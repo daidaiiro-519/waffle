@@ -17,8 +17,10 @@ Feature: document を schema 適合検証する (uc-validate-document)
       | path                                                |
       | .waffle/documents/skills/harness-query-engine.json |
       | .waffle/documents/skills/harness-render-engine.json |
-      | .waffle/documents/coding/stack.json                |
-      | .waffle/documents/coding/python-hexagonal.json     |
+      | .waffle/documents/coding/tech-stack-python-hexagonal.json      |
+      | .waffle/documents/coding/architecture-python-hexagonal.json    |
+      | .waffle/documents/coding/coding-standard-python-hexagonal.json |
+      | .waffle/documents/coding/test-standard-python-hexagonal.json   |
       | .waffle/documents/specs/bc-waffle-engines.json      |
       | .waffle/documents/specs/sd-harness-core.json        |
       | .waffle/documents/specs/sd-validation.json          |
@@ -29,6 +31,8 @@ Feature: document を schema 適合検証する (uc-validate-document)
       | .waffle/documents/specs/uc-render-document.json     |
       | .waffle/documents/specs/uc-validate-document.json   |
       | .waffle/documents/specs/uc-scaffold-document.json   |
+      | .waffle/documents/specs/uc-scan-source-code.json    |
+      | .waffle/documents/specs/uc-lint-doc-comment.json    |
 
   # --- 不適合 ---
 

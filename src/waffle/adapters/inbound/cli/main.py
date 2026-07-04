@@ -3,8 +3,6 @@
 各 engine(application use case) に outbound adapter を結線し、CLI 引数を params に成型して呼ぶ。
 Result[dict] を JSON で標準出力に出す（Ok→value をそのまま / Err→{error, message}・exit!=0）。
 これが engine Skill の InvocationSpec が指す実体（`waffle <op> ...`）。
-
-@stack:cli
 """
 from __future__ import annotations
 
@@ -23,25 +21,19 @@ from waffle.shared.result import Ok, Result
 
 app = typer.Typer(add_completion=False, help="waffle CLI — query / render / validate / scaffold")
 
-
 def _emit(result: Result) -> None:
-    # waffle:impl-start
     if isinstance(result, Ok):
         typer.echo(json.dumps(result.value, ensure_ascii=False))
         return
     code = result.details[0] if result.details else "ERROR"
     typer.echo(json.dumps({"error": code, "message": result.message}, ensure_ascii=False))
     raise typer.Exit(1)
-    # waffle:impl-end
-
 
 def _docs() -> FsDocumentRepository:
     return FsDocumentRepository()
 
-
 def _schemas() -> PackageSchemaRepository:
     return PackageSchemaRepository()
-
 
 @app.command()
 def query(
@@ -61,7 +53,6 @@ def query(
     nested_field: str = typer.Option(None, "--nestedField", "--nested-field"),
 ) -> None:
     """document.json へのセマンティック・クエリ（uc-query-document）。"""
-    # waffle:impl-start
     raw = {
         "blockKey": block_key, "arrayField": array_field, "field": field,
         "idField": id_field, "idValue": id_value, "key": key, "value": value,
@@ -70,8 +61,6 @@ def query(
     }
     params = {k: v for k, v in raw.items() if v is not None}
     _emit(QueryEngine(_docs(), _schemas()).run(operation, path, params))
-    # waffle:impl-end
-
 
 @app.command()
 def render(
@@ -79,18 +68,12 @@ def render(
     no_deploy: bool = typer.Option(False, "--no-deploy"),
 ) -> None:
     """document.json を成果物にレンダリングして deploy（uc-render-document）。"""
-    # waffle:impl-start
     _emit(RenderEngine(_docs(), _schemas()).run(path, deploy=not no_deploy))
-    # waffle:impl-end
-
 
 @app.command()
 def validate(path: str = typer.Option(..., "--path")) -> None:
     """document を schema 適合検証（uc-validate-document）。"""
-    # waffle:impl-start
     _emit(ValidateEngine(_docs(), _schemas(), JsonSchemaValidator()).run(path))
-    # waffle:impl-end
-
 
 @app.command()
 def scaffold(
@@ -102,7 +85,6 @@ def scaffold(
     values: str = typer.Option(None, "--values", help="fill する値の JSON オブジェクト"),
 ) -> None:
     """document.json の骨格生成 / 値書き込み（uc-scaffold-document）。"""
-    # waffle:impl-start
     if operation == "create":
         params: dict = {"schemaRef": schema_ref, "documentId": document_id}
         if discriminator:
@@ -113,18 +95,13 @@ def scaffold(
     else:
         params = {}
     _emit(ScaffoldEngine(_docs(), _schemas()).run(operation, params))
-    # waffle:impl-end
-
 
 @app.command()
 def serve() -> None:
     """MCP サーバを起動（query_document / render_document / … を MCP ツールとして公開）。"""
-    # waffle:impl-start
     from waffle.adapters.inbound.mcp.main import mcp
 
     mcp.run()
-    # waffle:impl-end
-
 
 if __name__ == "__main__":
     app()

@@ -7,8 +7,6 @@ x-render-target.path の場所へ deploy する application use case。
   「見出し(x-render-level + block.title) + x-render(宣言的部品) 本体」を生成
   （部品の描画は domain/services/part_renderer に委譲）
 - 出力先は x-render-target.path
-
-@spec:uc-render-document
 """
 from __future__ import annotations
 
@@ -20,10 +18,8 @@ from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.domain.services.part_renderer import render_parts
 from waffle.shared.result import Err, Ok, Result
 
-
 def _err(code: str, message: str) -> Err:
     return Err(message, [code])
-
 
 class RenderEngine:
     def __init__(
@@ -35,7 +31,6 @@ class RenderEngine:
         self._schemas = schemas
 
     def run(self, document_path: str, deploy: bool = True) -> Result[dict]:
-        # waffle:impl-start
         # G6: パストラバーサル拒否
         if ".." in Path(document_path).parts:
             return _err("INVALID_PATH", f"パストラバーサルは許可されません: {document_path}")
@@ -89,7 +84,6 @@ class RenderEngine:
             "path": canonical, "deployed": deployed, "format": fmt, "content": output,
             "feature": feature, "featurePath": feature_path or None,
         })
-        # waffle:impl-end
 
     def _render_frontmatter(self, doc: dict, schema: dict) -> str:
         fm = schema.get("x-frontmatter")
@@ -123,13 +117,11 @@ class RenderEngine:
         # トップレベルのセクション間に区切り線を入れて境界を明確にする
         return "\n\n---\n\n".join(parts) + "\n"
 
-
 def _extract_feature(doc: dict, defs: dict):
     """x-test-scenario: true の block（TestScenarios/UnitTestScenarios）の Gherkin を返す。
 
     .feature は仕様内 Gherkin を実行可能形に書き出すだけ（render は内容を作らない・SP-6）。
     """
-    # waffle:impl-start
     for block in doc.get("content", {}).values():
         if not isinstance(block, dict):
             continue
@@ -151,8 +143,6 @@ def _extract_feature(doc: dict, defs: dict):
                 lines.extend("  " + ln for ln in g.splitlines())
             return "\n".join(lines) + "\n"
     return None
-    # waffle:impl-end
-
 
 def _resolve_path(root: dict, path: str):
     """'doc.content.purpose.text' のようなドット区切りパスで dict を辿り値を返す。
@@ -160,9 +150,7 @@ def _resolve_path(root: dict, path: str):
     x-frontmatter は各 schema が『フィールド→パス』を宣言する（ロジックはデータに置かず
     描画は engine が担う＝Harness 原則）。新しい frontmatter パターンはこの宣言を増やすだけで対応する。
     """
-    # waffle:impl-start
     cur = root
     for part in path.split("."):
         cur = cur[part]
     return cur
-    # waffle:impl-end

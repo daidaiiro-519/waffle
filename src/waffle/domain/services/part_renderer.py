@@ -5,21 +5,16 @@ sequence/statediagram/kvtable）を engine 1実装で描画する。table はセ
 bool の ✓/- 整形を一律で行うので、全 block・全 skill のテーブルが崩れず統一される。
 `from` 先が空なら部品ごと省略するので、条件付きセクション（operations / note 等）は
 別ロジック不要で消える。HTML は viewer 側（クライアントサイド）が担うため、ここは MD 正本に統一する。
-
-@spec:uc-render-parts
 """
 from __future__ import annotations
 
-
 def render_parts(parts: list[dict], data: dict, level: int) -> str:
     """parts(宣言の配列) を data(block の値) から Markdown に描画する。level=小見出しの基準レベル。"""
-    # waffle:impl-start
     return _join((render_part(p, data, level)) for p in parts)
-    # waffle:impl-end
 
 
 def render_part(part: dict, data: dict, level: int) -> str:
-    # waffle:impl-start
+    """単一の RenderPart 宣言を Markdown 断片に描画する（対応する data が空なら空文字を返し部品ごと省略する）。"""
     kind = part["as"]
     # kvtable は from を取らず現在の data 自身を1行として描く
     src = data.get(part["from"]) if "from" in part else None
@@ -62,18 +57,14 @@ def render_part(part: dict, data: dict, level: int) -> str:
                 out.append(body)
 
     return _join(out)
-    # waffle:impl-end
-
 
 # --- 整形ヘルパ ---
 
 def _join(chunks):
     return "\n\n".join(s for s in chunks if s)
 
-
 def _fmt(v):
     return ("✓" if v else "-") if isinstance(v, bool) else v
-
 
 def _mdcell(v, code=False, join=None, sep=" / "):
     # セル値が配列なら畳む。dict 要素は join テンプレ（あれば）/ 文字列要素は str。sep で連結
@@ -82,18 +73,14 @@ def _mdcell(v, code=False, join=None, sep=" / "):
     s = str(_fmt(v)).replace("|", "\\|").replace("\n", " ")
     return f"`{s}`" if code and s else s
 
-
 def _heading(text, level):
     return "#" * level + " " + str(text)
-
 
 def _para(text):
     return str(text)
 
-
 def _list(items, ordered):
     return "\n".join((f"{i}. " if ordered else "- ") + str(x) for i, x in enumerate(items, 1))
-
 
 def _table(rows, columns):
     headers = [c.get("header", c["field"]) for c in columns]
@@ -102,13 +89,11 @@ def _table(rows, columns):
         out.append("| " + " | ".join(_cell(r, c) for c in columns) + " |")
     return "\n".join(out)
 
-
 def _cell(r, c):
     v = _mdcell(r.get(c["field"], ""), c.get("code"), c.get("join"), c.get("sep", " / "))
     if c.get("markField") and r.get(c["markField"]):
         v = f"**{v}**{c.get('markSuffix', '')}"
     return v
-
 
 def _keyvalue(part, data, src):
     if "pairs" in part:
@@ -130,16 +115,13 @@ def _keyvalue(part, data, src):
         return f"`{v}`" if vc else str(v)
     return "\n".join(f"- {lab(k)}: {val(v)}" for k, v in pairs)
 
-
 def _code(text, lang):
     items = text if isinstance(text, list) else [text]
     return "\n\n".join(f"```{lang or ''}\n{t}\n```" for t in items)
 
-
 def _seq_token(name: str) -> str:
     """Mermaid の participant 識別子向けに空白を除く（ドメイン役者名は単語想定）。"""
     return str(name).replace(" ", "_")
-
 
 def _sequence(steps):
     """構造化ステップ（from/to/message/kind）→ Mermaid sequenceDiagram。"""
@@ -159,7 +141,6 @@ def _sequence(steps):
             lines.append(f"    {frm}->>{to}: {msg}")
     diagram = "\n".join(lines)
     return f"```mermaid\n{diagram}\n```"
-
 
 def _statediagram(transitions):
     """状態遷移配列（from/to/command）→ Mermaid stateDiagram-v2。状態名の空白は _ に。"""

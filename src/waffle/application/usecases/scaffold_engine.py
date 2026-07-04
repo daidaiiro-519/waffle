@@ -5,8 +5,6 @@ Harness 原則: AI は「値」だけを生成し、document.json の構造は e
   fillTemplate（値フィールドの path × x-prompt-write）を生成し、x-source-target に書く。
 - fill: AI が生成した values を、宣言済み値フィールドにのみ機械的に書き込む（構造保護）。
   値の型/enum 適合検証は uc-validate-document の責務（疎結合）。
-
-@spec:uc-scaffold-document
 """
 from __future__ import annotations
 
@@ -17,10 +15,8 @@ from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.shared.result import Err, Ok, Result
 
-
 def _err(code: str, message: str) -> Err:
     return Err(message, [code])
-
 
 class ScaffoldEngine:
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
@@ -28,17 +24,14 @@ class ScaffoldEngine:
         self._schemas = schemas
 
     def run(self, operation: str, params: dict | None = None) -> Result[dict]:
-        # waffle:impl-start
         params = params or {}
         if operation == "create":
             return self._create(params)
         if operation == "fill":
             return self._fill(params)
         return _err("INVALID_OPERATION", f"未知の operation: {operation}")
-        # waffle:impl-end
 
     def _create(self, params: dict) -> Result[dict]:
-        # waffle:impl-start
         schema_ref = params.get("schemaRef")
         document_id = params.get("documentId")
         if not schema_ref or not document_id:
@@ -62,10 +55,8 @@ class ScaffoldEngine:
         if path:
             self._documents.save(path, skeleton)
         return Ok({"skeleton": skeleton, "fillTemplate": fill_template, "path": path})
-        # waffle:impl-end
 
     def _fill(self, params: dict) -> Result[dict]:
-        # waffle:impl-start
         document_path = params.get("documentPath")
         values = params.get("values")
         if not document_path or values is None:
@@ -101,8 +92,6 @@ class ScaffoldEngine:
                 skipped.append(path)  # 未知 / const / discriminator / 構造改変は拒否
         self._documents.save(document_path, doc)
         return Ok({"documentPath": document_path, "written": written, "skipped": skipped})
-        # waffle:impl-end
-
 
 # --- schema 走査ヘルパ（純ロジック・機械的） ---
 
@@ -111,7 +100,6 @@ def _resolve(schema: dict, ref: str):
     for part in ref.lstrip("#/").split("/"):
         node = node[part]
     return node
-
 
 def _discriminator_key(schema: dict):
     if "if" in schema:
@@ -123,17 +111,14 @@ def _discriminator_key(schema: dict):
                 return key
     return None
 
-
 def _discriminator_candidates(schema: dict, key: str) -> list:
     return schema.get("properties", {}).get(key, {}).get("enum", [])
-
 
 def _matches(if_clause: dict, discriminator: dict) -> bool:
     for key, cond in if_clause.get("properties", {}).items():
         if "const" in cond and discriminator.get(key) != cond["const"]:
             return False
     return True
-
 
 def _content_def(schema: dict, discriminator: dict) -> dict:
     if "if" in schema:
@@ -147,7 +132,6 @@ def _content_def(schema: dict, discriminator: dict) -> dict:
             if ref:
                 return _resolve(schema, ref)
     return schema.get("properties", {}).get("content", {})
-
 
 def _skeleton_from_def(schema: dict, d: dict):
     if "$ref" in d:
@@ -169,7 +153,6 @@ def _skeleton_from_def(schema: dict, d: dict):
         return False
     return None
 
-
 def _build_skeleton(schema, document_id, disc_key, discriminator, content_def) -> dict:
     props = schema.get("properties", {})
     out: dict = {}
@@ -186,7 +169,6 @@ def _build_skeleton(schema, document_id, disc_key, discriminator, content_def) -
         out["tags"] = []
     return out
 
-
 def _merge_allof(schema: dict, d: dict) -> dict:
     if "allOf" not in d:
         return d
@@ -198,12 +180,10 @@ def _merge_allof(schema: dict, d: dict) -> dict:
     merged["properties"].update(d.get("properties", {}))
     return merged
 
-
 def _build_fill_template(schema: dict, content_def: dict) -> list:
     entries: list = []
     _walk_fill(schema, content_def, "content", entries)
     return entries
-
 
 def _walk_fill(schema, d, path, entries):
     if "$ref" in d:
@@ -231,7 +211,6 @@ def _walk_fill(schema, d, path, entries):
         if element:
             entry["element"] = element
     entries.append(entry)
-
 
 def _set_path(doc: dict, path: str, value) -> bool:
     parts = path.split(".")
