@@ -244,7 +244,16 @@ pytest 188件green・重複0件・語彙漏れ（schema description内の既存"
 
 **総フィールド数:** 30件　**20字未満:** 9件　**重複テキスト:** 0種
 
-**ステータス:** 未着手
+**ステータス:** 完了（2026-07-11）
+
+**対応内容:** 9件中7件は既に例を持っており改善不要と判断（例: `ActionsBlock.name`
+「操作名。例: 注文を確定する」等）。genuinely薄かった2件（`ActionsBlock.
+description`・`VisualRefBlock.url`）のみ例を追加して修正。`*ScenariosBlock.
+name/category`の薄さはDomainSpecSchemaと同じ理由（真に同じ意味）で許容。
+
+**レビュー:** JSON構文・diff2行（意図通り）・現時点でこのschemaを使う
+document.jsonは0件のため文書側revalidateは不要・pytest 188件green・
+check-schema-version-drift clean・語彙漏れ無しを確認済み。
 
 ### 薄いフィールド（20字未満、要見直し）
 
