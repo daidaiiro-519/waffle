@@ -82,7 +82,7 @@ def test_データが空の任意ブロックは見出しごと省略する():
 
     doc = {
         "documentId": "smoke-subagent",
-        "schemaRef": "AgentSchema/v1",
+        "schemaRef": "AgentSchema/v2",
         "agentKind": "subagent",
         "content": {
             "title": {"blockType": "Title", "title": "smoke-subagent"},
