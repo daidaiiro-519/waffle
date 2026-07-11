@@ -1,7 +1,7 @@
 {
   "documentId": "uc-lint-docstring",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v2",
+  "schemaRef": "DomainSpecSchema/v3",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-docstring-linting",
@@ -28,6 +28,11 @@
       "title": "主アクターと意図",
       "actor": "Orchestrator（HarnessAgent）",
       "intent": "対象コードベースの docstring が規約どおりの構造か（必須セクションの有無・引数名と実シグネチャの整合）を確認したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "docstringが実装のシグネチャと乖離したまま放置されると、AIがソースコード本体を読まずにdocstringだけを頼りに判断する他usecase（uc-scan-source-code等）の前提が崩れる。自前の照合ロジックを持たず既存lintツールに委ねているのは車輪の再発明を避ける判断だが、規約適合を機械的に確認する入口が無ければ、docstringの陳腐化がAIの誤判断として静かに伝播するリスクを防げない。"
     },
     "externalActors": {
       "blockType": "ExternalActors",

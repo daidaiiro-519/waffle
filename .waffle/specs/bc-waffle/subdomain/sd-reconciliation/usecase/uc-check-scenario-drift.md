@@ -8,10 +8,22 @@ spec の TestScenarios（acceptanceScenarios/guaranteeScenarios/invariantScenari
 
 ---
 
+## 名前
+
+CheckScenarioDrift
+
+---
+
 ## 主アクターと意図
 
 - **主アクター**: Orchestrator（HarnessAgent）
 - **意図**: specのシナリオ宣言とテストコードの対応関係が保たれているかを確認したい
+
+---
+
+## 存在意義
+
+specのシナリオとテストコードの対応が検証されなければ、TDDの規律（spec→シナリオ→テスト→実装の順走）が守られているかを確認する手段が無くなる。specに書いたシナリオが実装されないまま放置される「順走の欠落」と、specに無い振る舞いが実装側の都合でテストとして固定される「逆走・抜け駆け実装」は、どちらも人手のレビューでは見逃されやすい。この2つを機械的に検知することで、仕様が実装を導くという開発順序そのものを保護する。
 
 ---
 
@@ -39,7 +51,7 @@ sequenceDiagram
 - 返り値は次の4フィールドを持つ: missing_in_tests（specが宣言するが対応するテスト関数が無いシナリオ名）・orphaned_in_tests（テストファイルにあるがどのシナリオ宣言にも対応しない関数名）・matched（両方に存在する名前）・gherkin_mismatches（名前は一致するが、テスト関数のdocstringがシナリオのgherkin本文を含んでいないシナリオ名）
 - 対象となるシナリオブロックはacceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenariosの4種
 - シナリオ名からテスト関数名への変換規則（sanitize）は、非単語文字を_に置換しtest_を前置する
-- gherkin本文の比較は、gherkinの"Scenario: ..."見出し行を除いた各行と、テスト関数のdocstringの各行を、前後の空白を無視して比較する（docstringがgherkin本文を含む連続した部分列であれば一致とみなす。docstringに追加の説明文が続いても構わない）
+- gherkin本文の比較は、gherkinの"Scenario: ..."（または"Scenario Outline: ..."）見出し行を除いた各行と、テスト関数のdocstringの各行を、前後の空白を無視して比較する（docstringがgherkin本文を含む連続した部分列であれば一致とみなす。docstringに追加の説明文が続いても構わない）
 - テスト関数名・docstringの抽出はASTのみで行い、実行や意味理解はしない
 - missing_in_tests・orphaned_in_tests・gherkin_mismatches全てが空配列であれば、シナリオとテストの対応関係が保たれている（正常系）
 
@@ -47,19 +59,19 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When specが宣言するシナリオに対応するテスト関数がテストファイルに無いとき、エンジンはそのシナリオ名（sanitize後）をmissing_in_testsに含める shall。
-- When テストファイルの関数が、どのシナリオ宣言にも対応しないとき、エンジンはその関数名をorphaned_in_testsに含める shall。
-- When シナリオ名（sanitize後）とテスト関数名が一致するとき、エンジンはその名前をmatchedに含める shall。
-- When 名前は一致するが、テスト関数のdocstringが対応するシナリオのgherkin本文を含んでいないとき、エンジンはそのシナリオ名をgherkin_mismatchesに含める shall。
-- While 全シナリオに対応するテストが存在し、孤立テストもgherkin本文の不一致も無いとき、エンジンはmissing_in_tests・orphaned_in_tests・gherkin_mismatches全てを空配列で返す shall。
-- If 対象のspec.jsonまたはテストファイルが存在しないとき、エンジンはINVALID_PATHエラーを返す shall。
-- If テストファイルが構文解析できないとき、エンジンはINVALID_SOURCEエラーを返す shall。
+- When specが宣言するシナリオに対応するテスト関数がテストファイルに無いとき、システムはそのシナリオ名（sanitize後）をmissing_in_testsに含める shall。
+- When テストファイルの関数が、どのシナリオ宣言にも対応しないとき、システムはその関数名をorphaned_in_testsに含める shall。
+- When シナリオ名（sanitize後）とテスト関数名が一致するとき、システムはその名前をmatchedに含める shall。
+- When 名前は一致するが、テスト関数のdocstringが対応するシナリオのgherkin本文を含んでいないとき、システムはそのシナリオ名をgherkin_mismatchesに含める shall。
+- While 全シナリオに対応するテストが存在し、孤立テストもgherkin本文の不一致も無いとき、システムはmissing_in_tests・orphaned_in_tests・gherkin_mismatches全てを空配列で返す shall。
+- If 対象のspec.jsonまたはテストファイルが存在しないとき、システムはINVALID_PATHエラーを返す shall。
+- If テストファイルが構文解析できないとき、システムはINVALID_SOURCEエラーを返す shall。
 
 ---
 
 ## 操作保証
 
-- When 対象のspec.jsonまたはテストファイルが存在しないとき、engine は INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+- When 対象のspec.jsonまたはテストファイルが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
 
 ---
 
@@ -68,6 +80,7 @@ sequenceDiagram
 | コード | 条件 |
 |---|---|
 | `INVALID_SOURCE` | 対象のテストファイルが構文解析できない（Pythonのパーサでエラー） |
+| `INVALID_JSON` | 対象のspec.jsonが存在するが不正なJSON（json.JSONDecodeError） |
 
 ---
 

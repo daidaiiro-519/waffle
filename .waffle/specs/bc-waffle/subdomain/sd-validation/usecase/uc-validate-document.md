@@ -8,10 +8,22 @@ Document の content が schema に適合するかを検証し、適合可否と
 
 ---
 
+## 名前
+
+ValidateDocument
+
+---
+
 ## 主アクターと意図
 
 - **主アクター**: Orchestrator（HarnessAgent）
 - **意図**: 対象 Document が schema に適合するかを判定し、進められるか確かめる
+
+---
+
+## 存在意義
+
+schemaへの適合が機械チェックされなければ、DocumentをCREATEDからVALIDATEDへ進めてよいかの判断が人手のレビュー頼みになり、構造的に壊れた文書がrender・reconcile等の後続処理に渡ってしまう。他の全usecase（render/query/reconcile系）はDocumentがschemaに適合していることを前提に動くため、この検証ゲートが無ければそれらの前提が保証されない。
 
 ---
 
@@ -36,33 +48,25 @@ sequenceDiagram
 
 ## 事後条件
 
-- 適合なら VALIDATED へ進めてよいという判定が返る
+- 適合し、状態遷移も可能なとき、判定されたstatus（例: VALIDATED）が実際にdocumentへ書き込まれる
 - 適合時は DocumentValidated が発行される
-- status 自体は書き換えない（判定のみ・冪等）
+- schemaがこのdocument種別で"validate"を状態遷移コマンドと定義していない場合（例: SkillSchema/CodingSchemaのmaturityLifecycleにはx-lifecycle自体が無い）、statusは変更しない
 
 ---
 
 ## 受け入れ基準
 
-- When 適合する Document が与えられたとき、engine は VALIDATED 判定を返す shall。
-- When 不適合のとき、engine は違反詳細つきで失敗を返す shall。
-- If schemaRef が無いとき、engine は MISSING_SCHEMA_REF を返す shall。
-- While 検証中、engine は Document の status を書き換えない shall（副作用なし）。
+- When 適合する Document が与えられたとき、システムは VALIDATED 判定を返す shall。
+- When 不適合のとき、システムは違反詳細つきで失敗を返す shall。
+- If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返す shall。
+- When 適合し状態遷移も可能なとき、システムは判定したstatusを実際にDocumentへ書き込む shall。
 
 ---
 
 ## 操作保証
 
-- When 対象パスが存在しないとき、engine は INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
-- When 対象のschemaRefを解決できないとき、engine は INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
-
----
-
-## エラー
-
-| コード | 条件 |
-|---|---|
-| `VALIDATION_FAILED` | schema に不適合（違反詳細つきで失敗・status は変えない） |
+- When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+- When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
 
 ---
 
@@ -144,6 +148,19 @@ Scenario: 不正なJSONはINVALID_JSON
   Given 不正なJSONの対象ファイル
   When validateする
   Then INVALID_JSONエラーが返る
+```
+
+### 適合判定は実際にstatusをdocumentへ書き込む
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 永続化：適合し状態遷移も可能なとき、判定結果を実際にdocumentへ書き込む |
+
+```gherkin
+Scenario: 適合判定は実際にstatusをdocumentへ書き込む
+  Given CREATED状態の、schemaに適合するDocument
+  When validateする
+  Then 判定結果のstatusが実際にdocument.jsonへ書き込まれる（再読込しても反映されている）
 ```
 
 ---

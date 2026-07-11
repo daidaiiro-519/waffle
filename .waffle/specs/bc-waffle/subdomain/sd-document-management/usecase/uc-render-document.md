@@ -21,6 +21,12 @@ RenderDocument
 
 ---
 
+## 存在意義
+
+spec/skillはJSON（document.json）として構造化されているが、人間がレビュー・意思決定する場面ではMarkdown等の可読な成果物が要る。この描画経路が無ければ、人間はJSONを直接読むか、Documentの内容を別途手作業でMarkdown化する必要が生じ、正本（document.json）と可読な成果物が容易に乖離する。
+
+---
+
 ## 事前条件
 
 - 対象 Document が存在し、schemaRef を持つ

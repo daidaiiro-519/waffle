@@ -8,10 +8,22 @@ bounded-context が宣言する members(subdomain/usecase) と、ディスク上
 
 ---
 
+## 名前
+
+CheckSpecIntegrity
+
+---
+
 ## 主アクターと意図
 
 - **主アクター**: Orchestrator（HarnessAgent）
 - **意図**: spec ツリー内部の参照整合性（宣言と実ファイルの対応）が保たれているかを確認したい
+
+---
+
+## 存在意義
+
+spec同士の宣言（bc.json/subdomain.json）と実態（ディスク上の実ファイル）のズレは、人手のレビューだけでは静かに蓄積する。宣言と実態が食い違ったまま放置されると、AIオーケストレーターが実在しないusecaseを参照したり、実在するusecaseがどこからも辿れず孤立したりする。この機械チェックが無ければ、waffleが掲げる「陳腐化しない仕様」という差別化原理が、spec層内部で既に崩れていることに誰も気づけない。
 
 ---
 
@@ -26,10 +38,10 @@ bounded-context が宣言する members(subdomain/usecase) と、ディスク上
 
 ```mermaid
 sequenceDiagram
-    Orchestrator->>SpecTree: bc.json のパスを指定して参照整合性検査を依頼する
-    SpecTree->>SpecTree: bc.json の members(kind=subdomain/usecase) が宣言する名前集合を取得する
-    SpecTree->>SpecTree: ディスク上の実際の subdomain ディレクトリ・各 subdomain.json が宣言する usecase 名・実際の usecase ファイルを走査する
-    SpecTree->>SpecTree: 宣言集合と実態集合を6方向で突き合わせ、加えて各集約内部の値オブジェクト使用整合性・Document集約と実インスタンスの整合性・usecase間の相互参照整合性を確認する
+    Orchestrator->>SpecTree: bc.jsonのパスを指定して参照整合性検査を依頼する
+    SpecTree->>SpecTree: bc.jsonのmembers(kind=subdomain/usecase)が宣言する名前集合を取得する
+    SpecTree->>SpecTree: ディスク上の実際のsubdomainディレクトリ・各subdomain.jsonが宣言するusecase名・実際のusecaseファイルを走査する
+    SpecTree->>SpecTree: 宣言集合と実態集合を6方向で突き合わせ、加えて各集約内部の値オブジェクト使用整合性・Document集約と実インスタンスの整合性・usecaseからsubdomain/aggregateへの参照整合性を確認する
     SpecTree-->>Orchestrator: 10のフィールド（それぞれ文字列/オブジェクトの配列）を持つ差分結果を返す
 ```
 
@@ -50,24 +62,24 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When bc.jsonが宣言するsubdomain名がディスク上に実在しないとき、エンジンはdeclared_subdomains_missing_on_diskにその名前を含める shall。
-- When ディスク上に実在するsubdomainがbc.jsonに未宣言のとき、エンジンはsubdomains_on_disk_not_declared_in_bcにその名前を含める shall。
-- When bc.jsonが宣言するusecaseがどのsubdomainのmembersにも属さないとき、エンジンはusecases_orphaned_no_subdomainにその名前を含める shall。
-- When いずれかのsubdomainのmembersが宣言するusecaseがbc.jsonに未宣言のとき、エンジンはusecases_in_subdomain_not_declared_in_bcにその名前を含める shall。
-- When subdomainが宣言するusecaseの実ファイルがディスクに無いとき、エンジンはusecase_files_missing_on_diskにその名前を含める shall。
-- When 実ファイルはあるがどのsubdomainのmembersにも宣言されていないusecaseがあるとき、エンジンはusecase_files_orphaned_on_diskにその名前を含める shall。
-- While 6方向全てで宣言と実態が一致しているとき、エンジンは全フィールドを空配列で返す shall。
-- If bc.json自体が存在しないとき、エンジンはINVALID_PATHエラーを返す shall。
-- When 集約が宣言するvalueObjectのうち、どのentity属性の型としても参照されていないものがあるとき、エンジンはそのvalueObject名をorphaned_value_objectsに含める shall。
-- When 実在するdocument.jsonが持つトップレベルフィールドが、Document集約のentity属性に宣言されていないとき、エンジンはそのフィールド名をundeclared_document_fieldsに含める shall。
-- When usecaseのsubdomainRefと参照先subdomainのmembers宣言が食い違うとき、エンジンはその組をsubdomain_ref_mismatchesに含める shall。
-- When usecaseのaggregateRefが指す集約が実在しないとき、エンジンはその組をmissing_aggregate_refsに含める shall。
+- When bc.jsonが宣言するsubdomain名がディスク上に実在しないとき、システムはdeclared_subdomains_missing_on_diskにその名前を含める shall。
+- When ディスク上に実在するsubdomainがbc.jsonに未宣言のとき、システムはsubdomains_on_disk_not_declared_in_bcにその名前を含める shall。
+- When bc.jsonが宣言するusecaseがどのsubdomainのmembersにも属さないとき、システムはusecases_orphaned_no_subdomainにその名前を含める shall。
+- When いずれかのsubdomainのmembersが宣言するusecaseがbc.jsonに未宣言のとき、システムはusecases_in_subdomain_not_declared_in_bcにその名前を含める shall。
+- When subdomainが宣言するusecaseの実ファイルがディスクに無いとき、システムはusecase_files_missing_on_diskにその名前を含める shall。
+- When 実ファイルはあるがどのsubdomainのmembersにも宣言されていないusecaseがあるとき、システムはusecase_files_orphaned_on_diskにその名前を含める shall。
+- While 6方向全てで宣言と実態が一致しているとき、システムは全フィールドを空配列で返す shall。
+- If bc.json自体が存在しないとき、システムはINVALID_PATHエラーを返す shall。
+- When 集約が宣言するvalueObjectのうち、どのentity属性の型としても参照されていないものがあるとき、システムはそのvalueObject名をorphaned_value_objectsに含める shall。
+- When 実在するdocument.jsonが持つトップレベルフィールドが、Document集約のentity属性に宣言されていないとき、システムはそのフィールド名をundeclared_document_fieldsに含める shall。
+- When usecaseのsubdomainRefと参照先subdomainのmembers宣言が食い違うとき、システムはその組をsubdomain_ref_mismatchesに含める shall。
+- When usecaseのaggregateRefが指す集約が実在しないとき、システムはその組をmissing_aggregate_refsに含める shall。
 
 ---
 
 ## 操作保証
 
-- When 対象のbc.jsonが存在しないとき、engine は INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+- When 対象のbc.jsonが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
 
 ---
 
@@ -214,6 +226,19 @@ Scenario: 存在しない集約を指すaggregateRefを検出する
   Given 実在しない集約documentIdをaggregateRefに持つusecase document
   When 参照整合性検査を実行する
   Then missing_aggregate_refsにその組が含まれる
+```
+
+### 複数entityの属性が全て未宣言判定に使われる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | agg-documentが複数のentityを持つとき、entities[0]だけでなく全entityの属性を未宣言判定の母集合に使う |
+
+```gherkin
+Scenario: 複数entityの属性が全て未宣言判定に使われる
+  Given agg-documentが複数のentityを持ち、2つ目のentityにのみ宣言されているフィールドを持つ実document.json
+  When 参照整合性検査を実行する
+  Then そのフィールドはundeclared_document_fieldsに含まれない（entities[0]だけでなく全entityの属性が見られる）
 ```
 
 ---

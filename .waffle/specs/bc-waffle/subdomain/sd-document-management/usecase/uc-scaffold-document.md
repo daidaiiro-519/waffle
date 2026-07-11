@@ -21,6 +21,12 @@ ScaffoldDocument
 
 ---
 
+## 存在意義
+
+AIがdocument.jsonの構造（キー名・ネスト・schemaの規約）を毎回自由に組み立てると、schemaが保証すべき構造の一貫性が壊れ、validateに通らない文書が量産される。AIが触れる範囲を「値だけ」に限定する仕組みが無ければ、AIによる構造改変を防ぐ手立てがなく、waffleが狙うAI過剰生成対策（構造保護）が成立しない。
+
+---
+
 ## 事前条件
 
 - 生成対象の schema と documentId が与えられている

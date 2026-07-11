@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-agent-skill-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v2",
+  "schemaRef": "DomainSpecSchema/v3",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -24,6 +24,11 @@
       "title": "主アクターと意図",
       "actor": "Orchestrator（HarnessAgent）",
       "intent": "Subagentがskillsとしてプリロード指定しているSkillが、実在しかつプリロード可能な状態であるかを確認したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "AgentSchemaとSkillSchemaはそれぞれ独立に検証されるため、Subagentが参照するSkillの実在性やプリロード可否（Claude Code側の制約）は、どちらのschema単体からも検出できない盲点になっている。この検知が無ければ、実際にはロードできないSkillをプリロード指定したまま気づかれず、実行時に初めて（あるいは気づかれないまま）機能しない。"
     },
     "externalActors": {
       "blockType": "ExternalActors",

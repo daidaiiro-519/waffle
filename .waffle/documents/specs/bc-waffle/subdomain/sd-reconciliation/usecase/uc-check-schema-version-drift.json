@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-schema-version-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v2",
+  "schemaRef": "DomainSpecSchema/v3",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
@@ -29,6 +29,11 @@
       "title": "主アクターと意図",
       "actor": "Orchestrator（HarnessAgent）",
       "intent": "Documentが参照するSchemaの版が実在し、かつ最新であるかを確認したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "schemaが版を重ねて進化しても、既存のDocumentが古い版を参照したまま放置されれば、そのズレは誰にも気づかれない。破壊的変更のたびに全文書を手作業で洗い直すのは現実的でなく、この検知が無ければschemaの改版履歴が実データに反映されているかを確認する手段自体が存在しないことになる。"
     },
     "preconditions": {
       "blockType": "Preconditions",

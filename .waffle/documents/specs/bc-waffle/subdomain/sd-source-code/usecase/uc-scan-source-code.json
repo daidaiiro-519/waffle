@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scan-source-code",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v2",
+  "schemaRef": "DomainSpecSchema/v3",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-source-code",
@@ -28,6 +28,11 @@
       "title": "主アクターと意図",
       "actor": "Orchestrator（HarnessAgent）",
       "intent": "対象コードベースから公開要素の docstring を構造化抽出し、本体を読まずに当たりをつけられるインデックスを取得する"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "AIがリポジトリ全体のソースコード本体を毎回直接読むと、無関係な実装詳細までコンテキストに含めてトークンを浪費し、大規模コードベースでは走査自体が非現実的になる。docstringだけを構造化抽出したインデックスが無ければ、AIは「どこに何があるか」の当たりをつける手段を持たず、毎回全文検索的な読み込みに頼ることになる。"
     },
     "externalActors": {
       "blockType": "ExternalActors",

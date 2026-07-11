@@ -8,10 +8,22 @@ Document集約の実インスタンス群が持つschemaRefを、実在するSch
 
 ---
 
+## 名前
+
+CheckSchemaVersionDrift
+
+---
+
 ## 主アクターと意図
 
 - **主アクター**: Orchestrator（HarnessAgent）
 - **意図**: Documentが参照するSchemaの版が実在し、かつ最新であるかを確認したい
+
+---
+
+## 存在意義
+
+schemaが版を重ねて進化しても、既存のDocumentが古い版を参照したまま放置されれば、そのズレは誰にも気づかれない。破壊的変更のたびに全文書を手作業で洗い直すのは現実的でなく、この検知が無ければschemaの改版履歴が実データに反映されているかを確認する手段自体が存在しないことになる。
 
 ---
 
@@ -46,17 +58,17 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When Documentのschema参照が指す版が実在しないとき、エンジンはその組をbroken_referencesに含める shall。
-- When Documentのschema参照は実在するが、同名Schemaの最新版でないとき、エンジンはその組（参照先の最新schemaRef付き）をnewer_version_availableに含める shall。
-- When 参照先Schemaが宣言する値フィールドのpathを、Documentの実データが持たないとき、エンジンはその組をmissing_declared_fieldsに含める shall。
-- While 全DocumentのSchema参照が実在しかつ最新であり、宣言済みフィールドにも追従しているとき、エンジンはbroken_references・newer_version_available・missing_declared_fields全てを空配列で返す shall。
-- If 対象のdocuments_rootが存在しないとき、エンジンはINVALID_PATHエラーを返す shall。
+- When Documentのschema参照が指す版が実在しないとき、システムはその組をbroken_referencesに含める shall。
+- When Documentのschema参照は実在するが、同名Schemaの最新版でないとき、システムはその組（参照先の最新schemaRef付き）をnewer_version_availableに含める shall。
+- When 参照先Schemaが宣言する値フィールドのpathを、Documentの実データが持たないとき、システムはその組をmissing_declared_fieldsに含める shall。
+- While 全DocumentのSchema参照が実在しかつ最新であり、宣言済みフィールドにも追従しているとき、システムはbroken_references・newer_version_available・missing_declared_fields全てを空配列で返す shall。
+- If 対象のdocuments_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。
 
 ---
 
 ## 操作保証
 
-- When 対象のdocuments_rootが存在しないとき、engine は INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+- When 対象のdocuments_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
 
 ---
 

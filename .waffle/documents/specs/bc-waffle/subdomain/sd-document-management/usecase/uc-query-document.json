@@ -1,7 +1,7 @@
 {
   "documentId": "uc-query-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v2",
+  "schemaRef": "DomainSpecSchema/v3",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -29,6 +29,11 @@
       "title": "主アクターと意図",
       "actor": "Orchestrator（HarnessAgent）",
       "intent": "対象 Document から欲しい意味単位を取得し、読み方の指針とともに受け取る"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "AIがDocument全文をファイルとして直接読むと、無関係なブロックまでコンテキストに含めてトークンを浪費し、document.jsonの内部構造（schemaの実装詳細）に直接依存したコードを書き始めてしまう。意味単位だけを取得する経路が無ければ、AIとdocument.jsonの間で保つべき疎結合（テキストベースの入出力）が崩れる。"
     },
     "preconditions": {
       "blockType": "Preconditions",

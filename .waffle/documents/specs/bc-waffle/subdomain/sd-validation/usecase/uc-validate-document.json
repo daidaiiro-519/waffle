@@ -1,7 +1,7 @@
 {
   "documentId": "uc-validate-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v2",
+  "schemaRef": "DomainSpecSchema/v3",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-validation",
@@ -29,6 +29,11 @@
       "title": "主アクターと意図",
       "actor": "Orchestrator（HarnessAgent）",
       "intent": "対象 Document が schema に適合するかを判定し、進められるか確かめる"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "schemaへの適合が機械チェックされなければ、DocumentをCREATEDからVALIDATEDへ進めてよいかの判断が人手のレビュー頼みになり、構造的に壊れた文書がrender・reconcile等の後続処理に渡ってしまう。他の全usecase（render/query/reconcile系）はDocumentがschemaに適合していることを前提に動くため、この検証ゲートが無ければそれらの前提が保証されない。"
     },
     "preconditions": {
       "blockType": "Preconditions",

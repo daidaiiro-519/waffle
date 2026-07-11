@@ -1,7 +1,7 @@
 {
   "documentId": "uc-render-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v2",
+  "schemaRef": "DomainSpecSchema/v3",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -29,6 +29,11 @@
       "title": "主アクターと意図",
       "actor": "Orchestrator（HarnessAgent）",
       "intent": "対象 Document を成果物に描画し、canonical と deploy 先へ反映する"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "spec/skillはJSON（document.json）として構造化されているが、人間がレビュー・意思決定する場面ではMarkdown等の可読な成果物が要る。この描画経路が無ければ、人間はJSONを直接読むか、Documentの内容を別途手作業でMarkdown化する必要が生じ、正本（document.json）と可読な成果物が容易に乖離する。"
     },
     "preconditions": {
       "blockType": "Preconditions",
