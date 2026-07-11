@@ -158,8 +158,73 @@ check-schema-version-drift clean・render確認済み。
    同じ手順: 既存advisorへの事前相談→アイデアダンプ→論点整理→合意）
    → 4テーマ完了・KnowledgeSchema文書化済み（tdd/boundary-value-analysis-
    equivalence-partitioning/risk-based-testing/exploratory-testing）
-3. Definition of Done（DoD）を別途追加調査する（未着手）
+3. ~~Definition of Done（DoD）を別途追加調査する~~ → 完了（2026-07-11、
+   `definition-of-done.json`として文書化。deep-research最終統合ステップが
+   バグりダミー値を返したため、journal.jsonlの生検証結果から手動で再構成した）
 4. test smells/sociable-solitary/test-induced design damage/mutation testingの
    一次資料裏付けを行う（未着手）
 5. 実装（実際にskill documentを新設するか）は保留。知識が出揃った段階で
    knowledgeRefsとして束ね、qa-advisorのpurpose/role/判断基準を固める
+
+---
+
+## qa-advisorをどう運用に組み込むか（2026-07-11）
+
+### 「#4ゼロコード審判」の運用ループを検討する過程で判明した、4層の役割分担
+
+`#4`（未踏行の検知）を実際に運用する場合、「未踏行を見つけたらどうするか」を
+検討したところ、qa-advisor単体では完結しないことが判明した。qa-advisorを含む
+全advisorは一貫して「抽象化された状況を渡されて、助言を文章で返すだけ」という
+動作モデルであり、直接ソースコードを読みに行ったり、ファイルを編集したりはしない。
+「未踏行の実コードを読んで、正当な例外か・削除すべきか・specへ遡及追記すべきかを
+判断し、実際に行動する」という一連の作業は、能動的に読み・判断し・手を動かす
+**Agent**の守備範囲であり、Skillの守備範囲ではない。
+
+4層に分けて整理した:
+
+| 層 | 何を持つか | どこに置くか |
+|---|---|---|
+| 検知 | 未踏行を機械的に列挙する | usecase（reconcile） |
+| 判断基準 | 「正当な例外／delete／spec遡及追記」の決定木 | qa-advisorのKnowledge文書（新設予定） |
+| 実行 | 実コードを読み、判断を仰ぎ、行動する | Agent（Orchestrator、または委譲されたSubagent） |
+| 連携の配線 | 「検知結果が出た後、qa-advisorに相談してから行動する」という手順 | AgentSchemaの`SkillFollowUp`（`waffle.json`に既存の同型パターンあり） |
+
+現状waffleには専用の「コーディング担当Subagent」が存在しない（`check-agent-skill-drift`
+の実行結果が示す通りsubagentは0件）ため、実行主体は現時点ではOrchestrator自身になる。
+これは`brainstorm-has-udd-role-agent-rethink.md`（has-uddのrole agentをPO/SM軸で
+再定義する話）で保留にした「実際にコードを書く役割を専任のSubagentとして切り出すか」
+という積み残しの論点に直結する。
+
+### 常設Subagentを用意すべきか、毎回スポットで生成すべきか
+
+ユーザーからの問い: AgentSchemaは既にOrchestrator/Subagentのスキーマを持ち、
+waffleのscaffold+fill+renderの仕組みを使えば、目的・タスク・成果物イメージを
+x-prompt-write通りに埋めるだけでSubagent定義（またはAgent呼び出しパラメータ）を
+その都度生成できる。この場合、常設のSubagentを用意するメリットは薄いのではないか。
+
+**AIの見解:** 「常設(persisted) vs スポット(ad-hoc)」の実質的な論点は、
+「プロセスが常時稼働し続けるか」ではない（Claude CodeのAgent呼び出しは
+persisted/spotどちらであっても、呼び出しごとにステートレスで新規に開始される
+——「新しいAgent呼び出しは過去のやり取りの記憶を持たない」という既存の制約は
+どちらの方式でも同じ）。実質的な論点は「**skillPreloads・purpose・roleという
+定義自体を、文書として永続化するか、その都度その場で組み立てるか**」。
+
+この判断も、これまで繰り返し適用してきたYAGNI（`architecture-evidence-based-scope`）
+と同じ基準で決めるべきだと考える: **同じ役割・同じskillPreloadsの組み合わせが
+繰り返し必要になったという具体的な実例が、複数回観測されて初めて永続化する**。
+「今後こういう役割が要りそうだから」という予測だけで先に常設Subagent文書を
+作るのは、このセッション全体で一貫して避けてきた「実例が無い段階での構造の
+先取り」そのものになる。
+
+今回の`#4`未踏行トリアージのようなタスクについては、まだ実際に運用して
+繰り返し発生パターンを確認したわけではないため、**現時点ではスポット生成が妥当**。
+同じ形（qa-advisor＋tech-lead-advisorのskillPreloads、同じgoal/task形状）での
+呼び出しが複数回実際に観測された時点で、初めて`AgentSchema`のSubagent文書として
+永続化するかどうかを判断する。永続化のメリットは（a）skillPreloadsが呼び出しの
+たびにブレない一貫性、（b）`check-agent-skill-drift`による機械的なガバナンス
+が効くこと、の2点だが、これらは「実際に繰り返し使われている」という前提が
+無ければ意味を持たない。
+
+**次のアクション:** `#4`（ゼロコード審判）またはqa-advisorの相談パターンが
+実際に複数回発生してから、Subagent文書として永続化するかどうかを再検討する。
+現時点ではAgentSchemaへの追加作業は行わない。
