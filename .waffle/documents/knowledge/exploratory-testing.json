@@ -1,0 +1,77 @@
+{
+  "documentId": "exploratory-testing",
+  "documentType": "Knowledge",
+  "schemaRef": "KnowledgeSchema/v1",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "exploratory-testing"
+    },
+    "overview": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "スクリプト化されたテストと探索的テストは何が違うのか？",
+        "仕様に書かれていない不具合を見つけるには、どうテストすればよいか？"
+      ],
+      "text": "テストの設計・実行・そこから得た学習を同時並行で進める、テスターの裁量と責任を重視するテストのスタイル。事前に手順を固定するスクリプトテストとは対極にあるが、実務では両者は連続体として混ざり合う。"
+    },
+    "principles": {
+      "blockType": "Principles",
+      "title": "原則",
+      "text": "James Bachは探索的テストを『テストを行いながら、そのテストに影響を与える事柄を同時に学習していく、科学的なプロセス』と定義する。Cem Kanerの定義では『学習・テスト設計・テスト実行を並行して行う、個々のテスターの個人的な自由と責任を重視するテストのスタイル』とされる。Bachは、テストは完全にスクリプト化されたものと完全に探索的なものの間の連続体上に位置し、現実のテストは常にその両者の混合であると位置づける——『全てのテストはある程度探索的である』。"
+    },
+    "classifications": {
+      "blockType": "Classifications",
+      "title": "分類",
+      "items": [
+        {
+          "name": "スクリプトテスト",
+          "description": "事前に書かれた手順通りにテストを実行する。再現性が高く、既知のシナリオの回帰確認に向く"
+        },
+        {
+          "name": "探索的テスト",
+          "description": "テストしながら学んだことを次のテスト設計に即座に反映する。仕様に書かれていない未知の不具合の発見に向く"
+        }
+      ]
+    },
+    "decisionCriteria": {
+      "blockType": "DecisionCriteria",
+      "title": "判断基準",
+      "stages": [],
+      "transitions": []
+    },
+    "examples": {
+      "blockType": "Examples",
+      "title": "実例",
+      "text": ""
+    },
+    "antiPatterns": {
+      "blockType": "AntiPatterns",
+      "title": "アンチパターン",
+      "items": [
+        {
+          "name": "探索的テストを『行き当たりばったりのテスト』と誤解する",
+          "problem": "探索的テストは無計画な作業ではなく、学習・設計・実行を同時に行う訓練されたスキルである。テスターの経験・専門性に強く依存する"
+        }
+      ]
+    },
+    "provenance": {
+      "blockType": "Provenance",
+      "title": "出典・根拠の透明性",
+      "text": "James Bach・Cem Kanerが提唱し、Kaner, Bach, Pettichord共著『Lessons Learned in Software Testing』(2001年)でContext-Driven Schoolのアプローチとして発展・普及した。なお用語の初出時期(1984年造語説・1988年著書初出説)は今回の調査で確証を得られていない。"
+    },
+    "relatedConcepts": {
+      "blockType": "RelatedConcepts",
+      "title": "関連概念",
+      "items": [
+        {
+          "conceptId": "tdd",
+          "note": "TDDは実装前のテスト設計、探索的テストは実装後(または並行)の学習型テスト実行。両者は異なるフェーズ・目的を持つ"
+        }
+      ]
+    }
+  },
+  "tags": []
+}

@@ -108,11 +108,26 @@ qa-advisorの原典知識候補にこれらを追加する。
 - test-induced design damage（実装への過度な結合によるリファクタ困難化）
 - Mutation testingの考え方（`#1シナリオ検死官`の技術的中核。個々のテストの強度評価）
 
-**まだ裏付けの無い候補（次回以降のアイデアダンプで実例と照らして深掘りする）:**
-- 境界値分析・同値分割等の古典的テスト設計技法
-- リスクベーステスト（risk-based testing）
-- Definition of Doneの構成要素
-- 探索的テスト（exploratory testing）
+**web調査済み・KnowledgeSchema文書として作成済み（2026-07-11）:**
+deep-researchワークフロー（5テーマ・107エージェント・adversarial検証付き）で調査し、
+うち4テーマは高信頼度の裏付けが取れたため、`.waffle/documents/knowledge/`配下に
+KnowledgeSchema文書として作成・validate・render済み:
+
+- `tdd.json`（Kent Beck『Test-Driven Development: By Example』。Red/Green/Refactor）
+- `boundary-value-analysis-equivalence-partitioning.json`（Glenford Myers起源、
+  ISTQB Foundation Level Syllabusで標準化）
+- `risk-based-testing.json`（Felderer & Schieferdecker 2014、ISTQB glossary）
+- `exploratory-testing.json`（James Bach / Cem Kaner、
+  『Lessons Learned in Software Testing』2001年）
+
+**未完了・追加調査が必要:**
+- **Definition of Done（DoD）** — 同じ調査で検証済みclaimが0件だった。Scrum Guide
+  由来の正式定義、およびユーザー仮説（「AcceptanceCriteria由来のAcceptanceScenarios
+  が全て満たされていれば、そのユースケース単位のDoDとみなせる」）とDoD一般原則との
+  整合性について、別途追加調査が必要
+- **本ブレスト前半で見つけた候補**（test smells/sociable-solitary unit tests/
+  test-induced design damage/mutation testing）は今回のweb調査対象に含めておらず、
+  出典の一次資料確認はまだ済んでいない
 
 ---
 
@@ -121,8 +136,10 @@ qa-advisorの原典知識候補にこれらを追加する。
 1. ~~tech-lead-advisorとの境界を確定する~~ → 完了（本ブレストで確定・ddd-advisorも含めた3分割に修正）
 2. qa-advisorの原典知識（バックボーン）のアイデアダンプを行う（`ux-advisor`設計時と
    同じ手順: 既存advisorへの事前相談→アイデアダンプ→論点整理→合意）
-   → 一部完了（test smells/sociable-solitary/test-induced design damage/mutation testingは
-   実例で裏付け済み）。残りの候補（境界値分析・risk-based testing・DoD・探索的テスト）は
-   実例との照合が未了
-3. 実装（実際にskill documentを新設するか）は保留。まず設計（knowledgeRefsの中身・
-   判断基準の型）を固めることを優先する
+   → 4テーマ完了・KnowledgeSchema文書化済み（tdd/boundary-value-analysis-
+   equivalence-partitioning/risk-based-testing/exploratory-testing）
+3. Definition of Done（DoD）を別途追加調査する（未着手）
+4. test smells/sociable-solitary/test-induced design damage/mutation testingの
+   一次資料裏付けを行う（未着手）
+5. 実装（実際にskill documentを新設するか）は保留。知識が出揃った段階で
+   knowledgeRefsとして束ね、qa-advisorのpurpose/role/判断基準を固める
