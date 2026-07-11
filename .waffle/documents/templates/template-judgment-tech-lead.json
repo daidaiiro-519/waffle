@@ -1,0 +1,87 @@
+{
+  "documentId": "template-judgment-tech-lead",
+  "documentType": "Template",
+  "schemaRef": "TemplateSchema/v1",
+  "templateKind": "judgment",
+  "skillRef": "tech-lead-advisor",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "template-judgment-tech-lead"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "使用条件",
+      "text": "「このコードはどこに置くべきか」「この依存関係は正しいか」などの配置・レイヤー境界・依存方向に関する判断を求める相談",
+      "openingLine": "{{対象（ユーザーが提示したコード・コンポーネント・依存関係）}}について判断します。"
+    },
+    "contextBlocks": {
+      "blockType": "ContextBlocks",
+      "title": "前置きセクション",
+      "items": [
+        {
+          "title": "サブドメイン分類",
+          "guidance": "{{中核/一般/補完のいずれか。出所（ddd-advisor/既存spec/ユーザー確認）も明記}}"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "diagnosticFlow": {
+      "blockType": "DiagnosticFlow",
+      "title": "判断フロー",
+      "items": [
+        {
+          "questionId": "q1",
+          "question": "{{判断の起点となる問い（該当するknowledgeファイルの決定木から）}}",
+          "branches": [
+            {
+              "condition": "{{YESの条件}}",
+              "then": "{{YESの結論または次の問いへ}}"
+            },
+            {
+              "condition": "{{NOの条件}}",
+              "then": "次へ"
+            }
+          ]
+        },
+        {
+          "questionId": "q2",
+          "question": "{{2段階目の問い（不要なら削除）}}",
+          "branches": [
+            {
+              "condition": "{{YESの条件}}",
+              "then": "**{{判定結果}}**"
+            },
+            {
+              "condition": "{{NOの条件}}",
+              "then": "**{{判定結果}}**"
+            }
+          ]
+        }
+      ]
+    },
+    "verdict": {
+      "blockType": "Verdict",
+      "title": "判定",
+      "guidance": "「{{対象}}は「{{判定結果}}」です。」と明示した上で、{{判定理由を2〜3文で説明。参照したknowledgeファイル名と判断基準を明示して根拠を示す}}"
+    },
+    "recommendedAction": {
+      "blockType": "RecommendedAction",
+      "title": "推奨アクション",
+      "guidance": "{{具体的に次にどこへ置く・どう直すべきかを動詞で始める}}。{{代替案がある場合は併記}}"
+    },
+    "extraSections": {
+      "blockType": "ExtraSections",
+      "title": "追加セクション",
+      "items": [],
+      "emptyReason": "tech-lead-advisorの判断相談は判定→推奨アクションで完結するため。"
+    },
+    "antiPatternNote": {
+      "blockType": "AntiPatternNote",
+      "title": "注意（アンチパターンに該当する場合のみ）",
+      "guidance": "{{該当するアンチパターン名}}: {{なぜそれがアンチパターンなのかとリスクを説明。代替案とセットで提示する}}"
+    }
+  },
+  "tags": []
+}

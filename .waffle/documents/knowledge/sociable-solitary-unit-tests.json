@@ -1,0 +1,116 @@
+{
+  "documentId": "sociable-solitary-unit-tests",
+  "documentType": "Knowledge",
+  "schemaRef": "KnowledgeSchema/v2",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "sociable-solitary-unit-tests"
+    },
+    "overview": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "ユニットテストは協調オブジェクト(collaborator)を本物のまま動かすべきか、置き換えるべきか？",
+        "テストの脆さ(実装への過剰な結合)は何によって生まれるか？",
+        "この区別はテスト戦略の設計にどう影響するか？"
+      ],
+      "text": "ユニットテストを、対象の協調オブジェクト(collaborator)をどう扱うかで2分類する考え方。Jay Fieldsが考案し、Martin Fowlerが自身のbliki記事「UnitTest」(2014年公開)で整理・普及させた。"
+    },
+    "principles": {
+      "blockType": "Principles",
+      "title": "原則",
+      "items": [
+        "Solitary unit testは、テスト対象ユニットの協調オブジェクトをすべてtest double(mock/stub等)に置き換え、対象を孤立させて検証する。",
+        "Sociable unit testは、実際の協調オブジェクトをそのまま動かして検証する。Fowlerは『単一ユニットの振る舞いのテストであり、そのユニット以外はすべて正しく動作していると仮定して書く』と説明する。",
+        "Sociable unit testが実協調オブジェクトとの相互作用を許すことは、テスト対象以外のコンポーネントの不具合によってテストが失敗しうることを意味し、実装への結合による脆さの一因になりうる(ただしFowler自身は「fragile」という語を明示的には使っていない)。",
+        "この用語自体はJay Fieldsが考案したものであり、Fowlerはbliki記事でこれを採用・普及させた——Fowler自身の独自発案ではない。"
+      ]
+    },
+    "classifications": {
+      "blockType": "Classifications",
+      "title": "分類",
+      "items": [
+        {
+          "name": "Solitary",
+          "description": "collaboratorをtest doubleに置き換えて対象ユニットを孤立させるテスト"
+        },
+        {
+          "name": "Sociable",
+          "description": "実collaboratorをそのまま動かして対象ユニットの振る舞いを検証するテスト"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "decisionCriteria": {
+      "blockType": "DecisionCriteria",
+      "title": "判断基準",
+      "emptyReason": "",
+      "stages": [
+        {
+          "id": "check",
+          "label": "協調オブジェクトは軽量・高速で、副作用が無いか？"
+        },
+        {
+          "id": "sociable",
+          "label": "Sociable(実協調オブジェクトをそのまま使う)"
+        },
+        {
+          "id": "solitary",
+          "label": "Solitary(test doubleに置き換えて孤立させる)"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "check",
+          "to": "sociable",
+          "label": "はい(軽量・高速・副作用なし)"
+        },
+        {
+          "from": "check",
+          "to": "solitary",
+          "label": "いいえ(重い・遅い・副作用あり、または対象の振る舞いだけを厳密に孤立させたい)"
+        }
+      ]
+    },
+    "examples": {
+      "blockType": "Examples",
+      "title": "実例",
+      "text": "orderオブジェクトのpriceメソッドをテストする際、solitary方式ならcustomerオブジェクトをtest doubleに置き換え、customer側の不具合でorderのテストが失敗する事態を防ぐ。sociable方式なら実customerオブジェクトをそのまま使い、両者の統合された振る舞いを含めて検証する。"
+    },
+    "antiPatterns": {
+      "blockType": "AntiPatterns",
+      "title": "アンチパターン",
+      "items": [
+        {
+          "name": "全てのユニットテストを機械的にsolitaryで書く",
+          "problem": "協調オブジェクト間の実際の統合不具合を検出できなくなり、個々のユニットが仕様通りでも組み合わせると壊れるという欠陥を見逃す"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "provenance": {
+      "blockType": "Provenance",
+      "title": "出典・根拠の透明性",
+      "source": "Jay Fields『Working Effectively with Unit Tests』における語の考案、およびMartin Fowlerのbliki記事「UnitTest」(martinfowler.com、2014年5月5日公開、2014年10月24日にsolitary/sociable語彙を追加、2017年3月9日にこれらの用語を主要な扱いに格上げ)に基づく。",
+      "caveats": "「実装への結合による脆さ(fragility)」という表現は、Fowlerの原文(『2021 Test Shapes』記事等)の説明を妥当に敷衍したものであり、Fowler自身が「fragile」という語を明示的に使っているわけではない。"
+    },
+    "relatedConcepts": {
+      "blockType": "RelatedConcepts",
+      "title": "関連概念",
+      "items": [
+        {
+          "conceptId": "test-smells",
+          "note": "solitary化の過剰適用がConditional Test Logic等のtest smellsを誘発することがある"
+        },
+        {
+          "conceptId": "test-induced-design-damage",
+          "note": "solitaryを追求しすぎることが、test-induced design damageが指摘する過剰な間接化(モック駆動設計)の一因になりうる"
+        }
+      ],
+      "emptyReason": ""
+    }
+  },
+  "tags": []
+}

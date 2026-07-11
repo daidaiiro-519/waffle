@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "TemplateSchema/v1",
+  "title": "Template Schema v1",
+  "description": "Document集約の一documentType（Template）。advisor Skillの回答テンプレート（ddd-advisor/tech-lead-advisor/qa-advisor等が`references/template-*.md`として持つ、`{{プレースホルダー}}`混じりの回答骨格）を構造化する。templateKindで骨格の種類を判別する（現状は既に複数のadvisorで繰り返し観測された『判断相談』骨格のみ。概念質問・実装相談等の骨格はまだ実例が1つずつしかなく、architecture-evidence-based-scope（YAGNI）の基準に照らして時期尚早のため対象外——将来、同じ骨格が複数回観測された時点で新しいtemplateKindとして追加する）。この文書自体の値（trigger.text等）は最終的な回答内容ではなく、advisorが相談ごとに埋める『{{}}』プレースホルダーを含んだテンプレート文字列そのものである点に注意。",
+
+  "type": "object",
+  "required": ["documentId", "documentType", "schemaRef", "templateKind", "skillRef", "status", "content"],
+  "x-source-target": ".waffle/documents/templates/{documentId}.json",
+  "x-render-target": {
+    "formats": ["md"],
+    "pathVars": {
+      "judgment": { "skillRef": "doc.skillRef" }
+    },
+    "path": {
+      "judgment": ".waffle/templates/{documentId}.md"
+    },
+    "deploy": {
+      "judgment": [".claude/skills/{skillRef}/references/{documentId}.md"]
+    }
+  },
+
+  "allOf": [
+    {
+      "if": { "properties": { "templateKind": { "const": "judgment" } }, "required": ["templateKind"] },
+      "then": { "properties": { "content": { "$ref": "#/$defs/JudgmentTemplateContent" } } }
+    }
+  ],
+
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "x-prompt-write": "このTemplateを一意に識別するIDを kebab-case で付けてください。deploy先のファイル名にもそのまま使われます。例: template-judgment, template-strength-assessment"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "Template"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "TemplateSchema/v1"
+    },
+    "templateKind": {
+      "type": "string",
+      "enum": ["judgment"],
+      "x-prompt-write": "骨格の種類を指定してください。現状は判断相談（診断フロー→判定→推奨アクション→注意という骨格）を意味する judgment のみ対応。"
+    },
+    "skillRef": {
+      "type": "string",
+      "x-prompt-write": "このTemplateが属するSkillのdocumentIdを指定してください。例: tech-lead-advisor, qa-advisor。deploy先(.claude/skills/{skillRef}/references/)の解決に使う。"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "ACTIVE", "DEPRECATED"],
+      "x-prompt-write": "作成中は DRAFT、利用可能になったら ACTIVE、廃止する場合は DEPRECATED を指定してください。"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-prompt-write": "このTemplateを分類するタグを付けてください。例: [\"skill:qa-advisor\"]"
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "_index": {
+      "description": "waffle が x-prompt-query から自動生成する。AI は直接書かない。",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["blockType", "prompt"],
+            "properties": {
+              "blockType": { "type": "string" },
+              "prompt": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "content": {}
+  },
+
+  "$defs": {
+    "JudgmentTemplateContent": {
+      "type": "object",
+      "required": ["title", "trigger", "diagnosticFlow", "verdict", "recommendedAction", "antiPatternNote"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "$ref": "#/$defs/TitleBlock" },
+        "trigger": { "$ref": "#/$defs/TriggerBlock" },
+        "contextBlocks": { "$ref": "#/$defs/ContextBlocksBlock" },
+        "diagnosticFlow": { "$ref": "#/$defs/DiagnosticFlowBlock" },
+        "verdict": { "$ref": "#/$defs/VerdictBlock" },
+        "recommendedAction": { "$ref": "#/$defs/RecommendedActionBlock" },
+        "extraSections": { "$ref": "#/$defs/ExtraSectionsBlock" },
+        "antiPatternNote": { "$ref": "#/$defs/AntiPatternNoteBlock" }
+      }
+    },
+
+    "TitleBlock": {
+      "type": "object",
+      "required": ["blockType", "title"],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-prompt-query": "このTemplateのタイトルを持ちます。documentId がそのまま使われます。",
+      "x-render": [],
+      "properties": {
+        "blockType": { "type": "string", "const": "Title" },
+        "title": { "type": "string", "x-prompt-write": "documentId をそのまま設定してください。" }
+      }
+    },
+
+    "TriggerBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "text", "openingLine"],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "この判断相談テンプレートがいつ使われるべきかと、判断フローに入る直前に相談対象を一文でスコープするopeningLineを持ちます。SKILL.md本文の`responseTypes`テーブルと重複するが、テンプレート単体で見た時に発動条件・対象の掴み方が分かるよう残す。",
+      "x-render": [{ "as": "paragraph", "from": "text" }, { "as": "paragraph", "from": "openingLine" }],
+      "properties": {
+        "blockType": { "type": "string", "const": "Trigger" },
+        "title": { "type": "string", "const": "使用条件" },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "この骨格がいつ使われるべきかを一文で書いてください（例:「『このコードはどこに置くべきか』等の配置・依存方向に関する判断を求める相談」）。実際の相談文ではなく、発動条件の説明であることに注意。"
+        },
+        "openingLine": {
+          "type": "string",
+          "x-prompt-write": "判断フローに入る前に相談対象を一文でスコープする文を{{}}プレースホルダー込みで書いてください（例:「{{対象（ユーザーが提示したシステム・機能・設計）}}について判断します。」）。"
+        }
+      }
+    },
+
+    "ContextBlocksBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items", "emptyReason"],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "判断フローに入る前に、判断の前提となる分類・階層を確認させる任意の前置きセクションを持ちます（例: tech-lead-advisorの『サブドメイン分類』、qa-advisorの『階層の確認』）。前提確認が不要な骨格では空配列。",
+      "x-render": [{ "as": "section", "from": "items", "titleFrom": "title", "each": [{ "as": "paragraph", "from": "guidance" }] }],
+      "properties": {
+        "blockType": { "type": "string", "const": "ContextBlocks" },
+        "title": { "type": "string", "const": "前置きセクション" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "判断フローに入る前に確認させたい前提（分類・階層等）があれば、見出しと、そこに何を書くべきかの指示（{{}}プレースホルダー込み）を列挙してください。不要なら空配列。",
+          "items": {
+            "type": "object",
+            "required": ["title", "guidance"],
+            "properties": {
+              "title": { "type": "string", "x-prompt-write": "前置きセクションの見出し。例: サブドメイン分類" },
+              "guidance": { "type": "string", "x-prompt-write": "そのセクションに何を書くべきかの指示文（{{}}プレースホルダーを使う）。" }
+            }
+          }
+        },
+        "emptyReason": {
+          "type": "string",
+          "x-prompt-write": "itemsが空配列の場合、前置きセクションが不要な理由を書いてください。空でない場合は空文字でよい。"
+        }
+      }
+    },
+
+    "DiagnosticFlowBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items"],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "判断・診断の起点となる問いと、その分岐（YES/NO等）を持ちます。骨格の核であり、advisorが相談ごとにこの構造を辿って回答を組み立てる。",
+      "x-render": [{ "as": "section", "from": "items", "titleFrom": "question", "each": [{ "as": "table", "from": "branches", "columns": [{ "field": "condition", "header": "条件" }, { "field": "then", "header": "結果" }] }] }],
+      "properties": {
+        "blockType": { "type": "string", "const": "DiagnosticFlow" },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "このセクションの見出しを書いてください。骨格の性質に応じて『判断フロー』『診断フロー』『計画フロー』等、文脈に合った語を選んでよい（見出し語自体は骨格ごとに変わってよいが、直後のitemsの構造は共通）。"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "問いを順に列挙してください。各問いは{{}}プレースホルダーを含む問い文と、条件ごとの分岐（次の問いへ進む／最終的な結論に至る）を持たせてください。",
+          "items": {
+            "type": "object",
+            "required": ["questionId", "question", "branches"],
+            "properties": {
+              "questionId": { "type": "string", "x-prompt-write": "問いの識別子。例: q1" },
+              "question": { "type": "string", "x-prompt-write": "問い文（{{}}プレースホルダーを含む）。例:「{{判断の起点となる問い}}」" },
+              "branches": {
+                "type": "array",
+                "x-prompt-write": "この問いに対する条件ごとの分岐を列挙してください。",
+                "items": {
+                  "type": "object",
+                  "required": ["condition", "then"],
+                  "properties": {
+                    "condition": { "type": "string", "x-prompt-write": "分岐条件（例: YESの条件、NOの条件）。" },
+                    "then": { "type": "string", "x-prompt-write": "その条件のときどうなるか（次の問いへ進む旨、または結論そのもの）。" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "VerdictBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "guidance"],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "診断フローの結果として示すべき判定結果の書き方を持ちます。",
+      "x-render": [{ "as": "paragraph", "from": "guidance" }],
+      "properties": {
+        "blockType": { "type": "string", "const": "Verdict" },
+        "title": { "type": "string", "const": "判定" },
+        "guidance": {
+          "type": "string",
+          "x-prompt-write": "判定結果をどう提示すべきかの指示を{{}}プレースホルダー込みで書いてください。判定理由（バックボーンの定義・原則に基づく根拠）を必ず示すよう指示に含めること。"
+        }
+      }
+    },
+
+    "RecommendedActionBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "guidance"],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "判定を踏まえて次に何をすべきかの書き方を持ちます。判定セクションと明確に分離し、同じセクションに混在させない。",
+      "x-render": [{ "as": "paragraph", "from": "guidance" }],
+      "properties": {
+        "blockType": { "type": "string", "const": "RecommendedAction" },
+        "title": { "type": "string", "const": "推奨アクション" },
+        "guidance": {
+          "type": "string",
+          "x-prompt-write": "推奨アクションをどう提示すべきかの指示を{{}}プレースホルダー込みで書いてください。動詞で始まる具体的な行動を示すよう指示に含めること。"
+        }
+      }
+    },
+
+    "ExtraSectionsBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items", "emptyReason"],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-query": "判定・推奨アクションの後に必要な、骨格固有の追加セクション（例: qa-advisorの『診断的差し戻し』）を持ちます。不要なら空配列。",
+      "x-render": [{ "as": "section", "from": "items", "titleFrom": "title", "each": [{ "as": "paragraph", "from": "guidance" }] }],
+      "properties": {
+        "blockType": { "type": "string", "const": "ExtraSections" },
+        "title": { "type": "string", "const": "追加セクション" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "判定・推奨アクションの後に必要な追加セクションがあれば、見出しと書き方の指示を列挙してください。不要なら空配列。",
+          "items": {
+            "type": "object",
+            "required": ["title", "guidance"],
+            "properties": {
+              "title": { "type": "string", "x-prompt-write": "追加セクションの見出し。例: 診断的差し戻し（該当する場合のみ）" },
+              "guidance": { "type": "string", "x-prompt-write": "そのセクションに何を書くべきかの指示文（{{}}プレースホルダーを使う）。" }
+            }
+          }
+        },
+        "emptyReason": {
+          "type": "string",
+          "x-prompt-write": "itemsが空配列の場合、追加セクションが不要な理由を書いてください。空でない場合は空文字でよい。"
+        }
+      }
+    },
+
+    "AntiPatternNoteBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "guidance"],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "判定がアンチパターンに該当する場合にのみ書くべき注意の書き方を持ちます。",
+      "x-render": [{ "as": "paragraph", "from": "guidance" }],
+      "properties": {
+        "blockType": { "type": "string", "const": "AntiPatternNote" },
+        "title": { "type": "string", "const": "注意（アンチパターンに該当する場合のみ）" },
+        "guidance": {
+          "type": "string",
+          "x-prompt-write": "アンチパターンに該当する場合に何を書くべきかの指示を{{}}プレースホルダー込みで書いてください。該当するアンチパターン名とリスクをセットで示すよう指示に含めること。"
+        }
+      }
+    }
+  }
+}

@@ -120,14 +120,29 @@ KnowledgeSchema文書として作成・validate・render済み:
 - `exploratory-testing.json`（James Bach / Cem Kaner、
   『Lessons Learned in Software Testing』2001年）
 
+**web調査済み・KnowledgeSchema文書として作成済み（2026-07-11、追加分）:**
+本ブレスト前半で見つけた4候補（test smells/sociable-solitary unit tests/
+test-induced design damage/mutation testing）についても、deep-researchワークフロー
+（6角度・104エージェント・adversarial検証付き）で追加調査し、`.waffle/documents/knowledge/`
+配下にKnowledgeSchema文書として作成・validate・render済み:
+
+- `test-smells.json`（Gerard Meszaros『xUnit Test Patterns: Refactoring Test Code』
+  2007年。Code/Behavior/Project Smellsの3分類、Code Smellsの代表例5種）
+- `sociable-solitary-unit-tests.json`（Jay Fields考案・Martin Fowlerがbliki記事
+  「UnitTest」2014年で整理・普及）
+- `test-induced-design-damage.json`（DHH 2014年の一連のブログ記事とMartin Fowler
+  司会『Is TDD Dead?』対談シリーズ。DHH側/Beck・Fowler側の対立を中立的に整理）
+- `mutation-testing.json`（現代ツール文書によるmutant/killed/survivedの基本定義。
+  起源論文Hamlet 1977・DeMillo et al. 1978は書誌情報のみ確認でき、論文本文への
+  直接検証は今回未達——provenance.caveatsに正直に記録）
+
+これで`定義済みDefinition of Done`と合わせ、qa-advisorの原典知識候補は当初の
+動機（`#1シナリオ検死官`）に直結する9本が出揃った。
+
 **未完了・追加調査が必要:**
-- **Definition of Done（DoD）** — 同じ調査で検証済みclaimが0件だった。Scrum Guide
-  由来の正式定義、およびユーザー仮説（「AcceptanceCriteria由来のAcceptanceScenarios
-  が全て満たされていれば、そのユースケース単位のDoDとみなせる」）とDoD一般原則との
-  整合性について、別途追加調査が必要
-- **本ブレスト前半で見つけた候補**（test smells/sociable-solitary unit tests/
-  test-induced design damage/mutation testing）は今回のweb調査対象に含めておらず、
-  出典の一次資料確認はまだ済んでいない
+- ~~Definition of Done（DoD）~~ → 完了（2026-07-11、`definition-of-done.json`）
+- ~~test smells/sociable-solitary/test-induced design damage/mutation testing~~
+  → 完了（2026-07-11、上記4本）
 
 ### 副産物: KnowledgeSchema自体の構造レビュー（v1→v2、2026-07-11）
 
@@ -161,10 +176,11 @@ check-schema-version-drift clean・render確認済み。
 3. ~~Definition of Done（DoD）を別途追加調査する~~ → 完了（2026-07-11、
    `definition-of-done.json`として文書化。deep-research最終統合ステップが
    バグりダミー値を返したため、journal.jsonlの生検証結果から手動で再構成した）
-4. test smells/sociable-solitary/test-induced design damage/mutation testingの
-   一次資料裏付けを行う（未着手）
-5. 実装（実際にskill documentを新設するか）は保留。知識が出揃った段階で
-   knowledgeRefsとして束ね、qa-advisorのpurpose/role/判断基準を固める
+4. ~~test smells/sociable-solitary/test-induced design damage/mutation testingの
+   一次資料裏付けを行う~~ → 完了（2026-07-11、4本文書化。詳細は上記）
+5. qa-advisor Skill本体の新設に着手（2026-07-11〜）。9本のKnowledge文書が
+   出揃ったため、knowledgeRefsとして束ね、purpose/role/判断基準・回答テンプレートを
+   ddd-advisor/tech-lead-advisorと同型で構築する
 
 ---
 
@@ -202,29 +218,25 @@ waffleのscaffold+fill+renderの仕組みを使えば、目的・タスク・成
 x-prompt-write通りに埋めるだけでSubagent定義（またはAgent呼び出しパラメータ）を
 その都度生成できる。この場合、常設のSubagentを用意するメリットは薄いのではないか。
 
-**AIの見解:** 「常設(persisted) vs スポット(ad-hoc)」の実質的な論点は、
-「プロセスが常時稼働し続けるか」ではない（Claude CodeのAgent呼び出しは
-persisted/spotどちらであっても、呼び出しごとにステートレスで新規に開始される
-——「新しいAgent呼び出しは過去のやり取りの記憶を持たない」という既存の制約は
-どちらの方式でも同じ）。実質的な論点は「**skillPreloads・purpose・roleという
-定義自体を、文書として永続化するか、その都度その場で組み立てるか**」。
+**訂正（2026-07-11、ユーザー指摘により確定）:** AIは当初これをYAGNI
+（`architecture-evidence-based-scope`、同じ組み合わせの実例が複数回観測
+されてから永続化を判断する）で処理しようとしたが、ユーザーから明確な訂正が
+入った。この判断は「実現の頻度」で決める話ではなく、**Waffleを個人利用ではなく
+OSSとして出荷する以上、プロダクトの仕組みとして今すぐ確定させるべき
+コンセプトレベルの決定**である。理由は2点:
 
-この判断も、これまで繰り返し適用してきたYAGNI（`architecture-evidence-based-scope`）
-と同じ基準で決めるべきだと考える: **同じ役割・同じskillPreloadsの組み合わせが
-繰り返し必要になったという具体的な実例が、複数回観測されて初めて永続化する**。
-「今後こういう役割が要りそうだから」という予測だけで先に常設Subagent文書を
-作るのは、このセッション全体で一貫して避けてきた「実例が無い段階での構造の
-先取り」そのものになる。
+1. 委譲するタスクごとに目的・受け入れ基準が変わるため、「同じ組み合わせの
+   繰り返し」という発生パターン自体を前提にできない
+2. Claude Code・GitHub Copilot・Kiro等、ツールごとにエージェント定義ファイルの
+   形式が異なり共通化できない——ツール固有形式で永続登録する設計は、そもそも
+   OSSとして複数ツールにまたがる想定と相性が悪い
 
-今回の`#4`未踏行トリアージのようなタスクについては、まだ実際に運用して
-繰り返し発生パターンを確認したわけではないため、**現時点ではスポット生成が妥当**。
-同じ形（qa-advisor＋tech-lead-advisorのskillPreloads、同じgoal/task形状）での
-呼び出しが複数回実際に観測された時点で、初めて`AgentSchema`のSubagent文書として
-永続化するかどうかを判断する。永続化のメリットは（a）skillPreloadsが呼び出しの
-たびにブレない一貫性、（b）`check-agent-skill-drift`による機械的なガバナンス
-が効くこと、の2点だが、これらは「実際に繰り返し使われている」という前提が
-無ければ意味を持たない。
+**確定した設計:** Subagentは**都度、Orchestratorが動的にゴール指定書を
+render+deployせずテキストとして組み立てる**方式に統一する（`.claude/agents/`への
+永続登録はしない）。これは`AgentSchema/v2`として実装済み——`SubagentContent`を
+goal/persona/skillPreloads/task/deliverable/acceptanceCriteriaの物語順で再構成し、
+`x-render-target.deploy.subagent`を空にして永続ファイルを書き出さないようにした
+（実際にddd-advisorへの並列dispatchで動作検証済み。詳細はコミット`238a13c`）。
 
-**次のアクション:** `#4`（ゼロコード審判）またはqa-advisorの相談パターンが
-実際に複数回発生してから、Subagent文書として永続化するかどうかを再検討する。
-現時点ではAgentSchemaへの追加作業は行わない。
+**次のアクション:** qa-advisor Skill本体を新設した後、実際の批評依頼で
+`AgentSchema/v2`のgoal-dispatch機構を使って呼び出す運用を試す。

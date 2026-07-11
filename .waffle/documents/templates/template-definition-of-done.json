@@ -1,0 +1,68 @@
+{
+  "documentId": "template-definition-of-done",
+  "documentType": "Template",
+  "schemaRef": "TemplateSchema/v1",
+  "templateKind": "judgment",
+  "skillRef": "qa-advisor",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "template-definition-of-done"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "使用条件",
+      "text": "「このタスクの完了基準は何か」「このAcceptanceCriteriaで十分か」等、Definition of Doneの策定を求める相談",
+      "openingLine": "{{対象（ユーザーが提示したタスク・usecase・PBI）}}の完了基準について判断します。"
+    },
+    "contextBlocks": {
+      "blockType": "ContextBlocks",
+      "title": "前置きセクション",
+      "items": [],
+      "emptyReason": "階層の確認そのものが診断フローの最初の問いであり、別の前置きセクションは不要なため。"
+    },
+    "diagnosticFlow": {
+      "blockType": "DiagnosticFlow",
+      "title": "階層の確認",
+      "items": [
+        {
+          "questionId": "q1",
+          "question": "相談内容は、組織・プロダクト横断で一律に適用される普遍的な基準の話か、個々のタスク固有の基準の話か。",
+          "branches": [
+            {
+              "condition": "組織・プロダクト横断",
+              "then": "Definition of Done（definition-of-done.mdの分類）に該当"
+            },
+            {
+              "condition": "タスク固有",
+              "then": "Acceptance Criteria（definition-of-done.mdの分類）に該当。両者を混同しない"
+            }
+          ]
+        }
+      ]
+    },
+    "verdict": {
+      "blockType": "Verdict",
+      "title": "判定",
+      "guidance": "「{{対象}}の完了基準は「{{Definition of Done／Acceptance Criteria}}」の階層に属します。」と明示した上で、{{definition-of-done.mdの定義・両者の階層関係を引用しつつ、判定理由を説明する}}"
+    },
+    "recommendedAction": {
+      "blockType": "RecommendedAction",
+      "title": "推奨アクション",
+      "guidance": "{{Definition of Doneの場合: 組織・プロダクト横断で安定的に適用できる基準か（タスクごとに変わっていないか）を確認する}}。{{Acceptance Criteriaの場合: 検証可能な基準になっているか（「頑張る」「漏れなく確認する」のような検証不能な基準になっていないか）を確認する}}"
+    },
+    "extraSections": {
+      "blockType": "ExtraSections",
+      "title": "追加セクション",
+      "items": [],
+      "emptyReason": "完了基準・品質ゲート相談は階層確認→判定→推奨アクションで完結するため。"
+    },
+    "antiPatternNote": {
+      "blockType": "AntiPatternNote",
+      "title": "注意（アンチパターンに該当する場合のみ）",
+      "guidance": "{{Definition of DoneとAcceptance Criteriaを混同している場合、あるいはScrum由来のDoDという語を別の粒度の概念に転用している場合、その混同がもたらす実害（読み手が誤ったメンタルモデルを持ち込む等）を説明する}}"
+    }
+  },
+  "tags": []
+}

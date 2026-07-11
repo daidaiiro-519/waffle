@@ -1,0 +1,82 @@
+{
+  "documentId": "template-judgment",
+  "documentType": "Template",
+  "schemaRef": "TemplateSchema/v1",
+  "templateKind": "judgment",
+  "skillRef": "ddd-advisor",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "template-judgment"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "使用条件",
+      "text": "「〜はどの{{概念名}}になるか」「〜の設計はどうすべきか」などの意思決定を求める質問",
+      "openingLine": "{{対象（ユーザーが提示したシステム・機能・設計）}}について判断します。"
+    },
+    "contextBlocks": {
+      "blockType": "ContextBlocks",
+      "title": "前置きセクション",
+      "items": [],
+      "emptyReason": "ddd-advisorの判断相談は前提となる分類・階層の確認を必要としないため。"
+    },
+    "diagnosticFlow": {
+      "blockType": "DiagnosticFlow",
+      "title": "判断フロー",
+      "items": [
+        {
+          "questionId": "q1",
+          "question": "{{判断の起点となる問い}}",
+          "branches": [
+            {
+              "condition": "{{YESの条件}}",
+              "then": "{{YESの結論または次の問いへ}}"
+            },
+            {
+              "condition": "{{NOの条件}}",
+              "then": "次へ"
+            }
+          ]
+        },
+        {
+          "questionId": "q2",
+          "question": "{{2段階目の問い（不要なら削除）}}",
+          "branches": [
+            {
+              "condition": "{{YESの条件}}",
+              "then": "**{{判定結果}}**"
+            },
+            {
+              "condition": "{{NOの条件}}",
+              "then": "**{{判定結果}}**"
+            }
+          ]
+        }
+      ]
+    },
+    "verdict": {
+      "blockType": "Verdict",
+      "title": "判定",
+      "guidance": "「{{対象}}は「{{判定結果}}」です。」と明示した上で、{{判定理由を2〜3文で説明。本書の定義・原則に基づいて根拠を示す}}"
+    },
+    "recommendedAction": {
+      "blockType": "RecommendedAction",
+      "title": "推奨アクション",
+      "guidance": "{{具体的に次に何をすべきかを動詞で始める}}。{{代替案がある場合は併記}}"
+    },
+    "extraSections": {
+      "blockType": "ExtraSections",
+      "title": "追加セクション",
+      "items": [],
+      "emptyReason": "ddd-advisorの判断相談は判定→推奨アクションで完結するため。"
+    },
+    "antiPatternNote": {
+      "blockType": "AntiPatternNote",
+      "title": "注意（アンチパターンに該当する場合のみ）",
+      "guidance": "{{該当するアンチパターン名}}: {{なぜそれがアンチパターンなのかとリスクを説明}}"
+    }
+  },
+  "tags": []
+}

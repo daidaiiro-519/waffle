@@ -1,0 +1,88 @@
+{
+  "documentId": "template-test-planning",
+  "documentType": "Template",
+  "schemaRef": "TemplateSchema/v1",
+  "templateKind": "judgment",
+  "skillRef": "qa-advisor",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "template-test-planning"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "使用条件",
+      "text": "「どこにテスト工数を厚くすべきか」「境界値はどう洗い出すか」「探索的テストのセッションをどう設計するか」等、テスト戦略・計画の立案を求める相談",
+      "openingLine": "{{対象（ユーザーが提示した機能・領域）}}のテスト計画について判断します。"
+    },
+    "contextBlocks": {
+      "blockType": "ContextBlocks",
+      "title": "前置きセクション",
+      "items": [],
+      "emptyReason": "テスト計画相談は前提となる分類・階層の確認を必要とせず、計画フローから直接始めるため。"
+    },
+    "diagnosticFlow": {
+      "blockType": "DiagnosticFlow",
+      "title": "計画フロー",
+      "items": [
+        {
+          "questionId": "q1",
+          "question": "対象領域のリスク（発生可能性×影響度）は高いか。",
+          "branches": [
+            {
+              "condition": "高い",
+              "then": "risk-based-testing.mdの重量な手法（FMEA/FTA等）で網羅的に洗い出すことを検討する"
+            },
+            {
+              "condition": "低い",
+              "then": "risk-based-testing.mdの軽量な手法（高中低の簡易スケール）で十分"
+            }
+          ]
+        },
+        {
+          "questionId": "q2",
+          "question": "個々のテストケースの入力値をどう選定するか。",
+          "branches": [
+            {
+              "condition": "常に",
+              "then": "boundary-value-analysis-equivalence-partitioning.mdの技法（同値分割で代表値を選び、境界値を重点的に検証する）に従う"
+            }
+          ]
+        },
+        {
+          "questionId": "q3",
+          "question": "仕様化されたテストケースだけでは見つけにくい欠陥（未知の使い方・組み合わせ）を探したいか。",
+          "branches": [
+            {
+              "condition": "YES",
+              "then": "exploratory-testing.mdの原則に基づき、チャーター（探索の目的・範囲）を定めたセッションベースドテストを設計する"
+            }
+          ]
+        }
+      ]
+    },
+    "verdict": {
+      "blockType": "Verdict",
+      "title": "判定",
+      "guidance": "「{{対象}}のテスト計画は「{{要約}}」とすべきです。」と明示した上で、{{該当するknowledgeファイルの原則・判断基準を引用しつつ、具体的な配分・技法選定の理由を説明する}}"
+    },
+    "recommendedAction": {
+      "blockType": "RecommendedAction",
+      "title": "推奨アクション",
+      "guidance": "{{リスクが高い箇所への具体的な配分方針}}。{{境界値・同値分割で洗い出すべき具体的なケース}}。{{探索的テストが有効な場合はチャーターの案}}"
+    },
+    "extraSections": {
+      "blockType": "ExtraSections",
+      "title": "追加セクション",
+      "items": [],
+      "emptyReason": "テスト計画相談は計画フロー→判定→推奨アクションで完結するため。"
+    },
+    "antiPatternNote": {
+      "blockType": "AntiPatternNote",
+      "title": "注意（アンチパターンに該当する場合のみ）",
+      "guidance": "{{全機能に均等にテスト工数を配分する等、risk-based-testing.mdが挙げるアンチパターンに該当する場合、そのリスクを説明する}}"
+    }
+  },
+  "tags": []
+}
