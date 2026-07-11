@@ -14,7 +14,6 @@ from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
-from waffle.application.usecases.check_agent_skill_drift import CheckAgentSkillDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
@@ -116,11 +115,6 @@ def check_scenario_drift(specPath: str, testPath: str) -> dict:
 def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict:
     """DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。"""
     return _dict(CheckSchemaVersionDrift(_docs(), _schemas()).run(documentsRoot))
-
-@mcp.tool
-def check_agent_skill_drift(documentsRoot: str = ".waffle/documents") -> dict:
-    """subagentのskillPreloadsが参照するSkillの実在性・プリロード可能性を検証（uc-check-agent-skill-drift）。"""
-    return _dict(CheckAgentSkillDrift(_docs()).run(documentsRoot))
 
 @mcp.tool
 def check_usecase_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases") -> dict:

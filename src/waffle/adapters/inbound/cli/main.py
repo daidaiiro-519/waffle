@@ -15,7 +15,6 @@ from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.check_agent_skill_drift import CheckAgentSkillDrift
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
@@ -133,13 +132,6 @@ def check_schema_version_drift(
 ) -> None:
     """DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。"""
     _emit(CheckSchemaVersionDrift(_docs(), _schemas()).run(documents_root))
-
-@app.command("check-agent-skill-drift")
-def check_agent_skill_drift(
-    documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
-) -> None:
-    """subagentのskillPreloadsが参照するSkillの実在性・プリロード可能性を検証（uc-check-agent-skill-drift）。"""
-    _emit(CheckAgentSkillDrift(_docs()).run(documents_root))
 
 @app.command("check-usecase-class-drift")
 def check_usecase_class_drift(

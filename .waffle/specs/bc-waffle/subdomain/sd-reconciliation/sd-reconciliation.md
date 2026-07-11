@@ -20,7 +20,6 @@
 - uc-check-spec-integrity
 - uc-check-scenario-drift
 - uc-check-schema-version-drift
-- uc-check-agent-skill-drift
 - uc-check-usecase-class-drift
 
 ---
