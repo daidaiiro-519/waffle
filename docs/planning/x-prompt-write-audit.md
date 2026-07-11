@@ -211,7 +211,17 @@ spec側schema家族の語彙混入なしを確認。
 
 **総フィールド数:** 22件　**20字未満:** 10件　**重複テキスト:** 0種
 
-**ステータス:** 未着手
+**ステータス:** 完了（2026-07-11）
+
+**対応内容:** 9フィールドを修正（`ClassificationsBlock.name/description`・
+`DecisionCriteriaBlock.stages.label`・`DecisionCriteriaBlock.transitions.
+from/to/label`・`AntiPatternsBlock.name/problem`・`RelatedConceptsBlock.note`）。
+主に例の追加と、`transitions.from/to`が`stages`で宣言済みのidを再利用すべき
+という指示の追加（DomainSpecSchemaのpostState等と同種のパターン）。
+
+**レビュー:** JSON構文・diff行数（9行、意図通り）・全knowledge文書validate・
+pytest 188件green・重複0件・語彙漏れ（schema description内の既存"engine"
+言及はx-prompt-write対象外のため許容）を確認済み。
 
 ### 薄いフィールド（20字未満、要見直し）
 

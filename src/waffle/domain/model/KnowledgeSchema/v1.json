@@ -148,8 +148,8 @@
             "type": "object",
             "required": ["name", "description"],
             "properties": {
-              "name": { "type": "string", "x-prompt-write": "分類名。" },
-              "description": { "type": "string", "x-prompt-write": "その分類の特徴。" }
+              "name": { "type": "string", "x-prompt-write": "分類名。例: core / supporting / generic" },
+              "description": { "type": "string", "x-prompt-write": "その分類の特徴を1文で。例: 競争優位を生む中核的な業務領域" }
             }
           }
         }
@@ -174,7 +174,7 @@
             "required": ["id", "label"],
             "properties": {
               "id": { "type": "string", "x-prompt-write": "ノードの識別子。例: q1" },
-              "label": { "type": "string", "x-prompt-write": "問いや帰結の短い文言。" }
+              "label": { "type": "string", "x-prompt-write": "問いや帰結の短い文言。例: 複数集約にまたがるか？" }
             }
           }
         },
@@ -185,9 +185,9 @@
             "type": "object",
             "required": ["from", "to"],
             "properties": {
-              "from": { "type": "string", "x-prompt-write": "遷移元ノードのid。" },
-              "to": { "type": "string", "x-prompt-write": "遷移先ノードのid。" },
-              "label": { "type": "string", "x-prompt-write": "遷移条件（回答）の短い文言。" }
+              "from": { "type": "string", "x-prompt-write": "遷移元ノードのid。stagesで宣言済みのidの中から選ぶ。" },
+              "to": { "type": "string", "x-prompt-write": "遷移先ノードのid。stagesで宣言済みのidの中から選ぶ。" },
+              "label": { "type": "string", "x-prompt-write": "遷移条件（回答）の短い文言。例: はい / いいえ" }
             }
           }
         }
@@ -228,8 +228,8 @@
             "type": "object",
             "required": ["name", "problem"],
             "properties": {
-              "name": { "type": "string", "x-prompt-write": "アンチパターン名。" },
-              "problem": { "type": "string", "x-prompt-write": "何が問題かの説明。" }
+              "name": { "type": "string", "x-prompt-write": "アンチパターン名。何が誤りかが分かる短い名詞句で。例: 貧血ドメインモデル" },
+              "problem": { "type": "string", "x-prompt-write": "その誤りが引き起こす具体的な問題を1文で。" }
             }
           }
         }
@@ -271,7 +271,7 @@
             "required": ["conceptId", "note"],
             "properties": {
               "conceptId": { "type": "string", "x-prompt-write": "関連するKnowledge documentのdocumentId。" },
-              "note": { "type": "string", "x-prompt-write": "どう関連するかの短い説明。" }
+              "note": { "type": "string", "x-prompt-write": "どう関連するかを1文で。例: この概念の前提となる基礎概念" }
             }
           }
         }
