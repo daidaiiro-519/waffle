@@ -13,7 +13,7 @@
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "Agent(subagent)集約の実インスタンスがskillPreloadsで参照するSkillが、実在するか・Claude Codeの制約上プリロード可能か（disable-model-invocation:trueでないか）を機械的に検証する。Waffleのschema単体からは検出できないSubagent文書↔Skill文書間の参照整合性のドリフト。"
+      "text": "Agent(subagent)集約の実インスタンスがskillPreloadsで参照するSkillが、実在するかを機械的に検証する。Waffleのschema単体からは検出できないSubagent文書↔Skill文書間の参照整合性のドリフト。"
     },
     "name": {
       "blockType": "Name",
@@ -24,12 +24,12 @@
       "blockType": "ActorIntent",
       "title": "主アクターと意図",
       "actor": "Orchestrator（HarnessAgent）",
-      "intent": "Subagentがskillsとしてプリロード指定しているSkillが、実在しかつプリロード可能な状態であるかを確認したい"
+      "intent": "Subagentがskillsとしてプリロード指定しているSkillが、実在する状態であるかを確認したい"
     },
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "AgentSchemaとSkillSchemaはそれぞれ独立に検証されるため、Subagentが参照するSkillの実在性やプリロード可否（Claude Code側の制約）は、どちらのschema単体からも検出できない盲点になっている。この検知が無ければ、実際にはロードできないSkillをプリロード指定したまま気づかれず、実行時に初めて（あるいは気づかれないまま）機能しない。"
+      "rationale": "AgentSchemaとSkillSchemaはそれぞれ独立に検証されるため、Subagentが参照するSkillの実在性は、どちらのschema単体からも検出できない盲点になっている。この検知が無ければ、実在しないSkillをプリロード指定したまま気づかれず、実行時に初めて（あるいは気づかれないまま）機能しない。"
     },
     "externalActors": {
       "blockType": "ExternalActors",
@@ -68,14 +68,8 @@
         },
         {
           "from": "AgentSkillTree",
-          "to": "AgentSkillTree",
-          "message": "実在するSkill documentについて、content.invocationMode.manualOnlyがtrueでないか（プリロード可能か）を確認する",
-          "kind": "self"
-        },
-        {
-          "from": "AgentSkillTree",
           "to": "Orchestrator",
-          "message": "missing_skills・unpreloadable_skillsの2つのオブジェクト配列を返す",
+          "message": "missing_skillsのオブジェクト配列を返す",
           "kind": "return"
         }
       ]
@@ -84,11 +78,11 @@
       "blockType": "Postconditions",
       "title": "事後条件",
       "items": [
-        "返り値は次の2フィールドを持つ: missing_skills（参照先Skill documentが実在しないAgent-skillIdの組）・unpreloadable_skills（参照先Skill documentは実在するが、content.invocationMode.manualOnlyがtrueであるためClaude Code上プリロードできないAgent-skillIdの組）",
+        "返り値は次の1フィールドを持つ: missing_skills（参照先Skill documentが実在しないAgent-skillIdの組）",
         "agentKind=orchestratorのAgent documentは対象外とする（skillPreloadsを持たないため）",
         "content.skillPreloads自体を持たないsubagentは対象外とする",
         "Agent documentが1件も無い（agentサブディレクトリ自体が無い）場合もエラーにせず空配列を返す",
-        "missing_skills・unpreloadable_skillsが共に空配列であれば、全subagentのskillPreloads参照が実在しかつプリロード可能である（正常系）"
+        "missing_skillsが空配列であれば、全subagentのskillPreloads参照が実在する（正常系）"
       ]
     },
     "acceptanceCriteria": {
@@ -96,8 +90,7 @@
       "title": "受け入れ基準",
       "items": [
         "When subagentのskillPreloads.itemsが参照するskillIdに対応するSkill documentが実在しないとき、システムはその組をmissing_skillsに含める shall。",
-        "When 参照先Skill documentのcontent.invocationMode.manualOnlyがtrueであるとき、システムはその組をunpreloadable_skillsに含める shall（Claude Code公式仕様上、disable-model-invocation:trueのSkillはpreloadできないため）。",
-        "While 全subagentのskillPreloads参照が実在しかつプリロード可能であるとき、システムはmissing_skills・unpreloadable_skills両方を空配列で返す shall。",
+        "While 全subagentのskillPreloads参照が実在するとき、システムはmissing_skillsを空配列で返す shall。",
         "If 対象のdocuments_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
       ]
     },
@@ -120,15 +113,15 @@
           "name": "agentディレクトリがまだ無いとき空配列を返す",
           "category": "正常系",
           "viewpoint": "境界値: Agent documentが1件も無い状態はエラーではなく空配列とする",
-          "gherkin": "Scenario: agentディレクトリがまだ無いとき空配列を返す\n  Given documents_rootは実在するがagentサブディレクトリがまだ無い（Agent documentが1件も無い）\n  When Agent-Skill整合検査を実行する\n  Then missing_skills・unpreloadable_skills両方が空配列で返る（エラーにしない）",
+          "gherkin": "Scenario: agentディレクトリがまだ無いとき空配列を返す\n  Given documents_rootは実在するがagentサブディレクトリがまだ無い（Agent documentが1件も無い）\n  When Agent-Skill整合検査を実行する\n  Then missing_skillsが空配列で返る（エラーにしない）",
           "covers": "受け入れ基準: Agent document不在は正常系"
         },
         {
-          "name": "全subagentの参照が実在しプリロード可能なとき差分なしと判定する",
+          "name": "全subagentの参照が実在するとき差分なしと判定する",
           "category": "正常系",
-          "viewpoint": "整合：全skillPreloads参照が実在しmanualOnlyでないSkillを指しているとき正常系（空配列）",
-          "gherkin": "Scenario: 全subagentの参照が実在しプリロード可能なとき差分なしと判定する\n  Given 全subagentのskillPreloads.itemsが、実在しmanualOnlyでないSkillを参照しているspecツリー\n  When Agent-Skill整合検査を実行する\n  Then missing_skills・unpreloadable_skills両方が空配列で返る",
-          "covers": "受け入れ基準: 全参照が実在しプリロード可能で空配列"
+          "viewpoint": "整合：全skillPreloads参照が実在するSkillを指しているとき正常系（空配列）",
+          "gherkin": "Scenario: 全subagentの参照が実在するとき差分なしと判定する\n  Given 全subagentのskillPreloads.itemsが、実在するSkillを参照しているspecツリー\n  When Agent-Skill整合検査を実行する\n  Then missing_skillsが空配列で返る",
+          "covers": "受け入れ基準: 全参照が実在で空配列"
         },
         {
           "name": "実在しないskillIdを参照するsubagentを検出する",
@@ -136,13 +129,6 @@
           "viewpoint": "ドリフト：skillPreloads.itemsが実在しないSkillを参照している",
           "gherkin": "Scenario: 実在しないskillIdを参照するsubagentを検出する\n  Given 実在しないskillIdをskillPreloads.itemsに持つsubagent\n  When Agent-Skill整合検査を実行する\n  Then missing_skillsにその組が含まれる",
           "covers": "受け入れ基準: missing_skills"
-        },
-        {
-          "name": "manualOnlyのSkillをプリロード指定しているsubagentを検出する",
-          "category": "異常系",
-          "viewpoint": "ドリフト：参照先SkillはinvocationMode.manualOnly=trueでありプリロード不可能",
-          "gherkin": "Scenario: manualOnlyのSkillをプリロード指定しているsubagentを検出する\n  Given invocationMode.manualOnly=trueのSkillをskillPreloads.itemsに持つsubagent\n  When Agent-Skill整合検査を実行する\n  Then unpreloadable_skillsにその組が含まれる",
-          "covers": "受け入れ基準: unpreloadable_skills"
         }
       ]
     },

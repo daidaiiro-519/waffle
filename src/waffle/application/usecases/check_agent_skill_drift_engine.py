@@ -1,9 +1,10 @@
 """check agent skill drift engine — Agent(subagent)集約の実インスタンスがskillPreloadsで
-参照するSkillが、実在しかつプリロード可能（disable-model-invocation:trueでない）かを検証する
-application use case。
+参照するSkillが実在するかを検証する application use case。
 
-Claude Code公式仕様: disable-model-invocation:trueのSkillはsubagentのskillsフィールドで
-プリロードできない。schema単体からは気づけない文書間の参照整合性を機械的に検出する。
+プリロード可能かどうか（Claude Code側のdisable-model-invocation等の実行時制約）は
+対象外とする。実行時に自然に露見する（AIがそのSubagentとして動いた際に気づける）ため、
+静的チェックとして持つ価値が薄いという判断（2026-07-11に一度実装した後、削除した）。
+schema単体からは気づけない、Subagent文書↔Skill文書間の参照整合性のみを機械的に検出する。
 """
 from __future__ import annotations
 
@@ -33,7 +34,6 @@ class CheckAgentSkillDriftEngine:
             agent_paths = []  # Agent documentがまだ1件も無い（正常系）
 
         missing_skills: list[dict] = []
-        unpreloadable_skills: list[dict] = []
 
         for agent_path in agent_paths:
             doc = self._documents.load(agent_path)
@@ -43,15 +43,10 @@ class CheckAgentSkillDriftEngine:
             for skill_id in skill_ids:
                 skill_path = f"{documents_root}/skills/{skill_id}.json"
                 try:
-                    skill_doc = self._documents.load(skill_path)
+                    self._documents.load(skill_path)
                 except FileNotFoundError:
                     missing_skills.append({"agent": agent_path, "skillId": skill_id})
-                    continue
-                manual_only = skill_doc.get("content", {}).get("invocationMode", {}).get("manualOnly")
-                if manual_only:
-                    unpreloadable_skills.append({"agent": agent_path, "skillId": skill_id, "skillPath": skill_path})
 
         return Ok({
             "missing_skills": missing_skills,
-            "unpreloadable_skills": unpreloadable_skills,
         })
