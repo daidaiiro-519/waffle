@@ -2,12 +2,12 @@
 リポジトリ解決契約(対象のdocuments_root)に対応する統合テスト。
 """
 from waffle.adapters.outbound.fs import FsDocumentRepository
-from waffle.application.usecases.check_agent_skill_drift_engine import CheckAgentSkillDriftEngine
+from waffle.application.usecases.check_agent_skill_drift import CheckAgentSkillDrift
 from waffle.shared.result import Err
 
 
-def _engine() -> CheckAgentSkillDriftEngine:
-    return CheckAgentSkillDriftEngine(FsDocumentRepository())
+def _engine() -> CheckAgentSkillDrift:
+    return CheckAgentSkillDrift(FsDocumentRepository())
 
 
 def test_存在しないdocuments_rootはINVALID_PATH():

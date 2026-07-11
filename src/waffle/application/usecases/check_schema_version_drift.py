@@ -1,4 +1,4 @@
-"""check schema version drift engine — Document集約の実インスタンス群が参照する
+"""check schema version drift — Document集約の実インスタンス群が参照する
 schemaRefの実在性・最新版との一致を検証する application use case。
 
 実行/意味理解はしない（schemaRef文字列と実在するバージョン集合の機械的な突き合わせのみ）。
@@ -28,7 +28,7 @@ def _path_exists(doc: dict, path: str) -> bool:
     return True
 
 
-class CheckSchemaVersionDriftEngine:
+class CheckSchemaVersionDrift:
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
         self._schemas = schemas

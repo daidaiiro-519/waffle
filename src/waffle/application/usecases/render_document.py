@@ -1,4 +1,4 @@
-"""render engine — document.json を成果物（SKILL.md / HTML 等）にレンダリングし、
+"""render document — document.json を成果物（SKILL.md / HTML 等）にレンダリングし、
 x-render-target.path の場所へ deploy する application use case。
 
 汎用エンジン（schema 固有ロジックを持たない）:
@@ -47,7 +47,7 @@ def _select_field_map(value: dict, spec_kind: str | None) -> dict:
         return value.get(spec_kind, {}) if spec_kind else {}
     return value
 
-class RenderEngine:
+class RenderDocument:
     def __init__(
         self,
         documents: DocumentRepository,

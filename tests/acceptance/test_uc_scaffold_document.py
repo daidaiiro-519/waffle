@@ -4,8 +4,8 @@ from pathlib import Path
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.scaffold_engine import ScaffoldEngine
-from waffle.application.usecases.validate_engine import ValidateEngine
+from waffle.application.usecases.scaffold_document import ScaffoldDocument
+from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.shared.result import Err, Ok
 
 _SKILL_SCHEMA = "SkillSchema/v1"
@@ -15,8 +15,8 @@ _CUSTOM_DOC_ID = "test-acceptance-scaffold-custom"
 _CUSTOM_DOC_PATH = f".waffle/documents/skills/{_CUSTOM_DOC_ID}.json"
 
 
-def _engine() -> ScaffoldEngine:
-    return ScaffoldEngine(FsDocumentRepository(), PackageSchemaRepository())
+def _engine() -> ScaffoldDocument:
+    return ScaffoldDocument(FsDocumentRepository(), PackageSchemaRepository())
 
 
 def setup_function():
@@ -42,7 +42,7 @@ def test_生成した骨格は自分の_schema_で_valid():
     assert isinstance(result, Ok), result
     assert result.value["skeleton"]["status"] == "DRAFT"
 
-    validate_result = ValidateEngine(
+    validate_result = ValidateDocument(
         FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator()
     ).run(result.value["path"])
     assert isinstance(validate_result, Ok), getattr(validate_result, "details", validate_result)

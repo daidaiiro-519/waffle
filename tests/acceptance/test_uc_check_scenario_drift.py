@@ -3,12 +3,12 @@ import json
 from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
-from waffle.application.usecases.check_scenario_drift_engine import CheckScenarioDriftEngine
+from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.shared.result import Err, Ok
 
 
-def _engine() -> CheckScenarioDriftEngine:
-    return CheckScenarioDriftEngine(FsDocumentRepository())
+def _engine() -> CheckScenarioDrift:
+    return CheckScenarioDrift(FsDocumentRepository())
 
 
 def _spec(tmp_path: Path, scenario_name: str, gherkin: str) -> Path:

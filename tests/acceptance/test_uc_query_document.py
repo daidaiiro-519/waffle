@@ -1,14 +1,14 @@
 """uc-query-document の受け入れテスト（ネイティブpytest）。"""
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.query_engine import QueryEngine
+from waffle.application.usecases.query_document import QueryDocument
 from waffle.shared.result import Err, Ok
 
 _TARGET = ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json"
 
 
-def _engine() -> QueryEngine:
-    return QueryEngine(FsDocumentRepository(), PackageSchemaRepository())
+def _engine() -> QueryDocument:
+    return QueryDocument(FsDocumentRepository(), PackageSchemaRepository())
 
 
 def test_ブロックを丸ごと取得する():

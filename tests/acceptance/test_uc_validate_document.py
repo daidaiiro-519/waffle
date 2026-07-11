@@ -8,7 +8,7 @@ import pytest
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.validate_engine import ValidateEngine
+from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.shared.result import Err, Ok
 
 _DOGFOOD_DOCUMENTS = [
@@ -34,8 +34,8 @@ _DOGFOOD_DOCUMENTS = [
 ]
 
 
-def _engine() -> ValidateEngine:
-    return ValidateEngine(FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator())
+def _engine() -> ValidateDocument:
+    return ValidateDocument(FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator())
 
 
 def test_適合する_Document_は_VALIDATED_判定になる():

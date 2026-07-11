@@ -1,4 +1,4 @@
-"""check agent skill drift engine — Agent(subagent)集約の実インスタンスがskillPreloadsで
+"""check agent skill drift — Agent(subagent)集約の実インスタンスがskillPreloadsで
 参照するSkillが実在するかを検証する application use case。
 
 プリロード可能かどうか（Claude Code側のdisable-model-invocation等の実行時制約）は
@@ -17,7 +17,7 @@ def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 
-class CheckAgentSkillDriftEngine:
+class CheckAgentSkillDrift:
     def __init__(self, documents: DocumentRepository) -> None:
         self._documents = documents
 

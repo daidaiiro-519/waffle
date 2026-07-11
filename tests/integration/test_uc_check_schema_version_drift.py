@@ -3,12 +3,12 @@
 """
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.check_schema_version_drift_engine import CheckSchemaVersionDriftEngine
+from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.shared.result import Err
 
 
-def _engine() -> CheckSchemaVersionDriftEngine:
-    return CheckSchemaVersionDriftEngine(FsDocumentRepository(), PackageSchemaRepository())
+def _engine() -> CheckSchemaVersionDrift:
+    return CheckSchemaVersionDrift(FsDocumentRepository(), PackageSchemaRepository())
 
 
 def test_存在しないdocuments_rootはINVALID_PATH():

@@ -2,12 +2,12 @@
 リポジトリ解決契約(対象のspec.json・テストファイル)に対応する統合テスト。
 """
 from waffle.adapters.outbound.fs import FsDocumentRepository
-from waffle.application.usecases.check_scenario_drift_engine import CheckScenarioDriftEngine
+from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.shared.result import Err
 
 
-def _engine() -> CheckScenarioDriftEngine:
-    return CheckScenarioDriftEngine(FsDocumentRepository())
+def _engine() -> CheckScenarioDrift:
+    return CheckScenarioDrift(FsDocumentRepository())
 
 
 def test_存在しないspec_jsonはINVALID_PATH():

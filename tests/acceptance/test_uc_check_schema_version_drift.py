@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
-from waffle.application.usecases.check_schema_version_drift_engine import CheckSchemaVersionDriftEngine
+from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.shared.result import Ok
 
 
@@ -22,8 +22,8 @@ class _FakeSchemaRepository:
         return self._versions_by_name.get(name, [])
 
 
-def _engine(versions_by_name: dict[str, list[str]], schemas_by_ref: dict[str, dict] | None = None) -> CheckSchemaVersionDriftEngine:
-    return CheckSchemaVersionDriftEngine(FsDocumentRepository(), _FakeSchemaRepository(versions_by_name, schemas_by_ref))
+def _engine(versions_by_name: dict[str, list[str]], schemas_by_ref: dict[str, dict] | None = None) -> CheckSchemaVersionDrift:
+    return CheckSchemaVersionDrift(FsDocumentRepository(), _FakeSchemaRepository(versions_by_name, schemas_by_ref))
 
 
 def _write(path: Path, doc: dict) -> None:

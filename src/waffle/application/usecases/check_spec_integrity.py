@@ -1,4 +1,4 @@
-"""check spec integrity engine — bounded-context が宣言する members(subdomain/usecase)と、
+"""check spec integrity — bounded-context が宣言する members(subdomain/usecase)と、
 ディスク上に実在する subdomain/usecase ドキュメントの参照整合性を検証する application use case。
 
 宣言先ファイルがディスクに存在しないことはエラーではなく、それ自体が検出結果（ドリフト）。
@@ -15,7 +15,7 @@ def _split(members_str: str) -> list[str]:
     return [s.strip() for s in members_str.split("/") if s.strip()] if members_str else []
 
 
-class CheckSpecIntegrityEngine:
+class CheckSpecIntegrity:
     def __init__(self, documents: DocumentRepository) -> None:
         self._documents = documents
 

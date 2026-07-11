@@ -3,12 +3,12 @@ import json
 from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
-from waffle.application.usecases.check_agent_skill_drift_engine import CheckAgentSkillDriftEngine
+from waffle.application.usecases.check_agent_skill_drift import CheckAgentSkillDrift
 from waffle.shared.result import Ok
 
 
-def _engine() -> CheckAgentSkillDriftEngine:
-    return CheckAgentSkillDriftEngine(FsDocumentRepository())
+def _engine() -> CheckAgentSkillDrift:
+    return CheckAgentSkillDrift(FsDocumentRepository())
 
 
 def _write(path: Path, doc: dict) -> None:

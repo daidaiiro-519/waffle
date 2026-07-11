@@ -3,12 +3,12 @@ import json
 from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
-from waffle.application.usecases.check_spec_integrity_engine import CheckSpecIntegrityEngine
+from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.shared.result import Ok
 
 
-def _engine() -> CheckSpecIntegrityEngine:
-    return CheckSpecIntegrityEngine(FsDocumentRepository())
+def _engine() -> CheckSpecIntegrity:
+    return CheckSpecIntegrity(FsDocumentRepository())
 
 
 def _write(path: Path, doc: dict) -> None:

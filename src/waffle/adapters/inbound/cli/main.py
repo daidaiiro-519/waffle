@@ -15,16 +15,16 @@ from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.check_agent_skill_drift_engine import CheckAgentSkillDriftEngine
-from waffle.application.usecases.check_scenario_drift_engine import CheckScenarioDriftEngine
-from waffle.application.usecases.check_schema_version_drift_engine import CheckSchemaVersionDriftEngine
-from waffle.application.usecases.check_spec_integrity_engine import CheckSpecIntegrityEngine
-from waffle.application.usecases.lint_docstring_engine import LintDocstringEngine
-from waffle.application.usecases.query_engine import QueryEngine
-from waffle.application.usecases.render_engine import RenderEngine
-from waffle.application.usecases.scaffold_engine import ScaffoldEngine
-from waffle.application.usecases.scan_source_code_engine import ScanSourceCodeEngine
-from waffle.application.usecases.validate_engine import ValidateEngine
+from waffle.application.usecases.check_agent_skill_drift import CheckAgentSkillDrift
+from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
+from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
+from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
+from waffle.application.usecases.lint_docstring import LintDocstring
+from waffle.application.usecases.query_document import QueryDocument
+from waffle.application.usecases.render_document import RenderDocument
+from waffle.application.usecases.scaffold_document import ScaffoldDocument
+from waffle.application.usecases.scan_source_code import ScanSourceCode
+from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.shared.result import Ok, Result
 
 app = typer.Typer(add_completion=False, help="waffle CLI — query / render / validate / scaffold")
@@ -68,7 +68,7 @@ def query(
         "fieldName": field_name, "nestedField": nested_field,
     }
     params = {k: v for k, v in raw.items() if v is not None}
-    _emit(QueryEngine(_docs(), _schemas()).run(operation, path, params))
+    _emit(QueryDocument(_docs(), _schemas()).run(operation, path, params))
 
 @app.command()
 def render(
@@ -76,12 +76,12 @@ def render(
     no_deploy: bool = typer.Option(False, "--no-deploy"),
 ) -> None:
     """document.json を成果物にレンダリングして deploy（uc-render-document）。"""
-    _emit(RenderEngine(_docs(), _schemas()).run(path, deploy=not no_deploy))
+    _emit(RenderDocument(_docs(), _schemas()).run(path, deploy=not no_deploy))
 
 @app.command()
 def validate(path: str = typer.Option(..., "--path")) -> None:
     """document を schema 適合検証（uc-validate-document）。"""
-    _emit(ValidateEngine(_docs(), _schemas(), JsonSchemaValidator()).run(path))
+    _emit(ValidateDocument(_docs(), _schemas(), JsonSchemaValidator()).run(path))
 
 @app.command()
 def scaffold(
@@ -108,7 +108,7 @@ def scaffold(
         params = {"documentPath": path, "values": json.loads(values) if values else {}}
     else:
         params = {}
-    _emit(ScaffoldEngine(_docs(), _schemas()).run(operation, params))
+    _emit(ScaffoldDocument(_docs(), _schemas()).run(operation, params))
 
 @app.command("check-spec-integrity")
 def check_spec_integrity(
@@ -116,7 +116,7 @@ def check_spec_integrity(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
 ) -> None:
     """bc.jsonのmembers宣言とディスク上の実ファイルの参照整合性を検証（uc-check-spec-integrity）。"""
-    _emit(CheckSpecIntegrityEngine(_docs()).run(path, documents_root))
+    _emit(CheckSpecIntegrity(_docs()).run(path, documents_root))
 
 @app.command("check-scenario-drift")
 def check_scenario_drift(
@@ -124,21 +124,21 @@ def check_scenario_drift(
     test_path: str = typer.Option(..., "--testPath", "--test-path", help="対応するテストファイル(.py)のパス"),
 ) -> None:
     """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。"""
-    _emit(CheckScenarioDriftEngine(_docs()).run(spec_path, test_path))
+    _emit(CheckScenarioDrift(_docs()).run(spec_path, test_path))
 
 @app.command("check-schema-version-drift")
 def check_schema_version_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
 ) -> None:
     """DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。"""
-    _emit(CheckSchemaVersionDriftEngine(_docs(), _schemas()).run(documents_root))
+    _emit(CheckSchemaVersionDrift(_docs(), _schemas()).run(documents_root))
 
 @app.command("check-agent-skill-drift")
 def check_agent_skill_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
 ) -> None:
     """subagentのskillPreloadsが参照するSkillの実在性・プリロード可能性を検証（uc-check-agent-skill-drift）。"""
-    _emit(CheckAgentSkillDriftEngine(_docs()).run(documents_root))
+    _emit(CheckAgentSkillDrift(_docs()).run(documents_root))
 
 @app.command("scan-source-code")
 def scan_source_code(
@@ -146,7 +146,7 @@ def scan_source_code(
     kind: str = typer.Option(..., "--kind", help="DocstringSchemaのkind（現状はgoogleのみ対応）"),
 ) -> None:
     """対象コードベースの公開要素のdocstringを構造化抽出（uc-scan-source-code）。"""
-    _emit(ScanSourceCodeEngine(_docs(), PythonAstSourceScanner()).run(path, kind))
+    _emit(ScanSourceCode(_docs(), PythonAstSourceScanner()).run(path, kind))
 
 @app.command("lint-docstring")
 def lint_docstring(
@@ -154,8 +154,8 @@ def lint_docstring(
     kind: str = typer.Option(..., "--kind", help="DocstringSchemaのkind（現状はgoogleのみ対応）"),
 ) -> None:
     """対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。"""
-    scan_engine = ScanSourceCodeEngine(_docs(), PythonAstSourceScanner())
-    _emit(LintDocstringEngine(scan_engine, PydoclintLinter()).run(path, kind))
+    scan_engine = ScanSourceCode(_docs(), PythonAstSourceScanner())
+    _emit(LintDocstring(scan_engine, PydoclintLinter()).run(path, kind))
 
 @app.command()
 def serve() -> None:

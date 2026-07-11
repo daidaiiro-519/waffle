@@ -1,4 +1,4 @@
-"""scan source code engine — 対象コードベース(ディレクトリ)から公開要素の docstring を
+"""scan source code — 対象コードベース(ディレクトリ)から公開要素の docstring を
 kind 別に構造化抽出する application use case。
 
 SourceScanner port（kind ごとの言語パーサ技術を隠蔽する Secondary Port）を編成する。
@@ -15,7 +15,7 @@ def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 
-class ScanSourceCodeEngine:
+class ScanSourceCode:
     def __init__(self, documents: DocumentRepository, scanner: SourceScanner) -> None:
         self._documents = documents
         self._scanner = scanner

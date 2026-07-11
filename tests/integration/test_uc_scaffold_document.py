@@ -7,7 +7,7 @@ from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.scaffold_engine import ScaffoldEngine
+from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.shared.result import Err, Ok
 
 _SKILL_SCHEMA = "SkillSchema/v1"
@@ -15,8 +15,8 @@ _TEST_DOC_ID = "test-acceptance-poc-migration"
 _TEST_DOC_PATH = f".waffle/documents/skills/{_TEST_DOC_ID}.json"
 
 
-def _engine() -> ScaffoldEngine:
-    return ScaffoldEngine(FsDocumentRepository(), PackageSchemaRepository())
+def _engine() -> ScaffoldDocument:
+    return ScaffoldDocument(FsDocumentRepository(), PackageSchemaRepository())
 
 
 def setup_function():

@@ -4,14 +4,14 @@
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
-from waffle.application.usecases.lint_docstring_engine import LintDocstringEngine
-from waffle.application.usecases.scan_source_code_engine import ScanSourceCodeEngine
+from waffle.application.usecases.lint_docstring import LintDocstring
+from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.shared.result import Err
 
 
-def _engine() -> LintDocstringEngine:
-    scan_engine = ScanSourceCodeEngine(FsDocumentRepository(), PythonAstSourceScanner())
-    return LintDocstringEngine(scan_engine, PydoclintLinter())
+def _engine() -> LintDocstring:
+    scan_engine = ScanSourceCode(FsDocumentRepository(), PythonAstSourceScanner())
+    return LintDocstring(scan_engine, PydoclintLinter())
 
 
 def test_存在しないパスはINVALID_PATH():

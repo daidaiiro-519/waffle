@@ -1,4 +1,4 @@
-"""validate engine — document を schema 適合検証する application use case。
+"""validate document — document を schema 適合検証する application use case。
 
 driven port（DocumentRepository / SchemaRepository / Validator）を編成する。
 inbound（driving）側のエントリは run()。
@@ -15,7 +15,7 @@ from waffle.shared.result import Err, Ok, Result
 def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
-class ValidateEngine:
+class ValidateDocument:
     def __init__(
         self,
         documents: DocumentRepository,

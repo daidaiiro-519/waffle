@@ -1,5 +1,5 @@
 """schemaのcontent定義から、x-prompt-writeを持つ値フィールドのpath一覧（fillTemplate）を
-機械的に走査するドメインサービス。ScaffoldEngine（値埋め込みの土台）とCheckSchemaVersionDriftEngine
+機械的に走査するドメインサービス。ScaffoldDocument（値埋め込みの土台）とCheckSchemaVersionDrift
 （documentが現行schemaの宣言する項目に追従しているかの確認）の両方が使う純ロジック。
 """
 from __future__ import annotations

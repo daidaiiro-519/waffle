@@ -1,17 +1,17 @@
 """uc-render-document のguaranteeScenarios(operationGuaranteesと対)に対応する統合テスト。
 
 part_rendererの15件の整形保証はsd-document-managementのdomainServiceScenarios(domain層)へ
-再分類済み。ここはrender_engine自体が呼び出し元に約束する保証(決定性・配線・リポジトリ解決契約)
+再分類済み。ここはrender_document自体が呼び出し元に約束する保証(決定性・配線・リポジトリ解決契約)
 のみを実engine+実adapterで検証する。
 """
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.render_engine import RenderEngine
+from waffle.application.usecases.render_document import RenderDocument
 from waffle.shared.result import Err, Ok
 
 
-def _engine() -> RenderEngine:
-    return RenderEngine(FsDocumentRepository(), PackageSchemaRepository())
+def _engine() -> RenderDocument:
+    return RenderDocument(FsDocumentRepository(), PackageSchemaRepository())
 
 
 def test_存在しないパスはINVALID_PATH():

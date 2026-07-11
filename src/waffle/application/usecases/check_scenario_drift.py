@@ -1,4 +1,4 @@
-"""check scenario drift engine — spec の TestScenarios と、対応するネイティブテスト
+"""check scenario drift — spec の TestScenarios と、対応するネイティブテスト
 ファイルのテスト関数名・docstring内容を突き合わせる application use case。
 
 実行/意味理解はしない（AST解析のみ）。検出した差分の中身の妥当性評価はAIが担う。
@@ -21,7 +21,7 @@ def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 
-class CheckScenarioDriftEngine:
+class CheckScenarioDrift:
     def __init__(self, documents: DocumentRepository) -> None:
         self._documents = documents
 

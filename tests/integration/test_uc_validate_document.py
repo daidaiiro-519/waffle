@@ -4,12 +4,12 @@
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
-from waffle.application.usecases.validate_engine import ValidateEngine
+from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.shared.result import Err
 
 
-def _engine() -> ValidateEngine:
-    return ValidateEngine(FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator())
+def _engine() -> ValidateDocument:
+    return ValidateDocument(FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator())
 
 
 def test_存在しないパスはINVALID_PATH():

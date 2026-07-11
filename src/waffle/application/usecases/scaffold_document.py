@@ -1,4 +1,4 @@
-"""scaffold engine — document.json の骨格生成（create）と値書き込み（fill）。
+"""scaffold document — document.json の骨格生成（create）と値書き込み（fill）。
 
 Harness 原則: AI は「値」だけを生成し、document.json の構造は engine が組む。
 - create: schema を機械走査して skeleton（自分の schema で valid・status=enum 先頭）と
@@ -23,7 +23,7 @@ from waffle.shared.result import Err, Ok, Result
 def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
-class ScaffoldEngine:
+class ScaffoldDocument:
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
         self._schemas = schemas

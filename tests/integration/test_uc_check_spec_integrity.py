@@ -2,12 +2,12 @@
 リポジトリ解決契約(対象のbc.json)に対応する統合テスト。
 """
 from waffle.adapters.outbound.fs import FsDocumentRepository
-from waffle.application.usecases.check_spec_integrity_engine import CheckSpecIntegrityEngine
+from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.shared.result import Err
 
 
-def _engine() -> CheckSpecIntegrityEngine:
-    return CheckSpecIntegrityEngine(FsDocumentRepository())
+def _engine() -> CheckSpecIntegrity:
+    return CheckSpecIntegrity(FsDocumentRepository())
 
 
 def test_存在しないbc_jsonはINVALID_PATH():

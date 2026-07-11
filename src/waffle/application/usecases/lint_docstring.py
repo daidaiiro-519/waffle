@@ -1,4 +1,4 @@
-"""lint docstring engine — 対象コードベースの docstring が規約どおりの構造か
+"""lint docstring — 対象コードベースの docstring が規約どおりの構造か
 （必須セクションの有無・引数名と実シグネチャの整合）を、既存 lint ツールを
 呼び出して判定する application use case。自前の照合ロジックは持たない。
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from waffle.application.ports.docstring_linter import DocstringLinter, ToolNotAvailable
 from waffle.application.ports.docstring_linter import UnsupportedKind as LinterUnsupportedKind
-from waffle.application.usecases.scan_source_code_engine import ScanSourceCodeEngine
+from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.shared.result import Err, Ok, Result
 
 
@@ -17,13 +17,13 @@ def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 
-class LintDocstringEngine:
-    def __init__(self, scan_engine: ScanSourceCodeEngine, linter: DocstringLinter) -> None:
-        self._scan_engine = scan_engine
+class LintDocstring:
+    def __init__(self, scan_source_code: ScanSourceCode, linter: DocstringLinter) -> None:
+        self._scan_source_code = scan_source_code
         self._linter = linter
 
     def run(self, target_path: str, kind: str) -> Result[list[dict]]:
-        scan_result = self._scan_engine.run(target_path, kind)
+        scan_result = self._scan_source_code.run(target_path, kind)
         if isinstance(scan_result, Err):
             return scan_result
 

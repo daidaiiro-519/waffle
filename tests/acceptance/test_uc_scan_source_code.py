@@ -1,12 +1,12 @@
 """uc-scan-source-code の受け入れテスト（ネイティブpytest）。"""
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
-from waffle.application.usecases.scan_source_code_engine import ScanSourceCodeEngine
+from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.shared.result import Err, Ok
 
 
-def _engine() -> ScanSourceCodeEngine:
-    return ScanSourceCodeEngine(FsDocumentRepository(), PythonAstSourceScanner())
+def _engine() -> ScanSourceCode:
+    return ScanSourceCode(FsDocumentRepository(), PythonAstSourceScanner())
 
 
 def test_公開要素の_docstring_を構造化抽出する(tmp_path):

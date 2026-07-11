@@ -1,4 +1,4 @@
-"""query engine — document.json / 通常ファイルへのセマンティック・クエリ。
+"""query document — document.json / 通常ファイルへのセマンティック・クエリ。
 
 16 のセマンティック操作で、AI がファイルを直接読まずに必要な意味単位だけを取得する。
 構造アクセスは全て Python が担い、`{ prompt, value }` を返す（prompt=value の読み方の指針＝
@@ -38,7 +38,7 @@ _REQUIRED: dict[str, list[str]] = {
 
 _META_FIELDS = ("documentId", "documentType", "schemaRef", "skillKind", "codingKind", "status", "tags")
 
-class QueryEngine:
+class QueryDocument:
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
         self._schemas = schemas
