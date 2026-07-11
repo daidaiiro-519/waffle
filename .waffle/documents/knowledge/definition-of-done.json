@@ -1,0 +1,131 @@
+{
+  "documentId": "definition-of-done",
+  "documentType": "Knowledge",
+  "schemaRef": "KnowledgeSchema/v2",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "definition-of-done"
+    },
+    "overview": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "個々のユースケース/ストーリーが「完成」と言えるのは何を満たしたときか？",
+        "受け入れ基準(Acceptance Criteria)を満たせば、それだけで完成と言えるのか？"
+      ],
+      "text": "全ての作業項目に一律適用される、チーム全体の普遍的な品質基準。個々のストーリー固有の受け入れ基準(Acceptance Criteria)とは別軸で、両方を満たして初めて「完成」となる。"
+    },
+    "principles": {
+      "blockType": "Principles",
+      "title": "原則",
+      "items": [
+        "Scrum Guide(2020年版)の定義: Definition of Doneは、プロダクトに要求される品質基準を満たしたインクリメントの状態を表す、正式な記述である。",
+        "DoDは2020年版でScrumの3つのCommitment(Product Backlog↔Product Goal、Sprint Backlog↔Sprint Goal、Increment↔Definition of Done)の1つとして正式に構造化された。",
+        "DoDは「Incrementそのもの」と「そのIncrementの一部になる各Product Backlog Item」の両方に適用される、入れ子構造を持つ。",
+        "組織レベルの標準DoDがあれば全Scrum Teamはそれを最低基準として従い、上乗せしてよい。無ければチーム自身が作る。同じプロダクトに複数チームが関わる場合、DoDは1つを共有する。",
+        "Acceptance Criteria(個々のストーリー固有の受け入れ条件)とDefinition of Done(全ストーリーに一律適用される普遍的品質基準)は別軸であり、1件のストーリーが「完成」と言えるのは両方を満たしたときのみである。",
+        "AC→DoDという順序的な階層関係ではなく、両方が独立して要求される加算的な関係である。"
+      ]
+    },
+    "classifications": {
+      "blockType": "Classifications",
+      "title": "分類",
+      "items": [
+        {
+          "name": "Acceptance Criteria(受け入れ基準)",
+          "description": "個々のストーリー/PBI固有。プロダクトオーナーが主に作成し、その特定の作業が完了したと言えるかを定義する"
+        },
+        {
+          "name": "Definition of Done",
+          "description": "全PBIに一律適用される、チーム全体で協働して作る普遍的な品質基準(コードレビュー済み・テスト済み・文書化済み等)"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "decisionCriteria": {
+      "blockType": "DecisionCriteria",
+      "title": "判断基準",
+      "emptyReason": "",
+      "stages": [
+        {
+          "id": "q1",
+          "label": "このPBI固有のAcceptance Criteriaを満たしているか？"
+        },
+        {
+          "id": "q2",
+          "label": "チーム全体のDefinition of Doneを満たしているか？"
+        },
+        {
+          "id": "done",
+          "label": "完成(Done)"
+        },
+        {
+          "id": "notdone",
+          "label": "未完成"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "q1",
+          "to": "q2",
+          "label": "はい"
+        },
+        {
+          "from": "q1",
+          "to": "notdone",
+          "label": "いいえ"
+        },
+        {
+          "from": "q2",
+          "to": "done",
+          "label": "はい"
+        },
+        {
+          "from": "q2",
+          "to": "notdone",
+          "label": "いいえ"
+        }
+      ]
+    },
+    "examples": {
+      "blockType": "Examples",
+      "title": "実例",
+      "text": "あるPBI「注文確定ボタンを押すと注文が確定する」について、Acceptance Criteria(「在庫が無い場合はエラーになる」等)を全て満たしていても、チームのDoD(単体テストカバレッジ基準・コードレビュー完了・ドキュメント更新)を満たしていなければ、そのPBIはまだ\"Done\"とは言えない。"
+    },
+    "antiPatterns": {
+      "blockType": "AntiPatterns",
+      "title": "アンチパターン",
+      "items": [
+        {
+          "name": "fudging the Definition of Done(DoDのごまかし)",
+          "problem": "締め切りのプレッシャーの中で、ほぼ完成した作業を完全に完成したものとして扱ってしまう。DoDが持つ透明性という目的を損なう"
+        },
+        {
+          "name": "Acceptance CriteriaをDefinition of Doneの代わりにする",
+          "problem": "個々のストーリー固有の受け入れ基準を満たすだけで完成とみなし、コードレビュー・テスト規約・文書化等の横断的な品質基準を省略してしまう"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "provenance": {
+      "blockType": "Provenance",
+      "title": "出典・根拠の透明性",
+      "source": "Scrum Guide(Ken Schwaber・Jeff Sutherland共著、2020年版を中心に2011年版・2013年版の変遷も参照)、およびMike Cohn(Mountain Goat Software)によるDoD/Acceptance Criteria比較記事に基づく。",
+      "caveats": "web調査の最終統合ステップで技術的な不具合が発生したため、検証済みの生データから手動で再構成した。"
+    },
+    "relatedConcepts": {
+      "blockType": "RelatedConcepts",
+      "title": "関連概念",
+      "items": [
+        {
+          "conceptId": "tdd",
+          "note": "TDDのRed/Green/Refactorサイクルとは別軸。DoDは個々のテストではなく作業項目全体の完成基準"
+        }
+      ],
+      "emptyReason": ""
+    }
+  },
+  "tags": []
+}
