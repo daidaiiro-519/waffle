@@ -179,7 +179,13 @@ spec側schema家族の語彙混入なしを確認。
 
 **総フィールド数:** 34件　**20字未満:** 2件　**重複テキスト:** 0種
 
-**ステータス:** 未着手
+**ステータス:** 完了（2026-07-11）
+
+**対応内容:** 2件（`ReferencesBlock.items`・`KnowledgeRefsBlock.description`）
+に例を追加。
+
+**レビュー:** JSON構文・diff2行・全4 skill文書（platform/tech-lead/ddd/ux-advisor）
+validate・pytest 188件green・check-agent-skill-drift clean。
 
 ### 薄いフィールド（20字未満、要見直し）
 
