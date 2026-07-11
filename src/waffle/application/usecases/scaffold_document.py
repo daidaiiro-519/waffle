@@ -15,6 +15,7 @@ from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.application.services.document_loading import load_document, load_schema, require_schema_ref
 from waffle.domain.services import path_template
 from waffle.domain.services.fill_template import build_fill_template as _build_fill_template
+from waffle.domain.services.fill_template import build_top_level_fill_template as _build_top_level_fill_template
 from waffle.domain.services.fill_template import content_def as _content_def
 from waffle.domain.services.fill_template import resolve_ref as _resolve
 from waffle.domain.services.schema_discriminator import discriminator_key as _discriminator_key
@@ -52,13 +53,14 @@ class ScaffoldDocument:
             cands = ", ".join(_discriminator_candidates(schema, disc_key))
             return _err("MISSING_DISCRIMINATOR", f"{disc_key} の指定が必要です（候補: {cands}）")
 
+        path_vars = {"documentId": document_id, **{k: v for k, v in params.items() if isinstance(v, str)}}
         content_def = _content_def(schema, discriminator)
-        skeleton = _build_skeleton(schema, document_id, disc_key, discriminator, content_def)
-        fill_template = _build_fill_template(schema, content_def)
+        skeleton = _build_skeleton(schema, document_id, disc_key, discriminator, content_def, path_vars)
+        protected = {"documentId"} | ({disc_key} if disc_key else set())
+        fill_template = _build_top_level_fill_template(schema, protected) + _build_fill_template(schema, content_def)
 
         x_source = schema.get("x-source-target") or ""
         template = x_source.get(discriminator.get(disc_key)) if isinstance(x_source, dict) else x_source
-        path_vars = {"documentId": document_id, **{k: v for k, v in params.items() if isinstance(v, str)}}
         path = path_template.resolve(template, **path_vars) if template else ""
         if path:
             existing = self._existing_document(path)
@@ -99,7 +101,9 @@ class ScaffoldDocument:
         disc_key = _discriminator_key(schema)
         discriminator = {disc_key: doc.get(disc_key)} if disc_key else {}
         content_def = _content_def(schema, discriminator)
-        allowed = {e["path"] for e in _build_fill_template(schema, content_def)}
+        protected = {"documentId"} | ({disc_key} if disc_key else set())
+        allowed = {e["path"] for e in _build_top_level_fill_template(schema, protected)}
+        allowed |= {e["path"] for e in _build_fill_template(schema, content_def)}
 
         written: list[str] = []
         skipped: list[str] = []
@@ -136,7 +140,7 @@ def _skeleton_from_def(schema: dict, d: dict):
         return False
     return None
 
-def _build_skeleton(schema, document_id, disc_key, discriminator, content_def) -> dict:
+def _build_skeleton(schema, document_id, disc_key, discriminator, content_def, extra_refs) -> dict:
     props = schema.get("properties", {})
     out: dict = {}
     for name in schema.get("required", []):
@@ -146,10 +150,17 @@ def _build_skeleton(schema, document_id, disc_key, discriminator, content_def) -
             out[name] = discriminator[disc_key]
         elif name == "content":
             out[name] = _skeleton_from_def(schema, content_def)
+        elif name in extra_refs:
+            out[name] = extra_refs[name]
         else:
             out[name] = _skeleton_from_def(schema, props.get(name, {}))
     if "tags" in props and "tags" not in out:
         out["tags"] = []
+    # CLIから渡されたref系パラメータ(subdomainRef等)が、必須ではないが宣言されたプロパティに
+    # 一致する場合も、パス計算だけで消費して document 本体に反映されない事故を防ぐため書き込む
+    for name, value in extra_refs.items():
+        if name in props and name not in out and name != disc_key:
+            out[name] = value
     return out
 
 def _set_path(doc: dict, path: str, value) -> bool:

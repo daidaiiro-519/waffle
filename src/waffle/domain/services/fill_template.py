@@ -51,6 +51,22 @@ def build_fill_template(schema: dict, content: dict) -> list:
     return entries
 
 
+def build_top_level_fill_template(schema: dict, protected: set) -> list:
+    """content の外側にある値フィールド（subdomainRef/skillRef 等）の fillTemplate を走査する。
+
+    documentId・discriminator キー（agentKind/skillKind/specKind/templateKind 等）は、
+    それ自体がdocumentの識別子・構造分岐を決める値であり、作成後の書き換えは別のdocumentへの
+    変質を意味するため、protected として明示的に除外する。
+    """
+    entries: list = []
+    required = set(schema.get("required", []))
+    for key, prop in schema.get("properties", {}).items():
+        if key == "content" or key in protected:
+            continue
+        _walk_fill(schema, prop, key, entries, is_required=key in required)
+    return entries
+
+
 def _walk_fill(schema, d, path, entries, is_required):
     if "$ref" in d:
         return _walk_fill(schema, resolve_ref(schema, d["$ref"]), path, entries, is_required)
