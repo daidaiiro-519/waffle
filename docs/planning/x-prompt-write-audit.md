@@ -124,7 +124,20 @@ ErrorsBlock.condition・ContextMapBlock.content・InvariantsBlock.rule/rationale
 
 **総フィールド数:** 77件　**20字未満:** 21件　**重複テキスト:** 1種
 
-**ステータス:** 未着手
+**ステータス:** 完了（2026-07-11）
+
+**対応内容:** 12フィールドを修正。最大の問題だった「rule」フィールドの
+使い回し（PolicyBlock/ArchitectureRulesBlock/StyleBlock/CodingRulesBlock/
+ScenarioBindingBlock/TestRulesBlockの6ブロック、うち4ブロックが完全一致の
+「規約の内容。」）を、各ブロックの実際の文脈（依存追加方針／アーキ横断決定／
+コードスタイル／docstring規約／仕様とテストの対応規約／テスト規約）に応じて
+書き分けた。重複テキストは0件に解消。
+
+その他、`PlacementByTargetBlock.testKind`が`TestTypesBlock.testType`
+（英語enum）と対応すべきなのに参照指示が無かった点も修正（DomainSpecSchemaの
+postState/from-toと同種の「他フィールドの宣言値を参照すべきなのに指示が
+無い」パターン）。pytest 188件green、全9 coding文書validate・render済み、
+spec側schema家族の語彙混入なしを確認。
 
 ### 重複テキスト（同じ指示文が複数の別フィールドで使い回されている）
 
