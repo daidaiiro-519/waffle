@@ -194,7 +194,20 @@ spec側schema家族の語彙混入なしを確認。
 
 **総フィールド数:** 34件　**20字未満:** 4件　**重複テキスト:** 0種
 
-**ステータス:** 未着手
+**ステータス:** 完了（2026-07-11）
+
+**対応内容:** 4件中2件（`OperatingRulesBlock.why`・`SkillFollowUpBlock.why`）は
+配列レベルのx-prompt-writeが既に十分に厚く、rule/why/howToApplyを分けて書く
+理由まで明記されているため改善不要と判断。`KeyCommandsBlock.command/purpose`
+の2件のみ例を追加。
+
+**レビュー:** JSON構文・diff2行・使用文書`agent/waffle.json`をvalidate・
+pytest 188件green・check-agent-skill-drift clean。再render時に、以前から
+document.jsonには存在したが.mdに未反映だったSkillFollowUpセクションが
+同期された（今回の修正とは無関係な既存の陳腐化renderの解消）。また、
+render実行時に誤って`waffle/CLAUDE.md`等の入れ子フォルダが生成されたため
+削除（has-udd側から実行する前提のデプロイパス解決が、waffle単体リポジトリ
+内での直接実行と噛み合わない既知の挙動。今回のx-prompt-write修正とは無関係）。
 
 ### 薄いフィールド（20字未満、要見直し）
 
