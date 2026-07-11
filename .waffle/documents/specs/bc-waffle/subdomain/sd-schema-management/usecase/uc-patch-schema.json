@@ -1,0 +1,245 @@
+{
+  "documentId": "uc-patch-schema",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v4",
+  "specKind": "usecase",
+  "subdomainRef": "sd-schema-management",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "uc-patch-schema"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "text": "既存のSchema定義ファイルに対し、新規ブロック追加（add_block）・識別子リネーム（rename_block）という構造化操作を、対象外の箇所を一切変更せず（最小diff）、後方互換チェック・JSON Schema構文検証を通過した場合のみ適用する。AIはブロック定義・識別子名だけを与え、schemaファイル内の他の記述には一切触れない。"
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "PatchSchema"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "Orchestrator（HarnessAgent）",
+      "intent": "既存のSchema定義ファイルに新しいブロック・kindを安全に追加、または識別子をリネームする"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "document.jsonは「AIは値だけ、構造は機械が守る」というHarness原則でscaffold/fillが担保しているが、その値を定義するSchema自体はこの原則の外側にあり、AIがRead/Edit/Writeで直接編集していた。このセッションだけでも、json.dumpによる全体再シリアライズがフォーマットを破壊した事故、必須フィールドの追加が既存instanceを壊しうることに気づかず書き込んでしまうリスク、同じ編集を誤って再実行した際の冪等性の欠如、が実際に起きている。document.jsonが受けている安全網（構造保護・冪等性）を、Schema自体の編集にも適用しなければ、waffleが最も守るべき自分自身の定義層が、今も無防備なままになる。"
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象のschemaRefが解決できる",
+        "対象のschemaファイルが、agg-schemaが定める整形契約（json.dumps(indent=2, ensure_ascii=False)相当）に既に従っている",
+        "add_blockの場合: 追加するブロック定義・紐付け先のContent def名・プロパティ名が与えられている",
+        "rename_blockの場合: リネーム元・リネーム先の短縮名（例: DefinitionOfDone→AcceptanceCriteria）が与えられている"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "Orchestrator",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "Orchestrator",
+          "to": "Schema",
+          "message": "patch(operation, params)",
+          "kind": "command"
+        },
+        {
+          "from": "Schema",
+          "to": "Schema",
+          "message": "変更後の構造(dict)を組み立てる",
+          "kind": "self"
+        },
+        {
+          "from": "Schema",
+          "to": "Schema",
+          "message": "後方互換チェック",
+          "kind": "self"
+        },
+        {
+          "from": "Schema",
+          "to": "Schema",
+          "message": "JSON Schema構文検証",
+          "kind": "self"
+        },
+        {
+          "from": "Schema",
+          "to": "",
+          "message": "SchemaPatched",
+          "kind": "event"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "対象外の箇所は一切変更されない（最小diff）",
+        "後方互換を壊す変更（公開済みkindのrequired配列への追加等）は書き込まれない",
+        "書き込まれた結果はJSON Schemaとして構文的に妥当である",
+        "同じ操作を再実行しても、対象が既に完了状態なら無変更で成功する（冪等性）"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When add_blockでブロック名・ブロック定義・紐付け先が与えられたとき、システムは$defsに新規ブロックを追加し対応するContent defにプロパティ参照を追加する shall。",
+        "While 対象ブロックが既に存在するとき、add_blockは無変更で成功する shall。",
+        "When rename_blockで旧短縮名・新短縮名が与えられたとき、システムは$defsキー名・blockType const・プロパティキー名・required配列内エントリ・$ref参照文字列を一貫してリネームする shall。",
+        "While リネーム元が既に存在せず、リネーム先が既に存在するとき、rename_blockは無変更で成功する shall。",
+        "If 変更が公開済みkindのrequired配列へのエントリ追加を含むとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall。",
+        "If 生成結果がJSON Schemaとして構文的に不正なとき、システムはINVALID_SCHEMA_STRUCTUREエラーを返し書き込みを拒否する shall。",
+        "When 書き込みを行うとき、システムは対象ブロック・対象参照以外の箇所を一切変更しない shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "BACKWARD_INCOMPATIBLE",
+          "condition": "変更が公開済みkindのrequired配列へのエントリ追加を含む"
+        },
+        {
+          "code": "INVALID_SCHEMA_STRUCTURE",
+          "condition": "生成結果がJSON Schemaの構文（メタスキーマ）に適合しない"
+        },
+        {
+          "code": "BLOCK_NOT_FOUND",
+          "condition": "rename_blockでリネーム元・リネーム先のいずれも存在しない（対象の取り違え）"
+        },
+        {
+          "code": "INVALID_OPERATION",
+          "condition": "add_block/rename_block以外のoperationが指定された"
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "新規ブロックを追加する",
+          "category": "正常系",
+          "viewpoint": "add_block：$defsへの新規ブロック追加とContent defへのプロパティ参照追加",
+          "gherkin": "Scenario: 新規ブロックを追加する\n  Given ブロック名・ブロック定義・紐付け先のContent def名・プロパティ名\n  When add_blockを実行する\n  Then $defsに新規ブロックが追加され、対応するContent defにプロパティ参照が追加される",
+          "covers": "受け入れ基準: add_blockでのブロック追加"
+        },
+        {
+          "name": "既に存在するブロックの追加は無変更で成功する",
+          "category": "境界値",
+          "viewpoint": "add_block：冪等性",
+          "gherkin": "Scenario: 既に存在するブロックの追加は無変更で成功する\n  Given 既に追加済みのブロック名を含むadd_block操作\n  When add_blockを再実行する\n  Then 対象は無変更のまま成功する",
+          "covers": "受け入れ基準: add_blockの冪等性"
+        },
+        {
+          "name": "識別子を複数箇所にわたってリネームする",
+          "category": "正常系",
+          "viewpoint": "rename_block：$defsキー名・blockType const・プロパティキー名・required・$ref参照の一貫したリネーム",
+          "gherkin": "Scenario: 識別子を複数箇所にわたってリネームする\n  Given 旧短縮名・新短縮名\n  When rename_blockを実行する\n  Then $defsキー名・blockType const・プロパティキー名・required配列内エントリ・$ref参照文字列がすべて新短縮名に一貫してリネームされる",
+          "covers": "受け入れ基準: rename_blockでの識別子リネーム"
+        },
+        {
+          "name": "既にリネーム済みの状態への再リネームは無変更で成功する",
+          "category": "境界値",
+          "viewpoint": "rename_block：冪等性",
+          "gherkin": "Scenario: 既にリネーム済みの状態への再リネームは無変更で成功する\n  Given リネーム元が既に存在せずリネーム先が既に存在する状態\n  When 同じrename_block操作を再実行する\n  Then 対象は無変更のまま成功する",
+          "covers": "受け入れ基準: rename_blockの冪等性"
+        },
+        {
+          "name": "requiredへの追加はBACKWARD_INCOMPATIBLEとして拒否される",
+          "category": "異常系",
+          "viewpoint": "後方互換チェック：公開済みkindのrequired配列へのエントリ追加を拒否する",
+          "gherkin": "Scenario: requiredへの追加はBACKWARD_INCOMPATIBLEとして拒否される\n  Given 公開済みkindのContent defのrequired配列に新規エントリを追加する変更\n  When patchを実行する\n  Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない",
+          "covers": "受け入れ基準: 後方互換チェック"
+        },
+        {
+          "name": "構文的に不正な結果はINVALID_SCHEMA_STRUCTUREとして拒否される",
+          "category": "異常系",
+          "viewpoint": "書き込み前のJSON Schema構文検証",
+          "gherkin": "Scenario: 構文的に不正な結果はINVALID_SCHEMA_STRUCTUREとして拒否される\n  Given 適用するとJSON Schemaとして構文的に不正になる変更\n  When patchを実行する\n  Then INVALID_SCHEMA_STRUCTUREエラーが返り書き込まれない",
+          "covers": "受け入れ基準: 書き込み前のJSON Schema構文検証"
+        },
+        {
+          "name": "対象外の箇所は一切変更されない",
+          "category": "正常系",
+          "viewpoint": "最小diff：変更に無関係な箇所のバイトは1つも変わらない",
+          "gherkin": "Scenario: 対象外の箇所は一切変更されない\n  Given 整形契約に従った既存のschemaファイル\n  When add_blockまたはrename_blockを実行する\n  Then 変更に関係のない既存の行は1バイトも変わらない",
+          "covers": "受け入れ基準: 対象外の箇所の不変性"
+        },
+        {
+          "name": "解決できないschemaRefはINVALID_SCHEMA_REF",
+          "category": "異常系",
+          "viewpoint": "解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる",
+          "gherkin": "Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF\n  Given 解決できないschemaRef\n  When patchを実行する\n  Then INVALID_SCHEMA_REFエラーが返る",
+          "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
+        },
+        {
+          "name": "未知のoperationはINVALID_OPERATION",
+          "category": "異常系",
+          "viewpoint": "operationの妥当性検証：add_block/rename_block以外を拒否する",
+          "gherkin": "Scenario: 未知のoperationはINVALID_OPERATION\n  Given add_block/rename_block以外のoperation\n  When patchを実行する\n  Then INVALID_OPERATIONエラーが返る",
+          "covers": "受け入れ基準: 未知operationの拒否"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 同じadd_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
+        "When 同じrename_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
+        "While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "add_blockの複数回実行はべき等である",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じadd_block操作を複数回実行しても結果が変わらない",
+          "gherkin": "Scenario: add_blockの複数回実行はべき等である\n  Given 同一のadd_block操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
+          "covers": "操作保証: add_blockのべき等性"
+        },
+        {
+          "name": "rename_blockの複数回実行はべき等である",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じrename_block操作を複数回実行しても結果が変わらない",
+          "gherkin": "Scenario: rename_blockの複数回実行はべき等である\n  Given 同一のrename_block操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
+          "covers": "操作保証: rename_blockのべき等性"
+        },
+        {
+          "name": "整形契約に従う既存箇所は書き込み後も不変である",
+          "category": "正常系",
+          "viewpoint": "最小diff：整形契約に従う既存部分はpatch後もバイト単位で不変",
+          "gherkin": "Scenario: 整形契約に従う既存箇所は書き込み後も不変である\n  Given 整形契約に従った既存のschemaファイル\n  When patchを実行する\n  Then 変更対象以外の既存の行はバイト単位で不変である",
+          "covers": "操作保証: 最小diffの保証"
+        }
+      ]
+    }
+  },
+  "tags": []
+}

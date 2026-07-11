@@ -43,3 +43,14 @@ class PackageSchemaRepository(SchemaRepository):
                 if child.name.endswith(".json"):
                     versions.append(child.name.removesuffix(".json"))
         return versions
+
+    def resolve_path(self, schema_ref: str) -> str:
+        *dirs, name = schema_ref.split("/")
+        for package in _PACKAGES:
+            ref = resources.files(package)
+            for d in dirs:
+                ref = ref / d
+            candidate = ref / f"{name}.json"
+            if candidate.is_file():
+                return str(candidate)
+        raise FileNotFoundError(schema_ref)

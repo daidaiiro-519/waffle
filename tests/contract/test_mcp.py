@@ -5,10 +5,21 @@ CLIと並ぶ第2のfront-door。engineの振る舞いはtests/acceptance・tests
 だけを固定する（旧features/mcp.featureから移行）。
 """
 import asyncio
+import json
+from pathlib import Path
 
 from fastmcp import Client
 
 from waffle.adapters.inbound.mcp.main import mcp
+
+_PATCH_FIXTURE_DIR = Path("src/waffle/domain/model/TestMcpPatchSchemaFixture")
+_PATCH_FIXTURE_PATH = _PATCH_FIXTURE_DIR / "v1.json"
+
+
+def teardown_function():
+    _PATCH_FIXTURE_PATH.unlink(missing_ok=True)
+    if _PATCH_FIXTURE_DIR.exists() and not any(_PATCH_FIXTURE_DIR.iterdir()):
+        _PATCH_FIXTURE_DIR.rmdir()
 
 
 async def _call(tool: str, args: dict):
@@ -67,6 +78,30 @@ def test_render_documentはmdフォーマットを返す():
         "deploy": False,
     }))
     assert out["format"] == "md"
+
+
+def test_patch_schemaはadd_blockの結果をdictで返す():
+    """
+    Given waffle MCPサーバ
+    When patch_schemaツールをoperation=add_blockで呼ぶ
+    Then MCP出力のchangedはTrue
+    """
+    _PATCH_FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
+    _PATCH_FIXTURE_PATH.write_text(
+        json.dumps({"$defs": {"SomeContent": {"type": "object", "required": [], "properties": {}}}}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    out = asyncio.run(_call("patch_schema", {
+        "operation": "add_block",
+        "schemaRef": "TestMcpPatchSchemaFixture/v1",
+        "params": {
+            "blockName": "NoteBlock",
+            "blockDef": {"type": "object", "required": ["blockType"], "properties": {"blockType": {"type": "string", "const": "Note"}}},
+            "contentDefName": "SomeContent",
+            "propName": "note",
+        },
+    }))
+    assert out["changed"] is True
 
 
 def test_check_spec_integrityは10フィールドの差分結果を返す():

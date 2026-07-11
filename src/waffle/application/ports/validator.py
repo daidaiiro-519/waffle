@@ -8,3 +8,7 @@ class Validator(Protocol):
     def validate(self, document: dict, schema: dict) -> list[str]:
         """schema 適合を検証し、違反メッセージのリストを返す（空リスト=PASS）。"""
         ...
+
+    def check_schema(self, schema: dict) -> list[str]:
+        """schema自体がJSON Schemaとして構文的に正しいかを検証し、違反メッセージのリストを返す（空リスト=PASS）。"""
+        ...

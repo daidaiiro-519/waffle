@@ -20,6 +20,7 @@ from waffle.application.usecases.check_schema_version_drift import CheckSchemaVe
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
+from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
@@ -109,6 +110,17 @@ def scaffold(
     else:
         params = {}
     _emit(ScaffoldDocument(_docs(), _schemas()).run(operation, params))
+
+@app.command("patch-schema")
+def patch_schema(
+    operation: str = typer.Option(..., "--operation", help="add_block または rename_block"),
+    schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref"),
+    params: str = typer.Option(None, "--params", help="operation固有パラメータのJSONオブジェクト"),
+) -> None:
+    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。"""
+    p = json.loads(params) if params else {}
+    p["schemaRef"] = schema_ref
+    _emit(PatchSchema(_docs(), _schemas(), JsonSchemaValidator()).run(operation, p))
 
 @app.command("check-spec-integrity")
 def check_spec_integrity(

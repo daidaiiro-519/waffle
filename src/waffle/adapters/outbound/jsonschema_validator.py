@@ -14,3 +14,10 @@ class JsonSchemaValidator(Validator):
         v = Draft202012Validator(schema)
         errors = sorted(v.iter_errors(document), key=lambda e: list(e.path))
         return [f"{list(e.path)}: {e.message}" for e in errors]
+
+    def check_schema(self, schema: dict) -> list[str]:
+        try:
+            Draft202012Validator.check_schema(schema)
+        except Exception as e:  # jsonschema.exceptions.SchemaError
+            return [str(e)]
+        return []

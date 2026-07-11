@@ -14,10 +14,15 @@ from waffle.adapters.inbound.cli.main import app
 
 _runner = CliRunner()
 _SCAFFOLD_DEMO_PATH = ".waffle/documents/skills/scaffold-demo.json"
+_PATCH_FIXTURE_DIR = Path("src/waffle/domain/model/TestCliPatchSchemaFixture")
+_PATCH_FIXTURE_PATH = _PATCH_FIXTURE_DIR / "v1.json"
 
 
 def teardown_function():
     Path(_SCAFFOLD_DEMO_PATH).unlink(missing_ok=True)
+    _PATCH_FIXTURE_PATH.unlink(missing_ok=True)
+    if _PATCH_FIXTURE_DIR.exists() and not any(_PATCH_FIXTURE_DIR.iterdir()):
+        _PATCH_FIXTURE_DIR.rmdir()
 
 
 def test_queryはブロックを取得しvalueをJSONで返す():
@@ -176,6 +181,32 @@ def test_scan_source_codeは公開要素の一覧を返す(tmp_path):
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert any(e["name"] == "f" for e in data)
+
+
+def test_patch_schemaはadd_blockの結果をJSONで返す():
+    """
+    Given waffle CLI
+    When patch-schema --operation add_block --schemaRef ... --params '{...}' を実行する
+    Then 終了コードは0で、出力JSONのchangedはtrue
+    """
+    _PATCH_FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
+    _PATCH_FIXTURE_PATH.write_text(
+        json.dumps({"$defs": {"SomeContent": {"type": "object", "required": [], "properties": {}}}}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    result = _runner.invoke(app, [
+        "patch-schema", "--operation", "add_block",
+        "--schemaRef", "TestCliPatchSchemaFixture/v1",
+        "--params", json.dumps({
+            "blockName": "NoteBlock",
+            "blockDef": {"type": "object", "required": ["blockType"], "properties": {"blockType": {"type": "string", "const": "Note"}}},
+            "contentDefName": "SomeContent",
+            "propName": "note",
+        }),
+    ])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data["changed"] is True
 
 
 def test_lint_docstringは違反の配列を返す(tmp_path):

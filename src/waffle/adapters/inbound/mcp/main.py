@@ -18,6 +18,7 @@ from waffle.application.usecases.check_schema_version_drift import CheckSchemaVe
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
+from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
@@ -100,6 +101,13 @@ def scaffold_document(
     else:
         params = {}
     return _dict(ScaffoldDocument(_docs(), _schemas()).run(operation, params))
+
+@mcp.tool
+def patch_schema(operation: str, schemaRef: str, params: dict | None = None) -> dict:
+    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block または rename_block。"""
+    p = dict(params or {})
+    p["schemaRef"] = schemaRef
+    return _dict(PatchSchema(_docs(), _schemas(), JsonSchemaValidator()).run(operation, p))
 
 @mcp.tool
 def check_spec_integrity(path: str, documentsRoot: str = ".waffle/documents") -> dict:
