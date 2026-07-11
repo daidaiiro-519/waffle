@@ -294,7 +294,38 @@ check-schema-version-drift clean・語彙漏れ無しを確認済み。
 
 **総フィールド数:** 12件　**20字未満:** 4件　**重複テキスト:** 0種
 
-**ステータス:** 未着手
+**ステータス:** 完了（2026-07-11）
+
+**対応内容:** 4件中3件（`PlatformGuaranteeScenariosBlock.name/category/viewpoint`
+相当）はDomainSpecSchemaの同種フィールドと同じ理由（真に同じ意味を持つ）で
+改善不要と判断。`ReleasePipelineBlock.stages`のみ例を追加。
+
+**レビュー:** JSON構文・diff1行・全11 platform文書
+（plat-integration/ml/storage/networking/observability/security/analytics/
+compute/database/iot/ci-cd）validate・pytest 188件green。
+
+---
+
+## 全フェーズ完了
+
+全7schema（DomainSpecSchema→CodingSchema→KnowledgeSchema→
+PresentationSpecSchema→AgentSchema→SkillSchema→PlatformSpec）の
+x-prompt-write棚卸し・修正が完了（2026-07-11）。各フェーズで発見した
+横断的な教訓:
+
+1. 他フィールドで宣言済みの値を再利用すべき箇所（enum・states・commands等）
+   に、その旨を明記する指示が欠けているパターンが複数schemaで見つかった
+   （postState・transitions.from/to・testKind等）
+2. 「rule」のような同じフィールド名を複数ブロックで使い回す場合、意味が
+   ブロックごとに異なるなら書き分ける（CodingSchemaの6ブロックが好例）。
+   一方「シナリオ名」「分類」等、文脈が違っても本当に同じ意味のものは
+   無理に書き分けない
+3. json.dumpによる全体再シリアライズは、手書きスタイルのファイルの整形を
+   壊し無関係な差分を生む。既存ファイルを編集する際は文字列置換
+   （Editツール）を基本にする（CodingSchemaのPhase 2で実際に発生し是正した）
+4. schemaの`description`フィールド（開発者向けメタ説明）とcontent側の
+   `x-prompt-write`（AIが値を書く際の指示）は別物。前者にアーキテクチャ
+   語彙が出てきても、業務エキスパート向け成果物には流れ込まないため問題ない
 
 ### 薄いフィールド（20字未満、要見直し）
 
