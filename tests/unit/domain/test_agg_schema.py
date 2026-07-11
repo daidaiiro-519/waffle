@@ -11,12 +11,29 @@ x-migration語彙(MigrationMetaSchema)・移行方向の不変条件は、実際
 過剰なため撤去した(詳細はdocs/brainstorm/brainstorm-schema-versioning-migration.md
 に撤回の経緯として追記済み)。
 """
+import json
+from importlib import resources
+
 import pytest
 
 from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 
 _IN_SCOPE_SCHEMAS = ["SkillSchema/v1", "AgentSchema/v2", "TemplateSchema/v1", "CodingSchema/v2", "DomainSpecSchema/v2", "PresentationSpecSchema/v1", "PlatformSpec/v1"]
+_PACKAGES = ["waffle.domain.model", "waffle.domain.value_objects", "waffle.application.dto"]
+
+
+def _load_raw_text(schema_ref: str) -> str:
+    *dirs, name = schema_ref.split("/")
+    for package in _PACKAGES:
+        ref = resources.files(package)
+        for d in dirs:
+            ref = ref / d
+        try:
+            return (ref / f"{name}.json").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            continue
+    raise FileNotFoundError(schema_ref)
 
 
 # --- 値フィールドに oneOf を持てない ---
@@ -80,6 +97,23 @@ def test_x_render_は閉じた語彙にのみ従う(schema_ref):
 
 # --- 公開済みの版は後方互換を壊さない ---
 # (port不要・純粋なValidator呼び出しで検証できる不変条件)
+
+# --- Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する ---
+
+@pytest.mark.parametrize("schema_ref", _IN_SCOPE_SCHEMAS)
+def test_Schemaファイルの物理整形はjson_dumpsと完全一致する(schema_ref):
+    """
+    Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル
+    When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する
+    Then バイト単位で一致しない場合は不適合として検出される
+
+    (整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な
+    差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする)
+    """
+    original = _load_raw_text(schema_ref)
+    reserialized = json.dumps(json.loads(original), indent=2, ensure_ascii=False) + "\n"
+    assert original == reserialized, f"{schema_ref} が json.dumps(indent=2, ensure_ascii=False) の出力と一致しない"
+
 
 def test_公開済みの版は後方互換を壊さない():
     """

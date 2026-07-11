@@ -3,15 +3,29 @@
   "$id": "RenderMetaSchema/v1",
   "title": "Render Meta Schema v1",
   "description": "各 block の x-render（部品宣言）を検証するメタスキーマ。x-render は RenderPart の配列。部品語彙は閉じた enum で、未知部品・属性漏れは validate で弾ける。engine は MD を正本として各部品を描画する（HTML は生成しない・Google OKF 整合のため MD に一本化し、HTML は既存技術で MD から導出する viewer 側の責務）。block の見出しは x-render-level + title から engine が自動付与し、parts は本文を担う。",
-
   "$defs": {
     "RenderPart": {
       "type": "object",
-      "required": ["as"],
+      "required": [
+        "as"
+      ],
       "additionalProperties": false,
       "properties": {
         "as": {
-          "enum": ["paragraph", "list", "table", "section", "keyvalue", "code", "divider", "sequence", "statediagram", "kvtable", "architecture", "flowchart"],
+          "enum": [
+            "paragraph",
+            "list",
+            "table",
+            "section",
+            "keyvalue",
+            "code",
+            "divider",
+            "sequence",
+            "statediagram",
+            "kvtable",
+            "architecture",
+            "flowchart"
+          ],
           "description": "部品の種類（閉じた語彙）"
         },
         "from": {
@@ -29,11 +43,20 @@
         "badge": {
           "type": "object",
           "description": "section: item の見出しに条件付きで（text）を付ける。from が真のときのみ",
-          "required": ["from", "text"],
+          "required": [
+            "from",
+            "text"
+          ],
           "additionalProperties": false,
           "properties": {
-            "from": { "type": "string", "description": "真偽を判定する item フィールド（例: isRoot）" },
-            "text": { "type": "string", "description": "付与する語（例: 集約ルート）" }
+            "from": {
+              "type": "string",
+              "description": "真偽を判定する item フィールド（例: isRoot）"
+            },
+            "text": {
+              "type": "string",
+              "description": "付与する語（例: 集約ルート）"
+            }
           }
         },
         "heading": {
@@ -49,16 +72,39 @@
           "description": "table / kvtable: 列定義",
           "items": {
             "type": "object",
-            "required": ["field"],
+            "required": [
+              "field"
+            ],
             "additionalProperties": false,
             "properties": {
-              "field": { "type": "string", "description": "行オブジェクトのフィールド名" },
-              "header": { "type": "string", "description": "列見出し（省略時は field）" },
-              "code": { "type": "boolean", "description": "セル値を code（`...`）表示する" },
-              "join": { "type": "string", "description": "table: セル値が配列のとき各要素に .format() するテンプレ文字列（例: '{name}: {type}'）。sep で連結" },
-              "sep":  { "type": "string", "description": "table: join した要素の区切り（既定 ' / '）" },
-              "markField":  { "type": "string", "description": "table: 行のこのフィールドが真ならセルを太字＋markSuffix（例: 識別子の強調）" },
-              "markSuffix": { "type": "string", "description": "table: markField が真のとき末尾に付ける語（例: '（識別子）'）" }
+              "field": {
+                "type": "string",
+                "description": "行オブジェクトのフィールド名"
+              },
+              "header": {
+                "type": "string",
+                "description": "列見出し（省略時は field）"
+              },
+              "code": {
+                "type": "boolean",
+                "description": "セル値を code（`...`）表示する"
+              },
+              "join": {
+                "type": "string",
+                "description": "table: セル値が配列のとき各要素に .format() するテンプレ文字列（例: '{name}: {type}'）。sep で連結"
+              },
+              "sep": {
+                "type": "string",
+                "description": "table: join した要素の区切り（既定 ' / '）"
+              },
+              "markField": {
+                "type": "string",
+                "description": "table: 行のこのフィールドが真ならセルを太字＋markSuffix（例: 識別子の強調）"
+              },
+              "markSuffix": {
+                "type": "string",
+                "description": "table: markField が真のとき末尾に付ける語（例: '（識別子）'）"
+              }
             }
           }
         },
@@ -73,7 +119,9 @@
         "each": {
           "type": "array",
           "description": "section: 各 item を描画する部品列（再帰）",
-          "items": { "$ref": "#/$defs/RenderPart" }
+          "items": {
+            "$ref": "#/$defs/RenderPart"
+          }
         },
         "labelFrom": {
           "type": "string",
@@ -88,11 +136,20 @@
           "description": "keyvalue: 明示ペア。block 直下の各フィールドを固定ラベルつきで並べる（from の代わり）。値が空のペアは省略",
           "items": {
             "type": "object",
-            "required": ["label", "from"],
+            "required": [
+              "label",
+              "from"
+            ],
             "additionalProperties": false,
             "properties": {
-              "label": { "type": "string", "description": "固定ラベル" },
-              "from":  { "type": "string", "description": "値を引く block フィールド名" }
+              "label": {
+                "type": "string",
+                "description": "固定ラベル"
+              },
+              "from": {
+                "type": "string",
+                "description": "値を引く block フィールド名"
+              }
             }
           }
         },
@@ -126,24 +183,188 @@
         }
       },
       "allOf": [
-        { "if": { "properties": { "as": { "const": "paragraph" } } }, "then": { "anyOf": [{ "required": ["from"] }, { "required": ["text"] }] } },
-        { "if": { "properties": { "as": { "const": "list" } } },      "then": { "required": ["from"] } },
-        { "if": { "properties": { "as": { "const": "table" } } },     "then": { "required": ["from", "columns"] } },
-        { "if": { "properties": { "as": { "const": "section" } } },   "then": { "required": ["from", "each"] } },
-        { "if": { "properties": { "as": { "const": "keyvalue" } } },  "then": { "anyOf": [{ "required": ["from"] }, { "required": ["pairs"] }] } },
-        { "if": { "properties": { "as": { "const": "code" } } },      "then": { "required": ["from"] } },
-        { "if": { "properties": { "as": { "const": "sequence" } } },  "then": { "required": ["from"] } },
-        { "if": { "properties": { "as": { "const": "statediagram" } } }, "then": { "required": ["from"] } },
-        { "if": { "properties": { "as": { "const": "kvtable" } } },    "then": { "required": ["columns"] } },
-        { "if": { "properties": { "as": { "const": "architecture" } } }, "then": { "required": ["from"] } },
-        { "if": { "properties": { "as": { "const": "flowchart" } } },  "then": { "required": ["from"] } }
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "paragraph"
+              }
+            }
+          },
+          "then": {
+            "anyOf": [
+              {
+                "required": [
+                  "from"
+                ]
+              },
+              {
+                "required": [
+                  "text"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "list"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "table"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from",
+              "columns"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "section"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from",
+              "each"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "keyvalue"
+              }
+            }
+          },
+          "then": {
+            "anyOf": [
+              {
+                "required": [
+                  "from"
+                ]
+              },
+              {
+                "required": [
+                  "pairs"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "code"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "sequence"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "statediagram"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "kvtable"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "columns"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "architecture"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "as": {
+                "const": "flowchart"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from"
+            ]
+          }
+        }
       ]
     },
-
     "XRender": {
       "type": "array",
       "description": "1 block の x-render。RenderPart を順に並べる。",
-      "items": { "$ref": "#/$defs/RenderPart" }
+      "items": {
+        "$ref": "#/$defs/RenderPart"
+      }
     }
   }
 }

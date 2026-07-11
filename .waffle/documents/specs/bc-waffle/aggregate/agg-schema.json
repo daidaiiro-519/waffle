@@ -115,6 +115,11 @@
           "rule": "Schema集約が対象とするのは Document の schemaRef が指しうる型のみ（派生構造を検証する schema は対象外）",
           "enforcement": "schema",
           "rationale": "一貫性境界を「schemaRef の解決先」に閉じ、無関係な検証用 schema を集約に含めない"
+        },
+        {
+          "rule": "Schemaファイル自体の物理的な整形は、常にPython標準ライブラリの json.dumps(schema, indent=2, ensure_ascii=False) + 改行 の出力と完全一致する",
+          "enforcement": "schema",
+          "rationale": "整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする（複数の書式が混在すると、機械編集のたびにどの書式に合わせるべきかが曖昧になり、フォーマット破壊のリスクが生まれる）"
         }
       ]
     },
@@ -148,6 +153,13 @@
           "viewpoint": "不変条件: 各ブロックの x-render は常に RenderMetaSchema の閉じた語彙にのみ従う",
           "gherkin": "Scenario: x-render は閉じた語彙にのみ従う\n  Given 未知の部品種別、または必須属性が欠けた x-render 宣言を持つ Schema\n  When x-render の適合を検証する\n  Then 不適合として拒否される",
           "covers": "不変条件: 各ブロックの x-render は常に RenderMetaSchema の閉じた語彙にのみ従う"
+        },
+        {
+          "name": "Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する",
+          "category": "異常系",
+          "viewpoint": "不変条件: Schemaファイル自体の物理的な整形は常に json.dumps(schema, indent=2, ensure_ascii=False) の出力と完全一致する",
+          "gherkin": "Scenario: Schemaファイルの物理整形は一意である\n  Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル\n  When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する\n  Then バイト単位で一致しない場合は不適合として検出される",
+          "covers": "不変条件: Schemaファイル自体の物理的な整形は常に json.dumps(indent=2, ensure_ascii=False) の出力と完全一致する"
         }
       ]
     }
