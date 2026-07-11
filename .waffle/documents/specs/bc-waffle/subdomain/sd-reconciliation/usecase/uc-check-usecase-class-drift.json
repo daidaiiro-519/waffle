@@ -1,0 +1,165 @@
+{
+  "documentId": "uc-check-usecase-class-drift",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v4",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "subdomainRef": "sd-reconciliation",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "uc-check-usecase-class-drift"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "text": "usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。"
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "CheckUsecaseClassDrift"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "Orchestrator（HarnessAgent）",
+      "intent": "usecase specの操作名と実装クラス名が一致しているかを確認したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "rationale": "usecase specのoperationNameと実装クラス名が乖離したまま放置されると、specが実装から乖離した「違うモデル」を宣言し続けることになり、DDDのモデル駆動設計（モデルはコードに宿る）の前提が崩れる。この検知が無ければ、リネームの片方だけ反映し忘れる、といった典型的なドリフトに誰も気づけない。"
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root）が与えられている",
+        "usecase実装クラスの配置ルートディレクトリ（src_root）が与えられている"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [],
+      "steps": [
+        {
+          "from": "Orchestrator",
+          "to": "UsecaseClassTree",
+          "message": "documents_root/src_rootを指定してクラス名ドリフト検査を依頼する",
+          "kind": "command"
+        },
+        {
+          "from": "UsecaseClassTree",
+          "to": "UsecaseClassTree",
+          "message": "documents_root配下のusecase document(specKind=usecase)を走査し、各documentのcontent.name.operationNameを集める",
+          "kind": "self"
+        },
+        {
+          "from": "UsecaseClassTree",
+          "to": "UsecaseClassTree",
+          "message": "各operationNameをsnake_caseに変換し、対応する実装ファイル（src_root配下）が実在するかを確認する",
+          "kind": "self"
+        },
+        {
+          "from": "UsecaseClassTree",
+          "to": "UsecaseClassTree",
+          "message": "実在するファイルをASTで解析してクラス定義名を抽出し、operationNameと一致するクラスが含まれるか確認する",
+          "kind": "self"
+        },
+        {
+          "from": "UsecaseClassTree",
+          "to": "Orchestrator",
+          "message": "missing_implementation_file・class_name_mismatchの2つのオブジェクト配列を返す",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "返り値は次の2フィールドを持つ: missing_implementation_file（operationNameから導出したファイルパスが実在しないusecaseの組）・class_name_mismatch（実装ファイルは実在するが、operationNameと一致するクラス定義が含まれていないusecaseの組）",
+        "ファイルパスの導出は、operationNameをsnake_caseに変換し（例: CheckScenarioDrift→check_scenario_drift）、src_root配下に{name}.pyとして配置されている前提で行う",
+        "クラス名の抽出はASTのみで行い、実行や意味理解はしない（宣言された名前と、実装ファイル内に存在するクラス定義名の機械的な突き合わせのみ）",
+        "missing_implementation_file・class_name_mismatchの両方が空配列であれば、全usecaseの操作名と実装クラスが一致している（正常系）"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When usecase specのoperationNameから導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。",
+        "When 実装ファイルは実在するが、operationNameと一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。",
+        "While 全usecaseの操作名と実装クラスが一致しているとき、システムはmissing_implementation_file・class_name_mismatch両方を空配列で返す shall。",
+        "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "INVALID_PATH",
+          "condition": "documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む"
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "全usecaseの操作名と実装クラスが一致するとき差分なしと判定する",
+          "category": "正常系",
+          "viewpoint": "整合：全operationNameが対応する実装ファイル内の同名クラスと一致するとき正常系（空配列）",
+          "gherkin": "Scenario: 全usecaseの操作名と実装クラスが一致するとき差分なしと判定する\n  Given 全usecaseのoperationNameが、対応する実装ファイル内の同名クラスと一致するspecツリー\n  When クラス名ドリフト検査を実行する\n  Then missing_implementation_file・class_name_mismatch両方が空配列で返る",
+          "covers": "受け入れ基準: 全一致で空配列"
+        },
+        {
+          "name": "実装ファイルが存在しないusecaseを検出する",
+          "category": "異常系",
+          "viewpoint": "ドリフト：operationNameから導出したファイルが実在しない",
+          "gherkin": "Scenario: 実装ファイルが存在しないusecaseを検出する\n  Given operationNameから導出したファイルパスに対応する実装ファイルが実在しないusecase document\n  When クラス名ドリフト検査を実行する\n  Then missing_implementation_fileにその組が含まれる",
+          "covers": "受け入れ基準: missing_implementation_file"
+        },
+        {
+          "name": "クラス名が一致しないusecaseを検出する",
+          "category": "異常系",
+          "viewpoint": "ドリフト：実装ファイルは実在するがoperationNameと一致するクラスが無い",
+          "gherkin": "Scenario: クラス名が一致しないusecaseを検出する\n  Given 実装ファイルは実在するが、operationNameと一致するクラス定義を持たないusecase document\n  When クラス名ドリフト検査を実行する\n  Then class_name_mismatchにその組が含まれる",
+          "covers": "受け入れ基準: class_name_mismatch"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "存在しないdocuments_rootはINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：走査起点の不在",
+          "gherkin": "Scenario: 存在しないdocuments_rootはINVALID_PATH\n  When 存在しないdocuments_rootでクラス名ドリフト検査を実行する\n  Then INVALID_PATHエラーが返る",
+          "covers": "操作保証: documents_rootが存在しないときINVALID_PATH"
+        }
+      ]
+    }
+  },
+  "tags": []
+}

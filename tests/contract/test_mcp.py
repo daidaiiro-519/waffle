@@ -112,6 +112,16 @@ def test_check_agent_skill_driftは1フィールドの差分結果を返す():
     assert out == {"missing_skills": []}
 
 
+def test_check_usecase_class_driftは2フィールドの差分結果を返す():
+    """
+    Given waffle MCPサーバ
+    When check_usecase_class_driftツールを呼ぶ
+    Then MCP出力は2フィールド全て空配列（自己整合済み）
+    """
+    out = asyncio.run(_call("check_usecase_class_drift", {}))
+    assert out == {"missing_implementation_file": [], "class_name_mismatch": []}
+
+
 def test_check_scenario_driftは4フィールドの差分結果を返す():
     """
     Given waffle MCPサーバ

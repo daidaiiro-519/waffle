@@ -17,6 +17,7 @@ from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_agent_skill_drift import CheckAgentSkillDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
+from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.query_document import QueryDocument
 from waffle.application.usecases.render_document import RenderDocument
@@ -120,6 +121,11 @@ def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict
 def check_agent_skill_drift(documentsRoot: str = ".waffle/documents") -> dict:
     """subagentのskillPreloadsが参照するSkillの実在性・プリロード可能性を検証（uc-check-agent-skill-drift）。"""
     return _dict(CheckAgentSkillDrift(_docs()).run(documentsRoot))
+
+@mcp.tool
+def check_usecase_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases") -> dict:
+    """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
+    return _dict(CheckUsecaseClassDrift(_docs()).run(documentsRoot, srcRoot))
 
 @mcp.tool
 def scan_source_code(path: str, kind: str) -> dict | list:

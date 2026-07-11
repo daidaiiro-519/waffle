@@ -145,6 +145,18 @@ def test_check_agent_skill_driftは1フィールドの差分結果を返す():
     assert data == {"missing_skills": []}
 
 
+def test_check_usecase_class_driftは2フィールドの差分結果を返す():
+    """
+    Given waffle CLI
+    When check-usecase-class-drift を実行する
+    Then 終了コードは0で、出力JSONは2フィールド全て空配列（自己整合済み）
+    """
+    result = _runner.invoke(app, ["check-usecase-class-drift"])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data == {"missing_implementation_file": [], "class_name_mismatch": []}
+
+
 def test_check_scenario_driftは4フィールドの差分結果を返す():
     """
     Given waffle CLI

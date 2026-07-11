@@ -19,6 +19,7 @@ from waffle.application.usecases.check_agent_skill_drift import CheckAgentSkillD
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
+from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.query_document import QueryDocument
 from waffle.application.usecases.render_document import RenderDocument
@@ -139,6 +140,14 @@ def check_agent_skill_drift(
 ) -> None:
     """subagentのskillPreloadsが参照するSkillの実在性・プリロード可能性を検証（uc-check-agent-skill-drift）。"""
     _emit(CheckAgentSkillDrift(_docs()).run(documents_root))
+
+@app.command("check-usecase-class-drift")
+def check_usecase_class_drift(
+    documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
+    src_root: str = typer.Option("src/waffle/application/usecases", "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ"),
+) -> None:
+    """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
+    _emit(CheckUsecaseClassDrift(_docs()).run(documents_root, src_root))
 
 @app.command("scan-source-code")
 def scan_source_code(
