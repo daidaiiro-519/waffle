@@ -1,0 +1,317 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "KnowledgeSchema/v2",
+  "title": "Knowledge Schema v2",
+  "description": "Document集約の一documentType（Knowledge）。1つの概念について、原則・判断基準・実例・アンチパターン・関連概念を記述する参照資料。独立集約ではなくDocument集約のインスタンスであり、create/fill/validate/render/queryは既存engineがそのまま扱う。kind discriminatorは持たない（形は常に1つ）。v2: principlesを1文字列から独立した主張ごとの配列に変更、provenanceをsource/caveatsに分割、classifications/decisionCriteria/antiPatterns/relatedConceptsにnoteフィールドを追加（itemsが空の場合に理由を明示する）、これら6ブロックをcontentの必須プロパティに昇格。",
+
+  "type": "object",
+  "required": ["documentId", "documentType", "schemaRef", "status", "content"],
+  "x-source-target": ".waffle/documents/knowledge/{documentId}.json",
+  "x-render-target": {
+    "formats": ["md"],
+    "path": ".waffle/knowledge/{documentId}.md"
+  },
+
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "x-prompt-write": "この概念を一意に識別するIDを kebab-case で付けてください。例: subdomain, bounded-context"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "Knowledge"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "KnowledgeSchema/v2"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "ACTIVE", "DEPRECATED"],
+      "x-prompt-write": "作成中は DRAFT、参照可能になったら ACTIVE、廃止する場合は DEPRECATED を指定してください。"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-prompt-write": "この概念を分類するタグを namespace:value 形式で付けてください。例: [\"framework:ddd\", \"domain:order\"]"
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "_index": {
+      "description": "waffle が x-prompt-query から自動生成する。AI は直接書かない。",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["blockType", "prompt"],
+            "properties": {
+              "blockType": { "type": "string" },
+              "prompt": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "content": { "$ref": "#/$defs/KnowledgeContent" }
+  },
+
+  "$defs": {
+    "KnowledgeContent": {
+      "type": "object",
+      "required": ["title", "overview", "principles", "classifications", "decisionCriteria", "examples", "antiPatterns", "provenance", "relatedConcepts"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "$ref": "#/$defs/TitleBlock" },
+        "overview": { "$ref": "#/$defs/OverviewBlock" },
+        "principles": { "$ref": "#/$defs/PrinciplesBlock" },
+        "classifications": { "$ref": "#/$defs/ClassificationsBlock" },
+        "decisionCriteria": { "$ref": "#/$defs/DecisionCriteriaBlock" },
+        "examples": { "$ref": "#/$defs/ExamplesBlock" },
+        "antiPatterns": { "$ref": "#/$defs/AntiPatternsBlock" },
+        "provenance": { "$ref": "#/$defs/ProvenanceBlock" },
+        "relatedConcepts": { "$ref": "#/$defs/RelatedConceptsBlock" }
+      }
+    },
+
+    "TitleBlock": {
+      "type": "object",
+      "required": ["blockType", "title"],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-prompt-query": "この概念のタイトルを持ちます。documentId がそのまま使われます。",
+      "x-render": [],
+      "properties": {
+        "blockType": { "type": "string", "const": "Title" },
+        "title": { "type": "string", "x-prompt-write": "documentId をそのまま設定してください。" }
+      }
+    },
+
+    "OverviewBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "questions", "text"],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "この概念が答える判断（利用者が抱く問い）と、概念の要約を持ちます。読む前にどんな判断に役立つかを把握します。",
+      "x-render": [
+        { "heading": "この概念が答える判断", "as": "list", "from": "questions" },
+        { "as": "paragraph", "from": "text" }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "Overview" },
+        "title": { "type": "string", "const": "概要" },
+        "questions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "x-prompt-write": "この概念を知ることで答えられるようになる、利用者の具体的な問いを列挙してください。「〜べきか」「〜はどう判断するか」の形で。"
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "この概念が何であるかを1〜2文で要約してください。"
+        }
+      }
+    },
+
+    "PrinciplesBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items"],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "この概念の原則を、独立した主張ごとに1要素で持ちます。概念そのものの理解に使います。",
+      "x-render": [{ "as": "list", "from": "items" }],
+      "properties": {
+        "blockType": { "type": "string", "const": "Principles" },
+        "title": { "type": "string", "const": "原則" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "この概念の原則を、独立した主張ごとに1要素で列挙してください（例: 定義・成立根拠・優先順位・副次的効果は、それぞれ別要素に分ける）。1要素は1〜2文とし、他の要素の主張と混在させない。出典の一般原則に基づいて記述してください。",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "ClassificationsBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items", "emptyReason"],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "この概念が持つ分類軸（種別ごとの特徴）を持ちます。判断時にどの種別に該当するかの参照に使います。分類が無い概念ではitemsを空配列にし、noteにその理由を書きます。",
+      "x-render": [
+        { "as": "table", "from": "items", "columns": [{ "field": "name", "header": "分類" }, { "field": "description", "header": "特徴" }] },
+        { "as": "paragraph", "from": "emptyReason" }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "Classifications" },
+        "title": { "type": "string", "const": "分類" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "この概念の分類（例: 中核/一般/補完）を列挙してください。分類が無ければ空配列にしてください。",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "properties": {
+              "name": { "type": "string", "x-prompt-write": "分類名。例: core / supporting / generic" },
+              "description": { "type": "string", "x-prompt-write": "その分類の特徴を1文で。例: 競争優位を生む中核的な業務領域" }
+            }
+          }
+        },
+        "emptyReason": {
+          "type": "string",
+          "x-prompt-write": "itemsが空の場合、この概念に分類軸が無い理由を書いてください。itemsに中身がある場合は空文字でよい。"
+        }
+      }
+    },
+
+    "DecisionCriteriaBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "stages", "transitions", "emptyReason"],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "この概念に関する判断の分岐点（問いと分岐先）を持ちます。実際の判断作業で辿る決定木として使います。判断基準が無い概念ではstages/transitionsを空配列にし、noteにその理由を書きます。",
+      "x-render": [
+        { "as": "flowchart", "from": "stages", "transitionsFrom": "transitions" },
+        { "as": "paragraph", "from": "emptyReason" }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "DecisionCriteria" },
+        "title": { "type": "string", "const": "判断基準" },
+        "emptyReason": {
+          "type": "string",
+          "x-prompt-write": "stages/transitionsが空の場合、この概念に判断の分岐点が無い理由を書いてください。中身がある場合は空文字でよい。"
+        },
+        "stages": {
+          "type": "array",
+          "x-prompt-write": "判断の各分岐点（問いや帰結）をノードとして列挙してください。判断基準が無ければ空配列。",
+          "items": {
+            "type": "object",
+            "required": ["id", "label"],
+            "properties": {
+              "id": { "type": "string", "x-prompt-write": "ノードの識別子。例: q1" },
+              "label": { "type": "string", "x-prompt-write": "問いや帰結の短い文言。例: 複数集約にまたがるか？" }
+            }
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "x-prompt-write": "分岐点間の遷移を、条件（回答）付きで列挙してください。",
+          "items": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+              "from": { "type": "string", "x-prompt-write": "遷移元ノードのid。stagesで宣言済みのidの中から選ぶ。" },
+              "to": { "type": "string", "x-prompt-write": "遷移先ノードのid。stagesで宣言済みのidの中から選ぶ。" },
+              "label": { "type": "string", "x-prompt-write": "遷移条件（回答）の短い文言。例: はい / いいえ" }
+            }
+          }
+        }
+      }
+    },
+
+    "ExamplesBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "text"],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "この概念を具体的な架空の題材に当てはめた実例を持ちます。原則の理解を補強します。",
+      "x-render": [{ "as": "paragraph", "from": "text" }],
+      "properties": {
+        "blockType": { "type": "string", "const": "Examples" },
+        "title": { "type": "string", "const": "実例" },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "架空の題材を使い、この概念を具体的に当てはめた実例を記述してください。特定の実在企業名は避けてください。"
+        }
+      }
+    },
+
+    "AntiPatternsBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items", "emptyReason"],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-query": "この概念に関するよくある誤り（アンチパターン）と、その問題点を持ちます。避けるべき判断の参照に使います。無い概念ではitemsを空配列にし、noteにその理由を書きます。",
+      "x-render": [
+        { "as": "table", "from": "items", "columns": [{ "field": "name", "header": "アンチパターン" }, { "field": "problem", "header": "問題点" }] },
+        { "as": "paragraph", "from": "emptyReason" }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "AntiPatterns" },
+        "title": { "type": "string", "const": "アンチパターン" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "この概念に関するよくある誤りを列挙してください。無ければ空配列。",
+          "items": {
+            "type": "object",
+            "required": ["name", "problem"],
+            "properties": {
+              "name": { "type": "string", "x-prompt-write": "アンチパターン名。何が誤りかが分かる短い名詞句で。例: 貧血ドメインモデル" },
+              "problem": { "type": "string", "x-prompt-write": "その誤りが引き起こす具体的な問題を1文で。" }
+            }
+          }
+        },
+        "emptyReason": {
+          "type": "string",
+          "x-prompt-write": "itemsが空の場合、この概念によくある誤りが無い理由を書いてください。itemsに中身がある場合は空文字でよい。"
+        }
+      }
+    },
+
+    "ProvenanceBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "source", "caveats"],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "この概念の内容がどの出典に基づくか（source）と、まだ確証が得られていない留保事項があれば（caveats）を持ちます。内容の信頼性の確認に使います。",
+      "x-render": [
+        { "as": "paragraph", "from": "source" },
+        { "as": "paragraph", "heading": "留保事項", "from": "caveats" }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "Provenance" },
+        "title": { "type": "string", "const": "出典・根拠の透明性" },
+        "source": {
+          "type": "string",
+          "x-prompt-write": "内容の出典（著者名・書籍/論文名・年等）と、要約/再構成であり直接引用でないことを明記してください。"
+        },
+        "caveats": {
+          "type": "string",
+          "x-prompt-write": "調査・検証の過程でまだ確証が得られていない留保事項があれば書いてください（例: 特定の定式化が検証で却下された等）。無ければ空文字。"
+        }
+      }
+    },
+
+    "RelatedConceptsBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items", "emptyReason"],
+      "x-render-order": 8,
+      "x-render-level": 2,
+      "x-prompt-query": "関連する他のKnowledge documentへの参照を持ちます。概念間のつながりを辿るのに使います。関連が無い概念ではitemsを空配列にし、emptyReasonにその理由を書きます。",
+      "x-render": [
+        { "as": "table", "from": "items", "columns": [{ "field": "conceptId", "header": "関連概念" }, { "field": "note", "header": "関係" }] },
+        { "as": "paragraph", "from": "emptyReason" }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "RelatedConcepts" },
+        "title": { "type": "string", "const": "関連概念" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "関連するKnowledge documentのdocumentIdと、その関係を短く列挙してください。",
+          "items": {
+            "type": "object",
+            "required": ["conceptId", "note"],
+            "properties": {
+              "conceptId": { "type": "string", "x-prompt-write": "関連するKnowledge documentのdocumentId。" },
+              "note": { "type": "string", "x-prompt-write": "どう関連するかを1文で。例: この概念の前提となる基礎概念" }
+            }
+          }
+        },
+        "emptyReason": {
+          "type": "string",
+          "x-prompt-write": "itemsが空の場合、この概念に関連する他のKnowledgeが無い理由を書いてください。itemsに中身がある場合は空文字でよい。"
+        }
+      }
+    }
+  }
+}

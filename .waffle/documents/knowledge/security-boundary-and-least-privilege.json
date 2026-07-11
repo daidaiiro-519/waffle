@@ -1,7 +1,7 @@
 {
   "documentId": "security-boundary-and-least-privilege",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "content": {
     "title": {
@@ -21,7 +21,12 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "最小権限の原則とは、利用者・サービス・ロールに対して、その役割の遂行に必要な範囲のアクセス権だけを与え、それ以上は与えないという設計方針である。長期間有効な認証情報（固定のパスワード・APIキー等）は漏洩時の影響が大きいため、可能な限り一時的な認証情報に置き換える。多層防御とは、ネットワークの境界・ロードバランサー・個々のインスタンス・OS・アプリケーション・コードといった複数の層それぞれにセキュリティ対策を配置する考え方であり、1つの層の対策が破られても他の層が防御を続けられる状態を作る。単一の防御層だけに頼ると、その層が突破された時点で無防備になる。"
+      "items": [
+        "最小権限の原則とは、利用者・サービス・ロールに対して、その役割の遂行に必要な範囲のアクセス権だけを与え、それ以上は与えないという設計方針である。",
+        "長期間有効な認証情報（固定のパスワード・APIキー等）は漏洩時の影響が大きいため、可能な限り一時的な認証情報に置き換える。",
+        "多層防御とは、ネットワークの境界・ロードバランサー・個々のインスタンス・OS・アプリケーション・コードといった複数の層それぞれにセキュリティ対策を配置する考え方であり、1つの層の対策が破られても他の層が防御を続けられる状態を作る。",
+        "単一の防御層だけに頼ると、その層が突破された時点で無防備になる。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -35,7 +40,8 @@
           "name": "多層防御 (Defense in Depth)",
           "description": "ネットワーク境界・ロードバランサー・インスタンス・OS・アプリケーション・コードの各層にセキュリティ対策を重ねる"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
@@ -83,7 +89,8 @@
           "to": "r3",
           "label": "はい（複数層）"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
@@ -106,12 +113,14 @@
           "name": "単一の防御層（例: ロードバランサーの流量制限のみ）に全面的に依存する",
           "problem": "その層が突破・誤設定された瞬間、他に防御手段が無く無防備になる"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "AWS Well-Architected FrameworkのSecurity Pillarが扱う最小権限の原則・多層防御の一般原則をAIが要約・再構成したものであり、本文の直接引用ではない。単一の権威ある出典ではなく、広く確立されたクラウドセキュリティ実務知見として扱う。"
+      "source": "AWS Well-Architected FrameworkのSecurity Pillarが扱う最小権限の原則・多層防御の一般原則をAIが要約・再構成したものであり、本文の直接引用ではない。単一の権威ある出典ではなく、広く確立されたクラウドセキュリティ実務知見として扱う。",
+      "caveats": ""
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -121,7 +130,8 @@
           "conceptId": "reliability-targets-and-error-budgets",
           "note": "どちらもPlatformSpecが扱う非機能要件の判断基準という点で並列の関係"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   },
   "tags": []

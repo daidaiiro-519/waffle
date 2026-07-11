@@ -129,6 +129,26 @@ KnowledgeSchema文書として作成・validate・render済み:
   test-induced design damage/mutation testing）は今回のweb調査対象に含めておらず、
   出典の一次資料確認はまだ済んでいない
 
+### 副産物: KnowledgeSchema自体の構造レビュー（v1→v2、2026-07-11）
+
+4文書を作成する過程で、ユーザーから`KnowledgeSchema`自体の構造指摘を受け、v2へ移行した:
+
+1. **`principles.text`（1文字列）→`principles.items`（配列）**: 複数の独立した主張
+   （定義・成立根拠・優先順位・副次的効果等）が1つの長文に混在していた問題を解消
+2. **`provenance.text`→`provenance.source`/`caveats`**: 「出典」と「まだ確証が
+   得られていない留保事項」という別の関心事が混在していた問題を解消
+3. **`classifications`/`decisionCriteria`/`antiPatterns`/`relatedConcepts`に
+   `emptyReason`フィールドを追加**: itemsが空のとき、ブロックが「存在するが中身が空」の
+   状態を放置せず、必ず理由を明記するよう強制。実際にこの移行作業中、`risk-based-testing`
+   （分類0件・判断基準0件・実例が空文字）等、本来書くべき内容が抜けていた箇所を複数発見し
+   補完した
+4. `classifications`/`decisionCriteria`/`examples`/`antiPatterns`/`provenance`/
+   `relatedConcepts`を`KnowledgeContent`の必須プロパティに昇格（`scaffold create`が
+   既に必ず全ブロックの空スケルトンを生成する実態に、schemaの`required`宣言を合わせた）
+
+既存42文書＋新規4文書、計46文書全てをv2へ移行し、pytest 194件green・
+check-schema-version-drift clean・render確認済み。
+
 ---
 
 ## 次のアクション

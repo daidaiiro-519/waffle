@@ -1,7 +1,7 @@
 {
   "documentId": "risk-based-testing",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "content": {
     "title": {
@@ -20,23 +20,62 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "リスクベーステスト(RBT)は、プロジェクトの初期段階からプロダクトリスクの水準を低減し、その状況をステークホルダーに伝えるためのアプローチであり、核となる要素はリスクの識別とリスクレベルの活用である。評価手法には、発生可能性(likelihood)と影響度(impact)の2軸を簡易スケール(高・中・低等)で評価する軽量な手法と、FMEA(故障モード影響解析)・FTA(故障の木解析)・QFD等の重量な技法がある。リスクが高いと判定された領域には、より厚く・より早い段階でテストリソースを配分する。"
+      "items": [
+        "リスクベーステスト(RBT)は、プロジェクトの初期段階からプロダクトリスクの水準を低減し、その状況をステークホルダーに伝えるためのアプローチであり、核となる要素はリスクの識別とリスクレベルの活用である。",
+        "評価手法には、発生可能性(likelihood)と影響度(impact)の2軸を簡易スケール(高・中・低等)で評価する軽量な手法と、FMEA(故障モード影響解析)・FTA(故障の木解析)・QFD等の重量な技法がある。",
+        "リスクが高いと判定された領域には、より厚く・より早い段階でテストリソースを配分する。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
       "title": "分類",
-      "items": []
+      "items": [
+        {
+          "name": "軽量な手法",
+          "description": "発生可能性(likelihood)と影響度(impact)を高中低等の簡易スケールで評価する"
+        },
+        {
+          "name": "重量な手法",
+          "description": "FMEA(故障モード影響解析)・FTA(故障の木解析)・QFD等の体系的な技法を用いる"
+        }
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
       "title": "判断基準",
-      "stages": [],
-      "transitions": []
+      "stages": [
+        {
+          "id": "assess",
+          "label": "対象のリスク(影響度・複雑性)は高いか？"
+        },
+        {
+          "id": "heavy",
+          "label": "重量な手法(FMEA/FTA等)を使う"
+        },
+        {
+          "id": "light",
+          "label": "軽量な手法(likelihood×impactの簡易スケール)を使う"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "assess",
+          "to": "heavy",
+          "label": "はい(影響度・複雑性が高い)"
+        },
+        {
+          "from": "assess",
+          "to": "light",
+          "label": "いいえ(影響度・複雑性が低い)"
+        }
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
       "title": "実例",
-      "text": ""
+      "text": "例えば決済機能のリスク評価では、影響度(金銭的損失・信頼失墜)が高いため、FMEAのような重量な手法で網羅的に故障モードを洗い出す。一方、UIの表示崩れのような軽微な不具合は、発生可能性×影響度を高中低で簡易評価するだけで十分であり、テストの厚みをそこに合わせて調整する。"
     },
     "antiPatterns": {
       "blockType": "AntiPatterns",
@@ -46,12 +85,14 @@
           "name": "全機能に均等にテスト工数を配分する",
           "problem": "高リスク領域のテストが薄くなり、低リスク領域に工数を浪費する。限られたテスト工数はリスクに応じて傾斜配分すべき"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "Felderer & Schieferdecker(2014年、Software Tools for Technology Transfer誌掲載の査読論文)およびISTQB glossaryにおける定義に基づく。なお『リスク=発生確率×影響度』という単純な掛け算による定量化については、確立された唯一の合意とまでは言えず、軽量・重量それぞれの評価手法が併存している点に留意。"
+      "source": "Felderer & Schieferdecker(2014年、Software Tools for Technology Transfer誌掲載の査読論文)およびISTQB glossaryにおける定義に基づく。",
+      "caveats": "『リスク=発生確率×影響度』という単純な掛け算による定量化については、確立された唯一の合意とまでは言えず、軽量・重量それぞれの評価手法が併存している点に留意。"
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -61,7 +102,8 @@
           "conceptId": "boundary-value-analysis-equivalence-partitioning",
           "note": "境界値分析は『どこを狙うか』の技法、リスクベーステストは『どこに力を注ぐか』の戦略。粒度が異なる"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   },
   "tags": []

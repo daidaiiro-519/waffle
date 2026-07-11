@@ -1,7 +1,7 @@
 {
   "documentId": "boundary-value-analysis-equivalence-partitioning",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "content": {
     "title": {
@@ -20,7 +20,11 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "同値分割は、あるパーティション内の全要素が同じ方法で処理されるという期待に基づいてデータを分割する技法であり、『あるパーティション内の1値で欠陥が検出されれば、同パーティション内の他の値でも同じ欠陥が検出されるはず』という前提に立つ。これにより、無限に近い入力の組み合わせを、代表値をテストするだけで済む程度まで絞り込める。境界値分析は、パーティションの中間値ではなく境界(エッジ)を狙って検証する技法である——開発者は境界値(例: 範囲の最小値・最大値・その1つ外側)でエラーを起こしやすいという経験則に基づく。"
+      "items": [
+        "同値分割は、あるパーティション内の全要素が同じ方法で処理されるという期待に基づいてデータを分割する技法であり、『あるパーティション内の1値で欠陥が検出されれば、同パーティション内の他の値でも同じ欠陥が検出されるはず』という前提に立つ。",
+        "これにより、無限に近い入力の組み合わせを、代表値をテストするだけで済む程度まで絞り込める。",
+        "境界値分析は、パーティションの中間値ではなく境界(エッジ)を狙って検証する技法である——開発者は境界値(例: 範囲の最小値・最大値・その1つ外側)でエラーを起こしやすいという経験則に基づく。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -34,13 +38,15 @@
           "name": "境界値分析",
           "description": "各パーティションの境界(最小値・最大値・その前後)を狙って検証する"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
       "title": "判断基準",
       "stages": [],
-      "transitions": []
+      "transitions": [],
+      "emptyReason": "同値分割と境界値分析は排他的な選択肢ではなく組み合わせて使う技法であり、機械的な分岐判断は存在しない。"
     },
     "examples": {
       "blockType": "Examples",
@@ -55,12 +61,14 @@
           "name": "パーティション内の中間値だけをテストする",
           "problem": "境界値でのオフバイワンエラー(範囲の端が1つずれる不具合)を見逃しやすい"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "Glenford J. Myers『The Art of Software Testing』に起源を持つ同値分割・境界値分析の概念が、ISTQB(International Software Testing Qualifications Board) Foundation Level Syllabusで標準的なブラックボックステスト技法として整理されている。"
+      "source": "Glenford J. Myers『The Art of Software Testing』に起源を持つ同値分割・境界値分析の概念が、ISTQB(International Software Testing Qualifications Board) Foundation Level Syllabusで標準的なブラックボックステスト技法として整理されている。",
+      "caveats": ""
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -70,7 +78,8 @@
           "conceptId": "risk-based-testing",
           "note": "境界値分析は『どこを狙うか』の技法、リスクベーステストは『どこに力を注ぐか』の戦略。粒度が異なる"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   },
   "tags": []

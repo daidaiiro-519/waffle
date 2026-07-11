@@ -1,7 +1,7 @@
 {
   "documentId": "visual-hierarchy-and-restraint",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "content": {
     "title": {
@@ -23,7 +23,15 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "5つの判断軸から成る。(1)画面の最初の要素（Hero）は、そのプロダクト・題材にとって最も特徴的なものを選ぶ——「大きな数字＋小さなラベル＋補足統計＋グラデーション」のような定型パターンを、それが本当に最適でない限り既定にしない。(2)見出し用書体と本文用書体は意図的に組み合わせる——どんな案件でも同じ組み合わせを使い回さない。(3)番号・見出し接頭辞・区切り線などの構造表現は、実際の意味（本当に順序が理解に関わる工程か等）を反映させる——意味のない01/02/03を飾りとして使わない。(4)モーション（アニメーション）は「この題材に効くか」を先に問い、ページ読み込み時の演出・スクロール連動・ホバー時の反応等、狙いを絞って配置する——散発的な効果の乱用はAI生成っぽさとして読まれるリスクがある。(5)実装の作り込み度は選んだ方向性と一致させる——凝った方向を選んだら細部まで凝る、最小限の方向を選んだら余白・書体・仕上げの精度で勝負する。中途半端が最も避けるべき状態である。"
+      "items": [
+        "5つの判断軸から成る。",
+        "(1)画面の最初の要素（Hero）は、そのプロダクト・題材にとって最も特徴的なものを選ぶ——「大きな数字＋小さなラベル＋補足統計＋グラデーション」のような定型パターンを、それが本当に最適でない限り既定にしない。",
+        "(2)見出し用書体と本文用書体は意図的に組み合わせる——どんな案件でも同じ組み合わせを使い回さない。",
+        "(3)番号・見出し接頭辞・区切り線などの構造表現は、実際の意味（本当に順序が理解に関わる工程か等）を反映させる——意味のない01/02/03を飾りとして使わない。",
+        "(4)モーション（アニメーション）は「この題材に効くか」を先に問い、ページ読み込み時の演出・スクロール連動・ホバー時の反応等、狙いを絞って配置する——散発的な効果の乱用はAI生成っぽさとして読まれるリスクがある。",
+        "(5)実装の作り込み度は選んだ方向性と一致させる——凝った方向を選んだら細部まで凝る、最小限の方向を選んだら余白・書体・仕上げの精度で勝負する。",
+        "中途半端が最も避けるべき状態である。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -49,7 +57,8 @@
           "name": "Complexity Matching",
           "description": "作り込み度と選んだ方向性を一致させる"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
@@ -97,7 +106,8 @@
           "to": "r3",
           "label": "はい"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
@@ -124,12 +134,14 @@
           "name": "方向性と作り込み度が一致しない",
           "problem": "凝った方向性を選びながら細部を仕上げない、または最小限の方向性なのに余計な装飾を足す、という中途半端な実装になる"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "Anthropic公式`/frontend-design`skillのDesign Principles（Hero as Thesis／Typography／Structure as Information／Motion／Complexity Matching）を要約・再構成したものであり、本文の直接引用ではない。"
+      "source": "Anthropic公式`/frontend-design`skillのDesign Principles（Hero as Thesis／Typography／Structure as Information／Motion／Complexity Matching）を要約・再構成したものであり、本文の直接引用ではない。",
+      "caveats": ""
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -139,7 +151,8 @@
           "conceptId": "design-system-tokens",
           "note": "この5原則で決めた判断を実際に記録・再利用する仕組みがdesign-system-tokens"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   },
   "tags": []

@@ -1,7 +1,7 @@
 {
   "documentId": "reliability-targets-and-error-budgets",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "content": {
     "title": {
@@ -21,7 +21,13 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "可用性は100%を目指すべきではない——完璧な信頼性を追求するコストは、利用者が実際に体感できる差を上回ることが多く、投資対効果が悪化する。まずSLI（何を測るか、例: リクエスト成功率）を定め、次にSLO（その指標がどの水準を満たすべきか、例: 99.9%）を設定する。SLOと100%の差（例: 0.1%）が「エラーバジェット」であり、これは許容される障害の予算として扱う。エラーバジェットが残っている間は新機能のリリース・実験的な変更を積極的に進めてよく、エラーバジェットを使い切った場合は新規リリースを止めて信頼性の回復を優先する、という判断基準に変換できる。SLOは業務要件（どれだけの信頼性が事業上必要か）を反映すべきであり、技術的に達成可能な最大値をそのまま目標にしない。"
+      "items": [
+        "可用性は100%を目指すべきではない——完璧な信頼性を追求するコストは、利用者が実際に体感できる差を上回ることが多く、投資対効果が悪化する。",
+        "まずSLI（何を測るか、例: リクエスト成功率）を定め、次にSLO（その指標がどの水準を満たすべきか、例: 99.9%）を設定する。",
+        "SLOと100%の差（例: 0.1%）が「エラーバジェット」であり、これは許容される障害の予算として扱う。",
+        "エラーバジェットが残っている間は新機能のリリース・実験的な変更を積極的に進めてよく、エラーバジェットを使い切った場合は新規リリースを止めて信頼性の回復を優先する、という判断基準に変換できる。",
+        "SLOは業務要件（どれだけの信頼性が事業上必要か）を反映すべきであり、技術的に達成可能な最大値をそのまま目標にしない。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -39,7 +45,8 @@
           "name": "エラーバジェット",
           "description": "SLOと100%の差。許容される障害の予算として扱う"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
@@ -87,7 +94,8 @@
           "to": "r3",
           "label": "使い切っている"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
@@ -110,17 +118,20 @@
           "name": "エラーバジェットを使い切っても新機能リリースを止めない",
           "problem": "信頼性の低下が続き、利用者の信頼を損なう"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "GoogleのSite Reliability Engineering（SRE）が確立したSLI/SLO/エラーバジェットの概念をAIが要約・再構成したものであり、本文の直接引用ではない。広く確立されたSRE実務知見として扱う。"
+      "source": "GoogleのSite Reliability Engineering（SRE）が確立したSLI/SLO/エラーバジェットの概念をAIが要約・再構成したものであり、本文の直接引用ではない。広く確立されたSRE実務知見として扱う。",
+      "caveats": ""
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
       "title": "関連概念",
-      "items": []
+      "items": [],
+      "emptyReason": "現時点でこの概念に直接関連付けるKnowledge documentは無い。"
     }
   },
   "tags": []

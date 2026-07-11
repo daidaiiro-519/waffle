@@ -1,7 +1,7 @@
 {
   "documentId": "accessibility-baseline",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "content": {
     "title": {
@@ -21,7 +21,14 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "品質下限は3点から成る。(1)レスポンシブ対応——画面幅が変わっても情報が読み取れ操作できる状態を保つ。(2)フォーカス状態——キーボードだけで操作する利用者のために、今どの要素が選択されているかを視覚的に示す。マウス操作を前提にフォーカス表示を消してしまうと、キーボード利用者が操作不能になる。(3)reduced-motion対応——利用者のOS設定で「動きを減らす」が指定されている場合、大きなアニメーション・自動再生を抑える。これらはデザインの個性を出す領域（Hero・タイポグラフィ・モーションの演出等）とは別次元の話であり、独自性を追求する自由度とは無関係に常に満たす。"
+      "items": [
+        "品質下限は3点から成る。",
+        "(1)レスポンシブ対応——画面幅が変わっても情報が読み取れ操作できる状態を保つ。",
+        "(2)フォーカス状態——キーボードだけで操作する利用者のために、今どの要素が選択されているかを視覚的に示す。",
+        "マウス操作を前提にフォーカス表示を消してしまうと、キーボード利用者が操作不能になる。",
+        "(3)reduced-motion対応——利用者のOS設定で「動きを減らす」が指定されている場合、大きなアニメーション・自動再生を抑える。",
+        "これらはデザインの個性を出す領域（Hero・タイポグラフィ・モーションの演出等）とは別次元の話であり、独自性を追求する自由度とは無関係に常に満たす。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -39,7 +46,8 @@
           "name": "reduced-motion対応",
           "description": "利用者の「動きを減らす」設定時に、大きなアニメーション・自動再生を抑える"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
@@ -78,7 +86,8 @@
           "to": "r2",
           "label": "はい"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
@@ -101,12 +110,14 @@
           "name": "デザインの個性を優先し品質下限を後回しにする",
           "problem": "独自性のあるHero・モーションを作り込む前にこれらの基準を満たしていることを確認しないと、後から手戻りが大きくなる"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "Anthropic公式`/frontend-design`skillのRestraint & Self-Critiqueセクション（レスポンシブ・フォーカス状態・reduced-motion対応という品質下限）を要約・再構成したものであり、本文の直接引用ではない。"
+      "source": "Anthropic公式`/frontend-design`skillのRestraint & Self-Critiqueセクション（レスポンシブ・フォーカス状態・reduced-motion対応という品質下限）を要約・再構成したものであり、本文の直接引用ではない。",
+      "caveats": ""
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -116,7 +127,8 @@
           "conceptId": "visual-hierarchy-and-restraint",
           "note": "品質下限を満たした上で、個性を追求する領域の判断がvisual-hierarchy-and-restraint"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   },
   "tags": []

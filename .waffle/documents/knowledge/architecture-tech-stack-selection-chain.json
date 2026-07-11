@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-tech-stack-selection-chain",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "tags": [
     "advisor:tech-lead",
@@ -27,7 +27,11 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "サブドメイン分類→実装方法→技術方式という連鎖の続きとして、技術方式が決まれば、その技術方式が要求する技術的性質（技術要件）が決まる。例えば技術方式がCQRSであれば「書き込み用と読み取り用で異なる永続化モデルを扱えること」が要件になり、ポートとアダプターであれば「ドメイン層から独立してテスト用の偽実装に差し替え可能なインターフェース機構」が要件になる。この技術要件を満たす具体的な製品・ライブラリの選定（例：どのDBを使うか、どのWebフレームワークを使うか）は、原則からは一意に決まらない——プロジェクトの制約（チームの習熟度・既存資産・コスト）に依存するため、この判断基準の範囲外とし、選定の経緯と理由を記録するADR（Architecture Decision Record）として別途残すべきである。"
+      "items": [
+        "サブドメイン分類→実装方法→技術方式という連鎖の続きとして、技術方式が決まれば、その技術方式が要求する技術的性質（技術要件）が決まる。",
+        "例えば技術方式がCQRSであれば「書き込み用と読み取り用で異なる永続化モデルを扱えること」が要件になり、ポートとアダプターであれば「ドメイン層から独立してテスト用の偽実装に差し替え可能なインターフェース機構」が要件になる。",
+        "この技術要件を満たす具体的な製品・ライブラリの選定（例：どのDBを使うか、どのWebフレームワークを使うか）は、原則からは一意に決まらない——プロジェクトの制約（チームの習熟度・既存資産・コスト）に依存するため、この判断基準の範囲外とし、選定の経緯と理由を記録するADR（Architecture Decision Record）として別途残すべきである。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -45,24 +49,57 @@
           "name": "レイヤードアーキテクチャが要求する技術要件",
           "description": "特別な技術要件は薄い。一般的なWebフレームワーク・DBアクセス手段で足りることが多い"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
       "title": "判断基準",
       "stages": [
-        { "id": "q1", "label": "技術方式は既に決まっているか（サブドメイン分類→実装方法→技術方式の連鎖を経ているか）" },
-        { "id": "r1", "label": "先に連鎖（サブドメイン分類→実装方法→技術方式）を確定させる" },
-        { "id": "q2", "label": "その技術方式が要求する技術的性質は明確か" },
-        { "id": "r2", "label": "その性質を満たす製品候補を複数挙げ、ADRとして選定理由を記録する" },
-        { "id": "r3", "label": "この判断基準の範囲外。プロジェクト固有の制約（チームの習熟度・既存資産・コスト）で判断し、ADRに残す" }
+        {
+          "id": "q1",
+          "label": "技術方式は既に決まっているか（サブドメイン分類→実装方法→技術方式の連鎖を経ているか）"
+        },
+        {
+          "id": "r1",
+          "label": "先に連鎖（サブドメイン分類→実装方法→技術方式）を確定させる"
+        },
+        {
+          "id": "q2",
+          "label": "その技術方式が要求する技術的性質は明確か"
+        },
+        {
+          "id": "r2",
+          "label": "その性質を満たす製品候補を複数挙げ、ADRとして選定理由を記録する"
+        },
+        {
+          "id": "r3",
+          "label": "この判断基準の範囲外。プロジェクト固有の制約（チームの習熟度・既存資産・コスト）で判断し、ADRに残す"
+        }
       ],
       "transitions": [
-        { "from": "q1", "to": "r1", "label": "いいえ" },
-        { "from": "q1", "to": "q2", "label": "はい" },
-        { "from": "q2", "to": "r2", "label": "はい" },
-        { "from": "q2", "to": "r3", "label": "いいえ" }
-      ]
+        {
+          "from": "q1",
+          "to": "r1",
+          "label": "いいえ"
+        },
+        {
+          "from": "q1",
+          "to": "q2",
+          "label": "はい"
+        },
+        {
+          "from": "q2",
+          "to": "r2",
+          "label": "はい"
+        },
+        {
+          "from": "q2",
+          "to": "r3",
+          "label": "いいえ"
+        }
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
@@ -81,12 +118,14 @@
           "name": "ADRを残さず製品選定の理由が失われる",
           "problem": "後任者が「なぜこの製品を選んだか」を再現できず、変更の是非を判断できなくなる"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "ddd-advisorの`design-heuristics.md`が扱う連鎖（サブドメイン分類→実装方法→技術方式）の続きとして、技術方式が要求する技術的性質までをAIが総合し、has-udd独自にまとめたものである。具体的な製品選定はこの判断基準の範囲外とし、ADR形式に委ねるという判断は既に合意済みである（[[brainstorm-platform-engineering-application]] 論点6・論点11拡張を受けて着手）。"
+      "source": "ddd-advisorの`design-heuristics.md`が扱う連鎖（サブドメイン分類→実装方法→技術方式）の続きとして、技術方式が要求する技術的性質までをAIが総合し、has-udd独自にまとめたものである。具体的な製品選定はこの判断基準の範囲外とし、ADR形式に委ねるという判断は既に合意済みである（[[brainstorm-platform-engineering-application]] 論点6・論点11拡張を受けて着手）。",
+      "caveats": ""
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -100,7 +139,8 @@
           "conceptId": "architecture-port-adapter",
           "note": "技術方式の1つ（ポートとアダプター）が要求する技術要件の具体例"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   }
 }

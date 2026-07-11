@@ -1,7 +1,7 @@
 {
   "documentId": "exploratory-testing",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "content": {
     "title": {
@@ -20,7 +20,11 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "James Bachは探索的テストを『テストを行いながら、そのテストに影響を与える事柄を同時に学習していく、科学的なプロセス』と定義する。Cem Kanerの定義では『学習・テスト設計・テスト実行を並行して行う、個々のテスターの個人的な自由と責任を重視するテストのスタイル』とされる。Bachは、テストは完全にスクリプト化されたものと完全に探索的なものの間の連続体上に位置し、現実のテストは常にその両者の混合であると位置づける——『全てのテストはある程度探索的である』。"
+      "items": [
+        "James Bachは探索的テストを『テストを行いながら、そのテストに影響を与える事柄を同時に学習していく、科学的なプロセス』と定義する。",
+        "Cem Kanerの定義では『学習・テスト設計・テスト実行を並行して行う、個々のテスターの個人的な自由と責任を重視するテストのスタイル』とされる。",
+        "Bachは、テストは完全にスクリプト化されたものと完全に探索的なものの間の連続体上に位置し、現実のテストは常にその両者の混合であると位置づける——『全てのテストはある程度探索的である』。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -34,18 +38,44 @@
           "name": "探索的テスト",
           "description": "テストしながら学んだことを次のテスト設計に即座に反映する。仕様に書かれていない未知の不具合の発見に向く"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
       "title": "判断基準",
-      "stages": [],
-      "transitions": []
+      "stages": [
+        {
+          "id": "q1",
+          "label": "対象領域は仕様が明確で反復確認したいか？"
+        },
+        {
+          "id": "scripted",
+          "label": "スクリプトテストを主軸にする"
+        },
+        {
+          "id": "exploratory",
+          "label": "探索的テストを主軸にする"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "q1",
+          "to": "scripted",
+          "label": "はい(既知の仕様を反復確認したい)"
+        },
+        {
+          "from": "q1",
+          "to": "exploratory",
+          "label": "いいえ(未知・新規領域を学習しながら検証したい)"
+        }
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
       "title": "実例",
-      "text": ""
+      "text": "例えば新しいログイン画面をテストする際、事前に用意したスクリプトだけでなく、「パスワード欄に絵文字を入れたらどうなるか」「二重タブで同時にログインしたらどうなるか」といった、テストしながら思いついた疑問をその場で試し、発見した挙動を次のテスト設計に反映していく。"
     },
     "antiPatterns": {
       "blockType": "AntiPatterns",
@@ -55,12 +85,14 @@
           "name": "探索的テストを『行き当たりばったりのテスト』と誤解する",
           "problem": "探索的テストは無計画な作業ではなく、学習・設計・実行を同時に行う訓練されたスキルである。テスターの経験・専門性に強く依存する"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "James Bach・Cem Kanerが提唱し、Kaner, Bach, Pettichord共著『Lessons Learned in Software Testing』(2001年)でContext-Driven Schoolのアプローチとして発展・普及した。なお用語の初出時期(1984年造語説・1988年著書初出説)は今回の調査で確証を得られていない。"
+      "source": "James Bach・Cem Kanerが提唱し、Kaner, Bach, Pettichord共著『Lessons Learned in Software Testing』(2001年)でContext-Driven Schoolのアプローチとして発展・普及した。",
+      "caveats": "用語の初出時期(1984年造語説・1988年著書初出説)は今回の調査で確証を得られていない。"
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -70,7 +102,8 @@
           "conceptId": "tdd",
           "note": "TDDは実装前のテスト設計、探索的テストは実装後(または並行)の学習型テスト実行。両者は異なるフェーズ・目的を持つ"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   },
   "tags": []

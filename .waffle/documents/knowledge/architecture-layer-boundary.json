@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-layer-boundary",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "tags": [
     "advisor:tech-lead",
@@ -27,7 +27,12 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "最小構成は「ドメイン層（ビジネスルール）」「アプリケーション層（ユースケースの調整）」「インフラ層（技術的詳細）」の3層である。UIを含めるなら「プレゼンテーション層」が加わるが、DDD自体はこの層をスコープ外にすることが多い。層を増やす判断基準は、変更の理由が明確に分離できる場合に限る——増やしすぎるとコードを追う手間が増え、少なすぎると責務が混ざり[[architecture-dependency-direction]]の依存方向原則が守れなくなる。DDDのサブドメイン分類（中核・一般・補完）は、事業の差別化にどれだけ寄与するかという事業側の判断だが、この分類は「どれだけ層を厳密に分離すべきか」という設計側の判断に直接影響する——中核は変化・複雑さの中心なので層を厳密に分離する価値が高く、補完は変化が少ないため層を簡略化しても実害が小さい。"
+      "items": [
+        "最小構成は「ドメイン層（ビジネスルール）」「アプリケーション層（ユースケースの調整）」「インフラ層（技術的詳細）」の3層である。",
+        "UIを含めるなら「プレゼンテーション層」が加わるが、DDD自体はこの層をスコープ外にすることが多い。",
+        "層を増やす判断基準は、変更の理由が明確に分離できる場合に限る——増やしすぎるとコードを追う手間が増え、少なすぎると責務が混ざり[[architecture-dependency-direction]]の依存方向原則が守れなくなる。",
+        "DDDのサブドメイン分類（中核・一般・補完）は、事業の差別化にどれだけ寄与するかという事業側の判断だが、この分類は「どれだけ層を厳密に分離すべきか」という設計側の判断に直接影響する——中核は変化・複雑さの中心なので層を厳密に分離する価値が高く、補完は変化が少ないため層を簡略化しても実害が小さい。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -49,7 +54,8 @@
           "name": "プレゼンテーション層（任意）",
           "description": "UI・入出力の表現。DDD自体はこの層を積極的にモデル化しないため、必要な場合は別途明示的な設計判断が要る"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
@@ -97,7 +103,8 @@
           "to": "r3",
           "label": "いいえ"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
@@ -116,12 +123,14 @@
           "name": "レイヤーをまたいで直接データベースにアクセスする「レイヤーのバイパス」",
           "problem": "層の意味が失われ、依存関係が追跡不能になる。将来的な変更の影響範囲が予測できなくなる"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "クリーンアーキテクチャ・オニオンアーキテクチャ・ヘキサゴナルアーキテクチャの共通原則（単一責任の原則の層レベルでの適用）をAIが総合し、has-udd独自にまとめたものである。DDDサブドメイン分類との接続部分は、ddd-advisorのbackboneとは独立した、tech-lead-advisor独自の判断ロジックである（[[brainstorm-platform-engineering-application]] 論点6を参照）。"
+      "source": "クリーンアーキテクチャ・オニオンアーキテクチャ・ヘキサゴナルアーキテクチャの共通原則（単一責任の原則の層レベルでの適用）をAIが総合し、has-udd独自にまとめたものである。DDDサブドメイン分類との接続部分は、ddd-advisorのbackboneとは独立した、tech-lead-advisor独自の判断ロジックである（[[brainstorm-platform-engineering-application]] 論点6を参照）。",
+      "caveats": ""
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -135,7 +144,8 @@
           "conceptId": "architecture-port-adapter",
           "note": "アプリケーション層・ドメイン層が外側に公開するインターフェースの設計パターン"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   }
 }

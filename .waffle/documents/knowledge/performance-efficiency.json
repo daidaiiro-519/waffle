@@ -1,7 +1,7 @@
 {
   "documentId": "performance-efficiency",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v1",
+  "schemaRef": "KnowledgeSchema/v2",
   "status": "DRAFT",
   "content": {
     "title": {
@@ -21,7 +21,13 @@
     "principles": {
       "blockType": "Principles",
       "title": "原則",
-      "text": "性能効率は「勘」ではなくデータに基づいて判断する。まず計測可能な指標（レイテンシ・スループット等）を集め、その上でアーキテクチャの選択（コンピュート・ストレージ・データベース・ネットワークの種類）を決める。クラウドの強みは、より高次のマネージドサービス（自前で運用しなくてよいもの）を使うことで、専門知識が無くても高度な技術（機械学習・分析等）を利用できる点にある。構成は一度決めたら固定ではなく、需要の変化やクラウドサービス自体の進化に応じて定期的に見直す。実験のコストが低い（環境を素早く作り直せる）というクラウドの特性を活かし、複数の構成を試してから決める、という進め方も選択肢に入る。"
+      "items": [
+        "性能効率は「勘」ではなくデータに基づいて判断する。",
+        "まず計測可能な指標（レイテンシ・スループット等）を集め、その上でアーキテクチャの選択（コンピュート・ストレージ・データベース・ネットワークの種類）を決める。",
+        "クラウドの強みは、より高次のマネージドサービス（自前で運用しなくてよいもの）を使うことで、専門知識が無くても高度な技術（機械学習・分析等）を利用できる点にある。",
+        "構成は一度決めたら固定ではなく、需要の変化やクラウドサービス自体の進化に応じて定期的に見直す。",
+        "実験のコストが低い（環境を素早く作り直せる）というクラウドの特性を活かし、複数の構成を試してから決める、という進め方も選択肢に入る。"
+      ]
     },
     "classifications": {
       "blockType": "Classifications",
@@ -43,7 +49,8 @@
           "name": "ネットワーク選択",
           "description": "レイテンシ要件・地理的分散に応じた選定"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "decisionCriteria": {
       "blockType": "DecisionCriteria",
@@ -109,7 +116,8 @@
           "to": "r4",
           "label": "最近見直した"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "examples": {
       "blockType": "Examples",
@@ -132,12 +140,14 @@
           "name": "自前運用にこだわりマネージドサービスを検討しない",
           "problem": "運用負荷が不必要に高くなり、専門知識が無い分野の機能を使う機会を逃す"
         }
-      ]
+      ],
+      "emptyReason": ""
     },
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "text": "AWS Well-Architected FrameworkのPerformance Efficiency Pillarが扱う設計原則（データ駆動の判断・マネージドサービスの活用・定期的な見直し）をAIが要約・再構成したものであり、本文の直接引用ではない。"
+      "source": "AWS Well-Architected FrameworkのPerformance Efficiency Pillarが扱う設計原則（データ駆動の判断・マネージドサービスの活用・定期的な見直し）をAIが要約・再構成したものであり、本文の直接引用ではない。",
+      "caveats": ""
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
@@ -147,7 +157,8 @@
           "conceptId": "reliability-targets-and-error-budgets",
           "note": "どちらも計測データに基づく判断という点で関連する"
         }
-      ]
+      ],
+      "emptyReason": ""
     }
   },
   "tags": []
