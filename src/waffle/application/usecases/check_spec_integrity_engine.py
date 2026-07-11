@@ -74,8 +74,15 @@ class CheckSpecIntegrityEngine:
         for uc_name, uc_path in usecase_file_paths.items():
             uc_doc = self._documents.load(uc_path)
             subdomain_ref = uc_doc.get("subdomainRef")
-            if subdomain_ref is not None and uc_name not in subdomain_usecases.get(subdomain_ref, set()):
-                subdomain_ref_mismatches.append({"usecase": uc_name, "subdomainRef": subdomain_ref})
+            if subdomain_ref is not None:
+                if uc_name not in subdomain_usecases.get(subdomain_ref, set()):
+                    subdomain_ref_mismatches.append({"usecase": uc_name, "subdomainRef": subdomain_ref})
+            else:
+                # 逆方向: subdomainRef未宣言でも、いずれかのsubdomainのmembersに
+                # 含まれていれば食い違い（宣言のサボりを見逃さない）。
+                member_of = {sd for sd, members in subdomain_usecases.items() if uc_name in members}
+                if member_of:
+                    subdomain_ref_mismatches.append({"usecase": uc_name, "subdomainRef": None})
             aggregate_ref = uc_doc.get("aggregateRef")
             if aggregate_ref is not None and aggregate_ref not in actual_aggregates:
                 missing_aggregate_refs.append({"usecase": uc_name, "aggregateRef": aggregate_ref})

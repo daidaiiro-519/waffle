@@ -54,7 +54,7 @@ sequenceDiagram
 - 全10フィールドが空配列であれば、参照整合性が保たれている（正常系）
 - orphaned_value_objectsは、各集約documentのvalueObjects.itemsの各nameが、同じ集約のentities[].attributes[].typeのどこにも現れないかを確認する
 - undeclared_document_fieldsは、対象ディレクトリ配下の実在するdocument.json群のトップレベルキー全体の和集合を取り、Document集約（agg-document）のentities[].attributesに宣言された属性名の集合との差分を取る
-- subdomain_ref_mismatchesは、各usecase documentが持つsubdomainRefフィールドと、参照先subdomain documentのmembers宣言を突き合わせ、双方向（usecaseがsubdomainRefで指す先／subdomainのmembersが指すusecase）で一致しないものを検出する
+- subdomain_ref_mismatchesは、各usecase documentが持つsubdomainRefフィールドと、参照先subdomain documentのmembers宣言を突き合わせ、双方向で一致しないものを検出する: (a) usecaseがsubdomainRefを持つが参照先subdomainのmembersに自分自身が含まれない、(b) usecaseがsubdomainRefを持たない（未宣言）が、いずれかのsubdomainのmembersには自分自身が含まれている（宣言のサボりを見逃さない）
 - missing_aggregate_refsは、各usecase documentが持つaggregateRefフィールドが指す集約documentIdが、実在する集約一覧に無いものを検出する
 - 実行/意味理解はしない（宣言された名前集合の機械的な突き合わせのみ。差分の妥当性評価はAIが担う）
 
@@ -73,6 +73,7 @@ sequenceDiagram
 - When 集約が宣言するvalueObjectのうち、どのentity属性の型としても参照されていないものがあるとき、システムはそのvalueObject名をorphaned_value_objectsに含める shall。
 - When 実在するdocument.jsonが持つトップレベルフィールドが、Document集約のentity属性に宣言されていないとき、システムはそのフィールド名をundeclared_document_fieldsに含める shall。
 - When usecaseのsubdomainRefと参照先subdomainのmembers宣言が食い違うとき、システムはその組をsubdomain_ref_mismatchesに含める shall。
+- When usecaseがsubdomainRefを宣言していないが、いずれかのsubdomainのmembersに自分自身が含まれているとき、システムはその組（subdomainRefはnull）をsubdomain_ref_mismatchesに含める shall。
 - When usecaseのaggregateRefが指す集約が実在しないとき、システムはその組をmissing_aggregate_refsに含める shall。
 
 ---
@@ -213,6 +214,19 @@ Scenario: subdomainRefの食い違いを検出する
   Given subdomainRefが指すsubdomainのmembersに自分自身が含まれていないusecase document
   When 参照整合性検査を実行する
   Then subdomain_ref_mismatchesにその組が含まれる
+```
+
+### subdomainRef未宣言でもsubdomainのmembersに含まれていれば食い違いを検出する
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | ドリフト：usecase自身がsubdomainRefを宣言していないが、subdomainのmembersには含まれている（逆方向の食い違い） |
+
+```gherkin
+Scenario: subdomainRef未宣言でもsubdomainのmembersに含まれていれば食い違いを検出する
+  Given subdomainのmembersに含まれるが、自分自身にsubdomainRefを宣言していないusecase document
+  When 参照整合性検査を実行する
+  Then subdomain_ref_mismatchesにその組が含まれる（subdomainRefはnull）
 ```
 
 ### 存在しない集約を指すaggregateRefを検出する
