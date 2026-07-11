@@ -114,14 +114,46 @@ usecase（UDDの核となる単位）には「なぜこのusecaseが必要か」
 含む`postconditions`構造自体（論点2）は今回変更していない。論点2は
 別途合意形成してから着手する。
 
+## 決着: 論点2（見送り・2026-07-11）
+
+**決定:** `postconditions.items`を`{field, description, rationale}`のような
+オブジェクト配列に構造化する提案は、YAGNIとして見送る。
+
+**理由（`tech-lead-advisor`の`architecture-evidence-based-scope`知識に基づく
+経済的判断）:** 判断基準は「その抽象化を必要とする具体的な実例が、既に1つ以上
+観測されているか」。唯一の候補だった`uc-check-scenario-drift`
+（`missing_in_tests`/`orphaned_in_tests`の意図の違い）は、論点1の対応
+（`usecaseRationale`）で書き分けることで実際に解決済みであり、実例は
+**ゼロ**の状態。実例が無い段階で構造を確定させると、推測が当たっていた
+としても「オプション性のコスト（後でより良い情報を得てから決め直す選択権を
+失う）」と「NPVコスト（構築コストは今日払うが便益は実現しない）」を
+先払いすることになる。また`uc-check-spec-integrity`の`postconditions`には
+特定の1フィールドに対応しない横断的な注記も含まれ、無理に`{field, ...}`
+構造へ押し込めない実態もある。
+
+**副次的な発見（このブレストの過程で見つけて修正済み）:** 議論の途中で
+「Gherkinの`gherkin`フィールドも1文字列にまとまっているのはおかしいのでは」
+という関連指摘があり、検討する過程で`PresentationSpecSchema`と
+`PlatformSpec`のx-prompt-query/writeに、既に完全撤去された`.feature`生成
+（`07a2820`）を前提にした古い記述が残っていたことを発見した。
+`DomainSpecSchema`は`242f47a`で「AIネイティブテスト書き起こし前提」に
+修正済みだったが、この修正が兄弟schemaに伝播していなかった。両schemaを
+`DomainSpecSchema`の現行表現に揃えて修正した（コミット参照:
+`0c378f1 PresentationSpecSchema/PlatformSpecから.feature前提の記述を除去`）。
+`gherkin`フィールド自体の構造化（Given/When/Then分割）は、Gherkinが
+JSONではなく外部DSL自体の構造を持つこと・And/But/Table/Scenario Outline等
+JSON化コストが高いこと・具体的な不具合実例が無いこと、から同じくYAGNIとして
+見送った。
+
 ## 次のアクション
 
 1. ~~論点1について、ユーザーと合意形成する~~ → 完了（2026-07-11実装済み）
-2. 論点2（postconditions個別フィールドへの意図記述）について、
-   引き続きユーザーと合意形成する
+2. ~~論点2（postconditions個別フィールドへの意図記述）について、
+   ユーザーと合意形成する~~ → 完了（2026-07-11、YAGNIとして見送り決定）
 3. 他のsubdomain/usecaseにも同種の「メカニズムは書いてあるが意図が
    書かれていない」漏れがないか、横断的に棚卸しする（本ブレストの発端は
    reconcileサブドメインのレビューだったが、対象はwaffle全体のusecaseに
    広げるべきかもしれない）——ただし論点1の実装により、今後新規作成される
    usecaseはスキーマレベルで`usecaseRationale`が必須になったため、
-   この棚卸しの緊急度はやや下がった
+   この棚卸しの緊急度はやや下がった。本論点も同じ理由（実例が観測されて
+   いない）でYAGNIとして見送ってよい可能性が高い
