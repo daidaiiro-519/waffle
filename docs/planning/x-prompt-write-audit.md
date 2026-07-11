@@ -31,7 +31,26 @@ RenderMetaSchema/v1・DocstringSchema/v1は`x-prompt-write`を持つフィール
 
 **総フィールド数:** 107件　**20字未満:** 30件　**重複テキスト:** 8種
 
-**ステータス:** 未着手
+**ステータス:** 完了（2026-07-11）
+
+**対応内容:** 15フィールドのx-prompt-writeを強化（NameBlock.operationName・
+CommandsBlock.postState/params.name/params.meaning・LifecycleBlock.
+transitions.from/to/command・DomainServicesBlock.name・DomainEventsBlock.
+raisedBy/payload.name/payload.meaning・EntitiesBlock.role・MembersBlock.kind・
+ErrorsBlock.condition・ContextMapBlock.content・InvariantsBlock.rule/rationale）。
+主眼は「他ブロックで宣言済みの値を再利用すべき箇所に、その旨を明記する」
+（例: postState/transitions.from/toはlifecycle.statesの値を再利用すべきなのに
+指示が無かった）ことと、他の兄弟フィールドと非対称に例が欠けていた箇所への
+例示追加。
+
+**そのまま残した重複テキスト（意図的）:** `*ScenariosBlock.scenarios[].name`
+（4箇所, "シナリオ名（概要）。"）・`.category`（4箇所, "分類: 正常系/異常系/
+境界値。"）・`.background`（2ペア）は、CodingSchemaの「rule」のような
+「同じ言葉で意味が変わる」問題ではなく、**文脈が違っても本当に同じ意味**
+（シナリオ名はシナリオ名、正常系/異常系/境界値という分類軸も4ブロック共通）
+のため、無理に書き分けなかった。coding-standard側にも1件追加
+（`architecture-python-hexagonal.json`の`rules`に「usecase実装クラス名は
+対応するusecase specの操作名とそのまま一致させる」を追加）。
 
 ### 重複テキスト（同じ指示文が複数の別フィールドで使い回されている）
 

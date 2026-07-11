@@ -447,7 +447,7 @@
         },
         "operationName": {
           "type": "string",
-          "x-prompt-write": "このusecaseの名前をそのまま書く。"
+          "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に。例: CheckScenarioDrift。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
         }
       }
     },
@@ -593,7 +593,7 @@
                   "aggregate",
                   "usecase"
                 ],
-                "x-prompt-write": "メンバーの種別。"
+                "x-prompt-write": "メンバーの種別。下のenum（subdomain/aggregate/usecase）から選ぶ。"
               },
               "members": {
                 "type": "string",
@@ -664,7 +664,7 @@
               },
               "content": {
                 "type": "string",
-                "x-prompt-write": "何を連係するかを1文で。"
+                "x-prompt-write": "他bounded-contextと何を連係するかを1文で。例: 注文確定イベントを配送コンテキストへ連携"
               }
             }
           }
@@ -864,7 +864,7 @@
             "properties": {
               "name": {
                 "type": "string",
-                "x-prompt-write": "業務サービス名。"
+                "x-prompt-write": "業務サービス名。例: パステンプレート解決 / 整形描画（ドメイン語彙で、他の集約に属さない業務ロジックであることが分かる名前にする）"
               },
               "responsibility": {
                 "type": "string",
@@ -993,7 +993,7 @@
               },
               "role": {
                 "type": "string",
-                "x-prompt-write": "役割を1文で。"
+                "x-prompt-write": "このエンティティが集約内で担う役割を1文で。例: 注文全体の整合性を保つ集約ルート"
               },
               "isRoot": {
                 "type": "boolean",
@@ -1149,7 +1149,7 @@
             "properties": {
               "rule": {
                 "type": "string",
-                "x-prompt-write": "不変条件（「〜は常に〜」の形）。"
+                "x-prompt-write": "不変条件（「〜は常に〜」の形）。例: 注文明細の数量は常に1以上である"
               },
               "enforcement": {
                 "type": "string",
@@ -1161,7 +1161,7 @@
               },
               "rationale": {
                 "type": "string",
-                "x-prompt-write": "そのルールが要る根拠を短く。"
+                "x-prompt-write": "その不変条件が必要な業務上の根拠を短く。例: 在庫を超えて注文できると出荷不能になるため"
               }
             }
           }
@@ -1237,15 +1237,15 @@
             "properties": {
               "from": {
                 "type": "string",
-                "x-prompt-write": "遷移元の状態。"
+                "x-prompt-write": "遷移元の状態。statesで宣言済みの値の中から選ぶ。集約インスタンスがまだ存在しない新規生成コマンドの場合のみ、開始疑似状態を表す\"[*]\"を使う。例: CREATED"
               },
               "to": {
                 "type": "string",
-                "x-prompt-write": "遷移先の状態。"
+                "x-prompt-write": "遷移先の状態。statesで宣言済みの値の中から選ぶ。例: VALIDATED"
               },
               "command": {
                 "type": "string",
-                "x-prompt-write": "遷移を起こすコマンド。"
+                "x-prompt-write": "この遷移を起こすコマンド。commandsで宣言済みのコマンド名の中から選ぶ（新しいコマンド名をここで作らない）。例: validate"
               },
               "condition": {
                 "type": "string",
@@ -1347,7 +1347,7 @@
               },
               "postState": {
                 "type": "string",
-                "x-prompt-write": "成功後の状態。"
+                "x-prompt-write": "成功後の状態。この集約のlifecycle.statesで宣言済みの値の中から選ぶ（新しい状態名をここで作らない）。例: VALIDATED"
               },
               "params": {
                 "type": "array",
@@ -1361,11 +1361,11 @@
                   "properties": {
                     "name": {
                       "type": "string",
-                      "x-prompt-write": "引数名。"
+                      "x-prompt-write": "引数名。ドメイン語彙で。例: quantity"
                     },
                     "meaning": {
                       "type": "string",
-                      "x-prompt-write": "意味を1文で。"
+                      "x-prompt-write": "この引数が何を表すかを1文で。例: 注文する数量"
                     }
                   }
                 }
@@ -1446,7 +1446,7 @@
               },
               "raisedBy": {
                 "type": "string",
-                "x-prompt-write": "どのコマンド/契機で発行されるか。"
+                "x-prompt-write": "どのコマンド/契機で発行されるか。commandsで宣言済みのコマンド名の中から選ぶ。例: place"
               },
               "payload": {
                 "type": "array",
@@ -1460,11 +1460,11 @@
                   "properties": {
                     "name": {
                       "type": "string",
-                      "x-prompt-write": "項目名。"
+                      "x-prompt-write": "ペイロード項目名。例: quantity"
                     },
                     "meaning": {
                       "type": "string",
-                      "x-prompt-write": "意味を1文で。"
+                      "x-prompt-write": "このペイロード項目が何を表すかを1文で。例: 確定した数量"
                     }
                   }
                 }
@@ -1827,7 +1827,7 @@
               },
               "condition": {
                 "type": "string",
-                "x-prompt-write": "その失敗が起きる条件。"
+                "x-prompt-write": "そのエラーコードが返る具体的な条件を1文で。例: 対象ファイルが存在しない"
               }
             }
           }
