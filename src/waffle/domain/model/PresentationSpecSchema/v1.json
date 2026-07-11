@@ -610,7 +610,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "この画面固有の振る舞い（業務ユースケースを介さない画面単体のロジック）の受け入れ契約(Gherkin)を持ちます。コンポーネントテストとしてMD＋.featureにrenderされ実行されます。",
+      "x-prompt-query": "この画面固有の振る舞い（業務ユースケースを介さない画面単体のロジック）の受け入れ契約(Gherkin)を持ちます。MDにコードブロックとして描画され、AIがこのGherkinを見てネイティブテストとして執筆・実行する。",
       "x-render": [
         {
           "as": "paragraph",
@@ -683,7 +683,7 @@
               },
               "gherkin": {
                 "type": "string",
-                "x-prompt-write": "このシナリオの Given/When/Then（Scenario: 1つ・実行可能・.feature化）。"
+                "x-prompt-write": "このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。"
               }
             }
           }
