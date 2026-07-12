@@ -6,11 +6,11 @@
 |---|---|
 | `{{title.title}}` | documentId をそのまま設定してください。 |
 | `{{purpose.text}}` | このSkillが「何をするか」だけでなく「いつ使うべきか」を1〜2文で記述してください。動詞で始め、判断のトリガーとなる状況・キーワードを含めること（例:「〜を実装・修正する際に必ず使う」「ユーザーが〜と言ったときに使う」）。自動委譲/自動参照の判断根拠として使われる最重要フィールドです。 |
-| `{{inputExpectation.items[1].aspect}}` | 受け取ると想定する情報の種類（例: 対象ブランチ、対象ファイル範囲）。 |
-| `{{inputExpectation.items[1].interpretation}}` | その情報が明示されなかった場合にどう解釈するか（既定値・確認を挟む等）。 |
 | `{{role.items[1]}}` | このSkillが担う責務を列挙してください。各項目は「〜する」「〜を提供する」の形で記述してください。（配列。この形式の行を必要な数だけ繰り返す） |
 | `{{processingTarget.target}}` | このSkillが受け取る処理対象を自然言語で記述してください。何を・どのような状態のものを受け取るかを明示してください。 |
 | `{{processingTarget.artifact}}` | このSkillが生み出す成果物を自然言語で記述してください。何を・どのような形式で出力するかを明示してください。 |
+| `{{inputExpectation.items[1].aspect}}` | 受け取ると想定する情報の種類（例: 対象ブランチ、対象ファイル範囲）。 |
+| `{{inputExpectation.items[1].interpretation}}` | その情報が明示されなかった場合にどう解釈するか（既定値・確認を挟む等）。 |
 | `{{steps.items[1].stepId}}` | step-1, step-2 のように連番で付けてください。 |
 | `{{steps.items[1].title}}` | このStepで行うことを動詞で始めて簡潔に記述してください。 |
 | `{{steps.items[1].summary}}` | この Step でSubAgentが行うドメイン操作の要点を1〜2文で簡潔に。インフラ語彙（document.json・MCP・ファイルパス・Python API 等）は書かない。 |

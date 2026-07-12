@@ -7,12 +7,14 @@
 | `{{title.title}}` | documentId をそのまま設定してください。 |
 | `{{naming.items[1].target}}` | 命名の対象。例: モジュール / ファイル |
 | `{{naming.items[1].convention}}` | 命名規約。例: スネークケース |
-| `{{style.items[1].rule}}` | 規約の内容。 |
+| `{{style.items[1].level}}` | 種別。必須 / 禁止 / 推奨のいずれか。 |
+| `{{style.items[1].rule}}` | 型注釈・関数の責務範囲・import規律等、コードスタイルに関する規約の内容。例: 全ての公開関数に型注釈を付ける |
 | `{{docstring.style}}` | 言語標準の docstring スタイル。例: Google スタイル docstring |
 | `{{docstring.summaryGuidance}}` | 要約行（1行目）の書き方の指針。「何をするか・いつ使うか」を検索と判断に効く語で、の旨。 |
 | `{{docstring.target}}` | docstring を必須にする対象。例: 公開要素（module / 公開 class / 公開 function）。private は任意。 |
 | `{{docstring.example}}` | このスタイルに従った docstring のコード例（要約行＋本文＋Args/Returns 等・カスタムタグなし）。 |
-| `{{rules.items[1].rule}}` | 規約の内容。 |
+| `{{rules.items[1].level}}` | 種別。必須 / 禁止 / 推奨のいずれか。 |
+| `{{rules.items[1].rule}}` | docstring必須の範囲・コードから導出できる情報を書かない・仕様と異なる語彙で命名しない等、docstring/コメントに関する規約の内容。例: 公開関数のdocstringは要約行＋Args/Returnsを持つ |
 
 ---
 
@@ -32,7 +34,7 @@
 
 | 種別 | 規約 |
 |---|---|
-| 必須 | {{style.items[1].rule}} |
+| {{style.items[1].level}} | {{style.items[1].rule}} |
 
 ---
 
@@ -55,4 +57,4 @@
 
 | 種別 | 規約 |
 |---|---|
-| 必須 | {{rules.items[1].rule}} |
+| {{rules.items[1].level}} | {{rules.items[1].rule}} |

@@ -52,3 +52,4 @@
 - uc-check-usecase-class-drift
 - uc-patch-schema
 - uc-check-operation-drift
+- uc-check-aggregate-class-drift

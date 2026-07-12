@@ -18,6 +18,7 @@ from waffle.application.usecases.check_schema_version_drift import CheckSchemaVe
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
+from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
@@ -129,6 +130,11 @@ def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict
 def check_usecase_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases") -> dict:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
     return _dict(CheckUsecaseClassDrift(_docs()).run(documentsRoot, srcRoot))
+
+@mcp.tool
+def check_aggregate_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/domain/entities") -> dict:
+    """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
+    return _dict(CheckAggregateClassDrift(_docs()).run(documentsRoot, srcRoot))
 
 @mcp.tool
 def check_operation_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases") -> dict:

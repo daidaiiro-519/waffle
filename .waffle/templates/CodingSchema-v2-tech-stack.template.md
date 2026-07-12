@@ -5,7 +5,7 @@
 | プレースフォルダー | 記入する内容 |
 |---|---|
 | `{{title.title}}` | documentId をそのまま設定してください。 |
-| `{{identity.tier}}` | このスタックが担うティア。 |
+| `{{identity.tier}}` | このスタックが担うティア（backend=サーバー側/frontend=画面側/platform=基盤側）。下のenumから選ぶ。 |
 | `{{identity.stackName}}` | スタック名（kebab-case）。documentId の {stack} 部分と一致させる。 |
 | `{{runtime.language}}` | 言語とバージョン。例: Python 3.12+ |
 | `{{runtime.target}}` | 実行ターゲット。例: CLI / ローカルプロセス、ブラウザ、コンテナ |
@@ -16,7 +16,7 @@
 | `{{interface.items[1].style}}` | 様式。例: CLI, MCP, REST |
 | `{{interface.items[1].implementation}}` | 実装ライブラリ。例: typer, fastmcp |
 | `{{interface.items[1].rationale}}` | 他の候補（習熟度・既存資産・技術要件等）ではなくこの実装を選んだ理由を1文で（ADR）。 |
-| `{{middleware.items[1].role}}` | ミドルウェアの役割分類。 |
+| `{{middleware.items[1].role}}` | ミドルウェアの役割分類。下のenumから選ぶ。 |
 | `{{middleware.items[1].product}}` | 製品名。例: PostgreSQL, Redis |
 | `{{middleware.items[1].access}}` | アクセスするクライアントライブラリ。例: SQLAlchemy |
 | `{{middleware.items[1].rationale}}` | 他の候補（別のDB製品等・実行環境の制約含む）ではなくこれを選んだ理由を1文で（ADR）。 |
@@ -29,7 +29,8 @@
 | `{{tooling.packageManager}}` | パッケージ管理ツール。例: uv（.venv / uv.lock 固定） |
 | `{{tooling.lintFormat}}` | lint/format ツール。任意なら空。 |
 | `{{tooling.rationale}}` | 他の候補ではなくこのパッケージ管理ツールを選んだ理由を1文で（ADR）。 |
-| `{{policy.items[1].rule}}` | 方針の内容。 |
+| `{{policy.items[1].level}}` | 種別。必須 / 禁止 / 推奨のいずれか。 |
+| `{{policy.items[1].rule}}` | 依存ライブラリを追加する際に満たすべき方針の内容。例: 標準ライブラリ・既存依存で代替可能なら追加しない |
 
 ---
 
@@ -114,4 +115,4 @@
 
 | 種別 | 方針 |
 |---|---|
-| 必須 | {{policy.items[1].rule}} |
+| {{policy.items[1].level}} | {{policy.items[1].rule}} |

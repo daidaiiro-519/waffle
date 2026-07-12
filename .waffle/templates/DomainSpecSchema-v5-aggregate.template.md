@@ -4,39 +4,39 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
-| `{{title.title}}` | documentId をそのまま設定してください。 |
-| `{{summary.text}}` | この文脈/業務領域/集約/ユースケースが何かを1〜2文で（ドメイン語彙のみ・技術用語禁止）。 |
+| `{{title.title}}` | 「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこのSpecが何であるかを業務語彙で簡潔に表す句（documentIdやクラス名をそのまま繰り返さない）。specKindがbounded-context/subdomain/aggregateの場合は、説明の末尾にその種別を表す語（bounded-contextなら「〜を行う境界づけられたコンテキスト」、subdomainなら「〜を担うサブドメイン」、aggregateなら「〜を守る集約」）を含め、読んだだけでこのSpecがDDDのどの構成要素かがわかるようにしてください（usecaseの場合はこの種別語を付けない）。識別子部分はspecKindに応じて設定する: usecaseの場合はcontent.name.operationNameと同じ値、aggregateの場合はcontent.aggregateRoot.nameと同じ値、bounded-context/subdomainの場合はdocumentIdをそのまま使う（識別子は既に別の構造化フィールドが正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。 |
+| `{{summary.items[1]}}` | 論点ごとに列挙する（1〜2項目が目安）。この文脈/業務領域/集約/ユースケースが何かを1〜2文で（ドメイン語彙のみ・技術用語禁止）。（配列。この形式の行を必要な数だけ繰り返す） |
 | `{{aggregateRoot.name}}` | ルートエンティティ名（ドメイン語彙）。例: Order |
 | `{{aggregateRoot.externalRefs[1]}}` | ID で参照する他集約を列挙（オブジェクトは内部に持たない・図6-4）。例: Customer, Product。無ければ空。（配列。この形式の行を必要な数だけ繰り返す） |
 | `{{entities.items[1].name}}` | エンティティ名。例: Order / OrderLine |
-| `{{entities.items[1].role}}` | 役割を1文で。 |
+| `{{entities.items[1].role}}` | このエンティティが集約内で担う役割を1文で。例: 注文全体の整合性を保つ集約ルート |
 | `{{entities.items[1].isRoot}}` | 集約ルートなら true（1つだけ）。 |
 | `{{entities.items[1].attributes[1].name}}` | 属性名。例: status / orderId |
 | `{{entities.items[1].attributes[1].type}}` | 型（値オブジェクト名・他エンティティ・ID）。例: OrderStatus / OrderLine[] / customerId |
 | `{{entities.items[1].attributes[1].isId}}` | この属性が識別子なら true（エンティティに1つ）。 |
-| `{{valueObjects.items[1].name}}` | 値オブジェクト名。例: Money |
+| `{{valueObjects.items[1].name}}` | 値オブジェクト名。例: Money（任意ブロック：エンティティ属性の型となる値オブジェクトが無ければvalueObjectsブロック自体を省略してよい） |
 | `{{valueObjects.items[1].represents}}` | 何を表すか。例: 通貨つきの金額 |
 | `{{valueObjects.items[1].behavior}}` | 振る舞い・制約・等価判定。例: 不変。加算は同一通貨のみ。負値不可。 |
-| `{{invariants.items[1].rule}}` | 不変条件（「〜は常に〜」の形）。 |
+| `{{invariants.items[1].rule}}` | 不変条件（「〜は常に〜」の形）。例: 注文明細の数量は常に1以上である |
 | `{{invariants.items[1].enforcement}}` | 静的(値/構造)=schema が守る / 動的(状態遷移など)=guard が守る。 |
-| `{{invariants.items[1].rationale}}` | そのルールが要る根拠を短く。 |
-| `{{lifecycle.states[1]}}` | 取りうる状態を列挙。例: PLACED, PAID, SHIPPED。状態を持たない集約なら空。（配列。この形式の行を必要な数だけ繰り返す） |
-| `{{lifecycle.transitions[1].from}}` | 遷移元の状態。 |
-| `{{lifecycle.transitions[1].to}}` | 遷移先の状態。 |
-| `{{lifecycle.transitions[1].command}}` | 遷移を起こすコマンド。 |
+| `{{invariants.items[1].rationale}}` | その不変条件が必要な業務上の根拠を短く。例: 在庫を超えて注文できると出荷不能になるため |
+| `{{lifecycle.states[1]}}` | 取りうる状態を列挙。例: PLACED, PAID, SHIPPED。状態を持たない集約なら空。（配列。この形式の行を必要な数だけ繰り返す）（任意ブロック：状態を持たない集約であればlifecycleブロック自体を省略してよい） |
+| `{{lifecycle.transitions[1].from}}` | 遷移元の状態。statesで宣言済みの値の中から選ぶ。集約インスタンスがまだ存在しない新規生成コマンドの場合のみ、開始疑似状態を表す"[*]"を使う。例: CREATED |
+| `{{lifecycle.transitions[1].to}}` | 遷移先の状態。statesで宣言済みの値の中から選ぶ。例: VALIDATED |
+| `{{lifecycle.transitions[1].command}}` | この遷移を起こすコマンド。commandsで宣言済みのコマンド名の中から選ぶ（新しいコマンド名をここで作らない）。例: validate |
 | `{{lifecycle.transitions[1].condition}}` | 遷移の追加条件があれば。無ければ空。 |
 | `{{commands.items[1].name}}` | コマンド名（命令形）。例: place / 確定する |
 | `{{commands.items[1].description}}` | 何をするか・どの不変条件を守るかを1文で（実装手順は書かない）。 |
 | `{{commands.items[1].requiresState}}` | 実行に必要な前提状態。集約インスタンスがまだ存在しない新規生成コマンドの場合は null（曖昧な文字列プレースホルダーは使わない）。 |
-| `{{commands.items[1].postState}}` | 成功後の状態。 |
-| `{{commands.items[1].params[1].name}}` | 引数名。 |
-| `{{commands.items[1].params[1].meaning}}` | 意味を1文で。 |
+| `{{commands.items[1].postState}}` | 成功後の状態。この集約のlifecycle.statesで宣言済みの値の中から選ぶ（新しい状態名をここで作らない）。例: VALIDATED |
+| `{{commands.items[1].params[1].name}}` | 引数名。ドメイン語彙で。例: quantity |
+| `{{commands.items[1].params[1].meaning}}` | この引数が何を表すかを1文で。例: 注文する数量 |
 | `{{commands.items[1].emits[1]}}` | 発行するドメインイベント名（過去形）。無ければ空。（配列。この形式の行を必要な数だけ繰り返す） |
-| `{{domainEvents.items[1].name}}` | イベント名（必ず過去形）。例: OrderPlaced |
-| `{{domainEvents.items[1].raisedBy}}` | どのコマンド/契機で発行されるか。 |
-| `{{domainEvents.items[1].payload[1].name}}` | 項目名。 |
-| `{{domainEvents.items[1].payload[1].meaning}}` | 意味を1文で。 |
-| `{{invariantScenarios.background}}` | 複数シナリオ共通の前提（Gherkin Background 相当）。無ければ空文字。 |
+| `{{domainEvents.items[1].name}}` | イベント名（必ず過去形）。例: OrderPlaced（任意ブロック：発行するドメインイベントが無ければdomainEventsブロック自体を省略してよい） |
+| `{{domainEvents.items[1].raisedBy}}` | どのコマンド/契機で発行されるか。commandsで宣言済みのコマンド名の中から選ぶ。例: place |
+| `{{domainEvents.items[1].payload[1].name}}` | ペイロード項目名。例: quantity |
+| `{{domainEvents.items[1].payload[1].meaning}}` | このペイロード項目が何を表すかを1文で。例: 確定した数量 |
+| `{{invariantScenarios.background}}` | 複数シナリオ共通の前提（Gherkin Background 相当）。無ければ空文字。（任意ブロック：無ければinvariantScenariosブロック自体を省略してよい） |
 | `{{invariantScenarios.scenarios[1].name}}` | シナリオ名（概要）。 |
 | `{{invariantScenarios.scenarios[1].category}}` | 分類: 正常系 / 異常系 / 境界値。 |
 | `{{invariantScenarios.scenarios[1].viewpoint}}` | 観点: 側面（状態遷移/計算整合/事前条件 等）＋検証の狙い。 |
@@ -51,13 +51,13 @@
 
 ## 概要
 
-{{summary.text}}
+- {{summary.items[1]}}
 
 ---
 
 ## 集約ルート
 
-- **集約ルート**: {{aggregateRoot.name}}
+{{aggregateRoot.name}}
 
 ### 外部参照（ID）
 
@@ -79,9 +79,11 @@
 
 ## 値オブジェクト
 
-| 値オブジェクト | 表すもの | 振る舞い・制約 |
-|---|---|---|
-| {{valueObjects.items[1].name}} | {{valueObjects.items[1].represents}} | {{valueObjects.items[1].behavior}} |
+### {{valueObjects.items[1].name}}
+
+| 表す値 | 振る舞い |
+|---|---|
+| {{valueObjects.items[1].represents}} | {{valueObjects.items[1].behavior}} |
 
 ---
 

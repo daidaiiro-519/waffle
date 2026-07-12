@@ -20,6 +20,7 @@ from waffle.application.usecases.check_schema_version_drift import CheckSchemaVe
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
+from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
@@ -153,6 +154,14 @@ def check_usecase_class_drift(
 ) -> None:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
     _emit(CheckUsecaseClassDrift(_docs()).run(documents_root, src_root))
+
+@app.command("check-aggregate-class-drift")
+def check_aggregate_class_drift(
+    documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
+    src_root: str = typer.Option("src/waffle/domain/entities", "--srcRoot", "--src-root", help="集約Entityクラスの配置ルートディレクトリ"),
+) -> None:
+    """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
+    _emit(CheckAggregateClassDrift(_docs()).run(documents_root, src_root))
 
 @app.command("check-operation-drift")
 def check_operation_drift(

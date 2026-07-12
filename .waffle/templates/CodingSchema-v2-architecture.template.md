@@ -7,16 +7,17 @@
 | `{{title.title}}` | documentId をそのまま設定してください。 |
 | `{{layers.style}}` | 技術方式。例: ポートとアダプター（ヘキサゴナル） |
 | `{{layers.items[1].layer}}` | レイヤー名。例: domain, application, ports, inbound adapter, outbound adapter |
-| `{{layers.items[1].responsibility}}` | このレイヤーの責務を1文で。 |
+| `{{layers.items[1].responsibility}}` | このレイヤーの責務を1文で。例: 外部I/O・外部ライブラリをport実装に閉じ込める |
 | `{{layers.items[1].mayDependOn[1]}}` | 依存してよいレイヤー名を列挙（内向きのみ）。最内層は空。（配列。この形式の行を必要な数だけ繰り返す） |
 | `{{layout.tree}}` | 正典ディレクトリツリー（テキスト）。`{package}` 等プレースホルダを使ってよい（プロダクト非依存）。 |
 | `{{layout.compositionRoot}}` | 結線（DI）を置く場所を1文で。例: inbound adapter の起動点にのみ置く |
 | `{{conceptPlacement.items[1].concept}}` | 固定語彙から選ぶ（spec の specKind と対応）。 |
 | `{{conceptPlacement.items[1].placement}}` | layout のツリー上の配置（相対パス）。例: application/usecases |
 | `{{conceptPlacement.items[1].pattern}}` | この概念の実現方針を決定レベルで（正確な署名は書かない）。例: エントリメソッド1つ・ドメインは port 経由で呼ぶ |
-| `{{rules.items[1].rule}}` | ルールの内容。 |
+| `{{rules.items[1].level}}` | 種別。必須 / 禁止 / 推奨のいずれか。 |
+| `{{rules.items[1].rule}}` | 依存方向・DIの受け取り方・エラー伝播（結果型/例外の使い分け）等、横断的な決定ルールの内容。例: 依存は内向きのみ |
 | `{{thicknessBySubdomain.items[1].category}}` | subdomain spec の Category。 |
-| `{{thicknessBySubdomain.items[1].thickness}}` | 実装の厚み方針を1文で。 |
+| `{{thicknessBySubdomain.items[1].thickness}}` | 実装の厚み方針を1文で。例: ドメインモデルで厚く実装する |
 
 ---
 
@@ -60,7 +61,7 @@
 
 | 種別 | 規約 |
 |---|---|
-| 必須 | {{rules.items[1].rule}} |
+| {{rules.items[1].level}} | {{rules.items[1].rule}} |
 
 ---
 

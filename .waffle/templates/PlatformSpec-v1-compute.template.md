@@ -4,6 +4,17 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
+| `{{title.title}}` | documentId をそのまま設定してください。 |
+| `{{summary.text}}` | このコンポーネント/領域の概要を1〜2文で。 |
+| `{{capacity.title}}` | このブロックの見出し。「容量・性能要件」など具体的な名称を記入。 |
+| `{{capacity.items[1].metric}}` | 指標・目標値・根拠を列挙。IaCコードから導出できる情報(具体的な設定値の羅列)ではなく、その目標値がなぜ必要かという事業/業務側の根拠を書く。 |
+| `{{capacity.items[1].target}}` | 目標値。 |
+| `{{capacity.items[1].rationale}}` | 根拠。 |
+| `{{resilience.items[1].metric}}` | 耐障害性の指標・目標値・根拠を列挙。 |
+| `{{resilience.items[1].target}}` | 目標値。 |
+| `{{resilience.items[1].rationale}}` | 根拠。 |
+| `{{security.items[1].boundary}}` | このコンポーネント固有のセキュリティ境界を列挙(プロダクト全体を横断するコンプライアンス/アクセス方針はsecurity specKindの責務であり、ここには書かない)。 |
+| `{{security.items[1].requirement}}` | 要件。 |
 | `{{guaranteeScenarios.background}}` | 複数シナリオ共通の前提。無ければ空文字。 |
 | `{{guaranteeScenarios.scenarios[1].name}}` | シナリオ名（概要）。 |
 | `{{guaranteeScenarios.scenarios[1].category}}` | 分類: 正常系 / 異常系 / 境界値。 |
@@ -13,19 +24,21 @@
 
 ---
 
-# {{documentId}}
+# {{title.title}}
 
 ---
 
 ## 概要
 
+{{summary.text}}
+
 ---
 
-## {{documentId}}
+## {{capacity.title}}
 
 | 指標 | 目標値 | 根拠 |
 |---|---|---|
-|  |  |  |
+| {{capacity.items[1].metric}} | {{capacity.items[1].target}} | {{capacity.items[1].rationale}} |
 
 ---
 
@@ -33,7 +46,7 @@
 
 | 指標 | 目標値 | 根拠 |
 |---|---|---|
-|  |  |  |
+| {{resilience.items[1].metric}} | {{resilience.items[1].target}} | {{resilience.items[1].rationale}} |
 
 ---
 
@@ -41,7 +54,7 @@
 
 | 境界 | 要件 |
 |---|---|
-|  |  |
+| {{security.items[1].boundary}} | {{security.items[1].requirement}} |
 
 ---
 

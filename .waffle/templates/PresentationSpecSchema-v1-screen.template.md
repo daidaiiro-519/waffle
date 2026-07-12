@@ -12,15 +12,15 @@
 | `{{fields.items[1].description}}` | 何のための項目か、かつ、なぜ業務ユースケースの入力ではないのかを1文で。 |
 | `{{actions.items[1].name}}` | 操作名。例: 注文を確定する |
 | `{{actions.items[1].trigger}}` | 操作の契機。例: 「確定」ボタン押下 |
-| `{{actions.items[1].description}}` | 何をするかを1文で。 |
+| `{{actions.items[1].description}}` | この操作が業務的に何をするかを1文で。例: カート内容を注文として確定する |
 | `{{actions.items[1].usecaseRef}}` | この操作が対応する業務ユースケース（DomainSpecSchemaのusecase）の documentId（あれば）。例: uc-place-order。無ければ空文字。 |
 | `{{actions.items[1].leadsTo}}` | この操作の実行後に遷移する screen の documentId（あれば）。同じ画面に留まるなら空文字。 |
 | `{{componentAcceptanceScenarios.background}}` | 複数シナリオ共通の前提。無ければ空文字。 |
 | `{{componentAcceptanceScenarios.scenarios[1].name}}` | シナリオ名（概要）。 |
 | `{{componentAcceptanceScenarios.scenarios[1].category}}` | 分類: 正常系 / 異常系 / 境界値。 |
 | `{{componentAcceptanceScenarios.scenarios[1].viewpoint}}` | 観点（入力検証/表示条件/活性状態 等）＋検証の狙い。 |
-| `{{componentAcceptanceScenarios.scenarios[1].gherkin}}` | このシナリオの Given/When/Then（Scenario: 1つ・実行可能・.feature化）。 |
-| `{{visualRef.url}}` | Figma等のURL。 |
+| `{{componentAcceptanceScenarios.scenarios[1].gherkin}}` | このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。 |
+| `{{visualRef.url}}` | この画面のデザインを確認できる外部URL。例: https://figma.com/file/... |
 | `{{visualRef.note}}` | 補足（バージョン・参照箇所等）。無ければ空文字。 |
 
 ---

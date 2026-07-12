@@ -4,6 +4,14 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
+| `{{title.title}}` | documentId をそのまま設定してください。 |
+| `{{summary.text}}` | このコンポーネント/領域の概要を1〜2文で。 |
+| `{{monitoring.items[1].target}}` | 監視対象・閾値・重大度を列挙。 |
+| `{{monitoring.items[1].threshold}}` | 閾値。 |
+| `{{monitoring.items[1].severity}}` | 重大度。 |
+| `{{retention.items[1].dataType}}` | データ種別・保持期間・根拠を列挙。 |
+| `{{retention.items[1].retentionPeriod}}` | 保持期間。 |
+| `{{retention.items[1].rationale}}` | 根拠。 |
 | `{{guaranteeScenarios.background}}` | 複数シナリオ共通の前提。無ければ空文字。 |
 | `{{guaranteeScenarios.scenarios[1].name}}` | シナリオ名（概要）。 |
 | `{{guaranteeScenarios.scenarios[1].category}}` | 分類: 正常系 / 異常系 / 境界値。 |
@@ -13,11 +21,13 @@
 
 ---
 
-# {{documentId}}
+# {{title.title}}
 
 ---
 
 ## 概要
+
+{{summary.text}}
 
 ---
 
@@ -25,7 +35,7 @@
 
 | 監視対象 | 閾値 | 重大度 |
 |---|---|---|
-|  |  |  |
+| {{monitoring.items[1].target}} | {{monitoring.items[1].threshold}} | {{monitoring.items[1].severity}} |
 
 ---
 
@@ -33,7 +43,7 @@
 
 | データ種別 | 保持期間 | 根拠 |
 |---|---|---|
-|  |  |  |
+| {{retention.items[1].dataType}} | {{retention.items[1].retentionPeriod}} | {{retention.items[1].rationale}} |
 
 ---
 
