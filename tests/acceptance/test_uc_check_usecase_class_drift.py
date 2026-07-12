@@ -3,12 +3,13 @@ import json
 from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
+from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.shared.result import Ok
 
 
 def _engine() -> CheckUsecaseClassDrift:
-    return CheckUsecaseClassDrift(FsDocumentRepository())
+    return CheckUsecaseClassDrift(FsDocumentRepository(), TreeSitterClassExtractor())
 
 
 def _write(path: Path, doc: dict) -> None:
@@ -59,6 +60,25 @@ def test_実装ファイルが存在しないusecaseを検出する(tmp_path):
     assert result.value["missing_implementation_file"] == [
         {"documentId": "uc-a", "operationName": "CheckScenarioDrift", "expectedPath": str(src_root / "check_scenario_drift.py")}
     ]
+
+
+def test_Java実装に対してもクラス名ドリフトを検知できる(tmp_path):
+    """
+    Given languageにjavaを指定し、operationNameと一致するJavaクラスを持つ実装ファイル
+    When クラス名ドリフト検査を実行する
+    Then Python専用のASTに依存せず、tree-sitter経由で正しく一致と判定される
+    """
+    docs_root = tmp_path / "documents"
+    src_root = tmp_path / "src"
+    _write(docs_root / "usecase" / "uc-a.json", _usecase_doc("CheckScenarioDrift"))
+    src_root.mkdir(parents=True, exist_ok=True)
+    (src_root / "check_scenario_drift.java").write_text(
+        "public class CheckScenarioDrift {\n    private String x;\n}\n", encoding="utf-8"
+    )
+
+    result = _engine().run(str(docs_root), str(src_root), language="java")
+    assert isinstance(result, Ok), result
+    assert result.value == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
 def test_クラス名が一致しないusecaseを検出する(tmp_path):

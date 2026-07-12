@@ -28,6 +28,7 @@ aggregate specの集約ルート名と実装クラス名が一致しているか
 
 - Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root）が与えられている
 - 集約Entityクラスの配置ルートディレクトリ（src_root）が与えられている
+- 実装言語（language）が与えられている。省略時はpython
 
 ---
 
@@ -64,6 +65,8 @@ sequenceDiagram
 - When ValueObjectsが宣言する値オブジェクト名に対応するクラス定義が、同じ実装ファイル内に見つからないとき、システムはその組をmissing_value_objectに含める shall。
 - While 全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクトが一致しているとき、システムは4フィールド全てを空配列で返す shall。
 - If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。
+- If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。
+- While languageが指定されないとき、システムはpythonとして扱う shall。
 
 ---
 
@@ -78,6 +81,7 @@ sequenceDiagram
 | コード | 条件 |
 |---|---|
 | `INVALID_PATH` | documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む |
+| `UNSUPPORTED_LANGUAGE` | languageがサポート対象外（python/java/typescript/javascript以外） |
 
 ---
 

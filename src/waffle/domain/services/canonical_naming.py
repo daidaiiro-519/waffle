@@ -22,3 +22,15 @@ def operation_name_to_module_name(operation_name: str) -> str:
     """'CheckScenarioDrift' -> 'check_scenario_drift' のようにPascalCaseを
     snake_caseへ変換する。"""
     return to_snake_case(operation_name)
+
+
+_EXTENSIONS = {"python": "py", "java": "java", "typescript": "ts", "javascript": "js"}
+
+
+def language_extension(language: str) -> str:
+    """言語識別子から実装ファイルの拡張子を返す。ファイル名自体は言語を問わず
+    snake_caseに統一する（Waffle自身の生成規約。各言語の慣習的なファイル命名
+    ——JavaのPascalCase等——には合わせない）。"""
+    if language not in _EXTENSIONS:
+        raise ValueError(f"サポート対象外の言語です: {language}（対応: {sorted(_EXTENSIONS)}）")
+    return _EXTENSIONS[language]

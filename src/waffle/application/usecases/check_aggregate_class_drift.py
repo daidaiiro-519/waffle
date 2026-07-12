@@ -6,33 +6,22 @@ check_usecase_class_drift.pyと同型の検知を集約にも適用する。「�
 宿る」というDDD原則に基づき、宣言と実装クラスの対応関係を機械的に検出する。
 実行/意味理解はしない（宣言された名前と、実装ファイル内のクラス定義名の機械的な
 突き合わせのみ）。
+
+クラス名・フィールド名抽出はClassDeclarationExtractor port経由で行い、Python
+専用のASTには依存しない（tree-sitterベースのadapterでPython/Java/TypeScript/
+JavaScriptに対応、docs/brainstorm/brainstorm-waffle-hooks.md参照）。
 """
 from __future__ import annotations
 
-import ast
-
+from waffle.application.ports.class_declaration_extractor import ClassDeclarationExtractor
 from waffle.application.ports.document_repository import DocumentRepository
-from waffle.domain.services.canonical_naming import operation_name_to_module_name, to_snake_case
+from waffle.domain.services.canonical_naming import language_extension, operation_name_to_module_name, to_snake_case
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
 
 
 def _err(code: str, message: str) -> Err:
     return Err(message, [code])
-
-
-def _class_names(source: str) -> list[str]:
-    tree = ast.parse(source)
-    return [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
-
-
-def _field_names(source: str, class_name: str) -> list[str]:
-    """指定クラスの本体直下にあるフィールド宣言(AnnAssign)の名前をAST上の出現順で返す。"""
-    tree = ast.parse(source)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef) and node.name == class_name:
-            return [stmt.target.id for stmt in node.body if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)]
-    return []
 
 
 def _declared_attributes(doc: dict, root_name: str) -> list[str]:
@@ -48,12 +37,17 @@ def _declared_value_objects(doc: dict) -> list[str]:
 
 
 class CheckAggregateClassDrift:
-    def __init__(self, documents: DocumentRepository) -> None:
+    def __init__(self, documents: DocumentRepository, extractor: ClassDeclarationExtractor) -> None:
         self._documents = documents
+        self._extractor = extractor
 
-    def run(self, documents_root: str, src_root: str) -> Result[dict]:
+    def run(self, documents_root: str, src_root: str, language: str = "python") -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
+        try:
+            extension = language_extension(language)
+        except ValueError as e:
+            return _err("UNSUPPORTED_LANGUAGE", str(e))
         try:
             doc_paths = self._documents.list_files(documents_root, "**/*.json")
         except FileNotFoundError:
@@ -76,7 +70,7 @@ class CheckAggregateClassDrift:
             if not root_name:
                 continue
             module_name = operation_name_to_module_name(root_name)
-            expected_path = f"{src_root}/{module_name}.py"
+            expected_path = f"{src_root}/{module_name}.{extension}"
             try:
                 source = self._documents.read_text(expected_path)
             except FileNotFoundError:
@@ -84,7 +78,7 @@ class CheckAggregateClassDrift:
                     "documentId": doc["documentId"], "aggregateRootName": root_name, "expectedPath": expected_path,
                 })
                 continue
-            found_classes = _class_names(source)
+            found_classes = self._extractor.class_names(source, language)
             for vo_name in _declared_value_objects(doc):
                 if vo_name not in found_classes:
                     missing_value_object.append({
@@ -98,7 +92,7 @@ class CheckAggregateClassDrift:
                 })
                 continue
             declared_attributes = _declared_attributes(doc, root_name)
-            found_fields = _field_names(source, root_name)
+            found_fields = self._extractor.field_names(source, language, root_name)
             if declared_attributes and set(declared_attributes) != set(found_fields):
                 attribute_mismatch.append({
                     "documentId": doc["documentId"], "aggregateRootName": root_name,

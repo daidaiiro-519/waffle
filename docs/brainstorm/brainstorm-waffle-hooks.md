@@ -1142,6 +1142,44 @@ Schema集約と同じ方針（薄いEntity、新規specは不要——`agg-docum
 確認済み。
 
 これにより**全7種のdriftチェックが完全にクリーン**になった
-（`missing_implementation_file`含め、既知の未実装項目が0件）。今回のセッション
-（Hooksブレスト→集約Entity化→DomainServices移行→Hooks実装→Document集約
-Entity化）で扱った論点は全て決着した。
+（`missing_implementation_file`含め、既知の未実装項目が0件）。
+
+---
+
+## tree-sitter乗り換え完了（2026-07-13）
+
+「実例が出るまで実装は保留」としていた判断を撤回し、着手した。理由は
+qa-advisor-design.mdでのSubagent永続化判断と同じ論理——「Waffleを個人利用
+ではなくOSSとして出荷する以上、プロダクトの仕組みとして今すぐ確定させるべき
+コンセプトレベルの決定」であり、多言語対応は実績を待つ機能ではなくWaffleの
+コンセプトそのものである、というユーザーの指摘による。
+
+**実装内容:**
+- `ClassDeclarationExtractor`port（`application/ports/`）を新設。
+  `class_names(source, language)`・`field_names(source, language, class_name)`
+  の2メソッドのみを持つ、言語非依存の抽象
+- `TreeSitterClassExtractor`adapter（`adapters/outbound/`）で実装。
+  Python/Java/TypeScript/JavaScriptの4言語（Waffleの初期対象言語群）に
+  対応。事前に各言語の実際の構文木構造をtree-sitterで検証してからクエリを
+  設計した（Pythonは型注釈付き代入、Javaはfield_declaration、TypeScriptは
+  public_field_definition、JavaScriptはfield_definition——4言語ともフィールド
+  宣言の構文が異なることを実データで確認済み）
+- `check_usecase_class_drift.py`/`check_aggregate_class_drift.py`から
+  Python専用の`ast`依存を完全に除去し、port経由に置き換え。両usecaseに
+  `language`パラメータ（省略時python、後方互換）を追加、`UNSUPPORTED_LANGUAGE`
+  エラーを新設
+- ファイル名規約はWaffle自身の生成規約としてsnake_case統一（Javaの
+  PascalCase等、各言語の慣習には合わせない方針を明記）
+- spec（uc-check-usecase-class-drift・uc-check-aggregate-class-drift）を
+  language パラメータ・UNSUPPORTED_LANGUAGEエラーの追加に合わせて更新
+- TDD: `TreeSitterClassExtractor`の4言語単体テスト10件、
+  Java実装に対する実際のクラス名ドリフト検知の受け入れテストを追加
+- 全316テスト・7種のdriftチェック通過、Waffle自身のPythonへの実行結果に
+  影響なし（`ast`からtree-sitterへの入れ替えが透過的であることを実データで
+  確認）
+
+`uv add`で`tree-sitter`・`tree-sitter-python`・`tree-sitter-java`・
+`tree-sitter-typescript`・`tree-sitter-javascript`を新規依存として追加した。
+
+今回のセッション（Hooksブレスト→集約Entity化→DomainServices移行→Hooks実装
+→Document集約Entity化→tree-sitter乗り換え）で扱った論点は全て決着した。

@@ -15,6 +15,7 @@ from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
+from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
@@ -46,6 +47,9 @@ def _docs() -> FsDocumentRepository:
 
 def _schemas() -> PackageSchemaRepository:
     return PackageSchemaRepository()
+
+def _class_extractor() -> TreeSitterClassExtractor:
+    return TreeSitterClassExtractor()
 
 @app.command()
 def query(
@@ -155,17 +159,19 @@ def check_schema_version_drift(
 def check_usecase_class_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
     src_root: str = typer.Option("src/waffle/application/usecases", "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ"),
+    language: str = typer.Option("python", "--language", help="実装言語（python/java/typescript/javascript）"),
 ) -> None:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
-    _emit(CheckUsecaseClassDrift(_docs()).run(documents_root, src_root))
+    _emit(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documents_root, src_root, language))
 
 @app.command("check-aggregate-class-drift")
 def check_aggregate_class_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
     src_root: str = typer.Option("src/waffle/domain/entities", "--srcRoot", "--src-root", help="集約Entityクラスの配置ルートディレクトリ"),
+    language: str = typer.Option("python", "--language", help="実装言語（python/java/typescript/javascript）"),
 ) -> None:
     """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
-    _emit(CheckAggregateClassDrift(_docs()).run(documents_root, src_root))
+    _emit(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documents_root, src_root, language))
 
 @app.command("check-domain-service-drift")
 def check_domain_service_drift(

@@ -2,12 +2,13 @@
 リポジトリ解決契約(対象のdocuments_root)に対応する統合テスト。
 """
 from waffle.adapters.outbound.fs import FsDocumentRepository
+from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.shared.result import Err
 
 
 def _engine() -> CheckUsecaseClassDrift:
-    return CheckUsecaseClassDrift(FsDocumentRepository())
+    return CheckUsecaseClassDrift(FsDocumentRepository(), TreeSitterClassExtractor())
 
 
 def test_存在しないdocuments_rootはINVALID_PATH():

@@ -45,7 +45,8 @@
       "title": "事前条件",
       "items": [
         "Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root）が与えられている",
-        "usecase実装クラスの配置ルートディレクトリ（src_root）が与えられている"
+        "usecase実装クラスの配置ルートディレクトリ（src_root）が与えられている",
+        "実装言語（language）が与えられている。省略時はpython"
       ]
     },
     "mainFlow": {
@@ -102,7 +103,9 @@
         "When usecase specのoperationNameから導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。",
         "When 実装ファイルは実在するが、operationNameと一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。",
         "While 全usecaseの操作名と実装クラスが一致しているとき、システムはmissing_implementation_file・class_name_mismatch両方を空配列で返す shall。",
-        "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+        "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
+        "If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。",
+        "While languageが指定されないとき、システムはpythonとして扱う shall。"
       ]
     },
     "errors": {
@@ -112,6 +115,10 @@
         {
           "code": "INVALID_PATH",
           "condition": "documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む"
+        },
+        {
+          "code": "UNSUPPORTED_LANGUAGE",
+          "condition": "languageがサポート対象外（python/java/typescript/javascript以外）"
         }
       ]
     },

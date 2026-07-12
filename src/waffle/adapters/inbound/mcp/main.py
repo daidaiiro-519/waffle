@@ -13,6 +13,7 @@ from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
+from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
@@ -41,6 +42,9 @@ def _docs() -> FsDocumentRepository:
 
 def _schemas() -> PackageSchemaRepository:
     return PackageSchemaRepository()
+
+def _class_extractor() -> TreeSitterClassExtractor:
+    return TreeSitterClassExtractor()
 
 @mcp.tool
 def query_document(
@@ -131,14 +135,14 @@ def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict
     return _dict(CheckSchemaVersionDrift(_docs(), _schemas()).run(documentsRoot))
 
 @mcp.tool
-def check_usecase_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases") -> dict:
+def check_usecase_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases", language: str = "python") -> dict:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
-    return _dict(CheckUsecaseClassDrift(_docs()).run(documentsRoot, srcRoot))
+    return _dict(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documentsRoot, srcRoot, language))
 
 @mcp.tool
-def check_aggregate_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/domain/entities") -> dict:
+def check_aggregate_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/domain/entities", language: str = "python") -> dict:
     """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
-    return _dict(CheckAggregateClassDrift(_docs()).run(documentsRoot, srcRoot))
+    return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documentsRoot, srcRoot, language))
 
 @mcp.tool
 def check_domain_service_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/domain/services") -> dict:

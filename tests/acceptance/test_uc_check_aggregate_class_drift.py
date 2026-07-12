@@ -3,12 +3,13 @@ import json
 from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
+from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.shared.result import Ok
 
 
 def _engine() -> CheckAggregateClassDrift:
-    return CheckAggregateClassDrift(FsDocumentRepository())
+    return CheckAggregateClassDrift(FsDocumentRepository(), TreeSitterClassExtractor())
 
 
 def _write(path: Path, doc: dict) -> None:
