@@ -10,6 +10,7 @@ from waffle.application.services.document_loading import load_document
 from waffle.domain.services.scenario_drift import (
     contains_subsequence,
     docstring_lines,
+    relevant_scenario_block_keys,
     scenario_gherkins,
     test_function_docstrings,
 )
@@ -38,7 +39,7 @@ class CheckScenarioDrift:
         except FileNotFoundError:
             return _err("INVALID_PATH", f"ファイルが見つかりません: {test_file_path}")
 
-        gherkins = scenario_gherkins(spec_doc)
+        gherkins = scenario_gherkins(spec_doc, relevant_scenario_block_keys(test_file_path))
         try:
             test_docstrings = test_function_docstrings(source)
         except SyntaxError:

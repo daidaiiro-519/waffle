@@ -32,11 +32,25 @@ def gherkin_body(gherkin: str) -> list[str]:
     return [ln.strip() for ln in lines if ln.strip()]
 
 
-def scenario_gherkins(spec_doc: dict) -> dict[str, list[str]]:
-    """spec document(dict) から sanitize済みシナリオ名 -> gherkin本文行 のマップを作る。"""
+def relevant_scenario_block_keys(test_file_path: str) -> tuple[str, ...]:
+    """test_file_pathのパスパターンから、scenarioBinding（test-standard-waffle）が定める
+    配置ルールに沿って対象シナリオブロックを機械的に絞り込む。いずれのパターンにも
+    一致しないパスは、絞り込まず全種を対象にする（ケースバイケース判定はしない）。"""
+    if "tests/acceptance/" in test_file_path:
+        return ("acceptanceScenarios",)
+    if "tests/integration/" in test_file_path:
+        return ("guaranteeScenarios",)
+    if "tests/unit/" in test_file_path:
+        return ("invariantScenarios", "domainServiceScenarios")
+    return _SCENARIO_BLOCK_KEYS
+
+
+def scenario_gherkins(spec_doc: dict, block_keys: tuple[str, ...] = _SCENARIO_BLOCK_KEYS) -> dict[str, list[str]]:
+    """spec document(dict) から sanitize済みシナリオ名 -> gherkin本文行 のマップを作る。
+    block_keysで対象シナリオブロックを絞り込める（省略時は全種）。"""
     content = spec_doc.get("content", {})
     result: dict[str, list[str]] = {}
-    for block_key in _SCENARIO_BLOCK_KEYS:
+    for block_key in block_keys:
         block = content.get(block_key)
         if block:
             for s in block["scenarios"]:

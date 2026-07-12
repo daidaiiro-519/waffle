@@ -46,7 +46,7 @@ sequenceDiagram
 ## 事後条件
 
 - 返り値は次の4フィールドを持つ: missing_in_tests（specが宣言するが対応するテスト関数が無いシナリオ名）・orphaned_in_tests（テストファイルにあるがどのシナリオ宣言にも対応しない関数名）・matched（両方に存在する名前）・gherkin_mismatches（名前は一致するが、テスト関数のdocstringがシナリオのgherkin本文を含んでいないシナリオ名）
-- 対象となるシナリオブロックはacceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenariosの4種
+- 対象となるシナリオブロックは、test_file_pathのパスパターンから機械的に絞り込む: tests/acceptance/配下はacceptanceScenariosのみ、tests/integration/配下はguaranteeScenariosのみ、tests/unit/配下はinvariantScenarios・domainServiceScenariosの2種、いずれにも一致しない場合は4種全てを対象にする（scenarioBindingが定める配置ルールと機械的に対応させる。ケースバイケースの判定はしない）
 - シナリオ名からテスト関数名への変換規則（sanitize）は、非単語文字を_に置換しtest_を前置する
 - gherkin本文の比較は、gherkinの"Scenario: ..."（または"Scenario Outline: ..."）見出し行を除いた各行と、テスト関数のdocstringの各行を、前後の空白を無視して比較する（docstringがgherkin本文を含む連続した部分列であれば一致とみなす。docstringに追加の説明文が続いても構わない）
 - テスト関数名・docstringの抽出はASTのみで行い、実行や意味理解はしない
@@ -63,6 +63,10 @@ sequenceDiagram
 - While 全シナリオに対応するテストが存在し、孤立テストもgherkin本文の不一致も無いとき、システムはmissing_in_tests・orphaned_in_tests・gherkin_mismatches全てを空配列で返す shall。
 - If 対象のspec.jsonまたはテストファイルが存在しないとき、システムはINVALID_PATHエラーを返す shall。
 - If テストファイルが構文解析できないとき、システムはINVALID_SOURCEエラーを返す shall。
+- While test_file_pathがtests/acceptance/配下のとき、システムはacceptanceScenariosのみを対象にシナリオ突き合わせを行う shall。
+- While test_file_pathがtests/integration/配下のとき、システムはguaranteeScenariosのみを対象にシナリオ突き合わせを行う shall。
+- While test_file_pathがtests/unit/配下のとき、システムはinvariantScenarios・domainServiceScenariosを対象にシナリオ突き合わせを行う shall。
+- While test_file_pathがいずれのパターンにも一致しないとき、システムは4種のシナリオブロック全てを対象にシナリオ突き合わせを行う shall。
 
 ---
 

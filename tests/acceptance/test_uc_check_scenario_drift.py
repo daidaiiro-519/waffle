@@ -27,6 +27,28 @@ def _spec(tmp_path: Path, scenario_name: str, gherkin: str) -> Path:
     return path
 
 
+def _spec_with_two_blocks(tmp_path: Path) -> Path:
+    """acceptanceScenariosとguaranteeScenariosの両方を宣言するusecase specを書く。"""
+    path = tmp_path / "spec.json"
+    doc = {
+        "documentId": "test-spec",
+        "content": {
+            "acceptanceScenarios": {
+                "scenarios": [
+                    {"name": "受け入れ観点で起きる", "gherkin": "Scenario: 受け入れ観点で起きる\n  Given 前提\n  When 操作する\n  Then 結果になる", "category": "正常系", "viewpoint": "", "covers": ""}
+                ]
+            },
+            "guaranteeScenarios": {
+                "scenarios": [
+                    {"name": "保証観点で起きる", "gherkin": "Scenario: 保証観点で起きる\n  Given 前提\n  When 操作する\n  Then 結果になる", "category": "正常系", "viewpoint": "", "covers": ""}
+                ]
+            },
+        },
+    }
+    path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
 def test_全シナリオに対応するテストがあり孤立も無いとき整合していると判定する(tmp_path):
     """
     Given 宣言する全シナリオに対応するtest_*関数を持ち、docstringがgherkin本文と一致するテストファイル
@@ -139,3 +161,84 @@ def test_構文解析できないテストファイルはINVALID_SOURCE(tmp_path
     result = _engine().run(str(spec_path), str(test_path))
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_SOURCE"
+
+
+def test_acceptanceディレクトリのテストはacceptanceScenariosのみ突き合わせる(tmp_path):
+    """
+    Given acceptanceScenariosとguaranteeScenariosの両方を宣言するspecと、
+          tests/acceptance/配下にありacceptanceScenariosのシナリオのみ実装したテストファイル
+    When ドリフト検査を実行する
+    Then guaranteeScenariosのシナリオはmissing_in_testsに含まれない（対象外のため）
+    """
+    spec_path = _spec_with_two_blocks(tmp_path)
+    test_dir = tmp_path / "tests" / "acceptance"
+    test_dir.mkdir(parents=True)
+    test_path = test_dir / "test_spec.py"
+    test_path.write_text(
+        'def test_受け入れ観点で起きる():\n'
+        '    """\n'
+        '    Given 前提\n'
+        '    When 操作する\n'
+        '    Then 結果になる\n'
+        '    """\n'
+        '    pass\n',
+        encoding="utf-8",
+    )
+
+    result = _engine().run(str(spec_path), str(test_path))
+    assert isinstance(result, Ok), result
+    assert result.value["missing_in_tests"] == []
+    assert result.value["matched"] == ["test_受け入れ観点で起きる"]
+
+
+def test_integrationディレクトリのテストはguaranteeScenariosのみ突き合わせる(tmp_path):
+    """
+    Given acceptanceScenariosとguaranteeScenariosの両方を宣言するspecと、
+          tests/integration/配下にありguaranteeScenariosのシナリオのみ実装したテストファイル
+    When ドリフト検査を実行する
+    Then acceptanceScenariosのシナリオはmissing_in_testsに含まれない（対象外のため）
+    """
+    spec_path = _spec_with_two_blocks(tmp_path)
+    test_dir = tmp_path / "tests" / "integration"
+    test_dir.mkdir(parents=True)
+    test_path = test_dir / "test_spec.py"
+    test_path.write_text(
+        'def test_保証観点で起きる():\n'
+        '    """\n'
+        '    Given 前提\n'
+        '    When 操作する\n'
+        '    Then 結果になる\n'
+        '    """\n'
+        '    pass\n',
+        encoding="utf-8",
+    )
+
+    result = _engine().run(str(spec_path), str(test_path))
+    assert isinstance(result, Ok), result
+    assert result.value["missing_in_tests"] == []
+    assert result.value["matched"] == ["test_保証観点で起きる"]
+
+
+def test_既知のディレクトリパターンに一致しないパスは全シナリオブロックを対象にする(tmp_path):
+    """
+    Given acceptanceScenariosとguaranteeScenariosの両方を宣言するspecと、
+          tests/acceptance/・tests/integration/・tests/unit/のいずれにも一致しないテストファイル
+    When ドリフト検査を実行する
+    Then guaranteeScenariosのシナリオがmissing_in_testsに含まれる（絞り込まれず対象になる）
+    """
+    spec_path = _spec_with_two_blocks(tmp_path)
+    test_path = tmp_path / "test_spec.py"
+    test_path.write_text(
+        'def test_受け入れ観点で起きる():\n'
+        '    """\n'
+        '    Given 前提\n'
+        '    When 操作する\n'
+        '    Then 結果になる\n'
+        '    """\n'
+        '    pass\n',
+        encoding="utf-8",
+    )
+
+    result = _engine().run(str(spec_path), str(test_path))
+    assert isinstance(result, Ok), result
+    assert result.value["missing_in_tests"] == ["test_保証観点で起きる"]
