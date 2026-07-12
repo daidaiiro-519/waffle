@@ -13,6 +13,39 @@ def render_parts(parts: list[dict], data: dict, level: int) -> str:
     return _join((render_part(p, data, level)) for p in parts)
 
 
+def render_body(content: dict, defs: dict) -> str:
+    """document.contentの各ブロックをx-render-orderでソートし、見出し＋x-render本体を
+    連結してMarkdown本文にする（RenderDocument/RenderBlankTemplate共通）。"""
+    ordered = []
+    for _key, block in content.items():
+        bdef = defs.get(block["blockType"] + "Block", {})
+        ordered.append((bdef.get("x-render-order", 999), bdef, block))
+    ordered.sort(key=lambda t: t[0])
+
+    parts = []
+    for _order, bdef, block in ordered:
+        if bdef.get("x-render-hidden"):
+            continue  # frontmatter等の値供給専用ブロック→本文には一切出さない
+        level = bdef.get("x-render-level", 2)
+        xr = bdef.get("x-render") or []
+        body = render_parts(xr, block, level + 1).strip()
+        if xr and not body:
+            continue  # 部品は宣言されているが対応データが全て空→見出しごと省略（空セクション防止）
+        title = block.get("title", "")
+        heading = "#" * level + " " + title
+        parts.append((level, heading + ("\n\n" + body if body else "")))
+    if not parts:
+        return ""
+    # トップレベルのセクション間に区切り線を入れて境界を明確にする。ただし直前が
+    # H1(level=1、文書見出し)の場合は区切り線を入れない——多くのビューアはH1自体に
+    # 下線を描画するため、直後の---が二重線に見えてしまう。
+    out = [parts[0][1]]
+    for i in range(1, len(parts)):
+        sep = "\n\n" if parts[i - 1][0] == 1 else "\n\n---\n\n"
+        out.append(sep + parts[i][1])
+    return "".join(out) + "\n"
+
+
 def render_part(part: dict, data: dict, level: int) -> str:
     """単一の RenderPart 宣言を Markdown 断片に描画する（対応する data が空なら空文字を返し部品ごと省略する）。"""
     kind = part["as"]

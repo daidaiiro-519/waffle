@@ -24,6 +24,7 @@ from waffle.application.usecases.check_domain_service_drift import CheckDomainSe
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
+from waffle.application.usecases.render_blank_template import RenderBlankTemplate
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
@@ -77,6 +78,11 @@ def query_document(
 def render_document(path: str, deploy: bool = True) -> dict:
     """document.json を成果物にレンダリングして deploy（uc-render-document）。"""
     return _dict(RenderDocument(_docs(), _schemas()).run(path, deploy=deploy))
+
+@mcp.tool
+def render_blank_template(schemaRef: str, discriminator: dict | None = None) -> dict:
+    """schemaRefが宣言する値フィールドをx-prompt-write本文のプレースホルダーとして描画する（uc-render-blank-template）。"""
+    return _dict(RenderBlankTemplate(_schemas()).run(schemaRef, discriminator or {}))
 
 @mcp.tool
 def validate_document(path: str) -> dict:

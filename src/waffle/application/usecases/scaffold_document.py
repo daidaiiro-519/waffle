@@ -16,10 +16,11 @@ from waffle.application.services.document_loading import load_document, load_sch
 from waffle.domain.services import path_template
 from waffle.domain.services.fill_template import build_const_paths as _build_const_paths
 from waffle.domain.services.fill_template import build_fill_template as _build_fill_template
+from waffle.domain.services.fill_template import build_skeleton as _build_skeleton
 from waffle.domain.services.fill_template import build_top_level_const_paths as _build_top_level_const_paths
 from waffle.domain.services.fill_template import build_top_level_fill_template as _build_top_level_fill_template
 from waffle.domain.services.fill_template import content_def as _content_def
-from waffle.domain.services.fill_template import resolve_ref as _resolve
+from waffle.domain.services.fill_template import discriminator_candidates as _discriminator_candidates
 from waffle.domain.services.schema_discriminator import discriminator_key as _discriminator_key
 from waffle.shared.result import Err, Ok, Result
 
@@ -156,52 +157,6 @@ class ScaffoldDocument:
         return Ok({"documentPath": document_path, "cleared": cleared})
 
 # --- schema 走査ヘルパ（純ロジック・機械的） ---
-
-def _discriminator_candidates(schema: dict, key: str) -> list:
-    return schema.get("properties", {}).get(key, {}).get("enum", [])
-
-def _skeleton_from_def(schema: dict, d: dict):
-    if "$ref" in d:
-        return _skeleton_from_def(schema, _resolve(schema, d["$ref"]))
-    if "const" in d:
-        return d["const"]
-    if "enum" in d:
-        return d["enum"][0]
-    t = d.get("type")
-    if t == "object":
-        return {k: _skeleton_from_def(schema, v) for k, v in d.get("properties", {}).items()}
-    if t == "array":
-        return []
-    if t == "string":
-        return ""
-    if t in ("number", "integer"):
-        return 0
-    if t == "boolean":
-        return False
-    return None
-
-def _build_skeleton(schema, document_id, disc_key, discriminator, content_def, extra_refs) -> dict:
-    props = schema.get("properties", {})
-    out: dict = {}
-    for name in schema.get("required", []):
-        if name == "documentId":
-            out[name] = document_id
-        elif name == disc_key:
-            out[name] = discriminator[disc_key]
-        elif name == "content":
-            out[name] = _skeleton_from_def(schema, content_def)
-        elif name in extra_refs:
-            out[name] = extra_refs[name]
-        else:
-            out[name] = _skeleton_from_def(schema, props.get(name, {}))
-    if "tags" in props and "tags" not in out:
-        out["tags"] = []
-    # CLIから渡されたref系パラメータ(subdomainRef等)が、必須ではないが宣言されたプロパティに
-    # 一致する場合も、パス計算だけで消費して document 本体に反映されない事故を防ぐため書き込む
-    for name, value in extra_refs.items():
-        if name in props and name not in out and name != disc_key:
-            out[name] = value
-    return out
 
 def _set_path(doc: dict, path: str, value) -> bool:
     """path上の中間キーが無ければ新設しながら値を設定する（呼び出し元がpathを既に

@@ -80,6 +80,19 @@ def test_render_documentはmdフォーマットを返す():
     assert out["format"] == "md"
 
 
+def test_render_blank_templateはプレースホルダーMarkdownを返す():
+    """
+    Given waffle MCPサーバ
+    When render_blank_templateツールをschemaRef=CodingSchema/v2で呼ぶ
+    Then MCP出力のcontentに{{...}}形式のプレースホルダーが含まれる
+    """
+    out = asyncio.run(_call("render_blank_template", {
+        "schemaRef": "CodingSchema/v2",
+        "discriminator": {"codingKind": "coding-standard"},
+    }))
+    assert "{{" in out["content"]
+
+
 def test_patch_schemaはadd_blockの結果をdictで返す():
     """
     Given waffle MCPサーバ

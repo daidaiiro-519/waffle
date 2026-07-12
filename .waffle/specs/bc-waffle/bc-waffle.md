@@ -54,6 +54,7 @@
 - uc-check-operation-drift
 - uc-check-aggregate-class-drift
 - uc-check-domain-service-drift
+- uc-render-blank-template
 
 ---
 

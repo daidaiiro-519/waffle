@@ -4,6 +4,8 @@
 """
 from __future__ import annotations
 
+import copy
+
 
 def resolve_ref(schema: dict, ref: str):
     node = schema
@@ -93,6 +95,87 @@ def _walk_const(schema, d, path, paths):
         return
     if "const" in d:
         paths[path] = d["const"]
+
+
+def discriminator_candidates(schema: dict, key: str) -> list:
+    return schema.get("properties", {}).get(key, {}).get("enum", [])
+
+
+def skeleton_from_def(schema: dict, d: dict):
+    if "$ref" in d:
+        return skeleton_from_def(schema, resolve_ref(schema, d["$ref"]))
+    if "const" in d:
+        return d["const"]
+    if "enum" in d:
+        return d["enum"][0]
+    t = d.get("type")
+    if t == "object":
+        return {k: skeleton_from_def(schema, v) for k, v in d.get("properties", {}).items()}
+    if t == "array":
+        return []
+    if t == "string":
+        return ""
+    if t in ("number", "integer"):
+        return 0
+    if t == "boolean":
+        return False
+    return None
+
+
+def build_skeleton(schema, document_id, disc_key, discriminator, content_def, extra_refs) -> dict:
+    props = schema.get("properties", {})
+    out: dict = {}
+    for name in schema.get("required", []):
+        if name == "documentId":
+            out[name] = document_id
+        elif name == disc_key:
+            out[name] = discriminator[disc_key]
+        elif name == "content":
+            out[name] = skeleton_from_def(schema, content_def)
+        elif name in extra_refs:
+            out[name] = extra_refs[name]
+        else:
+            out[name] = skeleton_from_def(schema, props.get(name, {}))
+    if "tags" in props and "tags" not in out:
+        out["tags"] = []
+    for name, value in extra_refs.items():
+        if name in props and name not in out and name != disc_key:
+            out[name] = value
+    return out
+
+
+def _placeholder_value(entry: dict) -> str:
+    text = entry["prompt"]
+    if "enum" in entry:
+        text = f"{text}（選択肢: {' / '.join(entry['enum'])}）"
+    return f"{{{{{text}}}}}"
+
+
+def overlay_placeholders(skeleton: dict, entries: list) -> dict:
+    """skeletonのコピーに、entries(build_fill_template等の出力)が指すpathへ
+    x-prompt-write本文を{{...}}プレースホルダーとして上書きする。elementを持つ配列は
+    要素1件分のプレースホルダーオブジェクトを含む配列にする。副作用なし（コピーを返す）。"""
+    out = copy.deepcopy(skeleton)
+    for entry in entries:
+        if "element" in entry:
+            # 構造化要素を持つ配列: 要素1件分のプレースホルダーオブジェクトを含む配列にする。
+            value = [{k: f"{{{{{v}}}}}" for k, v in entry["element"].items()}]
+        elif entry.get("type") == "array":
+            # 単純な配列(例: tags): プレースホルダー文字列のまま代入すると、レンダラが
+            # 文字列を1文字ずつの配列として反復してしまうため、必ず配列で包む。
+            value = [_placeholder_value(entry)]
+        else:
+            value = _placeholder_value(entry)
+        _set_path(out, entry["path"], value)
+    return out
+
+
+def _set_path(doc: dict, path: str, value) -> None:
+    parts = path.split(".")
+    cur = doc
+    for p in parts[:-1]:
+        cur = cur.setdefault(p, {})
+    cur[parts[-1]] = value
 
 
 def _walk_fill(schema, d, path, entries, is_required):

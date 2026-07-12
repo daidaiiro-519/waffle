@@ -70,6 +70,20 @@ def test_render_no_deployはmdフォーマットを返す():
     assert data["format"] == "md"
 
 
+def test_render_blank_templateはプレースホルダーMarkdownを返す():
+    """
+    Given waffle CLI
+    When render-blank-template --schemaRef CodingSchema/v2 --discriminator codingKind=coding-standard を実行する
+    Then 終了コードは0で、出力JSONのcontentに{{...}}形式のプレースホルダーが含まれる
+    """
+    result = _runner.invoke(app, [
+        "render-blank-template", "--schemaRef", "CodingSchema/v2", "--discriminator", "codingKind=coding-standard",
+    ])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert "{{" in data["content"]
+
+
 def test_validateは適合でstatus判定を返す():
     """
     Given waffle CLI

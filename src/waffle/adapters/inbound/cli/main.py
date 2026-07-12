@@ -26,6 +26,7 @@ from waffle.application.usecases.check_domain_service_drift import CheckDomainSe
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
+from waffle.application.usecases.render_blank_template import RenderBlankTemplate
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
@@ -85,6 +86,18 @@ def render(
 ) -> None:
     """document.json を成果物にレンダリングして deploy（uc-render-document）。"""
     _emit(RenderDocument(_docs(), _schemas()).run(path, deploy=not no_deploy))
+
+@app.command("render-blank-template")
+def render_blank_template(
+    schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref"),
+    discriminator: str = typer.Option(None, "--discriminator", help="key=value 形式（例: codingKind=coding-standard）"),
+) -> None:
+    """schemaRefが宣言する値フィールドをx-prompt-write本文のプレースホルダーとして描画する（uc-render-blank-template）。"""
+    params = {}
+    if discriminator:
+        k, _, v = discriminator.partition("=")
+        params = {k: v}
+    _emit(RenderBlankTemplate(_schemas()).run(schema_ref, params))
 
 @app.command()
 def validate(path: str = typer.Option(..., "--path")) -> None:
