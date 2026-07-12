@@ -4,110 +4,110 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
-| `{{title.title}}` | documentId をそのまま設定してください。 |
-| `{{identity.tier}}` | このスタックが担うティア（backend=サーバー側/frontend=画面側/platform=基盤側）。下のenumから選ぶ。 |
-| `{{identity.stackName}}` | スタック名（kebab-case）。documentId の {stack} 部分と一致させる。 |
-| `{{runtime.language}}` | 言語とバージョン。例: Python 3.12+ |
-| `{{runtime.target}}` | 実行ターゲット。例: CLI / ローカルプロセス、ブラウザ、コンテナ |
-| `{{runtime.concurrency}}` | 並行モデル。例: 同期主体（境界のみ async） |
-| `{{framework.name}}` | 看板フレームワーク名（1つ）。無ければ空文字。例: FastAPI, React |
-| `{{framework.note}}` | name が空のとき、無い理由を1文で。name があれば空文字。 |
-| `{{framework.rationale}}` | name が空でなければ、他の候補（習熟度・既存資産・技術要件等）ではなくこれを選んだ理由を1文で（ADR）。name が空なら空文字。 |
-| `{{interface.items[1].style}}` | 様式。例: CLI, MCP, REST |
-| `{{interface.items[1].implementation}}` | 実装ライブラリ。例: typer, fastmcp |
-| `{{interface.items[1].rationale}}` | 他の候補（習熟度・既存資産・技術要件等）ではなくこの実装を選んだ理由を1文で（ADR）。 |
-| `{{middleware.items[1].role}}` | ミドルウェアの役割分類。下のenumから選ぶ。 |
-| `{{middleware.items[1].product}}` | 製品名。例: PostgreSQL, Redis |
-| `{{middleware.items[1].access}}` | アクセスするクライアントライブラリ。例: SQLAlchemy |
-| `{{middleware.items[1].rationale}}` | 他の候補（別のDB製品等・実行環境の制約含む）ではなくこれを選んだ理由を1文で（ADR）。 |
-| `{{middleware.note}}` | items が空のとき、無い理由を1文で。items があれば空文字。 |
-| `{{libraries.items[1].category}}` | 能力の分類（AWS カテゴリ相当）。例: validation, observability, security |
-| `{{libraries.items[1].capability}}` | 用途名。例: schema-validation, logging |
-| `{{libraries.items[1].implementation}}` | 実装ライブラリ。例: jsonschema |
-| `{{libraries.items[1].version}}` | バージョン。固定不要なら空。 |
-| `{{libraries.items[1].rationale}}` | 他の候補ではなくこの実装を選んだ理由を1文で（ADR）。 |
-| `{{tooling.packageManager}}` | パッケージ管理ツール。例: uv（.venv / uv.lock 固定） |
-| `{{tooling.lintFormat}}` | lint/format ツール。任意なら空。 |
-| `{{tooling.rationale}}` | 他の候補ではなくこのパッケージ管理ツールを選んだ理由を1文で（ADR）。 |
-| `{{policy.items[1].level}}` | 種別。必須 / 禁止 / 推奨のいずれか。 |
-| `{{policy.items[1].rule}}` | 依存ライブラリを追加する際に満たすべき方針の内容。例: 標準ライブラリ・既存依存で代替可能なら追加しない |
+| `{{タイトル}}` | documentId をそのまま設定してください。（JSON上のフィールド: content.title.title） |
+| `{{スタック概要.対象領域}}` | このスタックが担うティア（backend=サーバー側/frontend=画面側/platform=基盤側）。下のenumから選ぶ。（JSON上のフィールド: content.identity.tier） |
+| `{{スタック概要.スタック名}}` | スタック名（kebab-case）。documentId の {stack} 部分と一致させる。（JSON上のフィールド: content.identity.stackName） |
+| `{{ランタイム.言語}}` | 言語とバージョン。例: Python 3.12+（JSON上のフィールド: content.runtime.language） |
+| `{{ランタイム.実行ターゲット}}` | 実行ターゲット。例: CLI / ローカルプロセス、ブラウザ、コンテナ（JSON上のフィールド: content.runtime.target） |
+| `{{ランタイム.並行モデル}}` | 並行モデル。例: 同期主体（境界のみ async）（JSON上のフィールド: content.runtime.concurrency） |
+| `{{フレームワーク.名称}}` | 看板フレームワーク名（1つ）。無ければ空文字。例: FastAPI, React（JSON上のフィールド: content.framework.name） |
+| `{{フレームワーク.備考}}` | name が空のとき、無い理由を1文で。name があれば空文字。（JSON上のフィールド: content.framework.note） |
+| `{{フレームワーク.選定理由}}` | name が空でなければ、他の候補（習熟度・既存資産・技術要件等）ではなくこれを選んだ理由を1文で（ADR）。name が空なら空文字。（JSON上のフィールド: content.framework.rationale） |
+| `{{公開インターフェース.項目1.様式}}` | 様式。例: CLI, MCP, REST（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.interface.items[].style） |
+| `{{公開インターフェース.項目1.実装}}` | 実装ライブラリ。例: typer, fastmcp（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.interface.items[].implementation） |
+| `{{公開インターフェース.項目1.選定理由}}` | 他の候補（習熟度・既存資産・技術要件等）ではなくこの実装を選んだ理由を1文で（ADR）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.interface.items[].rationale） |
+| `{{ミドルウェア.項目1.役割}}` | ミドルウェアの役割分類。下のenumから選ぶ。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.middleware.items[].role） |
+| `{{ミドルウェア.項目1.製品}}` | 製品名。例: PostgreSQL, Redis（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.middleware.items[].product） |
+| `{{ミドルウェア.項目1.アクセス手段}}` | アクセスするクライアントライブラリ。例: SQLAlchemy（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.middleware.items[].access） |
+| `{{ミドルウェア.項目1.選定理由}}` | 他の候補（別のDB製品等・実行環境の制約含む）ではなくこれを選んだ理由を1文で（ADR）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.middleware.items[].rationale） |
+| `{{ミドルウェア.備考}}` | items が空のとき、無い理由を1文で。items があれば空文字。（JSON上のフィールド: content.middleware.note） |
+| `{{ライブラリ.項目1.分類}}` | 能力の分類（AWS カテゴリ相当）。例: validation, observability, security（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.libraries.items[].category） |
+| `{{ライブラリ.項目1.用途}}` | 用途名。例: schema-validation, logging（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.libraries.items[].capability） |
+| `{{ライブラリ.項目1.実装}}` | 実装ライブラリ。例: jsonschema（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.libraries.items[].implementation） |
+| `{{ライブラリ.項目1.バージョン}}` | バージョン。固定不要なら空。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.libraries.items[].version） |
+| `{{ライブラリ.項目1.選定理由}}` | 他の候補ではなくこの実装を選んだ理由を1文で（ADR）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.libraries.items[].rationale） |
+| `{{開発ツール.パッケージ管理}}` | パッケージ管理ツール。例: uv（.venv / uv.lock 固定）（JSON上のフィールド: content.tooling.packageManager） |
+| `{{開発ツール.lintフォーマットツール}}` | lint/format ツール。任意なら空。（JSON上のフィールド: content.tooling.lintFormat） |
+| `{{開発ツール.選定理由}}` | 他の候補ではなくこのパッケージ管理ツールを選んだ理由を1文で（ADR）。（JSON上のフィールド: content.tooling.rationale） |
+| `{{依存方針.項目1.種別}}` | 種別。必須 / 禁止 / 推奨のいずれか。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.policy.items[].level） |
+| `{{依存方針.項目1.方針}}` | 依存ライブラリを追加する際に満たすべき方針の内容。例: 標準ライブラリ・既存依存で代替可能なら追加しない（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.policy.items[].rule） |
 
 ---
 
-# {{title.title}}
+# {{タイトル}}
 
 ---
 
 ## スタック概要
 
-- **対象領域（ティア: backend=サーバー側 / frontend=画面側 / platform=基盤側）**: {{identity.tier}}
-- **スタック名**: {{identity.stackName}}
+- **対象領域（ティア: backend=サーバー側 / frontend=画面側 / platform=基盤側）**: {{スタック概要.対象領域}}
+- **スタック名**: {{スタック概要.スタック名}}
 
 ---
 
 ## ランタイム
 
-- **言語**: {{runtime.language}}
-- **実行ターゲット**: {{runtime.target}}
-- **並行モデル**: {{runtime.concurrency}}
+- **言語**: {{ランタイム.言語}}
+- **実行ターゲット**: {{ランタイム.実行ターゲット}}
+- **並行モデル**: {{ランタイム.並行モデル}}
 
 ---
 
 ## フレームワーク
 
-{{framework.note}}
+{{フレームワーク.備考}}
 
-- **フレームワーク**: {{framework.name}}
-- **選定理由**: {{framework.rationale}}
+- **フレームワーク**: {{フレームワーク.名称}}
+- **選定理由**: {{フレームワーク.選定理由}}
 
 ---
 
 ## 公開インターフェース
 
-### {{interface.items[1].style}}
+### {{公開インターフェース.項目1.様式}}
 
-- **実装**: {{interface.items[1].implementation}}
+- **実装**: {{公開インターフェース.項目1.実装}}
 
 #### 選定理由
 
-{{interface.items[1].rationale}}
+{{公開インターフェース.項目1.選定理由}}
 
 ---
 
 ## ミドルウェア
 
-{{middleware.note}}
+{{ミドルウェア.備考}}
 
-### {{middleware.items[1].product}}
+### {{ミドルウェア.項目1.製品}}
 
-- **役割**: {{middleware.items[1].role}}
-- **アクセス手段**: {{middleware.items[1].access}}
+- **役割**: {{ミドルウェア.項目1.役割}}
+- **アクセス手段**: {{ミドルウェア.項目1.アクセス手段}}
 
 #### 選定理由
 
-{{middleware.items[1].rationale}}
+{{ミドルウェア.項目1.選定理由}}
 
 ---
 
 ## ライブラリ
 
-### {{libraries.items[1].implementation}}
+### {{ライブラリ.項目1.実装}}
 
-- **分類**: {{libraries.items[1].category}}
-- **用途**: {{libraries.items[1].capability}}
-- **バージョン**: {{libraries.items[1].version}}
+- **分類**: {{ライブラリ.項目1.分類}}
+- **用途**: {{ライブラリ.項目1.用途}}
+- **バージョン**: {{ライブラリ.項目1.バージョン}}
 
 #### 選定理由
 
-{{libraries.items[1].rationale}}
+{{ライブラリ.項目1.選定理由}}
 
 ---
 
 ## 開発ツール
 
-- **パッケージ管理**: {{tooling.packageManager}}
-- **lint / format**: {{tooling.lintFormat}}
-- **選定理由**: {{tooling.rationale}}
+- **パッケージ管理**: {{開発ツール.パッケージ管理}}
+- **lint / format**: {{開発ツール.lintフォーマットツール}}
+- **選定理由**: {{開発ツール.選定理由}}
 
 ---
 
@@ -115,4 +115,4 @@
 
 | 種別 | 方針 |
 |---|---|
-| {{policy.items[1].level}} | {{policy.items[1].rule}} |
+| {{依存方針.項目1.種別}} | {{依存方針.項目1.方針}} |

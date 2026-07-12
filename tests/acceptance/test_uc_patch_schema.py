@@ -257,6 +257,56 @@ def test_存在しないブロックへのset_fieldはBLOCK_NOT_FOUND():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
 
 
+def test_content_defからプロパティ参照を外す():
+    """
+    Given 必須ではないプロパティを持つcontent def名・プロパティ名
+    When remove_blockを実行する
+    Then そのcontent defからプロパティ参照が外れ、$defs内のブロック定義自体は変更されない
+    """
+    add = _engine().run("add_block", {
+        "schemaRef": _SCHEMA_REF,
+        "blockName": "NoteBlock", "blockDef": _note_block_def(),
+        "contentDefName": "SomeContent", "propName": "note",
+    })
+    assert isinstance(add, Ok), add
+
+    result = _engine().run("remove_block", {
+        "schemaRef": _SCHEMA_REF,
+        "contentDefName": "SomeContent", "propName": "note",
+    })
+    assert isinstance(result, Ok), result
+    written = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+    assert "note" not in written["$defs"]["SomeContent"]["properties"]
+    assert "NoteBlock" in written["$defs"]
+
+
+def test_既に存在しないプロパティのremove_blockは無変更で成功する():
+    """
+    Given 既に除去済みのプロパティ名を含むremove_block操作
+    When remove_blockを再実行する
+    Then 対象は無変更のまま成功する
+    """
+    params = {"schemaRef": _SCHEMA_REF, "contentDefName": "SomeContent", "propName": "no_such_prop"}
+    result = _engine().run("remove_block", params)
+    assert isinstance(result, Ok) and result.value["changed"] is False
+
+
+def test_必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される():
+    """
+    Given 公開済みkindのrequiredに指定されているプロパティ
+    When remove_blockを実行する
+    Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない
+    """
+    before = _FIXTURE_PATH.read_text(encoding="utf-8")
+    result = _engine().run("remove_block", {
+        "schemaRef": _SCHEMA_REF,
+        "contentDefName": "SomeContent", "propName": "title",
+    })
+    assert isinstance(result, Err), result
+    assert result.details[0] == "BACKWARD_INCOMPATIBLE"
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
+
+
 def test_既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否される():
     """
     Given 既存Documentを壊しうる後方互換性のない変更
@@ -334,7 +384,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
 
 def test_未知のoperationはINVALID_OPERATION():
     """
-    Given add_block/rename_block以外のoperation
+    Given add_block/rename_block/set_field/remove_block以外のoperation
     When patchを実行する
     Then INVALID_OPERATIONエラーが返る
     """

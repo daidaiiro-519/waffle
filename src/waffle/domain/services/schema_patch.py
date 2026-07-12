@@ -91,12 +91,27 @@ def set_field(schema: dict, def_name: str, field_path: str, value) -> dict:
     return new_schema
 
 
+def remove_block(schema: dict, content_def_name: str, prop_name: str) -> dict:
+    """$defs[content_def_name]のpropertiesからprop_nameへの参照を外す（冪等）。
+    $defs内のブロック定義自体は削除しない（他のcontent defから参照され続けている
+    可能性があるため）。requiredに指定されているプロパティの除去は
+    check_backward_compatibleが後方互換違反として検出する（呼び出し側が確認する）。"""
+    if content_def_name not in schema["$defs"]:
+        raise BlockNotFoundError(f"{content_def_name} が $defs に存在しない")
+    if prop_name not in schema["$defs"][content_def_name].get("properties", {}):
+        return schema
+    new_schema = json.loads(dump(schema))
+    del new_schema["$defs"][content_def_name]["properties"][prop_name]
+    return new_schema
+
+
 _REQUIRED_ENTRY = re.compile(r"/required/\d+$")
+_PROPERTY_ENTRY = re.compile(r"^/\$defs/([^/]+)/properties/([^/]+)$")
 
 
 def check_backward_compatible(old_schema: dict, new_schema: dict) -> list[str]:
     """既存instanceを壊しうる変更（公開済みkindのrequired配列への追加・エントリのリネーム、
-    既存フィールドの型変更等）を検出する。違反が無ければ空配列。
+    既存フィールドの型変更、必須プロパティの除去等）を検出する。違反が無ければ空配列。
 
     jsonpatchはrequired配列の変更を常に要素単位のadd/replace（例: /required/0）として
     表現し、配列全体を丸ごとreplaceすることはない。エントリのリネーム（rename_block）も
@@ -111,6 +126,11 @@ def check_backward_compatible(old_schema: dict, new_schema: dict) -> list[str]:
             violations.append(f"required配列への追加・変更は後方互換を壊す: {path}")
         if op["op"] == "replace" and path.endswith("/type"):
             violations.append(f"既存フィールドの型変更は後方互換を壊す: {path}")
+        if op["op"] == "remove" and (m := _PROPERTY_ENTRY.match(path)):
+            content_def_name, prop_name = m.groups()
+            required = old_schema["$defs"].get(content_def_name, {}).get("required", [])
+            if prop_name in required:
+                violations.append(f"必須プロパティの除去は後方互換を壊す: {path}")
     return violations
 
 

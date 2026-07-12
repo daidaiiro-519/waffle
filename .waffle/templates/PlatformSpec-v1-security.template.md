@@ -4,33 +4,33 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
-| `{{title.title}}` | documentId をそのまま設定してください。 |
-| `{{summary.text}}` | このコンポーネント/領域の概要を1〜2文で。 |
-| `{{compliance.items[1].framework}}` | コンプライアンスフレームワークの名称・対象範囲・要件を列挙。例: SOC2, PCI-DSS, GDPR |
-| `{{compliance.items[1].scope}}` | 対象範囲。 |
-| `{{compliance.items[1].requirement}}` | 要件。 |
-| `{{accessPolicy.items[1].principal}}` | アクセス制御の主体・許可される操作・条件を列挙。例: 特定ロール、サービスアカウント |
-| `{{accessPolicy.items[1].allowedActions}}` | 許可される操作。 |
-| `{{accessPolicy.items[1].condition}}` | 条件。無ければ空。 |
-| `{{dataBoundary.items[1].classification}}` | データ分類ごとの境界・要件を列挙。 |
-| `{{dataBoundary.items[1].boundary}}` | 境界。 |
-| `{{dataBoundary.items[1].requirement}}` | 要件。 |
-| `{{guaranteeScenarios.background}}` | 複数シナリオ共通の前提。無ければ空文字。 |
-| `{{guaranteeScenarios.scenarios[1].name}}` | シナリオ名（概要）。 |
-| `{{guaranteeScenarios.scenarios[1].category}}` | 分類: 正常系 / 異常系 / 境界値。 |
-| `{{guaranteeScenarios.scenarios[1].viewpoint}}` | 観点: 何を保証するか＋検証の狙い。 |
-| `{{guaranteeScenarios.scenarios[1].gherkin}}` | Given/When/Then。ドメイン語彙で書き、IaCの実装詳細は書かない。 |
-| `{{guaranteeScenarios.scenarios[1].covers}}` | 対応する保証項目への参照。 |
+| `{{タイトル}}` | documentId をそのまま設定してください。（JSON上のフィールド: content.title.title） |
+| `{{概要}}` | このコンポーネント/領域の概要を1〜2文で。（JSON上のフィールド: content.summary.text） |
+| `{{コンプライアンス要件.項目1.フレームワーク}}` | コンプライアンスフレームワークの名称・対象範囲・要件を列挙。例: SOC2, PCI-DSS, GDPR（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.compliance.items[].framework） |
+| `{{コンプライアンス要件.項目1.対象範囲}}` | 対象範囲。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.compliance.items[].scope） |
+| `{{コンプライアンス要件.項目1.要件}}` | 要件。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.compliance.items[].requirement） |
+| `{{アクセス制御方針.項目1.主体}}` | アクセス制御の主体・許可される操作・条件を列挙。例: 特定ロール、サービスアカウント（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.accessPolicy.items[].principal） |
+| `{{アクセス制御方針.項目1.許可される操作}}` | 許可される操作。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.accessPolicy.items[].allowedActions） |
+| `{{アクセス制御方針.項目1.条件}}` | 条件。無ければ空。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.accessPolicy.items[].condition） |
+| `{{データ分類境界.項目1.データ分類}}` | データ分類ごとの境界・要件を列挙。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.dataBoundary.items[].classification） |
+| `{{データ分類境界.項目1.境界}}` | 境界。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.dataBoundary.items[].boundary） |
+| `{{データ分類境界.項目1.要件}}` | 要件。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.dataBoundary.items[].requirement） |
+| `{{保証シナリオ.背景}}` | 複数シナリオ共通の前提。無ければ空文字。（JSON上のフィールド: content.guaranteeScenarios.background） |
+| `{{保証シナリオ.シナリオ1.シナリオ名}}` | シナリオ名（概要）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.guaranteeScenarios.scenarios[].name） |
+| `{{保証シナリオ.シナリオ1.分類}}` | 分類: 正常系 / 異常系 / 境界値。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.guaranteeScenarios.scenarios[].category） |
+| `{{保証シナリオ.シナリオ1.観点}}` | 観点: 何を保証するか＋検証の狙い。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.guaranteeScenarios.scenarios[].viewpoint） |
+| `{{保証シナリオ.シナリオ1.シナリオ本文}}` | Given/When/Then。ドメイン語彙で書き、IaCの実装詳細は書かない。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.guaranteeScenarios.scenarios[].gherkin） |
+| `{{保証シナリオ.シナリオ1.対応項目}}` | 対応する保証項目への参照。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.guaranteeScenarios.scenarios[].covers） |
 
 ---
 
-# {{title.title}}
+# {{タイトル}}
 
 ---
 
 ## 概要
 
-{{summary.text}}
+{{概要}}
 
 ---
 
@@ -38,7 +38,7 @@
 
 | フレームワーク | 対象範囲 | 要件 |
 |---|---|---|
-| {{compliance.items[1].framework}} | {{compliance.items[1].scope}} | {{compliance.items[1].requirement}} |
+| {{コンプライアンス要件.項目1.フレームワーク}} | {{コンプライアンス要件.項目1.対象範囲}} | {{コンプライアンス要件.項目1.要件}} |
 
 ---
 
@@ -46,7 +46,7 @@
 
 | 主体 | 許可される操作 | 条件 |
 |---|---|---|
-| {{accessPolicy.items[1].principal}} | {{accessPolicy.items[1].allowedActions}} | {{accessPolicy.items[1].condition}} |
+| {{アクセス制御方針.項目1.主体}} | {{アクセス制御方針.項目1.許可される操作}} | {{アクセス制御方針.項目1.条件}} |
 
 ---
 
@@ -54,7 +54,7 @@
 
 | データ分類 | 境界 | 要件 |
 |---|---|---|
-| {{dataBoundary.items[1].classification}} | {{dataBoundary.items[1].boundary}} | {{dataBoundary.items[1].requirement}} |
+| {{データ分類境界.項目1.データ分類}} | {{データ分類境界.項目1.境界}} | {{データ分類境界.項目1.要件}} |
 
 ---
 
@@ -62,14 +62,14 @@
 
 ### 背景
 
-{{guaranteeScenarios.background}}
+{{保証シナリオ.背景}}
 
-### {{guaranteeScenarios.scenarios[1].name}}
+### {{保証シナリオ.シナリオ1.シナリオ名}}
 
 | 分類 | 観点 |
 |---|---|
-| {{guaranteeScenarios.scenarios[1].category}} | {{guaranteeScenarios.scenarios[1].viewpoint}} |
+| {{保証シナリオ.シナリオ1.分類}} | {{保証シナリオ.シナリオ1.観点}} |
 
 ```gherkin
-{{guaranteeScenarios.scenarios[1].gherkin}}
+{{保証シナリオ.シナリオ1.シナリオ本文}}
 ```

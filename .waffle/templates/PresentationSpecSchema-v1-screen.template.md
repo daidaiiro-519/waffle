@@ -4,34 +4,34 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
-| `{{title.title}}` | documentId をそのまま設定してください。 |
-| `{{summary.text}}` | この画面/フローが何のために存在するかを1〜2文で（業務ユースケースの内容の繰り返しでなく、プロダクトとしての意図）。 |
-| `{{fields.items[1].name}}` | 項目名。例: パスワード（確認） |
-| `{{fields.items[1].inputType}}` | 入力/表示の種別。例: text / number / select / checkbox |
-| `{{fields.items[1].required}}` | 入力必須なら true。 |
-| `{{fields.items[1].description}}` | 何のための項目か、かつ、なぜ業務ユースケースの入力ではないのかを1文で。 |
-| `{{actions.items[1].name}}` | 操作名。例: 注文を確定する |
-| `{{actions.items[1].trigger}}` | 操作の契機。例: 「確定」ボタン押下 |
-| `{{actions.items[1].description}}` | この操作が業務的に何をするかを1文で。例: カート内容を注文として確定する |
-| `{{actions.items[1].usecaseRef}}` | この操作が対応する業務ユースケース（DomainSpecSchemaのusecase）の documentId（あれば）。例: uc-place-order。無ければ空文字。 |
-| `{{actions.items[1].leadsTo}}` | この操作の実行後に遷移する screen の documentId（あれば）。同じ画面に留まるなら空文字。 |
-| `{{componentAcceptanceScenarios.background}}` | 複数シナリオ共通の前提。無ければ空文字。 |
-| `{{componentAcceptanceScenarios.scenarios[1].name}}` | シナリオ名（概要）。 |
-| `{{componentAcceptanceScenarios.scenarios[1].category}}` | 分類: 正常系 / 異常系 / 境界値。 |
-| `{{componentAcceptanceScenarios.scenarios[1].viewpoint}}` | 観点（入力検証/表示条件/活性状態 等）＋検証の狙い。 |
-| `{{componentAcceptanceScenarios.scenarios[1].gherkin}}` | このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。 |
-| `{{visualRef.url}}` | この画面のデザインを確認できる外部URL。例: https://figma.com/file/... |
-| `{{visualRef.note}}` | 補足（バージョン・参照箇所等）。無ければ空文字。 |
+| `{{タイトル}}` | documentId をそのまま設定してください。（JSON上のフィールド: content.title.title） |
+| `{{概要}}` | この画面/フローが何のために存在するかを1〜2文で（業務ユースケースの内容の繰り返しでなく、プロダクトとしての意図）。（JSON上のフィールド: content.summary.text） |
+| `{{項目.項目1.項目}}` | 項目名。例: パスワード（確認）（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.fields.items[].name） |
+| `{{項目.項目1.種別}}` | 入力/表示の種別。例: text / number / select / checkbox（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.fields.items[].inputType） |
+| `{{項目.項目1.必須}}` | 入力必須なら true。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.fields.items[].required） |
+| `{{項目.項目1.説明（業務ユースケースにない理由）}}` | 何のための項目か、かつ、なぜ業務ユースケースの入力ではないのかを1文で。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.fields.items[].description） |
+| `{{操作.項目1.操作}}` | 操作名。例: 注文を確定する（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.actions.items[].name） |
+| `{{操作.項目1.契機}}` | 操作の契機。例: 「確定」ボタン押下（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.actions.items[].trigger） |
+| `{{操作.項目1.説明}}` | この操作が業務的に何をするかを1文で。例: カート内容を注文として確定する（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.actions.items[].description） |
+| `{{操作.項目1.対応する業務ユースケース}}` | この操作が対応する業務ユースケース（DomainSpecSchemaのusecase）の documentId（あれば）。例: uc-place-order。無ければ空文字。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.actions.items[].usecaseRef） |
+| `{{操作.項目1.遷移先}}` | この操作の実行後に遷移する screen の documentId（あれば）。同じ画面に留まるなら空文字。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.actions.items[].leadsTo） |
+| `{{コンポーネント受け入れシナリオ.背景}}` | 複数シナリオ共通の前提。無ければ空文字。（JSON上のフィールド: content.componentAcceptanceScenarios.background） |
+| `{{コンポーネント受け入れシナリオ.シナリオ1.シナリオ名}}` | シナリオ名（概要）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.componentAcceptanceScenarios.scenarios[].name） |
+| `{{コンポーネント受け入れシナリオ.シナリオ1.分類}}` | 分類: 正常系 / 異常系 / 境界値。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.componentAcceptanceScenarios.scenarios[].category） |
+| `{{コンポーネント受け入れシナリオ.シナリオ1.観点}}` | 観点（入力検証/表示条件/活性状態 等）＋検証の狙い。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.componentAcceptanceScenarios.scenarios[].viewpoint） |
+| `{{コンポーネント受け入れシナリオ.シナリオ1.手順}}` | このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.componentAcceptanceScenarios.scenarios[].gherkin） |
+| `{{ビジュアル参照.参照先}}` | この画面のデザインを確認できる外部URL。例: https://figma.com/file/...（JSON上のフィールド: content.visualRef.url） |
+| `{{ビジュアル参照.補足}}` | 補足（バージョン・参照箇所等）。無ければ空文字。（JSON上のフィールド: content.visualRef.note） |
 
 ---
 
-# {{title.title}}
+# {{タイトル}}
 
 ---
 
 ## 概要
 
-{{summary.text}}
+{{概要}}
 
 ---
 
@@ -39,7 +39,7 @@
 
 | 項目 | 種別 | 必須 | 説明（業務ユースケースにない理由） |
 |---|---|---|---|
-| {{fields.items[1].name}} | {{fields.items[1].inputType}} | {{fields.items[1].required}} | {{fields.items[1].description}} |
+| {{項目.項目1.項目}} | {{項目.項目1.種別}} | {{項目.項目1.必須}} | {{項目.項目1.説明（業務ユースケースにない理由）}} |
 
 ---
 
@@ -47,7 +47,7 @@
 
 | 操作 | 契機 | 説明 | 対応する業務ユースケース | 遷移先 |
 |---|---|---|---|---|
-| {{actions.items[1].name}} | {{actions.items[1].trigger}} | {{actions.items[1].description}} | `{{actions.items[1].usecaseRef}}` | `{{actions.items[1].leadsTo}}` |
+| {{操作.項目1.操作}} | {{操作.項目1.契機}} | {{操作.項目1.説明}} | `{{操作.項目1.対応する業務ユースケース}}` | `{{操作.項目1.遷移先}}` |
 
 ---
 
@@ -55,21 +55,21 @@
 
 ### 背景
 
-{{componentAcceptanceScenarios.background}}
+{{コンポーネント受け入れシナリオ.背景}}
 
-### {{componentAcceptanceScenarios.scenarios[1].name}}
+### {{コンポーネント受け入れシナリオ.シナリオ1.シナリオ名}}
 
 | 分類 | 観点 |
 |---|---|
-| {{componentAcceptanceScenarios.scenarios[1].category}} | {{componentAcceptanceScenarios.scenarios[1].viewpoint}} |
+| {{コンポーネント受け入れシナリオ.シナリオ1.分類}} | {{コンポーネント受け入れシナリオ.シナリオ1.観点}} |
 
 ```gherkin
-{{componentAcceptanceScenarios.scenarios[1].gherkin}}
+{{コンポーネント受け入れシナリオ.シナリオ1.手順}}
 ```
 
 ---
 
 ## ビジュアル参照
 
-- **参照先**: {{visualRef.url}}
-- **補足**: {{visualRef.note}}
+- **参照先**: {{ビジュアル参照.参照先}}
+- **補足**: {{ビジュアル参照.補足}}

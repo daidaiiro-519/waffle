@@ -124,6 +124,31 @@ def test_set_fieldの複数回実行はべき等である():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
+def test_remove_blockの複数回実行はべき等である():
+    """
+    Given 同一のremove_block操作（必須ではないプロパティ）
+    When 2回連続で実行する
+    Then 2回目の実行結果は1回目と完全に同一である
+    """
+    _engine().run("add_block", {
+        "schemaRef": _SCHEMA_REF,
+        "blockName": "NoteBlock",
+        "blockDef": {
+            "type": "object",
+            "required": ["blockType", "note"],
+            "properties": {"blockType": {"type": "string", "const": "Note"}, "note": {"type": "string"}},
+        },
+        "contentDefName": "SomeContent",
+        "propName": "note",
+    })
+    params = {"schemaRef": _SCHEMA_REF, "contentDefName": "SomeContent", "propName": "note"}
+    _engine().run("remove_block", params)
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+    result = _engine().run("remove_block", params)
+    assert isinstance(result, Ok), result
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
+
+
 def test_整形契約に従う既存箇所は書き込み後も不変である():
     """
     Given 整形契約に従った既存のschemaファイル

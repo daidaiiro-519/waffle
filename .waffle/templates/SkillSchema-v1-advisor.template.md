@@ -4,42 +4,42 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
-| `{{title.title}}` | documentId をそのまま設定してください。 |
-| `{{purpose.text}}` | このSkillが「何をするか」だけでなく「いつ使うべきか」を1〜2文で記述してください。動詞で始め、判断のトリガーとなる状況・キーワードを含めること（例:「〜を実装・修正する際に必ず使う」「ユーザーが〜と言ったときに使う」）。自動委譲/自動参照の判断根拠として使われる最重要フィールドです。 |
-| `{{role.items[1]}}` | このSkillが担う責務を列挙してください。各項目は「〜する」「〜を提供する」の形で記述してください。（配列。この形式の行を必要な数だけ繰り返す） |
-| `{{responseTypes.items[1].type}}` | 相談種別の名前（例: 概念質問、判断相談、実装相談）。 |
-| `{{responseTypes.items[1].trigger}}` | この種別だと判定する条件（例: 「〜とは」という形式の質問）。 |
-| `{{responseTypes.items[1].templateRef}}` | 対応する回答テンプレートファイルのパス。 |
-| `{{inputExpectation.items[1].aspect}}` | 受け取ると想定する情報の種類（例: 対象ブランチ、対象ファイル範囲）。 |
-| `{{inputExpectation.items[1].interpretation}}` | その情報が明示されなかった場合にどう解釈するか（既定値・確認を挟む等）。 |
-| `{{steps.items[1].stepId}}` | step-1, step-2 のように連番で付けてください。 |
-| `{{steps.items[1].title}}` | このStepで行うことを動詞で始めて簡潔に記述してください。 |
-| `{{steps.items[1].summary}}` | この Step でSubAgentが行うドメイン操作の要点を1〜2文で簡潔に。インフラ語彙（document.json・MCP・ファイルパス・Python API 等）は書かない。 |
-| `{{steps.items[1].bullets[1]}}` | 選択肢・一覧など箇条書きにすべき項目があれば1行ずつ列挙（任意）。（配列。この形式の行を必要な数だけ繰り返す） |
-| `{{steps.items[1].children[1].stepId}}` | step-1-1, step-1-2 のように親 stepId を引き継いで連番で付けてください。 |
-| `{{steps.items[1].children[1].title}}` | このSubStepで行うことを動詞で始めて簡潔に記述してください。 |
-| `{{steps.items[1].children[1].bullets[1]}}` | 箇条書きにすべき項目があれば1行ずつ列挙（任意）。（配列。この形式の行を必要な数だけ繰り返す） |
-| `{{steps.items[1].children[1].summary}}` | この SubStep でSubAgentが行うドメイン操作の要点を1〜2文で簡潔に。インフラ語彙は書かない。 |
-| `{{guardrails.items[1]}}` | このSkillを実行する際に必ず守るべき制約・禁止事項・前提条件を列挙してください。（配列。この形式の行を必要な数だけ繰り返す） |
-| `{{knowledgeRefs.items[1].path}}` | 参照先のknowledgeファイルパス。 |
-| `{{knowledgeRefs.items[1].description}}` | このファイルが何を扱うかを1文で。 |
-| `{{invocationMode.manualOnly}}` | ユーザーが `/skill-name` で明示的に呼び出す手順型Skill（自動発火させたくない）なら true。ドメイン知識として自動的に参照されてよいリファレンス型Skillなら false。 |
+| `{{タイトル}}` | documentId をそのまま設定してください。（JSON上のフィールド: content.title.title） |
+| `{{目的}}` | このSkillが「何をするか」だけでなく「いつ使うべきか」を1〜2文で記述してください。動詞で始め、判断のトリガーとなる状況・キーワードを含めること（例:「〜を実装・修正する際に必ず使う」「ユーザーが〜と言ったときに使う」）。自動委譲/自動参照の判断根拠として使われる最重要フィールドです。（JSON上のフィールド: content.purpose.text） |
+| `{{役割.項目1}}` | このSkillが担う責務を列挙してください。各項目は「〜する」「〜を提供する」の形で記述してください。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.role.items[]） |
+| `{{相談種別と回答テンプレート.項目1.相談種別}}` | 相談種別の名前（例: 概念質問、判断相談、実装相談）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.responseTypes.items[].type） |
+| `{{相談種別と回答テンプレート.項目1.判定条件}}` | この種別だと判定する条件（例: 「〜とは」という形式の質問）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.responseTypes.items[].trigger） |
+| `{{相談種別と回答テンプレート.項目1.テンプレート}}` | 対応する回答テンプレートファイルのパス。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.responseTypes.items[].templateRef） |
+| `{{入力の想定.項目1.受け取る情報}}` | 受け取ると想定する情報の種類（例: 対象ブランチ、対象ファイル範囲）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.inputExpectation.items[].aspect） |
+| `{{入力の想定.項目1.解釈・既定値}}` | その情報が明示されなかった場合にどう解釈するか（既定値・確認を挟む等）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.inputExpectation.items[].interpretation） |
+| `{{実行手順.ステップ1.識別子}}` | step-1, step-2 のように連番で付けてください。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.steps.items[].stepId） |
+| `{{実行手順.ステップ1.タイトル}}` | このStepで行うことを動詞で始めて簡潔に記述してください。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.steps.items[].title） |
+| `{{実行手順.ステップ1.概要}}` | この Step でSubAgentが行うドメイン操作の要点を1〜2文で簡潔に。インフラ語彙（document.json・MCP・ファイルパス・Python API 等）は書かない。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.steps.items[].summary） |
+| `{{実行手順.ステップ1.項目1}}` | 選択肢・一覧など箇条書きにすべき項目があれば1行ずつ列挙（任意）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.steps.items[].bullets[]） |
+| `{{実行手順.ステップ1.サブステップ1.識別子}}` | step-1-1, step-1-2 のように親 stepId を引き継いで連番で付けてください。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.steps.items[].children[].stepId） |
+| `{{実行手順.ステップ1.サブステップ1.タイトル}}` | このSubStepで行うことを動詞で始めて簡潔に記述してください。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.steps.items[].children[].title） |
+| `{{実行手順.ステップ1.サブステップ1.項目1}}` | 箇条書きにすべき項目があれば1行ずつ列挙（任意）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.steps.items[].children[].bullets[]） |
+| `{{実行手順.ステップ1.サブステップ1.概要}}` | この SubStep でSubAgentが行うドメイン操作の要点を1〜2文で簡潔に。インフラ語彙は書かない。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.steps.items[].children[].summary） |
+| `{{ガードレール.項目1}}` | このSkillを実行する際に必ず守るべき制約・禁止事項・前提条件を列挙してください。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.guardrails.items[]） |
+| `{{参照knowledge.項目1.パス}}` | 参照先のknowledgeファイルパス。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.knowledgeRefs.items[].path） |
+| `{{参照knowledge.項目1.説明}}` | このファイルが何を扱うかを1文で。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.knowledgeRefs.items[].description） |
+| `{{呼び出しモード}}` | ユーザーが `/skill-name` で明示的に呼び出す手順型Skill（自動発火させたくない）なら true。ドメイン知識として自動的に参照されてよいリファレンス型Skillなら false。（JSON上のフィールド: content.invocationMode.manualOnly） |
 
 ---
 
-# {{title.title}}
+# {{タイトル}}
 
 ---
 
 ## 目的
 
-{{purpose.text}}
+{{目的}}
 
 ---
 
 ## 役割
 
-- {{role.items[1]}}
+- {{役割.項目1}}
 
 ---
 
@@ -47,7 +47,7 @@
 
 | 相談種別 | 判定条件 | テンプレート |
 |---|---|---|
-| {{responseTypes.items[1].type}} | {{responseTypes.items[1].trigger}} | `{{responseTypes.items[1].templateRef}}` |
+| {{相談種別と回答テンプレート.項目1.相談種別}} | {{相談種別と回答テンプレート.項目1.判定条件}} | `{{相談種別と回答テンプレート.項目1.テンプレート}}` |
 
 ---
 
@@ -55,32 +55,32 @@
 
 | 受け取る情報 | 解釈・既定値 |
 |---|---|
-| {{inputExpectation.items[1].aspect}} | {{inputExpectation.items[1].interpretation}} |
+| {{入力の想定.項目1.受け取る情報}} | {{入力の想定.項目1.解釈・既定値}} |
 
 ---
 
 ## 実行手順
 
-### Step 1: {{steps.items[1].title}}
+### Step 1: {{実行手順.ステップ1.タイトル}}
 
-{{steps.items[1].summary}}
+{{実行手順.ステップ1.概要}}
 
-- {{steps.items[1].bullets[1]}}
+- {{実行手順.ステップ1.項目1}}
 
-#### {{steps.items[1].children[1].title}}
+#### {{実行手順.ステップ1.サブステップ1.タイトル}}
 
-{{steps.items[1].children[1].summary}}
+{{実行手順.ステップ1.サブステップ1.概要}}
 
-- {{steps.items[1].children[1].bullets[1]}}
+- {{実行手順.ステップ1.サブステップ1.項目1}}
 
 ---
 
 ## ガードレール
 
-- {{guardrails.items[1]}}
+- {{ガードレール.項目1}}
 
 ---
 
 ## 参照knowledge
 
-- `{{knowledgeRefs.items[1].path}}`: {{knowledgeRefs.items[1].description}}
+- `{{参照knowledge.項目1.パス}}`: {{参照knowledge.項目1.説明}}

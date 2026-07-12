@@ -4,25 +4,25 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
-| `{{title.title}}` | documentId をそのまま設定してください。 |
-| `{{summary.text}}` | この画面/フローが何のために存在するかを1〜2文で（業務ユースケースの内容の繰り返しでなく、プロダクトとしての意図）。 |
-| `{{usecaseSequence.participants[1].id}}` | 識別子。人間主体は名前（例: 顧客）、業務ユースケースは documentId（例: uc-place-order）。 |
-| `{{usecaseSequence.participants[1].kind}}` | 人間の主体なら actor（棒人間アイコン）、業務ユースケース等のシステム側なら participant。 |
-| `{{usecaseSequence.participants[1].label}}` | 表示名（任意・省略時はidそのまま）。 |
-| `{{usecaseSequence.items[1].from}}` | この旅を辿る主体（participantsで宣言したid・例: 顧客）。 |
-| `{{usecaseSequence.items[1].to}}` | 呼び出す業務ユースケースのdocumentId（participantsで宣言したid・例: uc-place-order）。 |
-| `{{usecaseSequence.items[1].message}}` | この旅の中でこの業務ユースケースが果たす役割を1文で。 |
-| `{{usecaseSequence.items[1].kind}}` | 常に command（業務ユースケースの実行呼び出し）。 |
+| `{{タイトル}}` | documentId をそのまま設定してください。（JSON上のフィールド: content.title.title） |
+| `{{概要}}` | この画面/フローが何のために存在するかを1〜2文で（業務ユースケースの内容の繰り返しでなく、プロダクトとしての意図）。（JSON上のフィールド: content.summary.text） |
+| `{{業務ユースケースの並び.登場人物1.識別子}}` | 識別子。人間主体は名前（例: 顧客）、業務ユースケースは documentId（例: uc-place-order）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.usecaseSequence.participants[].id） |
+| `{{業務ユースケースの並び.登場人物1.種別}}` | 人間の主体なら actor（棒人間アイコン）、業務ユースケース等のシステム側なら participant。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.usecaseSequence.participants[].kind） |
+| `{{業務ユースケースの並び.登場人物1.表示名}}` | 表示名（任意・省略時はidそのまま）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.usecaseSequence.participants[].label） |
+| `{{業務ユースケースの並び.呼び出し1.主体}}` | この旅を辿る主体（participantsで宣言したid・例: 顧客）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.usecaseSequence.items[].from） |
+| `{{業務ユースケースの並び.呼び出し1.業務ユースケース}}` | 呼び出す業務ユースケースのdocumentId（participantsで宣言したid・例: uc-place-order）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.usecaseSequence.items[].to） |
+| `{{業務ユースケースの並び.呼び出し1.この旅における役割}}` | この旅の中でこの業務ユースケースが果たす役割を1文で。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.usecaseSequence.items[].message） |
+| `{{業務ユースケースの並び.呼び出し1.種別}}` | 常に command（業務ユースケースの実行呼び出し）。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.usecaseSequence.items[].kind） |
 
 ---
 
-# {{title.title}}
+# {{タイトル}}
 
 ---
 
 ## 概要
 
-{{summary.text}}
+{{概要}}
 
 ---
 
@@ -30,10 +30,10 @@
 
 ```mermaid
 sequenceDiagram
-    {{usecaseSequence.participants[1].kind}} {{usecaseSequence.participants[1].id}} as {{usecaseSequence.participants[1].label}}
-    {{usecaseSequence.items[1].from}}->>{{usecaseSequence.items[1].to}}: {{usecaseSequence.items[1].message}}
+    {{業務ユースケースの並び.登場人物1.種別}} {{業務ユースケースの並び.登場人物1.識別子}} as {{業務ユースケースの並び.登場人物1.表示名}}
+    {{業務ユースケースの並び.呼び出し1.主体}}->>{{業務ユースケースの並び.呼び出し1.業務ユースケース}}: {{業務ユースケースの並び.呼び出し1.この旅における役割}}
 ```
 
 | 主体 | 業務ユースケース | この旅における役割 |
 |---|---|---|
-| {{usecaseSequence.items[1].from}} | `{{usecaseSequence.items[1].to}}` | {{usecaseSequence.items[1].message}} |
+| {{業務ユースケースの並び.呼び出し1.主体}} | `{{業務ユースケースの並び.呼び出し1.業務ユースケース}}` | {{業務ユースケースの並び.呼び出し1.この旅における役割}} |

@@ -106,7 +106,7 @@ def scaffold_document(
 
 @mcp.tool
 def patch_schema(operation: str, schemaRef: str, params: dict | None = None) -> dict:
-    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block / rename_block / set_field。"""
+    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block / rename_block / set_field / remove_block。"""
     p = dict(params or {})
     p["schemaRef"] = schemaRef
     return _dict(PatchSchema(_docs(), _schemas(), JsonSchemaValidator()).run(operation, p))

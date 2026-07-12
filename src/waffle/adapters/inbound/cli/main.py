@@ -115,7 +115,7 @@ def scaffold(
 
 @app.command("patch-schema")
 def patch_schema(
-    operation: str = typer.Option(..., "--operation", help="add_block / rename_block / set_field"),
+    operation: str = typer.Option(..., "--operation", help="add_block / rename_block / set_field / remove_block"),
     schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref"),
     params: str = typer.Option(None, "--params", help="operation固有パラメータのJSONオブジェクト"),
 ) -> None:

@@ -50,7 +50,8 @@
         "対象のschemaファイルが、agg-schemaが定める整形契約に既に従っている",
         "add_blockの場合: 追加するブロック定義・紐付け先・プロパティ名が与えられている",
         "rename_blockの場合: リネーム元・リネーム先の識別子が与えられている（例: DefinitionOfDone→AcceptanceCriteria）",
-        "set_fieldの場合: 対象のブロック名・書き換える項目・新しい値が与えられている"
+        "set_fieldの場合: 対象のブロック名・書き換える項目・新しい値が与えられている",
+        "remove_blockの場合: 対象のcontent def名・外すプロパティ名が与えられている"
       ]
     },
     "mainFlow": {
@@ -102,7 +103,8 @@
         "対象外の箇所は一切変更されない（最小diff）",
         "既存のDocumentを壊しうる後方互換性のない変更は書き込まれない",
         "書き込まれた結果はJSON Schemaとして構文的に妥当である",
-        "同じ操作を再実行しても、対象が既に完了状態なら無変更で成功する（冪等性）"
+        "同じ操作を再実行しても、対象が既に完了状態なら無変更で成功する（冪等性）",
+        "remove_blockはcontent defからプロパティ参照を外すのみで、$defs内のブロック定義自体は削除しない（他のcontent defから参照され続けている可能性があるため）"
       ]
     },
     "acceptanceCriteria": {
@@ -119,7 +121,10 @@
         "When set_fieldでブロック名・項目パス・新しい値が与えられたとき、システムはそのブロックの指定した項目だけを新しい値に置き換える shall。",
         "While 指定した項目が既に目的の値であるとき、set_fieldは無変更で成功する shall。",
         "If set_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。",
-        "If 書き込み時にI/Oエラーが発生したとき、システムはWRITE_ERRORエラーを返す shall。"
+        "If 書き込み時にI/Oエラーが発生したとき、システムはWRITE_ERRORエラーを返す shall。",
+        "When remove_blockでcontent def名・プロパティ名が与えられたとき、システムはそのcontent defからプロパティ参照を外す shall。",
+        "While 対象プロパティが既に存在しないとき、remove_blockは無変更で成功する shall。",
+        "If remove_blockの対象プロパティがrequired配列に含まれているとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall（必須プロパティの削除は既存Documentを壊しうるため、先にset_fieldや別の手順でrequiredから外すことを求める）。"
       ]
     },
     "errors": {
@@ -128,7 +133,7 @@
       "items": [
         {
           "code": "BACKWARD_INCOMPATIBLE",
-          "condition": "変更が既存Documentを壊しうる後方互換性のない変更を含む"
+          "condition": "変更が既存Documentを壊しうる後方互換性のない変更を含む（必須プロパティのremove_blockを含む）"
         },
         {
           "code": "INVALID_SCHEMA_STRUCTURE",
@@ -136,11 +141,11 @@
         },
         {
           "code": "BLOCK_NOT_FOUND",
-          "condition": "対象のブロックが存在しない（rename_blockはリネーム元・リネーム先の両方が無いとき、set_fieldは対象ブロックが無いとき）"
+          "condition": "対象のブロックが存在しない（rename_blockはリネーム元・リネーム先の両方が無いとき、set_field/remove_blockは対象のcontent defが無いとき）"
         },
         {
           "code": "INVALID_OPERATION",
-          "condition": "add_block/rename_block/set_field以外のoperationが指定された"
+          "condition": "add_block/rename_block/set_field/remove_block以外のoperationが指定された"
         },
         {
           "code": "MISSING_PARAM",
@@ -220,8 +225,8 @@
         {
           "name": "未知のoperationはINVALID_OPERATION",
           "category": "異常系",
-          "viewpoint": "operationの妥当性検証：add_block/rename_block以外を拒否する",
-          "gherkin": "Scenario: 未知のoperationはINVALID_OPERATION\n  Given add_block/rename_block以外のoperation\n  When patchを実行する\n  Then INVALID_OPERATIONエラーが返る",
+          "viewpoint": "operationの妥当性検証：add_block/rename_block/set_field/remove_block以外を拒否する",
+          "gherkin": "Scenario: 未知のoperationはINVALID_OPERATION\n  Given add_block/rename_block/set_field/remove_block以外のoperation\n  When patchを実行する\n  Then INVALID_OPERATIONエラーが返る",
           "covers": "受け入れ基準: 未知operationの拒否"
         },
         {
@@ -268,6 +273,30 @@
           "viewpoint": "後方互換チェック：既存フィールドの型変更を拒否する",
           "gherkin": "Scenario: 既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒否される\n  Given 公開済みkindの既存フィールドの型(type)を書き換える変更\n  When set_fieldを実行する\n  Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない",
           "covers": "受け入れ基準: 後方互換チェック"
+        },
+        {
+          "name": "content defからプロパティ参照を外す",
+          "category": "正常系",
+          "viewpoint": "remove_block：content defから対象プロパティ参照を外す。ブロック定義自体は$defsに残る",
+          "gherkin": "Scenario: content defからプロパティ参照を外す\n  Given 必須ではないプロパティを持つcontent def名・プロパティ名\n  When remove_blockを実行する\n  Then そのcontent defからプロパティ参照が外れ、$defs内のブロック定義自体は変更されない",
+          "covers": "受け入れ基準: remove_blockでのプロパティ参照除去",
+          "operation": "remove_block"
+        },
+        {
+          "name": "既に存在しないプロパティのremove_blockは無変更で成功する",
+          "category": "境界値",
+          "viewpoint": "remove_block：冪等性",
+          "gherkin": "Scenario: 既に存在しないプロパティのremove_blockは無変更で成功する\n  Given 既に除去済みのプロパティ名を含むremove_block操作\n  When remove_blockを再実行する\n  Then 対象は無変更のまま成功する",
+          "covers": "受け入れ基準: remove_blockの冪等性",
+          "operation": "remove_block"
+        },
+        {
+          "name": "必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される",
+          "category": "異常系",
+          "viewpoint": "後方互換チェック：requiredに指定されているプロパティの除去を拒否する",
+          "gherkin": "Scenario: 必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される\n  Given 公開済みkindのrequiredに指定されているプロパティ\n  When remove_blockを実行する\n  Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない",
+          "covers": "受け入れ基準: remove_blockの後方互換チェック",
+          "operation": "remove_block"
         }
       ]
     },
@@ -278,6 +307,7 @@
         "When 同じadd_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
         "When 同じrename_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
         "When 同じset_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
+        "When 同じremove_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
         "While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。"
       ]
     },
@@ -308,6 +338,13 @@
           "covers": "操作保証: set_fieldのべき等性"
         },
         {
+          "name": "remove_blockの複数回実行はべき等である",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じremove_block操作を複数回実行しても結果が変わらない",
+          "gherkin": "Scenario: remove_blockの複数回実行はべき等である\n  Given 同一のremove_block操作（必須ではないプロパティ）\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
+          "covers": "操作保証: remove_blockのべき等性"
+        },
+        {
           "name": "整形契約に従う既存箇所は書き込み後も不変である",
           "category": "正常系",
           "viewpoint": "最小diff：整形契約に従う既存部分はpatch後もバイト単位で不変",
@@ -331,9 +368,14 @@
         {
           "operation": "set_field",
           "summary": "既存ブロックの指定した項目だけを新しい値に置き換える"
+        },
+        {
+          "operation": "remove_block",
+          "summary": "content defからプロパティ参照を外す（ブロック定義自体は$defsに残す）"
         }
       ]
     }
   },
-  "tags": []
+  "tags": [],
+  "aggregateRef": "agg-schema"
 }

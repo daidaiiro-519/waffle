@@ -4,34 +4,34 @@
 
 | プレースフォルダー | 記入する内容 |
 |---|---|
-| `{{title.title}}` | documentId をそのまま設定してください。 |
-| `{{testStrategy.pyramid}}` | 重心の方針。例: ピラミッド形（単体テストを重視・統合はやや軽め・E2E は行わない） |
-| `{{testStrategy.rationale}}` | その方針を選ぶ根拠。例: 業務ロジックの実装方法＝ドメインモデル |
-| `{{testPlan.items[1].item}}` | 計画項目名。例: 実行タイミング |
-| `{{testPlan.items[1].value}}` | この計画項目の具体的な内容。例: 全コミット時（pre-commit） |
-| `{{testTypes.items[1].testType}}` | 共通カタログの固定語彙から選ぶ。 |
-| `{{testTypes.items[1].tool}}` | 使用ツール。例: pytest |
-| `{{testTypes.items[1].target}}` | 対象。例: domain / application |
-| `{{framework.unit}}` | 単体テストFW。例: pytest |
-| `{{framework.acceptance}}` | 受け入れテストFW（仕様(要件)をこのFWでネイティブに実行可能テストとして執筆する）。無ければ空。例: pytest |
-| `{{scenarioBinding.items[1].item}}` | 項目名。例: 対応関係 |
-| `{{scenarioBinding.items[1].rule}}` | 実行可能な仕様とテストの対応関係・ドリフト検知方法に関する規約の内容。例: 1シナリオ=1テスト関数、シナリオ名をsanitizeした名前をtest_接頭辞付きで一致させる |
-| `{{placementByTarget.items[1].target}}` | テスト対象。例: domain |
-| `{{placementByTarget.items[1].testKind}}` | テスト種別。TestTypesBlock.testTypeに対応する種別を書く（人間可読な表記でよい）。例: 単体（unit） |
-| `{{placementByTarget.items[1].path}}` | 配置パス。例: tests/domain/ |
-| `{{rules.items[1].level}}` | 種別。必須 / 禁止 / 推奨のいずれか。 |
-| `{{rules.items[1].rule}}` | 実行可能な仕様の扱い・生成物の手書き禁止・テストダブルの使用方針等、テストに関する決定ルールの内容。例: モックは外部I/O境界のみに限定する |
+| `{{タイトル}}` | documentId をそのまま設定してください。（JSON上のフィールド: content.title.title） |
+| `{{テスト方針.方針}}` | 重心の方針。例: ピラミッド形（単体テストを重視・統合はやや軽め・E2E は行わない）（JSON上のフィールド: content.testStrategy.pyramid） |
+| `{{テスト方針.根拠}}` | その方針を選ぶ根拠。例: 業務ロジックの実装方法＝ドメインモデル（JSON上のフィールド: content.testStrategy.rationale） |
+| `{{テスト計画.項目1.項目}}` | 計画項目名。例: 実行タイミング（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.testPlan.items[].item） |
+| `{{テスト計画.項目1.値}}` | この計画項目の具体的な内容。例: 全コミット時（pre-commit）（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.testPlan.items[].value） |
+| `{{テストタイプ.項目1.テストタイプ}}` | 共通カタログの固定語彙から選ぶ。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.testTypes.items[].testType） |
+| `{{テストタイプ.項目1.ツール}}` | 使用ツール。例: pytest（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.testTypes.items[].tool） |
+| `{{テストタイプ.項目1.対象}}` | 対象。例: domain / application（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.testTypes.items[].target） |
+| `{{フレームワーク.単体テスト}}` | 単体テストFW。例: pytest（JSON上のフィールド: content.framework.unit） |
+| `{{フレームワーク.受け入れテスト}}` | 受け入れテストFW（仕様(要件)をこのFWでネイティブに実行可能テストとして執筆する）。無ければ空。例: pytest（JSON上のフィールド: content.framework.acceptance） |
+| `{{シナリオの束ね方.項目1.項目}}` | 項目名。例: 対応関係（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.scenarioBinding.items[].item） |
+| `{{シナリオの束ね方.項目1.規約}}` | 実行可能な仕様とテストの対応関係・ドリフト検知方法に関する規約の内容。例: 1シナリオ=1テスト関数、シナリオ名をsanitizeした名前をtest_接頭辞付きで一致させる（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.scenarioBinding.items[].rule） |
+| `{{テスト対象別の配置.項目1.対象}}` | テスト対象。例: domain（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.placementByTarget.items[].target） |
+| `{{テスト対象別の配置.項目1.テスト種別}}` | テスト種別。TestTypesBlock.testTypeに対応する種別を書く（人間可読な表記でよい）。例: 単体（unit）（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.placementByTarget.items[].testKind） |
+| `{{テスト対象別の配置.項目1.配置}}` | 配置パス。例: tests/domain/（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.placementByTarget.items[].path） |
+| `{{決定ルール.項目1.種別}}` | 種別。必須 / 禁止 / 推奨のいずれか。（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.rules.items[].level） |
+| `{{決定ルール.項目1.規約}}` | 実行可能な仕様の扱い・生成物の手書き禁止・テストダブルの使用方針等、テストに関する決定ルールの内容。例: モックは外部I/O境界のみに限定する（配列。この形式の行を必要な数だけ繰り返す）（JSON上のフィールド: content.rules.items[].rule） |
 
 ---
 
-# {{title.title}}
+# {{タイトル}}
 
 ---
 
 ## テスト方針
 
-- **方針**: {{testStrategy.pyramid}}
-- **根拠**: {{testStrategy.rationale}}
+- **方針**: {{テスト方針.方針}}
+- **根拠**: {{テスト方針.根拠}}
 
 ---
 
@@ -39,7 +39,7 @@
 
 | 項目 | 値 |
 |---|---|
-| {{testPlan.items[1].item}} | {{testPlan.items[1].value}} |
+| {{テスト計画.項目1.項目}} | {{テスト計画.項目1.値}} |
 
 ---
 
@@ -47,14 +47,14 @@
 
 | テストタイプ | ツール | 対象 |
 |---|---|---|
-| `{{testTypes.items[1].testType}}` | {{testTypes.items[1].tool}} | {{testTypes.items[1].target}} |
+| `{{テストタイプ.項目1.テストタイプ}}` | {{テストタイプ.項目1.ツール}} | {{テストタイプ.項目1.対象}} |
 
 ---
 
 ## フレームワーク
 
-- **単体テスト**: {{framework.unit}}
-- **受け入れテスト**: {{framework.acceptance}}
+- **単体テスト**: {{フレームワーク.単体テスト}}
+- **受け入れテスト**: {{フレームワーク.受け入れテスト}}
 
 ---
 
@@ -62,7 +62,7 @@
 
 | 項目 | 規約 |
 |---|---|
-| {{scenarioBinding.items[1].item}} | {{scenarioBinding.items[1].rule}} |
+| {{シナリオの束ね方.項目1.項目}} | {{シナリオの束ね方.項目1.規約}} |
 
 ---
 
@@ -70,7 +70,7 @@
 
 | 対象 | テスト種別 | 配置 |
 |---|---|---|
-| {{placementByTarget.items[1].target}} | {{placementByTarget.items[1].testKind}} | `{{placementByTarget.items[1].path}}` |
+| {{テスト対象別の配置.項目1.対象}} | {{テスト対象別の配置.項目1.テスト種別}} | `{{テスト対象別の配置.項目1.配置}}` |
 
 ---
 
@@ -78,4 +78,4 @@
 
 | 種別 | 規約 |
 |---|---|
-| {{rules.items[1].level}} | {{rules.items[1].rule}} |
+| {{決定ルール.項目1.種別}} | {{決定ルール.項目1.規約}} |

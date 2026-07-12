@@ -196,6 +196,67 @@ def test_set_fieldは存在しないdefを拒否する():
         pass
 
 
+# --- remove_block ---
+
+def test_remove_blockはcontent_defのプロパティ参照を外す():
+    """
+    Given optionalなプロパティ参照を持つcontent def
+    When remove_blockを実行する
+    Then そのプロパティ参照がcontent defから外れる
+    """
+    schema = schema_patch.add_block(_base_schema(), "NoteBlock", _new_block(), "SomeContent", "note", required=False)
+    result = schema_patch.remove_block(schema, "SomeContent", "note")
+    assert "note" not in result["$defs"]["SomeContent"]["properties"]
+
+
+def test_remove_blockはブロック定義自体を削除しない():
+    """
+    Given optionalなプロパティ参照を持つcontent def
+    When remove_blockを実行する
+    Then $defs内のブロック定義自体は残る（他のcontent defから参照されうるため）
+    """
+    schema = schema_patch.add_block(_base_schema(), "NoteBlock", _new_block(), "SomeContent", "note", required=False)
+    result = schema_patch.remove_block(schema, "SomeContent", "note")
+    assert "NoteBlock" in result["$defs"]
+
+
+def test_remove_blockは対象外のdefを変更しない():
+    """
+    Given 複数のdefを含むschema
+    When 1つのcontent defからremove_blockする
+    Then 他のdefの内容は変わらない
+    """
+    schema = schema_patch.add_block(_base_schema(), "NoteBlock", _new_block(), "SomeContent", "note", required=False)
+    before_title_block = json.loads(json.dumps(schema["$defs"]["TitleBlock"]))
+    result = schema_patch.remove_block(schema, "SomeContent", "note")
+    assert result["$defs"]["TitleBlock"] == before_title_block
+
+
+def test_remove_blockは既に存在しないプロパティに対して冪等である():
+    """
+    Given 既に存在しないプロパティ名
+    When remove_blockを実行する
+    Then 出力は変更前と完全に同一である
+    """
+    schema = _base_schema()
+    result = schema_patch.remove_block(schema, "SomeContent", "no_such_prop")
+    assert schema_patch.dump(result) == schema_patch.dump(schema)
+
+
+def test_remove_blockは存在しないcontent_defを拒否する():
+    """
+    Given schemaの$defsに存在しないcontent def名
+    When remove_blockを実行する
+    Then BLOCK_NOT_FOUNDに相当する例外が送出される
+    """
+    schema = _base_schema()
+    try:
+        schema_patch.remove_block(schema, "NoSuchContent", "title")
+        assert False, "例外が送出されなかった"
+    except schema_patch.BlockNotFoundError:
+        pass
+
+
 # --- check_backward_compatible ---
 
 def test_公開済みkindのrequiredへの追加は後方互換違反として検出される():
@@ -218,6 +279,30 @@ def test_optionalプロパティの追加は後方互換違反にならない():
     """
     old_schema = _base_schema()
     new_schema = schema_patch.add_block(old_schema, "NoteBlock", _new_block(), "SomeContent", "note")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations == []
+
+
+def test_必須プロパティのremove_blockは後方互換違反として検出される():
+    """
+    Given requiredに指定されているプロパティをremove_blockで除去した変更後schema
+    When 後方互換チェックを実行する
+    Then 違反として検出される
+    """
+    old_schema = _base_schema()
+    new_schema = schema_patch.remove_block(old_schema, "SomeContent", "title")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations, "必須プロパティのremove_blockが検出されなかった"
+
+
+def test_必須でないプロパティのremove_blockは後方互換違反にならない():
+    """
+    Given requiredに含まれないプロパティをremove_blockで除去した変更後schema
+    When 後方互換チェックを実行する
+    Then 違反として検出されない
+    """
+    old_schema = schema_patch.add_block(_base_schema(), "NoteBlock", _new_block(), "SomeContent", "note", required=False)
+    new_schema = schema_patch.remove_block(old_schema, "SomeContent", "note")
     violations = schema_patch.check_backward_compatible(old_schema, new_schema)
     assert violations == []
 
