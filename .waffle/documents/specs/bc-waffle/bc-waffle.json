@@ -57,7 +57,7 @@
         },
         {
           "term": "reconcile",
-          "definition": "スペックが嘘をつかないよう、6種類のドリフト（スペック内部の参照整合性・スペックとテストシナリオの対応関係・Document集約とSchema版の対応関係・usecase操作名と実装クラス名の対応関係・集約仕様と実装Entity/ValueObjectの対応関係・usecase operationの宣言と実装分岐の対応関係）を機械的に検知し続けること。docstring の構造化抽出・規約適合検証（uc-scan-source-code/uc-lint-docstring）はreconcileが使う部品であり、reconcile本体ではない。"
+          "definition": "スペックが嘘をつかないよう、7種類のドリフト（スペック内部の参照整合性・スペックとテストシナリオの対応関係・Document集約とSchema版の対応関係・usecase操作名と実装クラス名の対応関係・集約仕様と実装Entity/ValueObjectの対応関係・usecase operationの宣言と実装分岐の対応関係・業務サービスのgroupと実装ファイルの対応関係）を機械的に検知し続けること。docstring の構造化抽出・規約適合検証（uc-scan-source-code/uc-lint-docstring）はreconcileが使う部品であり、reconcile本体ではない。"
         }
       ]
     },
@@ -98,7 +98,8 @@
             "uc-check-usecase-class-drift",
             "uc-patch-schema",
             "uc-check-operation-drift",
-            "uc-check-aggregate-class-drift"
+            "uc-check-aggregate-class-drift",
+            "uc-check-domain-service-drift"
           ]
         }
       ]
@@ -107,23 +108,33 @@
       "items": [
         {
           "name": "パステンプレート解決",
-          "responsibility": "x-source-target/x-render-target のパステンプレートを document の値で解決(resolve)し、逆に実パスからテンプレート変数を復元(reverse-parse)する。scaffold/render/query の複数usecaseが共通して依存する（特定の集約に属さない）。"
+          "responsibility": "x-source-target/x-render-target のパステンプレートを document の値で解決(resolve)し、逆に実パスからテンプレート変数を復元(reverse-parse)する。scaffold/render/query の複数usecaseが共通して依存する（特定の集約に属さない）。",
+          "serviceName": "ResolvePathTemplate",
+          "group": "PathTemplate"
         },
         {
           "name": "整形描画",
-          "responsibility": "x-render宣言(Schema集約の値オブジェクト)とDocument集約のcontent dataの両方を参照してMarkdownへ整形する。RenderMetaSchemaが定義する部品種別(paragraph/list/table/keyvalue/section/kvtable/sequence/statediagram/architecture/flowchart)ごとに決定的な整形規則を持つ。特定の集約に属さない（Schema集約とDocument集約にまたがる計算）。"
+          "responsibility": "x-render宣言(Schema集約の値オブジェクト)とDocument集約のcontent dataの両方を参照してMarkdownへ整形する。RenderMetaSchemaが定義する部品種別(paragraph/list/table/keyvalue/section/kvtable/sequence/statediagram/architecture/flowchart)ごとに決定的な整形規則を持つ。特定の集約に属さない（Schema集約とDocument集約にまたがる計算）。",
+          "serviceName": "RenderParts",
+          "group": "PartRenderer"
         },
         {
           "name": "discriminatorキー抽出",
-          "responsibility": "schemaのallOf if/then構造から、どのフィールド（specKind/codingKind/skillKind等）がkindのdiscriminatorとして機能しているかを機械的に取り出す。scaffold/renderの複数usecaseが共通して依存する（特定の集約に属さない・Schema集約の構造そのものを読むがSchema集約の外から呼ばれる編成ロジック）。"
+          "responsibility": "schemaのallOf if/then構造から、どのフィールド（specKind/codingKind/skillKind等）がkindのdiscriminatorとして機能しているかを機械的に取り出す。scaffold/renderの複数usecaseが共通して依存する（特定の集約に属さない・Schema集約の構造そのものを読むがSchema集約の外から呼ばれる編成ロジック）。",
+          "serviceName": "ExtractDiscriminatorKey",
+          "group": "SchemaDiscriminator"
         },
         {
           "name": "後方互換チェック",
-          "responsibility": "変更前後のschema(dict)の差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。"
+          "responsibility": "変更前後のschema(dict)の差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。",
+          "serviceName": "CheckBackwardCompatible",
+          "group": "SchemaPatch"
         },
         {
           "name": "契約整形",
-          "responsibility": "schemaファイルの物理的な整形をagg-schemaが定める契約（json.dumps(indent=2, ensure_ascii=False)+改行）に一意に揃える。Schema集約の不変条件を実際に適用する。"
+          "responsibility": "schemaファイルの物理的な整形をagg-schemaが定める契約（json.dumps(indent=2, ensure_ascii=False)+改行）に一意に揃える。Schema集約の不変条件を実際に適用する。",
+          "serviceName": "FormatContract",
+          "group": "SchemaPatch"
         }
       ],
       "blockType": "DomainServices",

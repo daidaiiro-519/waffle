@@ -1,0 +1,169 @@
+{
+  "documentId": "uc-check-domain-service-drift",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v5",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "業務サービス名と実装ファイルの対応を検証する：CheckDomainServiceDrift"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "bounded-context specが宣言する業務サービスのgroup（実装ファイル単位）が、実際に対応するファイルとして実在するかを機械的に検証する。1業務サービス＝1ファイルという規約を強制せず、複数サービスが同じgroupを共有し同じファイルに同居することを許容した上で、宣言と実装の対応関係のドリフトを検出する。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "CheckDomainServiceDrift"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "Orchestrator（HarnessAgent）",
+      "intent": "業務サービスのgroupが実際の実装ファイルと対応しているかを確認したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "業務サービスは値オブジェクト・集約と異なり、宣言された名前から実装ファイルパスを機械的に導出できない（1サービス1ファイルという規約が無く、関連する複数サービスが同じファイルに同居することがある）。宣言（bounded-context spec）と実装（domain/services配下のファイル）が乖離しても、他のusecase/aggregateクラスドリフト検知と違い、これを検知する仕組みが無かった。TDDが担保するのは振る舞いの正しさであり、宣言と実装の対応関係という別の関心事は別途機械的に検証する必要がある。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root）が与えられている",
+        "業務サービス実装ファイルの配置ルートディレクトリ（src_root）が与えられている"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [],
+      "steps": [
+        {
+          "from": "Orchestrator",
+          "to": "DomainServiceFileTree",
+          "message": "documents_root/src_rootを指定してドリフト検査を依頼する",
+          "kind": "command"
+        },
+        {
+          "from": "DomainServiceFileTree",
+          "to": "DomainServiceFileTree",
+          "message": "documents_root配下のbounded-context document(specKind=bounded-context)を走査し、各documentのcontent.domainServices.itemsが宣言するgroupを集める",
+          "kind": "self"
+        },
+        {
+          "from": "DomainServiceFileTree",
+          "to": "DomainServiceFileTree",
+          "message": "各groupに対応する実装ファイル（src_root配下）が実在するかを確認する",
+          "kind": "self"
+        },
+        {
+          "from": "DomainServiceFileTree",
+          "to": "Orchestrator",
+          "message": "missing_implementation_fileのオブジェクト配列を返す",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "返り値はmissing_implementation_file（groupから導出したファイルパスが実在しない業務サービスの組）フィールドを持つ",
+        "ファイルパスの導出は、groupをsnake_caseに変換し、src_root配下に{group}.pyとして配置されている前提で行う",
+        "同じgroupを持つ複数の業務サービスは、1回のファイル存在確認にまとめられる（同じファイルを重複してチェックしない）",
+        "ファイルの実在確認のみを行い、ファイル内の具体的な関数・クラス定義までは検証しない（内容の正しさはTDDが別途担保する）",
+        "missing_implementation_fileが空配列であれば、全業務サービスのgroupと実装ファイルが一致している（正常系）"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 業務サービスのgroupから導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。",
+        "While 全業務サービスのgroupと実装ファイルが一致しているとき、システムはmissing_implementation_fileを空配列で返す shall。",
+        "While 複数の業務サービスが同じgroupを共有しているとき、システムは対応するファイルの存在確認を1回にまとめる shall（重複報告しない）。",
+        "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "INVALID_PATH",
+          "condition": "documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む"
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "全業務サービスのgroupと実装ファイルが一致するとき差分なしと判定する",
+          "category": "正常系",
+          "viewpoint": "整合：全groupが対応する実装ファイルと一致するとき正常系（空配列）",
+          "gherkin": "Scenario: 全業務サービスのgroupと実装ファイルが一致するとき差分なしと判定する\n  Given 全業務サービスのgroupが、対応する実装ファイルと一致するspecツリー\n  When ドリフト検査を実行する\n  Then missing_implementation_fileが空配列で返る",
+          "covers": "受け入れ基準: 全一致で空配列"
+        },
+        {
+          "name": "実装ファイルが存在しない業務サービスを検出する",
+          "category": "異常系",
+          "viewpoint": "ドリフト：groupから導出したファイルが実在しない",
+          "gherkin": "Scenario: 実装ファイルが存在しない業務サービスを検出する\n  Given groupから導出したファイルパスに対応する実装ファイルが実在しない業務サービス宣言\n  When ドリフト検査を実行する\n  Then missing_implementation_fileにその組が含まれる",
+          "covers": "受け入れ基準: missing_implementation_file"
+        },
+        {
+          "name": "同じgroupを共有する複数サービスは1回のファイル確認にまとめられる",
+          "category": "境界値",
+          "viewpoint": "重複排除：同一groupの複数サービスをそれぞれ個別に報告しない",
+          "gherkin": "Scenario: 同じgroupを共有する複数サービスは1回のファイル確認にまとめられる\n  Given 同じgroupを宣言する2件以上の業務サービス（対応する実装ファイルは実在しない）\n  When ドリフト検査を実行する\n  Then missing_implementation_fileには重複を除いた1件だけが含まれる",
+          "covers": "受け入れ基準: groupの重複排除"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "存在しないdocuments_rootはINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：走査起点の不在",
+          "gherkin": "Scenario: 存在しないdocuments_rootはINVALID_PATH\n  When 存在しないdocuments_rootでドリフト検査を実行する\n  Then INVALID_PATHエラーが返る",
+          "covers": "操作保証: documents_rootが存在しないときINVALID_PATH"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-reconciliation"
+}

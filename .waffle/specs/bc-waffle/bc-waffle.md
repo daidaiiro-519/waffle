@@ -18,7 +18,7 @@
 | `骨格(scaffold)` | schema を機械走査して生成した、値が空の schema 準拠 Document の雛形。 |
 | `UDD ループ` | Spec を正本とし、検証・描画・受け入れテストを通じて仕様と実装の整合を保つ開発サイクル。 |
 | `不変条件` | 集約が常に満たす業務ルール。static は schema、dynamic は guard が守る。 |
-| `reconcile` | スペックが嘘をつかないよう、6種類のドリフト（スペック内部の参照整合性・スペックとテストシナリオの対応関係・Document集約とSchema版の対応関係・usecase操作名と実装クラス名の対応関係・集約仕様と実装Entity/ValueObjectの対応関係・usecase operationの宣言と実装分岐の対応関係）を機械的に検知し続けること。docstring の構造化抽出・規約適合検証（uc-scan-source-code/uc-lint-docstring）はreconcileが使う部品であり、reconcile本体ではない。 |
+| `reconcile` | スペックが嘘をつかないよう、7種類のドリフト（スペック内部の参照整合性・スペックとテストシナリオの対応関係・Document集約とSchema版の対応関係・usecase操作名と実装クラス名の対応関係・集約仕様と実装Entity/ValueObjectの対応関係・usecase operationの宣言と実装分岐の対応関係・業務サービスのgroupと実装ファイルの対応関係）を機械的に検知し続けること。docstring の構造化抽出・規約適合検証（uc-scan-source-code/uc-lint-docstring）はreconcileが使う部品であり、reconcile本体ではない。 |
 
 ---
 
@@ -53,6 +53,7 @@
 - uc-patch-schema
 - uc-check-operation-drift
 - uc-check-aggregate-class-drift
+- uc-check-domain-service-drift
 
 ---
 

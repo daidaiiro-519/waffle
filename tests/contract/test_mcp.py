@@ -161,6 +161,16 @@ def test_check_aggregate_class_driftは4フィールドの差分結果を返す(
     assert out["missing_value_object"] == []
 
 
+def test_check_domain_service_driftは1フィールドの差分結果を返す():
+    """
+    Given waffle MCPサーバ
+    When check_domain_service_driftツールを呼ぶ
+    Then MCP出力は1フィールド空配列（自己整合済み）
+    """
+    out = asyncio.run(_call("check_domain_service_drift", {}))
+    assert out == {"missing_implementation_file": []}
+
+
 def test_check_operation_driftは2フィールドの差分結果を返す():
     """
     Given waffle MCPサーバ

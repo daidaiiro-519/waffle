@@ -889,6 +889,14 @@
               "responsibility": {
                 "type": "string",
                 "x-prompt-write": "何を計算/判定するか・どの集約に跨るか・入力→出力（何を受け何を返すか）を1文で。実装手順は書かない。"
+              },
+              "serviceName": {
+                "type": "string",
+                "x-prompt-write": "業務サービスのコード識別子をPascalCaseで。例: CheckBackwardCompatible。実装ファイル内の関数名としてto_snake_case変換した形でそのまま使われる。"
+              },
+              "group": {
+                "type": "string",
+                "x-prompt-write": "実装ファイルの単位をPascalCaseで。例: SchemaPatch。同じgroupを持つ複数サービスが同じ実装ファイルに同居してよい。to_snake_case変換したものがsrc_root配下のファイル名（{group}.py）になる。"
               }
             }
           }

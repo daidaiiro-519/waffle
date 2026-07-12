@@ -168,6 +168,18 @@ def test_check_aggregate_class_driftは4フィールドの差分結果を返す(
     assert data["missing_value_object"] == []
 
 
+def test_check_domain_service_driftは1フィールドの差分結果を返す():
+    """
+    Given waffle CLI
+    When check-domain-service-drift を実行する
+    Then 終了コードは0で、出力JSONは1フィールド空配列（自己整合済み）
+    """
+    result = _runner.invoke(app, ["check-domain-service-drift"])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data == {"missing_implementation_file": []}
+
+
 def test_check_operation_driftは2フィールドの差分結果を返す():
     """
     Given waffle CLI

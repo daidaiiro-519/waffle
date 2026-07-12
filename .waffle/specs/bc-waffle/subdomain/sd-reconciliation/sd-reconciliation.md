@@ -26,6 +26,7 @@
 - uc-check-usecase-class-drift
 - uc-check-operation-drift
 - uc-check-aggregate-class-drift
+- uc-check-domain-service-drift
 
 ---
 
