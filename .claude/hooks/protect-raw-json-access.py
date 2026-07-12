@@ -1,0 +1,1 @@
+../../.waffle/hooks/protect-raw-json-access.py
