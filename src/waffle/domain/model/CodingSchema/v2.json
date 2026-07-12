@@ -1277,7 +1277,7 @@
       ],
       "x-render-order": 3,
       "x-render-level": 2,
-      "x-prompt-query": "ドキュメントコメント（docstring）の規約を持ちます。言語標準の docstring スタイルのみを使い、独自の注釈タグは持ち込まない。要約行は、ソースファイルを開かずに検索・判断できるよう、何をするか・いつ使うかが分かる語で書く。",
+      "x-prompt-query": "ドキュメントコメント（docstring）の規約を持ちます。言語標準の docstring スタイルのみを使い、独自の注釈タグは持ち込まない。paramSyntaxには、その言語のdocstringスタイルが定めるパラメータ/戻り値/例外の構文（タグ名と書式）を明記する。要約行は、ソースファイルを開かずに検索・判断できるよう、何をするか・いつ使うかが分かる語で書く。",
       "x-render": [
         {
           "as": "keyvalue",
@@ -1289,6 +1289,10 @@
             {
               "label": "対象",
               "from": "target"
+            },
+            {
+              "label": "パラメータ等の構文",
+              "from": "paramSyntax"
             }
           ]
         },
@@ -1325,7 +1329,11 @@
         },
         "example": {
           "type": "string",
-          "x-prompt-write": "このスタイルに従った docstring のコード例（要約行＋本文＋Args/Returns 等・カスタムタグなし）。"
+          "x-prompt-write": "このスタイルに従った docstring のコード例（要約行＋本文＋paramSyntaxで明記した構文を使ったパラメータ/戻り値/例外の記載・カスタムタグなし）。"
+        },
+        "paramSyntax": {
+          "type": "string",
+          "x-prompt-write": "このdocstringスタイルにおいて、パラメータ・戻り値・例外を表現する構文そのもの（タグ名と書式）。言語ごとに異なる構文を、その言語の書き方でここに明記する。例: Google styleなら「Args: name (type): 説明 / Returns: 説明 / Raises: ExceptionType: 説明」、TSDocなら「@param name - 説明 / @returns 説明 / @throws {ErrorType} 説明」、Javadocなら「@param name 説明 / @return 説明 / @throws ExceptionType 説明」。"
         }
       }
     },
@@ -1423,6 +1431,9 @@
         },
         "rules": {
           "$ref": "#/$defs/TestRulesBlock"
+        },
+        "docstring": {
+          "$ref": "#/$defs/TestScenarioDocstringBlock"
         }
       }
     },
@@ -1839,6 +1850,70 @@
               }
             }
           }
+        }
+      }
+    },
+    "TestScenarioDocstringBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "style",
+        "transcriptionGuidance",
+        "target",
+        "example"
+      ],
+      "x-render-order": 5.5,
+      "x-render-level": 2,
+      "x-prompt-query": "テスト関数のdocstring（またはそれに相当するコメント）にGherkin(Given/When/Then)を記載する規約を持ちます。Gherkinで記載するのはWaffle固有の契約（spec側のシナリオ文言をテスト側に転記し、事後編集への追従をドリフト検知で捕捉するため）であり、対象言語の標準docstring/コメント構文に載せて表現する。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "スタイル",
+              "from": "style"
+            },
+            {
+              "label": "対象",
+              "from": "target"
+            }
+          ]
+        },
+        {
+          "as": "paragraph",
+          "heading": "転記の指針",
+          "from": "transcriptionGuidance"
+        },
+        {
+          "as": "code",
+          "from": "example"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "TestScenarioDocstring"
+        },
+        "title": {
+          "type": "string",
+          "const": "シナリオdocstring"
+        },
+        "style": {
+          "type": "string",
+          "x-prompt-write": "対象言語のdocstring/コメント構文に載せてGherkinを記載するスタイル。例: pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載"
+        },
+        "transcriptionGuidance": {
+          "type": "string",
+          "x-prompt-write": "docstring本文には、対応するspec（DomainSpecSchema）のシナリオ（Given/When/Then）を一字一句そのまま転記する旨。関数名の一致だけでは、シナリオ文言の事後編集への追従を検知できないため。"
+        },
+        "target": {
+          "type": "string",
+          "x-prompt-write": "この転記規約を必須にする対象。例: acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenariosに対応する全テスト関数"
+        },
+        "example": {
+          "type": "string",
+          "x-prompt-write": "Given/When/Thenを転記したテスト関数のコード例（対象言語の実際の構文で）。"
         }
       }
     }

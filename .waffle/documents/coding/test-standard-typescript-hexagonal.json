@@ -160,6 +160,14 @@
           "rule": "アダプターの契約テストは、ポートのインターフェースに対して書き、本物の実装とテスト用の偽実装の両方が同じテストスイートを満たすことを確認する"
         }
       ]
+    },
+    "docstring": {
+      "style": "テスト関数(it/test)の直前に置くブロックコメント内にGiven/When/Thenをそのまま記載する",
+      "transcriptionGuidance": "コメント本文には、対応するspec（usecase/aggregate/subdomain）のシナリオ（Given/When/Then）を一字一句そのまま転記する。関数名の一致だけでは、シナリオ文言の事後編集への追従を検知できないため。",
+      "target": "acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenariosに対応する全テスト関数",
+      "example": "/**\n * Given 在庫が1個の商品\n * When 2個注文する\n * Then 在庫不足エラーになる\n */\nit(\"在庫不足なら失敗する\", () => {\n  // ...\n});",
+      "blockType": "TestScenarioDocstring",
+      "title": "シナリオdocstring"
     }
   },
   "tags": []

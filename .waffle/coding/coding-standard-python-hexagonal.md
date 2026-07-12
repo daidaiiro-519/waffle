@@ -1,7 +1,5 @@
 # coding-standard-python-hexagonal
 
----
-
 ## 命名
 
 | 対象 | 規約 |
@@ -33,6 +31,12 @@
 
 - **スタイル**: Google スタイル docstring
 - **対象**: 公開要素（module / 公開 class / 公開 function）は必須・private は任意
+- **パラメータ等の構文**: Args:
+    name (type): 説明
+Returns:
+    説明
+Raises:
+    ExceptionType: 説明
 
 ### 要約行の書き方
 

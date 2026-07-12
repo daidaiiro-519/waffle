@@ -1,7 +1,5 @@
 # test-standard-waffle
 
----
-
 ## テスト方針
 
 - **方針**: test-standard-python-hexagonalを前提とし、それに追加でWaffle固有のspec↔テスト対応規約を上乗せする
@@ -33,6 +31,27 @@
 | ドリフト検知 | シナリオ名⇔テスト関数名の名前突き合わせで機械検出（check-scenario-drift）。未実装/孤立を検出し、中身の妥当性はAIが評価する |
 | シナリオブロック種別とテスト配置層の対応 | invariantScenarios(aggregate)→domain/unit、domainServiceScenarios(subdomain)→domain/unit、guaranteeScenarios(usecase・operationGuaranteesと対)→integration、acceptanceScenarios(usecase)→acceptance。コードの性質(純粋かport必須か)をケースバイケースで判定してはならない（ドリフト検知を非決定的にするため） |
 | シナリオ文言の追従 | specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテスト関数は、対応するgherkinのGiven/When/Thenをdocstringに転記する（関数名の一致だけでは、シナリオ文言の事後編集に対する追従を検知できないため） |
+
+---
+
+## シナリオdocstring
+
+- **スタイル**: pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載する（test-standard-python-hexagonalを継承）
+- **対象**: usecase specのacceptanceScenarios/guaranteeScenarios、aggregate specのinvariantScenarios、bounded-context specのdomainServiceScenariosに対応する全テスト関数
+
+### 転記の指針
+
+docstring本文は、対応するspec（DomainSpecSchemaのTestScenarios）のGiven/When/Thenを人間が言い換えず一字一句そのまま転記する。scenarioBindingが定める名前突き合わせ(check-scenario-drift)は関数名の有無しか見ないため、文言そのものの事後編集への追従はこの転記規約でのみ保証される。
+
+```
+def test_バックワード非互換なら書き込みを拒否する():
+    """
+    Given 公開済みkindのrequired配列にプロパティを追加するpatch_schema呼び出し
+    When patch-schemaを実行する
+    Then BACKWARD_INCOMPATIBLEエラーが返り、schemaファイルは書き換わらない
+    """
+    ...
+```
 
 ---
 

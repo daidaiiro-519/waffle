@@ -1,7 +1,5 @@
 # coding-standard-typescript-hexagonal
 
----
-
 ## 命名
 
 | 対象 | 規約 |
@@ -33,6 +31,9 @@
 
 - **スタイル**: TSDoc
 - **対象**: 公開要素（exportされるclass / function / interface）。非公開（内部専用）は任意
+- **パラメータ等の構文**: @param name - 説明
+@returns 説明
+@throws {ErrorType} 説明
 
 ### 要約行の書き方
 

@@ -112,6 +112,14 @@
           "rule": "spec側(DomainSpecSchema等)のブロック名・シナリオの記述に、アーキテクチャ/テスト層の用語（unit/integration/adapter/render_engine等の内部コンポーネント名）を持ち込む。specは常にDDD/業務語彙のみで書く"
         }
       ]
+    },
+    "docstring": {
+      "style": "pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載する（test-standard-python-hexagonalを継承）",
+      "transcriptionGuidance": "docstring本文は、対応するspec（DomainSpecSchemaのTestScenarios）のGiven/When/Thenを人間が言い換えず一字一句そのまま転記する。scenarioBindingが定める名前突き合わせ(check-scenario-drift)は関数名の有無しか見ないため、文言そのものの事後編集への追従はこの転記規約でのみ保証される。",
+      "target": "usecase specのacceptanceScenarios/guaranteeScenarios、aggregate specのinvariantScenarios、bounded-context specのdomainServiceScenariosに対応する全テスト関数",
+      "example": "def test_バックワード非互換なら書き込みを拒否する():\n    \"\"\"\n    Given 公開済みkindのrequired配列にプロパティを追加するpatch_schema呼び出し\n    When patch-schemaを実行する\n    Then BACKWARD_INCOMPATIBLEエラーが返り、schemaファイルは書き換わらない\n    \"\"\"\n    ...",
+      "blockType": "TestScenarioDocstring",
+      "title": "シナリオdocstring"
     }
   },
   "tags": []
