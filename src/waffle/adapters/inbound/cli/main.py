@@ -94,10 +94,11 @@ def scaffold(
     discriminator: str = typer.Option(None, "--discriminator", help="key=value 形式（例: skillKind=engine）"),
     context_ref: str = typer.Option(None, "--contextRef", "--context-ref", help="所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合）"),
     subdomain_ref: str = typer.Option(None, "--subdomainRef", "--subdomain-ref", help="usecase が属する subdomain の documentId"),
-    path: str = typer.Option(None, "--path", help="fill 対象の documentPath"),
+    path: str = typer.Option(None, "--path", help="fill / clear_field 対象の documentPath"),
     values: str = typer.Option(None, "--values", help="fill する値の JSON オブジェクト"),
+    field_path: str = typer.Option(None, "--fieldPath", "--field-path", help="clear_field で削除する値フィールドのドットパス"),
 ) -> None:
-    """document.json の骨格生成 / 値書き込み（uc-scaffold-document）。"""
+    """document.json の骨格生成 / 値書き込み / フィールド削除（uc-scaffold-document）。operation: create / fill / clear_field。"""
     if operation == "create":
         params: dict = {"schemaRef": schema_ref, "documentId": document_id}
         if discriminator:
@@ -109,6 +110,8 @@ def scaffold(
             params["subdomainRef"] = subdomain_ref
     elif operation == "fill":
         params = {"documentPath": path, "values": json.loads(values) if values else {}}
+    elif operation == "clear_field":
+        params = {"documentPath": path, "path": field_path}
     else:
         params = {}
     _emit(ScaffoldDocument(_docs(), _schemas()).run(operation, params))

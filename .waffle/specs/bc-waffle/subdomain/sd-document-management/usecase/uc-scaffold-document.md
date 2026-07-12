@@ -28,6 +28,7 @@ Orchestrator（HarnessAgent）
 
 - 生成対象の schema と documentId が与えられている
 - 分岐のある schema では discriminator が与えられている
+- clear_fieldの場合: 対象のdocumentPath・削除する値フィールドのpathが与えられている
 
 ---
 
@@ -50,6 +51,7 @@ sequenceDiagram
 - Document が schema の初期 status（enum 先頭）で生成される
 - 宣言済みの値フィールドにのみ値が書き込まれる
 - 構造（const / discriminator）は AI に変更されない
+- clear_fieldは宣言済みの値フィールドのうち、必須ではないフィールドのみ削除できる（必須フィールドの削除は拒否する）
 
 ---
 
@@ -59,6 +61,9 @@ sequenceDiagram
 - When fill で値が与えられたとき、システムは宣言済み値フィールドにのみ書き込む shall。
 - If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。
 - If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。
+- When clear_fieldでdocumentPath・pathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。
+- While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。
+- If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。
 
 ---
 
@@ -68,6 +73,7 @@ sequenceDiagram
 - While document.json が既に存在するとき、create を再実行しても、fill で書き込まれた既存の values は保持され、破壊されない shall（values 自体の再現性はシステムの管轄外・呼び出し側の責務）。
 - When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
 - When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+- When 同じclear_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
 
 ---
 
@@ -76,6 +82,7 @@ sequenceDiagram
 | コード | 条件 |
 |---|---|
 | `MISSING_DISCRIMINATOR` | 分岐のあるschemaでdiscriminatorが未指定（候補enumを案内） |
+| `REQUIRED_FIELD` | clear_fieldの削除対象がschemaの必須フィールドである |
 
 ---
 
@@ -185,6 +192,45 @@ Scenario: customはadvisorと構成が異なる
   Then advisorとは異なりcontent配下にprocessingTargetを持つ骨格が生成される
 ```
 
+### 宣言済みの値フィールドを削除する
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | clear_field：必須ではない値フィールドをdocumentから削除する |
+
+```gherkin
+Scenario: 宣言済みの値フィールドを削除する
+  Given 値が書き込み済みの、必須ではないフィールドのpath
+  When clear_fieldを実行する
+  Then そのフィールドがdocumentから削除される
+```
+
+### 既に存在しないフィールドのclear_fieldは無変更で成功する
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | clear_field：冪等性 |
+
+```gherkin
+Scenario: 既に存在しないフィールドのclear_fieldは無変更で成功する
+  Given 既に削除済みのフィールドpath
+  When clear_fieldを再実行する
+  Then 対象は無変更のまま成功する
+```
+
+### 必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | clear_field：構造保護：必須フィールドの削除を拒否する |
+
+```gherkin
+Scenario: 必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される
+  Given schemaのrequiredに指定されているフィールドのpath
+  When clear_fieldを実行する
+  Then REQUIRED_FIELDエラーが返り削除されない
+```
+
 ---
 
 ## 操作保証シナリオ
@@ -226,4 +272,17 @@ Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
   Given 解決できないschemaRef
   When 本usecaseを実行する
   Then INVALID_SCHEMA_REFエラーが返る
+```
+
+### clear_fieldの複数回実行はべき等である
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | べき等性：同じclear_field操作を複数回実行しても結果が変わらない |
+
+```gherkin
+Scenario: clear_fieldの複数回実行はべき等である
+  Given 同一のclear_field操作（必須ではないフィールド）
+  When 2回連続で実行する
+  Then 2回目の実行結果は1回目と完全に同一である
 ```

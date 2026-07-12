@@ -44,7 +44,8 @@
       "title": "事前条件",
       "items": [
         "生成対象の schema と documentId が与えられている",
-        "分岐のある schema では discriminator が与えられている"
+        "分岐のある schema では discriminator が与えられている",
+        "clear_fieldの場合: 対象のdocumentPath・削除する値フィールドのpathが与えられている"
       ]
     },
     "mainFlow": {
@@ -95,7 +96,8 @@
       "items": [
         "Document が schema の初期 status（enum 先頭）で生成される",
         "宣言済みの値フィールドにのみ値が書き込まれる",
-        "構造（const / discriminator）は AI に変更されない"
+        "構造（const / discriminator）は AI に変更されない",
+        "clear_fieldは宣言済みの値フィールドのうち、必須ではないフィールドのみ削除できる（必須フィールドの削除は拒否する）"
       ]
     },
     "acceptanceCriteria": {
@@ -105,7 +107,10 @@
         "When schemaRef と documentId が与えられたとき、システムは schema に適合する骨格を生成する shall（status=schema の enum 先頭）。",
         "When fill で値が与えられたとき、システムは宣言済み値フィールドにのみ書き込む shall。",
         "If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。",
-        "If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。"
+        "If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。",
+        "When clear_fieldでdocumentPath・pathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。",
+        "While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。",
+        "If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。"
       ]
     },
     "errors": {
@@ -115,6 +120,10 @@
         {
           "code": "MISSING_DISCRIMINATOR",
           "condition": "分岐のあるschemaでdiscriminatorが未指定（候補enumを案内）"
+        },
+        {
+          "code": "REQUIRED_FIELD",
+          "condition": "clear_fieldの削除対象がschemaの必須フィールドである"
         }
       ]
     },
@@ -125,7 +134,8 @@
         "When 同じ documentId で create を複数回実行したとき、システム の生成する構造（schema由来の骨格の形）は常にべき等である shall。",
         "While document.json が既に存在するとき、create を再実行しても、fill で書き込まれた既存の values は保持され、破壊されない shall（values 自体の再現性はシステムの管轄外・呼び出し側の責務）。",
         "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
+        "When 同じclear_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。"
       ]
     },
     "guaranteeScenarios": {
@@ -153,6 +163,13 @@
           "viewpoint": "解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる",
           "gherkin": "Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF\n  Given 解決できないschemaRef\n  When 本usecaseを実行する\n  Then INVALID_SCHEMA_REFエラーが返る",
           "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
+        },
+        {
+          "name": "clear_fieldの複数回実行はべき等である",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じclear_field操作を複数回実行しても結果が変わらない",
+          "gherkin": "Scenario: clear_fieldの複数回実行はべき等である\n  Given 同一のclear_field操作（必須ではないフィールド）\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
+          "covers": "操作保証: clear_fieldのべき等性"
         }
       ]
     },
@@ -166,56 +183,88 @@
           "category": "正常系",
           "viewpoint": "骨格生成：生成骨格は schema 適合・status は初期値",
           "gherkin": "Scenario: 生成した骨格は自分の schema で valid\n  Given advisor 種別の Document（discriminator 指定済み）\n  When create する\n  Then 骨格は schema に適合し、status は schema の初期値である",
-          "covers": "受け入れ基準: 骨格は schema に適合"
+          "covers": "受け入れ基準: 骨格は schema に適合",
+          "operation": "create"
         },
         {
           "name": "構造を変える値は拒否される",
           "category": "異常系",
           "viewpoint": "構造保護：const フィールドへの書き込みは skipped",
           "gherkin": "Scenario: 構造を変える値は拒否される\n  Given 作成済みの Document\n  When const フィールドへ値を書き込もうとする\n  Then 書き込まれず skipped に記録される",
-          "covers": "受け入れ基準: 構造を変える値は拒否"
+          "covers": "受け入れ基準: 構造を変える値は拒否",
+          "operation": "fill"
         },
         {
           "name": "宣言済みの値フィールドに書き込まれる",
           "category": "正常系",
           "viewpoint": "fill：宣言済み値フィールドへの書き込みは written に記録される",
           "gherkin": "Scenario: 宣言済みの値フィールドに書き込まれる\n  Given 作成済みの Document\n  When 宣言済みの値フィールドへ値を書き込む\n  Then written に記録され、ファイルに反映される",
-          "covers": "受け入れ基準: fill で値が宣言済み値フィールドにのみ書き込まれる"
+          "covers": "受け入れ基準: fill で値が宣言済み値フィールドにのみ書き込まれる",
+          "operation": "fill"
         },
         {
           "name": "discriminator が無いと候補を案内する",
           "category": "異常系",
           "viewpoint": "エラー：分岐のある schema で discriminator 未指定は MISSING_DISCRIMINATOR",
           "gherkin": "Scenario: discriminator が無いと候補を案内する\n  Given 分岐のある schema\n  When discriminator を指定せずに create する\n  Then MISSING_DISCRIMINATOR エラーが候補つきで返る",
-          "covers": "エラー: MISSING_DISCRIMINATOR"
+          "covers": "エラー: MISSING_DISCRIMINATOR",
+          "operation": "create"
         },
         {
           "name": "createはadvisor_skillの骨格を生成する",
           "category": "正常系",
           "viewpoint": "骨格生成：discriminator(skillKind=advisor)からschema分岐に沿った骨格が組まれる",
           "gherkin": "Scenario: createはadvisor_skillの骨格を生成する\n  Given schemaRef, documentId, discriminator(skillKind=advisor)\n  When createを実行する\n  Then documentType/schemaRef/skillKind/statusが正しく設定され、content配下にresponseTypes/knowledgeRefsがある骨格が生成される",
-          "covers": "コマンド: create"
+          "covers": "コマンド: create",
+          "operation": "create"
         },
         {
           "name": "createはx_source_targetに骨格を書き出す",
           "category": "正常系",
           "viewpoint": "永続化：createはschema宣言のx-source-targetへ骨格ファイルを書き出す",
           "gherkin": "Scenario: createはx_source_targetに骨格を書き出す\n  Given schemaRef, documentId, discriminator\n  When createを実行する\n  Then schemaのx-source-target宣言どおりのパスにファイルが書き出される",
-          "covers": "コマンド: create（永続化）"
+          "covers": "コマンド: create（永続化）",
+          "operation": "create"
         },
         {
           "name": "fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持つ",
           "category": "正常系",
           "viewpoint": "fillTemplate：createが返すfillTemplateは値フィールドのpath×x-prompt-writeの一覧である",
           "gherkin": "Scenario: fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持つ\n  Given schemaRef, documentId, discriminator\n  When createを実行する\n  Then fillTemplateには値フィールドのpathとx-prompt-write由来のpromptを持つエントリが含まれる",
-          "covers": "コマンド: create（fillTemplate）"
+          "covers": "コマンド: create（fillTemplate）",
+          "operation": "create"
         },
         {
           "name": "customはadvisorと構成が異なる",
           "category": "正常系",
           "viewpoint": "discriminator分岐：skillKind=customはadvisorと異なるcontent構造(processingTarget)を持つ",
           "gherkin": "Scenario: customはadvisorと構成が異なる\n  Given discriminator(skillKind=custom)\n  When createを実行する\n  Then advisorとは異なりcontent配下にprocessingTargetを持つ骨格が生成される",
-          "covers": "discriminator: skillKind=custom"
+          "covers": "discriminator: skillKind=custom",
+          "operation": "create"
+        },
+        {
+          "name": "宣言済みの値フィールドを削除する",
+          "category": "正常系",
+          "viewpoint": "clear_field：必須ではない値フィールドをdocumentから削除する",
+          "gherkin": "Scenario: 宣言済みの値フィールドを削除する\n  Given 値が書き込み済みの、必須ではないフィールドのpath\n  When clear_fieldを実行する\n  Then そのフィールドがdocumentから削除される",
+          "covers": "受け入れ基準: clear_fieldでのフィールド削除",
+          "operation": "clear_field"
+        },
+        {
+          "name": "既に存在しないフィールドのclear_fieldは無変更で成功する",
+          "category": "境界値",
+          "viewpoint": "clear_field：冪等性",
+          "gherkin": "Scenario: 既に存在しないフィールドのclear_fieldは無変更で成功する\n  Given 既に削除済みのフィールドpath\n  When clear_fieldを再実行する\n  Then 対象は無変更のまま成功する",
+          "covers": "受け入れ基準: clear_fieldの冪等性",
+          "operation": "clear_field"
+        },
+        {
+          "name": "必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される",
+          "category": "異常系",
+          "viewpoint": "clear_field：構造保護：必須フィールドの削除を拒否する",
+          "gherkin": "Scenario: 必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される\n  Given schemaのrequiredに指定されているフィールドのpath\n  When clear_fieldを実行する\n  Then REQUIRED_FIELDエラーが返り削除されない",
+          "covers": "受け入れ基準: clear_fieldの構造保護",
+          "operation": "clear_field"
         }
       ]
     }

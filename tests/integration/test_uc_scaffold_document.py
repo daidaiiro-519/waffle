@@ -78,3 +78,24 @@ def test_既存documentへの再createはvaluesを破壊しない():
 
     doc = FsDocumentRepository().load(create_result.value["path"])
     assert doc["content"]["purpose"]["text"] == "ドメインを分析する"
+
+
+def test_clear_fieldの複数回実行はべき等である():
+    """
+    Given 同一のclear_field操作（必須ではないフィールド）
+    When 2回連続で実行する
+    Then 2回目の実行結果は1回目と完全に同一である
+    """
+    create_result = _engine().run(
+        "create",
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "engine"}},
+    )
+    assert isinstance(create_result, Ok), create_result
+    _engine().run("fill", {"documentPath": create_result.value["path"], "values": {"tags": ["context:test"]}})
+
+    params = {"documentPath": create_result.value["path"], "path": "tags"}
+    _engine().run("clear_field", params)
+    after_first = Path(create_result.value["path"]).read_text(encoding="utf-8")
+    result = _engine().run("clear_field", params)
+    assert isinstance(result, Ok), result
+    assert Path(create_result.value["path"]).read_text(encoding="utf-8") == after_first

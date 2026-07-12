@@ -37,6 +37,8 @@ class ScaffoldDocument:
             return self._create(params)
         if operation == "fill":
             return self._fill(params)
+        if operation == "clear_field":
+            return self._clear_field(params)
         return _err("INVALID_OPERATION", f"未知の operation: {operation}")
 
     def _create(self, params: dict) -> Result[dict]:
@@ -121,6 +123,38 @@ class ScaffoldDocument:
         self._documents.save(document_path, doc)
         return Ok({"documentPath": document_path, "written": written, "skipped": skipped})
 
+    def _clear_field(self, params: dict) -> Result[dict]:
+        document_path = params.get("documentPath")
+        path = params.get("path")
+        if not document_path or not path:
+            return _err("MISSING_PARAM", "clear_field には documentPath, path が必要です")
+        loaded = load_document(self._documents, document_path)
+        if isinstance(loaded, Err):
+            return loaded
+        doc = loaded.value
+
+        schema_ref_result = require_schema_ref(doc)
+        if isinstance(schema_ref_result, Err):
+            return schema_ref_result
+        schema_ref = schema_ref_result.value
+
+        schema_result = load_schema(self._schemas, schema_ref)
+        if isinstance(schema_result, Err):
+            return schema_result
+        schema = schema_result.value
+
+        disc_key = _discriminator_key(schema)
+        discriminator = {disc_key: doc.get(disc_key)} if disc_key else {}
+        content_def = _content_def(schema, discriminator)
+
+        if _is_required_path(schema, content_def, path):
+            return _err("REQUIRED_FIELD", f"必須フィールドは削除できません: {path}")
+
+        cleared = _clear_path(doc, path)
+        if cleared:
+            self._documents.save(document_path, doc)
+        return Ok({"documentPath": document_path, "cleared": cleared})
+
 # --- schema 走査ヘルパ（純ロジック・機械的） ---
 
 def _discriminator_candidates(schema: dict, key: str) -> list:
@@ -182,4 +216,25 @@ def _set_path(doc: dict, path: str, value) -> bool:
     if not isinstance(cur, dict):
         return False
     cur[parts[-1]] = value
+    return True
+
+def _is_required_path(schema: dict, content_def: dict, path: str) -> bool:
+    """pathの直下フィールドが、その階層のschema required配列に含まれるか判定する
+    （トップレベルはschema自身、content配下はcontent_defのrequiredを見る）。"""
+    parts = path.split(".")
+    if parts[0] == "content" and len(parts) >= 2:
+        return parts[1] in content_def.get("required", [])
+    return parts[0] in schema.get("required", [])
+
+def _clear_path(doc: dict, path: str) -> bool:
+    """path上のキーが実在すれば削除する（冪等：存在しなければ何もせずFalseを返す）。"""
+    parts = path.split(".")
+    cur = doc
+    for p in parts[:-1]:
+        if not isinstance(cur, dict) or p not in cur:
+            return False
+        cur = cur[p]
+    if not isinstance(cur, dict) or parts[-1] not in cur:
+        return False
+    del cur[parts[-1]]
     return True

@@ -310,3 +310,65 @@ def test_customはadvisorと構成が異なる():
     assert "processingTarget" in result.value["skeleton"]["content"]
 
 
+def test_宣言済みの値フィールドを削除する():
+    """
+    Given 値が書き込み済みの、必須ではないフィールドのpath
+    When clear_fieldを実行する
+    Then そのフィールドがdocumentから削除される
+    """
+    create_result = _engine().run(
+        "create",
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "advisor"}},
+    )
+    assert isinstance(create_result, Ok), create_result
+    fill_result = _engine().run(
+        "fill",
+        {"documentPath": create_result.value["path"], "values": {"tags": ["context:test"]}},
+    )
+    assert isinstance(fill_result, Ok), fill_result
+
+    clear_result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "path": "tags"})
+    assert isinstance(clear_result, Ok), clear_result
+    assert clear_result.value["cleared"] is True
+
+    doc = FsDocumentRepository().load(create_result.value["path"])
+    assert "tags" not in doc
+
+
+def test_既に存在しないフィールドのclear_fieldは無変更で成功する():
+    """
+    Given 既に削除済みのフィールドpath
+    When clear_fieldを再実行する
+    Then 対象は無変更のまま成功する
+    """
+    create_result = _engine().run(
+        "create",
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "advisor"}},
+    )
+    assert isinstance(create_result, Ok), create_result
+
+    result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "path": "no_such_field"})
+    assert isinstance(result, Ok), result
+    assert result.value["cleared"] is False
+
+
+def test_必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される():
+    """
+    Given schemaのrequiredに指定されているフィールドのpath
+    When clear_fieldを実行する
+    Then REQUIRED_FIELDエラーが返り削除されない
+    """
+    create_result = _engine().run(
+        "create",
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "advisor"}},
+    )
+    assert isinstance(create_result, Ok), create_result
+
+    result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "path": "status"})
+    assert isinstance(result, Err), result
+    assert result.details[0] == "REQUIRED_FIELD"
+
+    doc = FsDocumentRepository().load(create_result.value["path"])
+    assert "status" in doc
+
+

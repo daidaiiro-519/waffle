@@ -88,8 +88,9 @@ def scaffold_document(
     subdomainRef: str | None = None,
     documentPath: str | None = None,
     values: dict | None = None,
+    fieldPath: str | None = None,
 ) -> dict:
-    """document.json の骨格生成 / 値書き込み（uc-scaffold-document）。"""
+    """document.json の骨格生成 / 値書き込み / フィールド削除（uc-scaffold-document）。operation: create / fill / clear_field。"""
     if operation == "create":
         params: dict = {"schemaRef": schemaRef, "documentId": documentId}
         if discriminator:
@@ -100,6 +101,8 @@ def scaffold_document(
             params["subdomainRef"] = subdomainRef
     elif operation == "fill":
         params = {"documentPath": documentPath, "values": values or {}}
+    elif operation == "clear_field":
+        params = {"documentPath": documentPath, "path": fieldPath}
     else:
         params = {}
     return _dict(ScaffoldDocument(_docs(), _schemas()).run(operation, params))
