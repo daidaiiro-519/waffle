@@ -306,7 +306,8 @@
           "const": "概要"
         },
         "text": {
-          "type": "string"
+          "type": "string",
+          "x-prompt-write": "このコンポーネント/領域が何を担うかを1〜2文で。人の即スキャンとAIの意図把握に使う。"
         }
       }
     },
@@ -346,7 +347,8 @@
           "const": "CapacityRequirements"
         },
         "title": {
-          "type": "string"
+          "type": "string",
+          "x-prompt-write": "このブロックの見出し。文脈に応じた表示名にする。例: 容量要件、デプロイ先要件、推論サービング目標、クエリ性能目標"
         },
         "items": {
           "type": "array",
@@ -355,13 +357,16 @@
             "type": "object",
             "properties": {
               "metric": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "指標名。例: 同時接続数、スループット、レイテンシp99"
               },
               "target": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "目標値。例: 1000 req/s、p99 200ms以内"
               },
               "rationale": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "その目標値が必要な事業/業務側の根拠。例: ピーク時のキャンペーン流入に耐えるため"
               }
             }
           }
@@ -413,16 +418,20 @@
             "type": "object",
             "properties": {
               "metric": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "指標名。例: 可用性(SLA)、RTO、RPO"
               },
               "target": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "目標値。例: 99.9%、RTO 1時間以内"
               },
               "rationale": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "その目標値が必要な業務上の根拠。例: 障害時の売上機会損失を許容範囲に抑えるため"
               }
             }
-          }
+          },
+          "x-prompt-write": "指標・目標値・根拠を列挙。可用性・障害復旧に関する目標値と、その業務上の根拠を書く。"
         }
       }
     },
@@ -467,13 +476,16 @@
             "type": "object",
             "properties": {
               "boundary": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "境界の対象。例: 外部からの入力、内部ネットワーク越しの通信"
               },
               "requirement": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "その境界で満たすべきセキュリティ要件。例: TLS終端必須、入力値のサニタイズ必須"
               }
             }
-          }
+          },
+          "x-prompt-write": "このコンポーネント固有のセキュリティ境界と要件を列挙。プロダクト全体を横断するコンプライアンス/アクセス方針は書かない（security specKindの責務）。"
         }
       }
     },
@@ -521,16 +533,20 @@
             "type": "object",
             "properties": {
               "framework": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "準拠するフレームワーク/規制名。例: PCI DSS、GDPR、SOC2"
               },
               "scope": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "そのフレームワークが適用される範囲。例: 決済処理を行う全コンポーネント"
               },
               "requirement": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "満たすべき具体的な要件。例: カード番号は非保持化する"
               }
             }
-          }
+          },
+          "x-prompt-write": "準拠すべきコンプライアンスフレームワークと、その適用範囲・要件を列挙。"
         }
       }
     },
@@ -578,16 +594,20 @@
             "type": "object",
             "properties": {
               "principal": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "主体（誰/何が）。例: CI/CDパイプライン、運用担当者ロール"
               },
               "allowedActions": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "その主体に許可する操作。例: デプロイの実行、ログの閲覧"
               },
               "condition": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "許可の条件。例: 営業時間内のみ、多要素認証済みの場合のみ。無ければ空。"
               }
             }
-          }
+          },
+          "x-prompt-write": "誰が何をどんな条件で行えるかというアクセス制御方針を列挙。"
         }
       }
     },
@@ -635,16 +655,20 @@
             "type": "object",
             "properties": {
               "classification": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "データ分類。例: 個人情報、機密情報、公開情報"
               },
               "boundary": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "越えてはならない境界。例: 特定リージョン外への転送禁止"
               },
               "requirement": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "その境界を守るための要件。例: 保存時暗号化必須"
               }
             }
-          }
+          },
+          "x-prompt-write": "データ分類ごとに、どこまでの越境・持ち出しが許されるかという境界と要件を列挙。"
         }
       }
     },
@@ -692,16 +716,20 @@
             "type": "object",
             "properties": {
               "target": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "監視対象。例: エラー率、CPU使用率、キューの滞留数"
               },
               "threshold": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "アラートを発報する閾値。例: エラー率5%超、CPU使用率90%超が5分継続"
               },
               "severity": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "重大度。例: critical / warning"
               }
             }
-          }
+          },
+          "x-prompt-write": "監視すべき対象と、アラートを発報する閾値・重大度を列挙。"
         }
       }
     },
@@ -749,16 +777,20 @@
             "type": "object",
             "properties": {
               "dataType": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "データ種別。例: アクセスログ、監査ログ、バックアップ"
               },
               "retentionPeriod": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "保持期間。例: 90日、7年"
               },
               "rationale": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "その保持期間が必要な根拠。例: 監査要件で7年保持が義務付けられているため"
               }
             }
-          }
+          },
+          "x-prompt-write": "データ種別ごとの保持期間と、その根拠（法令・業務要件）を列挙。"
         }
       }
     },
@@ -888,10 +920,12 @@
             "type": "object",
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "ゾーンの識別子（図の接続で使う）。例: public-subnet"
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "ゾーンの表示名。例: パブリックサブネット"
               },
               "contains": {
                 "type": "array",
@@ -899,13 +933,16 @@
                   "type": "object",
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "x-prompt-write": "コンポーネントの識別子（connectionsのfrom/toで使う）。例: web-server"
                     },
                     "label": {
-                      "type": "string"
+                      "type": "string",
+                      "x-prompt-write": "コンポーネントの表示名。例: Webサーバー"
                     }
                   }
-                }
+                },
+                "x-prompt-write": "このゾーンに含まれるコンポーネント(id/label)を列挙。"
               }
             }
           }
@@ -917,10 +954,12 @@
             "type": "object",
             "properties": {
               "from": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "接続元コンポーネントのid（zonesのcontainsで宣言済みのものを使う）。"
               },
               "to": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "接続先コンポーネントのid（zonesのcontainsで宣言済みのものを使う）。"
               }
             }
           }
@@ -960,10 +999,12 @@
             "type": "object",
             "properties": {
               "id": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "環境段階の識別子（transitionsのfrom/toで使う）。例: staging"
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "環境段階の表示名。例: ステージング環境"
               }
             }
           }
@@ -975,13 +1016,16 @@
             "type": "object",
             "properties": {
               "from": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "遷移元の環境id（stagesで宣言済みのものを使う）。"
               },
               "to": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "遷移先の環境id（stagesで宣言済みのものを使う）。"
               },
               "label": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "昇格条件の要約。例: 自動テスト成功後"
               }
             }
           }
@@ -1032,16 +1076,20 @@
             "type": "object",
             "properties": {
               "environment": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "環境名。ReleasePipeline.stagesのlabelと対応させる。例: staging"
               },
               "promotionCriteria": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "次の環境へ昇格するための基準。例: 自動テスト全件成功、カナリアリリースでエラー率が閾値以下"
               },
               "approvalRequirement": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "昇格に必要な承認。例: テックリードの承認必須。不要なら空。"
               }
             }
-          }
+          },
+          "x-prompt-write": "環境ごとの昇格基準と承認要件を列挙（ReleasePipelineの各環境に対応する詳細）。"
         }
       }
     },
@@ -1089,16 +1137,20 @@
             "type": "object",
             "properties": {
               "dataClassification": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "学習データの分類。例: ユーザー入力データ、合成データ"
               },
               "usageBoundary": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "利用が許される境界。例: モデル再学習にのみ使用、第三者への提供禁止"
               },
               "requirement": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "満たすべき要件。例: 個人情報は匿名化してから学習に使う"
               }
             }
-          }
+          },
+          "x-prompt-write": "学習データの分類ごとの利用境界と要件を列挙。"
         }
       }
     },
