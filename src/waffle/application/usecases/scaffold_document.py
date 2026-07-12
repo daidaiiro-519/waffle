@@ -14,7 +14,9 @@ from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.application.services.document_loading import load_document, load_schema, require_schema_ref
 from waffle.domain.services import path_template
+from waffle.domain.services.fill_template import build_const_paths as _build_const_paths
 from waffle.domain.services.fill_template import build_fill_template as _build_fill_template
+from waffle.domain.services.fill_template import build_top_level_const_paths as _build_top_level_const_paths
 from waffle.domain.services.fill_template import build_top_level_fill_template as _build_top_level_fill_template
 from waffle.domain.services.fill_template import content_def as _content_def
 from waffle.domain.services.fill_template import resolve_ref as _resolve
@@ -104,14 +106,18 @@ class ScaffoldDocument:
         protected = {"documentId"} | ({disc_key} if disc_key else set())
         allowed = {e["path"] for e in _build_top_level_fill_template(schema, protected)}
         allowed |= {e["path"] for e in _build_fill_template(schema, content_def)}
+        const_paths = _build_top_level_const_paths(schema, protected) | _build_const_paths(schema, content_def)
 
         written: list[str] = []
         skipped: list[str] = []
         for path, value in values.items():
-            if path in allowed and _set_path(doc, path, value):
+            # const再同期: schema版更新でconst値自体が変わった既存documentを、現行schemaの
+            # 宣言値と完全一致する値でのみ書き込み許可する（任意の値への上書きは引き続き拒否）
+            is_const_resync = path in const_paths and const_paths[path] == value
+            if (path in allowed or is_const_resync) and _set_path(doc, path, value):
                 written.append(path)
             else:
-                skipped.append(path)  # 未知 / const / discriminator / 構造改変は拒否
+                skipped.append(path)  # 未知 / const（現行値と不一致）/ discriminator / 構造改変は拒否
         self._documents.save(document_path, doc)
         return Ok({"documentPath": document_path, "written": written, "skipped": skipped})
 
@@ -164,13 +170,16 @@ def _build_skeleton(schema, document_id, disc_key, discriminator, content_def, e
     return out
 
 def _set_path(doc: dict, path: str, value) -> bool:
+    """path上の中間キーが無ければ新設しながら値を設定する（呼び出し元がpathを既に
+    allowed/const_pathsで検証済みのため、ここでの新設は現行schemaが宣言する経路に限られる。
+    schema版更新で新設された任意ブロックへ、旧版のまま追従していない既存Documentも書き込めるようにする）。"""
     parts = path.split(".")
     cur = doc
     for p in parts[:-1]:
-        if not isinstance(cur, dict) or p not in cur:
+        if not isinstance(cur, dict):
             return False
-        cur = cur[p]
-    if isinstance(cur, dict) and parts[-1] in cur:
-        cur[parts[-1]] = value
-        return True
-    return False
+        cur = cur.setdefault(p, {})
+    if not isinstance(cur, dict):
+        return False
+    cur[parts[-1]] = value
+    return True

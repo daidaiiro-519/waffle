@@ -1,29 +1,26 @@
-# uc-check-schema-version-drift
-
----
+# DocumentとSchema版の対応関係を検証する：CheckSchemaVersionDrift
 
 ## 概要
 
-Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。
-
----
-
-## 名前
-
-CheckSchemaVersionDrift
-
----
-
-## 主アクターと意図
-
-- **主アクター**: Orchestrator（HarnessAgent）
-- **意図**: Documentが参照するSchemaの版が実在し、かつ最新であるかを確認したい
+- Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。
 
 ---
 
 ## 存在意義
 
-schemaが版を重ねて進化しても、既存のDocumentが古い版を参照したまま放置されれば、そのズレは誰にも気づかれない。破壊的変更のたびに全文書を手作業で洗い直すのは現実的でなく、この検知が無ければschemaの改版履歴が実データに反映されているかを確認する手段自体が存在しないことになる。
+- schemaが版を重ねて進化しても、既存のDocumentが古い版を参照したまま放置されれば、そのズレは誰にも気づかれない。破壊的変更のたびに全文書を手作業で洗い直すのは現実的でなく、この検知が無ければschemaの改版履歴が実データに反映されているかを確認する手段自体が存在しないことになる。
+
+---
+
+## 主アクターと意図
+
+### 主アクター
+
+Orchestrator（HarnessAgent）
+
+### 意図
+
+Documentが参照するSchemaの版が実在し、かつ最新であるかを確認したい
 
 ---
 

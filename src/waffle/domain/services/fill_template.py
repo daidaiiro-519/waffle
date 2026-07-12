@@ -67,6 +67,34 @@ def build_top_level_fill_template(schema: dict, protected: set) -> list:
     return entries
 
 
+def build_const_paths(schema: dict, content: dict) -> dict:
+    """constを持つ値フィールドのpath→現行schemaが宣言するconst値の対応を機械的に走査する。
+    fillのconst再同期（値が現行schemaの宣言値と完全一致する場合のみの書き込み許可）が使う。"""
+    paths: dict = {}
+    _walk_const(schema, content, "content", paths)
+    return paths
+
+
+def build_top_level_const_paths(schema: dict, protected: set) -> dict:
+    paths: dict = {}
+    for key, prop in schema.get("properties", {}).items():
+        if key == "content" or key in protected:
+            continue
+        _walk_const(schema, prop, key, paths)
+    return paths
+
+
+def _walk_const(schema, d, path, paths):
+    if "$ref" in d:
+        return _walk_const(schema, resolve_ref(schema, d["$ref"]), path, paths)
+    if d.get("type") == "object":
+        for k, v in d.get("properties", {}).items():
+            _walk_const(schema, v, f"{path}.{k}", paths)
+        return
+    if "const" in d:
+        paths[path] = d["const"]
+
+
 def _walk_fill(schema, d, path, entries, is_required):
     if "$ref" in d:
         return _walk_fill(schema, resolve_ref(schema, d["$ref"]), path, entries, is_required)

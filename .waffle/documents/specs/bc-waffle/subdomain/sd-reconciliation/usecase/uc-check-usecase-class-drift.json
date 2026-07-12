@@ -1,19 +1,21 @@
 {
   "documentId": "uc-check-usecase-class-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "uc-check-usecase-class-drift"
+      "title": "操作名と実装クラス名の一致を検証する：CheckUsecaseClassDrift"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。"
+      "items": [
+        "usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。"
+      ]
     },
     "name": {
       "blockType": "Name",
@@ -29,7 +31,9 @@
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "usecase specのoperationNameと実装クラス名が乖離したまま放置されると、specが実装から乖離した「違うモデル」を宣言し続けることになり、DDDのモデル駆動設計（モデルはコードに宿る）の前提が崩れる。この検知が無ければ、リネームの片方だけ反映し忘れる、といった典型的なドリフトに誰も気づけない。"
+      "items": [
+        "usecase specのoperationNameと実装クラス名が乖離したまま放置されると、specが実装から乖離した「違うモデル」を宣言し続けることになり、DDDのモデル駆動設計（モデルはコードに宿る）の前提が崩れる。この検知が無ければ、リネームの片方だけ反映し忘れる、といった典型的なドリフトに誰も気づけない。"
+      ]
     },
     "externalActors": {
       "blockType": "ExternalActors",

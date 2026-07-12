@@ -1,21 +1,24 @@
-# sd-document-engine
-
----
+# Documentの生成・読取・描画を担うサブドメイン：sd-document-management
 
 ## 概要
 
-AI に構造を推論させず、engine が決定的に Document を生成(scaffold)・読取(query)・描画(render)する中核の業務領域。waffle の差別化そのもの（Harness 原則と UDD ループ）を担う。
+- AI に構造を推論させず、システムが決定的に Document を生成(scaffold)・読取(query)・描画(render)する中核の業務領域。waffle の差別化そのもの（Harness 原則と UDD ループ）を担う。
 
 ---
 
-## カテゴリー
+## サブドメイン分類
 
-- **カテゴリー**: core
-- **根拠**: 『AI に構造を推論させず engine が構造を持つ／Spec を正本にして陳腐化させない UDD ループ』は waffle の競争優位の源泉であり、既製品で置換できない。ゆえに中核。旧 sd-rendering（補完）はこの subdomain に統合した——描画(render)は宣言的 x-render の閉じた語彙・複数種の Mermaid 図生成まで複雑化しており、単純な CRUD/ETL ではなくなっている。この複雑さは Harness 原則という同じ差別化に資するものであり、理由のない複雑化ではないため『補完→中核』の変化基準に合致する。対象データ（Document）・差別化原理（Harness 原則）が scaffold/query と同一である以上、subdomain を分ける意味も薄れていた。
+### 分類
+
+中核
+
+### 根拠
+
+- 『AI に構造を推論させず システムが構造を持つ／Spec を正本にして陳腐化させない UDD ループ』は waffle の競争優位の源泉であり、既製品で置換できない。ゆえに中核。旧 sd-rendering（補完）はこの subdomain に統合した——描画(render)は宣言的 x-render の閉じた語彙・複数種の Mermaid 図生成まで複雑化しており、単純な CRUD/ETL ではなくなっている。この複雑さは Harness 原則という同じ差別化に資するものであり、理由のない複雑化ではないため『補完→中核』の変化基準に合致する。対象データ（Document）・差別化原理（Harness 原則）が scaffold/query と同一である以上、subdomain を分ける意味も薄れていた。
 
 ---
 
-## 所属ユースケース
+## 業務ユースケース一覧
 
 - uc-scaffold-document
 - uc-query-document
@@ -23,9 +26,9 @@ AI に構造を推論させず、engine が決定的に Document を生成(scaff
 
 ---
 
-## 実装ガイド
+## 詳細設計ガイド
 
-中核ゆえドメインモデルで厚く実装する。schema 走査による骨格生成・意味単位アクセス・x-render 宣言に従った機械描画は、いずれも自前の決定的コードで書き、外部ライブラリやテンプレートエンジンに委ねない。
+- 中核ゆえドメインモデルで厚く実装する。schema 走査による骨格生成・意味単位アクセス・x-render 宣言に従った機械描画は、いずれも自前の決定的コードで書き、外部ライブラリやテンプレートエンジンに委ねない。
 
 ---
 

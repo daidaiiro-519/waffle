@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-spec-integrity",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
@@ -11,12 +11,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "uc-check-spec-integrity"
+      "title": "スペック内部の参照整合性を検証する：CheckSpecIntegrity"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "bounded-context が宣言する members(subdomain/usecase) と、ディスク上に実在する subdomain/usecase ドキュメントの参照整合性を検証する。加えて、各集約内部の値オブジェクトの使用整合性・Document集約とその実インスタンスとの整合性・usecase間の相互参照(subdomainRef/aggregateRef)の整合性も検証する。宣言と実態がずれている箇所（宙に浮いた参照・未宣言の実体・不整合な相互参照）を機械的に検出する。"
+      "items": [
+        "bounded-context が宣言する members(subdomain/usecase) と、ディスク上に実在する subdomain/usecase ドキュメントの参照整合性を検証する。加えて、各集約内部の値オブジェクトの使用整合性・Document集約とその実インスタンスとの整合性・usecase間の相互参照(subdomainRef/aggregateRef)の整合性も検証する。宣言と実態がずれている箇所（宙に浮いた参照・未宣言の実体・不整合な相互参照）を機械的に検出する。"
+      ]
     },
     "name": {
       "blockType": "Name",
@@ -32,7 +34,9 @@
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "spec同士の宣言（bc.json/subdomain.json）と実態（ディスク上の実ファイル）のズレは、人手のレビューだけでは静かに蓄積する。宣言と実態が食い違ったまま放置されると、AIオーケストレーターが実在しないusecaseを参照したり、実在するusecaseがどこからも辿れず孤立したりする。この機械チェックが無ければ、waffleが掲げる「陳腐化しない仕様」という差別化原理が、spec層内部で既に崩れていることに誰も気づけない。"
+      "items": [
+        "spec同士の宣言（bc.json/subdomain.json）と実態（ディスク上の実ファイル）のズレは、人手のレビューだけでは静かに蓄積する。宣言と実態が食い違ったまま放置されると、AIオーケストレーターが実在しないusecaseを参照したり、実在するusecaseがどこからも辿れず孤立したりする。この機械チェックが無ければ、waffleが掲げる「陳腐化しない仕様」という差別化原理が、spec層内部で既に崩れていることに誰も気づけない。"
+      ]
     },
     "preconditions": {
       "blockType": "Preconditions",

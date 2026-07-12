@@ -37,7 +37,7 @@ def render_part(part: dict, data: dict, level: int) -> str:
         out.append(_heading(part["heading"], level))
 
     if kind == "paragraph":
-        out.append(_para(part.get("text", src)))
+        out.append(_para(part.get("text", _label(src, part.get("labelMap")))))
     elif kind == "list":
         out.append(_list(src, part.get("ordered", False)))
     elif kind == "table":
@@ -60,7 +60,7 @@ def render_part(part: dict, data: dict, level: int) -> str:
         out.append("---")
     elif kind == "section":
         for i, item in enumerate(src or [], 1):
-            title = item.get(part.get("titleFrom", "title"), "")
+            title = _label(item.get(part.get("titleFrom", "title"), ""), part.get("labelMap"))
             if part.get("itemLabel"):
                 title = f"{part['itemLabel']} {i}: {title}"
             badge = part.get("badge")
@@ -93,6 +93,9 @@ def _heading(text, level):
 
 def _para(text):
     return str(text)
+
+def _label(value, label_map):
+    return (label_map or {}).get(value, value)
 
 def _list(items, ordered):
     return "\n".join((f"{i}. " if ordered else "- ") + str(x) for i, x in enumerate(items, 1))

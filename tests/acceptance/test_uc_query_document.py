@@ -22,6 +22,28 @@ def test_ブロックを丸ごと取得する():
     assert result.value["prompt"] is not None
 
 
+def test_解釈指針を宣言したブロックはcautionを持つ():
+    """
+    Given x-prompt-interpret（値の解釈指針）を宣言したブロック
+    When operation get_block を実行する
+    Then valueの読み方の指針とは別に、誤読を防ぐcautionが返る
+    """
+    result = _engine().run("get_block", _TARGET, {"blockKey": "acceptanceCriteria"})
+    assert isinstance(result, Ok), result
+    assert result.value.get("caution")
+
+
+def test_解釈指針を宣言していないブロックはcautionを持たない():
+    """
+    Given x-prompt-interpretを宣言していないブロック
+    When operation get_block を実行する
+    Then cautionキー自体が省略される（値が無いフィールドは持たせない）
+    """
+    result = _engine().run("get_block", _TARGET, {"blockKey": "title"})
+    assert isinstance(result, Ok), result
+    assert "caution" not in result.value
+
+
 def test_条件に一致する配列要素だけを絞り込む():
     """
     Given query システム と対象 Document
@@ -97,11 +119,11 @@ def test_scanは生テキストを返す():
     """
     Given query システム と対象 Document
     When operation scan を実行する
-    Then value は生テキストであり、prompt は null である
+    Then value は生テキストであり、prompt にはこの値の読み方の指針が入る
     """
     result = _engine().run("scan", _TARGET)
     assert isinstance(result, Ok), result
-    assert result.value["prompt"] is None
+    assert result.value["prompt"]
     assert "documentId" in result.value["value"]
 
 
@@ -109,30 +131,32 @@ def test_get_metaはメタ情報を返す():
     """
     Given query システム と対象 Document
     When operation get_meta を実行する
-    Then value にはdocumentId等のメタフィールドのみが含まれる
+    Then value にはdocumentId等のメタフィールドのみが含まれ、prompt にはこの値の読み方の指針が入る
     """
     result = _engine().run("get_meta", _TARGET)
     assert isinstance(result, Ok), result
     assert result.value["value"]["documentId"] == "uc-query-document"
+    assert result.value["prompt"]
 
 
 def test_index_scanはblockTypeとpromptをschemaから動的算出する():
     """
     Given query システム と対象 Document
     When operation index_scan を実行する
-    Then 各blockのblockTypeとx-prompt-query由来のpromptが返る
+    Then 各blockのblockTypeとx-prompt-query由来のpromptが返り、トップレベルのpromptには各要素のpromptを参照する案内が入る
     """
     result = _engine().run("index_scan", _TARGET)
     assert isinstance(result, Ok), result
     assert result.value["value"]["mainFlow"]["blockType"] == "MainFlow"
     assert result.value["value"]["mainFlow"]["prompt"]
+    assert result.value["prompt"]
 
 
 def test_index_scan_dirはディレクトリ横断でindexとtagsを集約する():
     """
     Given query システム と対象ディレクトリ
     When operation index_scan_dir を実行する
-    Then ディレクトリ配下の各Documentのindexとtagsがまとめて返る
+    Then ディレクトリ配下の各Documentのindexとtagsがまとめて返り、トップレベルのpromptには各要素のpromptを参照する案内が入る
     """
     result = _engine().run(
         "index_scan_dir", ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase",
@@ -140,6 +164,7 @@ def test_index_scan_dirはディレクトリ横断でindexとtagsを集約する
     assert isinstance(result, Ok), result
     entry = next(v for k, v in result.value["value"].items() if "uc-query-document.json" in k)
     assert "context:waffle" in entry["tags"]
+    assert result.value["prompt"]
     assert entry["blocks"]["mainFlow"]["prompt"]
 
 
@@ -151,7 +176,7 @@ def test_get_fieldはblockの1フィールドを返す():
     """
     result = _engine().run("get_field", _TARGET, {"blockKey": "title", "field": "title"})
     assert isinstance(result, Ok), result
-    assert result.value["value"] == "uc-query-document"
+    assert result.value["value"] == "Documentから必要な意味単位だけを取得する：QueryDocument"
 
 
 def test_get_by_idは単一オブジェクトを返す():
@@ -172,11 +197,129 @@ def test_find_allは全階層を再帰収集する():
     """
     Given query システム と対象 Document
     When operation find_all を fieldName で実行する
-    Then 全階層に出現するfieldNameの値がvalueとして返る
+    Then 全階層に出現するfieldNameの値がvalueとして返り、prompt にはこの値の読み方の指針が入る
     """
     result = _engine().run("find_all", _TARGET, {"fieldName": "category"})
     assert isinstance(result, Ok), result
     assert "異常系" in result.value["value"]
+    assert result.value["prompt"]
+
+
+def test_get_itemsは配列フィールドをそのまま返す():
+    """
+    Given query システム と対象 Document
+    When operation get_items を実行する
+    Then value は対象の配列フィールドそのものである
+    """
+    result = _engine().run("get_items", _TARGET, {"blockKey": "acceptanceScenarios", "arrayField": "scenarios"})
+    assert isinstance(result, Ok), result
+    assert isinstance(result.value["value"], list) and len(result.value["value"]) > 0
+
+
+def test_get_item_fieldは配列要素から指定フィールドだけを取り出す():
+    """
+    Given query システム と対象 Document
+    When operation get_item_field を実行する
+    Then 各要素の指定フィールドの値だけがvalueとして返る
+    """
+    result = _engine().run(
+        "get_item_field", _TARGET,
+        {"blockKey": "acceptanceScenarios", "arrayField": "scenarios", "field": "name"},
+    )
+    assert isinstance(result, Ok), result
+    assert "ブロックを丸ごと取得する" in result.value["value"]
+
+
+def test_get_items_sliceは配列の指定範囲だけを返す():
+    """
+    Given query システム と対象 Document
+    When operation get_items_slice を実行する
+    Then その範囲の要素だけがvalueとして返る
+    """
+    result = _engine().run(
+        "get_items_slice", _TARGET,
+        {"blockKey": "acceptanceScenarios", "arrayField": "scenarios", "start": 0, "end": 2},
+    )
+    assert isinstance(result, Ok), result
+    assert len(result.value["value"]) == 2
+
+
+def test_filter_existsは指定フィールドを持つ要素だけを絞り込む():
+    """
+    Given query システム と対象 Document
+    When operation filter_exists を実行する
+    Then 指定フィールドを持つ要素だけがvalueに含まれる
+    """
+    result = _engine().run(
+        "filter_exists", _TARGET,
+        {"blockKey": "acceptanceScenarios", "arrayField": "scenarios", "field": "operation"},
+    )
+    assert isinstance(result, Ok), result
+    assert all("operation" in item for item in result.value["value"])
+    assert len(result.value["value"]) > 0
+
+
+def _write_custom_skill_with_children(path) -> None:
+    import json
+
+    doc = {
+        "documentId": "test-query-nested",
+        "schemaRef": "SkillSchema/v1",
+        "skillKind": "custom",
+        "content": {
+            "steps": {
+                "blockType": "CustomSteps",
+                "title": "実行手順",
+                "items": [
+                    {
+                        "stepId": "step-1", "title": "手順1",
+                        "children": [
+                            {"stepId": "step-1a", "title": "サブ手順1"},
+                            {"stepId": "step-1b", "title": "サブ手順2"},
+                        ],
+                    },
+                    {"stepId": "step-2", "title": "手順2", "children": []},
+                ],
+            },
+        },
+    }
+    path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+
+
+def test_get_nested_itemsは各要素の入れ子配列を1段展開して集約する(tmp_path):
+    """
+    Given query システム と、配列要素それぞれが入れ子配列を持つ対象 Document
+    When operation get_nested_items を実行する
+    Then 全要素の入れ子配列を1段展開して集約したものがvalueとして返る
+    """
+    import json
+
+    path = tmp_path / "test-query-nested.json"
+    _write_custom_skill_with_children(path)
+
+    result = _engine().run(
+        "get_nested_items", str(path),
+        {"blockKey": "steps", "arrayField": "items", "nestedField": "children"},
+    )
+    assert isinstance(result, Ok), result
+    assert [c["stepId"] for c in result.value["value"]] == ["step-1a", "step-1b"]
+
+
+def test_get_childrenは識別子で特定した要素のchildren配列を返す(tmp_path):
+    """
+    Given query システム と、children配列を持つ要素を含む対象 Document
+    When operation get_children を実行する
+    Then 識別子で特定した要素のchildren配列がvalueとして返る
+    """
+    path = tmp_path / "test-query-nested.json"
+    _write_custom_skill_with_children(path)
+
+    result = _engine().run(
+        "get_children", str(path),
+        {"blockKey": "steps", "arrayField": "items", "idField": "stepId", "idValue": "step-1"},
+    )
+    assert isinstance(result, Ok), result
+    assert [c["stepId"] for c in result.value["value"]] == ["step-1a", "step-1b"]
 
 
 def test_schemaRefを持たないファイルはrawで返す():

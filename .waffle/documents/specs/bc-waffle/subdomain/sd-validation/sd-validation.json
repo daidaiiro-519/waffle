@@ -1,7 +1,7 @@
 {
   "documentId": "sd-validation",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "subdomain",
   "status": "VALIDATED",
   "tags": [
@@ -10,30 +10,36 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "sd-validation"
+      "title": "Documentのschema適合判定を担うサブドメイン：sd-validation"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "Document の content が schema に適合するかを判定する業務領域。適合検証は確立された既製の仕組みで賄える一般的な関心事。"
+      "items": [
+        "Document の content が schema に適合するかを判定する業務領域。適合検証は確立された既製の仕組みで賄える一般的な関心事。"
+      ]
     },
     "category": {
       "blockType": "SubdomainCategory",
-      "title": "カテゴリー",
+      "title": "サブドメイン分類",
       "classification": "generic",
-      "rationale": "JSON Schema 適合検証は業界標準の既製ライブラリで解決済みであり、waffle 固有の差別化を生まない。ゆえに一般。"
+      "rationale": [
+        "JSON Schema 適合検証は業界標準の既製ライブラリで解決済みであり、waffle 固有の差別化を生まない。ゆえに一般。"
+      ]
     },
     "members": {
       "blockType": "SubdomainMembers",
-      "title": "所属ユースケース",
+      "title": "業務ユースケース一覧",
       "items": [
         "uc-validate-document"
       ]
     },
     "implementationGuidance": {
       "blockType": "ImplementationGuidance",
-      "title": "実装ガイド",
-      "text": "一般ゆえ既製ライブラリを薄く包む。適合判定そのものは既製の検証器に委ね、waffle はエラー整形と境界の適応だけを担う。"
+      "title": "詳細設計ガイド",
+      "items": [
+        "一般ゆえ既製ライブラリを薄く包む。適合判定そのものは既製の検証器に委ね、waffle はエラー整形と境界の適応だけを担う。"
+      ]
     },
     "externalSolution": {
       "blockType": "ExternalSolution",

@@ -1,7 +1,7 @@
 {
   "documentId": "uc-validate-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-validation",
@@ -12,12 +12,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "uc-validate-document"
+      "title": "Documentがschemaに適合するか検証する：ValidateDocument"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "Document の content が schema に適合するかを検証し、適合可否と違反詳細を返す（副作用なし）。"
+      "items": [
+        "Document の content が schema に適合するかを検証し、適合可否と違反詳細を返す（副作用なし）。"
+      ]
     },
     "name": {
       "blockType": "Name",
@@ -33,7 +35,9 @@
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "schemaへの適合が機械チェックされなければ、DocumentをCREATEDからVALIDATEDへ進めてよいかの判断が人手のレビュー頼みになり、構造的に壊れた文書がrender・reconcile等の後続処理に渡ってしまう。他の全usecase（render/query/reconcile系）はDocumentがschemaに適合していることを前提に動くため、この検証ゲートが無ければそれらの前提が保証されない。"
+      "items": [
+        "schemaへの適合が機械チェックされなければ、DocumentをCREATEDからVALIDATEDへ進めてよいかの判断が人手のレビュー頼みになり、構造的に壊れた文書がrender・reconcile等の後続処理に渡ってしまう。他の全usecase（render/query/reconcile系）はDocumentがschemaに適合していることを前提に動くため、この検証ゲートが無ければそれらの前提が保証されない。"
+      ]
     },
     "preconditions": {
       "blockType": "Preconditions",

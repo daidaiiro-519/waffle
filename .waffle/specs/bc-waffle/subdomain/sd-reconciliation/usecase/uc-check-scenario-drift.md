@@ -1,29 +1,26 @@
-# uc-check-scenario-drift
-
----
+# スペックとテストシナリオの対応関係を検証する：CheckScenarioDrift
 
 ## 概要
 
-spec の TestScenarios（acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenarios）が宣言するシナリオ名と、対応するテストファイルの test_* 関数名を突き合わせ、未実装のシナリオ・宣言に対応しない孤立テストを機械的に検出する。
-
----
-
-## 名前
-
-CheckScenarioDrift
-
----
-
-## 主アクターと意図
-
-- **主アクター**: Orchestrator（HarnessAgent）
-- **意図**: specのシナリオ宣言とテストコードの対応関係が保たれているかを確認したい
+- spec の TestScenarios（acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenarios）が宣言するシナリオ名と、対応するテストファイルの test_* 関数名を突き合わせ、未実装のシナリオ・宣言に対応しない孤立テストを機械的に検出する。
 
 ---
 
 ## 存在意義
 
-specのシナリオとテストコードの対応が検証されなければ、TDDの規律（spec→シナリオ→テスト→実装の順走）が守られているかを確認する手段が無くなる。specに書いたシナリオが実装されないまま放置される「順走の欠落」と、specに無い振る舞いが実装側の都合でテストとして固定される「逆走・抜け駆け実装」は、どちらも人手のレビューでは見逃されやすい。この2つを機械的に検知することで、仕様が実装を導くという開発順序そのものを保護する。
+- specのシナリオとテストコードの対応が検証されなければ、TDDの規律（spec→シナリオ→テスト→実装の順走）が守られているかを確認する手段が無くなる。specに書いたシナリオが実装されないまま放置される「順走の欠落」と、specに無い振る舞いが実装側の都合でテストとして固定される「逆走・抜け駆け実装」は、どちらも人手のレビューでは見逃されやすい。この2つを機械的に検知することで、仕様が実装を導くという開発順序そのものを保護する。
+
+---
+
+## 主アクターと意図
+
+### 主アクター
+
+Orchestrator（HarnessAgent）
+
+### 意図
+
+specのシナリオ宣言とテストコードの対応関係が保たれているかを確認したい
 
 ---
 

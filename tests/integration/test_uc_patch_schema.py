@@ -82,14 +82,44 @@ def test_add_blockの複数回実行はべき等である():
 
 def test_rename_blockの複数回実行はべき等である():
     """
-    Given 同一のrename_block操作
+    Given 同一のrename_block操作（必須ではないブロック）
     When 2回連続で実行する
     Then 2回目の実行結果は1回目と完全に同一である
     """
-    params = {"schemaRef": _SCHEMA_REF, "oldName": "Title", "newName": "Heading"}
+    _engine().run("add_block", {
+        "schemaRef": _SCHEMA_REF,
+        "blockName": "NoteBlock",
+        "blockDef": {
+            "type": "object",
+            "required": ["blockType", "note"],
+            "properties": {"blockType": {"type": "string", "const": "Note"}, "note": {"type": "string"}},
+        },
+        "contentDefName": "SomeContent",
+        "propName": "note",
+    })
+    params = {"schemaRef": _SCHEMA_REF, "oldName": "Note", "newName": "Memo"}
     _engine().run("rename_block", params)
     after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
     result = _engine().run("rename_block", params)
+    assert isinstance(result, Ok), result
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
+
+
+def test_set_fieldの複数回実行はべき等である():
+    """
+    Given 同一のset_field操作
+    When 2回連続で実行する
+    Then 2回目の実行結果は1回目と完全に同一である
+    """
+    params = {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "TitleBlock",
+        "fieldPath": "properties.title.description",
+        "value": "タイトル文字列",
+    }
+    _engine().run("set_field", params)
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+    result = _engine().run("set_field", params)
     assert isinstance(result, Ok), result
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 

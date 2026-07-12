@@ -83,6 +83,35 @@ def test_paragraph_listが正しく整形される():
     assert "- a\n- b" in md
 
 
+def test_paragraphはlabelMapで値を表示ラベルに変換する():
+    """
+    Given labelMapを宣言したparagraph部品と、labelMapのキーに一致するfrom値
+    When renderする
+    Then 生値ではなくlabelMapが示す表示ラベルが描画される
+    """
+    md = render_parts(
+        [{"as": "paragraph", "from": "classification", "labelMap": {"core": "中核", "generic": "一般"}}],
+        {"classification": "core"}, 3,
+    )
+    assert md == "中核"
+
+
+def test_sectionはtitleFromの値をlabelMapで表示ラベルに変換する():
+    """
+    Given labelMapを宣言したsection部品と、titleFromが指すitemフィールドの値
+    When renderする
+    Then 各itemの見出しに生値ではなくlabelMapが示す表示ラベルが使われる
+    """
+    parts = [{"as": "section", "from": "items", "titleFrom": "kind",
+              "labelMap": {"subdomain": "サブドメイン", "usecase": "業務ユースケース"},
+              "each": [{"as": "list", "from": "members"}]}]
+    data = {"items": [{"kind": "subdomain", "members": ["sd-a"]}, {"kind": "usecase", "members": ["uc-a"]}]}
+    md = render_parts(parts, data, 3)
+    assert "### サブドメイン" in md
+    assert "### 業務ユースケース" in md
+    assert "### subdomain" not in md
+
+
 def test_tableはパイプ文字をエスケープしboolを整形する():
     """
     Given パイプ文字やbool値を含む行データ

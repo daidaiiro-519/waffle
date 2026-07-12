@@ -1,7 +1,7 @@
 {
   "documentId": "uc-lint-docstring",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-docstring-linting",
@@ -11,12 +11,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "uc-lint-docstring"
+      "title": "docstringの規約適合を検証する：LintDocstring"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "ソースコードの docstring が規約どおりの構造か（必須セクションの有無・引数名と実シグネチャの整合）を、kind ごとに確立された既存 lint ツールを呼び出して判定する。自前の照合ロジックは持たない。"
+      "items": [
+        "ソースコードの docstring が規約どおりの構造か（必須セクションの有無・引数名と実シグネチャの整合）を、kind ごとに確立された既存 lint ツールを呼び出して判定する。自前の照合ロジックは持たない。"
+      ]
     },
     "name": {
       "blockType": "Name",
@@ -32,7 +34,9 @@
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "docstringが実装のシグネチャと乖離したまま放置されると、AIがソースコード本体を読まずにdocstringだけを頼りに判断する他usecase（uc-scan-source-code等）の前提が崩れる。自前の照合ロジックを持たず既存lintツールに委ねているのは車輪の再発明を避ける判断だが、規約適合を機械的に確認する入口が無ければ、docstringの陳腐化がAIの誤判断として静かに伝播するリスクを防げない。"
+      "items": [
+        "docstringが実装のシグネチャと乖離したまま放置されると、AIがソースコード本体を読まずにdocstringだけを頼りに判断する他usecase（uc-scan-source-code等）の前提が崩れる。自前の照合ロジックを持たず既存lintツールに委ねているのは車輪の再発明を避ける判断だが、規約適合を機械的に確認する入口が無ければ、docstringの陳腐化がAIの誤判断として静かに伝播するリスクを防げない。"
+      ]
     },
     "externalActors": {
       "blockType": "ExternalActors",

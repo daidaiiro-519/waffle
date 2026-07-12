@@ -1,7 +1,7 @@
 {
   "documentId": "agg-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "tags": [
@@ -10,12 +10,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "agg-document"
+      "title": "Document（document.json）の一貫性とライフサイクルを守る集約：agg-document"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "Document(document.json)の一貫性とライフサイクルを表す集約。Spec家族系（DomainSpecSchema/PresentationSpecSchema）は生成→検証→描画→置換の「処理パイプライン」（lifecycle）を持つ。CodingSchema/SkillSchema系はDRAFT/ACTIVE/DEPRECATEDという分類ラベルを持つが、遷移を強制するcommand・guardは存在しない。"
+      "items": [
+        "Document(document.json)の一貫性とライフサイクルを表す集約。Spec家族系（DomainSpecSchema/PresentationSpecSchema）は生成→検証→描画→置換の「処理パイプライン」（lifecycle）を持つ。CodingSchema/SkillSchema系はDRAFT/ACTIVE/DEPRECATEDという分類ラベルを持つが、遷移を強制するcommand・guardは存在しない。"
+      ]
     },
     "aggregateRoot": {
       "blockType": "AggregateRoot",

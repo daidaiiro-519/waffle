@@ -53,6 +53,14 @@ class PatchSchema:
                 new_schema = schema_patch.rename_block(old_schema, params["oldName"], params["newName"])
             except schema_patch.BlockNotFoundError as e:
                 return _err("BLOCK_NOT_FOUND", str(e))
+        elif operation == "set_field":
+            required = ("defName", "fieldPath")
+            if not all(params.get(k) for k in required) or "value" not in params:
+                return _err("MISSING_PARAM", "set_field には defName, fieldPath, value が必要です")
+            try:
+                new_schema = schema_patch.set_field(old_schema, params["defName"], params["fieldPath"], params["value"])
+            except schema_patch.BlockNotFoundError as e:
+                return _err("BLOCK_NOT_FOUND", str(e))
         else:
             return _err("INVALID_OPERATION", f"未知の operation: {operation}")
 
@@ -67,5 +75,8 @@ class PatchSchema:
         output = schema_patch.dump(new_schema)
         changed = output != schema_patch.dump(old_schema)
         if changed:
-            self._documents.write_text(path, output)
+            try:
+                self._documents.write_text(path, output)
+            except OSError as e:
+                return _err("WRITE_ERROR", f"書き込みに失敗しました: {e}")
         return Ok({"schemaRef": schema_ref, "path": path, "changed": changed})

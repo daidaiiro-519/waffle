@@ -1,29 +1,26 @@
-# uc-validate-document
-
----
+# Documentがschemaに適合するか検証する：ValidateDocument
 
 ## 概要
 
-Document の content が schema に適合するかを検証し、適合可否と違反詳細を返す（副作用なし）。
-
----
-
-## 名前
-
-ValidateDocument
-
----
-
-## 主アクターと意図
-
-- **主アクター**: Orchestrator（HarnessAgent）
-- **意図**: 対象 Document が schema に適合するかを判定し、進められるか確かめる
+- Document の content が schema に適合するかを検証し、適合可否と違反詳細を返す（副作用なし）。
 
 ---
 
 ## 存在意義
 
-schemaへの適合が機械チェックされなければ、DocumentをCREATEDからVALIDATEDへ進めてよいかの判断が人手のレビュー頼みになり、構造的に壊れた文書がrender・reconcile等の後続処理に渡ってしまう。他の全usecase（render/query/reconcile系）はDocumentがschemaに適合していることを前提に動くため、この検証ゲートが無ければそれらの前提が保証されない。
+- schemaへの適合が機械チェックされなければ、DocumentをCREATEDからVALIDATEDへ進めてよいかの判断が人手のレビュー頼みになり、構造的に壊れた文書がrender・reconcile等の後続処理に渡ってしまう。他の全usecase（render/query/reconcile系）はDocumentがschemaに適合していることを前提に動くため、この検証ゲートが無ければそれらの前提が保証されない。
+
+---
+
+## 主アクターと意図
+
+### 主アクター
+
+Orchestrator（HarnessAgent）
+
+### 意図
+
+対象 Document が schema に適合するかを判定し、進められるか確かめる
 
 ---
 

@@ -16,6 +16,7 @@ from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
+from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
@@ -104,7 +105,7 @@ def scaffold_document(
 
 @mcp.tool
 def patch_schema(operation: str, schemaRef: str, params: dict | None = None) -> dict:
-    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block または rename_block。"""
+    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block / rename_block / set_field。"""
     p = dict(params or {})
     p["schemaRef"] = schemaRef
     return _dict(PatchSchema(_docs(), _schemas(), JsonSchemaValidator()).run(operation, p))
@@ -128,6 +129,11 @@ def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict
 def check_usecase_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases") -> dict:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
     return _dict(CheckUsecaseClassDrift(_docs()).run(documentsRoot, srcRoot))
+
+@mcp.tool
+def check_operation_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases") -> dict:
+    """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。"""
+    return _dict(CheckOperationDrift(_docs()).run(documentsRoot, srcRoot))
 
 @mcp.tool
 def scan_source_code(path: str, kind: str) -> dict | list:

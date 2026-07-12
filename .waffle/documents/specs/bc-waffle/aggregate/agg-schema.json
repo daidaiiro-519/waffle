@@ -1,7 +1,7 @@
 {
   "documentId": "agg-schema",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "tags": [
@@ -10,12 +10,16 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "agg-schema"
+      "title": "Schema定義の型と不変条件を守る集約：Schema"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "Document の型定義（Schema）の不変条件を表す集約。Document が機械生成・検証・描画できることを保証する。バージョンが変わった際の既存Documentの追従はAIが個別に判断して直す（機械的な自動移行の機構はこの集約の対象外・過剰実装と判断し撤去済み）。対象は「Document の schemaRef が指しうる型」に限定する: DomainSpecSchema・PresentationSpecSchema・CodingSchema・SkillSchema・KnowledgeSchema・AgentSchema・TemplateSchema。RenderMetaSchema は Document 型定義ではなく派生構造（x-render 部品）を検証する別概念であり、この集約の対象外。"
+      "items": [
+        "Document の型定義（Schema）の不変条件を表す集約。Document が機械生成・検証・描画できることを保証する",
+        "バージョンが変わった際の既存Documentの追従はAIが個別に判断して直す（機械的な自動移行の機構はこの集約の対象外・過剰実装と判断し撤去済み）",
+        "対象は「Document の schemaRef が指しうる型」に限定する: DomainSpecSchema・PresentationSpecSchema・CodingSchema・SkillSchema・KnowledgeSchema・AgentSchema・TemplateSchema。RenderMetaSchema は Document 型定義ではなく派生構造（x-render 部品）を検証する別概念であり、この集約の対象外"
+      ]
     },
     "aggregateRoot": {
       "blockType": "AggregateRoot",
@@ -67,8 +71,8 @@
         },
         {
           "name": "KindProfile",
-          "represents": "kind（specKind/codingKind/skillKind/agentKind/templateKind）1つに対応する、必須 content ブロック集合とその形状。各kindの目的: specKind(bounded-context=同じ言葉が通る境界／subdomain=業務領域の区切り／aggregate=不変条件を持つ実体／usecase=1つの業務操作)、codingKind(tech-stack=技術選択／architecture=技術方式・配置・依存方向／coding-standard=命名・スタイル規約／test-standard=テスト方針)、skillKind(advisor=バックボーンknowledge参照+判断力提供／custom=ユーザー作成のドメイン手順)、agentKind(orchestrator=engine認識を持つ唯一の主体／subagent=その都度Orchestratorが動的に組み立てるゴール指定書)、templateKind(judgment=診断フロー型の判断相談骨格。advisor Skillの回答テンプレートを構造化したもの)。各具体的なフィールド構成はschemaファイル自体を正とし、ここでは重複させない。各ブロックが持つ x-render 属性は、RenderMetaSchema（ネストした値オブジェクトの型）が形を規定する。",
-          "behavior": "不変。kind 名＋必須ブロック集合の組で識別（同じ値なら同じものとして扱う）。Schema の版が変わらない限り不変（新版の発行・移行は現状スコープ外。既存版内でその場変更はしない）。各ブロックが持つ x-render 属性は、RenderMetaSchema（ネストした値オブジェクトの型）が形を規定する。"
+          "represents": "kind（specKind/codingKind/skillKind/agentKind/templateKind）1つに対応する、必須 content ブロック集合とその形状。各kindの目的は各schemaファイルのx-prompt-queryに委ね、ここでは重複させない。",
+          "behavior": "不変。kind 名＋必須ブロック集合の組で識別（同じ値なら同じものとして扱う）。Schema の版が変わらない限り不変。各ブロックが持つ x-render 属性は、RenderMetaSchema が形を規定する。"
         }
       ]
     },

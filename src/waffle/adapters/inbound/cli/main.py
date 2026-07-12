@@ -18,6 +18,7 @@ from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
+from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
@@ -113,7 +114,7 @@ def scaffold(
 
 @app.command("patch-schema")
 def patch_schema(
-    operation: str = typer.Option(..., "--operation", help="add_block または rename_block"),
+    operation: str = typer.Option(..., "--operation", help="add_block / rename_block / set_field"),
     schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref"),
     params: str = typer.Option(None, "--params", help="operation固有パラメータのJSONオブジェクト"),
 ) -> None:
@@ -152,6 +153,14 @@ def check_usecase_class_drift(
 ) -> None:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
     _emit(CheckUsecaseClassDrift(_docs()).run(documents_root, src_root))
+
+@app.command("check-operation-drift")
+def check_operation_drift(
+    documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
+    src_root: str = typer.Option("src/waffle/application/usecases", "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ"),
+) -> None:
+    """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。"""
+    _emit(CheckOperationDrift(_docs()).run(documents_root, src_root))
 
 @app.command("scan-source-code")
 def scan_source_code(

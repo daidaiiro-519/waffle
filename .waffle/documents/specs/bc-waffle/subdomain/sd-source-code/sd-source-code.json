@@ -1,7 +1,7 @@
 {
   "documentId": "sd-source-code",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "subdomain",
   "status": "VALIDATED",
   "tags": [
@@ -10,30 +10,36 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "sd-source-code"
+      "title": "ソースコードのdocstring構造化抽出を担うサブドメイン：sd-source-code"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "ソースコードから、AI に生ファイルを読ませず、docstring を DocstringSchema の kind の構造宣言に従って機械的に抽出したインデックスビューを提供する業務領域。sd-document-management が Document(document.json) に対して適用する Harness 原則（AI に構造を推論させず システムが決定的に処理する）を、対象をソースコードに広げて適用したもの。"
+      "items": [
+        "ソースコードから、AI に生ファイルを読ませず、docstring を DocstringSchema の kind の構造宣言に従って機械的に抽出したインデックスビューを提供する業務領域。sd-document-management が Document(document.json) に対して適用する Harness 原則（AI に構造を推論させず システムが決定的に処理する）を、対象をソースコードに広げて適用したもの。"
+      ]
     },
     "category": {
       "blockType": "SubdomainCategory",
-      "title": "カテゴリー",
+      "title": "サブドメイン分類",
       "classification": "core",
-      "rationale": "docstring を kind ごとの構造宣言（summary/body/args/returns/raises/attributes）に機械的に分解するロジックは既製の静的解析ツールでは代替できない、waffle 独自の差別化。sd-document-management と同じ差別化原理（AI 0 で構造アクセス）をソースコードに適用したもの。"
+      "rationale": [
+        "docstring を kind ごとの構造宣言（summary/body/args/returns/raises/attributes）に機械的に分解するロジックは既製の静的解析ツールでは代替できない、waffle 独自の差別化。sd-document-management と同じ差別化原理（AI 0 で構造アクセス）をソースコードに適用したもの。"
+      ]
     },
     "members": {
       "blockType": "SubdomainMembers",
-      "title": "所属ユースケース",
+      "title": "業務ユースケース一覧",
       "items": [
         "uc-scan-source-code"
       ]
     },
     "implementationGuidance": {
       "blockType": "ImplementationGuidance",
-      "title": "実装ガイド",
-      "text": "中核ゆえドメインモデルで厚く実装する。docstring の kind ごとの構造化抽出は自前の決定的コードで書き、AI に生ソースを読ませない。"
+      "title": "詳細設計ガイド",
+      "items": [
+        "中核ゆえドメインモデルで厚く実装する。docstring の kind ごとの構造化抽出は自前の決定的コードで書き、AI に生ソースを読ませない。"
+      ]
     }
   }
 }

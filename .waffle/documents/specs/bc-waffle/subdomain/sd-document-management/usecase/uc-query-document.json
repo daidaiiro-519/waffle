@@ -1,7 +1,7 @@
 {
   "documentId": "uc-query-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -12,12 +12,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "uc-query-document"
+      "title": "Documentから必要な意味単位だけを取得する：QueryDocument"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "AI がファイルを直接読まずに、Document の必要な意味単位（ブロック・フィールド・条件一致・全階層）だけを取得する。"
+      "items": [
+        "AI がファイルを直接読まずに、Document の必要な意味単位（ブロック・フィールド・条件一致・全階層）だけを取得する。"
+      ]
     },
     "name": {
       "blockType": "Name",
@@ -33,7 +35,9 @@
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "AIがDocument全文をファイルとして直接読むと、無関係なブロックまでコンテキストに含めてトークンを浪費し、document.jsonの内部構造（schemaの実装詳細）に直接依存したコードを書き始めてしまう。意味単位だけを取得する経路が無ければ、AIとdocument.jsonの間で保つべき疎結合（テキストベースの入出力）が崩れる。"
+      "items": [
+        "AIがDocument全文をファイルとして直接読むと、無関係なブロックまでコンテキストに含めてトークンを浪費し、document.jsonの内部構造（schemaの実装詳細）に直接依存したコードを書き始めてしまう。意味単位だけを取得する経路が無ければ、AIとdocument.jsonの間で保つべき疎結合（テキストベースの入出力）が崩れる。"
+      ]
     },
     "preconditions": {
       "blockType": "Preconditions",
@@ -77,7 +81,8 @@
       "title": "事後条件",
       "items": [
         "要求された意味単位が value として返る",
-        "ブロック/配列取得時は value の読み方の指針が prompt に付く",
+        "全operationで、value の読み方の指針が prompt に付く（ブロック/配列取得時はx-prompt-query由来、それ以外は操作の性質に基づく固定文言）",
+        "対象ブロックがx-prompt-interpret（値の解釈指針・誤読しやすい点への注意）を宣言しているとき、promptとは別にcautionが付く（宣言が無いブロックではcautionキー自体が省略される）",
         "index_scan_dirは各Documentのindexに加え、そのDocument自身のtagsも含めて返す"
       ]
     },
@@ -87,12 +92,15 @@
       "items": [
         "When operationと対象パスが与えられ、対象がschemaRefを持つDocumentであるとき、システムは結果を{ prompt, value }形式で返す shall。",
         "When ブロック/配列を取得したとき、promptに対象ブロックの読み方の指針（x-prompt-query由来）を含める shall。",
+        "When get_meta/scan/index_scan/index_scan_dir/find_allを実行したとき、promptにその操作の性質に基づく固定の読み方の指針を含める shall（schemaから動的に導出できない場合もpromptを省略しない）。",
+        "When 対象ブロックがx-prompt-interpretを宣言しているとき、システムはpromptとは別にcautionフィールドへ値の解釈指針を含める shall。",
+        "While 対象ブロックがx-prompt-interpretを宣言していないとき、システムはcautionキー自体を省略する shall（必要なデータだけを返す）。",
         "While フィルタ条件に一致する要素が無いとき、システムは正常系として空配列value: []を返す shall。",
         "If operationが未知のとき、システムはINVALID_OPERATIONエラーを返す shall。",
         "If 対象パスが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
         "If 指定したblockKey/idValueが存在しないとき、システムはNOT_FOUNDエラーを返す shall。",
         "If フィルタの正規表現パターンが不正なとき、システムはINVALID_PATTERNエラーを返す shall。",
-        "If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: \"raw\", content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: null, value: <生テキスト> }を返す）。"
+        "If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: \"raw\", content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: <固定文言>, value: <生テキスト> }を返す）。"
       ]
     },
     "errors": {
@@ -127,21 +135,24 @@
           "category": "正常系",
           "viewpoint": "意味単位取得：ブロック取得で読み方の指針が付く",
           "gherkin": "Scenario: ブロックを丸ごと取得する\n  Given query システム と対象 Document\n  When operation get_block を blockKey interface で実行する\n  Then value は対象ブロックであり、prompt に読み方の指針が付く",
-          "covers": "受け入れ基準: prompt に読み方の指針"
+          "covers": "受け入れ基準: prompt に読み方の指針",
+          "operation": "get_block"
         },
         {
           "name": "条件に一致する配列要素だけを絞り込む",
           "category": "正常系",
           "viewpoint": "意味単位取得：フィルタで条件一致だけを返す",
           "gherkin": "Scenario: 条件に一致する配列要素だけを絞り込む\n  Given query システム と対象 Document\n  When operation filter_items で required=true を指定する\n  Then value には required な要素だけが含まれる",
-          "covers": "受け入れ基準: 意味単位を value で返す"
+          "covers": "受け入れ基準: 意味単位を value で返す",
+          "operation": "filter_items"
         },
         {
           "name": "一致が無くても正常系で空配列を返す",
           "category": "境界値",
           "viewpoint": "空一致：一致ゼロは正常系（エラーにしない）",
           "gherkin": "Scenario: 一致が無くても正常系で空配列を返す\n  When 一致しないフィルタ条件で filter_items を実行する\n  Then value は空配列で、エラーにはならない",
-          "covers": "受け入れ基準: 空一致は空配列"
+          "covers": "受け入れ基準: 空一致は空配列",
+          "operation": "filter_items"
         },
         {
           "name": "未知の operation はエラーを返す",
@@ -155,70 +166,73 @@
           "category": "異常系",
           "viewpoint": "エラー：必須パラメータ欠落は MISSING_PARAM",
           "gherkin": "Scenario: 必須パラメータの欠落はエラーを返す\n  When blockKey を指定せずに get_block を実行する\n  Then MISSING_PARAM エラーが返る",
-          "covers": "エラー: MISSING_PARAM"
+          "covers": "エラー: MISSING_PARAM",
+          "operation": "get_block"
         },
         {
           "name": "存在しないblockKeyはエラーを返す",
           "category": "異常系",
           "viewpoint": "エラー：指定した blockKey が存在しないときは NOT_FOUND",
           "gherkin": "Scenario: 存在しないblockKeyはエラーを返す\n  When 存在しない blockKey を指定して get_block を実行する\n  Then NOT_FOUND エラーが返る",
-          "covers": "エラー: NOT_FOUND"
+          "covers": "エラー: NOT_FOUND",
+          "operation": "get_block"
         },
         {
           "name": "不正な正規表現はエラーを返す",
           "category": "異常系",
           "viewpoint": "エラー：filter_pattern の正規表現が不正なときは INVALID_PATTERN",
           "gherkin": "Scenario: 不正な正規表現はエラーを返す\n  When 不正な正規表現で filter_pattern を実行する\n  Then INVALID_PATTERN エラーが返る",
-          "covers": "エラー: INVALID_PATTERN"
+          "covers": "エラー: INVALID_PATTERN",
+          "operation": "filter_pattern"
         },
         {
           "name": "scanは生テキストを返す",
           "category": "正常系",
           "viewpoint": "ファイル単位：scanはファイルをそのまま読む(prompt=null)",
-          "gherkin": "Scenario: scanは生テキストを返す\n  Given query システム と対象 Document\n  When operation scan を実行する\n  Then value は生テキストであり、prompt は null である",
-          "covers": "operation: scan"
+          "gherkin": "Scenario: scanは生テキストを返す\n  Given query システム と対象 Document\n  When operation scan を実行する\n  Then value は生テキストであり、prompt にはこの値の読み方の指針が入る",
+          "operation": "scan"
         },
         {
           "name": "get_metaはメタ情報を返す",
           "category": "正常系",
           "viewpoint": "ファイル単位：get_metaはdocumentId等のメタフィールドのみを返す",
-          "gherkin": "Scenario: get_metaはメタ情報を返す\n  Given query システム と対象 Document\n  When operation get_meta を実行する\n  Then value にはdocumentId等のメタフィールドのみが含まれる",
-          "covers": "operation: get_meta"
+          "gherkin": "Scenario: get_metaはメタ情報を返す\n  Given query システム と対象 Document\n  When operation get_meta を実行する\n  Then value にはdocumentId等のメタフィールドのみが含まれ、prompt にはこの値の読み方の指針が入る",
+          "operation": "get_meta"
         },
         {
           "name": "index_scanはblockTypeとpromptをschemaから動的算出する",
           "category": "正常系",
           "viewpoint": "ファイル単位：index_scanは_indexを保存せず読み取り時に動的算出する",
-          "gherkin": "Scenario: index_scanはblockTypeとpromptをschemaから動的算出する\n  Given query システム と対象 Document\n  When operation index_scan を実行する\n  Then 各blockのblockTypeとx-prompt-query由来のpromptが返る",
-          "covers": "operation: index_scan"
+          "gherkin": "Scenario: index_scanはblockTypeとpromptをschemaから動的算出する\n  Given query システム と対象 Document\n  When operation index_scan を実行する\n  Then 各blockのblockTypeとx-prompt-query由来のpromptが返り、トップレベルのpromptには各要素のpromptを参照する案内が入る",
+          "operation": "index_scan"
         },
         {
           "name": "index_scan_dirはディレクトリ横断でindexとtagsを集約する",
           "category": "正常系",
           "viewpoint": "ファイル単位：index_scan_dirは複数Documentのindexとtagsを1回で集約する",
-          "gherkin": "Scenario: index_scan_dirはディレクトリ横断でindexとtagsを集約する\n  Given query システム と対象ディレクトリ\n  When operation index_scan_dir を実行する\n  Then ディレクトリ配下の各Documentのindexとtagsがまとめて返る",
-          "covers": "operation: index_scan_dir"
+          "gherkin": "Scenario: index_scan_dirはディレクトリ横断でindexとtagsを集約する\n  Given query システム と対象ディレクトリ\n  When operation index_scan_dir を実行する\n  Then ディレクトリ配下の各Documentのindexとtagsがまとめて返り、トップレベルのpromptには各要素のpromptを参照する案内が入る",
+          "operation": "index_scan_dir"
         },
         {
           "name": "get_fieldはblockの1フィールドを返す",
           "category": "正常系",
           "viewpoint": "ブロック単位：get_fieldは指定フィールドのみを取り出す",
           "gherkin": "Scenario: get_fieldはblockの1フィールドを返す\n  Given query システム と対象 Document\n  When operation get_field を blockKey, field で実行する\n  Then value は指定フィールドの値である",
-          "covers": "operation: get_field"
+          "operation": "get_field"
         },
         {
           "name": "get_by_idは単一オブジェクトを返す",
           "category": "正常系",
           "viewpoint": "配列操作：get_by_idはidが一意である前提でリストでなく単一要素を返す(filter_itemsとの役割分離)",
           "gherkin": "Scenario: get_by_idは単一オブジェクトを返す\n  Given query システム と対象 Document\n  When operation get_by_id を idField, idValue で実行する\n  Then 一致した単一の要素がvalueとして返る（配列ではない）",
-          "covers": "operation: get_by_id"
+          "operation": "get_by_id"
         },
         {
           "name": "find_allは全階層を再帰収集する",
           "category": "正常系",
           "viewpoint": "再帰：find_allはネスト構造の全階層からfieldNameの値を集める",
-          "gherkin": "Scenario: find_allは全階層を再帰収集する\n  Given query システム と対象 Document\n  When operation find_all を fieldName で実行する\n  Then 全階層に出現するfieldNameの値がvalueとして返る",
-          "covers": "operation: find_all"
+          "gherkin": "Scenario: find_allは全階層を再帰収集する\n  Given query システム と対象 Document\n  When operation find_all を fieldName で実行する\n  Then 全階層に出現するfieldNameの値がvalueとして返り、prompt にはこの値の読み方の指針が入る",
+          "operation": "find_all"
         },
         {
           "name": "schemaRefを持たないファイルはrawで返す",
@@ -226,6 +240,64 @@
           "viewpoint": "フォールバック：schemaRefを持たない通常ファイルは{type,content}という別形状で生テキストを返す（scanは対象外）",
           "gherkin": "Scenario: schemaRefを持たないファイルはrawで返す\n  Given schemaRefを持たない対象ファイル\n  When scan以外の任意のoperationを実行する\n  Then 戻り値は{ prompt, value }ではなく{ type: \"raw\", content: <生テキスト> }という別形状で返る",
           "covers": "operation: 全operation共通(raw フォールバック)"
+        },
+        {
+          "name": "get_itemsは配列フィールドをそのまま返す",
+          "category": "正常系",
+          "viewpoint": "取得：配列フィールドをそのまま返す",
+          "operation": "get_items",
+          "gherkin": "Scenario: get_itemsは配列フィールドをそのまま返す\n  Given query システム と対象 Document\n  When operation get_items を実行する\n  Then value は対象の配列フィールドそのものである"
+        },
+        {
+          "name": "get_item_fieldは配列要素から指定フィールドだけを取り出す",
+          "category": "正常系",
+          "viewpoint": "取得：配列の各要素から1フィールドだけを取り出す",
+          "operation": "get_item_field",
+          "gherkin": "Scenario: get_item_fieldは配列要素から指定フィールドだけを取り出す\n  Given query システム と対象 Document\n  When operation get_item_field を実行する\n  Then 各要素の指定フィールドの値だけがvalueとして返る"
+        },
+        {
+          "name": "get_items_sliceは配列の指定範囲だけを返す",
+          "category": "境界値",
+          "viewpoint": "取得：配列の指定範囲だけを切り出す",
+          "operation": "get_items_slice",
+          "gherkin": "Scenario: get_items_sliceは配列の指定範囲だけを返す\n  Given query システム と対象 Document\n  When operation get_items_slice を実行する\n  Then その範囲の要素だけがvalueとして返る"
+        },
+        {
+          "name": "filter_existsは指定フィールドを持つ要素だけを絞り込む",
+          "category": "正常系",
+          "viewpoint": "絞り込み：指定フィールドの有無で絞り込む",
+          "operation": "filter_exists",
+          "gherkin": "Scenario: filter_existsは指定フィールドを持つ要素だけを絞り込む\n  Given query システム と対象 Document\n  When operation filter_exists を実行する\n  Then 指定フィールドを持つ要素だけがvalueに含まれる"
+        },
+        {
+          "name": "get_nested_itemsは各要素の入れ子配列を1段展開して集約する",
+          "category": "正常系",
+          "viewpoint": "取得：入れ子配列の1段展開と集約",
+          "operation": "get_nested_items",
+          "gherkin": "Scenario: get_nested_itemsは各要素の入れ子配列を1段展開して集約する\n  Given query システム と、配列要素それぞれが入れ子配列を持つ対象 Document\n  When operation get_nested_items を実行する\n  Then 全要素の入れ子配列を1段展開して集約したものがvalueとして返る"
+        },
+        {
+          "name": "get_childrenは識別子で特定した要素のchildren配列を返す",
+          "category": "正常系",
+          "viewpoint": "取得：識別子で特定した要素のchildren配列を返す",
+          "operation": "get_children",
+          "gherkin": "Scenario: get_childrenは識別子で特定した要素のchildren配列を返す\n  Given query システム と、children配列を持つ要素を含む対象 Document\n  When operation get_children を実行する\n  Then 識別子で特定した要素のchildren配列がvalueとして返る"
+        },
+        {
+          "name": "解釈指針を宣言したブロックはcautionを持つ",
+          "category": "正常系",
+          "viewpoint": "解釈指針：x-prompt-interpretを宣言したブロックはvalueとは別にcautionを返す",
+          "operation": "get_block",
+          "gherkin": "Scenario: 解釈指針を宣言したブロックはcautionを持つ\n  Given x-prompt-interpret（値の解釈指針）を宣言したブロック\n  When operation get_block を実行する\n  Then valueの読み方の指針とは別に、誤読を防ぐcautionが返る",
+          "covers": "受け入れ基準: x-prompt-interpret宣言時のcaution付与"
+        },
+        {
+          "name": "解釈指針を宣言していないブロックはcautionを持たない",
+          "category": "境界値",
+          "viewpoint": "省略規則：x-prompt-interpretを宣言していないブロックはcautionキー自体を持たない",
+          "operation": "get_block",
+          "gherkin": "Scenario: 解釈指針を宣言していないブロックはcautionを持たない\n  Given x-prompt-interpretを宣言していないブロック\n  When operation get_block を実行する\n  Then cautionキー自体が省略される（値が無いフィールドは持たせない）",
+          "covers": "受け入れ基準: x-prompt-interpret未宣言時のcaution省略"
         }
       ]
     },
@@ -255,6 +327,76 @@
           "viewpoint": "解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる",
           "gherkin": "Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF\n  Given 解決できないschemaRef\n  When 本usecaseを実行する\n  Then INVALID_SCHEMA_REFエラーが返る",
           "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": [
+        {
+          "operation": "scan",
+          "summary": "ファイルの生テキストをそのまま返す"
+        },
+        {
+          "operation": "get_meta",
+          "summary": "documentId等のメタフィールドだけを返す"
+        },
+        {
+          "operation": "index_scan",
+          "summary": "各ブロックのblockTypeとprompt（読み方指針）をschemaから動的算出して返す"
+        },
+        {
+          "operation": "index_scan_dir",
+          "summary": "ディレクトリ配下の各Documentのindexとtagsをまとめて返す"
+        },
+        {
+          "operation": "find_all",
+          "summary": "全階層に出現する指定フィールドの値を再帰収集して返す"
+        },
+        {
+          "operation": "get_block",
+          "summary": "指定したブロックを丸ごと返す"
+        },
+        {
+          "operation": "get_field",
+          "summary": "ブロック内の指定した1フィールドの値を返す"
+        },
+        {
+          "operation": "get_items",
+          "summary": "ブロック内の配列フィールドをそのまま返す"
+        },
+        {
+          "operation": "get_item_field",
+          "summary": "配列内の各要素から指定フィールドの値だけを取り出して返す"
+        },
+        {
+          "operation": "get_items_slice",
+          "summary": "配列の指定範囲（start〜end）だけを切り出して返す"
+        },
+        {
+          "operation": "filter_items",
+          "summary": "配列要素のうち、指定キーが指定値と一致するものだけを絞り込んで返す"
+        },
+        {
+          "operation": "filter_exists",
+          "summary": "配列要素のうち、指定フィールドを持つものだけを絞り込んで返す"
+        },
+        {
+          "operation": "filter_pattern",
+          "summary": "配列要素のうち、指定フィールドが正規表現に一致するものだけを絞り込んで返す"
+        },
+        {
+          "operation": "get_by_id",
+          "summary": "配列内から指定した識別子フィールドの値が一致する単一要素を返す"
+        },
+        {
+          "operation": "get_nested_items",
+          "summary": "配列内の各要素が持つ入れ子配列を1段展開して集約する"
+        },
+        {
+          "operation": "get_children",
+          "summary": "識別子で特定した要素が持つchildren配列を返す"
         }
       ]
     }

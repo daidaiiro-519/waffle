@@ -1,7 +1,7 @@
 {
   "documentId": "bc-waffle",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "bounded-context",
   "status": "VALIDATED",
   "tags": [
@@ -10,12 +10,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "bc-waffle"
+      "title": "Harness原則に基づくドキュメント自動化を行う境界づけられたコンテキスト：bc-waffle"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "waffle の中核機能群が属する文脈。document.json を唯一の正とし、AI が構造を推論せず システムが機械的に読み書き・生成・描画する（Harness 原則）。"
+      "items": [
+        "waffle の中核機能群が属する文脈。document.json を唯一の正とし、AI が構造を推論せず システムが機械的に読み書き・生成・描画する（Harness 原則）。"
+      ]
     },
     "ubiquitousLanguage": {
       "blockType": "UbiquitousLanguage",
@@ -65,15 +67,38 @@
       "items": [
         {
           "kind": "subdomain",
-          "members": "sd-document-management / sd-validation / sd-source-code / sd-docstring-linting / sd-reconciliation / sd-schema-management"
+          "members": [
+            "sd-document-management",
+            "sd-validation",
+            "sd-source-code",
+            "sd-docstring-linting",
+            "sd-reconciliation",
+            "sd-schema-management"
+          ]
         },
         {
           "kind": "aggregate",
-          "members": "agg-document / agg-schema"
+          "members": [
+            "agg-document",
+            "agg-schema"
+          ]
         },
         {
           "kind": "usecase",
-          "members": "uc-scaffold-document / uc-query-document / uc-validate-document / uc-render-document / uc-scan-source-code / uc-lint-docstring / uc-check-spec-integrity / uc-check-scenario-drift / uc-check-schema-version-drift / uc-check-usecase-class-drift / uc-patch-schema"
+          "members": [
+            "uc-scaffold-document",
+            "uc-query-document",
+            "uc-validate-document",
+            "uc-render-document",
+            "uc-scan-source-code",
+            "uc-lint-docstring",
+            "uc-check-spec-integrity",
+            "uc-check-scenario-drift",
+            "uc-check-schema-version-drift",
+            "uc-check-usecase-class-drift",
+            "uc-patch-schema",
+            "uc-check-operation-drift"
+          ]
         }
       ]
     }

@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scaffold-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -12,12 +12,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "uc-scaffold-document"
+      "title": "Documentの骨格生成と値の書き込み：ScaffoldDocument"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
+      "items": [
+        "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
+      ]
     },
     "name": {
       "blockType": "Name",
@@ -33,7 +35,9 @@
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "AIがdocument.jsonの構造（キー名・ネスト・schemaの規約）を毎回自由に組み立てると、schemaが保証すべき構造の一貫性が壊れ、validateに通らない文書が量産される。AIが触れる範囲を「値だけ」に限定する仕組みが無ければ、AIによる構造改変を防ぐ手立てがなく、waffleが狙うAI過剰生成対策（構造保護）が成立しない。"
+      "items": [
+        "AIがdocument.jsonの構造（キー名・ネスト・schemaの規約）を毎回自由に組み立てると、schemaが保証すべき構造の一貫性が壊れ、validateに通らない文書が量産される。AIが触れる範囲を「値だけ」に限定する仕組みが無ければ、AIによる構造改変を防ぐ手立てがなく、waffleが狙うAI過剰生成対策（構造保護）が成立しない。"
+      ]
     },
     "preconditions": {
       "blockType": "Preconditions",

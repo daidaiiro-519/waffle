@@ -176,9 +176,17 @@ class RenderDocument:
                 continue  # 部品は宣言されているが対応データが全て空→見出しごと省略（空セクション防止）
             title = block.get("title", "")
             heading = "#" * level + " " + title
-            parts.append(heading + ("\n\n" + body if body else ""))
-        # トップレベルのセクション間に区切り線を入れて境界を明確にする
-        return "\n\n---\n\n".join(parts) + "\n"
+            parts.append((level, heading + ("\n\n" + body if body else "")))
+        if not parts:
+            return ""
+        # トップレベルのセクション間に区切り線を入れて境界を明確にする。ただし直前が
+        # H1(level=1、文書見出し)の場合は区切り線を入れない——多くのビューアはH1自体に
+        # 下線を描画するため、直後の---が二重線に見えてしまう。
+        out = [parts[0][1]]
+        for i in range(1, len(parts)):
+            sep = "\n\n" if parts[i - 1][0] == 1 else "\n\n---\n\n"
+            out.append(sep + parts[i][1])
+        return "".join(out) + "\n"
 
 def _resolve_path(root: dict, path: str):
     """'doc.content.purpose.text' のようなドット区切りパスで dict を辿り値を返す。

@@ -180,6 +180,13 @@
         "transitionsFrom": {
           "type": "string",
           "description": "flowchart: 遷移宣言（{from, to, label?}[]）を持つ block フィールドのキー（任意・fromと同階層の別フィールド）。"
+        },
+        "labelMap": {
+          "type": "object",
+          "description": "paragraph: from値、section: titleFromが指すitem値を、表示用ラベルへ変換する対応表（キー→表示ラベル）。マップに無い値はそのまま表示する",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "allOf": [

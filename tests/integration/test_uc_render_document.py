@@ -98,6 +98,36 @@ def test_データが空の任意ブロックは見出しごと省略する():
     assert "実行設定" not in result.value["content"]
 
 
+def test_H1見出し直後に区切り線を入れない():
+    """
+    Given x-render-level=1のTitleブロックの直後にx-render-level=2のブロックが続くDocument
+    When render する
+    Then H1見出しと最初のH2見出しの間に区切り線(---)が入らない
+    (H1自体が視覚的な区切りを持つビューアが多く、直後の---が二重線に見えるため)
+    """
+    import json
+    import tempfile
+
+    doc = {
+        "documentId": "smoke-h1-divider",
+        "schemaRef": "AgentSchema/v2",
+        "agentKind": "subagent",
+        "content": {
+            "title": {"blockType": "Title", "title": "smoke-h1-divider"},
+            "goal": {"blockType": "Goal", "title": "目的", "text": "テスト用の目的文。", "openingLine": "対象について判断します。"},
+        },
+    }
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+        json.dump(doc, f)
+        path = f.name
+
+    result = _engine().run(path, deploy=False)
+    assert isinstance(result, Ok), result
+    content = result.value["content"]
+    assert content.startswith("# smoke-h1-divider\n\n## 目的")
+    assert "# smoke-h1-divider\n\n---" not in content
+
+
 def test_x_render_hiddenを宣言したブロックは本文に描画しない():
     """
     Given x-render-hidden:trueを宣言したブロックを含むDocument

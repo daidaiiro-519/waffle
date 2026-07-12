@@ -1,8 +1,11 @@
 """query document — document.json / 通常ファイルへのセマンティック・クエリ。
 
 16 のセマンティック操作で、AI がファイルを直接読まずに必要な意味単位だけを取得する。
-構造アクセスは全て Python が担い、`{ prompt, value }` を返す（prompt=value の読み方の指針＝
-対象 block の x-prompt-query を schema から動的算出）。schemaRef を持たないファイルは raw フォールバック。
+構造アクセスは全て Python が担い、常に `{ prompt, value }` を返す（prompt=value の読み方の
+指針）。ブロック単位の操作は対象 block の x-prompt-query を schema から動的算出し、
+メタ/集約系操作（get_meta/scan/index_scan/index_scan_dir/find_all）は動的に導出できないため
+操作の性質に基づく固定文言を使う（値を返すすべての操作で読み方の指針を省略しない）。
+schemaRef を持たないファイルは raw フォールバック。
 全エラーは Result.Err（details[0]=エラーコード）で構造化し、例外を AI に素通りさせない。
 """
 from __future__ import annotations
@@ -38,6 +41,16 @@ _REQUIRED: dict[str, list[str]] = {
 
 _META_FIELDS = ("documentId", "documentType", "schemaRef", "skillKind", "codingKind", "status", "tags")
 
+# schemaのx-prompt-queryから動的に引けない operation（メタ/集約系）向けの固定prompt。
+# promptは「値が有るときだけ付随する情報」ではなく「取得した意味単位をどう解釈すべきかの指針」を
+# 全operationに共通して渡すためのものであり、動的に導出できない場合も操作の性質に基づく
+# 固定的な説明文を与える（値を持たないから省略してよい、という扱いはしない）。
+_PROMPT_SCAN = "未パースの生テキストです。構造化されたアクセスにはindex_scanまたはget_block等を使ってください。"
+_PROMPT_GET_META = "documentId等のDocument識別用メタ情報です。ドメイン内容の解釈には使いません。"
+_PROMPT_FIND_ALL = "全階層を横断して集約した値の配列です。どのブロック・階層に属していたかという文脈は失われています。文脈が必要な場合はget_block等で個別に取得してください。"
+_PROMPT_INDEX_SCAN = "各ブロックの索引です。各要素のprompt（value[key].prompt）に、そのブロック自体の読み方の指針が入っています。"
+_PROMPT_INDEX_SCAN_DIR = "ディレクトリ配下の各Documentの索引です。各Documentのblocksの各要素にそのブロックの読み方の指針（prompt）が入っています。"
+
 class QueryDocument:
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
@@ -58,7 +71,7 @@ class QueryDocument:
         # Group 1: ファイル/ディレクトリ単位（schema 不要なものを先に処理）
         if operation == "scan":
             try:
-                return Ok({"prompt": None, "value": self._documents.read_text(path)})
+                return Ok({"prompt": _PROMPT_SCAN, "value": self._documents.read_text(path)})
             except FileNotFoundError:
                 return _err("INVALID_PATH", f"ファイルが見つかりません: {path}")
         if operation == "index_scan_dir":
@@ -83,33 +96,34 @@ class QueryDocument:
 
     def _dispatch(self, operation: str, doc: dict, schema: dict, params: dict) -> Result[dict]:
         if operation == "get_meta":
-            return Ok({"prompt": None, "value": {k: doc[k] for k in _META_FIELDS if k in doc}})
+            return Ok({"prompt": _PROMPT_GET_META, "value": {k: doc[k] for k in _META_FIELDS if k in doc}})
         if operation == "index_scan":
-            return Ok({"prompt": None, "value": _index(doc, schema)})
+            return Ok({"prompt": _PROMPT_INDEX_SCAN, "value": _index(doc, schema)})
         if operation == "find_all":
-            return Ok({"prompt": None, "value": _find_all(doc, params["fieldName"])})
+            return Ok({"prompt": _PROMPT_FIND_ALL, "value": _find_all(doc, params["fieldName"])})
 
         # Group 2/3: block が必要
         block = doc.get("content", {}).get(params["blockKey"])
         if not isinstance(block, dict):
             return _err("NOT_FOUND", f"block が見つかりません: {params['blockKey']}")
         prompt = _block_prompt(schema, block)
+        caution = _block_caution(schema, block)
 
         if operation == "get_block":
-            return Ok({"prompt": prompt, "value": block})
+            return Ok(_response(prompt, block, caution))
         if operation == "get_field":
             field = params["field"]
             if field not in block:
                 return _err("NOT_FOUND", f"field が見つかりません: {field}")
-            return Ok({"prompt": prompt, "value": block[field]})
+            return Ok(_response(prompt, block[field], caution))
 
         # Group 3: 配列が必要
         arr = block.get(params["arrayField"])
         if not isinstance(arr, list):
             return _err("NOT_FOUND", f"配列フィールドが見つかりません: {params['arrayField']}")
-        return self._array_op(operation, arr, prompt, params)
+        return self._array_op(operation, arr, prompt, caution, params)
 
-    def _array_op(self, operation: str, arr: list, prompt, params: dict) -> Result[dict]:
+    def _array_op(self, operation: str, arr: list, prompt, caution, params: dict) -> Result[dict]:
         if operation == "get_items":
             value = arr
         elif operation == "get_item_field":
@@ -148,7 +162,7 @@ class QueryDocument:
             value = hit.get("children", [])
         else:  # pragma: no cover — _REQUIRED で網羅済み
             return _err("INVALID_OPERATION", f"未知の operation: {operation}")
-        return Ok({"prompt": prompt, "value": value})
+        return Ok(_response(prompt, value, caution))
 
     def _index_scan_dir(self, directory: str) -> Result[dict]:
         # G7: index_scan_dir はプロジェクトルート配下のディレクトリのみ対象
@@ -168,7 +182,7 @@ class QueryDocument:
                     "tags": doc.get("tags", []),
                     "blocks": _index(doc, self._schemas.load(doc["schemaRef"])),
                 }
-        return Ok({"prompt": None, "value": out})
+        return Ok({"prompt": _PROMPT_INDEX_SCAN_DIR, "value": out})
 
 # --- 純ヘルパ ---
 
@@ -181,6 +195,19 @@ def _eq(a, b) -> bool:
 def _block_prompt(schema: dict, block: dict):
     bdef = schema.get("$defs", {}).get(f"{block.get('blockType')}Block", {})
     return bdef.get("x-prompt-query")
+
+def _block_caution(schema: dict, block: dict):
+    """x-prompt-interpret（値の解釈指針。誤読しやすい点への注意）。宣言されているブロックのみ持つ
+    （x-prompt-queryの「これは何か」という構造説明とは責務が異なるため別フィールドにしている）。"""
+    bdef = schema.get("$defs", {}).get(f"{block.get('blockType')}Block", {})
+    return bdef.get("x-prompt-interpret")
+
+def _response(prompt, value, caution=None) -> dict:
+    """cautionは宣言されているときだけ含める（必要なデータだけを返すという方針）。"""
+    out = {"prompt": prompt, "value": value}
+    if caution:
+        out["caution"] = caution
+    return out
 
 def _index(doc: dict, schema: dict) -> dict:
     """blockType × schema.x-prompt-query から _index を読み取り時に動的算出する（保存はしない）。"""

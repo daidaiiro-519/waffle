@@ -1,29 +1,26 @@
-# uc-render-document
-
----
+# Documentを人間可読な成果物へ描画する：RenderDocument
 
 ## 概要
 
-検証済みの Document を schema の x-render に従って人間可読な成果物（SKILL.md / HTML）に描画し、配置先へ反映する。
-
----
-
-## 名前
-
-RenderDocument
-
----
-
-## 主アクターと意図
-
-- **主アクター**: Orchestrator（HarnessAgent）
-- **意図**: 対象 Document を成果物に描画し、canonical と deploy 先へ反映する
+- 検証済みの Document を schema の x-render に従って人間可読な成果物（SKILL.md / HTML）に描画し、配置先へ反映する。
 
 ---
 
 ## 存在意義
 
-spec/skillはJSON（document.json）として構造化されているが、人間がレビュー・意思決定する場面ではMarkdown等の可読な成果物が要る。この描画経路が無ければ、人間はJSONを直接読むか、Documentの内容を別途手作業でMarkdown化する必要が生じ、正本（document.json）と可読な成果物が容易に乖離する。
+- spec/skillはJSON（document.json）として構造化されているが、人間がレビュー・意思決定する場面ではMarkdown等の可読な成果物が要る。この描画経路が無ければ、人間はJSONを直接読むか、Documentの内容を別途手作業でMarkdown化する必要が生じ、正本（document.json）と可読な成果物が容易に乖離する。
+
+---
+
+## 主アクターと意図
+
+### 主アクター
+
+Orchestrator（HarnessAgent）
+
+### 意図
+
+対象 Document を成果物に描画し、canonical と deploy 先へ反映する
 
 ---
 
@@ -81,6 +78,7 @@ sequenceDiagram
 - When ブロックのx-renderが宣言する部品が全て空データで描画結果が空になったとき、システムはそのブロックの見出しごと省略する shall（タイトルだけが残る空セクションを防ぐ）。
 - When ブロック定義がx-render-hiddenを宣言しているとき、システムはそのブロックを本文に一切描画しない shall（frontmatter等の値供給のみに使う非表示ブロックを表現できる）。
 - When schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき、システムは INVALID_TRANSITION エラーを返す shall（宣言しないschema種別はstatusを問わない）。
+- When レベル1（H1）の見出しブロックの直後に別のブロックが続くとき、システムはその間に区切り線（---）を挿入しない shall（多くのビューアがH1自体に下線を描画するため、直後の---は二重線に見えてしまう）。
 
 ---
 
@@ -361,4 +359,17 @@ Scenario: 未検証ではrenderできない
   Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument
   When renderする
   Then INVALID_TRANSITIONエラーが返り、成果物は書き出されない
+```
+
+### H1見出し直後に区切り線を入れない
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 区切り線抑制：レベル1(H1)の見出しブロック直後は区切り線(---)を入れない（多くのビューアがH1自体に下線を描画するため二重線に見えるのを防ぐ） |
+
+```gherkin
+Scenario: H1見出し直後に区切り線を入れない
+  Given x-render-level=1のTitleブロックの直後にx-render-level=2のブロックが続くDocument
+  When render する
+  Then H1見出しと最初のH2見出しの間に区切り線(---)が入らない
 ```

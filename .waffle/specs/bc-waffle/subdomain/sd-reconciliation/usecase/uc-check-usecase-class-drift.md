@@ -1,29 +1,26 @@
-# uc-check-usecase-class-drift
-
----
+# 操作名と実装クラス名の一致を検証する：CheckUsecaseClassDrift
 
 ## 概要
 
-usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。
-
----
-
-## 名前
-
-CheckUsecaseClassDrift
-
----
-
-## 主アクターと意図
-
-- **主アクター**: Orchestrator（HarnessAgent）
-- **意図**: usecase specの操作名と実装クラス名が一致しているかを確認したい
+- usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。
 
 ---
 
 ## 存在意義
 
-usecase specのoperationNameと実装クラス名が乖離したまま放置されると、specが実装から乖離した「違うモデル」を宣言し続けることになり、DDDのモデル駆動設計（モデルはコードに宿る）の前提が崩れる。この検知が無ければ、リネームの片方だけ反映し忘れる、といった典型的なドリフトに誰も気づけない。
+- usecase specのoperationNameと実装クラス名が乖離したまま放置されると、specが実装から乖離した「違うモデル」を宣言し続けることになり、DDDのモデル駆動設計（モデルはコードに宿る）の前提が崩れる。この検知が無ければ、リネームの片方だけ反映し忘れる、といった典型的なドリフトに誰も気づけない。
+
+---
+
+## 主アクターと意図
+
+### 主アクター
+
+Orchestrator（HarnessAgent）
+
+### 意図
+
+usecase specの操作名と実装クラス名が一致しているかを確認したい
 
 ---
 

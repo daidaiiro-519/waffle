@@ -1,29 +1,26 @@
-# uc-scaffold-document
-
----
+# Documentの骨格生成と値の書き込み：ScaffoldDocument
 
 ## 概要
 
-schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。
-
----
-
-## 名前
-
-ScaffoldDocument
-
----
-
-## 主アクターと意図
-
-- **主アクター**: Orchestrator（HarnessAgent）
-- **意図**: 新しい Document を schema 通りに起こし、値だけを安全に埋める
+- schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。
 
 ---
 
 ## 存在意義
 
-AIがdocument.jsonの構造（キー名・ネスト・schemaの規約）を毎回自由に組み立てると、schemaが保証すべき構造の一貫性が壊れ、validateに通らない文書が量産される。AIが触れる範囲を「値だけ」に限定する仕組みが無ければ、AIによる構造改変を防ぐ手立てがなく、waffleが狙うAI過剰生成対策（構造保護）が成立しない。
+- AIがdocument.jsonの構造（キー名・ネスト・schemaの規約）を毎回自由に組み立てると、schemaが保証すべき構造の一貫性が壊れ、validateに通らない文書が量産される。AIが触れる範囲を「値だけ」に限定する仕組みが無ければ、AIによる構造改変を防ぐ手立てがなく、waffleが狙うAI過剰生成対策（構造保護）が成立しない。
+
+---
+
+## 主アクターと意図
+
+### 主アクター
+
+Orchestrator（HarnessAgent）
+
+### 意図
+
+新しい Document を schema 通りに起こし、値だけを安全に埋める
 
 ---
 

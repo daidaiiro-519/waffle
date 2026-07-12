@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scan-source-code",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-source-code",
@@ -11,12 +11,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "uc-scan-source-code"
+      "title": "ソースコードからdocstringを構造化抽出する：ScanSourceCode"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "AI がソースコード本体を直接読まずに、DocstringSchema の kind に従って docstring を構造化抽出したインデックスビューを取得する。"
+      "items": [
+        "AI がソースコード本体を直接読まずに、DocstringSchema の kind に従って docstring を構造化抽出したインデックスビューを取得する。"
+      ]
     },
     "name": {
       "blockType": "Name",
@@ -32,7 +34,9 @@
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "AIがリポジトリ全体のソースコード本体を毎回直接読むと、無関係な実装詳細までコンテキストに含めてトークンを浪費し、大規模コードベースでは走査自体が非現実的になる。docstringだけを構造化抽出したインデックスが無ければ、AIは「どこに何があるか」の当たりをつける手段を持たず、毎回全文検索的な読み込みに頼ることになる。"
+      "items": [
+        "AIがリポジトリ全体のソースコード本体を毎回直接読むと、無関係な実装詳細までコンテキストに含めてトークンを浪費し、大規模コードベースでは走査自体が非現実的になる。docstringだけを構造化抽出したインデックスが無ければ、AIは「どこに何があるか」の当たりをつける手段を持たず、毎回全文検索的な読み込みに頼ることになる。"
+      ]
     },
     "externalActors": {
       "blockType": "ExternalActors",

@@ -11,8 +11,8 @@ from waffle.application.services.document_loading import load_document
 from waffle.shared.result import Err, Ok, Result
 
 
-def _split(members_str: str) -> list[str]:
-    return [s.strip() for s in members_str.split("/") if s.strip()] if members_str else []
+def _split(members: list[str]) -> list[str]:
+    return [s.strip() for s in members if s.strip()] if members else []
 
 
 class CheckSpecIntegrity:
@@ -30,8 +30,8 @@ class CheckSpecIntegrity:
         aggregate_dir = f"{bc_dir}/aggregate"
 
         members = bc_doc["content"]["members"]["items"]
-        declared_subdomains = set(_split(next((m["members"] for m in members if m["kind"] == "subdomain"), "")))
-        declared_usecases = set(_split(next((m["members"] for m in members if m["kind"] == "usecase"), "")))
+        declared_subdomains = set(_split(next((m["members"] for m in members if m["kind"] == "subdomain"), [])))
+        declared_usecases = set(_split(next((m["members"] for m in members if m["kind"] == "usecase"), [])))
 
         try:
             candidate_dirs = self._documents.list_dirs(subdomain_dir)

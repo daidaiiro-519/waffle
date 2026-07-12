@@ -1,0 +1,176 @@
+{
+  "documentId": "uc-check-operation-drift",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v5",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "operation名と実装のoperation分岐の一致を検証する：CheckOperationDrift"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "usecase specのacceptanceScenariosが宣言するoperation名と、対応する実装が実際に持つoperation分岐の文字列が一致しているかを機械的に検証する。複数の操作をoperation引数で分岐するusecase（QueryDocument等）の操作名が、specの自由記述にしか現れず実装から乖離しても誰も気づけない、という盲点を検出する。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "CheckOperationDrift"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "Orchestrator（HarnessAgent）",
+      "intent": "usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを確認したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "operation名は複数の操作を持つusecaseの公開契約そのものであり、呼び出し側はこの文字列を知らなければ操作を実行できない",
+        "この検知が無ければ、実装でoperationの文字列をリネームしても、spec側の自由記述（Gherkin等）は誰にも壊されずに古いまま残り続け、仕様が実装から静かに乖離する"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root）が与えられている",
+        "usecase実装クラスの配置ルートディレクトリ（src_root）が与えられている"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [],
+      "steps": [
+        {
+          "from": "Orchestrator",
+          "to": "OperationIndex",
+          "message": "documents_root/src_rootを指定してoperationドリフト検査を依頼する",
+          "kind": "command"
+        },
+        {
+          "from": "OperationIndex",
+          "to": "OperationIndex",
+          "message": "documents_root配下のusecase documentのうち、acceptanceScenariosにoperationフィールドを1件以上宣言するものを対象に、宣言済みoperation名の集合を集める",
+          "kind": "self"
+        },
+        {
+          "from": "OperationIndex",
+          "to": "OperationIndex",
+          "message": "対象usecaseのoperationNameから導出した実装ファイルを読み、operation引数の分岐が持つ文字列の集合を集める",
+          "kind": "self"
+        },
+        {
+          "from": "OperationIndex",
+          "to": "Orchestrator",
+          "message": "operations_missing_in_impl・operations_undocumented_in_specの2つのオブジェクト配列を返す",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "返り値は次の2フィールドを持つ: operations_missing_in_impl（specが宣言するが実装のoperation分岐には存在しない操作の組）・operations_undocumented_in_spec（実装のoperation分岐にはあるがspecのどのシナリオにも宣言されていない操作の組）",
+        "acceptanceScenariosにoperationフィールドを1件も宣言していないusecase（単一操作のusecase等）は対象外とする",
+        "operations_missing_in_impl・operations_undocumented_in_specの両方が空配列であれば、宣言と実装のoperationが完全に一致している（正常系）"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When usecase specが宣言するoperation名が実装のoperation分岐に存在しないとき、システムはその組をoperations_missing_in_implに含める shall。",
+        "When 実装のoperation分岐にはあるがusecase specのどのシナリオにも宣言されていない操作があるとき、システムはその組をoperations_undocumented_in_specに含める shall。",
+        "While acceptanceScenariosにoperationフィールドを1件も宣言していないusecaseであるとき、システムはそのusecaseを突き合わせの対象にしない shall。",
+        "While 宣言と実装のoperationが完全に一致しているとき、システムはoperations_missing_in_impl・operations_undocumented_in_spec両方を空配列で返す shall。",
+        "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "INVALID_PATH",
+          "condition": "documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む"
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "宣言と実装のoperationが完全一致するとき差分なしと判定する",
+          "category": "正常系",
+          "viewpoint": "整合：specが宣言するoperation名の集合と実装のoperation分岐の集合が完全一致するとき正常系（空配列）",
+          "gherkin": "Scenario: 宣言と実装のoperationが完全一致するとき差分なしと判定する\n  Given specが宣言するoperation名の集合と、実装のoperation分岐の集合が完全一致するusecase\n  When operationドリフト検査を実行する\n  Then operations_missing_in_impl・operations_undocumented_in_spec両方が空配列で返る",
+          "covers": "受け入れ基準: 全一致で空配列"
+        },
+        {
+          "name": "specが宣言するが実装に無いoperationを検出する",
+          "category": "異常系",
+          "viewpoint": "ドリフト：specが宣言するが実装のoperation分岐には存在しない",
+          "gherkin": "Scenario: specが宣言するが実装に無いoperationを検出する\n  Given specが宣言するが実装のoperation分岐には存在しないoperation名\n  When operationドリフト検査を実行する\n  Then operations_missing_in_implにその組が含まれる",
+          "covers": "受け入れ基準: operations_missing_in_impl"
+        },
+        {
+          "name": "実装にあるがspecに未宣言のoperationを検出する",
+          "category": "異常系",
+          "viewpoint": "ドリフト：実装のoperation分岐にはあるがspecのどのシナリオにも宣言されていない",
+          "gherkin": "Scenario: 実装にあるがspecに未宣言のoperationを検出する\n  Given 実装のoperation分岐にはあるがspecのどのシナリオにも宣言されていないoperation\n  When operationドリフト検査を実行する\n  Then operations_undocumented_in_specにその組が含まれる",
+          "covers": "受け入れ基準: operations_undocumented_in_spec"
+        },
+        {
+          "name": "operationを1件も宣言していないusecaseは対象外",
+          "category": "境界値",
+          "viewpoint": "対象外：単一操作のusecase等、operationフィールドを1件も宣言していないusecaseは突き合わせない",
+          "gherkin": "Scenario: operationを1件も宣言していないusecaseは対象外\n  Given acceptanceScenariosのどのシナリオにもoperationフィールドを宣言していないusecase\n  When operationドリフト検査を実行する\n  Then そのusecaseは突き合わせの対象にならず、差分にも現れない",
+          "covers": "受け入れ基準: operationフィールド無しは対象外"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "存在しないdocuments_rootはINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：走査起点の不在",
+          "gherkin": "Scenario: 存在しないdocuments_rootはINVALID_PATH\n  When 存在しないdocuments_rootでoperationドリフト検査を実行する\n  Then INVALID_PATHエラーが返る",
+          "covers": "操作保証: documents_rootが存在しないときINVALID_PATH"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-reconciliation"
+}

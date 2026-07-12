@@ -1,7 +1,7 @@
 {
   "documentId": "uc-render-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v4",
+  "schemaRef": "DomainSpecSchema/v5",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -12,12 +12,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "uc-render-document"
+      "title": "Documentを人間可読な成果物へ描画する：RenderDocument"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "text": "検証済みの Document を schema の x-render に従って人間可読な成果物（SKILL.md / HTML）に描画し、配置先へ反映する。"
+      "items": [
+        "検証済みの Document を schema の x-render に従って人間可読な成果物（SKILL.md / HTML）に描画し、配置先へ反映する。"
+      ]
     },
     "name": {
       "blockType": "Name",
@@ -33,7 +35,9 @@
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "rationale": "spec/skillはJSON（document.json）として構造化されているが、人間がレビュー・意思決定する場面ではMarkdown等の可読な成果物が要る。この描画経路が無ければ、人間はJSONを直接読むか、Documentの内容を別途手作業でMarkdown化する必要が生じ、正本（document.json）と可読な成果物が容易に乖離する。"
+      "items": [
+        "spec/skillはJSON（document.json）として構造化されているが、人間がレビュー・意思決定する場面ではMarkdown等の可読な成果物が要る。この描画経路が無ければ、人間はJSONを直接読むか、Documentの内容を別途手作業でMarkdown化する必要が生じ、正本（document.json）と可読な成果物が容易に乖離する。"
+      ]
     },
     "preconditions": {
       "blockType": "Preconditions",
@@ -121,7 +125,8 @@
         "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
         "When ブロックのx-renderが宣言する部品が全て空データで描画結果が空になったとき、システムはそのブロックの見出しごと省略する shall（タイトルだけが残る空セクションを防ぐ）。",
         "When ブロック定義がx-render-hiddenを宣言しているとき、システムはそのブロックを本文に一切描画しない shall（frontmatter等の値供給のみに使う非表示ブロックを表現できる）。",
-        "When schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき、システムは INVALID_TRANSITION エラーを返す shall（宣言しないschema種別はstatusを問わない）。"
+        "When schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき、システムは INVALID_TRANSITION エラーを返す shall（宣言しないschema種別はstatusを問わない）。",
+        "When レベル1（H1）の見出しブロックの直後に別のブロックが続くとき、システムはその間に区切り線（---）を挿入しない shall（多くのビューアがH1自体に下線を描画するため、直後の---は二重線に見えてしまう）。"
       ]
     },
     "guaranteeScenarios": {
@@ -177,6 +182,13 @@
           "viewpoint": "状態遷移：schemaがrenderをVALIDATED起点の遷移として宣言する場合、VALIDATED前提が効く",
           "gherkin": "Scenario: 未検証ではrenderできない\n  Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument\n  When renderする\n  Then INVALID_TRANSITIONエラーが返り、成果物は書き出されない",
           "covers": "操作保証: schemaがrenderを状態遷移コマンドとして宣言する場合はVALIDATED以降でなければrenderできない"
+        },
+        {
+          "name": "H1見出し直後に区切り線を入れない",
+          "category": "境界値",
+          "viewpoint": "区切り線抑制：レベル1(H1)の見出しブロック直後は区切り線(---)を入れない（多くのビューアがH1自体に下線を描画するため二重線に見えるのを防ぐ）",
+          "gherkin": "Scenario: H1見出し直後に区切り線を入れない\n  Given x-render-level=1のTitleブロックの直後にx-render-level=2のブロックが続くDocument\n  When render する\n  Then H1見出しと最初のH2見出しの間に区切り線(---)が入らない",
+          "covers": "操作保証: レベル1(H1)見出し直後には区切り線を挿入しない"
         }
       ]
     },

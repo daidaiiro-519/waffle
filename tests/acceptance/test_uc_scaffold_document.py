@@ -73,6 +73,61 @@ def test_構造を変える値は拒否される():
     assert "documentType" in fill_result.value["skipped"]
 
 
+def test_constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる():
+    """
+    Given 作成済みの Document
+    When constフィールドへ、現行schemaが宣言するconst値と完全に一致する値を書き込む
+    Then 書き込みが許可される（schema版が変わりconstの値自体が変化した場合の再同期のみを許す。
+    任意の値への上書きは引き続き拒否される＝構造保護は維持される）
+    """
+    create_result = _engine().run(
+        "create",
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "advisor"}},
+    )
+    assert isinstance(create_result, Ok), create_result
+
+    fill_result = _engine().run(
+        "fill",
+        {"documentPath": create_result.value["path"], "values": {"documentType": "Skill"}},
+    )
+    assert isinstance(fill_result, Ok), fill_result
+    assert "documentType" in fill_result.value["written"]
+
+
+def test_schema版が変わった後に新設された任意ブロックも既存documentへ書き込める():
+    """
+    Given schemaが宣言する任意ブロックのキー自体を持たない、より古いschema版の状態を保つ既存Document
+    （schemaに新規の任意ブロックが追加された後も、作成済みDocumentは追従していない状態を模す）
+    When そのブロック配下の宣言済み値フィールドへfillする
+    Then written に記録され、ファイルに反映される（ブロックのキー自体が無くても、
+    現行schemaが宣言する経路であれば新規に書き込める）
+    """
+    create_result = _engine().run(
+        "create",
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "advisor"}},
+    )
+    assert isinstance(create_result, Ok), create_result
+    path = create_result.value["path"]
+
+    doc = FsDocumentRepository().load(path)
+    del doc["content"]["inputExpectation"]
+    FsDocumentRepository().save(path, doc)
+
+    fill_result = _engine().run(
+        "fill",
+        {"documentPath": path, "values": {"content.inputExpectation.items": [
+            {"aspect": "対象ブランチ", "interpretation": "指定が無ければ現在のブランチ"},
+        ]}},
+    )
+    assert isinstance(fill_result, Ok), fill_result
+    assert "content.inputExpectation.items" in fill_result.value["written"]
+
+    reloaded = FsDocumentRepository().load(path)
+    assert reloaded["content"]["inputExpectation"]["items"] == [
+        {"aspect": "対象ブランチ", "interpretation": "指定が無ければ現在のブランチ"},
+    ]
+
+
 def test_宣言済みの値フィールドに書き込まれる():
     """
     Given 作成済みの Document

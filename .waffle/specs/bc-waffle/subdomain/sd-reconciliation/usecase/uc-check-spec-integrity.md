@@ -1,29 +1,26 @@
-# uc-check-spec-integrity
-
----
+# スペック内部の参照整合性を検証する：CheckSpecIntegrity
 
 ## 概要
 
-bounded-context が宣言する members(subdomain/usecase) と、ディスク上に実在する subdomain/usecase ドキュメントの参照整合性を検証する。加えて、各集約内部の値オブジェクトの使用整合性・Document集約とその実インスタンスとの整合性・usecase間の相互参照(subdomainRef/aggregateRef)の整合性も検証する。宣言と実態がずれている箇所（宙に浮いた参照・未宣言の実体・不整合な相互参照）を機械的に検出する。
-
----
-
-## 名前
-
-CheckSpecIntegrity
-
----
-
-## 主アクターと意図
-
-- **主アクター**: Orchestrator（HarnessAgent）
-- **意図**: spec ツリー内部の参照整合性（宣言と実ファイルの対応）が保たれているかを確認したい
+- bounded-context が宣言する members(subdomain/usecase) と、ディスク上に実在する subdomain/usecase ドキュメントの参照整合性を検証する。加えて、各集約内部の値オブジェクトの使用整合性・Document集約とその実インスタンスとの整合性・usecase間の相互参照(subdomainRef/aggregateRef)の整合性も検証する。宣言と実態がずれている箇所（宙に浮いた参照・未宣言の実体・不整合な相互参照）を機械的に検出する。
 
 ---
 
 ## 存在意義
 
-spec同士の宣言（bc.json/subdomain.json）と実態（ディスク上の実ファイル）のズレは、人手のレビューだけでは静かに蓄積する。宣言と実態が食い違ったまま放置されると、AIオーケストレーターが実在しないusecaseを参照したり、実在するusecaseがどこからも辿れず孤立したりする。この機械チェックが無ければ、waffleが掲げる「陳腐化しない仕様」という差別化原理が、spec層内部で既に崩れていることに誰も気づけない。
+- spec同士の宣言（bc.json/subdomain.json）と実態（ディスク上の実ファイル）のズレは、人手のレビューだけでは静かに蓄積する。宣言と実態が食い違ったまま放置されると、AIオーケストレーターが実在しないusecaseを参照したり、実在するusecaseがどこからも辿れず孤立したりする。この機械チェックが無ければ、waffleが掲げる「陳腐化しない仕様」という差別化原理が、spec層内部で既に崩れていることに誰も気づけない。
+
+---
+
+## 主アクターと意図
+
+### 主アクター
+
+Orchestrator（HarnessAgent）
+
+### 意図
+
+spec ツリー内部の参照整合性（宣言と実ファイルの対応）が保たれているかを確認したい
 
 ---
 
