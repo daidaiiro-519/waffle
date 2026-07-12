@@ -151,14 +151,14 @@ def test_check_aggregate_class_driftは4フィールドの差分結果を返す(
     """
     Given waffle MCPサーバ
     When check_aggregate_class_driftツールを呼ぶ
-    Then MCP出力は4フィールドを持つ（Document集約のEntityクラスはまだ未実装
-    のため、現時点ではmissing_implementation_fileにDocument集約が列挙される）
+    Then MCP出力は4フィールド全て空配列（Schema/Document両集約のEntity化が
+    完了し自己整合済み）
     """
     out = asyncio.run(_call("check_aggregate_class_drift", {}))
-    assert {m["documentId"] for m in out["missing_implementation_file"]} == {"agg-document"}
-    assert out["class_name_mismatch"] == []
-    assert out["attribute_mismatch"] == []
-    assert out["missing_value_object"] == []
+    assert out == {
+        "missing_implementation_file": [], "class_name_mismatch": [],
+        "attribute_mismatch": [], "missing_value_object": [],
+    }
 
 
 def test_check_domain_service_driftは1フィールドの差分結果を返す():

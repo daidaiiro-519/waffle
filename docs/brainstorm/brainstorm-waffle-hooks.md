@@ -1101,5 +1101,47 @@ Go候補5・4・2・6を`.waffle/hooks/`配下に実装し、`.claude/hooks/`へ
 （`check-scenario-drift`が複数testPathを受け取れるようにする等）の改修が
 必要だが、今回のスコープ外として先送りした。
 
-全298テスト・7種のdriftチェック通過に影響なし。候補8（Stop hookでの一括
-drift確認）・Document集約のEntity実装は引き続き未着手。
+全298テスト・7種のdriftチェック通過に影響なし。
+
+---
+
+## 候補8: 保留を決定（2026-07-13）
+
+「Stop hookでの一括drift確認」を実際に検討した結果、**保留**とした。
+
+**Stop hookの発火タイミングを確認**: セッション終了時ではなく、**毎ターン終了後**
+に発火する（`/goal`スラッシュコマンド自体がStop hookのラッパーとして実装されて
+いることが実例証拠）。長いセッションなら数十回発火しうる。
+
+**オーバーヘッドを実測**: 単発呼び出し系5チェック（spec-integrity/
+schema-version-drift/usecase-class-drift/aggregate-class-drift/
+domain-service-drift/operation-drift）で0.86秒、`check-scenario-drift`
+（全usecase×testファイルのペア呼び出し、1specにつき1testしか比較できない
+制約のため件数分呼ぶ必要がある）で3.5秒、合計**約4.4秒**。毎ターンこれが
+発生すると、長いセッションで大きな遅延が積み重なる。
+
+**保留の判断理由**: 既に`check-drift-on-write.py`（PostToolUse）が、usecase・
+Entity・業務サービス・testファイルへの書き込みの都度リアルタイムでdriftを
+検知している。候補8が追加で拾える価値は「PostToolUseのパスパターンに
+引っかからない書き込み経路（Claude Code外での手動編集等）」という限定的な
+ケースに留まり、そのわずかな追加価値に対して実装コスト（dirtyフラグ方式等の
+設計が必要）と実行コスト（毎ターン最大4.4秒）が見合わない。
+`architecture-evidence-based-scope`原則（実証された欠落・実例に基づいて
+機能追加する）に照らし、今は見送る。
+
+Document集約のEntity実装は引き続き未着手。
+
+---
+
+## Document集約のEntity実装完了（2026-07-13）
+
+Schema集約と同じ方針（薄いEntity、新規specは不要——`agg-document.json`が既に
+仕様）でTDD実装した。`domain/entities/document.py`に`DocumentId`/
+`DocumentType`/`DiscriminatorValue`/`SchemaRef`/`Status`の5 ValueObjectと、
+17属性を持つ`Document`Entityを追加。`check-aggregate-class-drift`で実データ
+確認済み。
+
+これにより**全7種のdriftチェックが完全にクリーン**になった
+（`missing_implementation_file`含め、既知の未実装項目が0件）。今回のセッション
+（Hooksブレスト→集約Entity化→DomainServices移行→Hooks実装→Document集約
+Entity化）で扱った論点は全て決着した。

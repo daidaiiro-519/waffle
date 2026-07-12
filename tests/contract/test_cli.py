@@ -154,18 +154,16 @@ def test_check_aggregate_class_driftは4フィールドの差分結果を返す(
     """
     Given waffle CLI
     When check-aggregate-class-drift を実行する
-    Then 終了コードは0で、出力JSONは4フィールドを持つ（集約Entityクラスは
-    Document集約のみまだ未実装のため、現時点ではmissing_implementation_file
-    にDocument集約が列挙される。Entity化のパイロットが進むごとにこの期待値を
-    更新する）
+    Then 終了コードは0で、出力JSONは4フィールド全て空配列（Schema/Document
+    両集約のEntity化が完了し自己整合済み）
     """
     result = _runner.invoke(app, ["check-aggregate-class-drift"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert {m["documentId"] for m in data["missing_implementation_file"]} == {"agg-document"}
-    assert data["class_name_mismatch"] == []
-    assert data["attribute_mismatch"] == []
-    assert data["missing_value_object"] == []
+    assert data == {
+        "missing_implementation_file": [], "class_name_mismatch": [],
+        "attribute_mismatch": [], "missing_value_object": [],
+    }
 
 
 def test_check_domain_service_driftは1フィールドの差分結果を返す():
