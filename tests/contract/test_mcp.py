@@ -147,17 +147,17 @@ def test_check_usecase_class_driftは2フィールドの差分結果を返す():
     assert out == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
-def test_check_aggregate_class_driftは4フィールドの差分結果を返す():
+def test_check_aggregate_class_driftは5フィールドの差分結果を返す():
     """
     Given waffle MCPサーバ
     When check_aggregate_class_driftツールを呼ぶ
-    Then MCP出力は4フィールド全て空配列（Schema/Document両集約のEntity化が
+    Then MCP出力は5フィールド全て空配列（Schema/Document両集約のEntity化が
     完了し自己整合済み）
     """
     out = asyncio.run(_call("check_aggregate_class_drift", {}))
     assert out == {
         "missing_implementation_file": [], "class_name_mismatch": [],
-        "attribute_mismatch": [], "missing_value_object": [],
+        "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
     }
 
 

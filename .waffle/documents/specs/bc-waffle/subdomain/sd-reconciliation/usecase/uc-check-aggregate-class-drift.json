@@ -89,13 +89,14 @@
       "blockType": "Postconditions",
       "title": "事後条件",
       "items": [
-        "返り値は次の4フィールドを持つ: missing_implementation_file（集約ルート名から導出したファイルパスが実在しないaggregateの組）・class_name_mismatch（実装ファイルは実在するが、集約ルート名と一致するクラス定義が含まれていないaggregateの組）・attribute_mismatch（クラスは実在するが、aggregate specのEntitiesが宣言する属性集合と、実装クラスが実際に持つフィールド集合が一致しないaggregateの組）・missing_value_object（aggregate specのValueObjectsが宣言する値オブジェクトのクラスが、同じ実装ファイル内に見つからない組）",
+        "返り値は次の5フィールドを持つ: missing_implementation_file（集約ルート名から導出したファイルパスが実在しないaggregateの組）・class_name_mismatch（実装ファイルは実在するが、集約ルート名と一致するクラス定義が含まれていないaggregateの組）・attribute_mismatch（クラスは実在するが、aggregate specのEntitiesが宣言する属性集合と、実装クラスが実際に持つフィールド集合が一致しないaggregateの組）・missing_value_object（aggregate specのValueObjectsが宣言する値オブジェクトのクラスが、同じ実装ファイル内に見つからない組）・value_object_attribute_mismatch（値オブジェクトのクラスは実在するが、ValueObjects宣言のattributesと実装クラスが実際に持つフィールド集合が一致しない組）",
         "ファイルパスの導出は、集約ルート名をsnake_caseに変換し、src_root配下に{name}.pyとして配置されている前提で行う",
         "クラス名・フィールド名の抽出は構文解析のみで行い、実行や意味理解はしない（宣言された名前と、実装ファイル内に存在するクラス定義名・フィールド宣言名の機械的な突き合わせのみ）",
         "属性名の対応は、Entities宣言のcamelCase属性名(例: kindProfiles)をsnake_case(例: kind_profiles)に変換した上で、実装クラスのフィールド名集合と完全一致するかで判定する",
-        "値オブジェクトの対応は、ValueObjectsが宣言する名前(例: SchemaId)が、集約ルートと同じ実装ファイル内のクラス定義名として存在するかで判定する（フィールドまでは検証しない、クラスの実在のみ）",
+        "値オブジェクトの対応は、ValueObjectsが宣言する名前(例: SchemaId)が、集約ルートと同じ実装ファイル内のクラス定義名として存在するかで判定する",
+        "値オブジェクトの属性対応は、ValueObjects宣言のitemがattributesを持つ場合のみ行う（attributesはDomainSpecSchemaで任意項目のため）。宣言されたattributesのcamelCase属性名をsnake_caseに変換した上で、その値オブジェクトの実装クラスが実際に持つフィールド集合と完全一致するかで判定する。attributesを宣言していない値オブジェクトは、クラスの実在確認（missing_value_object）のみで属性対応は対象外とする",
         "aggregate specがEntitiesの属性を1件も宣言していない場合は、attribute_mismatchの対象外とする（宣言が無い以上、比較しようがないため）",
-        "missing_implementation_file・class_name_mismatch・attribute_mismatch・missing_value_objectの全てが空配列であれば、全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクトが一致している（正常系）"
+        "missing_implementation_file・class_name_mismatch・attribute_mismatch・missing_value_object・value_object_attribute_mismatchの全てが空配列であれば、全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクト・値オブジェクトの属性集合が一致している（正常系）"
       ]
     },
     "acceptanceCriteria": {
@@ -106,7 +107,9 @@
         "When 実装ファイルは実在するが、集約ルート名と一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。",
         "When クラス名は一致するが、Entitiesが宣言する属性集合(snake_case変換後)と実装クラスのフィールド集合が一致しないとき、システムはその組をattribute_mismatchに含める shall。",
         "When ValueObjectsが宣言する値オブジェクト名に対応するクラス定義が、同じ実装ファイル内に見つからないとき、システムはその組をmissing_value_objectに含める shall。",
-        "While 全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクトが一致しているとき、システムは4フィールド全てを空配列で返す shall。",
+        "When 値オブジェクトのクラス定義は見つかるが、ValueObjects宣言のattributes(宣言されている場合、snake_case変換後)と実装クラスのフィールド集合が一致しないとき、システムはその組をvalue_object_attribute_mismatchに含める shall。",
+        "While 値オブジェクトのValueObjects宣言がattributesを持たないとき、システムはその値オブジェクトをvalue_object_attribute_mismatchの対象外とする shall。",
+        "While 全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクト・値オブジェクトの属性集合が一致しているとき、システムは5フィールド全てを空配列で返す shall。",
         "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
         "If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。",
         "While languageが指定されないとき、システムはpythonとして扱う shall。"

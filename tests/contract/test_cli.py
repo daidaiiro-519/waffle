@@ -150,11 +150,11 @@ def test_check_usecase_class_driftは2フィールドの差分結果を返す():
     assert data == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
-def test_check_aggregate_class_driftは4フィールドの差分結果を返す():
+def test_check_aggregate_class_driftは5フィールドの差分結果を返す():
     """
     Given waffle CLI
     When check-aggregate-class-drift を実行する
-    Then 終了コードは0で、出力JSONは4フィールド全て空配列（Schema/Document
+    Then 終了コードは0で、出力JSONは5フィールド全て空配列（Schema/Document
     両集約のEntity化が完了し自己整合済み）
     """
     result = _runner.invoke(app, ["check-aggregate-class-drift"])
@@ -162,7 +162,7 @@ def test_check_aggregate_class_driftは4フィールドの差分結果を返す(
     data = json.loads(result.output)
     assert data == {
         "missing_implementation_file": [], "class_name_mismatch": [],
-        "attribute_mismatch": [], "missing_value_object": [],
+        "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
     }
 
 

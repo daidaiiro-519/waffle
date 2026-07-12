@@ -52,11 +52,19 @@ Document
 |---|---|
 | 一意な識別子 | 不変。kebab-case。value が等しければ等価。 |
 
+| 属性 | 型 |
+|---|---|
+| value | string |
+
 ### DocumentType
 
 | 表す値 | 振る舞い |
 |---|---|
 | Document が属するschema家族の種別（例: DomainSpec/PresentationSpec/Coding/Skill/Knowledge/Agent/Template） | 独立した業務情報ではなく、schemaRefが指すschema自身が宣言する固定値（schemaRefと1対1）。値が等しければ等価。 |
+
+| 属性 | 型 |
+|---|---|
+| value | string |
 
 ### DiscriminatorValue
 
@@ -64,17 +72,30 @@ Document
 |---|---|
 | documentTypeに応じて名前が変わる分岐値（specKind/codingKind/skillKind/agentKind/templateKindのいずれか1つのみ出現する）。schemaのKindProfileが定義するenumの1つ。KnowledgeSchemaのように形が単一のdocumentTypeでは出現しない。 | documentType家族ごとに排他的（1つのDocumentにつき同時に複数出現しない）。値が等しければ等価。 |
 
+| 属性 | 型 |
+|---|---|
+| value | string |
+
 ### SchemaRef
 
 | 表す値 | 振る舞い |
 |---|---|
 | 適合する Schema への参照 | name と version の組。両方が等しければ等価。 |
 
+| 属性 | 型 |
+|---|---|
+| name | string |
+| version | string |
+
 ### Status
 
 | 表す値 | 振る舞い |
 |---|---|
 | ライフサイクル状態 | Spec家族系（DomainSpecSchema/PresentationSpecSchema）: enum CREATED/VALIDATED/RENDERED/SUPERSEDED（lifecycle・遷移はguardで守る）。CodingSchema/SkillSchema/KnowledgeSchema/AgentSchema/TemplateSchema 系: enum DRAFT/ACTIVE/DEPRECATED（分類ラベル・遷移を強制するcommand・guardは無い）。documentType ごとにどちらか一方のみを持つ。値が等しければ等価。 |
+
+| 属性 | 型 |
+|---|---|
+| value | string |
 
 ---
 

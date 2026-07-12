@@ -1081,6 +1081,20 @@
                   "header": "振る舞い"
                 }
               ]
+            },
+            {
+              "as": "table",
+              "from": "attributes",
+              "columns": [
+                {
+                  "field": "name",
+                  "header": "属性"
+                },
+                {
+                  "field": "type",
+                  "header": "型"
+                }
+              ]
             }
           ]
         }
@@ -1116,6 +1130,27 @@
               "behavior": {
                 "type": "string",
                 "x-prompt-write": "振る舞い・制約・等価判定。例: 不変。加算は同一通貨のみ。負値不可。"
+              },
+              "attributes": {
+                "type": "array",
+                "x-prompt-write": "属性を列挙（任意。宣言するとcheck-aggregate-class-driftが実装クラスのフィールドとの一致を検証する）。型は値オブジェクト名/プリミティブ型で。",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "type"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "x-prompt-write": "属性名。例: amount"
+                    },
+                    "type": {
+                      "type": "string",
+                      "x-prompt-write": "型。例: string / number / SchemaId[]"
+                    }
+                  }
+                }
               }
             }
           }

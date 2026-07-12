@@ -36,6 +36,16 @@ def _declared_value_objects(doc: dict) -> list[str]:
     return [v["name"] for v in doc.get("content", {}).get("valueObjects", {}).get("items", [])]
 
 
+def _declared_value_object_attributes(doc: dict, vo_name: str) -> list[str] | None:
+    """値オブジェクトitemがattributesを宣言していればsnake_case変換したリストを返す。
+    未宣言（旧形式のdocument）ならNone（属性レベルの突き合わせをスキップする合図）。"""
+    items = doc.get("content", {}).get("valueObjects", {}).get("items", [])
+    vo = next((v for v in items if v.get("name") == vo_name), None)
+    if vo is None or "attributes" not in vo:
+        return None
+    return [to_snake_case(a["name"]) for a in vo["attributes"]]
+
+
 class CheckAggregateClassDrift:
     def __init__(self, documents: DocumentRepository, extractor: ClassDeclarationExtractor) -> None:
         self._documents = documents
@@ -61,6 +71,7 @@ class CheckAggregateClassDrift:
         class_name_mismatch: list[dict] = []
         attribute_mismatch: list[dict] = []
         missing_value_object: list[dict] = []
+        value_object_attribute_mismatch: list[dict] = []
 
         for doc_path in doc_paths:
             doc = self._documents.load(doc_path)
@@ -85,6 +96,16 @@ class CheckAggregateClassDrift:
                         "documentId": doc["documentId"], "aggregateRootName": root_name,
                         "valueObjectName": vo_name, "expectedPath": expected_path,
                     })
+                    continue
+                declared_vo_attributes = _declared_value_object_attributes(doc, vo_name)
+                if declared_vo_attributes:
+                    found_vo_fields = self._extractor.field_names(source, language, vo_name)
+                    if set(declared_vo_attributes) != set(found_vo_fields):
+                        value_object_attribute_mismatch.append({
+                            "documentId": doc["documentId"], "aggregateRootName": root_name,
+                            "valueObjectName": vo_name, "expectedPath": expected_path,
+                            "declaredAttributes": declared_vo_attributes, "foundFields": found_vo_fields,
+                        })
             if root_name not in found_classes:
                 class_name_mismatch.append({
                     "documentId": doc["documentId"], "aggregateRootName": root_name,
@@ -105,4 +126,5 @@ class CheckAggregateClassDrift:
             "class_name_mismatch": class_name_mismatch,
             "attribute_mismatch": attribute_mismatch,
             "missing_value_object": missing_value_object,
+            "value_object_attribute_mismatch": value_object_attribute_mismatch,
         })
