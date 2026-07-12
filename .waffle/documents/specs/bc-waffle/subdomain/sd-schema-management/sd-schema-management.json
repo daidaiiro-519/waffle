@@ -46,48 +46,6 @@
       "blockType": "ExternalSolution",
       "title": "外部解決策",
       "text": ""
-    },
-    "domainServices": {
-      "blockType": "DomainServices",
-      "title": "ドメインサービス",
-      "items": [
-        {
-          "name": "後方互換チェック",
-          "responsibility": "変更前後のschema(dict)の差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。"
-        },
-        {
-          "name": "契約整形",
-          "responsibility": "schemaファイルの物理的な整形をagg-schemaが定める契約（json.dumps(indent=2, ensure_ascii=False)+改行）に一意に揃える。Schema集約の不変条件を実際に適用する。"
-        }
-      ]
-    },
-    "domainServiceScenarios": {
-      "blockType": "DomainServiceScenarios",
-      "title": "業務サービスシナリオ",
-      "background": "",
-      "scenarios": [
-        {
-          "name": "requiredへの追加は後方互換違反として検出される",
-          "category": "異常系",
-          "viewpoint": "後方互換チェック：公開済みkindのContent defのrequired配列に新規エントリを追加する変更を検出する",
-          "gherkin": "Scenario: requiredへの追加は後方互換違反として検出される\n  Given 公開済みのschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出される",
-          "covers": "ドメインサービス: 後方互換チェック"
-        },
-        {
-          "name": "optionalプロパティの追加は後方互換違反にならない",
-          "category": "正常系",
-          "viewpoint": "後方互換チェック：requiredに含まれない新規プロパティの追加は既存instanceを壊さない",
-          "gherkin": "Scenario: optionalプロパティの追加は後方互換違反にならない\n  Given 公開済みのschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出されない",
-          "covers": "ドメインサービス: 後方互換チェック"
-        },
-        {
-          "name": "契約整形はjson.dumpsの出力と完全一致する",
-          "category": "正常系",
-          "viewpoint": "契約整形：schemaファイルの物理整形がagg-schemaの不変条件と一致する",
-          "gherkin": "Scenario: 契約整形はjson.dumpsの出力と完全一致する\n  Given 任意の整形が施されたschema(dict)\n  When 契約整形を適用する\n  Then 出力はjson.dumps(schema, indent=2, ensure_ascii=False)+改行と完全一致する",
-          "covers": "ドメインサービス: 契約整形"
-        }
-      ]
     }
   },
   "tags": []
