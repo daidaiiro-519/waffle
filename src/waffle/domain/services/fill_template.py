@@ -151,6 +151,18 @@ def _placeholder_value(entry: dict) -> str:
     return f"{{{{{text}}}}}"
 
 
+def _placeholder_object(element: dict) -> dict:
+    """_build_elementが作るelementマップ(値がpromptの文字列、またはネストした
+    {"element": {...}}のいずれか)から、プレースホルダーオブジェクトを再帰的に作る。"""
+    out: dict = {}
+    for k, v in element.items():
+        if isinstance(v, dict) and "element" in v:
+            out[k] = [_placeholder_object(v["element"])]
+        else:
+            out[k] = f"{{{{{v}}}}}"
+    return out
+
+
 def overlay_placeholders(skeleton: dict, entries: list) -> dict:
     """skeletonのコピーに、entries(build_fill_template等の出力)が指すpathへ
     x-prompt-write本文を{{...}}プレースホルダーとして上書きする。elementを持つ配列は
@@ -159,7 +171,7 @@ def overlay_placeholders(skeleton: dict, entries: list) -> dict:
     for entry in entries:
         if "element" in entry:
             # 構造化要素を持つ配列: 要素1件分のプレースホルダーオブジェクトを含む配列にする。
-            value = [{k: f"{{{{{v}}}}}" for k, v in entry["element"].items()}]
+            value = [_placeholder_object(entry["element"])]
         elif entry.get("type") == "array":
             # 単純な配列(例: tags): プレースホルダー文字列のまま代入すると、レンダラが
             # 文字列を1文字ずつの配列として反復してしまうため、必ず配列で包む。
@@ -176,6 +188,12 @@ def _set_path(doc: dict, path: str, value) -> None:
     for p in parts[:-1]:
         cur = cur.setdefault(p, {})
     cur[parts[-1]] = value
+
+
+def _is_object_schema(d: dict) -> bool:
+    """objectスキーマかどうかを判定する。type:objectの明示だけでなく、allOf合成
+    （_merge_allofの返り値はtypeキーを持たずpropertiesキーだけを持つ）も対象にする。"""
+    return d.get("type") == "object" or "properties" in d
 
 
 def _walk_fill(schema, d, path, entries, is_required):
@@ -197,11 +215,38 @@ def _walk_fill(schema, d, path, entries, is_required):
         if "$ref" in item:
             item = resolve_ref(schema, item["$ref"])
         item = _merge_allof(schema, item)
-        element = {
-            ik: iv["x-prompt-write"]
-            for ik, iv in item.get("properties", {}).items()
-            if "x-prompt-write" in iv and "const" not in iv
-        }
-        if element:
-            entry["element"] = element
+        # itemがobject型かどうかで判定する（プロパティにx-prompt-writeが1つも無い
+        # object型itemもありうるため、_build_elementの結果が空でも{}を保持する。
+        # そうしないとoverlay_placeholdersが単純配列と誤認し、文字列プレースホルダーを
+        # 1件だけ入れてしまい、element前提のtable/section描画がAttributeErrorになる）。
+        if _is_object_schema(item):
+            entry["element"] = _build_element(schema, item)
     entries.append(entry)
+
+
+def _build_element(schema, item, depth: int = 0, max_depth: int = 2) -> dict:
+    """配列itemのプロパティごとのprompt(x-prompt-write)を集める。プロパティ自身が
+    さらに構造化された配列(例: Entities.items[].attributes)の場合、ネストしたelementとして
+    表現する（{"element": {...}}の形）。ネスト構造そのものは常に保持する（配列は常に
+    {"element": ...}を持つ形でなければならず、途中で平坦なprompt文字列に落としてしまうと、
+    x-renderは常にlistを期待するため描画がAttributeErrorになる）。ただしプロンプト文言を
+    集める再帰の深さはmax_depthで打ち切り、それ以上は空のelementにする（自己参照的な
+    schema、例: AgentSchemaのSubStepのchildren、で無限再帰にならないようにするため）。"""
+    element: dict = {}
+    for ik, iv in item.get("properties", {}).items():
+        if "$ref" in iv:
+            iv = resolve_ref(schema, iv["$ref"])
+        if "const" in iv:
+            continue
+        if iv.get("type") == "array":
+            sub_item = iv.get("items", {})
+            if "$ref" in sub_item:
+                sub_item = resolve_ref(schema, sub_item["$ref"])
+            sub_item = _merge_allof(schema, sub_item)
+            if _is_object_schema(sub_item):
+                nested = _build_element(schema, sub_item, depth + 1, max_depth) if depth < max_depth else {}
+                element[ik] = {"element": nested}
+                continue
+        if "x-prompt-write" in iv:
+            element[ik] = iv["x-prompt-write"]
+    return element
