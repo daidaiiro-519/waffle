@@ -1,0 +1,1 @@
+../../.waffle/hooks/protect-document-json.py

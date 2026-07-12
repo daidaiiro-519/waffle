@@ -1,0 +1,1 @@
+../../.waffle/hooks/check-drift-on-write.py
