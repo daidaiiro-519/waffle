@@ -14,12 +14,14 @@ from waffle.adapters.inbound.mcp.main import mcp
 
 _PATCH_FIXTURE_DIR = Path("src/waffle/domain/model/TestMcpPatchSchemaFixture")
 _PATCH_FIXTURE_PATH = _PATCH_FIXTURE_DIR / "v1.json"
+_BLANK_TEMPLATE_PATH = Path(".waffle/templates/blank/CodingSchema/v2/coding-standard.md")
 
 
 def teardown_function():
     _PATCH_FIXTURE_PATH.unlink(missing_ok=True)
     if _PATCH_FIXTURE_DIR.exists() and not any(_PATCH_FIXTURE_DIR.iterdir()):
         _PATCH_FIXTURE_DIR.rmdir()
+    _BLANK_TEMPLATE_PATH.unlink(missing_ok=True)
 
 
 async def _call(tool: str, args: dict):
@@ -91,6 +93,7 @@ def test_render_blank_templateはプレースホルダーMarkdownを返す():
         "discriminator": {"codingKind": "coding-standard"},
     }))
     assert "{{" in out["content"]
+    assert out["path"] == str(_BLANK_TEMPLATE_PATH)
 
 
 def test_patch_schemaはadd_blockの結果をdictで返す():

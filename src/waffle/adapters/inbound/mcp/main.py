@@ -82,7 +82,7 @@ def render_document(path: str, deploy: bool = True) -> dict:
 @mcp.tool
 def render_blank_template(schemaRef: str, discriminator: dict | None = None) -> dict:
     """schemaRefが宣言する値フィールドをx-prompt-write本文のプレースホルダーとして描画する（uc-render-blank-template）。"""
-    return _dict(RenderBlankTemplate(_schemas()).run(schemaRef, discriminator or {}))
+    return _dict(RenderBlankTemplate(_docs(), _schemas()).run(schemaRef, discriminator or {}))
 
 @mcp.tool
 def validate_document(path: str) -> dict:

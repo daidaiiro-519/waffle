@@ -97,7 +97,7 @@ def render_blank_template(
     if discriminator:
         k, _, v = discriminator.partition("=")
         params = {k: v}
-    _emit(RenderBlankTemplate(_schemas()).run(schema_ref, params))
+    _emit(RenderBlankTemplate(_docs(), _schemas()).run(schema_ref, params))
 
 @app.command()
 def validate(path: str = typer.Option(..., "--path")) -> None:

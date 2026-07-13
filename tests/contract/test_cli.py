@@ -16,6 +16,7 @@ _runner = CliRunner()
 _SCAFFOLD_DEMO_PATH = ".waffle/documents/skills/scaffold-demo.json"
 _PATCH_FIXTURE_DIR = Path("src/waffle/domain/model/TestCliPatchSchemaFixture")
 _PATCH_FIXTURE_PATH = _PATCH_FIXTURE_DIR / "v1.json"
+_BLANK_TEMPLATE_PATH = Path(".waffle/templates/blank/CodingSchema/v2/coding-standard.md")
 
 
 def teardown_function():
@@ -23,6 +24,7 @@ def teardown_function():
     _PATCH_FIXTURE_PATH.unlink(missing_ok=True)
     if _PATCH_FIXTURE_DIR.exists() and not any(_PATCH_FIXTURE_DIR.iterdir()):
         _PATCH_FIXTURE_DIR.rmdir()
+    _BLANK_TEMPLATE_PATH.unlink(missing_ok=True)
 
 
 def test_queryはブロックを取得しvalueをJSONで返す():
@@ -82,6 +84,7 @@ def test_render_blank_templateはプレースホルダーMarkdownを返す():
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert "{{" in data["content"]
+    assert data["path"] == str(_BLANK_TEMPLATE_PATH)
 
 
 def test_validateは適合でstatus判定を返す():

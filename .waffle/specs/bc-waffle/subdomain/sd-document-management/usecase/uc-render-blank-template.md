@@ -41,15 +41,18 @@ sequenceDiagram
     RenderBlankTemplate->>RenderBlankTemplate: skeletonとfillTemplateを機械走査する（scaffold createと同じ走査ロジックを共有）
     RenderBlankTemplate->>RenderBlankTemplate: fillTemplateの各エントリのpromptを{{...}}プレースホルダーとしてskeletonへ上書きする
     RenderBlankTemplate->>RenderBlankTemplate: 合成したcontentを、x-render宣言に従ってMarkdownへ描画する（render-documentと同じ本文描画部品を共有）
-    RenderBlankTemplate-->>Orchestrator: プレースホルダーMarkdown本文
+    RenderBlankTemplate->>RenderBlankTemplate: schemaRef・discriminatorから書き出し先パスを導出し、Markdown本文をファイルへ保存する
+    RenderBlankTemplate-->>Orchestrator: プレースホルダーMarkdown本文と書き出し先パス
 ```
 
 ---
 
 ## 事後条件
 
-- 返り値はcontentフィールドを持つ: 対象schemaのcontent構造を、各値フィールドがx-prompt-write本文を{{...}}として埋め込んだ状態でMarkdown化したもの
-- document.jsonはどこにも作成・保存しない（副作用の無い読み取り専用の描画）
+- 返り値はcontent・pathの2フィールドを持つ: content（対象schemaのcontent構造を各値フィールドがx-prompt-write本文を{{...}}として埋め込んだ状態でMarkdown化したもの）・path（実際に書き出したファイルの相対パス）
+- 書き出し先のパスは、schemaRefとdiscriminatorから機械的に導出する: .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md（discriminatorを持たないschemaは .waffle/templates/blank/{schemaName}/{version}.md）
+- 同じschemaRef・discriminatorに対して再実行すると、書き出し先の既存ファイルを新しい描画結果で上書きする（冪等）
+- document.jsonはどこにも作成・保存しない（書き出すのはcontentのプレースホルダーMarkdownのみ）
 - 省略可能なブロック・フィールドも含め、schemaが宣言する記入対象を全て埋める（実際のdocumentでは値が無ければ省略される任意ブロックも、テンプレートでは記入指示を示すため省略しない）
 - enumを持つフィールドは、プレースホルダー本文に選択肢を併記する
 - 配列でelement（構造化された要素）を持つフィールドは、要素1件分のプレースホルダーオブジェクトを持つ配列として描画する
@@ -62,6 +65,8 @@ sequenceDiagram
 - When フィールドがx-prompt-writeを宣言しているとき、システムはそのフィールドの値を「{{x-prompt-write本文}}」という形式のプレースホルダー文字列に置き換える shall。
 - When フィールドがenumを持つとき、システムはプレースホルダー文字列に選択肢を併記する shall。
 - When 配列フィールドが構造化された要素（オブジェクト）を持つとき、システムは要素1件分のプレースホルダーオブジェクトを含む配列として描画する shall。
+- When 描画が成功したとき、システムはschemaRef・discriminatorから導出したパスへMarkdown本文をファイルとして書き出す shall。
+- When 書き出し先に既にファイルが存在するとき、システムはその内容を新しい描画結果で上書きする shall。
 - If schemaRefが実在しないとき、システムはINVALID_SCHEMA_REFエラーを返す shall。
 - If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。
 - While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。
@@ -80,6 +85,7 @@ sequenceDiagram
 |---|---|
 | `INVALID_SCHEMA_REF` | 指定されたschemaRefが実在しない |
 | `MISSING_DISCRIMINATOR` | schemaのcontentがdiscriminatorで分岐するが、対応するdiscriminator値が指定されていない |
+| `WRITE_ERROR` | 書き出し先パスへのファイル書き込みに失敗する（権限不足等） |
 
 ---
 
@@ -148,6 +154,32 @@ Scenario: 構造化配列要素は1件分のプレースホルダーとして描
   Given 配列フィールドが構造化された要素(オブジェクト)を宣言するschema
   When そのschemaRefでブランクテンプレート描画を実行する
   Then 要素1件分のプレースホルダーオブジェクトを含む配列として描画される
+```
+
+### schemaRefとdiscriminatorから導出したパスへファイルを書き出す
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 状態遷移: 描画結果がファイルとして永続化されるか |
+
+```gherkin
+Scenario: schemaRefとdiscriminatorから導出したパスへファイルを書き出す
+  Given discriminatorを持つschema
+  When そのschemaRefでブランクテンプレート描画を実行する
+  Then .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md にプレースホルダーMarkdownがファイルとして書き出されている
+```
+
+### 既存ファイルを新しい描画結果で上書きする
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | べき等性: 再実行時に既存ファイルが正しく更新されるか |
+
+```gherkin
+Scenario: 既存ファイルを新しい描画結果で上書きする
+  Given 書き出し先に既に別内容のファイルが存在する
+  When 同じschemaRef・discriminatorでブランクテンプレート描画を実行する
+  Then 書き出し先のファイルが新しい描画結果で上書きされている
 ```
 
 ---

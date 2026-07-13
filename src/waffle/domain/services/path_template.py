@@ -15,6 +15,17 @@ def resolve(template: str, **variables) -> str:
     return template.format(**variables)
 
 
+def blank_template_path(schema_ref: str, discriminator: dict) -> str:
+    """schemaRef（例: 'CodingSchema/v2'）とdiscriminator（例: {"codingKind": "coding-standard"}）
+    から、render-blank-templateの書き出し先パスを機械的に導出する。discriminatorを
+    持たないschemaは版までのパスにする。"""
+    name, _, version = schema_ref.partition("/")
+    if discriminator:
+        value = next(iter(discriminator.values()))
+        return resolve(".waffle/templates/blank/{name}/{version}/{value}.md", name=name, version=version, value=value)
+    return resolve(".waffle/templates/blank/{name}/{version}.md", name=name, version=version)
+
+
 def reverse_parse(template: str, concrete_path: str) -> dict | None:
     """具体パスとテンプレートを突き合わせ、{変数名} の実際の値を辞書で返す。一致しなければ None。
 

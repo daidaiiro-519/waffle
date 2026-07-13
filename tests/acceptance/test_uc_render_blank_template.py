@@ -19,8 +19,34 @@ class _FakeSchemaRepository:
         return schema_ref
 
 
-def _engine(schemas: dict[str, dict]) -> RenderBlankTemplate:
-    return RenderBlankTemplate(_FakeSchemaRepository(schemas))
+class _FakeDocumentRepository:
+    def __init__(self) -> None:
+        self.written: dict[str, str] = {}
+
+    def write_text(self, path: str, text: str) -> None:
+        self.written[path] = text
+
+    def load(self, path):
+        raise NotImplementedError
+
+    def save(self, path, document):
+        raise NotImplementedError
+
+    def read_text(self, path):
+        raise NotImplementedError
+
+    def list_json(self, directory):
+        raise NotImplementedError
+
+    def list_dirs(self, directory):
+        raise NotImplementedError
+
+    def list_files(self, root, pattern):
+        raise NotImplementedError
+
+
+def _engine(schemas: dict[str, dict], documents: _FakeDocumentRepository | None = None) -> RenderBlankTemplate:
+    return RenderBlankTemplate(documents or _FakeDocumentRepository(), _FakeSchemaRepository(schemas))
 
 
 def _simple_schema() -> dict:
@@ -172,9 +198,56 @@ def test_document_jsonへの書き込みを一切行わない():
     """
     Given schemaのみを受け取るブランクテンプレート描画
     When 実行する
-    Then documentRepositoryを一切要求しない（副作用の無い読み取り専用の描画）
+    Then document.json相当の書き込み(save)は一切呼ばれない（write_textでのMarkdown書き出しのみ）
     """
-    engine = RenderBlankTemplate(_FakeSchemaRepository({"SimpleSchema/v1": _simple_schema()}))
-    result = engine.run("SimpleSchema/v1")
+    documents = _FakeDocumentRepository()
+    result = _engine({"SimpleSchema/v1": _simple_schema()}, documents).run("SimpleSchema/v1")
     assert isinstance(result, Ok), result
-    assert set(result.value.keys()) == {"content"}
+    assert set(result.value.keys()) == {"content", "path"}
+    assert len(documents.written) == 1
+
+
+def test_schemaRefとdiscriminatorから導出したパスへファイルを書き出す():
+    """
+    Given discriminatorを持つschema
+    When そのschemaRefでブランクテンプレート描画を実行する
+    Then .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md にプレースホルダーMarkdownがファイルとして書き出されている
+    """
+    schema = {
+        "required": ["documentId", "kind", "content"],
+        "properties": {
+            "documentId": {"type": "string"},
+            "kind": {"type": "string", "enum": ["a", "b"]},
+        },
+        "allOf": [
+            {
+                "if": {"properties": {"kind": {"const": "a"}}, "required": ["kind"]},
+                "then": {"properties": {"content": {"$ref": "#/$defs/AContent"}}},
+            },
+        ],
+        "$defs": {"AContent": {"type": "object", "required": [], "properties": {}}},
+    }
+    documents = _FakeDocumentRepository()
+    result = _engine({"KindSchema/v3": schema}, documents).run("KindSchema/v3", {"kind": "a"})
+
+    assert isinstance(result, Ok), result
+    expected_path = ".waffle/templates/blank/KindSchema/v3/a.md"
+    assert result.value["path"] == expected_path
+    assert documents.written[expected_path] == result.value["content"]
+
+
+def test_既存ファイルを新しい描画結果で上書きする():
+    """
+    Given 書き出し先に既に別内容のファイルが存在する
+    When 同じschemaRef・discriminatorでブランクテンプレート描画を実行する
+    Then 書き出し先のファイルが新しい描画結果で上書きされている
+    """
+    documents = _FakeDocumentRepository()
+    path = ".waffle/templates/blank/SimpleSchema/v1.md"
+    documents.written[path] = "古い内容"
+
+    result = _engine({"SimpleSchema/v1": _simple_schema()}, documents).run("SimpleSchema/v1")
+
+    assert isinstance(result, Ok), result
+    assert documents.written[path] == result.value["content"]
+    assert documents.written[path] != "古い内容"
