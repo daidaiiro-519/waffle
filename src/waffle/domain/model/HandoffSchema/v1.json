@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "HandoffSchema/v1",
+  "title": "Handoff Schema v1",
+  "description": "Document集約の一documentType（Handoff）。あるusecase/aggregate specが合意（VALIDATED）された後、実装に入る前に、全advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor/platform-advisor等）へ相談した結果のうち、関係するadvisorが書き込んだ設計・実装観点を記録する。specとは異なり正本（契約）ではなく助言的な記録であり、drift検知・ライフサイクル遷移ガードの対象にしない（statusフィールドを持たない）。独立集約ではなくDocument集約のインスタンスであり、create/fill/validate/render/queryは既存engineがそのまま扱う。kind discriminatorは持たない（形は常に1つ）。",
+  "type": "object",
+  "required": [
+    "documentId",
+    "documentType",
+    "schemaRef",
+    "content"
+  ],
+  "x-source-target": ".waffle/documents/handoff/{documentId}.json",
+  "x-render-target": {
+    "formats": ["md"],
+    "path": ".waffle/handoff/{documentId}.md"
+  },
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "x-prompt-write": "この引き継ぎを一意に識別するIDを kebab-case で付けてください。慣例は handoff-{specRefのdocumentId}。例: handoff-uc-render-blank-template"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "Handoff"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "HandoffSchema/v1"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-prompt-write": "この引き継ぎを分類するタグを namespace:value 形式で付けてください。例: [\"context:waffle\"]"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "_index": {
+      "description": "waffle が x-prompt-query から自動生成する。AI は直接書かない。",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["blockType", "prompt"],
+            "properties": {
+              "blockType": { "type": "string" },
+              "prompt": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "content": {
+      "$ref": "#/$defs/HandoffContent"
+    }
+  },
+  "$defs": {
+    "HandoffContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "specRef",
+        "designViewpoints",
+        "implementationViewpoints"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "$ref": "#/$defs/TitleBlock" },
+        "specRef": { "$ref": "#/$defs/SpecRefBlock" },
+        "designViewpoints": { "$ref": "#/$defs/DesignViewpointsBlock" },
+        "implementationViewpoints": { "$ref": "#/$defs/ImplementationViewpointsBlock" },
+        "constraints": { "$ref": "#/$defs/ConstraintsBlock" }
+      }
+    },
+    "TitleBlock": {
+      "type": "object",
+      "required": ["blockType", "title"],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-prompt-query": "この引き継ぎのタイトルを持ちます。documentId がそのまま使われます。",
+      "x-render": [],
+      "properties": {
+        "blockType": { "type": "string", "const": "Title" },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "documentId をそのまま設定してください。"
+        }
+      }
+    },
+    "SpecRefBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "specRef"],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "このHandoffが引き継ぎ元とするspecのdocumentIdを持ちます。",
+      "x-render": [
+        { "as": "paragraph", "from": "specRef" }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "SpecRef" },
+        "title": { "type": "string", "const": "引き継ぎ元spec" },
+        "specRef": {
+          "type": "string",
+          "x-prompt-write": "引き継ぎ元のusecase/aggregate specのdocumentId。例: uc-render-blank-template"
+        }
+      }
+    },
+    "DesignViewpointsBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items"],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "実装に入る前にadvisorとの相談で得られた設計観点（レイヤー配置・既存パターンとの整合・DDD境界判断等）を持ちます。各観点にはどのadvisor由来かをタグ付けします。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            { "field": "advisor", "header": "advisor" },
+            { "field": "viewpoint", "header": "観点" },
+            { "field": "consideration", "header": "考慮事項" }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "DesignViewpoints" },
+        "title": { "type": "string", "const": "設計観点" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "advisorとの相談で得られた設計観点を列挙。無ければ空。",
+          "items": {
+            "type": "object",
+            "required": ["advisor", "viewpoint", "consideration"],
+            "properties": {
+              "advisor": {
+                "type": "string",
+                "x-prompt-write": "観点の由来advisor名。例: ddd-advisor, tech-lead-advisor, ux-advisor, qa-advisor, platform-advisor"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点の見出し。例: レイヤー境界の置き場所"
+              },
+              "consideration": {
+                "type": "string",
+                "x-prompt-write": "考慮事項の内容を1〜3文で。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ImplementationViewpointsBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items"],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "実装に入る前にadvisorとの相談で得られた実装観点（テスト戦略・既存コードパターンとの整合等）を持ちます。各観点にはどのadvisor由来かをタグ付けします。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            { "field": "advisor", "header": "advisor" },
+            { "field": "viewpoint", "header": "観点" },
+            { "field": "consideration", "header": "考慮事項" }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "ImplementationViewpoints" },
+        "title": { "type": "string", "const": "実装観点" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "advisorとの相談で得られた実装観点を列挙。無ければ空。",
+          "items": {
+            "type": "object",
+            "required": ["advisor", "viewpoint", "consideration"],
+            "properties": {
+              "advisor": {
+                "type": "string",
+                "x-prompt-write": "観点の由来advisor名。例: ddd-advisor, tech-lead-advisor, ux-advisor, qa-advisor, platform-advisor"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点の見出し。例: テスト戦略上の注意点"
+              },
+              "consideration": {
+                "type": "string",
+                "x-prompt-write": "考慮事項の内容を1〜3文で。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ConstraintsBlock": {
+      "type": "object",
+      "required": ["blockType", "title", "items"],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "既知の制約・トレードオフを持ちます（任意）。",
+      "x-render": [
+        { "as": "list", "from": "items" }
+      ],
+      "properties": {
+        "blockType": { "type": "string", "const": "Constraints" },
+        "title": { "type": "string", "const": "既知の制約・トレードオフ" },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "既知の制約・トレードオフを列挙。無ければ空。",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
