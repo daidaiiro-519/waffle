@@ -130,6 +130,36 @@ def test_discriminator未指定はMISSING_DISCRIMINATOR():
     assert result.details[0] == "MISSING_DISCRIMINATOR"
 
 
+def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
+    """
+    Given 分岐のあるschemaのenumに存在しないdiscriminator値
+    When ブランクテンプレート描画を実行する
+    Then INVALID_DISCRIMINATORエラーが返る
+    """
+    schema = {
+        "required": ["documentId", "kind", "content"],
+        "properties": {
+            "documentId": {"type": "string"},
+            "kind": {"type": "string", "enum": ["a", "b"]},
+        },
+        "allOf": [
+            {
+                "if": {"properties": {"kind": {"const": "a"}}, "required": ["kind"]},
+                "then": {"properties": {"content": {"$ref": "#/$defs/AContent"}}},
+            },
+        ],
+        "$defs": {
+            "AContent": {
+                "type": "object", "required": [],
+                "properties": {},
+            },
+        },
+    }
+    result = _engine({"DiscSchema/v1": schema}).run("DiscSchema/v1", {"kind": "not-a-real-candidate"})
+    assert isinstance(result, Err), result
+    assert result.details[0] == "INVALID_DISCRIMINATOR"
+
+
 def test_enumフィールドは選択肢を併記する():
     """
     Given enumを宣言する値フィールドを持つschema

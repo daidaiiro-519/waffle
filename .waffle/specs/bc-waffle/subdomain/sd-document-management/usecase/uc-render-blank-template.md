@@ -69,6 +69,7 @@ sequenceDiagram
 - When 書き出し先に既にファイルが存在するとき、システムはその内容を新しい描画結果で上書きする shall。
 - If schemaRefが実在しないとき、システムはINVALID_SCHEMA_REFエラーを返す shall。
 - If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。
+- If schemaのcontentがdiscriminatorで分岐し、指定されたdiscriminator値が候補enumに存在しないとき、システムはINVALID_DISCRIMINATORエラーを返す shall。
 - While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。
 
 ---
@@ -85,6 +86,7 @@ sequenceDiagram
 |---|---|
 | `INVALID_SCHEMA_REF` | 指定されたschemaRefが実在しない |
 | `MISSING_DISCRIMINATOR` | schemaのcontentがdiscriminatorで分岐するが、対応するdiscriminator値が指定されていない |
+| `INVALID_DISCRIMINATOR` | schemaのcontentがdiscriminatorで分岐するが、指定されたdiscriminator値が候補enumに存在しない |
 | `WRITE_ERROR` | 書き出し先パスへのファイル書き込みに失敗する（権限不足等） |
 
 ---
@@ -180,6 +182,19 @@ Scenario: 既存ファイルを新しい描画結果で上書きする
   Given 書き出し先に既に別内容のファイルが存在する
   When 同じschemaRef・discriminatorでブランクテンプレート描画を実行する
   Then 書き出し先のファイルが新しい描画結果で上書きされている
+```
+
+### 不正なdiscriminator値はINVALID_DISCRIMINATOR
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 事前条件違反: enumに無いdiscriminator値の拒否 |
+
+```gherkin
+Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR
+  Given 分岐のあるschemaのenumに存在しないdiscriminator値
+  When ブランクテンプレート描画を実行する
+  Then INVALID_DISCRIMINATORエラーが返る
 ```
 
 ---

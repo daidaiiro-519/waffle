@@ -110,7 +110,7 @@ def test_scaffold_createは骨格を返す():
     result = _runner.invoke(app, [
         "scaffold", "--operation", "create",
         "--schemaRef", "SkillSchema/v1", "--documentId", "scaffold-demo",
-        "--discriminator", "skillKind=engine",
+        "--discriminator", "skillKind=custom",
     ])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)

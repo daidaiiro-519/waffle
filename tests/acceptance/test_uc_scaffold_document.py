@@ -162,6 +162,20 @@ def test_discriminator_が無いと候補を案内する():
     assert result.details[0] == "MISSING_DISCRIMINATOR"
 
 
+def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
+    """
+    Given 分岐のあるschemaのenumに存在しないdiscriminator値
+    When createを実行する
+    Then INVALID_DISCRIMINATORエラーが返る
+    """
+    result = _engine().run(
+        "create",
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "not-a-real-candidate"}},
+    )
+    assert isinstance(result, Err), result
+    assert result.details[0] == "INVALID_DISCRIMINATOR"
+
+
 
 def test_createはadvisor_skillの骨格を生成する():
     """

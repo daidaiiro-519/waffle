@@ -46,7 +46,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
     """
     result = _engine().run(
         "create",
-        {"schemaRef": "NoSuchSchema/v1", "documentId": "test-acceptance-poc-migration", "discriminator": {"skillKind": "engine"}},
+        {"schemaRef": "NoSuchSchema/v1", "documentId": "test-acceptance-poc-migration", "discriminator": {"skillKind": "custom"}},
     )
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_SCHEMA_REF"
@@ -60,7 +60,7 @@ def test_既存documentへの再createはvaluesを破壊しない():
     """
     create_result = _engine().run(
         "create",
-        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "engine"}},
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "custom"}},
     )
     assert isinstance(create_result, Ok), create_result
 
@@ -72,7 +72,7 @@ def test_既存documentへの再createはvaluesを破壊しない():
 
     recreate_result = _engine().run(
         "create",
-        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "engine"}},
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "custom"}},
     )
     assert isinstance(recreate_result, Ok), recreate_result
 
@@ -88,7 +88,7 @@ def test_clear_fieldの複数回実行はべき等である():
     """
     create_result = _engine().run(
         "create",
-        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "engine"}},
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "custom"}},
     )
     assert isinstance(create_result, Ok), create_result
     _engine().run("fill", {"documentPath": create_result.value["path"], "values": {"tags": ["context:test"]}})

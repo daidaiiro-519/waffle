@@ -108,6 +108,7 @@
         "When fill で値が与えられたとき、システムは宣言済み値フィールドにのみ書き込む shall。",
         "If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。",
         "If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。",
+        "If 分岐のある schema で discriminator の値が候補enumに存在しないとき、システムは INVALID_DISCRIMINATOR を返し候補を案内する shall。",
         "When clear_fieldでdocumentPath・pathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。",
         "While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。",
         "If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。"
@@ -120,6 +121,10 @@
         {
           "code": "MISSING_DISCRIMINATOR",
           "condition": "分岐のあるschemaでdiscriminatorが未指定（候補enumを案内）"
+        },
+        {
+          "code": "INVALID_DISCRIMINATOR",
+          "condition": "分岐のあるschemaでdiscriminatorの値がenumに存在しない（候補enumを案内）"
         },
         {
           "code": "REQUIRED_FIELD",
@@ -265,6 +270,13 @@
           "gherkin": "Scenario: 必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される\n  Given schemaのrequiredに指定されているフィールドのpath\n  When clear_fieldを実行する\n  Then REQUIRED_FIELDエラーが返り削除されない",
           "covers": "受け入れ基準: clear_fieldの構造保護",
           "operation": "clear_field"
+        },
+        {
+          "name": "不正なdiscriminator値はINVALID_DISCRIMINATOR",
+          "category": "異常系",
+          "viewpoint": "事前条件違反: enumに無いdiscriminator値の拒否",
+          "gherkin": "Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR\n  Given 分岐のあるschemaのenumに存在しないdiscriminator値\n  When createを実行する\n  Then INVALID_DISCRIMINATORエラーが返る",
+          "covers": ""
         }
       ]
     }

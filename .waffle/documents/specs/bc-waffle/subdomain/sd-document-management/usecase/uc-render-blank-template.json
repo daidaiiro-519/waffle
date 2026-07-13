@@ -126,6 +126,7 @@
         "When 書き出し先に既にファイルが存在するとき、システムはその内容を新しい描画結果で上書きする shall。",
         "If schemaRefが実在しないとき、システムはINVALID_SCHEMA_REFエラーを返す shall。",
         "If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。",
+        "If schemaのcontentがdiscriminatorで分岐し、指定されたdiscriminator値が候補enumに存在しないとき、システムはINVALID_DISCRIMINATORエラーを返す shall。",
         "While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。"
       ]
     },
@@ -140,6 +141,10 @@
         {
           "code": "MISSING_DISCRIMINATOR",
           "condition": "schemaのcontentがdiscriminatorで分岐するが、対応するdiscriminator値が指定されていない"
+        },
+        {
+          "code": "INVALID_DISCRIMINATOR",
+          "condition": "schemaのcontentがdiscriminatorで分岐するが、指定されたdiscriminator値が候補enumに存在しない"
         },
         {
           "code": "WRITE_ERROR",
@@ -199,6 +204,13 @@
           "category": "境界値",
           "viewpoint": "べき等性: 再実行時に既存ファイルが正しく更新されるか",
           "gherkin": "Scenario: 既存ファイルを新しい描画結果で上書きする\n  Given 書き出し先に既に別内容のファイルが存在する\n  When 同じschemaRef・discriminatorでブランクテンプレート描画を実行する\n  Then 書き出し先のファイルが新しい描画結果で上書きされている",
+          "covers": ""
+        },
+        {
+          "name": "不正なdiscriminator値はINVALID_DISCRIMINATOR",
+          "category": "異常系",
+          "viewpoint": "事前条件違反: enumに無いdiscriminator値の拒否",
+          "gherkin": "Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR\n  Given 分岐のあるschemaのenumに存在しないdiscriminator値\n  When ブランクテンプレート描画を実行する\n  Then INVALID_DISCRIMINATORエラーが返る",
           "covers": ""
         }
       ]

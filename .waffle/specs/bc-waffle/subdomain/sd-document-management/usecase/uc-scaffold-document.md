@@ -61,6 +61,7 @@ sequenceDiagram
 - When fill で値が与えられたとき、システムは宣言済み値フィールドにのみ書き込む shall。
 - If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。
 - If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。
+- If 分岐のある schema で discriminator の値が候補enumに存在しないとき、システムは INVALID_DISCRIMINATOR を返し候補を案内する shall。
 - When clear_fieldでdocumentPath・pathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。
 - While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。
 - If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。
@@ -82,6 +83,7 @@ sequenceDiagram
 | コード | 条件 |
 |---|---|
 | `MISSING_DISCRIMINATOR` | 分岐のあるschemaでdiscriminatorが未指定（候補enumを案内） |
+| `INVALID_DISCRIMINATOR` | 分岐のあるschemaでdiscriminatorの値がenumに存在しない（候補enumを案内） |
 | `REQUIRED_FIELD` | clear_fieldの削除対象がschemaの必須フィールドである |
 
 ---
@@ -229,6 +231,19 @@ Scenario: 必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否さ
   Given schemaのrequiredに指定されているフィールドのpath
   When clear_fieldを実行する
   Then REQUIRED_FIELDエラーが返り削除されない
+```
+
+### 不正なdiscriminator値はINVALID_DISCRIMINATOR
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 事前条件違反: enumに無いdiscriminator値の拒否 |
+
+```gherkin
+Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR
+  Given 分岐のあるschemaのenumに存在しないdiscriminator値
+  When createを実行する
+  Then INVALID_DISCRIMINATORエラーが返る
 ```
 
 ---

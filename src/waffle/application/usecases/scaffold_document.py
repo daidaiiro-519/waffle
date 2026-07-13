@@ -54,9 +54,15 @@ class ScaffoldDocument:
 
         disc_key = _discriminator_key(schema)
         discriminator = params.get("discriminator") or {}
-        if disc_key and disc_key not in discriminator:
-            cands = ", ".join(_discriminator_candidates(schema, disc_key))
-            return _err("MISSING_DISCRIMINATOR", f"{disc_key} の指定が必要です（候補: {cands}）")
+        if disc_key:
+            candidates = _discriminator_candidates(schema, disc_key)
+            if disc_key not in discriminator:
+                return _err("MISSING_DISCRIMINATOR", f"{disc_key} の指定が必要です（候補: {', '.join(candidates)}）")
+            if discriminator[disc_key] not in candidates:
+                return _err(
+                    "INVALID_DISCRIMINATOR",
+                    f"{disc_key}='{discriminator[disc_key]}' は不正な値です（候補: {', '.join(candidates)}）",
+                )
 
         path_vars = {"documentId": document_id, **{k: v for k, v in params.items() if isinstance(v, str)}}
         content_def = _content_def(schema, discriminator)
