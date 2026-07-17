@@ -1,0 +1,48 @@
+{
+  "documentId": "sd-flow-gate",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "subdomain",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "開発フローのフェーズ遷移を機械的に判定するサブドメイン：sd-flow-gate"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "ブレスト→spec→TDD→検証→レビューという開発フローの各フェーズ遷移について、進んでよいか(ready)・まだ足りないか(blocked)・機械的に判別できず人間の判断が要るか(needs_human)を判定し続ける業務領域。sd-reconciliationが「既存の成果物間の構造的整合性」を検知するのに対し、こちらは「プロセスが次フェーズへ進める状態にあるか」というプロセス状態そのものを対象にする。"
+      ]
+    },
+    "category": {
+      "blockType": "SubdomainCategory",
+      "title": "サブドメイン分類",
+      "classification": "core",
+      "rationale": [
+        "spec-first+TDDというWaffle自身の開発プロセスに固有の遷移判定であり、spec(acceptanceScenarios)とテストの対応関係という、Waffleの独自ドキュメントモデルを理解した上でしか判定できない。SonarQubeのQuality GateやGitHub branch protection等の既製ツールは、テストの合否は見られてもspec⇄テストという対応関係自体を理解できないため代替できない。"
+      ]
+    },
+    "members": {
+      "blockType": "SubdomainMembers",
+      "title": "業務ユースケース一覧",
+      "items": [
+        "uc-check-verification-gate"
+      ]
+    },
+    "implementationGuidance": {
+      "blockType": "ImplementationGuidance",
+      "title": "詳細設計ガイド",
+      "items": [
+        "中核ゆえドメインモデルで厚く実装する。既存sd-reconciliationのcheck-*系usecase（Orchestrator主導・読み取り専用・冪等）と同じ実装パターンを踏襲し、判定ロジックはAIに委ねず自前の決定的コードで書く。テスト実行自体はusecaseの責務外とし、既に生成済みのテスト結果レポートを読むにとどめる。"
+      ]
+    },
+    "externalSolution": {
+      "blockType": "ExternalSolution",
+      "title": "外部解決策",
+      "text": ""
+    }
+  },
+  "tags": []
+}

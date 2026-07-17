@@ -242,6 +242,24 @@ def test_check_scenario_driftは4フィールドの差分結果を返す():
     assert set(out.keys()) == {"missing_in_tests", "orphaned_in_tests", "matched", "gherkin_mismatches"}
 
 
+def test_check_verification_gateはstatusとreasonsを返す(tmp_path):
+    """
+    Given waffle MCPサーバ
+    When check_verification_gateツールを呼ぶ
+    Then MCP出力はstatus/reasonsを持つ
+    """
+    results_path = tmp_path / "results.json"
+    results_path.write_text(json.dumps({"passed": [], "failed": []}), encoding="utf-8")
+
+    out = asyncio.run(_call("check_verification_gate", {
+        "specPath": ".waffle/documents/specs/bc-waffle/subdomain/sd-flow-gate/usecase/uc-check-verification-gate.json",
+        "testPath": "tests/acceptance/test_uc_check_verification_gate.py",
+        "testResultsPath": str(results_path),
+    }))
+    assert out["status"] == "ready"
+    assert out["reasons"] == []
+
+
 def test_scan_source_codeは公開要素の一覧を返す(tmp_path):
     """
     Given waffle MCPサーバ

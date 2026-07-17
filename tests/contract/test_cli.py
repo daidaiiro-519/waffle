@@ -259,6 +259,27 @@ def test_check_scenario_driftは4フィールドの差分結果を返す():
     assert set(data.keys()) == {"missing_in_tests", "orphaned_in_tests", "matched", "gherkin_mismatches"}
 
 
+def test_check_verification_gateはstatusとreasonsを返す(tmp_path):
+    """
+    Given waffle CLI
+    When check-verification-gate --specPath --testPath --testResultsPath を実行する
+    Then 終了コードは0で、出力JSONはstatus/reasonsを持つ
+    """
+    results_path = tmp_path / "results.json"
+    results_path.write_text(json.dumps({"passed": [], "failed": []}), encoding="utf-8")
+
+    result = _runner.invoke(app, [
+        "check-verification-gate",
+        "--specPath", ".waffle/documents/specs/bc-waffle/subdomain/sd-flow-gate/usecase/uc-check-verification-gate.json",
+        "--testPath", "tests/acceptance/test_uc_check_verification_gate.py",
+        "--testResultsPath", str(results_path),
+    ])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data["status"] == "ready"
+    assert data["reasons"] == []
+
+
 def test_scan_source_codeは公開要素の一覧を返す(tmp_path):
     """
     Given waffle CLI

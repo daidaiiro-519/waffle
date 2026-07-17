@@ -1,0 +1,223 @@
+{
+  "documentId": "uc-check-verification-gate",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "実装完了→検証フェーズへ進んでよいかを機械的に判定する：CheckVerificationGate"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "対象usecase specのacceptanceScenariosと実装済みテストの対応関係、および渡されたテスト実行結果から、検証フェーズへ進んでよいか（ready/blocked/needs_human）を判定する。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "CheckVerificationGate"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "Orchestrator（HarnessAgent）",
+      "intent": "対象usecase specについて、実装完了フェーズから検証フェーズへ進んでよいかを判定したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "spec-first+TDDというWaffle自身の開発プロセスでは、「テストを書いた」ことと「specの受け入れシナリオを実際に満たすテストを書いた」ことは同じではない。この区別を人間の目視確認に委ねると見落としが起き、フェーズを次に進めてよいかの判断が属人化する。",
+        "既存のcheck_scenario_drift（spec⇄テストの対応関係の検知）は差分を検出するだけで、「だから次に進んでよいか」という判断までは行わない。判断まで含めて機械化する経路が無いと、Orchestratorは毎回同じ判断ロジックを即興で組み立てることになり、判定基準がセッションごとにぶれる。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象usecase specのpathが要望テキストで与えられている",
+        "対象specに対応するネイティブテストファイルのpathが要望テキストで与えられている",
+        "テスト実行結果を{passed: [...], failed: [...]}という形式（specのacceptanceScenariosのシナリオ名と同じ語彙のテスト名でpass/failを表す）で持つファイルのpathが要望テキストで与えられている"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "Orchestrator",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "Orchestrator",
+          "to": "VerificationGate",
+          "message": "specPath, testFilePath, testResultsPathを指定して判定を依頼する",
+          "kind": "command"
+        },
+        {
+          "from": "VerificationGate",
+          "to": "VerificationGate",
+          "message": "spec⇄テストの対応関係（missing_in_tests/orphaned_in_tests/gherkin_mismatches）を照合する",
+          "kind": "self"
+        },
+        {
+          "from": "VerificationGate",
+          "to": "VerificationGate",
+          "message": "対応するテストの実行結果（passed/failed）を照合する",
+          "kind": "self"
+        },
+        {
+          "from": "VerificationGate",
+          "to": "Orchestrator",
+          "message": "status（ready/blocked/needs_human）とreasonsを返す",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "判定結果がstatus（ready/blocked/needs_human）として返る",
+        "statusの根拠がreasonsとして返る（人間が理由を確認できる）",
+        "本usecaseはテストを実行しない・specやテストファイルを書き換えない（読み取り専用・副作用なし）"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When specのacceptanceScenariosに対応するテストが1件以上未実装（missing_in_tests）のとき、システムはstatus blocked を返す shall。",
+        "When 実装済みテストのうちspecに存在しないもの（orphaned_in_tests）、またはGherkinと内容が一致しないもの（gherkin_mismatches）が1件以上あるとき、システムはstatus needs_human を返す shall（意図的な追加か更新漏れかを機械的に判別できないため）。",
+        "When spec⇄テストの対応関係に差分が無いが、対応するテストの実行結果に1件以上failedが含まれるとき、システムはstatus blocked を返す shall。",
+        "When spec⇄テストの対応関係に差分が無く、対応する全テストがpassedであるとき、システムはstatus ready を返す shall。",
+        "While 複数の条件に同時に該当するとき、システムはblocked/needs_human/readyの優先順位（missing_in_tests最優先、次にorphaned/mismatch、次にfailed、最後にready）で単一のstatusを決定する shall。",
+        "When statusを返すとき、システムはその根拠をreasonsに含める shall。",
+        "If specPathが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
+        "If testFilePathが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
+        "If testResultsPathが存在しない、またはJSONとして解釈できないとき、システムはINVALID_TEST_RESULTSエラーを返す shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "specPathまたはtestFilePathが存在しない"
+          ]
+        },
+        {
+          "code": "INVALID_TEST_RESULTS",
+          "condition": [
+            "testResultsPathが存在しない、またはJSONとして解釈できない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "未実装のシナリオがあるときはblockedを返す",
+          "category": "正常系",
+          "viewpoint": "判定：missing_in_testsが1件以上あればblocked",
+          "gherkin": "Scenario: 未実装のシナリオがあるときはblockedを返す\n  Given specのacceptanceScenariosに対して未実装のシナリオを1件含む対象\n  When CheckVerificationGateを実行する\n  Then statusはblockedであり、reasonsに未実装のシナリオが含まれる",
+          "covers": "受け入れ基準: missing_in_testsはblocked"
+        },
+        {
+          "name": "意図不明なズレがあるときはneeds_humanを返す",
+          "category": "正常系",
+          "viewpoint": "判定：orphaned_in_tests/gherkin_mismatchesが1件以上あればneeds_human",
+          "gherkin": "Scenario: 意図不明なズレがあるときはneeds_humanを返す\n  Given specに無いテスト（orphaned_in_tests）を1件含む対象\n  When CheckVerificationGateを実行する\n  Then statusはneeds_humanであり、reasonsにそのズレが含まれる",
+          "covers": "受け入れ基準: orphaned/mismatchはneeds_human"
+        },
+        {
+          "name": "対応関係に差分は無いがテストが失敗しているときはblockedを返す",
+          "category": "正常系",
+          "viewpoint": "判定：spec⇄テストの対応は取れているがfailedが1件以上あればblocked",
+          "gherkin": "Scenario: 対応関係に差分は無いがテストが失敗しているときはblockedを返す\n  Given spec⇄テストの対応関係に差分が無く、1件failedを含むテスト実行結果\n  When CheckVerificationGateを実行する\n  Then statusはblockedであり、reasonsに失敗したテスト名が含まれる",
+          "covers": "受け入れ基準: failedが残っていればblocked"
+        },
+        {
+          "name": "対応関係に差分が無く全テストが成功しているときはreadyを返す",
+          "category": "正常系",
+          "viewpoint": "判定：差分無し・全passedならready",
+          "gherkin": "Scenario: 対応関係に差分が無く全テストが成功しているときはreadyを返す\n  Given spec⇄テストの対応関係に差分が無く、全てpassedのテスト実行結果\n  When CheckVerificationGateを実行する\n  Then statusはreadyである",
+          "covers": "受け入れ基準: 差分無し・全passedはready"
+        },
+        {
+          "name": "複数条件に該当するときは優先順位に従い単一のstatusを返す",
+          "category": "境界値",
+          "viewpoint": "優先順位：missing_in_tests > orphaned/mismatch > failed > ready",
+          "gherkin": "Scenario: 複数条件に該当するときは優先順位に従い単一のstatusを返す\n  Given missing_in_testsとorphaned_in_testsを同時に含む対象\n  When CheckVerificationGateを実行する\n  Then statusはblockedである（missing_in_testsが最優先）",
+          "covers": "受け入れ基準: 優先順位による単一status決定"
+        },
+        {
+          "name": "存在しないspecPathはエラーを返す",
+          "category": "異常系",
+          "viewpoint": "エラー：specPathが存在しないときはINVALID_PATH",
+          "gherkin": "Scenario: 存在しないspecPathはエラーを返す\n  Given 実在しないspecPath\n  When CheckVerificationGateを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "受け入れ基準: specPath不在はエラー"
+        },
+        {
+          "name": "存在しないtestFilePathはエラーを返す",
+          "category": "異常系",
+          "viewpoint": "エラー：testFilePathが存在しないときはINVALID_PATH",
+          "gherkin": "Scenario: 存在しないtestFilePathはエラーを返す\n  Given 実在しないtestFilePath\n  When CheckVerificationGateを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "受け入れ基準: testFilePath不在はエラー"
+        },
+        {
+          "name": "不正なtestResultsPathはエラーを返す",
+          "category": "異常系",
+          "viewpoint": "エラー：testResultsPathが存在しない、またはJSONとして不正なときはINVALID_TEST_RESULTS",
+          "gherkin": "Scenario: 不正なtestResultsPathはエラーを返す\n  Given 存在しない、またはJSONとして不正なtestResultsPath\n  When CheckVerificationGateを実行する\n  Then INVALID_TEST_RESULTS エラーが返る",
+          "covers": "受け入れ基準: testResultsPath不正はエラー"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "While 同一の入力で複数回実行しても、システムは同じstatusを返す shall（副作用の無い読み取り専用操作）。",
+        "When 判定を行うとき、システムはテスト自体を実行しない shall（既に生成済みのtestResultsPathを読むのみ。実行はOrchestrator側の責務）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "同一入力での再実行はべき等である",
+          "category": "正常系",
+          "viewpoint": "べき等性：同一のspecPath/testFilePath/testResultsPathを2回実行しても結果が一致する",
+          "gherkin": "Scenario: 同一入力での再実行はべき等である\n  Given CheckVerificationGate システム と同一の入力\n  When 2回連続で実行する\n  Then 2回の結果は完全に一致する",
+          "covers": "操作保証: べき等性"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-flow-gate"
+}

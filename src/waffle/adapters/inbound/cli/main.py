@@ -21,6 +21,7 @@ from waffle.application.usecases.check_schema_version_drift import CheckSchemaVe
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
+from waffle.application.usecases.check_verification_gate import CheckVerificationGate
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.application.usecases.check_domain_service_drift import CheckDomainServiceDrift
 from waffle.application.usecases.lint_docstring import LintDocstring
@@ -189,6 +190,18 @@ def check_scenario_drift(
 ) -> None:
     """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。"""
     _emit(CheckScenarioDrift(_docs()).run(spec_path, test_path))
+
+@app.command("check-verification-gate")
+def check_verification_gate(
+    spec_path: str = typer.Option(..., "--specPath", "--spec-path", help="spec.json のパス"),
+    test_path: str = typer.Option(..., "--testPath", "--test-path", help="対応するテストファイル(.py)のパス"),
+    test_results_path: str = typer.Option(
+        ..., "--testResultsPath", "--test-results-path",
+        help='テスト実行結果({"passed": [...], "failed": [...]})のパス',
+    ),
+) -> None:
+    """実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。"""
+    _emit(CheckVerificationGate(_docs()).run(spec_path, test_path, test_results_path))
 
 @app.command("check-schema-version-drift")
 def check_schema_version_drift(
