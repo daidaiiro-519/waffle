@@ -1,7 +1,7 @@
 {
   "documentId": "uc-lint-docstring",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-docstring-linting",
@@ -128,11 +128,15 @@
       "items": [
         {
           "code": "UNSUPPORTED_KIND",
-          "condition": "対象言語に対応する DocstringSchema の kind が無い"
+          "condition": [
+            "対象言語に対応する DocstringSchema の kind が無い"
+          ]
         },
         {
           "code": "TOOL_NOT_AVAILABLE",
-          "condition": "kind に対応する既存 lint ツールが実行環境に存在しない"
+          "condition": [
+            "kind に対応する既存 lint ツールが実行環境に存在しない"
+          ]
         }
       ]
     },

@@ -80,8 +80,8 @@ sequenceDiagram
 
 | コード | 条件 |
 |---|---|
-| `INVALID_SOURCE` | 対象のテストファイルが構文解析できない（Pythonのパーサでエラー） |
-| `INVALID_JSON` | 対象のspec.jsonが存在するが不正なJSON（json.JSONDecodeError） |
+| `INVALID_SOURCE` | - 対象のテストファイルが構文解析できない（Pythonのパーサでエラー） |
+| `INVALID_JSON` | - 対象のspec.jsonが存在するが不正なJSON（json.JSONDecodeError） |
 
 ---
 

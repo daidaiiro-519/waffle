@@ -11,3 +11,10 @@ from pathlib import Path
 def is_confined(path: str) -> bool:
     """path がプロジェクトルート内に閉じ込められているか（パストラバーサルを含まないか）を判定する。"""
     return ".." not in Path(path).parts
+
+def is_within_project_root(directory: str) -> bool:
+    """directory がプロジェクトルート自身またはその配下にあるかを判定する（ディレクトリ横断
+    operationがプロジェクトルート外を走査しないための閉じ込め）。"""
+    root = Path.cwd().resolve()
+    target = Path(directory).resolve()
+    return target == root or root in target.parents

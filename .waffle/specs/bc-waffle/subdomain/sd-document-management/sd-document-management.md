@@ -22,6 +22,7 @@
 
 - uc-scaffold-document
 - uc-query-document
+- uc-query-document-collection
 - uc-render-document
 - uc-render-blank-template
 

@@ -83,8 +83,8 @@ sequenceDiagram
 
 | コード | 条件 |
 |---|---|
-| `INVALID_PATH` | documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む |
-| `UNSUPPORTED_LANGUAGE` | languageがサポート対象外（python/java/typescript/javascript以外） |
+| `INVALID_PATH` | - documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む |
+| `UNSUPPORTED_LANGUAGE` | - languageがサポート対象外（python/java/typescript/javascript以外） |
 
 ---
 

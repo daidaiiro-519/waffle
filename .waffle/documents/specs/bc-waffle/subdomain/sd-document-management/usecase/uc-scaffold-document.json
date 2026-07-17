@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scaffold-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -111,7 +111,10 @@
         "If 分岐のある schema で discriminator の値が候補enumに存在しないとき、システムは INVALID_DISCRIMINATOR を返し候補を案内する shall。",
         "When clear_fieldでdocumentPath・pathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。",
         "While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。",
-        "If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。"
+        "If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。",
+        "When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。",
+        "While Documentのschemaが既に目的のschemaRefであるとき、migrate_schemaは無変更で成功する shall。",
+        "If migrate_schemaの移行先schemaRefが解決できないとき、システムはINVALID_SCHEMA_REFエラーを返し書き換えを拒否する shall。"
       ]
     },
     "errors": {
@@ -120,15 +123,27 @@
       "items": [
         {
           "code": "MISSING_DISCRIMINATOR",
-          "condition": "分岐のあるschemaでdiscriminatorが未指定（候補enumを案内）"
+          "condition": [
+            "分岐のあるschemaでdiscriminatorが未指定（候補enumを案内）"
+          ]
         },
         {
           "code": "INVALID_DISCRIMINATOR",
-          "condition": "分岐のあるschemaでdiscriminatorの値がenumに存在しない（候補enumを案内）"
+          "condition": [
+            "分岐のあるschemaでdiscriminatorの値がenumに存在しない（候補enumを案内）"
+          ]
         },
         {
           "code": "REQUIRED_FIELD",
-          "condition": "clear_fieldの削除対象がschemaの必須フィールドである"
+          "condition": [
+            "clear_fieldの削除対象がschemaの必須フィールドである"
+          ]
+        },
+        {
+          "code": "INVALID_SCHEMA_REF",
+          "condition": [
+            "migrate_schemaの移行先schemaRefが解決できない"
+          ]
         }
       ]
     },
@@ -277,6 +292,30 @@
           "viewpoint": "事前条件違反: enumに無いdiscriminator値の拒否",
           "gherkin": "Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR\n  Given 分岐のあるschemaのenumに存在しないdiscriminator値\n  When createを実行する\n  Then INVALID_DISCRIMINATORエラーが返る",
           "covers": ""
+        },
+        {
+          "name": "migrate_schemaはschemaRefを新版へ書き換える",
+          "category": "正常系",
+          "viewpoint": "migrate_schema: 既に解決可能な別のschema版へDocumentのschemaRefを書き換える",
+          "gherkin": "Scenario: migrate_schemaはschemaRefを新版へ書き換える\n  Given 別版のschemaRefを指す既存Document\n  When migrate_schemaを実行する\n  Then Documentのstatusはそのschema版へ書き換わる",
+          "operation": "migrate_schema",
+          "covers": "受け入れ基準: migrate_schemaによるschemaRef書き換え"
+        },
+        {
+          "name": "migrate_schemaは同じ版への書き換えに対して冪等である",
+          "category": "境界値",
+          "viewpoint": "migrate_schema: 冪等性",
+          "gherkin": "Scenario: migrate_schemaは同じ版への書き換えに対して冪等である\n  Given 既に目的のschemaRefになっているDocument\n  When 同じschemaRefでmigrate_schemaを再実行する\n  Then 対象は無変更のまま成功する",
+          "operation": "migrate_schema",
+          "covers": "受け入れ基準: migrate_schemaの冪等性"
+        },
+        {
+          "name": "migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する",
+          "category": "異常系",
+          "viewpoint": "migrate_schema: 対象取り違えの防止",
+          "gherkin": "Scenario: migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する\n  Given 解決できない移行先schemaRef\n  When migrate_schemaを実行する\n  Then INVALID_SCHEMA_REFエラーが返り、Documentは変更されない",
+          "operation": "migrate_schema",
+          "covers": "エラー: INVALID_SCHEMA_REF"
         }
       ]
     }

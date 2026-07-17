@@ -58,6 +58,42 @@ def test_queryのエラーはerror_messageと非ゼロ終了で返す():
     assert data["error"] == "INVALID_OPERATION"
 
 
+def test_queryはresolve_refで参照先pathを返す():
+    """
+    Given waffle CLI
+    When query --operation resolve_ref ... を実行する
+    Then 終了コードは0で、出力JSONのvalue.pathは参照先Documentのpath
+    """
+    result = _runner.invoke(app, [
+        "query", "--operation", "resolve_ref",
+        "--path", ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json",
+        "--field", "subdomainRef",
+        "--targetSchemaRef", "DomainSpecSchema/v5",
+        "--targetDiscriminator", "specKind=subdomain",
+    ])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data["value"]["path"] == (
+        ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/sd-document-management.json"
+    )
+
+
+def test_query_collectionはgrep_documentsで横断検索する():
+    """
+    Given waffle CLI
+    When query-collection --operation grep_documents ... を実行する
+    Then 終了コードは0で、出力JSONのvalueにpatternへ一致したDocumentのpathが含まれる
+    """
+    result = _runner.invoke(app, [
+        "query-collection", "--operation", "grep_documents",
+        "--path", ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase",
+        "--pattern", "resolve_ref",
+    ])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert any("uc-query-document.json" in p for p in data["value"])
+
+
 def test_render_no_deployはmdフォーマットを返す():
     """
     Given waffle CLI

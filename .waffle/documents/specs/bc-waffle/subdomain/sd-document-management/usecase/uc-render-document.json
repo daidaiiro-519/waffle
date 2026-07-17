@@ -1,7 +1,7 @@
 {
   "documentId": "uc-render-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -107,7 +107,8 @@
         "When pathVarsがdiscriminatorごとの宣言（kindごとの変数マップ）であるとき、システムは対象Documentのdiscriminator値に対応する変数マップだけを解決する shall。",
         "When x-frontmatterがdiscriminatorごとの宣言（kindごとのフィールドマップ）であるとき、システムは対象Documentのdiscriminator値に対応するフィールドマップだけからfrontmatterを生成する shall。",
         "When x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空であるとき、システムはそのフィールドをfrontmatterから省略する shall。",
-        "If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返し描画しない shall。"
+        "If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返し描画しない shall。",
+        "When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。"
       ]
     },
     "errors": {
@@ -294,6 +295,13 @@
           "viewpoint": "受け入れ基準：任意ブロック省略時にfrontmatterフィールドを空値で埋めず省略する（上書き指定の意味を保つ）",
           "gherkin": "Scenario: 存在しないx_frontmatterのドットパスは省略する\n  Given x-frontmatterが宣言するドットパスに対応するcontentブロックを持たない、または値が空であるDocument\n  When renderする\n  Then そのフィールドはfrontmatterから省略される",
           "covers": "受け入れ基準: 存在しないx-frontmatterドットパスの省略"
+        },
+        {
+          "name": "配列値の列をbullet指定でセル内改行の箇条書きにする",
+          "category": "正常系",
+          "viewpoint": "table描画：列定義のbulletがtrueで対象フィールドの値が配列のとき、各要素を<br>区切りの箇条書きとしてセル内に描画する",
+          "gherkin": "Scenario: 配列値の列をbullet指定でセル内改行の箇条書きにする\n  Given bullet:trueを宣言する列を持つtable部品と、その対象フィールドが複数要素の配列であるDocument\n  When renderする\n  Then そのセルは各要素が<br>で区切られた箇条書きとして描画される",
+          "covers": "受け入れ基準: table部品のbullet列によるセル内箇条書き描画"
         }
       ]
     }

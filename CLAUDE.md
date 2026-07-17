@@ -53,3 +53,7 @@
 | 呼び出した後 | 次に行うこと | 返却フォーマット | テンプレート | 理由 |
 |---|---|---|---|---|
 | advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor等） | 批評を依頼する各advisor（同じadvisorへの批評フェーズ再検証を含む）ごとに、AgentSchemaのgoal-dispatch構造（目的・役割・読み込むSkill・タスク・成果物・受け入れ基準）で内容を組み立て、Agentツールで並列に呼び出す（1体ずつ直列に呼ばない。複数advisorへの依頼は1回のメッセージで同時に発行する）。批評対象が1件のみで他advisorとの突き合わせが不要な場合は単体呼び出しでよい。全員の結果が揃ってから、template-skill-critique.mdの形式で統合する | 各意見 → 統合見解 → 合意事項 → 次のアクション | `waffle/.waffle/agent/references/template-skill-critique.md` | advisorはWaffleが所有・出荷する成果物であり、単一advisorの一発出力を無検証で確定させない運用はWaffle自身のOrchestratorの責務。advisorが互いを呼ぶのではなくOrchestrator側が組合せを判断することで、Skill/advisor間のテキストベース疎結合原則を保てる。並列dispatchにするのは、直列に1体ずつ呼ぶと後段のadvisorが前段の結論に引きずられ、独立した意見として機能しなくなるため（診断的差し戻しの前提となる複数視点の独立性を保つ） |
+
+### document-authoring系Skill実行時の原則
+
+document-authoring系Skill（schemaRefに基づくdocument作成・実装等）を扱う際は、まず`skill-router`に問い合わせ、routingTableが示すadvisorとの組み合わせ（WHO）を確認する。呼ぶタイミング（執筆前の判断材料収集・執筆後の十分性チェックのいずれか、または両方）はOrchestrator自身が判断する。

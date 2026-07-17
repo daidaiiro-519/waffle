@@ -357,6 +357,22 @@ def test_tableはjoin指定で配列セルを結合整形する():
     assert "status: OrderStatus / total: Money" in md
 
 
+def test_tableはbullet指定で配列セルを改行区切りの箇条書きにする():
+    """
+    Given bullet:trueを指定したcolumns宣言と複数要素の配列値を持つセル
+    When renderする
+    Then 各要素が"- "接頭辞つきで<br>区切りの箇条書きとしてセル内に描画される
+    """
+    parts = [{"as": "table", "from": "items", "columns": [
+        {"field": "code", "header": "コード", "code": True},
+        {"field": "condition", "header": "条件", "bullet": True}]}]
+    data = {"items": [{"code": "UNSUPPORTED_ROOT_DISPATCH_SHAPE", "condition": [
+        "ルート直下のkind分岐が、既知の形状に適合しない",
+        "if/then/else形式でありながら、elseの暗黙値を一意に逆算できない"]}]}
+    md = render_parts(parts, data, 3)
+    assert "- ルート直下のkind分岐が、既知の形状に適合しない<br>- if/then/else形式でありながら、elseの暗黙値を一意に逆算できない" in md
+
+
 def test_schemaのif直下からdiscriminatorキーを取り出す():
     """
     Given トップレベルにif.properties.specKindを持つschema

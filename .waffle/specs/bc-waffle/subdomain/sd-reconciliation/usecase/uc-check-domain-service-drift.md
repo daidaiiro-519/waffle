@@ -72,7 +72,7 @@ sequenceDiagram
 
 | コード | 条件 |
 |---|---|
-| `INVALID_PATH` | documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む |
+| `INVALID_PATH` | - documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む |
 
 ---
 

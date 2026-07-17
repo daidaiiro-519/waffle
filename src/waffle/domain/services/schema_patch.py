@@ -18,6 +18,17 @@ class BlockNotFoundError(Exception):
     """rename_blockでリネーム元・リネーム先のいずれも存在しないときに送出する。"""
 
 
+class UnsupportedRootDispatchShapeError(Exception):
+    """add_kind_branchの対象となるルート直下のkind分岐が、既知の形状（if/then/else形式・
+    allOf形式）に適合しない、またはif/then/else形式でありながらelseの暗黙kind値を
+    一意に逆算できないときに送出する。"""
+
+
+class UnsupportedRenderTargetShapeError(Exception):
+    """set_kind_render_targetの対象schemaがx-render-target自体を持たない、または
+    pathVars・path・deployのいずれかがkind別dict形式でないときに送出する。"""
+
+
 def add_block(
     schema: dict, block_name: str, block_def: dict, content_def_name: str, prop_name: str, required: bool = False
 ) -> dict:
@@ -74,21 +85,37 @@ def rename_block(schema: dict, old_short_name: str, new_short_name: str) -> dict
     return _walk(schema)
 
 
-def set_field(schema: dict, def_name: str, field_path: str, value) -> dict:
+def set_field(schema: dict, def_name: str | None, field_path: str, value) -> dict:
     """$defs[def_name]内のドットパス(field_path)が指す値をvalueに書き換える（冪等・対象外は不変）。
     ブロックの内容変更（x-render・title・enum等）を、add_block/rename_blockが対象としない
-    既存ブロックのフィールド単位で行うための汎用操作。"""
-    if def_name not in schema["$defs"]:
+    既存ブロックのフィールド単位で行うための汎用操作。パス中の数字は配列インデックスとして辿る
+    （x-render配列内のcolumns等、リストを含む構造への部分編集に対応する）。def_nameにNoneを
+    渡すと$defsではなくschemaのルート直下を対象にする（$idやproperties.schemaRef.const等、
+    $defsの外側にあるフィールドの書き換えに対応する）。"""
+    if def_name is not None and def_name not in schema["$defs"]:
         raise BlockNotFoundError(f"{def_name} が $defs に存在しない")
     new_schema = json.loads(dump(schema))
-    cur = new_schema["$defs"][def_name]
+    cur = new_schema if def_name is None else new_schema["$defs"][def_name]
     parts = field_path.split(".")
     for part in parts[:-1]:
-        cur = cur[part]
-    if cur.get(parts[-1]) == value:
+        cur = cur[int(part)] if isinstance(cur, list) else cur[part]
+    last = int(parts[-1]) if isinstance(cur, list) else parts[-1]
+    current = cur[last] if isinstance(cur, list) else cur.get(last)
+    if current == value:
         return schema
-    cur[parts[-1]] = value
+    cur[last] = value
     return new_schema
+
+
+def create_version(base_schema: dict, edits: list[dict]) -> dict:
+    """base_schemaを複製し、edits（defName/fieldPath/valueの列）をset_fieldと同じ経路で順に
+    適用した新しいschemaを返す。新版はまだどのDocumentも参照していない未公開の状態のため、
+    check_backward_compatibleの対象にしない（呼び出し元はこの結果に対して互換性チェックを
+    行わない）。"""
+    schema = json.loads(dump(base_schema))
+    for edit in edits:
+        schema = set_field(schema, edit.get("defName"), edit["fieldPath"], edit["value"])
+    return schema
 
 
 def remove_block(schema: dict, content_def_name: str, prop_name: str) -> dict:
@@ -102,6 +129,124 @@ def remove_block(schema: dict, content_def_name: str, prop_name: str) -> dict:
         return schema
     new_schema = json.loads(dump(schema))
     del new_schema["$defs"][content_def_name]["properties"][prop_name]
+    return new_schema
+
+
+def add_def(schema: dict, def_name: str, def_body: dict) -> dict:
+    """$defsに、既存content defへの紐付けを持たない独立した新規エントリを追加する（冪等）。
+    新しいkindのcontent def（例: RouterContent）をゼロから作るときに使う。
+    紐付け（ルート直下のkind分岐への組み込み）はadd_kind_branchが別途担う。"""
+    if def_name in schema["$defs"]:
+        return schema
+    new_schema = json.loads(dump(schema))
+    new_schema["$defs"][def_name] = def_body
+    return new_schema
+
+
+def _branch_kind_value(branch: dict, discriminator_field: str) -> str | None:
+    if not isinstance(branch, dict):
+        return None
+    return branch.get("if", {}).get("properties", {}).get(discriminator_field, {}).get("const")
+
+
+def _branch_content_ref(branch: dict) -> str | None:
+    if not isinstance(branch, dict):
+        return None
+    return branch.get("then", {}).get("properties", {}).get("content", {}).get("$ref")
+
+
+def _make_branch(discriminator_field: str, kind_value: str, content_def_name: str) -> dict:
+    return {
+        "if": {"properties": {discriminator_field: {"const": kind_value}}, "required": [discriminator_field]},
+        "then": {"properties": {"content": {"$ref": f"#/$defs/{content_def_name}"}}},
+    }
+
+
+def add_kind_branch(schema: dict, discriminator_field: str, kind_value: str, content_def_name: str) -> dict:
+    """discriminatorフィールドのenumに新しいkind値を追加し、ルート直下のkind分岐に
+    新しいブランチを追加する（冪等）。既存がif/then/else形式（2値限定の二分岐）の場合は、
+    elseブランチが暗黙に表していたkind値をenumから逆算した上でallOf形式（N分岐）に
+    正規化してから新ブランチを追加する（enumがkind値の唯一の情報源になるよう、
+    暗黙のelseを残さない）。"""
+    new_content_ref = f"#/$defs/{content_def_name}"
+
+    if "allOf" in schema:
+        branches = schema["allOf"]
+        if not isinstance(branches, list) or not all(_branch_kind_value(b, discriminator_field) for b in branches):
+            raise UnsupportedRootDispatchShapeError("allOfの各要素がkind分岐（if/then）の形状に適合しない")
+        existing = {_branch_kind_value(b, discriminator_field): _branch_content_ref(b) for b in branches}
+        enum = schema["properties"][discriminator_field]["enum"]
+        if existing.get(kind_value) == new_content_ref and kind_value in enum:
+            return schema
+        new_schema = json.loads(dump(schema))
+        if kind_value not in existing:
+            new_schema["allOf"].append(_make_branch(discriminator_field, kind_value, content_def_name))
+        if kind_value not in new_schema["properties"][discriminator_field]["enum"]:
+            new_schema["properties"][discriminator_field]["enum"].append(kind_value)
+        return new_schema
+
+    if "if" in schema and "then" in schema and "else" in schema:
+        enum = schema["properties"][discriminator_field]["enum"]
+        if len(enum) != 2:
+            raise UnsupportedRootDispatchShapeError(
+                "if/then/else形式だがenumが2値ではない（elseの暗黙kind値を一意に逆算できない）"
+            )
+        if_kind_value = _branch_kind_value(schema, discriminator_field)
+        if if_kind_value not in enum:
+            raise UnsupportedRootDispatchShapeError("if分岐のconstがenumに含まれない")
+        else_candidates = [v for v in enum if v != if_kind_value]
+        if len(else_candidates) != 1:
+            raise UnsupportedRootDispatchShapeError("elseの暗黙kind値を一意に逆算できない")
+        else_kind_value = else_candidates[0]
+        if_content_ref = _branch_content_ref(schema)
+        else_content_ref = schema["else"]["properties"]["content"]["$ref"]
+
+        if kind_value == if_kind_value and if_content_ref == new_content_ref:
+            return schema
+        if kind_value == else_kind_value and else_content_ref == new_content_ref:
+            return schema
+
+        new_schema = json.loads(dump(schema))
+        del new_schema["if"]
+        del new_schema["then"]
+        del new_schema["else"]
+        new_schema["allOf"] = [
+            _make_branch(discriminator_field, if_kind_value, if_content_ref.removeprefix("#/$defs/")),
+            {
+                "if": {"properties": {discriminator_field: {"const": else_kind_value}}, "required": [discriminator_field]},
+                "then": {"properties": {"content": {"$ref": else_content_ref}}},
+            },
+        ]
+        if kind_value not in (if_kind_value, else_kind_value):
+            new_schema["allOf"].append(_make_branch(discriminator_field, kind_value, content_def_name))
+            new_schema["properties"][discriminator_field]["enum"].append(kind_value)
+        return new_schema
+
+    raise UnsupportedRootDispatchShapeError("ルート直下の分岐がif/then/else形式でもallOf形式でもない")
+
+
+def set_kind_render_target(schema: dict, kind_value: str, path_vars: dict, path: str, deploy: list) -> dict:
+    """x-render-target.pathVars/path/deploy（いずれもkind別dict形式）に、新しいkind値の
+    エントリを追加する（冪等）。add_kind_branchが担うルート直下のkind分岐（content参照）とは
+    別に、render/deploy先を決めるx-render-target側にもkind別のエントリが必要なため。"""
+    target = schema.get("x-render-target")
+    if not isinstance(target, dict):
+        raise UnsupportedRenderTargetShapeError("x-render-targetが存在しない")
+    for key in ("pathVars", "path", "deploy"):
+        if key in target and not isinstance(target[key], dict):
+            raise UnsupportedRenderTargetShapeError(f"x-render-target.{key}がkind別dict形式ではない")
+
+    current_path_vars = target.get("pathVars", {}).get(kind_value)
+    current_path = target.get("path", {}).get(kind_value)
+    current_deploy = target.get("deploy", {}).get(kind_value)
+    if current_path_vars == path_vars and current_path == path and current_deploy == deploy:
+        return schema
+
+    new_schema = json.loads(dump(schema))
+    new_target = new_schema["x-render-target"]
+    new_target.setdefault("pathVars", {})[kind_value] = path_vars
+    new_target.setdefault("path", {})[kind_value] = path
+    new_target.setdefault("deploy", {})[kind_value] = deploy
     return new_schema
 
 

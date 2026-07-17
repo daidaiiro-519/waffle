@@ -80,8 +80,8 @@ sequenceDiagram
 
 | コード | 条件 |
 |---|---|
-| `UNSUPPORTED_KIND` | 対象言語に対応する DocstringSchema の kind が無い |
-| `INVALID_SOURCE` | 対象ファイルが構文解析できない（言語のパーサでエラー） |
+| `UNSUPPORTED_KIND` | - 対象言語に対応する DocstringSchema の kind が無い |
+| `INVALID_SOURCE` | - 対象ファイルが構文解析できない（言語のパーサでエラー） |
 
 ---
 

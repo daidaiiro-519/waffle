@@ -91,8 +91,8 @@ sequenceDiagram
 
 | コード | 条件 |
 |---|---|
-| `UNSUPPORTED_KIND` | 対象言語に対応する DocstringSchema の kind が無い |
-| `TOOL_NOT_AVAILABLE` | kind に対応する既存 lint ツールが実行環境に存在しない |
+| `UNSUPPORTED_KIND` | - 対象言語に対応する DocstringSchema の kind が無い |
+| `TOOL_NOT_AVAILABLE` | - kind に対応する既存 lint ツールが実行環境に存在しない |
 
 ---
 

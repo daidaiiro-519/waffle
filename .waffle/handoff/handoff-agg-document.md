@@ -11,6 +11,10 @@ agg-document
 | advisor | 観点 | 考慮事項 |
 |---|---|---|
 | ddd-advisor | Document集約のEntityは薄い受動的Entityにする | agg-document.jsonが宣言する不変条件のうち複数は静的構造制約でありJSON Schema自体が担保している。手続き的な不変条件（status遷移・SUPERSEDED終端・schemaRef必須等）は、既にlifecycle_guard.py・schema_ref_guard.pyという純粋関数のドメインサービスとして実装済みのため、Entity自身に複雑な業務ロジックメソッドを持たせる必要が無い。値オブジェクトの不変性・値による等価性という宣言された構造のみを表現すればよい。 |
+| ddd-advisor | 集約ルートはDocumentのみ | agg-document.jsonのEntitiesブロックはDocument（isRoot: true）の1件のみを宣言しており、Document集約の内部にDocument以外のEntityは存在しない。集約ルート以外の子Entityが無いため、ルートを通じてのみ変更されるという原則は自明に満たされる。 |
+| ddd-advisor | 値オブジェクトはDocumentId/DocumentType/DiscriminatorValue/SchemaRef/Statusの5種 | agg-document.jsonのValueObjectsブロックが宣言する5種の値オブジェクトは、src/waffle/domain/entities/document.pyに全て@dataclass(frozen=True)として実装済みであり、宣言と実装に乖離が無い（check-aggregate-class-driftの検証対象）。 |
+| ddd-advisor | schemaRefは外部集約への参照ではなく値オブジェクトとして直接保持する | SchemaRefはname/versionの組を持つ値オブジェクトであり、「外部の集約はIDで参照し直接オブジェクトとして保持しない」という原則が想定する外部集約参照には該当しない。WaffleにはSchema自体を独立した集約として扱う設計が無く（SchemaRepositoryはインフラ層のリポジトリでありDDD集約ではない）、schemaRefは単なる値として直接保持してよい。 |
+| ddd-advisor | 不変条件7件の担保先対応表 | agg-document.jsonが宣言する不変条件は7件。(1)Spec家族のstatus順序遷移=guard(lifecycle_guard.py) (2)schemaRefは常に存在する=schema(JSON Schema required) (3)content適合until VALIDATED=guard(validate usecase) (4)render前VALIDATED必須=guard(lifecycle_guard.py) (5)SUPERSEDED終端=guard(lifecycle_guard.pyのtransitions表にSUPERSEDEDからの遷移が定義されないことで保証) (6)パストラバーサル防止=guard(application/services/document_loading.pyのload_document、INVALID_PATH) (7)MISSING_SCHEMA_REF拒否=guard(schema_ref_guard.py)。担保先が無い不変条件は無い。 |
 
 ---
 
@@ -19,3 +23,7 @@ agg-document
 | advisor | 観点 | 考慮事項 |
 |---|---|---|
 | ddd-advisor | check-aggregate-class-driftの検証対象として実装する | Entityはビジネスロジックの実行主体としてではなく、agg-document.jsonのEntities/ValueObjectsブロックとの構造的な対応関係（クラス名・フィールド名の一致）を、既存のドリフト検知usecaseが機械的に検証する対象として実装する。 |
+| tech-lead-advisor | 配置はsrc/waffle/domain/entities/document.py、guard関数は同じdomain層内の別モジュール | Document/値オブジェクト群はsrc/waffle/domain/entities/document.pyに実装済み。lifecycle_guard.py・schema_ref_guard.pyはsrc/waffle/domain/services/配下にあり、Entityとguardは同じdomain層内で、モジュールとしては分離されている。domain層内での協調であり、依存が上位層（application/adapters）へ漏れることはない。 |
+| tech-lead-advisor | 依存方向の迂回防止はfrozen=Trueにより言語機構レベルで既に対応済み | Document/DocumentId/SchemaRef等は全て@dataclass(frozen=True)で実装済み。frozenなdataclassはインスタンス生成後のフィールド再代入時にdataclasses.FrozenInstanceErrorを送出するため、guard関数を経由しない直接代入の経路は既に言語機構レベルで塞がれている。状態変更が必要な場合は新しいインスタンスを生成する以外の手段が無く、値オブジェクトの不変性の原則とも整合する。 |
+| tech-lead-advisor | テスト戦略はEntity側とguard側で役割分担する | Entity自体の単体テストは「frozenであること（再代入不可）」「値による等価性」を確認する。不変条件の検証（迂回不可能性を含む）はguard関数側（lifecycle_guard.py/schema_ref_guard.py）の単体テストで担保する。宣言と実装の構造的対応関係はcheck-aggregate-class-driftが機械的に検証する。 |
+| tech-lead-advisor | 命名規約は既に技術的接尾辞を避けている | 既存実装のクラス名（Document/DocumentId/SchemaRef等）はEntity/ValueObject等の技術的接尾辞を持たない。docstringの説明文中でのみ「Entity」「値オブジェクト」という語を使っており、クラス名自体には出現しない。architecture-layer-naming-conventionの原則に既に整合している。 |

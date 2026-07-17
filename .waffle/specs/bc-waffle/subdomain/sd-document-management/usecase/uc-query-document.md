@@ -44,6 +44,7 @@ Orchestrator（HarnessAgent）
 | `get_by_id` | 配列内から指定した識別子フィールドの値が一致する単一要素を返す |
 | `get_nested_items` | 配列内の各要素が持つ入れ子配列を1段展開して集約する |
 | `get_children` | 識別子で特定した要素が持つchildren配列を返す |
+| `resolve_ref` | 参照フィールドfieldの値と、targetSchemaRefが宣言するx-source-targetテンプレートから、参照先Documentのpathを算出して返す（中身は取得しない） |
 
 ---
 
@@ -87,6 +88,8 @@ sequenceDiagram
 - If 指定したblockKey/idValueが存在しないとき、システムはNOT_FOUNDエラーを返す shall。
 - If フィルタの正規表現パターンが不正なとき、システムはINVALID_PATTERNエラーを返す shall。
 - If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: "raw", content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: <固定文言>, value: <生テキスト> }を返す）。
+- When operationにresolve_refを指定したとき、システムは対象Documentのfieldの値をdocumentId、対象Document自身が持つ他の参照フィールドをテンプレート変数として、targetSchemaRef（discriminatorを持つschemaの場合はtargetDiscriminatorで対象種別を指定する）のx-source-targetテンプレートに埋め込み、参照先Documentのpathを算出してvalueに返す shall（参照先Documentの中身は取得しない）。
+- If resolve_refでテンプレート変数を解決できないとき、システムはMISSING_TEMPLATE_VARエラーを返す shall。
 
 ---
 
@@ -101,10 +104,11 @@ sequenceDiagram
 
 | コード | 条件 |
 |---|---|
-| `INVALID_OPERATION` | operation が定義外 |
-| `MISSING_PARAM` | 必須パラメータが欠落 |
-| `NOT_FOUND` | 指定した blockKey/idValue に一致する要素が存在しない |
-| `INVALID_PATTERN` | filter_pattern の正規表現が不正 |
+| `INVALID_OPERATION` | - operation が定義外 |
+| `MISSING_PARAM` | - 必須パラメータが欠落 |
+| `NOT_FOUND` | - 指定した blockKey/idValue に一致する要素が存在しない |
+| `INVALID_PATTERN` | - filter_pattern の正規表現が不正 |
+| `MISSING_TEMPLATE_VAR` | - resolve_ref でテンプレート変数（contextRef等）を解決できない |
 
 ---
 
@@ -402,6 +406,32 @@ Scenario: 解釈指針を宣言していないブロックはcautionを持たな
   Given x-prompt-interpretを宣言していないブロック
   When operation get_block を実行する
   Then cautionキー自体が省略される（値が無いフィールドは持たせない）
+```
+
+### resolve_refは参照先Documentのpathを算出する
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 参照解決：ref値とx-source-targetテンプレートから参照先pathを機械的に算出する |
+
+```gherkin
+Scenario: resolve_refは参照先Documentのpathを算出する
+  Given query システム と、subdomainRefフィールドを持つ対象 Document
+  When operation resolve_ref を field subdomainRef, targetSchemaRef DomainSpecSchema/v5, targetDiscriminator specKind=subdomain で実行する
+  Then 参照先Documentのpathがvalueとして返る（中身は取得されない）
+```
+
+### resolve_refはテンプレート変数を解決できないときエラーを返す
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー：テンプレート変数が不足するときはMISSING_TEMPLATE_VAR |
+
+```gherkin
+Scenario: resolve_refはテンプレート変数を解決できないときエラーを返す
+  Given 参照先テンプレートが要求する変数を持たない対象 Document
+  When operation resolve_ref を実行する
+  Then MISSING_TEMPLATE_VAR エラーが返る
 ```
 
 ---

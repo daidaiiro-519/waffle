@@ -1,7 +1,7 @@
 {
   "documentId": "agg-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "tags": [
@@ -192,37 +192,52 @@
         {
           "rule": "Spec家族（DomainSpecSchema/PresentationSpecSchema）のstatusはCREATED→VALIDATED→RENDERED→SUPERSEDEDの順にのみ進み、逆行・飛ばしをしない",
           "enforcement": "guard",
-          "rationale": "成果物の状態の一貫性を保つ"
+          "rationale": [
+            "成果物の状態の一貫性を保つ"
+          ]
         },
         {
           "rule": "schemaRefは常に存在する",
           "enforcement": "schema",
-          "rationale": "型が無ければ検証も描画もできない"
+          "rationale": [
+            "型が無ければ検証も描画もできない"
+          ]
         },
         {
           "rule": "contentがschemaに適合しない限りVALIDATEDへ進めない",
           "enforcement": "guard",
-          "rationale": "不正な成果物を後段（render/deploy）に流さない"
+          "rationale": [
+            "不正な成果物を後段（render/deploy）に流さない"
+          ]
         },
         {
           "rule": "schemaがrenderを状態遷移コマンドとして宣言する場合、VALIDATED以降でなければrenderできない（宣言しないschema種別はstatusを問わない）",
           "enforcement": "guard",
-          "rationale": "未検証の成果物がdeploy先（CLAUDE.md/SKILL.md等の生きているファイル）へ反映されることを防ぐ"
+          "rationale": [
+            "未検証の成果物がdeploy先（CLAUDE.md/SKILL.md等の生きているファイル）へ反映されることを防ぐ"
+          ]
         },
         {
           "rule": "SUPERSEDEDは終端であり、以後どのコマンドも受け付けない",
           "enforcement": "guard",
-          "rationale": "置換後の変更を防ぐ"
+          "rationale": [
+            "置換後の変更を防ぐ"
+          ]
         },
         {
           "rule": "Documentのパス解決は、いかなるoperation・commandからも常にプロジェクトルート内に閉じ込められる（パストラバーサルを許さない）",
           "enforcement": "guard",
-          "rationale": "ファイルアクセスというデータアクセス層の技術的関心事だが、Document集約が扱う全ての操作に横断的に適用される不変条件であり、特定usecaseの業務シナリオではなく集約の不変条件として一箇所で保証する"
+          "rationale": [
+            "ファイルアクセスというデータアクセス層の技術的関心事だが、Document集約が扱う全ての操作に横断的に適用される不変条件であり、特定usecaseの業務シナリオではなく集約の不変条件として一箇所で保証する"
+          ]
         },
         {
           "rule": "schemaRefを持たないDocumentを対象にした、schema解決を要する操作は、いかなるoperation・commandからも常にMISSING_SCHEMA_REFとして拒否される",
           "enforcement": "guard",
-          "rationale": "「schemaRefは常に存在する」は理想状態の不変条件だが、scaffold直後の未検証Document等、実際には欠けている状態が生じうる。render/validateが個別に対応していた（重複）この防御的振る舞いを集約の不変条件として一箇所で保証する"
+          "rationale": [
+            "「schemaRefは常に存在する」は理想状態の不変条件だが、scaffold直後の未検証Document等、実際には欠けている状態が生じうる",
+            "render/validateが個別に対応していた（重複）この防御的振る舞いを集約の不変条件として一箇所で保証する"
+          ]
         }
       ]
     },

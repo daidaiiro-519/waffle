@@ -66,6 +66,7 @@ sequenceDiagram
 - When x-frontmatterがdiscriminatorごとの宣言（kindごとのフィールドマップ）であるとき、システムは対象Documentのdiscriminator値に対応するフィールドマップだけからfrontmatterを生成する shall。
 - When x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空であるとき、システムはそのフィールドをfrontmatterから省略する shall。
 - If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返し描画しない shall。
+- When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。
 
 ---
 
@@ -264,6 +265,19 @@ Scenario: 存在しないx_frontmatterのドットパスは省略する
   Given x-frontmatterが宣言するドットパスに対応するcontentブロックを持たない、または値が空であるDocument
   When renderする
   Then そのフィールドはfrontmatterから省略される
+```
+
+### 配列値の列をbullet指定でセル内改行の箇条書きにする
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | table描画：列定義のbulletがtrueで対象フィールドの値が配列のとき、各要素を<br>区切りの箇条書きとしてセル内に描画する |
+
+```gherkin
+Scenario: 配列値の列をbullet指定でセル内改行の箇条書きにする
+  Given bullet:trueを宣言する列を持つtable部品と、その対象フィールドが複数要素の配列であるDocument
+  When renderする
+  Then そのセルは各要素が<br>で区切られた箇条書きとして描画される
 ```
 
 ---

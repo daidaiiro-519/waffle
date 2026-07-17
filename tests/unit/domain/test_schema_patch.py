@@ -182,6 +182,34 @@ def test_set_fieldは同じ値への書き込みに対して冪等である():
     assert schema_patch.dump(once) == schema_patch.dump(twice)
 
 
+def test_set_fieldはドットパス中の数字を配列インデックスとして辿る():
+    """
+    Given x-render配列を含むdefと、数字を含むドットパス（例: x-render.0.columns.1.bullet）
+    When set_fieldを実行する
+    Then 配列の該当インデックスの値だけが書き換わる
+    """
+    schema = _base_schema()
+    schema["$defs"]["TitleBlock"]["x-render"] = [
+        {"as": "table", "columns": [{"field": "code"}, {"field": "condition"}]}
+    ]
+    result = schema_patch.set_field(schema, "TitleBlock", "x-render.0.columns.1.bullet", True)
+    assert result["$defs"]["TitleBlock"]["x-render"][0]["columns"][1]["bullet"] is True
+    assert result["$defs"]["TitleBlock"]["x-render"][0]["columns"][0] == {"field": "code"}
+
+
+def test_set_fieldはdefNameがNoneのときschemaのルート直下を書き換える():
+    """
+    Given defNameにNone、ルート直下のドットパス（例: properties.schemaRef.const）
+    When set_fieldを実行する
+    Then $defsではなくschemaのルート直下の値が書き換わる
+    """
+    schema = _base_schema()
+    schema["properties"] = {"schemaRef": {"const": "Foo/v1"}}
+    result = schema_patch.set_field(schema, None, "properties.schemaRef.const", "Foo/v2")
+    assert result["properties"]["schemaRef"]["const"] == "Foo/v2"
+    assert result["$defs"] == schema["$defs"]
+
+
 def test_set_fieldは存在しないdefを拒否する():
     """
     Given schemaの$defsに存在しないdef名
@@ -194,6 +222,36 @@ def test_set_fieldは存在しないdefを拒否する():
         assert False, "例外が送出されなかった"
     except schema_patch.BlockNotFoundError:
         pass
+
+
+# --- create_version ---
+
+def test_create_versionはeditsを順に適用した新しいschemaを返す():
+    """
+    Given 既存schemaと複数のフィールド編集(edits)
+    When create_versionを実行する
+    Then 各editが順に適用された新しいschemaが返る
+    """
+    schema = _base_schema()
+    edits = [
+        {"defName": "TitleBlock", "fieldPath": "properties.title.type", "value": "array"},
+        {"defName": "SomeContent", "fieldPath": "properties.title.description", "value": "タイトル"},
+    ]
+    result = schema_patch.create_version(schema, edits)
+    assert result["$defs"]["TitleBlock"]["properties"]["title"]["type"] == "array"
+    assert result["$defs"]["SomeContent"]["properties"]["title"]["description"] == "タイトル"
+
+
+def test_create_versionは元のschemaを変更しない():
+    """
+    Given 既存schema
+    When create_versionを実行する
+    Then 引数として渡した元のschemaは変更されない
+    """
+    schema = _base_schema()
+    before = json.loads(json.dumps(schema))
+    schema_patch.create_version(schema, [{"defName": "TitleBlock", "fieldPath": "properties.title.type", "value": "array"}])
+    assert schema == before
 
 
 # --- remove_block ---
@@ -254,6 +312,278 @@ def test_remove_blockは存在しないcontent_defを拒否する():
         schema_patch.remove_block(schema, "NoSuchContent", "title")
         assert False, "例外が送出されなかった"
     except schema_patch.BlockNotFoundError:
+        pass
+
+
+# --- add_def ---
+
+def _kind_dispatch_schema() -> dict:
+    """if/then/else形式（2値）のkind分岐を持つschema。SkillSchemaのskillKind分岐を模す。"""
+    schema = _base_schema()
+    schema["properties"] = {
+        "skillKind": {"type": "string", "enum": ["advisor", "custom"]},
+    }
+    schema["$defs"]["AdvisorContent"] = {"type": "object", "properties": {}}
+    schema["$defs"]["CustomContent"] = {"type": "object", "properties": {}}
+    schema["if"] = {"properties": {"skillKind": {"const": "advisor"}}, "required": ["skillKind"]}
+    schema["then"] = {"properties": {"content": {"$ref": "#/$defs/AdvisorContent"}}}
+    schema["else"] = {"properties": {"content": {"$ref": "#/$defs/CustomContent"}}}
+    return schema
+
+
+def test_add_defはdefsに独立した新規エントリを追加する():
+    """
+    Given def名・def定義
+    When add_defを実行する
+    Then $defsに新規エントリが追加される（既存content defへの紐付けは行わない）
+    """
+    schema = _base_schema()
+    result = schema_patch.add_def(schema, "RouterContent", {"type": "object", "properties": {}})
+    assert result["$defs"]["RouterContent"] == {"type": "object", "properties": {}}
+
+
+def test_add_defは既存の他のdefを変更しない():
+    """
+    Given 既存のdefを含むschema
+    When 新規defをadd_defする
+    Then 既存のdefの内容は変わらない
+    """
+    schema = _base_schema()
+    before_some_content = json.loads(json.dumps(schema["$defs"]["SomeContent"]))
+    result = schema_patch.add_def(schema, "RouterContent", {"type": "object", "properties": {}})
+    assert result["$defs"]["SomeContent"] == before_some_content
+
+
+def test_add_defは既に存在するdefに対して冪等である():
+    """
+    Given 既に追加済みのdef名を含むadd_def操作
+    When add_defを再実行する
+    Then 対象は無変更のまま成功する
+    """
+    schema = _base_schema()
+    once = schema_patch.add_def(schema, "RouterContent", {"type": "object", "properties": {}})
+    twice = schema_patch.add_def(once, "RouterContent", {"type": "object", "properties": {}})
+    assert schema_patch.dump(once) == schema_patch.dump(twice)
+
+
+# --- add_kind_branch ---
+
+def test_add_kind_branchはif_then_else形式をallOf形式に正規化し新ブランチを追加する():
+    """
+    Given if/then/else形式（enumが既存kind値を2つのみ持つ）のルート分岐
+    When add_kind_branchを実行する
+    Then discriminatorフィールドのenumに新しいkind値が追加され、
+    ルート直下の分岐はallOf形式に正規化された上で新しいブランチを含む
+    """
+    schema = _kind_dispatch_schema()
+    schema["$defs"]["RouterContent"] = {"type": "object", "properties": {}}
+    result = schema_patch.add_kind_branch(schema, "skillKind", "router", "RouterContent")
+
+    assert "if" not in result
+    assert "then" not in result
+    assert "else" not in result
+    assert result["properties"]["skillKind"]["enum"] == ["advisor", "custom", "router"]
+
+    branches = {b["if"]["properties"]["skillKind"]["const"]: b["then"]["properties"]["content"]["$ref"] for b in result["allOf"]}
+    assert branches == {
+        "advisor": "#/$defs/AdvisorContent",
+        "custom": "#/$defs/CustomContent",
+        "router": "#/$defs/RouterContent",
+    }
+
+
+def test_add_kind_branchは既にallOf形式の分岐に新ブランチを追加する():
+    """
+    Given 既にallOf形式のルート分岐
+    When add_kind_branchを実行する
+    Then discriminatorフィールドのenumに新しいkind値が追加され、allOf配列に新しいブランチが追加される
+    """
+    schema = _kind_dispatch_schema()
+    schema["$defs"]["RouterContent"] = {"type": "object", "properties": {}}
+    schema = schema_patch.add_kind_branch(schema, "skillKind", "router", "RouterContent")
+    schema["$defs"]["FourthContent"] = {"type": "object", "properties": {}}
+
+    result = schema_patch.add_kind_branch(schema, "skillKind", "fourth", "FourthContent")
+
+    assert result["properties"]["skillKind"]["enum"] == ["advisor", "custom", "router", "fourth"]
+    branches = {b["if"]["properties"]["skillKind"]["const"]: b["then"]["properties"]["content"]["$ref"] for b in result["allOf"]}
+    assert branches["fourth"] == "#/$defs/FourthContent"
+    assert len(result["allOf"]) == 4
+
+
+def test_add_kind_branchは対象外の箇所を変更しない():
+    """
+    Given 既存のブロックを含むschema
+    When add_kind_branchを実行する
+    Then 既存のブロック($defs内の無関係なエントリ)は変わらない
+    """
+    schema = _kind_dispatch_schema()
+    schema["$defs"]["RouterContent"] = {"type": "object", "properties": {}}
+    before_title_block = json.loads(json.dumps(schema["$defs"]["TitleBlock"]))
+    result = schema_patch.add_kind_branch(schema, "skillKind", "router", "RouterContent")
+    assert result["$defs"]["TitleBlock"] == before_title_block
+
+
+def test_add_kind_branchは既に存在するkind値_content_def紐付けに対して冪等である():
+    """
+    Given 既にenumとルート分岐の両方に存在するkind値・content def紐付け
+    When add_kind_branchを再実行する
+    Then 対象は無変更のまま成功する
+    """
+    schema = _kind_dispatch_schema()
+    schema["$defs"]["RouterContent"] = {"type": "object", "properties": {}}
+    once = schema_patch.add_kind_branch(schema, "skillKind", "router", "RouterContent")
+    twice = schema_patch.add_kind_branch(once, "skillKind", "router", "RouterContent")
+    assert schema_patch.dump(once) == schema_patch.dump(twice)
+
+
+def test_add_kind_branchは既存2値のif_then_else形式に対して冪等である():
+    """
+    Given if/then/elseの既存2値(advisor/custom)そのものを対象にした add_kind_branch
+    When advisor（if分岐が表すkind値）を対象に add_kind_branchを実行する
+    Then 対象は無変更のまま成功する（既にif/then/elseが表現している）
+    """
+    schema = _kind_dispatch_schema()
+    result = schema_patch.add_kind_branch(schema, "skillKind", "advisor", "AdvisorContent")
+    assert schema_patch.dump(result) == schema_patch.dump(schema)
+
+
+def test_add_kind_branchはif_then_elseでもallOfでもない形状を拒否する():
+    """
+    Given ルート直下にif/then/elseもallOfも持たないschema
+    When add_kind_branchを実行する
+    Then UnsupportedRootDispatchShapeErrorが送出される
+    """
+    schema = _base_schema()
+    schema["properties"] = {"skillKind": {"type": "string", "enum": ["advisor", "custom"]}}
+    try:
+        schema_patch.add_kind_branch(schema, "skillKind", "router", "RouterContent")
+        assert False, "例外が送出されなかった"
+    except schema_patch.UnsupportedRootDispatchShapeError:
+        pass
+
+
+def test_add_kind_branchはif_then_elseでenumが3値以上の不整合な状態を拒否する():
+    """
+    Given if/then/else形式でありながらenumが既に3値以上を持つ（elseの暗黙値を一意に逆算できない）schema
+    When add_kind_branchを実行する
+    Then UnsupportedRootDispatchShapeErrorが送出される
+    """
+    schema = _kind_dispatch_schema()
+    schema["properties"]["skillKind"]["enum"] = ["advisor", "custom", "extra"]
+    try:
+        schema_patch.add_kind_branch(schema, "skillKind", "router", "RouterContent")
+        assert False, "例外が送出されなかった"
+    except schema_patch.UnsupportedRootDispatchShapeError:
+        pass
+
+
+# --- set_kind_render_target ---
+
+def _kind_keyed_render_target_schema() -> dict:
+    return {
+        "$defs": {},
+        "x-render-target": {
+            "formats": ["md"],
+            "pathVars": {"judgment": {"skillRef": "doc.skillRef"}},
+            "path": {"judgment": ".waffle/templates/{documentId}.md"},
+            "deploy": {"judgment": [".claude/skills/{skillRef}/references/{documentId}.md"]},
+        },
+    }
+
+
+def test_set_kind_render_targetはpathVars_path_deployのkind別dictに新しいエントリを追加する():
+    """
+    Given kind値・pathVars・path・deploy、およびpathVars/path/deployがkind別dict形式のschema
+    When set_kind_render_targetを実行する
+    Then x-render-target.pathVars/path/deployそれぞれに、そのkind値のエントリが追加される
+    """
+    schema = _kind_keyed_render_target_schema()
+    result = schema_patch.set_kind_render_target(
+        schema,
+        "investigation-report",
+        {"skillRef": "doc.skillRef"},
+        ".waffle/templates/{documentId}.md",
+        [".claude/skills/{skillRef}/references/{documentId}.md"],
+    )
+    target = result["x-render-target"]
+    assert target["pathVars"]["investigation-report"] == {"skillRef": "doc.skillRef"}
+    assert target["path"]["investigation-report"] == ".waffle/templates/{documentId}.md"
+    assert target["deploy"]["investigation-report"] == [".claude/skills/{skillRef}/references/{documentId}.md"]
+
+
+def test_set_kind_render_targetは既存の他のkindのエントリを変更しない():
+    """
+    Given 既存kindのエントリを含むschema
+    When 新しいkindをset_kind_render_targetする
+    Then 既存kind（judgment）のエントリは変わらない
+    """
+    schema = _kind_keyed_render_target_schema()
+    result = schema_patch.set_kind_render_target(
+        schema,
+        "investigation-report",
+        {"skillRef": "doc.skillRef"},
+        ".waffle/templates/{documentId}.md",
+        [".claude/skills/{skillRef}/references/{documentId}.md"],
+    )
+    target = result["x-render-target"]
+    assert target["pathVars"]["judgment"] == {"skillRef": "doc.skillRef"}
+    assert target["path"]["judgment"] == ".waffle/templates/{documentId}.md"
+    assert target["deploy"]["judgment"] == [".claude/skills/{skillRef}/references/{documentId}.md"]
+
+
+def test_set_kind_render_targetは既に一致するエントリに対して冪等である():
+    """
+    Given 既にpathVars・path・deployの全てで指定した値と一致するkind値のエントリ
+    When set_kind_render_targetを再実行する
+    Then 対象は無変更のまま成功する
+    """
+    schema = _kind_keyed_render_target_schema()
+    once = schema_patch.set_kind_render_target(
+        schema,
+        "investigation-report",
+        {"skillRef": "doc.skillRef"},
+        ".waffle/templates/{documentId}.md",
+        [".claude/skills/{skillRef}/references/{documentId}.md"],
+    )
+    twice = schema_patch.set_kind_render_target(
+        once,
+        "investigation-report",
+        {"skillRef": "doc.skillRef"},
+        ".waffle/templates/{documentId}.md",
+        [".claude/skills/{skillRef}/references/{documentId}.md"],
+    )
+    assert schema_patch.dump(once) == schema_patch.dump(twice)
+
+
+def test_set_kind_render_targetはx_render_targetが無いschemaを拒否する():
+    """
+    Given x-render-target自体を持たないschema
+    When set_kind_render_targetを実行する
+    Then UnsupportedRenderTargetShapeErrorが送出される
+    """
+    schema = {"$defs": {}}
+    try:
+        schema_patch.set_kind_render_target(schema, "investigation-report", {}, "path", ["deploy"])
+        assert False, "例外が送出されなかった"
+    except schema_patch.UnsupportedRenderTargetShapeError:
+        pass
+
+
+def test_set_kind_render_targetはpath_がフラット形式のschemaを拒否する():
+    """
+    Given x-render-target.pathがkind別dictでなくフラットな文字列であるschema
+    When set_kind_render_targetを実行する
+    Then UnsupportedRenderTargetShapeErrorが送出される
+    """
+    schema = {
+        "$defs": {},
+        "x-render-target": {"formats": ["md"], "path": ".waffle/skills/{documentId}/SKILL.md"},
+    }
+    try:
+        schema_patch.set_kind_render_target(schema, "investigation-report", {}, "path", ["deploy"])
+        assert False, "例外が送出されなかった"
+    except schema_patch.UnsupportedRenderTargetShapeError:
         pass
 
 

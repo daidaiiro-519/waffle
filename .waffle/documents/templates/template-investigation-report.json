@@ -1,0 +1,30 @@
+{
+  "documentId": "template-investigation-report",
+  "documentType": "Template",
+  "schemaRef": "TemplateSchema/v1",
+  "templateKind": "investigation-report",
+  "skillRef": "investigation",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "template-investigation-report"
+    },
+    "findingsGuidance": {
+      "blockType": "FindingsGuidance",
+      "title": "分かったこと",
+      "guidance": "対象範囲を読んで判明した事実を箇条書きで示す。各項目には根拠（ファイルパス・行番号・該当箇所の引用）を添える。{{項目1: 判明した事実}}\n{{項目2: 判明した事実}}"
+    },
+    "unknownsGuidance": {
+      "blockType": "UnknownsGuidance",
+      "title": "分からなかったこと",
+      "guidance": "確認できなかった事項・判断がつかなかった事項を箇条書きで示す。「分かったこと」と混同せず、不明であることを明示する。{{項目1: 確認できなかった事項}}"
+    },
+    "evidenceGuidance": {
+      "blockType": "EvidenceGuidance",
+      "title": "根拠の書き方",
+      "guidance": "各項目の根拠は file_path:line_number 形式のファイルパスと該当箇所の引用で示す。例:「{{ファイルパス}}:{{行番号}} — {{該当箇所の引用}}」"
+    }
+  },
+  "tags": []
+}

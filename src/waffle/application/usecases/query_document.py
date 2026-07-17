@@ -11,12 +11,13 @@ schemaRef を持たないファイルは raw フォールバック。
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.application.services.document_loading import load_document, load_schema
-from waffle.shared.path_confinement import is_confined
+from waffle.domain.services import path_template
+from waffle.domain.services.schema_discriminator import discriminator_key
+from waffle.shared.path_confinement import is_confined, is_within_project_root
 from waffle.shared.result import Err, Ok, Result
 
 # 各 operation の必須パラメータ（path を除く）
@@ -37,6 +38,7 @@ _REQUIRED: dict[str, list[str]] = {
     "get_nested_items": ["blockKey", "arrayField", "nestedField"],
     "get_children": ["blockKey", "arrayField", "idField", "idValue"],
     "find_all": ["fieldName"],
+    "resolve_ref": ["field", "targetSchemaRef"],
 }
 
 _META_FIELDS = ("documentId", "documentType", "schemaRef", "skillKind", "codingKind", "status", "tags")
@@ -50,6 +52,7 @@ _PROMPT_GET_META = "documentId等のDocument識別用メタ情報です。ドメ
 _PROMPT_FIND_ALL = "全階層を横断して集約した値の配列です。どのブロック・階層に属していたかという文脈は失われています。文脈が必要な場合はget_block等で個別に取得してください。"
 _PROMPT_INDEX_SCAN = "各ブロックの索引です。各要素のprompt（value[key].prompt）に、そのブロック自体の読み方の指針が入っています。"
 _PROMPT_INDEX_SCAN_DIR = "ディレクトリ配下の各Documentの索引です。各Documentのblocksの各要素にそのブロックの読み方の指針（prompt）が入っています。"
+_PROMPT_RESOLVE_REF = "参照先Documentのpathです。中身は取得されていません。必要ならこのpathに対してget_block等を別途実行してください。"
 
 class QueryDocument:
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
@@ -90,17 +93,19 @@ class QueryDocument:
         schema_result = load_schema(self._schemas, doc["schemaRef"])
         if isinstance(schema_result, Err):
             return schema_result
-        return self._dispatch(operation, doc, schema_result.value, params)
+        return self._dispatch(operation, doc, schema_result.value, params, path)
 
     # --- ディスパッチ ---
 
-    def _dispatch(self, operation: str, doc: dict, schema: dict, params: dict) -> Result[dict]:
+    def _dispatch(self, operation: str, doc: dict, schema: dict, params: dict, path: str) -> Result[dict]:
         if operation == "get_meta":
             return Ok({"prompt": _PROMPT_GET_META, "value": {k: doc[k] for k in _META_FIELDS if k in doc}})
         if operation == "index_scan":
             return Ok({"prompt": _PROMPT_INDEX_SCAN, "value": _index(doc, schema)})
         if operation == "find_all":
             return Ok({"prompt": _PROMPT_FIND_ALL, "value": _find_all(doc, params["fieldName"])})
+        if operation == "resolve_ref":
+            return self._resolve_ref(doc, schema, path, params)
 
         # Group 2/3: block が必要
         block = doc.get("content", {}).get(params["blockKey"])
@@ -164,11 +169,46 @@ class QueryDocument:
             return _err("INVALID_OPERATION", f"未知の operation: {operation}")
         return Ok(_response(prompt, value, caution))
 
+    def _resolve_ref(self, doc: dict, schema: dict, document_path: str, params: dict) -> Result[dict]:
+        field = params["field"]
+        if field not in doc:
+            return _err("NOT_FOUND", f"field が見つかりません: {field}")
+
+        target_schema_result = load_schema(self._schemas, params["targetSchemaRef"])
+        if isinstance(target_schema_result, Err):
+            return target_schema_result
+        target_schema = target_schema_result.value
+
+        path_vars = {"documentId": doc["documentId"]}
+        x_source = schema.get("x-source-target")
+        if isinstance(x_source, dict):
+            own_key = discriminator_key(schema)
+            own_template = x_source.get(doc.get(own_key)) if own_key else None
+            if own_template:
+                recovered = path_template.reverse_parse(own_template, document_path)
+                if recovered:
+                    path_vars.update(recovered)
+        path_vars["documentId"] = doc[field]
+
+        target_x_source = target_schema.get("x-source-target") or ""
+        if isinstance(target_x_source, dict):
+            target_discriminator = params.get("targetDiscriminator") or {}
+            target_key = discriminator_key(target_schema)
+            template = target_x_source.get(target_discriminator.get(target_key)) if target_key else None
+        else:
+            template = target_x_source
+        if not template:
+            return _err("MISSING_TEMPLATE_VAR", "参照先のpathテンプレートを特定できません（targetDiscriminatorを確認してください）")
+
+        try:
+            resolved_path = path_template.resolve(template, **path_vars)
+        except KeyError as e:
+            return _err("MISSING_TEMPLATE_VAR", f"テンプレート変数を解決できません: {e}")
+        return Ok({"prompt": _PROMPT_RESOLVE_REF, "value": {"path": resolved_path}})
+
     def _index_scan_dir(self, directory: str) -> Result[dict]:
         # G7: index_scan_dir はプロジェクトルート配下のディレクトリのみ対象
-        root = Path.cwd().resolve()
-        target = Path(directory).resolve()
-        if target != root and root not in target.parents:
+        if not is_within_project_root(directory):
             return _err("INVALID_PATH", f"プロジェクトルート外は走査できません: {directory}")
         try:
             paths = self._documents.list_json(directory)

@@ -149,6 +149,60 @@ def test_remove_blockの複数回実行はべき等である():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
+def _kind_dispatch_schema() -> dict:
+    schema = _base_schema()
+    schema["properties"] = {"skillKind": {"type": "string", "enum": ["advisor", "custom"]}}
+    schema["$defs"]["AdvisorContent"] = {"type": "object", "properties": {}}
+    schema["$defs"]["CustomContent"] = {"type": "object", "properties": {}}
+    schema["if"] = {"properties": {"skillKind": {"const": "advisor"}}, "required": ["skillKind"]}
+    schema["then"] = {"properties": {"content": {"$ref": "#/$defs/AdvisorContent"}}}
+    schema["else"] = {"properties": {"content": {"$ref": "#/$defs/CustomContent"}}}
+    return schema
+
+
+def test_add_defの複数回実行はべき等である():
+    """
+    Given 同一のadd_def操作
+    When 2回連続で実行する
+    Then 2回目の実行結果は1回目と完全に同一である
+    """
+    params = {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "RouterContent",
+        "defDef": {"type": "object", "properties": {}},
+    }
+    _engine().run("add_def", params)
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+    result = _engine().run("add_def", params)
+    assert isinstance(result, Ok), result
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
+
+
+def test_add_kind_branchの複数回実行はべき等である():
+    """
+    Given 同一のadd_kind_branch操作
+    When 2回連続で実行する
+    Then 2回目の実行結果は1回目と完全に同一である
+    """
+    _write_fixture(_kind_dispatch_schema())
+    _engine().run("add_def", {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "RouterContent",
+        "defDef": {"type": "object", "properties": {}},
+    })
+    params = {
+        "schemaRef": _SCHEMA_REF,
+        "discriminatorField": "skillKind",
+        "kindValue": "router",
+        "contentDefName": "RouterContent",
+    }
+    _engine().run("add_kind_branch", params)
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+    result = _engine().run("add_kind_branch", params)
+    assert isinstance(result, Ok), result
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
+
+
 def test_整形契約に従う既存箇所は書き込み後も不変である():
     """
     Given 整形契約に従った既存のschemaファイル

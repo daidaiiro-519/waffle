@@ -322,6 +322,57 @@ def test_get_childrenは識別子で特定した要素のchildren配列を返す
     assert [c["stepId"] for c in result.value["value"]] == ["step-1a", "step-1b"]
 
 
+def test_resolve_refは参照先Documentのpathを算出する():
+    """
+    Given query システム と、subdomainRefフィールドを持つ対象 Document
+    When operation resolve_ref を field subdomainRef, targetSchemaRef DomainSpecSchema/v5, targetDiscriminator specKind=subdomain で実行する
+    Then 参照先Documentのpathがvalueとして返る（中身は取得されない）
+    """
+    result = _engine().run(
+        "resolve_ref", _TARGET,
+        {
+            "field": "subdomainRef",
+            "targetSchemaRef": "DomainSpecSchema/v5",
+            "targetDiscriminator": {"specKind": "subdomain"},
+        },
+    )
+    assert isinstance(result, Ok), result
+    assert result.value["value"]["path"] == (
+        ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/sd-document-management.json"
+    )
+    assert "content" not in result.value["value"]
+
+
+def test_resolve_refはテンプレート変数を解決できないときエラーを返す(tmp_path):
+    """
+    Given 参照先テンプレートが要求する変数を持たない対象 Document
+    When operation resolve_ref を実行する
+    Then MISSING_TEMPLATE_VAR エラーが返る
+    """
+    import json
+
+    doc = {
+        "documentId": "orphan-usecase",
+        "documentType": "DomainSpec",
+        "schemaRef": "DomainSpecSchema/v5",
+        "specKind": "usecase",
+        "subdomainRef": "sd-document-management",
+    }
+    path = tmp_path / "orphan-usecase.json"
+    path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+
+    result = _engine().run(
+        "resolve_ref", str(path),
+        {
+            "field": "subdomainRef",
+            "targetSchemaRef": "DomainSpecSchema/v5",
+            "targetDiscriminator": {"specKind": "subdomain"},
+        },
+    )
+    assert isinstance(result, Err), result
+    assert result.details[0] == "MISSING_TEMPLATE_VAR"
+
+
 def test_schemaRefを持たないファイルはrawで返す():
     """
     Given schemaRefを持たない対象ファイル

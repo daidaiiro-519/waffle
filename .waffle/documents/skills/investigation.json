@@ -1,0 +1,98 @@
+{
+  "documentId": "investigation",
+  "documentType": "Skill",
+  "schemaRef": "SkillSchema/v1",
+  "skillKind": "custom",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "investigation"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "設計判断・実装方針を決める前に、コードベース・document.json・spec・既存資料などを読んで事実を確認する必要があるときに使う。判断や実装は行わず、調べた事実と根拠のみを報告する。"
+    },
+    "inputExpectation": {
+      "blockType": "InputExpectation",
+      "title": "入力の想定",
+      "items": [
+        {
+          "aspect": "調査対象の範囲",
+          "interpretation": "明示されなければ直前の会話文脈から対象を推測し、曖昧な場合は呼び出し元に確認する。"
+        },
+        {
+          "aspect": "調査の観点（何を知りたいか）",
+          "interpretation": "明示されなければ「対象範囲の現状把握」を既定の観点とする。"
+        }
+      ]
+    },
+    "role": {
+      "blockType": "Role",
+      "title": "役割",
+      "items": [
+        "対象範囲を読み、事実を収集する",
+        "収集した事実を、根拠（ファイルパス・行番号・該当箇所の引用等）とともに報告する",
+        "判断・推測・実装提案を行わない。「調べて分かったこと」と「まだ分からないこと」を明確に分けて報告する"
+      ]
+    },
+    "processingTarget": {
+      "blockType": "ProcessingTarget",
+      "title": "処理対象と成果物",
+      "target": "コードベース・document.json・spec・既存資料など、判断や実装の前に事実確認が必要な対象。",
+      "artifact": "調査結果の報告（分かったこと・分からなかったこと・根拠の一覧）。フォーマットが固定されたschema管理下の成果物ではなく、自由形式のテキスト報告として返す（investigation-report向けのTemplateSchema拡張は別途検討中で未実装）。"
+    },
+    "steps": {
+      "blockType": "CustomSteps",
+      "title": "実行手順",
+      "items": [
+        {
+          "stepId": "step-1",
+          "title": "調査範囲を確定する",
+          "summary": "呼び出し元から受け取った対象範囲・観点を確認し、曖昧な点があれば先に確認する。"
+        },
+        {
+          "stepId": "step-2",
+          "title": "対象を読み、事実を収集する",
+          "summary": "対象範囲を実際に読み、判断を交えず現状の記述・実装の有無・構造等の事実を収集する。"
+        },
+        {
+          "stepId": "step-3",
+          "title": "根拠とともに報告する",
+          "summary": "収集した事実を、ファイルパス・該当箇所の引用等の根拠とともに整理して報告する。",
+          "bullets": [
+            "分かったこと",
+            "分からなかったこと・確認できなかったこと",
+            "根拠（ファイルパス・行番号・引用）"
+          ]
+        }
+      ]
+    },
+    "outputFormat": {
+      "blockType": "OutputFormat",
+      "title": "出力形式",
+      "text": "「分かったこと」「分からなかったこと」「根拠」の3点を区別して報告する。判断・提案は含めない（判断はOrchestrator・advisorの役割）。"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "判断・設計提案・実装を行わない。事実の収集と報告のみを行う",
+        "確認できなかった事項を「分かった」かのように報告しない。不確実な点は明示的に「未確認」と書く",
+        "document.json/schemaファイルの調査はCLAUDE.mdの運用ルールに従い、CLI/MCP経由で読む（直接Read/cat/grepしない）"
+      ]
+    },
+    "references": {
+      "items": [
+        {
+          "path": "references/template-investigation-report.md",
+          "description": "調査結果報告の骨格（分かったこと/分からなかったこと/根拠の3セクション）"
+        }
+      ],
+      "blockType": "References",
+      "title": "参照"
+    }
+  },
+  "tags": []
+}

@@ -1,7 +1,7 @@
 {
   "documentId": "uc-render-blank-template",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -136,19 +136,27 @@
       "items": [
         {
           "code": "INVALID_SCHEMA_REF",
-          "condition": "指定されたschemaRefが実在しない"
+          "condition": [
+            "指定されたschemaRefが実在しない"
+          ]
         },
         {
           "code": "MISSING_DISCRIMINATOR",
-          "condition": "schemaのcontentがdiscriminatorで分岐するが、対応するdiscriminator値が指定されていない"
+          "condition": [
+            "schemaのcontentがdiscriminatorで分岐するが、対応するdiscriminator値が指定されていない"
+          ]
         },
         {
           "code": "INVALID_DISCRIMINATOR",
-          "condition": "schemaのcontentがdiscriminatorで分岐するが、指定されたdiscriminator値が候補enumに存在しない"
+          "condition": [
+            "schemaのcontentがdiscriminatorで分岐するが、指定されたdiscriminator値が候補enumに存在しない"
+          ]
         },
         {
           "code": "WRITE_ERROR",
-          "condition": "書き出し先パスへのファイル書き込みに失敗する（権限不足等）"
+          "condition": [
+            "書き出し先パスへのファイル書き込みに失敗する（権限不足等）"
+          ]
         }
       ]
     },

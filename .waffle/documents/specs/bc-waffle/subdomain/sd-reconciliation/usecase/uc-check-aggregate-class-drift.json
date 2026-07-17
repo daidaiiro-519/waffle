@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-aggregate-class-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -121,11 +121,15 @@
       "items": [
         {
           "code": "INVALID_PATH",
-          "condition": "documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む"
+          "condition": [
+            "documents_rootまたはsrc_rootが存在しない、またはパストラバーサルを含む"
+          ]
         },
         {
           "code": "UNSUPPORTED_LANGUAGE",
-          "condition": "languageがサポート対象外（python/java/typescript/javascript以外）"
+          "condition": [
+            "languageがサポート対象外（python/java/typescript/javascript以外）"
+          ]
         }
       ]
     },

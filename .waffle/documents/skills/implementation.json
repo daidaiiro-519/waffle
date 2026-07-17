@@ -1,0 +1,89 @@
+{
+  "documentId": "implementation",
+  "documentType": "Skill",
+  "schemaRef": "SkillSchema/v1",
+  "skillKind": "custom",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "implementation"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "VALIDATED以上のspec、および必要に応じてHandoffに記録された設計観点・実装観点をもとに、実際のソースコードを実装する必要があるときに使う。TDD（Red→Green→必要ならRefactor）で進める。"
+    },
+    "inputExpectation": {
+      "blockType": "InputExpectation",
+      "title": "入力の想定",
+      "items": [
+        {
+          "aspect": "対象spec（specRef）",
+          "interpretation": "VALIDATED以上のstatusを持つspecであることを前提とする。明示されなければ呼び出し元に確認する。"
+        },
+        {
+          "aspect": "Handoffに記録された設計観点・実装観点（あれば）",
+          "interpretation": "既に呼び出し元から与えられているものとして受け取る。無い場合はspecのacceptanceScenarios/acceptanceCriteriaのみを根拠に進める。"
+        }
+      ]
+    },
+    "role": {
+      "blockType": "Role",
+      "title": "役割",
+      "items": [
+        "対象specおよび受け取った設計観点・実装観点を根拠に、実装方針を立てる",
+        "TDDでネイティブテストを先に書き、実装する",
+        "受け取った判断材料（設計観点・実装観点）に反する実装をしない"
+      ]
+    },
+    "processingTarget": {
+      "blockType": "ProcessingTarget",
+      "title": "処理対象と成果物",
+      "target": "VALIDATED以上のspecと、必要に応じて既に確定しているHandoffの設計観点・実装観点。",
+      "artifact": "specのacceptanceScenarios/acceptanceCriteriaを満たすソースコード（実装とネイティブテスト）。document.jsonではない。"
+    },
+    "steps": {
+      "blockType": "CustomSteps",
+      "title": "実行手順",
+      "items": [
+        {
+          "stepId": "step-1",
+          "title": "対象specの受け入れ基準を確認する",
+          "summary": "対象specのacceptanceScenarios/acceptanceCriteriaを確認し、実装すべき振る舞いを把握する。"
+        },
+        {
+          "stepId": "step-2",
+          "title": "テストを先に書く（Red）",
+          "summary": "acceptanceScenariosのGherkinをもとに、対応するネイティブテストを先に書く。まだ実装が無いため失敗することを確認する。"
+        },
+        {
+          "stepId": "step-3",
+          "title": "実装する（Green）",
+          "summary": "テストが通る最小限の実装を行う。"
+        },
+        {
+          "stepId": "step-4",
+          "title": "必要に応じて整理する（Refactor）",
+          "summary": "テストが通った状態を保ったまま、重複や分かりにくさを整理する。"
+        }
+      ]
+    },
+    "outputFormat": {
+      "blockType": "OutputFormat",
+      "title": "出力形式",
+      "text": "変更したファイルの一覧と、テスト実行結果を報告する。"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "VALIDATED未満のstatusのspecを根拠に実装しない",
+        "テストより先に実装を書かない（Red→Green→必要ならRefactorの順を守る）",
+        "受け取った設計観点・実装観点に反する実装をしない。矛盾する場合は実装を進めず呼び出し元に確認する",
+        "このSkillはCodingSchema等のドキュメント作成ではなく、実際のソースコード実装そのものを指す"
+      ]
+    }
+  },
+  "tags": []
+}

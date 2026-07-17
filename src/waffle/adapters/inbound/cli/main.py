@@ -26,6 +26,7 @@ from waffle.application.usecases.check_domain_service_drift import CheckDomainSe
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
+from waffle.application.usecases.query_document_collection import QueryDocumentCollection
 from waffle.application.usecases.render_blank_template import RenderBlankTemplate
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
@@ -68,6 +69,11 @@ def query(
     end: int = typer.Option(None, "--end"),
     field_name: str = typer.Option(None, "--fieldName", "--field-name"),
     nested_field: str = typer.Option(None, "--nestedField", "--nested-field"),
+    target_schema_ref: str = typer.Option(None, "--targetSchemaRef", "--target-schema-ref"),
+    target_discriminator: str = typer.Option(
+        None, "--targetDiscriminator", "--target-discriminator",
+        help="key=value 形式（例: specKind=subdomain）",
+    ),
 ) -> None:
     """document.json へのセマンティック・クエリ（uc-query-document）。"""
     raw = {
@@ -75,9 +81,30 @@ def query(
         "idField": id_field, "idValue": id_value, "key": key, "value": value,
         "pattern": pattern, "start": start, "end": end,
         "fieldName": field_name, "nestedField": nested_field,
+        "targetSchemaRef": target_schema_ref,
     }
     params = {k: v for k, v in raw.items() if v is not None}
+    if target_discriminator:
+        k, _, v = target_discriminator.partition("=")
+        params["targetDiscriminator"] = {k: v}
     _emit(QueryDocument(_docs(), _schemas()).run(operation, path, params))
+
+@app.command("query-collection")
+def query_collection(
+    operation: str = typer.Option(..., "--operation"),
+    path: str = typer.Option(..., "--path", help="対象ディレクトリ"),
+    pattern: str = typer.Option(None, "--pattern"),
+    field: str = typer.Option(None, "--field"),
+    key: str = typer.Option(None, "--key"),
+    value: str = typer.Option(None, "--value"),
+    fields: str = typer.Option(None, "--fields", help="カンマ区切りのフィールド名一覧"),
+) -> None:
+    """複数document.jsonを横断するセマンティック・クエリ（uc-query-document-collection）。"""
+    raw = {"pattern": pattern, "field": field, "key": key, "value": value}
+    params = {k: v for k, v in raw.items() if v is not None}
+    if fields:
+        params["fields"] = [f.strip() for f in fields.split(",") if f.strip()]
+    _emit(QueryDocumentCollection(_docs(), _schemas()).run(operation, path, params))
 
 @app.command()
 def render(
@@ -116,7 +143,7 @@ def scaffold(
     values: str = typer.Option(None, "--values", help="fill する値の JSON オブジェクト"),
     field_path: str = typer.Option(None, "--fieldPath", "--field-path", help="clear_field で削除する値フィールドのドットパス"),
 ) -> None:
-    """document.json の骨格生成 / 値書き込み / フィールド削除（uc-scaffold-document）。operation: create / fill / clear_field。"""
+    """document.json の骨格生成 / 値書き込み / フィールド削除 / schemaRef移行（uc-scaffold-document）。operation: create / fill / clear_field / migrate_schema。"""
     if operation == "create":
         params: dict = {"schemaRef": schema_ref, "documentId": document_id}
         if discriminator:
@@ -130,13 +157,15 @@ def scaffold(
         params = {"documentPath": path, "values": json.loads(values) if values else {}}
     elif operation == "clear_field":
         params = {"documentPath": path, "path": field_path}
+    elif operation == "migrate_schema":
+        params = {"documentPath": path, "schemaRef": schema_ref}
     else:
         params = {}
     _emit(ScaffoldDocument(_docs(), _schemas()).run(operation, params))
 
 @app.command("patch-schema")
 def patch_schema(
-    operation: str = typer.Option(..., "--operation", help="add_block / rename_block / set_field / remove_block"),
+    operation: str = typer.Option(..., "--operation", help="add_block / rename_block / set_field / remove_block / add_def / add_kind_branch / create_version"),
     schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref"),
     params: str = typer.Option(None, "--params", help="operation固有パラメータのJSONオブジェクト"),
 ) -> None:

@@ -1,7 +1,7 @@
 {
   "documentId": "agg-schema",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "tags": [
@@ -105,47 +105,66 @@
         {
           "rule": "値フィールドは常に oneOf / anyOf を持たない",
           "enforcement": "schema",
-          "rationale": "scaffold が骨格を機械生成できるようにする"
+          "rationale": [
+            "scaffold が骨格を機械生成できるようにする"
+          ]
         },
         {
           "rule": "content の各ブロックは additionalProperties を常に閉じる（固定 properties のみ）",
           "enforcement": "schema",
-          "rationale": "未知フィールドの混入を防ぎ構造を決定的にする"
+          "rationale": [
+            "未知フィールドの混入を防ぎ構造を決定的にする"
+          ]
         },
         {
           "rule": "再帰は常に有界である（無限ネストを許さない）",
           "enforcement": "schema",
-          "rationale": "機械走査が停止することを保証する"
+          "rationale": [
+            "機械走査が停止することを保証する"
+          ]
         },
         {
           "rule": "各ブロックの x-render は常に RenderMetaSchema の閉じた語彙にのみ従う",
           "enforcement": "schema",
-          "rationale": "描画がロジックを持たず決定的であることを保つ"
+          "rationale": [
+            "描画がロジックを持たず決定的であることを保つ"
+          ]
         },
         {
           "rule": "status の enum は常に遷移順に並び、先頭が初期状態である",
           "enforcement": "schema",
-          "rationale": "scaffold が初期状態を enum 先頭から一意に決められる"
+          "rationale": [
+            "scaffold が初期状態を enum 先頭から一意に決められる"
+          ]
         },
         {
           "rule": "公開済みの版は遡って構造を変えない（後方互換を壊さない）",
           "enforcement": "guard",
-          "rationale": "既存 Document が破損しないよう版の進化を安全にする"
+          "rationale": [
+            "既存 Document が破損しないよう版の進化を安全にする"
+          ]
         },
         {
           "rule": "各 kind の KindProfile は同一版内で不変であり、他 kind のブロックを持たない（discriminator として機能する）",
           "enforcement": "schema",
-          "rationale": "kind ごとの content 構造の一貫性を保証し、scaffold/validate が kind から構造を一意に決定できるようにする"
+          "rationale": [
+            "kind ごとの content 構造の一貫性を保証し、scaffold/validate が kind から構造を一意に決定できるようにする"
+          ]
         },
         {
           "rule": "Schema集約が対象とするのは Document の schemaRef が指しうる型のみ（派生構造を検証する schema は対象外）",
           "enforcement": "schema",
-          "rationale": "一貫性境界を「schemaRef の解決先」に閉じ、無関係な検証用 schema を集約に含めない"
+          "rationale": [
+            "一貫性境界を「schemaRef の解決先」に閉じ、無関係な検証用 schema を集約に含めない"
+          ]
         },
         {
           "rule": "Schemaファイル自体の物理的な整形は、常にPython標準ライブラリの json.dumps(schema, indent=2, ensure_ascii=False) + 改行 の出力と完全一致する",
           "enforcement": "schema",
-          "rationale": "整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする（複数の書式が混在すると、機械編集のたびにどの書式に合わせるべきかが曖昧になり、フォーマット破壊のリスクが生まれる）"
+          "rationale": [
+            "整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする",
+            "複数の書式が混在すると、機械編集のたびにどの書式に合わせるべきかが曖昧になり、フォーマット破壊のリスクが生まれる"
+          ]
         }
       ]
     },

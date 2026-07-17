@@ -1,7 +1,7 @@
 {
   "documentId": "uc-query-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -100,7 +100,9 @@
         "If 対象パスが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
         "If 指定したblockKey/idValueが存在しないとき、システムはNOT_FOUNDエラーを返す shall。",
         "If フィルタの正規表現パターンが不正なとき、システムはINVALID_PATTERNエラーを返す shall。",
-        "If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: \"raw\", content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: <固定文言>, value: <生テキスト> }を返す）。"
+        "If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: \"raw\", content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: <固定文言>, value: <生テキスト> }を返す）。",
+        "When operationにresolve_refを指定したとき、システムは対象Documentのfieldの値をdocumentId、対象Document自身が持つ他の参照フィールドをテンプレート変数として、targetSchemaRef（discriminatorを持つschemaの場合はtargetDiscriminatorで対象種別を指定する）のx-source-targetテンプレートに埋め込み、参照先Documentのpathを算出してvalueに返す shall（参照先Documentの中身は取得しない）。",
+        "If resolve_refでテンプレート変数を解決できないとき、システムはMISSING_TEMPLATE_VARエラーを返す shall。"
       ]
     },
     "errors": {
@@ -109,19 +111,33 @@
       "items": [
         {
           "code": "INVALID_OPERATION",
-          "condition": "operation が定義外"
+          "condition": [
+            "operation が定義外"
+          ]
         },
         {
           "code": "MISSING_PARAM",
-          "condition": "必須パラメータが欠落"
+          "condition": [
+            "必須パラメータが欠落"
+          ]
         },
         {
           "code": "NOT_FOUND",
-          "condition": "指定した blockKey/idValue に一致する要素が存在しない"
+          "condition": [
+            "指定した blockKey/idValue に一致する要素が存在しない"
+          ]
         },
         {
           "code": "INVALID_PATTERN",
-          "condition": "filter_pattern の正規表現が不正"
+          "condition": [
+            "filter_pattern の正規表現が不正"
+          ]
+        },
+        {
+          "code": "MISSING_TEMPLATE_VAR",
+          "condition": [
+            "resolve_ref でテンプレート変数（contextRef等）を解決できない"
+          ]
         }
       ]
     },
@@ -298,6 +314,22 @@
           "operation": "get_block",
           "gherkin": "Scenario: 解釈指針を宣言していないブロックはcautionを持たない\n  Given x-prompt-interpretを宣言していないブロック\n  When operation get_block を実行する\n  Then cautionキー自体が省略される（値が無いフィールドは持たせない）",
           "covers": "受け入れ基準: x-prompt-interpret未宣言時のcaution省略"
+        },
+        {
+          "name": "resolve_refは参照先Documentのpathを算出する",
+          "category": "正常系",
+          "viewpoint": "参照解決：ref値とx-source-targetテンプレートから参照先pathを機械的に算出する",
+          "gherkin": "Scenario: resolve_refは参照先Documentのpathを算出する\n  Given query システム と、subdomainRefフィールドを持つ対象 Document\n  When operation resolve_ref を field subdomainRef, targetSchemaRef DomainSpecSchema/v5, targetDiscriminator specKind=subdomain で実行する\n  Then 参照先Documentのpathがvalueとして返る（中身は取得されない）",
+          "covers": "受け入れ基準: resolve_refは参照先pathを算出する",
+          "operation": "resolve_ref"
+        },
+        {
+          "name": "resolve_refはテンプレート変数を解決できないときエラーを返す",
+          "category": "異常系",
+          "viewpoint": "エラー：テンプレート変数が不足するときはMISSING_TEMPLATE_VAR",
+          "gherkin": "Scenario: resolve_refはテンプレート変数を解決できないときエラーを返す\n  Given 参照先テンプレートが要求する変数を持たない対象 Document\n  When operation resolve_ref を実行する\n  Then MISSING_TEMPLATE_VAR エラーが返る",
+          "covers": "受け入れ基準: MISSING_TEMPLATE_VARエラー",
+          "operation": "resolve_ref"
         }
       ]
     },
@@ -397,6 +429,10 @@
         {
           "operation": "get_children",
           "summary": "識別子で特定した要素が持つchildren配列を返す"
+        },
+        {
+          "operation": "resolve_ref",
+          "summary": "参照フィールドfieldの値と、targetSchemaRefが宣言するx-source-targetテンプレートから、参照先Documentのpathを算出して返す（中身は取得しない）"
         }
       ]
     }

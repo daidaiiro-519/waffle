@@ -57,6 +57,38 @@ def test_query_documentのエラーはerror_messageを返す():
     assert out["error"] == "INVALID_OPERATION"
 
 
+def test_query_documentはresolve_refで参照先pathを返す():
+    """
+    Given waffle MCPサーバ
+    When query_documentツールをoperation=resolve_refで呼ぶ
+    Then MCP出力のvalue.pathは参照先Documentのpath
+    """
+    out = asyncio.run(_call("query_document", {
+        "operation": "resolve_ref",
+        "path": ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json",
+        "field": "subdomainRef",
+        "targetSchemaRef": "DomainSpecSchema/v5",
+        "targetDiscriminator": {"specKind": "subdomain"},
+    }))
+    assert out["value"]["path"] == (
+        ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/sd-document-management.json"
+    )
+
+
+def test_query_document_collectionはgrep_documentsで横断検索する():
+    """
+    Given waffle MCPサーバ
+    When query_document_collectionツールをoperation=grep_documentsで呼ぶ
+    Then MCP出力のvalueにpatternへ一致したDocumentのpathが含まれる
+    """
+    out = asyncio.run(_call("query_document_collection", {
+        "operation": "grep_documents",
+        "path": ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase",
+        "pattern": "resolve_ref",
+    }))
+    assert any("uc-query-document.json" in p for p in out["value"])
+
+
 def test_validate_documentは適合でstatus判定を返す():
     """
     Given waffle MCPサーバ

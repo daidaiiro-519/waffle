@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scan-source-code",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-source-code",
@@ -107,11 +107,15 @@
       "items": [
         {
           "code": "UNSUPPORTED_KIND",
-          "condition": "対象言語に対応する DocstringSchema の kind が無い"
+          "condition": [
+            "対象言語に対応する DocstringSchema の kind が無い"
+          ]
         },
         {
           "code": "INVALID_SOURCE",
-          "condition": "対象ファイルが構文解析できない（言語のパーサでエラー）"
+          "condition": [
+            "対象ファイルが構文解析できない（言語のパーサでエラー）"
+          ]
         }
       ]
     },

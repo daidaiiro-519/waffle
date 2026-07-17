@@ -65,6 +65,9 @@ sequenceDiagram
 - When clear_fieldでdocumentPath・pathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。
 - While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。
 - If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。
+- When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。
+- While Documentのschemaが既に目的のschemaRefであるとき、migrate_schemaは無変更で成功する shall。
+- If migrate_schemaの移行先schemaRefが解決できないとき、システムはINVALID_SCHEMA_REFエラーを返し書き換えを拒否する shall。
 
 ---
 
@@ -82,9 +85,10 @@ sequenceDiagram
 
 | コード | 条件 |
 |---|---|
-| `MISSING_DISCRIMINATOR` | 分岐のあるschemaでdiscriminatorが未指定（候補enumを案内） |
-| `INVALID_DISCRIMINATOR` | 分岐のあるschemaでdiscriminatorの値がenumに存在しない（候補enumを案内） |
-| `REQUIRED_FIELD` | clear_fieldの削除対象がschemaの必須フィールドである |
+| `MISSING_DISCRIMINATOR` | - 分岐のあるschemaでdiscriminatorが未指定（候補enumを案内） |
+| `INVALID_DISCRIMINATOR` | - 分岐のあるschemaでdiscriminatorの値がenumに存在しない（候補enumを案内） |
+| `REQUIRED_FIELD` | - clear_fieldの削除対象がschemaの必須フィールドである |
+| `INVALID_SCHEMA_REF` | - migrate_schemaの移行先schemaRefが解決できない |
 
 ---
 
@@ -244,6 +248,45 @@ Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR
   Given 分岐のあるschemaのenumに存在しないdiscriminator値
   When createを実行する
   Then INVALID_DISCRIMINATORエラーが返る
+```
+
+### migrate_schemaはschemaRefを新版へ書き換える
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | migrate_schema: 既に解決可能な別のschema版へDocumentのschemaRefを書き換える |
+
+```gherkin
+Scenario: migrate_schemaはschemaRefを新版へ書き換える
+  Given 別版のschemaRefを指す既存Document
+  When migrate_schemaを実行する
+  Then Documentのstatusはそのschema版へ書き換わる
+```
+
+### migrate_schemaは同じ版への書き換えに対して冪等である
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | migrate_schema: 冪等性 |
+
+```gherkin
+Scenario: migrate_schemaは同じ版への書き換えに対して冪等である
+  Given 既に目的のschemaRefになっているDocument
+  When 同じschemaRefでmigrate_schemaを再実行する
+  Then 対象は無変更のまま成功する
+```
+
+### migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | migrate_schema: 対象取り違えの防止 |
+
+```gherkin
+Scenario: migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する
+  Given 解決できない移行先schemaRef
+  When migrate_schemaを実行する
+  Then INVALID_SCHEMA_REFエラーが返り、Documentは変更されない
 ```
 
 ---

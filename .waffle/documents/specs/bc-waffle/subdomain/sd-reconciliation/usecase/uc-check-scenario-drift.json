@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-scenario-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
@@ -116,11 +116,15 @@
       "items": [
         {
           "code": "INVALID_SOURCE",
-          "condition": "対象のテストファイルが構文解析できない（Pythonのパーサでエラー）"
+          "condition": [
+            "対象のテストファイルが構文解析できない（Pythonのパーサでエラー）"
+          ]
         },
         {
           "code": "INVALID_JSON",
-          "condition": "対象のspec.jsonが存在するが不正なJSON（json.JSONDecodeError）"
+          "condition": [
+            "対象のspec.jsonが存在するが不正なJSON（json.JSONDecodeError）"
+          ]
         }
       ]
     },

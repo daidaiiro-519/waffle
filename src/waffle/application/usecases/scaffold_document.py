@@ -40,6 +40,8 @@ class ScaffoldDocument:
             return self._fill(params)
         if operation == "clear_field":
             return self._clear_field(params)
+        if operation == "migrate_schema":
+            return self._migrate_schema(params)
         return _err("INVALID_OPERATION", f"未知の operation: {operation}")
 
     def _create(self, params: dict) -> Result[dict]:
@@ -161,6 +163,29 @@ class ScaffoldDocument:
         if cleared:
             self._documents.save(document_path, doc)
         return Ok({"documentPath": document_path, "cleared": cleared})
+
+    def _migrate_schema(self, params: dict) -> Result[dict]:
+        """documentのschemaRefを、既に解決可能な別のschema版へ書き換える（冪等）。
+        contentの型適合検証は行わない（migrate_schema前後どちらのタイミングでも
+        scaffold fillでcontentを書き換えられ、適合判定はuc-validate-documentの責務）。"""
+        document_path = params.get("documentPath")
+        schema_ref = params.get("schemaRef")
+        if not document_path or not schema_ref:
+            return _err("MISSING_PARAM", "migrate_schema には documentPath, schemaRef が必要です")
+        loaded = load_document(self._documents, document_path)
+        if isinstance(loaded, Err):
+            return loaded
+        doc = loaded.value
+
+        schema_result = load_schema(self._schemas, schema_ref)
+        if isinstance(schema_result, Err):
+            return schema_result
+
+        if doc.get("schemaRef") == schema_ref:
+            return Ok({"documentPath": document_path, "schemaRef": schema_ref, "changed": False})
+        doc["schemaRef"] = schema_ref
+        self._documents.save(document_path, doc)
+        return Ok({"documentPath": document_path, "schemaRef": schema_ref, "changed": True})
 
 # --- schema 走査ヘルパ（純ロジック・機械的） ---
 

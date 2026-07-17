@@ -114,9 +114,12 @@ def _join(chunks):
 def _fmt(v):
     return ("✓" if v else "-") if isinstance(v, bool) else v
 
-def _mdcell(v, code=False, join=None, sep=" / "):
-    # セル値が配列なら畳む。dict 要素は join テンプレ（あれば）/ 文字列要素は str。sep で連結
-    if isinstance(v, list):
+def _mdcell(v, code=False, join=None, sep=" / ", bullet=False):
+    # セル値が配列なら畳む。bullet指定は各要素を "- " 接頭辞つき <br> 区切りの箇条書きにする（join/sepより優先）。
+    # bullet指定が無ければ dict 要素は join テンプレ（あれば）/ 文字列要素は str を sep で連結する
+    if isinstance(v, list) and bullet:
+        v = "<br>".join(f"- {it}" for it in v)
+    elif isinstance(v, list):
         v = sep.join((join.format(**it) if (join and isinstance(it, dict)) else str(it)) for it in v)
     s = str(_fmt(v)).replace("|", "\\|").replace("\n", " ")
     return f"`{s}`" if code and s else s
@@ -141,7 +144,7 @@ def _table(rows, columns):
     return "\n".join(out)
 
 def _cell(r, c):
-    v = _mdcell(r.get(c["field"], ""), c.get("code"), c.get("join"), c.get("sep", " / "))
+    v = _mdcell(r.get(c["field"], ""), c.get("code"), c.get("join"), c.get("sep", " / "), c.get("bullet"))
     if c.get("markField") and r.get(c["markField"]):
         v = f"**{v}**{c.get('markSuffix', '')}"
     return v

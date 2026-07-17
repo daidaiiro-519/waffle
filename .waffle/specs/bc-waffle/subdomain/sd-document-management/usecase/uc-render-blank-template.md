@@ -84,10 +84,10 @@ sequenceDiagram
 
 | コード | 条件 |
 |---|---|
-| `INVALID_SCHEMA_REF` | 指定されたschemaRefが実在しない |
-| `MISSING_DISCRIMINATOR` | schemaのcontentがdiscriminatorで分岐するが、対応するdiscriminator値が指定されていない |
-| `INVALID_DISCRIMINATOR` | schemaのcontentがdiscriminatorで分岐するが、指定されたdiscriminator値が候補enumに存在しない |
-| `WRITE_ERROR` | 書き出し先パスへのファイル書き込みに失敗する（権限不足等） |
+| `INVALID_SCHEMA_REF` | - 指定されたschemaRefが実在しない |
+| `MISSING_DISCRIMINATOR` | - schemaのcontentがdiscriminatorで分岐するが、対応するdiscriminator値が指定されていない |
+| `INVALID_DISCRIMINATOR` | - schemaのcontentがdiscriminatorで分岐するが、指定されたdiscriminator値が候補enumに存在しない |
+| `WRITE_ERROR` | - 書き出し先パスへのファイル書き込みに失敗する（権限不足等） |
 
 ---
 

@@ -11,6 +11,7 @@ from waffle.shared.result import Err, Ok
 _FIXTURE_DIR = Path("src/waffle/domain/model/TestPatchSchemaFixture")
 _FIXTURE_PATH = _FIXTURE_DIR / "v1.json"
 _SCHEMA_REF = "TestPatchSchemaFixture/v1"
+_FIXTURE_V2_PATH = _FIXTURE_DIR / "v2.json"
 
 
 def _base_schema() -> dict:
@@ -56,6 +57,7 @@ def setup_function():
 
 def teardown_function():
     _FIXTURE_PATH.unlink(missing_ok=True)
+    _FIXTURE_V2_PATH.unlink(missing_ok=True)
     if _FIXTURE_DIR.exists() and not any(_FIXTURE_DIR.iterdir()):
         _FIXTURE_DIR.rmdir()
 
@@ -384,10 +386,298 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
 
 def test_未知のoperationはINVALID_OPERATION():
     """
-    Given add_block/rename_block/set_field/remove_block以外のoperation
+    Given add_block/rename_block/set_field/remove_block/add_def/add_kind_branch/create_version/set_kind_render_target以外のoperation
     When patchを実行する
     Then INVALID_OPERATIONエラーが返る
     """
     result = _engine().run("bogus", {"schemaRef": _SCHEMA_REF})
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_OPERATION"
+
+
+def _kind_dispatch_fixture() -> dict:
+    schema = _base_schema()
+    schema["properties"] = {"skillKind": {"type": "string", "enum": ["advisor", "custom"]}}
+    schema["$defs"]["AdvisorContent"] = {"type": "object", "properties": {}}
+    schema["$defs"]["CustomContent"] = {"type": "object", "properties": {}}
+    schema["if"] = {"properties": {"skillKind": {"const": "advisor"}}, "required": ["skillKind"]}
+    schema["then"] = {"properties": {"content": {"$ref": "#/$defs/AdvisorContent"}}}
+    schema["else"] = {"properties": {"content": {"$ref": "#/$defs/CustomContent"}}}
+    return schema
+
+
+def test_既存content_defへの紐付けを持たない新規defを追加する():
+    """
+    Given def名・def定義
+    When add_defを実行する
+    Then $defsに新規エントリが追加され、既存のcontent defには一切変更が加わらない
+    """
+    result = _engine().run("add_def", {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "RouterContent",
+        "defDef": {"type": "object", "properties": {}},
+    })
+    assert isinstance(result, Ok), result
+    written = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+    assert written["$defs"]["RouterContent"] == {"type": "object", "properties": {}}
+    assert written["$defs"]["SomeContent"] == _base_schema()["$defs"]["SomeContent"]
+
+
+def test_既に存在するdefの追加は無変更で成功する():
+    """
+    Given 既に追加済みのdef名を含むadd_def操作
+    When add_defを再実行する
+    Then 対象は無変更のまま成功する
+    """
+    params = {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "RouterContent",
+        "defDef": {"type": "object", "properties": {}},
+    }
+    first = _engine().run("add_def", params)
+    assert isinstance(first, Ok) and first.value["changed"] is True
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+
+    second = _engine().run("add_def", params)
+    assert isinstance(second, Ok) and second.value["changed"] is False
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
+
+
+def test_2値のif_then_else形式に新しいkindブランチを追加する():
+    """
+    Given if/then/else形式（enumが既存kind値を2つのみ持つ）のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名
+    When add_kind_branchを実行する
+    Then discriminatorフィールドのenumに新しいkind値が追加され、ルート直下の分岐はallOf形式に正規化された上で新しいブランチを含む
+    """
+    _write_fixture(_kind_dispatch_fixture())
+    _engine().run("add_def", {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "RouterContent",
+        "defDef": {"type": "object", "properties": {}},
+    })
+
+    result = _engine().run("add_kind_branch", {
+        "schemaRef": _SCHEMA_REF,
+        "discriminatorField": "skillKind",
+        "kindValue": "router",
+        "contentDefName": "RouterContent",
+    })
+    assert isinstance(result, Ok), result
+    written = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+    assert "if" not in written and "then" not in written and "else" not in written
+    assert written["properties"]["skillKind"]["enum"] == ["advisor", "custom", "router"]
+    branches = {b["if"]["properties"]["skillKind"]["const"]: b["then"]["properties"]["content"]["$ref"] for b in written["allOf"]}
+    assert branches == {
+        "advisor": "#/$defs/AdvisorContent",
+        "custom": "#/$defs/CustomContent",
+        "router": "#/$defs/RouterContent",
+    }
+
+
+def test_allOf形式の分岐に新しいkindブランチを追加する():
+    """
+    Given 既にallOf形式のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名
+    When add_kind_branchを実行する
+    Then discriminatorフィールドのenumに新しいkind値が追加され、allOf配列に新しいブランチが追加される
+    """
+    _write_fixture(_kind_dispatch_fixture())
+    _engine().run("add_def", {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "RouterContent",
+        "defDef": {"type": "object", "properties": {}},
+    })
+    _engine().run("add_kind_branch", {
+        "schemaRef": _SCHEMA_REF,
+        "discriminatorField": "skillKind",
+        "kindValue": "router",
+        "contentDefName": "RouterContent",
+    })
+    _engine().run("add_def", {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "FourthContent",
+        "defDef": {"type": "object", "properties": {}},
+    })
+
+    result = _engine().run("add_kind_branch", {
+        "schemaRef": _SCHEMA_REF,
+        "discriminatorField": "skillKind",
+        "kindValue": "fourth",
+        "contentDefName": "FourthContent",
+    })
+    assert isinstance(result, Ok), result
+    written = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+    assert written["properties"]["skillKind"]["enum"] == ["advisor", "custom", "router", "fourth"]
+    branches = {b["if"]["properties"]["skillKind"]["const"]: b["then"]["properties"]["content"]["$ref"] for b in written["allOf"]}
+    assert branches["fourth"] == "#/$defs/FourthContent"
+    assert len(written["allOf"]) == 4
+
+
+def test_既に存在するkindブランチの追加は無変更で成功する():
+    """
+    Given 既にenumとルート分岐の両方に存在するkind値・content def紐付け
+    When add_kind_branchを再実行する
+    Then 対象は無変更のまま成功する
+    """
+    _write_fixture(_kind_dispatch_fixture())
+    _engine().run("add_def", {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "RouterContent",
+        "defDef": {"type": "object", "properties": {}},
+    })
+    params = {
+        "schemaRef": _SCHEMA_REF,
+        "discriminatorField": "skillKind",
+        "kindValue": "router",
+        "contentDefName": "RouterContent",
+    }
+    first = _engine().run("add_kind_branch", params)
+    assert isinstance(first, Ok) and first.value["changed"] is True
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+
+    second = _engine().run("add_kind_branch", params)
+    assert isinstance(second, Ok) and second.value["changed"] is False
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
+
+
+def test_未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE():
+    """
+    Given if/then/else形式でもallOf形式でもないルート分岐、またはif/then/else形式でありながらenumが3つ以上のkind値を持つ状態
+    When add_kind_branchを実行する
+    Then UNSUPPORTED_ROOT_DISPATCH_SHAPEエラーが返り書き込まれない
+    """
+    before = _FIXTURE_PATH.read_text(encoding="utf-8")
+    result = _engine().run("add_kind_branch", {
+        "schemaRef": _SCHEMA_REF,
+        "discriminatorField": "skillKind",
+        "kindValue": "router",
+        "contentDefName": "RouterContent",
+    })
+    assert isinstance(result, Err), result
+    assert result.details[0] == "UNSUPPORTED_ROOT_DISPATCH_SHAPE"
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
+
+
+def test_create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る():
+    """
+    Given 複製元のfromSchemaRefと、複製先のschemaRef（新版）・edits
+    When create_versionを実行する
+    Then fromSchemaRefの内容を複製しeditsを適用した新しい版ファイルがschemaRefへ書き込まれ、fromSchemaRef自体は変更されない
+    """
+    before = _FIXTURE_PATH.read_text(encoding="utf-8")
+    result = _engine().run("create_version", {
+        "schemaRef": f"{_SCHEMA_REF.rsplit('/', 1)[0]}/v2",
+        "fromSchemaRef": _SCHEMA_REF,
+        "edits": [{"defName": "TitleBlock", "fieldPath": "properties.title.type", "value": "array"}],
+    })
+    assert isinstance(result, Ok), result
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
+    written = json.loads(_FIXTURE_V2_PATH.read_text(encoding="utf-8"))
+    assert written["$defs"]["TitleBlock"]["properties"]["title"]["type"] == "array"
+
+
+def test_create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない():
+    """
+    Given 既存フィールドの型を変更するedits（通常のset_fieldなら拒否される変更）
+    When create_versionを実行する
+    Then BACKWARD_INCOMPATIBLEエラーにならず新版が作られる
+    """
+    result = _engine().run("create_version", {
+        "schemaRef": f"{_SCHEMA_REF.rsplit('/', 1)[0]}/v2",
+        "fromSchemaRef": _SCHEMA_REF,
+        "edits": [{"defName": "TitleBlock", "fieldPath": "properties.title.type", "value": "array"}],
+    })
+    assert isinstance(result, Ok), result
+
+
+def test_create_versionは既に存在する版ファイルを上書きしない():
+    """
+    Given schemaRef（新版）が指す版ファイルが既に存在する状態
+    When create_versionを実行する
+    Then VERSION_ALREADY_EXISTSエラーが返り、既存の版ファイルは変更されない
+    """
+    _FIXTURE_V2_PATH.write_text(json.dumps(_base_schema(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    before = _FIXTURE_V2_PATH.read_text(encoding="utf-8")
+    result = _engine().run("create_version", {
+        "schemaRef": f"{_SCHEMA_REF.rsplit('/', 1)[0]}/v2",
+        "fromSchemaRef": _SCHEMA_REF,
+        "edits": [{"defName": "TitleBlock", "fieldPath": "properties.title.type", "value": "array"}],
+    })
+    assert isinstance(result, Err), result
+    assert result.details[0] == "VERSION_ALREADY_EXISTS"
+    assert _FIXTURE_V2_PATH.read_text(encoding="utf-8") == before
+
+
+def _kind_keyed_render_target_fixture() -> dict:
+    schema = _base_schema()
+    schema["x-render-target"] = {
+        "formats": ["md"],
+        "pathVars": {"judgment": {"skillRef": "doc.skillRef"}},
+        "path": {"judgment": ".waffle/templates/{documentId}.md"},
+        "deploy": {"judgment": [".claude/skills/{skillRef}/references/{documentId}.md"]},
+    }
+    return schema
+
+
+def test_x_render_targetのkind別dictに新しいkind値のエントリを追加する():
+    """
+    Given kind値・pathVars・path・deploy、およびpathVars/path/deployがkind別dict形式のschema
+    When set_kind_render_targetを実行する
+    Then x-render-target.pathVars/path/deployそれぞれに、そのkind値のエントリが追加される
+    """
+    _write_fixture(_kind_keyed_render_target_fixture())
+    result = _engine().run("set_kind_render_target", {
+        "schemaRef": _SCHEMA_REF,
+        "kindValue": "investigation-report",
+        "pathVars": {"skillRef": "doc.skillRef"},
+        "path": ".waffle/templates/{documentId}.md",
+        "deploy": [".claude/skills/{skillRef}/references/{documentId}.md"],
+    })
+    assert isinstance(result, Ok), result
+    written = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+    target = written["x-render-target"]
+    assert target["pathVars"]["investigation-report"] == {"skillRef": "doc.skillRef"}
+    assert target["path"]["investigation-report"] == ".waffle/templates/{documentId}.md"
+    assert target["deploy"]["investigation-report"] == [".claude/skills/{skillRef}/references/{documentId}.md"]
+    assert target["pathVars"]["judgment"] == {"skillRef": "doc.skillRef"}
+
+
+def test_既に存在するkind別render_targetエントリの追加は無変更で成功する():
+    """
+    Given 既にpathVars・path・deployの全てで指定した値と一致するkind値のエントリ
+    When set_kind_render_targetを再実行する
+    Then 対象は無変更のまま成功する
+    """
+    _write_fixture(_kind_keyed_render_target_fixture())
+    params = {
+        "schemaRef": _SCHEMA_REF,
+        "kindValue": "investigation-report",
+        "pathVars": {"skillRef": "doc.skillRef"},
+        "path": ".waffle/templates/{documentId}.md",
+        "deploy": [".claude/skills/{skillRef}/references/{documentId}.md"],
+    }
+    first = _engine().run("set_kind_render_target", params)
+    assert isinstance(first, Ok) and first.value["changed"] is True
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+
+    second = _engine().run("set_kind_render_target", params)
+    assert isinstance(second, Ok) and second.value["changed"] is False
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
+
+
+def test_x_render_targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE():
+    """
+    Given x-render-target自体を持たない、またはpathVars・path・deployのいずれかがフラット形式（kind別dictでない）のschema
+    When set_kind_render_targetを実行する
+    Then UNSUPPORTED_RENDER_TARGET_SHAPEエラーが返り書き込まれない
+    """
+    before = _FIXTURE_PATH.read_text(encoding="utf-8")
+    result = _engine().run("set_kind_render_target", {
+        "schemaRef": _SCHEMA_REF,
+        "kindValue": "investigation-report",
+        "pathVars": {"skillRef": "doc.skillRef"},
+        "path": ".waffle/templates/{documentId}.md",
+        "deploy": [".claude/skills/{skillRef}/references/{documentId}.md"],
+    })
+    assert isinstance(result, Err), result
+    assert result.details[0] == "UNSUPPORTED_RENDER_TARGET_SHAPE"
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == before

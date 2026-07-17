@@ -1,7 +1,7 @@
 {
   "documentId": "uc-patch-schema",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v5",
+  "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
   "subdomainRef": "sd-schema-management",
   "status": "VALIDATED",
@@ -34,7 +34,9 @@
       "items": [
         "document.jsonは「AIは値だけ、構造は機械が守る」というHarness原則でscaffold/fillが担保しているが、その値を定義するSchema自体はこの原則の外側にあり、AIがRead/Edit/Writeで直接編集していた",
         "このセッションだけでも、json.dumpによる全体再シリアライズがフォーマットを破壊した事故・必須フィールドの追加が既存instanceを壊しうることに気づかず書き込んでしまうリスク・同じ編集を誤って再実行した際の冪等性の欠如、が実際に起きている",
-        "document.jsonが受けている安全網（構造保護・冪等性）を、Schema自体の編集にも適用しなければ、waffleが最も守るべき自分自身の定義層が、今も無防備なままになる"
+        "document.jsonが受けている安全網（構造保護・冪等性）を、Schema自体の編集にも適用しなければ、waffleが最も守るべき自分自身の定義層が、今も無防備なままになる",
+        "既存のadd_block/rename_block/set_field/remove_blockは、$defs配下の既存content defへのブロック追加・改名・単一フィールド書き換え・プロパティ除去のみを対象とし、新しいkind（discriminator値）そのものをSchemaに追加する操作（新規content defのゼロからの作成、ルート直下のkind分岐への新ブランチ追加）は行えなかった",
+        "この結果、Skillにadvisor/custom以外の新しいkind（例: 複数Skillの組み合わせを判断するrouter）を追加するという、Schema自体を進化させる場面では、依然としてEdit/Writeによる直接編集に頼らざるを得なかった"
       ]
     },
     "externalActors": {
@@ -51,7 +53,8 @@
         "add_blockの場合: 追加するブロック定義・紐付け先・プロパティ名が与えられている",
         "rename_blockの場合: リネーム元・リネーム先の識別子が与えられている（例: DefinitionOfDone→AcceptanceCriteria）",
         "set_fieldの場合: 対象のブロック名・書き換える項目・新しい値が与えられている",
-        "remove_blockの場合: 対象のcontent def名・外すプロパティ名が与えられている"
+        "remove_blockの場合: 対象のcontent def名・外すプロパティ名が与えられている",
+        "create_versionの場合: 複製元のfromSchemaRefが解決でき、複製先のschemaRef（新版）がまだ存在しない"
       ]
     },
     "mainFlow": {
@@ -124,7 +127,19 @@
         "If 書き込み時にI/Oエラーが発生したとき、システムはWRITE_ERRORエラーを返す shall。",
         "When remove_blockでcontent def名・プロパティ名が与えられたとき、システムはそのcontent defからプロパティ参照を外す shall。",
         "While 対象プロパティが既に存在しないとき、remove_blockは無変更で成功する shall。",
-        "If remove_blockの対象プロパティがrequired配列に含まれているとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall（必須プロパティの削除は既存Documentを壊しうるため、先にset_fieldや別の手順でrequiredから外すことを求める）。"
+        "If remove_blockの対象プロパティがrequired配列に含まれているとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall（必須プロパティの削除は既存Documentを壊しうるため、先にset_fieldや別の手順でrequiredから外すことを求める）。",
+        "When add_defでdef名・def定義が与えられたとき、システムはSchemaの$defsに新規エントリを追加する（既存content defへの紐付けは行わない） shall。",
+        "While 対象defが既に存在するとき、add_defは無変更で成功する shall。",
+        "When add_kind_branchでdiscriminatorフィールド名・新しいkind値・紐付け先content def名が与えられたとき、システムはそのフィールドのenumに新しい値を追加し、ルート直下のkind分岐に新しいブランチを追加する shall。",
+        "While ルート直下のkind分岐がif/then/elseの単一分岐形式であり、かつdiscriminatorフィールドのenumが既存kind値を2つのみ持つとき、add_kind_branchはelseブランチが暗黙に表していたkind値をenumから逆算し、allOf形式の複数分岐に正規化した上で新しいブランチを追加する shall。",
+        "While 対象のkind値・content def紐付けの組が既にkind分岐に存在するとき、add_kind_branchは無変更で成功する shall。",
+        "If add_kind_branchの対象となるルート直下のkind分岐の形状が、既知の形状（if/then/else形式・allOf形式）に適合しない、またはif/then/else形式でありながらelseの暗黙値を一意に逆算できないとき、システムはUNSUPPORTED_ROOT_DISPATCH_SHAPEエラーを返し書き込みを拒否する shall。",
+        "When create_versionでfromSchemaRef・schemaRef（新版）・editsが与えられたとき、システムはfromSchemaRefの内容を複製し、editsを適用した新しいschema版ファイルをschemaRefへ書き込む shall。",
+        "While create_versionのschemaRef（新版）が既に存在するとき、システムはVERSION_ALREADY_EXISTSエラーを返し書き込みを拒否する shall。",
+        "When create_versionのeditsが既存フィールドの型を変更するとき、システムはbackward-compatチェックを行わずに書き込む shall（新版はまだどのDocumentも参照していないため）。",
+        "When set_kind_render_targetでkind値・pathVars・path・deployが与えられたとき、システムはx-render-target.pathVars/path/deployそれぞれのkind別dictに、そのkind値のエントリを追加する shall。",
+        "While 対象のkind値のエントリが既にpathVars・path・deployの全てで指定した値と一致しているとき、set_kind_render_targetは無変更で成功する shall。",
+        "If set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でないとき、システムはUNSUPPORTED_RENDER_TARGET_SHAPEエラーを返し書き込みを拒否する shall。"
       ]
     },
     "errors": {
@@ -133,27 +148,58 @@
       "items": [
         {
           "code": "BACKWARD_INCOMPATIBLE",
-          "condition": "変更が既存Documentを壊しうる後方互換性のない変更を含む（必須プロパティのremove_blockを含む）"
+          "condition": [
+            "変更が既存Documentを壊しうる後方互換性のない変更を含む（必須プロパティのremove_blockを含む）"
+          ]
         },
         {
           "code": "INVALID_SCHEMA_STRUCTURE",
-          "condition": "生成結果がJSON Schemaの構文に適合しない"
+          "condition": [
+            "生成結果がJSON Schemaの構文に適合しない"
+          ]
         },
         {
           "code": "BLOCK_NOT_FOUND",
-          "condition": "対象のブロックが存在しない（rename_blockはリネーム元・リネーム先の両方が無いとき、set_field/remove_blockは対象のcontent defが無いとき）"
+          "condition": [
+            "対象のブロックが存在しない（rename_blockはリネーム元・リネーム先の両方が無いとき、set_field/remove_blockは対象のcontent defが無いとき）"
+          ]
         },
         {
           "code": "INVALID_OPERATION",
-          "condition": "add_block/rename_block/set_field/remove_block以外のoperationが指定された"
+          "condition": [
+            "add_block/rename_block/set_field/remove_block/add_def/add_kind_branch/create_version/set_kind_render_target以外のoperationが指定された"
+          ]
         },
         {
           "code": "MISSING_PARAM",
-          "condition": "operationの実行に必要なパラメータが不足している"
+          "condition": [
+            "operationの実行に必要なパラメータが不足している"
+          ]
         },
         {
           "code": "WRITE_ERROR",
-          "condition": "書き込み先へのI/Oエラー等で書き込みに失敗する"
+          "condition": [
+            "書き込み先へのI/Oエラー等で書き込みに失敗する"
+          ]
+        },
+        {
+          "code": "UNSUPPORTED_ROOT_DISPATCH_SHAPE",
+          "condition": [
+            "add_kind_branchの対象となるルート直下のkind分岐が、既知の形状（if/then/else形式・allOf形式）に適合しない",
+            "if/then/else形式でありながら、elseの暗黙値を一意に逆算できない"
+          ]
+        },
+        {
+          "code": "VERSION_ALREADY_EXISTS",
+          "condition": [
+            "create_versionのschemaRef（新版）が指す版ファイルが既に存在する"
+          ]
+        },
+        {
+          "code": "UNSUPPORTED_RENDER_TARGET_SHAPE",
+          "condition": [
+            "set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でない"
+          ]
         }
       ]
     },
@@ -225,8 +271,8 @@
         {
           "name": "未知のoperationはINVALID_OPERATION",
           "category": "異常系",
-          "viewpoint": "operationの妥当性検証：add_block/rename_block/set_field/remove_block以外を拒否する",
-          "gherkin": "Scenario: 未知のoperationはINVALID_OPERATION\n  Given add_block/rename_block/set_field/remove_block以外のoperation\n  When patchを実行する\n  Then INVALID_OPERATIONエラーが返る",
+          "viewpoint": "operationの妥当性検証：add_block/rename_block/set_field/remove_block/add_def/add_kind_branch/create_version/set_kind_render_target以外を拒否する",
+          "gherkin": "Scenario: 未知のoperationはINVALID_OPERATION\n  Given add_block/rename_block/set_field/remove_block/add_def/add_kind_branch/create_version/set_kind_render_target以外のoperation\n  When patchを実行する\n  Then INVALID_OPERATIONエラーが返る",
           "covers": "受け入れ基準: 未知operationの拒否"
         },
         {
@@ -297,6 +343,102 @@
           "gherkin": "Scenario: 必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される\n  Given 公開済みkindのrequiredに指定されているプロパティ\n  When remove_blockを実行する\n  Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない",
           "covers": "受け入れ基準: remove_blockの後方互換チェック",
           "operation": "remove_block"
+        },
+        {
+          "name": "既存content defへの紐付けを持たない新規defを追加する",
+          "category": "正常系",
+          "viewpoint": "add_def：$defsへの独立した新規エントリの追加",
+          "gherkin": "Scenario: 既存content defへの紐付けを持たない新規defを追加する\n  Given def名・def定義\n  When add_defを実行する\n  Then $defsに新規エントリが追加され、既存のcontent defには一切変更が加わらない",
+          "covers": "受け入れ基準: add_defでの新規def追加",
+          "operation": "add_def"
+        },
+        {
+          "name": "既に存在するdefの追加は無変更で成功する",
+          "category": "境界値",
+          "viewpoint": "add_def：冪等性",
+          "gherkin": "Scenario: 既に存在するdefの追加は無変更で成功する\n  Given 既に追加済みのdef名を含むadd_def操作\n  When add_defを再実行する\n  Then 対象は無変更のまま成功する",
+          "covers": "受け入れ基準: add_defの冪等性",
+          "operation": "add_def"
+        },
+        {
+          "name": "2値のif_then_else形式に新しいkindブランチを追加する",
+          "category": "正常系",
+          "viewpoint": "add_kind_branch：if/then/elseからallOf形式への正規化と新ブランチの追加",
+          "gherkin": "Scenario: 2値のif_then_else形式に新しいkindブランチを追加する\n  Given if/then/else形式（enumが既存kind値を2つのみ持つ）のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名\n  When add_kind_branchを実行する\n  Then discriminatorフィールドのenumに新しいkind値が追加され、ルート直下の分岐はallOf形式に正規化された上で新しいブランチを含む",
+          "covers": "受け入れ基準: add_kind_branchでのif/then/elseからallOfへの正規化",
+          "operation": "add_kind_branch"
+        },
+        {
+          "name": "allOf形式の分岐に新しいkindブランチを追加する",
+          "category": "正常系",
+          "viewpoint": "add_kind_branch：既にallOf形式の分岐への新規ブランチ追加",
+          "gherkin": "Scenario: allOf形式の分岐に新しいkindブランチを追加する\n  Given 既にallOf形式のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名\n  When add_kind_branchを実行する\n  Then discriminatorフィールドのenumに新しいkind値が追加され、allOf配列に新しいブランチが追加される",
+          "covers": "受け入れ基準: add_kind_branchでのブランチ追加",
+          "operation": "add_kind_branch"
+        },
+        {
+          "name": "既に存在するkindブランチの追加は無変更で成功する",
+          "category": "境界値",
+          "viewpoint": "add_kind_branch：冪等性",
+          "gherkin": "Scenario: 既に存在するkindブランチの追加は無変更で成功する\n  Given 既にenumとルート分岐の両方に存在するkind値・content def紐付け\n  When add_kind_branchを再実行する\n  Then 対象は無変更のまま成功する",
+          "covers": "受け入れ基準: add_kind_branchの冪等性",
+          "operation": "add_kind_branch"
+        },
+        {
+          "name": "未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE",
+          "category": "異常系",
+          "viewpoint": "add_kind_branch：対応できない分岐形状の拒否",
+          "gherkin": "Scenario: 未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE\n  Given if/then/else形式でもallOf形式でもないルート分岐、またはif/then/else形式でありながらenumが3つ以上のkind値を持つ状態\n  When add_kind_branchを実行する\n  Then UNSUPPORTED_ROOT_DISPATCH_SHAPEエラーが返り書き込まれない",
+          "covers": "受け入れ基準: add_kind_branchでの未知形状の拒否",
+          "operation": "add_kind_branch"
+        },
+        {
+          "name": "create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る",
+          "category": "正常系",
+          "viewpoint": "create_version: fromSchemaRefの内容を複製し、editsを適用した新しいschema版ファイルを作る",
+          "gherkin": "Scenario: create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る\n  Given 複製元のfromSchemaRefと、複製先のschemaRef（新版）・edits\n  When create_versionを実行する\n  Then fromSchemaRefの内容を複製しeditsを適用した新しい版ファイルがschemaRefへ書き込まれ、fromSchemaRef自体は変更されない",
+          "covers": "受け入れ基準: create_versionによる新版作成",
+          "operation": "create_version"
+        },
+        {
+          "name": "create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない",
+          "category": "正常系",
+          "viewpoint": "create_version: 新版はまだどのDocumentも参照していないためbackward-compatチェックの対象外",
+          "gherkin": "Scenario: create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない\n  Given 既存フィールドの型を変更するedits（通常のset_fieldなら拒否される変更）\n  When create_versionを実行する\n  Then BACKWARD_INCOMPATIBLEエラーにならず新版が作られる",
+          "covers": "受け入れ基準: create_versionはbackward-compatチェックを行わない",
+          "operation": "create_version"
+        },
+        {
+          "name": "create_versionは既に存在する版ファイルを上書きしない",
+          "category": "異常系",
+          "viewpoint": "create_version: 対象取り違え・誤上書きの防止",
+          "gherkin": "Scenario: create_versionは既に存在する版ファイルを上書きしない\n  Given schemaRef（新版）が指す版ファイルが既に存在する状態\n  When create_versionを実行する\n  Then VERSION_ALREADY_EXISTSエラーが返り、既存の版ファイルは変更されない",
+          "covers": "エラー: VERSION_ALREADY_EXISTS",
+          "operation": "create_version"
+        },
+        {
+          "name": "x-render-targetのkind別dictに新しいkind値のエントリを追加する",
+          "category": "正常系",
+          "viewpoint": "set_kind_render_target：pathVars/path/deployそれぞれのkind別dictへの新規エントリ追加",
+          "gherkin": "Scenario: x-render-targetのkind別dictに新しいkind値のエントリを追加する\n  Given kind値・pathVars・path・deploy、およびpathVars/path/deployがkind別dict形式のschema\n  When set_kind_render_targetを実行する\n  Then x-render-target.pathVars/path/deployそれぞれに、そのkind値のエントリが追加される",
+          "covers": "受け入れ基準: set_kind_render_targetでのエントリ追加",
+          "operation": "set_kind_render_target"
+        },
+        {
+          "name": "既に存在するkind別render_targetエントリの追加は無変更で成功する",
+          "category": "境界値",
+          "viewpoint": "set_kind_render_target：冪等性",
+          "gherkin": "Scenario: 既に存在するkind別render_targetエントリの追加は無変更で成功する\n  Given 既にpathVars・path・deployの全てで指定した値と一致するkind値のエントリ\n  When set_kind_render_targetを再実行する\n  Then 対象は無変更のまま成功する",
+          "covers": "受け入れ基準: set_kind_render_targetの冪等性",
+          "operation": "set_kind_render_target"
+        },
+        {
+          "name": "x-render-targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE",
+          "category": "異常系",
+          "viewpoint": "set_kind_render_target：対応できない形状の拒否",
+          "gherkin": "Scenario: x-render-targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE\n  Given x-render-target自体を持たない、またはpathVars・path・deployのいずれかがフラット形式（kind別dictでない）のschema\n  When set_kind_render_targetを実行する\n  Then UNSUPPORTED_RENDER_TARGET_SHAPEエラーが返り書き込まれない",
+          "covers": "受け入れ基準: set_kind_render_targetでの未知形状の拒否",
+          "operation": "set_kind_render_target"
         }
       ]
     },
@@ -308,6 +450,9 @@
         "When 同じrename_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
         "When 同じset_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
         "When 同じremove_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
+        "When 同じadd_def操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
+        "When 同じadd_kind_branch操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
+        "When 同じset_kind_render_target操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
         "While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。"
       ]
     },
@@ -345,11 +490,32 @@
           "covers": "操作保証: remove_blockのべき等性"
         },
         {
+          "name": "add_defの複数回実行はべき等である",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じadd_def操作を複数回実行しても結果が変わらない",
+          "gherkin": "Scenario: add_defの複数回実行はべき等である\n  Given 同一のadd_def操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
+          "covers": "操作保証: add_defのべき等性"
+        },
+        {
+          "name": "add_kind_branchの複数回実行はべき等である",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じadd_kind_branch操作を複数回実行しても結果が変わらない",
+          "gherkin": "Scenario: add_kind_branchの複数回実行はべき等である\n  Given 同一のadd_kind_branch操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
+          "covers": "操作保証: add_kind_branchのべき等性"
+        },
+        {
           "name": "整形契約に従う既存箇所は書き込み後も不変である",
           "category": "正常系",
           "viewpoint": "最小diff：整形契約に従う既存部分はpatch後もバイト単位で不変",
           "gherkin": "Scenario: 整形契約に従う既存箇所は書き込み後も不変である\n  Given 整形契約に従った既存のschemaファイル\n  When patchを実行する\n  Then 変更対象以外の既存の行はバイト単位で不変である",
           "covers": "操作保証: 最小diffの保証"
+        },
+        {
+          "name": "set_kind_render_targetの複数回実行はべき等である",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じset_kind_render_target操作を複数回実行しても結果が変わらない",
+          "gherkin": "Scenario: set_kind_render_targetの複数回実行はべき等である\n  Given 同一のset_kind_render_target操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
+          "covers": "操作保証: set_kind_render_targetのべき等性"
         }
       ]
     },
@@ -372,6 +538,22 @@
         {
           "operation": "remove_block",
           "summary": "content defからプロパティ参照を外す（ブロック定義自体は$defsに残す）"
+        },
+        {
+          "operation": "add_def",
+          "summary": "$defsに、既存content defへの紐付けを持たない独立した新規エントリ（新しいkindのcontent def等）を追加する"
+        },
+        {
+          "operation": "add_kind_branch",
+          "summary": "discriminatorフィールドのenumに新しいkind値を追加し、ルート直下のkind分岐に新しいブランチを追加する"
+        },
+        {
+          "operation": "create_version",
+          "summary": "既存schema（fromSchemaRef）を複製し、editsを適用した新しいschema版ファイル（schemaRef）を作る。新版はまだ未公開のためbackward-compatチェックの対象外"
+        },
+        {
+          "operation": "set_kind_render_target",
+          "summary": "x-render-target.pathVars/path/deployの、kind別dict形式の各マップに、新しいkind値のエントリを追加する"
         }
       ]
     }

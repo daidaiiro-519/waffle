@@ -44,7 +44,8 @@
       "type": "string",
       "enum": [
         "advisor",
-        "custom"
+        "custom",
+        "router"
       ],
       "x-prompt-write": "advisor（バックボーンknowledge参照+判断力提供）か custom（ユーザー作成・ドメイン手順）かを指定してください。"
     },
@@ -99,30 +100,6 @@
     },
     "content": {
       "type": "object"
-    }
-  },
-  "if": {
-    "properties": {
-      "skillKind": {
-        "const": "advisor"
-      }
-    },
-    "required": [
-      "skillKind"
-    ]
-  },
-  "then": {
-    "properties": {
-      "content": {
-        "$ref": "#/$defs/AdvisorContent"
-      }
-    }
-  },
-  "else": {
-    "properties": {
-      "content": {
-        "$ref": "#/$defs/CustomContent"
-      }
     }
   },
   "$defs": {
@@ -808,6 +785,186 @@
           }
         }
       }
+    },
+    "RoutingTableBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "このrouter Skillが持つルーティング表を持ちます。単独では目的を完結できないSkillについて、どのadvisor Skillと組み合わせる必要があるかを判断するための表です。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "skill",
+              "header": "Skill"
+            },
+            {
+              "field": "purpose",
+              "header": "併用が必要な条件"
+            },
+            {
+              "field": "combinedSkills",
+              "header": "併用するadvisor Skill",
+              "code": true
+            },
+            {
+              "field": "strength",
+              "header": "強度"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "RoutingTable"
+        },
+        "title": {
+          "type": "string",
+          "const": "ルーティング表"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "単独では目的を完結できないSkillについてのみ行を追加してください。単独で完結するSkillにはエントリを作らないこと。",
+          "items": {
+            "type": "object",
+            "required": [
+              "skill",
+              "purpose",
+              "combinedSkills",
+              "strength"
+            ],
+            "properties": {
+              "skill": {
+                "type": "string",
+                "x-prompt-write": "併用が必要なSkillのdocumentId。"
+              },
+              "purpose": {
+                "type": "string",
+                "x-prompt-write": "併用が必要になる条件（例: どのschemaRefを扱うときか）。"
+              },
+              "combinedSkills": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-prompt-write": "併用するSkillのdocumentIdを列挙してください。skillKind: advisorのSkillのみを指定できます（advisor以外を併用したくなる場合は、Skillの切り方が細かすぎるサインです）。"
+              },
+              "strength": {
+                "type": "string",
+                "enum": [
+                  "block",
+                  "nudge"
+                ],
+                "x-prompt-write": "block（併用が必須）かnudge（推奨だが必須ではない）かを指定してください。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RouterContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "purpose",
+        "role",
+        "routingTable",
+        "guardrails"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "purpose": {
+          "$ref": "#/$defs/PurposeBlock"
+        },
+        "role": {
+          "$ref": "#/$defs/RoleBlock"
+        },
+        "inputExpectation": {
+          "$ref": "#/$defs/InputExpectationBlock"
+        },
+        "routingTable": {
+          "$ref": "#/$defs/RoutingTableBlock"
+        },
+        "guardrails": {
+          "$ref": "#/$defs/GuardrailsBlock"
+        },
+        "references": {
+          "$ref": "#/$defs/ReferencesBlock"
+        },
+        "invocationMode": {
+          "$ref": "#/$defs/InvocationModeBlock"
+        }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "skillKind": {
+            "const": "advisor"
+          }
+        },
+        "required": [
+          "skillKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/AdvisorContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "skillKind": {
+            "const": "custom"
+          }
+        },
+        "required": [
+          "skillKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/CustomContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "skillKind": {
+            "const": "router"
+          }
+        },
+        "required": [
+          "skillKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/RouterContent"
+          }
+        }
+      }
+    }
+  ]
 }

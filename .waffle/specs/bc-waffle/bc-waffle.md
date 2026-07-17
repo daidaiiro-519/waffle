@@ -42,6 +42,7 @@
 
 - uc-scaffold-document
 - uc-query-document
+- uc-query-document-collection
 - uc-validate-document
 - uc-render-document
 - uc-scan-source-code

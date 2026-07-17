@@ -21,13 +21,20 @@
     "pathVars": {
       "judgment": {
         "skillRef": "doc.skillRef"
+      },
+      "investigation-report": {
+        "skillRef": "doc.skillRef"
       }
     },
     "path": {
-      "judgment": ".waffle/templates/{documentId}.md"
+      "judgment": ".waffle/templates/{documentId}.md",
+      "investigation-report": ".waffle/templates/{documentId}.md"
     },
     "deploy": {
       "judgment": [
+        ".claude/skills/{skillRef}/references/{documentId}.md"
+      ],
+      "investigation-report": [
         ".claude/skills/{skillRef}/references/{documentId}.md"
       ]
     }
@@ -51,6 +58,25 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "templateKind": {
+            "const": "investigation-report"
+          }
+        },
+        "required": [
+          "templateKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/InvestigationReportTemplateContent"
+          }
+        }
+      }
     }
   ],
   "properties": {
@@ -69,7 +95,8 @@
     "templateKind": {
       "type": "string",
       "enum": [
-        "judgment"
+        "judgment",
+        "investigation-report"
       ],
       "x-prompt-write": "骨格の種類を指定してください。現状は判断相談（診断フロー→判定→推奨アクション→注意という骨格）を意味する judgment のみ対応。"
     },
@@ -525,6 +552,123 @@
         "guidance": {
           "type": "string",
           "x-prompt-write": "アンチパターンに該当する場合に何を書くべきかの指示を{{}}プレースホルダー込みで書いてください。該当するアンチパターン名とリスクをセットで示すよう指示に含めること。"
+        }
+      }
+    },
+    "FindingsGuidanceBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "guidance"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "investigation Skillが報告する『分かったこと』セクションの書き方を持ちます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "guidance"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "FindingsGuidance"
+        },
+        "title": {
+          "type": "string",
+          "const": "分かったこと"
+        },
+        "guidance": {
+          "type": "string",
+          "x-prompt-write": "対象範囲を読んで判明した事実の書き方を{{}}プレースホルダー込みで書いてください。各項目には根拠（ファイルパス・行番号・引用等）を必ず添えるよう指示に含めること。"
+        }
+      }
+    },
+    "UnknownsGuidanceBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "guidance"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "investigation Skillが報告する『分からなかったこと』セクションの書き方を持ちます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "guidance"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "UnknownsGuidance"
+        },
+        "title": {
+          "type": "string",
+          "const": "分からなかったこと"
+        },
+        "guidance": {
+          "type": "string",
+          "x-prompt-write": "確認できなかった事項・判断がつかなかった事項の書き方を{{}}プレースホルダー込みで書いてください。「分かったこと」と混同せず、不明であることを明示するよう指示に含めること。"
+        }
+      }
+    },
+    "EvidenceGuidanceBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "guidance"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "investigation Skillが根拠をどう書くべきかの指示を持ちます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "guidance"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "EvidenceGuidance"
+        },
+        "title": {
+          "type": "string",
+          "const": "根拠の書き方"
+        },
+        "guidance": {
+          "type": "string",
+          "x-prompt-write": "各項目の根拠の示し方を{{}}プレースホルダー込みで書いてください。ファイルパス・行番号・該当箇所の引用を使うよう指示に含めること。"
+        }
+      }
+    },
+    "InvestigationReportTemplateContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "findingsGuidance",
+        "unknownsGuidance",
+        "evidenceGuidance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "findingsGuidance": {
+          "$ref": "#/$defs/FindingsGuidanceBlock"
+        },
+        "unknownsGuidance": {
+          "$ref": "#/$defs/UnknownsGuidanceBlock"
+        },
+        "evidenceGuidance": {
+          "$ref": "#/$defs/EvidenceGuidanceBlock"
         }
       }
     }

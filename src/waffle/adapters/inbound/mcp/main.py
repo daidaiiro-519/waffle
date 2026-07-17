@@ -24,6 +24,7 @@ from waffle.application.usecases.check_domain_service_drift import CheckDomainSe
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
+from waffle.application.usecases.query_document_collection import QueryDocumentCollection
 from waffle.application.usecases.render_blank_template import RenderBlankTemplate
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
@@ -63,6 +64,8 @@ def query_document(
     end: int | None = None,
     fieldName: str | None = None,
     nestedField: str | None = None,
+    targetSchemaRef: str | None = None,
+    targetDiscriminator: dict | None = None,
 ) -> dict:
     """document.json へのセマンティック・クエリ（uc-query-document）。"""
     raw = {
@@ -70,9 +73,25 @@ def query_document(
         "idField": idField, "idValue": idValue, "key": key, "value": value,
         "pattern": pattern, "start": start, "end": end,
         "fieldName": fieldName, "nestedField": nestedField,
+        "targetSchemaRef": targetSchemaRef, "targetDiscriminator": targetDiscriminator,
     }
     params = {k: v for k, v in raw.items() if v is not None}
     return _dict(QueryDocument(_docs(), _schemas()).run(operation, path, params))
+
+@mcp.tool
+def query_document_collection(
+    operation: str,
+    path: str,
+    pattern: str | None = None,
+    field: str | None = None,
+    key: str | None = None,
+    value: str | None = None,
+    fields: list[str] | None = None,
+) -> dict:
+    """複数document.jsonを横断するセマンティック・クエリ（uc-query-document-collection）。pathは対象ディレクトリ。"""
+    raw = {"pattern": pattern, "field": field, "key": key, "value": value, "fields": fields}
+    params = {k: v for k, v in raw.items() if v is not None}
+    return _dict(QueryDocumentCollection(_docs(), _schemas()).run(operation, path, params))
 
 @mcp.tool
 def render_document(path: str, deploy: bool = True) -> dict:
@@ -101,7 +120,7 @@ def scaffold_document(
     values: dict | None = None,
     fieldPath: str | None = None,
 ) -> dict:
-    """document.json の骨格生成 / 値書き込み / フィールド削除（uc-scaffold-document）。operation: create / fill / clear_field。"""
+    """document.json の骨格生成 / 値書き込み / フィールド削除 / schemaRef移行（uc-scaffold-document）。operation: create / fill / clear_field / migrate_schema。"""
     if operation == "create":
         params: dict = {"schemaRef": schemaRef, "documentId": documentId}
         if discriminator:
@@ -114,13 +133,15 @@ def scaffold_document(
         params = {"documentPath": documentPath, "values": values or {}}
     elif operation == "clear_field":
         params = {"documentPath": documentPath, "path": fieldPath}
+    elif operation == "migrate_schema":
+        params = {"documentPath": documentPath, "schemaRef": schemaRef}
     else:
         params = {}
     return _dict(ScaffoldDocument(_docs(), _schemas()).run(operation, params))
 
 @mcp.tool
 def patch_schema(operation: str, schemaRef: str, params: dict | None = None) -> dict:
-    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block / rename_block / set_field / remove_block。"""
+    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block / rename_block / set_field / remove_block / add_def / add_kind_branch / create_version。"""
     p = dict(params or {})
     p["schemaRef"] = schemaRef
     return _dict(PatchSchema(_docs(), _schemas(), JsonSchemaValidator()).run(operation, p))

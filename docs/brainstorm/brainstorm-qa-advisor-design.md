@@ -240,3 +240,70 @@ goal/persona/skillPreloads/task/deliverable/acceptanceCriteriaの物語順で再
 
 **次のアクション:** qa-advisor Skill本体を新設した後、実際の批評依頼で
 `AgentSchema/v2`のgoal-dispatch機構を使って呼び出す運用を試す。
+
+---
+
+## qa-advisorの配線漏れの発見と暫定対応（2026-07-14）
+
+schema-authoring Skill（新設検討中）の設計を進める中で、全5advisor
+（ddd-advisor/tech-lead-advisor/ux-advisor/platform-advisor/qa-advisor）の
+完成度を横並びで確認した。
+
+**確認方法:** 各advisorのSKILL.mdが`references/knowledge/*.md`として参照している
+ファイル名一覧と、実際の`references/knowledge/`ディレクトリの中身をdiffした。
+
+**結果:** ddd-advisor（19本）・tech-lead-advisor（11本）・ux-advisor（5本）・
+platform-advisor（7本）は参照とディレクトリ実体が完全一致していたが、
+**qa-advisorだけSKILL.mdが9本参照しているのに実ディレクトリが0本**だった。
+
+**原因:** 「調査未了」ではなく**配線漏れ**。9本（tdd/boundary-value-analysis-
+equivalence-partitioning/risk-based-testing/exploratory-testing/test-smells/
+sociable-solitary-unit-tests/test-induced-design-damage/mutation-testing/
+definition-of-done）は`.waffle/documents/knowledge/`に既にKnowledgeSchema文書
+として作成・validate・render済みだった（本ブレスト前半の成果）が、そこから
+advisor Skillの`references/knowledge/`へ配置する最後の一手だけが未実施だった。
+
+**確立された運用パターンの発見:** 4advisor全てが「KnowledgeSchema文書として
+`.waffle/documents/knowledge/`で作成・validate・render → advisor Skillの
+`references/knowledge/`へ配置」という2段構成に揃っていた。qa-advisorだけこの
+パターンから外れていた。
+
+**暫定対応（2026-07-14実施）:** 9本のrender済み`.md`を手動`cp`で
+`.claude/skills/qa-advisor/references/knowledge/`へ配置し、他4advisorと同じ
+完成度に揃えた。これは新規の設計判断を伴わない、既に合意済みの作業（配置漏れの
+解消）として即時実施した。
+
+---
+
+## 次の設計判断: 2段構成をwaffle側の機能にする（2026-07-14、方針決定・未実装）
+
+上記の手動配置は暫定対応であり、ユーザーから「waffle側の機能に入れた方がいい」
+という方針が示された。現状`render`は`x-render-target`で成果物の配置先
+（`.waffle/knowledge/`等）を持てるが、advisor Skillの`references/knowledge/`
+という**別プロジェクト（`.claude/skills/`）配下への配置**は現行の仕組みの
+対象外。KnowledgeSchema文書のrender時に、advisor Skillへのdeploy先を
+`x-render-target.deploy`のような形で宣言できるようにする（AgentSchema/
+SkillSchemaの`x-render-target.deploy`と同型のパターンを踏襲できる可能性が高い）。
+
+**未着手。** 次にこの機能自体のusecase spec化に進むかどうかは未決定。
+
+---
+
+## 次の設計判断: advisorの「デフォルト/任意」区分（2026-07-14、方針決定・未実装）
+
+ユーザーからの方針: advisorを育てていく（knowledgeを増やす・新設する）部分は
+OSSとしてユーザー側に委ねるのが良い。ただしddd-advisorはWaffleの根幹（DDD-driven
+document engine）であるため**デフォルト同梱**とし、それ以外（tech-lead-advisor/
+ux-advisor/qa-advisor/platform-advisor）は**任意（ユーザーが必要に応じて育てる）**
+という位置づけにする。
+
+**含意（未検討・要設計）:**
+- 「デフォルト/任意」をどこにどう表現するか（SkillSchemaに`isDefault`相当の
+  フィールドを持たせるか、配布物としてのdirectory構成で区別するか等）が未決定
+- schema-authoring Skill側が「このadvisorは常にいる前提」（ddd-advisor）と
+  「いない場合がある」（他4種）を区別して動作できる必要がある可能性がある
+  （＝DIの注入先が「必ず存在する」とは限らないケースへの対処）
+
+**未着手。** schema-authoring Skillの設計（DI注入点の議論）に戻る前に、
+この2つの方針決定をusecase spec化するか、それとも設計メモのまま次に進むかを
+ユーザーと合意する必要がある。
