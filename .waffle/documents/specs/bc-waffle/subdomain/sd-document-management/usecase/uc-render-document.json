@@ -108,7 +108,8 @@
         "When x-frontmatterがdiscriminatorごとの宣言（kindごとのフィールドマップ）であるとき、システムは対象Documentのdiscriminator値に対応するフィールドマップだけからfrontmatterを生成する shall。",
         "When x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空であるとき、システムはそのフィールドをfrontmatterから省略する shall。",
         "If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返し描画しない shall。",
-        "When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。"
+        "When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。",
+        "While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。"
       ]
     },
     "errors": {
@@ -302,6 +303,13 @@
           "viewpoint": "table描画：列定義のbulletがtrueで対象フィールドの値が配列のとき、各要素を<br>区切りの箇条書きとしてセル内に描画する",
           "gherkin": "Scenario: 配列値の列をbullet指定でセル内改行の箇条書きにする\n  Given bullet:trueを宣言する列を持つtable部品と、その対象フィールドが複数要素の配列であるDocument\n  When renderする\n  Then そのセルは各要素が<br>で区切られた箇条書きとして描画される",
           "covers": "受け入れ基準: table部品のbullet列によるセル内箇条書き描画"
+        },
+        {
+          "name": "bulletとjoin_sepが同時指定されたときbulletを優先する",
+          "category": "境界値",
+          "viewpoint": "table描画：列定義がbulletとjoin/sepの両方を宣言しているとき、bulletが優先されjoin/sepによる1行連結は行われない",
+          "gherkin": "Scenario: bulletとjoin_sepが同時指定されたときbulletを優先する\n  Given bulletとjoin/sepの両方を宣言する列を持つtable部品\n  When renderする\n  Then join/sepによる1行連結ではなくbulletによる箇条書きが描画される",
+          "covers": "受け入れ基準: bulletとjoin/sep同時指定時のbullet優先"
         }
       ]
     }
