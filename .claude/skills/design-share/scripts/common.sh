@@ -71,3 +71,31 @@ new_token() { # 暗号学的乱数のトークン（URL安全な22文字）
 new_slug() { # 推測困難なslug（16文字。誕生日衝突を実質排除）
   python3 -c "import secrets; print(secrets.token_hex(8))"
 }
+
+# --- ギャラリー（プロジェクト共通トークンで入る横断ランディング） ---
+# 共通トークンは KVS の唯一のキー project:token に保持（値 or "DISABLED"）。
+# 一覧は全 meta/*.json を集約した gallery/index.json を都度再生成して持つ
+# （閲覧側は1ファイルfetchで済み、edge側でListBucket権限を要求しない）。
+gallery_enabled() { # 有効なら現在の共通トークン、無効/未設定なら空を返す
+  local v; v="$(kvs_get "project:token")"
+  [[ -n "$v" && "$v" != "DISABLED" && "$v" != "None" ]] && printf '%s' "$v" || printf ''
+}
+
+rebuild_gallery_index() { # 全meta/*.jsonを集約して gallery/index.json を再生成・配置
+  local keys
+  keys="$(aws s3api list-objects-v2 --bucket "$BUCKET" --prefix "meta/" \
+    --query "Contents[].Key" --output text 2>/dev/null)" || return 0
+  {
+    for key in $keys; do
+      [[ -n "$key" && "$key" != "None" ]] || continue
+      aws s3 cp "s3://$BUCKET/$key" - 2>/dev/null
+      echo
+    done
+  } | python3 -c "
+import json, sys
+rows = [json.loads(l) for l in sys.stdin if l.strip()]
+rows = [{'slug': r.get('slug',''), 'name': r.get('name',''),
+         'status': r.get('status','active'), 'updatedAt': r.get('updatedAt','')} for r in rows]
+sys.stdout.write(json.dumps(rows, ensure_ascii=False))
+" | aws s3 cp - "s3://$BUCKET/gallery/index.json" --content-type "application/json" >/dev/null
+}

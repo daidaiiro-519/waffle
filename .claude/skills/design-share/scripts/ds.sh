@@ -9,6 +9,7 @@
 #   ./ds.sh disable <slug> [--no-export]  無効化（既定でエクスポート同伴）
 #   ./ds.sh console                       Web管理コンソールをlocalhostで起動
 #   ./ds.sh update-function               edge-gate.jsをCloudFront Functionへ反映
+#   ./ds.sh gallery <init|rotate|disable|url>  共有ギャラリー（共通トークンで横断閲覧）を管理
 #   ./ds.sh smoke                         実機スモークテスト（使い捨てパターンで往復検証）
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -47,6 +48,7 @@ for r in rows:
   disable)         exec "$SCRIPT_DIR/invalidate_pattern.sh" "$@" ;;
   console)         exec python3 "$SCRIPT_DIR/console_server.py" ;;
   update-function) exec "$SCRIPT_DIR/deploy_function.sh" ;;
+  gallery)         exec "$SCRIPT_DIR/gallery.sh" "$@" ;;
   smoke)           exec "$SCRIPT_DIR/smoke_test.sh" ;;
   help|*)
     grep '^#   ' "$0" | sed 's/^#   //'

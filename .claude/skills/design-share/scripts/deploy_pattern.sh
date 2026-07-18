@@ -27,6 +27,7 @@ PY
 
 kvs_put "token:$SLUG" "$TOKEN"
 meta_write "$SLUG" "$DISPLAY_NAME" "active"
+rebuild_gallery_index  # ギャラリー集約インデックスを最新化（有効時に一覧へ反映される）
 
 cat <<EOF
 

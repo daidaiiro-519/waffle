@@ -21,6 +21,7 @@ kvs_put "token:$SLUG" "$TOKEN"
 if [[ "$WAS" == "DISABLED" ]]; then
   NAME="$(meta_name "$SLUG")"
   meta_write "$SLUG" "${NAME:-$SLUG}" "active"
+  rebuild_gallery_index  # 再公開をギャラリー一覧へ反映
   echo "無効化済みパターンを再公開しました。"
 fi
 

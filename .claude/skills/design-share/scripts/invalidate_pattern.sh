@@ -21,6 +21,7 @@ kvs_put "token:$SLUG" "DISABLED"
 
 NAME="$(meta_name "$SLUG")"
 meta_write "$SLUG" "${NAME:-$SLUG}" "disabled"
+rebuild_gallery_index  # 無効化をギャラリー一覧へ反映（active以外は表示されない）
 
 echo "無効化しました: https://$DISTRIBUTION_DOMAIN/p/$SLUG/ はまもなく403を返します（エッジ反映まで数秒〜数十秒）。"
 echo "データはS3に残っています。再エクスポートは ds.sh export $SLUG、再公開は ds.sh rotate $SLUG で可能です。"

@@ -36,8 +36,10 @@ padding:.55rem .7rem;width:100%;cursor:pointer}
 <button id="go">アクセスする</button><p class="err" id="e">トークンが違います。もう一度お試しください。</p></div>
 <script>
 document.getElementById('go').addEventListener('click', async () => {
-  const m = location.pathname.match(/^\\/p\\/([A-Za-z0-9_-]+)/);
-  const r = await fetch('/p/' + (m ? m[1] : '') + '/verify',
+  const p = location.pathname;
+  const m = p.match(/^\\/p\\/([A-Za-z0-9_-]+)/);
+  const verify = p.indexOf('/gallery') === 0 ? '/gallery/verify' : '/p/' + (m ? m[1] : '') + '/verify';
+  const r = await fetch(verify,
     { headers: { 'x-share-token': document.getElementById('t').value.trim() } });
   if (r.status === 204) location.reload();
   else document.getElementById('e').style.display = 'block';
@@ -78,12 +80,70 @@ function extractSlug(uri) {
   return m ? m[1] : null;
 }
 
+function setCookie(name, value) {
+  return {
+    statusCode: 204,
+    statusDescription: 'No Content',
+    cookies: {
+      [name]: {
+        value: value,
+        attributes: 'Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=604800',
+      },
+    },
+  };
+}
+
+// プロジェクト共通トークン（ギャラリー用）の現在値。未設定/取得失敗はnull。
+async function projectToken() {
+  try {
+    const v = await kvs.get('project:token');
+    return (v && v !== 'DISABLED') ? v : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ギャラリー経路（プロジェクト共通トークンで保護）。1URL＋1共通トークンで
+// 公開中パターンを一覧・横断できるランディング。実体ファイルはS3の gallery/ 配下。
+async function handleGallery(request, uri, method) {
+  if (method !== 'GET' && method !== 'HEAD') {
+    return deny(403);
+  }
+  const pt = await projectToken();
+  if (!pt) {
+    return htmlResponse(403, DISABLED_HTML); // ギャラリー未有効化 or 無効化済み
+  }
+  // 共通トークン検証: 成功で share_project Cookie を発行
+  if (uri === '/gallery/verify') {
+    const supplied = request.headers['x-share-token']
+      ? request.headers['x-share-token'].value : '';
+    if (supplied === pt) {
+      return setCookie('share_project', pt);
+    }
+    return { statusCode: 401, statusDescription: 'Unauthorized' };
+  }
+  if (getCookie(request, 'share_project') !== pt) {
+    return htmlResponse(401, GATE_HTML);
+  }
+  // /gallery または /gallery/ → gallery/index.html 補完
+  if (uri === '/gallery' || uri === '/gallery/') {
+    request.uri = '/gallery/index.html';
+  }
+  // /gallery/index.json 等はそのままS3のgallery/配下へ通す
+  return request;
+}
+
 async function handler(event) {
   const request = event.request;
   const uri = request.uri;
   const method = request.method;
-  const slug = extractSlug(uri);
 
+  // ルート直下はギャラリーへ寄せる
+  if (uri === '/' || uri.indexOf('/gallery') === 0) {
+    return await handleGallery(request, uri === '/' ? '/gallery/' : uri, method);
+  }
+
+  const slug = extractSlug(uri);
   if (!slug) {
     return deny(403);
   }
@@ -94,7 +154,7 @@ async function handler(event) {
     return deny(403);
   }
 
-  // 状態取得（KVS読み取りはこの1回だけ）
+  // 状態取得（パターン別トークンのKVS読み取り）
   let expected;
   try {
     expected = await kvs.get('token:' + slug);
@@ -105,27 +165,24 @@ async function handler(event) {
     return htmlResponse(403, DISABLED_HTML);
   }
 
-  // トークン検証エンドポイント
+  // トークン検証エンドポイント（パターン別）
   if (uri === '/p/' + slug + '/verify') {
     const supplied = request.headers['x-share-token']
       ? request.headers['x-share-token'].value : '';
     if (supplied === expected) {
-      return {
-        statusCode: 204,
-        statusDescription: 'No Content',
-        cookies: {
-          ['share_' + slug]: {
-            value: expected,
-            attributes: 'Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=604800',
-          },
-        },
-      };
+      return setCookie('share_' + slug, expected);
     }
     return { statusCode: 401, statusDescription: 'Unauthorized' };
   }
 
-  // Cookie照合（KVSの現在値と毎回直接比較 = ローテーション即時反映）
-  if (getCookie(request, 'share_' + slug) !== expected) {
+  // アクセス許可: パターン別Cookie一致 or プロジェクト共通Cookie一致のいずれか。
+  // 共通トークンの照合はパターン別が一致しなかった場合のみ行う（通常はKVS読み取り1回に抑える）。
+  let allowed = getCookie(request, 'share_' + slug) === expected;
+  if (!allowed && getCookie(request, 'share_project')) {
+    const pt = await projectToken();
+    allowed = pt !== null && getCookie(request, 'share_project') === pt;
+  }
+  if (!allowed) {
     return htmlResponse(401, GATE_HTML);
   }
 
