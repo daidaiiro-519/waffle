@@ -74,3 +74,4 @@ class Document:
     updated_at: str | None
     content: dict
     tags: list[str]
+    distribution_tier: str | None

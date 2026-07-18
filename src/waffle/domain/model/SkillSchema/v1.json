@@ -100,6 +100,14 @@
     },
     "content": {
       "type": "object"
+    },
+    "distributionTier": {
+      "type": "string",
+      "enum": [
+        "core",
+        "optional"
+      ],
+      "x-prompt-write": "このSkillの配布区分。core=Waffleが標準同梱し常に存在する前提（例: ddd-advisor、Waffleの根幹をなすため）。optional=ユーザー・チームが必要に応じて育てる任意のSkill（他のadvisor Skill等）。"
     }
   },
   "$defs": {

@@ -83,7 +83,7 @@ def test_Statusは値が等しければ等価():
 
 def test_Documentは宣言された全属性を持つ():
     """
-    Given agg-document.jsonが宣言する17属性を指定してDocumentを構築する
+    Given agg-document.jsonが宣言する18属性を指定してDocumentを構築する
     When 各属性を参照する
     Then 全属性がそのまま保持されている
     """
@@ -105,6 +105,7 @@ def test_Documentは宣言された全属性を持つ():
         updated_at=None,
         content={},
         tags=["context:waffle"],
+        distribution_tier=None,
     )
     assert document.document_id == DocumentId("uc-scaffold-document")
     assert document.spec_kind == DiscriminatorValue("usecase")
