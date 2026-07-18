@@ -20,13 +20,14 @@ const kvs = cf.kvs();
 
 const GATE_HTML = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>共有トークンの入力</title>
-<style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;
-min-height:100vh;margin:0;background:#f5f6f4;color:#1a2126}
+<style>*{box-sizing:border-box}body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;
+min-height:100vh;margin:0;padding:1rem;background:#f5f6f4;color:#1a2126}
 .card{background:#fff;border:1px solid #d7dcdb;border-radius:10px;padding:2rem 1.6rem;max-width:340px;
 width:100%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.08)}
-input{font:inherit;text-align:center;letter-spacing:.08em;border:1px solid #d7dcdb;border-radius:6px;
-padding:.55rem .7rem;width:100%;margin-bottom:.6rem}
-button{font:inherit;font-weight:600;background:#2f6f76;color:#fff;border:none;border-radius:6px;
+.card h1{margin:0 0 .4rem}.card p{margin:.4rem 0 1rem}
+input{display:block;font:inherit;text-align:center;letter-spacing:.08em;border:1px solid #d7dcdb;border-radius:6px;
+padding:.55rem .7rem;width:100%;margin:0 0 .6rem}
+button{display:block;font:inherit;font-weight:600;background:#2f6f76;color:#fff;border:none;border-radius:6px;
 padding:.55rem .7rem;width:100%;cursor:pointer}
 .err{display:none;color:#a5423a;font-size:.8rem;margin-top:.6rem}</style></head><body>
 <div class="card"><h1 style="font-size:1.05rem">共有トークンを入力してください</h1>
