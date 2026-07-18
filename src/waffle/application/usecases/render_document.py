@@ -17,6 +17,7 @@ from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.application.services.document_loading import load_document, load_schema, require_schema_ref
 from waffle.domain.services import path_template
 from waffle.domain.services.lifecycle_guard import next_status
+from waffle.domain.services.part_renderer import MalformedContentError
 from waffle.domain.services.part_renderer import render_body as _render_body_service
 from waffle.domain.services.schema_discriminator import discriminator_key
 from waffle.shared.result import Err, Ok, Result
@@ -93,7 +94,10 @@ class RenderDocument:
         defs = schema.get("$defs", {})
 
         spec_kind = doc.get(discriminator_key(schema))
-        output = self._render_frontmatter(doc, schema, spec_kind) + self._render_body(doc, defs)
+        try:
+            output = self._render_frontmatter(doc, schema, spec_kind) + self._render_body(doc, defs)
+        except MalformedContentError as e:
+            return _err("MALFORMED_CONTENT", str(e))
 
         path_vars = self._resolve_path_vars(doc, schema, document_path, spec_kind)
         path_template_str = _select_template(target.get("path"), spec_kind)

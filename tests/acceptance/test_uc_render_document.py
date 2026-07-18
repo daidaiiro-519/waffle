@@ -393,6 +393,38 @@ def test_bulletとjoin_sepが同時指定されたときbulletを優先する(tm
     assert "status: OrderStatus / total: Money" not in content
 
 
+def test_配列を期待する部品が配列でない値を受け取るとMALFORMED_CONTENTを返す(tmp_path):
+    """
+    Given listを宣言する部品に対応するcontent値が配列でなく文字列であるDocument
+    When renderする
+    Then MALFORMED_CONTENTエラーが返り、成果物は書き出されない
+    """
+    schema = {
+        "properties": {"content": {"type": "object", "properties": {}}},
+        "x-render-target": {"formats": ["md"], "path": str(tmp_path / "{documentId}.md")},
+        "$defs": {
+            "GuardrailsBlock": {
+                "x-render-level": 2,
+                "x-render": [{"as": "list", "from": "items"}],
+            },
+        },
+    }
+    doc_path = tmp_path / "doc.json"
+    doc_path.write_text(json.dumps({
+        "documentId": "x", "schemaRef": "Fake/v1",
+        "content": {"guardrails": {
+            "blockType": "Guardrails", "title": "ガードレール",
+            "items": "配列でない文字列",
+        }},
+    }), encoding="utf-8")
+
+    engine = RenderDocument(FsDocumentRepository(), _FakeSchemaRepository(schema))
+    result = engine.run(str(doc_path), deploy=False)
+    assert isinstance(result, Err), result
+    assert result.details[0] == "MALFORMED_CONTENT"
+    assert not (tmp_path / "x.md").exists()
+
+
 def test_未検証ではrenderできない():
     """
     Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument

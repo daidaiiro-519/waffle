@@ -109,13 +109,21 @@
         "When x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空であるとき、システムはそのフィールドをfrontmatterから省略する shall。",
         "If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返し描画しない shall。",
         "When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。",
-        "While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。"
+        "While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。",
+        "If list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取ったとき、システムはMALFORMED_CONTENTエラーを返し描画しない shall。"
       ]
     },
     "errors": {
       "blockType": "Errors",
       "title": "エラー",
-      "items": []
+      "items": [
+        {
+          "code": "MALFORMED_CONTENT",
+          "condition": [
+            "list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取った"
+          ]
+        }
+      ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
@@ -310,6 +318,13 @@
           "viewpoint": "table描画：列定義がbulletとjoin/sepの両方を宣言しているとき、bulletが優先されjoin/sepによる1行連結は行われない",
           "gherkin": "Scenario: bulletとjoin_sepが同時指定されたときbulletを優先する\n  Given bulletとjoin/sepの両方を宣言する列を持つtable部品\n  When renderする\n  Then join/sepによる1行連結ではなくbulletによる箇条書きが描画される",
           "covers": "受け入れ基準: bulletとjoin/sep同時指定時のbullet優先"
+        },
+        {
+          "name": "配列を期待する部品が配列でない値を受け取るとMALFORMED_CONTENTを返す",
+          "category": "異常系",
+          "viewpoint": "描画：list/table/section等の配列を期待する部品が、fill後にvalidateを経ずに残った非配列値を受け取ったとき、意味不明な出力ではなく明確なエラーを返す",
+          "gherkin": "Scenario: 配列を期待する部品が配列でない値を受け取るとMALFORMED_CONTENTを返す\n  Given listを宣言する部品に対応するcontent値が配列でなく文字列であるDocument\n  When renderする\n  Then MALFORMED_CONTENTエラーが返り、成果物は書き出されない",
+          "covers": "エラー: MALFORMED_CONTENT"
         }
       ]
     }

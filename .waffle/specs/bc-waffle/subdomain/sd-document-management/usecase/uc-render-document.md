@@ -68,6 +68,7 @@ sequenceDiagram
 - If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返し描画しない shall。
 - When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。
 - While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。
+- If list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取ったとき、システムはMALFORMED_CONTENTエラーを返し描画しない shall。
 
 ---
 
@@ -81,6 +82,14 @@ sequenceDiagram
 - When ブロック定義がx-render-hiddenを宣言しているとき、システムはそのブロックを本文に一切描画しない shall（frontmatter等の値供給のみに使う非表示ブロックを表現できる）。
 - When schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき、システムは INVALID_TRANSITION エラーを返す shall（宣言しないschema種別はstatusを問わない）。
 - When レベル1（H1）の見出しブロックの直後に別のブロックが続くとき、システムはその間に区切り線（---）を挿入しない shall（多くのビューアがH1自体に下線を描画するため、直後の---は二重線に見えてしまう）。
+
+---
+
+## エラー
+
+| コード | 条件 |
+|---|---|
+| `MALFORMED_CONTENT` | - list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取った |
 
 ---
 
@@ -292,6 +301,19 @@ Scenario: bulletとjoin_sepが同時指定されたときbulletを優先する
   Given bulletとjoin/sepの両方を宣言する列を持つtable部品
   When renderする
   Then join/sepによる1行連結ではなくbulletによる箇条書きが描画される
+```
+
+### 配列を期待する部品が配列でない値を受け取るとMALFORMED_CONTENTを返す
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 描画：list/table/section等の配列を期待する部品が、fill後にvalidateを経ずに残った非配列値を受け取ったとき、意味不明な出力ではなく明確なエラーを返す |
+
+```gherkin
+Scenario: 配列を期待する部品が配列でない値を受け取るとMALFORMED_CONTENTを返す
+  Given listを宣言する部品に対応するcontent値が配列でなく文字列であるDocument
+  When renderする
+  Then MALFORMED_CONTENTエラーが返り、成果物は書き出されない
 ```
 
 ---
