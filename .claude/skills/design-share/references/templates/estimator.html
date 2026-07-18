@@ -1,0 +1,158 @@
+<!doctype html>
+<!--
+  estimator.html — 管理コンソールのコスト試算ビュー（console_server.py の /estimator が配信）
+  単価は /api/pricing（AWS Price List API・console_server側で取得）から取得し、
+  利用量モデルに当てて月額を試算する。単価には出所（API取得/公示レート）を明示する。
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>design-share コスト試算</title>
+<style>
+  :root{--ground:#F1F4F6;--surface:#FFFFFF;--surface-2:#F7F9FA;--ink:#1C2733;--muted:#5A6B7A;--faint:#8494A1;
+    --line:#E1E5EA;--accent:#2F6F76;--accent-ink:#FFF;--ok:#1E7A50;--warn:#B9770B;
+    --mono:ui-monospace,"SF Mono","IBM Plex Mono",Menlo,monospace;--sans:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    --shadow:0 1px 2px rgba(28,39,51,.06),0 8px 24px rgba(28,39,51,.06);}
+  @media(prefers-color-scheme:dark){:root{--ground:#10161C;--surface:#19222B;--surface-2:#1E2831;--ink:#E7EDF1;--muted:#9DAAB5;--faint:#6E7E8B;--line:#2A353F;--accent:#52A2A9;--accent-ink:#06171A;--ok:#67C79A;--warn:#E0A54B;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);}}
+  :root[data-theme="light"]{--ground:#F1F4F6;--surface:#FFFFFF;--surface-2:#F7F9FA;--ink:#1C2733;--muted:#5A6B7A;--faint:#8494A1;--line:#E1E5EA;--accent:#2F6F76;--accent-ink:#FFF;--ok:#1E7A50;--warn:#B9770B;--shadow:0 1px 2px rgba(28,39,51,.06),0 8px 24px rgba(28,39,51,.06);}
+  :root[data-theme="dark"]{--ground:#10161C;--surface:#19222B;--surface-2:#1E2831;--ink:#E7EDF1;--muted:#9DAAB5;--faint:#6E7E8B;--line:#2A353F;--accent:#52A2A9;--accent-ink:#06171A;--ok:#67C79A;--warn:#E0A54B;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.5;padding:clamp(.8rem,3vw,2rem) 1rem 4rem;-webkit-text-size-adjust:100%}
+  .wrap{max-width:760px;margin:0 auto}
+  .bc{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--muted);margin-bottom:.5rem}
+  .bc a{color:var(--accent);text-decoration:none}
+  h1{font-size:1.2rem;font-weight:650;margin:0 0 .2rem}
+  .sub{color:var(--muted);font-size:.84rem;margin:0 0 1.2rem}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:1.1rem;margin-bottom:1rem}
+  .panel h2{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin:0 0 .9rem}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media(max-width:620px){.grid{grid-template-columns:1fr}}
+  .ctl{margin-bottom:1rem}
+  .ctl label{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;margin-bottom:.35rem}
+  .ctl label .val{font-family:var(--mono);font-weight:700;color:var(--accent)}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  input[type=number]{width:100%;font:inherit;font-family:var(--mono);padding:.45rem .6rem;border:1px solid var(--line);border-radius:7px;background:var(--surface-2);color:var(--ink)}
+  .chk{display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--muted)}
+  .chk input{width:1.05rem;height:1.05rem;accent-color:var(--accent)}
+  .hint{font-size:.72rem;color:var(--faint);margin-top:.3rem}
+  .total{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:1rem;text-align:center}
+  .total .n{font-size:2.2rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .total .yen{font-size:.9rem;color:var(--muted);font-family:var(--mono)}
+  .total .k{font-size:.72rem;color:var(--faint);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-top:.2rem}
+  table{width:100%;border-collapse:collapse;font-size:.82rem}
+  td,th{padding:.4rem .3rem;border-bottom:1px solid var(--line);text-align:left}
+  th{font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.03em;color:var(--faint);font-weight:600}
+  td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .freeb{font-family:var(--mono);font-size:.62rem;font-weight:700;color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent);padding:.05rem .35rem;border-radius:5px}
+  .srcb{font-family:var(--mono);font-size:.58rem;font-weight:700;padding:.05rem .32rem;border-radius:4px;margin-left:.35rem}
+  .srcb.api{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+  .srcb.published{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+  .note{font-size:.74rem;color:var(--muted);margin-top:1rem;padding-top:.8rem;border-top:1px dashed var(--line)}
+  .prices{font-size:.76rem;color:var(--muted);display:flex;flex-direction:column;gap:.3rem}
+  .prices .r{display:flex;justify-content:space-between;gap:.5rem}
+  .prices .r .v{font-family:var(--mono);color:var(--ink)}
+  #err{color:var(--warn);font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bc"><a id="back" href="/">← コンソールに戻る</a> <span>/</span> <span>コスト試算</span></div>
+  <h1>design-share コスト試算</h1>
+  <p class="sub">単価は <b>AWS Price List API</b> から取得（取得できない項目は公示レート）。利用量を動かすと月額が変わります。ドメイン無し・従量課金・使わなければ$0。</p>
+
+  <div class="total"><div class="n" id="usd">—</div><div class="yen" id="jpy"></div><div class="k">推定 AWS 月額</div></div>
+  <div id="err"></div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>使い方の想定</h2>
+      <div class="ctl"><label>レビュー参加人数（延べ） <span class="val" id="vp">8</span></label><input type="range" id="people" min="1" max="50" value="8"></div>
+      <div class="ctl"><label>1人あたり 月の閲覧時間 <span class="val" id="vh">10 h</span></label><input type="range" id="hours" min="1" max="80" value="10"><div class="hint">画面を開いている合計時間。この間だけポーリングで同期。</div></div>
+      <div class="ctl"><label>ポーリング間隔 <span class="val" id="vi">5 秒</span></label><input type="range" id="interval" min="2" max="30" value="5"></div>
+      <div class="ctl"><div class="chk"><input type="checkbox" id="pause" checked><label for="pause" style="display:inline">タブ非表示のとき停止（推奨）</label></div><div class="hint">裏に回した時間は課金ゼロ。実効ポーリングを約50%に。</div></div>
+    </div>
+    <div class="panel">
+      <h2>その他の量（月）</h2>
+      <div class="ctl"><label for="pv">ページ表示回数</label><input type="number" id="pv" value="2000" min="0" step="100"></div>
+      <div class="ctl"><label for="posts">コメント/フィードバック投稿</label><input type="number" id="posts" value="500" min="0" step="50"></div>
+      <div class="ctl"><label for="stor">保管データ量（GB）</label><input type="number" id="stor" value="1" min="0" step="1"></div>
+    </div>
+  </div>
+
+  <div class="panel"><h2>内訳</h2>
+    <table><thead><tr><th>項目</th><th style="text-align:right">回数/量（月）</th><th style="text-align:right">コスト</th></tr></thead><tbody id="rows"></tbody></table>
+    <div class="note" id="note"></div>
+  </div>
+
+  <div class="panel"><h2>適用単価（出所）</h2><div class="prices" id="prices"></div></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const $=(id)=>document.getElementById(id);
+  const TOKEN=new URLSearchParams(location.search).get('token')||'';
+  $('back').href='/?token='+encodeURIComponent(TOKEN);
+  const RATE=155;
+  let P=null;
+
+  async function loadPrices(){
+    try{
+      const r=await fetch('/api/pricing',{headers:{'X-Console-Token':TOKEN}});
+      if(!r.ok) throw new Error('pricing '+r.status);
+      P=await r.json();
+      renderPrices(); calc();
+    }catch(e){ $('err').textContent='単価の取得に失敗しました（コンソール経由で開いてください）: '+e.message; }
+  }
+  function srcLabel(s){return s==='api'?'<span class="srcb api">API取得</span>':'<span class="srcb published">公示レート</span>';}
+  function renderPrices(){
+    const rows=[
+      ['CloudFront リクエスト','$'+P.cf_request.usd.toFixed(7)+' /req',P.cf_request.src],
+      ['CloudFront Function 実行','$'+P.cf_functions.usd.toFixed(9)+' /実行',P.cf_functions.src],
+      ['S3 LIST/PUT','$'+P.s3_put_list.usd.toFixed(7)+' /req',P.s3_put_list.src],
+      ['S3 GET','$'+P.s3_get.usd.toFixed(9)+' /req',P.s3_get.src],
+      ['データ転送out','$'+P.cf_transfer_gb.usd.toFixed(3)+' /GB',P.cf_transfer_gb.src],
+      ['S3 ストレージ','$'+P.s3_storage_gb.usd.toFixed(3)+' /GB月',P.s3_storage_gb.src],
+    ];
+    $('prices').innerHTML=rows.map(r=>'<div class="r"><span>'+r[0]+srcLabel(r[2])+'</span><span class="v">'+r[1]+'</span></div>').join('');
+  }
+
+  function calc(){
+    if(!P) return;
+    const people=+$('people').value,hours=+$('hours').value,interval=+$('interval').value;
+    const active=$('pause').checked?0.5:1.0;
+    const pv=+$('pv').value||0,posts=+$('posts').value||0,stor=+$('stor').value||0;
+    const viewerHours=people*hours;
+    const polls=Math.round(viewerHours*3600/interval*active);
+    const cfReq=polls+pv*5+posts, cfFunc=cfReq, s3List=polls+pv, s3Get=pv*3, s3Put=posts;
+    const xferGB=(polls*3072+pv*51200+posts*1024)/1e9;
+    const F=P.free;
+    const c_req=Math.max(0,cfReq-F.cf_req)*P.cf_request.usd;
+    const c_func=Math.max(0,cfFunc-F.cf_func)*P.cf_functions.usd;
+    const c_list=s3List*P.s3_put_list.usd, c_get=s3Get*P.s3_get.usd, c_put=s3Put*P.s3_put_list.usd;
+    const c_xfer=Math.max(0,xferGB-F.xfer_gb)*P.cf_transfer_gb.usd, c_stor=stor*P.s3_storage_gb.usd;
+    const total=c_req+c_func+c_list+c_get+c_put+c_xfer+c_stor;
+    $('usd').textContent='$'+total.toFixed(2);
+    $('jpy').textContent='≈ ¥'+Math.round(total*RATE).toLocaleString()+' / 月（$1='+RATE+'円）';
+    const fmt=(n)=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':Math.round(n);
+    const cc=(v,free)=>free?'<span class="freeb">無料枠内</span>':'$'+v.toFixed(2);
+    const rows=[
+      ['CloudFront リクエスト',fmt(cfReq),cc(c_req,cfReq<=F.cf_req)],
+      ['CloudFront Function 実行',fmt(cfFunc),cc(c_func,cfFunc<=F.cf_func)],
+      ['S3 LIST（コメント一覧・ポーリング主因）',fmt(s3List),'$'+c_list.toFixed(2)],
+      ['S3 GET',fmt(s3Get),'$'+c_get.toFixed(2)],
+      ['S3 PUT（投稿）',fmt(s3Put),'$'+c_put.toFixed(2)],
+      ['データ転送 '+xferGB.toFixed(2)+'GB',fmt(xferGB)+'GB',cc(c_xfer,xferGB<=F.xfer_gb)],
+      ['S3 ストレージ '+stor+'GB',stor+'GB','$'+c_stor.toFixed(2)],
+    ];
+    $('rows').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td class="num">'+r[1]+'</td><td class="num">'+r[2]+'</td></tr>').join('');
+    $('note').innerHTML='延べ閲覧 <b>'+viewerHours+' 人時/月</b> ・ ポーリング <b>'+polls.toLocaleString()+' 回/月</b>。主コストは <b>S3 LIST</b>。CloudFrontのreq/Functionは恒久無料枠に収まりやすい。';
+    $('vp').textContent=people;$('vh').textContent=hours+' h';$('vi').textContent=interval+' 秒';
+  }
+  ['people','hours','interval','pause','pv','posts','stor'].forEach(id=>$(id).addEventListener('input',calc));
+  loadPrices();
+})();
+</script>
+</body>
+</html>

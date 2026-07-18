@@ -139,6 +139,54 @@ def galleries_list() -> list[dict]:
     return sorted(cats, key=lambda c: c["name"])
 
 
+_PRICING_CACHE = None
+
+
+def pricing() -> dict:
+    # AWS Price List API から現行オンデマンド単価を取得（東京リージョン）。
+    # Price List API が安定して返す項目（S3・CloudFront Functions）はライブ取得し、
+    # 露出が不安定な項目（CloudFront 標準リクエスト/転送）は公示レートにフォールバックする。
+    # 各単価に出所(api/published)を付す。プロセス内で1度だけ取得しキャッシュ。
+    global _PRICING_CACHE
+    if _PRICING_CACHE is not None:
+        return _PRICING_CACHE
+
+    def unit(service_code, filters):
+        args = ["pricing", "get-products", "--region", "us-east-1",
+                "--service-code", service_code, "--max-items", "6"]
+        for f in filters:
+            args += ["--filters", f]
+        try:
+            best = None
+            for pjson in json.loads(aws(*args)).get("PriceList", []):
+                o = json.loads(pjson)
+                for t in o.get("terms", {}).get("OnDemand", {}).values():
+                    for d in t.get("priceDimensions", {}).values():
+                        v = float(d.get("pricePerUnit", {}).get("USD", "0") or 0)
+                        if v > 0 and (best is None or v > best):  # $0(無料/beginRange0)は除き有料ティアを採る
+                            best = v
+            return best
+        except (subprocess.CalledProcessError, ValueError, KeyError):
+            return None
+
+    def fb(v, published):
+        return {"usd": v, "src": "api"} if v is not None else {"usd": published, "src": "published"}
+
+    tokyo = "Type=TERM_MATCH,Field=location,Value=Asia Pacific (Tokyo)"
+    p = {
+        "s3_put_list": fb(unit("AmazonS3", [tokyo, "Type=TERM_MATCH,Field=group,Value=S3-API-Tier1"]), 0.0055 / 1000),
+        "s3_get": fb(unit("AmazonS3", [tokyo, "Type=TERM_MATCH,Field=group,Value=S3-API-Tier2"]), 0.0042 / 10000),
+        "s3_storage_gb": fb(unit("AmazonS3", [tokyo, "Type=TERM_MATCH,Field=storageClass,Value=General Purpose",
+                                              "Type=TERM_MATCH,Field=volumeType,Value=Standard"]), 0.025),
+        "cf_functions": fb(unit("AmazonCloudFront", ["Type=TERM_MATCH,Field=usagetype,Value=Executions-CloudFrontFunctions"]), 0.10 / 1e6),
+        "cf_request": fb(None, 0.0120 / 1e4),   # Price List APIで安定取得できないため公示レート
+        "cf_transfer_gb": fb(None, 0.114),
+        "free": {"cf_req": 10e6, "cf_func": 2e6, "xfer_gb": 1000},
+    }
+    _PRICING_CACHE = p
+    return p
+
+
 def state() -> dict:
     patterns = list_patterns()
     cats = galleries_list()
@@ -257,7 +305,7 @@ td[data-k]:not(.c-actions)::before{content:attr(data-k) "  ";font-family:var(--m
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
 <div class="wrap">
-<header class="top"><h1>design-share 管理コンソール</h1><span class="env" id="env"></span></header>
+<header class="top"><h1>design-share 管理コンソール</h1><span class="env" id="env"></span><a id="estlink" class="env" style="text-decoration:none;color:var(--accent)" href="#">コスト試算 →</a></header>
 <p class="sub">公開中の全パターンを横断管理します。localhostのみ・本番非公開。操作はAWS認証情報で直接実行されます。</p>
 <div class="summary">
 <div class="stat"><div class="n" id="s-total">–</div><div class="k">総パターン</div></div>
@@ -281,6 +329,7 @@ td[data-k]:not(.c-actions)::before{content:attr(data-k) "  ";font-family:var(--m
 </div></div>
 <script>
 const TOKEN=new URLSearchParams(location.search).get('token')||'';
+document.getElementById('estlink').href='/estimator?token='+encodeURIComponent(TOKEN);
 const $=(id)=>document.getElementById(id);
 const KEBAB='<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="3" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="13" r="1.5" fill="currentColor"/></svg>';
 let openMenu=null;let CATS=[];let modalSlug=null;let selCat=null;let DOMAIN='';
@@ -472,6 +521,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send(500, f"状態の取得に失敗しました（AWS認証・権限・バケット名を確認）: {e}")
                 return
             self._send(200, body, "application/json; charset=utf-8")
+        elif path == "/api/pricing":
+            if self.headers.get("X-Console-Token", "") != CONSOLE_TOKEN:
+                self._send(403, "invalid console token")
+                return
+            self._send(200, json.dumps(pricing(), ensure_ascii=False), "application/json; charset=utf-8")
+        elif path == "/estimator":
+            try:
+                with open(os.path.join(SCRIPT_DIR, "..", "references", "templates", "estimator.html"), encoding="utf-8") as f:
+                    self._send(200, f.read(), "text/html; charset=utf-8")
+            except OSError:
+                self._send(404, "estimator template not found")
         else:
             self._send(404, "not found")
 
