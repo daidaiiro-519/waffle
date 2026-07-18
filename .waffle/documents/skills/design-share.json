@@ -207,7 +207,7 @@
         },
         {
           "path": "infra/cloudfront-function/edge-gate.js",
-          "description": "トークン照合・無効化判定・コメントPUT検査・一覧書き換えを行うエッジ関数（KVS読み取りは1回/リクエスト）"
+          "description": "トークン照合・無効化判定・コメントPUT検査(形状/content-type/16KBサイズ上限)・名前付きギャラリーのスコープ判定・一覧書き換えを行うエッジ関数。KVS読み取りは通常1回、ギャラリー横断/スコープ経路で最大約6回（所属は最大3件・fail-closed）"
         },
         {
           "path": "scripts/ds.sh",
