@@ -66,6 +66,25 @@
   aside.comments .hint { font-size: 0.72rem; color: #777; }
   aside.comments .error { color: #b3261e; font-size: 0.8rem; }
   aside.comments .empty { color: #777; }
+  aside.comments .live { margin-left: .4rem; font-size: .68rem; color: #1e9e5a; font-family: ui-monospace, monospace; }
+  aside.comments .item.reply { margin-left: 1.2rem; padding-left: .6rem; border-left: 2px solid #e5e5e5; }
+  aside.comments .item .dec { font-size: .6rem; font-weight: 700; padding: .05rem .35rem; border-radius: 5px; margin-left: .35rem; }
+  aside.comments .item .dec.approve { background: #e2f0e8; color: #1e7a50; }
+  aside.comments .item .dec.revise { background: #f6eedd; color: #9a6300; }
+  aside.comments .item .replybtn { background: none; border: none; padding: 0; font: inherit; font-size: .72rem; color: #2f6f76; cursor: pointer; align-self: flex-start; }
+  aside.comments .item.fresh { animation: cfresh .6s ease; }
+  @keyframes cfresh { from { background: #e8f6ee; border-radius: 6px; } to { background: transparent; } }
+  aside.comments .idrow { display: flex; align-items: center; gap: .35rem; font-size: .78rem; color: #666; min-height: 1.3rem; flex-wrap: wrap; }
+  aside.comments .idrow .as { font-weight: 600; color: #222; }
+  aside.comments .idrow button { background: none; border: none; padding: 0; font: inherit; font-size: .72rem; color: #2f6f76; cursor: pointer; }
+  aside.comments .replyctx { display: none; align-items: center; gap: .4rem; font-size: .74rem; color: #666; background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 6px; padding: .3rem .5rem; }
+  aside.comments .replyctx.on { display: flex; }
+  aside.comments .replyctx .x { margin-left: auto; background: none; border: none; color: #999; cursor: pointer; font: inherit; }
+  aside.comments .seg { display: flex; gap: .3rem; }
+  aside.comments .seg label { flex: 1; display: flex; align-items: center; justify-content: center; font-size: .72rem; border: 1px solid #ccc; border-radius: 6px; padding: .32rem .2rem; cursor: pointer; color: #666; }
+  aside.comments .seg input { position: absolute; opacity: 0; width: 0; height: 0; }
+  aside.comments .seg label:has(input:checked) { border-color: #2f6f76; color: #2f6f76; background: #eef5f5; font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) { aside.comments .item.fresh { animation: none; } }
 </style>
 </head>
 <body>
@@ -77,13 +96,20 @@
 </main>
 
 <aside class="comments">
-  <header>コメント <span id="c-count"></span></header>
+  <header>コメント <span id="c-count"></span><span class="live" id="c-live" title="数秒ごとに同期">● 同期</span></header>
   <div class="list" id="c-list"><p class="empty" id="c-empty" hidden>まだコメントはありません。</p></div>
   <form id="c-form">
-    <input id="c-author" type="text" placeholder="お名前" required maxlength="40">
+    <div class="idrow" id="c-idrow"></div>
+    <div class="replyctx" id="c-replyctx"><span id="c-replyto"></span><button type="button" class="x" id="c-cancelreply">返信をやめる ✕</button></div>
+    <div id="c-namewrap"><input id="c-author" type="text" placeholder="お名前（初回のみ）" maxlength="40"></div>
+    <div class="seg" role="radiogroup" aria-label="判定">
+      <label><input type="radio" name="c-dec" value="comment" checked>コメント</label>
+      <label><input type="radio" name="c-dec" value="approve">この方向でOK</label>
+      <label><input type="radio" name="c-dec" value="revise">修正希望</label>
+    </div>
     <textarea id="c-body" placeholder="コメントを入力" required maxlength="2000"></textarea>
-    <button id="c-submit" type="submit">投稿する</button>
-    <span class="hint">投稿にはアカウント登録は不要です</span>
+    <button id="c-submit" type="submit">送信</button>
+    <span class="hint">アカウント登録は不要です</span>
     <span class="error" id="c-error" hidden></span>
   </form>
 </aside>
@@ -92,66 +118,93 @@
 (function () {
   'use strict';
   const SLUG = '{{スラッグ}}';
+  const NKEY = 'ds_reviewer_name';           // 投稿者名を端末に記憶（アカウント無し・名前ベース）
   const $ = (id) => document.getElementById(id);
+  let loaded = {}, order = [], replyTarget = null;
 
   function showError(msg) { const e = $('c-error'); e.textContent = msg; e.hidden = !msg; }
+  function savedName() { try { return localStorage.getItem(NKEY) || ''; } catch (e) { return ''; } }
+  function fmtDec(d) { return d === 'approve' ? ['approve', 'この方向でOK'] : d === 'revise' ? ['revise', '修正希望'] : null; }
+  function idOf(key) { return key.split('/').pop(); }
 
-  // DOM生成はcreateElement＋textContentのみ（innerHTML禁止 = XSS防止）
-  function renderItem(c) {
-    const item = document.createElement('div'); item.className = 'item';
-    const who = document.createElement('span'); who.className = 'who'; who.textContent = c.author;
-    const when = document.createElement('span'); when.className = 'when'; when.textContent = c.postedAt;
-    const body = document.createElement('div'); body.className = 'body'; body.textContent = c.body;
-    item.append(who, when, body);
-    return item;
+  // 名前を一度入れれば次から入力不要（この端末に記憶）。「変更」で入れ直せる。
+  function refreshId() {
+    const n = savedName(); const row = $('c-idrow'); row.textContent = '';
+    if (n) {
+      $('c-namewrap').style.display = 'none';
+      const as = document.createElement('span'); as.className = 'as'; as.textContent = n;
+      row.append(as, document.createTextNode(' として投稿 '));
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = '変更';
+      b.addEventListener('click', () => { $('c-namewrap').style.display = ''; $('c-author').value = n; row.textContent = '新しいお名前を入力（この端末に記憶します）'; });
+      row.appendChild(b);
+    } else { $('c-namewrap').style.display = ''; row.textContent = '初回だけお名前を入れてください（この端末に記憶し、次から不要）'; }
   }
 
+  // DOM生成はcreateElement＋textContentのみ（innerHTML禁止 = XSS防止）
+  function renderItem(c, isReply) {
+    const item = document.createElement('div'); item.className = 'item' + (isReply ? ' reply' : '') + (c.__fresh ? ' fresh' : '');
+    const top = document.createElement('div');
+    const who = document.createElement('span'); who.className = 'who'; who.textContent = c.author; top.appendChild(who);
+    const dm = fmtDec(c.decision); if (dm) { const b = document.createElement('span'); b.className = 'dec ' + dm[0]; b.textContent = dm[1]; top.appendChild(b); }
+    const when = document.createElement('span'); when.className = 'when'; when.textContent = c.postedAt; top.appendChild(when);
+    const body = document.createElement('div'); body.className = 'body'; body.textContent = c.body;
+    item.append(top, body);
+    if (!isReply) { const rb = document.createElement('button'); rb.className = 'replybtn'; rb.type = 'button'; rb.textContent = '返信'; rb.addEventListener('click', () => startReply(c)); item.appendChild(rb); }
+    c.__fresh = false; return item;
+  }
+  // スレッド描画: 親（parentId無し）→その返信をインデントで束ねる
+  function render() {
+    const list = $('c-list'); list.querySelectorAll('.item').forEach(el => el.remove());
+    const all = order.map(k => loaded[k]).filter(Boolean);
+    all.filter(c => !c.parentId).forEach(c => {
+      list.appendChild(renderItem(c, false));
+      all.filter(r => r.parentId === c.__id).forEach(r => list.appendChild(renderItem(r, true)));
+    });
+    $('c-empty').hidden = all.length > 0;
+    $('c-count').textContent = all.length ? '(' + all.length + '件)' : '';
+  }
+  function startReply(c) { replyTarget = c; $('c-replyctx').classList.add('on'); $('c-replyto').textContent = '→ ' + c.author + ' への返信'; $('c-body').focus(); }
+
+  // ニアリアルタイム同期: 一覧を取得し、未取得のコメントだけ増分で読み込み・マージ・再描画。
   async function load() {
     try {
-      const res = await fetch(`/comments-list/${SLUG}`);
-      if (!res.ok) throw new Error(`list ${res.status}`);
+      const res = await fetch('/comments-list/' + SLUG, { cache: 'no-store' });
+      if (!res.ok) throw new Error('list ' + res.status);
       const xml = new DOMParser().parseFromString(await res.text(), 'application/xml');
       const keys = [...xml.querySelectorAll('Contents > Key')].map(k => k.textContent).sort();
-      const items = (await Promise.all(keys.map(async (key) => {
-        const r = await fetch(`/${key}`);
-        if (!r.ok) return null;
+      let changed = false;
+      for (const key of keys) {
+        if (loaded[key]) continue;
+        const r = await fetch('/' + key); if (!r.ok) continue;
         const c = await r.json();
-        return { author: String(c.author ?? '名無し'), body: String(c.body ?? ''),
-                 postedAt: String(c.postedAt ?? '').slice(0, 10) };
-      }))).filter(Boolean);
-
-      const list = $('c-list');
-      list.querySelectorAll('.item').forEach(el => el.remove());
-      items.forEach(c => list.appendChild(renderItem(c)));
-      $('c-empty').hidden = items.length > 0;
-      $('c-count').textContent = items.length ? `(${items.length}件)` : '';
+        loaded[key] = { author: String(c.author ?? '名無し'), body: String(c.body ?? ''),
+          decision: String(c.decision || 'comment'), parentId: c.parentId ? String(c.parentId) : null,
+          postedAt: String(c.postedAt ?? '').slice(0, 10), __id: idOf(key), __fresh: order.length > 0 };
+        order.push(key); changed = true;
+      }
+      if (changed) { order.sort(); render(); }
       showError('');
-    } catch (e) {
-      showError('コメントの読み込みに失敗しました。');
-    }
+    } catch (e) { /* 同期の一時エラーは黙って次のポーリングで回復 */ }
   }
 
   async function post(ev) {
-    ev.preventDefault();
-    $('c-submit').disabled = true; showError('');
+    ev.preventDefault(); $('c-submit').disabled = true; showError('');
     try {
-      const payload = JSON.stringify({
-        author: $('c-author').value.trim(),
-        body: $('c-body').value.trim(),
-        postedAt: new Date().toISOString(),
-      });
+      let name = savedName();
+      if (!name || $('c-namewrap').style.display !== 'none') { const t = $('c-author').value.trim(); if (t) { name = t; try { localStorage.setItem(NKEY, t); } catch (e) {} } }
+      if (!name) { $('c-author').focus(); showError('お名前を入れてください。'); $('c-submit').disabled = false; return; }
+      const body = $('c-body').value.trim(); if (!body) { $('c-body').focus(); $('c-submit').disabled = false; return; }
+      const dec = (document.querySelector('input[name=c-dec]:checked') || {}).value || 'comment';
+      const payload = JSON.stringify({ author: name, decision: dec, body: body,
+        parentId: replyTarget ? replyTarget.__id : null, postedAt: new Date().toISOString() });
       // コメント1件 = 1オブジェクト。キーの timestamp-random で衝突を原理的に排除する
-      const key = `comments/${SLUG}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.json`;
+      const key = 'comments/' + SLUG + '/' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + '.json';
       // OAC署名のPUTには x-amz-content-sha256（ペイロードのSHA-256）が必須
       const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
       const sha256 = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
-      const res = await fetch(`/${key}`, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json', 'x-amz-content-sha256': sha256 },
-        body: payload,
-      });
-      if (!res.ok) throw new Error(`put ${res.status}`);
-      $('c-body').value = '';
+      const res = await fetch('/' + key, { method: 'PUT', headers: { 'content-type': 'application/json', 'x-amz-content-sha256': sha256 }, body: payload });
+      if (!res.ok) throw new Error('put ' + res.status);
+      $('c-body').value = ''; replyTarget = null; $('c-replyctx').classList.remove('on'); refreshId();
       await load();
     } catch (e) {
       showError('投稿に失敗しました。時間をおいて再度お試しください。');
@@ -159,6 +212,7 @@
       $('c-submit').disabled = false;
     }
   }
+  $('c-cancelreply').addEventListener('click', () => { replyTarget = null; $('c-replyctx').classList.remove('on'); });
 
   // 戻る導線: 参照元がカテゴリ(/g/{id}/)か全体ギャラリー(/gallery/)ならそこへ戻す。
   // sessionStorageに覚えてリロード後も維持。どちらも無ければ全体ギャラリーのアクセス可否で判定。
@@ -185,7 +239,11 @@
   })();
 
   $('c-form').addEventListener('submit', post);
+  refreshId();
   load();
+  // 数秒ごとに同期（モブプロ/ライブレビュー）。タブ非表示のときは止めて負荷・コストを抑える。
+  setInterval(() => { if (!document.hidden) load(); }, 5000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
 })();
 </script>
 </body>
