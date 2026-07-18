@@ -108,9 +108,39 @@ def gallery_status() -> str:
     return "disabled" if v == "DISABLED" else "enabled"
 
 
+def galleries_list() -> list[dict]:
+    try:
+        out = aws("s3api", "list-objects-v2", "--bucket", CONF["BUCKET"],
+                  "--prefix", "galleries/", "--query", "Contents[].Key", "--output", "json")
+        keys = json.loads(out) or []
+    except subprocess.CalledProcessError:
+        return []
+    cats = []
+    for key in keys:
+        gs = key.split("/")[-1].rsplit(".json", 1)[0]
+        try:
+            meta = json.loads(aws("s3", "cp", f"s3://{CONF['BUCKET']}/{key}", "-"))
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            continue
+        try:
+            v = aws("cloudfront-keyvaluestore", "get-key", "--kvs-arn", CONF["KVS_ARN"],
+                    "--key", f"g:{gs}", "--query", "Value", "--output", "text").strip()
+        except subprocess.CalledProcessError:
+            v = ""
+        status = "disabled" if v == "DISABLED" else ("enabled" if v and v != "None" else "unset")
+        cats.append({"gslug": gs, "name": meta.get("name", ""), "status": status,
+                     "url": f"https://{CONF.get('DISTRIBUTION_DOMAIN', '')}/g/{gs}/"})
+    return sorted(cats, key=lambda c: c["name"])
+
+
 def state() -> dict:
-    return {"patterns": list_patterns(),
-            "gallery": {"status": gallery_status(), "url": GALLERY_URL}}
+    patterns = list_patterns()
+    cats = galleries_list()
+    for c in cats:
+        c["count"] = sum(1 for p in patterns if c["gslug"] in (p.get("galleries") or []))
+    return {"patterns": patterns,
+            "gallery": {"status": gallery_status(), "url": GALLERY_URL},
+            "categories": cats}
 
 
 PAGE = r"""<!doctype html><html lang="ja"><head><meta charset="utf-8">
@@ -168,6 +198,26 @@ button.kebab svg{width:1.1rem;height:1.1rem;display:block}
 .menu button.item.danger:hover,.menu button.item.danger:focus-visible{background:var(--crit-bg)}
 .menu button.item.good{color:var(--pos-fg)}.menu button.item.good .ic{color:var(--pos-fg)}
 .menu .sep{height:1px;background:var(--line);margin:.3rem .2rem}
+button.mini{font:inherit;font-size:.78rem;font-weight:600;cursor:pointer;padding:.32rem .8rem;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button.mini:hover{background:var(--surface-2);border-color:var(--accent)}
+button.mini.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.catrow{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;padding:.7rem 1.1rem;border-bottom:1px solid var(--line)}
+.catrow:last-child{border-bottom:none}
+.catrow .cname{font-weight:600}
+.catrow .cmeta{font-family:var(--mono);font-size:.72rem;color:var(--faint)}
+.catrow .curl{font-family:var(--mono);font-size:.72rem;color:var(--accent);word-break:break-all;flex:1;min-width:10rem}
+.cempty{padding:.9rem 1.1rem;color:var(--muted);font-size:.85rem}
+.modal-bg{position:fixed;inset:0;background:rgba(10,16,22,.5);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:100}
+.modal-bg[hidden]{display:none}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4);width:100%;max-width:26rem;padding:1.2rem}
+.modal h3{margin:0 0 .2rem;font-size:1rem}
+.modal .msub{margin:0 0 .9rem;font-size:.8rem;color:var(--muted)}
+.modal .clist{display:flex;flex-direction:column;gap:.1rem;max-height:16rem;overflow:auto;margin-bottom:1rem}
+.modal label{display:flex;align-items:center;gap:.6rem;padding:.5rem;border-radius:7px;cursor:pointer;font-size:.9rem}
+.modal label:hover{background:var(--surface-2)}
+.modal label input{width:1.05rem;height:1.05rem;accent-color:var(--accent)}
+.modal .mnone{color:var(--muted);font-size:.85rem;padding:.5rem}
+.modal-actions{display:flex;justify-content:flex-end;gap:.5rem}
 .console h2{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin:0 0 .4rem}
 pre.log{font-family:var(--mono);font-size:.78rem;line-height:1.6;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:.9rem 1.1rem;min-height:3.4rem;white-space:pre-wrap;word-break:break-word;color:var(--muted);box-shadow:var(--shadow)}
 pre.log .ok{color:var(--pos-fg)}pre.log .warn{color:var(--crit-fg)}
@@ -187,18 +237,26 @@ td[data-k]:not(.c-actions)::before{content:attr(data-k) "  ";font-family:var(--m
 <div class="stat pos"><div class="n" id="s-active">–</div><div class="k">公開中</div></div>
 <div class="stat crit"><div class="n" id="s-disabled">–</div><div class="k">無効化済み</div></div>
 </div>
-<div class="panel"><div class="ph"><h2>共有ギャラリー</h2><span id="g-actions"></span></div>
+<div class="panel"><div class="ph"><h2>全体ギャラリー</h2><span id="g-actions"></span></div>
 <div class="gwrap" id="g-body"></div></div>
+<div class="panel"><div class="ph"><h2>カテゴリ（名前付きギャラリー）</h2><button id="cat-new" class="mini">＋ 新規カテゴリ</button></div>
+<div id="cat-body"></div></div>
 <div class="panel"><div class="ph"><h2>パターン一覧</h2></div>
 <table><thead><tr><th>パターン名</th><th>slug</th><th>状態</th><th>更新日</th><th>操作</th></tr></thead>
 <tbody id="rows"><tr><td colspan="5" style="padding:1rem 1.1rem;color:var(--muted)">読み込み中…</td></tr></tbody></table></div>
 <div class="console"><h2>操作ログ</h2><pre class="log" id="log">操作を選ぶと結果をここに表示します。</pre></div>
 </div>
+<div class="modal-bg" id="modal" hidden><div class="modal">
+<h3 id="modal-title">カテゴリを編集</h3>
+<p class="msub" id="modal-sub"></p>
+<div class="clist" id="modal-cats"></div>
+<div class="modal-actions"><button id="modal-cancel" class="mini">キャンセル</button><button id="modal-save" class="mini primary">保存</button></div>
+</div></div>
 <script>
 const TOKEN=new URLSearchParams(location.search).get('token')||'';
 const $=(id)=>document.getElementById(id);
 const KEBAB='<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="3" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="13" r="1.5" fill="currentColor"/></svg>';
-let openMenu=null;
+let openMenu=null;let CATS=[];let modalSlug=null;
 function closeMenu(){if(!openMenu)return;openMenu.menu.classList.remove('open');openMenu.trigger.setAttribute('aria-expanded','false');openMenu=null;}
 document.addEventListener('click',closeMenu);
 document.addEventListener('keydown',(e)=>{if(e.key==='Escape')closeMenu();});
@@ -219,6 +277,7 @@ function sep(){const d=document.createElement('div');d.className='sep';return d;
 function patternMenu(p){const items=[];
 items.push(item('↓','エクスポート','',false,()=>doOp('/api/export?slug='+encodeURIComponent(p.slug),'export')));
 items.push(item('✎','名前を変更','',false,()=>renamePattern(p)));
+items.push(item('▦','カテゴリを編集','',false,()=>openMembership(p)));
 if(p.status==='active'){
 items.push(item('⟳','トークンを再発行','',false,()=>doOp('/api/rotate?slug='+encodeURIComponent(p.slug),'rotate')));
 items.push(sep());
@@ -231,6 +290,35 @@ return menuButton(p.name+' の操作メニュー',items);}
 
 function renamePattern(p){closeMenu();const name=prompt('新しい表示名を入力してください',p.name);if(name===null)return;const t=name.trim();if(!t){log('名前が空です。変更を中止しました。','warn');return;}
 doOp('/api/rename?slug='+encodeURIComponent(p.slug)+'&name='+encodeURIComponent(t),'rename');}
+
+function createCategory(){closeMenu();const name=prompt('新しいカテゴリ名を入力してください');if(name===null)return;const t=name.trim();if(!t){log('名前が空です。','warn');return;}doOp('/api/gallery-create?name='+encodeURIComponent(t),'gallery create');}
+
+function renderCategories(cats){const body=$('cat-body');body.textContent='';
+if(!cats.length){const d=document.createElement('div');d.className='cempty';d.textContent='カテゴリはまだありません。「＋ 新規カテゴリ」で作成できます。';body.appendChild(d);return;}
+cats.forEach(c=>{const row=document.createElement('div');row.className='catrow';
+const nm=document.createElement('span');nm.className='cname';nm.textContent=c.name||c.gslug;
+const pill=document.createElement('span');pill.className='pill '+(c.status==='enabled'?'active':c.status==='disabled'?'disabled':'unset');pill.textContent=c.status==='enabled'?'有効':c.status==='disabled'?'無効':'トークン無';
+const cnt=document.createElement('span');cnt.className='cmeta';cnt.textContent=c.count+'件';
+const url=document.createElement('span');url.className='curl';url.textContent=c.url;
+const items=[
+item('⟳','共有トークンを再発行','',false,()=>doOp('/api/gallery-rotate?gslug='+encodeURIComponent(c.gslug),'gallery rotate')),
+item(c.status==='disabled'?'▲':'⦸',c.status==='disabled'?'再有効化':'無効化',c.status==='disabled'?'good':'danger',false,()=>doOp((c.status==='disabled'?'/api/gallery-rotate':'/api/gallery-disable')+'?gslug='+encodeURIComponent(c.gslug),'gallery')),
+sep(),
+item('×','削除','danger',false,()=>{if(confirm('カテゴリ「'+(c.name||c.gslug)+'」を削除しますか？\n所属は全解除されますが、パターン自体は残ります。'))doOp('/api/gallery-delete?gslug='+encodeURIComponent(c.gslug),'gallery delete');}),
+];
+row.append(nm,pill,cnt,url,menuButton((c.name||c.gslug)+' の操作',items));body.appendChild(row);});}
+
+function openMembership(p){closeMenu();modalSlug=p.slug;
+$('modal-sub').textContent=p.name;const box=$('modal-cats');box.textContent='';
+if(!CATS.length){const d=document.createElement('div');d.className='mnone';d.textContent='カテゴリがありません。先に「＋ 新規カテゴリ」で作成してください。';box.appendChild(d);}
+else CATS.forEach(c=>{const lab=document.createElement('label');const cb=document.createElement('input');cb.type='checkbox';cb.value=c.gslug;cb.checked=(p.galleries||[]).indexOf(c.gslug)>=0;const sp=document.createElement('span');sp.textContent=c.name||c.gslug;lab.append(cb,sp);box.appendChild(lab);});
+$('modal').hidden=false;}
+function closeModal(){$('modal').hidden=true;modalSlug=null;}
+async function saveMembership(){const slug=modalSlug;if(!slug)return;
+const gs=Array.prototype.slice.call(document.querySelectorAll('#modal-cats input:checked')).map(x=>x.value);
+closeModal();log('カテゴリ所属を更新中…');
+const {ok,text}=await api('/api/pattern-galleries?slug='+encodeURIComponent(slug)+'&galleries='+encodeURIComponent(gs.join(',')));
+log(text.trim()||(ok?'完了':'失敗'),ok?'ok':'warn');refresh();}
 
 function galleryControls(g){
 const box=$('g-actions');box.textContent='';const body=$('g-body');body.textContent='';
@@ -264,7 +352,14 @@ $('env').textContent='env: '+((data.gallery.url||'').replace('https://','').repl
 const ps=data.patterns||[];$('s-total').textContent=ps.length;
 $('s-active').textContent=ps.filter(p=>p.status==='active').length;
 $('s-disabled').textContent=ps.filter(p=>p.status!=='active').length;
-galleryControls(data.gallery||{status:'unset',url:''});renderRows(ps);}
+galleryControls(data.gallery||{status:'unset',url:''});
+CATS=data.categories||[];renderCategories(CATS);
+renderRows(ps);}
+$('cat-new').addEventListener('click',createCategory);
+$('modal-cancel').addEventListener('click',closeModal);
+$('modal-save').addEventListener('click',saveMembership);
+$('modal').addEventListener('click',(e)=>{if(e.target===$('modal'))closeModal();});
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&!$('modal').hidden)closeModal();});
 refresh();
 </script></body></html>"""
 
@@ -305,13 +400,45 @@ class Handler(http.server.BaseHTTPRequestHandler):
         q = urllib.parse.parse_qs(parsed.query)
         slug = q.get("slug", [""])[0]
 
-        # 共有ギャラリー操作（slug不要）
+        # 全体ギャラリー操作（slug不要）
         if parsed.path == "/api/gallery":
             op = q.get("op", [""])[0]
             if op not in {"init", "rotate", "disable"}:
                 self._send(400, "invalid gallery op")
                 return
             ok, output = run_script("gallery.sh", op)
+            self._send(200 if ok else 500, output)
+            return
+
+        # 名前付きギャラリー（カテゴリ）操作
+        if parsed.path == "/api/gallery-create":
+            name = q.get("name", [""])[0].strip()
+            if not name or len(name) > 80 or any(ord(c) < 0x20 for c in name):
+                self._send(400, "invalid name")
+                return
+            ok, output = run_script("galleries.sh", "create", name)
+            self._send(200 if ok else 500, output)
+            return
+        if parsed.path in ("/api/gallery-rotate", "/api/gallery-disable", "/api/gallery-delete"):
+            gslug = q.get("gslug", [""])[0]
+            if not SLUG_RE.match(gslug):
+                self._send(400, "invalid gslug")
+                return
+            sub = {"/api/gallery-rotate": "rotate", "/api/gallery-disable": "disable",
+                   "/api/gallery-delete": "delete"}[parsed.path]
+            ok, output = run_script("galleries.sh", sub, gslug)
+            self._send(200 if ok else 500, output)
+            return
+        if parsed.path == "/api/pattern-galleries":
+            slug = q.get("slug", [""])[0]
+            if not SLUG_RE.match(slug):
+                self._send(400, "invalid slug")
+                return
+            gslugs = [g for g in q.get("galleries", [""])[0].split(",") if g]
+            if any(not SLUG_RE.match(g) for g in gslugs):
+                self._send(400, "invalid gslug")
+                return
+            ok, output = run_script("galleries.sh", "set", slug, *gslugs)
             self._send(200 if ok else 500, output)
             return
 

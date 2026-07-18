@@ -13,6 +13,7 @@
 #   ./galleries.sh delete <gslug>             カテゴリを削除（所属も全解除。パターン自体は消えない）
 #   ./galleries.sh add <gslug> <pattern-slug>     パターンをカテゴリに追加
 #   ./galleries.sh remove <gslug> <pattern-slug>  パターンをカテゴリから外す
+#   ./galleries.sh set <pattern-slug> [gslug...]  パターンの所属カテゴリを一括設定（0個で全解除）
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
@@ -92,6 +93,12 @@ EOF
     aws s3 rm "s3://$BUCKET/galleries/$GSLUG.json" >/dev/null 2>&1 || true
     rebuild_gallery_index
     echo "カテゴリ $GSLUG を削除しました（所属パターン自体は残っています）。"
+    ;;
+  set)
+    SLUG="${1:?usage: galleries.sh set <pattern-slug> [gslug...]}"; require_pattern "$SLUG"; shift
+    for g in "$@"; do require_gslug "$g"; done
+    pattern_set_galleries "$SLUG" "$@"
+    echo "更新しました: $SLUG の所属カテゴリ = [ $* ]"
     ;;
   add|remove)
     GSLUG="${1:?usage: galleries.sh $cmd <gslug> <pattern-slug>}"; require_gslug "$GSLUG"
