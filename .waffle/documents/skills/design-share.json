@@ -108,27 +108,53 @@
         },
         {
           "stepId": "step-3",
+          "title": "DESIGN.mdを関係者レビューにかけ確定する",
+          "summary": "確定前のDESIGN.mdを視覚スペックシートとして公開し、関係者のコメントで方向性を合意してから正式な配置場所へ確定配置する。UIモックの量産はこの確定の後に行う。",
+          "bullets": [],
+          "children": [
+            {
+              "stepId": "step-3-1",
+              "title": "スペックシートを生成しレビュー用に公開する",
+              "summary": "references/templates/template-design-spec-body.html にDESIGN.mdのトークン（スウォッチ・タイプスケール・状態チップ全種・部品の実物）と本文（Overview/Layout/Do's & Don'ts）を流し込み、template-pattern-page.html の {{モック本体}} に載せる。ds.sh deploy --type design-review --design <DESIGN.mdパス> <spec.html> \"<表示名>\" でURL＋トークンを発行する。値は必ずトークンから導出し、その場で新しい色・サイズを発明しない（round-tripを閉じる）。",
+              "bullets": []
+            },
+            {
+              "stepId": "step-3-2",
+              "title": "コメントで方向性を合意する",
+              "summary": "関係者はコメント欄で「この方向でOK／修正希望」を名前付きで返す（アカウント不要・数秒ごとに同期＝ライブレビュー可）。修正希望があればDESIGN.mdを直してスペックシートを再デプロイし、合意できるまで往復する。",
+              "bullets": []
+            },
+            {
+              "stepId": "step-3-3",
+              "title": "確定して正式な配置場所へ置く",
+              "summary": "合意できたら ds.sh confirm-design <slug> [--to <ディレクトリ>] を実行する。deploy時にS3へ保存したDESIGN.md本体を <配置先>/DESIGN.md（既定はカレント）として配置し、既存があれば上書き前にバックアップを取り、確定の事実（confirmedAt・配置先）をmetaへ記録し、レビューコメントを記録として同伴エクスポートする。confirm-designはUIモックを生成しない（生成は確定後の対話で行う）。",
+              "bullets": []
+            }
+          ]
+        },
+        {
+          "stepId": "step-4",
           "title": "UIパターンHTMLを生成する",
           "summary": "確定したDesign.mdをもとに、references/templates/template-pattern-page.htmlを雛形として複数パターンのモックHTMLを生成する。コメントUIは外部依存ゼロのvanilla JSでページに内蔵し、単体で配布可能な自己完結ファイルにする。トークンゲートはHTMLに含めない（配信基盤側のedge-gateが担う）。",
           "bullets": [],
           "children": []
         },
         {
-          "stepId": "step-4",
+          "stepId": "step-5",
           "title": "パターン単位でデプロイしURL＋トークンを発行する",
           "summary": "scripts/ds.sh deploy <HTMLファイル> \"<表示名>\" を実行する。slugとトークンが生成されてホスティング先へ配置され、URLとトークンはこの場で一度だけ表示される。トークンは別チャネルで共有相手へ渡すよう案内する。デプロイ直後に閲覧者と同じ手順（URLを開く→トークン入力→コメント1件投稿→一覧表示）のセルフスモークを必ず1周する。",
           "bullets": [],
           "children": []
         },
         {
-          "stepId": "step-5",
+          "stepId": "step-6",
           "title": "コメントを回収しDesign.mdへ反映する",
           "summary": "scripts/ds.sh export <slug> のzip、または aws s3 sync でコメントJSONを取得して要点を整理し、Design.mdへの差分として反映する。必要ならパターンを再生成・再デプロイして改善サイクルを回す。",
           "bullets": [],
           "children": []
         },
         {
-          "stepId": "step-6",
+          "stepId": "step-7",
           "title": "公開中パターンを管理する",
           "summary": "管理操作はCLI（scripts/ds.sh）・Web UI（ds.sh console、localhostのみ）・ローカルMCP（scripts/mcp_server.py）の3経路から選べる。いずれも実体は同じスクリプトに委譲される。閲覧者に横断閲覧を提供する場合は共有ギャラリー（共通トークン）を有効化する。",
           "bullets": [
@@ -162,7 +188,8 @@
         "実行時に他のSkill（ux-advisor等）を呼び出さない。knowledgeはこのSkill内のreferencesで自己完結させる",
         "特定企業サイトのデザイントークン抽出・同梱・名指し参照をしない（アーキタイプの想起ワードは業種レベルに留める）",
         "外部URL（Figma・実アプリ画面）の取り込み機能は提供しない",
-        "トークン値（色・タイポグラフィ等）は言葉だけで確定せず、必ず試作artifactの視覚確認を経て確定する"
+        "トークン値（色・タイポグラフィ等）は言葉だけで確定せず、必ず試作artifactの視覚確認を経て確定する",
+        "Design.md確定・試作生成・パターン生成の前に、references/knowledge/frontend-design-principles.md の概念層（題材に根ざす／ありきたりを避ける／主役を立てる／理由を言い切る／効かせどころを絞る／下限を守る）に照らす。特に『理由を言い切る』＝「なぜこれがありきたり（同種の題材なら誰でも出る型どおりの姿）でないか」を自分の言葉で言えることを確認する。○×チェックリストの照合にしない（毎回題材ごとに答えが変わる生成的な問いとして回す）。アクセシビリティ等の下限が通っていることを、ありきたりでない証拠の代わりにしない。"
       ]
     },
     "references": {
@@ -202,6 +229,10 @@
           "description": "コメントUI内蔵・外部依存ゼロのUIパターンHTML雛形（トークンゲートは含めない）"
         },
         {
+          "path": "references/templates/template-design-spec-body.html",
+          "description": "DESIGN.mdを視覚スペックシート（スウォッチ・タイプスケール・状態チップ全種・部品の実物・Do/Don't）としてレンダリングする本体断片。template-pattern-page.htmlの{{モック本体}}に載せてレビュー用に公開し、既存のコメント・トークンゲート機構をそのまま再利用する"
+        },
+        {
           "path": "infra/cloudformation.yaml",
           "description": "S3＋CloudFront＋CloudFront Functions＋KeyValueStoreの初回構築テンプレート（構築後にdeploy_function.shの実行が必須）"
         },
@@ -211,7 +242,11 @@
         },
         {
           "path": "scripts/ds.sh",
-          "description": "統一CLI: list／deploy／export／rotate／disable／console／update-function"
+          "description": "統一CLI: list／deploy／export／rotate／disable／console／update-function／confirm-design（レビュー済みDESIGN.mdの確定配置）"
+        },
+        {
+          "path": "scripts/confirm_design.sh",
+          "description": "レビュー（design-review）を経たDESIGN.mdを正式な配置場所（既定 ./DESIGN.md）へ確定配置する。既存があればバックアップし、確定事実をmetaへ記録、レビューコメントを同伴エクスポートする。UIモックは生成しない"
         },
         {
           "path": "scripts/common.sh",

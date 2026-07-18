@@ -4,6 +4,8 @@
 # 使い方:
 #   ./ds.sh list                          公開中/無効化済みパターンの一覧
 #   ./ds.sh deploy <html> "<表示名>"      パターンをデプロイ（slug＋トークン発行）
+#   ./ds.sh deploy --design <DESIGN.md> <spec.html> "<名>"  DESIGN.md視覚スペックシートをレビュー用に公開
+#   ./ds.sh confirm-design <slug> [--to <dir>]  レビュー済みDESIGN.mdを正式な配置場所へ確定配置
 #   ./ds.sh export <slug> [outdir]        zipエクスポート（公開状態は変えない）
 #   ./ds.sh rotate <slug>                 トークン再発行（DISABLEDなら再公開）
 #   ./ds.sh disable <slug> [--no-export]  無効化（既定でエクスポート同伴）
@@ -45,6 +47,7 @@ for r in rows:
     print(f\"[{mark}] {r.get('name',''):<{w}}  slug={r.get('slug','')}  updated={r.get('updatedAt','')[:10]}\")"
     ;;
   deploy)          exec "$SCRIPT_DIR/deploy_pattern.sh" "$@" ;;
+  confirm-design)  exec "$SCRIPT_DIR/confirm_design.sh" "$@" ;;
   export)          exec "$SCRIPT_DIR/export_pattern.sh" "$@" ;;
   rotate)          exec "$SCRIPT_DIR/rotate_token.sh" "$@" ;;
   disable)         exec "$SCRIPT_DIR/invalidate_pattern.sh" "$@" ;;
