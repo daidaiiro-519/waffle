@@ -11,6 +11,7 @@
 #   ./ds.sh update-function               edge-gate.jsをCloudFront Functionへ反映
 #   ./ds.sh gallery <init|rotate|disable|url>  全体ギャラリー（共通トークンで全部入り）を管理
 #   ./ds.sh galleries <create|list|rotate|disable|delete|add|remove ...>  名前付きギャラリー（カテゴリ）を管理
+#   ./ds.sh reconcile                     S3のmeta(真実源)からKVS投影(pg/status)・index.jsonを再生成
 #   ./ds.sh smoke                         実機スモークテスト（使い捨てパターンで往復検証）
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -51,6 +52,7 @@ for r in rows:
   update-function) exec "$SCRIPT_DIR/deploy_function.sh" ;;
   gallery)         exec "$SCRIPT_DIR/gallery.sh" "$@" ;;
   galleries)       exec "$SCRIPT_DIR/galleries.sh" "$@" ;;
+  reconcile)       source "$SCRIPT_DIR/common.sh"; reconcile_projections ;;
   smoke)           exec "$SCRIPT_DIR/smoke_test.sh" ;;
   help|*)
     grep '^#   ' "$0" | sed 's/^#   //'

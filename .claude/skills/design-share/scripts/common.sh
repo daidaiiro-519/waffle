@@ -48,7 +48,11 @@ kvs_get() { # kvs_get <key>（無ければ空文字）
     --kvs-arn "$KVS_ARN" --key "$1" --query Value --output text 2>/dev/null || true
 }
 
-# --- meta helpers（横断管理コンソール・CLI一覧が読む表示用キャッシュ。真実はKVS） ---
+# --- meta helpers ---
+# 真実源の割り当て（reconcile_projections がこの前提で投影を再生成する）:
+#   秘密トークン         → KVS が権威（token:{slug} / g:{gslug} / project:token）。S3には残さない
+#   構造・状態・名前・所属 → S3 の meta/{slug}.json が権威
+#   投影(再生成可・非権威) → KVS pg:{slug}、gallery/index.json、g/*/index.json、token:のDISABLED overlay
 meta_write() { # meta_write <slug> <name> <status>  （既存のgalleries[]所属は保持する）
   # 既存galleries[]の保持は、metaが「読めた」ときだけ行う。読めない場合:
   #   - オブジェクトが存在しない（新規デプロイ）→ galleries=[] で新規作成してよい
@@ -189,4 +193,32 @@ for g in gals:
     items = [slim(r) for r in metas if gs in (r.get('galleries') or [])]
     put('g/%s/index.json' % gs, {'name': g.get('name',''), 'gslug': gs, 'items': items})
 "
+}
+
+# reconcile: S3のmeta（構造・状態・所属の真実源）から、KVSの投影(pg:{slug})・status overlay・
+# 各index.jsonをすべて再生成する。乖離（pg:とmeta.galleriesの不一致、token:のDISABLEDとmeta.status
+# の不一致）を直せる唯一の経路。書き込みが途中失敗して投影がずれても、これで真実源から回復できる。
+#   真実源: 秘密トークン=KVS(token:/g:/project:token)、構造・状態・所属=S3 meta。
+#   投影(再生成可): pg:{slug}、gallery/index.json、g/*/index.json、token:のDISABLED overlay。
+reconcile_projections() {
+  local keys slug gl st tok n=0 warned=0
+  keys="$(aws s3api list-objects-v2 --bucket "$BUCKET" --prefix "meta/" --query "Contents[].Key" --output text 2>/dev/null)" \
+    || { echo "meta一覧の取得に失敗（認証・権限・バケット名を確認）" >&2; return 1; }
+  for k in $keys; do
+    [[ -n "$k" && "$k" != "None" ]] || continue
+    slug="$(basename "$k" .json)"
+    gl="$(pattern_galleries "$slug")"
+    kvs_put "pg:$slug" "$gl"                       # 所属ミラーをmetaから再生成
+    st="$(meta_status "$slug")"
+    tok="$(kvs_get "token:$slug")"
+    if [[ "$st" == "disabled" ]]; then
+      [[ "$tok" == "DISABLED" ]] || kvs_put "token:$slug" "DISABLED"   # 無効化overlayを保証（秘密は触らない）
+    elif [[ "$tok" == "DISABLED" ]]; then
+      echo "  ⚠ $slug: metaはactiveだがKVSがDISABLED。トークンは秘密でmetaから復元不可 → ds.sh rotate $slug で再発行を" >&2
+      warned=$((warned+1))
+    fi
+    n=$((n+1))
+  done
+  rebuild_gallery_index
+  echo "reconcile完了: ${n}パターンの投影(pg:/index/status overlay)をmetaから再生成しました（要対応: ${warned}件）。"
 }
