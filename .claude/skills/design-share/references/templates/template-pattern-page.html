@@ -35,6 +35,13 @@
   body { margin: 0; display: grid; grid-template-columns: minmax(0,1fr) 320px; min-height: 100vh; }
   @media (max-width: 760px) { body { grid-template-columns: 1fr; } }
 
+  /* ギャラリーへ戻る導線。ギャラリーにアクセス権がある閲覧者にだけJSが表示する（.show付与） */
+  a.backbar { grid-column: 1 / -1; display: none; align-items: center; gap: .4rem;
+    text-decoration: none; font-family: system-ui, sans-serif; font-size: .82rem;
+    color: #fff; background: #1a2126; padding: .5rem 1rem; position: sticky; top: 0; z-index: 20; }
+  a.backbar:hover { background: #2c353d; }
+  a.backbar.show { display: flex; }
+
   main.mock { padding: 1.5rem; min-width: 0; }
 
   aside.comments {
@@ -62,6 +69,8 @@
 </style>
 </head>
 <body>
+
+<a class="backbar" id="backbar" href="/gallery/">← ギャラリーに戻る</a>
 
 <main class="mock">
   <!-- {{モック本体}} — Design.mdのトークンとfrontend-design-principlesに基づいて生成する -->
@@ -150,6 +159,11 @@
       $('c-submit').disabled = false;
     }
   }
+
+  // ギャラリーにアクセス権がある（共通トークンで入場済み）場合のみ「戻る」を表示する
+  fetch('/gallery/index.json', { cache: 'no-store' })
+    .then((r) => { if (r.ok) $('backbar').classList.add('show'); })
+    .catch(() => {});
 
   $('c-form').addEventListener('submit', post);
   load();
