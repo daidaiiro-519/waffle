@@ -1,0 +1,159 @@
+<!doctype html>
+<!--
+  UIパターンHTML雛形（design-share Skill）— 外部依存ゼロの自己完結ファイル
+
+  プレースフォルダー定義票:
+  | プレースフォルダー | 記入する内容 |
+  |---|---|
+  | {{パターン名}}       | このパターンの表示名（例: 在庫管理ダッシュボード / パターンA） |
+  | {{スラッグ}}         | デプロイ時に発行されるslug（scripts/deploy_pattern.sh が置換する） |
+  | {{モック本体}}       | Design.mdのトークンに基づいて生成するUIモックのHTML |
+  | {{デザイントークンCSS}} | Design.mdのYAMLフロントマターから導出した :root のCSSカスタムプロパティ |
+
+  設計上の前提（変更しないこと）:
+  - 外部CDN・ライブラリを読み込まない（エクスポートzipをオフラインで開いても構造が壊れない）
+  - コメント1件 = 1つの独立したS3オブジェクト（read-modify-writeをしない）
+  - コメントの読み書きは同一オリジン（CloudFront経由）のパスに対して行う
+      一覧: GET /comments-list/{{スラッグ}}  （edge-gateがS3 ListObjectsV2へ書き換える）
+      取得: GET /comments/{{スラッグ}}/{key}
+      投稿: PUT /comments/{{スラッグ}}/{timestamp}-{random}.json
+            （content-type: application/json と x-amz-content-sha256 が必須。
+              edge-gateがキー形状とcontent-typeを検査する）
+  - コメント本文・投稿者名は必ず textContent で描画する（innerHTMLに入れない = XSS防止）
+  - トークンゲートはedge-gate.js（CloudFront Function）が担うため、このページには含めない
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{パターン名}}</title>
+<style>
+  :root {
+    /* {{デザイントークンCSS}} — Design.mdのcolors/typography/rounded/spacingから導出する */
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; display: grid; grid-template-columns: minmax(0,1fr) 320px; min-height: 100vh; }
+  @media (max-width: 760px) { body { grid-template-columns: 1fr; } }
+
+  main.mock { padding: 1.5rem; min-width: 0; }
+
+  aside.comments {
+    border-left: 1px solid #ddd; display: flex; flex-direction: column;
+    font-family: system-ui, sans-serif; font-size: 0.9rem; background: #fff; color: #222;
+  }
+  aside.comments header { padding: 0.8rem 1rem; border-bottom: 1px solid #ddd; font-weight: 600; }
+  aside.comments .list { flex: 1; overflow-y: auto; padding: 0.8rem 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
+  aside.comments .item .who { font-weight: 600; }
+  aside.comments .item .when { color: #777; font-size: 0.75rem; margin-left: 0.4rem; }
+  aside.comments .item .body { margin-top: 0.15rem; white-space: pre-wrap; }
+  aside.comments form { border-top: 1px solid #ddd; padding: 0.8rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  aside.comments input, aside.comments textarea {
+    font: inherit; padding: 0.45rem 0.6rem; border: 1px solid #ccc; border-radius: 4px; width: 100%;
+  }
+  aside.comments textarea { resize: none; height: 4rem; }
+  aside.comments button {
+    align-self: flex-end; font: inherit; font-weight: 600; padding: 0.4rem 1rem;
+    border: none; border-radius: 4px; background: #333; color: #fff; cursor: pointer;
+  }
+  aside.comments button:disabled { opacity: 0.5; cursor: default; }
+  aside.comments .hint { font-size: 0.72rem; color: #777; }
+  aside.comments .error { color: #b3261e; font-size: 0.8rem; }
+  aside.comments .empty { color: #777; }
+</style>
+</head>
+<body>
+
+<main class="mock">
+  <!-- {{モック本体}} — Design.mdのトークンとfrontend-design-principlesに基づいて生成する -->
+</main>
+
+<aside class="comments">
+  <header>コメント <span id="c-count"></span></header>
+  <div class="list" id="c-list"><p class="empty" id="c-empty" hidden>まだコメントはありません。</p></div>
+  <form id="c-form">
+    <input id="c-author" type="text" placeholder="お名前" required maxlength="40">
+    <textarea id="c-body" placeholder="コメントを入力" required maxlength="2000"></textarea>
+    <button id="c-submit" type="submit">投稿する</button>
+    <span class="hint">投稿にはアカウント登録は不要です</span>
+    <span class="error" id="c-error" hidden></span>
+  </form>
+</aside>
+
+<script>
+(function () {
+  'use strict';
+  const SLUG = '{{スラッグ}}';
+  const $ = (id) => document.getElementById(id);
+
+  function showError(msg) { const e = $('c-error'); e.textContent = msg; e.hidden = !msg; }
+
+  // DOM生成はcreateElement＋textContentのみ（innerHTML禁止 = XSS防止）
+  function renderItem(c) {
+    const item = document.createElement('div'); item.className = 'item';
+    const who = document.createElement('span'); who.className = 'who'; who.textContent = c.author;
+    const when = document.createElement('span'); when.className = 'when'; when.textContent = c.postedAt;
+    const body = document.createElement('div'); body.className = 'body'; body.textContent = c.body;
+    item.append(who, when, body);
+    return item;
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(`/comments-list/${SLUG}`);
+      if (!res.ok) throw new Error(`list ${res.status}`);
+      const xml = new DOMParser().parseFromString(await res.text(), 'application/xml');
+      const keys = [...xml.querySelectorAll('Contents > Key')].map(k => k.textContent).sort();
+      const items = (await Promise.all(keys.map(async (key) => {
+        const r = await fetch(`/${key}`);
+        if (!r.ok) return null;
+        const c = await r.json();
+        return { author: String(c.author ?? '名無し'), body: String(c.body ?? ''),
+                 postedAt: String(c.postedAt ?? '').slice(0, 10) };
+      }))).filter(Boolean);
+
+      const list = $('c-list');
+      list.querySelectorAll('.item').forEach(el => el.remove());
+      items.forEach(c => list.appendChild(renderItem(c)));
+      $('c-empty').hidden = items.length > 0;
+      $('c-count').textContent = items.length ? `(${items.length}件)` : '';
+      showError('');
+    } catch (e) {
+      showError('コメントの読み込みに失敗しました。');
+    }
+  }
+
+  async function post(ev) {
+    ev.preventDefault();
+    $('c-submit').disabled = true; showError('');
+    try {
+      const payload = JSON.stringify({
+        author: $('c-author').value.trim(),
+        body: $('c-body').value.trim(),
+        postedAt: new Date().toISOString(),
+      });
+      // コメント1件 = 1オブジェクト。キーの timestamp-random で衝突を原理的に排除する
+      const key = `comments/${SLUG}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.json`;
+      // OAC署名のPUTには x-amz-content-sha256（ペイロードのSHA-256）が必須
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
+      const sha256 = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+      const res = await fetch(`/${key}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json', 'x-amz-content-sha256': sha256 },
+        body: payload,
+      });
+      if (!res.ok) throw new Error(`put ${res.status}`);
+      $('c-body').value = '';
+      await load();
+    } catch (e) {
+      showError('投稿に失敗しました。時間をおいて再度お試しください。');
+    } finally {
+      $('c-submit').disabled = false;
+    }
+  }
+
+  $('c-form').addEventListener('submit', post);
+  load();
+})();
+</script>
+</body>
+</html>

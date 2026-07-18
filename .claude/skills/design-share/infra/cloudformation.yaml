@@ -1,0 +1,196 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  design-share Skill hosting stack.
+  S3 (private) + CloudFront (OAC) + CloudFront Function (edge-gate) + KeyValueStore.
+  常時稼働するコンピュート（Lambda/EC2）を持たない構成（ブレスト論点1・2の合意）。
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: パターンHTMLとコメントJSONを保管するS3バケット名（グローバル一意）
+  PriceClass:
+    Type: String
+    Default: PriceClass_200
+    AllowedValues: [PriceClass_100, PriceClass_200, PriceClass_All]
+    Description: CloudFrontの価格クラス
+
+Resources:
+  ContentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      # CORS設定は持たない: コメントの読み書きは配信ドメイン自身からの
+      # 同一オリジンfetchのみで、クロスオリジンアクセスを許可する理由がない
+
+  # コメント書き込みはCloudFront経由のみ。バケットは完全プライベート。
+  # PutObjectは comments/ prefix限定・DeleteObjectは付与しない（論点1の合意）
+  ContentBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ContentBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: CloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${ContentBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+          - Sid: CloudFrontListComments
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:ListBucket
+            Resource: !GetAtt ContentBucket.Arn
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+              StringLike:
+                s3:prefix: "comments/*"
+          - Sid: CloudFrontPutCommentOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub "${ContentBucket.Arn}/comments/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # token:{slug} を唯一の状態キーとして保持する（通常値=有効トークン / "DISABLED"=無効化済み）
+  TokenStore:
+    Type: AWS::CloudFront::KeyValueStore
+    Properties:
+      Name: !Sub "${AWS::StackName}-tokens"
+      Comment: "design-share: token:{slug} (value or DISABLED)"
+
+  EdgeGateFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub "${AWS::StackName}-edge-gate"
+      AutoPublish: true
+      FunctionConfig:
+        Comment: "token gate + disabled check + comments-list rewrite"
+        Runtime: cloudfront-js-2.0
+        KeyValueStoreAssociations:
+          - KeyValueStoreARN: !GetAtt TokenStore.Arn
+      # デプロイ時に scripts/ 側で infra/cloudfront-function/edge-gate.js の内容に更新する。
+      # ここでは最小のプレースホルダーを置く（CFNのインラインコード上限を避けるため）。
+      FunctionCode: |
+        function handler(event) {
+          return { statusCode: 503, statusDescription: 'Service Unavailable',
+                   body: 'edge-gate.js not deployed yet. Run scripts/deploy_function.sh' };
+        }
+
+  # コメントPUTをS3オリジンへ通すための専用オリジンリクエストポリシー。
+  # x-amz-content-sha256 はOAC(SigningBehavior=always)が署名時にネイティブ処理するため
+  # ここには含めない（含めるとCloudFrontが「許可されないヘッダ」として拒否する）。
+  # content-type だけを転送し、S3にJSONとして保存させる。
+  # S3オリジンは AllViewer 系マネージドポリシーを拒否するため、必要ヘッダのみのカスタムを作る。
+  CommentPutOriginRequestPolicy:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub "${AWS::StackName}-comment-put"
+        Comment: "forward content-type for OAC-signed comment PUT (x-amz-content-sha256 is handled by OAC natively)"
+        HeadersConfig:
+          HeaderBehavior: whitelist
+          Headers: [content-type]
+        CookiesConfig: { CookieBehavior: none }
+        QueryStringsConfig: { QueryStringBehavior: none }
+
+  CachePolicyNoCache:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub "${AWS::StackName}-no-cache"
+        DefaultTTL: 0
+        MaxTTL: 1
+        MinTTL: 0
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig: { CookieBehavior: none }
+          HeadersConfig: { HeaderBehavior: none }
+          QueryStringsConfig: { QueryStringBehavior: all }
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: "design-share pattern hosting"
+        PriceClass: !Ref PriceClass
+        HttpVersion: http2and3
+        DefaultRootObject: ""
+        Origins:
+          - Id: content-s3
+            DomainName: !GetAtt ContentBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: content-s3
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachePolicyId: !Ref CachePolicyNoCache
+          # SecurityHeadersPolicy (AWSマネージド): nosniff / frame-deny 等を全応答に付与
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt EdgeGateFunction.FunctionMetadata.FunctionARN
+        CacheBehaviors:
+          # コメント投稿はPUTを許可（edge-gateがCookie照合済みのリクエストのみ通す）
+          - PathPattern: "comments/*"
+            TargetOriginId: content-s3
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            CachePolicyId: !Ref CachePolicyNoCache
+            ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03
+            OriginRequestPolicyId: !Ref CommentPutOriginRequestPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeGateFunction.FunctionMetadata.FunctionARN
+          - PathPattern: "comments-list/*"
+            TargetOriginId: content-s3
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD]
+            CachePolicyId: !Ref CachePolicyNoCache
+            ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeGateFunction.FunctionMetadata.FunctionARN
+
+Outputs:
+  DistributionDomain:
+    Description: 共有URLのベースドメイン（https://{この値}/p/{slug}/）
+    Value: !GetAtt Distribution.DomainName
+  DistributionId:
+    Value: !Ref Distribution
+  BucketNameOut:
+    Description: パターン・コメントの保管バケット
+    Value: !Ref ContentBucket
+  TokenStoreArn:
+    Description: トークン・無効化フラグを保持するKeyValueStoreのARN
+    Value: !GetAtt TokenStore.Arn
+  EdgeGateFunctionName:
+    Description: scripts/deploy_function.sh が本体コードを流し込む対象
+    Value: !Sub "${AWS::StackName}-edge-gate"

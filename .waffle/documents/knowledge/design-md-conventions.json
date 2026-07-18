@@ -1,0 +1,205 @@
+{
+  "documentId": "design-md-conventions",
+  "documentType": "Knowledge",
+  "schemaRef": "KnowledgeSchema/v2",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "design-md-conventions"
+    },
+    "overview": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "Design.mdはどんなフォーマットで書くべきか",
+        "デザイントークンはいつ・どうやって確定すべきか",
+        "Design.mdのバージョン管理はどう行うか",
+        "非デザイナーとの対話でデザインの方向性をどう決めるか"
+      ],
+      "text": "Design.md（コーディングエージェントにビジュアルアイデンティティを伝える文書）の実体仕様と、対話×試作artifactの往復でそれを作成・改善する運用規約。"
+    },
+    "principles": {
+      "blockType": "Principles",
+      "title": "原則",
+      "items": [
+        "フォーマットは発明しない: Design.mdの実体はgoogle-labs-code/design.md仕様に従う。YAMLフロントマター（機械可読トークン）＋Markdown本文（人間可読の設計理由）の2層構造で、トークンが規範値・本文が適用文脈を担う。",
+        "トークンの語彙: フロントマターにはname・colors・typography・rounded・spacing・componentsを書く。色は任意のCSS色、寸法は数値＋単位、トークン参照は{path.to.token}形式。",
+        "セクションは固定順: 本文の##セクションはOverview→Colors→Typography→Layout→Elevation & Depth→Shapes→Components→Do's and Don'tsの順。省略は許されるが順序の入れ替えは不可。",
+        "見て決める: トークン値は言葉だけで確定しない。Colors＋Typography確定後とLayout＋Components確定後の2チェックポイントで試作artifactを生成し、視覚確認を経て値を確定する。",
+        "入り口は指差し: 非デザイナーはゼロから言語化できない。対話の最初に内蔵アーキタイプ（6種の方向性）を見せ、近いものを選んでから差分を対話で詰める。",
+        "検証は既存ツールで: 構造検証・WCAGコントラスト確認はdesign.mdのlintコマンドを、バージョン間比較はdiffコマンドをオンデマンドで使う。自前で再実装しない。",
+        "履歴はスナップショット: バージョン履歴は各版のDesign.mdをそのまま保存する。差分は必要時にdiffで算出し、差分結果自体は保存しない。",
+        "Design.mdは生きた文書: UIパターンへのコメント・レビューの学びは、パターン側だけでなくDesign.md本体へ差分として還元する。"
+      ]
+    },
+    "classifications": {
+      "blockType": "Classifications",
+      "title": "分類",
+      "items": [
+        {
+          "name": "コーポレート・クリーン",
+          "description": "業務SaaSダッシュボード系。スレートネイビー＋技術的ブルー1色、詰めた余白、小さい角丸"
+        },
+        {
+          "name": "エディトリアル・ウォーム",
+          "description": "出版・ブランドジャーナル系。生成り＋高コントラストセリフ＋赤褐色1色、広い余白"
+        },
+        {
+          "name": "プレイフル・スタートアップ",
+          "description": "コンシューマーアプリ・LP系。ほぼ黒地本文＋コーラルと薄紫の2アクセント"
+        },
+        {
+          "name": "ミニマル・ラグジュアリー",
+          "description": "高級小売・ポートフォリオ系。ほぼ黒地＋アイボリー文字＋真鍮色を一箇所だけ"
+        },
+        {
+          "name": "テクニカル・ブループリント",
+          "description": "開発者ツール・インフラ管理系。インク黒＋ティール1色、等幅ラベル、罫線グリッド"
+        },
+        {
+          "name": "信頼重視・パブリック",
+          "description": "行政・公共サービス系。濃紺＋青1色、装飾ゼロ、コントラスト最優先"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "decisionCriteria": {
+      "blockType": "DecisionCriteria",
+      "title": "判断基準",
+      "emptyReason": "",
+      "stages": [
+        {
+          "id": "q1",
+          "label": "既存のDesign.mdがあるか？"
+        },
+        {
+          "id": "new1",
+          "label": "アーキタイプ6種から近いものを選んでもらう"
+        },
+        {
+          "id": "new2",
+          "label": "Colors・Typographyを対話で決め試作①で視覚確認"
+        },
+        {
+          "id": "new3",
+          "label": "Layout・Componentsを決め試作②で視覚確認"
+        },
+        {
+          "id": "lint",
+          "label": "lintで検証しスナップショット保存"
+        },
+        {
+          "id": "imp1",
+          "label": "コメント・改善要望を差分として整理"
+        },
+        {
+          "id": "imp2",
+          "label": "影響するセクションだけ再対話（必要なら試作で確認）"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "q1",
+          "to": "new1",
+          "label": "ない（新規作成）"
+        },
+        {
+          "from": "q1",
+          "to": "imp1",
+          "label": "ある（改善）"
+        },
+        {
+          "from": "new1",
+          "to": "new2",
+          "label": "選択後"
+        },
+        {
+          "from": "new2",
+          "to": "new3",
+          "label": "確定後"
+        },
+        {
+          "from": "new3",
+          "to": "lint",
+          "label": "確定後"
+        },
+        {
+          "from": "imp1",
+          "to": "imp2",
+          "label": "整理後"
+        },
+        {
+          "from": "imp2",
+          "to": "lint",
+          "label": "反映後"
+        }
+      ]
+    },
+    "examples": {
+      "blockType": "Examples",
+      "title": "実例",
+      "text": "架空の図書館アプリのDesign.mdを作る場合。利用者が「信頼重視・パブリック」を指差したら、その雛形のcolors（濃紺＋青1色）を起点に対話を始める。「もう少し親しみが欲しい」という要望を受けて青をやや暖色寄りに振った候補2案をスウォッチ試作で見せ、選ばれた値をcolorsトークンに確定する。Layout確定後の試作②で「表の行間が詰まりすぎ」と分かればspacingを増やし、lintでコントラスト比を確認してからv1として保存する。公開後「ボタンが押せる感じがしない」というコメントが3件付いたら、Componentsセクションのbutton-primaryへの差分として反映しv2を保存する。"
+    },
+    "antiPatterns": {
+      "blockType": "AntiPatterns",
+      "title": "アンチパターン",
+      "items": [
+        {
+          "name": "独自フォーマットの発明",
+          "problem": "既存のlint/diffツールが使えなくなり、他エージェントとの互換性も失う"
+        },
+        {
+          "name": "言葉だけのトークン確定",
+          "problem": "「落ち着いた青で」の解釈が人により違い、実装後に大きな手戻りが起きる"
+        },
+        {
+          "name": "トークン1個ごとの試作生成",
+          "problem": "対話のリズムが壊れ、利用者が疲弊する。試作はセクションのまとまり（2チェックポイント）で生成する"
+        },
+        {
+          "name": "ゼロからの言語化要求",
+          "problem": "非デザイナーは要望を言語化しきれず、対話が空転する。選択肢の指差しから始める"
+        },
+        {
+          "name": "特定企業デザインの複製",
+          "problem": "実在企業のトークンを抽出・同梱すると商標・トレードドレス上のリスクを負う。想起ワードは業種レベルに留める"
+        },
+        {
+          "name": "パターンだけの修正",
+          "problem": "コメントの学びをDesign.mdへ還元しないと、次のパターン生成で同じ指摘が再発する"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "provenance": {
+      "blockType": "Provenance",
+      "title": "出典・根拠の透明性",
+      "source": "google-labs-code/design.md（Google Labs, 2026年時点のREADME・spec）のフォーマット仕様の要約と、waffleプロジェクトのブレインストーミング（docs/brainstorm/brainstorm-self-hosted-artifact-design-skill.md 論点10・11）で合意した運用規約の再構成。直接引用ではない。",
+      "caveats": "design.md仕様はalpha版であり、トークンスキーマ・セクション構成は今後変わる可能性がある。"
+    },
+    "relatedConcepts": {
+      "blockType": "RelatedConcepts",
+      "title": "関連概念",
+      "items": [
+        {
+          "conceptId": "frontend-design-principles",
+          "note": "試作artifactを生成する際の品質判断基準を提供する"
+        },
+        {
+          "conceptId": "design-system-tokens",
+          "note": "トークンという概念自体の設計原則を提供する"
+        },
+        {
+          "conceptId": "accessibility-baseline",
+          "note": "lintで確認するコントラスト等の最低基準の背景を提供する"
+        }
+      ],
+      "emptyReason": ""
+    }
+  },
+  "tags": [
+    "domain:design",
+    "skill:design-share"
+  ]
+}
