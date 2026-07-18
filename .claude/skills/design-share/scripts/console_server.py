@@ -82,12 +82,11 @@ def run_script(name: str, *args: str) -> tuple[bool, str]:
 
 
 def list_patterns() -> list[dict]:
-    try:
-        out = aws("s3api", "list-objects-v2", "--bucket", CONF["BUCKET"],
-                  "--prefix", "meta/", "--query", "Contents[].Key", "--output", "json")
-        keys = json.loads(out) or []
-    except subprocess.CalledProcessError:
-        return []
+    # 一覧取得(list-objects)の失敗は認証/権限エラー＝「0件」と誤認させず伝播させる。
+    # （空バケットは Contents=null で成功し keys=[] になる。ここでの例外は本物の失敗）
+    out = aws("s3api", "list-objects-v2", "--bucket", CONF["BUCKET"],
+              "--prefix", "meta/", "--query", "Contents[].Key", "--output", "json")
+    keys = json.loads(out) or []
     patterns = []
     for key in keys:
         try:
@@ -117,12 +116,10 @@ def gallery_status() -> str:
 
 
 def galleries_list() -> list[dict]:
-    try:
-        out = aws("s3api", "list-objects-v2", "--bucket", CONF["BUCKET"],
-                  "--prefix", "galleries/", "--query", "Contents[].Key", "--output", "json")
-        keys = json.loads(out) or []
-    except subprocess.CalledProcessError:
-        return []
+    # 一覧取得の失敗は伝播させる（0件と誤認しない）
+    out = aws("s3api", "list-objects-v2", "--bucket", CONF["BUCKET"],
+              "--prefix", "galleries/", "--query", "Contents[].Key", "--output", "json")
+    keys = json.loads(out) or []
     cats = []
     for key in keys:
         gs = key.split("/")[-1].rsplit(".json", 1)[0]
@@ -418,7 +415,9 @@ const d=document.createElement('td');d.className='date';d.dataset.k='更新';d.t
 const a=document.createElement('td');a.className='c-actions';a.dataset.k='操作';a.appendChild(patternMenu(p));
 tr.append(n,s,st,d,a);tb.appendChild(tr);});}
 
-async function refresh(){const r=await fetch('/api/state');const data=await r.json();
+async function refresh(){const r=await fetch('/api/state',{headers:{'X-Console-Token':TOKEN}});
+if(!r.ok){log('状態の取得に失敗: '+(await r.text()).trim(),'warn');return;}
+const data=await r.json();
 DOMAIN=(data.gallery.url||'').replace('https://','').replace('/gallery/','');
 $('env').textContent='env: '+DOMAIN;
 const ps=data.patterns||[];$('s-total').textContent=ps.length;
@@ -463,7 +462,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if path == "/":
             self._send(200, PAGE, "text/html; charset=utf-8")
         elif path == "/api/state":
-            self._send(200, json.dumps(state(), ensure_ascii=False), "application/json; charset=utf-8")
+            # /api/state は現在トークンを含む秘密を返すため、変更系と同じくトークン必須
+            if self.headers.get("X-Console-Token", "") != CONSOLE_TOKEN:
+                self._send(403, "invalid console token")
+                return
+            try:
+                body = json.dumps(state(), ensure_ascii=False)
+            except Exception as e:  # 認証/権限エラー等は500で表面化（0件に化けさせない）
+                self._send(500, f"状態の取得に失敗しました（AWS認証・権限・バケット名を確認）: {e}")
+                return
+            self._send(200, body, "application/json; charset=utf-8")
         else:
             self._send(404, "not found")
 

@@ -50,11 +50,22 @@ kvs_get() { # kvs_get <key>（無ければ空文字）
 
 # --- meta helpers（横断管理コンソール・CLI一覧が読む表示用キャッシュ。真実はKVS） ---
 meta_write() { # meta_write <slug> <name> <status>  （既存のgalleries[]所属は保持する）
-  local existing
-  existing="$(aws s3 cp "s3://$BUCKET/meta/$1.json" - 2>/dev/null \
-    | python3 -c "import json,sys; print(json.dumps(json.load(sys.stdin).get('galleries',[])))" 2>/dev/null || true)"
-  [[ -n "$existing" ]] || existing='[]'
-  python3 - "$1" "$2" "$3" "$existing" <<'PY' | aws s3 cp - "s3://$BUCKET/meta/$1.json" --content-type application/json
+  # 既存galleries[]の保持は、metaが「読めた」ときだけ行う。読めない場合:
+  #   - オブジェクトが存在しない（新規デプロイ）→ galleries=[] で新規作成してよい
+  #   - 存在するのに読めない（一時失敗）→ 上書きを中止（galleries[]の消失を防ぐ）
+  local existing cur
+  if cur="$(aws s3 cp "s3://$BUCKET/meta/$1.json" - 2>/dev/null)" && [[ -n "$cur" ]]; then
+    existing="$(printf '%s' "$cur" | python3 -c "import json,sys; print(json.dumps(json.load(sys.stdin).get('galleries',[])))" 2>/dev/null)" \
+      || { echo "meta_write: 既存metaの解析に失敗したため上書きを中止: $1" >&2; return 1; }
+  elif aws s3api head-object --bucket "$BUCKET" --key "meta/$1.json" >/dev/null 2>&1; then
+    echo "meta_write: 既存metaが存在するのに読めなかったため上書きを中止（所属消失防止）: $1" >&2
+    return 1
+  else
+    existing='[]'  # 本当に新規
+  fi
+  # 確定値を組み立ててから書く（pythonが失敗しても空でmetaを上書きしない）
+  local out
+  out="$(python3 - "$1" "$2" "$3" "$existing" <<'PY'
 import json, sys, datetime
 slug, name, status, galleries = sys.argv[1:5]
 try:
@@ -65,6 +76,9 @@ print(json.dumps({"slug": slug, "name": name, "status": status, "galleries": g,
                   "updatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()},
                  ensure_ascii=False))
 PY
+)" || { echo "meta_write: metaの生成に失敗: $1" >&2; return 1; }
+  [[ -n "$out" ]] || { echo "meta_write: 生成結果が空のため書き込み中止: $1" >&2; return 1; }
+  printf '%s' "$out" | aws s3 cp - "s3://$BUCKET/meta/$1.json" --content-type application/json >/dev/null
 }
 
 meta_name() { # meta_name <slug>（無ければslugを返す）
@@ -115,8 +129,15 @@ gallery_meta_name() { # <gslug>
 
 # パターンの所属ギャラリーを設定し、meta.galleries・pg:{slug}(KVS)・各indexを更新する。
 # 途中で失敗しても meta を空で上書きしないよう、確定値を組み立ててから書き込む。
+MAX_PATTERN_GALLERIES=3   # edge-gate.js のスコープ判定が先頭N件のみ照合するため、書き込み側で強制
 pattern_set_galleries() { # <slug> <gslug...>（0個で全所属解除）
   local slug="$1"; shift; local list="$*"
+  # 所属カテゴリ数の上限を強制（超過を黙って切り捨てず、書き込み時点で拒否する）
+  local -a arr=($list)
+  if (( ${#arr[@]} > MAX_PATTERN_GALLERIES )); then
+    echo "所属カテゴリは最大 ${MAX_PATTERN_GALLERIES} 件までです（指定: ${#arr[@]} 件）: $slug" >&2
+    return 1
+  fi
   local cur new
   cur="$(aws s3 cp "s3://$BUCKET/meta/$slug.json" - 2>/dev/null)"
   [[ -n "$cur" ]] || { echo "meta not found or empty: $slug" >&2; return 1; }

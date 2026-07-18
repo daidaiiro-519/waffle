@@ -1,11 +1,15 @@
 // edge-gate.js — CloudFront Function (cf2, viewer-request)
 //
 // 責務（論点4・5・8の合意事項 + advisor批評の反映）:
-//   1. 状態判定: KVS "token:{slug}" を1回だけ読む
+//   1. 状態判定: KVS "token:{slug}" を読む
 //        通常値      = 現在有効なトークン
 //        "DISABLED" = 無効化済み → 403
 //        キー無し    = 未発行slug → 403
-//      （KVS読み取りを1回に抑えるのはcf2の実行予算対策）
+//      KVS読み取り回数（cf2実行予算に影響）:
+//        - パターン別Cookieで通る通常経路 = 1読み（token:{slug}のみ）
+//        - 全体ギャラリー共通Cookie経由    = +1読み（project:token）
+//        - 名前付きギャラリーのスコープ経由 = +pg:{slug} +該当g:{gslug}（所属は最大3件に制限）
+//        最悪ケースで最大約6読み。予算超過時はcf2がエラー→CloudFrontが5xx（fail-closed=安全側）
 //   2. トークン照合: Cookie "share_{slug}" の値をKVS現在値と毎回直接比較する
 //      （ローテーションはKVSの値を書き換えるだけで旧トークンが自動失効する）
 //   3. トークン検証: GET /p/{slug}/verify (header: x-share-token) → 204 + Set-Cookie
@@ -256,13 +260,14 @@ async function handler(event) {
     return htmlResponse(401, GATE_HTML);
   }
 
-  // コメントPUTの形状検査: キーは {英数}.json のみ・content-typeはJSONのみ
-  // （text/html等を置かせない = 配信ドメイン上のstored XSSを封じる）
+  // コメントPUTの形状検査: キーは {英数}.json のみ・content-typeはJSONのみ・サイズ上限
+  // （text/html等を置かせない = 配信ドメイン上のstored XSSを封じる。サイズ上限=コスト/DoS対策）
   if (isCommentPut) {
     const keyOk = new RegExp('^/comments/' + slug + '/[A-Za-z0-9_-]+\\.json$').test(uri);
     const ct = request.headers['content-type'] ? request.headers['content-type'].value : '';
-    if (!keyOk || ct.split(';')[0].trim() !== 'application/json') {
-      return deny(403);
+    var clen = request.headers['content-length'] ? parseInt(request.headers['content-length'].value, 10) : 0;
+    if (!keyOk || ct.split(';')[0].trim() !== 'application/json' || !(clen > 0) || clen > 16384) {
+      return deny(403);  // 16KB上限。Content-Length欠落や超過は拒否
     }
     return request;
   }

@@ -57,6 +57,20 @@ poll() {
   return 1
 }
 
+# streak_ok <retries> <sleep> <needed> <説明> -- <cmd...>
+# 失効・無効化の確認はKVS結果整合が非単調なため、単発ヒットでは偽PASSしうる。
+# cmdが「連続needed回」成功して初めて合格（収束確認）とする。
+streak_ok() {
+  local n="$1" s="$2" need="$3" desc="$4"; shift 4; shift
+  local i st=0
+  for ((i=1;i<=n;i++)); do
+    if "$@"; then st=$((st+1)); else st=0; fi
+    [[ $st -ge $need ]] && return 0
+    sleep "$s"
+  done
+  echo "    （$desc: 連続${need}回に届かず）"; return 1
+}
+
 # --- 0. 前提チェック -------------------------------------------------------
 info "0. 前提チェック"
 for bin in aws python3 curl; do
@@ -106,9 +120,17 @@ wrong="$(curl -s -o /dev/null -w '%{http_code}' -H "x-share-token: WRONG-$MARKER
 
 # --- 4. 正トークンでCookie発行 → 本体が見られる ---------------------------
 info "4. Cookie発行とページ本体"
-right="$(curl -s -c "$JAR" -o /dev/null -w '%{http_code}' -H "x-share-token: $TOKEN" "$BASE/p/$SLUG/verify")"
+# KVS収束は非単調なので、正トークンverifyも204になるまで数回許容してからCookieを確定する
+verify_get() { curl -s -c "$JAR" -o /dev/null -w '%{http_code}' -H "x-share-token: $TOKEN" "$BASE/p/$SLUG/verify"; }
+right="$(verify_get)"
+for _i in 1 2 3 4 5 6 7 8; do [[ "$right" == "204" ]] && break; sleep 5; right="$(verify_get)"; done
 [[ "$right" == "204" ]] && ok "正トークン → 204" || ng "正トークンで 204 以外（実際: $right）"
 grep -q "share_$SLUG" "$JAR" && ok "share_$SLUG Cookie が発行された" || ng "Cookie が発行されない"
+# Cookie属性を Set-Cookie ヘッダから機械検査（Secure/HttpOnly/SameSite=Strict）
+SETCOOKIE="$(curl -s -D - -o /dev/null -H "x-share-token: $TOKEN" "$BASE/p/$SLUG/verify" | tr -d '\r' | grep -i "^set-cookie:.*share_$SLUG")"
+if grep -qi 'Secure' <<<"$SETCOOKIE" && grep -qi 'HttpOnly' <<<"$SETCOOKIE" && grep -qi 'SameSite=Strict' <<<"$SETCOOKIE"; then
+  ok "Cookie属性 Secure/HttpOnly/SameSite=Strict"
+else ng "Cookie属性が不足: $SETCOOKIE"; fi
 # 伝播の裾で一時的に403が混じりうるので、200が取れるまで数回許容
 page_ok() { curl -s -b "$JAR" "$BASE/p/$SLUG/" | grep -q "$MARKER"; }
 if poll 6 5 "本体取得リトライ" -- page_ok; then ok "Cookie付き → ページ本体200（マーカー一致）" \
@@ -126,6 +148,22 @@ put_ok() { [[ "$(put_code)" =~ ^2 ]]; }
 if poll 6 5 "PUTリトライ(伝播裾)" -- put_ok; then ok "コメントPUT → 2xx（OAC署名PUT成立）"; else
   ng "コメントPUT失敗（$(put_code)）★これが失敗ならコメント投稿だけFunction URL等へ逃がす代替が必要"; fi
 
+# --- 5b. コメントPUTの拒否経路（stored XSS/DoS防御の負テスト）-------------
+info "5b. コメントPUT拒否経路（負テスト）"
+DUMMY='{"author":"x","body":"x","postedAt":"2026-01-01T00:00:00Z"}'
+DSHA="$(sha256hex "$DUMMY")"
+tsk() { date -u +%s%N 2>/dev/null | cut -c1-13 || echo 0; }
+c1="$(curl -s -b "$JAR" -o /dev/null -w '%{http_code}' -X PUT -H 'content-type: application/json' -H "x-amz-content-sha256: $DSHA" --data "$DUMMY" "$BASE/comments/$SLUG/evil.html")"
+[[ "$c1" == "403" ]] && ok "非.jsonキーPUT → 403" || ng "非.jsonキーPUTが403以外（$c1）"
+c2="$(curl -s -b "$JAR" -o /dev/null -w '%{http_code}' -X PUT -H 'content-type: text/html' -H "x-amz-content-sha256: $DSHA" --data "$DUMMY" "$BASE/comments/$SLUG/$(tsk)-x.json")"
+[[ "$c2" == "403" ]] && ok "content-type=text/html → 403" || ng "不正content-typeが403以外（$c2）"
+c3="$(curl -s -b "$JAR" -o /dev/null -w '%{http_code}' -X DELETE "$BASE/p/$SLUG/")"
+[[ "$c3" == "403" ]] && ok "DELETE → 403" || ng "DELETEが403以外（$c3）"
+BIG="$(python3 -c "print('{\"author\":\"x\",\"body\":\"'+'a'*20000+'\"}')")"
+BSHA="$(sha256hex "$BIG")"
+c4="$(curl -s -b "$JAR" -o /dev/null -w '%{http_code}' -X PUT -H 'content-type: application/json' -H "x-amz-content-sha256: $BSHA" --data "$BIG" "$BASE/comments/$SLUG/$(tsk)-big.json")"
+[[ "$c4" == "403" ]] && ok "16KB超PUT → 403" || ng "巨大PUTが403以外（$c4）"
+
 # --- 6. コメント一覧（ListObjectsV2書き換え）＋本文取得 -------------------
 info "6. コメント一覧と本文取得"
 # grepは <Key>…投稿キー…</Key> を厳密に見る（<Prefix>への誤マッチを避ける）
@@ -135,21 +173,48 @@ if poll 10 3 "一覧反映待ち" -- list_has_key; then ok "comments-list に投
 got="$(curl -s -b "$JAR" "$BASE/$KEY")"
 printf '%s' "$got" | grep -q "$MARKER" && ok "コメント本文を取得できる" || ng "コメント本文を取得できない"
 
-# --- 7. ローテーション：旧トークンCookieは失効 -----------------------------
+# --- 6b. 名前付きギャラリーのスコープ（所属案は開ける/非所属案は遮断）------
+info "6b. カテゴリのスコープ制御（最重要）"
+TMP2="$(mktemp --suffix=.html)"; printf '<!doctype html><title>s2</title><main>NONMEMBER-%s</main>' "$MARKER" > "$TMP2"
+D2="$("$SCRIPT_DIR/deploy_pattern.sh" "$TMP2" "smoke-nonmember $MARKER" 2>&1)" || true
+SLUG2="$(printf '%s\n' "$D2" | sed -n 's#.*/p/\([A-Za-z0-9_-]*\)/.*#\1#p' | head -1)"
+CATOUT="$("$SCRIPT_DIR/galleries.sh" create "smoke-cat $MARKER" 2>&1)" || true
+CATG="$(printf '%s\n' "$CATOUT" | sed -n 's#.*/g/\([A-Za-z0-9_-]*\)/.*#\1#p' | head -1)"
+CATTOK="$(printf '%s\n' "$CATOUT" | sed -n 's/^.*トークン: *//p' | head -1)"
+"$SCRIPT_DIR/galleries.sh" add "$CATG" "$SLUG" >/dev/null 2>&1 || true
+if [[ -n "$SLUG2" && -n "$CATG" && -n "$CATTOK" ]]; then
+  CJAR="$(mktemp)"
+  cat_ok() { [[ "$(curl -s -o /dev/null -w '%{http_code}' -H "x-share-token: $CATTOK" "$BASE/g/$CATG/verify")" == "204" ]]; }
+  streak_ok 30 3 4 "カテゴリトークン収束" -- cat_ok >/dev/null || true
+  curl -s -c "$CJAR" -o /dev/null -H "x-share-token: $CATTOK" "$BASE/g/$CATG/verify"
+  memb_ok() { [[ "$(curl -s -b "$CJAR" -o /dev/null -w '%{http_code}' "$BASE/p/$SLUG/")" == "200" ]]; }
+  if streak_ok 30 3 3 "所属案アクセス収束" -- memb_ok; then ok "所属案 → カテゴリCookieで200（横断成立）"; else
+    ng "所属案がカテゴリCookieで開けない"; fi
+  nm="$(curl -s -b "$CJAR" -o /dev/null -w '%{http_code}' "$BASE/p/$SLUG2/")"
+  [[ "$nm" == "401" ]] && ok "★非所属案 → 401（スコープ遮断）" || ng "★非所属案がカテゴリCookieで開ける（$nm）＝スコープ漏れ"
+  rm -f "$CJAR"
+  "$SCRIPT_DIR/galleries.sh" delete "$CATG" >/dev/null 2>&1 || true
+  "$SCRIPT_DIR/invalidate_pattern.sh" "$SLUG2" --no-export >/dev/null 2>&1 || true
+else
+  ng "スコープテストの準備に失敗（slug2=$SLUG2 cat=$CATG）"
+fi
+rm -f "$TMP2"
+
+# --- 7. ローテーション：旧トークンCookieは失効（収束確認）------------------
 info "7. トークンローテーション"
 ROT_OUT="$("$SCRIPT_DIR/rotate_token.sh" "$SLUG" 2>&1)" || true
 NEWTOKEN="$(printf '%s\n' "$ROT_OUT" | sed -n 's/^.*トークン: *//p' | head -1)"
 [[ -n "$NEWTOKEN" && "$NEWTOKEN" != "$TOKEN" ]] && ok "新トークン発行（旧と異なる）" || ng "新トークンを取得できない"
 old_dead() { local c; c="$(curl -s -b "$JAR" -o /dev/null -w '%{http_code}' "$BASE/p/$SLUG/")"; [[ "$c" == "401" ]]; }
-if poll 20 3 "旧トークン失効反映待ち" -- old_dead; then ok "旧トークンCookie → 401（即時失効）"; else
-  ng "旧トークンCookieがまだ通る"; fi
+if streak_ok 30 3 4 "旧トークン失効の収束" -- old_dead; then ok "旧トークンCookie → 401（収束確認）"; else
+  ng "旧トークンCookieがまだ通る（収束せず）"; fi
 
 # --- 8. 無効化：403 DISABLED だがエクスポートは可能（データは残る）--------
 info "8. 無効化とデータ保全"
 "$SCRIPT_DIR/invalidate_pattern.sh" "$SLUG" --no-export >/dev/null 2>&1 || true
 disabled() { local c; c="$(curl -s -o /dev/null -w '%{http_code}' -H "x-share-token: $NEWTOKEN" "$BASE/p/$SLUG/verify")"; [[ "$c" == "403" ]]; }
-if poll 20 3 "無効化反映待ち" -- disabled; then ok "無効化後は正トークンでも403"; else
-  ng "無効化後もアクセスできる"; fi
+if streak_ok 30 3 4 "無効化の収束" -- disabled; then ok "無効化後は正トークンでも403（収束確認）"; else
+  ng "無効化後もアクセスできる（収束せず）"; fi
 EXPORT_DIR="$(mktemp -d)"
 if "$SCRIPT_DIR/export_pattern.sh" "$SLUG" "$EXPORT_DIR" >/dev/null 2>&1 && ls "$EXPORT_DIR"/*.zip >/dev/null 2>&1; then
   ok "無効化後もエクスポート可能（データは削除されていない）"; else
