@@ -130,12 +130,13 @@
         {
           "stepId": "step-6",
           "title": "公開中パターンを管理する",
-          "summary": "管理操作はCLI（scripts/ds.sh）・Web UI（ds.sh console、localhostのみ）・ローカルMCP（scripts/mcp_server.py）の3経路から選べる。いずれも実体は同じスクリプトに委譲される。",
+          "summary": "管理操作はCLI（scripts/ds.sh）・Web UI（ds.sh console、localhostのみ）・ローカルMCP（scripts/mcp_server.py）の3経路から選べる。いずれも実体は同じスクリプトに委譲される。閲覧者に横断閲覧を提供する場合は共有ギャラリー（共通トークン）を有効化する。",
           "bullets": [
             "一覧: ds.sh list（全パターンの公開状態・slug・更新日）",
             "無効化: ds.sh disable <slug>。アクセスを止めるがデータは残す。既定でzipエクスポートを先に実行する",
             "再発行/再公開: ds.sh rotate <slug>。新トークン発行で旧トークンは失効（URL不変）。無効化済みパターンに対して実行すると再公開になる",
-            "エクスポート: ds.sh export <slug>。公開を維持したままバックアップを取得する"
+            "エクスポート: ds.sh export <slug>。公開を維持したままバックアップを取得する",
+            "共有ギャラリー: ds.sh gallery init で1つのランディングURL＋共通トークンを発行し、閲覧者が公開中の全パターンを一覧・横断閲覧できるようにする（rotate/disableで共通トークンを管理）"
           ],
           "children": []
         }
@@ -226,6 +227,14 @@
         {
           "path": "scripts/mcp_server.py",
           "description": "ローカルMCPサーバ（stdio・依存なし）。MCPクライアントから管理操作をツールとして呼べる"
+        },
+        {
+          "path": "references/templates/gallery-page.html",
+          "description": "共有ギャラリー（公開中パターンの一覧・横断閲覧）のランディングページ雛形。gallery/index.htmlとして配置される"
+        },
+        {
+          "path": "scripts/gallery.sh",
+          "description": "共有ギャラリーの管理（init/rotate/disable/url）。プロジェクト共通トークンの発行・失効とギャラリーページ配置を行う"
         }
       ]
     },
