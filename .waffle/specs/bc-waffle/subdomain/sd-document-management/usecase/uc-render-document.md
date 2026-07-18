@@ -69,6 +69,7 @@ sequenceDiagram
 - When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。
 - While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。
 - If list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取ったとき、システムはMALFORMED_CONTENTエラーを返し描画しない shall。
+- While pathVarsが参照するcontentのドットパスを対象Documentが持たないとき、システムはその変数を使うdeploy先だけをスキップし、canonicalへの書き込みは継続する shall。
 
 ---
 
@@ -314,6 +315,19 @@ Scenario: 配列を期待する部品が配列でない値を受け取るとMALF
   Given listを宣言する部品に対応するcontent値が配列でなく文字列であるDocument
   When renderする
   Then MALFORMED_CONTENTエラーが返り、成果物は書き出されない
+```
+
+### pathVarsが解決できないdeploy先はスキップしcanonicalへは書く
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 描画：pathVarsが参照するcontentのフィールドを持たないDocumentでも、そのpathVarを使わないcanonicalへの書き込みは妨げず、解決できないdeploy先だけをスキップする |
+
+```gherkin
+Scenario: pathVarsが解決できないdeploy先はスキップしcanonicalへは書く
+  Given x-render-target.pathVarsが参照するcontentのドットパスを持たないDocument
+  When renderする
+  Then canonicalへは書かれるが、解決できないdeploy先はクラッシュせずスキップされる
 ```
 
 ---

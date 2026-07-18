@@ -108,9 +108,14 @@ class RenderDocument:
             try:
                 # canonical（.waffle 配下）に書く
                 self._documents.write_text(canonical, output)
-                # deploy: 同一フォーマットは verbatim copy（更新漏れ防止のため render に内蔵）
+                # deploy: 同一フォーマットは verbatim copy（更新漏れ防止のため render に内蔵）。
+                # deployテンプレートが参照する変数がpath_varsに無い場合（例: skillRef未宣言の
+                # document）、そのdeploy先だけをスキップする（canonicalの書き込みは妨げない）。
                 for dep in _select_deploy(target.get("deploy", []), spec_kind):
-                    dp = path_template.resolve(dep, **path_vars)
+                    try:
+                        dp = path_template.resolve(dep, **path_vars)
+                    except KeyError:
+                        continue
                     self._documents.write_text(dp, output)
                     deployed.append(dp)
             except OSError as e:
@@ -138,7 +143,10 @@ class RenderDocument:
                     path_vars.update(recovered)
         path_vars_decl = _select_field_map(schema.get("x-render-target", {}).get("pathVars", {}), spec_kind)
         for var_name, dotted_path in path_vars_decl.items():
-            path_vars[var_name] = _resolve_path({"doc": doc}, dotted_path)
+            try:
+                path_vars[var_name] = _resolve_path({"doc": doc}, dotted_path)
+            except KeyError:
+                continue  # このdocumentには当該フィールドが無い→この変数を使うdeploy先だけ後段でスキップされる
         return path_vars
 
     def _render_frontmatter(self, doc: dict, schema: dict, spec_kind: str | None) -> str:

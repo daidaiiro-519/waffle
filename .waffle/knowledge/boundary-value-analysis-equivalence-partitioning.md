@@ -1,7 +1,5 @@
 # boundary-value-analysis-equivalence-partitioning
 
----
-
 ## 概要
 
 ### この概念が答える判断

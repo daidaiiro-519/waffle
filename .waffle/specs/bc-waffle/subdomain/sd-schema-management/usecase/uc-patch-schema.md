@@ -107,6 +107,7 @@ sequenceDiagram
 - When set_kind_render_targetでkind値・pathVars・path・deployが与えられたとき、システムはx-render-target.pathVars/path/deployそれぞれのkind別dictに、そのkind値のエントリを追加する shall。
 - While 対象のkind値のエントリが既にpathVars・path・deployの全てで指定した値と一致しているとき、set_kind_render_targetは無変更で成功する shall。
 - If set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でないとき、システムはUNSUPPORTED_RENDER_TARGET_SHAPEエラーを返し書き込みを拒否する shall。
+- When set_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。
 
 ---
 
@@ -529,6 +530,19 @@ Scenario: x-render-targetがkind別dict形式でないschemaへのset_kind_rende
   Given x-render-target自体を持たない、またはpathVars・path・deployのいずれかがフラット形式（kind別dictでない）のschema
   When set_kind_render_targetを実行する
   Then UNSUPPORTED_RENDER_TARGET_SHAPEエラーが返り書き込まれない
+```
+
+### set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | set_field: defNameにnullを渡すと$defsではなくschemaのルート直下（$id・properties.schemaRef.const等）を対象にできる |
+
+```gherkin
+Scenario: set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える
+  Given defNameにnull・ルート直下のドットパス・新しい値
+  When set_fieldを実行する
+  Then $defsではなくschemaのルート直下の値が書き換わる
 ```
 
 ---

@@ -1,7 +1,5 @@
 # sociable-solitary-unit-tests
 
----
-
 ## 概要
 
 ### この概念が答える判断

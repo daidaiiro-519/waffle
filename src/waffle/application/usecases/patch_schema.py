@@ -59,8 +59,9 @@ class PatchSchema:
             except schema_patch.BlockNotFoundError as e:
                 return _err("BLOCK_NOT_FOUND", str(e))
         elif operation == "set_field":
-            required = ("defName", "fieldPath")
-            if not all(params.get(k) for k in required) or "value" not in params:
+            # defNameはNoneでもよい（schemaのルート直下を対象にする合図）。
+            # fieldPath/valueは常に必須。
+            if not params.get("fieldPath") or "value" not in params or "defName" not in params:
                 return _err("MISSING_PARAM", "set_field には defName, fieldPath, value が必要です")
             try:
                 new_schema = schema_patch.set_field(old_schema, params["defName"], params["fieldPath"], params["value"])

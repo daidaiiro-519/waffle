@@ -202,6 +202,27 @@ def test_既存ブロックの1フィールドだけを書き換える():
     assert written["$defs"]["SomeContent"] == _base_schema()["$defs"]["SomeContent"]
 
 
+def test_set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える():
+    """
+    Given defNameにnull・ルート直下のドットパス・新しい値
+    When set_fieldを実行する
+    Then $defsではなくschemaのルート直下の値が書き換わる
+    """
+    schema = _base_schema()
+    schema["properties"] = {}
+    _write_fixture(schema)
+
+    result = _engine().run("set_field", {
+        "schemaRef": _SCHEMA_REF,
+        "defName": None,
+        "fieldPath": "properties.newTopLevelField",
+        "value": {"type": "string"},
+    })
+    assert isinstance(result, Ok), result
+    written = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+    assert written["properties"]["newTopLevelField"] == {"type": "string"}
+
+
 def test_既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒否される():
     """
     Given 公開済みkindの既存フィールドの型(type)を書き換える変更

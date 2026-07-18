@@ -16,7 +16,13 @@
     "formats": [
       "md"
     ],
-    "path": ".waffle/knowledge/{documentId}.md"
+    "path": ".waffle/knowledge/{documentId}.md",
+    "pathVars": {
+      "skillRef": "doc.skillRef"
+    },
+    "deploy": [
+      ".claude/skills/{skillRef}/references/knowledge/{documentId}.md"
+    ]
   },
   "properties": {
     "documentId": {
@@ -82,6 +88,10 @@
     },
     "content": {
       "$ref": "#/$defs/KnowledgeContent"
+    },
+    "skillRef": {
+      "type": "string",
+      "x-prompt-write": "このknowledgeが属するadvisor SkillのdocumentIdを指定してください。例: ddd-advisor, tech-lead-advisor, qa-advisor。deploy先(.claude/skills/{skillRef}/references/knowledge/)の解決に使う。特定のSkillに属さない汎用knowledgeの場合は省略してよい（省略時はcanonicalへの描画のみでdeployは行われない）。"
     }
   },
   "$defs": {
