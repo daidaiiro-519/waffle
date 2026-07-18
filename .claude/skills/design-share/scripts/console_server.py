@@ -94,6 +94,14 @@ def list_patterns() -> list[dict]:
             patterns.append(json.loads(aws("s3", "cp", f"s3://{CONF['BUCKET']}/{key}", "-")))
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             continue
+    # 各パターンの現在トークンをKVSから付ける（localhost管理画面なので表示してよい）
+    for p in patterns:
+        try:
+            v = aws("cloudfront-keyvaluestore", "get-key", "--kvs-arn", CONF["KVS_ARN"],
+                    "--key", "token:" + p.get("slug", ""), "--query", "Value", "--output", "text").strip()
+        except subprocess.CalledProcessError:
+            v = ""
+        p["token"] = "" if v in ("", "None", "DISABLED") else v
     return sorted(patterns, key=lambda p: p.get("updatedAt", ""), reverse=True)
 
 
@@ -129,6 +137,7 @@ def galleries_list() -> list[dict]:
             v = ""
         status = "disabled" if v == "DISABLED" else ("enabled" if v and v != "None" else "unset")
         cats.append({"gslug": gs, "name": meta.get("name", ""), "status": status,
+                     "token": v if status == "enabled" else "",
                      "url": f"https://{CONF.get('DISTRIBUTION_DOMAIN', '')}/g/{gs}/"})
     return sorted(cats, key=lambda c: c["name"])
 
@@ -138,8 +147,15 @@ def state() -> dict:
     cats = galleries_list()
     for c in cats:
         c["count"] = sum(1 for p in patterns if c["gslug"] in (p.get("galleries") or []))
+    try:
+        gv = aws("cloudfront-keyvaluestore", "get-key", "--kvs-arn", CONF["KVS_ARN"],
+                 "--key", "project:token", "--query", "Value", "--output", "text").strip()
+    except subprocess.CalledProcessError:
+        gv = ""
+    gstatus = "disabled" if gv == "DISABLED" else ("enabled" if gv and gv != "None" else "unset")
     return {"patterns": patterns,
-            "gallery": {"status": gallery_status(), "url": GALLERY_URL},
+            "gallery": {"status": gstatus, "url": GALLERY_URL,
+                        "token": gv if gstatus == "enabled" else ""},
             "categories": cats}
 
 
@@ -224,6 +240,13 @@ button.mini.primary{background:var(--accent);color:var(--accent-ink);border-colo
 .modal label:hover{background:var(--surface-2)}
 .modal label input{width:1.05rem;height:1.05rem;accent-color:var(--accent)}
 .modal .mnone{color:var(--muted);font-size:.85rem;padding:.5rem}
+.modal input.tin{width:100%;font:inherit;padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink)}
+.modal .mmsg{margin:0 0 1rem;font-size:.9rem;color:var(--muted)}
+.srow{margin-bottom:.9rem}
+.srow .slab{font-family:var(--mono);font-size:.64rem;letter-spacing:.03em;text-transform:uppercase;color:var(--faint);margin-bottom:.25rem}
+.srow .sinline{display:flex;gap:.4rem;align-items:center}
+.srow .sinline input.tin{flex:1;min-width:0}
+.srow .sinline a.mini{text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap}
 .modal-actions{display:flex;justify-content:flex-end;gap:.5rem}
 .console h2{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin:0 0 .4rem}
 pre.log{font-family:var(--mono);font-size:.78rem;line-height:1.6;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:.9rem 1.1rem;min-height:3.4rem;white-space:pre-wrap;word-break:break-word;color:var(--muted);box-shadow:var(--shadow)}
@@ -254,16 +277,16 @@ td[data-k]:not(.c-actions)::before{content:attr(data-k) "  ";font-family:var(--m
 <div class="console"><h2>操作ログ</h2><pre class="log" id="log">操作を選ぶと結果をここに表示します。</pre></div>
 </div>
 <div class="modal-bg" id="modal" hidden><div class="modal">
-<h3 id="modal-title">カテゴリを編集</h3>
+<h3 id="modal-title">　</h3>
 <p class="msub" id="modal-sub"></p>
-<div class="clist" id="modal-cats"></div>
-<div class="modal-actions"><button id="modal-cancel" class="mini">キャンセル</button><button id="modal-save" class="mini primary">保存</button></div>
+<div id="modal-body"></div>
+<div class="modal-actions"><button id="modal-cancel" class="mini">閉じる</button><button id="modal-ok" class="mini primary">OK</button></div>
 </div></div>
 <script>
 const TOKEN=new URLSearchParams(location.search).get('token')||'';
 const $=(id)=>document.getElementById(id);
 const KEBAB='<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="3" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="13" r="1.5" fill="currentColor"/></svg>';
-let openMenu=null;let CATS=[];let modalSlug=null;let selCat=null;
+let openMenu=null;let CATS=[];let modalSlug=null;let selCat=null;let DOMAIN='';
 function closeMenu(){if(!openMenu)return;openMenu.menu.classList.remove('open');openMenu.trigger.setAttribute('aria-expanded','false');openMenu=null;}
 document.addEventListener('click',closeMenu);
 document.addEventListener('keydown',(e)=>{if(e.key==='Escape')closeMenu();});
@@ -281,7 +304,36 @@ trig.addEventListener('click',(e)=>{e.stopPropagation();const isOpen=openMenu&&o
 menu.addEventListener('click',(e)=>e.stopPropagation());wrap.append(trig,menu);return wrap;}
 function sep(){const d=document.createElement('div');d.className='sep';return d;}
 
-function patternMenu(p){const items=[];
+let modalOk=null;
+function closeModal(){$('modal').hidden=true;modalOk=null;}
+function openModal(title,sub,build,okLabel,onOk){
+$('modal-title').textContent=title;const s=$('modal-sub');s.textContent=sub||'';s.style.display=sub?'':'none';
+const body=$('modal-body');body.textContent='';build(body);
+const ok=$('modal-ok');if(okLabel){ok.textContent=okLabel;ok.style.display='';}else{ok.style.display='none';}
+modalOk=onOk;$('modal').hidden=false;const inp=body.querySelector('input.tin');if(inp&&!inp.readOnly){inp.focus();}}
+function fallbackCopy(text,done){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);}
+function doCopy(text,btn){const orig=btn.textContent;const done=()=>{btn.textContent='コピー済';setTimeout(()=>{btn.textContent=orig;},1200);};
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,()=>fallbackCopy(text,done));}else fallbackCopy(text,done);}
+function shareRow(label,value,isUrl){const wrap=document.createElement('div');wrap.className='srow';
+const lab=document.createElement('div');lab.className='slab';lab.textContent=label;
+const row=document.createElement('div');row.className='sinline';
+const inp=document.createElement('input');inp.type='text';inp.className='tin';inp.readOnly=true;inp.value=value;inp.addEventListener('focus',()=>inp.select());
+const copy=document.createElement('button');copy.type='button';copy.className='mini';copy.textContent='コピー';copy.addEventListener('click',()=>doCopy(value,copy));
+row.append(inp,copy);
+if(isUrl){const a=document.createElement('a');a.className='mini';a.href=value;a.target='_blank';a.rel='noopener';a.textContent='開く ↗';row.append(a);}
+wrap.append(lab,row);return wrap;}
+function openShare(title,url,token){closeMenu();
+openModal(title,'URLとトークンは別々のチャネルで共有相手へ渡してください。',(body)=>{
+body.appendChild(shareRow('URL',url,true));
+if(token)body.appendChild(shareRow('トークン',token,false));
+else{const p=document.createElement('p');p.className='mmsg';p.textContent='有効なトークンがありません（無効化中の可能性）。';body.appendChild(p);}
+},null,null);}
+function openUrl(url){closeMenu();window.open(url,'_blank','noopener');}
+
+function patternMenu(p){const items=[];const purl='https://'+DOMAIN+'/p/'+p.slug+'/';
+items.push(item('↗','開く','',false,()=>openUrl(purl)));
+items.push(item('🔗','共有（URL・トークン）','',false,()=>openShare(p.name,purl,p.token||'')));
+items.push(sep());
 items.push(item('↓','エクスポート','',false,()=>doOp('/api/export?slug='+encodeURIComponent(p.slug),'export')));
 items.push(item('✎','名前を変更','',false,()=>renamePattern(p)));
 items.push(item('▦','カテゴリを編集','',false,()=>openMembership(p)));
@@ -314,7 +366,9 @@ body.appendChild(catSelectRow('▤','すべてのパターン',total+'件',selCa
 if(!cats.length){const d=document.createElement('div');d.className='cempty';d.textContent='カテゴリはまだありません。「＋ 新規カテゴリ」で作成できます。';body.appendChild(d);return;}
 cats.forEach(c=>{
 const items=[
-item('🔗','共有リンクを表示','',false,()=>{closeMenu();log('カテゴリ「'+(c.name||c.gslug)+'」の共有リンク:\n'+c.url+'\n（このURL＋トークンで、このカテゴリの案だけ閲覧できます）');}),
+item('↗','開く','',false,()=>openUrl(c.url)),
+item('🔗','共有（URL・トークン）','',false,()=>openShare(c.name||c.gslug,c.url,c.token||'')),
+sep(),
 item('⟳','共有トークンを再発行','',false,()=>doOp('/api/gallery-rotate?gslug='+encodeURIComponent(c.gslug),'gallery rotate')),
 item(c.status==='disabled'?'▲':'⦸',c.status==='disabled'?'再有効化':'無効化',c.status==='disabled'?'good':'danger',false,()=>doOp((c.status==='disabled'?'/api/gallery-rotate':'/api/gallery-disable')+'?gslug='+encodeURIComponent(c.gslug),'gallery')),
 sep(),
@@ -322,17 +376,17 @@ item('×','削除','danger',false,()=>{if(confirm('カテゴリ「'+(c.name||c.g
 ];
 body.appendChild(catSelectRow('▸',c.name||c.gslug,c.count+'件',selCat===c.gslug,()=>{selCat=c.gslug;refresh();},c.status,menuButton((c.name||c.gslug)+' の操作',items)));});}
 
-function openMembership(p){closeMenu();modalSlug=p.slug;
-$('modal-sub').textContent=p.name;const box=$('modal-cats');box.textContent='';
-if(!CATS.length){const d=document.createElement('div');d.className='mnone';d.textContent='カテゴリがありません。先に「＋ 新規カテゴリ」で作成してください。';box.appendChild(d);}
-else CATS.forEach(c=>{const lab=document.createElement('label');const cb=document.createElement('input');cb.type='checkbox';cb.value=c.gslug;cb.checked=(p.galleries||[]).indexOf(c.gslug)>=0;const sp=document.createElement('span');sp.textContent=c.name||c.gslug;lab.append(cb,sp);box.appendChild(lab);});
-$('modal').hidden=false;}
-function closeModal(){$('modal').hidden=true;modalSlug=null;}
-async function saveMembership(){const slug=modalSlug;if(!slug)return;
-const gs=Array.prototype.slice.call(document.querySelectorAll('#modal-cats input:checked')).map(x=>x.value);
+function openMembership(p){closeMenu();
+openModal('カテゴリを編集',p.name,(body)=>{
+const list=document.createElement('div');list.className='clist';
+if(!CATS.length){const d=document.createElement('div');d.className='mnone';d.textContent='カテゴリがありません。先に「＋ 新規カテゴリ」で作成してください。';list.appendChild(d);}
+else CATS.forEach(c=>{const lab=document.createElement('label');const cb=document.createElement('input');cb.type='checkbox';cb.value=c.gslug;cb.checked=(p.galleries||[]).indexOf(c.gslug)>=0;const sp=document.createElement('span');sp.textContent=c.name||c.gslug;lab.append(cb,sp);list.appendChild(lab);});
+body.appendChild(list);
+},'保存',async()=>{
+const gs=Array.prototype.slice.call($('modal-body').querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value);
 closeModal();log('カテゴリ所属を更新中…');
-const {ok,text}=await api('/api/pattern-galleries?slug='+encodeURIComponent(slug)+'&galleries='+encodeURIComponent(gs.join(',')));
-log(text.trim()||(ok?'完了':'失敗'),ok?'ok':'warn');refresh();}
+const {ok,text}=await api('/api/pattern-galleries?slug='+encodeURIComponent(p.slug)+'&galleries='+encodeURIComponent(gs.join(',')));
+log(text.trim()||(ok?'完了':'失敗'),ok?'ok':'warn');refresh();});}
 
 function galleryControls(g){
 const box=$('g-actions');box.textContent='';const body=$('g-body');body.textContent='';
@@ -340,7 +394,10 @@ const pill=document.createElement('span');pill.className='pill '+(g.status==='en
 pill.textContent=g.status==='enabled'?'有効':g.status==='disabled'?'無効化済み':'未設定';box.appendChild(pill);
 const items=[];
 if(g.status==='enabled'){
-const url=document.createElement('span');url.className='gurl';url.textContent=g.url;body.appendChild(url);
+const url=document.createElement('a');url.className='gurl';url.href=g.url;url.target='_blank';url.rel='noopener';url.textContent=g.url;body.appendChild(url);
+items.push(item('↗','開く','',false,()=>openUrl(g.url)));
+items.push(item('🔗','共有（URL・トークン）','',false,()=>openShare('全体ギャラリー',g.url,g.token||'')));
+items.push(sep());
 items.push(item('⟳','共通トークンを再発行','',false,()=>doOp('/api/gallery?op=rotate','gallery rotate')));
 items.push(sep());
 items.push(item('⦸','ギャラリーを無効化','danger',false,()=>{if(confirm('共有ギャラリーを無効化しますか？\n（各パターンの個別URLには影響しません）'))doOp('/api/gallery?op=disable','gallery disable');}));
@@ -362,7 +419,8 @@ const a=document.createElement('td');a.className='c-actions';a.dataset.k='操作
 tr.append(n,s,st,d,a);tb.appendChild(tr);});}
 
 async function refresh(){const r=await fetch('/api/state');const data=await r.json();
-$('env').textContent='env: '+((data.gallery.url||'').replace('https://','').replace('/gallery/',''));
+DOMAIN=(data.gallery.url||'').replace('https://','').replace('/gallery/','');
+$('env').textContent='env: '+DOMAIN;
 const ps=data.patterns||[];$('s-total').textContent=ps.length;
 $('s-active').textContent=ps.filter(p=>p.status==='active').length;
 $('s-disabled').textContent=ps.filter(p=>p.status!=='active').length;
@@ -377,7 +435,7 @@ if(cat){pf.appendChild(document.createTextNode('絞り込み: '+(cat.name||cat.g
 renderRows(shown,cat?'このカテゴリに所属するパターンはありません。パターンの⋮「カテゴリを編集」で追加できます。':'');}
 $('cat-new').addEventListener('click',createCategory);
 $('modal-cancel').addEventListener('click',closeModal);
-$('modal-save').addEventListener('click',saveMembership);
+$('modal-ok').addEventListener('click',()=>{if(modalOk)modalOk();});
 $('modal').addEventListener('click',(e)=>{if(e.target===$('modal'))closeModal();});
 document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&!$('modal').hidden)closeModal();});
 refresh();
