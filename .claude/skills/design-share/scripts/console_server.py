@@ -201,12 +201,19 @@ button.kebab svg{width:1.1rem;height:1.1rem;display:block}
 button.mini{font:inherit;font-size:.78rem;font-weight:600;cursor:pointer;padding:.32rem .8rem;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 button.mini:hover{background:var(--surface-2);border-color:var(--accent)}
 button.mini.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.catrow{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;padding:.7rem 1.1rem;border-bottom:1px solid var(--line)}
+#g-actions{display:inline-flex;align-items:center;gap:.55rem}
+.catrow{display:flex;align-items:center;gap:.6rem;padding:.7rem 1.1rem;border-bottom:1px solid var(--line);cursor:pointer}
 .catrow:last-child{border-bottom:none}
-.catrow .cname{font-weight:600}
-.catrow .cmeta{font-family:var(--mono);font-size:.72rem;color:var(--faint)}
-.catrow .curl{font-family:var(--mono);font-size:.72rem;color:var(--accent);word-break:break-all;flex:1;min-width:10rem}
+.catrow:hover{background:var(--surface-2)}
+.catrow.sel{background:color-mix(in srgb,var(--accent) 13%,var(--surface))}
+.catrow .cname{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:.4rem}
+.catrow .cname .caret{color:var(--faint);flex:none}
+.catrow.sel .cname .caret{color:var(--accent)}
+.catrow .cmeta{font-family:var(--mono);font-size:.72rem;color:var(--faint);flex:none}
+.catrow .cactions{flex:none}
 .cempty{padding:.9rem 1.1rem;color:var(--muted);font-size:.85rem}
+.pfilter{font-family:var(--mono);font-size:.68rem;color:var(--accent);font-weight:600}
+.pfilter .clear{cursor:pointer;text-decoration:underline;margin-left:.4rem}
 .modal-bg{position:fixed;inset:0;background:rgba(10,16,22,.5);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:100}
 .modal-bg[hidden]{display:none}
 .modal{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4);width:100%;max-width:26rem;padding:1.2rem}
@@ -241,7 +248,7 @@ td[data-k]:not(.c-actions)::before{content:attr(data-k) "  ";font-family:var(--m
 <div class="gwrap" id="g-body"></div></div>
 <div class="panel"><div class="ph"><h2>カテゴリ（名前付きギャラリー）</h2><button id="cat-new" class="mini">＋ 新規カテゴリ</button></div>
 <div id="cat-body"></div></div>
-<div class="panel"><div class="ph"><h2>パターン一覧</h2></div>
+<div class="panel"><div class="ph"><h2>パターン一覧</h2><span class="pfilter" id="pfilter"></span></div>
 <table><thead><tr><th>パターン名</th><th>slug</th><th>状態</th><th>更新日</th><th>操作</th></tr></thead>
 <tbody id="rows"><tr><td colspan="5" style="padding:1rem 1.1rem;color:var(--muted)">読み込み中…</td></tr></tbody></table></div>
 <div class="console"><h2>操作ログ</h2><pre class="log" id="log">操作を選ぶと結果をここに表示します。</pre></div>
@@ -256,7 +263,7 @@ td[data-k]:not(.c-actions)::before{content:attr(data-k) "  ";font-family:var(--m
 const TOKEN=new URLSearchParams(location.search).get('token')||'';
 const $=(id)=>document.getElementById(id);
 const KEBAB='<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="3" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="13" r="1.5" fill="currentColor"/></svg>';
-let openMenu=null;let CATS=[];let modalSlug=null;
+let openMenu=null;let CATS=[];let modalSlug=null;let selCat=null;
 function closeMenu(){if(!openMenu)return;openMenu.menu.classList.remove('open');openMenu.trigger.setAttribute('aria-expanded','false');openMenu=null;}
 document.addEventListener('click',closeMenu);
 document.addEventListener('keydown',(e)=>{if(e.key==='Escape')closeMenu();});
@@ -293,20 +300,27 @@ doOp('/api/rename?slug='+encodeURIComponent(p.slug)+'&name='+encodeURIComponent(
 
 function createCategory(){closeMenu();const name=prompt('新しいカテゴリ名を入力してください');if(name===null)return;const t=name.trim();if(!t){log('名前が空です。','warn');return;}doOp('/api/gallery-create?name='+encodeURIComponent(t),'gallery create');}
 
-function renderCategories(cats){const body=$('cat-body');body.textContent='';
+function catSelectRow(caret,name,count,selected,onSelect,pillStatus,menu){
+const row=document.createElement('div');row.className='catrow'+(selected?' sel':'');
+const nm=document.createElement('span');nm.className='cname';
+const car=document.createElement('span');car.className='caret';car.textContent=caret;
+const tx=document.createElement('span');tx.textContent=name;nm.append(car,tx);row.append(nm);
+if(pillStatus){const pill=document.createElement('span');pill.className='pill '+(pillStatus==='enabled'?'active':pillStatus==='disabled'?'disabled':'unset');pill.style.flex='none';pill.textContent=pillStatus==='enabled'?'有効':pillStatus==='disabled'?'無効':'トークン無';row.append(pill);}
+const cnt=document.createElement('span');cnt.className='cmeta';cnt.textContent=count;row.append(cnt);
+if(menu){const a=document.createElement('span');a.className='cactions';a.appendChild(menu);row.append(a);}
+row.addEventListener('click',onSelect);return row;}
+function renderCategories(cats,total){const body=$('cat-body');body.textContent='';
+body.appendChild(catSelectRow('▤','すべてのパターン',total+'件',selCat===null,()=>{selCat=null;refresh();},null,null));
 if(!cats.length){const d=document.createElement('div');d.className='cempty';d.textContent='カテゴリはまだありません。「＋ 新規カテゴリ」で作成できます。';body.appendChild(d);return;}
-cats.forEach(c=>{const row=document.createElement('div');row.className='catrow';
-const nm=document.createElement('span');nm.className='cname';nm.textContent=c.name||c.gslug;
-const pill=document.createElement('span');pill.className='pill '+(c.status==='enabled'?'active':c.status==='disabled'?'disabled':'unset');pill.textContent=c.status==='enabled'?'有効':c.status==='disabled'?'無効':'トークン無';
-const cnt=document.createElement('span');cnt.className='cmeta';cnt.textContent=c.count+'件';
-const url=document.createElement('span');url.className='curl';url.textContent=c.url;
+cats.forEach(c=>{
 const items=[
+item('🔗','共有リンクを表示','',false,()=>{closeMenu();log('カテゴリ「'+(c.name||c.gslug)+'」の共有リンク:\n'+c.url+'\n（このURL＋トークンで、このカテゴリの案だけ閲覧できます）');}),
 item('⟳','共有トークンを再発行','',false,()=>doOp('/api/gallery-rotate?gslug='+encodeURIComponent(c.gslug),'gallery rotate')),
 item(c.status==='disabled'?'▲':'⦸',c.status==='disabled'?'再有効化':'無効化',c.status==='disabled'?'good':'danger',false,()=>doOp((c.status==='disabled'?'/api/gallery-rotate':'/api/gallery-disable')+'?gslug='+encodeURIComponent(c.gslug),'gallery')),
 sep(),
 item('×','削除','danger',false,()=>{if(confirm('カテゴリ「'+(c.name||c.gslug)+'」を削除しますか？\n所属は全解除されますが、パターン自体は残ります。'))doOp('/api/gallery-delete?gslug='+encodeURIComponent(c.gslug),'gallery delete');}),
 ];
-row.append(nm,pill,cnt,url,menuButton((c.name||c.gslug)+' の操作',items));body.appendChild(row);});}
+body.appendChild(catSelectRow('▸',c.name||c.gslug,c.count+'件',selCat===c.gslug,()=>{selCat=c.gslug;refresh();},c.status,menuButton((c.name||c.gslug)+' の操作',items)));});}
 
 function openMembership(p){closeMenu();modalSlug=p.slug;
 $('modal-sub').textContent=p.name;const box=$('modal-cats');box.textContent='';
@@ -337,8 +351,8 @@ items.push(item('▲','ギャラリーを有効化','good',false,()=>doOp('/api/
 $('g-actions').appendChild(menuButton('共有ギャラリーの操作メニュー',items));
 }
 
-function renderRows(patterns){const tb=$('rows');tb.textContent='';
-if(!patterns.length){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=5;td.style.padding='1rem 1.1rem';td.style.color='var(--muted)';td.textContent='まだデプロイされたパターンはありません。';tr.appendChild(td);tb.appendChild(tr);return;}
+function renderRows(patterns,emptyMsg){const tb=$('rows');tb.textContent='';
+if(!patterns.length){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=5;td.style.padding='1rem 1.1rem';td.style.color='var(--muted)';td.textContent=emptyMsg||'まだデプロイされたパターンはありません。';tr.appendChild(td);tb.appendChild(tr);return;}
 patterns.forEach(p=>{const tr=document.createElement('tr');
 const n=document.createElement('td');n.className='c-name name';n.textContent=p.name||p.slug;
 const s=document.createElement('td');s.className='slug';s.dataset.k='slug';s.textContent=p.slug;
@@ -353,8 +367,14 @@ const ps=data.patterns||[];$('s-total').textContent=ps.length;
 $('s-active').textContent=ps.filter(p=>p.status==='active').length;
 $('s-disabled').textContent=ps.filter(p=>p.status!=='active').length;
 galleryControls(data.gallery||{status:'unset',url:''});
-CATS=data.categories||[];renderCategories(CATS);
-renderRows(ps);}
+CATS=data.categories||[];
+if(selCat!==null && !CATS.some(c=>c.gslug===selCat)) selCat=null;
+renderCategories(CATS,ps.length);
+const cat=selCat!==null?CATS.find(c=>c.gslug===selCat):null;
+const shown=cat?ps.filter(p=>(p.galleries||[]).indexOf(selCat)>=0):ps;
+const pf=$('pfilter');pf.textContent='';
+if(cat){pf.appendChild(document.createTextNode('絞り込み: '+(cat.name||cat.gslug)));const cl=document.createElement('span');cl.className='clear';cl.textContent='すべて表示';cl.addEventListener('click',()=>{selCat=null;refresh();});pf.appendChild(cl);}
+renderRows(shown,cat?'このカテゴリに所属するパターンはありません。パターンの⋮「カテゴリを編集」で追加できます。':'');}
 $('cat-new').addEventListener('click',createCategory);
 $('modal-cancel').addEventListener('click',closeModal);
 $('modal-save').addEventListener('click',saveMembership);
