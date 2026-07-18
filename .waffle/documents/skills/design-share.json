@@ -136,7 +136,8 @@
             "無効化: ds.sh disable <slug>。アクセスを止めるがデータは残す。既定でzipエクスポートを先に実行する",
             "再発行/再公開: ds.sh rotate <slug>。新トークン発行で旧トークンは失効（URL不変）。無効化済みパターンに対して実行すると再公開になる",
             "エクスポート: ds.sh export <slug>。公開を維持したままバックアップを取得する",
-            "共有ギャラリー: ds.sh gallery init で1つのランディングURL＋共通トークンを発行し、閲覧者が公開中の全パターンを一覧・横断閲覧できるようにする（rotate/disableで共通トークンを管理）"
+            "共有ギャラリー: ds.sh gallery init で1つのランディングURL＋共通トークンを発行し、閲覧者が公開中の全パターンを一覧・横断閲覧できるようにする（rotate/disableで共通トークンを管理）",
+            "カテゴリ（名前付きギャラリー）: ds.sh galleries create でカテゴリを発行し、ds.sh galleries add/remove/set で各パターンの所属を管理する。カテゴリのトークンは所属パターンだけを開ける（スコープ共有）"
           ],
           "children": []
         }
@@ -222,7 +223,7 @@
         },
         {
           "path": "scripts/console_server.py",
-          "description": "Web管理コンソール（localhostのみ・Host検証＋乱数トークンでCSRF防御）。行ごとの⋯メニューでエクスポート/改名/トークン再発行/無効化・再公開、共有ギャラリーの有効化/共通トークン再発行/無効化も操作できる"
+          "description": "Web管理コンソール（localhostのみ・Host検証＋乱数トークンでCSRF防御）。行ごとの⋯メニューでエクスポート/改名/トークン再発行/無効化・再公開、共有ギャラリーの有効化/共通トークン再発行/無効化も操作できる。カテゴリ（名前付きギャラリー）の作成・一覧・所属編集もできる"
         },
         {
           "path": "scripts/mcp_server.py",
@@ -239,6 +240,14 @@
         {
           "path": "scripts/rename_pattern.sh",
           "description": "パターンの表示名のみを変更する（slug・トークン・公開状態は不変。ギャラリー一覧へも反映）"
+        },
+        {
+          "path": "scripts/galleries.sh",
+          "description": "名前付きギャラリー（カテゴリ）の管理（create/list/rotate/disable/delete/add/remove/set）。所属はタグ式・アクセスはスコープ"
+        },
+        {
+          "path": "references/templates/gallery-app.html",
+          "description": "名前付きギャラリーのランディング雛形（URLからgslugを読み /g/{gslug}/index.json を表示）。gallery/app.htmlとして全カテゴリ共用配置"
         }
       ]
     },
