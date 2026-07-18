@@ -64,6 +64,11 @@ meta_name() { # meta_name <slug>（無ければslugを返す）
     | python3 -c "import json,sys; print(json.load(sys.stdin).get('name',''))" || true
 }
 
+meta_status() { # meta_status <slug>（無ければ空。通常は active / disabled）
+  aws s3 cp "s3://$BUCKET/meta/$1.json" - 2>/dev/null \
+    | python3 -c "import json,sys; print(json.load(sys.stdin).get('status',''))" || true
+}
+
 new_token() { # 暗号学的乱数のトークン（URL安全な22文字）
   python3 -c "import secrets; print(secrets.token_urlsafe(16))"
 }
