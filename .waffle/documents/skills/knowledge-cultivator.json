@@ -1,0 +1,138 @@
+{
+  "documentId": "knowledge-cultivator",
+  "documentType": "Skill",
+  "schemaRef": "SkillSchema/v1",
+  "skillKind": "custom",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "knowledge-cultivator"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "advisorのバックボーンknowledgeに追加すべき候補を検知・記録し、蓄積した候補について採用可否を人間との対話を通じて判定する際に使う。ユーザーがadvisorの判断を訂正したとき、既存knowledgeでカバーされない実例に遭遇したとき、または並列dispatchしたadvisor同士の見解が矛盾したときに使う。"
+    },
+    "inputExpectation": {
+      "blockType": "InputExpectation",
+      "title": "入力の想定",
+      "items": [
+        {
+          "aspect": "knowledge候補の記録トリガーとなった状況（ユーザーによるadvisor判断への訂正／既存knowledgeでカバーされない実例／並列dispatchしたadvisor間の見解矛盾のいずれか）",
+          "interpretation": "明示されなければ直前の会話からこの3種のいずれに該当するか判定する。個人の伝え方・コミュニケーションスタイルへのフィードバックはこの3種に該当せず対象外として扱う。"
+        },
+        {
+          "aspect": "棚卸し対象とするDRAFT状態のKnowledgeSchema document群",
+          "interpretation": "明示されなければ既存のDRAFT状態のKnowledgeSchema documentをqueryで全て洗い出す。"
+        }
+      ]
+    },
+    "role": {
+      "blockType": "Role",
+      "title": "役割",
+      "items": [
+        "advisorのバックボーンknowledgeへの追加候補を、KnowledgeSchemaのDRAFT状態のdocumentとして記録する",
+        "蓄積されたDRAFT候補を、審査に使える形へ要約・整理する",
+        "候補ごとに、人間との対話（AI初期見解→ユーザー見解→AI再考見解→合意決定）を通じて採用可否を判定する"
+      ]
+    },
+    "processingTarget": {
+      "blockType": "ProcessingTarget",
+      "title": "処理対象と成果物",
+      "target": "advisorのバックボーンknowledgeへの追加候補となりうる状況（ユーザーの訂正・未カバーの実例・advisor間の矛盾）、および既に記録済みのDRAFT状態のKnowledgeSchema document群。",
+      "artifact": "DRAFT状態のKnowledgeSchema document（記録局面）、候補審査ドキュメント（棚卸し・審査局面、採用/却下/修正して採用の決定を含む）。"
+    },
+    "steps": {
+      "blockType": "CustomSteps",
+      "title": "実行手順",
+      "items": [
+        {
+          "stepId": "step-1",
+          "title": "knowledge候補を記録する",
+          "summary": "3種のトリガー（ユーザーによるadvisor判断への訂正／既存knowledgeでカバーされない実例／並列dispatchしたadvisor間の見解矛盾）のいずれかを検知したら、対象advisorへのskillRefを持つKnowledgeSchema documentをstatus DRAFTで作成する。",
+          "children": [
+            {
+              "stepId": "step-1-1",
+              "title": "ユーザーによるadvisor判断への明示的な訂正を検知する",
+              "summary": "advisorが出した結論・判断根拠に対し、ユーザーが誤りを指摘した発言をトリガーとする。",
+              "bullets": [
+                "個人の伝え方・コミュニケーションスタイルへの指摘は対象外とする"
+              ]
+            },
+            {
+              "stepId": "step-1-2",
+              "title": "既存knowledgeでカバーされない実例に遭遇したことを検知する",
+              "summary": "advisorが判断根拠を示せない、またはバックボーン範囲外と回答した実際の状況をトリガーとする。"
+            },
+            {
+              "stepId": "step-1-3",
+              "title": "並列dispatchしたadvisor同士の見解の矛盾を検知する",
+              "summary": "同一の相談に対して複数advisorを並列dispatchした結果、判断が食い違った場合をトリガーとする。"
+            }
+          ]
+        },
+        {
+          "stepId": "step-2",
+          "title": "蓄積したDRAFT候補を審査用にとりまとめる",
+          "summary": "既存のDRAFT状態のKnowledgeSchema documentをqueryで洗い出し、各候補の出典・トリガー種別を含む審査対象一覧へ要約する。採用の可否はここでは判断しない。"
+        },
+        {
+          "stepId": "step-3",
+          "title": "候補ごとに採用可否の対話を行う",
+          "summary": "template-candidate-review.mdを用い、候補ごとにAI初期見解→ユーザー見解→AI再考見解→合意決定の対話ループを行う。採用/却下/修正して採用のいずれかを決定する。",
+          "bullets": [
+            "ユーザー見解欄をAIが勝手に埋めてはならない",
+            "AI再考見解は迎合であってはならない。ユーザー見解に同意する場合でも根拠を示す",
+            "候補が多い場合は3〜5件ずつに絞り、疲弊を避ける"
+          ]
+        }
+      ]
+    },
+    "outputFormat": {
+      "blockType": "OutputFormat",
+      "title": "出力形式",
+      "text": "対象KnowledgeSchema documentのパスと状態遷移（DRAFT作成／審査結果）、および各候補の採用可否決定を報告する。"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "AIはACTIVE状態のknowledgeへ直接書き込まない。必ずDRAFT状態のKnowledgeSchema documentとして記録するに留める",
+        "個人の伝え方・コミュニケーションスタイルへのフィードバックは対象外とする（各AIツール自身の私的なフィードバック機構の管轄とし、このSkillの対象にしない）",
+        "候補の採用可否はユーザーとの対話を経て決定する。AIが単独で採用を決めない",
+        "審査の対話ループはknowledge-cultivator専用であり、汎用のbrainstorm skillとは独立した仕組みとして扱う。混同して同じ仕組みに載せない",
+        "採用決定後の昇格実行（status変更・validate・render）はこのSkillの責務外とする。Orchestratorが通常のCLI操作（CLAUDE.mdの運用ルール）として直接行う",
+        "document.jsonの操作は必ずCLI/MCP経由で行う（直接Read/Edit/Writeしない）"
+      ]
+    },
+    "references": {
+      "blockType": "References",
+      "title": "参照",
+      "items": [
+        {
+          "path": "src/waffle/domain/model/KnowledgeSchema/v2.json",
+          "description": "knowledge候補を記録するためのschema。DRAFT/ACTIVEのstatusと、skillRefによるadvisor別deploy先制御を持つ。"
+        },
+        {
+          "path": ".claude/skills/knowledge-cultivator/references/template-candidate-review.md",
+          "description": "候補審査の対話ループ用テンプレート（このSkill専用、brainstormとは独立）。"
+        },
+        {
+          "path": "docs/brainstorm/brainstorm-advisor-knowledge-growth.md",
+          "description": "このSkillの設計背景となったブレスト記録（8論点合意）。"
+        }
+      ]
+    },
+    "invocationMode": {
+      "blockType": "InvocationMode",
+      "title": "呼び出しモード",
+      "manualOnly": false
+    }
+  },
+  "tags": [
+    "skill:advisor-knowledge-growth",
+    "knowledge:draft-promotion"
+  ],
+  "distributionTier": "optional"
+}

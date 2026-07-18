@@ -53,6 +53,11 @@
           "rule": "Skill/advisor間はテキストベース疎結合を保つ",
           "why": "受け手の内部形式を事前に知らなくてよくするため（腐敗防止層と同型）",
           "howToApply": "入出力はテキストに統一し、構造化への成型は受け手側が行う"
+        },
+        {
+          "rule": "document-authoring系Skill（schemaRefに基づくdocument作成・実装等）を扱う際は、まずskill-routerに問い合わせる",
+          "why": "routingTableが示すadvisorとの組み合わせ（WHO）を確認する必要があるため",
+          "howToApply": "呼ぶタイミング（執筆前の判断材料収集・執筆後の十分性チェックのいずれか、または両方）はOrchestrator自身が判断する"
         }
       ]
     },
@@ -106,6 +111,15 @@
           ],
           "template": "waffle/.waffle/agent/references/template-skill-critique.md",
           "why": "advisorはWaffleが所有・出荷する成果物であり、単一advisorの一発出力を無検証で確定させない運用はWaffle自身のOrchestratorの責務。advisorが互いを呼ぶのではなくOrchestrator側が組合せを判断することで、Skill/advisor間のテキストベース疎結合原則を保てる。並列dispatchにするのは、直列に1体ずつ呼ぶと後段のadvisorが前段の結論に引きずられ、独立した意見として機能しなくなるため（診断的差し戻しの前提となる複数視点の独立性を保つ）"
+        },
+        {
+          "afterSkill": "knowledge-cultivator（Step3: 候補審査の対話完了後）",
+          "thenAction": "採用が決定した候補について、Orchestratorが通常のCLI操作（scaffold fillでstatus: ACTIVEへ変更→対象advisorへのskillRef確認→validate→render）で昇格を実行する。却下・保留の候補はDRAFTのまま残す",
+          "outputFormat": [
+            "採用分の昇格実行結果"
+          ],
+          "template": "waffle/.claude/skills/knowledge-cultivator/references/template-candidate-review.md",
+          "why": "knowledge-cultivatorは候補の検知・記録・審査（人間対話によるバイアス防止）までを自己完結で担う。この審査対話は汎用のbrainstorm skillとは責務が異なる特化型の対話であり、混同して同じ仕組みに載せない（brainstormは任意テーマの論点探索・問題解決用の汎用ツールとして汎用性を保つ）。昇格実行のみCLAUDE.mdの既存運用ルールの範囲内の通常操作として切り出し、専用手順を持たせない"
         }
       ]
     }

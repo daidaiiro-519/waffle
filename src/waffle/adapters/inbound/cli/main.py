@@ -7,6 +7,9 @@ Result[dict] を JSON で標準出力に出す（Ok→value をそのまま / Er
 from __future__ import annotations
 
 import json
+import os
+
+os.environ.setdefault("PYTHON_COLORS", "0")
 
 import typer
 
@@ -35,7 +38,12 @@ from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.shared.result import Ok, Result
 
-app = typer.Typer(add_completion=False, help="waffle CLI — query / render / validate / scaffold")
+app = typer.Typer(
+    add_completion=False,
+    help="waffle CLI — query / render / validate / scaffold",
+    rich_markup_mode=None,
+    pretty_exceptions_enable=False,
+)
 
 def _emit(result: Result) -> None:
     if isinstance(result, Ok):
