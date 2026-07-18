@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  名前付きギャラリー（カテゴリ）のランディング — 外部依存ゼロの自己完結ファイル
+
+  役割:
+  - URL (/g/{gslug}/) から gslug を読み、GET /g/{gslug}/index.json を取得して
+    そのカテゴリに所属する公開中パターンをカード一覧する
+  - 各カードは /p/{slug}/ へのリンク。カテゴリ固有トークンのCookie(gt_{gslug})で
+    そのまま所属パターンを開ける（edge-gateがスコープ内のみ許可する）
+
+  データ源: GET /g/{gslug}/index.json  形式: { "name": "...", "gslug": "...",
+    "items": [ { "slug", "name", "status", "updatedAt" } ] }
+
+  トークンゲートはedge-gateが担うためこのページには含めない。表示テキストは必ずtextContentで描画する。
+  S3上は gallery/app.html として1つだけ配置し、全カテゴリで共用する（gslugはURL依存）。
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>カテゴリ</title>
+<style>
+  :root {
+    --primary: #1C2733; --secondary: #5A6B7A; --accent: #2F6FED;
+    --neutral: #F2F4F6; --surface: #FFFFFF; --line: #E1E5EA;
+    --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-sans); color: var(--primary); background: var(--neutral); min-height: 100vh; }
+  header.top { background: var(--surface); border-bottom: 1px solid var(--line); padding: 1.2rem 1.5rem; }
+  header.top .eyebrow { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--secondary); }
+  header.top h1 { margin: .15rem 0 0; font-size: 1.35rem; font-weight: 600; }
+  header.top p { margin: .25rem 0 0; color: var(--secondary); font-size: .9rem; }
+  main { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+  a.card { display: flex; flex-direction: column; gap: .5rem; text-decoration: none; color: inherit;
+           background: var(--surface); border: 1px solid var(--line); border-top: 2px solid var(--accent);
+           border-radius: 6px; padding: 1rem; transition: box-shadow .12s ease; }
+  a.card:hover { box-shadow: 0 4px 14px rgba(28,39,51,.10); }
+  a.card .name { font-weight: 600; font-size: 1rem; }
+  a.card .meta { font-family: var(--font-mono); font-size: .72rem; color: var(--secondary); letter-spacing: .02em; }
+  a.card .go { margin-top: auto; font-size: .8rem; color: var(--accent); font-weight: 600; }
+  .empty, .error { color: var(--secondary); padding: 2rem 0; }
+  .error { color: #C2372E; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="eyebrow">カテゴリ</div>
+  <h1 id="g-name">…</h1>
+  <p>このカテゴリに含まれるデザイン案の一覧です。カードを選ぶと各案を開けます。</p>
+</header>
+<main>
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>このカテゴリには公開中のパターンがありません。</p>
+  <p class="error" id="error" hidden>一覧の読み込みに失敗しました。時間をおいて再度お試しください。</p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const m = location.pathname.match(/^\/g\/([A-Za-z0-9_-]+)/);
+  const gslug = m ? m[1] : '';
+
+  function fmtDate(s) { const d = String(s || '').slice(0, 10); return d ? d + ' 更新' : ''; }
+
+  function renderCard(p) {
+    const a = document.createElement('a');
+    a.className = 'card';
+    a.href = '/p/' + encodeURIComponent(p.slug) + '/';
+    const name = document.createElement('div'); name.className = 'name'; name.textContent = p.name || p.slug;
+    const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = fmtDate(p.updatedAt);
+    const go = document.createElement('div'); go.className = 'go'; go.textContent = '開く →';
+    a.append(name, meta, go);
+    return a;
+  }
+
+  async function load() {
+    try {
+      const res = await fetch('/g/' + gslug + '/index.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('index ' + res.status);
+      const data = await res.json();
+      if (data && data.name) { $('g-name').textContent = data.name; document.title = data.name; }
+      const items = ((data && data.items) || [])
+        .filter((p) => p && p.slug && p.status === 'active')
+        .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+      const grid = $('grid');
+      items.forEach((p) => grid.appendChild(renderCard(p)));
+      $('empty').hidden = items.length > 0;
+    } catch (e) {
+      $('error').hidden = false;
+    }
+  }
+  load();
+})();
+</script>
+</body>
+</html>

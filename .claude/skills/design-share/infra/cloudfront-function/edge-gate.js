@@ -37,8 +37,12 @@ padding:.55rem .7rem;width:100%;cursor:pointer}
 <script>
 document.getElementById('go').addEventListener('click', async () => {
   const p = location.pathname;
-  const m = p.match(/^\\/p\\/([A-Za-z0-9_-]+)/);
-  const verify = p.indexOf('/gallery') === 0 ? '/gallery/verify' : '/p/' + (m ? m[1] : '') + '/verify';
+  let verify;
+  const mg = p.match(/^\\/g\\/([A-Za-z0-9_-]+)/);
+  const mp = p.match(/^\\/p\\/([A-Za-z0-9_-]+)/);
+  if (mg) verify = '/g/' + mg[1] + '/verify';
+  else if (p.indexOf('/gallery') === 0) verify = '/gallery/verify';
+  else verify = '/p/' + (mp ? mp[1] : '') + '/verify';
   const r = await fetch(verify,
     { headers: { 'x-share-token': document.getElementById('t').value.trim() } });
   if (r.status === 204) location.reload();
@@ -93,7 +97,7 @@ function setCookie(name, value) {
   };
 }
 
-// プロジェクト共通トークン（ギャラリー用）の現在値。未設定/取得失敗はnull。
+// プロジェクト共通トークン（全体ギャラリー用）の現在値。未設定/取得失敗はnull。
 async function projectToken() {
   try {
     const v = await kvs.get('project:token');
@@ -101,6 +105,49 @@ async function projectToken() {
   } catch (e) {
     return null;
   }
+}
+
+// パスから名前付きギャラリーのidを取り出す: /g/{gslug}/...
+function extractGallery(uri) {
+  const m = uri.match(/^\/g\/([A-Za-z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+// 名前付きギャラリーの現在トークン（未設定/無効/失敗はnull）
+async function galleryToken(gslug) {
+  try {
+    const v = await kvs.get('g:' + gslug);
+    return (v && v !== 'DISABLED') ? v : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 名前付きギャラリー経路（カテゴリ固有トークンで保護・スコープ）。実体はS3のgallery/app.html。
+async function handleNamedGallery(request, gslug, uri, method) {
+  if (method !== 'GET' && method !== 'HEAD') {
+    return deny(403);
+  }
+  const gt = await galleryToken(gslug);
+  if (!gt) {
+    return htmlResponse(403, DISABLED_HTML); // 未作成 or 無効化済み
+  }
+  if (uri === '/g/' + gslug + '/verify') {
+    const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value : '';
+    if (supplied === gt) {
+      return setCookie('gt_' + gslug, gt);
+    }
+    return { statusCode: 401, statusDescription: 'Unauthorized' };
+  }
+  if (getCookie(request, 'gt_' + gslug) !== gt) {
+    return htmlResponse(401, GATE_HTML);
+  }
+  // /g/{gslug} または /g/{gslug}/ → 共有ギャラリーアプリ（gslugはURLからJSが読む）
+  if (uri === '/g/' + gslug || uri === '/g/' + gslug + '/') {
+    request.uri = '/gallery/app.html';
+  }
+  // /g/{gslug}/index.json 等はそのままS3のg/{gslug}/配下へ通す
+  return request;
 }
 
 // ギャラリー経路（プロジェクト共通トークンで保護）。1URL＋1共通トークンで
@@ -138,9 +185,14 @@ async function handler(event) {
   const uri = request.uri;
   const method = request.method;
 
-  // ルート直下はギャラリーへ寄せる
+  // ルート直下と /gallery は全体ギャラリーへ
   if (uri === '/' || uri.indexOf('/gallery') === 0) {
     return await handleGallery(request, uri === '/' ? '/gallery/' : uri, method);
+  }
+  // /g/{gslug}/ は名前付きギャラリー（カテゴリ）へ
+  const gslug = extractGallery(uri);
+  if (gslug) {
+    return await handleNamedGallery(request, gslug, uri, method);
   }
 
   const slug = extractSlug(uri);
@@ -175,12 +227,30 @@ async function handler(event) {
     return { statusCode: 401, statusDescription: 'Unauthorized' };
   }
 
-  // アクセス許可: パターン別Cookie一致 or プロジェクト共通Cookie一致のいずれか。
-  // 共通トークンの照合はパターン別が一致しなかった場合のみ行う（通常はKVS読み取り1回に抑える）。
+  // アクセス許可（いずれか成立で通す。KVS追加読み取りは前段が不一致のときだけ）:
+  //   1. パターン別Cookie一致（通常はKVS読み取り1回で完結）
+  //   2. 全体ギャラリー共通Cookie一致（+1読み）
+  //   3. 名前付きギャラリーのスコープ一致: このパターンが所属するカテゴリ(pg:{slug})のうち、
+  //      閲覧者が有効なCookie(gt_{gslug})を持つものがあれば通す（+pg読み +該当ギャラリー読み）
   let allowed = getCookie(request, 'share_' + slug) === expected;
   if (!allowed && getCookie(request, 'share_project')) {
     const pt = await projectToken();
     allowed = pt !== null && getCookie(request, 'share_project') === pt;
+  }
+  if (!allowed) {
+    let member = null;
+    try { member = await kvs.get('pg:' + slug); } catch (e) { member = null; }
+    if (member) {
+      const gslugs = member.split(' ');
+      for (let i = 0; i < gslugs.length && i < 3 && !allowed; i++) {
+        const g = gslugs[i];
+        if (!g) continue;
+        const cookie = getCookie(request, 'gt_' + g);
+        if (!cookie) continue;
+        const gt = await galleryToken(g);
+        if (gt !== null && cookie === gt) allowed = true;
+      }
+    }
   }
   if (!allowed) {
     return htmlResponse(401, GATE_HTML);

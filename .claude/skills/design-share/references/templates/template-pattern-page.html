@@ -160,10 +160,29 @@
     }
   }
 
-  // ギャラリーにアクセス権がある（共通トークンで入場済み）場合のみ「戻る」を表示する
-  fetch('/gallery/index.json', { cache: 'no-store' })
-    .then((r) => { if (r.ok) $('backbar').classList.add('show'); })
-    .catch(() => {});
+  // 戻る導線: 参照元がカテゴリ(/g/{id}/)か全体ギャラリー(/gallery/)ならそこへ戻す。
+  // sessionStorageに覚えてリロード後も維持。どちらも無ければ全体ギャラリーのアクセス可否で判定。
+  (function () {
+    const bar = $('backbar');
+    const show = (href, label) => { bar.href = href; bar.textContent = label; bar.classList.add('show'); };
+    let t = null;
+    try {
+      const ref = new URL(document.referrer);
+      if (ref.origin === location.origin) {
+        const mg = ref.pathname.match(/^\/g\/([A-Za-z0-9_-]+)\//);
+        if (mg) t = { href: '/g/' + mg[1] + '/', label: '← カテゴリに戻る' };
+        else if (ref.pathname.indexOf('/gallery') === 0) t = { href: '/gallery/', label: '← ギャラリーに戻る' };
+      }
+    } catch (e) {}
+    try {
+      if (t) sessionStorage.setItem('ds_back', JSON.stringify(t));
+      else { const s = JSON.parse(sessionStorage.getItem('ds_back') || 'null'); if (s) t = s; }
+    } catch (e) {}
+    if (t) { show(t.href, t.label); return; }
+    fetch('/gallery/index.json', { cache: 'no-store' })
+      .then((r) => { if (r.ok) show('/gallery/', '← ギャラリーに戻る'); })
+      .catch(() => {});
+  })();
 
   $('c-form').addEventListener('submit', post);
   load();
