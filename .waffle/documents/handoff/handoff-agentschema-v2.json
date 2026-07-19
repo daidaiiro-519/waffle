@@ -51,6 +51,61 @@
         "guardrailsが実質空配列（=省略と同義）になる抜け道がないか、x-prompt-writeの文言だけでなく運用時にも確認する（ddd-advisorの懸念）。",
         "waffle-subagent.mdはAgentSchema/v2の具体的なファイルパス・schemaRefバージョンを書き込まない。書き込むとschema改版のたびに手動同期が必要になり、コンポジションルートが分散するアンチパターンになる（tech-lead-advisorの指摘）。抽象的なフィールド構造の記述のみに留め、具体的なschemaRef参照とrender呼び出しはOrchestrator側の1箇所に集約する。"
       ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "境界づけられたコンテキスト",
+          "description": "bc-waffle（既存）。今回の変更もこの内側で完結する。",
+          "nodes": [
+            {
+              "id": "bc",
+              "title": "Document検証・生成・描画基盤",
+              "sub": "bc-waffle（既存）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "集約",
+          "description": "Schema集約（新設・今回のspecの対象）。SchemaId/Version/KindProfileから成り、document.jsonが適合すべき構造・意味ガイダンスを表す。",
+          "nodes": [
+            {
+              "id": "schema",
+              "title": "Schema定義の集約",
+              "sub": "Schema集約（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "操作するusecase",
+          "description": "PatchSchema（schema自体への構造化編集）・ScaffoldDocument（schemaを機械走査した骨格生成）・ValidateDocument（schema適合検証）が、いずれもSchema集約を読み書きする。",
+          "nodes": [
+            {
+              "id": "ps",
+              "title": "Schema定義ファイル自体への構造化編集",
+              "sub": "PatchSchema（既存）",
+              "status": "existing"
+            },
+            {
+              "id": "sd",
+              "title": "document骨格生成・値書き込み",
+              "sub": "ScaffoldDocument（既存）",
+              "status": "existing"
+            },
+            {
+              "id": "vd",
+              "title": "schema適合検証とstatus遷移guard",
+              "sub": "ValidateDocument（既存）",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
     }
   },
   "tags": []

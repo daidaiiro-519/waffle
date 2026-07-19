@@ -55,6 +55,67 @@
       "items": [
         "永続インデックスは持たない（都度フルスキャン）。grep_documents/filter_documentsはディレクトリ配下の全documentを毎回読み込んで走査する。コーパス規模が数百件程度である現状では許容範囲だが、実測でボトルネックが判明した場合のみ索引化を再検討する（先回りした索引設計はしない）。"
       ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "waffle query-collection（CLI・新設）／query_document_collection（MCP・新設）。ディレクトリ配下の複数documentを横断検索する入口。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "waffle query-collection",
+              "sub": "CLIコマンド（新設）",
+              "status": "new"
+            },
+            {
+              "id": "mcp",
+              "title": "query_document_collection",
+              "sub": "MCPツール（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "コア",
+          "description": "QueryDocumentCollection（新設）。pattern一致(grep)/属性一致(filter)で複数documentを絞り込む。永続インデックスは持たず、都度フルスキャンする。",
+          "nodes": [
+            {
+              "id": "qdc",
+              "title": "複数documentの横断grep/filter",
+              "sub": "QueryDocumentCollection（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "ポート",
+          "description": "DocumentRepository（既存）。コア層はこのportにのみ依存する。",
+          "nodes": [
+            {
+              "id": "repo",
+              "title": "DocumentRepository",
+              "sub": "既存・port（interface）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "実装",
+          "description": "FsDocumentRepository（既存）。portを実装し、DI時にコアへ差し込まれる。",
+          "nodes": [
+            {
+              "id": "fsrepo",
+              "title": "FsDocumentRepository",
+              "sub": "既存・outbound adapter",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
     }
   },
   "tags": []

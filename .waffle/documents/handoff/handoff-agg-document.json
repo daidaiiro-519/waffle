@@ -78,6 +78,73 @@
       "blockType": "Constraints",
       "title": "既知の制約・トレードオフ",
       "items": []
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "境界づけられたコンテキスト",
+          "description": "bc-waffle（既存）。今回の変更もこの内側で完結する。",
+          "nodes": [
+            {
+              "id": "bc",
+              "title": "Document検証・生成・描画基盤",
+              "sub": "bc-waffle（既存）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "集約",
+          "description": "Document集約（新設・今回のspecの対象）。DocumentId/DocumentType/SchemaRef/Statusから成り、document.json 1件そのものを表す。",
+          "nodes": [
+            {
+              "id": "doc",
+              "title": "document.jsonそのものの集約",
+              "sub": "Document集約（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "操作するusecase",
+          "description": "QueryDocument（意味単位の取得）・QueryDocumentCollection（横断grep/filter）・ScaffoldDocument（骨格生成）・ValidateDocument（適合検証）・RenderDocument（成果物描画）が、いずれもDocument集約を読み書きする。",
+          "nodes": [
+            {
+              "id": "qd",
+              "title": "意味単位のセマンティック・クエリ",
+              "sub": "QueryDocument（既存）",
+              "status": "existing"
+            },
+            {
+              "id": "qdc",
+              "title": "複数documentの横断grep/filter",
+              "sub": "QueryDocumentCollection（既存）",
+              "status": "existing"
+            },
+            {
+              "id": "sd",
+              "title": "document骨格生成・値書き込み",
+              "sub": "ScaffoldDocument（既存）",
+              "status": "existing"
+            },
+            {
+              "id": "vd",
+              "title": "schema適合検証とstatus遷移guard",
+              "sub": "ValidateDocument（既存）",
+              "status": "existing"
+            },
+            {
+              "id": "rd",
+              "title": "Documentを人間可読な成果物へ描画する",
+              "sub": "RenderDocument（既存）",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
     }
   },
   "tags": []

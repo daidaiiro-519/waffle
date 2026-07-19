@@ -45,6 +45,79 @@
       "items": [
         "resolve_refはテンプレート変数を解決できない場合MISSING_TEMPLATE_VARを返す。対象documentがtargetSchemaRefのx-source-targetテンプレートが要求する変数（contextRef等）を持たない場合に発生する。実装時はpath_template.resolveの失敗をこのエラーコードにマッピングすること。"
       ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "waffle query（CLI・新設）／query_document（MCP・新設）。AIがdocument.jsonを直接読まず、16のセマンティック操作経由で必要な意味単位だけを取得するための入口。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "waffle query",
+              "sub": "CLIコマンド（新設）",
+              "status": "new"
+            },
+            {
+              "id": "mcp",
+              "title": "query_document",
+              "sub": "MCPツール（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "コア",
+          "description": "QueryDocument（新設）。get_block/get_fieldなど16操作でdocument.json/通常ファイルから{prompt, value}を取得する。",
+          "nodes": [
+            {
+              "id": "qd",
+              "title": "意味単位のセマンティック・クエリ",
+              "sub": "QueryDocument（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "ポート",
+          "description": "DocumentRepository（既存・document読み込み）とSchemaRepository（既存・schema読み込み）。コア層はこの2つのportにのみ依存する。",
+          "nodes": [
+            {
+              "id": "repo",
+              "title": "DocumentRepository",
+              "sub": "既存・port（interface）",
+              "status": "existing"
+            },
+            {
+              "id": "schemarepo",
+              "title": "SchemaRepository",
+              "sub": "既存・port（interface）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "実装",
+          "description": "FsDocumentRepository・PackageSchemaRepository（いずれも既存）。それぞれのportを実装し、DI時にコアへ差し込まれる。",
+          "nodes": [
+            {
+              "id": "fsrepo",
+              "title": "FsDocumentRepository",
+              "sub": "既存・outbound adapter",
+              "status": "existing"
+            },
+            {
+              "id": "pkgschemarepo",
+              "title": "PackageSchemaRepository",
+              "sub": "既存・outbound adapter",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
     }
   },
   "tags": []

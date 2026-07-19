@@ -52,6 +52,88 @@
         "複数の条件に同時に該当する場合の優先順位は missing_in_tests > orphaned_in_tests/gherkin_mismatches > failed > ready の順で固定。実装時にこの順序を変更しない。",
         "mutation score等の検出力指標は今回のスコープ外（brainstormの合意通り、最初の1フェーズ分＝テスト緑＋spec対応関係のみを実装する。検出力指標は2件目のフェーズが必要になった時点で改めて検討する）。"
       ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "waffle check-verification-gate（CLI・新設）／check_verification_gate（MCP・新設）。人間・AI・Orchestratorがこのusecaseを実際に呼び出す入口で、どちらも同じusecaseを呼ぶだけの薄いアダプタにする。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "waffle check-verification-gate",
+              "sub": "CLIコマンド（新設）",
+              "status": "new"
+            },
+            {
+              "id": "mcp",
+              "title": "check_verification_gate",
+              "sub": "MCPツール（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "コア",
+          "description": "CheckScenarioDrift（既存）とCheckVerificationGate（新設）。新設usecaseは既存usecaseを内部でコンポジション（再利用）し、判定ロジック（優先順位: missing_in_tests > orphaned/mismatch > failed > ready）だけを追加する——ゼロから照合ロジックを再実装しない。",
+          "nodes": [
+            {
+              "id": "csd",
+              "title": "spec⇄テストシナリオの対応検証",
+              "sub": "CheckScenarioDrift（既存）",
+              "status": "existing"
+            },
+            {
+              "id": "cvg",
+              "title": "実装完了→検証の可否判定",
+              "sub": "CheckVerificationGate（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "ポート",
+          "description": "DocumentRepository（既存interface）。コア層はこのportにのみ依存し、具体的な実装は知らない（依存方向逆転の原則）。",
+          "nodes": [
+            {
+              "id": "repo",
+              "title": "DocumentRepository",
+              "sub": "既存・port（interface）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "実装",
+          "description": "FsDocumentRepository（既存）。portを実装し、DI（依存性注入）時にコアへ差し込まれる。今回の新設分でこのportに新しい実装は要らない。",
+          "nodes": [
+            {
+              "id": "fsrepo",
+              "title": "FsDocumentRepository",
+              "sub": "既存・outbound adapter",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "cvg",
+          "to": "csd",
+          "kind": "dependency",
+          "label": "内部で再利用（コンポジション）"
+        }
+      ]
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "waffle check-verification-gate --specPath <spec> --testPath <test> --testResultsPath <results.json> のように、spec・テストファイル・抽象化された実行結果ファイルのpathを渡して呼ぶ。",
+        "返り値は {\"status\": \"ready|blocked|needs_human\", \"reasons\": [...]}。Orchestratorはこの結果を見て、次フェーズ（実装完了→検証）へ進んでよいかを機械的に判断する。"
+      ]
     }
   },
   "tags": []

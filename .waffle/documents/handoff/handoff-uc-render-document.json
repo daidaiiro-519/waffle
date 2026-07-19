@@ -76,6 +76,79 @@
         "bullet:trueとjoin/sepが同一列に同時指定された場合の優先順位は両advisorのバックボーン範囲外。実装時の暫定方針: bulletが真ならjoin/sepを無視し、validateではエラーにしない。",
         "condition/rationaleのstring→array変更は既存document.jsonにとって後方互換性のない変更であるため、DomainSpecSchemaの版を上げた上で対象documentのみ新版へ移行する（v5自体は不変のまま維持する）。"
       ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "waffle render（CLI・新設）／render_document（MCP・新設）。document.jsonを人間可読な成果物へ描画する入口。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "waffle render",
+              "sub": "CLIコマンド（新設）",
+              "status": "new"
+            },
+            {
+              "id": "mcp",
+              "title": "render_document",
+              "sub": "MCPツール（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "コア",
+          "description": "RenderDocument（新設）。frontmatter生成＋body描画＋x-render-target.pathへのcanonical書き込み＋deploy(symlink/copy)を行う。schema適合検証はしない（検証はuc-validate-documentの責務・疎結合）。",
+          "nodes": [
+            {
+              "id": "rd",
+              "title": "Documentを人間可読な成果物へ描画する",
+              "sub": "RenderDocument（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "ポート",
+          "description": "DocumentRepository（既存・読み書き＋symlink）とSchemaRepository（既存・schema読み込み）。コア層はこの2つのportにのみ依存する。",
+          "nodes": [
+            {
+              "id": "repo",
+              "title": "DocumentRepository",
+              "sub": "既存・port（interface）",
+              "status": "existing"
+            },
+            {
+              "id": "schemarepo",
+              "title": "SchemaRepository",
+              "sub": "既存・port（interface）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "実装",
+          "description": "FsDocumentRepository・PackageSchemaRepository（いずれも既存）。それぞれのportを実装し、DI時にコアへ差し込まれる。",
+          "nodes": [
+            {
+              "id": "fsrepo",
+              "title": "FsDocumentRepository",
+              "sub": "既存・outbound adapter",
+              "status": "existing"
+            },
+            {
+              "id": "pkgschemarepo",
+              "title": "PackageSchemaRepository",
+              "sub": "既存・outbound adapter",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
     }
   },
   "tags": []
