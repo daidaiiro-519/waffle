@@ -46,7 +46,7 @@ class CheckOperationDrift:
             declared = declared_operations(doc)
             if not declared:
                 continue
-            operation_name = doc.get("content", {}).get("name", {}).get("operationName")
+            operation_name = doc.get("content", {}).get("usecase", {}).get("operationName")
             module_name = operation_name_to_module_name(operation_name) if operation_name else None
             expected_path = f"{src_root}/{module_name}.py" if module_name else None
             try:

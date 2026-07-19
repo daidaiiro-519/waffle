@@ -1,7 +1,7 @@
 {
   "documentId": "uc-render-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -20,11 +20,6 @@
       "items": [
         "検証済みの Document を schema の x-render に従って人間可読な成果物（SKILL.md / HTML）に描画し、配置先へ反映する。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "RenderDocument"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -335,6 +330,11 @@
           "covers": "受け入れ基準: pathVarsが解決できないdeploy先のスキップ"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "RenderDocument",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   }
 }

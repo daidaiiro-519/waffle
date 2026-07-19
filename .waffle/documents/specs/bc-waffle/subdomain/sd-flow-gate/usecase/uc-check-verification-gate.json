@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-verification-gate",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -15,11 +15,6 @@
       "items": [
         "対象usecase specのacceptanceScenariosと実装済みテストの対応関係、および渡されたテスト実行結果から、検証フェーズへ進んでよいか（ready/blocked/needs_human）を判定する。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "CheckVerificationGate"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -216,6 +211,11 @@
       "blockType": "OperationIndex",
       "title": "操作一覧",
       "items": []
+    },
+    "usecase": {
+      "operationName": "CheckVerificationGate",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   },
   "tags": [],

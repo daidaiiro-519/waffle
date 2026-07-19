@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-operation-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -15,11 +15,6 @@
       "items": [
         "usecase specのacceptanceScenariosが宣言するoperation名と、対応する実装が実際に持つoperation分岐の文字列が一致しているかを機械的に検証する。複数の操作をoperation引数で分岐するusecase（QueryDocument等）の操作名が、specの自由記述にしか現れず実装から乖離しても誰も気づけない、という盲点を検出する。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "CheckOperationDrift"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -171,6 +166,11 @@
       "blockType": "OperationIndex",
       "title": "操作一覧",
       "items": []
+    },
+    "usecase": {
+      "operationName": "CheckOperationDrift",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   },
   "tags": [],

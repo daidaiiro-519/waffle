@@ -50,7 +50,7 @@ class CheckUsecaseClassDrift:
             doc = self._documents.load(doc_path)
             if doc.get("specKind") != "usecase":
                 continue
-            operation_name = doc.get("content", {}).get("name", {}).get("operationName")
+            operation_name = doc.get("content", {}).get("usecase", {}).get("operationName")
             if not operation_name:
                 continue
             module_name = operation_name_to_module_name(operation_name)

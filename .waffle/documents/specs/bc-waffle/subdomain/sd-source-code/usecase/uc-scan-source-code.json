@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scan-source-code",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-source-code",
@@ -19,11 +19,6 @@
       "items": [
         "AI がソースコード本体を直接読まずに、DocstringSchema の kind に従って docstring を構造化抽出したインデックスビューを取得する。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "ScanSourceCode"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -167,6 +162,11 @@
           "covers": "操作保証: 対象パスが存在しないときはINVALID_PATHを返す"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "ScanSourceCode",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "documentId": "uc-validate-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-validation",
@@ -20,11 +20,6 @@
       "items": [
         "Document の content が schema に適合するかを検証し、適合可否と違反詳細を返す（副作用なし）。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "ValidateDocument"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -190,6 +185,11 @@
           "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "ValidateDocument",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "documentId": "uc-patch-schema",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "subdomainRef": "sd-schema-management",
   "status": "VALIDATED",
@@ -16,11 +16,6 @@
       "items": [
         "既存のSchema定義ファイルに対し、新規ブロック追加（add_block）・識別子リネーム（rename_block）・既存ブロックの1フィールド書き換え（set_field）という構造化操作を、対象外の箇所を一切変更せず（最小diff）、後方互換チェック・JSON Schema構文検証を通過した場合のみ適用する。AIはブロック定義・識別子名・書き換える値だけを与え、schemaファイル内の他の記述には一切触れない。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "PatchSchema"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -564,6 +559,11 @@
           "summary": "x-render-target.pathVars/path/deployの、kind別dict形式の各マップに、新しいkind値のエントリを追加する"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "PatchSchema",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   },
   "tags": [],

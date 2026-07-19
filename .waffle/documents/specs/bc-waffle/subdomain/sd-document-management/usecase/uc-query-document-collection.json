@@ -1,7 +1,7 @@
 {
   "documentId": "uc-query-document-collection",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -15,11 +15,6 @@
       "items": [
         "AIが単一Document内では完結しない要求（複数Documentにまたがるパターン検索・属性による絞り込み）を、ディレクトリ単位で一括して満たす。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "QueryDocumentCollection"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -216,6 +211,11 @@
           "summary": "ディレクトリ配下のDocumentのうち、指定メタフィールドkeyの値がvalueと一致するものだけを絞り込み、pathとmeta（fields指定時はfieldsの値のみ）を返す"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "QueryDocumentCollection",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   },
   "tags": [],

@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-schema-version-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
@@ -20,11 +20,6 @@
       "items": [
         "Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "CheckSchemaVersionDrift"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -159,6 +154,11 @@
           "covers": "受け入れ基準: missing_declared_fields"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "CheckSchemaVersionDrift",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   }
 }

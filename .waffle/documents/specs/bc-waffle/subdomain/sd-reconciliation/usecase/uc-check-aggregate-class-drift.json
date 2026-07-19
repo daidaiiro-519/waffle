@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-aggregate-class-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -15,11 +15,6 @@
       "items": [
         "aggregate specが宣言する集約ルート名(aggregateRoot.name)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。check-usecase-class-driftと同型の検知を集約にも適用し、集約の構造がJSON Schemaのみで表現されドリフトを検知できない盲点を埋める。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "CheckAggregateClassDrift"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -200,6 +195,11 @@
       "blockType": "OperationIndex",
       "title": "操作一覧",
       "items": []
+    },
+    "usecase": {
+      "operationName": "CheckAggregateClassDrift",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   },
   "tags": [],

@@ -21,7 +21,7 @@ def _usecase_doc(operation_name: str, operations: list[str]) -> dict:
         "documentId": "uc-a",
         "specKind": "usecase",
         "content": {
-            "name": {"blockType": "Name", "title": "名前", "operationName": operation_name},
+            "usecase": {"blockType": "Usecase", "title": "名前", "operationName": operation_name},
             "acceptanceScenarios": {
                 "blockType": "AcceptanceScenarios",
                 "title": "受け入れシナリオ",

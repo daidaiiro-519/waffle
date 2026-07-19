@@ -1,7 +1,7 @@
 {
   "documentId": "uc-query-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -20,11 +20,6 @@
       "items": [
         "AI がファイルを直接読まずに、Document の必要な意味単位（ブロック・フィールド・条件一致・全階層）だけを取得する。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "QueryDocument"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -435,6 +430,11 @@
           "summary": "参照フィールドfieldの値と、targetSchemaRefが宣言するx-source-targetテンプレートから、参照先Documentのpathを算出して返す（中身は取得しない）"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "QueryDocument",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   }
 }

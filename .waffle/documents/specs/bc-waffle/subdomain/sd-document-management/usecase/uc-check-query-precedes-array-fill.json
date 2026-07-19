@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-query-precedes-array-fill",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -15,11 +15,6 @@
       "items": [
         "配列フィールドを含むdocument.jsonの書き込み（scaffold fill）は、既存の配列要素をqueryで確認せず上書きすると内容を消失させる事故が起きる。この操作順序制約（クエリ先行）を機械的に検証する。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "CheckQueryPrecedesArrayFill"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -140,6 +135,11 @@
       "blockType": "OperationIndex",
       "title": "操作一覧",
       "items": []
+    },
+    "usecase": {
+      "operationName": "CheckQueryPrecedesArrayFill",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   },
   "tags": [],

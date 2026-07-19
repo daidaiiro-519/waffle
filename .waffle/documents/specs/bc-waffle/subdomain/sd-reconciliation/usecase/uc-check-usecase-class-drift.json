@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-usecase-class-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
@@ -16,11 +16,6 @@
       "items": [
         "usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "CheckUsecaseClassDrift"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -174,6 +169,11 @@
           "covers": "操作保証: documents_rootが存在しないときINVALID_PATH"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "CheckUsecaseClassDrift",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   },
   "tags": []

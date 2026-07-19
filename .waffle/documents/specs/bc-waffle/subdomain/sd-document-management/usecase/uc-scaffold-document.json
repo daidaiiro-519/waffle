@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scaffold-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v7",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -20,11 +20,6 @@
       "items": [
         "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
       ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "ScaffoldDocument"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -318,6 +313,11 @@
           "covers": "エラー: INVALID_SCHEMA_REF"
         }
       ]
+    },
+    "usecase": {
+      "operationName": "ScaffoldDocument",
+      "blockType": "Usecase",
+      "title": "名前"
     }
   }
 }
