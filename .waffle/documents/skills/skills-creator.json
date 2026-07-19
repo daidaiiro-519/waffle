@@ -1,0 +1,124 @@
+{
+  "documentId": "skills-creator",
+  "documentType": "Skill",
+  "schemaRef": "SkillSchema/v1",
+  "skillKind": "custom",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "skills-creator"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "新しいSkillsを作成したいとき、Skillのテンプレートが欲しいとき、「スキルを作って」「Skills作成」「新しいスキル」と言われたとき、またはベストプラクティスに従ったSkillフォルダ構成を生成したいときに使う。"
+    },
+    "inputExpectation": {
+      "blockType": "InputExpectation",
+      "title": "入力の想定",
+      "items": [
+        {
+          "aspect": "新規Skillの要件（スキル名・トリガー条件・スコープ・テンプレートの要否・追加フォルダの要否）",
+          "interpretation": "要件が明確でない場合は作成を開始せず、先にヒアリングを完了させる。"
+        }
+      ]
+    },
+    "role": {
+      "blockType": "Role",
+      "title": "役割",
+      "items": [
+        "スキル設計のコンサルタントとして要件をヒアリングする",
+        "ベストプラクティスのフォルダ構成を遵守した実装者として動く",
+        "SKILL.mdの各セクション（目的・役割・実行手順・ガードレール）を適切に埋めるファシリテーターとして振る舞う",
+        "作成後はスキルの動作確認方法をユーザーに伝える"
+      ]
+    },
+    "processingTarget": {
+      "blockType": "ProcessingTarget",
+      "title": "処理対象と成果物",
+      "target": "新規Skillの要件（スキル名・トリガー条件・スコープ・テンプレートの要否・追加フォルダの要否）。",
+      "artifact": "ベストプラクティスに従ったフォルダ構成とSKILL.mdを備えた新しいSkill（プレースフォルダー付きスケルトンから量産）。"
+    },
+    "steps": {
+      "blockType": "CustomSteps",
+      "title": "実行手順",
+      "items": [
+        {
+          "stepId": "step-1",
+          "title": "要件のヒアリング",
+          "summary": "スキル名・トリガー条件・スコープ（プロジェクト専用/グローバル）・テンプレートの要否・追加フォルダの要否を確認する。不明な項目はユーザーに質問する。"
+        },
+        {
+          "stepId": "step-2",
+          "title": "プレースフォルダー定義票を参照する",
+          "summary": "references/skill-template.mdとreferences/folder-structure.mdを読み込み、使用するフォルダ構成とプレースフォルダーの意味を把握する。"
+        },
+        {
+          "stepId": "step-3",
+          "title": "フォルダ構成を決定して作成する",
+          "summary": "folder-structure.mdを参照し、ヒアリング内容に応じてミニマム構成かフル構成かを選び、SKILL.mdと必要ならreferences/を作成する。"
+        },
+        {
+          "stepId": "step-4",
+          "title": "SKILL.mdを生成する",
+          "summary": "references/skill-template.mdを読み込み、プレースフォルダー定義票に従って埋め、{{スコープ}}/skills/{{スキル名}}/SKILL.mdとして保存する。"
+        },
+        {
+          "stepId": "step-5",
+          "title": "テンプレートファイルを生成する（必要な場合のみ）",
+          "summary": "出力ドキュメントを生成するスキルの場合、プレースフォルダー付きのスケルトンテンプレートを{{スコープ}}/skills/{{スキル名}}/references/template.mdとして作成する。"
+        },
+        {
+          "stepId": "step-6",
+          "title": "完成確認",
+          "summary": "作成したファイル一覧を表示し、スキルの呼び出し方をユーザーに伝える。"
+        }
+      ]
+    },
+    "outputFormat": {
+      "blockType": "OutputFormat",
+      "title": "出力形式",
+      "text": "作成したファイル一覧を表示し、スキルの呼び出し方をユーザーに伝える。"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "SKILL.md は必ずスキルフォルダのルートに置く。サブフォルダには置かない",
+        "テンプレートファイルは assets/ ではなく references/ に置く",
+        "不要なフォルダは作らない。使うものだけ作る",
+        "プレースフォルダーを埋める前に必ずreferences/placeholder-definitions.mdを参照する。定義票なしで埋めない",
+        "スキル名は英小文字・ハイフン区切りに統一する（スペース・アンダースコア不可）",
+        "ユーザーが要件を明確にしていない場合は作成を開始しない。必ずヒアリングを先に完了させる"
+      ]
+    },
+    "references": {
+      "blockType": "References",
+      "title": "参照",
+      "items": [
+        {
+          "path": ".claude/skills/skills-creator/references/skill-template.md",
+          "description": "SKILL.md スケルトン。"
+        },
+        {
+          "path": ".claude/skills/skills-creator/references/folder-structure.md",
+          "description": "フォルダ構成ベストプラクティス。"
+        },
+        {
+          "path": ".claude/skills/skills-creator/references/placeholder-definitions.md",
+          "description": "SKILL.mdスケルトンが持つプレースフォルダーの定義票。"
+        }
+      ]
+    },
+    "invocationMode": {
+      "blockType": "InvocationMode",
+      "title": "呼び出しモード",
+      "manualOnly": false
+    }
+  },
+  "tags": [
+    "skill:meta"
+  ],
+  "distributionTier": "optional"
+}

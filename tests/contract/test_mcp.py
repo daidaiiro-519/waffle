@@ -93,12 +93,12 @@ def test_validate_documentは適合でstatus判定を返す():
     """
     Given waffle MCPサーバ
     When validate_documentツールを呼ぶ
-    Then MCP出力のstatusはDRAFT
+    Then MCP出力のstatusはdocumentのstatusをそのまま返す
     """
     out = asyncio.run(_call("validate_document", {
         "path": ".waffle/documents/skills/tech-lead-advisor.json",
     }))
-    assert out["status"] == "DRAFT"
+    assert out["status"] == "ACTIVE"
 
 
 def test_render_documentはmdフォーマットを返す():

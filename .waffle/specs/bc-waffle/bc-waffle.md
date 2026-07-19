@@ -32,6 +32,7 @@
 - sd-docstring-linting
 - sd-reconciliation
 - sd-schema-management
+- sd-flow-gate
 
 ### 集約
 
@@ -56,6 +57,8 @@
 - uc-check-aggregate-class-drift
 - uc-check-domain-service-drift
 - uc-render-blank-template
+- uc-check-verification-gate
+- uc-check-query-precedes-array-fill
 
 ---
 

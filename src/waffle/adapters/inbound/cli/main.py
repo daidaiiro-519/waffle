@@ -24,6 +24,7 @@ from waffle.application.usecases.check_schema_version_drift import CheckSchemaVe
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
+from waffle.application.usecases.check_query_precedes_array_fill import CheckQueryPrecedesArrayFill
 from waffle.application.usecases.check_verification_gate import CheckVerificationGate
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.application.usecases.check_domain_service_drift import CheckDomainServiceDrift
@@ -210,6 +211,18 @@ def check_verification_gate(
 ) -> None:
     """実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。"""
     _emit(CheckVerificationGate(_docs()).run(spec_path, test_path, test_results_path))
+
+@app.command("check-query-precedes-array-fill")
+def check_query_precedes_array_fill(
+    target_path: str = typer.Option(..., "--targetPath", "--target-path", help="fill対象のdocument.jsonパス"),
+    has_array_value: bool = typer.Option(..., "--hasArrayValue", "--has-array-value", help="値に配列を含むか"),
+    queried_paths: str = typer.Option(
+        "[]", "--queriedPaths", "--queried-paths",
+        help="同一セッション内で既にqueryされたpathのJSON配列。例: [\"a.json\"]",
+    ),
+) -> None:
+    """配列fillの前にqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。"""
+    _emit(CheckQueryPrecedesArrayFill().run(target_path, has_array_value, json.loads(queried_paths)))
 
 @app.command("check-schema-version-drift")
 def check_schema_version_drift(

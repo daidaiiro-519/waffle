@@ -1,24 +1,49 @@
 #!/usr/bin/env python3
 """process-reliability論点3: 配列fieldへのfill前にqueryを要求する（PreToolUse）。
 
-Bash経由のwaffle scaffold fillが、配列型の値を含むvaluesを書き込もうとしている
-とき、同一セッション内で同じpathに対してwaffle queryが先に呼ばれているかを
-transcriptから確認する。「呼ばれたかどうか」自体は例外の無い構造的事実であり
-（意図・合意の有無のような偽装可能な判定ではない）、Hook候補6の反省
-（PreToolUse denyは構造的事実のみに使う）の対象外としてブロック方式を維持する。
+判定ロジック（クエリ先行の検証）はuc-check-query-precedes-array-fill（
+CheckQueryPrecedesArrayFill）へ切り出し済み。このスクリプトは、Claude Code固有の
+入出力（Bashコマンド文字列・セッションtranscriptファイル）を、そのusecaseが
+受け取れる構造化された入力（targetPath/hasArrayValue/queriedPaths）へ翻訳し、
+CLI経由で呼び出すだけの薄い駆動アダプター（Hexagonal Architectureの
+Driving Adapter）である。新しい判定ロジックはここに持ち込まない。
 
-CLAUDE.mdの運用ルール「配列はqueryで現在値取得→組み立て→fillで丸ごと置き換え」
-を機械的に強制する。パースできない・確認できない場合は安全側（許可）に倒す。
+「呼ばれたかどうか」自体は例外の無い構造的事実であり（意図・合意の有無のような
+偽装可能な判定ではない）、Hook候補6の反省（PreToolUse denyは構造的事実のみに
+使う）の対象外としてブロック方式を維持する。パースできない・確認できない場合は
+安全側（許可）に倒す。
 """
 from __future__ import annotations
 
 import json
+import os
 import re
+import subprocess
 import sys
 
 _FILL_CMD = re.compile(r"waffle\s+scaffold\s+--operation\s+fill\b")
 _PATH_ARG = re.compile(r"--path\s+(\S+)")
 _VALUES_ARG = re.compile(r"--values\s+'(.*)'\s*$", re.DOTALL)
+_QUERY_PATH = re.compile(r"waffle\s+query\b[^\n]*?--path\s+(\S+)")
+
+
+def _project_root() -> str:
+    return os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd())
+
+
+def _run_waffle(*args: str) -> dict | None:
+    result = subprocess.run(
+        ["uv", "run", "--project", ".", "waffle", *args],
+        cwd=_project_root(), capture_output=True, text=True,
+    )
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return None
+
+
+def _extract_queried_paths(transcript_text: str) -> list[str]:
+    return sorted({m.strip("'\"") for m in _QUERY_PATH.findall(transcript_text)})
 
 
 def main() -> None:
@@ -54,18 +79,25 @@ def main() -> None:
     except OSError:
         sys.exit(0)
 
-    if "waffle query" in transcript_text and target_path in transcript_text:
-        sys.exit(0)
+    queried_paths = _extract_queried_paths(transcript_text)
+
+    result = _run_waffle(
+        "check-query-precedes-array-fill",
+        "--target-path", target_path,
+        "--has-array-value",
+        "--queried-paths", json.dumps(queried_paths, ensure_ascii=False),
+    )
+    if result is None or result.get("allowed", True):
+        sys.exit(0)  # usecase呼び出しに失敗した場合も安全側（許可）に倒す
 
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": "deny",
-            "permissionDecisionReason": (
-                f"配列フィールドを含むfillです。{target_path} に対してこのセッション内で"
-                "waffle queryを先に実行し、現在値を取得してから配列を組み立て直して"
-                "ください（CLAUDE.mdの運用ルール: 配列はqueryで現在値取得→組み立て→"
-                "fillで丸ごと置き換え）。"
+            "permissionDecisionReason": result.get("reason") or (
+                f"{target_path} に対してこのセッション内でwaffle queryを先に実行し、"
+                "現在値を取得してから配列を組み立て直してください（CLAUDE.mdの運用ルール: "
+                "配列はqueryで現在値取得→組み立て→fillで丸ごと置き換え）。"
             ),
         }
     }, ensure_ascii=False))

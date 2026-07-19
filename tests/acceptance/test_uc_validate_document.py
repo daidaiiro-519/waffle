@@ -12,7 +12,7 @@ from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.shared.result import Err, Ok
 
 _DOGFOOD_DOCUMENTS = [
-    (".waffle/documents/skills/tech-lead-advisor.json", "DRAFT"),
+    (".waffle/documents/skills/tech-lead-advisor.json", "ACTIVE"),
     (".waffle/documents/coding/tech-stack-python-hexagonal.json", "ACTIVE"),
     (".waffle/documents/coding/architecture-python-hexagonal.json", "ACTIVE"),
     (".waffle/documents/coding/coding-standard-python-hexagonal.json", "ACTIVE"),

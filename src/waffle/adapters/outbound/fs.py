@@ -30,10 +30,17 @@ class FsDocumentRepository(DocumentRepository):
 
     def link(self, canonical: str, path: str) -> None:
         target = Path(path)
+        canonical_abs = Path(canonical).resolve()
         target.parent.mkdir(parents=True, exist_ok=True)
+        # targetの親ディレクトリ自体がcanonical側へのシンボリックリンクの場合、targetは
+        # 実体としてcanonicalと同一ファイルを指す。この状態でunlinkするとcanonical自体を
+        # 消してしまい、続く symlink_to が自己参照リンクを作ってしまう（実際に発生した事故）。
+        # 親解決後の絶対パスが一致する場合は何もしない（既に同一ファイルなので不要）。
+        if target.exists() and target.resolve() == canonical_abs:
+            return
         if target.is_symlink() or target.exists():
             target.unlink()
-        rel = os.path.relpath(Path(canonical).resolve(), target.parent.resolve())
+        rel = os.path.relpath(canonical_abs, target.parent.resolve())
         target.symlink_to(rel)
 
     def read_text(self, path: str) -> str:

@@ -1,0 +1,118 @@
+{
+  "documentId": "brainstorm",
+  "documentType": "Skill",
+  "schemaRef": "SkillSchema/v1",
+  "skillKind": "custom",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "brainstorm"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "テーマに対して「論点→見解→合意」のサイクルを繰り返し、ユーザーとAIが対話しながら思考を深め、決定・アクションに着地させる際に使う。ブレインストーミングを行いたいとき、アイデアを出したいとき、問題を整理・解決したいとき、論点を深掘りしたいときに使う。"
+    },
+    "inputExpectation": {
+      "blockType": "InputExpectation",
+      "title": "入力の想定",
+      "items": [
+        {
+          "aspect": "テーマ・目的、およびモード判定材料（問題解決/アイデア発散のいずれか）",
+          "interpretation": "引数に「問題/課題/バグ/うまくいかない/解決」等が含まれれば問題解決モード、それ以外はアイデア発散モードと判定する。不明な場合はアイデア発散モードを既定とする。"
+        }
+      ]
+    },
+    "role": {
+      "blockType": "Role",
+      "title": "役割",
+      "items": [
+        "ファシリテーターとして論点を構造化し、議論をリードする",
+        "AI初期見解では偏らず根拠を明示する",
+        "ユーザー見解を受けて誠実に再考し、迎合ではなく統合を行う",
+        "合意を急がず、論点ごとに丁寧に着地させる"
+      ]
+    },
+    "processingTarget": {
+      "blockType": "ProcessingTarget",
+      "title": "処理対象と成果物",
+      "target": "ブレインストーミングしたいテーマ・深掘りしたい論点。問題解決モードかアイデア発散モードかの判定材料を含む。",
+      "artifact": "論点ごとにAI初期見解→ユーザー見解→AI再考見解→合意決定を記録したブレインストーミングdocument（例: docs/brainstorm-{テーマ}.md）。"
+    },
+    "steps": {
+      "blockType": "CustomSteps",
+      "title": "実行手順",
+      "items": [
+        {
+          "stepId": "step-1",
+          "title": "モード判定とテーマ確認",
+          "summary": "引数からモード（問題解決/アイデア発散）を判定し、テーマと目的を1〜2文で確認してからセッションを開始する。"
+        },
+        {
+          "stepId": "step-2",
+          "title": "プレースフォルダー定義票を参照する",
+          "summary": "references/placeholder-definitions.mdの共通定義票、およびモードごとの追加定義票を読み込み、各プレースフォルダーに何を書くべきかを把握してから、スケルトンテンプレートを埋める。"
+        },
+        {
+          "stepId": "step-3",
+          "title": "ドキュメントを作成してテンプレートを埋める",
+          "summary": "モードに応じたテンプレートファイル（template-idea.md/template-problem.md）を読み込み、テーマ名をファイル名に使ってブレインストーミングドキュメントを作成する。ユーザー見解欄は必ず空欄のまま残す。"
+        },
+        {
+          "stepId": "step-4",
+          "title": "ユーザーとの対話ループ",
+          "summary": "出力後、ユーザーに各論点の見解欄への記入を促す。記入されたら、AI再考見解と合意決定を記述して次の論点へ進む。"
+        },
+        {
+          "stepId": "step-5",
+          "title": "セッションまとめ",
+          "summary": "全論点の合意が完了したら、合意事項の一覧・次のアクション一覧・未解決/保留の論点を出力する。"
+        }
+      ]
+    },
+    "outputFormat": {
+      "blockType": "OutputFormat",
+      "title": "出力形式",
+      "text": "全論点の合意が完了したら、合意事項の一覧・次のアクション一覧・未解決/保留の論点を報告する。"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "ユーザー見解欄をAIが勝手に埋めてはならない",
+        "AI再考見解は迎合であってはならない。ユーザー見解に同意する場合でも根拠を示す",
+        "論点は多すぎると疲弊するため、最初は3〜5個に絞り、追加は都度確認する",
+        "合意を急かさない。「保留」は正当な着地点として扱う",
+        "モードが不明な場合は発散モードをデフォルトとする"
+      ]
+    },
+    "references": {
+      "blockType": "References",
+      "title": "参照",
+      "items": [
+        {
+          "path": ".claude/skills/brainstorm/references/placeholder-definitions.md",
+          "description": "共通＋モードごとのプレースフォルダー定義票。"
+        },
+        {
+          "path": ".claude/skills/brainstorm/references/template-idea.md",
+          "description": "アイデア発散モード用のスケルトンテンプレート。"
+        },
+        {
+          "path": ".claude/skills/brainstorm/references/template-problem.md",
+          "description": "問題解決モード用のスケルトンテンプレート。"
+        }
+      ]
+    },
+    "invocationMode": {
+      "blockType": "InvocationMode",
+      "title": "呼び出しモード",
+      "manualOnly": false
+    }
+  },
+  "tags": [
+    "skill:facilitation"
+  ],
+  "distributionTier": "core"
+}

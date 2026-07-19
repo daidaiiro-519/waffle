@@ -127,14 +127,14 @@ def test_validateは適合でstatus判定を返す():
     """
     Given waffle CLI
     When validateを実行する
-    Then 終了コードは0で、出力JSONのstatusはDRAFT
+    Then 終了コードは0で、出力JSONのstatusはdocumentのstatusをそのまま返す
     """
     result = _runner.invoke(app, [
         "validate", "--path", ".waffle/documents/skills/tech-lead-advisor.json",
     ])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert data["status"] == "DRAFT"
+    assert data["status"] == "ACTIVE"
 
 
 def test_scaffold_createは骨格を返す():
@@ -338,3 +338,27 @@ def test_lint_docstringは違反の配列を返す(tmp_path):
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert isinstance(data, list)
+
+
+def test_check_query_precedes_array_fillはCLI経由でも直接呼び出しと同じ判定になる():
+    """
+    Given targetPathが"X.json"であり、hasArrayValueがtrueであり、queriedPathsに"X.json"が含まれていない
+    When Pythonから直接CheckQueryPrecedesArrayFillを呼び出す
+    Then 拒否判定が返る
+    When 同じ入力をCLI経由（waffle check-query-precedes-array-fill）で呼び出す
+    Then 同じ拒否判定が返る
+    """
+    from waffle.application.usecases.check_query_precedes_array_fill import CheckQueryPrecedesArrayFill
+
+    direct = CheckQueryPrecedesArrayFill().run("X.json", True, [])
+    assert direct.value["allowed"] is False
+
+    result = _runner.invoke(app, [
+        "check-query-precedes-array-fill",
+        "--target-path", "X.json",
+        "--has-array-value",
+        "--queried-paths", "[]",
+    ])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data == direct.value
