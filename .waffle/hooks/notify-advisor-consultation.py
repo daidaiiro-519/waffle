@@ -74,9 +74,10 @@ def main() -> None:
         sys.exit(0)
 
     routing = _run_waffle(
-        "query", "--operation", "get_block",
+        "query", "--operation", "query_path",
         "--path", ".waffle/documents/skills/skill-router.json",
         "--blockKey", "routingTable",
+        "--expression", "@",
     )
     if not routing:
         sys.exit(0)

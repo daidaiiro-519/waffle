@@ -30,16 +30,17 @@ async def _call(tool: str, args: dict):
         return result.data
 
 
-def test_query_documentはブロックを取得する():
+def test_query_documentはquery_pathでブロックを取得する():
     """
     Given waffle MCPサーバ
-    When query_documentツールをoperation=get_blockで呼ぶ
+    When query_documentツールをoperation=query_path・blockKey・expression=@で呼ぶ
     Then MCP出力のvalue.blockTypeはResponseTypes
     """
     out = asyncio.run(_call("query_document", {
-        "operation": "get_block",
+        "operation": "query_path",
         "path": ".waffle/documents/skills/tech-lead-advisor.json",
         "blockKey": "responseTypes",
+        "expression": "@",
     }))
     assert out["value"]["blockType"] == "ResponseTypes"
 

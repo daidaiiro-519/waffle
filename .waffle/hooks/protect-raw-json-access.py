@@ -37,7 +37,7 @@ def _deny(reason_target: str) -> None:
             "permissionDecision": "deny",
             "permissionDecisionReason": (
                 "document.json / schema.json は waffle CLI 経由（query の "
-                "index_scan → get_field/get_block、書き込みは scaffold fill / "
+                "index_scan → query_path、書き込みは scaffold fill / "
                 f"patch-schema）で読んでください。直接読み取ろうとした対象: {reason_target}"
             ),
         }

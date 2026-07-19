@@ -27,16 +27,17 @@ def teardown_function():
     _BLANK_TEMPLATE_PATH.unlink(missing_ok=True)
 
 
-def test_queryはブロックを取得しvalueをJSONで返す():
+def test_queryはquery_pathでブロックを取得しvalueをJSONで返す():
     """
     Given waffle CLI
-    When query --operation get_block --path ... --blockKey responseTypes を実行する
+    When query --operation query_path --path ... --blockKey responseTypes --expression @ を実行する
     Then 終了コードは0で、出力JSONのvalue.blockTypeはResponseTypes
     """
     result = _runner.invoke(app, [
-        "query", "--operation", "get_block",
+        "query", "--operation", "query_path",
         "--path", ".waffle/documents/skills/tech-lead-advisor.json",
         "--blockKey", "responseTypes",
+        "--expression", "@",
     ])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)

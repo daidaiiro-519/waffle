@@ -22,7 +22,7 @@
     "behavior": {
       "blockType": "Behavior",
       "title": "判定ロジック",
-      "text": "Bash経由のwaffle scaffold create/fillが、advisorとの組み合わせが必須（skill-routerのroutingTableでblock/nudge指定）なschema家族のdocumentを作成・更新しようとしているとき、対応するadvisor Skillがこのセッション内で呼ばれた形跡があるかをtranscriptから確認し、無ければ通知する。skill-routerのroutingTable document.jsonを唯一の真実源としてCLI経由で毎回参照し、ハードコードしたファイルパターン表は持たない。qa-advisorはこのdocument編集ベースのトリガーに馴染まないため対象外。"
+      "text": "Bash経由のwaffle scaffold create/fillが、advisorとの組み合わせが必須（skill-routerのroutingTableでblock/nudge指定）なschema家族のdocumentを作成・更新しようとしているとき、対応するadvisor Skillがこのセッション内で呼ばれた形跡があるかをtranscriptから確認し、無ければ通知する。skill-routerのroutingTable document.jsonを唯一の真実源としてCLI経由で毎回参照し、ハードコードしたファイルパターン表は持たない（内部実装はuc-query-documentのquery_path[--blockKey routingTable --expression @]でブロック全体を取得しており、廃止されたget_block操作には依存しない）。qa-advisorはこのdocument編集ベースのトリガーに馴染まないため対象外。"
     },
     "scriptRef": {
       "blockType": "ScriptRef",

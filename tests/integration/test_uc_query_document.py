@@ -23,7 +23,7 @@ def test_存在しないパスはINVALID_PATH():
     When 本usecaseを実行する
     Then INVALID_PATHエラーが返る
     """
-    result = _engine().run("get_block", "does/not/exist.json", {"blockKey": "title"})
+    result = _engine().run("get_meta", "does/not/exist.json")
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_PATH"
 

@@ -70,17 +70,8 @@ def query(
     operation: str = typer.Option(..., "--operation"),
     path: str = typer.Option(..., "--path"),
     block_key: str = typer.Option(None, "--blockKey", "--block-key"),
-    array_field: str = typer.Option(None, "--arrayField", "--array-field"),
     field: str = typer.Option(None, "--field"),
-    id_field: str = typer.Option(None, "--idField", "--id-field"),
-    id_value: str = typer.Option(None, "--idValue", "--id-value"),
-    key: str = typer.Option(None, "--key"),
-    value: str = typer.Option(None, "--value"),
-    pattern: str = typer.Option(None, "--pattern"),
-    start: int = typer.Option(None, "--start"),
-    end: int = typer.Option(None, "--end"),
     field_name: str = typer.Option(None, "--fieldName", "--field-name"),
-    nested_field: str = typer.Option(None, "--nestedField", "--nested-field"),
     target_schema_ref: str = typer.Option(None, "--targetSchemaRef", "--target-schema-ref"),
     target_discriminator: str = typer.Option(
         None, "--targetDiscriminator", "--target-discriminator",
@@ -93,10 +84,8 @@ def query(
 ) -> None:
     """document.json へのセマンティック・クエリ（uc-query-document）。"""
     raw = {
-        "blockKey": block_key, "arrayField": array_field, "field": field,
-        "idField": id_field, "idValue": id_value, "key": key, "value": value,
-        "pattern": pattern, "start": start, "end": end,
-        "fieldName": field_name, "nestedField": nested_field,
+        "blockKey": block_key, "field": field,
+        "fieldName": field_name,
         "targetSchemaRef": target_schema_ref, "expression": expression,
     }
     params = {k: v for k, v in raw.items() if v is not None}
