@@ -226,7 +226,7 @@
       ],
       "x-render-order": 0,
       "x-render-level": 1,
-      "x-prompt-query": "このAgentのタイトルを持ちます。documentId がそのまま使われます。",
+      "x-prompt-query": "このAgentのタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
       "x-render": [],
       "properties": {
         "blockType": {
@@ -235,7 +235,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "documentId をそのまま設定してください。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのAgentが何をするかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にagentKindを表す語（orchestratorなら「〜を編成するOrchestrator」、subagentなら「〜を行うSubagent」）を含め、読んだだけでこのAgentがどの種別かがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
         }
       }
     },

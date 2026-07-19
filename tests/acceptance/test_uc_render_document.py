@@ -21,7 +21,7 @@ def test_検証済み_Document_を成果物に描画する():
     result = _engine().run(".waffle/documents/skills/tech-lead-advisor.json", deploy=False)
     assert isinstance(result, Ok), result
     assert result.value["format"] == "md"
-    assert "# tech-lead-advisor" in result.value["content"]
+    assert "# コード配置・レイヤー境界・依存方向の判断を担うadvisor Skill：tech-lead-advisor" in result.value["content"]
 
 
 def test_schemaRef_を持たない_Document_は描画しない():
@@ -295,7 +295,7 @@ def test_SkillSchemaをMarkdownにレンダリングする():
     result = _engine().run(".waffle/documents/skills/tech-lead-advisor.json", deploy=False)
     assert isinstance(result, Ok), result
     content = result.value["content"]
-    assert "# tech-lead-advisor" in content
+    assert "# コード配置・レイヤー境界・依存方向の判断を担うadvisor Skill：tech-lead-advisor" in content
     assert "## 目的" in content
     assert "| 相談種別 | 判定条件 | テンプレート |" in content
     assert "### Step 1: サブドメイン分類を確認する" in content

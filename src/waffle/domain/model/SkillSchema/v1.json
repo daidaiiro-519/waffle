@@ -205,7 +205,7 @@
       ],
       "x-render-order": 0,
       "x-render-level": 1,
-      "x-prompt-query": "このSkillのタイトルを持ちます。documentId がそのまま使われます。レンダリング時に h1 見出しになります。",
+      "x-prompt-query": "このSkillのタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
       "x-render": [],
       "properties": {
         "blockType": {
@@ -214,7 +214,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "documentId をそのまま設定してください。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのSkillが何をするかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にskillKindを表す語（advisorなら「〜を担うadvisor Skill」、customなら「〜を行うSkill」、routerなら「〜を振り分けるrouter Skill」）を含め、読んだだけでこのSkillがどの種別かがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
         }
       }
     },

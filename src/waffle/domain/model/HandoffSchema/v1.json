@@ -12,7 +12,9 @@
   ],
   "x-source-target": ".waffle/documents/handoff/{documentId}.json",
   "x-render-target": {
-    "formats": ["md"],
+    "formats": [
+      "md"
+    ],
     "path": ".waffle/handoff/{documentId}.md"
   },
   "properties": {
@@ -52,10 +54,17 @@
           "type": "object",
           "additionalProperties": {
             "type": "object",
-            "required": ["blockType", "prompt"],
+            "required": [
+              "blockType",
+              "prompt"
+            ],
             "properties": {
-              "blockType": { "type": "string" },
-              "prompt": { "type": "string" }
+              "blockType": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
             }
           }
         }
@@ -76,40 +85,69 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "title": { "$ref": "#/$defs/TitleBlock" },
-        "specRef": { "$ref": "#/$defs/SpecRefBlock" },
-        "designViewpoints": { "$ref": "#/$defs/DesignViewpointsBlock" },
-        "implementationViewpoints": { "$ref": "#/$defs/ImplementationViewpointsBlock" },
-        "constraints": { "$ref": "#/$defs/ConstraintsBlock" }
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "specRef": {
+          "$ref": "#/$defs/SpecRefBlock"
+        },
+        "designViewpoints": {
+          "$ref": "#/$defs/DesignViewpointsBlock"
+        },
+        "implementationViewpoints": {
+          "$ref": "#/$defs/ImplementationViewpointsBlock"
+        },
+        "constraints": {
+          "$ref": "#/$defs/ConstraintsBlock"
+        }
       }
     },
     "TitleBlock": {
       "type": "object",
-      "required": ["blockType", "title"],
+      "required": [
+        "blockType",
+        "title"
+      ],
       "x-render-order": 0,
       "x-render-level": 1,
-      "x-prompt-query": "この引き継ぎのタイトルを持ちます。documentId がそのまま使われます。",
+      "x-prompt-query": "この引き継ぎのタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
       "x-render": [],
       "properties": {
-        "blockType": { "type": "string", "const": "Title" },
+        "blockType": {
+          "type": "string",
+          "const": "Title"
+        },
         "title": {
           "type": "string",
-          "x-prompt-write": "documentId をそのまま設定してください。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのHandoffが何を引き継ぐかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。識別子部分はdocumentIdをそのまま使う（識別子は既に別の構造化フィールドが正であり、ここでは表示のためだけに引用する）。"
         }
       }
     },
     "SpecRefBlock": {
       "type": "object",
-      "required": ["blockType", "title", "specRef"],
+      "required": [
+        "blockType",
+        "title",
+        "specRef"
+      ],
       "x-render-order": 1,
       "x-render-level": 2,
       "x-prompt-query": "このHandoffが引き継ぎ元とするspecのdocumentIdを持ちます。",
       "x-render": [
-        { "as": "paragraph", "from": "specRef" }
+        {
+          "as": "paragraph",
+          "from": "specRef"
+        }
       ],
       "properties": {
-        "blockType": { "type": "string", "const": "SpecRef" },
-        "title": { "type": "string", "const": "引き継ぎ元spec" },
+        "blockType": {
+          "type": "string",
+          "const": "SpecRef"
+        },
+        "title": {
+          "type": "string",
+          "const": "引き継ぎ元spec"
+        },
         "specRef": {
           "type": "string",
           "x-prompt-write": "引き継ぎ元のusecase/aggregate specのdocumentId。例: uc-render-blank-template"
@@ -118,7 +156,11 @@
     },
     "DesignViewpointsBlock": {
       "type": "object",
-      "required": ["blockType", "title", "items"],
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
       "x-render-order": 2,
       "x-render-level": 2,
       "x-prompt-query": "実装に入る前にadvisorとの相談で得られた設計観点（レイヤー配置・既存パターンとの整合・DDD境界判断等）を持ちます。各観点にはどのadvisor由来かをタグ付けします。",
@@ -127,21 +169,40 @@
           "as": "table",
           "from": "items",
           "columns": [
-            { "field": "advisor", "header": "advisor" },
-            { "field": "viewpoint", "header": "観点" },
-            { "field": "consideration", "header": "考慮事項" }
+            {
+              "field": "advisor",
+              "header": "advisor"
+            },
+            {
+              "field": "viewpoint",
+              "header": "観点"
+            },
+            {
+              "field": "consideration",
+              "header": "考慮事項"
+            }
           ]
         }
       ],
       "properties": {
-        "blockType": { "type": "string", "const": "DesignViewpoints" },
-        "title": { "type": "string", "const": "設計観点" },
+        "blockType": {
+          "type": "string",
+          "const": "DesignViewpoints"
+        },
+        "title": {
+          "type": "string",
+          "const": "設計観点"
+        },
         "items": {
           "type": "array",
           "x-prompt-write": "advisorとの相談で得られた設計観点を列挙。無ければ空。",
           "items": {
             "type": "object",
-            "required": ["advisor", "viewpoint", "consideration"],
+            "required": [
+              "advisor",
+              "viewpoint",
+              "consideration"
+            ],
             "properties": {
               "advisor": {
                 "type": "string",
@@ -162,7 +223,11 @@
     },
     "ImplementationViewpointsBlock": {
       "type": "object",
-      "required": ["blockType", "title", "items"],
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
       "x-render-order": 3,
       "x-render-level": 2,
       "x-prompt-query": "実装に入る前にadvisorとの相談で得られた実装観点（テスト戦略・既存コードパターンとの整合等）を持ちます。各観点にはどのadvisor由来かをタグ付けします。",
@@ -171,21 +236,40 @@
           "as": "table",
           "from": "items",
           "columns": [
-            { "field": "advisor", "header": "advisor" },
-            { "field": "viewpoint", "header": "観点" },
-            { "field": "consideration", "header": "考慮事項" }
+            {
+              "field": "advisor",
+              "header": "advisor"
+            },
+            {
+              "field": "viewpoint",
+              "header": "観点"
+            },
+            {
+              "field": "consideration",
+              "header": "考慮事項"
+            }
           ]
         }
       ],
       "properties": {
-        "blockType": { "type": "string", "const": "ImplementationViewpoints" },
-        "title": { "type": "string", "const": "実装観点" },
+        "blockType": {
+          "type": "string",
+          "const": "ImplementationViewpoints"
+        },
+        "title": {
+          "type": "string",
+          "const": "実装観点"
+        },
         "items": {
           "type": "array",
           "x-prompt-write": "advisorとの相談で得られた実装観点を列挙。無ければ空。",
           "items": {
             "type": "object",
-            "required": ["advisor", "viewpoint", "consideration"],
+            "required": [
+              "advisor",
+              "viewpoint",
+              "consideration"
+            ],
             "properties": {
               "advisor": {
                 "type": "string",
@@ -206,20 +290,35 @@
     },
     "ConstraintsBlock": {
       "type": "object",
-      "required": ["blockType", "title", "items"],
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
       "x-render-order": 4,
       "x-render-level": 2,
       "x-prompt-query": "既知の制約・トレードオフを持ちます（任意）。",
       "x-render": [
-        { "as": "list", "from": "items" }
+        {
+          "as": "list",
+          "from": "items"
+        }
       ],
       "properties": {
-        "blockType": { "type": "string", "const": "Constraints" },
-        "title": { "type": "string", "const": "既知の制約・トレードオフ" },
+        "blockType": {
+          "type": "string",
+          "const": "Constraints"
+        },
+        "title": {
+          "type": "string",
+          "const": "既知の制約・トレードオフ"
+        },
         "items": {
           "type": "array",
           "x-prompt-write": "既知の制約・トレードオフを列挙。無ければ空。",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

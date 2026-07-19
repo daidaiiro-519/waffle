@@ -277,9 +277,11 @@
           "const": "Title"
         },
         "title": {
-          "type": "string"
+          "type": "string",
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのPlatformSpecが何を担うインフラかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にspecKindを表す語を「〜を担う{specKind}基盤」のように含め（例: specKindがcomputeなら「〜を担うcompute基盤」）、読んだだけでこのSpecがどの種別のインフラを扱うかがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
         }
-      }
+      },
+      "x-prompt-query": "この Spec のタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。"
     },
     "SummaryBlock": {
       "type": "object",
