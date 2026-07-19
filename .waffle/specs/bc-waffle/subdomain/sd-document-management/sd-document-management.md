@@ -26,6 +26,7 @@
 - uc-render-document
 - uc-render-blank-template
 - uc-check-query-precedes-array-fill
+- uc-check-path-is-projection
 
 ---
 

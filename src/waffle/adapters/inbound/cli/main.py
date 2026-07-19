@@ -24,6 +24,7 @@ from waffle.application.usecases.check_schema_version_drift import CheckSchemaVe
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
+from waffle.application.usecases.check_path_is_projection import CheckPathIsProjection
 from waffle.application.usecases.check_query_precedes_array_fill import CheckQueryPrecedesArrayFill
 from waffle.application.usecases.check_verification_gate import CheckVerificationGate
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
@@ -223,6 +224,13 @@ def check_query_precedes_array_fill(
 ) -> None:
     """配列fillの前にqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。"""
     _emit(CheckQueryPrecedesArrayFill().run(target_path, has_array_value, json.loads(queried_paths)))
+
+@app.command("check-path-is-projection")
+def check_path_is_projection(
+    resolved_path: str = typer.Option(..., "--resolvedPath", "--resolved-path", help="判定対象の実体パス（symlink解決済み）"),
+) -> None:
+    """実体パスがdocument.jsonからの投影かどうかを判定（uc-check-path-is-projection）。"""
+    _emit(CheckPathIsProjection(_docs()).run(resolved_path))
 
 @app.command("check-schema-version-drift")
 def check_schema_version_drift(

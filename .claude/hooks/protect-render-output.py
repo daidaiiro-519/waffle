@@ -1,0 +1,1 @@
+../../.waffle/hooks/protect-render-output.py

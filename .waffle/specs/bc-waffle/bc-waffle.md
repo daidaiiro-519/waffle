@@ -59,6 +59,7 @@
 - uc-render-blank-template
 - uc-check-verification-gate
 - uc-check-query-precedes-array-fill
+- uc-check-path-is-projection
 
 ---
 
