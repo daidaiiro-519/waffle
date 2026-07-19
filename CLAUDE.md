@@ -12,12 +12,8 @@
 | ルール | なぜ | 適用方法 |
 |---|---|---|
 | document.json操作は必ずCLI/MCP経由で行う | 自分自身がdogfood対象のため | create/fill/validate/render/query/check-*/scan-source-code/lint-docstringを使う（直接読み書きしない） |
-| 既存document.jsonはscaffold fillで編集する | x-prompt-write宣言済みpathへ書き込めるため | 配列は query で現在値取得→組み立て→fill で丸ごと置き換え |
-| schemaに新規必須トップレベルキー追加時のみEdit/Writeを許容する | fill/createは新規キーの後追いマージをしないため | check-schema-version-drift で検知されたキーのみEdit/Writeで追記 |
 | document.jsonのパスは`.waffle/`を使う | has-udd汎用パス（`.has-udd/`）と混在させないため | `waffle/.waffle/documents/`配下に置く |
-| repo rootからは`uv run --project waffle waffle <command>`で呼ぶ | waffleはrepo rootとは別プロジェクトのため | deploy先パスは`waffle/`配下を明示する |
 | Skill/advisor間はテキストベース疎結合を保つ | 受け手の内部形式を事前に知らなくてよくするため（腐敗防止層と同型） | 入出力はテキストに統一し、構造化への成型は受け手側が行う |
-| document-authoring系Skill（schemaRefに基づくdocument作成・実装等）を扱う際は、まずskill-routerに問い合わせる | routingTableが示すadvisorとの組み合わせ（WHO）を確認する必要があるため | 呼ぶタイミング（執筆前の判断材料収集・執筆後の十分性チェックのいずれか、または両方）はOrchestrator自身が判断する |
 
 ---
 
@@ -34,22 +30,33 @@
 
 ---
 
-## 委譲先
+## 自身の役割
 
-### 以下のscope配下で作業する場合は、必ず対応するOrchestrator documentのcontentを先に読むこと
-
-| 対象ディレクトリ | 参照Orchestrator | 備考 |
-|---|---|---|
-
-委譲先なし（このOrchestratorの管轄範囲に、より狭いscopeを持つ子Orchestratorは存在しない）
+スキーマという型で文書を焼き上げる、構造検証＋意味ガイダンス内蔵のドキュメントエンジン「Waffle」自身の開発において、document.json操作の妥当性判断・Skill/advisorへの委譲判断・機械的作業の実行を担うOrchestrator。
 
 ---
 
-## Skillフォローアップ
+## 機械的に行える作業
 
-### Skillを呼び出した後に必ず行うフォローアップ
+| 作業 | 適用方法 |
+|---|---|
+| 既存document.jsonをscaffold fillで編集する | 配列は query で現在値取得→組み立て→fill で丸ごと置き換え |
+| repo rootから`uv run --project waffle waffle <command>`で呼ぶ | waffleはrepo rootとは別プロジェクトのため。deploy先パスは`waffle/`配下を明示する |
 
-| 呼び出した後 | 次に行うこと | 返却フォーマット | テンプレート | 理由 |
+---
+
+## AIの推論を要する作業
+
+| 状況 | 判断基準 | 理由 |
+|---|---|---|
+| schemaに新規トップレベルキーを追加する必要が生じたとき | そのキーが本当に新規必須キー追加に該当するかを判断し、該当する場合のみEdit/Writeを許容する | fill/createは新規キーの後追いマージをしないため。check-schema-version-driftで検知されたキーのみEdit/Writeで追記する |
+
+---
+
+## 委譲パターン
+
+| 対象 | タイミング | 範囲 | アクション | 理由 |
 |---|---|---|---|---|
-| advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor等） | 批評を依頼する各advisor（同じadvisorへの批評フェーズ再検証を含む）ごとに、AgentSchemaのgoal-dispatch構造（目的・役割・読み込むSkill・タスク・成果物・受け入れ基準）で内容を組み立て、Agentツールで並列に呼び出す（1体ずつ直列に呼ばない。複数advisorへの依頼は1回のメッセージで同時に発行する）。批評対象が1件のみで他advisorとの突き合わせが不要な場合は単体呼び出しでよい。全員の結果が揃ってから、template-skill-critique.mdの形式で統合する | 各意見 → 統合見解 → 合意事項 → 次のアクション | `waffle/.waffle/agent/references/template-skill-critique.md` | advisorはWaffleが所有・出荷する成果物であり、単一advisorの一発出力を無検証で確定させない運用はWaffle自身のOrchestratorの責務。advisorが互いを呼ぶのではなくOrchestrator側が組合せを判断することで、Skill/advisor間のテキストベース疎結合原則を保てる。並列dispatchにするのは、直列に1体ずつ呼ぶと後段のadvisorが前段の結論に引きずられ、独立した意見として機能しなくなるため（診断的差し戻しの前提となる複数視点の独立性を保つ） |
-| knowledge-cultivator（Step3: 候補審査の対話完了後） | 採用が決定した候補について、Orchestratorが通常のCLI操作（scaffold fillでstatus: ACTIVEへ変更→対象advisorへのskillRef確認→validate→render）で昇格を実行する。却下・保留の候補はDRAFTのまま残す | 採用分の昇格実行結果 | `waffle/.claude/skills/knowledge-cultivator/references/template-candidate-review.md` | knowledge-cultivatorは候補の検知・記録・審査（人間対話によるバイアス防止）までを自己完結で担う。この審査対話は汎用のbrainstorm skillとは責務が異なる特化型の対話であり、混同して同じ仕組みに載せない（brainstormは任意テーマの論点探索・問題解決用の汎用ツールとして汎用性を保つ）。昇格実行のみCLAUDE.mdの既存運用ルールの範囲内の通常操作として切り出し、専用手順を持たせない |
+| document-authoring系Skill（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor等） | before | category | document-authoring系Skill（schemaRefに基づくdocument作成・実装等）を扱う際は、まずskill-routerに問い合わせ、routingTableが示すadvisorとの組み合わせ（WHO）を確認する。呼ぶタイミング（執筆前の判断材料収集・執筆後の十分性チェックのいずれか、または両方）はOrchestrator自身が判断する | routingTableが示すadvisorとの組み合わせ（WHO）を確認する必要があるため |
+| advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor等） | after | category | 批評を依頼する各advisor（同じadvisorへの批評フェーズ再検証を含む）ごとに、AgentSchemaのgoal-dispatch構造（目的・役割・読み込むSkill・タスク・成果物・受け入れ基準）で内容を組み立て、Agentツールで並列に呼び出す（1体ずつ直列に呼ばない。複数advisorへの依頼は1回のメッセージで同時に発行する）。批評対象が1件のみで他advisorとの突き合わせが不要な場合は単体呼び出しでよい。全員の結果が揃ってから、template-skill-critique.mdの形式で統合する | advisorはWaffleが所有・出荷する成果物であり、単一advisorの一発出力を無検証で確定させない運用はWaffle自身のOrchestratorの責務。advisorが互いを呼ぶのではなくOrchestrator側が組合せを判断することで、Skill/advisor間のテキストベース疎結合原則を保てる。並列dispatchにするのは、直列に1体ずつ呼ぶと後段のadvisorが前段の結論に引きずられ、独立した意見として機能しなくなるため（診断的差し戻しの前提となる複数視点の独立性を保つ） |
+| knowledge-cultivator | after | single | knowledge-cultivatorのStep3（候補審査の対話完了後）で採用が決定した候補について、Orchestratorが通常のCLI操作（scaffold fillでstatus: ACTIVEへ変更→対象advisorへのskillRef確認→validate→render）で昇格を実行する。却下・保留の候補はDRAFTのまま残す | knowledge-cultivatorは候補の検知・記録・審査（人間対話によるバイアス防止）までを自己完結で担う。この審査対話は汎用のbrainstorm skillとは責務が異なる特化型の対話であり、混同して同じ仕組みに載せない。昇格実行のみCLAUDE.mdの既存運用ルールの範囲内の通常操作として切り出し、専用手順を持たせない |
