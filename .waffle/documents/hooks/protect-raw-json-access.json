@@ -1,0 +1,40 @@
+{
+  "documentId": "protect-raw-json-access",
+  "documentType": "Hook",
+  "schemaRef": "HookSchema/v1",
+  "hookKind": "self-contained",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "protect-raw-json-access"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "document.json/schemaファイルの直接「読み」を防ぐ。protect-document-jsonが直接「書き」しか見ていなかった穴（AIがpython3/cat/grep等で直接読んでいた事故）を塞ぐ。"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "いつ働くか",
+      "text": "Read操作の直前、およびBashコマンド実行の直前"
+    },
+    "behavior": {
+      "blockType": "Behavior",
+      "title": "判定ロジック",
+      "text": "Bashコマンド文字列がcat/head/python3/grep等の生読み取りコマンドと、document.json（.waffle/documents/配下）またはschemaファイル（src/waffle/domain/model/配下）へのパスを同時に含む場合に拒否する。waffle CLI自体の呼び出し（query --operation index_scan/get_field/get_block等）とgit（diff/show/log等）は対象外とする。「AIは値だけ、構造は機械が守る」というHarness原則を読み取り側（Read/Bash）にも適用する。"
+    },
+    "scriptRef": {
+      "blockType": "ScriptRef",
+      "title": "スクリプト実体",
+      "text": ".waffle/hooks/protect-raw-json-access.py"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "waffle CLI自体の呼び出しとgitの履歴確認コマンドは対象外とする（構造検証・prompt付与を経由する正規経路を塞がないため）"
+      ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "documentId": "require-query-before-array-fill",
+  "documentType": "Hook",
+  "schemaRef": "HookSchema/v1",
+  "hookKind": "usecase-delegate",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "require-query-before-array-fill"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "配列フィールドを含むscaffold fillを実行する前に、同じ対象パスへwaffle queryが先行実行されているかを確認する運用ルール（CLAUDE.mdの「配列はqueryで現在値取得→組み立て→fillで丸ごと置き換え」）を機械的に強制する。"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "いつ働くか",
+      "text": "Bash経由でwaffle scaffold fillが配列フィールドを含んで実行される直前"
+    },
+    "usecaseRef": {
+      "blockType": "UsecaseRef",
+      "title": "委譲先usecase",
+      "text": "check-query-precedes-array-fill"
+    },
+    "scriptRef": {
+      "blockType": "ScriptRef",
+      "title": "スクリプト実体",
+      "text": ".waffle/hooks/require-query-before-array-fill.py"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "判定ロジックをこのHookスクリプトに持ち込まない。transcriptパース等の技術的詳細のみをこのスクリプトが担い、allow/denyの判定自体はusecaseRefが指すusecaseで行う"
+      ]
+    }
+  }
+}

@@ -1,7 +1,7 @@
 """agg-document（Document集約）のEntity/ValueObjectに対応するネイティブテスト。
 
 agg-document.jsonのEntities/ValueObjectsブロックが既に集約の仕様であり、ここでは
-そこで宣言された構造（17属性・5ValueObject、および各ValueObjectの不変性・値による
+そこで宣言された構造（19属性・5ValueObject、および各ValueObjectの不変性・値による
 等価性）がPython実装として成立していることを検証する。Schema集約
 （domain/entities/schema.py）と同じ「薄いEntity」方針に従う。
 """
@@ -83,7 +83,7 @@ def test_Statusは値が等しければ等価():
 
 def test_Documentは宣言された全属性を持つ():
     """
-    Given agg-document.jsonが宣言する18属性を指定してDocumentを構築する
+    Given agg-document.jsonが宣言する19属性を指定してDocumentを構築する
     When 各属性を参照する
     Then 全属性がそのまま保持されている
     """
@@ -97,6 +97,7 @@ def test_Documentは宣言された全属性を持つ():
         skill_kind=None,
         agent_kind=None,
         template_kind=None,
+        hook_kind=None,
         subdomain_ref=DocumentId("sd-document-management"),
         aggregate_ref=None,
         skill_ref=None,

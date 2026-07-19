@@ -66,6 +66,7 @@ class Document:
     skill_kind: DiscriminatorValue | None
     agent_kind: DiscriminatorValue | None
     template_kind: DiscriminatorValue | None
+    hook_kind: DiscriminatorValue | None
     subdomain_ref: DocumentId | None
     aggregate_ref: DocumentId | None
     skill_ref: DocumentId | None

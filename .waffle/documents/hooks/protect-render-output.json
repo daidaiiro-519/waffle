@@ -1,0 +1,40 @@
+{
+  "documentId": "protect-render-output",
+  "documentType": "Hook",
+  "schemaRef": "HookSchema/v1",
+  "hookKind": "usecase-delegate",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "protect-render-output"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "投影（document.jsonからのrender出力）への直接編集を防ぐ。原本（document.json/schema.json）自体はprotect-document-json.py/protect-raw-json-access.pyが別途保護しており、本Hookはそれと対になる投影側の保護を担う。"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "いつ働くか",
+      "text": "Edit/Write操作の直前"
+    },
+    "usecaseRef": {
+      "blockType": "UsecaseRef",
+      "title": "委譲先usecase",
+      "text": "check-path-is-projection"
+    },
+    "scriptRef": {
+      "blockType": "ScriptRef",
+      "title": "スクリプト実体",
+      "text": ".waffle/hooks/protect-render-output.py"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "新しい判定ロジックをこのHookスクリプトに持ち込まない。判定ロジックの変更はusecaseRefが指すusecase側で行う"
+      ]
+    }
+  }
+}
