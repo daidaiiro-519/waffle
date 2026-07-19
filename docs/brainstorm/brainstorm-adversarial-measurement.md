@@ -1,6 +1,13 @@
 # ブレスト（記録）: 敵対的測定（adversarial measurement）を advisor 批評の汎用エッセンスにする
 
-status: UIモックは【決定済み標準】／spec・codingへの一般化はアイデア段階（未検討）
+status: UIモックは【決定済み標準】／spec・codingへの一般化は【knowledge化完了・部分実例】
+
+## 汎用knowledgeへの昇格（2026-07-19）
+evidence-based-scope（実例2件以上で抽象化してよい）を、design-share（デザイン生成）と
+spec-authoring（Orchestratorの既存運用: check-spec-integrity/check-scenario-drift＋advisor並列批評＋
+knowledge-cultivator）という独立した2実例で満たしたため、`.waffle/documents/knowledge/self-improving-generation-cycle.json`
+として汎用knowledge（skillRef無し・canonical配置のみ）に昇格した。coding/implementation領域は
+まだ実例として確定していない（試験観測のみ、provenance.caveatsに明記）。
 
 ## 決定（2026-07-19・UIモック）
 - **最良のUIモックは〈生成→敵対的測定→修正→学びの還元〉サイクルで作る。これが design-share の標準で、スキルの中で完結する。**
