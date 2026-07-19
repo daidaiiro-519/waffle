@@ -365,7 +365,7 @@
           "$ref": "#/$defs/TitleBlock"
         },
         "usecase": {
-          "$ref": "#/$defs/NameBlock"
+          "$ref": "#/$defs/UsecaseBlock"
         },
         "actorIntent": {
           "$ref": "#/$defs/ActorIntentBlock"
@@ -2437,6 +2437,38 @@
         "name": {
           "type": "string",
           "x-prompt-write": "この境界づけられたコンテキストの名前をドメイン語彙で簡潔に（documentIdやTitleの説明文とは別に、名前だけを独立して機械的に参照できるようにする）。例: スキーマ駆動Document基盤"
+        }
+      }
+    },
+    "UsecaseBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "operationName"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "このusecase自身の名前を持ちます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "operationName"
+        }
+      ],
+      "x-render-hidden": true,
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Usecase"
+        },
+        "title": {
+          "type": "string",
+          "const": "名前"
+        },
+        "operationName": {
+          "type": "string",
+          "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に。例: CheckScenarioDrift。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
         }
       }
     }

@@ -36,6 +36,7 @@ from waffle.application.usecases.query_document_collection import QueryDocumentC
 from waffle.application.usecases.render_blank_template import RenderBlankTemplate
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.application.usecases.render_handoff_template import RenderHandoffTemplate
+from waffle.application.usecases.render_document_viewer import RenderDocumentViewer
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
@@ -126,6 +127,14 @@ def render_handoff_template(
 ) -> None:
     """HandoffのDocument.jsonを固定HTMLテンプレートへ描画する（uc-render-handoff-template）。"""
     _emit(RenderHandoffTemplate(_docs()).run(path, output_path))
+
+@app.command("render-document-viewer")
+def render_document_viewer(
+    path: str = typer.Option(..., "--path"),
+    output_path: str = typer.Option(..., "--outputPath", "--output-path"),
+) -> None:
+    """document.jsonのMD正本をCSS付きの自己完結HTMLへ変換する（uc-render-document-viewer）。"""
+    _emit(RenderDocumentViewer(_docs(), RenderDocument(_docs(), _schemas())).run(path, output_path))
 
 @app.command("render-blank-template")
 def render_blank_template(

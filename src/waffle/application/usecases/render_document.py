@@ -1,5 +1,7 @@
-"""render document — document.json を成果物（SKILL.md / HTML 等）にレンダリングし、
+"""render document — document.json を成果物（SKILL.md 等の MD 正本）にレンダリングし、
 x-render-target.path の場所へ deploy する application use case。
+CSS付きHTMLでの閲覧は uc-render-document-viewer が別usecaseとして担う（CQRS原則、
+MD正本＝コマンド実行モデル、HTML＝読み取り専用の投影として責務を分離する）。
 
 汎用エンジン（schema 固有ロジックを持たない）:
 - frontmatter は schema の x-frontmatter から生成
@@ -90,7 +92,7 @@ class RenderDocument:
 
         target = schema.get("x-render-target", {})
         formats = target.get("formats") or ["md"]
-        fmt = formats[0]  # MD 正本（HTML は将来 viewer が担うため engine は MD のみ描画）
+        fmt = formats[0]  # MD 正本（HTML は uc-render-document-viewer が別usecaseとして担う）
         defs = schema.get("$defs", {})
 
         spec_kind = doc.get(discriminator_key(schema))
