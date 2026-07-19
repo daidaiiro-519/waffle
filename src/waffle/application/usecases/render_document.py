@@ -108,22 +108,61 @@ class RenderDocument:
             try:
                 # canonical（.waffle 配下）に書く
                 self._documents.write_text(canonical, output)
-                # deploy: 同一フォーマットは verbatim copy（更新漏れ防止のため render に内蔵）。
-                # deployテンプレートが参照する変数がpath_varsに無い場合（例: skillRef未宣言の
-                # document）、そのdeploy先だけをスキップする（canonicalの書き込みは妨げない）。
-                for dep in _select_deploy(target.get("deploy", []), spec_kind):
-                    try:
-                        dp = path_template.resolve(dep, **path_vars)
-                    except KeyError:
-                        continue
-                    self._documents.write_text(dp, output)
-                    deployed.append(dp)
+                tool_targets = self._resolve_tool_deploy_targets(doc.get("documentType"), path_vars)
+                if tool_targets is not None:
+                    # .waffle/config.json が対応するdocumentTypeを持つ場合はそちらを唯一の真実源にする
+                    # （x-render-target.deployは読まない。真実源が2箇所に分散するのを避けるため）
+                    for dp, mode in tool_targets:
+                        if mode == "symlink":
+                            self._documents.link(canonical, dp)
+                        else:
+                            self._documents.write_text(dp, output)
+                        deployed.append(dp)
+                else:
+                    # deploy: 同一フォーマットは verbatim copy（更新漏れ防止のため render に内蔵）。
+                    # deployテンプレートが参照する変数がpath_varsに無い場合（例: skillRef未宣言の
+                    # document）、そのdeploy先だけをスキップする（canonicalの書き込みは妨げない）。
+                    for dep in _select_deploy(target.get("deploy", []), spec_kind):
+                        try:
+                            dp = path_template.resolve(dep, **path_vars)
+                        except KeyError:
+                            continue
+                        self._documents.write_text(dp, output)
+                        deployed.append(dp)
             except OSError as e:
                 return _err("WRITE_ERROR", f"書き込みに失敗しました: {e}")
 
         return Ok({
             "path": canonical, "deployed": deployed, "format": fmt, "content": output,
         })
+
+    def _resolve_tool_deploy_targets(self, document_type: str | None, path_vars: dict) -> list[tuple[str, str]] | None:
+        """.waffle/config.json の toolMappings から documentType 向けのdeploy先を解決する。
+
+        config.json が無い、または documentType に対応するマッピングが1つも無ければ None を返し、
+        呼び出し元は従来通り x-render-target.deploy を読む（後方互換フォールバック）。
+        1つでも対応があれば、そのdocumentTypeについては config.json を唯一の真実源として扱う。
+        """
+        try:
+            raw = self._documents.read_text(".waffle/config.json")
+        except (OSError, FileNotFoundError):
+            return None
+        try:
+            config = json.loads(raw)
+        except json.JSONDecodeError:
+            return None
+
+        targets: list[tuple[str, str]] = []
+        for tool_config in config.get("toolMappings", {}).values():
+            mapping = tool_config.get(document_type) if document_type else None
+            if not mapping:
+                continue
+            try:
+                dp = path_template.resolve(mapping["pathTemplate"], **path_vars)
+            except KeyError:
+                continue
+            targets.append((dp, mapping.get("mode", "render")))
+        return targets or None
 
     def _resolve_path_vars(self, doc: dict, schema: dict, document_path: str, spec_kind: str | None) -> dict:
         """x-render-target のパステンプレートに渡す変数を組み立てる。

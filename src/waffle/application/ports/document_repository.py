@@ -17,6 +17,10 @@ class DocumentRepository(Protocol):
         """レンダリング成果物などのテキストを path に書き込む。"""
         ...
 
+    def link(self, canonical: str, path: str) -> None:
+        """canonical への相対シンボリックリンクを path に作る（既存ファイル/リンクは置き換える）。"""
+        ...
+
     def read_text(self, path: str) -> str:
         """path のファイルを生テキストで返す（scan / raw フォールバック用）。無ければ FileNotFoundError。"""
         ...
