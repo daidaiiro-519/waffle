@@ -1,1 +1,1 @@
-../../../../knowledge/bounded-context.md
+../../../../knowledge/ACTIVE/bounded-context.md

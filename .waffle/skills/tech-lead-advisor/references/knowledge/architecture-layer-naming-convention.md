@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-layer-naming-convention.md
+../../../../knowledge/ACTIVE/architecture-layer-naming-convention.md

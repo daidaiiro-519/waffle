@@ -1,1 +1,1 @@
-../../../../knowledge/closing-heuristics.md
+../../../../knowledge/ACTIVE/closing-heuristics.md

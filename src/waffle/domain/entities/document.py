@@ -70,6 +70,7 @@ class Document:
     subdomain_ref: DocumentId | None
     aggregate_ref: DocumentId | None
     skill_ref: DocumentId | None
+    skill_refs: list[DocumentId] | None
     stack: list[str] | None
     created_at: str | None
     updated_at: str | None

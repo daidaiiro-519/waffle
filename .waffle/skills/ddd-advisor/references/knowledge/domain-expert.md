@@ -1,1 +1,1 @@
-../../../../knowledge/domain-expert.md
+../../../../knowledge/ACTIVE/domain-expert.md

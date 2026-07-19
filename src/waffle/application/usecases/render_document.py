@@ -157,11 +157,27 @@ class RenderDocument:
             mapping = tool_config.get(document_type) if document_type else None
             if not mapping:
                 continue
-            try:
-                dp = path_template.resolve(mapping["pathTemplate"], **path_vars)
-            except KeyError:
-                continue
-            targets.append((dp, mapping.get("mode", "render")))
+            mode = mapping.get("mode", "render")
+            array_vars = {k: v for k, v in path_vars.items() if isinstance(v, list)}
+            if array_vars:
+                # 複数の値を持つpathVar（例: 複数advisorへのskillRefs）は、要素ごとに
+                # 1つずつdeploy先を解決する（fan-out）。値が配列のpathVarは高々1種類を想定
+                # （実例1件・KnowledgeSchemaのskillRefsのみのため、2種類以上の組合せ展開は
+                # 未サポート。evidence-based-scope: 実証済みの拡張の範囲に限定する）。
+                var_name, values = next(iter(array_vars.items()))
+                for value in values:
+                    scalar_vars = {**path_vars, var_name: value}
+                    try:
+                        dp = path_template.resolve(mapping["pathTemplate"], **scalar_vars)
+                    except KeyError:
+                        continue
+                    targets.append((dp, mode))
+            else:
+                try:
+                    dp = path_template.resolve(mapping["pathTemplate"], **path_vars)
+                except KeyError:
+                    continue
+                targets.append((dp, mode))
         return targets or None
 
     def _resolve_path_vars(self, doc: dict, schema: dict, document_path: str, spec_kind: str | None) -> dict:

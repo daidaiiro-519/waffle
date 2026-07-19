@@ -1,1 +1,1 @@
-../../../../knowledge/event-storming.md
+../../../../knowledge/ACTIVE/event-storming.md

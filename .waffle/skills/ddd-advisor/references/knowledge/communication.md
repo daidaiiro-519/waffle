@@ -1,1 +1,1 @@
-../../../../knowledge/communication.md
+../../../../knowledge/ACTIVE/communication.md

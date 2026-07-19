@@ -1,1 +1,1 @@
-../../../../knowledge/ubiquitous-language.md
+../../../../knowledge/ACTIVE/ubiquitous-language.md

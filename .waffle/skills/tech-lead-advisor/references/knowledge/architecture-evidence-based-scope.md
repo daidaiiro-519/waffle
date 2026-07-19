@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-evidence-based-scope.md
+../../../../knowledge/ACTIVE/architecture-evidence-based-scope.md

@@ -1,1 +1,1 @@
-../../../../knowledge/event-sourced-domain-model.md
+../../../../knowledge/ACTIVE/event-sourced-domain-model.md

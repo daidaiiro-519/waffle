@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-test-strategy-by-layer.md
+../../../../knowledge/ACTIVE/architecture-test-strategy-by-layer.md

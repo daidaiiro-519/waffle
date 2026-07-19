@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-layer-boundary.md
+../../../../knowledge/ACTIVE/architecture-layer-boundary.md

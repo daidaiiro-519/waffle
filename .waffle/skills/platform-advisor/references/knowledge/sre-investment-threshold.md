@@ -1,1 +1,1 @@
-../../../../knowledge/sre-investment-threshold.md
+../../../../knowledge/ACTIVE/sre-investment-threshold.md

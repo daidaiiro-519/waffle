@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-patterns.md
+../../../../knowledge/ACTIVE/architecture-patterns.md

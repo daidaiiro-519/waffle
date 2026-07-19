@@ -1,1 +1,1 @@
-../../../../knowledge/business-domain.md
+../../../../knowledge/ACTIVE/business-domain.md

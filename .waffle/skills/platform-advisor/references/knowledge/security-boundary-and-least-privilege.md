@@ -1,1 +1,1 @@
-../../../../knowledge/security-boundary-and-least-privilege.md
+../../../../knowledge/ACTIVE/security-boundary-and-least-privilege.md

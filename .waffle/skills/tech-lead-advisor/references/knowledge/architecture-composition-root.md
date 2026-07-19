@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-composition-root.md
+../../../../knowledge/ACTIVE/architecture-composition-root.md

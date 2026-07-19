@@ -328,6 +328,13 @@
           "viewpoint": "描画：pathVarsが参照するcontentのフィールドを持たないDocumentでも、そのpathVarを使わないcanonicalへの書き込みは妨げず、解決できないdeploy先だけをスキップする",
           "gherkin": "Scenario: pathVarsが解決できないdeploy先はスキップしcanonicalへは書く\n  Given x-render-target.pathVarsが参照するcontentのドットパスを持たないDocument\n  When renderする\n  Then canonicalへは書かれるが、解決できないdeploy先はクラッシュせずスキップされる",
           "covers": "受け入れ基準: pathVarsが解決できないdeploy先のスキップ"
+        },
+        {
+          "name": "配列のpathVarはtoolMappings経由のdeploy先へfan-outする",
+          "category": "正常系",
+          "viewpoint": "deploy: x-render-target.pathVarsで宣言した値が配列（例: 複数advisorへのskillRefs）のとき、.waffle/config.jsonのtoolMappings経由のdeploy先は要素ごとに1つずつ生成される",
+          "gherkin": "Scenario: 配列のpathVarはtoolMappings経由のdeploy先へfan-outする\n  Given x-render-target.pathVarsで宣言した値が配列であるDocumentと、その変数を参照するtoolMappingsのpathTemplate\n  When deployを有効にしてrenderする\n  Then 配列の要素ごとに1つずつsymlinkのdeploy先が作られる",
+          "covers": "受け入れ基準: 配列pathVarのtoolMappings経由fan-out"
         }
       ]
     },

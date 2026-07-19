@@ -1,1 +1,1 @@
-../../../../knowledge/domain-model.md
+../../../../knowledge/ACTIVE/domain-model.md

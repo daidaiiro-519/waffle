@@ -1,1 +1,1 @@
-../../../../knowledge/real-world-ddd.md
+../../../../knowledge/ACTIVE/real-world-ddd.md

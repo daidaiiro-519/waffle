@@ -1,1 +1,1 @@
-../../../../knowledge/event-driven-architecture.md
+../../../../knowledge/ACTIVE/event-driven-architecture.md

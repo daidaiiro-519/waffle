@@ -1,1 +1,1 @@
-../../../../knowledge/cost-optimization.md
+../../../../knowledge/ACTIVE/cost-optimization.md

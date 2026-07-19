@@ -1,1 +1,1 @@
-../../../../knowledge/visual-hierarchy-and-restraint.md
+../../../../knowledge/ACTIVE/visual-hierarchy-and-restraint.md

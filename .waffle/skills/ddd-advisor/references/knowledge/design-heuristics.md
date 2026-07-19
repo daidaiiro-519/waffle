@@ -1,1 +1,1 @@
-../../../../knowledge/design-heuristics.md
+../../../../knowledge/ACTIVE/design-heuristics.md

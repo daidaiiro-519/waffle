@@ -1,12 +1,14 @@
 {
   "canonicalPathTemplates": {
     "Skill": ".waffle/skills/{documentId}/SKILL.md",
-    "Agent": ".waffle/agent/{documentId}.md"
+    "Agent": ".waffle/agent/{documentId}.md",
+    "Knowledge": ".waffle/knowledge/{status}/{documentId}.md"
   },
   "toolMappings": {
     "claude-code": {
       "Skill": { "pathTemplate": ".claude/skills/{documentId}/SKILL.md", "mode": "symlink" },
-      "Agent": { "pathTemplate": "CLAUDE.md", "mode": "symlink" }
+      "Agent": { "pathTemplate": "CLAUDE.md", "mode": "symlink" },
+      "Knowledge": { "pathTemplate": ".claude/skills/{skillRefs}/references/knowledge/{documentId}.md", "mode": "symlink" }
     },
     "codex": {
       "Agent": { "pathTemplate": "AGENTS.md", "mode": "symlink" }

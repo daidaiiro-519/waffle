@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-dependency-direction.md
+../../../../knowledge/ACTIVE/architecture-dependency-direction.md

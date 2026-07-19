@@ -1,1 +1,1 @@
-../../../../knowledge/ui-copywriting.md
+../../../../knowledge/ACTIVE/ui-copywriting.md

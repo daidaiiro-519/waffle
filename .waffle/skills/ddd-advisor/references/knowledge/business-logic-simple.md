@@ -1,1 +1,1 @@
-../../../../knowledge/business-logic-simple.md
+../../../../knowledge/ACTIVE/business-logic-simple.md

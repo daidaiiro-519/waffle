@@ -101,6 +101,7 @@ def test_Documentは宣言された全属性を持つ():
         subdomain_ref=DocumentId("sd-document-management"),
         aggregate_ref=None,
         skill_ref=None,
+        skill_refs=None,
         stack=None,
         created_at=None,
         updated_at=None,

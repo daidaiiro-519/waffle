@@ -1,1 +1,1 @@
-../../../../knowledge/progressive-disclosure.md
+../../../../knowledge/ACTIVE/progressive-disclosure.md

@@ -1,1 +1,1 @@
-../../../../knowledge/data-mesh.md
+../../../../knowledge/ACTIVE/data-mesh.md

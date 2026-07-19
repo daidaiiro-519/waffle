@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-port-adapter.md
+../../../../knowledge/ACTIVE/architecture-port-adapter.md

@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-cross-boundary-exception-handling.md
+../../../../knowledge/ACTIVE/architecture-cross-boundary-exception-handling.md

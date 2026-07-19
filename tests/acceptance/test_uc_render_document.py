@@ -67,6 +67,68 @@ def test_deploy_すると_canonical_と_deploy_先の両方に書く(tmp_path):
     assert str(tmp_path / "deploy" / "x.md") in result.value["deployed"]
 
 
+class _ConfigStubDocumentRepository:
+    """.waffle/config.json の読み出しだけ差し替え、他は実FSへ委譲する（toolMappings経由のsymlink解決テスト用）。"""
+
+    def __init__(self, real: FsDocumentRepository, config_json: str) -> None:
+        self._real = real
+        self._config_json = config_json
+
+    def read_text(self, path: str) -> str:
+        if path == ".waffle/config.json":
+            return self._config_json
+        return self._real.read_text(path)
+
+    def write_text(self, path: str, text: str) -> None:
+        self._real.write_text(path, text)
+
+    def link(self, canonical: str, path: str) -> None:
+        self._real.link(canonical, path)
+
+    def load(self, path: str) -> dict:
+        return self._real.load(path)
+
+
+def test_配列のpathVarはtoolMappings経由のdeploy先へfan_outする(tmp_path):
+    """
+    Given toolMappingsのpathTemplateが参照するpathVarの値が配列であるDocument
+    When deployを有効にしてrenderする
+    Then 配列の要素ごとに1つずつsymlinkのdeploy先が作られる
+    """
+    schema = {
+        "properties": {"content": {"type": "object", "properties": {}}},
+        "x-render-target": {
+            "formats": ["md"],
+            "path": str(tmp_path / "canonical" / "{documentId}.md"),
+            "pathVars": {"skillRefs": "doc.skillRefs"},
+        },
+    }
+    config_json = json.dumps({
+        "toolMappings": {
+            "claude-code": {
+                "FakeMulti": {"pathTemplate": str(tmp_path / "links" / "{skillRefs}" / "{documentId}.md"), "mode": "symlink"}
+            }
+        }
+    })
+    doc_path = tmp_path / "doc.json"
+    doc_path.write_text(
+        json.dumps({
+            "documentId": "x", "schemaRef": "Fake/v1", "documentType": "FakeMulti",
+            "skillRefs": ["advisor-a", "advisor-b"], "content": {},
+        }),
+        encoding="utf-8",
+    )
+
+    repo = _ConfigStubDocumentRepository(FsDocumentRepository(), config_json)
+    engine = RenderDocument(repo, _FakeSchemaRepository(schema))
+    result = engine.run(str(doc_path), deploy=True)
+    assert isinstance(result, Ok), result
+    assert str(tmp_path / "links" / "advisor-a" / "x.md") in result.value["deployed"]
+    assert str(tmp_path / "links" / "advisor-b" / "x.md") in result.value["deployed"]
+    assert (tmp_path / "links" / "advisor-a" / "x.md").is_symlink()
+    assert (tmp_path / "links" / "advisor-b" / "x.md").is_symlink()
+
+
 class _FakeSchemaRepository:
     def __init__(self, schema: dict) -> None:
         self._schema = schema

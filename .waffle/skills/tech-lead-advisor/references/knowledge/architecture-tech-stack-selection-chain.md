@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-tech-stack-selection-chain.md
+../../../../knowledge/ACTIVE/architecture-tech-stack-selection-chain.md

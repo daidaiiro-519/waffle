@@ -1,1 +1,1 @@
-../../../../knowledge/architecture-cross-cutting-concerns.md
+../../../../knowledge/ACTIVE/architecture-cross-cutting-concerns.md

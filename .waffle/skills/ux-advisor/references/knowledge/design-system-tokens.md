@@ -1,1 +1,1 @@
-../../../../knowledge/design-system-tokens.md
+../../../../knowledge/ACTIVE/design-system-tokens.md
