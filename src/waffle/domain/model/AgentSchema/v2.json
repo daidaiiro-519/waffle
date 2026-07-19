@@ -201,6 +201,12 @@
         },
         "runtimeConfig": {
           "$ref": "#/$defs/RuntimeConfigBlock"
+        },
+        "guardrails": {
+          "$ref": "#/$defs/GuardrailsBlock"
+        },
+        "preconditions": {
+          "$ref": "#/$defs/PreconditionsBlock"
         }
       }
     },
@@ -840,6 +846,98 @@
         "permissionMode": {
           "type": "string",
           "x-prompt-write": "権限モードを指定してください（例: default, plan）。"
+        }
+      }
+    },
+    "GuardrailsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "このSubagentへの委譲において常に守るべき禁止事項を持ちます。skillPreloadsで読み込ませるSkillが既に持つ制約は、ここに転記しない（Subagentは委譲時にそのSkill自体を読み込むため、Skill本文の制約はそのまま伝わる。ここへの重複記載は境界侵犯であり避ける）。ここに書くのは、どのSkillにも属さない、この委譲固有の禁止事項のみ（例:「対象ディレクトリ外のファイルには触れない」）。無ければこのブロック自体を省略してよい。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Guardrails"
+        },
+        "title": {
+          "type": "string",
+          "const": "禁止事項"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "常に守るべき禁止事項を列挙してください。検証可能な具体的禁止指示にすること（例:「判断・推測・実装提案を行わない」）。無いことを確認した場合はこのブロック自体を省略してください。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PreconditionsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 8,
+      "x-render-level": 2,
+      "x-prompt-query": "このSubagentの実行前に満たすべき条件と、満たさない場合の振る舞いを持ちます。skillPreloadsで読み込ませるSkillが既に持つ前提条件は、ここに転記しない（Subagentは委譲時にそのSkill自体を読み込むため、Skill本文の前提条件はそのまま伝わる。ここへの重複記載は境界侵犯であり避ける）。ここに書くのは、どのSkillにも属さない、この委譲固有の前提条件のみ。無ければこのブロック自体を省略してよい。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "condition",
+              "header": "前提条件"
+            },
+            {
+              "field": "ifNotMet",
+              "header": "満たさない場合"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Preconditions"
+        },
+        "title": {
+          "type": "string",
+          "const": "前提条件"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "実行前に満たすべき条件と、満たさない場合の振る舞いを列挙してください。無いことを確認した場合はこのブロック自体を省略してください。",
+          "items": {
+            "type": "object",
+            "required": [
+              "condition",
+              "ifNotMet"
+            ],
+            "properties": {
+              "condition": {
+                "type": "string",
+                "x-prompt-write": "満たすべき前提条件を1文で。"
+              },
+              "ifNotMet": {
+                "type": "string",
+                "x-prompt-write": "満たさない場合にどう振る舞うべきかを1文で（例:「実行せず、理由を報告して停止する」）。"
+              }
+            }
+          }
         }
       }
     }
