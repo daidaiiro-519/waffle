@@ -1,6 +1,4 @@
-# plat-compute
-
----
+# コンピューティングリソースを担うcompute基盤：plat-compute
 
 ## 概要
 

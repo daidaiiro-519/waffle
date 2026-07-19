@@ -1,0 +1,1388 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PlatformSpec/v2",
+  "title": "PlatformSpec v1 (DRAFT/PROTOTYPE v3 - 全11分類)",
+  "description": "検証用プロトタイプ。specKind=コンポーネント軸11分類(Compute/Storage/Database/Networking/Security/Integration/Observability/CI-CD/IoT/ML/Analytics)。資源型5分類(compute/storage/database/networking/integration)はCapacity/Resilience/ComponentSecurityの共通三分ブロックを再利用し、残り6分類(security/observability/ci-cd/iot/ml/analytics)はそれぞれの自然な中身に合わせた専用/再利用ブロックを持つ。",
+  "x-render-target": {
+    "formats": [
+      "md"
+    ],
+    "path": ".waffle/specs/platform/{documentId}.md"
+  },
+  "x-source-target": ".waffle/documents/specs/platform/{documentId}.json",
+  "type": "object",
+  "required": [
+    "documentId",
+    "documentType",
+    "schemaRef",
+    "specKind",
+    "content"
+  ],
+  "properties": {
+    "documentId": {
+      "type": "string"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "PlatformSpec"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "PlatformSpec/v2"
+    },
+    "specKind": {
+      "type": "string",
+      "enum": [
+        "compute",
+        "storage",
+        "database",
+        "networking",
+        "security",
+        "integration",
+        "observability",
+        "ci-cd",
+        "iot",
+        "ml",
+        "analytics"
+      ]
+    },
+    "content": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "compute"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/ResourceContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "storage"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/ResourceContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "database"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/ResourceContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "networking"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/NetworkingContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "integration"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/ResourceContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "iot"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/IotContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "security"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/SecurityContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "observability"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/ObservabilityContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "ci-cd"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/CiCdContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "ml"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/MlContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "analytics"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/AnalyticsContent"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "TitleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title"
+      ],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Title"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのPlatformSpecが何を担うインフラかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にspecKindを表す語を「〜を担う{specKind}基盤」のように含め（例: specKindがcomputeなら「〜を担うcompute基盤」）、読んだだけでこのSpecがどの種別のインフラを扱うかがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
+        }
+      },
+      "x-prompt-query": "この Spec のタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。"
+    },
+    "SummaryBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Summary"
+        },
+        "title": {
+          "type": "string",
+          "const": "概要"
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "このコンポーネント/領域が何を担うかを1〜2文で。人の即スキャンとAIの意図把握に使う。"
+        }
+      }
+    },
+    "CapacityRequirementsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "このコンポーネント/領域が満たすべき容量・性能・規模の目標値を持ちます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "metric",
+              "header": "指標"
+            },
+            {
+              "field": "target",
+              "header": "目標値"
+            },
+            {
+              "field": "rationale",
+              "header": "根拠"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "CapacityRequirements"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "このブロックの見出し。文脈に応じた表示名にする。例: 容量要件、デプロイ先要件、推論サービング目標、クエリ性能目標"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "指標・目標値・根拠を列挙。IaCコードから導出できる情報(具体的な設定値の羅列)ではなく、その目標値がなぜ必要かという事業/業務側の根拠を書く。",
+          "items": {
+            "type": "object",
+            "properties": {
+              "metric": {
+                "type": "string",
+                "x-prompt-write": "指標名。例: 同時接続数、スループット、レイテンシp99"
+              },
+              "target": {
+                "type": "string",
+                "x-prompt-write": "目標値。例: 1000 req/s、p99 200ms以内"
+              },
+              "rationale": {
+                "type": "string",
+                "x-prompt-write": "その目標値が必要な事業/業務側の根拠。例: ピーク時のキャンペーン流入に耐えるため"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ResilienceRequirementsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "このコンポーネント/領域の耐障害性・可用性・災害対策の目標値を持ちます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "metric",
+              "header": "指標"
+            },
+            {
+              "field": "target",
+              "header": "目標値"
+            },
+            {
+              "field": "rationale",
+              "header": "根拠"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ResilienceRequirements"
+        },
+        "title": {
+          "type": "string",
+          "const": "耐障害性要件"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "metric": {
+                "type": "string",
+                "x-prompt-write": "指標名。例: 可用性(SLA)、RTO、RPO"
+              },
+              "target": {
+                "type": "string",
+                "x-prompt-write": "目標値。例: 99.9%、RTO 1時間以内"
+              },
+              "rationale": {
+                "type": "string",
+                "x-prompt-write": "その目標値が必要な業務上の根拠。例: 障害時の売上機会損失を許容範囲に抑えるため"
+              }
+            }
+          },
+          "x-prompt-write": "指標・目標値・根拠を列挙。可用性・障害復旧に関する目標値と、その業務上の根拠を書く。"
+        }
+      }
+    },
+    "ComponentSecurityBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "このコンポーネント固有のセキュリティ境界を持ちます(プロダクト全体を横断するコンプライアンス/アクセス方針はsecurity specKindの責務であり、ここには書かない)。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "boundary",
+              "header": "境界"
+            },
+            {
+              "field": "requirement",
+              "header": "要件"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ComponentSecurity"
+        },
+        "title": {
+          "type": "string",
+          "const": "このコンポーネント固有のセキュリティ境界"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "boundary": {
+                "type": "string",
+                "x-prompt-write": "境界の対象。例: 外部からの入力、内部ネットワーク越しの通信"
+              },
+              "requirement": {
+                "type": "string",
+                "x-prompt-write": "その境界で満たすべきセキュリティ要件。例: TLS終端必須、入力値のサニタイズ必須"
+              }
+            }
+          },
+          "x-prompt-write": "このコンポーネント固有のセキュリティ境界と要件を列挙。プロダクト全体を横断するコンプライアンス/アクセス方針は書かない（security specKindの責務）。"
+        }
+      }
+    },
+    "ComplianceRequirementsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "framework",
+              "header": "フレームワーク"
+            },
+            {
+              "field": "scope",
+              "header": "対象範囲"
+            },
+            {
+              "field": "requirement",
+              "header": "要件"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ComplianceRequirements"
+        },
+        "title": {
+          "type": "string",
+          "const": "コンプライアンス要件"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "framework": {
+                "type": "string",
+                "x-prompt-write": "準拠するフレームワーク/規制名。例: PCI DSS、GDPR、SOC2"
+              },
+              "scope": {
+                "type": "string",
+                "x-prompt-write": "そのフレームワークが適用される範囲。例: 決済処理を行う全コンポーネント"
+              },
+              "requirement": {
+                "type": "string",
+                "x-prompt-write": "満たすべき具体的な要件。例: カード番号は非保持化する"
+              }
+            }
+          },
+          "x-prompt-write": "準拠すべきコンプライアンスフレームワークと、その適用範囲・要件を列挙。"
+        }
+      }
+    },
+    "IdentityAndAccessPolicyBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "principal",
+              "header": "主体"
+            },
+            {
+              "field": "allowedActions",
+              "header": "許可される操作"
+            },
+            {
+              "field": "condition",
+              "header": "条件"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "IdentityAndAccessPolicy"
+        },
+        "title": {
+          "type": "string",
+          "const": "アクセス制御方針"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "principal": {
+                "type": "string",
+                "x-prompt-write": "主体（誰/何が）。例: CI/CDパイプライン、運用担当者ロール"
+              },
+              "allowedActions": {
+                "type": "string",
+                "x-prompt-write": "その主体に許可する操作。例: デプロイの実行、ログの閲覧"
+              },
+              "condition": {
+                "type": "string",
+                "x-prompt-write": "許可の条件。例: 営業時間内のみ、多要素認証済みの場合のみ。無ければ空。"
+              }
+            }
+          },
+          "x-prompt-write": "誰が何をどんな条件で行えるかというアクセス制御方針を列挙。"
+        }
+      }
+    },
+    "DataClassificationBoundaryBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "classification",
+              "header": "データ分類"
+            },
+            {
+              "field": "boundary",
+              "header": "境界"
+            },
+            {
+              "field": "requirement",
+              "header": "要件"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "DataClassificationBoundary"
+        },
+        "title": {
+          "type": "string",
+          "const": "データ分類ごとの境界"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "classification": {
+                "type": "string",
+                "x-prompt-write": "データ分類。例: 個人情報、機密情報、公開情報"
+              },
+              "boundary": {
+                "type": "string",
+                "x-prompt-write": "越えてはならない境界。例: 特定リージョン外への転送禁止"
+              },
+              "requirement": {
+                "type": "string",
+                "x-prompt-write": "その境界を守るための要件。例: 保存時暗号化必須"
+              }
+            }
+          },
+          "x-prompt-write": "データ分類ごとに、どこまでの越境・持ち出しが許されるかという境界と要件を列挙。"
+        }
+      }
+    },
+    "MonitoringTargetsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "target",
+              "header": "監視対象"
+            },
+            {
+              "field": "threshold",
+              "header": "閾値"
+            },
+            {
+              "field": "severity",
+              "header": "重大度"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "MonitoringTargets"
+        },
+        "title": {
+          "type": "string",
+          "const": "監視対象と閾値"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "x-prompt-write": "監視対象。例: エラー率、CPU使用率、キューの滞留数"
+              },
+              "threshold": {
+                "type": "string",
+                "x-prompt-write": "アラートを発報する閾値。例: エラー率5%超、CPU使用率90%超が5分継続"
+              },
+              "severity": {
+                "type": "string",
+                "x-prompt-write": "重大度。例: critical / warning"
+              }
+            }
+          },
+          "x-prompt-write": "監視すべき対象と、アラートを発報する閾値・重大度を列挙。"
+        }
+      }
+    },
+    "RetentionPolicyBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "dataType",
+              "header": "データ種別"
+            },
+            {
+              "field": "retentionPeriod",
+              "header": "保持期間"
+            },
+            {
+              "field": "rationale",
+              "header": "根拠"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "RetentionPolicy"
+        },
+        "title": {
+          "type": "string",
+          "const": "保持方針"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dataType": {
+                "type": "string",
+                "x-prompt-write": "データ種別。例: アクセスログ、監査ログ、バックアップ"
+              },
+              "retentionPeriod": {
+                "type": "string",
+                "x-prompt-write": "保持期間。例: 90日、7年"
+              },
+              "rationale": {
+                "type": "string",
+                "x-prompt-write": "その保持期間が必要な根拠。例: 監査要件で7年保持が義務付けられているため"
+              }
+            }
+          },
+          "x-prompt-write": "データ種別ごとの保持期間と、その根拠（法令・業務要件）を列挙。"
+        }
+      }
+    },
+    "PlatformGuaranteeScenariosBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "scenarios"
+      ],
+      "x-render-order": 20,
+      "x-render-level": 2,
+      "x-prompt-query": "このPlatformSpecの保証内容を検証するテストシナリオ(分類・観点・Gherkin)を持ちます。MDにコードブロックとして描画され、GuaranteeScenariosと同じ機構でAIがネイティブテストとして書き起こす（IaC適合テスト・policy-as-code等）。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "heading": "背景",
+          "from": "background"
+        },
+        {
+          "as": "section",
+          "from": "scenarios",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "kvtable",
+              "columns": [
+                {
+                  "field": "category",
+                  "header": "分類"
+                },
+                {
+                  "field": "viewpoint",
+                  "header": "観点"
+                }
+              ]
+            },
+            {
+              "as": "code",
+              "from": "gherkin",
+              "lang": "gherkin"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "PlatformGuaranteeScenarios"
+        },
+        "title": {
+          "type": "string",
+          "const": "プラットフォーム操作保証シナリオ"
+        },
+        "background": {
+          "type": "string",
+          "x-prompt-write": "複数シナリオ共通の前提。無ければ空文字。"
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "1シナリオ1要素。このPlatformSpecの各保証（容量/耐障害性/セキュリティ境界/コンプライアンス等）を最低1つのシナリオで検証する。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "category",
+              "viewpoint",
+              "gherkin"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "シナリオ名（概要）。"
+              },
+              "category": {
+                "type": "string",
+                "x-prompt-write": "分類: 正常系 / 異常系 / 境界値。"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点: 何を保証するか＋検証の狙い。"
+              },
+              "gherkin": {
+                "type": "string",
+                "x-prompt-write": "Given/When/Then。ドメイン語彙で書き、IaCの実装詳細は書かない。"
+              },
+              "covers": {
+                "type": "string",
+                "x-prompt-write": "対応する保証項目への参照。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "NetworkLayoutBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "zones"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "ネットワークのゾーン区分と、ゾーン間の接続関係を持ちます。構成図として描画されます。",
+      "x-render": [
+        {
+          "as": "architecture",
+          "from": "zones",
+          "connectionsFrom": "connections"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "NetworkLayout"
+        },
+        "title": {
+          "type": "string",
+          "const": "ネットワーク構成図"
+        },
+        "zones": {
+          "type": "array",
+          "x-prompt-write": "ゾーン(id/label)と、そのゾーンに含まれるコンポーネント(contains: id/label)を列挙。",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "x-prompt-write": "ゾーンの識別子（図の接続で使う）。例: public-subnet"
+              },
+              "label": {
+                "type": "string",
+                "x-prompt-write": "ゾーンの表示名。例: パブリックサブネット"
+              },
+              "contains": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "x-prompt-write": "コンポーネントの識別子（connectionsのfrom/toで使う）。例: web-server"
+                    },
+                    "label": {
+                      "type": "string",
+                      "x-prompt-write": "コンポーネントの表示名。例: Webサーバー"
+                    }
+                  }
+                },
+                "x-prompt-write": "このゾーンに含まれるコンポーネント(id/label)を列挙。"
+              }
+            }
+          }
+        },
+        "connections": {
+          "type": "array",
+          "x-prompt-write": "コンポーネント間の接続(from/to、containsで宣言したidを使う)。",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "x-prompt-write": "接続元コンポーネントのid（zonesのcontainsで宣言済みのものを使う）。"
+              },
+              "to": {
+                "type": "string",
+                "x-prompt-write": "接続先コンポーネントのid（zonesのcontainsで宣言済みのものを使う）。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ReleasePipelineBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "stages"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "環境の昇格順序(dev→staging→production等)をパイプライン図で持ちます。各環境の詳細な昇格基準はReleasePolicyの表を参照。",
+      "x-render": [
+        {
+          "as": "flowchart",
+          "from": "stages",
+          "transitionsFrom": "transitions"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ReleasePipeline"
+        },
+        "title": {
+          "type": "string",
+          "const": "リリースパイプライン"
+        },
+        "stages": {
+          "type": "array",
+          "x-prompt-write": "環境の段階(id/label)を列挙。例: {id: dev, label: 開発環境}",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "x-prompt-write": "環境段階の識別子（transitionsのfrom/toで使う）。例: staging"
+              },
+              "label": {
+                "type": "string",
+                "x-prompt-write": "環境段階の表示名。例: ステージング環境"
+              }
+            }
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "x-prompt-write": "段階間の遷移(from/to/label=昇格条件の要約)。",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "x-prompt-write": "遷移元の環境id（stagesで宣言済みのものを使う）。"
+              },
+              "to": {
+                "type": "string",
+                "x-prompt-write": "遷移先の環境id（stagesで宣言済みのものを使う）。"
+              },
+              "label": {
+                "type": "string",
+                "x-prompt-write": "昇格条件の要約。例: 自動テスト成功後"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ReleasePolicyBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "environment",
+              "header": "環境"
+            },
+            {
+              "field": "promotionCriteria",
+              "header": "昇格基準"
+            },
+            {
+              "field": "approvalRequirement",
+              "header": "承認要件"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ReleasePolicy"
+        },
+        "title": {
+          "type": "string",
+          "const": "リリース/環境昇格方針"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "environment": {
+                "type": "string",
+                "x-prompt-write": "環境名。ReleasePipeline.stagesのlabelと対応させる。例: staging"
+              },
+              "promotionCriteria": {
+                "type": "string",
+                "x-prompt-write": "次の環境へ昇格するための基準。例: 自動テスト全件成功、カナリアリリースでエラー率が閾値以下"
+              },
+              "approvalRequirement": {
+                "type": "string",
+                "x-prompt-write": "昇格に必要な承認。例: テックリードの承認必須。不要なら空。"
+              }
+            }
+          },
+          "x-prompt-write": "環境ごとの昇格基準と承認要件を列挙（ReleasePipelineの各環境に対応する詳細）。"
+        }
+      }
+    },
+    "TrainingDataGovernanceBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "dataClassification",
+              "header": "データ分類"
+            },
+            {
+              "field": "usageBoundary",
+              "header": "利用境界"
+            },
+            {
+              "field": "requirement",
+              "header": "要件"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "TrainingDataGovernance"
+        },
+        "title": {
+          "type": "string",
+          "const": "学習データガバナンス"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dataClassification": {
+                "type": "string",
+                "x-prompt-write": "学習データの分類。例: ユーザー入力データ、合成データ"
+              },
+              "usageBoundary": {
+                "type": "string",
+                "x-prompt-write": "利用が許される境界。例: モデル再学習にのみ使用、第三者への提供禁止"
+              },
+              "requirement": {
+                "type": "string",
+                "x-prompt-write": "満たすべき要件。例: 個人情報は匿名化してから学習に使う"
+              }
+            }
+          },
+          "x-prompt-write": "学習データの分類ごとの利用境界と要件を列挙。"
+        }
+      }
+    },
+    "ResourceContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "capacity",
+        "resilience",
+        "security"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "capacity": {
+          "$ref": "#/$defs/CapacityRequirementsBlock"
+        },
+        "resilience": {
+          "$ref": "#/$defs/ResilienceRequirementsBlock"
+        },
+        "security": {
+          "$ref": "#/$defs/ComponentSecurityBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/PlatformGuaranteeScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "NetworkingContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "layout",
+        "capacity",
+        "resilience",
+        "security"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "layout": {
+          "$ref": "#/$defs/NetworkLayoutBlock"
+        },
+        "capacity": {
+          "$ref": "#/$defs/CapacityRequirementsBlock"
+        },
+        "resilience": {
+          "$ref": "#/$defs/ResilienceRequirementsBlock"
+        },
+        "security": {
+          "$ref": "#/$defs/ComponentSecurityBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/PlatformGuaranteeScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "IotContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "capacity",
+        "security"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "capacity": {
+          "$ref": "#/$defs/CapacityRequirementsBlock"
+        },
+        "security": {
+          "$ref": "#/$defs/ComponentSecurityBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/PlatformGuaranteeScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "SecurityContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "compliance",
+        "accessPolicy",
+        "dataBoundary"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "compliance": {
+          "$ref": "#/$defs/ComplianceRequirementsBlock"
+        },
+        "accessPolicy": {
+          "$ref": "#/$defs/IdentityAndAccessPolicyBlock"
+        },
+        "dataBoundary": {
+          "$ref": "#/$defs/DataClassificationBoundaryBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/PlatformGuaranteeScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "ObservabilityContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "monitoring",
+        "retention"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "monitoring": {
+          "$ref": "#/$defs/MonitoringTargetsBlock"
+        },
+        "retention": {
+          "$ref": "#/$defs/RetentionPolicyBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/PlatformGuaranteeScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "CiCdContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "deploymentTargets",
+        "releasePipeline",
+        "releasePolicy"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "deploymentTargets": {
+          "$ref": "#/$defs/CapacityRequirementsBlock"
+        },
+        "releasePipeline": {
+          "$ref": "#/$defs/ReleasePipelineBlock"
+        },
+        "releasePolicy": {
+          "$ref": "#/$defs/ReleasePolicyBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/PlatformGuaranteeScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "MlContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "servingTargets",
+        "trainingDataGovernance"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "servingTargets": {
+          "$ref": "#/$defs/CapacityRequirementsBlock"
+        },
+        "trainingDataGovernance": {
+          "$ref": "#/$defs/TrainingDataGovernanceBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/PlatformGuaranteeScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "AnalyticsContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "queryPerformanceTargets",
+        "retention"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "queryPerformanceTargets": {
+          "$ref": "#/$defs/CapacityRequirementsBlock"
+        },
+        "retention": {
+          "$ref": "#/$defs/RetentionPolicyBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/PlatformGuaranteeScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    }
+  }
+}

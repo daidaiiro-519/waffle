@@ -1,8 +1,18 @@
-# handoff-agg-document
+## 概要
+
+document.jsonの一貫性・ライフサイクルを守るDocument集約の設計判断を実装へ引き継ぐ。
+
+---
+
+# Document（document.json）の一貫性とライフサイクルを守る集約の実装引き継ぎ：handoff-agg-document
 
 ## 引き継ぎ元spec
 
 agg-document
+
+---
+
+## 完成イメージ
 
 ---
 

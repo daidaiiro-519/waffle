@@ -1,7 +1,7 @@
 {
   "documentId": "uc-patch-schema",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "subdomainRef": "sd-schema-management",
   "status": "VALIDATED",
@@ -9,13 +9,6 @@
     "title": {
       "blockType": "Title",
       "title": "Schema定義ファイルを安全に部分編集する：PatchSchema"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "既存のSchema定義ファイルに対し、新規ブロック追加（add_block）・識別子リネーム（rename_block）・既存ブロックの1フィールド書き換え（set_field）という構造化操作を、対象外の箇所を一切変更せず（最小diff）、後方互換チェック・JSON Schema構文検証を通過した場合のみ適用する。AIはブロック定義・識別子名・書き換える値だけを与え、schemaファイル内の他の記述には一切触れない。"
-      ]
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -564,6 +557,13 @@
       "operationName": "PatchSchema",
       "blockType": "Usecase",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "既存のSchema定義ファイルに対し、新規ブロック追加（add_block）・識別子リネーム（rename_block）・既存ブロックの1フィールド書き換え（set_field）という構造化操作を、対象外の箇所を一切変更せず（最小diff）、後方互換チェック・JSON Schema構文検証を通過した場合のみ適用する。AIはブロック定義・識別子名・書き換える値だけを与え、schemaファイル内の他の記述には一切触れない。"
+      ]
     }
   },
   "tags": [],

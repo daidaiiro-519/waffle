@@ -1,0 +1,978 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "SkillSchema/v2",
+  "title": "SkillSchema v1",
+  "description": "waffle Skill document の Schema（advisor / custom 両対応）",
+  "x-render-target": {
+    "formats": [
+      "md"
+    ],
+    "path": ".waffle/skills/{documentId}/SKILL.md",
+    "deploy": [
+      ".claude/skills/{documentId}/SKILL.md"
+    ]
+  },
+  "x-source-target": ".waffle/documents/skills/{documentId}.json",
+  "x-frontmatter": {
+    "name": "doc.documentId",
+    "description": "doc.content.description.text",
+    "disable-model-invocation": "doc.content.invocationMode.manualOnly"
+  },
+  "type": "object",
+  "required": [
+    "documentId",
+    "documentType",
+    "schemaRef",
+    "skillKind",
+    "status",
+    "content"
+  ],
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "x-prompt-write": "このSkillを一意に識別するIDを kebab-case で付けてください。例: harness-render-engine, analyze-domain-model"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "Skill"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "SkillSchema/v2"
+    },
+    "skillKind": {
+      "type": "string",
+      "enum": [
+        "advisor",
+        "custom",
+        "router"
+      ],
+      "x-prompt-write": "advisor（バックボーンknowledge参照+判断力提供）か custom（ユーザー作成・ドメイン手順）かを指定してください。"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "ACTIVE",
+        "DEPRECATED"
+      ],
+      "x-prompt-write": "作成中は DRAFT、利用可能になったら ACTIVE、廃止する場合は DEPRECATED を指定してください。"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-prompt-write": "このSkillを分類するタグを付けてください。例: [\"engine:render\", \"domain:spec\"]"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "_index": {
+      "description": "waffle が x-prompt-query から自動生成する。AI は直接書かない。",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "blockType",
+              "prompt"
+            ],
+            "properties": {
+              "blockType": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "content": {
+      "type": "object"
+    },
+    "distributionTier": {
+      "type": "string",
+      "enum": [
+        "core",
+        "optional"
+      ],
+      "x-prompt-write": "このSkillの配布区分。core=Waffleが標準同梱し常に存在する前提（例: ddd-advisor、Waffleの根幹をなすため）。optional=ユーザー・チームが必要に応じて育てる任意のSkill（他のadvisor Skill等）。"
+    }
+  },
+  "$defs": {
+    "AdvisorContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "role",
+        "responseTypes",
+        "knowledgeRefs",
+        "steps",
+        "guardrails"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "role": {
+          "$ref": "#/$defs/RoleBlock"
+        },
+        "inputExpectation": {
+          "$ref": "#/$defs/InputExpectationBlock"
+        },
+        "responseTypes": {
+          "$ref": "#/$defs/ResponseTypesBlock"
+        },
+        "knowledgeRefs": {
+          "$ref": "#/$defs/KnowledgeRefsBlock"
+        },
+        "steps": {
+          "$ref": "#/$defs/CustomStepsBlock"
+        },
+        "guardrails": {
+          "$ref": "#/$defs/GuardrailsBlock"
+        },
+        "invocationMode": {
+          "$ref": "#/$defs/InvocationModeBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/PurposeBlock"
+        }
+      }
+    },
+    "CustomContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "inputExpectation",
+        "role",
+        "processingTarget",
+        "steps"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "inputExpectation": {
+          "$ref": "#/$defs/InputExpectationBlock"
+        },
+        "role": {
+          "$ref": "#/$defs/RoleBlock"
+        },
+        "processingTarget": {
+          "$ref": "#/$defs/ProcessingTargetBlock"
+        },
+        "steps": {
+          "$ref": "#/$defs/CustomStepsBlock"
+        },
+        "outputFormat": {
+          "$ref": "#/$defs/OutputFormatBlock"
+        },
+        "guardrails": {
+          "$ref": "#/$defs/GuardrailsBlock"
+        },
+        "references": {
+          "$ref": "#/$defs/ReferencesBlock"
+        },
+        "invocationMode": {
+          "$ref": "#/$defs/InvocationModeBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/PurposeBlock"
+        }
+      }
+    },
+    "TitleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title"
+      ],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-prompt-query": "このSkillのタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Title"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのSkillが何をするかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にskillKindを表す語（advisorなら「〜を担うadvisor Skill」、customなら「〜を行うSkill」、routerなら「〜を振り分けるrouter Skill」）を含め、読んだだけでこのSkillがどの種別かがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
+        }
+      }
+    },
+    "PurposeBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "このSkillの目的を1〜2文で持ちます。Skill選択・ルーティング判断・ドキュメント理解に使います。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Purpose"
+        },
+        "title": {
+          "type": "string",
+          "const": "目的"
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "このSkillが「何をするか」だけでなく「いつ使うべきか」を1〜2文で記述してください。動詞で始め、判断のトリガーとなる状況・キーワードを含めること（例:「〜を実装・修正する際に必ず使う」「ユーザーが〜と言ったときに使う」）。自動委譲/自動参照の判断根拠として使われる最重要フィールドです。"
+        }
+      }
+    },
+    "InvocationModeBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "manualOnly"
+      ],
+      "x-render-order": 10,
+      "x-render-level": 2,
+      "x-render-hidden": true,
+      "x-prompt-query": "このSkillがモデルによる自動呼び出し対象かどうかを持ちます。frontmatterのdisable-model-invocationとして使われます。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "InvocationMode"
+        },
+        "title": {
+          "type": "string",
+          "const": "呼び出しモード"
+        },
+        "manualOnly": {
+          "type": "boolean",
+          "x-prompt-write": "ユーザーが `/skill-name` で明示的に呼び出す手順型Skill（自動発火させたくない）なら true。ドメイン知識として自動的に参照されてよいリファレンス型Skillなら false。"
+        }
+      }
+    },
+    "RoleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "このSkillの役割リストを持ちます。Skillの責務範囲の把握に使います。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Role"
+        },
+        "title": {
+          "type": "string",
+          "const": "役割"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "このSkillが担う責務を列挙してください。各項目は「〜する」「〜を提供する」の形で記述してください。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "InputExpectationBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "このSkillを呼び出す際に渡されるべき情報と、情報が不足・曖昧な場合の解釈方法を持ちます。テキストベース疎結合の入力（自然言語の意図）を受け手がどう構造化するかの手引きであり、呼び出しごとに解釈がぶれて再現性が損なわれることを防ぎます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "aspect",
+              "header": "受け取る情報"
+            },
+            {
+              "field": "interpretation",
+              "header": "解釈・既定値"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "InputExpectation"
+        },
+        "title": {
+          "type": "string",
+          "const": "入力の想定"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "このSkillを呼び出す際、自然言語の意図から読み取るべき情報の種類と、明示されなかった場合にどう解釈する（既定値を使う・確認を挟む等）かを列挙してください。呼び出すたびに解釈が変わらないようにするための手引きです。",
+          "items": {
+            "type": "object",
+            "required": [
+              "aspect",
+              "interpretation"
+            ],
+            "properties": {
+              "aspect": {
+                "type": "string",
+                "x-prompt-write": "受け取ると想定する情報の種類（例: 対象ブランチ、対象ファイル範囲）。"
+              },
+              "interpretation": {
+                "type": "string",
+                "x-prompt-write": "その情報が明示されなかった場合にどう解釈するか（既定値・確認を挟む等）。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "OutputFormatBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "このSkillの実行結果・報告の形式を持ちます。ブロック自体が無ければ自由形式。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "OutputFormat"
+        },
+        "title": {
+          "type": "string",
+          "const": "出力形式"
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "実行結果・報告の形式を指定してください（例:「チェック項目ごとに✓/✗と理由を箇条書きで報告する」）。無ければこのブロック自体を省略してください。"
+        }
+      }
+    },
+    "ProcessingTargetBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "target",
+        "artifact"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "このcustom Skillの処理対象と成果物を持ちます。SubAgentがSkillの意味的な入出力を把握するために使います。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "heading": "処理対象",
+          "from": "target"
+        },
+        {
+          "as": "paragraph",
+          "heading": "成果物",
+          "from": "artifact"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ProcessingTarget"
+        },
+        "title": {
+          "type": "string",
+          "const": "処理対象と成果物"
+        },
+        "target": {
+          "type": "string",
+          "x-prompt-write": "このSkillが受け取る処理対象を自然言語で記述してください。何を・どのような状態のものを受け取るかを明示してください。"
+        },
+        "artifact": {
+          "type": "string",
+          "x-prompt-write": "このSkillが生み出す成果物を自然言語で記述してください。何を・どのような形式で出力するかを明示してください。"
+        }
+      }
+    },
+    "CustomStepsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-write": "このcustom Skillのドメイン実行手順を定義してください。インフラ語彙（document.json・MCP・ファイルパス・Python API 等）は絶対に書かないでください。SubAgentが実行するドメイン固有の操作のみを記述してください。",
+      "x-prompt-query": "このcustom Skillの実行手順を持ちます。SubAgentがSkillのドメイン操作を把握・実行するために使います。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "title",
+          "itemLabel": "Step",
+          "each": [
+            {
+              "as": "paragraph",
+              "from": "summary"
+            },
+            {
+              "as": "list",
+              "from": "bullets"
+            },
+            {
+              "as": "section",
+              "from": "children",
+              "titleFrom": "title",
+              "each": [
+                {
+                  "as": "paragraph",
+                  "from": "summary"
+                },
+                {
+                  "as": "list",
+                  "from": "bullets"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "CustomSteps"
+        },
+        "title": {
+          "type": "string",
+          "const": "実行手順"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "ドメイン固有の操作を実行順に列挙してください。",
+          "items": {
+            "$ref": "#/$defs/CustomStepItem"
+          }
+        }
+      }
+    },
+    "StepItemBase": {
+      "type": "object",
+      "required": [
+        "stepId",
+        "title"
+      ],
+      "properties": {
+        "stepId": {
+          "type": "string",
+          "x-prompt-write": "step-1, step-2 のように連番で付けてください。"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "このStepで行うことを動詞で始めて簡潔に記述してください。"
+        }
+      }
+    },
+    "CustomStepItem": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/StepItemBase"
+        }
+      ],
+      "required": [
+        "summary"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "x-prompt-write": "この Step でSubAgentが行うドメイン操作の要点を1〜2文で簡潔に。インフラ語彙（document.json・MCP・ファイルパス・Python API 等）は書かない。"
+        },
+        "bullets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "選択肢・一覧など箇条書きにすべき項目があれば1行ずつ列挙（任意）。"
+        },
+        "children": {
+          "type": "array",
+          "x-prompt-write": "さらに細かいドメイン操作に分割する場合に SubStep を列挙（任意）。",
+          "items": {
+            "$ref": "#/$defs/CustomSubStepItem"
+          }
+        }
+      }
+    },
+    "SubStepItemBase": {
+      "type": "object",
+      "required": [
+        "stepId",
+        "title",
+        "summary"
+      ],
+      "properties": {
+        "stepId": {
+          "type": "string",
+          "x-prompt-write": "step-1-1, step-1-2 のように親 stepId を引き継いで連番で付けてください。"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "このSubStepで行うことを動詞で始めて簡潔に記述してください。"
+        },
+        "bullets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "箇条書きにすべき項目があれば1行ずつ列挙（任意）。"
+        }
+      }
+    },
+    "CustomSubStepItem": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/SubStepItemBase"
+        }
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "x-prompt-write": "この SubStep でSubAgentが行うドメイン操作の要点を1〜2文で簡潔に。インフラ語彙は書かない。"
+        }
+      }
+    },
+    "GuardrailsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 8,
+      "x-render-level": 2,
+      "x-prompt-query": "このSkillの実行制約を持ちます。Skillを実行する前に確認すべきガードレールの一覧です。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Guardrails"
+        },
+        "title": {
+          "type": "string",
+          "const": "ガードレール"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "このSkillを実行する際に必ず守るべき制約・禁止事項・前提条件を列挙してください。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ReferencesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 9,
+      "x-render-level": 2,
+      "x-prompt-write": "このSkillが参照するファイル・ドキュメント・スキーマを列挙してください。",
+      "x-prompt-query": "このSkillが参照するリソースの一覧を持ちます。Skill実行時に読み込むべきファイルの特定に使います。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "from": "items",
+          "labelFrom": "path",
+          "valueFrom": "description",
+          "labelCode": true
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "References"
+        },
+        "title": {
+          "type": "string",
+          "const": "参照"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "参照リソースを列挙してください。例: 手順書・テンプレートファイル・外部ドキュメント等。",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "description"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "x-prompt-write": "参照先のファイルパスまたはスキーマ参照を記述してください。例: .waffle/schemas/SkillSchema/v1.json"
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "このリソースが何を提供するかを1文で記述してください。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ResponseTypesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "この advisor が対応する相談種別と、対応する回答テンプレートの対応表を持ちます。相談を受けた際にどのテンプレートで応答すべきかを機械的に把握するために使います。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "type",
+              "header": "相談種別"
+            },
+            {
+              "field": "trigger",
+              "header": "判定条件"
+            },
+            {
+              "field": "templateRef",
+              "header": "テンプレート",
+              "code": true
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ResponseTypes"
+        },
+        "title": {
+          "type": "string",
+          "const": "相談種別と回答テンプレート"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "対応する相談種別を列挙してください。各項目は種別名・判定条件・対応するテンプレートファイルの3点を持ちます。",
+          "items": {
+            "type": "object",
+            "required": [
+              "type",
+              "trigger",
+              "templateRef"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "x-prompt-write": "相談種別の名前（例: 概念質問、判断相談、実装相談）。"
+              },
+              "trigger": {
+                "type": "string",
+                "x-prompt-write": "この種別だと判定する条件（例: 「〜とは」という形式の質問）。"
+              },
+              "templateRef": {
+                "type": "string",
+                "x-prompt-write": "対応する回答テンプレートファイルのパス。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "KnowledgeRefsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 9,
+      "x-render-level": 2,
+      "x-prompt-write": "このadvisorが判断の根拠として必ず参照するバックボーンknowledgeファイルを列挙してください。",
+      "x-prompt-query": "この advisor が判断前に必ず読むべきバックボーンknowledgeファイルの一覧を持ちます。相談内容に応じてどのファイルを読むべきかの特定、および参照先の実在性の機械チェックに使います。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "from": "items",
+          "labelFrom": "path",
+          "valueFrom": "description",
+          "labelCode": true
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "KnowledgeRefs"
+        },
+        "title": {
+          "type": "string",
+          "const": "参照knowledge"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "参照するbackbone knowledgeファイルを列挙してください。",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "description"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "x-prompt-write": "参照先のknowledgeファイルパス。"
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "このファイルが何を扱うかを1文で。例: DDDの集約設計原則と判断基準"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RoutingTableBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "このrouter Skillが持つルーティング表を持ちます。単独では目的を完結できないSkillについて、どのadvisor Skillと組み合わせる必要があるかを判断するための表です。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "skill",
+              "header": "Skill"
+            },
+            {
+              "field": "purpose",
+              "header": "併用が必要な条件"
+            },
+            {
+              "field": "combinedSkills",
+              "header": "併用するadvisor Skill",
+              "code": true
+            },
+            {
+              "field": "strength",
+              "header": "強度"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "RoutingTable"
+        },
+        "title": {
+          "type": "string",
+          "const": "ルーティング表"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "単独では目的を完結できないSkillについてのみ行を追加してください。単独で完結するSkillにはエントリを作らないこと。",
+          "items": {
+            "type": "object",
+            "required": [
+              "skill",
+              "purpose",
+              "combinedSkills",
+              "strength"
+            ],
+            "properties": {
+              "skill": {
+                "type": "string",
+                "x-prompt-write": "併用が必要なSkillのdocumentId。"
+              },
+              "purpose": {
+                "type": "string",
+                "x-prompt-write": "併用が必要になる条件（例: どのschemaRefを扱うときか）。"
+              },
+              "combinedSkills": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-prompt-write": "併用するSkillのdocumentIdを列挙してください。skillKind: advisorのSkillのみを指定できます（advisor以外を併用したくなる場合は、Skillの切り方が細かすぎるサインです）。"
+              },
+              "strength": {
+                "type": "string",
+                "enum": [
+                  "block",
+                  "nudge"
+                ],
+                "x-prompt-write": "block（併用が必須）かnudge（推奨だが必須ではない）かを指定してください。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RouterContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "role",
+        "routingTable",
+        "guardrails"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "role": {
+          "$ref": "#/$defs/RoleBlock"
+        },
+        "inputExpectation": {
+          "$ref": "#/$defs/InputExpectationBlock"
+        },
+        "routingTable": {
+          "$ref": "#/$defs/RoutingTableBlock"
+        },
+        "guardrails": {
+          "$ref": "#/$defs/GuardrailsBlock"
+        },
+        "references": {
+          "$ref": "#/$defs/ReferencesBlock"
+        },
+        "invocationMode": {
+          "$ref": "#/$defs/InvocationModeBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/PurposeBlock"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "skillKind": {
+            "const": "advisor"
+          }
+        },
+        "required": [
+          "skillKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/AdvisorContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "skillKind": {
+            "const": "custom"
+          }
+        },
+        "required": [
+          "skillKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/CustomContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "skillKind": {
+            "const": "router"
+          }
+        },
+        "required": [
+          "skillKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/RouterContent"
+          }
+        }
+      }
+    }
+  ]
+}

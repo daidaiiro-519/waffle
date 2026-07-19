@@ -1,6 +1,4 @@
-# plat-security
-
----
+# セキュリティ境界を担うsecurity基盤：plat-security
 
 ## 概要
 

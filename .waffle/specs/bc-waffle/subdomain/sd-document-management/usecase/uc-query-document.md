@@ -347,7 +347,3 @@ Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
   When 本usecaseを実行する
   Then INVALID_SCHEMA_REFエラーが返る
 ```
-
----
-
-## 名前

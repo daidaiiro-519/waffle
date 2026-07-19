@@ -1,6 +1,10 @@
-# template-test-planning
+## 概要
+
+テスト計画の妥当性を判断する回答の構造を定める。
 
 ---
+
+# テスト計画の妥当性を判断する回答テンプレート：template-test-planning
 
 ## 使用条件
 

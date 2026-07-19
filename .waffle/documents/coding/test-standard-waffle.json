@@ -1,7 +1,7 @@
 {
   "documentId": "test-standard-waffle",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v2",
+  "schemaRef": "CodingSchema/v3",
   "codingKind": "test-standard",
   "stack": "waffle",
   "status": "DRAFT",
@@ -120,6 +120,11 @@
       "example": "def test_バックワード非互換なら書き込みを拒否する():\n    \"\"\"\n    Given 公開済みkindのrequired配列にプロパティを追加するpatch_schema呼び出し\n    When patch-schemaを実行する\n    Then BACKWARD_INCOMPATIBLEエラーが返り、schemaファイルは書き換わらない\n    \"\"\"\n    ...",
       "blockType": "TestScenarioDocstring",
       "title": "シナリオdocstring"
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "Waffle自身のunit/integration/acceptance/contractという4層テスト構成の方針を定める。"
     }
   },
   "tags": []

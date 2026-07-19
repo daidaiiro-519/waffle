@@ -1,4 +1,10 @@
-# coding-standard-python-hexagonal
+# Python/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-python-hexagonal
+
+## 概要
+
+Python/ヘキサゴナル構成のコーディング規約（命名・スタイル・docstring）を定める。
+
+---
 
 ## 命名
 

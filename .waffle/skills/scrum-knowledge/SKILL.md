@@ -3,7 +3,7 @@ name: "scrum-knowledge"
 description: "Scrum・アジャイルに関する質問・設計判断・知識注入を行う際に使う。「Scrumの〜とは？」「PBIのリファインメントは誰が担うか？」「Sprint Goalとは？」などと言われたとき、またはhas-uddのJob Agent設計でScrumの正確な知識が必要なときに使う。"
 ---
 
-# scrum-knowledge
+# Scrum・アジャイルに関する知識注入を行うSkill：scrum-knowledge
 
 ## 目的
 

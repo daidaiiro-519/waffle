@@ -3,7 +3,7 @@ name: "handoff-authoring"
 description: "spec→実装の橋渡しとして、DDD設計判断・アーキテクチャ判断等のadvisor見解をHandoffSchema documentに記録する必要があるときに使う。VALIDATED以上のspecと、既に確定している判断材料をもとに、designViewpoints/implementationViewpointsを記録する。"
 ---
 
-# handoff-authoring
+# spec→実装の橋渡しとなるHandoffドキュメントの作成を行うSkill：handoff-authoring
 
 ## 目的
 

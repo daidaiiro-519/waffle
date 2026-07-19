@@ -1,8 +1,18 @@
-# handoff-uc-query-document
+## 概要
+
+document.jsonから必要な意味単位だけを取得するusecaseの設計判断を実装へ引き継ぐ。
+
+---
+
+# Documentから必要な意味単位だけを取得する実装引き継ぎ：handoff-uc-query-document
 
 ## 引き継ぎ元spec
 
 uc-query-document
+
+---
+
+## 完成イメージ
 
 ---
 

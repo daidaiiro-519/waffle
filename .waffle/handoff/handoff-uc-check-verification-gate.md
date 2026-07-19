@@ -1,8 +1,22 @@
-# handoff-uc-check-verification-gate
+## 概要
+
+実装完了から検証フェーズへ進んでよいかを機械的に判定するusecaseの設計判断を実装へ引き継ぐ。
+
+---
+
+# 実装完了→検証フェーズへ進んでよいかを機械的に判定する実装引き継ぎ：handoff-uc-check-verification-gate
 
 ## 引き継ぎ元spec
 
 uc-check-verification-gate
+
+---
+
+## 完成イメージ
+
+---
+
+## 使われ方（実際の呼び出し例）
 
 ---
 

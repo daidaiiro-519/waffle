@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-cross-layer-data-shape",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "tags": [
     "advisor:tech-lead",
@@ -13,16 +13,6 @@
     "title": {
       "blockType": "Title",
       "title": "レイヤーを跨ぐデータの形（DTO等）の設計原則を扱う概念：architecture-cross-layer-data-shape"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "レイヤー境界を越えてデータを渡すとき、ドメインのエンティティ・集約をそのまま渡してよいか？",
-        "DTO（Data Transfer Object）とドメインオブジェクトは何が違うのか？",
-        "APIのリクエスト/レスポンス型は、そのままドメイン層のメソッドに渡してよいか？"
-      ],
-      "text": "レイヤー境界を越えてデータを受け渡す際、各層は自分の関心事に閉じた専用のデータ形（DTO）に変換して渡すべきであり、内側の層のドメインオブジェクト（エンティティ・集約）をそのまま外部に渡してはならない、という原則。"
     },
     "principles": {
       "blockType": "Principles",
@@ -155,6 +145,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "レイヤー境界を越えてデータを渡すとき、ドメインのエンティティ・集約をそのまま渡してよいか？",
+        "DTO（Data Transfer Object）とドメインオブジェクトは何が違うのか？",
+        "APIのリクエスト/レスポンス型は、そのままドメイン層のメソッドに渡してよいか？"
+      ],
+      "text": "レイヤー境界を越えてデータを受け渡す際、各層は自分の関心事に閉じた専用のデータ形（DTO）に変換して渡すべきであり、内側の層のドメインオブジェクト（エンティティ・集約）をそのまま外部に渡してはならない、という原則。"
     }
   },
   "skillRefs": [

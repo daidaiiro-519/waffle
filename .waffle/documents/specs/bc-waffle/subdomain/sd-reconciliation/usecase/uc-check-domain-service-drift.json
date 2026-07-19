@@ -1,20 +1,13 @@
 {
   "documentId": "uc-check-domain-service-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "業務サービス名と実装ファイルの対応を検証する：CheckDomainServiceDrift"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "bounded-context specが宣言する業務サービスのgroup（実装ファイル単位）が、実際に対応するファイルとして実在するかを機械的に検証する。1業務サービス＝1ファイルという規約を強制せず、複数サービスが同じgroupを共有し同じファイルに同居することを許容した上で、宣言と実装の対応関係のドリフトを検出する。"
-      ]
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -164,6 +157,13 @@
       "operationName": "CheckDomainServiceDrift",
       "blockType": "Usecase",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "bounded-context specが宣言する業務サービスのgroup（実装ファイル単位）が、実際に対応するファイルとして実在するかを機械的に検証する。1業務サービス＝1ファイルという規約を強制せず、複数サービスが同じgroupを共有し同じファイルに同居することを許容した上で、宣言と実装の対応関係のドリフトを検出する。"
+      ]
     }
   },
   "tags": [],

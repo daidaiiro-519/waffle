@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-port-adapter",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "tags": [
     "advisor:tech-lead",
@@ -13,16 +13,6 @@
     "title": {
       "blockType": "Title",
       "title": "ポート＆アダプタ（ヘキサゴナル）パターンを扱う概念：architecture-port-adapter"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "このインターフェースは誰が定義すべきか、コア側か外側か？",
-        "「ポート」と「アダプター」の違いは何か？",
-        "駆動する側（Primary/Driving）と駆動される側（Secondary/Driven）の違いは？"
-      ],
-      "text": "アプリケーションコア（ドメイン＋アプリケーション層）が外部と接続する箇所を「ポート」（インターフェース）として明示的に定義し、外部の技術的詳細を「アダプター」として実装するパターン。コアは常にポートの所有者であり、外部技術に依存しない。"
     },
     "principles": {
       "blockType": "Principles",
@@ -142,6 +132,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "このインターフェースは誰が定義すべきか、コア側か外側か？",
+        "「ポート」と「アダプター」の違いは何か？",
+        "駆動する側（Primary/Driving）と駆動される側（Secondary/Driven）の違いは？"
+      ],
+      "text": "アプリケーションコア（ドメイン＋アプリケーション層）が外部と接続する箇所を「ポート」（インターフェース）として明示的に定義し、外部の技術的詳細を「アダプター」として実装するパターン。コアは常にポートの所有者であり、外部技術に依存しない。"
     }
   },
   "skillRefs": [

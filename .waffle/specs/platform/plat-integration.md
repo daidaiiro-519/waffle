@@ -1,6 +1,4 @@
-# plat-integration
-
----
+# 外部システム連携を担うintegration基盤：plat-integration
 
 ## 概要
 

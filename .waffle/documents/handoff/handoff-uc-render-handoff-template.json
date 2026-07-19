@@ -1,7 +1,7 @@
 {
   "documentId": "handoff-uc-render-handoff-template",
   "documentType": "Handoff",
-  "schemaRef": "HandoffSchema/v1",
+  "schemaRef": "HandoffSchema/v2",
   "content": {
     "title": {
       "blockType": "Title",
@@ -136,6 +136,11 @@
         "waffle render-handoff-template --path .waffle/documents/handoff/{documentId}.json --outputPath .waffle/handoff/{documentId}.html のように、対象HandoffのdocumentPathと出力先HTMLのpathを渡して呼ぶ。",
         "返り値は {\"path\": \"<出力先path>\", \"content\": \"<生成されたHTML文字列>\"}。Orchestratorやユーザーはこの結果を見て、生成されたHTMLをそのまま確認・共有できる。"
       ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "Handoffを固定HTMLテンプレートへ描画するusecaseの設計判断を実装へ引き継ぐ。"
     }
   },
   "tags": []

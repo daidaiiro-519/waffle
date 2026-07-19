@@ -1,6 +1,4 @@
-# plat-ci-cd
-
----
+# CI/CDパイプラインを担うci-cd基盤：plat-ci-cd
 
 ## 概要
 

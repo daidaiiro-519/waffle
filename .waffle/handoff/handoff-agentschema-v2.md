@@ -1,8 +1,18 @@
-# handoff-agentschema-v2
+## 概要
+
+AgentSchema/v2にguardrails/preconditionsを追加し、waffle-subagentを新設した設計判断を実装へ引き継ぐ。
+
+---
+
+# AgentSchema/v2へ委譲固有の禁止事項・前提条件を追加する実装引き継ぎ：handoff-agentschema-v2
 
 ## 引き継ぎ元spec
 
 agg-schema
+
+---
+
+## 完成イメージ
 
 ---
 

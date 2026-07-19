@@ -1,6 +1,10 @@
-# template-strength-assessment
+## 概要
+
+実装の強度・堅牢性を評価する回答の構造を定める。
 
 ---
+
+# 実装の強度・堅牢性を評価する回答テンプレート：template-strength-assessment
 
 ## 使用条件
 

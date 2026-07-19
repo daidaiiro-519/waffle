@@ -1,22 +1,12 @@
 {
   "documentId": "mutation-testing",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "ミューテーションテストによる検出力測定を扱う概念：mutation-testing"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "既存のテストスイートが実際にバグを検出できる強さを持っているか、どう測定するか？",
-        "カバレッジ(実行された行の割合)と、テストの検出力は何が違うか？",
-        "現代の開発でこの技法はどう位置づけられているか？"
-      ],
-      "text": "ソースコードに意図的な小さな変更(mutant)を注入し、既存のテストスイートがその変更を検出(kill)できるかどうかでテストの検出力(強度)を測定する技法。カバレッジが「実行されたか」だけを見るのに対し、mutation testingは「実行された箇所の変化を実際に検出できるか」を見る。"
     },
     "principles": {
       "blockType": "Principles",
@@ -118,6 +108,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "既存のテストスイートが実際にバグを検出できる強さを持っているか、どう測定するか？",
+        "カバレッジ(実行された行の割合)と、テストの検出力は何が違うか？",
+        "現代の開発でこの技法はどう位置づけられているか？"
+      ],
+      "text": "ソースコードに意図的な小さな変更(mutant)を注入し、既存のテストスイートがその変更を検出(kill)できるかどうかでテストの検出力(強度)を測定する技法。カバレッジが「実行されたか」だけを見るのに対し、mutation testingは「実行された箇所の変化を実際に検出できるか」を見る。"
     }
   },
   "tags": [],

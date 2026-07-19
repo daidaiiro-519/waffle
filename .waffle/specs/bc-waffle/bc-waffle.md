@@ -1,5 +1,11 @@
 # スキーマ駆動でDocumentを検証・生成・描画する境界づけられたコンテキスト：bc-waffle
 
+## 名前
+
+スキーマ駆動Document基盤
+
+---
+
 ## 概要
 
 - waffle の中核機能群が属する文脈。document.json を唯一の正とし、AI が構造を推論せず システムが機械的に読み書き・生成・描画する（Harness 原則）。
@@ -60,6 +66,8 @@
 - uc-check-verification-gate
 - uc-check-query-precedes-array-fill
 - uc-check-path-is-projection
+- uc-render-handoff-template
+- uc-render-document-viewer
 
 ---
 

@@ -77,6 +77,44 @@ def test_検証済みDocumentをHTMLへ描画する(tmp_path):
     assert "<p>これは本文です。</p>" in html
 
 
+def test_content_descriptionがOKF_frontmatterのdescriptionとしてヘッダに出る(tmp_path):
+    """
+    Given content.description.textを持つDocument
+    When RenderDocumentViewerを実行する
+    Then そのtextがHTMLヘッダのdescriptionとして出力される
+    """
+    doc_path = _write_doc(tmp_path, overrides={
+        "content": {
+            "title": {"blockType": "Title", "title": "テスト対象：x"},
+            "description": {"blockType": "Description", "title": "概要", "text": "これはOKF用の要約文です。"},
+            "body": {"blockType": "Body", "title": "本文", "text": "これは本文です。"},
+        },
+    })
+    output_path = str(tmp_path / "out.html")
+    result = _engine(tmp_path).run(doc_path, output_path)
+    assert isinstance(result, Ok), result
+    assert "これはOKF用の要約文です。" in result.value["content"]
+
+
+def test_content_descriptionがitems配列の場合も結合してヘッダに出る(tmp_path):
+    """
+    Given content.description.items（配列、DomainSpecSchema等の形）を持つDocument
+    When RenderDocumentViewerを実行する
+    Then その要素を結合したテキストがHTMLヘッダのdescriptionとして出力される
+    """
+    doc_path = _write_doc(tmp_path, overrides={
+        "content": {
+            "title": {"blockType": "Title", "title": "テスト対象：x"},
+            "description": {"blockType": "Description", "title": "概要", "items": ["配列要素の要約文です。"]},
+            "body": {"blockType": "Body", "title": "本文", "text": "これは本文です。"},
+        },
+    })
+    output_path = str(tmp_path / "out.html")
+    result = _engine(tmp_path).run(doc_path, output_path)
+    assert isinstance(result, Ok), result
+    assert "配列要素の要約文です。" in result.value["content"]
+
+
 def test_mermaidコードフェンスをpre要素として出力する(tmp_path):
     """
     Given 基本フローにmermaidを含むDocument

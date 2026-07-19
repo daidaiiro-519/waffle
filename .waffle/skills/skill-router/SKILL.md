@@ -3,7 +3,7 @@ name: "skill-router"
 description: "role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が単独では目的を完結できない場面で、どのadvisor Skillと組み合わせる必要があるかをルーティング表に基づいて判断する際に使う。CLAUDE.md（Orchestrator）がrole skillのライフサイクルの中で必要な回数呼び、判断材料となるadvisorの結果をrole skillへの入力として渡す。ルーティング表は「誰と組み合わせるか（WHO）」のみを扱い、「いつ呼ぶか（WHEN：執筆前の判断材料収集か、執筆後の十分性ゲートチェックか、あるいはその両方か）」はOrchestrator側の責務とし、skill-router自身はタイミングを一切保持しない。"
 ---
 
-# skill-router
+# schemaごとに必要なadvisorの組み合わせを振り分けるrouter Skill：skill-router
 
 ## 目的
 

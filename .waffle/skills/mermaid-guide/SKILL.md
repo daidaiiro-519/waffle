@@ -3,7 +3,7 @@ name: "mermaid-guide"
 description: "Mermaidの構文パターンを参照・選択したいとき、図の表現方法を決めたいとき、Mermaidの記法を確認したいとき、またはknowledgeSkillsで図を作成するときに使う。「どのMermaid構文を使うか」「この図はどう書くか」「Mermaidで〜を表現したい」と言われたときに使う。"
 ---
 
-# mermaid-guide
+# Mermaid構文パターンの参照を行うSkill：mermaid-guide
 
 ## 目的
 

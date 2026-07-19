@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-cross-cutting-concerns",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "tags": [
     "advisor:tech-lead",
@@ -13,16 +13,6 @@
     "title": {
       "blockType": "Title",
       "title": "ロギング・認証等の横断的関心事の扱い方を定める概念：architecture-cross-cutting-concerns"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "ロギング・認証・キャッシュのようなコードは、どの層に置くべきか？",
-        "ドメイン層の処理で認可チェックが必要になった。ドメイン層に認可ロジックを書いてよいか？",
-        "全てのユースケースで共通して必要な処理（監査ログ等）を、毎回手作業で呼び出す必要があるか？"
-      ],
-      "text": "ロギング・認証・キャッシュ・トランザクション管理のような、特定の業務ルールに属さず複数の箇所で横断的に必要になる関心事を、どの層に配置し、どう実装するかという判断。"
     },
     "principles": {
       "blockType": "Principles",
@@ -137,6 +127,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "ロギング・認証・キャッシュのようなコードは、どの層に置くべきか？",
+        "ドメイン層の処理で認可チェックが必要になった。ドメイン層に認可ロジックを書いてよいか？",
+        "全てのユースケースで共通して必要な処理（監査ログ等）を、毎回手作業で呼び出す必要があるか？"
+      ],
+      "text": "ロギング・認証・キャッシュ・トランザクション管理のような、特定の業務ルールに属さず複数の箇所で横断的に必要になる関心事を、どの層に配置し、どう実装するかという判断。"
     }
   },
   "skillRefs": [

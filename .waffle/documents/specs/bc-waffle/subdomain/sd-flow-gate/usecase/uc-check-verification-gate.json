@@ -1,20 +1,13 @@
 {
   "documentId": "uc-check-verification-gate",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "実装完了→検証フェーズへ進んでよいかを機械的に判定する：CheckVerificationGate"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "対象usecase specのacceptanceScenariosと実装済みテストの対応関係、および渡されたテスト実行結果から、検証フェーズへ進んでよいか（ready/blocked/needs_human）を判定する。"
-      ]
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -216,6 +209,13 @@
       "operationName": "CheckVerificationGate",
       "blockType": "Usecase",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "対象usecase specのacceptanceScenariosと実装済みテストの対応関係、および渡されたテスト実行結果から、検証フェーズへ進んでよいか（ready/blocked/needs_human）を判定する。"
+      ]
     }
   },
   "tags": [],

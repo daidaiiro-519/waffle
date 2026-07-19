@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-scenario-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
@@ -12,13 +12,6 @@
     "title": {
       "blockType": "Title",
       "title": "スペックとテストシナリオの対応関係を検証する：CheckScenarioDrift"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "spec の TestScenarios（acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenarios）が宣言するシナリオ名と、対応するテストファイルの test_* 関数名を突き合わせ、未実装のシナリオ・宣言に対応しない孤立テストを機械的に検出する。"
-      ]
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -197,6 +190,13 @@
       "operationName": "CheckScenarioDrift",
       "blockType": "Usecase",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "spec の TestScenarios（acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenarios）が宣言するシナリオ名と、対応するテストファイルの test_* 関数名を突き合わせ、未実装のシナリオ・宣言に対応しない孤立テストを機械的に検出する。"
+      ]
     }
   }
 }

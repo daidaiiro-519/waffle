@@ -1,5 +1,11 @@
 # Documentの生成・読取・描画を担うサブドメイン：sd-document-management
 
+## 名前
+
+Document管理
+
+---
+
 ## 概要
 
 - AI に構造を推論させず、システムが決定的に Document を生成(scaffold)・読取(query)・描画(render)する中核の業務領域。waffle の差別化そのもの（Harness 原則と UDD ループ）を担う。
@@ -27,6 +33,8 @@
 - uc-render-blank-template
 - uc-check-query-precedes-array-fill
 - uc-check-path-is-projection
+- uc-render-handoff-template
+- uc-render-document-viewer
 
 ---
 

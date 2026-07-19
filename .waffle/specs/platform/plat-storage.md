@@ -1,6 +1,4 @@
-# plat-storage
-
----
+# 永続化ストレージを担うstorage基盤：plat-storage
 
 ## 概要
 

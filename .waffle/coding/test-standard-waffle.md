@@ -1,4 +1,10 @@
-# test-standard-waffle
+# Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle
+
+## 概要
+
+Waffle自身のunit/integration/acceptance/contractという4層テスト構成の方針を定める。
+
+---
 
 ## テスト方針
 

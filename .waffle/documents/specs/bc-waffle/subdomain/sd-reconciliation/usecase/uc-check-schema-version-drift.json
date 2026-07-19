@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-schema-version-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
@@ -13,13 +13,6 @@
     "title": {
       "blockType": "Title",
       "title": "DocumentとSchema版の対応関係を検証する：CheckSchemaVersionDrift"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。"
-      ]
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -159,6 +152,13 @@
       "operationName": "CheckSchemaVersionDrift",
       "blockType": "Usecase",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。"
+      ]
     }
   }
 }

@@ -3,7 +3,7 @@ name: "knowledge-cultivator"
 description: "advisorのバックボーンknowledgeに追加すべき候補を検知・記録し、蓄積した候補について採用可否を人間との対話を通じて判定する際に使う。ユーザーがadvisorの判断を訂正したとき、既存knowledgeでカバーされない実例に遭遇したとき、または並列dispatchしたadvisor同士の見解が矛盾したときに使う。"
 ---
 
-# knowledge-cultivator
+# advisorのknowledge候補の検知・採用判定を行うSkill：knowledge-cultivator
 
 ## 目的
 

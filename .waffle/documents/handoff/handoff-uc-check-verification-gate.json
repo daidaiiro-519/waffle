@@ -1,7 +1,7 @@
 {
   "documentId": "handoff-uc-check-verification-gate",
   "documentType": "Handoff",
-  "schemaRef": "HandoffSchema/v1",
+  "schemaRef": "HandoffSchema/v2",
   "content": {
     "title": {
       "blockType": "Title",
@@ -134,6 +134,11 @@
         "waffle check-verification-gate --specPath <spec> --testPath <test> --testResultsPath <results.json> のように、spec・テストファイル・抽象化された実行結果ファイルのpathを渡して呼ぶ。",
         "返り値は {\"status\": \"ready|blocked|needs_human\", \"reasons\": [...]}。Orchestratorはこの結果を見て、次フェーズ（実装完了→検証）へ進んでよいかを機械的に判断する。"
       ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "実装完了から検証フェーズへ進んでよいかを機械的に判定するusecaseの設計判断を実装へ引き継ぐ。"
     }
   },
   "tags": []

@@ -1,3 +1,9 @@
+## 概要
+
+tech-lead-advisorがコード配置・レイヤー境界の判断を回答する際の構造を定める。
+
+---
+
 # tech-lead-advisorの判断を構造化する回答テンプレート：template-judgment-tech-lead
 
 ## 使用条件

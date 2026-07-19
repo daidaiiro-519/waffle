@@ -3,7 +3,7 @@ name: "skills-creator"
 description: "新しいSkillsを作成したいとき、Skillのテンプレートが欲しいとき、「スキルを作って」「Skills作成」「新しいスキル」と言われたとき、またはベストプラクティスに従ったSkillフォルダ構成を生成したいときに使う。"
 ---
 
-# skills-creator
+# 新規Skillのテンプレート生成を行うSkill：skills-creator
 
 ## 目的
 

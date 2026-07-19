@@ -1,6 +1,4 @@
-# plat-networking
-
----
+# ネットワーク構成を担うnetworking基盤：plat-networking
 
 ## 概要
 

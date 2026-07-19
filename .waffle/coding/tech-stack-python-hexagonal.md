@@ -1,5 +1,11 @@
 # Python/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-python-hexagonal
 
+## 概要
+
+Python/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。
+
+---
+
 ## スタック概要
 
 - **対象領域（ティア: backend=サーバー側 / frontend=画面側 / platform=基盤側）**: backend

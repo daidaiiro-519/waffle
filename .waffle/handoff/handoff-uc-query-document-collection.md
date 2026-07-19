@@ -1,8 +1,18 @@
-# handoff-uc-query-document-collection
+## 概要
+
+複数Documentを横断してパターン検索・属性絞り込みを行うusecaseの設計判断を実装へ引き継ぐ。
+
+---
+
+# 複数Documentを横断してパターン検索・属性絞り込みする実装引き継ぎ：handoff-uc-query-document-collection
 
 ## 引き継ぎ元spec
 
 uc-query-document-collection
+
+---
+
+## 完成イメージ
 
 ---
 

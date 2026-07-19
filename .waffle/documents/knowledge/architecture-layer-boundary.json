@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-layer-boundary",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "tags": [
     "advisor:tech-lead",
@@ -13,16 +13,6 @@
     "title": {
       "blockType": "Title",
       "title": "レイヤー境界の引き方を定める概念：architecture-layer-boundary"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "この機能はドメイン層に置くべきか、アプリケーション層に置くべきか？",
-        "レイヤーはいくつに分けるべきか？分けすぎ・少なすぎの判断基準は？",
-        "DDDのサブドメイン分類（中核・一般・補完）は、レイヤー設計にどう影響するか？"
-      ],
-      "text": "ソフトウェアをいくつの層に分割し、各層にどんな責務を割り当てるかという設計判断。層の数自体に唯一の正解はなく、「同じ理由で変更されるコードを同じ層にまとめる」という単一責任の原則を層レベルに適用した基準で決める。"
     },
     "principles": {
       "blockType": "Principles",
@@ -146,6 +136,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "この機能はドメイン層に置くべきか、アプリケーション層に置くべきか？",
+        "レイヤーはいくつに分けるべきか？分けすぎ・少なすぎの判断基準は？",
+        "DDDのサブドメイン分類（中核・一般・補完）は、レイヤー設計にどう影響するか？"
+      ],
+      "text": "ソフトウェアをいくつの層に分割し、各層にどんな責務を割り当てるかという設計判断。層の数自体に唯一の正解はなく、「同じ理由で変更されるコードを同じ層にまとめる」という単一責任の原則を層レベルに適用した基準で決める。"
     }
   },
   "skillRefs": [

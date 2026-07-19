@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scaffold-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -13,13 +13,6 @@
     "title": {
       "blockType": "Title",
       "title": "Documentの骨格生成と値の書き込み：ScaffoldDocument"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
-      ]
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -318,6 +311,13 @@
       "operationName": "ScaffoldDocument",
       "blockType": "Usecase",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
+      ]
     }
   }
 }

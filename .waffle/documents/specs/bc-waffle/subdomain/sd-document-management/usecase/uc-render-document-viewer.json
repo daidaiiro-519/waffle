@@ -1,7 +1,7 @@
 {
   "documentId": "uc-render-document-viewer",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -135,14 +135,21 @@
           "viewpoint": "読み取り専用の投影として、RenderDocumentのstatus遷移・deploy処理を一切トリガーしないことを確認する",
           "gherkin": "Scenario: HTML描画はDocument集約自身の状態を変更しない\n  Given 検証済みのDocument\n  When RenderDocumentViewerを実行する\n  Then 対象Documentのstatus・canonical MD・deploy先はいずれも変更されない",
           "covers": "事後条件: Document集約自身の状態・内容は変更しない"
+        },
+        {
+          "name": "content.descriptionがOKF frontmatterのdescriptionとしてヘッダに出る",
+          "category": "正常系",
+          "viewpoint": "schemaが持つdescriptionブロック（OKF frontmatter対応、brainstorm-md-html-viewer-and-okf.md論点2）のtextが、HTMLヘッダのdescriptionとして出力されることを確認する",
+          "gherkin": "Scenario: content.descriptionがOKF frontmatterのdescriptionとしてヘッダに出る\n  Given content.description.textを持つDocument\n  When RenderDocumentViewerを実行する\n  Then そのtextがHTMLヘッダのdescriptionとして出力される",
+          "covers": "受け入れ基準: OKF frontmatterのdescription表示"
+        },
+        {
+          "name": "content.descriptionがitems配列の場合も結合してヘッダに出る",
+          "category": "正常系",
+          "viewpoint": "schemaによってdescriptionブロックの形（text文字列 or items配列）が異なる（DomainSpecSchema等）ため、items配列の場合も結合して同じヘッダに反映されることを確認する",
+          "gherkin": "Scenario: content.descriptionがitems配列の場合も結合してヘッダに出る\n  Given content.description.items（配列）を持つDocument\n  When RenderDocumentViewerを実行する\n  Then その要素を結合したテキストがHTMLヘッダのdescriptionとして出力される",
+          "covers": "受け入れ基準: OKF frontmatterのdescription表示（items配列形式）"
         }
-      ]
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "対象Documentのcanonical MD（RenderDocumentの出力）を、CSSの効いた自己完結HTMLへ変換し、読み取り専用の投影として書き出す"
       ]
     },
     "preconditions": {
@@ -150,6 +157,13 @@
       "title": "事前条件",
       "items": [
         "対象Documentが検証済み（VALIDATED以降のstatus）であり、canonical MDへrender可能である"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "対象Documentのcanonical MD（RenderDocumentの出力）を、CSSの効いた自己完結HTMLへ変換し、読み取り専用の投影として書き出す"
       ]
     }
   },

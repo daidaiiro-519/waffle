@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-test-strategy-by-layer",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "tags": [
     "advisor:tech-lead",
@@ -14,16 +14,6 @@
     "title": {
       "blockType": "Title",
       "title": "レイヤー別のテスト戦略を定める概念：architecture-test-strategy-by-layer"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "ドメイン層のテストは何を検証すべきか？",
-        "アダプターの実装を差し替えてテストするとはどういうことか？",
-        "ポートのテストダブル（偽実装）はどこまで本物に似せるべきか？"
-      ],
-      "text": "レイヤー構成・ポートとアダプターの分離を、テスト戦略にどう活かすかという判断。テストの種類（単体・結合・E2E）を、どの層のどの境界に対して書くべきかを決める。"
     },
     "principles": {
       "blockType": "Principles",
@@ -166,6 +156,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "ドメイン層のテストは何を検証すべきか？",
+        "アダプターの実装を差し替えてテストするとはどういうことか？",
+        "ポートのテストダブル（偽実装）はどこまで本物に似せるべきか？"
+      ],
+      "text": "レイヤー構成・ポートとアダプターの分離を、テスト戦略にどう活かすかという判断。テストの種類（単体・結合・E2E）を、どの層のどの境界に対して書くべきかを決める。"
     }
   },
   "skillRefs": [

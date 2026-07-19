@@ -1,4 +1,10 @@
-# test-standard-python-hexagonal
+# Python/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-python-hexagonal
+
+## 概要
+
+Python/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。
+
+---
 
 ## テスト方針
 

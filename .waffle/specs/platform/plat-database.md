@@ -1,6 +1,4 @@
-# plat-database
-
----
+# データベースを担うdatabase基盤：plat-database
 
 ## 概要
 

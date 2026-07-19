@@ -3,7 +3,7 @@ name: "implementation"
 description: "VALIDATED以上のspec、および必要に応じてHandoffに記録された設計観点・実装観点をもとに、実際のソースコードを実装する必要があるときに使う。TDD（Red→Green→必要ならRefactor）で進める。"
 ---
 
-# implementation
+# TDD（Red→Green→Refactor）による実装を行うSkill：implementation
 
 ## 目的
 

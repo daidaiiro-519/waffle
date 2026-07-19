@@ -1,18 +1,13 @@
 {
   "documentId": "spec-authoring",
   "documentType": "Skill",
-  "schemaRef": "SkillSchema/v1",
+  "schemaRef": "SkillSchema/v2",
   "skillKind": "custom",
   "status": "ACTIVE",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "schemaRefに沿ったdocument作成を行うSkill：spec-authoring"
-    },
-    "purpose": {
-      "blockType": "Purpose",
-      "title": "目的",
-      "text": "既存のspec schema（DomainSpecSchema・CodingSchema・PlatformSpec・PresentationSpecSchema等）に沿ってspec document.jsonを新規作成・更新する必要があるときに使う。schemaRefに基づいて骨格を生成し、既に確定している判断材料をもとに値を埋め、validate・renderまで行う。"
     },
     "inputExpectation": {
       "blockType": "InputExpectation",
@@ -83,6 +78,11 @@
         "設計判断・アーキテクチャ判断が必要な箇所を、判断材料が与えられていないまま自分で埋めない。判断材料が不足している場合は呼び出し元に確認する",
         "schemaに新規必須トップレベルキーが追加されている場合のみ、check-schema-version-driftで検知した上でEdit/Writeを許容する"
       ]
+    },
+    "description": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "既存のspec schema（DomainSpecSchema・CodingSchema・PlatformSpec・PresentationSpecSchema等）に沿ってspec document.jsonを新規作成・更新する必要があるときに使う。schemaRefに基づいて骨格を生成し、既に確定している判断材料をもとに値を埋め、validate・renderまで行う。"
     }
   },
   "tags": []

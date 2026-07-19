@@ -36,6 +36,8 @@ class RenderDocumentViewer:
 
         content = doc.get("content", {})
         title = content.get("title", {}).get("title", doc.get("documentId", ""))
+        description_block = content.get("description", {})
+        description = description_block.get("text") or " ".join(description_block.get("items", []))
         body_html = convert(rendered.value["content"])
 
         html = render_viewer_html(
@@ -44,6 +46,7 @@ class RenderDocumentViewer:
             schema_ref=doc.get("schemaRef", ""),
             tags=doc.get("tags", []),
             updated_at=doc.get("updatedAt", ""),
+            description=description,
             body_html=body_html,
         )
 

@@ -1,4 +1,8 @@
-# architecture-python-hexagonal
+# Python/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-python-hexagonal
+
+## 概要
+
+Pythonでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。
 
 ---
 

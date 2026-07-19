@@ -3,7 +3,7 @@ name: "platform-advisor"
 description: "可用性・スケーラビリティ・セキュリティ境界・インフラ構成に関する判断相談を受けたときに使う。tech-lead-advisorが判定するアプリケーション内部のレイヤー配置・依存方向の外側（デプロイ単位がどう動かされ、どう外部と繋がるか）の判断を行う。PlatformSpecの記述を導く。"
 ---
 
-# platform-advisor
+# 可用性・スケーラビリティ・セキュリティ境界の判断を行うSkill：platform-advisor
 
 ## 目的
 

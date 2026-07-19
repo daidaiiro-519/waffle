@@ -3,7 +3,7 @@ name: "spec-authoring"
 description: "既存のspec schema（DomainSpecSchema・CodingSchema・PlatformSpec・PresentationSpecSchema等）に沿ってspec document.jsonを新規作成・更新する必要があるときに使う。schemaRefに基づいて骨格を生成し、既に確定している判断材料をもとに値を埋め、validate・renderまで行う。"
 ---
 
-# spec-authoring
+# schemaRefに沿ったdocument作成を行うSkill：spec-authoring
 
 ## 目的
 

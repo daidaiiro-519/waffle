@@ -3,7 +3,7 @@ name: "investigation"
 description: "設計判断・実装方針を決める前に、コードベース・document.json・spec・既存資料などを読んで事実を確認する必要があるときに使う。判断や実装は行わず、調べた事実と根拠のみを報告する。"
 ---
 
-# investigation
+# 判断・実装をせず事実調査のみを行うSkill：investigation
 
 ## 目的
 

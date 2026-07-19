@@ -1,22 +1,12 @@
 {
   "documentId": "event-sourced-domain-model",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "イベントソーシングによるドメインモデルの原則を扱う概念：event-sourced-domain-model"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "集約の状態は最新値だけ保存すればよいのか、それとも状態が変化した経緯そのものを残すべきか",
-        "過去のある時点で集約がどんな状態だったかを、あとから正確に再現する必要があるか",
-        "監査ログ・分析・検索など、同じデータから複数の見方を導きたい場合、どう永続化を設計するか"
-      ],
-      "text": "集約の「今の状態」を直接保存するのではなく、状態を変化させた業務イベントの履歴を保存し、その履歴を順番に適用(投影)することで状態を再構築する設計方式。永続化されたイベント列そのものが唯一の情報源(source of truth)になる。"
     },
     "principles": {
       "blockType": "Principles",
@@ -221,6 +211,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "集約の状態は最新値だけ保存すればよいのか、それとも状態が変化した経緯そのものを残すべきか",
+        "過去のある時点で集約がどんな状態だったかを、あとから正確に再現する必要があるか",
+        "監査ログ・分析・検索など、同じデータから複数の見方を導きたい場合、どう永続化を設計するか"
+      ],
+      "text": "集約の「今の状態」を直接保存するのではなく、状態を変化させた業務イベントの履歴を保存し、その履歴を順番に適用(投影)することで状態を再構築する設計方式。永続化されたイベント列そのものが唯一の情報源(source of truth)になる。"
     }
   },
   "tags": [],

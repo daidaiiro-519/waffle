@@ -1,0 +1,538 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "HandoffSchema/v2",
+  "title": "Handoff Schema v1",
+  "description": "Document集約の一documentType（Handoff）。あるusecase/aggregate specが合意（VALIDATED）された後、実装に入る前に、全advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor/platform-advisor等）へ相談した結果のうち、関係するadvisorが書き込んだ設計・実装観点を記録する。specとは異なり正本（契約）ではなく助言的な記録であり、drift検知・ライフサイクル遷移ガードの対象にしない（statusフィールドを持たない）。独立集約ではなくDocument集約のインスタンスであり、create/fill/validate/render/queryは既存engineがそのまま扱う。kind discriminatorは持たない（形は常に1つ）。",
+  "type": "object",
+  "required": [
+    "documentId",
+    "documentType",
+    "schemaRef",
+    "content"
+  ],
+  "x-source-target": ".waffle/documents/handoff/{documentId}.json",
+  "x-render-target": {
+    "formats": [
+      "md"
+    ],
+    "path": ".waffle/handoff/{documentId}.md"
+  },
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "x-prompt-write": "この引き継ぎを一意に識別するIDを kebab-case で付けてください。慣例は handoff-{specRefのdocumentId}。例: handoff-uc-render-blank-template"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "Handoff"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "HandoffSchema/v2"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-prompt-write": "この引き継ぎを分類するタグを namespace:value 形式で付けてください。例: [\"context:waffle\"]"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "_index": {
+      "description": "waffle が x-prompt-query から自動生成する。AI は直接書かない。",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "blockType",
+              "prompt"
+            ],
+            "properties": {
+              "blockType": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "content": {
+      "$ref": "#/$defs/HandoffContent"
+    }
+  },
+  "$defs": {
+    "HandoffContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "specRef",
+        "designViewpoints",
+        "implementationViewpoints",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "specRef": {
+          "$ref": "#/$defs/SpecRefBlock"
+        },
+        "designViewpoints": {
+          "$ref": "#/$defs/DesignViewpointsBlock"
+        },
+        "implementationViewpoints": {
+          "$ref": "#/$defs/ImplementationViewpointsBlock"
+        },
+        "constraints": {
+          "$ref": "#/$defs/ConstraintsBlock"
+        },
+        "completionImage": {
+          "$ref": "#/$defs/CompletionImageBlock"
+        },
+        "handoffKind": {
+          "$ref": "#/$defs/HandoffKindBlock"
+        },
+        "usageExamples": {
+          "$ref": "#/$defs/UsageExamplesBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/DescriptionBlock"
+        }
+      }
+    },
+    "TitleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title"
+      ],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-prompt-query": "この引き継ぎのタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Title"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのHandoffが何を引き継ぐかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。識別子部分はdocumentIdをそのまま使う（識別子は既に別の構造化フィールドが正であり、ここでは表示のためだけに引用する）。"
+        }
+      }
+    },
+    "SpecRefBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "specRef"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "このHandoffが引き継ぎ元とするspecのdocumentIdを持ちます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "specRef"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "SpecRef"
+        },
+        "title": {
+          "type": "string",
+          "const": "引き継ぎ元spec"
+        },
+        "specRef": {
+          "type": "string",
+          "x-prompt-write": "引き継ぎ元のusecase/aggregate specのdocumentId。例: uc-render-blank-template"
+        }
+      }
+    },
+    "DesignViewpointsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "実装に入る前にadvisorとの相談で得られた設計観点（レイヤー配置・既存パターンとの整合・DDD境界判断等）を持ちます。各観点にはどのadvisor由来かをタグ付けします。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "advisor",
+              "header": "advisor"
+            },
+            {
+              "field": "viewpoint",
+              "header": "観点"
+            },
+            {
+              "field": "consideration",
+              "header": "考慮事項"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "DesignViewpoints"
+        },
+        "title": {
+          "type": "string",
+          "const": "設計観点"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "advisorとの相談で得られた設計観点を列挙。無ければ空。",
+          "items": {
+            "type": "object",
+            "required": [
+              "advisor",
+              "viewpoint",
+              "consideration"
+            ],
+            "properties": {
+              "advisor": {
+                "type": "string",
+                "x-prompt-write": "観点の由来advisor名。例: ddd-advisor, tech-lead-advisor, ux-advisor, qa-advisor, platform-advisor"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点の見出し。例: レイヤー境界の置き場所"
+              },
+              "consideration": {
+                "type": "string",
+                "x-prompt-write": "考慮事項の内容を1〜3文で。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ImplementationViewpointsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "実装に入る前にadvisorとの相談で得られた実装観点（テスト戦略・既存コードパターンとの整合等）を持ちます。各観点にはどのadvisor由来かをタグ付けします。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "advisor",
+              "header": "advisor"
+            },
+            {
+              "field": "viewpoint",
+              "header": "観点"
+            },
+            {
+              "field": "consideration",
+              "header": "考慮事項"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ImplementationViewpoints"
+        },
+        "title": {
+          "type": "string",
+          "const": "実装観点"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "advisorとの相談で得られた実装観点を列挙。無ければ空。",
+          "items": {
+            "type": "object",
+            "required": [
+              "advisor",
+              "viewpoint",
+              "consideration"
+            ],
+            "properties": {
+              "advisor": {
+                "type": "string",
+                "x-prompt-write": "観点の由来advisor名。例: ddd-advisor, tech-lead-advisor, ux-advisor, qa-advisor, platform-advisor"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点の見出し。例: テスト戦略上の注意点"
+              },
+              "consideration": {
+                "type": "string",
+                "x-prompt-write": "考慮事項の内容を1〜3文で。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ConstraintsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "既知の制約・トレードオフを持ちます（任意）。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Constraints"
+        },
+        "title": {
+          "type": "string",
+          "const": "既知の制約・トレードオフ"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "既知の制約・トレードオフを列挙。無ければ空。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CompletionImageBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "layers",
+        "relationships"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "実装後の構造・振る舞いを示す完成イメージを持ちます。プロセスの現在地ではなく、対象成果物そのものの構造（層に分けたノード群＋層をまたぐ依存関係）を表します。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "CompletionImage"
+        },
+        "title": {
+          "type": "string",
+          "const": "完成イメージ"
+        },
+        "layers": {
+          "type": "array",
+          "x-prompt-write": "上から並ぶ層（レイヤー）を列挙してください。層内のノードは横に並び、隣接する層の間には自動で包含関係の矢印が引かれます。例: 呼出口層→コア層→ポート層→実装層、またはbounded-context層→subdomain層→usecase層。",
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "nodes"
+            ],
+            "properties": {
+              "label": {
+                "type": "string",
+                "x-prompt-write": "この層の短い名前（例: 呼出口、コア、ポート、実装）。"
+              },
+              "nodes": {
+                "type": "array",
+                "x-prompt-write": "この層に属するノードを列挙してください。",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "sub",
+                    "status"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "x-prompt-write": "このノードを一意に識別するID（relationshipsから参照するため）。例: cli, csd"
+                    },
+                    "title": {
+                      "type": "string",
+                      "x-prompt-write": "このノードの主表示テキスト（業務語彙で）。"
+                    },
+                    "sub": {
+                      "type": "string",
+                      "x-prompt-write": "このノードの補足キャプション（識別子・種別等）。"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "existing",
+                        "new"
+                      ],
+                      "x-prompt-write": "existing（既存）またはnew（新設・今回の対象）。"
+                    }
+                  }
+                }
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "この層が何をするかを1〜3文で説明してください。層内のノードの固有名詞を含めてよい。「読み方」セクションにこの層1件分の項目として出力されます。"
+              }
+            }
+          }
+        },
+        "relationships": {
+          "type": "array",
+          "x-prompt-write": "層をまたがない、または隣接層の単純な包含関係では表せない特別な関係（依存・分離等）を列挙してください。無ければ空配列。",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to",
+              "kind",
+              "label"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "x-prompt-write": "起点ノードのid。"
+              },
+              "to": {
+                "type": "string",
+                "x-prompt-write": "終点ノードのid。"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "dependency",
+                  "split"
+                ],
+                "x-prompt-write": "dependency（依存・内部再利用等）またはsplit（分離の関係）。"
+              },
+              "label": {
+                "type": "string",
+                "x-prompt-write": "この関係を短く説明するラベル。例: 内部で再利用（コンポジション）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "HandoffKindBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "value"
+      ],
+      "x-render-order": -1,
+      "x-render-level": 0,
+      "x-prompt-query": "このHandoffが「spec→実装」と「ブレスト→spec」のどちらの引き継ぎ種別かを持ちます（省略時はspecToImplementation扱い）。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "HandoffKind"
+        },
+        "value": {
+          "type": "string",
+          "enum": [
+            "specToImplementation",
+            "brainstormToSpec"
+          ],
+          "x-prompt-write": "specToImplementation（spec合意後→実装引き継ぎ）またはbrainstormToSpec（ブレスト収束後→spec作成引き継ぎ）のどちらか。"
+        }
+      }
+    },
+    "UsageExamplesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "完成イメージの下に置く第2の読み方リスト「使われ方（実際の呼び出し例）」を持ちます（任意）。実際の呼び出し構文・返り値の例等。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "UsageExamples"
+        },
+        "title": {
+          "type": "string",
+          "const": "使われ方（実際の呼び出し例）"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "実際の呼び出し例・返り値の例等を1件1文で列挙してください。無ければこのブロック自体を省略。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "DescriptionBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
+      "x-render-order": -2,
+      "x-render-level": 2,
+      "x-prompt-query": "この引き継ぎが何を伝えるかを1〜2文で要約します。OKF frontmatterのdescriptionとしても使われます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Description"
+        },
+        "title": {
+          "type": "string",
+          "const": "概要"
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "この引き継ぎが何を伝えるかを1〜2文で。"
+        }
+      }
+    }
+  }
+}

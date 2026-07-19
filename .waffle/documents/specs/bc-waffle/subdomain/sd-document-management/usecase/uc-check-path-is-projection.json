@@ -1,20 +1,13 @@
 {
   "documentId": "uc-check-path-is-projection",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "uc-check-path-is-projection"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "document.jsonから機械的に生成された投影（render出力、例: SKILL.md・CLAUDE.md）を、原本を経由せず直接編集してしまう事故を防ぐため、対象ファイルの実体パスが投影であるかを機械的に判定する。"
-      ]
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -146,6 +139,13 @@
       "operationName": "CheckPathIsProjection",
       "blockType": "Usecase",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "document.jsonから機械的に生成された投影（render出力、例: SKILL.md・CLAUDE.md）を、原本を経由せず直接編集してしまう事故を防ぐため、対象ファイルの実体パスが投影であるかを機械的に判定する。"
+      ]
     }
   },
   "tags": [],

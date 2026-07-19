@@ -43,6 +43,7 @@ header.masthead { background: var(--surface); border: 1px solid var(--line); bor
 .masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.76rem; color: var(--ink-faint); border-top: 1px solid var(--line); padding-top: 0.8rem; }
 .masthead dt { white-space: nowrap; }
 .masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.masthead .description { color: var(--ink-dim); margin: 0 0 0.9rem; max-width: 68ch; overflow-wrap: anywhere; }
 article { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 2rem 2.2rem 2.4rem; }
 article h1 { font-family: var(--serif); font-size: clamp(1.3rem, 3vw, 1.7rem); margin: 0 0 1rem; }
 article h2 { font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 2.2rem 0 0.9rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line); }
@@ -78,9 +79,11 @@ def render_viewer_html(
     schema_ref: str,
     tags: list[str],
     updated_at: str,
+    description: str,
     body_html: str,
 ) -> str:
     """MD正本から変換した本文HTMLを、OKF frontmatter付きの自己完結HTMLへ組み立てる。"""
+    description_html = f'<p class="description">{_e(description)}</p>' if description else ""
     return f"""<!doctype html>
 <html>
 <head>
@@ -94,6 +97,7 @@ def render_viewer_html(
   <header class="masthead">
     <div class="kicker">Document Viewer</div>
     <h1>{_e(title)}</h1>
+    {description_html}
     <div class="meta-row">
       {_render_tags(tags)}
     </div>

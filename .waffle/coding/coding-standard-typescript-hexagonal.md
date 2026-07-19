@@ -1,4 +1,10 @@
-# coding-standard-typescript-hexagonal
+# TypeScript/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-typescript-hexagonal
+
+## 概要
+
+TypeScript/ヘキサゴナル構成のコーディング規約（命名・スタイル）を定める。
+
+---
 
 ## 命名
 

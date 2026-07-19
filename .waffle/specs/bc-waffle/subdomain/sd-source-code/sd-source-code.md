@@ -1,5 +1,11 @@
 # ソースコードのdocstring構造化抽出を担うサブドメイン：sd-source-code
 
+## 名前
+
+ソースコード解析
+
+---
+
 ## 概要
 
 - ソースコードから、AI に生ファイルを読ませず、docstring を DocstringSchema の kind の構造宣言に従って機械的に抽出したインデックスビューを提供する業務領域。sd-document-management が Document(document.json) に対して適用する Harness 原則（AI に構造を推論させず システムが決定的に処理する）を、対象をソースコードに広げて適用したもの。

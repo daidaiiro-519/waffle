@@ -1,6 +1,4 @@
-# plat-analytics
-
----
+# 分析基盤を担うanalytics基盤：plat-analytics
 
 ## 概要
 

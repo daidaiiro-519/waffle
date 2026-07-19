@@ -1,8 +1,18 @@
-# handoff-uc-render-document
+## 概要
+
+Documentを人間可読な成果物へ描画するusecaseの設計判断を実装へ引き継ぐ。
+
+---
+
+# Documentを人間可読な成果物へ描画する実装引き継ぎ：handoff-uc-render-document
 
 ## 引き継ぎ元spec
 
 uc-render-document
+
+---
+
+## 完成イメージ
 
 ---
 

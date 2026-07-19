@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-tech-stack-selection-chain",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "tags": [
     "advisor:tech-lead",
@@ -14,15 +14,6 @@
     "title": {
       "blockType": "Title",
       "title": "技術スタック選定の連鎖的判断を扱う概念：architecture-tech-stack-selection-chain"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "業務ロジックの実装方法（トランザクションスクリプト／アクティブレコード／ドメインモデル／イベント履歴式ドメインモデル）が決まった。技術方式・技術選定はどう決まるか？",
-        "具体的にどのライブラリ・製品を使うかは、この判断基準が決めてくれるか？"
-      ],
-      "text": "DDDのサブドメイン分類から実装方法・技術方式まで連鎖する判断フローを受けて、技術方式が要求する技術的性質（技術要件）までを扱う。具体的にどの製品・ライブラリを選ぶかはこの原則の範囲外であり、プロジェクトごとのADR（Architecture Decision Record）に委ねる。"
     },
     "principles": {
       "blockType": "Principles",
@@ -141,6 +132,15 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "業務ロジックの実装方法（トランザクションスクリプト／アクティブレコード／ドメインモデル／イベント履歴式ドメインモデル）が決まった。技術方式・技術選定はどう決まるか？",
+        "具体的にどのライブラリ・製品を使うかは、この判断基準が決めてくれるか？"
+      ],
+      "text": "DDDのサブドメイン分類から実装方法・技術方式まで連鎖する判断フローを受けて、技術方式が要求する技術的性質（技術要件）までを扱う。具体的にどの製品・ライブラリを選ぶかはこの原則の範囲外であり、プロジェクトごとのADR（Architecture Decision Record）に委ねる。"
     }
   },
   "skillRefs": [

@@ -1,6 +1,4 @@
-# plat-iot
-
----
+# IoTデバイス連携を担うiot基盤：plat-iot
 
 ## 概要
 

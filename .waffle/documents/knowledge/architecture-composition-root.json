@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-composition-root",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "tags": [
     "advisor:tech-lead",
@@ -13,16 +13,6 @@
     "title": {
       "blockType": "Title",
       "title": "依存関係の配線を1箇所に集約する原則を扱う概念：architecture-composition-root"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "アダプターをポートに配線する処理は、どこに書くべきか？",
-        "配線コードは依存方向のルールに従う必要があるか？",
-        "配線コードがアプリケーションコアや個々のアダプターの中に散らばってしまっている。これは問題か？"
-      ],
-      "text": "アダプターをポート（インターフェース）に結びつける「配線」処理を、システム全体で1箇所（コンポジションルート）に集約する、という原則。"
     },
     "principles": {
       "blockType": "Principles",
@@ -138,6 +128,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "アダプターをポートに配線する処理は、どこに書くべきか？",
+        "配線コードは依存方向のルールに従う必要があるか？",
+        "配線コードがアプリケーションコアや個々のアダプターの中に散らばってしまっている。これは問題か？"
+      ],
+      "text": "アダプターをポート（インターフェース）に結びつける「配線」処理を、システム全体で1箇所（コンポジションルート）に集約する、という原則。"
     }
   },
   "skillRefs": [

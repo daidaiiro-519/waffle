@@ -1,7 +1,7 @@
 {
   "documentId": "agg-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "tags": [
@@ -11,13 +11,6 @@
     "title": {
       "blockType": "Title",
       "title": "Document（document.json）の一貫性とライフサイクルを守る集約：agg-document"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "Document(document.json)の一貫性とライフサイクルを表す集約。Spec家族系（DomainSpecSchema/PresentationSpecSchema）は生成→検証→描画→置換の「処理パイプライン」（lifecycle）を持つ。CodingSchema/SkillSchema系はDRAFT/ACTIVE/DEPRECATEDという分類ラベルを持つが、遷移を強制するcommand・guardは存在しない。"
-      ]
     },
     "aggregateRoot": {
       "blockType": "AggregateRoot",
@@ -467,6 +460,13 @@
           "gherkin": "Scenario: schemaRefを持たないDocumentはMISSING_SCHEMA_REFとして拒否される\n  Given schemaRef を持たない Document\n  When schema 解決を要する operation・command を実行する\n  Then MISSING_SCHEMA_REF エラーが返る",
           "covers": "不変条件: schemaRefを持たないDocumentへの操作はMISSING_SCHEMA_REFとして拒否される"
         }
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "Document(document.json)の一貫性とライフサイクルを表す集約。Spec家族系（DomainSpecSchema/PresentationSpecSchema）は生成→検証→描画→置換の「処理パイプライン」（lifecycle）を持つ。CodingSchema/SkillSchema系はDRAFT/ACTIVE/DEPRECATEDという分類ラベルを持つが、遷移を強制するcommand・guardは存在しない。"
       ]
     }
   }

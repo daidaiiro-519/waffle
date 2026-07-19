@@ -1,4 +1,8 @@
-# tech-stack-typescript-hexagonal
+# TypeScript/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-typescript-hexagonal
+
+## 概要
+
+TypeScript/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。
 
 ---
 

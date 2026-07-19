@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-cross-boundary-exception-handling",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "tags": [
     "advisor:tech-lead",
@@ -13,16 +13,6 @@
     "title": {
       "blockType": "Title",
       "title": "レイヤー境界を跨ぐ例外処理の設計原則を扱う概念：architecture-cross-boundary-exception-handling"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "インフラ層で発生した例外を、そのままドメイン層・アプリケーション層に伝播させてよいか？",
-        "ドメイン層の業務ルール違反は、どんな形の例外として表現すべきか？",
-        "全ての例外をレイヤー境界で翻訳する必要があるか？"
-      ],
-      "text": "例外もデータと同じくレイヤー境界を越えて伝播する。境界を越えるたびに、その例外は受け取る側の層の語彙に翻訳されるべきであり、外側の技術的な例外型をそのまま内側の層に漏らしてはならない、という原則。"
     },
     "principles": {
       "blockType": "Principles",
@@ -154,6 +144,16 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "インフラ層で発生した例外を、そのままドメイン層・アプリケーション層に伝播させてよいか？",
+        "ドメイン層の業務ルール違反は、どんな形の例外として表現すべきか？",
+        "全ての例外をレイヤー境界で翻訳する必要があるか？"
+      ],
+      "text": "例外もデータと同じくレイヤー境界を越えて伝播する。境界を越えるたびに、その例外は受け取る側の層の語彙に翻訳されるべきであり、外側の技術的な例外型をそのまま内側の層に漏らしてはならない、という原則。"
     }
   },
   "skillRefs": [

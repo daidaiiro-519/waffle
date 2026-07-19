@@ -1,6 +1,10 @@
-# template-judgment
+## 概要
+
+advisor全般が判断相談に回答する際の汎用的な構造を定める。
 
 ---
+
+# advisor全般の判断を構造化する回答テンプレート：template-judgment
 
 ## 使用条件
 

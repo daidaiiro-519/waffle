@@ -1,23 +1,12 @@
 {
   "documentId": "nl-feature-routing",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v3",
+  "schemaRef": "KnowledgeSchema/v4",
   "status": "ACTIVE",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "ユーザーの自然言語を機能ルーティングへ変換する原則を扱う概念：nl-feature-routing"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "ユーザーの自然言語をどうやって8語の概念層に対応させるべきか",
-        "視覚・印象以外に、自然言語から拾うべき特徴量は何か",
-        "特徴量カテゴリを新しい概念語として8語に追加すべきか",
-        "写像の質をどう検証すべきか"
-      ],
-      "text": "design-shareの標準サイクル（自然言語→8語の概念層→題材ごとの具象）で、「自然言語→概念層」の変換を担う層。8語自体は変換ロジックを持たない語彙にすぎず、この変換層が無いと写像は生成者の暗黙判断に丸投げされ、検証も再現もできない。5つの特徴量カテゴリで発話を聞き分け、8語または既存knowledge（progressive-disclosure／ui-copywriting等）へ送り、確定前に写像を言葉にすることで検証可能にする。"
     },
     "principles": {
       "blockType": "Principles",
@@ -117,6 +106,17 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "ユーザーの自然言語をどうやって8語の概念層に対応させるべきか",
+        "視覚・印象以外に、自然言語から拾うべき特徴量は何か",
+        "特徴量カテゴリを新しい概念語として8語に追加すべきか",
+        "写像の質をどう検証すべきか"
+      ],
+      "text": "design-shareの標準サイクル（自然言語→8語の概念層→題材ごとの具象）で、「自然言語→概念層」の変換を担う層。8語自体は変換ロジックを持たない語彙にすぎず、この変換層が無いと写像は生成者の暗黙判断に丸投げされ、検証も再現もできない。5つの特徴量カテゴリで発話を聞き分け、8語または既存knowledge（progressive-disclosure／ui-copywriting等）へ送り、確定前に写像を言葉にすることで検証可能にする。"
     }
   },
   "tags": [

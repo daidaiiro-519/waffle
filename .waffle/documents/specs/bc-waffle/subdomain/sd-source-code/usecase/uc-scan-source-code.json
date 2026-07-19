@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scan-source-code",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-source-code",
@@ -12,13 +12,6 @@
     "title": {
       "blockType": "Title",
       "title": "ソースコードからdocstringを構造化抽出する：ScanSourceCode"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "AI がソースコード本体を直接読まずに、DocstringSchema の kind に従って docstring を構造化抽出したインデックスビューを取得する。"
-      ]
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -167,6 +160,13 @@
       "operationName": "ScanSourceCode",
       "blockType": "Usecase",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "AI がソースコード本体を直接読まずに、DocstringSchema の kind に従って docstring を構造化抽出したインデックスビューを取得する。"
+      ]
     }
   }
 }

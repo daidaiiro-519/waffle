@@ -1,4 +1,8 @@
-# architecture-typescript-hexagonal
+# TypeScript/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-typescript-hexagonal
+
+## 概要
+
+TypeScriptでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。
 
 ---
 

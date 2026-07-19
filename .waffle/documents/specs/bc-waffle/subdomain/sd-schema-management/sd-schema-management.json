@@ -1,20 +1,13 @@
 {
   "documentId": "sd-schema-management",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v7",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "subdomain",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "Schema定義ファイル自体の作成・部分編集を担うサブドメイン：sd-schema-management"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "AIに構造を推論させず、システムが決定的にSchema定義ファイル自体を作成・部分編集（ブロック追加・リネーム等）する業務領域。Documentの値ではなくDocumentの型定義そのものを対象とする点でsd-document-managementと責務が異なる（agg-document/agg-schemaが既に別集約であるのと同型の区別）。"
-      ]
     },
     "category": {
       "blockType": "SubdomainCategory",
@@ -51,6 +44,13 @@
       "name": "Schema管理",
       "blockType": "Subdomain",
       "title": "名前"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "AIに構造を推論させず、システムが決定的にSchema定義ファイル自体を作成・部分編集（ブロック追加・リネーム等）する業務領域。Documentの値ではなくDocumentの型定義そのものを対象とする点でsd-document-managementと責務が異なる（agg-document/agg-schemaが既に別集約であるのと同型の区別）。"
+      ]
     }
   },
   "tags": []

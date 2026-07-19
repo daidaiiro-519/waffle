@@ -1,3 +1,9 @@
+## 概要
+
+uc-query-documentの10操作をJMESPath式のquery_path操作へ統合する設計判断を実装へ引き継ぐ。
+
+---
+
  
 
 ---

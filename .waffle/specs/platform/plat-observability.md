@@ -1,6 +1,4 @@
-# plat-observability
-
----
+# 監視・可観測性を担うobservability基盤：plat-observability
 
 ## 概要
 

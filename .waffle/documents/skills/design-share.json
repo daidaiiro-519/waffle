@@ -1,18 +1,13 @@
 {
   "documentId": "design-share",
   "documentType": "Skill",
-  "schemaRef": "SkillSchema/v1",
+  "schemaRef": "SkillSchema/v2",
   "skillKind": "custom",
   "status": "DRAFT",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "UIモック生成とDesign.md作成を自前AWS環境で共有する対応を行うSkill：design-share"
-    },
-    "purpose": {
-      "blockType": "Purpose",
-      "title": "目的",
-      "text": "UIモックを作成して関係者に共有・レビューしてもらいたいとき、またはDesign.md（デザインシステム定義）を対話式で作成・改善したいときに使う。「UIモックを作りたい」「デザイン案を見せたい」「Design.mdを作りたい・直したい」と言われたときに使い、成果物は自前のAWS環境（S3+CloudFront）へトークン保護付きURLとして公開する。"
     },
     "inputExpectation": {
       "blockType": "InputExpectation",
@@ -317,6 +312,11 @@
       "blockType": "InvocationMode",
       "title": "呼び出しモード",
       "manualOnly": true
+    },
+    "description": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "UIモックを作成して関係者に共有・レビューしてもらいたいとき、またはDesign.md（デザインシステム定義）を対話式で作成・改善したいときに使う。「UIモックを作りたい」「デザイン案を見せたい」「Design.mdを作りたい・直したい」と言われたときに使い、成果物は自前のAWS環境（S3+CloudFront）へトークン保護付きURLとして公開する。"
     }
   },
   "tags": [

@@ -1,6 +1,10 @@
-# template-definition-of-done
+## 概要
+
+ある作業項目がDefinition of Doneを満たしているかを判定する回答の構造を定める。
 
 ---
+
+# 完了の定義（Definition of Done）を判定するための回答テンプレート：template-definition-of-done
 
 ## 使用条件
 
