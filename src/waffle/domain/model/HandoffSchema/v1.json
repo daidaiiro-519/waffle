@@ -99,6 +99,15 @@
         },
         "constraints": {
           "$ref": "#/$defs/ConstraintsBlock"
+        },
+        "completionImage": {
+          "$ref": "#/$defs/CompletionImageBlock"
+        },
+        "handoffKind": {
+          "$ref": "#/$defs/HandoffKindBlock"
+        },
+        "usageExamples": {
+          "$ref": "#/$defs/UsageExamplesBlock"
         }
       }
     },
@@ -316,6 +325,174 @@
         "items": {
           "type": "array",
           "x-prompt-write": "既知の制約・トレードオフを列挙。無ければ空。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CompletionImageBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "layers",
+        "relationships"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "実装後の構造・振る舞いを示す完成イメージを持ちます。プロセスの現在地ではなく、対象成果物そのものの構造（層に分けたノード群＋層をまたぐ依存関係）を表します。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "CompletionImage"
+        },
+        "title": {
+          "type": "string",
+          "const": "完成イメージ"
+        },
+        "layers": {
+          "type": "array",
+          "x-prompt-write": "上から並ぶ層（レイヤー）を列挙してください。層内のノードは横に並び、隣接する層の間には自動で包含関係の矢印が引かれます。例: 呼出口層→コア層→ポート層→実装層、またはbounded-context層→subdomain層→usecase層。",
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "nodes"
+            ],
+            "properties": {
+              "label": {
+                "type": "string",
+                "x-prompt-write": "この層の短い名前（例: 呼出口、コア、ポート、実装）。"
+              },
+              "nodes": {
+                "type": "array",
+                "x-prompt-write": "この層に属するノードを列挙してください。",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "sub",
+                    "status"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "x-prompt-write": "このノードを一意に識別するID（relationshipsから参照するため）。例: cli, csd"
+                    },
+                    "title": {
+                      "type": "string",
+                      "x-prompt-write": "このノードの主表示テキスト（業務語彙で）。"
+                    },
+                    "sub": {
+                      "type": "string",
+                      "x-prompt-write": "このノードの補足キャプション（識別子・種別等）。"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "existing",
+                        "new"
+                      ],
+                      "x-prompt-write": "existing（既存）またはnew（新設・今回の対象）。"
+                    }
+                  }
+                }
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "この層が何をするかを1〜3文で説明してください。層内のノードの固有名詞を含めてよい。「読み方」セクションにこの層1件分の項目として出力されます。"
+              }
+            }
+          }
+        },
+        "relationships": {
+          "type": "array",
+          "x-prompt-write": "層をまたがない、または隣接層の単純な包含関係では表せない特別な関係（依存・分離等）を列挙してください。無ければ空配列。",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to",
+              "kind",
+              "label"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "x-prompt-write": "起点ノードのid。"
+              },
+              "to": {
+                "type": "string",
+                "x-prompt-write": "終点ノードのid。"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "dependency",
+                  "split"
+                ],
+                "x-prompt-write": "dependency（依存・内部再利用等）またはsplit（分離の関係）。"
+              },
+              "label": {
+                "type": "string",
+                "x-prompt-write": "この関係を短く説明するラベル。例: 内部で再利用（コンポジション）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "HandoffKindBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "value"
+      ],
+      "x-render-order": -1,
+      "x-render-level": 0,
+      "x-prompt-query": "このHandoffが「spec→実装」と「ブレスト→spec」のどちらの引き継ぎ種別かを持ちます（省略時はspecToImplementation扱い）。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "HandoffKind"
+        },
+        "value": {
+          "type": "string",
+          "enum": [
+            "specToImplementation",
+            "brainstormToSpec"
+          ],
+          "x-prompt-write": "specToImplementation（spec合意後→実装引き継ぎ）またはbrainstormToSpec（ブレスト収束後→spec作成引き継ぎ）のどちらか。"
+        }
+      }
+    },
+    "UsageExamplesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "完成イメージの下に置く第2の読み方リスト「使われ方（実際の呼び出し例）」を持ちます（任意）。実際の呼び出し構文・返り値の例等。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "UsageExamples"
+        },
+        "title": {
+          "type": "string",
+          "const": "使われ方（実際の呼び出し例）"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "実際の呼び出し例・返り値の例等を1件1文で列挙してください。無ければこのブロック自体を省略。",
           "items": {
             "type": "string"
           }

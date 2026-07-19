@@ -35,6 +35,7 @@ from waffle.application.usecases.query_document import QueryDocument
 from waffle.application.usecases.query_document_collection import QueryDocumentCollection
 from waffle.application.usecases.render_blank_template import RenderBlankTemplate
 from waffle.application.usecases.render_document import RenderDocument
+from waffle.application.usecases.render_handoff_template import RenderHandoffTemplate
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
@@ -124,6 +125,14 @@ def render(
 ) -> None:
     """document.json を成果物にレンダリングして deploy（uc-render-document）。"""
     _emit(RenderDocument(_docs(), _schemas()).run(path, deploy=not no_deploy))
+
+@app.command("render-handoff-template")
+def render_handoff_template(
+    path: str = typer.Option(..., "--path"),
+    output_path: str = typer.Option(..., "--outputPath", "--output-path"),
+) -> None:
+    """HandoffのDocument.jsonを固定HTMLテンプレートへ描画する（uc-render-handoff-template）。"""
+    _emit(RenderHandoffTemplate(_docs()).run(path, output_path))
 
 @app.command("render-blank-template")
 def render_blank_template(

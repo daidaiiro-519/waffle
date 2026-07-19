@@ -28,6 +28,7 @@ from waffle.application.usecases.query_document import QueryDocument
 from waffle.application.usecases.query_document_collection import QueryDocumentCollection
 from waffle.application.usecases.render_blank_template import RenderBlankTemplate
 from waffle.application.usecases.render_document import RenderDocument
+from waffle.application.usecases.render_handoff_template import RenderHandoffTemplate
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
@@ -98,6 +99,11 @@ def query_document_collection(
 def render_document(path: str, deploy: bool = True) -> dict:
     """document.json を成果物にレンダリングして deploy（uc-render-document）。"""
     return _dict(RenderDocument(_docs(), _schemas()).run(path, deploy=deploy))
+
+@mcp.tool
+def render_handoff_template(path: str, outputPath: str) -> dict:
+    """HandoffのDocument.jsonを固定HTMLテンプレートへ描画する（uc-render-handoff-template）。"""
+    return _dict(RenderHandoffTemplate(_docs()).run(path, outputPath))
 
 @mcp.tool
 def render_blank_template(schemaRef: str, discriminator: dict | None = None) -> dict:

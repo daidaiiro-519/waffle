@@ -1,0 +1,142 @@
+{
+  "documentId": "handoff-uc-render-handoff-template",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v1",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "Handoffを固定HTMLテンプレートへ描画する実装引き継ぎ：handoff-uc-render-handoff-template"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-render-handoff-template"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "別usecaseとして新設し、既存RenderDocumentは変更しない",
+          "consideration": "RenderDocumentのソース中に既に「HTML は将来 viewer が担うため engine は MD のみ描画」という注記があり、MD生成と人間向けHTML成果物は設計時点で切り分け済み。固定テンプレート適用は別種の変更理由を持つため、同一usecaseに条件分岐で混ぜると責務が混在する。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "HTML生成はDocument集約の外側の別関心事（CQRS的投影）",
+          "consideration": "document.json（AI向け正本）が唯一の真実源、HTMLはそこから導出される読み取りモデル（投影）。Document集約はvalidate/fillの整合性のみを保証し、HTML生成という out-of-band な処理を集約自身の責務に含めない。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "sd-document-management配下への配置は妥当だが、中核分類根拠との緊張関係に注意する",
+          "consideration": "当該サブドメインの中核分類根拠は「x-render宣言に従った機械描画」だが、本usecaseはこの語彙で表現できないため自前の決定的コードで書く。usecaseRationaleにevidence-based-scopeの限定条件（2件目の実例が出るまで汎用化しない）を明記することで整合させた。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "固定テンプレート実体はsrc/waffle配下のコード内定数として持つ",
+          "consideration": "固定テンプレートは実行時に差し替える対象ではなく、コンパイル時に固定される資産。schema側に技術詳細（HTML/CSS）を持たせると依存方向が逆転するため、新規ポート（TemplateRepository等）は不要。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "座標計算ロジックはusecase自身でなくdomain/services配下の純粋関数へ切り出す",
+          "consideration": "既存のpart_renderer（宣言的部品描画をdomain/servicesに切り出している前例）と同型のパターンに従う。usecase内に直接書くとアプリケーション層に業務ロジックの詳細判定を書きすぎるアンチパターンに該当し、座標計算だけを独立してテストできなくなる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "読み取り専用の投影として実装し、Handoff集約の状態は変更しない",
+          "consideration": "誤って集約のトランザクション境界を書き換えないよう、postconditionsに「Handoff集約自身の状態・内容は変更しない」ことを明記した。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "schemaRef不一致・completionImage欠如は暗黙にスキップせず、明示的なエラー（WRONG_SCHEMA_REF・MISSING_COMPLETION_IMAGE）として扱う。",
+        "2件目の実例（Backend集約構造図等）が具体的に発生するまで、テンプレートエンジンの汎用フレームワーク化は行わない（evidence-based-scope）。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口（adapters/inbound）",
+          "description": "waffle render-handoff-template（CLI・新設）／render_handoff_template（MCP・新設）。どちらもRenderHandoffTemplateを呼び出すだけの薄いアダプタで、パス変換以外の判断ロジックを持たない。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "CLIコマンド",
+              "sub": "render-handoff-template（新設）",
+              "status": "new"
+            },
+            {
+              "id": "mcp",
+              "title": "MCPツール",
+              "sub": "render_handoff_template（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "コア（application/usecases）",
+          "description": "RenderDocument（既存）はDocument.jsonをMarkdownへ描画する既存usecase。RenderHandoffTemplateはそれとは別usecaseとして新設し、Handoffを固定HTMLテンプレートへ描画する。座標計算はdomain/services配下のcompute_layoutへ委譲し、usecase自身は薄く保つ。",
+          "nodes": [
+            {
+              "id": "rd",
+              "title": "Documentを人間可読な成果物へ描画する",
+              "sub": "RenderDocument（既存・不変）",
+              "status": "existing"
+            },
+            {
+              "id": "rht",
+              "title": "Handoffを固定HTMLテンプレートへ描画する",
+              "sub": "RenderHandoffTemplate（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "ポート（application/ports）",
+          "description": "DocumentRepository（既存interface）。コア層はこのportにのみ依存し、具体的な実装は知らない。",
+          "nodes": [
+            {
+              "id": "repo",
+              "title": "Documentの読み書き",
+              "sub": "DocumentRepository（既存）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "実装（adapters/outbound）",
+          "description": "FsDocumentRepository（既存）。portを実装し、DI時にコアへ差し込まれる。今回の新設分でこのportに新しい実装は要らない。",
+          "nodes": [
+            {
+              "id": "fsrepo",
+              "title": "ファイルシステム上のDocument永続化",
+              "sub": "FsDocumentRepository（既存）",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "waffle render-handoff-template --path .waffle/documents/handoff/{documentId}.json --outputPath .waffle/handoff/{documentId}.html のように、対象HandoffのdocumentPathと出力先HTMLのpathを渡して呼ぶ。",
+        "返り値は {\"path\": \"<出力先path>\", \"content\": \"<生成されたHTML文字列>\"}。Orchestratorやユーザーはこの結果を見て、生成されたHTMLをそのまま確認・共有できる。"
+      ]
+    }
+  },
+  "tags": []
+}

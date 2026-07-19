@@ -1,0 +1,156 @@
+{
+  "documentId": "uc-render-handoff-template",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v7",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "Handoff document.jsonを固定HTMLテンプレートへ描画する：RenderHandoffTemplate"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "RenderHandoffTemplate"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "人間（レビュアー）",
+      "intent": "Handoffの完成イメージ・レビュー状況・詳細を、認知負荷の低いHTMLとして確認したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "sd-document-managementの中核分類根拠は宣言的x-render機構による機械描画だが、Handoff HTML出力はこの語彙で表現できない固定デザインのため、evidence-based-scopeの例外として、Handoff専用の薄いusecaseで実現する（2件目の実例が出るまで汎用フレームワーク化しない）"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "人間",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "人間",
+          "to": "Handoff",
+          "message": "描画依頼",
+          "kind": "command"
+        },
+        {
+          "from": "Handoff",
+          "to": "人間",
+          "message": "完成イメージ・レビュー状況・詳細を反映したHTML",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "Handoff集約自身の状態・内容は変更しない（読み取り専用の投影）",
+        "固定テンプレートへ値を差し込んだHTMLファイルが.waffle/handoff/{documentId}.htmlへ生成される"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "If 対象DocumentのschemaRefがHandoffSchemaでないとき、システムはエラーを返し描画しない shall。",
+        "If completionImageブロックが無いとき、システムはMISSING_COMPLETION_IMAGEエラーを返し描画しない shall。",
+        "When designViewpoints/implementationViewpointsが与えられたとき、システムはadvisor名＋件数のペアをレビュー状況セクションに出力する shall。",
+        "When 対象HandoffとcompletionImageが与えられたとき、システムは固定テンプレートへ値を差し込んだHTMLを.waffle/handoff/{documentId}.htmlへ書き込む shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "WRONG_SCHEMA_REF",
+          "condition": [
+            "対象DocumentのschemaRefがHandoffSchema以外である"
+          ]
+        },
+        {
+          "code": "MISSING_COMPLETION_IMAGE",
+          "condition": [
+            "completionImageブロックが存在しない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "completionImageを含むHandoffを描画する",
+          "category": "正常系",
+          "viewpoint": "固定テンプレートへ値が正しく差し込まれ、HTMLファイルが生成されることを確認する",
+          "gherkin": "Given completionImage・designViewpoints・implementationViewpoints・constraints・title・specRefを持つ検証済みのHandoff\nWhen RenderHandoffTemplateを実行する\nThen .waffle/handoff/{documentId}.htmlが生成される",
+          "covers": "",
+          "operation": ""
+        },
+        {
+          "name": "HandoffSchema以外を描画しようとする",
+          "category": "異常系",
+          "viewpoint": "事前条件（schemaRef）違反を検出できることを確認する",
+          "gherkin": "Given schemaRefがHandoffSchema以外のDocument\nWhen RenderHandoffTemplateを実行する\nThen WRONG_SCHEMA_REFエラーが返り描画されない",
+          "covers": "",
+          "operation": ""
+        },
+        {
+          "name": "completionImageが無いHandoffを描画しようとする",
+          "category": "異常系",
+          "viewpoint": "必須の構造化データが欠けている場合を検出できることを確認する",
+          "gherkin": "Given completionImageブロックを持たないHandoff\nWhen RenderHandoffTemplateを実行する\nThen MISSING_COMPLETION_IMAGEエラーが返り描画されない",
+          "covers": "",
+          "operation": ""
+        },
+        {
+          "name": "advisor名と件数のペアがレビュー状況に出力される",
+          "category": "正常系",
+          "viewpoint": "designViewpoints/implementationViewpointsのadvisor別集計が正しく出力に反映されることを確認する",
+          "gherkin": "Given designViewpoints/implementationViewpointsが与えられたHandoff\nWhen RenderHandoffTemplateを実行する\nThen advisor名＋件数のペアがレビュー状況セクションに出力される",
+          "covers": "",
+          "operation": ""
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "Handoff document.jsonの内容を、確定済みの固定HTMLテンプレート（完成イメージ・レビュー状況・詳細タブ）へ描画し、人間が読める成果物として書き出す"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象DocumentのschemaRefがHandoffSchemaである"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-document-management"
+}

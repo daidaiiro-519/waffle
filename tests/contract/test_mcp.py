@@ -114,6 +114,39 @@ def test_render_documentはmdフォーマットを返す():
     assert out["format"] == "md"
 
 
+def test_render_handoff_templateはHTMLを生成する(tmp_path):
+    """
+    Given waffle MCPサーバ
+    When render_handoff_templateツールをHandoffのpathで呼ぶ
+    Then 出力先HTMLファイルが生成される
+    """
+    handoff = {
+        "documentId": "handoff-uc-a", "documentType": "Handoff", "schemaRef": "HandoffSchema/v1",
+        "content": {
+            "title": {"blockType": "Title", "title": "対象usecaseの実装引き継ぎ：handoff-uc-a"},
+            "specRef": {"blockType": "SpecRef", "title": "引き継ぎ元spec", "specRef": "uc-a"},
+            "designViewpoints": {"blockType": "DesignViewpoints", "title": "設計観点", "items": []},
+            "implementationViewpoints": {"blockType": "ImplementationViewpoints", "title": "実装観点", "items": []},
+            "constraints": {"blockType": "Constraints", "title": "既知の制約・トレードオフ", "items": []},
+            "completionImage": {
+                "blockType": "CompletionImage", "title": "完成イメージ",
+                "layers": [{"label": "コア", "description": "説明。", "nodes": [{"id": "a", "title": "A", "sub": "既存", "status": "existing"}]}],
+                "relationships": [],
+            },
+        },
+    }
+    handoff_path = tmp_path / "handoff-uc-a.json"
+    handoff_path.write_text(json.dumps(handoff, ensure_ascii=False), encoding="utf-8")
+    output_path = tmp_path / "handoff-uc-a.html"
+
+    out = asyncio.run(_call("render_handoff_template", {
+        "path": str(handoff_path),
+        "outputPath": str(output_path),
+    }))
+    assert out["path"] == str(output_path)
+    assert output_path.read_text(encoding="utf-8")
+
+
 def test_render_blank_templateはプレースホルダーMarkdownを返す():
     """
     Given waffle MCPサーバ
