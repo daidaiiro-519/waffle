@@ -3,10 +3,10 @@
 status: UIモックは【決定済み標準】／spec・codingへの一般化はアイデア段階（未検討）
 
 ## 決定（2026-07-19・UIモック）
-- **最良のUIモックは〈生成→敵対的測定→修正→学びの還元〉サイクルで作る。これが design-share の標準。**
-- **敵対的測定は UX を熟知した批評者＝ux-advisor が行う**（汎用批評でなくUX専門）。
-- design-share は自己完結（実行時に他Skillを呼ばない）ため、この敵対的測定は**スキル内でなく Orchestrator 層が回す**（スキルは自己批評=「理由を言い切る/掟に照らす」まで持ち、外部測定は上位が回す層分け）。SKILL.md guardrails に明記済み。
-- 形式的なホーム（後続）: CLAUDE.md の Skillフォローアップ表に「design-share でUIモック生成後 → ux-advisor 敵対的測定」を型として載せるか（CLAUDE.md は並行セッションで再構成中のため未反映）。
+- **最良のUIモックは〈生成→敵対的測定→修正→学びの還元〉サイクルで作る。これが design-share の標準で、スキルの中で完結する。**
+- **敵対的測定は UX 専門知識に基づく**。design-share は ux-advisor 由来のUX知識（references/knowledge/、特に frontend-design-principles）を同梱しているので、**外部のux-advisor Skillを呼ばず、その同梱UX知識を土台に自前で測定する**（＝自己完結「実行時に他Skillを呼ばない」と両立）。
+- 保つべきは**独立性のみ**（生成者は自己採点できない＝本session実証）。独立性は“別Skill”でなく**“別pass・敵対フレーミング（忖度なし/出荷基準/refute）・実物と数値evidenceの読解”**で担保する（必要なら同梱UX知識を読ませたサブエージェントを敵対レビュアに）。
+- → SKILL.md guardrails に「UIモックの標準サイクル」として明記済み。**Orchestrator層/CLAUDE.md Skillフォローアップへの型化は不要**（スキル内完結のため）。
 
 
 きっかけ: 2026-07-19、design-share の商用モック化で回した〈実証→敵対的測定→知識/資産へ還元〉サイクルが効いた。
