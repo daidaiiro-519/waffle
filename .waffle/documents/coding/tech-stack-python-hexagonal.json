@@ -72,6 +72,13 @@
           "implementation": "標準 logging",
           "version": "",
           "rationale": "ローカルCLI/MCPプロセスであり、外部ロギング基盤との連携要件が無いため、標準ライブラリで十分"
+        },
+        {
+          "category": "query",
+          "capability": "document-path-query",
+          "implementation": "jmespath",
+          "version": "^1",
+          "rationale": "uc-query-documentの17操作のうち10操作（get_field/filter_items/get_items_slice等）を1つの宣言的クエリ式へ統合するために採用。JSONPathより関数・フィルタ式が豊富でPython公式実装が枯れている（AWS CLIの--queryで実績あり）。技術要件（宣言的な絞り込み・射影・スライス、独自関数の登録によるカスタム拡張、blockKeyスコープでのprompt導出との整合）を満たす候補としてjsonpath-ng等も検討したが、カスタム関数拡張機構（jmespath.functions.Functions継承）がfilter_pattern相当の正規表現マッチを同一式言語内に統合するために必須で、spike検証（2026-07-19）で実際に動作を確認済み。標準の想定利用範囲を超えるカスタム関数拡張であるため、アップストリームAPI変更に追従する保守コストが通常のライブラリ利用より高い点は既知のトレードオフとして許容する"
         }
       ]
     },
