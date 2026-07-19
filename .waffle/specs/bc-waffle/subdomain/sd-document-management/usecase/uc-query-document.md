@@ -101,6 +101,8 @@ sequenceDiagram
 - When query_pathのpath式内でregex_match(text, pattern)を使用したとき、システムはjmespath.functions.Functionsを継承したカスタム関数として、既存のfilter_pattern相当の正規表現マッチングを行う shall。
 - If query_pathのpathがJMESPathとして構文エラーであるとき、システムはjmespathの生例外をそのまま返さず、Waffle独自のエラーコード・メッセージへ変換して返す shall。
 - While query_pathを実行するとき、pathは常に1ブロックの内側を起点とした相対式として評価される shall（doc全体や複数blockTypeを跨ぐ横断検索が必要な場合は既存のfind_allを使う）。
+- While operationにquery_pathをblockKey省略で実行し、あるblockKeyに対するpathの評価がJMESPathの評価時型エラー（式の形が対象ブロックの構造に合わない）になったとき、システムはそのblockKeyを結果から静かにスキップし、クエリ全体を失敗させない shall（構文エラーとは区別する。全blockKeyがスキップされresultsが空配列になるのも正常系とする）。
+- If operationにquery_pathをblockKey指定で実行し、pathの評価がJMESPathの評価時型エラーになったとき、システムはINVALID_JMESPATH_EXPRESSIONエラーを返す shall（ユーザーが明示指定した単一ブロックに式が合わなかったことをそのまま伝える）。
 
 ---
 
@@ -521,6 +523,32 @@ Scenario: query_pathの構文エラーはWaffle独自のエラーへ変換され
   Given query システム と対象 Document
   When 構文的に不正なJMESPath式を path に指定して operation query_path を実行する
   Then jmespath の生例外ではなく、Waffle独自のエラーコード・メッセージが返る
+```
+
+### query_pathでblockKey省略時、式の形に合わないブロックは静かにスキップされる
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | エラー区別：全ブロック評価時の評価時型エラーは構文エラーと区別し、そのブロックだけをヒットなしとして黙ってスキップする |
+
+```gherkin
+Scenario: query_pathでblockKey省略時、式の形に合わないブロックは静かにスキップされる
+  Given query システム と、items配列を持つブロックと持たないブロックが混在する対象 Document
+  When operation query_path を blockKey を指定せず path "items[?contains(rule, 'CLI')]" で実行する
+  Then results には items を持つブロックの評価結果だけが含まれ、items を持たず評価時型エラーになったブロックはエラーにならず黙って省略される
+```
+
+### query_pathでblockKey指定時、式の評価時型エラーはエラーを返す
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー区別：blockKey明示指定時の評価時型エラーはスキップせずハードエラーとして伝える |
+
+```gherkin
+Scenario: query_pathでblockKey指定時、式の評価時型エラーはエラーを返す
+  Given query システム と、items配列は持つがruleフィールドは持たない対象ブロック
+  When operation query_path を blockKey で明示指定し、ruleフィールドを前提とした path "items[?contains(rule, 'CLI')]" で実行する
+  Then エラーコード INVALID_JMESPATH_EXPRESSION が返る
 ```
 
 ---

@@ -373,6 +373,129 @@ def test_resolve_refはテンプレート変数を解決できないときエラ
     assert result.details[0] == "MISSING_TEMPLATE_VAR"
 
 
+def test_query_pathでblockKey指定時は単一ブロックの評価結果を返す():
+    """
+    Given query システム と対象 Document
+    When operation query_path を blockKey summary, path "items[?length(@) > `0`]" で実行する
+    Then value は指定ブロック内でのJMESPath評価結果であり、prompt に読み方の指針が付く
+    """
+    result = _engine().run(
+        "query_path", _TARGET,
+        {"blockKey": "acceptanceScenarios", "expression": "scenarios[?length(name) > `0`].name"},
+    )
+    assert isinstance(result, Ok), result
+    assert result.value["documentId"] == "uc-query-document"
+    assert result.value["prompt"]
+    assert "ブロックを丸ごと取得する" in result.value["value"]
+
+
+def test_query_pathでblockKey省略時はヒットしたブロックだけを配列で返す():
+    """
+    Given query システム と対象 Document
+    When operation query_path を blockKey を指定せず path "items[?priority=='high']" で実行する
+    Then results にはヒットしたブロックだけが { blockKey, prompt, value } として含まれ、ヒットしなかったブロックは省略される
+    """
+    result = _engine().run(
+        "query_path", _TARGET,
+        {"expression": "scenarios[?category=='異常系']"},
+    )
+    assert isinstance(result, Ok), result
+    assert result.value["documentId"] == "uc-query-document"
+    hit = next(r for r in result.value["results"] if r["blockKey"] == "acceptanceScenarios")
+    assert hit["prompt"]
+    assert all(item["category"] == "異常系" for item in hit["value"])
+    assert "title" not in [r["blockKey"] for r in result.value["results"]]
+
+
+def test_query_pathはフィルタ条件を式内で表現できる():
+    """
+    Given query システム と対象 Document
+    When operation query_path を blockKey, path "items[?required==`true`]" で実行する
+    Then value には required な要素だけが含まれる
+    """
+    result = _engine().run(
+        "query_path", _TARGET,
+        {"blockKey": "acceptanceScenarios", "expression": "scenarios[?category=='異常系']"},
+    )
+    assert isinstance(result, Ok), result
+    assert all(item["category"] == "異常系" for item in result.value["value"])
+
+
+def test_query_pathは配列の範囲指定をスライス式で表現できる():
+    """
+    Given query システム と対象 Document
+    When operation query_path を blockKey, path "items[2:5]" で実行する
+    Then value にはその範囲の要素だけが含まれる
+    """
+    result = _engine().run(
+        "query_path", _TARGET,
+        {"blockKey": "acceptanceScenarios", "expression": "scenarios[0:2]"},
+    )
+    assert isinstance(result, Ok), result
+    assert len(result.value["value"]) == 2
+
+
+def test_query_pathは正規表現カスタム関数で絞り込める():
+    """
+    Given query システム と対象 Document
+    When operation query_path を blockKey, path "items[?regex_match(name, 'foo.*')]" で実行する
+    Then value には正規表現に一致する要素だけが含まれる
+    """
+    result = _engine().run(
+        "query_path", _TARGET,
+        {"blockKey": "acceptanceScenarios", "expression": "scenarios[?regex_match(name, '.*丸ごと.*')].name"},
+    )
+    assert isinstance(result, Ok), result
+    assert result.value["value"] == ["ブロックを丸ごと取得する"]
+
+
+def test_query_pathの構文エラーはWaffle独自のエラーへ変換される():
+    """
+    Given query システム と対象 Document
+    When 構文的に不正なJMESPath式を path に指定して operation query_path を実行する
+    Then jmespath の生例外ではなく、Waffle独自のエラーコード・メッセージが返る
+    """
+    result = _engine().run(
+        "query_path", _TARGET,
+        {"blockKey": "acceptanceScenarios", "expression": "scenarios[?"},
+    )
+    assert isinstance(result, Err), result
+    assert result.details[0] == "INVALID_JMESPATH_EXPRESSION"
+
+
+def test_query_pathでblockKey省略時_式の形に合わないブロックは静かにスキップされる():
+    """
+    Given query システム と、items配列を持つブロックと持たないブロックが混在する対象 Document
+    When operation query_path を blockKey を指定せず path "items[?contains(rule, 'CLI')]" で実行する
+    Then results には items を持つブロックの評価結果だけが含まれ、items を持たず評価時型エラーになったブロックはエラーにならず黙って省略される
+    """
+    result = _engine().run(
+        "query_path", ".waffle/documents/agent/waffle.json",
+        {"expression": "items[?contains(rule, 'CLI')] || items[?contains(rule, 'memory')]"},
+    )
+    assert isinstance(result, Ok), result
+    hit = next((r for r in result.value["results"] if r["blockKey"] == "operatingRules"), None)
+    assert hit is not None
+    assert any("CLI" in item["rule"] for item in hit["value"])
+    # title/role等、itemsを持たない・rule項目を持たないブロックはエラーにならず省略される
+    assert "title" not in [r["blockKey"] for r in result.value["results"]]
+    assert "role" not in [r["blockKey"] for r in result.value["results"]]
+
+
+def test_query_pathでblockKey指定時_式の評価時型エラーはエラーを返す():
+    """
+    Given query システム と、items配列は持つがruleフィールドは持たない対象ブロック
+    When operation query_path を blockKey で明示指定し、ruleフィールドを前提とした path "items[?contains(rule, 'CLI')]" で実行する
+    Then エラーコード INVALID_JMESPATH_EXPRESSION が返る
+    """
+    result = _engine().run(
+        "query_path", ".waffle/documents/agent/waffle.json",
+        {"blockKey": "keyCommands", "expression": "items[?contains(rule, 'CLI')]"},
+    )
+    assert isinstance(result, Err), result
+    assert result.details[0] == "INVALID_JMESPATH_EXPRESSION"
+
+
 def test_schemaRefを持たないファイルはrawで返す():
     """
     Given schemaRefを持たない対象ファイル

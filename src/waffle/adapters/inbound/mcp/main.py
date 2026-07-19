@@ -68,6 +68,7 @@ def query_document(
     nestedField: str | None = None,
     targetSchemaRef: str | None = None,
     targetDiscriminator: dict | None = None,
+    expression: str | None = None,
 ) -> dict:
     """document.json へのセマンティック・クエリ（uc-query-document）。"""
     raw = {
@@ -76,6 +77,7 @@ def query_document(
         "pattern": pattern, "start": start, "end": end,
         "fieldName": fieldName, "nestedField": nestedField,
         "targetSchemaRef": targetSchemaRef, "targetDiscriminator": targetDiscriminator,
+        "expression": expression,
     }
     params = {k: v for k, v in raw.items() if v is not None}
     return _dict(QueryDocument(_docs(), _schemas()).run(operation, path, params))

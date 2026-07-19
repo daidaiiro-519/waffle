@@ -75,6 +75,37 @@ def test_query_documentはresolve_refで参照先pathを返す():
     )
 
 
+def test_query_documentはquery_pathでblockKey指定時に単一ブロックの評価結果を返す():
+    """
+    Given waffle MCPサーバ
+    When query_documentツールをoperation=query_path・blockKey・expressionで呼ぶ
+    Then MCP出力のvalueはJMESPath評価結果、documentIdとpromptを含む
+    """
+    out = asyncio.run(_call("query_document", {
+        "operation": "query_path",
+        "path": ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json",
+        "blockKey": "acceptanceScenarios",
+        "expression": "scenarios[?category=='異常系']",
+    }))
+    assert out["documentId"] == "uc-query-document"
+    assert out["prompt"]
+    assert all(item["category"] == "異常系" for item in out["value"])
+
+
+def test_query_documentはquery_pathでblockKey省略時にヒットしたブロックだけを返す():
+    """
+    Given waffle MCPサーバ
+    When query_documentツールをoperation=query_path・expressionのみで呼ぶ（blockKey省略）
+    Then MCP出力のresultsにヒットしたブロックだけが含まれる
+    """
+    out = asyncio.run(_call("query_document", {
+        "operation": "query_path",
+        "path": ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json",
+        "expression": "scenarios[?category=='異常系']",
+    }))
+    assert any(r["blockKey"] == "acceptanceScenarios" for r in out["results"])
+
+
 def test_query_document_collectionはgrep_documentsで横断検索する():
     """
     Given waffle MCPサーバ

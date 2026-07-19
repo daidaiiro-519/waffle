@@ -86,6 +86,10 @@ def query(
         None, "--targetDiscriminator", "--target-discriminator",
         help="key=value 形式（例: specKind=subdomain）",
     ),
+    expression: str = typer.Option(
+        None, "--expression",
+        help="query_path用のJMESPath式（1ブロックの内側を起点とした相対式）。document.json自体のパスは--pathのため別名にしている",
+    ),
 ) -> None:
     """document.json へのセマンティック・クエリ（uc-query-document）。"""
     raw = {
@@ -93,7 +97,7 @@ def query(
         "idField": id_field, "idValue": id_value, "key": key, "value": value,
         "pattern": pattern, "start": start, "end": end,
         "fieldName": field_name, "nestedField": nested_field,
-        "targetSchemaRef": target_schema_ref,
+        "targetSchemaRef": target_schema_ref, "expression": expression,
     }
     params = {k: v for k, v in raw.items() if v is not None}
     if target_discriminator:

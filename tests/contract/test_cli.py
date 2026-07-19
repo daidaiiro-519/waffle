@@ -78,6 +78,58 @@ def test_queryはresolve_refで参照先pathを返す():
     )
 
 
+def test_queryはquery_pathでblockKey指定時に単一ブロックの評価結果を返す():
+    """
+    Given waffle CLI
+    When query --operation query_path --blockKey --expression を実行する
+    Then 終了コードは0で、出力JSONのvalueはJMESPath評価結果、documentIdとpromptを含む
+    """
+    result = _runner.invoke(app, [
+        "query", "--operation", "query_path",
+        "--path", ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json",
+        "--blockKey", "acceptanceScenarios",
+        "--expression", "scenarios[?category=='異常系']",
+    ])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data["documentId"] == "uc-query-document"
+    assert data["prompt"]
+    assert all(item["category"] == "異常系" for item in data["value"])
+
+
+def test_queryはquery_pathでblockKey省略時にヒットしたブロックだけを返す():
+    """
+    Given waffle CLI
+    When query --operation query_path --expression を blockKey なしで実行する
+    Then 終了コードは0で、出力JSONのresultsにヒットしたブロックだけが含まれる
+    """
+    result = _runner.invoke(app, [
+        "query", "--operation", "query_path",
+        "--path", ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json",
+        "--expression", "scenarios[?category=='異常系']",
+    ])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert any(r["blockKey"] == "acceptanceScenarios" for r in data["results"])
+
+
+def test_queryはquery_pathの構文エラーでINVALID_JMESPATH_EXPRESSIONを返す():
+    """
+    Given waffle CLI
+    When query --operation query_path に構文エラーのexpressionを渡す
+    Then 終了コードは1で、出力JSONのerrorはINVALID_JMESPATH_EXPRESSION
+    """
+    result = _runner.invoke(app, [
+        "query", "--operation", "query_path",
+        "--path", ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json",
+        "--blockKey", "acceptanceScenarios",
+        "--expression", "scenarios[?",
+    ])
+    assert result.exit_code == 1, result.output
+    data = json.loads(result.output)
+    assert data["error"] == "INVALID_JMESPATH_EXPRESSION"
+
+
 def test_query_collectionはgrep_documentsで横断検索する():
     """
     Given waffle CLI

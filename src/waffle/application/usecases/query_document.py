@@ -1,16 +1,25 @@
 """query document — document.json / 通常ファイルへのセマンティック・クエリ。
 
-16 のセマンティック操作で、AI がファイルを直接読まずに必要な意味単位だけを取得する。
+18 のセマンティック操作で、AI がファイルを直接読まずに必要な意味単位だけを取得する。
 構造アクセスは全て Python が担い、常に `{ prompt, value }` を返す（prompt=value の読み方の
 指針）。ブロック単位の操作は対象 block の x-prompt-query を schema から動的算出し、
 メタ/集約系操作（get_meta/scan/index_scan/index_scan_dir/find_all）は動的に導出できないため
 操作の性質に基づく固定文言を使う（値を返すすべての操作で読み方の指針を省略しない）。
 schemaRef を持たないファイルは raw フォールバック。
 全エラーは Result.Err（details[0]=エラーコード）で構造化し、例外を AI に素通りさせない。
+
+query_path は get_field/filter_items/get_items_slice 等10操作を1つの JMESPath 式操作へ
+統合する（ddd-advisor: これらは実装都合の語彙でありユビキタス言語ではないため統合が妥当）。
+式は常に「1ブロックの内側を起点とした相対式」（tech-lead-advisor: 「値を返す全操作に
+prompt が付く」という絶対制約と整合させるため、doc全体や複数blockTypeを跨ぐ評価はしない）。
 """
 from __future__ import annotations
 
 import re
+
+import jmespath
+import jmespath.exceptions
+import jmespath.functions
 
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.schema_repository import SchemaRepository
@@ -39,6 +48,7 @@ _REQUIRED: dict[str, list[str]] = {
     "get_children": ["blockKey", "arrayField", "idField", "idValue"],
     "find_all": ["fieldName"],
     "resolve_ref": ["field", "targetSchemaRef"],
+    "query_path": ["expression"],
 }
 
 _META_FIELDS = ("documentId", "documentType", "schemaRef", "skillKind", "codingKind", "status", "tags")
@@ -106,6 +116,8 @@ class QueryDocument:
             return Ok({"prompt": _PROMPT_FIND_ALL, "value": _find_all(doc, params["fieldName"])})
         if operation == "resolve_ref":
             return self._resolve_ref(doc, schema, path, params)
+        if operation == "query_path":
+            return self._query_path(doc, schema, params)
 
         # Group 2/3: block が必要
         block = doc.get("content", {}).get(params["blockKey"])
@@ -206,6 +218,34 @@ class QueryDocument:
             return _err("MISSING_TEMPLATE_VAR", f"テンプレート変数を解決できません: {e}")
         return Ok({"prompt": _PROMPT_RESOLVE_REF, "value": {"path": resolved_path}})
 
+    def _query_path(self, doc: dict, schema: dict, params: dict) -> Result[dict]:
+        """query_path — 1ブロックの内側を起点とした相対式で JMESPath 評価する（絶対制約:
+        doc全体や複数blockTypeを跨ぐ評価はしない。blockKey省略時はcontent配下の全ブロックへ
+        同じ相対式を個別評価し、ヒットしたブロックだけを集める）。"""
+        compiled_result = _compile_jmespath(params["expression"])
+        if isinstance(compiled_result, Err):
+            return compiled_result
+        compiled = compiled_result.value
+
+        block_key = params.get("blockKey")
+        if block_key:
+            block = doc.get("content", {}).get(block_key)
+            if not isinstance(block, dict):
+                return _err("NOT_FOUND", f"block が見つかりません: {block_key}")
+            evaluated = _evaluate(compiled, block)
+            if isinstance(evaluated, Err):
+                return evaluated
+            return Ok({
+                "documentId": doc["documentId"],
+                "prompt": _block_prompt(schema, block),
+                "value": evaluated.value,
+            })
+
+        results_result = _query_path_all_blocks(doc.get("content", {}), compiled, schema)
+        if isinstance(results_result, Err):
+            return results_result
+        return Ok({"documentId": doc["documentId"], "results": results_result.value})
+
     def _index_scan_dir(self, directory: str) -> Result[dict]:
         # G7: index_scan_dir はプロジェクトルート配下のディレクトリのみ対象
         if not is_within_project_root(directory):
@@ -224,10 +264,57 @@ class QueryDocument:
                 }
         return Ok({"prompt": _PROMPT_INDEX_SCAN_DIR, "value": out})
 
+class _WaffleFunctions(jmespath.functions.Functions):
+    """query_path が式内から呼べる Waffle 固有のカスタム関数（filter_pattern相当の正規表現絞り込み）。"""
+
+    @jmespath.functions.signature({"types": ["string"]}, {"types": ["string"]})
+    def _func_regex_match(self, text, pattern):
+        return re.search(pattern, text) is not None
+
+
+_JMESPATH_OPTIONS = jmespath.Options(custom_functions=_WaffleFunctions())
+
 # --- 純ヘルパ ---
 
 def _err(code: str, message: str) -> Err:
     return Err(message, [code])
+
+def _compile_jmespath(expression: str) -> Result:
+    """expression をコンパイルする。構文エラーは jmespath の生例外ではなく
+    Waffle独自のエラーコード（INVALID_JMESPATH_EXPRESSION）へ変換する。"""
+    try:
+        return Ok(jmespath.compile(expression))
+    except jmespath.exceptions.ParseError as e:
+        return _err("INVALID_JMESPATH_EXPRESSION", f"JMESPath式が不正です: {expression!r} ({e})")
+
+def _evaluate(compiled, root) -> Result:
+    """コンパイル済み式を root（1ブロックの内側）に対して評価する。評価時エラー
+    （regex_matchへの不正な正規表現渡し等）も Waffle独自のエラーへ変換する。"""
+    try:
+        return Ok(compiled.search(root, options=_JMESPATH_OPTIONS))
+    except jmespath.exceptions.JMESPathError as e:
+        return _err("INVALID_JMESPATH_EXPRESSION", f"JMESPath式の評価に失敗しました: {e}")
+    except re.error as e:
+        return _err("INVALID_JMESPATH_EXPRESSION", f"正規表現が不正です: {e}")
+
+def _query_path_all_blocks(content: dict, compiled, schema: dict) -> Result:
+    """content配下の全blockKeyそれぞれへ同じ相対式を個別評価し、ヒットした
+    （評価結果が空でない）ブロックだけを集める。式の構文自体は_compile_jmespathで
+    事前にコンパイル済みのためここでは評価時エラーのみが起こりうる。あるブロックの
+    形が式に合わず評価時型エラー（JMESPathTypeError等）になっても、そのブロックを
+    ヒットなしとして黙ってスキップし、他のブロックの評価・クエリ全体は継続する
+    （blockKeyを明示指定した単一ブロック評価とは異なり、ハードエラーにはしない）。"""
+    results: list[dict] = []
+    for key, block in content.items():
+        if not isinstance(block, dict):
+            continue
+        evaluated = _evaluate(compiled, block)
+        if isinstance(evaluated, Err):
+            continue
+        value = evaluated.value
+        if value:
+            results.append({"blockKey": key, "prompt": _block_prompt(schema, block), "value": value})
+    return Ok(results)
 
 def _eq(a, b) -> bool:
     return a == b or str(a).lower() == str(b).lower()
