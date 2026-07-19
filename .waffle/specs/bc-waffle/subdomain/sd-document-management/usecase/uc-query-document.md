@@ -9,7 +9,7 @@
 ## 存在意義
 
 - AIがDocument全文をファイルとして直接読むと、無関係なブロックまでコンテキストに含めてトークンを浪費し、document.jsonの内部構造（schemaの実装詳細）に直接依存したコードを書き始めてしまう。意味単位だけを取得する経路が無ければ、AIとdocument.jsonの間で保つべき疎結合（テキストベースの入出力）が崩れる。
-- 当初17種類の名前付きoperationのうち、get_block/get_field/get_items/get_item_field/get_items_slice/filter_items/filter_exists/get_by_id/get_nested_items/get_childrenの10操作は、いずれも『1ブロックの内側を起点に値を取り出す』という同じ責務のバリエーションであり、絞り込み・整形パターンが増えるたびにoperation名・CLI/MCPツール・実装コードが個別に増殖していた。ddd-advisor/tech-lead-advisorとの合意により、この10操作をJMESPath式1本で表現する新operation query_path へ統合する（式言語自体の表現力で吸収し、『値を返す全操作にpromptが付く』という既存の一貫性は、blockKeyスコープを必須にすることで維持する）。find_all（深さ不定の再帰探索。JMESPath標準構文に対応する演算子が無い）とresolve_ref（ツリー検索ではなくWaffle固有の参照解決ロジックそのもの）は統合不可のため対象外とし、index_scan/index_scan_dir/get_meta/scanはschemaとの突き合わせ、または複数document横断という別責務のため対象外とする（この4つを一括りに『発見系』と呼ぶことの妥当性自体はddd-advisorから再検討の指摘があり、別スコープで扱う）。複数document横断検索を担うuc-query-document-collection（grep_documents/filter_documents）も、実装メカニズムを共有できることと責務が同じであることは別問題であるとddd-advisorへの再確認で判定され、統合対象に含めない（推奨: 内部実装だけ共有し、usecase・CLI・MCPツールとしての分離は維持する）。
+- 当初17種類の名前付きoperationのうち、get_block/get_field/get_items/get_item_field/get_items_slice/filter_items/filter_exists/get_by_id/get_nested_items/get_childrenの10操作は、いずれも『1ブロックの内側を起点に値を取り出す』という同じ責務のバリエーションであり、絞り込み・整形パターンが増えるたびにoperation名・CLI/MCPツール・実装コードが個別に増殖していた。ddd-advisor/tech-lead-advisorとの合意により、この10操作をJMESPath式1本で表現する新operation query_path へ統合する（式言語自体の表現力で吸収し、『値を返す全操作にpromptが付く』という既存の一貫性は、blockKeyスコープを必須にすることで維持する）。find_all（深さ不定の再帰探索。JMESPath標準構文に対応する演算子が無い）とresolve_ref（ツリー検索ではなくWaffle固有の参照解決ロジックそのもの）は統合不可のため対象外とし、index_scan/get_meta/scanはschemaとの突き合わせという別責務のため対象外とする（この3つを一括りに『発見系』と呼ぶことの妥当性自体はddd-advisorから再検討の指摘があり、別スコープで扱う）。複数document横断検索を担うuc-query-document-collection（grep_documents/filter_documents/index_scan_documents）も、実装メカニズムを共有できることと責務が同じであることは別問題であるとddd-advisorへの再確認で判定され、統合対象に含めない（推奨: 内部実装だけ共有し、usecase・CLI・MCPツールとしての分離は維持する）。複数document横断でindexとtagsを集約する操作（旧index_scan_dir）は、ddd-advisorのbounded-context違反指摘により、単一document起点の本usecaseから複数document横断が本来の関心事であるuc-query-document-collection側へindex_scan_documentsとして移動した。
 
 ---
 
@@ -32,7 +32,6 @@ Orchestrator（HarnessAgent）
 | `scan` | ファイルの生テキストをそのまま返す |
 | `get_meta` | documentId等のメタフィールドだけを返す |
 | `index_scan` | 各ブロックのblockTypeとprompt（読み方指針）をschemaから動的算出して返す |
-| `index_scan_dir` | ディレクトリ配下の各Documentのindexとtagsをまとめて返す |
 | `find_all` | 全階層に出現する指定フィールドの値を再帰収集して返す |
 | `get_block` | 指定したブロックを丸ごと返す |
 | `get_field` | ブロック内の指定した1フィールドの値を返す |
@@ -51,7 +50,7 @@ Orchestrator（HarnessAgent）
 
 ## 事前条件
 
-- 対象 Document（またはディレクトリ）のパスが要望テキストで与えられている
+- 対象 Document のパスが要望テキストで与えられている
 
 ---
 
@@ -76,7 +75,6 @@ sequenceDiagram
 - 要求された意味単位が value として返る
 - 全operationで、value の読み方の指針が prompt に付く（ブロック/配列取得時はx-prompt-query由来、それ以外は操作の性質に基づく固定文言）
 - 対象ブロックがx-prompt-interpret（値の解釈指針・誤読しやすい点への注意）を宣言しているとき、promptとは別にcautionが付く（宣言が無いブロックではcautionキー自体が省略される）
-- index_scan_dirは各Documentのindexに加え、そのDocument自身のtagsも含めて返す
 
 ---
 
@@ -84,7 +82,7 @@ sequenceDiagram
 
 - When operationと対象パスが与えられ、対象がschemaRefを持つDocumentであるとき、システムは結果を{ prompt, value }形式で返す shall。
 - When ブロック/配列を取得したとき、promptに対象ブロックの読み方の指針（x-prompt-query由来）を含める shall。
-- When get_meta/scan/index_scan/index_scan_dir/find_allを実行したとき、promptにその操作の性質に基づく固定の読み方の指針を含める shall（schemaから動的に導出できない場合もpromptを省略しない）。
+- When get_meta/scan/index_scan/find_allを実行したとき、promptにその操作の性質に基づく固定の読み方の指針を含める shall（schemaから動的に導出できない場合もpromptを省略しない）。
 - When 対象ブロックがx-prompt-interpretを宣言しているとき、システムはpromptとは別にcautionフィールドへ値の解釈指針を含める shall。
 - While 対象ブロックがx-prompt-interpretを宣言していないとき、システムはcautionキー自体を省略する shall（必要なデータだけを返す）。
 - While フィルタ条件に一致する要素が無いとき、システムは正常系として空配列value: []を返す shall。
@@ -250,19 +248,6 @@ Scenario: index_scanはblockTypeとpromptをschemaから動的算出する
   Given query システム と対象 Document
   When operation index_scan を実行する
   Then 各blockのblockTypeとx-prompt-query由来のpromptが返り、トップレベルのpromptには各要素のpromptを参照する案内が入る
-```
-
-### index_scan_dirはディレクトリ横断でindexとtagsを集約する
-
-| 分類 | 観点 |
-|---|---|
-| 正常系 | ファイル単位：index_scan_dirは複数Documentのindexとtagsを1回で集約する |
-
-```gherkin
-Scenario: index_scan_dirはディレクトリ横断でindexとtagsを集約する
-  Given query システム と対象ディレクトリ
-  When operation index_scan_dir を実行する
-  Then ディレクトリ配下の各Documentのindexとtagsがまとめて返り、トップレベルのpromptには各要素のpromptを参照する案内が入る
 ```
 
 ### get_fieldはblockの1フィールドを返す

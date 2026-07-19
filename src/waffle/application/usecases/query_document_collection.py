@@ -1,9 +1,11 @@
 """query document collection — 複数document.jsonを横断するセマンティック・クエリ。
 
 uc-query-documentの16操作＋resolve_refが「単一document・単一block・単一配列フィールド」に
-閉じた点操作であるのに対し、ここはディレクトリ配下の複数documentを横断する2操作
-（grep_documents/filter_documents）を担う。都度フルスキャンであり、永続インデックス・
-ミラーDBは持たない（正典はdocument.json＝git管理のプレーンJSONのまま、という設計合意）。
+閉じた点操作であるのに対し、ここはディレクトリ配下の複数documentを横断する3操作
+（grep_documents/filter_documents/index_scan_documents）を担う。都度フルスキャンであり、
+永続インデックス・ミラーDBは持たない（正典はdocument.json＝git管理のプレーンJSONのまま、
+という設計合意）。index_scan_documents の索引構築ロジック自体はuc-query-documentの
+index_scan（単一document向け）と共通のドメインサービス（document_index）を使う。
 """
 from __future__ import annotations
 
@@ -11,18 +13,21 @@ import re
 
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.schema_repository import SchemaRepository
+from waffle.domain.services.document_index import build_block_index
 from waffle.shared.path_confinement import is_within_project_root
 from waffle.shared.result import Err, Ok, Result
 
 _REQUIRED: dict[str, list[str]] = {
     "grep_documents": ["pattern"],
     "filter_documents": ["key", "value"],
+    "index_scan_documents": [],
 }
 
 _META_FIELDS = ("documentId", "documentType", "schemaRef", "skillKind", "codingKind", "status", "tags")
 
 _PROMPT_GREP = "対象ディレクトリ配下でpatternに一致した値を、Documentのpath単位で集めたものです。一致ゼロは正常系です。"
 _PROMPT_FILTER = "対象ディレクトリ配下でkey/valueに一致したDocumentのpathとmeta（またはfields指定分）を集めたものです。一致ゼロは正常系です。"
+_PROMPT_INDEX_SCAN_DOCUMENTS = "ディレクトリ配下の各Documentの索引です。各Documentのblocksの各要素にそのブロックの読み方の指針（prompt）が入っています。"
 
 class QueryDocumentCollection:
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
@@ -48,6 +53,8 @@ class QueryDocumentCollection:
             return self._grep_documents(paths, params)
         if operation == "filter_documents":
             return self._filter_documents(paths, params)
+        if operation == "index_scan_documents":
+            return self._index_scan_documents(paths)
         return _err("INVALID_OPERATION", f"未知の operation: {operation}")  # pragma: no cover — _REQUIRED で網羅済み
 
     def _grep_documents(self, paths: list[str], params: dict) -> Result[dict]:
@@ -81,6 +88,17 @@ class QueryDocumentCollection:
             meta = {k: doc[k] for k in fields} if fields else {k: doc[k] for k in _META_FIELDS if k in doc}
             out[p] = meta
         return Ok({"prompt": _PROMPT_FILTER, "value": out})
+
+    def _index_scan_documents(self, paths: list[str]) -> Result[dict]:
+        out: dict[str, dict] = {}
+        for p in paths:
+            doc = self._documents.load(p)
+            if isinstance(doc, dict) and "schemaRef" in doc:
+                out[p] = {
+                    "tags": doc.get("tags", []),
+                    "blocks": build_block_index(doc, self._schemas.load(doc["schemaRef"])),
+                }
+        return Ok({"prompt": _PROMPT_INDEX_SCAN_DOCUMENTS, "value": out})
 
 # --- 純ヘルパ ---
 

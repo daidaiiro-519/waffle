@@ -152,22 +152,6 @@ def test_index_scanはblockTypeとpromptをschemaから動的算出する():
     assert result.value["prompt"]
 
 
-def test_index_scan_dirはディレクトリ横断でindexとtagsを集約する():
-    """
-    Given query システム と対象ディレクトリ
-    When operation index_scan_dir を実行する
-    Then ディレクトリ配下の各Documentのindexとtagsがまとめて返り、トップレベルのpromptには各要素のpromptを参照する案内が入る
-    """
-    result = _engine().run(
-        "index_scan_dir", ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase",
-    )
-    assert isinstance(result, Ok), result
-    entry = next(v for k, v in result.value["value"].items() if "uc-query-document.json" in k)
-    assert "context:waffle" in entry["tags"]
-    assert result.value["prompt"]
-    assert entry["blocks"]["mainFlow"]["prompt"]
-
-
 def test_get_fieldはblockの1フィールドを返す():
     """
     Given query システム と対象 Document

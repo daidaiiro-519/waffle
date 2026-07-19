@@ -32,14 +32,14 @@
       "title": "存在意義",
       "items": [
         "AIがDocument全文をファイルとして直接読むと、無関係なブロックまでコンテキストに含めてトークンを浪費し、document.jsonの内部構造（schemaの実装詳細）に直接依存したコードを書き始めてしまう。意味単位だけを取得する経路が無ければ、AIとdocument.jsonの間で保つべき疎結合（テキストベースの入出力）が崩れる。",
-        "当初17種類の名前付きoperationのうち、get_block/get_field/get_items/get_item_field/get_items_slice/filter_items/filter_exists/get_by_id/get_nested_items/get_childrenの10操作は、いずれも『1ブロックの内側を起点に値を取り出す』という同じ責務のバリエーションであり、絞り込み・整形パターンが増えるたびにoperation名・CLI/MCPツール・実装コードが個別に増殖していた。ddd-advisor/tech-lead-advisorとの合意により、この10操作をJMESPath式1本で表現する新operation query_path へ統合する（式言語自体の表現力で吸収し、『値を返す全操作にpromptが付く』という既存の一貫性は、blockKeyスコープを必須にすることで維持する）。find_all（深さ不定の再帰探索。JMESPath標準構文に対応する演算子が無い）とresolve_ref（ツリー検索ではなくWaffle固有の参照解決ロジックそのもの）は統合不可のため対象外とし、index_scan/index_scan_dir/get_meta/scanはschemaとの突き合わせ、または複数document横断という別責務のため対象外とする（この4つを一括りに『発見系』と呼ぶことの妥当性自体はddd-advisorから再検討の指摘があり、別スコープで扱う）。複数document横断検索を担うuc-query-document-collection（grep_documents/filter_documents）も、実装メカニズムを共有できることと責務が同じであることは別問題であるとddd-advisorへの再確認で判定され、統合対象に含めない（推奨: 内部実装だけ共有し、usecase・CLI・MCPツールとしての分離は維持する）。"
+        "当初17種類の名前付きoperationのうち、get_block/get_field/get_items/get_item_field/get_items_slice/filter_items/filter_exists/get_by_id/get_nested_items/get_childrenの10操作は、いずれも『1ブロックの内側を起点に値を取り出す』という同じ責務のバリエーションであり、絞り込み・整形パターンが増えるたびにoperation名・CLI/MCPツール・実装コードが個別に増殖していた。ddd-advisor/tech-lead-advisorとの合意により、この10操作をJMESPath式1本で表現する新operation query_path へ統合する（式言語自体の表現力で吸収し、『値を返す全操作にpromptが付く』という既存の一貫性は、blockKeyスコープを必須にすることで維持する）。find_all（深さ不定の再帰探索。JMESPath標準構文に対応する演算子が無い）とresolve_ref（ツリー検索ではなくWaffle固有の参照解決ロジックそのもの）は統合不可のため対象外とし、index_scan/get_meta/scanはschemaとの突き合わせという別責務のため対象外とする（この3つを一括りに『発見系』と呼ぶことの妥当性自体はddd-advisorから再検討の指摘があり、別スコープで扱う）。複数document横断検索を担うuc-query-document-collection（grep_documents/filter_documents/index_scan_documents）も、実装メカニズムを共有できることと責務が同じであることは別問題であるとddd-advisorへの再確認で判定され、統合対象に含めない（推奨: 内部実装だけ共有し、usecase・CLI・MCPツールとしての分離は維持する）。複数document横断でindexとtagsを集約する操作（旧index_scan_dir）は、ddd-advisorのbounded-context違反指摘により、単一document起点の本usecaseから複数document横断が本来の関心事であるuc-query-document-collection側へindex_scan_documentsとして移動した。"
       ]
     },
     "preconditions": {
       "blockType": "Preconditions",
       "title": "事前条件",
       "items": [
-        "対象 Document（またはディレクトリ）のパスが要望テキストで与えられている"
+        "対象 Document のパスが要望テキストで与えられている"
       ]
     },
     "mainFlow": {
@@ -102,8 +102,7 @@
       "items": [
         "要求された意味単位が value として返る",
         "全operationで、value の読み方の指針が prompt に付く（ブロック/配列取得時はx-prompt-query由来、それ以外は操作の性質に基づく固定文言）",
-        "対象ブロックがx-prompt-interpret（値の解釈指針・誤読しやすい点への注意）を宣言しているとき、promptとは別にcautionが付く（宣言が無いブロックではcautionキー自体が省略される）",
-        "index_scan_dirは各Documentのindexに加え、そのDocument自身のtagsも含めて返す"
+        "対象ブロックがx-prompt-interpret（値の解釈指針・誤読しやすい点への注意）を宣言しているとき、promptとは別にcautionが付く（宣言が無いブロックではcautionキー自体が省略される）"
       ]
     },
     "acceptanceCriteria": {
@@ -112,7 +111,7 @@
       "items": [
         "When operationと対象パスが与えられ、対象がschemaRefを持つDocumentであるとき、システムは結果を{ prompt, value }形式で返す shall。",
         "When ブロック/配列を取得したとき、promptに対象ブロックの読み方の指針（x-prompt-query由来）を含める shall。",
-        "When get_meta/scan/index_scan/index_scan_dir/find_allを実行したとき、promptにその操作の性質に基づく固定の読み方の指針を含める shall（schemaから動的に導出できない場合もpromptを省略しない）。",
+        "When get_meta/scan/index_scan/find_allを実行したとき、promptにその操作の性質に基づく固定の読み方の指針を含める shall（schemaから動的に導出できない場合もpromptを省略しない）。",
         "When 対象ブロックがx-prompt-interpretを宣言しているとき、システムはpromptとは別にcautionフィールドへ値の解釈指針を含める shall。",
         "While 対象ブロックがx-prompt-interpretを宣言していないとき、システムはcautionキー自体を省略する shall（必要なデータだけを返す）。",
         "While フィルタ条件に一致する要素が無いとき、システムは正常系として空配列value: []を返す shall。",
@@ -249,13 +248,6 @@
           "viewpoint": "ファイル単位：index_scanは_indexを保存せず読み取り時に動的算出する",
           "gherkin": "Scenario: index_scanはblockTypeとpromptをschemaから動的算出する\n  Given query システム と対象 Document\n  When operation index_scan を実行する\n  Then 各blockのblockTypeとx-prompt-query由来のpromptが返り、トップレベルのpromptには各要素のpromptを参照する案内が入る",
           "operation": "index_scan"
-        },
-        {
-          "name": "index_scan_dirはディレクトリ横断でindexとtagsを集約する",
-          "category": "正常系",
-          "viewpoint": "ファイル単位：index_scan_dirは複数Documentのindexとtagsを1回で集約する",
-          "gherkin": "Scenario: index_scan_dirはディレクトリ横断でindexとtagsを集約する\n  Given query システム と対象ディレクトリ\n  When operation index_scan_dir を実行する\n  Then ディレクトリ配下の各Documentのindexとtagsがまとめて返り、トップレベルのpromptには各要素のpromptを参照する案内が入る",
-          "operation": "index_scan_dir"
         },
         {
           "name": "get_fieldはblockの1フィールドを返す",
@@ -468,10 +460,6 @@
         {
           "operation": "index_scan",
           "summary": "各ブロックのblockTypeとprompt（読み方指針）をschemaから動的算出して返す"
-        },
-        {
-          "operation": "index_scan_dir",
-          "summary": "ディレクトリ配下の各Documentのindexとtagsをまとめて返す"
         },
         {
           "operation": "find_all",

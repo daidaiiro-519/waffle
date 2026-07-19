@@ -72,7 +72,7 @@ def test_パストラバーサルを含むパスは拒否される():
 def test_ディレクトリ横断はプロジェクトルート外を拒否する():
     """
     Given プロジェクトルート外を指すディレクトリパス
-    When index_scan_dir を実行する
+    When index_scan_documents を実行する
     Then INVALID_PATH エラーが返る
     """
     assert is_confined("../outside") is False

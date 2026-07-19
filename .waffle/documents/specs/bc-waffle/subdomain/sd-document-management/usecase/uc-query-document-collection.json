@@ -27,7 +27,8 @@
       "title": "存在意義",
       "items": [
         "QueryDocumentの既存操作は単一document・単一block・単一配列フィールドに閉じた点操作であり、複数documentを横断してcontentの中身を検索したり、tags等の属性で絞り込んだりする経路が無い。この経路が無いと、AIは対象を探すためにディレクトリ配下の全documentを1件ずつindex_scanし読み比べる必要があり、探索コストが線形に膨らむ（ddd-advisorへの相談が約30分かかった実例が既にある）。",
-        "都度フルスキャンであり、永続インデックス・ミラーDB（LoomDB/SQLite等）は持たない。正典はdocument.json（git管理のプレーンJSON）のままとする設計合意に基づく。"
+        "都度フルスキャンであり、永続インデックス・ミラーDB（LoomDB/SQLite等）は持たない。正典はdocument.json（git管理のプレーンJSON）のままとする設計合意に基づく。",
+        "複数document横断でindexとtagsを集約する操作（index_scan_documents）は、元はuc-query-document側のindex_scan_dirとして存在していたが、ddd-advisorから『同じ関心事（複数document横断）が2つのusecaseに分散している』というbounded-context違反の指摘があり、複数document横断という関心事を既に担う本usecase（grep_documents/filter_documents）側へ移動した。単一document側にはindex_scan（対象範囲が1ファイル）が残り、対象範囲（1ファイル vs 複数document）で責務を区別する。内部実装（indexを組み立てるロジック自体）はindex_scanと共有してよいが、公開されるoperation・usecaseとしての所属は本usecase側に置く。"
       ]
     },
     "externalActors": {
@@ -78,7 +79,8 @@
       "items": [
         "要求された条件に一致した結果がvalueとして返る（一致ゼロは正常系として空で返る）",
         "全operationで、valueの読み方の指針がpromptに付く",
-        "都度フルスキャンで算出され、状態は保存されない（べき等・副作用なし）"
+        "都度フルスキャンで算出され、状態は保存されない（べき等・副作用なし）",
+        "index_scan_documentsは各Documentのindexに加え、そのDocument自身のtagsも含めて返す"
       ]
     },
     "acceptanceCriteria": {
@@ -88,6 +90,7 @@
         "When operationとディレクトリが与えられ、対象がschemaRefを持つDocumentの集合であるとき、システムは結果を{ prompt, value }形式で返す shall。",
         "When operationにgrep_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentのcontentを走査し、patternに一致した値をpath単位で収集してvalueに返す shall。",
         "When operationにfilter_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentのうちkeyの値がvalueと一致するものだけを絞り込み、そのpathとmeta（fields指定時はfieldsの値のみ）をvalueに返す shall。",
+        "When operationにindex_scan_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentについて、index_scan相当のblockTypeとpromptの索引、およびそのDocument自身のtagsを集約し、Document単位でvalueに返す shall。",
         "While 一致するDocumentが無いとき、システムは正常系として空のvalueを返す shall。",
         "If operationが未知のとき、システムはINVALID_OPERATIONエラーを返す shall。",
         "If 対象ディレクトリが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
@@ -144,6 +147,14 @@
           "gherkin": "Scenario: filter_documentsはメタフィールドの一致でDocumentを絞り込む\n  Given QueryDocumentCollection システム と対象ディレクトリ\n  When operation filter_documents を key tags, value repo:has-udd で実行する\n  Then tagsにrepo:has-uddを含むDocumentのpathとmetaがvalueとして返る",
           "covers": "受け入れ基準: filter_documentsはkey/valueの一致でDocumentを絞り込む",
           "operation": "filter_documents"
+        },
+        {
+          "name": "index_scan_documentsはディレクトリ横断でindexとtagsを集約する",
+          "category": "正常系",
+          "viewpoint": "横断集約：複数Documentのindexとtagsを1回で集約する",
+          "gherkin": "Scenario: index_scan_documentsはディレクトリ横断でindexとtagsを集約する\n  Given QueryDocumentCollection システム と対象ディレクトリ\n  When operation index_scan_documents を実行する\n  Then ディレクトリ配下の各Documentのindexとtagsがまとめてvalueとして返り、promptには各要素のpromptを参照する案内が入る",
+          "covers": "受け入れ基準: index_scan_documentsはindexとtagsを集約する",
+          "operation": "index_scan_documents"
         },
         {
           "name": "一致するDocumentが無くても正常系で空を返す",
@@ -209,6 +220,10 @@
         {
           "operation": "filter_documents",
           "summary": "ディレクトリ配下のDocumentのうち、指定メタフィールドkeyの値がvalueと一致するものだけを絞り込み、pathとmeta（fields指定時はfieldsの値のみ）を返す"
+        },
+        {
+          "operation": "index_scan_documents",
+          "summary": "ディレクトリ配下の各Documentのindexとtagsをまとめて返す"
         }
       ]
     },
