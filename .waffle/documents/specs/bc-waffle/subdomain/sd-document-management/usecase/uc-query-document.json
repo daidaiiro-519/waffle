@@ -31,7 +31,8 @@
       "blockType": "UsecaseRationale",
       "title": "存在意義",
       "items": [
-        "AIがDocument全文をファイルとして直接読むと、無関係なブロックまでコンテキストに含めてトークンを浪費し、document.jsonの内部構造（schemaの実装詳細）に直接依存したコードを書き始めてしまう。意味単位だけを取得する経路が無ければ、AIとdocument.jsonの間で保つべき疎結合（テキストベースの入出力）が崩れる。"
+        "AIがDocument全文をファイルとして直接読むと、無関係なブロックまでコンテキストに含めてトークンを浪費し、document.jsonの内部構造（schemaの実装詳細）に直接依存したコードを書き始めてしまう。意味単位だけを取得する経路が無ければ、AIとdocument.jsonの間で保つべき疎結合（テキストベースの入出力）が崩れる。",
+        "当初17種類の名前付きoperationのうち、get_block/get_field/get_items/get_item_field/get_items_slice/filter_items/filter_exists/get_by_id/get_nested_items/get_childrenの10操作は、いずれも『1ブロックの内側を起点に値を取り出す』という同じ責務のバリエーションであり、絞り込み・整形パターンが増えるたびにoperation名・CLI/MCPツール・実装コードが個別に増殖していた。ddd-advisor/tech-lead-advisorとの合意により、この10操作をJMESPath式1本で表現する新operation query_path へ統合する（式言語自体の表現力で吸収し、『値を返す全操作にpromptが付く』という既存の一貫性は、blockKeyスコープを必須にすることで維持する）。find_all（深さ不定の再帰探索。JMESPath標準構文に対応する演算子が無い）とresolve_ref（ツリー検索ではなくWaffle固有の参照解決ロジックそのもの）は統合不可のため対象外とし、index_scan/index_scan_dir/get_meta/scanはschemaとの突き合わせ、または複数document横断という別責務のため対象外とする（この4つを一括りに『発見系』と呼ぶことの妥当性自体はddd-advisorから再検討の指摘があり、別スコープで扱う）。複数document横断検索を担うuc-query-document-collection（grep_documents/filter_documents）も、実装メカニズムを共有できることと責務が同じであることは別問題であるとddd-advisorへの再確認で判定され、統合対象に含めない（推奨: 内部実装だけ共有し、usecase・CLI・MCPツールとしての分離は維持する）。"
       ]
     },
     "preconditions": {
@@ -68,6 +69,30 @@
           "to": "Orchestrator",
           "message": "{ prompt, value } を返す",
           "kind": "return"
+        },
+        {
+          "from": "Document",
+          "to": "Document",
+          "message": "query_pathの場合: blockKey指定時はcontent[blockKey]を起点に、省略時はcontent配下の全blockKeyを起点に、JMESPath式pathを評価する（regex_match(text, pattern)カスタム関数を含む）",
+          "kind": "self"
+        },
+        {
+          "from": "Document",
+          "to": "Document",
+          "message": "blockKey指定時: 単一ブロックの評価結果を{ documentId, prompt, value }として組み立てる（promptはblockKeyから_block_prompt()と同じ仕組みで導出）",
+          "kind": "self"
+        },
+        {
+          "from": "Document",
+          "to": "Document",
+          "message": "blockKey省略時: 全blockKeyのうちvalueが空でなかったブロックだけを{ blockKey, prompt, value }の配列resultsへ集約する（ヒットしなかったブロックは応答から省略する）",
+          "kind": "self"
+        },
+        {
+          "from": "Document",
+          "to": "Orchestrator",
+          "message": "blockKey指定時は{ documentId, prompt, value }、省略時は{ documentId, results }を返す（pathの構文エラー時はjmespathの生例外ではなくWaffle独自のエラーへ変換して返す）",
+          "kind": "return"
         }
       ]
     },
@@ -97,7 +122,13 @@
         "If フィルタの正規表現パターンが不正なとき、システムはINVALID_PATTERNエラーを返す shall。",
         "If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: \"raw\", content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: <固定文言>, value: <生テキスト> }を返す）。",
         "When operationにresolve_refを指定したとき、システムは対象Documentのfieldの値をdocumentId、対象Document自身が持つ他の参照フィールドをテンプレート変数として、targetSchemaRef（discriminatorを持つschemaの場合はtargetDiscriminatorで対象種別を指定する）のx-source-targetテンプレートに埋め込み、参照先Documentのpathを算出してvalueに返す shall（参照先Documentの中身は取得しない）。",
-        "If resolve_refでテンプレート変数を解決できないとき、システムはMISSING_TEMPLATE_VARエラーを返す shall。"
+        "If resolve_refでテンプレート変数を解決できないとき、システムはMISSING_TEMPLATE_VARエラーを返す shall。",
+        "When operationにquery_pathをblockKey指定で実行したとき、システムはdoc[\"content\"][blockKey]を起点にJMESPath式pathを評価し、{ documentId, prompt, value }形式で返す shall（promptは_block_prompt()と同じ仕組みでblockKeyから導出する）。",
+        "When operationにquery_pathをblockKey省略で実行したとき、システムはdoc[\"content\"]配下の全blockKeyに同じ相対式pathを評価し、{ documentId, results: [{ blockKey, prompt, value }, ...] }形式で返す shall。",
+        "While operationにquery_pathをblockKey省略で実行し、あるblockKeyの評価結果valueが空であるとき、システムはそのblockKeyをresultsから省略する shall（ヒットしなかったブロックについて沈黙する）。",
+        "When query_pathのpath式内でregex_match(text, pattern)を使用したとき、システムはjmespath.functions.Functionsを継承したカスタム関数として、既存のfilter_pattern相当の正規表現マッチングを行う shall。",
+        "If query_pathのpathがJMESPathとして構文エラーであるとき、システムはjmespathの生例外をそのまま返さず、Waffle独自のエラーコード・メッセージへ変換して返す shall。",
+        "While query_pathを実行するとき、pathは常に1ブロックの内側を起点とした相対式として評価される shall（doc全体や複数blockTypeを跨ぐ横断検索が必要な場合は既存のfind_allを使う）。"
       ]
     },
     "errors": {
@@ -325,6 +356,53 @@
           "gherkin": "Scenario: resolve_refはテンプレート変数を解決できないときエラーを返す\n  Given 参照先テンプレートが要求する変数を持たない対象 Document\n  When operation resolve_ref を実行する\n  Then MISSING_TEMPLATE_VAR エラーが返る",
           "covers": "受け入れ基準: MISSING_TEMPLATE_VARエラー",
           "operation": "resolve_ref"
+        },
+        {
+          "name": "query_pathでblockKey指定時は単一ブロックの評価結果を返す",
+          "category": "正常系",
+          "viewpoint": "意味単位取得：query_pathはblockKey指定時に単一ブロック起点でJMESPath式を評価する",
+          "gherkin": "Scenario: query_pathでblockKey指定時は単一ブロックの評価結果を返す\n  Given query システム と対象 Document\n  When operation query_path を blockKey summary, path \"items[?length(@) > `0`]\" で実行する\n  Then value は指定ブロック内でのJMESPath評価結果であり、prompt に読み方の指針が付く",
+          "covers": "受け入れ基準: query_pathのblockKey指定時応答形式",
+          "operation": "query_path"
+        },
+        {
+          "name": "query_pathでblockKey省略時はヒットしたブロックだけを配列で返す",
+          "category": "正常系",
+          "viewpoint": "意味単位取得：query_pathはblockKey省略時にcontent配下の全ブロックへ同じ式を評価し、ヒットしたものだけを返す",
+          "gherkin": "Scenario: query_pathでblockKey省略時はヒットしたブロックだけを配列で返す\n  Given query システム と対象 Document\n  When operation query_path を blockKey を指定せず path \"items[?priority=='high']\" で実行する\n  Then results にはヒットしたブロックだけが { blockKey, prompt, value } として含まれ、ヒットしなかったブロックは省略される",
+          "covers": "受け入れ基準: query_pathのblockKey省略時の複数ブロック応答形式、ヒットしなかったブロックの省略",
+          "operation": "query_path"
+        },
+        {
+          "name": "query_pathはフィルタ条件を式内で表現できる",
+          "category": "正常系",
+          "viewpoint": "統合：query_pathはfilter_items相当の条件絞り込みをJMESPath式1本で表現する",
+          "gherkin": "Scenario: query_pathはフィルタ条件を式内で表現できる\n  Given query システム と対象 Document\n  When operation query_path を blockKey, path \"items[?required==`true`]\" で実行する\n  Then value には required な要素だけが含まれる",
+          "covers": "受け入れ基準: 意味単位を value で返す",
+          "operation": "query_path"
+        },
+        {
+          "name": "query_pathは配列の範囲指定をスライス式で表現できる",
+          "category": "境界値",
+          "viewpoint": "統合：query_pathはget_items_slice相当の範囲切り出しをJMESPath式1本で表現する",
+          "gherkin": "Scenario: query_pathは配列の範囲指定をスライス式で表現できる\n  Given query システム と対象 Document\n  When operation query_path を blockKey, path \"items[2:5]\" で実行する\n  Then value にはその範囲の要素だけが含まれる",
+          "operation": "query_path"
+        },
+        {
+          "name": "query_pathは正規表現カスタム関数で絞り込める",
+          "category": "正常系",
+          "viewpoint": "統合：query_pathはfilter_pattern相当の正規表現絞り込みをregex_matchカスタム関数で表現する",
+          "gherkin": "Scenario: query_pathは正規表現カスタム関数で絞り込める\n  Given query システム と対象 Document\n  When operation query_path を blockKey, path \"items[?regex_match(name, 'foo.*')]\" で実行する\n  Then value には正規表現に一致する要素だけが含まれる",
+          "covers": "受け入れ基準: query_pathの正規表現カスタム関数の動作",
+          "operation": "query_path"
+        },
+        {
+          "name": "query_pathの構文エラーはWaffle独自のエラーへ変換される",
+          "category": "異常系",
+          "viewpoint": "エラー：query_pathの式が構文エラーのとき、jmespathの生例外ではなくWaffle独自の形式へ変換する",
+          "gherkin": "Scenario: query_pathの構文エラーはWaffle独自のエラーへ変換される\n  Given query システム と対象 Document\n  When 構文的に不正なJMESPath式を path に指定して operation query_path を実行する\n  Then jmespath の生例外ではなく、Waffle独自のエラーコード・メッセージが返る",
+          "covers": "受け入れ基準: query_pathの構文エラー時のメッセージ変換",
+          "operation": "query_path"
         }
       ]
     },
