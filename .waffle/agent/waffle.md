@@ -1,4 +1,4 @@
-# waffle
+# スキーマ駆動でDocumentを検証・生成・描画するリポジトリ全体を編成するOrchestrator：waffle
 
 ## 管轄範囲
 
@@ -14,6 +14,7 @@
 | document.json操作は必ずCLI/MCP経由で行う | 自分自身がdogfood対象のため | create/fill/validate/render/query/check-*/scan-source-code/lint-docstringを使う（直接読み書きしない） |
 | document.jsonのパスは`.waffle/`を使う | has-udd汎用パス（`.has-udd/`）と混在させないため | `waffle/.waffle/documents/`配下に置く |
 | Skill/advisor間はテキストベース疎結合を保つ | 受け手の内部形式を事前に知らなくてよくするため（腐敗防止層と同型） | 入出力はテキストに統一し、構造化への成型は受け手側が行う |
+| 作業開始時に`.waffle/memory/MEMORY.md`を確認し、関連する既存メモリがあれば踏まえる | ツールを問わず、過去の決定・訂正・フィードバックを引き継ぐため | 関連する重要な決定・訂正・知見が生じたらmemory-cultivator Skillで`.waffle/memory/`へ記録する |
 
 ---
 
