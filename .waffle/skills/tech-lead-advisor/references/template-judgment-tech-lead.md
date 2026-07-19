@@ -1,6 +1,4 @@
-# template-judgment-tech-lead
-
----
+# tech-lead-advisorの判断を構造化する回答テンプレート：template-judgment-tech-lead
 
 ## 使用条件
 
@@ -15,6 +13,10 @@
 ### サブドメイン分類
 
 {{中核/一般/補完のいずれか。出所（ddd-advisor/既存spec/ユーザー確認）も明記}}
+
+### evidence-based-scope分類宣言
+
+{{architecture-evidence-based-scope.mdを判断根拠に使う相談でのみ記載。『実証済みの拡張（実例1つで着手可）』か『複数実例からの一般化（2件以上必要）』かを1行で明示的に宣言する。該当しない相談では本セクション自体を省略してよい}}
 
 ---
 

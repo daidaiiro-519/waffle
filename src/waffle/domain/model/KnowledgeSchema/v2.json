@@ -16,9 +16,10 @@
     "formats": [
       "md"
     ],
-    "path": ".waffle/knowledge/{documentId}.md",
+    "path": ".waffle/knowledge/{status}/{documentId}.md",
     "pathVars": {
-      "skillRef": "doc.skillRef"
+      "skillRef": "doc.skillRef",
+      "status": "doc.status"
     },
     "deploy": [
       ".claude/skills/{skillRef}/references/knowledge/{documentId}.md"

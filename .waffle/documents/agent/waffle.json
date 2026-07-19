@@ -131,6 +131,13 @@
         },
         {
           "target": "knowledge-cultivator",
+          "timing": "before",
+          "targetScope": "single",
+          "action": "advisor相談への応答生成中に次の3種のいずれかに該当したら、knowledge-cultivator Skillを呼ぶ: (1)ユーザーの明示的な反論・訂正 (2)既存knowledgeでカバーできない実際の遭遇 (3)複数advisor並列dispatch時の矛盾。Claude Code専用の`feedback_*`メモリは経由せず、`waffle scaffold create/fill`で直接KnowledgeSchema DRAFT文書として記録する",
+          "why": "マルチツール（Claude Code以外のAIツールを含む）で動作する記録経路にする必要があるため。Claude Code専用の記憶機構はツール依存で他ツールから記録できない"
+        },
+        {
+          "target": "knowledge-cultivator",
           "timing": "after",
           "targetScope": "single",
           "action": "knowledge-cultivatorのStep3（候補審査の対話完了後）で採用が決定した候補について、Orchestratorが通常のCLI操作（scaffold fillでstatus: ACTIVEへ変更→対象advisorへのskillRef確認→validate→render）で昇格を実行する。却下・保留の候補はDRAFTのまま残す",
