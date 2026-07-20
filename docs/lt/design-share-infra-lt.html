@@ -1,0 +1,558 @@
+<title>API GatewayもLambdaも使わない、サーバーレスの選択肢 — design-share Skillのインフラ解説</title>
+<style>
+  :root{
+    --bg: #101820;
+    --surface: #17222c;
+    --surface-2: #1d2a35;
+    --line: #2a3a46;
+    --line-strong: #3c5162;
+    --ink: #e9eef1;
+    --muted: #8ea1ac;
+    --muted-2: #62747f;
+    --accent: #e2a53d;
+    --accent-soft: #e2a53d33;
+    --accent-ink: #241a08;
+    --cool: #52b3a3;
+    --cool-soft: #52b3a326;
+    --danger: #c8654f;
+    --font-display: Charter, "Iowan Old Style", "Georgia Pro", Georgia, serif;
+    --font-body: -apple-system, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg: #f3f0e8;
+      --surface: #ffffff;
+      --surface-2: #ece7d9;
+      --line: #d8d0bd;
+      --line-strong: #b8ac8e;
+      --ink: #221c12;
+      --muted: #5c5340;
+      --muted-2: #7a7059;
+      --accent: #b5730f;
+      --accent-soft: #b5730f22;
+      --accent-ink: #fff6e6;
+      --cool: #2f7d6d;
+      --cool-soft: #2f7d6d1f;
+      --danger: #a1432f;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #101820; --surface: #17222c; --surface-2: #1d2a35; --line: #2a3a46; --line-strong: #3c5162;
+    --ink: #e9eef1; --muted: #8ea1ac; --muted-2: #62747f;
+    --accent: #e2a53d; --accent-soft: #e2a53d33; --accent-ink: #241a08;
+    --cool: #52b3a3; --cool-soft: #52b3a326; --danger: #c8654f;
+  }
+  :root[data-theme="light"]{
+    --bg: #f3f0e8; --surface: #ffffff; --surface-2: #ece7d9; --line: #d8d0bd; --line-strong: #b8ac8e;
+    --ink: #221c12; --muted: #5c5340; --muted-2: #7a7059;
+    --accent: #b5730f; --accent-soft: #b5730f22; --accent-ink: #fff6e6;
+    --cool: #2f7d6d; --cool-soft: #2f7d6d1f; --danger: #a1432f;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--font-body);
+    scroll-snap-type: y proximity;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth} }
+
+  /* Waffle-grid ambient texture: ties back to the project's own name */
+  .waffle-ground{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(0deg, var(--line) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 64px);
+    opacity:.35;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 40%, transparent 85%);
+  }
+
+  .rail{
+    position:fixed; left:0; top:0; bottom:0; width:56px; z-index:5;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  }
+  .rail .dot{ width:7px; height:7px; border-radius:50%; background:var(--line-strong); transition:background .25s, transform .25s; }
+  .rail .dot.active{ background:var(--accent); transform:scale(1.5); }
+  .rail-brand{
+    position:fixed; right:20px; top:20px; z-index:5; font-family:var(--font-mono); font-size:.72rem;
+    color:var(--muted-2); letter-spacing:.06em;
+  }
+  .rail-count{
+    position:fixed; left:20px; bottom:20px; z-index:5; font-family:var(--font-mono); font-size:.72rem; color:var(--muted-2);
+  }
+
+  section{
+    position:relative; z-index:1;
+    min-height:100vh; scroll-snap-align:start;
+    padding: 8vh 8vw 8vh 12vw;
+    display:flex; flex-direction:column; justify-content:center;
+    border-bottom:1px solid var(--line);
+    max-width:1180px; margin:0 auto;
+  }
+  section:last-of-type{border-bottom:none}
+
+  .eyebrow{
+    font-family:var(--font-mono); font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); display:flex; align-items:center; gap:.6em; margin-bottom:1.4rem;
+  }
+  .eyebrow .num{ color:var(--muted-2); }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--accent); display:inline-block; }
+
+  h1,h2{
+    font-family:var(--font-display); font-weight:600; text-wrap:balance; margin:0 0 .5rem;
+    letter-spacing:-.01em;
+  }
+  h1{ font-size:clamp(2.2rem, 5.4vw, 4rem); line-height:1.08; }
+  h2{ font-size:clamp(1.6rem, 3.4vw, 2.5rem); line-height:1.15; }
+  .lede{ font-size:1.15rem; color:var(--muted); max-width:60ch; line-height:1.7; margin:1rem 0 0; }
+  p.body-text{ font-size:1.02rem; color:var(--muted); max-width:62ch; line-height:1.75; }
+  strong.mark{ color:var(--ink); font-weight:600; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); }
+
+  code, .k{ font-family:var(--font-mono); font-size:.92em; }
+  .k{ color:var(--cool); }
+  .badge{
+    display:inline-flex; align-items:center; font-family:var(--font-mono); font-size:.74rem;
+    padding:.22em .6em; border-radius:3px; border:1px solid var(--line-strong); color:var(--muted);
+    letter-spacing:.02em;
+  }
+  .badge.zero{ color:var(--cool); border-color:var(--cool); background:var(--cool-soft); }
+  .badge.gone{ color:var(--danger); border-color:var(--danger); text-decoration:line-through; opacity:.7; }
+
+  /* ---- title slide ---- */
+  .title-slide{ justify-content:center; }
+  .title-mark{ font-size:2.6rem; margin-bottom:1.6rem; filter:saturate(.85); }
+  .title-slide h1{ font-size:clamp(2.6rem, 7vw, 5.2rem); }
+  .title-sub{ font-size:1.2rem; color:var(--muted); margin-top:1.2rem; max-width:52ch; line-height:1.6; }
+  .title-foot{ margin-top:3rem; display:flex; gap:2rem; flex-wrap:wrap; font-family:var(--font-mono); font-size:.82rem; color:var(--muted-2); }
+  .title-foot b{ color:var(--ink); font-weight:600; }
+
+  /* ---- generic stack diagram ---- */
+  .stack-row{ display:flex; align-items:center; gap:.9rem; margin:1.6rem 0; flex-wrap:wrap; }
+  .stack-box{
+    font-family:var(--font-mono); font-size:.92rem; padding:.9rem 1.3rem; border-radius:6px;
+    border:1px solid var(--line-strong); background:var(--surface); color:var(--muted); white-space:nowrap;
+  }
+  .stack-arrow{ color:var(--muted-2); font-size:1.1rem; }
+  .stack-box.dead{ color:var(--danger); border-color:var(--danger); text-decoration:line-through; opacity:.55; background:transparent; }
+  .stack-box.live{ color:var(--ink); border-color:var(--accent); background:var(--accent-soft); font-weight:600; }
+  .stack-box.cool{ color:var(--cool); border-color:var(--cool); background:var(--cool-soft); }
+
+  .compare{ display:grid; grid-template-columns: 1fr 1fr; gap: 2.4rem; margin-top:2rem; }
+  @media (max-width: 820px){ .compare{ grid-template-columns:1fr; } }
+  .compare .col h3{
+    font-family:var(--font-mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--muted-2); margin:0 0 1rem; font-weight:600;
+  }
+  .compare .col.win h3{ color:var(--cool); }
+
+  .diagram-wrap{ margin-top:1.6rem; overflow-x:auto; }
+  svg text{ font-family:var(--font-mono); }
+
+  .kv-list{ list-style:none; margin:1.6rem 0 0; padding:0; display:flex; flex-direction:column; gap:.65rem; max-width:64ch; }
+  .kv-list li{
+    display:flex; gap:1rem; align-items:baseline; padding:.6rem .9rem; border:1px solid var(--line);
+    border-radius:6px; background:var(--surface); font-size:.95rem;
+  }
+  .kv-list code{ color:var(--cool); flex-shrink:0; min-width:11ch; }
+  .kv-list span{ color:var(--muted); }
+
+  .step-list{ counter-reset: step; list-style:none; margin:1.8rem 0 0; padding:0; max-width:64ch; }
+  .step-list li{
+    counter-increment: step; position:relative; padding:.55rem 0 .55rem 2.6rem; color:var(--muted);
+    line-height:1.6; border-left:1px solid var(--line); margin-left:.55rem;
+  }
+  .step-list li:last-child{ border-color:transparent; }
+  .step-list li::before{
+    content: counter(step); position:absolute; left:-.55rem; top:.4rem; transform:translateX(-50%);
+    width:1.6rem; height:1.6rem; border-radius:50%; background:var(--surface); border:1px solid var(--line-strong);
+    color:var(--ink); font-family:var(--font-mono); font-size:.72rem; display:flex; align-items:center; justify-content:center;
+  }
+  .step-list li b{ color:var(--ink); font-weight:600; }
+
+  .impact-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1.6rem; margin-top:2rem; }
+  @media (max-width: 900px){ .impact-grid{ grid-template-columns:1fr; } }
+  .impact-card{ border:1px solid var(--line); border-radius:8px; padding:1.4rem 1.5rem; background:var(--surface); }
+  .impact-num{ font-family:var(--font-display); font-size:2.4rem; color:var(--accent); line-height:1; margin-bottom:.5rem; font-variant-numeric:tabular-nums; }
+  .impact-label{ font-size:.92rem; color:var(--muted); line-height:1.55; }
+
+  .closing-links{ margin-top:2.4rem; display:flex; flex-direction:column; gap:.5rem; font-family:var(--font-mono); font-size:.88rem; color:var(--muted); }
+  .closing-links b{ color:var(--ink); }
+</style>
+
+<div class="waffle-ground" aria-hidden="true"></div>
+<nav class="rail" id="rail" aria-hidden="true"></nav>
+<div class="rail-brand">design-share / infra</div>
+<div class="rail-count" id="railCount">01 / 09</div>
+
+<section class="title-slide" id="s0" data-label="Intro">
+  <div class="title-mark" role="img" aria-label="waffle">🧇</div>
+  <h1>API GatewayもLambdaも、<br>使わないという選択。</h1>
+  <p class="title-sub">それでも"サーバーレス"は名乗れる——UIモックにコメントがつけられる仕組みの裏側。<br>
+  <strong class="mark">Claude Code向けに自作したSkill</strong>「design-share」の話。</p>
+  <div class="title-foot">
+    <span><b>常時稼働コンピュート</b> — 0</span>
+    <span><b>使用サービス</b> — 2種</span>
+    <span><b>LT枠</b> — 5min</span>
+  </div>
+</section>
+
+<section id="s1" data-label="design-shareとは">
+  <div class="eyebrow"><span class="num">01</span> design-shareとは</div>
+  <h2>自作した、「UIモックを、URLで」渡すSkill</h2>
+  <p class="lede">design-share は、私が Claude Code 向けに自作した Skill。「UIモック作りたい」とチャットで頼むと、
+  対話だけで<strong class="mark">見た目の合意</strong>から<strong class="mark">共有可能なURL</strong>まで面倒を見てくれる。</p>
+  <div class="stack-row">
+    <div class="stack-box">対話でヒアリング</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box">Design.md確定</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box">UIモックHTML生成</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box live">共有URL + コメント</div>
+  </div>
+  <p class="body-text" style="margin-top:1.6rem">
+    途中で生まれる<code>Design.md</code>は配色・タイポグラフィ・コンポーネントを決めるデザインシステム定義。
+    確定後にそこから複数パターンのUIモックを生成し、<strong class="mark">パターンごとにトークン保護つきのURL</strong>を発行する。
+    関係者はURLを開いてトークンを入れるだけで見られて、コメントもその場に残せる——アカウント登録は要らない。
+  </p>
+</section>
+
+<section id="s2" data-label="Artifactとの違い">
+  <div class="eyebrow"><span class="num">02</span> なぜ作ったか</div>
+  <h2>Claude Code標準のArtifactは、他人と共有できない</h2>
+  <p class="lede">Claude Codeにはその場でモックを見せる「Artifact」がある。便利だが、
+  <strong class="mark">今チャットしている自分</strong>のためのものだ。POにも、デザイナーにも、そのURLをそのまま渡せない。</p>
+  <div class="stack-row">
+    <div class="stack-box">URL＋トークンを渡す</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box">相手がブラウザでコメント</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box">コンソールで確認</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box">直して再配布</div>
+  </div>
+  <p class="body-text" style="margin-top:1.6rem">
+    design-shareが埋めているのはこの隙間。<strong class="mark">Artifactにはないコメント機能</strong>を持たせ、
+    URLとトークンさえ渡せば、Claude Codeを触ったことのない人でもレビューの輪に入れる。
+    しかもトークンは<strong class="mark">パターンごとに1本ずつ発行</strong>——使い回さないので、1件漏れても他は無関係のまま。
+
+  </p>
+</section>
+
+<section id="s3" data-label="課題">
+  <div class="eyebrow"><span class="num">03</span> 課題</div>
+  <h2>「UIモック、見といて」の面倒くささ</h2>
+  <p class="lede">Slackに画像を貼る → スレッドでコメントが分散する → 「どのバージョンの話？」<br>
+  ちゃんとやるなら、URLを1つ発行してコメントもそこに集めたい。</p>
+  <p class="body-text" style="margin-top:2rem">
+    でもそれを<strong class="mark">自前で作る</strong>となると、認証・保存・コメントAPIと、急に「アプリケーション」が1個増える。
+    design-share はこれをどう発行しているのか——今日話すのは<em>その裏側のインフラ</em>。
+  </p>
+</section>
+
+<section id="s4" data-label="よくある構成">
+  <div class="eyebrow"><span class="num">04</span> よくある構成</div>
+  <h2>「サーバーレス」と聞いて思い浮かぶもの</h2>
+  <p class="lede">認証つきでちょっとした状態を持つWebアプリ、と言えば大体この並びになる。</p>
+  <div class="stack-row">
+    <div class="stack-box">Browser</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box">API Gateway</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box">Lambda</div>
+    <span class="stack-arrow">→</span>
+    <div class="stack-box">DynamoDB</div>
+  </div>
+  <p class="body-text">
+    間違ってはいない。ただし<span class="k">コールドスタート</span>・<span class="k">IAMロール設計</span>・<span class="k">デプロイパイプライン</span>と、
+    管理対象コンポーネントが一気に増える。design-share が扱う仕事——<strong class="mark">トークンで開ける／コメントを溜める／一覧を返す</strong>——に、
+    ここまでの装備は要るだろうか？
+  </p>
+</section>
+
+<section id="s5" data-label="対比">
+  <div class="eyebrow"><span class="num">05</span> 実際の構成</div>
+  <h2>やってみたら、2サービスで足りた</h2>
+  <div class="compare">
+    <div class="col">
+      <h3>一般的な構成</h3>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 340 380" width="100%" height="380" role="img" aria-label="一般的なサーバーレス構成のアーキテクチャ図">
+          <rect x="120" y="10" width="100" height="42" rx="6" fill="none" stroke="var(--line-strong)" />
+          <text x="170" y="36" fill="var(--muted)" font-size="13" text-anchor="middle">Browser</text>
+
+          <line x1="170" y1="52" x2="170" y2="80" stroke="var(--line-strong)" />
+          <polygon points="170,80 165,70 175,70" fill="var(--line-strong)" />
+
+          <rect x="15" y="85" width="310" height="280" rx="10" fill="none" stroke="var(--muted-2)" stroke-dasharray="5 4" />
+          <text x="30" y="106" fill="var(--muted-2)" font-size="11" letter-spacing="1">AWS</text>
+
+          <rect x="100" y="120" width="140" height="52" rx="6" fill="none" stroke="var(--danger)" stroke-dasharray="4 3" opacity=".8" />
+          <text x="170" y="142" fill="var(--danger)" font-size="13" text-anchor="middle" text-decoration="line-through" opacity=".85">API Gateway</text>
+          <text x="170" y="160" fill="var(--muted-2)" font-size="10" text-anchor="middle">REST/HTTP API</text>
+
+          <line x1="170" y1="172" x2="170" y2="200" stroke="var(--muted-2)" />
+          <polygon points="170,200 165,190 175,190" fill="var(--muted-2)" />
+
+          <rect x="100" y="205" width="140" height="52" rx="6" fill="none" stroke="var(--danger)" stroke-dasharray="4 3" opacity=".8" />
+          <text x="170" y="227" fill="var(--danger)" font-size="13" text-anchor="middle" text-decoration="line-through" opacity=".85">Lambda</text>
+          <text x="170" y="245" fill="var(--muted-2)" font-size="10" text-anchor="middle">認証・検証ロジック</text>
+
+          <line x1="170" y1="257" x2="170" y2="285" stroke="var(--muted-2)" />
+          <polygon points="170,285 165,275 175,275" fill="var(--muted-2)" />
+
+          <rect x="100" y="290" width="140" height="52" rx="6" fill="none" stroke="var(--danger)" stroke-dasharray="4 3" opacity=".8" />
+          <text x="170" y="312" fill="var(--danger)" font-size="13" text-anchor="middle" text-decoration="line-through" opacity=".85">DynamoDB</text>
+          <text x="170" y="330" fill="var(--muted-2)" font-size="10" text-anchor="middle">トークン・コメント状態</text>
+        </svg>
+      </div>
+    </div>
+    <div class="col win">
+      <h3>design-share</h3>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 340 380" width="100%" height="380" role="img" aria-label="design-shareのアーキテクチャ図">
+          <rect x="120" y="10" width="100" height="42" rx="6" fill="none" stroke="var(--line-strong)" />
+          <text x="170" y="36" fill="var(--muted)" font-size="13" text-anchor="middle">Browser</text>
+
+          <line x1="170" y1="52" x2="170" y2="80" stroke="var(--line-strong)" />
+          <polygon points="170,80 165,70 175,70" fill="var(--line-strong)" />
+
+          <rect x="15" y="85" width="310" height="280" rx="10" fill="none" stroke="var(--muted-2)" stroke-dasharray="5 4" />
+          <text x="30" y="106" fill="var(--muted-2)" font-size="11" letter-spacing="1">AWS</text>
+
+          <rect x="70" y="120" width="150" height="58" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4" />
+          <text x="145" y="144" fill="var(--ink)" font-size="14" text-anchor="middle" font-weight="600">CloudFront</text>
+          <text x="145" y="163" fill="var(--accent)" font-size="10" text-anchor="middle">+ CloudFront Functions</text>
+
+          <line x1="220" y1="149" x2="255" y2="149" stroke="var(--cool)" stroke-dasharray="3 3" />
+          <polygon points="255,149 247,144 247,154" fill="var(--cool)" />
+          <rect x="258" y="122" width="60" height="54" rx="6" fill="var(--cool-soft)" stroke="var(--cool)" />
+          <text x="288" y="145" fill="var(--cool)" font-size="10" text-anchor="middle">KeyValue</text>
+          <text x="288" y="158" fill="var(--cool)" font-size="10" text-anchor="middle">Store</text>
+          <text x="288" y="171" fill="var(--muted-2)" font-size="8" text-anchor="middle">DynamoDBの代わり</text>
+
+          <line x1="145" y1="178" x2="145" y2="215" stroke="var(--accent)" />
+          <polygon points="145,215 140,205 150,205" fill="var(--accent)" />
+
+          <rect x="70" y="220" width="150" height="52" rx="6" fill="var(--surface)" stroke="var(--line-strong)" />
+          <text x="145" y="242" fill="var(--ink)" font-size="14" text-anchor="middle" font-weight="600">S3</text>
+          <text x="145" y="260" fill="var(--muted)" font-size="10" text-anchor="middle">private・OAC経由のみ</text>
+
+          <text x="145" y="305" fill="var(--muted-2)" font-size="10" text-anchor="middle">Lambda / API Gateway / DynamoDB — 登場しない</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <p class="body-text" style="margin-top:2.2rem">
+    Lambdaが要らなかったのは、edge-gate というロジックを<strong class="mark">CloudFront Functions</strong>に載せ、
+    状態の置き場を<strong class="mark">CloudFront KeyValueStore</strong>に寄せたから。次のスライドから、この2つの正体を見ていく。
+  </p>
+</section>
+
+<section id="s6" data-label="edge-gate">
+  <div class="eyebrow"><span class="num">06</span> 仕掛け①</div>
+  <h2>edge-gate.js — Lambdaがやりそうな仕事を、エッジで</h2>
+  <p class="lede">CloudFront Function（<code>viewer-request</code>）1本が、リクエストが来るたびにこれを判定する。</p>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 920 220" width="100%" height="220" role="img" aria-label="edge-gateの処理フロー">
+      <rect x="10" y="80" width="150" height="60" rx="6" fill="none" stroke="var(--line-strong)" />
+      <text x="85" y="105" fill="var(--muted)" font-size="13" text-anchor="middle">Browser</text>
+      <text x="85" y="122" fill="var(--muted-2)" font-size="11" text-anchor="middle">GET /p/{slug}</text>
+
+      <line x1="160" y1="110" x2="230" y2="110" stroke="var(--line-strong)" />
+      <polygon points="230,110 220,105 220,115" fill="var(--line-strong)" />
+
+      <rect x="235" y="50" width="220" height="180" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4" />
+      <text x="345" y="75" fill="var(--accent)" font-size="12" text-anchor="middle" font-weight="600">CloudFront Function</text>
+      <text x="345" y="100" fill="var(--ink)" font-size="12" text-anchor="middle">token:{slug} 照合</text>
+      <text x="345" y="122" fill="var(--ink)" font-size="12" text-anchor="middle">Cookie share_{slug}</text>
+      <text x="345" y="144" fill="var(--ink)" font-size="12" text-anchor="middle">PUTの形/content-type検査</text>
+      <text x="345" y="166" fill="var(--ink)" font-size="12" text-anchor="middle">disabled判定</text>
+      <text x="345" y="205" fill="var(--muted-2)" font-size="10" text-anchor="middle">= edge-gate.js（1ファイル）</text>
+
+      <line x1="455" y1="90" x2="455" y2="40" stroke="var(--cool)" stroke-dasharray="3 3" />
+      <line x1="455" y1="40" x2="560" y2="40" stroke="var(--cool)" stroke-dasharray="3 3" />
+      <polygon points="560,40 552,35 552,45" fill="var(--cool)" />
+      <rect x="565" y="15" width="150" height="50" rx="6" fill="var(--cool-soft)" stroke="var(--cool)" />
+      <text x="640" y="45" fill="var(--cool)" font-size="12" text-anchor="middle">KeyValueStore</text>
+
+      <line x1="455" y1="140" x2="560" y2="140" stroke="var(--line-strong)" />
+      <polygon points="560,140 552,135 552,145" fill="var(--line-strong)" />
+      <rect x="565" y="105" width="150" height="70" rx="6" fill="var(--surface)" stroke="var(--line-strong)" />
+      <text x="640" y="135" fill="var(--muted)" font-size="12" text-anchor="middle">S3</text>
+      <text x="640" y="153" fill="var(--muted-2)" font-size="10" text-anchor="middle">private / OAC経由のみ</text>
+
+      <text x="345" y="0" fill="none">.</text>
+      <rect x="740" y="80" width="160" height="60" rx="6" fill="none" stroke="var(--danger)" stroke-dasharray="4 3" opacity=".55" />
+      <text x="820" y="105" fill="var(--danger)" font-size="12" text-anchor="middle" opacity=".8">Lambda</text>
+      <text x="820" y="122" fill="var(--danger)" font-size="10" text-anchor="middle" opacity=".7">呼ばれない</text>
+    </svg>
+  </div>
+  <p class="body-text">
+    許可されるのは<span class="k">GET/HEAD</span>と、<span class="k">/comments/{slug}/*.json</span>宛の<span class="k">PUT</span>だけ。
+    他の書き込み系メソッドは経路を問わず即403——<strong class="mark">多層防御をコード1本に握らせている</strong>。
+  </p>
+</section>
+
+<section id="s7" data-label="KVS">
+  <div class="eyebrow"><span class="num">07</span> 仕掛け②</div>
+  <h2>KeyValueStoreが担う、たった数種類のキー</h2>
+  <p class="lede">DynamoDBの代わりに使っているのは、CloudFrontに直結できるキーバリューストア。持つ状態はこれだけ。</p>
+  <ul class="kv-list">
+    <li><code>token:{slug}</code><span>そのパターンの現在の有効トークン。書き換えるだけで即失効=ローテーション</span></li>
+    <li><code>"DISABLED"</code><span>無効化フラグ。トークン値の代わりにこの文字列が入る</span></li>
+    <li><code>project:token</code><span>共有ギャラリー（全体横断閲覧）の共通トークン</span></li>
+    <li><code>g:{gslug}</code><span>名前付きギャラリー（プロジェクト）ごとのスコープトークン</span></li>
+    <li><code>pg:{slug}</code><span>パターンがどのギャラリーに所属するか（最大3件）</span></li>
+  </ul>
+  <p class="body-text" style="margin-top:1.8rem">
+    読み取りは通常<strong class="mark">1回</strong>、ギャラリー横断の複雑な経路でも最大6回。
+    テーブル設計もIAMロールも要らない——<span class="badge zero">キーが数種類、それだけ</span>。
+  </p>
+</section>
+
+<section id="s8" data-label="コメント">
+  <div class="eyebrow"><span class="num">08</span> 仕掛け③</div>
+  <h2>コメント機能、DBなしでどう動く？</h2>
+  <p class="lede">「投稿」も「一覧」も、正体はS3への素朴なオブジェクト操作に書き換えているだけ。</p>
+  <ol class="step-list">
+    <li><b>投稿</b>: ブラウザが <code>PUT /comments/{slug}/{id}.json</code> を叩く。edge-gateがキー形状と<code>content-type</code>を検査してからS3へ素通し</li>
+    <li><b>一覧</b>: <code>GET /comments-list/{slug}</code> を、edge-gateが内部で <code>ListObjectsV2 ?prefix=comments/{slug}/</code> に書き換える</li>
+    <li><b>保存</b>: 実体はS3オブジェクトが並んでいるだけ。読み出し方をCloudFront Functionが偽装している</li>
+  </ol>
+  <p class="body-text" style="margin-top:1.8rem">
+    「DBが要る」と思っていた処理の実態は、<strong class="mark">prefix検索とオブジェクトPUT</strong>だった、というだけのことも多い。
+  </p>
+</section>
+
+<section id="s9" data-label="Skillとの接続">
+  <div class="eyebrow"><span class="num">09</span> Skillとの組み合わせ</div>
+  <h2>ここが一番おもしろい部分</h2>
+  <p class="lede">このインフラを、自作の design-share Skill が「対話の続き」として直接叩く。</p>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 1040 300" width="100%" height="300" role="img" aria-label="design-share Skillが対話からAWSインフラを操作し結果を返すフロー">
+      <rect x="10" y="100" width="150" height="100" rx="8" fill="var(--surface)" stroke="var(--line-strong)" />
+      <text x="85" y="132" fill="var(--muted-2)" font-size="10" text-anchor="middle" letter-spacing="1">CHAT</text>
+      <text x="85" y="155" fill="var(--ink)" font-size="12" text-anchor="middle" font-weight="600">「UIモック</text>
+      <text x="85" y="171" fill="var(--ink)" font-size="12" text-anchor="middle" font-weight="600">作りたい」</text>
+      <text x="85" y="189" fill="var(--muted)" font-size="10" text-anchor="middle">自然言語だけ</text>
+
+      <line x1="160" y1="150" x2="192" y2="150" stroke="var(--line-strong)" />
+      <polygon points="192,150 183,145 183,155" fill="var(--line-strong)" />
+
+      <rect x="196" y="35" width="290" height="230" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4" />
+      <text x="341" y="58" fill="var(--accent)" font-size="12" text-anchor="middle" font-weight="600">design-share Skill</text>
+
+      <rect x="214" y="70" width="254" height="42" rx="6" fill="var(--surface)" stroke="var(--line)" />
+      <text x="341" y="88" fill="var(--ink)" font-size="11" text-anchor="middle">① Design.mdを対話＋試作で確定</text>
+      <text x="341" y="103" fill="var(--muted-2)" font-size="9" text-anchor="middle">色・タイポグラフィ・コンポーネント</text>
+
+      <line x1="341" y1="112" x2="341" y2="128" stroke="var(--line-strong)" />
+      <polygon points="341,128 336,119 346,119" fill="var(--line-strong)" />
+
+      <rect x="214" y="132" width="254" height="42" rx="6" fill="var(--surface)" stroke="var(--line)" />
+      <text x="341" y="150" fill="var(--ink)" font-size="11" text-anchor="middle">② パターンHTMLを複数生成</text>
+      <text x="341" y="165" fill="var(--muted-2)" font-size="9" text-anchor="middle">コメントUIを各ファイルに内蔵</text>
+
+      <line x1="341" y1="174" x2="341" y2="190" stroke="var(--line-strong)" />
+      <polygon points="341,190 336,181 346,181" fill="var(--line-strong)" />
+
+      <rect x="214" y="194" width="254" height="46" rx="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="2" />
+      <text x="341" y="215" fill="var(--ink)" font-size="11" text-anchor="middle">③ AWSへ配置してURLを発行</text>
+      <text x="341" y="231" fill="var(--accent)" font-size="9" text-anchor="middle" font-weight="600">← ここも人手を介さずSkillが実行</text>
+
+      <line x1="470" y1="217" x2="502" y2="150" stroke="var(--line-strong)" />
+      <polygon points="502,150 490,152 496,161" fill="var(--line-strong)" />
+
+      <rect x="506" y="60" width="230" height="180" rx="10" fill="none" stroke="var(--muted-2)" stroke-dasharray="5 4" />
+      <text x="521" y="80" fill="var(--muted-2)" font-size="10" letter-spacing="1">AWS</text>
+
+      <rect x="526" y="95" width="190" height="46" rx="6" fill="var(--surface)" stroke="var(--line-strong)" />
+      <text x="621" y="115" fill="var(--ink)" font-size="11" text-anchor="middle" font-weight="600">S3へHTMLアップロード</text>
+      <text x="621" y="131" fill="var(--muted)" font-size="9" text-anchor="middle">CloudFormationスタック経由</text>
+
+      <line x1="621" y1="141" x2="621" y2="157" stroke="var(--cool)" />
+      <polygon points="621,157 616,148 626,148" fill="var(--cool)" />
+
+      <rect x="526" y="161" width="190" height="46" rx="6" fill="var(--cool-soft)" stroke="var(--cool)" />
+      <text x="621" y="181" fill="var(--cool)" font-size="11" text-anchor="middle" font-weight="600">token:{slug} 発行</text>
+      <text x="621" y="197" fill="var(--muted)" font-size="9" text-anchor="middle">CloudFront Function/KVSへ反映</text>
+
+      <line x1="736" y1="150" x2="768" y2="150" stroke="var(--line-strong)" />
+      <polygon points="768,150 759,145 759,155" fill="var(--line-strong)" />
+
+      <rect x="772" y="100" width="260" height="100" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4" />
+      <text x="902" y="123" fill="var(--muted-2)" font-size="10" text-anchor="middle" letter-spacing="1">CHATへ戻る</text>
+      <text x="902" y="147" fill="var(--ink)" font-size="12" text-anchor="middle" font-weight="600">URL + token を表示</text>
+      <text x="902" y="167" fill="var(--muted)" font-size="10" text-anchor="middle">共有相手はそのまま</text>
+      <text x="902" y="183" fill="var(--muted)" font-size="10" text-anchor="middle">コメントで「OK」を返せる</text>
+    </svg>
+  </div>
+  <p class="body-text" style="margin-top:1.4rem">
+    <strong class="mark">対話（左）とAWS操作（右）の間</strong>を、design-share Skillの3ステップが橋渡ししている。
+    AWSへの配置作業すら、人間は手を動かさない——実行するのはSkill自身。
+    ユーザーが触れるのは最初から最後まで<strong class="mark">自然言語のチャットだけ</strong>で、
+    裏側の操作は、すべてSkill側に畳み込まれている。
+  </p>
+</section>
+
+<section id="s10" data-label="まとめ">
+  <div class="eyebrow"><span class="num">10</span> まとめ</div>
+  <h2>「小さく作る」の実利</h2>
+  <div class="impact-grid">
+    <div class="impact-card">
+      <div class="impact-num">0</div>
+      <div class="impact-label">常時稼働コンピュート。Lambdaも、EC2も、コンテナも動いていない</div>
+    </div>
+    <div class="impact-card">
+      <div class="impact-num">2</div>
+      <div class="impact-label">課金対象サービスの種類（CloudFront・S3。KVSはCloudFrontの一部）</div>
+    </div>
+    <div class="impact-card">
+      <div class="impact-num">1<span style="font-size:1.2rem">本</span></div>
+      <div class="impact-label">アプリケーションロジックの実体は edge-gate.js 一枚に集約</div>
+    </div>
+  </div>
+  <p class="body-text" style="margin-top:2.2rem">
+    「トークンで開ける」「コメントを溜める」「一覧を返す」——やりたいことの粒度に、構成の大きさを合わせただけ。
+    大きな構成を先に選ばないという判断も、設計の一部。
+  </p>
+</section>
+
+<section id="s11" data-label="Fin">
+  <div class="eyebrow"><span class="num">11</span> Fin</div>
+  <h2>ご清聴ありがとうございました</h2>
+  <p class="lede">質問・ツッコミ歓迎です。</p>
+  <div class="closing-links">
+    <span>Skill本体: <b>.waffle/skills/design-share/</b></span>
+    <span>インフラ定義: <b>infra/cloudformation.yaml</b></span>
+    <span>エッジロジック: <b>infra/cloudfront-function/edge-gate.js</b></span>
+  </div>
+</section>
+
+<script>
+(function(){
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section'));
+  var rail = document.getElementById('rail');
+  var count = document.getElementById('railCount');
+  sections.forEach(function(s, i){
+    var dot = document.createElement('span');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.dataset.index = i;
+    rail.appendChild(dot);
+  });
+  var dots = rail.querySelectorAll('.dot');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting){
+        var idx = sections.indexOf(entry.target);
+        dots.forEach(function(d, i){ d.classList.toggle('active', i === idx); });
+        count.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(sections.length).padStart(2, '0');
+      }
+    });
+  }, { threshold: 0.6 });
+  sections.forEach(function(s){ io.observe(s); });
+})();
+</script>

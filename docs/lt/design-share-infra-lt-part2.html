@@ -1,0 +1,450 @@
+<title>「CloudFrontとS3だけ」の中身は、9個ある — design-share インフラ解説 Part 2</title>
+<style>
+  :root{
+    --bg: #101820;
+    --surface: #17222c;
+    --surface-2: #1d2a35;
+    --line: #2a3a46;
+    --line-strong: #3c5162;
+    --ink: #e9eef1;
+    --muted: #8ea1ac;
+    --muted-2: #62747f;
+    --accent: #e2a53d;
+    --accent-soft: #e2a53d33;
+    --cool: #52b3a3;
+    --cool-soft: #52b3a326;
+    --danger: #c8654f;
+    --font-display: Charter, "Iowan Old Style", "Georgia Pro", Georgia, serif;
+    --font-body: -apple-system, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg: #f3f0e8; --surface: #ffffff; --surface-2: #ece7d9; --line: #d8d0bd; --line-strong: #b8ac8e;
+      --ink: #221c12; --muted: #5c5340; --muted-2: #7a7059;
+      --accent: #b5730f; --accent-soft: #b5730f22; --cool: #2f7d6d; --cool-soft: #2f7d6d1f; --danger: #a1432f;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #101820; --surface: #17222c; --surface-2: #1d2a35; --line: #2a3a46; --line-strong: #3c5162;
+    --ink: #e9eef1; --muted: #8ea1ac; --muted-2: #62747f;
+    --accent: #e2a53d; --accent-soft: #e2a53d33; --cool: #52b3a3; --cool-soft: #52b3a326; --danger: #c8654f;
+  }
+  :root[data-theme="light"]{
+    --bg: #f3f0e8; --surface: #ffffff; --surface-2: #ece7d9; --line: #d8d0bd; --line-strong: #b8ac8e;
+    --ink: #221c12; --muted: #5c5340; --muted-2: #7a7059;
+    --accent: #b5730f; --accent-soft: #b5730f22; --cool: #2f7d6d; --cool-soft: #2f7d6d1f; --danger: #a1432f;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{ background:var(--bg); color:var(--ink); font-family:var(--font-body); scroll-snap-type: y proximity; overflow-x:hidden; }
+  @media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth} }
+
+  .waffle-ground{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(0deg, var(--line) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 64px);
+    opacity:.35;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 40%, transparent 85%);
+  }
+
+  .rail{ position:fixed; left:0; top:0; bottom:0; width:56px; z-index:5; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; }
+  .rail .dot{ width:7px; height:7px; border-radius:50%; background:var(--line-strong); transition:background .25s, transform .25s; }
+  .rail .dot.active{ background:var(--accent); transform:scale(1.5); }
+  .rail-brand{ position:fixed; right:20px; top:20px; z-index:5; font-family:var(--font-mono); font-size:.72rem; color:var(--muted-2); letter-spacing:.06em; }
+  .rail-count{ position:fixed; left:20px; bottom:20px; z-index:5; font-family:var(--font-mono); font-size:.72rem; color:var(--muted-2); }
+
+  section{
+    position:relative; z-index:1; min-height:100vh; scroll-snap-align:start;
+    padding: 8vh 8vw 8vh 12vw; display:flex; flex-direction:column; justify-content:center;
+    border-bottom:1px solid var(--line); max-width:1180px; margin:0 auto;
+  }
+  section:last-of-type{border-bottom:none}
+
+  .eyebrow{
+    font-family:var(--font-mono); font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); display:flex; align-items:center; gap:.6em; margin-bottom:1.4rem;
+  }
+  .eyebrow .num{ color:var(--muted-2); }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--accent); display:inline-block; }
+
+  h1,h2{ font-family:var(--font-display); font-weight:600; text-wrap:balance; margin:0 0 .5rem; letter-spacing:-.01em; }
+  h1{ font-size:clamp(2.2rem, 5.4vw, 4rem); line-height:1.08; }
+  h2{ font-size:clamp(1.5rem, 3.2vw, 2.3rem); line-height:1.18; }
+  .lede{ font-size:1.1rem; color:var(--muted); max-width:64ch; line-height:1.7; margin:1rem 0 0; }
+  p.body-text{ font-size:1rem; color:var(--muted); max-width:66ch; line-height:1.75; }
+  strong.mark{ color:var(--ink); font-weight:600; background:linear-gradient(transparent 62%, var(--accent-soft) 62%); }
+  code, .k{ font-family:var(--font-mono); font-size:.92em; }
+  .k{ color:var(--cool); }
+
+  /* ---- title slide ---- */
+  .title-slide{ justify-content:center; }
+  .title-mark{ font-size:2.2rem; margin-bottom:1.4rem; filter:saturate(.85); }
+  .title-eyebrow{ font-family:var(--font-mono); font-size:.8rem; color:var(--cool); letter-spacing:.1em; margin-bottom:.8rem; }
+  .title-slide h1{ font-size:clamp(2.4rem, 6.4vw, 4.6rem); }
+  .title-sub{ font-size:1.15rem; color:var(--muted); margin-top:1.2rem; max-width:56ch; line-height:1.6; }
+  .title-foot{ margin-top:2.6rem; display:flex; gap:2rem; flex-wrap:wrap; font-family:var(--font-mono); font-size:.82rem; color:var(--muted-2); }
+  .title-foot b{ color:var(--ink); font-weight:600; }
+
+  /* ---- part index chips ---- */
+  .chip-grid{ display:flex; flex-wrap:wrap; gap:.7rem; margin-top:2rem; max-width:64ch; }
+  .chip{
+    display:flex; align-items:baseline; gap:.5em; font-family:var(--font-mono); font-size:.85rem;
+    padding:.5em .9em; border:1px solid var(--line-strong); border-radius:99px; color:var(--muted); background:var(--surface);
+  }
+  .chip b{ color:var(--accent); font-weight:700; }
+
+  /* ---- two column: attr panel + explanation ---- */
+  .two-col{ display:grid; grid-template-columns: 1.05fr 1fr; gap:2.6rem; align-items:start; margin-top:1.8rem; }
+  @media (max-width: 900px){ .two-col{ grid-template-columns:1fr; } }
+
+  .attr-panel{
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:8px; overflow:hidden;
+  }
+  .attr-panel .attr-head{
+    font-family:var(--font-mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted-2);
+    padding:.6rem 1rem; border-bottom:1px solid var(--line); background:var(--surface-2);
+  }
+  .attr-row{ display:flex; justify-content:space-between; gap:1.2rem; padding:.55rem 1rem; border-bottom:1px solid var(--line); font-size:.85rem; }
+  .attr-row:last-child{ border-bottom:none; }
+  .attr-row .k{ color:var(--muted); font-family:var(--font-mono); flex-shrink:0; }
+  .attr-row .v{ color:var(--ink); font-family:var(--font-mono); text-align:right; }
+  .attr-row .v.on{ color:var(--cool); }
+  .attr-row .v.off{ color:var(--danger); }
+
+  .rule-table{ width:100%; border-collapse:collapse; font-size:.83rem; margin-top:.4rem; }
+  .rule-table th{ text-align:left; font-family:var(--font-mono); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-2); padding:.4rem .6rem; border-bottom:1px solid var(--line-strong); }
+  .rule-table td{ padding:.55rem .6rem; border-bottom:1px solid var(--line); color:var(--muted); vertical-align:top; }
+  .rule-table td:first-child{ color:var(--ink); font-family:var(--font-mono); font-weight:600; white-space:nowrap; }
+  .rule-table code{ color:var(--cool); }
+  .table-wrap{ overflow-x:auto; }
+
+  .kv-list{ list-style:none; margin:1.2rem 0 0; padding:0; display:flex; flex-direction:column; gap:.5rem; max-width:66ch; }
+  .kv-list li{ display:flex; gap:1rem; align-items:baseline; padding:.55rem .8rem; border:1px solid var(--line); border-radius:6px; background:var(--surface); font-size:.88rem; }
+  .kv-list code{ color:var(--cool); flex-shrink:0; }
+  .kv-list span{ color:var(--muted); }
+
+  .stat-row{ display:flex; gap:1.2rem; flex-wrap:wrap; margin-top:1.6rem; }
+  .stat{ border:1px solid var(--line); border-radius:8px; padding:1rem 1.3rem; background:var(--surface); min-width:130px; }
+  .stat b{ display:block; font-family:var(--font-display); font-size:1.7rem; color:var(--accent); line-height:1; margin-bottom:.35rem; font-variant-numeric:tabular-nums; }
+  .stat span{ font-size:.78rem; color:var(--muted); }
+
+  .diagram-wrap{ margin-top:1.6rem; overflow-x:auto; }
+  svg text{ font-family:var(--font-mono); }
+
+  .closing-links{ margin-top:2.2rem; display:flex; flex-direction:column; gap:.5rem; font-family:var(--font-mono); font-size:.85rem; color:var(--muted); }
+  .closing-links b{ color:var(--ink); }
+</style>
+
+<div class="waffle-ground" aria-hidden="true"></div>
+<nav class="rail" id="rail" aria-hidden="true"></nav>
+<div class="rail-brand">design-share / infra · part 2</div>
+<div class="rail-count" id="railCount">01 / 11</div>
+
+<section class="title-slide" id="s0" data-label="Intro">
+  <div class="title-mark" role="img" aria-label="waffle">🧇</div>
+  <div class="title-eyebrow">design-share インフラ解説 — Part 2</div>
+  <h1>「CloudFrontとS3だけ」の<br>中身は、9個ある。</h1>
+  <p class="title-sub">前回は「Lambdaを使わない」という選択を話した。今回はその中身——
+  <strong class="mark">1つのCloudFormationテンプレートに詰め込まれた9つの部品</strong>を、1個ずつ開けていく。</p>
+  <div class="title-foot">
+    <span><b>登場するAWSの機能</b> — 9個</span>
+    <span><b>テンプレート</b> — 1ファイル</span>
+    <span><b>コンピュート</b> — やっぱり0</span>
+  </div>
+</section>
+
+<section id="s1" data-label="内訳予告">
+  <div class="eyebrow"><span class="num">01</span> 今日見る9個</div>
+  <h2>「CloudFront + S3」は、9部品の略称だった</h2>
+  <p class="lede">前回のスライドでは2サービスと言ったが、実際に<code>cloudformation.yaml</code>を開くと
+  9種のAWSリソース定義が並んでいる。今日はこれを、リクエストが流れる順に見ていく。</p>
+  <div class="chip-grid">
+    <span class="chip"><b>1</b>S3 Bucket</span>
+    <span class="chip"><b>2</b>Origin Access Control</span>
+    <span class="chip"><b>3</b>CloudFront Distribution</span>
+    <span class="chip"><b>4</b>Cache Policy</span>
+    <span class="chip"><b>5</b>Origin Request Policy</span>
+    <span class="chip"><b>6</b>Response Headers Policy</span>
+    <span class="chip"><b>7</b>CloudFront Function</span>
+    <span class="chip"><b>8</b>KeyValueStore</span>
+    <span class="chip"><b>9</b>CloudFormation Stack</span>
+  </div>
+  <p class="body-text" style="margin-top:2rem">
+    どれも単体では地味な部品だが、組み合わせると<strong class="mark">認証つき・コメント可・キャッシュ制御ありのWebアプリ</strong>になる。
+  </p>
+</section>
+
+<section id="s2" data-label="S3">
+  <div class="eyebrow"><span class="num">02</span> 部品① S3</div>
+  <h2>完全に非公開の倉庫</h2>
+  <p class="lede">design-shareが扱うデータは全部この1バケットに入っている。ただし外からは1バイトも直接読めない。</p>
+  <div class="two-col">
+    <div class="attr-panel">
+      <div class="attr-head">PublicAccessBlockConfiguration</div>
+      <div class="attr-row"><span class="k">BlockPublicAcls</span><span class="v off">true</span></div>
+      <div class="attr-row"><span class="k">BlockPublicPolicy</span><span class="v off">true</span></div>
+      <div class="attr-row"><span class="k">IgnorePublicAcls</span><span class="v off">true</span></div>
+      <div class="attr-row"><span class="k">RestrictPublicBuckets</span><span class="v off">true</span></div>
+      <div class="attr-row"><span class="k">静的Webサイトホスティング</span><span class="v off">未設定</span></div>
+      <div class="attr-row"><span class="k">CORS設定</span><span class="v off">なし</span></div>
+    </div>
+    <p class="body-text">
+      4項目すべてtrue＝<strong class="mark">パブリックアクセスの穴を一切開けない</strong>設定。
+      CORSも定義していない。理由は単純で、コメントの読み書きは<strong class="mark">配信ドメイン自身からの同一オリジンfetch</strong>だけで完結し、
+      クロスオリジンでアクセスされる想定がそもそも無いから。
+    </p>
+  </div>
+  <ul class="kv-list" style="margin-top:1.8rem">
+    <li><code>p/{slug}/index.html</code><span>パターンHTML本体</span></li>
+    <li><code>comments/{slug}/{id}.json</code><span>コメント。1件＝1オブジェクト</span></li>
+    <li><code>design/{slug}.md</code><span>デプロイ元のDesign.md</span></li>
+    <li><code>gallery/</code> ・ <code>galleries/{gslug}.json</code><span>共有ギャラリー・名前付きギャラリーの実体</span></li>
+  </ul>
+</section>
+
+<section id="s3" data-label="OAC">
+  <div class="eyebrow"><span class="num">03</span> 部品② Origin Access Control</div>
+  <h2>CloudFrontだけが持つ、S3への鍵</h2>
+  <p class="lede">S3は完全非公開なのに、CloudFront経由なら読める。その橋渡しをしているのがOAC（Origin Access Identityの後継）。</p>
+  <div class="two-col">
+    <div class="attr-panel">
+      <div class="attr-head">OriginAccessControlConfig</div>
+      <div class="attr-row"><span class="k">OriginAccessControlOriginType</span><span class="v">s3</span></div>
+      <div class="attr-row"><span class="k">SigningBehavior</span><span class="v on">always</span></div>
+      <div class="attr-row"><span class="k">SigningProtocol</span><span class="v">sigv4</span></div>
+    </div>
+    <p class="body-text">
+      CloudFrontがS3へリクエストする際、毎回<strong class="mark">SigV4署名</strong>を付ける。S3側はBucket Policyで
+      「署名が正しく、<em>かつ</em>自分自身のDistribution ARNから来たリクエストだけ」を許可する——他人のCloudFrontが同じOACを騙って
+      このバケットを覗く<em>confused deputy</em>攻撃を、Condition句のARN一致で塞いでいる。
+    </p>
+  </div>
+  <div class="table-wrap">
+    <table class="rule-table">
+      <tr><th>Sid</th><th>許可アクション</th><th>範囲</th></tr>
+      <tr><td>CloudFrontRead</td><td>s3:GetObject</td><td>バケット全体</td></tr>
+      <tr><td>CloudFrontListComments</td><td>s3:ListBucket</td><td><code>comments/*</code>のprefix一覧のみ</td></tr>
+      <tr><td>CloudFrontPutCommentOnly</td><td>s3:PutObject</td><td><code>comments/*</code>配下のみ。DeleteObjectは無し</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="s4" data-label="Distribution">
+  <div class="eyebrow"><span class="num">04</span> 部品③ CloudFront Distribution</div>
+  <h2>全リクエストの入口、経路ごとに別ルール</h2>
+  <p class="lede">1つのDistributionの中に、パスパターンで振る舞いが変わる3つの経路がある。</p>
+  <div class="table-wrap">
+    <table class="rule-table">
+      <tr><th>Path</th><th>許可メソッド</th><th>用途</th></tr>
+      <tr><td>デフォルト (/*)</td><td>GET, HEAD</td><td>パターンHTML・DESIGN.md閲覧。edge-gate必ず通過</td></tr>
+      <tr><td>comments/*</td><td>GET/HEAD/OPTIONS/PUT/POST/PATCH/DELETE</td><td>コメント投稿。専用Origin Request Policyを付与</td></tr>
+      <tr><td>comments-list/*</td><td>GET, HEAD</td><td>コメント一覧。edge-gateがS3の<code>ListObjectsV2</code>へ書き換え</td></tr>
+    </table>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><b>200</b><span>PriceClass — 北米・欧州・アジアの主要拠点まで</span></div>
+    <div class="stat"><b>H2/H3</b><span>HttpVersion — http2and3</span></div>
+    <div class="stat"><b>""</b><span>DefaultRootObject — 空。補完はedge-gateの役目</span></div>
+  </div>
+</section>
+
+<section id="s5" data-label="ポリシー3枚">
+  <div class="eyebrow"><span class="num">05</span> 部品④⑤⑥ 3枚のポリシー</div>
+  <h2>挙動を決めているのは、3枚の小さな設定</h2>
+  <div class="two-col">
+    <div class="attr-panel">
+      <div class="attr-head">Cache Policy（自作・no-cache）</div>
+      <div class="attr-row"><span class="k">DefaultTTL</span><span class="v off">0</span></div>
+      <div class="attr-row"><span class="k">MaxTTL</span><span class="v off">1</span></div>
+      <div class="attr-row"><span class="k">MinTTL</span><span class="v off">0</span></div>
+    </div>
+    <p class="body-text">
+      CDNの本業である「キャッシュして高速化する」を、design-shareは<strong class="mark">意図的に捨てている</strong>。
+      トークンの失効やコメントの新着を即座に反映したいので、毎回オリジン（S3）まで見に行かせる。
+      ここでのCloudFrontの役割は「キャッシュ」ではなく<strong class="mark">グローバルなリクエストルーター兼TLS終端</strong>。
+    </p>
+  </div>
+  <div class="two-col" style="margin-top:1.6rem">
+    <div class="attr-panel">
+      <div class="attr-head">Origin Request Policy（コメントPUT専用・自作）</div>
+      <div class="attr-row"><span class="k">HeaderBehavior</span><span class="v">whitelist</span></div>
+      <div class="attr-row"><span class="k">Headers</span><span class="v on">content-type のみ</span></div>
+    </div>
+    <p class="body-text">
+      S3オリジンはAWSマネージドの汎用ポリシー（AllViewer等）を受け付けないため、専用に1枚作った。
+      <code>x-amz-content-sha256</code>は含めない——OACの署名処理がネイティブに扱うので、ここに書くとむしろ
+      「許可されないヘッダ」としてCloudFrontに拒否される、という実装上の落とし穴込みの1枚。
+    </p>
+  </div>
+  <p class="body-text" style="margin-top:1.6rem">
+    3枚目の<strong class="mark">Response Headers Policy</strong>はAWSマネージドの<code>SecurityHeadersPolicy</code>をそのままアタッチするだけ。
+    <code>nosniff</code>・<code>frame-deny</code>等のセキュリティヘッダーを、自作コード無しで全レスポンスに付与できる。
+  </p>
+</section>
+
+<section id="s6" data-label="Functions">
+  <div class="eyebrow"><span class="num">06</span> 部品⑦ CloudFront Functions</div>
+  <h2>edge-gate.js — 10KBの中に、認可ロジック全部</h2>
+  <p class="lede">前回の主役。今回は数字で改めてサイズ感を見る。</p>
+  <div class="stat-row">
+    <div class="stat"><b>291<span style="font-size:1rem">行</span></b><span>ソースの行数（コメント込み）</span></div>
+    <div class="stat"><b>8.6<span style="font-size:1rem">KB</span></b><span>行コメント・空行を除いた実配置サイズ</span></div>
+    <div class="stat"><b>10<span style="font-size:1rem">KB</span></b><span>cf2ランタイムの上限。約1.4KBの余白</span></div>
+    <div class="stat"><b>~6<span style="font-size:1rem">回</span></b><span>ギャラリー横断時のKVS最大読み取り回数</span></div>
+  </div>
+  <p class="body-text" style="margin-top:1.8rem">
+    トークン照合・無効化判定・PUTの形/content-type検査・コメント一覧へのリクエスト書き換え・ギャラリーのスコープ判定——
+    通常はLambda@EdgeやLambdaで書きそうなロジックが、<strong class="mark">10KB制限のjsランタイム1本</strong>に収まっている。
+    デプロイ時は<code>ds.py update-function</code>がコメントと空行を削ってから反映する。
+  </p>
+</section>
+
+<section id="s7" data-label="KVS">
+  <div class="eyebrow"><span class="num">07</span> 部品⑧ KeyValueStore</div>
+  <h2>書き込みは、ETagで守られている</h2>
+  <p class="lede">DynamoDBを消したはずなのに、DynamoDB的な発想は結局ここに残っている。</p>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 190" width="100%" height="190" role="img" aria-label="KVSのETag楽観ロックのフロー">
+      <rect x="10" y="65" width="190" height="60" rx="6" fill="var(--surface)" stroke="var(--line-strong)" />
+      <text x="105" y="90" fill="var(--ink)" font-size="12" text-anchor="middle" font-weight="600">describe_key_value_store</text>
+      <text x="105" y="108" fill="var(--muted-2)" font-size="10" text-anchor="middle">現在のETagを取得</text>
+
+      <line x1="200" y1="95" x2="255" y2="95" stroke="var(--line-strong)" />
+      <polygon points="255,95 246,90 246,100" fill="var(--line-strong)" />
+
+      <rect x="260" y="65" width="190" height="60" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4" />
+      <text x="355" y="90" fill="var(--ink)" font-size="12" text-anchor="middle" font-weight="600">put_key(IfMatch=ETag)</text>
+      <text x="355" y="108" fill="var(--accent)" font-size="10" text-anchor="middle">ETagが一致した時だけ書き込む</text>
+
+      <line x1="450" y1="95" x2="505" y2="95" stroke="var(--line-strong)" />
+      <polygon points="505,95 496,90 496,100" fill="var(--line-strong)" />
+
+      <rect x="510" y="65" width="230" height="60" rx="6" fill="var(--cool-soft)" stroke="var(--cool)" />
+      <text x="625" y="90" fill="var(--cool)" font-size="12" text-anchor="middle" font-weight="600">成功 → 新しいETagに更新</text>
+      <text x="625" y="108" fill="var(--muted)" font-size="10" text-anchor="middle">ETagが古ければ例外で弾かれる</text>
+
+      <text x="380" y="160" fill="var(--muted-2)" font-size="11" text-anchor="middle">DynamoDBの条件付き書き込み（ConditionExpression）と同じ発想 = 楽観的並行性制御</text>
+    </svg>
+  </div>
+  <p class="body-text" style="margin-top:1rem">
+    <code>token:{slug}</code>のローテーションも無効化も、実体はこの<strong class="mark">ETag一致確認つきの書き込み</strong>。
+    「DynamoDBを使わない」と決めた設計が、結局は<strong class="mark">DynamoDBが得意とする考え方（条件付き書き込み）</strong>を
+    別の場所でそのまま再発明している——地味だが面白い発見。
+  </p>
+</section>
+
+<section id="s8" data-label="CloudFormation">
+  <div class="eyebrow"><span class="num">08</span> 部品⑨ CloudFormation</div>
+  <h2>1枚のYAMLが、8つの部品を全部知っている</h2>
+  <p class="lede">ここまでの8部品（S3〜KeyValueStore）は、すべて1つのCloudFormationテンプレートの中で定義されている。</p>
+  <ul class="kv-list">
+    <li><code>Outputs.DistributionDomain</code><span>共有URLのベースドメイン</span></li>
+    <li><code>Outputs.BucketNameOut</code><span>コンテンツ保管バケット名</span></li>
+    <li><code>Outputs.TokenStoreArn</code><span>KeyValueStoreのARN</span></li>
+    <li><code>Outputs.EdgeGateFunctionName</code><span>edge-gate.jsの反映先</span></li>
+  </ul>
+  <p class="body-text" style="margin-top:1.6rem">
+    <code>ds.py init</code>が、このOutputsを<strong class="mark">design-share.env</strong>というテキストファイルに落とし込み、
+    以降すべてのコマンドがそれを読む。<strong class="mark">「テンプレート→Outputs→ENV→CLI」</strong>という一本道で、
+    手作業でARNをコピペする工程が存在しない。
+  </p>
+</section>
+
+<section id="s9" data-label="1リクエストの一生">
+  <div class="eyebrow"><span class="num">09</span> まとめ図</div>
+  <h2>1本のGETリクエストの一生</h2>
+  <p class="lede">9個の部品が、それぞれどこで働いているかを1枚にする。</p>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 1000 460" width="100%" height="460" role="img" aria-label="GETリクエストがCloudFront経由でS3へ届き返るまでのシーケンス図">
+      <line x1="120" y1="70" x2="120" y2="420" stroke="var(--line)" stroke-dasharray="3 4" />
+      <line x1="400" y1="70" x2="400" y2="420" stroke="var(--line)" stroke-dasharray="3 4" />
+      <line x1="650" y1="70" x2="650" y2="420" stroke="var(--line)" stroke-dasharray="3 4" />
+      <line x1="880" y1="70" x2="880" y2="420" stroke="var(--line)" stroke-dasharray="3 4" />
+
+      <rect x="60" y="30" width="120" height="34" rx="6" fill="var(--surface)" stroke="var(--line-strong)" />
+      <text x="120" y="52" fill="var(--ink)" font-size="12" text-anchor="middle" font-weight="600">Browser</text>
+
+      <rect x="320" y="30" width="160" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" />
+      <text x="400" y="52" fill="var(--ink)" font-size="12" text-anchor="middle" font-weight="600">CloudFront + Function</text>
+
+      <rect x="580" y="30" width="140" height="34" rx="6" fill="var(--cool-soft)" stroke="var(--cool)" />
+      <text x="650" y="52" fill="var(--cool)" font-size="12" text-anchor="middle" font-weight="600">KeyValueStore</text>
+
+      <rect x="820" y="30" width="120" height="34" rx="6" fill="var(--surface)" stroke="var(--line-strong)" />
+      <text x="880" y="52" fill="var(--ink)" font-size="12" text-anchor="middle" font-weight="600">S3</text>
+
+      <line x1="120" y1="90" x2="395" y2="90" stroke="var(--ink)" />
+      <polygon points="400,90 390,85 390,95" fill="var(--ink)" />
+      <text x="260" y="82" fill="var(--ink)" font-size="11" text-anchor="middle">① GET /p/{slug}/</text>
+
+      <line x1="400" y1="120" x2="645" y2="120" stroke="var(--muted)" />
+      <polygon points="650,120 640,115 640,125" fill="var(--muted)" />
+      <text x="525" y="112" fill="var(--muted)" font-size="11" text-anchor="middle">② token:{slug} を問い合わせ</text>
+
+      <line x1="650" y1="150" x2="405" y2="150" stroke="var(--muted)" stroke-dasharray="4 3" />
+      <polygon points="400,150 410,145 410,155" fill="var(--muted)" />
+      <text x="525" y="142" fill="var(--muted-2)" font-size="11" text-anchor="middle">③ 現在の有効トークンを返す（ETagで保護された値）</text>
+
+      <rect x="320" y="168" width="330" height="46" rx="6" fill="none" stroke="var(--accent)" stroke-dasharray="3 3" />
+      <text x="485" y="188" fill="var(--accent)" font-size="11" text-anchor="middle">④ Cookieと一致 → 許可</text>
+      <text x="485" y="204" fill="var(--muted-2)" font-size="9" text-anchor="middle">Cache Policy=no-cacheなので必ず毎回ここを通る</text>
+
+      <line x1="400" y1="240" x2="875" y2="240" stroke="var(--ink)" />
+      <polygon points="880,240 870,235 870,245" fill="var(--ink)" />
+      <text x="640" y="232" fill="var(--ink)" font-size="11" text-anchor="middle">⑤ OAC署名つきリクエストへ書き換えて転送</text>
+
+      <line x1="880" y1="270" x2="405" y2="270" stroke="var(--muted)" stroke-dasharray="4 3" />
+      <polygon points="400,270 410,265 410,275" fill="var(--muted)" />
+      <text x="640" y="262" fill="var(--muted)" font-size="11" text-anchor="middle">⑥ private objectを返す（OACが無ければAccessDenied）</text>
+
+      <rect x="320" y="288" width="330" height="40" rx="6" fill="none" stroke="var(--cool)" stroke-dasharray="3 3" />
+      <text x="485" y="308" fill="var(--cool)" font-size="11" text-anchor="middle">⑦ Response Headers Policyでセキュリティヘッダー付与</text>
+      <text x="485" y="323" fill="var(--muted-2)" font-size="9" text-anchor="middle">コメントPUT時はここでOrigin Request Policyがcontent-typeのみ転送</text>
+
+      <line x1="400" y1="360" x2="125" y2="360" stroke="var(--ink)" />
+      <polygon points="120,360 130,355 130,365" fill="var(--ink)" />
+      <text x="260" y="352" fill="var(--ink)" font-size="11" text-anchor="middle">⑧ 完成したレスポンスをBrowserへ</text>
+
+      <text x="500" y="410" fill="var(--muted-2)" font-size="10" text-anchor="middle">この一連を成立させている土台が ⑨ CloudFormation（1テンプレートで①〜⑧の全部品を定義）</text>
+    </svg>
+  </div>
+</section>
+
+<section id="s10" data-label="Fin">
+  <div class="eyebrow"><span class="num">10</span> Fin</div>
+  <h2>ご清聴ありがとうございました</h2>
+  <p class="lede">「サーバーレス」の中身は、名前を並べるより分解した方がずっと面白い。</p>
+  <div class="closing-links">
+    <span>Part 1: <b>API GatewayもLambdaも使わない、サーバーレスの選択肢</b></span>
+    <span>テンプレート本体: <b>infra/cloudformation.yaml</b></span>
+    <span>エッジロジック: <b>infra/cloudfront-function/edge-gate.js</b></span>
+  </div>
+</section>
+
+<script>
+(function(){
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section'));
+  var rail = document.getElementById('rail');
+  var count = document.getElementById('railCount');
+  sections.forEach(function(s, i){
+    var dot = document.createElement('span');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.dataset.index = i;
+    rail.appendChild(dot);
+  });
+  var dots = rail.querySelectorAll('.dot');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting){
+        var idx = sections.indexOf(entry.target);
+        dots.forEach(function(d, i){ d.classList.toggle('active', i === idx); });
+        count.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(sections.length).padStart(2, '0');
+      }
+    });
+  }, { threshold: 0.6 });
+  sections.forEach(function(s){ io.observe(s); });
+})();
+</script>
