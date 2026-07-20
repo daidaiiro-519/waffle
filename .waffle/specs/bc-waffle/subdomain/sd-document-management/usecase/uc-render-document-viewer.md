@@ -1,3 +1,10 @@
+---
+id: "uc-render-document-viewer"
+type: "usecase"
+title: "MD正本をCSS付きHTMLで閲覧できる汎用viewerへ描画する：RenderDocumentViewer"
+description: "対象Documentのcanonical MD（RenderDocumentの出力）を、CSSの効いた自己完結HTMLへ変換し、読み取り専用の投影として書き出す"
+---
+
 # MD正本をCSS付きHTMLで閲覧できる汎用viewerへ描画する：RenderDocumentViewer
 
 ## 概要
@@ -123,4 +130,30 @@ Scenario: HTML描画はDocument集約自身の状態を変更しない
   Given 検証済みのDocument
   When RenderDocumentViewerを実行する
   Then 対象Documentのstatus・canonical MD・deploy先はいずれも変更されない
+```
+
+### content.descriptionがOKF frontmatterのdescriptionとしてヘッダに出る
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | schemaが持つdescriptionブロック（OKF frontmatter対応、brainstorm-md-html-viewer-and-okf.md論点2）のtextが、HTMLヘッダのdescriptionとして出力されることを確認する |
+
+```gherkin
+Scenario: content.descriptionがOKF frontmatterのdescriptionとしてヘッダに出る
+  Given content.description.textを持つDocument
+  When RenderDocumentViewerを実行する
+  Then そのtextがHTMLヘッダのdescriptionとして出力される
+```
+
+### content.descriptionがitems配列の場合も結合してヘッダに出る
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | schemaによってdescriptionブロックの形（text文字列 or items配列）が異なる（DomainSpecSchema等）ため、items配列の場合も結合して同じヘッダに反映されることを確認する |
+
+```gherkin
+Scenario: content.descriptionがitems配列の場合も結合してヘッダに出る
+  Given content.description.items（配列）を持つDocument
+  When RenderDocumentViewerを実行する
+  Then その要素を結合したテキストがHTMLヘッダのdescriptionとして出力される
 ```

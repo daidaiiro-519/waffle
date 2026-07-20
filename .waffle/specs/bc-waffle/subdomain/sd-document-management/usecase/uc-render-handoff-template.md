@@ -1,3 +1,10 @@
+---
+id: "uc-render-handoff-template"
+type: "usecase"
+title: "Handoff document.jsonを固定HTMLテンプレートへ描画する：RenderHandoffTemplate"
+description: "Handoff document.jsonの内容を、確定済みの固定HTMLテンプレート（完成イメージ・レビュー状況・詳細タブ）へ描画し、人間が読める成果物として書き出す"
+---
+
 # Handoff document.jsonを固定HTMLテンプレートへ描画する：RenderHandoffTemplate
 
 ## 概要
@@ -54,6 +61,7 @@ sequenceDiagram
 - If completionImageブロックが無いとき、システムはMISSING_COMPLETION_IMAGEエラーを返し描画しない shall。
 - When designViewpoints/implementationViewpointsが与えられたとき、システムはadvisor名＋件数のペアをレビュー状況セクションに出力する shall。
 - When 対象HandoffとcompletionImageが与えられたとき、システムは固定テンプレートへ値を差し込んだHTMLを.waffle/handoff/{documentId}.htmlへ書き込む shall。
+- When 対象Handoffが与えられたとき、システムはdocument-graph Skillの契約に沿ったid/type/title/description/tagsをHTMLのheadに<meta>タグとして出力する shall。
 
 ---
 
@@ -114,4 +122,28 @@ Then MISSING_COMPLETION_IMAGEエラーが返り描画されない
 Given designViewpoints/implementationViewpointsが与えられたHandoff
 When RenderHandoffTemplateを実行する
 Then advisor名＋件数のペアがレビュー状況セクションに出力される
+```
+
+### HandoffSchemaの新しいバージョンも描画できる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | schemaRefの検証がバージョン完全一致ではなくHandoffSchema/プレフィックスであることを確認する（実データがHandoffSchema/v2へ移行済みで、旧v1完全一致では全件が描画失敗していた回帰の再発防止） |
+
+```gherkin
+Given schemaRefがHandoffSchema/v2のHandoff
+When RenderHandoffTemplateを実行する
+Then 正常にHTMLが生成される
+```
+
+### 契約準拠のmetaタグが出力される
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | document-graph Skillが読める契約（id/type/title/description/tags）がHTMLのheadにmetaタグとして正しく出力されることを確認する |
+
+```gherkin
+Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff
+When RenderHandoffTemplateを実行する
+Then 生成されたHTMLのheadにid/type/title/description/tagsの<meta>タグが出力される
 ```
