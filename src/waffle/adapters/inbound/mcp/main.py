@@ -30,6 +30,7 @@ from waffle.application.usecases.render_blank_template import RenderBlankTemplat
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.application.usecases.render_handoff_template import RenderHandoffTemplate
 from waffle.application.usecases.render_document_viewer import RenderDocumentViewer
+from waffle.application.usecases.render_document_graph import RenderDocumentGraph
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
@@ -101,6 +102,11 @@ def render_handoff_template(path: str, outputPath: str) -> dict:
 def render_document_viewer(path: str, outputPath: str) -> dict:
     """document.jsonのMD正本をCSS付きの自己完結HTMLへ変換する（uc-render-document-viewer）。"""
     return _dict(RenderDocumentViewer(_docs(), RenderDocument(_docs(), _schemas())).run(path, outputPath))
+
+@mcp.tool
+def render_document_graph(directory: str, outputPath: str) -> dict:
+    """複数documentを横断してnode/edgeを集計しグラフmapビューへ描画する（uc-render-document-graph）。"""
+    return _dict(RenderDocumentGraph(_docs()).run(directory, outputPath))
 
 @mcp.tool
 def render_blank_template(schemaRef: str, discriminator: dict | None = None) -> dict:

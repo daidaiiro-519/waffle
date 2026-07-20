@@ -194,6 +194,21 @@ def test_render_document_viewerはHTMLを生成する(tmp_path):
     assert output_path.read_text(encoding="utf-8")
 
 
+def test_render_document_graphはグラフHTMLを生成する(tmp_path):
+    """
+    Given waffle MCPサーバ
+    When render_document_graphツールを既存ディレクトリで呼ぶ
+    Then 出力先HTMLファイルが生成される
+    """
+    output_path = tmp_path / "graph.html"
+    out = asyncio.run(_call("render_document_graph", {
+        "directory": ".waffle/documents/handoff",
+        "outputPath": str(output_path),
+    }))
+    assert out["path"] == str(output_path)
+    assert output_path.read_text(encoding="utf-8")
+
+
 def test_render_blank_templateはプレースホルダーMarkdownを返す():
     """
     Given waffle MCPサーバ
