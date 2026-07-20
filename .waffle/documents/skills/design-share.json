@@ -23,7 +23,7 @@
         },
         {
           "aspect": "デプロイ先AWS環境の有無",
-          "interpretation": "未構築、または design-share.env が無い場合は scripts/ds.sh init を対話式で実行する（既存スタックがあればそれを再利用してdesign-share.envを生成、無ければバケット名・価格クラス等を確認したうえで実際に作成してよいか最終確認してからCloudFormationスタックを作成し、Outputsからdesign-share.envを生成、edge-gate関数を反映・公開する、までを1コマンドで行う）。デプロイ不要（ローカル確認のみ）の場合は省略する"
+          "interpretation": "未構築、または design-share.env が無い場合は scripts/ds.py init を対話式で実行する（既存スタックがあればそれを再利用してdesign-share.envを生成、無ければバケット名・価格クラス等を確認したうえで実際に作成してよいか最終確認してからCloudFormationスタックを作成し、Outputsからdesign-share.envを生成、edge-gate関数を反映・公開する、までを1コマンドで行う）。デプロイ不要（ローカル確認のみ）の場合は省略する"
         },
         {
           "aspect": "生成するUIパターン数",
@@ -31,7 +31,7 @@
         },
         {
           "aspect": "管理操作の入り口の好み",
-          "interpretation": "指定がなければscripts/ds.sh（CLI）を直接使う。画面で見たい場合はds.sh console（Web UI）、MCPクライアントから使う場合はscripts/mcp_server.pyを案内する"
+          "interpretation": "指定がなければscripts/ds.py（CLI）を直接使う。画面で見たい場合はuv run scripts/ds.py console（Web UI）、MCPクライアントから使う場合はscripts/mcp_server.pyを案内する"
         }
       ]
     },
@@ -122,25 +122,25 @@
             {
               "stepId": "step-3-0",
               "title": "初回デプロイの前にプロジェクト用の名前付きギャラリーを用意する",
-              "summary": "DESIGN.mdを伴う最初のデプロイは、そのプロジェクトの開始を意味する。以降そのプロジェクトで生成する全てのパターン・スペックシートが一箇所から横断閲覧できるよう、デプロイ前に ds.sh galleries create でプロジェクト専用の名前付きギャラリー（カテゴリ）を作成し、以降このプロジェクトのデプロイは全て ds.sh galleries add でそのカテゴリへ登録する。個別のURLを単独で渡すだけで終えない。",
+              "summary": "DESIGN.mdを伴う最初のデプロイは、そのプロジェクトの開始を意味する。以降そのプロジェクトで生成する全てのパターン・スペックシートが一箇所から横断閲覧できるよう、デプロイ前に uv run scripts/ds.py galleries create でプロジェクト専用の名前付きギャラリー（カテゴリ）を作成し、以降このプロジェクトのデプロイは全て uv run scripts/ds.py galleries add でそのカテゴリへ登録する。個別のURLを単独で渡すだけで終えない。",
               "bullets": []
             },
             {
               "stepId": "step-3-1",
               "title": "スペックシートを生成しレビュー用に公開する",
-              "summary": "scripts/render_spec_sheet.mjs <DESIGN.mdパス> <出力htmlパス> を実行する。内部で @google/design.md の公式lintパイプラインでDESIGN.mdを解析し、解決済みトークンからスウォッチ・タイプスケール・スケール・コンポーネント実物を機械的に生成する（値の手動転記をしない＝round-tripを閉じる）。エラーがあれば生成を中止するので、先にDESIGN.mdを直す。不明なコンポーネントサブトークンや未解決の参照は生成物中に不足として自動的に明示される。生成後 scripts/embed_fonts.py で自己完結化してから ds.sh deploy --type design-review --design <DESIGN.mdパス> <spec.html> \"<表示名>\" でURL＋トークンを発行する。",
+              "summary": "scripts/render_spec_sheet.mjs <DESIGN.mdパス> <出力htmlパス> を実行する。内部で @google/design.md の公式lintパイプラインでDESIGN.mdを解析し、解決済みトークンからスウォッチ・タイプスケール・スケール・コンポーネント実物を機械的に生成する（値の手動転記をしない＝round-tripを閉じる）。エラーがあれば生成を中止するので、先にDESIGN.mdを直す。不明なコンポーネントサブトークンや未解決の参照は生成物中に不足として自動的に明示される。生成後 scripts/embed_fonts.py で自己完結化してから uv run scripts/ds.py deploy --type design-review --design <DESIGN.mdパス> <spec.html> \"<表示名>\" でURL＋トークンを発行する。",
               "bullets": []
             },
             {
               "stepId": "step-3-2",
               "title": "コメントで方向性を合意する",
-              "summary": "関係者はコメント欄で「この方向でOK／修正希望」を名前付きで返す（アカウント不要・数秒ごとに同期＝ライブレビュー可）。修正希望があればDESIGN.mdを直してスペックシートを再デプロイし、合意できるまで往復する。",
+              "summary": "関係者はコメント欄で「この方向でOK／修正希望」を名前付きで返す（アカウント不要・数秒ごとに同期＝ライブレビュー可）。修正希望があればDESIGN.mdを直し、uv run scripts/ds.py redeploy --design <DESIGN.mdパス> <slug> <spec.html> で同一URL・同一コメントスレッドのまま内容を差し替える（deployで作り直すと新しいURL・空のコメント欄になりレビューの連続性が切れるため使わない）。合意できるまで往復する。",
               "bullets": []
             },
             {
               "stepId": "step-3-3",
               "title": "確定して正式な配置場所へ置く",
-              "summary": "合意できたら ds.sh confirm-design <slug> [--to <ディレクトリ>] を実行する。deploy時にS3へ保存したDESIGN.md本体を <配置先>/DESIGN.md（既定はカレント）として配置し、既存があれば上書き前にバックアップを取り、確定の事実（confirmedAt・配置先）をmetaへ記録し、レビューコメントを記録として同伴エクスポートする。confirm-designはUIモックを生成しない（生成は確定後の対話で行う）。",
+              "summary": "合意できたら uv run scripts/ds.py confirm-design <slug> [--to <ディレクトリ>] を実行する（コンソールの「確定」ボタンからも同じ操作ができる）。deploy時にS3へ保存したDESIGN.md本体を <配置先>/DESIGN.md（既定はカレント）として配置し、既存があれば上書き前にバックアップを取り、確定の事実（confirmedAt・配置先）をmetaへ記録し、レビューコメントを記録として同伴エクスポートする。同一プロジェクト内に既存の確定済みDESIGN.mdがあれば自動的に確定解除される（1プロジェクトにつき確定済みDESIGN.mdは常に1つ）。confirm-designはUIモックを生成しない（生成は確定後の対話で行う）。",
               "bullets": []
             }
           ]
@@ -155,28 +155,31 @@
         {
           "stepId": "step-5",
           "title": "パターン単位でデプロイしURL＋トークンを発行する",
-          "summary": "scripts/ds.sh deploy <HTMLファイル> \"<表示名>\" を実行する。slugとトークンが生成されてホスティング先へ配置され、URLとトークンはこの場で一度だけ表示される。トークンは別チャネルで共有相手へ渡すよう案内する。デプロイ直後に閲覧者と同じ手順（URLを開く→トークン入力→コメント1件投稿→一覧表示）のセルフスモークを必ず1周する。",
+          "summary": "scripts/ds.py deploy <HTMLファイル> \"<表示名>\" を実行する。slugとトークンが生成されてホスティング先へ配置され、URLとトークンはこの場で一度だけ表示される。トークンは別チャネルで共有相手へ渡すよう案内する。デプロイ直後に閲覧者と同じ手順（URLを開く→トークン入力→コメント1件投稿→一覧表示）のセルフスモークを必ず1周する。",
           "bullets": [],
           "children": []
         },
         {
           "stepId": "step-6",
           "title": "コメントを回収しDesign.mdへ反映する",
-          "summary": "scripts/ds.sh export <slug> のzip、または aws s3 sync でコメントJSONを取得して要点を整理し、Design.mdへの差分として反映する。必要ならパターンを再生成・再デプロイして改善サイクルを回す。",
+          "summary": "scripts/ds.py export <slug> のzip、または aws s3 sync でコメントJSONを取得して要点を整理し、Design.mdへの差分として反映する。必要なら uv run scripts/ds.py redeploy <slug> <html> で同一URL・同一コメントスレッドのまま改善サイクルを回す（新しいURLを発行し直さない）。",
           "bullets": [],
           "children": []
         },
         {
           "stepId": "step-7",
           "title": "公開中パターンを管理する",
-          "summary": "管理操作はCLI（scripts/ds.sh）・Web UI（ds.sh console、localhostのみ）・ローカルMCP（scripts/mcp_server.py）の3経路から選べる。いずれも実体は同じスクリプトに委譲される。閲覧者に横断閲覧を提供する場合は共有ギャラリー（共通トークン）を有効化する。",
+          "summary": "管理操作はCLI（scripts/ds.py）・Web UI（uv run scripts/ds.py console、localhostのみ）・ローカルMCP（scripts/mcp_server.py）の3経路から選べる。いずれも実体は同じスクリプトに委譲される。閲覧者に横断閲覧を提供する場合は共有ギャラリー（共通トークン）を有効化する。",
           "bullets": [
-            "一覧: ds.sh list（全パターンの公開状態・slug・更新日）",
-            "無効化: ds.sh disable <slug>。アクセスを止めるがデータは残す。既定でzipエクスポートを先に実行する",
-            "再発行/再公開: ds.sh rotate <slug>。新トークン発行で旧トークンは失効（URL不変）。無効化済みパターンに対して実行すると再公開になる",
-            "エクスポート: ds.sh export <slug>。公開を維持したままバックアップを取得する",
-            "共有ギャラリー: ds.sh gallery init で1つのランディングURL＋共通トークンを発行し、閲覧者が公開中の全パターンを一覧・横断閲覧できるようにする（rotate/disableで共通トークンを管理）",
-            "カテゴリ（名前付きギャラリー）: ds.sh galleries create でカテゴリを発行し、ds.sh galleries add/remove/set で各パターンの所属を管理する。カテゴリのトークンは所属パターンだけを開ける（スコープ共有）"
+            "一覧: uv run scripts/ds.py list（全パターンの公開状態・slug・更新日）。コンソールではプロジェクトごとにDESIGN.mdタブ／UIモックタブへ分けて表示する",
+            "無効化: uv run scripts/ds.py disable <slug>。アクセスを止めるがデータは残す。既定でzipエクスポートを先に実行する",
+            "更新（同一URLへの再デプロイ）: uv run scripts/ds.py redeploy <slug> <html-file>。URL・トークン・既存コメントは維持したまま内容だけを差し替える。rotate（トークン再発行のみ・内容は不変）とは別物",
+            "再発行/再公開: uv run scripts/ds.py rotate <slug>。新トークン発行で旧トークンは失効（URL不変）。無効化済みパターンに対して実行すると再公開になる",
+            "エクスポート（パターン単位）: uv run scripts/ds.py export <slug>。公開を維持したままバックアップを取得する",
+            "確定（採用）: DESIGN.mdは uv run scripts/ds.py confirm-design <slug> で正式配置する（1プロジェクトにつき常に1つ、confirm時に既存の確定は自動解除）。UIモックにも確定（採用案にする）の概念があるが、こちらはsupersedeしない——同じプロジェクト内で複数のUIモックが同時に確定していてよい（別々の枠を担当する複数モックが並存しうるため）。いずれもコンソールの⋯メニューから操作できる",
+            "エクスポート（プロジェクト単位）: 確定済みDESIGN.md 1件＋そのプロジェクトのUIモック＋各パターンのコメントをまとめてzip化する。コンソールのエクスポート画面ではUIモックをチェックボックスで選択でき、既定では確定済みのものだけにチェックが入る（検討中のものも任意で追加選択できる）",
+            "共有ギャラリー: uv run scripts/ds.py gallery init で1つのランディングURL＋共通トークンを発行し、閲覧者が公開中の全パターンを一覧・横断閲覧できるようにする（rotate/disableで共通トークンを管理）",
+            "カテゴリ（名前付きギャラリー＝プロジェクト）: uv run scripts/ds.py galleries create でカテゴリを発行し、uv run scripts/ds.py galleries add/remove/set で各パターンの所属を管理する。カテゴリのトークンは所属パターンだけを開ける（スコープ共有）。カテゴリごとの無効化（uv run scripts/ds.py galleries disable <gslug>）もコンソールの⋯メニューから操作できる"
           ],
           "children": []
         }
@@ -191,10 +194,11 @@
       "blockType": "Guardrails",
       "title": "ガードレール",
       "items": [
-        "動作要件: uvがインストール済みで、AWS認証情報が設定されていること（CLI・Web UI・MCPサーバーの全経路が前提とする）。実体（scripts/ds.py・scripts/console_server.py）はboto3+awscrtに依存するが、PEP 723のインラインスクリプトメタデータで宣言し `uv run --script` で起動することで、design-shareの外側（親プロジェクトのvenv等）を一切汚さず隔離環境へ自動導入する。scripts/ds.sh は `uv run --script scripts/ds.py` を呼ぶだけの薄いシムで、旧来のaws CLI v2への個別subprocess依存（common.sh等の各シェルスクリプト）は撤去済み。エクスポートのzip化もPython標準のzipfileで行う（追加バイナリ不要）。",
+        "動作要件: uvがインストール済みで、AWS認証情報が設定されていること（CLI・Web UI・MCPサーバーの全経路が前提とする）。実体（scripts/ds.py・scripts/console_server.py）はboto3+awscrtに依存するが、PEP 723のインラインスクリプトメタデータで宣言し `uv run --script` で起動することで、design-shareの外側（親プロジェクトのvenv等）を一切汚さず隔離環境へ自動導入する。旧来のaws CLI v2への個別subprocess依存（common.sh等の各シェルスクリプト）は撤去済みで、`scripts/ds.py`単体（`uv run --script`経由）に統一されている。エクスポートのzip化もPython標準のzipfileで行う（追加バイナリ不要）。",
         "Design.mdの実体フォーマットはgoogle-labs-code/design.md仕様に従い、独自フォーマットを発明しない",
         "トークンは発行・再発行の瞬間にチャットへ一度だけ表示し、平文でファイルやリポジトリに永続保存しない（閲覧者側ではCookieに保持される点は既知の設計）。ただしlocalhost限定の管理コンソールは、開発者がKVSから現在トークンを読んで表示・コピーしてよい（ファイルには残さない）",
         "無効化してもホスティング上のデータは即削除しない（エクスポート可能な状態を保つ）",
+        "【デプロイのやり直しには2種類あり、意味が異なる】uv run scripts/ds.py deploy は毎回新しいslug（＝新しいURL）を発行する。レビュー中に内容を直すたびにこれで作り直すと、旧URLのcomments/配下にレビュアーのコメントが取り残され、レビュアーから見ると『直すたびに空っぽの別ページになる』——design-shareの核である継続的レビューの前提が壊れる。既存パターンの内容だけを更新したい場合は必ず uv run scripts/ds.py redeploy <slug> <html-file> を使う（URL・トークン・既存コメントスレッドを維持したまま index.html の中身だけを差し替える）。deployは新規パターンの初回公開時にのみ使う。",
         "トークン失効・無効化・新規デプロイのエッジ反映は数秒〜数十秒の伝播遅延がある（KVSは結果整合で収束するまで非単調。新規発行・再発行直後のパターンは一時的に403＝無効化済み表示に見えうる）。「即時」とは案内せず、少し待って再読み込みするよう伝える",
         "コメント内容は必ずテキストとして描画する（innerHTML禁止）。加えてedge-gateがコメントPUTのキー形状（.jsonのみ）とcontent-type（application/jsonのみ)を検査し、配信ドメイン上へのHTML設置を拒否する",
         "コメントPUTにはサイズ・レート制限がない（トークン保持者によるゴミ投棄は受容リスク）。共有相手は信頼できる範囲に留めること",
@@ -202,17 +206,21 @@
         "特定企業サイトのデザイントークン抽出・同梱・名指し参照をしない（アーキタイプの想起ワードは業種レベルに留める）",
         "外部URL（Figma・実アプリ画面）の取り込み機能は提供しない",
         "トークン値（色・タイポグラフィ等）は言葉だけで確定せず、必ず試作artifactの視覚確認を経て確定する",
-        "視覚的な判断（Design.md確定・トークン確定・比較検討）を要する場面でユーザーに提示するモックは、design-share自身の配信基盤（scripts/ds.sh deploy等、AWS上のトークン保護URL＋コメント機能）をデフォルトの提示経路とする。Step2の試作artifactはDesign.md確定前の小さな確認用途（配色スウォッチ等）に限定し、確定済み・意思決定を要する成果物を最後まで生artifactのまま提示して終えない。ただしClaude Code環境で完結する軽量なやり取りでは、artifactの方が往復コストが低いため優先してよい（AWS未構築・ローカル確認のみでよい場合を含む）——実行環境に応じて経路を選ぶが、既定は自前配信基盤であることを忘れない。",
+        "視覚的な判断（Design.md確定・トークン確定・比較検討）を要する場面でユーザーに提示するモックは、design-share自身の配信基盤（scripts/ds.py deploy等、AWS上のトークン保護URL＋コメント機能）をデフォルトの提示経路とする。Step2の試作artifactはDesign.md確定前の小さな確認用途（配色スウォッチ等）に限定し、確定済み・意思決定を要する成果物を最後まで生artifactのまま提示して終えない。ただしClaude Code環境で完結する軽量なやり取りでは、artifactの方が往復コストが低いため優先してよい（AWS未構築・ローカル確認のみでよい場合を含む）——実行環境に応じて経路を選ぶが、既定は自前配信基盤であることを忘れない。",
         "Design.md確定・試作生成・パターン生成の前に、references/knowledge/frontend-design-principles.md の概念層（題材に根ざす／ありきたりを避ける／主役を立てる／理由を言い切る／効かせどころを絞る／下限を守る）に照らす。特に『理由を言い切る』＝「なぜこれがありきたり（同種の題材なら誰でも出る型どおりの姿）でないか」を自分の言葉で言えることを確認する。○×チェックリストの照合にしない（毎回題材ごとに答えが変わる生成的な問いとして回す）。アクセシビリティ等の下限が通っていることを、ありきたりでない証拠の代わりにしない。",
         "UIモック生成時は、生成したモックをそのDESIGN.mdが言い切った制約に照らして点検する（『理由を言い切る』を確定時だけでなく実装時にも適用）。制約の明文化はそれ自体では遵守を保証しない（DESIGN.mdに書いた直後の生成物であっても、明文化と無関係に既定の言い回しへ流れうる）ため、提示前に必ずこの点検を実行する: 効かせどころ＝アクセントが実装でも一点に集約されているか（見出し等に撒いていないか）／主役は状態を跨いで機能する姿を見せているか（1状態だけ『置いた』のは装飾）／状態専用と宣言した色を別用途に流用していないか／DESIGN.mdに無い値を発明していないか（round-trip）／DESIGN.mdのDo's and Dontsに列挙した各項目と生成物を1つずつ照合する（トークンの使い方だけでなく、文章として書いた禁止事項も含む）／生成したコピーに、生成物の外側（設計意図・制作プロセス・生成AI自身の判断）への自己言及的な言及が紛れていないか／比喩表現がテーゼ・見出し・図の視覚表現の範囲を超えて、正確性が要る説明文（コマンド説明・手順等）に漏れていないか。違反は実装をDESIGN.mdへ戻すか、掟の方を直す。",
         "商用級モックの入力コントラクト（value-prop=自己完結・AWSのみを保つ）: 書体（assets/fonts＋embed_fonts.py）・統一SVGアイコン（references/icons/ui-icons.md）・生成SVG/CSSクラフト（チャート/パターン/データビズ）はスキル内蔵で埋める。実写・ロゴ・プロダクト画面などの画像は顧客提供とし、外部画像生成には依存しない。SaaSサーフェスは絵より部品（アイコン/チャート/表/状態）が主なので内蔵アセットで商用に届きやすい。LP/コーポレートはブランド画像の提供が前提。emojiをアイコン代わりにしない",
         "【UIモックの標準サイクル】最良のUIモックは〈生成→敵対的測定→修正→学びの還元〉サイクルで作り、これは design-share の中で完結する。自己批評（理由を言い切る／DESIGN.mdの掟に照らす）だけで完成としない。生成したモックに、このスキルが同梱するUX専門知識（references/knowledge/ 特に frontend-design-principles＝ux-advisor由来）を土台にした独立した敵対的測定をかける: 実物と数値evidence（コントラスト計算等）で欠陥を具体箇所で名指しし、verdict＋順位付きmust/should-fixを得る→修正→必要なら再測定で閉じる→学びを知識/アセットへ還元。生成者は自己採点できないため独立性が必須だが、独立性は“別Skillを呼ぶこと”でなく“別pass・敵対フレーミング（忖度なし/出荷基準/refute既定）・実物の読解”で担保する（生成時の文脈と自己弁護を持ち込まない別レビューとして回す。同梱UX知識を読ませたサブエージェントを敵対レビュアとして使う）。※外部のux-advisor Skillを呼ぶのではなく同梱UX知識による自前測定なので、自己完結（実行時に他Skillを呼ばない）と両立する。",
         "【敵対的測定は3つのゲートを直列に進み、各ゲートの内部では複数の判断レンズを並列サブエージェントとして立てて敵対的に検証してから、そのゲートの統合見解を出す】1つのゲートを単独のエージェント判断に任せると、判断が足りない観点が抜け落ちたり、性質の異なる複数の問い（例: 商用出荷可否とありきたり回避と細部の破綻）が1回の測定に混ざって『条件付きYes』の中身が曖昧になる。ゲートごとに、そのゲートが持つ判断レンズを並列サブエージェントとして立て、それぞれ敵対フレーミングで検証し、統合見解としてそのゲートのPASS/FAILを決めてから次のゲートへ進む。上位ゲートがFAILしたら下位ゲートは測定しない（差し戻して再生成する）。特定の題材条件でだけ発動する側道のレンズは作らない——1エージェントで判断が足りない観点があれば、それはゲートの外に追い出さず、そのゲートの内部レンズとして常に並列検証に含める（該当しない題材では単に指摘が出ないだけで、レンズ自体は毎回検証に含める）。",
-        "①コンセプト層（レンズ: 題材に根ざす／ありきたりを避ける／主役を立てる／理由を言い切る／round-trip）＝判断の出どころが題材にあるか・ありきたりでないか。『題材に根ざす』は、確立されたデザインパターン（例: SaaSの定番UI構成のような、ユーザーに受け入れられている表現）の援用をその選択がこの題材にとって適切な語彙である限り積極的に許容しつつ、特定の実在デザインを丸ごと模倣し選択の出どころを他者の作品に置くことだけを退ける（模倣は題材から再導出されていないため題材に根ざしていない）。ここがFAILなら見た目をどれだけ磨いても無駄なので即差し戻す。",
+        "①コンセプト層（レンズ: 題材に根ざす／主役を立てる／理由を言い切る／round-trip）＝判断の出どころが題材にあるか。『ありきたりを避ける』は独立した拒否権としては置かない——references/knowledge/frontend-design-principles.mdの統べる規則自身が『原則が固定してよいのは題材に根ざす・理由を言い切るだけ』と明記しており、ありきたりを避けるは本来『題材を考えずに既定値クラスタへ反射的に落ちていないか』を検知するための参照点・着眼点であって、題材に根ざすと対等な独立ゲートではない。よって『題材に根ざす』の判定に、既定値クラスタとの一致を『理由付けの除去テスト（その理由を外したとき、選択への必然性が本当に消えるか）を通常より厳しくやる引き金』として組み込むが、除去テストの結果として理由付けが具体的な必然性を持つと判定できるなら、結果が既知の既定値クラスタと偶然一致していてもそれだけを理由に差し戻さない。既定値クラスタとの一致を単独の理由に『ありきたりだからFAIL』と判定することは、この統べる規則違反であり禁止する。『題材に根ざす』は、確立されたデザインパターン（例: SaaSの定番UI構成のような、ユーザーに受け入れられている表現）の援用をその選択がこの題材にとって適切な語彙である限り積極的に許容しつつ、特定の実在デザインを丸ごと模倣し選択の出どころを他者の作品に置くことだけを退ける（模倣は題材から再導出されていないため題材に根ざしていない）。ここがFAILなら見た目をどれだけ磨いても無駄なので即差し戻す。",
         "②レイアウト層（レンズ: サーフェス別の情報設計／感性工学・人間工学）＝サーフェス別の情報設計が目的に噛み合っているか（SaaS=要約→明細・状態の形符号化、LP=ヒーローの訴求とCV導線、コーポレート=IA・信頼設計の情報粒度・固有名詞/資格の細部精度）を、視覚的階層のGestalt原則・視線の走査パターン・操作対象の到達しやすさ等、感性工学・人間工学に基づく理論的根拠で裏付けて判定する（『噛み合ってそう』という主観評価のままにしない）。",
         "③デザイン層（レンズ: 視覚クラフト／CSS技術品質／信頼設計の細部精度）＝クラフトと実装が商用の仕上げに達しているか。全レンズが統合見解でPASSして初めて『商用レベル到達（Yes）』と判定する。fix後は必ずそのゲートのレンズ群から再度並列・敵対検証をやり直し、『直したはず』を生成者の自己申告のまま確定にしない。視覚クラフト＝はみ出し・見切れ・余白の欠落や衝突（overflow、要素の重なり、paddingゼロで文字が枠に接触、marginの相殺で密着しすぎ/離れすぎ）といった視覚的に目立つ物理的な崩れを最初に確認する。次いでSVGの歪み（preserveAspectRatio異方性・真円が卵形になる等）、コントラスト・フォーカス可視・状態の三重符号化などa11y下限、lang/full-doc等の文書構造。CSS技術品質＝セレクタ詳細度の衝突（.sectionのような種類セレクタと.ctaのような要素セレクタがpadding/marginを打ち消し合っていないか）、レスポンシブは複数ビューポート（狭幅・中間幅・広幅）で実際に崩れを確認する（静的コード読解だけで済ませない）、保守性（命名一貫性・重複ルール・デッドCSS・!important濫用）。信頼設計の細部精度＝固有名詞・資格表記・登録番号等の細部精度、写真依存プレースホルダーの全箇所一貫性、実在の法人・個人への信頼を毀損する誤植を独立して読み返す（コーポレート/信頼設計中心のモックに限らず、常設レンズとして毎回検証に含める。該当しない題材では単に指摘が出ないだけ）。検証・修正はその適用文脈にのみ有効で、構造的に類似する他のインスタンスや別の適用文脈へは自動的に伝播しない。局所的な修正の直後に安心して終えず、同型の箇所を必ず横断走査する: 共通コンテナクラス（.wrap等）と組み合わせる全要素をgrepで洗い出し、同じ要素にpaddingを重複定義していないか（詳細度や定義順で共通クラスの横方向paddingを丸ごと上書きしていないか）をメディアクエリ内の再定義も含めて機械的に確認する。同様に、複数箇所に同じ構造で描画されるSVG図（ノードと矢印等の描画順）や、複数箇所で再利用される色トークン（用途ごとに閾値が異なるコントラスト等）についても、1箇所の修正・検証で終えず全使用箇所をgrepし直す。モバイルナビは既定でハンバーガー＋ドロワー等の発見可能な標準パターンを使い、横スクロール行のような独自パターンは理由を言い切れる場合のみ採用する。",
         "【自然言語の写像ゲート】ユーザー発話をDesign.md確定・トークン決定に反映する前に、references/knowledge/nl-feature-routing.md の5特徴量カテゴリ（視覚・印象／情報構造・タスク型／利用文脈・習熟度／トーン・ボイス／リスク・不可逆性）に照らし、「この発話のどの部分が・どのカテゴリで・どこへ送られるか（8語のどれ、またはprogressive-disclosure/ui-copywriting等の既存knowledge）」を一文で言い切ってから展開する。硬い対応表として機械的に照合せず、発話ごとに言葉で言い切る（理由を言い切るの対になる注入側のゲート）。確定したトークン・構成要素には、それがどの発話・どの特徴量カテゴリに由来するかを一言添える（DESIGN.mdのコメント等）。これにより注入の質を事後検証でき、展開側の成果物のトレーサビリティも同時に補う。",
-        "design-shareが生成した成果物（DESIGN.md・パターンHTML）は、その内容が何について語っているか（design-share自身か、design-shareを使う側のプロジェクトの何かか）に関わらず、常に design-share自身の管理下（.claude/skills/design-share/examples/<題材のslug>/ 配下、DESIGN.mdと生成HTMLを同居させる）に置く。design-shareが自らconsumer側のプロジェクト構造（docs/等）を推測して配置先を決めることはしない——それを行うとdesign-shareが個々のプロジェクト構造に依存する密結合なツールになる。成果物を最終的にどこへ配置するか（例: docs/等の公開場所へ移す）は、design-shareの範囲外の作業として人間が個別に判断・実行する。"
+        "design-shareが生成した成果物（DESIGN.md・パターンHTML）は、その内容が何について語っているか（design-share自身か、design-shareを使う側のプロジェクトの何かか）に関わらず、常に design-share自身の管理下（.claude/skills/design-share/examples/<題材のslug>/ 配下、DESIGN.mdと生成HTMLを同居させる）に置く。design-shareが自らconsumer側のプロジェクト構造（docs/等）を推測して配置先を決めることはしない——それを行うとdesign-shareが個々のプロジェクト構造に依存する密結合なツールになる。成果物を最終的にどこへ配置するか（例: docs/等の公開場所へ移す）は、design-shareの範囲外の作業として人間が個別に判断・実行する。",
+        "【DESIGN.mdとUIモックの確定は非対称】DESIGN.mdは1プロジェクトにつき確定済みは常に1つまで（confirm-design実行時、同一プロジェクト内の既存の確定済みDESIGN.mdは自動的に確定解除＝supersedeする）。UIモックの確定（採用案にする）はsupersedeしない——同じプロジェクト内で複数のUIモックが同時に確定していてよい。理由: DESIGN.mdはそのプロジェクトのデザインシステムそのものであり1つしかあり得ないが、UIモックは別々の枠（ヒーロー・料金セクション等）を担当する複数モックが同時に確定していて自然なため。",
+        "【ローカル/クラウド同期状態の判定はその場で計算し、ローカルにマニフェストファイルを持たない】各パターンのmeta.jsonに sourceFile（デプロイ元のローカルファイルパス）・sourceHash（アップロード時点のsha256）を持たせる。コンソールはローカルファイルをその場でハッシュ化し、同じsourceFileを持つパターン（複数あれば最新のもの）のsourceHashと比較して「公開中／未公開／再公開待ち」を判定する。ローカルに`.gslug`や`.deployed.json`のような紐付け専用ファイルは一切置かない。理由: 複数人・複数マシンで同じプロジェクトを触っても全員が同じクラウドの実体を見て判定するため機械的に食い違わず、新規にコミットするファイルも増えないためgitの競合が原理的に起きない。",
+        "【プロジェクト（名前付きギャラリー）の紐付けも同じ理屈で解決する】galleries create時に、表示名とは別に半角の「プロジェクトキー」（例: design-share-lp）を galleries/{gslug}.json に持たせ、ローカルのプロジェクトフォルダ名にも同じ文字列を使う。コンソールはローカルのフォルダ名を毎回クラウドの全プロジェクトのprojectKeyと照合し、一致すればそのgslugを使う。どこにも見つからなければ本当に「未公開」（一度もデプロイされていない）と判定する。",
+        "【ローカルフォルダ構成】プロジェクトフォルダ（design-share自身の運用では`.claude/skills/design-share/.design-share/<プロジェクト名>/`、通常の顧客プロジェクトではそのリポジトリのルート、代理店運用では共有ワークスペース内のサブフォルダ）の直下に、成果物としてDESIGN.md・mocks/（デプロイ用UIモックHTML一式）を置く（コミット対象）。`.design-share/`配下にpreview/（DESIGN.mdのレンダリング確認用。render_spec_sheet.mjsの出力をブラウザで直接開いてクラウドに触れずに確認できる）・backups/（確定時の.bak退避）・exports/（エクスポートしたzip）を置く（.gitignore対象、いつでも再生成できる使い捨てファイルのため）。design-share自身の自己言及的な成果物についても、旧`examples/<slug>/`規約は廃止し、この構成に統一する。"
       ]
     },
     "references": {
@@ -265,19 +273,15 @@
         },
         {
           "path": "infra/cloudformation.yaml",
-          "description": "S3＋CloudFront＋CloudFront Functions＋KeyValueStoreの初回構築テンプレート（構築後にds.py update-function（またはds.sh update-function）の実行が必須）"
+          "description": "S3＋CloudFront＋CloudFront Functions＋KeyValueStoreの初回構築テンプレート（構築後にuv run scripts/ds.py update-function の実行が必須）"
         },
         {
           "path": "infra/cloudfront-function/edge-gate.js",
           "description": "トークン照合・無効化判定・コメントPUT検査(形状/content-type/16KBサイズ上限)・名前付きギャラリーのスコープ判定・一覧書き換えを行うエッジ関数。KVS読み取りは通常1回、ギャラリー横断/スコープ経路で最大約6回（所属は最大3件・fail-closed）"
         },
         {
-          "path": "scripts/ds.sh",
-          "description": "統一CLIの薄いシム。`exec uv run --script scripts/ds.py \"$@\"` を呼ぶだけで、実体はds.py側にある（bash→Python移行後もユーザー向け呼び出し面 `ds.sh <command>` は不変）"
-        },
-        {
           "path": "scripts/ds.py",
-          "description": "統一CLIの実体（PEP 723でboto3+awscrtを宣言、uv run --scriptで隔離環境実行）。旧common.sh/init.sh/destroy.sh/deploy_pattern.sh/confirm_design.sh/export_pattern.sh/rotate_token.sh/invalidate_pattern.sh/rename_pattern.sh/gallery.sh/galleries.sh/deploy_function.sh/smoke_test.shを1ファイルへ統合した。init（AWS環境の対話式セットアップ）／destroy（対話式削除）／list／deploy（--type design-review・--design対応）／confirm-design／export／rotate／disable／rename／console／update-function／gallery／galleries／reconcile／smoke の全コマンドを提供する。KVSの「未設定」と「取得失敗（ARN誤り等）」をエラーメッセージで判別し、後者は握りつぶさず伝播させる（bash版で実際に踏んだ事故の再発防止）"
+          "description": "統一CLIの実体（PEP 723でboto3+awscrtを宣言、uv run --scriptで隔離環境実行）。旧common.sh/init.sh/destroy.sh/deploy_pattern.sh/confirm_design.sh/export_pattern.sh/rotate_token.sh/invalidate_pattern.sh/rename_pattern.sh/gallery.sh/galleries.sh/deploy_function.sh/smoke_test.shを1ファイルへ統合した。init（AWS環境の対話式セットアップ）／destroy（対話式削除）／list／deploy（--type design-review・--design対応、新規パターンの初回公開で新しいURLを発行する）／redeploy（既存パターンの内容だけを差し替える。URL・トークン・既存コメントは維持する）／confirm-design／export／rotate／disable／rename／console／update-function／gallery／galleries／reconcile／smoke の全コマンドを提供する。KVSの「未設定」と「取得失敗（ARN誤り等）」をエラーメッセージで判別し、後者は握りつぶさず伝播させる（bash版で実際に踏んだ事故の再発防止）"
         },
         {
           "path": "scripts/console_server.py",

@@ -97,7 +97,17 @@
   aside.comments .seg label { flex: 1; display: flex; align-items: center; justify-content: center; font-size: .72rem; border: 1px solid #ccc; border-radius: 6px; padding: .32rem .2rem; cursor: pointer; color: #666; }
   aside.comments .seg input { position: absolute; opacity: 0; width: 0; height: 0; }
   aside.comments .seg label:has(input:checked) { border-color: #2f6f76; color: #2f6f76; background: #eef5f5; font-weight: 600; }
+  aside.comments .seg label:has(input:focus-visible) { outline: 2px solid #2f6f76; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { aside.comments .item.fresh { animation: none; } }
+
+  /* 狭幅ではcomments-collapsed時にasideごとdisplay:noneになり、中の再開ボタン(ctoggle)も
+     一緒に消えて二度と開けなくなる（実際のレビュー中に発覚した不具合）。asideの外に独立した
+     再開ボタンを常設し、狭幅×閉じた状態のときだけ表示する。 */
+  button.c-reopen { display: none; position: fixed; right: 1rem; bottom: 1rem; z-index: 30;
+    width: 52px; height: 52px; border-radius: 50%; border: none; background: #1a2126; color: #fff;
+    align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.3); }
+  button.c-reopen svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  @media (max-width: 760px) { body.comments-collapsed button.c-reopen { display: flex; } }
 </style>
 </head>
 <body>
@@ -107,6 +117,10 @@
 <main class="mock">
   <!-- {{モック本体}} — Design.mdのトークンとfrontend-design-principlesに基づいて生成する -->
 </main>
+
+<button type="button" class="c-reopen" id="c-reopen" aria-label="コメント欄を開く" title="コメント欄を開く">
+  <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>
+</button>
 
 <aside class="comments">
   <header><span class="clabel">コメント <span id="c-count"></span></span><span class="live" id="c-live" title="数秒ごとに同期">● 同期</span><button type="button" class="ctoggle" id="c-toggle" aria-label="コメント欄を閉じる" title="コメント欄を閉じる">▸</button></header>
@@ -261,13 +275,16 @@
 
 (function () {
   const ctoggle = document.getElementById('c-toggle');
+  const reopen = document.getElementById('c-reopen');
   if (!ctoggle) return;
-  ctoggle.addEventListener('click', () => {
-    const collapsed = document.body.classList.toggle('comments-collapsed');
+  function setCollapsed(collapsed) {
+    document.body.classList.toggle('comments-collapsed', collapsed);
     ctoggle.textContent = collapsed ? '◂' : '▸';
     ctoggle.title = collapsed ? 'コメント欄を開く' : 'コメント欄を閉じる';
     ctoggle.setAttribute('aria-label', ctoggle.title);
-  });
+  }
+  ctoggle.addEventListener('click', () => setCollapsed(!document.body.classList.contains('comments-collapsed')));
+  if (reopen) reopen.addEventListener('click', () => setCollapsed(false));
 })();
 </script>
 </body>

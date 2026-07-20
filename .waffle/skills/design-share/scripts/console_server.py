@@ -28,6 +28,7 @@
         または DESIGN_SHARE_ENV に絶対パスを設定。uvが無い環境では
         `pip install boto3` 後に python3 console_server.py でも動く）
 """
+import hashlib
 import http.server
 import json
 import os
@@ -37,6 +38,7 @@ import subprocess
 import sys
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import boto3
 
@@ -161,12 +163,79 @@ def galleries_list() -> list[dict]:
         v = kvs_get(f"g:{gs}")
         status = "disabled" if v == "DISABLED" else ("enabled" if v and v != "None" else "unset")
         # トークンの実値は一覧に含めない。共有メニューを開いたときに /api/token でオンデマンド取得する
-        return {"gslug": gs, "name": meta.get("name", ""), "status": status,
-                "url": f"https://{CONF.get('DISTRIBUTION_DOMAIN', '')}/g/{gs}/"}
+        return {"gslug": gs, "name": meta.get("name", ""), "projectKey": meta.get("projectKey", ""),
+                "status": status, "url": f"https://{CONF.get('DISTRIBUTION_DOMAIN', '')}/g/{gs}/"}
 
     with ThreadPoolExecutor(max_workers=8) as ex:
         cats = [c for c in ex.map(fetch_cat, keys) if c is not None]
     return sorted(cats, key=lambda c: c["name"])
+
+
+# --- ローカルプロジェクトの発見・同期状態判定 --------------------------------
+# 論点5・6の最終合意: ローカルには紐付け専用ファイルを一切持たない。起動時のカレントディレクトリ
+# 直下、およびその直下の各サブディレクトリについて「.design-share/」フォルダを探し、そこが
+# プロジェクトごとのサブフォルダ（design-share自身のexamples/廃止後の運用）を持つか、
+# それとも.design-share/自体がプロジェクト直下（通常の顧客プロジェクト・代理店運用）かを判定する。
+# 紐付けはプロジェクトキー（表示名とは別の半角キー、galleries/{gslug}.jsonのprojectKey）と
+# ローカルフォルダ名の一致だけで行う。同期状態はmeta.jsonのsourceFile/sourceHashとローカルの
+# 現在のファイルのハッシュをその場で比較して求める（ローカルにマニフェストは持たない）。
+
+def _build_local_project(name: str, proj_dir: Path) -> dict:
+    design_md = proj_dir / "DESIGN.md"
+    mocks_dir = proj_dir / "mocks"
+    mock_files = sorted(p.name for p in mocks_dir.glob("*.html")) if mocks_dir.is_dir() else []
+    return {"name": name, "dir": str(proj_dir), "hasDesign": design_md.is_file(), "mockFiles": mock_files}
+
+
+def discover_local_projects(root: Path) -> list[dict]:
+    candidates: list[tuple[Path, Path]] = []
+    direct = root / ".design-share"
+    if direct.is_dir():
+        candidates.append((root, direct))
+    try:
+        children = [c for c in root.iterdir() if c.is_dir() and c.name != ".design-share"]
+    except OSError:
+        children = []
+    for child in children:
+        sub = child / ".design-share"
+        if sub.is_dir():
+            candidates.append((child, sub))
+
+    found: list[dict] = []
+    for proj_root, ds_dir in candidates:
+        try:
+            nested = [d for d in ds_dir.iterdir()
+                      if d.is_dir() and ((d / "DESIGN.md").is_file() or (d / "mocks").is_dir())]
+        except OSError:
+            nested = []
+        if nested:
+            # design-share自身の運用: .design-share/配下にプロジェクトごとのサブフォルダがある
+            found.extend(_build_local_project(np.name, np) for np in nested)
+        elif (proj_root / "DESIGN.md").is_file() or (proj_root / "mocks").is_dir():
+            # 通常の顧客プロジェクト・代理店運用: .design-share/自体がプロジェクト直下にある
+            found.append(_build_local_project(proj_root.name, proj_root))
+    return found
+
+
+def _local_file_hash(path: Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def annotate_sync(items: list[dict], local: dict | None) -> None:
+    for p in items:
+        source_file = p.get("sourceFile")
+        sync = "cloud"
+        if local and source_file:
+            local_path = Path(local["dir"]) / source_file
+            if local_path.is_file():
+                h = _local_file_hash(local_path)
+                if h is not None:
+                    sync = "match" if h == p.get("sourceHash") else "diff"
+                    p["_localProject"] = local["name"]
+        p["sync"] = sync
 
 
 _PRICING_CACHE = None
@@ -225,12 +294,32 @@ def state() -> dict:
         f_cats = ex.submit(galleries_list)
         f_gstatus = ex.submit(gallery_status)
         patterns, cats, gstatus = f_patterns.result(), f_cats.result(), f_gstatus.result()
+
+    local_projects = discover_local_projects(Path.cwd())
+    local_by_key = {lp["name"]: lp for lp in local_projects}
+    matched_names: set[str] = set()
+
+    projects = []
     for c in cats:
-        c["count"] = sum(1 for p in patterns if c["gslug"] in (p.get("galleries") or []))
+        proj_patterns = [p for p in patterns if c["gslug"] in (p.get("galleries") or [])]
+        c["count"] = len(proj_patterns)
+        designs = [p for p in proj_patterns if p.get("type") == "design-review"]
+        mocks = [p for p in proj_patterns if p.get("type") != "design-review"]
+        local = local_by_key.get(c.get("projectKey", ""))
+        if local:
+            matched_names.add(local["name"])
+        annotate_sync(designs, local)
+        annotate_sync(mocks, local)
+        projects.append({**c, "designs": designs, "mocks": mocks, "hasLocal": local is not None})
+
+    local_only = [lp for lp in local_projects if lp["name"] not in matched_names]
+
     # トークンの実値は一覧に含めない。共有メニューを開いたときに /api/token でオンデマンド取得する
     return {"patterns": patterns,
             "gallery": {"status": gstatus, "url": GALLERY_URL},
-            "categories": cats}
+            "categories": cats,
+            "projects": projects,
+            "localOnly": local_only}
 
 
 def fetch_token_for(kind: str, ident: str) -> str:
@@ -344,6 +433,58 @@ tbody td{border:none;padding:.18rem 0}tbody td.c-name{font-size:1rem;padding-rig
 tbody td.c-actions{position:absolute;top:.7rem;right:.9rem;margin:0;padding:0}
 td[data-k]:not(.c-actions)::before{content:attr(data-k) "  ";font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;color:var(--faint)}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* プロジェクト行（DESIGN.md/UIモックタブ） */
+.projrow{border-bottom:1px solid var(--line)}
+.projrow:last-child{border-bottom:none}
+.projhead{display:flex;align-items:center;gap:.7rem;padding:.85rem 1.1rem;cursor:pointer}
+.projhead:hover{background:var(--surface-2)}
+.projhead .caret{color:var(--faint);font-size:.72rem;flex:none;transition:transform .12s}
+.projrow.open .projhead .caret{transform:rotate(90deg)}
+.projhead .pname{font-weight:650;font-size:.92rem;flex:none}
+.projhead .pmeta{font-family:var(--mono);font-size:.7rem;color:var(--faint);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projhead .pactions{display:flex;gap:.4rem;flex:none;position:relative}
+.projbody{display:none;padding:0 1.1rem 1.1rem}
+.projrow.open .projbody{display:block}
+.subtabs{display:flex;gap:.3rem;padding-top:.3rem;margin-bottom:.8rem;border-bottom:1px solid var(--line)}
+.subtab{font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;background:none;border:none;padding:.5rem .25rem;color:var(--muted);border-bottom:2px solid transparent;display:flex;align-items:center;gap:.35rem}
+.subtab .n{font-family:var(--mono);font-size:.64rem;color:var(--faint);background:var(--surface-2);border-radius:999px;padding:.03rem .38rem}
+.subtab.active{color:var(--ink);border-color:var(--accent)}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem}
+@media(max-width:760px){.pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.pgrid{grid-template-columns:1fr}}
+.pcard{position:relative;min-width:0;border:1px solid var(--line);border-radius:9px;background:var(--surface);transition:box-shadow .12s,border-color .12s}
+.pcard:hover{box-shadow:var(--shadow)}
+.pcard .thumb{height:44px;min-width:0;border-radius:8px 8px 0 0}
+.pcard .thumb.mockthumb{background:var(--surface-2);display:flex;align-items:center;justify-content:center}
+.pcard .thumb.mockthumb svg{width:1.4rem;height:1.4rem;color:var(--faint)}
+.pcard .cardbtn{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;background:none;border:none;padding:0;min-width:0}
+.pcard .body{padding:.6rem 2.1rem .7rem .7rem;min-width:0}
+.pcard .row1{display:flex;justify-content:space-between;gap:.4rem;margin-bottom:.25rem;min-width:0}
+.pcard .nm{font-weight:650;font-size:.84rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard .meta{font-family:var(--mono);font-size:.62rem;color:var(--faint);margin-bottom:.4rem}
+.syncbadge{display:inline-flex;align-items:center;gap:.3rem;font-size:.64rem;font-weight:600;padding:.1rem .45rem;border-radius:6px;white-space:nowrap}
+.syncbadge.match{background:var(--pos-bg);color:var(--pos-fg)}
+.syncbadge.diff{background:#F6EEDD;color:#B9770B}
+.syncbadge.unlinked{background:#EAF1FB;color:#2E5FA3}
+@media(prefers-color-scheme:dark){.syncbadge.diff{background:#33280F;color:#E0A54B}.syncbadge.unlinked{background:#17263A;color:#7FA9E0}}
+.card-kebab-wrap{position:absolute;top:.4rem;right:.4rem}
+.exp-hero{display:flex;gap:.9rem;align-items:center;padding:.9rem;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;margin-bottom:1rem}
+.exp-hero .thumb{width:56px;height:56px;border-radius:8px;flex:none;background:linear-gradient(135deg,#22201C 0%,#22201C 55%,#A6432D 55%,#A6432D 100%)}
+.exp-hero .tt{font-weight:650;font-size:.92rem}
+.exp-hero .ts{font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.exp-list{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:.7rem}
+.exp-item{display:flex;align-items:center;gap:.5rem;padding:.5rem .7rem;border-bottom:1px solid var(--line);font-size:.82rem;cursor:default}
+.exp-item:last-child{border-bottom:none}
+.exp-item .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.exp-empty{text-align:center;padding:1.4rem 1rem;color:var(--muted);font-size:.85rem}
+.fb{display:flex;gap:.5rem;padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);margin-bottom:.5rem}
+.fb .dot{flex:none;width:1.2rem;height:1.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700}
+.fb .dot.approve{background:var(--pos-bg);color:var(--pos-fg)}.fb .dot.revise{background:#F6EEDD;color:#B9770B}
+.fb .who{font-weight:600;font-size:.8rem}
+.fb .when{color:var(--faint);font-size:.7rem;margin-left:.4rem}
+.fb .bd{font-size:.8rem;margin-top:.1rem}
+.supersede-note{font-size:.76rem;color:#B9770B;background:#F6EEDD;border-radius:6px;padding:.5rem .7rem;margin-bottom:.9rem}
+@media(prefers-color-scheme:dark){.supersede-note{background:#33280F;color:#E0A54B}}
 </style></head><body>
 <div class="wrap">
 <header class="top"><h1>design-share 管理コンソール</h1><span class="env" id="env"></span><a id="estlink" class="env" style="text-decoration:none;color:var(--accent)" href="#">コスト試算 →</a></header>
@@ -353,13 +494,10 @@ td[data-k]:not(.c-actions)::before{content:attr(data-k) "  ";font-family:var(--m
 <div class="stat pos"><div class="n" id="s-active">–</div><div class="k">公開中</div></div>
 <div class="stat crit"><div class="n" id="s-disabled">–</div><div class="k">無効化済み</div></div>
 </div>
-<div class="panel"><div class="ph"><h2>全体ギャラリー</h2><span id="g-actions"></span></div>
+<div class="panel"><div class="ph"><h2>ギャラリー</h2><span id="g-actions"></span></div>
 <div class="gwrap" id="g-body"></div></div>
-<div class="panel"><div class="ph"><h2>カテゴリ（名前付きギャラリー）</h2><button id="cat-new" class="mini">＋ 新規カテゴリ</button></div>
-<div id="cat-body"></div></div>
-<div class="panel"><div class="ph"><h2>パターン一覧</h2><span class="pfilter" id="pfilter"></span></div>
-<table><thead><tr><th>パターン名</th><th>slug</th><th>状態</th><th>更新日</th><th>操作</th></tr></thead>
-<tbody id="rows"><tr><td colspan="5" style="padding:1rem 1.1rem;color:var(--muted)">読み込み中…</td></tr></tbody></table></div>
+<div class="panel"><div class="ph"><h2>プロジェクト</h2><button id="cat-new" class="mini">＋ 新規プロジェクト</button></div>
+<div id="proj-body"><div style="padding:1rem 1.1rem;color:var(--muted)">読み込み中…</div></div></div>
 <div class="console"><h2>操作ログ</h2><pre class="log" id="log">操作を選ぶと結果をここに表示します。</pre></div>
 </div>
 <div class="modal-bg" id="modal" hidden><div class="modal">
@@ -424,13 +562,22 @@ else{loading.textContent='有効なトークンがありません（無効化中
 }).catch(()=>{if(loading&&loading.parentNode)loading.textContent='トークンの取得に失敗しました。';});}
 function openUrl(url){closeMenu();window.open(url,'_blank','noopener');}
 
-function patternMenu(p){const items=[];const purl='https://'+DOMAIN+'/p/'+p.slug+'/';
-items.push(item('↗','開く','',false,()=>openUrl(purl)));
+function patternMenu(p,kind){const items=[];const purl='https://'+DOMAIN+'/p/'+p.slug+'/';
+items.push(item('↗','開く（公開URL）','',false,()=>openUrl(purl)));
+if(p.sync==='match'||p.sync==='diff'){items.push(item('🖥','ローカルで開く','',false,()=>openLocalFile(p)));}
 items.push(item('🔗','共有（URL・トークン）','',false,()=>openShare(p.name,purl,'pattern',p.slug)));
 items.push(sep());
 items.push(item('↓','エクスポート','',false,()=>doOp('/api/export?slug='+encodeURIComponent(p.slug),'export')));
 items.push(item('✎','名前を変更','',false,()=>renamePattern(p)));
-items.push(item('▦','カテゴリを編集','',false,()=>openMembership(p)));
+if(kind==='design'&&!p.confirmedAt){
+items.push(sep());
+items.push(item('✓','確定（DESIGN.mdを正式配置）','good',false,()=>{if(confirm('「'+p.name+'」を確定しますか？\n（同一プロジェクト内の既存の確定済みDESIGN.mdは自動的に確定解除されます）'))doOp('/api/confirm-design?slug='+encodeURIComponent(p.slug),'confirm-design');}));
+}
+if(kind==='mock'){
+items.push(sep());
+if(p.confirmed){items.push(item('↩','確定を取り消す','',false,()=>doOp('/api/unconfirm-mock?slug='+encodeURIComponent(p.slug),'unconfirm')));}
+else{items.push(item('✓','確定（採用案にする）','good',false,()=>doOp('/api/confirm-mock?slug='+encodeURIComponent(p.slug),'confirm')));}
+}
 if(p.status==='active'){
 items.push(item('⟳','トークンを再発行','',false,()=>doOp('/api/rotate?slug='+encodeURIComponent(p.slug),'rotate')));
 items.push(sep());
@@ -441,46 +588,230 @@ items.push(item('▲','再公開する（新トークン）','good',false,()=>do
 }
 return menuButton(p.name+' の操作メニュー',items);}
 
+function openLocalFile(p){closeMenu();
+const w=window.open('','_blank');
+fetch('/api/local-file?project='+encodeURIComponent(p._localProject)+'&file='+encodeURIComponent(p.sourceFile),{headers:{'X-Console-Token':TOKEN}})
+.then(r=>r.text()).then(t=>{if(w)w.document.write(t);}).catch(()=>{if(w)w.document.write('読み込みに失敗しました。');});}
+
 function renamePattern(p){closeMenu();const name=prompt('新しい表示名を入力してください',p.name);if(name===null)return;const t=name.trim();if(!t){log('名前が空です。変更を中止しました。','warn');return;}
 doOp('/api/rename?slug='+encodeURIComponent(p.slug)+'&name='+encodeURIComponent(t),'rename');}
 
-function createCategory(){closeMenu();const name=prompt('新しいカテゴリ名を入力してください');if(name===null)return;const t=name.trim();if(!t){log('名前が空です。','warn');return;}doOp('/api/gallery-create?name='+encodeURIComponent(t),'gallery create');}
+function createCategory(){closeMenu();
+const name=prompt('新しいプロジェクト名を入力してください');if(name===null)return;const t=name.trim();if(!t){log('名前が空です。','warn');return;}
+const key=prompt('プロジェクトキー（半角英数・ハイフン。ローカルフォルダ名と一致させます。空欄なら自動生成）','');
+if(key===null)return;
+let url='/api/gallery-create?name='+encodeURIComponent(t);
+if(key.trim())url+='&key='+encodeURIComponent(key.trim());
+doOp(url,'project create');}
 
-function catSelectRow(caret,name,count,selected,onSelect,pillStatus,menu){
-const row=document.createElement('div');row.className='catrow'+(selected?' sel':'');
-const nm=document.createElement('span');nm.className='cname';
-const car=document.createElement('span');car.className='caret';car.textContent=caret;
-const tx=document.createElement('span');tx.textContent=name;nm.append(car,tx);row.append(nm);
-if(pillStatus){const pill=document.createElement('span');pill.className='pill '+(pillStatus==='enabled'?'active':pillStatus==='disabled'?'disabled':'unset');pill.style.flex='none';pill.textContent=pillStatus==='enabled'?'有効':pillStatus==='disabled'?'無効':'トークン無';row.append(pill);}
-const cnt=document.createElement('span');cnt.className='cmeta';cnt.textContent=count;row.append(cnt);
-if(menu){const a=document.createElement('span');a.className='cactions';a.appendChild(menu);row.append(a);}
-row.addEventListener('click',onSelect);return row;}
-function renderCategories(cats,total){const body=$('cat-body');body.textContent='';
-body.appendChild(catSelectRow('▤','すべてのパターン',total+'件',selCat===null,()=>{selCat=null;refresh();},null,null));
-if(!cats.length){const d=document.createElement('div');d.className='cempty';d.textContent='カテゴリはまだありません。「＋ 新規カテゴリ」で作成できます。';body.appendChild(d);return;}
-cats.forEach(c=>{
+function syncBadge(sync){
+if(sync==='match')return '<span class="syncbadge match">公開中</span>';
+if(sync==='diff')return '<span class="syncbadge diff">再公開待ち</span>';
+if(sync==='unlinked')return '<span class="syncbadge unlinked">未公開</span>';
+return '';}
+
+function projectMenu(proj){
 const items=[
-item('↗','開く','',false,()=>openUrl(c.url)),
-item('🔗','共有（URL・トークン）','',false,()=>openShare(c.name||c.gslug,c.url,'gallery',c.gslug)),
+item('↗','開く','',false,()=>openUrl(proj.url)),
+item('🔗','共有（URL・トークン）','',false,()=>openShare(proj.name||proj.gslug,proj.url,'gallery',proj.gslug)),
 sep(),
-item('⟳','共有トークンを再発行','',false,()=>doOp('/api/gallery-rotate?gslug='+encodeURIComponent(c.gslug),'gallery rotate')),
-item(c.status==='disabled'?'▲':'⦸',c.status==='disabled'?'再有効化':'無効化',c.status==='disabled'?'good':'danger',false,()=>doOp((c.status==='disabled'?'/api/gallery-rotate':'/api/gallery-disable')+'?gslug='+encodeURIComponent(c.gslug),'gallery')),
+item('↓','エクスポート','',false,()=>openExportModal(proj)),
 sep(),
-item('×','削除','danger',false,()=>{if(confirm('カテゴリ「'+(c.name||c.gslug)+'」を削除しますか？\n所属は全解除されますが、パターン自体は残ります。'))doOp('/api/gallery-delete?gslug='+encodeURIComponent(c.gslug),'gallery delete');}),
+item('⟳','共有トークンを再発行','',false,()=>doOp('/api/gallery-rotate?gslug='+encodeURIComponent(proj.gslug),'gallery rotate')),
+item(proj.status==='disabled'?'▲':'⦸',proj.status==='disabled'?'再有効化':'このプロジェクトを無効化',proj.status==='disabled'?'good':'danger',false,()=>{
+const doIt=()=>doOp((proj.status==='disabled'?'/api/gallery-rotate':'/api/gallery-disable')+'?gslug='+encodeURIComponent(proj.gslug),'project');
+if(proj.status==='disabled'){doIt();}else if(confirm('プロジェクト「'+(proj.name||proj.gslug)+'」を無効化しますか？\n（所属パターンの個別URLには影響しません）')){doIt();}
+}),
+sep(),
+item('×','削除','danger',false,()=>{if(confirm('プロジェクト「'+(proj.name||proj.gslug)+'」を削除しますか？\n所属は全解除されますが、パターン自体は残ります。'))doOp('/api/gallery-delete?gslug='+encodeURIComponent(proj.gslug),'project delete');}),
 ];
-body.appendChild(catSelectRow('▸',c.name||c.gslug,c.count+'件',selCat===c.gslug,()=>{selCat=c.gslug;refresh();},c.status,menuButton((c.name||c.gslug)+' の操作',items)));});}
+return menuButton((proj.name||proj.gslug)+' の操作メニュー',items);}
 
-function openMembership(p){closeMenu();
-openModal('カテゴリを編集',p.name,(body)=>{
-const list=document.createElement('div');list.className='clist';
-if(!CATS.length){const d=document.createElement('div');d.className='mnone';d.textContent='カテゴリがありません。先に「＋ 新規カテゴリ」で作成してください。';list.appendChild(d);}
-else CATS.forEach(c=>{const lab=document.createElement('label');const cb=document.createElement('input');cb.type='checkbox';cb.value=c.gslug;cb.checked=(p.galleries||[]).indexOf(c.gslug)>=0;const sp=document.createElement('span');sp.textContent=c.name||c.gslug;lab.append(cb,sp);list.appendChild(lab);});
-body.appendChild(list);
-},'保存',async()=>{
-const gs=Array.prototype.slice.call($('modal-body').querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value);
-closeModal();log('カテゴリ所属を更新中…');
-const {ok,text}=await api('/api/pattern-galleries?slug='+encodeURIComponent(p.slug)+'&galleries='+encodeURIComponent(gs.join(',')));
-log(text.trim()||(ok?'完了':'失敗'),ok?'ok':'warn');refresh();});}
+/* 公開状態（公開中/無効化済み）と確定状態（確定済み/検討中）は別の軸なので、2つのピルを並べて出す。
+   一時、確定機能を足したときに1つのピルに統合してしまい「公開中」の表示が消えていた不具合を修正した。 */
+function statusPills(p,confirmed){
+if(p.status!=='active')return '<span class="pill disabled">無効化済み</span>';
+const c=confirmed?'<span class="pill active">確定済み</span>':'<span class="pill unset">検討中</span>';
+return '<span class="pill active">公開中</span>'+c;
+}
+
+function dCard(p,projName){
+const wrap=document.createElement('div');wrap.className='pcard';
+const confirmed=!!p.confirmedAt;
+const grad=confirmed?'linear-gradient(135deg,#22201C 0%,#22201C 55%,#A6432D 55%,#A6432D 100%)':'linear-gradient(135deg,#1C2733 0%,#1C2733 55%,#2F6FED 55%,#2F6FED 100%)';
+const btn=document.createElement('button');btn.className='cardbtn';btn.type='button';
+btn.innerHTML='<div class="thumb" style="background:'+grad+'"></div>'+
+'<div class="body"><div class="row1"><span class="nm"></span><span class="pillgroup" style="display:flex;gap:.3rem;flex:none"></span></div>'+
+'<div class="meta"></div>'+syncBadge(p.sync)+'</div>';
+btn.querySelector('.nm').textContent=p.name||p.slug;
+btn.querySelector('.pillgroup').innerHTML=statusPills(p,confirmed);
+btn.querySelector('.meta').textContent='slug='+p.slug+' ・ '+(p.updatedAt||'').slice(0,10)+' 更新';
+btn.addEventListener('click',()=>openDesignModal(p,projName));
+wrap.appendChild(btn);
+const menu1=patternMenu(p,'design');menu1.className='card-kebab-wrap';wrap.appendChild(menu1);
+return wrap;}
+
+function mCard(p){
+const wrap=document.createElement('div');wrap.className='pcard';
+const inner=document.createElement('div');
+inner.innerHTML='<div class="thumb mockthumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M8 4v5"/></svg></div>'+
+'<div class="body"><div class="row1"><span class="nm"></span><span class="pillgroup" style="display:flex;gap:.3rem;flex:none"></span></div><div class="meta"></div>'+syncBadge(p.sync)+'</div>';
+inner.querySelector('.nm').textContent=p.name||p.slug;
+inner.querySelector('.pillgroup').innerHTML=statusPills(p,!!p.confirmed);
+inner.querySelector('.meta').textContent='slug='+p.slug+' ・ '+(p.updatedAt||'').slice(0,10)+' 更新';
+wrap.appendChild(inner);
+const menu2=patternMenu(p,'mock');menu2.className='card-kebab-wrap';wrap.appendChild(menu2);
+return wrap;}
+
+function projectRow(proj,opts){
+opts=opts||{};
+const row=document.createElement('div');row.className='projrow';
+const head=document.createElement('div');head.className='projhead';
+const left=document.createElement('div');left.style.cssText='display:flex;align-items:center;gap:.7rem;flex:1;min-width:0';
+const designs=proj.designs||[],mocks=proj.mocks||[];
+let metaText;
+if(opts.linked){
+metaText='DESIGN.md '+designs.length+'件 ・ モック '+mocks.length+'件';
+let needsRepublish=0,disabledCount=0;
+designs.concat(mocks).forEach(p=>{
+if(p.status!=='active')disabledCount++;
+else if(p.sync==='diff')needsRepublish++;
+});
+if(needsRepublish)metaText+=' ・ 再公開待ち '+needsRepublish+'件';
+if(disabledCount)metaText+=' ・ 無効化済み '+disabledCount+'件';
+}else{
+metaText=proj.dir;
+}
+left.innerHTML='<span class="caret">▸</span><span class="pname"></span><span class="pstatus"></span><span class="pmeta"></span>';
+left.querySelector('.pname').textContent=proj.name;
+if(opts.linked){
+const st=proj.status;
+const cls=st==='enabled'?'active':st==='disabled'?'disabled':'unset';
+const label=st==='enabled'?'共有URL: 有効':st==='disabled'?'共有URL: 無効':'共有URL未設定';
+left.querySelector('.pstatus').innerHTML='<span class="pill '+cls+'">'+label+'</span>';
+}else{
+left.querySelector('.pstatus').innerHTML=syncBadge('unlinked');
+}
+left.querySelector('.pmeta').textContent=metaText;
+const acts=document.createElement('div');acts.className='pactions';
+if(opts.linked){acts.appendChild(projectMenu(proj));}
+head.append(left,acts);
+head.addEventListener('click',()=>row.classList.toggle('open'));
+const body=document.createElement('div');body.className='projbody';
+const tabs=document.createElement('div');tabs.className='subtabs';
+tabs.innerHTML='<button class="subtab active" data-t="d" type="button">DESIGN.md <span class="n"></span></button>'+
+'<button class="subtab" data-t="m" type="button">UIモック <span class="n"></span></button>';
+tabs.querySelectorAll('.subtab .n')[0].textContent=designs.length;
+tabs.querySelectorAll('.subtab .n')[1].textContent=mocks.length;
+const dpane=document.createElement('div');dpane.className='pgrid';dpane.style.display='grid';
+const mpane=document.createElement('div');mpane.className='pgrid';mpane.style.display='none';
+if(opts.linked){
+designs.forEach(p=>dpane.appendChild(dCard(p,proj.name)));
+mocks.forEach(p=>mpane.appendChild(mCard(p)));
+}else{
+(proj.hasDesign?['DESIGN.md']:[]).forEach(f=>dpane.appendChild(localFileCard(f)));
+(proj.mockFiles||[]).forEach(f=>mpane.appendChild(localFileCard(f)));
+}
+if(!designs.length&&!(opts.linked===false&&proj.hasDesign))dpane.innerHTML='<p style="color:var(--muted);font-size:.82rem;grid-column:1/-1">まだDESIGN.mdはありません。</p>';
+if(!mocks.length&&!(opts.linked===false&&(proj.mockFiles||[]).length))mpane.innerHTML='<p style="color:var(--muted);font-size:.82rem;grid-column:1/-1">まだUIモックはありません。</p>';
+tabs.addEventListener('click',(e)=>{
+const btn=e.target.closest('.subtab');if(!btn)return;
+tabs.querySelectorAll('.subtab').forEach(b=>b.classList.toggle('active',b===btn));
+dpane.style.display=btn.dataset.t==='d'?'grid':'none';
+mpane.style.display=btn.dataset.t==='m'?'grid':'none';
+});
+body.append(tabs,dpane,mpane);
+row.append(head,body);
+return row;}
+
+function localFileCard(name){
+const wrap=document.createElement('div');wrap.className='pcard';
+wrap.innerHTML='<div class="thumb" style="background:repeating-linear-gradient(135deg,var(--surface-2),var(--surface-2) 8px,var(--line) 8px,var(--line) 9px)"></div>'+
+'<div class="body"><div class="row1"><span class="nm"></span></div>'+syncBadge('unlinked')+'</div>';
+wrap.querySelector('.nm').textContent=name;
+return wrap;}
+
+function renderProjects(projects,localOnly){
+const body=$('proj-body');body.textContent='';
+projects.forEach(proj=>body.appendChild(projectRow(proj,{linked:true})));
+(localOnly||[]).forEach(lp=>body.appendChild(projectRow(lp,{linked:false})));
+if(!projects.length&&!(localOnly||[]).length){
+const d=document.createElement('div');d.style.cssText='padding:1rem 1.1rem;color:var(--muted)';d.textContent='プロジェクトはまだありません。「＋ 新規プロジェクト」で作成できます。';body.appendChild(d);
+}}
+
+function openDesignModal(p,projName){
+openModal(p.name||p.slug,projName,(body)=>{
+const confirmed=!!p.confirmedAt;
+let html='';
+if(!confirmed){html+='<div class="supersede-note">⚠ 確定すると、このプロジェクト内の既存の確定済みDESIGN.mdは自動的に確定解除されます（1プロジェクトにつき確定は常に1つ）。</div>';}
+html+='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem">';
+if(!confirmed){html+='<button class="mini primary" id="dm-confirm" type="button">確定（DESIGN.mdを正式配置）</button>';}
+else{html+='<span class="pill active" style="padding:.35rem .8rem">確定済み</span>';}
+html+='</div>';
+html+='<div style="font-size:.8rem;color:var(--muted);margin-bottom:.8rem">ローカル状態: '+(syncBadge(p.sync)||'（ローカルにファイルなし）')+'</div>';
+html+='<div style="font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin-bottom:.4rem">共有レビューのフィードバック</div>';
+html+='<div id="dm-fb"><p style="font-size:.8rem;color:var(--muted)">読み込み中…</p></div>';
+body.innerHTML=html;
+const cbtn=body.querySelector('#dm-confirm');
+if(cbtn)cbtn.addEventListener('click',()=>{closeModal();doOp('/api/confirm-design?slug='+encodeURIComponent(p.slug),'confirm-design');});
+fetch('/api/comments?slug='+encodeURIComponent(p.slug),{headers:{'X-Console-Token':TOKEN}}).then(r=>r.json()).then(comments=>{
+const fb=body.querySelector('#dm-fb');if(!fb)return;
+if(!comments.length){fb.innerHTML='<p style="font-size:.8rem;color:var(--muted)">まだフィードバックはありません。</p>';return;}
+fb.textContent='';
+comments.forEach(c=>{
+const d=document.createElement('div');d.className='fb';
+const dot=document.createElement('span');dot.className='dot';dot.textContent='💬';
+const info=document.createElement('div');
+const head=document.createElement('div');
+const who=document.createElement('span');who.className='who';who.textContent=c.author||'匿名';
+const when=document.createElement('span');when.className='when';when.textContent=(c.postedAt||'').slice(0,16).replace('T',' ');
+head.append(who,when);
+const bd=document.createElement('div');bd.className='bd';bd.textContent=c.body||'';
+info.append(head,bd);d.append(dot,info);fb.appendChild(d);});
+}).catch(()=>{const fb=body.querySelector('#dm-fb');if(fb)fb.innerHTML='<p style="font-size:.8rem;color:var(--muted)">コメントの取得に失敗しました。</p>';});
+},null,null);}
+
+function openExportModal(proj){
+const designs=(proj.designs||[]).filter(d=>d.confirmedAt);
+openModal('エクスポート',proj.name,(body)=>{
+if(!designs.length){body.innerHTML='<div class="exp-empty">🔒 このプロジェクトにはまだ確定済みのDESIGN.mdがありません。<br>確定後にエクスポートできるようになります。</div>';return;}
+const confirmedDesign=designs.slice().sort((a,b)=>(b.confirmedAt||'').localeCompare(a.confirmedAt||''))[0];
+const mocks=proj.mocks||[];
+let html='<div class="exp-hero"><div class="thumb"></div><div><div class="tt"></div><div class="ts"></div></div></div>';
+html+='<div class="exp-list"><div class="exp-item"><span class="lbl"></span></div></div>';
+if(mocks.length){
+html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">'+
+'<span style="font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)">UIモック（必要なものだけ選ぶ）</span>'+
+'<span><button class="mini" type="button" id="exp-all">全て選択</button> <button class="mini" type="button" id="exp-none">選択解除</button></span></div>';
+html+='<div class="exp-list" id="exp-mock-list"></div>';
+html+='<p style="font-size:.72rem;color:var(--faint);margin:.4rem 0 0">既定では確定済みのものだけにチェックが入っています。</p>';
+}
+html+='<p style="font-size:.76rem;color:var(--muted);margin:.6rem 0 1rem">選択した項目それぞれのレビューコメントも一緒に含まれます。</p>';
+html+='<button class="mini primary" type="button" id="exp-cta" style="width:100%"></button>';
+body.innerHTML=html;
+body.querySelector('.exp-hero .tt').textContent=confirmedDesign.name||confirmedDesign.slug;
+body.querySelector('.exp-hero .ts').textContent='確定済み ・ '+(confirmedDesign.updatedAt||'').slice(0,10);
+body.querySelector('.exp-list .lbl').textContent='DESIGN.md（'+(confirmedDesign.name||confirmedDesign.slug)+'）';
+const mockList=body.querySelector('#exp-mock-list');
+if(mockList){
+mocks.forEach(m=>{
+const lab=document.createElement('label');lab.className='exp-item';lab.style.cursor='pointer';
+const cb=document.createElement('input');cb.type='checkbox';cb.className='exp-mock-cb';cb.dataset.slug=m.slug;cb.checked=!!m.confirmed;cb.style.marginRight='.3rem';
+const lbl=document.createElement('span');lbl.className='lbl';lbl.textContent=m.name||m.slug;
+lab.append(cb,lbl);mockList.appendChild(lab);});
+}
+const cbs=Array.prototype.slice.call(body.querySelectorAll('.exp-mock-cb'));
+const cta=body.querySelector('#exp-cta');
+function updateCta(){const n=cbs.filter(cb=>cb.checked).length;cta.textContent='zipを作成（DESIGN.md 1件 ＋ UIモック '+n+'件）';}
+updateCta();
+cbs.forEach(cb=>cb.addEventListener('change',updateCta));
+const allBtn=body.querySelector('#exp-all');if(allBtn)allBtn.addEventListener('click',()=>{cbs.forEach(cb=>cb.checked=true);updateCta();});
+const noneBtn=body.querySelector('#exp-none');if(noneBtn)noneBtn.addEventListener('click',()=>{cbs.forEach(cb=>cb.checked=false);updateCta();});
+cta.addEventListener('click',()=>{
+const slugs=cbs.filter(cb=>cb.checked).map(cb=>cb.dataset.slug);
+closeModal();
+doOp('/api/export-project?gslug='+encodeURIComponent(proj.gslug)+'&mocks='+encodeURIComponent(slugs.join(',')),'export-project');});
+},null,null);}
 
 function galleryControls(g){
 const box=$('g-actions');box.textContent='';const body=$('g-body');body.textContent='';
@@ -502,16 +833,6 @@ items.push(item('▲','ギャラリーを有効化','good',false,()=>doOp('/api/
 $('g-actions').appendChild(menuButton('共有ギャラリーの操作メニュー',items));
 }
 
-function renderRows(patterns,emptyMsg){const tb=$('rows');tb.textContent='';
-if(!patterns.length){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=5;td.style.padding='1rem 1.1rem';td.style.color='var(--muted)';td.textContent=emptyMsg||'まだデプロイされたパターンはありません。';tr.appendChild(td);tb.appendChild(tr);return;}
-patterns.forEach(p=>{const tr=document.createElement('tr');
-const n=document.createElement('td');n.className='c-name name';n.textContent=p.name||p.slug;
-const s=document.createElement('td');s.className='slug';s.dataset.k='slug';s.textContent=p.slug;
-const st=document.createElement('td');st.dataset.k='状態';const pill=document.createElement('span');pill.className='pill '+(p.status==='active'?'active':'disabled');pill.textContent=p.status==='active'?'公開中':'無効化済み';st.appendChild(pill);
-const d=document.createElement('td');d.className='date';d.dataset.k='更新';d.textContent=(p.updatedAt||'').slice(0,10);
-const a=document.createElement('td');a.className='c-actions';a.dataset.k='操作';a.appendChild(patternMenu(p));
-tr.append(n,s,st,d,a);tb.appendChild(tr);});}
-
 async function refresh(){const r=await fetch('/api/state',{headers:{'X-Console-Token':TOKEN}});
 if(!r.ok){log('状態の取得に失敗: '+(await r.text()).trim(),'warn');return;}
 const data=await r.json();
@@ -521,14 +842,7 @@ const ps=data.patterns||[];$('s-total').textContent=ps.length;
 $('s-active').textContent=ps.filter(p=>p.status==='active').length;
 $('s-disabled').textContent=ps.filter(p=>p.status!=='active').length;
 galleryControls(data.gallery||{status:'unset',url:''});
-CATS=data.categories||[];
-if(selCat!==null && !CATS.some(c=>c.gslug===selCat)) selCat=null;
-renderCategories(CATS,ps.length);
-const cat=selCat!==null?CATS.find(c=>c.gslug===selCat):null;
-const shown=cat?ps.filter(p=>(p.galleries||[]).indexOf(selCat)>=0):ps;
-const pf=$('pfilter');pf.textContent='';
-if(cat){pf.appendChild(document.createTextNode('絞り込み: '+(cat.name||cat.gslug)));const cl=document.createElement('span');cl.className='clear';cl.textContent='すべて表示';cl.addEventListener('click',()=>{selCat=null;refresh();});pf.appendChild(cl);}
-renderRows(shown,cat?'このカテゴリに所属するパターンはありません。パターンの⋮「カテゴリを編集」で追加できます。':'');}
+renderProjects(data.projects||[],data.localOnly||[]);}
 $('cat-new').addEventListener('click',createCategory);
 $('modal-cancel').addEventListener('click',closeModal);
 $('modal-ok').addEventListener('click',()=>{if(modalOk)modalOk();});
@@ -594,6 +908,67 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send(500, f"トークンの取得に失敗しました: {e}")
                 return
             self._send(200, json.dumps({"token": tok}, ensure_ascii=False), "application/json; charset=utf-8")
+        elif path == "/api/comments":
+            # DESIGN.md確定モーダルのフィードバック表示専用。コメントは全パターンをstate()で
+            # 一括先読みせず、モーダルを開いたときだけオンデマンド取得する（トークンと同じ設計）。
+            if self.headers.get("X-Console-Token", "") != CONSOLE_TOKEN:
+                self._send(403, "invalid console token")
+                return
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            slug = (qs.get("slug") or [""])[0]
+            if not SLUG_RE.match(slug):
+                self._send(400, "invalid slug")
+                return
+            try:
+                resp = _S3.list_objects_v2(Bucket=CONF["BUCKET"], Prefix=f"comments/{slug}/")
+                keys = [o["Key"] for o in resp.get("Contents", [])]
+
+                def fetch_one(key: str):
+                    try:
+                        body = _S3.get_object(Bucket=CONF["BUCKET"], Key=key)["Body"].read()
+                        return json.loads(body)
+                    except Exception:
+                        return None
+                with ThreadPoolExecutor(max_workers=min(16, max(1, len(keys)))) as ex:
+                    comments = [c for c in ex.map(fetch_one, keys) if c is not None]
+                comments.sort(key=lambda c: c.get("postedAt", ""))
+            except Exception as e:
+                self._send(500, f"コメントの取得に失敗しました: {e}")
+                return
+            self._send(200, json.dumps(comments, ensure_ascii=False), "application/json; charset=utf-8")
+        elif path == "/api/local-file":
+            # ローカルのDESIGN.md/UIモックHTMLをブラウザで直接開く（クラウドを介さない）。
+            # 任意パス読み取りを避けるため、discover_local_projects()が実際に見つけた
+            # プロジェクト名・ファイルにだけ限定し、解決後のパスがそのプロジェクトディレクトリの
+            # 外に出ていないことも確認する（パストラバーサル対策）。
+            if self.headers.get("X-Console-Token", "") != CONSOLE_TOKEN:
+                self._send(403, "invalid console token")
+                return
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            project = (qs.get("project") or [""])[0]
+            file_rel = (qs.get("file") or [""])[0]
+            local = next((lp for lp in discover_local_projects(Path.cwd()) if lp["name"] == project), None)
+            if not local:
+                self._send(404, "local project not found")
+                return
+            # mockFilesはベースネームのみ保持するが、sourceFile（deploy時にds.pyが記録する値）は
+            # "mocks/<name>"というプレフィックス付きの相対パスなので、比較側もそれに合わせる
+            allowed = {"DESIGN.md"} | {f"mocks/{name}" for name in local.get("mockFiles", [])}
+            if file_rel not in allowed:
+                self._send(400, "invalid file")
+                return
+            base_dir = Path(local["dir"]).resolve()
+            target = (base_dir / file_rel).resolve()
+            if base_dir not in target.parents and target != base_dir:
+                self._send(400, "invalid path")
+                return
+            try:
+                text = target.read_text(encoding="utf-8")
+            except OSError:
+                self._send(404, "file not found")
+                return
+            ctype = "text/html; charset=utf-8" if file_rel.endswith(".html") else "text/plain; charset=utf-8"
+            self._send(200, text, ctype)
         elif path == "/estimator":
             try:
                 with open(os.path.join(SCRIPT_DIR, "..", "references", "templates", "estimator.html"), encoding="utf-8") as f:
@@ -624,13 +999,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._send(200 if ok else 500, output)
             return
 
-        # 名前付きギャラリー（カテゴリ）操作
+        # 名前付きギャラリー（プロジェクト）操作
         if parsed.path == "/api/gallery-create":
             name = q.get("name", [""])[0].strip()
+            key = q.get("key", [""])[0].strip()
             if not name or len(name) > 80 or any(ord(c) < 0x20 for c in name):
                 self._send(400, "invalid name")
                 return
-            ok, output = run_script("galleries", "create", name)
+            args = ["create", name]
+            if key:
+                args += ["--key", key]
+            ok, output = run_script("galleries", *args)
             self._send(200 if ok else 500, output)
             return
         if parsed.path in ("/api/gallery-rotate", "/api/gallery-disable", "/api/gallery-delete"):
@@ -655,6 +1034,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
             ok, output = run_script("galleries", "set", slug, *gslugs)
             self._send(200 if ok else 500, output)
             return
+        if parsed.path == "/api/export-project":
+            gslug = q.get("gslug", [""])[0]
+            if not SLUG_RE.match(gslug):
+                self._send(400, "invalid gslug")
+                return
+            mocks_param = q.get("mocks", [None])[0]
+            args = ["export", gslug]
+            if mocks_param is not None:
+                mock_slugs = [s for s in mocks_param.split(",") if s]
+                if any(not SLUG_RE.match(s) for s in mock_slugs):
+                    self._send(400, "invalid mock slug")
+                    return
+                args += ["--mocks", ",".join(mock_slugs)]
+            ok, output = run_script("galleries", *args)
+            self._send(200 if ok else 500, output)
+            return
 
         # 以降はパターン単位の操作。slug必須。
         if not SLUG_RE.match(slug):
@@ -672,6 +1067,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             "/api/export": ("export", [slug]),
             "/api/rotate": ("rotate", [slug]),
             "/api/invalidate": ("disable", [slug]),
+            "/api/confirm-design": ("confirm-design", [slug]),
+            "/api/confirm-mock": ("confirm", [slug]),
+            "/api/unconfirm-mock": ("unconfirm", [slug]),
         }
         if parsed.path not in actions:
             self._send(404, "not found")

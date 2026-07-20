@@ -17,7 +17,12 @@
   uv run ds.py list                          公開中/無効化済みパターンの一覧
   uv run ds.py deploy <html> "<表示名>"      パターンをデプロイ（slug＋トークン発行）
   uv run ds.py deploy --design <DESIGN.md> <spec.html> "<名>"  DESIGN.md視覚スペックシートをレビュー用に公開
+  uv run ds.py redeploy <slug> <html>        既存パターンの内容だけを差し替える（URL・トークン・既存コメントは維持）
+  uv run ds.py redeploy --design <DESIGN.md> <slug> <spec.html>  DESIGN.mdレビュー版のDESIGN.md本体も同様に差し替える
   uv run ds.py confirm-design <slug> [--to <dir>]  レビュー済みDESIGN.mdを正式な配置場所へ確定配置
+                                              （同一プロジェクト内の既存の確定済みDESIGN.mdは自動的に確定解除される）
+  uv run ds.py confirm <slug>                UIモックを確定（採用案にする）。DESIGN.mdと違い複数同時に確定していてよい
+  uv run ds.py unconfirm <slug>              UIモックの確定を取り消す
   uv run ds.py export <slug> [outdir]        zipエクスポート（公開状態は変えない）
   uv run ds.py rotate <slug>                 トークン再発行（DISABLEDなら再公開）
   uv run ds.py disable <slug> [--no-export]  無効化（既定でエクスポート同伴）
@@ -25,7 +30,8 @@
   uv run ds.py console                       Web管理コンソールをlocalhostで起動
   uv run ds.py update-function               edge-gate.jsをCloudFront Functionへ反映
   uv run ds.py gallery <init|rotate|disable|url>  全体ギャラリー（共通トークンで全部入り）を管理
-  uv run ds.py galleries <create|list|rotate|disable|delete|add|remove|set ...>  名前付きギャラリー（カテゴリ）を管理
+  uv run ds.py galleries <create|list|rotate|disable|delete|add|remove|set ...>  名前付きギャラリー（プロジェクト）を管理
+                                              createは表示名の他に --key <プロジェクトキー> を取る（省略時は表示名から自動生成）
   uv run ds.py reconcile                     S3のmeta(真実源)からKVS投影(pg/status)・index.jsonを再生成
   uv run ds.py smoke                         実機スモークテスト（使い捨てパターンで往復検証）
 """
@@ -274,6 +280,11 @@ def new_gslug() -> str:
     return secrets.token_hex(6)
 
 
+def slugify(s: str) -> str:
+    s = re.sub(r"[^a-z0-9]+", "-", s.strip().lower())
+    return s.strip("-") or "project"
+
+
 # --- ギャラリー ---
 # 全体ギャラリー: KVS project:token（値 or "DISABLED"）で入る全部入りランディング（/gallery/）。
 # 名前付きギャラリー（カテゴリ）: KVS g:{gslug}（値 or "DISABLED"）で入る /g/{gslug}/。所属はタグ式。
@@ -283,9 +294,23 @@ def gallery_enabled(ctx: Ctx) -> str:
     return v if v and v not in ("DISABLED", "None") else ""
 
 
-def gallery_meta_write(ctx: Ctx, gslug: str, name: str) -> None:
+def gallery_meta_write(ctx: Ctx, gslug: str, name: str, project_key: str = "") -> None:
+    # projectKey: ローカルのプロジェクトフォルダ名と照合するための半角キー（表示名とは別）。
+    # コンソールはローカルフォルダ名でこれを検索し、ローカル/クラウドを紐付ける（論点6の最終合意）。
     s3_put_text(ctx, f"galleries/{gslug}.json",
-                json.dumps({"gslug": gslug, "name": name, "updatedAt": now_iso()}, ensure_ascii=False))
+                json.dumps({"gslug": gslug, "name": name, "projectKey": project_key, "updatedAt": now_iso()},
+                           ensure_ascii=False))
+
+
+def gallery_meta_get(ctx: Ctx, gslug: str) -> dict:
+    cur = s3_get_text(ctx, f"galleries/{gslug}.json")
+    if not cur:
+        return {}
+    try:
+        obj = json.loads(cur)
+        return obj if isinstance(obj, dict) else {}
+    except Exception:
+        return {}
 
 
 def gallery_meta_name(ctx: Ctx, gslug: str) -> str:
@@ -396,19 +421,64 @@ def deploy_pattern_core(ctx: Ctx, html_file: str, display_name: str,
     slug = new_slug()
     token = new_token()
 
-    html = Path(html_file).read_text(encoding="utf-8").replace("{{スラッグ}}", slug)
+    html_content = Path(html_file).read_text(encoding="utf-8")
+    html = html_content.replace("{{スラッグ}}", slug)
     ctx.s3.put_object(Bucket=ctx.bucket, Key=f"p/{slug}/index.html",
                        Body=html.encode("utf-8"), ContentType="text/html; charset=utf-8")
 
     kvs_put(ctx, f"token:{slug}", token)
     meta_write(ctx, slug, display_name, "active")
+
+    # sourceFile/sourceHash: ローカル/クラウドの同期状態をその場で判定するための手がかり
+    # （論点6の最終合意。ローカルには紐付け専用ファイルを持たず、これだけで判定する）。
+    # design-reviewはDESIGN.md本体を追跡対象にする（自動生成されるspec.htmlはビルド成果物のため対象外）。
+    patch: dict = {}
     if design_src:
+        design_bytes = Path(design_src).read_bytes()
         ctx.s3.upload_file(design_src, ctx.bucket, f"design/{slug}.md",
                             ExtraArgs={"ContentType": "text/markdown; charset=utf-8"})
-    if type_ != "mock":
-        meta_patch(ctx, slug, {"type": type_, "designSource": f"design/{slug}.md" if design_src else ""})
+        patch["type"] = type_
+        patch["designSource"] = f"design/{slug}.md"
+        patch["sourceFile"] = Path(design_src).name
+        patch["sourceHash"] = hashlib.sha256(design_bytes).hexdigest()
+    else:
+        patch["sourceFile"] = f"mocks/{Path(html_file).name}"
+        patch["sourceHash"] = hashlib.sha256(html_content.encode("utf-8")).hexdigest()
+    meta_patch(ctx, slug, patch)
+
     rebuild_gallery_index(ctx)  # ギャラリー集約インデックスを最新化
     return slug, token, type_
+
+
+def redeploy_pattern_core(ctx: Ctx, slug: str, html_file: str, design_src: str | None = None) -> None:
+    # deployは呼ぶたびに新しいslug（＝新しいURL）を発行するため、レビュー中に内容を直すたびに
+    # コメントスレッドが途切れてしまう（旧slugのcomments/配下に取り残される）。redeployは既存の
+    # slugのURL・トークン・comments/配下をそのまま維持し、p/{slug}/index.html の中身とsourceHash
+    # だけを差し替える（論点: 同一URLでの反復レビューを成立させるための追加コマンド）。
+    if not Path(html_file).is_file():
+        die(f"error: HTMLファイルが見つかりません: {html_file}")
+    if not meta_name(ctx, slug):
+        die(f"error: パターンが見つかりません: {slug}")
+
+    html_content = Path(html_file).read_text(encoding="utf-8")
+    html = html_content.replace("{{スラッグ}}", slug)
+    ctx.s3.put_object(Bucket=ctx.bucket, Key=f"p/{slug}/index.html",
+                       Body=html.encode("utf-8"), ContentType="text/html; charset=utf-8")
+
+    patch: dict = {}
+    if design_src:
+        if not Path(design_src).is_file():
+            die(f"error: DESIGN.mdが見つかりません: {design_src}")
+        design_bytes = Path(design_src).read_bytes()
+        ctx.s3.upload_file(design_src, ctx.bucket, f"design/{slug}.md",
+                            ExtraArgs={"ContentType": "text/markdown; charset=utf-8"})
+        patch["designSource"] = f"design/{slug}.md"
+        patch["sourceFile"] = Path(design_src).name
+        patch["sourceHash"] = hashlib.sha256(design_bytes).hexdigest()
+    else:
+        patch["sourceFile"] = f"mocks/{Path(html_file).name}"
+        patch["sourceHash"] = hashlib.sha256(html_content.encode("utf-8")).hexdigest()
+    meta_patch(ctx, slug, patch)
 
 
 def export_pattern_core(ctx: Ctx, slug: str, outdir: str | Path) -> tuple[Path, int, int]:
@@ -427,6 +497,61 @@ def export_pattern_core(ctx: Ctx, slug: str, outdir: str | Path) -> tuple[Path, 
                     full = Path(root) / name
                     z.write(full, full.relative_to(work))
     return zip_path, pattern_count, comment_count
+
+
+def project_metas(ctx: Ctx, gslug: str) -> list[dict]:
+    metas = []
+    for k in list_keys(ctx, "meta/"):
+        txt = s3_get_text(ctx, k)
+        if not txt:
+            continue
+        try:
+            m = json.loads(txt)
+        except Exception:
+            continue
+        if gslug in (m.get("galleries") or []):
+            metas.append(m)
+    return metas
+
+
+def export_project_core(ctx: Ctx, gslug: str, outdir: str | Path,
+                         mock_slugs: list[str] | None = None) -> tuple[Path, dict]:
+    """プロジェクト単位エクスポート（論点3の最終合意）: 確定済みDESIGN.md 1件＋指定したUIモック＋
+    各パターンのコメントを1つのzipにまとめる。未確定のDESIGN.md案は対象にしない。
+    mock_slugsを指定しなければ「確定済み」のモックだけを対象にする（コンソールの既定選択と揃える）。"""
+    metas = project_metas(ctx, gslug)
+    designs = [m for m in metas if m.get("type") == "design-review" and m.get("confirmedAt")]
+    if not designs:
+        die(f"error: このプロジェクトには確定済みのDESIGN.mdがありません: {gslug}")
+    design = sorted(designs, key=lambda m: m.get("confirmedAt", ""), reverse=True)[0]
+
+    mocks = [m for m in metas if m.get("type") != "design-review"]
+    if mock_slugs is not None:
+        wanted = set(mock_slugs)
+        mocks = [m for m in mocks if m.get("slug") in wanted]
+    else:
+        mocks = [m for m in mocks if m.get("confirmed")]
+
+    outdir = Path(outdir)
+    with tempfile.TemporaryDirectory() as work_s:
+        work = Path(work_s)
+        dslug = design["slug"]
+        _s3_download_prefix(ctx, f"p/{dslug}/", work / "design")
+        _s3_download_prefix(ctx, f"comments/{dslug}/", work / "design" / "comments")
+        for m in mocks:
+            s = m["slug"]
+            _s3_download_prefix(ctx, f"p/{s}/", work / "mocks" / s)
+            _s3_download_prefix(ctx, f"comments/{s}/", work / "mocks" / s / "comments")
+
+        outdir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        zip_path = outdir / f"design-share-{gslug}-{stamp}.zip"
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+            for root, _dirs, files in os.walk(work):
+                for name in files:
+                    full = Path(root) / name
+                    z.write(full, full.relative_to(work))
+    return zip_path, {"design": design["slug"], "mocks": [m["slug"] for m in mocks]}
 
 
 def rotate_token_core(ctx: Ctx, slug: str) -> tuple[str, bool]:
@@ -452,16 +577,27 @@ def invalidate_pattern_core(ctx: Ctx, slug: str, do_export: bool = True) -> None
     rebuild_gallery_index(ctx)  # 無効化をギャラリー一覧へ反映
 
 
-def galleries_create_core(ctx: Ctx, name: str) -> tuple[str, str]:
+def galleries_create_core(ctx: Ctx, name: str, project_key: str = "") -> tuple[str, str, str]:
     gslug = new_gslug()
     token = new_token()
+    project_key = project_key or slugify(name)
     app_path = SCRIPT_DIR.parent / "references" / "templates" / "gallery-app.html"
     ctx.s3.put_object(Bucket=ctx.bucket, Key="gallery/app.html",
                        Body=app_path.read_bytes(), ContentType="text/html; charset=utf-8")
-    gallery_meta_write(ctx, gslug, name)
+    gallery_meta_write(ctx, gslug, name, project_key)
     kvs_put(ctx, f"g:{gslug}", token)
     rebuild_gallery_index(ctx)
-    return gslug, token
+    return gslug, token, project_key
+
+
+def find_gslug_by_project_key(ctx: Ctx, project_key: str) -> str | None:
+    """ローカルのプロジェクトフォルダ名からクラウドのプロジェクト(gslug)を毎回その場で探す。
+    ローカルには紐付け専用ファイルを一切持たない（論点6の最終合意）。"""
+    for k in list_keys(ctx, "galleries/"):
+        g = gallery_meta_get(ctx, Path(k).stem)
+        if g.get("projectKey") == project_key:
+            return g.get("gslug") or Path(k).stem
+    return None
 
 
 # --- CLIコマンド --------------------------------------------------------------
@@ -537,6 +673,61 @@ def cmd_deploy(ctx: Ctx, argv: list[str]) -> None:
     print("      403（無効化済みの表示）に見えることがあります。少し待ってから再読み込みしてください。")
 
 
+def cmd_redeploy(ctx: Ctx, argv: list[str]) -> None:
+    design_src = None
+    pos: list[str] = []
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a == "--design":
+            if i + 1 >= len(argv):
+                die("--design には値が必要です")
+            design_src = argv[i + 1]
+            i += 2
+        else:
+            pos.append(a)
+            i += 1
+    if len(pos) < 2:
+        die("usage: redeploy [--design <DESIGN.mdパス>] <slug> <html-file>")
+    slug, html_file = pos[0], pos[1]
+    require_pattern(slug)
+
+    redeploy_pattern_core(ctx, slug, html_file, design_src)
+
+    print()
+    print(f"更新完了: {slug}")
+    print(f"  URL: https://{ctx.domain}/p/{slug}/  （URL・トークン・既存コメントは変わりません）")
+    print()
+    print("補足: 反映は数秒〜数十秒かかる場合があります。少し待ってから再読み込みしてください。")
+
+
+def supersede_confirmed_designs(ctx: Ctx, gslug: str, except_slug: str) -> list[str]:
+    """1プロジェクトにつき確定済みDESIGN.mdは常に高々1つ、という制約を強制する（論点4の最終合意）。
+    同一プロジェクト内の他の確定済みdesign-reviewパターンを確定解除する。UIモックの確定はこの対象外
+    （supersedeしない。論点4で複数モックが同時に確定していてよいと合意したため）。"""
+    superseded = []
+    for k in list_keys(ctx, "meta/"):
+        slug = Path(k).stem
+        if slug == except_slug:
+            continue
+        txt = s3_get_text(ctx, k)
+        if not txt:
+            continue
+        try:
+            m = json.loads(txt)
+        except Exception:
+            continue
+        if m.get("type") != "design-review":
+            continue
+        if gslug not in (m.get("galleries") or []):
+            continue
+        if not m.get("confirmedAt"):
+            continue
+        meta_patch(ctx, slug, {"confirmedAt": None, "confirmedTo": None})
+        superseded.append(slug)
+    return superseded
+
+
 def cmd_confirm_design(ctx: Ctx, argv: list[str]) -> None:
     slug = None
     to_dir = "."
@@ -595,6 +786,12 @@ def cmd_confirm_design(ctx: Ctx, argv: list[str]) -> None:
     abs_dest = str(dest.resolve())
     meta_patch(ctx, slug, {"confirmedAt": now_iso(), "confirmedTo": abs_dest})
 
+    galleries = meta.get("galleries") or []
+    if galleries:
+        superseded = supersede_confirmed_designs(ctx, galleries[0], except_slug=slug)
+        if superseded:
+            print(f"同一プロジェクト内の既存の確定済みDESIGN.mdを確定解除しました: {', '.join(superseded)}")
+
     print()
     print(f"確定しました: {mname}")
     print(f"  配置先: {abs_dest}")
@@ -611,6 +808,30 @@ def cmd_confirm_design(ctx: Ctx, argv: list[str]) -> None:
     print("次のステップ:")
     print("  - このDESIGN.mdを単一の源として、対話でUIモックを生成できます（confirm-designはモックを生成しません）。")
     print(f"  - レビュー用スペックシート自体が不要になったら ds.py disable {slug} で公開を止められます（データは残ります）。")
+
+
+def cmd_confirm_mock(ctx: Ctx, argv: list[str]) -> None:
+    # UIモックの確定は「採用案にする」の意味で、DESIGN.mdと違いsupersedeしない
+    # （同じプロジェクト内で複数のモックが同時に確定していてよい。論点4の最終合意）。
+    if not argv:
+        die("usage: confirm <slug>")
+    slug = argv[0]
+    meta_text = s3_get_text(ctx, f"meta/{slug}.json")
+    if not meta_text:
+        die(f"error: metaが読めません（slugを確認してください）: {slug}")
+    meta = json.loads(meta_text)
+    if meta.get("type") == "design-review":
+        die(f"error: このslugはDESIGN.mdレビューです。確定には ds.py confirm-design を使ってください: {slug}")
+    meta_patch(ctx, slug, {"confirmed": True})
+    print(f"確定しました（採用案にしました）: {meta.get('name', '') or slug}")
+
+
+def cmd_unconfirm_mock(ctx: Ctx, argv: list[str]) -> None:
+    if not argv:
+        die("usage: unconfirm <slug>")
+    slug = argv[0]
+    meta_patch(ctx, slug, {"confirmed": False})
+    print(f"確定を取り消しました: {slug}")
 
 
 def cmd_export(ctx: Ctx, argv: list[str]) -> None:
@@ -751,17 +972,34 @@ def cmd_galleries(ctx: Ctx, argv: list[str]) -> None:
     sub, rest = argv[0], argv[1:]
     if sub == "create":
         if not rest:
-            die('usage: galleries create "<表示名>"')
-        name = rest[0]
-        gslug, token = galleries_create_core(ctx, name)
+            die('usage: galleries create "<表示名>" [--key <プロジェクトキー>]')
+        name = None
+        project_key = ""
+        pos = []
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--key":
+                if i + 1 >= len(rest):
+                    die("--key には値が必要です")
+                project_key = rest[i + 1]
+                i += 2
+            else:
+                pos.append(rest[i])
+                i += 1
+        if not pos:
+            die('usage: galleries create "<表示名>" [--key <プロジェクトキー>]')
+        name = pos[0]
+        gslug, token, project_key = galleries_create_core(ctx, name, project_key)
         print()
-        print("カテゴリ（名前付きギャラリー）を作成しました。")
-        print(f"  名前  : {name}")
-        print(f"  URL   : {gurl(ctx, gslug)}")
-        print(f"  トークン: {token}")
+        print("カテゴリ（名前付きギャラリー＝プロジェクト）を作成しました。")
+        print(f"  名前          : {name}")
+        print(f"  プロジェクトキー: {project_key}")
+        print(f"  URL           : {gurl(ctx, gslug)}")
+        print(f"  トークン        : {token}")
         print()
         print("このURLとトークンを渡した相手は、このカテゴリに入れたパターンだけを一覧・閲覧できます。")
         print(f"トークンはこの一度だけ表示。パターンの追加は ds.py galleries add {gslug} <pattern-slug> です。")
+        print(f"ローカルのプロジェクトフォルダ名を「{project_key}」にすると、コンソールが自動的にこのプロジェクトと紐付けます。")
     elif sub == "list":
         keys = list_keys(ctx, "galleries/")
         if not keys:
@@ -819,6 +1057,38 @@ def cmd_galleries(ctx: Ctx, argv: list[str]) -> None:
             pass
         rebuild_gallery_index(ctx)
         print(f"カテゴリ {gslug} を削除しました（所属パターン自体は残っています）。")
+    elif sub == "export":
+        if not rest:
+            die("usage: galleries export <gslug> [outdir] [--all-mocks] [--mocks slug1,slug2,...]")
+        gslug = rest[0]
+        require_gslug(gslug)
+        all_mocks = False
+        explicit_mocks: list[str] | None = None
+        outdir = "./exports"
+        i = 1
+        while i < len(rest):
+            a = rest[i]
+            if a == "--all-mocks":
+                all_mocks = True
+                i += 1
+            elif a == "--mocks":
+                if i + 1 >= len(rest):
+                    die("--mocks には値が必要です")
+                explicit_mocks = [s for s in rest[i + 1].split(",") if s]
+                i += 2
+            else:
+                outdir = a
+                i += 1
+        if explicit_mocks is not None:
+            mock_slugs = explicit_mocks
+        elif all_mocks:
+            mock_slugs = [m["slug"] for m in project_metas(ctx, gslug) if m.get("type") != "design-review"]
+        else:
+            mock_slugs = None  # export_project_core既定: 確定済みのみ
+        zip_path, picked = export_project_core(ctx, gslug, outdir, mock_slugs=mock_slugs)
+        print(f"エクスポート完了: {zip_path}")
+        print(f"  DESIGN.md: {picked['design']}")
+        print(f"  UIモック  : {len(picked['mocks'])}件")
     elif sub == "set":
         if not rest:
             die("usage: galleries set <pattern-slug> [gslug...]")
@@ -1235,7 +1505,7 @@ def cmd_smoke(ctx: Ctx, argv: list[str]) -> int:
         finally:
             os.unlink(tmp2)
         try:
-            catg, cattok = galleries_create_core(ctx, f"smoke-cat {marker}")
+            catg, cattok, _ = galleries_create_core(ctx, f"smoke-cat {marker}")
             pattern_set_galleries(ctx, slug, list(set(pattern_galleries(ctx, slug)) | {catg}))
         except Exception:
             pass
@@ -1348,8 +1618,14 @@ def main() -> None:
         cmd_list(ctx, rest)
     elif cmd == "deploy":
         cmd_deploy(ctx, rest)
+    elif cmd == "redeploy":
+        cmd_redeploy(ctx, rest)
     elif cmd == "confirm-design":
         cmd_confirm_design(ctx, rest)
+    elif cmd == "confirm":
+        cmd_confirm_mock(ctx, rest)
+    elif cmd == "unconfirm":
+        cmd_unconfirm_mock(ctx, rest)
     elif cmd == "export":
         cmd_export(ctx, rest)
     elif cmd == "rotate":

@@ -21,7 +21,7 @@ import subprocess
 import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DS = os.path.join(SCRIPT_DIR, "ds.sh")
+DS = os.path.join(SCRIPT_DIR, "ds.py")
 
 TOOLS = [
     {
@@ -39,6 +39,19 @@ TOOLS = [
                 "display_name": {"type": "string", "description": "パターンの表示名"},
             },
             "required": ["html_path", "display_name"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "redeploy_pattern",
+        "description": "既存パターンの内容だけを差し替える（URL・トークン・既存コメントはそのまま維持される）",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "slug": {"type": "string"},
+                "html_path": {"type": "string", "description": "差し替えるHTMLファイルの絶対パス"},
+            },
+            "required": ["slug", "html_path"],
             "additionalProperties": False,
         },
     },
@@ -79,12 +92,13 @@ TOOLS = [
 
 
 def run_ds(*args: str) -> tuple[bool, str]:
-    proc = subprocess.run(["bash", DS, *args], capture_output=True, text=True)
+    proc = subprocess.run(["uv", "run", "--script", DS, *args], capture_output=True, text=True)
     return proc.returncode == 0, proc.stdout + proc.stderr
 
 
 REQUIRED_ARGS = {
     "deploy_pattern": ("html_path", "display_name"),
+    "redeploy_pattern": ("slug", "html_path"),
     "export_pattern": ("slug",),
     "rotate_token": ("slug",),
     "disable_pattern": ("slug",),
@@ -103,6 +117,8 @@ def call_tool(name: str, arguments: dict) -> tuple[bool, str]:
         return run_ds("list")
     if name == "deploy_pattern":
         return run_ds("deploy", str(arguments["html_path"]), str(arguments["display_name"]))
+    if name == "redeploy_pattern":
+        return run_ds("redeploy", slug, str(arguments["html_path"]))
     if name == "export_pattern":
         extra = [str(arguments["outdir"])] if arguments.get("outdir") else []
         return run_ds("export", slug, *extra)
