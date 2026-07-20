@@ -129,6 +129,144 @@ def test_配列のpathVarはtoolMappings経由のdeploy先へfan_outする(tmp_p
     assert (tmp_path / "links" / "advisor-b" / "x.md").is_symlink()
 
 
+def test_toolMappingsがdiscriminatorごとに入れ子で宣言されているときは対応するマッピングだけを使う(tmp_path):
+    """
+    Given .waffle/config.jsonのtoolMappingsが対象documentTypeについてdiscriminatorの値ごとの入れ子マッピングを持つDocument
+    When deployを有効にしてrenderする
+    Then そのDocumentのdiscriminator値に対応するマッピングのdeploy先だけに書かれる
+    """
+    schema = {
+        "if": {"properties": {"kind": {"const": "a"}}},
+        "properties": {"content": {"type": "object", "properties": {}}},
+        "x-render-target": {
+            "formats": ["md"],
+            "path": str(tmp_path / "canonical" / "{documentId}.md"),
+        },
+    }
+    config_json = json.dumps({
+        "toolMappings": {
+            "claude-code": {
+                "FakeMulti": {
+                    "a": {"pathTemplate": str(tmp_path / "deploy-a" / "{documentId}.md"), "mode": "symlink"},
+                    "b": {"pathTemplate": str(tmp_path / "deploy-b" / "{documentId}.md"), "mode": "symlink"},
+                }
+            }
+        }
+    })
+    doc_path = tmp_path / "doc.json"
+    doc_path.write_text(
+        json.dumps({
+            "documentId": "x", "schemaRef": "Fake/v1", "documentType": "FakeMulti",
+            "kind": "a", "content": {},
+        }),
+        encoding="utf-8",
+    )
+
+    repo = _ConfigStubDocumentRepository(FsDocumentRepository(), config_json)
+    engine = RenderDocument(repo, _FakeSchemaRepository(schema))
+    result = engine.run(str(doc_path), deploy=True)
+    assert isinstance(result, Ok), result
+    assert str(tmp_path / "deploy-a" / "x.md") in result.value["deployed"]
+    assert str(tmp_path / "deploy-b" / "x.md") not in result.value["deployed"]
+    assert (tmp_path / "deploy-a" / "x.md").is_symlink()
+
+
+def test_AgentのtoolMappingsが入れ子化されてもorchestratorとsubagentで別々のdeploy先に解決される(tmp_path):
+    """
+    Given toolMappings.claude-code.AgentがagentKindごとの入れ子マッピング（orchestrator/subagent）を持つDocument
+    When agentKind=orchestratorとagentKind=subagentのそれぞれをdeployを有効にしてrenderする
+    Then orchestratorはCLAUDE.md相当のパスへ、subagentは.claude/agents/{documentId}.md相当のパスへ、それぞれ別々に解決される
+    （実config.jsonのclaude-code.Agentをフラット→入れ子構造へ移行しても、既存のorchestrator系documentの
+    deploy先が変わらないことを保証する回帰テスト）
+    """
+    schema = {
+        "if": {"properties": {"agentKind": {"const": "orchestrator"}}},
+        "properties": {"content": {"type": "object", "properties": {}}},
+        "x-render-target": {
+            "formats": ["md"],
+            "path": str(tmp_path / "canonical" / "{documentId}.md"),
+        },
+    }
+    config_json = json.dumps({
+        "toolMappings": {
+            "claude-code": {
+                "Agent": {
+                    "orchestrator": {"pathTemplate": str(tmp_path / "CLAUDE.md"), "mode": "symlink"},
+                    "subagent": {"pathTemplate": str(tmp_path / "agents" / "{documentId}.md"), "mode": "symlink"},
+                }
+            }
+        }
+    })
+
+    def _run(agent_kind: str, document_id: str) -> Ok:
+        doc_path = tmp_path / f"{document_id}.json"
+        doc_path.write_text(
+            json.dumps({
+                "documentId": document_id, "schemaRef": "Fake/v1", "documentType": "Agent",
+                "agentKind": agent_kind, "content": {},
+            }),
+            encoding="utf-8",
+        )
+        repo = _ConfigStubDocumentRepository(FsDocumentRepository(), config_json)
+        engine = RenderDocument(repo, _FakeSchemaRepository(schema))
+        result = engine.run(str(doc_path), deploy=True)
+        assert isinstance(result, Ok), result
+        return result
+
+    orchestrator_result = _run("orchestrator", "waffle")
+    assert str(tmp_path / "CLAUDE.md") in orchestrator_result.value["deployed"]
+
+    subagent_result = _run("subagent", "waffle-subagent")
+    assert str(tmp_path / "agents" / "waffle-subagent.md") in subagent_result.value["deployed"]
+    assert str(tmp_path / "CLAUDE.md") not in subagent_result.value["deployed"]
+
+
+def test_入れ子のtoolMappingsに含まれないdiscriminator値はdeployされない(tmp_path):
+    """
+    Given documentType向けのtoolMappingsが入れ子だが、対象Documentのdiscriminator値に対応するキーを持たない
+    When deployを有効にしてrenderする
+    Then そのtoolのdeploy先には何も書かれない（他のdiscriminator値へのdeploy先を誤って共有しない）
+
+    実装時に発見した回帰: .waffle/config.jsonのtoolMappings.codex.Agentがフラット
+    （{"pathTemplate": "AGENTS.md", ...}）のまま残っていたため、agentKind=subagentの
+    document（本来はcodex向けdeploy対象外）もAGENTS.mdへdeployされ、既存のagentKind=orchestrator
+    向けAGENTS.mdシンボリックリンクを誤って上書きした。この回帰を防ぐため、入れ子マッピングに
+    存在しないdiscriminator値は明示的に対象外になることを確認する。
+    """
+    schema = {
+        "if": {"properties": {"agentKind": {"const": "orchestrator"}}},
+        "properties": {"content": {"type": "object", "properties": {}}},
+        "x-render-target": {
+            "formats": ["md"],
+            "path": str(tmp_path / "canonical" / "{documentId}.md"),
+        },
+    }
+    config_json = json.dumps({
+        "toolMappings": {
+            "codex": {
+                "Agent": {
+                    "orchestrator": {"pathTemplate": str(tmp_path / "AGENTS.md"), "mode": "symlink"},
+                }
+            }
+        }
+    })
+    doc_path = tmp_path / "waffle-subagent.json"
+    doc_path.write_text(
+        json.dumps({
+            "documentId": "waffle-subagent", "schemaRef": "Fake/v1", "documentType": "Agent",
+            "agentKind": "subagent", "content": {},
+        }),
+        encoding="utf-8",
+    )
+
+    repo = _ConfigStubDocumentRepository(FsDocumentRepository(), config_json)
+    engine = RenderDocument(repo, _FakeSchemaRepository(schema))
+    result = engine.run(str(doc_path), deploy=True)
+    assert isinstance(result, Ok), result
+    assert result.value["deployed"] == []
+    assert not (tmp_path / "AGENTS.md").exists()
+
+
 class _FakeSchemaRepository:
     def __init__(self, schema: dict) -> None:
         self._schema = schema

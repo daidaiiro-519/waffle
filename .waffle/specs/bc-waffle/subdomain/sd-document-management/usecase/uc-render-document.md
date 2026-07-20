@@ -58,6 +58,7 @@ sequenceDiagram
 - DocumentRendered が発行される
 - 成果物が canonical に書かれ、deploy 先へ verbatim コピーされる
 - deploy 先は固定の配列だけでなく、discriminator（specKind等）ごとに異なる配列としても宣言できる（canonicalのpath選択と同じ仕組み）
+- deploy 先の解決は .waffle/config.json の toolMappings が対象documentTypeに対応するマッピングを持つ場合、そちらを優先する。toolMappings 側のマッピングも、discriminatorの値ごとに異なるマッピング（kindごとの{pathTemplate, mode}等の組）として入れ子に宣言できる（documentType単位の分岐に加え、discriminatorという同一documentType内のさらに細かい軸でも分岐できる、canonicalのpath選択・schema側deployのdiscriminator分岐と同型の仕組み）
 - パステンプレートの変数は、documentId等の既定変数に加え、schemaがx-render-target.pathVarsでcontentのドットパスを宣言すれば、そのcontent値も変数として使える（x-frontmatterと同型の宣言的解決）
 - pathVarsもpath/deployと同様、discriminatorごとに異なる宣言（kindごとの{変数名: ドットパス}の組）としても書ける（discriminatorの分岐によってcontentの形が変わり、参照できるドットパスも変わるため）
 - x-frontmatterも同様に、discriminatorの値ごとに異なるフィールド宣言（kindごとの{フィールド名: ドットパス}の組）として書ける（discriminatorによってcontentの形が変わり、frontmatterに出すべきフィールド自体も変わるため。frontmatterを持たないdiscriminator値は宣言しなければ生成されない）
@@ -70,6 +71,7 @@ sequenceDiagram
 - When 対象 Document が与えられたとき、システムは x-render に従い成果物を生成する shall。
 - When deploy が有効なとき、システムは canonical と deploy 先の両方へ書き込む shall。
 - When deploy 先が discriminator ごとの配列として宣言されているとき、システムは対象 Document の discriminator 値に対応する配列だけへ書き込む shall。
+- When 対象documentTypeに対応するtoolMappingsのマッピングが、discriminatorの値ごとの入れ子（kindごとの{pathTemplate, mode}等の組）として宣言されているとき、システムは対象Documentのdiscriminator値に対応するマッピングだけを使ってdeploy先を解決する shall。
 - When schemaがx-render-target.pathVarsでcontentのドットパスを宣言しているとき、システムはそのcontent値をパステンプレートの変数として使う shall。
 - When pathVarsがdiscriminatorごとの宣言（kindごとの変数マップ）であるとき、システムは対象Documentのdiscriminator値に対応する変数マップだけを解決する shall。
 - When x-frontmatterがdiscriminatorごとの宣言（kindごとのフィールドマップ）であるとき、システムは対象Documentのdiscriminator値に対応するフィールドマップだけからfrontmatterを生成する shall。
@@ -234,6 +236,19 @@ Scenario: discriminatorごとに異なるdeploy先へ書き分ける
   Given deploy先がdiscriminatorの値ごとに異なる配列として宣言されたschemaのDocument
   When deployを有効にしてrenderする
   Then そのDocumentのdiscriminator値に対応する配列のdeploy先だけに書かれる
+```
+
+### toolMappingsがdiscriminatorごとに入れ子で宣言されているときは対応するマッピングだけを使う
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 受け入れ基準：toolMappingsが対象documentType内でdiscriminatorの値ごとに異なるマッピング（kindごとの{pathTemplate, mode}の組）として宣言されているとき、対象Documentのdiscriminator値に対応するマッピングだけからdeploy先を解決する |
+
+```gherkin
+Scenario: toolMappingsがdiscriminatorごとに入れ子で宣言されているときは対応するマッピングだけを使う
+  Given .waffle/config.jsonのtoolMappingsが対象documentTypeについてdiscriminatorの値ごとの入れ子マッピングを持つDocument
+  When deployを有効にしてrenderする
+  Then そのDocumentのdiscriminator値に対応するマッピングのdeploy先だけに書かれる
 ```
 
 ### pathVarsで宣言したcontent値をパステンプレートの変数として使う

@@ -67,10 +67,14 @@ class ScaffoldDocument:
                 )
 
         path_vars = {"documentId": document_id, **{k: v for k, v in params.items() if isinstance(v, str)}}
+        spec_kind = discriminator.get(disc_key) if disc_key else None
         content_def = _content_def(schema, discriminator)
         skeleton = _build_skeleton(schema, document_id, disc_key, discriminator, content_def, path_vars)
         protected = {"documentId"} | ({disc_key} if disc_key else set())
-        fill_template = _build_top_level_fill_template(schema, protected) + _build_fill_template(schema, content_def)
+        fill_template = (
+            _build_top_level_fill_template(schema, protected, spec_kind)
+            + _build_fill_template(schema, content_def, spec_kind)
+        )
 
         x_source = schema.get("x-source-target") or ""
         template = x_source.get(discriminator.get(disc_key)) if isinstance(x_source, dict) else x_source

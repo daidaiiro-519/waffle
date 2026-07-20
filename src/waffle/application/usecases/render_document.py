@@ -110,7 +110,7 @@ class RenderDocument:
             try:
                 # canonical（.waffle 配下）に書く
                 self._documents.write_text(canonical, output)
-                tool_targets = self._resolve_tool_deploy_targets(doc.get("documentType"), path_vars)
+                tool_targets = self._resolve_tool_deploy_targets(doc.get("documentType"), path_vars, spec_kind)
                 if tool_targets is not None:
                     # .waffle/config.json が対応するdocumentTypeを持つ場合はそちらを唯一の真実源にする
                     # （x-render-target.deployは読まない。真実源が2箇所に分散するのを避けるため）
@@ -138,7 +138,9 @@ class RenderDocument:
             "path": canonical, "deployed": deployed, "format": fmt, "content": output,
         })
 
-    def _resolve_tool_deploy_targets(self, document_type: str | None, path_vars: dict) -> list[tuple[str, str]] | None:
+    def _resolve_tool_deploy_targets(
+        self, document_type: str | None, path_vars: dict, spec_kind: str | None,
+    ) -> list[tuple[str, str]] | None:
         """.waffle/config.json の toolMappings から documentType 向けのdeploy先を解決する。
 
         config.json が無い、または documentType に対応するマッピングが1つも無ければ None を返し、
@@ -157,6 +159,7 @@ class RenderDocument:
         targets: list[tuple[str, str]] = []
         for tool_config in config.get("toolMappings", {}).values():
             mapping = tool_config.get(document_type) if document_type else None
+            mapping = _select_field_map(mapping, spec_kind) if mapping else mapping
             if not mapping:
                 continue
             mode = mapping.get("mode", "render")

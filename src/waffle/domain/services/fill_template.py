@@ -47,13 +47,22 @@ def _merge_allof(schema: dict, d: dict) -> dict:
     return merged
 
 
-def build_fill_template(schema: dict, content: dict) -> list:
+def _select_prompt(value, spec_kind: str | None):
+    """x-prompt-write は、フラットな文字列（discriminator非依存）か discriminatorごとの
+    辞書（kind→文言）のどちらでも書ける。辞書なら該当spec_kindの文言を選ぶ（render_document.py の
+    _select_template/_select_deploy と同型の規約）。"""
+    if isinstance(value, dict):
+        return value.get(spec_kind, "") if spec_kind else ""
+    return value
+
+
+def build_fill_template(schema: dict, content: dict, spec_kind: str | None = None) -> list:
     entries: list = []
-    _walk_fill(schema, content, "content", entries, is_required=True)
+    _walk_fill(schema, content, "content", entries, is_required=True, spec_kind=spec_kind)
     return entries
 
 
-def build_top_level_fill_template(schema: dict, protected: set) -> list:
+def build_top_level_fill_template(schema: dict, protected: set, spec_kind: str | None = None) -> list:
     """content の外側にある値フィールド（subdomainRef/skillRef 等）の fillTemplate を走査する。
 
     documentId・discriminator キー（agentKind/skillKind/specKind/templateKind 等）は、
@@ -65,7 +74,7 @@ def build_top_level_fill_template(schema: dict, protected: set) -> list:
     for key, prop in schema.get("properties", {}).items():
         if key == "content" or key in protected:
             continue
-        _walk_fill(schema, prop, key, entries, is_required=key in required)
+        _walk_fill(schema, prop, key, entries, is_required=key in required, spec_kind=spec_kind)
     return entries
 
 
@@ -196,18 +205,18 @@ def _is_object_schema(d: dict) -> bool:
     return d.get("type") == "object" or "properties" in d
 
 
-def _walk_fill(schema, d, path, entries, is_required):
+def _walk_fill(schema, d, path, entries, is_required, spec_kind: str | None = None):
     if "$ref" in d:
-        return _walk_fill(schema, resolve_ref(schema, d["$ref"]), path, entries, is_required)
+        return _walk_fill(schema, resolve_ref(schema, d["$ref"]), path, entries, is_required, spec_kind)
     t = d.get("type")
     if t == "object":
         required_keys = set(d.get("required", []))
         for k, v in d.get("properties", {}).items():
-            _walk_fill(schema, v, f"{path}.{k}", entries, is_required and k in required_keys)
+            _walk_fill(schema, v, f"{path}.{k}", entries, is_required and k in required_keys, spec_kind)
         return
     if "const" in d or "x-prompt-write" not in d:
         return
-    entry = {"path": path, "type": t or "any", "prompt": d["x-prompt-write"], "required": is_required}
+    entry = {"path": path, "type": t or "any", "prompt": _select_prompt(d["x-prompt-write"], spec_kind), "required": is_required}
     if "enum" in d:
         entry["enum"] = d["enum"]
     if t == "array":
@@ -220,11 +229,11 @@ def _walk_fill(schema, d, path, entries, is_required):
         # そうしないとoverlay_placeholdersが単純配列と誤認し、文字列プレースホルダーを
         # 1件だけ入れてしまい、element前提のtable/section描画がAttributeErrorになる）。
         if _is_object_schema(item):
-            entry["element"] = _build_element(schema, item)
+            entry["element"] = _build_element(schema, item, spec_kind=spec_kind)
     entries.append(entry)
 
 
-def _build_element(schema, item, depth: int = 0, max_depth: int = 2) -> dict:
+def _build_element(schema, item, depth: int = 0, max_depth: int = 2, spec_kind: str | None = None) -> dict:
     """配列itemのプロパティごとのprompt(x-prompt-write)を集める。プロパティ自身が
     さらに構造化された配列(例: Entities.items[].attributes)の場合、ネストしたelementとして
     表現する（{"element": {...}}の形）。ネスト構造そのものは常に保持する（配列は常に
@@ -244,9 +253,9 @@ def _build_element(schema, item, depth: int = 0, max_depth: int = 2) -> dict:
                 sub_item = resolve_ref(schema, sub_item["$ref"])
             sub_item = _merge_allof(schema, sub_item)
             if _is_object_schema(sub_item):
-                nested = _build_element(schema, sub_item, depth + 1, max_depth) if depth < max_depth else {}
+                nested = _build_element(schema, sub_item, depth + 1, max_depth, spec_kind) if depth < max_depth else {}
                 element[ik] = {"element": nested}
                 continue
         if "x-prompt-write" in iv:
-            element[ik] = iv["x-prompt-write"]
+            element[ik] = _select_prompt(iv["x-prompt-write"], spec_kind)
     return element

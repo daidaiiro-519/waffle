@@ -196,7 +196,12 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に対象種別を表す語（技術スタックなら「〜を定めるTech Stack仕様」、アーキテクチャなら「〜を定めるArchitecture仕様」、コーディング規約なら「〜を定めるCoding Standard」、テスト規約なら「〜を定めるTest Standard」）を含め、読んだだけでこの仕様がどの種別かがわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。"
+          "x-prompt-write": {
+            "tech-stack": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTech Stack仕様」を含め、読んだだけでこの仕様が技術スタックだとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
+            "architecture": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるArchitecture仕様」を含め、読んだだけでこの仕様がアーキテクチャだとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
+            "coding-standard": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるCoding Standard」を含め、読んだだけでこの仕様がコーディング規約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
+            "test-standard": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTest Standard」を含め、読んだだけでこの仕様がテスト規約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。"
+          }
         }
       }
     },
@@ -347,15 +352,15 @@
         },
         "language": {
           "type": "string",
-          "x-prompt-write": "言語とバージョン。例: Python 3.12+"
+          "x-prompt-write": "言語とバージョン（例: Python 3.12+）"
         },
         "target": {
           "type": "string",
-          "x-prompt-write": "実行ターゲット。例: CLI / ローカルプロセス、ブラウザ、コンテナ"
+          "x-prompt-write": "実行ターゲット（例: CLI / ローカルプロセス、ブラウザ、コンテナ）"
         },
         "concurrency": {
           "type": "string",
-          "x-prompt-write": "並行モデル。例: 同期主体（境界のみ async）"
+          "x-prompt-write": "並行モデル（例: 同期主体（境界のみ async））"
         }
       }
     },
@@ -398,7 +403,7 @@
         },
         "name": {
           "type": "string",
-          "x-prompt-write": "看板フレームワーク名（1つ）。無ければ空文字。例: FastAPI, React"
+          "x-prompt-write": "看板フレームワーク名（1つ）。無ければ空文字（例: FastAPI, React）"
         },
         "note": {
           "type": "string",
@@ -465,11 +470,11 @@
             "properties": {
               "style": {
                 "type": "string",
-                "x-prompt-write": "様式。例: CLI, MCP, REST"
+                "x-prompt-write": "様式（例: CLI, MCP, REST）"
               },
               "implementation": {
                 "type": "string",
-                "x-prompt-write": "実装ライブラリ。例: typer, fastmcp"
+                "x-prompt-write": "実装ライブラリ（例: typer, fastmcp）"
               },
               "rationale": {
                 "type": "string",
@@ -555,11 +560,11 @@
               },
               "product": {
                 "type": "string",
-                "x-prompt-write": "製品名。例: PostgreSQL, Redis"
+                "x-prompt-write": "製品名（例: PostgreSQL, Redis）"
               },
               "access": {
                 "type": "string",
-                "x-prompt-write": "アクセスするクライアントライブラリ。例: SQLAlchemy"
+                "x-prompt-write": "アクセスするクライアントライブラリ（例: SQLAlchemy）"
               },
               "rationale": {
                 "type": "string",
@@ -638,15 +643,15 @@
             "properties": {
               "category": {
                 "type": "string",
-                "x-prompt-write": "能力の分類（AWS カテゴリ相当）。例: validation, observability, security"
+                "x-prompt-write": "能力の分類（AWS カテゴリ相当）（例: validation, observability, security）"
               },
               "capability": {
                 "type": "string",
-                "x-prompt-write": "用途名。例: schema-validation, logging"
+                "x-prompt-write": "用途名（例: schema-validation, logging）"
               },
               "implementation": {
                 "type": "string",
-                "x-prompt-write": "実装ライブラリ。例: jsonschema"
+                "x-prompt-write": "実装ライブラリ（例: jsonschema）"
               },
               "version": {
                 "type": "string",
@@ -702,7 +707,7 @@
         },
         "packageManager": {
           "type": "string",
-          "x-prompt-write": "パッケージ管理ツール。例: uv（.venv / uv.lock 固定）"
+          "x-prompt-write": "パッケージ管理ツール（例: uv（.venv / uv.lock 固定））"
         },
         "lintFormat": {
           "type": "string",
@@ -764,7 +769,7 @@
               },
               "rule": {
                 "type": "string",
-                "x-prompt-write": "依存ライブラリを追加する際に満たすべき方針の内容。例: 標準ライブラリ・既存依存で代替可能なら追加しない"
+                "x-prompt-write": "依存ライブラリを追加する際に満たすべき方針の内容（例: 標準ライブラリ・既存依存で代替可能なら追加しない）"
               }
             }
           }
@@ -855,7 +860,7 @@
         },
         "style": {
           "type": "string",
-          "x-prompt-write": "技術方式。例: ポートとアダプター（ヘキサゴナル）"
+          "x-prompt-write": "技術方式（例: ポートとアダプター（ヘキサゴナル））"
         },
         "items": {
           "type": "array",
@@ -871,11 +876,11 @@
             "properties": {
               "layer": {
                 "type": "string",
-                "x-prompt-write": "レイヤー名。例: domain, application, ports, inbound adapter, outbound adapter"
+                "x-prompt-write": "レイヤー名（例: domain, application, ports, inbound adapter, outbound adapter）"
               },
               "responsibility": {
                 "type": "string",
-                "x-prompt-write": "このレイヤーの責務を1文で。例: 外部I/O・外部ライブラリをport実装に閉じ込める"
+                "x-prompt-write": "このレイヤーの責務を1文で（例: 外部I/O・外部ライブラリをport実装に閉じ込める）"
               },
               "mayDependOn": {
                 "type": "array",
@@ -927,7 +932,7 @@
         },
         "compositionRoot": {
           "type": "string",
-          "x-prompt-write": "結線（DI）を置く場所を1文で。例: inbound adapter の起動点にのみ置く"
+          "x-prompt-write": "結線（DI）を置く場所を1文で（例: inbound adapter の起動点にのみ置く）"
         }
       }
     },
@@ -1000,7 +1005,7 @@
               },
               "placement": {
                 "type": "string",
-                "x-prompt-write": "layout のツリー上の配置（相対パス）。例: application/usecases"
+                "x-prompt-write": "layout のツリー上の配置（相対パス）（例: application/usecases）"
               },
               "pattern": {
                 "type": "string",
@@ -1061,7 +1066,7 @@
               },
               "rule": {
                 "type": "string",
-                "x-prompt-write": "依存方向・DIの受け取り方・エラー伝播（結果型/例外の使い分け）等、横断的な決定ルールの内容。例: 依存は内向きのみ"
+                "x-prompt-write": "依存方向・DIの受け取り方・エラー伝播（結果型/例外の使い分け）等、横断的な決定ルールの内容（例: 依存は内向きのみ）"
               }
             }
           }
@@ -1124,7 +1129,7 @@
               },
               "thickness": {
                 "type": "string",
-                "x-prompt-write": "実装の厚み方針を1文で。例: ドメインモデルで厚く実装する"
+                "x-prompt-write": "実装の厚み方針を1文で（例: ドメインモデルで厚く実装する）"
               }
             }
           }
@@ -1210,11 +1215,11 @@
             "properties": {
               "target": {
                 "type": "string",
-                "x-prompt-write": "命名の対象。例: モジュール / ファイル"
+                "x-prompt-write": "命名の対象（例: モジュール / ファイル）"
               },
               "convention": {
                 "type": "string",
-                "x-prompt-write": "命名規約。例: スネークケース"
+                "x-prompt-write": "命名規約（例: スネークケース）"
               }
             }
           }
@@ -1271,7 +1276,7 @@
               },
               "rule": {
                 "type": "string",
-                "x-prompt-write": "型注釈・関数の責務範囲・import規律等、コードスタイルに関する規約の内容。例: 全ての公開関数に型注釈を付ける"
+                "x-prompt-write": "型注釈・関数の責務範囲・import規律等、コードスタイルに関する規約の内容（例: 全ての公開関数に型注釈を付ける）"
               }
             }
           }
@@ -1330,7 +1335,7 @@
         },
         "style": {
           "type": "string",
-          "x-prompt-write": "言語標準の docstring スタイル。例: Google スタイル docstring"
+          "x-prompt-write": "言語標準の docstring スタイル（例: Google スタイル docstring）"
         },
         "summaryGuidance": {
           "type": "string",
@@ -1338,7 +1343,7 @@
         },
         "target": {
           "type": "string",
-          "x-prompt-write": "docstring を必須にする対象。例: 公開要素（module / 公開 class / 公開 function）。private は任意。"
+          "x-prompt-write": "docstring を必須にする対象（例: 公開要素（module / 公開 class / 公開 function））。private は任意。"
         },
         "example": {
           "type": "string",
@@ -1400,7 +1405,7 @@
               },
               "rule": {
                 "type": "string",
-                "x-prompt-write": "docstring必須の範囲・コードから導出できる情報を書かない・仕様と異なる語彙で命名しない等、docstring/コメントに関する規約の内容。例: 公開関数のdocstringは要約行＋Args/Returnsを持つ"
+                "x-prompt-write": "docstring必須の範囲・コードから導出できる情報を書かない・仕様と異なる語彙で命名しない等、docstring/コメントに関する規約の内容（例: 公開関数のdocstringは要約行＋Args/Returnsを持つ）"
               }
             }
           }
@@ -1491,11 +1496,11 @@
         },
         "pyramid": {
           "type": "string",
-          "x-prompt-write": "重心の方針。例: ピラミッド形（単体テストを重視・統合はやや軽め・E2E は行わない）"
+          "x-prompt-write": "重心の方針（例: ピラミッド形（単体テストを重視・統合はやや軽め・E2E は行わない））"
         },
         "rationale": {
           "type": "string",
-          "x-prompt-write": "その方針を選ぶ根拠。例: 業務ロジックの実装方法＝ドメインモデル"
+          "x-prompt-write": "その方針を選ぶ根拠（例: 業務ロジックの実装方法＝ドメインモデル）"
         }
       }
     },
@@ -1546,11 +1551,11 @@
             "properties": {
               "item": {
                 "type": "string",
-                "x-prompt-write": "計画項目名。例: 実行タイミング"
+                "x-prompt-write": "計画項目名（例: 実行タイミング）"
               },
               "value": {
                 "type": "string",
-                "x-prompt-write": "この計画項目の具体的な内容。例: 全コミット時（pre-commit）"
+                "x-prompt-write": "この計画項目の具体的な内容（例: 全コミット時（pre-commit））"
               }
             }
           }
@@ -1631,11 +1636,11 @@
               },
               "tool": {
                 "type": "string",
-                "x-prompt-write": "使用ツール。例: pytest"
+                "x-prompt-write": "使用ツール（例: pytest）"
               },
               "target": {
                 "type": "string",
-                "x-prompt-write": "対象。例: domain / application"
+                "x-prompt-write": "対象（例: domain / application）"
               }
             }
           }
@@ -1679,11 +1684,11 @@
         },
         "unit": {
           "type": "string",
-          "x-prompt-write": "単体テストFW。例: pytest"
+          "x-prompt-write": "単体テストFW（例: pytest）"
         },
         "acceptance": {
           "type": "string",
-          "x-prompt-write": "受け入れテストFW（仕様(要件)をこのFWでネイティブに実行可能テストとして執筆する）。無ければ空。例: pytest"
+          "x-prompt-write": "受け入れテストFW（仕様(要件)をこのFWでネイティブに実行可能テストとして執筆する）。無ければ空（例: pytest）"
         }
       }
     },
@@ -1734,11 +1739,11 @@
             "properties": {
               "item": {
                 "type": "string",
-                "x-prompt-write": "項目名。例: 対応関係"
+                "x-prompt-write": "項目名（例: 対応関係）"
               },
               "rule": {
                 "type": "string",
-                "x-prompt-write": "実行可能な仕様とテストの対応関係・ドリフト検知方法に関する規約の内容。例: 1シナリオ=1テスト関数、シナリオ名をsanitizeした名前をtest_接頭辞付きで一致させる"
+                "x-prompt-write": "実行可能な仕様とテストの対応関係・ドリフト検知方法に関する規約の内容（例: 1シナリオ=1テスト関数、シナリオ名をsanitizeした名前をtest_接頭辞付きで一致させる）"
               }
             }
           }
@@ -1798,7 +1803,7 @@
             "properties": {
               "target": {
                 "type": "string",
-                "x-prompt-write": "テスト対象。例: domain"
+                "x-prompt-write": "テスト対象（例: domain）"
               },
               "testKind": {
                 "type": "string",
@@ -1806,7 +1811,7 @@
               },
               "path": {
                 "type": "string",
-                "x-prompt-write": "配置パス。例: tests/domain/"
+                "x-prompt-write": "配置パス（例: tests/domain/）"
               }
             }
           }
@@ -1863,7 +1868,7 @@
               },
               "rule": {
                 "type": "string",
-                "x-prompt-write": "実行可能な仕様の扱い・生成物の手書き禁止・テストダブルの使用方針等、テストに関する決定ルールの内容。例: モックは外部I/O境界のみに限定する"
+                "x-prompt-write": "実行可能な仕様の扱い・生成物の手書き禁止・テストダブルの使用方針等、テストに関する決定ルールの内容（例: モックは外部I/O境界のみに限定する）"
               }
             }
           }
@@ -1918,7 +1923,7 @@
         },
         "style": {
           "type": "string",
-          "x-prompt-write": "対象言語のdocstring/コメント構文に載せてGherkinを記載するスタイル。例: pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載"
+          "x-prompt-write": "対象言語のdocstring/コメント構文に載せてGherkinを記載するスタイル（例: pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載）"
         },
         "transcriptionGuidance": {
           "type": "string",
@@ -1926,7 +1931,7 @@
         },
         "target": {
           "type": "string",
-          "x-prompt-write": "この転記規約を必須にする対象。例: 受け入れシナリオ・保証シナリオ・不変条件シナリオ・ドメインサービスシナリオに対応する全テスト関数"
+          "x-prompt-write": "この転記規約を必須にする対象（例: 受け入れシナリオ・保証シナリオ・不変条件シナリオ・ドメインサービスシナリオに対応する全テスト関数）"
         },
         "example": {
           "type": "string",

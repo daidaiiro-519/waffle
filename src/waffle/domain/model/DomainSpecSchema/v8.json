@@ -425,7 +425,12 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。この構成要素の種類が境界づけられたコンテキスト／サブドメイン／集約のいずれかである場合は、説明の末尾にその種類を表す語（境界づけられたコンテキストなら「〜を行う境界づけられたコンテキスト」、サブドメインなら「〜を担うサブドメイン」、集約なら「〜を守る集約」）を含め、読んだだけでこの構成要素がDDDのどれにあたるかがわかるようにしてください（ユースケースの場合はこの種別語を付けない）。識別子部分は構成要素の種類に応じて設定する: ユースケースの場合はその操作を表す正式名と同じ値、集約の場合はその集約のルートを表す正式名と同じ値、境界づけられたコンテキスト／サブドメインの場合はこの文書自身の一意な識別子をそのまま使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。"
+          "x-prompt-write": {
+            "bounded-context": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。末尾に「〜を行う境界づけられたコンテキスト」を含め、読んだだけでDDDのどれにあたるかがわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。",
+            "subdomain": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。末尾に「〜を担うサブドメイン」を含め、読んだだけでDDDのどれにあたるかがわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。",
+            "aggregate": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。末尾に「〜を守る集約」を含め、読んだだけでDDDのどれにあたるかがわかるようにしてください。識別子部分はその集約のルートを表す正式名と同じ値を使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。",
+            "usecase": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。種別を表す語（〜を守る集約 等）は付けない。識別子部分はその操作を表す正式名と同じ値を使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。"
+          }
         }
       }
     },
@@ -456,7 +461,7 @@
         },
         "operationName": {
           "type": "string",
-          "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に。例: CheckScenarioDrift。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
+          "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に（例: CheckScenarioDrift）。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
         }
       },
       "x-render-hidden": true
@@ -682,7 +687,7 @@
               },
               "content": {
                 "type": "string",
-                "x-prompt-write": "他bounded-contextと何を連係するかを1文で。例: 注文確定イベントを配送コンテキストへ連携"
+                "x-prompt-write": "他bounded-contextと何を連係するかを1文で（例: 注文確定イベントを配送コンテキストへ連携）"
               }
             }
           }
@@ -890,7 +895,7 @@
             "properties": {
               "name": {
                 "type": "string",
-                "x-prompt-write": "業務サービス名。例: パステンプレート解決 / 整形描画（ドメイン語彙で、他の集約に属さない業務ロジックであることが分かる名前にする）"
+                "x-prompt-write": "業務サービス名（例: パステンプレート解決 / 整形描画（ドメイン語彙で、他の集約に属さない業務ロジックであることが分かる名前にする））"
               },
               "responsibility": {
                 "type": "string",
@@ -898,11 +903,11 @@
               },
               "serviceName": {
                 "type": "string",
-                "x-prompt-write": "業務サービスのコード識別子をPascalCaseで。例: CheckBackwardCompatible。実装ファイル内の関数名としてto_snake_case変換した形でそのまま使われる。"
+                "x-prompt-write": "業務サービスのコード識別子をPascalCaseで（例: CheckBackwardCompatible）。実装ファイル内の関数名としてto_snake_case変換した形でそのまま使われる。"
               },
               "group": {
                 "type": "string",
-                "x-prompt-write": "実装ファイルの単位をPascalCaseで。例: SchemaPatch。同じgroupを持つ複数サービスが同じ実装ファイルに同居してよい。to_snake_case変換したものがsrc_root配下のファイル名（{group}.py）になる。"
+                "x-prompt-write": "実装ファイルの単位をPascalCaseで（例: SchemaPatch）。同じgroupを持つ複数サービスが同じ実装ファイルに同居してよい。to_snake_case変換したものがsrc_root配下のファイル名（{group}.py）になる。"
               }
             }
           }
@@ -941,11 +946,11 @@
         },
         "name": {
           "type": "string",
-          "x-prompt-write": "ルートエンティティ名（ドメイン語彙）。例: Order"
+          "x-prompt-write": "ルートエンティティ名（ドメイン語彙）（例: Order）"
         },
         "externalRefs": {
           "type": "array",
-          "x-prompt-write": "ID で参照する他集約を列挙（オブジェクトは内部に持たない・図6-4）。例: Customer, Product。無ければ空。",
+          "x-prompt-write": "ID で参照する他集約を列挙（オブジェクトは内部に持たない・図6-4）（例: Customer, Product）。無ければ空。",
           "items": {
             "type": "string"
           }
@@ -1018,11 +1023,11 @@
             "properties": {
               "name": {
                 "type": "string",
-                "x-prompt-write": "エンティティ名。例: Order / OrderLine"
+                "x-prompt-write": "エンティティ名（例: Order / OrderLine）"
               },
               "role": {
                 "type": "string",
-                "x-prompt-write": "このエンティティが集約内で担う役割を1文で。例: 注文全体の整合性を保つ集約ルート"
+                "x-prompt-write": "このエンティティが集約内で担う役割を1文で（例: 注文全体の整合性を保つ集約ルート）"
               },
               "isRoot": {
                 "type": "boolean",
@@ -1041,11 +1046,11 @@
                   "properties": {
                     "name": {
                       "type": "string",
-                      "x-prompt-write": "属性名。例: status / orderId"
+                      "x-prompt-write": "属性名（例: status / orderId）"
                     },
                     "type": {
                       "type": "string",
-                      "x-prompt-write": "型（値オブジェクト名・他エンティティ・ID）。例: OrderStatus / OrderLine[] / customerId"
+                      "x-prompt-write": "型（値オブジェクト名・他エンティティ・ID）（例: OrderStatus / OrderLine[] / customerId）"
                     },
                     "isId": {
                       "type": "boolean",
@@ -1127,7 +1132,7 @@
             "properties": {
               "name": {
                 "type": "string",
-                "x-prompt-write": "値オブジェクト名。例: Money"
+                "x-prompt-write": "値オブジェクト名（例: Money）"
               },
               "represents": {
                 "type": "string",
@@ -1135,7 +1140,7 @@
               },
               "behavior": {
                 "type": "string",
-                "x-prompt-write": "振る舞い・制約・等価判定。例: 不変。加算は同一通貨のみ。負値不可。"
+                "x-prompt-write": "振る舞い・制約・等価判定（例: 不変）。加算は同一通貨のみ。負値不可。"
               },
               "attributes": {
                 "type": "array",
@@ -1149,11 +1154,11 @@
                   "properties": {
                     "name": {
                       "type": "string",
-                      "x-prompt-write": "属性名。例: amount"
+                      "x-prompt-write": "属性名（例: amount）"
                     },
                     "type": {
                       "type": "string",
-                      "x-prompt-write": "型。例: string / number / SchemaId[]"
+                      "x-prompt-write": "型（例: string / number / SchemaId[]）"
                     }
                   }
                 }
@@ -1216,7 +1221,7 @@
             "properties": {
               "rule": {
                 "type": "string",
-                "x-prompt-write": "不変条件（「〜は常に〜」の形）。例: 注文明細の数量は常に1以上である"
+                "x-prompt-write": "不変条件（「〜は常に〜」の形）（例: 注文明細の数量は常に1以上である）"
               },
               "enforcement": {
                 "type": "string",
@@ -1289,7 +1294,7 @@
         },
         "states": {
           "type": "array",
-          "x-prompt-write": "取りうる状態を列挙。例: PLACED, PAID, SHIPPED。状態を持たない集約なら空。",
+          "x-prompt-write": "取りうる状態を列挙（例: PLACED, PAID, SHIPPED）。状態を持たない集約なら空。",
           "items": {
             "type": "string"
           }
@@ -1402,7 +1407,7 @@
             "properties": {
               "name": {
                 "type": "string",
-                "x-prompt-write": "コマンド名（命令形）。例: place / 確定する"
+                "x-prompt-write": "コマンド名（命令形）（例: place / 確定する）"
               },
               "description": {
                 "type": "string",
@@ -1431,11 +1436,11 @@
                   "properties": {
                     "name": {
                       "type": "string",
-                      "x-prompt-write": "引数名。ドメイン語彙で。例: quantity"
+                      "x-prompt-write": "引数名。ドメイン語彙で（例: quantity）"
                     },
                     "meaning": {
                       "type": "string",
-                      "x-prompt-write": "この引数が何を表すかを1文で。例: 注文する数量"
+                      "x-prompt-write": "この引数が何を表すかを1文で（例: 注文する数量）"
                     }
                   }
                 }
@@ -1512,7 +1517,7 @@
             "properties": {
               "name": {
                 "type": "string",
-                "x-prompt-write": "イベント名（必ず過去形）。例: OrderPlaced"
+                "x-prompt-write": "イベント名（必ず過去形）（例: OrderPlaced）"
               },
               "raisedBy": {
                 "type": "string",
@@ -1530,11 +1535,11 @@
                   "properties": {
                     "name": {
                       "type": "string",
-                      "x-prompt-write": "ペイロード項目名。例: quantity"
+                      "x-prompt-write": "ペイロード項目名（例: quantity）"
                     },
                     "meaning": {
                       "type": "string",
-                      "x-prompt-write": "このペイロード項目が何を表すかを1文で。例: 確定した数量"
+                      "x-prompt-write": "このペイロード項目が何を表すかを1文で（例: 確定した数量）"
                     }
                   }
                 }
@@ -1578,11 +1583,11 @@
         },
         "actor": {
           "type": "string",
-          "x-prompt-write": "主アクター（業務上の役割）。例: 顧客"
+          "x-prompt-write": "主アクター（業務上の役割）（例: 顧客）"
         },
         "intent": {
           "type": "string",
-          "x-prompt-write": "何を達成したいか（1文）。例: カートの商品を注文として確定する"
+          "x-prompt-write": "何を達成したいか（1文）（例: カートの商品を注文として確定する）"
         }
       }
     },
@@ -1895,7 +1900,7 @@
             "properties": {
               "code": {
                 "type": "string",
-                "x-prompt-write": "エラーコード。例: OUT_OF_STOCK"
+                "x-prompt-write": "エラーコード（例: OUT_OF_STOCK）"
               },
               "condition": {
                 "type": "array",
@@ -2468,7 +2473,7 @@
         },
         "operationName": {
           "type": "string",
-          "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に。例: CheckScenarioDrift。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
+          "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に（例: CheckScenarioDrift）。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
         }
       }
     }

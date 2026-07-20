@@ -49,10 +49,14 @@ class RenderBlankTemplate:
                     f"{disc_key}='{discriminator[disc_key]}' は不正な値です（候補: {', '.join(candidates)}）",
                 )
 
+        spec_kind = discriminator.get(disc_key) if disc_key else None
         content_def = _content_def(schema, discriminator)
         skeleton = build_skeleton(schema, "{{documentId}}", disc_key, discriminator, content_def, {})
         protected = {"documentId"} | ({disc_key} if disc_key else set())
-        entries = build_top_level_fill_template(schema, protected) + build_fill_template(schema, content_def)
+        entries = (
+            build_top_level_fill_template(schema, protected, spec_kind)
+            + build_fill_template(schema, content_def, spec_kind)
+        )
         placeholder_doc = overlay_placeholders(skeleton, entries)
 
         defs = schema.get("$defs", {})
