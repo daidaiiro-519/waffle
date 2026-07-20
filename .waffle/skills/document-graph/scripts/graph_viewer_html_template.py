@@ -104,8 +104,20 @@ main > h2 {
 .tab-btn.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
-.tab-full iframe { width: 100%; height: 420px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.tab-full-wrap { position: relative; }
+.tab-full iframe { width: 100%; height: 420px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); display: block; }
 .tab-full .full-link { font-size: 0.76rem; margin-top: 0.4rem; display: inline-block; color: var(--accent); }
+.tab-full-spinner {
+  position: absolute; top: 0; left: 0; right: 0; height: 420px; display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; pointer-events: none;
+}
+.tab-full-spinner.hidden { display: none; }
+.spinner {
+  width: 1.6rem; height: 1.6rem; border: 3px solid var(--line); border-top-color: var(--accent);
+  border-radius: 50%; animation: dg-spin 0.7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 1.6s; } }
+@keyframes dg-spin { to { transform: rotate(360deg); } }
 .doc-related { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.4rem; }
 .rel-group {
   font-size: 0.72rem; border: 1px solid var(--line); border-radius: 8px;
@@ -204,7 +216,10 @@ def _render_full_tab(full_href: str, open_href: str) -> str:
     # 遅延読み込みが発火せず、iframeが永遠に空のままになることがある
     # （非表示要素はレイアウトボックスを持たずIntersection Observerが機能しないため）。
     return (
-        f'<iframe src="{_html.escape(full_href)}"></iframe>'
+        f'<div class="tab-full-wrap">'
+        f'<div class="tab-full-spinner"><div class="spinner"></div></div>'
+        f'<iframe src="{_html.escape(full_href)}" onload="this.previousElementSibling.classList.add(\'hidden\')"></iframe>'
+        f'</div>'
         f'<a class="full-link" href="{_html.escape(open_href)}" target="_blank" rel="noopener">元ファイルを別タブで開く ↗</a>'
     )
 
