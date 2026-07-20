@@ -89,6 +89,35 @@ def test_スキーマの値フィールドをプレースホルダー化したMa
     assert "{{タイトルを書く}}" in result.value["content"]
 
 
+def test_x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する():
+    """
+    Given x-frontmatterを宣言するschema
+    When そのschemaRefでブランクテンプレート描画を実行する
+    Then 出力冒頭に、x-frontmatterが指すフィールドのx-prompt-write本文を{{...}}形式の
+         プレースホルダーにしたYAML frontmatterが含まれる（documentIdのように値埋め込み
+         entriesから除外される保護済みフィールドは、汎用的な識別子プロンプトを使う）
+    """
+    schema = _simple_schema()
+    schema["x-frontmatter"] = {"id": "doc.documentId", "title": "doc.content.title.title"}
+    result = _engine({"SimpleSchema/v1": schema}).run("SimpleSchema/v1")
+    assert isinstance(result, Ok), result
+    content = result.value["content"]
+    assert content.startswith("---\n")
+    assert 'id: "{{この文書を一意に識別する識別子。}}"' in content
+    assert 'title: "{{タイトルを書く}}"' in content
+
+
+def test_x_frontmatterを宣言しないschemaはfrontmatterを出力しない():
+    """
+    Given x-frontmatterを宣言しないschema
+    When そのschemaRefでブランクテンプレート描画を実行する
+    Then 出力にfrontmatterブロック（---で始まる行）が含まれない
+    """
+    result = _engine({"SimpleSchema/v1": _simple_schema()}).run("SimpleSchema/v1")
+    assert isinstance(result, Ok), result
+    assert not result.value["content"].startswith("---")
+
+
 def test_存在しないschemaRefはINVALID_SCHEMA_REF():
     """
     Given 実在しないschemaRef

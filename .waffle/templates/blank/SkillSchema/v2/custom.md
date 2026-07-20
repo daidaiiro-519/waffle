@@ -69,4 +69,3 @@ disable-model-invocation: "{{ユーザーが `/skill-name` で明示的に呼び
 ## 参照
 
 - `{{参照先を実行環境で特定できる形で記述してください（ファイルパス、URL、外部ドキュメント名など）。例: docs/architecture/event-storming.md、社内Wikiの「命名規約」ページ}}`: {{このリソースが何を提供するかを1文で記述してください。}}
-

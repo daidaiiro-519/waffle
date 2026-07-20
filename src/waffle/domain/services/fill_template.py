@@ -161,12 +161,15 @@ def _placeholder_value(entry: dict) -> str:
 
 
 def _placeholder_object(element: dict) -> dict:
-    """_build_elementが作るelementマップ(値がpromptの文字列、またはネストした
-    {"element": {...}}のいずれか)から、プレースホルダーオブジェクトを再帰的に作る。"""
+    """_build_elementが作るelementマップ(値がpromptの文字列、ネストした{"element": {...}}、
+    またはプリミティブ配列を表す{"primitiveArray": prompt}のいずれか)から、プレースホルダー
+    オブジェクトを再帰的に作る。"""
     out: dict = {}
     for k, v in element.items():
         if isinstance(v, dict) and "element" in v:
             out[k] = [_placeholder_object(v["element"])]
+        elif isinstance(v, dict) and "primitiveArray" in v:
+            out[k] = [f"{{{{{v['primitiveArray']}}}}}"]
         else:
             out[k] = f"{{{{{v}}}}}"
     return out
@@ -236,9 +239,10 @@ def _walk_fill(schema, d, path, entries, is_required, spec_kind: str | None = No
 def _build_element(schema, item, depth: int = 0, max_depth: int = 2, spec_kind: str | None = None) -> dict:
     """配列itemのプロパティごとのprompt(x-prompt-write)を集める。プロパティ自身が
     さらに構造化された配列(例: Entities.items[].attributes)の場合、ネストしたelementとして
-    表現する（{"element": {...}}の形）。ネスト構造そのものは常に保持する（配列は常に
-    {"element": ...}を持つ形でなければならず、途中で平坦なprompt文字列に落としてしまうと、
-    x-renderは常にlistを期待するため描画がAttributeErrorになる）。ただしプロンプト文言を
+    表現する（{"element": {...}}の形）。プロパティがプリミティブの配列(例: 箇条書きの
+    bullets: string[])の場合も、配列であることを{"primitiveArray": prompt}として保持する
+    （平坦なprompt文字列に落としてしまうと、x-renderは常にlistを期待するため描画時に
+    MalformedContentErrorになる）。ネスト構造そのものは常に保持する。ただしプロンプト文言を
     集める再帰の深さはmax_depthで打ち切り、それ以上は空のelementにする（自己参照的な
     schema、例: AgentSchemaのSubStepのchildren、で無限再帰にならないようにするため）。"""
     element: dict = {}
@@ -256,6 +260,9 @@ def _build_element(schema, item, depth: int = 0, max_depth: int = 2, spec_kind: 
                 nested = _build_element(schema, sub_item, depth + 1, max_depth, spec_kind) if depth < max_depth else {}
                 element[ik] = {"element": nested}
                 continue
+            if "x-prompt-write" in iv:
+                element[ik] = {"primitiveArray": _select_prompt(iv["x-prompt-write"], spec_kind)}
+            continue
         if "x-prompt-write" in iv:
             element[ik] = _select_prompt(iv["x-prompt-write"], spec_kind)
     return element

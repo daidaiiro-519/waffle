@@ -115,7 +115,9 @@
         "If schemaRefが実在しないとき、システムはINVALID_SCHEMA_REFエラーを返す shall。",
         "If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。",
         "If schemaのcontentがdiscriminatorで分岐し、指定されたdiscriminator値が候補enumに存在しないとき、システムはINVALID_DISCRIMINATORエラーを返す shall。",
-        "While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。"
+        "While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。",
+        "When schemaがx-frontmatterを宣言しているとき、システムはx-frontmatterが指す各フィールドのx-prompt-write本文をプレースホルダー化したYAML frontmatterを、本文の先頭に付ける shall。",
+        "If schemaがx-frontmatterを宣言していないとき、システムはfrontmatterブロックを出力しない shall。"
       ]
     },
     "errors": {
@@ -208,6 +210,22 @@
           "viewpoint": "事前条件違反: enumに無いdiscriminator値の拒否",
           "gherkin": "Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR\n  Given 分岐のあるschemaのenumに存在しないdiscriminator値\n  When ブランクテンプレート描画を実行する\n  Then INVALID_DISCRIMINATORエラーが返る",
           "covers": ""
+        },
+        {
+          "name": "x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する",
+          "category": "正常系",
+          "viewpoint": "x-frontmatterが指すフィールドのx-prompt-write本文がYAML frontmatterとしてプレースホルダー化されることを確認する",
+          "gherkin": "Given x-frontmatterを宣言するschema\nWhen そのschemaRefでブランクテンプレート描画を実行する\nThen 出力冒頭にx-frontmatterが指すフィールドのプレースホルダー化されたYAML frontmatterが含まれる",
+          "covers": "",
+          "operation": ""
+        },
+        {
+          "name": "x_frontmatterを宣言しないschemaはfrontmatterを出力しない",
+          "category": "正常系",
+          "viewpoint": "x-frontmatterを持たないschemaではfrontmatterブロック自体が出力されないことを確認する",
+          "gherkin": "Given x-frontmatterを宣言しないschema\nWhen そのschemaRefでブランクテンプレート描画を実行する\nThen 出力にfrontmatterブロックが含まれない",
+          "covers": "",
+          "operation": ""
         }
       ]
     },

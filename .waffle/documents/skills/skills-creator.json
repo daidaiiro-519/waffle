@@ -46,23 +46,23 @@
         },
         {
           "stepId": "step-2",
-          "title": "プレースフォルダー定義票を参照する",
-          "summary": "references/skill-template.mdとreferences/folder-structure.mdを読み込み、使用するフォルダ構成とプレースフォルダーの意味を把握する。"
+          "title": "フォルダ構成を決定する",
+          "summary": "folder-structure.mdを参照し、ヒアリング内容に応じてミニマム構成かフル構成かを選ぶ。"
         },
         {
           "stepId": "step-3",
-          "title": "フォルダ構成を決定して作成する",
-          "summary": "folder-structure.mdを参照し、ヒアリング内容に応じてミニマム構成かフル構成かを選び、SKILL.mdと必要ならreferences/を作成する。"
+          "title": "フォルダ構成を作成する",
+          "summary": "決定した構成に従い、SKILL.mdと必要ならreferences/等のフォルダを作成する。"
         },
         {
           "stepId": "step-4",
           "title": "SKILL.mdを生成する",
-          "summary": "references/skill-template.mdを読み込み、プレースフォルダー定義票に従って埋め、{{スコープ}}/skills/{{スキル名}}/SKILL.mdとして保存する。"
+          "summary": "references/skill-template.mdを読み込む。各{{...}}プレースホルダーは、そこに書かれた指示を読めばそのまま埋められる自己完結の形式になっているため、別途定義票を参照する必要はない。ヒアリング内容に従って全プレースホルダーを埋め、{{スコープ}}/skills/{{スキル名}}/SKILL.mdとして保存する。"
         },
         {
           "stepId": "step-5",
           "title": "テンプレートファイルを生成する（必要な場合のみ）",
-          "summary": "出力ドキュメントを生成するスキルの場合、プレースフォルダー付きのスケルトンテンプレートを{{スコープ}}/skills/{{スキル名}}/references/template.mdとして作成する。"
+          "summary": "出力ドキュメントを生成するスキルの場合、プレースホルダー付きのスケルトンテンプレートを{{スコープ}}/skills/{{スキル名}}/references/template.mdとして作成する。"
         },
         {
           "stepId": "step-6",
@@ -93,16 +93,12 @@
       "title": "参照",
       "items": [
         {
-          "path": ".claude/skills/skills-creator/references/skill-template.md",
-          "description": "SKILL.md スケルトン。"
+          "path": "references/skill-template.md",
+          "description": "SKILL.md自体の雛形（プレースホルダー付き、各プレースホルダーが自己完結した執筆ガイダンスを持つ）。"
         },
         {
-          "path": ".claude/skills/skills-creator/references/folder-structure.md",
-          "description": "フォルダ構成ベストプラクティス。"
-        },
-        {
-          "path": ".claude/skills/skills-creator/references/placeholder-definitions.md",
-          "description": "SKILL.mdスケルトンが持つプレースフォルダーの定義票。"
+          "path": "references/folder-structure.md",
+          "description": "Skillフォルダのミニマム構成・フル構成の基準。"
         }
       ]
     },

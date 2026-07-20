@@ -7,8 +7,15 @@ scaffold createが使うskeleton/fillTemplateの機械走査（domain/services/f
 render-documentが使う本文描画（domain/services/part_renderer.render_body）を合成し、
 render-documentと同じくpath_template.resolveでパスを導出してファイル書き込みまで行う。
 document.jsonの読み書きは行わない（書き出すのはプレースホルダーMarkdownのみ）。
+
+schemaがx-frontmatterを宣言する場合、本文と同じ要領でfrontmatterもプレースホルダー
+として先頭に付ける（render-documentのx-frontmatterは実際の値を解決するが、blank
+templateには値が無いため、対応するフィールドのx-prompt-write本文をプレースホルダーに
+する）。x-frontmatterが無ければfrontmatterブロック自体を省略する。
 """
 from __future__ import annotations
+
+import json
 
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.schema_repository import SchemaRepository
@@ -21,9 +28,45 @@ from waffle.domain.services.part_renderer import render_body
 from waffle.domain.services.schema_discriminator import discriminator_key
 from waffle.shared.result import Err, Ok, Result
 
+_DOCUMENT_ID_PROMPT = "この文書を一意に識別する識別子。"
+
 
 def _err(code: str, message: str) -> Err:
     return Err(message, [code])
+
+
+def _select_field_map(value: dict, spec_kind: str | None) -> dict:
+    """render_document.pyの同名関数と同じ選択規則（discriminatorごとの入れ子か
+    フラットかを値の形から判定する）。x-frontmatterの解決に使う。"""
+    if value and all(isinstance(v, dict) for v in value.values()):
+        return value.get(spec_kind, {}) if spec_kind else {}
+    return value
+
+
+def _render_frontmatter_placeholders(schema: dict, spec_kind: str | None, prompt_by_path: dict) -> str:
+    fm = _select_field_map(schema.get("x-frontmatter") or {}, spec_kind)
+    if not fm:
+        return ""
+    lines = ["---"]
+    for key, path in fm.items():
+        content_path = path[4:] if path.startswith("doc.") else path
+        # x-frontmatterはtext/itemsを持つブロックそのもの（例: doc.content.description）を
+        # 指すことがある（render_documentの_normalize_frontmatter_valueと同型の規約）。
+        # そのブロック自身にはx-prompt-writeが無く、実際の値を持つitems/textの方に
+        # x-prompt-writeが宣言されているため、無ければそちらへフォールバックする。
+        prompt = (
+            prompt_by_path.get(content_path)
+            or prompt_by_path.get(f"{content_path}.items")
+            or prompt_by_path.get(f"{content_path}.text")
+            or (_DOCUMENT_ID_PROMPT if content_path == "documentId" else None)
+        )
+        if prompt is None:
+            continue
+        lines.append(f"{key}: {json.dumps(f'{{{{{prompt}}}}}', ensure_ascii=False)}")
+    if len(lines) == 1:
+        return ""
+    lines.append("---")
+    return "\n".join(lines) + "\n\n"
 
 
 class RenderBlankTemplate:
@@ -59,8 +102,11 @@ class RenderBlankTemplate:
         )
         placeholder_doc = overlay_placeholders(skeleton, entries)
 
+        prompt_by_path = {e["path"]: e["prompt"] for e in entries}
+        frontmatter = _render_frontmatter_placeholders(schema, spec_kind, prompt_by_path)
+
         defs = schema.get("$defs", {})
-        output = render_body(placeholder_doc.get("content", {}), defs)
+        output = frontmatter + render_body(placeholder_doc.get("content", {}), defs)
 
         path = path_template.blank_template_path(schema_ref, discriminator)
         try:
