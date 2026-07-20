@@ -7,15 +7,15 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "spec→実装の橋渡しとなるHandoffドキュメントの作成を行うSkill：handoff-authoring"
+      "title": "spec→実装の橋渡しとなる引き継ぎ文書の作成を行うSkill：handoff-authoring"
     },
     "inputExpectation": {
       "blockType": "InputExpectation",
       "title": "入力の想定",
       "items": [
         {
-          "aspect": "対象spec（specRef）",
-          "interpretation": "VALIDATED以上のstatusを持つspecであることを前提とする。明示されなければ呼び出し元に確認する。"
+          "aspect": "対象spec（参照先）",
+          "interpretation": "検証済み以上の状態にあるspecであることを前提とする。明示されなければ呼び出し元に確認する。"
         },
         {
           "aspect": "記録する判断材料（設計観点・実装観点等、既に確定している見解）",
@@ -27,16 +27,16 @@
       "blockType": "Role",
       "title": "役割",
       "items": [
-        "対象specへの参照（specRef）を持つHandoff document.jsonを作成・更新する",
-        "受け取った判断材料を、designViewpoints/implementationViewpointsとして記録する",
-        "validate→renderまで通し、成果物を確定させる"
+        "対象specへの参照を持つ引き継ぎ文書を作成・更新する",
+        "受け取った判断材料を、設計観点/実装観点として記録する",
+        "内容を確認し、成果物を確定させる"
       ]
     },
     "processingTarget": {
       "blockType": "ProcessingTarget",
       "title": "処理対象と成果物",
-      "target": "VALIDATED以上のspecへの参照と、記録する判断材料（設計観点・実装観点・制約等、既に確定している見解）。",
-      "artifact": "validate・render済みのHandoff document.json（および対応するMarkdown）。"
+      "target": "検証済み以上のspecへの参照と、記録する判断材料（設計観点・実装観点・制約等、既に確定している見解）。",
+      "artifact": "確認済みの引き継ぎ文書（Markdown）。"
     },
     "steps": {
       "blockType": "CustomSteps",
@@ -45,50 +45,50 @@
         {
           "stepId": "step-1",
           "title": "対象specとの対応を確認する",
-          "summary": "specRefが指すspecがVALIDATED以上のstatusであることを確認する。"
+          "summary": "参照先のspecが検証済み以上の状態であることを確認する。"
         },
         {
           "stepId": "step-2",
-          "title": "骨格を生成する",
-          "summary": "既存Handoff document.jsonが無ければ骨格を生成する。既存の更新の場合はこの手順を省略する。"
+          "title": "雛形を用意する",
+          "summary": "雛形の用意手段自体は実行環境に委ねる——実行環境が対応する専用の生成手段を提供している場合はそちらを優先してよい。提供していない場合は、このSkillが既定の資材として同梱するtemplates/handoff.mdを使う。既存の引き継ぎ文書の更新の場合はこの手順を省略する。"
         },
         {
           "stepId": "step-3",
           "title": "受け取った判断材料を記録する",
-          "summary": "既に与えられている判断材料を、designViewpoints/implementationViewpoints/constraintsの対応する配列に整理して記録する。配列は現在値を取得してから組み立て直し、丸ごと置き換える。"
+          "summary": "既に与えられている判断材料を、設計観点/実装観点/制約の対応する項目に整理して記録する。配列項目は現在の内容を踏まえて組み立て直し、丸ごと置き換える。"
         },
         {
           "stepId": "step-4",
-          "title": "validateする",
-          "summary": "schemaへの適合を検証する。エラーがあれば該当箇所を修正して再度validateする。"
+          "title": "構造の整合を確認する",
+          "summary": "埋め終えた内容が、雛形が定める必須項目・型のルールを満たしているか確認する。実行環境が専用の検証手段を提供している場合はそちらを使う。満たしていなければ該当箇所を修正して再度確認する。"
         },
         {
           "stepId": "step-5",
-          "title": "renderする",
-          "summary": "validate済みのdocumentを成果物へ描画する。"
+          "title": "成果物として確定する",
+          "summary": "確認済みの内容を最終成果物として確定させる。実行環境が専用の確定・反映手段を提供している場合はそちらを使う。"
         }
       ]
     },
     "outputFormat": {
       "blockType": "OutputFormat",
       "title": "出力形式",
-      "text": "作成・更新したHandoff document.jsonのパス、記録したviewpoints件数、validate/renderの結果を報告する。"
+      "text": "作成・更新した引き継ぎ文書の場所、記録した観点の件数、確認結果を報告する。"
     },
     "guardrails": {
       "blockType": "Guardrails",
       "title": "ガードレール",
       "items": [
-        "document.jsonの操作は必ずCLI/MCP経由で行う（直接Read/Edit/Writeしない）",
-        "既存document.jsonはscaffold fillで編集する。配列はqueryで現在値を取得してから組み立て直し、丸ごと置き換える",
-        "VALIDATED未満のstatusのspecを対象にしない",
+        "検証済み未満の状態のspecを対象にしない",
         "判断材料が与えられていないまま自分で設計判断・アーキテクチャ判断を作り出さない。不足している場合は呼び出し元に確認する",
-        "Handoffはあくまで助言記録であり、specの正式な状態遷移とは別物である（statusフィールドを持たない）"
+        "引き継ぎ文書はあくまで助言記録であり、spec自身の正式な状態遷移とは別物である",
+        "雛形の執筆ガイダンスに厳密に従う。ガイダンスを無視した自由記述で埋めない",
+        "実行環境がこのSkillの手順に対応する専用の生成・検証・確定手段を提供している場合、同梱のtemplates/やこのSkill自身の手順文言より、その専用手段を優先する"
       ]
     },
     "description": {
       "blockType": "Purpose",
       "title": "目的",
-      "text": "spec→実装の橋渡しとして、DDD設計判断・アーキテクチャ判断等のadvisor見解をHandoffSchema documentに記録する必要があるときに使う。VALIDATED以上のspecと、既に確定している判断材料をもとに、designViewpoints/implementationViewpointsを記録する。"
+      "text": "spec→実装の橋渡しとして、DDD設計判断・アーキテクチャ判断等のadvisor見解を引き継ぎ文書に記録する必要があるときに使う。検証済み以上のspecと、既に確定している判断材料をもとに、設計観点/実装観点を記録する。"
     }
   },
   "tags": []

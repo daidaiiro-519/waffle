@@ -150,5 +150,6 @@ def test_全体タブのリンクはhtml形式は直接_md形式はpreview経由
     config_mod.add_source(str(html_docs), alias="html-docs", fmt="html", config_path=config_path, sources_dir=sources_dir)
 
     html = server_mod.build_page(config_path=config_path, sources_dir=sources_dir)
-    assert '<iframe src="/preview/md-docs/a.md"' in html
-    assert '<iframe src="/files/html-docs/b.html"' in html
+    # data-srcを使う（表示直前まで実際のsrcを設定しない、mermaidのNaN崩れ対策）
+    assert '<iframe data-src="/preview/md-docs/a.md"' in html
+    assert '<iframe data-src="/files/html-docs/b.html"' in html

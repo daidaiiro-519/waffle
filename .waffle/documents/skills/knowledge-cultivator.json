@@ -18,8 +18,8 @@
           "interpretation": "明示されなければ直前の会話からこの3種のいずれに該当するか判定する。個人の伝え方・コミュニケーションスタイルへのフィードバックはこの3種に該当せず対象外として扱う。"
         },
         {
-          "aspect": "棚卸し対象とするDRAFT状態のKnowledgeSchema document群",
-          "interpretation": "明示されなければ既存のDRAFT状態のKnowledgeSchema documentをqueryで全て洗い出す。"
+          "aspect": "棚卸し対象とする下書き状態の候補記録群",
+          "interpretation": "明示されなければ既存の下書き状態の候補記録を全て洗い出す。"
         }
       ]
     },
@@ -27,16 +27,16 @@
       "blockType": "Role",
       "title": "役割",
       "items": [
-        "advisorのバックボーンknowledgeへの追加候補を、KnowledgeSchemaのDRAFT状態のdocumentとして記録する",
-        "蓄積されたDRAFT候補を、審査に使える形へ要約・整理する",
+        "advisorのバックボーンknowledgeへの追加候補を、下書き状態の候補記録として残す",
+        "蓄積された下書き候補を、審査に使える形へ要約・整理する",
         "候補ごとに、人間との対話（AI初期見解→ユーザー見解→AI再考見解→合意決定）を通じて採用可否を判定する"
       ]
     },
     "processingTarget": {
       "blockType": "ProcessingTarget",
       "title": "処理対象と成果物",
-      "target": "advisorのバックボーンknowledgeへの追加候補となりうる状況（ユーザーの訂正・未カバーの実例・advisor間の矛盾）、および既に記録済みのDRAFT状態のKnowledgeSchema document群。",
-      "artifact": "DRAFT状態のKnowledgeSchema document（記録局面）、候補審査ドキュメント（棚卸し・審査局面、採用/却下/修正して採用の決定を含む）。"
+      "target": "advisorのバックボーンknowledgeへの追加候補となりうる状況（ユーザーの訂正・未カバーの実例・advisor間の矛盾）、および既に記録済みの下書き状態の候補記録群。",
+      "artifact": "下書き状態の候補記録（記録局面）、候補審査ドキュメント（棚卸し・審査局面、採用/却下/修正して採用の決定を含む）。"
     },
     "steps": {
       "blockType": "CustomSteps",
@@ -45,7 +45,7 @@
         {
           "stepId": "step-1",
           "title": "knowledge候補を記録する",
-          "summary": "3種のトリガー（ユーザーによるadvisor判断への訂正／既存knowledgeでカバーされない実例／並列dispatchしたadvisor間の見解矛盾）のいずれかを検知したら、対象advisorへのskillRefを持つKnowledgeSchema documentをstatus DRAFTで作成する。",
+          "summary": "3種のトリガー（ユーザーによるadvisor判断への訂正／既存knowledgeでカバーされない実例／並列dispatchしたadvisor間の見解矛盾）のいずれかを検知したら、対象advisorの識別子を添えて、この候補を下書き状態の記録として残す。記録手段自体は実行環境に委ねる——実行環境が専用の記録手段を提供している場合はそちらを優先し、提供していない場合はこのSkillが既定の資材として同梱するtemplates/knowledge.mdを使う。",
           "children": [
             {
               "stepId": "step-1-1",
@@ -69,8 +69,8 @@
         },
         {
           "stepId": "step-2",
-          "title": "蓄積したDRAFT候補を審査用にとりまとめる",
-          "summary": "既存のDRAFT状態のKnowledgeSchema documentをqueryで洗い出し、各候補の出典・トリガー種別を含む審査対象一覧へ要約する。採用の可否はここでは判断しない。"
+          "title": "蓄積した下書き候補を審査用にとりまとめる",
+          "summary": "既存の下書き状態の候補記録を洗い出し、各候補の出典・トリガー種別を含む審査対象一覧へ要約する。採用の可否はここでは判断しない。"
         },
         {
           "stepId": "step-3",
@@ -87,18 +87,18 @@
     "outputFormat": {
       "blockType": "OutputFormat",
       "title": "出力形式",
-      "text": "対象KnowledgeSchema documentのパスと状態遷移（DRAFT作成／審査結果）、および各候補の採用可否決定を報告する。"
+      "text": "対象候補記録の場所と状態（下書き作成／審査結果）、および各候補の採用可否決定を報告する。"
     },
     "guardrails": {
       "blockType": "Guardrails",
       "title": "ガードレール",
       "items": [
-        "AIはACTIVE状態のknowledgeへ直接書き込まない。必ずDRAFT状態のKnowledgeSchema documentとして記録するに留める",
+        "AIは正式採用済みのknowledgeへ直接書き込まない。必ず下書き状態の候補記録として残すに留める",
         "個人の伝え方・コミュニケーションスタイルへのフィードバックは対象外とする（各AIツール自身の私的なフィードバック機構の管轄とし、このSkillの対象にしない）",
         "候補の採用可否はユーザーとの対話を経て決定する。AIが単独で採用を決めない",
         "審査の対話ループはknowledge-cultivator専用であり、汎用のbrainstorm skillとは独立した仕組みとして扱う。混同して同じ仕組みに載せない",
-        "採用決定後の昇格実行（status変更・validate・render）はこのSkillの責務外とする。Orchestratorが通常のCLI操作（CLAUDE.mdの運用ルール）として直接行う",
-        "document.jsonの操作は必ずCLI/MCP経由で行う（直接Read/Edit/Writeしない）"
+        "採用決定後の正式採用への反映は、このSkillの責務外とする。実行環境側の通常の運用手順に従う",
+        "実行環境がこのSkillの手順に対応する専用の記録・反映手段を提供している場合、同梱のtemplates/やこのSkill自身の手順文言より、その専用手段を優先する"
       ]
     },
     "references": {
@@ -106,8 +106,8 @@
       "title": "参照",
       "items": [
         {
-          "path": "src/waffle/domain/model/KnowledgeSchema/v2.json",
-          "description": "knowledge候補を記録するためのschema。DRAFT/ACTIVEのstatusと、skillRefによるadvisor別deploy先制御を持つ。"
+          "path": "templates/knowledge.md",
+          "description": "knowledge候補を下書き状態で記録するための雛形（プレースホルダー付きMarkdown）。実行環境が専用の記録手段を提供していない場合に使う。"
         },
         {
           "path": ".claude/skills/knowledge-cultivator/references/template-candidate-review.md",

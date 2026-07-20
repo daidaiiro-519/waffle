@@ -15,8 +15,8 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 
 - role skillが単独では完結できない場面を、ルーティング表に基づいて判定する
 - 併用が必要なadvisor Skillの組み合わせと、その強制力（block/nudge）を示す
-- 併用が必要なadvisor Skillをgoal-dispatch構造で並列にSubagent起動できるよう、対象advisor名の一覧を返す
-- role skill・advisor Skill同士が互いを呼ぶ構造を避け、Orchestrator（CLAUDE.md）に代わって組み合わせ判断の一次窓口になる
+- 併用が必要なadvisor Skillを、それぞれ独立した目的・役割・タスク・成果物・受け入れ基準を持たせて並列に呼び出せるよう、対象advisor名の一覧を返す
+- role skill・advisor Skill同士が互いを呼ぶ構造を避け、Orchestratorに代わって組み合わせ判断の一次窓口になる
 
 ---
 
@@ -25,7 +25,7 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 | 受け取る情報 | 解釈・既定値 |
 |---|---|
 | 呼び出し元のrole skill名 | 明示されなければ、これから実行しようとしている作業内容（spec作成・handoff作成・実装等）から推測し、不明な場合は呼び出し元に確認する。 |
-| 対象のschemaRefまたは作業目的 | role skillがSpec-authoringの場合は必須（schemaRef単位でルーティング表を引くため）。Handoff-authoring/Implementationの場合は「前段階で実際に参加したadvisor」を別途受け取る（動的引き継ぎ、固定リストではない）。 |
+| 対象とする仕様書の種別（ドメイン仕様・技術スタック/アーキテクチャ/コーディング規約・テスト方針・インフラ仕様・画面設計仕様等）または作業目的 | role skillがSpec-authoringの場合は必須（仕様書の種別ごとにルーティング表を引くため）。Handoff-authoring/Implementationの場合は「前段階で実際に参加したadvisor」を別途受け取る（動的引き継ぎ、固定リストではない）。 |
 
 ---
 
@@ -33,23 +33,23 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 
 | Skill | 併用が必要な条件 | 併用するadvisor Skill | 強度 |
 |---|---|---|---|
-| Spec-authoring | DomainSpecSchemaのdocument作成 | `ddd-advisor / tech-lead-advisor` | block |
-| Spec-authoring | CodingSchema（tech-stack/architecture/coding-standard）のdocument作成 | `tech-lead-advisor` | block |
-| Spec-authoring | CodingSchema（test-standard）のdocument作成 | `tech-lead-advisor / qa-advisor` | block |
-| Spec-authoring | PlatformSpecのdocument作成 | `platform-advisor` | block |
-| Spec-authoring | PresentationSpecSchemaのdocument作成 | `ux-advisor` | nudge |
-| Handoff-authoring | HandoffSchemaのdocument作成（前段階Spec-authoringで実際に参加したadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | block |
-| Implementation | 実装（Handoffのdesign/implementationViewpointsに記録されたadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | block |
+| Spec-authoring | ドメイン仕様書の作成 | `ddd-advisor / tech-lead-advisor` | block |
+| Spec-authoring | 技術スタック・アーキテクチャ・コーディング規約の作成 | `tech-lead-advisor` | block |
+| Spec-authoring | テスト方針・テスト規約の作成 | `tech-lead-advisor / qa-advisor` | block |
+| Spec-authoring | インフラ仕様書の作成 | `platform-advisor` | block |
+| Spec-authoring | 画面設計・プレゼンテーション仕様の作成 | `ux-advisor` | nudge |
+| Handoff-authoring | 設計判断を実装への引き継ぎ文書として記録する作業（前段階のSpec-authoringで実際に参加したadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | block |
+| Implementation | 実装（引き継ぎ文書の設計観点・実装観点に記録されたadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | block |
 
 ---
 
 ## ガードレール
 
-- combinedSkillsに指定できるのは常にskillKind: advisorのSkillのみ。advisor以外のSkillを併用したくなった場合は、role skillの境界の切り方自体が細かすぎる設計ミスのサインであり、この表に逃がさない
+- combinedSkillsに指定できるのは常に助言専門のadvisor Skillのみ。advisor以外のSkillを併用したくなった場合は、role skillの境界の切り方自体が細かすぎる設計ミスのサインであり、この表に逃がさない
 - ルーティング表にエントリが無いSkill（例: Investigation）は単独で完結するとみなし、advisorのdispatchを行わない
 - strengthがblockのエントリは、対象advisorの結果を得るまでrole skillの実行を進めない。nudgeのエントリは、対象advisorの結果を推奨情報としてrole skillに渡すが、role skillの実行をブロックしない
 - Handoff-authoring/Implementationの行は固定のadvisor一覧ではなく「前段階で実際に参加したadvisor」を動的に引き継ぐ。この表のcombinedSkillsは引き継ぎ元が無い場合のデフォルトとして扱う
-- skill-router自身はrole skillやadvisor Skillの内部手順を一切知らない。判断結果（併用すべきadvisor名の一覧）を返すだけで、実際のgoal-dispatch組み立てとSubagent起動はOrchestrator（CLAUDE.md）側が行う
+- skill-router自身はrole skillやadvisor Skillの内部手順を一切知らない。判断結果（併用すべきadvisor名の一覧）を返すだけで、実際の並列呼び出しの組み立てと起動はOrchestrator側が行う
 - ルーティング表の各行は「いつ呼ぶか」を持たない。同じ行（同じskill/purpose/combinedSkills）を、role skillのライフサイクル内でOrchestratorが執筆前・執筆後の複数回にわたって呼び出してよい。この表に執筆前用・執筆後用の行を別々に作らない
 
 ---

@@ -14,8 +14,8 @@
       "title": "入力の想定",
       "items": [
         {
-          "aspect": "対象spec（specRef）",
-          "interpretation": "VALIDATED以上のstatusを持つspecであることを前提とする。明示されなければ呼び出し元に確認する。"
+          "aspect": "対象仕様（参照先）",
+          "interpretation": "検証済み以上の状態にある仕様であることを前提とする。明示されなければ呼び出し元に確認する。"
         },
         {
           "aspect": "Handoffに記録された設計観点・実装観点（あれば）",
@@ -35,8 +35,8 @@
     "processingTarget": {
       "blockType": "ProcessingTarget",
       "title": "処理対象と成果物",
-      "target": "VALIDATED以上のspecと、必要に応じて既に確定しているHandoffの設計観点・実装観点。",
-      "artifact": "specのacceptanceScenarios/acceptanceCriteriaを満たすソースコード（実装とネイティブテスト）。document.jsonではない。"
+      "target": "検証済み以上のspecと、必要に応じて既に確定しているHandoffの設計観点・実装観点。",
+      "artifact": "specのacceptanceScenarios/acceptanceCriteriaを満たすソースコード（実装とネイティブテスト）であり、構造化された文書ではない。"
     },
     "steps": {
       "blockType": "CustomSteps",
@@ -73,16 +73,16 @@
       "blockType": "Guardrails",
       "title": "ガードレール",
       "items": [
-        "VALIDATED未満のstatusのspecを根拠に実装しない",
+        "検証未完了の状態のspecを根拠に実装しない",
         "テストより先に実装を書かない（Red→Green→必要ならRefactorの順を守る）",
         "受け取った設計観点・実装観点に反する実装をしない。矛盾する場合は実装を進めず呼び出し元に確認する",
-        "このSkillはCodingSchema等のドキュメント作成ではなく、実際のソースコード実装そのものを指す"
+        "このSkillは仕様文書の作成ではなく、実際のソースコード実装そのものを指す"
       ]
     },
     "description": {
       "blockType": "Purpose",
       "title": "目的",
-      "text": "VALIDATED以上のspec、および必要に応じてHandoffに記録された設計観点・実装観点をもとに、実際のソースコードを実装する必要があるときに使う。TDD（Red→Green→必要ならRefactor）で進める。"
+      "text": "検証済み以上のspec、および必要に応じてHandoffに記録された設計観点・実装観点をもとに、実際のソースコードを実装する必要があるときに使う。TDD（Red→Green→必要ならRefactor）で進める。"
     }
   },
   "tags": []

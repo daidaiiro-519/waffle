@@ -20,7 +20,7 @@
   "properties": {
     "documentId": {
       "type": "string",
-      "x-prompt-write": "この引き継ぎを一意に識別するIDを kebab-case で付けてください。慣例は handoff-{specRefのdocumentId}。例: handoff-uc-render-blank-template"
+      "x-prompt-write": "この引き継ぎを一意に識別するIDを kebab-case で付けてください。慣例は handoff-{引き継ぎ元specの識別子}。例: handoff-uc-render-blank-template"
     },
     "documentType": {
       "type": "string",
@@ -132,7 +132,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのHandoffが何を引き継ぐかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。識別子部分はdocumentIdをそのまま使う（識別子は既に別の構造化フィールドが正であり、ここでは表示のためだけに引用する）。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのHandoffが何を引き継ぐかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。識別子部分はこの文書自身の一意な識別子をそのまま使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する）。"
         }
       }
     },
@@ -145,7 +145,7 @@
       ],
       "x-render-order": 1,
       "x-render-level": 2,
-      "x-prompt-query": "このHandoffが引き継ぎ元とするspecのdocumentIdを持ちます。",
+      "x-prompt-query": "このHandoffが引き継ぎ元とするspec（ユースケース／集約仕様）の識別子を持ちます。",
       "x-render": [
         {
           "as": "paragraph",
@@ -163,7 +163,7 @@
         },
         "specRef": {
           "type": "string",
-          "x-prompt-write": "引き継ぎ元のusecase/aggregate specのdocumentId。例: uc-render-blank-template"
+          "x-prompt-write": "引き継ぎ元のユースケース／集約仕様の識別子。例: uc-render-blank-template"
         }
       }
     },
@@ -227,7 +227,7 @@
               },
               "consideration": {
                 "type": "string",
-                "x-prompt-write": "考慮事項の内容を1〜3文で。"
+                "x-prompt-write": "その観点について具体的に何を考慮すべきか（背景・理由・注意点）を1〜3文で。例:「既存のadapter層と責務が重複するため、新規クラスではなく既存クラスの拡張で対応する」"
               }
             }
           }
@@ -294,7 +294,7 @@
               },
               "consideration": {
                 "type": "string",
-                "x-prompt-write": "考慮事項の内容を1〜3文で。"
+                "x-prompt-write": "その観点について具体的に何を考慮すべきか（背景・理由・注意点）を1〜3文で。例:「非同期処理のテストはタイムアウト待ちで不安定になりやすいため、フェイクタイマーを使う」"
               }
             }
           }
@@ -384,7 +384,7 @@
                   "properties": {
                     "id": {
                       "type": "string",
-                      "x-prompt-write": "このノードを一意に識別するID（relationshipsから参照するため）。例: cli, csd"
+                      "x-prompt-write": "このノードを一意に識別するIDを付けてください。後述する関係一覧からこのノードを指し示すために使われます。例: cli, csd"
                     },
                     "title": {
                       "type": "string",
@@ -512,7 +512,7 @@
       ],
       "x-render-order": -2,
       "x-render-level": 2,
-      "x-prompt-query": "この引き継ぎが何を伝えるかを1〜2文で要約します。OKF frontmatterのdescriptionとしても使われます。",
+      "x-prompt-query": "この引き継ぎが何を伝えるかを1〜2文で要約します。この文書全体の要約としても外部から参照されます。",
       "x-render": [
         {
           "as": "paragraph",

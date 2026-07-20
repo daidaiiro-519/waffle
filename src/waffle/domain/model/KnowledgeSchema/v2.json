@@ -92,7 +92,7 @@
     },
     "skillRef": {
       "type": "string",
-      "x-prompt-write": "このknowledgeが属するadvisor SkillのdocumentIdを指定してください。例: ddd-advisor, tech-lead-advisor, qa-advisor。deploy先(.claude/skills/{skillRef}/references/knowledge/)の解決に使う。特定のSkillに属さない汎用knowledgeの場合は省略してよい（省略時はcanonicalへの描画のみでdeployは行われない）。"
+      "x-prompt-write": "このknowledgeが属するadvisor Skillの識別子を指定してください。例: ddd-advisor, tech-lead-advisor, qa-advisor。特定のSkillに属さない汎用knowledgeの場合は省略してよい。"
     }
   },
   "$defs": {
@@ -157,7 +157,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのKnowledgeが何を記録するかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。識別子部分はdocumentIdをそのまま使う。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのKnowledgeが何を記録するかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。識別子部分はこの文書自身の一意な識別子をそのまま使う。"
         }
       }
     },
@@ -571,7 +571,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "関連するKnowledge documentのdocumentIdと、その関係を短く列挙してください。",
+          "x-prompt-write": "関連するKnowledge文書の識別子と、その関係を短く列挙してください。",
           "items": {
             "type": "object",
             "required": [
@@ -581,7 +581,7 @@
             "properties": {
               "conceptId": {
                 "type": "string",
-                "x-prompt-write": "関連するKnowledge documentのdocumentId。"
+                "x-prompt-write": "関連するKnowledge文書の識別子。"
               },
               "note": {
                 "type": "string",

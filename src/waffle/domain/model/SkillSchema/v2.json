@@ -47,7 +47,7 @@
         "custom",
         "router"
       ],
-      "x-prompt-write": "advisor（バックボーンknowledge参照+判断力提供）か custom（ユーザー作成・ドメイン手順）かを指定してください。"
+      "x-prompt-write": "advisor（バックボーンknowledge参照+判断力提供）、custom（ユーザー作成・ドメイン手順）、router（他のSkillとの組み合わせ判断を担う振り分け役）のいずれかを指定してください。"
     },
     "status": {
       "type": "string",
@@ -214,7 +214,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのSkillが何をするかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にskillKindを表す語（advisorなら「〜を担うadvisor Skill」、customなら「〜を行うSkill」、routerなら「〜を振り分けるrouter Skill」）を含め、読んだだけでこのSkillがどの種別かがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのSkillが何をするかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾にSkill種別を表す語（advisorなら「〜を担うadvisor Skill」、customなら「〜を行うSkill」、routerなら「〜を振り分けるrouter Skill」）を含め、読んだだけでこのSkillがどの種別かがわかるようにしてください。識別子部分はこのSkillの一意な名前をそのまま使う。"
         }
       }
     },
@@ -615,7 +615,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "このSkillを実行する際に必ず守るべき制約・禁止事項・前提条件を列挙してください。",
+          "x-prompt-write": "このSkillを実行する際に必ず守るべき制約・禁止事項・前提条件を、1項目1文で行動可能な形（「〜してはならない」「〜する前に必ず〜を確認する」等）で列挙してください。判断がぶれやすい項目は理由も添えてください。例:「検証済みでない前提には着手しない（後で手戻りが生じるため）」。",
           "items": {
             "type": "string"
           }
@@ -663,7 +663,7 @@
             "properties": {
               "path": {
                 "type": "string",
-                "x-prompt-write": "参照先のファイルパスまたはスキーマ参照を記述してください。例: .waffle/schemas/SkillSchema/v1.json"
+                "x-prompt-write": "参照先を実行環境で特定できる形で記述してください（ファイルパス、URL、外部ドキュメント名など）。例: docs/architecture/event-storming.md、社内Wikiの「命名規約」ページ"
               },
               "description": {
                 "type": "string",
@@ -735,7 +735,7 @@
               },
               "templateRef": {
                 "type": "string",
-                "x-prompt-write": "対応する回答テンプレートファイルのパス。"
+                "x-prompt-write": "この相談種別で使う回答テンプレートを特定できる名前や参照を記述してください。例:「概念質問用テンプレート」「判断相談用テンプレート」のように、テンプレートの用途がわかる名前で。"
               }
             }
           }
@@ -773,7 +773,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "参照するbackbone knowledgeファイルを列挙してください。",
+          "x-prompt-write": "この advisor が判断のたびに必ず参照するバックボーンknowledgeファイルを列挙してください。各項目は参照先(path)と、それが扱う内容の要約(description)の組で記述します。例: 「DDD原則集」「集約設計・境界づけられたコンテキストの判断基準」、「テスト理論リファレンス」「テストピラミッドとリスクベースの工数配分の基準」。",
           "items": {
             "type": "object",
             "required": [
@@ -783,7 +783,7 @@
             "properties": {
               "path": {
                 "type": "string",
-                "x-prompt-write": "参照先のknowledgeファイルパス。"
+                "x-prompt-write": "参照するbackbone knowledgeを実行環境で特定できる形で記述してください。例: ファイルパスやドキュメント名（DDD原則集、テスト理論リファレンス等）。"
               },
               "description": {
                 "type": "string",
@@ -852,18 +852,18 @@
             "properties": {
               "skill": {
                 "type": "string",
-                "x-prompt-write": "併用が必要なSkillのdocumentId。"
+                "x-prompt-write": "併用が必要なSkillの名前（識別子）を記述してください。"
               },
               "purpose": {
                 "type": "string",
-                "x-prompt-write": "併用が必要になる条件（例: どのschemaRefを扱うときか）。"
+                "x-prompt-write": "併用が必要になる条件を記述してください（例: 対象がどのような種類の文書・判断領域を扱うときか）。"
               },
               "combinedSkills": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
-                "x-prompt-write": "併用するSkillのdocumentIdを列挙してください。skillKind: advisorのSkillのみを指定できます（advisor以外を併用したくなる場合は、Skillの切り方が細かすぎるサインです）。"
+                "x-prompt-write": "併用するSkillの名前（識別子）を列挙してください。判断根拠を提供するadvisor種別のSkillのみを指定できます（advisor以外を併用したくなる場合は、Skillの切り方が細かすぎるサインです）。"
               },
               "strength": {
                 "type": "string",

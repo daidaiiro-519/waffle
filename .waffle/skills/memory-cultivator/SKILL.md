@@ -1,21 +1,21 @@
 ---
 name: "memory-cultivator"
-description: "ユーザーによる訂正・重要な決定・参照情報など、将来のセッションやツールをまたいで再利用すべき事実に気づいたとき、またはユーザーから明示的に「覚えておいて」と頼まれたときに使う。ツールを問わず共有される.waffle/memory/へ、user/feedback/project/referenceの4種のいずれかとして記録する。"
+description: "ユーザーによる訂正・重要な決定・参照情報など、将来のセッションやツールをまたいで再利用すべき事実に気づいたとき、またはユーザーから明示的に「覚えておいて」と頼まれたときに使う。ツールを問わず共有される記憶ストアへ、user/feedback/project/referenceの4種のいずれかとして記録する。"
 ---
 
 # memory-cultivator
 
 ## 目的
 
-ユーザーによる訂正・重要な決定・参照情報など、将来のセッションやツールをまたいで再利用すべき事実に気づいたとき、またはユーザーから明示的に「覚えておいて」と頼まれたときに使う。ツールを問わず共有される.waffle/memory/へ、user/feedback/project/referenceの4種のいずれかとして記録する。
+ユーザーによる訂正・重要な決定・参照情報など、将来のセッションやツールをまたいで再利用すべき事実に気づいたとき、またはユーザーから明示的に「覚えておいて」と頼まれたときに使う。ツールを問わず共有される記憶ストアへ、user/feedback/project/referenceの4種のいずれかとして記録する。
 
 ---
 
 ## 役割
 
 - ユーザーの訂正・重要な決定・参照情報の言及を検知し、user/feedback/project/referenceのいずれかに分類する
-- 分類した内容を、対応するテンプレートに沿って.waffle/memory/配下へ記録する
-- MEMORY.md索引を更新する
+- 分類した内容を、対応するテンプレートに沿って共有される記憶ストアへ記録する
+- 記憶ストアの索引を更新する
 - 明示的な記録依頼があれば、検知トリガーを問わず即座に記録する
 
 ---
@@ -28,7 +28,7 @@ description: "ユーザーによる訂正・重要な決定・参照情報など
 
 ### 成果物
 
-.waffle/memory/配下の記録ファイル（frontmatter付きMarkdown）と、更新されたMEMORY.md索引
+共有される記憶ストアへの記録ファイル（frontmatter付きMarkdown）と、更新された索引
 
 ---
 
@@ -49,15 +49,15 @@ description: "ユーザーによる訂正・重要な決定・参照情報など
 
 ### Step 2: 記録する型を分類する
 
-内容がuser/feedback/project/referenceのどれに該当するかを分類する。既存の.waffle/memory/内に関連する記録が既にあれば、新規作成ではなく更新を検討する。
+内容がuser/feedback/project/referenceのどれに該当するかを分類する。既存の記憶ストア内に関連する記録が既にあれば、新規作成ではなく更新を検討する。
 
 ### Step 3: テンプレートに沿って記録する
 
 分類した型に対応するテンプレート（references/配下）を使い、frontmatter（name/description/metadata.type）と本文を記述する。feedback/project型は「事実→Why→How to apply」の構成を守る。
 
-### Step 4: MEMORY.md索引を更新する
+### Step 4: 索引を更新する
 
-新規・更新した記録への1行ポインタをMEMORY.mdに追加・更新する。
+新規・更新した記録への1行ポインタを記憶ストアの索引に追加・更新する。
 
 ---
 
@@ -69,8 +69,8 @@ description: "ユーザーによる訂正・重要な決定・参照情報など
 
 ## ガードレール
 
-- 既存の.claude/memory/（Claude Code専用の自動メモリ機構）への複製は行わない。新規メモリのみ.waffle/memory/へ書く
-- AgentSchema等のdocument.json操作は必ずCLI経由（scaffold fill等）で行う。CLAUDE.md/AGENTS.mdを直接Edit/Writeしない
+- 特定ツール専用の自動メモリ機構（例: Claude Codeの自動メモリ）への複製は行わない。新規の記録は共有される記憶ストアのみへ書く
+- エージェントの恒常的な指示文書（例: CLAUDE.md/AGENTS.md）を直接編集しない。実行環境がそれらの構造化された更新手段を提供している場合はそちらを使う
 - advisorのバックボーンknowledgeへの追加候補の検知・審査はこのSkillの責務外。knowledge-cultivatorに委ねる
 - 個人の伝え方・コミュニケーションスタイルへのフィードバックは対象外とする
 - 採用可否の審査対話は行わない。訂正・実例に基づき最小限の記録を即座に行う

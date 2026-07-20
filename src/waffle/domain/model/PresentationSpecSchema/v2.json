@@ -248,7 +248,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこの画面・フローが何を示すかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にspecKindを表す語（screenなら「〜を示す画面」、flowなら「〜を示すフロー」）を含め、読んだだけでこのSpecがどちらの種別かがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこの画面・フローが何を示すかを業務語彙で簡潔に表す句（この文書自身の識別子をそのまま繰り返さない）。末尾に種別を表す語（画面なら「〜を示す画面」、フローなら「〜を示すフロー」）を含め、読んだだけでこのSpecがどちらの種別かがわかるようにしてください。識別子部分はこの文書自身の識別子をそのまま使う。"
         }
       }
     },
@@ -433,11 +433,11 @@
               },
               "usecaseRef": {
                 "type": "string",
-                "x-prompt-write": "この操作が対応する業務ユースケース（DomainSpecSchemaのusecase）の documentId（あれば）。例: uc-place-order。無ければ空文字。"
+                "x-prompt-write": "この操作が対応する業務ユースケースの識別子（あれば）。例: uc-place-order。無ければ空文字。"
               },
               "leadsTo": {
                 "type": "string",
-                "x-prompt-write": "この操作の実行後に遷移する screen の documentId（あれば）。同じ画面に留まるなら空文字。"
+                "x-prompt-write": "この操作の実行後に遷移する先の画面を指す識別子（あれば）。同じ画面に留まるなら空文字。"
               }
             }
           }
@@ -498,7 +498,7 @@
       ],
       "x-render-order": 2,
       "x-render-level": 2,
-      "x-prompt-query": "この体験を構成する業務ユースケース（DomainSpecSchemaのusecase）の時系列を持ちます。E2Eテストはこの並びで各業務ユースケースのTestScenariosをUIステップバインディングで繋いで実行します。",
+      "x-prompt-query": "この体験を構成する業務ユースケースの時系列を持ちます。E2Eテストはこの並びで各業務ユースケースの受け入れシナリオをUI操作の対応づけで繋いで実行します。",
       "x-render": [
         {
           "as": "sequence",
@@ -547,7 +547,7 @@
             "properties": {
               "id": {
                 "type": "string",
-                "x-prompt-write": "識別子。人間主体は名前（例: 顧客）、業務ユースケースは documentId（例: uc-place-order）。"
+                "x-prompt-write": "識別子。人間主体は名前（例: 顧客）、業務ユースケースはその業務ユースケースを指す識別子（例: uc-place-order）。"
               },
               "kind": {
                 "type": "string",
@@ -567,7 +567,7 @@
         "items": {
           "type": "array",
           "minItems": 1,
-          "x-prompt-write": "主体（顧客等）が各業務ユースケースを時系列に呼び出す形で列挙（kind=command）。",
+          "x-prompt-write": "主体（顧客等）が各業務ユースケースを時系列に呼び出す形で列挙。",
           "items": {
             "type": "object",
             "required": [
@@ -583,7 +583,7 @@
               },
               "to": {
                 "type": "string",
-                "x-prompt-write": "呼び出す業務ユースケースのdocumentId（participantsで宣言したid・例: uc-place-order）。"
+                "x-prompt-write": "呼び出す業務ユースケースを指す識別子（participantsで宣言した識別子と同じもの・例: uc-place-order）。"
               },
               "message": {
                 "type": "string",

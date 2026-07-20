@@ -7,14 +7,14 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "schemaRefに沿ったdocument作成を行うSkill：spec-authoring"
+      "title": "spec種別の型に沿ったspec文書作成を行うSkill：spec-authoring"
     },
     "inputExpectation": {
       "blockType": "InputExpectation",
       "title": "入力の想定",
       "items": [
         {
-          "aspect": "対象schemaRef・documentId",
+          "aspect": "対象spec種別・識別子",
           "interpretation": "明示されなければ呼び出し元に確認する。"
         },
         {
@@ -27,16 +27,16 @@
       "blockType": "Role",
       "title": "役割",
       "items": [
-        "対象schemaRefのscaffold create/fillを使い、spec document.jsonを作成・更新する",
-        "x-prompt-write宣言と、既に与えられている判断材料に従い、必要な値を埋める",
-        "validate→renderまで通し、成果物を確定させる"
+        "対象spec種別の雛形を用意し、spec文書を作成・更新する",
+        "雛形が示す執筆ガイダンスと、既に与えられている判断材料に従い、必要な値を埋める",
+        "値を埋め終えたspec文書を検証し、成果物として確定させる"
       ]
     },
     "processingTarget": {
       "blockType": "ProcessingTarget",
       "title": "処理対象と成果物",
-      "target": "対象spec schemaのdocumentId・schemaRefと、そのcontentを埋めるための判断材料（設計判断・アーキテクチャ判断等、既に確定している見解）。",
-      "artifact": "validate・render済みのspec document.json（および対応するMarkdown）。"
+      "target": "対象spec種別・識別子と、そのcontentを埋めるための判断材料（設計判断・アーキテクチャ判断等、既に確定している見解）。",
+      "artifact": "検証済みのspec文書（Markdown）。"
     },
     "steps": {
       "blockType": "CustomSteps",
@@ -44,45 +44,45 @@
       "items": [
         {
           "stepId": "step-1",
-          "title": "対象schemaRefの骨格を生成する",
-          "summary": "対象spec document.jsonの骨格を生成する。既存document.jsonの更新の場合はこの手順を省略する。"
+          "title": "対象spec種別の雛形を用意する",
+          "summary": "対象spec種別に対応する雛形を用意する。雛形の用意手段自体は実行環境に委ねる——実行環境が対応するspec種別専用の生成手段を提供している場合はそちらを優先してよい。提供していない場合は、このSkillが既定の資材として同梱するtemplates/配下から選ぶ：ドメイン仕様のサブドメインはdomain-spec-subdomain.md、集約はdomain-spec-aggregate.md、ユースケースはdomain-spec-usecase.md。コーディング仕様の技術スタックはcoding-tech-stack.md、アーキテクチャはcoding-architecture.md、コーディング規約はcoding-coding-standard.md、テスト規約はcoding-test-standard.md。インフラ仕様はplatform-spec.md（対象インフラ種別をcompute/storage/database/networking/security/integration/observability/ci-cd/iot/ml/analyticsから選び、文中の該当箇所へ当てはめる）。ドメイン仕様の境界づけられたコンテキストと画面仕様は、対応する雛形が現時点で無い。既存文書の更新の場合はこの手順を省略する。"
         },
         {
           "stepId": "step-2",
-          "title": "受け取った判断材料をもとに値を埋める",
-          "summary": "x-prompt-write宣言に従い、既に与えられている判断材料を使ってcontentの各値を埋める。配列は現在値を取得してから組み立て直し、丸ごと置き換える。"
+          "title": "雛形のガイダンスと判断材料に従って値を埋める",
+          "summary": "雛形が示す執筆ガイダンスと、既に与えられている判断材料を使って、雛形の各項目を埋める。配列項目は現在の内容を踏まえて組み立て直し、丸ごと置き換える。"
         },
         {
           "stepId": "step-3",
-          "title": "validateする",
-          "summary": "schemaへの適合を検証する。エラーがあれば該当箇所を修正して再度validateする。"
+          "title": "構造の整合を確認する",
+          "summary": "埋め終えた内容が、雛形が定める必須項目・型のルールを満たしているか確認する。実行環境が専用の検証手段を提供している場合はそちらを使う。満たしていなければ該当箇所を修正して再度確認する。"
         },
         {
           "stepId": "step-4",
-          "title": "renderする",
-          "summary": "validate済みのdocumentを成果物へ描画する。"
+          "title": "成果物として確定する",
+          "summary": "確認済みの内容を最終成果物として確定させる。実行環境が専用の確定・反映手段を提供している場合はそちらを使う。"
         }
       ]
     },
     "outputFormat": {
       "blockType": "OutputFormat",
       "title": "出力形式",
-      "text": "作成・更新したdocument.jsonのパスと、validate/renderの結果を報告する。"
+      "text": "作成・更新したspec文書の場所と、確認結果を報告する。"
     },
     "guardrails": {
       "blockType": "Guardrails",
       "title": "ガードレール",
       "items": [
-        "document.jsonの操作は必ずCLI/MCP経由で行う（直接Read/Edit/Writeしない）",
-        "既存document.jsonはscaffold fillで編集する。配列はqueryで現在値を取得してから組み立て直し、丸ごと置き換える",
         "設計判断・アーキテクチャ判断が必要な箇所を、判断材料が与えられていないまま自分で埋めない。判断材料が不足している場合は呼び出し元に確認する",
-        "schemaに新規必須トップレベルキーが追加されている場合のみ、check-schema-version-driftで検知した上でEdit/Writeを許容する"
+        "雛形の執筆ガイダンス（語彙選択・粒度・禁止事項等）に厳密に従う。ガイダンスを無視した自由記述で埋めない",
+        "雛形が定める必須項目を省略しない",
+        "実行環境がこのSkillの手順に対応する専用の生成・検証・確定手段を提供している場合、同梱のtemplates/やこのSkill自身の手順文言より、その専用手段を優先する"
       ]
     },
     "description": {
       "blockType": "Purpose",
       "title": "目的",
-      "text": "既存のspec schema（DomainSpecSchema・CodingSchema・PlatformSpec・PresentationSpecSchema等）に沿ってspec document.jsonを新規作成・更新する必要があるときに使う。schemaRefに基づいて骨格を生成し、既に確定している判断材料をもとに値を埋め、validate・renderまで行う。"
+      "text": "既存のspec種別（ドメイン仕様・コーディング規約・インフラ仕様等）の型に沿ってspec文書を新規作成・更新する必要があるときに使う。対象の型に基づいて雛形を用意し、既に確定している判断材料をもとに値を埋め、検証・成果物確定まで行う。"
     }
   },
   "tags": []

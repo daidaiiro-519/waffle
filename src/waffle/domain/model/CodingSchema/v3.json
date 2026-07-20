@@ -23,7 +23,7 @@
   "properties": {
     "documentId": {
       "type": "string",
-      "x-prompt-write": "この Coding document を一意に識別する ID を kebab-case で。慣例は {codingKind}-{stack}。例: tech-stack-python-hexagonal, architecture-python-hexagonal"
+      "x-prompt-write": "この文書を一意に識別するIDをkebab-caseで。慣例は {対象種別}-{スタック名} の順に並べる。例: tech-stack-python-hexagonal, architecture-python-hexagonal"
     },
     "documentType": {
       "type": "string",
@@ -196,7 +196,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのCodingSpecが何を定めるかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にcodingKindを表す語（tech-stackなら「〜を定めるTech Stack仕様」、architectureなら「〜を定めるArchitecture仕様」、coding-standardなら「〜を定めるCoding Standard」、test-standardなら「〜を定めるTest Standard」）を含め、読んだだけでこのSpecがどの種別かがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に対象種別を表す語（技術スタックなら「〜を定めるTech Stack仕様」、アーキテクチャなら「〜を定めるArchitecture仕様」、コーディング規約なら「〜を定めるCoding Standard」、テスト規約なら「〜を定めるTest Standard」）を含め、読んだだけでこの仕様がどの種別かがわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。"
         }
       }
     },
@@ -301,7 +301,7 @@
         },
         "stackName": {
           "type": "string",
-          "x-prompt-write": "スタック名（kebab-case）。documentId の {stack} 部分と一致させる。"
+          "x-prompt-write": "スタック名（kebab-case）。この文書の識別子に含まれるスタック名部分と一致させる。"
         }
       }
     },
@@ -940,7 +940,7 @@
       ],
       "x-render-order": 3,
       "x-render-level": 2,
-      "x-prompt-query": "DDD 概念ごとの配置と実現形（決定レベル）を持ちます。spec の specKind とキーが一致し、概念キー化の本体です。正確なコード形は walking skeleton（examples/）が手本。",
+      "x-prompt-query": "DDD 概念ごとの配置と実現形（決定レベル）を持ちます。この概念一覧は、対応するドメイン仕様が扱う概念のキーと一致させます。正確なコード形は walking skeleton（examples/）が手本。",
       "x-render": [
         {
           "as": "table",
@@ -974,7 +974,7 @@
         "items": {
           "type": "array",
           "minItems": 1,
-          "x-prompt-write": "DDD 概念ごとに配置(layout のどこか)と形(決定レベルの指針。正確なコード形は書かない)を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "DDD 概念ごとに配置(ディレクトリ構成上のどこか)と形(決定レベルの指針。正確なコード形は書かない)を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -996,7 +996,7 @@
                   "inbound-adapter",
                   "outbound-adapter"
                 ],
-                "x-prompt-write": "固定語彙から選ぶ（spec の specKind と対応）。"
+                "x-prompt-write": "DDD概念の種類を、下のenumに列挙された固定語彙（usecase/aggregate/entity/value-object/domain-service/repository/port/inbound-adapter/outbound-adapter）から選ぶ。対応するドメイン仕様側がこの概念を指すために使っているキー名と表記を一致させること（言い換えたり別名を作ったりしない）。例えば仕様側がusecaseという概念キーで扱っているものは、ここでもusecaseと書く。"
               },
               "placement": {
                 "type": "string",
@@ -1048,7 +1048,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "依存方向・DI の受け取り方・エラー伝播（結果型/例外の使い分け）・その他横断決定を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "依存方向・DI の受け取り方・エラー伝播（結果型/例外の使い分け）・その他横断決定を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1105,7 +1105,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "中核/一般/補完ごとの実装の厚み方針を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "中核/一般/補完ごとの実装の厚み方針を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1200,7 +1200,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "対象（モジュール/クラス/関数/private 等）ごとの命名規約を列挙。語彙は仕様のユビキタス言語に一致させる旨も含める。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "対象（モジュール/クラス/関数/private 等）ごとの命名規約を列挙。語彙は仕様のユビキタス言語に一致させる旨も含める。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1258,7 +1258,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "型注釈・関数の責務範囲・import 規律等を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "型注釈・関数の責務範囲・import 規律等を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1387,7 +1387,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "docstring 必須の範囲・コードから導出できる情報を書かない・仕様と異なる語彙で命名しない等を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "docstring 必須の範囲・コードから導出できる情報を書かない・仕様と異なる語彙で命名しない等を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1536,7 +1536,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "実行タイミング・CIトリガー・ゲート（シナリオ緑必須等）・対象外とする種別を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "実行タイミング・CIトリガー・ゲート（シナリオ緑必須等）・対象外とする種別を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1724,7 +1724,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "実行可能な仕様がある場合の扱い・ネイティブテストの配置・対応関係（1仕様単位=1ネイティブテストファイル等）・ドリフト検知方法（仕様とテストの対応をどう機械的または人手で確認するか）を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "実行可能な仕様がある場合の扱い・ネイティブテストの配置・対応関係（1仕様単位=1ネイティブテストファイル等）・ドリフト検知方法（仕様とテストの対応をどう機械的または人手で確認するか）を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1787,7 +1787,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "domain/application/adapters/usecase受け入れ等の対象ごとに、テスト種別と配置パスを列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "domain/application/adapters/usecase受け入れ等の対象ごとに、テスト種別と配置パスを列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1802,7 +1802,7 @@
               },
               "testKind": {
                 "type": "string",
-                "x-prompt-write": "テスト種別。TestTypesBlock.testTypeに対応する種別を書く（人間可読な表記でよい）。例: 単体（unit）"
+                "x-prompt-write": "テスト種別。上のテストタイプ一覧で選んだ種別に対応するものを書く（人間可読な表記でよい）。例: 単体（unit）"
               },
               "path": {
                 "type": "string",
@@ -1850,7 +1850,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "実行可能な仕様の扱い・生成物の手書き禁止（該当する場合）・テストダブルの使用方針等を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は同じcodingKindの別stack documentへ）",
+          "x-prompt-write": "実行可能な仕様の扱い・生成物の手書き禁止（該当する場合）・テストダブルの使用方針等を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
           "items": {
             "type": "object",
             "required": [
@@ -1882,7 +1882,7 @@
       ],
       "x-render-order": 5.5,
       "x-render-level": 2,
-      "x-prompt-query": "テスト関数のdocstring（またはそれに相当するコメント）にGherkin(Given/When/Then)を記載する規約を持ちます。Gherkinで記載するのはWaffle固有の契約（spec側のシナリオ文言をテスト側に転記し、事後編集への追従をドリフト検知で捕捉するため）であり、対象言語の標準docstring/コメント構文に載せて表現する。",
+      "x-prompt-query": "テスト関数のdocstring（またはそれに相当するコメント）にGherkin(Given/When/Then)を記載する規約を持ちます。Gherkinで記載するのは、仕様側のシナリオ文言をテスト側に転記し、事後編集への追従をドリフト検知で捕捉するための取り決めであり、対象言語の標準docstring/コメント構文に載せて表現する。",
       "x-render": [
         {
           "as": "keyvalue",
@@ -1922,11 +1922,11 @@
         },
         "transcriptionGuidance": {
           "type": "string",
-          "x-prompt-write": "docstring本文には、対応するspec（DomainSpecSchema）のシナリオ（Given/When/Then）を一字一句そのまま転記する旨。関数名の一致だけでは、シナリオ文言の事後編集への追従を検知できないため。"
+          "x-prompt-write": "docstring本文には、対応する仕様のシナリオ（Given/When/Then）を一字一句そのまま転記する旨。関数名の一致だけでは、シナリオ文言の事後編集への追従を検知できないため。"
         },
         "target": {
           "type": "string",
-          "x-prompt-write": "この転記規約を必須にする対象。例: acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenariosに対応する全テスト関数"
+          "x-prompt-write": "この転記規約を必須にする対象。例: 受け入れシナリオ・保証シナリオ・不変条件シナリオ・ドメインサービスシナリオに対応する全テスト関数"
         },
         "example": {
           "type": "string",
@@ -1943,7 +1943,7 @@
       ],
       "x-render-order": 0,
       "x-render-level": 2,
-      "x-prompt-query": "この文書が何かを1〜2文で要約します。OKF frontmatterのdescriptionとしても使われます。",
+      "x-prompt-query": "この文書が何かを1〜2文で要約します。文書一覧や検索結果での要約表示としても使われます。",
       "x-render": [
         {
           "as": "paragraph",

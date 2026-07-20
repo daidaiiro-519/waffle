@@ -103,11 +103,11 @@
     },
     "subdomainRef": {
       "type": "string",
-      "x-prompt-write": "usecase のみ: この操作が属する subdomain の documentId。例: sd-order-management"
+      "x-prompt-write": "usecase のみ: この操作が属するサブドメインの識別子。例: sd-order-management"
     },
     "aggregateRef": {
       "type": "string",
-      "x-prompt-write": "usecase のみ: この操作が対象とする aggregate の documentId。アプリ→ドメインの依存。"
+      "x-prompt-write": "usecase のみ: この操作が対象とする集約の識別子。アプリケーション層からドメイン層への依存を表す。"
     },
     "tags": {
       "type": "array",
@@ -425,7 +425,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこのSpecが何であるかを業務語彙で簡潔に表す句（documentIdやクラス名をそのまま繰り返さない）。specKindがbounded-context/subdomain/aggregateの場合は、説明の末尾にその種別を表す語（bounded-contextなら「〜を行う境界づけられたコンテキスト」、subdomainなら「〜を担うサブドメイン」、aggregateなら「〜を守る集約」）を含め、読んだだけでこのSpecがDDDのどの構成要素かがわかるようにしてください（usecaseの場合はこの種別語を付けない）。識別子部分はspecKindに応じて設定する: usecaseの場合はcontent.name.operationNameと同じ値、aggregateの場合はcontent.aggregateRoot.nameと同じ値、bounded-context/subdomainの場合はdocumentIdをそのまま使う（識別子は既に別の構造化フィールドが正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。"
+          "x-prompt-write": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。この構成要素の種類が境界づけられたコンテキスト／サブドメイン／集約のいずれかである場合は、説明の末尾にその種類を表す語（境界づけられたコンテキストなら「〜を行う境界づけられたコンテキスト」、サブドメインなら「〜を担うサブドメイン」、集約なら「〜を守る集約」）を含め、読んだだけでこの構成要素がDDDのどれにあたるかがわかるようにしてください（ユースケースの場合はこの種別語を付けない）。識別子部分は構成要素の種類に応じて設定する: ユースケースの場合はその操作を表す正式名と同じ値、集約の場合はその集約のルートを表す正式名と同じ値、境界づけられたコンテキスト／サブドメインの場合はこの文書自身の一意な識別子をそのまま使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。"
         }
       }
     },
@@ -787,7 +787,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "この業務領域の実装の厚み(中核=厚い/一般=既製/補完=薄い)を持ちます。CodingTemplate の subdomainRichness の宣言元。",
+      "x-prompt-query": "この業務領域の実装の厚み(中核=厚い/一般=既製/補完=薄い)を持ちます。この分類は、実装時にどれだけ作り込むか（自前でドメインモデルを厚く作るか、既製品を薄く包むか）の判断材料として後段で参照されます。",
       "x-render": [
         {
           "as": "list",
@@ -821,7 +821,7 @@
       ],
       "x-render-order": 5,
       "x-render-level": 2,
-      "x-prompt-query": "一般の業務領域で採用する既製品(@stack の宛先)を持ちます。",
+      "x-prompt-query": "一般の業務領域で採用する既製ライブラリ/サービスを持ちます。実装時の技術選定の判断材料として参照されます。",
       "x-render": [
         {
           "as": "paragraph",
@@ -839,7 +839,7 @@
         },
         "text": {
           "type": "string",
-          "x-prompt-write": "採用する既製ライブラリ/サービス名と、それが @stack のどの能力に当たるか。中核/補完なら不要。"
+          "x-prompt-write": "採用する既製ライブラリ/サービス名と、それが業務上のどんな能力を代替するかを1文で。中核/補完の業務領域（既製品に頼らず自前で実装する領域）なら不要。"
         }
       }
     },
@@ -1139,7 +1139,7 @@
               },
               "attributes": {
                 "type": "array",
-                "x-prompt-write": "属性を列挙（任意。宣言するとcheck-aggregate-class-driftが実装クラスのフィールドとの一致を検証する）。型は値オブジェクト名/プリミティブ型で。",
+                "x-prompt-write": "属性を列挙（任意。宣言すると、実装クラスのフィールドとの一致が後工程で機械的に検証される）。型は値オブジェクト名/プリミティブ型で。",
                 "items": {
                   "type": "object",
                   "required": [
@@ -2092,7 +2092,7 @@
               },
               "operation": {
                 "type": "string",
-                "x-prompt-write": "このシナリオが検証する操作の識別子（任意）。usecaseの実装がoperation引数で複数の操作を分岐する場合のみ設定し、その操作を指す文字列そのものを設定する（例: get_block）。check-operation-driftが実装コードのoperation分岐と機械的に突き合わせるため、gherkin本文に埋め込む代わりにここへ構造化して書く。単一操作のusecaseでは省略する。"
+                "x-prompt-write": "このシナリオが検証する操作の識別子（任意）。usecaseの実装がoperation引数で複数の操作を分岐する場合のみ設定し、その操作を指す文字列そのものを設定する（例: get_block）。実装コードのoperation分岐と機械的に突き合わせる仕組みがあるため、gherkin本文に埋め込む代わりにここへ構造化して書く。単一操作のusecaseでは省略する。"
               }
             }
           }
@@ -2126,7 +2126,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "保証をEARSで列挙（When/While/If … shall …）。書いてよいのは『何を保証するか』だけ（べき等性・一貫性・提供チャネルの一貫性等）。『どう実現するか』（具体的なDB技法・ロック機構・実装技術）は書かない（CodingSchemaのcode-templateの領分）。判定基準（このusecaseに書くか、集約のinvariantsに書くか）: 同じ資源を操作する複数usecaseの間で、この保証内容が重複するか？ 重複するなら集約（agg-*.json）のinvariants/invariantScenariosに書く。このusecase固有の業務理由でのみ必要な保証だけをここに書く。性能の生数値（応答時間・スループット等）は書かない（CodingSchemaのtestTypes: non-functional-performanceの領分）。",
+          "x-prompt-write": "保証をEARSで列挙（When/While/If … shall …）。書いてよいのは『何を保証するか』だけ（べき等性・一貫性・提供チャネルの一貫性等）。『どう実現するか』（具体的なDB技法・ロック機構・実装技術）は実装方針の担当領域であり、ここには書かない。判定基準（このusecaseに書くか、対象集約の不変条件に書くか）: 同じ資源を操作する複数usecaseの間で、この保証内容が重複するか？ 重複するなら対象集約側の不変条件として書く。このusecase固有の業務理由でのみ必要な保証だけをここに書く。性能の生数値（応答時間・スループット等）は非機能テストの担当領域であり、ここには書かない。",
           "items": {
             "type": "string"
           }
@@ -2328,7 +2328,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "このusecaseがoperation引数で分岐する複数の操作を持つ場合、その一覧と概要を持ちます。単一操作のusecaseでは省略します。check-operation-driftが実装コードのoperation分岐と機械的に突き合わせる対象。",
+      "x-prompt-query": "このusecaseがoperation引数で分岐する複数の操作を持つ場合、その一覧と概要を持ちます。単一操作のusecaseでは省略します。実装コードのoperation分岐と機械的に突き合わされる対象です。",
       "x-render": [
         {
           "as": "table",
@@ -2405,7 +2405,7 @@
         },
         "name": {
           "type": "string",
-          "x-prompt-write": "このサブドメインの名前をドメイン語彙で簡潔に（documentIdやTitleの説明文とは別に、名前だけを独立して機械的に参照できるようにする）。例: フェーズゲート判定"
+          "x-prompt-write": "このサブドメインの名前をドメイン語彙で簡潔に（識別子やタイトルの説明文とは別に、名前だけを独立して機械的に参照できるようにする）。例: フェーズゲート判定"
         }
       }
     },
@@ -2436,7 +2436,7 @@
         },
         "name": {
           "type": "string",
-          "x-prompt-write": "この境界づけられたコンテキストの名前をドメイン語彙で簡潔に（documentIdやTitleの説明文とは別に、名前だけを独立して機械的に参照できるようにする）。例: スキーマ駆動Document基盤"
+          "x-prompt-write": "この境界づけられたコンテキストの名前をドメイン語彙で簡潔に（識別子やタイトルの説明文とは別に、名前だけを独立して機械的に参照できるようにする）。例: スキーマ駆動Document基盤"
         }
       }
     },

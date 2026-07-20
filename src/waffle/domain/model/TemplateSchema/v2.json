@@ -102,7 +102,7 @@
     },
     "skillRef": {
       "type": "string",
-      "x-prompt-write": "このTemplateが属するSkillのdocumentIdを指定してください。例: tech-lead-advisor, qa-advisor。deploy先(.claude/skills/{skillRef}/references/)の解決に使う。"
+      "x-prompt-write": "このTemplateが属するSkillを、そのSkillのID（kebab-case、そのSkill自身に付けられた識別子）で指定してください。例: tech-lead-advisor, qa-advisor。このIDが、指定したSkillの配下へこのTemplateの成果物を配置する際の手がかりになります。"
     },
     "status": {
       "type": "string",
@@ -215,7 +215,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのTemplateが何のためのものかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。末尾にtemplateKindを表す語（judgmentなら「〜の回答テンプレート」、investigation-reportなら「〜の調査報告テンプレート」）を含め、読んだだけでこのTemplateがどの種別かがわかるようにしてください。識別子部分はdocumentIdをそのまま使う。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのTemplateが何のためのものかを業務語彙で簡潔に表す句（このTemplateのIDをそのまま繰り返さない）。末尾にtemplateKindを表す語（judgmentなら「〜の回答テンプレート」、investigation-reportなら「〜の調査報告テンプレート」）を含め、読んだだけでこのTemplateがどの種別かがわかるようにしてください。識別子部分はこのTemplateのIDをそのまま使う。"
         }
       }
     },
@@ -229,7 +229,7 @@
       ],
       "x-render-order": 1,
       "x-render-level": 2,
-      "x-prompt-query": "この判断相談テンプレートがいつ使われるべきかと、判断フローに入る直前に相談対象を一文でスコープするopeningLineを持ちます。SKILL.md本文の`responseTypes`テーブルと重複するが、テンプレート単体で見た時に発動条件・対象の掴み方が分かるよう残す。",
+      "x-prompt-query": "この判断相談テンプレートがいつ使われるべきかと、判断フローに入る直前に相談対象を一文でスコープするopeningLineを持ちます。属するSkill本文にある発動条件の一覧（どんな相談で発動するかを示す表）と内容が重複するが、テンプレート単体で見た時にも発動条件・対象の掴み方が分かるよう残す。",
       "x-render": [
         {
           "as": "paragraph",
@@ -707,7 +707,7 @@
         },
         "text": {
           "type": "string",
-          "x-prompt-write": "このテンプレートが何を扱うかを1〜2文で。"
+          "x-prompt-write": "このテンプレートが何を扱うか（どんな判断相談・調査報告の骨格に対応するテンプレートか）を1〜2文で書いてください。本文を読まなくてもこのテンプレートの用途と対象範囲が伝わることを目的とするため、抽象的な言い換えではなく、対象となる判断・調査の種類が具体的にわかる言葉を選んでください。"
         }
       }
     }

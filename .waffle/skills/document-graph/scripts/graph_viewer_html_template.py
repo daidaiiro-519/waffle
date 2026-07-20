@@ -211,14 +211,16 @@ def _render_full_tab(full_href: str, open_href: str) -> str:
     同じCSS整形（markdown_to_html.convert + 同一のビューアCSS）をSkill側でも行い、
     見た目を完全に一致させる（サーバーの/preview/ルートが担う。document.jsonへの
     依存は無く、任意のMDファイルに対して動く汎用変換）。"""
-    # loading="lazy"は付けない: このiframeは初期状態でdisplay:noneの.tab-pane内にあり、
-    # 「全体」タブをクリックしてdisplay:blockへ切り替えた後もブラウザによっては
-    # 遅延読み込みが発火せず、iframeが永遠に空のままになることがある
-    # （非表示要素はレイアウトボックスを持たずIntersection Observerが機能しないため）。
+    # srcではなくdata-srcに保持し、実際のsrc設定は「全体」タブがクリックされ
+    # display:blockになった後（タブ切り替えJS側）まで遅らせる。iframeがdisplay:noneの
+    # 親の中にある間に読み込みを始めると、中のmermaidがラベルの実測サイズを取れず
+    # 0/NaNになり、SVGのtransform属性が壊れる（"translate(undefined, NaN)"）。
+    # loading="lazy"も使わない: 同じ理由で非表示中はレイアウトボックスが無く、
+    # 表示に切り替えても遅延読み込みが発火しないブラウザがある。
     return (
         f'<div class="tab-full-wrap">'
         f'<div class="tab-full-spinner"><div class="spinner"></div></div>'
-        f'<iframe src="{_html.escape(full_href)}" onload="this.previousElementSibling.classList.add(\'hidden\')"></iframe>'
+        f'<iframe data-src="{_html.escape(full_href)}" onload="this.previousElementSibling.classList.add(\'hidden\')"></iframe>'
         f'</div>'
         f'<a class="full-link" href="{_html.escape(open_href)}" target="_blank" rel="noopener">元ファイルを別タブで開く ↗</a>'
     )
@@ -339,6 +341,16 @@ document.querySelectorAll('.doc-tabs').forEach((tabs) => {{
       row.querySelectorAll('.tab-pane').forEach((p) => {{
         p.classList.toggle('active', p.classList.contains('tab-' + btn.dataset.tab));
       }});
+      // 全体タブのiframeは、display:blockになった後（＝寸法が確定した後）に初めてsrcを
+      // 設定する。非表示のまま先読みすると、中のmermaidがラベルの実測サイズを取れず
+      // SVGのtransform属性が壊れる（"translate(undefined, NaN)"）。
+      if (btn.dataset.tab === 'full') {{
+        const iframe = row.querySelector('.tab-full iframe[data-src]');
+        if (iframe) {{
+          iframe.src = iframe.dataset.src;
+          iframe.removeAttribute('data-src');
+        }}
+      }}
     }});
   }});
 }});

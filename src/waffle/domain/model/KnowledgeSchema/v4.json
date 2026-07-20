@@ -92,7 +92,7 @@
       "items": {
         "type": "string"
       },
-      "x-prompt-write": "このknowledgeを参照すべきadvisor SkillのdocumentIdを配列で指定してください。例: [\"ddd-advisor\", \"tech-lead-advisor\"]。複数advisorへ同時にsymlinkできます（.claude/skills/{各要素}/references/knowledge/）。特定のSkillに属さない汎用knowledgeの場合は省略・空配列でよい（その場合canonicalへの描画のみでdeployは行われない）。"
+      "x-prompt-write": "この概念を参照すべき専門家的な役割（advisor）の識別名を配列で指定してください。例: [\"ddd-advisor\", \"tech-lead-advisor\"]。複数の役割に同時に結び付けられます。特定の役割に紐づかない汎用的な概念の場合は省略・空配列でよい（その場合はどの役割の専門知識にも配布されず、一般の参照資料としてのみ扱われます）。"
     }
   },
   "$defs": {
@@ -157,7 +157,7 @@
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのKnowledgeが何を記録するかを業務語彙で簡潔に表す句（documentIdをそのまま繰り返さない）。識別子部分はdocumentIdをそのまま使う。"
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこの概念が何を記録するかを業務語彙で簡潔に表す句（識別子の値をそのまま繰り返さない）。識別子部分はこの文書自身の識別子の値をそのまま使う。"
         }
       }
     },
@@ -249,7 +249,7 @@
       ],
       "x-render-order": 3,
       "x-render-level": 2,
-      "x-prompt-query": "この概念が持つ分類軸（種別ごとの特徴）を持ちます。判断時にどの種別に該当するかの参照に使います。分類が無い概念ではitemsを空配列にし、noteにその理由を書きます。",
+      "x-prompt-query": "この概念が持つ分類軸（種別ごとの特徴）を持ちます。判断時にどの種別に該当するかの参照に使います。分類が無い概念では一覧を空にし、その理由を別途書き添えます。",
       "x-render": [
         {
           "as": "table",
@@ -317,7 +317,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "この概念に関する判断の分岐点（問いと分岐先）を持ちます。実際の判断作業で辿る決定木として使います。判断基準が無い概念ではstages/transitionsを空配列にし、noteにその理由を書きます。",
+      "x-prompt-query": "この概念に関する判断の分岐点（問いと分岐先）を持ちます。実際の判断作業で辿る決定木として使います。判断基準が無い概念では分岐点・遷移を空にし、その理由を別途書き添えます。",
       "x-render": [
         {
           "as": "flowchart",
@@ -431,7 +431,7 @@
       ],
       "x-render-order": 6,
       "x-render-level": 2,
-      "x-prompt-query": "この概念に関するよくある誤り（アンチパターン）と、その問題点を持ちます。避けるべき判断の参照に使います。無い概念ではitemsを空配列にし、noteにその理由を書きます。",
+      "x-prompt-query": "この概念に関するよくある誤り（アンチパターン）と、その問題点を持ちます。避けるべき判断の参照に使います。無い概念では一覧を空にし、その理由を別途書き添えます。",
       "x-render": [
         {
           "as": "table",
@@ -539,7 +539,7 @@
       ],
       "x-render-order": 8,
       "x-render-level": 2,
-      "x-prompt-query": "関連する他のKnowledge documentへの参照を持ちます。概念間のつながりを辿るのに使います。関連が無い概念ではitemsを空配列にし、emptyReasonにその理由を書きます。",
+      "x-prompt-query": "関連する他の概念文書への参照を持ちます。概念間のつながりを辿るのに使います。関連が無い概念では参照一覧を空にし、その理由を別途書き添えます。",
       "x-render": [
         {
           "as": "table",
@@ -571,7 +571,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "関連するKnowledge documentのdocumentIdと、その関係を短く列挙してください。",
+          "x-prompt-write": "関連する概念の識別子と、どう関連するかを短く列挙してください。識別子は、その関連先の概念自身が識別子として使っている値と同じ文字列を使ってください。",
           "items": {
             "type": "object",
             "required": [
@@ -581,7 +581,7 @@
             "properties": {
               "conceptId": {
                 "type": "string",
-                "x-prompt-write": "関連するKnowledge documentのdocumentId。"
+                "x-prompt-write": "関連する概念を一意に指す識別子。その概念自身の識別子として使われている値と同じ文字列を使ってください（例: subdomain, bounded-context）。"
               },
               "note": {
                 "type": "string",
@@ -592,7 +592,7 @@
         },
         "emptyReason": {
           "type": "string",
-          "x-prompt-write": "itemsが空の場合、この概念に関連する他のKnowledgeが無い理由を書いてください。itemsに中身がある場合は空文字でよい。"
+          "x-prompt-write": "itemsが空の場合、この概念に関連する他の概念が無い理由を書いてください。itemsに中身がある場合は空文字でよい。"
         }
       }
     }

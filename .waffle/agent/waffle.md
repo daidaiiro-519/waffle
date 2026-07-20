@@ -43,6 +43,9 @@
 |---|---|
 | 既存document.jsonをscaffold fillで編集する | 配列は query で現在値取得→組み立て→fill で丸ごと置き換え |
 | repo rootから`uv run --project waffle waffle <command>`で呼ぶ | waffleはrepo rootとは別プロジェクトのため。deploy先パスは`waffle/`配下を明示する |
+| spec-authoringの概念的な手順をWaffleコマンドへ対応させる（Skill自身にはWaffle固有の語彙を持ち込まない。対応関係はここに集約する） | 「対象spec種別の雛形を用意する」=`waffle scaffold create --schemaRef <対応するschemaRef> --discriminator <対応するdiscriminator>`（既存document更新時は省略）／「雛形のガイダンスと判断材料に従って値を埋める」=`waffle scaffold fill`（x-prompt-write宣言をガイダンスとして使う）／「構造の整合を確認する」=`waffle validate`／「成果物として確定する」=`waffle render` |
+| handoff-authoringの概念的な手順をWaffleコマンドへ対応させる | 「対象specとの対応を確認する」=対象specのdocument.jsonのstatusが VALIDATED 以上か`waffle query --operation get_meta`で確認／「雛形を用意する」=`waffle scaffold create --schemaRef HandoffSchema/v2`（既存document更新時は省略）／「受け取った判断材料を記録する」=`waffle scaffold fill`／「構造の整合を確認する」=`waffle validate`／「成果物として確定する」=`waffle render` |
+| knowledge-cultivatorの概念的な手順をWaffleコマンドへ対応させる | 「knowledge候補を記録する」（下書き状態の記録手段）=`waffle scaffold create --schemaRef KnowledgeSchema/v2`でstatus DRAFTのdocumentを作成→`waffle scaffold fill`／「蓄積した下書き候補を審査用にとりまとめる」=`waffle query --operation find_all`等でstatus DRAFTのKnowledgeSchema documentを洗い出す／採用決定後の正式採用への反映（このSkillの責務外）=Orchestratorが`waffle scaffold fill`でstatus ACTIVEへ変更→`waffle validate`→`waffle render` |
 
 ---
 
