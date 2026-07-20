@@ -216,6 +216,7 @@ class RenderDocument:
                 value = _resolve_path({"doc": doc}, path)
             except KeyError:
                 continue  # 任意ブロック省略時：値で埋めずフィールドごと省略する（上書き指定の意味を保つ）
+            value = _normalize_frontmatter_value(value)
             if not value:
                 continue  # 空文字・空配列・null も同様に省略する（part_rendererの空値省略規約と一貫）
             # JSON 文字列は YAML のスカラとしても安全（コロン・括弧・日本語を含んでも壊れない）
@@ -238,3 +239,11 @@ def _resolve_path(root: dict, path: str):
     for part in path.split("."):
         cur = cur[part]
     return cur
+
+def _normalize_frontmatter_value(value):
+    """text/items のいずれかを持つブロック形状の dict（DescriptionBlock/SummaryBlock等）を
+    単一のスカラ値へ正規化する。text があればそれを使い、無ければ items を半角スペースで
+    結合する（schema名に依存せず、値の形だけで判定する＝Harness原則を保つ）。"""
+    if isinstance(value, dict) and ("text" in value or "items" in value):
+        return value.get("text") or " ".join(value.get("items", []))
+    return value

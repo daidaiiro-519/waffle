@@ -1,3 +1,11 @@
+---
+id: "uc-render-document"
+type: "usecase"
+title: "Documentを人間可読な成果物へ描画する：RenderDocument"
+description: "検証済みの Document を schema の x-render に従って人間可読な成果物（SKILL.md / HTML）に描画し、配置先へ反映する。"
+tags: ["context:waffle"]
+---
+
 # Documentを人間可読な成果物へ描画する：RenderDocument
 
 ## 概要
@@ -70,6 +78,7 @@ sequenceDiagram
 - While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。
 - If list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取ったとき、システムはMALFORMED_CONTENTエラーを返し描画しない shall。
 - While pathVarsが参照するcontentのドットパスを対象Documentが持たないとき、システムはその変数を使うdeploy先だけをスキップし、canonicalへの書き込みは継続する shall。
+- When x-frontmatterが指すドットパスの解決値がtext・itemsのいずれかを持つブロック形状のdictであるとき、システムはtextがあればそれを使い、無ければitemsを半角スペース区切りで結合した文字列をfrontmatter値として使う shall。
 
 ---
 
@@ -341,6 +350,30 @@ Scenario: 配列のpathVarはtoolMappings経由のdeploy先へfan-outする
   Given x-render-target.pathVarsで宣言した値が配列であるDocumentと、その変数を参照するtoolMappingsのpathTemplate
   When deployを有効にしてrenderする
   Then 配列の要素ごとに1つずつsymlinkのdeploy先が作られる
+```
+
+### x_frontmatterが指すブロックがitemsを持つときスペース区切りで結合する
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | x-frontmatterが指す値がtext/itemsを持つブロック形状のdictのとき、itemsが空スペース区切りの1文字列へ正規化されることを確認する |
+
+```gherkin
+Given x-frontmatterがtext/itemsを持つブロック形状のdictを指すDocument
+When RenderDocumentを実行する
+Then itemsを半角スペースで結合した1つの文字列がfrontmatter値になる
+```
+
+### DomainSpecSchemaのusecase_Specはfrontmatterでid_type_title_description_tagsを持つ
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | document-graph Skillの契約（id/type/title/description/tags）に沿ったfrontmatterがDomainSpecSchemaのusecaseから出力されることを確認する |
+
+```gherkin
+Given usecase specKindのDomainSpecSchema Document
+When RenderDocumentを実行する
+Then id/type/title/descriptionを含むfrontmatterが出力される
 ```
 
 ---

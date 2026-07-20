@@ -69,6 +69,20 @@ def test_completionImageを含むHandoffを描画する(tmp_path):
     assert "制約1" in content
 
 
+def test_HandoffSchemaの新しいバージョンも描画できる(tmp_path):
+    """
+    実際のHandoff document群は既にHandoffSchema/v2へ移行済みだが、本usecaseは
+    完全一致でHandoffSchema/v1のみを受け付けていたため、実在する全Handoff
+    documentの描画が失敗していた（実データで発覚した回帰）。バージョンではなく
+    プレフィックス（HandoffSchema/）で受け付けるようにする。
+    """
+    doc = _handoff_doc()
+    doc["schemaRef"] = "HandoffSchema/v2"
+    path = _write(tmp_path, "handoff-uc-a.json", doc)
+    result = _engine().run(path, str(tmp_path / "out.html"))
+    assert isinstance(result, Ok), result
+
+
 def test_HandoffSchema以外を描画しようとする(tmp_path):
     """
     Given schemaRefがHandoffSchema以外のDocument
@@ -109,3 +123,23 @@ def test_advisor名と件数のペアがレビュー状況に出力される(tmp
     content = (tmp_path / "handoff-uc-a.html").read_text(encoding="utf-8")
     assert "ddd-advisor" in content
     assert "tech-lead-advisor" in content
+
+
+def test_契約準拠のmetaタグが出力される(tmp_path):
+    """
+    Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff
+    When RenderHandoffTemplateを実行する
+    Then 生成されたHTMLのheadにid/type/title/description/tagsの<meta>タグが出力される
+    """
+    doc = _handoff_doc()
+    doc["tags"] = ["context:waffle"]
+    doc["content"]["description"] = {"blockType": "Description", "title": "説明", "text": "このHandoffの説明です"}
+    path = _write(tmp_path, "handoff-uc-a.json", doc)
+    output_path = str(tmp_path / "handoff-uc-a.html")
+    result = _engine().run(path, output_path)
+    assert isinstance(result, Ok), result
+    content = (tmp_path / "handoff-uc-a.html").read_text(encoding="utf-8")
+    assert '<meta name="id" content="handoff-uc-a">' in content
+    assert '<meta name="type" content="Handoff">' in content
+    assert '<meta name="description" content="このHandoffの説明です">' in content
+    assert '<meta name="tags" content="context:waffle">' in content

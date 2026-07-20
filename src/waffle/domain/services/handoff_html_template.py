@@ -322,18 +322,30 @@ def render_handoff_html(
     constraints: list[str],
     handoff_kind: str = "specToImplementation",
     usage_examples: list[str] | None = None,
+    description: str = "",
+    tags: list[str] | None = None,
 ) -> str:
-    """Handoffの値を、確定済みの固定HTMLテンプレート（Pattern G）へ差し込んだ自己完結HTMLを返す。"""
+    """Handoffの値を、確定済みの固定HTMLテンプレート（Pattern G）へ差し込んだ自己完結HTMLを返す。
+
+    <head>には、document-graph Skill（Waffle非依存の外部Skill）が読む契約
+    （id/type/title/description/tags を<meta>で表現）を満たすタグも出力する。
+    """
     svg_width = layout["viewbox_width"]
     svg_height = layout["viewbox_height"]
     kind_labels = _KIND_LABELS[handoff_kind]
     tab1_label, tab2_label, tab3_label = kind_labels["tabs"]
     usage_examples = usage_examples or []
+    tags = tags or []
     return f"""<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
 <title>{_e(title)}</title>
+<meta name="id" content="{_e(document_id)}">
+<meta name="type" content="Handoff">
+<meta name="title" content="{_e(title)}">
+<meta name="description" content="{_e(description)}">
+<meta name="tags" content="{_e(", ".join(tags))}">
 <style>{_CSS}</style>
 </head>
 <body>

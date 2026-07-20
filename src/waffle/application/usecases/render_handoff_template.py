@@ -13,7 +13,7 @@ from waffle.domain.services.completion_image_layout import compute_layout
 from waffle.domain.services.handoff_html_template import render_handoff_html
 from waffle.shared.result import Err, Ok, Result
 
-_HANDOFF_SCHEMA_REF = "HandoffSchema/v1"
+_HANDOFF_SCHEMA_PREFIX = "HandoffSchema/"
 
 
 def _err(code: str, message: str) -> Err:
@@ -39,8 +39,8 @@ class RenderHandoffTemplate:
             return loaded
         doc = loaded.value
 
-        if doc.get("schemaRef") != _HANDOFF_SCHEMA_REF:
-            return _err("WRONG_SCHEMA_REF", f"schemaRef が {_HANDOFF_SCHEMA_REF} ではありません")
+        if not doc.get("schemaRef", "").startswith(_HANDOFF_SCHEMA_PREFIX):
+            return _err("WRONG_SCHEMA_REF", f"schemaRef が {_HANDOFF_SCHEMA_PREFIX}* ではありません")
 
         content = doc.get("content", {})
         completion_image = content.get("completionImage")
@@ -53,6 +53,8 @@ class RenderHandoffTemplate:
         implementation_viewpoints = content.get("implementationViewpoints", {}).get("items", [])
         constraints = content.get("constraints", {}).get("items", [])
         usage_examples = content.get("usageExamples", {}).get("items", [])
+        description_block = content.get("description", {})
+        description = description_block.get("text") or " ".join(description_block.get("items", []))
 
         layout = compute_layout(completion_image["layers"], completion_image["relationships"])
         review_counts = _count_by_advisor(design_viewpoints, implementation_viewpoints)
@@ -70,6 +72,8 @@ class RenderHandoffTemplate:
             constraints=constraints,
             handoff_kind=handoff_kind,
             usage_examples=usage_examples,
+            description=description,
+            tags=doc.get("tags", []),
         )
 
         try:

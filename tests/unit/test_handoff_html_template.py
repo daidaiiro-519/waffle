@@ -196,3 +196,33 @@ def test_同じ行の関係矢印は始点と終点のy座標が一致する():
     assert m is not None
     _, fy, _, ty = m.groups()
     assert fy == ty
+
+
+def test_headにdocument_graph契約準拠のmetaタグが出力される():
+    """
+    Given description・tagsを持つHandoff
+    When render_handoff_htmlを呼ぶ
+    Then headにid/type/title/description/tagsのmetaタグが出力される
+    """
+    layout = compute_layout([], [])
+    kwargs = _base_kwargs(layout)
+    kwargs["description"] = "説明文です"
+    kwargs["tags"] = ["context:waffle", "kind:handoff"]
+    html = render_handoff_html(**kwargs)
+    assert '<meta name="id" content="handoff-x">' in html
+    assert '<meta name="type" content="Handoff">' in html
+    assert '<meta name="title" content="タイトル">' in html
+    assert '<meta name="description" content="説明文です">' in html
+    assert '<meta name="tags" content="context:waffle, kind:handoff">' in html
+
+
+def test_descriptionとtagsが無い場合はmetaタグを空文字で出力する():
+    """
+    Given description・tagsを渡さないHandoff
+    When render_handoff_htmlを呼ぶ
+    Then エラーにならず、空文字のmetaタグが出力される
+    """
+    layout = compute_layout([], [])
+    html = render_handoff_html(**_base_kwargs(layout))
+    assert '<meta name="description" content="">' in html
+    assert '<meta name="tags" content="">' in html
