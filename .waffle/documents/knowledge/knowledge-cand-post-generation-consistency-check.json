@@ -1,0 +1,87 @@
+{
+  "documentId": "knowledge-cand-post-generation-consistency-check",
+  "documentType": "Knowledge",
+  "schemaRef": "KnowledgeSchema/v4",
+  "status": "DEPRECATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "生成後の機械的一貫性検査：post-generation-consistency-check"
+    },
+    "principles": {
+      "blockType": "Principles",
+      "title": "原則",
+      "items": [
+        "同じ生成物の中で繰り返し使われる構造（複数のSVG図、複数のセクション）は、個別には正しく見えても、生成物全体を横断した機械的なチェック（grep等）をしない限り、同種の不整合が複数箇所に再発しやすい。",
+        "レイヤー化された図（背景→ノード→矢印等）では、要素を指し示す装飾（矢印・線）は、指し示す対象より後に描画しないと、対象の描画に隠れて見えなくなる。この種のz順序バグは1つの図で直しても、同じパターンで作られた別の図には機械的に横展開されない限り残る。",
+        "同じ生成物内の複数セクションが、同じ概念を別の角度から説明しようとすると、意図せず内容が重複する。生成側は執筆時にはそれぞれ独立して正しいと感じるため、生成物全体を通し読みしない限り重複に気づけない。"
+      ]
+    },
+    "classifications": {
+      "blockType": "Classifications",
+      "title": "分類",
+      "items": [],
+      "emptyReason": "この概念は分類軸ではなく、出荷前に横断的に実行すべき検査項目の集合のため分類を持たない。"
+    },
+    "decisionCriteria": {
+      "blockType": "DecisionCriteria",
+      "title": "判断基準",
+      "emptyReason": "この概念は条件分岐ではなく、生成物を出荷する前に常に実行すべき検査手順のため決定木を持たない。",
+      "stages": [],
+      "transitions": []
+    },
+    "examples": {
+      "blockType": "Examples",
+      "title": "実例",
+      "text": "架空のダッシュボードツール「Bar」のLPで、同じ4ステップの矢印付きフロー図を2箇所（ヒーローと機能説明欄）に別々に実装した。片方は矢印グループをノードより先に描画し、もう片方は後に描画していた——同じパターンのコピペ元を直した後、複製先を機械的に洗い直さなかったため、1箇所だけ矢先が隠れたまま出荷寸前まで残った。"
+    },
+    "antiPatterns": {
+      "blockType": "AntiPatterns",
+      "title": "アンチパターン",
+      "items": [
+        {
+          "name": "レイヤー図のz順序バグの局所修正",
+          "problem": "矢印・線などの装飾がノード等の対象より先に描画され隠れてしまうバグを1箇所直しても、生成物内に同じ構造の図が複数あれば、他の図には機械的に反映されず同じバグが残る。修正後は同じパターンを持つ全ての図をgrep等で洗い出し、描画順を一括で確認する。"
+        },
+        {
+          "name": "セクション間の内容重複を個別執筆時に検知できない",
+          "problem": "各セクションを個別に執筆している間は、それぞれの文章が扱う概念が生成物内の他セクションと重複していることに気づきにくい。生成物全体を通し読みし、同じ主張・同じ用語が複数セクションで独立に説明されていないかを確認する工程が無いと、読者に同じことを何度も言っているという冗長な印象を与えたまま出荷される。"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "provenance": {
+      "blockType": "Provenance",
+      "title": "出典・根拠の透明性",
+      "source": "本セッション（Waffle OSS LP作成）での実例の再構成。同一パターンの複数SVG図におけるz順序バグの再発、およびヒーロー/仕組み/機能/使用イメージ間での説明重複をユーザーが繰り返し指摘した経緯を一般化した。",
+      "caveats": "knowledge-cand-scoped-validation-does-not-propagateへ統合されたため非推奨（2026-07-20）。個別の具象事象として記録していたが、より抽象化された1原則へまとめた。"
+    },
+    "relatedConcepts": {
+      "blockType": "RelatedConcepts",
+      "title": "関連概念",
+      "items": [
+        {
+          "conceptId": "knowledge-cand-investigate-before-explain",
+          "note": "事前のinvestigation規律が生成前の正確性を担保するのに対し、この概念は生成後の構造的・内容的整合性を担保する。両方が揃って初めて出荷可能な品質になる。"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "複数のSVG図やコンポーネントが同じ生成物内に存在するとき、何を横断的に確認すべきか？",
+        "セクションごとに個別に執筆した後、出荷前に何を通し読みで確認すべきか？"
+      ],
+      "text": "生成物内で繰り返し使われる構造（複数の図、複数のセクション）について、個別の正しさだけでなく生成物全体を横断した機械的な一貫性検査（z順序・内容重複）を出荷前に行う規律。"
+    }
+  },
+  "tags": [
+    "domain:process",
+    "framework:generation-quality"
+  ],
+  "skillRefs": [
+    "design-share"
+  ]
+}

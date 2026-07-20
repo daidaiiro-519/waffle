@@ -3,12 +3,16 @@
 カテゴリの個別document一覧（紐づき先付き）が表示される、というドリルダウン型UX。
 
 Waffle本体の src/waffle/domain/services/graph_viewer_html_template.py をベースに
-移植した。差分（brainstorm-document-graph-skill.md 論点3・4の合意決定）:
+移植した。ブレスト（brainstorm-document-graph-skill.md 論点3・4）の合意は「既存の
+treemap・カテゴリ描画・紐づき先ツリー・タブ切り替えは転用する」であり、UXは変更しない。
+差分は次の1点のみ:
   - node属性を契約の{id, type, title, description, tags}＋relatedだけに絞り込み、
     Waffle固有のspecKind/schemaRefへの参照を除去した。
-  - Waffle固有だった「全体」タブ（document.jsonからMD/HTMLをその場でレンダリング
-    するタブ）を削除した。Skill側は既に契約準拠のHTML/MDファイルそのものを持って
-    いるので、代わりに各documentへ直接の「元ファイルを開く」リンクを1本添える。
+
+「全体」タブは維持する。Waffle版はdocument.jsonからその場でMD/HTMLをレンダリング
+していたが、Skill版はレンダリング済みの契約ファイルそのものを持っているので、
+iframeでその契約ファイル（/files/{alias}/{path}）を直接参照するだけで足りる
+（レンダリングし直す必要が無い分、むしろ単純）。
 """
 from __future__ import annotations
 
@@ -91,9 +95,17 @@ main > h2 {
 .doc-row.doc-focus { background: var(--accent-soft); outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 .doc-title { font-size: 0.9rem; font-weight: 600; }
 .doc-id { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-faint); margin-left: 0.5rem; }
-.doc-open { font-size: 0.76rem; margin-left: 0.5rem; color: var(--accent); text-decoration: none; }
-.doc-open:hover { text-decoration: underline; }
 .doc-desc { font-size: 0.82rem; color: var(--ink-dim); margin: 0.25rem 0 0; line-height: 1.5; }
+.doc-tabs { display: flex; gap: 0.4rem; margin: 0.5rem 0 0.5rem; }
+.tab-btn {
+  font-family: var(--mono); font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface-sunken); color: var(--ink-dim); cursor: pointer;
+}
+.tab-btn.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.tab-full iframe { width: 100%; height: 420px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.tab-full .full-link { font-size: 0.76rem; margin-top: 0.4rem; display: inline-block; color: var(--accent); }
 .doc-related { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.4rem; }
 .rel-group {
   font-size: 0.72rem; border: 1px solid var(--line); border-radius: 8px;
@@ -181,20 +193,40 @@ def _render_related(related: list[dict]) -> str:
     return f'<div class="doc-related">{"".join(groups)}</div>'
 
 
-def _render_panel(category: dict, files_base_url: str) -> str:
+def _render_full_tab(full_href: str, open_href: str) -> str:
+    """「全体」タブの中身。HTML形式ソースは既にCSSが当たった正本HTMLなのでそのまま
+    iframe参照する。MD形式ソースは、Waffleの uc-render-document-viewer が行っていたのと
+    同じCSS整形（markdown_to_html.convert + 同一のビューアCSS）をSkill側でも行い、
+    見た目を完全に一致させる（サーバーの/preview/ルートが担う。document.jsonへの
+    依存は無く、任意のMDファイルに対して動く汎用変換）。"""
+    # loading="lazy"は付けない: このiframeは初期状態でdisplay:noneの.tab-pane内にあり、
+    # 「全体」タブをクリックしてdisplay:blockへ切り替えた後もブラウザによっては
+    # 遅延読み込みが発火せず、iframeが永遠に空のままになることがある
+    # （非表示要素はレイアウトボックスを持たずIntersection Observerが機能しないため）。
+    return (
+        f'<iframe src="{_html.escape(full_href)}"></iframe>'
+        f'<a class="full-link" href="{_html.escape(open_href)}" target="_blank" rel="noopener">元ファイルを別タブで開く ↗</a>'
+    )
+
+
+def _render_panel(category: dict, files_base_url: str, preview_base_url: str) -> str:
     rows = []
     for d in category["docs"]:
         hay = f'{d["id"]} {d["title"]}'.lower()
         desc = d.get("description") or ""
         desc_html = f'<p class="doc-desc">{_html.escape(desc)}</p>' if desc else ""
         open_href = f'{files_base_url}{d["href"]}'
+        full_href = open_href if d.get("format") == "html" else f'{preview_base_url}{d["href"]}'
         rows.append(
             f'<div class="doc-row" id="doc-{_html.escape(d["id"])}" data-hay="{_html.escape(hay)}">'
             f'<span class="doc-title">{_html.escape(d["title"])}</span>'
             f'<span class="doc-id">{_html.escape(d["id"])}</span>'
-            f'<a class="doc-open" href="{_html.escape(open_href)}" target="_blank" rel="noopener">元ファイルを開く ↗</a>'
-            f'{desc_html}'
-            f'{_render_related(d["related"])}'
+            f'<div class="doc-tabs">'
+            f'<button class="tab-btn active" data-tab="desc">概要</button>'
+            f'<button class="tab-btn" data-tab="full">全体</button>'
+            f'</div>'
+            f'<div class="tab-pane tab-desc active">{desc_html}{_render_related(d["related"])}</div>'
+            f'<div class="tab-pane tab-full">{_render_full_tab(full_href, open_href)}</div>'
             f'</div>'
         )
     return f'<div class="cat-panel" id="panel-{_html.escape(category["key"])}">{"".join(rows)}</div>'
@@ -207,14 +239,20 @@ def _render_warnings(warnings: list[str]) -> str:
     return f'<div class="warn-banner">⚠ {items}</div>'
 
 
-def render_graph_html(graph: dict, warnings: list[str] | None = None, files_base_url: str = "/files/") -> str:
+def render_graph_html(
+    graph: dict,
+    warnings: list[str] | None = None,
+    files_base_url: str = "/files/",
+    preview_base_url: str = "/preview/",
+) -> str:
     """全documentを契約の`type`別のフラットなカテゴリへ分類し、treemapで一瞰、
     クリックしたカテゴリのdocument一覧（紐づき先付き）を表示する自己完結HTMLを返す。
-    各documentには元ファイル（契約準拠のMD/HTML）への直接リンクを添える。"""
+    各documentは「概要」（説明＋紐づき先）と「全体」（CSS整形済みのフルプレビュー）を
+    タブで切り替えられる。"""
     types_seen: dict = {}
     categories = compute_categories(graph)
     treemap_html = _render_treemap(categories, types_seen)
-    panels_html = "".join(_render_panel(c, files_base_url) for c in categories)
+    panels_html = "".join(_render_panel(c, files_base_url, preview_base_url) for c in categories)
     warnings_html = _render_warnings(warnings or [])
 
     return f"""<!doctype html>
@@ -277,6 +315,18 @@ def render_graph_html(graph: dict, warnings: list[str] | None = None, files_base
     }});
   }});
 }})();
+
+document.querySelectorAll('.doc-tabs').forEach((tabs) => {{
+  const row = tabs.closest('.doc-row');
+  tabs.querySelectorAll('.tab-btn').forEach((btn) => {{
+    btn.addEventListener('click', () => {{
+      tabs.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      row.querySelectorAll('.tab-pane').forEach((p) => {{
+        p.classList.toggle('active', p.classList.contains('tab-' + btn.dataset.tab));
+      }});
+    }});
+  }});
+}});
 
 document.getElementById('search').addEventListener('input', (e) => {{
   const q = e.target.value.toLowerCase();

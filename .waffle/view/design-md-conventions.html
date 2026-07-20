@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Design.md仕様（YAMLトークン＋固定順セクション）の規約を扱う概念：design-md-conventions</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.75; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+.masthead h1 { font-family: var(--serif); font-size: clamp(1.4rem, 3.2vw, 1.9rem); font-weight: 600; margin: 0.35rem 0 0.9rem; text-wrap: balance; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.9rem; }
+.tag-pill { font-family: var(--mono); font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--line); }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.76rem; color: var(--ink-faint); border-top: 1px solid var(--line); padding-top: 0.8rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.masthead .description { color: var(--ink-dim); margin: 0 0 0.9rem; max-width: 68ch; overflow-wrap: anywhere; }
+article { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 2rem 2.2rem 2.4rem; }
+article h1 { font-family: var(--serif); font-size: clamp(1.3rem, 3vw, 1.7rem); margin: 0 0 1rem; }
+article h2 { font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 2.2rem 0 0.9rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line); }
+article > h2:first-of-type, article > h1:first-child + h2 { margin-top: 0; }
+article h3 { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; color: var(--ink); margin: 1.4rem 0 0.6rem; }
+article p { margin: 0 0 0.9rem; max-width: 68ch; overflow-wrap: anywhere; }
+article ul, article ol { margin: 0 0 0.9rem; padding-left: 1.3rem; max-width: 68ch; }
+article li { margin-bottom: 0.35rem; overflow-wrap: anywhere; }
+article strong { color: var(--ink); }
+.table-scroll { overflow-x: auto; margin-bottom: 1.2rem; }
+article table { border-collapse: collapse; width: 100%; min-width: max-content; font-size: 0.9rem; }
+article th, article td { text-align: left; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+article th { font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; border-bottom: 1.5px solid var(--ink-faint); }
+article tr:last-child td { border-bottom: none; }
+article code { font-family: var(--mono); font-size: 0.87em; background: var(--surface-sunken); border: 1px solid var(--line); border-radius: 4px; padding: 0.08em 0.4em; }
+article pre { font-family: var(--mono); font-size: 0.83rem; line-height: 1.65; background: var(--surface-sunken); border: 1px solid var(--line); border-radius: 8px; padding: 0.9rem 1.1rem; margin: 0 0 1.2rem; overflow-x: auto; white-space: pre-wrap; }
+article pre code { background: none; border: none; padding: 0; }
+article pre.mermaid { text-align: center; background: var(--surface-sunken); }
+article pre.mermaid svg { max-width: 100%; }
+article hr { border: none; border-top: 1px solid var(--line); margin: 1.8rem 0; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Document Viewer</div>
+    <h1>Design.md仕様（YAMLトークン＋固定順セクション）の規約を扱う概念：design-md-conventions</h1>
+    <p class="description">Design.md（コーディングエージェントにビジュアルアイデンティティを伝える文書）の実体仕様と、対話×試作artifactの往復でそれを作成・改善する運用規約。</p>
+    <div class="meta-row">
+      <span class="tag-pill">domain:design</span><span class="tag-pill">skill:design-share</span>
+    </div>
+    <dl>
+      <dt>documentId</dt><dd>design-md-conventions</dd>
+      <dt>schemaRef</dt><dd>KnowledgeSchema/v4</dd>
+      <dt>updatedAt</dt><dd></dd>
+    </dl>
+  </header>
+  <article>
+<h1>Design.md仕様（YAMLトークン＋固定順セクション）の規約を扱う概念：design-md-conventions</h1>
+<h2>概要</h2>
+<h3>この概念が答える判断</h3>
+<ul><li>Design.mdはどんなフォーマットで書くべきか</li><li>デザイントークンはいつ・どうやって確定すべきか</li><li>Design.mdのバージョン管理はどう行うか</li><li>非デザイナーとの対話でデザインの方向性をどう決めるか</li></ul>
+<p>Design.md（コーディングエージェントにビジュアルアイデンティティを伝える文書）の実体仕様と、対話×試作artifactの往復でそれを作成・改善する運用規約。</p>
+<hr>
+<h2>原則</h2>
+<ul><li>フォーマットは発明しない: Design.mdの実体はgoogle-labs-code/design.md仕様に従う。YAMLフロントマター（機械可読トークン）＋Markdown本文（人間可読の設計理由）の2層構造で、トークンが規範値・本文が適用文脈を担う。</li><li>トークンの語彙: フロントマターにはname・colors・typography・rounded・spacing・componentsを書く。色は任意のCSS色、寸法は数値＋単位、トークン参照は{path.to.token}形式。</li><li>セクションは固定順: 本文の##セクションはOverview→Colors→Typography→Layout→Elevation &amp; Depth→Shapes→Components→Do&#x27;s and Don&#x27;tsの順。省略は許されるが順序の入れ替えは不可。</li><li>見て決める: トークン値は言葉だけで確定しない。Colors＋Typography確定後とLayout＋Components確定後の2チェックポイントで試作artifactを生成し、視覚確認を経て値を確定する。</li><li>入り口は指差し: 非デザイナーはゼロから言語化できない。対話の最初に内蔵アーキタイプ（6種の方向性）を見せ、近いものを選んでから差分を対話で詰める。</li><li>検証は既存ツールで: 構造検証・WCAGコントラスト確認はdesign.mdのlintコマンドを、バージョン間比較はdiffコマンドをオンデマンドで使う。自前で再実装しない。</li><li>履歴はスナップショット: バージョン履歴は各版のDesign.mdをそのまま保存する。差分は必要時にdiffで算出し、差分結果自体は保存しない。</li><li>Design.mdは生きた文書: UIパターンへのコメント・レビューの学びは、パターン側だけでなくDesign.md本体へ差分として還元する。</li><li>状態系トークンでround-tripを閉じる: 状態を持つUI（状態チップ・disabled・focus・hover・罫線など）は、その全バリアントの背景色/文字色/境界/focusリングまでトークンとして明示する。トークンが欠けるとモック側が値をその場で発明し、DESIGN.mdが単一の源でなくなる（round-tripが閉じない）。componentsに状態別バリアントを含め、モックがゼロ発明で組める状態にする。</li></ul>
+<hr>
+<h2>分類</h2>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>特徴</th></tr></thead><tbody><tr><td>コーポレート・クリーン</td><td>業務SaaSダッシュボード系。スレートネイビー＋技術的ブルー1色、詰めた余白、小さい角丸</td></tr><tr><td>エディトリアル・ウォーム</td><td>出版・ブランドジャーナル系。生成り＋高コントラストセリフ＋赤褐色1色、広い余白</td></tr><tr><td>プレイフル・スタートアップ</td><td>コンシューマーアプリ・LP系。ほぼ黒地本文＋コーラルと薄紫の2アクセント</td></tr><tr><td>ミニマル・ラグジュアリー</td><td>高級小売・ポートフォリオ系。ほぼ黒地＋アイボリー文字＋真鍮色を一箇所だけ</td></tr><tr><td>テクニカル・ブループリント</td><td>開発者ツール・インフラ管理系。インク黒＋ティール1色、等幅ラベル、罫線グリッド</td></tr><tr><td>信頼重視・パブリック</td><td>行政・公共サービス系。濃紺＋青1色、装飾ゼロ、コントラスト最優先</td></tr></tbody></table></div>
+<hr>
+<h2>判断基準</h2>
+<pre class="mermaid">flowchart LR
+    q1[&quot;既存のDesign.mdがあるか？&quot;]
+    new1[&quot;アーキタイプ6種から近いものを選んでもらう&quot;]
+    new2[&quot;Colors・Typographyを対話で決め試作①で視覚確認&quot;]
+    new3[&quot;Layout・Componentsを決め試作②で視覚確認&quot;]
+    lint[&quot;lintで検証しスナップショット保存&quot;]
+    imp1[&quot;コメント・改善要望を差分として整理&quot;]
+    imp2[&quot;影響するセクションだけ再対話（必要なら試作で確認）&quot;]
+    q1 --&gt;|&quot;ない（新規作成）&quot;| new1
+    q1 --&gt;|&quot;ある（改善）&quot;| imp1
+    new1 --&gt;|&quot;選択後&quot;| new2
+    new2 --&gt;|&quot;確定後&quot;| new3
+    new3 --&gt;|&quot;確定後&quot;| lint
+    imp1 --&gt;|&quot;整理後&quot;| imp2
+    imp2 --&gt;|&quot;反映後&quot;| lint</pre>
+<hr>
+<h2>実例</h2>
+<p>架空の図書館アプリのDesign.mdを作る場合。利用者が「信頼重視・パブリック」を指差したら、その雛形のcolors（濃紺＋青1色）を起点に対話を始める。「もう少し親しみが欲しい」という要望を受けて青をやや暖色寄りに振った候補2案をスウォッチ試作で見せ、選ばれた値をcolorsトークンに確定する。Layout確定後の試作②で「表の行間が詰まりすぎ」と分かればspacingを増やし、lintでコントラスト比を確認してからv1として保存する。公開後「ボタンが押せる感じがしない」というコメントが3件付いたら、Componentsセクションのbutton-primaryへの差分として反映しv2を保存する。</p>
+<hr>
+<h2>アンチパターン</h2>
+<div class="table-scroll"><table><thead><tr><th>アンチパターン</th><th>問題点</th></tr></thead><tbody><tr><td>独自フォーマットの発明</td><td>既存のlint/diffツールが使えなくなり、他エージェントとの互換性も失う</td></tr><tr><td>言葉だけのトークン確定</td><td>「落ち着いた青で」の解釈が人により違い、実装後に大きな手戻りが起きる</td></tr><tr><td>トークン1個ごとの試作生成</td><td>対話のリズムが壊れ、利用者が疲弊する。試作はセクションのまとまり（2チェックポイント）で生成する</td></tr><tr><td>ゼロからの言語化要求</td><td>非デザイナーは要望を言語化しきれず、対話が空転する。選択肢の指差しから始める</td></tr><tr><td>特定企業デザインの複製</td><td>実在企業のトークンを抽出・同梱すると商標・トレードドレス上のリスクを負う。想起ワードは業種レベルに留める</td></tr><tr><td>パターンだけの修正</td><td>コメントの学びをDesign.mdへ還元しないと、次のパターン生成で同じ指摘が再発する</td></tr><tr><td>状態トークンの取りこぼし</td><td>チップ背景・disabled・focus・hover・罫線をトークン化せず本文の言及だけで済ませると、モックが複数の値を即興し、DESIGN.mdとモックの二重管理になりround-tripが閉じない</td></tr></tbody></table></div>
+<hr>
+<h2>出典・根拠の透明性</h2>
+<p>google-labs-code/design.md（Google Labs, 2026年時点のREADME・spec）のフォーマット仕様の要約と、waffleプロジェクトのブレインストーミング（docs/brainstorm/brainstorm-self-hosted-artifact-design-skill.md 論点10・11）で合意した運用規約の再構成。直接引用ではない。</p>
+<h3>留保事項</h3>
+<p>design.md仕様はalpha版であり、トークンスキーマ・セクション構成は今後変わる可能性がある。</p>
+<hr>
+<h2>関連概念</h2>
+<div class="table-scroll"><table><thead><tr><th>関連概念</th><th>関係</th></tr></thead><tbody><tr><td>frontend-design-principles</td><td>試作artifactを生成する際の品質判断基準を提供する</td></tr><tr><td>design-system-tokens</td><td>トークンという概念自体の設計原則を提供する</td></tr><tr><td>accessibility-baseline</td><td>lintで確認するコントラスト等の最低基準の背景を提供する</td></tr></tbody></table></div>
+  </article>
+</div>
+<script>mermaid.initialize({startOnLoad: true});</script>
+</body>
+</html>

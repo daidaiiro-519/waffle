@@ -1,3 +1,12 @@
+---
+id: "sd-document-management"
+type: "subdomain"
+title: "Documentの生成・読取・描画を担うサブドメイン：sd-document-management"
+description: "AI に構造を推論させず、システムが決定的に Document を生成(scaffold)・読取(query)・描画(render)する中核の業務領域。waffle の差別化そのもの（Harness 原則と UDD ループ）を担う。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # Documentの生成・読取・描画を担うサブドメイン：sd-document-management
 
 ## 名前

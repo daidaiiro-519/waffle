@@ -1,0 +1,1 @@
+../../../../../.waffle/knowledge/ACTIVE/knowledge-cand-declared-constraints-require-self-check.md

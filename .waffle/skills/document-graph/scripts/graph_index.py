@@ -148,7 +148,7 @@ def _target_to_id(target: str) -> str | None:
     return stem or None
 
 
-def _node_from_md(path: Path, node_id: str) -> tuple[dict, list[str]]:
+def _node_from_md(path: Path, node_id: str) -> tuple[dict, list[str], str]:
     text = path.read_text(encoding="utf-8")
     frontmatter, body = parse_md(text)
     title = frontmatter.get("title")
@@ -167,10 +167,10 @@ def _node_from_md(path: Path, node_id: str) -> tuple[dict, list[str]]:
         "hasContract": bool(frontmatter),
     }
     links = _extract_md_links(body)
-    return node, links
+    return node, links, body
 
 
-def _node_from_html(path: Path, node_id: str) -> tuple[dict, list[str]]:
+def _node_from_html(path: Path, node_id: str) -> tuple[dict, list[str], str]:
     text = path.read_text(encoding="utf-8")
     meta = parse_html_meta(text)
     tags = meta.get("tags", [])
@@ -183,7 +183,29 @@ def _node_from_html(path: Path, node_id: str) -> tuple[dict, list[str]]:
         "hasContract": bool(meta),
     }
     links = _extract_html_links(text)
-    return node, links
+    return node, links, text
+
+
+def _build_mention_regex(ids_sorted_desc: list[str]) -> re.Pattern | None:
+    """既知のID群を、長い順に並べた単語境界一致の正規表現へまとめる。長い順にする
+    ことで、'uc-render-document-viewer' 中に含まれる 'uc-render-document' を
+    部分一致で誤検出しない（re.finditer/findallは同じ開始位置でalternationの
+    先頭から順に試すため、長い候補を先に置けば貪欲に長い方が優先される）。"""
+    if not ids_sorted_desc:
+        return None
+    pattern = "|".join(re.escape(i) for i in ids_sorted_desc)
+    return re.compile(rf"\b(?:{pattern})\b")
+
+
+def _extract_mentions(text: str, mention_re: re.Pattern | None) -> list[str]:
+    """本文中に、Markdownリンク/`<a href>`の形を取らない素のテキストとして書かれた
+    既知ID（例: 箇条書きの'- uc-render-document'）も、ファイル名ID解決の対象として
+    エッジ候補に含める。相対パスの有無に関わらず、ID文字列そのものが本文中に
+    現れていれば紐づく、という設計（Waffleのレンダリングが実際のハイパーリンクを
+    出力しているかどうかに依存しない）。"""
+    if mention_re is None:
+        return []
+    return mention_re.findall(text)
 
 
 def scan_sources(sources_root: Path, sources: list[dict]) -> dict:
@@ -211,6 +233,7 @@ def scan_sources(sources_root: Path, sources: list[dict]) -> dict:
 
     nodes: list[dict] = []
     links_by_id: dict[str, list[str]] = {}
+    bodies_by_id: dict[str, str] = {}
     contract_missing: dict[str, int] = {}
     contract_total: dict[str, int] = {}
     for node_id, paths in by_id.items():
@@ -218,17 +241,25 @@ def scan_sources(sources_root: Path, sources: list[dict]) -> dict:
         file_path, alias = sorted(paths, key=lambda pa: str(pa[0]))[0]
         contract_total[alias] = contract_total.get(alias, 0) + 1
         if file_path.suffix == ".md":
-            node, links = _node_from_md(file_path, node_id)
+            node, links, body = _node_from_md(file_path, node_id)
         else:
-            node, links = _node_from_html(file_path, node_id)
+            node, links, body = _node_from_html(file_path, node_id)
         if not node.pop("hasContract"):
             contract_missing[alias] = contract_missing.get(alias, 0) + 1
         node["href"] = f"{alias}/{file_path.relative_to(sources_root / alias).as_posix()}"
         node["sourceAlias"] = alias
+        node["format"] = file_path.suffix.lstrip(".")
         nodes.append(node)
         links_by_id[node_id] = links
+        bodies_by_id[node_id] = body
 
     known_ids = {n["id"] for n in nodes}
+    # 本文中に正式なリンクの形を取らない素のID（例: 箇条書きの'- uc-render-document'）が
+    # あれば、それもエッジ候補に含める（document-graph側だけで完結する解決）。
+    mention_re = _build_mention_regex(sorted(known_ids, key=len, reverse=True))
+    for node_id, body in bodies_by_id.items():
+        links_by_id[node_id].extend(_extract_mentions(body, mention_re))
+
     edges = []
     seen_edges = set()
     for node_id, links in links_by_id.items():
@@ -292,6 +323,7 @@ def compute_categories(graph: dict) -> list[dict]:
             "title": n["title"],
             "description": n["description"],
             "href": n["href"],
+            "format": n.get("format") or ("html" if n["href"].endswith(".html") else "md"),
             "related": related_items,
         })
 

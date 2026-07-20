@@ -1,3 +1,12 @@
+---
+id: "bc-waffle"
+type: "bounded-context"
+title: "スキーマ駆動でDocumentを検証・生成・描画する境界づけられたコンテキスト：bc-waffle"
+description: "waffle の中核機能群が属する文脈。document.json を唯一の正とし、AI が構造を推論せず システムが機械的に読み書き・生成・描画する（Harness 原則）。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # スキーマ駆動でDocumentを検証・生成・描画する境界づけられたコンテキスト：bc-waffle
 
 ## 名前

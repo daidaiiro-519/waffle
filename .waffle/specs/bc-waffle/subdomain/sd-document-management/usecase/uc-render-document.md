@@ -4,6 +4,7 @@ type: "usecase"
 title: "Documentを人間可読な成果物へ描画する：RenderDocument"
 description: "検証済みの Document を schema の x-render に従って人間可読な成果物（SKILL.md / HTML）に描画し、配置先へ反映する。"
 tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
 ---
 
 # Documentを人間可読な成果物へ描画する：RenderDocument

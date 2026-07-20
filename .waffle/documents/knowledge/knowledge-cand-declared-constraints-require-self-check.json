@@ -1,0 +1,83 @@
+{
+  "documentId": "knowledge-cand-declared-constraints-require-self-check",
+  "documentType": "Knowledge",
+  "schemaRef": "KnowledgeSchema/v4",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "明文化した制約は自動的に守られない：declared-constraints-require-self-check"
+    },
+    "principles": {
+      "blockType": "Principles",
+      "title": "原則",
+      "items": [
+        "ガードレールや仕様書（DESIGN.md等）に制約・禁止事項を書いたという事実は、その後の生成がその制約に従うことを保証しない。制約の明文化と、生成物がその制約を満たしているかの確認は、別の独立した工程である。",
+        "制約を書いた直後の生成であっても、既定の言い回し・過去の文脈からの惰性で、明文化したばかりの制約に反する内容が紛れ込みうる。生成側は『さっき書いたから守っているはず』という思い込みに陥りやすい。",
+        "制約遵守を確実にするには、生成物を提示する前に、直前に明文化した制約と生成物を一つずつ照合する明示的な自己点検パスを挟む必要がある。この点検を省略すると、制約の明文化そのものが実質的な効果を持たない儀式になる。"
+      ]
+    },
+    "classifications": {
+      "blockType": "Classifications",
+      "title": "分類",
+      "items": [],
+      "emptyReason": "この概念は分類軸ではなく、制約明文化後に必ず行うべき単一の点検規律のため分類を持たない。"
+    },
+    "decisionCriteria": {
+      "blockType": "DecisionCriteria",
+      "title": "判断基準",
+      "emptyReason": "この概念は条件分岐ではなく、制約を明文化した後は常に実行すべき点検手順のため決定木を持たない。",
+      "stages": [],
+      "transitions": []
+    },
+    "examples": {
+      "blockType": "Examples",
+      "title": "実例",
+      "text": "架空の共有ツール「Bar」で、プロジェクトの仕様書（Design.md相当）のDo's/Don'tsに『インフラの実装詳細を前面の主張にしない』と明記した直後、同じ会話の中でヒーロー見出しに『売りはインフラではない』という否定形の文言を書き、さらにフッターには『Self-hosted on your Infra』という一文を残してしまった。仕様書に書いた制約と、直後に生成した文言を照合する工程が無かったため、明文化した直後にその制約を破った。"
+    },
+    "antiPatterns": {
+      "blockType": "AntiPatterns",
+      "title": "アンチパターン",
+      "items": [
+        {
+          "name": "制約の明文化を遵守の証明とみなす",
+          "problem": "ガードレールや仕様書に制約を書いた事実そのものを『もう守られている』のサインとして扱い、生成物を制約と照合する工程を省略すると、明文化した直後の生成物にすら同じ制約違反が残る。"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "provenance": {
+      "blockType": "Provenance",
+      "title": "出典・根拠の透明性",
+      "source": "design-share自身のLP作成セッションでの実例の再構成。Design.mdのDo's/Don'tsに書いた直後のヒーロー見出し・フッターで同じ制約に違反した経緯、および同セッションでSkillのガードレールに敵対的測定を明文化した直後の生成物にその測定を適用しなかった経緯を一般化した。",
+      "caveats": "本セッション内の2つの近接した事例（Design.mdの制約違反／ガードレール未適用）からの一般化であり、時間的に離れた場面（制約明文化から生成までに間隔がある場合）でも同じ構造の欠陥が生じるかは未検証。"
+    },
+    "relatedConcepts": {
+      "blockType": "RelatedConcepts",
+      "title": "関連概念",
+      "items": [
+        {
+          "conceptId": "knowledge-cand-scoped-validation-does-not-propagate",
+          "note": "どちらも『一度行った/書いたことが自動的に他へ及ぶ』という誤った期待を扱うが、この概念は検証済みの修正の伝播ではなく、明文化した制約そのものへの自己点検の欠如を扱う"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "仕様書やガードレールに制約を書いた直後の生成物は、その制約を守っていると信頼してよいか？",
+        "制約の明文化と、生成物がその制約を満たしていることの確認を、どう分けて扱うべきか？"
+      ],
+      "text": "ガードレールや仕様書に制約を明文化した事実は、その後の生成がその制約に従うことを保証しない。生成物を提示する前に、直前に明文化した制約と照合する明示的な自己点検パスが必要という規律。"
+    }
+  },
+  "tags": [
+    "domain:process",
+    "framework:generation-quality"
+  ],
+  "skillRefs": [
+    "design-share"
+  ]
+}

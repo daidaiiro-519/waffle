@@ -3,6 +3,7 @@ id: "uc-render-blank-template"
 type: "usecase"
 title: "スキーマが宣言する値の記入指示をプレースホルダーとして描画する：RenderBlankTemplate"
 description: "schemaRef（と必要ならdiscriminator）から、値を一切埋めていない状態のcontent構造を、各フィールドの記入指示（x-prompt-write）をプレースホルダーとして埋め込んだMarkdownとして描画する。"
+schemaRef: "DomainSpecSchema/v8"
 ---
 
 # スキーマが宣言する値の記入指示をプレースホルダーとして描画する：RenderBlankTemplate

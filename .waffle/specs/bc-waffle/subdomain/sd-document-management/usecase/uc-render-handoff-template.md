@@ -3,6 +3,7 @@ id: "uc-render-handoff-template"
 type: "usecase"
 title: "Handoff document.jsonを固定HTMLテンプレートへ描画する：RenderHandoffTemplate"
 description: "Handoff document.jsonの内容を、確定済みの固定HTMLテンプレート（完成イメージ・レビュー状況・詳細タブ）へ描画し、人間が読める成果物として書き出す"
+schemaRef: "DomainSpecSchema/v8"
 ---
 
 # Handoff document.jsonを固定HTMLテンプレートへ描画する：RenderHandoffTemplate

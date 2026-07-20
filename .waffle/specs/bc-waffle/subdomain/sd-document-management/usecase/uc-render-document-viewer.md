@@ -3,6 +3,7 @@ id: "uc-render-document-viewer"
 type: "usecase"
 title: "MD正本をCSS付きHTMLで閲覧できる汎用viewerへ描画する：RenderDocumentViewer"
 description: "対象Documentのcanonical MD（RenderDocumentの出力）を、CSSの効いた自己完結HTMLへ変換し、読み取り専用の投影として書き出す"
+schemaRef: "DomainSpecSchema/v8"
 ---
 
 # MD正本をCSS付きHTMLで閲覧できる汎用viewerへ描画する：RenderDocumentViewer

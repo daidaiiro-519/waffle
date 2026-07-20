@@ -1,0 +1,196 @@
+<!--
+  DESIGN.md 視覚スペックシート（body fragment）— design-share Skill
+
+  用途:
+    DESIGN.md（google-labs-code/design.md仕様）を「関係者がレビューして確定する」ための
+    視覚的な一覧（リビングスタイルガイド）としてレンダリングするための本体断片。
+    これは単独ページではなく、template-pattern-page.html の {{モック本体}} スロットに
+    そのまま流し込む断片である。そうすることで、UIモックと同じ配信・コメント・トークンゲートの
+    パイプライン（ds.sh deploy → URL＋トークン → コメント同期）にそのまま乗る。
+
+  レビュー→確定の流れ:
+    1. このスペックシートを ds.sh deploy で type:design-review として公開する
+    2. 関係者がコメント欄で「この方向でOK / 修正希望」を名前付きで返す
+    3. 合意できたら ds.sh confirm-design でDESIGN.md本体を正式な配置場所へ置く
+
+  生成方法（手動転記ではなく機械変換）:
+    scripts/render_spec_sheet.mjs <DESIGN.mdパス> <出力htmlパス> を実行する。
+    @google/design.md の公式lintパイプラインでDESIGN.mdを解析し、下記の {{...}} プレースフォルダーを
+    解決済みトークンからすべて機械的に埋める。値をこの場で発明しない（round-tripを閉じる）。
+
+  デザイン方針（案A・サイドナビ型を採用。2026-07-20）:
+    このテンプレートは毎回異なるプロジェクトのDESIGN.mdを表示する共通chrome。
+    表示対象の題材と視覚的に競合しない中立なツール的見た目（淡色・サンセリフ・素直な情報設計）を保ち、
+    読み物ではなく「見て判断する」レビューUIとして走査しやすい構成（セクション別サイドナビ）にする。
+
+  プレースフォルダー定義票（DESIGN.mdのフロントマター／本文から機械的に導出する）:
+  | プレースフォルダー | 記入する内容（DESIGN.md上の対応） |
+  |---|---|
+  | {{デザイン名}}            | frontmatter name |
+  | {{デザイン説明}}          | frontmatter description |
+  | {{バージョン表記}}        | 任意。スナップショット版（例: v2・2026-07-18）。無ければ「ドラフト」 |
+  | {{カラースウォッチ群}}     | colors の各トークンを1枚のスウォッチにする。text色は対neutralコントラスト比を添える（4.5:1以上=pass） |
+  | {{タイポグラフィ見本群}}   | typography の各ロールを実サイズで1行ずつ描画する |
+  | {{スケール見本}}          | spacing・rounded の各値を四角の大きさ/角丸で視覚化する |
+  | {{コンポーネント見本群}}   | components の各トークンを実物で描画する。値はトークンから取り、その場で発明しない。不明なサブトークン・未解決参照はgapとして明示する |
+  | {{Overview本文}}          | DESIGN.md本文の Overview セクションをMarkdown→HTML変換したもの |
+  | {{Layout本文}}            | DESIGN.md本文の Layout セクションをMarkdown→HTML変換したもの |
+  | {{Elevation本文}}         | DESIGN.md本文の Elevation & Depth セクションをMarkdown→HTML変換したもの。無ければ「未記載」と明示する |
+  | {{Shapes本文}}            | DESIGN.md本文の Shapes セクションをMarkdown→HTML変換したもの。無ければ「未記載」と明示する |
+  | {{Doリスト}}              | DESIGN.md本文の Do's and Don'ts セクションのうち Do: の各行を <li> にしたもの |
+  | {{Dontリスト}}            | 同 Don't: の各行を <li> にしたもの |
+
+  設計上の前提（変更しないこと）:
+  - 値はすべてDESIGN.mdのトークンから導出し、この場で新しい色・サイズを発明しない（round-tripを閉じる）
+  - スコープ付きの <style> は .dspec 配下だけに効かせ、親ページのコメント欄・backbarと衝突させない
+-->
+<style>
+  /* スペックシート専用スタイル（.dspec配下限定）。値はデザイントークンではなくシート自身の体裁。
+     地色は真の中立グレー（暖色寄りのcream等にしない）でDESIGN.md側のneutralと視覚的に競合させない */
+  .dspec { display: grid; grid-template-columns: 200px 1fr; min-height: 100%; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif; color: #20241F; background: #fff; transition: grid-template-columns .18s ease; }
+  .dspec.nav-collapsed { grid-template-columns: 40px 1fr; }
+  @media (max-width: 620px) { .dspec { grid-template-columns: 1fr; } }
+
+  /* 折りたたみ時も帯として残し、開閉ボタンだけをその場に置く（本文への重なりを避ける） */
+  .dspec .sidenav { border-right: 1px solid #E5E5E5; padding: 20px 0; background: #FAFAFA; overflow: hidden; white-space: nowrap; }
+  @media (max-width: 620px) { .dspec .sidenav { display: none; } }
+  .dspec .sidenav .navhead { display: flex; align-items: center; justify-content: space-between; padding: 0 8px 14px; border-bottom: 1px solid #EDEDED; margin-bottom: 8px; }
+  .dspec.nav-collapsed .sidenav .navhead { justify-content: center; padding: 0 0 14px; }
+  .dspec .sidenav .brand { font-weight: 800; font-size: .9rem; padding-left: 8px; }
+  .dspec.nav-collapsed .sidenav .brand { display: none; }
+  .dspec .sidenav .navtoggle { background: none; border: 1px solid #D8D8D8; border-radius: 4px; width: 24px; height: 24px; padding: 0; font-size: .7rem; line-height: 1; color: #666; cursor: pointer; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
+  .dspec .sidenav a { display: block; padding: 8px 16px; font-size: .84rem; color: #666; text-decoration: none; border-left: 3px solid transparent; }
+  .dspec .sidenav a:hover { color: #20241F; background: #F0F0F0; }
+  .dspec.nav-collapsed .sidenav a { display: none; }
+
+  .dspec .main { padding: 28px 32px; min-width: 0; }
+  .dspec .main h1.title { font-size: 1.4rem; margin: 0 0 4px; font-weight: 800; }
+  .dspec .main .desc { color: #666; margin: 0 0 8px; font-size: .88rem; line-height: 1.6; }
+  .dspec .main .ver { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+    background: #F0F0F0; color: #666; padding: .2rem .6rem; }
+  .dspec .main .lead { color: #666; font-size: .84rem; margin: .8rem 0 1.8rem; line-height: 1.6; max-width: 62ch; }
+
+  .dspec section { margin: 0 0 2.2rem; scroll-margin-top: 16px; }
+  .dspec h2.sec { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: #666; margin: 0 0 14px; font-weight: 700; padding-bottom: 8px; border-bottom: 1px solid #E5E5E5; }
+  .dspec .gap { color: #8A3A2E; font-size: .82rem; margin: .5rem 0 1rem; line-height: 1.6; border-left: 3px solid #8A3A2E; padding-left: .7rem }
+
+  .dspec .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .dspec .swatch { background: #fff; border: 1px solid #E5E5E5; border-radius: 8px; overflow: hidden; }
+  .dspec .swatch .chip { height: 52px; }
+  .dspec .swatch .meta { padding: 8px 10px; font-size: .78rem; }
+  .dspec .swatch .tok { font-weight: 700; }
+  .dspec .swatch .hex { font-family: ui-monospace, monospace; color: #666; font-size: .72rem; }
+  .dspec .swatch .cr { display: inline-block; font-size: .66rem; font-weight: 700; padding: .05rem .35rem; margin-top: .3rem; border-radius: 4px; }
+  .dspec .swatch .cr.pass { background: #E1EFE5; color: #0e5a38; }
+  .dspec .swatch .cr.warn { background: #F6EEDD; color: #9a6300; }
+
+  .dspec .typerow { background: #fff; border: 1px solid #E5E5E5; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .dspec .typerow .lbl { font-family: ui-monospace, monospace; font-size: .7rem; color: #666; }
+
+  .dspec .scale { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: flex-end; }
+  .dspec .scale .u { text-align: center; font-size: .72rem; color: #666; }
+  .dspec .scale .box { background: #B0552C; margin: 0 auto .3rem; }
+
+  .dspec .previews { display: flex; flex-direction: column; gap: 10px; }
+  .dspec .preview { background: #fff; border: 1px solid #E5E5E5; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .dspec .preview .cap { font-family: ui-monospace, monospace; font-size: .72rem; color: #666; flex: 0 0 auto; min-width: 100px; }
+
+  .dspec .prose p { line-height: 1.75; font-size: .92rem; }
+  .dspec .prose ul { line-height: 1.75; font-size: .92rem; }
+  .dspec .dl { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 480px) { .dspec .dl { grid-template-columns: 1fr; } }
+  .dspec .dl .col { background: #fff; border: 1px solid #E5E5E5; border-radius: 8px; padding: 14px 16px; }
+  .dspec .dl .col h3 { margin: 0 0 .5rem; font-size: .88rem; }
+  .dspec .dl .col.do h3 { color: #0e5a38; }
+  .dspec .dl .col.dont h3 { color: #8A3A2E; }
+  .dspec .dl ul { margin: 0; padding-left: 1.1rem; }
+  .dspec .dl li { margin: .35rem 0; }
+</style>
+
+<div class="dspec" id="dspec-root">
+
+  <nav class="sidenav">
+    <div class="navhead">
+      <div class="brand">DESIGN.md</div>
+      <button class="navtoggle" id="dspec-navtoggle" aria-label="サイドメニューを閉じる" title="サイドメニューを閉じる">◂</button>
+    </div>
+    <a href="#dspec-colors">Colors</a>
+    <a href="#dspec-typography">Typography</a>
+    <a href="#dspec-layout">Layout</a>
+    <a href="#dspec-elevation">Elevation &amp; Depth</a>
+    <a href="#dspec-shapes">Shapes</a>
+    <a href="#dspec-scale">Scale</a>
+    <a href="#dspec-components">Components</a>
+    <a href="#dspec-dodont">Do's &amp; Don'ts</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title">{{デザイン名}}</h1>
+    <p class="desc">{{デザイン説明}}</p>
+    <span class="ver">{{バージョン表記}}</span>
+    <p class="lead">これは<b>デザインの決めごと（DESIGN.md）を確認するためのスペックシート</b>です。実際の画面ではありません。各項目はDESIGN.mdのトークンをそのまま表示しています。右のコメント欄で「この方向でOK／修正希望」を返してください。</p>
+
+    <section id="dspec-overview" class="prose">
+      <h2 class="sec">Overview</h2>
+      {{Overview本文}}
+    </section>
+
+    <section id="dspec-colors">
+      <h2 class="sec">Colors</h2>
+      <div class="swatches">{{カラースウォッチ群}}</div>
+    </section>
+
+    <section id="dspec-typography">
+      <h2 class="sec">Typography</h2>
+      {{タイポグラフィ見本群}}
+    </section>
+
+    <section id="dspec-layout" class="prose">
+      <h2 class="sec">Layout</h2>
+      {{Layout本文}}
+    </section>
+
+    <section id="dspec-elevation" class="prose">
+      <h2 class="sec">Elevation &amp; Depth</h2>
+      {{Elevation本文}}
+    </section>
+
+    <section id="dspec-shapes" class="prose">
+      <h2 class="sec">Shapes</h2>
+      {{Shapes本文}}
+    </section>
+
+    <section id="dspec-scale">
+      <h2 class="sec">Scale</h2>
+      <div class="scale">{{スケール見本}}</div>
+    </section>
+
+    <section id="dspec-components">
+      <h2 class="sec">Components</h2>
+      <div class="previews">{{コンポーネント見本群}}</div>
+    </section>
+
+    <section id="dspec-dodont" class="prose">
+      <h2 class="sec">Do's &amp; Don'ts</h2>
+      <div class="dl">
+        <div class="col do"><h3>Do</h3><ul>{{Doリスト}}</ul></div>
+        <div class="col dont"><h3>Don't</h3><ul>{{Dontリスト}}</ul></div>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<script>
+(function () {
+  var root = document.getElementById('dspec-root');
+  var toggleBtn = document.getElementById('dspec-navtoggle');
+  if (!root || !toggleBtn) return;
+  toggleBtn.addEventListener('click', function () {
+    var collapsed = root.classList.toggle('nav-collapsed');
+    toggleBtn.textContent = collapsed ? '▸' : '◂';
+    toggleBtn.title = collapsed ? 'サイドメニューを開く' : 'サイドメニューを閉じる';
+    toggleBtn.setAttribute('aria-label', toggleBtn.title);
+  });
+})();
+</script>

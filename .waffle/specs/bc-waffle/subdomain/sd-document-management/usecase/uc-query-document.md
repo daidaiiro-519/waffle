@@ -4,6 +4,7 @@ type: "usecase"
 title: "Documentから必要な意味単位だけを取得する：QueryDocument"
 description: "AI がファイルを直接読まずに、Document の必要な意味単位（ブロック・フィールド・条件一致・全階層）だけを取得する。"
 tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
 ---
 
 # Documentから必要な意味単位だけを取得する：QueryDocument

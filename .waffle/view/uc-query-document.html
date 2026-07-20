@@ -1,0 +1,241 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentから必要な意味単位だけを取得する：QueryDocument</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.75; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+.masthead h1 { font-family: var(--serif); font-size: clamp(1.4rem, 3.2vw, 1.9rem); font-weight: 600; margin: 0.35rem 0 0.9rem; text-wrap: balance; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.9rem; }
+.tag-pill { font-family: var(--mono); font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--line); }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.76rem; color: var(--ink-faint); border-top: 1px solid var(--line); padding-top: 0.8rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.masthead .description { color: var(--ink-dim); margin: 0 0 0.9rem; max-width: 68ch; overflow-wrap: anywhere; }
+article { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 2rem 2.2rem 2.4rem; }
+article h1 { font-family: var(--serif); font-size: clamp(1.3rem, 3vw, 1.7rem); margin: 0 0 1rem; }
+article h2 { font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 2.2rem 0 0.9rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line); }
+article > h2:first-of-type, article > h1:first-child + h2 { margin-top: 0; }
+article h3 { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; color: var(--ink); margin: 1.4rem 0 0.6rem; }
+article p { margin: 0 0 0.9rem; max-width: 68ch; overflow-wrap: anywhere; }
+article ul, article ol { margin: 0 0 0.9rem; padding-left: 1.3rem; max-width: 68ch; }
+article li { margin-bottom: 0.35rem; overflow-wrap: anywhere; }
+article strong { color: var(--ink); }
+.table-scroll { overflow-x: auto; margin-bottom: 1.2rem; }
+article table { border-collapse: collapse; width: 100%; min-width: max-content; font-size: 0.9rem; }
+article th, article td { text-align: left; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+article th { font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; border-bottom: 1.5px solid var(--ink-faint); }
+article tr:last-child td { border-bottom: none; }
+article code { font-family: var(--mono); font-size: 0.87em; background: var(--surface-sunken); border: 1px solid var(--line); border-radius: 4px; padding: 0.08em 0.4em; }
+article pre { font-family: var(--mono); font-size: 0.83rem; line-height: 1.65; background: var(--surface-sunken); border: 1px solid var(--line); border-radius: 8px; padding: 0.9rem 1.1rem; margin: 0 0 1.2rem; overflow-x: auto; white-space: pre-wrap; }
+article pre code { background: none; border: none; padding: 0; }
+article pre.mermaid { text-align: center; background: var(--surface-sunken); }
+article pre.mermaid svg { max-width: 100%; }
+article hr { border: none; border-top: 1px solid var(--line); margin: 1.8rem 0; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Document Viewer</div>
+    <h1>Documentから必要な意味単位だけを取得する：QueryDocument</h1>
+    <p class="description">AI がファイルを直接読まずに、Document の必要な意味単位（ブロック・フィールド・条件一致・全階層）だけを取得する。</p>
+    <div class="meta-row">
+      <span class="tag-pill">context:waffle</span>
+    </div>
+    <dl>
+      <dt>documentId</dt><dd>uc-query-document</dd>
+      <dt>schemaRef</dt><dd>DomainSpecSchema/v8</dd>
+      <dt>updatedAt</dt><dd></dd>
+    </dl>
+  </header>
+  <article>
+<h1>Documentから必要な意味単位だけを取得する：QueryDocument</h1>
+<h2>概要</h2>
+<ul><li>AI がファイルを直接読まずに、Document の必要な意味単位（ブロック・フィールド・条件一致・全階層）だけを取得する。</li></ul>
+<hr>
+<h2>存在意義</h2>
+<ul><li>AIがDocument全文をファイルとして直接読むと、無関係なブロックまでコンテキストに含めてトークンを浪費し、document.jsonの内部構造（schemaの実装詳細）に直接依存したコードを書き始めてしまう。意味単位だけを取得する経路が無ければ、AIとdocument.jsonの間で保つべき疎結合（テキストベースの入出力）が崩れる。当初17種類の名前付きoperationのうち、get_block/get_field/get_items/get_item_field/get_items_slice/filter_items/filter_exists/get_by_id/get_nested_items/get_childrenの10操作は、いずれも『1ブロックの内側を起点に値を取り出す』という同じ責務のバリエーションであり、絞り込み・整形パターンが増えるたびにoperation名・CLI/MCPツール・実装コードが個別に増殖していた。ddd-advisor/tech-lead-advisorとの合意により、この10操作をJMESPath式1本で表現する新operation query_path へ統合した（式言語自体の表現力で吸収し、『値を返す全操作にpromptが付く』という既存の一貫性は、blockKeyスコープを必須にすることで維持している。統合後はこの10操作自体をspec・実装の両方から削除し、現在query_documentが持つ意味単位取得operationはscan/get_meta/index_scan/find_all/resolve_ref/query_pathの6種のみである）。find_all（深さ不定の再帰探索。JMESPath標準構文に対応する演算子が無い）とresolve_ref（ツリー検索ではなくWaffle固有の参照解決ロジックそのもの）は統合不可のため対象外とし、index_scan/get_meta/scanはschemaとの突き合わせという別責務のため対象外とする（この3つを一括りに『発見系』と呼ぶことの妥当性自体はddd-advisorから再検討の指摘があり、別スコープで扱う）。複数document横断検索を担うuc-query-document-collection（grep_documents/filter_documents/index_scan_documents）も、実装メカニズムを共有できることと責務が同じであることは別問題であるとddd-advisorへの再確認で判定され、統合対象に含めない（推奨: 内部実装だけ共有し、usecase・CLI・MCPツールとしての分離は維持する）。複数document横断でindexとtagsを集約する操作（旧index_scan_dir）は、ddd-advisorのbounded-context違反指摘により、単一document起点の本usecaseから複数document横断が本来の関心事であるuc-query-document-collection側へindex_scan_documentsとして移動した。</li></ul>
+<hr>
+<h2>主アクターと意図</h2>
+<h3>主アクター</h3>
+<p>Orchestrator（HarnessAgent）</p>
+<h3>意図</h3>
+<p>対象 Document から欲しい意味単位を取得し、読み方の指針とともに受け取る</p>
+<hr>
+<h2>操作一覧</h2>
+<div class="table-scroll"><table><thead><tr><th>操作</th><th>概要</th></tr></thead><tbody><tr><td><code>scan</code></td><td>ファイルの生テキストをそのまま返す</td></tr><tr><td><code>get_meta</code></td><td>documentId等のメタフィールドだけを返す</td></tr><tr><td><code>index_scan</code></td><td>各ブロックのblockTypeとprompt（読み方指針）をschemaから動的算出して返す</td></tr><tr><td><code>find_all</code></td><td>全階層に出現する指定フィールドの値を再帰収集して返す</td></tr><tr><td><code>resolve_ref</code></td><td>参照フィールドfieldの値と、targetSchemaRefが宣言するx-source-targetテンプレートから、参照先Documentのpathを算出して返す（中身は取得しない）</td></tr></tbody></table></div>
+<hr>
+<h2>事前条件</h2>
+<ul><li>対象 Document のパスが要望テキストで与えられている</li></ul>
+<hr>
+<h2>基本フロー</h2>
+<pre class="mermaid">sequenceDiagram
+    actor Orchestrator
+    Orchestrator-&gt;&gt;Document: operation と対象パスを指定して問い合わせる
+    Document-&gt;&gt;Document: 対象の意味単位を取り出す
+    Document--&gt;&gt;Orchestrator: { prompt, value } を返す
+    Document-&gt;&gt;Document: query_pathの場合: blockKey指定時はcontent[blockKey]を起点に、省略時はcontent配下の全blockKeyを起点に、JMESPath式pathを評価する（regex_match(text, pattern)カスタム関数を含む）
+    Document-&gt;&gt;Document: blockKey指定時: 単一ブロックの評価結果を{ documentId, prompt, value }として組み立てる（promptはblockKeyから_block_prompt()と同じ仕組みで導出）
+    Document-&gt;&gt;Document: blockKey省略時: 全blockKeyのうちvalueが空でなかったブロックだけを{ blockKey, prompt, value }の配列resultsへ集約する（ヒットしなかったブロックは応答から省略する）
+    Document--&gt;&gt;Orchestrator: blockKey指定時は{ documentId, prompt, value }、省略時は{ documentId, results }を返す（pathの構文エラー時はjmespathの生例外ではなくWaffle独自のエラーへ変換して返す）</pre>
+<hr>
+<h2>事後条件</h2>
+<ul><li>要求された意味単位が value として返る</li><li>全operationで、value の読み方の指針が prompt に付く（ブロック/配列取得時はx-prompt-query由来、それ以外は操作の性質に基づく固定文言）</li><li>対象ブロックがx-prompt-interpret（値の解釈指針・誤読しやすい点への注意）を宣言しているとき、promptとは別にcautionが付く（宣言が無いブロックではcautionキー自体が省略される）</li></ul>
+<hr>
+<h2>受け入れ基準</h2>
+<ul><li>When operationと対象パスが与えられ、対象がschemaRefを持つDocumentであるとき、システムは結果を{ prompt, value }形式で返す shall。</li><li>When ブロック/配列を取得したとき、promptに対象ブロックの読み方の指針（x-prompt-query由来）を含める shall。</li><li>When get_meta/scan/index_scan/find_allを実行したとき、promptにその操作の性質に基づく固定の読み方の指針を含める shall（schemaから動的に導出できない場合もpromptを省略しない）。</li><li>When 対象ブロックがx-prompt-interpretを宣言しているとき、システムはpromptとは別にcautionフィールドへ値の解釈指針を含める shall。</li><li>While 対象ブロックがx-prompt-interpretを宣言していないとき、システムはcautionキー自体を省略する shall（必要なデータだけを返す）。</li><li>If operationが未知のとき、システムはINVALID_OPERATIONエラーを返す shall。</li><li>If 対象パスが存在しないとき、システムはINVALID_PATHエラーを返す shall。</li><li>If 指定したblockKeyが存在しないとき、システムはNOT_FOUNDエラーを返す shall。</li><li>If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: &quot;raw&quot;, content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: &lt;固定文言&gt;, value: &lt;生テキスト&gt; }を返す）。</li><li>When operationにresolve_refを指定したとき、システムは対象Documentのfieldの値をdocumentId、対象Document自身が持つ他の参照フィールドをテンプレート変数として、targetSchemaRef（discriminatorを持つschemaの場合はtargetDiscriminatorで対象種別を指定する）のx-source-targetテンプレートに埋め込み、参照先Documentのpathを算出してvalueに返す shall（参照先Documentの中身は取得しない）。</li><li>If resolve_refでテンプレート変数を解決できないとき、システムはMISSING_TEMPLATE_VARエラーを返す shall。</li><li>When operationにquery_pathをblockKey指定で実行したとき、システムはdoc[&quot;content&quot;][blockKey]を起点にJMESPath式pathを評価し、{ documentId, prompt, value }形式で返す shall（promptは_block_prompt()と同じ仕組みでblockKeyから導出する）。</li><li>When operationにquery_pathをblockKey省略で実行したとき、システムはdoc[&quot;content&quot;]配下の全blockKeyに同じ相対式pathを評価し、{ documentId, results: [{ blockKey, prompt, value }, ...] }形式で返す shall。</li><li>While operationにquery_pathをblockKey省略で実行し、あるblockKeyの評価結果valueが空であるとき、システムはそのblockKeyをresultsから省略する shall（ヒットしなかったブロックについて沈黙する）。</li><li>When query_pathのpath式内でregex_match(text, pattern)を使用したとき、システムはjmespath.functions.Functionsを継承したカスタム関数として、既存のfilter_pattern相当の正規表現マッチングを行う shall。</li><li>If query_pathのpathがJMESPathとして構文エラーであるとき、システムはjmespathの生例外をそのまま返さず、Waffle独自のエラーコード・メッセージへ変換して返す shall。</li><li>While query_pathを実行するとき、pathは常に1ブロックの内側を起点とした相対式として評価される shall（doc全体や複数blockTypeを跨ぐ横断検索が必要な場合は既存のfind_allを使う）。</li><li>While operationにquery_pathをblockKey省略で実行し、あるblockKeyに対するpathの評価がJMESPathの評価時型エラー（式の形が対象ブロックの構造に合わない）になったとき、システムはそのblockKeyを結果から静かにスキップし、クエリ全体を失敗させない shall（構文エラーとは区別する。全blockKeyがスキップされresultsが空配列になるのも正常系とする）。</li><li>If operationにquery_pathをblockKey指定で実行し、pathの評価がJMESPathの評価時型エラーになったとき、システムはINVALID_JMESPATH_EXPRESSIONエラーを返す shall（ユーザーが明示指定した単一ブロックに式が合わなかったことをそのまま伝える）。</li></ul>
+<hr>
+<h2>操作保証</h2>
+<ul><li>When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。</li><li>When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。</li></ul>
+<hr>
+<h2>エラー</h2>
+<div class="table-scroll"><table><thead><tr><th>コード</th><th>条件</th></tr></thead><tbody><tr><td><code>INVALID_OPERATION</code></td><td>- operation が定義外</td></tr><tr><td><code>MISSING_PARAM</code></td><td>- 必須パラメータが欠落</td></tr><tr><td><code>NOT_FOUND</code></td><td>- 指定した blockKey に一致するブロックが存在しない</td></tr><tr><td><code>INVALID_JMESPATH_EXPRESSION</code></td><td>- query_path の expression が構文エラー、またはblockKey指定時に評価時型エラーになった</td></tr><tr><td><code>MISSING_TEMPLATE_VAR</code></td><td>- resolve_ref でテンプレート変数（contextRef等）を解決できない</td></tr></tbody></table></div>
+<hr>
+<h2>受け入れシナリオ</h2>
+<h3>未知の operation はエラーを返す</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>異常系</td><td>エラー：未知 operation は INVALID_OPERATION</td></tr></tbody></table></div>
+<pre><code>Scenario: 未知の operation はエラーを返す
+  When 未知の operation を実行する
+  Then INVALID_OPERATION エラーが返る</code></pre>
+<h3>scanは生テキストを返す</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>ファイル単位：scanはファイルをそのまま読む(prompt=null)</td></tr></tbody></table></div>
+<pre><code>Scenario: scanは生テキストを返す
+  Given query システム と対象 Document
+  When operation scan を実行する
+  Then value は生テキストであり、prompt にはこの値の読み方の指針が入る</code></pre>
+<h3>get_metaはメタ情報を返す</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>ファイル単位：get_metaはdocumentId等のメタフィールドのみを返す</td></tr></tbody></table></div>
+<pre><code>Scenario: get_metaはメタ情報を返す
+  Given query システム と対象 Document
+  When operation get_meta を実行する
+  Then value にはdocumentId等のメタフィールドのみが含まれ、prompt にはこの値の読み方の指針が入る</code></pre>
+<h3>index_scanはblockTypeとpromptをschemaから動的算出する</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>ファイル単位：index_scanは_indexを保存せず読み取り時に動的算出する</td></tr></tbody></table></div>
+<pre><code>Scenario: index_scanはblockTypeとpromptをschemaから動的算出する
+  Given query システム と対象 Document
+  When operation index_scan を実行する
+  Then 各blockのblockTypeとx-prompt-query由来のpromptが返り、トップレベルのpromptには各要素のpromptを参照する案内が入る</code></pre>
+<h3>find_allは全階層を再帰収集する</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>再帰：find_allはネスト構造の全階層からfieldNameの値を集める</td></tr></tbody></table></div>
+<pre><code>Scenario: find_allは全階層を再帰収集する
+  Given query システム と対象 Document
+  When operation find_all を fieldName で実行する
+  Then 全階層に出現するfieldNameの値がvalueとして返り、prompt にはこの値の読み方の指針が入る</code></pre>
+<h3>schemaRefを持たないファイルはrawで返す</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>フォールバック：schemaRefを持たない通常ファイルは{type,content}という別形状で生テキストを返す（scanは対象外）</td></tr></tbody></table></div>
+<pre><code>Scenario: schemaRefを持たないファイルはrawで返す
+  Given schemaRefを持たない対象ファイル
+  When scan以外の任意のoperationを実行する
+  Then 戻り値は{ prompt, value }ではなく{ type: &quot;raw&quot;, content: &lt;生テキスト&gt; }という別形状で返る</code></pre>
+<h3>resolve_refは参照先Documentのpathを算出する</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>参照解決：ref値とx-source-targetテンプレートから参照先pathを機械的に算出する</td></tr></tbody></table></div>
+<pre><code>Scenario: resolve_refは参照先Documentのpathを算出する
+  Given query システム と、subdomainRefフィールドを持つ対象 Document
+  When operation resolve_ref を field subdomainRef, targetSchemaRef DomainSpecSchema/v5, targetDiscriminator specKind=subdomain で実行する
+  Then 参照先Documentのpathがvalueとして返る（中身は取得されない）</code></pre>
+<h3>resolve_refはテンプレート変数を解決できないときエラーを返す</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>異常系</td><td>エラー：テンプレート変数が不足するときはMISSING_TEMPLATE_VAR</td></tr></tbody></table></div>
+<pre><code>Scenario: resolve_refはテンプレート変数を解決できないときエラーを返す
+  Given 参照先テンプレートが要求する変数を持たない対象 Document
+  When operation resolve_ref を実行する
+  Then MISSING_TEMPLATE_VAR エラーが返る</code></pre>
+<h3>query_pathでblockKey指定時は単一ブロックの評価結果を返す</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>意味単位取得：query_pathはblockKey指定時に単一ブロック起点でJMESPath式を評価する</td></tr></tbody></table></div>
+<pre><code>Scenario: query_pathでblockKey指定時は単一ブロックの評価結果を返す
+  Given query システム と対象 Document
+  When operation query_path を blockKey summary, path &quot;items[?length(@) &gt; `0`]&quot; で実行する
+  Then value は指定ブロック内でのJMESPath評価結果であり、prompt に読み方の指針が付く</code></pre>
+<h3>query_pathでblockKey省略時はヒットしたブロックだけを配列で返す</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>意味単位取得：query_pathはblockKey省略時にcontent配下の全ブロックへ同じ式を評価し、ヒットしたものだけを返す</td></tr></tbody></table></div>
+<pre><code>Scenario: query_pathでblockKey省略時はヒットしたブロックだけを配列で返す
+  Given query システム と対象 Document
+  When operation query_path を blockKey を指定せず path &quot;items[?priority==&#x27;high&#x27;]&quot; で実行する
+  Then results にはヒットしたブロックだけが { blockKey, prompt, value } として含まれ、ヒットしなかったブロックは省略される</code></pre>
+<h3>query_pathはフィルタ条件を式内で表現できる</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>統合：query_pathはfilter_items相当の条件絞り込みをJMESPath式1本で表現する</td></tr></tbody></table></div>
+<pre><code>Scenario: query_pathはフィルタ条件を式内で表現できる
+  Given query システム と対象 Document
+  When operation query_path を blockKey, path &quot;items[?required==`true`]&quot; で実行する
+  Then value には required な要素だけが含まれる</code></pre>
+<h3>query_pathは配列の範囲指定をスライス式で表現できる</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>境界値</td><td>統合：query_pathはget_items_slice相当の範囲切り出しをJMESPath式1本で表現する</td></tr></tbody></table></div>
+<pre><code>Scenario: query_pathは配列の範囲指定をスライス式で表現できる
+  Given query システム と対象 Document
+  When operation query_path を blockKey, path &quot;items[2:5]&quot; で実行する
+  Then value にはその範囲の要素だけが含まれる</code></pre>
+<h3>query_pathは正規表現カスタム関数で絞り込める</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>正常系</td><td>統合：query_pathはfilter_pattern相当の正規表現絞り込みをregex_matchカスタム関数で表現する</td></tr></tbody></table></div>
+<pre><code>Scenario: query_pathは正規表現カスタム関数で絞り込める
+  Given query システム と対象 Document
+  When operation query_path を blockKey, path &quot;items[?regex_match(name, &#x27;foo.*&#x27;)]&quot; で実行する
+  Then value には正規表現に一致する要素だけが含まれる</code></pre>
+<h3>query_pathの構文エラーはWaffle独自のエラーへ変換される</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>異常系</td><td>エラー：query_pathの式が構文エラーのとき、jmespathの生例外ではなくWaffle独自の形式へ変換する</td></tr></tbody></table></div>
+<pre><code>Scenario: query_pathの構文エラーはWaffle独自のエラーへ変換される
+  Given query システム と対象 Document
+  When 構文的に不正なJMESPath式を path に指定して operation query_path を実行する
+  Then jmespath の生例外ではなく、Waffle独自のエラーコード・メッセージが返る</code></pre>
+<h3>query_pathでblockKey省略時、式の形に合わないブロックは静かにスキップされる</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>境界値</td><td>エラー区別：全ブロック評価時の評価時型エラーは構文エラーと区別し、そのブロックだけをヒットなしとして黙ってスキップする</td></tr></tbody></table></div>
+<pre><code>Scenario: query_pathでblockKey省略時、式の形に合わないブロックは静かにスキップされる
+  Given query システム と、items配列を持つブロックと持たないブロックが混在する対象 Document
+  When operation query_path を blockKey を指定せず path &quot;items[?contains(rule, &#x27;CLI&#x27;)]&quot; で実行する
+  Then results には items を持つブロックの評価結果だけが含まれ、items を持たず評価時型エラーになったブロックはエラーにならず黙って省略される</code></pre>
+<h3>query_pathでblockKey指定時、式の評価時型エラーはエラーを返す</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>異常系</td><td>エラー区別：blockKey明示指定時の評価時型エラーはスキップせずハードエラーとして伝える</td></tr></tbody></table></div>
+<pre><code>Scenario: query_pathでblockKey指定時、式の評価時型エラーはエラーを返す
+  Given query システム と、items配列は持つがruleフィールドは持たない対象ブロック
+  When operation query_path を blockKey で明示指定し、ruleフィールドを前提とした path &quot;items[?contains(rule, &#x27;CLI&#x27;)]&quot; で実行する
+  Then エラーコード INVALID_JMESPATH_EXPRESSION が返る</code></pre>
+<hr>
+<h2>操作保証シナリオ</h2>
+<h3>存在しないパスはINVALID_PATH</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>異常系</td><td>解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる</td></tr></tbody></table></div>
+<pre><code>Scenario: 存在しないパスはINVALID_PATH
+  Given 実在しない対象パス
+  When 本usecaseを実行する
+  Then INVALID_PATHエラーが返る</code></pre>
+<h3>解決できないschemaRefはINVALID_SCHEMA_REF</h3>
+<div class="table-scroll"><table><thead><tr><th>分類</th><th>観点</th></tr></thead><tbody><tr><td>異常系</td><td>解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる</td></tr></tbody></table></div>
+<pre><code>Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
+  Given 解決できないschemaRef
+  When 本usecaseを実行する
+  Then INVALID_SCHEMA_REFエラーが返る</code></pre>
+  </article>
+</div>
+<script>mermaid.initialize({startOnLoad: true});</script>
+</body>
+</html>
