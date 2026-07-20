@@ -50,6 +50,10 @@ class CheckUsecaseClassDrift:
             doc = self._documents.load(doc_path)
             if doc.get("specKind") != "usecase":
                 continue
+            if doc.get("status") == "SUPERSEDED":
+                # 廃止済みspecは実装が意図的に存在しない（例: document-graph Skillへの
+                # 移管でWaffle内部実装を削除したケース）。ドリフトとして検出しない。
+                continue
             operation_name = doc.get("content", {}).get("usecase", {}).get("operationName")
             if not operation_name:
                 continue

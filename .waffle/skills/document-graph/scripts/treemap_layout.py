@@ -1,6 +1,7 @@
 """treemap_layout — squarified treemap（Bruls et al. 1999）による面積比例の矩形分割を
-計算する純粋関数群。階層＋規模感を1枚の絵で示すuc-render-document-graphの
-規模感セクションが使う（graph_viewer_html_templateから利用）。
+計算する純粋関数群。document-graph Skillのtreemap描画（graph_viewer_html_template）が
+使う。Waffle本体の src/waffle/domain/services/treemap_layout.py から無変更で移植した
+（このSkill自身はdocument.jsonを一切知らないので、この純粋関数のロジックだけを引き継ぐ）。
 """
 from __future__ import annotations
 

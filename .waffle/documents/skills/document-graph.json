@@ -1,0 +1,139 @@
+{
+  "documentId": "document-graph",
+  "documentType": "Skill",
+  "schemaRef": "SkillSchema/v2",
+  "skillKind": "custom",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "MD/HTMLの契約に基づきdocument間の関係をtreemapで可視化するSkill：document-graph"
+    },
+    "inputExpectation": {
+      "blockType": "InputExpectation",
+      "title": "入力の想定",
+      "items": [
+        {
+          "aspect": "可視化したいMD/HTMLフォルダのパス",
+          "interpretation": "明示されなければユーザーに確認する。相対パスは実行時のカレントディレクトリを基準に絶対パスへ解決する。"
+        },
+        {
+          "aspect": "フォルダのalias・format",
+          "interpretation": "指定がなければフォルダ名から自動生成・配下拡張子の多数決で自動推定する（`document-graph add`が行う）。"
+        },
+        {
+          "aspect": "サーバーのポート番号",
+          "interpretation": "指定がなければ既定の4173を使う。"
+        }
+      ]
+    },
+    "role": {
+      "blockType": "Role",
+      "title": "役割",
+      "items": [
+        "MD frontmatter／HTML <meta>タグ＋本文リンクという契約に沿ってnode/edgeを抽出する",
+        "抽出したグラフをtreemap・カテゴリ一覧・関連ツリーとして可視化するローカルサーバーを提供する",
+        "config.json（表示したいソースの宣言）とsources/配下のシムリンクをCLI経由で管理する",
+        "MD→HTML変換等の生成ロジックは持たず、契約に従った既存のMD/HTMLを表示するだけに徹する"
+      ]
+    },
+    "processingTarget": {
+      "blockType": "ProcessingTarget",
+      "title": "処理対象と成果物",
+      "target": "契約（id=ファイル名幹、type/title/description/tagsをfrontmatterまたは<meta>で宣言し、本文中の標準リンクで関連を表す）を満たすMD/HTMLファイル群を格納したフォルダ、またはCLIで登録済みのソース一覧。",
+      "artifact": "typeごとの規模感を示すtreemap・カテゴリ一覧・documentごとの紐づき先ツリーを備えた自己完結HTMLを、ローカルサーバー（127.0.0.1限定）で配信する。"
+    },
+    "steps": {
+      "blockType": "CustomSteps",
+      "title": "実行手順",
+      "items": [
+        {
+          "stepId": "step-1",
+          "title": "ソースフォルダをconfig.jsonへ登録する",
+          "summary": "対象のMD/HTMLフォルダを`document-graph add <path>`で登録する。alias自動生成・format自動推定・sources/配下へのシムリンク同期・契約チェック（frontmatter/meta未検出件数）が1コマンドで行われる。"
+        },
+        {
+          "stepId": "step-2",
+          "title": "登録済みソースを確認する",
+          "summary": "`document-graph list`で現在登録されているソースの一覧（alias/format/path）を確認する。"
+        },
+        {
+          "stepId": "step-3",
+          "title": "ローカルサーバーを起動しグラフを閲覧する",
+          "summary": "`document-graph serve [--port 4173]`でローカルサーバーを起動し、ブラウザで開く。GETのたびにsources/配下を再スキャンして最新のグラフを返すので、ファイルを追記・保存した後はページ再読み込みだけで反映される。"
+        },
+        {
+          "stepId": "step-4",
+          "title": "不要になったソースを削除する",
+          "summary": "`document-graph remove <alias>`で登録とシムリンクを解除する。"
+        }
+      ]
+    },
+    "outputFormat": {
+      "blockType": "OutputFormat",
+      "title": "出力形式",
+      "text": "`add`はalias／format／symlink同期結果／契約チェック結果（frontmatter・meta未検出件数、重複ファイル名の警告があれば併記）を箇条書きで報告する。`list`はalias・format・pathをタブ区切りで一覧する。`serve`は起動したURLを1行で表示する。"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "動作要件はpython3（標準ライブラリのみ）で完結し、PyYAML等の外部パッケージを追加しない",
+        "サーバーは127.0.0.1限定で待受け、外部公開しない",
+        "Skill自身はMD→HTML変換等の生成ロジックを持たない。契約（frontmatter/meta＋本文リンク）を満たすMD/HTMLを表示するだけに徹する",
+        "config.jsonは手作業で編集せず、必ずadd/list/removeコマンド経由で変更する",
+        "全ソースを通じてファイル名（拡張子除く）は一意という契約を前提とする。重複が検出された場合は警告として画面に表示されるので、ファイル名を調整して解消する",
+        "sources/配下のシムリンクはSkillが自動管理する統制フォルダなので、手動でファイルを追加・編集しない"
+      ]
+    },
+    "references": {
+      "blockType": "References",
+      "title": "参照",
+      "items": [
+        {
+          "path": "scripts/config.py",
+          "description": "config.jsonの読み書きとsources/配下のシムリンク差分同期"
+        },
+        {
+          "path": "scripts/graph_index.py",
+          "description": "frontmatter/meta＋本文リンクの契約パーサーとnode/edge抽出、カテゴリ集計"
+        },
+        {
+          "path": "scripts/treemap_layout.py",
+          "description": "squarified treemapの矩形分割を計算する純粋関数"
+        },
+        {
+          "path": "scripts/graph_viewer_html_template.py",
+          "description": "treemap・カテゴリ一覧・関連ツリーを描画する自己完結HTMLテンプレート"
+        },
+        {
+          "path": "scripts/server.py",
+          "description": "127.0.0.1限定のローカルサーバー。GETのたびに最新のグラフHTMLを返す"
+        },
+        {
+          "path": "scripts/cli.py",
+          "description": "add/list/remove/serveサブコマンドを持つCLIエントリポイント"
+        },
+        {
+          "path": "scripts/dg.sh",
+          "description": "CLIラッパースクリプト（design-shareのds.shと同じ立て付け）"
+        }
+      ]
+    },
+    "invocationMode": {
+      "blockType": "InvocationMode",
+      "title": "呼び出しモード",
+      "manualOnly": true
+    },
+    "description": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "MD/HTMLファイル群の間の関連性をtreemap・カテゴリ一覧・紐づき先ツリーで可視化したいときに使う。Waffleのdocument.jsonに一切依存せず、MD frontmatter／HTML <meta>タグ＋本文リンクという契約だけを前提に動くので、任意のマークダウン・HTMLフォルダに対して使える。「documentどうしの関係を見せて」「ナレッジベースの全体像を俯瞰したい」と言われたときに使う。"
+    }
+  },
+  "tags": [
+    "visualization",
+    "document-graph"
+  ],
+  "distributionTier": "optional"
+}

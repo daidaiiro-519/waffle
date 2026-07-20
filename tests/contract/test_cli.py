@@ -212,23 +212,6 @@ def test_render_document_viewerはHTMLを生成する(tmp_path):
     assert output_path.read_text(encoding="utf-8")
 
 
-def test_render_document_graphはグラフHTMLを生成する(tmp_path):
-    """
-    Given waffle CLI
-    When render-document-graph --directory <既存ディレクトリ> --outputPath <出力先> を実行する
-    Then 終了コードは0で、出力先HTMLファイルが生成される
-    """
-    output_path = tmp_path / "graph.html"
-    result = _runner.invoke(app, [
-        "render-document-graph", "--directory", ".waffle/documents/handoff",
-        "--outputPath", str(output_path),
-    ])
-    assert result.exit_code == 0, result.output
-    data = json.loads(result.output)
-    assert data["path"] == str(output_path)
-    assert output_path.read_text(encoding="utf-8")
-
-
 def test_render_blank_templateはプレースホルダーMarkdownを返す():
     """
     Given waffle CLI
