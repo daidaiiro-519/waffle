@@ -13,6 +13,7 @@ os.environ.setdefault("PYTHON_COLORS", "0")
 
 import typer
 
+from waffle.adapters.inbound.http.document_graph_server import serve as serve_document_graph_http
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
@@ -144,6 +145,24 @@ def render_document_graph(
 ) -> None:
     """複数documentを横断してnode/edgeを集計しグラフmapビューへ描画する（uc-render-document-graph）。"""
     _emit(RenderDocumentGraph(_docs()).run(directory, output_path))
+
+@app.command("serve-document-graph")
+def serve_document_graph(
+    directory: str = typer.Option(..., "--directory"),
+    output_path: str = typer.Option(..., "--outputPath", "--output-path"),
+    port: int = typer.Option(4173, "--port"),
+) -> None:
+    """document-graphを127.0.0.1限定のローカルサーバーとして提供する。GETのたびに再スキャン
+    して最新を返すため、ブラウザの再読み込みだけで常に最新のグラフを見られる（uc-render-document-graph）。"""
+    httpd = serve_document_graph_http(directory, output_path, port)
+    bound_port = httpd.server_address[1]
+    typer.echo(f"http://127.0.0.1:{bound_port}/ で待受中（Ctrl+Cで終了、再読み込みで再スキャン）")
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        httpd.server_close()
 
 @app.command("render-blank-template")
 def render_blank_template(
