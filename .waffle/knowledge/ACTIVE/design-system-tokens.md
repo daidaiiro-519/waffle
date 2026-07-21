@@ -1,3 +1,11 @@
+---
+id: "design-system-tokens"
+type: "Knowledge"
+title: "デザイントークンの設計原則を扱う概念：design-system-tokens"
+description: "デザイントークンとは、色・タイポグラフィ・余白・角丸等の視覚的決定を、コード中に直接埋め込むのではなく、名前付きの再利用可能な値として一箇所に集約したものである。"
+schemaRef: "KnowledgeSchema/v4"
+---
+
 # デザイントークンの設計原則を扱う概念：design-system-tokens
 
 ## 概要
@@ -77,3 +85,4 @@ Anthropic公式`/frontend-design`skill（設計プラン成果物のフォーマ
 | 関連概念 | 関係 |
 |---|---|
 | architecture-dependency-direction | デザイントークンはpresentation層内部の実装詳細であり、依存方向の外側の話ではない（tech-lead-advisorのbackbone） |
+| frontend-design-principles | 本概念の核（決定を先に固定し記録する）は『トークンを先に固定する』としてdesign-shareの8語の概念層へ昇格済み。一行定義の深掘り先として参照される |

@@ -1,3 +1,11 @@
+---
+id: "visual-hierarchy-and-restraint"
+type: "Knowledge"
+title: "視覚的階層と抑制の原則を扱う概念：visual-hierarchy-and-restraint"
+description: "画面設計における視覚的判断（何を最初に見せるか・書体の組み合わせ・構造表現・モーション・作り込みの度合い）を、思いつきではなく一貫した基準で決めるための原則群。"
+schemaRef: "KnowledgeSchema/v4"
+---
+
 # 視覚的階層と抑制の原則を扱う概念：visual-hierarchy-and-restraint
 
 ## 概要
@@ -83,3 +91,4 @@ Anthropic公式`/frontend-design`skillのDesign Principles（Hero as Thesis／Ty
 | 関連概念 | 関係 |
 |---|---|
 | design-system-tokens | この5原則で決めた判断を実際に記録・再利用する仕組みがdesign-system-tokens |
+| frontend-design-principles | 本概念の核（作り込み度と方向性を一致させる）は『作り込みを一貫させる』としてdesign-shareの8語の概念層へ昇格済み。一行定義の深掘り先として参照される |
