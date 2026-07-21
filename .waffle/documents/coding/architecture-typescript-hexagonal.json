@@ -143,6 +143,10 @@
         {
           "level": "禁止",
           "rule": "個々のusecase・adapterの中でアダプターの具体クラスをnewする。配線（DI）はcompositionRootの1箇所に集約する"
+        },
+        {
+          "level": "必須",
+          "rule": "Promiseのrejectionは必ず境界（adapter/composition root）で捕捉する。未処理のPromise拒否をdomain/applicationの外へ漏らさない。外部呼び出しにはタイムアウトを設定し、タイムアウトも通常の失敗としてResult型相当で表現する"
         }
       ]
     },

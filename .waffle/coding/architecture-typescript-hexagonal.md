@@ -80,6 +80,7 @@ inbound adapter の起動点（エントリーポイント）にのみ置く
 | 禁止 | outbound adapterの実装の詳細（クエリ・スキーマ形式等）がapplication/domainへ漏れること |
 | 必須 | レイヤー境界を越えてdomainオブジェクト（entity・aggregate）をそのまま渡さない。外部に出る形は必要な値だけをコピーした専用のDTOにする |
 | 禁止 | 個々のusecase・adapterの中でアダプターの具体クラスをnewする。配線（DI）はcompositionRootの1箇所に集約する |
+| 必須 | Promiseのrejectionは必ず境界（adapter/composition root）で捕捉する。未処理のPromise拒否をdomain/applicationの外へ漏らさない。外部呼び出しにはタイムアウトを設定し、タイムアウトも通常の失敗としてResult型相当で表現する |
 
 ---
 
