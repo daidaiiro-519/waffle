@@ -91,6 +91,7 @@ inbound adapter の起動点にのみ置く
 | 必須 | 監査ログ・認可のような業務要件としての横断的関心事は、「何を記録すべきか・誰が実行を許可されるか」の判断をdomain/applicationが持ち、実際の記録・認証手段はport経由でoutbound adapterに委譲する |
 | 禁止 | 認可チェックをdomain層の集約メソッドの中に直接書く（「誰がログインしているか」という技術的な認証の仕組みにdomain層が依存し、依存方向が逆転する） |
 | 必須 | usecase実装クラス名は、対応するusecase specが宣言する操作名とそのまま一致させる（Engine等の装飾的な接尾辞を付けない）。ファイル名も同じ操作名をsnake_caseに変換したものに.pyを付与する（例: 操作名RegisterOrder→register_order.py） |
+| 必須 | MCP境界（async関数）で発生した例外は、境界を越える前に捕捉し失敗の形（Result等）に翻訳する。awaitし忘れたcoroutine等、async処理特有の未処理例外を残さない。外部呼び出しにはタイムアウトを設定し、タイムアウトも通常の失敗としてResult型相当で表現する |
 
 ---
 
