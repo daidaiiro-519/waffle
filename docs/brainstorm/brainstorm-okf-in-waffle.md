@@ -1,5 +1,20 @@
 # ブレインストーミング: OKF（tags/relationsグラフ）をWaffle自身のコンセプト機能として取り込む
 
+## ★クローズ（2026-07-21）
+
+このブレストが動機だった「documentをグラフとして紐づけて閲覧したい」というニーズは、
+別途確立した`document-graph` Skill（`docs/brainstorm/brainstorm-document-graph-skill.md`）
+が満たしている。document-graphが実際に要求する契約は`id`/`type`/`title`/
+`description`/`tags`の5項目のみで、これは全schemaへのx-frontmatter展開
+（commit `6655d95`）で満たし済み。
+
+本文書が個別に合意していた`resource`フィールド追加・論点4のx-render経由
+リンクフラグ機構は、document-graph経由の解決とは別の実装方針（Skill側の
+ベアテキストIDスキャン）に置き換わったため、本文書のまま次アクションとして
+残すと「まだ何か作業が残っている」という誤解を招く。着手しない、という結論
+でクローズする。将来OKF準拠自体（Waffle外部への標準準拠）が独立した動機として
+再浮上した場合は、新しいブレストとして起こすこと（本文書を再開しない）。
+
 **作成日:** 2026-07-14
 **目的:** 元々has-udd側で構想されていたOKF（frontmatter駆動のtags/relations
 グラフ）を、「Waffle＋has-uddのセット利用」前提から「Waffle自身が提供する
