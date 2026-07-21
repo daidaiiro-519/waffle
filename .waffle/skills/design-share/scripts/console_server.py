@@ -142,33 +142,33 @@ def list_patterns() -> list[dict]:
 
 
 def gallery_status() -> str:
-    v = kvs_get("project:token")
+    v = kvs_get("gallery:token")
     if not v or v == "None":
         return "unset"
     return "disabled" if v == "DISABLED" else "enabled"
 
 
-def galleries_list() -> list[dict]:
+def projects_list() -> list[dict]:
     # 一覧取得の失敗は伝播させる（0件と誤認しない）
-    resp = _S3.list_objects_v2(Bucket=CONF["BUCKET"], Prefix="galleries/")
+    resp = _S3.list_objects_v2(Bucket=CONF["BUCKET"], Prefix="projects/")
     keys = [o["Key"] for o in resp.get("Contents", [])]
 
-    def fetch_cat(key: str) -> dict | None:
-        gs = key.split("/")[-1].rsplit(".json", 1)[0]
+    def fetch_proj(key: str) -> dict | None:
+        pid = key.split("/")[-1].rsplit(".json", 1)[0]
         try:
             body = _S3.get_object(Bucket=CONF["BUCKET"], Key=key)["Body"].read()
             meta = json.loads(body)
         except Exception:
             return None
-        v = kvs_get(f"g:{gs}")
+        v = kvs_get(f"proj:{pid}")
         status = "disabled" if v == "DISABLED" else ("enabled" if v and v != "None" else "unset")
         # トークンの実値は一覧に含めない。共有メニューを開いたときに /api/token でオンデマンド取得する
-        return {"gslug": gs, "name": meta.get("name", ""), "projectKey": meta.get("projectKey", ""),
-                "status": status, "url": f"https://{CONF.get('DISTRIBUTION_DOMAIN', '')}/g/{gs}/"}
+        return {"pid": pid, "name": meta.get("name", ""), "projectKey": meta.get("projectKey", ""),
+                "status": status, "url": f"https://{CONF.get('DISTRIBUTION_DOMAIN', '')}/proj/{pid}/"}
 
     with ThreadPoolExecutor(max_workers=8) as ex:
-        cats = [c for c in ex.map(fetch_cat, keys) if c is not None]
-    return sorted(cats, key=lambda c: c["name"])
+        projs = [c for c in ex.map(fetch_proj, keys) if c is not None]
+    return sorted(projs, key=lambda c: c["name"])
 
 
 # --- ローカルプロジェクトの発見・同期状態判定 --------------------------------
@@ -176,7 +176,7 @@ def galleries_list() -> list[dict]:
 # 直下、およびその直下の各サブディレクトリについて「.design-share/」フォルダを探し、そこが
 # プロジェクトごとのサブフォルダ（design-share自身のexamples/廃止後の運用）を持つか、
 # それとも.design-share/自体がプロジェクト直下（通常の顧客プロジェクト・代理店運用）かを判定する。
-# 紐付けはプロジェクトキー（表示名とは別の半角キー、galleries/{gslug}.jsonのprojectKey）と
+# 紐付けはプロジェクトキー（表示名とは別の半角キー、projects/{pid}.jsonのprojectKey）と
 # ローカルフォルダ名の一致だけで行う。同期状態はmeta.jsonのsourceFile/sourceHashとローカルの
 # 現在のファイルのハッシュをその場で比較して求める（ローカルにマニフェストは持たない）。
 
@@ -287,21 +287,21 @@ def pricing() -> dict:
 
 
 def state() -> dict:
-    # patternsは高速（KVS不要）。galleries_list/gallery_statusはそれぞれ内部でKVSのSigV4A署名
+    # patternsは高速（KVS不要）。projects_list/gallery_statusはそれぞれ内部でKVSのSigV4A署名
     # （1回約1.3秒）を伴うため、この2つを互いに直列に呼ぶと待ち時間が積み上がる。並列に走らせる
     with ThreadPoolExecutor(max_workers=3) as ex:
         f_patterns = ex.submit(list_patterns)
-        f_cats = ex.submit(galleries_list)
+        f_projs = ex.submit(projects_list)
         f_gstatus = ex.submit(gallery_status)
-        patterns, cats, gstatus = f_patterns.result(), f_cats.result(), f_gstatus.result()
+        patterns, projs, gstatus = f_patterns.result(), f_projs.result(), f_gstatus.result()
 
     local_projects = discover_local_projects(Path.cwd())
     local_by_key = {lp["name"]: lp for lp in local_projects}
     matched_names: set[str] = set()
 
     projects = []
-    for c in cats:
-        proj_patterns = [p for p in patterns if c["gslug"] in (p.get("galleries") or [])]
+    for c in projs:
+        proj_patterns = [p for p in patterns if c["pid"] in (p.get("projects") or [])]
         c["count"] = len(proj_patterns)
         designs = [p for p in proj_patterns if p.get("type") == "design-review"]
         mocks = [p for p in proj_patterns if p.get("type") != "design-review"]
@@ -317,7 +317,6 @@ def state() -> dict:
     # トークンの実値は一覧に含めない。共有メニューを開いたときに /api/token でオンデマンド取得する
     return {"patterns": patterns,
             "gallery": {"status": gstatus, "url": GALLERY_URL},
-            "categories": cats,
             "projects": projects,
             "localOnly": local_only}
 
@@ -325,10 +324,10 @@ def state() -> dict:
 def fetch_token_for(kind: str, ident: str) -> str:
     if kind == "pattern":
         v = kvs_get("token:" + ident)
-    elif kind == "gallery":
-        v = kvs_get(f"g:{ident}")
+    elif kind == "project":
+        v = kvs_get(f"proj:{ident}")
     elif kind == "global":
-        v = kvs_get("project:token")
+        v = kvs_get("gallery:token")
     else:
         return ""
     return "" if v in ("", "None", "DISABLED") else v
@@ -600,7 +599,7 @@ function createCategory(){closeMenu();
 const name=prompt('新しいプロジェクト名を入力してください');if(name===null)return;const t=name.trim();if(!t){log('名前が空です。','warn');return;}
 const key=prompt('プロジェクトキー（半角英数・ハイフン。ローカルフォルダ名と一致させます。空欄なら自動生成）','');
 if(key===null)return;
-let url='/api/gallery-create?name='+encodeURIComponent(t);
+let url='/api/project-create?name='+encodeURIComponent(t);
 if(key.trim())url+='&key='+encodeURIComponent(key.trim());
 doOp(url,'project create');}
 
@@ -613,19 +612,19 @@ return '';}
 function projectMenu(proj){
 const items=[
 item('↗','開く','',false,()=>openUrl(proj.url)),
-item('🔗','共有（URL・トークン）','',false,()=>openShare(proj.name||proj.gslug,proj.url,'gallery',proj.gslug)),
+item('🔗','共有（URL・トークン）','',false,()=>openShare(proj.name||proj.pid,proj.url,'project',proj.pid)),
 sep(),
 item('↓','エクスポート','',false,()=>openExportModal(proj)),
 sep(),
-item('⟳','共有トークンを再発行','',false,()=>doOp('/api/gallery-rotate?gslug='+encodeURIComponent(proj.gslug),'gallery rotate')),
+item('⟳','共有トークンを再発行','',false,()=>doOp('/api/project-rotate?pid='+encodeURIComponent(proj.pid),'project rotate')),
 item(proj.status==='disabled'?'▲':'⦸',proj.status==='disabled'?'再有効化':'このプロジェクトを無効化',proj.status==='disabled'?'good':'danger',false,()=>{
-const doIt=()=>doOp((proj.status==='disabled'?'/api/gallery-rotate':'/api/gallery-disable')+'?gslug='+encodeURIComponent(proj.gslug),'project');
-if(proj.status==='disabled'){doIt();}else if(confirm('プロジェクト「'+(proj.name||proj.gslug)+'」を無効化しますか？\n（所属パターンの個別URLには影響しません）')){doIt();}
+const doIt=()=>doOp((proj.status==='disabled'?'/api/project-rotate':'/api/project-disable')+'?pid='+encodeURIComponent(proj.pid),'project');
+if(proj.status==='disabled'){doIt();}else if(confirm('プロジェクト「'+(proj.name||proj.pid)+'」を無効化しますか？\n（所属パターンの個別URLには影響しません）')){doIt();}
 }),
 sep(),
-item('×','削除','danger',false,()=>{if(confirm('プロジェクト「'+(proj.name||proj.gslug)+'」を削除しますか？\n所属は全解除されますが、パターン自体は残ります。'))doOp('/api/gallery-delete?gslug='+encodeURIComponent(proj.gslug),'project delete');}),
+item('×','削除','danger',false,()=>{if(confirm('プロジェクト「'+(proj.name||proj.pid)+'」を削除しますか？\n所属は全解除されますが、パターン自体は残ります。'))doOp('/api/project-delete?pid='+encodeURIComponent(proj.pid),'project delete');}),
 ];
-return menuButton((proj.name||proj.gslug)+' の操作メニュー',items);}
+return menuButton((proj.name||proj.pid)+' の操作メニュー',items);}
 
 /* 公開状態（公開中/無効化済み）と確定状態（確定済み/検討中）は別の軸なので、2つのピルを並べて出す。
    一時、確定機能を足したときに1つのピルに統合してしまい「公開中」の表示が消えていた不具合を修正した。 */
@@ -810,7 +809,7 @@ const noneBtn=body.querySelector('#exp-none');if(noneBtn)noneBtn.addEventListene
 cta.addEventListener('click',()=>{
 const slugs=cbs.filter(cb=>cb.checked).map(cb=>cb.dataset.slug);
 closeModal();
-doOp('/api/export-project?gslug='+encodeURIComponent(proj.gslug)+'&mocks='+encodeURIComponent(slugs.join(',')),'export-project');});
+doOp('/api/export-project?pid='+encodeURIComponent(proj.pid)+'&mocks='+encodeURIComponent(slugs.join(',')),'export-project');});
 },null,null);}
 
 function galleryControls(g){
@@ -896,8 +895,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             kind = (qs.get("kind") or [""])[0]
             ident = (qs.get("id") or [""])[0]
-            if kind not in ("pattern", "gallery", "global"):
-                self._send(400, "kindはpattern/gallery/globalのいずれか")
+            if kind not in ("pattern", "project", "global"):
+                self._send(400, "kindはpattern/project/globalのいずれか")
                 return
             if kind != "global" and not SLUG_RE.match(ident):
                 self._send(400, "idの形式が不正です")
@@ -999,8 +998,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._send(200 if ok else 500, output)
             return
 
-        # 名前付きギャラリー（プロジェクト）操作
-        if parsed.path == "/api/gallery-create":
+        # プロジェクト操作
+        if parsed.path == "/api/project-create":
             name = q.get("name", [""])[0].strip()
             key = q.get("key", [""])[0].strip()
             if not name or len(name) > 80 or any(ord(c) < 0x20 for c in name):
@@ -1009,45 +1008,45 @@ class Handler(http.server.BaseHTTPRequestHandler):
             args = ["create", name]
             if key:
                 args += ["--key", key]
-            ok, output = run_script("galleries", *args)
+            ok, output = run_script("project", *args)
             self._send(200 if ok else 500, output)
             return
-        if parsed.path in ("/api/gallery-rotate", "/api/gallery-disable", "/api/gallery-delete"):
-            gslug = q.get("gslug", [""])[0]
-            if not SLUG_RE.match(gslug):
-                self._send(400, "invalid gslug")
+        if parsed.path in ("/api/project-rotate", "/api/project-disable", "/api/project-delete"):
+            pid = q.get("pid", [""])[0]
+            if not SLUG_RE.match(pid):
+                self._send(400, "invalid pid")
                 return
-            sub = {"/api/gallery-rotate": "rotate", "/api/gallery-disable": "disable",
-                   "/api/gallery-delete": "delete"}[parsed.path]
-            ok, output = run_script("galleries", sub, gslug)
+            sub = {"/api/project-rotate": "rotate", "/api/project-disable": "disable",
+                   "/api/project-delete": "delete"}[parsed.path]
+            ok, output = run_script("project", sub, pid)
             self._send(200 if ok else 500, output)
             return
-        if parsed.path == "/api/pattern-galleries":
+        if parsed.path == "/api/pattern-projects":
             slug = q.get("slug", [""])[0]
             if not SLUG_RE.match(slug):
                 self._send(400, "invalid slug")
                 return
-            gslugs = [g for g in q.get("galleries", [""])[0].split(",") if g]
-            if any(not SLUG_RE.match(g) for g in gslugs):
-                self._send(400, "invalid gslug")
+            pids = [p for p in q.get("projects", [""])[0].split(",") if p]
+            if any(not SLUG_RE.match(p) for p in pids):
+                self._send(400, "invalid pid")
                 return
-            ok, output = run_script("galleries", "set", slug, *gslugs)
+            ok, output = run_script("project", "set", slug, *pids)
             self._send(200 if ok else 500, output)
             return
         if parsed.path == "/api/export-project":
-            gslug = q.get("gslug", [""])[0]
-            if not SLUG_RE.match(gslug):
-                self._send(400, "invalid gslug")
+            pid = q.get("pid", [""])[0]
+            if not SLUG_RE.match(pid):
+                self._send(400, "invalid pid")
                 return
             mocks_param = q.get("mocks", [None])[0]
-            args = ["export", gslug]
+            args = ["export", pid]
             if mocks_param is not None:
                 mock_slugs = [s for s in mocks_param.split(",") if s]
                 if any(not SLUG_RE.match(s) for s in mock_slugs):
                     self._send(400, "invalid mock slug")
                     return
                 args += ["--mocks", ",".join(mock_slugs)]
-            ok, output = run_script("galleries", *args)
+            ok, output = run_script("project", *args)
             self._send(200 if ok else 500, output)
             return
 

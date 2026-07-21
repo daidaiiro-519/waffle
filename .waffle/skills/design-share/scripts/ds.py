@@ -30,9 +30,9 @@
   uv run ds.py console                       Web管理コンソールをlocalhostで起動
   uv run ds.py update-function               edge-gate.jsをCloudFront Functionへ反映
   uv run ds.py gallery <init|rotate|disable|url>  全体ギャラリー（共通トークンで全部入り）を管理
-  uv run ds.py galleries <create|list|rotate|disable|delete|add|remove|set ...>  名前付きギャラリー（プロジェクト）を管理
+  uv run ds.py project <create|list|rotate|disable|delete|add|remove|set|export ...>  プロジェクトを管理
                                               createは表示名の他に --key <プロジェクトキー> を取る（省略時は表示名から自動生成）
-  uv run ds.py reconcile                     S3のmeta(真実源)からKVS投影(pg/status)・index.jsonを再生成
+  uv run ds.py reconcile                     S3のmeta(真実源)からKVS投影(pp/status)・index.jsonを再生成
   uv run ds.py smoke                         実機スモークテスト（使い捨てパターンで往復検証）
 """
 from __future__ import annotations
@@ -57,8 +57,8 @@ import boto3
 import botocore.exceptions
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MAX_PATTERN_GALLERIES = 3
-GSLUG_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+MAX_PATTERN_PROJECTS = 3
+PID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def die(msg: str) -> None:
@@ -205,14 +205,14 @@ def _s3_download_prefix(ctx: Ctx, prefix: str, dest_dir: Path) -> int:
 
 # --- meta helpers ---
 # 真実源の割り当て（reconcile_projections がこの前提で投影を再生成する）:
-#   秘密トークン         → KVS が権威（token:{slug} / g:{gslug} / project:token）。S3には残さない
+#   秘密トークン         → KVS が権威（token:{slug} / proj:{pid} / gallery:token）。S3には残さない
 #   構造・状態・名前・所属 → S3 の meta/{slug}.json が権威
-#   投影(再生成可・非権威) → KVS pg:{slug}、gallery/index.json、g/*/index.json、token:のDISABLED overlay
+#   投影(再生成可・非権威) → KVS pp:{slug}、gallery/index.json、proj/*/index.json、token:のDISABLED overlay
 
 def meta_write(ctx: Ctx, slug: str, name: str, status: str) -> bool:
-    # 既存galleries[]の保持は、metaが「読めた」ときだけ行う。読めない場合:
-    #   - オブジェクトが存在しない（新規デプロイ）→ galleries=[] で新規作成してよい
-    #   - 存在するのに読めない（一時失敗）→ 上書きを中止（galleries[]の消失を防ぐ）
+    # 既存projects[]の保持は、metaが「読めた」ときだけ行う。読めない場合:
+    #   - オブジェクトが存在しない（新規デプロイ）→ projects=[] で新規作成してよい
+    #   - 存在するのに読めない（一時失敗）→ 上書きを中止（projects[]の消失を防ぐ）
     cur = s3_get_text(ctx, f"meta/{slug}.json")
     if cur:
         try:
@@ -227,7 +227,7 @@ def meta_write(ctx: Ctx, slug: str, name: str, status: str) -> bool:
         return False
     else:
         base = {}
-    base.setdefault("galleries", [])
+    base.setdefault("projects", [])
     base.update({"slug": slug, "name": name, "status": status, "updatedAt": now_iso()})
     s3_put_text(ctx, f"meta/{slug}.json", json.dumps(base, ensure_ascii=False))
     return True
@@ -276,7 +276,7 @@ def new_slug() -> str:
     return secrets.token_hex(8)
 
 
-def new_gslug() -> str:
+def new_pid() -> str:
     return secrets.token_hex(6)
 
 
@@ -285,25 +285,25 @@ def slugify(s: str) -> str:
     return s.strip("-") or "project"
 
 
-# --- ギャラリー ---
-# 全体ギャラリー: KVS project:token（値 or "DISABLED"）で入る全部入りランディング（/gallery/）。
-# 名前付きギャラリー（カテゴリ）: KVS g:{gslug}（値 or "DISABLED"）で入る /g/{gslug}/。所属はタグ式。
+# --- ギャラリー／プロジェクト ---
+# 全体ギャラリー: KVS gallery:token（値 or "DISABLED"）で入る全部入りランディング（/gallery/）。
+# プロジェクト（旧称: 名前付きギャラリー）: KVS proj:{pid}（値 or "DISABLED"）で入る /proj/{pid}/。所属はタグ式。
 
 def gallery_enabled(ctx: Ctx) -> str:
-    v = kvs_get(ctx, "project:token")
+    v = kvs_get(ctx, "gallery:token")
     return v if v and v not in ("DISABLED", "None") else ""
 
 
-def gallery_meta_write(ctx: Ctx, gslug: str, name: str, project_key: str = "") -> None:
+def project_meta_write(ctx: Ctx, pid: str, name: str, project_key: str = "") -> None:
     # projectKey: ローカルのプロジェクトフォルダ名と照合するための半角キー（表示名とは別）。
     # コンソールはローカルフォルダ名でこれを検索し、ローカル/クラウドを紐付ける（論点6の最終合意）。
-    s3_put_text(ctx, f"galleries/{gslug}.json",
-                json.dumps({"gslug": gslug, "name": name, "projectKey": project_key, "updatedAt": now_iso()},
+    s3_put_text(ctx, f"projects/{pid}.json",
+                json.dumps({"pid": pid, "name": name, "projectKey": project_key, "updatedAt": now_iso()},
                            ensure_ascii=False))
 
 
-def gallery_meta_get(ctx: Ctx, gslug: str) -> dict:
-    cur = s3_get_text(ctx, f"galleries/{gslug}.json")
+def project_meta_get(ctx: Ctx, pid: str) -> dict:
+    cur = s3_get_text(ctx, f"projects/{pid}.json")
     if not cur:
         return {}
     try:
@@ -313,8 +313,8 @@ def gallery_meta_get(ctx: Ctx, gslug: str) -> dict:
         return {}
 
 
-def gallery_meta_name(ctx: Ctx, gslug: str) -> str:
-    cur = s3_get_text(ctx, f"galleries/{gslug}.json")
+def project_meta_name(ctx: Ctx, pid: str) -> str:
+    cur = s3_get_text(ctx, f"projects/{pid}.json")
     if not cur:
         return ""
     try:
@@ -323,29 +323,29 @@ def gallery_meta_name(ctx: Ctx, gslug: str) -> str:
         return ""
 
 
-def pattern_galleries(ctx: Ctx, slug: str) -> list[str]:
+def pattern_projects(ctx: Ctx, slug: str) -> list[str]:
     cur = s3_get_text(ctx, f"meta/{slug}.json")
     if not cur:
         return []
     try:
-        return list(json.loads(cur).get("galleries", []) or [])
+        return list(json.loads(cur).get("projects", []) or [])
     except Exception:
         return []
 
 
-def pattern_set_galleries(ctx: Ctx, slug: str, gslugs: list[str]) -> bool:
-    gslugs = [g for g in gslugs if g]
-    if len(gslugs) > MAX_PATTERN_GALLERIES:
-        print(f"所属カテゴリは最大 {MAX_PATTERN_GALLERIES} 件までです（指定: {len(gslugs)} 件）: {slug}", file=sys.stderr)
+def pattern_set_projects(ctx: Ctx, slug: str, pids: list[str]) -> bool:
+    pids = [g for g in pids if g]
+    if len(pids) > MAX_PATTERN_PROJECTS:
+        print(f"所属カテゴリは最大 {MAX_PATTERN_PROJECTS} 件までです（指定: {len(pids)} 件）: {slug}", file=sys.stderr)
         return False
     cur = s3_get_text(ctx, f"meta/{slug}.json")
     if not cur:
         print(f"meta not found or empty: {slug}", file=sys.stderr)
         return False
     meta = json.loads(cur)
-    meta["galleries"] = gslugs
+    meta["projects"] = pids
     s3_put_text(ctx, f"meta/{slug}.json", json.dumps(meta, ensure_ascii=False))
-    kvs_put(ctx, f"pg:{slug}", " ".join(gslugs))  # エッジのスコープ判定用の鏡像
+    kvs_put(ctx, f"pp:{slug}", " ".join(pids))  # エッジのスコープ判定用の鏡像
     rebuild_gallery_index(ctx)
     return True
 
@@ -365,23 +365,23 @@ def rebuild_gallery_index(ctx: Ctx) -> None:
             metas.append(json.loads(txt))
         except Exception:
             continue
-    gals = []
-    for k in list_keys(ctx, "galleries/"):
+    projs = []
+    for k in list_keys(ctx, "projects/"):
         txt = s3_get_text(ctx, k)
         if not txt:
             continue
         try:
-            gals.append(json.loads(txt))
+            projs.append(json.loads(txt))
         except Exception:
             continue
     s3_put_text(ctx, "gallery/index.json", json.dumps([slim(r) for r in metas], ensure_ascii=False))
-    for g in gals:
-        gs = g.get("gslug", "")
-        if not gs:
+    for p in projs:
+        pid = p.get("pid", "")
+        if not pid:
             continue
-        items = [slim(r) for r in metas if gs in (r.get("galleries") or [])]
-        s3_put_text(ctx, f"g/{gs}/index.json",
-                    json.dumps({"name": g.get("name", ""), "gslug": gs, "items": items}, ensure_ascii=False))
+        items = [slim(r) for r in metas if pid in (r.get("projects") or [])]
+        s3_put_text(ctx, f"proj/{pid}/index.json",
+                    json.dumps({"name": p.get("name", ""), "pid": pid, "items": items}, ensure_ascii=False))
 
 
 def reconcile_projections(ctx: Ctx) -> None:
@@ -389,8 +389,8 @@ def reconcile_projections(ctx: Ctx) -> None:
     warned = 0
     for k in list_keys(ctx, "meta/"):
         slug = Path(k).stem
-        gl = pattern_galleries(ctx, slug)
-        kvs_put(ctx, f"pg:{slug}", " ".join(gl))
+        gl = pattern_projects(ctx, slug)
+        kvs_put(ctx, f"pp:{slug}", " ".join(gl))
         st = meta_status(ctx, slug)
         tok = kvs_get(ctx, f"token:{slug}")
         if st == "disabled":
@@ -402,7 +402,7 @@ def reconcile_projections(ctx: Ctx) -> None:
             warned += 1
         n += 1
     rebuild_gallery_index(ctx)
-    print(f"reconcile完了: {n}パターンの投影(pg:/index/status overlay)をmetaから再生成しました（要対応: {warned}件）。")
+    print(f"reconcile完了: {n}パターンの投影(pp:/index/status overlay)をmetaから再生成しました（要対応: {warned}件）。")
 
 
 # --- パターン操作コア（CLIラッパーとsmokeテストの両方から呼ばれる） -------------
@@ -499,7 +499,7 @@ def export_pattern_core(ctx: Ctx, slug: str, outdir: str | Path) -> tuple[Path, 
     return zip_path, pattern_count, comment_count
 
 
-def project_metas(ctx: Ctx, gslug: str) -> list[dict]:
+def project_metas(ctx: Ctx, pid: str) -> list[dict]:
     metas = []
     for k in list_keys(ctx, "meta/"):
         txt = s3_get_text(ctx, k)
@@ -509,20 +509,20 @@ def project_metas(ctx: Ctx, gslug: str) -> list[dict]:
             m = json.loads(txt)
         except Exception:
             continue
-        if gslug in (m.get("galleries") or []):
+        if pid in (m.get("projects") or []):
             metas.append(m)
     return metas
 
 
-def export_project_core(ctx: Ctx, gslug: str, outdir: str | Path,
+def export_project_core(ctx: Ctx, pid: str, outdir: str | Path,
                          mock_slugs: list[str] | None = None) -> tuple[Path, dict]:
     """プロジェクト単位エクスポート（論点3の最終合意）: 確定済みDESIGN.md 1件＋指定したUIモック＋
     各パターンのコメントを1つのzipにまとめる。未確定のDESIGN.md案は対象にしない。
     mock_slugsを指定しなければ「確定済み」のモックだけを対象にする（コンソールの既定選択と揃える）。"""
-    metas = project_metas(ctx, gslug)
+    metas = project_metas(ctx, pid)
     designs = [m for m in metas if m.get("type") == "design-review" and m.get("confirmedAt")]
     if not designs:
-        die(f"error: このプロジェクトには確定済みのDESIGN.mdがありません: {gslug}")
+        die(f"error: このプロジェクトには確定済みのDESIGN.mdがありません: {pid}")
     design = sorted(designs, key=lambda m: m.get("confirmedAt", ""), reverse=True)[0]
 
     mocks = [m for m in metas if m.get("type") != "design-review"]
@@ -545,7 +545,7 @@ def export_project_core(ctx: Ctx, gslug: str, outdir: str | Path,
 
         outdir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        zip_path = outdir / f"design-share-{gslug}-{stamp}.zip"
+        zip_path = outdir / f"design-share-{pid}-{stamp}.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
             for root, _dirs, files in os.walk(work):
                 for name in files:
@@ -577,26 +577,26 @@ def invalidate_pattern_core(ctx: Ctx, slug: str, do_export: bool = True) -> None
     rebuild_gallery_index(ctx)  # 無効化をギャラリー一覧へ反映
 
 
-def galleries_create_core(ctx: Ctx, name: str, project_key: str = "") -> tuple[str, str, str]:
-    gslug = new_gslug()
+def project_create_core(ctx: Ctx, name: str, project_key: str = "") -> tuple[str, str, str]:
+    pid = new_pid()
     token = new_token()
     project_key = project_key or slugify(name)
-    app_path = SCRIPT_DIR.parent / "references" / "templates" / "gallery-app.html"
-    ctx.s3.put_object(Bucket=ctx.bucket, Key="gallery/app.html",
+    app_path = SCRIPT_DIR.parent / "references" / "templates" / "project-app.html"
+    ctx.s3.put_object(Bucket=ctx.bucket, Key="proj/app.html",
                        Body=app_path.read_bytes(), ContentType="text/html; charset=utf-8")
-    gallery_meta_write(ctx, gslug, name, project_key)
-    kvs_put(ctx, f"g:{gslug}", token)
+    project_meta_write(ctx, pid, name, project_key)
+    kvs_put(ctx, f"proj:{pid}", token)
     rebuild_gallery_index(ctx)
-    return gslug, token, project_key
+    return pid, token, project_key
 
 
-def find_gslug_by_project_key(ctx: Ctx, project_key: str) -> str | None:
-    """ローカルのプロジェクトフォルダ名からクラウドのプロジェクト(gslug)を毎回その場で探す。
+def find_pid_by_project_key(ctx: Ctx, project_key: str) -> str | None:
+    """ローカルのプロジェクトフォルダ名からクラウドのプロジェクト(pid)を毎回その場で探す。
     ローカルには紐付け専用ファイルを一切持たない（論点6の最終合意）。"""
-    for k in list_keys(ctx, "galleries/"):
-        g = gallery_meta_get(ctx, Path(k).stem)
+    for k in list_keys(ctx, "projects/"):
+        g = project_meta_get(ctx, Path(k).stem)
         if g.get("projectKey") == project_key:
-            return g.get("gslug") or Path(k).stem
+            return g.get("pid") or Path(k).stem
     return None
 
 
@@ -701,7 +701,7 @@ def cmd_redeploy(ctx: Ctx, argv: list[str]) -> None:
     print("補足: 反映は数秒〜数十秒かかる場合があります。少し待ってから再読み込みしてください。")
 
 
-def supersede_confirmed_designs(ctx: Ctx, gslug: str, except_slug: str) -> list[str]:
+def supersede_confirmed_designs(ctx: Ctx, pid: str, except_slug: str) -> list[str]:
     """1プロジェクトにつき確定済みDESIGN.mdは常に高々1つ、という制約を強制する（論点4の最終合意）。
     同一プロジェクト内の他の確定済みdesign-reviewパターンを確定解除する。UIモックの確定はこの対象外
     （supersedeしない。論点4で複数モックが同時に確定していてよいと合意したため）。"""
@@ -719,7 +719,7 @@ def supersede_confirmed_designs(ctx: Ctx, gslug: str, except_slug: str) -> list[
             continue
         if m.get("type") != "design-review":
             continue
-        if gslug not in (m.get("galleries") or []):
+        if pid not in (m.get("projects") or []):
             continue
         if not m.get("confirmedAt"):
             continue
@@ -786,9 +786,9 @@ def cmd_confirm_design(ctx: Ctx, argv: list[str]) -> None:
     abs_dest = str(dest.resolve())
     meta_patch(ctx, slug, {"confirmedAt": now_iso(), "confirmedTo": abs_dest})
 
-    galleries = meta.get("galleries") or []
-    if galleries:
-        superseded = supersede_confirmed_designs(ctx, galleries[0], except_slug=slug)
+    projects = meta.get("projects") or []
+    if projects:
+        superseded = supersede_confirmed_designs(ctx, projects[0], except_slug=slug)
         if superseded:
             print(f"同一プロジェクト内の既存の確定済みDESIGN.mdを確定解除しました: {', '.join(superseded)}")
 
@@ -921,7 +921,7 @@ def cmd_gallery(ctx: Ctx, argv: list[str]) -> None:
         ctx.s3.put_object(Bucket=ctx.bucket, Key="gallery/index.html",
                            Body=html_path.read_bytes(), ContentType="text/html; charset=utf-8")
         rebuild_gallery_index(ctx)
-        kvs_put(ctx, "project:token", token)
+        kvs_put(ctx, "gallery:token", token)
         print()
         print("共有ギャラリーを有効化しました。")
         print(f"  URL       : {gallery_url}")
@@ -934,7 +934,7 @@ def cmd_gallery(ctx: Ctx, argv: list[str]) -> None:
         if not gallery_enabled(ctx):
             die("ギャラリーは未有効化です。先に ds.py gallery init を実行してください。")
         token = new_token()
-        kvs_put(ctx, "project:token", token)
+        kvs_put(ctx, "gallery:token", token)
         print()
         print("共通トークンを再発行しました（URLは変更なし）。")
         print(f"  URL         : {gallery_url}")
@@ -942,7 +942,7 @@ def cmd_gallery(ctx: Ctx, argv: list[str]) -> None:
         print()
         print("旧共通トークンはまもなく無効になります（エッジ反映まで数秒〜数十秒）。")
     elif sub == "disable":
-        kvs_put(ctx, "project:token", "DISABLED")
+        kvs_put(ctx, "gallery:token", "DISABLED")
         print(f"ギャラリーを無効化しました: {gallery_url} はまもなく403を返します（エッジ反映まで数秒〜数十秒）。")
         print("各パターンの個別URL＋個別トークンでのアクセスには影響しません。再有効化は ds.py gallery init です。")
     elif sub == "url":
@@ -951,28 +951,28 @@ def cmd_gallery(ctx: Ctx, argv: list[str]) -> None:
         print(__doc__)
 
 
-def gurl(ctx: Ctx, gslug: str) -> str:
-    return f"https://{ctx.domain}/g/{gslug}/"
+def purl(ctx: Ctx, pid: str) -> str:
+    return f"https://{ctx.domain}/proj/{pid}/"
 
 
-def require_gslug(g: str) -> None:
-    if not GSLUG_RE.match(g):
-        die(f"invalid gslug: {g}")
+def require_pid(pid: str) -> None:
+    if not PID_RE.match(pid):
+        die(f"invalid pid: {pid}")
 
 
 def require_pattern(s: str) -> None:
-    if not GSLUG_RE.match(s):
+    if not PID_RE.match(s):
         die(f"invalid pattern slug: {s}")
 
 
-def cmd_galleries(ctx: Ctx, argv: list[str]) -> None:
+def cmd_project(ctx: Ctx, argv: list[str]) -> None:
     if not argv:
         print(__doc__)
         return
     sub, rest = argv[0], argv[1:]
     if sub == "create":
         if not rest:
-            die('usage: galleries create "<表示名>" [--key <プロジェクトキー>]')
+            die('usage: project create "<表示名>" [--key <プロジェクトキー>]')
         name = None
         project_key = ""
         pos = []
@@ -987,81 +987,81 @@ def cmd_galleries(ctx: Ctx, argv: list[str]) -> None:
                 pos.append(rest[i])
                 i += 1
         if not pos:
-            die('usage: galleries create "<表示名>" [--key <プロジェクトキー>]')
+            die('usage: project create "<表示名>" [--key <プロジェクトキー>]')
         name = pos[0]
-        gslug, token, project_key = galleries_create_core(ctx, name, project_key)
+        pid, token, project_key = project_create_core(ctx, name, project_key)
         print()
-        print("カテゴリ（名前付きギャラリー＝プロジェクト）を作成しました。")
+        print("プロジェクトを作成しました。")
         print(f"  名前          : {name}")
         print(f"  プロジェクトキー: {project_key}")
-        print(f"  URL           : {gurl(ctx, gslug)}")
+        print(f"  URL           : {purl(ctx, pid)}")
         print(f"  トークン        : {token}")
         print()
-        print("このURLとトークンを渡した相手は、このカテゴリに入れたパターンだけを一覧・閲覧できます。")
-        print(f"トークンはこの一度だけ表示。パターンの追加は ds.py galleries add {gslug} <pattern-slug> です。")
+        print("このURLとトークンを渡した相手は、このプロジェクトに入れたパターンだけを一覧・閲覧できます。")
+        print(f"トークンはこの一度だけ表示。パターンの追加は ds.py project add {pid} <pattern-slug> です。")
         print(f"ローカルのプロジェクトフォルダ名を「{project_key}」にすると、コンソールが自動的にこのプロジェクトと紐付けます。")
     elif sub == "list":
-        keys = list_keys(ctx, "galleries/")
+        keys = list_keys(ctx, "projects/")
         if not keys:
-            print("カテゴリはまだありません。")
+            print("プロジェクトはまだありません。")
             return
         for k in keys:
-            gs = Path(k).stem
-            name = gallery_meta_name(ctx, gs)
-            tok = kvs_get(ctx, f"g:{gs}")
+            pid = Path(k).stem
+            name = project_meta_name(ctx, pid)
+            tok = kvs_get(ctx, f"proj:{pid}")
             if tok == "DISABLED":
                 st = "無効"
             elif tok and tok != "None":
                 st = "有効"
             else:
                 st = "トークン無し"
-            print(f"[{st}] {name or gs}  gslug={gs}  {gurl(ctx, gs)}")
+            print(f"[{st}] {name or pid}  pid={pid}  {purl(ctx, pid)}")
     elif sub == "rotate":
         if not rest:
-            die("usage: galleries rotate <gslug>")
-        gslug = rest[0]
-        require_gslug(gslug)
+            die("usage: project rotate <pid>")
+        pid = rest[0]
+        require_pid(pid)
         token = new_token()
-        kvs_put(ctx, f"g:{gslug}", token)
+        kvs_put(ctx, f"proj:{pid}", token)
         print()
         print("共有トークンを再発行しました（URL不変）。")
-        print(f"  URL     : {gurl(ctx, gslug)}")
+        print(f"  URL     : {purl(ctx, pid)}")
         print(f"  新トークン: {token}")
         print("旧トークンはまもなく無効になります（エッジ反映まで数秒〜数十秒）。")
     elif sub == "disable":
         if not rest:
-            die("usage: galleries disable <gslug>")
-        gslug = rest[0]
-        require_gslug(gslug)
-        kvs_put(ctx, f"g:{gslug}", "DISABLED")
-        print(f"カテゴリを無効化しました: {gurl(ctx, gslug)} はまもなく403になります。")
-        print(f"所属パターンの個別URL・他カテゴリには影響しません。再有効化は ds.py galleries rotate {gslug} です。")
+            die("usage: project disable <pid>")
+        pid = rest[0]
+        require_pid(pid)
+        kvs_put(ctx, f"proj:{pid}", "DISABLED")
+        print(f"プロジェクトを無効化しました: {purl(ctx, pid)} はまもなく403になります。")
+        print(f"所属パターンの個別URL・他プロジェクトには影響しません。再有効化は ds.py project rotate {pid} です。")
     elif sub == "delete":
         if not rest:
-            die("usage: galleries delete <gslug>")
-        gslug = rest[0]
-        require_gslug(gslug)
+            die("usage: project delete <pid>")
+        pid = rest[0]
+        require_pid(pid)
         for k in list_keys(ctx, "meta/"):
             slug = Path(k).stem
-            cur = pattern_galleries(ctx, slug)
-            if gslug in cur:
-                pattern_set_galleries(ctx, slug, [g for g in cur if g != gslug])
+            cur = pattern_projects(ctx, slug)
+            if pid in cur:
+                pattern_set_projects(ctx, slug, [p for p in cur if p != pid])
         try:
-            ctx.kvs.delete_key(KvsARN=ctx.kvs_arn, Key=f"g:{gslug}", IfMatch=kvs_etag(ctx))
+            ctx.kvs.delete_key(KvsARN=ctx.kvs_arn, Key=f"proj:{pid}", IfMatch=kvs_etag(ctx))
         except botocore.exceptions.ClientError:
             pass
-        _s3_delete_prefix(ctx, f"g/{gslug}/")
+        _s3_delete_prefix(ctx, f"proj/{pid}/")
         try:
-            ctx.s3.delete_object(Bucket=ctx.bucket, Key=f"galleries/{gslug}.json")
+            ctx.s3.delete_object(Bucket=ctx.bucket, Key=f"projects/{pid}.json")
         except botocore.exceptions.ClientError:
             pass
         rebuild_gallery_index(ctx)
-        print(f"カテゴリ {gslug} を削除しました（所属パターン自体は残っています）。")
+        print(f"プロジェクト {pid} を削除しました（所属パターン自体は残っています）。")
     elif sub == "export":
         if not rest:
-            die("usage: galleries export <gslug> [outdir] [--all-mocks] [--mocks slug1,slug2,...]")
-        gslug = rest[0]
-        require_gslug(gslug)
+            die("usage: project export <pid> [outdir] [--all-mocks] [--mocks slug1,slug2,...]")
+        pid = rest[0]
+        require_pid(pid)
         all_mocks = False
         explicit_mocks: list[str] | None = None
         outdir = "./exports"
@@ -1082,37 +1082,37 @@ def cmd_galleries(ctx: Ctx, argv: list[str]) -> None:
         if explicit_mocks is not None:
             mock_slugs = explicit_mocks
         elif all_mocks:
-            mock_slugs = [m["slug"] for m in project_metas(ctx, gslug) if m.get("type") != "design-review"]
+            mock_slugs = [m["slug"] for m in project_metas(ctx, pid) if m.get("type") != "design-review"]
         else:
             mock_slugs = None  # export_project_core既定: 確定済みのみ
-        zip_path, picked = export_project_core(ctx, gslug, outdir, mock_slugs=mock_slugs)
+        zip_path, picked = export_project_core(ctx, pid, outdir, mock_slugs=mock_slugs)
         print(f"エクスポート完了: {zip_path}")
         print(f"  DESIGN.md: {picked['design']}")
         print(f"  UIモック  : {len(picked['mocks'])}件")
     elif sub == "set":
         if not rest:
-            die("usage: galleries set <pattern-slug> [gslug...]")
-        slug, gslugs = rest[0], rest[1:]
+            die("usage: project set <pattern-slug> [pid...]")
+        slug, pids = rest[0], rest[1:]
         require_pattern(slug)
-        for g in gslugs:
-            require_gslug(g)
-        pattern_set_galleries(ctx, slug, gslugs)
-        print(f"更新しました: {slug} の所属カテゴリ = [ {' '.join(gslugs)} ]")
+        for p in pids:
+            require_pid(p)
+        pattern_set_projects(ctx, slug, pids)
+        print(f"更新しました: {slug} の所属プロジェクト = [ {' '.join(pids)} ]")
     elif sub in ("add", "remove"):
         if len(rest) < 2:
-            die(f"usage: galleries {sub} <gslug> <pattern-slug>")
-        gslug, slug = rest[0], rest[1]
-        require_gslug(gslug)
+            die(f"usage: project {sub} <pid> <pattern-slug>")
+        pid, slug = rest[0], rest[1]
+        require_pid(pid)
         require_pattern(slug)
-        if not gallery_meta_name(ctx, gslug):
-            die(f"カテゴリが存在しません: {gslug}")
-        cur = pattern_galleries(ctx, slug)
+        if not project_meta_name(ctx, pid):
+            die(f"プロジェクトが存在しません: {pid}")
+        cur = pattern_projects(ctx, slug)
         if sub == "add":
-            newlist = sorted(set(cur) | {gslug})
+            newlist = sorted(set(cur) | {pid})
         else:
-            newlist = [g for g in cur if g != gslug]
-        pattern_set_galleries(ctx, slug, newlist)
-        print(f"更新しました: {slug} の所属カテゴリ = [ {' '.join(newlist)} ]")
+            newlist = [p for p in cur if p != pid]
+        pattern_set_projects(ctx, slug, newlist)
+        print(f"更新しました: {slug} の所属プロジェクト = [ {' '.join(newlist)} ]")
     else:
         print(__doc__)
 
@@ -1493,11 +1493,11 @@ def cmd_smoke(ctx: Ctx, argv: list[str]) -> int:
         got = get_body(f"{base}/{key}", jar=jar)
         ok("コメント本文を取得できる") if marker in got else ng("コメント本文を取得できない")
 
-        info("6b. カテゴリのスコープ制御（最重要）")
+        info("6b. プロジェクトのスコープ制御（最重要）")
         fd2, tmp2 = tempfile.mkstemp(suffix=".html")
         with os.fdopen(fd2, "w", encoding="utf-8") as f2:
             f2.write(f'<!doctype html><title>s2</title><main>NONMEMBER-{marker}</main>')
-        slug2 = catg = cattok = None
+        slug2 = pid2 = pid2tok = None
         try:
             slug2, _tok2, _ = deploy_pattern_core(ctx, tmp2, f"smoke-nonmember {marker}")
         except Exception:
@@ -1505,34 +1505,34 @@ def cmd_smoke(ctx: Ctx, argv: list[str]) -> int:
         finally:
             os.unlink(tmp2)
         try:
-            catg, cattok, _ = galleries_create_core(ctx, f"smoke-cat {marker}")
-            pattern_set_galleries(ctx, slug, list(set(pattern_galleries(ctx, slug)) | {catg}))
+            pid2, pid2tok, _ = project_create_core(ctx, f"smoke-proj {marker}")
+            pattern_set_projects(ctx, slug, list(set(pattern_projects(ctx, slug)) | {pid2}))
         except Exception:
             pass
-        if slug2 and catg and cattok:
-            def cat_ok() -> bool:
-                return get_code(f"{base}/g/{catg}/verify", headers={"x-share-token": cattok}) == 204
+        if slug2 and pid2 and pid2tok:
+            def proj_ok() -> bool:
+                return get_code(f"{base}/proj/{pid2}/verify", headers={"x-share-token": pid2tok}) == 204
 
-            streak_ok(30, 3, 4, "カテゴリトークン収束", cat_ok)
+            streak_ok(30, 3, 4, "プロジェクトトークン収束", proj_ok)
             cjar = http.cookiejar.CookieJar()
-            _do_request(f"{base}/g/{catg}/verify", headers={"x-share-token": cattok}, jar=cjar)
+            _do_request(f"{base}/proj/{pid2}/verify", headers={"x-share-token": pid2tok}, jar=cjar)
 
             def memb_ok() -> bool:
                 return get_code(f"{base}/p/{slug}/", jar=cjar) == 200
 
             if streak_ok(30, 3, 3, "所属案アクセス収束", memb_ok):
-                ok("所属案 → カテゴリCookieで200（横断成立）")
+                ok("所属案 → プロジェクトCookieで200（横断成立）")
             else:
-                ng("所属案がカテゴリCookieで開けない")
+                ng("所属案がプロジェクトCookieで開けない")
             nm = get_code(f"{base}/p/{slug2}/", jar=cjar)
-            ok("★非所属案 → 401（スコープ遮断）") if nm == 401 else ng(f"★非所属案がカテゴリCookieで開ける（{nm}）＝スコープ漏れ")
+            ok("★非所属案 → 401（スコープ遮断）") if nm == 401 else ng(f"★非所属案がプロジェクトCookieで開ける（{nm}）＝スコープ漏れ")
             try:
-                cur = pattern_galleries(ctx, slug)
-                if catg in cur:
-                    pattern_set_galleries(ctx, slug, [g for g in cur if g != catg])
-                ctx.kvs.delete_key(KvsARN=ctx.kvs_arn, Key=f"g:{catg}", IfMatch=kvs_etag(ctx))
-                _s3_delete_prefix(ctx, f"g/{catg}/")
-                ctx.s3.delete_object(Bucket=ctx.bucket, Key=f"galleries/{catg}.json")
+                cur = pattern_projects(ctx, slug)
+                if pid2 in cur:
+                    pattern_set_projects(ctx, slug, [p for p in cur if p != pid2])
+                ctx.kvs.delete_key(KvsARN=ctx.kvs_arn, Key=f"proj:{pid2}", IfMatch=kvs_etag(ctx))
+                _s3_delete_prefix(ctx, f"proj/{pid2}/")
+                ctx.s3.delete_object(Bucket=ctx.bucket, Key=f"projects/{pid2}.json")
                 rebuild_gallery_index(ctx)
             except Exception:
                 pass
@@ -1638,8 +1638,8 @@ def main() -> None:
         cmd_deploy_function(ctx, rest)
     elif cmd == "gallery":
         cmd_gallery(ctx, rest)
-    elif cmd == "galleries":
-        cmd_galleries(ctx, rest)
+    elif cmd == "project":
+        cmd_project(ctx, rest)
     elif cmd == "reconcile":
         cmd_reconcile(ctx, rest)
     elif cmd == "smoke":

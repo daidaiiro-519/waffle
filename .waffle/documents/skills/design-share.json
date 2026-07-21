@@ -121,8 +121,8 @@
           "children": [
             {
               "stepId": "step-3-0",
-              "title": "初回デプロイの前にプロジェクト用の名前付きギャラリーを用意する",
-              "summary": "DESIGN.mdを伴う最初のデプロイは、そのプロジェクトの開始を意味する。以降そのプロジェクトで生成する全てのパターン・スペックシートが一箇所から横断閲覧できるよう、デプロイ前に uv run scripts/ds.py galleries create でプロジェクト専用の名前付きギャラリー（カテゴリ）を作成し、以降このプロジェクトのデプロイは全て uv run scripts/ds.py galleries add でそのカテゴリへ登録する。個別のURLを単独で渡すだけで終えない。",
+              "title": "初回デプロイの前にプロジェクトを用意する",
+              "summary": "DESIGN.mdを伴う最初のデプロイは、そのプロジェクトの開始を意味する。以降そのプロジェクトで生成する全てのパターン・スペックシートが一箇所から横断閲覧できるよう、デプロイ前に uv run scripts/ds.py project create でプロジェクトを作成し、以降このプロジェクトのデプロイは全て uv run scripts/ds.py project add でそのプロジェクトへ登録する。個別のURLを単独で渡すだけで終えない。",
               "bullets": []
             },
             {
@@ -179,7 +179,7 @@
             "確定（採用）: DESIGN.mdは uv run scripts/ds.py confirm-design <slug> で正式配置する（1プロジェクトにつき常に1つ、confirm時に既存の確定は自動解除）。UIモックにも確定（採用案にする）の概念があるが、こちらはsupersedeしない——同じプロジェクト内で複数のUIモックが同時に確定していてよい（別々の枠を担当する複数モックが並存しうるため）。いずれもコンソールの⋯メニューから操作できる",
             "エクスポート（プロジェクト単位）: 確定済みDESIGN.md 1件＋そのプロジェクトのUIモック＋各パターンのコメントをまとめてzip化する。コンソールのエクスポート画面ではUIモックをチェックボックスで選択でき、既定では確定済みのものだけにチェックが入る（検討中のものも任意で追加選択できる）",
             "共有ギャラリー: uv run scripts/ds.py gallery init で1つのランディングURL＋共通トークンを発行し、閲覧者が公開中の全パターンを一覧・横断閲覧できるようにする（rotate/disableで共通トークンを管理）",
-            "カテゴリ（名前付きギャラリー＝プロジェクト）: uv run scripts/ds.py galleries create でカテゴリを発行し、uv run scripts/ds.py galleries add/remove/set で各パターンの所属を管理する。カテゴリのトークンは所属パターンだけを開ける（スコープ共有）。カテゴリごとの無効化（uv run scripts/ds.py galleries disable <gslug>）もコンソールの⋯メニューから操作できる"
+            "プロジェクト: uv run scripts/ds.py project create でプロジェクトを発行し、uv run scripts/ds.py project add/remove/set で各パターンの所属を管理する。プロジェクトのトークンは所属パターンだけを開ける（スコープ共有）。プロジェクトごとの無効化（uv run scripts/ds.py project disable <pid>）もコンソールの⋯メニューから操作できる"
           ],
           "children": []
         }
@@ -218,8 +218,8 @@
         "【自然言語の写像ゲート】ユーザー発話をDesign.md確定・トークン決定に反映する前に、references/knowledge/nl-feature-routing.md の5特徴量カテゴリ（視覚・印象／情報構造・タスク型／利用文脈・習熟度／トーン・ボイス／リスク・不可逆性）に照らし、「この発話のどの部分が・どのカテゴリで・どこへ送られるか（8語のどれ、またはprogressive-disclosure/ui-copywriting等の既存knowledge）」を一文で言い切ってから展開する。硬い対応表として機械的に照合せず、発話ごとに言葉で言い切る（理由を言い切るの対になる注入側のゲート）。確定したトークン・構成要素には、それがどの発話・どの特徴量カテゴリに由来するかを一言添える（DESIGN.mdのコメント等）。これにより注入の質を事後検証でき、展開側の成果物のトレーサビリティも同時に補う。",
         "design-shareが生成した成果物（DESIGN.md・パターンHTML）は、その内容が何について語っているか（design-share自身か、design-shareを使う側のプロジェクトの何かか）に関わらず、常に design-share自身の管理下（.claude/skills/design-share/examples/<題材のslug>/ 配下、DESIGN.mdと生成HTMLを同居させる）に置く。design-shareが自らconsumer側のプロジェクト構造（docs/等）を推測して配置先を決めることはしない——それを行うとdesign-shareが個々のプロジェクト構造に依存する密結合なツールになる。成果物を最終的にどこへ配置するか（例: docs/等の公開場所へ移す）は、design-shareの範囲外の作業として人間が個別に判断・実行する。",
         "【DESIGN.mdとUIモックの確定は非対称】DESIGN.mdは1プロジェクトにつき確定済みは常に1つまで（confirm-design実行時、同一プロジェクト内の既存の確定済みDESIGN.mdは自動的に確定解除＝supersedeする）。UIモックの確定（採用案にする）はsupersedeしない——同じプロジェクト内で複数のUIモックが同時に確定していてよい。理由: DESIGN.mdはそのプロジェクトのデザインシステムそのものであり1つしかあり得ないが、UIモックは別々の枠（ヒーロー・料金セクション等）を担当する複数モックが同時に確定していて自然なため。",
-        "【ローカル/クラウド同期状態の判定はその場で計算し、ローカルにマニフェストファイルを持たない】各パターンのmeta.jsonに sourceFile（デプロイ元のローカルファイルパス）・sourceHash（アップロード時点のsha256）を持たせる。コンソールはローカルファイルをその場でハッシュ化し、同じsourceFileを持つパターン（複数あれば最新のもの）のsourceHashと比較して「公開中／未公開／再公開待ち」を判定する。ローカルに`.gslug`や`.deployed.json`のような紐付け専用ファイルは一切置かない。理由: 複数人・複数マシンで同じプロジェクトを触っても全員が同じクラウドの実体を見て判定するため機械的に食い違わず、新規にコミットするファイルも増えないためgitの競合が原理的に起きない。",
-        "【プロジェクト（名前付きギャラリー）の紐付けも同じ理屈で解決する】galleries create時に、表示名とは別に半角の「プロジェクトキー」（例: design-share-lp）を galleries/{gslug}.json に持たせ、ローカルのプロジェクトフォルダ名にも同じ文字列を使う。コンソールはローカルのフォルダ名を毎回クラウドの全プロジェクトのprojectKeyと照合し、一致すればそのgslugを使う。どこにも見つからなければ本当に「未公開」（一度もデプロイされていない）と判定する。",
+        "【ローカル/クラウド同期状態の判定はその場で計算し、ローカルにマニフェストファイルを持たない】各パターンのmeta.jsonに sourceFile（デプロイ元のローカルファイルパス）・sourceHash（アップロード時点のsha256）を持たせる。コンソールはローカルファイルをその場でハッシュ化し、同じsourceFileを持つパターン（複数あれば最新のもの）のsourceHashと比較して「公開中／未公開／再公開待ち」を判定する。ローカルに`.pid`や`.deployed.json`のような紐付け専用ファイルは一切置かない。理由: 複数人・複数マシンで同じプロジェクトを触っても全員が同じクラウドの実体を見て判定するため機械的に食い違わず、新規にコミットするファイルも増えないためgitの競合が原理的に起きない。",
+        "【プロジェクトの紐付けも同じ理屈で解決する】project create時に、表示名とは別に半角の「プロジェクトキー」（例: design-share-lp）を projects/{pid}.json に持たせ、ローカルのプロジェクトフォルダ名にも同じ文字列を使う。コンソールはローカルのフォルダ名を毎回クラウドの全プロジェクトのprojectKeyと照合し、一致すればそのpidを使う。どこにも見つからなければ本当に「未公開」（一度もデプロイされていない）と判定する。",
         "【ローカルフォルダ構成】プロジェクトフォルダ（design-share自身の運用では`.claude/skills/design-share/.design-share/<プロジェクト名>/`、通常の顧客プロジェクトではそのリポジトリのルート、代理店運用では共有ワークスペース内のサブフォルダ）の直下に、成果物としてDESIGN.md・mocks/（デプロイ用UIモックHTML一式）を置く（コミット対象）。`.design-share/`配下にpreview/（DESIGN.mdのレンダリング確認用。render_spec_sheet.mjsの出力をブラウザで直接開いてクラウドに触れずに確認できる）・backups/（確定時の.bak退避）・exports/（エクスポートしたzip）を置く（.gitignore対象、いつでも再生成できる使い捨てファイルのため）。design-share自身の自己言及的な成果物についても、旧`examples/<slug>/`規約は廃止し、この構成に統一する。"
       ]
     },
@@ -277,15 +277,15 @@
         },
         {
           "path": "infra/cloudfront-function/edge-gate.js",
-          "description": "トークン照合・無効化判定・コメントPUT検査(形状/content-type/16KBサイズ上限)・名前付きギャラリーのスコープ判定・一覧書き換えを行うエッジ関数。KVS読み取りは通常1回、ギャラリー横断/スコープ経路で最大約6回（所属は最大3件・fail-closed）"
+          "description": "トークン照合・無効化判定・コメントPUT検査(形状/content-type/16KBサイズ上限)・プロジェクトのスコープ判定・一覧書き換えを行うエッジ関数。KVS読み取りは通常1回、ギャラリー横断/スコープ経路で最大約6回（所属は最大3件・fail-closed）"
         },
         {
           "path": "scripts/ds.py",
-          "description": "統一CLIの実体（PEP 723でboto3+awscrtを宣言、uv run --scriptで隔離環境実行）。旧common.sh/init.sh/destroy.sh/deploy_pattern.sh/confirm_design.sh/export_pattern.sh/rotate_token.sh/invalidate_pattern.sh/rename_pattern.sh/gallery.sh/galleries.sh/deploy_function.sh/smoke_test.shを1ファイルへ統合した。init（AWS環境の対話式セットアップ）／destroy（対話式削除）／list／deploy（--type design-review・--design対応、新規パターンの初回公開で新しいURLを発行する）／redeploy（既存パターンの内容だけを差し替える。URL・トークン・既存コメントは維持する）／confirm-design／export／rotate／disable／rename／console／update-function／gallery／galleries／reconcile／smoke の全コマンドを提供する。KVSの「未設定」と「取得失敗（ARN誤り等）」をエラーメッセージで判別し、後者は握りつぶさず伝播させる（bash版で実際に踏んだ事故の再発防止）"
+          "description": "統一CLIの実体（PEP 723でboto3+awscrtを宣言、uv run --scriptで隔離環境実行）。旧common.sh/init.sh/destroy.sh/deploy_pattern.sh/confirm_design.sh/export_pattern.sh/rotate_token.sh/invalidate_pattern.sh/rename_pattern.sh/gallery.sh/galleries.sh/deploy_function.sh/smoke_test.shを1ファイルへ統合した。init（AWS環境の対話式セットアップ）／destroy（対話式削除）／list／deploy（--type design-review・--design対応、新規パターンの初回公開で新しいURLを発行する）／redeploy（既存パターンの内容だけを差し替える。URL・トークン・既存コメントは維持する）／confirm-design／export／rotate／disable／rename／console／update-function／gallery／project／reconcile／smoke の全コマンドを提供する。KVSの「未設定」と「取得失敗（ARN誤り等）」をエラーメッセージで判別し、後者は握りつぶさず伝播させる（bash版で実際に踏んだ事故の再発防止）"
         },
         {
           "path": "scripts/console_server.py",
-          "description": "Web管理コンソール（localhostのみ・Host検証＋乱数トークンでCSRF防御）。uv run scripts/console_server.pyで起動する（PEP 723でboto3+awscrtを宣言、親プロジェクトのvenvを汚さない）。一覧取得(/api/state)はKVSトークンの実値を含めず高速に返し、共有メニューを開いたときだけ/api/tokenでトークンをオンデマンド取得する（CloudFront KeyValueStoreのSigV4A署名は1回約1.3秒かかり並列化でも縮まらないため、全件事前取得を避ける設計）。行ごとの⋯メニューでエクスポート/改名/トークン再発行/無効化・再公開、共有ギャラリーの有効化/共通トークン再発行/無効化も操作できる。カテゴリ（名前付きギャラリー）の作成・一覧・所属編集もできる"
+          "description": "Web管理コンソール（localhostのみ・Host検証＋乱数トークンでCSRF防御）。uv run scripts/console_server.pyで起動する（PEP 723でboto3+awscrtを宣言、親プロジェクトのvenvを汚さない）。一覧取得(/api/state)はKVSトークンの実値を含めず高速に返し、共有メニューを開いたときだけ/api/tokenでトークンをオンデマンド取得する（CloudFront KeyValueStoreのSigV4A署名は1回約1.3秒かかり並列化でも縮まらないため、全件事前取得を避ける設計）。行ごとの⋯メニューでエクスポート/改名/トークン再発行/無効化・再公開、共有ギャラリーの有効化/共通トークン再発行/無効化も操作できる。プロジェクトの作成・一覧・所属編集もできる"
         },
         {
           "path": "scripts/mcp_server.py",
@@ -296,8 +296,8 @@
           "description": "共有ギャラリー（公開中パターンの一覧・横断閲覧）のランディングページ雛形。gallery/index.htmlとして配置される"
         },
         {
-          "path": "references/templates/gallery-app.html",
-          "description": "名前付きギャラリーのランディング雛形（URLからgslugを読み /g/{gslug}/index.json を表示）。gallery/app.htmlとして全カテゴリ共用配置"
+          "path": "references/templates/project-app.html",
+          "description": "プロジェクトのランディング雛形（URLからpidを読み /proj/{pid}/index.json を表示）。proj/app.htmlとして全プロジェクト共用配置"
         },
         {
           "path": "assets/fonts/",

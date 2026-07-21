@@ -350,8 +350,8 @@
     try {
       const ref = new URL(document.referrer);
       if (ref.origin === location.origin) {
-        const mg = ref.pathname.match(/^\/g\/([A-Za-z0-9_-]+)\//);
-        if (mg) t = { href: '/g/' + mg[1] + '/', label: '← カテゴリに戻る' };
+        const mg = ref.pathname.match(/^\/proj\/([A-Za-z0-9_-]+)\//);
+        if (mg) t = { href: '/proj/' + mg[1] + '/', label: '← プロジェクトに戻る' };
         else if (ref.pathname.indexOf('/gallery') === 0) t = { href: '/gallery/', label: '← ギャラリーに戻る' };
       }
     } catch (e) {}

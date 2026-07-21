@@ -7,8 +7,8 @@
 //        キー無し    = 未発行slug → 403
 //      KVS読み取り回数（cf2実行予算に影響）:
 //        - パターン別Cookieで通る通常経路 = 1読み（token:{slug}のみ）
-//        - 全体ギャラリー共通Cookie経由    = +1読み（project:token）
-//        - 名前付きギャラリーのスコープ経由 = +pg:{slug} +該当g:{gslug}（所属は最大3件に制限）
+//        - 全体ギャラリー共通Cookie経由    = +1読み（gallery:token）
+//        - プロジェクトのスコープ経由      = +pp:{slug} +該当proj:{pid}（所属は最大3件に制限）
 //        最悪ケースで最大約6読み。予算超過時はcf2がエラー→CloudFrontが5xx（fail-closed=安全側）
 //   2. トークン照合: Cookie "share_{slug}" の値をKVS現在値と毎回直接比較する
 //      （ローテーションはKVSの値を書き換えるだけで旧トークンが自動失効する）
@@ -42,9 +42,9 @@ padding:.55rem .7rem;width:100%;cursor:pointer}
 document.getElementById('go').addEventListener('click', async () => {
   const p = location.pathname;
   let verify;
-  const mg = p.match(/^\\/g\\/([A-Za-z0-9_-]+)/);
+  const mg = p.match(/^\\/proj\\/([A-Za-z0-9_-]+)/);
   const mp = p.match(/^\\/p\\/([A-Za-z0-9_-]+)/);
-  if (mg) verify = '/g/' + mg[1] + '/verify';
+  if (mg) verify = '/proj/' + mg[1] + '/verify';
   else if (p.indexOf('/gallery') === 0) verify = '/gallery/verify';
   else verify = '/p/' + (mp ? mp[1] : '') + '/verify';
   const r = await fetch(verify,
@@ -101,79 +101,79 @@ function setCookie(name, value) {
   };
 }
 
-// プロジェクト共通トークン（全体ギャラリー用）の現在値。未設定/取得失敗はnull。
-async function projectToken() {
+// 全体ギャラリー共通トークンの現在値。未設定/取得失敗はnull。
+async function galleryToken() {
   try {
-    const v = await kvs.get('project:token');
+    const v = await kvs.get('gallery:token');
     return (v && v !== 'DISABLED') ? v : null;
   } catch (e) {
     return null;
   }
 }
 
-// パスから名前付きギャラリーのidを取り出す: /g/{gslug}/...
-function extractGallery(uri) {
-  const m = uri.match(/^\/g\/([A-Za-z0-9_-]+)/);
+// パスからプロジェクトのidを取り出す: /proj/{pid}/...
+function extractProject(uri) {
+  const m = uri.match(/^\/proj\/([A-Za-z0-9_-]+)/);
   return m ? m[1] : null;
 }
 
-// 名前付きギャラリーの現在トークン（未設定/無効/失敗はnull）
-async function galleryToken(gslug) {
+// プロジェクトの現在トークン（未設定/無効/失敗はnull）
+async function projectToken(pid) {
   try {
-    const v = await kvs.get('g:' + gslug);
+    const v = await kvs.get('proj:' + pid);
     return (v && v !== 'DISABLED') ? v : null;
   } catch (e) {
     return null;
   }
 }
 
-// 名前付きギャラリー経路（カテゴリ固有トークンで保護・スコープ）。実体はS3のgallery/app.html。
-async function handleNamedGallery(request, gslug, uri, method) {
+// プロジェクト経路（プロジェクト固有トークンで保護・スコープ）。実体はS3のproj/app.html。
+async function handleProject(request, pid, uri, method) {
   if (method !== 'GET' && method !== 'HEAD') {
     return deny(403);
   }
-  const gt = await galleryToken(gslug);
-  if (!gt) {
+  const pt = await projectToken(pid);
+  if (!pt) {
     return htmlResponse(403, DISABLED_HTML); // 未作成 or 無効化済み
   }
-  if (uri === '/g/' + gslug + '/verify') {
+  if (uri === '/proj/' + pid + '/verify') {
     const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value : '';
-    if (supplied === gt) {
-      return setCookie('gt_' + gslug, gt);
+    if (supplied === pt) {
+      return setCookie('pt_' + pid, pt);
     }
     return { statusCode: 401, statusDescription: 'Unauthorized' };
   }
-  if (getCookie(request, 'gt_' + gslug) !== gt) {
+  if (getCookie(request, 'pt_' + pid) !== pt) {
     return htmlResponse(401, GATE_HTML);
   }
-  // /g/{gslug} または /g/{gslug}/ → 共有ギャラリーアプリ（gslugはURLからJSが読む）
-  if (uri === '/g/' + gslug || uri === '/g/' + gslug + '/') {
-    request.uri = '/gallery/app.html';
+  // /proj/{pid} または /proj/{pid}/ → プロジェクトアプリ（pidはURLからJSが読む）
+  if (uri === '/proj/' + pid || uri === '/proj/' + pid + '/') {
+    request.uri = '/proj/app.html';
   }
-  // /g/{gslug}/index.json 等はそのままS3のg/{gslug}/配下へ通す
+  // /proj/{pid}/index.json 等はそのままS3のproj/{pid}/配下へ通す
   return request;
 }
 
-// ギャラリー経路（プロジェクト共通トークンで保護）。1URL＋1共通トークンで
+// 全体ギャラリー経路（共通トークンで保護）。1URL＋1共通トークンで
 // 公開中パターンを一覧・横断できるランディング。実体ファイルはS3の gallery/ 配下。
 async function handleGallery(request, uri, method) {
   if (method !== 'GET' && method !== 'HEAD') {
     return deny(403);
   }
-  const pt = await projectToken();
-  if (!pt) {
+  const gt = await galleryToken();
+  if (!gt) {
     return htmlResponse(403, DISABLED_HTML); // ギャラリー未有効化 or 無効化済み
   }
-  // 共通トークン検証: 成功で share_project Cookie を発行
+  // 共通トークン検証: 成功で share_gallery Cookie を発行
   if (uri === '/gallery/verify') {
     const supplied = request.headers['x-share-token']
       ? request.headers['x-share-token'].value : '';
-    if (supplied === pt) {
-      return setCookie('share_project', pt);
+    if (supplied === gt) {
+      return setCookie('share_gallery', gt);
     }
     return { statusCode: 401, statusDescription: 'Unauthorized' };
   }
-  if (getCookie(request, 'share_project') !== pt) {
+  if (getCookie(request, 'share_gallery') !== gt) {
     return htmlResponse(401, GATE_HTML);
   }
   // /gallery または /gallery/ → gallery/index.html 補完
@@ -193,10 +193,10 @@ async function handler(event) {
   if (uri === '/' || uri.indexOf('/gallery') === 0) {
     return await handleGallery(request, uri === '/' ? '/gallery/' : uri, method);
   }
-  // /g/{gslug}/ は名前付きギャラリー（カテゴリ）へ
-  const gslug = extractGallery(uri);
-  if (gslug) {
-    return await handleNamedGallery(request, gslug, uri, method);
+  // /proj/{pid}/ はプロジェクトへ
+  const pid = extractProject(uri);
+  if (pid) {
+    return await handleProject(request, pid, uri, method);
   }
 
   const slug = extractSlug(uri);
@@ -234,25 +234,25 @@ async function handler(event) {
   // アクセス許可（いずれか成立で通す。KVS追加読み取りは前段が不一致のときだけ）:
   //   1. パターン別Cookie一致（通常はKVS読み取り1回で完結）
   //   2. 全体ギャラリー共通Cookie一致（+1読み）
-  //   3. 名前付きギャラリーのスコープ一致: このパターンが所属するカテゴリ(pg:{slug})のうち、
-  //      閲覧者が有効なCookie(gt_{gslug})を持つものがあれば通す（+pg読み +該当ギャラリー読み）
+  //   3. プロジェクトのスコープ一致: このパターンが所属するプロジェクト(pp:{slug})のうち、
+  //      閲覧者が有効なCookie(pt_{pid})を持つものがあれば通す（+pp読み +該当プロジェクト読み）
   let allowed = getCookie(request, 'share_' + slug) === expected;
-  if (!allowed && getCookie(request, 'share_project')) {
-    const pt = await projectToken();
-    allowed = pt !== null && getCookie(request, 'share_project') === pt;
+  if (!allowed && getCookie(request, 'share_gallery')) {
+    const gt = await galleryToken();
+    allowed = gt !== null && getCookie(request, 'share_gallery') === gt;
   }
   if (!allowed) {
     let member = null;
-    try { member = await kvs.get('pg:' + slug); } catch (e) { member = null; }
+    try { member = await kvs.get('pp:' + slug); } catch (e) { member = null; }
     if (member) {
-      const gslugs = member.split(' ');
-      for (let i = 0; i < gslugs.length && i < 3 && !allowed; i++) {
-        const g = gslugs[i];
-        if (!g) continue;
-        const cookie = getCookie(request, 'gt_' + g);
+      const pids = member.split(' ');
+      for (let i = 0; i < pids.length && i < 3 && !allowed; i++) {
+        const p = pids[i];
+        if (!p) continue;
+        const cookie = getCookie(request, 'pt_' + p);
         if (!cookie) continue;
-        const gt = await galleryToken(g);
-        if (gt !== null && cookie === gt) allowed = true;
+        const pt = await projectToken(p);
+        if (pt !== null && cookie === pt) allowed = true;
       }
     }
   }

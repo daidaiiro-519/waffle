@@ -241,7 +241,7 @@
   }
   $('c-cancelreply').addEventListener('click', () => { replyTarget = null; $('c-replyctx').classList.remove('on'); });
 
-  // 戻る導線: 参照元がカテゴリ(/g/{id}/)か全体ギャラリー(/gallery/)ならそこへ戻す。
+  // 戻る導線: 参照元がプロジェクト(/proj/{id}/)か全体ギャラリー(/gallery/)ならそこへ戻す。
   // sessionStorageに覚えてリロード後も維持。どちらも無ければ全体ギャラリーのアクセス可否で判定。
   (function () {
     const bar = $('backbar');
@@ -250,8 +250,8 @@
     try {
       const ref = new URL(document.referrer);
       if (ref.origin === location.origin) {
-        const mg = ref.pathname.match(/^\/g\/([A-Za-z0-9_-]+)\//);
-        if (mg) t = { href: '/g/' + mg[1] + '/', label: '← カテゴリに戻る' };
+        const mg = ref.pathname.match(/^\/proj\/([A-Za-z0-9_-]+)\//);
+        if (mg) t = { href: '/proj/' + mg[1] + '/', label: '← プロジェクトに戻る' };
         else if (ref.pathname.indexOf('/gallery') === 0) t = { href: '/gallery/', label: '← ギャラリーに戻る' };
       }
     } catch (e) {}
