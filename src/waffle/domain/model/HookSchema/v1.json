@@ -4,12 +4,21 @@
   "title": "HookSchema v1",
   "description": "Claude Code hook（.waffle/hooks/*.py）の意図・判定ロジックの所在を記録する document の Schema（usecase-delegate / self-contained 両対応）。settings.json側のtrigger配線（matcher等）そのものは持たず、正本のまま維持する。",
   "x-render-target": {
-    "formats": ["md"],
+    "formats": [
+      "md"
+    ],
     "path": ".waffle/hooks/{documentId}.md"
   },
   "x-source-target": ".waffle/documents/hooks/{documentId}.json",
   "type": "object",
-  "required": ["documentId", "documentType", "schemaRef", "hookKind", "status", "content"],
+  "required": [
+    "documentId",
+    "documentType",
+    "schemaRef",
+    "hookKind",
+    "status",
+    "content"
+  ],
   "properties": {
     "documentId": {
       "type": "string",
@@ -25,12 +34,19 @@
     },
     "hookKind": {
       "type": "string",
-      "enum": ["usecase-delegate", "self-contained"],
-      "x-prompt-write": "判定ロジックをusecase（src/waffle/application/usecases/配下）へ委譲する薄い駆動アダプターなら usecase-delegate。判定ロジックをスクリプト自身が完結して持つなら self-contained を指定してください。"
+      "enum": [
+        "usecase-delegate",
+        "self-contained"
+      ],
+      "x-prompt-write": "判定ロジックを、既存の再利用可能な処理（ユースケース）へ委譲する薄い駆動アダプターであれば usecase-delegate を指定してください。判定ロジックをスクリプト自身が完結して持つ場合は self-contained を指定してください。委譲先の具体的な特定方法は「委譲先usecase」ブロックで別途記録します。"
     },
     "status": {
       "type": "string",
-      "enum": ["DRAFT", "ACTIVE", "DEPRECATED"],
+      "enum": [
+        "DRAFT",
+        "ACTIVE",
+        "DEPRECATED"
+      ],
       "x-prompt-write": "作成中は DRAFT、settings.jsonに登録済みで稼働中なら ACTIVE、廃止する場合は DEPRECATED を指定してください。"
     },
     "createdAt": {
@@ -50,10 +66,17 @@
           "type": "object",
           "additionalProperties": {
             "type": "object",
-            "required": ["blockType", "prompt"],
+            "required": [
+              "blockType",
+              "prompt"
+            ],
             "properties": {
-              "blockType": { "type": "string" },
-              "prompt": { "type": "string" }
+              "blockType": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
             }
           }
         }
@@ -66,55 +89,114 @@
   "$defs": {
     "DelegateContent": {
       "type": "object",
-      "required": ["title", "purpose", "trigger", "usecaseRef", "scriptRef", "guardrails"],
+      "required": [
+        "title",
+        "purpose",
+        "trigger",
+        "usecaseRef",
+        "scriptRef",
+        "guardrails"
+      ],
       "additionalProperties": false,
       "properties": {
-        "title": { "$ref": "#/$defs/TitleBlock" },
-        "purpose": { "$ref": "#/$defs/PurposeBlock" },
-        "trigger": { "$ref": "#/$defs/TriggerBlock" },
-        "usecaseRef": { "$ref": "#/$defs/UsecaseRefBlock" },
-        "scriptRef": { "$ref": "#/$defs/ScriptRefBlock" },
-        "guardrails": { "$ref": "#/$defs/GuardrailsBlock" }
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "purpose": {
+          "$ref": "#/$defs/PurposeBlock"
+        },
+        "trigger": {
+          "$ref": "#/$defs/TriggerBlock"
+        },
+        "usecaseRef": {
+          "$ref": "#/$defs/UsecaseRefBlock"
+        },
+        "scriptRef": {
+          "$ref": "#/$defs/ScriptRefBlock"
+        },
+        "guardrails": {
+          "$ref": "#/$defs/GuardrailsBlock"
+        }
       }
     },
     "SelfContainedContent": {
       "type": "object",
-      "required": ["title", "purpose", "trigger", "behavior", "scriptRef", "guardrails"],
+      "required": [
+        "title",
+        "purpose",
+        "trigger",
+        "behavior",
+        "scriptRef",
+        "guardrails"
+      ],
       "additionalProperties": false,
       "properties": {
-        "title": { "$ref": "#/$defs/TitleBlock" },
-        "purpose": { "$ref": "#/$defs/PurposeBlock" },
-        "trigger": { "$ref": "#/$defs/TriggerBlock" },
-        "behavior": { "$ref": "#/$defs/BehaviorBlock" },
-        "scriptRef": { "$ref": "#/$defs/ScriptRefBlock" },
-        "guardrails": { "$ref": "#/$defs/GuardrailsBlock" }
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "purpose": {
+          "$ref": "#/$defs/PurposeBlock"
+        },
+        "trigger": {
+          "$ref": "#/$defs/TriggerBlock"
+        },
+        "behavior": {
+          "$ref": "#/$defs/BehaviorBlock"
+        },
+        "scriptRef": {
+          "$ref": "#/$defs/ScriptRefBlock"
+        },
+        "guardrails": {
+          "$ref": "#/$defs/GuardrailsBlock"
+        }
       }
     },
     "TitleBlock": {
       "type": "object",
-      "required": ["blockType", "title"],
+      "required": [
+        "blockType",
+        "title"
+      ],
       "x-render-order": 0,
       "x-render-level": 1,
-      "x-prompt-query": "このHookのタイトルを持ちます。documentId がそのまま使われます。レンダリング時に h1 見出しになります。",
+      "x-prompt-query": "このHookのタイトルを持ちます。このHookを識別する名前がそのまま使われます。レンダリング時に見出し(h1)になります。",
       "x-render": [],
       "properties": {
-        "blockType": { "type": "string", "const": "Title" },
+        "blockType": {
+          "type": "string",
+          "const": "Title"
+        },
         "title": {
           "type": "string",
-          "x-prompt-write": "documentId をそのまま設定してください。"
+          "x-prompt-write": "このHookを識別する名前（対応するスクリプトのファイル名、拡張子なし）をそのまま設定してください。例: protect-render-output"
         }
       }
     },
     "PurposeBlock": {
       "type": "object",
-      "required": ["blockType", "title", "text"],
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
       "x-render-order": 1,
       "x-render-level": 2,
       "x-prompt-query": "このHookが機械的に強制するCLAUDE.md運用ルール・防ぎたい事故を持ちます。",
-      "x-render": [{ "as": "paragraph", "from": "text" }],
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
       "properties": {
-        "blockType": { "type": "string", "const": "Purpose" },
-        "title": { "type": "string", "const": "目的" },
+        "blockType": {
+          "type": "string",
+          "const": "Purpose"
+        },
+        "title": {
+          "type": "string",
+          "const": "目的"
+        },
         "text": {
           "type": "string",
           "x-prompt-write": "このHookが対応するCLAUDE.mdの運用ルール、または防ぎたい具体的な事故を1〜2文で記述してください。"
@@ -123,14 +205,29 @@
     },
     "TriggerBlock": {
       "type": "object",
-      "required": ["blockType", "title", "text"],
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
       "x-render-order": 2,
       "x-render-level": 2,
       "x-prompt-query": "このHookがいつ働くかの人間可読な意図説明を持ちます。settings.json側のPreToolUse/PostToolUse・matcherが実際の配線の正本であり、このフィールドはそれを重複定義するものではありません。",
-      "x-render": [{ "as": "paragraph", "from": "text" }],
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
       "properties": {
-        "blockType": { "type": "string", "const": "Trigger" },
-        "title": { "type": "string", "const": "いつ働くか" },
+        "blockType": {
+          "type": "string",
+          "const": "Trigger"
+        },
+        "title": {
+          "type": "string",
+          "const": "いつ働くか"
+        },
         "text": {
           "type": "string",
           "x-prompt-write": "このHookが働くタイミングを業務語彙寄りの自由文で記述してください（例:「Edit/Write操作の直前」）。settings.jsonの実際のmatcher正規表現をここへ転記しないでください（二重管理を避けるため）。"
@@ -139,14 +236,29 @@
     },
     "UsecaseRefBlock": {
       "type": "object",
-      "required": ["blockType", "title", "text"],
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
       "x-render-order": 3,
       "x-render-level": 2,
       "x-prompt-query": "委譲先usecaseのCLIコマンド名を持ちます。判定ロジックの実体がどこにあるかを特定するために使います。",
-      "x-render": [{ "as": "paragraph", "from": "text" }],
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
       "properties": {
-        "blockType": { "type": "string", "const": "UsecaseRef" },
-        "title": { "type": "string", "const": "委譲先usecase" },
+        "blockType": {
+          "type": "string",
+          "const": "UsecaseRef"
+        },
+        "title": {
+          "type": "string",
+          "const": "委譲先usecase"
+        },
         "text": {
           "type": "string",
           "x-prompt-write": "判定ロジックを委譲しているusecaseのCLIコマンド名を記述してください（例: check-path-is-projection）。"
@@ -155,30 +267,60 @@
     },
     "BehaviorBlock": {
       "type": "object",
-      "required": ["blockType", "title", "text"],
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
       "x-render-order": 3,
       "x-render-level": 2,
       "x-prompt-query": "スクリプト自身が完結して持つ判定ロジックの人間可読な説明を持ちます。",
-      "x-render": [{ "as": "paragraph", "from": "text" }],
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
       "properties": {
-        "blockType": { "type": "string", "const": "Behavior" },
-        "title": { "type": "string", "const": "判定ロジック" },
+        "blockType": {
+          "type": "string",
+          "const": "Behavior"
+        },
+        "title": {
+          "type": "string",
+          "const": "判定ロジック"
+        },
         "text": {
           "type": "string",
-          "x-prompt-write": "スクリプトが行う判定ロジックを人間可読な自由文で記述してください。"
+          "x-prompt-write": "スクリプトが行う判定ロジックを、条件（何を検知したら）→動作（どう振る舞うか）の形で具体的に記述してください（例:「対象パスが保護対象ディレクトリ配下かどうかを判定し、該当すれば操作を拒否する」）。「判定ロジックを持つ」のような抽象的な要約だけで終わらせず、分岐の条件が読み手に伝わる粒度で書いてください。"
         }
       }
     },
     "ScriptRefBlock": {
       "type": "object",
-      "required": ["blockType", "title", "text"],
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
       "x-render-order": 4,
       "x-render-level": 2,
       "x-prompt-query": "対応するhookスクリプトの実体パスを持ちます。",
-      "x-render": [{ "as": "paragraph", "from": "text" }],
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
       "properties": {
-        "blockType": { "type": "string", "const": "ScriptRef" },
-        "title": { "type": "string", "const": "スクリプト実体" },
+        "blockType": {
+          "type": "string",
+          "const": "ScriptRef"
+        },
+        "title": {
+          "type": "string",
+          "const": "スクリプト実体"
+        },
         "text": {
           "type": "string",
           "x-prompt-write": "対応するスクリプトファイルのパスを記述してください（例: .waffle/hooks/protect-render-output.py）。"
@@ -187,18 +329,35 @@
     },
     "GuardrailsBlock": {
       "type": "object",
-      "required": ["blockType", "title", "items"],
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
       "x-render-order": 5,
       "x-render-level": 2,
       "x-prompt-query": "このHookの制約・注意事項を持ちます。",
-      "x-render": [{ "as": "list", "from": "items" }],
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
       "properties": {
-        "blockType": { "type": "string", "const": "Guardrails" },
-        "title": { "type": "string", "const": "ガードレール" },
+        "blockType": {
+          "type": "string",
+          "const": "Guardrails"
+        },
+        "title": {
+          "type": "string",
+          "const": "ガードレール"
+        },
         "items": {
           "type": "array",
           "x-prompt-write": "このHookに関する制約・注意事項を列挙してください（例:「新しい判定ロジックをここに持ち込まない」）。",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
@@ -206,21 +365,59 @@
   "allOf": [
     {
       "if": {
-        "properties": { "hookKind": { "const": "usecase-delegate" } },
-        "required": ["hookKind"]
+        "properties": {
+          "hookKind": {
+            "const": "usecase-delegate"
+          }
+        },
+        "required": [
+          "hookKind"
+        ]
       },
       "then": {
-        "properties": { "content": { "$ref": "#/$defs/DelegateContent" } }
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/DelegateContent"
+          }
+        }
       }
     },
     {
       "if": {
-        "properties": { "hookKind": { "const": "self-contained" } },
-        "required": ["hookKind"]
+        "properties": {
+          "hookKind": {
+            "const": "self-contained"
+          }
+        },
+        "required": [
+          "hookKind"
+        ]
       },
       "then": {
-        "properties": { "content": { "$ref": "#/$defs/SelfContainedContent" } }
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/SelfContainedContent"
+          }
+        }
       }
     }
-  ]
+  ],
+  "x-frontmatter": {
+    "usecase-delegate": {
+      "id": "doc.documentId",
+      "type": "doc.hookKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.purpose",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "self-contained": {
+      "id": "doc.documentId",
+      "type": "doc.hookKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.purpose",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    }
+  }
 }
