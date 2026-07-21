@@ -1,13 +1,13 @@
 ---
 name: "scrum-knowledge"
-description: "Scrum・アジャイルに関する質問・設計判断・知識注入を行う際に使う。「Scrumの〜とは？」「PBIのリファインメントは誰が担うか？」「Sprint Goalとは？」などと言われたとき、またはhas-uddのJob Agent設計でScrumの正確な知識が必要なときに使う。"
+description: "Scrum・アジャイルに関する質問・設計判断・知識注入を行う際に使う。「Scrumの〜とは？」「PBIのリファインメントは誰が担うか？」「Sprint Goalとは？」などと言われたとき、またはAIエージェントに役割ごとのScrum責務を割り当てる設計でScrumの正確な知識が必要なときに使う。"
 ---
 
 # Scrum・アジャイルに関する知識注入を行うSkill：scrum-knowledge
 
 ## 目的
 
-Scrum・アジャイルに関する質問・設計判断・知識注入を行う際に使う。「Scrumの〜とは？」「PBIのリファインメントは誰が担うか？」「Sprint Goalとは？」などと言われたとき、またはhas-uddのJob Agent設計でScrumの正確な知識が必要なときに使う。
+Scrum・アジャイルに関する質問・設計判断・知識注入を行う際に使う。「Scrumの〜とは？」「PBIのリファインメントは誰が担うか？」「Sprint Goalとは？」などと言われたとき、またはAIエージェントに役割ごとのScrum責務を割り当てる設計でScrumの正確な知識が必要なときに使う。
 
 ---
 
@@ -15,7 +15,7 @@ Scrum・アジャイルに関する質問・設計判断・知識注入を行う
 
 - Scrum Guideに定義された用語・役割・イベントを一次情報として提供する
 - アジャイル12原則とScrumのマッピングを示す
-- has-uddのPO Agent・SM Agent・Dev Agent・QA Agentが従うべきScrum上の責務を明確にする
+- Scrumの役割（PO/SM/Dev/QA等）を担うAIエージェントが従うべき責務を明確にする
 
 ---
 
@@ -27,7 +27,7 @@ Scrumプロセス・役割・イベント・アーティファクトに関する
 
 ### 成果物
 
-Scrum Guide 2020とAgile Manifestoに基づく正確な知識の提供（has-uddのKnowledgeSkillsとしてJob Agentへ注入される情報源）。
+Scrum Guide 2020とAgile Manifestoに基づく正確な知識の提供（Scrumの役割ごとにAIエージェントへ注入される情報源）。
 
 ---
 
@@ -35,7 +35,7 @@ Scrum Guide 2020とAgile Manifestoに基づく正確な知識の提供（has-udd
 
 | 受け取る情報 | 解釈・既定値 |
 |---|---|
-| Scrumの概念・役割・イベント・アーティファクトについての質問、またはhas-uddのAgent設計における知識注入依頼 | 質問の対象がPO/SM/Dev/QAいずれのAgentの責務に関わるか不明な場合は、references/usage-by-agent-role.mdの対応表を横断的に確認する。 |
+| Scrumの概念・役割・イベント・アーティファクトについての質問、またはAIエージェントへのScrum知識注入依頼 | 質問の対象がPO/SM/Dev/QAいずれのAgentの責務に関わるか不明な場合は、references/usage-by-agent-role.mdの対応表を横断的に確認する。 |
 
 ---
 
@@ -43,7 +43,7 @@ Scrum Guide 2020とAgile Manifestoに基づく正確な知識の提供（has-udd
 
 ### Step 1: 質問・知識注入依頼の対象範囲を把握する
 
-Scrumのどの概念・役割・イベントについての質問か、またはhas-uddのどのAgent種別向けの知識注入かを把握する。
+Scrumのどの概念・役割・イベントについての質問か、またはどのAgent種別向けの知識注入かを把握する。
 
 ### Step 2: 一次情報を参照する
 
@@ -64,8 +64,8 @@ Scrum Guideの内容は改変せず引用する形で回答する。
 ## ガードレール
 
 - Scrum Guide の内容は改変せず引用する。独自解釈を加えない
-- has-uddが担う責務と、現実のScrum Team が担う責務を混同しない
-- has-uddは支援ツールであり、Scrumイベント自体を代替しない（Daily Scrum・Sprint Review等は人間が実施する）
+- AIエージェントが担う責務と、現実のScrum Team が担う責務を混同しない
+- AIエージェントは支援ツールであり、Scrumイベント自体を代替しない（Daily Scrum・Sprint Review等は人間が実施する）
 - 同じ概念に対して複数の表現を使わない。references/terminology.mdの正式用語のみを使う
 
 ---
