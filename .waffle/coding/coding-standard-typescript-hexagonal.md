@@ -1,3 +1,11 @@
+---
+id: "coding-standard-typescript-hexagonal"
+type: "coding-standard"
+title: "TypeScript/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-typescript-hexagonal"
+description: "TypeScript/ヘキサゴナル構成のコーディング規約（命名・スタイル）を定める。"
+schemaRef: "CodingSchema/v3"
+---
+
 # TypeScript/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-typescript-hexagonal
 
 ## 概要
@@ -63,4 +71,3 @@ function calculateTotal(order: Order): Money { /* ... */ }
 |---|---|
 | 必須 | docstringは公開要素のみ必須とする |
 | 禁止 | コードから自明に導出できる情報（型そのものの説明等）だけをdocstringに書く |
-| 禁止 | 仕様と異なる語彙で命名する（業務語彙と実装上の命名は常に一致させる） |

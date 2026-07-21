@@ -81,5 +81,4 @@ def calculate_total(order: Order, coupon: Coupon | None = None) -> Money:
 |---|---|
 | 必須 | 公開要素に要約行つき docstring を書く |
 | 禁止 | コードから導出できる情報を docstring に書く（型の列挙・実装手順の逐語説明） |
-| 禁止 | 仕様と異なる語彙での命名（ユビキタス言語の言い換え） |
 | 推奨 | コメントは「なぜ」を書く（「何を」は命名と要約行が表現する） |
