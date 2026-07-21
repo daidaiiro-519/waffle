@@ -1,3 +1,12 @@
+---
+id: "test-standard-python-hexagonal"
+type: "test-standard"
+title: "Python/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-python-hexagonal"
+description: "Python/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
+tags: ["tier:backend"]
+schemaRef: "CodingSchema/v3"
+---
+
 # Python/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-python-hexagonal
 
 ## 概要
@@ -101,3 +110,4 @@ def test_在庫不足なら失敗する():
 | 必須 | エンティティのテストは、同一性がidで決まること（フィールドの値が同じでもidが違えば別物として扱われること）を検証する |
 | 必須 | 集約のテストは、不変条件が常にメソッド経由でしか変更できず、直接不変条件に違反した状態を作れないことを検証する（コンストラクタ・setter等での迂回が無いこと） |
 | 必須 | 業務サービスのテストは、ステートレスであること（同じ入力に対して常に同じ結果を返し、呼び出し順序に依存しないこと）を検証する |
+| 必須 | 時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない |

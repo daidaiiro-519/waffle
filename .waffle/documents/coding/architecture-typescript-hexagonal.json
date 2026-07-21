@@ -22,7 +22,7 @@
         },
         {
           "layer": "application",
-          "responsibility": "usecaseの編成・ポート呼び出し",
+          "responsibility": "usecaseの編成・ポート呼び出し・トランザクション境界",
           "mayDependOn": [
             "domain"
           ]
@@ -160,7 +160,7 @@
         },
         {
           "category": "補完",
-          "thickness": "最小限のusecase内の手続き的処理のみ（別途domainモデルを起こさない）"
+          "thickness": "最小限のusecase内の手続き的処理のみ（別途domainモデルを起こさない）。唯一の規律は、一連の更新処理が完全に成功するか完全に失敗するかのどちらかで終わること（トランザクション管理）"
         }
       ]
     },

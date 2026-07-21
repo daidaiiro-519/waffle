@@ -1,3 +1,11 @@
+---
+id: "test-standard-waffle"
+type: "test-standard"
+title: "Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle"
+description: "Waffle自身のunit/integration/acceptance/contractという4層テスト構成の方針を定める。"
+schemaRef: "CodingSchema/v3"
+---
+
 # Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle
 
 ## 概要
@@ -80,3 +88,4 @@ def test_バックワード非互換なら書き込みを拒否する():
 | 必須 | テストファイル名は test_{対応するspecのdocumentIdをsnake_case化したもの}.py で統一する（domain/application/adapters(integration)/acceptanceの全層に適用。実装モジュール名を由来にした命名は禁止） |
 | 必須 | DomainSpecSchemaのシナリオブロック種別とテスト配置層は機械的に対応する（scenarioBinding参照） |
 | 禁止 | spec側(DomainSpecSchema等)のブロック名・シナリオの記述に、アーキテクチャ/テスト層の用語（unit/integration/adapter/render_engine等の内部コンポーネント名）を持ち込む。specは常にDDD/業務語彙のみで書く |
+| 必須 | 時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない |

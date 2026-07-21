@@ -1,3 +1,11 @@
+---
+id: "test-standard-typescript-hexagonal"
+type: "test-standard"
+title: "TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-typescript-hexagonal"
+description: "TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
+schemaRef: "CodingSchema/v3"
+---
+
 # TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-typescript-hexagonal
 
 ## 概要
@@ -99,3 +107,4 @@ it("在庫不足なら失敗する", () => {
 | 必須 | 集約のテストは、不変条件が常にメソッド経由でしか変更できないことを検証する |
 | 必須 | 業務サービスのテストは、ステートレスであることを検証する |
 | 必須 | アダプターの契約テストは、ポートのインターフェースに対して書き、本物の実装とテスト用の偽実装の両方が同じテストスイートを満たすことを確認する |
+| 必須 | 時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない |
