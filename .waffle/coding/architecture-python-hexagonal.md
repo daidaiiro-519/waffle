@@ -1,3 +1,12 @@
+---
+id: "architecture-python-hexagonal"
+type: "architecture"
+title: "Python/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-python-hexagonal"
+description: "Pythonでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
+tags: ["tier:backend"]
+schemaRef: "CodingSchema/v3"
+---
+
 # Python/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-python-hexagonal
 
 ## 概要
@@ -81,7 +90,7 @@ inbound adapter の起動点にのみ置く
 | 必須 | ロギング・キャッシュ・パフォーマンス計測のような純粋に技術的な横断的関心事は、domain/applicationのコードに書かず、外側（デコレーター・ミドルウェア等）で一括して適用する |
 | 必須 | 監査ログ・認可のような業務要件としての横断的関心事は、「何を記録すべきか・誰が実行を許可されるか」の判断をdomain/applicationが持ち、実際の記録・認証手段はport経由でoutbound adapterに委譲する |
 | 禁止 | 認可チェックをdomain層の集約メソッドの中に直接書く（「誰がログインしているか」という技術的な認証の仕組みにdomain層が依存し、依存方向が逆転する） |
-| 必須 | usecase実装クラス名は、対応するusecase specが宣言する操作名とそのまま一致させる（Engine等の装飾的な接尾辞を付けない）。ファイル名も同じ操作名をsnake_caseに変換したものに.pyを付与する（例: 操作名CheckScenarioDrift→check_scenario_drift.py） |
+| 必須 | usecase実装クラス名は、対応するusecase specが宣言する操作名とそのまま一致させる（Engine等の装飾的な接尾辞を付けない）。ファイル名も同じ操作名をsnake_caseに変換したものに.pyを付与する（例: 操作名RegisterOrder→register_order.py） |
 
 ---
 

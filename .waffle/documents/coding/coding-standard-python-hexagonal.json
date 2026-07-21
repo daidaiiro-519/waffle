@@ -83,7 +83,7 @@
       "style": "Google スタイル docstring",
       "summaryGuidance": "「何をするか・いつ使うか」を1行の平叙文で。インデックスに載る前提で、検索と判断に効く語を選ぶ。",
       "target": "公開要素（module / 公開 class / 公開 function）は必須・private は任意",
-      "example": "def render_parts(parts: list[dict], data: dict, level: int = 2) -> str:\n    \"\"\"宣言的 x-render の部品配列を Markdown に描画する。\n\n    schema が宣言した部品（table/section/keyvalue 等）を block の値から\n    決定的に Markdown へ変換する。書式判断はすべて部品定義側にあり、\n    呼び出し側は整形ロジックを持たなくてよい。\n\n    Args:\n        parts: RenderMetaSchema に適合する部品宣言の配列。\n        data: 描画対象 block の値。\n        level: 小見出しの基準レベル。\n\n    Returns:\n        描画済み Markdown（部品間は空行区切り）。\n\n    Raises:\n        RenderError: 部品種別が未知、または from 参照が解決できない場合。\n    \"\"\"",
+      "example": "def calculate_total(order: Order, coupon: Coupon | None = None) -> Money:\n    \"\"\"注文の合計金額を計算する。クーポン適用後の金額を返す。\n\n    Args:\n        order: 対象の注文。\n        coupon: 適用するクーポン（無ければ定価のまま）。\n\n    Returns:\n        クーポン適用後の合計金額。\n\n    Raises:\n        InvalidCouponError: クーポンの適用条件を満たさない場合。\n    \"\"\"",
       "paramSyntax": "Args:\n    name (type): 説明\nReturns:\n    説明\nRaises:\n    ExceptionType: 説明"
     },
     "rules": {

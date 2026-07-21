@@ -1,3 +1,12 @@
+---
+id: "coding-standard-python-hexagonal"
+type: "coding-standard"
+title: "Python/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-python-hexagonal"
+description: "Python/ヘキサゴナル構成のコーディング規約（命名・スタイル・docstring）を定める。"
+tags: ["tier:backend"]
+schemaRef: "CodingSchema/v3"
+---
+
 # Python/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-python-hexagonal
 
 ## 概要
@@ -49,23 +58,18 @@ Raises:
 「何をするか・いつ使うか」を1行の平叙文で。インデックスに載る前提で、検索と判断に効く語を選ぶ。
 
 ```
-def render_parts(parts: list[dict], data: dict, level: int = 2) -> str:
-    """宣言的 x-render の部品配列を Markdown に描画する。
-
-    schema が宣言した部品（table/section/keyvalue 等）を block の値から
-    決定的に Markdown へ変換する。書式判断はすべて部品定義側にあり、
-    呼び出し側は整形ロジックを持たなくてよい。
+def calculate_total(order: Order, coupon: Coupon | None = None) -> Money:
+    """注文の合計金額を計算する。クーポン適用後の金額を返す。
 
     Args:
-        parts: RenderMetaSchema に適合する部品宣言の配列。
-        data: 描画対象 block の値。
-        level: 小見出しの基準レベル。
+        order: 対象の注文。
+        coupon: 適用するクーポン（無ければ定価のまま）。
 
     Returns:
-        描画済み Markdown（部品間は空行区切り）。
+        クーポン適用後の合計金額。
 
     Raises:
-        RenderError: 部品種別が未知、または from 参照が解決できない場合。
+        InvalidCouponError: クーポンの適用条件を満たさない場合。
     """
 ```
 
