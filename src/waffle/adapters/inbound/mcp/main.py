@@ -33,6 +33,7 @@ from waffle.application.usecases.render_document_viewer import RenderDocumentVie
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
+from waffle.domain.services.concept_source_root import package_name_from_reference, resolve_source_root
 from waffle.shared.result import Ok, Result
 
 mcp = FastMCP("waffle")
@@ -47,6 +48,29 @@ def _docs() -> FsDocumentRepository:
 
 def _schemas() -> PackageSchemaRepository:
     return PackageSchemaRepository()
+
+def _resolve_src_root(src_root: str | None, architecture_ref: str | None, concept: str) -> str | dict:
+    """srcRootが明示指定されていればそれを優先し、無ければarchitectureRefが指す
+    architecture文書のlayout.sourceRoot/conceptPlacementから動的に解決する。
+    解決できない場合はエラーdictを返す（呼び出し側がそのままツール結果として返す）。"""
+    if src_root:
+        return src_root
+    if not architecture_ref:
+        return {"error": "MISSING_PARAM", "message": "srcRoot または architectureRef のいずれかが必要です"}
+    try:
+        doc = _docs().load(f".waffle/documents/coding/{architecture_ref}.json")
+    except FileNotFoundError:
+        return {"error": "ARCHITECTURE_REF_NOT_FOUND", "message": f"architecture document が見つかりません: {architecture_ref}"}
+    layout = doc.get("content", {}).get("layout", {})
+    items = doc.get("content", {}).get("conceptPlacement", {}).get("items", [])
+    package = package_name_from_reference(architecture_ref, "architecture") or ""
+    resolved = resolve_source_root(layout, items, concept, package=package)
+    if not resolved:
+        return {
+            "error": "ARCHITECTURE_REF_UNRESOLVED",
+            "message": f"{architecture_ref} の layout.sourceRoot / conceptPlacement（concept={concept}）から解決できません",
+        }
+    return resolved
 
 def _class_extractor() -> TreeSitterClassExtractor:
     return TreeSitterClassExtractor()
@@ -171,24 +195,40 @@ def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict
     return _dict(CheckSchemaVersionDrift(_docs(), _schemas()).run(documentsRoot))
 
 @mcp.tool
-def check_usecase_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases", language: str = "python") -> dict:
-    """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
-    return _dict(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documentsRoot, srcRoot, language))
+def check_usecase_class_drift(
+    documentsRoot: str = ".waffle/documents", srcRoot: str | None = None, architectureRef: str | None = None, language: str = "python"
+) -> dict:
+    """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。"""
+    resolved = _resolve_src_root(srcRoot, architectureRef, "usecase")
+    if isinstance(resolved, dict):
+        return resolved
+    return _dict(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documentsRoot, resolved, language))
 
 @mcp.tool
-def check_aggregate_class_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/domain/entities", language: str = "python") -> dict:
-    """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
-    return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documentsRoot, srcRoot, language))
+def check_aggregate_class_drift(
+    documentsRoot: str = ".waffle/documents", srcRoot: str | None = None, architectureRef: str | None = None, language: str = "python"
+) -> dict:
+    """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。"""
+    resolved = _resolve_src_root(srcRoot, architectureRef, "aggregate")
+    if isinstance(resolved, dict):
+        return resolved
+    return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documentsRoot, resolved, language))
 
 @mcp.tool
-def check_domain_service_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/domain/services") -> dict:
-    """業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。"""
-    return _dict(CheckDomainServiceDrift(_docs()).run(documentsRoot, srcRoot))
+def check_domain_service_drift(documentsRoot: str = ".waffle/documents", srcRoot: str | None = None, architectureRef: str | None = None) -> dict:
+    """業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。"""
+    resolved = _resolve_src_root(srcRoot, architectureRef, "domain-service")
+    if isinstance(resolved, dict):
+        return resolved
+    return _dict(CheckDomainServiceDrift(_docs()).run(documentsRoot, resolved))
 
 @mcp.tool
-def check_operation_drift(documentsRoot: str = ".waffle/documents", srcRoot: str = "src/waffle/application/usecases") -> dict:
-    """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。"""
-    return _dict(CheckOperationDrift(_docs()).run(documentsRoot, srcRoot))
+def check_operation_drift(documentsRoot: str = ".waffle/documents", srcRoot: str | None = None, architectureRef: str | None = None) -> dict:
+    """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。"""
+    resolved = _resolve_src_root(srcRoot, architectureRef, "usecase")
+    if isinstance(resolved, dict):
+        return resolved
+    return _dict(CheckOperationDrift(_docs()).run(documentsRoot, resolved))
 
 @mcp.tool
 def scan_source_code(path: str, kind: str) -> dict | list:

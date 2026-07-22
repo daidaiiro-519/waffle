@@ -54,7 +54,7 @@
     "layout": {
       "blockType": "Layout",
       "title": "ディレクトリ構成",
-      "tree": "src/{package}/\n  domain/\n    model/          value-object, entity, aggregate\n    services/       domain-service\n  application/\n    usecases/       1 usecase = 1 module\n    ports/          driven interface の定義\n  adapters/\n    inbound/        driving（api, cli, ...）\n    outbound/       driven（db, external, ...）\n  shared/           共通（エラー・結果型 等）",
+      "tree": "src/{package}/\n  domain/\n    entities/       value-object, entity, aggregate\n    model/          schema.jsonそのもの（JSON Schema定義の同梱データ。DDD実装クラスの置き場ではない）\n    services/       domain-service\n  application/\n    usecases/       1 usecase = 1 module\n    ports/          driven interface の定義\n  adapters/\n    inbound/        driving（api, cli, ...）\n    outbound/       driven（db, external, ...）\n  shared/           共通（エラー・結果型 等）",
       "compositionRoot": "inbound adapter の起動点にのみ置く",
       "sourceRoot": "src/{package}"
     },
@@ -69,17 +69,17 @@
         },
         {
           "concept": "aggregate",
-          "placement": "domain/model",
+          "placement": "domain/entities",
           "pattern": "整合性境界を持つクラス・不変条件をメソッド内で強制・コマンドはメソッド・永続化は repository 経由"
         },
         {
           "concept": "entity",
-          "placement": "domain/model",
+          "placement": "domain/entities",
           "pattern": "同一性は id・集約の内側でのみ可変"
         },
         {
           "concept": "value-object",
-          "placement": "domain/model",
+          "placement": "domain/entities",
           "pattern": "不変（frozen dataclass）・値等価"
         },
         {

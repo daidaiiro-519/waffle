@@ -42,7 +42,8 @@ from waffle.application.usecases.render_document_viewer import RenderDocumentVie
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
-from waffle.shared.result import Ok, Result
+from waffle.domain.services.concept_source_root import package_name_from_reference, resolve_source_root
+from waffle.shared.result import Err, Ok, Result
 
 app = typer.Typer(
     add_completion=False,
@@ -67,6 +68,29 @@ def _schemas() -> PackageSchemaRepository:
 
 def _class_extractor() -> TreeSitterClassExtractor:
     return TreeSitterClassExtractor()
+
+def _resolve_src_root(src_root: str | None, architecture_ref: str | None, concept: str) -> str:
+    """--srcRootが明示指定されていればそれを優先し、無ければ--architectureRefが指す
+    architecture文書のlayout.sourceRoot/conceptPlacementから動的に解決する。
+    どちらも無い、または解決できない場合はエラーを出して終了する。"""
+    if src_root:
+        return src_root
+    if not architecture_ref:
+        _emit(Err("--srcRoot または --architectureRef のいずれかが必要です", ["MISSING_PARAM"]))
+    try:
+        doc = _docs().load(f".waffle/documents/coding/{architecture_ref}.json")
+    except FileNotFoundError:
+        _emit(Err(f"architecture document が見つかりません: {architecture_ref}", ["ARCHITECTURE_REF_NOT_FOUND"]))
+    layout = doc.get("content", {}).get("layout", {})
+    items = doc.get("content", {}).get("conceptPlacement", {}).get("items", [])
+    package = package_name_from_reference(architecture_ref, "architecture") or ""
+    resolved = resolve_source_root(layout, items, concept, package=package)
+    if not resolved:
+        _emit(Err(
+            f"{architecture_ref} の layout.sourceRoot / conceptPlacement（concept={concept}）から解決できません",
+            ["ARCHITECTURE_REF_UNRESOLVED"],
+        ))
+    return resolved
 
 @app.command()
 def query(
@@ -255,36 +279,44 @@ def check_schema_version_drift(
 @app.command("check-usecase-class-drift")
 def check_usecase_class_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
-    src_root: str = typer.Option("src/waffle/application/usecases", "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ"),
+    src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
+    architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
     language: str = typer.Option("python", "--language", help="実装言語（python/java/typescript/javascript）"),
 ) -> None:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
-    _emit(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documents_root, src_root, language))
+    resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
+    _emit(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documents_root, resolved_src_root, language))
 
 @app.command("check-aggregate-class-drift")
 def check_aggregate_class_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
-    src_root: str = typer.Option("src/waffle/domain/entities", "--srcRoot", "--src-root", help="集約Entityクラスの配置ルートディレクトリ"),
+    src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="集約Entityクラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
+    architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
     language: str = typer.Option("python", "--language", help="実装言語（python/java/typescript/javascript）"),
 ) -> None:
     """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
-    _emit(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documents_root, src_root, language))
+    resolved_src_root = _resolve_src_root(src_root, architecture_ref, "aggregate")
+    _emit(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documents_root, resolved_src_root, language))
 
 @app.command("check-domain-service-drift")
 def check_domain_service_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
-    src_root: str = typer.Option("src/waffle/domain/services", "--srcRoot", "--src-root", help="業務サービス実装ファイルの配置ルートディレクトリ"),
+    src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="業務サービス実装ファイルの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
+    architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
 ) -> None:
     """業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。"""
-    _emit(CheckDomainServiceDrift(_docs()).run(documents_root, src_root))
+    resolved_src_root = _resolve_src_root(src_root, architecture_ref, "domain-service")
+    _emit(CheckDomainServiceDrift(_docs()).run(documents_root, resolved_src_root))
 
 @app.command("check-operation-drift")
 def check_operation_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
-    src_root: str = typer.Option("src/waffle/application/usecases", "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ"),
+    src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
+    architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
 ) -> None:
     """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。"""
-    _emit(CheckOperationDrift(_docs()).run(documents_root, src_root))
+    resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
+    _emit(CheckOperationDrift(_docs()).run(documents_root, resolved_src_root))
 
 @app.command("scan-source-code")
 def scan_source_code(

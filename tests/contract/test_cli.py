@@ -298,10 +298,10 @@ def test_check_schema_version_driftは3フィールドの差分結果を返す()
 def test_check_usecase_class_driftは2フィールドの差分結果を返す():
     """
     Given waffle CLI
-    When check-usecase-class-drift を実行する
+    When check-usecase-class-drift --architectureRef architecture-waffle を実行する
     Then 終了コードは0で、出力JSONは2フィールド全て空配列（自己整合済み）
     """
-    result = _runner.invoke(app, ["check-usecase-class-drift"])
+    result = _runner.invoke(app, ["check-usecase-class-drift", "--architectureRef", "architecture-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert data == {"missing_implementation_file": [], "class_name_mismatch": []}
@@ -310,11 +310,11 @@ def test_check_usecase_class_driftは2フィールドの差分結果を返す():
 def test_check_aggregate_class_driftは5フィールドの差分結果を返す():
     """
     Given waffle CLI
-    When check-aggregate-class-drift を実行する
+    When check-aggregate-class-drift --architectureRef architecture-waffle を実行する
     Then 終了コードは0で、出力JSONは5フィールド全て空配列（Schema/Document
     両集約のEntity化が完了し自己整合済み）
     """
-    result = _runner.invoke(app, ["check-aggregate-class-drift"])
+    result = _runner.invoke(app, ["check-aggregate-class-drift", "--architectureRef", "architecture-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert data == {
@@ -326,10 +326,10 @@ def test_check_aggregate_class_driftは5フィールドの差分結果を返す(
 def test_check_domain_service_driftは1フィールドの差分結果を返す():
     """
     Given waffle CLI
-    When check-domain-service-drift を実行する
+    When check-domain-service-drift --architectureRef architecture-waffle を実行する
     Then 終了コードは0で、出力JSONは1フィールド空配列（自己整合済み）
     """
-    result = _runner.invoke(app, ["check-domain-service-drift"])
+    result = _runner.invoke(app, ["check-domain-service-drift", "--architectureRef", "architecture-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert data == {"missing_implementation_file": []}
@@ -338,13 +338,51 @@ def test_check_domain_service_driftは1フィールドの差分結果を返す()
 def test_check_operation_driftは2フィールドの差分結果を返す():
     """
     Given waffle CLI
-    When check-operation-drift を実行する
+    When check-operation-drift --architectureRef architecture-waffle を実行する
     Then 終了コードは0で、出力JSONは2フィールド全て空配列（自己整合済み）
     """
-    result = _runner.invoke(app, ["check-operation-drift"])
+    result = _runner.invoke(app, ["check-operation-drift", "--architectureRef", "architecture-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert data == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
+
+
+def test_srcRootとarchitectureRefが両方とも無ければエラーになる():
+    """
+    Given waffle CLI
+    When --srcRootも--architectureRefも指定せずcheck-usecase-class-driftを実行する
+    Then MISSING_PARAMエラーが返り、Waffle自身のパスへの暗黙フォールバックは起きない
+    """
+    result = _runner.invoke(app, ["check-usecase-class-drift"])
+    assert result.exit_code != 0
+    data = json.loads(result.output)
+    assert data["error"] == "MISSING_PARAM"
+
+
+def test_srcRootを明示指定するとarchitectureRefより優先される():
+    """
+    Given 存在しないarchitectureRefと、実在するsrcRootの両方を指定する
+    When check-usecase-class-driftを実行する
+    Then srcRootが優先され、architectureRef解決は行われずエラーにならない
+    """
+    result = _runner.invoke(app, [
+        "check-usecase-class-drift",
+        "--srcRoot", "src/waffle/application/usecases",
+        "--architectureRef", "no-such-architecture-document",
+    ])
+    assert result.exit_code == 0, result.output
+
+
+def test_存在しないarchitectureRefはARCHITECTURE_REF_NOT_FOUNDを返す():
+    """
+    Given 存在しないarchitectureRef
+    When --srcRootを指定せずcheck-usecase-class-driftを実行する
+    Then ARCHITECTURE_REF_NOT_FOUNDエラーが返る
+    """
+    result = _runner.invoke(app, ["check-usecase-class-drift", "--architectureRef", "no-such-architecture-document"])
+    assert result.exit_code != 0
+    data = json.loads(result.output)
+    assert data["error"] == "ARCHITECTURE_REF_NOT_FOUND"
 
 
 def test_check_scenario_driftは4フィールドの差分結果を返す():
