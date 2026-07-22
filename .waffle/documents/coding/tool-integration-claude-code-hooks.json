@@ -1,0 +1,109 @@
+{
+  "documentId": "tool-integration-claude-code-hooks",
+  "documentType": "Coding",
+  "schemaRef": "CodingSchema/v4",
+  "codingKind": "tool-integration",
+  "stack": "claude-code",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "Claude Code Hooksが要求する成果物形式・配線契約：tool-integration-claude-code-hooks"
+    },
+    "identity": {
+      "blockType": "ToolIntegrationIdentity",
+      "title": "対象ツールと成果物種別",
+      "toolName": "claude-code",
+      "artifactKind": "Hook",
+      "officialDocRef": "https://code.claude.com/docs/en/hooks"
+    },
+    "artifactShape": {
+      "blockType": "ArtifactShape",
+      "title": "成果物の構造契約",
+      "summary": "各Hookスクリプトは実行時にstdinでJSON payloadを受け取り、判定結果をstdoutへJSONで出力する薄いプロセス。PreToolUseはブロック可否、PostToolUseは追加コンテキスト通知のみで、両者は出力フィールドの組が異なる。",
+      "fields": [
+        {
+          "field": "tool_input（stdin）",
+          "requirement": "必須",
+          "description": "発火元ツール呼び出しの引数（例: BashならcommandとしてBashコマンド文字列、Edit/WriteならfilePath）。イベント種別により中身が変わる。"
+        },
+        {
+          "field": "transcript_path（stdin）",
+          "requirement": "任意",
+          "description": "セッションのtranscriptファイルへのパス。過去のツール呼び出し履歴を確認したいHookが使う。"
+        },
+        {
+          "field": "hookSpecificOutput.hookEventName（stdout）",
+          "requirement": "必須",
+          "description": "PreToolUseまたはPostToolUseの固定文字列。出力先イベント種別と一致させる。"
+        },
+        {
+          "field": "hookSpecificOutput.permissionDecision（stdout）",
+          "requirement": "PreToolUseのみ条件付き必須",
+          "description": "denyまたはallow。denyのとき対象ツール呼び出し自体がブロックされる。"
+        },
+        {
+          "field": "hookSpecificOutput.permissionDecisionReason（stdout）",
+          "requirement": "permissionDecision=denyのとき必須",
+          "description": "ブロック理由の人間可読な説明文。"
+        },
+        {
+          "field": "hookSpecificOutput.additionalContext（stdout）",
+          "requirement": "PostToolUseのみ任意",
+          "description": "ブロックせず、追加の文脈情報としてモデルへ渡す通知文。空なら何も出力しない（沈黙）のが規約。"
+        }
+      ]
+    },
+    "wiring": {
+      "blockType": "Wiring",
+      "title": "配線方法",
+      "placements": [
+        {
+          "pathPattern": ".claude/settings.json#hooks.PreToolUse[]",
+          "mechanism": "registration-array",
+          "note": "各要素はmatcher（正規表現、対象ツール名。例: \"Bash\"、\"Edit|Write\"）とhooks[].command（実行コマンド文字列）を持つ。1matcherに複数commandを登録すると全て直列実行される。"
+        },
+        {
+          "pathPattern": ".claude/settings.json#hooks.PostToolUse[]",
+          "mechanism": "registration-array",
+          "note": "構造はPreToolUseと同型。イベント名（PreToolUse/PostToolUse）ごとに配列が分かれる。"
+        },
+        {
+          "pathPattern": ".claude/hooks/{scriptName}.py",
+          "mechanism": "single-file",
+          "note": "settings.jsonのcommandから参照される実行ファイル本体。Waffleの慣行では実体を.waffle/hooks/配下に置きsymlinkする（HookSchemaのscriptRef参照）。"
+        }
+      ]
+    },
+    "rules": {
+      "blockType": "ToolIntegrationRules",
+      "title": "規約・落とし穴",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "settings.jsonへcommandを登録する前に、参照先スクリプトファイル（またはsymlink）を先に作成すること。順序を逆にするとBash呼び出し自体が登録の瞬間から全面ブロックされうる。"
+        },
+        {
+          "level": "必須",
+          "rule": "PostToolUseのadditionalContextは、検知内容が無いときは何も出力せず沈黙すること（毎回定型文を出すと通知が形骸化しノイズになる）。"
+        },
+        {
+          "level": "推奨",
+          "rule": "同一イベント・同一matcherに複数commandを登録する場合、それぞれが独立プロセスとして起動する（プロセス起動コストが線形に増える）。関連する複数の判定をまとめたい場合は、1つのディスパッチャスクリプトに集約することを検討する。"
+        },
+        {
+          "level": "推奨",
+          "rule": "matcherの正規表現は対象ツール名（Bash/Edit/Write/Read等）に対してかかる。ファイルパスパターンでの絞り込みはmatcherではできず、スクリプト内部でtool_inputを見て判定する。"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "Claude Code Hooksという仕組み自体が要求する、成果物（Hookスクリプト）の入出力契約とsettings.jsonへの配線方法を定める。個々のHookが何を検知しどう振る舞うかはHookSchemaの責務であり、ここでは扱わない。"
+    }
+  },
+  "tags": [
+    "tier:platform"
+  ]
+}

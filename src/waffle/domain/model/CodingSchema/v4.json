@@ -39,7 +39,8 @@
         "tech-stack",
         "architecture",
         "coding-standard",
-        "test-standard"
+        "test-standard",
+        "tool-integration"
       ],
       "x-prompt-write": "tech-stack（技術選択＋非ドメイン能力）/ architecture（技術方式・配置・依存方向）/ coding-standard（命名・スタイル・docstring 規約）/ test-standard（テスト方針・種別・シナリオ束ね）のいずれか。"
     },
@@ -176,6 +177,25 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "codingKind": {
+            "const": "tool-integration"
+          }
+        },
+        "required": [
+          "codingKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/ToolIntegrationContent"
+          }
+        }
+      }
     }
   ],
   "$defs": {
@@ -200,7 +220,8 @@
             "tech-stack": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTech Stack仕様」を含め、読んだだけでこの仕様が技術スタックだとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
             "architecture": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるArchitecture仕様」を含め、読んだだけでこの仕様がアーキテクチャだとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
             "coding-standard": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるCoding Standard」を含め、読んだだけでこの仕様がコーディング規約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
-            "test-standard": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTest Standard」を含め、読んだだけでこの仕様がテスト規約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。"
+            "test-standard": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTest Standard」を含め、読んだだけでこの仕様がテスト規約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
+            "tool-integration": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこの契約が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTool Integration仕様」を含め、読んだだけでこの仕様がツール連携契約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。"
           }
         }
       }
@@ -1973,6 +1994,301 @@
           "x-prompt-write": "この文書が何を定めているかを1〜2文で。"
         }
       }
+    },
+    "ToolIntegrationIdentityBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "toolName",
+        "artifactKind"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "この文書が対象とするツールと成果物種別を持ちます。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "ツール",
+              "from": "toolName"
+            },
+            {
+              "label": "成果物種別",
+              "from": "artifactKind"
+            },
+            {
+              "label": "公式ドキュメント",
+              "from": "officialDocRef"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ToolIntegrationIdentity"
+        },
+        "title": {
+          "type": "string",
+          "const": "対象ツールと成果物種別"
+        },
+        "toolName": {
+          "type": "string",
+          "x-prompt-write": "この契約が対象とするAIコーディングツール名（kebab-case）。例: claude-code, codex, github-copilot, kiro"
+        },
+        "artifactKind": {
+          "type": "string",
+          "x-prompt-write": "このツールが要求する成果物の種別。固定enumではなく自由記述（新しい種別の発見のたびにschema変更を要さないため）。既知の例: Hook, Skill, Agent(subagent), Agent(orchestrator), Instructions, PromptTemplate, ChatMode, Spec, MCPConfig, Plugin（Pluginは複数の下位artifactKindを束ねる複合種別のため、このkindのスコープ外——rulesブロックにその旨を記載する）。"
+        },
+        "officialDocRef": {
+          "type": "string",
+          "x-prompt-write": "この契約の一次情報源となる公式ドキュメントのURL。無ければ空文字。"
+        }
+      }
+    },
+    "ArtifactShapeBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "summary",
+        "fields"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "ツールが要求する成果物自体の構造契約を持ちます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "summary"
+        },
+        {
+          "as": "table",
+          "from": "fields",
+          "columns": [
+            {
+              "field": "field",
+              "header": "フィールド"
+            },
+            {
+              "field": "requirement",
+              "header": "必須度"
+            },
+            {
+              "field": "description",
+              "header": "説明"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ArtifactShape"
+        },
+        "title": {
+          "type": "string",
+          "const": "成果物の構造契約"
+        },
+        "summary": {
+          "type": "string",
+          "x-prompt-write": "成果物全体の構造を1〜3文で。複数ファイル1組（例: Kiro Specsのrequirements/design/tasks）やレジストリ形式（例: MCPの1ファイル内複数サーバー定義）の場合はここで説明する。"
+        },
+        "fields": {
+          "type": "array",
+          "x-prompt-write": "成果物が持つフィールド・キーを列挙。フロントマターのキー、JSON契約のキー、設定エントリのキー等。",
+          "items": {
+            "type": "object",
+            "required": [
+              "field",
+              "requirement",
+              "description"
+            ],
+            "properties": {
+              "field": {
+                "type": "string",
+                "x-prompt-write": "フィールド名（例: hookSpecificOutput.hookEventName）"
+              },
+              "requirement": {
+                "type": "string",
+                "x-prompt-write": "必須度（例: 必須／任意／条件付き必須）。自由記述。"
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "このフィールドの意味・値の形。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "WiringBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "placements"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "ツール側への実際の登録方法（配置エントリの一覧）を持ちます。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "placements",
+          "titleFrom": "pathPattern",
+          "each": [
+            {
+              "as": "keyvalue",
+              "pairs": [
+                {
+                  "label": "配線方式",
+                  "from": "mechanism"
+                }
+              ]
+            },
+            {
+              "as": "paragraph",
+              "heading": "補足",
+              "from": "note"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Wiring"
+        },
+        "title": {
+          "type": "string",
+          "const": "配線方法"
+        },
+        "placements": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "配置エントリを列挙。単一ファイル系は1エントリ、複数ファイル1組（Kiro Specs等）は複数エントリ、レジストリ系（MCP等）は1エントリ＋noteで複数エントリが入る旨を説明する。",
+          "items": {
+            "type": "object",
+            "required": [
+              "pathPattern",
+              "mechanism",
+              "note"
+            ],
+            "properties": {
+              "pathPattern": {
+                "type": "string",
+                "x-prompt-write": "配置先のパスパターン（例: .claude/settings.json, .kiro/specs/{feature}/requirements.md）"
+              },
+              "mechanism": {
+                "type": "string",
+                "enum": [
+                  "directory-convention",
+                  "registration-array",
+                  "config-entry",
+                  "single-file"
+                ],
+                "x-prompt-write": "配線方式。directory-convention=規約に沿ったディレクトリ配置のみで自動検出される／registration-array=中央の配列へ明示登録が必要／config-entry=1設定ファイル内に複数エントリとして登録／single-file=リポジトリ内の単一ファイルとして配置（登録不要）。下のenumから選ぶ。"
+              },
+              "note": {
+                "type": "string",
+                "x-prompt-write": "この配置エントリの補足（例: 複数サーバー定義がこの1ファイルにエントリとして入る、等）。無ければ空文字。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ToolIntegrationRulesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "配線・実装時の落とし穴・規約を持ちます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "level",
+              "header": "種別"
+            },
+            {
+              "field": "rule",
+              "header": "規約"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ToolIntegrationRules"
+        },
+        "title": {
+          "type": "string",
+          "const": "規約・落とし穴"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "配線・実装時の落とし穴、規約を列挙。identity.artifactKindがPlugin等の複合種別でこのkindのスコープ外である場合は、その旨もここに一文残す。",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "rule"
+            ],
+            "properties": {
+              "level": {
+                "$ref": "#/$defs/LevelEnum"
+              },
+              "rule": {
+                "type": "string",
+                "x-prompt-write": "規約・落とし穴の内容。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ToolIntegrationContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "identity",
+        "artifactShape",
+        "wiring",
+        "rules",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "identity": {
+          "$ref": "#/$defs/ToolIntegrationIdentityBlock"
+        },
+        "artifactShape": {
+          "$ref": "#/$defs/ArtifactShapeBlock"
+        },
+        "wiring": {
+          "$ref": "#/$defs/WiringBlock"
+        },
+        "rules": {
+          "$ref": "#/$defs/ToolIntegrationRulesBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/DescriptionBlock"
+        }
+      }
     }
   },
   "x-frontmatter": {
@@ -2004,6 +2320,15 @@
       "updatedAt": "doc.updatedAt"
     },
     "test-standard": {
+      "id": "doc.documentId",
+      "type": "doc.codingKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "tool-integration": {
       "id": "doc.documentId",
       "type": "doc.codingKind",
       "title": "doc.content.title.title",
