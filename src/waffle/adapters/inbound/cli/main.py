@@ -13,6 +13,7 @@ os.environ.setdefault("PYTHON_COLORS", "0")
 
 import typer
 
+from waffle.adapters.outbound.coding_preset_repo import PackageCodingPresetRepository
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
@@ -29,6 +30,7 @@ from waffle.application.usecases.check_query_precedes_array_fill import CheckQue
 from waffle.application.usecases.check_verification_gate import CheckVerificationGate
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.application.usecases.check_domain_service_drift import CheckDomainServiceDrift
+from waffle.application.usecases.init_coding_preset import InitCodingPreset
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
@@ -300,6 +302,14 @@ def lint_docstring(
     """対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。"""
     scan_engine = ScanSourceCode(_docs(), PythonAstSourceScanner())
     _emit(LintDocstring(scan_engine, PydoclintLinter()).run(path, kind))
+
+@app.command("init-coding-preset")
+def init_coding_preset(
+    preset: str = typer.Option(..., "--preset", help="プリセット名（例: python-hexagonal）"),
+    product: str = typer.Option(..., "--product", help="プロダクト名（documentIdのサフィックスになる。例: waffle）"),
+) -> None:
+    """CodingSchemaプリセットからtech-stack/architecture/coding-standard/test-standardの4documentを一括生成（uc-init-coding-preset）。"""
+    _emit(InitCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, product))
 
 @app.command()
 def serve() -> None:

@@ -77,6 +77,7 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-check-path-is-projection
 - uc-render-handoff-template
 - uc-render-document-viewer
+- uc-init-coding-preset
 
 ---
 

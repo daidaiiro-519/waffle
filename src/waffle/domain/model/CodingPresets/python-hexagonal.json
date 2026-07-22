@@ -1,0 +1,608 @@
+{
+  "tech-stack": {
+    "title": {
+      "blockType": "Title",
+      "title": "Python/ヘキサゴナル構成の採用技術を定めるTech Stack仕様"
+    },
+    "identity": {
+      "blockType": "Identity",
+      "title": "スタック概要",
+      "tier": "backend",
+      "stackName": "python-hexagonal"
+    },
+    "runtime": {
+      "blockType": "Runtime",
+      "title": "ランタイム",
+      "language": "Python 3.12+",
+      "target": "CLI / ローカルプロセス",
+      "concurrency": "同期主体（MCP 境界のみ async）"
+    },
+    "framework": {
+      "blockType": "Framework",
+      "title": "フレームワーク",
+      "name": "",
+      "note": "なし（Web フレームワークは使用しない。外部公開は「公開インターフェース」を参照）",
+      "rationale": ""
+    },
+    "interface": {
+      "blockType": "Interface",
+      "title": "公開インターフェース",
+      "items": [
+        {
+          "style": "CLI",
+          "implementation": "typer",
+          "rationale": "型ヒントから引数解析を自動生成でき、Pythonの型注釈という既存資産をそのままCLI定義に転用できるため"
+        },
+        {
+          "style": "MCP",
+          "implementation": "fastmcp",
+          "rationale": "MCPサーバーの定型的な配線（tool登録・スキーマ変換）を薄く済ませられ、CLIと同じユースケース層をそのまま再利用できるため"
+        }
+      ]
+    },
+    "middleware": {
+      "blockType": "Middleware",
+      "title": "ミドルウェア",
+      "items": [],
+      "note": "なし（document.json をファイルとして保存。DB・ブローカー・AP サーバーを持たない）"
+    },
+    "libraries": {
+      "blockType": "Libraries",
+      "title": "ライブラリ",
+      "items": [
+        {
+          "category": "validation",
+          "capability": "schema-validation",
+          "implementation": "jsonschema",
+          "version": "^4",
+          "rationale": "document.json自体がJSON Schemaで検証される設計であり、Python標準的なJSON Schema実装として広く使われているため"
+        },
+        {
+          "category": "observability",
+          "capability": "logging",
+          "implementation": "標準 logging",
+          "version": "",
+          "rationale": "ローカルCLI/MCPプロセスであり、外部ロギング基盤との連携要件が無いため、標準ライブラリで十分"
+        },
+        {
+          "category": "query",
+          "capability": "document-path-query",
+          "implementation": "jmespath",
+          "version": "^1",
+          "rationale": "uc-query-documentの17操作のうち10操作（get_field/filter_items/get_items_slice等）を1つの宣言的クエリ式へ統合するために採用。JSONPathより関数・フィルタ式が豊富でPython公式実装が枯れている（AWS CLIの--queryで実績あり）。技術要件（宣言的な絞り込み・射影・スライス、独自関数の登録によるカスタム拡張、blockKeyスコープでのprompt導出との整合）を満たす候補としてjsonpath-ng等も検討したが、カスタム関数拡張機構（jmespath.functions.Functions継承）がfilter_pattern相当の正規表現マッチを同一式言語内に統合するために必須で、spike検証（2026-07-19）で実際に動作を確認済み。標準の想定利用範囲を超えるカスタム関数拡張であるため、アップストリームAPI変更に追従する保守コストが通常のライブラリ利用より高い点は既知のトレードオフとして許容する"
+        }
+      ]
+    },
+    "tooling": {
+      "blockType": "Tooling",
+      "title": "開発ツール",
+      "packageManager": "uv（.venv / uv.lock 固定）",
+      "lintFormat": "ruff（任意）",
+      "rationale": "uvは依存解決とロックファイル管理が高速で、.venv管理も一体化しており、追加のツール(pip/virtualenv/poetry等)を組み合わせる必要がないため"
+    },
+    "policy": {
+      "blockType": "Policy",
+      "title": "依存方針",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "依存追加は「既存の用途で代替不可か」を確認してから"
+        },
+        {
+          "level": "禁止",
+          "rule": "一覧に無いライブラリを反射的に import する"
+        },
+        {
+          "level": "推奨",
+          "rule": "バージョンは範囲指定し uv.lock で固定する"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "Python/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。"
+    }
+  },
+  "architecture": {
+    "title": {
+      "blockType": "Title",
+      "title": "Python/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様"
+    },
+    "layers": {
+      "blockType": "Layers",
+      "title": "レイヤーと依存方向",
+      "style": "ポートとアダプター（ヘキサゴナル）",
+      "items": [
+        {
+          "layer": "domain",
+          "responsibility": "ドメインモデル・不変条件・値",
+          "mayDependOn": []
+        },
+        {
+          "layer": "application",
+          "responsibility": "usecase の調整・トランザクション境界",
+          "mayDependOn": [
+            "domain",
+            "ports"
+          ]
+        },
+        {
+          "layer": "ports",
+          "responsibility": "application が要求する抽象（driven interface）",
+          "mayDependOn": [
+            "domain"
+          ]
+        },
+        {
+          "layer": "inbound adapter",
+          "responsibility": "外部からの入口（driving：API・CLI 等）",
+          "mayDependOn": [
+            "application"
+          ]
+        },
+        {
+          "layer": "outbound adapter",
+          "responsibility": "外部への出口（driven：DB・外部サービス）",
+          "mayDependOn": [
+            "ports"
+          ]
+        }
+      ]
+    },
+    "layout": {
+      "blockType": "Layout",
+      "title": "ディレクトリ構成",
+      "tree": "src/{package}/\n  domain/\n    model/          value-object, entity, aggregate\n    services/       domain-service\n  application/\n    usecases/       1 usecase = 1 module\n    ports/          driven interface の定義\n  adapters/\n    inbound/        driving（api, cli, ...）\n    outbound/       driven（db, external, ...）\n  shared/           共通（エラー・結果型 等）",
+      "compositionRoot": "inbound adapter の起動点にのみ置く"
+    },
+    "conceptPlacement": {
+      "blockType": "ConceptPlacement",
+      "title": "概念 → 実現形",
+      "items": [
+        {
+          "concept": "usecase",
+          "placement": "application/usecases",
+          "pattern": "application service・エントリメソッド1つ・ドメインは port 経由で呼ぶ"
+        },
+        {
+          "concept": "aggregate",
+          "placement": "domain/model",
+          "pattern": "整合性境界を持つクラス・不変条件をメソッド内で強制・コマンドはメソッド・永続化は repository 経由"
+        },
+        {
+          "concept": "entity",
+          "placement": "domain/model",
+          "pattern": "同一性は id・集約の内側でのみ可変"
+        },
+        {
+          "concept": "value-object",
+          "placement": "domain/model",
+          "pattern": "不変（frozen dataclass）・値等価"
+        },
+        {
+          "concept": "domain-service",
+          "placement": "domain/services",
+          "pattern": "ステートレス・複数集約を跨る計算"
+        },
+        {
+          "concept": "repository",
+          "placement": "application/ports（interface）＋adapters/outbound（impl）",
+          "pattern": "aggregate の load/save・集約1つに1リポジトリ"
+        },
+        {
+          "concept": "port",
+          "placement": "application/ports",
+          "pattern": "application が要求する driven インターフェース（ABC / Protocol）"
+        },
+        {
+          "concept": "inbound-adapter",
+          "placement": "adapters/inbound",
+          "pattern": "外部入力を application 呼び出しへ変換・ロジックを持たない"
+        },
+        {
+          "concept": "outbound-adapter",
+          "placement": "adapters/outbound",
+          "pattern": "port / repository を実装・外部ライブラリをここに閉じ込める"
+        }
+      ]
+    },
+    "rules": {
+      "blockType": "ArchitectureRules",
+      "title": "規約（守るべきルール）",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "依存は内向きのみ"
+        },
+        {
+          "level": "必須",
+          "rule": "外部 I/O・外部ライブラリは outbound adapter（port 実装）に閉じ込める"
+        },
+        {
+          "level": "必須",
+          "rule": "合成ルート（結線・DI）は inbound adapter の起動点にのみ置く"
+        },
+        {
+          "level": "必須",
+          "rule": "依存（port / repository）はコンストラクタ注入で受け取る（生成は合成ルートのみ）"
+        },
+        {
+          "level": "必須",
+          "rule": "application 境界は結果型（Result 等）で成否を返す・domain は不変条件違反をドメイン例外で表す"
+        },
+        {
+          "level": "必須",
+          "rule": "失敗は識別可能なエラーコード（定数文字列）を伴う結果型で返す（メッセージ文字列のみは不可）"
+        },
+        {
+          "level": "禁止",
+          "rule": "domain / application が外部ライブラリ（DB・HTTP 等）を直接 import する"
+        },
+        {
+          "level": "禁止",
+          "rule": "domain 層での副作用（I/O・グローバル可変状態）"
+        },
+        {
+          "level": "禁止",
+          "rule": "ドメイン例外の握り潰し（境界で結果型に写像する）"
+        },
+        {
+          "level": "必須",
+          "rule": "配線（どのportにどのadapterを使うか）はコンポジションルート（起動処理）の1箇所に集約する。個々のusecase・adapterの中でアダプターの具体クラスをnewしない"
+        },
+        {
+          "level": "禁止",
+          "rule": "コンポジションルート自体に業務ロジックを書く（配線専用に保つ）"
+        },
+        {
+          "level": "必須",
+          "rule": "outbound adapterで発生した技術的例外（DB接続エラー等）は、境界を越える前にport契約が定める失敗の形（Result等）に翻訳する。ライブラリ固有の例外型をapplication/domainまで伝播させない"
+        },
+        {
+          "level": "必須",
+          "rule": "domainが投げる例外は業務ルール違反のみを表す（業務語彙の専用例外型）。技術的失敗の翻訳先として使わない"
+        },
+        {
+          "level": "禁止",
+          "rule": "レイヤー境界を越えてdomainオブジェクト（entity・aggregate）をそのまま渡す。外部に出る形は必要な値だけをコピーした専用のDTOにする"
+        },
+        {
+          "level": "必須",
+          "rule": "ロギング・キャッシュ・パフォーマンス計測のような純粋に技術的な横断的関心事は、domain/applicationのコードに書かず、外側（デコレーター・ミドルウェア等）で一括して適用する"
+        },
+        {
+          "level": "必須",
+          "rule": "監査ログ・認可のような業務要件としての横断的関心事は、「何を記録すべきか・誰が実行を許可されるか」の判断をdomain/applicationが持ち、実際の記録・認証手段はport経由でoutbound adapterに委譲する"
+        },
+        {
+          "level": "禁止",
+          "rule": "認可チェックをdomain層の集約メソッドの中に直接書く（「誰がログインしているか」という技術的な認証の仕組みにdomain層が依存し、依存方向が逆転する）"
+        },
+        {
+          "level": "必須",
+          "rule": "usecase実装クラス名は、対応するusecase specが宣言する操作名とそのまま一致させる（Engine等の装飾的な接尾辞を付けない）。ファイル名も同じ操作名をsnake_caseに変換したものに.pyを付与する（例: 操作名RegisterOrder→register_order.py）"
+        },
+        {
+          "level": "必須",
+          "rule": "MCP境界（async関数）で発生した例外は、境界を越える前に捕捉し失敗の形（Result等）に翻訳する。awaitし忘れたcoroutine等、async処理特有の未処理例外を残さない。外部呼び出しにはタイムアウトを設定し、タイムアウトも通常の失敗としてResult型相当で表現する"
+        }
+      ]
+    },
+    "thicknessBySubdomain": {
+      "blockType": "ThicknessBySubdomain",
+      "title": "サブドメイン別の厚み",
+      "items": [
+        {
+          "category": "中核",
+          "thickness": "厚い設計（明示的なドメインモデル）。トランザクションスクリプト・アクティブレコードは使わない（業務ルールが複雑になるほど、これらは同じ判断ロジックの重複・不整合を招くため）"
+        },
+        {
+          "category": "一般",
+          "thickness": "ライブラリを adapter で薄く包む"
+        },
+        {
+          "category": "補完",
+          "thickness": "最小のトランザクションスクリプト（またはデータ構造が複雑ならアクティブレコード）。唯一の規律は、一連の更新処理が完全に成功するか完全に失敗するかのどちらかで終わること（トランザクション管理）。業務ルールが複雑化してきたら中核と同じ厚い設計への移行を検討する"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "Pythonでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
+    }
+  },
+  "coding-standard": {
+    "title": {
+      "blockType": "Title",
+      "title": "Python/ヘキサゴナル構成のコーディング規約を定めるCoding Standard"
+    },
+    "naming": {
+      "blockType": "Naming",
+      "title": "命名",
+      "items": [
+        {
+          "target": "モジュール / ファイル",
+          "convention": "スネークケース"
+        },
+        {
+          "target": "クラス",
+          "convention": "パスカルケース"
+        },
+        {
+          "target": "関数・メソッド",
+          "convention": "スネークケース"
+        },
+        {
+          "target": "private（内部限定）",
+          "convention": "先頭 _"
+        },
+        {
+          "target": "語彙",
+          "convention": "仕様（spec）のユビキタス言語に一致させる（勝手な言い換え禁止）"
+        },
+        {
+          "target": "domain層の識別子（クラス名・メソッド名）",
+          "convention": "ユビキタス言語のみで構成する。Impl/DTO/Manager/Helper等の技術的接尾辞を付けない（付いている時点でその概念はドメインの言葉でなく実装都合で存在している兆候）"
+        },
+        {
+          "target": "application層の識別子（usecase名）",
+          "convention": "動詞＋目的語の業務操作として命名する（例: RequestPickup、CancelOrder）"
+        },
+        {
+          "target": "outbound adapter層の識別子",
+          "convention": "使用する技術名を明示してよい（例: PostgresShipmentRepository、InMemoryShipmentRepository）。ポート実装であることが責務そのものなので技術名を隠す理由が無い"
+        },
+        {
+          "target": "レイヤー境界を越えるDTOの識別子",
+          "convention": "層の外に出るための入れ物であることが分かる名前にする（例: ShipmentStatusResponse）。ドメインオブジェクトと同じクラス名を使い回さない"
+        }
+      ]
+    },
+    "style": {
+      "blockType": "Style",
+      "title": "スタイル",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "型注釈を公開関数の引数・戻り値に付ける"
+        },
+        {
+          "level": "必須",
+          "rule": "1関数＝1責務"
+        },
+        {
+          "level": "禁止",
+          "rule": "循環 import"
+        },
+        {
+          "level": "推奨",
+          "rule": "早期 return で条件分岐の入れ子を避ける"
+        },
+        {
+          "level": "必須",
+          "rule": "importは標準ライブラリ／サードパーティ／ローカル（自プロジェクト）の3グループに分け、グループ間を空行で区切る。グループ内はアルファベット順。自動整形ツール（isort/ruff等）の設定をこの規約のSSOTとし、手動での並べ替えはしない"
+        }
+      ]
+    },
+    "docstring": {
+      "blockType": "Docstring",
+      "title": "docstring",
+      "style": "Google スタイル docstring",
+      "summaryGuidance": "「何をするか・いつ使うか」を1行の平叙文で。インデックスに載る前提で、検索と判断に効く語を選ぶ。",
+      "target": "公開要素（module / 公開 class / 公開 function）は必須・private は任意",
+      "example": "def calculate_total(order: Order, coupon: Coupon | None = None) -> Money:\n    \"\"\"注文の合計金額を計算する。クーポン適用後の金額を返す。\n\n    Args:\n        order: 対象の注文。\n        coupon: 適用するクーポン（無ければ定価のまま）。\n\n    Returns:\n        クーポン適用後の合計金額。\n\n    Raises:\n        InvalidCouponError: クーポンの適用条件を満たさない場合。\n    \"\"\"",
+      "paramSyntax": "Args:\n    name (type): 説明\nReturns:\n    説明\nRaises:\n    ExceptionType: 説明"
+    },
+    "rules": {
+      "blockType": "CodingRules",
+      "title": "決定ルール",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "公開要素に要約行つき docstring を書く"
+        },
+        {
+          "level": "禁止",
+          "rule": "コードから導出できる情報を docstring に書く（型の列挙・実装手順の逐語説明）"
+        },
+        {
+          "level": "推奨",
+          "rule": "コメントは「なぜ」を書く（「何を」は命名と要約行が表現する）"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "Python/ヘキサゴナル構成のコーディング規約（命名・スタイル・docstring）を定める。"
+    }
+  },
+  "test-standard": {
+    "title": {
+      "blockType": "Title",
+      "title": "Python/ヘキサゴナル構成のテスト方針を定めるTest Standard"
+    },
+    "testStrategy": {
+      "blockType": "TestStrategy",
+      "title": "テスト方針",
+      "pyramid": "ピラミッド形（単体テストを重視・統合はやや軽め・E2E は行わない）",
+      "rationale": "業務ロジックの実装方法＝ドメインモデル"
+    },
+    "testPlan": {
+      "blockType": "TestPlan",
+      "title": "テスト計画",
+      "items": [
+        {
+          "item": "実行タイミング",
+          "value": "すべての変更（コミット前ローカル・PR で CI）"
+        },
+        {
+          "item": "CI トリガー",
+          "value": "push / pull_request"
+        },
+        {
+          "item": "ゲート",
+          "value": "対応するシナリオのネイティブテストが緑であることをマージ必須条件にする"
+        },
+        {
+          "item": "対象外",
+          "value": "パフォーマンステスト（中核だが性能要件なし）"
+        }
+      ]
+    },
+    "testTypes": {
+      "blockType": "TestTypes",
+      "title": "テストタイプ",
+      "items": [
+        {
+          "testType": "unit",
+          "tool": "pytest",
+          "target": "domain / application"
+        },
+        {
+          "testType": "integration",
+          "tool": "pytest",
+          "target": "adapters"
+        },
+        {
+          "testType": "acceptance",
+          "tool": "pytest（要件のシナリオを見て人間またはAIが直接執筆）",
+          "target": "usecase"
+        },
+        {
+          "testType": "contract",
+          "tool": "pytest（インターフェース定義との差分検査）",
+          "target": "外部公開インターフェース（CLI/API/RPC等。無ければこの行自体を省略）"
+        }
+      ]
+    },
+    "framework": {
+      "blockType": "TestFramework",
+      "title": "フレームワーク",
+      "unit": "pytest",
+      "acceptance": "pytest"
+    },
+    "scenarioBinding": {
+      "blockType": "ScenarioBinding",
+      "title": "シナリオの束ね方",
+      "items": [
+        {
+          "item": "書き方",
+          "rule": "振る舞いはGiven/When/Then形式(Gherkin)のシナリオとして書く。1シナリオ＝1つの具体的な状況→操作→結果"
+        },
+        {
+          "item": "実行可能にする",
+          "rule": "書いたシナリオはそのまま放置せず、対応する実行可能なテスト関数を書く。シナリオの文章だけでは「検証済み」とみなさない"
+        },
+        {
+          "item": "対応関係",
+          "rule": "1仕様単位（usecase等）につき1テストファイルを基本とし、シナリオ名とテスト関数名を対応させる（例: シナリオ「在庫不足なら失敗する」→関数名test_在庫不足なら失敗する）"
+        },
+        {
+          "item": "ドリフト検知",
+          "rule": "シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない）"
+        }
+      ]
+    },
+    "placementByTarget": {
+      "blockType": "PlacementByTarget",
+      "title": "テスト対象別の配置",
+      "items": [
+        {
+          "target": "domain",
+          "testKind": "unit",
+          "path": "tests/unit/domain/"
+        },
+        {
+          "target": "application",
+          "testKind": "unit（port はテストダブル）",
+          "path": "tests/unit/application/（port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する）"
+        },
+        {
+          "target": "adapters",
+          "testKind": "integration（契約テスト）",
+          "path": "tests/integration/（同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行できると、両者の振る舞いの一致を保証しやすい）"
+        },
+        {
+          "target": "usecase",
+          "testKind": "acceptance（ネイティブ）",
+          "path": "tests/acceptance/"
+        },
+        {
+          "target": "システム全体の少数シナリオ",
+          "testKind": "E2E",
+          "path": "tests/e2e/（コンポジションルートによる配線を含めて検証。件数は絞る）"
+        }
+      ]
+    },
+    "rules": {
+      "blockType": "TestRules",
+      "title": "決定ルール",
+      "items": [
+        {
+          "level": "禁止",
+          "rule": "単体テストが実物の DB・外部サービスに依存する"
+        },
+        {
+          "level": "推奨",
+          "rule": "不変条件はテストダブルなしで検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "テストファイル名は対応する仕様の識別子に対応させて統一する（実装モジュール名を由来にした命名は禁止）"
+        },
+        {
+          "level": "必須",
+          "rule": "tests/ 配下は testTypes（unit/integration/acceptance/contract/e2e）を第一階層とする。domain/applicationはunit/配下の第二階層（対象層の軸）。adaptersは単体テストではなく統合(integration)テストなので tests/unit/配下に置かず tests/integration/ を独立の第一階層にする"
+        },
+        {
+          "level": "推奨",
+          "rule": "application層のport経由コードは、integration層(実アダプタ)で既に検証済みの保証を、fakeに差し替えて再検証するためだけの単体テストを追加しない。追加するのは、そのコード自身が独自の分岐/判定ロジックを持ち、かつどの既存シナリオにも対応しない場合のみ（テストカバレッジは目標ではなく診断ツール）"
+        },
+        {
+          "level": "必須",
+          "rule": "アダプターの契約テストは、ポートのインターフェースに対して書き、本物の実装とテスト用の偽実装の両方が同じテストスイートを満たすことを確認する"
+        },
+        {
+          "level": "禁止",
+          "rule": "仕様(要件)の記述に、テスト層・アーキテクチャ層の内部語彙（unit/integration/adapter・具体的なクラス名等）を持ち込む。仕様は常に業務語彙のみで書き、「どう検証するか」はこの規約（コーディング側）にのみ書く"
+        },
+        {
+          "level": "必須",
+          "rule": "値オブジェクトのテストは、値が等しければ等価であること・不変であること（状態を変更するメソッドが存在しないこと）を検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "エンティティのテストは、同一性がidで決まること（フィールドの値が同じでもidが違えば別物として扱われること）を検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "集約のテストは、不変条件が常にメソッド経由でしか変更できず、直接不変条件に違反した状態を作れないことを検証する（コンストラクタ・setter等での迂回が無いこと）"
+        },
+        {
+          "level": "必須",
+          "rule": "業務サービスのテストは、ステートレスであること（同じ入力に対して常に同じ結果を返し、呼び出し順序に依存しないこと）を検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない"
+        }
+      ]
+    },
+    "docstring": {
+      "style": "pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載する",
+      "transcriptionGuidance": "docstring本文には、対応するspec（usecase/aggregate/subdomain）のシナリオ（Given/When/Then）を一字一句そのまま転記する。関数名の一致だけでは、シナリオ文言の事後編集への追従を検知できないため。",
+      "target": "acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenariosに対応する全テスト関数",
+      "example": "def test_在庫不足なら失敗する():\n    \"\"\"\n    Given 在庫が1個の商品\n    When 2個注文する\n    Then 在庫不足エラーになる\n    \"\"\"\n    ...",
+      "blockType": "TestScenarioDocstring",
+      "title": "シナリオdocstring"
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "Python/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
+    }
+  }
+}

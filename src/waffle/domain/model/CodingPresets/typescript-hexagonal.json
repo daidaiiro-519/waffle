@@ -1,0 +1,536 @@
+{
+  "tech-stack": {
+    "title": {
+      "blockType": "Title",
+      "title": "TypeScript/ヘキサゴナル構成の採用技術を定めるTech Stack仕様"
+    },
+    "identity": {
+      "blockType": "Identity",
+      "title": "スタック概要",
+      "tier": "backend",
+      "stackName": "typescript-hexagonal"
+    },
+    "runtime": {
+      "blockType": "Runtime",
+      "title": "ランタイム",
+      "language": "TypeScript 5.x（Node.js 20+）",
+      "target": "ローカルプロセス（ゲートウェイ機器上で常駐）",
+      "concurrency": "非同期主体（async/await・シングルスレッドイベントループ）"
+    },
+    "framework": {
+      "blockType": "Framework",
+      "title": "フレームワーク",
+      "name": "Fastify",
+      "note": "",
+      "rationale": "軽量でプラグイン機構が薄く、TypeBoxと組み合わせたスキーマファーストなルーティング定義（型とバリデーションの二重管理を避けられる）に適しているため"
+    },
+    "interface": {
+      "blockType": "Interface",
+      "title": "公開インターフェース",
+      "items": [
+        {
+          "style": "REST",
+          "implementation": "Fastify + TypeBox 製 schema provider",
+          "rationale": "ゲートウェイ上のローカルアプリとして、フロントエンド(Vue SPA)からの単純なリクエスト/レスポンスで足り、GraphQL/gRPC等の複雑な契約機構は不要なため"
+        }
+      ]
+    },
+    "middleware": {
+      "blockType": "Middleware",
+      "title": "ミドルウェア",
+      "items": [
+        {
+          "role": "database",
+          "product": "SQLite",
+          "access": "Drizzle ORM",
+          "rationale": "ゲートウェイ機器上でローカル常駐するアプリであり、外部DBサーバーを別途立てる運用コストを避け、ファイル1つで完結する永続化が要件に合うため。Drizzle ORMはTypeBoxと親和性が高い型推論を持つため選定"
+        }
+      ],
+      "note": ""
+    },
+    "libraries": {
+      "blockType": "Libraries",
+      "title": "ライブラリ",
+      "items": [
+        {
+          "category": "validation",
+          "capability": "schema-validation",
+          "implementation": "TypeBox",
+          "version": "",
+          "rationale": "Fastifyのスキーマベースルーティングとネイティブに統合でき、型注釈とランタイムバリデーションを同じスキーマ定義から生成できるため（型とバリデーションの二重管理を避ける）"
+        }
+      ]
+    },
+    "tooling": {
+      "blockType": "Tooling",
+      "title": "開発ツール",
+      "packageManager": "npm",
+      "lintFormat": "ESLint + Prettier",
+      "rationale": "Node.jsエコシステムの標準的な選択肢であり、追加のワークスペース機能等は現時点で不要なため"
+    },
+    "policy": {
+      "blockType": "Policy",
+      "title": "依存方針",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "新規依存の追加は、標準ライブラリ・既存依存で代替できないことを確認してから行う"
+        },
+        {
+          "level": "禁止",
+          "rule": "同じ役割（バリデーション・ORM等）のライブラリを重複して導入する"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "TypeScript/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。"
+    }
+  },
+  "architecture": {
+    "title": {
+      "blockType": "Title",
+      "title": "TypeScript/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様"
+    },
+    "layers": {
+      "blockType": "Layers",
+      "title": "レイヤーと依存方向",
+      "style": "ポートとアダプター（ヘキサゴナル）",
+      "items": [
+        {
+          "layer": "domain",
+          "responsibility": "業務ロジック・不変条件",
+          "mayDependOn": []
+        },
+        {
+          "layer": "application",
+          "responsibility": "usecaseの編成・ポート呼び出し・トランザクション境界",
+          "mayDependOn": [
+            "domain"
+          ]
+        },
+        {
+          "layer": "ports",
+          "responsibility": "domain/applicationが外部に要求するインターフェース定義",
+          "mayDependOn": [
+            "domain"
+          ]
+        },
+        {
+          "layer": "inbound adapter",
+          "responsibility": "外部プロトコルの受け口（usecaseを呼ぶだけ）",
+          "mayDependOn": [
+            "application",
+            "ports"
+          ]
+        },
+        {
+          "layer": "outbound adapter",
+          "responsibility": "portの実装。外部システムとの実際のやり取り",
+          "mayDependOn": [
+            "ports"
+          ]
+        }
+      ]
+    },
+    "layout": {
+      "blockType": "Layout",
+      "title": "ディレクトリ構成",
+      "tree": "src/\n  domain/\n    model/\n    value-objects/\n    services/\n  application/\n    usecases/\n  ports/\n  adapters/\n    inbound/\n    outbound/",
+      "compositionRoot": "inbound adapter の起動点（エントリーポイント）にのみ置く"
+    },
+    "conceptPlacement": {
+      "blockType": "ConceptPlacement",
+      "title": "概念 → 実現形",
+      "items": [
+        {
+          "concept": "usecase",
+          "placement": "application/usecases",
+          "pattern": "エントリメソッド1つ・ドメインは port 経由で呼ぶ"
+        },
+        {
+          "concept": "aggregate",
+          "placement": "domain/model",
+          "pattern": "不変条件はメソッド経由でのみ変更できる形にする（コンストラクタとメソッド内に検証ロジックを閉じ込める）。外部の集約はIDで参照し、直接オブジェクトとして保持しない。集約はできるだけ小さく設計する"
+        },
+        {
+          "concept": "entity",
+          "placement": "domain/model",
+          "pattern": "同一性はidで判定する（フィールドの値ではない）。単独では実装しない。必ず集約の内部にのみ存在する"
+        },
+        {
+          "concept": "value-object",
+          "placement": "domain/value-objects",
+          "pattern": "構造的等価性・不変（readonlyフィールドのみ・状態変更メソッドを持たない）"
+        },
+        {
+          "concept": "domain-service",
+          "placement": "domain/services",
+          "pattern": "ステートレス（同じ入力に対して常に同じ結果を返す）。複数集約を単一トランザクションでまとめて変更するための抜け道にはしない（1集約=1トランザクションの原則は業務サービスがあっても変わらない）"
+        },
+        {
+          "concept": "repository",
+          "placement": "ports（インターフェース）／adapters/outbound（実装）",
+          "pattern": "インターフェースはports、具象はoutbound adapterに置く"
+        },
+        {
+          "concept": "port",
+          "placement": "ports",
+          "pattern": "インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない"
+        },
+        {
+          "concept": "inbound-adapter",
+          "placement": "adapters/inbound",
+          "pattern": "外部プロトコルの受け口。usecaseを呼び出すだけで業務ロジックを持たない"
+        },
+        {
+          "concept": "outbound-adapter",
+          "placement": "adapters/outbound",
+          "pattern": "portの実装。外部システムとの実際のやり取りを担う"
+        }
+      ]
+    },
+    "rules": {
+      "blockType": "ArchitectureRules",
+      "title": "規約（守るべきルール）",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "依存は常に内向き（adapters→application→domain）。domainは他レイヤーを一切importしない"
+        },
+        {
+          "level": "必須",
+          "rule": "DIはコンストラクタ注入で行い、実装（class）ではなくport（インターフェース）型で受け取る"
+        },
+        {
+          "level": "必須",
+          "rule": "domain/applicationからadapter/外部ライブラリの型を直接importしない（型はportsで自前定義する）"
+        },
+        {
+          "level": "推奨",
+          "rule": "エラー伝播は、想定内の失敗（業務ルール違反等）は戻り値の判別可能な型（Result型相当）で表現し、想定外の異常はthrowする。境界（adapter）で例外を捕捉し外部向けの形に翻訳する（内側→外側方向の翻訳）"
+        },
+        {
+          "level": "必須",
+          "rule": "outbound adapter内で発生した技術的失敗（特定ライブラリ・ドライバ固有の例外型）を、そのままdomain/applicationへ伝播させない。抽象化した失敗の形に翻訳してから内側へ渡す（外側→内側方向の翻訳）"
+        },
+        {
+          "level": "禁止",
+          "rule": "outbound adapterの実装の詳細（クエリ・スキーマ形式等）がapplication/domainへ漏れること"
+        },
+        {
+          "level": "必須",
+          "rule": "レイヤー境界を越えてdomainオブジェクト（entity・aggregate）をそのまま渡さない。外部に出る形は必要な値だけをコピーした専用のDTOにする"
+        },
+        {
+          "level": "禁止",
+          "rule": "個々のusecase・adapterの中でアダプターの具体クラスをnewする。配線（DI）はcompositionRootの1箇所に集約する"
+        },
+        {
+          "level": "必須",
+          "rule": "Promiseのrejectionは必ず境界（adapter/composition root）で捕捉する。未処理のPromise拒否をdomain/applicationの外へ漏らさない。外部呼び出しにはタイムアウトを設定し、タイムアウトも通常の失敗としてResult型相当で表現する"
+        }
+      ]
+    },
+    "thicknessBySubdomain": {
+      "blockType": "ThicknessBySubdomain",
+      "title": "サブドメイン別の厚み",
+      "items": [
+        {
+          "category": "中核",
+          "thickness": "aggregate/entity/value-object/domain-serviceをフルに用いて厚く設計する"
+        },
+        {
+          "category": "一般",
+          "thickness": "既存ライブラリ・外部サービスを薄いadapterで包む程度に留める"
+        },
+        {
+          "category": "補完",
+          "thickness": "最小限のusecase内の手続き的処理のみ（別途domainモデルを起こさない）。唯一の規律は、一連の更新処理が完全に成功するか完全に失敗するかのどちらかで終わること（トランザクション管理）"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "TypeScriptでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
+    }
+  },
+  "coding-standard": {
+    "title": {
+      "blockType": "Title",
+      "title": "TypeScript/ヘキサゴナル構成のコーディング規約を定めるCoding Standard"
+    },
+    "naming": {
+      "blockType": "Naming",
+      "title": "命名",
+      "items": [
+        {
+          "target": "ファイル",
+          "convention": "kebab-case。例: order-repository.ts"
+        },
+        {
+          "target": "クラス・型・インターフェース",
+          "convention": "PascalCase"
+        },
+        {
+          "target": "関数・変数・メソッド",
+          "convention": "camelCase"
+        },
+        {
+          "target": "定数",
+          "convention": "UPPER_SNAKE_CASE（モジュールスコープの真の定数のみ）"
+        },
+        {
+          "target": "業務語彙",
+          "convention": "仕様のユビキタス言語に一致させる（実装都合の言い換えをしない）"
+        },
+        {
+          "target": "domain層の識別子",
+          "convention": "ユビキタス言語のみで命名し、技術的接尾辞（Impl/DTO/Manager/Helper等）をつけない"
+        },
+        {
+          "target": "outbound adapter層の識別子",
+          "convention": "使用する技術を明示してよい。例: SqliteOrderRepository, DrizzleOrderRepository"
+        },
+        {
+          "target": "usecase",
+          "convention": "動詞＋目的語の業務操作名で命名する。例: RequestPickup, RegisterOrder"
+        },
+        {
+          "target": "レイヤー境界を越えるDTO",
+          "convention": "境界を越えるための入れ物であると分かる名前にする。例: OrderStatusResponse, RegisterOrderCommand"
+        }
+      ]
+    },
+    "style": {
+      "blockType": "Style",
+      "title": "スタイル",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "any型を使わない。型が未確定な場合はunknownを使い、使用箇所で型を絞り込む"
+        },
+        {
+          "level": "必須",
+          "rule": "関数は1つの責務のみを持つ。複数の判断軸を1関数に混ぜない"
+        },
+        {
+          "level": "禁止",
+          "rule": "循環import（相互にimportし合うモジュール）"
+        },
+        {
+          "level": "推奨",
+          "rule": "公開APIの引数・戻り値には明示的な型注釈を付ける（推論に任せない）"
+        },
+        {
+          "level": "必須",
+          "rule": "importは標準/組み込みモジュール・サードパーティ・ローカル（自プロジェクト）の3グループに分け、グループ間を空行で区切る。グループ内はアルファベット順。自動整形ツール（eslint-plugin-import等）の設定をこの規約のSSOTとし、手動での並べ替えはしない"
+        }
+      ]
+    },
+    "docstring": {
+      "blockType": "Docstring",
+      "title": "docstring",
+      "style": "TSDoc",
+      "summaryGuidance": "要約行（1行目）は、ソースを開かずに検索・判断できるよう「何をするか・いつ使うか」が分かる語で書く",
+      "target": "公開要素（exportされるclass / function / interface）。非公開（内部専用）は任意",
+      "example": "/**\n * 注文の合計金額を計算する。割引適用後の金額を返す。\n *\n * @param order - 対象の注文\n * @returns 割引適用後の合計金額\n */\nfunction calculateTotal(order: Order): Money { /* ... */ }",
+      "paramSyntax": "@param name - 説明\n@returns 説明\n@throws {ErrorType} 説明"
+    },
+    "rules": {
+      "blockType": "CodingRules",
+      "title": "決定ルール",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "docstringは公開要素のみ必須とする"
+        },
+        {
+          "level": "禁止",
+          "rule": "コードから自明に導出できる情報（型そのものの説明等）だけをdocstringに書く"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "TypeScript/ヘキサゴナル構成のコーディング規約（命名・スタイル）を定める。"
+    }
+  },
+  "test-standard": {
+    "title": {
+      "blockType": "Title",
+      "title": "TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard"
+    },
+    "testStrategy": {
+      "blockType": "TestStrategy",
+      "title": "テスト方針",
+      "pyramid": "ピラミッド形（単体テストを重視・統合はやや軽め・E2Eは行わない）",
+      "rationale": "業務ロジックの実装方法＝ドメインモデル"
+    },
+    "testPlan": {
+      "blockType": "TestPlan",
+      "title": "テスト計画",
+      "items": [
+        {
+          "item": "実行タイミング",
+          "value": "すべての変更（コミット前ローカル・PRでCI）"
+        },
+        {
+          "item": "CIトリガー",
+          "value": "push / pull_request"
+        },
+        {
+          "item": "ゲート",
+          "value": "対応するシナリオのテストが緑であることをマージ必須条件にする"
+        },
+        {
+          "item": "対象外",
+          "value": "パフォーマンステスト（中核だが性能要件なし）"
+        }
+      ]
+    },
+    "testTypes": {
+      "blockType": "TestTypes",
+      "title": "テストタイプ",
+      "items": [
+        {
+          "testType": "unit",
+          "tool": "Vitest",
+          "target": "domain / application"
+        },
+        {
+          "testType": "integration",
+          "tool": "Vitest",
+          "target": "adapters"
+        },
+        {
+          "testType": "acceptance",
+          "tool": "Vitest（要件のシナリオを見て人間またはAIが直接執筆）",
+          "target": "usecase"
+        },
+        {
+          "testType": "contract",
+          "tool": "Vitest（インターフェース定義との差分検査）",
+          "target": "外部公開インターフェース"
+        }
+      ]
+    },
+    "framework": {
+      "blockType": "TestFramework",
+      "title": "フレームワーク",
+      "unit": "Vitest",
+      "acceptance": "Vitest"
+    },
+    "scenarioBinding": {
+      "blockType": "ScenarioBinding",
+      "title": "シナリオの束ね方",
+      "items": [
+        {
+          "item": "書き方",
+          "rule": "振る舞いはGiven/When/Then形式(Gherkin)のシナリオとして書く。1シナリオ＝1つの具体的な状況→操作→結果"
+        },
+        {
+          "item": "実行可能にする",
+          "rule": "書いたシナリオはそのまま放置せず、対応する実行可能なテスト関数を書く。シナリオの文章だけでは検証済みとみなさない"
+        },
+        {
+          "item": "対応関係",
+          "rule": "1仕様単位（usecase等）につき1テストファイルを基本とし、シナリオ名とテスト関数名を対応させる"
+        },
+        {
+          "item": "ドリフト検知",
+          "rule": "シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない）"
+        }
+      ]
+    },
+    "placementByTarget": {
+      "blockType": "PlacementByTarget",
+      "title": "テスト対象別の配置",
+      "items": [
+        {
+          "target": "domain",
+          "testKind": "unit",
+          "path": "src/domain/**/*.test.ts"
+        },
+        {
+          "target": "application",
+          "testKind": "unit（port はテストダブル）",
+          "path": "src/application/**/*.test.ts"
+        },
+        {
+          "target": "adapters",
+          "testKind": "integration",
+          "path": "src/adapters/**/*.test.ts"
+        },
+        {
+          "target": "usecase",
+          "testKind": "acceptance（ネイティブ）",
+          "path": "tests/acceptance/"
+        },
+        {
+          "target": "システム全体の少数シナリオ",
+          "testKind": "E2E",
+          "path": "tests/e2e/（コンポジションルートによる配線を含めて検証。件数は絞る）"
+        }
+      ]
+    },
+    "rules": {
+      "blockType": "TestRules",
+      "title": "決定ルール",
+      "items": [
+        {
+          "level": "禁止",
+          "rule": "単体テストが実物のDB・外部サービスに依存する"
+        },
+        {
+          "level": "推奨",
+          "rule": "不変条件はテストダブルなしで検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "テストファイル名は対応する仕様の識別子に対応させて統一する（実装モジュール名を由来にした命名は禁止）"
+        },
+        {
+          "level": "必須",
+          "rule": "値オブジェクトのテストは、値が等しければ等価であること・不変であることを検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "エンティティのテストは、同一性がidで決まることを検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "集約のテストは、不変条件が常にメソッド経由でしか変更できないことを検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "業務サービスのテストは、ステートレスであることを検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "アダプターの契約テストは、ポートのインターフェースに対して書き、本物の実装とテスト用の偽実装の両方が同じテストスイートを満たすことを確認する"
+        },
+        {
+          "level": "必須",
+          "rule": "時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない"
+        }
+      ]
+    },
+    "docstring": {
+      "style": "テスト関数(it/test)の直前に置くブロックコメント内にGiven/When/Thenをそのまま記載する",
+      "transcriptionGuidance": "コメント本文には、対応するspec（usecase/aggregate/subdomain）のシナリオ（Given/When/Then）を一字一句そのまま転記する。関数名の一致だけでは、シナリオ文言の事後編集への追従を検知できないため。",
+      "target": "acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenariosに対応する全テスト関数",
+      "example": "/**\n * Given 在庫が1個の商品\n * When 2個注文する\n * Then 在庫不足エラーになる\n */\nit(\"在庫不足なら失敗する\", () => {\n  // ...\n});",
+      "blockType": "TestScenarioDocstring",
+      "title": "シナリオdocstring"
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
+    }
+  }
+}

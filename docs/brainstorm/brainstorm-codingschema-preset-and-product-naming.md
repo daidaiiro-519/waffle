@@ -50,3 +50,28 @@
 **次のアクション:** ddd-advisor（プリセット/実規約という概念区分がDDD的に妥当か、境界づけられたコンテキストの観点から`5d5c39e`の判断を覆すことに問題が無いか）とtech-lead-advisor（プリセット機構の実装設計、3文書のリネームに伴う参照箇所の洗い出しと影響範囲）へ敵対的検証を依頼した上で、(a) 3文書のリネーム＋test-standard-waffleの統合、(b) プリセット機構の新設、の2つをspec-first手続きで進める。
 
 ---
+
+## 実施状況（2026-07-22）
+
+### (a) 3文書のリネーム＋test-standard-waffleの統合 — 完了
+
+ddd-advisor（DDD原則面）・tech-lead-advisor（実装観点）とも敵対的検証で「進めてよい」と判定。tech-lead-advisorが指摘した未決事項（`stack`フィールドの値）は、ユーザーとの相談で「`python-hexagonal`のまま残し、プリセット系譜を保持する」で決着。
+
+- `tech-stack-python-hexagonal`→`tech-stack-waffle`、`architecture-python-hexagonal`→`architecture-waffle`、`coding-standard-python-hexagonal`→`coding-standard-waffle`へリネーム（内容は`scaffold create`+`fill`で複製、`stack`は`python-hexagonal`のまま維持）
+- `test-standard-python-hexagonal`の内容を`test-standard-waffle`（DRAFT）へ統合。ACTIVE側の充実した`testStrategy`/`testPlan`/`testTypes`/`rules`と、DRAFT側が持っていたWaffle固有の詳細（`scenarioBinding`のシナリオブロック種別↔テスト層対応・check-scenario-drift連携・`docstring`の転記規約）を統合し、「〜を継承」という注記文言は不要になったため削除
+- 旧3+1文書は削除（内容は新文書へ複製済み、git履歴からも復元可能）。依存する2テストファイルのdocumentId参照を更新
+- 全502テストパス、`check-schema-version-drift`クリーン。commit `bdb5b2c`
+
+**ddd-advisorが指摘したリスク（要フォローアップ）**:
+- 系譜の断絶：将来プリセット側（下記(b)）を改訂したとき、実規約側へ反映すべきかの判断材料が`stack`フィールドの値だけでは弱い可能性がある
+- プリセットのライフサイクル未決定：プリセットをdocumentのvalidate/render対象外とする決定を、(b)着手時にHandoffへ明記する必要がある
+- 境界の再侵犯防止：「実規約にはWaffle語彙を許す」という合意が、将来プリセット側への混入をなし崩し的に許容するリスクを認識しておくこと
+
+### (b) プリセット機構（`waffle init`等）の新設 — 未着手
+
+tech-lead-advisorの実装観点の提案（要点）:
+- プリセットは`render_blank_template`の再利用ではなく、新規の静的データ種として`src/waffle/domain/model/CodingPresets/{presetName}.json`相当の場所に置く
+- init機構は既存`scaffold create`への操作追加ではなく、新規usecase（`uc-init-coding-preset`）として新設する
+- 新規capability・新規CLIコマンドを伴う明確な新機能であり、フルサイクル（Investigation→Spec-authoring→Handoff-authoring→Implementation）必須
+
+このセッションでは(a)のみ着手し、(b)は別途起票する。
