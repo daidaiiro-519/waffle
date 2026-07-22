@@ -1,6 +1,10 @@
 # ブレインストーミング: Waffleの各種処理の確実性・再現性をどう担保するか
 
 **作成日:** 2026-07-13
+**実装状況（2026-07-23追記）:** 論点1（advisor自動発火通知）・論点3（手順の再現性・
+冪等性）は実装完了。論点2（開発フローの継続、`sd-flow-gate`）は設計合意・
+`uc-check-verification-gate`まで実装済み、残タスクはサーベイ中（詳細は
+`project_query_redesign_and_flow_gate_status.md`メモリ参照）。
 **目的:** 「Claude Code純正の`/loop`・`/goal`をマルチツール向けに再実装する」という
 実装方式先行の問い（`docs/brainstorm/brainstorm-multitool-loop-goal.md`）を一度
 脇に置き、その議論から実際に浮かび上がった3つの具体的な課題を主題として立て直し、
@@ -299,6 +303,22 @@ sd-reconciliationを踏襲する。usecaseはフェーズごとに1つずつ、o
 `patch-schema`呼び出しも対象に含む形へ拡張する設計を、既存Hooks設計の記録
 （`docs/brainstorm/brainstorm-waffle-hooks.md`）と同じ扱いで先に文書化してから
 実装する。
+
+**実装完了（2026-07-23）:** 3つの残タスクをすべて実装済み。
+1. 配列fill前のquery確認: `require-query-before-array-fill.py`（PreToolUse Bash、
+   `uc-check-query-precedes-array-fill`に委譲）
+2. Bash経由fill/patchへのdrift-check適用: `check-drift-on-write.py`のmatcherを
+   `Bash`にも拡張済み
+3. fill/patch後のvalidate/render実行確認: `notify-validate-render-after-write.py`
+   （PostToolUse Bash、新規）を追加
+
+さらに、この3本を含むHook群8本にユーザーから「Hookを作りすぎてUXを損ねていないか」
+という懸念が出たため、tech-lead-advisor・ddd-advisorに敵対的検証を依頼。責務の
+重複は無いが、Bashコマンド1回あたり最大10プロセス（Hookスクリプト5本＋内部の
+`uv run`サブプロセス最大5本）が直列で走る実行構成になっていたことが判明し、
+`post-bash-dispatch.py`・`pre-bash-dispatch.py`という集約ディスパッチャへ統合
+（各Hookの判定関数自体は変更せず、プロセス起動とtranscript読み込みのみ集約）。
+Bashコマンド1回あたりのpython3起動数を5→2に削減した。
 
 ---
 
