@@ -3,7 +3,7 @@ id: "coding-standard-typescript-hexagonal"
 type: "coding-standard"
 title: "TypeScript/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-typescript-hexagonal"
 description: "TypeScript/ヘキサゴナル構成のコーディング規約（命名・スタイル）を定める。"
-schemaRef: "CodingSchema/v3"
+schemaRef: "CodingSchema/v4"
 ---
 
 # TypeScript/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-typescript-hexagonal

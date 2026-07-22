@@ -1,3 +1,11 @@
+---
+id: "tech-stack-typescript-hexagonal"
+type: "tech-stack"
+title: "TypeScript/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-typescript-hexagonal"
+description: "TypeScript/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。"
+schemaRef: "CodingSchema/v4"
+---
+
 # TypeScript/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-typescript-hexagonal
 
 ## 概要

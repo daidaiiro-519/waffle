@@ -51,7 +51,7 @@ class InitCodingPreset:
             document = {
                 "documentId": document_id,
                 "documentType": "Coding",
-                "schemaRef": "CodingSchema/v3",
+                "schemaRef": "CodingSchema/v4",
                 "codingKind": kind,
                 "stack": preset_name,
                 "status": "ACTIVE",

@@ -137,6 +137,12 @@
           "responsibility": "schemaファイルの物理的な整形をagg-schemaが定める契約（json.dumps(indent=2, ensure_ascii=False)+改行）に一意に揃える。Schema集約の不変条件を実際に適用する。",
           "serviceName": "FormatContract",
           "group": "SchemaPatch"
+        },
+        {
+          "name": "ソースルート解決",
+          "responsibility": "CodingSchema（Coding集約）のarchitecture文書が持つlayout.sourceRootとconceptPlacementから、指定した概念（usecase等）の実装ファイル配置パスを導出する。drift-check系の複数usecaseが共通して依存する（特定の集約に属さない・言語/アーキテクチャに依存しない汎用計算）。",
+          "serviceName": "ResolveConceptSourceRoot",
+          "group": "ConceptSourceRoot"
         }
       ],
       "blockType": "DomainServices",

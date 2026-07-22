@@ -1,0 +1,144 @@
+{
+  "documentId": "handoff-concept-source-root-resolution",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "drift-check系usecaseの動的パス解決の実装引き継ぎ：handoff-concept-source-root-resolution"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "bc-waffle"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "sourceRootと既存フィールドの役割分担",
+          "consideration": "layout.tree（人間可読な正典ツリー、自由記述）から機械的にパースする案は、人間可読性のための自由度と機械可読な厳密パースという異質な関心事を混在させる脆い実装になるため不採用。conceptPlacement.placementが既に「treeの一部を構造化データとして切り出す」先例であり、sourceRootはその延長として独立フィールドに持たせるのが一貫している。ただしtreeとsourceRootが将来ズレる（二重の正典化）リスクがあるため、tree側のx-prompt-writeに『先頭行はsourceRootと一致させること』を明記して対応済み（CodingSchema/v4）。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "sourceRoot/placementを1フィールドに統合しない",
+          "consideration": "sourceRoot（言語・スタックごとに決まる技術規約、1architecture文書に1つ）とplacement（DDD概念ごとの配置、9概念×配列）は変更理由も粒度も異なる別軸であり、統合すると9箇所全てに同じroot文字列を重複させることになりDRY違反になる。分離設計を維持する。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "{package}等のトークンをinit時に解決しない",
+          "consideration": "architecture-waffle.jsonの実データで、layout.treeが現時点でも{package}を未解決のまま保持していることを確認済み。sourceRootだけこの前例を破ってinit時に解決すると非対称な変更になるため、sourceRootもtreeと同じ扱い（未解決のまま複製、解決は利用時＝drift-check実行時）にする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "実装場所は共有ドメインサービス",
+          "consideration": "4つのdrift-check usecaseで同一パターン（sourceRoot+placementをpath_template.resolveへ渡す）が重複するため、architecture-evidence-based-scope（複数実例からの一般化＝2件以上）の基準を満たす。各usecase個別実装ではなく、domain/services配下の共有ヘルパーとして切り出す（bc-waffle.jsonのdomainServicesにResolveConceptSourceRoot/ConceptSourceRootとして宣言済み）。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "packageの導出方法",
+          "consideration": "新規フィールド・新規CLIオプションは追加しない。architectureRef（documentId、例: architecture-waffle）から\"{codingKind}-\"プレフィックスを剥がすだけでpackage名（waffle）を復元できることを実データで確認済み（init_coding_preset.pyのdocument_id = f\"{kind}-{product_name}\"という既存命名規約から論理的に必然する値）。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "CLIオプション設計",
+          "consideration": "既存--srcRootは残し明示指定時はそちらを優先（後方互換）。新設--architectureRefは未指定時のみ使う。ただしWaffle自身のパスへの暗黙フォールバックは廃止し、両方未指定ならエラーにする（今回の欠陥の温床を残さないため）。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "共有ヘルパーのシグネチャ",
+          "consideration": "resolve_source_root(layout: dict, concept_placement_items: list[dict], concept: str, **variables) -> str | None。sourceRootが無い/conceptが見つからない場合はNoneを返し、呼び出し側（CLI）がフォールバック（エラー）を判断する。既存path_template.resolve()を内部で呼ぶ（改変せず合成利用）。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "path_template.resolveのKeyError挙動に注意",
+          "consideration": "resolve()はstr.format(**variables)の薄いラッパーで、テンプレートに{package}があるのにpackage変数を渡し忘れるとKeyErrorで例外送出する（素通りしない）。python版sourceRoot(\"src/{package}\")では必ずpackage変数を渡す実装にすること。ts版(\"src\"、プレースホルダ無し)はpackage変数が無くても安全に動く。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "4つのusecase自体は無改修",
+          "consideration": "check_usecase_class_drift.py等application層のrun(documents_root, src_root, ...)シグネチャは変更不要。CLI（inbound adapter）がarchitectureRefを解決してsrc_rootの生文字列に変換してから渡すだけで、application層は変換後の結果を受け取るのみ（依存方向の原則に合致）。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "複数言語混在プロジェクト（同一プロジェクトにPython実装のusecaseとTypeScript実装のusecaseが混在する場合）は今回のスコープ外。1回の呼び出しで1つのarchitecture文書のみ参照するMVPとし、必要になった時点で再設計する",
+        "productNameとpackage実体名が乖離するケース（kebab-case変換が必要になる等）も今回のスコープ外。実例が無いうちに先回りしない（evidence-based-scope）"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "waffle check-usecase-class-drift等4コマンド（CLI・既存、--architectureRefオプション追加）",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "4つのcheck-*-driftコマンド",
+              "sub": "CLIコマンド（既存、拡張）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "ドメインサービス",
+          "description": "ResolveConceptSourceRoot（新設）。既存path_template.resolveを合成利用する純粋関数。",
+          "nodes": [
+            {
+              "id": "helper",
+              "title": "concept_source_root.py",
+              "sub": "domain service（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "既存application層",
+          "description": "4つのdrift-check usecase。シグネチャ変更なし。",
+          "nodes": [
+            {
+              "id": "usecases",
+              "title": "check_usecase_class_drift等4usecase",
+              "sub": "既存（無改修）",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "waffle check-usecase-class-drift --architectureRef architecture-waffle を実行すると、architecture-waffle.jsonのlayout.sourceRoot(\"src/{package}\")とconceptPlacement(usecase→\"application/usecases\")からsrc_root=\"src/waffle/application/usecases\"が導出され、従来のハードコードされたデフォルト値と同じ結果になる",
+        "--srcRootを明示指定すればarchitectureRefより優先される（後方互換）。両方未指定ならエラーになる"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "drift-check系4usecaseがWaffle自身のパスをハードコードしていた問題を、architecture文書のsourceRoot/conceptPlacementから動的解決する仕組みの実装引き継ぎ。ddd-advisor/tech-lead-advisorの敵対的検証結果を反映する。"
+    }
+  },
+  "tags": [
+    "context:waffle"
+  ]
+}

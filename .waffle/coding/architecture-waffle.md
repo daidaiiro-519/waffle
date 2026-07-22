@@ -4,7 +4,7 @@ type: "architecture"
 title: "Waffle自身が採用するヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-waffle"
 description: "Waffle自身がヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v3"
+schemaRef: "CodingSchema/v4"
 ---
 
 # Waffle自身が採用するヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-waffle

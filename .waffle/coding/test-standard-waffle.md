@@ -3,7 +3,7 @@ id: "test-standard-waffle"
 type: "test-standard"
 title: "Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle"
 description: "Waffle自身のunit/integration/acceptance/contractという4層テスト構成の方針を定める。"
-schemaRef: "CodingSchema/v3"
+schemaRef: "CodingSchema/v4"
 ---
 
 # Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle

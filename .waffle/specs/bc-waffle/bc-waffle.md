@@ -90,6 +90,7 @@ schemaRef: "DomainSpecSchema/v8"
 | discriminatorキー抽出 | schemaのallOf if/then構造から、どのフィールド（specKind/codingKind/skillKind等）がkindのdiscriminatorとして機能しているかを機械的に取り出す。scaffold/renderの複数usecaseが共通して依存する（特定の集約に属さない・Schema集約の構造そのものを読むがSchema集約の外から呼ばれる編成ロジック）。 |
 | 後方互換チェック | 変更前後のschema(dict)の差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。 |
 | 契約整形 | schemaファイルの物理的な整形をagg-schemaが定める契約（json.dumps(indent=2, ensure_ascii=False)+改行）に一意に揃える。Schema集約の不変条件を実際に適用する。 |
+| ソースルート解決 | CodingSchema（Coding集約）のarchitecture文書が持つlayout.sourceRootとconceptPlacementから、指定した概念（usecase等）の実装ファイル配置パスを導出する。drift-check系の複数usecaseが共通して依存する（特定の集約に属さない・言語/アーキテクチャに依存しない汎用計算）。 |
 
 ---
 

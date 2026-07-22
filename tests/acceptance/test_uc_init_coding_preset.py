@@ -36,7 +36,7 @@ def test_プリセットから4documentを一括生成する():
     for p in _PATHS:
         assert p.is_file()
         doc = json.loads(p.read_text(encoding="utf-8"))
-        assert doc["schemaRef"] == "CodingSchema/v3"
+        assert doc["schemaRef"] == "CodingSchema/v4"
         assert doc["stack"] == "python-hexagonal"
         assert doc["status"] == "ACTIVE"
         assert doc["documentId"] in doc["content"]["title"]["title"]

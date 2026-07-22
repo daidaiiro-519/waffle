@@ -3,7 +3,7 @@ id: "architecture-typescript-hexagonal"
 type: "architecture"
 title: "TypeScript/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-typescript-hexagonal"
 description: "TypeScriptでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
-schemaRef: "CodingSchema/v3"
+schemaRef: "CodingSchema/v4"
 ---
 
 # TypeScript/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-typescript-hexagonal

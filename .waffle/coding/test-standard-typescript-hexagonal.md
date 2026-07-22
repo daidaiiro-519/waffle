@@ -3,7 +3,7 @@ id: "test-standard-typescript-hexagonal"
 type: "test-standard"
 title: "TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-typescript-hexagonal"
 description: "TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
-schemaRef: "CodingSchema/v3"
+schemaRef: "CodingSchema/v4"
 ---
 
 # TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-typescript-hexagonal

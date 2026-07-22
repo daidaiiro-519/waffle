@@ -4,7 +4,7 @@ type: "tech-stack"
 title: "Waffle自身が採用する技術要素を定めるTech Stack仕様：tech-stack-waffle"
 description: "Waffle自身がPython/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v3"
+schemaRef: "CodingSchema/v4"
 ---
 
 # Waffle自身が採用する技術要素を定めるTech Stack仕様：tech-stack-waffle
