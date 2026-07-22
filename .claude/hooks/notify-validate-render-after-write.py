@@ -1,0 +1,1 @@
+../../.waffle/hooks/notify-validate-render-after-write.py
