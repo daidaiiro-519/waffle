@@ -14,7 +14,7 @@
       "blockType": "TestStrategy",
       "title": "テスト方針",
       "pyramid": "test-standard-python-hexagonalを前提とし、それに追加でWaffle固有のspec↔テスト対応規約を上乗せする",
-      "rationale": "Waffleはspec(DomainSpecSchema)のTestScenariosを実行可能テストへ機械的に束ねるUDD(Usage-Driven Development)ループを持つ。この対応関係はWaffle固有の仕組みであり、汎用のPython×Hexagonal規約(test-standard-python-hexagonal)には含めない"
+      "rationale": "Waffleはspec(DomainSpecSchema)のTestScenariosを実行可能テストへ機械的に束ねるUDD(Usage-Driven Development)ループを持つ。この対応関係はWaffle固有の仕組みであり、汎用のPython×Hexagonal規約(test-standard-python-hexagonal)には含めない。本文書はtest-standard-python-hexagonalを前提とし、frameworkやplacementByTargetの配置等、値が同一のフィールドは明示的に再掲した上で継承元を注記し、rules・testTypes等はWaffle固有の内容に絞って追加・簡略化している（機械的な差分継承ではなく、各フィールドの由来を平文で明示する方式を採る）"
     },
     "testPlan": {
       "blockType": "TestPlan",
@@ -35,8 +35,8 @@
     "framework": {
       "blockType": "TestFramework",
       "title": "フレームワーク",
-      "unit": "pytest",
-      "acceptance": "pytest"
+      "unit": "pytest（test-standard-python-hexagonalを継承）",
+      "acceptance": "pytest（test-standard-python-hexagonalを継承）"
     },
     "scenarioBinding": {
       "blockType": "ScenarioBinding",
@@ -70,22 +70,22 @@
       "items": [
         {
           "target": "domain",
-          "testKind": "unit",
+          "testKind": "unit（配置はtest-standard-python-hexagonalを継承）",
           "path": "tests/unit/domain/"
         },
         {
           "target": "application",
-          "testKind": "unit（port はテストダブル）",
+          "testKind": "unit（port はテストダブル、配置はtest-standard-python-hexagonalを継承）",
           "path": "tests/unit/application/"
         },
         {
           "target": "adapters",
-          "testKind": "integration",
+          "testKind": "integration（配置はtest-standard-python-hexagonalを継承）",
           "path": "tests/integration/"
         },
         {
           "target": "usecase",
-          "testKind": "acceptance（ネイティブ）",
+          "testKind": "acceptance（ネイティブ、配置はtest-standard-python-hexagonalを継承）",
           "path": "tests/acceptance/"
         },
         {
@@ -113,7 +113,7 @@
         },
         {
           "level": "必須",
-          "rule": "時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない"
+          "rule": "時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する（test-standard-python-hexagonalを継承）"
         }
       ]
     },
