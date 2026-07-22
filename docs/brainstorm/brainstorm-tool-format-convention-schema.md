@@ -113,4 +113,62 @@ AIエージェントが実装を担う開発では、そのエージェントが
 tech-stack kindの記述対象を拡張するか）を論点2として検討する。
 
 ---
-<!-- 論点2以降は「論点N」ブロックを繰り返す -->
+
+## 論点 2: 新kindの名称・スコープをどう決めるか（tech-stack kindを拡張するか、別kindを新設するか）
+
+### AI 初期見解
+**見解:** tech-stack kindの記述対象を拡張するのではなく、5つ目の新kind（仮称
+`tool-integration`）として独立させるべきだと考える。
+
+**根拠:**
+- **カーディナリティが噛み合わない。** tech-stackは通常「1製品につき1つの一貫した
+  スタック像」を記述する単位（identity/runtime/framework/...という単一のナラティブ）
+  だが、ツールフォーマット規約は「外部ツール1つにつき1つの契約」（例:
+  `tool-integration-claude-code-hooks`、`tool-integration-claude-code-skill`、
+  `tool-integration-codex-agent`）という、独立して増減する複数文書になる。これを
+  tech-stackの1文書内のサブフィールドとして詰め込むと、tech-stack文書が「製品の
+  スタック像」と「無関係な複数の外部契約の寄せ集め」を同時に背負うことになり、
+  1文書1責務が崩れる
+- **内容の粒度が異なる。** tech-stackの各フィールド（identity/runtime/framework等）
+  は意思決定レベルの記述（「何を選んだか」）だが、ツールフォーマット規約は
+  「settings.jsonのhooksセクションはmatcher+commandを持つ」のような、選択の余地が
+  ない仕様documentationに近い。同じx-prompt-writeの粒度感で両者を扱うのは無理がある
+- **プリセット機構との相性が良い。** 直近で実装したCodingSchemaのpreset/product-
+  document分離（`brainstorm-codingschema-preset-and-product-naming.md`）の教訓が
+  そのまま当てはまる。ツールフォーマット規約は対象コードベースの言語・stackに
+  依存せず（Claude Code Hooksの契約はPythonでもTypeScriptでも同じ）、むしろ
+  tech-stackよりもさらに「製品非依存の汎用知識」という性質が強い。tech-stackの
+  一部として埋め込むと、製品ごとにこの契約を重複して持つ・更新し忘れるという、
+  まさにpreset分離で解決したのと同じ問題を再発させる。独立kindにしてpreset的に
+  1つだけ持たせる方が自然
+
+**新kind名の案:** `tool-integration`（Waffle成果物が消費される外部ツール側の契約、
+という意味を素直に表す）。他候補として`tool-contract`・`agent-runtime-format`も
+検討の余地あり。
+
+### ユーザー見解
+> いいと思いますね
+
+### AI 再考見解
+**見解:** 初期見解のまま確定してよい。カーディナリティ（1製品1像 vs 1ツール1契約）・
+粒度（意思決定 vs 仕様documentation）・preset機構との相性（言語・製品非依存）の
+3つの根拠はいずれも独立に成立しており、ユーザーの合意で覆すべき対抗意見も出て
+いないため、再考の余地なく初期見解を採用する。
+
+### 合意決定
+**決定:** ツール固有フォーマット規約は、CodingSchemaの5つ目の新kind
+`tool-integration`として独立させる。tech-stack kindの拡張は行わない。
+**理由:** カーディナリティ（1製品=1スタック像 vs 1外部ツール=1契約）・記述粒度
+（意思決定レベル vs 仕様documentation）・preset機構との相性（言語・製品非依存の
+汎用知識であり、tech-stackに埋め込むと重複・更新漏れを再発させる）の3点で、
+既存kindへの拡張よりも独立kindの方が形が合う。
+**次のアクション:** `tool-integration` kindの具体的なブロック構成（例:
+ツール名・契約の対象成果物種別・必須フィールド一覧・配線例）を論点3として設計する。
+実際のschema変更（`patch-schema add_kind_branch`等）は、CLAUDE.mdのフルサイクル
+原則に従い、この論点3の合意後、正式なspec-authoring（usecase spec不要なら
+schema変更のみのDRAFT→VALIDATED相当の合意記録）を経てから行う。着手の優先度は
+高くないため、次に実際の必要（Claude Code Hooksの配線知識を最初に文書化したい
+等）が生じたタイミングで再開する。
+
+---
+<!-- 論点3以降は「論点N」ブロックを繰り返す -->
