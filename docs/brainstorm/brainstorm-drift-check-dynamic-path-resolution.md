@@ -64,4 +64,28 @@ check-operation-drift・check-domain-service-drift・check-aggregate-class-drift
 実装する。
 
 ---
-<!-- 論点2以降は「論点N」ブロックを繰り返す -->
+
+## 実施状況（2026-07-22・完了）
+
+前回の反省（spec-first手順違反）を踏まえ、今回は実装コードを1行も書く前に
+spec/schema/handoffを確定させた:
+
+1. **spec/schema/handoff先行コミット**（commit `8bf0690`）: CodingSchema/v3→v4作成、
+   `LayoutBlock.sourceRoot`追加（treeとの整合ガイダンスも追記）、既存8文書のv4移行、
+   architecture-waffle/architecture-typescript-hexagonalへの`sourceRoot`バックフィル、
+   `bc-waffle.json`への`ResolveConceptSourceRoot`業務サービス宣言追加、
+   `handoff-concept-source-root-resolution.json`作成。この時点で`check-domain-service-drift`が
+   未実装ファイルを正しく検知することを確認（spec-firstが本来機能している状態の実演）
+2. **実装**（commit `6fb5d4a`）: `concept_source_root.py`（新規ドメインサービス、単体テスト6件）、
+   CLI（4コマンド）・MCPアダプター両方に`--architectureRef`対応を追加（MCPには同種の
+   ハードコード問題が独立して存在しており、実装中に発見して同時に修正）。
+   全518テストパス、全drift-checkクリーン
+3. **副産物の発見**: 実装検証の過程で、`architecture-waffle.json`の`conceptPlacement`/`layout.tree`が
+   実態と食い違っていた（aggregate/entity/value-objectの配置を"domain/model"と宣言していたが、
+   実際の実装クラスは"domain/entities"にあった。domain/model/はWaffle成長の過程でschema JSON
+   定義の置き場に転用され、DDD実装クラスの置き場ではなくなっていた）ことを発見し、同じコミットで
+   修正した。動的解決を実際に実装・実行したことで初めて可視化されたドリフトであり、
+   「ハードコードされたデフォルト値が正しい記述を裏付けている」という誤った安心感を
+   生んでいたことの実例になった。
+
+**次のアクション:** 無し。この一連の作業は完了。
