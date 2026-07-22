@@ -566,7 +566,7 @@ def test_CodingSchemaはMarkdownとして描画できる():
     When renderする
     Then Markdown形式で見出しを含む出力が生成される
     """
-    result = _engine().run(".waffle/documents/coding/tech-stack-python-hexagonal.json", deploy=False)
+    result = _engine().run(".waffle/documents/coding/tech-stack-waffle.json", deploy=False)
     assert isinstance(result, Ok), result
     assert result.value["format"] == "md"
     assert "# " in result.value["content"]

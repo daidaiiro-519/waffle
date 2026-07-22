@@ -13,10 +13,10 @@ from waffle.shared.result import Err, Ok
 
 _DOGFOOD_DOCUMENTS = [
     (".waffle/documents/skills/tech-lead-advisor.json", "ACTIVE"),
-    (".waffle/documents/coding/tech-stack-python-hexagonal.json", "ACTIVE"),
-    (".waffle/documents/coding/architecture-python-hexagonal.json", "ACTIVE"),
-    (".waffle/documents/coding/coding-standard-python-hexagonal.json", "ACTIVE"),
-    (".waffle/documents/coding/test-standard-python-hexagonal.json", "ACTIVE"),
+    (".waffle/documents/coding/tech-stack-waffle.json", "ACTIVE"),
+    (".waffle/documents/coding/architecture-waffle.json", "ACTIVE"),
+    (".waffle/documents/coding/coding-standard-waffle.json", "ACTIVE"),
+    (".waffle/documents/coding/test-standard-waffle.json", "ACTIVE"),
     (".waffle/documents/specs/bc-waffle/bc-waffle.json", "VALIDATED"),
     (".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/sd-document-management.json", "VALIDATED"),
     (".waffle/documents/specs/bc-waffle/subdomain/sd-validation/sd-validation.json", "VALIDATED"),

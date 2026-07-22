@@ -1,17 +1,17 @@
 ---
-id: "architecture-python-hexagonal"
+id: "architecture-waffle"
 type: "architecture"
-title: "Python/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-python-hexagonal"
-description: "Pythonでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
+title: "Waffle自身が採用するヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-waffle"
+description: "Waffle自身がヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
 tags: ["tier:backend"]
 schemaRef: "CodingSchema/v3"
 ---
 
-# Python/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-python-hexagonal
+# Waffle自身が採用するヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-waffle
 
 ## 概要
 
-Pythonでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。
+Waffle自身がヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。
 
 ---
 

@@ -1,8 +1,17 @@
-# Python/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-python-hexagonal
+---
+id: "tech-stack-waffle"
+type: "tech-stack"
+title: "Waffle自身が採用する技術要素を定めるTech Stack仕様：tech-stack-waffle"
+description: "Waffle自身がPython/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。"
+tags: ["tier:backend"]
+schemaRef: "CodingSchema/v3"
+---
+
+# Waffle自身が採用する技術要素を定めるTech Stack仕様：tech-stack-waffle
 
 ## 概要
 
-Python/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。
+Waffle自身がPython/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。
 
 ---
 

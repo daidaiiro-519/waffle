@@ -1,17 +1,17 @@
 ---
-id: "coding-standard-python-hexagonal"
+id: "coding-standard-waffle"
 type: "coding-standard"
-title: "Python/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-python-hexagonal"
-description: "Python/ヘキサゴナル構成のコーディング規約（命名・スタイル・docstring）を定める。"
+title: "Waffle自身が採用するコーディング規約を定めるCoding Standard：coding-standard-waffle"
+description: "Waffle自身のコーディング規約（命名・スタイル・docstring）を定める。"
 tags: ["tier:backend"]
 schemaRef: "CodingSchema/v3"
 ---
 
-# Python/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-python-hexagonal
+# Waffle自身が採用するコーディング規約を定めるCoding Standard：coding-standard-waffle
 
 ## 概要
 
-Python/ヘキサゴナル構成のコーディング規約（命名・スタイル・docstring）を定める。
+Waffle自身のコーディング規約（命名・スタイル・docstring）を定める。
 
 ---
 
