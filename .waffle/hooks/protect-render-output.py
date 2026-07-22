@@ -50,6 +50,12 @@ def main() -> None:
     except ValueError:
         sys.exit(0)  # 別ドライブ等、相対化できない場合は許可する（安全側）
 
+    # 投影は.waffle/config.jsonのcanonicalPathTemplatesが指す.waffle/配下にしか
+    # 存在しない（uc-check-path-is-projectionの判定対象と同じ真実源）。それ以外の
+    # パスはCLIを起動するまでもなく投影ではあり得ないため、ここで足切りする。
+    if not (rel_path == ".waffle" or rel_path.startswith(".waffle" + os.sep)):
+        sys.exit(0)
+
     result = _run_waffle("check-path-is-projection", "--resolved-path", rel_path)
     if result is None or not result.get("isProjection"):
         sys.exit(0)

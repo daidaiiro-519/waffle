@@ -46,38 +46,37 @@ def _extract_queried_paths(transcript_text: str) -> list[str]:
     return sorted({m.strip("'\"") for m in _QUERY_PATH.findall(transcript_text)})
 
 
-def main() -> None:
-    payload = json.load(sys.stdin)
+def check(payload: dict, transcript_text: str | None = None) -> str | None:
     tool_input = payload.get("tool_input", {})
     command = tool_input.get("command", "")
-    transcript_path = payload.get("transcript_path", "")
 
     if not _FILL_CMD.search(command):
-        sys.exit(0)
+        return None
 
     path_m = _PATH_ARG.search(command)
     values_m = _VALUES_ARG.search(command)
     if not path_m or not values_m:
-        sys.exit(0)  # 想定外の形はパースせず許可する（安全側）
+        return None  # 想定外の形はパースせず許可する（安全側）
 
     target_path = path_m.group(1).strip("'\"")
     try:
         values = json.loads(values_m.group(1))
     except json.JSONDecodeError:
-        sys.exit(0)
+        return None
 
     has_array = isinstance(values, dict) and any(isinstance(v, list) for v in values.values())
     if not has_array:
-        sys.exit(0)  # 配列フィールドを含まないfillは対象外
+        return None  # 配列フィールドを含まないfillは対象外
 
-    if not transcript_path:
-        sys.exit(0)  # transcriptを確認できない環境では許可する
-
-    try:
-        with open(transcript_path, encoding="utf-8") as f:
-            transcript_text = f.read()
-    except OSError:
-        sys.exit(0)
+    if transcript_text is None:
+        transcript_path = payload.get("transcript_path", "")
+        if not transcript_path:
+            return None  # transcriptを確認できない環境では許可する
+        try:
+            with open(transcript_path, encoding="utf-8") as f:
+                transcript_text = f.read()
+        except OSError:
+            return None
 
     queried_paths = _extract_queried_paths(transcript_text)
 
@@ -88,19 +87,26 @@ def main() -> None:
         "--queried-paths", json.dumps(queried_paths, ensure_ascii=False),
     )
     if result is None or result.get("allowed", True):
-        sys.exit(0)  # usecase呼び出しに失敗した場合も安全側（許可）に倒す
+        return None  # usecase呼び出しに失敗した場合も安全側（許可）に倒す
 
-    print(json.dumps({
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "permissionDecision": "deny",
-            "permissionDecisionReason": result.get("reason") or (
-                f"{target_path} に対してこのセッション内でwaffle queryを先に実行し、"
-                "現在値を取得してから配列を組み立て直してください（CLAUDE.mdの運用ルール: "
-                "配列はqueryで現在値取得→組み立て→fillで丸ごと置き換え）。"
-            ),
-        }
-    }, ensure_ascii=False))
+    return result.get("reason") or (
+        f"{target_path} に対してこのセッション内でwaffle queryを先に実行し、"
+        "現在値を取得してから配列を組み立て直してください（CLAUDE.mdの運用ルール: "
+        "配列はqueryで現在値取得→組み立て→fillで丸ごと置き換え）。"
+    )
+
+
+def main() -> None:
+    payload = json.load(sys.stdin)
+    reason = check(payload)
+    if reason:
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason,
+            }
+        }, ensure_ascii=False))
     sys.exit(0)
 
 

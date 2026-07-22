@@ -60,18 +60,16 @@ def _schema_family(command: str) -> str | None:
     return schema_ref.split("/")[0] if schema_ref else None
 
 
-def main() -> None:
-    payload = json.load(sys.stdin)
+def check(payload: dict, transcript_text: str | None = None) -> str | None:
     tool_input = payload.get("tool_input", {})
     command = tool_input.get("command", "")
-    transcript_path = payload.get("transcript_path", "")
 
     if not (_CREATE_CMD.search(command) or _FILL_CMD.search(command)):
-        sys.exit(0)
+        return None
 
     family = _schema_family(command)
     if not family:
-        sys.exit(0)
+        return None
 
     routing = _run_waffle(
         "query", "--operation", "query_path",
@@ -80,14 +78,14 @@ def main() -> None:
         "--expression", "@",
     )
     if not routing:
-        sys.exit(0)
+        return None
     rows = routing.get("value", {}).get("items", [])
     matched = [
         r for r in rows
         if family in r.get("purpose", "") and "qa-advisor" not in r.get("combinedSkills", [])
     ]
     if not matched:
-        sys.exit(0)
+        return None
 
     advisors: set[str] = set()
     max_strength = "nudge"
@@ -96,29 +94,38 @@ def main() -> None:
         if r.get("strength") == "block":
             max_strength = "block"
 
-    if not transcript_path:
-        sys.exit(0)
-    try:
-        with open(transcript_path, encoding="utf-8") as f:
-            transcript_text = f.read()
-    except OSError:
-        sys.exit(0)
+    if transcript_text is None:
+        transcript_path = payload.get("transcript_path", "")
+        if not transcript_path:
+            return None
+        try:
+            with open(transcript_path, encoding="utf-8") as f:
+                transcript_text = f.read()
+        except OSError:
+            return None
 
     missing = sorted(a for a in advisors if a not in transcript_text)
     if not missing:
-        sys.exit(0)
+        return None
 
     tone = "必ず確認してください" if max_strength == "block" else "検討をおすすめします"
-    print(json.dumps({
-        "hookSpecificOutput": {
-            "hookEventName": "PostToolUse",
-            "additionalContext": (
-                f"[Hook] {family}系のdocumentを作成・更新していますが、"
-                f"このセッション内で相談した形跡が見つからないadvisorがあります: "
-                f"{', '.join(missing)}（skill-routerのroutingTableで{max_strength}指定）。{tone}。"
-            ),
-        }
-    }, ensure_ascii=False))
+    return (
+        f"[Hook] {family}系のdocumentを作成・更新していますが、"
+        f"このセッション内で相談した形跡が見つからないadvisorがあります: "
+        f"{', '.join(missing)}（skill-routerのroutingTableで{max_strength}指定）。{tone}。"
+    )
+
+
+def main() -> None:
+    payload = json.load(sys.stdin)
+    message = check(payload)
+    if message:
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": message,
+            }
+        }, ensure_ascii=False))
     sys.exit(0)
 
 

@@ -1,0 +1,1 @@
+../../.waffle/hooks/post-bash-dispatch.py

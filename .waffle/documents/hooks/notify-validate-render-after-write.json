@@ -22,7 +22,7 @@
     "behavior": {
       "blockType": "Behavior",
       "title": "判定ロジック",
-      "text": "検知したfill/patchコマンドから対象のdocumentPath（またはschemaRef）を抽出する。同一transcript内で、その後に対象と同じpathを指すwaffle validateコマンド、およびwaffle renderコマンドの呼び出しがあるかを確認する。両方揃っていれば沈黙する。どちらか（または両方）が見つからなければ、不足しているコマンド名を含めてadditionalContextとして通知する（ブロックはしない）。"
+      "text": "このHookはfill/patch自体の実行直後には発火しない（validate/renderはまだ未来のコマンドで、その時点では必ず「未実行」判定になり無意味な通知になるため）。代わりに、transcript内のBashコマンド列を辿り、fill/patch-schemaで書き換えた対象（--pathまたは--schemaRef）を記録する。その後、同じ対象への追加fillが続く間は「まとめて後でvalidate/renderする運用」として何もしない。対象が別のtargetへ切り替わった時点（＝直前の対象への作業が一区切りついたとみなせるタイミング）で、直前の対象に対してwaffle validate・waffle renderの両方の呼び出しが間に挟まっていたかを確認する。どちらか（または両方）が見つからなければ、不足しているコマンド名を含めてadditionalContextとして通知する（ブロックはしない）。transcriptからコマンド列を抽出する際、heredocの本体やコメント行に書かれた文字列（実行されていないコマンド例等）は判定対象から除外する。"
     },
     "scriptRef": {
       "blockType": "ScriptRef",

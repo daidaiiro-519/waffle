@@ -30,6 +30,7 @@ _PATH_ARG = re.compile(r"--path\s+(\S+)")
 _SCHEMA_REF_ARG = re.compile(r"--schema(?:Ref|-ref)\s+(\S+)")
 
 _WAFFLE_CMD = re.compile(r"\bwaffle\s+\S+")
+_HEREDOC_OPEN = re.compile(r"<<-?\s*['\"]?(\w+)['\"]?")
 
 
 def _target(command: str) -> str | None:
@@ -40,6 +41,30 @@ def _target(command: str) -> str | None:
     if m:
         return m.group(1).strip("'\"")
     return None
+
+
+def _strip_non_executable_regions(command: str) -> str:
+    """heredoc本体とコメント行を、waffleコマンド抽出対象から除外する。
+
+    ヒアドキュメントに埋め込んだコマンド例文字列やコメント行を「実行された
+    コマンド」として誤検知しないようにする（実際に発生した誤検知の修正）。
+    """
+    lines = command.splitlines()
+    result = []
+    heredoc_terminator: str | None = None
+    for line in lines:
+        if heredoc_terminator is not None:
+            if line.strip() == heredoc_terminator:
+                heredoc_terminator = None
+            continue
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        m = _HEREDOC_OPEN.search(line)
+        if m:
+            heredoc_terminator = m.group(1)
+        result.append(line)
+    return "\n".join(result)
 
 
 def _bash_commands(transcript_text: str) -> list[str]:
@@ -58,27 +83,30 @@ def _bash_commands(transcript_text: str) -> list[str]:
                 continue
             tool_input = block.get("input", {})
             command = tool_input.get("command")
-            if isinstance(command, str) and _WAFFLE_CMD.search(command):
-                commands.append(command)
+            if not isinstance(command, str):
+                continue
+            executable = _strip_non_executable_regions(command)
+            if _WAFFLE_CMD.search(executable):
+                commands.append(executable)
     return commands
 
 
-def main() -> None:
-    payload = json.load(sys.stdin)
+def check(payload: dict, transcript_text: str | None = None) -> str | None:
     tool_input = payload.get("tool_input", {})
-    command = tool_input.get("command", "")
-    transcript_path = payload.get("transcript_path", "")
+    command = _strip_non_executable_regions(tool_input.get("command", ""))
 
     if not _WAFFLE_CMD.search(command):
-        sys.exit(0)
-    if not transcript_path:
-        sys.exit(0)
+        return None
 
-    try:
-        with open(transcript_path, encoding="utf-8") as f:
-            transcript_text = f.read()
-    except OSError:
-        sys.exit(0)
+    if transcript_text is None:
+        transcript_path = payload.get("transcript_path", "")
+        if not transcript_path:
+            return None
+        try:
+            with open(transcript_path, encoding="utf-8") as f:
+                transcript_text = f.read()
+        except OSError:
+            return None
 
     history = _bash_commands(transcript_text)
     history.append(command)
@@ -103,15 +131,15 @@ def main() -> None:
                 rendered = True
 
     if last_write_target is None:
-        sys.exit(0)
+        return None
 
     current_target = _target(command)
     current_is_write = bool(_FILL_CMD.search(command) or _PATCH_CMD.search(command))
     if current_is_write and current_target == last_write_target:
         # 同じ対象への追加fillは「まとめて後でvalidate/renderする」運用を妨げない
-        sys.exit(0)
+        return None
     if current_target == last_write_target and (_VALIDATE_CMD.search(command) or _RENDER_CMD.search(command)):
-        sys.exit(0)
+        return None
 
     missing = []
     if not validated:
@@ -119,18 +147,25 @@ def main() -> None:
     if not rendered:
         missing.append("waffle render")
     if not missing:
-        sys.exit(0)
+        return None
 
-    print(json.dumps({
-        "hookSpecificOutput": {
-            "hookEventName": "PostToolUse",
-            "additionalContext": (
-                f"[Hook] {last_write_target} をfill/patch-schemaで更新しましたが、"
-                f"その後 {', '.join(missing)} を実行した形跡が見つからないまま次のコマンドに"
-                f"進んでいます。document.jsonと成果物がズレたままにならないよう確認してください。"
-            ),
-        }
-    }, ensure_ascii=False))
+    return (
+        f"[Hook] {last_write_target} をfill/patch-schemaで更新しましたが、"
+        f"その後 {', '.join(missing)} を実行した形跡が見つからないまま次のコマンドに"
+        f"進んでいます。document.jsonと成果物がズレたままにならないよう確認してください。"
+    )
+
+
+def main() -> None:
+    payload = json.load(sys.stdin)
+    message = check(payload)
+    if message:
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": message,
+            }
+        }, ensure_ascii=False))
     sys.exit(0)
 
 

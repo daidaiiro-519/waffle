@@ -15,7 +15,7 @@
         ]
       },
       {
-        "matcher": "Read|Bash",
+        "matcher": "Read",
         "hooks": [
           {
             "type": "command",
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/require-query-before-array-fill.py"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-bash-dispatch.py"
           }
         ]
       }
@@ -52,15 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-drift-on-write.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notify-advisor-consultation.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notify-validate-render-after-write.py"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-bash-dispatch.py"
           }
         ]
       }

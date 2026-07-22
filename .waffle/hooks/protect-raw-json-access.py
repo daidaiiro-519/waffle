@@ -30,18 +30,12 @@ _WAFFLE_CLI = re.compile(
 )
 
 
-def _deny(reason_target: str) -> None:
-    print(json.dumps({
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "permissionDecision": "deny",
-            "permissionDecisionReason": (
-                "document.json / schema.json は waffle CLI 経由（query の "
-                "index_scan → query_path、書き込みは scaffold fill / "
-                f"patch-schema）で読んでください。直接読み取ろうとした対象: {reason_target}"
-            ),
-        }
-    }, ensure_ascii=False))
+def _deny_reason(reason_target: str) -> str:
+    return (
+        "document.json / schema.json は waffle CLI 経由（query の "
+        "index_scan → query_path、書き込みは scaffold fill / "
+        f"patch-schema）で読んでください。直接読み取ろうとした対象: {reason_target}"
+    )
 
 
 def _looks_like_raw_json_access(command: str) -> bool:
@@ -54,20 +48,38 @@ def _looks_like_raw_json_access(command: str) -> bool:
     return bool(_READ_VERB.search(command))
 
 
+def check_read(payload: dict) -> str | None:
+    file_path = payload.get("tool_input", {}).get("file_path", "")
+    if _TARGET.search(file_path):
+        return _deny_reason(file_path)
+    return None
+
+
+def check_bash(payload: dict) -> str | None:
+    command = payload.get("tool_input", {}).get("command", "")
+    if _looks_like_raw_json_access(command):
+        return _deny_reason(command)
+    return None
+
+
 def main() -> None:
     payload = json.load(sys.stdin)
     tool_name = payload.get("tool_name", "")
 
+    reason = None
     if tool_name == "Read":
-        file_path = payload.get("tool_input", {}).get("file_path", "")
-        if _TARGET.search(file_path):
-            _deny(file_path)
-            sys.exit(0)
+        reason = check_read(payload)
     elif tool_name == "Bash":
-        command = payload.get("tool_input", {}).get("command", "")
-        if _looks_like_raw_json_access(command):
-            _deny(command)
-            sys.exit(0)
+        reason = check_bash(payload)
+
+    if reason:
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason,
+            }
+        }, ensure_ascii=False))
 
     sys.exit(0)
 

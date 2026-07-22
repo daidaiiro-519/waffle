@@ -79,8 +79,7 @@ def _guess_test_paths(spec_path: str) -> list[str]:
     return found
 
 
-def main() -> None:
-    payload = json.load(sys.stdin)
+def check(payload: dict) -> str | None:
     tool_input = payload.get("tool_input", {})
     file_path = tool_input.get("file_path", "")
     command = tool_input.get("command", "")
@@ -121,11 +120,19 @@ def main() -> None:
                 reports.append(f"[scenario-drift:{test_path}] {json.dumps(data, ensure_ascii=False)}")
 
     target = file_path or spec_path
-    if reports:
+    if not reports:
+        return None
+    return f"[Hook] {target} への書き込み後にdriftを検出しました: " + " / ".join(reports)
+
+
+def main() -> None:
+    payload = json.load(sys.stdin)
+    message = check(payload)
+    if message:
         print(json.dumps({
             "hookSpecificOutput": {
                 "hookEventName": "PostToolUse",
-                "additionalContext": f"[Hook] {target} への書き込み後にdriftを検出しました: " + " / ".join(reports),
+                "additionalContext": message,
             }
         }, ensure_ascii=False))
     sys.exit(0)

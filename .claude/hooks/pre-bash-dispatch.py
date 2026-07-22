@@ -1,0 +1,1 @@
+../../.waffle/hooks/pre-bash-dispatch.py
