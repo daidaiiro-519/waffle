@@ -720,6 +720,17 @@ def test_未検証ではrenderできない():
     assert result.details[0] == "INVALID_TRANSITION"
 
 
+def test_x_render_targetを持たないschemaはNO_RENDER_TARGETを返す():
+    """
+    Given x-render-target.pathを宣言していないschemaのDocument
+    When renderを実行する
+    Then NO_RENDER_TARGETエラーが返り描画されない
+    """
+    result = _engine().run(".waffle/documents/handoff/handoff-concept-source-root-resolution.json", deploy=False)
+    assert isinstance(result, Err), result
+    assert result.details[0] == "NO_RENDER_TARGET"
+
+
 def test_不正なJSONはINVALID_JSON():
     """
     Given 不正なJSONの対象ファイル

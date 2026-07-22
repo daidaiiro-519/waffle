@@ -90,7 +90,13 @@ class RenderDocument:
                 f"status '{doc.get('status')}' からrenderへは遷移できません",
             )
 
-        target = schema.get("x-render-target", {})
+        target = schema.get("x-render-target") or {}
+        if not target.get("path"):
+            return _err(
+                "NO_RENDER_TARGET",
+                f"{schema_ref} は x-render-target.path を宣言していません。"
+                "専用の成果物確定コマンドを使ってください（例: HandoffSchemaは render-handoff-template）。",
+            )
         formats = target.get("formats") or ["md"]
         fmt = formats[0]  # MD 正本（HTML は uc-render-document-viewer が別usecaseとして担う）
         defs = schema.get("$defs", {})

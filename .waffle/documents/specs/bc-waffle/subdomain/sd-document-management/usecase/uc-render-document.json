@@ -102,7 +102,8 @@
         "While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。",
         "If list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取ったとき、システムはMALFORMED_CONTENTエラーを返し描画しない shall。",
         "While pathVarsが参照するcontentのドットパスを対象Documentが持たないとき、システムはその変数を使うdeploy先だけをスキップし、canonicalへの書き込みは継続する shall。",
-        "When x-frontmatterが指すドットパスの解決値がtext・itemsのいずれかを持つブロック形状のdictであるとき、システムはtextがあればそれを使い、無ければitemsを半角スペース区切りで結合した文字列をfrontmatter値として使う shall。"
+        "When x-frontmatterが指すドットパスの解決値がtext・itemsのいずれかを持つブロック形状のdictであるとき、システムはtextがあればそれを使い、無ければitemsを半角スペース区切りで結合した文字列をfrontmatter値として使う shall。",
+        "If 対象schemaがx-render-target.pathを宣言していないとき、システムはNO_RENDER_TARGETエラーを返し描画しない shall（専用の成果物確定コマンドを使うべきschemaであることを示す）。"
       ]
     },
     "errors": {
@@ -113,6 +114,12 @@
           "code": "MALFORMED_CONTENT",
           "condition": [
             "list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取った"
+          ]
+        },
+        {
+          "code": "NO_RENDER_TARGET",
+          "condition": [
+            "対象schemaがx-render-target.pathを宣言していない（専用のrenderコマンドを使うべき成果物のため、汎用render経路を意図的に持たない）"
           ]
         }
       ]
@@ -354,6 +361,13 @@
           "gherkin": "Given usecase specKindのDomainSpecSchema Document\nWhen RenderDocumentを実行する\nThen id/type/title/descriptionを含むfrontmatterが出力される",
           "covers": "",
           "operation": ""
+        },
+        {
+          "name": "x-render-targetを持たないschemaはNO_RENDER_TARGETを返す",
+          "category": "異常系",
+          "viewpoint": "解決契約：専用の成果物確定コマンドを持つschema（例: HandoffSchema）は汎用render経路を持たないことを明示的にエラーで示す",
+          "gherkin": "Scenario: x-render-targetを持たないschemaはNO_RENDER_TARGETを返す\n  Given x-render-target.pathを宣言していないschemaのDocument\n  When renderを実行する\n  Then NO_RENDER_TARGETエラーが返り描画されない",
+          "covers": "受け入れ基準: x-render-target.pathを宣言していないschemaはNO_RENDER_TARGETエラーになる"
         }
       ]
     },

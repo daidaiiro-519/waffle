@@ -107,7 +107,7 @@
         },
         {
           "task": "handoff-authoringの概念的な手順のうち、対象確認・雛形生成・整合確認・成果物確定をWaffleコマンドへ対応させる",
-          "howToApply": "「対象specとの対応を確認する」=対象specのdocument.jsonのstatusが VALIDATED 以上か`waffle query --operation get_meta`で確認／「雛形を用意する」=`waffle scaffold create --schemaRef HandoffSchema/v2`（既存document更新時は省略）／「構造の整合を確認する」=`waffle validate`／「成果物として確定する」=`waffle render`。「受け取った判断材料を記録する」（fillの中身の決定）は機械的操作ではない（judgmentTasksを参照）"
+          "howToApply": "「対象specとの対応を確認する」=対象specのdocument.jsonのstatusが VALIDATED 以上か`waffle query --operation get_meta`で確認／「雛形を用意する」=`waffle scaffold create --schemaRef HandoffSchema/v2`（既存document更新時は省略）／「構造の整合を確認する」=`waffle validate`／「成果物として確定する」=`waffle render-handoff-template --path <documentPath> --outputPath .waffle/handoff/<documentId>.html`（**汎用の`waffle render`ではない**。HandoffSchemaは`x-render-target`を意図的に持たず、`waffle render`を実行するとNO_RENDER_TARGETエラーになる。HTML固定テンプレートのみが正しい成果物）。「受け取った判断材料を記録する」（fillの中身の決定）は機械的操作ではない（judgmentTasksを参照）"
         },
         {
           "task": "knowledge-cultivatorの概念的な手順のうち、記録の器の生成と昇格操作をWaffleコマンドへ対応させる",
