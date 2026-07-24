@@ -999,7 +999,14 @@ def cmd_project(ctx: Ctx, argv: list[str]) -> None:
         print()
         print("このURLとトークンを渡した相手は、このプロジェクトに入れたパターンだけを一覧・閲覧できます。")
         print(f"トークンはこの一度だけ表示。パターンの追加は ds.py project add {pid} <pattern-slug> です。")
-        print(f"ローカルのプロジェクトフォルダ名を「{project_key}」にすると、コンソールが自動的にこのプロジェクトと紐付けます。")
+        local_dir = Path(".design-share") / project_key
+        for sub_dir in ("mocks", "preview", "backups", "exports"):
+            (local_dir / sub_dir).mkdir(parents=True, exist_ok=True)
+        gitignore = local_dir / ".gitignore"
+        if not gitignore.is_file():
+            gitignore.write_text("preview/\nbackups/\nexports/\n", encoding="utf-8")
+        print(f"ローカルのプロジェクトフォルダを用意しました: {local_dir}/（DESIGN.md・mocks/はコミット対象、preview/backups/exportsはgitignore対象）")
+        print(f"以降 confirm-design 等は --to {local_dir} を付けて実行してください。")
     elif sub == "list":
         keys = list_keys(ctx, "projects/")
         if not keys:

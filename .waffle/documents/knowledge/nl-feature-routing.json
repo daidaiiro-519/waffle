@@ -13,11 +13,12 @@
       "title": "原則",
       "items": [
         "変換層は8語の外にある: 8語の概念層は語彙（受け皿）であって変換ロジックではない。発話を語彙へ写す処理を別に持たないと、写像は毎回暗黙・不安定になる。",
-        "特徴量カテゴリで発話を聞き分ける: 視覚・印象／情報構造・タスク型／利用文脈・習熟度／トーン・ボイス／リスク・不可逆性の5カテゴリで、発話がどこに触れているかをまず特定する。",
-        "送り先は一様ではない: 視覚・印象は『トークンを先に固定する』『作り込みを一貫させる』（深い参照先はdesign-system-tokens／visual-hierarchy-and-restraint）という専用の概念語へ送る。情報構造・タスク型はprogressive-disclosure、トーン・ボイスはui-copywritingという、概念語を持たない既存knowledgeへ直接送る。利用文脈は「題材に根ざす」、リスク・不可逆性は「下限を守る」の適用範囲拡張として吸収する。新しい概念語の追加は、evidence-based-scope（実例2件以上）を満たした特徴量に限る——都度は足さない。",
-        "写像は言葉にして初めて検証できる: 確定前に「この発話のどの部分が・どのカテゴリで・どこへ送られるか」を一文で言う。○×チェックでなく、理由を言い切るの対になるゲートとして運用する。",
-        "対応表は硬い辞書にしない: 決定的な変換（特定の語→特定の色）にすると、新しいハウススタイル生成機になる。カテゴリは聞き分けの補助であり、具体の答えを決めない。",
-        "跡を残す: 展開側の成果物（DESIGN.md等のトークン）に、どの発話・どの特徴量カテゴリから来たかを一言添える。注入の質を事後検証できるようにし、展開側のトレーサビリティの弱さも同時に補う。"
+        "5平面で発話を聞き分ける: Jesse James Garrettの『Elements of User Experience』が定めるStrategy/Scope/Structure/Skeleton/Surfaceの5平面で、発話がどこに触れているかをまず特定する。自作の分類ではなく、確立された外部フレームワークに根拠を置く。",
+        "抽象軸はユーザーへ直接問わない: Strategy平面の『機能としてのプロダクト/ハイパーテキストとしてのプロダクト』という抽象2軸は、AIが目的ヒアリングの自由記述から内部で推定するための受け皿であり、ユーザーに直接選ばせる質問にしない。抽象的な自己診断を強いる質問は、design-shareの『入り口は指差し』原則（非デザイナーはゼロから言語化できない）に反する。",
+        "送り先は一様ではない: SurfaceはGarrett自身の言葉で『装飾でなく伝達』を目的とし、視覚・作り込みの判断領域を扱う8語（トークンを先に固定する／作り込みを一貫させる。深い参照先はdesign-system-tokens／visual-hierarchy-and-restraint）へ送る。Scope・Structure・SkeletonはSKILL.md自身のStep2〜4という直接の実行手順へ送る（既存knowledgeへの間接送りではない——これらの平面はdesign-share自身が固有の提案パターンを持つため）。新しい概念語の8語への追加は、evidence-based-scope（実例2件以上）を満たし、かつ視覚・作り込みの判断領域内にある特徴量に限る——領域の外側にある特徴量は、8語をいくら増やしても対象にならない。",
+        "写像は言葉にして初めて検証できる: 確定前に「この発話のどの部分が・どの平面で・どこへ送られるか」を一文で言う。○×チェックでなく、理由を言い切るの対になるゲートとして運用する。",
+        "対応表は硬い辞書にしない: 決定的な変換（特定の語→特定の色）にすると、新しいハウススタイル生成機になる。平面は聞き分けの補助であり、具体の答えを決めない。",
+        "跡を残す: 展開側の成果物（DESIGN.md等のトークン）に、どの発話・どの平面から来たかを一言添える。注入の質を事後検証できるようにし、展開側のトレーサビリティの弱さも同時に補う。"
       ]
     },
     "classifications": {
@@ -25,24 +26,24 @@
       "title": "分類",
       "items": [
         {
-          "name": "視覚・印象",
-          "description": "色・質感・雰囲気を表す発話。『トークンを先に固定する』『作り込みを一貫させる』へ送る（詳細な判断基準はdesign-system-tokens／visual-hierarchy-and-restraintを参照）。題材固有の色選びの理由付けであれば「題材に根ざす」も併せて参照する。"
+          "name": "Strategy",
+          "description": "目的・対象層に関する発話（『社内の経費精算を早くしたい』等）。ユーザーに『機能重視かハイパーテキスト重視か』という抽象軸を直接問わない——AIが目的ヒアリングの自由記述から内部で機能としてのプロダクト/ハイパーテキストとしてのプロダクトの軸を推定する。『題材に根ざす』の適用範囲拡張として吸収する。"
         },
         {
-          "name": "情報構造・タスク型",
-          "description": "比較する／順に進める／一覧から探す等の発話。既存knowledge progressive-disclosureへ送る。"
+          "name": "Scope",
+          "description": "できること・見せる情報に関する発話（機能要件・コンテンツ要件）。トーン・ボイス（言葉の硬さ）とリスク・不可逆性（削除・提出取り消し等の確認要否）は独立カテゴリではなく、Scopeの機能要件／コンテンツ要件それぞれのサブ要素として扱う（Garrett原著のScope平面が機能仕様とコンテンツ要件の2要素を持つことに対応）。SKILL.md Step2の提案→逆算ロジックへ直接送る（既存knowledgeへの送りではない）。"
         },
         {
-          "name": "利用文脈・習熟度",
-          "description": "初心者向け／毎日使う業務ツール等の発話。「題材に根ざす」の定義（題材＝プロダクト特徴だけでなく利用文脈も含む）へ吸収する。"
+          "name": "Structure",
+          "description": "手順・状態のルールに関する発話（『一本道でいいか、中断できるか』等、画面数を含意しない）。Garrett自身の用語『概念モデル（conceptual model）』に対応。SKILL.md Step3へ直接送る。"
         },
         {
-          "name": "トーン・ボイス",
-          "description": "フレンドリーに／堅めに等、文言の硬さを表す発話。既存knowledge ui-copywritingへ送る。"
+          "name": "Skeleton",
+          "description": "画面配置・遷移に関する発話（『一覧から直接操作できるか、詳細画面を開くか』等）。Garrettの3要素（Information/Interface/Navigation Design）に対応。SKILL.md Step4へ直接送る。"
         },
         {
-          "name": "リスク・不可逆性",
-          "description": "決済／削除／本人確認等の発話。「下限を守る」の適用範囲（a11y等の床に、操作の不可逆性に応じた確認の厳密さを含める）へ吸収する。"
+          "name": "Surface",
+          "description": "色・質感・雰囲気・動きを表す発話。Garrett自身の用語『Sensory Design』に対応。8語の『トークンを先に固定する』『作り込みを一貫させる』へ送る（詳細な判断基準はdesign-system-tokens／visual-hierarchy-and-restraintを参照）。題材固有の色選びの理由付けであれば『題材に根ざす』も併せて参照する。"
         }
       ],
       "emptyReason": ""
@@ -57,7 +58,7 @@
     "examples": {
       "blockType": "Examples",
       "title": "実例",
-      "text": "架空の記録管理アプリで、利用者が「一度消したら戻せない操作なので、慎重な感じにしたい」と発話したとする。変換層はこれを次のように処理する: (1)「一度消したら戻せない」＝リスク・不可逆性カテゴリ→『下限を守る』の適用範囲（削除確認の厳密さ）へ送る。(2)「慎重な感じ」＝トーン・ボイスカテゴリ→ui-copywritingの語彙選定（断定を避け、確認を促す言い回し）へ送る。(3)確定前に「一度消したら戻せない＝リスク・不可逆性＝下限を守るの拡張、慎重な感じ＝トーン・ボイス＝ui-copywriting」と一文で言い切ってから、削除ボタンに二段階確認＋具体的な影響範囲を明示する文言、という具体案へ展開する。DESIGN.md側には「削除確認の厳密さ＝利用者発話『一度消したら戻せない』に由来」と一言添える。"
+      "text": "架空の記録管理アプリで、利用者が「一度消したら戻せない操作なので、慎重な感じにしたい」と発話したとする。変換層はこれを次のように処理する: (1)「一度消したら戻せない」＝Scope平面の機能要件（リスク・不可逆性）→『下限を守る』の適用範囲（削除確認の厳密さ）へ送る。(2)「慎重な感じ」＝Scope平面のコンテンツ要件（トーン・ボイス）→ui-copywritingの語彙選定（断定を避け、確認を促す言い回し）へ送る。(3)確定前に「一度消したら戻せない＝Scope機能要件＝下限を守るの拡張、慎重な感じ＝Scopeコンテンツ要件＝ui-copywriting」と一文で言い切ってから、削除ボタンに二段階確認＋具体的な影響範囲を明示する文言、という具体案へ展開する。DESIGN.md側には「削除確認の厳密さ＝利用者発話『一度消したら戻せない』に由来」と一言添える。"
     },
     "antiPatterns": {
       "blockType": "AntiPatterns",
@@ -73,7 +74,11 @@
         },
         {
           "name": "一行定義で立ち止まり、深い参照先を辿らない",
-          "problem": "8語の一行定義はあくまで入り口であり、視覚・印象カテゴリのようにdesign-system-tokens／visual-hierarchy-and-restraintという深い参照先（トークン階層、5判断軸等の具体的な判断基準）を持つ語は、一行定義だけで満足せずそちらも辿る必要がある。辿らないと、既存knowledgeが積み上げた詳細な判断基準を素通りしたまま確定してしまう"
+          "problem": "8語の一行定義はあくまで入り口であり、Surfaceカテゴリのようにdesign-system-tokens／visual-hierarchy-and-restraintという深い参照先（トークン階層、5判断軸等の具体的な判断基準）を持つ語は、一行定義だけで満足せずそちらも辿る必要がある。辿らないと、既存knowledgeが積み上げた詳細な判断基準を素通りしたまま確定してしまう"
+        },
+        {
+          "name": "抽象な分類軸をそのままユーザーへの質問にする",
+          "problem": "Strategy平面の『機能としてのプロダクトかハイパーテキストとしてのプロダクトか』のような抽象軸を、ユーザーに直接選ばせる質問として提示すると、非デザイナーは答えられない。ux-advisorの敵対的検証（2026-07-22）で実際に指摘された欠陥——抽象軸はAI内部の受け皿として使い、ユーザーには具体的な提案・選択肢の形で問う"
         }
       ],
       "emptyReason": ""
@@ -81,28 +86,28 @@
     "provenance": {
       "blockType": "Provenance",
       "title": "出典・根拠の透明性",
-      "source": "ux-advisor諮問（2026-07-19、design-shareのくびれ構造設計の一環）の要約・再構成。特定企業・書籍の直接引用ではない。",
-      "caveats": "5カテゴリはux-advisor諮問1回の結果であり、evidence-based-scope基準（実例2件以上）を満たすまでは暫定的な列挙として扱う。特に情報構造・タスク型カテゴリは既存8語に吸収できない独立軸として提示されたが、実運用での再現性は未検証。視覚・印象カテゴリの送り先（トークンを先に固定する／作り込みを一貫させる）は、design-system-tokens／visual-hierarchy-and-restraintという既に確立済みの既存knowledgeを昇格させたものであり、この2語自体のevidence-based-scopeは既存knowledge側の実績で満たされている。"
+      "source": "ux-advisor諮問（2026-07-19、design-shareのくびれ構造設計の一環）の要約・再構成に加え、2026-07-22にJesse James Garrettの『Elements of User Experience』（5平面：Strategy/Scope/Structure/Skeleton/Surface）へ全面的に組み直し、Web検索による原著の用語（conceptual model／Sensory Design等）の裏取りと、ux-advisorによる敵対的検証（実装レベルの欠陥3件を検出・修正済み）を経ている。",
+      "caveats": "5平面への組み直しはGarrett原著の用語で裏取り済みだが、design-share固有の題材への適用（Scope→Structure→Skeletonの提案連鎖のターン数、複数中核機能への対応）は2026-07-22時点でSKILL.mdへ実装したばかりで、実運用での再現性は未検証。Surface平面の8語への送り先は、design-system-tokens／visual-hierarchy-and-restraintという既に確立済みの既存knowledgeを昇格させたものであり、この2語自体のevidence-based-scopeは既存knowledge側の実績で満たされている。"
     },
     "relatedConcepts": {
       "blockType": "RelatedConcepts",
       "title": "関連概念",
       "items": [
         {
-          "conceptId": "progressive-disclosure",
-          "note": "情報構造・タスク型カテゴリの送り先"
+          "conceptId": "frontend-design-principles",
+          "note": "8語の概念層。Surface平面の送り先"
         },
         {
           "conceptId": "ui-copywriting",
-          "note": "トーン・ボイスカテゴリの送り先"
-        },
-        {
-          "conceptId": "frontend-design-principles",
-          "note": "8語の概念層。この変換層が写像した先"
+          "note": "Scopeのコンテンツ要件（トーン・ボイス）が参照する既存knowledge"
         },
         {
           "conceptId": "accessibility-baseline",
-          "note": "「下限を守る」の基礎。リスク・不可逆性カテゴリが拡張する対象"
+          "note": "Scopeの機能要件（リスク・不可逆性、下限を守る）が参照する既存knowledge"
+        },
+        {
+          "conceptId": "design-md-conventions",
+          "note": "Surfaceの試作往復・固定順・round-trip原則の出典。5平面の実装がこの規約と衝突しないことを検証済み"
         }
       ],
       "emptyReason": ""
@@ -111,12 +116,11 @@
       "blockType": "Overview",
       "title": "概要",
       "questions": [
-        "ユーザーの自然言語をどうやって8語の概念層に対応させるべきか",
-        "視覚・印象以外に、自然言語から拾うべき特徴量は何か",
-        "特徴量カテゴリを新しい概念語として8語に追加すべきか",
+        "ユーザーの自然言語を、Garrettの5平面（Strategy/Scope/Structure/Skeleton/Surface）へどう写像すべきか",
+        "写像した後、それぞれの平面はどこへ送られるべきか（8語、既存knowledge、SKILL.md自身のStep）",
         "写像の質をどう検証すべきか"
       ],
-      "text": "design-shareの標準サイクル（自然言語→8語の概念層→題材ごとの具象）で、「自然言語→概念層」の変換を担う層。8語自体は変換ロジックを持たない語彙にすぎず、この変換層が無いと写像は生成者の暗黙判断に丸投げされ、検証も再現もできない。5つの特徴量カテゴリで発話を聞き分け、8語または既存knowledge（progressive-disclosure／ui-copywriting等）へ送り、確定前に写像を言葉にすることで検証可能にする。"
+      "text": "design-shareの標準サイクル（自然言語→5平面→題材ごとの具象）で、「自然言語→平面」の変換を担う層。5平面それぞれの送り先は一様ではない：Strategyは8語（題材に根ざす）の適用範囲拡張として吸収、Scope/Structure/SkeletonはSKILL.md自身のStep2〜4という直接の実行手順、Surfaceは8語（トークンを先に固定する／作り込みを一貫させる）。かつての『5つの特徴量カテゴリ』は自作の分類だったが、Jesse James Garrettの『Elements of User Experience』という確立された外部フレームワークに置き換え、確立された用語（conceptual model等）による裏取りを経ている。"
     }
   },
   "tags": [
