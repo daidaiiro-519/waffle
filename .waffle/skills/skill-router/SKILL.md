@@ -14,7 +14,7 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 ## 役割
 
 - role skillが単独では完結できない場面を、ルーティング表に基づいて判定する
-- 併用が必要なadvisor Skillの組み合わせと、その強制力（block/nudge）を示す
+- 併用が必要なadvisor Skillの組み合わせと、その強制力（必須/推奨）を示す
 - 併用が必要なadvisor Skillを、それぞれ独立した目的・役割・タスク・成果物・受け入れ基準を持たせて並列に呼び出せるよう、対象advisor名の一覧を返す
 - role skill・advisor Skill同士が互いを呼ぶ構造を避け、Orchestratorに代わって組み合わせ判断の一次窓口になる
 
@@ -33,13 +33,13 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 
 | Skill | 併用が必要な条件 | 併用するadvisor Skill | 強度 |
 |---|---|---|---|
-| Spec-authoring | ドメイン仕様書の作成 | `ddd-advisor / tech-lead-advisor` | block |
-| Spec-authoring | 技術スタック・アーキテクチャ・コーディング規約の作成 | `tech-lead-advisor` | block |
-| Spec-authoring | テスト方針・テスト規約の作成 | `tech-lead-advisor / qa-advisor` | block |
-| Spec-authoring | インフラ仕様書の作成 | `platform-advisor` | block |
-| Spec-authoring | 画面設計・プレゼンテーション仕様の作成 | `ux-advisor` | nudge |
-| Handoff-authoring | 設計判断を実装への引き継ぎ文書として記録する作業（前段階のSpec-authoringで実際に参加したadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | block |
-| Implementation | 実装（引き継ぎ文書の設計観点・実装観点に記録されたadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | block |
+| Spec-authoring | ドメイン仕様書の作成 | `ddd-advisor / tech-lead-advisor` | 必須 |
+| Spec-authoring | 技術スタック・アーキテクチャ・コーディング規約の作成 | `tech-lead-advisor` | 必須 |
+| Spec-authoring | テスト方針・テスト規約の作成 | `tech-lead-advisor / qa-advisor` | 必須 |
+| Spec-authoring | インフラ仕様書の作成 | `platform-advisor` | 必須 |
+| Spec-authoring | 画面設計・プレゼンテーション仕様の作成 | `ux-advisor` | 推奨 |
+| Handoff-authoring | 設計判断を実装への引き継ぎ文書として記録する作業（前段階のSpec-authoringで実際に参加したadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | 必須 |
+| Implementation | 実装（引き継ぎ文書の設計観点・実装観点に記録されたadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | 必須 |
 
 ---
 
@@ -47,7 +47,7 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 
 - combinedSkillsに指定できるのは常に助言専門のadvisor Skillのみ。advisor以外のSkillを併用したくなった場合は、role skillの境界の切り方自体が細かすぎる設計ミスのサインであり、この表に逃がさない
 - ルーティング表にエントリが無いSkill（例: Investigation）は単独で完結するとみなし、advisorのdispatchを行わない
-- strengthがblockのエントリは、対象advisorの結果を得るまでrole skillの実行を進めない。nudgeのエントリは、対象advisorの結果を推奨情報としてrole skillに渡すが、role skillの実行をブロックしない
+- strengthが必須のエントリは、対象advisorの結果を得るまでrole skillの実行を進めない。推奨のエントリは、対象advisorの結果を参考情報としてrole skillに渡すが、role skillの実行をブロックしない
 - Handoff-authoring/Implementationの行は固定のadvisor一覧ではなく「前段階で実際に参加したadvisor」を動的に引き継ぐ。この表のcombinedSkillsは引き継ぎ元が無い場合のデフォルトとして扱う
 - skill-router自身はrole skillやadvisor Skillの内部手順を一切知らない。判断結果（併用すべきadvisor名の一覧）を返すだけで、実際の並列呼び出しの組み立てと起動はOrchestrator側が行う
 - ルーティング表の各行は「いつ呼ぶか」を持たない。同じ行（同じskill/purpose/combinedSkills）を、role skillのライフサイクル内でOrchestratorが執筆前・執筆後の複数回にわたって呼び出してよい。この表に執筆前用・執筆後用の行を別々に作らない
