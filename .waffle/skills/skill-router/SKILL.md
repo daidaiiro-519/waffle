@@ -17,6 +17,7 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 - 併用が必要なadvisor Skillの組み合わせと、その強制力（必須/推奨）を示す
 - 併用が必要なadvisor Skillを、それぞれ独立した目的・役割・タスク・成果物・受け入れ基準を持たせて並列に呼び出せるよう、対象advisor名の一覧を返す
 - role skill・advisor Skill同士が互いを呼ぶ構造を避け、Orchestratorに代わって組み合わせ判断の一次窓口になる
+- ユーザーから明示的にルーティング表の追加・修正・削除を依頼されたときは、対話的に該当行を編集する（判定のみを求められた場合は表を変更しない）
 
 ---
 
@@ -51,6 +52,7 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 - Handoff-authoring/Implementationの行は固定のadvisor一覧ではなく「前段階で実際に参加したadvisor」を動的に引き継ぐ。この表のcombinedSkillsは引き継ぎ元が無い場合のデフォルトとして扱う
 - skill-router自身はrole skillやadvisor Skillの内部手順を一切知らない。判断結果（併用すべきadvisor名の一覧）を返すだけで、実際の並列呼び出しの組み立てと起動はOrchestrator側が行う
 - ルーティング表の各行は「いつ呼ぶか」を持たない。同じ行（同じskill/purpose/combinedSkills）を、role skillのライフサイクル内でOrchestratorが執筆前・執筆後の複数回にわたって呼び出してよい。この表に執筆前用・執筆後用の行を別々に作らない
+- 他プロジェクトへ持ち出す場合は、routingTableの中身をそのプロジェクト自身のSkill構成に合わせて作り直す（表の中身はこのリポジトリのSkill構成に固有のデータであり、機構本体はそのまま使い回せる）
 
 ---
 

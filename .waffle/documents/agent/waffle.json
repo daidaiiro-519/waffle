@@ -112,6 +112,10 @@
         {
           "task": "knowledge-cultivatorの概念的な手順のうち、記録の器の生成と昇格操作をWaffleコマンドへ対応させる",
           "howToApply": "「knowledge候補を記録する」（下書き状態の記録手段）=`waffle scaffold create --schemaRef KnowledgeSchema/v2`でstatus DRAFTのdocumentを作成（記録する内容自体の決定はjudgmentTasksを参照）／「蓄積した下書き候補を審査用にとりまとめる」=`waffle query --operation find_all`等でstatus DRAFTのKnowledgeSchema documentを洗い出す／採用決定後の正式採用への反映（このSkillの責務外）=Orchestratorが`waffle scaffold fill`でstatus ACTIVEへ変更→`waffle validate`→`waffle render`"
+        },
+        {
+          "task": "skill-routerの概念的な手順のうち、ルーティング表の反映をWaffleコマンドへ対応させる（Skill自身にはWaffle固有の語彙を持ち込まない。対応関係はここに集約する）",
+          "howToApply": "「ルーティング表の該当行を追加・修正・削除する」= `content.routingTable.items`を query で現在値取得→組み立て→`waffle scaffold fill --path .waffle/documents/skills/skill-router.json`で丸ごと置き換え→`waffle validate`→`waffle render`"
         }
       ],
       "blockType": "MechanicalTasks",
