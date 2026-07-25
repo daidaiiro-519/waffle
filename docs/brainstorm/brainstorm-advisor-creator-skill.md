@@ -294,4 +294,38 @@ schema管理・symlink自動デプロイが欲しい場合は、advisor-creator�
 設計は、このブレストのスコープ外（Waffle側の統合方法として別途検討）とする。
 
 ---
-<!-- 論点5以降は「論点N」ブロックを繰り返す -->
+
+## 論点 5: テンプレートとschemaの同期をどう保証するか
+
+### 経緯
+
+`advisor-creator`実装後、「テンプレートフォーマットはWaffleのSkillSchema/
+KnowledgeSchemaと統一された契約になっているか」と問われ、実際に
+`SkillSchema/v2`（`AdvisorContent`）・`KnowledgeSchema/v4`の実データと
+`skill-template-advisor.md`/`knowledge-template.md`を突き合わせたところ、
+`responseTypes`/`knowledgeRefs`が独立ブロックとして表現できていない、
+`decisionCriteria`（実際は`stages`/`transitions`の決定木構造）を単純な
+番号付きリストにしていた、`classifications`/`antiPatterns`/
+`relatedConcepts`の`emptyReason`必須フィールドが欠けていた、という4件の
+不一致が即座に見つかった。実データ照合で修正した（commit`f38c395`）。
+
+### ユーザー見解
+> いや、ここは一回だけ合わせてくれればいいです。一般提供の方は作成した
+> テンプレートさえ用意してもらえれば、それに沿ってユーザが保守できれば
+> いいと思うので！
+
+### 合意決定
+**決定:** テンプレートとschemaの同期を保証する自動機構（drift-check等）は
+作らない。今回の1回限りの実データ照合・修正（commit`f38c395`）で確定とする。
+以降、`SkillSchema`/`KnowledgeSchema`が変更されてテンプレートとズレても、
+それを追従させる責務はOSSとして配布された後の利用者（テンプレートに沿って
+保守する側）に委ねる。
+**理由:** advisor-creatorはWaffle非依存のOSS配布物であり、Waffle本体の
+schema変更にテンプレートを自動追従させる仕組みを持たせること自体が、
+論点4で確定した「Waffleを判定・追跡するロジックを持たせない」という
+依存性の方向原則と整合しない。テンプレートを渡すところまでがWaffle側の
+責務であり、その後の保守は利用者の裁量に委ねるのが正しい境界線。
+**次のアクション:** なし。このブレストはここで一区切りとする。
+
+---
+<!-- 論点6以降は「論点N」ブロックを繰り返す -->
