@@ -206,7 +206,65 @@ KnowledgeSchema symlink deploy・AgentSchema goal-dispatch・skill-router
 advisor自身は自己完結を保てる。
 **次のアクション:** `SkillSchema/v2`の`RouterContent`へ`advisorBoundaries`
 ブロックを追加し、`ux-advisor`→`tech-lead-advisor`・`platform-advisor`→
-`tech-lead-advisor`の2エントリを`skill-router`へ記録する。
+`tech-lead-advisor`の2エントリを`skill-router`へ記録する。実装完了
+（commit`84af58e`）。さらに「skill-routerを他プロジェクトへ持ち出して
+実用的か」という確認を受け、WHEN側（`AgentSchema.delegationPatterns`）・
+WHO側（`SkillSchema/v2.RouterContent`）が両方とも既にschemaで構造化されて
+いることを確認し、`references/porting-guide.md`として格納した
+（commit`41d0b2e`）。
+
+### 撤回: 「advisor-creatorが機械化すべき周辺配線の範囲」という論点立ては境界はみ出し
+
+上記の副産物（skill-router関連の是正）が一段落した後、「advisor-creatorが
+KnowledgeSchema symlink deploy・AgentSchema goal-dispatch登録・skill-router
+登録のどこまでを機械化すべきか」を論点3として検討しかけたが、ユーザーから
+「境界をはみ出しすぎ。本日はadvisor Skillの作成と育成が主題で、skill-router
+への登録や他への依存は本来ない。knowledgeを持つことは必要だが、symlinkを
+貼るかどうかはWaffleの都合」と指摘され、この論点立て自体を撤回した。
+**確定した境界:** advisor-creatorの責務は「1人のadvisorを完結させる」
+（SkillSchema advisor-kind content作成＋backbone knowledge文書作成）までで
+終わる。knowledgeのsymlinkデプロイ（Waffleのrender機構が担当）、
+skill-routerへの登録（Orchestrator・利用者側の判断）は明確に範囲外。
 
 ---
-<!-- 論点4以降は「論点N」ブロックを繰り返す -->
+
+## 論点 4: advisor-creatorはWaffle CLIに依存してよいか（実装方式）
+
+### 経緯
+
+論点2で確定した8ブロック構造（実装イメージ）を、`scaffold create
+--schemaRef SkillSchema/v2 --discriminator skillKind=advisor`から始まる
+Waffle CLI呼び出しとして提示したところ、ユーザーから「これ前提がワッフルに
+なってるけど大丈夫か」と指摘された。実際に兄弟Skillである`skills-creator`
+のSKILL.mdを検索したところ、「waffle」「scaffold」「patch-schema」という
+文字列が1件もヒットせず、`skills-creator`はテンプレートファイル
+（`references/skill-template.md`）を読み込みプレースホルダーを埋めて
+**Writeツールで直接SKILL.mdを保存する**、Waffle非依存の設計だった。
+「OSSとして自由に定義できる基盤」という目的と、Waffle CLI必須の実装方式は
+矛盾する。
+
+### ユーザー見解
+> そうだね。そしてこれはワッフルで動かす時はwaffleのcliとmcpで動くように
+> できれば完璧だよね
+
+### 合意決定
+**決定:** advisor-creatorは`skills-creator`と同じ方式（テンプレートファイル
+＋Writeツールで直接SKILL.md/knowledgeファイルを生成、Waffle非依存）を
+ベースラインとする。加えて、実行環境にWaffle CLI/MCPが利用可能な場合は、
+ベースラインのテンプレート生成の代わりに`scaffold create/fill`→
+`validate`→`render`（CLI経由）または対応するMCPツールを使い、schema検証・
+symlink自動デプロイの恩恵を受ける完全体として動作する。
+**理由:** Waffle非依存のベースラインが無いと「OSSとして自由に定義できる
+基盤」という目的（他プロジェクトへの持ち出し）を満たせない。一方、
+Waffleを導入済みの環境（このリポジトリ自身を含む）では、CLAUDE.mdの
+既存運用ルール（document.json操作は必ずCLI/MCP経由）とも整合させる必要が
+あり、Waffle検出時はCLI/MCP経由に切り替えるのが両立点になる。
+**次のアクション:** advisor-creatorの実行手順に「Waffle CLI/MCPが
+利用可能か判定する」ステップを先頭に置き、判定結果に応じてテンプレート
+方式／Waffle CLI方式のいずれかに分岐する設計を、実際にadvisor-creatorの
+SKILL.mdを書く段階（このブレストの後続タスク）で具体化する。テンプレート
+の型（8ブロック構造）は`SkillSchema/v2`の`skillKind=advisor`分岐と常に
+一致させ、schema変更時にテンプレートが陳腐化しないよう追従させる。
+
+---
+<!-- 論点5以降は「論点N」ブロックを繰り返す -->
