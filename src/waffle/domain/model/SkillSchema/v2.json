@@ -916,6 +916,76 @@
         },
         "description": {
           "$ref": "#/$defs/PurposeBlock"
+        },
+        "advisorBoundaries": {
+          "$ref": "#/$defs/AdvisorBoundariesBlock"
+        }
+      }
+    },
+    "AdvisorBoundariesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-query": "advisor同士の境界・委譲マップを持ちます。あるadvisorの相談範囲外となる隣接領域が、どのadvisorの領域に該当するかを一元的に記録します。個々のadvisorの本文には他advisor名を書かせない代わりに、ここに集約します。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "advisor",
+              "header": "advisor"
+            },
+            {
+              "field": "outOfScopeTopic",
+              "header": "範囲外となるトピック"
+            },
+            {
+              "field": "escalatesTo",
+              "header": "委譲先"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "AdvisorBoundaries"
+        },
+        "title": {
+          "type": "string",
+          "const": "advisor間の境界・委譲マップ"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "あるadvisorが「範囲外」と判断するトピックと、その委譲先advisorの対応を列挙してください。advisor自身の本文にはこの情報を書かせず、必ずここに一元化してください。",
+          "items": {
+            "type": "object",
+            "required": [
+              "advisor",
+              "outOfScopeTopic",
+              "escalatesTo"
+            ],
+            "properties": {
+              "advisor": {
+                "type": "string",
+                "x-prompt-write": "範囲外の判断をする側のadvisor名（識別子）。"
+              },
+              "outOfScopeTopic": {
+                "type": "string",
+                "x-prompt-write": "このadvisorが範囲外と判断する、具体的なトピック・判断内容。"
+              },
+              "escalatesTo": {
+                "type": "string",
+                "x-prompt-write": "そのトピックを実際に担当するadvisor名（識別子）。"
+              }
+            }
+          }
         }
       }
     }

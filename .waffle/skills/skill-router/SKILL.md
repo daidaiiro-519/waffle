@@ -44,6 +44,15 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 
 ---
 
+## advisor間の境界・委譲マップ
+
+| advisor | 範囲外となるトピック | 委譲先 |
+|---|---|---|
+| ux-advisor | 依存方向の適合判定（presentationがユースケースのportを正しく呼んでいるか） | tech-lead-advisor |
+| platform-advisor | アプリケーション内部のレイヤー配置・依存方向の判定 | tech-lead-advisor |
+
+---
+
 ## ガードレール
 
 - combinedSkillsに指定できるのは常に助言専門のadvisor Skillのみ。advisor以外のSkillを併用したくなった場合は、role skillの境界の切り方自体が細かすぎる設計ミスのサインであり、この表に逃がさない

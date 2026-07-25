@@ -149,11 +149,64 @@ description/inputExpectation等）に直接書かない」を追加する。ヒ�
 **次のアクション:** 論点3（`advisor-creator`が機械化すべき周辺配線の範囲——
 KnowledgeSchema symlink deploy・AgentSchema goal-dispatch・skill-router
 登録のどこまでを自動化するか）へ進む。既存3 advisorの記述修正（疎結合違反の
-是正）自体は、このブレストとは別の直行レーン作業として、ユーザーに実施要否を
-確認する。
-**決定:**
-**理由:**
-**次のアクション:**
+是正）自体は、このブレストとは別の直行レーン作業として実施した（commit
+`58aabb0`）。
 
 ---
-<!-- 論点3以降は「論点N」ブロックを繰り返す -->
+
+## 論点 3: advisor間の境界・委譲マップをどこに集約するか（advisor-creatorが機械化すべき周辺配線）
+
+### 経緯（このブレスト内で発見）
+
+論点2の合意（他advisor名を本文に直接書かない）に従い、`ux-advisor`・
+`platform-advisor`の8箇所から`tech-lead-advisor`という名指しを除去した
+（commit`58aabb0`）。しかしユーザーから「この修正で動作が変わってしまっては
+抽象化がうまくできてない扱いになる」と指摘され、実際に
+`query-collection --operation grep_documents`で全document・CLAUDE.mdを
+横断検索した結果、「依存方向の判定はtech-lead-advisorに聞く」という
+委譲先情報が、修正前も**ux-advisor自身の文章の中にしか存在しなかった**
+ことが判明した。名前を消したことで、この情報はどこにも移動せず単純に
+失われていた。
+
+### AI 初期見解
+**見解:** 個々のadvisorに委譲先情報を持たせるのではなく、`skill-router`
+（`skillKind: "router"`、既に「組み合わせ判断の一次窓口」としての役割を
+持つ）の`RouterContent`に、新しいブロック（仮称`advisorBoundaries`）を
+追加し、advisor間の境界・委譲マップをそこに一元化すべきだと考える。
+
+**根拠:**
+- `skill-router`は既にCLAUDE.mdの委譲パターン表で「role skillとadvisor
+  Skillが互いを呼ぶ構造を避け、組み合わせ判断の一次窓口をOrchestrator側に
+  置くため」という設計原則のもとで作られており、これは今回の問題（advisor
+  同士が互いを名指しする構造を避けたい）と全く同じ動機を持つ。既存の
+  `routingTable`ブロックは「role skill↔advisor」の組み合わせを扱うが、
+  今回必要なのは「advisor↔advisor」の境界・委譲であり、軸は違うが
+  `skill-router`という置き場所自体は一貫している
+- 各advisorは「これは自分の範囲外」とだけ言い、「では誰の範囲か」は
+  `skill-router`だけが知っている状態にすれば、self-containment
+  （advisor同士が互いの存在を知らない）と機能の完全性（委譲先情報が
+  失われない）を両立できる
+- `advisor-creator`が新規advisorを作る際、「このadvisorの範囲外となる
+  隣接領域は何か、それは既存のどのadvisorの領域と重なるか」をヒアリングし、
+  回答をadvisor自身の文章にではなく`skill-router`の`advisorBoundaries`へ
+  書き込む、という機械化されたフローにできる
+
+### ユーザー見解
+> うん
+
+### AI 再考見解
+（ユーザー見解を受けて記述、または初期見解のまま実装へ進む場合は省略）
+
+### 合意決定
+**決定:** `skill-router`（`skillKind: "router"`）の`RouterContent`に
+`advisorBoundaries`ブロックを新設し、advisor間の境界・委譲マップを一元化する。
+既存の`routingTable`（role skill↔advisor）とは別ブロックとして扱う。
+**理由:** `skill-router`は既に「組み合わせ判断の一次窓口をOrchestrator側に
+置く」という同型の設計原則で作られており、置き場所として一貫している。
+advisor自身は自己完結を保てる。
+**次のアクション:** `SkillSchema/v2`の`RouterContent`へ`advisorBoundaries`
+ブロックを追加し、`ux-advisor`→`tech-lead-advisor`・`platform-advisor`→
+`tech-lead-advisor`の2エントリを`skill-router`へ記録する。
+
+---
+<!-- 論点4以降は「論点N」ブロックを繰り返す -->
