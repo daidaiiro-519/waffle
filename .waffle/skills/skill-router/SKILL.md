@@ -41,6 +41,7 @@ role skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が
 | Spec-authoring | 画面設計・プレゼンテーション仕様の作成 | `ux-advisor` | 推奨 |
 | Handoff-authoring | 設計判断を実装への引き継ぎ文書として記録する作業（前段階のSpec-authoringで実際に参加したadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | 必須 |
 | Implementation | 実装（引き継ぎ文書の設計観点・実装観点に記録されたadvisorを動的に引き継ぐ。固定リストではない） | `ddd-advisor` | 必須 |
+| Implementation | UIコンポーネントの実装 | `ux-advisor` | 推奨 |
 
 ---
 
