@@ -396,3 +396,10 @@ Hooksは正しく機能しており、バグではない。むしろ「CLI経由
 （Waffleの各種処理の確実性・再現性）とは別の、Waffle CLI自体の機能ギャップ
 として、別途対応を検討する価値がある（例: `query --operation grep_documents`
 のような、`--documentsRoot`配下を横断してパターン検索する新操作）。
+
+**実装済み（2026-07-25確認）:** `brainstorm-query-usecase-redesign.md`の
+合意（パターンB）に沿って、`waffle query-collection --operation grep_documents
+--path <documentsRoot> --pattern <正規表現>`として既に実装済み。同usecase
+（`uc-query-document-collection`）には`filter_documents`（横断フィルタ）・
+`index_scan_documents`（横断ブロック索引）も実装されている。この副次的発見は
+解消済み。

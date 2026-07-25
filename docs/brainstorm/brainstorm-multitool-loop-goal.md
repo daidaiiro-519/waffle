@@ -1,5 +1,16 @@
 # ブレスト: マルチツール対応の/loop・/goalをリバースエンジニアリングで作る
 
+**★クローズ（2026-07-25）:** この論点自体、`brainstorm-waffle-process-reliability.md`で
+「loop/goalは仮説の一つに過ぎない」として棚卸しされ、ユーザーが実際に困っていた
+3課題（advisor自動発火／開発フローの継続／手順の再現性）に再定義された。うち
+論点2（開発フローの継続）が本文書の後継にあたるが、結論は「あいまいなLLM判定・
+常駐プロセス・セッション永続化を伴う自律継続機構は不要で、`sd-flow-gate`配下の
+離散ステータス(`ready`/`blocked`/`needs_human`)による機械的条件判定で足りる」
+というもので、`uc-check-verification-gate`まで実装済み（commit`9d422ec`）。
+本文書が想定していた「常駐プロセスでのマルチツール移植」という前提自体が
+process-reliability文書側で明示的に不要と判断されたため、本文書はクローズする。
+詳細は`brainstorm-waffle-process-reliability.md`の「元のloop/goal論点との関係」章参照。
+
 **作成日:** 2026-07-12
 **経緯:** `docs/handoff-goal-loop-orchestration.md`で、Claude Code CLI固有の
 `/goal`・`/loop`の構造調査（条件駆動 vs 時間駆動という2パターン、ハーネスと
