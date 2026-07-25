@@ -266,5 +266,32 @@ SKILL.mdを書く段階（このブレストの後続タスク）で具体化す
 の型（8ブロック構造）は`SkillSchema/v2`の`skillKind=advisor`分岐と常に
 一致させ、schema変更時にテンプレートが陳腐化しないよう追従させる。
 
+### 訂正: 分岐をadvisor-creator自身に持たせるのは依存性の方向違反
+
+上記の合意決定（advisor-creator内に「Waffle CLI/MCPが利用可能か判定する」
+ステップを持たせる）に対し、ユーザーから「このスキル自体にその判断を
+設けるのは依存性の方向違反。Waffleにこのスキルを注入するのが正しい方向」
+と指摘された。
+
+Waffleの既存原則（architecture-dependency-direction.md等、composition-root
+は外側が内側を組み立てる）に照らすと、advisor-creator（汎用・Waffle非依存の
+概念）が具体的な実装（Waffle）の有無を自ら判定するのは、汎用側が特定の
+実装を知ってしまう向きの依存であり誤り。正しい向きは「Waffleという具体的な
+システムの側が、advisor-creatorという汎用Skillを自分の中に注入・統合する」
+——advisor-creator自身は`skills-creator`と全く同じ、Waffleを一切知らない
+単一の実装（テンプレート＋Writeツール）のままにし、Waffle固有の統合
+（schema検証・symlink自動デプロイ）は、advisor-creatorの外側
+（Waffle自身のOrchestrator/CLAUDE.mdの委譲パターン、または別の変換・
+取り込み手順）が担う。
+
+**訂正後の決定:** advisor-creatorはWaffleの存在を判定するロジックを一切
+持たない。`skills-creator`と同一の単一実装（テンプレート＋Writeツールで
+SKILL.md/knowledgeファイルを直接生成）に統一する。Waffle環境での
+schema管理・symlink自動デプロイが欲しい場合は、advisor-creatorが生成した
+プレーンなSKILL.md/knowledgeファイルを、Waffle側（Orchestratorの委譲
+パターン、または別途のインポート手順）が事後的にWaffle文書として取り込む
+——「Waffleがadvisor-creatorを注入する」向きにする。この取り込み手順自体の
+設計は、このブレストのスコープ外（Waffle側の統合方法として別途検討）とする。
+
 ---
 <!-- 論点5以降は「論点N」ブロックを繰り返す -->
