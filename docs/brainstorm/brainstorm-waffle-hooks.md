@@ -973,7 +973,10 @@ Waffleを導入してこの検知が必要になった実例はまだ無い。�
   subdomainへの逆参照を持たない現状の設計は正しい
 - `uc-patch-schema`が`aggregateRef`を設定していない点は、DDD原則違反ではなく
   「本来存在するはずの関係が仕様上未記録」という**spec完全性の欠落**。実態
-  （Schema集約を編集している）に合わせて追記すべき（未実施・要対応）
+  （Schema集約を編集している）に合わせて追記すべき（**実施済み**: 2026-07-21
+  時点で`aggregateRef: "agg-schema"`・`subdomainRef: "sd-schema-management"`
+  が既に設定・コミット済みと確認済み。2026-07-26に`find_all`で再確認済み。
+  この行の「未実施・要対応」は当時の記述が古いまま残っていたもの）
 
 ### 業務サービスの所属先（DDD理論からの直接適用）
 
@@ -995,16 +998,19 @@ Eric Evansの業務サービスの定義（特定のEntity/Value Objectに自然
 置きます」）は、**DDD理論として正しくない**。実データ（`schema_discriminator.py`
 のクロスsubdomain利用）もこの結論と一致する。
 
-### 必要な是正（未着手・スコープの見積もり）
+### 必要な是正（**全項目実施済み**、2026-07-21確認・2026-07-26再確認）
 
 - `DomainSpecSchema/v5.json`: `DomainServicesBlock`の参照を`SubdomainContent`
   から`BoundedContextContent`（`bc-waffle.json`が使う方）へ移すschema変更
+  → 実施済み
 - 既存2件のspec（`sd-document-management.json`・`sd-schema-management.json`）
   が持つ`content.domainServices`（計5サービス）を`bc-waffle.json`側へ移動
+  → 実施済み
 - 付随して`sd-document-management.md`/`sd-schema-management.md`/
-  `bc-waffle.md`のレンダリング内容も変わる
+  `bc-waffle.md`のレンダリング内容も変わる → 反映済み
 - `uc-patch-schema`の`aggregateRef=agg-schema`追記（spec完全性の是正、別件だが
-  同じタイミングで見つかった）
+  同じタイミングで見つかった）→ 実施済み（`aggregateRef: "agg-schema"`・
+  `subdomainRef: "sd-schema-management"`とも設定済みと2026-07-26に再確認）
 
 これは前回までのspec内容の追記・修正（値レベル）より一段大きい、**スキーマ
 構造そのものの変更**であり、今回は着手せず記録に留める。
