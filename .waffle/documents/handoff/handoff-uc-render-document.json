@@ -185,6 +185,28 @@
       "blockType": "Description",
       "title": "概要",
       "text": "Documentを人間可読な成果物へ描画するusecaseの設計判断を実装へ引き継ぐ。"
+    },
+    "expectedScope": {
+      "items": [
+        {
+          "path": "src/waffle/application/usecases/render_document.py",
+          "reason": "discriminator分岐ロジック（_resolve_tool_deploy_targets）の拡張箇所"
+        },
+        {
+          "path": ".waffle/config.json",
+          "reason": "toolMappingsをdiscriminatorごとの入れ子構造へ移行する対象"
+        },
+        {
+          "path": "tests/acceptance/test_uc_render_document.py",
+          "reason": "discriminator分岐・回帰の受け入れテスト追加先"
+        },
+        {
+          "path": ".waffle/documents/agent/waffle-subagent.json（新規作成）",
+          "reason": "acceptance観点で検証する実document"
+        }
+      ],
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み"
     }
   },
   "tags": []

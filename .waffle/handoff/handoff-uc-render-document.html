@@ -84,9 +84,13 @@ h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-t
 .tabs input { position: absolute; opacity: 0; pointer-events: none; }
 .tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
 .tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
-#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
-#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3 { display: block; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
 .entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
 .entry:first-child { border-top: none; padding-top: 0; }
 .entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
@@ -254,10 +258,12 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <input type="radio" name="tabs" id="tab1" checked>
         <input type="radio" name="tabs" id="tab2">
         <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
         <div class="tab-labels">
           <label for="tab1">spec作成の結論</label>
           <label for="tab2">実装方針</label>
           <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
         </div>
         <div class="tab-panels">
           <div class="tab-panel" id="panel1">
@@ -349,6 +355,23 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="constraint-item">
               <span class="num">3</span>
               <p>config.jsonのtoolMappings.claude-code.Agentのみを入れ子化し、codex.Agent（AGENTS.md）/Skill/Knowledgeのマッピングは変更しない（他ツール・他documentTypeへの影響を局所化する）。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/render_document.py</div>
+              <div class="reason">discriminator分岐ロジック（_resolve_tool_deploy_targets）の拡張箇所</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/config.json</div>
+              <div class="reason">toolMappingsをdiscriminatorごとの入れ子構造へ移行する対象</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/acceptance/test_uc_render_document.py</div>
+              <div class="reason">discriminator分岐・回帰の受け入れテスト追加先</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/documents/agent/waffle-subagent.json（新規作成）</div>
+              <div class="reason">acceptance観点で検証する実document</div>
             </div></div>
         </div>
       </div>

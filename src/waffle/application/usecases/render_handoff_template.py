@@ -52,6 +52,7 @@ class RenderHandoffTemplate:
         design_viewpoints = content.get("designViewpoints", {}).get("items", [])
         implementation_viewpoints = content.get("implementationViewpoints", {}).get("items", [])
         constraints = content.get("constraints", {}).get("items", [])
+        expected_scope = content.get("expectedScope", {}).get("items", [])
         usage_examples = content.get("usageExamples", {}).get("items", [])
         description_block = content.get("description", {})
         description = description_block.get("text") or " ".join(description_block.get("items", []))
@@ -70,6 +71,7 @@ class RenderHandoffTemplate:
             design_viewpoints=design_viewpoints,
             implementation_viewpoints=implementation_viewpoints,
             constraints=constraints,
+            expected_scope=expected_scope,
             handoff_kind=handoff_kind,
             usage_examples=usage_examples,
             description=description,

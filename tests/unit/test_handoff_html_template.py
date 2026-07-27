@@ -95,6 +95,35 @@ def test_brainstormToSpec種別ではタブラベルとkickerが切り替わる(
     assert "実装時の制約" not in html
 
 
+def test_expected_scopeを渡すと4つ目のタブに対象パスと理由が描画される():
+    """
+    Given path/reasonを持つexpected_scopeの項目
+    When render_handoff_htmlを呼ぶ
+    Then 4つ目のタブラベルと、その中に対象パス・理由がそのまま出力される
+    """
+    layout = compute_layout([], [])
+    html = render_handoff_html(**_base_kwargs(layout), expected_scope=[
+        {"path": "src/waffle/application/usecases/render_document.py", "reason": "discriminator分岐ロジックの拡張箇所"},
+    ])
+    assert "対象範囲の見込み" in html
+    assert "src/waffle/application/usecases/render_document.py" in html
+    assert "discriminator分岐ロジックの拡張箇所" in html
+    assert 'id="tab4"' in html
+    assert 'id="panel4"' in html
+
+
+def test_expected_scopeが空でも4つ目のタブは空状態で描画される():
+    """
+    Given expected_scopeを渡さない
+    When render_handoff_htmlを呼ぶ
+    Then 4つ目のタブラベルは出力されるが、中身は空状態メッセージになる
+    """
+    layout = compute_layout([], [])
+    html = render_handoff_html(**_base_kwargs(layout))
+    assert "対象範囲の見込み" in html
+    assert "記録なし" in html
+
+
 def test_split種別の関係は矢印なしの分離線として描画される():
     """
     Given kind=splitのrelationshipsを持つ同じ層の2ノード

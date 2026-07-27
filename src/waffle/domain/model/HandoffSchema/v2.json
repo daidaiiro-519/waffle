@@ -107,6 +107,9 @@
         },
         "description": {
           "$ref": "#/$defs/DescriptionBlock"
+        },
+        "expectedScope": {
+          "$ref": "#/$defs/ExpectedScopeBlock"
         }
       }
     },
@@ -526,6 +529,64 @@
         "text": {
           "type": "string",
           "x-prompt-write": "この引き継ぎが何を伝えるかを1〜2文で。"
+        }
+      }
+    },
+    "ExpectedScopeBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "着手前に予想される対象範囲（触る見込みの実装ファイル・spec document等）を持ちます（任意）。実際に何を変更したかの記録ではなく、着手前の見込みを示すもので、着手後に書き戻す対象ではありません。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "path",
+              "header": "対象パス"
+            },
+            {
+              "field": "reason",
+              "header": "理由"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ExpectedScope"
+        },
+        "title": {
+          "type": "string",
+          "const": "対象範囲の見込み"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "着手前に触る見込みのファイル・spec document等を列挙してください。無ければ空。実装後に実際の差分と突き合わせて書き直す必要はありません（見込みが外れても構わない、着手前の判断材料に留める）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "reason"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "x-prompt-write": "触る見込みのファイルパス・spec documentのパス等（例: src/waffle/application/usecases/render_document.py）"
+              },
+              "reason": {
+                "type": "string",
+                "x-prompt-write": "なぜそこを触る見込みか、1文で（例: discriminator分岐ロジックの拡張箇所）"
+              }
+            }
+          }
         }
       }
     }

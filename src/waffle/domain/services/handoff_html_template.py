@@ -88,9 +88,13 @@ h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-t
 .tabs input { position: absolute; opacity: 0; pointer-events: none; }
 .tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
 .tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
-#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
-#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3 { display: block; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
 .entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
 .entry:first-child { border-top: none; padding-top: 0; }
 .entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
@@ -120,7 +124,7 @@ _KIND_LABELS = {
     "specToImplementation": {
         "kicker": "Handoff Record",
         "spec_dt": "引き継ぎ元spec",
-        "tabs": ("spec作成の結論", "実装方針", "実装時の制約"),
+        "tabs": ("spec作成の結論", "実装方針", "実装時の制約", "対象範囲の見込み"),
         "rail_current_index": 4,  # Handoff記録
         "section00_suffix": " — 予定される実装配置",
         "new_legend": "新設（今回の実装対象）",
@@ -129,7 +133,7 @@ _KIND_LABELS = {
     "brainstormToSpec": {
         "kicker": "ブレスト→specハンドオフ",
         "spec_dt": "これから書くspec",
-        "tabs": ("ブレストの結論", "仕様方針", "仕様時の制約"),
+        "tabs": ("ブレストの結論", "仕様方針", "仕様時の制約", "対象範囲の見込み"),
         "rail_current_index": 2,  # ブレスト完了サマリー
         "section00_suffix": " — 予定されるDDD上の配置",
         "new_legend": "新設（今回のブレストの帰結）",
@@ -297,6 +301,19 @@ def _render_entries(items: list[dict]) -> str:
     return "".join(parts)
 
 
+def _render_scope(items: list[dict]) -> str:
+    if not items:
+        return '<p class="empty-state">記録なし。</p>'
+    parts = []
+    for item in items:
+        parts.append(f"""
+            <div class="scope-item">
+              <div class="path">{_e(item['path'])}</div>
+              <div class="reason">{_e(item['reason'])}</div>
+            </div>""")
+    return "".join(parts)
+
+
 def _render_constraints(items: list[str]) -> str:
     if not items:
         return '<p class="empty-state">既知の制約・トレードオフなし。</p>'
@@ -324,6 +341,7 @@ def render_handoff_html(
     usage_examples: list[str] | None = None,
     description: str = "",
     tags: list[str] | None = None,
+    expected_scope: list[dict] | None = None,
 ) -> str:
     """Handoffの値を、確定済みの固定HTMLテンプレート（Pattern G）へ差し込んだ自己完結HTMLを返す。
 
@@ -333,9 +351,10 @@ def render_handoff_html(
     svg_width = layout["viewbox_width"]
     svg_height = layout["viewbox_height"]
     kind_labels = _KIND_LABELS[handoff_kind]
-    tab1_label, tab2_label, tab3_label = kind_labels["tabs"]
+    tab1_label, tab2_label, tab3_label, tab4_label = kind_labels["tabs"]
     usage_examples = usage_examples or []
     tags = tags or []
+    expected_scope = expected_scope or []
     return f"""<!doctype html>
 <html>
 <head>
@@ -399,15 +418,18 @@ def render_handoff_html(
         <input type="radio" name="tabs" id="tab1" checked>
         <input type="radio" name="tabs" id="tab2">
         <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
         <div class="tab-labels">
           <label for="tab1">{_e(tab1_label)}</label>
           <label for="tab2">{_e(tab2_label)}</label>
           <label for="tab3">{_e(tab3_label)}</label>
+          <label for="tab4">{_e(tab4_label)}</label>
         </div>
         <div class="tab-panels">
           <div class="tab-panel" id="panel1">{_render_entries(design_viewpoints)}</div>
           <div class="tab-panel" id="panel2">{_render_entries(implementation_viewpoints)}</div>
           <div class="tab-panel" id="panel3">{_render_constraints(constraints)}</div>
+          <div class="tab-panel" id="panel4">{_render_scope(expected_scope)}</div>
         </div>
       </div>
     </div>

@@ -125,6 +125,42 @@ def test_advisor名と件数のペアがレビュー状況に出力される(tmp
     assert "tech-lead-advisor" in content
 
 
+def test_expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される(tmp_path):
+    """
+    Given expectedScopeブロック（path/reasonの配列）を持つHandoff
+    When RenderHandoffTemplateを実行する
+    Then 「対象範囲の見込み」タブに対象パスと理由がそのまま出力される
+    """
+    doc = _handoff_doc()
+    doc["content"]["expectedScope"] = {
+        "blockType": "ExpectedScope", "title": "対象範囲の見込み",
+        "items": [{"path": "src/waffle/domain/model.py", "reason": "分岐ロジックの拡張箇所"}],
+    }
+    path = _write(tmp_path, "handoff-uc-a.json", doc)
+    output_path = str(tmp_path / "handoff-uc-a.html")
+    result = _engine().run(path, output_path)
+    assert isinstance(result, Ok), result
+    content = (tmp_path / "handoff-uc-a.html").read_text(encoding="utf-8")
+    assert "対象範囲の見込み" in content
+    assert "src/waffle/domain/model.py" in content
+    assert "分岐ロジックの拡張箇所" in content
+
+
+def test_expectedScopeが無いHandoffも描画できる(tmp_path):
+    """
+    Given expectedScopeブロックを持たない（任意ブロックのため省略可能な）Handoff
+    When RenderHandoffTemplateを実行する
+    Then エラーにならず、対象範囲の見込みタブは空状態で描画される
+    """
+    path = _write(tmp_path, "handoff-uc-a.json", _handoff_doc())
+    output_path = str(tmp_path / "handoff-uc-a.html")
+    result = _engine().run(path, output_path)
+    assert isinstance(result, Ok), result
+    content = (tmp_path / "handoff-uc-a.html").read_text(encoding="utf-8")
+    assert "対象範囲の見込み" in content
+    assert "記録なし" in content
+
+
 def test_契約準拠のmetaタグが出力される(tmp_path):
     """
     Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff
