@@ -120,7 +120,7 @@ _KIND_LABELS = {
     "specToImplementation": {
         "kicker": "Handoff Record",
         "spec_dt": "引き継ぎ元spec",
-        "tabs": ("spec作成の結論", "実装方針", "実装への申し送り"),
+        "tabs": ("spec作成の結論", "実装方針", "実装時の制約"),
         "rail_current_index": 4,  # Handoff記録
         "section00_suffix": " — 予定される実装配置",
         "new_legend": "新設（今回の実装対象）",
@@ -129,7 +129,7 @@ _KIND_LABELS = {
     "brainstormToSpec": {
         "kicker": "ブレスト→specハンドオフ",
         "spec_dt": "これから書くspec",
-        "tabs": ("ブレストの結論", "仕様方針", "仕様への申し送り"),
+        "tabs": ("ブレストの結論", "仕様方針", "仕様時の制約"),
         "rail_current_index": 2,  # ブレスト完了サマリー
         "section00_suffix": " — 予定されるDDD上の配置",
         "new_legend": "新設（今回のブレストの帰結）",

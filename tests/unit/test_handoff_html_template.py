@@ -92,7 +92,7 @@ def test_brainstormToSpec種別ではタブラベルとkickerが切り替わる(
     html = render_handoff_html(**_base_kwargs(layout, handoff_kind="brainstormToSpec"))
     assert "ブレストの結論" in html
     assert "ブレスト→specハンドオフ" in html
-    assert "実装への申し送り" not in html
+    assert "実装時の制約" not in html
 
 
 def test_split種別の関係は矢印なしの分離線として描画される():

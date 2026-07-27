@@ -240,8 +240,8 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
       </div>
       <div class="coverage-list">
-        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 2件／実装観点 5件</span></div>
-        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 2件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 3件／実装観点 8件</span></div>
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 3件／実装観点 1件</span></div>
         <div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>
       </div>
     </div>
@@ -257,7 +257,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <div class="tab-labels">
           <label for="tab1">spec作成の結論</label>
           <label for="tab2">実装方針</label>
-          <label for="tab3">実装への申し送り</label>
+          <label for="tab3">実装時の制約</label>
         </div>
         <div class="tab-panels">
           <div class="tab-panel" id="panel1">
@@ -280,6 +280,16 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
               <div class="entry-head"><span class="badge">ddd-advisor</span></div>
               <div class="entry-viewpoint">撤回した誤った前提（記録として残す）</div>
               <div class="entry-consideration">初版でMembersBlock/ValueObjectsBlockのsection+each移行も対象としたが、現行DomainSpecSchema/v5をCLIで確認した結果、既に実装済みと判明したため対象から除外した。コンテキスト圧縮前の古いv4分析を確認せず引きずっていたことが原因。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">agentKindのenum拡張は不要</div>
+              <div class="entry-consideration">ephemeralな一発委譲（agentKind=subagentの都度使い捨て）はそもそもdocument.jsonとして永続化・登録されない設計であるため、実際に永続化されるagentKind=subagentインスタンスは今回作るwaffle-subagentテンプレート1個のみになる。よってconfig.json側で既存discriminator値agentKind=subagentそのものに対してdeploy先を宣言しても、矛盾する実在インスタンスは存在せず、二重の真実源にはならない。新しいdiscriminator値の追加・schema版上げは不要。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">既存のdiscriminator分岐規約への適用</div>
+              <div class="entry-consideration">render_document.pyには既にdiscriminator値でdict分岐する規約が_select_template/_select_deploy/_select_field_mapの3箇所で確立済みで、discriminator値(spec_kind)自体も98行目で既に計算済み。新しい層・抽象化は不要で、既存規約を_resolve_tool_deploy_targetsに適用するだけでよい。</div>
             </div></div>
           <div class="tab-panel" id="panel2">
             <div class="entry">
@@ -306,6 +316,26 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
               <div class="entry-viewpoint">移行ロジックの分離</div>
               <div class="entry-consideration">既存document.jsonのstring→array移行ロジックは、レンダリング規則（恒久ロジック）とは変更理由が異なる一過性の処理。part_renderer.py/RenderMetaSchema側に混入させず、別usecase（uc-patch-schemaのset_field呼び出し）として分離すること。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">unit</div>
+              <div class="entry-consideration">_resolve_tool_deploy_targetsにspec_kind引数を追加し、_select_field_mapと同じ「値が全てdictならdiscriminator分岐」判定が適用されることを外部依存なしで検証する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">integration</div>
+              <div class="entry-consideration">config.jsonのtoolMappings.claude-code.Agentが入れ子構造（orchestrator/subagent）になっていても、既存Orchestrator系（agentKind=orchestrator）documentのdeploy先がCLAUDE.md/AGENTS.mdへ従来通り解決されることをファイルI/Oポートの偽実装で検証する（回帰テスト）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">acceptance</div>
+              <div class="entry-consideration">agentKind=subagentのwaffle-subagent documentをCLI経由でvalidate→renderし、.claude/agents/waffle-subagent.mdへのsymlinkが実際に作られることをend-to-endに確認する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">前提確認</div>
+              <div class="entry-consideration">着手前に、discriminator_key(schema)がAgentSchema/v3で実際にagentKindを返すことをinvestigationで確認する（未確認のまま進めるとspec_kindがNoneになり入れ子マッピングが常に空になる静かな失敗モードになりうる、というtech-lead-advisorの付言）。</div>
             </div></div>
           <div class="tab-panel" id="panel3">
             <div class="constraint-item">
@@ -315,6 +345,10 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="constraint-item">
               <span class="num">2</span>
               <p>condition/rationaleのstring→array変更は既存document.jsonにとって後方互換性のない変更であるため、DomainSpecSchemaの版を上げた上で対象documentのみ新版へ移行する（v5自体は不変のまま維持する）。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>config.jsonのtoolMappings.claude-code.Agentのみを入れ子化し、codex.Agent（AGENTS.md）/Skill/Knowledgeのマッピングは変更しない（他ツール・他documentTypeへの影響を局所化する）。</p>
             </div></div>
         </div>
       </div>
