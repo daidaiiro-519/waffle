@@ -1,3 +1,13 @@
+---
+id: "architecture-layer-naming-convention"
+type: "Knowledge"
+title: "レイヤーの命名規約を定める概念：architecture-layer-naming-convention"
+description: "レイヤー間の依存方向・境界を名前そのもので可視化するための命名原則。ユビキタス言語の一貫性を、レイヤーをまたいでも壊さないための実践的なルール。"
+tags: ["advisor:tech-lead", "domain:architecture", "domain:coding-standard"]
+schemaRef: "KnowledgeSchema/v5"
+updatedAt: "2026-07-08T00:00:00Z"
+---
+
 # レイヤーの命名規約を定める概念：architecture-layer-naming-convention
 
 ## 概要

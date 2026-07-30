@@ -1,3 +1,11 @@
+---
+id: "accessibility-baseline"
+type: "Knowledge"
+title: "アクセシビリティの最低基準を定める概念：accessibility-baseline"
+description: "画面設計にはどれだけ独自性を追求しても省略してはならない最低限の品質基準（品質下限）がある。これはデザインの個性とは別の、常に満たすべき土台である。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # アクセシビリティの最低基準を定める概念：accessibility-baseline
 
 ## 概要

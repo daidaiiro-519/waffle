@@ -1,3 +1,11 @@
+---
+id: "domain-expert"
+type: "Knowledge"
+title: "業務エキスパートの役割を扱う概念：domain-expert"
+description: "業務エキスパートとは、ソフトウェアが対象とする業務活動に精通し、その領域について信頼できる情報源になれる人であり、要求分析の専門家ではなく業務そのものの代弁者である点を扱う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 業務エキスパートの役割を扱う概念：domain-expert
 
 ## 概要

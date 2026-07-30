@@ -1,3 +1,13 @@
+---
+id: "architecture-layer-boundary"
+type: "Knowledge"
+title: "レイヤー境界の引き方を定める概念：architecture-layer-boundary"
+description: "ソフトウェアをいくつの層に分割し、各層にどんな責務を割り当てるかという設計判断。層の数自体に唯一の正解はなく、「同じ理由で変更されるコードを同じ層にまとめる」という単一責任の原則を層レベルに適用した基準で決める。"
+tags: ["advisor:tech-lead", "domain:architecture"]
+schemaRef: "KnowledgeSchema/v5"
+updatedAt: "2026-07-07T00:00:00Z"
+---
+
 # レイヤー境界の引き方を定める概念：architecture-layer-boundary
 
 ## 概要

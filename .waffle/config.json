@@ -11,7 +11,10 @@
         "orchestrator": { "pathTemplate": "CLAUDE.md", "mode": "symlink" },
         "subagent": { "pathTemplate": ".claude/agents/{documentId}.md", "mode": "symlink" }
       },
-      "Knowledge": { "pathTemplate": ".claude/skills/{skillRefs}/references/knowledge/{documentId}.md", "mode": "symlink" }
+      "Knowledge": [
+        { "pathTemplate": ".claude/skills/{skillRefs}/references/knowledge/{documentId}.md", "mode": "symlink" },
+        { "pathTemplate": ".waffle/agent/{agentRefs}/references/knowledge/{documentId}.md", "mode": "symlink" }
+      ]
     },
     "codex": {
       "Agent": {

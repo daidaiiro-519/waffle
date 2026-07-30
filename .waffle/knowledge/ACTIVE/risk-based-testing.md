@@ -1,3 +1,11 @@
+---
+id: "risk-based-testing"
+type: "Knowledge"
+title: "リスクベースのテスト工数配分を扱う概念：risk-based-testing"
+description: "ソフトウェアが持つリスク(未検出のバグがシステム利用者に悪影響を及ぼす確率)を、テスト計画・設計・実装・実行・評価という全フェーズの意思決定を導く指針とするアプローチ。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # リスクベースのテスト工数配分を扱う概念：risk-based-testing
 
 ## 概要

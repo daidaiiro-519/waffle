@@ -53,6 +53,7 @@ sequenceDiagram
 
 - Handoff集約自身の状態・内容は変更しない（読み取り専用の投影）
 - 固定テンプレートへ値を差し込んだHTMLファイルが.waffle/handoff/{documentId}.htmlへ生成される
+- reviewStatus（requiredAdvisors/findings/completionImageConfirmedBy）が与えられている場合、その値はそのまま表示され、レンダリング処理内で新たな合否判定は行われない
 
 ---
 
@@ -63,6 +64,7 @@ sequenceDiagram
 - When designViewpoints/implementationViewpointsが与えられたとき、システムはadvisor名＋件数のペアをレビュー状況セクションに出力する shall。
 - When 対象HandoffとcompletionImageが与えられたとき、システムは固定テンプレートへ値を差し込んだHTMLを.waffle/handoff/{documentId}.htmlへ書き込む shall。
 - When 対象Handoffが与えられたとき、システムはdocument-graph Skillの契約に沿ったid/type/title/description/tagsをHTMLのheadに<meta>タグとして出力する shall。
+- When reviewStatus（requiredAdvisors/findings/completionImageConfirmedBy）が与えられたとき、システムはその値をそのまま表示し、実装に進めてよいかどうかの判定を新たに算出しない shall。
 
 ---
 
@@ -147,4 +149,17 @@ Then 正常にHTMLが生成される
 Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff
 When RenderHandoffTemplateを実行する
 Then 生成されたHTMLのheadにid/type/title/description/tagsの<meta>タグが出力される
+```
+
+### reviewStatusの値をそのまま表示し新たな判定を行わない
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | render側が既存contentの値を集計・表示するだけで、合否判定そのものを新たに計算していないことを確認する（UI層に業務ルール判定ロジックを持たせないというアーキテクチャ制約の検証） |
+
+```gherkin
+Given requiredAdvisors・findings（resolutionStatusを含む）・completionImageConfirmedByを持つ検証済みのHandoff
+When RenderHandoffTemplateを実行する
+Then 生成されたHTMLにfindingsの件数・resolutionStatusの値がそのまま表示される
+And レンダリング処理内で「実装に進めてよいか」を新たに算出するロジックは実行されない
 ```

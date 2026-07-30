@@ -1,0 +1,1 @@
+../../.waffle/hooks/inject-process-knowledge-on-session-start.py

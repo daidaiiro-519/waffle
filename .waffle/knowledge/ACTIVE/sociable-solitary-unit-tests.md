@@ -1,3 +1,11 @@
+---
+id: "sociable-solitary-unit-tests"
+type: "Knowledge"
+title: "sociable/solitaryなユニットテストの使い分けを扱う概念：sociable-solitary-unit-tests"
+description: "ユニットテストを、対象の協調オブジェクト(collaborator)をどう扱うかで2分類する考え方。Jay Fieldsが考案し、Martin Fowlerが自身のbliki記事「UnitTest」(2014年公開)で整理・普及させた。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # sociable/solitaryなユニットテストの使い分けを扱う概念：sociable-solitary-unit-tests
 
 ## 概要

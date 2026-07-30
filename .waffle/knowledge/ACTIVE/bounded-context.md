@@ -1,3 +1,11 @@
+---
+id: "bounded-context"
+type: "Knowledge"
+title: "境界づけられたコンテキストの概念そのものを扱う：bounded-context"
+description: "境界づけられたコンテキストとは、ある言葉が一貫した意味を持ち続けられる範囲であり、同時にその意味を表現するモデルが実装として独立している範囲である。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 境界づけられたコンテキストの概念そのものを扱う：bounded-context
 
 ## 概要

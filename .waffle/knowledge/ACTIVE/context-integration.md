@@ -1,3 +1,11 @@
+---
+id: "context-integration"
+type: "Knowledge"
+title: "複数コンテキストの統合方式を扱う概念：context-integration"
+description: "境界づけられたコンテキストどうしが協調するための連係パターンを、チーム間の協力関係の性質に基づいて選び分ける考え方を扱う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 複数コンテキストの統合方式を扱う概念：context-integration
 
 ## 概要

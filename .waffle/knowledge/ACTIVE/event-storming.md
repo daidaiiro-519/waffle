@@ -1,3 +1,11 @@
+---
+id: "event-storming"
+type: "Knowledge"
+title: "イベントストーミングによるドメイン発見手法を扱う概念：event-storming"
+description: "業務プロセスのモデルを短時間で作り上げるための協調型ワークショップ。成果物そのものより、そのモデルを全員で一緒に作り上げる過程に主な価値がある。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # イベントストーミングによるドメイン発見手法を扱う概念：event-storming
 
 ## 概要

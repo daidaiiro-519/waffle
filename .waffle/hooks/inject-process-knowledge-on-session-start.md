@@ -1,0 +1,40 @@
+---
+id: "inject-process-knowledge-on-session-start"
+type: "usecase-delegate"
+title: "process種別knowledgeをセッション開始時に注入するHook：inject-process-knowledge-on-session-start"
+description: "CLAUDE.mdは一度アンビエントにロードされるだけで、都度フレッシュ起動されるadvisor Skillと違い「今読みに行け」という発火点を持たない。process種別knowledge（agentRefsにwaffleを含む横断的な方法論knowledge）を、セッション開始時に追加コンテキストとして強制的に注入することで、Orchestrator自身の進行管理・再検証判断の材料を確実に文脈へ入れる。"
+schemaRef: "HookSchema/v1"
+---
+
+# process種別knowledgeをセッション開始時に注入するHook：inject-process-knowledge-on-session-start
+
+## 目的
+
+CLAUDE.mdは一度アンビエントにロードされるだけで、都度フレッシュ起動されるadvisor Skillと違い「今読みに行け」という発火点を持たない。process種別knowledge（agentRefsにwaffleを含む横断的な方法論knowledge）を、セッション開始時に追加コンテキストとして強制的に注入することで、Orchestrator自身の進行管理・再検証判断の材料を確実に文脈へ入れる。
+
+---
+
+## いつ働くか
+
+セッション開始時（Claude Code: SessionStart、matcher=startup/resume/compact）
+
+---
+
+## 委譲先usecase
+
+query-collectionのfilter_documents（key=agentRefs, value=waffle）でprocess種別knowledgeを列挙し、queryのquery_path（blockKey=description, expression=text）で各文書の要約を取得する（既存usecaseの再利用のみ、新規usecaseは持たない）
+
+---
+
+## スクリプト実体
+
+.waffle/hooks/inject-process-knowledge-on-session-start.py
+
+---
+
+## ガードレール
+
+- 注入する内容は各knowledgeのdescription.text（1〜2文の要約）に留め、principles/antiPatterns等の全文は貼らない（コンテキスト圧迫を避ける）
+- agentRefsに対象Agent（waffle）を含まない、またはknowledgeKindがdomainの文書は対象にしない
+- 新しい検知・判断ロジックは持たない。既存usecase（query-collection/query）のCLI呼び出しに限定する
+- 対象knowledgeが0件のときは何も出力しない（沈黙する）

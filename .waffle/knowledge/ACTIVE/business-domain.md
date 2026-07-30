@@ -1,3 +1,11 @@
+---
+id: "business-domain"
+type: "Knowledge"
+title: "業務ドメインの定義を扱う概念：business-domain"
+description: "ビジネスドメインとは企業が顧客に価値を提供している活動の全体を指し、その内側は複数の業務領域(サブドメイン)に分解される。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 業務ドメインの定義を扱う概念：business-domain
 
 ## 概要

@@ -1,3 +1,11 @@
+---
+id: "evolving-design"
+type: "Knowledge"
+title: "設計を継続的に進化させる原則を扱う概念：evolving-design"
+description: "DDDにおける設計は一度確定させて終わりのものではなく、事業活動・組織・業務知識・システムの成長という複数の変化のベクトルに応じて継続的に見直されるべきものである。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 設計を継続的に進化させる原則を扱う概念：evolving-design
 
 ## 概要

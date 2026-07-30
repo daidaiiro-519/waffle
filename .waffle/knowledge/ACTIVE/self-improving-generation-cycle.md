@@ -1,3 +1,12 @@
+---
+id: "self-improving-generation-cycle"
+type: "Knowledge"
+title: "生成物の質を継続的に改善するサイクルを扱う概念：self-improving-generation-cycle"
+description: "生成物（デザイン・仕様・実装など）の質を、生成の瞬間の一発勝負でなく、〈生成→層状ゲート測定→修正→知識への還元〉というサイクルの反復で高めていく考え方。各サイクルの学びが知識に積み上がり、次のサイクルはより高い床から始まる。自動化・テンプレ化（工場）による置き換えではなく、判断をループの中に残すことで複利が効く。"
+tags: ["framework:process", "domain:quality"]
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 生成物の質を継続的に改善するサイクルを扱う概念：self-improving-generation-cycle
 
 ## 概要

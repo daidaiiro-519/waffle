@@ -63,6 +63,7 @@ sequenceDiagram
 - pathVarsもpath/deployと同様、discriminatorごとに異なる宣言（kindごとの{変数名: ドットパス}の組）としても書ける（discriminatorの分岐によってcontentの形が変わり、参照できるドットパスも変わるため）
 - x-frontmatterも同様に、discriminatorの値ごとに異なるフィールド宣言（kindごとの{フィールド名: ドットパス}の組）として書ける（discriminatorによってcontentの形が変わり、frontmatterに出すべきフィールド自体も変わるため。frontmatterを持たないdiscriminator値は宣言しなければ生成されない）
 - x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空（空文字・空配列・null）である場合、そのfrontmatterフィールドは省略する（フィールドの省略＝上書きしない、という意味をpart_renderer全体の空値省略規約と一貫させる）
+- x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言する場合、それぞれの配列は独立にfan-out展開され、両方に対応するdeploy先へ書かれる（1種類の配列pathVarのみを想定した実装からの一般化）
 
 ---
 
@@ -83,6 +84,7 @@ sequenceDiagram
 - While pathVarsが参照するcontentのドットパスを対象Documentが持たないとき、システムはその変数を使うdeploy先だけをスキップし、canonicalへの書き込みは継続する shall。
 - When x-frontmatterが指すドットパスの解決値がtext・itemsのいずれかを持つブロック形状のdictであるとき、システムはtextがあればそれを使い、無ければitemsを半角スペース区切りで結合した文字列をfrontmatter値として使う shall。
 - If 対象schemaがx-render-target.pathを宣言していないとき、システムはNO_RENDER_TARGETエラーを返し描画しない shall（専用の成果物確定コマンドを使うべきschemaであることを示す）。
+- When x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、システムはそれぞれの配列を独立にfan-out展開し、両方に対応するdeploy先へ書き込む shall。
 
 ---
 
@@ -405,6 +407,19 @@ Scenario: x-render-targetを持たないschemaはNO_RENDER_TARGETを返す
   Given x-render-target.pathを宣言していないschemaのDocument
   When renderを実行する
   Then NO_RENDER_TARGETエラーが返り描画されない
+```
+
+### 複数種類の配列pathVarが同時にfan-out展開される
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | deploy: x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、それぞれ独立にfan-out展開され両方のdeploy先へ書かれる |
+
+```gherkin
+Scenario: 複数種類の配列pathVarが同時にfan-out展開される
+  Given x-render-target.pathVarsで2種類の配列値（skillRefsとagentRefs）を宣言したschemaのDocumentと、それぞれを参照するtoolMappingsのpathTemplate
+  When deployを有効にしてrenderする
+  Then skillRefsの各要素とagentRefsの各要素それぞれに対応するdeploy先が全て作られる
 ```
 
 ---

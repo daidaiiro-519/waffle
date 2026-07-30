@@ -1,3 +1,11 @@
+---
+id: "definition-of-done"
+type: "Knowledge"
+title: "完了の定義（DoD）の普遍的な品質基準を扱う概念：definition-of-done"
+description: "全ての作業項目に一律適用される、チーム全体の普遍的な品質基準。個々のストーリー固有の受け入れ基準(Acceptance Criteria)とは別軸で、両方を満たして初めて「完成」となる。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 完了の定義（DoD）の普遍的な品質基準を扱う概念：definition-of-done
 
 ## 概要

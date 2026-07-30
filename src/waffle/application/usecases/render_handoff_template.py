@@ -56,6 +56,9 @@ class RenderHandoffTemplate:
         usage_examples = content.get("usageExamples", {}).get("items", [])
         description_block = content.get("description", {})
         description = description_block.get("text") or " ".join(description_block.get("items", []))
+        review_status = content.get("reviewStatus", {})
+        findings = review_status.get("findings", [])
+        completion_image_confirmed_by = review_status.get("completionImageConfirmedBy")
 
         layout = compute_layout(completion_image["layers"], completion_image["relationships"])
         review_counts = _count_by_advisor(design_viewpoints, implementation_viewpoints)
@@ -76,6 +79,8 @@ class RenderHandoffTemplate:
             usage_examples=usage_examples,
             description=description,
             tags=doc.get("tags", []),
+            findings=findings,
+            completion_image_confirmed_by=completion_image_confirmed_by,
         )
 
         try:

@@ -1,3 +1,11 @@
+---
+id: "subdomain"
+type: "Knowledge"
+title: "サブドメインの概念そのものを扱う：subdomain"
+description: "企業の事業活動を中核・一般・補完に分類し、どの業務活動を自社で作り込み、どれを既製品やパッケージに任せるべきかを判断するための投資判断の道具。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # サブドメインの概念そのものを扱う：subdomain
 
 ## 概要

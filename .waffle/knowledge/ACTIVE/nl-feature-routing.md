@@ -4,7 +4,7 @@ type: "Knowledge"
 title: "ユーザーの自然言語を機能ルーティングへ変換する原則を扱う概念：nl-feature-routing"
 description: "design-shareの標準サイクル（自然言語→5平面→題材ごとの具象）で、「自然言語→平面」の変換を担う層。5平面それぞれの送り先は一様ではない：Strategyは8語（題材に根ざす）の適用範囲拡張として吸収、Scope/Structure/SkeletonはSKILL.md自身のStep2〜4という直接の実行手順、Surfaceは8語（トークンを先に固定する／作り込みを一貫させる）。かつての『5つの特徴量カテゴリ』は自作の分類だったが、Jesse James Garrettの『Elements of User Experience』という確立された外部フレームワークに置き換え、確立された用語（conceptual model等）による裏取りを経ている。"
 tags: ["framework:design-share", "domain:nl-conversion"]
-schemaRef: "KnowledgeSchema/v4"
+schemaRef: "KnowledgeSchema/v5"
 ---
 
 # ユーザーの自然言語を機能ルーティングへ変換する原則を扱う概念：nl-feature-routing

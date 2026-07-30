@@ -82,7 +82,8 @@
         "パステンプレートの変数は、documentId等の既定変数に加え、schemaがx-render-target.pathVarsでcontentのドットパスを宣言すれば、そのcontent値も変数として使える（x-frontmatterと同型の宣言的解決）",
         "pathVarsもpath/deployと同様、discriminatorごとに異なる宣言（kindごとの{変数名: ドットパス}の組）としても書ける（discriminatorの分岐によってcontentの形が変わり、参照できるドットパスも変わるため）",
         "x-frontmatterも同様に、discriminatorの値ごとに異なるフィールド宣言（kindごとの{フィールド名: ドットパス}の組）として書ける（discriminatorによってcontentの形が変わり、frontmatterに出すべきフィールド自体も変わるため。frontmatterを持たないdiscriminator値は宣言しなければ生成されない）",
-        "x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空（空文字・空配列・null）である場合、そのfrontmatterフィールドは省略する（フィールドの省略＝上書きしない、という意味をpart_renderer全体の空値省略規約と一貫させる）"
+        "x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空（空文字・空配列・null）である場合、そのfrontmatterフィールドは省略する（フィールドの省略＝上書きしない、という意味をpart_renderer全体の空値省略規約と一貫させる）",
+        "x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言する場合、それぞれの配列は独立にfan-out展開され、両方に対応するdeploy先へ書かれる（1種類の配列pathVarのみを想定した実装からの一般化）"
       ]
     },
     "acceptanceCriteria": {
@@ -103,7 +104,8 @@
         "If list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取ったとき、システムはMALFORMED_CONTENTエラーを返し描画しない shall。",
         "While pathVarsが参照するcontentのドットパスを対象Documentが持たないとき、システムはその変数を使うdeploy先だけをスキップし、canonicalへの書き込みは継続する shall。",
         "When x-frontmatterが指すドットパスの解決値がtext・itemsのいずれかを持つブロック形状のdictであるとき、システムはtextがあればそれを使い、無ければitemsを半角スペース区切りで結合した文字列をfrontmatter値として使う shall。",
-        "If 対象schemaがx-render-target.pathを宣言していないとき、システムはNO_RENDER_TARGETエラーを返し描画しない shall（専用の成果物確定コマンドを使うべきschemaであることを示す）。"
+        "If 対象schemaがx-render-target.pathを宣言していないとき、システムはNO_RENDER_TARGETエラーを返し描画しない shall（専用の成果物確定コマンドを使うべきschemaであることを示す）。",
+        "When x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、システムはそれぞれの配列を独立にfan-out展開し、両方に対応するdeploy先へ書き込む shall。"
       ]
     },
     "errors": {
@@ -368,6 +370,13 @@
           "viewpoint": "解決契約：専用の成果物確定コマンドを持つschema（例: HandoffSchema）は汎用render経路を持たないことを明示的にエラーで示す",
           "gherkin": "Scenario: x-render-targetを持たないschemaはNO_RENDER_TARGETを返す\n  Given x-render-target.pathを宣言していないschemaのDocument\n  When renderを実行する\n  Then NO_RENDER_TARGETエラーが返り描画されない",
           "covers": "受け入れ基準: x-render-target.pathを宣言していないschemaはNO_RENDER_TARGETエラーになる"
+        },
+        {
+          "name": "複数種類の配列pathVarが同時にfan-out展開される",
+          "category": "正常系",
+          "viewpoint": "deploy: x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、それぞれ独立にfan-out展開され両方のdeploy先へ書かれる",
+          "gherkin": "Scenario: 複数種類の配列pathVarが同時にfan-out展開される\n  Given x-render-target.pathVarsで2種類の配列値（skillRefsとagentRefs）を宣言したschemaのDocumentと、それぞれを参照するtoolMappingsのpathTemplate\n  When deployを有効にしてrenderする\n  Then skillRefsの各要素とagentRefsの各要素それぞれに対応するdeploy先が全て作られる",
+          "covers": "受け入れ基準: 複数種類の配列pathVarの同時fan-out"
         }
       ]
     },

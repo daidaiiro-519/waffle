@@ -1,0 +1,1 @@
+../../../../knowledge/ACTIVE/knowledge-cand-artifact-fidelity-to-decision-stage.md

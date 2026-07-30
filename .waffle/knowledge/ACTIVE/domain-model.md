@@ -1,3 +1,11 @@
+---
+id: "domain-model"
+type: "Knowledge"
+title: "ドメインモデルの定義を扱う概念：domain-model"
+description: "複雑な業務ロジックを持つ中核の業務領域で、業務ルールをコード上に直接・明示的に表現するための実装方法。値オブジェクト・エンティティ・集約・業務サービスの4部品からなる。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # ドメインモデルの定義を扱う概念：domain-model
 
 ## 概要

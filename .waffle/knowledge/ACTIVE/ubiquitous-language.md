@@ -1,3 +1,11 @@
+---
+id: "ubiquitous-language"
+type: "Knowledge"
+title: "ユビキタス言語の原則を扱う概念：ubiquitous-language"
+description: "業務エキスパートと開発者が同じ語彙で事業活動を語れる状態を作り、維持するための原則。会話・要件・テスト・コードの言葉の一貫性を扱う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # ユビキタス言語の原則を扱う概念：ubiquitous-language
 
 ## 概要

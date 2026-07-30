@@ -1,3 +1,13 @@
+---
+id: "architecture-tech-stack-selection-chain"
+type: "Knowledge"
+title: "技術スタック選定の連鎖的判断を扱う概念：architecture-tech-stack-selection-chain"
+description: "DDDのサブドメイン分類から実装方法・技術方式まで連鎖する判断フローを受けて、技術方式が要求する技術的性質（技術要件）までを扱う。具体的にどの製品・ライブラリを選ぶかはこの原則の範囲外であり、プロジェクトごとのADR（Architecture Decision Record）に委ねる。"
+tags: ["advisor:tech-lead", "domain:architecture", "domain:tech-stack"]
+schemaRef: "KnowledgeSchema/v5"
+updatedAt: "2026-07-08T00:00:00Z"
+---
+
 # 技術スタック選定の連鎖的判断を扱う概念：architecture-tech-stack-selection-chain
 
 ## 概要

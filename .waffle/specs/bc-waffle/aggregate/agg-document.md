@@ -1,3 +1,12 @@
+---
+id: "agg-document"
+type: "aggregate"
+title: "Document（document.json）の一貫性とライフサイクルを守る集約：agg-document"
+description: "Document(document.json)の一貫性とライフサイクルを表す集約。Spec家族系（DomainSpecSchema/PresentationSpecSchema）は生成→検証→描画→置換の「処理パイプライン」（lifecycle）を持つ。CodingSchema/SkillSchema系はDRAFT/ACTIVE/DEPRECATEDという分類ラベルを持つが、遷移を強制するcommand・guardは存在しない。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # Document（document.json）の一貫性とライフサイクルを守る集約：agg-document
 
 ## 概要
@@ -38,6 +47,8 @@ Document
 | aggregateRef | DocumentId |
 | skillRef | DocumentId |
 | skillRefs | DocumentId配列 |
+| agentRefs | DocumentId配列 |
+| knowledgeKind | 文字列（enum: domain/process） |
 | stack | 文字列配列 |
 | createdAt | 日時文字列（ISO8601） |
 | updatedAt | 日時文字列（ISO8601） |

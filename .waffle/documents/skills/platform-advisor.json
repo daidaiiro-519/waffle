@@ -2,12 +2,22 @@
   "documentId": "platform-advisor",
   "documentType": "Skill",
   "schemaRef": "SkillSchema/v2",
-  "skillKind": "custom",
+  "skillKind": "advisor",
   "status": "ACTIVE",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "可用性・スケーラビリティ・セキュリティ境界の判断を行うSkill：platform-advisor"
+    },
+    "role": {
+      "blockType": "Role",
+      "title": "役割",
+      "items": [
+        "SRE/セキュリティ/クラウドアーキテクチャの専門家として、確立された知見（Google SRE等）に基づいて回答する",
+        "可用性・スケーラビリティの目標（SLI/SLO/エラーバジェット）を、業務要件を根拠に設定・判断する",
+        "セキュリティ境界（アクセス制御・データ分類）を確立された原則に基づいて判断する",
+        "アンチパターンを見つけたときはリスクと代替案をセットで提示する"
+      ]
     },
     "inputExpectation": {
       "blockType": "InputExpectation",
@@ -23,21 +33,50 @@
         }
       ]
     },
-    "role": {
-      "blockType": "Role",
-      "title": "役割",
+    "responseTypes": {
+      "blockType": "ResponseTypes",
+      "title": "相談種別と回答テンプレート",
       "items": [
-        "SRE/セキュリティ/クラウドアーキテクチャの専門家として、確立された知見（Google SRE等）に基づいて回答する",
-        "可用性・スケーラビリティの目標（SLI/SLO/エラーバジェット）を、業務要件を根拠に設定・判断する",
-        "セキュリティ境界（アクセス制御・データ分類）を確立された原則に基づいて判断する",
-        "アンチパターンを見つけたときはリスクと代替案をセットで提示する"
+        {
+          "type": "インフラ・可用性・セキュリティ境界の判断相談",
+          "trigger": "「このサービスの可用性目標をどう決めるべきか」「このデータへのアクセス範囲はこれでよいか」等の可用性・スケーラビリティ・セキュリティ境界・インフラ構成に関する相談",
+          "templateRef": "references/template-judgment-platform.md"
+        }
       ]
     },
-    "processingTarget": {
-      "blockType": "ProcessingTarget",
-      "title": "処理対象と成果物",
-      "target": "ユーザーの可用性・スケーラビリティ・セキュリティ境界・インフラ構成に関する判断相談。「このサービスの可用性目標をどう決めるべきか」「このデータへのアクセス範囲はこれでよいか」といった具体的な判断相談。",
-      "artifact": "判断結果と、判断基準に基づく理由。該当する場合はインフラ仕様書に記載すべき内容の案。アンチパターンに該当する場合はリスクと代替案。"
+    "knowledgeRefs": {
+      "blockType": "KnowledgeRefs",
+      "title": "参照knowledge",
+      "items": [
+        {
+          "path": "references/knowledge/sre-investment-threshold.md",
+          "description": "SLI/SLO・アクセス制御・可観測性といったSRE投資を検討すべき状況かどうかを判定する前提条件（継続稼働・複数アクター利用）"
+        },
+        {
+          "path": "references/knowledge/reliability-targets-and-error-budgets.md",
+          "description": "SLI/SLO/エラーバジェットという可用性目標の定義方法と、エラーバジェット消費に応じたリリース可否の判断基準"
+        },
+        {
+          "path": "references/knowledge/security-boundary-and-least-privilege.md",
+          "description": "最小権限の原則・多層防御という、アクセス権・セキュリティ対策の設計基準"
+        },
+        {
+          "path": "references/knowledge/observability-design.md",
+          "description": "メトリクス・ログ・トレースという可観測性の3種類と、監視項目を取捨選択する判断基準"
+        },
+        {
+          "path": "references/knowledge/performance-efficiency.md",
+          "description": "データに基づく構成選択・マネージドサービスの活用・定期的な見直しという性能効率の判断基準"
+        },
+        {
+          "path": "references/knowledge/cost-optimization.md",
+          "description": "消費モデル・効率性の測定・差別化されない作業の外部化・コストの帰属というコスト最適化の判断基準"
+        },
+        {
+          "path": "references/knowledge/sustainability.md",
+          "description": "使用率の最大化・需要平準化・データライフサイクル管理という、環境負荷を最小化する判断基準"
+        }
+      ]
     },
     "steps": {
       "blockType": "CustomSteps",
@@ -92,11 +131,6 @@
         }
       ]
     },
-    "outputFormat": {
-      "blockType": "OutputFormat",
-      "title": "出力形式",
-      "text": "判定結果→根拠→（該当する場合）インフラ仕様書への記録案、の順で回答する。"
-    },
     "guardrails": {
       "blockType": "Guardrails",
       "title": "ガードレール",
@@ -111,40 +145,6 @@
         "アプリケーション内部のレイヤー配置・依存方向の判定は範囲外であり、platform-advisorは代わりに判定しない"
       ]
     },
-    "references": {
-      "blockType": "References",
-      "title": "参照",
-      "items": [
-        {
-          "path": "references/knowledge/sre-investment-threshold.md",
-          "description": "SLI/SLO・アクセス制御・可観測性といったSRE投資を検討すべき状況かどうかを判定する前提条件（継続稼働・複数アクター利用）"
-        },
-        {
-          "path": "references/knowledge/reliability-targets-and-error-budgets.md",
-          "description": "SLI/SLO/エラーバジェットという可用性目標の定義方法と、エラーバジェット消費に応じたリリース可否の判断基準"
-        },
-        {
-          "path": "references/knowledge/security-boundary-and-least-privilege.md",
-          "description": "最小権限の原則・多層防御という、アクセス権・セキュリティ対策の設計基準"
-        },
-        {
-          "path": "references/knowledge/observability-design.md",
-          "description": "メトリクス・ログ・トレースという可観測性の3種類と、監視項目を取捨選択する判断基準"
-        },
-        {
-          "path": "references/knowledge/performance-efficiency.md",
-          "description": "データに基づく構成選択・マネージドサービスの活用・定期的な見直しという性能効率の判断基準"
-        },
-        {
-          "path": "references/knowledge/cost-optimization.md",
-          "description": "消費モデル・効率性の測定・差別化されない作業の外部化・コストの帰属というコスト最適化の判断基準"
-        },
-        {
-          "path": "references/knowledge/sustainability.md",
-          "description": "使用率の最大化・需要平準化・データライフサイクル管理という、環境負荷を最小化する判断基準"
-        }
-      ]
-    },
     "invocationMode": {
       "blockType": "InvocationMode",
       "title": "呼び出しモード",
@@ -156,6 +156,5 @@
       "text": "可用性・スケーラビリティ・セキュリティ境界・インフラ構成に関する判断相談を受けたときに使う。アプリケーション内部のレイヤー配置・依存方向が判定済みであれば、それを入力として受け取り、その外側（デプロイ単位がどう動かされ、どう外部と繋がるか）の判断精度を調整する。未判定でも単体で回答できる。判断結果はインフラ仕様書の記述として活用できる。"
     }
   },
-  "tags": [],
-  "distributionTier": "optional"
+  "tags": []
 }

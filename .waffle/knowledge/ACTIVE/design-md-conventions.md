@@ -4,7 +4,7 @@ type: "Knowledge"
 title: "Design.md仕様（YAMLトークン＋固定順セクション）の規約を扱う概念：design-md-conventions"
 description: "Design.md（コーディングエージェントにビジュアルアイデンティティを伝える文書）の実体仕様と、対話×試作artifactの往復でそれを作成・改善する運用規約。"
 tags: ["domain:design", "skill:design-share"]
-schemaRef: "KnowledgeSchema/v4"
+schemaRef: "KnowledgeSchema/v5"
 ---
 
 # Design.md仕様（YAMLトークン＋固定順セクション）の規約を扱う概念：design-md-conventions

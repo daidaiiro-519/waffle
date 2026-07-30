@@ -1,3 +1,11 @@
+---
+id: "design-heuristics"
+type: "Knowledge"
+title: "デザイン判断のヒューリスティクスを扱う概念：design-heuristics"
+description: "コンテキストの大きさ・業務ロジックの実装方法・技術方式・テスト方針を連鎖的に決定する経験則(ヒューリスティクス)を扱う。前段の判断が後段の判断の前提になる。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # デザイン判断のヒューリスティクスを扱う概念：design-heuristics
 
 ## 概要

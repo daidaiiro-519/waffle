@@ -3,7 +3,7 @@ id: "design-system-tokens"
 type: "Knowledge"
 title: "デザイントークンの設計原則を扱う概念：design-system-tokens"
 description: "デザイントークンとは、色・タイポグラフィ・余白・角丸等の視覚的決定を、コード中に直接埋め込むのではなく、名前付きの再利用可能な値として一箇所に集約したものである。"
-schemaRef: "KnowledgeSchema/v4"
+schemaRef: "KnowledgeSchema/v5"
 ---
 
 # デザイントークンの設計原則を扱う概念：design-system-tokens

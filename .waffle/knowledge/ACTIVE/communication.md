@@ -1,3 +1,11 @@
+---
+id: "communication"
+type: "Knowledge"
+title: "境界づけられたコンテキスト間の連携パターンを扱う概念：communication"
+description: "境界づけられたコンテキストどうしが業務プロセスを跨いで連携する際に必要な、モデル変換・イベント発行・プロセス調整に関する通信の原則を扱う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 境界づけられたコンテキスト間の連携パターンを扱う概念：communication
 
 ## 概要

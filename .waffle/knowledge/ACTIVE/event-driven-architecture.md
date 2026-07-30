@@ -1,3 +1,11 @@
+---
+id: "event-driven-architecture"
+type: "Knowledge"
+title: "イベント駆動アーキテクチャの原則を扱う概念：event-driven-architecture"
+description: "コンポーネント間で非同期にイベントメッセージをやり取りする通信方式。境界づけられたコンテキストの公開インターフェースを設計する手段であり、コンテキスト内部の実装方式ではない。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # イベント駆動アーキテクチャの原則を扱う概念：event-driven-architecture
 
 ## 概要

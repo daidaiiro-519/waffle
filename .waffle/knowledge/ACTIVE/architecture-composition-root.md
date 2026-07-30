@@ -1,3 +1,13 @@
+---
+id: "architecture-composition-root"
+type: "Knowledge"
+title: "依存関係の配線を1箇所に集約する原則を扱う概念：architecture-composition-root"
+description: "アダプターをポート（インターフェース）に結びつける「配線」処理を、システム全体で1箇所（コンポジションルート）に集約する、という原則。"
+tags: ["advisor:tech-lead", "domain:architecture"]
+schemaRef: "KnowledgeSchema/v5"
+updatedAt: "2026-07-08T00:00:00Z"
+---
+
 # 依存関係の配線を1箇所に集約する原則を扱う概念：architecture-composition-root
 
 ## 概要

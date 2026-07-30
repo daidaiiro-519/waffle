@@ -3,7 +3,7 @@ id: "visual-hierarchy-and-restraint"
 type: "Knowledge"
 title: "視覚的階層と抑制の原則を扱う概念：visual-hierarchy-and-restraint"
 description: "画面設計における視覚的判断（何を最初に見せるか・書体の組み合わせ・構造表現・モーション・作り込みの度合い）を、思いつきではなく一貫した基準で決めるための原則群。"
-schemaRef: "KnowledgeSchema/v4"
+schemaRef: "KnowledgeSchema/v5"
 ---
 
 # 視覚的階層と抑制の原則を扱う概念：visual-hierarchy-and-restraint

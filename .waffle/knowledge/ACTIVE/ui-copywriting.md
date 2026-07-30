@@ -1,3 +1,11 @@
+---
+id: "ui-copywriting"
+type: "Knowledge"
+title: "UIコピーライティングの原則を扱う概念：ui-copywriting"
+description: "画面上の文言（ボタン・見出し・確認メッセージ・エラー文等）は、理解と操作のしやすさのためだけに存在するという前提に立ち、書き方の一貫した基準を定める。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # UIコピーライティングの原則を扱う概念：ui-copywriting
 
 ## 概要

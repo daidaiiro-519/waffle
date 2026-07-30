@@ -1,3 +1,11 @@
+---
+id: "microservices"
+type: "Knowledge"
+title: "マイクロサービスアーキテクチャの原則を扱う概念：microservices"
+description: "サービスの公開インターフェースを小さく保ちつつシステム全体の複雑さを増やさないための設計原則。境界づけられたコンテキスト・サブドメイン・集約とどう関係づけて境界を決めるかを扱う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # マイクロサービスアーキテクチャの原則を扱う概念：microservices
 
 ## 概要

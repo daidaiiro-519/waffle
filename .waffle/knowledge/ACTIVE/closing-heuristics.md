@@ -1,3 +1,11 @@
+---
+id: "closing-heuristics"
+type: "Knowledge"
+title: "業務領域のカテゴリー分類（中核・一般・補完）の判断ヒューリスティクスを扱う概念：closing-heuristics"
+description: "実装方法の選択は単発の判断ではなく連鎖する判断であり、業務領域のカテゴリー→業務ロジックの実装方法→アーキテクチャ/テスト戦略の順に決まり、逆方向にも検証に使える経験則である。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 業務領域のカテゴリー分類（中核・一般・補完）の判断ヒューリスティクスを扱う概念：closing-heuristics
 
 ## 概要

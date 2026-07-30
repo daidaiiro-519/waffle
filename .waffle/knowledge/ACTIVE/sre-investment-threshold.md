@@ -1,3 +1,11 @@
+---
+id: "sre-investment-threshold"
+type: "Knowledge"
+title: "SLI/SLO等SRE投資判断の閾値を扱う概念：sre-investment-threshold"
+description: "SRE/クラウドアーキテクチャの原則（SLI/SLO・最小権限・可観測性等）は、複数の利用者に対して継続的に稼働するサービスであることを暗黙の前提にしている。この前提が成立しない対象にまで機械的に適用すべきではない、という投資判断の閾値を扱う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # SLI/SLO等SRE投資判断の閾値を扱う概念：sre-investment-threshold
 
 ## 概要

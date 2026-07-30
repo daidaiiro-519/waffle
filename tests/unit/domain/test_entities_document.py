@@ -102,6 +102,8 @@ def test_Documentは宣言された全属性を持つ():
         aggregate_ref=None,
         skill_ref=None,
         skill_refs=None,
+        agent_refs=None,
+        knowledge_kind=None,
         stack=None,
         created_at=None,
         updated_at=None,

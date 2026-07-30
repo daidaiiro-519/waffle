@@ -110,6 +110,9 @@
         },
         "expectedScope": {
           "$ref": "#/$defs/ExpectedScopeBlock"
+        },
+        "reviewStatus": {
+          "$ref": "#/$defs/ReviewStatusBlock"
         }
       }
     },
@@ -585,6 +588,106 @@
                 "type": "string",
                 "x-prompt-write": "なぜそこを触る見込みか、1文で（例: discriminator分岐ロジックの拡張箇所）"
               }
+            }
+          }
+        }
+      }
+    },
+    "ReviewStatusBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "requiredAdvisors",
+        "findings",
+        "completionImageConfirmedBy"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "Handoffが実装に進めてよい状態かを示す構造化情報を持ちます。必要advisor・指摘の解消状態・人間による完成イメージ確認の3点で構成されます。省略された場合、この判定はまだ構造化されていないHandoffとして扱われます。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ReviewStatus"
+        },
+        "title": {
+          "type": "string",
+          "const": "レビュー状況"
+        },
+        "requiredAdvisors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "Orchestratorが今回のHandoffに必要と判断したadvisorの識別名を配列で指定してください（skill-routerのcombinedSkills由来）。実際に参加したadvisorはdesignViewpoints/implementationViewpointsのadvisorフィールドから別途確認できるため、ここには重複して記録しない。"
+        },
+        "findings": {
+          "type": "array",
+          "x-prompt-write": "designViewpoints/implementationViewpointsの各指摘について、解消状態を記録してください。refBlock/refIndexで対象の指摘を指し、指摘本文自体はここに書き直さない。",
+          "items": {
+            "type": "object",
+            "required": [
+              "advisor",
+              "refBlock",
+              "refIndex",
+              "resolutionStatus"
+            ],
+            "properties": {
+              "advisor": {
+                "type": "string",
+                "x-prompt-write": "指摘の由来advisor名。"
+              },
+              "refBlock": {
+                "type": "string",
+                "enum": [
+                  "designViewpoints",
+                  "implementationViewpoints"
+                ],
+                "x-prompt-write": "対象の指摘がdesignViewpoints/implementationViewpointsのどちらに属するか。"
+              },
+              "refIndex": {
+                "type": "integer",
+                "x-prompt-write": "対象の指摘の、refBlock内での配列インデックス（0始まり）。"
+              },
+              "resolutionStatus": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "resolved",
+                  "acceptedAsConstraint"
+                ],
+                "x-prompt-write": "open=未解消／resolved=解消済み／acceptedAsConstraint=決着済みの既知の制約としてconstraintsに記録済み。"
+              },
+              "note": {
+                "type": "string",
+                "x-prompt-write": "解消状態についての補足（任意）。"
+              }
+            }
+          }
+        },
+        "completionImageConfirmedBy": {
+          "type": "object",
+          "required": [
+            "confirmed"
+          ],
+          "x-prompt-write": "完成イメージを人間が実際に見て理解できたことの確認記録。未確認ならconfirmed: falseのみでよい。",
+          "properties": {
+            "confirmed": {
+              "type": "boolean",
+              "x-prompt-write": "人間が完成イメージを確認済みか。"
+            },
+            "confirmedBy": {
+              "type": "string",
+              "x-prompt-write": "確認した人間の識別（名前等）。confirmed:trueのときに記録する。"
+            },
+            "confirmedAt": {
+              "type": "string",
+              "x-prompt-write": "確認した日付。confirmed:trueのときに記録する。"
+            },
+            "note": {
+              "type": "string",
+              "x-prompt-write": "確認内容についての補足（任意）。"
             }
           }
         }

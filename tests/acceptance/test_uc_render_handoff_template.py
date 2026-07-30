@@ -161,6 +161,48 @@ def test_expectedScopeが無いHandoffも描画できる(tmp_path):
     assert "記録なし" in content
 
 
+def test_reviewStatusの値をそのまま表示し新たな判定を行わない(tmp_path):
+    """
+    Given requiredAdvisors・findings（resolutionStatusを含む）・completionImageConfirmedByを持つ検証済みのHandoff
+    When RenderHandoffTemplateを実行する
+    Then 生成されたHTMLにfindingsの件数・resolutionStatusの値がそのまま表示される
+    And レンダリング処理内で「実装に進めてよいか」を新たに算出するロジックは実行されない
+    """
+    doc = _handoff_doc()
+    doc["content"]["reviewStatus"] = {
+        "blockType": "ReviewStatus", "title": "レビュー状況",
+        "requiredAdvisors": ["ddd-advisor", "tech-lead-advisor"],
+        "findings": [
+            {"advisor": "ddd-advisor", "refBlock": "designViewpoints", "refIndex": 0, "resolutionStatus": "resolved"},
+            {"advisor": "tech-lead-advisor", "refBlock": "designViewpoints", "refIndex": 1, "resolutionStatus": "open"},
+        ],
+        "completionImageConfirmedBy": {"confirmed": True, "confirmedBy": "daidaiiro", "confirmedAt": "2026-07-30"},
+    }
+    path = _write(tmp_path, "handoff-uc-a.json", doc)
+    output_path = str(tmp_path / "handoff-uc-a.html")
+    result = _engine().run(path, output_path)
+    assert isinstance(result, Ok), result
+    content = (tmp_path / "handoff-uc-a.html").read_text(encoding="utf-8")
+    assert "未解決事項" in content
+    assert "1件" in content
+    assert "daidaiiro" in content
+
+
+def test_reviewStatusが無いHandoffも描画できる(tmp_path):
+    """
+    Given reviewStatusブロックを持たない（任意ブロックのため省略可能な）Handoff
+    When RenderHandoffTemplateを実行する
+    Then エラーにならず、未解決事項は0件のまま描画される
+    """
+    path = _write(tmp_path, "handoff-uc-a.json", _handoff_doc())
+    output_path = str(tmp_path / "handoff-uc-a.html")
+    result = _engine().run(path, output_path)
+    assert isinstance(result, Ok), result
+    content = (tmp_path / "handoff-uc-a.html").read_text(encoding="utf-8")
+    assert "未解決事項" in content
+    assert "0件" in content
+
+
 def test_契約準拠のmetaタグが出力される(tmp_path):
     """
     Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff

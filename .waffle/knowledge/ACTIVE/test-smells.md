@@ -1,3 +1,11 @@
+---
+id: "test-smells"
+type: "Knowledge"
+title: "テストコードの臭い（アンチパターン）を扱う概念：test-smells"
+description: "テストコードそのもの・テストの振る舞い・プロジェクト運用のいずれかの層に現れる、テストの保守性や信頼性を損なう兆候の総称。Gerard Meszarosが体系的にカタログ化した。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # テストコードの臭い（アンチパターン）を扱う概念：test-smells
 
 ## 概要

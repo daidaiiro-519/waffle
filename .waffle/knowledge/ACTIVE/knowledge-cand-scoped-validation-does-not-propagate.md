@@ -1,3 +1,12 @@
+---
+id: "knowledge-cand-scoped-validation-does-not-propagate"
+type: "Knowledge"
+title: "検証・修正のスコープ限定性：scoped-validation-does-not-propagate"
+description: "生成物内で繰り返し使われる構造やトークンについて、ある文脈での検証・修正は他の同型インスタンスや別の適用文脈へ自動的に伝播しないため、修正のたびに同型箇所を機械的に横断走査し、同じ検証・修正を適用する規律。"
+tags: ["domain:process", "framework:generation-quality"]
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 検証・修正のスコープ限定性：scoped-validation-does-not-propagate
 
 ## 概要

@@ -155,15 +155,15 @@
           "target": "advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor等）",
           "timing": "after",
           "targetScope": "category",
-          "action": "skill-routerが返したcombinedSkillsに従い、敵対的検証を依頼する各advisor（同じadvisorへの敵対的検証フェーズ再検証を含む）ごとに、AgentSchemaのgoal-dispatch構造（目的・役割・読み込むSkill・タスク・成果物・受け入れ基準）で内容を組み立て、Agentツールで並列に呼び出す（1体ずつ直列に呼ばない。複数advisorへの依頼は1回のメッセージで同時に発行する）。敵対的検証の対象が1件のみで他advisorとの突き合わせが不要な場合は単体呼び出しでよい。全員の結果が揃ってから、template-skill-adversarial-verification.mdの形式で統合する",
+          "action": "skill-routerが返したcombinedSkillsに従い、敵対的検証を依頼する各advisor（同じadvisorへの敵対的検証フェーズ再検証を含む）ごとに、AgentSchemaのgoal-dispatch構造（目的・役割・読み込むSkill・タスク・成果物・受け入れ基準）で内容を組み立て、Agentツールでwaffleサブエージェントとして並列に呼び出す（汎用のエージェントへ要約した指示を渡す代行はしない。受け手が読み込むべきSkillのSKILL.md本文の具体的な手順、特にresponseTypesが指すテンプレートファイルの読み込みが遂行される保証がないため）（1体ずつ直列に呼ばない。複数advisorへの依頼は1回のメッセージで同時に発行する）。敵対的検証の対象が1件のみで他advisorとの突き合わせが不要な場合は単体呼び出しでよい。全員の結果が揃ったら、各回答がresponseTypesが指すテンプレートの見出し構造を実際に踏襲しているかを確認してから、template-skill-adversarial-verification.mdの形式で統合する（テンプレート構造を踏まない回答は、内容の質も未検証とみなし再実行する）",
+          "why": "advisorはWaffleが所有・出荷する成果物であり、単一advisorの一発出力を無検証で確定させない運用はWaffle自身のOrchestratorの責務。advisorが互いを呼ぶのではなくOrchestrator側が組合せを判断することで、Skill/advisor間のテキストベース疎結合原則を保てる。並列dispatchにするのは、直列に1体ずつ呼ぶと後段のadvisorが前段の結論に引きずられ、独立した意見として機能しなくなるため（診断的差し戻しの前提となる複数視点の独立性を保つ）。呼び出し手段・出力検証を明示するのは、要約した指示による代行dispatchでは受け手がテンプレート等の具体的な手順を遂行する保証がなく、実際に本セッションでテンプレート未遵守の回答を無検証で確定させかけた再発防止のため",
           "outputFormat": [
             "各意見",
             "統合見解",
             "合意事項",
             "次のアクション"
           ],
-          "template": "waffle/.waffle/agent/references/template-skill-adversarial-verification.md",
-          "why": "advisorはWaffleが所有・出荷する成果物であり、単一advisorの一発出力を無検証で確定させない運用はWaffle自身のOrchestratorの責務。advisorが互いを呼ぶのではなくOrchestrator側が組合せを判断することで、Skill/advisor間のテキストベース疎結合原則を保てる。並列dispatchにするのは、直列に1体ずつ呼ぶと後段のadvisorが前段の結論に引きずられ、独立した意見として機能しなくなるため（診断的差し戻しの前提となる複数視点の独立性を保つ）"
+          "template": "waffle/.waffle/agent/references/template-skill-adversarial-verification.md"
         },
         {
           "target": "knowledge-cultivator",
@@ -177,11 +177,11 @@
           "timing": "after",
           "targetScope": "single",
           "action": "knowledge-cultivatorのStep3（候補審査の対話完了後）で採用が決定した候補について、Orchestratorが通常のCLI操作（scaffold fillでstatus: ACTIVEへ変更→対象advisorへのskillRef確認→validate→render）で昇格を実行する。却下・保留の候補はDRAFTのまま残す",
+          "why": "knowledge-cultivatorは候補の検知・記録・審査（人間対話によるバイアス防止）までを自己完結で担う。この審査対話は汎用のbrainstorm skillとは責務が異なる特化型の対話であり、混同して同じ仕組みに載せない。昇格実行のみCLAUDE.mdの既存運用ルールの範囲内の通常操作として切り出し、専用手順を持たせない",
           "outputFormat": [
             "採用分の昇格実行結果"
           ],
-          "template": "waffle/.claude/skills/knowledge-cultivator/references/template-candidate-review.md",
-          "why": "knowledge-cultivatorは候補の検知・記録・審査（人間対話によるバイアス防止）までを自己完結で担う。この審査対話は汎用のbrainstorm skillとは責務が異なる特化型の対話であり、混同して同じ仕組みに載せない。昇格実行のみCLAUDE.mdの既存運用ルールの範囲内の通常操作として切り出し、専用手順を持たせない"
+          "template": "waffle/.claude/skills/knowledge-cultivator/references/template-candidate-review.md"
         },
         {
           "target": "memory-cultivator",

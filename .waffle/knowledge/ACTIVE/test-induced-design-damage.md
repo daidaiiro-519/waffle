@@ -1,3 +1,11 @@
+---
+id: "test-induced-design-damage"
+type: "Knowledge"
+title: "テストが引き起こす設計の歪みを扱う概念：test-induced-design-damage"
+description: "David Heinemeier Hansson(DHH)が2014年に提起した、テスト駆動(特にmock多用によるisolation-driven testing)が過剰な間接化(indirection)を生み設計を損なうという主張、およびそれを巡ってKent Beck・Martin Fowlerと交わされた論争の総称。単一の確立原則ではなく、対立する2つの立場を含む論争として扱う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # テストが引き起こす設計の歪みを扱う概念：test-induced-design-damage
 
 ## 概要

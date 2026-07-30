@@ -1,3 +1,11 @@
+---
+id: "exploratory-testing"
+type: "Knowledge"
+title: "探索的テストの手法を扱う概念：exploratory-testing"
+description: "テストの設計・実行・そこから得た学習を同時並行で進める、テスターの裁量と責任を重視するテストのスタイル。事前に手順を固定するスクリプトテストとは対極にあるが、実務では両者は連続体として混ざり合う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 探索的テストの手法を扱う概念：exploratory-testing
 
 ## 概要

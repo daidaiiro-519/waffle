@@ -1,3 +1,13 @@
+---
+id: "architecture-port-adapter"
+type: "Knowledge"
+title: "ポート＆アダプタ（ヘキサゴナル）パターンを扱う概念：architecture-port-adapter"
+description: "アプリケーションコア（ドメイン＋アプリケーション層）が外部と接続する箇所を「ポート」（インターフェース）として明示的に定義し、外部の技術的詳細を「アダプター」として実装するパターン。コアは常にポートの所有者であり、外部技術に依存しない。"
+tags: ["advisor:tech-lead", "domain:architecture"]
+schemaRef: "KnowledgeSchema/v5"
+updatedAt: "2026-07-07T00:00:00Z"
+---
+
 # ポート＆アダプタ（ヘキサゴナル）パターンを扱う概念：architecture-port-adapter
 
 ## 概要

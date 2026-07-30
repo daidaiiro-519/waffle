@@ -1,3 +1,12 @@
+---
+id: "knowledge-cand-investigate-before-explain"
+type: "Knowledge"
+title: "生成前のinvestigation規律：identify-before-explain"
+description: "生成物が対象システムの仕組み・順序・役割分担について技術的主張をする前に、実物（ソースコード・spec）を確認する規律。確認を怠ると、通念に基づくもっともらしい誤りを重ねる。"
+tags: ["domain:process", "framework:generation-quality"]
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 生成前のinvestigation規律：identify-before-explain
 
 ## 概要

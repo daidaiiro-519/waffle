@@ -1,3 +1,11 @@
+---
+id: "real-world-ddd"
+type: "Knowledge"
+title: "実務におけるDDD適用の現実的な判断を扱う概念：real-world-ddd"
+description: "既存の稼働中システムにDDDを段階的に適用するための現実的な導入原則。どの業務領域に設計投資を集中し、どのように安全に移行し、組織にどう根付かせるかを扱う。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 実務におけるDDD適用の現実的な判断を扱う概念：real-world-ddd
 
 ## 概要

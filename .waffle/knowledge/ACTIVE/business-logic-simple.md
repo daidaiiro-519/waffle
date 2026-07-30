@@ -1,3 +1,11 @@
+---
+id: "business-logic-simple"
+type: "Knowledge"
+title: "シンプルな業務ロジックの扱い方を定める概念：business-logic-simple"
+description: "業務ロジックの複雑さは業務領域ごとに一様ではなく、単純な処理はトランザクションスクリプトやアクティブレコードで実装するのが適切であり、あらゆる処理に同じ重厚さの設計を適用する必要はない。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # シンプルな業務ロジックの扱い方を定める概念：business-logic-simple
 
 ## 概要

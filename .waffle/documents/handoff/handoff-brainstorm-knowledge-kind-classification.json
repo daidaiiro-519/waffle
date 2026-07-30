@@ -1,0 +1,151 @@
+{
+  "documentId": "handoff-brainstorm-knowledge-kind-classification",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "KnowledgeSchemaへのdomain/process区別導入：handoff-brainstorm-knowledge-kind-classification"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-render-document"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "knowledgeKindは分類タグとして追加する（discriminatorにしない）",
+          "consideration": "domain種別とprocess種別でKnowledgeContentの構造（principles/classifications/decisionCriteria/examples/antiPatterns/provenance/relatedConcepts）に実質差が無く、ubiquitous-languageの同義語判定基準（責務・データ構造が同一なら別概念としない）に該当する。self-improving-generation-cycleが既に単一形状のまま記録できている事実が裏付けになる"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "process種別knowledgeの配布先はKnowledgeSchemaに新規配列`agentRefs`を追加する。AgentSchema側には何も追加しない",
+          "consideration": "Knowledge起点で配布先を宣言する既存方向（skillRefs）と対称に保つことで、配線の集約（architecture-composition-root）を崩さない。AgentSchemaに`knowledgeRefs`を対称追加する案は、配布関係の宣言方向が2つに分裂するため撤回した"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "render_document.pyの`_resolve_tool_deploy_targets`が持つ配列pathVar fan-out処理を、skillRefs/agentRefsの2種類を扱えるよう一般化する",
+          "consideration": "現状は実例1件（skillRefsのみ）を想定した実装だが、agentRefsが加わり実例2件になるため、evidence-based-scopeの一般化基準を満たす"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "knowledgeKindはまずoptionalで追加し、既存55件へ`domain`をbackfillしてvalidateを通してからrequired化する2段階移行にする",
+          "consideration": "値の決定は判断行為であり機械的な一括デフォルト投入は避けるべきだが、既存55件は全てdomain種別と判明済みのため、backfill自体は安全な機械的操作"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "AgentSchema/AgentSchema-v3にはKnowledgeへの参照フィールドを追加しない。配布方向はKnowledgeSchema側からのみ宣言する（二重の真実源を避ける）",
+        "CLAUDE.md/AGENTS.mdは単一ファイルデプロイのため、Skillのreferences/knowledge/に相当する新規ディレクトリ（.waffle/agent/references/knowledge/）を新設する必要がある",
+        "skillRefsに特殊識別子（\"waffle\"等）を混在させない。SkillとAgentという異質な参照先を同じフィールドの値で区別しようとすると型の意味が崩れる"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "KnowledgeSchema/v4",
+          "description": "domain/process区別と配布先宣言を持つ",
+          "nodes": [
+            {
+              "id": "knowledgeKind",
+              "title": "knowledgeKind",
+              "sub": "domain | process の分類タグ",
+              "status": "new"
+            },
+            {
+              "id": "agentRefs",
+              "title": "agentRefs",
+              "sub": "Orchestratorへの配布先配列",
+              "status": "new"
+            },
+            {
+              "id": "skillRefs",
+              "title": "skillRefs",
+              "sub": "advisorへの配布先配列",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "render engine",
+          "description": "配布先のsymlink fan-out展開",
+          "nodes": [
+            {
+              "id": "fanout",
+              "title": "_resolve_tool_deploy_targets",
+              "sub": "配列pathVar fan-outをskillRefs/agentRefsの2種類へ一般化",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "AgentSchema/CLAUDE.md",
+          "description": "process種別knowledgeの受け取り側",
+          "nodes": [
+            {
+              "id": "agentKnowledgeDir",
+              "title": ".waffle/agent/references/knowledge/",
+              "sub": "canonicalなknowledgeからのsymlink先",
+              "status": "new"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "knowledgeKind",
+          "to": "agentRefs",
+          "kind": "dependency",
+          "label": "process種別と判明した場合にagentRefsを使う"
+        },
+        {
+          "from": "agentRefs",
+          "to": "fanout",
+          "kind": "dependency",
+          "label": "fan-out展開の対象"
+        },
+        {
+          "from": "fanout",
+          "to": "agentKnowledgeDir",
+          "kind": "dependency",
+          "label": "symlink配置先"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "brainstormToSpec"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": []
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "self-improving-generation-cycleの配線検討から発覚した、KnowledgeSchemaにdomain種別/process種別の区別が無いという問題への対応方針をspec-authoringへ引き継ぐ。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": []
+    }
+  },
+  "tags": []
+}

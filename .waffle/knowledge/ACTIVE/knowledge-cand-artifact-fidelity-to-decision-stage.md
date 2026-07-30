@@ -1,3 +1,12 @@
+---
+id: "knowledge-cand-artifact-fidelity-to-decision-stage"
+type: "Knowledge"
+title: "決定段階に見合った成果物を出す：artifact-fidelity-to-decision-stage"
+description: "意思決定の各段階で実際に開いている論点に見合った詳細度の成果物を出す規律。基盤（トークン体系等）がまだ確定していない段階で、個別の生成物固有の内容まで埋めた完成品を提示すると、レビュアーの反応が本来の論点からずれる。"
+tags: ["domain:process", "framework:generation-quality"]
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 決定段階に見合った成果物を出す：artifact-fidelity-to-decision-stage
 
 ## 概要

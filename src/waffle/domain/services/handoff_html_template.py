@@ -256,7 +256,12 @@ def _render_legend(nodes: list[dict], new_legend: str) -> str:
     )
 
 
-def _render_coverage(review_counts: list[dict], review_detail: str) -> str:
+def _render_coverage(
+    review_counts: list[dict],
+    review_detail: str,
+    findings: list[dict] | None = None,
+    completion_image_confirmed_by: dict | None = None,
+) -> str:
     rows = []
     for rc in review_counts:
         if review_detail == "classification":
@@ -273,7 +278,17 @@ def _render_coverage(review_counts: list[dict], review_detail: str) -> str:
             f'<div class="review-row"><span class="who">{_e(rc["advisor"])}</span>'
             f'<span class="detail">{_e(detail)}</span></div>'
         )
-    rows.append('<div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>')
+    open_count = sum(1 for f in (findings or []) if f.get("resolutionStatus") == "open")
+    rows.append(
+        f'<div class="review-row"><span class="who">未解決事項</span><span class="detail">{open_count}件</span></div>'
+    )
+    if completion_image_confirmed_by and completion_image_confirmed_by.get("confirmed"):
+        confirmed_by = completion_image_confirmed_by.get("confirmedBy", "")
+        confirmed_at = completion_image_confirmed_by.get("confirmedAt", "")
+        detail = "／".join(part for part in (confirmed_by, confirmed_at) if part)
+        rows.append(
+            f'<div class="review-row"><span class="who">完成イメージ確認済み</span><span class="detail">{_e(detail)}</span></div>'
+        )
     return "\n        ".join(rows)
 
 
@@ -342,6 +357,8 @@ def render_handoff_html(
     description: str = "",
     tags: list[str] | None = None,
     expected_scope: list[dict] | None = None,
+    findings: list[dict] | None = None,
+    completion_image_confirmed_by: dict | None = None,
 ) -> str:
     """Handoffの値を、確定済みの固定HTMLテンプレート（Pattern G）へ差し込んだ自己完結HTMLを返す。
 
@@ -406,7 +423,7 @@ def render_handoff_html(
         {_render_rail(kind_labels["rail_current_index"])}
       </div>
       <div class="coverage-list">
-        {_render_coverage(review_counts, kind_labels["review_detail"])}
+        {_render_coverage(review_counts, kind_labels["review_detail"], findings, completion_image_confirmed_by)}
       </div>
     </div>
   </section>

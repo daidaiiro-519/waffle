@@ -1,3 +1,11 @@
+---
+id: "sustainability"
+type: "Knowledge"
+title: "インフラ・システムの環境負荷（サステナビリティ）を扱う概念：sustainability"
+description: "持続可能性（サステナビリティ）とは、クラウドワークロードの稼働がもたらす環境負荷（電力消費・資源消費）を最小化する設計原則である。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # インフラ・システムの環境負荷（サステナビリティ）を扱う概念：sustainability
 
 ## 概要

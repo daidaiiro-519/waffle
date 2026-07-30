@@ -1,3 +1,13 @@
+---
+id: "architecture-cross-layer-data-shape"
+type: "Knowledge"
+title: "レイヤーを跨ぐデータの形（DTO等）の設計原則を扱う概念：architecture-cross-layer-data-shape"
+description: "レイヤー境界を越えてデータを受け渡す際、各層は自分の関心事に閉じた専用のデータ形（DTO）に変換して渡すべきであり、内側の層のドメインオブジェクト（エンティティ・集約）をそのまま外部に渡してはならない、という原則。"
+tags: ["advisor:tech-lead", "domain:architecture"]
+schemaRef: "KnowledgeSchema/v5"
+updatedAt: "2026-07-08T00:00:00Z"
+---
+
 # レイヤーを跨ぐデータの形（DTO等）の設計原則を扱う概念：architecture-cross-layer-data-shape
 
 ## 概要

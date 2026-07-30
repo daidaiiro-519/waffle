@@ -1,3 +1,11 @@
+---
+id: "boundary-value-analysis-equivalence-partitioning"
+type: "Knowledge"
+title: "境界値分析と同値分割によるテスト設計技法を扱う概念：boundary-value-analysis-equivalence-partitioning"
+description: "入力値空間を「同じ処理をされるはず」という前提でグループ分けし(同値分割)、その中でも特にエラーが起きやすい境界(エッジ)を狙って検証する(境界値分析)、古典的なテスト設計技法。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 境界値分析と同値分割によるテスト設計技法を扱う概念：boundary-value-analysis-equivalence-partitioning
 
 ## 概要

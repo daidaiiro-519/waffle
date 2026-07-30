@@ -1,3 +1,12 @@
+---
+id: "knowledge-cand-copy-register-discipline"
+type: "Knowledge"
+title: "読者向けコピーの語り口の一貫性：copy-register-discipline"
+description: "読者向けコピーにおいて、生成AI自身への言及（自己言及的メタ説明）を排除し、比喩表現をテーゼ・見出し・図の視覚表現に限定して、正確性が要求される説明文には持ち込まない語り口の一貫性規律。"
+tags: ["domain:copywriting", "framework:generation-quality"]
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 読者向けコピーの語り口の一貫性：copy-register-discipline
 
 ## 概要

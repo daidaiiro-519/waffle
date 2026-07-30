@@ -129,6 +129,48 @@ def test_配列のpathVarはtoolMappings経由のdeploy先へfan_outする(tmp_p
     assert (tmp_path / "links" / "advisor-b" / "x.md").is_symlink()
 
 
+def test_複数種類の配列pathVarが同時にfan_out展開される(tmp_path):
+    """
+    Given toolMappingsが同じdocumentTypeに対し、異なる配列pathVar（skillRefsとagentRefs）を
+          それぞれ参照する2つのマッピングをリストとして持つDocument
+    When deployを有効にしてrenderする
+    Then skillRefsの各要素とagentRefsの各要素それぞれに対応するdeploy先が全て作られる
+    """
+    schema = {
+        "properties": {"content": {"type": "object", "properties": {}}},
+        "x-render-target": {
+            "formats": ["md"],
+            "path": str(tmp_path / "canonical" / "{documentId}.md"),
+            "pathVars": {"skillRefs": "doc.skillRefs", "agentRefs": "doc.agentRefs"},
+        },
+    }
+    config_json = json.dumps({
+        "toolMappings": {
+            "claude-code": {
+                "FakeMulti": [
+                    {"pathTemplate": str(tmp_path / "skills" / "{skillRefs}" / "{documentId}.md"), "mode": "symlink"},
+                    {"pathTemplate": str(tmp_path / "agents" / "{agentRefs}" / "{documentId}.md"), "mode": "symlink"},
+                ]
+            }
+        }
+    })
+    doc_path = tmp_path / "doc.json"
+    doc_path.write_text(
+        json.dumps({
+            "documentId": "x", "schemaRef": "Fake/v1", "documentType": "FakeMulti",
+            "skillRefs": ["advisor-a"], "agentRefs": ["waffle"], "content": {},
+        }),
+        encoding="utf-8",
+    )
+
+    repo = _ConfigStubDocumentRepository(FsDocumentRepository(), config_json)
+    engine = RenderDocument(repo, _FakeSchemaRepository(schema))
+    result = engine.run(str(doc_path), deploy=True)
+    assert isinstance(result, Ok), result
+    assert str(tmp_path / "skills" / "advisor-a" / "x.md") in result.value["deployed"]
+    assert str(tmp_path / "agents" / "waffle" / "x.md") in result.value["deployed"]
+
+
 def test_toolMappingsがdiscriminatorごとに入れ子で宣言されているときは対応するマッピングだけを使う(tmp_path):
     """
     Given .waffle/config.jsonのtoolMappingsが対象documentTypeについてdiscriminatorの値ごとの入れ子マッピングを持つDocument

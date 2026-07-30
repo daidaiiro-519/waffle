@@ -50,6 +50,37 @@ def _select_field_map(value: dict, spec_kind: str | None) -> dict:
         return value.get(spec_kind, {}) if spec_kind else {}
     return value
 
+def _resolve_single_mapping_targets(mapping: dict, path_vars: dict) -> list[tuple[str, str]]:
+    """1つのtoolMappingsマッピングからdeploy先を解決する。
+
+    pathTemplateが参照する配列値のpathVar（例: skillRefs）だけを見て要素ごとに
+    fan-outする。同じdocumentTypeに複数マッピング（例: skillRefs用・agentRefs用）が
+    並んでいても、各マッピングは自分のpathTemplateが参照する配列変数だけを見るため
+    互いに干渉しない。"""
+    template = mapping["pathTemplate"]
+    mode = mapping.get("mode", "render")
+    array_vars = {
+        k: v for k, v in path_vars.items() if isinstance(v, list) and f"{{{k}}}" in template
+    }
+    targets: list[tuple[str, str]] = []
+    if array_vars:
+        var_name, values = next(iter(array_vars.items()))
+        for value in values:
+            scalar_vars = {**path_vars, var_name: value}
+            try:
+                dp = path_template.resolve(template, **scalar_vars)
+            except KeyError:
+                continue
+            targets.append((dp, mode))
+    else:
+        try:
+            dp = path_template.resolve(template, **path_vars)
+        except KeyError:
+            return targets
+        targets.append((dp, mode))
+    return targets
+
+
 class RenderDocument:
     def __init__(
         self,
@@ -165,30 +196,16 @@ class RenderDocument:
         targets: list[tuple[str, str]] = []
         for tool_config in config.get("toolMappings", {}).values():
             mapping = tool_config.get(document_type) if document_type else None
-            mapping = _select_field_map(mapping, spec_kind) if mapping else mapping
+            if isinstance(mapping, dict):
+                mapping = _select_field_map(mapping, spec_kind)
             if not mapping:
                 continue
-            mode = mapping.get("mode", "render")
-            array_vars = {k: v for k, v in path_vars.items() if isinstance(v, list)}
-            if array_vars:
-                # 複数の値を持つpathVar（例: 複数advisorへのskillRefs）は、要素ごとに
-                # 1つずつdeploy先を解決する（fan-out）。値が配列のpathVarは高々1種類を想定
-                # （実例1件・KnowledgeSchemaのskillRefsのみのため、2種類以上の組合せ展開は
-                # 未サポート。evidence-based-scope: 実証済みの拡張の範囲に限定する）。
-                var_name, values = next(iter(array_vars.items()))
-                for value in values:
-                    scalar_vars = {**path_vars, var_name: value}
-                    try:
-                        dp = path_template.resolve(mapping["pathTemplate"], **scalar_vars)
-                    except KeyError:
-                        continue
-                    targets.append((dp, mode))
-            else:
-                try:
-                    dp = path_template.resolve(mapping["pathTemplate"], **path_vars)
-                except KeyError:
-                    continue
-                targets.append((dp, mode))
+            # 同じdocumentTypeに対し複数のマッピングを持てる（例: skillRefsを参照するSkill向け
+            # マッピングと、agentRefsを参照するAgent向けマッピングを別々に定義する）。単一の
+            # マッピング（旧来の辞書1つ）はリスト化して同じ経路で処理する。
+            mapping_list = mapping if isinstance(mapping, list) else [mapping]
+            for single_mapping in mapping_list:
+                targets.extend(_resolve_single_mapping_targets(single_mapping, path_vars))
         return targets or None
 
     def _resolve_path_vars(self, doc: dict, schema: dict, document_path: str, spec_kind: str | None) -> dict:

@@ -84,9 +84,13 @@ h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-t
 .tabs input { position: absolute; opacity: 0; pointer-events: none; }
 .tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
 .tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
-#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
-#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3 { display: block; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
 .entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
 .entry:first-child { border-top: none; padding-top: 0; }
 .entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
@@ -229,8 +233,8 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
       </div>
       <div class="coverage-list">
-        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 1件／実装観点 2件</span></div>
-        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 2件／実装観点 1件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 3件／実装観点 4件</span></div>
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 4件／実装観点 2件</span></div>
         <div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>
       </div>
     </div>
@@ -243,10 +247,12 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <input type="radio" name="tabs" id="tab1" checked>
         <input type="radio" name="tabs" id="tab2">
         <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
         <div class="tab-labels">
           <label for="tab1">spec作成の結論</label>
           <label for="tab2">実装方針</label>
-          <label for="tab3">実装への申し送り</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
         </div>
         <div class="tab-panels">
           <div class="tab-panel" id="panel1">
@@ -264,6 +270,26 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
               <div class="entry-head"><span class="badge">ddd-advisor</span></div>
               <div class="entry-viewpoint">sd-document-management配下への配置は妥当だが、中核分類根拠との緊張関係に注意する</div>
               <div class="entry-consideration">当該サブドメインの中核分類根拠は「x-render宣言に従った機械描画」だが、本usecaseはこの語彙で表現できないため自前の決定的コードで書く。usecaseRationaleにevidence-based-scopeの限定条件（2件目の実例が出るまで汎用化しない）を明記することで整合させた。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">参加advisorの集合は導出のみ、新規フィールドを持たせない</div>
+              <div class="entry-consideration">designViewpoints/implementationViewpointsのadvisorフィールドから「実際に参加した集合」は既に導出可能であり、これを別フィールドとして重複保持すると二重の真実源になる。参加集合は保存しない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">「必要advisor」と「参加advisor」は別の事実</div>
+              <div class="entry-consideration">条件1が本当に判定したいのは「Orchestratorが必要と判断した集合（skill-routerのcombinedSkills由来）」との一致であり、これはどのブロックにも存在しない新しい事実。新規フィールドrequiredAdvisorsを追加し、参加集合側は既存フィールドから都度導出する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">指摘の解消状態は指摘そのものの属性（同一集約内の強い一貫性）</div>
+              <div class="entry-consideration">指摘の解消状態は指摘（viewpoint）そのものの状態遷移であり、指摘と同じHandoffSchema documentという単一の一貫性境界に属する。別配列で参照する場合、advisor名・viewpoint名という自由記述テキストの一意性・不変性が保証されないため参照切れのリスクがある。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">解消状態はviewpoint本文と書き手・更新タイミングが異なる別関心事</div>
+              <div class="entry-consideration">advisorが記録するviewpoint本文（一度書かれたら変わらない）と、Orchestrator/人間が事後に更新する解消状態（レビュー過程で複数回書き換わる）は変更理由が異なる。既存item直下への追加はDesignViewpointsBlock/ImplementationViewpointsBlock両方の構造変更＋既存Handoff文書への遡及的backfillを要するのに対し、別ブロック新設は既存ブロックに手を入れない追加的変更（add_block）で済む。参照は配列インデックス（refBlock/refIndex）を使い、ddd-advisorが懸念した自由記述テキストの不安定さを回避する。</div>
             </div></div>
           <div class="tab-panel" id="panel2">
             <div class="entry">
@@ -280,6 +306,21 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
               <div class="entry-head"><span class="badge">ddd-advisor</span></div>
               <div class="entry-viewpoint">読み取り専用の投影として実装し、Handoff集約の状態は変更しない</div>
               <div class="entry-consideration">誤って集約のトランザクション境界を書き換えないよう、postconditionsに「Handoff集約自身の状態・内容は変更しない」ことを明記した。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">reviewStatusブロックの構造</div>
+              <div class="entry-consideration">requiredAdvisors: string[]／findings: {advisor, refBlock, refIndex, resolutionStatus: open|resolved|acceptedAsConstraint, note?}[]／completionImageConfirmedBy: {confirmedBy, confirmedAt, note?}という3フィールドを持つ新規ブロックreviewStatusを、patch-schema add_blockでHandoffSchema/v2内に追加する（v3への昇格は不要、既存ブロックの構造変更を伴わないため）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">render側はcontentの値をそのまま表示、新たな判定を行わない</div>
+              <div class="entry-consideration">現状Artifact HTML側のJavaScript（coverage-panel）にしか「実装に進めてよいか」の判定ロジックが存在しないこと自体が、UI層に業務ルール判定ロジックを持たせるアンチパターンに該当するリスクを含む。render_handoff_template.pyはreviewStatusの値（findings件数等）を既存の_count_by_advisorと同じパターンで集計・表示してよいが、合否判定そのものを新たに計算するコードを持たせない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">completionImageConfirmedByは行為者を含む業務イベントとして構造化する</div>
+              <div class="entry-consideration">「誰が確認したか」を持たないconfirmedAtのみの構造は、業務イベントの記録として不完全。confirmedByを含める。なお確認後にdesignViewpoints/implementationViewpointsへ変更が入った場合、確認済みフラグが古い内容への確認のまま残るリスクがあるが、この対処は本schema変更のスコープ外とし、既知の限界としてconstraintsに記録する。</div>
             </div></div>
           <div class="tab-panel" id="panel3">
             <div class="constraint-item">
@@ -289,7 +330,16 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="constraint-item">
               <span class="num">2</span>
               <p>2件目の実例（Backend集約構造図等）が具体的に発生するまで、テンプレートエンジンの汎用フレームワーク化は行わない（evidence-based-scope）。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>completionImageConfirmedBy確認後にdesignViewpoints/implementationViewpointsへ変更が入っても、確認済みフラグは自動的に無効化されない（何を確認したかとの対応が取れなくなるリスクがある）。今回のスコープでは対処せず、運用上の規律（確認後の変更は再確認を要する）に委ねる（ddd-advisor指摘、2026-07-30）。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>check-handoff-readiness（reviewStatusを機械的に判定するusecase）は今回のスコープに含めない。reviewStatusという構造化フィールドの追加までであり、機械判定への昇格は実例が積み上がった段階で改めて検討する（evidence-based-scope、2026-07-30）。</p>
             </div></div>
+          <div class="tab-panel" id="panel4"><p class="empty-state">記録なし。</p></div>
         </div>
       </div>
     </div>

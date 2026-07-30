@@ -1,3 +1,11 @@
+---
+id: "event-sourced-domain-model"
+type: "Knowledge"
+title: "イベントソーシングによるドメインモデルの原則を扱う概念：event-sourced-domain-model"
+description: "集約の「今の状態」を直接保存するのではなく、状態を変化させた業務イベントの履歴を保存し、その履歴を順番に適用(投影)することで状態を再構築する設計方式。永続化されたイベント列そのものが唯一の情報源(source of truth)になる。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # イベントソーシングによるドメインモデルの原則を扱う概念：event-sourced-domain-model
 
 ## 概要

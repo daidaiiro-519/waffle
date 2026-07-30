@@ -1,3 +1,13 @@
+---
+id: "architecture-cross-cutting-concerns"
+type: "Knowledge"
+title: "ロギング・認証等の横断的関心事の扱い方を定める概念：architecture-cross-cutting-concerns"
+description: "ロギング・認証・キャッシュ・トランザクション管理のような、特定の業務ルールに属さず複数の箇所で横断的に必要になる関心事を、どの層に配置し、どう実装するかという判断。"
+tags: ["advisor:tech-lead", "domain:architecture"]
+schemaRef: "KnowledgeSchema/v5"
+updatedAt: "2026-07-08T00:00:00Z"
+---
+
 # ロギング・認証等の横断的関心事の扱い方を定める概念：architecture-cross-cutting-concerns
 
 ## 概要

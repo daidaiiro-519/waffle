@@ -1,3 +1,13 @@
+---
+id: "architecture-test-strategy-by-layer"
+type: "Knowledge"
+title: "レイヤー別のテスト戦略を定める概念：architecture-test-strategy-by-layer"
+description: "レイヤー構成・ポートとアダプターの分離を、テスト戦略にどう活かすかという判断。テストの種類（単体・結合・E2E）を、どの層のどの境界に対して書くべきかを決める。"
+tags: ["advisor:tech-lead", "domain:architecture", "domain:test-standard"]
+schemaRef: "KnowledgeSchema/v5"
+updatedAt: "2026-07-08T00:00:00Z"
+---
+
 # レイヤー別のテスト戦略を定める概念：architecture-test-strategy-by-layer
 
 ## 概要

@@ -1,3 +1,12 @@
+---
+id: "knowledge-cand-declared-constraints-require-self-check"
+type: "Knowledge"
+title: "明文化した制約は自動的に守られない：declared-constraints-require-self-check"
+description: "ガードレールや仕様書に制約を明文化した事実は、その後の生成がその制約に従うことを保証しない。生成物を提示する前に、直前に明文化した制約と照合する明示的な自己点検パスが必要という規律。"
+tags: ["domain:process", "framework:generation-quality"]
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 明文化した制約は自動的に守られない：declared-constraints-require-self-check
 
 ## 概要

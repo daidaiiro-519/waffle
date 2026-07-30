@@ -1,3 +1,11 @@
+---
+id: "mutation-testing"
+type: "Knowledge"
+title: "ミューテーションテストによる検出力測定を扱う概念：mutation-testing"
+description: "ソースコードに意図的な小さな変更(mutant)を注入し、既存のテストスイートがその変更を検出(kill)できるかどうかでテストの検出力(強度)を測定する技法。カバレッジが「実行されたか」だけを見るのに対し、mutation testingは「実行された箇所の変化を実際に検出できるか」を見る。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # ミューテーションテストによる検出力測定を扱う概念：mutation-testing
 
 ## 概要

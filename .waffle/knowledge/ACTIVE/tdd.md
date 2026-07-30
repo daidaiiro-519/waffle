@@ -1,3 +1,11 @@
+---
+id: "tdd"
+type: "Knowledge"
+title: "テスト駆動開発（TDD）の原則を扱う概念：tdd"
+description: "新しいコードを書く前に、まず失敗する自動テストを書き、重複を排除しながら小さく前進する開発手法。Kent Beckが提唱した。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # テスト駆動開発（TDD）の原則を扱う概念：tdd
 
 ## 概要

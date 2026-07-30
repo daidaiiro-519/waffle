@@ -1,3 +1,11 @@
+---
+id: "architecture-patterns"
+type: "Knowledge"
+title: "代表的なアーキテクチャパターンの分類を扱う概念：architecture-patterns"
+description: "技術方式(レイヤードアーキテクチャ・ポートとアダプター・CQRS)は、プレゼンテーション・業務ロジック・永続化・外部連係という関心事をどう構造化するかについての原則である。"
+schemaRef: "KnowledgeSchema/v5"
+---
+
 # 代表的なアーキテクチャパターンの分類を扱う概念：architecture-patterns
 
 ## 概要
