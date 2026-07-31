@@ -141,6 +141,8 @@ URLを開く、トークンを入れる、コメントを1件書く、一覧に�
 
 ## 参照
 
+- `references/knowledge/document-two-layer-structure.md`: 文書を掴む層と確かめる層に分けて組み立てる考え方。テンプレートに内容を埋めるとき、どちらの層に何を書くかの判断に使う
+- `references/knowledge/spec-describes-behavior-not-implementation.md`: 仕様として振る舞いを書き、実装手段を書かないための書き分け。機能仕様や設計判断を記述するときに使う
 - `references/contract.md`: 公開されるHTMLが満たすべき取り決め。独自テンプレートを作るとき、持ち込んだHTMLが公開できるか確かめるときに読む
 - `references/templates/doc/`: 既定4種別のテンプレート。プレースホルダーそのものに執筆の指示が書かれている
 - `references/examples/doc/`: 同じ4種別の記入例。空のテンプレートだけでは出来上がりが想像しにくいときに見る
