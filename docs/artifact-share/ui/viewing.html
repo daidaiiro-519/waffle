@@ -1,7 +1,7 @@
 <title>検索基盤にPostgreSQLの全文検索を採用する</title>
 <style>
   :root{
-    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#68737e;
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#65707b;
     --paper:#f6f5f2; --card:#ffffff; --line:#dcd8d0; --line-soft:#e9e5de;
     --accent:#3d5a80; --accent-soft:#e7edf4;
     --decision:#5c7a5f; --decision-bg:#eef3ec;
@@ -33,7 +33,8 @@
   *{box-sizing:border-box;}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;
     display:grid; grid-template-columns:minmax(0,1fr) 330px; min-height:100vh; transition:grid-template-columns .18s ease;}
-  body.collapsed{grid-template-columns:minmax(0,1fr) 42px;}
+  body.collapsed{grid-template-columns:minmax(0,1fr);}
+  body.collapsed aside.cm{display:none;}
 
   /* 戻る導線（プロジェクト経由で来た人にだけ出る） */
   a.backbar{grid-column:1 / -1; display:flex; align-items:center; gap:.4rem; text-decoration:none;
@@ -96,14 +97,23 @@
   aside.cm{border-left:1px solid var(--line); background:var(--card); display:flex; flex-direction:column;
     position:sticky; top:0; height:100vh; overflow:hidden; font-size:.9rem;}
   aside.cm header{padding:.75rem 1rem; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:.4rem; font-weight:600; font-size:.85rem;}
-  body.collapsed aside.cm header{padding:.75rem 0; justify-content:center;}
-  body.collapsed .clabel, body.collapsed .live, body.collapsed .list, body.collapsed form{display:none;}
   .live{font-size:.66rem; color:var(--live); font-family:var(--mono); font-weight:400;}
   .live::before{content:"●"; margin-right:3px;}
   .ctoggle{margin-left:auto; background:none; border:1px solid var(--line); border-radius:4px; width:22px; height:22px;
     padding:0; font-size:.7rem; color:var(--ink-faint); cursor:pointer; display:inline-flex; align-items:center; justify-content:center;}
-  body.collapsed .ctoggle{margin-left:0;}
   .ctoggle:hover{border-color:var(--accent); color:var(--accent);}
+
+  /* 折りたたみ中に出る、開き直すためのボタン。スクロールしても居場所が変わらない */
+  .cmfab{position:fixed; right:18px; bottom:18px; z-index:40; display:none; gap:.45rem;
+    align-items:center; font:inherit; font-size:.82rem; font-weight:600; padding:.6rem 1.05rem;
+    border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff;
+    cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,.18);}
+  body.collapsed .cmfab{display:inline-flex;}
+  .cmfab:hover{filter:brightness(1.08);}
+  .cmfab:focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
+  .cmfab .n{font-variant-numeric:tabular-nums; background:rgba(255,255,255,.22);
+    border-radius:999px; padding:0 .45rem; font-size:.76rem;}
+  .cmfab .dot{width:6px; height:6px; border-radius:50%; background:var(--live); flex-shrink:0;}
 
   .list{flex:1 1 auto; min-height:0; overflow-y:auto; padding:.85rem 1rem; display:flex; flex-direction:column; gap:.9rem;}
   .item .who{font-weight:600; font-size:.82rem;}
@@ -136,7 +146,6 @@
     body{grid-template-columns:1fr;}
     aside.cm{position:static; height:auto; max-height:66vh; border-left:none; border-top:1px solid var(--line);}
     body.collapsed{grid-template-columns:1fr;}
-    body.collapsed aside.cm{display:none;}
   }
   @media (prefers-reduced-motion: reduce){body{transition:none;}}
 </style>
@@ -272,16 +281,25 @@
   </form>
 </aside>
 
+<button class="cmfab" id="cmfab" type="button" aria-expanded="true" aria-controls="clist">
+  <span class="dot" aria-hidden="true"></span>コメント<span class="n" id="fabcount">5</span>
+</button>
+
 <script>
 (function(){
   'use strict';
   var t = document.getElementById('ctoggle');
-  t.addEventListener('click', function(){
-    var c = document.body.classList.toggle('collapsed');
-    t.textContent = c ? '◂' : '▸';
-    t.title = c ? 'コメント欄を開く' : 'コメント欄を閉じる';
+  var fab = document.getElementById('cmfab');
+
+  function setOpen(open){
+    document.body.classList.toggle('collapsed', !open);
+    t.title = open ? 'コメント欄を閉じる' : 'コメント欄を開く';
     t.setAttribute('aria-label', t.title);
-  });
+    fab.setAttribute('aria-expanded', String(open));
+    if (open) t.focus(); else fab.focus();
+  }
+  t.addEventListener('click', function(){ setOpen(false); });
+  fab.addEventListener('click', function(){ setOpen(true); });
   document.getElementById('cform').addEventListener('submit', function(e){ e.preventDefault(); });
 })();
 </script>

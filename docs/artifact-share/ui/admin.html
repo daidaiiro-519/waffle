@@ -1,0 +1,809 @@
+<title>artifactshare — 管理者</title>
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#65707b;
+    --paper:#f4f2ee; --card:#ffffff; --line:#dcd8d0; --line-soft:#e9e5de;
+    --accent:#2f5d63; --accent-soft:#e3edee;
+    --ok:#4f7355; --ok-soft:#eaf1ea;
+    --off:#716a61; --off-soft:#efece6;
+    --warn:#8a672b; --warn-soft:#f7f0e1;
+    --live:#b4553f;
+    --token-bg:#1f2529; --token-ink:#f0ede6; --token-gold:#d9b26a;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+    --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+    --accent:#7fb3ba; --accent-soft:#1e2c2e;
+    --ok:#8ecbb6; --ok-soft:#1d2a23;
+    --off:#928a7a; --off-soft:#26241f;
+    --warn:#c9a05e; --warn-soft:#2b2419;
+    --live:#d98a72;
+    --token-bg:#0e1113; --token-ink:#f0ede6; --token-gold:#d9b26a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+      --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+      --accent:#7fb3ba; --accent-soft:#1e2c2e;
+      --ok:#8ecbb6; --ok-soft:#1d2a23;
+      --off:#928a7a; --off-soft:#26241f;
+      --warn:#c9a05e; --warn-soft:#2b2419;
+      --live:#d98a72;
+      --token-bg:#0e1113; --token-ink:#f0ede6; --token-gold:#d9b26a;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .page{max-width:940px; margin:0 auto; padding:34px 22px 90px;}
+
+  .appbar{display:flex; align-items:center; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:30px;}
+  .brand{font-family:var(--serif); font-size:19px; font-weight:600;}
+  .brand span{color:var(--accent);}
+  .nav{display:flex; gap:4px; margin-left:20px;}
+  .nav a{font-size:13px; color:var(--ink-soft); text-decoration:none; padding:5px 11px; border-radius:7px;}
+  .nav a.cur{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .nav a:hover:not(.cur){background:var(--line-soft);}
+  .whoami{margin-left:auto; display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-soft);}
+  .avatar{width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; font-size:11px; font-weight:700;}
+
+  .btn{font:inherit; font-size:13px; font-weight:600; padding:8px 18px; border-radius:7px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn.ghost{background:transparent; color:var(--accent);}
+  .btn:focus-visible, .copy:focus-visible, .linkbtn:focus-visible, input:focus-visible, summary:focus-visible,
+  .fchip input:focus-visible + span, .pchip input:focus-visible + span, .rowbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .linkbtn{font:inherit; font-size:12.5px; background:none; border:none; color:var(--ink-soft); cursor:pointer; padding:6px 2px; text-decoration:underline; text-underline-offset:3px;}
+  .card{border:1px solid var(--line); border-radius:12px; background:var(--card); padding:18px;}
+  .view{display:none;}
+  .view.on{display:block;}
+
+  /* ── dropzone（メイン） ── */
+  .drop{border:2px dashed var(--line); border-radius:14px; background:var(--card); padding:30px 26px; text-align:center;
+    transition:border-color .15s, background .15s; margin-bottom:34px; display:flex; align-items:center; gap:22px; text-align:left;}
+  .drop.hot{border-color:var(--accent); background:var(--accent-soft);}
+  .glyph{width:52px; height:44px; position:relative; flex-shrink:0;}
+  .sheet{position:absolute; inset:0; border:1.5px solid var(--ink-faint); border-radius:4px; background:var(--card);}
+  .sheet.b{transform:rotate(-7deg) translate(-4px,3px); opacity:.4;}
+  .sheet.f{display:grid; align-content:center; gap:4px; padding:8px 7px;}
+  .sheet.f i{display:block; height:2px; background:var(--ink-faint); border-radius:1px; opacity:.5;}
+  .sheet.f i:nth-child(1){width:70%;} .sheet.f i:nth-child(2){width:100%;} .sheet.f i:nth-child(3){width:85%;}
+  .tag-html{position:absolute; right:-8px; bottom:-6px; font-family:var(--mono); font-size:8px; font-weight:700; background:var(--accent); color:#fff; padding:2px 5px; border-radius:3px;}
+  .drop .dtxt{flex:1; min-width:0;}
+  .drop h2{font-size:16px; margin:0 0 3px; font-weight:600;}
+  .drop .d-sub{font-size:12.5px; color:var(--ink-soft); margin:0;}
+  .drop .dact{flex-shrink:0;}
+
+  /* ── list ── */
+  .lhead{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  .lhead h1{font-family:var(--serif); font-size:20px; font-weight:600; margin:0;}
+  .lhead .count{font-size:12.5px; color:var(--ink-faint);}
+  .scope{margin-left:auto; font-size:11.5px; color:var(--ink-faint);}
+
+  .toolbar{display:flex; flex-direction:column; gap:11px; margin-bottom:16px;}
+  .search{position:relative;}
+  .search input{width:100%; font:inherit; font-size:13.5px; padding:9px 12px 9px 34px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
+  .search svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); width:14px; height:14px; stroke:var(--ink-faint); stroke-width:2; fill:none;}
+  .filters{display:flex; gap:16px; flex-wrap:wrap; align-items:center;}
+  .fgroup{display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .fgroup .flabel{font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); margin-right:2px;}
+  .fchip, .pchip{position:relative;}
+  .fchip input, .pchip input{position:absolute; opacity:0; width:0; height:0;}
+  .fchip span{display:inline-block; font-size:12px; padding:3px 11px; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink-soft); cursor:pointer;}
+  .fchip input:checked + span{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;}
+
+  .list{border:1px solid var(--line); border-radius:12px; background:var(--card);}
+  .row{display:grid; grid-template-columns:1fr auto auto; gap:4px 16px; padding:15px 18px; border-top:1px solid var(--line-soft); align-items:center;}
+  .row:first-child{border-top:none; border-radius:12px 12px 0 0;}
+  .row:last-child{border-radius:0 0 12px 12px;}
+  .row:only-child{border-radius:12px;}
+  .row.off{background:var(--off-soft);}
+  .row.off .title{color:var(--ink-soft);}
+  .row.justnow{animation:pop 1.4s ease;}
+  @keyframes pop{from{background:var(--accent-soft);} to{background:transparent;}}
+  .main{grid-column:1; min-width:0;}
+  .title{font-size:14.5px; font-weight:600; margin:0 0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .sub{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
+  .dtype{font-family:var(--mono); font-size:10px; letter-spacing:.03em; padding:2px 7px; border-radius:4px; background:var(--accent-soft); color:var(--accent);}
+  .dtype.none{background:var(--line-soft); color:var(--ink-faint);}
+  .tag{font-size:11px; color:var(--ink-soft);}
+  .tag::before{content:"#"; opacity:.5;}
+  .proj{font-size:11px; color:var(--ink-soft); display:inline-flex; align-items:center; gap:4px;}
+  .proj::before{content:""; width:6px; height:6px; border-radius:2px; background:var(--accent); opacity:.7;}
+  .comments{grid-column:2; text-align:right; white-space:nowrap; background:none; border:1px solid transparent;
+    border-radius:8px; padding:4px 8px; font:inherit; color:inherit; cursor:pointer;}
+  .comments:hover{border-color:var(--line); background:var(--paper);}
+  .comments:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .comments[disabled]{cursor:default; background:none; border-color:transparent;}
+  .cnum{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; display:block;}
+  .cnum.zero{color:var(--ink-faint); font-weight:400;}
+  .cwhen{font-size:11px; color:var(--ink-faint); display:block;}
+  .cwhen.fresh{color:var(--live); font-weight:600;}
+  .cwhen.fresh::before{content:"●"; font-size:7px; vertical-align:2px; margin-right:3px;}
+  .rowend{grid-column:3; display:flex; align-items:center; gap:9px;}
+  .status{font-family:var(--mono); font-size:10px; letter-spacing:.04em; padding:3px 9px; border-radius:11px; white-space:nowrap;}
+  .status.on{background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok);}
+  .status.no{background:var(--off-soft); color:var(--off); border:1px solid var(--off);}
+  .rowbtn{font:inherit; font-size:15px; line-height:1; background:none; border:1px solid transparent; border-radius:6px; color:var(--ink-faint); cursor:pointer; padding:5px 8px;}
+  .rowbtn:hover{border-color:var(--line); color:var(--ink);}
+  .iconbtn{background:none; border:1px solid transparent; border-radius:6px; color:var(--ink-faint); cursor:pointer;
+    padding:5px; display:inline-flex; align-items:center; justify-content:center;}
+  .iconbtn:hover{border-color:var(--line); color:var(--accent);}
+  .iconbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .iconbtn svg{width:15px; height:15px; stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .iconbtn.ok{color:var(--ok); border-color:var(--ok);}
+
+  .menu{position:relative;}
+  .menu ul{position:absolute; right:0; top:calc(100% + 5px); z-index:10; min-width:186px; margin:0; padding:5px; list-style:none;
+    background:var(--card); border:1px solid var(--line); border-radius:9px; box-shadow:0 6px 22px rgba(0,0,0,.13);}
+  .menu ul.up{top:auto; bottom:calc(100% + 5px);}
+  .menu ul[hidden]{display:none;}
+  .menu li button{width:100%; text-align:left; font:inherit; font-size:12.5px; padding:7px 10px; border:none; border-radius:6px; background:none; color:var(--ink); cursor:pointer;}
+  .menu li button:hover{background:var(--accent-soft); color:var(--accent);}
+  .menu li.sep{height:1px; background:var(--line-soft); margin:4px 2px;}
+  .menu li button.danger{color:var(--live);}
+  .empty{padding:46px 24px; text-align:center; color:var(--ink-faint);}
+  .empty p{font-size:13.5px; margin:0;}
+
+  /* ── confirm ── */
+  h1.vt{font-family:var(--serif); font-size:23px; font-weight:600; margin:0 0 5px;}
+  .lede{color:var(--ink-soft); font-size:13.5px; margin:0 0 22px;}
+  .filerow{display:flex; align-items:center; gap:10px; padding:9px 11px; border:1px solid var(--line-soft); border-radius:8px; background:var(--paper); margin-bottom:15px;}
+  .fname{font-family:var(--mono); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .fsize{margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--ink-faint); flex-shrink:0;}
+  .readout{border:1px solid var(--line-soft); border-radius:8px; overflow:hidden; margin-bottom:15px;}
+  .rhead{display:flex; align-items:center; gap:7px; padding:8px 11px; background:var(--ok-soft); border-bottom:1px solid var(--line-soft); font-size:11.5px; color:var(--ok); font-weight:600;}
+  .check{width:14px; height:14px; border-radius:50%; background:var(--ok); display:grid; place-items:center; flex-shrink:0;}
+  .check svg{width:9px; height:9px; stroke:#fff; stroke-width:2.6; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .kv{display:grid; grid-template-columns:auto 1fr; gap:6px 13px; padding:12px; font-size:12.5px; margin:0;}
+  .kv dt{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; padding-top:2px;}
+  .kv dd{margin:0; word-break:break-word;}
+  .chips{display:flex; gap:5px; flex-wrap:wrap;}
+  .chip{font-size:11px; background:var(--accent-soft); color:var(--accent); padding:2px 8px; border-radius:11px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block; font-size:12px; font-weight:600; margin-bottom:5px;}
+  .field label .req{color:var(--warn); font-weight:400; font-size:11px; margin-left:5px;}
+  .field input{width:100%; font:inherit; font-size:13.5px; padding:8px 11px; border:1px solid var(--line); border-radius:7px; background:var(--paper); color:var(--ink);}
+  details.optional{border-top:1px dashed var(--line); padding-top:12px; margin-top:2px;}
+  details.optional summary{font-size:12px; color:var(--ink-soft); cursor:pointer; list-style:none; display:flex; align-items:center; gap:6px;}
+  details.optional summary::-webkit-details-marker{display:none;}
+  details.optional summary::before{content:"＋"; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  details.optional[open] summary::before{content:"−";}
+  details.optional .inner{padding-top:13px;}
+  .notice{display:flex; gap:9px; align-items:flex-start; padding:10px 12px; border-radius:8px; font-size:12px; background:var(--warn-soft); border:1px solid var(--warn); margin-bottom:15px;}
+  .notice .ic{font-family:var(--mono); font-weight:700; color:var(--warn); flex-shrink:0;}
+  .notice p{margin:0;}
+  .picker{border-top:1px solid var(--line-soft); margin-top:15px; padding-top:14px;}
+  .picker .plabel{font-size:12px; font-weight:600; margin:0 0 3px;}
+  .picker .phelp{font-size:11.5px; color:var(--ink-faint); margin:0 0 10px;}
+  .pchips{display:flex; gap:7px; flex-wrap:wrap;}
+  .pchip span{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; padding:5px 12px;
+    border:1px solid var(--line); border-radius:16px; background:var(--paper); color:var(--ink-soft); cursor:pointer;}
+  .pchip span::before{content:""; width:11px; height:11px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0;}
+  .pchip input:checked + span{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .pchip input:checked + span::before{background:var(--accent); border-color:var(--accent);}
+  .actions{display:flex; gap:9px; align-items:center; padding-top:3px;}
+  .actions .spacer{flex:1;}
+
+  /* ── done ── */
+  .dhead{display:flex; align-items:center; gap:9px; margin-bottom:16px;}
+  .dhead .t{font-family:var(--serif); font-size:19px; font-weight:600;}
+  .urlrow{display:flex; align-items:center; gap:9px; padding:11px 13px; border:1px solid var(--line); border-radius:8px; background:var(--paper); margin-bottom:13px;}
+  .urlrow .u{font-family:var(--mono); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .copy{margin-left:auto; font:inherit; font-size:11.5px; font-weight:600; padding:5px 11px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); cursor:pointer; flex-shrink:0;}
+  .copy:hover{border-color:var(--accent); color:var(--accent);}
+  .tokenbox{background:var(--token-bg); border-radius:10px; padding:16px 18px; margin-bottom:15px;}
+  .tlabel{font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--token-gold); margin:0 0 10px;}
+  .tval{display:flex; align-items:center; gap:10px;}
+  .tval code{font-family:var(--mono); font-size:17px; letter-spacing:.06em; color:var(--token-ink); word-break:break-all;}
+  .tokenbox .copy{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.22); color:var(--token-ink);}
+  .tokenbox .warn{font-size:11.5px; color:#b6b0a4; margin:11px 0 0; line-height:1.65;}
+  .belongs{font-size:12.5px; color:var(--ink-soft); margin:0 0 15px; display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
+  .belongs .pb{font-size:11.5px; background:var(--accent-soft); color:var(--accent); padding:2px 9px; border-radius:11px;}
+  .nextrow{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+
+  /* ── dialog ── */
+  dialog{border:1px solid var(--line); border-radius:13px; background:var(--card); color:var(--ink);
+    padding:0; max-width:460px; width:calc(100% - 32px); box-shadow:0 14px 50px rgba(0,0,0,.24);}
+  dialog::backdrop{background:rgba(20,22,25,.42);}
+  .dlg-head{padding:17px 20px 0;}
+  .dlg-head h2{font-family:var(--serif); font-size:17px; font-weight:600; margin:0 0 5px;}
+  .dlg-head .target{font-size:12px; color:var(--ink-faint); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .dlg-body{padding:15px 20px 0;}
+  .dlg-body p{font-size:13px; color:var(--ink-soft); margin:0 0 11px;}
+  .dlg-body p strong{color:var(--ink); font-weight:600;}
+  .keep{border:1px solid var(--line-soft); border-radius:9px; overflow:hidden; margin-bottom:13px;}
+  .keep div{display:flex; gap:9px; align-items:flex-start; padding:9px 12px; font-size:12.5px; border-top:1px solid var(--line-soft);}
+  .keep div:first-child{border-top:none;}
+  .keep .ky{color:var(--ok); font-weight:700; flex-shrink:0;}
+  .keep .kn{color:var(--live); font-weight:700; flex-shrink:0;}
+  .optline{display:flex; gap:9px; align-items:flex-start; padding:11px 12px; border:1px solid var(--line-soft);
+    border-radius:9px; background:var(--paper); margin-bottom:13px; font-size:12.5px;}
+  .optline input{margin-top:4px; flex-shrink:0;}
+  .optline label{cursor:pointer;}
+  .optline .sub{display:block; color:var(--ink-faint); font-size:11.5px;}
+  .dlg-act{display:flex; gap:9px; align-items:center; justify-content:flex-end; padding:5px 20px 18px;}
+  .dlg-act .spacer{display:none;}
+  /* コメント閲覧ダイアログ */
+  .cmlist{max-height:min(56vh,420px); overflow-y:auto; margin:0 -20px; padding:0 20px;
+    display:flex; flex-direction:column; gap:15px;}
+  .cmitem .cmtop{display:flex; align-items:baseline; gap:6px; flex-wrap:wrap;}
+  .cmitem .cwho{font-size:12.5px; font-weight:700;}
+  .cmitem .cwhen{font-size:11px; color:var(--ink-faint);}
+  .cmitem .cbody{font-size:13px; margin:2px 0 0; color:var(--ink); white-space:pre-wrap;}
+  .cmitem.reply{margin-left:15px; padding-left:11px; border-left:2px solid var(--line-soft);}
+  .cdec{font-size:10px; font-weight:700; padding:1px 6px; border-radius:5px;}
+  .cdec.approve{background:var(--ok-soft); color:var(--ok);}
+  .cdec.revise{background:var(--warn-soft); color:var(--warn);}
+  .cmsum{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);
+    padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid var(--line-soft);}
+  .cmsum b{color:var(--ink);}
+
+  /* コピー完了の通知 */
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(10px); z-index:60;
+    background:var(--ink); color:var(--paper); font-size:13px; font-weight:600; padding:10px 20px;
+    border-radius:24px; box-shadow:0 6px 24px rgba(0,0,0,.24); opacity:0; pointer-events:none;
+    transition:opacity .18s, transform .18s; display:flex; align-items:center; gap:8px;}
+  .toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast svg{width:15px; height:15px; stroke:currentColor; stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+
+  .dropmini{border:2px dashed var(--line); border-radius:10px; background:var(--paper); padding:20px 16px;
+    text-align:center; margin-bottom:13px; transition:border-color .15s, background .15s;}
+  .dropmini.hot{border-color:var(--accent); background:var(--accent-soft);}
+  .dropmini p{font-size:12.5px; margin:0 0 9px; color:var(--ink-soft);}
+  .dropmini .btn{font-size:12px; padding:6px 14px;}
+  .btn.danger-b{background:transparent; border-color:var(--live); color:var(--live);}
+  .btn.danger-b:hover{background:rgba(180,85,63,.1); filter:none;}
+  .dlg-pane{display:none;} .dlg-pane.on{display:block;}
+
+  @media (max-width:660px){
+    .drop{flex-direction:column; text-align:center;}
+    .row{grid-template-columns:1fr auto;}
+    .comments{grid-column:1/-1; grid-row:2; text-align:left; margin-top:6px;}
+    .cwhen{display:inline; margin-left:6px;}
+    .mrow{grid-template-columns:1fr auto;}
+    .mcount{grid-column:1/-1; grid-row:2; text-align:left; margin-top:5px;}
+    .mcount b{display:inline; margin-right:4px;}
+    .lhead{flex-wrap:wrap;}
+    #invite-open{margin-left:0 !important; width:100%; margin-top:10px;}
+  }
+  @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important;}}
+
+  /* ── 管理者の画面に固有のもの ── */
+
+  .rolechip{font-size:10.5px; letter-spacing:.02em; padding:2px 8px; border-radius:11px; white-space:nowrap;}
+  .rolechip.admin{background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);}
+  .rolechip.member{background:var(--line-soft); color:var(--ink-soft); border:1px solid var(--line);}
+  .rolechip.pending{background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn);}
+
+  .mrow{display:grid; grid-template-columns:1fr auto auto; gap:4px 16px; padding:15px 18px;
+    border-top:1px solid var(--line-soft); align-items:center;}
+  .mrow:first-child{border-top:none;}
+  .mname{font-size:14px; font-weight:600; margin:0 0 3px;}
+  .mmail{font-size:11.5px; color:var(--ink-faint); font-family:var(--mono);}
+  .mcount{font-size:11.5px; color:var(--ink-soft); text-align:right; white-space:nowrap;}
+  .mcount b{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; display:block; color:var(--ink);}
+
+  .hint{font-size:12px; color:var(--ink-faint); line-height:1.65; margin:10px 0 0;}
+  .warnbox{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:9px;
+    background:var(--warn-soft); border:1px solid var(--warn); margin:14px 0 0;}
+  .warnbox .ic{flex-shrink:0; width:17px; height:17px; border-radius:50%; background:var(--warn); color:var(--card);
+    font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;}
+  .warnbox p{margin:0; font-size:12.5px; line-height:1.65; color:var(--ink);}
+  .warnbox b{font-variant-numeric:tabular-nums;}
+
+  select.pick{width:100%; font:inherit; font-size:13.5px; padding:9px 11px; border:1px solid var(--line);
+    border-radius:8px; background:var(--card); color:var(--ink);}
+  .field input[type=email]{width:100%; font:inherit; font-size:13.5px; padding:9px 11px;
+    border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
+</style>
+
+<div class="page">
+  <div class="appbar">
+    <div class="brand">artifact<span>share</span></div>
+    <nav class="nav">
+      <a href="main.html">アーティファクト</a>
+      <a href="project.html">プロジェクト</a>
+      <a href="#" class="cur" data-tab="all">すべて</a>
+      <a href="#" data-tab="members">メンバー</a>
+    </nav>
+    <div class="whoami"><span class="avatar">DA</span>daidaiiro</div>
+  </div>
+
+  <!-- ══ すべてのアーティファクト ══ -->
+  <section class="view on" id="v-all">
+    <div class="lhead">
+      <h1>すべてのアーティファクト</h1>
+      <span class="count" id="count"></span>
+      <span class="scope">メンバー全員が公開したものが並びます</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+        <input type="search" id="q" placeholder="タイトル・タグ・公開した人で絞り込む" aria-label="絞り込み">
+      </div>
+      <div class="filters">
+        <div class="fgroup">
+          <span class="flabel">公開した人</span>
+          <label class="fchip"><input type="checkbox" data-f="mine" value="1"><span>自分のものだけ</span></label>
+        </div>
+        <div class="fgroup">
+          <span class="flabel">状態</span>
+          <label class="fchip"><input type="checkbox" data-f="off" value="1"><span>無効化済みも表示</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+  </section>
+
+  <!-- ══ メンバー ══ -->
+  <section class="view" id="v-members">
+    <div class="lhead">
+      <h1>メンバー</h1>
+      <span class="count" id="mcount"></span>
+      <span class="scope">招かれた人だけが公開できます</span>
+      <button class="btn" id="invite-open" style="margin-left:auto;">メンバーを招く</button>
+    </div>
+    <div class="list" id="mlist"></div>
+    <p class="hint">
+      管理者を増やすには、AWSの権限を持つ人が手元で <code>artifactshare grant-admin</code> を実行します。
+      管理者どうしで増やせないようにしてあるのは、誰が最終的な責任を負うのかを辿れるようにするためです。
+    </p>
+  </section>
+</div>
+
+<!-- ══ 引き継ぐ ══ -->
+<dialog id="dlg-transfer">
+    <form method="dialog">
+      <div class="dlg-head"><h2 id="tr-title">引き継ぐ</h2>
+        <p class="target" id="tr-lede"></p></div>
+      <div class="dlg-body">
+        
+        <div class="field">
+          <label for="tr-to">引き継ぎ先</label>
+          <select class="pick" id="tr-to"></select>
+        </div>
+        <div class="keep">
+          <div><span class="ky">変わらない</span><span>共有URL・閲覧トークン・中身・これまでのコメント</span></div>
+          <div><span class="kn">変わる</span><span>手入れできる人（差し替え・公開停止・再発行を行える人）</span></div>
+        </div>
+        <p style="font-size:12px;">渡した相手の手元では何も起きません。開いている画面もそのままです。</p>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn" id="tr-go" value="ok">引き継ぐ</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ══ 招く ══ -->
+  <dialog id="dlg-invite">
+    <form method="dialog">
+      <div class="dlg-head"><h2>メンバーを招く</h2>
+        <p class="target">招かれた人だけが公開できます</p></div>
+      <div class="dlg-body">
+        <p>招くと、仮のパスワードが本人宛に届きます。</p>
+        <div class="field">
+          <label for="inv-mail">メールアドレス</label>
+          <input type="email" id="inv-mail" placeholder="name@example.com" autocomplete="off">
+        </div>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn" id="inv-go" value="ok">招く</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ══ 外す ══ -->
+  <dialog id="dlg-remove">
+    <form method="dialog">
+      <div class="dlg-head"><h2 id="rm-title">メンバーから外す</h2>
+        <p class="target" id="rm-lede"></p></div>
+      <div class="dlg-body">
+        <div class="warnbox" id="rm-warn" hidden>
+          <span class="ic">!</span>
+          <p id="rm-warn-text"></p>
+        </div>
+        <div class="field" id="rm-field" hidden>
+          <label for="rm-to">まとめて引き継ぐ</label>
+          <select class="pick" id="rm-to"></select>
+        </div>
+        <div class="keep">
+          <div><span class="ky">変わらない</span><span>その人が公開したもの・共有URL・閲覧トークン・コメント</span></div>
+          <div><span class="kn">変わる</span><span>この人が新しく公開できるかどうか</span></div>
+        </div>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn danger-b" id="rm-go" value="ok">外す</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.7 2.7L11 4.6"/></svg>
+    <span id="toast-text"></span>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var ME = 'daidaiiro';
+
+  var PEOPLE = [
+    { id: 'daidaiiro', name: 'daidaiiro', mail: 'daidaiiro@example.com', role: 'admin', status: 'active' },
+    { id: 'backend-team', name: '田中 拓也', mail: 'tanaka@example.com', role: 'member', status: 'active' },
+    { id: 'sato', name: '佐藤 みなみ', mail: 'sato@example.com', role: 'member', status: 'active' },
+    { id: 'yamada', name: '山田 健', mail: 'yamada@example.com', role: 'member', status: 'pending' }
+  ];
+
+  var DATA = [
+    { title: '検索基盤にPostgreSQLの全文検索を採用する', type: 'DecisionRecord',
+      tags: ['backend', 'search'], by: 'backend-team', comments: 7, last: '2時間前', fresh: true, active: true, updated: '7/30' },
+    { title: 'コメント投稿APIの受け入れ条件', type: 'FeatureSpec',
+      tags: ['api'], by: 'backend-team', comments: 3, last: '昨日', fresh: false, active: true, updated: '7/29' },
+    { title: '決済リトライ多重実行の振り返り', type: 'Postmortem',
+      tags: ['payment'], by: 'sato', comments: 12, last: '3日前', fresh: false, active: true, updated: '7/27' },
+    { title: '管理画面のナビゲーション比較', type: 'UIMock',
+      tags: ['ui'], by: 'daidaiiro', comments: 4, last: '5日前', fresh: false, active: true, updated: '7/25' },
+    { title: '旧レコメンド基盤の停止手順', type: '', tags: [], by: 'sato', comments: 0, last: '—', fresh: false, active: false, updated: '6/12' },
+    { title: '検索インデックス再構築の計測結果', type: 'Investigation',
+      tags: ['search'], by: 'yamada', comments: 2, last: '先週', fresh: false, active: true, updated: '7/22' }
+  ];
+
+  function person(id) {
+    for (var i = 0; i < PEOPLE.length; i++) if (PEOPLE[i].id === id) return PEOPLE[i];
+    return { id: id, name: id, mail: '', role: 'member', status: 'active' };
+  }
+  function chip(cls, text) {
+    var e = document.createElement('span'); e.className = cls; e.textContent = text; return e;
+  }
+  function copyIcon() {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 16 16'); svg.setAttribute('aria-hidden', 'true');
+    var r = document.createElementNS(ns, 'rect');
+    r.setAttribute('x', '5.5'); r.setAttribute('y', '5.5');
+    r.setAttribute('width', '8'); r.setAttribute('height', '8'); r.setAttribute('rx', '1.6');
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M10.5 5.5V3.6A1.1 1.1 0 0 0 9.4 2.5H3.6A1.1 1.1 0 0 0 2.5 3.6v5.8'
+                         + 'a1.1 1.1 0 0 0 1.1 1.1h1.9');
+    svg.append(r, path);
+    return svg;
+  }
+  function owned(id) {
+    return DATA.filter(function (d) { return d.by === id; }).length;
+  }
+
+  var toastTimer;
+  function toast(text) {
+    $('toast-text').textContent = text;
+    $('toast').classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { $('toast').classList.remove('on'); }, 2600);
+  }
+
+  /* ── 画面の切り替え ── */
+  document.querySelectorAll('.nav a[data-tab]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      document.querySelectorAll('.nav a').forEach(function (x) { x.classList.remove('cur'); });
+      a.classList.add('cur');
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('on'); });
+      $(a.dataset.tab === 'all' ? 'v-all' : 'v-members').classList.add('on');
+    });
+  });
+
+  /* ── アーティファクトの一覧 ── */
+  function menuFor(item) {
+    var wrap = document.createElement('div'); wrap.className = 'menu';
+    var btn = document.createElement('button');
+    btn.className = 'rowbtn'; btn.type = 'button'; btn.textContent = '⋯';
+    btn.setAttribute('aria-label', item.title + ' の操作');
+    btn.setAttribute('aria-expanded', 'false');
+
+    var ul = document.createElement('ul'); ul.hidden = true;
+    var mine = item.by === ME;
+    var entries = [['開く']];
+    // 中身の差し替えは公開した本人だけ。他人のものには出さない
+    if (mine && item.active) entries.push(['差し替えてアップロード']);
+    if (item.active) entries.push(['トークンを再発行']);
+    entries.push(['エクスポート'], ['sep'], ['引き継ぐ']);
+    entries.push(['sep'], item.active ? ['無効化する', 'danger'] : ['再公開する']);
+
+    entries.forEach(function (it) {
+      var li = document.createElement('li');
+      if (it[0] === 'sep') { li.className = 'sep'; }
+      else {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = it[0];
+        if (it[1]) b.className = it[1];
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          ul.hidden = true; btn.setAttribute('aria-expanded', 'false');
+          act(it[0], item);
+        });
+        li.appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = ul.hidden;
+      document.querySelectorAll('.menu ul').forEach(function (u) { u.hidden = true; });
+      document.querySelectorAll('.menu .rowbtn').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+      ul.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+      if (open) {
+        ul.classList.remove('up');
+        var r = btn.getBoundingClientRect();
+        if (window.innerHeight - r.bottom < ul.offsetHeight + 14) ul.classList.add('up');
+      }
+    });
+    wrap.append(btn, ul);
+    return wrap;
+  }
+
+  function act(label, item) {
+    if (label === '引き継ぐ') return openTransfer(item);
+    if (label === '無効化する') { item.active = false; renderList(); return toast('公開を止めました。中身もコメントも残っています'); }
+    if (label === '再公開する') { item.active = true; renderList(); return toast('再公開しました。閲覧トークンは新しくなっています'); }
+    if (label === 'トークンを再発行') return toast('新しい閲覧トークンを発行しました');
+    if (label === 'エクスポート') return toast('中身とコメントをまとめて取り出しました');
+    toast(label);
+  }
+
+  function renderList() {
+    var q = $('q').value.trim().toLowerCase();
+    var onlyMine = !!document.querySelector('[data-f="mine"]:checked');
+    var showOff = !!document.querySelector('[data-f="off"]:checked');
+
+    var rows = DATA.filter(function (d) {
+      if (!showOff && !d.active) return false;
+      if (onlyMine && d.by !== ME) return false;
+      if (q) {
+        var hay = (d.title + ' ' + d.tags.join(' ') + ' ' + d.type + ' ' + person(d.by).name).toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+
+    var list = $('list'); list.textContent = '';
+    $('count').textContent = rows.length + ' 件';
+
+    if (!rows.length) {
+      var e = document.createElement('div'); e.className = 'empty';
+      var p = document.createElement('p'); p.textContent = '条件に合うアーティファクトはありません。';
+      e.appendChild(p); list.appendChild(e);
+      return;
+    }
+
+    rows.forEach(function (d) {
+      var row = document.createElement('div');
+      row.className = 'row' + (d.active ? '' : ' off');
+
+      var main = document.createElement('div'); main.className = 'main';
+      var t = document.createElement('p'); t.className = 'title'; t.textContent = d.title;
+      var sub = document.createElement('div'); sub.className = 'sub';
+      // 管理者の画面だけが持つ情報。更新日と同じ控えめな字で先頭に置く
+      sub.appendChild(chip('', d.by === ME ? '自分' : person(d.by).name));
+      sub.appendChild(d.type ? chip('dtype', d.type) : chip('dtype none', '種別なし'));
+      d.tags.forEach(function (g) { sub.appendChild(chip('tag', g)); });
+      sub.appendChild(chip('', d.updated + ' 更新'));
+      main.append(t, sub);
+
+      var c = document.createElement('button');
+      c.type = 'button'; c.className = 'comments';
+      var n = document.createElement('span');
+      n.className = 'cnum' + (d.comments ? '' : ' zero');
+      n.textContent = d.comments ? d.comments + '件' : '—';
+      var w = document.createElement('span');
+      w.className = 'cwhen' + (d.fresh ? ' fresh' : '');
+      w.textContent = d.comments ? d.last : 'コメントなし';
+      c.append(n, w);
+      if (d.comments) {
+        c.setAttribute('aria-label', d.title + ' のコメント' + d.comments + '件を読む');
+        c.title = 'コメントを読む';
+        c.addEventListener('click', function (e) { e.stopPropagation(); toast('コメントを開きます'); });
+      } else { c.disabled = true; }
+
+      var end = document.createElement('div'); end.className = 'rowend';
+      end.appendChild(d.active ? chip('status on', '公開中') : chip('status no', '無効化済み'));
+
+      if (d.active) {
+        var cp = document.createElement('button');
+        cp.type = 'button'; cp.className = 'iconbtn';
+        cp.title = 'URLをコピー'; cp.setAttribute('aria-label', d.title + ' のURLをコピー');
+        cp.appendChild(copyIcon());
+        cp.addEventListener('click', function (e) {
+          e.stopPropagation();
+          toast('URLをコピーしました');
+          cp.classList.add('ok');
+          setTimeout(function () { cp.classList.remove('ok'); }, 1600);
+        });
+        end.appendChild(cp);
+      }
+      end.appendChild(menuFor(d));
+
+      row.append(main, c, end);
+      list.appendChild(row);
+    });
+  }
+
+  /* ── 引き継ぐ ── */
+  var transferring = null;
+  function fillPicker(select, exclude) {
+    select.textContent = '';
+    PEOPLE.filter(function (p) { return p.id !== exclude && p.status === 'active'; })
+      .forEach(function (p) {
+        var o = document.createElement('option');
+        o.value = p.id;
+        o.textContent = p.name + '（' + p.mail + '）';
+        select.appendChild(o);
+      });
+  }
+
+  function openTransfer(item) {
+    transferring = item;
+    $('tr-lede').textContent =
+      '「' + item.title + '」を手入れできる人を、' + person(item.by).name + ' から移します。';
+    fillPicker($('tr-to'), item.by);
+    $('dlg-transfer').showModal();
+  }
+
+  $('tr-go').addEventListener('click', function () {
+    if (!transferring) return;
+    var to = $('tr-to').value;
+    transferring.by = to;
+    renderList(); renderMembers();
+    toast(person(to).name + ' へ引き継ぎました');
+    transferring = null;
+  });
+
+  /* ── メンバー ── */
+  function memberMenu(p) {
+    var wrap = document.createElement('div'); wrap.className = 'menu';
+    var btn = document.createElement('button');
+    btn.className = 'rowbtn'; btn.type = 'button'; btn.textContent = '⋯';
+    btn.setAttribute('aria-label', p.name + ' の操作');
+    btn.setAttribute('aria-expanded', 'false');
+    var ul = document.createElement('ul'); ul.hidden = true;
+
+    var entries = [];
+    if (p.status === 'pending') entries.push(['招待をもう一度送る']);
+    if (entries.length) entries.push(['sep']);      // 区切りは、上に何かある時だけ
+    entries.push(['メンバーから外す', 'danger']);
+
+    entries.forEach(function (it) {
+      var li = document.createElement('li');
+      if (it[0] === 'sep') { li.className = 'sep'; }
+      else {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = it[0];
+        if (it[1] === 'danger') b.className = 'danger';
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          ul.hidden = true; btn.setAttribute('aria-expanded', 'false');
+          if (it[0] === 'メンバーから外す') openRemove(p);
+          else if (it[0] === '招待をもう一度送る') toast(p.mail + ' へ招待を送り直しました');
+        });
+        li.appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = ul.hidden;
+      document.querySelectorAll('.menu ul').forEach(function (u) { u.hidden = true; });
+      document.querySelectorAll('.menu .rowbtn').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+      ul.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+      if (open) {
+        ul.classList.remove('up');
+        var r = btn.getBoundingClientRect();
+        if (window.innerHeight - r.bottom < ul.offsetHeight + 14) ul.classList.add('up');
+      }
+    });
+    wrap.append(btn, ul);
+    return wrap;
+  }
+
+  function renderMembers() {
+    var list = $('mlist'); list.textContent = '';
+    $('mcount').textContent = PEOPLE.length + ' 人';
+
+    PEOPLE.forEach(function (p) {
+      var row = document.createElement('div'); row.className = 'mrow';
+
+      var main = document.createElement('div');
+      var name = document.createElement('p'); name.className = 'mname';
+      name.textContent = p.name + (p.id === ME ? '（自分）' : '');
+      var mail = document.createElement('span'); mail.className = 'mmail'; mail.textContent = p.mail;
+      main.append(name, mail);
+
+      var count = document.createElement('div'); count.className = 'mcount';
+      var b = document.createElement('b'); b.textContent = owned(p.id);
+      count.append(b, document.createTextNode('件を公開'));
+
+      var end = document.createElement('div'); end.className = 'rowend';
+      var chip = document.createElement('span');
+      if (p.status === 'pending') { chip.className = 'rolechip pending'; chip.textContent = '招待中'; }
+      else if (p.role === 'admin') { chip.className = 'rolechip admin'; chip.textContent = '管理者'; }
+      else { chip.className = 'rolechip member'; chip.textContent = '投稿者'; }
+      end.appendChild(chip);
+      if (p.id !== ME) end.appendChild(memberMenu(p));
+
+      row.append(main, count, end);
+      list.appendChild(row);
+    });
+  }
+
+  /* ── 招く ── */
+  $('invite-open').addEventListener('click', function () {
+    $('inv-mail').value = '';
+    $('dlg-invite').showModal();
+    setTimeout(function () { $('inv-mail').focus(); }, 30);
+  });
+
+  $('inv-go').addEventListener('click', function (e) {
+    var mail = $('inv-mail').value.trim();
+    if (!mail) { e.preventDefault(); $('inv-mail').focus(); return; }
+    var exists = PEOPLE.some(function (p) { return p.mail === mail; });
+    if (exists) { toast('その人はすでに招かれています'); return; }
+    PEOPLE.push({ id: mail, name: mail.split('@')[0], mail: mail, role: 'member', status: 'pending' });
+    renderMembers();
+    toast(mail + ' を招きました。仮のパスワードが本人宛に届きます');
+  });
+
+  /* ── 外す ── */
+  var removing = null;
+  function openRemove(p) {
+    removing = p;
+    var count = owned(p.id);
+    $('rm-title').textContent = p.name + ' をメンバーから外す';
+    $('rm-lede').textContent = '外すと、この人は新しく公開できなくなります。';
+
+    $('rm-warn').hidden = count === 0;
+    $('rm-field').hidden = count === 0;
+    if (count) {
+      var warn = $('rm-warn-text');
+      warn.textContent = '';
+      var strong = document.createElement('b'); strong.textContent = count + '件';
+      warn.append(document.createTextNode('この人が公開したものが '), strong,
+                  document.createTextNode(' あります。このまま外すと、公開を止めることも'
+                    + '閲覧トークンを再発行することも、誰にもできなくなります。'));
+      fillPicker($('rm-to'), p.id);
+    }
+    $('dlg-remove').showModal();
+  }
+
+  $('rm-go').addEventListener('click', function () {
+    if (!removing) return;
+    var count = owned(removing.id);
+    var to = count ? $('rm-to').value : null;
+    if (to) {
+      DATA.forEach(function (d) { if (d.by === removing.id) d.by = to; });
+    }
+    PEOPLE = PEOPLE.filter(function (p) { return p.id !== removing.id; });
+    renderMembers(); renderList();
+    toast(count
+      ? removing.name + ' を外し、' + count + '件を ' + person(to).name + ' へ引き継ぎました'
+      : removing.name + ' を外しました');
+    removing = null;
+  });
+
+  /* ── 起動 ── */
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.menu ul').forEach(function (u) { u.hidden = true; });
+    document.querySelectorAll('.menu .rowbtn').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+  });
+  $('q').addEventListener('input', renderList);
+  document.querySelectorAll('[data-f]').forEach(function (c) { c.addEventListener('change', renderList); });
+
+  renderList();
+  renderMembers();
+})();
+</script>

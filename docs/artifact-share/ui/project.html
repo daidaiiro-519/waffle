@@ -1,12 +1,12 @@
 <title>artifactshare — プロジェクト</title>
 <style>
   :root{
-    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#68737e;
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#65707b;
     --paper:#f4f2ee; --card:#ffffff; --line:#dcd8d0; --line-soft:#e9e5de;
     --accent:#2f5d63; --accent-soft:#e3edee;
     --ok:#4f7355; --ok-soft:#eaf1ea;
-    --off:#8c8478; --off-soft:#efece6;
-    --warn:#96702f; --warn-soft:#f7f0e1;
+    --off:#716a61; --off-soft:#efece6;
+    --warn:#8a672b; --warn-soft:#f7f0e1;
     --live:#b4553f; --live-soft:#f7e9e5;
     --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
@@ -17,7 +17,7 @@
     --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
     --accent:#7fb3ba; --accent-soft:#1e2c2e;
     --ok:#8ecbb6; --ok-soft:#1d2a23;
-    --off:#7d7669; --off-soft:#26241f;
+    --off:#928a7a; --off-soft:#26241f;
     --warn:#c9a05e; --warn-soft:#2b2419;
     --live:#d98a72; --live-soft:#2e211f;
   }
@@ -27,7 +27,7 @@
       --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
       --accent:#7fb3ba; --accent-soft:#1e2c2e;
       --ok:#8ecbb6; --ok-soft:#1d2a23;
-      --off:#7d7669; --off-soft:#26241f;
+      --off:#928a7a; --off-soft:#26241f;
       --warn:#c9a05e; --warn-soft:#2b2419;
       --live:#d98a72; --live-soft:#2e211f;
     }
@@ -74,8 +74,6 @@
   .pmeta{display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
   .pkey{font-family:var(--mono); font-size:10.5px; background:var(--line-soft); padding:2px 7px; border-radius:4px; color:var(--ink-soft);}
   .pstat{grid-column:2; text-align:right; white-space:nowrap;}
-  .pstat .n{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums;}
-  .pstat .l{font-size:11px; color:var(--ink-faint); display:block;}
   .pstat .l.fresh{color:var(--live); font-weight:600;}
   .pstat .l.fresh::before{content:"●"; font-size:7px; vertical-align:2px; margin-right:3px;}
   .pend{grid-column:3; display:flex; align-items:center; gap:9px;}
@@ -108,8 +106,16 @@
   .asub{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
   .dtype{font-family:var(--mono); font-size:10px; padding:2px 7px; border-radius:4px; background:var(--accent-soft); color:var(--accent);}
   .dtype.none{background:var(--line-soft); color:var(--ink-faint);}
-  .acom{text-align:right; white-space:nowrap; font-size:12px; color:var(--ink-soft);}
-  .acom .fresh{color:var(--live); font-weight:600;}
+  .comments{text-align:right; white-space:nowrap; background:none; border:1px solid transparent;
+    border-radius:8px; padding:4px 8px; font:inherit; color:inherit; cursor:pointer;}
+  .comments:hover{border-color:var(--line); background:var(--paper);}
+  .comments:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .comments[disabled]{cursor:default; background:none; border-color:transparent;}
+  .cnum{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; display:block;}
+  .cnum.zero{color:var(--ink-faint); font-weight:400;}
+  .cwhen{font-size:11px; color:var(--ink-faint); display:block;}
+  .cwhen.fresh{color:var(--live); font-weight:600;}
+  .cwhen.fresh::before{content:"●"; font-size:7px; vertical-align:2px; margin-right:3px;}
   .rowbtn{font:inherit; font-size:12px; background:none; border:1px solid var(--line); border-radius:6px; color:var(--ink-soft); cursor:pointer; padding:4px 10px;}
   .rowbtn:hover{border-color:var(--live); color:var(--live);}
   .addrow{padding:13px 17px; border-top:1px solid var(--line-soft); background:var(--paper); border-radius:0 0 12px 12px;}
@@ -165,9 +171,9 @@
   @media (max-width:660px){
     .pcard{grid-template-columns:1fr auto;}
     .pstat{grid-column:1/-1; grid-row:2; text-align:left; margin-top:5px;}
-    .pstat .l{display:inline; margin-left:6px;}
+    .cwhen{display:inline; margin-left:6px;}
     .arow{grid-template-columns:1fr auto;}
-    .acom{grid-column:1/-1; grid-row:2; text-align:left; margin-top:4px;}
+    .comments{grid-column:1/-1; grid-row:2; text-align:left; margin-top:6px;}
   }
 </style>
 
@@ -396,18 +402,18 @@
 
   var ARTS = {
     search: [
-      { t:'検索基盤にPostgreSQLの全文検索を採用する', ty:'DecisionRecord', c:7, fresh:true, u:'7/30' },
-      { t:'検索UIのパターン比較（A/B/C案）', ty:'', c:9, fresh:false, u:'7/09' },
-      { t:'pg_trgmのベンチマーク結果', ty:'InvestigationReport', c:1, fresh:false, u:'7/22' }
+      { t:'検索基盤にPostgreSQLの全文検索を採用する', ty:'DecisionRecord', c:7, fresh:true, u:'7/30', last:'2時間前' },
+      { t:'検索UIのパターン比較（A/B/C案）', ty:'', c:9, fresh:false, u:'7/09', last:'3週間前' },
+      { t:'pg_trgmのベンチマーク結果', ty:'InvestigationReport', c:1, fresh:false, u:'7/22', last:'先週' }
     ],
     pay: [
-      { t:'深夜バッチによる決済API 30分停止', ty:'Postmortem', c:12, fresh:false, u:'7/26' },
-      { t:'コネクションプール分離の設計', ty:'DecisionRecord', c:4, fresh:true, u:'7/29' }
+      { t:'深夜バッチによる決済API 30分停止', ty:'Postmortem', c:12, fresh:false, u:'7/26', last:'5日前' },
+      { t:'コネクションプール分離の設計', ty:'DecisionRecord', c:4, fresh:true, u:'7/29', last:'昨日' }
     ],
     tools: [
-      { t:'コメント投稿API', ty:'FunctionalSpec', c:3, fresh:true, u:'7/29' },
-      { t:'Safariプライベートブラウズでのコメント投稿失敗の原因調査', ty:'InvestigationReport', c:2, fresh:false, u:'7/24' },
-      { t:'四半期の稼働状況ダッシュボード', ty:'', c:1, fresh:false, u:'7/16' }
+      { t:'コメント投稿API', ty:'FunctionalSpec', c:3, fresh:true, u:'7/29', last:'昨日' },
+      { t:'Safariプライベートブラウズでのコメント投稿失敗の原因調査', ty:'InvestigationReport', c:2, fresh:false, u:'7/24', last:'1週間前' },
+      { t:'四半期の稼働状況ダッシュボード', ty:'', c:1, fresh:false, u:'7/16', last:'2週間前' }
     ],
     old: [
       { t:'旧管理画面のリニューアル案', ty:'', c:5, fresh:false, u:'5/14' }
@@ -444,8 +450,9 @@
       main.append(nm, meta);
 
       var st = document.createElement('div'); st.className = 'pstat';
-      var n = document.createElement('span'); n.className = 'n'; n.textContent = comments ? comments + '件' : '—';
-      var l = document.createElement('span'); l.className = 'l' + (p.fresh ? ' fresh' : '');
+      var n = document.createElement('span'); n.className = 'cnum' + (comments ? '' : ' zero');
+      n.textContent = comments ? comments + '件' : '—';
+      var l = document.createElement('span'); l.className = 'cwhen' + (p.fresh ? ' fresh' : '');
       l.textContent = comments ? p.last : 'コメントなし';
       st.append(n, l);
 
@@ -484,11 +491,19 @@
       s.appendChild(chip('', a.u + ' 更新'));
       m.append(t, s);
 
-      var c = document.createElement('div'); c.className = 'acom';
-      var cs = document.createElement('span');
-      if (a.fresh) cs.className = 'fresh';
-      cs.textContent = a.c ? 'コメント ' + a.c + '件' : 'コメントなし';
-      c.appendChild(cs);
+      var c = document.createElement('button');
+      c.type = 'button'; c.className = 'comments';
+      var cn = document.createElement('span');
+      cn.className = 'cnum' + (a.c ? '' : ' zero');
+      cn.textContent = a.c ? a.c + '件' : '—';
+      var cw = document.createElement('span');
+      cw.className = 'cwhen' + (a.fresh ? ' fresh' : '');
+      cw.textContent = a.c ? a.last : 'コメントなし';
+      c.append(cn, cw);
+      if (a.c) {
+        c.setAttribute('aria-label', a.t + ' のコメント' + a.c + '件を読む');
+        c.title = 'コメントを読む';
+      } else { c.disabled = true; }
 
       var b = document.createElement('button');
       b.className = 'rowbtn'; b.type = 'button'; b.textContent = '外す';
