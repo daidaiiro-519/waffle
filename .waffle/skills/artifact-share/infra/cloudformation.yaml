@@ -172,6 +172,13 @@ Resources:
         AllowAdminCreateUserOnly: true     # 自分で登録する経路を閉じる
       UsernameAttributes: [email]
       AutoVerifiedAttributes: [email]
+      # 合言葉を忘れたときは、確認済みのメールだけを頼りにする。
+      # 招待に応じていない人はこの経路を使えないため、その場合は
+      # 管理者が招き直す（受け口の resend-invite）
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
       Policies:
         PasswordPolicy:
           MinimumLength: 12

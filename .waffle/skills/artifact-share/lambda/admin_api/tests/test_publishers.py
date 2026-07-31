@@ -50,6 +50,10 @@ class FakeDirectory:
     def admins(self):
         return {"admin-1"}
 
+    def resend(self, publisher_id):
+        self.resent = getattr(self, "resent", [])
+        self.resent.append(publisher_id)
+
 
 def setup(people=None, objects=None):
     directory = FakeDirectory(people if people is not None else {
@@ -186,3 +190,45 @@ def test_一覧に合言葉に関わるものが含まれない():
     deps, _ = setup()
     for row in publishers.list_publishers(deps, ADMIN):
         assert set(row) == {"id", "name", "email", "status", "admin"}
+
+
+# ── 招待を送り直す ──────────────────────────────────────
+
+def test_招待に応じていない人へ送り直せる():
+    """仮のパスワードを無くした人は、自分では解決できない。
+    その状態では利用者プールの再設定が使えないため、招き直すしかない。"""
+    deps, directory = setup(people={
+        "admin-1": {"email": "admin@example.com", "status": "active"},
+        "newbie": {"email": "new@example.com", "status": "invited"},
+    })
+
+    result = publishers.resend_invite(deps, ADMIN, "newbie")
+
+    assert result["event"] == "PublisherInvited"
+    assert directory.resent == ["newbie"]
+
+
+def test_既に入っている人へは送り直さない():
+    """送り直すと仮のパスワードに戻り、本人が決めたものが使えなくなる"""
+    deps, directory = setup()
+    with pytest.raises(publishers.PublisherError) as x:
+        publishers.resend_invite(deps, ADMIN, "publisher-2")
+    assert x.value.code == "ALREADY_ACTIVE"
+    assert getattr(directory, "resent", []) == []
+
+
+def test_管理者でなければ送り直せない():
+    deps, _ = setup(people={
+        "admin-1": {"email": "admin@example.com", "status": "active"},
+        "newbie": {"email": "new@example.com", "status": "invited"},
+    })
+    with pytest.raises(publishers.PublisherError) as x:
+        publishers.resend_invite(deps, manage.Caller("newbie"), "newbie")
+    assert x.value.code == "NOT_ADMINISTRATOR"
+
+
+def test_招かれていない人へは送り直せない():
+    deps, _ = setup()
+    with pytest.raises(publishers.PublisherError) as x:
+        publishers.resend_invite(deps, ADMIN, "no-such-person")
+    assert x.value.code == "PUBLISHER_NOT_FOUND"

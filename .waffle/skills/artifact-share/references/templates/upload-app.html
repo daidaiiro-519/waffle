@@ -320,6 +320,7 @@
   .gerr[hidden]{display:none;}
   .gate .btn{width:100%; padding:11px; font-size:14px;}
   .gate .btn[disabled]{opacity:.55; cursor:default;}
+  .glink{display:block; width:100%; text-align:center; margin-top:12px;}
 
   /* ── 通信中と失敗 ── */
   .busy{padding:46px 24px; text-align:center; color:var(--ink-faint); font-size:13.5px;}
@@ -358,6 +359,35 @@
       </div>
       <p class="gerr" id="g-err" role="alert" hidden></p>
       <button class="btn" type="submit" id="g-go">ログイン</button>
+      <button class="linkbtn glink" type="button" id="g-forgot">パスワードを忘れた</button>
+    </form>
+
+    <form id="forgotform" hidden novalidate>
+      <h1>確認コードを送る</h1>
+      <p class="glede">登録されているメールアドレスへ、確認コードを送ります。届いたコードで新しいパスワードを決められます。</p>
+      <div class="gfield">
+        <label for="g-fmail">メールアドレス</label>
+        <input type="email" id="g-fmail" autocomplete="username" required>
+      </div>
+      <p class="gerr" id="g-ferr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-fgo">コードを送る</button>
+      <button class="linkbtn glink" type="button" data-back>ログインに戻る</button>
+    </form>
+
+    <form id="resetform" hidden novalidate>
+      <h1>新しいパスワードを決める</h1>
+      <p class="glede" id="g-rlede"></p>
+      <div class="gfield">
+        <label for="g-code">確認コード</label>
+        <input type="text" id="g-code" inputmode="numeric" autocomplete="one-time-code" required>
+      </div>
+      <div class="gfield">
+        <label for="g-rnew">新しいパスワード</label>
+        <input type="password" id="g-rnew" autocomplete="new-password" required>
+      </div>
+      <p class="gerr" id="g-rerr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-rgo">決める</button>
+      <button class="linkbtn glink" type="button" data-back>ログインに戻る</button>
     </form>
 
     <form id="newpassform" hidden novalidate>
@@ -900,10 +930,15 @@
   /* ── ログイン ──────────────────────────────────── */
   var pendingSession = null, pendingMail = '';
 
+  function gateForm(id) {
+    ['loginform', 'newpassform', 'forgotform', 'resetform'].forEach(function (f) {
+      $(f).hidden = f !== id;
+    });
+  }
+
   function showGate(message) {
     $('gate').hidden = false;
-    $('loginform').hidden = false;
-    $('newpassform').hidden = true;
+    gateForm('loginform');
     $('g-err').hidden = !message;
     if (message) $('g-err').textContent = message;
     $('g-pass').value = '';
@@ -940,8 +975,7 @@
     signIn(mail, pass).then(function (d) {
       if (d.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
         pendingSession = d.Session; pendingMail = mail;
-        $('loginform').hidden = true;
-        $('newpassform').hidden = false;
+        gateForm('newpassform');
         setTimeout(function () { $('g-new').focus(); }, 40);
         return;
       }
@@ -959,7 +993,8 @@
     var a = $('g-new').value, b = $('g-new2').value;
     var err = $('g-newerr');
     if (a !== b) { err.textContent = '2つの入力が一致しません。'; err.hidden = false; return; }
-    if (a.length < 12) { err.textContent = '12文字以上にしてください。'; err.hidden = false; return; }
+    var bad = badPassword(a);
+    if (bad) { err.textContent = bad; err.hidden = false; return; }
 
     $('g-newgo').disabled = true; err.hidden = true;
     answerNewPassword(pendingMail, a, pendingSession).then(function (d) {
@@ -969,6 +1004,72 @@
       err.textContent = x.message || 'この内容では決められません。';
       err.hidden = false;
     }).then(function () { $('g-newgo').disabled = false; });
+  });
+
+  /* ── 合言葉を忘れたとき ────────────────────────────
+     招待に応じていない人はこの経路を使えない（利用者プールが拒む）。
+     仮の合言葉を無くした人は、管理者に招き直してもらう。 */
+  function badPassword(value) {
+    if (value.length < 12) return '12文字以上にしてください。';
+    if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/[0-9]/.test(value)) {
+      return '大文字・小文字・数字をそれぞれ含めてください。';
+    }
+    return '';
+  }
+
+  $('g-forgot').addEventListener('click', function () {
+    $('g-fmail').value = $('g-mail').value.trim();
+    gateForm('forgotform');
+    setTimeout(function () { $('g-fmail').focus(); }, 40);
+  });
+
+  document.querySelectorAll('.gate [data-back]').forEach(function (b) {
+    b.addEventListener('click', function () { showGate(''); });
+  });
+
+  $('forgotform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var mail = $('g-fmail').value.trim();
+    if (!mail) return;
+    $('g-fgo').disabled = true;
+    $('g-ferr').hidden = true;
+
+    cognito('ForgotPassword', { ClientId: CONFIG.clientId, Username: mail })
+      .catch(function () { /* 送れたかどうかを伝えない（下記） */ })
+      .then(function () {
+        // 招かれていない宛先でも同じ画面へ進む。送れたかどうかの違いから、
+        // 誰が招かれているかを外から探れないようにするため
+        pendingMail = mail;
+        $('g-rlede').textContent = mail + ' 宛にコードを送りました。届いていない場合は、'
+          + '迷惑メールに入っていないかを確かめてください。';
+        gateForm('resetform');
+        setTimeout(function () { $('g-code').focus(); }, 40);
+        $('g-fgo').disabled = false;
+      });
+  });
+
+  $('resetform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = $('g-code').value.trim(), pass = $('g-rnew').value;
+    var err = $('g-rerr');
+    var bad = badPassword(pass);
+    if (!code) { $('g-code').focus(); return; }
+    if (bad) { err.textContent = bad; err.hidden = false; return; }
+
+    $('g-rgo').disabled = true; err.hidden = true;
+    cognito('ConfirmForgotPassword', {
+      ClientId: CONFIG.clientId, Username: pendingMail,
+      ConfirmationCode: code, Password: pass
+    }).then(function () {
+      showGate('');
+      $('g-mail').value = pendingMail;
+      toast('パスワードを決めました。ログインしてください');
+    }).catch(function (x) {
+      err.textContent = /CodeMismatch|ExpiredCode/.test(x.kind || '')
+        ? 'コードが違うか、期限が切れています。もう一度送ってください。'
+        : (x.message || '決められませんでした。');
+      err.hidden = false;
+    }).then(function () { $('g-rgo').disabled = false; });
   });
 
   /* ── 一覧 ──────────────────────────────────────── */
@@ -1378,6 +1479,20 @@
     btn.setAttribute('aria-label', p.name + ' の操作');
     btn.setAttribute('aria-expanded', 'false');
     var ul = document.createElement('ul'); ul.hidden = true;
+
+    if (p.status === 'invited') {
+      var rl = document.createElement('li');
+      var rb = document.createElement('button');
+      rb.type = 'button'; rb.textContent = '招待をもう一度送る';
+      rb.addEventListener('click', function (e) {
+        e.stopPropagation(); ul.hidden = true;
+        api('resend-invite', { publisherId: p.id })
+          .then(function () { toast(p.email + ' へ招待を送り直しました'); })
+          .catch(fail);
+      });
+      rl.appendChild(rb); ul.appendChild(rl);
+      var sep = document.createElement('li'); sep.className = 'sep'; ul.appendChild(sep);
+    }
 
     var li = document.createElement('li');
     var b = document.createElement('button');

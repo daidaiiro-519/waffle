@@ -48,6 +48,37 @@ def invite(deps: Deps, caller: Caller, email: str) -> dict:
             "event": "PublisherInvited"}
 
 
+def resend_invite(deps: Deps, caller: Caller, publisher_id: str) -> dict:
+    """招待をもう一度送る。仮の合言葉が新しくなる。
+
+    招待に応じていない人は、利用者プールの再設定（合言葉を忘れたときの
+    経路）を使えない。仮の合言葉を無くしたら本人には手立てが無いため、
+    管理者が招き直す。
+
+    既に入っている人へは送らない。送ると仮の合言葉に戻り、その人が自分で
+    決めたものが使えなくなる。
+    """
+    _require_admin(caller)
+
+    person = deps.directory.find(publisher_id)
+    if not person:
+        raise PublisherError("PUBLISHER_NOT_FOUND", "その人は招かれていません。")
+    if _status_of(person) != "invited":
+        raise PublisherError("ALREADY_ACTIVE",
+                             "その人はもう入っています。送り直すと、"
+                             "本人が決めたパスワードが使えなくなります。")
+
+    deps.directory.resend(publisher_id)
+    return {"publisherId": publisher_id, "event": "PublisherInvited"}
+
+
+def _status_of(person) -> str:
+    """名簿が返すものから、招待に応じたかどうかを読む。"""
+    if isinstance(person, dict):
+        return person.get("status", "")
+    return getattr(person, "status", "")
+
+
 def remove(deps: Deps, caller: Caller, publisher_id: str) -> dict:
     """公開できる人から外す。公開したものには一切触れない。
 

@@ -28,7 +28,7 @@ import publishers
 ACTIONS = {
     "publish", "list", "replace", "rotate", "disable", "enable",
     "assign", "unassign", "transfer", "invite", "remove-publisher",
-    "publishers",
+    "publishers", "resend-invite",
 }
 
 # 管理者のグループ名。Cognitoのトークンに含まれていれば管理者とみなす
@@ -91,6 +91,8 @@ def _dispatch(action, deps, caller, body):  # pragma: no cover
         return publishers.invite(deps, caller, body.get("email", ""))
     if action == "publishers":
         return {"publishers": publishers.list_publishers(deps, caller)}
+    if action == "resend-invite":
+        return publishers.resend_invite(deps, caller, body.get("publisherId", ""))
     return publishers.remove(deps, caller, body.get("publisherId", ""))
 
 
@@ -139,9 +141,13 @@ def _connections() -> dict:  # pragma: no cover
 
         def find(self, publisher_id):
             try:
-                return idp.admin_get_user(UserPoolId=pool, Username=publisher_id)
+                got = idp.admin_get_user(UserPoolId=pool, Username=publisher_id)
             except Exception:
                 return None
+            # 仮の合言葉のまま入っていない人は、まだ招待に応じていない
+            got["status"] = ("invited" if got.get("UserStatus") == "FORCE_CHANGE_PASSWORD"
+                             else "active")
+            return got
 
         def invite(self, email):
             try:
@@ -176,6 +182,17 @@ def _connections() -> dict:  # pragma: no cover
                 token = res.get("PaginationToken")
                 if not token:
                     return people
+
+        def resend(self, publisher_id):
+            person = self.find(publisher_id) or {}
+            email = {a["Name"]: a["Value"]
+                     for a in person.get("UserAttributes", [])}.get("email", publisher_id)
+            idp.admin_create_user(
+                UserPoolId=pool, Username=publisher_id,
+                UserAttributes=[{"Name": "email", "Value": email},
+                                {"Name": "email_verified", "Value": "true"}],
+                MessageAction="RESEND",
+                DesiredDeliveryMediums=["EMAIL"])
 
         def admins(self):
             res = idp.list_users_in_group(UserPoolId=pool,

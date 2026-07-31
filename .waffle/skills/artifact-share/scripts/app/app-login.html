@@ -16,6 +16,35 @@
       </div>
       <p class="gerr" id="g-err" role="alert" hidden></p>
       <button class="btn" type="submit" id="g-go">ログイン</button>
+      <button class="linkbtn glink" type="button" id="g-forgot">パスワードを忘れた</button>
+    </form>
+
+    <form id="forgotform" hidden novalidate>
+      <h1>確認コードを送る</h1>
+      <p class="glede">登録されているメールアドレスへ、確認コードを送ります。届いたコードで新しいパスワードを決められます。</p>
+      <div class="gfield">
+        <label for="g-fmail">メールアドレス</label>
+        <input type="email" id="g-fmail" autocomplete="username" required>
+      </div>
+      <p class="gerr" id="g-ferr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-fgo">コードを送る</button>
+      <button class="linkbtn glink" type="button" data-back>ログインに戻る</button>
+    </form>
+
+    <form id="resetform" hidden novalidate>
+      <h1>新しいパスワードを決める</h1>
+      <p class="glede" id="g-rlede"></p>
+      <div class="gfield">
+        <label for="g-code">確認コード</label>
+        <input type="text" id="g-code" inputmode="numeric" autocomplete="one-time-code" required>
+      </div>
+      <div class="gfield">
+        <label for="g-rnew">新しいパスワード</label>
+        <input type="password" id="g-rnew" autocomplete="new-password" required>
+      </div>
+      <p class="gerr" id="g-rerr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-rgo">決める</button>
+      <button class="linkbtn glink" type="button" data-back>ログインに戻る</button>
     </form>
 
     <form id="newpassform" hidden novalidate>

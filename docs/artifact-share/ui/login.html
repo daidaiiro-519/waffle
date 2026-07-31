@@ -1,0 +1,525 @@
+<title>artifactshare — ログイン</title>
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#65707b;
+    --paper:#f4f2ee; --card:#ffffff; --line:#dcd8d0; --line-soft:#e9e5de;
+    --accent:#2f5d63; --accent-soft:#e3edee;
+    --ok:#4f7355; --ok-soft:#eaf1ea;
+    --off:#716a61; --off-soft:#efece6;
+    --warn:#8a672b; --warn-soft:#f7f0e1;
+    --live:#b4553f;
+    --token-bg:#1f2529; --token-ink:#f0ede6; --token-gold:#d9b26a;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+    --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+    --accent:#7fb3ba; --accent-soft:#1e2c2e;
+    --ok:#8ecbb6; --ok-soft:#1d2a23;
+    --off:#928a7a; --off-soft:#26241f;
+    --warn:#c9a05e; --warn-soft:#2b2419;
+    --live:#d98a72;
+    --token-bg:#0e1113; --token-ink:#f0ede6; --token-gold:#d9b26a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+      --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+      --accent:#7fb3ba; --accent-soft:#1e2c2e;
+      --ok:#8ecbb6; --ok-soft:#1d2a23;
+      --off:#928a7a; --off-soft:#26241f;
+      --warn:#c9a05e; --warn-soft:#2b2419;
+      --live:#d98a72;
+      --token-bg:#0e1113; --token-ink:#f0ede6; --token-gold:#d9b26a;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .page{max-width:940px; margin:0 auto; padding:34px 22px 90px;}
+
+  .appbar{display:flex; align-items:center; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:30px;}
+  .brand{font-family:var(--serif); font-size:19px; font-weight:600;}
+  .brand span{color:var(--accent);}
+  .nav{display:flex; gap:4px; margin-left:20px;}
+  .nav a{font-size:13px; color:var(--ink-soft); text-decoration:none; padding:5px 11px; border-radius:7px;}
+  .nav a.cur{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .nav a:hover:not(.cur){background:var(--line-soft);}
+  .whoami{margin-left:auto; display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-soft);}
+  .avatar{width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; font-size:11px; font-weight:700;}
+
+  .btn{font:inherit; font-size:13px; font-weight:600; padding:8px 18px; border-radius:7px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn.ghost{background:transparent; color:var(--accent);}
+  .btn:focus-visible, .copy:focus-visible, .linkbtn:focus-visible, input:focus-visible, summary:focus-visible,
+  .fchip input:focus-visible + span, .pchip input:focus-visible + span, .rowbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .linkbtn{font:inherit; font-size:12.5px; background:none; border:none; color:var(--ink-soft); cursor:pointer; padding:6px 2px; text-decoration:underline; text-underline-offset:3px;}
+  .card{border:1px solid var(--line); border-radius:12px; background:var(--card); padding:18px;}
+  .view{display:none;}
+  .view.on{display:block;}
+
+  /* ── dropzone（メイン） ── */
+  .drop{border:2px dashed var(--line); border-radius:14px; background:var(--card); padding:30px 26px; text-align:center;
+    transition:border-color .15s, background .15s; margin-bottom:34px; display:flex; align-items:center; gap:22px; text-align:left;}
+  .drop.hot{border-color:var(--accent); background:var(--accent-soft);}
+  .glyph{width:52px; height:44px; position:relative; flex-shrink:0;}
+  .sheet{position:absolute; inset:0; border:1.5px solid var(--ink-faint); border-radius:4px; background:var(--card);}
+  .sheet.b{transform:rotate(-7deg) translate(-4px,3px); opacity:.4;}
+  .sheet.f{display:grid; align-content:center; gap:4px; padding:8px 7px;}
+  .sheet.f i{display:block; height:2px; background:var(--ink-faint); border-radius:1px; opacity:.5;}
+  .sheet.f i:nth-child(1){width:70%;} .sheet.f i:nth-child(2){width:100%;} .sheet.f i:nth-child(3){width:85%;}
+  .tag-html{position:absolute; right:-8px; bottom:-6px; font-family:var(--mono); font-size:8px; font-weight:700; background:var(--accent); color:#fff; padding:2px 5px; border-radius:3px;}
+  .drop .dtxt{flex:1; min-width:0;}
+  .drop h2{font-size:16px; margin:0 0 3px; font-weight:600;}
+  .drop .d-sub{font-size:12.5px; color:var(--ink-soft); margin:0;}
+  .drop .dact{flex-shrink:0;}
+
+  /* ── list ── */
+  .lhead{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  .lhead h1{font-family:var(--serif); font-size:20px; font-weight:600; margin:0;}
+  .lhead .count{font-size:12.5px; color:var(--ink-faint);}
+  .scope{margin-left:auto; font-size:11.5px; color:var(--ink-faint);}
+
+  .toolbar{display:flex; flex-direction:column; gap:11px; margin-bottom:16px;}
+  .search{position:relative;}
+  .search input{width:100%; font:inherit; font-size:13.5px; padding:9px 12px 9px 34px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
+  .search svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); width:14px; height:14px; stroke:var(--ink-faint); stroke-width:2; fill:none;}
+  .filters{display:flex; gap:16px; flex-wrap:wrap; align-items:center;}
+  .fgroup{display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .fgroup .flabel{font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); margin-right:2px;}
+  .fchip, .pchip{position:relative;}
+  .fchip input, .pchip input{position:absolute; opacity:0; width:0; height:0;}
+  .fchip span{display:inline-block; font-size:12px; padding:3px 11px; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink-soft); cursor:pointer;}
+  .fchip input:checked + span{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;}
+
+  .list{border:1px solid var(--line); border-radius:12px; background:var(--card);}
+  .row{display:grid; grid-template-columns:1fr auto auto; gap:4px 16px; padding:15px 18px; border-top:1px solid var(--line-soft); align-items:center;}
+  .row:first-child{border-top:none; border-radius:12px 12px 0 0;}
+  .row:last-child{border-radius:0 0 12px 12px;}
+  .row:only-child{border-radius:12px;}
+  .row.off{background:var(--off-soft);}
+  .row.off .title{color:var(--ink-soft);}
+  .row.justnow{animation:pop 1.4s ease;}
+  @keyframes pop{from{background:var(--accent-soft);} to{background:transparent;}}
+  .main{grid-column:1; min-width:0;}
+  .title{font-size:14.5px; font-weight:600; margin:0 0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .sub{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
+  .dtype{font-family:var(--mono); font-size:10px; letter-spacing:.03em; padding:2px 7px; border-radius:4px; background:var(--accent-soft); color:var(--accent);}
+  .dtype.none{background:var(--line-soft); color:var(--ink-faint);}
+  .tag{font-size:11px; color:var(--ink-soft);}
+  .tag::before{content:"#"; opacity:.5;}
+  .proj{font-size:11px; color:var(--ink-soft); display:inline-flex; align-items:center; gap:4px;}
+  .proj::before{content:""; width:6px; height:6px; border-radius:2px; background:var(--accent); opacity:.7;}
+  .comments{grid-column:2; text-align:right; white-space:nowrap; background:none; border:1px solid transparent;
+    border-radius:8px; padding:4px 8px; font:inherit; color:inherit; cursor:pointer;}
+  .comments:hover{border-color:var(--line); background:var(--paper);}
+  .comments:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .comments[disabled]{cursor:default; background:none; border-color:transparent;}
+  .cnum{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; display:block;}
+  .cnum.zero{color:var(--ink-faint); font-weight:400;}
+  .cwhen{font-size:11px; color:var(--ink-faint); display:block;}
+  .cwhen.fresh{color:var(--live); font-weight:600;}
+  .cwhen.fresh::before{content:"●"; font-size:7px; vertical-align:2px; margin-right:3px;}
+  .rowend{grid-column:3; display:flex; align-items:center; gap:9px;}
+  .status{font-family:var(--mono); font-size:10px; letter-spacing:.04em; padding:3px 9px; border-radius:11px; white-space:nowrap;}
+  .status.on{background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok);}
+  .status.no{background:var(--off-soft); color:var(--off); border:1px solid var(--off);}
+  .rowbtn{font:inherit; font-size:15px; line-height:1; background:none; border:1px solid transparent; border-radius:6px; color:var(--ink-faint); cursor:pointer; padding:5px 8px;}
+  .rowbtn:hover{border-color:var(--line); color:var(--ink);}
+  .iconbtn{background:none; border:1px solid transparent; border-radius:6px; color:var(--ink-faint); cursor:pointer;
+    padding:5px; display:inline-flex; align-items:center; justify-content:center;}
+  .iconbtn:hover{border-color:var(--line); color:var(--accent);}
+  .iconbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .iconbtn svg{width:15px; height:15px; stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .iconbtn.ok{color:var(--ok); border-color:var(--ok);}
+
+  .menu{position:relative;}
+  .menu ul{position:absolute; right:0; top:calc(100% + 5px); z-index:10; min-width:186px; margin:0; padding:5px; list-style:none;
+    background:var(--card); border:1px solid var(--line); border-radius:9px; box-shadow:0 6px 22px rgba(0,0,0,.13);}
+  .menu ul.up{top:auto; bottom:calc(100% + 5px);}
+  .menu ul[hidden]{display:none;}
+  .menu li button{width:100%; text-align:left; font:inherit; font-size:12.5px; padding:7px 10px; border:none; border-radius:6px; background:none; color:var(--ink); cursor:pointer;}
+  .menu li button:hover{background:var(--accent-soft); color:var(--accent);}
+  .menu li.sep{height:1px; background:var(--line-soft); margin:4px 2px;}
+  .menu li button.danger{color:var(--live);}
+  .empty{padding:46px 24px; text-align:center; color:var(--ink-faint);}
+  .empty p{font-size:13.5px; margin:0;}
+
+  /* ── confirm ── */
+  h1.vt{font-family:var(--serif); font-size:23px; font-weight:600; margin:0 0 5px;}
+  .lede{color:var(--ink-soft); font-size:13.5px; margin:0 0 22px;}
+  .filerow{display:flex; align-items:center; gap:10px; padding:9px 11px; border:1px solid var(--line-soft); border-radius:8px; background:var(--paper); margin-bottom:15px;}
+  .fname{font-family:var(--mono); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .fsize{margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--ink-faint); flex-shrink:0;}
+  .readout{border:1px solid var(--line-soft); border-radius:8px; overflow:hidden; margin-bottom:15px;}
+  .rhead{display:flex; align-items:center; gap:7px; padding:8px 11px; background:var(--ok-soft); border-bottom:1px solid var(--line-soft); font-size:11.5px; color:var(--ok); font-weight:600;}
+  .check{width:14px; height:14px; border-radius:50%; background:var(--ok); display:grid; place-items:center; flex-shrink:0;}
+  .check svg{width:9px; height:9px; stroke:#fff; stroke-width:2.6; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .kv{display:grid; grid-template-columns:auto 1fr; gap:6px 13px; padding:12px; font-size:12.5px; margin:0;}
+  .kv dt{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; padding-top:2px;}
+  .kv dd{margin:0; word-break:break-word;}
+  .chips{display:flex; gap:5px; flex-wrap:wrap;}
+  .chip{font-size:11px; background:var(--accent-soft); color:var(--accent); padding:2px 8px; border-radius:11px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block; font-size:12px; font-weight:600; margin-bottom:5px;}
+  .field label .req{color:var(--warn); font-weight:400; font-size:11px; margin-left:5px;}
+  .field input{width:100%; font:inherit; font-size:13.5px; padding:8px 11px; border:1px solid var(--line); border-radius:7px; background:var(--paper); color:var(--ink);}
+  details.optional{border-top:1px dashed var(--line); padding-top:12px; margin-top:2px;}
+  details.optional summary{font-size:12px; color:var(--ink-soft); cursor:pointer; list-style:none; display:flex; align-items:center; gap:6px;}
+  details.optional summary::-webkit-details-marker{display:none;}
+  details.optional summary::before{content:"＋"; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  details.optional[open] summary::before{content:"−";}
+  details.optional .inner{padding-top:13px;}
+  .notice{display:flex; gap:9px; align-items:flex-start; padding:10px 12px; border-radius:8px; font-size:12px; background:var(--warn-soft); border:1px solid var(--warn); margin-bottom:15px;}
+  .notice .ic{font-family:var(--mono); font-weight:700; color:var(--warn); flex-shrink:0;}
+  .notice p{margin:0;}
+  .picker{border-top:1px solid var(--line-soft); margin-top:15px; padding-top:14px;}
+  .picker .plabel{font-size:12px; font-weight:600; margin:0 0 3px;}
+  .picker .phelp{font-size:11.5px; color:var(--ink-faint); margin:0 0 10px;}
+  .pchips{display:flex; gap:7px; flex-wrap:wrap;}
+  .pchip span{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; padding:5px 12px;
+    border:1px solid var(--line); border-radius:16px; background:var(--paper); color:var(--ink-soft); cursor:pointer;}
+  .pchip span::before{content:""; width:11px; height:11px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0;}
+  .pchip input:checked + span{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .pchip input:checked + span::before{background:var(--accent); border-color:var(--accent);}
+  .actions{display:flex; gap:9px; align-items:center; padding-top:3px;}
+  .actions .spacer{flex:1;}
+
+  /* ── done ── */
+  .dhead{display:flex; align-items:center; gap:9px; margin-bottom:16px;}
+  .dhead .t{font-family:var(--serif); font-size:19px; font-weight:600;}
+  .urlrow{display:flex; align-items:center; gap:9px; padding:11px 13px; border:1px solid var(--line); border-radius:8px; background:var(--paper); margin-bottom:13px;}
+  .urlrow .u{font-family:var(--mono); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .copy{margin-left:auto; font:inherit; font-size:11.5px; font-weight:600; padding:5px 11px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); cursor:pointer; flex-shrink:0;}
+  .copy:hover{border-color:var(--accent); color:var(--accent);}
+  .tokenbox{background:var(--token-bg); border-radius:10px; padding:16px 18px; margin-bottom:15px;}
+  .tlabel{font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--token-gold); margin:0 0 10px;}
+  .tval{display:flex; align-items:center; gap:10px;}
+  .tval code{font-family:var(--mono); font-size:17px; letter-spacing:.06em; color:var(--token-ink); word-break:break-all;}
+  .tokenbox .copy{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.22); color:var(--token-ink);}
+  .tokenbox .warn{font-size:11.5px; color:#b6b0a4; margin:11px 0 0; line-height:1.65;}
+  .belongs{font-size:12.5px; color:var(--ink-soft); margin:0 0 15px; display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
+  .belongs .pb{font-size:11.5px; background:var(--accent-soft); color:var(--accent); padding:2px 9px; border-radius:11px;}
+  .nextrow{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+
+  /* ── dialog ── */
+  dialog{border:1px solid var(--line); border-radius:13px; background:var(--card); color:var(--ink);
+    padding:0; max-width:460px; width:calc(100% - 32px); box-shadow:0 14px 50px rgba(0,0,0,.24);}
+  dialog::backdrop{background:rgba(20,22,25,.42);}
+  .dlg-head{padding:17px 20px 0;}
+  .dlg-head h2{font-family:var(--serif); font-size:17px; font-weight:600; margin:0 0 5px;}
+  .dlg-head .target{font-size:12px; color:var(--ink-faint); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .dlg-body{padding:15px 20px 0;}
+  .dlg-body p{font-size:13px; color:var(--ink-soft); margin:0 0 11px;}
+  .dlg-body p strong{color:var(--ink); font-weight:600;}
+  .keep{border:1px solid var(--line-soft); border-radius:9px; overflow:hidden; margin-bottom:13px;}
+  .keep div{display:flex; gap:9px; align-items:flex-start; padding:9px 12px; font-size:12.5px; border-top:1px solid var(--line-soft);}
+  .keep div:first-child{border-top:none;}
+  .keep .ky{color:var(--ok); font-weight:700; flex-shrink:0;}
+  .keep .kn{color:var(--live); font-weight:700; flex-shrink:0;}
+  .optline{display:flex; gap:9px; align-items:flex-start; padding:11px 12px; border:1px solid var(--line-soft);
+    border-radius:9px; background:var(--paper); margin-bottom:13px; font-size:12.5px;}
+  .optline input{margin-top:4px; flex-shrink:0;}
+  .optline label{cursor:pointer;}
+  .optline .sub{display:block; color:var(--ink-faint); font-size:11.5px;}
+  .dlg-act{display:flex; gap:9px; align-items:center; justify-content:flex-end; padding:5px 20px 18px;}
+  .dlg-act .spacer{display:none;}
+  /* コメント閲覧ダイアログ */
+  .cmlist{max-height:min(56vh,420px); overflow-y:auto; margin:0 -20px; padding:0 20px;
+    display:flex; flex-direction:column; gap:15px;}
+  .cmitem .cmtop{display:flex; align-items:baseline; gap:6px; flex-wrap:wrap;}
+  .cmitem .cwho{font-size:12.5px; font-weight:700;}
+  .cmitem .cwhen{font-size:11px; color:var(--ink-faint);}
+  .cmitem .cbody{font-size:13px; margin:2px 0 0; color:var(--ink); white-space:pre-wrap;}
+  .cmitem.reply{margin-left:15px; padding-left:11px; border-left:2px solid var(--line-soft);}
+  .cdec{font-size:10px; font-weight:700; padding:1px 6px; border-radius:5px;}
+  .cdec.approve{background:var(--ok-soft); color:var(--ok);}
+  .cdec.revise{background:var(--warn-soft); color:var(--warn);}
+  .cmsum{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);
+    padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid var(--line-soft);}
+  .cmsum b{color:var(--ink);}
+
+  /* コピー完了の通知 */
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(10px); z-index:60;
+    background:var(--ink); color:var(--paper); font-size:13px; font-weight:600; padding:10px 20px;
+    border-radius:24px; box-shadow:0 6px 24px rgba(0,0,0,.24); opacity:0; pointer-events:none;
+    transition:opacity .18s, transform .18s; display:flex; align-items:center; gap:8px;}
+  .toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast svg{width:15px; height:15px; stroke:currentColor; stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+
+  .dropmini{border:2px dashed var(--line); border-radius:10px; background:var(--paper); padding:20px 16px;
+    text-align:center; margin-bottom:13px; transition:border-color .15s, background .15s;}
+  .dropmini.hot{border-color:var(--accent); background:var(--accent-soft);}
+  .dropmini p{font-size:12.5px; margin:0 0 9px; color:var(--ink-soft);}
+  .dropmini .btn{font-size:12px; padding:6px 14px;}
+  .btn.danger-b{background:transparent; border-color:var(--live); color:var(--live);}
+  .btn.danger-b:hover{background:rgba(180,85,63,.1); filter:none;}
+  .dlg-pane{display:none;} .dlg-pane.on{display:block;}
+
+  @media (max-width:660px){
+    .drop{flex-direction:column; text-align:center;}
+    .row{grid-template-columns:1fr auto;}
+    .comments{grid-column:1/-1; grid-row:2; text-align:left; margin-top:6px;}
+    .cwhen{display:inline; margin-left:6px;}
+    .mrow{grid-template-columns:1fr auto;}
+    .mcount{grid-column:1/-1; grid-row:2; text-align:left; margin-top:5px;}
+    .mcount b{display:inline; margin-right:4px;}
+    .lhead{flex-wrap:wrap;}
+    #invite-open{margin-left:0 !important; width:100%; margin-top:10px;}
+  }
+  @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important;}}
+
+  /* ── 管理者の画面に固有のもの ── */
+
+  .rolechip{font-size:10.5px; letter-spacing:.02em; padding:2px 8px; border-radius:11px; white-space:nowrap;}
+  .rolechip.admin{background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);}
+  .rolechip.member{background:var(--line-soft); color:var(--ink-soft); border:1px solid var(--line);}
+  .rolechip.pending{background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn);}
+
+  .mrow{display:grid; grid-template-columns:1fr auto auto; gap:4px 16px; padding:15px 18px;
+    border-top:1px solid var(--line-soft); align-items:center;}
+  .mrow:first-child{border-top:none;}
+  .mname{font-size:14px; font-weight:600; margin:0 0 3px;}
+  .mmail{font-size:11.5px; color:var(--ink-faint); font-family:var(--mono);}
+  .mcount{font-size:11.5px; color:var(--ink-soft); text-align:right; white-space:nowrap;}
+  .mcount b{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; display:block; color:var(--ink);}
+
+  .hint{font-size:12px; color:var(--ink-faint); line-height:1.65; margin:10px 0 0;}
+  .warnbox{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:9px;
+    background:var(--warn-soft); border:1px solid var(--warn); margin:14px 0 0;}
+  .warnbox .ic{flex-shrink:0; width:17px; height:17px; border-radius:50%; background:var(--warn); color:var(--card);
+    font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;}
+  .warnbox p{margin:0; font-size:12.5px; line-height:1.65; color:var(--ink);}
+  .warnbox b{font-variant-numeric:tabular-nums;}
+
+  select.pick{width:100%; font:inherit; font-size:13.5px; padding:9px 11px; border:1px solid var(--line);
+    border-radius:8px; background:var(--card); color:var(--ink);}
+  .field input[type=email]{width:100%; font:inherit; font-size:13.5px; padding:9px 11px;
+    border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
+
+  /* ── ログイン ── */
+  .gate{position:fixed; inset:0; z-index:100; background:var(--paper);
+    display:flex; align-items:center; justify-content:center; padding:22px;}
+  .gate[hidden]{display:none;}
+  .gatebox{width:100%; max-width:380px;}
+  .gatebox .brand{font-family:var(--serif); font-size:21px; font-weight:600; margin-bottom:22px;}
+  .gate h1{font-family:var(--serif); font-size:19px; font-weight:600; margin:0 0 6px;}
+  .glede{font-size:12.5px; color:var(--ink-soft); margin:0 0 18px; line-height:1.75;}
+  .gfield{margin-bottom:13px;}
+  .gfield label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+  .gfield input{width:100%; font:inherit; font-size:14px; padding:10px 12px;
+    border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
+  .gfield input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .gerr{font-size:12.5px; color:var(--live); margin:0 0 13px; line-height:1.7;}
+  .gerr[hidden]{display:none;}
+  .gate .btn{width:100%; padding:11px; font-size:14px;}
+  .gate .btn[disabled]{opacity:.55; cursor:default;}
+  .glink{display:block; width:100%; text-align:center; margin-top:12px;}
+
+  /* ── 通信中と失敗 ── */
+  .busy{padding:46px 24px; text-align:center; color:var(--ink-faint); font-size:13.5px;}
+  .failed{padding:26px 24px; text-align:center;}
+  .failed p{font-size:13.5px; color:var(--ink); margin:0 0 14px;}
+  .failed .btn{font-size:12.5px; padding:6px 16px;}
+
+  .signout{font:inherit; font-size:12px; background:none; border:1px solid var(--line);
+    border-radius:6px; color:var(--ink-soft); cursor:pointer; padding:4px 11px; margin-left:10px;}
+  .signout:hover{border-color:var(--live); color:var(--live);}
+
+  /* 管理者にだけ出るもの */
+  body:not(.is-admin) .adminonly{display:none !important;}
+</style>
+<!-- ══ ログイン ══ -->
+<div class="gate" id="gate">
+  <div class="gatebox">
+    <div class="brand">artifact<span>share</span></div>
+
+    <form id="loginform" novalidate>
+      <h1>ログイン</h1>
+      <p class="glede">招かれた人だけが公開できます。届いたメールのアドレスと、仮のパスワードを入力してください。</p>
+      <div class="gfield">
+        <label for="g-mail">メールアドレス</label>
+        <input type="email" id="g-mail" autocomplete="username" required>
+      </div>
+      <div class="gfield">
+        <label for="g-pass">パスワード</label>
+        <input type="password" id="g-pass" autocomplete="current-password" required>
+      </div>
+      <p class="gerr" id="g-err" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-go">ログイン</button>
+      <button class="linkbtn glink" type="button" id="g-forgot">パスワードを忘れた</button>
+    </form>
+
+    <form id="forgotform" hidden novalidate>
+      <h1>確認コードを送る</h1>
+      <p class="glede">登録されているメールアドレスへ、確認コードを送ります。届いたコードで新しいパスワードを決められます。</p>
+      <div class="gfield">
+        <label for="g-fmail">メールアドレス</label>
+        <input type="email" id="g-fmail" autocomplete="username" required>
+      </div>
+      <p class="gerr" id="g-ferr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-fgo">コードを送る</button>
+      <button class="linkbtn glink" type="button" data-back>ログインに戻る</button>
+    </form>
+
+    <form id="resetform" hidden novalidate>
+      <h1>新しいパスワードを決める</h1>
+      <p class="glede" id="g-rlede"></p>
+      <div class="gfield">
+        <label for="g-code">確認コード</label>
+        <input type="text" id="g-code" inputmode="numeric" autocomplete="one-time-code" required>
+      </div>
+      <div class="gfield">
+        <label for="g-rnew">新しいパスワード</label>
+        <input type="password" id="g-rnew" autocomplete="new-password" required>
+      </div>
+      <p class="gerr" id="g-rerr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-rgo">決める</button>
+      <button class="linkbtn glink" type="button" data-back>ログインに戻る</button>
+    </form>
+
+    <form id="newpassform" hidden novalidate>
+      <h1>パスワードを決める</h1>
+      <p class="glede">初めてのログインです。仮のパスワードは使えなくなります。12文字以上で、大文字・小文字・数字を含めてください。</p>
+      <div class="gfield">
+        <label for="g-new">新しいパスワード</label>
+        <input type="password" id="g-new" autocomplete="new-password" required>
+      </div>
+      <div class="gfield">
+        <label for="g-new2">もう一度</label>
+        <input type="password" id="g-new2" autocomplete="new-password" required>
+      </div>
+      <p class="gerr" id="g-newerr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-newgo">決めてログイン</button>
+    </form>
+  </div>
+</div>
+
+<script>
+
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  // 招かれている人（作り物）。仮のパスワードのままの人は、初回に決め直す
+  var PEOPLE = {
+    'tanaka@example.com': { pass: 'Temporary2026x', first: true },
+    'daidaiiro@example.com': { pass: 'Passw0rdPassw0rd', first: false }
+  };
+
+  $('loginform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var mail = $('g-mail').value.trim(), pass = $('g-pass').value;
+    var err = $('g-err');
+    if (!mail || !pass) return;
+
+    $('g-go').disabled = true;
+    err.hidden = true;
+
+    setTimeout(function () {
+      var person = PEOPLE[mail];
+      if (!person || person.pass !== pass) {
+        // 招かれていないのか、パスワードが違うのかを分けて伝えない。
+        // 拒み方の違いから、誰が招かれているかを外から探れないようにするため
+        err.textContent = 'メールアドレスかパスワードが違います。';
+        err.hidden = false;
+        $('g-go').disabled = false;
+        return;
+      }
+      if (person.first) {
+        $('loginform').hidden = true;
+        $('newpassform').hidden = false;
+        setTimeout(function () { $('g-new').focus(); }, 40);
+      } else {
+        done(mail);
+      }
+      $('g-go').disabled = false;
+    }, 420);
+  });
+
+  // 合言葉を忘れたとき。招待に応じていない人はこの経路を使えない
+  function gateForm(id) {
+    ['loginform', 'newpassform', 'forgotform', 'resetform'].forEach(function (f) {
+      $(f).hidden = f !== id;
+    });
+  }
+
+  $('g-forgot').addEventListener('click', function () {
+    $('g-fmail').value = $('g-mail').value.trim();
+    gateForm('forgotform');
+    setTimeout(function () { $('g-fmail').focus(); }, 40);
+  });
+
+  document.querySelectorAll('.gate [data-back]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      gateForm('loginform');
+      $('g-err').hidden = true;
+    });
+  });
+
+  $('forgotform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var mail = $('g-fmail').value.trim();
+    if (!mail) return;
+    // 招かれていない宛先でも同じ画面へ進む。送れたかどうかの違いから、
+    // 誰が招かれているかを外から探れないようにするため
+    $('g-rlede').textContent = mail + ' 宛にコードを送りました。届いていない場合は、'
+      + '迷惑メールに入っていないかを確かめてください。';
+    gateForm('resetform');
+    setTimeout(function () { $('g-code').focus(); }, 40);
+  });
+
+  $('resetform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = $('g-code').value.trim(), pass = $('g-rnew').value;
+    var err = $('g-rerr');
+    if (!code) { $('g-code').focus(); return; }
+    if (code !== '123456') {
+      err.textContent = 'コードが違うか、期限が切れています。もう一度送ってください。';
+      err.hidden = false; return;
+    }
+    var bad = check(pass);
+    if (bad) { err.textContent = bad; err.hidden = false; return; }
+    err.hidden = true;
+    done($('g-fmail').value.trim());
+  });
+
+  function check(value) {
+    if (value.length < 12) return '12文字以上にしてください。';
+    if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/[0-9]/.test(value)) {
+      return '大文字・小文字・数字をそれぞれ含めてください。';
+    }
+    return '';
+  }
+
+  $('newpassform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var a = $('g-new').value, b = $('g-new2').value;
+    var err = $('g-newerr');
+    if (a !== b) { err.textContent = '2つの入力が一致しません。'; err.hidden = false; return; }
+    var bad = check(a);
+    if (bad) { err.textContent = bad; err.hidden = false; return; }
+    err.hidden = true;
+    done($('g-mail').value.trim());
+  });
+
+  function done(mail) {
+    var box = document.querySelector('.gatebox');
+    box.textContent = '';
+    var brand = document.createElement('div');
+    brand.className = 'brand'; brand.textContent = 'artifact';
+    var span = document.createElement('span'); span.textContent = 'share';
+    brand.appendChild(span);
+    var h = document.createElement('h1'); h.textContent = 'ログインしました';
+    var p = document.createElement('p'); p.className = 'glede';
+    p.textContent = mail + ' として入りました。アーティファクトの一覧へ移ります。';
+    var again = document.createElement('button');
+    again.className = 'btn'; again.type = 'button'; again.textContent = 'もう一度ためす';
+    again.addEventListener('click', function () { location.reload(); });
+    box.append(brand, h, p, again);
+  }
+
+  setTimeout(function () { $('g-mail').focus(); }, 60);
+})();
+</script>
