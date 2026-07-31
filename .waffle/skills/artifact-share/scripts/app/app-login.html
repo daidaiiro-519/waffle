@@ -1,0 +1,36 @@
+<!-- ══ ログイン ══ -->
+<div class="gate" id="gate" hidden>
+  <div class="gatebox">
+    <div class="brand">artifact<span>share</span></div>
+
+    <form id="loginform" novalidate>
+      <h1>ログイン</h1>
+      <p class="glede">招かれた人だけが公開できます。届いたメールのアドレスと、仮のパスワードを入力してください。</p>
+      <div class="gfield">
+        <label for="g-mail">メールアドレス</label>
+        <input type="email" id="g-mail" autocomplete="username" required>
+      </div>
+      <div class="gfield">
+        <label for="g-pass">パスワード</label>
+        <input type="password" id="g-pass" autocomplete="current-password" required>
+      </div>
+      <p class="gerr" id="g-err" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-go">ログイン</button>
+    </form>
+
+    <form id="newpassform" hidden novalidate>
+      <h1>パスワードを決める</h1>
+      <p class="glede">初めてのログインです。仮のパスワードは使えなくなります。12文字以上で、大文字・小文字・数字を含めてください。</p>
+      <div class="gfield">
+        <label for="g-new">新しいパスワード</label>
+        <input type="password" id="g-new" autocomplete="new-password" required>
+      </div>
+      <div class="gfield">
+        <label for="g-new2">もう一度</label>
+        <input type="password" id="g-new2" autocomplete="new-password" required>
+      </div>
+      <p class="gerr" id="g-newerr" role="alert" hidden></p>
+      <button class="btn" type="submit" id="g-newgo">決めてログイン</button>
+    </form>
+  </div>
+</div>

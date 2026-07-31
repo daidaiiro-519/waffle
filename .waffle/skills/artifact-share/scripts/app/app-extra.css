@@ -1,0 +1,31 @@
+
+  /* ── ログイン ── */
+  .gate{position:fixed; inset:0; z-index:100; background:var(--paper);
+    display:flex; align-items:center; justify-content:center; padding:22px;}
+  .gate[hidden]{display:none;}
+  .gatebox{width:100%; max-width:380px;}
+  .gatebox .brand{font-family:var(--serif); font-size:21px; font-weight:600; margin-bottom:22px;}
+  .gate h1{font-family:var(--serif); font-size:19px; font-weight:600; margin:0 0 6px;}
+  .glede{font-size:12.5px; color:var(--ink-soft); margin:0 0 18px; line-height:1.75;}
+  .gfield{margin-bottom:13px;}
+  .gfield label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+  .gfield input{width:100%; font:inherit; font-size:14px; padding:10px 12px;
+    border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
+  .gfield input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .gerr{font-size:12.5px; color:var(--live); margin:0 0 13px; line-height:1.7;}
+  .gerr[hidden]{display:none;}
+  .gate .btn{width:100%; padding:11px; font-size:14px;}
+  .gate .btn[disabled]{opacity:.55; cursor:default;}
+
+  /* ── 通信中と失敗 ── */
+  .busy{padding:46px 24px; text-align:center; color:var(--ink-faint); font-size:13.5px;}
+  .failed{padding:26px 24px; text-align:center;}
+  .failed p{font-size:13.5px; color:var(--ink); margin:0 0 14px;}
+  .failed .btn{font-size:12.5px; padding:6px 16px;}
+
+  .signout{font:inherit; font-size:12px; background:none; border:1px solid var(--line);
+    border-radius:6px; color:var(--ink-soft); cursor:pointer; padding:4px 11px; margin-left:10px;}
+  .signout:hover{border-color:var(--live); color:var(--live);}
+
+  /* 管理者にだけ出るもの */
+  body:not(.is-admin) .adminonly{display:none !important;}

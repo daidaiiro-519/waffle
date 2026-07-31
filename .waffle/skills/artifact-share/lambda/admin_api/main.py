@@ -28,6 +28,7 @@ import publishers
 ACTIONS = {
     "publish", "list", "replace", "rotate", "disable", "enable",
     "assign", "unassign", "transfer", "invite", "remove-publisher",
+    "publishers",
 }
 
 # 管理者のグループ名。Cognitoのトークンに含まれていれば管理者とみなす
@@ -88,6 +89,8 @@ def _dispatch(action, deps, caller, body):  # pragma: no cover
         return manage.transfer(deps, caller, artifact_id, body.get("toPublisher", ""))
     if action == "invite":
         return publishers.invite(deps, caller, body.get("email", ""))
+    if action == "publishers":
+        return {"publishers": publishers.list_publishers(deps, caller)}
     return publishers.remove(deps, caller, body.get("publisherId", ""))
 
 
@@ -153,6 +156,31 @@ def _connections() -> dict:  # pragma: no cover
 
         def remove(self, publisher_id):
             idp.admin_delete_user(UserPoolId=pool, Username=publisher_id)
+
+        def list(self):
+            people, token = [], None
+            while True:
+                kw = {"UserPoolId": pool, "Limit": 60}
+                if token:
+                    kw["PaginationToken"] = token
+                res = idp.list_users(**kw)
+                for u in res.get("Users", []):
+                    attrs = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
+                    people.append({
+                        "id": u["Username"],
+                        "email": attrs.get("email", ""),
+                        # 仮の合言葉のまま入っていない人は、まだ招待に応じていない
+                        "status": ("invited" if u.get("UserStatus") == "FORCE_CHANGE_PASSWORD"
+                                   else "active"),
+                    })
+                token = res.get("PaginationToken")
+                if not token:
+                    return people
+
+        def admins(self):
+            res = idp.list_users_in_group(UserPoolId=pool,
+                                          GroupName=ADMIN_GROUP, Limit=60)
+            return {u["Username"] for u in res.get("Users", [])}
 
     return {"store": _Store(), "keys": _Keys(), "directory": _Directory(),
             "viewer_domain": os.environ.get("VIEWER_DOMAIN", "")}

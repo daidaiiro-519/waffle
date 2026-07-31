@@ -190,34 +190,20 @@ Resources:
       UserPoolId: !Ref UserPool
       Description: 全員の共有アーティファクトを手入れでき、投稿者を出し入れできる
 
-  # ログインの画面そのものは利用者プールに持たせる。合言葉が管理画面の
-  # コードを一切通らず、初回の付け替えや取り違えの扱いも自前で作らずに済む。
-  UserPoolDomain:
-    Type: AWS::Cognito::UserPoolDomain
-    Properties:
-      UserPoolId: !Ref UserPool
-      Domain: !Sub "${AWS::StackName}-${AWS::AccountId}"
-
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref UserPool
       ClientName: !Sub "${AWS::StackName}-upload-app"
       GenerateSecret: false                # ブラウザから使うため秘密を持たせない
+      # 管理画面が自前のフォームで受け取り、そのまま利用者プールへ渡す。
+      # 初回の合言葉の付け替えも自前の画面で扱う（RespondToAuthChallenge）
       ExplicitAuthFlows:
-        - ALLOW_USER_SRP_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
+      # 招かれていない宛先を入れても、招かれている宛先と同じ拒み方をする。
+      # 拒み方の違いから、誰が招かれているかを外から探れないようにするため
       PreventUserExistenceErrors: ENABLED
-      # 秘密を持てないブラウザからの受け取りなので、引き換え券に
-      # 検証用の値を添える方式（PKCE）だけを許す
-      AllowedOAuthFlows: [code]
-      AllowedOAuthFlowsUserPoolClient: true
-      AllowedOAuthScopes: [openid, email]
-      SupportedIdentityProviders: [COGNITO]
-      CallbackURLs:
-        - !Sub "https://${AdminDistribution.DomainName}/admin/"
-      LogoutURLs:
-        - !Sub "https://${AdminDistribution.DomainName}/admin/"
       # 締め出しを防ぐため、入り直せる期間は長めに取る
       AccessTokenValidity: 60
       IdTokenValidity: 60
@@ -286,6 +272,7 @@ Resources:
                   - cognito-idp:AdminDeleteUser
                   - cognito-idp:AdminGetUser
                   - cognito-idp:ListUsers
+                  - cognito-idp:ListUsersInGroup
                 Resource: !GetAtt UserPool.Arn
               - Sid: OwnLogsOnly
                 Effect: Allow
@@ -439,6 +426,24 @@ Resources:
             AccessControlMaxAgeSec: 31536000
             IncludeSubdomains: true
             Override: true
+          # 管理画面から出ていける先を、利用者プールと受け口の2つに限る。
+          # ここが緩いと、持ち込まれた命令が証明を外へ運び出せる。
+          # 受け口の居場所を名指しできないのは、その居場所がこの面自身に
+          # 依存しており、名指しすると資源どうしが互いを待って作れなくなるため。
+          ContentSecurityPolicy:
+            Override: true
+            ContentSecurityPolicy: !Sub >-
+              default-src 'none';
+              script-src 'self' 'unsafe-inline';
+              style-src 'self' 'unsafe-inline';
+              img-src 'self' data:;
+              font-src 'self' data:;
+              connect-src 'self'
+                https://cognito-idp.${AWS::Region}.amazonaws.com
+                https://*.lambda-url.${AWS::Region}.on.aws;
+              form-action 'none';
+              base-uri 'none';
+              frame-ancestors 'none'
 
   # ── 配信の口（信頼の境界で2つに分ける） ────────────────
 
@@ -554,6 +559,3 @@ Outputs:
     Value: !Ref UserPool
   UserPoolClientId:
     Value: !Ref UserPoolClient
-  LoginDomain:
-    Description: ログインの画面。合言葉はここでだけ扱われ、管理画面のコードを通らない
-    Value: !Sub "${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"

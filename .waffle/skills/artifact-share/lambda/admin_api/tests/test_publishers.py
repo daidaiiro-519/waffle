@@ -43,6 +43,13 @@ class FakeDirectory:
     def remove(self, publisher_id):
         self.people.pop(publisher_id, None)
 
+    def list(self):
+        return [{"id": pid, "email": p["email"], "status": p["status"]}
+                for pid, p in sorted(self.people.items())]
+
+    def admins(self):
+        return {"admin-1"}
+
 
 def setup(people=None, objects=None):
     directory = FakeDirectory(people if people is not None else {
@@ -153,3 +160,29 @@ def test_管理者でない者は外せない():
         publishers.remove(deps, SOMEONE, "admin-1")
     assert x.value.code == "NOT_ADMINISTRATOR"
     assert directory.find("admin-1") is not None
+
+
+# ── 一覧 ────────────────────────────────────────────────
+
+def test_招かれている人を一覧できる():
+    deps, _ = setup()
+    rows = {r["id"]: r for r in publishers.list_publishers(deps, ADMIN)}
+
+    assert set(rows) == {"admin-1", "publisher-2"}
+    assert rows["admin-1"]["admin"] is True       # 管理者は印がつく
+    assert rows["publisher-2"]["admin"] is False
+    assert rows["publisher-2"]["email"] == "p2@example.com"
+
+
+def test_管理者でなければ一覧できない():
+    """誰が招かれているかは、投稿者どうしには見せない"""
+    deps, _ = setup()
+    with pytest.raises(publishers.PublisherError) as x:
+        publishers.list_publishers(deps, SOMEONE)
+    assert x.value.code == "NOT_ADMINISTRATOR"
+
+
+def test_一覧に合言葉に関わるものが含まれない():
+    deps, _ = setup()
+    for row in publishers.list_publishers(deps, ADMIN):
+        assert set(row) == {"id", "name", "email", "status", "admin"}

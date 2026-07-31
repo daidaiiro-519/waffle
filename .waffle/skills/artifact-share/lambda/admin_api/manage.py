@@ -124,8 +124,22 @@ def list_artifacts(deps: Deps, caller: Caller) -> list[dict]:
             "projects": meta.get("projects", []),
             "uploadedBy": meta.get("uploadedBy", ""),
             "updatedAt": meta.get("updatedAt", 0),
+            "comments": _count_comments(deps, meta.get("artifactId", "")),
         })
     return sorted(rows, key=lambda r: r["updatedAt"], reverse=True)
+
+
+def _count_comments(deps: Deps, artifact_id: str) -> int:
+    """反応の件数。差し替えの区切りは印であって反応ではないので数えない。
+
+    一覧のたびに置き場を走査する。件数が増えると呼び出しも増えるが、
+    受け口は反応そのものへ書けないため、書き込みのたびに数を控えておく
+    手立てが無い（数えるのはここだけ、という制約と引き換えの作り）。
+    """
+    if not artifact_id:
+        return 0
+    return sum(1 for key in deps.store.list(f"comments/{artifact_id}/")
+               if not key.endswith("-replaced.json"))
 
 
 # ── 差し替え ────────────────────────────────────────────

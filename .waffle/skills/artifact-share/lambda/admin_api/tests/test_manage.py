@@ -262,3 +262,20 @@ def test_中身に書いた分類の目印では所属できない():
     assert meta["projects"] == []       # 所属は変わらない
     with pytest.raises(KeyError):
         deps.keys.get(f"pp:{r['artifactId']}")
+
+
+def test_一覧はコメントの件数を添える():
+    """どれに反応が集まっているかは、次に何をするかを決める手がかりになる"""
+    deps, r = setup()
+    for name in ("1700000001-aaa.json", "1700000002-bbb.json"):
+        deps.store.put(f"comments/{r['artifactId']}/{name}", "{}", "application/json")
+
+    assert manage.list_artifacts(deps, ME)[0]["comments"] == 2
+
+
+def test_差し替えの区切りはコメントの件数に数えない():
+    """区切りは印であって、誰かの反応ではない"""
+    deps, r = setup()
+    manage.replace_content(deps, ME, r["artifactId"], HTML.replace("本文", "直した"))
+
+    assert manage.list_artifacts(deps, ME)[0]["comments"] == 0

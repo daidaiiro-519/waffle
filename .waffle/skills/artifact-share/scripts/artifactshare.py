@@ -18,8 +18,8 @@ Cognitoでログインした管理画面から行う。
       環境を作る。作成後に管理画面のURLと、次にすることを表示する。
 
   artifactshare update-function
-      閲覧の関門（CloudFront Functions）と管理の受け口（Lambda）に、
-      手元のソースを反映する。init のあとに必ず1回実行する。
+      閲覧の関門（CloudFront Functions）・管理の受け口（Lambda）・
+      管理画面に、手元のソースを反映する。init のあとに必ず1回実行する。
 
   artifactshare invite <メールアドレス>
       公開できる人を招く。仮のパスワードが本人宛に届く。
@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import subprocess
 import sys
 import zipfile
@@ -199,7 +200,39 @@ def update_function(stack: str, region: str | None) -> None:
         ZipFile=buffer.getvalue(),
     )
     print("管理の受け口を反映しました。")
+
+    _put_admin_app(out, region)
+    print("管理画面を反映しました。")
     print("\n行き渡るまで数十秒かかります。")
+
+
+def _put_admin_app(out: dict, region: str | None) -> None:
+    """管理画面と、その設定を置く。
+
+    設定を別ファイルにするのは、環境ごとに変わる値（受け口の居場所・
+    利用者プールの識別子）を画面の中に焼き込まないため。画面は
+    どの環境でも同じものを置ける。
+    """
+    import boto3
+
+    s3 = boto3.client("s3", region_name=region)
+    bucket = out["BucketNameOut"]
+
+    app = (SKILL / "references" / "templates" / "upload-app.html") \
+        .read_text(encoding="utf-8")
+    s3.put_object(Bucket=bucket, Key="admin/index.html",
+                  Body=app.encode("utf-8"), ContentType="text/html; charset=utf-8")
+
+    session = boto3.Session(region_name=region)
+    config = {
+        "region": session.region_name,
+        "apiUrl": out["AdminApiUrl"],
+        "clientId": out["UserPoolClientId"],
+        "viewerDomain": out["ViewerDomain"],
+    }
+    s3.put_object(Bucket=bucket, Key="admin/config.json",
+                  Body=json.dumps(config, ensure_ascii=False).encode("utf-8"),
+                  ContentType="application/json")
 
 
 def status(stack: str, region: str | None) -> None:

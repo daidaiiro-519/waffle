@@ -81,3 +81,27 @@ def _count_artifacts(deps: Deps, publisher_id: str) -> int:
         if meta.get("uploadedBy") == publisher_id:
             count += 1
     return count
+
+
+def list_publishers(deps: Deps, caller: Caller) -> list[dict]:
+    """招かれている人を並べる。管理者だけが見られる。
+
+    誰が招かれているかを投稿者どうしに見せないのは、共有の相手を
+    社外へ広げたときに、社内の顔ぶれまで一緒に伝わらないようにするため。
+
+    合言葉に関わるものは一切含めない。名簿が持っていても、ここから外へ出さない。
+    """
+    _require_admin(caller)
+
+    admins = set(deps.directory.admins())
+    rows = []
+    for person in deps.directory.list():
+        email = person.get("email", "")
+        rows.append({
+            "id": person["id"],
+            "name": email.split("@")[0] if email else person["id"],
+            "email": email,
+            "status": person.get("status", ""),
+            "admin": person["id"] in admins,
+        })
+    return rows
