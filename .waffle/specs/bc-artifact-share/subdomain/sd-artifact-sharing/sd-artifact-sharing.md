@@ -32,6 +32,8 @@
 - uc-post-comment
 - uc-invite-publisher
 - uc-transfer-artifact
+- uc-sign-in
+- uc-reset-password
 
 ---
 

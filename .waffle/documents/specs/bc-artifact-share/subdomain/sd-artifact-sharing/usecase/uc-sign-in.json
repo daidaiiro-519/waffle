@@ -1,0 +1,236 @@
+{
+  "documentId": "uc-sign-in",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "招かれた人が合言葉で入る：uc-sign-in"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "招かれた投稿者が、宛先と合言葉を示して本人であることを確かめてもらう操作。以後の公開と管理は、すべてこれを通ってから行う。",
+        "初めて入るときは、招待で届いた仮の合言葉を自分だけが知るものへ決め直すまで、公開も管理もできない。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "SignIn"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "自分であることを確かめてもらい、公開と管理ができる状態になる"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、公開も管理も誰が行ったのか分からなくなる。自分が公開したものだけを扱えるという制限も、管理者だけが投稿者を出し入れできるという制限も、すべて『いま操作しているのが誰か』が分かって初めて成り立つ。",
+        "仮の合言葉のまま使い続けられると、招待のメールを見た者は誰でもその人になりすませる。初回に決め直させることで、招待が届く経路と、入るための合言葉を切り離す。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": [
+        "投稿者の名簿（誰が招かれているかと、その合言葉を持つ、この文脈の外にある仕組み）"
+      ]
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "操作する者があらかじめ招かれていること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "投稿者の名簿",
+          "message": "signIn（宛先・合言葉）",
+          "kind": "command"
+        },
+        {
+          "from": "投稿者の名簿",
+          "to": "",
+          "message": "招かれた者かと、合言葉が合うかを確かめる",
+          "kind": "self"
+        },
+        {
+          "from": "投稿者の名簿",
+          "to": "投稿者",
+          "message": "誰であるかを示す証明と、入り直すための券",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "誰であるかを示す証明が渡されている",
+        "その証明に、管理者かどうかが含まれている",
+        "しばらくのあいだ、合言葉を入れ直さずに入り直せる状態になっている",
+        "初めて入ったときは、仮の合言葉が使えなくなっている"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "招かれた人が正しい合言葉を示したとき、誰であるかを示す証明を返すこと",
+        "その証明に、管理者かどうかを含めること",
+        "宛先が招かれていないときと、合言葉が合わないときで、返す内容を変えないこと",
+        "初めて入るとき、新しい合言葉を決めるまで証明を返さないこと",
+        "新しい合言葉を決めたとき、仮の合言葉で入れなくすること",
+        "決められた強さを満たさない合言葉は受け付けないこと",
+        "一度入ったあとは、しばらくのあいだ合言葉を入れ直さずに入り直せること",
+        "合言葉を、この文脈の側に残さないこと"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "SIGN_IN_FAILED",
+          "condition": [
+            "宛先が招かれていない",
+            "合言葉が合わない",
+            "（この2つを区別して返さない）"
+          ]
+        },
+        {
+          "code": "PASSWORD_REJECTED",
+          "condition": [
+            "新しい合言葉が決められた強さを満たさない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "ある人が招かれている。",
+      "scenarios": [
+        {
+          "name": "招かれた人が入れる",
+          "category": "正常系",
+          "viewpoint": "事前条件: 招かれていることが、入れることの条件であると確かめる",
+          "gherkin": "Given ある人が招かれており、自分の合言葉を決め終えている\nWhen 宛先と合言葉を示す\nThen 誰であるかを示す証明が返る\nAnd その人として公開や管理ができる",
+          "covers": "招かれた人が正しい合言葉を示したとき、誰であるかを示す証明を返すこと",
+          "operation": "sign-in"
+        },
+        {
+          "name": "管理者かどうかが証明に含まれる",
+          "category": "正常系",
+          "viewpoint": "一貫性: 扱える範囲の判断が、入ったときの証明だけで決まることを確かめる。名簿を引き直さないため、証明にこれが無いと管理者だと分からない",
+          "gherkin": "Given 管理者が招かれている\nWhen その人が入る\nThen 返る証明に、管理者であることが含まれている",
+          "covers": "その証明に、管理者かどうかを含めること",
+          "operation": "sign-in"
+        },
+        {
+          "name": "招かれていない宛先と、合言葉違いを区別しない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 拒み方の違いから、誰が招かれているかを外から探れないことを確かめる",
+          "gherkin": "Given 宛先Aは招かれておらず、宛先Bは招かれている\nWhen Aで入ろうとする\nAnd Bで誤った合言葉を示して入ろうとする\nThen どちらも SIGN_IN_FAILED として同じ内容で拒まれる",
+          "covers": "宛先が招かれていないときと、合言葉が合わないときで、返す内容を変えないこと",
+          "operation": "sign-in"
+        },
+        {
+          "name": "初めて入るときは決め直すまで入れない",
+          "category": "境界値",
+          "viewpoint": "状態遷移: 仮の合言葉のままでは公開も管理もできないことを確かめる",
+          "gherkin": "Given ある人が招かれ、仮の合言葉が届いている\nWhen その仮の合言葉で入ろうとする\nThen 新しい合言葉を求められる\nAnd 誰であるかを示す証明はまだ返らない",
+          "covers": "初めて入るとき、新しい合言葉を決めるまで証明を返さないこと",
+          "operation": "renew-password"
+        },
+        {
+          "name": "決め直すと仮の合言葉は使えなくなる",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 招待が届く経路と、入るための合言葉が切り離されることを確かめる",
+          "gherkin": "Given ある人が新しい合言葉を決めている\nWhen 仮の合言葉で入ろうとする\nThen SIGN_IN_FAILED として拒まれる",
+          "covers": "新しい合言葉を決めたとき、仮の合言葉で入れなくすること",
+          "operation": "renew-password"
+        },
+        {
+          "name": "弱い合言葉は決められない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 決められた強さが、決め直すときにも効くことを確かめる",
+          "gherkin": "Given ある人が仮の合言葉で入り、新しいものを求められている\nWhen 決められた強さを満たさないものを示す\nThen PASSWORD_REJECTED として拒まれる\nAnd 仮の合言葉のままである",
+          "covers": "決められた強さを満たさない合言葉は受け付けないこと",
+          "operation": "renew-password"
+        },
+        {
+          "name": "しばらくは入れ直さずに済む",
+          "category": "境界値",
+          "viewpoint": "一貫性: 作業の途中で締め出されないことを確かめる。証明は短命なので、入り直す手段が別に要る",
+          "gherkin": "Given ある人が入っている\nAnd 証明の期限が切れている\nWhen 続きの操作をする\nThen 合言葉を入れ直さずに新しい証明が得られる\nAnd 操作はそのまま続けられる",
+          "covers": "一度入ったあとは、しばらくのあいだ合言葉を入れ直さずに入り直せること",
+          "operation": "sign-in"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "合言葉を、この文脈の側にどの形でも残さないこと",
+        "誰であるかを示す証明を、この文脈が自分で作り出さないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "ある人が入っている。",
+      "scenarios": [
+        {
+          "name": "合言葉はどこにも残らない",
+          "category": "境界値",
+          "viewpoint": "一貫性: 合言葉が名簿の外に写しを持たないことを確かめる。写しがあれば、そこが破られたときに全員の入り口が同時に開く",
+          "gherkin": "Given ある人が合言葉を示して入っている\nWhen この文脈が持つものを調べる\nThen 合言葉も、そこから合言葉を導けるものも見つからない",
+          "covers": "合言葉を、この文脈の側にどの形でも残さないこと"
+        },
+        {
+          "name": "証明の出どころは名簿ひとつ",
+          "category": "異常系",
+          "viewpoint": "一貫性: 証明を作れる者が名簿に限られることを確かめる。こちらで作れると、招かれていない人の証明も作れてしまう",
+          "gherkin": "Given 名簿が出したものではない証明が示される\nWhen その証明で操作しようとする\nThen 誰とも特定されず、操作は拒まれる",
+          "covers": "誰であるかを示す証明を、この文脈が自分で作り出さないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": [
+        {
+          "operation": "sign-in",
+          "summary": "宛先と合言葉を示して、誰であるかを示す証明を受け取る。"
+        },
+        {
+          "operation": "renew-password",
+          "summary": "初めて入るときに、仮の合言葉を自分だけが知るものへ決め直す。"
+        }
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing"
+}
