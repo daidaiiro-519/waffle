@@ -482,7 +482,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "論点ごとに列挙する（1〜2項目が目安）。この文脈/業務領域/集約/ユースケースが何かを1〜2文で（ドメイン語彙のみ・技術用語禁止）。",
+          "x-prompt-write": "論点ごとに列挙する（1〜2項目が目安）。この文脈/業務領域/集約/ユースケースが何かを1〜2文で（ドメイン語彙のみ・技術用語禁止）。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "string"
           }
@@ -527,7 +527,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "この文脈の主要な用語と定義を網羅的に列挙。業務エキスパートと同じ言葉で（技術用語を混ぜない）。",
+          "x-prompt-write": "この文脈の主要な用語と定義を網羅的に列挙。業務エキスパートと同じ言葉で（技術用語を混ぜない）。定義文の中でも、ここで定義した語をそのまま使う（説明のために別の同義語を持ち込まない）。配下のsubdomain/aggregate/usecaseの地の文はこの一覧の語だけで書かれるため、それらが指す対象は漏れなくここへ載せる。",
           "items": {
             "type": "object",
             "required": [
@@ -1200,7 +1200,7 @@
         "items": {
           "type": "array",
           "minItems": 1,
-          "x-prompt-write": "集約が常に満たす不変条件を最低1つ列挙。1つも挙げられないなら、それは集約でなく値オブジェクトか単なるデータ。",
+          "x-prompt-write": "集約が常に満たす不変条件を最低1つ列挙。1つも挙げられないなら、それは集約でなく値オブジェクトか単なるデータ。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "object",
             "required": [
@@ -1386,7 +1386,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "集約が公開する状態変更コマンドを列挙（命令形・ドメイン語彙）。",
+          "x-prompt-write": "集約が公開する状態変更コマンドを列挙（命令形・ドメイン語彙）。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "object",
             "required": [
@@ -1496,7 +1496,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "発行するドメインイベントを列挙。無ければ空。",
+          "x-prompt-write": "発行するドメインイベントを列挙。無ければ空。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "object",
             "required": [
@@ -1607,7 +1607,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "存在しなかった場合に起きる問題・防いでいるリスクを、独立した論点ごとに列挙する。このusecaseが存在しなかった場合に起きる問題、または防いでいるリスクを1〜2文で。メカニズム（何をするか）ではなく目的（なぜ必要か）を書く。actorIntent.intentが「何を達成したいか」を書く場所であるのに対し、ここは「それがなぜ業務上重要か」を書く場所（両者を混同しない）。",
+          "x-prompt-write": "存在しなかった場合に起きる問題・防いでいるリスクを、独立した論点ごとに列挙する。このusecaseが存在しなかった場合に起きる問題、または防いでいるリスクを1〜2文で。メカニズム（何をするか）ではなく目的（なぜ必要か）を書く。actorIntent.intentが「何を達成したいか」を書く場所であるのに対し、ここは「それがなぜ業務上重要か」を書く場所（両者を混同しない）。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "string"
           }
@@ -1675,7 +1675,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "操作開始前に成立している必要がある条件を列挙。無ければ空。",
+          "x-prompt-write": "操作開始前に成立している必要がある条件を列挙。無ければ空。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "string"
           }
@@ -1798,7 +1798,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "成功時に成立する結果（集約の状態変化・発行イベント）を列挙。",
+          "x-prompt-write": "成功時に成立する結果（集約の状態変化・発行イベント）を列挙。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "string"
           }
@@ -1832,7 +1832,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "受け入れ条件を EARS で列挙（When/While/If … shall …）。一意・検証可能・ドメイン語彙のみ。",
+          "x-prompt-write": "受け入れ条件を EARS で列挙（When/While/If … shall …）。一意・検証可能・ドメイン語彙のみ。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "string"
           }
@@ -1985,7 +1985,7 @@
               },
               "gherkin": {
                 "type": "string",
-                "x-prompt-write": "このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。"
+                "x-prompt-write": "このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。"
               },
               "covers": {
                 "type": "string",
@@ -2078,7 +2078,7 @@
               },
               "gherkin": {
                 "type": "string",
-                "x-prompt-write": "このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。"
+                "x-prompt-write": "このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。"
               },
               "covers": {
                 "type": "string",
@@ -2120,7 +2120,7 @@
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "保証をEARSで列挙（When/While/If … shall …）。書いてよいのは『何を保証するか』だけ（べき等性・一貫性・提供チャネルの一貫性等）。『どう実現するか』（具体的なDB技法・ロック機構・実装技術）は書かない（CodingSchemaのcode-templateの領分）。判定基準（このusecaseに書くか、集約のinvariantsに書くか）: 同じ資源を操作する複数usecaseの間で、この保証内容が重複するか？ 重複するなら集約（agg-*.json）のinvariants/invariantScenariosに書く。このusecase固有の業務理由でのみ必要な保証だけをここに書く。性能の生数値（応答時間・スループット等）は書かない（CodingSchemaのtestTypes: non-functional-performanceの領分）。",
+          "x-prompt-write": "保証をEARSで列挙（When/While/If … shall …）。書いてよいのは『何を保証するか』だけ（べき等性・一貫性・提供チャネルの一貫性等）。『どう実現するか』（具体的なDB技法・ロック機構・実装技術）は書かない（CodingSchemaのcode-templateの領分）。判定基準（このusecaseに書くか、集約のinvariantsに書くか）: 同じ資源を操作する複数usecaseの間で、この保証内容が重複するか？ 重複するなら集約（agg-*.json）のinvariants/invariantScenariosに書く。このusecase固有の業務理由でのみ必要な保証だけをここに書く。性能の生数値（応答時間・スループット等）は書かない（CodingSchemaのtestTypes: non-functional-performanceの領分）。用語はbounded-contextのubiquitousLanguageで定義された語をそのまま使い、定義に無い同義語を作らない。対応する語が無ければ先にbounded-context側へ用語を追加する。",
           "items": {
             "type": "string"
           }
