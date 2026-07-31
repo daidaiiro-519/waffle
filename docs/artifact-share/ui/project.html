@@ -1,0 +1,593 @@
+<title>artifactshare — プロジェクト</title>
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#68737e;
+    --paper:#f4f2ee; --card:#ffffff; --line:#dcd8d0; --line-soft:#e9e5de;
+    --accent:#2f5d63; --accent-soft:#e3edee;
+    --ok:#4f7355; --ok-soft:#eaf1ea;
+    --off:#8c8478; --off-soft:#efece6;
+    --warn:#96702f; --warn-soft:#f7f0e1;
+    --live:#b4553f; --live-soft:#f7e9e5;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+    --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+    --accent:#7fb3ba; --accent-soft:#1e2c2e;
+    --ok:#8ecbb6; --ok-soft:#1d2a23;
+    --off:#7d7669; --off-soft:#26241f;
+    --warn:#c9a05e; --warn-soft:#2b2419;
+    --live:#d98a72; --live-soft:#2e211f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+      --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+      --accent:#7fb3ba; --accent-soft:#1e2c2e;
+      --ok:#8ecbb6; --ok-soft:#1d2a23;
+      --off:#7d7669; --off-soft:#26241f;
+      --warn:#c9a05e; --warn-soft:#2b2419;
+      --live:#d98a72; --live-soft:#2e211f;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .page{max-width:940px; margin:0 auto; padding:34px 22px 90px;}
+
+  .appbar{display:flex; align-items:center; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:30px;}
+  .brand{font-family:var(--serif); font-size:19px; font-weight:600;}
+  .brand span{color:var(--accent);}
+  .nav{display:flex; gap:4px; margin-left:20px;}
+  .nav a{font-size:13px; color:var(--ink-soft); text-decoration:none; padding:5px 11px; border-radius:7px;}
+  .nav a.cur{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .nav a:hover:not(.cur){background:var(--line-soft);}
+  .whoami{margin-left:auto; display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-soft);}
+  .avatar{width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; font-size:11px; font-weight:700;}
+
+  .btn{font:inherit; font-size:13px; font-weight:600; padding:8px 16px; border-radius:7px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn.ghost{background:transparent; color:var(--accent);}
+  .btn.sm{font-size:12px; padding:6px 12px;}
+  .btn:focus-visible, .copy:focus-visible, .linkbtn:focus-visible, .rowbtn:focus-visible, .back:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .linkbtn{font:inherit; font-size:12.5px; background:none; border:none; color:var(--ink-soft); cursor:pointer; padding:6px 2px; text-decoration:underline; text-underline-offset:3px;}
+  .card{border:1px solid var(--line); border-radius:12px; background:var(--card);}
+  .view{display:none;}
+  .view.on{display:block;}
+
+  /* ── list ── */
+  .head{display:flex; align-items:baseline; gap:12px; margin-bottom:8px; flex-wrap:wrap;}
+  .head h1{font-family:var(--serif); font-size:23px; font-weight:600; margin:0;}
+  .head .count{font-size:12.5px; color:var(--ink-faint);}
+  .head .btn{margin-left:auto;}
+  .lede{color:var(--ink-soft); font-size:13.5px; margin:0 0 22px; max-width:64ch;}
+
+  .plist{display:flex; flex-direction:column; gap:12px;}
+  .pcard{border:1px solid var(--line); border-radius:12px; background:var(--card); padding:16px 18px;
+    display:grid; grid-template-columns:1fr auto auto; gap:5px 16px; align-items:center; cursor:pointer;}
+  .pcard:hover{border-color:var(--accent);}
+  .pcard.off{background:var(--off-soft);}
+  .pcard.off .pname{color:var(--ink-soft);}
+  .pmain{grid-column:1; min-width:0;}
+  .pname{font-size:15px; font-weight:600; margin:0 0 4px;}
+  .pmeta{display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
+  .pkey{font-family:var(--mono); font-size:10.5px; background:var(--line-soft); padding:2px 7px; border-radius:4px; color:var(--ink-soft);}
+  .pstat{grid-column:2; text-align:right; white-space:nowrap;}
+  .pstat .n{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .pstat .l{font-size:11px; color:var(--ink-faint); display:block;}
+  .pstat .l.fresh{color:var(--live); font-weight:600;}
+  .pstat .l.fresh::before{content:"●"; font-size:7px; vertical-align:2px; margin-right:3px;}
+  .pend{grid-column:3; display:flex; align-items:center; gap:9px;}
+  .status{font-family:var(--mono); font-size:10px; letter-spacing:.04em; padding:3px 9px; border-radius:11px; white-space:nowrap;}
+  .status.on{background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok);}
+  .status.no{background:var(--off-soft); color:var(--off); border:1px solid var(--off);}
+  .chev{color:var(--ink-faint); font-size:15px;}
+
+  /* ── detail ── */
+  .back{font:inherit; font-size:12.5px; background:none; border:none; color:var(--ink-soft); cursor:pointer; padding:4px 0; margin-bottom:14px; display:inline-flex; gap:5px; align-items:center;}
+  .back:hover{color:var(--accent);}
+  .dhead{display:flex; align-items:baseline; gap:11px; flex-wrap:wrap; margin-bottom:20px;}
+  .dhead h1{font-family:var(--serif); font-size:23px; font-weight:600; margin:0;}
+
+  .sec{margin-bottom:26px;}
+  .sec > h2{font-size:12px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin:0 0 11px;}
+
+  .sharebox{padding:17px 19px;}
+  .urlrow{display:flex; align-items:center; gap:9px; padding:11px 13px; border:1px solid var(--line); border-radius:8px; background:var(--paper); margin-bottom:12px;}
+  .urlrow .u{font-family:var(--mono); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .copy{margin-left:auto; font:inherit; font-size:11.5px; font-weight:600; padding:5px 11px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); cursor:pointer; flex-shrink:0;}
+  .copy:hover{border-color:var(--accent); color:var(--accent);}
+  .tokenline{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:11px 13px; border:1px dashed var(--line); border-radius:8px;}
+  .tokenline .tmask{font-family:var(--mono); font-size:13px; color:var(--ink-faint); letter-spacing:.14em;}
+  .tokenline .tnote{font-size:11.5px; color:var(--ink-faint); flex:1; min-width:200px;}
+
+  .arow{display:grid; grid-template-columns:1fr auto auto; gap:4px 14px; padding:13px 17px; border-top:1px solid var(--line-soft); align-items:center;}
+  .arow:first-child{border-top:none; border-radius:12px 12px 0 0;}
+  .atitle{font-size:14px; font-weight:600; margin:0 0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .asub{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
+  .dtype{font-family:var(--mono); font-size:10px; padding:2px 7px; border-radius:4px; background:var(--accent-soft); color:var(--accent);}
+  .dtype.none{background:var(--line-soft); color:var(--ink-faint);}
+  .acom{text-align:right; white-space:nowrap; font-size:12px; color:var(--ink-soft);}
+  .acom .fresh{color:var(--live); font-weight:600;}
+  .rowbtn{font:inherit; font-size:12px; background:none; border:1px solid var(--line); border-radius:6px; color:var(--ink-soft); cursor:pointer; padding:4px 10px;}
+  .rowbtn:hover{border-color:var(--live); color:var(--live);}
+  .addrow{padding:13px 17px; border-top:1px solid var(--line-soft); background:var(--paper); border-radius:0 0 12px 12px;}
+
+  .danger{border:1px solid var(--live); border-radius:12px; padding:15px 18px; background:var(--live-soft);}
+  .danger h3{font-size:12.5px; font-weight:700; margin:0 0 4px; color:var(--live);}
+  .danger p{font-size:12px; color:var(--ink-soft); margin:0 0 12px;}
+  .danger .drow{display:flex; gap:9px; flex-wrap:wrap;}
+  .btn.danger-b{background:transparent; border-color:var(--live); color:var(--live);}
+  .btn.danger-b:hover{background:rgba(180,85,63,.1); filter:none;}
+
+  /* ── dialog ── */
+  dialog{border:1px solid var(--line); border-radius:13px; background:var(--card); color:var(--ink);
+    padding:0; max-width:470px; width:calc(100% - 32px); box-shadow:0 14px 50px rgba(0,0,0,.24);}
+  dialog::backdrop{background:rgba(20,22,25,.42);}
+  .dlg-head{padding:17px 20px 0;}
+  .dlg-head h2{font-family:var(--serif); font-size:17px; font-weight:600; margin:0 0 5px;}
+  .dlg-head .target{font-size:12px; color:var(--ink-faint); margin:0;}
+  .dlg-body{padding:15px 20px 0;}
+  .dlg-body p{font-size:13px; color:var(--ink-soft); margin:0 0 11px;}
+  .dlg-body p strong{color:var(--ink); font-weight:600;}
+  .keep{border:1px solid var(--line-soft); border-radius:9px; overflow:hidden; margin-bottom:13px;}
+  .keep div{display:flex; gap:9px; align-items:flex-start; padding:9px 12px; font-size:12.5px; border-top:1px solid var(--line-soft);}
+  .keep div:first-child{border-top:none;}
+  .keep .ky{color:var(--ok); font-weight:700; flex-shrink:0;}
+  .keep .kn{color:var(--live); font-weight:700; flex-shrink:0;}
+  .optline{display:flex; gap:9px; align-items:flex-start; padding:11px 12px; border:1px solid var(--line-soft);
+    border-radius:9px; background:var(--paper); margin-bottom:13px; font-size:12.5px;}
+  .optline input{margin-top:4px; flex-shrink:0;}
+  .optline label{cursor:pointer;}
+  .optline .sub{display:block; color:var(--ink-faint); font-size:11.5px;}
+  .dlg-act{display:flex; gap:9px; align-items:center; justify-content:flex-end; padding:5px 20px 18px;}
+  .dlg-act .spacer{display:none;}
+  .dlg-pane{display:none;} .dlg-pane.on{display:block;}
+  .fld{margin-bottom:13px;}
+  .fld label{display:block; font-size:12px; font-weight:600; margin-bottom:5px;}
+  .fld input{width:100%; font:inherit; font-size:13.5px; padding:8px 11px; border:1px solid var(--line);
+    border-radius:7px; background:var(--paper); color:var(--ink);}
+  .fld .note{font-size:11.5px; color:var(--ink-faint); margin:4px 0 0;}
+  .tokenbox{background:#1f2529; border-radius:10px; padding:15px 17px;}
+  :root[data-theme="dark"] .tokenbox{background:#0e1113;}
+  .tokenbox .tlabel{font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:#d9b26a; margin:0 0 9px;}
+  .tokenbox .tval{display:flex; align-items:center; gap:10px;}
+  .tokenbox code{font-family:var(--mono); font-size:16px; letter-spacing:.06em; color:#f0ede6; word-break:break-all;}
+  .tokenbox .copy{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.22); color:#f0ede6; margin-left:auto;}
+  .picklist{border:1px solid var(--line-soft); border-radius:9px; max-height:210px; overflow-y:auto; margin-bottom:13px;}
+  .picklist label{display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border-top:1px solid var(--line-soft); cursor:pointer; font-size:12.5px;}
+  .picklist label:first-child{border-top:none;}
+  .picklist input{margin-top:4px; flex-shrink:0;}
+  .picklist .pt{display:block; font-weight:600;}
+  .picklist .ps{display:block; font-size:11px; color:var(--ink-faint);}
+
+  @media (max-width:660px){
+    .pcard{grid-template-columns:1fr auto;}
+    .pstat{grid-column:1/-1; grid-row:2; text-align:left; margin-top:5px;}
+    .pstat .l{display:inline; margin-left:6px;}
+    .arow{grid-template-columns:1fr auto;}
+    .acom{grid-column:1/-1; grid-row:2; text-align:left; margin-top:4px;}
+  }
+</style>
+
+<div class="page">
+  <div class="appbar">
+    <div class="brand">artifact<span>share</span></div>
+    <nav class="nav">
+      <a href="#">アーティファクト</a>
+      <a href="#" class="cur">プロジェクト</a>
+    </nav>
+    <div class="whoami"><span class="avatar">DA</span>daidaiiro</div>
+  </div>
+
+  <!-- ══ 一覧 ══ -->
+  <section class="view on" id="v-list">
+    <div class="head">
+      <h1>プロジェクト</h1>
+      <span class="count" id="pcount"></span>
+      <button class="btn" type="button" id="btn-new">新しいプロジェクト</button>
+    </div>
+    <p class="lede">まとめて見せたいアーティファクトを1つにします。プロジェクトのURLとトークンを渡した相手は、入れたものだけを一覧・閲覧できます。</p>
+    <div class="plist" id="plist"></div>
+  </section>
+
+  <!-- ══ 詳細 ══ -->
+  <section class="view" id="v-detail">
+    <button class="back" type="button" id="back">← プロジェクト一覧</button>
+
+    <div class="dhead">
+      <h1 id="d-name"></h1>
+      <span class="pkey" id="d-key"></span>
+      <span class="status on" id="d-status">公開中</span>
+    </div>
+
+    <div class="sec">
+      <h2>共有</h2>
+      <div class="card sharebox">
+        <div class="urlrow">
+          <span class="u" id="d-url"></span>
+          <button class="copy" type="button" data-copy="d-url">URLをコピー</button>
+        </div>
+        <div class="tokenline">
+          <span class="tmask">••••-••••-••••</span>
+          <span class="tnote">トークンは発行したときの一度しか表示されません。分からなくなった場合は再発行してください（それまでのトークンは使えなくなります）。</span>
+          <button class="btn ghost sm" type="button" id="btn-rotate">トークンを再発行</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>入っているアーティファクト（<span id="d-artcount"></span>）</h2>
+      <div class="card arts" id="d-arts"></div>
+    </div>
+
+    <div class="sec">
+      <h2>このプロジェクトの記録</h2>
+      <div class="card sharebox" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <p style="font-size:12.5px; color:var(--ink-soft); margin:0; flex:1; min-width:220px;">
+          入っているアーティファクトと、寄せられたコメントをまとめてzipで取り出します。公開は維持されます。</p>
+        <button class="btn ghost sm" type="button">エクスポート</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="danger">
+        <h3>公開を止める</h3>
+        <p>無効化するとプロジェクトのURLは開けなくなりますが、中のアーティファクトは個別のURLとトークンで引き続き見られます。データは消えず、あとから再公開できます。</p>
+        <div class="drow">
+          <button class="btn danger-b sm" type="button" id="btn-disable">無効化する</button>
+          <button class="btn danger-b sm" type="button" id="btn-delete">プロジェクトを削除</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══ 新規プロジェクト ══ -->
+<dialog id="dlg-new">
+  <div class="dlg-pane on" id="new-1">
+    <div class="dlg-head"><h2>新しいプロジェクト</h2></div>
+    <div class="dlg-body">
+      <p>まとめて見せたいアーティファクトを入れる箱を作ります。専用のURLとトークンが1組発行されます。</p>
+      <div class="fld">
+        <label for="np-name">表示名</label>
+        <input id="np-name" type="text" placeholder="例: 検索基盤リニューアル">
+      </div>
+      <div class="fld">
+        <label for="np-key">プロジェクトキー</label>
+        <input id="np-key" type="text" placeholder="search-renewal">
+        <p class="note">CLIで使うときのローカルフォルダ名になります。英数字とハイフンのみ。ブラウザだけで使う場合は空欄で構いません。</p>
+      </div>
+    </div>
+    <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn" type="button" id="np-go">作成する</button>
+  </div>
+  </div>
+
+  <div class="dlg-pane" id="new-2">
+    <div class="dlg-head"><h2>プロジェクトを作成しました</h2><p class="target" id="np-name2"></p></div>
+    <div class="dlg-body">
+      <div class="urlrow" style="margin-bottom:12px;">
+        <span class="u" id="np-url"></span>
+        <button class="copy" type="button" data-copy="np-url">URLをコピー</button>
+      </div>
+      <div class="tokenbox" style="margin-bottom:13px;">
+        <p class="tlabel">この画面を閉じると二度と表示できません</p>
+        <div class="tval"><code id="np-token"></code><button class="copy" type="button" data-copy="np-token">コピー</button></div>
+      </div>
+      <p>まだ中身は空です。アーティファクトを入れてから共有してください。</p>
+    </div>
+    <div class="dlg-act"><span class="spacer"></span><button class="btn" type="button" data-close>閉じる</button></div>
+  </div>
+</dialog>
+
+<!-- ══ トークン再発行 ══ -->
+<dialog id="dlg-rotate">
+  <div class="dlg-pane on" id="rot-1">
+    <div class="dlg-head"><h2>トークンを再発行しますか</h2><p class="target" id="rot-target"></p></div>
+    <div class="dlg-body">
+      <p>新しいトークンを発行すると、<strong>今のトークンはその場で使えなくなります</strong>。このプロジェクトを共有した相手全員に、新しいトークンを渡し直す必要があります。</p>
+      <div class="keep">
+        <div><span class="ky">変わらない</span><span>プロジェクトのURL・入っているアーティファクト・コメント</span></div>
+        <div><span class="kn">変わる</span><span>プロジェクトの閲覧用トークン</span></div>
+      </div>
+      <p style="font-size:12px;">各アーティファクトに個別のトークンを渡している相手は、そのまま閲覧を続けられます。</p>
+    </div>
+    <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn" type="button" id="rot-go">再発行する</button>
+  </div>
+  </div>
+  <div class="dlg-pane" id="rot-2">
+    <div class="dlg-head"><h2>新しいトークンを発行しました</h2><p class="target" id="rot-target2"></p></div>
+    <div class="dlg-body">
+      <div class="tokenbox" style="margin-bottom:13px;">
+        <p class="tlabel">この画面を閉じると二度と表示できません</p>
+        <div class="tval"><code id="rot-token"></code><button class="copy" type="button" data-copy="rot-token">コピー</button></div>
+      </div>
+      <p>URLは変わっていないので、トークンだけを伝えれば足ります。</p>
+    </div>
+    <div class="dlg-act"><span class="spacer"></span><button class="btn" type="button" data-close>閉じる</button></div>
+  </div>
+</dialog>
+
+<!-- ══ アーティファクトを追加 ══ -->
+<dialog id="dlg-add">
+  <div class="dlg-head"><h2>アーティファクトを追加</h2><p class="target" id="add-target"></p></div>
+  <div class="dlg-body">
+    <p>選んだアーティファクトは、<strong>このプロジェクトのトークンでも開けるようになります</strong>。</p>
+    <div class="picklist">
+      <label><input type="checkbox"><span><span class="pt">会員登録フローの離脱率メモ</span><span class="ps">種別なし・7/28 更新</span></span></label>
+      <label><input type="checkbox"><span><span class="pt">コメント投稿API</span><span class="ps">FunctionalSpec・7/29 更新</span></span></label>
+      <label><input type="checkbox"><span><span class="pt">四半期の稼働状況ダッシュボード</span><span class="ps">種別なし・7/16 更新</span></span></label>
+      <label><input type="checkbox"><span><span class="pt">深夜バッチによる決済API 30分停止</span><span class="ps">Postmortem・7/26 更新</span></span></label>
+    </div>
+    <p style="font-size:11.5px;">すでにこのプロジェクトに入っているものは表示されません。</p>
+  </div>
+  <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn" type="button" data-close>追加する</button>
+  </div>
+</dialog>
+
+<!-- ══ 外す ══ -->
+<dialog id="dlg-remove">
+  <div class="dlg-head"><h2>このプロジェクトから外しますか</h2><p class="target" id="rm-target"></p></div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">できなくなる</span><span>プロジェクトのトークンでは開けなくなる</span></div>
+      <div><span class="ky">残る</span><span>アーティファクト本体・コメント・個別のURLとトークン</span></div>
+    </div>
+    <p style="font-size:12px;">外すだけで、アーティファクトが消えることはありません。あとから追加し直せます。</p>
+  </div>
+  <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" data-close>外す</button>
+  </div>
+</dialog>
+
+<!-- ══ 無効化 ══ -->
+<dialog id="dlg-disable">
+  <div class="dlg-head"><h2>プロジェクトの公開を止めますか</h2><p class="target" id="dis-target"></p></div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">止まる</span><span>プロジェクトのURLが開けなくなる</span></div>
+      <div><span class="ky">止まらない</span><span>中のアーティファクトは、個別のURLとトークンで引き続き見られる</span></div>
+      <div><span class="ky">残る</span><span>データは消えない。あとから再公開できる（トークンは新しくなる）</span></div>
+    </div>
+    <div class="optline">
+      <input type="checkbox" id="dis-export" checked>
+      <label for="dis-export">先にエクスポートする
+        <span class="sub">入っているアーティファクトとコメントをzipで保存してから止めます。</span>
+      </label>
+    </div>
+  </div>
+  <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" data-close>無効化する</button>
+  </div>
+</dialog>
+
+<!-- ══ 削除 ══ -->
+<dialog id="dlg-delete">
+  <div class="dlg-head"><h2>プロジェクトを削除しますか</h2><p class="target" id="del-target"></p></div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">消える</span><span>プロジェクトそのもの・URL・トークン（元に戻せません）</span></div>
+      <div><span class="ky">消えない</span><span>入っていたアーティファクトとコメント。所属が外れるだけで、個別のURLとトークンで引き続き見られる</span></div>
+    </div>
+    <div class="fld">
+      <label for="del-confirm">確認のため、プロジェクトキーを入力してください</label>
+      <input id="del-confirm" type="text" placeholder="" autocomplete="off">
+    </div>
+  </div>
+  <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" data-close>削除する</button>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+
+  var ARTS = {
+    search: [
+      { t:'検索基盤にPostgreSQLの全文検索を採用する', ty:'DecisionRecord', c:7, fresh:true, u:'7/30' },
+      { t:'検索UIのパターン比較（A/B/C案）', ty:'', c:9, fresh:false, u:'7/09' },
+      { t:'pg_trgmのベンチマーク結果', ty:'InvestigationReport', c:1, fresh:false, u:'7/22' }
+    ],
+    pay: [
+      { t:'深夜バッチによる決済API 30分停止', ty:'Postmortem', c:12, fresh:false, u:'7/26' },
+      { t:'コネクションプール分離の設計', ty:'DecisionRecord', c:4, fresh:true, u:'7/29' }
+    ],
+    tools: [
+      { t:'コメント投稿API', ty:'FunctionalSpec', c:3, fresh:true, u:'7/29' },
+      { t:'Safariプライベートブラウズでのコメント投稿失敗の原因調査', ty:'InvestigationReport', c:2, fresh:false, u:'7/24' },
+      { t:'四半期の稼働状況ダッシュボード', ty:'', c:1, fresh:false, u:'7/16' }
+    ],
+    old: [
+      { t:'旧管理画面のリニューアル案', ty:'', c:5, fresh:false, u:'5/14' }
+    ]
+  };
+
+  var PROJECTS = [
+    { id:'search', name:'検索基盤リニューアル', key:'search-renewal', pid:'p7k2xq', active:true, last:'2時間前', fresh:true },
+    { id:'pay',    name:'決済まわりの改善',     key:'payment-fix',    pid:'m4v9tz', active:true, last:'昨日',    fresh:true },
+    { id:'tools',  name:'社内ツール',           key:'internal-tools', pid:'w2b8rk', active:true, last:'6日前',  fresh:false },
+    { id:'old',    name:'管理画面リニューアル（2025）', key:'admin-2025', pid:'q5n3hd', active:false, last:'2か月前', fresh:false }
+  ];
+
+  function chip(cls, text){ var s = document.createElement('span'); s.className = cls; s.textContent = text; return s; }
+
+  function renderList(){
+    var wrap = $('plist'); wrap.textContent = '';
+    $('pcount').textContent = PROJECTS.length + ' 件';
+
+    PROJECTS.forEach(function(p){
+      var arts = ARTS[p.id] || [];
+      var comments = arts.reduce(function(a,b){ return a + b.c; }, 0);
+
+      var el = document.createElement('div');
+      el.className = 'pcard' + (p.active ? '' : ' off');
+      el.setAttribute('role','button');
+      el.setAttribute('tabindex','0');
+
+      var main = document.createElement('div'); main.className = 'pmain';
+      var nm = document.createElement('p'); nm.className = 'pname'; nm.textContent = p.name;
+      var meta = document.createElement('div'); meta.className = 'pmeta';
+      meta.appendChild(chip('pkey', p.key));
+      meta.appendChild(chip('', arts.length + ' 件のアーティファクト'));
+      main.append(nm, meta);
+
+      var st = document.createElement('div'); st.className = 'pstat';
+      var n = document.createElement('span'); n.className = 'n'; n.textContent = comments ? comments + '件' : '—';
+      var l = document.createElement('span'); l.className = 'l' + (p.fresh ? ' fresh' : '');
+      l.textContent = comments ? p.last : 'コメントなし';
+      st.append(n, l);
+
+      var end = document.createElement('div'); end.className = 'pend';
+      end.appendChild(p.active ? chip('status on','公開中') : chip('status no','無効化済み'));
+      end.appendChild(chip('chev','›'));
+
+      el.append(main, st, end);
+      el.addEventListener('click', function(){ openDetail(p); });
+      el.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(p); }
+      });
+      wrap.appendChild(el);
+    });
+  }
+
+  function openDetail(p){
+    $('d-name').textContent = p.name;
+    $('d-key').textContent = p.key;
+    var st = $('d-status');
+    st.className = 'status ' + (p.active ? 'on' : 'no');
+    st.textContent = p.active ? '公開中' : '無効化済み';
+    $('d-url').textContent = 'https://dbbb1234.cloudfront.net/proj/' + p.pid + '/';
+
+    var arts = ARTS[p.id] || [];
+    $('d-artcount').textContent = arts.length + '件';
+
+    var box = $('d-arts'); box.textContent = '';
+    arts.forEach(function(a){
+      var row = document.createElement('div'); row.className = 'arow';
+
+      var m = document.createElement('div');
+      var t = document.createElement('p'); t.className = 'atitle'; t.textContent = a.t;
+      var s = document.createElement('div'); s.className = 'asub';
+      s.appendChild(a.ty ? chip('dtype', a.ty) : chip('dtype none','種別なし'));
+      s.appendChild(chip('', a.u + ' 更新'));
+      m.append(t, s);
+
+      var c = document.createElement('div'); c.className = 'acom';
+      var cs = document.createElement('span');
+      if (a.fresh) cs.className = 'fresh';
+      cs.textContent = a.c ? 'コメント ' + a.c + '件' : 'コメントなし';
+      c.appendChild(cs);
+
+      var b = document.createElement('button');
+      b.className = 'rowbtn'; b.type = 'button'; b.textContent = '外す';
+      b.setAttribute('aria-label', a.t + ' をこのプロジェクトから外す');
+      b.addEventListener('click', function(){
+        document.getElementById('rm-target').textContent = a.t;
+        var d = document.getElementById('dlg-remove'); if (d.showModal) d.showModal();
+      });
+
+      row.append(m, c, b);
+      box.appendChild(row);
+    });
+
+    var add = document.createElement('div'); add.className = 'addrow';
+    var ab = document.createElement('button');
+    ab.className = 'btn ghost sm'; ab.type = 'button'; ab.textContent = '＋ アーティファクトを追加';
+    ab.addEventListener('click', function(){
+      document.getElementById('add-target').textContent = p.name;
+      var d = document.getElementById('dlg-add'); if (d.showModal) d.showModal();
+    });
+    add.appendChild(ab);
+    box.appendChild(add);
+
+    $('v-list').classList.remove('on');
+    $('v-detail').classList.add('on');
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  $('back').addEventListener('click', function(){
+    $('v-detail').classList.remove('on');
+    $('v-list').classList.add('on');
+    window.scrollTo({top:0, behavior:'instant'});
+  });
+
+  document.querySelectorAll('.copy').forEach(function(b){
+    b.addEventListener('click', function(){
+      var t = $(b.getAttribute('data-copy')).textContent;
+      var done = function(){
+        var old = b.textContent; b.textContent = 'コピーしました';
+        setTimeout(function(){ b.textContent = old; }, 1400);
+      };
+      if (navigator.clipboard) { navigator.clipboard.writeText(t).then(done, function(){}); }
+      else { done(); }
+    });
+  });
+
+  /* ── ダイアログ ── */
+  var ABC = 'abcdefghijkmnpqrstuvwxyz23456789';
+  function randToken(){
+    var o = [], b = new Uint8Array(12);
+    crypto.getRandomValues(b);
+    for (var i = 0; i < 12; i++) o.push(ABC[b[i] % ABC.length]);
+    return o.slice(0,4).join('') + '-' + o.slice(4,8).join('') + '-' + o.slice(8,12).join('');
+  }
+  function randPid(){
+    var o = '', b = new Uint8Array(6);
+    crypto.getRandomValues(b);
+    for (var i = 0; i < 6; i++) o += ABC[b[i] % ABC.length];
+    return o;
+  }
+  function open(id){ var d = $(id); if (d.showModal) d.showModal(); }
+
+  $('btn-new').addEventListener('click', function(){
+    $('np-name').value = ''; $('np-key').value = '';
+    $('new-1').classList.add('on'); $('new-2').classList.remove('on');
+    open('dlg-new');
+  });
+  $('np-go').addEventListener('click', function(){
+    $('np-name2').textContent = $('np-name').value.trim() || '（名称未設定）';
+    $('np-url').textContent = 'https://dbbb1234.cloudfront.net/proj/' + randPid() + '/';
+    $('np-token').textContent = randToken();
+    $('new-1').classList.remove('on'); $('new-2').classList.add('on');
+  });
+
+  $('btn-rotate').addEventListener('click', function(){
+    $('rot-target').textContent = $('d-name').textContent;
+    $('rot-target2').textContent = $('d-name').textContent;
+    $('rot-1').classList.add('on'); $('rot-2').classList.remove('on');
+    open('dlg-rotate');
+  });
+  $('rot-go').addEventListener('click', function(){
+    $('rot-token').textContent = randToken();
+    $('rot-1').classList.remove('on'); $('rot-2').classList.add('on');
+  });
+
+  $('btn-disable').addEventListener('click', function(){
+    $('dis-target').textContent = $('d-name').textContent; open('dlg-disable');
+  });
+  $('btn-delete').addEventListener('click', function(){
+    $('del-target').textContent = $('d-name').textContent;
+    $('del-confirm').value = '';
+    $('del-confirm').placeholder = $('d-key').textContent;
+    open('dlg-delete');
+  });
+
+  document.querySelectorAll('dialog [data-close]').forEach(function(b){
+    b.addEventListener('click', function(){ b.closest('dialog').close(); });
+  });
+
+  renderList();
+})();
+</script>

@@ -1,0 +1,287 @@
+<title>検索基盤にPostgreSQLの全文検索を採用する</title>
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#68737e;
+    --paper:#f6f5f2; --card:#ffffff; --line:#dcd8d0; --line-soft:#e9e5de;
+    --accent:#3d5a80; --accent-soft:#e7edf4;
+    --decision:#5c7a5f; --decision-bg:#eef3ec;
+    --approve:#1e7a50; --approve-bg:#e2f0e8;
+    --revise:#9a6300; --revise-bg:#f6eedd;
+    --live:#1e9e5a;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --card:#212327; --line:#33363b; --line-soft:#2b2e33;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --decision:#8ecbb6; --decision-bg:#1e2a20;
+    --approve:#7fc9a4; --approve-bg:#1c2b23;
+    --revise:#c9a05e; --revise-bg:#2b2419;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --card:#212327; --line:#33363b; --line-soft:#2b2e33;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --decision:#8ecbb6; --decision-bg:#1e2a20;
+      --approve:#7fc9a4; --approve-bg:#1c2b23;
+      --revise:#c9a05e; --revise-bg:#2b2419;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;
+    display:grid; grid-template-columns:minmax(0,1fr) 330px; min-height:100vh; transition:grid-template-columns .18s ease;}
+  body.collapsed{grid-template-columns:minmax(0,1fr) 42px;}
+
+  /* 戻る導線（プロジェクト経由で来た人にだけ出る） */
+  a.backbar{grid-column:1 / -1; display:flex; align-items:center; gap:.4rem; text-decoration:none;
+    font-size:.82rem; color:#fff; background:#1a2126; padding:.5rem 1rem; position:sticky; top:0; z-index:20;}
+  a.backbar:hover{background:#2c353d;}
+
+  main.body{padding:34px 30px 70px; min-width:0;}
+  .doc{max-width:66ch;}
+
+  .meta-row{display:flex; flex-wrap:wrap; gap:9px; margin-bottom:14px;}
+  .pill{font-family:var(--mono); font-size:10.5px; padding:3px 9px; border-radius:4px; background:var(--card); border:1px solid var(--line); color:var(--ink-soft);}
+  .pill.st{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  h1{font-family:var(--serif); font-size:clamp(21px,2.7vw,27px); font-weight:600; margin:0 0 26px; text-wrap:balance;}
+
+  .glance{display:flex; flex-direction:column; gap:14px; margin-bottom:30px;}
+  .gb{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:17px 20px;}
+  .gb.next{background:var(--accent-soft); border-color:var(--accent);}
+  .eyebrow{font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 9px;}
+  .gb.next .eyebrow{color:var(--accent);}
+  .core{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; padding:14px 17px; background:var(--decision-bg);
+    border:1px solid var(--decision); border-radius:8px; margin-bottom:14px;}
+  .core .chose{font-family:var(--serif); font-size:18px; font-weight:600;}
+  .core .because{font-size:12.5px; color:var(--ink-soft);}
+  .core .because b{color:var(--decision);}
+  .verdict{font-family:var(--serif); font-size:15px; margin:0; max-width:60ch;}
+
+  .tblwrap{overflow-x:auto;}
+  table.sc{width:100%; border-collapse:collapse; font-size:12px;}
+  table.sc th, table.sc td{padding:7px 9px; text-align:left; border-bottom:1px solid var(--line);}
+  table.sc thead th{color:var(--ink-faint); font-weight:600; font-size:10.5px;}
+  table.sc thead th.win{color:var(--decision);}
+  td.crit{color:var(--ink-soft);}
+  td.win{background:var(--decision-bg);}
+  tr.dec{outline:2px solid var(--decision); outline-offset:-1px;}
+  tr.dec td{background:var(--decision-bg); font-weight:600;}
+  .dtag{display:inline-block; font-family:var(--mono); font-size:9px; font-weight:700; background:var(--decision);
+    color:var(--card); padding:2px 5px; border-radius:3px; margin-left:6px; vertical-align:middle;}
+  .dots{display:flex; gap:3px;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line);}
+  .dot.on{background:var(--accent);}
+  td.win .dot.on{background:var(--decision);}
+
+  .steps{display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;}
+  .step{flex:1; min-width:135px; border:1px solid var(--line); border-radius:8px; padding:11px 13px; background:var(--paper);}
+  .step.done{border-color:var(--decision);}
+  .step .tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; margin:0 0 5px; color:var(--ink-faint);}
+  .step.done .tag{color:var(--decision);}
+  .step p{margin:0; font-size:12px;}
+  .arrow{font-size:18px; color:var(--ink-faint); align-self:center;}
+
+  .divider{display:flex; align-items:center; gap:11px; margin:6px 0 26px; color:var(--ink-faint);
+    font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;}
+  .divider::before, .divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  section.d{margin-bottom:30px;}
+  section.d h2{font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 11px;}
+  section.d p{font-size:14.5px; margin:0 0 11px;}
+  code{font-family:var(--mono); font-size:.9em; background:var(--accent-soft); padding:1px 4px; border-radius:3px;}
+
+  /* ── コメント欄 ── */
+  aside.cm{border-left:1px solid var(--line); background:var(--card); display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh; overflow:hidden; font-size:.9rem;}
+  aside.cm header{padding:.75rem 1rem; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:.4rem; font-weight:600; font-size:.85rem;}
+  body.collapsed aside.cm header{padding:.75rem 0; justify-content:center;}
+  body.collapsed .clabel, body.collapsed .live, body.collapsed .list, body.collapsed form{display:none;}
+  .live{font-size:.66rem; color:var(--live); font-family:var(--mono); font-weight:400;}
+  .live::before{content:"●"; margin-right:3px;}
+  .ctoggle{margin-left:auto; background:none; border:1px solid var(--line); border-radius:4px; width:22px; height:22px;
+    padding:0; font-size:.7rem; color:var(--ink-faint); cursor:pointer; display:inline-flex; align-items:center; justify-content:center;}
+  body.collapsed .ctoggle{margin-left:0;}
+  .ctoggle:hover{border-color:var(--accent); color:var(--accent);}
+
+  .list{flex:1 1 auto; min-height:0; overflow-y:auto; padding:.85rem 1rem; display:flex; flex-direction:column; gap:.9rem;}
+  .item .who{font-weight:600; font-size:.82rem;}
+  .item .when{color:var(--ink-faint); font-size:.72rem; margin-left:.35rem;}
+  .item .body{margin-top:.15rem; font-size:.82rem; white-space:pre-wrap;}
+  .item.reply{margin-left:1.1rem; padding-left:.6rem; border-left:2px solid var(--line);}
+  .dec{font-size:.6rem; font-weight:700; padding:.06rem .35rem; border-radius:5px; margin-left:.3rem;}
+  .dec.approve{background:var(--approve-bg); color:var(--approve);}
+  .dec.revise{background:var(--revise-bg); color:var(--revise);}
+  .replybtn{background:none; border:none; padding:0; font:inherit; font-size:.72rem; color:var(--accent); cursor:pointer; margin-top:.2rem;}
+
+  aside.cm form{border-top:1px solid var(--line); padding:.8rem 1rem; display:flex; flex-direction:column; gap:.5rem;}
+  .idrow{display:flex; align-items:center; gap:.35rem; font-size:.76rem; color:var(--ink-faint); flex-wrap:wrap;}
+  .idrow .as{font-weight:600; color:var(--ink);}
+  .idrow button{background:none; border:none; padding:0; font:inherit; font-size:.72rem; color:var(--accent); cursor:pointer;}
+  .seg{display:flex; gap:.3rem;}
+  .seg label{flex:1; display:flex; align-items:center; justify-content:center; font-size:.7rem; border:1px solid var(--line);
+    border-radius:6px; padding:.3rem .2rem; cursor:pointer; color:var(--ink-soft); text-align:center;}
+  .seg input{position:absolute; opacity:0; width:0; height:0;}
+  .seg label:has(input:checked){border-color:var(--accent); color:var(--accent); background:var(--accent-soft); font-weight:600;}
+  .seg label:has(input:focus-visible){outline:2px solid var(--accent); outline-offset:2px;}
+  aside.cm textarea{font:inherit; font-size:.82rem; padding:.45rem .6rem; border:1px solid var(--line); border-radius:5px;
+    resize:none; height:4rem; background:var(--paper); color:var(--ink); width:100%;}
+  aside.cm textarea:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  aside.cm .send{align-self:flex-end; font:inherit; font-size:.78rem; font-weight:600; padding:.36rem 1rem;
+    border:none; border-radius:5px; background:var(--accent); color:#fff; cursor:pointer;}
+  .hint{font-size:.68rem; color:var(--ink-faint);}
+
+  @media (max-width:820px){
+    body{grid-template-columns:1fr;}
+    aside.cm{position:static; height:auto; max-height:66vh; border-left:none; border-top:1px solid var(--line);}
+    body.collapsed{grid-template-columns:1fr;}
+    body.collapsed aside.cm{display:none;}
+  }
+  @media (prefers-reduced-motion: reduce){body{transition:none;}}
+</style>
+
+<a class="backbar" href="#">← 検索基盤リニューアル に戻る</a>
+
+<main class="body">
+  <div class="doc">
+    <div class="meta-row">
+      <span class="pill st">決定済み</span>
+      <span class="pill">種別：設計決定記録</span>
+      <span class="pill">起票：2026-07-18</span>
+      <span class="pill">起票者：backend-team</span>
+    </div>
+    <h1>検索基盤にPostgreSQLの全文検索を採用する</h1>
+
+    <div class="glance">
+      <div class="gb">
+        <p class="eyebrow">本質——何を選び、なぜか</p>
+        <div class="core">
+          <span class="chose">pg_trgmを採用</span>
+          <span class="because">本質的な理由は<b>「運用の軽さ」がこの規模・この体制では性能の上振れより重い</b>という一点。Elasticsearchは検索性能で勝るが、そのために新規ミドルウェアを背負う理由が、この題材にはまだ無い。</span>
+        </div>
+        <p class="verdict">新しいミドルウェアを増やさず、既存DBの拡張機能だけで「使い物にならないLIKE検索」を「実用速度の部分一致検索」に置き換える。直近3ヶ月で寄せられた顧客要望12件はこれで解消できる見込み。</p>
+      </div>
+
+      <div class="gb">
+        <p class="eyebrow" style="margin-bottom:9px;">代替案との比較（3観点、なぜこれが決め手か）</p>
+        <div class="tblwrap"><table class="sc">
+          <thead><tr><th></th><th>Elasticsearch</th><th>Algolia等SaaS</th><th class="win">pg_trgm（採用）</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="crit">検索性能</td>
+              <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div></td>
+              <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div></td>
+              <td class="win"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div></td>
+            </tr>
+            <tr class="dec">
+              <td class="crit">運用の軽さ<span class="dtag">決め手</span></td>
+              <td><div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+              <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+              <td class="win"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+            </tr>
+            <tr>
+              <td class="crit">データを外へ出さない</td>
+              <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+              <td><div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+              <td class="win"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+            </tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="gb next">
+        <p class="eyebrow">作業イメージ</p>
+        <div class="steps">
+          <div class="step done"><p class="tag">設計・検証 済み</p><p>pg_trgm有効化・GINインデックス設計、ベンチマーク実測</p></div>
+          <span class="arrow">→</span>
+          <div class="step"><p class="tag">未着手</p><p><code>CREATE EXTENSION pg_trgm</code> 実行＋インデックス追加</p></div>
+          <span class="arrow">→</span>
+          <div class="step"><p class="tag">未着手</p><p>検索APIエンドポイント実装（設計済み・すぐ着手可）</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider">ここから先は詳細（上の本質を裏付ける根拠）</div>
+
+    <section class="d">
+      <h2>01 概要</h2>
+      <p>案件管理画面の検索機能（案件名・担当者・タグからの横断検索）をどう実装するかを扱う設計決定記録。対象は案件テーブル（約8万件）に対する検索1機能のみで、検索基盤の選定からAPI実装までを範囲とする。</p>
+    </section>
+
+    <section class="d">
+      <h2>02 背景・課題</h2>
+      <p>案件管理画面に「案件名・担当者・タグからの横断検索」を追加する要望が、直近3ヶ月で顧客から合計12件寄せられている。現状はLIKE検索のみで、部分一致の精度・速度ともに実用に耐えない状態が続いている。</p>
+    </section>
+
+    <section class="d">
+      <h2>03 決定事項・結論</h2>
+      <p>この規模のデータ量・検索要件であれば、専用エンジンが持つ高度なスコアリング・分散性能は過剰である一方、運用コストの増加は確実に発生する。既存インフラの範囲で要件を満たせるなら、それを優先するという判断に至った。</p>
+    </section>
+  </div>
+</main>
+
+<aside class="cm">
+  <header>
+    <span class="clabel">コメント <span id="ccount">(5件)</span></span>
+    <span class="live">同期</span>
+    <button class="ctoggle" id="ctoggle" type="button" aria-label="コメント欄を閉じる" title="コメント欄を閉じる">▸</button>
+  </header>
+
+  <div class="list" id="clist">
+    <div class="item">
+      <div><span class="who">田中</span><span class="dec approve">この方向でOK</span><span class="when">7-29</span></div>
+      <div class="body">運用チーム3名という制約が明示されているのが良いです。この規模で専用エンジンを入れると当番が回らないので賛成します。</div>
+      <button class="replybtn" type="button">返信</button>
+    </div>
+
+    <div class="item">
+      <div><span class="who">佐藤</span><span class="dec revise">修正希望</span><span class="when">7-29</span></div>
+      <div class="body">「将来の再検討条件」に件数だけでなく、検索対象テーブルが増えたときの条件も入れておきたいです。横断検索の要望は必ず来ると思うので。</div>
+      <button class="replybtn" type="button">返信</button>
+    </div>
+    <div class="item reply">
+      <div><span class="who">backend-team</span><span class="when">7-30</span></div>
+      <div class="body">影響範囲の「将来の再検討条件」に追記しました。複数テーブル横断が必要になった時点、という条件を足しています。</div>
+    </div>
+
+    <div class="item">
+      <div><span class="who">山田</span><span class="when">7-30</span></div>
+      <div class="body">Algoliaを0点扱いにした理由は、社内データポリシーの確認コストという理解で合っていますか。技術的に不可能という意味ではないですよね。</div>
+      <button class="replybtn" type="button">返信</button>
+    </div>
+    <div class="item reply">
+      <div><span class="who">backend-team</span><span class="when">7-30</span></div>
+      <div class="body">その通りです。04節に測定方法として書いてありますが、確認コスト自体を導入を妨げる要因として扱いました。</div>
+    </div>
+  </div>
+
+  <form id="cform">
+    <div class="idrow">
+      <span class="as">山田</span> として投稿
+      <button type="button">変更</button>
+    </div>
+    <div class="seg" role="radiogroup" aria-label="判定">
+      <label><input type="radio" name="dec" value="comment" checked>コメント</label>
+      <label><input type="radio" name="dec" value="approve">この方向でOK</label>
+      <label><input type="radio" name="dec" value="revise">修正希望</label>
+    </div>
+    <textarea placeholder="コメントを入力" maxlength="2000"></textarea>
+    <button class="send" type="submit">送信</button>
+    <span class="hint">アカウント登録は不要です</span>
+  </form>
+</aside>
+
+<script>
+(function(){
+  'use strict';
+  var t = document.getElementById('ctoggle');
+  t.addEventListener('click', function(){
+    var c = document.body.classList.toggle('collapsed');
+    t.textContent = c ? '◂' : '▸';
+    t.title = c ? 'コメント欄を開く' : 'コメント欄を閉じる';
+    t.setAttribute('aria-label', t.title);
+  });
+  document.getElementById('cform').addEventListener('submit', function(e){ e.preventDefault(); });
+})();
+</script>

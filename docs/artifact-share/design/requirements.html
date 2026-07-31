@@ -1,0 +1,429 @@
+<title>アーティファクトシェア — SKILL.md要件・インフラ要件</title>
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#64707c;
+    --paper:#f6f5f2; --paper-raised:#ffffff; --line:#dcd8d0;
+    --accent:#3d5a80; --accent-soft:#e7edf4;
+    --content:#5c7a5f; --content-soft:#eef3ec;
+    --plugin:#7a5a8a; --plugin-soft:#f1eaf5;
+    --core:#8a6d3b; --core-soft:#f4ecdd;
+    --reuse-bg:#eef3ec; --reuse-border:#5c7a5f;
+    --new-bg:#f6e8e6; --new-border:#a1503f;
+    --change-bg:#f7f0e1; --change-border:#a1793f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --content:#8ecbb6; --content-soft:#1f2b22;
+    --plugin:#c3a3d6; --plugin-soft:#29222e;
+    --core:#d0ad74; --core-soft:#2c2619;
+    --reuse-bg:#1e2a20; --reuse-border:#5c7a5f;
+    --new-bg:#2e211f; --new-border:#c17362;
+    --change-bg:#2c2417; --change-border:#c1954f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --content:#8ecbb6; --content-soft:#1f2b22;
+      --plugin:#c3a3d6; --plugin-soft:#29222e;
+      --core:#d0ad74; --core-soft:#2c2619;
+      --reuse-bg:#1e2a20; --reuse-border:#5c7a5f;
+      --new-bg:#2e211f; --new-border:#c17362;
+      --change-bg:#2c2417; --change-border:#c1954f;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .shell{max-width:1000px; margin:0 auto; padding:48px 24px 96px; display:grid; grid-template-columns:200px minmax(0,1fr); gap:48px;}
+  nav.toc{position:sticky; top:32px; align-self:start; font-size:13px;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc a{display:block; padding:7px 0 7px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px; font-size:12.5px;}
+  nav.toc a:hover{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+  @media (max-width:760px){.shell{grid-template-columns:1fr;} nav.toc{position:static;}}
+
+  main{min-width:0;}
+  header{border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:36px;}
+  h1{font-family:var(--serif); font-size:clamp(24px,3.4vw,30px); font-weight:600; margin:0 0 10px; text-wrap:balance;}
+  .lede{color:var(--ink-soft); font-size:14.5px; max-width:66ch; margin:0;}
+  section{margin-bottom:48px;}
+  h2{font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 18px; display:flex; align-items:baseline; gap:8px;}
+  h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  h3{font-family:var(--serif); font-size:16px; font-weight:600; margin:24px 0 10px;}
+  p{font-size:14.5px; margin:0 0 12px; max-width:68ch;}
+
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:20px; font-size:12px; color:var(--ink-soft);}
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .legend .sw{width:10px; height:10px; border-radius:3px; display:inline-block;}
+  .sw.reuse{background:var(--reuse-border);}
+  .sw.new{background:var(--new-border);}
+  .sw.change{background:var(--change-border);}
+
+  .item-list{display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
+  .item{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; background:var(--paper-raised);}
+  .item-tag{grid-row:1/3; align-self:start; margin-top:2px; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.03em; padding:4px 9px; border-radius:10px; white-space:nowrap; height:fit-content;}
+  .item-tag.reuse{background:var(--reuse-bg); color:var(--reuse-border); border:1px solid var(--reuse-border);}
+  .item-tag.new{background:var(--new-bg); color:var(--new-border); border:1px solid var(--new-border);}
+  .item-tag.change{background:var(--change-bg); color:var(--change-border); border:1px solid var(--change-border);}
+  .item-tag.reason{background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);}
+  .item .h{font-size:13.5px; font-weight:600;}
+  .item .d{font-size:12.5px; color:var(--ink-soft);}
+
+  code{font-family:var(--mono); font-size:.88em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+  .path{font-family:var(--mono); font-size:12px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line); padding:2px 7px; border-radius:4px; display:inline-block; margin-bottom:4px;}
+
+  .tree{font-family:var(--mono); font-size:12.5px; background:var(--paper-raised); border:1px solid var(--line); border-radius:8px; padding:16px 18px; line-height:1.85; overflow-x:auto;}
+  .tree .dir{color:var(--accent); font-weight:600;}
+  .tree .note{color:var(--ink-faint);}
+
+  .flow-steps{display:flex; flex-direction:column; gap:0; position:relative; padding-left:22px; margin-bottom:8px;}
+  .flow-steps::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line);}
+  .fs-item{position:relative; padding:0 0 16px 18px;}
+  .fs-item:last-child{padding-bottom:0;}
+  .fs-item::before{content:"";position:absolute;left:-22px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--accent);}
+  .fs-item .t{font-size:13.5px; font-weight:600;}
+  .fs-item .d{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+
+  .impact-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;}
+  .impact-card{background:var(--paper-raised); border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
+  .impact-card .k{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px;}
+  .impact-card .v{font-size:13px; margin:0;}
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#position"><span class="num">01</span>位置づけ</a></li>
+      <li><a href="#skill"><span class="num">02</span>SKILL.md要件</a></li>
+      <li><a href="#infra"><span class="num">03</span>インフラ要件</a></li>
+      <li><a href="#structure"><span class="num">04</span>ディレクトリ構成案</a></li>
+      <li><a href="#migration"><span class="num">05</span>design-share側の変更</a></li>
+      <li><a href="#corrections"><span class="num">06</span>実装確認による訂正</a></li>
+      <li><a href="#advisor"><span class="num">07</span>advisor指摘と修正</a></li>
+      <li><a href="#order"><span class="num">08</span>実装順序</a></li>
+      <li><a href="#open"><span class="num">09</span>決定事項</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header>
+      <h1>アーティファクトシェア — SKILL.md要件・インフラ要件</h1>
+      <p class="lede">design-shareが先行POCとして持っていた配信基盤を、アーティファクトシェア本体として再定義する。design-shareは別物ではなく、同じ目的（成果物を共有してレビューしてもらう）を共有しながら「対象物＝UIモック」と「その作成プロセスの専門knowledge」だけを独自に持つ子スキルとして、アーティファクトシェアの上に載る。この構成を実装するために新しく必要になるもの・そのまま流用できるものを、SKILL.mdとインフラの2軸で整理する。</p>
+    </header>
+
+    <section id="position">
+      <h2><span class="num">01</span>位置づけ</h2>
+      <p>アーティファクトシェアは新規の親Skill。design-shareは既存のSkillのまま存続するが、「中身を作る」役割に限定され、「配信する」役割はアーティファクトシェア側に一本化する。両者は目的（成果物を共有してレビューしてもらう）を共有し、design-shareは対象物（UIモック）とその作成プロセスの専門knowledgeだけを独自に持つ子スキルという関係になる。</p>
+
+      <h3>統合ではなく分離を選ぶ理由（トリガーの確実性）</h3>
+      <p>子スキルをアーティファクトシェア本体へ内包するか、独立したSkillとして分けるかは、Skillが正しく呼ばれるかどうか——トリガーの確実性で判断した。分離を選ぶ根拠は3点。</p>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag reason">根拠1</span>
+          <p class="h">説明文の希薄化を避けられる</p>
+          <p class="d">Skill選択は名前と1行説明文のマッチングで動く。design-shareの説明文には「UIモックを作りたい」「デザイン案を見せたい」「Design.mdを作りたい・直したい」という具体的な発話例が並び、これがトリガー精度を作っている。統合すると1つの説明文でUIモック生成・仕様書共有・ポストモーテム作成の全てをカバーせねばならず、説明文が薄まって曖昧化する</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reason">根拠2</span>
+          <p class="h">呼ばれた直後の分岐負荷が無い</p>
+          <p class="d">design-shareは既に12ステップの重い専用プロセス（アーキタイプ選定・Design.md対話・試作往復・敵対的測定）を持つ。同居させると呼び出された瞬間に「UIモック生成か、開発文書共有か」を正しく振り分ける負荷がかかる。分けておけば、design-shareが呼ばれた時点で前提を疑わず専用プロセスへ直行できる</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reason">根拠3</span>
+          <p class="h">依存の方向とトリガーの方向は別物</p>
+          <p class="d">「design-shareの配信ステップがアーティファクトシェアのスクリプト・インフラを呼ぶ」のはファイル・実行レベルの結合であり、Skillとしての呼び出しは独立でよい。design-shareが呼ばれても、アーティファクトシェアがSkillとして別途呼ばれるわけではない——内部が直接そのスクリプトを実行するだけ（CLAUDE.mdがskill-routerをSkillとして呼ばず直接参照しているのと同型）</p>
+        </div>
+      </div>
+      <p>この分離は密結合を受け入れる選択でもある。子スキルはアーティファクトシェアが同時にインストールされていなければ配信できない。プラグインという性質上これは当然の前提であり、回避すべき欠陥ではない。</p>
+
+      <h3>今後増える子スキルの扱い（拡張性）</h3>
+      <p>今後追加される子スキルも同じパターン（独立Skill＋アーティファクトシェアのインフラに依存）に統一する。全てをアーティファクトシェア本体へ同梱していく方式だと、SKILL.mdが肥大化するたびにトリガー精度が目減りする一方通行の劣化になる。独立Skill方式なら「アーティファクトシェアは配信基盤を提供するだけ、内容生成の専門knowledgeは各子スキルが持つ」という責務分離が保たれ、子スキルが増えてもアーティファクトシェア本体は変わらずに済む。</p>
+    </section>
+
+    <section id="skill">
+      <h2><span class="num">02</span>SKILL.md要件</h2>
+      <div class="legend">
+        <span><span class="sw reuse"></span>流用（design-shareから移す）</span>
+        <span><span class="sw new"></span>新規</span>
+        <span><span class="sw change"></span>変更が要る</span>
+      </div>
+
+      <h3>役割・処理対象・成果物</h3>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag new">新規</span>
+          <p class="h">役割定義</p>
+          <p class="d">「開発文書（spec・ADR・ポストモーテム・調査レポート等）を気軽に共有し、コメント・モブプロ形式でレビューしてもらう」ためのSkill、という役割をSKILL.mdの目的節に明記する。design-shareの「UIモックを共有する」という役割とは別物として定義する</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">新規</span>
+          <p class="h">既定4テンプレートの選択ヒアリング</p>
+          <p class="d">「何を共有したいか」から4種別（設計決定記録／機能仕様書／ポストモーテム／調査・検証レポート）のどれに当たるかを対話で特定する手順。今回確定した固定6セクション構造・2層(掴む/確かめる)構成をSKILL.md本文または同梱テンプレートとして持つ</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">新規</span>
+          <p class="h">3つの作成モードの分岐</p>
+          <p class="d">(0)新規テンプレートを自分で設計する／(1)既定・カスタムテンプレートを使って対話で1件作る／(1')完成済みHTMLをそのまま持ち込む、の3モードを最初に確認する手順。いずれも最終的に同じ配信ステップへ合流する</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">流用</span>
+          <p class="h">配信・トークン発行フロー</p>
+          <p class="d">design-shareのStep5相当（<span class="path">as.py deploy</span>→URL・トークンを一度だけ提示→セルフスモーク1周）をそのままアーティファクトシェアの配信手順として引き継ぐ。呼び出すスクリプトの実体は後述インフラ要件を参照</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">流用</span>
+          <p class="h">公開中文書の管理コマンド群</p>
+          <p class="d">design-shareのStep7（list／disable／rotate／export／gallery）をそのまま「公開中の共有文書」の管理としてアーティファクトシェア側に引き継ぐ</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">新規</span>
+          <p class="h">deploy時のラッパー埋め込み（訂正2を参照）</p>
+          <p class="d">現在のdeployは渡されたHTMLをそのまま置くだけで、ラッパーへの埋め込みを行っていない。中身がコメントUIを持たなくて済むようにするには、deploy時に中身をラッパーの{{共有する中身}}へ差し込む処理を新規に実装する必要がある。ラッパー自体はdesign-shareの<span class="path">template-pattern-page.html</span>の構造・DOM・scriptを流用し、文言だけ中立化する</p>
+        </div>
+      </div>
+
+      <h3>ガードレール</h3>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag new">新規</span>
+          <p class="h">中身への要求は最小限に留める</p>
+          <p class="d">中身（既定テンプレート／カスタムテンプレート／持ち込みHTML）に求めるのは自己完結・外部依存ゼロ・ラッパー予約名前空間との非衝突のみ。それ以上の構造（2層構成・6セクション等）を持ち込みHTMLにまで強制しない</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">新規</span>
+          <p class="h">既定テンプレートの固定構造を守る</p>
+          <p class="d">6セクションの並び順・重複禁止（掴む層と確かめる層で同じ結論を繰り返さない）・What-not-How原則・作業イメージへのタスク管理項目（担当者・締切）混入禁止を、既定4テンプレート使用時のガードレールとして明記する</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">流用</span>
+          <p class="h">design-shareのAWS運用ガードレール一式</p>
+          <p class="d">トークンの非永続化・無効化時のデータ保持・伝播遅延の案内・コメントのテキスト描画強制（innerHTML禁止）等、design-shareの既存ガードレールをそのまま引き継ぐ（内容は配信基盤の性質そのものであり、中身が何であっても変わらない）</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="infra">
+      <h2><span class="num">03</span>インフラ要件</h2>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag reuse">流用</span>
+          <p class="h">S3 + CloudFront + CloudFront Functions + KVS</p>
+          <p class="d"><span class="path">infra/cloudformation.yaml</span>・<span class="path">edge-gate.js</span>をそのまま使う。トークンゲート・コメントPUTの形状検査は中身の文書種別に依存しないため変更不要</p>
+        </div>
+        <div class="item">
+          <span class="item-tag change">変更</span>
+          <p class="h">配信コマンドの --type に文書種別を追加</p>
+          <p class="d"><span class="path">deploy</span>は既に任意のHTMLファイルを引数に取り、<code>--type mock|design-review</code>という判別子を持つ（<span class="path">ds.py:632</span>）。この既存の拡張点に開発文書用の種別を足すだけで済み、入力の一般化そのものは実質完了している</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">新規</span>
+          <p class="h">既定4テンプレートの同梱</p>
+          <p class="d">プレースホルダー版4テンプレート（設計決定記録／機能仕様書／ポストモーテム／調査・検証レポート）を<span class="path">references/templates/</span>相当の場所に同梱資材として配置する</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">新規</span>
+          <p class="h">名前空間衝突チェック（軽量）</p>
+          <p class="d">持ち込みHTML（モード1'）をラッパーに埋め込む前に、予約ID（<span class="path">c-*</span>／<span class="path">backbar</span>）やクラス（<span class="path">.comments</span>／<span class="path">.mock</span>）と衝突していないかを機械的に検査する一手間。衝突時は警告し、リネームを促す（自動リネームはしない——中身側のCSS/JS参照まで壊す危険があるため）</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">流用</span>
+          <p class="h">Web管理コンソール・ローカルMCP</p>
+          <p class="d"><span class="path">console_server.py</span>・<span class="path">mcp_server.py</span>は文書種別に依存しない管理操作（一覧・無効化・再発行・エクスポート）のみを扱うため、無変更で流用できる</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="structure">
+      <h2><span class="num">04</span>ディレクトリ構成案</h2>
+      <div class="tree">
+<span class="note">canonical（実体はここに置く）</span>
+<span class="dir">.waffle/skills/artifact-share/</span>
+├── SKILL.md                          <span class="note">← 新規：4テンプレート選択・3モード分岐・配信手順</span>
+├── <span class="dir">references/templates/</span>
+│   ├── template-decision-record.html      <span class="note">← 新規：本セッションで作成済み</span>
+│   ├── template-functional-spec.html      <span class="note">← 新規：本セッションで作成済み</span>
+│   ├── template-postmortem.html           <span class="note">← 新規：本セッションで作成済み</span>
+│   ├── template-investigation-report.html <span class="note">← 新規：本セッションで作成済み</span>
+│   └── template-share-wrapper.html        <span class="note">← 新規：template-pattern-page.htmlを流用し文言を中立化</span>
+├── <span class="dir">infra/</span>                             <span class="note">← 流用：design-share/infra/ を移設（無変更）</span>
+├── <span class="dir">scripts/</span>
+│   ├── as.py                         <span class="note">← 変更：ds.pyを移設。--typeに文書種別追加＋deploy時のラッパー埋め込みを新規実装</span>
+│   ├── console_server.py             <span class="note">← 流用：無変更</span>
+│   └── mcp_server.py                 <span class="note">← 流用：無変更</span>
+└── <span class="dir">references/knowledge/</span>
+    └── document-format-conventions.md    <span class="note">← 新規：6セクション固定構造・What-not-How原則等</span>
+
+<span class="note">Skillとしての露出（各ファイルをsymlinkする既存規約に従う）</span>
+<span class="dir">.claude/skills/artifact-share/</span>       <span class="note">← SKILL.md/infra/scripts等をsymlink</span>
+
+<span class="dir">.claude/skills/design-share/</span>         <span class="note">← 子スキル：Skillとして独立のまま（トリガーは維持）</span>
+└── SKILL.md                          <span class="note">← 変更：Step5以降を as.py 呼び出しへ。infraへのリンクは持たない</span>
+    <span class="note">※ ds.py は as.py へリネーム（委譲ラッパーは残さない）</span>
+
+<span class="dir">.claude/skills/（今後増える子スキル）/</span>  <span class="note">← 同じパターン：独立Skill＋artifact-shareのインフラに依存</span>
+      </div>
+    </section>
+
+    <section id="migration">
+      <h2><span class="num">05</span>design-share側の変更</h2>
+      <p>design-shareは「Design.md対話→UIモックHTML生成」までを担い、生成したHTMLの配信をartifact-shareに委ねる子スキルになる。Skillとしての独立性・トリガーは維持したまま、内部の配信ステップだけがartifact-share配下のスクリプト実行に置き換わる。実際の移行フローは以下の通り。</p>
+      <div class="flow-steps">
+        <div class="fs-item"><p class="t">1. インフラ・CLIの所属を再定義</p><p class="d"><span class="path">infra/</span>・<span class="path">ds.py</span>をcanonicalな<span class="path">.waffle/skills/artifact-share/</span>配下へ移し、<span class="path">as.py</span>にする。design-share側はinfraへのリンクを持たない</p></div>
+        <div class="fs-item"><p class="t">2. ラッパーテンプレートを中立化し、deploy時の埋め込みを実装</p><p class="d">template-pattern-page.htmlを<span class="path">template-share-wrapper.html</span>として流用・文言中立化し、あわせてdeploy時に中身を差し込む処理を新規実装する（訂正2）</p></div>
+        <div class="fs-item"><p class="t">3. design-shareのSKILL.md Step5〜7を差し替え</p><p class="d">配信手順を「artifact-shareの<span class="path">as.py</span>へモックHTMLを渡す」に書き換える。Step1〜4（対話・Design.md確定・パターン生成）は無変更。あわせてSKILL.md内の実装と乖離した記述（<span class="path">ds.sh</span>等のシェル前提の記述）も実体に合わせて修正する</p></div>
+        <div class="fs-item"><p class="t">4. 既存の公開中パターンの扱いを決める</p><p class="d">既に発行済みのURL・トークンをそのまま維持するか、移行に伴い再発行するかは運用判断（インフラの実体は同じため、URLは維持できる見込み）</p></div>
+      </div>
+    </section>
+
+    <section id="corrections">
+      <h2><span class="num">06</span>実装確認による訂正</h2>
+      <p>要件を確定する前に実物（<span class="path">.waffle/skills/design-share/scripts/ds.py</span>・ディレクトリ構成）を確認したところ、2点の事実誤認が判明した。</p>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag change">訂正1</span>
+          <p class="h">CLIの実体はシェルでなくPython単一ファイル</p>
+          <p class="d">実体は<span class="path">ds.py</span>のみで、<span class="path">ds.sh</span>／<span class="path">common.sh</span>／<span class="path">gallery.sh</span>等は存在しない（design-share側のSKILL.mdの記述が実装に追いついていない）。したがってアーティファクトシェア側のCLIも<span class="path">as.py</span>となり、名前空間衝突チェックの実装言語という論点自体が消える（既にPythonなので当然Pythonで書く）</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">訂正2</span>
+          <p class="h">「シェア時に包む」は既存機能ではなく新規実装</p>
+          <p class="d"><span class="path">deploy_pattern_core</span>は渡されたHTMLをそのままS3へ置き、<code>{{スラッグ}}</code>を置換するだけでラッパーへの埋め込みを行っていない。つまり現状はコメントUIが<b>生成時点でHTMLに入っている前提</b>の作り。「シェアする瞬間だけ包む」という設計はdeploy時にラッパーへ差し込む処理の新規追加を要する——これは流用ではなく新規作業として見積もる必要がある</p>
+        </div>
+      </div>
+      <p>訂正2の影響で、02節の「ラッパー埋め込みの一般化」は<b>変更</b>ではなく<b>新規</b>に格上げされる。既定4テンプレートが自身にコメントUIを持たなくて済むという設計上の利点は変わらないが、その利点を成立させるための実装コストは配信側に発生する。</p>
+    </section>
+
+    <section id="advisor">
+      <h2><span class="num">07</span>advisor指摘と修正</h2>
+      <p>tech-lead-advisor・platform-advisorへ並列に相談し、設計上の誤りと見落としが判明した。インフラを削除して作り直せることが確定したため、移行互換に起因する制約は消えたが、それとは無関係な設計上の指摘は残る。</p>
+
+      <h3>設計を修正した点</h3>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag new">修正</span>
+          <p class="h">依存方向の根拠が原則上不正確だった</p>
+          <p class="d">「具体である子スキルが汎用である配信基盤に依存する」という説明は誤り。S3/CloudFrontを直接叩くartifact-shareは<b>外側のアダプター</b>であり、依存が向かってよい「より本質的な層」ではない。子→親が許されるのは「汎用だから」ではなく<b>親が公開する安定した契約（ポート）にのみ依存し、実装を知らないから</b>。現状その契約は両側の実装に散在した暗黙のプロトコルで、「アダプター側でポートを定義する」アンチパターンに該当する</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">修正</span>
+          <p class="h">「包んで配信する責務は親が持つ」を実装が満たしていない</p>
+          <p class="d">コメントUIの実装（<span class="path">c-*</span>のID群16個・<span class="path">aside.comments</span>・fetch呼び出し）は<span class="path">template-pattern-page.html</span>側に丸ごと入っており、「予約名前空間と衝突しない」という最小限の制約では表現できない量の契約が中身側へ流出している。中核サブドメイン（コメントによるレビューループ）の実装が所有者不在で散在する構造</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">修正</span>
+          <p class="h">「親は子を検出しない」は既に実装が違反している</p>
+          <p class="d"><code>--type mock|design-review</code>のenum・<span class="path">confirm-design</span>とsupersedeルール・コンソールのタブ分割——design-share固有のドメイン語彙と業務ルールが既に配信CLIに埋まっている。そのまま移すと親が子の文書種別と確定ルールを知る構造が固定される。<code>--type</code>はmetaの永続データにも入るため後から外しにくい</p>
+        </div>
+        <div class="item">
+          <span class="item-tag change">追加</span>
+          <p class="h">予約名前空間の非衝突は「子の義務＋親による検査」に分ける</p>
+          <p class="d">制約を中身側の責務として課すのは適切（親が中身のCSSを書き換えて吸収すると、親が中身の見た目を壊す新たな双方向依存が生まれる）。ただし<b>検査は親が持つ</b>。deploy処理の先頭で予約ID・予約クラスの出現を検出してdieさせれば、子が増えても強制点は1箇所で済む</p>
+        </div>
+        <div class="item">
+          <span class="item-tag change">追加</span>
+          <p class="h">ラッパー版の追跡手段が無いと修正が届かない</p>
+          <p class="d"><span class="path">sourceHash</span>はローカルソースのみのハッシュなので、ラッパー合成を入れるとラッパー（コメントUI）を修正しても既存slugは同期判定が「一致」のままになり、「配信中は旧ラッパー」状態が一切検知されない。<span class="path">meta.json</span>に<span class="path">wrapperHash</span>を持たせ、<code>(sourceHash, wrapperHash)</code>の両方で判定する</p>
+        </div>
+        <div class="item">
+          <span class="item-tag change">追加</span>
+          <p class="h">URL空間の不変条件</p>
+          <p class="d"><span class="path">edge-gate.js</span>の<span class="path">extractSlug</span>は<code>p|comments|comments-list</code>の3プレフィックスしか受けず、外れると全面403。したがって<code>--type</code>はmeta上の属性に留め、<b>URLは<code>/p/{slug}/</code>を種別横断で共有する</b>ことがedge-gate無改造の必要条件</p>
+        </div>
+      </div>
+
+      <h3>インフラ作り直しにより消えた制約</h3>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag reuse">解消</span>
+          <p class="h">CFNスタック名の改名禁止・503プレースホルダーの罠</p>
+          <p class="d">KVSとFunctionが<code>${AWS::StackName}</code>由来のため改名は既存トークン全消失を招く、テンプレート更新は503版の再公開で全slug即停止する——という制約は、スタックを削除して<span class="path">artifact-share</span>名で作り直すことで消える（create後に関数本体を一度投入するだけ）</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">解消</span>
+          <p class="h">環境変数名の新旧フォールバック期間</p>
+          <p class="d">最初から<span class="path">ARTIFACT_SHARE_ENV</span>＋gitignore済みの<span class="path">artifact-share.env</span>（キー名のみの<span class="path">.example</span>をコミット）で始められる。旧<span class="path">design-share.env</span>は追跡から外す。<span class="path">KVS_ARN</span>がアカウントIDを含み<code>git subtree split</code>で公開履歴に載る問題も、新規ファイルをignoreすることで回避できる</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">解消</span>
+          <p class="h">既存データの移行互換</p>
+          <p class="d">既存slug・トークン・コメント・meta約100件の互換を保つ必要が無いため、<span class="path">sourceHash</span>の意味変更・<span class="path">wrapperHash</span>追加・<span class="path">.design-share/</span>ローカル作業ディレクトリの帰属も、後方互換を気にせず最初から正しい形で決められる</p>
+        </div>
+      </div>
+
+      <h3>インフラとは無関係に残る作業</h3>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag new">残る</span>
+          <p class="h">アクセスログが未設定</p>
+          <p class="d">CloudFrontのLoggingが未設定のため、「トークン漏洩の疑いがあるとき第三者が実際に閲覧したか」を事後確認する手段がゼロ。ポストモーテム・調査レポートを同じ面に載せるなら、標準アクセスログの有効化を作り直しと同時に入れるのが最も安い</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">残る</span>
+          <p class="h">コメント16KB上限の妥当性</p>
+          <p class="d">UIモックの短評を前提とした閾値。開発文書レビューでは引用付き長文が普通に発生し、超過時は理由なしの403で投稿者には原因不明の失敗として見える。上限の再確認、または403応答へ理由を載せることを検討する</p>
+        </div>
+        <div class="item">
+          <span class="item-tag new">残る</span>
+          <p class="h">単一境界で扱えるデータ分類の上限</p>
+          <p class="d">トークン1層＋7日固定Cookieという境界のまま種別を増やし続けるのは危険。「どの種別までこの境界で扱ってよいか」を明文化する（今すぐ境界を分ける必要があるとは判定されていない）</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="order">
+      <h2><span class="num">08</span>実装順序</h2>
+      <p>当初の順序（infra移設→ラッパー中立化→SKILL.md差し替え）は<b>逆順だった</b>。先に移設すると、4テンプレートが現行の暗黙プロトコルを写経する形で増え、後から1箇所へ戻すコストが6倍になるとの指摘を受けて修正した。インフラを作り直せることは、この順序に影響しない（契約とコメントUI所有権の問題は移行互換とは別の話）。</p>
+      <div class="flow-steps">
+        <div class="fs-item"><p class="t">1. 契約（ポート）を明文化する</p><p class="d">中身と配信の間の契約——受け取るHTMLの形・埋め込まれるスロット名・予約名前空間・URL規約——をartifact-share側に1つの文書として集約する。「子は親を検出しない／親は子を列挙しない」という宣言は、この契約文書があって初めて実効性を持つ</p></div>
+        <div class="fs-item"><p class="t">2. 汎用／design固有の線引きを決める</p><p class="d"><code>--type</code>のenum・<span class="path">confirm-design</span>とsupersedeルール・コンソールのタブ分割を、汎用側に残すか子スキル側へ出すかを確定する。metaのスキーマに影響するため後戻りが高く、移設前に決める必要がある</p></div>
+        <div class="fs-item"><p class="t">3. コメントUIの所有権を配信側へ移す</p><p class="d">deploy時に中身をラッパーへ埋め込む処理を実装し、あわせて予約名前空間の検査と<span class="path">wrapperHash</span>を入れる。<span class="path">.mock</span>のようなdesign-share固有の語彙は中立なスロット名へ改める</p></div>
+        <div class="fs-item"><p class="t">4. インフラを作り直し、CLIを移設する</p><p class="d">スタックを削除して<span class="path">artifact-share</span>名で作成、関数本体を投入。<span class="path">ds.py</span>を<span class="path">as.py</span>としてcanonicalな<span class="path">.waffle/skills/artifact-share/</span>配下へ移す。<span class="path">references/templates/</span>は親と子へ明示的に振り分ける（<span class="path">gallery-page.html</span>等は親、<span class="path">template-pattern-page.html</span>は子）</p></div>
+        <div class="fs-item"><p class="t">5. 既定4テンプレートを同梱し、SKILL.mdを書く</p><p class="d">契約が固まった後にテンプレートを配置する。この順序なら、テンプレートは暗黙プロトコルではなく明文化された契約に対して書かれる</p></div>
+      </div>
+    </section>
+
+    <section id="open">
+      <h2><span class="num">09</span>決定事項</h2>
+      <div class="item-list">
+        <div class="item">
+          <span class="item-tag reuse">決定</span>
+          <p class="h">スキル名は artifact-share、canonicalは .waffle/skills/ 配下</p>
+          <p class="d">既存の全Skillが<span class="path">.waffle/skills/&lt;name&gt;/</span>をcanonicalとし、<span class="path">.claude/skills/&lt;name&gt;/</span>から各ファイルをシンボリックリンクで参照する構成になっている（design-shareのSKILL.md・infra・scripts・assets全てがsymlink）。この既存規約に合わせる</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">決定</span>
+          <p class="h">infraはシンボリックリンクで共有する</p>
+          <p class="d">canonicalな<span class="path">infra/</span>・<span class="path">scripts/</span>をartifact-share配下へ移し、design-share側は配信を担わなくなるためinfraへのリンク自体を持たない（必要になるのは<span class="path">as.py</span>の呼び出しのみ）。物理コピーは二重管理になるため採らない</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">決定</span>
+          <p class="h">CloudFormationスタックは削除して作り直す</p>
+          <p class="d">既存の公開済みリソースを誰も使用していないため、スタック名の改名制約・503プレースホルダー再公開の罠・既存トークンの保全といった移行互換の制約を回避する必要が無い。<span class="path">artifact-share</span>名で新規作成し、環境設定・gitignore・metaスキーマを最初から正しい形で始める</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">決定</span>
+          <p class="h">名前空間衝突チェックは as.py 内のPythonで実装</p>
+          <p class="d">訂正1の通りCLIが既にPythonのため、実装場所の選択肢は元から1つだった。予約ID（<span class="path">c-*</span>／<span class="path">backbar</span>）・クラス（<span class="path">.comments</span>／<span class="path">.mock</span>）との衝突を検出して警告する。自動リネームはしない（中身側のCSS/JS参照まで壊す危険があるため）</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">決定</span>
+          <p class="h">ds.py は as.py へリネームする（後方互換は考えない）</p>
+          <p class="d">まだ外部に提供していない自分用のツールであり、守るべき既存利用者が存在しない。委譲ラッパーを残すのは不要な二重構造になるだけなので、単純にリネームし、参照している側（design-shareのSKILL.md・README.md）の記述を追随させる</p>
+        </div>
+        <div class="item">
+          <span class="item-tag reuse">決定</span>
+          <p class="h">子スキルは前提チェックの分岐を持たない</p>
+          <p class="d">design-shareが「artifact-shareが入っているか」を判定して振る舞いを変えるロジックは持たせない。子スキル（具体）が親の配信基盤（汎用）に依存するのは依存方向として正しいため、実行時に検出するのではなく<b>ハード前提として宣言する</b>だけにする（スクリプトが無ければ通常のエラーで止まる）。逆に、artifact-share側がどの子スキルが入っているかを検出・列挙するロジックを持つことは依存方向違反であり禁止する</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

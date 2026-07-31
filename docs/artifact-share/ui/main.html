@@ -1,0 +1,1027 @@
+<title>artifactshare</title>
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#68737e;
+    --paper:#f4f2ee; --card:#ffffff; --line:#dcd8d0; --line-soft:#e9e5de;
+    --accent:#2f5d63; --accent-soft:#e3edee;
+    --ok:#4f7355; --ok-soft:#eaf1ea;
+    --off:#8c8478; --off-soft:#efece6;
+    --warn:#96702f; --warn-soft:#f7f0e1;
+    --live:#b4553f;
+    --token-bg:#1f2529; --token-ink:#f0ede6; --token-gold:#d9b26a;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+    --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+    --accent:#7fb3ba; --accent-soft:#1e2c2e;
+    --ok:#8ecbb6; --ok-soft:#1d2a23;
+    --off:#7d7669; --off-soft:#26241f;
+    --warn:#c9a05e; --warn-soft:#2b2419;
+    --live:#d98a72;
+    --token-bg:#0e1113; --token-ink:#f0ede6; --token-gold:#d9b26a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+      --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+      --accent:#7fb3ba; --accent-soft:#1e2c2e;
+      --ok:#8ecbb6; --ok-soft:#1d2a23;
+      --off:#7d7669; --off-soft:#26241f;
+      --warn:#c9a05e; --warn-soft:#2b2419;
+      --live:#d98a72;
+      --token-bg:#0e1113; --token-ink:#f0ede6; --token-gold:#d9b26a;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .page{max-width:940px; margin:0 auto; padding:34px 22px 90px;}
+
+  .appbar{display:flex; align-items:center; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:30px;}
+  .brand{font-family:var(--serif); font-size:19px; font-weight:600;}
+  .brand span{color:var(--accent);}
+  .nav{display:flex; gap:4px; margin-left:20px;}
+  .nav a{font-size:13px; color:var(--ink-soft); text-decoration:none; padding:5px 11px; border-radius:7px;}
+  .nav a.cur{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .nav a:hover:not(.cur){background:var(--line-soft);}
+  .whoami{margin-left:auto; display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-soft);}
+  .avatar{width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; font-size:11px; font-weight:700;}
+
+  .btn{font:inherit; font-size:13px; font-weight:600; padding:8px 18px; border-radius:7px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn.ghost{background:transparent; color:var(--accent);}
+  .btn:focus-visible, .copy:focus-visible, .linkbtn:focus-visible, input:focus-visible, summary:focus-visible,
+  .fchip input:focus-visible + span, .pchip input:focus-visible + span, .rowbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .linkbtn{font:inherit; font-size:12.5px; background:none; border:none; color:var(--ink-soft); cursor:pointer; padding:6px 2px; text-decoration:underline; text-underline-offset:3px;}
+  .card{border:1px solid var(--line); border-radius:12px; background:var(--card); padding:18px;}
+  .view{display:none;}
+  .view.on{display:block;}
+
+  /* ── dropzone（メイン） ── */
+  .drop{border:2px dashed var(--line); border-radius:14px; background:var(--card); padding:30px 26px; text-align:center;
+    transition:border-color .15s, background .15s; margin-bottom:34px; display:flex; align-items:center; gap:22px; text-align:left;}
+  .drop.hot{border-color:var(--accent); background:var(--accent-soft);}
+  .glyph{width:52px; height:44px; position:relative; flex-shrink:0;}
+  .sheet{position:absolute; inset:0; border:1.5px solid var(--ink-faint); border-radius:4px; background:var(--card);}
+  .sheet.b{transform:rotate(-7deg) translate(-4px,3px); opacity:.4;}
+  .sheet.f{display:grid; align-content:center; gap:4px; padding:8px 7px;}
+  .sheet.f i{display:block; height:2px; background:var(--ink-faint); border-radius:1px; opacity:.5;}
+  .sheet.f i:nth-child(1){width:70%;} .sheet.f i:nth-child(2){width:100%;} .sheet.f i:nth-child(3){width:85%;}
+  .tag-html{position:absolute; right:-8px; bottom:-6px; font-family:var(--mono); font-size:8px; font-weight:700; background:var(--accent); color:#fff; padding:2px 5px; border-radius:3px;}
+  .drop .dtxt{flex:1; min-width:0;}
+  .drop h2{font-size:16px; margin:0 0 3px; font-weight:600;}
+  .drop .d-sub{font-size:12.5px; color:var(--ink-soft); margin:0;}
+  .drop .dact{flex-shrink:0;}
+
+  /* ── list ── */
+  .lhead{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  .lhead h1{font-family:var(--serif); font-size:20px; font-weight:600; margin:0;}
+  .lhead .count{font-size:12.5px; color:var(--ink-faint);}
+  .scope{margin-left:auto; font-size:11.5px; color:var(--ink-faint);}
+
+  .toolbar{display:flex; flex-direction:column; gap:11px; margin-bottom:16px;}
+  .search{position:relative;}
+  .search input{width:100%; font:inherit; font-size:13.5px; padding:9px 12px 9px 34px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
+  .search svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); width:14px; height:14px; stroke:var(--ink-faint); stroke-width:2; fill:none;}
+  .filters{display:flex; gap:16px; flex-wrap:wrap; align-items:center;}
+  .fgroup{display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .fgroup .flabel{font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); margin-right:2px;}
+  .fchip, .pchip{position:relative;}
+  .fchip input, .pchip input{position:absolute; opacity:0; width:0; height:0;}
+  .fchip span{display:inline-block; font-size:12px; padding:3px 11px; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink-soft); cursor:pointer;}
+  .fchip input:checked + span{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;}
+
+  .list{border:1px solid var(--line); border-radius:12px; background:var(--card);}
+  .row{display:grid; grid-template-columns:1fr auto auto; gap:4px 16px; padding:15px 18px; border-top:1px solid var(--line-soft); align-items:center;}
+  .row:first-child{border-top:none; border-radius:12px 12px 0 0;}
+  .row:last-child{border-radius:0 0 12px 12px;}
+  .row:only-child{border-radius:12px;}
+  .row.off{background:var(--off-soft);}
+  .row.off .title{color:var(--ink-soft);}
+  .row.justnow{animation:pop 1.4s ease;}
+  @keyframes pop{from{background:var(--accent-soft);} to{background:transparent;}}
+  .main{grid-column:1; min-width:0;}
+  .title{font-size:14.5px; font-weight:600; margin:0 0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .sub{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
+  .dtype{font-family:var(--mono); font-size:10px; letter-spacing:.03em; padding:2px 7px; border-radius:4px; background:var(--accent-soft); color:var(--accent);}
+  .dtype.none{background:var(--line-soft); color:var(--ink-faint);}
+  .tag{font-size:11px; color:var(--ink-soft);}
+  .tag::before{content:"#"; opacity:.5;}
+  .proj{font-size:11px; color:var(--ink-soft); display:inline-flex; align-items:center; gap:4px;}
+  .proj::before{content:""; width:6px; height:6px; border-radius:2px; background:var(--accent); opacity:.7;}
+  .comments{grid-column:2; text-align:right; white-space:nowrap; background:none; border:1px solid transparent;
+    border-radius:8px; padding:4px 8px; font:inherit; color:inherit; cursor:pointer;}
+  .comments:hover{border-color:var(--line); background:var(--paper);}
+  .comments:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .comments[disabled]{cursor:default; background:none; border-color:transparent;}
+  .cnum{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; display:block;}
+  .cnum.zero{color:var(--ink-faint); font-weight:400;}
+  .cwhen{font-size:11px; color:var(--ink-faint); display:block;}
+  .cwhen.fresh{color:var(--live); font-weight:600;}
+  .cwhen.fresh::before{content:"●"; font-size:7px; vertical-align:2px; margin-right:3px;}
+  .rowend{grid-column:3; display:flex; align-items:center; gap:9px;}
+  .status{font-family:var(--mono); font-size:10px; letter-spacing:.04em; padding:3px 9px; border-radius:11px; white-space:nowrap;}
+  .status.on{background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok);}
+  .status.no{background:var(--off-soft); color:var(--off); border:1px solid var(--off);}
+  .rowbtn{font:inherit; font-size:15px; line-height:1; background:none; border:1px solid transparent; border-radius:6px; color:var(--ink-faint); cursor:pointer; padding:5px 8px;}
+  .rowbtn:hover{border-color:var(--line); color:var(--ink);}
+  .iconbtn{background:none; border:1px solid transparent; border-radius:6px; color:var(--ink-faint); cursor:pointer;
+    padding:5px; display:inline-flex; align-items:center; justify-content:center;}
+  .iconbtn:hover{border-color:var(--line); color:var(--accent);}
+  .iconbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .iconbtn svg{width:15px; height:15px; stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .iconbtn.ok{color:var(--ok); border-color:var(--ok);}
+
+  .menu{position:relative;}
+  .menu ul{position:absolute; right:0; top:calc(100% + 5px); z-index:10; min-width:186px; margin:0; padding:5px; list-style:none;
+    background:var(--card); border:1px solid var(--line); border-radius:9px; box-shadow:0 6px 22px rgba(0,0,0,.13);}
+  .menu ul.up{top:auto; bottom:calc(100% + 5px);}
+  .menu ul[hidden]{display:none;}
+  .menu li button{width:100%; text-align:left; font:inherit; font-size:12.5px; padding:7px 10px; border:none; border-radius:6px; background:none; color:var(--ink); cursor:pointer;}
+  .menu li button:hover{background:var(--accent-soft); color:var(--accent);}
+  .menu li.sep{height:1px; background:var(--line-soft); margin:4px 2px;}
+  .menu li button.danger{color:var(--live);}
+  .empty{padding:46px 24px; text-align:center; color:var(--ink-faint);}
+  .empty p{font-size:13.5px; margin:0;}
+
+  /* ── confirm ── */
+  h1.vt{font-family:var(--serif); font-size:23px; font-weight:600; margin:0 0 5px;}
+  .lede{color:var(--ink-soft); font-size:13.5px; margin:0 0 22px;}
+  .filerow{display:flex; align-items:center; gap:10px; padding:9px 11px; border:1px solid var(--line-soft); border-radius:8px; background:var(--paper); margin-bottom:15px;}
+  .fname{font-family:var(--mono); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .fsize{margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--ink-faint); flex-shrink:0;}
+  .readout{border:1px solid var(--line-soft); border-radius:8px; overflow:hidden; margin-bottom:15px;}
+  .rhead{display:flex; align-items:center; gap:7px; padding:8px 11px; background:var(--ok-soft); border-bottom:1px solid var(--line-soft); font-size:11.5px; color:var(--ok); font-weight:600;}
+  .check{width:14px; height:14px; border-radius:50%; background:var(--ok); display:grid; place-items:center; flex-shrink:0;}
+  .check svg{width:9px; height:9px; stroke:#fff; stroke-width:2.6; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .kv{display:grid; grid-template-columns:auto 1fr; gap:6px 13px; padding:12px; font-size:12.5px; margin:0;}
+  .kv dt{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; padding-top:2px;}
+  .kv dd{margin:0; word-break:break-word;}
+  .chips{display:flex; gap:5px; flex-wrap:wrap;}
+  .chip{font-size:11px; background:var(--accent-soft); color:var(--accent); padding:2px 8px; border-radius:11px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block; font-size:12px; font-weight:600; margin-bottom:5px;}
+  .field label .req{color:var(--warn); font-weight:400; font-size:11px; margin-left:5px;}
+  .field input{width:100%; font:inherit; font-size:13.5px; padding:8px 11px; border:1px solid var(--line); border-radius:7px; background:var(--paper); color:var(--ink);}
+  details.optional{border-top:1px dashed var(--line); padding-top:12px; margin-top:2px;}
+  details.optional summary{font-size:12px; color:var(--ink-soft); cursor:pointer; list-style:none; display:flex; align-items:center; gap:6px;}
+  details.optional summary::-webkit-details-marker{display:none;}
+  details.optional summary::before{content:"＋"; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  details.optional[open] summary::before{content:"−";}
+  details.optional .inner{padding-top:13px;}
+  .notice{display:flex; gap:9px; align-items:flex-start; padding:10px 12px; border-radius:8px; font-size:12px; background:var(--warn-soft); border:1px solid var(--warn); margin-bottom:15px;}
+  .notice .ic{font-family:var(--mono); font-weight:700; color:var(--warn); flex-shrink:0;}
+  .notice p{margin:0;}
+  .picker{border-top:1px solid var(--line-soft); margin-top:15px; padding-top:14px;}
+  .picker .plabel{font-size:12px; font-weight:600; margin:0 0 3px;}
+  .picker .phelp{font-size:11.5px; color:var(--ink-faint); margin:0 0 10px;}
+  .pchips{display:flex; gap:7px; flex-wrap:wrap;}
+  .pchip span{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; padding:5px 12px;
+    border:1px solid var(--line); border-radius:16px; background:var(--paper); color:var(--ink-soft); cursor:pointer;}
+  .pchip span::before{content:""; width:11px; height:11px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0;}
+  .pchip input:checked + span{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .pchip input:checked + span::before{background:var(--accent); border-color:var(--accent);}
+  .actions{display:flex; gap:9px; align-items:center; padding-top:3px;}
+  .actions .spacer{flex:1;}
+
+  /* ── done ── */
+  .dhead{display:flex; align-items:center; gap:9px; margin-bottom:16px;}
+  .dhead .t{font-family:var(--serif); font-size:19px; font-weight:600;}
+  .urlrow{display:flex; align-items:center; gap:9px; padding:11px 13px; border:1px solid var(--line); border-radius:8px; background:var(--paper); margin-bottom:13px;}
+  .urlrow .u{font-family:var(--mono); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .copy{margin-left:auto; font:inherit; font-size:11.5px; font-weight:600; padding:5px 11px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); cursor:pointer; flex-shrink:0;}
+  .copy:hover{border-color:var(--accent); color:var(--accent);}
+  .tokenbox{background:var(--token-bg); border-radius:10px; padding:16px 18px; margin-bottom:15px;}
+  .tlabel{font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--token-gold); margin:0 0 10px;}
+  .tval{display:flex; align-items:center; gap:10px;}
+  .tval code{font-family:var(--mono); font-size:17px; letter-spacing:.06em; color:var(--token-ink); word-break:break-all;}
+  .tokenbox .copy{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.22); color:var(--token-ink);}
+  .tokenbox .warn{font-size:11.5px; color:#b6b0a4; margin:11px 0 0; line-height:1.65;}
+  .belongs{font-size:12.5px; color:var(--ink-soft); margin:0 0 15px; display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
+  .belongs .pb{font-size:11.5px; background:var(--accent-soft); color:var(--accent); padding:2px 9px; border-radius:11px;}
+  .nextrow{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+
+  /* ── dialog ── */
+  dialog{border:1px solid var(--line); border-radius:13px; background:var(--card); color:var(--ink);
+    padding:0; max-width:460px; width:calc(100% - 32px); box-shadow:0 14px 50px rgba(0,0,0,.24);}
+  dialog::backdrop{background:rgba(20,22,25,.42);}
+  .dlg-head{padding:17px 20px 0;}
+  .dlg-head h2{font-family:var(--serif); font-size:17px; font-weight:600; margin:0 0 5px;}
+  .dlg-head .target{font-size:12px; color:var(--ink-faint); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .dlg-body{padding:15px 20px 0;}
+  .dlg-body p{font-size:13px; color:var(--ink-soft); margin:0 0 11px;}
+  .dlg-body p strong{color:var(--ink); font-weight:600;}
+  .keep{border:1px solid var(--line-soft); border-radius:9px; overflow:hidden; margin-bottom:13px;}
+  .keep div{display:flex; gap:9px; align-items:flex-start; padding:9px 12px; font-size:12.5px; border-top:1px solid var(--line-soft);}
+  .keep div:first-child{border-top:none;}
+  .keep .ky{color:var(--ok); font-weight:700; flex-shrink:0;}
+  .keep .kn{color:var(--live); font-weight:700; flex-shrink:0;}
+  .optline{display:flex; gap:9px; align-items:flex-start; padding:11px 12px; border:1px solid var(--line-soft);
+    border-radius:9px; background:var(--paper); margin-bottom:13px; font-size:12.5px;}
+  .optline input{margin-top:4px; flex-shrink:0;}
+  .optline label{cursor:pointer;}
+  .optline .sub{display:block; color:var(--ink-faint); font-size:11.5px;}
+  .dlg-act{display:flex; gap:9px; align-items:center; justify-content:flex-end; padding:5px 20px 18px;}
+  .dlg-act .spacer{display:none;}
+  /* コメント閲覧ダイアログ */
+  .cmlist{max-height:min(56vh,420px); overflow-y:auto; margin:0 -20px; padding:0 20px;
+    display:flex; flex-direction:column; gap:15px;}
+  .cmitem .cmtop{display:flex; align-items:baseline; gap:6px; flex-wrap:wrap;}
+  .cmitem .cwho{font-size:12.5px; font-weight:700;}
+  .cmitem .cwhen{font-size:11px; color:var(--ink-faint);}
+  .cmitem .cbody{font-size:13px; margin:2px 0 0; color:var(--ink); white-space:pre-wrap;}
+  .cmitem.reply{margin-left:15px; padding-left:11px; border-left:2px solid var(--line-soft);}
+  .cdec{font-size:10px; font-weight:700; padding:1px 6px; border-radius:5px;}
+  .cdec.approve{background:var(--ok-soft); color:var(--ok);}
+  .cdec.revise{background:var(--warn-soft); color:var(--warn);}
+  .cmsum{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);
+    padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid var(--line-soft);}
+  .cmsum b{color:var(--ink);}
+
+  /* コピー完了の通知 */
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(10px); z-index:60;
+    background:var(--ink); color:var(--paper); font-size:13px; font-weight:600; padding:10px 20px;
+    border-radius:24px; box-shadow:0 6px 24px rgba(0,0,0,.24); opacity:0; pointer-events:none;
+    transition:opacity .18s, transform .18s; display:flex; align-items:center; gap:8px;}
+  .toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast svg{width:15px; height:15px; stroke:currentColor; stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+
+  .dropmini{border:2px dashed var(--line); border-radius:10px; background:var(--paper); padding:20px 16px;
+    text-align:center; margin-bottom:13px; transition:border-color .15s, background .15s;}
+  .dropmini.hot{border-color:var(--accent); background:var(--accent-soft);}
+  .dropmini p{font-size:12.5px; margin:0 0 9px; color:var(--ink-soft);}
+  .dropmini .btn{font-size:12px; padding:6px 14px;}
+  .btn.danger-b{background:transparent; border-color:var(--live); color:var(--live);}
+  .btn.danger-b:hover{background:rgba(180,85,63,.1); filter:none;}
+  .dlg-pane{display:none;} .dlg-pane.on{display:block;}
+
+  @media (max-width:660px){
+    .drop{flex-direction:column; text-align:center;}
+    .row{grid-template-columns:1fr auto;}
+    .comments{grid-column:1/-1; grid-row:2; text-align:left; margin-top:6px;}
+    .cwhen{display:inline; margin-left:6px;}
+  }
+  @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important;}}
+</style>
+
+<div class="page">
+  <div class="appbar">
+    <div class="brand">artifact<span>share</span></div>
+    <nav class="nav">
+      <a href="#" class="cur">アーティファクト</a>
+      <a href="#">プロジェクト</a>
+    </nav>
+    <div class="whoami"><span class="avatar">DA</span>daidaiiro</div>
+  </div>
+
+  <!-- ══ メイン ══ -->
+  <section class="view on" id="v-home">
+    <div class="drop" id="dz">
+      <div class="glyph">
+        <div class="sheet b"></div>
+        <div class="sheet f"><i></i><i></i><i></i></div>
+        <span class="tag-html">HTML</span>
+      </div>
+      <div class="dtxt">
+        <h2>HTMLをここにドロップして公開</h2>
+        <p class="d-sub">1ファイル・自己完結のHTML。共有用のURLとトークンを発行します。</p>
+      </div>
+      <div class="dact">
+        <button class="btn ghost" type="button" id="pick">ファイルを選ぶ</button>
+        <input type="file" id="fileinput" accept=".html,.htm,text/html" hidden>
+      </div>
+    </div>
+
+    <div class="lhead">
+      <h1>あなたのアーティファクト</h1>
+      <span class="count" id="count"></span>
+      <span class="scope">自分がアップロードしたものだけが並びます</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+        <input type="search" id="q" placeholder="タイトル・タグで絞り込む" aria-label="絞り込み">
+      </div>
+      <div class="filters">
+        <div class="fgroup">
+          <span class="flabel">プロジェクト</span>
+          <label class="fchip"><input type="checkbox" data-f="proj" value="検索基盤リニューアル"><span>検索基盤リニューアル</span></label>
+          <label class="fchip"><input type="checkbox" data-f="proj" value="決済まわりの改善"><span>決済まわりの改善</span></label>
+          <label class="fchip"><input type="checkbox" data-f="proj" value="社内ツール"><span>社内ツール</span></label>
+        </div>
+        <div class="fgroup">
+          <span class="flabel">状態</span>
+          <label class="fchip"><input type="checkbox" data-f="off" value="1"><span>無効化済みも表示</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+  </section>
+
+  <!-- ══ 確認 ══ -->
+  <section class="view" id="v-confirm">
+    <h1 class="vt">内容を確認</h1>
+    <p class="lede" id="confirm-lede"></p>
+    <div class="card">
+      <div class="filerow">
+        <span class="fname" id="c-fname"></span>
+        <span class="fsize" id="c-fsize"></span>
+      </div>
+      <div class="notice" id="c-extwarn" hidden>
+        <span class="ic">!</span>
+        <p id="c-extwarn-text"></p>
+      </div>
+      <div class="readout" id="c-readout" hidden>
+        <div class="rhead">
+          <span class="check"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.4l2.4 2.4 4.6-5"/></svg></span>
+          このHTMLから読み取りました
+        </div>
+        <dl class="kv" id="c-kv"></dl>
+      </div>
+      <div id="c-manual" hidden>
+        <div class="field">
+          <label for="c-name">表示名<span class="req">必須</span></label>
+          <input id="c-name" type="text" placeholder="一覧で見分けるための名前">
+        </div>
+        <details class="optional">
+          <summary>説明とタグを付ける（省略可）</summary>
+          <div class="inner">
+            <div class="field">
+              <label for="c-desc">説明</label>
+              <input id="c-desc" type="text" placeholder="どんな内容かを一文で">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label for="c-tags">タグ</label>
+              <input id="c-tags" type="text" placeholder="カンマ区切り　例: marketing, 試算">
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="picker">
+        <p class="plabel">プロジェクトに入れる（任意）</p>
+        <p class="phelp">入れたプロジェクトの閲覧トークンで、これも開けるようになります。</p>
+        <div class="pchips">
+          <label class="pchip"><input type="checkbox" name="proj" value="検索基盤リニューアル"><span>検索基盤リニューアル</span></label>
+          <label class="pchip"><input type="checkbox" name="proj" value="決済まわりの改善"><span>決済まわりの改善</span></label>
+          <label class="pchip"><input type="checkbox" name="proj" value="社内ツール"><span>社内ツール</span></label>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:16px;">
+        <button class="btn" type="button" id="publish">公開する</button>
+        <span class="spacer"></span>
+        <button class="linkbtn" type="button" id="cancel">やめる</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 完了 ══ -->
+  <section class="view" id="v-done">
+    <div class="dhead">
+      <span class="check"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.4l2.4 2.4 4.6-5"/></svg></span>
+      <span class="t">公開しました</span>
+    </div>
+    <p class="lede" id="done-name"></p>
+    <div class="card">
+      <div class="urlrow">
+        <span class="u" id="d-url"></span>
+        <button class="copy" type="button" data-copy="d-url">URLをコピー</button>
+      </div>
+      <div class="tokenbox">
+        <p class="tlabel">閲覧用トークン — この画面を離れると二度と表示できません</p>
+        <div class="tval">
+          <code id="d-token"></code>
+          <button class="copy" type="button" data-copy="d-token">コピー</button>
+        </div>
+        <p class="warn">URLとトークンは別々の手段で渡してください。紛失した場合は再発行になり、それまでのトークンは使えなくなります。</p>
+      </div>
+      <p class="belongs" id="d-belongs"></p>
+      <div class="nextrow">
+        <button class="btn ghost" type="button">開いて確認する</button>
+        <button class="linkbtn" type="button" id="back">一覧に戻る</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══ トークン再発行 ══ -->
+<dialog id="dlg-rotate">
+  <div class="dlg-pane on" id="rot-1">
+    <div class="dlg-head">
+      <h2>トークンを再発行しますか</h2>
+      <p class="target" id="rot-target"></p>
+    </div>
+    <div class="dlg-body">
+      <p>新しいトークンを発行すると、<strong>今のトークンはその場で使えなくなります</strong>。すでに共有した相手には、新しいトークンを渡し直す必要があります。</p>
+      <div class="keep">
+        <div><span class="ky">変わらない</span><span>URL・これまでに寄せられたコメント</span></div>
+        <div><span class="kn">変わる</span><span>閲覧用トークン（旧トークンでのアクセスは即座に不可）</span></div>
+      </div>
+      <p style="font-size:12px;">切り替えが行き渡るまで少し時間がかかることがあります。直後は一時的に開けない場合があります。</p>
+    </div>
+    <div class="dlg-act">
+      <button class="linkbtn" type="button" data-close>やめる</button>
+      <button class="btn" type="button" id="rot-go">再発行する</button>
+    </div>
+  </div>
+
+  <div class="dlg-pane" id="rot-2">
+    <div class="dlg-head">
+      <h2>新しいトークンを発行しました</h2>
+      <p class="target" id="rot-target2"></p>
+    </div>
+    <div class="dlg-body">
+      <div class="tokenbox" style="margin-bottom:13px;">
+        <p class="tlabel">この画面を閉じると二度と表示できません</p>
+        <div class="tval">
+          <code id="rot-token"></code>
+          <button class="copy" type="button" data-copy="rot-token">コピー</button>
+        </div>
+      </div>
+      <p>共有相手へ渡し直してください。URLは変わっていないので、トークンだけを伝えれば足ります。</p>
+    </div>
+    <div class="dlg-act">
+      <span class="spacer"></span>
+      <button class="btn" type="button" data-close>閉じる</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══ 無効化 ══ -->
+<dialog id="dlg-disable">
+  <div class="dlg-head">
+    <h2>公開を止めますか</h2>
+    <p class="target" id="dis-target"></p>
+  </div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">止まる</span><span>URLを開いてもアクセスできなくなる（トークンを持っていても不可）</span></div>
+      <div><span class="ky">残る</span><span>本体もコメントも消えない。あとから再公開すれば元のURLで再開できる</span></div>
+    </div>
+    <div class="optline">
+      <input type="checkbox" id="dis-export" checked>
+      <label for="dis-export">先にエクスポートする
+        <span class="sub">本体と寄せられたコメントをzipで手元に保存してから止めます。</span>
+      </label>
+    </div>
+  </div>
+  <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" data-close>無効化する</button>
+  </div>
+</dialog>
+
+<!-- ══ コメントを読む ══ -->
+<dialog id="dlg-comments">
+  <div class="dlg-head">
+    <h2>寄せられたコメント</h2>
+    <p class="target" id="cm-target"></p>
+  </div>
+  <div class="dlg-body">
+    <div class="cmsum" id="cm-sum"></div>
+    <div class="cmlist" id="cm-list"></div>
+  </div>
+  <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>閉じる</button>
+    <button class="btn" type="button" data-close>開いて返信する</button>
+  </div>
+</dialog>
+
+<!-- ══ エクスポート ══ -->
+<dialog id="dlg-export">
+  <div class="dlg-head">
+    <h2>手元に保存しますか</h2>
+    <p class="target" id="exp-target"></p>
+  </div>
+  <div class="dlg-body">
+    <p>公開はそのまま続きます。取り出すだけの操作です。</p>
+    <div class="keep">
+      <div><span class="ky">含まれる</span><span>本体のHTML・寄せられたコメント全件・表示名や種別などの情報</span></div>
+      <div><span class="kn">含まれない</span><span>閲覧用トークン（保存されていないため取り出せません）</span></div>
+    </div>
+    <p style="font-size:12px;">zipファイルとしてダウンロードされます。中のHTMLはそのまま開けますが、コメントは同梱のJSONで確認してください。</p>
+  </div>
+  <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn" type="button" data-close>ダウンロード</button>
+  </div>
+</dialog>
+
+<!-- ══ 再公開 ══ -->
+<dialog id="dlg-republish">
+  <div class="dlg-pane on" id="rep2-1">
+    <div class="dlg-head">
+      <h2>もう一度公開しますか</h2>
+      <p class="target" id="rep2-target"></p>
+    </div>
+    <div class="dlg-body">
+      <p>再公開すると<strong>新しいトークンが発行されます</strong>。無効化する前のトークンは使えないままなので、共有相手には新しいトークンを渡す必要があります。</p>
+      <div class="keep">
+        <div><span class="ky">戻る</span><span>URL（無効化前と同じ）・本体・これまでのコメント</span></div>
+        <div><span class="kn">変わる</span><span>閲覧用トークン（必ず新しくなる）</span></div>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <button class="linkbtn" type="button" data-close>やめる</button>
+      <button class="btn" type="button" id="rep2-go">再公開する</button>
+    </div>
+  </div>
+
+  <div class="dlg-pane" id="rep2-2">
+    <div class="dlg-head">
+      <h2>再公開しました</h2>
+      <p class="target" id="rep2-target2"></p>
+    </div>
+    <div class="dlg-body">
+      <div class="tokenbox" style="margin-bottom:13px;">
+        <p class="tlabel">この画面を閉じると二度と表示できません</p>
+        <div class="tval">
+          <code id="rep2-token"></code>
+          <button class="copy" type="button" data-copy="rep2-token">コピー</button>
+        </div>
+      </div>
+      <p>公開が行き渡るまで少し時間がかかることがあります。すぐに開けないときは、少し待ってから再読み込みしてください。</p>
+    </div>
+    <div class="dlg-act">
+      <span class="spacer"></span>
+      <button class="btn" type="button" data-close>閉じる</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══ 差し替え ══ -->
+<dialog id="dlg-replace">
+  <div class="dlg-head">
+    <h2>中身を差し替えますか</h2>
+    <p class="target" id="rep-target"></p>
+  </div>
+  <div class="dlg-body">
+    <p>レビュー中に指摘を直したときは、新しく公開せずここから差し替えてください。<strong>コメントのやり取りが途切れません。</strong></p>
+    <div class="keep">
+      <div><span class="ky">変わらない</span><span>URL・トークン・これまでのコメント</span></div>
+      <div><span class="kn">変わる</span><span>表示される中身（差し替えたHTML）</span></div>
+    </div>
+    <div class="dropmini" id="repdz">
+      <p>新しいHTMLをここにドロップ</p>
+      <button class="btn ghost" type="button" id="rep-pick">ファイルを選ぶ</button>
+      <input type="file" id="rep-file" accept=".html,.htm,text/html" hidden>
+    </div>
+    <p style="font-size:11.5px;">metaタグがあれば、説明やタグも読み直します。</p>
+  </div>
+  <div class="dlg-act">
+    <button class="linkbtn" type="button" data-close>やめる</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.4l3.2 3.2L13 4.8"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var picked = null, justSlug = null;
+
+  var DATA = [
+    { thread:[
+        {who:'田中', dec:'approve', when:'7-29', body:'運用チーム3名という制約が明示されているのが良いです。この規模で専用エンジンを入れると当番が回らないので賛成します。'},
+        {who:'佐藤', dec:'revise', when:'7-29', body:'「将来の再検討条件」に件数だけでなく、検索対象テーブルが増えたときの条件も入れておきたいです。'},
+        {who:'backend-team', dec:'', when:'7-30', body:'影響範囲に追記しました。複数テーブル横断が必要になった時点、という条件を足しています。', reply:true},
+        {who:'山田', dec:'', when:'7-30', body:'Algoliaを0点扱いにした理由は、社内データポリシーの確認コストという理解で合っていますか。'},
+        {who:'backend-team', dec:'', when:'7-30', body:'その通りです。技術的に不可能という意味ではありません。', reply:true},
+        {who:'鈴木', dec:'approve', when:'7-30', body:'決め手が1つに絞られているので判断しやすかったです。'},
+        {who:'井上', dec:'', when:'7-30', body:'ベンチマークの再現手順はどこかに残っていますか。'}
+      ],
+      title:'検索基盤にPostgreSQLの全文検索を採用する', type:'DecisionRecord',
+      tags:['backend','search','database'], projects:['検索基盤リニューアル'],
+      comments:7, last:'2時間前', fresh:true, active:true, updated:'7/30' },
+    { thread:[
+        {who:'佐藤', dec:'revise', when:'7-29', body:'16KBの上限を超えたときのエラー表示が、利用者から見て原因不明になりませんか。'},
+        {who:'design-share', dec:'', when:'7-29', body:'指摘のとおりです。未解決に追記しました。', reply:true},
+        {who:'田中', dec:'approve', when:'7-29', body:'エッジケース早見表があると仕様の抜けを確認しやすいです。'}
+      ],
+      title:'コメント投稿API', type:'FunctionalSpec',
+      tags:['api','comments'], projects:['社内ツール'],
+      comments:3, last:'昨日', fresh:true, active:true, updated:'7/29' },
+    { thread:[
+        {who:'山田', dec:'', when:'7-26', body:'共有プールが根本原因という整理に同意します。他のバッチも同じ構成では。'},
+        {who:'platform-team', dec:'', when:'7-26', body:'全バッチの棚卸しを次のアクションに入れています。', reply:true},
+        {who:'鈴木', dec:'approve', when:'7-27', body:'時系列が明確で、検知から復旧までの流れが追えました。'}
+      ],
+      title:'深夜バッチによる決済API 30分停止', type:'Postmortem',
+      tags:['incident','payment-api'], projects:['決済まわりの改善'],
+      comments:12, last:'4日前', fresh:false, active:true, updated:'7/26' },
+    { title:'Safariプライベートブラウズでのコメント投稿失敗の原因調査', type:'InvestigationReport',
+      tags:['investigation','safari'], projects:['社内ツール'],
+      comments:2, last:'6日前', fresh:false, active:true, updated:'7/24' },
+    { title:'会員登録フローの離脱率メモ', type:'',
+      tags:[], projects:[], comments:0, last:'', fresh:false, active:true, updated:'7/28' },
+    { title:'四半期の稼働状況ダッシュボード', type:'',
+      tags:['metrics'], projects:['社内ツール'],
+      comments:1, last:'2週間前', fresh:false, active:true, updated:'7/16' },
+    { title:'検索UIのパターン比較（A/B/C案）', type:'',
+      tags:['ui','search'], projects:['検索基盤リニューアル'],
+      comments:9, last:'3週間前', fresh:false, active:false, updated:'7/09' }
+  ];
+
+  function view(id){
+    ['v-home','v-confirm','v-done'].forEach(function(v){ $(v).classList.toggle('on', v === id); });
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+  function fmtSize(n){
+    return n < 1024 ? n + ' B' : n < 1048576 ? Math.round(n/1024) + ' KB' : (n/1048576).toFixed(1) + ' MB';
+  }
+  function chip(cls, text){ var s = document.createElement('span'); s.className = cls; s.textContent = text; return s; }
+
+  /* ── 行の操作 ── */
+  var TOKEN_ABC = 'abcdefghijkmnpqrstuvwxyz23456789';
+  function randToken(){
+    var out = [], b = new Uint8Array(12);
+    crypto.getRandomValues(b);
+    for (var i = 0; i < 12; i++) out.push(TOKEN_ABC[b[i] % TOKEN_ABC.length]);
+    return out.slice(0,4).join('') + '-' + out.slice(4,8).join('') + '-' + out.slice(8,12).join('');
+  }
+  function openDlg(id){ var d = $(id); if (d.showModal) d.showModal(); }
+
+  var toastTimer = null;
+  function toast(msg){
+    $('toast-text').textContent = msg;
+    var t = $('toast');
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('on'); }, 2200);
+  }
+
+  function copyUrl(slug){
+    var url = 'https://dbbb1234.cloudfront.net/p/' + (slug || 'k3f9x2') + '/';
+    var ok = function(){ toast('URLをコピーしました'); };
+    if (navigator.clipboard) { navigator.clipboard.writeText(url).then(ok, ok); } else { ok(); }
+  }
+
+  /* コメントを読むだけのダイアログ（本体は開かない） */
+  function showComments(item){
+    $('cm-target').textContent = item.title;
+
+    var th = item.thread || [];
+    var approve = th.filter(function(c){ return c.dec === 'approve'; }).length;
+    var revise  = th.filter(function(c){ return c.dec === 'revise'; }).length;
+    var people  = th.reduce(function(set, c){ if (set.indexOf(c.who) < 0) set.push(c.who); return set; }, []).length;
+
+    var sum = $('cm-sum'); sum.textContent = '';
+    var add = function(label, val){
+      var s = document.createElement('span');
+      s.appendChild(document.createTextNode(label + ' '));
+      var b = document.createElement('b'); b.textContent = val;
+      s.appendChild(b); sum.appendChild(s);
+    };
+    add('全', th.length + '件');
+    add('参加', people + '人');
+    if (approve) add('この方向でOK', approve + '件');
+    if (revise)  add('修正希望', revise + '件');
+
+    var list = $('cm-list'); list.textContent = '';
+    th.forEach(function(c){
+      var el = document.createElement('div');
+      el.className = 'cmitem' + (c.reply ? ' reply' : '');
+      var top = document.createElement('div'); top.className = 'cmtop';
+      var who = document.createElement('span'); who.className = 'cwho'; who.textContent = c.who;
+      top.appendChild(who);
+      if (c.dec === 'approve') { var a = document.createElement('span'); a.className = 'cdec approve'; a.textContent = 'この方向でOK'; top.appendChild(a); }
+      if (c.dec === 'revise')  { var r = document.createElement('span'); r.className = 'cdec revise';  r.textContent = '修正希望';     top.appendChild(r); }
+      var wn = document.createElement('span'); wn.className = 'cwhen'; wn.textContent = c.when;
+      top.appendChild(wn);
+      var bd = document.createElement('p'); bd.className = 'cbody'; bd.textContent = c.body;
+      el.append(top, bd);
+      list.appendChild(el);
+    });
+
+    openDlg('dlg-comments');
+  }
+
+  function act(label, item, btn){
+    if (label === 'エクスポート') { $('exp-target').textContent = item.title; openDlg('dlg-export'); return; }
+    if (label === 'トークンを再発行') {
+      $('rot-target').textContent = item.title;
+      $('rot-target2').textContent = item.title;
+      $('rot-1').classList.add('on'); $('rot-2').classList.remove('on');
+      openDlg('dlg-rotate'); return;
+    }
+    if (label === '無効化する') { $('dis-target').textContent = item.title; openDlg('dlg-disable'); return; }
+    if (label === '再公開する') {
+      $('rep2-target').textContent = item.title;
+      $('rep2-1').classList.add('on'); $('rep2-2').classList.remove('on');
+      openDlg('dlg-republish'); return;
+    }
+    if (label === '差し替えてアップロード') { $('rep-target').textContent = item.title; openDlg('dlg-replace'); return; }
+    /* 開く・コメントを見る・エクスポート・再公開する は画面遷移/ダウンロードのためモックでは何もしない */
+  }
+
+  $('rot-go').addEventListener('click', function(){
+    $('rot-token').textContent = randToken();
+    $('rot-1').classList.remove('on'); $('rot-2').classList.add('on');
+  });
+  $('rep2-go').addEventListener('click', function(){
+    $('rep2-target2').textContent = $('rep2-target').textContent;
+    $('rep2-token').textContent = randToken();
+    $('rep2-1').classList.remove('on'); $('rep2-2').classList.add('on');
+  });
+  document.querySelectorAll('dialog [data-close]').forEach(function(b){
+    b.addEventListener('click', function(){ b.closest('dialog').close(); });
+  });
+
+  // 差し替えも、最初のアップロードと同じドラッグ＆ドロップで受ける
+  var rdz = $('repdz');
+  ['dragenter','dragover'].forEach(function(ev){
+    rdz.addEventListener(ev, function(e){ e.preventDefault(); rdz.classList.add('hot'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    rdz.addEventListener(ev, function(e){ e.preventDefault(); rdz.classList.remove('hot'); });
+  });
+  rdz.addEventListener('drop', function(e){
+    var f = e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files[0] : null;
+    if (f) { $('dlg-replace').close(); handle(f); }
+  });
+  $('rep-pick').addEventListener('click', function(){ $('rep-file').click(); });
+  $('rep-file').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if (f) { $('dlg-replace').close(); handle(f); }
+  });
+
+  /* ── list ── */
+  function menuFor(item){
+    var wrap = document.createElement('div'); wrap.className = 'menu';
+    var btn = document.createElement('button');
+    btn.className = 'rowbtn'; btn.type = 'button'; btn.textContent = '⋯';
+    btn.setAttribute('aria-label', item.title + ' の操作');
+    btn.setAttribute('aria-expanded', 'false');
+    var ul = document.createElement('ul'); ul.hidden = true;
+    var items = item.active
+      ? [['開く'],['差し替えてアップロード'],['トークンを再発行'],['エクスポート'],['sep'],['無効化する','danger']]
+      : [['エクスポート'],['sep'],['再公開する']];
+    items.forEach(function(it){
+      var li = document.createElement('li');
+      if (it[0] === 'sep') { li.className = 'sep'; }
+      else {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = it[0];
+        if (it[1]) b.className = it[1];
+        b.addEventListener('click', function(e){
+          e.stopPropagation();
+          ul.hidden = true; btn.setAttribute('aria-expanded','false');
+          act(it[0], item, b);
+        });
+        li.appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var open = ul.hidden;
+      document.querySelectorAll('.menu ul').forEach(function(u){ u.hidden = true; });
+      document.querySelectorAll('.menu .rowbtn').forEach(function(b){ b.setAttribute('aria-expanded','false'); });
+      ul.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+      if (open) {
+        // 下に入りきらなければ上向きに開く
+        ul.classList.remove('up');
+        var r = btn.getBoundingClientRect();
+        if (window.innerHeight - r.bottom < ul.offsetHeight + 14) ul.classList.add('up');
+      }
+    });
+    wrap.append(btn, ul);
+    return wrap;
+  }
+
+  function render(){
+    var q = $('q').value.trim().toLowerCase();
+    var projs = [].slice.call(document.querySelectorAll('[data-f="proj"]:checked')).map(function(e){ return e.value; });
+    var showOff = !!document.querySelector('[data-f="off"]:checked');
+
+    var rows = DATA.filter(function(d){
+      if (!showOff && !d.active) return false;
+      if (projs.length && !d.projects.some(function(p){ return projs.indexOf(p) >= 0; })) return false;
+      if (q) {
+        var hay = (d.title + ' ' + d.tags.join(' ') + ' ' + d.type).toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+
+    var list = $('list'); list.textContent = '';
+    $('count').textContent = rows.length + ' 件';
+
+    if (!rows.length) {
+      var e = document.createElement('div'); e.className = 'empty';
+      var p = document.createElement('p'); p.textContent = '条件に合うアーティファクトはありません。';
+      e.appendChild(p); list.appendChild(e);
+      return;
+    }
+
+    rows.forEach(function(d){
+      var row = document.createElement('div');
+      row.className = 'row' + (d.active ? '' : ' off') + (d.justnow ? ' justnow' : '');
+      d.justnow = false;
+
+      var main = document.createElement('div'); main.className = 'main';
+      var t = document.createElement('p'); t.className = 'title'; t.textContent = d.title;
+      var sub = document.createElement('div'); sub.className = 'sub';
+      sub.appendChild(d.type ? chip('dtype', d.type) : chip('dtype none', '種別なし'));
+      d.projects.forEach(function(p){ sub.appendChild(chip('proj', p)); });
+      d.tags.forEach(function(g){ sub.appendChild(chip('tag', g)); });
+      sub.appendChild(chip('', d.updated + ' 更新'));
+      main.append(t, sub);
+
+      var c = document.createElement('button');
+      c.type = 'button'; c.className = 'comments';
+      var n = document.createElement('span');
+      n.className = 'cnum' + (d.comments ? '' : ' zero');
+      n.textContent = d.comments ? d.comments + '件' : '—';
+      var w = document.createElement('span');
+      w.className = 'cwhen' + (d.fresh ? ' fresh' : '');
+      w.textContent = d.comments ? d.last : 'コメントなし';
+      c.append(n, w);
+      if (d.comments) {
+        c.setAttribute('aria-label', d.title + ' のコメント' + d.comments + '件を読む');
+        c.title = 'コメントを読む';
+        c.addEventListener('click', function(e){ e.stopPropagation(); showComments(d); });
+      } else { c.disabled = true; }
+
+      var end = document.createElement('div'); end.className = 'rowend';
+      end.appendChild(d.active ? chip('status on', '公開中') : chip('status no', '無効化済み'));
+
+      if (d.active) {
+        var cp = document.createElement('button');
+        cp.type = 'button'; cp.className = 'iconbtn';
+        cp.title = 'URLをコピー'; cp.setAttribute('aria-label', d.title + ' のURLをコピー');
+        cp.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.6"/>' +
+                       '<path d="M10.5 5.5V3.6A1.1 1.1 0 0 0 9.4 2.5H3.6A1.1 1.1 0 0 0 2.5 3.6v5.8a1.1 1.1 0 0 0 1.1 1.1h1.9"/></svg>';
+        cp.addEventListener('click', function(e){
+          e.stopPropagation();
+          copyUrl(d.slug);
+          cp.classList.add('ok');
+          setTimeout(function(){ cp.classList.remove('ok'); }, 1600);
+        });
+        end.appendChild(cp);
+      }
+
+      end.appendChild(menuFor(d));
+
+      row.append(main, c, end);
+      list.appendChild(row);
+    });
+  }
+
+  /* ── upload ── */
+  function inspect(text){
+    var doc = new DOMParser().parseFromString(text, 'text/html');
+    var meta = function(name){
+      var el = doc.querySelector('meta[name="' + name + '"]');
+      return el ? (el.getAttribute('content') || '').trim() : '';
+    };
+    var ext = 0;
+    doc.querySelectorAll('script[src], link[rel="stylesheet"][href], img[src]').forEach(function(el){
+      var u = el.getAttribute('src') || el.getAttribute('href') || '';
+      if (/^(https?:)?\/\//i.test(u)) ext++;
+    });
+    var docTitle = doc.querySelector('title') ? doc.querySelector('title').textContent.trim() : '';
+    return {
+      id: meta('id'), type: meta('type'), title: meta('title') || docTitle,
+      description: meta('description'),
+      tags: meta('tags').split(',').map(function(s){ return s.trim(); }).filter(Boolean),
+      docTitle: docTitle, external: ext,
+      detected: !!(meta('id') && meta('type'))
+    };
+  }
+  function row(dl, k, v){
+    var dt = document.createElement('dt'); dt.textContent = k;
+    var dd = document.createElement('dd');
+    if (typeof v === 'string') { dd.textContent = v; }
+    else { dd.className = 'chips'; v.forEach(function(t){
+      var s = document.createElement('span'); s.className = 'chip'; s.textContent = t; dd.appendChild(s); }); }
+    dl.append(dt, dd);
+  }
+  function toConfirm(file, text){
+    var info = inspect(text);
+    picked = { file: file, info: info };
+    $('c-fname').textContent = file.name;
+    $('c-fsize').textContent = fmtSize(file.size);
+
+    var warn = $('c-extwarn');
+    if (info.external > 0) {
+      $('c-extwarn-text').textContent = '外部のファイルを' + info.external + '件参照しています。公開後、閲覧者の環境では読み込まれません。';
+      warn.hidden = false;
+    } else { warn.hidden = true; }
+
+    if (info.detected) {
+      $('confirm-lede').textContent = 'このまま公開できます。';
+      var dl = $('c-kv'); dl.textContent = '';
+      if (info.title) row(dl, 'タイトル', info.title);
+      if (info.type) row(dl, '種別', info.type);
+      if (info.description) row(dl, '説明', info.description);
+      if (info.tags.length) row(dl, 'タグ', info.tags);
+      $('c-readout').hidden = false; $('c-manual').hidden = true;
+    } else {
+      $('confirm-lede').textContent = '表示名を付けてください。';
+      $('c-readout').hidden = true; $('c-manual').hidden = false;
+      $('c-name').value = info.docTitle || file.name.replace(/\.html?$/i, '');
+    }
+    view('v-confirm');
+    if (!info.detected) $('c-name').focus();
+  }
+  function handle(file){
+    if (!file) return;
+    var r = new FileReader();
+    r.onload = function(){ toConfirm(file, String(r.result)); };
+    r.readAsText(file);
+  }
+
+  var dz = $('dz');
+  ['dragenter','dragover'].forEach(function(ev){
+    dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add('hot'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove('hot'); });
+  });
+  dz.addEventListener('drop', function(e){
+    handle(e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files[0] : null);
+  });
+  $('pick').addEventListener('click', function(){ $('fileinput').click(); });
+  $('fileinput').addEventListener('change', function(e){ handle(e.target.files[0]); });
+
+  function reset(){
+    picked = null; $('fileinput').value = '';
+    document.querySelectorAll('input[name="proj"]').forEach(function(el){ el.checked = false; });
+  }
+  $('cancel').addEventListener('click', function(){ reset(); view('v-home'); });
+  $('back').addEventListener('click', function(){ reset(); render(); view('v-home'); });
+
+  $('publish').addEventListener('click', function(){
+    if (!picked) return;
+    var info = picked.info;
+    var name = info.detected ? (info.title || picked.file.name)
+                             : ($('c-name').value.trim() || picked.file.name);
+    var chosen = [].slice.call(document.querySelectorAll('input[name="proj"]:checked'))
+                   .map(function(el){ return el.value; });
+
+    var abc = 'abcdefghijkmnpqrstuvwxyz23456789';
+    var pickN = function(n){
+      var out = '', b = new Uint8Array(n);
+      crypto.getRandomValues(b);
+      for (var i = 0; i < n; i++) out += abc[b[i] % abc.length];
+      return out;
+    };
+
+    var tagsIn = info.detected ? info.tags
+      : $('c-tags').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+
+    DATA.unshift({
+      title: name, type: info.detected ? info.type : '',
+      tags: tagsIn, projects: chosen,
+      comments: 0, last: '', fresh: false, active: true,
+      updated: '今日', justnow: true
+    });
+
+    $('done-name').textContent = name;
+    $('d-url').textContent = 'https://dbbb1234.cloudfront.net/p/' + pickN(6) + '/';
+    $('d-token').textContent = pickN(4) + '-' + pickN(4) + '-' + pickN(4);
+
+    var bl = $('d-belongs'); bl.textContent = '';
+    if (chosen.length) {
+      bl.appendChild(document.createTextNode('プロジェクト'));
+      chosen.forEach(function(p){
+        var s = document.createElement('span'); s.className = 'pb'; s.textContent = p; bl.appendChild(s);
+      });
+      bl.appendChild(document.createTextNode('に入れました'));
+    } else {
+      bl.textContent = 'どのプロジェクトにも入れていません。このURLとトークンでのみ開けます。';
+    }
+    view('v-done');
+  });
+
+  document.querySelectorAll('.copy').forEach(function(b){
+    b.addEventListener('click', function(){
+      var id = b.getAttribute('data-copy');
+      var t = $(id).textContent;
+      var label = id.indexOf('token') >= 0 ? 'トークンをコピーしました' : 'URLをコピーしました';
+      var done = function(){
+        toast(label);
+        var old = b.textContent; b.textContent = '済';
+        setTimeout(function(){ b.textContent = old; }, 1600);
+      };
+      if (navigator.clipboard) { navigator.clipboard.writeText(t).then(done, done); }
+      else { done(); }
+    });
+  });
+
+  document.addEventListener('click', function(){
+    document.querySelectorAll('.menu ul').forEach(function(u){ u.hidden = true; });
+    document.querySelectorAll('.menu .rowbtn').forEach(function(b){ b.setAttribute('aria-expanded','false'); });
+  });
+  $('q').addEventListener('input', render);
+  document.querySelectorAll('[data-f]').forEach(function(el){ el.addEventListener('change', render); });
+  render();
+})();
+</script>

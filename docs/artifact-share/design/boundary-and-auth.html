@@ -1,0 +1,421 @@
+<title>アーティファクトシェア — 境界と権限の設計</title>
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#64707c;
+    --paper:#f6f5f2; --paper-raised:#ffffff; --line:#dcd8d0;
+    --accent:#3d5a80; --accent-soft:#e7edf4;
+    --anon:#8a6d3b; --anon-soft:#f4ecdd;
+    --auth:#5c7a5f; --auth-soft:#eef3ec;
+    --admin:#7a5a8a; --admin-soft:#f1eaf5;
+    --risk-bg:#f6e8e6; --risk-border:#a1503f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --anon:#d0ad74; --anon-soft:#2c2619;
+    --auth:#8ecbb6; --auth-soft:#1f2b22;
+    --admin:#c3a3d6; --admin-soft:#29222e;
+    --risk-bg:#2e211f; --risk-border:#c17362;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --anon:#d0ad74; --anon-soft:#2c2619;
+      --auth:#8ecbb6; --auth-soft:#1f2b22;
+      --admin:#c3a3d6; --admin-soft:#29222e;
+      --risk-bg:#2e211f; --risk-border:#c17362;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .shell{max-width:1020px; margin:0 auto; padding:48px 24px 96px; display:grid; grid-template-columns:200px minmax(0,1fr); gap:48px;}
+  nav.toc{position:sticky; top:32px; align-self:start; font-size:13px;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc a{display:block; padding:7px 0 7px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px; font-size:12.5px;}
+  nav.toc a:hover{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+  @media (max-width:760px){.shell{grid-template-columns:1fr;} nav.toc{position:static;}}
+
+  main{min-width:0;}
+  header{border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:36px;}
+  h1{font-family:var(--serif); font-size:clamp(24px,3.4vw,30px); font-weight:600; margin:0 0 10px; text-wrap:balance;}
+  .lede{color:var(--ink-soft); font-size:14.5px; max-width:66ch; margin:0;}
+  section{margin-bottom:48px;}
+  h2{font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 18px; display:flex; align-items:baseline; gap:8px;}
+  h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  h3{font-family:var(--serif); font-size:16px; font-weight:600; margin:26px 0 10px;}
+  p{font-size:14.5px; margin:0 0 12px; max-width:68ch;}
+  code{font-family:var(--mono); font-size:.88em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+
+  /* actor cards */
+  .actors{display:flex; flex-direction:column; gap:12px;}
+  .actor{border-radius:10px; padding:16px 20px; border:1.5px solid var(--line); background:var(--paper-raised);}
+  .actor.admin{border-color:var(--admin); background:var(--admin-soft);}
+  .actor.auth{border-color:var(--auth); background:var(--auth-soft);}
+  .actor.anon{border-color:var(--anon); background:var(--anon-soft);}
+  .actor .who{font-family:var(--serif); font-size:17px; font-weight:600; margin:0 0 4px;}
+  .actor .gate{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; margin:0 0 8px;}
+  .actor.admin .gate{color:var(--admin);}
+  .actor.auth .gate{color:var(--auth);}
+  .actor.anon .gate{color:var(--anon);}
+  .actor .can{font-size:13px; margin:0;}
+
+  /* comparison table */
+  .tbl-wrap{width:100%; overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th, td{padding:9px 11px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top;}
+  thead th{color:var(--ink-faint); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em;}
+  td.k{color:var(--ink-soft); white-space:nowrap;}
+  .yes{color:var(--auth); font-weight:600;}
+  .no{color:var(--ink-faint);}
+
+  /* attack flow */
+  .flow-steps{display:flex; flex-direction:column; gap:0; position:relative; padding-left:22px;}
+  .flow-steps::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--risk-border);}
+  .fs-item{position:relative; padding:0 0 16px 18px;}
+  .fs-item:last-child{padding-bottom:0;}
+  .fs-item::before{content:"";position:absolute;left:-22px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--risk-border);border:2px solid var(--risk-border);}
+  .fs-item .t{font-size:13.5px; font-weight:600;}
+  .fs-item .d{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+
+  .keypoint{background:var(--risk-bg); border:1px solid var(--risk-border); border-radius:8px; padding:14px 18px; margin:16px 0;}
+  .keypoint .label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--risk-border); margin:0 0 6px;}
+  .keypoint p{margin:0; font-size:13.5px;}
+
+  .finding{border-left:3px solid var(--accent); padding:4px 0 4px 16px; margin:18px 0;}
+  .finding .label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; color:var(--accent); margin:0 0 6px;}
+
+  /* origin diagram */
+  .origin-box{border:1.5px solid var(--line); border-radius:8px; padding:14px 16px; background:var(--paper-raised); margin-bottom:12px;}
+  .origin-box .host{font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent); margin:0 0 8px;}
+  .origin-box .paths{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); line-height:1.9; margin:0;}
+  .origin-note{font-size:12.5px; color:var(--ink-faint); margin:6px 0 0;}
+
+  .decided{display:flex; flex-direction:column; gap:10px;}
+  .d-item{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; background:var(--paper-raised);}
+  .d-tag{grid-row:1/3; align-self:start; margin-top:2px; font-family:var(--mono); font-size:10px; text-transform:uppercase; padding:4px 9px; border-radius:10px; white-space:nowrap; height:fit-content; background:var(--auth-soft); color:var(--auth); border:1px solid var(--auth);}
+  .d-tag.open{background:var(--anon-soft); color:var(--anon); border-color:var(--anon);}
+  .d-item .h{font-size:13.5px; font-weight:600;}
+  .d-item .d{font-size:12.5px; color:var(--ink-soft);}
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#premise"><span class="num">01</span>前提の転換</a></li>
+      <li><a href="#actors"><span class="num">02</span>3つのアクター</a></li>
+      <li><a href="#tier"><span class="num">03</span>ティア設計</a></li>
+      <li><a href="#auth"><span class="num">04</span>認証基盤の選定</a></li>
+      <li><a href="#origin"><span class="num">05</span>オリジン分離</a></li>
+      <li><a href="#upload"><span class="num">06</span>アップロードとmeta</a></li>
+      <li><a href="#status"><span class="num">07</span>決定と未決</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header>
+      <h1>境界と権限の設計</h1>
+      <p class="lede">アーティファクトシェアの「見るのは不特定多数、上げるのは限られた人」という非対称な境界を、どう実装するか。AWSアカウントさえあれば動くOSSという制約のもとで、認証基盤・ティア・オリジン分離の3点を決めるまでの整理。</p>
+    </header>
+
+    <section id="premise">
+      <h2><span class="num">01</span>前提の転換</h2>
+      <p>当初は「ローカルの管理コンソールをクラウドへ移設したい」という枠で検討していたが、実際の要件は違った。<b>手元で作ったHTML（AIに生成させたもの等）を、リポジトリやCLI環境なしでその場で上げてURLをもらいたい</b>——これがブレストで既に合意していた「テンプレートを経由しない持ち込みHTML」の実現に必要な経路だった。</p>
+      <p>この転換により、当初「複数アクターが存在しないためアクセス制御は時期尚早」とされていた判定が覆った。公開エンドポイントがインターネットから到達可能になる以上、もう一方のアクターは「インターネット全体」であり、アクセス制御は先回りではなく必要条件になる。</p>
+      <div class="finding">
+        <p class="label">検討の途中で判明した重要な事実</p>
+        <p>書き込みの実体はS3のPutObjectとCloudFront KeyValueStoreのPutKeyであり、<b>これらは既にIAMで完全に保護されている</b>。「公開できるのはIAM権限を持つ者だけ」という要件は、新しい認可レイヤーを作らなくても既に成立していた。要件が本当に求めていたのは認可の追加ではなく、<b>ローカル環境なしにその実行環境へ到達する手段</b>だった。</p>
+      </div>
+      <p>また、当初「社内利用」を例として話していたが、実際は<b>AWSアカウントさえあれば完結するOSS</b>であり、特定企業の従業員向けではない。この点が後述の認証基盤の選定を決定づけた。</p>
+    </section>
+
+    <section id="actors">
+      <h2><span class="num">02</span>3つのアクター</h2>
+      <div class="actors">
+        <div class="actor admin">
+          <p class="gate">境界を定義する側</p>
+          <p class="who">デプロイする責任者</p>
+          <p class="can">AWSアカウントの管理者権限を持ち、CloudFormationでスタックを作成・削除でき、IAMポリシーも自分で定義できる。<b>この層には新しい認可の仕組みが一切不要</b>——既存のIAMがそのまま効く。構築は1回きりなので、この層のUXは最適化対象ではない。</p>
+        </div>
+        <div class="actor auth">
+          <p class="gate">認証あり（招待制）</p>
+          <p class="who">アップロードする人</p>
+          <p class="can">責任者とは別人。責任者が招待した人だけが認証を通り、アップロードできる。プロジェクトへの所属指定・コメント・エクスポート・データの永続化といった機能が使える。</p>
+        </div>
+        <div class="actor anon">
+          <p class="gate">認証なし（トークンのみ）</p>
+          <p class="who">閲覧する人</p>
+          <p class="can">不特定多数。slug単位のトークンを持っていれば誰でも見られ、コメントを投稿できる。アカウント登録は不要——この気軽さが中核の価値であり、変更しない。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tier">
+      <h2><span class="num">03</span>ティア設計</h2>
+      <p>当初は「認証なしでもアップロードでき、揮発する無料枠」という2ティア案を検討した。フリーミアムの発想として筋は通るが、<b>匿名の閲覧と匿名のアップロードはリスクの質がまったく違う</b>という問題があった。</p>
+
+      <div class="keypoint">
+        <p class="label">匿名アップロードが抱える3つのリスク</p>
+        <p><b>コストが青天井</b>——誰が上げたか特定できないため利用者ごとの制限がかけられず、スクリプトで叩かれればS3とCloudFrontの費用がデプロイ者の請求に乗る。<b>ドメインがフィッシングの配信元になる</b>——攻撃者にとって「無料で使える、TLS証明書付きの、信頼されたホスティング」であり、ブロックリストに載れば正規利用者も巻き添えになる。<b>後述のオリジン問題が事故から攻撃に変わる</b>——悪意ある第三者が意図的に仕掛けられるようになる。</p>
+      </div>
+
+      <p>次にセルフサインアップ（メール確認だけで誰でも登録可）を検討したが、これは<b>問題を消さず、検知できるようにするだけ</b>だった。捨てメールで登録して1回フィッシングを置いて去る経路が残る。属性付けは抑止であって防止ではない。</p>
+
+      <p>結論として<b>招待制</b>を採る。デプロイした責任者が一人ずつ明示的に承認するため、信頼が帯域外で確立される。これは重要で——<b>セキュリティ分析全体が前提にしていた「アップロード者は信頼できる」という仮定を、招待制は実際に成り立たせる</b>。匿名／セルフサインアップで壊れていた前提が回復し、リスクの質が「攻撃」から「事故（信頼できる人が精査せずAI生成HTMLを上げる）」へ戻る。</p>
+
+      <h3>機能の割り当て</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>閲覧者（認証なし）</th><th>アップロード者（招待制）</th></tr></thead>
+          <tbody>
+            <tr><td class="k">アーティファクトの閲覧</td><td class="yes">できる（トークン必要）</td><td class="yes">できる</td></tr>
+            <tr><td class="k">コメント投稿</td><td class="yes">できる（アカウント不要）</td><td class="yes">できる</td></tr>
+            <tr><td class="k">アップロード・URL発行</td><td class="no">できない</td><td class="yes">できる</td></tr>
+            <tr><td class="k">プロジェクトへの所属指定</td><td class="no">できない</td><td class="yes">できる</td></tr>
+            <tr><td class="k">エクスポート</td><td class="no">できない</td><td class="yes">できる</td></tr>
+            <tr><td class="k">データの永続化</td><td class="no">—</td><td class="yes">される</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="origin-note">なお「無料ティアは揮発する・機能制限あり」という体験自体は、招待制の中でティアを設ける形でも実現できる。匿名書き込みを許すこととは独立した設計。</p>
+    </section>
+
+    <section id="auth">
+      <h2><span class="num">04</span>認証基盤の選定</h2>
+      <p>CognitoとIAM Identity Center（IIC）のどちらを使うかは、<b>AWSへの書き込みを誰が実行するか</b>で決まる。ブラウザが直接S3へ書くならSigV4署名のための一時AWS認証情報が要り、それを発行できるのはCognito Identity Pool。裏側のLambdaが書くならブラウザは身元を証明するだけでよく、認証基盤の選択肢が広がる。</p>
+
+      <h3>OSSであることが決め手になった</h3>
+      <p>当初は「社内の従業員を管理するならIICが本来の用途」と考えたが、これは「社内利用」という誤った前提に立っていた。実際は<b>AWSアカウントを持つ誰もがデプロイするOSS</b>であり、デプロイのハードルを上げたくないという制約がある。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>Cognito</th><th>IAM Identity Center</th></tr></thead>
+          <tbody>
+            <tr><td class="k">デプロイ時のハードル</td><td class="yes">CloudFormationテンプレートに含められる。追加手順ゼロ</td><td class="no">有効化・ユーザー登録・アプリ割り当てを利用者が事前に実施</td></tr>
+            <tr><td class="k">性格</td><td>アプリが自前でユーザーを持つ。自己完結を求めるOSSに合う</td><td>アカウントレベルの事前設定。アプリのデプロイに含められない</td></tr>
+            <tr><td class="k">利用者管理</td><td>招待制なら管理者が数人を招待する規模。SCIM同期のような仕組みは不要</td><td>外部IdP連携なら自動同期できるが、そもそも外部IdPがある前提</td></tr>
+            <tr><td class="k">拡張余地</td><td class="yes">外部のSAML/OIDC IdPをフェデレーション先にできる。社内で使いたい人はIICやEntra IDを繋げばよい</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>Cognitoを採る。</b>既定は自己完結（招待制・セルフサインアップ無効）、必要な人だけ外部IdPを繋げばよい、という形がOSSとして素直。IICはアカウントレベルの事前設定を強いる点が、低ハードルという方針と衝突する（AWS Organizationsは必須ではなくスタンドアロンアカウントでもアカウントインスタンスとして有効化できるが、事前設定であること自体は変わらない）。</p>
+
+      <h3>任意オプション：IP制限</h3>
+      <p>CloudFront Functionsのイベントには<code>event.viewer.ip</code>が含まれるため、既存の<code>edge-gate.js</code>と同じ仕組み（KVSに許可IPリストを置いて照合）で<b>追加コストゼロ</b>で実装できる。WAFを持ち込むと月額の固定費が発生するが、その必要はない。使わないなら空のままでよい。</p>
+    </section>
+
+    <section id="origin">
+      <h2><span class="num">05</span>オリジン分離</h2>
+      <p>オリジンとは<b>スキーム＋ホスト名＋ポート</b>の組み合わせで、ブラウザのセキュリティの単位。同じオリジンのページ同士は「同じサイトの一部」とみなされ、互いのデータへのアクセスが許される。</p>
+
+      <div class="origin-box">
+        <p class="host">現状：すべて同一オリジン</p>
+        <p class="paths">https://d123abc.cloudfront.net/p/aaa/ &nbsp;← Aさんのアーティファクト<br>
+https://d123abc.cloudfront.net/p/bbb/ &nbsp;← Bさんのアーティファクト<br>
+https://d123abc.cloudfront.net/gallery/ &nbsp;← ギャラリー<br>
+https://d123abc.cloudfront.net/ &nbsp;← トークン入力画面</p>
+        <p class="origin-note">パスが違うだけではブラウザは別サイトと見なさない。</p>
+      </div>
+
+      <h3>「トークンを知らなければ見られないのでは？」への答え</h3>
+      <div class="keypoint">
+        <p class="label">攻撃者はトークンを知る必要がない</p>
+        <p>条件は「攻撃者がトークンを知っているか」ではなく<b>「被害者がトークンを持っているか」</b>。攻撃者は被害者が既に持っているアクセス権を踏み台にする。</p>
+      </div>
+      <div class="flow-steps">
+        <div class="fs-item"><p class="t">1. 悪意ある（または精査されていない）HTMLが <code>/p/evil/</code> に置かれる</p></div>
+        <div class="fs-item"><p class="t">2. 被害者がそれを開く</p><p class="d">このとき被害者のブラウザには、過去に開いた他のアーティファクトのCookie（<code>share_xxx</code>）が既に入っている</p></div>
+        <div class="fs-item"><p class="t">3. ページ内のJSが <code>fetch('/p/xxx/')</code> を実行する</p></div>
+        <div class="fs-item"><p class="t">4. 同一オリジンなのでブラウザがCookieを自動的に付ける</p><p class="d">edge-gateから見れば正当なアクセスなので通る</p></div>
+        <div class="fs-item"><p class="t">5. JSが中身を読んで外部へ送信する</p><p class="d">影響範囲はその閲覧者がアクセスできるアーティファクト数に比例する。特にギャラリーの共通トークン（<code>share_gallery</code>）を持つ閲覧者が踏むと、Cookie1つで全アーティファクトが読める</p></div>
+      </div>
+      <p>Cookieが1つも無い場合でも、<b>偽のトークン入力画面</b>は出せる。正規ドメイン・正規TLS証明書のページなので見分けはつかない。なおCookieには<code>HttpOnly</code>が付いているため<code>document.cookie</code>からの直接読み出しは防げている——これは既存設計の美点だが、同一オリジンの<code>fetch()</code>にCookieが自動付与される経路は防げない。</p>
+
+      <h3>採る構成：認証面と閲覧面を分ける</h3>
+      <div class="origin-box">
+        <p class="host">ディストリビューションA — 認証が要る面</p>
+        <p class="paths">https://dAAA.cloudfront.net/ &nbsp;← アップロードUI（Cognito認証）<br>
+https://dAAA.cloudfront.net/... &nbsp;← Cognitoのコールバック等</p>
+      </div>
+      <div class="origin-box">
+        <p class="host">ディストリビューションB — トークンで見る面</p>
+        <p class="paths">https://dBBB.cloudfront.net/p/{slug}/ &nbsp;← アーティファクト本体<br>
+https://dBBB.cloudfront.net/comments/{slug}/ &nbsp;← コメント投稿<br>
+https://dBBB.cloudfront.net/comments-list/{slug} &nbsp;← コメント一覧<br>
+https://dBBB.cloudfront.net/gallery/, /proj/ &nbsp;← ギャラリー</p>
+        <p class="origin-note">ギャラリーとコメントをB側に置くのが要点。ギャラリーの共通トークンCookieはedge-gateが読む必要があり、Cookieはホスト単位でスコープされるためアーティファクトと同一オリジンでなければ機能しない。コメントも同一オリジンに置くことで、既存の <code>template-pattern-page.html</code> のfetch処理を一切変えずに済む。<code>edge-gate.js</code> はほぼそのままB側に載る。</p>
+      </div>
+
+      <div class="keypoint">
+        <p class="label">この構成で守れるもの・守れないもの</p>
+        <p><b>守れる</b>：Cognitoでログイン中のアップロードUIが、悪意ある（あるいは精査されていない）アーティファクトのJSから隔離される。同一オリジンだと、そのJSが<b>ログイン中の権限でアップロードAPIを叩けてしまう</b>——これが最も重要な保護対象。<br><br><b>守れない</b>：アーティファクト同士の踏み台攻撃。<code>/p/aaa/</code> と <code>/p/bbb/</code> は同じホスト名にあるため、前述の経路は残る。これを消すにはslugごとに別ホスト名（<code>{slug}.artifacts.example.com</code>）が必要で、独自ドメイン＋ワイルドカード証明書が要る。</p>
+      </div>
+      <p>アーティファクト同士の分離は<b>独自ドメインを持つ人向けの任意オプション</b>として設計に余地だけ残す。招待制により信頼が担保されるため、残るリスクは「事故」の水準に収まる。</p>
+
+      <h3>懸念だった2点は、どちらも解消した</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>懸念</th><th>調べた結果</th></tr></thead>
+          <tbody>
+            <tr><td class="k">独自ドメインとACM証明書が要るのでは（OSSの低ハードル方針と衝突）</td><td><b><code>cloudfront.net</code>はPublic Suffix Listに登録されている</b>ため、<code>d123abc.cloudfront.net</code>と<code>d456def.cloudfront.net</code>はブラウザから別サイトとして扱われ、Cookieは共有されない。<b>独自ドメインもACM証明書も不要</b></td></tr>
+            <tr><td class="k">ディストリビューションを増やすとコストが上がるのでは</td><td>CloudFrontは従量課金（リクエスト数＋転送量）が基本で、<b>ディストリビューション数そのものへの課金ではない</b>。2つに分けても同じトラフィックなら合計はほぼ変わらない（トラフィックが分かれるだけ）。※2025年11月開始の定額プランは1プラン＝1ディストリビューションのため、定額を選ぶ場合は本数が効く。無料プランはアカウントあたり3つまで</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>今しか入れられない</h3>
+      <p>ホスト名が変わるということは<b>発行済みの共有URLが全部変わる</b>ということ。後から分離すると既に配ったURLは全て死ぬ。スタックを作り直す今が唯一の機会であり、この項目だけは「実例が出るまで作らない」という規律の対象外になる。</p>
+    </section>
+
+    <section id="upload">
+      <h2><span class="num">06</span>アップロードとmeta</h2>
+
+      <h3>実装方式：Lambda経由（裏側が書く）</h3>
+      <p>ブラウザが直接S3へ書く方式（Cognito Identity Poolで一時AWS認証情報を取得しSigV4署名）ではなく、<b>裏側のLambdaが自分の実行ロールで書く</b>方式を採る。理由は3つ。</p>
+      <ul style="font-size:14.5px; max-width:68ch;">
+        <li><b>契約検証・slug発行・トークン生成・予約名前空間チェックを必ず通る関門に置ける。</b>ブラウザ直書きだとこれらを挟む場所が構造的に存在しない</li>
+        <li><b>Identity Poolが不要。</b>Cognito User Poolだけで済み、部品が1つ減る（ブラウザはJWTを持つだけでAWS認証情報を持たない）</li>
+        <li><b>S3にCORS設定を追加せずに済む。</b>現行テンプレートは意図的にCORSを持たない設計で、その方針を崩さない</li>
+      </ul>
+      <p class="origin-note">注意：Lambda経由はペイロードサイズに上限がある（API Gateway経由で10MB、Lambda同期呼び出しで6MB程度）。実測ではアーティファクト1件が約200KBのため通常は問題ないが、大きなものを想定するなら「Lambdaが署名付きURLを発行してブラウザが直接S3へ上げ、S3イベントで検証・公開する」二段構えへ移行する。まずは上限付きの直接方式で始める。</p>
+
+      <h3>UI：ドラッグ＆ドロップ</h3>
+      <p>ドロップ →（表示名の入力）→ アップロード → <b>URLとトークンが1度だけ表示される</b>、という流れ。トークンを平文保存しない既存の原則があるため、その場でコピーしてもらう。「AIに作らせたHTMLをブラウザにドロップしたらURLが返ってくる」という体験が、CLIを使わない利用者にとっての価値そのものになる。</p>
+
+      <h3>2種類のHTMLをどう見分けるか</h3>
+      <p>アップロードされるHTMLには、既定4テンプレート等で作られたものと、それ以外のツールで作られた野良HTMLの2種類がある。ただし<b>「どのツールが作ったか」と「どの経路で入ってきたか」は直交する</b>——テンプレートで作ったADRをローカルに持っていて、それをUIにドロップすることもあり得る。</p>
+      <div class="keypoint" style="background:var(--accent-soft); border-color:var(--accent);">
+        <p class="label" style="color:var(--accent);">システムが振る舞いを変える基準</p>
+        <p>「どのツールが作ったか」ではなく<b>「HTMLからメタデータを取り出せるか否か」</b>で判定する。既定4テンプレートは <code>&lt;head&gt;</code> にdocument-graph契約のmetaタグ（id/type/title/description/tags）を持つため、<b>アップロード時にパースすれば自動で埋まる</b>。ユーザーに「これは野良ですか？」と聞く必要はない——見れば分かる。</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>metaタグあり（テンプレート製）</th><th>metaタグなし（野良）</th></tr></thead>
+          <tbody>
+            <tr><td class="k">ユーザーへの質問</td><td class="yes">ゼロ（表示名もtitleから取れる）</td><td>表示名だけ1つ</td></tr>
+            <tr><td class="k">任意入力</td><td>—</td><td>説明・タグを折りたたみで（省略可）</td></tr>
+            <tr><td class="k"><code>docType</code></td><td>metaタグの値をそのまま格納</td><td>空</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="origin-note">副次的な利点：metaタグの有無は「そのHTMLが契約を意識して作られたか」の指標にもなる。持たない野良HTMLはCSPや予約名前空間チェックで弾かれる可能性が相対的に高いため、アップロード時に「このHTMLは外部リソースを参照しています」と警告を出す、といった親切をここに乗せられる。</p>
+
+      <h3>metaスキーマ</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>フィールド</th><th>内容</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="k"><code>slug</code> / <code>name</code> / <code>status</code> / <code>updatedAt</code></td><td>スラッグ・表示名・active/disabled・更新時刻</td><td class="k">既存</td></tr>
+            <tr><td class="k"><code>projects</code></td><td>所属するプロジェクトIDの配列（タグ式・複数所属可）</td><td class="k">既存</td></tr>
+            <tr><td class="k"><code>sourceFile</code> / <code>sourceHash</code></td><td>ローカルソースの識別とSHA-256（同期判定用）</td><td class="k">既存</td></tr>
+            <tr><td class="k"><code>metaSource</code></td><td><code>extracted</code>（タグから取れた） / <code>manual</code>（手入力）</td><td class="k">追加</td></tr>
+            <tr><td class="k"><code>docType</code></td><td>metaタグのtype値を<b>そのまま格納</b>。プラットフォームは等価比較しかせず意味を解釈しない</td><td class="k">追加</td></tr>
+            <tr><td class="k"><code>docId</code> / <code>description</code> / <code>tags</code></td><td>document-graph契約のmetaタグ由来</td><td class="k">追加</td></tr>
+            <tr><td class="k"><code>uploadedBy</code></td><td>Cognitoのsub。誰が上げたかの帰属（招待制の実効性・濫用時の追跡）</td><td class="k">追加</td></tr>
+            <tr><td class="k"><code>wrapperHash</code></td><td>配信ラッパーの版。これが無いとコメントUIを修正しても既存slugへ届いたか判定できない</td><td class="k">追加</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><code>docType</code>を<b>不透明なラベル</b>として持つのが要点。<code>DecisionRecord</code>でも<code>Postmortem</code>でも、design-shareが将来独自の値を入れても、プラットフォーム側は意味を解釈しない。これで「親は子の文書種別を知らない」という依存方向が保てる。野良HTMLは<code>docType</code>が空、というだけの扱いになる。既存の <code>type</code>（<code>mock</code>/<code>design-review</code>）はこの<code>docType</code>へ吸収する。</p>
+
+      <h3>ギャラリー・プロジェクト・タグの区別</h3>
+      <p>既存実装には性格の異なる3つの概念がある。混同すると権限設計を誤るため、役割を明確に分ける。</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>数</th><th>誰が決めるか</th><th>何を制御するか</th></tr></thead>
+          <tbody>
+            <tr><td class="k"><b>共有ギャラリー</b></td><td><b>1つだけ</b></td><td>—（公開すれば自動的に載る）</td><td>公開中の<b>全アーティファクト</b>を単一の共通トークンで横断閲覧させる入口。個別に「追加」する操作は存在しない</td></tr>
+            <tr><td class="k"><b>プロジェクト</b><br>（<code>projects</code>）</td><td>複数</td><td><b>人の明示的な操作</b>（アップロード時に選択、またはCLI/管理画面）</td><td><b>アクセススコープ</b>。そのプロジェクトのトークンで、入れたアーティファクトだけが開ける。ローカルにも作業フォルダを持つ</td></tr>
+            <tr><td class="k"><b>タグ</b><br>（<code>tags</code>）</td><td>自由</td><td>アップロードした人（HTML内のmetaタグに記述）</td><td><b>絞り込み・分類のみ</b>。既にアクセスできる範囲の中での探しやすさ</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="keypoint">
+        <p class="label">タグにアクセス権を持たせない</p>
+        <p><code>tags</code>の出どころは<b>アップロードされたHTMLの中身</b>であり、ユーザーが自由に書ける値。もしタグがプロジェクト所属＝アクセススコープを決めるなら、<b>metaタグを1行書き換えるだけで、自分のアーティファクトを他人のプロジェクトのトークンで見える場所に紛れ込ませられる</b>。これは権限昇格になる。所属は必ず人の明示的な操作で決まる。</p>
+      </div>
+      <p>タグは「見える範囲を広げる」ことはできず、「見える範囲の中を整理する」ためのもの。この線を守れば、タグを自由なカテゴリとして使える。副次的に、<b>タグがHTMLに埋まっているのでre-uploadすると自動で更新される</b>——管理画面で付け直す必要がない。これはdocument-graph Skillの契約とも一致する（あちらもタグを分類情報として扱い、アクセス制御には使っていない）。</p>
+    </section>
+
+    <section id="status">
+      <h2><span class="num">07</span>決定と未決</h2>
+      <h3>決まったこと</h3>
+      <div class="decided">
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">アップロードは招待制。匿名アップロードは許可しない</p>
+          <p class="d">Cognito User Poolでセルフサインアップを無効化し、責任者がユーザーを作成する。CFNパラメータで開放する余地は残してよい</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">認証基盤はCognito。IICは採らない</p>
+          <p class="d">CFNテンプレートに含められ、デプロイの追加手順がゼロだから。外部IdP連携の余地は残るので、社内利用したい人はIIC等を繋げばよい</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">閲覧側は変更しない</p>
+          <p class="d">アカウント不要・slug単位トークンでの閲覧とコメント投稿という中核の価値は維持する</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">CSPを配信時に付与する</p>
+          <p class="d">数行・費用ゼロ。契約3点目「外部依存ゼロの自己完結HTML」を、規約から機械的な強制へ格上げできる</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">IP制限は任意オプションとして用意する</p>
+          <p class="d"><code>event.viewer.ip</code>とKVSで追加コストゼロ。WAFは不要</p>
+        </div>
+      </div>
+
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">オリジン分離を入れる（A＝認証面／B＝閲覧面）</p>
+          <p class="d">独自ドメイン不要・追加固定費なし。アーティファクト同士の分離は独自ドメインを持つ人向けの任意オプションとして余地を残す</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">アップロードはLambda経由。UIはドラッグ＆ドロップ</p>
+          <p class="d">契約検証・slug発行・名前空間チェックを必ず通る関門に置け、Identity PoolもS3のCORSも不要になる</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">テンプレート製か野良かは、metaタグの有無で自動判定する</p>
+          <p class="d">ユーザーに宣言させない。タグがあれば質問ゼロ、無ければ表示名だけ聞く</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h"><code>docType</code>は不透明ラベル。タグはアクセス制御に使わない</p>
+          <p class="d">プラットフォームは文書種別の意味を解釈しない。<code>projects</code>（人の明示的な操作で決まる・アクセススコープ）と<code>tags</code>（HTML由来・分類のみ）を分離する。プロジェクトへの所属はアップロード時の確認画面で選ぶ（公開後の別操作にしない）</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag">決定</span>
+          <p class="h">CloudFrontアクセスログを有効化する</p>
+          <p class="d">トークン漏洩の疑いが生じたとき、第三者が実際に閲覧したかを事後確認する唯一の手段。「該当slugを無効化するか」という実際の判断に直結する。作り直しと同時なら追加コストはS3の保存分のみで、常時稼働コンピュートも増えない</p>
+        </div>
+      </div>
+
+      <h3>未決</h3>
+      <div class="decided" style="margin-top:12px;">
+        <div class="d-item">
+          <span class="d-tag open">未決</span>
+          <p class="h">アップロードUIの画面設計</p>
+          <p class="d">ドラッグ＆ドロップという方針は決まったが、具体的な画面はこれから。design-shareでモックを作って詰める</p>
+        </div>
+        <div class="d-item">
+          <span class="d-tag open">未決</span>
+          <p class="h">無料ティア相当の制限を設けるか</p>
+          <p class="d">招待制を採ったため匿名アップロードは無くなったが、招待された人の中でティアを設ける（揮発・機能制限）かは未検討。当面は不要と見ている</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

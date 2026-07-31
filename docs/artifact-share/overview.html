@@ -1,0 +1,373 @@
+<title>アーティファクトシェア — 全体まとめ</title>
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#68737e;
+    --paper:#f4f2ee; --card:#ffffff; --line:#dcd8d0; --line-soft:#e9e5de;
+    --accent:#2f5d63; --accent-soft:#e3edee; --accent-deep:#204449;
+    --ok:#4f7355; --ok-soft:#eaf1ea;
+    --anon:#8a6d3b; --anon-soft:#f4ecdd;
+    --live:#b4553f; --live-soft:#f7e9e5;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+    --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+    --accent:#7fb3ba; --accent-soft:#1e2c2e; --accent-deep:#a8d0d5;
+    --ok:#8ecbb6; --ok-soft:#1d2a23;
+    --anon:#d0ad74; --anon-soft:#2c2619;
+    --live:#d98a72; --live-soft:#2e211f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e8e5df; --ink-soft:#a9b0ba; --ink-faint:#8b939d;
+      --paper:#16191c; --card:#1f2327; --line:#343a3f; --line-soft:#2a2f34;
+      --accent:#7fb3ba; --accent-soft:#1e2c2e; --accent-deep:#a8d0d5;
+      --ok:#8ecbb6; --ok-soft:#1d2a23;
+      --anon:#d0ad74; --anon-soft:#2c2619;
+      --live:#d98a72; --live-soft:#2e211f;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.75;}
+  .shell{max-width:1000px; margin:0 auto; padding:46px 24px 100px; display:grid; grid-template-columns:196px minmax(0,1fr); gap:48px;}
+  nav.toc{position:sticky; top:32px; align-self:start;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc a{display:block; padding:6px 0 6px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px; font-size:12.5px;}
+  nav.toc a:hover{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+  @media (max-width:800px){.shell{grid-template-columns:1fr; gap:26px;} nav.toc{position:static;}}
+
+  main{min-width:0;}
+  header.top{border-bottom:1px solid var(--line); padding-bottom:26px; margin-bottom:38px;}
+  .kicker{font-family:var(--mono); font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); margin:0 0 10px;}
+  h1{font-family:var(--serif); font-size:clamp(26px,4vw,36px); font-weight:600; margin:0 0 12px; text-wrap:balance; letter-spacing:-.01em;}
+  .lede{font-size:15.5px; color:var(--ink-soft); margin:0; max-width:60ch;}
+  .lede b{color:var(--ink); font-weight:600;}
+
+  section{margin-bottom:52px;}
+  h2{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 18px; display:flex; align-items:baseline; gap:9px;}
+  h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  h3{font-family:var(--serif); font-size:17px; font-weight:600; margin:28px 0 11px;}
+  p{font-size:14.5px; margin:0 0 13px; max-width:66ch;}
+  code{font-family:var(--mono); font-size:.88em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+
+  /* 非対称の核 */
+  .asym{display:grid; grid-template-columns:1fr auto 1fr; gap:0; align-items:stretch; margin-bottom:8px;}
+  .asym-side{border:1.5px solid var(--line); border-radius:12px; padding:18px 20px; background:var(--card);}
+  .asym-side.view{border-color:var(--anon); background:var(--anon-soft);}
+  .asym-side.up{border-color:var(--accent); background:var(--accent-soft);}
+  .asym-side .k{font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; margin:0 0 6px;}
+  .asym-side.view .k{color:var(--anon);} .asym-side.up .k{color:var(--accent);}
+  .asym-side .h{font-family:var(--serif); font-size:18px; font-weight:600; margin:0 0 7px;}
+  .asym-side p{font-size:13px; margin:0; color:var(--ink-soft);}
+  .asym-mid{display:grid; place-items:center; padding:0 16px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  @media (max-width:660px){.asym{grid-template-columns:1fr;} .asym-mid{padding:10px 0;}}
+
+  /* actors */
+  .actors{display:flex; flex-direction:column; gap:11px;}
+  .actor{display:grid; grid-template-columns:auto 1fr; gap:4px 15px; padding:14px 17px; border:1px solid var(--line); border-radius:11px; background:var(--card);}
+  .actor .badge{grid-row:1/3; align-self:start; margin-top:2px; font-family:var(--mono); font-size:9.5px; letter-spacing:.04em;
+    text-transform:uppercase; padding:4px 9px; border-radius:11px; white-space:nowrap; height:fit-content;}
+  .actor.admin .badge{background:var(--live-soft); color:var(--live); border:1px solid var(--live);}
+  .actor.member .badge{background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);}
+  .actor.viewer .badge{background:var(--anon-soft); color:var(--anon); border:1px solid var(--anon);}
+  .actor .h{font-size:14px; font-weight:600;}
+  .actor .d{font-size:12.5px; color:var(--ink-soft);}
+
+  /* flow diagram */
+  .flow{display:flex; flex-direction:column; align-items:center; gap:0; margin:8px 0 6px;}
+  .srcrow{display:flex; gap:9px; width:100%; flex-wrap:wrap; justify-content:center;}
+  .src{flex:1; min-width:118px; max-width:168px; border:1.5px solid var(--ok); background:var(--ok-soft);
+    border-radius:9px; padding:10px 12px; text-align:center;}
+  .src.alt{border-color:var(--anon); background:var(--anon-soft);}
+  .src .n{font-size:12px; font-weight:600; margin:0 0 2px;}
+  .src .w{font-family:var(--mono); font-size:9px; color:var(--ink-faint);}
+  .conn{display:flex; flex-direction:column; align-items:center; color:var(--ink-faint); font-family:var(--mono); font-size:10px; padding:9px 0; text-align:center;}
+  .conn .ln{width:1.5px; height:20px; background:var(--line);}
+  .conn .ar{font-size:13px; margin-top:-2px; max-width:520px;}
+  .wrapbox{width:100%; border:2px dashed var(--accent); border-radius:11px; padding:15px 19px; background:var(--accent-soft);}
+  .wrapbox .k{font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin:0 0 9px; text-align:center;}
+  .wrapbox .items{display:flex; flex-direction:column; gap:7px;}
+  .wrapbox .it{background:var(--card); border:1px solid var(--line); border-radius:7px; padding:8px 12px; font-size:12.5px;}
+  .dists{display:flex; gap:11px; width:100%; flex-wrap:wrap;}
+  .dist{flex:1; min-width:210px; border:1.5px solid var(--line); border-radius:11px; padding:14px 17px; background:var(--card);}
+  .dist .k{font-family:var(--mono); font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 6px;}
+  .dist .h{font-size:13.5px; font-weight:600; margin:0 0 5px;}
+  .dist p{font-size:12px; color:var(--ink-soft); margin:0;}
+
+  /* link cards */
+  .links{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px;}
+  a.lk{display:block; text-decoration:none; color:inherit; border:1px solid var(--line); border-radius:11px;
+    background:var(--card); padding:15px 17px; transition:border-color .14s, transform .14s;}
+  a.lk:hover{border-color:var(--accent); transform:translateY(-1px);}
+  a.lk:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  a.lk .t{font-size:14px; font-weight:600; margin:0 0 4px; display:flex; align-items:baseline; gap:7px;}
+  a.lk .t::after{content:"↗"; font-size:11px; color:var(--ink-faint); margin-left:auto;}
+  a.lk .d{font-size:12.5px; color:var(--ink-soft); margin:0;}
+  a.lk .chk{font-family:var(--mono); font-size:10px; color:var(--accent); margin:7px 0 0; display:block;}
+
+  .tblwrap{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th,td{padding:9px 11px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top;}
+  thead th{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); font-weight:600;}
+  td.k{color:var(--ink-soft); white-space:nowrap;}
+
+  .decided{display:flex; flex-direction:column; gap:9px;}
+  .dec{display:grid; grid-template-columns:auto 1fr; gap:3px 14px; padding:12px 15px; border:1px solid var(--line); border-radius:10px; background:var(--card);}
+  .dec .tg{grid-row:1/3; align-self:start; margin-top:2px; font-family:var(--mono); font-size:9.5px; text-transform:uppercase;
+    padding:4px 9px; border-radius:11px; white-space:nowrap; height:fit-content; background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok);}
+  .dec .h{font-size:13.5px; font-weight:600;}
+  .dec .d{font-size:12.5px; color:var(--ink-soft);}
+
+  .steps{display:flex; flex-direction:column; gap:0; position:relative; padding-left:23px;}
+  .steps::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line);}
+  .st{position:relative; padding:0 0 17px 18px;}
+  .st:last-child{padding-bottom:0;}
+  .st::before{content:"";position:absolute;left:-23px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--accent);}
+  .st .h{font-size:13.5px; font-weight:600;}
+  .st .d{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .st.pending::before{background:var(--paper); border-color:var(--ink-faint);}
+
+  .repo{font-family:var(--mono); font-size:12px; background:var(--card); border:1px solid var(--line);
+    border-radius:9px; padding:13px 16px; line-height:1.95; overflow-x:auto;}
+  .repo .c{color:var(--ink-faint);}
+
+  footer.end{margin-top:56px; padding-top:22px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-soft);}
+  @media (prefers-reduced-motion: reduce){a.lk{transition:none;} a.lk:hover{transform:none;}}
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#what"><span class="num">01</span>これは何か</a></li>
+      <li><a href="#actors"><span class="num">02</span>3つのアクター</a></li>
+      <li><a href="#arch"><span class="num">03</span>全体構成</a></li>
+      <li><a href="#screens"><span class="num">04</span>画面</a></li>
+      <li><a href="#templates"><span class="num">05</span>文書テンプレート</a></li>
+      <li><a href="#decided"><span class="num">06</span>決まったこと</a></li>
+      <li><a href="#next"><span class="num">07</span>これから作る</a></li>
+      <li><a href="#docs"><span class="num">08</span>資料</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="top">
+      <p class="kicker">artifactshare</p>
+      <h1>作った文書に、URLひとつで反応が返ってくる</h1>
+      <p class="lede">仕様書・設計決定記録・ポストモーテム・調査レポート——手元のHTMLを上げるとURLとトークンが発行され、渡した相手はアカウント登録なしで開き、その場でコメントを書き込める。<b>見るのは不特定多数、上げるのは招待された人だけ</b>という非対称を、自前のAWS環境だけで成立させる。</p>
+    </header>
+
+    <section id="what">
+      <h2><span class="num">01</span>これは何か</h2>
+      <p>design-shareはこの構想を先に確かめるためのPOCだった。UIモックの共有で成立することが分かったので、対象を開発文書全般へ広げ、配信基盤の側を本体として据え直す。design-shareは<b>UIモックという対象物と、その作り方の専門知識だけを持つ子スキル</b>として、この上に載る。</p>
+
+      <div class="asym">
+        <div class="asym-side view">
+          <p class="k">閲覧</p>
+          <p class="h">アカウント不要</p>
+          <p>URLとトークンを渡された人なら誰でも開ける。その場で名前を入れてコメントできる。この気軽さが中核の価値で、変更しない。</p>
+        </div>
+        <div class="asym-mid">対<br>称<br>で<br>な<br>い</div>
+        <div class="asym-side up">
+          <p class="k">公開</p>
+          <p class="h">招待された人だけ</p>
+          <p>デプロイした責任者が招待した人だけが認証を通り、アップロードできる。匿名アップロードは許可しない。</p>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--ink-faint); max-width:66ch;">匿名でも上げられる無料枠も検討したが、コスト・フィッシング配信・同一オリジンの踏み台という3つのリスクが実在し、セルフサインアップでは「検知できるだけで防げない」。招待制は、設計全体が前提にしていた「アップロード者は信頼できる」という仮定を実際に成り立たせる。</p>
+    </section>
+
+    <section id="actors">
+      <h2><span class="num">02</span>3つのアクター</h2>
+      <div class="actors">
+        <div class="actor admin">
+          <span class="badge">境界を定義する</span>
+          <p class="h">デプロイする責任者</p>
+          <p class="d">AWSアカウントの管理者。CloudFormationを一度流して環境を作り、メンバーを招待する。IAMがそのまま効くので、この層に新しい認可の仕組みは要らない。</p>
+        </div>
+        <div class="actor member">
+          <span class="badge">認証あり</span>
+          <p class="h">アップロードする人</p>
+          <p class="d">招待されたメンバー。HTMLを上げ、プロジェクトにまとめ、コメントを回収する。自分が上げたものだけが一覧に並ぶ。</p>
+        </div>
+        <div class="actor viewer">
+          <span class="badge">トークンのみ</span>
+          <p class="h">閲覧する人</p>
+          <p class="d">不特定多数。登録も何もせず、URLとトークンだけで開いてコメントを書ける。社外の相手にもそのまま渡せる。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="arch">
+      <h2><span class="num">03</span>全体構成</h2>
+      <p>中身がどう作られたかを、共有基盤は知らない。既定テンプレート製でも、子スキルの生成物でも、他所で作った野良HTMLでも、<b>公開の瞬間に同じラッパーで包まれる</b>だけ。</p>
+
+      <div class="flow">
+        <div class="srcrow">
+          <div class="src"><p class="n">既定テンプレート4種</p><span class="w">同梱</span></div>
+          <div class="src"><p class="n">design-share</p><span class="w">子スキル</span></div>
+          <div class="src"><p class="n">個別カスタム形式</p><span class="w">Waffle独自など</span></div>
+          <div class="src alt"><p class="n">野良HTML</p><span class="w">他ツール・手書き</span></div>
+        </div>
+
+        <div class="conn"><div class="ln"></div><span class="ar">▼ 由来を問わず「共有する中身」として同格 ▼</span><div class="ln"></div></div>
+
+        <div class="wrapbox">
+          <p class="k">公開時にラッパーが包む</p>
+          <div class="items">
+            <div class="it">コメントUI一式はラッパーが持ち、中身は関知しない</div>
+            <div class="it">HTMLの<code>&lt;head&gt;</code>を読み、metaタグがあれば表示名・種別・説明・タグを自動で埋める</div>
+            <div class="it">中身に求めるのは自己完結・外部依存ゼロ・予約名前空間と衝突しないことだけ</div>
+          </div>
+        </div>
+
+        <div class="conn"><div class="ln"></div><span class="ar">▼ 信頼境界で配信を2つに分ける ▼</span><div class="ln"></div></div>
+
+        <div class="dists">
+          <div class="dist">
+            <p class="k">Distribution A</p>
+            <p class="h">認証が要る面</p>
+            <p>アップロードUI・プロジェクト管理。Cognitoでログインする。</p>
+          </div>
+          <div class="dist">
+            <p class="k">Distribution B</p>
+            <p class="h">トークンで見る面</p>
+            <p>アーティファクト本体・コメント・プロジェクトの共有ページ。</p>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--ink-faint); max-width:66ch; margin-top:14px;">オリジンを分けるのは、悪意ある（あるいは精査されていない）HTMLのJSが、ログイン中の権限でアップロードAPIを叩けてしまう経路を構造的に断つため。<code>cloudfront.net</code>はPublic Suffix Listに載っているため、独自ドメインもACM証明書も要らない。ホスト名は後から変えられない＝作り直しの今しか入れられない。</p>
+    </section>
+
+    <section id="screens">
+      <h2><span class="num">04</span>画面</h2>
+      <p>いずれも実際に動くモック。サンプルHTMLをドロップすれば、metaタグの読み取り分岐もそのまま確認できる。</p>
+      <div class="links">
+        <a class="lk" href="ui/main.html">
+          <p class="t">メイン画面</p>
+          <p class="d">アップロードと自分の一覧を1画面に。ドロップ→確認→公開、コメントの確認、差し替え・トークン再発行・エクスポート・無効化。</p>
+          <span class="chk">HTMLをドロップして試せる</span>
+        </a>
+        <a class="lk" href="ui/project.html">
+          <p class="t">プロジェクト画面</p>
+          <p class="d">まとめて見せる単位の管理。共有URL、所属の追加と削除、トークン再発行、無効化と削除。</p>
+          <span class="chk">カードを押すと詳細へ</span>
+        </a>
+        <a class="lk" href="ui/viewer.html">
+          <p class="t">閲覧者の画面</p>
+          <p class="d">トークン入力から共有された一覧まで。説明文を主役にして、中身を知らない人が選べるようにしている。</p>
+          <span class="chk">何か入力すると進む</span>
+        </a>
+        <a class="lk" href="ui/viewing.html">
+          <p class="t">開いた画面</p>
+          <p class="d">文書本体＋コメント欄。判定つきの投稿（この方向でOK／修正希望）と返信で、合意の状態が残る。</p>
+          <span class="chk">コメント欄は畳める</span>
+        </a>
+      </div>
+    </section>
+
+    <section id="templates">
+      <h2><span class="num">05</span>文書テンプレート</h2>
+      <p>4種とも共通の2層構造を持つ。<b>掴む層</b>（本質・変化・比較・作業イメージ）と<b>確かめる層</b>（固定6セクション）を区切り線で分け、同じ結論を繰り返さない。読み手の属性ではなく「掴みたいのか、確かめたいのか」という目的で分けている。</p>
+
+      <div class="tblwrap">
+        <table>
+          <thead><tr><th>種別</th><th>掴む層の主役</th><th>テンプレート</th><th>記入例</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="k">設計決定記録</td>
+              <td>代替案とのドット比較＋決め手タグ</td>
+              <td><a href="templates/decision-record.html">空</a></td>
+              <td><a href="examples/decision-record.html">検索基盤の選定</a></td>
+            </tr>
+            <tr>
+              <td class="k">機能仕様書</td>
+              <td>入出力＋エッジケース早見表</td>
+              <td><a href="templates/functional-spec.html">空</a></td>
+              <td><a href="examples/functional-spec.html">コメント投稿API</a></td>
+            </tr>
+            <tr>
+              <td class="k">ポストモーテム</td>
+              <td>影響の数値＋時系列</td>
+              <td><a href="templates/postmortem.html">空</a></td>
+              <td><a href="examples/postmortem.html">決済API停止（架空）</a></td>
+            </tr>
+            <tr>
+              <td class="k">調査・検証レポート</td>
+              <td>確度バッジ＋仮説の支持／棄却</td>
+              <td><a href="templates/investigation-report.html">空</a></td>
+              <td><a href="examples/investigation-report.html">Safariの投稿失敗調査</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="margin-top:16px;">テンプレートの<code>{{...}}</code>には執筆ガイダンスそのものが書かれている——何を書くか、いつ省くか、いくつ複製するか。使い方の説明を別に持たなくて済む。</p>
+    </section>
+
+    <section id="decided">
+      <h2><span class="num">06</span>決まったこと</h2>
+      <div class="decided">
+        <div class="dec"><span class="tg">決定</span><p class="h">アップロードは招待制。匿名は許可しない</p><p class="d">Cognito User Poolのセルフサインアップを無効にし、責任者が招待する。外部IdP連携の余地は残す</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">認証はCognito。IAM Identity Centerは採らない</p><p class="d">CloudFormationに含められデプロイの追加手順がゼロだから。IICはアカウントレベルの事前設定を強いる</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">オリジンを2つに分ける</p><p class="d">認証が要る面と、トークンで見る面。独自ドメインは不要。今しか入れられない</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">アップロードはLambda経由。UIはドラッグ＆ドロップ</p><p class="d">契約検証・slug発行・名前空間チェックを必ず通る関門に置ける</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">テンプレート製か野良かは自動判定する</p><p class="d">metaタグが読めれば質問ゼロ、読めなければ表示名だけ聞く。利用者に宣言させない</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">タグはアクセス制御に使わない</p><p class="d">HTMLの中身に書かれた値なので、所属＝アクセススコープを決めさせると権限昇格になる。所属は人が明示的に操作する</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">CSPで契約を機械的に強制する</p><p class="d">「外部依存ゼロ」を規約でなく配信時の挙動として効かせる。数行・費用ゼロ</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">CloudFrontアクセスログを有効化する</p><p class="d">トークン漏洩の疑いが生じたとき、第三者が実際に閲覧したかを確認できる唯一の手段</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">CloudFormationは削除して作り直す</p><p class="d">既存の公開物は誰も使っていないため、移行互換の制約を負わずに最初から正しい形で始める</p></div>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2><span class="num">07</span>これから作る</h2>
+      <p>順序には理由がある。先にインフラを移すと、4つのテンプレートが暗黙のプロトコルを写経する形で増え、後から1箇所へ戻すコストが跳ね上がる。<b>契約を先に決める。</b></p>
+      <div class="steps">
+        <div class="st pending"><p class="h">1. 契約を明文化する</p><p class="d">中身と配信の間の契約——スロット名・予約名前空間・URL規約——を1つの文書に集約する</p></div>
+        <div class="st pending"><p class="h">2. 汎用とdesign固有の線引きを決める</p><p class="d"><code>--type</code>のenum、confirm-designとsupersedeルールを、どちらの持ち物にするか。metaのスキーマに影響するため先に決める</p></div>
+        <div class="st pending"><p class="h">3. コメントUIの所有権を配信側へ移す</p><p class="d">公開時にラッパーへ埋め込む処理を実装し、予約名前空間の検査と<code>wrapperHash</code>を入れる</p></div>
+        <div class="st pending"><p class="h">4. インフラを作り直し、CLIを移す</p><p class="d">スタックを削除して<code>artifact-share</code>で作成。<code>ds.py</code>を<code>as.py</code>として移設し、Cognito・2ディストリビューション・CSP・アクセスログを入れる</p></div>
+        <div class="st pending"><p class="h">5. テンプレートを同梱し、SKILL.mdを書く</p><p class="d">契約が固まった後に配置する。この順序なら、テンプレートは明文化された契約に対して書かれる</p></div>
+      </div>
+    </section>
+
+    <section id="docs">
+      <h2><span class="num">08</span>資料</h2>
+
+      <h3>設計</h3>
+      <div class="links">
+        <a class="lk" href="design/architecture.html">
+          <p class="t">全体構成</p>
+          <p class="d">中身の由来を問わない配信ラッパーの位置づけと、design-share＝POCという経緯。3点契約からの訂正も記録</p>
+        </a>
+        <a class="lk" href="design/boundary-and-auth.html">
+          <p class="t">境界と権限の設計</p>
+          <p class="d">アクターの定義、匿名／セルフサインアップ／招待制の比較、Cognito対IIC、オリジン分離、metaスキーマ</p>
+        </a>
+        <a class="lk" href="design/requirements.html">
+          <p class="t">SKILL.md要件・インフラ要件</p>
+          <p class="d">流用・新規・変更の切り分け、ディレクトリ構成、design-share側の移行手順、実装確認による訂正</p>
+        </a>
+      </div>
+
+      <h3 style="margin-top:26px;">リポジトリ</h3>
+      <div class="repo">
+docs/brainstorm/brainstorm-artifact-share-concept.md   <span class="c">← 8論点の合意記録</span>
+docs/samples/artifact-share/                          <span class="c">← 動作確認用サンプル</span>
+  ├── with-meta-decision-record.html                  <span class="c">metaタグあり → 質問ゼロ</span>
+  ├── no-meta-plain.html                              <span class="c">metaタグなし → 表示名だけ</span>
+  ├── no-meta-external-deps.html                      <span class="c">外部依存あり → 警告が出る</span>
+  └── README.md
+      </div>
+    </section>
+
+    <footer class="end">
+      アーティファクトシェアは、AWSアカウントさえあれば動くOSSとして作る。デプロイのハードルを上げないことを設計上の制約として扱い、アカウントレベルの事前設定を要求しない。子スキルが増えても本体は変わらない——内容を作る専門知識は各子スキルが持ち、本体は配信基盤だけを提供する。
+    </footer>
+  </main>
+</div>
