@@ -1,0 +1,225 @@
+<title>{{タイトル}} — 機能仕様書</title>
+<meta name="id" content="{{文書ID（英数字・ハイフン、ソース全体で一意）}}">
+<meta name="type" content="FunctionalSpec">
+<meta name="title" content="{{タイトル}}">
+<meta name="description" content="{{1文の要約}}">
+<meta name="tags" content="{{カンマ区切りのタグ}}">
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#64707c;
+    --paper:#f6f5f2; --paper-raised:#ffffff; --line:#dcd8d0;
+    --accent:#3d5a80; --accent-soft:#e7edf4;
+    --ok-bg:#eef3ec; --ok-border:#5c7a5f;
+    --deny-bg:#f6e8e6; --deny-border:#a1503f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --ok-bg:#1e2a20; --ok-border:#5c7a5f;
+    --deny-bg:#2e211f; --deny-border:#c17362;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --ok-bg:#1e2a20; --ok-border:#5c7a5f;
+      --deny-bg:#2e211f; --deny-border:#c17362;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .shell{max-width:1080px; margin:0 auto; padding:48px 24px 96px; display:grid; grid-template-columns:220px minmax(0,1fr); gap:56px;}
+  nav.toc{position:sticky; top:32px; align-self:start; font-size:13px;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc li{margin:0;}
+  nav.toc a{display:block; padding:7px 0 7px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px;}
+  nav.toc a:hover, nav.toc a:focus-visible{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+
+  main{min-width:0;}
+  header.doc-head{border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:36px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .meta-pill{font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:4px; background:var(--paper-raised); border:1px solid var(--line); color:var(--ink-soft);}
+  .meta-pill.status{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  h1{font-family:var(--serif); font-size:clamp(24px,3.4vw,32px); font-weight:600; margin:0; text-wrap:balance;}
+  section{margin-bottom:44px; max-width:70ch;}
+  section h2{font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 16px; display:flex; align-items:baseline; gap:8px;}
+  section h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  section p{margin:0 0 14px; font-size:15px; color:var(--ink);}
+  section ul{margin:0 0 14px; padding-left:22px; font-size:15px;}
+  section li{margin-bottom:6px;}
+  section li::marker{color:var(--ink-faint);}
+
+  code{font-family:var(--mono); font-size:.9em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+
+  .impact-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:8px;}
+  .impact-card{background:var(--paper-raised); border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
+  .impact-card .k{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px;}
+  .impact-card .v{font-size:13.5px; margin:0;}
+
+  .todo-item{display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--line); font-size:14.5px;}
+  .todo-item:first-child{border-top:none;}
+  .todo-item .chk{width:15px; height:15px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0; margin-top:2px;}
+  .todo-item .chk.done{background:var(--ok-border); border-color:var(--ok-border);}
+
+  @media (max-width:760px){.shell{grid-template-columns:1fr; gap:24px;} nav.toc{position:static;}}
+
+  /* at-a-glance layer */
+  .glance{display:flex; flex-direction:column; gap:16px; margin-bottom:36px;}
+  .glance-block{background:var(--paper-raised); border:1px solid var(--line); border-radius:10px; padding:20px 24px;}
+  .glance-block.next{background:var(--accent-soft); border-color:var(--accent);}
+  .glance-block.next .eyebrow{color:var(--accent);}
+  .glance .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 10px;}
+  .glance .verdict{font-family:var(--serif); font-size:17px; margin:0 0 20px; max-width:62ch;}
+  .core-pick{display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; padding:16px 20px; background:var(--ok-bg); border:1px solid var(--ok-border); border-radius:8px; margin-bottom:18px;}
+  .core-pick .chose{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--ink);}
+  .core-pick .because{font-size:13.5px; color:var(--ink-soft);}
+  .core-pick .because b{color:var(--ok-border);}
+  .detail-divider{display:flex; align-items:center; gap:12px; margin:8px 0 32px; color:var(--ink-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;}
+  .detail-divider::before, .detail-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .flow{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px;}
+  .flow-box{flex:1; min-width:180px; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px;}
+  .flow-box.after{border-color:var(--ok-border); background:var(--ok-bg);}
+  .flow-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--ink-faint); margin:0 0 6px;}
+  .flow-box.after .tag{color:var(--ok-border);}
+  .flow-box p{margin:0; font-size:13px; color:var(--ink); font-family:var(--mono);}
+  .flow-arrow{font-size:20px; color:var(--ink-faint); flex-shrink:0;}
+
+  /* edge-case table (functional-spec specific widget) */
+  .edge-table-wrap{width:100%; overflow-x:auto;}
+  .edge-table{width:100%; border-collapse:collapse; font-size:13px;}
+  .edge-table th, .edge-table td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--line);}
+  .edge-table thead th{color:var(--ink-faint); font-weight:600; font-size:11px;}
+  .edge-table td.case{font-family:var(--mono); font-size:12px;}
+  .verdict-badge{font-family:var(--mono); font-size:11px; font-weight:700; padding:3px 10px; border-radius:4px; display:inline-block;}
+  .verdict-badge.allow{background:var(--ok-bg); color:var(--ok-border); border:1px solid var(--ok-border);}
+  .verdict-badge.deny{background:var(--deny-bg); color:var(--deny-border); border:1px solid var(--deny-border);}
+
+  .steps{display:flex; align-items:stretch; gap:12px; flex-wrap:wrap;}
+  .step-box{flex:1; min-width:150px; border-radius:8px; padding:12px 14px; border:1px solid var(--line); background:var(--paper);}
+  .step-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; margin:0 0 6px;}
+  .step-box.done{border-color:var(--ok-border);}
+  .step-box.done .tag{color:var(--ok-border);}
+  .step-box.todo .tag{color:var(--ink-faint);}
+  .step-box p{margin:0 0 4px; font-size:12.5px;}
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要</a></li>
+      <li><a href="#background"><span class="num">02</span>背景・課題</a></li>
+      <li><a href="#decision"><span class="num">03</span>仕様の詳細</a></li>
+      <li><a href="#alternatives"><span class="num">04</span>検討した代替案</a></li>
+      <li><a href="#impact"><span class="num">05</span>影響範囲</a></li>
+      <li><a href="#next"><span class="num">06</span>未解決・次のアクション</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <div class="meta-row">
+        <span class="meta-pill status">{{ステータス：設計中／実装済み／非推奨 等}}</span>
+        <span class="meta-pill">種別：機能仕様書</span>
+        <span class="meta-pill">起票：{{YYYY-MM-DD}}</span>
+        <span class="meta-pill">起票者：{{起票者・チーム名}}</span>
+      </div>
+      <h1>{{タイトル：この機能が何をするものかが一目で分かる形で}}</h1>
+    </header>
+
+    <div class="glance">
+      <div class="glance-block">
+        <p class="eyebrow">本質——何を可能にし、なぜ必要か</p>
+        <div class="core-pick">
+          <span class="chose">{{この機能が可能にする1文（利用者視点で）}}</span>
+          <span class="because">存在理由は<b>{{この機能が無いと成立しない、決め手となる1つの理由}}</b>という一点。{{補足があれば1文}}</span>
+        </div>
+        <p class="verdict">{{利用者が何をすると何が起きるか、契約・振る舞いのレベルで1〜2文。実装技術名（ライブラリ名・関数名等）は書かない。仕様が実装の変更に耐えるための原則}}</p>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow">入出力</p>
+        <div class="flow">
+          <div class="flow-box">
+            <p class="tag">入力</p>
+            <p>{{何を渡すか。APIならメソッド・パス・パラメータ形状}}</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box after">
+            <p class="tag">出力</p>
+            <p>{{何が返る・何が起きるか}}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPEAT: 分岐・境界条件がある場合のみ。無ければこのglance-blockごと省略 -->
+      <div class="glance-block">
+        <p class="eyebrow" style="margin-bottom:10px;">エッジケース早見表（何を許可し、何を拒否するか）</p>
+        <div class="edge-table-wrap"><table class="edge-table">
+          <thead><tr><th>ケース</th><th>結果</th></tr></thead>
+          <tbody>
+            <tr><td class="case">{{入力の条件を1つ。ケースの数だけこのtrを複製}}</td><td><span class="verdict-badge allow">{{許可の場合の結果表記（例: 許可 2xx）}}</span></td></tr>
+            <!-- 拒否の場合は verdict-badge のclassをdenyにする -->
+          </tbody>
+        </table></div>
+      </div>
+      <!-- /REPEAT -->
+
+      <!-- REPEAT: ほぼ常に使う。作業として picture できることが目的で、担当者・期限は書かない（タスク管理はこの文書の役割ではない） -->
+      <div class="glance-block next">
+        <p class="eyebrow">作業イメージ</p>
+        <div class="steps">
+          <div class="step-box done">
+            <p class="tag">{{既に済んでいる作業を表す短い語。ステップの数だけこのstep-boxを複製し、済みはclass="done"、未着手はclass="todo"にする。既に出荷済みの機能で追加作業が無ければ、この1つのdoneステップだけで終えてよい}}</p>
+            <p>{{何を済ませたか}}</p>
+          </div>
+        </div>
+      </div>
+      <!-- /REPEAT -->
+    </div>
+
+    <div class="detail-divider">ここから先は詳細（上の本質を裏付ける根拠）</div>
+
+    <section id="overview">
+      <h2><span class="num">01</span>概要</h2>
+      <p>{{この機能がどこで・誰のために・何を可能にするかを2〜3文で。本質ブロックの決め手・結論は繰り返さない（重複禁止）}}</p>
+    </section>
+
+    <section id="background">
+      <h2><span class="num">02</span>背景・課題</h2>
+      <p>{{この機能が必要になった経緯・解決したい課題を具体的に}}</p>
+    </section>
+
+    <section id="decision">
+      <h2><span class="num">03</span>仕様の詳細</h2>
+      <p><b>{{仕様項目名（エンドポイント／認証／ボディ／反映タイミング 等）}}</b>：{{振る舞い・契約として書く。実装技術名（具体的なライブラリ・関数・ストレージ製品名等）は書かない。項目の数だけこのp要素を複製}}</p>
+    </section>
+
+    <section id="alternatives">
+      <h2><span class="num">04</span>検討した代替案</h2>
+      <p><b>{{検討した設計判断の論点名（例: メソッドの選択・サイズ制限の閾値）}}</b>：{{採用した理由と、見送った案・その理由。論点の数だけこのp要素を複製}}</p>
+    </section>
+
+    <section id="impact">
+      <h2><span class="num">05</span>影響範囲</h2>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <p class="k">{{影響を受ける観点名（対象コンポーネント／既存機能への影響／運用面 等）。観点の数だけこのimpact-cardを複製。ここは実際に触るものを説明する場なので、実装コンポーネント名を書いてよい}}</p>
+          <p class="v">{{その観点での具体的な影響内容}}</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2><span class="num">06</span>未解決・次のアクション</h2>
+      <div class="todo-item"><div class="chk"></div><p>{{未解決の事項・引き継ぎ事項を1件。件数ぶんこのtodo-itemを複製。既に対応済みのものはclass="chk done"にする}}</p></div>
+    </section>
+  </main>
+</div>

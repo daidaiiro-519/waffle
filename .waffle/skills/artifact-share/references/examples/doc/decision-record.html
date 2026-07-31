@@ -1,0 +1,504 @@
+<title>検索基盤にPostgreSQLの全文検索を採用する — 設計決定記録</title>
+<meta name="id" content="adr-search-backend-pg-trgm">
+<meta name="type" content="DecisionRecord">
+<meta name="title" content="検索基盤にPostgreSQLの全文検索を採用する">
+<meta name="description" content="案件検索機能の実装で、Elasticsearch等の新規ミドルウェアではなく既存RDSのpg_trgm拡張を採用する設計決定記録">
+<meta name="tags" content="backend, search, database, adr">
+<style>
+  :root{
+    --ink:#1b2027;
+    --ink-soft:#5b6472;
+    --ink-faint:#64707c;
+    --paper:#f6f5f2;
+    --paper-raised:#ffffff;
+    --line:#dcd8d0;
+    --accent:#3d5a80;
+    --accent-soft:#e7edf4;
+    --decision-bg:#eef3ec;
+    --decision-border:#5c7a5f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df;
+    --ink-soft:#a7aebb;
+    --ink-faint:#838b98;
+    --paper:#181a1d;
+    --paper-raised:#212327;
+    --line:#33363b;
+    --accent:#8fb0d6;
+    --accent-soft:#232b34;
+    --decision-bg:#1e2a20;
+    --decision-border:#5c7a5f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --decision-bg:#1e2a20; --decision-border:#5c7a5f;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.7;
+  }
+  .shell{
+    max-width:1080px;
+    margin:0 auto;
+    padding:48px 24px 96px;
+    display:grid;
+    grid-template-columns:220px minmax(0,1fr);
+    gap:56px;
+  }
+  nav.toc{
+    position:sticky;
+    top:32px;
+    align-self:start;
+    font-size:13px;
+  }
+  nav.toc .eyebrow{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:0 0 12px;
+  }
+  nav.toc ol{
+    list-style:none;
+    margin:0;
+    padding:0;
+    border-left:2px solid var(--line);
+  }
+  nav.toc li{margin:0;}
+  nav.toc a{
+    display:block;
+    padding:7px 0 7px 14px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    border-left:2px solid transparent;
+    margin-left:-2px;
+  }
+  nav.toc a:hover, nav.toc a:focus-visible{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+
+  main{min-width:0;}
+  header.doc-head{
+    border-bottom:1px solid var(--line);
+    padding-bottom:24px;
+    margin-bottom:36px;
+  }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .meta-pill{
+    font-family:var(--mono);
+    font-size:11px;
+    padding:4px 10px;
+    border-radius:4px;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+  }
+  .meta-pill.status{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  h1{
+    font-family:var(--serif);
+    font-size:clamp(24px,3.4vw,32px);
+    font-weight:600;
+    margin:0;
+    text-wrap:balance;
+  }
+  section{margin-bottom:44px; max-width:70ch;}
+  section h2{
+    font-family:var(--sans);
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 16px;
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  section h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  section p{margin:0 0 14px; font-size:15px; color:var(--ink);}
+  section ul, section ol{margin:0 0 14px; padding-left:22px; font-size:15px;}
+  section li{margin-bottom:6px;}
+  section li::marker{color:var(--ink-faint);}
+
+  .decision-box{
+    background:var(--decision-bg);
+    border-left:3px solid var(--decision-border);
+    border-radius:0 6px 6px 0;
+    padding:18px 20px;
+    margin:0 0 18px;
+  }
+  .decision-box p{margin:0; font-size:15px; font-weight:500;}
+  .decision-box .label{
+    font-family:var(--mono);
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--decision-border);
+    margin:0 0 6px;
+    display:block;
+  }
+
+
+  .impact-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:12px;
+    margin-bottom:8px;
+  }
+  .impact-card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:14px 16px;
+  }
+  .impact-card .k{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px;}
+  .impact-card .v{font-size:13.5px; margin:0;}
+
+  code{
+    font-family:var(--mono);
+    font-size:.9em;
+    background:var(--accent-soft);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+
+  .todo-item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:8px 0;
+    border-top:1px solid var(--line);
+    font-size:14.5px;
+  }
+  .todo-item:first-child{border-top:none;}
+  .todo-item .chk{
+    width:15px; height:15px;
+    border:1.5px solid var(--ink-faint);
+    border-radius:3px;
+    flex-shrink:0;
+    margin-top:2px;
+  }
+
+  @media (max-width:760px){
+    .shell{grid-template-columns:1fr; gap:24px;}
+    nav.toc{position:static;}
+  }
+
+  /* at-a-glance hero */
+  .glance{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-bottom:36px;
+  }
+  .glance-block{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px 24px;
+  }
+  .glance-block.next{
+    background:var(--accent-soft);
+    border-color:var(--accent);
+  }
+  .glance-block.next .eyebrow{color:var(--accent);}
+  .steps{display:flex; align-items:stretch; gap:12px; flex-wrap:wrap;}
+  .step-box{
+    flex:1;
+    min-width:150px;
+    border-radius:8px;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    background:var(--paper);
+  }
+  .step-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; margin:0 0 6px;}
+  .step-box.done{border-color:var(--decision-border);}
+  .step-box.done .tag{color:var(--decision-border);}
+  .step-box.todo .tag{color:var(--ink-faint);}
+  .step-box p{margin:0 0 4px; font-size:12.5px;}
+  .step-box p:last-child{margin-bottom:0;}
+  .badges{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;}
+  .badge{
+    font-family:var(--mono);
+    font-size:10px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    padding:2px 7px;
+    border-radius:3px;
+  }
+  .glance .eyebrow{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:0 0 10px;
+  }
+  .glance .verdict{
+    font-family:var(--serif);
+    font-size:17px;
+    margin:0 0 20px;
+    max-width:62ch;
+  }
+  .core-pick{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    flex-wrap:wrap;
+    padding:16px 20px;
+    background:var(--decision-bg);
+    border:1px solid var(--decision-border);
+    border-radius:8px;
+    margin-bottom:18px;
+  }
+  .core-pick .chose{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--ink);}
+  .core-pick .because{font-size:13.5px; color:var(--ink-soft);}
+  .core-pick .because b{color:var(--decision-border);}
+  .detail-divider{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:8px 0 32px;
+    color:var(--ink-faint);
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .detail-divider::before, .detail-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .flow{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .flow-box{
+    flex:1;
+    min-width:180px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+  }
+  .flow-box.after{border-color:var(--decision-border); background:var(--decision-bg);}
+  .flow-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--ink-faint); margin:0 0 6px;}
+  .flow-box.after .tag{color:var(--decision-border);}
+  .flow-box p{margin:0; font-size:13px; color:var(--ink);}
+  .flow-arrow{font-size:20px; color:var(--ink-faint); flex-shrink:0;}
+
+  .score-table-wrap{width:100%; overflow-x:auto;}
+  .score-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .score-table th, .score-table td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--line);}
+  .score-table thead th{color:var(--ink-faint); font-weight:600; font-size:11px;}
+  .score-table thead th.win-col{color:var(--decision-border);}
+  .score-table td.crit{color:var(--ink-soft);}
+  .score-table td.win-col{background:var(--decision-bg);}
+  .score-table tr.decisive{outline:2px solid var(--decision-border); outline-offset:-1px;}
+  .score-table tr.decisive td{background:var(--decision-bg); font-weight:600;}
+  .decisive-tag{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:.03em;
+    background:var(--decision-border);
+    color:var(--paper-raised);
+    padding:2px 6px;
+    border-radius:3px;
+    margin-left:8px;
+    vertical-align:middle;
+  }
+  .dots{display:flex; gap:3px;}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--line);}
+  .dot.on{background:var(--accent);}
+  td.win-col .dot.on{background:var(--decision-border);}
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要</a></li>
+      <li><a href="#background"><span class="num">02</span>背景・課題</a></li>
+      <li><a href="#decision"><span class="num">03</span>決定事項・結論</a></li>
+      <li><a href="#alternatives"><span class="num">04</span>検討した代替案</a></li>
+      <li><a href="#impact"><span class="num">05</span>影響範囲</a></li>
+      <li><a href="#next"><span class="num">06</span>未解決・次のアクション</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <div class="meta-row">
+        <span class="meta-pill status">決定済み</span>
+        <span class="meta-pill">種別：設計決定記録</span>
+        <span class="meta-pill">起票：2026-07-18</span>
+        <span class="meta-pill">起票者：backend-team</span>
+      </div>
+      <h1>検索基盤にPostgreSQLの全文検索を採用する</h1>
+    </header>
+
+    <div class="glance">
+      <div class="glance-block">
+        <p class="eyebrow">本質——何を選び、なぜか</p>
+        <div class="core-pick">
+          <span class="chose">pg_trgmを採用</span>
+          <span class="because">本質的な理由は<b>「運用の軽さ」がこの規模・この体制では性能の上振れより重い</b>という一点（下の比較表の決め手タグ参照）。Elasticsearchは検索性能で勝るが、そのために新規ミドルウェアを背負う理由が、この題材にはまだ無い。</span>
+        </div>
+        <p class="verdict">新しいミドルウェアを増やさず、既存DBの拡張機能だけで「使い物にならないLIKE検索」を「実用速度の部分一致検索」に置き換える。直近3ヶ月で寄せられた顧客要望12件はこれで解消できる見込み。</p>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow">何が変わるか</p>
+        <div class="flow">
+          <div class="flow-box">
+            <p class="tag">Before</p>
+            <p>案件テーブルへのLIKE検索のみ。8万件規模で体感1〜2秒、表記ゆれに弱い</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box after">
+            <p class="tag">After</p>
+            <p>既存RDS上でpg_trgm拡張を有効化し、トライグラム索引を追加。新規サーバー・新規監視対象はゼロ</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow" style="margin-bottom:10px;">代替案との比較（3観点、なぜこれが決め手か）</p>
+        <div class="score-table-wrap"><table class="score-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Elasticsearch</th>
+            <th>Algolia等SaaS</th>
+            <th class="win-col">pg_trgm（採用）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="crit">検索性能</td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div></td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div></td>
+          </tr>
+          <tr class="decisive">
+            <td class="crit">運用の軽さ<span class="decisive-tag">決め手</span></td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+          </tr>
+          <tr>
+            <td class="crit">データを外へ出さない</td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+            <td><div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+          </tr>
+        </tbody>
+      </table></div>
+        <p style="font-size:12px; color:var(--ink-faint); margin:10px 0 0;">評価の根拠 — 検索性能：8万件・部分一致で平均120ms（実測、2026-07-17）／運用の軽さ：新規ミドルウェア数（pg_trgm=0・Elasticsearch=1・Algolia=0だがSaaS契約管理が発生）／データ非流出：処理が自社VPC内で完結するか</p>
+      </div>
+
+      <div class="glance-block next">
+        <p class="eyebrow">作業イメージ</p>
+        <div class="steps">
+          <div class="step-box done">
+            <p class="tag">設計・検証 済み</p>
+            <p>pg_trgm有効化・GINインデックス設計、ベンチマーク実測</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="step-box todo">
+            <p class="tag">未着手</p>
+            <p><code>CREATE EXTENSION pg_trgm</code> 実行＋インデックス追加</p>
+            <p class="badges"><span class="badge">数分</span><span class="badge">ダウンタイムなし</span><span class="badge">新規デプロイ経路なし</span></p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="step-box todo">
+            <p class="tag">未着手</p>
+            <p>検索APIエンドポイント実装（設計済み・すぐ着手可）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-divider">ここから先は詳細（上の本質を裏付ける根拠）</div>
+
+    <section id="overview">
+      <h2><span class="num">01</span>概要</h2>
+      <p>案件管理画面の検索機能（案件名・担当者・タグからの横断検索）をどう実装するかを扱う設計決定記録。対象は案件テーブル（約8万件）に対する検索1機能のみで、検索基盤の選定からAPI実装までを範囲とする。</p>
+    </section>
+
+    <section id="background">
+      <h2><span class="num">02</span>背景・課題</h2>
+      <p>案件管理画面に「案件名・担当者・タグからの横断検索」を追加する要望が、直近3ヶ月で顧客から合計12件寄せられている。現状はLIKE検索のみで、部分一致の精度・速度ともに実用に耐えない状態が続いている。</p>
+      <p>検討開始時点では「検索といえばElasticsearch」という前提で調査を始めたが、以下の制約が判明した。</p>
+      <ul>
+        <li>検索対象データは案件テーブル1つで、レコード数は現在約8万件・年間増加は1万件程度と少量</li>
+        <li>運用チームは3名で、新規ミドルウェアの監視・パッチ運用を増やす余力が無い</li>
+        <li>検索要件は「案件名・タグの部分一致」「日本語の助詞を無視した検索」程度で、形態素解析の高度な要件は無い</li>
+      </ul>
+    </section>
+
+    <section id="decision">
+      <h2><span class="num">03</span>決定事項・結論</h2>
+      <div class="decision-box">
+        <span class="label">決定</span>
+        <p>PostgreSQLの<code>pg_trgm</code>拡張によるトライグラム類似検索を採用し、既存のRDS（PostgreSQL 15）上にインデックスを追加する形で実装する。</p>
+      </div>
+      <p>この規模のデータ量・検索要件であれば、専用エンジンが持つ高度なスコアリング・分散性能は過剰である一方、運用コストの増加は確実に発生する。既存インフラの範囲で要件を満たせるなら、それを優先するという判断に至った。</p>
+    </section>
+
+    <section id="alternatives">
+      <h2><span class="num">04</span>検討した代替案</h2>
+      <p style="font-size:13px; color:var(--ink-faint); margin-bottom:16px;">結論の一覧は冒頭の比較表を参照。ここでは各評価の測定方法・前提条件を記す。</p>
+      <p><b>検索性能の測定方法</b>：3案とも案件テーブルの本番相当ダンプ（8万件）をステージング環境に投入し、「案件名の部分一致・タグの部分一致」を想定した100クエリを実行して応答時間を計測した。Elasticsearchは平均45ms、pg_trgmは平均120ms、Algoliaは公称値のみで実測は未実施（SaaS契約前のためステージング投入不可）。</p>
+      <p><b>運用の軽さの判定基準</b>：「新規に増える監視対象・パッチ適用対象の数」で判定した。Elasticsearchはクラスタ運用が新規に発生（監視項目+6、パッチ適用は月次）。pg_trgmは既存RDSの拡張機能追加のみで新規監視対象ゼロ。Algoliaはサーバー管理は不要だが、SaaS契約・請求管理という別種の運用が発生するため満点にはしていない。</p>
+      <p><b>データを外へ出さない、の判定</b>：Algoliaは検索対象データを外部SaaSへ同期する構成が前提のため、社内データポリシー（個人情報を含む案件データの社外持ち出し規定）との整合確認が別途必要になる。今回はこの確認コスト自体を「導入を妨げる要因」として0点扱いにした。</p>
+    </section>
+
+    <section id="impact">
+      <h2><span class="num">05</span>影響範囲</h2>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <p class="k">対象テーブル</p>
+          <p class="v">projects（案件テーブル）のみ</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">既存機能への影響</p>
+          <p class="v">検索API 1本の実装追加のみ。既存エンドポイントの変更なし</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">運用面</p>
+          <p class="v">新規ミドルウェアなし。既存RDSのメンテナンスウィンドウ内で拡張機能を有効化</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">将来の再検討条件</p>
+          <p class="v">検索対象が10万件を大きく超える、または複数テーブル横断検索が必要になった時点</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2><span class="num">06</span>未解決・次のアクション</h2>
+      <div class="todo-item"><div class="chk"></div><p>本番RDSでの<code>pg_trgm</code>有効化手順とロールバック手順をinfraチームへ引き継ぐ</p></div>
+      <div class="todo-item"><div class="chk"></div><p>検索速度のベンチマーク（8万件時点でのレスポンスタイム）を計測し、このドキュメントの影響範囲へ追記する</p></div>
+      <div class="todo-item"><div class="chk"></div><p>タグの表記ゆれ（全角/半角等）の正規化方針は未決定のため、別途調査レポートで扱う</p></div>
+    </section>
+  </main>
+</div>

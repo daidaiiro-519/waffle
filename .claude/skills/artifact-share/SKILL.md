@@ -1,0 +1,1 @@
+../../../.waffle/skills/artifact-share/SKILL.md

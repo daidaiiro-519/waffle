@@ -1,0 +1,268 @@
+<title>{{タイトル}} — 設計決定記録</title>
+<meta name="id" content="{{文書ID（英数字・ハイフン、ソース全体で一意）}}">
+<meta name="type" content="DecisionRecord">
+<meta name="title" content="{{タイトル}}">
+<meta name="description" content="{{1文の要約}}">
+<meta name="tags" content="{{カンマ区切りのタグ}}">
+<style>
+  :root{
+    --ink:#1b2027;
+    --ink-soft:#5b6472;
+    --ink-faint:#64707c;
+    --paper:#f6f5f2;
+    --paper-raised:#ffffff;
+    --line:#dcd8d0;
+    --accent:#3d5a80;
+    --accent-soft:#e7edf4;
+    --decision-bg:#eef3ec;
+    --decision-border:#5c7a5f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --decision-bg:#1e2a20; --decision-border:#5c7a5f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --decision-bg:#1e2a20; --decision-border:#5c7a5f;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .shell{max-width:1080px; margin:0 auto; padding:48px 24px 96px; display:grid; grid-template-columns:220px minmax(0,1fr); gap:56px;}
+  nav.toc{position:sticky; top:32px; align-self:start; font-size:13px;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc li{margin:0;}
+  nav.toc a{display:block; padding:7px 0 7px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px;}
+  nav.toc a:hover, nav.toc a:focus-visible{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+
+  main{min-width:0;}
+  header.doc-head{border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:36px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .meta-pill{font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:4px; background:var(--paper-raised); border:1px solid var(--line); color:var(--ink-soft);}
+  .meta-pill.status{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  h1{font-family:var(--serif); font-size:clamp(24px,3.4vw,32px); font-weight:600; margin:0; text-wrap:balance;}
+  section{margin-bottom:44px; max-width:70ch;}
+  section h2{font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 16px; display:flex; align-items:baseline; gap:8px;}
+  section h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  section p{margin:0 0 14px; font-size:15px; color:var(--ink);}
+  section ul, section ol{margin:0 0 14px; padding-left:22px; font-size:15px;}
+  section li{margin-bottom:6px;}
+  section li::marker{color:var(--ink-faint);}
+
+  .decision-box{background:var(--decision-bg); border-left:3px solid var(--decision-border); border-radius:0 6px 6px 0; padding:18px 20px; margin:0 0 18px;}
+  .decision-box p{margin:0; font-size:15px; font-weight:500;}
+  .decision-box .label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--decision-border); margin:0 0 6px; display:block;}
+
+  .impact-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:8px;}
+  .impact-card{background:var(--paper-raised); border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
+  .impact-card .k{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px;}
+  .impact-card .v{font-size:13.5px; margin:0;}
+
+  code{font-family:var(--mono); font-size:.9em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+
+  .todo-item{display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--line); font-size:14.5px;}
+  .todo-item:first-child{border-top:none;}
+  .todo-item .chk{width:15px; height:15px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0; margin-top:2px;}
+
+  @media (max-width:760px){.shell{grid-template-columns:1fr; gap:24px;} nav.toc{position:static;}}
+
+  /* at-a-glance layer */
+  .glance{display:flex; flex-direction:column; gap:16px; margin-bottom:36px;}
+  .glance-block{background:var(--paper-raised); border:1px solid var(--line); border-radius:10px; padding:20px 24px;}
+  .glance-block.next{background:var(--accent-soft); border-color:var(--accent);}
+  .glance-block.next .eyebrow{color:var(--accent);}
+  .glance .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 10px;}
+  .glance .verdict{font-family:var(--serif); font-size:17px; margin:0 0 20px; max-width:62ch;}
+  .core-pick{display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; padding:16px 20px; background:var(--decision-bg); border:1px solid var(--decision-border); border-radius:8px; margin-bottom:18px;}
+  .core-pick .chose{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--ink);}
+  .core-pick .because{font-size:13.5px; color:var(--ink-soft);}
+  .core-pick .because b{color:var(--decision-border);}
+  .detail-divider{display:flex; align-items:center; gap:12px; margin:8px 0 32px; color:var(--ink-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;}
+  .detail-divider::before, .detail-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .flow{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px;}
+  .flow-box{flex:1; min-width:180px; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px;}
+  .flow-box.after{border-color:var(--decision-border); background:var(--decision-bg);}
+  .flow-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--ink-faint); margin:0 0 6px;}
+  .flow-box.after .tag{color:var(--decision-border);}
+  .flow-box p{margin:0; font-size:13px; color:var(--ink);}
+  .flow-arrow{font-size:20px; color:var(--ink-faint); flex-shrink:0;}
+
+  .score-table-wrap{width:100%; overflow-x:auto;}
+  .score-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .score-table th, .score-table td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--line);}
+  .score-table thead th{color:var(--ink-faint); font-weight:600; font-size:11px;}
+  .score-table thead th.win-col{color:var(--decision-border);}
+  .score-table td.crit{color:var(--ink-soft);}
+  .score-table td.win-col{background:var(--decision-bg);}
+  .score-table tr.decisive{outline:2px solid var(--decision-border); outline-offset:-1px;}
+  .score-table tr.decisive td{background:var(--decision-bg); font-weight:600;}
+  .decisive-tag{display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.03em; background:var(--decision-border); color:var(--paper-raised); padding:2px 6px; border-radius:3px; margin-left:8px; vertical-align:middle;}
+  .dots{display:flex; gap:3px;}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--line);}
+  .dot.on{background:var(--accent);}
+  td.win-col .dot.on{background:var(--decision-border);}
+
+  .steps{display:flex; align-items:stretch; gap:12px; flex-wrap:wrap;}
+  .step-box{flex:1; min-width:150px; border-radius:8px; padding:12px 14px; border:1px solid var(--line); background:var(--paper);}
+  .step-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; margin:0 0 6px;}
+  .step-box.done{border-color:var(--decision-border);}
+  .step-box.done .tag{color:var(--decision-border);}
+  .step-box.todo .tag{color:var(--ink-faint);}
+  .step-box p{margin:0 0 4px; font-size:12.5px;}
+  .step-box p:last-child{margin-bottom:0;}
+  .badges{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;}
+  .badge{font-family:var(--mono); font-size:10px; background:var(--accent-soft); color:var(--accent); padding:2px 7px; border-radius:3px;}
+</style>
+
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要</a></li>
+      <li><a href="#background"><span class="num">02</span>背景・課題</a></li>
+      <li><a href="#decision"><span class="num">03</span>決定事項・結論</a></li>
+      <li><a href="#alternatives"><span class="num">04</span>検討した代替案</a></li>
+      <li><a href="#impact"><span class="num">05</span>影響範囲</a></li>
+      <li><a href="#next"><span class="num">06</span>未解決・次のアクション</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <div class="meta-row">
+        <span class="meta-pill status">{{ステータス：検討中／決定済み／保留 等}}</span>
+        <span class="meta-pill">種別：設計決定記録</span>
+        <span class="meta-pill">起票：{{YYYY-MM-DD}}</span>
+        <span class="meta-pill">起票者：{{起票者・チーム名}}</span>
+      </div>
+      <h1>{{タイトル：何を決めるドキュメントかが一目で分かる形で}}</h1>
+    </header>
+
+    <div class="glance">
+      <div class="glance-block">
+        <p class="eyebrow">本質——何を選び、なぜか</p>
+        <div class="core-pick">
+          <span class="chose">{{選んだもの}}</span>
+          <span class="because">本質的な理由は<b>{{決め手となる1つの理由。除去したら選択の必然性が消えるものだけを書く}}</b>という一点。{{見送った案が優れている点があれば、それでも選ばなかった理由を1文で}}</span>
+        </div>
+        <p class="verdict">{{何がどう変わるかの1〜2文の要約。可能なら背景で述べた課題（顧客要望・障害件数等）が解消される旨も含める}}</p>
+      </div>
+
+      <!-- REPEAT: 状態の変化がある場合のみ。無ければこのglance-blockごと省略 -->
+      <div class="glance-block">
+        <p class="eyebrow">何が変わるか</p>
+        <div class="flow">
+          <div class="flow-box">
+            <p class="tag">Before</p>
+            <p>{{現状の具体的な状態・数値}}</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box after">
+            <p class="tag">After</p>
+            <p>{{変更後の具体的な状態・数値}}</p>
+          </div>
+        </div>
+      </div>
+      <!-- /REPEAT -->
+
+      <!-- REPEAT: 代替案を検討した場合のみ。無ければこのglance-blockごと省略 -->
+      <div class="glance-block">
+        <p class="eyebrow" style="margin-bottom:10px;">代替案との比較（{{実際に比較した観点の数}}観点、なぜこれが決め手か）</p>
+        <div class="score-table-wrap"><table class="score-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>{{比較する案の名前。採用しなかった案の数だけこのthを複製する}}</th>
+            <th class="win-col">{{実際に採用した案の名前（このthと対応する列のtdだけclass="win-col"にする）}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="decisive">
+            <td class="crit">{{比較する観点名。観点の数だけこのtrを複製する}}<span class="decisive-tag">決め手</span>{{↑この決め手タグは、実際に決め手になった観点の行だけに付ける（class="decisive"も同じ行に付ける）。他の観点の行には付けない}}</td>
+            <!-- REPEAT: 案の数だけ<td>を複製。ドット数は5段階評価、採用案のtdだけclass="win-col" -->
+            <td><div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+            <!-- /REPEAT -->
+          </tr>
+        </tbody>
+      </table></div>
+        <p style="font-size:12px; color:var(--ink-faint); margin:10px 0 0;">評価の根拠 — {{各観点のドット数を決めた具体的な基準・数値を、観点ごとに1文ずつ／区切りで並べる}}</p>
+      </div>
+      <!-- /REPEAT -->
+
+      <!-- REPEAT: ほぼ常に使う。作業として picture できることが目的で、担当者・期限は書かない（タスク管理はこの文書の役割ではない） -->
+      <div class="glance-block next">
+        <p class="eyebrow">作業イメージ</p>
+        <div class="steps">
+          <div class="step-box done">
+            <p class="tag">{{既に済んでいる作業を表す短い語。ステップの数だけこのstep-boxを複製し、済みはclass="done"、未着手はclass="todo"にする}}</p>
+            <p>{{何を済ませたか}}</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="step-box todo">
+            <p class="tag">未着手</p>
+            <p>{{次に何をするか、実行するコマンドや具体的な操作のレベルで。担当者・期限は書かない（誰が・いつやるかの管理は、この文書の役割ではない）}}</p>
+            <p class="badges"><span class="badge">{{所要時間の目安やダウンタイムの有無等、安心材料になる短い事実。無ければこのp要素ごと省略}}</span></p>
+          </div>
+        </div>
+      </div>
+      <!-- /REPEAT -->
+    </div>
+
+    <div class="detail-divider">ここから先は詳細（上の本質を裏付ける根拠）</div>
+
+    <section id="overview">
+      <h2><span class="num">01</span>概要</h2>
+      <p>{{この決定が扱う対象範囲（何についての決定か）を2〜3文で。本質ブロックの決め手・結論そのものは繰り返さない（重複禁止）。対象・スコープの事実のみを書く}}</p>
+    </section>
+
+    <section id="background">
+      <h2><span class="num">02</span>背景・課題</h2>
+      <p>{{この決定が必要になった経緯・課題を具体的な数値とともに}}</p>
+      <ul>
+        <li>{{制約・前提条件を1つ。複数あればliを複製、1つも無ければこのul要素ごと省略}}</li>
+      </ul>
+    </section>
+
+    <section id="decision">
+      <h2><span class="num">03</span>決定事項・結論</h2>
+      <div class="decision-box">
+        <span class="label">決定</span>
+        <p>{{実装レベルの具体的な決定内容。技術名・バージョン等を明記}}</p>
+      </div>
+      <p>{{なぜこの結論に至ったかの詳しい理由づけ（本質ブロックの1文をここで展開する）}}</p>
+    </section>
+
+    <section id="alternatives">
+      <h2><span class="num">04</span>検討した代替案</h2>
+      <p style="font-size:13px; color:var(--ink-faint); margin-bottom:16px;">結論の一覧は冒頭の比較表を参照。ここでは各評価の測定方法・前提条件を記す。</p>
+      <p><b>{{冒頭の比較表にある観点名}}の測定方法／判定基準</b>：{{その観点のドット数を決めた具体的な方法・数値・前提条件。観点の数だけこのp要素を複製}}</p>
+    </section>
+
+    <section id="impact">
+      <h2><span class="num">05</span>影響範囲</h2>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <p class="k">{{影響を受ける観点名（対象範囲／既存機能への影響／運用面／将来の再検討条件 等）。観点の数だけこのimpact-cardを複製}}</p>
+          <p class="v">{{その観点での具体的な影響内容}}</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2><span class="num">06</span>未解決・次のアクション</h2>
+      <div class="todo-item"><div class="chk"></div><p>{{未解決の事項・引き継ぎ事項を1件。件数ぶんこのtodo-itemを複製}}</p></div>
+    </section>
+  </main>
+</div>

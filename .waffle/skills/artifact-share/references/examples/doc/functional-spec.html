@@ -1,0 +1,235 @@
+<title>コメント投稿API — 機能仕様書</title>
+<meta name="id" content="spec-comment-put-api">
+<meta name="type" content="FunctionalSpec">
+<meta name="title" content="コメント投稿API">
+<meta name="description" content="design-shareのパターンページ・スペックシートから、閲覧者がコメントを投稿するためのPUT APIの仕様">
+<meta name="tags" content="design-share, api, comments, edge-gate">
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#64707c;
+    --paper:#f6f5f2; --paper-raised:#ffffff; --line:#dcd8d0;
+    --accent:#3d5a80; --accent-soft:#e7edf4;
+    --ok-bg:#eef3ec; --ok-border:#5c7a5f;
+    --deny-bg:#f6e8e6; --deny-border:#a1503f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --ok-bg:#1e2a20; --ok-border:#5c7a5f;
+    --deny-bg:#2e211f; --deny-border:#c17362;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --ok-bg:#1e2a20; --ok-border:#5c7a5f;
+      --deny-bg:#2e211f; --deny-border:#c17362;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .shell{max-width:1080px; margin:0 auto; padding:48px 24px 96px; display:grid; grid-template-columns:220px minmax(0,1fr); gap:56px;}
+  nav.toc{position:sticky; top:32px; align-self:start; font-size:13px;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc li{margin:0;}
+  nav.toc a{display:block; padding:7px 0 7px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px;}
+  nav.toc a:hover, nav.toc a:focus-visible{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+
+  main{min-width:0;}
+  header.doc-head{border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:36px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .meta-pill{font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:4px; background:var(--paper-raised); border:1px solid var(--line); color:var(--ink-soft);}
+  .meta-pill.status{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  h1{font-family:var(--serif); font-size:clamp(24px,3.4vw,32px); font-weight:600; margin:0; text-wrap:balance;}
+  section{margin-bottom:44px; max-width:70ch;}
+  section h2{font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 16px; display:flex; align-items:baseline; gap:8px;}
+  section h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  section p{margin:0 0 14px; font-size:15px; color:var(--ink);}
+  section ul{margin:0 0 14px; padding-left:22px; font-size:15px;}
+  section li{margin-bottom:6px;}
+  section li::marker{color:var(--ink-faint);}
+
+  code{font-family:var(--mono); font-size:.9em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+
+  .impact-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:8px;}
+  .impact-card{background:var(--paper-raised); border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
+  .impact-card .k{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px;}
+  .impact-card .v{font-size:13.5px; margin:0;}
+
+  .todo-item{display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--line); font-size:14.5px;}
+  .todo-item:first-child{border-top:none;}
+  .todo-item .chk{width:15px; height:15px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0; margin-top:2px;}
+  .todo-item .chk.done{background:var(--ok-border); border-color:var(--ok-border); position:relative;}
+
+  @media (max-width:760px){.shell{grid-template-columns:1fr; gap:24px;} nav.toc{position:static;}}
+
+  /* at-a-glance layer */
+  .glance{display:flex; flex-direction:column; gap:16px; margin-bottom:36px;}
+  .glance-block{background:var(--paper-raised); border:1px solid var(--line); border-radius:10px; padding:20px 24px;}
+  .glance-block.next{background:var(--accent-soft); border-color:var(--accent);}
+  .glance-block.next .eyebrow{color:var(--accent);}
+  .glance .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 10px;}
+  .glance .verdict{font-family:var(--serif); font-size:17px; margin:0 0 20px; max-width:62ch;}
+  .core-pick{display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; padding:16px 20px; background:var(--ok-bg); border:1px solid var(--ok-border); border-radius:8px; margin-bottom:18px;}
+  .core-pick .chose{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--ink);}
+  .core-pick .because{font-size:13.5px; color:var(--ink-soft);}
+  .core-pick .because b{color:var(--ok-border);}
+  .detail-divider{display:flex; align-items:center; gap:12px; margin:8px 0 32px; color:var(--ink-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;}
+  .detail-divider::before, .detail-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .flow{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px;}
+  .flow-box{flex:1; min-width:180px; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px;}
+  .flow-box.after{border-color:var(--ok-border); background:var(--ok-bg);}
+  .flow-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--ink-faint); margin:0 0 6px;}
+  .flow-box.after .tag{color:var(--ok-border);}
+  .flow-box p{margin:0; font-size:13px; color:var(--ink); font-family:var(--mono);}
+  .flow-arrow{font-size:20px; color:var(--ink-faint); flex-shrink:0;}
+
+  /* edge-case table (functional-spec specific widget) */
+  .edge-table{width:100%; border-collapse:collapse; font-size:13px;}
+  .edge-table th, .edge-table td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--line);}
+  .edge-table thead th{color:var(--ink-faint); font-weight:600; font-size:11px;}
+  .edge-table td.case{font-family:var(--mono); font-size:12px;}
+  .verdict-badge{font-family:var(--mono); font-size:11px; font-weight:700; padding:3px 10px; border-radius:4px; display:inline-block;}
+  .verdict-badge.allow{background:var(--ok-bg); color:var(--ok-border); border:1px solid var(--ok-border);}
+  .verdict-badge.deny{background:var(--deny-bg); color:var(--deny-border); border:1px solid var(--deny-border);}
+
+  .steps{display:flex; align-items:stretch; gap:12px; flex-wrap:wrap;}
+  .step-box{flex:1; min-width:150px; border-radius:8px; padding:12px 14px; border:1px solid var(--line); background:var(--paper);}
+  .step-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; margin:0 0 6px;}
+  .step-box.done{border-color:var(--ok-border);}
+  .step-box.done .tag{color:var(--ok-border);}
+  .step-box p{margin:0 0 4px; font-size:12.5px;}
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要</a></li>
+      <li><a href="#background"><span class="num">02</span>背景・課題</a></li>
+      <li><a href="#decision"><span class="num">03</span>仕様の詳細</a></li>
+      <li><a href="#alternatives"><span class="num">04</span>検討した代替案</a></li>
+      <li><a href="#impact"><span class="num">05</span>影響範囲</a></li>
+      <li><a href="#next"><span class="num">06</span>未解決・次のアクション</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <div class="meta-row">
+        <span class="meta-pill status">実装済み</span>
+        <span class="meta-pill">種別：機能仕様書</span>
+        <span class="meta-pill">起票：2026-07-20</span>
+        <span class="meta-pill">起票者：design-share</span>
+      </div>
+      <h1>コメント投稿API</h1>
+    </header>
+
+    <div class="glance">
+      <div class="glance-block">
+        <p class="eyebrow">本質——何を可能にし、なぜ必要か</p>
+        <div class="core-pick">
+          <span class="chose">閲覧者がコメントを投稿できる</span>
+          <span class="because">存在理由は<b>非同期レビューを成立させる最小機能</b>という一点。アカウント登録なし、トークンだけで投稿できることで、依頼から数分でレビューが始められる。</span>
+        </div>
+        <p class="verdict">閲覧者がパターンページ上のフォームから名前・本文を送ると、トークンと投稿内容の形式が検証された上で保存され、数秒〜数十秒で一覧に反映される（即時ではない）。</p>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow">入出力</p>
+        <div class="flow">
+          <div class="flow-box">
+            <p class="tag">入力</p>
+            <p>PUT /p/{slug}/comments/{id}.json<br>Content-Type: application/json<br>{name, text, timestamp}</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box after">
+            <p class="tag">出力</p>
+            <p>2xx（成功）<br>一覧への反映は結果整合（詳細は本質を参照）</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow" style="margin-bottom:10px;">エッジケース早見表（何を許可し、何を拒否するか）</p>
+        <table class="edge-table">
+          <thead><tr><th>ケース</th><th>結果</th></tr></thead>
+          <tbody>
+            <tr><td class="case">正しい形式（.jsonキー・application/json・16KB以内）</td><td><span class="verdict-badge allow">許可 2xx</span></td></tr>
+            <tr><td class="case">非.jsonキーへのPUT</td><td><span class="verdict-badge deny">拒否 403</span></td></tr>
+            <tr><td class="case">content-type ≠ application/json</td><td><span class="verdict-badge deny">拒否 403</span></td></tr>
+            <tr><td class="case">DELETEメソッド</td><td><span class="verdict-badge deny">拒否 403</span></td></tr>
+            <tr><td class="case">16KB超のペイロード</td><td><span class="verdict-badge deny">拒否 403</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="glance-block next">
+        <p class="eyebrow">作業イメージ</p>
+        <div class="steps">
+          <div class="step-box done">
+            <p class="tag">実装・検証 済み</p>
+            <p>edge-gateでの検査ロジック実装、実機スモークテストで5項目とも合格</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-divider">ここから先は詳細（上の本質を裏付ける根拠）</div>
+
+    <section id="overview">
+      <h2><span class="num">01</span>概要</h2>
+      <p>design-shareが配信するパターンページ・スペックシートに埋め込まれたコメント欄から、閲覧者が名前付きでフィードバックを投稿するためのPUT APIの仕様。アカウント不要、トークン保持者なら誰でも投稿できる。</p>
+    </section>
+
+    <section id="background">
+      <h2><span class="num">02</span>背景・課題</h2>
+      <p>design-shareの核となる価値は「URLだけで気軽にレビューできる」こと。アカウント登録やログインを要求すると、この価値が成立しなくなる。一方で、誰でも書き込める以上、悪意のあるペイロード（巨大なファイル、HTML注入、不正なメソッド）を機械的に拒否する必要がある。</p>
+    </section>
+
+    <section id="decision">
+      <h2><span class="num">03</span>仕様の詳細</h2>
+      <p><b>エンドポイント</b>：<code>PUT /p/{slug}/comments/{id}.json</code>（{id}はクライアント側で生成するUUID等）</p>
+      <p><b>認証</b>：閲覧セッションに紐づくトークンによる事前検証を前提とする。未認証・誤トークンは401（本APIの対象外、別のゲートで処理済み）。</p>
+      <p><b>ボディ</b>：<code>{"name": string, "text": string, "timestamp": ISO8601}</code>。本文は投稿された文字列をそのまま保存し、表示側は常に文字として描画する（マークアップとして解釈しない）。</p>
+      <p><b>反映</b>：投稿は一覧にも反映されるが、結果整合であり即時ではない。反映まで数秒〜数十秒の遅延がありうる（利用者への案内では「少し待って再読み込み」と伝え、「即時」とは案内しない）。</p>
+    </section>
+
+    <section id="alternatives">
+      <h2><span class="num">04</span>検討した代替案</h2>
+      <p><b>POSTでなくPUTを選んだ理由</b>：クライアント側でID（UUID）を生成してから投稿先を確定させる方式にすることで、サーバー側での採番ロジックが不要になる。POST＋サーバー採番も検討したが、採番のための追加のやり取りが必要になり、検証ロジックが複雑化するため見送った。</p>
+      <p><b>サイズ制限を16KBにした理由</b>：通常のコメント投稿は数百バイト程度で収まる。16KBは通常利用の100倍以上の余裕を持たせつつ、大量データによる意図的な負荷やコスト増を防げる閾値として選んだ。</p>
+    </section>
+
+    <section id="impact">
+      <h2><span class="num">05</span>影響範囲</h2>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <p class="k">対象コンポーネント</p>
+          <p class="v">edge-gate.js（CloudFront Function）、パターンページのコメントUI</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">既存機能への影響</p>
+          <p class="v">なし（新規エンドポイント）</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">運用面</p>
+          <p class="v">コメントPUTにサイズ・レート制限以外の上限はない。ゴミ投稿は受容リスクとして許容</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2><span class="num">06</span>未解決・次のアクション</h2>
+      <div class="todo-item"><div class="chk done"></div><p>実機スモークテストで5項目（正常系・非.jsonキー・content-type違反・DELETE・16KB超）を検証済み</p></div>
+      <div class="todo-item"><div class="chk"></div><p>コメントPUTのレート制限（現状なし）を将来的に導入するかは未検討</p></div>
+    </section>
+  </main>
+</div>

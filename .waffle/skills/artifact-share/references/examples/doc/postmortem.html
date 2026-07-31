@@ -1,0 +1,233 @@
+<title>深夜バッチによる決済API 30分停止 — ポストモーテム</title>
+<meta name="id" content="postmortem-payment-api-connection-exhaustion">
+<meta name="type" content="Postmortem">
+<meta name="title" content="深夜バッチによる決済API 30分停止">
+<meta name="description" content="深夜バッチ処理がDBコネクションを使い切り、決済APIが30分間503を返した障害の振り返り">
+<meta name="tags" content="incident, payment-api, database, connection-pool">
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#64707c;
+    --paper:#f6f5f2; --paper-raised:#ffffff; --line:#dcd8d0;
+    --accent:#3d5a80; --accent-soft:#e7edf4;
+    --sev-bg:#f6e8e6; --sev-border:#a1503f;
+    --ok-bg:#eef3ec; --ok-border:#5c7a5f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --sev-bg:#2e211f; --sev-border:#c17362;
+    --ok-bg:#1e2a20; --ok-border:#5c7a5f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --sev-bg:#2e211f; --sev-border:#c17362;
+      --ok-bg:#1e2a20; --ok-border:#5c7a5f;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .shell{max-width:1080px; margin:0 auto; padding:48px 24px 96px; display:grid; grid-template-columns:220px minmax(0,1fr); gap:56px;}
+  nav.toc{position:sticky; top:32px; align-self:start; font-size:13px;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc li{margin:0;}
+  nav.toc a{display:block; padding:7px 0 7px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px;}
+  nav.toc a:hover, nav.toc a:focus-visible{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+
+  main{min-width:0;}
+  header.doc-head{border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:36px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .meta-pill{font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:4px; background:var(--paper-raised); border:1px solid var(--line); color:var(--ink-soft);}
+  .meta-pill.status{background:var(--sev-bg); color:var(--sev-border); border-color:var(--sev-border);}
+  h1{font-family:var(--serif); font-size:clamp(24px,3.4vw,32px); font-weight:600; margin:0; text-wrap:balance;}
+  section{margin-bottom:44px; max-width:70ch;}
+  section h2{font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 16px; display:flex; align-items:baseline; gap:8px;}
+  section h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  section p{margin:0 0 14px; font-size:15px; color:var(--ink);}
+  section ul{margin:0 0 14px; padding-left:22px; font-size:15px;}
+  section li{margin-bottom:6px;}
+  section li::marker{color:var(--ink-faint);}
+
+  code{font-family:var(--mono); font-size:.9em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+
+  .impact-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:8px;}
+  .impact-card{background:var(--paper-raised); border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
+  .impact-card .k{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px;}
+  .impact-card .v{font-size:13.5px; margin:0;}
+
+  .todo-item{display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--line); font-size:14.5px;}
+  .todo-item:first-child{border-top:none;}
+  .todo-item .chk{width:15px; height:15px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0; margin-top:2px;}
+  .todo-item .chk.done{background:var(--ok-border); border-color:var(--ok-border);}
+
+  @media (max-width:760px){.shell{grid-template-columns:1fr; gap:24px;} nav.toc{position:static;}}
+
+  /* at-a-glance layer */
+  .glance{display:flex; flex-direction:column; gap:16px; margin-bottom:36px;}
+  .glance-block{background:var(--paper-raised); border:1px solid var(--line); border-radius:10px; padding:20px 24px;}
+  .glance-block.next{background:var(--accent-soft); border-color:var(--accent);}
+  .glance-block.next .eyebrow{color:var(--accent);}
+  .glance .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 10px;}
+  .glance .verdict{font-family:var(--serif); font-size:17px; margin:0 0 20px; max-width:62ch;}
+  .core-pick{display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; padding:16px 20px; background:var(--sev-bg); border:1px solid var(--sev-border); border-radius:8px; margin-bottom:18px;}
+  .core-pick .chose{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--ink);}
+  .core-pick .because{font-size:13.5px; color:var(--ink-soft);}
+  .core-pick .because b{color:var(--sev-border);}
+  .detail-divider{display:flex; align-items:center; gap:12px; margin:8px 0 32px; color:var(--ink-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;}
+  .detail-divider::before, .detail-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  /* impact stat row (postmortem-specific) */
+  .stat-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .stat-card{flex:1; min-width:130px; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px; text-align:center;}
+  .stat-card .num{font-family:var(--serif); font-size:24px; font-weight:600; color:var(--sev-border);}
+  .stat-card .label{font-size:11px; color:var(--ink-faint); margin-top:4px;}
+
+  /* timeline (postmortem-specific widget) */
+  .timeline{display:flex; flex-direction:column; gap:0; position:relative; padding-left:20px;}
+  .timeline::before{content:""; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background:var(--line);}
+  .tl-item{position:relative; padding:0 0 18px 20px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{content:""; position:absolute; left:-20px; top:3px; width:10px; height:10px; border-radius:50%; background:var(--paper); border:2px solid var(--ink-faint);}
+  .tl-item.detect::before{border-color:var(--sev-border); background:var(--sev-border);}
+  .tl-item.resolve::before{border-color:var(--ok-border); background:var(--ok-border);}
+  .tl-item .time{font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .tl-item .desc{font-size:13.5px; margin-top:2px;}
+
+  .steps{display:flex; align-items:stretch; gap:12px; flex-wrap:wrap;}
+  .step-box{flex:1; min-width:150px; border-radius:8px; padding:12px 14px; border:1px solid var(--line); background:var(--paper);}
+  .step-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; margin:0 0 6px;}
+  .step-box.done{border-color:var(--ok-border);}
+  .step-box.done .tag{color:var(--ok-border);}
+  .step-box.todo .tag{color:var(--ink-faint);}
+  .step-box p{margin:0 0 4px; font-size:12.5px;}
+  .flow-arrow{font-size:20px; color:var(--ink-faint); flex-shrink:0;}
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要</a></li>
+      <li><a href="#background"><span class="num">02</span>背景・課題</a></li>
+      <li><a href="#decision"><span class="num">03</span>根本原因</a></li>
+      <li><a href="#alternatives"><span class="num">04</span>検討した対応案</a></li>
+      <li><a href="#impact"><span class="num">05</span>影響範囲</a></li>
+      <li><a href="#next"><span class="num">06</span>未解決・次のアクション</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <div class="meta-row">
+        <span class="meta-pill status">解決済み</span>
+        <span class="meta-pill">種別：ポストモーテム</span>
+        <span class="meta-pill">発生：2026-07-24 02:00</span>
+        <span class="meta-pill">起票者：platform-team</span>
+      </div>
+      <h1>深夜バッチによる決済API 30分停止</h1>
+    </header>
+
+    <div class="glance">
+      <div class="glance-block">
+        <p class="eyebrow">本質——何が起き、根本原因は何か</p>
+        <div class="core-pick">
+          <span class="chose">決済APIが30分間503を返した</span>
+          <span class="because">根本原因は<b>バッチと決済APIが同一のDBコネクションプールを共有する構成になっていたこと</b>という一点。この共有構成のせいで、バッチ処理がコネクションを使い切ると決済API側が新規接続を確立できなくなった。</span>
+        </div>
+        <p class="verdict">深夜バッチ自体は日次の想定通りの処理だったが、実行時間が普段より長引いたことで、決済APIの通常のトラフィックとコネクション枯渇のタイミングが重なった。</p>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow">影響の大きさ</p>
+        <div class="stat-row">
+          <div class="stat-card"><p class="num">30分</p><p class="label">影響時間</p></div>
+          <div class="stat-card"><p class="num">約1,200件</p><p class="label">失敗した決済リクエスト</p></div>
+          <div class="stat-card"><p class="num">0件</p><p class="label">二重課金（無し）</p></div>
+        </div>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow" style="margin-bottom:10px;">時系列</p>
+        <div class="timeline">
+          <div class="tl-item"><p class="time">02:00</p><p class="desc">深夜バッチ開始（想定通り）</p></div>
+          <div class="tl-item"><p class="time">02:14</p><p class="desc">バッチの実行が長引き、コネクションプールの使用率が上昇し始める</p></div>
+          <div class="tl-item detect"><p class="time">02:16</p><p class="desc">決済APIのエラー率上昇でアラートが発報（検知）</p></div>
+          <div class="tl-item"><p class="time">02:22</p><p class="desc">オンコール担当が原因をバッチのコネクション占有と特定、バッチを一時停止</p></div>
+          <div class="tl-item resolve"><p class="time">02:31</p><p class="desc">コネクションが解放され、決済APIが正常応答に復帰</p></div>
+        </div>
+      </div>
+
+      <div class="glance-block next">
+        <p class="eyebrow">再発防止の作業イメージ</p>
+        <div class="steps">
+          <div class="step-box done">
+            <p class="tag">対応済み</p>
+            <p>バッチのコネクション取得数に上限を設定（暫定対応）</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="step-box todo">
+            <p class="tag">未着手</p>
+            <p>バッチ用と決済API用でコネクションプールを分離する（恒久対応）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-divider">ここから先は詳細（上の本質を裏付ける根拠）</div>
+
+    <section id="overview">
+      <h2><span class="num">01</span>概要</h2>
+      <p>2026-07-24深夜に発生した、決済APIが約30分間503エラーを返した障害の振り返り。対象は決済API本体と、原因となった日次バッチ処理の2コンポーネント。</p>
+    </section>
+
+    <section id="background">
+      <h2><span class="num">02</span>背景・課題</h2>
+      <p>日次バッチはこれまで平均10分程度で完了しており、コネクション使用がピークになる時間帯とも重ならなかったため、これまで問題が顕在化していなかった。当日はバッチ対象のデータ量が普段の3倍程度に増えており、実行時間が想定より長引いた。</p>
+    </section>
+
+    <section id="decision">
+      <h2><span class="num">03</span>根本原因</h2>
+      <p><b>直接原因</b>：バッチ処理がコネクションプールの上限まで接続を保持し続け、決済APIが新規リクエストのために新しい接続を確保できなくなった。</p>
+      <p><b>根本原因</b>：バッチと決済APIが同一のコネクションプールを共有する構成になっており、片方の異常な接続保持がもう片方に直接影響する設計だった。データ量の増加という単発の事象がトリガーにはなったが、共有構成そのものが本質的な脆弱性だった。</p>
+    </section>
+
+    <section id="alternatives">
+      <h2><span class="num">04</span>検討した対応案</h2>
+      <p><b>即座に検討した選択肢</b>：（1）バッチを停止して手動でコネクションを解放する、（2）決済API側を再起動して強制的に新しい接続を確立させる。今回は（1）を選んだ。バッチを止めても当日中の再実行で業務影響は無く、決済API側の再起動は進行中の決済処理を中断させるリスクがあったため。</p>
+      <p><b>恒久対応の候補</b>：コネクションプールの完全分離、バッチのコネクション使用に対するタイムアウト設定の強化、バッチの並列度を下げて接続数自体を減らす、の3案を比較検討中（次のアクション参照）。</p>
+    </section>
+
+    <section id="impact">
+      <h2><span class="num">05</span>影響範囲</h2>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <p class="k">影響を受けた機能</p>
+          <p class="v">決済APIのみ。他の読み取り系APIへの影響なし</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">利用者への影響</p>
+          <p class="v">決済操作中に約1,200件のエラー表示。再試行で成功したケースが大半</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">データの整合性</p>
+          <p class="v">二重課金・データ不整合は確認されていない（決済APIは冪等性を持つ設計のため）</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2><span class="num">06</span>未解決・次のアクション</h2>
+      <div class="todo-item"><div class="chk done"></div><p>バッチのコネクション取得数に暫定的な上限を設定済み</p></div>
+      <div class="todo-item"><div class="chk"></div><p>コネクションプールを決済API用とバッチ用で分離する恒久対応の設計・実装</p></div>
+      <div class="todo-item"><div class="chk"></div><p>同様の「共有リソースへの想定外の負荷」が起きうる他のバッチ処理が無いか、全バッチの棚卸しを行う</p></div>
+    </section>
+  </main>
+</div>

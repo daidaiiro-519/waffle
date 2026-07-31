@@ -1,0 +1,209 @@
+<title>{{タイトル}} — 調査・検証レポート</title>
+<meta name="id" content="{{文書ID（英数字・ハイフン、ソース全体で一意）}}">
+<meta name="type" content="InvestigationReport">
+<meta name="title" content="{{タイトル}}">
+<meta name="description" content="{{1文の要約}}">
+<meta name="tags" content="{{カンマ区切りのタグ}}">
+<style>
+  :root{
+    --ink:#1b2027; --ink-soft:#5b6472; --ink-faint:#64707c;
+    --paper:#f6f5f2; --paper-raised:#ffffff; --line:#dcd8d0;
+    --accent:#3d5a80; --accent-soft:#e7edf4;
+    --unsure-bg:#f7f0e1; --unsure-border:#a1793f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --unsure-bg:#2c2417; --unsure-border:#c1954f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --unsure-bg:#2c2417; --unsure-border:#c1954f;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .shell{max-width:1080px; margin:0 auto; padding:48px 24px 96px; display:grid; grid-template-columns:220px minmax(0,1fr); gap:56px;}
+  nav.toc{position:sticky; top:32px; align-self:start; font-size:13px;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc li{margin:0;}
+  nav.toc a{display:block; padding:7px 0 7px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px;}
+  nav.toc a:hover, nav.toc a:focus-visible{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+
+  main{min-width:0;}
+  header.doc-head{border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:36px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .meta-pill{font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:4px; background:var(--paper-raised); border:1px solid var(--line); color:var(--ink-soft);}
+  .meta-pill.status{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  h1{font-family:var(--serif); font-size:clamp(24px,3.4vw,32px); font-weight:600; margin:0; text-wrap:balance;}
+  section{margin-bottom:44px; max-width:70ch;}
+  section h2{font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 16px; display:flex; align-items:baseline; gap:8px;}
+  section h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  section p{margin:0 0 14px; font-size:15px; color:var(--ink);}
+  section ul{margin:0 0 14px; padding-left:22px; font-size:15px;}
+  section li{margin-bottom:6px;}
+  section li::marker{color:var(--ink-faint);}
+
+  code{font-family:var(--mono); font-size:.9em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+
+  .impact-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:8px;}
+  .impact-card{background:var(--paper-raised); border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
+  .impact-card .k{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px;}
+  .impact-card .v{font-size:13.5px; margin:0;}
+
+  .todo-item{display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--line); font-size:14.5px;}
+  .todo-item:first-child{border-top:none;}
+  .todo-item .chk{width:15px; height:15px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0; margin-top:2px;}
+  .todo-item .chk.done{background:var(--accent); border-color:var(--accent);}
+
+  @media (max-width:760px){.shell{grid-template-columns:1fr; gap:24px;} nav.toc{position:static;}}
+
+  /* at-a-glance layer */
+  .glance{display:flex; flex-direction:column; gap:16px; margin-bottom:36px;}
+  .glance-block{background:var(--paper-raised); border:1px solid var(--line); border-radius:10px; padding:20px 24px;}
+  .glance-block.next{background:var(--accent-soft); border-color:var(--accent);}
+  .glance-block.next .eyebrow{color:var(--accent);}
+  .glance .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 10px;}
+  .glance .verdict{font-family:var(--serif); font-size:17px; margin:0 0 20px; max-width:62ch;}
+  .core-pick{display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; padding:16px 20px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px; margin-bottom:14px;}
+  .core-pick .chose{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--ink);}
+  .core-pick .because{font-size:13.5px; color:var(--ink-soft);}
+  .core-pick .because b{color:var(--accent);}
+  .confidence-row{display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--ink-soft);}
+  .confidence-badge{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; padding:3px 9px; border-radius:10px; background:var(--unsure-bg); color:var(--unsure-border); border:1px solid var(--unsure-border);}
+  .detail-divider{display:flex; align-items:center; gap:12px; margin:8px 0 32px; color:var(--ink-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;}
+  .detail-divider::before, .detail-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  /* hypothesis-verdict list (investigation-report-specific widget) */
+  .hyp-list{display:flex; flex-direction:column; gap:10px;}
+  .hyp-item{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; background:var(--paper);}
+  .hyp-verdict{grid-row:1 / 3; align-self:start; margin-top:2px; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.03em; padding:4px 9px; border-radius:10px; white-space:nowrap; height:fit-content;}
+  .hyp-verdict.supported{background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);}
+  .hyp-verdict.refuted{background:var(--paper); color:var(--ink-faint); border:1px solid var(--line);}
+  .hyp-item .h{font-size:13.5px; font-weight:600;}
+  .hyp-item .method{font-size:12px; color:var(--ink-soft);}
+
+  .steps{display:flex; align-items:stretch; gap:12px; flex-wrap:wrap;}
+  .step-box{flex:1; min-width:150px; border-radius:8px; padding:12px 14px; border:1px solid var(--line); background:var(--paper);}
+  .step-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; margin:0 0 6px;}
+  .step-box.done{border-color:var(--accent);}
+  .step-box.done .tag{color:var(--accent);}
+  .step-box.todo .tag{color:var(--ink-faint);}
+  .step-box p{margin:0 0 4px; font-size:12.5px;}
+  .flow-arrow{font-size:20px; color:var(--ink-faint); flex-shrink:0;}
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要</a></li>
+      <li><a href="#background"><span class="num">02</span>背景・調査のきっかけ</a></li>
+      <li><a href="#hypotheses"><span class="num">03</span>検証した仮説と根拠</a></li>
+      <li><a href="#limits"><span class="num">04</span>除外した仮説・調査の限界</a></li>
+      <li><a href="#impact"><span class="num">05</span>影響範囲</a></li>
+      <li><a href="#next"><span class="num">06</span>未解決・次のアクション</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <div class="meta-row">
+        <span class="meta-pill status">{{ステータス：調査中／調査完了 等}}</span>
+        <span class="meta-pill">種別：調査・検証レポート</span>
+        <span class="meta-pill">調査期間：{{YYYY-MM-DD〜YYYY-MM-DD}}</span>
+        <span class="meta-pill">担当：{{担当者・チーム名}}</span>
+      </div>
+      <h1>{{タイトル：何を調べたレポートかが一目で分かる形で}}</h1>
+    </header>
+
+    <div class="glance">
+      <div class="glance-block">
+        <p class="eyebrow">本質——何が原因・結論と分かったか</p>
+        <div class="core-pick">
+          <span class="chose">{{分かった結論を1文で}}</span>
+          <span class="because">{{結論の決め手となった根拠を<b>1点だけ太字で強調</b>し、1〜2文で説明}}</span>
+        </div>
+        <div class="confidence-row">
+          <span class="confidence-badge">{{確度：高／中／低}}</span>
+          <span>{{確度をその水準にした理由を一言。詳細は04節で具体的に説明する}}</span>
+        </div>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow" style="margin-bottom:14px;">検証した仮説と結果</p>
+        <div class="hyp-list">
+          <div class="hyp-item">
+            <span class="hyp-verdict supported">支持</span>
+            <p class="h">{{検証した仮説を1文で。支持された仮説はclass="supported"、棄却された仮説はclass="refuted"（支持=前進・棄却=除外であり、良し悪しの評価ではない）。仮説の数だけこのhyp-itemを複製}}</p>
+            <p class="method">{{どう検証したか・何を確認したかを具体的に}}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPEAT: ほぼ常に使う。作業として picture できることが目的で、担当者・期限は書かない（タスク管理はこの文書の役割ではない） -->
+      <div class="glance-block next">
+        <p class="eyebrow">この結論を受けての作業イメージ</p>
+        <div class="steps">
+          <div class="step-box done">
+            <p class="tag">{{既に済んでいる対応を表す短い語。ステップの数だけこのstep-boxを複製し、済みはclass="done"、未着手はclass="todo"にする}}</p>
+            <p>{{何を済ませたか}}</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="step-box todo">
+            <p class="tag">未着手</p>
+            <p>{{次に何をするか。担当者・期限は書かない（誰が・いつやるかの管理は、この文書の役割ではない）}}</p>
+          </div>
+        </div>
+      </div>
+      <!-- /REPEAT -->
+    </div>
+
+    <div class="detail-divider">ここから先は詳細（上の本質を裏付ける根拠）</div>
+
+    <section id="overview">
+      <h2><span class="num">01</span>概要</h2>
+      <p>{{何を調べに行ったか・どういう方向から切り分けたかを2〜3文で。本質ブロックの結論そのものは繰り返さない（重複禁止。結論と確度は上部を参照、と述べるに留める）}}</p>
+    </section>
+
+    <section id="background">
+      <h2><span class="num">02</span>背景・調査のきっかけ</h2>
+      <p>{{どんな報告・違和感がきっかけで調査を始めたか。共通点があれば具体的に}}</p>
+    </section>
+
+    <section id="hypotheses">
+      <h2><span class="num">03</span>検証した仮説と根拠</h2>
+      <p>{{どの方向から仮説を立てたか、最終的にどれが支持・棄却されたかの流れ（内容は上部の一覧を参照、と述べてよい）}}</p>
+    </section>
+
+    <section id="limits">
+      <h2><span class="num">04</span>除外した仮説・調査の限界</h2>
+      <p><b>検証していない範囲</b>：{{時間・優先度の都合で検証しなかった範囲と、その理由}}</p>
+      <p><b>確度を{{高／中／低}}とした理由</b>：{{確度が下がる・完全には言い切れない具体的な理由。本質ブロックの確度バッジと対応させる}}</p>
+    </section>
+
+    <section id="impact">
+      <h2><span class="num">05</span>影響範囲</h2>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <p class="k">{{影響を受ける観点名（影響を受ける機能／対象範囲／他コンポーネントへの影響 等）。観点の数だけこのimpact-cardを複製}}</p>
+          <p class="v">{{その観点での具体的な内容}}</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2><span class="num">06</span>未解決・次のアクション</h2>
+      <div class="todo-item"><div class="chk"></div><p>{{未解決の事項・引き継ぎ事項を1件。件数ぶんこのtodo-itemを複製。既に対応済みのものはclass="chk done"にする}}</p></div>
+    </section>
+  </main>
+</div>
