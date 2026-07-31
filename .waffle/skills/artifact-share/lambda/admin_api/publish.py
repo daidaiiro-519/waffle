@@ -1,12 +1,11 @@
-"""公開の受け口。
+"""公開。
 
 アップロードされたHTMLを受け取り、閲覧できる状態にして、URLとトークンを返す。
-利用者の確認・中身の検査・artifactIdとトークンの発行・配置を、必ずここが通る
-唯一の関門として担う。手元のCLIも管理画面もMCPの受け口も、保管を直接操作せず
-ここを通す（中身の検査を経ない公開の経路を作らないため）。
+利用者の確認・中身の検査・artifactIdとトークンの発行・配置を担う。公開の経路は
+これひとつだけで、中身の検査を経ずに保管へ書き込む手段は用意しない。
 
-外部への接続は依存として受け取る。実際の接続を組み立てるのは handler だけで、
-中核の処理は渡されたものだけを使う。検証のときは偽の依存を渡せる。
+外部への接続は依存として受け取る。実際の接続を組み立てるのは main.py だけで、
+ここは渡されたものだけを使う。検証のときは偽の依存を渡せる。
 
 対象の仕様: uc-publish-artifact / agg-shared-artifact
 """
@@ -254,67 +253,4 @@ def publish(request: dict, deps: Deps) -> dict:
         "externalRefs": found["externalRefs"],
         "needsName": False,
         "tokenShownOnce": True,       # 呼び出し側へ、二度は示せないことを伝える
-    }
-
-
-# ── 受け口 ──────────────────────────────────────────────
-
-def handler(event, context):  # pragma: no cover - 実際の接続を組み立てるだけ
-    """関数URLからの呼び出し口。ここだけが外部との接続を知る。"""
-    import os
-
-    import boto3
-
-    body = json.loads(event.get("body") or "{}")
-    headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
-
-    s3 = boto3.client("s3")
-    kvs = boto3.client("cloudfront-keyvaluestore")
-    bucket = os.environ["CONTENT_BUCKET"]
-    kvs_arn = os.environ["KVS_ARN"]
-
-    class _Store:
-        def put(self, key, body_, content_type):
-            s3.put_object(Bucket=bucket, Key=key,
-                          Body=body_.encode("utf-8"), ContentType=content_type)
-
-        def remove(self, key):
-            s3.delete_object(Bucket=bucket, Key=key)
-
-    class _Keys:
-        def put(self, key, value):
-            meta = kvs.describe_key_value_store(KvsARN=kvs_arn)
-            kvs.put_key(KvsARN=kvs_arn, Key=key, Value=value, IfMatch=meta["ETag"])
-
-    def identify(authorization: str) -> str | None:
-        from cognito import verify  # 利用者の証明の検証は別に分ける
-        return verify(authorization, os.environ["USER_POOL_ID"],
-                      os.environ["USER_POOL_CLIENT_ID"])
-
-    deps = Deps(
-        store=_Store(),
-        keys=_Keys(),
-        identify=identify,
-        wrapper_template=_load_wrapper(),
-        viewer_domain=os.environ.get("VIEWER_DOMAIN", ""),
-    )
-
-    try:
-        result = publish({**body, "authorization": headers.get("authorization", "")}, deps)
-        return _response(200, result)
-    except PublishError as e:
-        status = 403 if e.code == "NOT_INVITED" else 400
-        return _response(status, {"error": e.code, "message": e.message})
-
-
-def _load_wrapper() -> str:  # pragma: no cover
-    from pathlib import Path
-    return (Path(__file__).parent / "share-wrapper.html").read_text(encoding="utf-8")
-
-
-def _response(status: int, payload: dict) -> dict:  # pragma: no cover
-    return {
-        "statusCode": status,
-        "headers": {"content-type": "application/json; charset=utf-8"},
-        "body": json.dumps(payload, ensure_ascii=False),
     }

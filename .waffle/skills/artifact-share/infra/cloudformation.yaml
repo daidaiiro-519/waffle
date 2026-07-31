@@ -28,7 +28,7 @@ Resources:
   # ── 保管 ───────────────────────────────────────────────
 
   # アーティファクト（p/{artifactId}/）・反応（comments/{artifactId}/）・索引（meta/）を置く。
-  # 外部からの直接アクセスは一切許さず、配信の口と公開の受け口だけが触れる。
+  # 外部からの直接アクセスは一切許さず、配信の口と管理の受け口だけが触れる。
   ContentBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -114,28 +114,31 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${AdminDistribution}"
 
-          # 公開の受け口が書けるのは、アーティファクトと索引の接頭辞だけ。
+          # 管理の受け口が書けるのは、アーティファクト・索引・差し替えの区切りだけ。
           # 実行ロール側でも同じ範囲に絞り、二重にする。
-          - Sid: PublishRoleWriteScoped
+          - Sid: AdminApiWriteScoped
             Effect: Allow
             Principal:
-              AWS: !GetAtt PublishFunctionRole.Arn
+              AWS: !GetAtt AdminApiRole.Arn
             Action: s3:PutObject
             Resource:
               - !Sub "${ContentBucket.Arn}/p/*"
               - !Sub "${ContentBucket.Arn}/meta/*"
+              - !Sub "${ContentBucket.Arn}/comments/*/*-replaced.json"
 
-          # 受け口が反応と記録へ書き込む経路を、資源の側でも明示的に塞ぐ。
-          - Sid: PublishRoleDenyElsewhere
+          # 受け口が閲覧者の反応そのものへ書き込む経路を、資源の側でも塞ぐ。
+          # 区切りの記録だけは許し、それ以外の反応には手を出させない。
+          - Sid: AdminApiDenyElsewhere
             Effect: Deny
             Principal:
-              AWS: !GetAtt PublishFunctionRole.Arn
+              AWS: !GetAtt AdminApiRole.Arn
             Action:
               - s3:PutObject
               - s3:DeleteObject
             NotResource:
               - !Sub "${ContentBucket.Arn}/p/*"
               - !Sub "${ContentBucket.Arn}/meta/*"
+              - !Sub "${ContentBucket.Arn}/comments/*/*-replaced.json"
 
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -151,7 +154,7 @@ Resources:
   # token:{artifactId} / proj:{pid} / pp:{artifactId} を持つ。
   # トークンの記録は "{値}|{期限のエポック秒}|{世代番号}" の形で保存する。
   # 期限切れと世代違いは関門がその場で失効させるため、書き換えを待たずに効く。
-  # 書き手は公開の受け口ひとつに限り、関門は読むだけ。
+  # 書き手は管理の受け口ひとつに限り、関門は読むだけ。
   TokenStore:
     Type: AWS::CloudFront::KeyValueStore
     Properties:
@@ -188,10 +191,10 @@ Resources:
         - ALLOW_REFRESH_TOKEN_AUTH
       PreventUserExistenceErrors: ENABLED
 
-  # ── 公開の受け口 ───────────────────────────────────────
+  # ── 管理の受け口 ───────────────────────────────────────
 
   # 権限は接頭辞と資源の単位まで絞る。反応にも記録にも書けない。削除も持たない。
-  PublishFunctionRole:
+  AdminApiRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -201,7 +204,7 @@ Resources:
             Principal: { Service: lambda.amazonaws.com }
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: publish-scoped
+        - PolicyName: admin-api-scoped
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -215,6 +218,20 @@ Resources:
                 Effect: Allow
                 Action: s3:GetObject
                 Resource: !Sub "arn:aws:s3:::${BucketName}/meta/*"
+              # 索引を並べるためだけの走査。中身の置き場は対象にしない
+              - Sid: ListIndexOnly
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${BucketName}"
+                Condition:
+                  StringLike:
+                    s3:prefix: "meta/*"
+              # 差し替えの区切りは反応の並びに載るため、そこへも書く。
+              # 書けるのは区切りの記録だけで、閲覧者の反応そのものには触れない
+              - Sid: WriteReplacementDivider
+                Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "arn:aws:s3:::${BucketName}/comments/*/*-replaced.json"
               # トークンの保管は、この資源ひとつに限定する
               - Sid: WriteViewKeys
                 Effect: Allow
@@ -229,13 +246,13 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-publish*"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-admin-api*"
 
-  PublishFunction:
+  AdminApiFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-publish"
-      Role: !GetAtt PublishFunctionRole.Arn
+      FunctionName: !Sub "${AWS::StackName}-admin-api"
+      Role: !GetAtt AdminApiRole.Arn
       Runtime: python3.12
       Handler: main.handler
       Timeout: 30
@@ -247,7 +264,7 @@ Resources:
           USER_POOL_ID: !Ref UserPool
           USER_POOL_CLIENT_ID: !Ref UserPoolClient
           VIEWER_DOMAIN: !GetAtt ViewerDistribution.DomainName
-      # 実体は lambda/publish_artifact/main.py。作成後に配置し直す。
+      # 実体は lambda/admin_api/ 配下。作成後に配置し直す。
       # ここに置くのは、置き換え前に誤って使われないための最小の受け口。
       Code:
         ZipFile: |
@@ -256,13 +273,13 @@ Resources:
                   "statusCode": 503,
                   "headers": {"content-type": "application/json"},
                   "body": '{"error":"NOT_DEPLOYED",'
-                          '"message":"lambda/publish_artifact/main.py を配置してください"}',
+                          '"message":"artifactshare update-function を実行してください"}',
               }
 
-  PublishFunctionUrl:
+  AdminApiUrl:
     Type: AWS::Lambda::Url
     Properties:
-      TargetFunctionArn: !GetAtt PublishFunction.Arn
+      TargetFunctionArn: !GetAtt AdminApiFunction.Arn
       AuthType: NONE          # 呼び出し元の確認は関数内で利用者の証明を検証して行う
       Cors:
         AllowOrigins:
@@ -271,10 +288,10 @@ Resources:
         AllowHeaders: [content-type, authorization]
         MaxAge: 300
 
-  PublishFunctionUrlPermission:
+  AdminApiUrlPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref PublishFunction
+      FunctionName: !Ref AdminApiFunction
       Action: lambda:InvokeFunctionUrl
       Principal: "*"
       FunctionUrlAuthType: NONE
@@ -480,12 +497,12 @@ Outputs:
   ViewerTokenGateFunctionName:
     Description: 作成後に infra/cloudfront-function/viewer-token-gate.js を配置する対象
     Value: !Sub "${AWS::StackName}-viewer-token-gate"
-  PublishFunctionName:
-    Description: 作成後に lambda/publish_artifact/main.py を配置する対象
-    Value: !Sub "${AWS::StackName}-publish"
-  PublishFunctionUrl:
+  AdminApiFunctionName:
+    Description: artifactshare update-function が lambda/admin_api/ を配置する対象
+    Value: !Sub "${AWS::StackName}-admin-api"
+  AdminApiUrl:
     Description: アップロード画面が公開を依頼する先
-    Value: !GetAtt PublishFunctionUrl.FunctionUrl
+    Value: !GetAtt AdminApiUrl.FunctionUrl
   UserPoolId:
     Value: !Ref UserPool
   UserPoolClientId:

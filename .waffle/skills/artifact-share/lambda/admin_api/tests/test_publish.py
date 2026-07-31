@@ -1,6 +1,6 @@
 """公開の受け口の振る舞いを、仕様の受け入れシナリオに沿って確かめる。
 
-実行:  python3 -m pytest lambda/publish_artifact/tests/ -v
+実行:  python3 -m pytest lambda/admin_api/tests/ -v
 
 対象の仕様: uc-publish-artifact（受け入れ基準6件・エラー3件・操作保証2件）
 外部への接続は依存として渡す形にしてあるため、この検証では偽の依存を渡す。
@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import main  # noqa: E402
+import publish as main  # noqa: E402
 
 
 # ── 偽の依存 ────────────────────────────────────────────
