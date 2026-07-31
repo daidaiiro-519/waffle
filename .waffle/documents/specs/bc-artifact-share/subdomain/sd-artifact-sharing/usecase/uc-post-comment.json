@@ -1,0 +1,253 @@
+{
+  "documentId": "uc-post-comment",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "閲覧者が名乗って反応を残す：uc-post-comment"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "合鍵を持つ閲覧者が、表示物に反応を残す操作。名乗るだけでよく、あらかじめ登録されている必要はない。",
+        "ただの意見か、この方向でよいか、直してほしいか、という意思表示を添えられる。他の反応への返信としても残せる。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "PostComment"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "閲覧者",
+      "intent": "見た表示物について、その場で意見や判断を残す"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、見てもらった相手の反応を別の手立てで集めることになり、どの指摘がどの表示物に対するものかが散らばる。",
+        "登録を求めると、その手間だけで反応を返さない人が出る。名乗るだけで残せることが、反応が実際に集まるかどうかを分ける。",
+        "意思表示を添えられることで、単なる感想の列ではなく、合意がどこまで進んだかを後から読み取れる記録になる。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象の表示物が開ける状態にあること",
+        "閲覧者が、その表示物を開ける合鍵を持っていること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "閲覧者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "閲覧者",
+          "to": "反応",
+          "message": "post（名乗り・本文・意思表示・返信先）",
+          "kind": "command"
+        },
+        {
+          "from": "反応",
+          "to": "",
+          "message": "本文を文字として保つ",
+          "kind": "self"
+        },
+        {
+          "from": "反応",
+          "to": "",
+          "message": "CommentPosted",
+          "kind": "event"
+        },
+        {
+          "from": "反応",
+          "to": "閲覧者",
+          "message": "投稿完了",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "反応が1件残っている",
+        "その反応が対象の表示物に結び付いている",
+        "本文が文字としてそのまま保たれている",
+        "CommentPosted が発行されている"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "閲覧者が名乗りと本文を与えたとき、反応を残すこと",
+        "閲覧者があらかじめ登録されていなくても、反応を残せること",
+        "意思表示が与えられないとき、ただの意見として扱うこと",
+        "本文を示すとき、常に文字として示し、書かれた内容を組み立ての指示として解釈しないこと",
+        "同じ表示物に付いた反応を返信先として指せること",
+        "別の表示物に付いた反応を返信先として指したとき、拒むこと",
+        "停止している表示物へ反応を残そうとしたとき、拒むこと",
+        "反応が並びに現れるまで時間がかかりうることを閲覧者に伝え、即座に現れるとは伝えないこと"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "ARTIFACT_NOT_VIEWABLE",
+          "condition": [
+            "対象の表示物が停止している",
+            "合鍵を持っていない"
+          ]
+        },
+        {
+          "code": "AUTHOR_REQUIRED",
+          "condition": [
+            "名乗りが与えられていない"
+          ]
+        },
+        {
+          "code": "BODY_REQUIRED",
+          "condition": [
+            "本文が空である"
+          ]
+        },
+        {
+          "code": "INVALID_PARENT",
+          "condition": [
+            "返信先として指された反応が、別の表示物に付いている"
+          ]
+        },
+        {
+          "code": "BODY_TOO_LARGE",
+          "condition": [
+            "本文が受け入れられる大きさを超えている"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "表示物Aが公開されており、閲覧者はその合鍵を持っている。",
+      "scenarios": [
+        {
+          "name": "名乗るだけで反応を残せる",
+          "category": "正常系",
+          "viewpoint": "事前条件: 登録なしで残せることを確かめる",
+          "gherkin": "Given 閲覧者はあらかじめ登録されていない\nWhen 名乗りと本文を与えて反応を残す\nThen 反応が1件残る\nAnd その反応は表示物Aに結び付いている",
+          "covers": "閲覧者があらかじめ登録されていなくても、反応を残せること"
+        },
+        {
+          "name": "意思表示を添えられる",
+          "category": "正常系",
+          "viewpoint": "計算整合: 合意の状態が記録として残ることを確かめる",
+          "gherkin": "When この方向でよいという意思表示を添えて反応を残す\nThen その意思表示とともに反応が残る\nAnd 後から読んだ人が、合意が示されたことを読み取れる",
+          "covers": "閲覧者が名乗りと本文を与えたとき、反応を残すこと"
+        },
+        {
+          "name": "意思表示が無ければただの意見として扱う",
+          "category": "境界値",
+          "viewpoint": "事前条件: 既定の解釈が定まっていることを確かめる",
+          "gherkin": "When 意思表示を添えずに反応を残す\nThen ただの意見として残る",
+          "covers": "意思表示が与えられないとき、ただの意見として扱うこと"
+        },
+        {
+          "name": "本文は文字として示される",
+          "category": "異常系",
+          "viewpoint": "事前条件: 投稿された本文が指示として解釈されないことを確かめる",
+          "gherkin": "When 組み立ての指示に見える文字列を本文に含めて反応を残す\nThen 他の閲覧者にはその文字列がそのまま文字として見える\nAnd 指示として実行されることはない",
+          "covers": "本文を示すとき、常に文字として示し、書かれた内容を組み立ての指示として解釈しないこと"
+        },
+        {
+          "name": "同じ表示物の反応へ返信できる",
+          "category": "正常系",
+          "viewpoint": "計算整合: やり取りの筋道が成立することを確かめる",
+          "gherkin": "Given 表示物Aに反応が1件ある\nWhen その反応を返信先に指して新しい反応を残す\nThen 返信として結び付いて残る",
+          "covers": "同じ表示物に付いた反応を返信先として指せること"
+        },
+        {
+          "name": "別の表示物の反応へは返信できない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 筋道が1つの表示物の中で閉じることを確かめる",
+          "gherkin": "Given 表示物Bに反応が1件ある\nWhen 表示物Aへの反応として、表示物Bの反応を返信先に指す\nThen INVALID_PARENT として拒まれる",
+          "covers": "別の表示物に付いた反応を返信先として指したとき、拒むこと"
+        },
+        {
+          "name": "停止している表示物には残せない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 停止が投稿も止めることを確かめる",
+          "gherkin": "Given 表示物Aが停止している\nWhen 反応を残そうとする\nThen ARTIFACT_NOT_VIEWABLE として拒まれる",
+          "covers": "停止している表示物へ反応を残そうとしたとき、拒むこと"
+        },
+        {
+          "name": "大きすぎる本文は拒む",
+          "category": "境界値",
+          "viewpoint": "事前条件: 受け入れられる大きさに上限があることを確かめる",
+          "gherkin": "When 受け入れられる大きさを超える本文で反応を残そうとする\nThen BODY_TOO_LARGE として拒まれる\nAnd 拒まれた理由が閲覧者に伝わる",
+          "covers": "閲覧者が名乗りと本文を与えたとき、反応を残すこと"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "残された反応が、後からどの操作によっても書き換えられないこと",
+        "同時に複数の閲覧者が反応を残したとき、いずれの反応も失われないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "残した反応は書き換えられない",
+          "category": "異常系",
+          "viewpoint": "一貫性: 記録としての不変性を確かめる",
+          "gherkin": "Given 閲覧者が反応を1件残している\nWhen 同じ符丁で別の内容を送る\nThen 元の反応は変わらない",
+          "covers": "残された反応が、後からどの操作によっても書き換えられないこと"
+        },
+        {
+          "name": "同時に残しても失われない",
+          "category": "境界値",
+          "viewpoint": "一貫性: 反応どうしが互いを打ち消さないことを確かめる",
+          "gherkin": "Given 2人の閲覧者が同じ表示物を見ている\nWhen 2人がほぼ同時に反応を残す\nThen 2件とも残っている",
+          "covers": "同時に複数の閲覧者が反応を残したとき、いずれの反応も失われないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-comment"
+}

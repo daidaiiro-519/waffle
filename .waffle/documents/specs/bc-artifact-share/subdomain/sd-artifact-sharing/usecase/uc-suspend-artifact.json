@@ -1,0 +1,202 @@
+{
+  "documentId": "uc-suspend-artifact",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "見せるのを止めるが、中身も反応も残す：uc-suspend-artifact"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "公開している表示物を開けない状態にする操作。中身も反応も消さず、あとから再び公開できる。",
+        "止める前に、中身と反応を手元へ取り出しておくかどうかを尋ねる。既定では取り出す。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "SuspendArtifact"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "見せるのを止めるが、記録は失わずに残しておく"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "見せる期間が終わったものを開いたままにしておくと、合鍵が漏れたときの影響が延々と残る。止める手立てが要る。",
+        "止めることと消すことを分けないと、止めるたびに記録が失われる。指摘のやり取りは後から読み返す価値があるため、消さずに止められる必要がある。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象の表示物が公開されていること",
+        "操作する者が、あらかじめ招かれた投稿者であること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "共有された表示物",
+          "message": "suspend",
+          "kind": "command"
+        },
+        {
+          "from": "共有された表示物",
+          "to": "",
+          "message": "開けない状態にする",
+          "kind": "self"
+        },
+        {
+          "from": "共有された表示物",
+          "to": "",
+          "message": "ArtifactSuspended",
+          "kind": "event"
+        },
+        {
+          "from": "共有された表示物",
+          "to": "投稿者",
+          "message": "停止完了",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "表示物が開けない状態になっている",
+        "中身が消えずに残っている",
+        "それまでに集まった反応が消えずに残っている",
+        "ArtifactSuspended が発行されている"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "投稿者が停止を求めたとき、どの合鍵でも開けない状態にすること",
+        "停止したとき、中身と反応を消さないこと",
+        "停止したとき、まとめて見せる単位の合鍵でも開けなくすること",
+        "停止する前に、中身と反応を手元へ取り出すかどうかを尋ね、既定では取り出すこと",
+        "止めても記録が残り、あとから再び公開できることを投稿者に伝えること",
+        "停止が行き渡るまで時間がかかりうることを投稿者に伝え、即座に止まるとは伝えないこと"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "NOT_PUBLISHED",
+          "condition": [
+            "対象の表示物が既に停止している"
+          ]
+        },
+        {
+          "code": "NOT_INVITED",
+          "condition": [
+            "操作する者が招かれた投稿者でない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "表示物Aが公開されており、反応が集まっている。操作する者は招かれた投稿者である。",
+      "scenarios": [
+        {
+          "name": "止めると開けなくなる",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 停止が閲覧を実際に止めることを確かめる",
+          "gherkin": "When 表示物Aの公開を止める\nThen 表示物Aの合鍵で開けない",
+          "covers": "投稿者が停止を求めたとき、どの合鍵でも開けない状態にすること"
+        },
+        {
+          "name": "まとめの合鍵でも開けない",
+          "category": "境界値",
+          "viewpoint": "事前条件: 停止の意図が、まとめて見せる経路から迂回されないことを確かめる",
+          "gherkin": "Given 表示物Aがまとめて見せる単位Pに入っている\nWhen 表示物Aの公開を止める\nThen Pの合鍵でも表示物Aを開けない",
+          "covers": "停止したとき、まとめて見せる単位の合鍵でも開けなくすること"
+        },
+        {
+          "name": "中身も反応も残る",
+          "category": "正常系",
+          "viewpoint": "計算整合: 止めることが消すことでないと確かめる",
+          "gherkin": "When 表示物Aの公開を止める\nThen 中身は残っている\nAnd 反応もすべて残っている\nAnd 手元へ取り出せる",
+          "covers": "停止したとき、中身と反応を消さないこと"
+        },
+        {
+          "name": "止める前に取り出すかを尋ねる",
+          "category": "正常系",
+          "viewpoint": "事前条件: 既定が安全側に倒れていることを確かめる",
+          "gherkin": "When 投稿者が停止を求める\nThen 手元へ取り出すかどうかを尋ねられる\nAnd 何も選ばなければ取り出したうえで停止する",
+          "covers": "停止する前に、中身と反応を手元へ取り出すかどうかを尋ね、既定では取り出すこと"
+        },
+        {
+          "name": "既に止まっているものは止められない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 状態の前提を確かめる",
+          "gherkin": "Given 表示物Aが既に停止している\nWhen もう一度停止しようとする\nThen NOT_PUBLISHED として拒まれる",
+          "covers": "投稿者が停止を求めたとき、どの合鍵でも開けない状態にすること"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "停止したとき、中身と反応がいずれも取り出せる状態のまま保たれること"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "止めた後も取り出せる",
+          "category": "正常系",
+          "viewpoint": "一貫性: 停止後もデータが失われないことを確かめる",
+          "gherkin": "Given 表示物Aが停止している\nWhen 中身と反応を手元へ取り出す\nThen 停止前と同じものが得られる",
+          "covers": "停止したとき、中身と反応がいずれも取り出せる状態のまま保たれること"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-shared-artifact"
+}

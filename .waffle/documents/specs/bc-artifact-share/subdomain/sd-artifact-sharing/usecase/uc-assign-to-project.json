@@ -1,0 +1,222 @@
+{
+  "documentId": "uc-assign-to-project",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "表示物をまとめて見せる単位へ入れる・外す：uc-assign-to-project"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "表示物を、まとめて見せる単位へ加えたり外したりする操作。加えるとその単位の合鍵でも開けるようになる。",
+        "所属は人が明示的に選んだときにだけ成立する。表示物の中に書かれた値によって決まることはない。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "AssignArtifactToProject"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "複数の表示物を1つの合鍵でまとめて見てもらえるようにする"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "1件ずつ合鍵を渡すと、渡す側も受け取る側も管理しきれない。関連するものをまとめて1つの合鍵で渡せる必要がある。",
+        "所属が自動で決まる仕組みにすると、表示物の中に書かれた値を書き換えるだけで他人のまとめに紛れ込める。人の操作を必須にすることで、見せる範囲を渡す側が把握し続けられる。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象のまとめて見せる単位が存在し、開ける状態にあること",
+        "対象の表示物が存在すること",
+        "操作する者が、あらかじめ招かれた投稿者であること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "まとめて見せる単位",
+          "message": "addArtifact（表示物の符丁）",
+          "kind": "command"
+        },
+        {
+          "from": "まとめて見せる単位",
+          "to": "",
+          "message": "所属に加える",
+          "kind": "self"
+        },
+        {
+          "from": "まとめて見せる単位",
+          "to": "",
+          "message": "ArtifactAssignedToProject",
+          "kind": "event"
+        },
+        {
+          "from": "まとめて見せる単位",
+          "to": "投稿者",
+          "message": "所属完了",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "表示物がまとめて見せる単位に入っている",
+        "その単位の合鍵で、その表示物を開ける",
+        "表示物自身の合鍵は変わっていない",
+        "ArtifactAssignedToProject が発行されている"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "投稿者が表示物を単位へ加えたとき、その単位の合鍵でその表示物を開けるようにすること",
+        "表示物を加えたとき、その表示物自身の合鍵を変えないこと",
+        "表示物を外したとき、その表示物自身は失わず、それ自身の合鍵で開ける状態を保つこと",
+        "1つの表示物が複数の単位に同時に入れること",
+        "表示物の中に書かれた値によって所属が決まることは無いこと",
+        "停止している表示物を加えたとき、その単位の合鍵でも開けないままにすること"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "PROJECT_NOT_FOUND",
+          "condition": [
+            "対象のまとめて見せる単位が存在しない"
+          ]
+        },
+        {
+          "code": "ARTIFACT_NOT_FOUND",
+          "condition": [
+            "対象の表示物が存在しない"
+          ]
+        },
+        {
+          "code": "PROJECT_SUSPENDED",
+          "condition": [
+            "対象のまとめて見せる単位が停止している"
+          ]
+        },
+        {
+          "code": "NOT_INVITED",
+          "condition": [
+            "操作する者が招かれた投稿者でない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "まとめて見せる単位Pが開ける状態にあり、表示物Aが公開されている。操作する者は招かれた投稿者である。",
+      "scenarios": [
+        {
+          "name": "加えるとまとめの合鍵で開ける",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 所属が閲覧の範囲を広げることを確かめる",
+          "gherkin": "When 表示物AをPへ加える\nThen Pの合鍵で表示物Aを開ける\nAnd 表示物A自身の合鍵も引き続き使える",
+          "covers": "投稿者が表示物を単位へ加えたとき、その単位の合鍵でその表示物を開けるようにすること"
+        },
+        {
+          "name": "外しても表示物は生きている",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 外すことが消すことでないと確かめる",
+          "gherkin": "Given 表示物AがPに入っている\nWhen 表示物AをPから外す\nThen Pの合鍵では表示物Aを開けない\nAnd 表示物A自身の合鍵では開ける",
+          "covers": "表示物を外したとき、その表示物自身は失わず、それ自身の合鍵で開ける状態を保つこと"
+        },
+        {
+          "name": "複数の単位に同時に入れる",
+          "category": "正常系",
+          "viewpoint": "計算整合: 所属が排他でないことを確かめる",
+          "gherkin": "Given まとめて見せる単位Qも存在する\nWhen 表示物AをPとQの両方へ加える\nThen Pの合鍵でも、Qの合鍵でも表示物Aを開ける",
+          "covers": "1つの表示物が複数の単位に同時に入れること"
+        },
+        {
+          "name": "中身に書いた値では所属できない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 所属が人の操作でのみ成立することを確かめる",
+          "gherkin": "Given 表示物BはPに入っていない\nWhen 表示物Bの中身にPを指す分類の目印を書いて差し替える\nThen 表示物BはPに入らない\nAnd Pの合鍵で表示物Bを開けない",
+          "covers": "表示物の中に書かれた値によって所属が決まることは無いこと"
+        },
+        {
+          "name": "停止している表示物は加えても開けない",
+          "category": "境界値",
+          "viewpoint": "事前条件: 停止の意図が所属によって迂回されないことを確かめる",
+          "gherkin": "Given 表示物Cが停止している\nWhen 表示物CをPへ加える\nThen 所属自体は成立する\nAnd Pの合鍵でも表示物Cは開けない",
+          "covers": "停止している表示物を加えたとき、その単位の合鍵でも開けないままにすること"
+        },
+        {
+          "name": "停止している単位へは加えられない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 単位の状態の前提を確かめる",
+          "gherkin": "Given まとめて見せる単位Pが停止している\nWhen 表示物AをPへ加えようとする\nThen PROJECT_SUSPENDED として拒まれる",
+          "covers": "投稿者が表示物を単位へ加えたとき、その単位の合鍵でその表示物を開けるようにすること"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "同じ表示物を同じ単位へ繰り返し加えたとき、二重に入ることなく、一度加えた状態と同じ結果になること"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "重ねて加えても一度分と同じ",
+          "category": "境界値",
+          "viewpoint": "べき等性: 繰り返しの操作が結果を変えないことを確かめる",
+          "gherkin": "Given 表示物AがPに入っている\nWhen 表示物AをPへもう一度加える\nThen 表示物Aは1件としてだけ入っている\nAnd 拒まれることもない",
+          "covers": "同じ表示物を同じ単位へ繰り返し加えたとき、二重に入ることなく、一度加えた状態と同じ結果になること"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-project"
+}

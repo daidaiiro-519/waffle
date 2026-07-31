@@ -1,0 +1,229 @@
+{
+  "documentId": "uc-publish-artifact",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "手元の表示物を公開して居場所と合鍵を受け取る：uc-publish-artifact"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "招かれた投稿者が手元の表示物を渡し、それを見てもらうための居場所と合鍵を受け取る操作。",
+        "表示物に識別のための情報が添えられていれば取り出して控え、添えられていなければ題名だけを人に尋ねる。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "PublishArtifact"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "手元の表示物を、渡した相手に見てもらえる状態にする"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、見せたい相手ごとに表示物を送りつけるしかなく、後から見せる相手を絞り直すことも、反応を1か所に集めることもできない。",
+        "誰でも公開できる状態を許すと、居場所と合鍵の発行が濫用され、費用の負担も、置かれた内容の責任も、環境を用意した者が負うことになる。招かれた者に限ることでこれを防ぐ。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "操作する者が、あらかじめ招かれた投稿者であること",
+        "渡された表示物が1つの完結した表示物であること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "共有された表示物",
+          "message": "publish（表示物・題名）",
+          "kind": "command"
+        },
+        {
+          "from": "共有された表示物",
+          "to": "",
+          "message": "添えられた識別情報を取り出す",
+          "kind": "self"
+        },
+        {
+          "from": "共有された表示物",
+          "to": "",
+          "message": "符丁と合鍵を発行する",
+          "kind": "self"
+        },
+        {
+          "from": "共有された表示物",
+          "to": "",
+          "message": "ArtifactPublished",
+          "kind": "event"
+        },
+        {
+          "from": "共有された表示物",
+          "to": "投稿者",
+          "message": "居場所と合鍵",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "共有された表示物が公開されている状態になっている",
+        "その表示物を指す符丁と、開くための合鍵が発行されている",
+        "渡された表示物が、書き換えられずそのまま保持されている",
+        "ArtifactPublished が発行されている"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "投稿者が表示物を渡したとき、居場所と合鍵を返すこと",
+        "表示物に識別のための情報が添えられているとき、題名・要約・種別・分類の目印を取り出して控え、投稿者に尋ねないこと",
+        "表示物に識別のための情報が添えられていないとき、題名だけを投稿者に尋ねること",
+        "合鍵を返すとき、それが一度しか示されないことを投稿者に伝えること",
+        "招かれていない者が公開しようとしたとき、公開せず拒むこと",
+        "表示物が外部の場所にあるものを参照しているとき、その件数を投稿者に伝えたうえで公開すること"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "NOT_INVITED",
+          "condition": [
+            "操作する者が招かれた投稿者でない"
+          ]
+        },
+        {
+          "code": "EMPTY_CONTENT",
+          "condition": [
+            "渡された表示物が空である"
+          ]
+        },
+        {
+          "code": "NAME_REQUIRED",
+          "condition": [
+            "識別のための情報が添えられておらず、題名も与えられていない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "操作する者は招かれた投稿者である。",
+      "scenarios": [
+        {
+          "name": "識別情報が添えられた表示物を公開する",
+          "category": "正常系",
+          "viewpoint": "計算整合: 添えられた情報を取り出すことで、投稿者への問いかけが不要になることを確かめる",
+          "gherkin": "Given 表示物に題名・要約・種別・分類の目印が添えられている\nWhen 投稿者がその表示物を渡して公開する\nThen 居場所と合鍵が返る\nAnd 添えられていた情報が控えられている\nAnd 投稿者は何も尋ねられない",
+          "covers": "表示物に識別のための情報が添えられているとき、題名・要約・種別・分類の目印を取り出して控え、投稿者に尋ねないこと"
+        },
+        {
+          "name": "識別情報が無い表示物には題名だけを尋ねる",
+          "category": "正常系",
+          "viewpoint": "事前条件: 尋ねる項目が題名に限られることを確かめる",
+          "gherkin": "Given 表示物に識別のための情報が添えられていない\nWhen 投稿者がその表示物を渡して公開しようとする\nThen 題名を尋ねられる\nAnd 題名を与えると居場所と合鍵が返る",
+          "covers": "表示物に識別のための情報が添えられていないとき、題名だけを投稿者に尋ねること"
+        },
+        {
+          "name": "渡した表示物がそのまま保たれる",
+          "category": "正常系",
+          "viewpoint": "計算整合: 公開が中身を書き換えないことを確かめる",
+          "gherkin": "Given 投稿者が表示物を渡している\nWhen 公開する\nThen 公開された中身は、渡した表示物と完全に一致する",
+          "covers": "投稿者が表示物を渡したとき、居場所と合鍵を返すこと"
+        },
+        {
+          "name": "招かれていない者は公開できない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 公開できる者が招かれた者に限られることを確かめる",
+          "gherkin": "Given 操作する者が招かれた投稿者でない\nWhen 表示物を渡して公開しようとする\nThen NOT_INVITED として拒まれる\nAnd 居場所も合鍵も発行されない",
+          "covers": "招かれていない者が公開しようとしたとき、公開せず拒むこと"
+        },
+        {
+          "name": "外部の場所を参照していれば件数を伝える",
+          "category": "境界値",
+          "viewpoint": "事前条件: 見た目が変わりうることを公開前に伝えることを確かめる",
+          "gherkin": "Given 表示物が外部の場所にあるものを2件参照している\nWhen 投稿者がその表示物を渡して公開する\nThen 参照が2件あることが投稿者に伝えられる\nAnd 公開そのものは行われる",
+          "covers": "表示物が外部の場所にあるものを参照しているとき、その件数を投稿者に伝えたうえで公開すること"
+        },
+        {
+          "name": "空の表示物は公開できない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 中身のないものが公開されないことを確かめる",
+          "gherkin": "Given 渡された表示物が空である\nWhen 公開しようとする\nThen EMPTY_CONTENT として拒まれる",
+          "covers": "投稿者が表示物を渡したとき、居場所と合鍵を返すこと"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "合鍵を返すとき、その合鍵はこの一度しか示されず、以後どの操作でも取り出せないこと",
+        "公開に失敗したとき、居場所も合鍵も一切残らないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "合鍵は後から取り出せない",
+          "category": "境界値",
+          "viewpoint": "一貫性: 合鍵が一度しか示されないことを確かめる",
+          "gherkin": "Given 表示物が公開され、合鍵が示されている\nWhen 一覧や記録から合鍵を取り出そうとする\nThen 合鍵は得られない\nAnd 新しく発行する以外に手立てが無い",
+          "covers": "合鍵を返すとき、その合鍵はこの一度しか示されず、以後どの操作でも取り出せないこと"
+        },
+        {
+          "name": "失敗したら何も残らない",
+          "category": "異常系",
+          "viewpoint": "一貫性: 中途半端な状態が残らないことを確かめる",
+          "gherkin": "Given 公開の途中で拒まれる条件が成立している\nWhen 公開しようとする\nThen 居場所は発行されない\nAnd 合鍵も発行されない",
+          "covers": "公開に失敗したとき、居場所も合鍵も一切残らないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-shared-artifact"
+}
