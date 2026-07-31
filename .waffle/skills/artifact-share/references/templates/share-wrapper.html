@@ -1,0 +1,555 @@
+<!doctype html>
+<!--
+  閲覧画面の雛形（artifact-share）
+
+  公開時に配置され、アップロードされた表示物を隔離された枠で読み込み、
+  その外側にコメント欄を持つ。表示物そのものは一切書き換えない。
+
+  プレースフォルダー:
+  | {{スラッグ}} | 公開時に発行される符丁（配置処理が置換する） |
+
+  設計上の前提（変更しないこと）:
+  - 表示物は sandbox 付きの枠に入れ、allow-same-origin を与えない。
+    与えると、持ち込まれた命令が合鍵や反応の経路と同じ出所で動く。
+  - 外側への遷移は allow-top-navigation-by-user-activation で許す。
+    allow-top-navigation（利用者の操作を条件としない方）を選んではならない。
+    選ぶと、表示物が操作なしに閲覧者を任意の場所へ飛ばせる。
+    逆に一切許さないと、表示物どうしのリンクが死ぬ。
+  - 反応の書き込みには If-None-Match: * を必ず付ける。既存の記録を
+    上書きしないことを、書き込む側の条件として宣言する。
+    （付いていない書き込みは配信側の関門が拒否する）
+  - 反応の本文と名乗りは textContent でのみ描画する（innerHTML を使わない）。
+  - 位置を指すURL（#anchor）は、この画面が枠へ引き継ぐ。中身の義務ではない。
+  - 合鍵の照合は配信側の関門が担う。この画面には含めない。
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{表示名}}</title>
+<style>
+  :root {
+    --ink: #1b2027; --ink-soft: #5b6472; --ink-faint: #68737e;
+    --paper: #f6f5f2; --card: #ffffff; --line: #dcd8d0; --line-soft: #e9e5de;
+    --accent: #2f5d63; --accent-soft: #e3edee;
+    --approve: #1e7a50; --approve-bg: #e2f0e8;
+    --revise: #9a6300; --revise-bg: #f6eedd;
+    --live: #1e9e5a;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"] {
+    --ink: #e6e4df; --ink-soft: #a7aebb; --ink-faint: #838b98;
+    --paper: #181a1d; --card: #212327; --line: #33363b; --line-soft: #2b2e33;
+    --accent: #7fb3ba; --accent-soft: #1e2c2e;
+    --approve: #7fc9a4; --approve-bg: #1c2b23;
+    --revise: #c9a05e; --revise-bg: #2b2419;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e6e4df; --ink-soft: #a7aebb; --ink-faint: #838b98;
+      --paper: #181a1d; --card: #212327; --line: #33363b; --line-soft: #2b2e33;
+      --accent: #7fb3ba; --accent-soft: #1e2c2e;
+      --approve: #7fc9a4; --approve-bg: #1c2b23;
+      --revise: #c9a05e; --revise-bg: #2b2419;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); line-height: 1.7;
+    display: grid; grid-template-columns: minmax(0, 1fr) 330px; min-height: 100vh;
+    transition: grid-template-columns .18s ease;
+  }
+  body.collapsed { grid-template-columns: minmax(0, 1fr) 42px; }
+
+  /* 戻る導線。まとめて見せる単位から来た閲覧者にだけ出す */
+  a.backbar {
+    grid-column: 1 / -1; display: none; align-items: center; gap: .4rem;
+    text-decoration: none; font-size: .82rem; color: #fff; background: #1a2126;
+    padding: .5rem 1rem; position: sticky; top: 0; z-index: 20;
+  }
+  a.backbar:hover { background: #2c353d; }
+  a.backbar.show { display: flex; }
+
+  /* 表示物を入れる枠。中身には一切手を入れない */
+  .stage { min-width: 0; display: flex; }
+  iframe.content {
+    flex: 1; width: 100%; height: 100%; border: none; background: var(--card);
+  }
+
+  aside.cm {
+    border-left: 1px solid var(--line); background: var(--card);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh; overflow: hidden; font-size: .9rem;
+  }
+  aside.cm header {
+    padding: .75rem 1rem; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: .4rem; font-weight: 600; font-size: .85rem;
+  }
+  body.collapsed aside.cm header { padding: .75rem 0; justify-content: center; }
+  body.collapsed .clabel, body.collapsed .live,
+  body.collapsed .list, body.collapsed form { display: none; }
+  .live { font-size: .66rem; color: var(--live); font-family: var(--mono); font-weight: 400; }
+  .live::before { content: "●"; margin-right: 3px; }
+  .ctoggle {
+    margin-left: auto; background: none; border: 1px solid var(--line); border-radius: 4px;
+    width: 22px; height: 22px; padding: 0; font-size: .7rem; color: var(--ink-faint);
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  }
+  body.collapsed .ctoggle { margin-left: 0; }
+  .ctoggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  .list {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: .85rem 1rem;
+    display: flex; flex-direction: column; gap: .9rem;
+  }
+  .item .who { font-weight: 600; font-size: .82rem; }
+  .item .when { color: var(--ink-faint); font-size: .72rem; margin-left: .35rem; }
+  .item .body { margin-top: .15rem; font-size: .82rem; white-space: pre-wrap; }
+  .item.reply { margin-left: 1.1rem; padding-left: .6rem; border-left: 2px solid var(--line); }
+  .item.fresh { animation: fresh .6s ease; }
+  @keyframes fresh { from { background: var(--accent-soft); border-radius: 6px; } to { background: transparent; } }
+  .dec { font-size: .6rem; font-weight: 700; padding: .06rem .35rem; border-radius: 5px; margin-left: .3rem; }
+  .dec.approve { background: var(--approve-bg); color: var(--approve); }
+  .dec.revise { background: var(--revise-bg); color: var(--revise); }
+  .replybtn {
+    background: none; border: none; padding: 0; font: inherit; font-size: .72rem;
+    color: var(--accent); cursor: pointer; margin-top: .2rem;
+  }
+
+  /* 差し替えの区切り。これより前の指摘は差し替え前のものだと読み取れる */
+  .divider {
+    display: flex; align-items: center; gap: .6rem;
+    font-family: var(--mono); font-size: .66rem; color: var(--ink-faint);
+    margin: .2rem 0;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--line);
+  }
+
+  .empty { color: var(--ink-faint); font-size: .8rem; }
+
+  aside.cm form {
+    border-top: 1px solid var(--line); padding: .8rem 1rem;
+    display: flex; flex-direction: column; gap: .5rem;
+  }
+  .idrow { display: flex; align-items: center; gap: .35rem; font-size: .76rem; color: var(--ink-faint); flex-wrap: wrap; }
+  .idrow .as { font-weight: 600; color: var(--ink); }
+  .idrow button { background: none; border: none; padding: 0; font: inherit; font-size: .72rem; color: var(--accent); cursor: pointer; }
+  .replyctx {
+    display: none; align-items: center; gap: .4rem; font-size: .74rem; color: var(--ink-faint);
+    background: var(--paper); border: 1px solid var(--line-soft); border-radius: 6px; padding: .3rem .5rem;
+  }
+  .replyctx.on { display: flex; }
+  .replyctx .x { margin-left: auto; background: none; border: none; color: var(--ink-faint); cursor: pointer; font: inherit; }
+  .seg { display: flex; gap: .3rem; }
+  .seg label {
+    flex: 1; display: flex; align-items: center; justify-content: center; font-size: .7rem;
+    border: 1px solid var(--line); border-radius: 6px; padding: .3rem .2rem; cursor: pointer;
+    color: var(--ink-soft); text-align: center;
+  }
+  .seg input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .seg label:has(input:checked) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  aside.cm input[type="text"], aside.cm textarea {
+    font: inherit; font-size: .82rem; padding: .45rem .6rem; border: 1px solid var(--line);
+    border-radius: 5px; background: var(--paper); color: var(--ink); width: 100%;
+  }
+  aside.cm textarea { resize: none; height: 4rem; }
+  aside.cm input:focus-visible, aside.cm textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .send {
+    align-self: flex-end; font: inherit; font-size: .78rem; font-weight: 600; padding: .36rem 1rem;
+    border: none; border-radius: 5px; background: var(--accent); color: #fff; cursor: pointer;
+  }
+  .send:disabled { opacity: .5; cursor: default; }
+  .hint { font-size: .68rem; color: var(--ink-faint); }
+  .error { color: #b3261e; font-size: .76rem; }
+  :root[data-theme="dark"] .error { color: #e79b91; }
+
+  /* 狭幅で畳んだときに開く手立てが消えないよう、枠の外に再開ボタンを常設する */
+  button.reopen {
+    display: none; position: fixed; right: 1rem; bottom: 1rem; z-index: 30;
+    width: 52px; height: 52px; border-radius: 50%; border: none;
+    background: #1a2126; color: #fff; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.3);
+  }
+  button.reopen svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  @media (max-width: 820px) {
+    body { grid-template-columns: 1fr; }
+    aside.cm { position: static; height: auto; max-height: 66vh; border-left: none; border-top: 1px solid var(--line); }
+    .stage { min-height: 60vh; }
+    body.collapsed { grid-template-columns: 1fr; }
+    body.collapsed aside.cm { display: none; }
+    body.collapsed button.reopen { display: flex; }
+  }
+  @media (prefers-reduced-motion: reduce) { body { transition: none; } .item.fresh { animation: none; } }
+</style>
+</head>
+<body>
+
+<a class="backbar" id="backbar" href="/proj/">← まとめに戻る</a>
+
+<div class="stage">
+  <!--
+    allow-same-origin は与えない（合鍵と反応への到達を構造的に塞ぐ）。
+    外側への遷移は利用者の操作を条件とする方だけを許す。
+  -->
+  <iframe class="content" id="content"
+          sandbox="allow-scripts allow-top-navigation-by-user-activation"
+          title="{{表示名}}"></iframe>
+</div>
+
+<button type="button" class="reopen" id="reopen" aria-label="コメント欄を開く" title="コメント欄を開く">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>
+</button>
+
+<aside class="cm">
+  <header>
+    <span class="clabel">コメント <span id="count"></span></span>
+    <span class="live" id="live" title="数秒ごとに同期">同期</span>
+    <button type="button" class="ctoggle" id="toggle" aria-label="コメント欄を閉じる" title="コメント欄を閉じる">▸</button>
+  </header>
+
+  <div class="list" id="list">
+    <p class="empty" id="empty" hidden>まだコメントはありません。</p>
+  </div>
+
+  <form id="form">
+    <div class="idrow" id="idrow"></div>
+    <div class="replyctx" id="replyctx">
+      <span id="replyto"></span>
+      <button type="button" class="x" id="cancelreply">返信をやめる ✕</button>
+    </div>
+    <div id="namewrap"><input id="author" type="text" placeholder="お名前（初回のみ）" maxlength="40"></div>
+    <div class="seg" role="radiogroup" aria-label="判定">
+      <label><input type="radio" name="dec" value="comment" checked>コメント</label>
+      <label><input type="radio" name="dec" value="approve">この方向でOK</label>
+      <label><input type="radio" name="dec" value="revise">修正希望</label>
+    </div>
+    <textarea id="body" placeholder="コメントを入力" required maxlength="2000"></textarea>
+    <button class="send" id="submit" type="submit">送信</button>
+    <span class="hint">アカウント登録は不要です</span>
+    <span class="error" id="error" hidden></span>
+  </form>
+</aside>
+
+<script>
+(function () {
+  'use strict';
+
+  var SLUG = '{{スラッグ}}';
+  var NAME_KEY = 'as_reviewer_name';
+  var $ = function (id) { return document.getElementById(id); };
+
+  var loaded = {};      // key -> 記録
+  var order = [];       // 読み込み済みのキーを並び順に保つ
+  var replyTarget = null;
+
+  /* ── 表示物の読み込み ─────────────────────────────
+     位置を指すURLは、この画面が枠へ引き継ぐ。中身に対応する位置が
+     無ければ先頭から表示されるだけで、中身への要求は増えない。      */
+  (function loadContent() {
+    var hash = '';
+    try { hash = location.hash || ''; } catch (e) { hash = ''; }
+    $('content').src = 'content.html' + hash;
+  })();
+
+  /* ── 名乗り ─────────────────────────────────── */
+  function savedName() {
+    try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; }
+  }
+  function refreshId() {
+    var name = savedName();
+    var row = $('idrow');
+    row.textContent = '';
+    if (name) {
+      $('namewrap').style.display = 'none';
+      var as = document.createElement('span');
+      as.className = 'as';
+      as.textContent = name;
+      row.append(as, document.createTextNode(' として投稿 '));
+      var change = document.createElement('button');
+      change.type = 'button';
+      change.textContent = '変更';
+      change.addEventListener('click', function () {
+        $('namewrap').style.display = '';
+        $('author').value = name;
+        row.textContent = '新しいお名前を入力（この端末に記憶します）';
+      });
+      row.appendChild(change);
+    } else {
+      $('namewrap').style.display = '';
+      row.textContent = '初回だけお名前を入れてください（この端末に記憶し、次から不要）';
+    }
+  }
+
+  /* ── 描画 ───────────────────────────────────
+     本文と名乗りは textContent でのみ描画する。         */
+  function decLabel(value) {
+    if (value === 'approve') return ['approve', 'この方向でOK'];
+    if (value === 'revise') return ['revise', '修正希望'];
+    return null;
+  }
+
+  function renderDivider(rec) {
+    var el = document.createElement('div');
+    el.className = 'divider';
+    el.textContent = 'ここで中身が差し替えられました（' + rec.postedAt + '）';
+    return el;
+  }
+
+  function renderComment(rec, isReply) {
+    var item = document.createElement('div');
+    item.className = 'item' + (isReply ? ' reply' : '') + (rec.__fresh ? ' fresh' : '');
+
+    var top = document.createElement('div');
+    var who = document.createElement('span');
+    who.className = 'who';
+    who.textContent = rec.author;
+    top.appendChild(who);
+
+    var dec = decLabel(rec.decision);
+    if (dec) {
+      var badge = document.createElement('span');
+      badge.className = 'dec ' + dec[0];
+      badge.textContent = dec[1];
+      top.appendChild(badge);
+    }
+
+    var when = document.createElement('span');
+    when.className = 'when';
+    when.textContent = rec.postedAt;
+    top.appendChild(when);
+
+    var body = document.createElement('div');
+    body.className = 'body';
+    body.textContent = rec.body;
+
+    item.append(top, body);
+
+    if (!isReply) {
+      var reply = document.createElement('button');
+      reply.className = 'replybtn';
+      reply.type = 'button';
+      reply.textContent = '返信';
+      reply.addEventListener('click', function () { startReply(rec); });
+      item.appendChild(reply);
+    }
+    rec.__fresh = false;
+    return item;
+  }
+
+  function render() {
+    var list = $('list');
+    list.querySelectorAll('.item, .divider').forEach(function (el) { el.remove(); });
+
+    var all = order.map(function (k) { return loaded[k]; }).filter(Boolean);
+    var comments = all.filter(function (r) { return r.kind !== 'divider'; });
+
+    all.forEach(function (rec) {
+      if (rec.kind === 'divider') { list.appendChild(renderDivider(rec)); return; }
+      if (rec.parentId) return;  // 返信は親の直後に描く
+      list.appendChild(renderComment(rec, false));
+      comments
+        .filter(function (r) { return r.parentId === rec.__id; })
+        .forEach(function (r) { list.appendChild(renderComment(r, true)); });
+    });
+
+    $('empty').hidden = comments.length > 0;
+    $('count').textContent = comments.length ? '(' + comments.length + '件)' : '';
+  }
+
+  function startReply(rec) {
+    replyTarget = rec;
+    $('replyctx').classList.add('on');
+    $('replyto').textContent = '→ ' + rec.author + ' への返信';
+    $('body').focus();
+  }
+
+  /* ── 同期 ───────────────────────────────────
+     一覧を取り、未取得のものだけ増分で読み込んで並べ直す。 */
+  function keyId(key) { return key.split('/').pop(); }
+
+  function load() {
+    return fetch('/comments-list/' + SLUG, { cache: 'no-store' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('list ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        var xml = new DOMParser().parseFromString(text, 'application/xml');
+        var keys = Array.prototype.slice
+          .call(xml.querySelectorAll('Contents > Key'))
+          .map(function (k) { return k.textContent; })
+          .sort();
+
+        var pending = keys.filter(function (k) { return !loaded[k]; });
+        if (!pending.length) return;
+
+        return Promise.all(pending.map(function (key) {
+          return fetch('/' + key)
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (rec) {
+              if (!rec) return;
+              loaded[key] = {
+                kind: String(rec.kind || 'comment'),
+                author: String(rec.author == null ? '名無し' : rec.author),
+                body: String(rec.body == null ? '' : rec.body),
+                decision: String(rec.decision || 'comment'),
+                parentId: rec.parentId ? String(rec.parentId) : null,
+                postedAt: String(rec.postedAt == null ? '' : rec.postedAt).slice(0, 10),
+                __id: keyId(key),
+                __fresh: order.length > 0
+              };
+              order.push(key);
+            })
+            .catch(function () { /* 1件の失敗で全体を止めない */ });
+        })).then(function () {
+          order.sort();
+          render();
+        });
+      })
+      .catch(function () { /* 同期の一時的な失敗は次回に回復させる */ });
+  }
+
+  /* ── 投稿 ───────────────────────────────────
+     既存が無いことを条件として宣言する。条件の付いていない書き込みは
+     配信側の関門が拒否するため、この宣言を省いてはならない。      */
+  function showError(message) {
+    var el = $('error');
+    el.textContent = message;
+    el.hidden = !message;
+  }
+
+  function post(event) {
+    event.preventDefault();
+    $('submit').disabled = true;
+    showError('');
+
+    var name = savedName();
+    if (!name || $('namewrap').style.display !== 'none') {
+      var typed = $('author').value.trim();
+      if (typed) {
+        name = typed;
+        try { localStorage.setItem(NAME_KEY, typed); } catch (e) { /* 保存できなくても投稿は通す */ }
+      }
+    }
+    if (!name) {
+      $('author').focus();
+      showError('お名前を入れてください。');
+      $('submit').disabled = false;
+      return;
+    }
+
+    var body = $('body').value.trim();
+    if (!body) {
+      $('body').focus();
+      $('submit').disabled = false;
+      return;
+    }
+
+    var checked = document.querySelector('input[name=dec]:checked');
+    var payload = JSON.stringify({
+      kind: 'comment',
+      author: name,
+      decision: checked ? checked.value : 'comment',
+      body: body,
+      parentId: replyTarget ? replyTarget.__id : null,
+      postedAt: new Date().toISOString()
+    });
+
+    // 1件が1つの記録。符丁に時刻と乱数を含めることで、衝突を原理的に避ける
+    var key = 'comments/' + SLUG + '/' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + '.json';
+
+    crypto.subtle
+      .digest('SHA-256', new TextEncoder().encode(payload))
+      .then(function (digest) {
+        var sha256 = Array.prototype.map
+          .call(new Uint8Array(digest), function (b) { return b.toString(16).padStart(2, '0'); })
+          .join('');
+        return fetch('/' + key, {
+          method: 'PUT',
+          headers: {
+            'content-type': 'application/json',
+            'x-amz-content-sha256': sha256,
+            'if-none-match': '*'
+          },
+          body: payload
+        });
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error('put ' + res.status);
+        $('body').value = '';
+        replyTarget = null;
+        $('replyctx').classList.remove('on');
+        refreshId();
+        return load();
+      })
+      .catch(function () {
+        showError('投稿に失敗しました。時間をおいて再度お試しください。');
+      })
+      .then(function () {
+        $('submit').disabled = false;
+      });
+  }
+
+  /* ── 戻る導線 ─────────────────────────────── */
+  (function backbar() {
+    var bar = $('backbar');
+    var show = function (href, label) {
+      bar.href = href;
+      bar.textContent = label;
+      bar.classList.add('show');
+    };
+    var target = null;
+    try {
+      var ref = new URL(document.referrer);
+      if (ref.origin === location.origin) {
+        var m = ref.pathname.match(/^\/proj\/([A-Za-z0-9_-]+)\//);
+        if (m) target = { href: '/proj/' + m[1] + '/', label: '← まとめに戻る' };
+      }
+    } catch (e) { /* 参照元が無い場合は導線を出さない */ }
+    try {
+      if (target) sessionStorage.setItem('as_back', JSON.stringify(target));
+      else {
+        var saved = JSON.parse(sessionStorage.getItem('as_back') || 'null');
+        if (saved) target = saved;
+      }
+    } catch (e) { /* 記憶できなくても導線以外に影響しない */ }
+    if (target) show(target.href, target.label);
+  })();
+
+  /* ── コメント欄の開閉 ───────────────────────── */
+  (function collapse() {
+    var toggle = $('toggle');
+    var reopen = $('reopen');
+    function set(collapsed) {
+      document.body.classList.toggle('collapsed', collapsed);
+      toggle.textContent = collapsed ? '◂' : '▸';
+      toggle.title = collapsed ? 'コメント欄を開く' : 'コメント欄を閉じる';
+      toggle.setAttribute('aria-label', toggle.title);
+    }
+    toggle.addEventListener('click', function () {
+      set(!document.body.classList.contains('collapsed'));
+    });
+    reopen.addEventListener('click', function () { set(false); });
+  })();
+
+  $('cancelreply').addEventListener('click', function () {
+    replyTarget = null;
+    $('replyctx').classList.remove('on');
+  });
+  $('form').addEventListener('submit', post);
+
+  refreshId();
+  load();
+
+  // 数秒ごとに同期する（見ながら進めるため）。伏せている間は止めて負荷を抑える
+  setInterval(function () { if (!document.hidden) load(); }, 5000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>
