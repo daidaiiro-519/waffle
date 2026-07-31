@@ -3,32 +3,38 @@
   "documentType": "DomainSpec",
   "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
-  "status": "CREATED",
+  "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
-      "title": ""
+      "title": "共有アーティファクトの投稿者を別の投稿者へ移す：uc-transfer-artifact"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "items": []
+      "items": [
+        "管理者が、共有アーティファクトの投稿者を別の投稿者へ移す操作。移された人は、それを自分が公開したものと同じように扱える。",
+        "共有URLも閲覧トークンも中身もコメントも変わらない。誰が手入れできるかだけが変わる。"
+      ]
     },
     "name": {
       "blockType": "Name",
       "title": "名前",
-      "operationName": ""
+      "operationName": "TransferArtifact"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
       "title": "主アクターと意図",
-      "actor": "",
-      "intent": ""
+      "actor": "管理者",
+      "intent": "投稿者が抜けたあとも、その共有アーティファクトを手入れできる人を残す"
     },
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "items": []
+      "items": [
+        "これが無いと、投稿者が抜けた時点でその共有アーティファクトは誰も公開停止も再発行もできなくなる。見せる相手を絞り直す必要が生じても手が出せず、公開したまま放置するしかない。",
+        "移せるのを管理者に限るのは、自分の共有アーティファクトを他人に押し付ける経路と、他人の共有アーティファクトを自分のものにする経路の両方を塞ぐため。"
+      ]
     },
     "externalActors": {
       "blockType": "ExternalActors",
@@ -38,45 +44,165 @@
     "preconditions": {
       "blockType": "Preconditions",
       "title": "事前条件",
-      "items": []
+      "items": [
+        "操作する者が管理者であること",
+        "対象の共有アーティファクトが存在すること",
+        "移す先の人が、現に招かれた投稿者であること"
+      ]
     },
     "mainFlow": {
       "blockType": "MainFlow",
       "title": "基本フロー",
-      "participants": [],
-      "steps": []
+      "participants": [
+        {
+          "id": "管理者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "管理者",
+          "to": "共有アーティファクト",
+          "message": "transfer（移す先の投稿者）",
+          "kind": "command"
+        },
+        {
+          "from": "共有アーティファクト",
+          "to": "",
+          "message": "投稿者を差し替える",
+          "kind": "self"
+        },
+        {
+          "from": "共有アーティファクト",
+          "to": "",
+          "message": "ArtifactTransferred",
+          "kind": "event"
+        },
+        {
+          "from": "共有アーティファクト",
+          "to": "管理者",
+          "message": "引き継ぎ完了",
+          "kind": "return"
+        }
+      ]
     },
     "postconditions": {
       "blockType": "Postconditions",
       "title": "事後条件",
-      "items": []
+      "items": [
+        "共有アーティファクトの投稿者が、移す先の人になっている",
+        "移す先の人が、その共有アーティファクトを差し替え・公開停止・再発行できる",
+        "移す前の人は、その共有アーティファクトを扱えない",
+        "共有URL・閲覧トークン・中身・コメントは変わっていない",
+        "ArtifactTransferred が発行されている"
+      ]
     },
     "acceptanceCriteria": {
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
-      "items": []
+      "items": [
+        "管理者が移す先を指定したとき、その人が対象の共有アーティファクトを扱えるようになること",
+        "引き継いだあと、移す前の人がその共有アーティファクトを扱えなくなること",
+        "引き継いでも、共有URLと閲覧トークンと中身とコメントを一切変えないこと",
+        "管理者以外が移そうとしたとき、移さず拒むこと",
+        "招かれていない人へ移そうとしたとき、移さず拒むこと",
+        "公開停止されている共有アーティファクトも移せること"
+      ]
     },
     "errors": {
       "blockType": "Errors",
       "title": "エラー",
-      "items": []
+      "items": [
+        {
+          "code": "NOT_ADMINISTRATOR",
+          "condition": [
+            "操作する者が管理者でない"
+          ]
+        },
+        {
+          "code": "ARTIFACT_NOT_FOUND",
+          "condition": [
+            "対象の共有アーティファクトが存在しない"
+          ]
+        },
+        {
+          "code": "PUBLISHER_NOT_FOUND",
+          "condition": [
+            "移す先の人が招かれた投稿者でない"
+          ]
+        }
+      ]
     },
     "acceptanceScenarios": {
       "blockType": "AcceptanceScenarios",
       "title": "受け入れシナリオ",
-      "background": "",
-      "scenarios": []
+      "background": "操作する者は管理者であり、投稿者Xが共有アーティファクトAを公開している。投稿者Yも招かれている。",
+      "scenarios": [
+        {
+          "name": "移した先が手入れできるようになる",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 引き継ぎが、手入れできる人を入れ替えるものであることを確かめる",
+          "gherkin": "Given 共有アーティファクトAの投稿者がXである\nWhen 管理者がAの投稿者をYへ移す\nThen YはAを差し替え・公開停止・再発行できる\nAnd ArtifactTransferred が発行されている",
+          "covers": "管理者が移す先を指定したとき、その人が対象の共有アーティファクトを扱えるようになること"
+        },
+        {
+          "name": "移す前の人は扱えなくなる",
+          "category": "正常系",
+          "viewpoint": "事前条件: 引き継ぎが移動であって複製ではないことを確かめる",
+          "gherkin": "Given 共有アーティファクトAの投稿者がYへ移されている\nWhen XがAを公開停止しようとする\nThen Xからは見つからないものとして拒まれる",
+          "covers": "引き継いだあと、移す前の人がその共有アーティファクトを扱えなくなること"
+        },
+        {
+          "name": "閲覧者から見て何も変わらない",
+          "category": "境界値",
+          "viewpoint": "一貫性: 引き継ぎが、渡した相手の手元に一切影響しないことを確かめる",
+          "gherkin": "Given 閲覧者が共有アーティファクトAの閲覧トークンを持っている\nWhen 管理者がAの投稿者をYへ移す\nThen 閲覧者はそれまでの共有URLと閲覧トークンでAを開ける\nAnd 中身もそれまでのコメントもそのまま見える",
+          "covers": "引き継いでも、共有URLと閲覧トークンと中身とコメントを一切変えないこと"
+        },
+        {
+          "name": "管理者でない者は移せない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 移す側が管理者に限られることを確かめる。自分のものを他人へ押し付ける経路を塞ぐ",
+          "gherkin": "Given 操作する者が管理者でない投稿者Xである\nWhen XがAの投稿者をYへ移そうとする\nThen NOT_ADMINISTRATOR として拒まれる\nAnd Aの投稿者はXのままである",
+          "covers": "管理者以外が移そうとしたとき、移さず拒むこと"
+        },
+        {
+          "name": "招かれていない人へは移せない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 移した先が現に公開できる人であることを確かめる。招かれていない人へ移すと、その場で手入れできない状態に戻る",
+          "gherkin": "Given ある人が招かれていない\nWhen 管理者がAの投稿者をその人へ移そうとする\nThen PUBLISHER_NOT_FOUND として拒まれる\nAnd Aの投稿者はXのままである",
+          "covers": "招かれていない人へ移そうとしたとき、移さず拒むこと"
+        },
+        {
+          "name": "公開停止されているものも移せる",
+          "category": "境界値",
+          "viewpoint": "事前条件: 引き継ぎが公開状態に左右されないことを確かめる。止まっているものこそ引き継ぎ先が要る",
+          "gherkin": "Given 共有アーティファクトAが公開停止されている\nWhen 管理者がAの投稿者をYへ移す\nThen 引き継がれる\nAnd Aは公開停止されたままである",
+          "covers": "公開停止されている共有アーティファクトも移せること"
+        }
+      ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": []
+      "items": [
+        "引き継ぎのとき、共有URL・閲覧トークン・中身・コメントのいずれも変えないこと",
+        "引き継ぎのとき、共有アーティファクトの公開状態を変えないこと"
+      ]
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
+      "background": "投稿者Xが共有アーティファクトAを公開しており、コメントが2件付いている。",
+      "scenarios": [
+        {
+          "name": "コメントは引き継ぎをまたいで残る",
+          "category": "境界値",
+          "viewpoint": "一貫性: 手入れする人が替わっても、それまでに集まったコメントが失われないことを確かめる",
+          "gherkin": "Given 共有アーティファクトAにコメントが2件付いている\nWhen 管理者がAの投稿者をYへ移す\nThen Aのコメントは2件のまま残っている\nAnd 区切りの記録は増えていない",
+          "covers": "引き継ぎのとき、共有URL・閲覧トークン・中身・コメントのいずれも変えないこと"
+        }
+      ]
     },
     "operationIndex": {
       "blockType": "OperationIndex",
@@ -85,5 +211,6 @@
     }
   },
   "tags": [],
-  "subdomainRef": "sd-artifact-sharing"
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-shared-artifact"
 }

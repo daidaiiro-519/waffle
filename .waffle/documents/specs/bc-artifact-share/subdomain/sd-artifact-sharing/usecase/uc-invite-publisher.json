@@ -3,85 +3,244 @@
   "documentType": "DomainSpec",
   "schemaRef": "DomainSpecSchema/v6",
   "specKind": "usecase",
-  "status": "CREATED",
+  "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
-      "title": ""
+      "title": "管理者が投稿者を招く・外す：uc-invite-publisher"
     },
     "summary": {
       "blockType": "Summary",
       "title": "概要",
-      "items": []
+      "items": [
+        "管理者が、公開できる人を増やしたり、外したりする操作。招かれた人だけが文書を公開できる。",
+        "外しても、その人がそれまでに公開した共有アーティファクトは消えない。誰も手入れできない状態にならないよう、外す前に引き継ぎ先を決める。"
+      ]
     },
     "name": {
       "blockType": "Name",
       "title": "名前",
-      "operationName": ""
+      "operationName": "InvitePublisher"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
       "title": "主アクターと意図",
-      "actor": "",
-      "intent": ""
+      "actor": "管理者",
+      "intent": "公開できる人の顔ぶれを、いまの体制に合わせる"
     },
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
       "title": "存在意義",
-      "items": []
+      "items": [
+        "これが無いと、人がひとり増えるたびに環境を用意した者の手が要り、招くこと自体が滞る。滞ると、招かれていない人が誰かのアカウントを借りて公開する抜け道が生まれる。",
+        "誰でも名乗り出て投稿者になれる状態を許すと、共有URLと閲覧トークンの発行が濫用され、費用の負担も、置かれた内容の責任も、環境を用意した者が負うことになる。招く側を管理者に限ることでこれを防ぐ。"
+      ]
     },
     "externalActors": {
       "blockType": "ExternalActors",
       "title": "関与する外部",
-      "items": []
+      "items": [
+        "投稿者の名簿（誰が招かれているかを持つ、この文脈の外にある仕組み）"
+      ]
     },
     "preconditions": {
       "blockType": "Preconditions",
       "title": "事前条件",
-      "items": []
+      "items": [
+        "操作する者が管理者であること",
+        "外すときは、対象の人が現に招かれていること"
+      ]
     },
     "mainFlow": {
       "blockType": "MainFlow",
       "title": "基本フロー",
-      "participants": [],
-      "steps": []
+      "participants": [
+        {
+          "id": "管理者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "管理者",
+          "to": "投稿者の名簿",
+          "message": "invite（招く相手の宛先）",
+          "kind": "command"
+        },
+        {
+          "from": "投稿者の名簿",
+          "to": "",
+          "message": "招かれた者として加える",
+          "kind": "self"
+        },
+        {
+          "from": "投稿者の名簿",
+          "to": "",
+          "message": "PublisherInvited",
+          "kind": "event"
+        },
+        {
+          "from": "投稿者の名簿",
+          "to": "管理者",
+          "message": "招いた旨",
+          "kind": "return"
+        }
+      ]
     },
     "postconditions": {
       "blockType": "Postconditions",
       "title": "事後条件",
-      "items": []
+      "items": [
+        "招いたときは、その人が文書を公開できる状態になっている",
+        "外したときは、その人が新たに公開できない状態になっている",
+        "外したときも、その人がそれまでに公開した共有アーティファクトは公開されたまま残っている",
+        "PublisherInvited または PublisherRemoved が発行されている"
+      ]
     },
     "acceptanceCriteria": {
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
-      "items": []
+      "items": [
+        "管理者が宛先を指定して招いたとき、その人が文書を公開できるようになること",
+        "招かれた人が初めて入るとき、本人だけが知る合言葉を決め直させること",
+        "管理者以外が招こうとしたとき、招かず拒むこと",
+        "既に招かれている人を重ねて招いたとき、二重に招かず、その人の状態を変えないこと",
+        "管理者が人を外したとき、その人が新たに公開できなくなること",
+        "人を外したとき、その人がそれまでに公開した共有アーティファクトを公開停止しないこと",
+        "引き継ぎ先が決まっていない共有アーティファクトを持つ人を外そうとしたとき、その件数を管理者に伝えること",
+        "管理者が自分自身を外そうとしたとき、外さず拒むこと"
+      ]
     },
     "errors": {
       "blockType": "Errors",
       "title": "エラー",
-      "items": []
+      "items": [
+        {
+          "code": "NOT_ADMINISTRATOR",
+          "condition": [
+            "操作する者が管理者でない"
+          ]
+        },
+        {
+          "code": "PUBLISHER_NOT_FOUND",
+          "condition": [
+            "外そうとした人が招かれていない"
+          ]
+        },
+        {
+          "code": "CANNOT_REMOVE_SELF",
+          "condition": [
+            "管理者が自分自身を外そうとした"
+          ]
+        }
+      ]
     },
     "acceptanceScenarios": {
       "blockType": "AcceptanceScenarios",
       "title": "受け入れシナリオ",
-      "background": "",
-      "scenarios": []
+      "background": "操作する者は管理者である。",
+      "scenarios": [
+        {
+          "name": "招かれた人が公開できるようになる",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 招くことが、公開できる状態への入口であることを確かめる",
+          "gherkin": "Given ある人がまだ招かれていない\nWhen 管理者がその人を招く\nThen その人は文書を公開できる\nAnd PublisherInvited が発行されている",
+          "covers": "管理者が宛先を指定して招いたとき、その人が文書を公開できるようになること",
+          "operation": "invite"
+        },
+        {
+          "name": "管理者でない者は招けない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 招く側が管理者に限られることを確かめる",
+          "gherkin": "Given 操作する者が管理者でない投稿者である\nWhen 誰かを招こうとする\nThen NOT_ADMINISTRATOR として拒まれる\nAnd 招かれた人は増えていない",
+          "covers": "管理者以外が招こうとしたとき、招かず拒むこと",
+          "operation": "invite"
+        },
+        {
+          "name": "重ねて招いても状態は変わらない",
+          "category": "境界値",
+          "viewpoint": "べき等性: 同じ人を二度招いても、その人の合言葉や公開したものに影響しないことを確かめる",
+          "gherkin": "Given ある人が既に招かれており、共有アーティファクトを公開している\nWhen 管理者が同じ人をもう一度招く\nThen 招かれた人は増えていない\nAnd その人が公開した共有アーティファクトは公開されたまま残っている",
+          "covers": "既に招かれている人を重ねて招いたとき、二重に招かず、その人の状態を変えないこと",
+          "operation": "invite"
+        },
+        {
+          "name": "外された人は新たに公開できない",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 外すことが、公開できる状態からの出口であることを確かめる",
+          "gherkin": "Given ある人が招かれている\nWhen 管理者がその人を外す\nThen その人は新たに文書を公開できない",
+          "covers": "管理者が人を外したとき、その人が新たに公開できなくなること",
+          "operation": "remove"
+        },
+        {
+          "name": "外しても公開したものは残る",
+          "category": "境界値",
+          "viewpoint": "一貫性: 人を外すことが、その人が公開したものの公開状態に及ばないことを確かめる。閲覧者の手元の共有URLが、投稿者の異動で黙って死んではならない",
+          "gherkin": "Given ある人が共有アーティファクトAを公開している\nWhen 管理者がその人を外す\nThen 共有アーティファクトAは公開されたまま残っている\nAnd 閲覧トークンを持つ閲覧者はAを開ける",
+          "covers": "人を外したとき、その人がそれまでに公開した共有アーティファクトを公開停止しないこと",
+          "operation": "remove"
+        },
+        {
+          "name": "手入れできなくなるものがあれば件数を伝える",
+          "category": "境界値",
+          "viewpoint": "事前条件: 外した結果、誰も公開停止も再発行もできない共有アーティファクトが生じることを、外す前に知らせることを確かめる",
+          "gherkin": "Given ある人が共有アーティファクトを3件公開しており、いずれも引き継ぎ先が決まっていない\nWhen 管理者がその人を外そうとする\nThen 引き継ぎ先の決まっていないものが3件あることが管理者に伝えられる",
+          "covers": "引き継ぎ先が決まっていない共有アーティファクトを持つ人を外そうとしたとき、その件数を管理者に伝えること",
+          "operation": "remove"
+        },
+        {
+          "name": "管理者は自分自身を外せない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 管理者が一人もいない状態に落ちる経路を塞ぐことを確かめる",
+          "gherkin": "Given 操作する者が管理者である\nWhen 自分自身を外そうとする\nThen CANNOT_REMOVE_SELF として拒まれる",
+          "covers": "管理者が自分自身を外そうとしたとき、外さず拒むこと",
+          "operation": "remove"
+        },
+        {
+          "name": "招かれていない人は外せない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 外す対象が現に招かれている人に限られることを確かめる",
+          "gherkin": "Given ある人が招かれていない\nWhen 管理者がその人を外そうとする\nThen PUBLISHER_NOT_FOUND として拒まれる",
+          "covers": "管理者が人を外したとき、その人が新たに公開できなくなること",
+          "operation": "remove"
+        }
+      ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": []
+      "items": [
+        "人を外すとき、その人が公開した共有アーティファクトの公開状態と閲覧トークンを一切変えないこと",
+        "同じ人を重ねて招いても、その人の合言葉と公開したものが変わらないこと"
+      ]
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
+      "background": "ある人が招かれており、共有アーティファクトAを公開している。",
+      "scenarios": [
+        {
+          "name": "外しても閲覧トークンは失効しない",
+          "category": "境界値",
+          "viewpoint": "一貫性: 投稿者の異動が、閲覧者の手元の閲覧トークンに波及しないことを確かめる",
+          "gherkin": "Given 閲覧者が共有アーティファクトAの閲覧トークンを持っている\nWhen 管理者がAの投稿者を外す\nThen 閲覧者はそれまでの閲覧トークンでAを開ける",
+          "covers": "人を外すとき、その人が公開した共有アーティファクトの公開状態と閲覧トークンを一切変えないこと"
+        }
+      ]
     },
     "operationIndex": {
       "blockType": "OperationIndex",
       "title": "操作一覧",
-      "items": []
+      "items": [
+        {
+          "operation": "invite",
+          "summary": "公開できる人を増やす。招かれた人は、初めて入るときに自分だけが知る合言葉を決める。"
+        },
+        {
+          "operation": "remove",
+          "summary": "公開できる人から外す。それまでに公開した共有アーティファクトは残る。"
+        }
+      ]
     }
   },
   "tags": [],

@@ -30,6 +30,8 @@
 - uc-resume-artifact
 - uc-assign-to-project
 - uc-post-comment
+- uc-invite-publisher
+- uc-transfer-artifact
 
 ---
 
