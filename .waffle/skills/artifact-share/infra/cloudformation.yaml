@@ -1,0 +1,492 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  artifact-share の配信環境。作った文書を渡した相手に見てもらい、その場で反応を
+  受け取るための基盤。常時稼働する計算資源を持たず、要求のあった分だけ課金される
+  構成にする。信頼の境界で配信の口を2つに分ける（認証が要る面と、合鍵で見る面）。
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: 表示物・反応・索引を置くバケット名（全アカウントで一意）
+  LogBucketName:
+    Type: String
+    Description: >-
+      アクセスの記録を置くバケット名。本体とは別の資源にする。保持期間の要件が
+      異なることと、事故のときに記録が本体と同じ権限で消せる状態を避けるため。
+  PriceClass:
+    Type: String
+    Default: PriceClass_200
+    AllowedValues: [PriceClass_100, PriceClass_200, PriceClass_All]
+    Description: 配信の範囲。100=北米欧州のみ、200=+アジア、All=全リージョン
+  LogRetentionDays:
+    Type: Number
+    Default: 90
+    Description: アクセスの記録を保持する日数。過ぎたものは自動で削除される
+
+Resources:
+
+  # ── 保管 ───────────────────────────────────────────────
+
+  # 表示物（p/{slug}/）・反応（comments/{slug}/）・索引（meta/）を置く。
+  # 外部からの直接アクセスは一切許さず、配信の口と公開の受け口だけが触れる。
+  ContentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      # CORS は設定しない。反応の読み書きは配信の口自身からの同一の出所への
+      # 要求だけで、別の出所からの要求を許す理由がない。
+
+  # アクセスの記録。本体と分ける理由は3つ。保持期間の要件が異なること、事故の
+  # ときに記録が本体と同じ権限で消せる状態はフォレンジック上の基本違反であること、
+  # 検査の漏れがあったときに書き込みが記録へ届く経路を同一の資源内に作らないこと。
+  LogBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref LogBucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred   # 配信の記録の書き込みに必要
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-logs
+            Status: Enabled
+            ExpirationInDays: !Ref LogRetentionDays
+
+  # 配信の口が読めるのは全体、書けるのは反応の置き場だけ。削除は与えない。
+  ContentBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ContentBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ViewerDistributionRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${ContentBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${ViewerDistribution}"
+
+          - Sid: ViewerDistributionListComments
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:ListBucket
+            Resource: !GetAtt ContentBucket.Arn
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${ViewerDistribution}"
+              StringLike:
+                s3:prefix: "comments/*"
+
+          # 反応の記録だけを書ける。表示物にも索引にも書けない。
+          - Sid: ViewerDistributionPutCommentOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub "${ContentBucket.Arn}/comments/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${ViewerDistribution}"
+
+          # 認証が要る面は、アップロード画面を配るためだけに読む。
+          - Sid: AdminDistributionRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${ContentBucket.Arn}/admin/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${AdminDistribution}"
+
+          # 公開の受け口が書けるのは、表示物と索引の接頭辞だけ。
+          # 実行ロール側でも同じ範囲に絞り、二重にする。
+          - Sid: PublishRoleWriteScoped
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt PublishFunctionRole.Arn
+            Action: s3:PutObject
+            Resource:
+              - !Sub "${ContentBucket.Arn}/p/*"
+              - !Sub "${ContentBucket.Arn}/meta/*"
+
+          # 受け口が反応と記録へ書き込む経路を、資源の側でも明示的に塞ぐ。
+          - Sid: PublishRoleDenyElsewhere
+            Effect: Deny
+            Principal:
+              AWS: !GetAtt PublishFunctionRole.Arn
+            Action:
+              - s3:PutObject
+              - s3:DeleteObject
+            NotResource:
+              - !Sub "${ContentBucket.Arn}/p/*"
+              - !Sub "${ContentBucket.Arn}/meta/*"
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # ── 合鍵の保管 ─────────────────────────────────────────
+
+  # token:{slug} / proj:{pid} / pp:{slug} を持つ。
+  # 合鍵の記録は "{値}|{期限のエポック秒}|{世代番号}" の形で保存する。
+  # 期限切れと世代違いは関門がその場で失効させるため、書き換えを待たずに効く。
+  # 書き手は公開の受け口ひとつに限り、関門は読むだけ。
+  TokenStore:
+    Type: AWS::CloudFront::KeyValueStore
+    Properties:
+      Name: !Sub "${AWS::StackName}-tokens"
+      Comment: "view keys with expiry and generation"
+
+  # ── 認証（招待された者だけが公開できる） ──────────────────
+
+  # 自分で登録する経路は開けない。責任者が招いた者だけが入れる。
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "${AWS::StackName}-publishers"
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true     # 自分で登録する経路を閉じる
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: !Sub "${AWS::StackName}-upload-app"
+      GenerateSecret: false                # ブラウザから使うため秘密を持たせない
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+
+  # ── 公開の受け口 ───────────────────────────────────────
+
+  # 権限は接頭辞と資源の単位まで絞る。反応にも記録にも書けない。削除も持たない。
+  PublishFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: publish-scoped
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: WriteArtifactAndIndexOnly
+                Effect: Allow
+                Action: s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/p/*"
+                  - !Sub "arn:aws:s3:::${BucketName}/meta/*"
+              - Sid: ReadIndexForListing
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${BucketName}/meta/*"
+              # 合鍵の保管は、この資源ひとつに限定する
+              - Sid: WriteViewKeys
+                Effect: Allow
+                Action:
+                  - cloudfront-keyvaluestore:DescribeKeyValueStore
+                  - cloudfront-keyvaluestore:PutKey
+                  - cloudfront-keyvaluestore:DeleteKey
+                Resource: !GetAtt TokenStore.Arn
+              - Sid: OwnLogsOnly
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-publish*"
+
+  PublishFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-publish"
+      Role: !GetAtt PublishFunctionRole.Arn
+      Runtime: python3.12
+      Handler: main.handler
+      Timeout: 30
+      MemorySize: 512
+      Environment:
+        Variables:
+          CONTENT_BUCKET: !Ref BucketName
+          KVS_ARN: !GetAtt TokenStore.Arn
+          USER_POOL_ID: !Ref UserPool
+          USER_POOL_CLIENT_ID: !Ref UserPoolClient
+          VIEWER_DOMAIN: !GetAtt ViewerDistribution.DomainName
+      # 実体は lambda/publish_artifact/main.py。作成後に配置し直す。
+      # ここに置くのは、置き換え前に誤って使われないための最小の受け口。
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return {
+                  "statusCode": 503,
+                  "headers": {"content-type": "application/json"},
+                  "body": '{"error":"NOT_DEPLOYED",'
+                          '"message":"lambda/publish_artifact/main.py を配置してください"}',
+              }
+
+  PublishFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt PublishFunction.Arn
+      AuthType: NONE          # 呼び出し元の確認は関数内で利用者の証明を検証して行う
+      Cors:
+        AllowOrigins:
+          - !Sub "https://${AdminDistribution.DomainName}"
+        AllowMethods: [POST]
+        AllowHeaders: [content-type, authorization]
+        MaxAge: 300
+
+  PublishFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PublishFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+  # ── 配信の共通設定 ─────────────────────────────────────
+
+  ViewerTokenGateFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub "${AWS::StackName}-viewer-token-gate"
+      AutoPublish: true
+      FunctionConfig:
+        Comment: "view key check (expiry and generation) + write guard"
+        Runtime: cloudfront-js-2.0
+        KeyValueStoreAssociations:
+          - KeyValueStoreARN: !GetAtt TokenStore.Arn
+      # 実体は infra/cloudfront-function/viewer-token-gate.js。作成後に配置し直す。
+      # このまま公開すると全ての閲覧が止まるため、必ず配置を済ませること。
+      FunctionCode: |
+        function handler(event) {
+          return { statusCode: 503, statusDescription: 'Service Unavailable',
+                   body: 'viewer-token-gate.js is not deployed yet.' };
+        }
+
+  # 反応の書き込みを保管へ通すための転送設定。
+  # x-amz-content-sha256 は署名時に扱われるためここに含めない（含めると拒否される）。
+  # 上書きしない宣言（if-none-match）は保管側が解釈するため転送する。
+  CommentPutOriginRequestPolicy:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub "${AWS::StackName}-comment-put"
+        Comment: "forward content-type and if-none-match for comment writes"
+        HeadersConfig:
+          HeaderBehavior: whitelist
+          Headers: [content-type, if-none-match]
+        CookiesConfig: { CookieBehavior: none }
+        QueryStringsConfig: { QueryStringBehavior: none }
+
+  CachePolicyNoCache:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub "${AWS::StackName}-no-cache"
+        DefaultTTL: 0
+        MaxTTL: 1
+        MinTTL: 0
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig: { CookieBehavior: none }
+          HeadersConfig: { HeaderBehavior: none }
+          QueryStringsConfig: { QueryStringBehavior: all }
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+
+  # 持ち込まれた表示物に外部への到達を許さない。これにより、契約の「自己完結」が
+  # 規約ではなく配信時の振る舞いとして効く。あわせて sandbox をヘッダー側でも
+  # 指定し、閲覧画面の1行が失われても隔離が残るよう二重にする。
+  ArtifactResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-artifact-headers"
+        Comment: "enforce self-contained content and isolation"
+        SecurityHeadersConfig:
+          ContentTypeOptions: { Override: true }
+          FrameOptions: { FrameOption: SAMEORIGIN, Override: true }
+          ReferrerPolicy: { ReferrerPolicy: no-referrer, Override: true }
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Override: true
+          ContentSecurityPolicy:
+            Override: true
+            ContentSecurityPolicy: >-
+              default-src 'none';
+              img-src 'self' data:;
+              style-src 'self' 'unsafe-inline';
+              font-src 'self' data:;
+              script-src 'self' 'unsafe-inline';
+              connect-src 'self';
+              frame-src 'self';
+              form-action 'none';
+              base-uri 'none';
+              sandbox allow-scripts allow-top-navigation-by-user-activation
+
+  # 認証が要る面。持ち込まれた表示物を配らないため、隔離のための指定は持たない。
+  AdminResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-admin-headers"
+        Comment: "headers for the authenticated surface"
+        SecurityHeadersConfig:
+          ContentTypeOptions: { Override: true }
+          FrameOptions: { FrameOption: DENY, Override: true }
+          ReferrerPolicy: { ReferrerPolicy: same-origin, Override: true }
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Override: true
+
+  # ── 配信の口（信頼の境界で2つに分ける） ────────────────
+
+  # 合鍵で見る面。持ち込まれた表示物・反応・まとめの一覧を配る。
+  # 認証が要る面と出所が分かれるため、ここで動く命令は認証の資格に手が届かない。
+  ViewerDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${AWS::StackName} viewer surface"
+        PriceClass: !Ref PriceClass
+        HttpVersion: http2and3
+        DefaultRootObject: ""
+        Logging:
+          Bucket: !GetAtt LogBucket.DomainName
+          Prefix: viewer/
+          IncludeCookies: false
+        Origins:
+          - Id: content-s3
+            DomainName: !GetAtt ContentBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: content-s3
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachePolicyId: !Ref CachePolicyNoCache
+          ResponseHeadersPolicyId: !Ref ArtifactResponseHeadersPolicy
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt ViewerTokenGateFunction.FunctionMetadata.FunctionARN
+        CacheBehaviors:
+          - PathPattern: "comments/*"
+            TargetOriginId: content-s3
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            CachePolicyId: !Ref CachePolicyNoCache
+            ResponseHeadersPolicyId: !Ref ArtifactResponseHeadersPolicy
+            OriginRequestPolicyId: !Ref CommentPutOriginRequestPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt ViewerTokenGateFunction.FunctionMetadata.FunctionARN
+          - PathPattern: "comments-list/*"
+            TargetOriginId: content-s3
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD]
+            CachePolicyId: !Ref CachePolicyNoCache
+            ResponseHeadersPolicyId: !Ref ArtifactResponseHeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt ViewerTokenGateFunction.FunctionMetadata.FunctionARN
+
+  # 認証が要る面。招かれた者が公開と管理を行う画面だけを配る。
+  # 合鍵で見る面とは出所が分かれるため、持ち込まれた命令からは到達できない。
+  AdminDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${AWS::StackName} authenticated surface"
+        PriceClass: !Ref PriceClass
+        HttpVersion: http2and3
+        DefaultRootObject: index.html
+        Logging:
+          Bucket: !GetAtt LogBucket.DomainName
+          Prefix: admin/
+          IncludeCookies: false
+        Origins:
+          - Id: admin-s3
+            DomainName: !GetAtt ContentBucket.RegionalDomainName
+            OriginPath: /admin
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: admin-s3
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachePolicyId: !Ref CachePolicyNoCache
+          ResponseHeadersPolicyId: !Ref AdminResponseHeadersPolicy
+
+Outputs:
+  ViewerDomain:
+    Description: 閲覧者へ渡すURLの土台（合鍵で見る面）
+    Value: !GetAtt ViewerDistribution.DomainName
+  AdminDomain:
+    Description: 招かれた者が公開・管理を行う画面（認証が要る面）
+    Value: !GetAtt AdminDistribution.DomainName
+  ViewerDistributionId:
+    Value: !Ref ViewerDistribution
+  AdminDistributionId:
+    Value: !Ref AdminDistribution
+  BucketNameOut:
+    Description: 表示物・反応・索引の置き場
+    Value: !Ref ContentBucket
+  LogBucketNameOut:
+    Description: アクセスの記録の置き場（本体とは別の資源）
+    Value: !Ref LogBucket
+  TokenStoreArn:
+    Value: !GetAtt TokenStore.Arn
+  ViewerTokenGateFunctionName:
+    Description: 作成後に infra/cloudfront-function/viewer-token-gate.js を配置する対象
+    Value: !Sub "${AWS::StackName}-viewer-token-gate"
+  PublishFunctionName:
+    Description: 作成後に lambda/publish_artifact/main.py を配置する対象
+    Value: !Sub "${AWS::StackName}-publish"
+  PublishFunctionUrl:
+    Description: アップロード画面が公開を依頼する先
+    Value: !GetAtt PublishFunctionUrl.FunctionUrl
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
