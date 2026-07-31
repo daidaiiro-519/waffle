@@ -6,7 +6,7 @@
   その外側にコメント欄を持つ。アーティファクトそのものは一切書き換えない。
 
   プレースフォルダー:
-  | {{スラッグ}} | 公開時に発行されるslug（配置処理が置換する） |
+  | {{アーティファクトID}} | 公開時に発行されるartifactId（配置処理が置換する） |
 
   設計上の前提（変更しないこと）:
   - アーティファクトは sandbox 付きの枠に入れ、allow-same-origin を与えない。
@@ -239,7 +239,7 @@
 (function () {
   'use strict';
 
-  var SLUG = '{{スラッグ}}';
+  var ARTIFACT_ID = '{{アーティファクトID}}';
   var NAME_KEY = 'as_reviewer_name';
   var $ = function (id) { return document.getElementById(id); };
 
@@ -373,7 +373,7 @@
   function keyId(key) { return key.split('/').pop(); }
 
   function load() {
-    return fetch('/comments-list/' + SLUG, { cache: 'no-store' })
+    return fetch('/comments-list/' + ARTIFACT_ID, { cache: 'no-store' })
       .then(function (res) {
         if (!res.ok) throw new Error('list ' + res.status);
         return res.text();
@@ -460,8 +460,8 @@
       postedAt: new Date().toISOString()
     });
 
-    // 1件が1つの記録。slugに時刻と乱数を含めることで、衝突を原理的に避ける
-    var key = 'comments/' + SLUG + '/' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + '.json';
+    // 1件が1つの記録。artifactIdに時刻と乱数を含めることで、衝突を原理的に避ける
+    var key = 'comments/' + ARTIFACT_ID + '/' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + '.json';
 
     crypto.subtle
       .digest('SHA-256', new TextEncoder().encode(payload))

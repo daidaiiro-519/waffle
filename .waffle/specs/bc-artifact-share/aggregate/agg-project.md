@@ -30,7 +30,7 @@ Project
 | projectKey | ProjectKey |
 | viewToken | ProjectViewToken |
 | status | ProjectStatus |
-| memberSlugs | Slug[] |
+| memberArtifactIds | ArtifactId[] |
 | createdAt | string |
 
 ---
@@ -41,7 +41,7 @@ Project
 
 | 表す値 | 振る舞い |
 |---|---|
-| まとめて見せる単位を一意に指す符丁 | 不変。作成時に発行され、以後変わらない。 |
+| まとめて見せる単位を一意に指すID | 不変。作成時に発行され、以後変わらない。 |
 
 | 属性 | 型 |
 |---|---|
@@ -182,7 +182,7 @@ addArtifact
 | 項目 | 意味 |
 |---|---|
 | projectId | 加え先のまとめて見せる単位 |
-| slug | 加えられた表示物を指す符丁 |
+| artifactId | 加えられた表示物を指すID |
 
 ### ArtifactRemovedFromProject
 
@@ -195,7 +195,7 @@ removeArtifact
 | 項目 | 意味 |
 |---|---|
 | projectId | 外し元のまとめて見せる単位 |
-| slug | 外された表示物を指す符丁 |
+| artifactId | 外された表示物を指すID |
 
 ---
 

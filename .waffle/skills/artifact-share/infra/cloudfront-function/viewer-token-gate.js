@@ -1,7 +1,7 @@
 // 閲覧者のトークンを照合する関門（CloudFront Functions・閲覧の面に載せる）
 //
 // 担うこと:
-//   1. トークンの照合。KVS の "token:{slug}" に、現在の値・有効期限・世代番号を持つ。
+//   1. トークンの照合。KVS の "token:{artifactId}" に、現在の値・有効期限・世代番号を持つ。
 //      期限切れ・世代違いはその場で拒む。値が "DISABLED" なら公開停止。
 //   2. 交差条件の判定。プロジェクトのトークンで開けるのは、そのまとめに入っており、かつ
 //      アーティファクト自身が公開されているものだけ。片方だけを見ると、公開を止めたはずの
@@ -141,7 +141,7 @@ function matches(cookieValue, record) {
   return value === record.value && generation === record.generation;
 }
 
-function extractSlug(uri) {
+function extractArtifactId(uri) {
   const m = uri.match(/^\/(?:p|comments|comments-list)\/([A-Za-z0-9_-]+)/);
   return m ? m[1] : null;
 }
@@ -179,10 +179,10 @@ async function handleProject(request, pid, uri, method) {
 // プロジェクトのトークンで、このアーティファクトを開けるか。
 // 所属していることと、アーティファクト自身が公開されていることの両方が要る。
 // アーティファクト側の公開状態は呼び出し元で既に確かめてあるため、ここでは所属だけを見る。
-async function allowedByProject(request, slug) {
+async function allowedByProject(request, artifactId) {
   let member = null;
   try {
-    member = await kvs.get('pp:' + slug);
+    member = await kvs.get('pp:' + artifactId);
   } catch (e) {
     return false;
   }
@@ -212,8 +212,8 @@ async function handler(event) {
     return await handleProject(request, pid, uri, method);
   }
 
-  const slug = extractSlug(uri);
-  if (!slug) {
+  const artifactId = extractArtifactId(uri);
+  if (!artifactId) {
     return deny(403);
   }
 
@@ -224,7 +224,7 @@ async function handler(event) {
   }
 
   // アーティファクト自身の状態。公開が止まっていれば、プロジェクトのトークンを持っていても開かせない
-  const record = await readKey('token:' + slug);
+  const record = await readKey('token:' + artifactId);
   if (!record) {
     return htmlResponse(403, DISABLED_HTML);   // 未発行
   }
@@ -235,18 +235,18 @@ async function handler(event) {
     return htmlResponse(401, GATE_HTML);       // 期限切れ。渡し直せば開ける
   }
 
-  if (uri === '/p/' + slug + '/verify') {
+  if (uri === '/p/' + artifactId + '/verify') {
     const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value : '';
     if (supplied === record.value) {
-      return setCookie(ARTIFACT_COOKIE + slug, record.value + '.' + record.generation);
+      return setCookie(ARTIFACT_COOKIE + artifactId, record.value + '.' + record.generation);
     }
     return { statusCode: 401, statusDescription: 'Unauthorized' };
   }
 
   // 開けるのは、アーティファクトごとのトークンが一致するか、所属するまとめのトークンが一致するとき
-  let allowed = matches(getCookie(request, ARTIFACT_COOKIE + slug), record);
+  let allowed = matches(getCookie(request, ARTIFACT_COOKIE + artifactId), record);
   if (!allowed) {
-    allowed = await allowedByProject(request, slug);
+    allowed = await allowedByProject(request, artifactId);
   }
   if (!allowed) {
     return htmlResponse(401, GATE_HTML);
@@ -255,7 +255,7 @@ async function handler(event) {
   // 反応の記録の書き込み。形・種類・大きさに加えて、既存を上書きしない宣言を要求する。
   // 宣言を省いた直接の書き込みをここで拒むことで、他人の記録を壊せなくする。
   if (isCommentPut) {
-    const keyOk = new RegExp('^/comments/' + slug + '/[A-Za-z0-9_-]+\\.json$').test(uri);
+    const keyOk = new RegExp('^/comments/' + artifactId + '/[A-Za-z0-9_-]+\\.json$').test(uri);
     const ct = request.headers['content-type'] ? request.headers['content-type'].value : '';
     const len = request.headers['content-length']
       ? parseInt(request.headers['content-length'].value, 10) : 0;
@@ -274,14 +274,14 @@ async function handler(event) {
     request.uri = '/';
     request.querystring = {
       'list-type': { value: '2' },
-      'prefix': { value: 'comments/' + slug + '/' },
+      'prefix': { value: 'comments/' + artifactId + '/' },
     };
     return request;
   }
 
-  // /p/{slug} と /p/{slug}/ は閲覧画面へ寄せる
-  if (uri === '/p/' + slug || uri === '/p/' + slug + '/') {
-    request.uri = '/p/' + slug + '/index.html';
+  // /p/{artifactId} と /p/{artifactId}/ は閲覧画面へ寄せる
+  if (uri === '/p/' + artifactId || uri === '/p/' + artifactId + '/') {
+    request.uri = '/p/' + artifactId + '/index.html';
   }
 
   return request;
