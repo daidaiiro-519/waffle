@@ -597,7 +597,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
           <div class="tab-panel" id="panel3">
             <div class="constraint-item">
               <span class="num">1</span>
-              <p>閲覧の防御は合鍵1層である。中核の価値（登録なしで開ける）とのトレードオフとして明示的に受容した</p>
+              <p>閲覧の防御はトークン1層である。中核の価値（登録なしで開ける）とのトレードオフとして明示的に受容した</p>
             </div>
             <div class="constraint-item">
               <span class="num">2</span>
@@ -609,11 +609,11 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">4</span>
-              <p>反応の一覧は保管の列挙機能で配られており、合鍵を1つ持つ者はその表示物に付いた反応のキーを全て列挙できる。既存の方式をそのまま引き継ぐ</p>
+              <p>反応の一覧は保管の列挙機能で配られており、トークンを1つ持つ者はそのアーティファクトに付いた反応のキーを全て列挙できる。既存の方式をそのまま引き継ぐ</p>
             </div>
             <div class="constraint-item">
               <span class="num">5</span>
-              <p>表示物どうしの隔離までは行っていない。すべての表示物が同じ出所を共有するため、完全に分けるには独自のドメインと証明書が必要になる。招待制により残るリスクは事故の水準に収まると判断した</p>
+              <p>アーティファクトどうしの隔離までは行っていない。すべてのアーティファクトが同じ出所を共有するため、完全に分けるには独自のドメインと証明書が必要になる。招待制により残るリスクは事故の水準に収まると判断した</p>
             </div>
             <div class="constraint-item">
               <span class="num">6</span>
@@ -622,6 +622,14 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="constraint-item">
               <span class="num">7</span>
               <p>無料の枠は有料プランを前提とする。2025年7月15日以降に作られた口座は6か月で閉じられるため、無料で使えるとは案内できない。実際の請求は月1ドル未満に収まる</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">8</span>
+              <p>保管されたものの削除は、権限を持つ責任者だけが行える。公開の受け口にも一般の利用者にも削除の権限を与えない。一般の利用者にできるのは公開の停止までで、データは取り出せる状態のまま残る。退職者の分の片付けなど、実際に消す操作は責任者の運用として行う</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">9</span>
+              <p>公開が途中で失敗したとき、置かれたファイルは残る（受け口が消せないため）。ただしトークンを最後に発行するため、そのファイルには誰も到達できない。到達できないまま残ったものの片付けも、責任者の運用に含まれる</p>
             </div></div>
           <div class="tab-panel" id="panel4">
             <div class="scope-item">
