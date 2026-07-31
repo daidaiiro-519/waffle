@@ -1,0 +1,673 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>配信基盤の実装に先立って渡す設計観点と実装観点：handoff-artifact-share</title>
+<meta name="id" content="handoff-artifact-share">
+<meta name="type" content="Handoff">
+<meta name="title" content="配信基盤の実装に先立って渡す設計観点と実装観点：handoff-artifact-share">
+<meta name="description" content="artifact-shareのドメイン仕様を実装へ渡すにあたり、仕様には書けなかった判断材料を記録する。ドメイン仕様は業務語彙で書かれるため、隔離の手段・合鍵の置き場・権限の絞り方といった実現側の観点がそこには入っていない。">
+<meta name="tags" content="context:artifact-share">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>配信基盤の実装に先立って渡す設計観点と実装観点：handoff-artifact-share</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>bc-artifact-share</dd>
+      <dt>documentId</dt><dd>handoff-artifact-share</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 868" width="100%" height="868">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">契約に依存する側</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">公開された契約</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">利用者の入口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">業務の判定</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="466.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">集約</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="580.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">公開の受け口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="694.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">配信</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="808.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">保管</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-split" d="M0,434.0 H700"/>
+        <path class="flow-split" d="M0,548.0 H700"/>
+        <path class="flow-split" d="M0,662.0 H700"/>
+        <path class="flow-split" d="M0,776.0 H700"/>
+        <path class="flow-arrow" d="M190.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M606.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L164.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L320.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L476.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L632.0,238.0"/>
+        <path class="flow-arrow" d="M164.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M320.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M476.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M632.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M398.0,402.0 L190.0,466.0"/>
+        <path class="flow-arrow" d="M398.0,402.0 L398.0,466.0"/>
+        <path class="flow-arrow" d="M398.0,402.0 L606.0,466.0"/>
+        <path class="flow-arrow" d="M190.0,516.0 L398.0,580.0"/>
+        <path class="flow-arrow" d="M398.0,516.0 L398.0,580.0"/>
+        <path class="flow-arrow" d="M606.0,516.0 L398.0,580.0"/>
+        <path class="flow-arrow" d="M398.0,630.0 L164.0,694.0"/>
+        <path class="flow-arrow" d="M398.0,630.0 L320.0,694.0"/>
+        <path class="flow-arrow" d="M398.0,630.0 L476.0,694.0"/>
+        <path class="flow-arrow" d="M398.0,630.0 L632.0,694.0"/>
+        <path class="flow-arrow" d="M164.0,744.0 L190.0,808.0"/>
+        <path class="flow-arrow" d="M164.0,744.0 L398.0,808.0"/>
+        <path class="flow-arrow" d="M164.0,744.0 L606.0,808.0"/>
+        <path class="flow-arrow" d="M320.0,744.0 L190.0,808.0"/>
+        <path class="flow-arrow" d="M320.0,744.0 L398.0,808.0"/>
+        <path class="flow-arrow" d="M320.0,744.0 L606.0,808.0"/>
+        <path class="flow-arrow" d="M476.0,744.0 L190.0,808.0"/>
+        <path class="flow-arrow" d="M476.0,744.0 L398.0,808.0"/>
+        <path class="flow-arrow" d="M476.0,744.0 L606.0,808.0"/>
+        <path class="flow-arrow" d="M632.0,744.0 L190.0,808.0"/>
+        <path class="flow-arrow" d="M632.0,744.0 L398.0,808.0"/>
+        <path class="flow-arrow" d="M632.0,744.0 L606.0,808.0"/>
+        <path class="flow-arrow dep" d="M190.0,60.0 L398.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="294.0" y="86.0">契約だけに依存する（受け口の内部を知らない）</text>
+        <path class="flow-arrow dep" d="M398.0,60.0 L398.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="86.0">同じ契約を満たせば公開できる</text>
+        <path class="flow-arrow dep" d="M606.0,60.0 L398.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="502.0" y="86.0">同上（特権的な経路を持たない）</text>
+        <path class="flow-arrow dep" d="M164.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="281.0" y="428.0">公開を依頼する（利用者の確認つき）</text>
+        <path class="flow-arrow dep" d="M320.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="359.0" y="428.0">同じ受け口を通す</text>
+        <path class="flow-arrow dep" d="M476.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="437.0" y="428.0">同じ受け口を通す（保管を直接叩かない）</text>
+        <path class="flow-arrow dep" d="M632.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="515.0" y="428.0">同上</text>
+        <path class="flow-arrow dep" d="M476.0,694.0 L398.0,402.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="437.0" y="542.0">開けるかを問い合わせる</text>
+        <path class="flow-arrow dep" d="M398.0,402.0 L190.0,466.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="294.0" y="428.0">公開状態を見る（片方だけでは答えが出ない）</text>
+        <path class="flow-arrow dep" d="M398.0,402.0 L398.0,466.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="428.0">所属を見る（片方だけでは答えが出ない）</text>
+        <path class="flow-arrow dep" d="M512.0,491.0 L284.0,491.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="485.0">符丁で指すだけ（内側に持たない）</text>
+        <path class="flow-arrow dep" d="M398.0,580.0 L190.0,516.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="294.0" y="542.0">符丁と合鍵を発行する</text>
+        <path class="flow-arrow dep" d="M398.0,630.0 L190.0,808.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="294.0" y="713.0">表示物と索引の接頭辞にだけ書く（削除は与えない）</text>
+        <path class="flow-arrow dep" d="M398.0,630.0 L398.0,808.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="713.0">合鍵を書く（書き手はここだけ）</text>
+        <path class="flow-arrow dep" d="M476.0,744.0 L398.0,808.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="437.0" y="770.0">合鍵を読むだけ（書き込みはしない）</text>
+        <path class="flow-split" d="M232.0,719.0 L252.0,719.0"/><text class="flow-caption-svg" x="242.0" y="713.0">信頼境界で分割（依存ではない・出所を隔てる）</text>
+        <path class="flow-arrow dep" d="M388.0,719.0 L408.0,719.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="713.0">合鍵の照合は閲覧面にだけ載る</text>
+        <path class="flow-arrow dep" d="M388.0,719.0 L564.0,719.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="476.0" y="713.0">中身を隔離された枠に入れて配る</text>
+        <path class="flow-arrow dep" d="M632.0,744.0 L190.0,808.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="411.0" y="770.0">中身を読み込む（合鍵にも反応にも手が届かない）</text>
+        <path class="flow-arrow dep" d="M320.0,744.0 L606.0,808.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="463.0" y="770.0">アクセスの記録を書く（受け口からは到達不能）</text>
+        
+        <g class="flow-box " transform="translate(96.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">子スキル</div>
+              <div class="sub">UIモック生成等・既存</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box " transform="translate(304.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">持ち込まれた表示物</div>
+              <div class="sub">他所で作られたもの</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box " transform="translate(512.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">既定4テンプレート</div>
+              <div class="sub">同梱・作成済み</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,124.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">共有される表示物の契約</div>
+              <div class="sub">contract.md・作成済み</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">アップロード画面</div>
+              <div class="sub">認証あり・新設</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(252.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">手元のCLI</div>
+              <div class="sub">artifactshare.py・新設</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">手元の管理画面</div>
+              <div class="sub">console_server.py・移設</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+        <g class="flow-box " transform="translate(564.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">MCPの受け口</div>
+              <div class="sub">mcp_server.py・移設</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">8</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,352.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">閲覧可否の判定</div>
+              <div class="sub">ResolveViewability・新設</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">9</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,466.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">共有された表示物</div>
+              <div class="sub">agg-shared-artifact</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">10</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(304.0,466.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">まとめて見せる単位</div>
+              <div class="sub">agg-project・所属を持つ</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">11</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(512.0,466.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">反応</div>
+              <div class="sub">agg-comment・区切りの記録を含む</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">12</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,580.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">公開の受け口</div>
+              <div class="sub">publish_artifact・新設</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">13</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,694.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">認証が要る面</div>
+              <div class="sub">アップロード画面を配る</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">14</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(252.0,694.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">合鍵で見る面</div>
+              <div class="sub">閲覧画面と反応を配る</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">15</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,694.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">合鍵の照合</div>
+              <div class="sub">viewer-token-gate・移設</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">16</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(564.0,694.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">隔離された枠</div>
+              <div class="sub">同一出所として扱わない</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">17</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,808.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">表示物と反応の置き場</div>
+              <div class="sub">接頭辞ごとに権限を分ける</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">18</text></g>
+        </g>
+        <g class="flow-box " transform="translate(304.0,808.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">合鍵の保管</div>
+              <div class="sub">期限と世代を持つ</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">19</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(512.0,808.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">記録の置き場</div>
+              <div class="sub">本体とは別の資源</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">20</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>契約に依存する側</strong>: 配信の仕組みを使う側。契約だけに依存し、受け口の内部も保管の形も知らない</p></li><li><p><strong>公開された契約</strong>: この文脈が外へ公開する唯一の依存先。中身に求めることと、受け口の呼び方を定める</p></li><li><p><strong>利用者の入口</strong>: 招かれた者が操作する経路。いずれも公開の受け口を唯一の書き込み経路とする</p></li><li><p><strong>業務の判定</strong>: 集約ひとつでは答えの出ない判定。合鍵と対象を受け取り、開けるかどうかを返す</p></li><li><p><strong>集約</strong>: 守るべき不変条件を持つ3つの集約。所属の一覧はまとめて見せる単位が持つ</p></li><li><p><strong>公開の受け口</strong>: 利用者の確認・中身の検査・符丁と合鍵の発行を必ず通る唯一の関門</p></li><li><p><strong>配信</strong>: 信頼の境界で2つに分けた配信の口と、閲覧者の合鍵を照合する関門</p></li><li><p><strong>保管</strong>: 表示物・反応・索引と、合鍵の保管、そして本体から切り離した記録の置き場</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 5件／実装観点 5件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 3件／実装観点 5件</span></div>
+        <div class="review-row"><span class="who">platform-advisor</span><span class="detail">設計観点 2件／実装観点 8件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">境界を分けた理由は言葉の意味の逆転にある</div>
+              <div class="entry-consideration">bc-waffleでは文書とは構造を検証される対象だが、この文脈では中身を解釈しない一塊である。実装でこの2つを同じ型・同じ検証経路に載せると、境界を分けた意味が消える。中身の構造を読もうとするコードが現れたら、それは境界を越えている合図と見なす。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">反応を表示物の内側に置かない</div>
+              <div class="entry-consideration">反応は登録なしで誰でも残せ、件数に上限が無い。表示物の内側に持たせると、1件の反応が増えるたびに表示物全体を読み書きすることになり、同時実行と読み込みの両方が劣化する。符丁で指し示す関係に留め、結果整合で足りるものとして扱う。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">所属を持つのはまとめて見せる単位の側</div>
+              <div class="entry-consideration">「その合鍵で何が開けるか」を守る責任がまとめる側にあるため、所属の一覧はそちらが持つ。表示物の側に所属リストを持たせると、表示物を1件更新するたびに他のまとめの閲覧範囲が変わり、一貫性の境界がどちらにあるか説明できなくなる。集約仕様の外部参照欄には両方が並ぶが、参照の向きは所属を持つ側から表示物へ向かう一方向である。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">区切りの記録は反応と同じ並びに載せる</div>
+              <div class="entry-consideration">差し替えの時点を、反応と同じ並びに載る1種の記録として持つ。表示物の側に差し替え時刻を1つ持たせるだけでは、2回目の差し替えで1回目の区切りが復元できなくなり、受け入れ基準を満たせなくなる。表示物の側に履歴の並びを持たせる案は、集約を操作の履歴で膨らませることになるため採らない。読み出しの経路が反応と完全に一致することが、この置き場を選ぶ理由である。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">契約文書には5種類の性質が同居している</div>
+              <div class="entry-consideration">ドメインの不変条件は「分類の目印が閲覧範囲を変えない」と「中身は書き換えられない」の2つだけである。自己完結と隔離は実行環境の性質、配置規則はインフラ仕様、満たさなくてよいことは解説、そして位置を指すURLの引き継ぎは親が子に与える保証にあたる。最後のものは子の義務ではなく閲覧画面側の実装義務なので、子向けの制約として読むと実装が落ちる。実装でこれらを同じ層の検証として並べない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">この文脈はコアであり、契約はそれが公開するポートである</div>
+              <div class="entry-consideration">自前の集約3つと業務サービスを持つ以上、これは技術的詳細だけを扱う外側の層ではなくコアである。契約はそのコアが公開する入口であり、子スキルがそこにだけ依存するのは正しい依存の向きになる。したがって契約は業務語彙だけで書き、保管の内部形状（何がどのように置かれているか）を持ち込まない。持ち込むと、依存してよい約束と知る必要のない詳細の区別が失われる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">配信側に文書種別の分岐を作らない</div>
+              <div class="entry-consideration">種別を選択肢の集合として配信側が持つと、種別が増えるたびに配信側へ手が入り、親が子の事情を知る構造が固定される。種別は意味を解釈しない不透明なラベルとして保持し、等価比較だけを行う。永続化される値なので、後から外すのが難しい点にも注意する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">予約された名前は3種あり、いずれも子の宣言と親の検査に分ける</div>
+              <div class="entry-consideration">隔離の枠を採ったことで表示上の名前の衝突は消えたが、予約された名前自体は3つ残る。表示物に添えるメタ情報の名前（子が宣言し、受け口が読み取る）、居場所のURLの接頭辞（子は決めず、符丁の発行時に親が決める）、合鍵の保管のキー接頭辞（子は関与しない）。制約を守る義務は中身の側にあるが、検査は必ず配信側に置く。中身を配信側が書き換えて吸収すると、見た目を壊す双方向の依存が生まれる。汎用の衝突検査機構は作らず、この3つそれぞれに対する最小限の検査に留める。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">閲覧側が単層であることは受容した判断である</div>
+              <div class="entry-consideration">閲覧の防御は合鍵の照合1つだけで、多層防御の観点では不合格になる。しかし登録なしで開けることが中核の価値であるため、認証層の追加は製品の否定にあたる。単層でよいと決めたことと、単層であることを検討していないことは別物なので、実装でもこの判断を記録として残す。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">最も弱いのは反応を残す経路である</div>
+              <div class="entry-consideration">合鍵の照合は少なくとも認可として働いているが、反応を残す経路の検査は認可でも完全性の保証でも頻度の制限でもない。合鍵を1つ持つ者が高頻度で書き込め、他人の反応を上書きできる。エッジの関数は呼び出しを跨いだ状態を持てないため、そこで頻度を制限することは原理的にできない。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">中身は隔離された枠に入れて読み込む</div>
+              <div class="entry-consideration">自己完結した表示物は定義上その場に書かれた命令を含み、外側へ直接埋め込むとその命令が合鍵や反応の経路と同じ出所で動く。配信時のヘッダーではこの構造を止められない。同じ出所として扱う許可を与えない枠に入れることで、合鍵の読み取りも同一の出所への通信も、ブラウザの仕組みとして塞がる。追加の費用も処理も要らない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">枠に与える許可は属性名で指定する（allow-scripts と allow-top-navigation-by-user-activation の2つだけ）</div>
+              <div class="entry-consideration">sandbox属性に与えるのは allow-scripts と allow-top-navigation-by-user-activation の2つに限る。allow-same-origin は与えない。外側への遷移を許す属性には2種類あり、利用者の操作を条件としない allow-top-navigation を選ぶと、持ち込まれたHTMLが操作なしに任意のタイミングで外側のページごと別のサイトへ飛ばせる。合鍵を持って開いた閲覧者を偽の入力画面へ送り込める経路になるため、必ず by-user-activation の付いた方を使う。逆に外側への遷移を一切許さないと、表示物どうしのリンクを押しても何も起きず、文書を辿る仕組みが死ぬ。あわせて配信時のヘッダー側でも sandbox を指定し、雛形の1行が失われても隔離が残るよう二重にする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">閲覧者へ発行するCookieの名前に __Host- を付ける（合鍵の保管のキーとは無関係）</div>
+              <div class="entry-consideration">対象はブラウザへ発行するCookieの名前であって、合鍵の保管のキーではない。__Host- 接頭辞に加えて、Domain属性を付けないこと・Path=/ とすること・Secure を付けることの3条件が揃って初めて効く。名前を変えるだけでは足りない。これが要るのは、配信の出所を2つに分ける前提が外部の静的な一覧に依存しているためで、その一覧は境界としての利用を推奨されておらず、取り込んでいない環境では別の出所からCookieを書き換えられる余地が残る。攻撃に必要な配信の口は無料で数分で用意できるため、前提条件が異常に安い。この接頭辞は、一覧への依存を設定1箇所で外す。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">合鍵に有効期限と世代番号を持たせる</div>
+              <div class="entry-consideration">保管する合鍵に有効期限と世代番号を持たせ、照合のときに両方を突き合わせる。これが無いと、再発行しても閲覧者の手元のCookieは最大7日間そのまま有効で、「配り直したので前の相手はもう見られない」という運用者の直感が成立しない。照合の読み取りは1回のままで足り、追加の費用は発生しない。実装しない判断を採るなら、その受容理由を制約として記録する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">反応の上書きは、エッジの関門が拒否することで防ぐ</div>
+              <div class="entry-consideration">既存が無いことを要求する条件は、書き込む側が付けるものである。閲覧画面の側で付けるだけの実装にすると、その条件を省いた直接の書き込みで従来どおり上書きでき、対策が実質0層になる。エッジの関門で、条件の付いていない反応の書き込みを拒否すること。既存の関門は形と大きさしか見ていないため、同じ位置に検査を1つ足す形になる。追加の費用は発生しない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">公開の受け口の権限を接頭辞と資源の単位まで絞る</div>
+              <div class="entry-consideration">表示物と索引の置き場への書き込み、および合鍵の保管への書き込みだけに限る。合鍵の保管については接頭辞ではなく資源の識別子そのもので限定する。反応の置き場と記録の置き場への書き込みは与えない。削除の権限も与えない。指定を広く取ると、受け口が破られたときに反応と記録まで書き換えられる。保管側の設定でも同じ範囲に絞り、二重にする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">記録の置き場だけは分ける</div>
+              <div class="entry-consideration">表示物・反応・索引の同居は許容できるが、アクセスの記録だけは別の資源に分け、公開の受け口からは到達できないようにする。保持期間と要件が本体と異なること、事故のときに記録が本体と同じ権限で消せる状態にあるのは調査上の基本違反であること、検査の漏れがあったときに書き込みが記録へ届く経路が同一の資源内にできること、の3点による。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">配信の口を増やしても固定費は増えない</div>
+              <div class="entry-consideration">配信の口そのものに固定費は無く、費用は要求数と転送量で決まる。2つに分けても同じ通信量なら合計はほぼ変わらない。閲覧の口だけは合鍵の保管が必要なため、定額の枠には載せられない点にだけ注意する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">手元のCLIは移設ではなく分割である</div>
+              <div class="entry-consideration">既存のCLIには、文書種別の選択肢の集合と、DESIGN.mdの確定という子スキル固有の操作が埋まっている。そのまま持ってくると、親が子の種別を知る構造が実装の第一歩で固定される。汎用の配信部分だけを抜き出し、種別の選択肢と確定の操作は子スキル側へ残す。子スキル側は、配信の部分をこの受け口の呼び出しへ置き換える。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">書き込みの経路を公開の受け口ひとつに絞る</div>
+              <div class="entry-consideration">手元のCLI・管理画面・MCPの受け口のいずれも、保管や合鍵の保管を直接操作せず、公開の受け口を通す。直接操作する経路を作ると、中身の検査を経ないアップロードが成立し、外部への依存の件数を知らせる保証も、招かれた者だけが公開できるという保証も同時に無効になる。読み取りだけの操作（一覧・取り出し）に別経路を許すなら、それを許可として明記する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">中身を合成しないため取り出しが元と一致する</div>
+              <div class="entry-consideration">アップロードされたものを書き換えず、別のファイルとして保管して枠から読み込む構成にしたため、指紋が示す対象が曖昧にならない。閲覧画面の版は別の値として持つ。合成する構成のままだと、閲覧画面を直しても既存のものが同期済みと判定され、修正が届いたかどうかを判別できなくなる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">位置を指すURLの引き継ぎは閲覧画面側が実装する</div>
+              <div class="entry-consideration">受け取った位置を、枠へ読み込む先に付けて渡す。隔離の枠では外側から中の状態を読めないため、実装できるのは読み込み時に一度渡す一方向だけである。中身に対応する位置が無ければ先頭から表示されるだけで、契約は増えない。これは子の義務ではなく閲覧画面の義務なので、契約文書の記述を子向けの制約として読むと落ちる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">差し替えと反応の対応は区切りの記録で表す</div>
+              <div class="entry-consideration">版を持たない代わりに、差し替えの時点を反応と同じ並びに載る記録として残す。これが無いと、直してほしいという意思表示が解消済みなのかまだ有効なのかを判別できず、往復そのものが機能しなくなる。後から遡って復元できない種類の欠落なので、最初から入れる。表示物の側に更新時刻を1つ持たせるだけの実装は、2回目の差し替えで1回目の区切りを失う。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">2つの合鍵を同じ名前で扱わない</div>
+              <div class="entry-consideration">表示物の合鍵とまとめの合鍵は、属する集約も失効の条件も発行の契機も異なる。実装で同じ名前を使うと、片方を再発行したつもりでもう片方が生きていた、という取り違えが起きる。取り違えは閲覧できる範囲の誤りとして現れるため、名前で区別する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">2つの集約にまたがる判定は集約の外に置く</div>
+              <div class="entry-consideration">ある合鍵である表示物を開けるかは、表示物自身の公開状態と、まとめへの所属の両方を見なければ答えが出ない。どちらか一方の集約だけでは表現できないため、業務サービスとして集約の外に置き、合鍵の照合はそこへ問い合わせる。片方だけを見る実装は、正常系の確認をすべて通過したまま、公開を止めたはずのものがまとめの合鍵で開けるという欠陥を残す。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">反応を残す経路にも業務の規則がある</div>
+              <div class="entry-consideration">返信先として指せるのは同じ表示物に付いた反応だけであり、公開が止まっている表示物へは残せない。前者は親の反応が指す表示物を突き合わせる必要があり、後者は表示物の公開状態を読む必要がある。いずれも形と大きさの検査では守れないため、守る場所を決める。守らない判断を採るなら、受け入れ基準を満たせないことを制約として記録する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">所属の同時更新でも二重に入らないようにする</div>
+              <div class="entry-consideration">同じ表示物を同じまとめへ繰り返し加えても二重に入らないことを、操作の保証として定めている。所属の一覧を読んで書き戻すだけの実装は、同時に2件の追加が起きたときに片方を失う。反応の同時書き込みには対策を置きながら所属には置かない、という非対称にしない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">テストの重心は結合の側に置く</div>
+              <div class="entry-consideration">この業務領域は補完に分類され、厚いドメインモデルを組まず薄い手続きとして実装する方針を採っている。守るべき規則の多くが、複数の集約にまたがる判定と、保管・配信の振る舞いに依存するため、単体の検証だけでは受け入れ基準を満たせない。特に境界の判定を扱うシナリオは、実際の経路を通して確かめる。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>閲覧の防御は合鍵1層である。中核の価値（登録なしで開ける）とのトレードオフとして明示的に受容した</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>反応を残す経路に頻度の制限が無い。エッジの関門は呼び出しを跨いだ状態を持てないため、そこでの実装は原理的に不可能で、別の仕組みを入れるには月額の固定費が発生する</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>反応を上書き不可にすると、反応の編集と削除も同じ仕組みで不可能になる。記録として動かないことを優先し、受容する</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>反応の一覧は保管の列挙機能で配られており、合鍵を1つ持つ者はその表示物に付いた反応のキーを全て列挙できる。既存の方式をそのまま引き継ぐ</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">5</span>
+              <p>表示物どうしの隔離までは行っていない。すべての表示物が同じ出所を共有するため、完全に分けるには独自のドメインと証明書が必要になる。招待制により残るリスクは事故の水準に収まると判断した</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">6</span>
+              <p>節を指す位置は、渡されれば開けるが、目次を押しても記録されない。位置を自動で記録するには中身からの通知が必要になり、契約が増えるため見送った</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">7</span>
+              <p>無料の枠は有料プランを前提とする。2025年7月15日以降に作られた口座は6か月で閉じられるため、無料で使えるとは案内できない。実際の請求は月1ドル未満に収まる</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/references/templates/share-wrapper.html</div>
+              <div class="reason">中身を隔離された枠で読み込み、反応の欄を外側に持つ閲覧画面の実体。位置を指すURLの引き継ぎもここが担う</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/references/templates/upload-app.html</div>
+              <div class="reason">認証が要る面に配る、公開と一覧の画面</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/infra/cloudformation.yaml</div>
+              <div class="reason">配信の口を2つに分け、認証・公開の受け口・記録の置き場を追加する</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/infra/cloudfront-function/viewer-token-gate.js</div>
+              <div class="reason">合鍵の照合（期限と世代の突き合わせを含む）と、反応の書き込みに条件が付いていないものを拒否する検査の追加</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/publish_artifact/main.py</div>
+              <div class="reason">利用者の確認・中身の検査・符丁と合鍵の発行・配置を行う唯一の関門</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/scripts/artifactshare.py</div>
+              <div class="reason">既存CLIから汎用の配信部分だけを抜き出して作る。文書種別の選択肢の集合とDESIGN.mdの確定の操作は持ち込まない</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/scripts/console_server.py</div>
+              <div class="reason">移設。保管や合鍵の保管を直接操作せず、公開の受け口を通す形へ改める</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/scripts/mcp_server.py</div>
+              <div class="reason">同上</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/documents/skills/design-share.json</div>
+              <div class="reason">配信の手順を、この基盤の受け口を呼ぶ形へ書き換える。種別の選択肢と確定の操作はこちらに残す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/references/contract.md</div>
+              <div class="reason">保管の内部形状（反応の置かれ方）を契約から外し、位置を指すURLの引き継ぎが親の義務であることを明示する</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
