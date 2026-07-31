@@ -22,12 +22,16 @@ from pathlib import Path
 
 import manage
 import publish
+import publishers
 
-# 受け付ける操作と、それを担う処理。ここに無いものは受け付けない
+# 受け付ける操作。ここに無いものは受け付けない
 ACTIONS = {
     "publish", "list", "replace", "rotate", "disable", "enable",
-    "assign", "unassign",
+    "assign", "unassign", "transfer", "invite", "remove-publisher",
 }
+
+# 管理者のグループ名。Cognitoのトークンに含まれていれば管理者とみなす
+ADMIN_GROUP = "administrators"
 
 
 def handler(event, context):  # pragma: no cover - 実際の接続を組み立てるだけ
@@ -39,8 +43,8 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
     if action not in ACTIONS:
         return _response(400, {"error": "UNKNOWN_ACTION", "message": "その操作はありません。"})
 
-    publisher = _identify(authorization)
-    if not publisher:
+    caller = _identify(authorization)
+    if not caller:
         return _response(403, {"error": "NOT_INVITED",
                                "message": "操作できるのは招かれた利用者だけです。"})
 
@@ -49,31 +53,42 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
             result = publish.publish({**body, "authorization": authorization},
                                      _publish_deps())
         else:
-            result = _dispatch(action, manage.Deps(**_connections()), publisher, body)
+            result = _dispatch(action, manage.Deps(**_connections()), caller, body)
         return _response(200, result)
     except publish.PublishError as e:
         return _response(403 if e.code == "NOT_INVITED" else 400,
                          {"error": e.code, "message": e.message})
-    except manage.ManageError as e:
-        return _response(404 if e.code == "ARTIFACT_NOT_FOUND" else 400,
+    except publishers.PublisherError as e:
+        return _response(403 if e.code == "NOT_ADMINISTRATOR" else 400,
                          {"error": e.code, "message": e.message})
+    except manage.ManageError as e:
+        status = {"ARTIFACT_NOT_FOUND": 404,
+                  "NOT_ADMINISTRATOR": 403,
+                  "NOT_THE_PUBLISHER": 403}.get(e.code, 400)
+        return _response(status, {"error": e.code, "message": e.message})
 
 
-def _dispatch(action, deps, publisher, body):  # pragma: no cover
+def _dispatch(action, deps, caller, body):  # pragma: no cover
     artifact_id = body.get("artifactId", "")
     if action == "list":
-        return {"artifacts": manage.list_artifacts(deps, publisher)}
+        return {"artifacts": manage.list_artifacts(deps, caller)}
     if action == "replace":
-        return manage.replace_content(deps, publisher, artifact_id, body.get("html", ""))
+        return manage.replace_content(deps, caller, artifact_id, body.get("html", ""))
     if action == "rotate":
-        return manage.reissue_token(deps, publisher, artifact_id)
+        return manage.reissue_token(deps, caller, artifact_id)
     if action == "disable":
-        return manage.suspend(deps, publisher, artifact_id)
+        return manage.suspend(deps, caller, artifact_id)
     if action == "enable":
-        return manage.resume(deps, publisher, artifact_id)
+        return manage.resume(deps, caller, artifact_id)
     if action == "assign":
-        return manage.assign(deps, publisher, artifact_id, body.get("projectId", ""))
-    return manage.unassign(deps, publisher, artifact_id, body.get("projectId", ""))
+        return manage.assign(deps, caller, artifact_id, body.get("projectId", ""))
+    if action == "unassign":
+        return manage.unassign(deps, caller, artifact_id, body.get("projectId", ""))
+    if action == "transfer":
+        return manage.transfer(deps, caller, artifact_id, body.get("toPublisher", ""))
+    if action == "invite":
+        return publishers.invite(deps, caller, body.get("email", ""))
+    return publishers.remove(deps, caller, body.get("publisherId", ""))
 
 
 # ── 外部との接続 ────────────────────────────────────────
@@ -83,8 +98,10 @@ def _connections() -> dict:  # pragma: no cover
 
     bucket = os.environ["CONTENT_BUCKET"]
     kvs_arn = os.environ["KVS_ARN"]
+    pool = os.environ["USER_POOL_ID"]
     s3 = boto3.client("s3")
     kvs = boto3.client("cloudfront-keyvaluestore")
+    idp = boto3.client("cognito-idp")
 
     class _Store:
         def put(self, key, body, content_type):
@@ -114,24 +131,57 @@ def _connections() -> dict:  # pragma: no cover
         def get(self, key):
             return kvs.get_key(KvsARN=kvs_arn, Key=key)["Value"]
 
-    return {"store": _Store(), "keys": _Keys(),
+    class _Directory:
+        """招かれている人の名簿。実体は利用者プール。"""
+
+        def find(self, publisher_id):
+            try:
+                return idp.admin_get_user(UserPoolId=pool, Username=publisher_id)
+            except Exception:
+                return None
+
+        def invite(self, email):
+            try:
+                idp.admin_create_user(
+                    UserPoolId=pool, Username=email,
+                    UserAttributes=[{"Name": "email", "Value": email},
+                                    {"Name": "email_verified", "Value": "true"}],
+                    DesiredDeliveryMediums=["EMAIL"])
+            except idp.exceptions.UsernameExistsException:
+                pass          # 既に招かれている。合言葉も公開したものも変えない
+            return email
+
+        def remove(self, publisher_id):
+            idp.admin_delete_user(UserPoolId=pool, Username=publisher_id)
+
+    return {"store": _Store(), "keys": _Keys(), "directory": _Directory(),
             "viewer_domain": os.environ.get("VIEWER_DOMAIN", "")}
 
 
 def _publish_deps() -> publish.Deps:  # pragma: no cover
+    connections = _connections()
+    connections.pop("directory")          # 公開は名簿を読まない
     return publish.Deps(
-        identify=_identify,
+        identify=lambda auth: (_identify(auth) or manage.Caller("")).id or None,
         wrapper_template=(Path(__file__).parent / "share-wrapper.html")
         .read_text(encoding="utf-8"),
-        **_connections(),
+        **connections,
     )
 
 
-def _identify(authorization: str) -> str | None:  # pragma: no cover
-    """利用者の証明を検証し、その人を表す値を返す。招かれていなければ None。"""
+def _identify(authorization: str) -> manage.Caller | None:  # pragma: no cover
+    """利用者の証明を検証し、誰であるかと管理者かどうかを返す。
+
+    招かれていなければ None。管理者かどうかは、証明に含まれるグループで決める
+    （こちらで名簿を引き直さない。証明そのものが唯一の根拠であるため）。
+    """
     from cognito import verify
-    return verify(authorization, os.environ["USER_POOL_ID"],
-                  os.environ["USER_POOL_CLIENT_ID"])
+    claims = verify(authorization, os.environ["USER_POOL_ID"],
+                    os.environ["USER_POOL_CLIENT_ID"])
+    if not claims:
+        return None
+    return manage.Caller(id=claims["username"],
+                         is_admin=ADMIN_GROUP in claims.get("groups", []))
 
 
 def _response(status: int, payload: dict) -> dict:  # pragma: no cover

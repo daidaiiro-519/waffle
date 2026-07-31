@@ -23,6 +23,13 @@ Cognitoでログインした管理画面から行う。
 
   artifactshare invite <メールアドレス>
       公開できる人を招く。仮のパスワードが本人宛に届く。
+      2人目以降は管理画面からも招けるので、ここで招くのは最初の1人でよい。
+
+  artifactshare grant-admin <メールアドレス>
+      その人を管理者にする。管理者は全員の共有アーティファクトを手入れでき、
+      投稿者を出し入れできる。管理者を増やす操作だけは、AWSの権限を持つ人の
+      手元に残してある（管理者が自分でさらに管理者を作れると、招かれた人の
+      うち誰が最終的な責任を負うのかが辿れなくなるため）。
 
   artifactshare status
       いまの環境の状態（URL・招かれている人）を表示する。
@@ -93,7 +100,7 @@ def init(stack: str, region: str | None) -> None:
     print(f"  閲覧の入口: https://{out.get('ViewerDomain', '')}/")
     print("\n続けて次の2つを行ってください。")
     print("  1. artifactshare update-function    関門と受け口に中身を入れる")
-    print("  2. artifactshare invite <メール>    最初の公開できる人を招く")
+    print("  2. artifactshare grant-admin <メール>  最初の管理者を決める")
     print("\nこの2つを省くと、管理画面を開いてもログインできず、"
           "共有URLもすべて開けないままになります。")
 
@@ -133,6 +140,28 @@ def invite(email: str, stack: str, region: str | None) -> None:
     )
     print(f"{email} を招きました。仮のパスワードが本人宛に届きます。")
     print(f"管理画面: https://{out.get('AdminDomain', '')}/")
+
+
+def grant_admin(email: str, stack: str, region: str | None) -> None:
+    """その人を管理者にする。招かれていなければ先に招く。"""
+    import boto3
+
+    out = _outputs(stack, region)
+    idp = boto3.client("cognito-idp", region_name=region)
+    pool = out["UserPoolId"]
+
+    try:
+        idp.admin_get_user(UserPoolId=pool, Username=email)
+    except idp.exceptions.UserNotFoundException:
+        print(f"{email} はまだ招かれていません。先に招きます。")
+        invite(email, stack, region)
+
+    idp.admin_add_user_to_group(UserPoolId=pool, Username=email,
+                                GroupName="administrators")
+    print(f"{email} を管理者にしました。")
+    print("管理者は全員の共有アーティファクトを一覧・公開停止・再発行でき、"
+          "投稿者を出し入れできます。")
+    print("他人が公開したものの中身の差し替えだけはできません。")
 
 
 # ── 手元のソースを反映する ──────────────────────────────
@@ -205,6 +234,8 @@ def main(argv: list[str]) -> int:
     sub.add_parser("status", help="環境の状態を表示する")
     sub.add_parser("invite", help="公開できる人を招く") \
        .add_argument("email", help="招く人のメールアドレス")
+    sub.add_parser("grant-admin", help="その人を管理者にする") \
+       .add_argument("email", help="管理者にする人のメールアドレス")
 
     args = parser.parse_args(argv)
     {
@@ -213,6 +244,7 @@ def main(argv: list[str]) -> int:
         "update-function": lambda: update_function(args.stack, args.region),
         "status": lambda: status(args.stack, args.region),
         "invite": lambda: invite(args.email, args.stack, args.region),
+        "grant-admin": lambda: grant_admin(args.email, args.stack, args.region),
     }[args.command]()
     return 0
 

@@ -180,6 +180,16 @@ Resources:
           RequireNumbers: true
           RequireSymbols: false
 
+  # 管理者。全員の共有アーティファクトを一覧・公開停止・再発行でき、
+  # 投稿者を招いたり外したりできる。他人の中身の差し替えだけはできない。
+  # 受け口はこのグループが証明に含まれるかだけを見て、名簿を引き直さない。
+  AdministratorGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: administrators
+      UserPoolId: !Ref UserPool
+      Description: 全員の共有アーティファクトを手入れでき、投稿者を出し入れできる
+
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -240,6 +250,17 @@ Resources:
                   - cloudfront-keyvaluestore:PutKey
                   - cloudfront-keyvaluestore:DeleteKey
                 Resource: !GetAtt TokenStore.Arn
+              # 招待と、外すこと。この利用者プールひとつに限る。
+              # グループの付け替えは含めない（管理者を増やすのは、環境を
+              # 用意した責任者がAWSの権限で行う操作として残す）
+              - Sid: ManagePublishers
+                Effect: Allow
+                Action:
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminDeleteUser
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:ListUsers
+                Resource: !GetAtt UserPool.Arn
               - Sid: OwnLogsOnly
                 Effect: Allow
                 Action:

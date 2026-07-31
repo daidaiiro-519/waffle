@@ -1,0 +1,155 @@
+"""公開できる人の出し入れを、仕様の受け入れシナリオに沿って確かめる。
+
+実行:  python3 -m pytest lambda/admin_api/tests/ -v
+
+対象の仕様: uc-invite-publisher（受け入れ基準8件・エラー3件・操作保証2件）
+名簿への接続は依存として渡す形にしてあるため、この検証では偽の名簿を渡す。
+"""
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import manage  # noqa: E402
+import publishers  # noqa: E402
+
+from test_manage import FakeKeyStore, FakeStore  # noqa: E402
+
+ADMIN = manage.Caller("admin-1", is_admin=True)
+SOMEONE = manage.Caller("publisher-2")
+
+
+class FakeDirectory:
+    """招かれている人の名簿。実物はこの文脈の外にある。"""
+
+    def __init__(self, people=None):
+        self.people = dict(people or {})   # id -> {"email", "status"}
+
+    def find(self, publisher_id):
+        return self.people.get(publisher_id)
+
+    def invite(self, email):
+        for pid, person in self.people.items():
+            if person["email"] == email:
+                return pid                  # 既に招かれていればそのまま返す
+        pid = f"p-{len(self.people) + 1}"
+        self.people[pid] = {"email": email, "status": "invited"}
+        return pid
+
+    def remove(self, publisher_id):
+        self.people.pop(publisher_id, None)
+
+
+def setup(people=None, objects=None):
+    directory = FakeDirectory(people if people is not None else {
+        "admin-1": {"email": "admin@example.com", "status": "active"},
+        "publisher-2": {"email": "p2@example.com", "status": "active"},
+    })
+    deps = manage.Deps(
+        store=FakeStore(objects or {}), keys=FakeKeyStore(),
+        directory=directory, now=lambda: 1_700_000_000,
+        viewer_domain="viewer.example.net",
+    )
+    return deps, directory
+
+
+def artifact_owned_by(publisher, artifact_id="aaaaaaaa", status="active"):
+    meta = {"artifactId": artifact_id, "name": "文書", "status": status,
+            "projects": [], "tags": [], "uploadedBy": publisher, "updatedAt": 1}
+    return {f"meta/{artifact_id}.json": {"body": json.dumps(meta),
+                                         "content_type": "application/json"}}
+
+
+# ── 招く ────────────────────────────────────────────────
+
+def test_招かれた人は公開できるようになる():
+    deps, directory = setup()
+    result = publishers.invite(deps, ADMIN, "new@example.com")
+
+    assert directory.find(result["publisherId"])["email"] == "new@example.com"
+    assert result["event"] == "PublisherInvited"
+
+
+def test_管理者でない者は招けない():
+    deps, directory = setup()
+    before = dict(directory.people)
+
+    with pytest.raises(publishers.PublisherError) as x:
+        publishers.invite(deps, SOMEONE, "new@example.com")
+
+    assert x.value.code == "NOT_ADMINISTRATOR"
+    assert directory.people == before      # 名簿は変わっていない
+
+
+def test_重ねて招いても増えず状態も変わらない():
+    """Given 既に招かれている / When もう一度招く / Then 二重にならない"""
+    deps, directory = setup()
+    first = publishers.invite(deps, ADMIN, "new@example.com")
+    count = len(directory.people)
+
+    again = publishers.invite(deps, ADMIN, "new@example.com")
+
+    assert again["publisherId"] == first["publisherId"]
+    assert len(directory.people) == count
+
+
+# ── 外す ────────────────────────────────────────────────
+
+def test_外された人は名簿から消える():
+    deps, directory = setup()
+    publishers.remove(deps, ADMIN, "publisher-2")
+    assert directory.find("publisher-2") is None
+
+
+def test_外しても公開したものは残る():
+    """Given その人が公開している / When 外す / Then 公開されたまま残る
+
+    閲覧者の手元の共有URLが、投稿者の異動で黙って死んではならない。
+    """
+    deps, _ = setup(objects=artifact_owned_by("publisher-2"))
+    deps.keys.put("token:aaaaaaaa", "abc|0|1")
+
+    publishers.remove(deps, ADMIN, "publisher-2")
+
+    meta = json.loads(deps.store.get("meta/aaaaaaaa.json"))
+    assert meta["status"] == "active"
+    assert deps.keys.get("token:aaaaaaaa") == "abc|0|1"   # 閲覧トークンも失効しない
+
+
+def test_手入れできなくなるものがあれば件数を伝える():
+    objects = {}
+    for i in range(3):
+        objects.update(artifact_owned_by("publisher-2", f"art{i}"))
+    deps, _ = setup(objects=objects)
+
+    result = publishers.remove(deps, ADMIN, "publisher-2")
+
+    assert result["orphanedArtifacts"] == 3
+
+
+def test_管理者は自分自身を外せない():
+    """管理者が一人もいない状態へ落ちる経路を塞ぐ"""
+    deps, directory = setup()
+    with pytest.raises(publishers.PublisherError) as x:
+        publishers.remove(deps, ADMIN, ADMIN.id)
+    assert x.value.code == "CANNOT_REMOVE_SELF"
+    assert directory.find(ADMIN.id) is not None
+
+
+def test_招かれていない人は外せない():
+    deps, _ = setup()
+    with pytest.raises(publishers.PublisherError) as x:
+        publishers.remove(deps, ADMIN, "no-such-person")
+    assert x.value.code == "PUBLISHER_NOT_FOUND"
+
+
+def test_管理者でない者は外せない():
+    deps, directory = setup()
+    with pytest.raises(publishers.PublisherError) as x:
+        publishers.remove(deps, SOMEONE, "admin-1")
+    assert x.value.code == "NOT_ADMINISTRATOR"
+    assert directory.find("admin-1") is not None

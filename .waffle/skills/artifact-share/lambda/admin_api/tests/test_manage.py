@@ -55,8 +55,8 @@ HTML = """<!doctype html><html><head>
 <meta name="id" content="adr-x"><meta name="type" content="DecisionRecord">
 <meta name="title" content="検索基盤の選定"><title>別</title></head><body>本文</body></html>"""
 
-ME = "publisher-1"
-SOMEONE_ELSE = "publisher-2"
+ME = manage.Caller("publisher-1")
+SOMEONE_ELSE = manage.Caller("publisher-2")
 
 
 def setup(keys=None):
@@ -68,7 +68,7 @@ def setup(keys=None):
         {"html": HTML, "authorization": "Bearer x"},
         publish.Deps(
             store=store, keys=key_store,
-            identify=lambda _t: ME,
+            identify=lambda _t: ME.id,
             wrapper_template="<html>{{アーティファクトID}}</html>",
             now=lambda: 1_700_000_000,
             viewer_domain="viewer.example.net",
@@ -105,7 +105,7 @@ def test_他人が公開したものは存在しないものとして扱う():
 def test_一覧には自分が公開したものだけが並ぶ():
     deps, mine = setup()
     other = dict(meta_of(deps, mine["artifactId"]),
-                 artifactId="zzzzzzzz", uploadedBy=SOMEONE_ELSE)
+                 artifactId="zzzzzzzz", uploadedBy=SOMEONE_ELSE.id)
     deps.store.put("meta/zzzzzzzz.json", json.dumps(other), "application/json")
 
     ids = [row["artifactId"] for row in manage.list_artifacts(deps, ME)]
