@@ -33,10 +33,11 @@ class FakeDirectory:
         return self.people.get(publisher_id)
 
     def invite(self, email):
+        # 宛先で入る設定のため、名簿が持つ識別子は宛先とは別の値になる
         for pid, person in self.people.items():
             if person["email"] == email:
                 return pid                  # 既に招かれていればそのまま返す
-        pid = f"p-{len(self.people) + 1}"
+        pid = f"id-{len(self.people) + 1}"
         self.people[pid] = {"email": email, "status": "invited"}
         return pid
 
@@ -232,3 +233,13 @@ def test_招かれていない人へは送り直せない():
     with pytest.raises(publishers.PublisherError) as x:
         publishers.resend_invite(deps, ADMIN, "no-such-person")
     assert x.value.code == "PUBLISHER_NOT_FOUND"
+
+
+def test_招待が返す識別子は一覧のものと揃っている():
+    """揃っていないと、招いた直後に引き継ぎ先として指せない。
+    宛先で入る設定のため、名簿の識別子は宛先そのものではない。"""
+    deps, _ = setup()
+    invited = publishers.invite(deps, ADMIN, "new@example.com")
+
+    listed = {r["id"] for r in publishers.list_publishers(deps, ADMIN)}
+    assert invited["publisherId"] in listed

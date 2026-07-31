@@ -150,15 +150,22 @@ def _connections() -> dict:  # pragma: no cover
             return got
 
         def invite(self, email):
+            """招いて、名簿が持つ識別子を返す。
+
+            宛先で入る設定にしてあるため、名簿の識別子は宛先そのものではない。
+            公開したものの持ち主はこの識別子で記録されるので、宛先を返すと
+            招いた直後に引き継ぎ先として指せなくなる。
+            """
             try:
-                idp.admin_create_user(
+                created = idp.admin_create_user(
                     UserPoolId=pool, Username=email,
                     UserAttributes=[{"Name": "email", "Value": email},
                                     {"Name": "email_verified", "Value": "true"}],
                     DesiredDeliveryMediums=["EMAIL"])
+                return created["User"]["Username"]
             except idp.exceptions.UsernameExistsException:
-                pass          # 既に招かれている。合言葉も公開したものも変えない
-            return email
+                # 既に招かれている。合言葉も公開したものも変えない
+                return idp.admin_get_user(UserPoolId=pool, Username=email)["Username"]
 
         def remove(self, publisher_id):
             idp.admin_delete_user(UserPoolId=pool, Username=publisher_id)

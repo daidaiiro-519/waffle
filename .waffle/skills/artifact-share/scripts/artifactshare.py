@@ -132,6 +132,8 @@ def invite(email: str, stack: str, region: str | None) -> None:
     import boto3
 
     out = _outputs(stack, region)
+    # 宛先で入る設定のため、ここで渡す宛先は入り口の名前として使われ、
+    # 名簿の中では別の識別子が振られる
     boto3.client("cognito-idp", region_name=region).admin_create_user(
         UserPoolId=out["UserPoolId"],
         Username=email,

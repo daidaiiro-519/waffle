@@ -11,21 +11,24 @@
      入り直すための券だけを残す。誰であるかを示す証明は短命なので、
      画面を開き直すたびに取り直す。 */
   var KEY = 'artifactshare.refresh';
-  var session = { id: null, name: '', admin: false, refresh: null };
+  var session = { token: null, who: '', label: '', admin: false, refresh: null };
 
   function remember(tokens) {
-    session.id = tokens.IdToken;
+    session.token = tokens.IdToken;
     if (tokens.RefreshToken) {
       session.refresh = tokens.RefreshToken;
       try { localStorage.setItem(KEY, tokens.RefreshToken); } catch (e) { /* 使えなくても続く */ }
     }
     var claims = readClaims(tokens.IdToken);
-    session.name = claims['cognito:username'] || claims.email || '';
+    // 突き合わせに使う値。宛先で入る設定なので、人が読める文字列ではない
+    session.who = claims['cognito:username'] || '';
+    // 画面に出す名前。読めるのはこちら
+    session.label = claims.email || session.who;
     session.admin = (claims['cognito:groups'] || []).indexOf('administrators') >= 0;
   }
 
   function forget() {
-    session = { id: null, name: '', admin: false, refresh: null };
+    session = { token: null, who: '', label: '', admin: false, refresh: null };
     try { localStorage.removeItem(KEY); } catch (e) { /* 同上 */ }
   }
 
@@ -89,7 +92,7 @@
   function api(action, body, retried) {
     return fetch(CONFIG.apiUrl, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + session.id },
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + session.token },
       body: JSON.stringify(Object.assign({ action: action }, body || {}))
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (d) {
@@ -140,7 +143,7 @@
     gateForm('loginform');
     $('g-err').hidden = !message;
     if (message) $('g-err').textContent = message;
-    $('g-pass').value = '';
+    clearSecrets();
     setTimeout(function () { $('g-mail').focus(); }, 40);
   }
 
@@ -149,18 +152,27 @@
     showGate('入り直してください。');
   }
 
+  function clearSecrets() {
+    // 仕様の操作保証: 合言葉と確認コードをこの側に残さない。
+    // 画面が隠れても入力欄の値は残るため、明示的に消す
+    ['g-pass', 'g-new', 'g-new2', 'g-code', 'g-rnew'].forEach(function (id) {
+      if ($(id)) $(id).value = '';
+    });
+  }
+
   function entered() {
+    clearSecrets();
     $('gate').hidden = true;
     document.body.classList.toggle('is-admin', session.admin);
     var who = document.querySelector('.whoami');
     who.textContent = '';
     var av = document.createElement('span');
     av.className = 'avatar';
-    av.textContent = (session.name || '?').slice(0, 2).toUpperCase();
+    av.textContent = (session.label || '?').slice(0, 2).toUpperCase();
     var out = document.createElement('button');
     out.type = 'button'; out.className = 'signout'; out.textContent = 'ログアウト';
     out.addEventListener('click', function () { forget(); showGate(''); });
-    who.append(av, document.createTextNode(session.name), out);
+    who.append(av, document.createTextNode(session.label), out);
     load();
   }
 
@@ -264,9 +276,16 @@
       $('g-mail').value = pendingMail;
       toast('パスワードを決めました。ログインしてください');
     }).catch(function (x) {
-      err.textContent = /CodeMismatch|ExpiredCode/.test(x.kind || '')
-        ? 'コードが違うか、期限が切れています。もう一度送ってください。'
-        : (x.message || '決められませんでした。');
+      if (/NotAuthorized|InvalidParameter/.test(x.kind || '')) {
+        // まだ一度も入っていない人は、この経路を使えない（仕様の
+        // RESET_NOT_AVAILABLE）。管理者に招き直してもらうほかない
+        err.textContent = 'この宛先はまだ招待に応じていません。'
+          + '管理者に招待を送り直してもらってください。';
+      } else if (/CodeMismatch|ExpiredCode/.test(x.kind || '')) {
+        err.textContent = 'コードが違うか、期限が切れています。もう一度送ってください。';
+      } else {
+        err.textContent = x.message || '決められませんでした。';
+      }
       err.hidden = false;
     }).then(function () { $('g-rgo').disabled = false; });
   });
@@ -304,7 +323,7 @@
     btn.setAttribute('aria-expanded', 'false');
     var ul = document.createElement('ul'); ul.hidden = true;
 
-    var mine = item.uploadedBy === session.name || !item.uploadedBy;
+    var mine = item.uploadedBy === session.who || !item.uploadedBy;
     var entries = [['開く']];
     // 中身を差し替えられるのは公開した本人だけ。管理者にも出さない
     if (mine && item.status === 'active') entries.push(['差し替えてアップロード']);
@@ -397,7 +416,7 @@
       var t = document.createElement('p'); t.className = 'title'; t.textContent = d.name;
       var sub = document.createElement('div'); sub.className = 'sub';
       // 管理者は全員のものを見るため、誰が公開したかが要る
-      if (session.admin) sub.appendChild(chip('', d.uploadedBy === session.name ? '自分' : d.uploadedBy));
+      if (session.admin) sub.appendChild(chip('', publisherLabel(d.uploadedBy)));
       sub.appendChild(d.docType ? chip('dtype', d.docType) : chip('dtype none', '種別なし'));
       (d.projects || []).forEach(function (p) { sub.appendChild(chip('proj', p)); });
       (d.tags || []).forEach(function (g) { sub.appendChild(chip('tag', g)); });
@@ -633,6 +652,7 @@
     api('publishers').then(function (d) {
       PEOPLE = d.publishers || [];
       renderMembers();
+      render();          // 公開した人を読める名前で出し直す
     }).catch(function () { /* 一覧が主目的なので、ここは黙って諦める */ });
   }
 
@@ -646,7 +666,7 @@
       var row = document.createElement('div'); row.className = 'mrow';
       var main = document.createElement('div');
       var name = document.createElement('p'); name.className = 'mname';
-      name.textContent = p.name + (p.id === session.name ? '（自分）' : '');
+      name.textContent = p.name + (p.id === session.who ? '（自分）' : '');
       var mail = document.createElement('span'); mail.className = 'mmail'; mail.textContent = p.email || '';
       main.append(name, mail);
 
@@ -660,7 +680,7 @@
       else if (p.admin) { chipEl.className = 'rolechip admin'; chipEl.textContent = '管理者'; }
       else { chipEl.className = 'rolechip member'; chipEl.textContent = '投稿者'; }
       end.appendChild(chipEl);
-      if (p.id !== session.name) end.appendChild(memberMenu(p));
+      if (p.id !== session.who) end.appendChild(memberMenu(p));
 
       row.append(main, count, end);
       list.appendChild(row);
@@ -669,6 +689,14 @@
 
   function owned(id) {
     return ITEMS.filter(function (d) { return d.uploadedBy === id; }).length;
+  }
+
+  function publisherLabel(id) {
+    if (id === session.who) return '自分';
+    for (var i = 0; i < PEOPLE.length; i++) {
+      if (PEOPLE[i].id === id) return PEOPLE[i].name || PEOPLE[i].email || id;
+    }
+    return id;
   }
 
   function memberMenu(p) {
