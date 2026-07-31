@@ -1,0 +1,332 @@
+{
+  "documentId": "agg-project",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "aggregate",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "複数の表示物をまとめて見せる単位と、そのための合鍵を守る集約：agg-project"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "複数の表示物を1つの合鍵でまとめて見せるための単位を扱う集約。何が入っているかと、その合鍵で何が開けるかを守る。",
+        "所属は人が明示的に選んだときにだけ成立する。表示物の中に書かれた値によって所属が変わることは無い。"
+      ]
+    },
+    "aggregateRoot": {
+      "blockType": "AggregateRoot",
+      "title": "集約ルート",
+      "name": "Project",
+      "externalRefs": [
+        "SharedArtifact"
+      ]
+    },
+    "entities": {
+      "blockType": "Entities",
+      "title": "エンティティ",
+      "items": [
+        {
+          "name": "Project",
+          "role": "まとめて見せる単位の合鍵と、入っている表示物の一覧を守る集約ルート",
+          "isRoot": true,
+          "attributes": [
+            {
+              "name": "projectId",
+              "type": "ProjectId"
+            },
+            {
+              "name": "displayName",
+              "type": "string"
+            },
+            {
+              "name": "projectKey",
+              "type": "ProjectKey"
+            },
+            {
+              "name": "viewToken",
+              "type": "ProjectViewToken"
+            },
+            {
+              "name": "status",
+              "type": "ProjectStatus"
+            },
+            {
+              "name": "memberSlugs",
+              "type": "Slug[]"
+            },
+            {
+              "name": "createdAt",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    "valueObjects": {
+      "blockType": "ValueObjects",
+      "title": "値オブジェクト",
+      "items": [
+        {
+          "name": "ProjectId",
+          "represents": "まとめて見せる単位を一意に指す符丁",
+          "behavior": "不変。作成時に発行され、以後変わらない。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ProjectKey",
+          "represents": "人が読める短い名前",
+          "behavior": "不変。作る人が付ける。付けなくてもよい。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ProjectViewToken",
+          "represents": "この単位に入っている表示物をまとめて開くための合鍵",
+          "behavior": "不変。作成時に一度だけ示され、以後は見返せない。個々の表示物の合鍵とは別のもので、個々の表示物が公開を止めても失効しない。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            },
+            {
+              "name": "issuedAt",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ProjectStatus",
+          "represents": "この単位が開けるかどうか",
+          "behavior": "不変。ACTIVE と SUSPENDED のいずれか。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    "invariants": {
+      "blockType": "Invariants",
+      "title": "不変条件",
+      "items": [
+        {
+          "rule": "所属は、人が明示的に加える操作をしたときにだけ常に成立する",
+          "enforcement": "guard",
+          "rationale": [
+            "所属は誰が開けるかを広げるため、表示物の中に書かれた値で自動的に決まってはならない。書き換えるだけで他人のまとめに紛れ込めてしまう。"
+          ]
+        },
+        {
+          "rule": "この単位の合鍵で開けるのは、常にこの単位に入っている表示物だけである",
+          "enforcement": "guard",
+          "rationale": [
+            "合鍵を渡す相手に見せる範囲を、渡す側が把握できるようにするため。入っていないものまで開けると、渡した範囲が説明できなくなる。"
+          ]
+        },
+        {
+          "rule": "この単位の合鍵は、個々の表示物の合鍵の再発行や公開停止によって常に失効しない",
+          "enforcement": "guard",
+          "rationale": [
+            "まとめて見せる相手と、1件だけ見せる相手は別であるため。片方の都合でもう片方の合鍵が失効すると、渡し直しが際限なく発生する。"
+          ]
+        },
+        {
+          "rule": "この単位から表示物を外しても、その表示物自体は常に失われない",
+          "enforcement": "guard",
+          "rationale": [
+            "外すことは、見せる範囲から取り除くことであって、消すことではないため。1件だけの合鍵を渡した相手は引き続き見られてよい。"
+          ]
+        },
+        {
+          "rule": "この単位の公開を止めても、入っている表示物は常にそれぞれの合鍵で開ける",
+          "enforcement": "guard",
+          "rationale": [
+            "この単位は見せ方の束ねであって、入れ物ではないため。束ねを解いても中身が消えるわけではない。"
+          ]
+        }
+      ]
+    },
+    "lifecycle": {
+      "blockType": "Lifecycle",
+      "title": "ライフサイクル",
+      "states": [
+        "ACTIVE",
+        "SUSPENDED"
+      ],
+      "transitions": [
+        {
+          "from": "[*]",
+          "to": "ACTIVE",
+          "command": "create",
+          "condition": "招かれた者による作成であること"
+        },
+        {
+          "from": "ACTIVE",
+          "to": "ACTIVE",
+          "command": "addArtifact",
+          "condition": ""
+        },
+        {
+          "from": "ACTIVE",
+          "to": "ACTIVE",
+          "command": "removeArtifact",
+          "condition": ""
+        },
+        {
+          "from": "ACTIVE",
+          "to": "ACTIVE",
+          "command": "reissueViewToken",
+          "condition": ""
+        },
+        {
+          "from": "ACTIVE",
+          "to": "SUSPENDED",
+          "command": "suspend",
+          "condition": ""
+        },
+        {
+          "from": "SUSPENDED",
+          "to": "ACTIVE",
+          "command": "resume",
+          "condition": ""
+        }
+      ]
+    },
+    "commands": {
+      "blockType": "Commands",
+      "title": "コマンド",
+      "items": [
+        {
+          "name": "create",
+          "description": "まとめて見せる単位を作り、その合鍵を発行する。作った時点では何も入っていない。",
+          "requiresState": null,
+          "postState": "ACTIVE"
+        },
+        {
+          "name": "addArtifact",
+          "description": "表示物をこの単位へ加える。人が明示的に選んだ結果としてのみ実行される。",
+          "requiresState": "ACTIVE",
+          "postState": "ACTIVE"
+        },
+        {
+          "name": "removeArtifact",
+          "description": "表示物をこの単位から外す。表示物自体は失われず、それぞれの合鍵で引き続き開ける。",
+          "requiresState": "ACTIVE",
+          "postState": "ACTIVE"
+        },
+        {
+          "name": "reissueViewToken",
+          "description": "新しい合鍵を発行し、それまでの合鍵を使えなくする。入っている表示物は変わらない。",
+          "requiresState": "ACTIVE",
+          "postState": "ACTIVE"
+        },
+        {
+          "name": "suspend",
+          "description": "この単位を開けない状態にする。入っている表示物はそれぞれの合鍵で引き続き開ける。",
+          "requiresState": "ACTIVE",
+          "postState": "SUSPENDED"
+        },
+        {
+          "name": "resume",
+          "description": "再び開けるようにする。合鍵は必ず新しくなる。",
+          "requiresState": "SUSPENDED",
+          "postState": "ACTIVE"
+        }
+      ]
+    },
+    "domainEvents": {
+      "blockType": "DomainEvents",
+      "title": "ドメインイベント",
+      "items": [
+        {
+          "name": "ArtifactAssignedToProject",
+          "raisedBy": "addArtifact",
+          "payload": [
+            {
+              "name": "projectId",
+              "meaning": "加え先のまとめて見せる単位"
+            },
+            {
+              "name": "slug",
+              "meaning": "加えられた表示物を指す符丁"
+            }
+          ]
+        },
+        {
+          "name": "ArtifactRemovedFromProject",
+          "raisedBy": "removeArtifact",
+          "payload": [
+            {
+              "name": "projectId",
+              "meaning": "外し元のまとめて見せる単位"
+            },
+            {
+              "name": "slug",
+              "meaning": "外された表示物を指す符丁"
+            }
+          ]
+        }
+      ]
+    },
+    "invariantScenarios": {
+      "blockType": "InvariantScenarios",
+      "title": "不変条件シナリオ",
+      "background": "まとめて見せる単位Pが作られ、表示物Aが加えられている。",
+      "scenarios": [
+        {
+          "name": "中身に書いた名前では所属できない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 所属が人の操作によってのみ成立することを確かめる",
+          "gherkin": "Given 表示物Bはまとめて見せる単位Pに加えられていない\nWhen 表示物Bの中身にPの名前を分類の目印として書いて差し替える\nThen 表示物BはPに所属しないままである\nAnd Pの合鍵で表示物Bは開けない",
+          "covers": "所属は、人が明示的に加える操作をしたときにだけ常に成立する"
+        },
+        {
+          "name": "入っていないものは開けない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 合鍵の及ぶ範囲が所属に限られることを確かめる",
+          "gherkin": "Given 表示物Bはまとめて見せる単位Pに入っていない\nWhen Pの合鍵で表示物Bを開こうとする\nThen 開けない",
+          "covers": "この単位の合鍵で開けるのは、常にこの単位に入っている表示物だけである"
+        },
+        {
+          "name": "表示物の合鍵を再発行してもまとめの合鍵は生きている",
+          "category": "境界値",
+          "viewpoint": "状態遷移: 2種類の合鍵が互いに独立していることを確かめる",
+          "gherkin": "Given 表示物Aがまとめて見せる単位Pに入っている\nWhen 表示物Aの合鍵を再発行する\nThen Pの合鍵は引き続き使える\nAnd Pの合鍵で表示物Aを開ける",
+          "covers": "この単位の合鍵は、個々の表示物の合鍵の再発行や公開停止によって常に失効しない"
+        },
+        {
+          "name": "外しても表示物は生き続ける",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 外すことが消すことではないと確かめる",
+          "gherkin": "Given 表示物Aがまとめて見せる単位Pに入っている\nWhen 表示物AをPから外す\nThen 表示物Aはそれ自身の合鍵で引き続き開ける\nAnd Pの合鍵では表示物Aを開けない",
+          "covers": "この単位から表示物を外しても、その表示物自体は常に失われない"
+        },
+        {
+          "name": "まとめを止めても中身は開ける",
+          "category": "境界値",
+          "viewpoint": "状態遷移: 束ねを解いても中身が消えないことを確かめる",
+          "gherkin": "Given まとめて見せる単位Pに表示物Aが入っている\nWhen まとめて見せる単位Pの公開を止める\nThen Pの合鍵では何も開けない\nAnd 表示物Aはそれ自身の合鍵で開ける",
+          "covers": "この単位の公開を止めても、入っている表示物は常にそれぞれの合鍵で開ける"
+        }
+      ]
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ]
+}

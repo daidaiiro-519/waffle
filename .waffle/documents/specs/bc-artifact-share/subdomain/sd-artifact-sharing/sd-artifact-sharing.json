@@ -1,0 +1,61 @@
+{
+  "documentId": "sd-artifact-sharing",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "subdomain",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "作った文書を渡した相手に見せて反応を集めることを扱う業務領域：sd-artifact-sharing"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "誰に見せるかを決め、見せ、反応を受け取るまでの一連を扱う業務領域。文書の中身をどう作るかは扱わない。",
+        "細分化していない。公開・反応・まとめのいずれを取り出しても、自前で作るか既製品に頼るかという投資の答えが同じになり、分けても設計判断が変わらないため。"
+      ]
+    },
+    "category": {
+      "blockType": "SubdomainCategory",
+      "title": "サブドメイン分類",
+      "classification": "supporting",
+      "rationale": [
+        "差別化の源泉は、判断の複雑さではなく、配信の仕組みを自前で所有していることと、登録なしで反応を返せる体験にある。業務の規則そのものは競合と比べて特異ではない。",
+        "業務の規則は、公開・差し替え・停止・再公開という状態の移り変わりと、誰が開けるかを決める1本の判定に尽きる。金銭の計算も監査の証跡も伴わない。",
+        "既製品でそのまま置き換えられるものでもない。登録なしの閲覧と、自分の環境で完結することを同時に満たす選択肢が既製品には無いため、一般ではなく補完に分類する。"
+      ]
+    },
+    "members": {
+      "blockType": "SubdomainMembers",
+      "title": "業務ユースケース一覧",
+      "items": [
+        "uc-publish-artifact",
+        "uc-replace-content",
+        "uc-reissue-view-token",
+        "uc-suspend-artifact",
+        "uc-resume-artifact",
+        "uc-assign-to-project",
+        "uc-post-comment"
+      ]
+    },
+    "implementationGuidance": {
+      "blockType": "ImplementationGuidance",
+      "title": "詳細設計ガイド",
+      "items": [
+        "厚いドメインモデルを組まず、薄い手続きとして実装する。守るべき規則は集約の不変条件として書き留めるが、そのために階層を増やさない。",
+        "唯一注意して実装するのは、誰が開けるかの判定。共有アーティファクト自身の状態とプロジェクトへの所属の両方を見る必要があり、片方だけを見る実装は、公開停止を迂回させる欠陥になる。",
+        "分類の目印は、公開された表示物の中に書かれた値をそのまま保持するだけに留める。値の意味を解釈して振る舞いを変えない。"
+      ]
+    },
+    "externalSolution": {
+      "blockType": "ExternalSolution",
+      "title": "外部解決策",
+      "text": ""
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ]
+}

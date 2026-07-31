@@ -1,0 +1,397 @@
+{
+  "documentId": "agg-shared-artifact",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "aggregate",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "公開された1つの表示物と、それを開くための合鍵を守る集約：agg-shared-artifact"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "誰かに見てもらうために公開された表示物1件を扱う集約。公開されているか、誰が開けるか、中身が入れ替わっていないかを守る。",
+        "中身に何が書かれているかは解釈しない。解釈しないことが、この集約が中身を書き換えないという約束の裏返しになっている。"
+      ]
+    },
+    "aggregateRoot": {
+      "blockType": "AggregateRoot",
+      "title": "集約ルート",
+      "name": "SharedArtifact",
+      "externalRefs": [
+        "Project",
+        "Comment"
+      ]
+    },
+    "entities": {
+      "blockType": "Entities",
+      "title": "エンティティ",
+      "items": [
+        {
+          "name": "SharedArtifact",
+          "role": "公開された表示物1件の公開状態と合鍵を守る集約ルート",
+          "isRoot": true,
+          "attributes": [
+            {
+              "name": "slug",
+              "type": "Slug"
+            },
+            {
+              "name": "displayName",
+              "type": "string"
+            },
+            {
+              "name": "content",
+              "type": "ArtifactContent"
+            },
+            {
+              "name": "viewToken",
+              "type": "ArtifactViewToken"
+            },
+            {
+              "name": "status",
+              "type": "ArtifactStatus"
+            },
+            {
+              "name": "publishedBy",
+              "type": "PublisherId"
+            },
+            {
+              "name": "descriptor",
+              "type": "ArtifactDescriptor"
+            },
+            {
+              "name": "publishedAt",
+              "type": "string"
+            },
+            {
+              "name": "updatedAt",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    "valueObjects": {
+      "blockType": "ValueObjects",
+      "title": "値オブジェクト",
+      "items": [
+        {
+          "name": "Slug",
+          "represents": "公開された表示物を一意に指す短い符丁",
+          "behavior": "不変。公開時に発行され、以後どの操作でも変わらない。差し替えても再公開しても同じ値を保つ。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ArtifactContent",
+          "represents": "公開された表示物そのもの",
+          "behavior": "不変。公開後に部分的な書き換えは行わず、差し替えのときだけ丸ごと新しいものに置き換わる。置き換えても、それまでに集まったコメントは失われない。",
+          "attributes": [
+            {
+              "name": "bytes",
+              "type": "string"
+            },
+            {
+              "name": "fingerprint",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ArtifactViewToken",
+          "represents": "この表示物1件を開くための合鍵",
+          "behavior": "不変。発行された瞬間に一度だけ示され、以後は見返せない。書き換えではなく、常に新しい合鍵の発行によって置き換わる。置き換わった時点で、それまでの合鍵は使えなくなる。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            },
+            {
+              "name": "issuedAt",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ArtifactDescriptor",
+          "represents": "表示物に添えられた識別子・種別・題名・要約・分類の目印",
+          "behavior": "不変。表示物の中に書かれていれば取り出し、書かれていなければ題名だけを人が与える。種別と分類の目印は保持するだけで、値の意味を解釈しない。",
+          "attributes": [
+            {
+              "name": "documentId",
+              "type": "string"
+            },
+            {
+              "name": "docType",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "name": "labels",
+              "type": "string[]"
+            }
+          ]
+        },
+        {
+          "name": "ArtifactStatus",
+          "represents": "公開されているかどうか",
+          "behavior": "不変。PUBLISHED と SUSPENDED のいずれか。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "PublisherId",
+          "represents": "公開した人を指す識別子",
+          "behavior": "不変。招かれた者にのみ与えられる。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    "invariants": {
+      "blockType": "Invariants",
+      "title": "不変条件",
+      "items": [
+        {
+          "rule": "公開された表示物の中身は、公開後に部分的に書き換えられることが常に無い",
+          "enforcement": "guard",
+          "rationale": [
+            "受け取った側が見ているものと、公開した側が渡したつもりのものが食い違わないようにするため。",
+            "手元へ取り出したときに、公開した表示物と一致することを保証するため。"
+          ]
+        },
+        {
+          "rule": "合鍵を新しく発行したとき、それまでの合鍵は常に使えなくなる",
+          "enforcement": "guard",
+          "rationale": [
+            "合鍵を渡した相手から見せる相手を外したいときに、新しい合鍵の発行がその手段になるため。古い合鍵が生き残ると、外したはずの相手が見続けられる。"
+          ]
+        },
+        {
+          "rule": "公開を再開したとき、合鍵は常に新しくなる",
+          "enforcement": "guard",
+          "rationale": [
+            "公開を止める理由の多くが、見せる相手を絞り直したいことにあるため。止める前の合鍵をそのまま復活させると、止めた意図が失われる。"
+          ]
+        },
+        {
+          "rule": "符丁は、公開してから取り消すまで常に変わらない",
+          "enforcement": "schema",
+          "rationale": [
+            "一度渡した居場所が変わらないことが、差し替えても同じ場所で見続けられるという体験の前提になるため。"
+          ]
+        },
+        {
+          "rule": "中身に書かれた分類の目印が、誰が開けるかを変えることは常に無い",
+          "enforcement": "guard",
+          "rationale": [
+            "分類の目印は、公開する人が中身に自由に書ける値であるため。これが閲覧の範囲を決めるなら、書き換えるだけで見せる相手を増やせてしまう。",
+            "誰が開けるかを決めるのは、合鍵とプロジェクトへの所属だけであり、いずれも人が明示的に操作した結果である。"
+          ]
+        },
+        {
+          "rule": "中身を差し替えたとき、それまでに集まったコメントは常に失われない",
+          "enforcement": "guard",
+          "rationale": [
+            "指摘を受けて直し、また見てもらう、という往復がこの文脈の中心にあるため。直すたびに反応が消えると、その往復が成立しない。"
+          ]
+        }
+      ]
+    },
+    "lifecycle": {
+      "blockType": "Lifecycle",
+      "title": "ライフサイクル",
+      "states": [
+        "PUBLISHED",
+        "SUSPENDED"
+      ],
+      "transitions": [
+        {
+          "from": "[*]",
+          "to": "PUBLISHED",
+          "command": "publish",
+          "condition": "招かれた者による公開であること"
+        },
+        {
+          "from": "PUBLISHED",
+          "to": "PUBLISHED",
+          "command": "replaceContent",
+          "condition": ""
+        },
+        {
+          "from": "PUBLISHED",
+          "to": "PUBLISHED",
+          "command": "reissueViewToken",
+          "condition": ""
+        },
+        {
+          "from": "PUBLISHED",
+          "to": "SUSPENDED",
+          "command": "suspend",
+          "condition": ""
+        },
+        {
+          "from": "SUSPENDED",
+          "to": "PUBLISHED",
+          "command": "resume",
+          "condition": ""
+        }
+      ]
+    },
+    "commands": {
+      "blockType": "Commands",
+      "title": "コマンド",
+      "items": [
+        {
+          "name": "publish",
+          "description": "表示物を受け取って公開し、符丁と合鍵を発行する。中身をそのまま保持し、書き換えない。",
+          "requiresState": null,
+          "postState": "PUBLISHED"
+        },
+        {
+          "name": "replaceContent",
+          "description": "中身だけを新しいものへ丸ごと置き換える。符丁・合鍵・それまでのコメントを保つ。",
+          "requiresState": "PUBLISHED",
+          "postState": "PUBLISHED"
+        },
+        {
+          "name": "reissueViewToken",
+          "description": "新しい合鍵を発行し、それまでの合鍵を使えなくする。符丁は変えない。",
+          "requiresState": "PUBLISHED",
+          "postState": "PUBLISHED"
+        },
+        {
+          "name": "suspend",
+          "description": "開けない状態にする。中身もコメントも消さない。",
+          "requiresState": "PUBLISHED",
+          "postState": "SUSPENDED"
+        },
+        {
+          "name": "resume",
+          "description": "再び開けるようにする。合鍵は必ず新しくなる。",
+          "requiresState": "SUSPENDED",
+          "postState": "PUBLISHED"
+        }
+      ]
+    },
+    "domainEvents": {
+      "blockType": "DomainEvents",
+      "title": "ドメインイベント",
+      "items": [
+        {
+          "name": "ArtifactPublished",
+          "raisedBy": "publish",
+          "payload": [
+            {
+              "name": "slug",
+              "meaning": "公開された表示物を指す符丁"
+            },
+            {
+              "name": "publishedBy",
+              "meaning": "公開した人"
+            }
+          ]
+        },
+        {
+          "name": "ArtifactContentReplaced",
+          "raisedBy": "replaceContent",
+          "payload": [
+            {
+              "name": "slug",
+              "meaning": "差し替えられた表示物を指す符丁"
+            },
+            {
+              "name": "replacedAt",
+              "meaning": "差し替えが行われた時点。この時点を境に、それ以前の指摘が差し替え前のものであると読み取れる"
+            }
+          ]
+        },
+        {
+          "name": "ArtifactSuspended",
+          "raisedBy": "suspend",
+          "payload": [
+            {
+              "name": "slug",
+              "meaning": "公開を止めた表示物を指す符丁"
+            }
+          ]
+        }
+      ]
+    },
+    "invariantScenarios": {
+      "blockType": "InvariantScenarios",
+      "title": "不変条件シナリオ",
+      "background": "招かれた投稿者が表示物を1件公開しており、閲覧者から数件のコメントが集まっている。",
+      "scenarios": [
+        {
+          "name": "差し替えても中身は部分的に書き換わらない",
+          "category": "正常系",
+          "viewpoint": "計算整合: 差し替えが丸ごとの置き換えであり、公開した表示物と受け取った側が見るものが一致し続けることを確かめる",
+          "gherkin": "Given 表示物Aが公開されている\nWhen 新しい表示物で中身を差し替える\nThen 中身は新しいものと完全に一致する\nAnd 差し替え前の中身の一部が残ることはない",
+          "covers": "公開された表示物の中身は、公開後に部分的に書き換えられることが常に無い"
+        },
+        {
+          "name": "合鍵を再発行すると前の合鍵は使えない",
+          "category": "境界値",
+          "viewpoint": "状態遷移: 合鍵の置き換えが、それまでの合鍵の失効を伴うことを確かめる",
+          "gherkin": "Given 表示物Aの合鍵が閲覧者へ渡されている\nWhen 合鍵を再発行する\nThen 新しい合鍵で開ける\nAnd それまでの合鍵では開けない",
+          "covers": "合鍵を新しく発行したとき、それまでの合鍵は常に使えなくなる"
+        },
+        {
+          "name": "再開すると合鍵が変わる",
+          "category": "境界値",
+          "viewpoint": "状態遷移: 公開を止めて再開したとき、止める前の合鍵が復活しないことを確かめる",
+          "gherkin": "Given 表示物Aが公開停止されている\nWhen 公開を再開する\nThen 新しい合鍵が発行される\nAnd 公開停止前の合鍵では開けない",
+          "covers": "公開を再開したとき、合鍵は常に新しくなる"
+        },
+        {
+          "name": "差し替えても居場所は変わらない",
+          "category": "正常系",
+          "viewpoint": "事前条件: 一度渡した居場所が保たれ、渡し直しが不要であることを確かめる",
+          "gherkin": "Given 表示物Aの居場所が閲覧者へ渡されている\nWhen 中身を差し替える\nThen 居場所は変わらない\nAnd 閲覧者は同じ居場所で新しい中身を見られる",
+          "covers": "符丁は、公開してから取り消すまで常に変わらない"
+        },
+        {
+          "name": "分類の目印を書き換えても見られる相手は増えない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 中身に書かれた値が閲覧の範囲に影響しないことを確かめる",
+          "gherkin": "Given 表示物Aはどのプロジェクトにも所属していない\nWhen 別のプロジェクトの名前を分類の目印として書いた中身へ差し替える\nThen そのプロジェクトの合鍵では開けないままである",
+          "covers": "中身に書かれた分類の目印が、誰が開けるかを変えることは常に無い"
+        },
+        {
+          "name": "差し替えてもコメントが残る",
+          "category": "正常系",
+          "viewpoint": "計算整合: 直して見てもらう往復が成立することを確かめる",
+          "gherkin": "Given 表示物Aに3件のコメントが集まっている\nWhen 中身を差し替える\nThen 3件のコメントはいずれも残っている\nAnd 差し替えが行われた時点が区切りとして読み取れる",
+          "covers": "中身を差し替えたとき、それまでに集まったコメントは常に失われない"
+        }
+      ]
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ]
+}

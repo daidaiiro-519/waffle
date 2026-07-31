@@ -1,0 +1,190 @@
+{
+  "documentId": "bc-artifact-share",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "bounded-context",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "作った文書を渡した相手に見てもらい反応を受け取ることを行う境界づけられたコンテキスト：bc-artifact-share"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "作った文書を、渡した相手に見てもらい、その場で反応を受け取るための文脈。文書を作った側は誰に見せるかを決め、見る側は名乗るだけで意見を残せる。",
+        "この文脈では、共有される文書の中身を解釈しない。何が書かれているかではなく、誰が見られるか・いつまで見られるか・どんな反応が集まったかだけを扱う。"
+      ]
+    },
+    "ubiquitousLanguage": {
+      "blockType": "UbiquitousLanguage",
+      "title": "ユビキタス言語",
+      "items": [
+        {
+          "term": "共有アーティファクト",
+          "definition": "誰かに見てもらうために公開された、1つの完結した表示物。この文脈では中身を解釈せず、公開されている一塊として扱う。"
+        },
+        {
+          "term": "中身",
+          "definition": "共有アーティファクトとして公開された表示物そのもの。公開後は一切書き換えられない。"
+        },
+        {
+          "term": "隔離された枠",
+          "definition": "中身が表示される領域。中身はこの枠の外にあるもの（閲覧の合鍵や他の共有アーティファクト）に手を伸ばせない。"
+        },
+        {
+          "term": "アーティファクト閲覧トークン",
+          "definition": "共有アーティファクト1件を開くための合鍵。公開時に一度だけ発行され、以後は見返せない。再発行すると、それまでのものは使えなくなる。"
+        },
+        {
+          "term": "プロジェクト",
+          "definition": "複数の共有アーティファクトをまとめて見せるための単位。1つの共有アーティファクトが複数のプロジェクトに属してよい。"
+        },
+        {
+          "term": "プロジェクト閲覧トークン",
+          "definition": "プロジェクトに入っている共有アーティファクトをまとめて開くための合鍵。個々の共有アーティファクトの公開停止とは無関係に生き続ける。"
+        },
+        {
+          "term": "所属",
+          "definition": "共有アーティファクトがプロジェクトに入っている状態。人が明示的に選んだときにだけ成立し、中身に書かれた情報では決して変わらない。"
+        },
+        {
+          "term": "閲覧者",
+          "definition": "合鍵を渡されて共有アーティファクトを見る人。名乗るだけでよく、あらかじめ登録されている必要はない。"
+        },
+        {
+          "term": "投稿者",
+          "definition": "共有アーティファクトを公開する人。あらかじめ招かれた者に限られる。"
+        },
+        {
+          "term": "コメント",
+          "definition": "閲覧者が共有アーティファクトに残す反応。名前・本文・判定を持ち、他のコメントへの返信として残すこともできる。"
+        },
+        {
+          "term": "判定",
+          "definition": "コメントに添える意思表示。ただの意見か、この方向でよいか、直してほしいか、の3つ。"
+        },
+        {
+          "term": "差し替え",
+          "definition": "共有アーティファクトの中身だけを新しいものに入れ替えること。合鍵も、それまでに集まったコメントも保たれる。"
+        },
+        {
+          "term": "区切りの記録",
+          "definition": "差し替えが行われた時点にコメントの並びへ残される印。これより前の指摘が、差し替え前のものであることを読み取れるようにする。"
+        },
+        {
+          "term": "公開停止",
+          "definition": "共有アーティファクトを開けない状態にすること。中身もコメントも消えず、あとから再び公開できる。"
+        },
+        {
+          "term": "再公開",
+          "definition": "公開停止した共有アーティファクトを再び開けるようにすること。合鍵は必ず新しくなる。"
+        },
+        {
+          "term": "分類の目印",
+          "definition": "共有アーティファクトに付けられる短い語。探しやすくするためだけのもので、誰が見られるかには一切影響しない。"
+        }
+      ]
+    },
+    "members": {
+      "blockType": "Members",
+      "title": "構成要素",
+      "items": [
+        {
+          "kind": "subdomain",
+          "members": [
+            "sd-artifact-sharing"
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "members": [
+            "agg-shared-artifact",
+            "agg-project",
+            "agg-comment"
+          ]
+        },
+        {
+          "kind": "usecase",
+          "members": [
+            "uc-publish-artifact",
+            "uc-replace-content",
+            "uc-reissue-view-token",
+            "uc-suspend-artifact",
+            "uc-resume-artifact",
+            "uc-assign-to-project",
+            "uc-post-comment"
+          ]
+        }
+      ]
+    },
+    "contextMap": {
+      "blockType": "ContextMap",
+      "title": "文脈マップ",
+      "items": [
+        {
+          "counterpart": "bc-waffle",
+          "relationship": "公開された言語",
+          "content": "共有アーティファクトに添えられた識別子・種別・題名・要約・分類の目印を、双方が同じ形式で読み書きする。この文脈はその値の意味を解釈せず、そのまま保持するだけに留める"
+        }
+      ]
+    },
+    "domainServices": {
+      "blockType": "DomainServices",
+      "title": "ドメインサービス",
+      "items": [
+        {
+          "name": "閲覧可否の判定",
+          "responsibility": "ある合鍵で、ある共有アーティファクトを開けるかを判定する。共有アーティファクト自身の公開状態と、プロジェクトへの所属の両方を見る必要があるため、どちらか一方だけでは答えを出せない。合鍵と対象を受け取り、開けるかどうかを返す。",
+          "serviceName": "ResolveViewability"
+        }
+      ]
+    },
+    "domainServiceScenarios": {
+      "blockType": "DomainServiceScenarios",
+      "title": "業務サービスシナリオ",
+      "background": "共有アーティファクトAが公開されており、プロジェクトPに所属している。",
+      "scenarios": [
+        {
+          "name": "個別の合鍵で開く",
+          "category": "正常系",
+          "viewpoint": "共有アーティファクト自身の合鍵で開けることを確かめる",
+          "gherkin": "Given 共有アーティファクトAが公開されている\nWhen Aのアーティファクト閲覧トークンで開こうとする\nThen 開ける",
+          "covers": "閲覧可否の判定"
+        },
+        {
+          "name": "まとめの合鍵で開く",
+          "category": "正常系",
+          "viewpoint": "所属先のプロジェクトの合鍵でも開けることを確かめる",
+          "gherkin": "Given 共有アーティファクトAが公開されており、プロジェクトPに所属している\nWhen プロジェクトPのプロジェクト閲覧トークンで開こうとする\nThen 開ける",
+          "covers": "閲覧可否の判定"
+        },
+        {
+          "name": "公開停止したものはまとめの合鍵でも開けない",
+          "category": "境界値",
+          "viewpoint": "個別の公開停止が、プロジェクト経由の閲覧にも及ぶことを確かめる。停止した意図を、まとめの合鍵が迂回してはならない",
+          "gherkin": "Given 共有アーティファクトAがプロジェクトPに所属している\nAnd 共有アーティファクトAが公開停止されている\nWhen プロジェクトPのプロジェクト閲覧トークンでAを開こうとする\nThen 開けない",
+          "covers": "閲覧可否の判定"
+        },
+        {
+          "name": "所属していないものは開けない",
+          "category": "異常系",
+          "viewpoint": "まとめの合鍵の及ぶ範囲が、所属しているものに限られることを確かめる",
+          "gherkin": "Given 共有アーティファクトBがプロジェクトPに所属していない\nWhen プロジェクトPのプロジェクト閲覧トークンでBを開こうとする\nThen 開けない",
+          "covers": "閲覧可否の判定"
+        },
+        {
+          "name": "再発行前の合鍵は使えない",
+          "category": "異常系",
+          "viewpoint": "合鍵の再発行が、それまでの合鍵を失効させることを確かめる",
+          "gherkin": "Given 共有アーティファクトAのアーティファクト閲覧トークンが再発行されている\nWhen 再発行前のアーティファクト閲覧トークンで開こうとする\nThen 開けない",
+          "covers": "閲覧可否の判定"
+        }
+      ]
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ]
+}
