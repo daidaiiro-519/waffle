@@ -2,16 +2,16 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
   artifact-share の配信環境。作った文書を渡した相手に見てもらい、その場で反応を
   受け取るための基盤。常時稼働する計算資源を持たず、要求のあった分だけ課金される
-  構成にする。信頼の境界で配信の口を2つに分ける（認証が要る面と、合鍵で見る面）。
+  構成にする。信頼の境界で配信の口を2つに分ける（認証が要る面と、閲覧の面）。
 
 Parameters:
   BucketName:
     Type: String
-    Description: 表示物・反応・索引を置くバケット名（全アカウントで一意）
+    Description: アーティファクト・反応・索引を置くバケット名（全アカウントで一意）
   LogBucketName:
     Type: String
     Description: >-
-      アクセスの記録を置くバケット名。本体とは別の資源にする。保持期間の要件が
+      アクセスログを置くバケット名。本体とは別の資源にする。保持期間の要件が
       異なることと、事故のときに記録が本体と同じ権限で消せる状態を避けるため。
   PriceClass:
     Type: String
@@ -21,13 +21,13 @@ Parameters:
   LogRetentionDays:
     Type: Number
     Default: 90
-    Description: アクセスの記録を保持する日数。過ぎたものは自動で削除される
+    Description: アクセスログを保持する日数。過ぎたものは自動で削除される
 
 Resources:
 
   # ── 保管 ───────────────────────────────────────────────
 
-  # 表示物（p/{slug}/）・反応（comments/{slug}/）・索引（meta/）を置く。
+  # アーティファクト（p/{slug}/）・反応（comments/{slug}/）・索引（meta/）を置く。
   # 外部からの直接アクセスは一切許さず、配信の口と公開の受け口だけが触れる。
   ContentBucket:
     Type: AWS::S3::Bucket
@@ -41,7 +41,7 @@ Resources:
       # CORS は設定しない。反応の読み書きは配信の口自身からの同一の出所への
       # 要求だけで、別の出所からの要求を許す理由がない。
 
-  # アクセスの記録。本体と分ける理由は3つ。保持期間の要件が異なること、事故の
+  # アクセスログ。本体と分ける理由は3つ。保持期間の要件が異なること、事故の
   # ときに記録が本体と同じ権限で消せる状態はフォレンジック上の基本違反であること、
   # 検査の漏れがあったときに書き込みが記録へ届く経路を同一の資源内に作らないこと。
   LogBucket:
@@ -92,7 +92,7 @@ Resources:
               StringLike:
                 s3:prefix: "comments/*"
 
-          # 反応の記録だけを書ける。表示物にも索引にも書けない。
+          # 反応の記録だけを書ける。アーティファクトにも索引にも書けない。
           - Sid: ViewerDistributionPutCommentOnly
             Effect: Allow
             Principal:
@@ -114,7 +114,7 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${AdminDistribution}"
 
-          # 公開の受け口が書けるのは、表示物と索引の接頭辞だけ。
+          # 公開の受け口が書けるのは、アーティファクトと索引の接頭辞だけ。
           # 実行ロール側でも同じ範囲に絞り、二重にする。
           - Sid: PublishRoleWriteScoped
             Effect: Allow
@@ -146,10 +146,10 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  # ── 合鍵の保管 ─────────────────────────────────────────
+  # ── トークンの保管 ─────────────────────────────────────────
 
   # token:{slug} / proj:{pid} / pp:{slug} を持つ。
-  # 合鍵の記録は "{値}|{期限のエポック秒}|{世代番号}" の形で保存する。
+  # トークンの記録は "{値}|{期限のエポック秒}|{世代番号}" の形で保存する。
   # 期限切れと世代違いは関門がその場で失効させるため、書き換えを待たずに効く。
   # 書き手は公開の受け口ひとつに限り、関門は読むだけ。
   TokenStore:
@@ -215,7 +215,7 @@ Resources:
                 Effect: Allow
                 Action: s3:GetObject
                 Resource: !Sub "arn:aws:s3:::${BucketName}/meta/*"
-              # 合鍵の保管は、この資源ひとつに限定する
+              # トークンの保管は、この資源ひとつに限定する
               - Sid: WriteViewKeys
                 Effect: Allow
                 Action:
@@ -329,7 +329,7 @@ Resources:
           EnableAcceptEncodingGzip: true
           EnableAcceptEncodingBrotli: true
 
-  # 持ち込まれた表示物に外部への到達を許さない。これにより、契約の「自己完結」が
+  # 持ち込まれたアーティファクトに外部への到達を許さない。これにより、契約の「自己完結」が
   # 規約ではなく配信時の振る舞いとして効く。あわせて sandbox をヘッダー側でも
   # 指定し、閲覧画面の1行が失われても隔離が残るよう二重にする。
   ArtifactResponseHeadersPolicy:
@@ -360,7 +360,7 @@ Resources:
               base-uri 'none';
               sandbox allow-scripts allow-top-navigation-by-user-activation
 
-  # 認証が要る面。持ち込まれた表示物を配らないため、隔離のための指定は持たない。
+  # 認証が要る面。持ち込まれたアーティファクトを配らないため、隔離のための指定は持たない。
   AdminResponseHeadersPolicy:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Properties:
@@ -378,7 +378,7 @@ Resources:
 
   # ── 配信の口（信頼の境界で2つに分ける） ────────────────
 
-  # 合鍵で見る面。持ち込まれた表示物・反応・まとめの一覧を配る。
+  # 閲覧の面。持ち込まれたアーティファクト・反応・まとめの一覧を配る。
   # 認証が要る面と出所が分かれるため、ここで動く命令は認証の資格に手が届かない。
   ViewerDistribution:
     Type: AWS::CloudFront::Distribution
@@ -430,7 +430,7 @@ Resources:
                 FunctionARN: !GetAtt ViewerTokenGateFunction.FunctionMetadata.FunctionARN
 
   # 認証が要る面。招かれた者が公開と管理を行う画面だけを配る。
-  # 合鍵で見る面とは出所が分かれるため、持ち込まれた命令からは到達できない。
+  # 閲覧の面とは出所が分かれるため、持ち込まれた命令からは到達できない。
   AdminDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -460,7 +460,7 @@ Resources:
 
 Outputs:
   ViewerDomain:
-    Description: 閲覧者へ渡すURLの土台（合鍵で見る面）
+    Description: 閲覧者へ渡すURLの土台（閲覧の面）
     Value: !GetAtt ViewerDistribution.DomainName
   AdminDomain:
     Description: 招かれた者が公開・管理を行う画面（認証が要る面）
@@ -470,10 +470,10 @@ Outputs:
   AdminDistributionId:
     Value: !Ref AdminDistribution
   BucketNameOut:
-    Description: 表示物・反応・索引の置き場
+    Description: アーティファクト・反応・索引の置き場
     Value: !Ref ContentBucket
   LogBucketNameOut:
-    Description: アクセスの記録の置き場（本体とは別の資源）
+    Description: アクセスのアクセスログの置き場（本体とは別の資源）
     Value: !Ref LogBucket
   TokenStoreArn:
     Value: !GetAtt TokenStore.Arn

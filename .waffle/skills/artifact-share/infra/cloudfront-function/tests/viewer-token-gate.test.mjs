@@ -1,4 +1,4 @@
-// 合鍵の照合の振る舞いを、仕様のシナリオに沿って確かめる。
+// トークンの照合の振る舞いを、仕様のシナリオに沿って確かめる。
 //
 // 実行:  node infra/cloudfront-function/tests/viewer-token-gate.test.mjs
 //
@@ -39,7 +39,7 @@ const t = async (name, fn, expect) => {
   else { console.log(`NG   ${name}  期待:${expect} 実際:${got}`); fail++; }
 };
 
-// 表示物A: 公開中(値 k1・世代 1)、まとめPに所属。表示物B: 公開停止。
+// アーティファクトA: 公開中(値 k1・世代 1)、まとめPに所属。アーティファクトB: 公開停止。
 store.set('token:aaa', 'k1|0|1');
 store.set('token:bbb', 'DISABLED');
 store.set('proj:ppp', 'pk1|0|1');
@@ -47,17 +47,17 @@ store.set('pp:aaa', 'ppp');
 store.set('pp:bbb', 'ppp');
 
 console.log('■ 仕様のシナリオ');
-await t('個別の合鍵で開く',            req('/p/aaa/', { cookies: { [A+'aaa']: 'k1.1' } }), 'pass-through');
-await t('まとめの合鍵で開く',          req('/p/aaa/', { cookies: { [P+'ppp']: 'pk1.1' } }), 'pass-through');
-await t('公開停止はまとめの合鍵でも開けない', req('/p/bbb/', { cookies: { [P+'ppp']: 'pk1.1' } }), 'status:403');
+await t('個別のトークンで開く',            req('/p/aaa/', { cookies: { [A+'aaa']: 'k1.1' } }), 'pass-through');
+await t('プロジェクトのトークンで開く',          req('/p/aaa/', { cookies: { [P+'ppp']: 'pk1.1' } }), 'pass-through');
+await t('公開停止はプロジェクトのトークンでも開けない', req('/p/bbb/', { cookies: { [P+'ppp']: 'pk1.1' } }), 'status:403');
 await t('所属していないものは開けない', req('/p/ccc/', { cookies: { [P+'ppp']: 'pk1.1' } }), 'status:403');
-await t('合鍵なしは入力画面へ',        req('/p/aaa/'), 'status:401');
+await t('トークンなしは入力画面へ',        req('/p/aaa/'), 'status:401');
 
 console.log('■ 再発行と期限');
 store.set('token:aaa', 'k2|0|2');   // 再発行（値と世代が変わる）
-await t('再発行前の合鍵では開けない',  req('/p/aaa/', { cookies: { [A+'aaa']: 'k1.1' } }), 'status:401');
+await t('再発行前のトークンでは開けない',  req('/p/aaa/', { cookies: { [A+'aaa']: 'k1.1' } }), 'status:401');
 await t('値だけ合っても世代違いは弾く', req('/p/aaa/', { cookies: { [A+'aaa']: 'k2.1' } }), 'status:401');
-await t('新しい合鍵では開ける',        req('/p/aaa/', { cookies: { [A+'aaa']: 'k2.2' } }), 'pass-through');
+await t('新しいトークンでは開ける',        req('/p/aaa/', { cookies: { [A+'aaa']: 'k2.2' } }), 'pass-through');
 store.set('token:ddd', 'k9|1000000000|1');  // 期限切れ（2001年）
 await t('期限切れは入力画面へ',        req('/p/ddd/', { cookies: { [A+'ddd']: 'k9.1' } }), 'status:401');
 

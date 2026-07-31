@@ -1,24 +1,24 @@
-// 閲覧者の合鍵を照合する関門（CloudFront Functions・合鍵で見る面に載せる）
+// 閲覧者のトークンを照合する関門（CloudFront Functions・閲覧の面に載せる）
 //
 // 担うこと:
-//   1. 合鍵の照合。KVS の "token:{slug}" に、現在の値・有効期限・世代番号を持つ。
+//   1. トークンの照合。KVS の "token:{slug}" に、現在の値・有効期限・世代番号を持つ。
 //      期限切れ・世代違いはその場で拒む。値が "DISABLED" なら公開停止。
-//   2. 交差条件の判定。まとめの合鍵で開けるのは、そのまとめに入っており、かつ
-//      表示物自身が公開されているものだけ。片方だけを見ると、公開を止めたはずの
-//      ものがまとめの合鍵で開ける欠陥になる。
+//   2. 交差条件の判定。プロジェクトのトークンで開けるのは、そのまとめに入っており、かつ
+//      アーティファクト自身が公開されているものだけ。片方だけを見ると、公開を止めたはずの
+//      ものがプロジェクトのトークンで開ける欠陥になる。
 //   3. 書き込みの検査。反応の記録は、キーの形・content-type・大きさに加えて
 //      「既存が無いこと」の宣言を要求する。宣言の無い書き込みは拒む。
 //      閲覧画面の側だけで宣言しても、宣言を省いた直接の書き込みを防げないため。
 //   4. 反応の一覧を、保管の列挙要求へ書き換える。
 //
 // 担わないこと:
-//   - 合鍵の発行・書き込み。ここは読むだけで、書き手は公開の受け口ひとつに限る。
-//   - 表示物の中身の検査。中身は隔離された枠に入るため、ここでは触れない。
+//   - トークンの発行・書き込み。ここは読むだけで、書き手は公開の受け口ひとつに限る。
+//   - アーティファクトの中身の検査。中身は隔離された枠に入るため、ここでは触れない。
 //   - 認証が要る面の判定。あちらは別の配信の口に載り、この関門を通らない。
 //
 // KVS の読み取り回数（実行予算に影響する）:
-//   - 表示物ごとの合鍵で通る通常経路 = 1回
-//   - まとめの合鍵経由 = + 所属の読み取り + 該当するまとめの読み取り（所属は3件まで）
+//   - アーティファクトごとのトークンで通る通常経路 = 1回
+//   - プロジェクトのトークン経由 = + 所属の読み取り + 該当するまとめの読み取り（所属は3件まで）
 //   最悪でおよそ5回。予算を超えると関数がエラーになり配信側が5xxを返す（安全側に倒れる）。
 
 import cf from 'cloudfront';
@@ -28,8 +28,8 @@ const kvs = cf.kvs();
 // Cookie 名の接頭辞。ブラウザ側で Domain 属性の付与を禁じ、Secure と Path=/ を強制する。
 // 配信の出所を分ける前提が外部の静的な一覧に依存しているため、その依存をこの接頭辞で外す。
 const COOKIE_PREFIX = '__Host-';
-const ARTIFACT_COOKIE = COOKIE_PREFIX + 'as_a_';   // 表示物ごとの合鍵
-const PROJECT_COOKIE = COOKIE_PREFIX + 'as_p_';    // まとめごとの合鍵
+const ARTIFACT_COOKIE = COOKIE_PREFIX + 'as_a_';   // アーティファクトごとのトークン
+const PROJECT_COOKIE = COOKIE_PREFIX + 'as_p_';    // まとめごとのトークン
 
 const GATE_HTML = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>共有トークンの入力</title>
@@ -92,7 +92,7 @@ function getCookie(request, name) {
   return c ? c.value : null;
 }
 
-// 合鍵を発行済みの相手へ渡す。__Host- の条件（Secure・Path=/・Domain属性なし）を満たす。
+// トークンを発行済みの相手へ渡す。__Host- の条件（Secure・Path=/・Domain属性なし）を満たす。
 function setCookie(name, value) {
   return {
     statusCode: 204,
@@ -106,7 +106,7 @@ function setCookie(name, value) {
   };
 }
 
-// 保管された合鍵の記録を読む。
+// 保管されたトークンの記録を読む。
 //   形式: "{値}|{期限のエポック秒}|{世代番号}"（期限0は無期限）
 //   "DISABLED" は公開停止。読めない場合は未発行として扱う。
 // 期限切れはここで失効させる。保管の書き換えを待たずに効く。
@@ -130,7 +130,7 @@ async function readKey(kvsKey) {
   return { value: value, generation: generation, disabled: false };
 }
 
-// 閲覧者が持つ合鍵と、保管された記録が一致するか。
+// 閲覧者が持つトークンと、保管された記録が一致するか。
 // 値だけでなく世代番号も突き合わせる（再発行のたびに世代が上がる）。
 function matches(cookieValue, record) {
   if (!cookieValue || !record || !record.value) return false;
@@ -151,7 +151,7 @@ function extractProject(uri) {
   return m ? m[1] : null;
 }
 
-// まとめて見せる単位の経路。入っているものの一覧を配る。
+// プロジェクトの経路。入っているものの一覧を配る。
 async function handleProject(request, pid, uri, method) {
   if (method !== 'GET' && method !== 'HEAD') {
     return deny(403);
@@ -176,9 +176,9 @@ async function handleProject(request, pid, uri, method) {
   return request;
 }
 
-// まとめの合鍵で、この表示物を開けるか。
-// 所属していることと、表示物自身が公開されていることの両方が要る。
-// 表示物側の公開状態は呼び出し元で既に確かめてあるため、ここでは所属だけを見る。
+// プロジェクトのトークンで、このアーティファクトを開けるか。
+// 所属していることと、アーティファクト自身が公開されていることの両方が要る。
+// アーティファクト側の公開状態は呼び出し元で既に確かめてあるため、ここでは所属だけを見る。
 async function allowedByProject(request, slug) {
   let member = null;
   try {
@@ -223,7 +223,7 @@ async function handler(event) {
     return deny(403);
   }
 
-  // 表示物自身の状態。公開が止まっていれば、まとめの合鍵を持っていても開かせない
+  // アーティファクト自身の状態。公開が止まっていれば、プロジェクトのトークンを持っていても開かせない
   const record = await readKey('token:' + slug);
   if (!record) {
     return htmlResponse(403, DISABLED_HTML);   // 未発行
@@ -243,7 +243,7 @@ async function handler(event) {
     return { statusCode: 401, statusDescription: 'Unauthorized' };
   }
 
-  // 開けるのは、表示物ごとの合鍵が一致するか、所属するまとめの合鍵が一致するとき
+  // 開けるのは、アーティファクトごとのトークンが一致するか、所属するまとめのトークンが一致するとき
   let allowed = matches(getCookie(request, ARTIFACT_COOKIE + slug), record);
   if (!allowed) {
     allowed = await allowedByProject(request, slug);

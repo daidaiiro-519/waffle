@@ -2,25 +2,25 @@
 <!--
   閲覧画面の雛形（artifact-share）
 
-  公開時に配置され、アップロードされた表示物を隔離された枠で読み込み、
-  その外側にコメント欄を持つ。表示物そのものは一切書き換えない。
+  公開時に配置され、アップロードされたアーティファクトを隔離された枠で読み込み、
+  その外側にコメント欄を持つ。アーティファクトそのものは一切書き換えない。
 
   プレースフォルダー:
-  | {{スラッグ}} | 公開時に発行される符丁（配置処理が置換する） |
+  | {{スラッグ}} | 公開時に発行されるslug（配置処理が置換する） |
 
   設計上の前提（変更しないこと）:
-  - 表示物は sandbox 付きの枠に入れ、allow-same-origin を与えない。
-    与えると、持ち込まれた命令が合鍵や反応の経路と同じ出所で動く。
+  - アーティファクトは sandbox 付きの枠に入れ、allow-same-origin を与えない。
+    与えると、持ち込まれた命令がトークンや反応の経路と同じ出所で動く。
   - 外側への遷移は allow-top-navigation-by-user-activation で許す。
     allow-top-navigation（利用者の操作を条件としない方）を選んではならない。
-    選ぶと、表示物が操作なしに閲覧者を任意の場所へ飛ばせる。
-    逆に一切許さないと、表示物どうしのリンクが死ぬ。
+    選ぶと、アーティファクトが操作なしに閲覧者を任意の場所へ飛ばせる。
+    逆に一切許さないと、アーティファクトどうしのリンクが死ぬ。
   - 反応の書き込みには If-None-Match: * を必ず付ける。既存の記録を
     上書きしないことを、書き込む側の条件として宣言する。
     （付いていない書き込みは配信側の関門が拒否する）
   - 反応の本文と名乗りは textContent でのみ描画する（innerHTML を使わない）。
   - 位置を指すURL（#anchor）は、この画面が枠へ引き継ぐ。中身の義務ではない。
-  - 合鍵の照合は配信側の関門が担う。この画面には含めない。
+  - トークンの照合は配信側の関門が担う。この画面には含めない。
 -->
 <html lang="ja">
 <head>
@@ -63,7 +63,7 @@
   }
   body.collapsed { grid-template-columns: minmax(0, 1fr) 42px; }
 
-  /* 戻る導線。まとめて見せる単位から来た閲覧者にだけ出す */
+  /* 戻る導線。プロジェクトから来た閲覧者にだけ出す */
   a.backbar {
     grid-column: 1 / -1; display: none; align-items: center; gap: .4rem;
     text-decoration: none; font-size: .82rem; color: #fff; background: #1a2126;
@@ -72,7 +72,7 @@
   a.backbar:hover { background: #2c353d; }
   a.backbar.show { display: flex; }
 
-  /* 表示物を入れる枠。中身には一切手を入れない */
+  /* アーティファクトを入れる枠。中身には一切手を入れない */
   .stage { min-width: 0; display: flex; }
   iframe.content {
     flex: 1; width: 100%; height: 100%; border: none; background: var(--card);
@@ -193,7 +193,7 @@
 
 <div class="stage">
   <!--
-    allow-same-origin は与えない（合鍵と反応への到達を構造的に塞ぐ）。
+    allow-same-origin は与えない（トークンと反応への到達を構造的に塞ぐ）。
     外側への遷移は利用者の操作を条件とする方だけを許す。
   -->
   <iframe class="content" id="content"
@@ -247,7 +247,7 @@
   var order = [];       // 読み込み済みのキーを並び順に保つ
   var replyTarget = null;
 
-  /* ── 表示物の読み込み ─────────────────────────────
+  /* ── アーティファクトの読み込み ─────────────────────────────
      位置を指すURLは、この画面が枠へ引き継ぐ。中身に対応する位置が
      無ければ先頭から表示されるだけで、中身への要求は増えない。      */
   (function loadContent() {
@@ -460,7 +460,7 @@
       postedAt: new Date().toISOString()
     });
 
-    // 1件が1つの記録。符丁に時刻と乱数を含めることで、衝突を原理的に避ける
+    // 1件が1つの記録。slugに時刻と乱数を含めることで、衝突を原理的に避ける
     var key = 'comments/' + SLUG + '/' + Date.now() + '-' + crypto.randomUUID().slice(0, 8) + '.json';
 
     crypto.subtle
