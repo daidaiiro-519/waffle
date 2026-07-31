@@ -190,6 +190,14 @@ Resources:
       UserPoolId: !Ref UserPool
       Description: 全員の共有アーティファクトを手入れでき、投稿者を出し入れできる
 
+  # ログインの画面そのものは利用者プールに持たせる。合言葉が管理画面の
+  # コードを一切通らず、初回の付け替えや取り違えの扱いも自前で作らずに済む。
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: !Ref UserPool
+      Domain: !Sub "${AWS::StackName}-${AWS::AccountId}"
+
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -200,6 +208,24 @@ Resources:
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
       PreventUserExistenceErrors: ENABLED
+      # 秘密を持てないブラウザからの受け取りなので、引き換え券に
+      # 検証用の値を添える方式（PKCE）だけを許す
+      AllowedOAuthFlows: [code]
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes: [openid, email]
+      SupportedIdentityProviders: [COGNITO]
+      CallbackURLs:
+        - !Sub "https://${AdminDistribution.DomainName}/admin/"
+      LogoutURLs:
+        - !Sub "https://${AdminDistribution.DomainName}/admin/"
+      # 締め出しを防ぐため、入り直せる期間は長めに取る
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
 
   # ── 管理の受け口 ───────────────────────────────────────
 
@@ -528,3 +554,6 @@ Outputs:
     Value: !Ref UserPool
   UserPoolClientId:
     Value: !Ref UserPoolClient
+  LoginDomain:
+    Description: ログインの画面。合言葉はここでだけ扱われ、管理画面のコードを通らない
+    Value: !Sub "${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"
