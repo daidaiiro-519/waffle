@@ -83,16 +83,32 @@
           "rule": "tests/acceptance/test_{documentId}.py（documentIdはspecのdocumentIdをそのままsnake_case化）"
         },
         {
+          "item": "突き合わせのキー",
+          "rule": "テストの文書コメント（Pythonならdocstring）の先頭に置いた宣言行「Scenario: {シナリオ名}」で、specのシナリオと突き合わせる。テスト関数名は突き合わせに使わない。関数名をキーにすると、仕様の語彙をそのまま識別子にできる言語でしか成立せず（シナリオ名は日本語、Pythonの識別子慣習はASCII）、識別子へ変換する過程で句読点や空白が潰れて別のシナリオと衝突しうるため"
+        },
+        {
+          "item": "テスト関数の命名",
+          "rule": "対象言語の命名慣習に従う（PythonならASCIIのsnake_case）。シナリオ名を識別子にしない。どのシナリオに対応するかは宣言行が持つ"
+        },
+        {
           "item": "ドリフト検知",
-          "rule": "シナリオ名⇔テスト関数名の名前突き合わせで機械検出（check-scenario-drift）。未実装/孤立を検出し、中身の妥当性はAIが評価する"
+          "rule": "宣言行⇔シナリオ名の突き合わせで機械検出（check-scenario-drift）。未実装（specにあってテストが無い）と孤立（テストにあってspecに無い）を検出し、中身の妥当性はAIが評価する"
+        },
+        {
+          "item": "シナリオ文言の追従",
+          "rule": "specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテストは、対応するgherkinの宣言行とGiven/When/Thenをそのまま転記する。宣言行は突き合わせのキーそのもの、本文はシナリオ文言の事後編集への追従を検知する材料であり、役割が異なる"
+        },
+        {
+          "item": "シナリオに紐づかないテストの扱い",
+          "rule": "specのシナリオに対応しない補助的なテストは、シナリオ対応テストとは別のファイルへ置く。同じファイルへ混ぜると、そのテストが常に孤立として報告され続け、警報が意味を失う。ドリフト検知はspecとテストファイルの組に対して行うため、specと組にならないファイルは検査対象にならない"
         },
         {
           "item": "シナリオブロック種別とテスト配置層の対応",
           "rule": "invariantScenarios(aggregate)→domain/unit、domainServiceScenarios(subdomain)→domain/unit、guaranteeScenarios(usecase・operationGuaranteesと対)→integration、acceptanceScenarios(usecase)→acceptance。コードの性質(純粋かport必須か)をケースバイケースで判定してはならない（ドリフト検知を非決定的にするため）"
         },
         {
-          "item": "シナリオ文言の追従",
-          "rule": "specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテスト関数は、対応するgherkinのGiven/When/Thenをdocstringに転記する（関数名の一致だけでは、シナリオ文言の事後編集に対する追従を検知できないため）"
+          "item": "対象言語ごとの抽出",
+          "rule": "文書コメントの取り出しは言語ごとのadapterが担い、コアは言語の構文解析技術を知らない。Pythonの文書コメントは関数の内側にあるため構造的に対応づくが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応づかない。言語によって対応づけの確実さが異なることを前提にする"
         }
       ]
     },
@@ -187,10 +203,10 @@
       ]
     },
     "docstring": {
-      "style": "pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載する",
-      "transcriptionGuidance": "docstring本文は、対応するspec（DomainSpecSchemaのTestScenarios）のGiven/When/Thenを人間が言い換えず一字一句そのまま転記する。scenarioBindingが定める名前突き合わせ(check-scenario-drift)は関数名の有無しか見ないため、文言そのものの事後編集への追従はこの転記規約でのみ保証される。",
+      "style": "対象言語の文書コメント構文に、先頭の宣言行「Scenario: {シナリオ名}」と、続くGiven/When/Thenをそのまま記載する（Pythonならpytestの三重引用符docstring内）。文書コメントの位置は言語で異なり、Pythonは関数の内側、Java/TypeScript/JavaScriptは関数の直前に置く",
+      "transcriptionGuidance": "文書コメントには、対応するspecのシナリオの宣言行とGiven/When/Thenを、人間が言い換えず一字一句そのまま転記する。転記が要るのは2つの役割を兼ねるため。宣言行はspecとテストを突き合わせるキーそのものであり、これを持たないテストはどのシナリオにも対応しないものとして扱われる。本文は、シナリオ文言の事後編集への追従を検知する材料になる（キーの一致だけでは文言の編集を検知できない）",
       "target": "usecase specのacceptanceScenarios/guaranteeScenarios、aggregate specのinvariantScenarios、bounded-context specのdomainServiceScenariosに対応する全テスト関数",
-      "example": "def test_バックワード非互換なら書き込みを拒否する():\n    \"\"\"\n    Given 公開済みkindのrequired配列にプロパティを追加するpatch_schema呼び出し\n    When patch-schemaを実行する\n    Then BACKWARD_INCOMPATIBLEエラーが返り、schemaファイルは書き換わらない\n    \"\"\"\n    ...",
+      "example": "def test_suspend_blocks_viewing():\n    \"\"\"\n    Scenario: 止めると開けなくなる\n    Given 共有アーティファクトAが公開されている\n    When 共有アーティファクトAの公開を止める\n    Then 共有アーティファクトAの閲覧トークンで開けない\n    \"\"\"\n    ...",
       "blockType": "TestScenarioDocstring",
       "title": "シナリオdocstring"
     },

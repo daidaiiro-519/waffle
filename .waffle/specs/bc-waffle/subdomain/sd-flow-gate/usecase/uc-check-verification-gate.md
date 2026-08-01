@@ -1,3 +1,11 @@
+---
+id: "uc-check-verification-gate"
+type: "usecase"
+title: "実装完了→検証フェーズへ進んでよいかを機械的に判定する：CheckVerificationGate"
+description: "対象usecase specのacceptanceScenariosと実装済みテストの対応関係、および渡されたテスト実行結果から、検証フェーズへ進んでよいか（ready/blocked/needs_human）を判定する。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 実装完了→検証フェーズへ進んでよいかを機械的に判定する：CheckVerificationGate
 
 ## 概要
@@ -29,7 +37,7 @@ Orchestrator（HarnessAgent）
 
 - 対象usecase specのpathが要望テキストで与えられている
 - 対象specに対応するネイティブテストファイルのpathが要望テキストで与えられている
-- テスト実行結果を{passed: [...], failed: [...]}という形式（specのacceptanceScenariosのシナリオ名と同じ語彙のテスト名でpass/failを表す）で持つファイルのpathが要望テキストで与えられている
+- テスト実行結果を{passed: [...], failed: [...]}という形式で持つファイルのpathが要望テキストで与えられている。ここに並ぶのはテスト実行環境が報告する識別子（テストの名前）であって、シナリオ名ではない。両者は別の語彙であり、対応づけはspec⇄テストの照合結果が持つ対で行う
 
 ---
 
@@ -39,9 +47,9 @@ Orchestrator（HarnessAgent）
 sequenceDiagram
     actor Orchestrator
     Orchestrator->>VerificationGate: specPath, testFilePath, testResultsPathを指定して判定を依頼する
-    VerificationGate->>VerificationGate: spec⇄テストの対応関係（missing_in_tests/orphaned_in_tests/gherkin_mismatches）を照合する
-    VerificationGate->>VerificationGate: 対応するテストの実行結果（passed/failed）を照合する
-    VerificationGate-->>Orchestrator: status（ready/blocked/needs_human）とreasonsを返す
+    VerificationGate->>VerificationGate: spec⇄テストの対応関係を照合し、差分（未実装・孤立・文言不一致・宣言行の重複・spec内の宣言行の食い違い）と、対応が取れた組（シナリオ名とテスト名の対）を得る
+    VerificationGate->>VerificationGate: 対応が取れた組のテスト名側と、実行結果のfailedを交差させる。交差が空でも、failedに未知の識別子が並んでいれば識別子の不整合として扱い、readyへ進まない
+    VerificationGate-->>Orchestrator: status（ready/blocked/needs_human）と、シナリオ名で表したreasonsを返す
 ```
 
 ---
@@ -50,6 +58,7 @@ sequenceDiagram
 
 - 判定結果がstatus（ready/blocked/needs_human）として返る
 - statusの根拠がreasonsとして返る（人間が理由を確認できる）
+- 実行結果との突き合わせはテスト名で行い、人間へ返す根拠はシナリオ名で表す。2つの語彙を1つの文字列に兼ねさせない
 - 本usecaseはテストを実行しない・specやテストファイルを書き換えない（読み取り専用・副作用なし）
 
 ---
@@ -57,11 +66,12 @@ sequenceDiagram
 ## 受け入れ基準
 
 - When specのacceptanceScenariosに対応するテストが1件以上未実装（missing_in_tests）のとき、システムはstatus blocked を返す shall。
-- When 実装済みテストのうちspecに存在しないもの（orphaned_in_tests）、またはGherkinと内容が一致しないもの（gherkin_mismatches）が1件以上あるとき、システムはstatus needs_human を返す shall（意図的な追加か更新漏れかを機械的に判別できないため）。
-- When spec⇄テストの対応関係に差分が無いが、対応するテストの実行結果に1件以上failedが含まれるとき、システムはstatus blocked を返す shall。
+- When 実装済みテストのうちspecに存在しないもの（orphaned_in_tests）、Gherkinと内容が一致しないもの（gherkin_mismatches）、同じ宣言行を複数のテストが名乗っているもの（duplicate_declarations）、spec自身の宣言行が名前と食い違うもの（spec_declaration_mismatches）が1件以上あるとき、システムはstatus needs_human を返す shall（意図的な追加か更新漏れかを機械的に判別できないため）。
+- When spec⇄テストの対応関係に差分が無いが、対応するテストの実行結果に1件以上failedが含まれるとき、システムはstatus blocked を返す shall。ここでの突き合わせは、照合結果が持つ対のテスト名側と実行結果のfailedを交差させて行う shall（シナリオ名と交差させると、両者が別の語彙であるため常に空集合になり、全テストが落ちていてもreadyを返す）。
+- When 実行結果のfailedに、照合結果のどの対のテスト名とも一致しない識別子だけが含まれるとき、システムはreadyを返さず、識別子の不整合をreasonsに含めて needs_human を返す shall（交差が空であることを、落ちたテストが無いことと同一視しない）。
 - When spec⇄テストの対応関係に差分が無く、対応する全テストがpassedであるとき、システムはstatus ready を返す shall。
-- While 複数の条件に同時に該当するとき、システムはblocked/needs_human/readyの優先順位（missing_in_tests最優先、次にorphaned/mismatch、次にfailed、最後にready）で単一のstatusを決定する shall。
-- When statusを返すとき、システムはその根拠をreasonsに含める shall。
+- While 複数の条件に同時に該当するとき、システムはblocked/needs_human/readyの優先順位（missing_in_tests最優先、次にorphaned/mismatch/duplicate/spec_declaration_mismatch、次にfailed、最後にready）で単一のstatusを決定する shall。
+- When statusを返すとき、システムはその根拠をreasonsに含める shall。reasonsにはシナリオ名を用いる shall（人間が読む面はspecの語彙で表す）。
 - If specPathが存在しないとき、システムはINVALID_PATHエラーを返す shall。
 - If testFilePathが存在しないとき、システムはINVALID_PATHエラーを返す shall。
 - If testResultsPathが存在しない、またはJSONとして解釈できないとき、システムはINVALID_TEST_RESULTSエラーを返す shall。
@@ -188,6 +198,47 @@ Scenario: 不正なtestResultsPathはエラーを返す
   Given 存在しない、またはJSONとして不正なtestResultsPath
   When CheckVerificationGateを実行する
   Then INVALID_TEST_RESULTS エラーが返る
+```
+
+### 落ちたテストはテスト名で突き合わせて検出する
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 計算整合: 実行結果はテスト名、specはシナリオ名という別の語彙。対応が取れた組のテスト名側で交差しないと、交差は常に空になる |
+
+```gherkin
+Scenario: 落ちたテストはテスト名で突き合わせて検出する
+  Given 対応関係に差分が無く、シナリオ名とは異なる名前のテストが1件failedである実行結果
+  When 検証ゲートの判定を実行する
+  Then status blocked が返る
+  And reasonsにそのシナリオ名が含まれる
+```
+
+### 実行結果の識別子が対応表と噛み合わないときreadyを返さない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 事前条件: 交差が空であることを、落ちたテストが無いことと同一視すると、全テストが落ちていてもreadyになる |
+
+```gherkin
+Scenario: 実行結果の識別子が対応表と噛み合わないときreadyを返さない
+  Given 対応関係に差分が無く、failedにどの対のテスト名とも一致しない識別子だけが並ぶ実行結果
+  When 検証ゲートの判定を実行する
+  Then status ready は返らない
+  And reasonsに識別子の不整合が含まれる
+```
+
+### 同じ宣言行を複数のテストが名乗っているときneeds_humanを返す
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | ドリフト: どのテストがそのシナリオを検証しているかが決まらない状態を、通過させない |
+
+```gherkin
+Scenario: 同じ宣言行を複数のテストが名乗っているときneeds_humanを返す
+  Given 同一の宣言行を2件のテストが名乗っている状態
+  When 検証ゲートの判定を実行する
+  Then status needs_human が返る
 ```
 
 ---

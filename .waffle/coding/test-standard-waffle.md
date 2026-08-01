@@ -56,27 +56,32 @@ Waffle自身のunit/integration/acceptance/contractという4層テスト構成�
 |---|---|
 | 対応関係 | 1 spec（DomainSpecSchemaのusecase）＝1 ネイティブテストファイル（AI執筆） |
 | ネイティブテストの配置 | tests/acceptance/test_{documentId}.py（documentIdはspecのdocumentIdをそのままsnake_case化） |
-| ドリフト検知 | シナリオ名⇔テスト関数名の名前突き合わせで機械検出（check-scenario-drift）。未実装/孤立を検出し、中身の妥当性はAIが評価する |
+| 突き合わせのキー | テストの文書コメント（Pythonならdocstring）の先頭に置いた宣言行「Scenario: {シナリオ名}」で、specのシナリオと突き合わせる。テスト関数名は突き合わせに使わない。関数名をキーにすると、仕様の語彙をそのまま識別子にできる言語でしか成立せず（シナリオ名は日本語、Pythonの識別子慣習はASCII）、識別子へ変換する過程で句読点や空白が潰れて別のシナリオと衝突しうるため |
+| テスト関数の命名 | 対象言語の命名慣習に従う（PythonならASCIIのsnake_case）。シナリオ名を識別子にしない。どのシナリオに対応するかは宣言行が持つ |
+| ドリフト検知 | 宣言行⇔シナリオ名の突き合わせで機械検出（check-scenario-drift）。未実装（specにあってテストが無い）と孤立（テストにあってspecに無い）を検出し、中身の妥当性はAIが評価する |
+| シナリオ文言の追従 | specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテストは、対応するgherkinの宣言行とGiven/When/Thenをそのまま転記する。宣言行は突き合わせのキーそのもの、本文はシナリオ文言の事後編集への追従を検知する材料であり、役割が異なる |
+| シナリオに紐づかないテストの扱い | specのシナリオに対応しない補助的なテストは、シナリオ対応テストとは別のファイルへ置く。同じファイルへ混ぜると、そのテストが常に孤立として報告され続け、警報が意味を失う。ドリフト検知はspecとテストファイルの組に対して行うため、specと組にならないファイルは検査対象にならない |
 | シナリオブロック種別とテスト配置層の対応 | invariantScenarios(aggregate)→domain/unit、domainServiceScenarios(subdomain)→domain/unit、guaranteeScenarios(usecase・operationGuaranteesと対)→integration、acceptanceScenarios(usecase)→acceptance。コードの性質(純粋かport必須か)をケースバイケースで判定してはならない（ドリフト検知を非決定的にするため） |
-| シナリオ文言の追従 | specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテスト関数は、対応するgherkinのGiven/When/Thenをdocstringに転記する（関数名の一致だけでは、シナリオ文言の事後編集に対する追従を検知できないため） |
+| 対象言語ごとの抽出 | 文書コメントの取り出しは言語ごとのadapterが担い、コアは言語の構文解析技術を知らない。Pythonの文書コメントは関数の内側にあるため構造的に対応づくが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応づかない。言語によって対応づけの確実さが異なることを前提にする |
 
 ---
 
 ## シナリオdocstring
 
-- **スタイル**: pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載する
+- **スタイル**: 対象言語の文書コメント構文に、先頭の宣言行「Scenario: {シナリオ名}」と、続くGiven/When/Thenをそのまま記載する（Pythonならpytestの三重引用符docstring内）。文書コメントの位置は言語で異なり、Pythonは関数の内側、Java/TypeScript/JavaScriptは関数の直前に置く
 - **対象**: usecase specのacceptanceScenarios/guaranteeScenarios、aggregate specのinvariantScenarios、bounded-context specのdomainServiceScenariosに対応する全テスト関数
 
 ### 転記の指針
 
-docstring本文は、対応するspec（DomainSpecSchemaのTestScenarios）のGiven/When/Thenを人間が言い換えず一字一句そのまま転記する。scenarioBindingが定める名前突き合わせ(check-scenario-drift)は関数名の有無しか見ないため、文言そのものの事後編集への追従はこの転記規約でのみ保証される。
+文書コメントには、対応するspecのシナリオの宣言行とGiven/When/Thenを、人間が言い換えず一字一句そのまま転記する。転記が要るのは2つの役割を兼ねるため。宣言行はspecとテストを突き合わせるキーそのものであり、これを持たないテストはどのシナリオにも対応しないものとして扱われる。本文は、シナリオ文言の事後編集への追従を検知する材料になる（キーの一致だけでは文言の編集を検知できない）
 
 ```
-def test_バックワード非互換なら書き込みを拒否する():
+def test_suspend_blocks_viewing():
     """
-    Given 公開済みkindのrequired配列にプロパティを追加するpatch_schema呼び出し
-    When patch-schemaを実行する
-    Then BACKWARD_INCOMPATIBLEエラーが返り、schemaファイルは書き換わらない
+    Scenario: 止めると開けなくなる
+    Given 共有アーティファクトAが公開されている
+    When 共有アーティファクトAの公開を止める
+    Then 共有アーティファクトAの閲覧トークンで開けない
     """
     ...
 ```
