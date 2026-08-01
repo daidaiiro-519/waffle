@@ -67,6 +67,20 @@
   .pcard{border:1px solid var(--line); border-radius:12px; background:var(--card); padding:16px 18px;
     display:grid; grid-template-columns:1fr auto auto; gap:5px 16px; align-items:center; cursor:pointer;}
   .pcard:hover{border-color:var(--accent);}
+
+  /* 誰が入れられるか */
+  .choices{display:flex; flex-direction:column; gap:8px;}
+  .choice{display:flex; gap:9px; align-items:flex-start; padding:10px 12px; border:1px solid var(--line);
+    border-radius:9px; cursor:pointer; background:var(--card);}
+  .choice:hover{border-color:var(--accent);}
+  .choice input{margin:3px 0 0; accent-color:var(--accent); flex-shrink:0;}
+  .choice:has(input:checked){border-color:var(--accent); background:var(--accent-soft);}
+  .choice input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .cbody{display:flex; flex-direction:column; gap:2px;}
+  .ct{font-size:13px; font-weight:600;}
+  .cs{font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+  .shared{font-size:10.5px; letter-spacing:.02em; padding:2px 8px; border-radius:11px; white-space:nowrap;
+    background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);}
   .pcard.off{background:var(--off-soft);}
   .pcard.off .pname{color:var(--ink-soft);}
   .pmain{grid-column:1; min-width:0;}
@@ -206,6 +220,7 @@
       <h1 id="d-name"></h1>
       <span class="pkey" id="d-key"></span>
       <span class="status on" id="d-status">公開中</span>
+      <span class="shared" id="d-scope"></span>
     </div>
 
     <div class="sec">
@@ -264,6 +279,26 @@
         <label for="np-key">プロジェクトキー</label>
         <input id="np-key" type="text" placeholder="search-renewal">
         <p class="note">CLIで使うときのローカルフォルダ名になります。英数字とハイフンのみ。ブラウザだけで使う場合は空欄で構いません。</p>
+      </div>
+      <div class="fld">
+        <label>プロジェクトの種類</label>
+        <div class="choices">
+          <label class="choice">
+            <input type="radio" name="np-who" value="personal" checked>
+            <span class="cbody">
+              <span class="ct">個人</span>
+              <span class="cs">アーティファクトを入れられるのは自分だけです。</span>
+            </span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="np-who" value="shared">
+            <span class="cbody">
+              <span class="ct">共有</span>
+              <span class="cs">招かれた人なら誰でも、自分のアーティファクトを入れられます。他人のものは動かせません。</span>
+            </span>
+          </label>
+        </div>
+        <p class="note">あとから変更できません。</p>
       </div>
     </div>
     <div class="dlg-act">
@@ -421,10 +456,10 @@
   };
 
   var PROJECTS = [
-    { id:'search', name:'検索基盤リニューアル', key:'search-renewal', pid:'p7k2xq', active:true, last:'2時間前', fresh:true },
-    { id:'pay',    name:'決済まわりの改善',     key:'payment-fix',    pid:'m4v9tz', active:true, last:'昨日',    fresh:true },
-    { id:'tools',  name:'社内ツール',           key:'internal-tools', pid:'w2b8rk', active:true, last:'6日前',  fresh:false },
-    { id:'old',    name:'管理画面リニューアル（2025）', key:'admin-2025', pid:'q5n3hd', active:false, last:'2か月前', fresh:false }
+    { id:'search', name:'検索基盤リニューアル', key:'search-renewal', pid:'p7k2xq', active:true, last:'2時間前', fresh:true, shared:true },
+    { id:'pay',    name:'決済まわりの改善',     key:'payment-fix',    pid:'m4v9tz', active:true, last:'昨日',    fresh:true, shared:true },
+    { id:'tools',  name:'社内ツール',           key:'internal-tools', pid:'w2b8rk', active:true, last:'6日前',  fresh:false, shared:false },
+    { id:'old',    name:'管理画面リニューアル（2025）', key:'admin-2025', pid:'q5n3hd', active:false, last:'2か月前', fresh:false, shared:false }
   ];
 
   function chip(cls, text){ var s = document.createElement('span'); s.className = cls; s.textContent = text; return s; }
@@ -447,6 +482,8 @@
       var meta = document.createElement('div'); meta.className = 'pmeta';
       meta.appendChild(chip('pkey', p.key));
       meta.appendChild(chip('', arts.length + ' 件のアーティファクト'));
+      // 共有のものにだけ印を出す。個人が既定なので、違う方に印を付ける
+      if (p.shared) meta.appendChild(chip('shared', '共有'));
       main.append(nm, meta);
 
       var st = document.createElement('div'); st.className = 'pstat';
