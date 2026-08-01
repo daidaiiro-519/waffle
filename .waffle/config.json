@@ -2,7 +2,8 @@
   "canonicalPathTemplates": {
     "Skill": ".waffle/skills/{documentId}/SKILL.md",
     "Agent": ".waffle/agent/{documentId}.md",
-    "Knowledge": ".waffle/knowledge/{status}/{documentId}.md"
+    "Knowledge": ".waffle/knowledge/{status}/{documentId}.md",
+    "Coding": ".waffle/coding/{documentId}.md"
   },
   "toolMappings": {
     "claude-code": {
@@ -14,7 +15,8 @@
       "Knowledge": [
         { "pathTemplate": ".claude/skills/{skillRefs}/references/knowledge/{documentId}.md", "mode": "symlink" },
         { "pathTemplate": ".waffle/agent/{agentRefs}/references/knowledge/{documentId}.md", "mode": "symlink" }
-      ]
+      ],
+      "Coding": { "pathTemplate": ".claude/skills/implementation/references/coding/{documentId}.md", "mode": "symlink" }
     },
     "codex": {
       "Agent": {

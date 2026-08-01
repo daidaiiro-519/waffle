@@ -1,0 +1,1 @@
+../../../../../.waffle/coding/test-standard-waffle.md

@@ -1,0 +1,1 @@
+../../../../../.waffle/coding/architecture-typescript-hexagonal.md

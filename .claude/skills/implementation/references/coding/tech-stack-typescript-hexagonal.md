@@ -1,0 +1,1 @@
+../../../../../.waffle/coding/tech-stack-typescript-hexagonal.md

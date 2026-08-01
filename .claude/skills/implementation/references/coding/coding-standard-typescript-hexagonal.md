@@ -1,0 +1,1 @@
+../../../../../.waffle/coding/coding-standard-typescript-hexagonal.md
