@@ -55,14 +55,14 @@ def meta_of(deps, artifact_id):
 
 def test_管理者は他人のものも一覧できる():
     deps, r = setup()
-    ids = [row["artifactId"] for row in manage.list_artifacts(deps, ADMIN)]
+    ids = [row["artifactId"] for row in manage.list_artifacts(deps, ADMIN)["artifacts"]]
     assert ids == [r["artifactId"]]
 
 
 def test_一覧には誰が公開したかが分かる():
     """管理者が全員のものを見るとき、持ち主が読めないと引き継ぎ先を決められない"""
     deps, r = setup()
-    assert manage.list_artifacts(deps, ADMIN)[0]["uploadedBy"] == X.id
+    assert manage.list_artifacts(deps, ADMIN)["artifacts"][0]["uploadedBy"] == X.id
 
 
 def test_管理者は他人のものを公開停止_再開_再発行できる():

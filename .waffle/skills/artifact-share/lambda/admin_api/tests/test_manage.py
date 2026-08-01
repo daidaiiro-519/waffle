@@ -109,22 +109,22 @@ def test_一覧には自分が公開したものだけが並ぶ():
                  artifactId="zzzzzzzz", uploadedBy=SOMEONE_ELSE.id)
     deps.store.put("meta/zzzzzzzz.json", json.dumps(other), "application/json")
 
-    ids = [row["artifactId"] for row in manage.list_artifacts(deps, ME)]
+    ids = [row["artifactId"] for row in manage.list_artifacts(deps, ME)["artifacts"]]
     assert ids == [mine["artifactId"]]
 
 
 def test_一覧にトークンは含まれない():
     """トークンは発行の一度きり。一覧から取り出せてはならない"""
     deps, _ = setup()
-    for row in manage.list_artifacts(deps, ME):
+    for row in manage.list_artifacts(deps, ME)["artifacts"]:
         assert "token" not in row
 
 
 def test_一覧は公開中と停止中を区別して返す():
     deps, r = setup()
-    assert manage.list_artifacts(deps, ME)[0]["status"] == "active"
+    assert manage.list_artifacts(deps, ME)["artifacts"][0]["status"] == "active"
     manage.suspend(deps, ME, r["artifactId"])
-    assert manage.list_artifacts(deps, ME)[0]["status"] == "disabled"
+    assert manage.list_artifacts(deps, ME)["artifacts"][0]["status"] == "disabled"
 
 
 # ── 差し替え ────────────────────────────────────────────
@@ -271,7 +271,7 @@ def test_一覧はコメントの件数を添える():
     for name in ("1700000001-aaa.json", "1700000002-bbb.json"):
         deps.store.put(f"comments/{r['artifactId']}/{name}", "{}", "application/json")
 
-    assert manage.list_artifacts(deps, ME)[0]["comments"] == 2
+    assert manage.list_artifacts(deps, ME)["artifacts"][0]["comments"] == 2
 
 
 def test_差し替えの区切りはコメントの件数に数えない():
@@ -279,7 +279,7 @@ def test_差し替えの区切りはコメントの件数に数えない():
     deps, r = setup()
     manage.replace_content(deps, ME, r["artifactId"], HTML.replace("本文", "直した"))
 
-    assert manage.list_artifacts(deps, ME)[0]["comments"] == 0
+    assert manage.list_artifacts(deps, ME)["artifacts"][0]["comments"] == 0
 
 
 # ── 共有と個人で出し入れの可否が変わる ──────────────────
@@ -389,3 +389,20 @@ def test_上限を超えてプロジェクトへ加えられない():
         manage.assign(deps, ME, r["artifactId"], ids[-1])
     assert x.value.code == "TOO_MANY_PROJECTS"
     assert len(meta_of(deps, r["artifactId"])["projects"]) == manage.MAX_PROJECTS_PER_ARTIFACT
+
+
+def test_読めない記録があっても残りが並ぶ():
+    """1件の不具合で一覧が空になるのを避ける。ただし黙っては落とさない——
+    落とすと、投稿者が「公開したはずのものが消えた」と気づけない"""
+    deps, published = setup()
+    deps.store.put("meta/broken.json", "{壊れている", "application/json")
+
+    got = manage.list_artifacts(deps, ME)
+
+    assert [r["artifactId"] for r in got["artifacts"]] == [published["artifactId"]]
+    assert got["unreadable"] == 1
+
+
+def test_読めるものだけなら件数は0():
+    deps, _published = setup()
+    assert manage.list_artifacts(deps, ME)["unreadable"] == 0

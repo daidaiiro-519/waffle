@@ -26,15 +26,6 @@ import projects
 import publish
 import publishers
 
-# 受け付ける操作。ここに無いものは受け付けない
-ACTIONS = {
-    "publish", "list", "replace", "rotate", "disable", "enable",
-    "assign", "unassign", "transfer", "invite", "remove-publisher",
-    "publishers", "resend-invite", "comments", "export",
-    "projects", "project", "create-project", "reissue-project",
-    "disable-project", "enable-project",
-}
-
 # 管理者のグループ名。Cognitoのトークンに含まれていれば管理者とみなす
 ADMIN_GROUP = "administrators"
 
@@ -78,50 +69,50 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
         return _response(status, {"error": e.code, "message": e.message})
 
 
-def _dispatch(action, deps, caller, body):  # pragma: no cover
-    artifact_id = body.get("artifactId", "")
-    if action == "list":
-        return {"artifacts": manage.list_artifacts(deps, caller)}
-    if action == "replace":
-        return manage.replace_content(deps, caller, artifact_id, body.get("html", ""))
-    if action == "rotate":
-        return manage.reissue_token(deps, caller, artifact_id)
-    if action == "disable":
-        return manage.suspend(deps, caller, artifact_id)
-    if action == "enable":
-        return manage.resume(deps, caller, artifact_id)
-    if action == "assign":
-        return manage.assign(deps, caller, artifact_id, body.get("projectId", ""))
-    if action == "unassign":
-        return manage.unassign(deps, caller, artifact_id, body.get("projectId", ""))
-    if action == "comments":
-        return comment_store.read(deps, caller, artifact_id)
-    if action == "export":
-        return comment_store.export(deps, caller, artifact_id)
-    if action == "transfer":
-        return manage.transfer(deps, caller, artifact_id, body.get("toPublisher", ""))
-    if action == "invite":
-        return publishers.invite(deps, caller, body.get("email", ""))
-    if action == "publishers":
-        return {"publishers": publishers.list_publishers(deps, caller)}
-    if action == "resend-invite":
-        return publishers.resend_invite(deps, caller, body.get("publisherId", ""))
+# 操作の名前と、その行き先。
+#
+# 表にしてあるのは、どれにも当たらなかったときの行き先を持たせないため。
+# 以前はここが連なった分岐で、最後の1つが名簿からの削除だった。操作を
+# 1つ増やして行き先を書き忘れると、その操作は黙って削除を実行していた。
+# 表であれば、行き先の無い操作は下で落ちる。
+ROUTES = {
+    "list":        lambda d, c, b: manage.list_artifacts(d, c),
+    "replace":     lambda d, c, b: manage.replace_content(d, c, b.get("artifactId", ""), b.get("html", "")),
+    "rotate":      lambda d, c, b: manage.reissue_token(d, c, b.get("artifactId", "")),
+    "disable":     lambda d, c, b: manage.suspend(d, c, b.get("artifactId", "")),
+    "enable":      lambda d, c, b: manage.resume(d, c, b.get("artifactId", "")),
+    "assign":      lambda d, c, b: manage.assign(d, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "unassign":    lambda d, c, b: manage.unassign(d, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "transfer":    lambda d, c, b: manage.transfer(d, c, b.get("artifactId", ""), b.get("toPublisher", "")),
+    "comments":    lambda d, c, b: comment_store.read(d, c, b.get("artifactId", "")),
+    "export":      lambda d, c, b: comment_store.export(d, c, b.get("artifactId", "")),
 
-    project_id = body.get("projectId", "")
-    if action == "projects":
-        return {"projects": projects.list_projects(deps, caller)}
-    if action == "project":
-        return projects.detail(deps, caller, project_id)
-    if action == "create-project":
-        return projects.create(deps, caller, body.get("displayName", ""),
-                               body.get("scope", ""), body.get("projectKey", ""))
-    if action == "reissue-project":
-        return projects.reissue_token(deps, caller, project_id)
-    if action == "disable-project":
-        return projects.suspend(deps, caller, project_id)
-    if action == "enable-project":
-        return projects.resume(deps, caller, project_id)
-    return publishers.remove(deps, caller, body.get("publisherId", ""))
+    "invite":          lambda d, c, b: publishers.invite(d, c, b.get("email", "")),
+    "publishers":      lambda d, c, b: {"publishers": publishers.list_publishers(d, c)},
+    "resend-invite":   lambda d, c, b: publishers.resend_invite(d, c, b.get("publisherId", "")),
+    "remove-publisher": lambda d, c, b: publishers.remove(d, c, b.get("publisherId", "")),
+
+    "projects":        lambda d, c, b: projects.list_projects(d, c),
+    "project":         lambda d, c, b: projects.detail(d, c, b.get("projectId", "")),
+    "create-project":  lambda d, c, b: projects.create(d, c, b.get("displayName", ""),
+                                                       b.get("scope", ""), b.get("projectKey", "")),
+    "reissue-project": lambda d, c, b: projects.reissue_token(d, c, b.get("projectId", "")),
+    "disable-project": lambda d, c, b: projects.suspend(d, c, b.get("projectId", "")),
+    "enable-project":  lambda d, c, b: projects.resume(d, c, b.get("projectId", "")),
+}
+
+
+
+# 受け付ける操作。ここに無いものは受け付けない。
+# 表から導くのは、受け付ける操作と行き先を持つ操作を必ず一致させるため
+ACTIONS = set(ROUTES) | {"publish"}
+
+
+def _dispatch(action, deps, caller, body):
+    route = ROUTES.get(action)
+    if route is None:
+        raise manage.ManageError("UNKNOWN_ACTION", "その操作はありません。")
+    return route(deps, caller, body)
 
 
 # ── 外部との接続 ────────────────────────────────────────

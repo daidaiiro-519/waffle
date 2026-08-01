@@ -109,17 +109,23 @@ def _require_published(meta: dict) -> None:
 
 # ── 一覧 ────────────────────────────────────────────────
 
-def list_artifacts(deps: Deps, caller: Caller) -> list[dict]:
+def list_artifacts(deps: Deps, caller: Caller) -> dict:
     """扱えるものを新しい順に並べる。トークンは含めない。
 
     投稿者には自分が公開したものだけ、管理者には全員のものが並ぶ。
     誰が公開したかを添えるのは、管理者が引き継ぎ先を決めるのに要るため。
+
+    読めない記録は飛ばして残りを返し、飛ばした件数を添える。1件の不具合で
+    一覧がすべて空になるのを避ける。黙って落とさないのは、投稿者が
+    「公開したはずのものが消えた」と気づけないため（コメントの読み出しと
+    同じ扱い）。
     """
-    rows = []
+    rows, unreadable = [], 0
     for key in deps.store.list("meta/"):
         try:
             meta = json.loads(deps.store.get(key))
         except Exception:
+            unreadable += 1
             continue
         if not caller.is_admin and meta.get("uploadedBy") != caller.id:
             continue
@@ -135,7 +141,8 @@ def list_artifacts(deps: Deps, caller: Caller) -> list[dict]:
             "updatedAt": meta.get("updatedAt", 0),
             "comments": _count_comments(deps, meta.get("artifactId", "")),
         })
-    return sorted(rows, key=lambda r: r["updatedAt"], reverse=True)
+    return {"artifacts": sorted(rows, key=lambda r: r["updatedAt"], reverse=True),
+            "unreadable": unreadable}
 
 
 def _count_comments(deps: Deps, artifact_id: str) -> int:

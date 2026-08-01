@@ -204,7 +204,7 @@ def test_一覧には自分のものと共有のものが並ぶ():
     shared = projects.create(deps, Y, "みんなの", "SHARED")
     others = projects.create(deps, Y, "他人の", "PERSONAL")
 
-    ids = {p["projectId"] for p in projects.list_projects(deps, X)}
+    ids = {p["projectId"] for p in projects.list_projects(deps, X)["projects"]}
     assert mine["projectId"] in ids
     assert shared["projectId"] in ids        # 共有なら自分のものを入れられる
     assert others["projectId"] not in ids
@@ -214,13 +214,13 @@ def test_管理者の一覧には全部が並ぶ():
     deps = setup()
     projects.create(deps, X, "自分の", "PERSONAL")
     projects.create(deps, Y, "他人の", "PERSONAL")
-    assert len(projects.list_projects(deps, ADMIN)) == 2
+    assert len(projects.list_projects(deps, ADMIN)["projects"]) == 2
 
 
 def test_一覧に閲覧トークンは含まれない():
     deps = setup()
     owned(deps)
-    for row in projects.list_projects(deps, X):
+    for row in projects.list_projects(deps, X)["projects"]:
         assert "token" not in row
 
 
@@ -281,3 +281,15 @@ def test_公開が止まっていても持ち主は中身を見られる():
 def manage_assign(deps, caller, artifact_id, project_id):
     import manage as m
     return m.assign(deps, caller, artifact_id, project_id)
+
+
+def test_読めない記録があっても残りが並ぶ():
+    """一覧が黙って短くなると、作ったはずのプロジェクトが消えたように見える"""
+    deps = setup()
+    projects.create(deps, X, "設計レビュー", projects.PERSONAL, "")
+    deps.store.put("projects/broken.json", "{壊れている", "application/json")
+
+    got = projects.list_projects(deps, X)
+
+    assert len(got["projects"]) == 1
+    assert got["unreadable"] == 1

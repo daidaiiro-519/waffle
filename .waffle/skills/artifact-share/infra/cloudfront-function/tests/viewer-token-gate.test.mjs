@@ -19,7 +19,11 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const source = readFileSync(join(here, '..', 'viewer-token-gate.js'), 'utf-8')
+// 既定では手元の本体を見る。実際に配る形（注釈を落としたもの）を確かめたい
+// ときは、その中身を AS_GATE_SOURCE で指す。配るときにだけ通す加工が
+// 振る舞いを変えていないことを、同じシナリオで確かめるため
+const 本体 = process.env.AS_GATE_SOURCE || join(here, '..', 'viewer-token-gate.js');
+const source = readFileSync(本体, 'utf-8')
   .replace("import cf from 'cloudfront';", '')
   .replace("import crypto from 'crypto';", "import crypto from 'node:crypto';")
   .replace('const kvs = cf.kvs();', 'const kvs = globalThis.__KVS;')

@@ -234,17 +234,21 @@ def resume(deps: Deps, caller: Caller, project_id: str) -> dict:
 
 # ── 一覧 ────────────────────────────────────────────────
 
-def list_projects(deps: Deps, caller: Caller) -> list[dict]:
+def list_projects(deps: Deps, caller: Caller) -> dict:
     """出し入れできるプロジェクトを並べる。閲覧トークンは含めない。
 
     自分が持ち主のものと、共有のものが並ぶ。管理者には全部が並ぶ。
     共有のものを並べるのは、そこへ自分のものを入れられるため。
+
+    読めない記録は飛ばして残りを返し、飛ばした件数を添える。黙って
+    落とすと、作ったはずのプロジェクトが消えたように見える。
     """
-    rows = []
+    rows, unreadable = [], 0
     for key in deps.store.list("projects/"):
         try:
             index = json.loads(deps.store.get(key))
         except Exception:
+            unreadable += 1
             continue
         mine = index.get("owner") == caller.id
         if not (caller.is_admin or mine or index.get("scope") == SHARED):
@@ -260,7 +264,8 @@ def list_projects(deps: Deps, caller: Caller) -> list[dict]:
             "artifactCount": len(index.get("memberArtifactIds", [])),
             "updatedAt": index.get("updatedAt", 0),
         })
-    return sorted(rows, key=lambda r: r["updatedAt"], reverse=True)
+    return {"projects": sorted(rows, key=lambda r: r["updatedAt"], reverse=True),
+            "unreadable": unreadable}
 
 
 # ── 中身を見る ──────────────────────────────────────────
