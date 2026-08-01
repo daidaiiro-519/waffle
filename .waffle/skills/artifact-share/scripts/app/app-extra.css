@@ -30,3 +30,43 @@
 
   /* 管理者にだけ出るもの */
   body:not(.is-admin) .adminonly{display:none !important;}
+
+  /* ── プロジェクト（モックと同じ部品） ── */
+  .pcard{border:1px solid var(--line); border-radius:12px; background:var(--card); padding:16px 18px;
+    display:grid; grid-template-columns:1fr auto auto; gap:5px 16px; align-items:center; cursor:pointer;
+    margin-bottom:10px;}
+  .pcard:hover{border-color:var(--accent);}
+  .pcard:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .pcard.off{background:var(--off-soft);}
+  .pcard.off .pname{color:var(--ink-soft);}
+  .pmain{grid-column:1; min-width:0;}
+  .pname{font-size:15px; font-weight:600; margin:0 0 4px;}
+  .pmeta{display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
+  .pkey{font-family:var(--mono); font-size:10.5px; background:var(--line-soft); padding:2px 7px;
+    border-radius:4px; color:var(--ink-soft);}
+  .pstat{grid-column:2; text-align:right; white-space:nowrap;}
+  .pend{grid-column:3; display:flex; align-items:center; gap:9px;}
+  .shared{font-size:10.5px; letter-spacing:.02em; padding:2px 8px; border-radius:11px; white-space:nowrap;
+    background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);}
+
+  .choices{display:flex; flex-direction:column; gap:8px;}
+  .choice{display:flex; gap:9px; align-items:flex-start; padding:10px 12px; border:1px solid var(--line);
+    border-radius:9px; cursor:pointer; background:var(--card);}
+  .choice:hover{border-color:var(--accent);}
+  .choice input{margin:3px 0 0; accent-color:var(--accent); flex-shrink:0;}
+  .choice:has(input:checked){border-color:var(--accent); background:var(--accent-soft);}
+  .choice input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .cbody{display:flex; flex-direction:column; gap:2px;}
+  .ct{font-size:13px; font-weight:600;}
+  .cs{font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+
+  .fld{margin-bottom:13px;}
+  .fld label{display:block; font-size:12px; font-weight:600; margin-bottom:5px;}
+  .fld input{width:100%; font:inherit; font-size:13.5px; padding:8px 11px; border:1px solid var(--line);
+    border-radius:7px; background:var(--paper); color:var(--ink);}
+  .fld .note{font-size:11.5px; color:var(--ink-faint); margin:4px 0 0;}
+
+  @media (max-width:660px){
+    .pcard{grid-template-columns:1fr auto;}
+    .pstat{grid-column:1/-1; grid-row:2; text-align:left; margin-top:5px;}
+  }

@@ -17,6 +17,7 @@
 | 作業開始時に`.waffle/memory/MEMORY.md`を確認し、関連する既存メモリがあれば踏まえる | ツールを問わず、過去の決定・訂正・フィードバックを引き継ぐため | 関連する重要な決定・訂正・知見が生じたらmemory-cultivator Skillで`.waffle/memory/`へ記録する |
 | 新規capability・挙動変更・schema変更を伴う作業は、調べる（Investigation）→決める（Spec-authoring）→引き継ぐ（Handoff-authoring）→作る（Implementation）というフルサイクルを通す。単一フィールド修正・機械的な文言変換・調査単体はmechanicalTasksの直行レーンでよい | フルサイクルと直行レーンを先に定義しておくことで、毎回ゼロから作業規模を見積もる負荷を減らす。規模の見積もりを誤ると、spec合意前の実装（既知の再発パターン）か、逆に軽微な修正への過剰な儀式化のどちらかに振れる | 境界事例（例：複数フィールドにまたがるが挙動は変わらない修正）はjudgmentTasksの基準に従う |
 | スキーマ構造を変えず、documentの表現レベルだけを直す修正は、必ずx-prompt-write/x-prompt-query側を先に直してからfillする。documentの値を直接書き換えて終わらせない | document側だけを直接直すと、その表現不備を生んだx-promptのガイダンスが実際に機能したかを一切検証しないまま個別修正で終わってしまう。スキーマ構造の変更を伴わない表現レベルの不備は、その定義上x-promptの記述不足のシグナルであり、documentを直接直すとこのシグナルを握りつぶし、同じ不備が他のdocumentやfill先で再発する | waffle patch-schemaでx-prompt-write/x-prompt-queryを先に修正し、その上でwaffle scaffold fillでdocument側へ反映する。document側をfillだけで直接書き換える修正はしない |
+| specを書き終えたら、実装へ移る前に必ずHandoffを作り、ユーザーへ提示して合意を得る。ユーザーから求められて初めて出すのではなく、Orchestrator自身から提案する | specは『何が正しいか』しか運ばず、『なぜその形にしたか』『どこに何を置くか』は運ばない。specを書き終えた直後は成果物が積み上がって手が動く状態になり、そのまま実装へ入りやすい。実際にこのセッションで3回続けて飛ばし、そのたびにユーザーから指摘された。指摘されてから出すのでは、毎回ユーザーが工程の番人をすることになる | `waffle scaffold create --schemaRef HandoffSchema/v2` で作り、`waffle render-handoff-template` でHTMLにしてユーザーへ提示する。descriptionにはこのHandoffが担うユースケースの識別子を必ず並べる（Handoffが指すユースケースをフックが突き合わせるため、境界づけられたコンテキストを指すだけでは、以後どれだけ仕様を足しても検知されない）。未解決の観点はreviewStatusにopenのまま残してよい——全部を解いてから出すのではなく、決まっていないことが見える状態で出す |
 
 ---
 

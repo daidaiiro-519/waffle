@@ -102,7 +102,8 @@
         "プロジェクトは消せない。公開停止までとし、削除の権限は受け口に与えない（共有アーティファクトと同じ）",
         "一覧ページの中身は、所属が変わったときと表示名が変わったときに書き直す。それ以外（コメントの増減など）は反映されない。件数を載せないのはこのため",
         "所属は索引と関門用の投影の2か所に持つ。同じ操作が両方を書くことで揃えるため、片方だけを書く経路を作らない",
-        "閲覧の関門は一切変更しない。共有の別は閲覧の可否に影響しないため、いま動いている検証14件がそのまま通ることが確かめになる"
+        "閲覧の関門は一切変更しない。共有の別は閲覧の可否に影響しないため、いま動いている検証14件がそのまま通ることが確かめになる",
+        "差し替えで表示名は変わらない。一覧が書き直されるのは、種別・要約・分類の目印が変わるため"
       ]
     },
     "completionImage": {
@@ -329,22 +330,22 @@
           "advisor": "platform-advisor",
           "refBlock": "designViewpoints",
           "refIndex": 4,
-          "resolutionStatus": "open",
-          "note": "資源の側の取り決めをどこまで広げるかは、書く接頭辞が確定してから決める。閲覧者の反応へ書けないことは維持する"
+          "resolutionStatus": "resolved",
+          "note": "書ける先を projects/* と proj/*/index.json、proj/*/index.html の3つに限った。proj/ は閲覧の面が配る場所なので、接頭辞ごと開けず名前で絞る"
         },
         {
           "advisor": "ux-advisor",
           "refBlock": "designViewpoints",
           "refIndex": 5,
-          "resolutionStatus": "open",
-          "note": "作る画面の文言と、一覧での共有の印はモックで確認してから確定する"
+          "resolutionStatus": "resolved",
+          "note": "個人／共有という言葉にし、注記は「あとから変更できません。」の一行だけにした。定義済みの用語と揃い、設計の理由は画面に持ち込まない"
         },
         {
           "advisor": "qa-advisor",
           "refBlock": "implementationViewpoints",
           "refIndex": 5,
-          "resolutionStatus": "open",
-          "note": "表示名が変わったときの書き直しの経路は、検証を書いてから確定する"
+          "resolutionStatus": "resolved",
+          "note": "観点の前提が誤っていた。差し替えで表示名は変わらない（仕様にも無く、実装も変えていない）。実際に変わるのは種別・要約・分類の目印なので、一覧の書き直し自体は必要なまま、検証をそちらへ向けた"
         },
         {
           "advisor": "qa-advisor",

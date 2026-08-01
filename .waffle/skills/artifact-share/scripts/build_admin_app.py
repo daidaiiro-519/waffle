@@ -37,7 +37,10 @@ members = section(admin, 343, 355)           # メンバーの面
 admin_dialogs = section(admin, 359, 428)     # 引き継ぎ・招く・外す
 
 # 投稿者の面へ、管理者の面を差し込む
-page = main_page.replace("\n</div>", "\n" + members + "\n</div>")
+projects_view = (PARTS / "app-projects.html").read_text(encoding="utf-8")
+view, _, dialogs = projects_view.partition("<!-- ══ プロジェクトを作る ══ -->")
+page = main_page.replace("\n</div>", "\n" + members + "\n" + view + "\n</div>")
+admin_dialogs += "\n<!-- ══ プロジェクトを作る ══ -->" + dialogs
 
 body = "\n".join([
     (PARTS / "app-login.html").read_text(encoding="utf-8"),

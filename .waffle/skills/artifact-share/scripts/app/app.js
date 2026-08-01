@@ -303,6 +303,7 @@
     api('list').then(function (d) {
       ITEMS = d.artifacts || [];
       render();
+      loadProjects();
       if (session.admin) loadMembers();
     }).catch(function (e) {
       list.textContent = '';
@@ -645,6 +646,162 @@
     });
   });
 
+  /* ── プロジェクト ──────────────────────────────────
+     自分が持ち主のものと、共有のものが並ぶ。共有なら自分のアーティファクトを
+     入れられるため、持ち主でなくても一覧に出す。 */
+  var PROJECTS = [];
+
+  function loadProjects() {
+    api('projects').then(function (d) {
+      PROJECTS = d.projects || [];
+      renderProjects();
+    }).catch(function () { /* 一覧が主目的なので、ここは黙って諦める */ });
+  }
+
+  function renderProjects() {
+    var wrap = $('plist');
+    if (!wrap) return;
+    wrap.textContent = '';
+    $('pcount').textContent = PROJECTS.length + ' 件';
+
+    if (!PROJECTS.length) {
+      var e = document.createElement('div');
+      e.className = 'empty';
+      var p0 = document.createElement('p');
+      p0.textContent = 'まだプロジェクトがありません。まとめて見せたいときに作ります。';
+      e.appendChild(p0); wrap.appendChild(e);
+      return;
+    }
+
+    PROJECTS.forEach(function (p) {
+      var active = p.status === 'active';
+      var card = document.createElement('div');
+      card.className = 'pcard' + (active ? '' : ' off');
+
+      var main = document.createElement('div'); main.className = 'pmain';
+      var name = document.createElement('p'); name.className = 'pname'; name.textContent = p.name;
+      var meta = document.createElement('div'); meta.className = 'pmeta';
+      if (p.projectKey) meta.appendChild(chip('pkey', p.projectKey));
+      meta.appendChild(chip('', p.artifactCount + ' 件のアーティファクト'));
+      // 共有のものにだけ印を出す。個人が既定なので、違う方に付ける
+      if (p.scope === 'SHARED') meta.appendChild(chip('shared', '共有'));
+      if (!p.isMine) meta.appendChild(chip('', p.owner + ' が作成'));
+      main.append(name, meta);
+
+      var end = document.createElement('div'); end.className = 'pend';
+      end.appendChild(active ? chip('status on', '公開中') : chip('status no', '無効化済み'));
+      // 見せ方を変えられるのは持ち主と管理者だけ
+      if (p.isMine || session.admin) end.appendChild(projectMenu(p));
+
+      card.append(main, end);
+      wrap.appendChild(card);
+    });
+  }
+
+  function projectMenu(p) {
+    var wrap = document.createElement('div'); wrap.className = 'menu';
+    var btn = document.createElement('button');
+    btn.className = 'rowbtn'; btn.type = 'button'; btn.textContent = '⋯';
+    btn.setAttribute('aria-label', p.name + ' の操作');
+    btn.setAttribute('aria-expanded', 'false');
+    var ul = document.createElement('ul'); ul.hidden = true;
+
+    var active = p.status === 'active';
+    var entries = [['URLをコピー']];
+    if (active) entries.push(['閲覧トークンを再発行']);
+    entries.push(['sep'], active ? ['無効化する', 'danger'] : ['再公開する']);
+
+    entries.forEach(function (it) {
+      var li = document.createElement('li');
+      if (it[0] === 'sep') { li.className = 'sep'; }
+      else {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = it[0];
+        if (it[1]) b.className = it[1];
+        b.addEventListener('click', function (e) {
+          e.stopPropagation(); ul.hidden = true;
+          projectAct(it[0], p);
+        });
+        li.appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = ul.hidden;
+      document.querySelectorAll('.menu ul').forEach(function (u) { u.hidden = true; });
+      ul.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+      if (open) {
+        ul.classList.remove('up');
+        var r = btn.getBoundingClientRect();
+        if (window.innerHeight - r.bottom < ul.offsetHeight + 14) ul.classList.add('up');
+      }
+    });
+    wrap.append(btn, ul);
+    return wrap;
+  }
+
+  var targetProject = null;
+
+  function projectAct(label, p) {
+    targetProject = p;
+    if (label === 'URLをコピー') {
+      copyText('https://' + CONFIG.viewerDomain + '/proj/' + p.projectId + '/',
+               function () { toast('URLをコピーしました'); });
+      return;
+    }
+    if (label === '閲覧トークンを再発行') {
+      $('pr-target').textContent = p.name;
+      $('pr-1').classList.add('on'); $('pr-2').classList.remove('on');
+      openDlg('dlg-projrotate');
+      return;
+    }
+    if (label === '無効化する') {
+      api('disable-project', { projectId: p.projectId })
+        .then(function () { toast('公開を止めました。入っているものは個別に開けます'); loadProjects(); })
+        .catch(fail);
+      return;
+    }
+    api('enable-project', { projectId: p.projectId }).then(function (d) {
+      $('pr-target2').textContent = p.name;
+      $('pr-token').textContent = d.token;
+      $('pr-1').classList.remove('on'); $('pr-2').classList.add('on');
+      openDlg('dlg-projrotate');
+      loadProjects();
+    }).catch(fail);
+  }
+
+  $('pr-go').addEventListener('click', function () {
+    api('reissue-project', { projectId: targetProject.projectId }).then(function (d) {
+      $('pr-target2').textContent = targetProject.name;
+      $('pr-token').textContent = d.token;
+      $('pr-1').classList.remove('on'); $('pr-2').classList.add('on');
+    }).catch(fail);
+  });
+
+  $('new-project').addEventListener('click', function () {
+    $('np-name').value = '';
+    document.querySelector('[name="np-scope"][value="PERSONAL"]').checked = true;
+    $('np-1').classList.add('on'); $('np-2').classList.remove('on');
+    openDlg('dlg-newproj');
+    setTimeout(function () { $('np-name').focus(); }, 40);
+  });
+
+  $('np-go').addEventListener('click', function () {
+    var name = $('np-name').value.trim();
+    if (!name) { $('np-name').focus(); return; }
+    var scope = document.querySelector('[name="np-scope"]:checked').value;
+
+    $('np-go').disabled = true;
+    api('create-project', { displayName: name, scope: scope }).then(function (d) {
+      $('np-name2').textContent = d.name;
+      $('np-url').textContent = d.url;
+      $('np-token').textContent = d.token;
+      $('np-1').classList.remove('on'); $('np-2').classList.add('on');
+      loadProjects();
+    }).catch(fail).then(function () { $('np-go').disabled = false; });
+  });
+
   /* ── メンバー（管理者だけ） ───────────────────────── */
   var PEOPLE = [];
 
@@ -824,6 +981,16 @@
     document.querySelectorAll('.menu .rowbtn').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
   });
   $('q').addEventListener('input', render);
+
+  document.querySelectorAll('.nav a').forEach(function (a, i) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      document.querySelectorAll('.nav a').forEach(function (x) { x.classList.remove('cur'); });
+      a.classList.add('cur');
+      view(i === 0 ? 'v-home' : 'v-projects');
+      if (i === 1) loadProjects();
+    });
+  });
 
   document.querySelectorAll('dialog [data-close], dialog [value="cancel"]').forEach(function (b) {
     b.addEventListener('click', function () { b.closest('dialog').close(); });

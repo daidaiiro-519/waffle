@@ -1,0 +1,99 @@
+<!-- ══ プロジェクト ══ -->
+<section class="view" id="v-projects">
+  <div class="lhead">
+    <h1>プロジェクト</h1>
+    <span class="count" id="pcount"></span>
+    <span class="scope">自分のものと、共有のものが並びます</span>
+    <button class="btn" id="new-project" style="margin-left:auto;">新しいプロジェクト</button>
+  </div>
+  <div id="plist"></div>
+</section>
+
+<!-- ══ プロジェクトを作る ══ -->
+<dialog id="dlg-newproj">
+  <div class="dlg-pane on" id="np-1">
+    <div class="dlg-head"><h2>新しいプロジェクト</h2>
+      <p class="target">まとめて見せたいアーティファクトを入れる単位です</p></div>
+    <div class="dlg-body">
+      <div class="fld">
+        <label for="np-name">表示名</label>
+        <input id="np-name" type="text" placeholder="例: 検索基盤リニューアル">
+      </div>
+      <div class="fld">
+        <label>プロジェクトの種類</label>
+        <div class="choices">
+          <label class="choice">
+            <input type="radio" name="np-scope" value="PERSONAL" checked>
+            <span class="cbody">
+              <span class="ct">個人</span>
+              <span class="cs">アーティファクトを入れられるのは自分だけです。</span>
+            </span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="np-scope" value="SHARED">
+            <span class="cbody">
+              <span class="ct">共有</span>
+              <span class="cs">招かれた人なら誰でも、自分のアーティファクトを入れられます。他人のものは動かせません。</span>
+            </span>
+          </label>
+        </div>
+        <p class="note">あとから変更できません。</p>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <button class="linkbtn" type="button" data-close>やめる</button>
+      <button class="btn" type="button" id="np-go">作成する</button>
+    </div>
+  </div>
+
+  <div class="dlg-pane" id="np-2">
+    <div class="dlg-head"><h2>プロジェクトを作成しました</h2>
+      <p class="target" id="np-name2"></p></div>
+    <div class="dlg-body">
+      <div class="urlrow" style="margin-bottom:12px;">
+        <span class="u" id="np-url"></span>
+        <button class="copy" type="button" data-copy="np-url">URLをコピー</button>
+      </div>
+      <div class="tokenbox" style="margin-bottom:13px;">
+        <p class="tlabel">この画面を閉じると二度と表示できません</p>
+        <div class="tval"><code id="np-token"></code>
+          <button class="copy" type="button" data-copy="np-token">コピー</button></div>
+      </div>
+      <p>まだ中身は空です。アーティファクトを入れてから共有してください。</p>
+    </div>
+    <div class="dlg-act"><span class="spacer"></span>
+      <button class="btn" type="button" data-close>閉じる</button></div>
+  </div>
+</dialog>
+
+<!-- ══ プロジェクトの閲覧トークンを再発行 ══ -->
+<dialog id="dlg-projrotate">
+  <div class="dlg-pane on" id="pr-1">
+    <div class="dlg-head"><h2>閲覧トークンを再発行しますか</h2>
+      <p class="target" id="pr-target"></p></div>
+    <div class="dlg-body">
+      <p>新しいトークンを発行すると、<strong>今のトークンは使えなくなります</strong>。
+      このプロジェクトを渡した相手全員へ、新しいトークンを渡し直すことになります。</p>
+      <div class="keep">
+        <div><span class="ky">変わらない</span><span>URL・入っているアーティファクト・コメント</span></div>
+        <div><span class="kn">変わる</span><span>プロジェクトの閲覧トークン</span></div>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <button class="linkbtn" type="button" data-close>やめる</button>
+      <button class="btn" type="button" id="pr-go">再発行する</button>
+    </div>
+  </div>
+  <div class="dlg-pane" id="pr-2">
+    <div class="dlg-head"><h2>再発行しました</h2><p class="target" id="pr-target2"></p></div>
+    <div class="dlg-body">
+      <div class="tokenbox">
+        <p class="tlabel">この画面を閉じると二度と表示できません</p>
+        <div class="tval"><code id="pr-token"></code>
+          <button class="copy" type="button" data-copy="pr-token">コピー</button></div>
+      </div>
+    </div>
+    <div class="dlg-act"><span class="spacer"></span>
+      <button class="btn" type="button" data-close>閉じる</button></div>
+  </div>
+</dialog>

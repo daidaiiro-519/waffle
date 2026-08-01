@@ -206,7 +206,45 @@ def update_function(stack: str, region: str | None) -> None:
 
     _put_admin_app(out, region)
     print("管理画面を反映しました。")
+
+    count = _put_project_pages(out, region)
+    if count:
+        print(f"プロジェクトの一覧ページを{count}件置き直しました。")
     print("\n行き渡るまで数十秒かかります。")
+
+
+def _put_project_pages(out: dict, region: str | None) -> int:
+    """既にあるプロジェクトの一覧ページを、いまの雛形で置き直す。
+
+    雛形はどのプロジェクトでも同じものなので、直したときは全件へ行き渡らせる
+    必要がある。中身（index.json）は触らない——そちらは所属が変わったときに
+    受け口が書き直しており、ここで上書きすると新しいものを古いもので潰す。
+    """
+    import boto3
+
+    s3 = boto3.client("s3", region_name=region)
+    bucket = out["BucketNameOut"]
+    page = (SKILL / "references" / "templates" / "project-page.html") \
+        .read_text(encoding="utf-8")
+
+    count, token = 0, None
+    while True:
+        kw = {"Bucket": bucket, "Prefix": "projects/"}
+        if token:
+            kw["ContinuationToken"] = token
+        res = s3.list_objects_v2(**kw)
+        for obj in res.get("Contents", []):
+            project_id = obj["Key"].removeprefix("projects/").removesuffix(".json")
+            if not project_id:
+                continue
+            s3.put_object(
+                Bucket=bucket, Key=f"proj/{project_id}/index.html",
+                Body=page.replace("{{プロジェクトID}}", project_id).encode("utf-8"),
+                ContentType="text/html; charset=utf-8")
+            count += 1
+        token = res.get("NextContinuationToken")
+        if not token:
+            return count
 
 
 def _put_admin_app(out: dict, region: str | None) -> None:
