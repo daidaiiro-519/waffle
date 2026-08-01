@@ -25,15 +25,15 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[3]
-本体 = ROOT / "infra" / "cloudfront-function" / "viewer-token-gate.js"
-シナリオ = ROOT / "infra" / "cloudfront-function" / "tests" / "viewer-token-gate.test.mjs"
+SOURCE = ROOT / "infra" / "cloudfront-function" / "viewer-token-gate.js"
+SCENARIOS = ROOT / "infra" / "cloudfront-function" / "tests" / "viewer-token-gate.test.mjs"
 
 
 def _cli():
     """手元のCLIから、配るときの加工と上限だけを借りる。
 
     CLIは冒頭に uv 向けの記述を持つが、読み込むだけなら影響しない。
-    加工をここへ書き写さないのは、写した時点で「配る形」でなくなるため。
+    加工をここへ書き写さないのは、写した時点で「実際に配る形」でなくなるため。
     """
     spec = importlib.util.spec_from_file_location(
         "artifactshare", ROOT / "scripts" / "artifactshare.py")
@@ -44,36 +44,36 @@ def _cli():
 
 
 @pytest.fixture(scope="module")
-def 配る形(tmp_path_factory):
+def deployed_form(tmp_path_factory):
     cli = _cli()
-    加工済み = cli._lean(本体.read_text(encoding="utf-8"))
-    出力先 = tmp_path_factory.mktemp("gate") / "viewer-token-gate.js"
-    出力先.write_text(加工済み, encoding="utf-8")
-    return cli, 加工済み, 出力先
+    leaned = cli._lean(SOURCE.read_text(encoding="utf-8"))
+    target = tmp_path_factory.mktemp("gate") / "viewer-token-gate.js"
+    target.write_text(leaned, encoding="utf-8")
+    return cli, leaned, target
 
 
-def test_配る形が上限に収まる(配る形):
-    cli, 加工済み, _ = 配る形
-    大きさ = len(加工済み.encode("utf-8"))
-    assert 大きさ <= cli.GATE_LIMIT, f"{大きさ} バイトで、上限 {cli.GATE_LIMIT} を超えている"
+def test_配る形が上限に収まる(deployed_form):
+    cli, leaned, _ = deployed_form
+    size = len(leaned.encode("utf-8"))
+    assert size <= cli.GATE_LIMIT, f"{size} バイトで、上限 {cli.GATE_LIMIT} を超えている"
 
 
-def test_文字列の中の二重斜線が消えていない(配る形):
+def test_文字列の中の二重斜線が消えていない(deployed_form):
     """`https://` を注釈と見誤ると、その行の後ろが黙って消える"""
-    _cli_, 加工済み, _ = 配る形
-    for 行 in 本体.read_text(encoding="utf-8").splitlines():
-        素 = 行.strip()
-        if 素.startswith("//") or not 素:
+    _cli_, leaned, _ = deployed_form
+    for line in SOURCE.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("//") or not stripped:
             continue
-        assert 素 in 加工済み, f"配る形から消えている: {素}"
+        assert stripped in leaned, f"配る形から消えている: {stripped}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node が無い")
-def test_配る形が手元の本体と同じ振る舞いをする(配る形):
-    _cli_, _加工済み, 出力先 = 配る形
-    結果 = subprocess.run(
-        ["node", str(シナリオ)],
-        env={**os.environ, "AS_GATE_SOURCE": str(出力先)},
+def test_配る形が手元の本体と同じ振る舞いをする(deployed_form):
+    _cli_, _leaned, target = deployed_form
+    result = subprocess.run(
+        ["node", str(SCENARIOS)],
+        env={**os.environ, "AS_GATE_SOURCE": str(target)},
         capture_output=True, text=True)
-    assert 結果.returncode == 0, 結果.stdout + 結果.stderr
-    assert "失敗 0" in 結果.stdout, 結果.stdout
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "失敗 0" in result.stdout, result.stdout

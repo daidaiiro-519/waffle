@@ -19,36 +19,38 @@ import main  # noqa: E402
 import manage  # noqa: E402
 
 
-class 呼ばれた記録(Exception):
+class Reached(Exception):
     """行き先へ届いたことだけを確かめたいので、届いた時点で止める。"""
 
-    def __init__(self, どこ, 引数):
-        self.どこ, self.引数 = どこ, 引数
+    def __init__(self, where, passed):
+        # args という名前は Exception 自身が使うため避ける
+        super().__init__(where)
+        self.where, self.passed = where, passed
 
 
 @pytest.fixture(autouse=True)
-def すべての行き先を差し替える(monkeypatch):
-    for モジュール名 in ("manage", "publishers", "projects", "comment_store"):
-        モジュール = getattr(main, モジュール名)
-        for 名 in dir(モジュール):
-            関数 = getattr(モジュール, 名)
-            if callable(関数) and not 名.startswith("_") and 名.islower():
+def stub_every_destination(monkeypatch):
+    for module_name in ("manage", "publishers", "projects", "comment_store"):
+        module = getattr(main, module_name)
+        for name in dir(module):
+            attr = getattr(module, name)
+            if callable(attr) and not name.startswith("_") and name.islower():
                 monkeypatch.setattr(
-                    モジュール, 名,
+                    module, name,
                     (lambda m, n: lambda *a, **k: (_ for _ in ()).throw(
-                        呼ばれた記録(f"{m}.{n}", a)))(モジュール名, 名),
+                        Reached(f"{m}.{n}", a)))(module_name, name),
                     raising=False)
 
 
-def どこへ届いたか(action, body=None):
-    with pytest.raises(呼ばれた記録) as x:
+def destination_of(action, body=None):
+    with pytest.raises(Reached) as x:
         main._dispatch(action, None, manage.Caller("p1"), body or {})
-    return x.value.どこ
+    return x.value.where
 
 
 # ── 行き先の対応 ────────────────────────────────────────
 
-対応 = {
+ROUTING = {
     "list": "manage.list_artifacts",
     "replace": "manage.replace_content",
     "rotate": "manage.reissue_token",
@@ -72,15 +74,15 @@ def どこへ届いたか(action, body=None):
 }
 
 
-@pytest.mark.parametrize("action,行き先", sorted(対応.items()))
-def test_操作が意図した行き先へ届く(action, 行き先):
-    assert どこへ届いたか(action) == 行き先
+@pytest.mark.parametrize("action,expected", sorted(ROUTING.items()))
+def test_操作が意図した行き先へ届く(action, expected):
+    assert destination_of(action) == expected
 
 
 def test_名簿からの削除はその操作でしか起きない():
     """以前は、行き先の無い操作すべてがここへ落ちていた"""
-    削除へ届いたもの = [a for a in 対応 if どこへ届いたか(a) == "publishers.remove"]
-    assert 削除へ届いたもの == ["remove-publisher"]
+    reached_remove = [a for a in ROUTING if destination_of(a) == "publishers.remove"]
+    assert reached_remove == ["remove-publisher"]
 
 
 def test_知らない操作は落ちる():
@@ -97,21 +99,21 @@ def test_受け付ける操作はすべて行き先を持つ():
 
 
 def test_この検証が表の全部を見ている():
-    assert set(対応) == set(main.ROUTES)
+    assert set(ROUTING) == set(main.ROUTES)
 
 
 # ── 渡す値 ──────────────────────────────────────────────
 
 def test_body_の値がそのまま渡る():
-    with pytest.raises(呼ばれた記録) as x:
+    with pytest.raises(Reached) as x:
         main._dispatch("assign", None, manage.Caller("p1"),
                        {"artifactId": "aaa", "projectId": "ppp"})
-    _deps, caller, artifact_id, project_id = x.value.引数
+    _deps, caller, artifact_id, project_id = x.value.passed
     assert (caller.id, artifact_id, project_id) == ("p1", "aaa", "ppp")
 
 
 def test_無い値は空文字として渡る():
     """呼び出し側の欠落を、行き先の手前で例外にしない（判定は行き先が持つ）"""
-    with pytest.raises(呼ばれた記録) as x:
+    with pytest.raises(Reached) as x:
         main._dispatch("rotate", None, manage.Caller("p1"), {})
-    assert x.value.引数[2] == ""
+    assert x.value.passed[2] == ""

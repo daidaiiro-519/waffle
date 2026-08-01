@@ -32,6 +32,9 @@ _ENTITY_IMPL = re.compile(r"src/waffle/domain/entities/.*\.py$")
 _SERVICE_IMPL = re.compile(r"src/waffle/domain/services/.*\.py$")
 _TEST_FILE = re.compile(r"tests/(?:acceptance|integration)/(test_.*)\.py$")
 _BASH_FILL_PATH = re.compile(r"waffle\s+scaffold\s+--operation\s+fill\b.*?--path\s+(\S+)")
+# tests/ 配下でなくても、テストとして書かれたことは名前から分かる。
+# 突き合わせ対象にならないことを黙って見過ごさないために見る
+_TEST_BASENAME = re.compile(r"(?:^|/)test_[^/]*\.py$")
 _USECASE_SPEC = re.compile(r"\.waffle/documents/specs/.*/usecase/(uc-[^/]+)\.json$")
 
 
@@ -85,6 +88,8 @@ def check(payload: dict) -> str | None:
     command = tool_input.get("command", "")
 
     reports: list[str] = []
+    # 突き合わせ先が見つからなかったもの。driftとは別の状態として扱う
+    unpaired: list[str] = []
 
     if _USECASE_IMPL.search(file_path):
         for cmd, label in [("check-usecase-class-drift", "usecase-class-drift"), ("check-operation-drift", "operation-drift")]:
@@ -110,19 +115,41 @@ def check(payload: dict) -> str | None:
             data = _run_waffle("check-scenario-drift", "--specPath", rel_spec, "--testPath", file_path)
             if _has_findings(data):
                 reports.append(f"[scenario-drift] {json.dumps(data, ensure_ascii=False)}")
+        else:
+            looked_for = m.group(1).removeprefix("test_").replace("_", "-")
+            unpaired.append(
+                f"{file_path} に対応するusecase specが見つかりません"
+                f"（{looked_for}.json を探しました）")
+    elif _TEST_BASENAME.search(file_path):
+        unpaired.append(
+            f"{file_path} は tests/acceptance/ tests/integration/ のいずれにも無いため、"
+            "scenario-driftの突き合わせ対象になりません")
 
     fm = _BASH_FILL_PATH.search(command)
     spec_path = fm.group(1).strip("'\"") if fm else ""
     if spec_path:
-        for test_path in _guess_test_paths(spec_path):
+        test_paths = _guess_test_paths(spec_path)
+        if not test_paths and _USECASE_SPEC.search(spec_path):
+            unpaired.append(
+                f"{spec_path} に対応するテストファイルが見つかりません"
+                "（tests/acceptance/ tests/integration/ を探しました）")
+        for test_path in test_paths:
             data = _run_waffle("check-scenario-drift", "--specPath", spec_path, "--testPath", test_path)
             if _has_findings(data):
                 reports.append(f"[scenario-drift:{test_path}] {json.dumps(data, ensure_ascii=False)}")
 
     target = file_path or spec_path
-    if not reports:
-        return None
-    return f"[Hook] {target} への書き込み後にdriftを検出しました: " + " / ".join(reports)
+    if reports:
+        return f"[Hook] {target} への書き込み後にdriftを検出しました: " + " / ".join(reports)
+    # 「突き合わせて綺麗だった」と「突き合わせ先が見つからなかった」は別の状態。
+    # 前者は沈黙してよいが、後者まで沈黙すると、対応が取れていないことが
+    # 綺麗であることと同じ見た目になる。2026-08-01に実際に取り違えた——
+    # 132シナリオが誰とも突き合わされていない状態を「drift無し」と読んだ。
+    # 沈黙してよいのは「検査した結果、綺麗だった」ときだけにする。
+    if unpaired:
+        return ("[Hook] driftは検出していません。突き合わせが行われていないためです: "
+                + " / ".join(unpaired))
+    return None
 
 
 def main() -> None:

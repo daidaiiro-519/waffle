@@ -409,63 +409,70 @@ def smoke(stack: str, region: str | None) -> int:
     閲覧画面が不透明な出どころになる等）は、ここからは構造的に見えない。
     実際にこの取り違えを起こしたとき、外から叩く確認はすべて通っていた。
     「通しで動いた」と言い切る根拠にこれを使わないよう、明示して終わる。
+
+    Args:
+        stack: 対象の環境の名前。
+        region: 対象の地域（省略時は手元の既定）。
+
+    Returns:
+        通らなかったものがあれば 1、すべて通れば 0。
     """
     out = _outputs(stack, region)
     viewer, admin = out["ViewerDomain"], out.get("AdminDomain", "")
-    結果 = []
+    checks: list[bool] = []
 
-    def 見る(名, 期待, 実際, 補足=""):
-        通った = 期待 == 実際
-        結果.append(通った)
-        印 = "OK  " if 通った else "NG  "
-        print(f"{印}{名}｜期待 {期待} / 実際 {実際}{('  ' + 補足) if 補足 else ''}")
+    def check(name: str, expected, actual, note: str = "") -> None:
+        passed = expected == actual
+        checks.append(passed)
+        mark = "OK  " if passed else "NG  "
+        print(f"{mark}{name}｜期待 {expected} / 実際 {actual}{('  ' + note) if note else ''}")
 
     print(f"■ 環境 {stack} を外から1周見る\n")
 
     # 閲覧ゲートが本当に保管を引けているか。引けないと 503 になり、
     # 正しいトークンを持つ人も含めて誰も開けない（実際に起きた）
-    状態, 見出し, _ = _probe(f"https://{viewer}/p/zzzzzzzz/",
-                             headers={"cookie": "__Host-as_a_zzzzzzzz=deadbeef.1"})
-    見る("閲覧ゲートが保管を引けている", True, 状態 != 503,
-         "503なら保管の結び付けが外れている" if 状態 == 503 else f"状態 {状態}")
+    status, _headers, _ = _probe(f"https://{viewer}/p/zzzzzzzz/",
+                                 headers={"cookie": "__Host-as_a_zzzzzzzz=deadbeef.1"})
+    check("閲覧ゲートが保管を引けている", True, status != 503,
+          "503なら保管の結び付けが外れている" if status == 503 else f"状態 {status}")
 
     # トークンが無ければ入れない
-    状態, _, _ = _probe(f"https://{viewer}/p/zzzzzzzz/")
-    見る("トークン無しでは開けない", 401, 状態)
+    status, _headers, _ = _probe(f"https://{viewer}/p/zzzzzzzz/")
+    check("トークン無しでは開けない", 401, status)
 
     # 隔離の指定は、持ち込まれたHTMLにだけ掛かる。閲覧画面にも掛けると
     # 閲覧画面自身が不透明な出どころになり、コメントの読み書きが止まる
-    _, 見出し, _ = _probe(f"https://{viewer}/p/zzzzzzzz/content.html")
-    見る("持ち込まれたHTMLは隔離されている", True,
-         "sandbox" in 見出し.get("content-security-policy", ""))
-    _, 見出し, _ = _probe(f"https://{viewer}/p/zzzzzzzz/")
-    見る("閲覧画面は隔離されていない", False,
-         "sandbox" in 見出し.get("content-security-policy", ""))
+    _status, headers, _ = _probe(f"https://{viewer}/p/zzzzzzzz/content.html")
+    check("持ち込まれたHTMLは隔離されている", True,
+          "sandbox" in headers.get("content-security-policy", ""))
+    _status, headers, _ = _probe(f"https://{viewer}/p/zzzzzzzz/")
+    check("閲覧画面は隔離されていない", False,
+          "sandbox" in headers.get("content-security-policy", ""))
 
     if admin:
-        状態, _, _ = _probe(f"https://{admin}/")
-        見る("管理画面が開く", 200, 状態)
-        状態, _, _ = _probe(f"https://{admin}/admin/config.json")
-        見る("管理画面が繋ぎ先を読める", 200, 状態)
+        status, _headers, _ = _probe(f"https://{admin}/")
+        check("管理画面が開く", 200, status)
+        status, _headers, _ = _probe(f"https://{admin}/admin/config.json")
+        check("管理画面が繋ぎ先を読める", 200, status)
         # 証明を持たない者が管理操作へ通らないこと
-        状態, _, _ = _probe(f"https://{admin}/api", method="POST")
-        見る("証明無しでは管理操作へ通らない", True, 状態 in (400, 401, 403),
-             f"状態 {状態}")
+        status, _headers, _ = _probe(f"https://{admin}/api", method="POST")
+        check("証明無しでは管理操作へ通らない", True, status in (400, 401, 403),
+              f"状態 {status}")
 
     # 配る形が上限に収まっていること（超えると次の反映が丸ごと失敗する）
-    大きさ = len(_lean((HERE.parent / "infra" / "cloudfront-function"
-                        / "viewer-token-gate.js").read_text(encoding="utf-8")).encode("utf-8"))
-    見る("閲覧ゲートが上限に収まる", True, 大きさ <= GATE_LIMIT,
-         f"{大きさ} / {GATE_LIMIT} バイト")
+    size = len(_lean((HERE.parent / "infra" / "cloudfront-function"
+                      / "viewer-token-gate.js").read_text(encoding="utf-8")).encode("utf-8"))
+    check("閲覧ゲートが上限に収まる", True, size <= GATE_LIMIT,
+          f"{size} / {GATE_LIMIT} バイト")
 
-    落ちた = 結果.count(False)
-    print(f"\n{len(結果) - 落ちた} / {len(結果)} 件が通った")
+    failed = checks.count(False)
+    print(f"\n{len(checks) - failed} / {len(checks)} 件が通った")
     print("\n■ ここからは見えないもの（ブラウザで1度は自分で通すこと）")
     print("  - 本人確認を通って公開し、そのURLとトークンで実際に開けるか")
     print("  - 開いた画面からコメントを書き込み、一覧に現れるか")
     print("  - 隔離の指定でコメントの読み書きが止まっていないか")
     print("    （外から叩く確認は隔離の指定を解釈しないため、ここでは通ってしまう）")
-    return 1 if 落ちた else 0
+    return 1 if failed else 0
 
 
 # ── 入り口 ──────────────────────────────────────────────

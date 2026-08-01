@@ -26,7 +26,7 @@ def cli():
     return module
 
 
-健全 = {
+HEALTHY = {
     ("GET", "https://viewer.example.net/p/zzzzzzzz/", True): (403, {}),
     ("GET", "https://viewer.example.net/p/zzzzzzzz/", False): (401, {}),
     ("GET", "https://viewer.example.net/p/zzzzzzzz/content.html", False): (
@@ -37,57 +37,57 @@ def cli():
 }
 
 
-def 環境を作る(cli, monkeypatch, 応答):
+def given_environment(cli, monkeypatch, responses):
     monkeypatch.setattr(cli, "_outputs", lambda *_a, **_k: {
         "ViewerDomain": "viewer.example.net", "AdminDomain": "admin.example.net"})
 
     def _probe(url, *, headers=None, method="GET"):
-        鍵 = (method, url, bool(headers and "cookie" in headers))
-        状態, 見出し = 応答[鍵]
-        return 状態, 見出し, b""
+        key = (method, url, bool(headers and "cookie" in headers))
+        status, headers = responses[key]
+        return status, headers, b""
 
     monkeypatch.setattr(cli, "_probe", _probe)
 
 
 def test_健全な環境なら全部通る(cli, monkeypatch, capsys):
-    環境を作る(cli, monkeypatch, 健全)
+    given_environment(cli, monkeypatch, HEALTHY)
     assert cli.smoke("artifact-share", None) == 0
     assert "NG" not in capsys.readouterr().out
 
 
 def test_保管との結び付けが外れていれば落ちる(cli, monkeypatch, capsys):
     """この壊れ方は、正しいトークンを持つ人も含めて全員が開けなくなる"""
-    壊れた = {**健全, ("GET", "https://viewer.example.net/p/zzzzzzzz/", True): (503, {})}
-    環境を作る(cli, monkeypatch, 壊れた)
+    broken = {**HEALTHY, ("GET", "https://viewer.example.net/p/zzzzzzzz/", True): (503, {})}
+    given_environment(cli, monkeypatch, broken)
 
     assert cli.smoke("artifact-share", None) == 1
     assert "保管を引けている" in [
-        行 for 行 in capsys.readouterr().out.splitlines() if 行.startswith("NG")][0]
+        line for line in capsys.readouterr().out.splitlines() if line.startswith("NG")][0]
 
 
 def test_隔離の指定が閲覧画面まで掛かっていれば落ちる(cli, monkeypatch, capsys):
     """閲覧画面自身が不透明な出どころになり、コメントの読み書きが止まる。
     外から叩く確認は隔離の指定を解釈しないので、見出しの有無でしか見えない"""
-    壊れた = {**健全, ("GET", "https://viewer.example.net/p/zzzzzzzz/", False): (
+    broken = {**HEALTHY, ("GET", "https://viewer.example.net/p/zzzzzzzz/", False): (
         401, {"content-security-policy": "sandbox allow-scripts"})}
-    環境を作る(cli, monkeypatch, 壊れた)
+    given_environment(cli, monkeypatch, broken)
 
     assert cli.smoke("artifact-share", None) == 1
     assert "閲覧画面は隔離されていない" in capsys.readouterr().out
 
 
 def test_持ち込まれたHTMLが隔離されていなければ落ちる(cli, monkeypatch, capsys):
-    壊れた = {**健全,
+    broken = {**HEALTHY,
               ("GET", "https://viewer.example.net/p/zzzzzzzz/content.html", False): (401, {})}
-    環境を作る(cli, monkeypatch, 壊れた)
+    given_environment(cli, monkeypatch, broken)
 
     assert cli.smoke("artifact-share", None) == 1
     assert "持ち込まれたHTMLは隔離されている" in capsys.readouterr().out
 
 
 def test_証明無しで管理操作へ通れば落ちる(cli, monkeypatch, capsys):
-    壊れた = {**健全, ("POST", "https://admin.example.net/api", False): (200, {})}
-    環境を作る(cli, monkeypatch, 壊れた)
+    broken = {**HEALTHY, ("POST", "https://admin.example.net/api", False): (200, {})}
+    given_environment(cli, monkeypatch, broken)
 
     assert cli.smoke("artifact-share", None) == 1
     assert "証明無しでは管理操作へ通らない" in capsys.readouterr().out
@@ -96,9 +96,9 @@ def test_証明無しで管理操作へ通れば落ちる(cli, monkeypatch, caps
 def test_見えないものを毎回言う(cli, monkeypatch, capsys):
     """外から叩く確認だけを根拠に「通しで動いた」と言わないための一文。
     実際にこの取り違えをしたとき、外から叩く確認はすべて通っていた"""
-    環境を作る(cli, monkeypatch, 健全)
+    given_environment(cli, monkeypatch, HEALTHY)
     cli.smoke("artifact-share", None)
 
-    出力 = capsys.readouterr().out
-    assert "ここからは見えないもの" in 出力
-    assert "隔離の指定を解釈しない" in 出力
+    printed = capsys.readouterr().out
+    assert "ここからは見えないもの" in printed
+    assert "隔離の指定を解釈しない" in printed
