@@ -263,6 +263,57 @@ def list_projects(deps: Deps, caller: Caller) -> list[dict]:
     return sorted(rows, key=lambda r: r["updatedAt"], reverse=True)
 
 
+# ── 中身を見る ──────────────────────────────────────────
+
+def detail(deps: Deps, caller: Caller, project_id: str) -> dict:
+    """プロジェクトと、いま入っている共有アーティファクトを返す。
+
+    見られるのは、そこへ自分のものを出し入れできる人（持ち主・管理者・
+    共有なら招かれた投稿者）。入れるには、いま何が入っているかが
+    見えている必要がある。
+
+    公開が止まっていても見られる。止めたものを再開するか外すかを決めるのに
+    中身が要るため。閲覧トークンは含めない。
+    """
+    index = read_index(deps, project_id)
+    if not index:
+        raise ProjectError("PROJECT_NOT_FOUND", "見つかりません。")
+    if not (caller.is_admin or index.get("owner") == caller.id
+            or index.get("scope") == SHARED):
+        raise ProjectError("PROJECT_NOT_FOUND", "見つかりません。")
+
+    rows = []
+    for artifact_id in index.get("memberArtifactIds", []):
+        try:
+            meta = json.loads(deps.store.get(f"meta/{artifact_id}.json"))
+        except Exception:
+            continue
+        rows.append({
+            "artifactId": artifact_id,
+            "name": meta.get("name", ""),
+            "docType": meta.get("docType", ""),
+            "status": meta.get("status", ""),
+            "uploadedBy": meta.get("uploadedBy", ""),
+            "isMine": meta.get("uploadedBy") == caller.id,
+            "updatedAt": meta.get("updatedAt", 0),
+        })
+    rows.sort(key=lambda r: r["updatedAt"], reverse=True)
+
+    return {
+        "project": {
+            "projectId": index.get("projectId", ""),
+            "name": index.get("displayName", ""),
+            "projectKey": index.get("projectKey", ""),
+            "scope": index.get("scope", PERSONAL),
+            "status": index.get("status", ""),
+            "owner": index.get("owner", ""),
+            "isMine": index.get("owner") == caller.id,
+            "url": _viewer_url(deps, project_id),
+        },
+        "artifacts": rows,
+    }
+
+
 # ── 出し入れの可否（manage.py から使う） ────────────────
 
 def require_writable(deps: Deps, caller: Caller, project_id: str) -> dict:

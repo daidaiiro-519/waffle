@@ -30,7 +30,7 @@ ACTIONS = {
     "publish", "list", "replace", "rotate", "disable", "enable",
     "assign", "unassign", "transfer", "invite", "remove-publisher",
     "publishers", "resend-invite",
-    "projects", "create-project", "reissue-project",
+    "projects", "project", "create-project", "reissue-project",
     "disable-project", "enable-project",
 }
 
@@ -103,6 +103,8 @@ def _dispatch(action, deps, caller, body):  # pragma: no cover
     project_id = body.get("projectId", "")
     if action == "projects":
         return {"projects": projects.list_projects(deps, caller)}
+    if action == "project":
+        return projects.detail(deps, caller, project_id)
     if action == "create-project":
         return projects.create(deps, caller, body.get("displayName", ""),
                                body.get("scope", ""), body.get("projectKey", ""))

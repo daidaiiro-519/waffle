@@ -222,3 +222,62 @@ def test_一覧に閲覧トークンは含まれない():
     owned(deps)
     for row in projects.list_projects(deps, X):
         assert "token" not in row
+
+
+# ── 中身を見る ──────────────────────────────────────────
+
+def artifact(deps, artifact_id, name, owner=X, status="active"):
+    deps.store.put(f"meta/{artifact_id}.json", json.dumps({
+        "artifactId": artifact_id, "name": name, "status": status,
+        "docType": "DecisionRecord", "description": "", "tags": [],
+        "uploadedBy": owner.id, "projects": [], "updatedAt": 1,
+    }), "application/json")
+
+
+def test_中身に入っているものが名前つきで返る():
+    """一覧の件数だけでは、何が入っているかを画面に出せない"""
+    deps = setup()
+    r = owned(deps)
+    artifact(deps, "aaaaaaaa", "検索基盤の選定")
+    manage_assign(deps, X, "aaaaaaaa", r["projectId"])
+
+    got = projects.detail(deps, X, r["projectId"])
+
+    assert got["project"]["name"] == "検索基盤リニューアル"
+    assert [a["artifactId"] for a in got["artifacts"]] == ["aaaaaaaa"]
+    assert got["artifacts"][0]["name"] == "検索基盤の選定"
+
+
+def test_中身に閲覧トークンは含まれない():
+    deps = setup()
+    r = owned(deps)
+    got = projects.detail(deps, X, r["projectId"])
+    assert "token" not in got["project"]
+
+
+def test_共有なら持ち主でなくても中身を見られる():
+    """そこへ自分のものを入れるには、いま何が入っているかが見えている必要がある"""
+    deps = setup()
+    r = owned(deps, scope="SHARED")
+    assert projects.detail(deps, Y, r["projectId"])["project"]["projectId"] == r["projectId"]
+
+
+def test_個人なら持ち主以外は中身を見られない():
+    deps = setup()
+    r = owned(deps)
+    with pytest.raises(projects.ProjectError) as x:
+        projects.detail(deps, Y, r["projectId"])
+    assert x.value.code == "PROJECT_NOT_FOUND"
+
+
+def test_公開が止まっていても持ち主は中身を見られる():
+    """止めたものを再開するか外すかを決めるのに、中身が見えている必要がある"""
+    deps = setup()
+    r = owned(deps)
+    projects.suspend(deps, X, r["projectId"])
+    assert projects.detail(deps, X, r["projectId"])["project"]["status"] == "disabled"
+
+
+def manage_assign(deps, caller, artifact_id, project_id):
+    import manage as m
+    return m.assign(deps, caller, artifact_id, project_id)

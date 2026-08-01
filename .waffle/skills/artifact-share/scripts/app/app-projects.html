@@ -9,6 +9,38 @@
   <div id="plist"></div>
 </section>
 
+<!-- ══ プロジェクトの中身 ══ -->
+<section class="view" id="v-projdetail">
+  <button class="back" type="button" id="pd-back">← プロジェクト一覧</button>
+
+  <div class="dhead">
+    <h1 id="pd-name"></h1>
+    <span class="pkey" id="pd-key"></span>
+    <span class="status on" id="pd-status">公開中</span>
+    <span class="shared" id="pd-scope"></span>
+  </div>
+
+  <div class="sec">
+    <h2>共有</h2>
+    <div class="card sharebox">
+      <div class="urlrow">
+        <span class="u" id="pd-url"></span>
+        <button class="copy" type="button" data-copy="pd-url">URLをコピー</button>
+      </div>
+      <div class="tokenline">
+        <span class="tmask">••••-••••-••••</span>
+        <span class="tnote">トークンは発行したときの一度しか表示されません。分からなくなった場合は再発行してください（それまでのトークンは使えなくなります）。</span>
+        <button class="btn ghost sm" type="button" id="pd-rotate">閲覧トークンを再発行</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>入っているアーティファクト（<span id="pd-count"></span>）</h2>
+    <div class="card" style="padding:0;" id="pd-arts"></div>
+  </div>
+</section>
+
 <!-- ══ プロジェクトを作る ══ -->
 <dialog id="dlg-newproj">
   <div class="dlg-pane on" id="np-1">

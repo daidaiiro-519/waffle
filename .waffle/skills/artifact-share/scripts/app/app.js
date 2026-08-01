@@ -692,11 +692,133 @@
       end.appendChild(active ? chip('status on', '公開中') : chip('status no', '無効化済み'));
       // 見せ方を変えられるのは持ち主と管理者だけ
       if (p.isMine || session.admin) end.appendChild(projectMenu(p));
+      end.appendChild(chip('chev', '›'));
 
       card.append(main, end);
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('.menu')) return;   // ⋯ を押したときは開かない
+        openProject(p.projectId);
+      });
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProject(p.projectId); }
+      });
       wrap.appendChild(card);
     });
   }
+
+  /* ── プロジェクトの中身 ─────────────────────────────
+     入れられるのは自分が公開したものだけ。他人のものは選べない。 */
+  var opened = null;
+
+  function openProject(projectId) {
+    api('project', { projectId: projectId }).then(function (d) {
+      opened = d;
+      var p = d.project;
+      $('pd-name').textContent = p.name;
+      $('pd-key').textContent = p.projectKey || '';
+      $('pd-key').hidden = !p.projectKey;
+      $('pd-url').textContent = 'https://' + CONFIG.viewerDomain + '/proj/' + p.projectId + '/';
+
+      var st = $('pd-status');
+      st.className = 'status ' + (p.status === 'active' ? 'on' : 'no');
+      st.textContent = p.status === 'active' ? '公開中' : '無効化済み';
+
+      var scope = $('pd-scope');
+      scope.textContent = p.scope === 'SHARED' ? '共有' : '個人';
+      scope.className = p.scope === 'SHARED' ? 'shared' : 'status no';
+
+      // 見せ方を変えられるのは持ち主と管理者だけ
+      $('pd-rotate').hidden = !(p.isMine || session.admin);
+
+      renderMembersOf(d);
+      view('v-projdetail');
+    }).catch(fail);
+  }
+
+  function renderMembersOf(d) {
+    var box = $('pd-arts');
+    box.textContent = '';
+    $('pd-count').textContent = d.artifacts.length + ' 件';
+
+    d.artifacts.forEach(function (a) {
+      var row = document.createElement('div'); row.className = 'arow';
+      var main = document.createElement('div');
+      var t = document.createElement('p'); t.className = 'atitle'; t.textContent = a.name;
+      var sub = document.createElement('div'); sub.className = 'asub';
+      if (a.docType) sub.appendChild(chip('dtype', a.docType));
+      if (!a.isMine) sub.appendChild(chip('', publisherLabel(a.uploadedBy)));
+      if (a.status !== 'active') sub.appendChild(chip('status no', '無効化済み'));
+      main.append(t, sub);
+
+      var end = document.createElement('div');
+      // 外せるのは自分が公開したものだけ。他人のものは動かせない
+      if (a.isMine) {
+        var b = document.createElement('button');
+        b.className = 'rowbtn'; b.type = 'button'; b.textContent = '外す';
+        b.setAttribute('aria-label', a.name + ' をこのプロジェクトから外す');
+        b.addEventListener('click', function () {
+          api('unassign', { artifactId: a.artifactId, projectId: d.project.projectId })
+            .then(function () {
+              toast('外しました。アーティファクト自体は残っています');
+              openProject(d.project.projectId);
+              loadProjects();
+            }).catch(fail);
+        });
+        end.appendChild(b);
+      }
+      row.append(main, end);
+      box.appendChild(row);
+    });
+
+    // 加える。選べるのは自分が公開していて、まだ入っていないものだけ
+    var inside = {};
+    d.artifacts.forEach(function (a) { inside[a.artifactId] = true; });
+    var addable = ITEMS.filter(function (x) {
+      return x.status === 'active' && !inside[x.artifactId];
+    });
+
+    var add = document.createElement('div'); add.className = 'addrow';
+    if (!addable.length) {
+      var note = document.createElement('span');
+      note.style.fontSize = '12.5px';
+      note.style.color = 'var(--ink-faint)';
+      note.textContent = ITEMS.length
+        ? '入れられるものがありません。公開中のものはすべて入っています。'
+        : 'まだ何も公開していません。';
+      add.appendChild(note);
+    } else {
+      var sel = document.createElement('select');
+      sel.setAttribute('aria-label', '入れるアーティファクトを選ぶ');
+      addable.forEach(function (x) {
+        var o = document.createElement('option');
+        o.value = x.artifactId; o.textContent = x.name;
+        sel.appendChild(o);
+      });
+      var go = document.createElement('button');
+      go.className = 'btn sm'; go.type = 'button'; go.textContent = '追加する';
+      go.addEventListener('click', function () {
+        api('assign', { artifactId: sel.value, projectId: d.project.projectId })
+          .then(function () {
+            toast('入れました。このプロジェクトのトークンでも開けます');
+            openProject(d.project.projectId);
+            loadProjects();
+          }).catch(fail);
+      });
+      add.append(sel, go);
+    }
+    box.appendChild(add);
+  }
+
+  $('pd-back').addEventListener('click', function () { view('v-projects'); });
+
+  $('pd-rotate').addEventListener('click', function () {
+    $('pr-target').textContent = opened.project.name;
+    $('pr-1').classList.add('on'); $('pr-2').classList.remove('on');
+    targetProject = { projectId: opened.project.projectId, name: opened.project.name };
+    openDlg('dlg-projrotate');
+  });
 
   function projectMenu(p) {
     var wrap = document.createElement('div'); wrap.className = 'menu';
