@@ -261,9 +261,11 @@ def test_構造化配列要素は1件分のプレースホルダーとして描�
 
 def test_document_jsonへの書き込みを一切行わない():
     """
+    Scenario: document.jsonへの書き込みを一切行わない
     Given schemaのみを受け取るブランクテンプレート描画
     When 実行する
-    Then document.json相当の書き込み(save)は一切呼ばれない（write_textでのMarkdown書き出しのみ）
+    Then document.jsonは書き換えられない
+    And 描画結果のMarkdownを書き出すだけである
     """
     documents = _FakeDocumentRepository()
     result = _engine({"SimpleSchema/v1": _simple_schema()}, documents).run("SimpleSchema/v1")

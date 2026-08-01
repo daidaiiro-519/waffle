@@ -37,9 +37,11 @@ def test_同じ入力なら同じ結果を返す():
 
 def test_導出したパスへ実際にファイルを書き出す():
     """
-    Given 実schemaRef・discriminator
+    Scenario: 導出したパスへ実際にファイルを書き出す
+    Given 実在するschemaRefとdiscriminator
     When ブランクテンプレート描画を実行する
-    Then .waffle/templates/blank/CodingSchema/v2/coding-standard.md が実際に書き出され、返り値のcontentと一致する
+    Then 導出したパスへファイルが実際に書き出される
+    And その内容は返り値のcontentと一致する
     """
     result = _engine().run("CodingSchema/v2", {"codingKind": "coding-standard"})
 

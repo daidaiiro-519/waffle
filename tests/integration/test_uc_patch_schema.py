@@ -230,3 +230,39 @@ def test_整形契約に従う既存箇所は書き込み後も不変である()
     })
     after_lines = set(_FIXTURE_PATH.read_text(encoding="utf-8").splitlines())
     assert before_lines <= after_lines
+
+
+def _render_target_schema() -> dict:
+    """x-render-targetがkind別dict形式のschema。"""
+    schema = _kind_dispatch_schema()
+    schema["x-render-target"] = {
+        "formats": ["md"],
+        "pathVars": {"advisor": {"dir": ".waffle/skills"}},
+        "path": {"advisor": "{dir}/{documentId}/SKILL.md"},
+        "deploy": {"advisor": [".claude/skills/{documentId}/SKILL.md"]},
+    }
+    return schema
+
+
+def test_set_kind_render_targetの複数回実行はべき等である():
+    """
+    Scenario: set_kind_render_targetの複数回実行はべき等である
+    Given 同一のset_kind_render_target操作
+    When 2回連続で実行する
+    Then 2回目の実行結果は1回目と完全に同一である
+    """
+    _write_fixture(_render_target_schema())
+    params = {
+        "schemaRef": _SCHEMA_REF,
+        "kindValue": "router",
+        "pathVars": {"dir": ".waffle/skills"},
+        "path": "{dir}/{documentId}/SKILL.md",
+        "deploy": [".claude/skills/{documentId}/SKILL.md"],
+    }
+    _engine().run("set_kind_render_target", params)
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+
+    result = _engine().run("set_kind_render_target", params)
+
+    assert isinstance(result, Ok), result
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first

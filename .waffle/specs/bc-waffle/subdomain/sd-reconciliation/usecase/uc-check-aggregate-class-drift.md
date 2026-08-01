@@ -163,6 +163,32 @@ Scenario: 宣言された値オブジェクトが実装に存在しないとき�
   Then missing_value_objectにその組が含まれる
 ```
 
+### 値オブジェクトのクラス名だけ一致し属性が空でも通っていた盲点をvalue_object_attribute_mismatchで検出する
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 計算整合: クラス名の一致だけでは合格にしないこと |
+
+```gherkin
+Scenario: 値オブジェクトのクラス名だけ一致し属性が空でも通っていた盲点をvalue_object_attribute_mismatchで検出する
+Given valueObjects宣言がattributesを持ち、値オブジェクトのクラス自体は存在するが属性を1つも持たない実装
+When クラス名ドリフト検査を実行する
+Then value_object_attribute_mismatchにその組が含まれる
+```
+
+### 値オブジェクトがattributesを宣言していなければ属性対応は対象外にする
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 境界: 宣言が無いものを比較して不一致にしない |
+
+```gherkin
+Scenario: 値オブジェクトがattributesを宣言していなければ属性対応は対象外にする
+Given valueObjects宣言がattributesを持たない値オブジェクト
+When クラス名ドリフト検査を実行する
+Then value_object_attribute_mismatchにその組は含まれない
+```
+
 ---
 
 ## 操作保証シナリオ

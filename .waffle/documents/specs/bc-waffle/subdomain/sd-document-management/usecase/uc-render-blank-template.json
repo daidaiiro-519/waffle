@@ -226,6 +226,13 @@
           "gherkin": "Scenario: x_frontmatterを宣言しないschemaはfrontmatterを出力しない\nGiven x-frontmatterを宣言しないschema\nWhen そのschemaRefでブランクテンプレート描画を実行する\nThen 出力にfrontmatterブロックが含まれない",
           "covers": "",
           "operation": ""
+        },
+        {
+          "name": "document.jsonへの書き込みを一切行わない",
+          "category": "正常系",
+          "viewpoint": "計算整合: 描画は読むだけの操作であり、対象を書き換えない",
+          "gherkin": "Scenario: document.jsonへの書き込みを一切行わない\nGiven schemaのみを受け取るブランクテンプレート描画\nWhen 実行する\nThen document.jsonは書き換えられない\nAnd 描画結果のMarkdownを書き出すだけである",
+          "covers": "受け入れ基準: スキーマの値フィールドをプレースホルダー化したMarkdownを返す（副作用の範囲）"
         }
       ]
     },
@@ -247,6 +254,13 @@
           "viewpoint": "べき等性: 副作用が無く同じ入力からは同じ出力になることを確認する",
           "gherkin": "Scenario: 同じ入力なら同じ結果を返す\n  Given 同一のschemaRef・discriminator\n  When ブランクテンプレート描画を2回実行する\n  Then 2回とも同じMarkdown文字列が返る",
           "covers": ""
+        },
+        {
+          "name": "導出したパスへ実際にファイルを書き出す",
+          "category": "正常系",
+          "viewpoint": "計算整合: 返した内容と、実際に書き出された内容が一致すること",
+          "gherkin": "Scenario: 導出したパスへ実際にファイルを書き出す\nGiven 実在するschemaRefとdiscriminator\nWhen ブランクテンプレート描画を実行する\nThen 導出したパスへファイルが実際に書き出される\nAnd その内容は返り値のcontentと一致する",
+          "covers": "操作保証: 導出したパスへの書き出し"
         }
       ]
     },

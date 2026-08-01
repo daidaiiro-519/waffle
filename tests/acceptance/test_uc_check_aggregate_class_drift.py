@@ -163,9 +163,10 @@ def test_クラス名が一致しないaggregateを検出する(tmp_path):
 
 def test_値オブジェクトのクラス名だけ一致し属性が空でも通っていた盲点をvalue_object_attribute_mismatchで検出する(tmp_path):
     """
-    Given ValueObjects宣言がattributesを持ち、値オブジェクトのクラス自体は存在するが中身が空(属性を1つも持たない)実装
+    Scenario: 値オブジェクトのクラス名だけ一致し属性が空でも通っていた盲点をvalue_object_attribute_mismatchで検出する
+    Given valueObjects宣言がattributesを持ち、値オブジェクトのクラス自体は存在するが属性を1つも持たない実装
     When クラス名ドリフト検査を実行する
-    Then value_object_attribute_mismatchにその組が含まれる（クラス名の一致だけでは合格にしない）
+    Then value_object_attribute_mismatchにその組が含まれる
     """
     docs_root = tmp_path / "documents"
     src_root = tmp_path / "src"
@@ -194,9 +195,10 @@ def test_値オブジェクトのクラス名だけ一致し属性が空でも�
 
 def test_値オブジェクトがattributesを宣言していなければ属性対応は対象外にする(tmp_path):
     """
-    Given ValueObjects宣言がattributesを持たない値オブジェクト（クラス自体は空実装）
+    Scenario: 値オブジェクトがattributesを宣言していなければ属性対応は対象外にする
+    Given valueObjects宣言がattributesを持たない値オブジェクト
     When クラス名ドリフト検査を実行する
-    Then value_object_attribute_mismatchにその組は含まれない（属性を宣言していない以上、比較しようがないため）
+    Then value_object_attribute_mismatchにその組は含まれない
     """
     docs_root = tmp_path / "documents"
     src_root = tmp_path / "src"

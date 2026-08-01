@@ -87,7 +87,7 @@ def test_schemaRef_を持たない_Document_は検証できない():
 @pytest.mark.parametrize("path,expected_status", _DOGFOOD_DOCUMENTS)
 def test_既存documentはschemaに適合する(path, expected_status, tmp_path):
     """
-    Scenario: 既存documentはschemaに適合する
+    Scenario Outline: 既存documentはschemaに適合する
     Given waffle自身のdocument
     When validateする
     Then 成功し、schemaのlifecycleに応じた正しいstatusになる

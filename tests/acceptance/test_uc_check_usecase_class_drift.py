@@ -66,9 +66,10 @@ def test_実装ファイルが存在しないusecaseを検出する(tmp_path):
 
 def test_Java実装に対してもクラス名ドリフトを検知できる(tmp_path):
     """
+    Scenario: Java実装に対してもクラス名ドリフトを検知できる
     Given languageにjavaを指定し、operationNameと一致するJavaクラスを持つ実装ファイル
     When クラス名ドリフト検査を実行する
-    Then Python専用のASTに依存せず、tree-sitter経由で正しく一致と判定される
+    Then 対象言語に依らず正しく一致と判定される
     """
     docs_root = tmp_path / "documents"
     src_root = tmp_path / "src"

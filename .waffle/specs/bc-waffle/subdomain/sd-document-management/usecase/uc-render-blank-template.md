@@ -233,6 +233,20 @@ When そのschemaRefでブランクテンプレート描画を実行する
 Then 出力にfrontmatterブロックが含まれない
 ```
 
+### document.jsonへの書き込みを一切行わない
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 描画は読むだけの操作であり、対象を書き換えない |
+
+```gherkin
+Scenario: document.jsonへの書き込みを一切行わない
+Given schemaのみを受け取るブランクテンプレート描画
+When 実行する
+Then document.jsonは書き換えられない
+And 描画結果のMarkdownを書き出すだけである
+```
+
 ---
 
 ## 操作保証シナリオ
@@ -248,4 +262,18 @@ Scenario: 同じ入力なら同じ結果を返す
   Given 同一のschemaRef・discriminator
   When ブランクテンプレート描画を2回実行する
   Then 2回とも同じMarkdown文字列が返る
+```
+
+### 導出したパスへ実際にファイルを書き出す
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 返した内容と、実際に書き出された内容が一致すること |
+
+```gherkin
+Scenario: 導出したパスへ実際にファイルを書き出す
+Given 実在するschemaRefとdiscriminator
+When ブランクテンプレート描画を実行する
+Then 導出したパスへファイルが実際に書き出される
+And その内容は返り値のcontentと一致する
 ```

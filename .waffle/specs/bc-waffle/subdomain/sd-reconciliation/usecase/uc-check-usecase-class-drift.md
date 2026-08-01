@@ -1,3 +1,11 @@
+---
+id: "uc-check-usecase-class-drift"
+type: "usecase"
+title: "操作名と実装クラス名の一致を検証する：CheckUsecaseClassDrift"
+description: "usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 操作名と実装クラス名の一致を検証する：CheckUsecaseClassDrift
 
 ## 概要
@@ -119,6 +127,19 @@ Scenario: クラス名が一致しないusecaseを検出する
   Given 実装ファイルは実在するが、operationNameと一致するクラス定義を持たないusecase document
   When クラス名ドリフト検査を実行する
   Then class_name_mismatchにその組が含まれる
+```
+
+### Java実装に対してもクラス名ドリフトを検知できる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 検知が対象言語に依らず成立すること |
+
+```gherkin
+Scenario: Java実装に対してもクラス名ドリフトを検知できる
+Given languageにjavaを指定し、operationNameと一致するJavaクラスを持つ実装ファイル
+When クラス名ドリフト検査を実行する
+Then 対象言語に依らず正しく一致と判定される
 ```
 
 ---

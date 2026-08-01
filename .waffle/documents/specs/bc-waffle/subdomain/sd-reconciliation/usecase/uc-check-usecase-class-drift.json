@@ -139,6 +139,13 @@
           "viewpoint": "ドリフト：実装ファイルは実在するがoperationNameと一致するクラスが無い",
           "gherkin": "Scenario: クラス名が一致しないusecaseを検出する\n  Given 実装ファイルは実在するが、operationNameと一致するクラス定義を持たないusecase document\n  When クラス名ドリフト検査を実行する\n  Then class_name_mismatchにその組が含まれる",
           "covers": "受け入れ基準: class_name_mismatch"
+        },
+        {
+          "name": "Java実装に対してもクラス名ドリフトを検知できる",
+          "category": "正常系",
+          "viewpoint": "計算整合: 検知が対象言語に依らず成立すること",
+          "gherkin": "Scenario: Java実装に対してもクラス名ドリフトを検知できる\nGiven languageにjavaを指定し、operationNameと一致するJavaクラスを持つ実装ファイル\nWhen クラス名ドリフト検査を実行する\nThen 対象言語に依らず正しく一致と判定される",
+          "covers": "受け入れ基準: 全usecaseの実装クラス名が一致するとき差分なしと判定する（対象言語）"
         }
       ]
     },
