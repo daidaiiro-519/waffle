@@ -22,6 +22,7 @@
 //   最悪でおよそ5回。予算を超えると関数がエラーになり配信側が5xxを返す（安全側に倒れる）。
 
 import cf from 'cloudfront';
+import crypto from 'crypto';
 
 const kvs = cf.kvs();
 
@@ -151,6 +152,13 @@ function extractProject(uri) {
   return m ? m[1] : null;
 }
 
+// 渡されたトークンを、保管に残した形へ変えて突き合わせる。
+// 保管にはトークンそのものを置かず、照合できる形だけを置いているため、
+// 平文のまま比べても永久に一致しない。
+function fingerprint(token) {
+  return crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
+}
+
 // プロジェクトの経路。入っているものの一覧を配る。
 async function handleProject(request, pid, uri, method) {
   if (method !== 'GET' && method !== 'HEAD') {
@@ -161,8 +169,8 @@ async function handleProject(request, pid, uri, method) {
     return htmlResponse(403, DISABLED_HTML);
   }
   if (uri === '/proj/' + pid + '/verify') {
-    const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value : '';
-    if (supplied === record.value) {
+    const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value.trim() : '';
+    if (supplied && fingerprint(supplied) === record.value) {
       return setCookie(PROJECT_COOKIE + pid, record.value + '.' + record.generation);
     }
     return { statusCode: 401, statusDescription: 'Unauthorized' };
@@ -236,8 +244,8 @@ async function handler(event) {
   }
 
   if (uri === '/p/' + artifactId + '/verify') {
-    const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value : '';
-    if (supplied === record.value) {
+    const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value.trim() : '';
+    if (supplied && fingerprint(supplied) === record.value) {
       return setCookie(ARTIFACT_COOKIE + artifactId, record.value + '.' + record.generation);
     }
     return { statusCode: 401, statusDescription: 'Unauthorized' };

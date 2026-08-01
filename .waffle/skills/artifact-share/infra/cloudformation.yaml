@@ -325,6 +325,9 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
+          # 保管への書き込みで既定のチェックサム方式が追加の部品を要求し、
+          # 実行環境に無いため公開が失敗する。必要なときだけ計算させる
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           CONTENT_BUCKET: !Ref BucketName
           KVS_ARN: !GetAtt TokenStore.Arn
           USER_POOL_ID: !Ref UserPool
@@ -342,25 +345,47 @@ Resources:
                           '"message":"artifactshare update-function を実行してください"}',
               }
 
-  AdminApiUrl:
-    Type: AWS::Lambda::Url
+  # 管理APIの口。関数URLは使わない——このアカウントでは外から届かず、
+  # 公開でもOAC経由でも拒まれることを実地で確かめた。
+  # ここは公開の口になるが、要求ごとに証明を検証するのは関数の側であり、
+  # 認証を通らない要求は入口の種類に関わらず拒まれる。
+  AdminApi:
+    Type: AWS::ApiGatewayV2::Api
     Properties:
-      TargetFunctionArn: !GetAtt AdminApiFunction.Arn
-      AuthType: NONE          # 呼び出し元の確認は関数内で利用者の証明を検証して行う
-      Cors:
-        AllowOrigins:
-          - !Sub "https://${AdminDistribution.DomainName}"
-        AllowMethods: [POST]
-        AllowHeaders: [content-type, authorization]
-        MaxAge: 300
+      Name: !Sub "${AWS::StackName}-admin-api"
+      ProtocolType: HTTP
+      # 出所をまたぐ要求の取り決めは持たない。画面は認証が要る面の
+      # /api を通って同じ出所から呼ぶため、またぐ必要が無い
 
-  AdminApiUrlPermission:
+  AdminApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref AdminApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt AdminApiFunction.Arn
+      PayloadFormatVersion: "2.0"
+
+  AdminApiRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref AdminApi
+      RouteKey: $default
+      Target: !Sub "integrations/${AdminApiIntegration}"
+
+  AdminApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref AdminApi
+      StageName: $default
+      AutoDeploy: true
+
+  AdminApiPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref AdminApiFunction
-      Action: lambda:InvokeFunctionUrl
-      Principal: "*"
-      FunctionUrlAuthType: NONE
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${AdminApi}/*"
 
   # ── 配信の共通設定 ─────────────────────────────────────
 
@@ -396,6 +421,22 @@ Resources:
           Headers: [content-type, if-none-match]
         CookiesConfig: { CookieBehavior: none }
         QueryStringsConfig: { QueryStringBehavior: none }
+
+  # 証明を関数まで届ける。authorization は使えない——配信の口が関数へ
+  # 署名するときにその見出しを使うため、こちらが載せると奪い合いになり、
+  # 署名の突き合わせが合わなくなる（実地で確かめた）
+  AdminApiOriginRequestPolicy:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub "${AWS::StackName}-admin-api-origin"
+        HeadersConfig:
+          HeaderBehavior: whitelist
+          Headers: [x-id-token, content-type]
+        CookiesConfig:
+          CookieBehavior: none
+        QueryStringsConfig:
+          QueryStringBehavior: none
 
   CachePolicyNoCache:
     Type: AWS::CloudFront::CachePolicy
@@ -470,9 +511,7 @@ Resources:
               style-src 'self' 'unsafe-inline';
               img-src 'self' data:;
               font-src 'self' data:;
-              connect-src 'self'
-              https://cognito-idp.${AWS::Region}.amazonaws.com
-              https://*.lambda-url.${AWS::Region}.on.aws;
+              connect-src 'self' https://cognito-idp.${AWS::Region}.amazonaws.com;
               form-action 'none';
               base-uri 'none';
               frame-ancestors 'none'
@@ -552,6 +591,21 @@ Resources:
             OriginAccessControlId: !GetAtt OriginAccessControl.Id
             S3OriginConfig:
               OriginAccessIdentity: ""
+          - Id: admin-api
+            DomainName: !Sub "${AdminApi}.execute-api.${AWS::Region}.amazonaws.com"
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
+        CacheBehaviors:
+          # 管理APIは同じ出所から呼ぶ。別の出所をまたがないため、
+          # 出所をまたぐ要求の取り決めも要らない
+          - PathPattern: /api
+            TargetOriginId: admin-api
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            CachePolicyId: !Ref CachePolicyNoCache
+            OriginRequestPolicyId: !Ref AdminApiOriginRequestPolicy
+            ResponseHeadersPolicyId: !Ref AdminResponseHeadersPolicy
         DefaultCacheBehavior:
           TargetOriginId: admin-s3
           ViewerProtocolPolicy: redirect-to-https
@@ -584,9 +638,9 @@ Outputs:
   AdminApiFunctionName:
     Description: artifactshare update-function が lambda/admin_api/ を配置する対象
     Value: !Sub "${AWS::StackName}-admin-api"
-  AdminApiUrl:
-    Description: アップロード画面が公開を依頼する先
-    Value: !GetAtt AdminApiUrl.FunctionUrl
+  AdminApiEndpoint:
+    Description: 管理APIの実体。画面は認証が要る面の /api を通って呼ぶ
+    Value: !GetAtt AdminApi.ApiEndpoint
   UserPoolId:
     Value: !Ref UserPool
   UserPoolClientId:

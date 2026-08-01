@@ -43,10 +43,16 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
+
+# 保管への書き込みで既定のチェックサム方式が追加の部品を要求するため、
+# 必要なときだけ計算させる（実行環境に部品が無くても動くようにする）
+os.environ.setdefault("AWS_REQUEST_CHECKSUM_CALCULATION", "when_required")
 
 HERE = Path(__file__).resolve().parent
 SKILL = HERE.parent
@@ -169,30 +175,78 @@ def grant_admin(email: str, stack: str, region: str | None) -> None:
 
 # ── 手元のソースを反映する ──────────────────────────────
 
+# 閲覧ゲートに置けるコードの上限。超えると配置そのものが拒まれる
+GATE_LIMIT = 10 * 1024
+
+
+def _lean(source: str) -> str:
+    """注釈と空行を落とす。
+
+    閲覧ゲートは置けるコードの大きさに上限があり、日本語の注釈を含めると
+    超える。読める形は手元に残し、置くときだけ落とす。行の途中にある注釈は
+    触らない（文字列の中の // を誤って落とさないため）。
+    """
+    out, in_block = [], False
+    for line in source.splitlines():
+        stripped = line.strip()
+        if in_block:
+            if "*/" in stripped:
+                in_block = False
+            continue
+        if stripped.startswith("/*"):
+            if "*/" not in stripped:
+                in_block = True
+            continue
+        if stripped.startswith("//") or not stripped:
+            continue
+        out.append(line)
+    return "\n".join(out) + "\n"
+
+
 def update_function(stack: str, region: str | None) -> None:
     import boto3
 
     out = _outputs(stack, region)
 
     # 閲覧ゲート。CloudFront Functions は us-east-1 でのみ扱える
-    gate = (SKILL / "infra" / "cloudfront-function" / "viewer-token-gate.js") \
-        .read_text(encoding="utf-8")
+    gate = _lean((SKILL / "infra" / "cloudfront-function" / "viewer-token-gate.js")
+                 .read_text(encoding="utf-8"))
+    size = len(gate.encode("utf-8"))
+    if size > GATE_LIMIT:
+        print(f"閲覧ゲートが大きすぎます（{size} / {GATE_LIMIT} バイト）。"
+              f"{size - GATE_LIMIT} バイト減らしてください。", file=sys.stderr)
+        raise SystemExit(1)
+    print(f"閲覧ゲート: {size} / {GATE_LIMIT} バイト（残り {GATE_LIMIT - size}）")
     cf = boto3.client("cloudfront", region_name="us-east-1")
     name = out.get("ViewerTokenGateFunctionName", f"{stack}-viewer-token-gate")
-    etag = cf.describe_function(Name=name)["ETag"]
+    described = cf.describe_function(Name=name)
+    # 紐付けは毎回こちらで組み立てる。いまある設定を引き継ぐ形にすると、
+    # 一度落ちたときにそのまま落ちたままになる。トークンの保管との
+    # 紐付けが無いと、閲覧ゲートは動かず閲覧がすべて止まる（実地で確かめた）
     etag = cf.update_function(
-        Name=name, IfMatch=etag,
-        FunctionConfig={"Comment": "viewer token gate", "Runtime": "cloudfront-js-2.0"},
+        Name=name, IfMatch=described["ETag"],
+        FunctionConfig={
+            "Comment": "viewer token gate",
+            "Runtime": "cloudfront-js-2.0",
+            "KeyValueStoreAssociations": {
+                "Quantity": 1,
+                "Items": [{"KeyValueStoreARN": out["TokenStoreArn"]}],
+            },
+        },
         FunctionCode=gate.encode("utf-8"),
     )["ETag"]
     cf.publish_function(Name=name, IfMatch=etag)
     print("閲覧ゲートを反映しました。")
 
     # 管理API
+    extra = _fetch_signing_parts()
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted((SKILL / "lambda" / "admin_api").glob("*.py")):
             zf.write(path, path.name)
+        for path in sorted(extra.rglob("*")):
+            if path.is_file():
+                zf.write(path, str(path.relative_to(extra)))
         # 閲覧画面とプロジェクトの一覧ページの雛形は、公開や作成のたびに
         # 読むため、管理APIに同梱する
         for name in ("share-wrapper.html", "project-page.html"):
@@ -211,6 +265,36 @@ def update_function(stack: str, region: str | None) -> None:
     if count:
         print(f"プロジェクトの一覧ページを{count}件置き直しました。")
     print("\n行き渡るまで数十秒かかります。")
+
+
+def _fetch_signing_parts() -> Path:
+    """トークンの保管へ書くのに要る署名の部品を集める。
+
+    CloudFront KeyValueStore のAPIは、複数の地域をまたぐ形の署名を使う。
+    それを組み立てる部品は実行環境に入っておらず、無いと書き込みが
+    「追加の部品が要る」として失敗する（実地で確かめた）。
+
+    公開は保管への配置がすべて済んでから閲覧トークンを書く順序なので、
+    ここが失敗すると、置かれたファイルは残るのに誰も開けない状態になる。
+    """
+    target = Path(tempfile.mkdtemp(prefix="artifactshare-parts-"))
+    # 実行する側の環境ではなく、管理APIが動く環境に合う形のものを集める
+    attempts = [
+        ["uv", "pip", "install", "--quiet", "--target", str(target),
+         "--python-platform", "x86_64-manylinux2014", "--python-version", "3.12",
+         "--only-binary", ":all:", "awscrt"],
+        [sys.executable, "-m", "pip", "install", "--quiet", "--target", str(target),
+         "--platform", "manylinux2014_x86_64", "--python-version", "3.12",
+         "--only-binary=:all:", "awscrt"],
+    ]
+    for command in attempts:
+        try:
+            subprocess.run(command, check=True, capture_output=True)
+            return target
+        except (OSError, subprocess.CalledProcessError):
+            continue
+    print("署名の部品を集められませんでした。uv か pip が必要です。", file=sys.stderr)
+    raise SystemExit(1)
 
 
 def _put_project_pages(out: dict, region: str | None) -> int:
@@ -240,7 +324,7 @@ def _put_project_pages(out: dict, region: str | None) -> int:
             s3.put_object(
                 Bucket=bucket, Key=f"proj/{project_id}/index.html",
                 Body=page.replace("{{プロジェクトID}}", project_id).encode("utf-8"),
-                ContentType="text/html; charset=utf-8")
+                ContentType="text/html; charset=utf-8", ChecksumAlgorithm="CRC32")
             count += 1
         token = res.get("NextContinuationToken")
         if not token:
@@ -262,18 +346,19 @@ def _put_admin_app(out: dict, region: str | None) -> None:
     app = (SKILL / "references" / "templates" / "upload-app.html") \
         .read_text(encoding="utf-8")
     s3.put_object(Bucket=bucket, Key="admin/index.html",
-                  Body=app.encode("utf-8"), ContentType="text/html; charset=utf-8")
+                  Body=app.encode("utf-8"), ContentType="text/html; charset=utf-8",
+                  ChecksumAlgorithm="CRC32")
 
     session = boto3.Session(region_name=region)
+    # 管理APIの居場所は入れない。画面は同じ出所の /api を呼ぶため
     config = {
         "region": session.region_name,
-        "apiUrl": out["AdminApiUrl"],
         "clientId": out["UserPoolClientId"],
         "viewerDomain": out["ViewerDomain"],
     }
     s3.put_object(Bucket=bucket, Key="admin/config.json",
                   Body=json.dumps(config, ensure_ascii=False).encode("utf-8"),
-                  ContentType="application/json")
+                  ContentType="application/json", ChecksumAlgorithm="CRC32")
 
 
 def status(stack: str, region: str | None) -> None:

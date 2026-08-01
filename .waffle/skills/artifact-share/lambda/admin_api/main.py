@@ -42,7 +42,9 @@ ADMIN_GROUP = "administrators"
 def handler(event, context):  # pragma: no cover - 実際の接続を組み立てるだけ
     body = json.loads(event.get("body") or "{}")
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
-    authorization = headers.get("authorization", "")
+    # 証明は x-id-token で届く。authorization は配信の口が関数へ署名するのに
+    # 使っており、そちらへ載せると署名の突き合わせが合わなくなる
+    authorization = headers.get("x-id-token") or headers.get("authorization", "")
 
     action = body.get("action", "publish")
     if action not in ACTIONS:
@@ -136,8 +138,11 @@ def _connections() -> dict:  # pragma: no cover
 
     class _Store:
         def put(self, key, body, content_type):
+            # 使う照合方式をこちらで決める。実行環境の既定に任せると、
+            # 追加の部品を要求されて書き込めないことがある
             s3.put_object(Bucket=bucket, Key=key,
-                          Body=body.encode("utf-8"), ContentType=content_type)
+                          Body=body.encode("utf-8"), ContentType=content_type,
+                          ChecksumAlgorithm="CRC32")
 
         def get(self, key):
             return s3.get_object(Bucket=bucket, Key=key)["Body"].read().decode("utf-8")

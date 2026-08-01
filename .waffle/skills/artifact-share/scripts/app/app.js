@@ -1,9 +1,9 @@
 (function () {
   'use strict';
 
-  /* この画面が知っている外部は2つだけ。利用者プールと、管理API。
-     どちらの居場所も config.json から受け取る（環境ごとに変わるため、
-     画面の中に焼き込まない）。 */
+  /* この画面が外へ出るのは利用者プールだけ。管理APIは同じ出所の /api
+     にあり、配信の口が内側で署名して届ける。関数URLの居場所を画面が
+     知る必要はなく、出所をまたぐ要求も起きない。 */
   var CONFIG = null;
   var $ = function (id) { return document.getElementById(id); };
 
@@ -90,9 +90,10 @@
      証明が古くなっていたら一度だけ取り直して、同じ要求をやり直す。
      入力の途中で締め出されないようにするため。 */
   function api(action, body, retried) {
-    return fetch(CONFIG.apiUrl, {
+    return fetch('/api', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + session.token },
+      // authorization は使えない。配信の口が関数へ署名するのに使うため
+      headers: { 'content-type': 'application/json', 'x-id-token': session.token },
       body: JSON.stringify(Object.assign({ action: action }, body || {}))
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (d) {
