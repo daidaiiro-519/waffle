@@ -1,3 +1,11 @@
+---
+id: "uc-check-aggregate-class-drift"
+type: "usecase"
+title: "集約ルート名と実装クラス名の一致を検証する：CheckAggregateClassDrift"
+description: "aggregate specが宣言する集約ルート名(aggregateRoot.name)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。check-usecase-class-driftと同型の検知を集約にも適用し、集約の構造がJSON Schemaのみで表現されドリフトを検知できない盲点を埋める。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 集約ルート名と実装クラス名の一致を検証する：CheckAggregateClassDrift
 
 ## 概要
@@ -129,27 +137,27 @@ Scenario: クラス名が一致しないaggregateを検出する
   Then class_name_mismatchにその組が含まれる
 ```
 
-### クラス名だけ一致し中身が空のaggregateを検出する
+### 属性が空でもクラス名だけ一致すれば通っていた盲点をattribute_mismatchで検出する
 
 | 分類 | 観点 |
 |---|---|
 | 異常系 | ドリフト：クラス名の一致だけでは合格にせず、宣言された属性集合との一致まで確認する |
 
 ```gherkin
-Scenario: クラス名だけ一致し中身が空のaggregateを検出する
+Scenario: 属性が空でもクラス名だけ一致すれば通っていた盲点をattribute_mismatchで検出する
   Given 集約ルート名と一致するクラスは存在するが、Entitiesが宣言する属性を1つも持たない実装
   When クラス名ドリフト検査を実行する
   Then attribute_mismatchにその組が含まれる
 ```
 
-### 宣言された値オブジェクトが実装に存在しないaggregateを検出する
+### 宣言された値オブジェクトが実装に存在しないとき検出する
 
 | 分類 | 観点 |
 |---|---|
 | 異常系 | ドリフト：ValueObjectsが宣言する値オブジェクトのクラスが実装ファイル内に無い |
 
 ```gherkin
-Scenario: 宣言された値オブジェクトが実装に存在しないaggregateを検出する
+Scenario: 宣言された値オブジェクトが実装に存在しないとき検出する
   Given 集約ルートクラスは一致するが、ValueObjectsが宣言する値オブジェクトのクラス定義が実装ファイル内に無いaggregate document
   When クラス名ドリフト検査を実行する
   Then missing_value_objectにその組が含まれる

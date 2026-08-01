@@ -63,9 +63,9 @@ def _write_doc(tmp_path, overrides=None):
 def test_検証済みDocumentをHTMLへ描画する(tmp_path):
     """
     Scenario: 検証済みDocumentをHTMLへ描画する
-    Given 検証済みのDocument
+    Given 検証済み（VALIDATED以降）のDocument
     When RenderDocumentViewerを実行する
-    Then CSS付きの自己完結HTMLが生成され、frontmatterがヘッダに反映される
+    Then CSS付きの自己完結HTMLファイルが生成され、tags等のfrontmatterがヘッダに表示される
     """
     doc_path = _write_doc(tmp_path)
     output_path = str(tmp_path / "out.html")
@@ -101,7 +101,7 @@ def test_content_descriptionがOKF_frontmatterのdescriptionとしてヘッダ�
 def test_content_descriptionがitems配列の場合も結合してヘッダに出る(tmp_path):
     """
     Scenario: content.descriptionがitems配列の場合も結合してヘッダに出る
-    Given content.description.items（配列、DomainSpecSchema等の形）を持つDocument
+    Given content.description.items（配列）を持つDocument
     When RenderDocumentViewerを実行する
     Then その要素を結合したテキストがHTMLヘッダのdescriptionとして出力される
     """
@@ -121,7 +121,7 @@ def test_content_descriptionがitems配列の場合も結合してヘッダに�
 def test_mermaidコードフェンスをpre要素として出力する(tmp_path):
     """
     Scenario: mermaidコードフェンスをpre要素として出力する
-    Given 基本フローにmermaidを含むDocument
+    Given 基本フローにmermaidのsequenceDiagramを含むDocument
     When RenderDocumentViewerを実行する
     Then <pre class="mermaid">要素としてmermaid記法がそのまま出力される
     """
@@ -147,7 +147,7 @@ def test_mermaidコードフェンスをpre要素として出力する(tmp_path)
 def test_RenderDocument自体が失敗する場合はRENDER_FAILEDを返す(tmp_path):
     """
     Scenario: RenderDocument自体が失敗する場合はRENDER_FAILEDを返す
-    Given RenderDocumentでMDへ描画できないDocument（schemaRef不正）
+    Given RenderDocumentでMDへ描画できないDocument（未検証等）
     When RenderDocumentViewerを実行する
     Then RENDER_FAILEDエラーが返りHTMLは生成されない
     """
@@ -168,7 +168,7 @@ def test_HTML描画はDocument集約自身の状態を変更しない(tmp_path):
     Scenario: HTML描画はDocument集約自身の状態を変更しない
     Given 検証済みのDocument
     When RenderDocumentViewerを実行する
-    Then 対象Documentのcontent自体は変更されない（読み込んだ元ファイルのバイト列が不変）
+    Then 対象Documentのstatus・canonical MD・deploy先はいずれも変更されない
     """
     doc_path = _write_doc(tmp_path)
     before = open(doc_path, encoding="utf-8").read()

@@ -73,6 +73,9 @@ def test_completionImageを含むHandoffを描画する(tmp_path):
 def test_HandoffSchemaの新しいバージョンも描画できる(tmp_path):
     """
     Scenario: HandoffSchemaの新しいバージョンも描画できる
+    Given schemaRefがHandoffSchema/v2のHandoff
+    When RenderHandoffTemplateを実行する
+    Then 正常にHTMLが生成される
     実際のHandoff document群は既にHandoffSchema/v2へ移行済みだが、本usecaseは
     完全一致でHandoffSchema/v1のみを受け付けていたため、実在する全Handoff
     documentの描画が失敗していた（実データで発覚した回帰）。バージョンではなく

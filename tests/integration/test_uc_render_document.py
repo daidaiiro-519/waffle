@@ -48,7 +48,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
 def test_x_render宣言どおりに決定的に描画する():
     """
     Scenario: x-render宣言どおりに決定的に描画する
-    Given responseTypesブロック(x-render宣言=table)を持つDocument
+    Given interfaceブロック(x-render宣言=table)を持つDocument
     When renderする
     Then schemaのx-render宣言どおりに整形されたMarkdownテーブルが出力に含まれる
 

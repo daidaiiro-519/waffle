@@ -148,17 +148,17 @@
           "covers": "受け入れ基準: class_name_mismatch"
         },
         {
-          "name": "クラス名だけ一致し中身が空のaggregateを検出する",
+          "name": "属性が空でもクラス名だけ一致すれば通っていた盲点をattribute_mismatchで検出する",
           "category": "異常系",
           "viewpoint": "ドリフト：クラス名の一致だけでは合格にせず、宣言された属性集合との一致まで確認する",
-          "gherkin": "Scenario: クラス名だけ一致し中身が空のaggregateを検出する\n  Given 集約ルート名と一致するクラスは存在するが、Entitiesが宣言する属性を1つも持たない実装\n  When クラス名ドリフト検査を実行する\n  Then attribute_mismatchにその組が含まれる",
+          "gherkin": "Scenario: 属性が空でもクラス名だけ一致すれば通っていた盲点をattribute_mismatchで検出する\n  Given 集約ルート名と一致するクラスは存在するが、Entitiesが宣言する属性を1つも持たない実装\n  When クラス名ドリフト検査を実行する\n  Then attribute_mismatchにその組が含まれる",
           "covers": "受け入れ基準: attribute_mismatch"
         },
         {
-          "name": "宣言された値オブジェクトが実装に存在しないaggregateを検出する",
+          "name": "宣言された値オブジェクトが実装に存在しないとき検出する",
           "category": "異常系",
           "viewpoint": "ドリフト：ValueObjectsが宣言する値オブジェクトのクラスが実装ファイル内に無い",
-          "gherkin": "Scenario: 宣言された値オブジェクトが実装に存在しないaggregateを検出する\n  Given 集約ルートクラスは一致するが、ValueObjectsが宣言する値オブジェクトのクラス定義が実装ファイル内に無いaggregate document\n  When クラス名ドリフト検査を実行する\n  Then missing_value_objectにその組が含まれる",
+          "gherkin": "Scenario: 宣言された値オブジェクトが実装に存在しないとき検出する\n  Given 集約ルートクラスは一致するが、ValueObjectsが宣言する値オブジェクトのクラス定義が実装ファイル内に無いaggregate document\n  When クラス名ドリフト検査を実行する\n  Then missing_value_objectにその組が含まれる",
           "covers": "受け入れ基準: missing_value_object"
         }
       ]

@@ -95,7 +95,7 @@ class _ConfigStubDocumentRepository:
 def test_配列のpathVarはtoolMappings経由のdeploy先へfan_outする(tmp_path):
     """
     Scenario: 配列のpathVarはtoolMappings経由のdeploy先へfan-outする
-    Given toolMappingsのpathTemplateが参照するpathVarの値が配列であるDocument
+    Given x-render-target.pathVarsで宣言した値が配列であるDocumentと、その変数を参照するtoolMappingsのpathTemplate
     When deployを有効にしてrenderする
     Then 配列の要素ごとに1つずつsymlinkのdeploy先が作られる
     """
@@ -136,7 +136,9 @@ def test_配列のpathVarはtoolMappings経由のdeploy先へfan_outする(tmp_p
 def test_複数種類の配列pathVarが同時にfan_out展開される(tmp_path):
     """
     Scenario: 複数種類の配列pathVarが同時にfan-out展開される
-    Given toolMappingsが同じdocumentTypeに対し、異なる配列pathVar（skillRefsとagentRefs）を
+    Given x-render-target.pathVarsで2種類の配列値（skillRefsとagentRefs）を宣言したschemaのDocumentと、それぞれを参照するtoolMappingsのpathTemplate
+    When deployを有効にしてrenderする
+    Then skillRefsの各要素とagentRefsの各要素それぞれに対応するdeploy先が全て作られる
           それぞれ参照する2つのマッピングをリストとして持つDocument
     When deployを有効にしてrenderする
     Then skillRefsの各要素とagentRefsの各要素それぞれに対応するdeploy先が全て作られる
@@ -541,7 +543,9 @@ def test_存在しないx_frontmatterのドットパスは省略する(tmp_path)
 def test_x_frontmatterが指すブロックがitemsを持つときスペース区切りで結合する(tmp_path):
     """
     Scenario: x-frontmatterが指すブロックがitemsを持つときスペース区切りで結合する
-    Given x-frontmatterが指すドットパスの解決値が、text/itemsを持つブロック形状のdict
+    Given x-frontmatterがtext/itemsを持つブロック形状のdictを指すDocument
+    When RenderDocumentを実行する
+    Then itemsを半角スペースで結合した1つの文字列がfrontmatter値になる
       （DomainSpecSchemaのSummaryBlock等、箇条書きitemsで概要を持つ形）であるDocument
     When renderする
     Then textが無い場合はitemsを半角スペースで結合した1つの文字列がfrontmatter値になる
@@ -570,8 +574,8 @@ def test_DomainSpecSchemaのusecase_Specはfrontmatterでid_type_title_descripti
     """
     Scenario: DomainSpecSchemaのusecase specはfrontmatterでid/type/title/description/tagsを持つ
     Given usecase specKindのDomainSpecSchema Document
-    When renderする
-    Then document-graph Skillの契約（id/type/title/description/tags）に沿ったfrontmatterが出力される
+    When RenderDocumentを実行する
+    Then id/type/title/descriptionを含むfrontmatterが出力される
     """
     result = _engine().run(
         ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-query-document.json",
