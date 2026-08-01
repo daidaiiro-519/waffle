@@ -14,6 +14,10 @@ Handoffの存在を確認しないままコードへ進みやすい。
 どんな指標を採用しても自己申告の域を出ないため。ここで見るのは、
 仕様があるユースケースのうち、どのHandoffからも指されていないものの有無だけ。
 
+既に実装が終わっているものは handoff-exempt.txt へ載せて数えない。
+いまさら引き継ぎを書いても実装へ渡すものが無く、鳴り続けると読まれなくなる。
+そこへ足すのは人の判断であって、鳴ったから足すものではない。
+
 ブロックはしない。引き継ぎが不要な軽微な修正も実在するため、判断の余地を残す。
 書き込みの前に出すことで、手を動かし始める前に気づけるようにする。
 """
@@ -75,6 +79,21 @@ def _usecase_ids(root: str, skill: str) -> list[str]:
     return sorted(ids)
 
 
+def _exempt(root: str) -> set[str]:
+    """引き継ぎを求めないと人が決めたユースケースの識別子。"""
+    path = os.path.join(root, ".claude/hooks/handoff-exempt.txt")
+    ids = set()
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                name = line.split("#", 1)[0].strip()
+                if name:
+                    ids.add(name)
+    except OSError:
+        pass
+    return ids
+
+
 def _handed_over(root: str) -> str:
     """Handoff documentの中身をまとめて返す。どれが何を指しているかを探すため。"""
     chunks = []
@@ -113,7 +132,8 @@ def main() -> None:
         sys.exit(0)
 
     handoffs = _handed_over(root)
-    missing = [uc for uc in usecases if uc not in handoffs]
+    exempt = _exempt(root)
+    missing = [uc for uc in usecases if uc not in handoffs and uc not in exempt]
     if not missing:
         sys.exit(0)
 
