@@ -412,167 +412,6 @@
         }
       }
     },
-    "SubOrchestratorRefsBlock": {
-      "type": "object",
-      "required": [
-        "blockType",
-        "title",
-        "items"
-      ],
-      "x-render-order": 4,
-      "x-render-level": 2,
-      "x-prompt-query": "このOrchestratorの管轄下にある、より狭いscopeを持つ子Orchestratorへの参照を持ちます。ツールがルートしか自動発見しないため、対象scopeで作業する際は子Orchestratorのcontentを先に読むべきことを示します。子を持たないOrchestratorでは空配列。",
-      "x-render": [
-        {
-          "as": "table",
-          "heading": "以下のscope配下で作業する場合は、必ず対応するOrchestrator documentのcontentを先に読むこと",
-          "from": "items",
-          "emptyText": "委譲先なし（このOrchestratorの管轄範囲に、より狭いscopeを持つ子Orchestratorは存在しない）",
-          "columns": [
-            {
-              "field": "scope",
-              "header": "対象ディレクトリ"
-            },
-            {
-              "field": "documentId",
-              "header": "参照Orchestrator"
-            },
-            {
-              "field": "note",
-              "header": "備考"
-            }
-          ]
-        }
-      ],
-      "properties": {
-        "blockType": {
-          "type": "string",
-          "const": "SubOrchestratorRefs"
-        },
-        "title": {
-          "type": "string",
-          "const": "委譲先"
-        },
-        "items": {
-          "type": "array",
-          "x-prompt-write": "子Orchestratorへの参照を列挙してください。子を持たなければ空配列。",
-          "items": {
-            "type": "object",
-            "required": [
-              "scope",
-              "documentId",
-              "note"
-            ],
-            "properties": {
-              "scope": {
-                "type": "string",
-                "x-prompt-write": "子Orchestratorが管轄するディレクトリ（例: \"waffle/\"）"
-              },
-              "documentId": {
-                "type": "string",
-                "x-prompt-write": "子Orchestratorを一意に識別するID。子Orchestrator自身のタイトル定義で使われている識別子と同じ値を、そのまま指定してください。"
-              },
-              "note": {
-                "type": "string",
-                "x-prompt-write": "そのscopeで作業する際に何を確認すべきかの短い説明。"
-              }
-            }
-          }
-        }
-      }
-    },
-    "SkillFollowUpBlock": {
-      "type": "object",
-      "required": [
-        "blockType",
-        "title",
-        "items"
-      ],
-      "x-render-order": 5,
-      "x-render-level": 2,
-      "x-prompt-query": "特定のSkillを呼び出した後に、機械的に踏むべき次のアクション（フォローアップ）を持ちます。OperatingRulesの自由記述の運用ルールと違い、「このSkillを使ったら次に何をするか」という手順そのものを構造化して表現します。複数ステップにわたる手順をOperatingRulesに埋め込まず、ここで明示的なtrigger→actionとして表す。",
-      "x-render": [
-        {
-          "as": "table",
-          "heading": "Skillを呼び出した後に必ず行うフォローアップ",
-          "from": "items",
-          "emptyText": "フォローアップ手順なし",
-          "columns": [
-            {
-              "field": "afterSkill",
-              "header": "呼び出した後"
-            },
-            {
-              "field": "thenAction",
-              "header": "次に行うこと"
-            },
-            {
-              "field": "outputFormat",
-              "header": "返却フォーマット",
-              "sep": " → "
-            },
-            {
-              "field": "template",
-              "header": "テンプレート",
-              "code": true
-            },
-            {
-              "field": "why",
-              "header": "理由"
-            }
-          ]
-        }
-      ],
-      "properties": {
-        "blockType": {
-          "type": "string",
-          "const": "SkillFollowUp"
-        },
-        "title": {
-          "type": "string",
-          "const": "Skillフォローアップ"
-        },
-        "items": {
-          "type": "array",
-          "x-prompt-write": "特定のSkillを呼び出した後に踏むべきフォローアップ手順を列挙してください。無ければ空配列。",
-          "items": {
-            "type": "object",
-            "required": [
-              "afterSkill",
-              "thenAction",
-              "outputFormat",
-              "template",
-              "why"
-            ],
-            "properties": {
-              "afterSkill": {
-                "type": "string",
-                "x-prompt-write": "どのSkillを呼び出した後の話か（例: advisor全般／特定のSkill名）。"
-              },
-              "thenAction": {
-                "type": "string",
-                "x-prompt-write": "次に何をするか（検証可能な具体的手順）。"
-              },
-              "outputFormat": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "x-prompt-write": "フォローアップの結果をどんな段階構成で返すべきか、短い見出し語を順番に列挙してください（例: [\"各意見\", \"統合見解\", \"合意事項\", \"次のアクション\"]）。段落の説明文ではなく、一目で流れが追える短い語の並びにする。"
-              },
-              "template": {
-                "type": "string",
-                "x-prompt-write": "outputFormatの各段階を実際に埋めるためのテンプレートファイルへの参照パス（プレースホルダー付きmarkdown）。"
-              },
-              "why": {
-                "type": "string",
-                "x-prompt-write": "なぜこのフォローアップが必要か。"
-              }
-            }
-          }
-        }
-      }
-    },
     "GoalBlock": {
       "type": "object",
       "required": [
@@ -952,220 +791,6 @@
         }
       }
     },
-    "Role": {
-      "type": "object",
-      "properties": {
-        "blockType": {
-          "const": "Role"
-        },
-        "title": {
-          "type": "string",
-          "default": "自身の役割",
-          "x-prompt-write": {
-            "prompt": "ブロックの見出し文字列。既定値をそのまま使ってよい。",
-            "required": false
-          }
-        },
-        "text": {
-          "type": "string",
-          "x-prompt-write": {
-            "prompt": "このOrchestratorが「何をする存在か」を1〜2文で記述してください。担当範囲（scope）とは違い、役割（何のために存在し、何を判断する主体か）を書きます。",
-            "required": true
-          }
-        }
-      },
-      "required": [
-        "blockType",
-        "title",
-        "text"
-      ],
-      "x-render": [
-        {
-          "kind": "text",
-          "from": "text"
-        }
-      ]
-    },
-    "MechanicalTasks": {
-      "type": "object",
-      "properties": {
-        "blockType": {
-          "const": "MechanicalTasks"
-        },
-        "title": {
-          "type": "string",
-          "default": "機械的に行える作業",
-          "x-prompt-write": {
-            "prompt": "ブロックの見出し文字列。既定値をそのまま使ってよい。",
-            "required": false
-          }
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "task": {
-                "type": "string"
-              },
-              "howToApply": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "task",
-              "howToApply"
-            ]
-          },
-          "x-prompt-write": {
-            "prompt": "判断不要で、手順通りにそのまま実行してよい作業を列挙してください。状況次第で分岐する判断が必要なものはjudgmentTasksへ書き、ここには書かないこと。",
-            "required": true,
-            "element": {
-              "task": "実行する作業を一文で。",
-              "howToApply": "具体的な手順・コマンド。分岐や条件を含めない。"
-            }
-          }
-        }
-      },
-      "required": [
-        "blockType",
-        "title",
-        "items"
-      ]
-    },
-    "JudgmentTasks": {
-      "type": "object",
-      "properties": {
-        "blockType": {
-          "const": "JudgmentTasks"
-        },
-        "title": {
-          "type": "string",
-          "default": "AIの推論を要する作業",
-          "x-prompt-write": {
-            "prompt": "ブロックの見出し文字列。既定値をそのまま使ってよい。",
-            "required": false
-          }
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "situation": {
-                "type": "string"
-              },
-              "criteria": {
-                "type": "string"
-              },
-              "why": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "situation",
-              "criteria",
-              "why"
-            ]
-          },
-          "x-prompt-write": {
-            "prompt": "状況を見てOrchestrator自身が判断し、自分で実行する作業を列挙してください。判断基準を明示すること。手順が固定的で判断不要ならmechanicalTasksへ書き、ここには書かないこと。",
-            "required": true,
-            "element": {
-              "situation": "どんな状況で判断が必要になるか。",
-              "criteria": "何を基準に、どう判断するか。",
-              "why": "なぜこの判断が必要か（根拠）。"
-            }
-          }
-        }
-      },
-      "required": [
-        "blockType",
-        "title",
-        "items"
-      ]
-    },
-    "DelegationPatterns": {
-      "type": "object",
-      "properties": {
-        "blockType": {
-          "const": "DelegationPatterns"
-        },
-        "title": {
-          "type": "string",
-          "default": "委譲パターン",
-          "x-prompt-write": {
-            "prompt": "ブロックの見出し文字列。既定値をそのまま使ってよい。",
-            "required": false
-          }
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "target": {
-                "type": "string"
-              },
-              "timing": {
-                "type": "string",
-                "enum": [
-                  "before",
-                  "after"
-                ]
-              },
-              "targetScope": {
-                "type": "string",
-                "enum": [
-                  "single",
-                  "category"
-                ]
-              },
-              "action": {
-                "type": "string"
-              },
-              "outputFormat": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "template": {
-                "type": "string"
-              },
-              "why": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "target",
-              "timing",
-              "targetScope",
-              "action",
-              "why"
-            ]
-          },
-          "x-prompt-write": {
-            "prompt": "特定タスクを他のSkill/advisorへ一時的に委譲するパターンを列挙してください。scope全体を丸ごと明け渡すものはここに書かない（そのような委譲先の概念はこのスキーマには無い）。委譲後は必ずOrchestrator自身に結果が戻ってくることを前提とします。",
-            "required": true,
-            "element": {
-              "target": "委譲先のSkill/advisor名（例: advisor全般／特定のSkill名）。",
-              "timing": "before（Skillを呼ぶ前の確認）またはafter（呼んだ後のフォローアップ）のいずれか。",
-              "targetScope": "single（特定1Skill向け）またはcategory（Skillのカテゴリ全体向け）のいずれか。",
-              "action": "具体的に何をするか（検証可能な手順）。",
-              "outputFormat": "結果をどんな段階構成で返すべきか、短い見出し語の配列。timing=beforeでは省略可。",
-              "template": "outputFormatを埋めるためのテンプレートファイルへの参照パス。timing=beforeでは省略可。",
-              "why": "なぜこの委譲パターンが必要か。"
-            }
-          }
-        }
-      },
-      "required": [
-        "blockType",
-        "title",
-        "items"
-      ]
-    },
     "RoleBlock": {
       "type": "object",
       "properties": {
@@ -1174,18 +799,11 @@
         },
         "title": {
           "type": "string",
-          "default": "自身の役割",
-          "x-prompt-write": {
-            "prompt": "ブロックの見出し文字列。既定値をそのまま使ってよい。",
-            "required": false
-          }
+          "const": "自身の役割"
         },
         "text": {
           "type": "string",
-          "x-prompt-write": {
-            "prompt": "このOrchestratorが「何をする存在か」を1〜2文で記述してください。担当範囲（scope）とは違い、役割（何のために存在し、何を判断する主体か）を書きます。",
-            "required": true
-          }
+          "x-prompt-write": "このOrchestratorが「何をする存在か」を1〜2文で記述してください。担当範囲（scope）とは違い、役割（何のために存在し、何を判断する主体か）を書きます。"
         }
       },
       "required": [
@@ -1209,11 +827,7 @@
         },
         "title": {
           "type": "string",
-          "default": "機械的に行える作業",
-          "x-prompt-write": {
-            "prompt": "ブロックの見出し文字列。既定値をそのまま使ってよい。",
-            "required": false
-          }
+          "const": "機械的に行える作業"
         },
         "items": {
           "type": "array",
@@ -1221,10 +835,12 @@
             "type": "object",
             "properties": {
               "task": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "実行する作業を一文で。"
               },
               "howToApply": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "具体的な手順・コマンド。分岐や条件を含めない。"
               }
             },
             "required": [
@@ -1232,14 +848,7 @@
               "howToApply"
             ]
           },
-          "x-prompt-write": {
-            "prompt": "判断不要で、手順通りにそのまま実行してよい作業を列挙してください。状況次第で分岐する判断が必要なものはjudgmentTasksへ書き、ここには書かないこと。",
-            "required": true,
-            "element": {
-              "task": "実行する作業を一文で。",
-              "howToApply": "具体的な手順・コマンド。分岐や条件を含めない。"
-            }
-          }
+          "x-prompt-write": "判断不要で、手順通りにそのまま実行してよい作業を列挙してください。状況次第で分岐する判断が必要なものはjudgmentTasksへ書き、ここには書かないこと。"
         }
       },
       "required": [
@@ -1273,11 +882,7 @@
         },
         "title": {
           "type": "string",
-          "default": "AIの推論を要する作業",
-          "x-prompt-write": {
-            "prompt": "ブロックの見出し文字列。既定値をそのまま使ってよい。",
-            "required": false
-          }
+          "const": "AIの推論を要する作業"
         },
         "items": {
           "type": "array",
@@ -1285,13 +890,16 @@
             "type": "object",
             "properties": {
               "situation": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "どんな状況で判断が必要になるか。"
               },
               "criteria": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "何を基準に、どう判断するか。"
               },
               "why": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "なぜこの判断が必要か（根拠）。"
               }
             },
             "required": [
@@ -1300,15 +908,7 @@
               "why"
             ]
           },
-          "x-prompt-write": {
-            "prompt": "状況を見てOrchestrator自身が判断し、自分で実行する作業を列挙してください。判断基準を明示すること。手順が固定的で判断不要ならmechanicalTasksへ書き、ここには書かないこと。",
-            "required": true,
-            "element": {
-              "situation": "どんな状況で判断が必要になるか。",
-              "criteria": "何を基準に、どう判断するか。",
-              "why": "なぜこの判断が必要か（根拠）。"
-            }
-          }
+          "x-prompt-write": "状況を見てOrchestrator自身が判断し、自分で実行する作業を列挙してください。判断基準を明示すること。手順が固定的で判断不要ならmechanicalTasksへ書き、ここには書かないこと。"
         }
       },
       "required": [
@@ -1346,11 +946,7 @@
         },
         "title": {
           "type": "string",
-          "default": "委譲パターン",
-          "x-prompt-write": {
-            "prompt": "ブロックの見出し文字列。既定値をそのまま使ってよい。",
-            "required": false
-          }
+          "const": "委譲パターン"
         },
         "items": {
           "type": "array",
@@ -1358,36 +954,43 @@
             "type": "object",
             "properties": {
               "target": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "委譲先のSkill/advisor名（例: advisor全般／特定のSkill名）。"
               },
               "timing": {
                 "type": "string",
                 "enum": [
                   "before",
                   "after"
-                ]
+                ],
+                "x-prompt-write": "before（Skillを呼ぶ前の確認）またはafter（呼んだ後のフォローアップ）のいずれか。"
               },
               "targetScope": {
                 "type": "string",
                 "enum": [
                   "single",
                   "category"
-                ]
+                ],
+                "x-prompt-write": "single（特定1Skill向け）またはcategory（Skillのカテゴリ全体向け）のいずれか。"
               },
               "action": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "具体的に何をするか（検証可能な手順）。"
               },
               "outputFormat": {
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "x-prompt-write": "結果をどんな段階構成で返すべきか、短い見出し語の配列。timing=beforeでは省略可。"
               },
               "template": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "outputFormatを埋めるためのテンプレートファイルへの参照パス。timing=beforeでは省略可。"
               },
               "why": {
-                "type": "string"
+                "type": "string",
+                "x-prompt-write": "なぜこの委譲パターンが必要か。"
               }
             },
             "required": [
@@ -1398,19 +1001,7 @@
               "why"
             ]
           },
-          "x-prompt-write": {
-            "prompt": "特定タスクを他のSkill/advisorへ一時的に委譲するパターンを列挙してください。scope全体を丸ごと明け渡すものはここに書かない（そのような委譲先の概念はこのスキーマには無い）。委譲後は必ずOrchestrator自身に結果が戻ってくることを前提とします。",
-            "required": true,
-            "element": {
-              "target": "委譲先のSkill/advisor名（例: advisor全般／特定のSkill名）。",
-              "timing": "before（Skillを呼ぶ前の確認）またはafter（呼んだ後のフォローアップ）のいずれか。",
-              "targetScope": "single（特定1Skill向け）またはcategory（Skillのカテゴリ全体向け）のいずれか。",
-              "action": "具体的に何をするか（検証可能な手順）。",
-              "outputFormat": "結果をどんな段階構成で返すべきか、短い見出し語の配列。timing=beforeでは省略可。",
-              "template": "outputFormatを埋めるためのテンプレートファイルへの参照パス。timing=beforeでは省略可。",
-              "why": "なぜこの委譲パターンが必要か。"
-            }
-          }
+          "x-prompt-write": "特定タスクを他のSkill/advisorへ一時的に委譲するパターンを列挙してください。scope全体を丸ごと明け渡すものはここに書かない（そのような委譲先の概念はこのスキーマには無い）。委譲後は必ずOrchestrator自身に結果が戻ってくることを前提とします。"
         }
       },
       "required": [
