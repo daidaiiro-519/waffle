@@ -48,15 +48,17 @@ class Caller:
 class Deps:
     """外部との接点。実物の組み立ては handler が行う。
 
-    store      保管の読み書き（put/get/list）。削除は持たない
-    keys       トークンの保管の読み書き（put/get）
-    directory  招かれている人の名簿（find/invite/remove）。この文脈の外にある
-    now        現在時刻（エポック秒）。検証で固定できるようにする
+    store         保管の読み書き（put/get/list）。削除は持たない
+    keys          トークンの保管の読み書き（put/get）
+    directory     招かれている人の名簿（find/invite/remove）。この文脈の外にある
+    project_page  プロジェクトの一覧ページの雛形。どのプロジェクトにも同じものを置く
+    now           現在時刻（エポック秒）。検証で固定できるようにする
     """
 
     store: object
     keys: object
     directory: object = None
+    project_page: str = ""
     now: Callable[[], int] = lambda: int(time.time())
     viewer_domain: str = ""
 
@@ -184,6 +186,7 @@ def replace_content(deps: Deps, caller: Caller, artifact_id: str, html: str) -> 
         })
     meta["externalRefs"] = found["externalRefs"]
     _write_meta(deps, meta)
+    _refresh_listings(deps, meta)
 
     return {"artifactId": artifact_id, "url": _viewer_url(deps, artifact_id),
             "externalRefs": found["externalRefs"]}
@@ -293,29 +296,77 @@ def _write_membership(deps: Deps, artifact_id: str, projects: list[str]) -> None
 
 
 def assign(deps: Deps, caller: Caller, artifact_id: str, project_id: str) -> dict:
-    """まとめて見せる単位へ加える。人の明示的な操作でのみ成立する。"""
+    """プロジェクトへ加える。人の明示的な操作でのみ成立する。
+
+    加えられるのは自分が公開したものだけ。入れ先は、共有なら誰でも、
+    個人なら持ち主だけ。この2つの判定を両方通ったときにだけ成立する。
+    """
+    import projects as project_store
+
     meta = _read_meta(deps, caller, artifact_id)
-    try:
-        deps.keys.get(f"proj:{project_id}")
-    except Exception as e:
-        raise ManageError("PROJECT_NOT_FOUND", "そのプロジェクトはありません。") from e
+    if meta.get("uploadedBy") != caller.id and not caller.is_admin:
+        # 他人のものを、勝手に誰かの見せる範囲へ入れられない
+        raise ManageError("ARTIFACT_NOT_FOUND", "見つかりません。")
 
-    projects = list(meta.get("projects") or [])
-    if project_id not in projects:              # 重ねて加えても二重にならない
-        projects.append(project_id)
-    meta["projects"] = projects
+    index = project_store.require_writable(deps, caller, project_id)
+
+    belongs = list(meta.get("projects") or [])
+    if project_id not in belongs:               # 重ねて加えても二重にならない
+        belongs.append(project_id)
+    meta["projects"] = belongs
     _write_meta(deps, meta)
-    _write_membership(deps, artifact_id, projects)
+    _write_membership(deps, artifact_id, belongs)
+    _sync_project(deps, project_store, index, artifact_id, member=True)
 
-    return {"artifactId": artifact_id, "projects": projects}
+    return {"artifactId": artifact_id, "projects": belongs}
 
 
 def unassign(deps: Deps, caller: Caller, artifact_id: str, project_id: str) -> dict:
-    """まとめから外す。アーティファクト自体は個別のトークンで開けるまま残る。"""
-    meta = _read_meta(deps, caller, artifact_id)
-    projects = [p for p in (meta.get("projects") or []) if p != project_id]
-    meta["projects"] = projects
-    _write_meta(deps, meta)
-    _write_membership(deps, artifact_id, projects)
+    """プロジェクトから外す。共有アーティファクト自体は個別の閲覧トークンで開けるまま残る。"""
+    import projects as project_store
 
-    return {"artifactId": artifact_id, "projects": projects}
+    meta = _read_meta(deps, caller, artifact_id)
+    if meta.get("uploadedBy") != caller.id and not caller.is_admin:
+        raise ManageError("ARTIFACT_NOT_FOUND", "見つかりません。")
+
+    index = project_store.require_writable(deps, caller, project_id)
+
+    belongs = [p for p in (meta.get("projects") or []) if p != project_id]
+    meta["projects"] = belongs
+    _write_meta(deps, meta)
+    _write_membership(deps, artifact_id, belongs)
+    _sync_project(deps, project_store, index, artifact_id, member=False)
+
+    return {"artifactId": artifact_id, "projects": belongs}
+
+
+def _sync_project(deps: Deps, project_store, index: dict,
+                  artifact_id: str, member: bool) -> None:
+    """プロジェクトの索引と、閲覧者が見る一覧を揃える。
+
+    所属は索引（人へ見せるための正）と pp:（関門が判じるための投影）の
+    2か所に持つ。片方だけを書く経路を作らないため、出し入れのたびに
+    ここを通す。
+    """
+    ids = [a for a in index.get("memberArtifactIds", []) if a != artifact_id]
+    if member:
+        ids.append(artifact_id)
+    index["memberArtifactIds"] = ids
+    index["updatedAt"] = deps.now()
+    deps.store.put(f"projects/{index['projectId']}.json",
+                   json.dumps(index, ensure_ascii=False), "application/json")
+    project_store.write_listing(deps, index)
+
+
+def _refresh_listings(deps: Deps, meta: dict) -> None:
+    """このアーティファクトが入っている全プロジェクトの一覧を書き直す。
+
+    一覧は表示名を含むため、差し替えで名前が変わったときに書き直さないと、
+    閲覧者へ古い名前が見え続ける。
+    """
+    import projects as project_store
+
+    for project_id in meta.get("projects") or []:
+        index = project_store.read_index(deps, project_id)
+        if index:
+            project_store.write_listing(deps, index)

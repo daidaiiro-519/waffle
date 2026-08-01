@@ -21,6 +21,7 @@ import os
 from pathlib import Path
 
 import manage
+import projects
 import publish
 import publishers
 
@@ -29,6 +30,8 @@ ACTIONS = {
     "publish", "list", "replace", "rotate", "disable", "enable",
     "assign", "unassign", "transfer", "invite", "remove-publisher",
     "publishers", "resend-invite",
+    "projects", "create-project", "reissue-project",
+    "disable-project", "enable-project",
 }
 
 # 管理者のグループ名。Cognitoのトークンに含まれていれば管理者とみなす
@@ -58,6 +61,9 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
         return _response(200, result)
     except publish.PublishError as e:
         return _response(403 if e.code == "NOT_INVITED" else 400,
+                         {"error": e.code, "message": e.message})
+    except projects.ProjectError as e:
+        return _response(404 if e.code == "PROJECT_NOT_FOUND" else 400,
                          {"error": e.code, "message": e.message})
     except publishers.PublisherError as e:
         return _response(403 if e.code == "NOT_ADMINISTRATOR" else 400,
@@ -93,6 +99,19 @@ def _dispatch(action, deps, caller, body):  # pragma: no cover
         return {"publishers": publishers.list_publishers(deps, caller)}
     if action == "resend-invite":
         return publishers.resend_invite(deps, caller, body.get("publisherId", ""))
+
+    project_id = body.get("projectId", "")
+    if action == "projects":
+        return {"projects": projects.list_projects(deps, caller)}
+    if action == "create-project":
+        return projects.create(deps, caller, body.get("displayName", ""),
+                               body.get("scope", ""), body.get("projectKey", ""))
+    if action == "reissue-project":
+        return projects.reissue_token(deps, caller, project_id)
+    if action == "disable-project":
+        return projects.suspend(deps, caller, project_id)
+    if action == "enable-project":
+        return projects.resume(deps, caller, project_id)
     return publishers.remove(deps, caller, body.get("publisherId", ""))
 
 
@@ -207,12 +226,22 @@ def _connections() -> dict:  # pragma: no cover
             return {u["Username"] for u in res.get("Users", [])}
 
     return {"store": _Store(), "keys": _Keys(), "directory": _Directory(),
+            "project_page": _read_template("project-page.html"),
             "viewer_domain": os.environ.get("VIEWER_DOMAIN", "")}
+
+
+def _read_template(name: str) -> str:  # pragma: no cover
+    """同梱した雛形を読む。受け口の中に置いてある。"""
+    try:
+        return (Path(__file__).parent / name).read_text(encoding="utf-8")
+    except OSError:
+        return ""
 
 
 def _publish_deps() -> publish.Deps:  # pragma: no cover
     connections = _connections()
     connections.pop("directory")          # 公開は名簿を読まない
+    connections.pop("project_page")       # 公開はプロジェクトの雛形を要らない
     return publish.Deps(
         identify=lambda auth: (_identify(auth) or manage.Caller("")).id or None,
         wrapper_template=(Path(__file__).parent / "share-wrapper.html")

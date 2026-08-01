@@ -125,6 +125,9 @@ Resources:
               - !Sub "${ContentBucket.Arn}/p/*"
               - !Sub "${ContentBucket.Arn}/meta/*"
               - !Sub "${ContentBucket.Arn}/comments/*/*-replaced.json"
+              - !Sub "${ContentBucket.Arn}/projects/*"
+              - !Sub "${ContentBucket.Arn}/proj/*/index.json"
+              - !Sub "${ContentBucket.Arn}/proj/*/index.html"
 
           # 受け口が閲覧者の反応そのものへ書き込む経路を、資源の側でも塞ぐ。
           # 区切りの記録だけは許し、それ以外の反応には手を出させない。
@@ -139,6 +142,9 @@ Resources:
               - !Sub "${ContentBucket.Arn}/p/*"
               - !Sub "${ContentBucket.Arn}/meta/*"
               - !Sub "${ContentBucket.Arn}/comments/*/*-replaced.json"
+              - !Sub "${ContentBucket.Arn}/projects/*"
+              - !Sub "${ContentBucket.Arn}/proj/*/index.json"
+              - !Sub "${ContentBucket.Arn}/proj/*/index.html"
 
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -243,10 +249,13 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${BucketName}/p/*"
                   - !Sub "arn:aws:s3:::${BucketName}/meta/*"
+                  - !Sub "arn:aws:s3:::${BucketName}/projects/*"
               - Sid: ReadIndexForListing
                 Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub "arn:aws:s3:::${BucketName}/meta/*"
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/meta/*"
+                  - !Sub "arn:aws:s3:::${BucketName}/projects/*"
               # 索引を並べるためだけの走査。中身の置き場は対象にしない
               - Sid: ListIndexOnly
                 Effect: Allow
@@ -254,7 +263,15 @@ Resources:
                 Resource: !Sub "arn:aws:s3:::${BucketName}"
                 Condition:
                   StringLike:
-                    s3:prefix: "meta/*"
+                    s3:prefix: ["meta/*", "projects/*"]
+              # 一覧ページは閲覧の面が配る場所。任意のページを置けないよう、
+              # 置ける名前を雛形と中身の2つに限る
+              - Sid: WriteProjectListing
+                Effect: Allow
+                Action: s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/proj/*/index.json"
+                  - !Sub "arn:aws:s3:::${BucketName}/proj/*/index.html"
               # 差し替えの区切りは反応の並びに載るため、そこへも書く。
               # 書けるのは区切りの記録だけで、閲覧者の反応そのものには触れない
               - Sid: WriteReplacementDivider

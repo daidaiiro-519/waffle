@@ -19,6 +19,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import manage  # noqa: E402
+import projects  # noqa: E402
 import publish  # noqa: E402
 
 
@@ -216,20 +217,20 @@ def test_止まっていないものは再開できない():
 # ── プロジェクトへの出し入れ ────────────────────────────
 
 def test_加えるとプロジェクトのトークンで開ける範囲に入る():
-    deps, r = setup(keys=FakeKeyStore({"proj:ppp": "v|0|1"}))
+    deps, r, pid = with_project("PERSONAL")
 
-    manage.assign(deps, ME, r["artifactId"], "ppp")
+    manage.assign(deps, ME, r["artifactId"], pid)
 
-    assert deps.keys.get(f"pp:{r['artifactId']}") == "ppp"
-    assert meta_of(deps, r["artifactId"])["projects"] == ["ppp"]
+    assert deps.keys.get(f"pp:{r['artifactId']}") == pid
+    assert meta_of(deps, r["artifactId"])["projects"] == [pid]
 
 
 def test_重ねて加えても二重に入らない():
-    deps, r = setup(keys=FakeKeyStore({"proj:ppp": "v|0|1"}))
-    manage.assign(deps, ME, r["artifactId"], "ppp")
-    manage.assign(deps, ME, r["artifactId"], "ppp")
+    deps, r, pid = with_project("PERSONAL")
+    manage.assign(deps, ME, r["artifactId"], pid)
+    manage.assign(deps, ME, r["artifactId"], pid)
 
-    assert meta_of(deps, r["artifactId"])["projects"] == ["ppp"]
+    assert meta_of(deps, r["artifactId"])["projects"] == [pid]
 
 
 def test_無いプロジェクトへは加えられない():
@@ -240,10 +241,10 @@ def test_無いプロジェクトへは加えられない():
 
 
 def test_外してもアーティファクト自体は生き続ける():
-    deps, r = setup(keys=FakeKeyStore({"proj:ppp": "v|0|1"}))
-    manage.assign(deps, ME, r["artifactId"], "ppp")
+    deps, r, pid = with_project("PERSONAL")
+    manage.assign(deps, ME, r["artifactId"], pid)
 
-    manage.unassign(deps, ME, r["artifactId"], "ppp")
+    manage.unassign(deps, ME, r["artifactId"], pid)
 
     assert meta_of(deps, r["artifactId"])["projects"] == []
     assert deps.keys.get(f"token:{r['artifactId']}") != "DISABLED"   # 個別には開ける
@@ -252,7 +253,7 @@ def test_外してもアーティファクト自体は生き続ける():
 
 def test_中身に書いた分類の目印では所属できない():
     """所属は人の明示的な操作でしか成立しない"""
-    deps, r = setup(keys=FakeKeyStore({"proj:ppp": "v|0|1"}))
+    deps, r, pid = with_project("PERSONAL")
     tagged = HTML.replace("</head>", '<meta name="tags" content="ppp"></head>')
 
     manage.replace_content(deps, ME, r["artifactId"], tagged)
@@ -279,3 +280,94 @@ def test_差し替えの区切りはコメントの件数に数えない():
     manage.replace_content(deps, ME, r["artifactId"], HTML.replace("本文", "直した"))
 
     assert manage.list_artifacts(deps, ME)[0]["comments"] == 0
+
+
+# ── 共有と個人で出し入れの可否が変わる ──────────────────
+
+OTHER = manage.Caller("publisher-9")
+
+
+def with_project(scope, owner=None):
+    """プロジェクトが1つある状態を作る。既定では自分（ME）が作ったもの。"""
+    deps, r = setup()
+    deps.project_page = "<html>{{プロジェクトID}}</html>"
+    p = projects.create(deps, owner or ME, "まとめ", scope)
+    return deps, r, p["projectId"]
+
+
+def test_共有なら他の人も自分のものを入れられる():
+    """持ち主が『誰でも入れてよい』と決めた前提が働く"""
+    deps, r, pid = with_project("SHARED", owner=OTHER)
+
+    manage.assign(deps, ME, r["artifactId"], pid)
+
+    assert deps.keys.get(f"pp:{r['artifactId']}") == pid
+    assert pid in meta_of(deps, r["artifactId"])["projects"]
+
+
+def test_個人のプロジェクトへは持ち主しか入れられない():
+    """渡した相手に何が見えるかを、持ち主が把握し続けられるようにする"""
+    deps, r, pid = with_project("PERSONAL", owner=OTHER)
+
+    with pytest.raises(manage.ManageError) as x:
+        manage.assign(deps, ME, r["artifactId"], pid)
+    assert x.value.code == "PROJECT_NOT_FOUND"
+    assert meta_of(deps, r["artifactId"])["projects"] == []
+
+
+def test_自分のプロジェクトへは個人でも入れられる():
+    deps, r, pid = with_project("PERSONAL")
+    manage.assign(deps, ME, r["artifactId"], pid)
+    assert pid in meta_of(deps, r["artifactId"])["projects"]
+
+
+def test_他人のアーティファクトは共有でも動かせない():
+    """共有でも、動かせるのは自分が公開したものだけ"""
+    deps, r, pid = with_project("SHARED")
+
+    with pytest.raises(manage.ManageError) as x:
+        manage.assign(deps, SOMEONE_ELSE, r["artifactId"], pid)
+    assert x.value.code == "ARTIFACT_NOT_FOUND"
+
+
+def test_公開が止まっているプロジェクトへは入れられない():
+    deps, r, pid = with_project("SHARED")
+    projects.suspend(deps, ME, pid)
+
+    with pytest.raises(manage.ManageError) as x:
+        manage.assign(deps, ME, r["artifactId"], pid)
+    assert x.value.code == "PROJECT_SUSPENDED"
+
+
+def test_出し入れするとプロジェクトの索引と一覧が揃う():
+    """所属は索引と関門用の投影の2か所に持つ。片方だけを書く経路を作らない"""
+    deps, r, pid = with_project("SHARED")
+
+    manage.assign(deps, ME, r["artifactId"], pid)
+    index = json.loads(deps.store.get(f"projects/{pid}.json"))
+    listing = json.loads(deps.store.get(f"proj/{pid}/index.json"))
+    assert index["memberArtifactIds"] == [r["artifactId"]]
+    assert [a["artifactId"] for a in listing["artifacts"]] == [r["artifactId"]]
+
+    manage.unassign(deps, ME, r["artifactId"], pid)
+    index = json.loads(deps.store.get(f"projects/{pid}.json"))
+    listing = json.loads(deps.store.get(f"proj/{pid}/index.json"))
+    assert index["memberArtifactIds"] == []
+    assert listing["artifacts"] == []
+    assert deps.keys.get(f"pp:{r['artifactId']}") == ""
+
+
+def test_差し替えると入っている全プロジェクトの一覧が書き直される():
+    """一覧は種別と要約を含む。差し替えで変わったものが閲覧者へ届くようにする
+
+    表示名は差し替えでは変わらない（公開したときのまま）。変わるのは
+    中身から読み直す種別・要約・分類の目印である。
+    """
+    deps, r, pid = with_project("SHARED")
+    manage.assign(deps, ME, r["artifactId"], pid)
+
+    revised = HTML.replace("</head>", '<meta name="description" content="改訂した理由"></head>')
+    manage.replace_content(deps, ME, r["artifactId"], revised)
+
+    listing = json.loads(deps.store.get(f"proj/{pid}/index.json"))
+    assert listing["artifacts"][0]["description"] == "改訂した理由"

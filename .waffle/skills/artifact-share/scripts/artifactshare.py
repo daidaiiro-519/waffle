@@ -193,9 +193,10 @@ def update_function(stack: str, region: str | None) -> None:
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted((SKILL / "lambda" / "admin_api").glob("*.py")):
             zf.write(path, path.name)
-        # 閲覧画面の雛形は公開のたびに読むため、受け口に同梱する
-        zf.write(SKILL / "references" / "templates" / "share-wrapper.html",
-                 "share-wrapper.html")
+        # 閲覧画面とプロジェクトの一覧ページの雛形は、公開や作成のたびに
+        # 読むため、受け口に同梱する
+        for name in ("share-wrapper.html", "project-page.html"):
+            zf.write(SKILL / "references" / "templates" / name, name)
 
     boto3.client("lambda", region_name=region).update_function_code(
         FunctionName=out.get("AdminApiFunctionName", f"{stack}-admin-api"),
