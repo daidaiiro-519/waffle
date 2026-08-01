@@ -53,10 +53,30 @@ def _run_waffle(*args: str) -> dict | None:
         return None
 
 
+# 検知結果に含まれるが、driftではないもの。突き合わせが成立した組を
+# 報告するための情報であり、これが非空であることは「綺麗」を意味する。
+# ここを除かないと、driftゼロでも常に「検出しました」と鳴る
+_INFORMATIONAL = {"matched", "matched_test_names"}
+
+
 def _has_findings(data: dict | None) -> bool:
     if data is None:
         return False
-    return any(v for v in data.values() if isinstance(v, list) and v)
+    return any(v for k, v in data.items()
+               if k not in _INFORMATIONAL and isinstance(v, list) and v)
+
+
+def _uncheckable(data: dict | None) -> str | None:
+    """検査そのものが実行できなかったときの理由を返す。
+
+    エラーは list ではないため、findingsの判定からは常に漏れる。漏れた結果
+    沈黙すると、検査できなかったことが綺麗だったことと同じ見た目になる。
+    """
+    if data is None:
+        return "結果を解釈できませんでした"
+    if isinstance(data.get("error"), str):
+        return f"{data['error']}: {data.get('message', '')}".strip()
+    return None
 
 
 def _guess_spec_path(test_stem: str) -> str | None:
@@ -91,30 +111,32 @@ def check(payload: dict) -> str | None:
     # 突き合わせ先が見つからなかったもの。driftとは別の状態として扱う
     unpaired: list[str] = []
 
+    def _collect(cmd: str, label: str, *args: str) -> None:
+        data = _run_waffle(cmd, *args)
+        if _has_findings(data):
+            reports.append(f"[{label}] {json.dumps(data, ensure_ascii=False)}")
+            return
+        reason = _uncheckable(data)
+        if reason:
+            unpaired.append(f"{label} を実行できませんでした（{reason}）")
+
     if _USECASE_IMPL.search(file_path):
-        for cmd, label in [("check-usecase-class-drift", "usecase-class-drift"), ("check-operation-drift", "operation-drift")]:
-            data = _run_waffle(cmd)
-            if _has_findings(data):
-                reports.append(f"[{label}] {json.dumps(data, ensure_ascii=False)}")
+        _collect("check-usecase-class-drift", "usecase-class-drift")
+        _collect("check-operation-drift", "operation-drift")
 
     if _ENTITY_IMPL.search(file_path):
-        data = _run_waffle("check-aggregate-class-drift")
-        if _has_findings(data):
-            reports.append(f"[aggregate-class-drift] {json.dumps(data, ensure_ascii=False)}")
+        _collect("check-aggregate-class-drift", "aggregate-class-drift")
 
     if _SERVICE_IMPL.search(file_path):
-        data = _run_waffle("check-domain-service-drift")
-        if _has_findings(data):
-            reports.append(f"[domain-service-drift] {json.dumps(data, ensure_ascii=False)}")
+        _collect("check-domain-service-drift", "domain-service-drift")
 
     m = _TEST_FILE.search(file_path)
     if m:
         spec_path = _guess_spec_path(m.group(1))
         if spec_path:
             rel_spec = os.path.relpath(spec_path, _project_root())
-            data = _run_waffle("check-scenario-drift", "--specPath", rel_spec, "--testPath", file_path)
-            if _has_findings(data):
-                reports.append(f"[scenario-drift] {json.dumps(data, ensure_ascii=False)}")
+            _collect("check-scenario-drift", "scenario-drift",
+                     "--specPath", rel_spec, "--testPath", file_path)
         else:
             looked_for = m.group(1).removeprefix("test_").replace("_", "-")
             unpaired.append(
@@ -134,9 +156,8 @@ def check(payload: dict) -> str | None:
                 f"{spec_path} に対応するテストファイルが見つかりません"
                 "（tests/acceptance/ tests/integration/ を探しました）")
         for test_path in test_paths:
-            data = _run_waffle("check-scenario-drift", "--specPath", spec_path, "--testPath", test_path)
-            if _has_findings(data):
-                reports.append(f"[scenario-drift:{test_path}] {json.dumps(data, ensure_ascii=False)}")
+            _collect("check-scenario-drift", f"scenario-drift:{test_path}",
+                     "--specPath", spec_path, "--testPath", test_path)
 
     target = file_path or spec_path
     if reports:
