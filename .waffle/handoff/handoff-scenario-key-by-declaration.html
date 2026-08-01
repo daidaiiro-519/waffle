@@ -1,0 +1,457 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>シナリオとテストの突き合わせをテスト名から宣言行へ移す実装への引き継ぎ：handoff-scenario-key-by-declaration</title>
+<meta name="id" content="handoff-scenario-key-by-declaration">
+<meta name="type" content="Handoff">
+<meta name="title" content="シナリオとテストの突き合わせをテスト名から宣言行へ移す実装への引き継ぎ：handoff-scenario-key-by-declaration">
+<meta name="description" content="specのシナリオとテストの突き合わせを、テスト関数名の綴りの一致から、テストの文書コメント先頭に置いた宣言行「Scenario: {シナリオ名}」へ移す。担うユースケースは uc-check-scenario-drift（対応関係の検知）と uc-check-verification-gate（検知結果と実行結果を突き合わせた通過判定）の2つ。">
+<meta name="tags" content="context:waffle, topic:scenario-drift">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>シナリオとテストの突き合わせをテスト名から宣言行へ移す実装への引き継ぎ：handoff-scenario-key-by-declaration</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>uc-check-scenario-drift / uc-check-verification-gate</dd>
+      <dt>documentId</dt><dd>handoff-scenario-key-by-declaration</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 526" width="100%" height="526">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">コア</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ドメイン</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ポート</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="466.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実装</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-split" d="M0,434.0 H700"/>
+        <path class="flow-arrow" d="M398.0,60.0 L242.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,60.0 L554.0,124.0"/>
+        <path class="flow-arrow" d="M242.0,174.0 L398.0,238.0"/>
+        <path class="flow-arrow" d="M554.0,174.0 L398.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M398.0,288.0 L554.0,352.0"/>
+        <path class="flow-arrow" d="M242.0,402.0 L242.0,466.0"/>
+        <path class="flow-arrow" d="M554.0,402.0 L554.0,466.0"/>
+        <path class="flow-arrow dep" d="M408.0,149.0 L388.0,149.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="143.0">内部利用</text>
+        <path class="flow-arrow dep" d="M388.0,491.0 L408.0,491.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="485.0">同じ形に揃える</text>
+        
+        <g class="flow-box " transform="translate(96.0,10.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">CLI / MCP</div>
+              <div class="sub">2つの検査コマンド</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,124.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">CheckScenarioDrift</div>
+              <div class="sub">【改修】6フィールドを返す</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,124.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">CheckVerificationGate</div>
+              <div class="sub">【改修】テスト名で交差する</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,238.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">scenario_drift</div>
+              <div class="sub">【改修】宣言行で突き合わせる。言語を知らない</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">TestFunctionExtractor</div>
+              <div class="sub">名前と文書コメントを返す</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ClassDeclarationExtractor</div>
+              <div class="sub">既存の前例</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,466.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">TreeSitterTestFunctionExtractor</div>
+              <div class="sub">4言語</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,466.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">TreeSitterClassExtractor</div>
+              <div class="sub">既存の前例</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">8</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 外から2つの検査を呼ぶ口。返り値の形が変わるため、契約テストがここで落ちる</p></li><li><p><strong>コア</strong>: 検査の組み立て。対応関係の検知と、その結果を実行結果と突き合わせる通過判定</p></li><li><p><strong>ドメイン</strong>: 宣言行での突き合わせそのもの。ここから言語の知識が無くなる</p></li><li><p><strong>ポート</strong>: テストの名前と文書コメントを取り出す抽象。既存のクラス抽出portと同じ形に揃える</p></li><li><p><strong>実装</strong>: 言語ごとの取り出し。飾りの除去もここが担う</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>テストの文書コメント先頭に「Scenario: 止めると開けなくなる」を置き、関数名は test_suspend_blocks_viewing とする</p></li><li><p>返り値は missing_in_tests / orphaned_in_tests / matched（シナリオ名とテスト名の対）/ gherkin_mismatches / duplicate_declarations / spec_declaration_mismatches の6つ</p></li><li><p>ゲートは matched のテスト名側と実行結果の failed を交差させ、reasons にはシナリオ名を載せて返す</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 4件／実装観点 3件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 2件／実装観点 5件</span></div>
+        <div class="review-row"><span class="who">qa-advisor</span><span class="detail">設計観点 1件／実装観点 2件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">シナリオの同一性は名前が決める</div>
+              <div class="entry-consideration">シナリオはエンティティであり、その自然キーは名前。名前が変われば別のシナリオとして扱い、未実装と孤立の両方で報告する。改名に黙って追従させないのは、追従させると人間が見るべき事象を握りつぶすため。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">同一性の軸と内容の軸を独立させたまま保つ</div>
+              <div class="entry-consideration">宣言行が同一性、gherkin本文が内容という二軸構造を潰さない。本文を同一性にすると、本文の変化を検知するという目的そのものが手段によって消える。qa-advisorも独立に同じ結論に達し、判定カテゴリが原理的に消滅すると指摘した。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">名前の正はひとつに定める</div>
+              <div class="entry-consideration">名前はシナリオの name と gherkin 先頭の見出し行の二箇所に存在しうる。name を唯一の正とし、見出し行は導出物として扱う。両方を正にすると、片方だけ直されたときにどちらが正しいか機械では決まらず、意味の衝突がそのままバグになる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">specとテスト実行環境は別の語彙を持つ</div>
+              <div class="entry-consideration">2つのモデルの接合部分は契約であり、明示すべきもの。現行は非可逆変換の偶然の一致で両者が同じ文字列に潰れているだけで、束ねという概念が単一の文字列に隠れている。対として表に出す。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">変更の本当の根拠は依存方向の是正</div>
+              <div class="entry-consideration">中核サブドメインのドメイン層が、特定言語の識別子規則と特定パーサ技術を直接知っている。ASCII化を動機に据えると費用対効果で説明しきれず、突き合わせの対象外にあるテストは日本語名のまま残るため半分しか達成しない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">安定IDは今は導入しない</div>
+              <div class="entry-consideration">リネーム起因の破損の実例がゼロ。404件への採番コストと執筆時の認知負荷を今日払い、価値の実現を将来へ先送りすることになる。実例が1件でも観測された時点で再検討する。3体とも裁定ではなくコスト構造の提示として述べている。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">qa-advisor</span></div>
+              <div class="entry-viewpoint">gherkin本文そのものをキーにしない</div>
+              <div class="entry-consideration">判定カテゴリが1つ消えるうえ、包含関係にある2シナリオでは割り当て順という本質と無関係な要因で検知結果が変動する。Given/When/Thenが完全に同一で名前だけ違うシナリオが、このリポジトリの実データに現存する。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">非可逆変換をドメイン層から除く</div>
+              <div class="entry-consideration">シナリオ名を識別子へ変換する処理を削除する。句読点・空白・括弧が同じ文字へ潰れて別のシナリオと衝突しうる。404件中46件が書き換え対象で、現時点の衝突は0件だが、同一性を非可逆変換の結果に預けている構造そのものが破綻の余地。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">gherkin見出し行の除去をやめる</div>
+              <div class="entry-consideration">除去こそが名前をテスト関数名側へ追い出していた原因。やめると規約から例外が1つ消え、キーは自然に文書コメントの中に現れる。新しい規約を足すのではなく、既存規約から切り欠きを取り除く変更になる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">文書コメントの取り出しをportの背後へ移す</div>
+              <div class="entry-consideration">既存のクラス抽出portとtree-sitterアダプタが4言語で稼働している前例に揃える。ドメイン層で構文解析を直接importしているのはこの1ファイルだけで、自リポジトリ自身のパターンから外れている。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">コメントの飾りの除去はadapterの責務</div>
+              <div class="entry-consideration">飾りの形は言語ごとに違う。落とし方を雑にすると、対応づけは正しくできているのに取れなかったと誤判定する。実際に検証中に一度この誤りを踏み、Java/JavaScriptで取れないと誤って結論しかけた。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">対応関係を対として返す</div>
+              <div class="entry-consideration">シナリオ名とテスト名の対で返す。2本の配列を並べて位置で対応させる形にすると、位置の対応という誰も検査しない前提が生まれる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">qa-advisor</span></div>
+              <div class="entry-viewpoint">通過判定の交差はテスト名側で行う</div>
+              <div class="entry-consideration">シナリオ名と交差させると恒常的に空集合になり、全テストが落ちていても通過を返す。しかもその状態は、判定側のテストがすべて緑であることによって隠れる。この回帰を検知するシナリオの追加を、賛成の条件として要求されている。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">qa-advisor</span></div>
+              <div class="entry-viewpoint">交差が空であることを合格と読まない</div>
+              <div class="entry-consideration">実行結果の失敗一覧に、対のどのテスト名とも一致しない識別子だけが並ぶ場合、識別子の不整合として人間の判断へ回す。空集合を落ちたテストが無いことと同一視すると、静かな見逃しになる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">移行の順序を守る</div>
+              <div class="entry-consideration">先に全対象テストの文書コメントへ宣言行を挿入し、全件が対応することを確認してから、テスト名を変える。逆順にすると変更直後に全件が未実装として一斉に噴出し、通過判定が停止で固まる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">契約テストは落ちるのが正しい</div>
+              <div class="entry-consideration">返り値のフィールド集合を完全一致で比較しているため必ず落ちる。検知が効いている証拠なので、同一の変更単位で更新する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">新旧のキーを併存させない</div>
+              <div class="entry-consideration">併存させると、文書コメントでは一致するが名前が違うものを孤立と呼ぶか決められず、通過判定の優先順位が入力によって揺れる。既存規約が明文で禁じている非決定的な判定にあたる。一括で切り替える。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>対応づけの確実さが言語で異なる。Pythonの文書コメントは関数の内側にあるため構造的に対応するが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応せず、間に別のコメントや空行が挟まると対応が変わりうる。4言語で実際に取得と対応づけが成立することは実機で確認済み</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>JavaScript/TypeScriptのテストには識別子としての関数名が無く、テスト名は文字列引数である。この2言語では『関数名が日本語になる』問題は元々存在せず、逆に現行の規約は原理的に移植できない</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>多言語対応の壁はこの変更だけでは全部崩れない。ソース走査がPythonのファイル拡張子に固定されている点は別に残る。この変更で崩れるのは、ドメイン層の言語依存と、識別子規則への依存の2つ</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>テスト実行結果ファイルが報告する識別子の粒度（関数名か、パラメトライズを含むノードIDか）は、この実装の前に確定させる必要がある。ASCII名化はパラメトライズの誘因を上げるため、既存の潜在的な不一致が広がる方向に働く（qa-advisor）</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">5</span>
+              <p>移行対象の件数に未確定がある。tech-lead-advisorの実測は非ASCII名477件、Orchestratorの実測は196件で食い違う。数え方（クラス内メソッド・パラメトライズを含むか）の違いと見られ、着手前に詰める</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">6</span>
+              <p>この変更の動機を『ASCII化』に置くと半分しか達成しない。突き合わせの対象外にあるテストは日本語名のまま残る。動機は『非可逆な導出関係をキーにするのをやめる』という設計の是正に置く（tech-lead-advisor）</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/scenario_drift.py</div>
+              <div class="reason">sanitizeの削除、宣言行の読み取り、gherkin見出しの除去の取りやめ。構文解析への直接依存をここから外す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/ports/test_function_extractor.py</div>
+              <div class="reason">新設。テストの名前と、飾りを落とした文書コメントを返すport</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/outbound/tree_sitter_test_function_extractor.py</div>
+              <div class="reason">新設。4言語のadapter。既存のクラス抽出adapterに揃える</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/check_scenario_drift.py</div>
+              <div class="reason">返り値を6フィールドへ。matchedを対に変更</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/check_verification_gate.py</div>
+              <div class="reason">交差をテスト名側で行い、reasonsをシナリオ名で組み立てる。識別子の不整合の判定を追加</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/cli/main.py</div>
+              <div class="reason">合成の場でadapterを配線する</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/mcp/main.py</div>
+              <div class="reason">同上</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/acceptance/test_uc_check_scenario_drift.py</div>
+              <div class="reason">新しい15シナリオへ対応。宣言行の転記とテスト名のASCII化</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/acceptance/test_uc_check_verification_gate.py</div>
+              <div class="reason">回帰検知の3シナリオを含めて対応</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/contract/test_cli.py</div>
+              <div class="reason">返り値のフィールド集合の完全一致比較を更新</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/contract/test_mcp.py</div>
+              <div class="reason">同上</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/acceptance/ 配下の既存テスト全般</div>
+              <div class="reason">宣言行の挿入とテスト名のASCII化。件数は着手前に確定させる</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/hooks/check-drift-on-write.py</div>
+              <div class="reason">新カテゴリを検知として扱い、matchedを情報として除外し続ける</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

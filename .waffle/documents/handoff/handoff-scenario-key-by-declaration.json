@@ -1,0 +1,341 @@
+{
+  "documentId": "handoff-scenario-key-by-declaration",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "シナリオとテストの突き合わせをテスト名から宣言行へ移す実装への引き継ぎ：handoff-scenario-key-by-declaration"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-check-scenario-drift / uc-check-verification-gate"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "シナリオの同一性は名前が決める",
+          "consideration": "シナリオはエンティティであり、その自然キーは名前。名前が変われば別のシナリオとして扱い、未実装と孤立の両方で報告する。改名に黙って追従させないのは、追従させると人間が見るべき事象を握りつぶすため。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "同一性の軸と内容の軸を独立させたまま保つ",
+          "consideration": "宣言行が同一性、gherkin本文が内容という二軸構造を潰さない。本文を同一性にすると、本文の変化を検知するという目的そのものが手段によって消える。qa-advisorも独立に同じ結論に達し、判定カテゴリが原理的に消滅すると指摘した。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "名前の正はひとつに定める",
+          "consideration": "名前はシナリオの name と gherkin 先頭の見出し行の二箇所に存在しうる。name を唯一の正とし、見出し行は導出物として扱う。両方を正にすると、片方だけ直されたときにどちらが正しいか機械では決まらず、意味の衝突がそのままバグになる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "specとテスト実行環境は別の語彙を持つ",
+          "consideration": "2つのモデルの接合部分は契約であり、明示すべきもの。現行は非可逆変換の偶然の一致で両者が同じ文字列に潰れているだけで、束ねという概念が単一の文字列に隠れている。対として表に出す。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "変更の本当の根拠は依存方向の是正",
+          "consideration": "中核サブドメインのドメイン層が、特定言語の識別子規則と特定パーサ技術を直接知っている。ASCII化を動機に据えると費用対効果で説明しきれず、突き合わせの対象外にあるテストは日本語名のまま残るため半分しか達成しない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "安定IDは今は導入しない",
+          "consideration": "リネーム起因の破損の実例がゼロ。404件への採番コストと執筆時の認知負荷を今日払い、価値の実現を将来へ先送りすることになる。実例が1件でも観測された時点で再検討する。3体とも裁定ではなくコスト構造の提示として述べている。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "gherkin本文そのものをキーにしない",
+          "consideration": "判定カテゴリが1つ消えるうえ、包含関係にある2シナリオでは割り当て順という本質と無関係な要因で検知結果が変動する。Given/When/Thenが完全に同一で名前だけ違うシナリオが、このリポジトリの実データに現存する。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "非可逆変換をドメイン層から除く",
+          "consideration": "シナリオ名を識別子へ変換する処理を削除する。句読点・空白・括弧が同じ文字へ潰れて別のシナリオと衝突しうる。404件中46件が書き換え対象で、現時点の衝突は0件だが、同一性を非可逆変換の結果に預けている構造そのものが破綻の余地。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "gherkin見出し行の除去をやめる",
+          "consideration": "除去こそが名前をテスト関数名側へ追い出していた原因。やめると規約から例外が1つ消え、キーは自然に文書コメントの中に現れる。新しい規約を足すのではなく、既存規約から切り欠きを取り除く変更になる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "文書コメントの取り出しをportの背後へ移す",
+          "consideration": "既存のクラス抽出portとtree-sitterアダプタが4言語で稼働している前例に揃える。ドメイン層で構文解析を直接importしているのはこの1ファイルだけで、自リポジトリ自身のパターンから外れている。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "コメントの飾りの除去はadapterの責務",
+          "consideration": "飾りの形は言語ごとに違う。落とし方を雑にすると、対応づけは正しくできているのに取れなかったと誤判定する。実際に検証中に一度この誤りを踏み、Java/JavaScriptで取れないと誤って結論しかけた。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "対応関係を対として返す",
+          "consideration": "シナリオ名とテスト名の対で返す。2本の配列を並べて位置で対応させる形にすると、位置の対応という誰も検査しない前提が生まれる。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "通過判定の交差はテスト名側で行う",
+          "consideration": "シナリオ名と交差させると恒常的に空集合になり、全テストが落ちていても通過を返す。しかもその状態は、判定側のテストがすべて緑であることによって隠れる。この回帰を検知するシナリオの追加を、賛成の条件として要求されている。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "交差が空であることを合格と読まない",
+          "consideration": "実行結果の失敗一覧に、対のどのテスト名とも一致しない識別子だけが並ぶ場合、識別子の不整合として人間の判断へ回す。空集合を落ちたテストが無いことと同一視すると、静かな見逃しになる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "移行の順序を守る",
+          "consideration": "先に全対象テストの文書コメントへ宣言行を挿入し、全件が対応することを確認してから、テスト名を変える。逆順にすると変更直後に全件が未実装として一斉に噴出し、通過判定が停止で固まる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "契約テストは落ちるのが正しい",
+          "consideration": "返り値のフィールド集合を完全一致で比較しているため必ず落ちる。検知が効いている証拠なので、同一の変更単位で更新する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "新旧のキーを併存させない",
+          "consideration": "併存させると、文書コメントでは一致するが名前が違うものを孤立と呼ぶか決められず、通過判定の優先順位が入力によって揺れる。既存規約が明文で禁じている非決定的な判定にあたる。一括で切り替える。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "対応づけの確実さが言語で異なる。Pythonの文書コメントは関数の内側にあるため構造的に対応するが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応せず、間に別のコメントや空行が挟まると対応が変わりうる。4言語で実際に取得と対応づけが成立することは実機で確認済み",
+        "JavaScript/TypeScriptのテストには識別子としての関数名が無く、テスト名は文字列引数である。この2言語では『関数名が日本語になる』問題は元々存在せず、逆に現行の規約は原理的に移植できない",
+        "多言語対応の壁はこの変更だけでは全部崩れない。ソース走査がPythonのファイル拡張子に固定されている点は別に残る。この変更で崩れるのは、ドメイン層の言語依存と、識別子規則への依存の2つ",
+        "テスト実行結果ファイルが報告する識別子の粒度（関数名か、パラメトライズを含むノードIDか）は、この実装の前に確定させる必要がある。ASCII名化はパラメトライズの誘因を上げるため、既存の潜在的な不一致が広がる方向に働く（qa-advisor）",
+        "移行対象の件数に未確定がある。tech-lead-advisorの実測は非ASCII名477件、Orchestratorの実測は196件で食い違う。数え方（クラス内メソッド・パラメトライズを含むか）の違いと見られ、着手前に詰める",
+        "この変更の動機を『ASCII化』に置くと半分しか達成しない。突き合わせの対象外にあるテストは日本語名のまま残る。動機は『非可逆な導出関係をキーにするのをやめる』という設計の是正に置く（tech-lead-advisor）"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "relationships": [
+        {
+          "from": "gate",
+          "to": "drift",
+          "kind": "dependency",
+          "label": "内部利用"
+        },
+        {
+          "from": "adapter",
+          "to": "clsadapter",
+          "kind": "dependency",
+          "label": "同じ形に揃える"
+        }
+      ],
+      "layers": [
+        {
+          "label": "呼出口",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "CLI / MCP",
+              "sub": "2つの検査コマンド",
+              "status": "existing"
+            }
+          ],
+          "description": "外から2つの検査を呼ぶ口。返り値の形が変わるため、契約テストがここで落ちる"
+        },
+        {
+          "label": "コア",
+          "nodes": [
+            {
+              "id": "drift",
+              "title": "CheckScenarioDrift",
+              "sub": "【改修】6フィールドを返す",
+              "status": "existing"
+            },
+            {
+              "id": "gate",
+              "title": "CheckVerificationGate",
+              "sub": "【改修】テスト名で交差する",
+              "status": "existing"
+            }
+          ],
+          "description": "検査の組み立て。対応関係の検知と、その結果を実行結果と突き合わせる通過判定"
+        },
+        {
+          "label": "ドメイン",
+          "nodes": [
+            {
+              "id": "svc",
+              "title": "scenario_drift",
+              "sub": "【改修】宣言行で突き合わせる。言語を知らない",
+              "status": "existing"
+            }
+          ],
+          "description": "宣言行での突き合わせそのもの。ここから言語の知識が無くなる"
+        },
+        {
+          "label": "ポート",
+          "nodes": [
+            {
+              "id": "port",
+              "title": "TestFunctionExtractor",
+              "sub": "名前と文書コメントを返す",
+              "status": "new"
+            },
+            {
+              "id": "clsport",
+              "title": "ClassDeclarationExtractor",
+              "sub": "既存の前例",
+              "status": "existing"
+            }
+          ],
+          "description": "テストの名前と文書コメントを取り出す抽象。既存のクラス抽出portと同じ形に揃える"
+        },
+        {
+          "label": "実装",
+          "nodes": [
+            {
+              "id": "adapter",
+              "title": "TreeSitterTestFunctionExtractor",
+              "sub": "4言語",
+              "status": "new"
+            },
+            {
+              "id": "clsadapter",
+              "title": "TreeSitterClassExtractor",
+              "sub": "既存の前例",
+              "status": "existing"
+            }
+          ],
+          "description": "言語ごとの取り出し。飾りの除去もここが担う"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "テストの文書コメント先頭に「Scenario: 止めると開けなくなる」を置き、関数名は test_suspend_blocks_viewing とする",
+        "返り値は missing_in_tests / orphaned_in_tests / matched（シナリオ名とテスト名の対）/ gherkin_mismatches / duplicate_declarations / spec_declaration_mismatches の6つ",
+        "ゲートは matched のテスト名側と実行結果の failed を交差させ、reasons にはシナリオ名を載せて返す"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "specのシナリオとテストの突き合わせを、テスト関数名の綴りの一致から、テストの文書コメント先頭に置いた宣言行「Scenario: {シナリオ名}」へ移す。担うユースケースは uc-check-scenario-drift（対応関係の検知）と uc-check-verification-gate（検知結果と実行結果を突き合わせた通過判定）の2つ。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/domain/services/scenario_drift.py",
+          "reason": "sanitizeの削除、宣言行の読み取り、gherkin見出しの除去の取りやめ。構文解析への直接依存をここから外す"
+        },
+        {
+          "path": "src/waffle/application/ports/test_function_extractor.py",
+          "reason": "新設。テストの名前と、飾りを落とした文書コメントを返すport"
+        },
+        {
+          "path": "src/waffle/adapters/outbound/tree_sitter_test_function_extractor.py",
+          "reason": "新設。4言語のadapter。既存のクラス抽出adapterに揃える"
+        },
+        {
+          "path": "src/waffle/application/usecases/check_scenario_drift.py",
+          "reason": "返り値を6フィールドへ。matchedを対に変更"
+        },
+        {
+          "path": "src/waffle/application/usecases/check_verification_gate.py",
+          "reason": "交差をテスト名側で行い、reasonsをシナリオ名で組み立てる。識別子の不整合の判定を追加"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/cli/main.py",
+          "reason": "合成の場でadapterを配線する"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/mcp/main.py",
+          "reason": "同上"
+        },
+        {
+          "path": "tests/acceptance/test_uc_check_scenario_drift.py",
+          "reason": "新しい15シナリオへ対応。宣言行の転記とテスト名のASCII化"
+        },
+        {
+          "path": "tests/acceptance/test_uc_check_verification_gate.py",
+          "reason": "回帰検知の3シナリオを含めて対応"
+        },
+        {
+          "path": "tests/contract/test_cli.py",
+          "reason": "返り値のフィールド集合の完全一致比較を更新"
+        },
+        {
+          "path": "tests/contract/test_mcp.py",
+          "reason": "同上"
+        },
+        {
+          "path": "tests/acceptance/ 配下の既存テスト全般",
+          "reason": "宣言行の挿入とテスト名のASCII化。件数は着手前に確定させる"
+        },
+        {
+          "path": ".waffle/hooks/check-drift-on-write.py",
+          "reason": "新カテゴリを検知として扱い、matchedを情報として除外し続ける"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor",
+        "qa-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "open",
+          "note": "テスト実行結果が報告する識別子の粒度（関数名か、パラメトライズを含むノードIDか）が未確定。実装前に決める必要がある"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 7,
+          "resolutionStatus": "open",
+          "note": "移行対象の件数が未確定。非ASCII名の実測がadvisor 477件 / Orchestrator 196件で食い違う。数え方の差を詰める"
+        },
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 6,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "Java/TypeScript/JavaScriptでの対応づけが近接にしか依らない点は、制約として受け入れる"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": [
+    "context:waffle",
+    "topic:scenario-drift"
+  ]
+}
