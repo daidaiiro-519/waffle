@@ -434,38 +434,6 @@
         }
       }
     },
-    "NameBlock": {
-      "type": "object",
-      "required": [
-        "blockType",
-        "title",
-        "operationName"
-      ],
-      "x-render-order": 2,
-      "x-render-level": 2,
-      "x-prompt-query": "このusecase自身の名前を持ちます。",
-      "x-render": [
-        {
-          "as": "paragraph",
-          "from": "operationName"
-        }
-      ],
-      "properties": {
-        "blockType": {
-          "type": "string",
-          "const": "Usecase"
-        },
-        "title": {
-          "type": "string",
-          "const": "名前"
-        },
-        "operationName": {
-          "type": "string",
-          "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に（例: CheckScenarioDrift）。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
-        }
-      },
-      "x-render-hidden": true
-    },
     "SummaryBlock": {
       "type": "object",
       "required": [
