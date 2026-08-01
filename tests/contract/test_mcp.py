@@ -352,7 +352,8 @@ def test_check_scenario_driftは4フィールドの差分結果を返す():
         "specPath": ".waffle/documents/specs/bc-waffle/subdomain/sd-reconciliation/usecase/uc-check-spec-integrity.json",
         "testPath": "tests/integration/test_uc_check_spec_integrity.py",
     }))
-    assert set(out.keys()) == {"missing_in_tests", "orphaned_in_tests", "matched", "gherkin_mismatches"}
+    assert set(out.keys()) == {"missing_in_tests", "orphaned_in_tests", "matched", "gherkin_mismatches",
+                                 "duplicate_declarations", "spec_declaration_mismatches"}
 
 
 def test_check_verification_gateはstatusとreasonsを返す(tmp_path):

@@ -398,7 +398,8 @@ def test_check_scenario_driftは4フィールドの差分結果を返す():
     ])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert set(data.keys()) == {"missing_in_tests", "orphaned_in_tests", "matched", "gherkin_mismatches"}
+    assert set(data.keys()) == {"missing_in_tests", "orphaned_in_tests", "matched", "gherkin_mismatches",
+                                 "duplicate_declarations", "spec_declaration_mismatches"}
 
 
 def test_check_verification_gateはstatusとreasonsを返す(tmp_path):

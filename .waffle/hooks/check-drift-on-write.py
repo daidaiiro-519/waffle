@@ -32,9 +32,25 @@ _ENTITY_IMPL = re.compile(r"src/waffle/domain/entities/.*\.py$")
 _SERVICE_IMPL = re.compile(r"src/waffle/domain/services/.*\.py$")
 _TEST_FILE = re.compile(r"tests/(?:acceptance|integration)/(test_.*)\.py$")
 _BASH_FILL_PATH = re.compile(r"waffle\s+scaffold\s+--operation\s+fill\b.*?--path\s+(\S+)")
-# tests/ 配下でなくても、テストとして書かれたことは名前から分かる。
-# 突き合わせ対象にならないことを黙って見過ごさないために見る
-_TEST_BASENAME = re.compile(r"(?:^|/)test_[^/]*\.py$")
+# tests/ という区画の中にありながら、突き合わせの対象になる配置に無いもの。
+# 対象外であることを黙って見過ごさないために見る。
+#
+# ファイル名だけで判定してはいけない。test_ で始まる名前のソースファイル
+# （例: ports/test_function_extractor.py）はテストではなく、実際に誤検知した
+_TEST_BASENAME = re.compile(r"(?:^|/)tests?/(?:.*/)?test_[^/]*\.py$")
+# 実装の配置ルールを持つ architecture document と、それが実現する範囲。
+#
+# 実装の置き場所は architecture document に1つだけ定義されており、境界づけ
+# られたコンテキストからスタックを辿る手段がまだ無い。範囲を絞らないと、
+# 別のスタックに載っているコンテキスト（実装を伴うSkill）の集約が
+# 「実装が無い」と誤って報告される——実際にはあり、探す場所が違うだけ。
+#
+# 絞っていること自体は静的な既知の事実なので、書き込みのたびには報告しない
+# （毎回鳴る警報は鳴らない警報と同じになる）。この制限は
+# .waffle/memory/ に作業項目として記録してある
+ARCHITECTURE_REF = "architecture-waffle"
+COVERED_DOCUMENTS_ROOT = ".waffle/documents/specs/bc-waffle"
+
 _USECASE_SPEC = re.compile(r"\.waffle/documents/specs/.*/usecase/(uc-[^/]+)\.json$")
 
 
@@ -120,15 +136,21 @@ def check(payload: dict) -> str | None:
         if reason:
             unpaired.append(f"{label} を実行できませんでした（{reason}）")
 
+    # 実装の配置は architecture document から導く。引数なしで呼ぶと
+    # MISSING_PARAM が返るだけで、この4つは書かれて以来ずっと空振りしていた
+    arch = ("--architectureRef", ARCHITECTURE_REF,
+            "--documentsRoot", COVERED_DOCUMENTS_ROOT)
+
+
     if _USECASE_IMPL.search(file_path):
-        _collect("check-usecase-class-drift", "usecase-class-drift")
-        _collect("check-operation-drift", "operation-drift")
+        _collect("check-usecase-class-drift", "usecase-class-drift", *arch)
+        _collect("check-operation-drift", "operation-drift", *arch)
 
     if _ENTITY_IMPL.search(file_path):
-        _collect("check-aggregate-class-drift", "aggregate-class-drift")
+        _collect("check-aggregate-class-drift", "aggregate-class-drift", *arch)
 
     if _SERVICE_IMPL.search(file_path):
-        _collect("check-domain-service-drift", "domain-service-drift")
+        _collect("check-domain-service-drift", "domain-service-drift", *arch)
 
     m = _TEST_FILE.search(file_path)
     if m:

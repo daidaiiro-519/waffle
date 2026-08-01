@@ -20,6 +20,9 @@ from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
+from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
+    TreeSitterTestFunctionExtractor,
+)
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
@@ -232,11 +235,15 @@ def check_spec_integrity(
 
 @app.command("check-scenario-drift")
 def check_scenario_drift(
-    spec_path: str = typer.Option(..., "--specPath", "--spec-path", help="spec.json のパス"),
-    test_path: str = typer.Option(..., "--testPath", "--test-path", help="対応するテストファイル(.py)のパス"),
+    spec_path: str = typer.Option(None, "--specPath", "--spec-path", help="spec.json のパス（1組だけ検査する）"),
+    test_path: str = typer.Option(None, "--testPath", "--test-path", help="対応するテストファイルのパス（1組だけ検査する）"),
+    documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="spec documentの置き場所（全体を検査する）"),
+    tests_root: str = typer.Option(None, "--testsRoot", "--tests-root", help="テストの配置ルート（全体を検査する）"),
 ) -> None:
     """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。"""
-    _emit(CheckScenarioDrift(_docs()).run(spec_path, test_path))
+    _emit(CheckScenarioDrift(_docs(), TreeSitterTestFunctionExtractor()).run(
+        spec_path=spec_path, test_file_path=test_path,
+        documents_root=documents_root, tests_root=tests_root))
 
 @app.command("check-verification-gate")
 def check_verification_gate(
@@ -248,7 +255,7 @@ def check_verification_gate(
     ),
 ) -> None:
     """実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。"""
-    _emit(CheckVerificationGate(_docs()).run(spec_path, test_path, test_results_path))
+    _emit(CheckVerificationGate(_docs(), TreeSitterTestFunctionExtractor()).run(spec_path, test_path, test_results_path))
 
 @app.command("check-query-precedes-array-fill")
 def check_query_precedes_array_fill(

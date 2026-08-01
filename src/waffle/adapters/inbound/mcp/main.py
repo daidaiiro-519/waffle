@@ -14,6 +14,9 @@ from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
+from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
+    TreeSitterTestFunctionExtractor,
+)
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
@@ -180,14 +183,21 @@ def check_spec_integrity(path: str, documentsRoot: str = ".waffle/documents") ->
     return _dict(CheckSpecIntegrity(_docs()).run(path, documentsRoot))
 
 @mcp.tool
-def check_scenario_drift(specPath: str, testPath: str) -> dict:
-    """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。"""
-    return _dict(CheckScenarioDrift(_docs()).run(specPath, testPath))
+def check_scenario_drift(specPath: str = None, testPath: str = None,
+                         documentsRoot: str = None, testsRoot: str = None) -> dict:
+    """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。
+
+    specPath と testPath で1組だけ検査するか、documentsRoot と testsRoot で
+    全体を走査するかのどちらか一方を指定する。
+    """
+    return _dict(CheckScenarioDrift(_docs(), TreeSitterTestFunctionExtractor()).run(
+        spec_path=specPath, test_file_path=testPath,
+        documents_root=documentsRoot, tests_root=testsRoot))
 
 @mcp.tool
 def check_verification_gate(specPath: str, testPath: str, testResultsPath: str) -> dict:
     """実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。"""
-    return _dict(CheckVerificationGate(_docs()).run(specPath, testPath, testResultsPath))
+    return _dict(CheckVerificationGate(_docs(), TreeSitterTestFunctionExtractor()).run(specPath, testPath, testResultsPath))
 
 @mcp.tool
 def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict:
