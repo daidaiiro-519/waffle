@@ -34,6 +34,8 @@
 - uc-transfer-artifact
 - uc-sign-in
 - uc-reset-password
+- uc-create-project
+- uc-control-project-access
 
 ---
 

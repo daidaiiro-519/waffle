@@ -1,0 +1,208 @@
+{
+  "documentId": "uc-create-project",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "まとめて見せるプロジェクトを作る：uc-create-project"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "投稿者が、複数の共有アーティファクトを1つの閲覧トークンでまとめて見せるための単位を作る操作。作った時点では何も入っていない。",
+        "作るときに、自分だけが出し入れするか、招かれた人なら誰でも出し入れできるかを選ぶ。この別はあとから変えられない。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "CreateProject"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "関わりのある共有アーティファクトを、1つの閲覧トークンでまとめて見せられるようにする"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、渡す相手ごとに共有アーティファクトの件数だけ閲覧トークンを渡すことになる。渡す側は何をどこまで渡したかを覚えていられず、受け取る側は複数のトークンを管理することになる。",
+        "作るときに共有の別を選ばせるのは、閲覧トークンを渡す相手を決める判断が『ここに何が入りうるか』を前提にしているため。あとから変えられると、その前提が渡したあとで崩れる。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "操作する者が、あらかじめ招かれた投稿者であること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "プロジェクト",
+          "message": "create（表示名・共有の別）",
+          "kind": "command"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "",
+          "message": "持ち主を記録し、閲覧トークンを発行する",
+          "kind": "self"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "",
+          "message": "ProjectCreated",
+          "kind": "event"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "投稿者",
+          "message": "共有URLと閲覧トークン",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "プロジェクトが開ける状態になっている",
+        "作った人が持ち主として記録されている",
+        "共有の別が記録されている",
+        "そのプロジェクトを開くための閲覧トークンが発行されている",
+        "入っている共有アーティファクトは0件である",
+        "ProjectCreated が発行されている"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "投稿者が表示名と共有の別を示したとき、共有URLと閲覧トークンを返すこと",
+        "作った人を持ち主として記録すること",
+        "閲覧トークンを返すとき、それが一度しか示されないことを投稿者に伝えること",
+        "作った直後は、入っている共有アーティファクトが0件であること",
+        "表示名が空のときは作らないこと",
+        "招かれていない者が作ろうとしたとき、作らず拒むこと",
+        "共有の別を、作ったあとに変えられなくすること"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "NOT_INVITED",
+          "condition": [
+            "操作する者が招かれた投稿者でない"
+          ]
+        },
+        {
+          "code": "NAME_REQUIRED",
+          "condition": [
+            "表示名が空である"
+          ]
+        },
+        {
+          "code": "SCOPE_REQUIRED",
+          "condition": [
+            "共有の別が示されていない、または想定外の値である"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "操作する者は招かれた投稿者である。",
+      "scenarios": [
+        {
+          "name": "作ると共有URLと閲覧トークンが返る",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 作った時点で開ける状態になり、渡せるものが手に入ることを確かめる",
+          "gherkin": "Given 表示名と共有の別が示されている\nWhen プロジェクトを作る\nThen 共有URLと閲覧トークンが返る\nAnd 入っている共有アーティファクトは0件である\nAnd ProjectCreated が発行されている",
+          "covers": "投稿者が表示名と共有の別を示したとき、共有URLと閲覧トークンを返すこと"
+        },
+        {
+          "name": "作った人が持ち主になる",
+          "category": "正常系",
+          "viewpoint": "事前条件: 見せ方を変えられる人が、作った時点で1人に定まることを確かめる",
+          "gherkin": "Given 投稿者Xがプロジェクトを作る\nThen Xが持ち主として記録されている\nAnd Xは閲覧トークンの再発行と公開停止ができる",
+          "covers": "作った人を持ち主として記録すること"
+        },
+        {
+          "name": "表示名が空なら作らない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 渡された側が何のまとまりかを読めない状態を作らないことを確かめる",
+          "gherkin": "Given 表示名が空である\nWhen プロジェクトを作ろうとする\nThen NAME_REQUIRED として拒まれる\nAnd 閲覧トークンは発行されない",
+          "covers": "表示名が空のときは作らないこと"
+        },
+        {
+          "name": "招かれていない者は作れない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 閲覧トークンの発行が招かれた者に限られることを確かめる",
+          "gherkin": "Given 操作する者が招かれた投稿者でない\nWhen プロジェクトを作ろうとする\nThen NOT_INVITED として拒まれる",
+          "covers": "招かれていない者が作ろうとしたとき、作らず拒むこと"
+        },
+        {
+          "name": "共有の別はあとから変えられない",
+          "category": "境界値",
+          "viewpoint": "一貫性: 渡す相手を決めた前提が、渡したあとで崩れないことを確かめる",
+          "gherkin": "Given 個人として作られたプロジェクトがある\nAnd その閲覧トークンを相手へ渡している\nWhen 共有へ変えようとする\nThen 変えられない",
+          "covers": "共有の別を、作ったあとに変えられなくすること"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "閲覧トークンを返すとき、そのトークンはこの一度しか示されず、以後どの操作でも取り出せないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "プロジェクトが作られ、閲覧トークンが示されている。",
+      "scenarios": [
+        {
+          "name": "閲覧トークンは後から取り出せない",
+          "category": "境界値",
+          "viewpoint": "一貫性: 閲覧トークンが一度しか示されないことを確かめる。取り出せると、一覧を見られる人が渡した相手と同じ範囲を開けてしまう",
+          "gherkin": "Given プロジェクトの閲覧トークンが示されている\nWhen 一覧や記録からその閲覧トークンを取り出そうとする\nThen 閲覧トークンは得られない\nAnd 新しく発行する以外に手立てが無い",
+          "covers": "閲覧トークンを返すとき、そのトークンはこの一度しか示されず、以後どの操作でも取り出せないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-project"
+}

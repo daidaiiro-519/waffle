@@ -1,0 +1,237 @@
+{
+  "documentId": "uc-control-project-access",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "プロジェクトの見せ方を持ち主が変える：uc-control-project-access"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "プロジェクトの閲覧トークンを再発行したり、開けない状態にしたり、再び開けるようにする操作。渡した相手を絞り直したいときに使う。",
+        "これらは閲覧トークンを渡した相手全員に及ぶため、共有のプロジェクトでも持ち主と管理者だけが行える。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "ControlProjectAccess"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "まとめて渡した相手の範囲を、あとから絞り直す"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、一度渡したまとめの閲覧トークンを取り消せない。異動や契約終了で見せたくなくなっても、渡した相手は見続けられる。",
+        "共有のプロジェクトでも持ち主に限るのは、これらの操作が閲覧トークンを渡した相手全員に及ぶため。誰でも止められると、他の人が渡した相手まで巻き込んで見えなくなる。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "操作する者が、そのプロジェクトの持ち主であるか、管理者であること",
+        "対象のプロジェクトが存在すること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "プロジェクト",
+          "message": "reissueViewToken / suspend / resume",
+          "kind": "command"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "",
+          "message": "持ち主か管理者かを確かめる",
+          "kind": "self"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "",
+          "message": "閲覧トークンを差し替えるか、開ける状態を切り替える",
+          "kind": "self"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "投稿者",
+          "message": "新しい閲覧トークン、または切り替えた旨",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "再発行したときは、新しい閲覧トークンが発行され、それまでのものが使えなくなっている",
+        "公開停止したときは、そのプロジェクトの閲覧トークンでは何も開けなくなっている",
+        "再開したときは、開ける状態に戻り、閲覧トークンが新しくなっている",
+        "いずれの場合も、入っている共有アーティファクトは変わっていない",
+        "いずれの場合も、入っている共有アーティファクトはそれぞれの閲覧トークンで引き続き開ける"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "持ち主が再発行を求めたとき、新しい閲覧トークンを返し、それまでのもので開けなくすること",
+        "持ち主が公開停止を求めたとき、そのプロジェクトの閲覧トークンでは何も開けなくすること",
+        "公開停止しても、入っている共有アーティファクトをそれぞれの閲覧トークンで開けるままにすること",
+        "持ち主が再開を求めたとき、開ける状態に戻し、閲覧トークンを必ず新しくすること",
+        "管理者は、自分が作ったものでなくてもこれらを行えること",
+        "持ち主でも管理者でもない者が求めたとき、対象が見つからないものとして拒むこと",
+        "共有のプロジェクトであっても、持ち主でも管理者でもない者にはこれらを行わせないこと",
+        "いずれの場合も、入っている共有アーティファクトの顔ぶれを変えないこと"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "PROJECT_NOT_FOUND",
+          "condition": [
+            "対象のプロジェクトが存在しない",
+            "操作する者が持ち主でも管理者でもない"
+          ]
+        },
+        {
+          "code": "NOT_SUSPENDED",
+          "condition": [
+            "公開停止していないプロジェクトを再開しようとした"
+          ]
+        },
+        {
+          "code": "NOT_ACTIVE",
+          "condition": [
+            "公開停止しているプロジェクトを、再発行または公開停止しようとした"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "投稿者Xがプロジェクトを作り、共有アーティファクトAとBが入っている。閲覧トークンは相手へ渡してある。",
+      "scenarios": [
+        {
+          "name": "再発行すると渡した相手が開けなくなる",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 渡した範囲を絞り直す手段として働くことを確かめる",
+          "gherkin": "Given 相手がプロジェクトの閲覧トークンを持っている\nWhen Xが再発行を求める\nThen 新しい閲覧トークンが返る\nAnd 相手はそれまでの閲覧トークンで開けない\nAnd 入っている共有アーティファクトはAとBのままである",
+          "covers": "持ち主が再発行を求めたとき、新しい閲覧トークンを返し、それまでのもので開けなくすること",
+          "operation": "reissue"
+        },
+        {
+          "name": "公開停止しても中身は個別の閲覧トークンで開ける",
+          "category": "境界値",
+          "viewpoint": "一貫性: プロジェクトが見せ方の束ねであって入れ物ではないことを確かめる。束ねを解いても中身は消えない",
+          "gherkin": "Given 共有アーティファクトAの閲覧トークンを別の相手へ渡している\nWhen Xがプロジェクトを公開停止する\nThen プロジェクトの閲覧トークンでは何も開けない\nAnd Aの閲覧トークンを持つ相手はAを開ける",
+          "covers": "公開停止しても、入っている共有アーティファクトをそれぞれの閲覧トークンで開けるままにすること",
+          "operation": "suspend"
+        },
+        {
+          "name": "再開すると閲覧トークンは必ず新しくなる",
+          "category": "正常系",
+          "viewpoint": "状態遷移: 止めた意図が、再開によって失われないことを確かめる",
+          "gherkin": "Given プロジェクトが公開停止されている\nWhen Xが再開を求める\nThen 開ける状態に戻る\nAnd 新しい閲覧トークンが返る\nAnd 止める前の閲覧トークンでは開けない",
+          "covers": "持ち主が再開を求めたとき、開ける状態に戻し、閲覧トークンを必ず新しくすること",
+          "operation": "resume"
+        },
+        {
+          "name": "管理者は自分が作ったものでなくても扱える",
+          "category": "正常系",
+          "viewpoint": "事前条件: 持ち主が抜けたあとに、誰も止められないプロジェクトが残らないことを確かめる",
+          "gherkin": "Given プロジェクトの持ち主がXである\nWhen 管理者が公開停止を求める\nThen 公開停止される",
+          "covers": "管理者は、自分が作ったものでなくてもこれらを行えること",
+          "operation": "suspend"
+        },
+        {
+          "name": "共有でも持ち主以外は見せ方を変えられない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 出し入れができることと、見せ方を変えられることが別であると確かめる。誰でも止められると、他の人が渡した相手まで巻き込む",
+          "gherkin": "Given プロジェクトが共有であり、投稿者Yが自分の共有アーティファクトを入れている\nWhen Yが公開停止を求める\nThen PROJECT_NOT_FOUND として拒まれる\nAnd プロジェクトは開ける状態のままである",
+          "covers": "共有のプロジェクトであっても、持ち主でも管理者でもない者にはこれらを行わせないこと",
+          "operation": "suspend"
+        },
+        {
+          "name": "止まっていないものは再開できない",
+          "category": "異常系",
+          "viewpoint": "状態遷移: 再開が公開停止からの復帰に限られることを確かめる",
+          "gherkin": "Given プロジェクトが開ける状態である\nWhen Xが再開を求める\nThen NOT_SUSPENDED として拒まれる",
+          "covers": "持ち主が再開を求めたとき、開ける状態に戻し、閲覧トークンを必ず新しくすること",
+          "operation": "resume"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "見せ方を変えるどの操作も、入っている共有アーティファクトの中身・個別の閲覧トークン・集まったコメントを変えないこと",
+        "新しい閲覧トークンを返すとき、そのトークンはこの一度しか示されないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "プロジェクトに共有アーティファクトAが入っており、Aにはコメントが3件付いている。",
+      "scenarios": [
+        {
+          "name": "見せ方を変えても中身とコメントは動かない",
+          "category": "境界値",
+          "viewpoint": "一貫性: まとめの都合が、個々の共有アーティファクトへ波及しないことを確かめる",
+          "gherkin": "Given Aにコメントが3件付いている\nWhen プロジェクトの閲覧トークンを再発行する\nAnd プロジェクトを公開停止して再開する\nThen Aの中身は変わっていない\nAnd Aの個別の閲覧トークンは変わっていない\nAnd Aのコメントは3件のまま残っている",
+          "covers": "見せ方を変えるどの操作も、入っている共有アーティファクトの中身・個別の閲覧トークン・集まったコメントを変えないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": [
+        {
+          "operation": "reissue",
+          "summary": "新しい閲覧トークンを発行し、それまでのものを使えなくする。"
+        },
+        {
+          "operation": "suspend",
+          "summary": "このプロジェクトの閲覧トークンでは何も開けない状態にする。"
+        },
+        {
+          "operation": "resume",
+          "summary": "再び開ける状態に戻す。閲覧トークンは必ず新しくなる。"
+        }
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-project"
+}
