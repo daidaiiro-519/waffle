@@ -263,7 +263,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 4件／実装観点 3件</span></div>
         <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 2件／実装観点 5件</span></div>
         <div class="review-row"><span class="who">qa-advisor</span><span class="detail">設計観点 1件／実装観点 2件</span></div>
-        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>
       </div>
     </div>
   </section>
@@ -373,7 +373,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
           <div class="tab-panel" id="panel3">
             <div class="constraint-item">
               <span class="num">1</span>
-              <p>対応づけの確実さが言語で異なる。Pythonの文書コメントは関数の内側にあるため構造的に対応するが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応せず、間に別のコメントや空行が挟まると対応が変わりうる。4言語で実際に取得と対応づけが成立することは実機で確認済み</p>
+              <p>宣言行を書ける場所は言語で異なる。Pythonは関数の内側の1か所だけ、Java/TypeScript/JavaScriptはテストの直前に置く必要がある。規則は「直前の兄弟ノードがコメントならそれ」という一意のもので、曖昧ではない。4言語9通りの書き方を実際に解析して確かめ、describeの内側（二重の入れ子を含む）・行コメント・注釈を挟む形はいずれも取れることを確認した。取れないのはdescribeの外に書く形と、宣言行とテストの間に別のコメントや文を挟む形の2つで、どちらも孤立と未実装の両方で鳴る。テストを消してコメントを残す形でも繰り上がりは起きず、偽の合格を作る入力は構成できなかった</p>
             </div>
             <div class="constraint-item">
               <span class="num">2</span>
@@ -381,19 +381,23 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">3</span>
-              <p>多言語対応の壁はこの変更だけでは全部崩れない。ソース走査がPythonのファイル拡張子に固定されている点は別に残る。この変更で崩れるのは、ドメイン層の言語依存と、識別子規則への依存の2つ</p>
+              <p>多言語対応の壁はこの変更だけでは全部崩れない。ソース走査がPythonのファイル拡張子に固定されている点は別に残る。この変更で崩れるのは、ドメイン層が特定言語のパーサ実装（Python標準ライブラリのast）を直接importしている点と、識別子規則への依存の2つ。ASTという概念自体は言語共通であり、依存の問題は概念ではなく特定実装への直結にある</p>
             </div>
             <div class="constraint-item">
               <span class="num">4</span>
-              <p>テスト実行結果ファイルが報告する識別子の粒度（関数名か、パラメトライズを含むノードIDか）は、この実装の前に確定させる必要がある。ASCII名化はパラメトライズの誘因を上げるため、既存の潜在的な不一致が広がる方向に働く（qa-advisor）</p>
+              <p>テスト実行結果ファイルを生成しているものはリポジトリに存在しない（生成コード・テストランナーの設定・生成手順の文書のいずれも無く、specは「実行はOrchestrator側の責務」とだけ定める）。したがって識別子の粒度は未確定ではなく未定義であり、この実装で定める。定める形は、テスト実行環境が報告する識別子から、パスとパラメータの装飾を落としたテストの名前とする。装飾を落とすのは読む側（通過判定）の責務にし、生成側は素直にテストランナーの出力を渡せるようにする</p>
             </div>
             <div class="constraint-item">
               <span class="num">5</span>
-              <p>移行対象の件数に未確定がある。tech-lead-advisorの実測は非ASCII名477件、Orchestratorの実測は196件で食い違う。数え方（クラス内メソッド・パラメトライズを含むか）の違いと見られ、着手前に詰める</p>
+              <p>移行対象は477件ではなく246件。テスト関数はASTで数えて全484件、うち非ASCII名477件だが、突き合わせの射程にあるのは tests/acceptance の211件と tests/integration の35件のみ。unit 177件・contract 54件は現状そもそも対象外で、今回は動かさない（先の実測196件はgrepの取りこぼしによる誤りで、advisorの477件が正しかった）</p>
             </div>
             <div class="constraint-item">
               <span class="num">6</span>
               <p>この変更の動機を『ASCII化』に置くと半分しか達成しない。突き合わせの対象外にあるテストは日本語名のまま残る。動機は『非可逆な導出関係をキーにするのをやめる』という設計の是正に置く（tech-lead-advisor）</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">7</span>
+              <p>突き合わせの相手がいないシナリオが167件ある（今回の変更では減らない）。417件のシナリオのうち、規約が定める配置にテストファイルが存在するのは250件のみ。内訳は acceptanceScenarios 204/303、guaranteeScenarios 36/60、invariantScenarios 10/25、domainServiceScenarios 0/29。今回の変更は組が成立している250件の中での突き合わせ方を変えるもので、組そのものが無い167件には効かない。相手のいないシナリオを一覧する手段は現時点で存在せず、この測定はその場限りのスクリプトで行った。手段の新設は置き場所の判断を要するため、別のサイクルで扱う</p>
             </div></div>
           <div class="tab-panel" id="panel4">
             <div class="scope-item">
