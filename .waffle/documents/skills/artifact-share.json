@@ -166,7 +166,8 @@
         "公開を停止してもデータを即座に削除しない。取り出せる状態を保つ",
         "トークンの切り替えや公開の停止は、行き渡るまでに少し時間がかかる。「即時」とは案内せず、少し待って再読み込みするよう伝える",
         "コメントは必ず文字として描画する。書かれた内容をマークアップとして解釈しない",
-        "動作要件として aws CLI v2 と python3 が必要。それ以外の実行環境を前提にしない（導入の手間を増やさないため）",
+        "環境を用意する側の動作要件は aws CLI v2・python3・uv（または pip）と、PyPIへ到達できることまで。閲覧ゲートの署名に要る部品を取得して同梱するため、手元だけでは完結しない。閲覧する側・公開する側にはブラウザ以外の要件を課さない",
+        "上げ終えた直後に artifactshare smoke を1回通す。ここで見えるのは外から叩ける範囲だけで、ブラウザでだけ起きる壊れ方（隔離の指定で閲覧画面が不透明な出どころになる等）は見えない。外から叩く確認が全部通ったことを「通しで動いた」と言い切る根拠にしない（実際にこの取り違えをした）",
         "AWS環境の構築は会話の手順に含めない。事前に済ませておくものとして扱う"
       ]
     },
@@ -174,14 +175,6 @@
       "blockType": "References",
       "title": "参照",
       "items": [
-        {
-          "path": "references/knowledge/document-two-layer-structure.md",
-          "description": "文書を掴む層と確かめる層に分けて組み立てる考え方。テンプレートに内容を埋めるとき、どちらの層に何を書くかの判断に使う"
-        },
-        {
-          "path": "references/knowledge/spec-describes-behavior-not-implementation.md",
-          "description": "仕様として振る舞いを書き、実装手段を書かないための書き分け。機能仕様や設計判断を記述するときに使う"
-        },
         {
           "path": "references/contract.md",
           "description": "公開されるHTMLが満たすべき取り決め。独自テンプレートを作るとき、持ち込んだHTMLが公開できるか確かめるときに読む"
@@ -199,28 +192,36 @@
           "description": "コメント欄を備えた閲覧画面。公開時に、共有するHTMLを外側から囲う"
         },
         {
+          "path": "references/templates/project-page.html",
+          "description": "プロジェクトに入っている共有アーティファクトを一覧する閲覧画面。プロジェクトのトークンで開く"
+        },
+        {
+          "path": "references/templates/upload-app.html",
+          "description": "本人確認を通った投稿者が使う管理画面の骨格。一覧・公開・差し替え・再発行・停止・プロジェクト管理をここから行う"
+        },
+        {
           "path": "infra/cloudformation.yaml",
-          "description": "配信環境の構築テンプレート。閲覧用と認証用を分けた2つの配信経路、トークンの保管、公開の受け口を含む"
+          "description": "配信環境の構築テンプレート。閲覧用と管理用を分けた2つの配信経路、トークンの保管、管理APIを含む。隔離の指定を持ち込まれたHTMLだけに掛けるための応答見出しの分割もここにある"
         },
         {
           "path": "infra/cloudfront-function/viewer-token-gate.js",
-          "description": "閲覧者のトークンを照合し、公開停止の判定とコメント投稿の形状検査を行う"
+          "description": "閲覧者のトークンを照合し、公開停止の判定とコメント投稿の形状検査を行う閲覧ゲート。置けるコードは1万バイトまで"
         },
         {
-          "path": "lambda/publish_artifact/main.py",
-          "description": "公開の受け口。利用者の確認、HTMLの検査、識別子とトークンの発行、配置を行う"
+          "path": "infra/contract/token-records.json",
+          "description": "閲覧トークンを保管へ残す形の契約。管理API（Python）と閲覧ゲート（JavaScript）の唯一の共通点で、両者の検証がこの表を読む。ここがずれると、正しいトークンでも開けない状態が両側の検証を通り抜ける"
+        },
+        {
+          "path": "lambda/admin_api/",
+          "description": "管理APIの本体。本人確認・公開・一覧・差し替え・再発行・停止・引き継ぎ・プロジェクト管理・招待を担う。外部との接続を知るのは main.py だけで、他は渡されたものだけを使う"
         },
         {
           "path": "scripts/artifactshare.py",
-          "description": "一覧・公開・差し替え・再発行・取り出し・停止・プロジェクト管理を行うCLI"
+          "description": "環境を用意し手入れするCLI。init／update-function／smoke／status／invite／grant-admin／destroy だけを持ち、公開後の管理操作は持たない（入口を管理画面ひとつに保つため）"
         },
         {
-          "path": "scripts/console_server.py",
-          "description": "手元のブラウザから管理操作を行う画面"
-        },
-        {
-          "path": "scripts/mcp_server.py",
-          "description": "MCPクライアントから管理操作を呼び出すためのサーバー"
+          "path": "scripts/build_admin_app.py",
+          "description": "scripts/app/ の部品から管理画面を組み立てる。反映は artifactshare update-function が行う"
         }
       ]
     },

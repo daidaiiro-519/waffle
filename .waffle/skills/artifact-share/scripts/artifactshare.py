@@ -31,6 +31,12 @@ Cognitoでログインした管理画面から行う。
       手元に残してある（管理者が自分でさらに管理者を作れると、招かれた人の
       うち誰が最終的な責任を負うのかが辿れなくなるため）。
 
+  artifactshare smoke
+      上げた直後に、外から見える範囲を1周見る。閲覧ゲートが保管を引けて
+      いるか、隔離の指定が持ち込まれたHTMLだけに掛かっているか等を確かめ、
+      通らなかったものがあれば終了状態で知らせる。
+      ここから見えないもの（ブラウザでだけ起きる壊れ方）も併せて表示する。
+
   artifactshare status
       いまの環境の状態（URL・招かれている人）を表示する。
 
@@ -105,10 +111,11 @@ def init(stack: str, region: str | None) -> None:
     print("\n用意できました。")
     print(f"  管理画面  : https://{out.get('AdminDomain', '')}/")
     print(f"  閲覧の入口: https://{out.get('ViewerDomain', '')}/")
-    print("\n続けて次の2つを行ってください。")
+    print("\n続けて次の3つを行ってください。")
     print("  1. artifactshare update-function    閲覧ゲートと管理APIに中身を入れる")
     print("  2. artifactshare grant-admin <メール>  最初の管理者を決める")
-    print("\nこの2つを省くと、管理画面を開いてもログインできず、"
+    print("  3. artifactshare smoke              外から1周見て、上がったことを確かめる")
+    print("\n1と2を省くと、管理画面を開いてもログインできず、"
           "共有URLもすべて開けないままになります。")
 
 
@@ -376,6 +383,91 @@ def status(stack: str, region: str | None) -> None:
         print(f"  - {user['Username']}（{user['UserStatus']}）")
 
 
+# ── 上げた直後の自己点検 ────────────────────────────────
+
+def _probe(url: str, *, headers: dict | None = None, method: str = "GET") -> tuple:
+    """1回だけ叩いて、状態と応答の見出しを返す。"""
+    import urllib.error
+    import urllib.request
+
+    req = urllib.request.Request(url, method=method, headers=headers or {})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as res:
+            return res.status, dict(res.headers), res.read(4096)
+    except urllib.error.HTTPError as e:
+        return e.code, dict(e.headers), e.read(4096)
+
+
+def smoke(stack: str, region: str | None) -> int:
+    """上げた直後に、外から見える範囲を1周見る。
+
+    ここで見るのは「上げてみるまで分からない」ものだけに絞る。手元の検証で
+    分かることは手元で見ればよく、二重に持つと、どちらを直せばよいかが
+    分からなくなる。
+
+    見ないものも最後に並べる。ブラウザだけで起きる壊れ方（隔離の指定で
+    閲覧画面が不透明な出どころになる等）は、ここからは構造的に見えない。
+    実際にこの取り違えを起こしたとき、外から叩く確認はすべて通っていた。
+    「通しで動いた」と言い切る根拠にこれを使わないよう、明示して終わる。
+    """
+    out = _outputs(stack, region)
+    viewer, admin = out["ViewerDomain"], out.get("AdminDomain", "")
+    結果 = []
+
+    def 見る(名, 期待, 実際, 補足=""):
+        通った = 期待 == 実際
+        結果.append(通った)
+        印 = "OK  " if 通った else "NG  "
+        print(f"{印}{名}｜期待 {期待} / 実際 {実際}{('  ' + 補足) if 補足 else ''}")
+
+    print(f"■ 環境 {stack} を外から1周見る\n")
+
+    # 閲覧ゲートが本当に保管を引けているか。引けないと 503 になり、
+    # 正しいトークンを持つ人も含めて誰も開けない（実際に起きた）
+    状態, 見出し, _ = _probe(f"https://{viewer}/p/zzzzzzzz/",
+                             headers={"cookie": "__Host-as_a_zzzzzzzz=deadbeef.1"})
+    見る("閲覧ゲートが保管を引けている", True, 状態 != 503,
+         "503なら保管の結び付けが外れている" if 状態 == 503 else f"状態 {状態}")
+
+    # トークンが無ければ入れない
+    状態, _, _ = _probe(f"https://{viewer}/p/zzzzzzzz/")
+    見る("トークン無しでは開けない", 401, 状態)
+
+    # 隔離の指定は、持ち込まれたHTMLにだけ掛かる。閲覧画面にも掛けると
+    # 閲覧画面自身が不透明な出どころになり、コメントの読み書きが止まる
+    _, 見出し, _ = _probe(f"https://{viewer}/p/zzzzzzzz/content.html")
+    見る("持ち込まれたHTMLは隔離されている", True,
+         "sandbox" in 見出し.get("content-security-policy", ""))
+    _, 見出し, _ = _probe(f"https://{viewer}/p/zzzzzzzz/")
+    見る("閲覧画面は隔離されていない", False,
+         "sandbox" in 見出し.get("content-security-policy", ""))
+
+    if admin:
+        状態, _, _ = _probe(f"https://{admin}/")
+        見る("管理画面が開く", 200, 状態)
+        状態, _, _ = _probe(f"https://{admin}/admin/config.json")
+        見る("管理画面が繋ぎ先を読める", 200, 状態)
+        # 証明を持たない者が管理操作へ通らないこと
+        状態, _, _ = _probe(f"https://{admin}/api", method="POST")
+        見る("証明無しでは管理操作へ通らない", True, 状態 in (400, 401, 403),
+             f"状態 {状態}")
+
+    # 配る形が上限に収まっていること（超えると次の反映が丸ごと失敗する）
+    大きさ = len(_lean((HERE.parent / "infra" / "cloudfront-function"
+                        / "viewer-token-gate.js").read_text(encoding="utf-8")).encode("utf-8"))
+    見る("閲覧ゲートが上限に収まる", True, 大きさ <= GATE_LIMIT,
+         f"{大きさ} / {GATE_LIMIT} バイト")
+
+    落ちた = 結果.count(False)
+    print(f"\n{len(結果) - 落ちた} / {len(結果)} 件が通った")
+    print("\n■ ここからは見えないもの（ブラウザで1度は自分で通すこと）")
+    print("  - 本人確認を通って公開し、そのURLとトークンで実際に開けるか")
+    print("  - 開いた画面からコメントを書き込み、一覧に現れるか")
+    print("  - 隔離の指定でコメントの読み書きが止まっていないか")
+    print("    （外から叩く確認は隔離の指定を解釈しないため、ここでは通ってしまう）")
+    return 1 if 落ちた else 0
+
+
 # ── 入り口 ──────────────────────────────────────────────
 
 def main(argv: list[str]) -> int:
@@ -391,21 +483,24 @@ def main(argv: list[str]) -> int:
     sub.add_parser("destroy", help="環境を消す")
     sub.add_parser("update-function", help="手元のソースを反映する")
     sub.add_parser("status", help="環境の状態を表示する")
+    sub.add_parser("smoke", help="上げた直後に外から1周見る")
     sub.add_parser("invite", help="公開できる人を招く") \
        .add_argument("email", help="招く人のメールアドレス")
     sub.add_parser("grant-admin", help="その人を管理者にする") \
        .add_argument("email", help="管理者にする人のメールアドレス")
 
     args = parser.parse_args(argv)
-    {
+    # smoke だけは、通らなかったものがあれば終了状態で知らせる。
+    # 上げる手順の最後に置いて、気づかず次へ進めないようにするため
+    return {
         "init": lambda: init(args.stack, args.region),
         "destroy": lambda: destroy(args.stack, args.region),
         "update-function": lambda: update_function(args.stack, args.region),
         "status": lambda: status(args.stack, args.region),
+        "smoke": lambda: smoke(args.stack, args.region),
         "invite": lambda: invite(args.email, args.stack, args.region),
         "grant-admin": lambda: grant_admin(args.email, args.stack, args.region),
-    }[args.command]()
-    return 0
+    }[args.command]() or 0
 
 
 if __name__ == "__main__":
