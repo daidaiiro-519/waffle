@@ -1,0 +1,366 @@
+{
+  "documentId": "handoff-project-scope",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "プロジェクトの個人と共有の別を、どこでどう表すか：handoff-project-scope"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-create-project"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "共有の別は閲覧の可否ではなく、書き換えの可否である",
+          "consideration": "個人と共有の違いは『誰が出し入れできるか』だけで、閲覧トークンを持つ人から見える範囲は同じ。したがって閲覧の関門は共有の別を知る必要がなく、知らせてもならない。関門に持ち込むと、閲覧のたびに読む値が増えて費用と遅延が乗るうえ、閲覧の判定と書き換えの判定が混ざる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "持ち主は共有アーティファクトの投稿者と同じ形で持つ",
+          "consideration": "プロジェクトの持ち主も、共有アーティファクトのuploadedByも、指しているのは同じ『招かれた投稿者』である。同じ値の形で持てば、管理者かどうかの判定も引き継ぎの判定も同じ処理で書ける。別の形にすると、同じ問いに二通りの答え方が生まれる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "所属を2か所に持つことになるが、役割が違う",
+          "consideration": "プロジェクトの索引が持つ一覧は『何が入っているか』を人へ見せるためのもの、pp:{artifactId}は関門が『開けてよいか』を即座に判じるための投影である。同じ操作が両方を書くことで揃える。片方だけを直す経路を作らない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "共有の別を変える操作を作らない",
+          "consideration": "仕様で『作ったあと変わらない』と決めたため、変える操作を用意しないことがそのまま実装になる。索引に書く場所はあっても、書き換える入口を持たせない。あとから必要になったら、新しいプロジェクトを作って移す形になる。"
+        },
+        {
+          "advisor": "platform-advisor",
+          "viewpoint": "受け口が書ける場所を広げる必要がある",
+          "consideration": "いまの資源の側の取り決めは、受け口が書けるのをアーティファクト・索引・差し替えの区切りだけに絞っている。プロジェクトの索引と一覧ページはそこに含まれないため、明示的に加えないと書けない。加える範囲は接頭辞の単位に留め、閲覧者の反応へは引き続き書けないままにする。"
+        },
+        {
+          "advisor": "ux-advisor",
+          "viewpoint": "個人と共有の違いは、作るときに一度だけ尋ねる",
+          "consideration": "あとから変えられない選択なので、作る画面で意味とともに示す必要がある。『自分だけが入れる』『招かれた人なら誰でも入れられる』という結果の違いで書き、内部の呼び名を出さない。一覧では、共有のものにだけ印を出して区別できるようにする。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "プロジェクトの索引を projects/{projectId}.json に置く",
+          "consideration": "持ち主・共有の別・表示名・入っている共有アーティファクトの一覧・公開状態を持つ。共有アーティファクトの索引が meta/{artifactId}.json であるのと同じ形にし、受け口が同じやり方で読み書きできるようにする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "トークンの保管には共有の別を持ち込まない",
+          "consideration": "proj:{projectId} は関門が読む値で、閲覧トークンの記録（値・期限・世代）と DISABLED だけを持つ。共有アーティファクトの token:{artifactId} と同じ形にする。共有の別はここに置かない（関門が読む必要が無く、置くと閲覧のたびに読まれる）。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "判定は manage.py の1か所に置く",
+          "consideration": "『出し入れしてよいか』は、対象の共有アーティファクトの投稿者であることと、プロジェクトが共有であるか持ち主であることの2つで決まる。読み取りの補助（_read_project）にこの判定をまとめ、加える・外すの両方から同じ処理を通す。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "見せ方を変える操作は別のファイルに分ける",
+          "consideration": "作る・再発行・公開停止・再開は projects.py に置き、共有アーティファクトの出し入れ（manage.py）と分ける。持ち主の判定と投稿者の判定が別物であることが、ファイルの分かれ目として見えるようにする。"
+        },
+        {
+          "advisor": "platform-advisor",
+          "viewpoint": "一覧ページは雛形と中身を分ける",
+          "consideration": "proj/{projectId}/index.html はどのプロジェクトでも同じ雛形を置き、proj/{projectId}/index.json がそのプロジェクトの中身を持つ。所属が変わったら index.json だけ書き直す。雛形を直したときは全プロジェクトの index.html を置き直す（CLIの反映の手順に含める）。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "一覧の中身が古くならない経路を確かめる",
+          "consideration": "index.json は共有アーティファクトの表示名を含むため、所属が変わったときだけでなく、差し替えで表示名が変わったときにも書き直す必要がある。索引が持つ projects を辿って、そのアーティファクトが入っている全プロジェクトの index.json を書き直す。この経路を検証で押さえる。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "共有と個人で分岐する検証を、両方向で書く",
+          "consideration": "『共有なら他人も入れられる』と『個人なら他人は入れられない』の両方を書く。片方だけだと、判定が常に真または常に偽になっていても通ってしまう。他人の共有アーティファクトを入れられないことも、共有・個人の両方で確かめる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "拒み方を共有アーティファクトと揃える",
+          "consideration": "持ち主でも管理者でもない者からの見せ方の操作は、拒否ではなく PROJECT_NOT_FOUND として扱う。共有アーティファクトで ARTIFACT_NOT_FOUND に揃えたのと同じ理由で、そこに何かがあること自体を読み取らせない。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "共有の別はあとから変えられない。変える操作を持たないことで守る。必要になった場合は、新しいプロジェクトを作って入れ直す",
+        "プロジェクトは消せない。公開停止までとし、削除の権限は受け口に与えない（共有アーティファクトと同じ）",
+        "一覧ページの中身は、所属が変わったときと表示名が変わったときに書き直す。それ以外（コメントの増減など）は反映されない。件数を載せないのはこのため",
+        "所属は索引と関門用の投影の2か所に持つ。同じ操作が両方を書くことで揃えるため、片方だけを書く経路を作らない",
+        "閲覧の関門は一切変更しない。共有の別は閲覧の可否に影響しないため、いま動いている検証14件がそのまま通ることが確かめになる"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "nodes": [
+            {
+              "id": "app",
+              "title": "管理画面",
+              "sub": "作る・見せ方を変える・出し入れ",
+              "status": "existing"
+            },
+            {
+              "id": "cli",
+              "title": "手元のCLI",
+              "sub": "雛形の置き直しのみ",
+              "status": "existing"
+            }
+          ],
+          "description": "人が触る面。作る・出し入れ・見せ方を変えるはすべて管理画面から行い、CLIは一覧ページの雛形を置き直すときだけ関わる。"
+        },
+        {
+          "label": "受け口",
+          "nodes": [
+            {
+              "id": "main",
+              "title": "振り分け",
+              "sub": "main.py",
+              "status": "existing"
+            }
+          ],
+          "description": "証明を確かめ、誰であるか（と管理者かどうか）を決めてから、操作ごとの処理へ渡す。"
+        },
+        {
+          "label": "中核",
+          "nodes": [
+            {
+              "id": "projects",
+              "title": "プロジェクト",
+              "sub": "projects.py／作る・再発行・停止・再開",
+              "status": "new"
+            },
+            {
+              "id": "manage",
+              "title": "出し入れ",
+              "sub": "manage.py／加える・外す",
+              "status": "existing"
+            }
+          ],
+          "description": "持ち主の判定は projects.py、共有の別と投稿者の判定は manage.py が持つ。判定が別物であることを、ファイルの分かれ目として表す。"
+        },
+        {
+          "label": "保管",
+          "nodes": [
+            {
+              "id": "index",
+              "title": "プロジェクトの索引",
+              "sub": "projects/{projectId}.json",
+              "status": "new"
+            },
+            {
+              "id": "page",
+              "title": "一覧ページ",
+              "sub": "proj/{projectId}/index.html ＋ index.json",
+              "status": "new"
+            },
+            {
+              "id": "keys",
+              "title": "トークンと所属",
+              "sub": "proj:{projectId}／pp:{artifactId}",
+              "status": "existing"
+            }
+          ],
+          "description": "索引は人へ見せるための正、トークンの保管は関門が即座に判じるための投影。共有の別は索引だけが持ち、トークンの保管には置かない。"
+        },
+        {
+          "label": "閲覧",
+          "nodes": [
+            {
+              "id": "gate",
+              "title": "閲覧の関門",
+              "sub": "変更しない",
+              "status": "existing"
+            }
+          ],
+          "description": "閲覧トークンと所属だけを見て開けるかを判じる。共有の別は知らない。閲覧する側から個人と共有の違いは見えない。"
+        }
+      ],
+      "relationships": [
+        {
+          "from": "manage",
+          "to": "index",
+          "kind": "dependency",
+          "label": "共有の別と持ち主を読む"
+        },
+        {
+          "from": "projects",
+          "to": "keys",
+          "kind": "dependency",
+          "label": "閲覧トークンを書く"
+        },
+        {
+          "from": "keys",
+          "to": "gate",
+          "kind": "dependency",
+          "label": "関門はここだけを読む"
+        },
+        {
+          "from": "index",
+          "to": "page",
+          "kind": "split",
+          "label": "見せるための写しを書き出す"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "作る: {\"action\":\"create-project\",\"displayName\":\"検索基盤リニューアル\",\"scope\":\"SHARED\"} → {\"projectId\":\"...\",\"url\":\"https://{閲覧の入口}/proj/{projectId}/\",\"token\":\"...\",\"tokenShownOnce\":true}",
+        "加える: {\"action\":\"assign\",\"artifactId\":\"k3f9x2\",\"projectId\":\"p7k2xq\"} → 共有なら通る。個人で持ち主でなければ PROJECT_NOT_FOUND",
+        "見せ方を変える: {\"action\":\"reissue-project\",\"projectId\":\"p7k2xq\"} → 持ち主か管理者なら新しい閲覧トークン。それ以外は PROJECT_NOT_FOUND",
+        "一覧: {\"action\":\"projects\"} → 自分が持ち主のものと、共有のものが並ぶ。管理者には全部が並ぶ"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "プロジェクトを個人と共有に分ける決定を、どの保管にどう表し、どこで判定するかを引き継ぐ。閲覧する側からは違いが見えず、判定は管理の受け口ひとつに閉じる。この引き継ぎが担うユースケースは uc-create-project / uc-control-project-access と、共有の別の判定を足す uc-assign-to-project の改訂。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/projects.py",
+          "reason": "作る・再発行・公開停止・再開と、一覧ページの書き出しを新しく置く"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/manage.py",
+          "reason": "加える・外すに、共有の別と持ち主の判定を足す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/main.py",
+          "reason": "新しい操作の振り分けと、プロジェクトの索引への接続を足す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/test_projects.py",
+          "reason": "作る・見せ方を変える・共有と個人の分岐を確かめる"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/test_manage.py",
+          "reason": "加える・外すの判定が共有の別で変わることを確かめる"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/infra/cloudformation.yaml",
+          "reason": "受け口が projects/ と proj/ へ書けるよう、資源の側の取り決めと実行の権限を広げる"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/references/templates/project-page.html",
+          "reason": "どのプロジェクトでも同じ雛形として置く一覧ページ"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/scripts/app/app.js",
+          "reason": "プロジェクトの面を、作り物ではなく受け口の応答で描く"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/scripts/artifactshare.py",
+          "reason": "雛形を直したときに全プロジェクトへ置き直す手順を足す"
+        },
+        {
+          "path": "docs/artifact-share/ui/project.html",
+          "reason": "個人と共有の選択と、共有の印をモックへ足す"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor",
+        "platform-advisor",
+        "qa-advisor",
+        "ux-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "共有の別を関門に持ち込まないと決め、トークンの保管にも置かないことを実装観点へ落とした"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "resolved",
+          "note": "持ち主は投稿者と同じ値の形で持つ。管理者の判定も同じ処理を通る"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "所属を2か所に持つことは制約として記録した。同じ操作が両方を書くことで揃える"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "変える操作を持たないことで守る、と制約へ記録した"
+        },
+        {
+          "advisor": "platform-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "資源の側の取り決めをどこまで広げるかは、書く接頭辞が確定してから決める。閲覧者の反応へ書けないことは維持する"
+        },
+        {
+          "advisor": "ux-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "open",
+          "note": "作る画面の文言と、一覧での共有の印はモックで確認してから確定する"
+        },
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "open",
+          "note": "表示名が変わったときの書き直しの経路は、検証を書いてから確定する"
+        },
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 6,
+          "resolutionStatus": "resolved",
+          "note": "共有と個人の両方向、他人のものを入れられないことの2件を、着手前の見込みに含めた"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": []
+}

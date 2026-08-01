@@ -53,6 +53,11 @@
           "rule": "スキーマ構造を変えず、documentの表現レベルだけを直す修正は、必ずx-prompt-write/x-prompt-query側を先に直してからfillする。documentの値を直接書き換えて終わらせない",
           "why": "document側だけを直接直すと、その表現不備を生んだx-promptのガイダンスが実際に機能したかを一切検証しないまま個別修正で終わってしまう。スキーマ構造の変更を伴わない表現レベルの不備は、その定義上x-promptの記述不足のシグナルであり、documentを直接直すとこのシグナルを握りつぶし、同じ不備が他のdocumentやfill先で再発する",
           "howToApply": "waffle patch-schemaでx-prompt-write/x-prompt-queryを先に修正し、その上でwaffle scaffold fillでdocument側へ反映する。document側をfillだけで直接書き換える修正はしない"
+        },
+        {
+          "rule": "specを書き終えたら、実装へ移る前に必ずHandoffを作り、ユーザーへ提示して合意を得る。ユーザーから求められて初めて出すのではなく、Orchestrator自身から提案する",
+          "why": "specは『何が正しいか』しか運ばず、『なぜその形にしたか』『どこに何を置くか』は運ばない。specを書き終えた直後は成果物が積み上がって手が動く状態になり、そのまま実装へ入りやすい。実際にこのセッションで3回続けて飛ばし、そのたびにユーザーから指摘された。指摘されてから出すのでは、毎回ユーザーが工程の番人をすることになる",
+          "howToApply": "`waffle scaffold create --schemaRef HandoffSchema/v2` で作り、`waffle render-handoff-template` でHTMLにしてユーザーへ提示する。descriptionにはこのHandoffが担うユースケースの識別子を必ず並べる（Handoffが指すユースケースをフックが突き合わせるため、境界づけられたコンテキストを指すだけでは、以後どれだけ仕様を足しても検知されない）。未解決の観点はreviewStatusにopenのまま残してよい——全部を解いてから出すのではなく、決まっていないことが見える状態で出す"
         }
       ]
     },

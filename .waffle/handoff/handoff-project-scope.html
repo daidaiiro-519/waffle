@@ -1,0 +1,445 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>プロジェクトの個人と共有の別を、どこでどう表すか：handoff-project-scope</title>
+<meta name="id" content="handoff-project-scope">
+<meta name="type" content="Handoff">
+<meta name="title" content="プロジェクトの個人と共有の別を、どこでどう表すか：handoff-project-scope">
+<meta name="description" content="プロジェクトを個人と共有に分ける決定を、どの保管にどう表し、どこで判定するかを引き継ぐ。閲覧する側からは違いが見えず、判定は管理の受け口ひとつに閉じる。この引き継ぎが担うユースケースは uc-create-project / uc-control-project-access と、共有の別の判定を足す uc-assign-to-project の改訂。">
+<meta name="tags" content="">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>プロジェクトの個人と共有の別を、どこでどう表すか：handoff-project-scope</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>uc-create-project</dd>
+      <dt>documentId</dt><dd>handoff-project-scope</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 526" width="100%" height="526">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">受け口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">中核</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">保管</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="466.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">閲覧</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-split" d="M0,434.0 H700"/>
+        <path class="flow-arrow" d="M242.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L190.0,352.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L606.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L190.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L606.0,352.0"/>
+        <path class="flow-arrow" d="M190.0,402.0 L398.0,466.0"/>
+        <path class="flow-arrow" d="M398.0,402.0 L398.0,466.0"/>
+        <path class="flow-arrow" d="M606.0,402.0 L398.0,466.0"/>
+        <path class="flow-arrow dep" d="M554.0,288.0 L190.0,352.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="372.0" y="314.0">共有の別と持ち主を読む</text>
+        <path class="flow-arrow dep" d="M242.0,288.0 L606.0,352.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="424.0" y="314.0">閲覧トークンを書く</text>
+        <path class="flow-arrow dep" d="M606.0,402.0 L398.0,466.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="502.0" y="428.0">関門はここだけを読む</text>
+        <path class="flow-split" d="M284.0,377.0 L304.0,377.0"/><text class="flow-caption-svg" x="294.0" y="371.0">見せるための写しを書き出す</text>
+        
+        <g class="flow-box " transform="translate(96.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">管理画面</div>
+              <div class="sub">作る・見せ方を変える・出し入れ</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">手元のCLI</div>
+              <div class="sub">雛形の置き直しのみ</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,124.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">振り分け</div>
+              <div class="sub">main.py</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">プロジェクト</div>
+              <div class="sub">projects.py／作る・再発行・停止・再開</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">出し入れ</div>
+              <div class="sub">manage.py／加える・外す</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">プロジェクトの索引</div>
+              <div class="sub">projects/{projectId}.json</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(304.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">一覧ページ</div>
+              <div class="sub">proj/{projectId}/index.html ＋ index.json</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+        <g class="flow-box " transform="translate(512.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">トークンと所属</div>
+              <div class="sub">proj:{projectId}／pp:{artifactId}</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">8</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,466.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">閲覧の関門</div>
+              <div class="sub">変更しない</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">9</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 人が触る面。作る・出し入れ・見せ方を変えるはすべて管理画面から行い、CLIは一覧ページの雛形を置き直すときだけ関わる。</p></li><li><p><strong>受け口</strong>: 証明を確かめ、誰であるか（と管理者かどうか）を決めてから、操作ごとの処理へ渡す。</p></li><li><p><strong>中核</strong>: 持ち主の判定は projects.py、共有の別と投稿者の判定は manage.py が持つ。判定が別物であることを、ファイルの分かれ目として表す。</p></li><li><p><strong>保管</strong>: 索引は人へ見せるための正、トークンの保管は関門が即座に判じるための投影。共有の別は索引だけが持ち、トークンの保管には置かない。</p></li><li><p><strong>閲覧</strong>: 閲覧トークンと所属だけを見て開けるかを判じる。共有の別は知らない。閲覧する側から個人と共有の違いは見えない。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>作る: {&quot;action&quot;:&quot;create-project&quot;,&quot;displayName&quot;:&quot;検索基盤リニューアル&quot;,&quot;scope&quot;:&quot;SHARED&quot;} → {&quot;projectId&quot;:&quot;...&quot;,&quot;url&quot;:&quot;https://{閲覧の入口}/proj/{projectId}/&quot;,&quot;token&quot;:&quot;...&quot;,&quot;tokenShownOnce&quot;:true}</p></li><li><p>加える: {&quot;action&quot;:&quot;assign&quot;,&quot;artifactId&quot;:&quot;k3f9x2&quot;,&quot;projectId&quot;:&quot;p7k2xq&quot;} → 共有なら通る。個人で持ち主でなければ PROJECT_NOT_FOUND</p></li><li><p>見せ方を変える: {&quot;action&quot;:&quot;reissue-project&quot;,&quot;projectId&quot;:&quot;p7k2xq&quot;} → 持ち主か管理者なら新しい閲覧トークン。それ以外は PROJECT_NOT_FOUND</p></li><li><p>一覧: {&quot;action&quot;:&quot;projects&quot;} → 自分が持ち主のものと、共有のものが並ぶ。管理者には全部が並ぶ</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 2件／実装観点 1件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 2件／実装観点 4件</span></div>
+        <div class="review-row"><span class="who">platform-advisor</span><span class="detail">設計観点 1件／実装観点 1件</span></div>
+        <div class="review-row"><span class="who">ux-advisor</span><span class="detail">設計観点 1件</span></div>
+        <div class="review-row"><span class="who">qa-advisor</span><span class="detail">実装観点 2件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">3件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">共有の別は閲覧の可否ではなく、書き換えの可否である</div>
+              <div class="entry-consideration">個人と共有の違いは『誰が出し入れできるか』だけで、閲覧トークンを持つ人から見える範囲は同じ。したがって閲覧の関門は共有の別を知る必要がなく、知らせてもならない。関門に持ち込むと、閲覧のたびに読む値が増えて費用と遅延が乗るうえ、閲覧の判定と書き換えの判定が混ざる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">持ち主は共有アーティファクトの投稿者と同じ形で持つ</div>
+              <div class="entry-consideration">プロジェクトの持ち主も、共有アーティファクトのuploadedByも、指しているのは同じ『招かれた投稿者』である。同じ値の形で持てば、管理者かどうかの判定も引き継ぎの判定も同じ処理で書ける。別の形にすると、同じ問いに二通りの答え方が生まれる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">所属を2か所に持つことになるが、役割が違う</div>
+              <div class="entry-consideration">プロジェクトの索引が持つ一覧は『何が入っているか』を人へ見せるためのもの、pp:{artifactId}は関門が『開けてよいか』を即座に判じるための投影である。同じ操作が両方を書くことで揃える。片方だけを直す経路を作らない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">共有の別を変える操作を作らない</div>
+              <div class="entry-consideration">仕様で『作ったあと変わらない』と決めたため、変える操作を用意しないことがそのまま実装になる。索引に書く場所はあっても、書き換える入口を持たせない。あとから必要になったら、新しいプロジェクトを作って移す形になる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">受け口が書ける場所を広げる必要がある</div>
+              <div class="entry-consideration">いまの資源の側の取り決めは、受け口が書けるのをアーティファクト・索引・差し替えの区切りだけに絞っている。プロジェクトの索引と一覧ページはそこに含まれないため、明示的に加えないと書けない。加える範囲は接頭辞の単位に留め、閲覧者の反応へは引き続き書けないままにする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ux-advisor</span></div>
+              <div class="entry-viewpoint">個人と共有の違いは、作るときに一度だけ尋ねる</div>
+              <div class="entry-consideration">あとから変えられない選択なので、作る画面で意味とともに示す必要がある。『自分だけが入れる』『招かれた人なら誰でも入れられる』という結果の違いで書き、内部の呼び名を出さない。一覧では、共有のものにだけ印を出して区別できるようにする。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">プロジェクトの索引を projects/{projectId}.json に置く</div>
+              <div class="entry-consideration">持ち主・共有の別・表示名・入っている共有アーティファクトの一覧・公開状態を持つ。共有アーティファクトの索引が meta/{artifactId}.json であるのと同じ形にし、受け口が同じやり方で読み書きできるようにする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">トークンの保管には共有の別を持ち込まない</div>
+              <div class="entry-consideration">proj:{projectId} は関門が読む値で、閲覧トークンの記録（値・期限・世代）と DISABLED だけを持つ。共有アーティファクトの token:{artifactId} と同じ形にする。共有の別はここに置かない（関門が読む必要が無く、置くと閲覧のたびに読まれる）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">判定は manage.py の1か所に置く</div>
+              <div class="entry-consideration">『出し入れしてよいか』は、対象の共有アーティファクトの投稿者であることと、プロジェクトが共有であるか持ち主であることの2つで決まる。読み取りの補助（_read_project）にこの判定をまとめ、加える・外すの両方から同じ処理を通す。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">見せ方を変える操作は別のファイルに分ける</div>
+              <div class="entry-consideration">作る・再発行・公開停止・再開は projects.py に置き、共有アーティファクトの出し入れ（manage.py）と分ける。持ち主の判定と投稿者の判定が別物であることが、ファイルの分かれ目として見えるようにする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">platform-advisor</span></div>
+              <div class="entry-viewpoint">一覧ページは雛形と中身を分ける</div>
+              <div class="entry-consideration">proj/{projectId}/index.html はどのプロジェクトでも同じ雛形を置き、proj/{projectId}/index.json がそのプロジェクトの中身を持つ。所属が変わったら index.json だけ書き直す。雛形を直したときは全プロジェクトの index.html を置き直す（CLIの反映の手順に含める）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">qa-advisor</span></div>
+              <div class="entry-viewpoint">一覧の中身が古くならない経路を確かめる</div>
+              <div class="entry-consideration">index.json は共有アーティファクトの表示名を含むため、所属が変わったときだけでなく、差し替えで表示名が変わったときにも書き直す必要がある。索引が持つ projects を辿って、そのアーティファクトが入っている全プロジェクトの index.json を書き直す。この経路を検証で押さえる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">qa-advisor</span></div>
+              <div class="entry-viewpoint">共有と個人で分岐する検証を、両方向で書く</div>
+              <div class="entry-consideration">『共有なら他人も入れられる』と『個人なら他人は入れられない』の両方を書く。片方だけだと、判定が常に真または常に偽になっていても通ってしまう。他人の共有アーティファクトを入れられないことも、共有・個人の両方で確かめる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">拒み方を共有アーティファクトと揃える</div>
+              <div class="entry-consideration">持ち主でも管理者でもない者からの見せ方の操作は、拒否ではなく PROJECT_NOT_FOUND として扱う。共有アーティファクトで ARTIFACT_NOT_FOUND に揃えたのと同じ理由で、そこに何かがあること自体を読み取らせない。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>共有の別はあとから変えられない。変える操作を持たないことで守る。必要になった場合は、新しいプロジェクトを作って入れ直す</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>プロジェクトは消せない。公開停止までとし、削除の権限は受け口に与えない（共有アーティファクトと同じ）</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>一覧ページの中身は、所属が変わったときと表示名が変わったときに書き直す。それ以外（コメントの増減など）は反映されない。件数を載せないのはこのため</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>所属は索引と関門用の投影の2か所に持つ。同じ操作が両方を書くことで揃えるため、片方だけを書く経路を作らない</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">5</span>
+              <p>閲覧の関門は一切変更しない。共有の別は閲覧の可否に影響しないため、いま動いている検証14件がそのまま通ることが確かめになる</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/projects.py</div>
+              <div class="reason">作る・再発行・公開停止・再開と、一覧ページの書き出しを新しく置く</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/manage.py</div>
+              <div class="reason">加える・外すに、共有の別と持ち主の判定を足す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/main.py</div>
+              <div class="reason">新しい操作の振り分けと、プロジェクトの索引への接続を足す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/tests/test_projects.py</div>
+              <div class="reason">作る・見せ方を変える・共有と個人の分岐を確かめる</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/tests/test_manage.py</div>
+              <div class="reason">加える・外すの判定が共有の別で変わることを確かめる</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/infra/cloudformation.yaml</div>
+              <div class="reason">受け口が projects/ と proj/ へ書けるよう、資源の側の取り決めと実行の権限を広げる</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/references/templates/project-page.html</div>
+              <div class="reason">どのプロジェクトでも同じ雛形として置く一覧ページ</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/scripts/app/app.js</div>
+              <div class="reason">プロジェクトの面を、作り物ではなく受け口の応答で描く</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/scripts/artifactshare.py</div>
+              <div class="reason">雛形を直したときに全プロジェクトへ置き直す手順を足す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">docs/artifact-share/ui/project.html</div>
+              <div class="reason">個人と共有の選択と、共有の印をモックへ足す</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
