@@ -27,7 +27,7 @@ def teardown_function():
     Path(_TEST_DOC_PATH).unlink(missing_ok=True)
 
 
-def test_存在しないパスはINVALID_PATH():
+def test_missing_path_is_invalid_path():
     """
     Scenario: 存在しないパスはINVALID_PATH
     Given 実在しない対象パス
@@ -39,7 +39,7 @@ def test_存在しないパスはINVALID_PATH():
     assert result.details[0] == "INVALID_PATH"
 
 
-def test_解決できないschemaRefはINVALID_SCHEMA_REF():
+def test_unresolvable_schema_ref():
     """
     Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
     Given 解決できないschemaRef
@@ -54,7 +54,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
     assert result.details[0] == "INVALID_SCHEMA_REF"
 
 
-def test_既存documentへの再createはvaluesを破壊しない():
+def test_recreate_preserves_existing_values():
     """
     Scenario: 既存documentへの再createはvaluesを破壊しない
     Given create済みかつfillで値を書き込み済みのdocumentId
@@ -83,7 +83,7 @@ def test_既存documentへの再createはvaluesを破壊しない():
     assert doc["content"]["purpose"]["text"] == "ドメインを分析する"
 
 
-def test_clear_fieldの複数回実行はべき等である():
+def test_clear_field_is_idempotent():
     """
     Scenario: clear_fieldの複数回実行はべき等である
     Given 同一のclear_field操作（必須ではないフィールド）

@@ -7,7 +7,7 @@ def _engine() -> CheckQueryPrecedesArrayFill:
     return CheckQueryPrecedesArrayFill()
 
 
-def test_配列値を含むfillで先行queryが無い場合は拒否される():
+def test_array_fill_without_preceding_query_is_denied():
     """
     Scenario: 配列値を含むfillで先行queryが無い場合は拒否される
     Given targetPathが"X.json"であり、hasArrayValueがtrueである
@@ -21,7 +21,7 @@ def test_配列値を含むfillで先行queryが無い場合は拒否される()
     assert result.value["reason"]
 
 
-def test_配列値を含むfillで先行queryがある場合は許可される():
+def test_array_fill_with_preceding_query_is_allowed():
     """
     Scenario: 配列値を含むfillで先行queryがある場合は許可される
     Given targetPathが"X.json"であり、hasArrayValueがtrueである
@@ -34,7 +34,7 @@ def test_配列値を含むfillで先行queryがある場合は許可される()
     assert result.value["allowed"] is True
 
 
-def test_配列値を含まないfillは先行queryの有無に関わらず許可される():
+def test_non_array_fill_is_always_allowed():
     """
     Scenario: 配列値を含まないfillは先行queryの有無に関わらず許可される
     Given hasArrayValueがfalseである

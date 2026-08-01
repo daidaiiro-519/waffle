@@ -23,7 +23,7 @@ def _engine() -> InitCodingPreset:
     return InitCodingPreset(FsDocumentRepository(), PackageCodingPresetRepository())
 
 
-def test_プリセットから4documentを一括生成する():
+def test_creates_four_documents_from_preset():
     """
     Scenario: プリセットから4documentを一括生成する
     Given python-hexagonalプリセット
@@ -43,7 +43,7 @@ def test_プリセットから4documentを一括生成する():
         assert doc["documentId"] in doc["content"]["title"]["title"]
 
 
-def test_タイトルにプロダクト固有のdocumentIdが付与される():
+def test_title_carries_product_specific_document_id():
     """
     Scenario: タイトルにプロダクト固有のdocumentIdが付与される
     Given python-hexagonalプリセット
@@ -57,7 +57,7 @@ def test_タイトルにプロダクト固有のdocumentIdが付与される():
     assert doc["content"]["title"]["title"] == f"Python/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-{_PRODUCT}"
 
 
-def test_既に存在するdocumentは上書きせずskipする():
+def test_existing_document_is_skipped_not_overwritten():
     """
     Scenario: 既に存在するdocumentは上書きせずskipする
     Given 既にinit済みの4document
@@ -73,7 +73,7 @@ def test_既に存在するdocumentは上書きせずskipする():
     assert sorted(second.value["skipped"]) == sorted(str(p) for p in _PATHS)
 
 
-def test_存在しないプリセット名はPRESET_NOT_FOUNDを返す():
+def test_unknown_preset_name_is_rejected():
     """
     Scenario: 存在しないプリセット名はPRESET_NOT_FOUNDを返す
     Given 存在しないプリセット名

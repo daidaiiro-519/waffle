@@ -51,7 +51,7 @@ def _engine() -> RenderHandoffTemplate:
     return RenderHandoffTemplate(FsDocumentRepository())
 
 
-def test_completionImageを含むHandoffを描画する(tmp_path):
+def test_renders_handoff_with_completion_image(tmp_path):
     """
     Scenario: completionImageを含むHandoffを描画する
     Given completionImage・designViewpoints・implementationViewpoints・constraints・title・specRefを持つ検証済みのHandoff
@@ -70,7 +70,7 @@ def test_completionImageを含むHandoffを描画する(tmp_path):
     assert "制約1" in content
 
 
-def test_HandoffSchemaの新しいバージョンも描画できる(tmp_path):
+def test_renders_newer_handoff_schema_version(tmp_path):
     """
     Scenario: HandoffSchemaの新しいバージョンも描画できる
     Given schemaRefがHandoffSchema/v2のHandoff
@@ -88,7 +88,7 @@ def test_HandoffSchemaの新しいバージョンも描画できる(tmp_path):
     assert isinstance(result, Ok), result
 
 
-def test_HandoffSchema以外を描画しようとする(tmp_path):
+def test_non_handoff_schema_is_rejected(tmp_path):
     """
     Scenario: HandoffSchema以外を描画しようとする
     Given schemaRefがHandoffSchema以外のDocument
@@ -103,7 +103,7 @@ def test_HandoffSchema以外を描画しようとする(tmp_path):
     assert result.details == ["WRONG_SCHEMA_REF"]
 
 
-def test_completionImageが無いHandoffを描画しようとする(tmp_path):
+def test_handoff_without_completion_image_is_rejected(tmp_path):
     """
     Scenario: completionImageが無いHandoffを描画しようとする
     Given completionImageブロックを持たないHandoff
@@ -118,7 +118,7 @@ def test_completionImageが無いHandoffを描画しようとする(tmp_path):
     assert result.details == ["MISSING_COMPLETION_IMAGE"]
 
 
-def test_advisor名と件数のペアがレビュー状況に出力される(tmp_path):
+def test_review_status_lists_advisor_and_count(tmp_path):
     """
     Scenario: advisor名と件数のペアがレビュー状況に出力される
     Given designViewpoints/implementationViewpointsが与えられたHandoff
@@ -133,7 +133,7 @@ def test_advisor名と件数のペアがレビュー状況に出力される(tmp
     assert "tech-lead-advisor" in content
 
 
-def test_expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される(tmp_path):
+def test_expected_scope_appears_in_its_tab(tmp_path):
     """
     Scenario: expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される
     Given expectedScopeブロック（path/reasonの配列）を持つHandoff
@@ -155,7 +155,7 @@ def test_expectedScopeを含むHandoffを描画すると対象範囲の見込み
     assert "分岐ロジックの拡張箇所" in content
 
 
-def test_expectedScopeが無いHandoffも描画できる(tmp_path):
+def test_renders_handoff_without_expected_scope(tmp_path):
     """
     Scenario: expectedScopeが無いHandoffも描画できる
     Given expectedScopeブロックを持たない（任意ブロックのため省略可能な）Handoff
@@ -171,7 +171,7 @@ def test_expectedScopeが無いHandoffも描画できる(tmp_path):
     assert "記録なし" in content
 
 
-def test_reviewStatusの値をそのまま表示し新たな判定を行わない(tmp_path):
+def test_review_status_is_shown_as_recorded(tmp_path):
     """
     Scenario: reviewStatusの値をそのまま表示し新たな判定を行わない
     Given requiredAdvisors・findings（resolutionStatusを含む）・completionImageConfirmedByを持つ検証済みのHandoff
@@ -199,7 +199,7 @@ def test_reviewStatusの値をそのまま表示し新たな判定を行わな�
     assert "daidaiiro" in content
 
 
-def test_reviewStatusが無いHandoffも描画できる(tmp_path):
+def test_renders_handoff_without_review_status(tmp_path):
     """
     Scenario: reviewStatusが無いHandoffも描画できる
     Given reviewStatusブロックを持たない（任意ブロックのため省略可能な）Handoff
@@ -215,7 +215,7 @@ def test_reviewStatusが無いHandoffも描画できる(tmp_path):
     assert "0件" in content
 
 
-def test_契約準拠のmetaタグが出力される(tmp_path):
+def test_meta_tags_follow_the_contract(tmp_path):
     """
     Scenario: 契約準拠のmetaタグが出力される
     Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff

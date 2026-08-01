@@ -10,7 +10,7 @@ def _engine() -> CheckSpecIntegrity:
     return CheckSpecIntegrity(FsDocumentRepository())
 
 
-def test_存在しないbc_jsonはINVALID_PATH():
+def test_missing_bc_json_is_invalid_path():
     """
     Scenario: 存在しないbc.jsonはINVALID_PATH
     When 存在しないbc.jsonのパスで参照整合性検査を実行する

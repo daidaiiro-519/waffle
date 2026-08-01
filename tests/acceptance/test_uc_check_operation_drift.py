@@ -32,7 +32,7 @@ def _usecase_doc(operation_name: str, operations: list[str]) -> dict:
     }
 
 
-def test_宣言と実装のoperationが完全一致するとき差分なしと判定する(tmp_path):
+def test_declared_and_implemented_operations_match(tmp_path):
     """
     Scenario: 宣言と実装のoperationが完全一致するとき差分なしと判定する
     Given specが宣言するoperation名の集合と、実装のoperation分岐の集合が完全一致するusecase
@@ -53,7 +53,7 @@ def test_宣言と実装のoperationが完全一致するとき差分なしと�
     assert result.value == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
 
 
-def test_specが宣言するが実装に無いoperationを検出する(tmp_path):
+def test_operation_declared_but_not_implemented(tmp_path):
     """
     Scenario: specが宣言するが実装に無いoperationを検出する
     Given specが宣言するが実装のoperation分岐には存在しないoperation名
@@ -73,7 +73,7 @@ def test_specが宣言するが実装に無いoperationを検出する(tmp_path)
     ]
 
 
-def test_実装にあるがspecに未宣言のoperationを検出する(tmp_path):
+def test_operation_implemented_but_not_declared(tmp_path):
     """
     Scenario: 実装にあるがspecに未宣言のoperationを検出する
     Given 実装のoperation分岐にはあるがspecのどのシナリオにも宣言されていないoperation
@@ -96,7 +96,7 @@ def test_実装にあるがspecに未宣言のoperationを検出する(tmp_path)
     ]
 
 
-def test_operationを1件も宣言していないusecaseは対象外(tmp_path):
+def test_usecase_without_declared_operations_is_skipped(tmp_path):
     """
     Scenario: operationを1件も宣言していないusecaseは対象外
     Given acceptanceScenariosのどのシナリオにもoperationフィールドを宣言していないusecase

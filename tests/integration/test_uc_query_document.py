@@ -17,7 +17,7 @@ def _engine() -> QueryDocument:
     return QueryDocument(FsDocumentRepository(), PackageSchemaRepository())
 
 
-def test_存在しないパスはINVALID_PATH():
+def test_missing_path_is_invalid_path():
     """
     Scenario: 存在しないパスはINVALID_PATH
     Given 実在しない対象パス
@@ -29,7 +29,7 @@ def test_存在しないパスはINVALID_PATH():
     assert result.details[0] == "INVALID_PATH"
 
 
-def test_解決できないschemaRefはINVALID_SCHEMA_REF():
+def test_unresolvable_schema_ref():
     """
     Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
     Given 解決できないschemaRef

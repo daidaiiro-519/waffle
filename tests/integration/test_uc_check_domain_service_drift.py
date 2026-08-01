@@ -10,7 +10,7 @@ def _engine() -> CheckDomainServiceDrift:
     return CheckDomainServiceDrift(FsDocumentRepository())
 
 
-def test_存在しないdocuments_rootはINVALID_PATH():
+def test_missing_documents_root_is_invalid_path():
     """
     Scenario: 存在しないdocuments_rootはINVALID_PATH
     When 存在しないdocuments_rootでドリフト検査を実行する

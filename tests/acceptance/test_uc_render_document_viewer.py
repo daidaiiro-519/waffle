@@ -60,7 +60,7 @@ def _write_doc(tmp_path, overrides=None):
     return str(path)
 
 
-def test_検証済みDocumentをHTMLへ描画する(tmp_path):
+def test_renders_validated_document_to_html(tmp_path):
     """
     Scenario: 検証済みDocumentをHTMLへ描画する
     Given 検証済み（VALIDATED以降）のDocument
@@ -78,7 +78,7 @@ def test_検証済みDocumentをHTMLへ描画する(tmp_path):
     assert "<p>これは本文です。</p>" in html
 
 
-def test_content_descriptionがOKF_frontmatterのdescriptionとしてヘッダに出る(tmp_path):
+def test_description_appears_in_header(tmp_path):
     """
     Scenario: content.descriptionがOKF frontmatterのdescriptionとしてヘッダに出る
     Given content.description.textを持つDocument
@@ -98,7 +98,7 @@ def test_content_descriptionがOKF_frontmatterのdescriptionとしてヘッダ�
     assert "これはOKF用の要約文です。" in result.value["content"]
 
 
-def test_content_descriptionがitems配列の場合も結合してヘッダに出る(tmp_path):
+def test_description_items_are_joined_in_header(tmp_path):
     """
     Scenario: content.descriptionがitems配列の場合も結合してヘッダに出る
     Given content.description.items（配列）を持つDocument
@@ -118,7 +118,7 @@ def test_content_descriptionがitems配列の場合も結合してヘッダに�
     assert "配列要素の要約文です。" in result.value["content"]
 
 
-def test_mermaidコードフェンスをpre要素として出力する(tmp_path):
+def test_mermaid_fence_becomes_pre_element(tmp_path):
     """
     Scenario: mermaidコードフェンスをpre要素として出力する
     Given 基本フローにmermaidのsequenceDiagramを含むDocument
@@ -144,7 +144,7 @@ def test_mermaidコードフェンスをpre要素として出力する(tmp_path)
     assert '<pre class="mermaid">' in result.value["content"]
 
 
-def test_RenderDocument自体が失敗する場合はRENDER_FAILEDを返す(tmp_path):
+def test_underlying_render_failure_is_reported(tmp_path):
     """
     Scenario: RenderDocument自体が失敗する場合はRENDER_FAILEDを返す
     Given RenderDocumentでMDへ描画できないDocument（未検証等）
@@ -163,7 +163,7 @@ def test_RenderDocument自体が失敗する場合はRENDER_FAILEDを返す(tmp_
     assert result.details[0] == "RENDER_FAILED"
 
 
-def test_HTML描画はDocument集約自身の状態を変更しない(tmp_path):
+def test_rendering_does_not_change_document_state(tmp_path):
     """
     Scenario: HTML描画はDocument集約自身の状態を変更しない
     Given 検証済みのDocument

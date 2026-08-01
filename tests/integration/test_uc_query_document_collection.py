@@ -11,7 +11,7 @@ def _engine() -> QueryDocumentCollection:
     return QueryDocumentCollection(FsDocumentRepository(), PackageSchemaRepository())
 
 
-def test_同一条件での再実行はべき等である():
+def test_repeated_run_is_idempotent():
     """
     Scenario: 同一条件での再実行はべき等である
     Given QueryDocumentCollection システム と対象ディレクトリ

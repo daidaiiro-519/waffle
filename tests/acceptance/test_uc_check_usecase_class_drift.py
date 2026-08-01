@@ -25,7 +25,7 @@ def _usecase_doc(operation_name: str) -> dict:
     }
 
 
-def test_全usecaseの操作名と実装クラスが一致するとき差分なしと判定する(tmp_path):
+def test_all_usecase_operations_match_implementation(tmp_path):
     """
     Scenario: 全usecaseの操作名と実装クラスが一致するとき差分なしと判定する
     Given 全usecaseのoperationNameが、対応する実装ファイル内の同名クラスと一致するspecツリー
@@ -45,7 +45,7 @@ def test_全usecaseの操作名と実装クラスが一致するとき差分な�
     assert result.value == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
-def test_実装ファイルが存在しないusecaseを検出する(tmp_path):
+def test_usecase_without_implementation_file(tmp_path):
     """
     Scenario: 実装ファイルが存在しないusecaseを検出する
     Given operationNameから導出したファイルパスに対応する実装ファイルが実在しないusecase document
@@ -64,7 +64,7 @@ def test_実装ファイルが存在しないusecaseを検出する(tmp_path):
     ]
 
 
-def test_Java実装に対してもクラス名ドリフトを検知できる(tmp_path):
+def test_detects_class_drift_in_java_implementation(tmp_path):
     """
     Scenario: Java実装に対してもクラス名ドリフトを検知できる
     Given languageにjavaを指定し、operationNameと一致するJavaクラスを持つ実装ファイル
@@ -84,7 +84,7 @@ def test_Java実装に対してもクラス名ドリフトを検知できる(tmp
     assert result.value == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
-def test_クラス名が一致しないusecaseを検出する(tmp_path):
+def test_usecase_with_mismatched_class_name(tmp_path):
     """
     Scenario: クラス名が一致しないusecaseを検出する
     Given 実装ファイルは実在するが、operationNameと一致するクラス定義を持たないusecase document

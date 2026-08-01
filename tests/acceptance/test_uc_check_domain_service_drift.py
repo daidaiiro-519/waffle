@@ -24,7 +24,7 @@ def _bc_doc(services: list[dict]) -> dict:
     }
 
 
-def test_全業務サービスのgroupと実装ファイルが一致するとき差分なしと判定する(tmp_path):
+def test_all_domain_services_match_implementation(tmp_path):
     """
     Scenario: 全業務サービスのgroupと実装ファイルが一致するとき差分なしと判定する
     Given 全業務サービスのgroupが、対応する実装ファイルと一致するspecツリー
@@ -42,7 +42,7 @@ def test_全業務サービスのgroupと実装ファイルが一致するとき
     assert result.value == {"missing_implementation_file": []}
 
 
-def test_実装ファイルが存在しない業務サービスを検出する(tmp_path):
+def test_domain_service_without_implementation_file(tmp_path):
     """
     Scenario: 実装ファイルが存在しない業務サービスを検出する
     Given groupから導出したファイルパスに対応する実装ファイルが実在しない業務サービス宣言
@@ -61,7 +61,7 @@ def test_実装ファイルが存在しない業務サービスを検出する(t
     ]
 
 
-def test_同じgroupを共有する複数サービスは1回のファイル確認にまとめられる(tmp_path):
+def test_services_sharing_a_group_are_checked_once(tmp_path):
     """
     Scenario: 同じgroupを共有する複数サービスは1回のファイル確認にまとめられる
     Given 同じgroupを宣言する2件以上の業務サービス（対応する実装ファイルは実在しない）

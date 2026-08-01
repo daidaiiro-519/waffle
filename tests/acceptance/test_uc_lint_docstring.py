@@ -12,7 +12,7 @@ def _engine(executable: str = "pydoclint") -> LintDocstring:
     return LintDocstring(scan_engine, PydoclintLinter(executable))
 
 
-def test_全要素が規約に適合するとき違反なしと判定する(tmp_path):
+def test_all_elements_conform_to_the_standard(tmp_path):
     """
     Scenario: 全要素が規約に適合するとき違反なしと判定する
     Given DocstringSchema の google kind に適合する docstring だけを持つコードベース
@@ -36,7 +36,7 @@ def test_全要素が規約に適合するとき違反なしと判定する(tmp_
     assert result.value == []
 
 
-def test_docstring_が無い公開要素を検出する(tmp_path):
+def test_public_element_without_docstring(tmp_path):
     """
     Scenario: docstring が無い公開要素を検出する
     Given docstring を持たない公開関数を含むコードベース
@@ -51,7 +51,7 @@ def test_docstring_が無い公開要素を検出する(tmp_path):
     assert violation["code"] == "MISSING_DOC_COMMENT"
 
 
-def test_Args_の引数名がシグネチャと不一致な要素を検出する(tmp_path):
+def test_args_names_do_not_match_signature(tmp_path):
     """
     Scenario: Args の引数名がシグネチャと不一致な要素を検出する
     Given Args セクションの引数名が実シグネチャと異なる関数を含むコードベース
@@ -75,7 +75,7 @@ def test_Args_の引数名がシグネチャと不一致な要素を検出する
     assert violation["code"] == "ARGS_MISMATCH"
 
 
-def test_要約行のみの短いdocstringでもArgsセクション欠落を検出する(tmp_path):
+def test_missing_args_section_in_summary_only_docstring(tmp_path):
     """
     Scenario: 要約行のみの短いdocstringでもArgsセクション欠落を検出する
     Given 引数を持つ公開関数が、要約行のみでArgsセクションを持たない短いdocstringを持つコードベース
@@ -94,7 +94,7 @@ def test_要約行のみの短いdocstringでもArgsセクション欠落を検�
     assert any(v["name"] == "f" and v["code"] == "MISSING_ARGS_SECTION" for v in result.value)
 
 
-def test_Returnsセクションの欠落を検出する(tmp_path):
+def test_missing_returns_section(tmp_path):
     """
     Scenario: Returnsセクションの欠落を検出する
     Given 戻り値を持つ公開関数が、Returnsセクションを持たないdocstringを持つコードベース
@@ -113,7 +113,7 @@ def test_Returnsセクションの欠落を検出する(tmp_path):
     assert any(v["name"] == "f" and v["code"] == "MISSING_RETURNS_SECTION" for v in result.value)
 
 
-def test_Raisesセクションの欠落を検出する(tmp_path):
+def test_missing_raises_section(tmp_path):
     """
     Scenario: Raisesセクションの欠落を検出する
     Given 例外を送出する公開関数が、Raisesセクションを持たないdocstringを持つコードベース
@@ -132,7 +132,7 @@ def test_Raisesセクションの欠落を検出する(tmp_path):
     assert any(v["name"] == "f" and v["code"] == "MISSING_RAISES_SECTION" for v in result.value)
 
 
-def test_非公開要素はセクション欠落判定の対象外とする(tmp_path):
+def test_private_element_is_skipped(tmp_path):
     """
     Scenario: 非公開要素はセクション欠落判定の対象外とする
     Given 引数・戻り値・例外を持つがdocstringのセクションを欠く非公開関数を含むコードベース
@@ -154,7 +154,7 @@ def test_非公開要素はセクション欠落判定の対象外とする(tmp_
     assert not any(v["name"] == "_f" and v["code"] in codes for v in result.value)
 
 
-def test_対応する_kind_が無い言語は_UNSUPPORTED_KIND(tmp_path):
+def test_unsupported_kind_is_rejected(tmp_path):
     """
     Scenario: 対応する kind が無い言語は UNSUPPORTED_KIND
     Given DocstringSchemaに定義の無い言語、またはgoogle以外の未実装kindのコードベース
@@ -168,7 +168,7 @@ def test_対応する_kind_が無い言語は_UNSUPPORTED_KIND(tmp_path):
     assert result.details[0] == "UNSUPPORTED_KIND"
 
 
-def test_対応するツールが実行環境に無いとき_TOOL_NOT_AVAILABLE(tmp_path):
+def test_missing_tool_is_reported(tmp_path):
     """
     Scenario: 対応するツールが実行環境に無いとき TOOL_NOT_AVAILABLE
     Given kind に対応する lint ツールがインストールされていない環境

@@ -19,7 +19,7 @@ def _engine() -> RenderBlankTemplate:
     return RenderBlankTemplate(FsDocumentRepository(), PackageSchemaRepository())
 
 
-def test_同じ入力なら同じ結果を返す():
+def test_same_input_gives_same_result():
     """
     Scenario: 同じ入力なら同じ結果を返す
     Given 同一のschemaRef・discriminator
@@ -35,7 +35,7 @@ def test_同じ入力なら同じ結果を返す():
     assert first.value == second.value
 
 
-def test_導出したパスへ実際にファイルを書き出す():
+def test_writes_file_to_derived_path():
     """
     Scenario: 導出したパスへ実際にファイルを書き出す
     Given 実在するschemaRefとdiscriminator

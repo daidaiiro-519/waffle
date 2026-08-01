@@ -14,7 +14,7 @@ def _engine() -> LintDocstring:
     return LintDocstring(scan_engine, PydoclintLinter())
 
 
-def test_存在しないパスはINVALID_PATH():
+def test_missing_path_is_invalid_path():
     """
     Scenario: 存在しないパスはINVALID_PATH
     Given 実在しない対象パス

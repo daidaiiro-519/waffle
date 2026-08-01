@@ -38,7 +38,7 @@ def _engine() -> ValidateDocument:
     return ValidateDocument(FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator())
 
 
-def test_適合する_Document_は_VALIDATED_判定になる():
+def test_conforming_document_becomes_validated():
     """
     Scenario: 適合する Document は VALIDATED 判定になる
     Given schema に適合する Document
@@ -49,7 +49,7 @@ def test_適合する_Document_は_VALIDATED_判定になる():
     assert isinstance(result, Ok), result
 
 
-def test_不適合は違反詳細つきで失敗する():
+def test_nonconforming_document_reports_violations():
     """
     Scenario: 不適合は違反詳細つきで失敗する
     Given schema に適合しない Document
@@ -68,7 +68,7 @@ def test_不適合は違反詳細つきで失敗する():
     assert len(result.details) >= 1
 
 
-def test_schemaRef_を持たない_Document_は検証できない():
+def test_document_without_schema_ref_cannot_be_validated():
     """
     Scenario: schemaRef を持たない Document は検証できない
     Given schemaRef の無い Document
@@ -85,7 +85,7 @@ def test_schemaRef_を持たない_Document_は検証できない():
 
 
 @pytest.mark.parametrize("path,expected_status", _DOGFOOD_DOCUMENTS)
-def test_既存documentはschemaに適合する(path, expected_status, tmp_path):
+def test_existing_documents_conform_to_their_schema(path, expected_status, tmp_path):
     """
     Scenario Outline: 既存documentはschemaに適合する
     Given waffle自身のdocument
@@ -103,7 +103,7 @@ def test_既存documentはschemaに適合する(path, expected_status, tmp_path)
     assert result.value["status"] == expected_status
 
 
-def test_適合判定は実際にstatusをdocumentへ書き込む(tmp_path):
+def test_validation_writes_status_to_the_document(tmp_path):
     """
     Scenario: 適合判定は実際にstatusをdocumentへ書き込む
     Given CREATED状態の、schemaに適合するDocument
@@ -124,7 +124,7 @@ def test_適合判定は実際にstatusをdocumentへ書き込む(tmp_path):
     assert reloaded["status"] == "VALIDATED"
 
 
-def test_SUPERSEDEDは終端でありvalidateを受け付けない():
+def test_superseded_is_terminal():
     """
     Scenario: SUPERSEDEDは終端でありvalidateを受け付けない
     Given SUPERSEDED状態のDocument
@@ -145,7 +145,7 @@ def test_SUPERSEDEDは終端でありvalidateを受け付けない():
 
 
 
-def test_不正なJSONはINVALID_JSON():
+def test_malformed_json_is_rejected():
     """
     Scenario: 不正なJSONはINVALID_JSON
     Given 不正なJSONの対象ファイル

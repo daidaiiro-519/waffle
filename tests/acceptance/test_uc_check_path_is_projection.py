@@ -8,7 +8,7 @@ def _engine() -> CheckPathIsProjection:
     return CheckPathIsProjection(FsDocumentRepository())
 
 
-def test_SkillのSKILL_mdの実体パスは投影と判定される():
+def test_skill_markdown_path_is_projection():
     """
     Scenario: SkillのSKILL.mdの実体パスは投影と判定される
     Given 実体パスが".waffle/skills/ddd-advisor/SKILL.md"である
@@ -22,7 +22,7 @@ def test_SkillのSKILL_mdの実体パスは投影と判定される():
     assert result.value["documentId"] == "ddd-advisor"
 
 
-def test_AgentのCLAUDE_md実体パスは投影と判定される():
+def test_agent_markdown_path_is_projection():
     """
     Scenario: AgentのCLAUDE.md実体パスは投影と判定される
     Given 実体パスが".waffle/agent/waffle.md"である
@@ -36,7 +36,7 @@ def test_AgentのCLAUDE_md実体パスは投影と判定される():
     assert result.value["documentId"] == "waffle"
 
 
-def test_手書き参照ファイルの実体パスは投影と判定されない():
+def test_handwritten_reference_path_is_not_projection():
     """
     Scenario: 手書き参照ファイルの実体パスは投影と判定されない
     Given 実体パスが".waffle/skills/ddd-advisor/references/knowledge/domain-model.md"である
@@ -48,7 +48,7 @@ def test_手書き参照ファイルの実体パスは投影と判定されな�
     assert result.value["isProjection"] is False
 
 
-def test_どのcanonicalPathTemplateにも一致しないパスは投影と判定されない():
+def test_path_matching_no_template_is_not_projection():
     """
     Scenario: どのcanonicalPathTemplateにも一致しないパスは投影と判定されない
     Given 実体パスが"docs/README.md"である

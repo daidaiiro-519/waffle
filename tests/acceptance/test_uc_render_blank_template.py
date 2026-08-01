@@ -78,7 +78,7 @@ def _simple_schema() -> dict:
     }
 
 
-def test_スキーマの値フィールドをプレースホルダー化したMarkdownを返す():
+def test_value_fields_become_placeholders():
     """
     Scenario: スキーマの値フィールドをプレースホルダー化したMarkdownを返す
     Given x-prompt-writeを宣言する値フィールドを持つschema
@@ -90,7 +90,7 @@ def test_スキーマの値フィールドをプレースホルダー化したMa
     assert "{{タイトルを書く}}" in result.value["content"]
 
 
-def test_x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する():
+def test_frontmatter_is_placeholdered_when_declared():
     """
     Scenario: x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する
     Given x-frontmatterを宣言するschema
@@ -107,7 +107,7 @@ def test_x_frontmatterを宣言するschemaはfrontmatterもプレースホル�
     assert 'title: "{{タイトルを書く}}"' in content
 
 
-def test_x_frontmatterを宣言しないschemaはfrontmatterを出力しない():
+def test_no_frontmatter_when_not_declared():
     """
     Scenario: x_frontmatterを宣言しないschemaはfrontmatterを出力しない
     Given x-frontmatterを宣言しないschema
@@ -119,7 +119,7 @@ def test_x_frontmatterを宣言しないschemaはfrontmatterを出力しない()
     assert not result.value["content"].startswith("---")
 
 
-def test_存在しないschemaRefはINVALID_SCHEMA_REF():
+def test_missing_schema_ref_is_rejected():
     """
     Scenario: 存在しないschemaRefはINVALID_SCHEMA_REF
     Given 実在しないschemaRef
@@ -131,7 +131,7 @@ def test_存在しないschemaRefはINVALID_SCHEMA_REF():
     assert result.details[0] == "INVALID_SCHEMA_REF"
 
 
-def test_discriminator未指定はMISSING_DISCRIMINATOR():
+def test_absent_discriminator_is_rejected():
     """
     Scenario: discriminator未指定はMISSING_DISCRIMINATOR
     Given contentがdiscriminatorで分岐するschema
@@ -162,7 +162,7 @@ def test_discriminator未指定はMISSING_DISCRIMINATOR():
     assert result.details[0] == "MISSING_DISCRIMINATOR"
 
 
-def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
+def test_invalid_discriminator_value_is_rejected():
     """
     Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR
     Given 分岐のあるschemaのenumに存在しないdiscriminator値
@@ -193,7 +193,7 @@ def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
     assert result.details[0] == "INVALID_DISCRIMINATOR"
 
 
-def test_enumフィールドは選択肢を併記する():
+def test_enum_field_lists_its_choices():
     """
     Scenario: enumフィールドは選択肢を併記する
     Given enumを宣言する値フィールドを持つschema
@@ -207,7 +207,7 @@ def test_enumフィールドは選択肢を併記する():
     assert "{{タイトルを書く（選択肢: A / B）}}" in result.value["content"]
 
 
-def test_構造化配列要素は1件分のプレースホルダーとして描画する():
+def test_structured_array_renders_one_placeholder_element():
     """
     Scenario: 構造化配列要素は1件分のプレースホルダーとして描画する
     Given 配列フィールドが構造化された要素(オブジェクト)を宣言するschema
@@ -259,7 +259,7 @@ def test_構造化配列要素は1件分のプレースホルダーとして描�
     assert "{{発生条件}}" in result.value["content"]
 
 
-def test_document_jsonへの書き込みを一切行わない():
+def test_does_not_write_to_the_document():
     """
     Scenario: document.jsonへの書き込みを一切行わない
     Given schemaのみを受け取るブランクテンプレート描画
@@ -274,7 +274,7 @@ def test_document_jsonへの書き込みを一切行わない():
     assert len(documents.written) == 1
 
 
-def test_schemaRefとdiscriminatorから導出したパスへファイルを書き出す():
+def test_writes_file_to_path_derived_from_schema_ref():
     """
     Scenario: schemaRefとdiscriminatorから導出したパスへファイルを書き出す
     Given discriminatorを持つschema
@@ -304,7 +304,7 @@ def test_schemaRefとdiscriminatorから導出したパスへファイルを書�
     assert documents.written[expected_path] == result.value["content"]
 
 
-def test_既存ファイルを新しい描画結果で上書きする():
+def test_existing_file_is_overwritten():
     """
     Scenario: 既存ファイルを新しい描画結果で上書きする
     Given 書き出し先に既に別内容のファイルが存在する

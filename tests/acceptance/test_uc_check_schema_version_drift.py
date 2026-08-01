@@ -31,7 +31,7 @@ def _write(path: Path, doc: dict) -> None:
     path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
 
 
-def test_全Documentが最新版を参照しているとき差分なしと判定する(tmp_path):
+def test_all_documents_reference_latest_version(tmp_path):
     """
     Scenario: 全Documentが最新版を参照しているとき差分なしと判定する
     Given 全DocumentのschemaRefが、実在する同名Schemaの最新版を指しているspecツリー
@@ -45,7 +45,7 @@ def test_全Documentが最新版を参照しているとき差分なしと判定
     assert result.value == {"broken_references": [], "newer_version_available": [], "missing_declared_fields": []}
 
 
-def test_実在しない版を指すschemaRefを検出する(tmp_path):
+def test_schema_ref_pointing_to_missing_version(tmp_path):
     """
     Scenario: 実在しない版を指すschemaRefを検出する
     Given 実在しない版をschemaRefに持つDocument
@@ -59,7 +59,7 @@ def test_実在しない版を指すschemaRefを検出する(tmp_path):
     assert result.value["broken_references"] == [{"document": str(tmp_path / "doc-a.json"), "schemaRef": "FooSchema/v9"}]
 
 
-def test_最新でない版を参照しているDocumentを検出する(tmp_path):
+def test_document_referencing_outdated_version(tmp_path):
     """
     Scenario: 最新でない版を参照しているDocumentを検出する
     Given 同名Schemaに新しい版が実在するが、旧い版をschemaRefに持つDocument
@@ -75,7 +75,7 @@ def test_最新でない版を参照しているDocumentを検出する(tmp_path
     ]
 
 
-def test_Schemaが宣言する値フィールドをDocumentが持たないことを検出する(tmp_path):
+def test_document_missing_declared_value_field(tmp_path):
     """
     Scenario: Schemaが宣言する値フィールドをDocumentが持たないことを検出する
     Given 参照先Schemaが宣言する値フィールドのキーを実データに持たないDocument

@@ -13,7 +13,7 @@ def _engine() -> QueryDocumentCollection:
     return QueryDocumentCollection(FsDocumentRepository(), PackageSchemaRepository())
 
 
-def test_grep_documentsはディレクトリ横断でpatternに一致する値を収集する():
+def test_grep_collects_matching_values_across_documents():
     """
     Scenario: grep_documentsはディレクトリ横断でpatternに一致する値を収集する
     Given QueryDocumentCollection システム と対象ディレクトリ
@@ -26,7 +26,7 @@ def test_grep_documentsはディレクトリ横断でpatternに一致する値�
     assert any("uc-query-document.json" in p for p in matched_paths)
 
 
-def test_filter_documentsはメタフィールドの一致でDocumentを絞り込む(tmp_path, monkeypatch):
+def test_filter_selects_documents_by_meta_field(tmp_path, monkeypatch):
     """
     Scenario: filter_documentsはメタフィールドの一致でDocumentを絞り込む
     Given QueryDocumentCollection システム と対象ディレクトリ
@@ -46,7 +46,7 @@ def test_filter_documentsはメタフィールドの一致でDocumentを絞り�
     assert meta["documentId"] == "doc-a"
 
 
-def test_index_scan_documentsはディレクトリ横断でindexとtagsを集約する():
+def test_index_scan_aggregates_index_and_tags():
     """
     Scenario: index_scan_documentsはディレクトリ横断でindexとtagsを集約する
     Given QueryDocumentCollection システム と対象ディレクトリ
@@ -61,7 +61,7 @@ def test_index_scan_documentsはディレクトリ横断でindexとtagsを集約
     assert entry["blocks"]["mainFlow"]["prompt"]
 
 
-def test_一致するDocumentが無くても正常系で空を返す():
+def test_no_match_returns_empty_without_error():
     """
     Scenario: 一致するDocumentが無くても正常系で空を返す
     Given QueryDocumentCollection システム と対象ディレクトリ
@@ -73,7 +73,7 @@ def test_一致するDocumentが無くても正常系で空を返す():
     assert result.value["value"] == {}
 
 
-def test_未知のoperationはエラーを返す():
+def test_unknown_operation_is_rejected():
     """
     Scenario: 未知のoperationはエラーを返す
     Given QueryDocumentCollection システム と対象ディレクトリ
@@ -85,7 +85,7 @@ def test_未知のoperationはエラーを返す():
     assert result.details[0] == "INVALID_OPERATION"
 
 
-def test_存在しないディレクトリはエラーを返す():
+def test_missing_directory_is_rejected():
     """
     Scenario: 存在しないディレクトリはエラーを返す
     Given 実在しない対象ディレクトリ
@@ -97,7 +97,7 @@ def test_存在しないディレクトリはエラーを返す():
     assert result.details[0] == "INVALID_PATH"
 
 
-def test_不正な正規表現はエラーを返す():
+def test_invalid_regular_expression_is_rejected():
     """
     Scenario: 不正な正規表現はエラーを返す
     Given QueryDocumentCollection システム と対象ディレクトリ

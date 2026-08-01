@@ -56,7 +56,7 @@ def teardown_function():
         _FIXTURE_DIR.rmdir()
 
 
-def test_add_blockの複数回実行はべき等である():
+def test_add_block_is_idempotent():
     """
     Scenario: add_blockの複数回実行はべき等である
     Given 同一のadd_block操作
@@ -81,7 +81,7 @@ def test_add_blockの複数回実行はべき等である():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_rename_blockの複数回実行はべき等である():
+def test_rename_block_is_idempotent():
     """
     Scenario: rename_blockの複数回実行はべき等である
     Given 同一のrename_block操作（必須ではないブロック）
@@ -107,7 +107,7 @@ def test_rename_blockの複数回実行はべき等である():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_set_fieldの複数回実行はべき等である():
+def test_set_field_is_idempotent():
     """
     Scenario: set_fieldの複数回実行はべき等である
     Given 同一のset_field操作
@@ -127,7 +127,7 @@ def test_set_fieldの複数回実行はべき等である():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_remove_blockの複数回実行はべき等である():
+def test_remove_block_is_idempotent():
     """
     Scenario: remove_blockの複数回実行はべき等である
     Given 同一のremove_block操作（必須ではないプロパティ）
@@ -164,7 +164,7 @@ def _kind_dispatch_schema() -> dict:
     return schema
 
 
-def test_add_defの複数回実行はべき等である():
+def test_add_def_is_idempotent():
     """
     Scenario: add_defの複数回実行はべき等である
     Given 同一のadd_def操作
@@ -183,7 +183,7 @@ def test_add_defの複数回実行はべき等である():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_add_kind_branchの複数回実行はべき等である():
+def test_add_kind_branch_is_idempotent():
     """
     Scenario: add_kind_branchの複数回実行はべき等である
     Given 同一のadd_kind_branch操作
@@ -209,7 +209,7 @@ def test_add_kind_branchの複数回実行はべき等である():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_整形契約に従う既存箇所は書き込み後も不変である():
+def test_formatted_regions_stay_unchanged_after_writing():
     """
     Scenario: 整形契約に従う既存箇所は書き込み後も不変である
     Given 整形契約に従った既存のschemaファイル
@@ -244,7 +244,7 @@ def _render_target_schema() -> dict:
     return schema
 
 
-def test_set_kind_render_targetの複数回実行はべき等である():
+def test_set_kind_render_target_is_idempotent():
     """
     Scenario: set_kind_render_targetの複数回実行はべき等である
     Given 同一のset_kind_render_target操作

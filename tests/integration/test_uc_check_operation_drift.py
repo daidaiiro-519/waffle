@@ -11,7 +11,7 @@ def _engine() -> CheckOperationDrift:
     return CheckOperationDrift(FsDocumentRepository())
 
 
-def test_存在しないdocuments_rootはINVALID_PATH(tmp_path):
+def test_missing_documents_root_is_invalid_path(tmp_path):
     """
     Scenario: 存在しないdocuments_rootはINVALID_PATH
     When 存在しないdocuments_rootでoperationドリフト検査を実行する

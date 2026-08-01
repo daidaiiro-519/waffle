@@ -46,7 +46,7 @@ def _aggregate_doc(
     }
 
 
-def test_全aggregateの集約ルート名と実装クラスが一致するとき差分なしと判定する(tmp_path):
+def test_all_aggregate_roots_match_implementation(tmp_path):
     """
     Scenario: 全aggregateの集約ルート名と実装クラスが一致するとき差分なしと判定する
     Given 全aggregateの集約ルート名・属性集合・値オブジェクトが、対応する実装ファイル内の同名クラス・同一フィールド集合と一致するspecツリー
@@ -69,7 +69,7 @@ def test_全aggregateの集約ルート名と実装クラスが一致すると�
     }
 
 
-def test_宣言された値オブジェクトが実装に存在しないとき検出する(tmp_path):
+def test_declared_value_object_missing_in_implementation(tmp_path):
     """
     Scenario: 宣言された値オブジェクトが実装に存在しないとき検出する
     Given 集約ルートクラスは一致するが、ValueObjectsが宣言する値オブジェクトのクラス定義が実装ファイル内に無いaggregate document
@@ -91,7 +91,7 @@ def test_宣言された値オブジェクトが実装に存在しないとき�
     ]
 
 
-def test_属性が空でもクラス名だけ一致すれば通っていた盲点をattribute_mismatchで検出する(tmp_path):
+def test_class_name_match_with_empty_attributes_is_reported(tmp_path):
     """
     Scenario: 属性が空でもクラス名だけ一致すれば通っていた盲点をattribute_mismatchで検出する
     Given 集約ルート名と一致するクラスは存在するが、Entitiesが宣言する属性を1つも持たない実装
@@ -117,7 +117,7 @@ def test_属性が空でもクラス名だけ一致すれば通っていた盲�
     ]
 
 
-def test_実装ファイルが存在しないaggregateを検出する(tmp_path):
+def test_aggregate_without_implementation_file(tmp_path):
     """
     Scenario: 実装ファイルが存在しないaggregateを検出する
     Given 集約ルート名から導出したファイルパスに対応する実装ファイルが実在しないaggregate document
@@ -136,7 +136,7 @@ def test_実装ファイルが存在しないaggregateを検出する(tmp_path):
     ]
 
 
-def test_クラス名が一致しないaggregateを検出する(tmp_path):
+def test_aggregate_with_mismatched_class_name(tmp_path):
     """
     Scenario: クラス名が一致しないaggregateを検出する
     Given 実装ファイルは実在するが、集約ルート名と一致するクラス定義を持たないaggregate document
@@ -161,7 +161,7 @@ def test_クラス名が一致しないaggregateを検出する(tmp_path):
     ]
 
 
-def test_値オブジェクトのクラス名だけ一致し属性が空でも通っていた盲点をvalue_object_attribute_mismatchで検出する(tmp_path):
+def test_value_object_class_match_with_empty_attributes_is_reported(tmp_path):
     """
     Scenario: 値オブジェクトのクラス名だけ一致し属性が空でも通っていた盲点をvalue_object_attribute_mismatchで検出する
     Given valueObjects宣言がattributesを持ち、値オブジェクトのクラス自体は存在するが属性を1つも持たない実装
@@ -193,7 +193,7 @@ def test_値オブジェクトのクラス名だけ一致し属性が空でも�
     ]
 
 
-def test_値オブジェクトがattributesを宣言していなければ属性対応は対象外にする(tmp_path):
+def test_value_object_without_declared_attributes_is_skipped(tmp_path):
     """
     Scenario: 値オブジェクトがattributesを宣言していなければ属性対応は対象外にする
     Given valueObjects宣言がattributesを持たない値オブジェクト

@@ -9,7 +9,7 @@ def _engine() -> ScanSourceCode:
     return ScanSourceCode(FsDocumentRepository(), PythonAstSourceScanner())
 
 
-def test_公開要素の_docstring_を構造化抽出する(tmp_path):
+def test_extracts_docstrings_of_public_elements(tmp_path):
     """
     Scenario: 公開要素の docstring を構造化抽出する
     Given 対象コードベースと google kind
@@ -37,7 +37,7 @@ def test_公開要素の_docstring_を構造化抽出する(tmp_path):
     assert greet["returns"] == "挨拶文字列。"
 
 
-def test_docstring_が無い要素も走査全体を失敗させない(tmp_path):
+def test_element_without_docstring_does_not_fail_scan(tmp_path):
     """
     Scenario: docstring が無い要素も走査全体を失敗させない
     Given docstring を持たない公開関数を含む対象コードベース
@@ -54,7 +54,7 @@ def test_docstring_が無い要素も走査全体を失敗させない(tmp_path)
     assert el["args"] == []
 
 
-def test_対応する_kind_が無い言語は_UNSUPPORTED_KIND(tmp_path):
+def test_unsupported_kind_is_rejected(tmp_path):
     """
     Scenario: 対応する kind が無い言語は UNSUPPORTED_KIND
     Given DocstringSchema に定義の無い言語のコードベース

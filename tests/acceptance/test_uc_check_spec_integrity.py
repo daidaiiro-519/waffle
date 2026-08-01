@@ -34,7 +34,7 @@ def _sd(name: str, usecases: list[str]) -> dict:
     return {"documentId": name, "content": {"members": {"items": usecases}}}
 
 
-def test_全ての宣言と実態が一致するとき差分なしと判定する(tmp_path):
+def test_fully_consistent_tree_has_no_drift(tmp_path):
     """
     Scenario: 全ての宣言と実態が一致するとき差分なしと判定する
     Given bc.jsonの宣言とディスク上の実ファイルが完全に一致するspecツリー
@@ -62,7 +62,7 @@ def test_全ての宣言と実態が一致するとき差分なしと判定す�
     }
 
 
-def test_宣言されたsubdomainがディスクに無いことを検出する(tmp_path):
+def test_declared_subdomain_missing_on_disk(tmp_path):
     """
     Scenario: 宣言されたsubdomainがディスクに無いことを検出する
     Given bc.jsonがsubdomainを宣言するが、そのディレクトリが実在しないspecツリー
@@ -79,7 +79,7 @@ def test_宣言されたsubdomainがディスクに無いことを検出する(t
     assert result.value["declared_subdomains_missing_on_disk"] == ["sd-ghost"]
 
 
-def test_未宣言のsubdomainがディスクにあることを検出する(tmp_path):
+def test_undeclared_subdomain_on_disk(tmp_path):
     """
     Scenario: 未宣言のsubdomainがディスクにあることを検出する
     Given ディスク上に実在するがbc.jsonに宣言されていないsubdomainを含むspecツリー
@@ -97,7 +97,7 @@ def test_未宣言のsubdomainがディスクにあることを検出する(tmp_
     assert result.value["subdomains_on_disk_not_declared_in_bc"] == ["sd-undeclared"]
 
 
-def test_どのsubdomainにも属さない宙に浮いたusecaseを検出する(tmp_path):
+def test_usecase_without_subdomain(tmp_path):
     """
     Scenario: どのsubdomainにも属さない宙に浮いたusecaseを検出する
     Given bc.jsonがusecaseを宣言するが、どのsubdomainのmembersにも含まれないspecツリー
@@ -114,7 +114,7 @@ def test_どのsubdomainにも属さない宙に浮いたusecaseを検出する(
     assert result.value["usecases_orphaned_no_subdomain"] == ["uc-orphan"]
 
 
-def test_subdomainには属するがbcに未宣言のusecaseを検出する(tmp_path):
+def test_usecase_in_subdomain_not_declared_in_bc(tmp_path):
     """
     Scenario: subdomainには属するがbcに未宣言のusecaseを検出する
     Given いずれかのsubdomainのmembersが宣言するがbc.jsonには宣言されていないusecaseを含むspecツリー
@@ -132,7 +132,7 @@ def test_subdomainには属するがbcに未宣言のusecaseを検出する(tmp_
     assert result.value["usecases_in_subdomain_not_declared_in_bc"] == ["uc-hidden"]
 
 
-def test_宣言されたusecaseの実ファイルが無いことを検出する(tmp_path):
+def test_declared_usecase_file_missing_on_disk(tmp_path):
     """
     Scenario: 宣言されたusecaseの実ファイルが無いことを検出する
     Given subdomainがusecaseを宣言するが、対応するjsonファイルが実在しないspecツリー
@@ -149,7 +149,7 @@ def test_宣言されたusecaseの実ファイルが無いことを検出する(
     assert result.value["usecase_files_missing_on_disk"] == ["uc-missing"]
 
 
-def test_未宣言のusecaseファイルがディスクにあることを検出する(tmp_path):
+def test_undeclared_usecase_file_on_disk(tmp_path):
     """
     Scenario: 未宣言のusecaseファイルがディスクにあることを検出する
     Given ディスク上に実在するがどのsubdomainのmembersにも宣言されていないusecaseファイルを含むspecツリー
@@ -177,7 +177,7 @@ def _agg_document(entity_attributes: list[dict], value_objects: list[dict]) -> d
     }
 
 
-def test_使われていない値オブジェクトを検出する(tmp_path):
+def test_unused_value_object(tmp_path):
     """
     Scenario: 使われていない値オブジェクトを検出する
     Given valueObjectsに宣言されているが、entities[].attributes[].typeのどこにも現れない値オブジェクトを含む集約document
@@ -198,7 +198,7 @@ def test_使われていない値オブジェクトを検出する(tmp_path):
     assert result.value["orphaned_value_objects"] == ["GhostValueObject"]
 
 
-def test_実document_jsonにある未宣言のフィールドを検出する(tmp_path):
+def test_undeclared_document_field(tmp_path):
     """
     Scenario: 実document.jsonにある未宣言のフィールドを検出する
     Given トップレベルにDocument集約のentity属性に宣言されていないフィールドを持つ実document.json
@@ -220,7 +220,7 @@ def test_実document_jsonにある未宣言のフィールドを検出する(tmp
     assert "unexpectedField" in result.value["undeclared_document_fields"]
 
 
-def test_複数entityの属性が全て未宣言判定に使われる(tmp_path):
+def test_attributes_of_every_entity_are_considered(tmp_path):
     """
     Scenario: 複数entityの属性が全て未宣言判定に使われる
     Given agg-documentが複数のentityを持ち、2つ目のentityにのみ宣言されているフィールドを持つ実document.json
@@ -248,7 +248,7 @@ def test_複数entityの属性が全て未宣言判定に使われる(tmp_path):
     assert "schemaRef" not in result.value["undeclared_document_fields"]
 
 
-def test_subdomainRefの食い違いを検出する(tmp_path):
+def test_subdomain_ref_mismatch(tmp_path):
     """
     Scenario: subdomainRefの食い違いを検出する
     Given subdomainRefが指すsubdomainのmembersに自分自身が含まれていないusecase document
@@ -265,7 +265,7 @@ def test_subdomainRefの食い違いを検出する(tmp_path):
     assert {"usecase": "uc-a", "subdomainRef": "sd-wrong"} in result.value["subdomain_ref_mismatches"]
 
 
-def test_subdomainRef未宣言でもsubdomainのmembersに含まれていれば食い違いを検出する(tmp_path):
+def test_subdomain_ref_mismatch_when_ref_is_absent(tmp_path):
     """
     Scenario: subdomainRef未宣言でもsubdomainのmembersに含まれていれば食い違いを検出する
     Given subdomainのmembersに含まれるが、自分自身にsubdomainRefを宣言していないusecase document
@@ -282,7 +282,7 @@ def test_subdomainRef未宣言でもsubdomainのmembersに含まれていれば�
     assert {"usecase": "uc-a", "subdomainRef": None} in result.value["subdomain_ref_mismatches"]
 
 
-def test_存在しない集約を指すaggregateRefを検出する(tmp_path):
+def test_aggregate_ref_pointing_to_missing_aggregate(tmp_path):
     """
     Scenario: 存在しない集約を指すaggregateRefを検出する
     Given 実在しない集約documentIdをaggregateRefに持つusecase document

@@ -16,7 +16,7 @@ def _engine() -> RenderDocument:
     return RenderDocument(FsDocumentRepository(), PackageSchemaRepository())
 
 
-def test_存在しないパスはINVALID_PATH():
+def test_missing_path_is_invalid_path():
     """
     Scenario: 存在しないパスはINVALID_PATH
     Given 実在しない対象パス
@@ -28,7 +28,7 @@ def test_存在しないパスはINVALID_PATH():
     assert result.details[0] == "INVALID_PATH"
 
 
-def test_解決できないschemaRefはINVALID_SCHEMA_REF():
+def test_unresolvable_schema_ref():
     """
     Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
     Given 解決できないschemaRef
@@ -47,7 +47,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
     assert result.details[0] == "INVALID_SCHEMA_REF"
 
 
-def test_x_render宣言どおりに決定的に描画する():
+def test_renders_deterministically_as_declared():
     """
     Scenario: x-render宣言どおりに決定的に描画する
     Given interfaceブロック(x-render宣言=table)を持つDocument
@@ -63,7 +63,7 @@ def test_x_render宣言どおりに決定的に描画する():
     assert "| 配置・判断相談 |" in result.value["content"]
 
 
-def test_同じDocumentを2回renderしても同一の成果物になる():
+def test_rendering_twice_gives_the_same_artifact():
     """
     Scenario: 同じDocumentを2回renderしても同一の成果物になる
     Given 変更されていないDocument
@@ -77,7 +77,7 @@ def test_同じDocumentを2回renderしても同一の成果物になる():
     assert first.value["content"] == second.value["content"]
 
 
-def test_データが空の任意ブロックは見出しごと省略する():
+def test_empty_optional_block_is_omitted_with_its_heading():
     """
     Scenario: データが空の任意ブロックは見出しごと省略する
     Given x-renderに部品が宣言されたブロックを含むが値が全て空であるDocument
@@ -105,7 +105,7 @@ def test_データが空の任意ブロックは見出しごと省略する():
     assert "実行設定" not in result.value["content"]
 
 
-def test_H1見出し直後に区切り線を入れない():
+def test_no_rule_directly_after_the_top_heading():
     """
     Scenario: H1見出し直後に区切り線を入れない
     Given x-render-level=1のTitleブロックの直後にx-render-level=2のブロックが続くDocument
@@ -136,7 +136,7 @@ def test_H1見出し直後に区切り線を入れない():
     assert "# smoke-h1-divider\n\n---" not in content
 
 
-def test_x_render_hiddenを宣言したブロックは本文に描画しない():
+def test_hidden_block_is_not_rendered_in_body():
     """
     Scenario: x-render-hiddenを宣言したブロックは本文に描画しない
     Given x-render-hidden:trueを宣言したブロックを含むDocument
@@ -164,7 +164,7 @@ def test_x_render_hiddenを宣言したブロックは本文に描画しない()
     assert "呼び出しモード" not in result.value["content"]
 
 
-def test_未検証ではrenderできない():
+def test_unvalidated_document_cannot_be_rendered():
     """
     Scenario: 未検証ではrenderできない
     Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument
