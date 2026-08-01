@@ -1,0 +1,196 @@
+{
+  "documentId": "uc-read-comments",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "寄せられたコメントを投稿者が読む：uc-read-comments"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "投稿者が、自分の共有アーティファクトに寄せられたコメントを、自分の画面で読む操作。",
+        "閲覧者は閲覧トークンで開いた画面からコメントを読み書きする。投稿者はその閲覧トークンを持たないため、別の経路が要る。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "ReadComments"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "自分が渡したものにどんな反応が来たかを知り、次に何を直すかを決める"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、公開した本人が反応を読めない。見てもらってコメントをもらうことがこの文脈の目的であるため、読めないなら公開する意味が無い。",
+        "閲覧の経路を使い回せないのは、閲覧トークンが一度しか示されず、投稿者の手元に残らないため。自分のものを読むために、自分で発行したトークンを控えておく必要がある作りにはしない。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "操作する者が、対象の共有アーティファクトの投稿者であるか、管理者であること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "コメント",
+          "message": "readComments（ArtifactId）",
+          "kind": "command"
+        },
+        {
+          "from": "コメント",
+          "to": "",
+          "message": "寄せられた順に並べる",
+          "kind": "self"
+        },
+        {
+          "from": "コメント",
+          "to": "投稿者",
+          "message": "コメントの一覧",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "寄せられたコメントが、古いものから順に並んで返っている",
+        "差し替えの区切りが、コメントと同じ並びに現れている",
+        "コメントは何も変わっていない"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "投稿者が求めたとき、寄せられたコメントを古いものから順に返すこと",
+        "それぞれについて、誰が・いつ・何を言い・どういう判定だったかを返すこと",
+        "他のコメントへの返信は、どれへの返信かが分かる形で返すこと",
+        "差し替えの区切りを、コメントと同じ並びに含めること",
+        "対象の投稿者でも管理者でもない者が求めたとき、対象が見つからないものとして拒むこと",
+        "読んでもコメントを変えないこと",
+        "公開が止まっている共有アーティファクトのコメントも読めること"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "ARTIFACT_NOT_FOUND",
+          "condition": [
+            "対象の共有アーティファクトが存在しない",
+            "操作する者が対象の投稿者でも管理者でもない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "投稿者Xが共有アーティファクトAを公開しており、閲覧者からコメントが寄せられている。",
+      "scenarios": [
+        {
+          "name": "寄せられた順に読める",
+          "category": "正常系",
+          "viewpoint": "一貫性: やり取りの流れが読み取れる並びで返ることを確かめる。順が崩れると、どの指摘に対する返答かが分からなくなる",
+          "gherkin": "Given Aに3件のコメントが順に寄せられている\nWhen Xが読み出しを求める\nThen 3件が古いものから順に返る\nAnd それぞれに、誰が・いつ・何を言い・どういう判定だったかが含まれている",
+          "covers": "投稿者が求めたとき、寄せられたコメントを古いものから順に返すこと"
+        },
+        {
+          "name": "返信がどれへの返信か分かる",
+          "category": "正常系",
+          "viewpoint": "一貫性: 筋道が1つの共有アーティファクトの中で閉じることを確かめる",
+          "gherkin": "Given あるコメントへの返信が寄せられている\nWhen Xが読み出しを求める\nThen その返信が、どのコメントへの返信かが分かる形で返る",
+          "covers": "他のコメントへの返信は、どれへの返信かが分かる形で返すこと"
+        },
+        {
+          "name": "差し替えの区切りが並びに現れる",
+          "category": "境界値",
+          "viewpoint": "一貫性: どの指摘が差し替え前のものかを読み取れることを確かめる",
+          "gherkin": "Given Aが一度差し替えられており、その前後にコメントがある\nWhen Xが読み出しを求める\nThen 差し替えの区切りが、その時点の位置に現れる",
+          "covers": "差し替えの区切りを、コメントと同じ並びに含めること"
+        },
+        {
+          "name": "他人のものは読めない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 読める範囲が自分の公開したものに限られることを確かめる。寄せられたコメントには、渡した相手しか知らない内容が含まれうる",
+          "gherkin": "Given Aの投稿者はXである\nWhen 管理者でない投稿者YがAのコメントを読もうとする\nThen ARTIFACT_NOT_FOUND として拒まれる",
+          "covers": "対象の投稿者でも管理者でもない者が求めたとき、対象が見つからないものとして拒むこと"
+        },
+        {
+          "name": "公開が止まっていても読める",
+          "category": "境界値",
+          "viewpoint": "事前条件: 止めたあとでも寄せられた反応を確かめられることを確かめる",
+          "gherkin": "Given Aが公開停止されている\nWhen Xが読み出しを求める\nThen それまでに寄せられたコメントが返る",
+          "covers": "公開が止まっている共有アーティファクトのコメントも読めること"
+        },
+        {
+          "name": "読んでも何も変わらない",
+          "category": "正常系",
+          "viewpoint": "べき等性: 読み出しが読むだけの操作であることを確かめる",
+          "gherkin": "Given Aに3件のコメントがある\nWhen 続けて2回読み出しを求める\nThen 2回とも同じ3件が返る\nAnd コメントは何も変わっていない",
+          "covers": "読んでもコメントを変えないこと"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "読み出しが、コメントを一切書き換えないこと",
+        "投稿者に閲覧トークンを持たせずに読めること"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "投稿者Xが共有アーティファクトAを公開している。",
+      "scenarios": [
+        {
+          "name": "閲覧トークンを控えていなくても読める",
+          "category": "境界値",
+          "viewpoint": "一貫性: 閲覧トークンが一度しか示されない決めごとと、投稿者が反応を読めることが両立するのを確かめる",
+          "gherkin": "Given Xは公開時に示された閲覧トークンを控えていない\nWhen XがAのコメントを読もうとする\nThen 読める\nAnd 閲覧トークンの入力は求められない",
+          "covers": "投稿者に閲覧トークンを持たせずに読めること"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-comment"
+}

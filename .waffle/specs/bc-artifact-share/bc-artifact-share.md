@@ -73,6 +73,8 @@
 - uc-reset-password
 - uc-create-project
 - uc-control-project-access
+- uc-export-artifact
+- uc-read-comments
 
 ---
 

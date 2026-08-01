@@ -20,6 +20,7 @@ import json
 import os
 from pathlib import Path
 
+import comments as comment_store
 import manage
 import projects
 import publish
@@ -29,7 +30,7 @@ import publishers
 ACTIONS = {
     "publish", "list", "replace", "rotate", "disable", "enable",
     "assign", "unassign", "transfer", "invite", "remove-publisher",
-    "publishers", "resend-invite",
+    "publishers", "resend-invite", "comments", "export",
     "projects", "project", "create-project", "reissue-project",
     "disable-project", "enable-project",
 }
@@ -91,6 +92,10 @@ def _dispatch(action, deps, caller, body):  # pragma: no cover
         return manage.assign(deps, caller, artifact_id, body.get("projectId", ""))
     if action == "unassign":
         return manage.unassign(deps, caller, artifact_id, body.get("projectId", ""))
+    if action == "comments":
+        return comment_store.read(deps, caller, artifact_id)
+    if action == "export":
+        return comment_store.export(deps, caller, artifact_id)
     if action == "transfer":
         return manage.transfer(deps, caller, artifact_id, body.get("toPublisher", ""))
     if action == "invite":

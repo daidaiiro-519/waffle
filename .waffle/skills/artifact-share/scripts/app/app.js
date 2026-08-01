@@ -433,7 +433,11 @@
       var w = document.createElement('span'); w.className = 'cwhen';
       w.textContent = count ? '' : 'コメントなし';
       c.append(n, w);
-      c.disabled = true;   // コメントの読み出しは閲覧の面が持つ
+      if (count) {
+        c.setAttribute('aria-label', d.name + ' のコメント' + count + '件を読む');
+        c.title = 'コメントを読む';
+        c.addEventListener('click', function (e) { e.stopPropagation(); openComments(d); });
+      } else { c.disabled = true; }
 
       var end = document.createElement('div'); end.className = 'rowend';
       end.appendChild(active ? chip('status on', '公開中') : chip('status no', '無効化済み'));
@@ -472,7 +476,7 @@
   function act(label, item) {
     target = item;
     if (label === '開く') { window.open(viewerUrl(item.artifactId), '_blank'); return; }
-    if (label === 'エクスポート') { $('exp-target').textContent = item.name; openDlg('dlg-export'); return; }
+    if (label === 'エクスポート') { exportArtifact(item); return; }
     if (label === '差し替えてアップロード') { $('rep-target').textContent = item.name; openDlg('dlg-replace'); return; }
     if (label === '引き継ぐ') return openTransfer(item);
 
@@ -645,6 +649,110 @@
       copyText($(b.dataset.copy).textContent, function () { toast('コピーしました'); });
     });
   });
+
+  /* ── 寄せられたコメントを読む ──────────────────────
+     閲覧者は閲覧トークンで開いた画面から読み書きし、投稿者はここから読む。
+     指しているものは同じで、保存されている形も同じ。 */
+  var DECISION = { approve: 'この方向でOK', revise: '修正希望' };
+
+  function openComments(item) {
+    $('cm-target').textContent = item.name;
+    var list = $('cm-list');
+    list.textContent = '';
+    var busy = document.createElement('p');
+    busy.className = 'busy'; busy.textContent = '読み込んでいます…';
+    list.appendChild(busy);
+    $('cm-sum').textContent = '';
+    openDlg('dlg-comments');
+
+    api('comments', { artifactId: item.artifactId })
+      .then(function (d) { renderComments(d); })
+      .catch(function (e) {
+        list.textContent = '';
+        var p = document.createElement('p');
+        p.className = 'busy'; p.textContent = '読み込めませんでした。' + (e.message || '');
+        list.appendChild(p);
+      });
+  }
+
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? '' : (d.getMonth() + 1) + '/' + d.getDate();
+  }
+
+  function renderComments(d) {
+    var list = $('cm-list');
+    list.textContent = '';
+
+    var said = d.comments.filter(function (c) { return c.kind !== 'divider'; });
+    var approve = said.filter(function (c) { return c.decision === 'approve'; }).length;
+    var revise = said.filter(function (c) { return c.decision === 'revise'; }).length;
+    var people = said.reduce(function (set, c) {
+      if (set.indexOf(c.author) < 0) set.push(c.author);
+      return set;
+    }, []).length;
+
+    var sum = said.length + '件・' + people + '人';
+    if (approve) sum += '・この方向でOK ' + approve;
+    if (revise) sum += '・修正希望 ' + revise;
+    // 読めなかったものを黙って落とすと、これで全部だと思い込む
+    if (d.unreadable) sum += '（読めなかったもの ' + d.unreadable + '件）';
+    $('cm-sum').textContent = sum;
+
+    if (!said.length) {
+      var e = document.createElement('p');
+      e.className = 'busy'; e.textContent = 'まだコメントはありません。';
+      list.appendChild(e);
+      return;
+    }
+
+    d.comments.forEach(function (c) {
+      if (c.kind === 'divider') {
+        var sep = document.createElement('p');
+        sep.className = 'cmdivider';
+        sep.textContent = 'ここで中身が差し替えられました';
+        list.appendChild(sep);
+        return;
+      }
+      var el = document.createElement('div');
+      el.className = 'cmitem' + (c.parentId ? ' reply' : '');
+
+      var head = document.createElement('div'); head.className = 'cmtop';
+      head.appendChild(chip('cwho', c.author));
+      if (DECISION[c.decision]) {
+        head.appendChild(chip('cdec ' + c.decision, DECISION[c.decision]));
+      }
+      head.appendChild(chip('cwhen', when(c.postedAt)));
+
+      var body = document.createElement('div'); body.className = 'cbody';
+      body.textContent = c.body;      // 受け取った値は必ず文字として描く
+
+      el.append(head, body);
+      list.appendChild(el);
+    });
+  }
+
+  /* ── 取り出す ──────────────────────────────────────
+     まとめるのはここ。管理APIは読むだけで、保管へは書かない。 */
+  function exportArtifact(item) {
+    api('export', { artifactId: item.artifactId }).then(function (d) {
+      var name = (d.name || item.artifactId).replace(/[\\/:*?"<>|]/g, '_');
+      save(name + '.html', d.content, 'text/html;charset=utf-8');
+      save(name + '.comments.json',
+           JSON.stringify(d.comments, null, 2), 'application/json;charset=utf-8');
+      toast(d.unreadable
+        ? '取り出しました（読めなかったコメントが' + d.unreadable + '件あります）'
+        : '中身とコメントを取り出しました');
+    }).catch(fail);
+  }
+
+  function save(filename, text, type) {
+    var url = URL.createObjectURL(new Blob([text], { type: type }));
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
 
   /* ── プロジェクト ──────────────────────────────────
      自分が持ち主のものと、共有のものが並ぶ。共有なら自分のアーティファクトを

@@ -98,3 +98,8 @@
   .addrow select{flex:1; min-width:200px; font:inherit; font-size:13px; padding:7px 10px;
     border:1px solid var(--line); border-radius:7px; background:var(--card); color:var(--ink);}
   .chev{color:var(--ink-faint); font-size:15px;}
+
+  /* 差し替えの区切り。閲覧画面と同じく、コメントの並びに挟まる印 */
+  .cmdivider{font-size:11px; color:var(--ink-faint); text-align:center; margin:14px 0;
+    display:flex; align-items:center; gap:9px;}
+  .cmdivider::before, .cmdivider::after{content:""; flex:1; height:1px; background:var(--line);}

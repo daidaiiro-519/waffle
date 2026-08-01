@@ -256,6 +256,14 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${BucketName}/meta/*"
                   - !Sub "arn:aws:s3:::${BucketName}/projects/*"
+              # 投稿者が自分へ寄せられたコメントを読むため、および中身を
+              # 手元へ取り出すため。読むだけで、書き込みは広げない
+              - Sid: ReadCommentsAndContent
+                Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/comments/*"
+                  - !Sub "arn:aws:s3:::${BucketName}/p/*"
               # 索引を並べるためだけの走査。中身の置き場は対象にしない
               - Sid: ListIndexOnly
                 Effect: Allow
@@ -263,7 +271,7 @@ Resources:
                 Resource: !Sub "arn:aws:s3:::${BucketName}"
                 Condition:
                   StringLike:
-                    s3:prefix: ["meta/*", "projects/*"]
+                    s3:prefix: ["meta/*", "projects/*", "comments/*"]
               # 一覧ページは閲覧の面が配る場所。任意のページを置けないよう、
               # 置ける名前を雛形と中身の2つに限る
               - Sid: WriteProjectListing

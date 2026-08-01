@@ -1,0 +1,307 @@
+{
+  "documentId": "handoff-read-export",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "寄せられたコメントを投稿者へ届ける経路：handoff-read-export"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-read-comments"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "同じコメントに、読み手ごとに別の経路がある",
+          "consideration": "閲覧者は閲覧トークンで開いた画面から読み書きし、投稿者は本人確認を通った画面から読む。指しているものは同じコメントだが、通ってよい条件が違う。経路を1つにまとめようとすると、どちらかの条件をもう一方に持ち込むことになる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "取り出しは読むだけの操作である",
+          "consideration": "公開状態も閲覧トークンもコメントも変えない。公開を止める操作と切り離してあるのは、止めるかどうかを決める前に中身を確かめたい場面があるため。実装でも、取り出しの経路から書き込みを一切行わない。"
+        },
+        {
+          "advisor": "platform-advisor",
+          "viewpoint": "管理APIに読み取りの権限が増える",
+          "consideration": "いまの権限は索引（meta/・projects/）を読むだけで、コメントの置き場は読めない。読み取りだけを接頭辞の単位で足す。書き込みは広げない——管理APIが閲覧者の反応を書ける状態にすると、寄せられた指摘を投稿者が書き換えられることになる。"
+        },
+        {
+          "advisor": "platform-advisor",
+          "viewpoint": "取り出したものをどう手元へ渡すか",
+          "consideration": "まとめたものをそのまま応答に載せると、コメントが多い共有アーティファクトで応答が大きくなる。中身とコメントを構造化して返し、1つのファイルへまとめるのは画面側が行う。管理APIは保管へ書かない（書くと、取り出しが読むだけの操作でなくなる）。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "並びと区切りを検証で押さえる",
+          "consideration": "コメントは寄せられた順に並び、差し替えの区切りがその時点の位置に現れる必要がある。鍵は時刻を含む名前で並ぶが、その前提が崩れたときに気づける検証を書く。区切りが落ちると、手元では指摘の前後関係が読めなくなる。"
+        },
+        {
+          "advisor": "ux-advisor",
+          "viewpoint": "読む画面は閲覧側の見え方に寄せる",
+          "consideration": "投稿者が読む一覧と、閲覧者が見るコメント欄は、同じものを見ている。名前・判定・返信・区切りの見え方を揃え、投稿者だけ別の形にしない。既存のモック（main.htmlのコメントを読むダイアログ）が既にその形になっている。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "コメントの読み出しを comments.py に置く",
+          "consideration": "manage.py（出し入れ・差し替え）でも projects.py（見せ方）でもない、コメントという別の対象を扱うため。取り出し（export）もコメントを読むので、同じファイルに置いて読み取りの処理を1つにする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "読んでよいかの判定は既にあるものを使う",
+          "consideration": "「自分が公開したものか、管理者か」は manage._read_meta が既に持っている。同じ判定を通せば、拒み方（見つからないものとして扱う）も自動的に揃う。新しい判定を書かない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "区切りの記録はコメントと同じ並びに混ぜる",
+          "consideration": "保管の上では comments/{artifactId}/ に同居しており、区切りは kind: divider を持つ。読み出しでは分けずに1つの並びで返し、どちらかを画面側が見分ける。閲覧側の画面（share-wrapper.html）が既にこの形で描いている。"
+        },
+        {
+          "advisor": "platform-advisor",
+          "viewpoint": "資源の側と実行の権限に、読み取りだけを足す",
+          "consideration": "comments/* への GetObject と ListBucket（接頭辞 comments/）を足す。書き込みは広げない。いまある明示的な拒否（NotResource）は書き込みだけを対象にしているため、読み取りを足しても拒否の範囲は変わらない。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "壊れた記録が1件あっても止まらないことを確かめる",
+          "consideration": "コメントは閲覧者が書き込むもので、読み出し側から見れば外から来たものである。1件が読めなくても残りが返ることを検証で押さえる。全部が読めなくなると、1件の不具合でその共有アーティファクトの反応がすべて見えなくなる。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "取り出しが何も書き換えないことを、続けて2回呼んで確かめる",
+          "consideration": "同じものが2回返り、保管が変わっていないことを見る。読むだけの操作という言明を、言明のままにしない。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "管理APIはコメントを読めるようになるが、書けるようにはしない。書けると、寄せられた指摘を投稿者が書き換えられる",
+        "取り出したものを1つのファイルにまとめるのは画面側が行う。管理APIは保管へ書かない（書くと読むだけの操作でなくなる）",
+        "取り出したものに閲覧トークンは含めない。渡り歩いても、それだけで開ける状態にならないようにする",
+        "コメントが非常に多い共有アーティファクトでは、読み出しの応答が大きくなる。区切って返す仕組みは持たない——このリポジトリが扱う規模では要らないと判断した",
+        "閲覧の経路（/comments-list/{artifactId}）は変更しない。閲覧者の読み方は変わらない",
+        "コメントは保存されている形のまま返す（author/decision/body/parentId/postedAt）。表示用に整えるのは画面側が行う",
+        "読めない記録があっても残りを返し、飛ばした件数を添える"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "nodes": [
+            {
+              "id": "app",
+              "title": "管理画面",
+              "sub": "コメントを読む・取り出す",
+              "status": "existing"
+            },
+            {
+              "id": "viewer",
+              "title": "閲覧画面",
+              "sub": "share-wrapper.html／変更しない",
+              "status": "existing"
+            }
+          ],
+          "description": "同じコメントを、投稿者は管理画面から、閲覧者は閲覧画面から読む。閲覧側は一切変更しない。"
+        },
+        {
+          "label": "経路",
+          "nodes": [
+            {
+              "id": "api",
+              "title": "管理API",
+              "sub": "本人確認を通った人だけ",
+              "status": "existing"
+            },
+            {
+              "id": "gate",
+              "title": "閲覧ゲート",
+              "sub": "閲覧トークンを持つ人だけ／変更しない",
+              "status": "existing"
+            }
+          ],
+          "description": "通ってよい条件が違うため、経路を分けたままにする。片方の条件をもう一方へ持ち込まない。"
+        },
+        {
+          "label": "中核",
+          "nodes": [
+            {
+              "id": "comments",
+              "title": "コメントの読み出し",
+              "sub": "comments.py／読む・取り出す",
+              "status": "new"
+            },
+            {
+              "id": "manage",
+              "title": "扱える範囲の判定",
+              "sub": "manage._read_meta を再利用",
+              "status": "existing"
+            }
+          ],
+          "description": "読んでよいかの判定は既にあるものを通す。拒み方（見つからないものとして扱う）も自動的に揃う。"
+        },
+        {
+          "label": "保管",
+          "nodes": [
+            {
+              "id": "store",
+              "title": "コメントの置き場",
+              "sub": "comments/{artifactId}/",
+              "status": "existing"
+            }
+          ],
+          "description": "書き込むのは閲覧ゲートだけ。管理APIは読むだけで、書けるようにはしない。"
+        }
+      ],
+      "relationships": [
+        {
+          "from": "comments",
+          "to": "manage",
+          "kind": "dependency",
+          "label": "扱える範囲の判定を借りる"
+        },
+        {
+          "from": "api",
+          "to": "gate",
+          "kind": "split",
+          "label": "通ってよい条件が違う"
+        },
+        {
+          "from": "gate",
+          "to": "store",
+          "kind": "dependency",
+          "label": "書き込むのはこちらだけ"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "読む: {\"action\":\"comments\",\"artifactId\":\"k3f9x2\"} → {\"comments\":[{\"kind\":\"comment\",\"who\":\"田中\",\"body\":\"…\",\"decision\":\"approve\",\"postedAt\":1700000000,\"replyTo\":null}]}",
+        "区切り: 差し替えのあるものは {\"kind\":\"divider\",\"postedAt\":…} が同じ並びに混ざる",
+        "取り出す: {\"action\":\"export\",\"artifactId\":\"k3f9x2\"} → {\"name\":\"…\",\"content\":\"<!doctype html>…\",\"comments\":[…]}。1つのファイルにまとめるのは画面側",
+        "他人のもの: 投稿者でも管理者でもなければ ARTIFACT_NOT_FOUND"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "投稿者が自分の画面でコメントを読み、中身とコメントを手元へ取り出せるようにする。この引き継ぎが担うユースケースは uc-read-comments / uc-export-artifact。閲覧の経路を使い回さず、管理APIに読み取りの権限を足すことが中心の判断になる。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/comments.py",
+          "reason": "コメントの読み出しと取り出しを新しく置く"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/main.py",
+          "reason": "comments と export の振り分けを足す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/test_comments.py",
+          "reason": "並び・区切り・扱える範囲・壊れた記録を確かめる"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/infra/cloudformation.yaml",
+          "reason": "コメントの置き場への読み取りだけを足す。書き込みは広げない"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/scripts/app/app.js",
+          "reason": "コメントを読むダイアログを繋ぎ、取り出しをファイルとして保存する"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor",
+        "platform-advisor",
+        "qa-advisor",
+        "ux-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "経路を分けたまま、判定だけを既存のものと共有する形にした"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "取り出しの経路から書き込みを行わないことを制約へ記録した"
+        },
+        {
+          "advisor": "platform-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "resolved",
+          "note": "読み取りだけを接頭辞の単位で足す。書き込みは広げない"
+        },
+        {
+          "advisor": "platform-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "1つのファイルにまとめるのは画面側と決め、制約へ記録した"
+        },
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "resolved",
+          "note": "並びと区切りの検証を着手前の見込みに含めた"
+        },
+        {
+          "advisor": "ux-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "resolved",
+          "note": "保存されている形（author/decision/parentId/postedAt）をそのまま返し、画面側を直す。モックの形は作り物のデータ用で、返信がどれへの返信かを表せない。閲覧画面も保存された形を描いているので、両方が同じ構造を読む"
+        },
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "resolved",
+          "note": "飛ばして続け、飛ばした件数を返す。黙って落とすと、投稿者が『これで全部だ』と思い込む"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": []
+}

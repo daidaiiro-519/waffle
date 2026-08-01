@@ -1,0 +1,195 @@
+{
+  "documentId": "uc-export-artifact",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v6",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "中身とコメントを手元へ取り出す：uc-export-artifact"
+    },
+    "summary": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "投稿者が、公開した共有アーティファクトの中身と、それに寄せられたコメントを手元へまとめて持ち出す操作。",
+        "取り出しても公開は続く。公開を止める前に控えを取る使い方と、記録として残す使い方の両方に使う。"
+      ]
+    },
+    "name": {
+      "blockType": "Name",
+      "title": "名前",
+      "operationName": "ExportArtifact"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "この環境が無くなっても、渡したものと返ってきたものが手元に残る状態にする"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、集まったコメントがこの環境の中にしか存在しなくなる。環境を畳んだ時点で、どんな指摘を受けて何を直したのかという経緯がまとめて失われる。",
+        "公開を止める操作と切り離しておくのは、止めるかどうかを決める前に中身を確かめたい場面があるため。止めてからでは取り出せない作りにすると、迷ったときに止められなくなる。"
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "操作する者が、対象の共有アーティファクトの投稿者であるか、管理者であること"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "共有アーティファクト",
+          "message": "export（ArtifactId）",
+          "kind": "command"
+        },
+        {
+          "from": "共有アーティファクト",
+          "to": "",
+          "message": "中身とコメントを1つにまとめる",
+          "kind": "self"
+        },
+        {
+          "from": "共有アーティファクト",
+          "to": "投稿者",
+          "message": "まとめたもの",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "中身と、それまでに寄せられたコメントが手元にある",
+        "共有アーティファクトは公開されたままである",
+        "閲覧トークンも、集まったコメントも変わっていない"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "投稿者が取り出しを求めたとき、公開した中身をそのまま返すこと",
+        "それまでに寄せられたコメントを、誰がいつ何を言ったかが分かる形で添えること",
+        "差し替えの区切りの記録も、コメントと同じ並びで添えること",
+        "取り出しても、公開状態・閲覧トークン・コメントを一切変えないこと",
+        "公開が止まっている共有アーティファクトも取り出せること",
+        "対象の投稿者でも管理者でもない者が求めたとき、対象が見つからないものとして拒むこと",
+        "閲覧トークンそのものを含めないこと"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "ARTIFACT_NOT_FOUND",
+          "condition": [
+            "対象の共有アーティファクトが存在しない",
+            "操作する者が対象の投稿者でも管理者でもない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "投稿者Xが共有アーティファクトAを公開しており、コメントが3件寄せられている。",
+      "scenarios": [
+        {
+          "name": "中身とコメントがまとめて手元に来る",
+          "category": "正常系",
+          "viewpoint": "計算整合: 渡したものと返ってきたものが、この環境の外でも読める形になることを確かめる",
+          "gherkin": "Given Aにコメントが3件寄せられている\nWhen Xが取り出しを求める\nThen 公開した中身がそのまま返る\nAnd コメント3件が、誰がいつ何を言ったかが分かる形で添えられている",
+          "covers": "それまでに寄せられたコメントを、誰がいつ何を言ったかが分かる形で添えること"
+        },
+        {
+          "name": "差し替えの区切りも一緒に来る",
+          "category": "境界値",
+          "viewpoint": "一貫性: どの指摘が差し替え前のものかを、取り出したあとでも読み取れることを確かめる。区切りが落ちると、手元では指摘の前後関係が分からなくなる",
+          "gherkin": "Given Aが一度差し替えられており、その前後にコメントがある\nWhen Xが取り出しを求める\nThen 差し替えの区切りがコメントと同じ並びに現れる",
+          "covers": "差し替えの区切りの記録も、コメントと同じ並びで添えること"
+        },
+        {
+          "name": "取り出しても何も変わらない",
+          "category": "正常系",
+          "viewpoint": "一貫性: 取り出しが読むだけの操作であることを確かめる。公開が止まったり閲覧トークンが変わったりすると、控えを取るたびに渡した相手へ影響が及ぶ",
+          "gherkin": "Given 閲覧者がAの閲覧トークンを持っている\nWhen Xが取り出しを求める\nThen Aは公開されたままである\nAnd 閲覧者はそれまでの閲覧トークンでAを開ける\nAnd Aのコメントは3件のまま残っている",
+          "covers": "取り出しても、公開状態・閲覧トークン・コメントを一切変えないこと"
+        },
+        {
+          "name": "公開が止まっていても取り出せる",
+          "category": "境界値",
+          "viewpoint": "事前条件: 止めたあとでも控えを取れることを確かめる。止めてからでは取り出せないと、迷ったときに止められなくなる",
+          "gherkin": "Given Aが公開停止されている\nWhen Xが取り出しを求める\nThen 中身とコメントが返る",
+          "covers": "公開が止まっている共有アーティファクトも取り出せること"
+        },
+        {
+          "name": "他人のものは取り出せない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 取り出せる範囲が、自分が公開したものに限られることを確かめる。寄せられたコメントには、渡した相手しか知らない内容が含まれうる",
+          "gherkin": "Given Aの投稿者はXである\nWhen 管理者でない投稿者YがAの取り出しを求める\nThen ARTIFACT_NOT_FOUND として拒まれる",
+          "covers": "対象の投稿者でも管理者でもない者が求めたとき、対象が見つからないものとして拒むこと"
+        },
+        {
+          "name": "閲覧トークンは含まれない",
+          "category": "境界値",
+          "viewpoint": "一貫性: 取り出したものが渡り歩いても、それだけで開ける状態にならないことを確かめる",
+          "gherkin": "Given Aの閲覧トークンが発行されている\nWhen Xが取り出しを求める\nThen 返ったものに閲覧トークンは含まれない",
+          "covers": "閲覧トークンそのものを含めないこと"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "取り出しが、保管されているものを一切書き換えないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "共有アーティファクトAが公開されている。",
+      "scenarios": [
+        {
+          "name": "何度取り出しても同じものが返る",
+          "category": "境界値",
+          "viewpoint": "べき等性: 取り出しが読むだけの操作であることを確かめる",
+          "gherkin": "Given Aが公開されている\nWhen 続けて2回取り出しを求める\nThen 2回とも同じ中身とコメントが返る\nAnd 保管されているものは何も変わっていない",
+          "covers": "取り出しが、保管されているものを一切書き換えないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-shared-artifact"
+}
