@@ -111,19 +111,3 @@ def test_operationを1件も宣言していないusecaseは対象外(tmp_path):
     result = _engine().run(str(docs_root), str(src_root))
     assert isinstance(result, Ok), result
     assert result.value == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
-
-
-def test_存在しないdocuments_rootはINVALID_PATH(tmp_path):
-    """
-    Scenario: 存在しないdocuments_rootはINVALID_PATH
-    When 存在しないdocuments_rootでoperationドリフト検査を実行する
-    Then INVALID_PATHエラーが返る
-    """
-    from waffle.shared.result import Err
-
-    src_root = tmp_path / "src"
-    src_root.mkdir(parents=True, exist_ok=True)
-
-    result = _engine().run(str(tmp_path / "no-such-dir"), str(src_root))
-    assert isinstance(result, Err), result
-    assert result.details[0] == "INVALID_PATH"

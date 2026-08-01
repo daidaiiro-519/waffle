@@ -223,11 +223,10 @@ def test_toolMappingsがdiscriminatorごとに入れ子で宣言されている�
 
 def test_AgentのtoolMappingsが入れ子化されてもorchestratorとsubagentで別々のdeploy先に解決される(tmp_path):
     """
-    Given toolMappings.claude-code.AgentがagentKindごとの入れ子マッピング（orchestrator/subagent）を持つDocument
+    Scenario: Agentのtool対応づけが入れ子でも、種別ごとに別々のdeploy先へ解決される
+    Given toolMappingsのAgentが、agentKindごとの入れ子マッピング（orchestrator/subagent）を持つDocument
     When agentKind=orchestratorとagentKind=subagentのそれぞれをdeployを有効にしてrenderする
-    Then orchestratorはCLAUDE.md相当のパスへ、subagentは.claude/agents/{documentId}.md相当のパスへ、それぞれ別々に解決される
-    （実config.jsonのclaude-code.Agentをフラット→入れ子構造へ移行しても、既存のorchestrator系documentの
-    deploy先が変わらないことを保証する回帰テスト）
+    Then orchestratorとsubagentは、それぞれ別々のdeploy先へ解決される
     """
     schema = {
         "if": {"properties": {"agentKind": {"const": "orchestrator"}}},
@@ -273,15 +272,10 @@ def test_AgentのtoolMappingsが入れ子化されてもorchestratorとsubagent�
 
 def test_入れ子のtoolMappingsに含まれないdiscriminator値はdeployされない(tmp_path):
     """
+    Scenario: 入れ子の対応づけに無いdiscriminator値はdeployされない
     Given documentType向けのtoolMappingsが入れ子だが、対象Documentのdiscriminator値に対応するキーを持たない
     When deployを有効にしてrenderする
-    Then そのtoolのdeploy先には何も書かれない（他のdiscriminator値へのdeploy先を誤って共有しない）
-
-    実装時に発見した回帰: .waffle/config.jsonのtoolMappings.codex.Agentがフラット
-    （{"pathTemplate": "AGENTS.md", ...}）のまま残っていたため、agentKind=subagentの
-    document（本来はcodex向けdeploy対象外）もAGENTS.mdへdeployされ、既存のagentKind=orchestrator
-    向けAGENTS.mdシンボリックリンクを誤って上書きした。この回帰を防ぐため、入れ子マッピングに
-    存在しないdiscriminator値は明示的に対象外になることを確認する。
+    Then そのtoolのdeploy先には何も書かれない
     """
     schema = {
         "if": {"properties": {"agentKind": {"const": "orchestrator"}}},
@@ -763,30 +757,6 @@ def test_配列を期待する部品が配列でない値を受け取るとMALFO
     assert isinstance(result, Err), result
     assert result.details[0] == "MALFORMED_CONTENT"
     assert not (tmp_path / "x.md").exists()
-
-
-def test_未検証ではrenderできない():
-    """
-    Scenario: 未検証ではrenderできない
-    Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument
-    When renderする
-    Then INVALID_TRANSITIONエラーが返り、成果物は書き出されない
-    """
-    doc = {
-        "documentId": "unvalidated-spec",
-        "documentType": "DomainSpec",
-        "schemaRef": "DomainSpecSchema/v2",
-        "specKind": "bounded-context",
-        "status": "CREATED",
-        "content": {},
-    }
-    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
-        json.dump(doc, f)
-        path = f.name
-
-    result = _engine().run(path, deploy=False)
-    assert isinstance(result, Err), result
-    assert result.details[0] == "INVALID_TRANSITION"
 
 
 def test_x_render_targetを持たないschemaはNO_RENDER_TARGETを返す():

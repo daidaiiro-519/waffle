@@ -4,6 +4,8 @@ part_rendererの15件の整形保証はsd-document-managementのdomainServiceSce
 再分類済み。ここはrender_document自体が呼び出し元に約束する保証(決定性・配線・リポジトリ解決契約)
 のみを実engine+実adapterで検証する。
 """
+import json
+import tempfile
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.render_document import RenderDocument
@@ -160,3 +162,27 @@ def test_x_render_hiddenを宣言したブロックは本文に描画しない()
     result = _engine().run(path, deploy=False)
     assert isinstance(result, Ok), result
     assert "呼び出しモード" not in result.value["content"]
+
+
+def test_未検証ではrenderできない():
+    """
+    Scenario: 未検証ではrenderできない
+    Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument
+    When renderする
+    Then INVALID_TRANSITIONエラーが返り、成果物は書き出されない
+    """
+    doc = {
+        "documentId": "unvalidated-spec",
+        "documentType": "DomainSpec",
+        "schemaRef": "DomainSpecSchema/v2",
+        "specKind": "bounded-context",
+        "status": "CREATED",
+        "content": {},
+    }
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+        json.dump(doc, f)
+        path = f.name
+
+    result = _engine().run(path, deploy=False)
+    assert isinstance(result, Err), result
+    assert result.details[0] == "INVALID_TRANSITION"

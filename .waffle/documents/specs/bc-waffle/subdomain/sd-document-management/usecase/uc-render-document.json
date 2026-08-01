@@ -377,6 +377,20 @@
           "viewpoint": "deploy: x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、それぞれ独立にfan-out展開され両方のdeploy先へ書かれる",
           "gherkin": "Scenario: 複数種類の配列pathVarが同時にfan-out展開される\n  Given x-render-target.pathVarsで2種類の配列値（skillRefsとagentRefs）を宣言したschemaのDocumentと、それぞれを参照するtoolMappingsのpathTemplate\n  When deployを有効にしてrenderする\n  Then skillRefsの各要素とagentRefsの各要素それぞれに対応するdeploy先が全て作られる",
           "covers": "受け入れ基準: 複数種類の配列pathVarの同時fan-out"
+        },
+        {
+          "name": "Agentのtool対応づけが入れ子でも、種別ごとに別々のdeploy先へ解決される",
+          "category": "正常系",
+          "viewpoint": "計算整合: 対応づけをフラットから入れ子へ移しても、既存documentのdeploy先が変わらないこと",
+          "gherkin": "Scenario: Agentのtool対応づけが入れ子でも、種別ごとに別々のdeploy先へ解決される\nGiven toolMappingsのAgentが、agentKindごとの入れ子マッピング（orchestrator/subagent）を持つDocument\nWhen agentKind=orchestratorとagentKind=subagentのそれぞれをdeployを有効にしてrenderする\nThen orchestratorとsubagentは、それぞれ別々のdeploy先へ解決される",
+          "covers": "受け入れ基準: toolMappingsが指すdeploy先へ配置する（入れ子の対応づけ）"
+        },
+        {
+          "name": "入れ子の対応づけに無いdiscriminator値はdeployされない",
+          "category": "異常系",
+          "viewpoint": "境界: 対応づけに無い値が、他の値のdeploy先を誤って共有しないこと",
+          "gherkin": "Scenario: 入れ子の対応づけに無いdiscriminator値はdeployされない\nGiven documentType向けのtoolMappingsが入れ子だが、対象Documentのdiscriminator値に対応するキーを持たない\nWhen deployを有効にしてrenderする\nThen そのtoolのdeploy先には何も書かれない",
+          "covers": "受け入れ基準: toolMappingsが指すdeploy先へ配置する（対象外の判定）"
         }
       ]
     },
