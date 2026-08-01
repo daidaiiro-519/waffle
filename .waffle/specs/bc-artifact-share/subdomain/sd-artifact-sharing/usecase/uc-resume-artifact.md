@@ -1,3 +1,12 @@
+---
+id: "uc-resume-artifact"
+type: "usecase"
+title: "止めていたものを再び見せる（閲覧トークンは必ず新しくなる）：uc-resume-artifact"
+description: "停止していた共有アーティファクトを再び開ける状態にする操作。共有URLも中身もコメントもそのまま戻るが、閲覧トークンだけは必ず新しくなる。 止めた理由の多くが見せる相手を絞り直すことにあるため、止める前の閲覧トークンは復活させない。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 止めていたものを再び見せる（閲覧トークンは必ず新しくなる）：uc-resume-artifact
 
 ## 概要

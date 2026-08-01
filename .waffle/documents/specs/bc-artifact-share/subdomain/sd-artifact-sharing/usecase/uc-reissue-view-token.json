@@ -1,26 +1,13 @@
 {
   "documentId": "uc-reissue-view-token",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "閲覧トークンを新しくして、それまでの閲覧トークンを使えなくする：uc-reissue-view-token"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "渡した閲覧トークンを失効させ、新しい閲覧トークンを発行する操作。見せる相手を絞り直したいときと、閲覧トークンを紛失したときに使う。",
-        "共有URLは変わらないため、相手には新しい閲覧トークンだけを伝えればよい。"
-      ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "ReissueArtifactViewToken"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -182,6 +169,19 @@
       "blockType": "OperationIndex",
       "title": "操作一覧",
       "items": []
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "渡した閲覧トークンを失効させ、新しい閲覧トークンを発行する操作。見せる相手を絞り直したいときと、閲覧トークンを紛失したときに使う。",
+        "共有URLは変わらないため、相手には新しい閲覧トークンだけを伝えればよい。"
+      ]
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "ReissueArtifactViewToken"
     }
   },
   "tags": [

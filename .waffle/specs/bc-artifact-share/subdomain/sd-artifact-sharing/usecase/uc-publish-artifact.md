@@ -1,3 +1,12 @@
+---
+id: "uc-publish-artifact"
+type: "usecase"
+title: "手元の文書を公開して共有URLと閲覧トークンを受け取る：uc-publish-artifact"
+description: "招かれた投稿者が手元の文書を渡し、それを見てもらうための共有URLと閲覧トークンを受け取る操作。 文書に識別のための情報が添えられていれば取り出して控え、添えられていなければ題名だけを人に尋ねる。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 手元の文書を公開して共有URLと閲覧トークンを受け取る：uc-publish-artifact
 
 ## 概要

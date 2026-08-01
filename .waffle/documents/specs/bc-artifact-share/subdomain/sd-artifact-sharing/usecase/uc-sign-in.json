@@ -1,26 +1,13 @@
 {
   "documentId": "uc-sign-in",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "招かれた人が合言葉で入る：uc-sign-in"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "招かれた投稿者が、宛先と合言葉を示して本人であることを確かめてもらう操作。以後の公開と管理は、すべてこれを通ってから行う。",
-        "初めて入るときは、招待で届いた仮の合言葉を自分だけが知るものへ決め直すまで、公開も管理もできない。"
-      ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "SignIn"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -229,6 +216,19 @@
           "summary": "初めて入るときに、仮の合言葉を自分だけが知るものへ決め直す。"
         }
       ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "招かれた投稿者が、宛先と合言葉を示して本人であることを確かめてもらう操作。以後の公開と管理は、すべてこれを通ってから行う。",
+        "初めて入るときは、招待で届いた仮の合言葉を自分だけが知るものへ決め直すまで、公開も管理もできない。"
+      ]
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "SignIn"
     }
   },
   "tags": [],

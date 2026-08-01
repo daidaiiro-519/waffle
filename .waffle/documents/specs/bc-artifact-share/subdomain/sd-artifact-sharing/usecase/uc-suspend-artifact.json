@@ -1,26 +1,13 @@
 {
   "documentId": "uc-suspend-artifact",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "見せるのを止めるが、中身もコメントも残す：uc-suspend-artifact"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "公開している共有アーティファクトを開けない状態にする操作。中身もコメントも消さず、あとから再び公開できる。",
-        "止める前に、中身とコメントを手元へ取り出しておくかどうかを尋ねる。既定では取り出す。"
-      ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "SuspendArtifact"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -209,6 +196,19 @@
       "blockType": "OperationIndex",
       "title": "操作一覧",
       "items": []
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "公開している共有アーティファクトを開けない状態にする操作。中身もコメントも消さず、あとから再び公開できる。",
+        "止める前に、中身とコメントを手元へ取り出しておくかどうかを尋ねる。既定では取り出す。"
+      ]
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "SuspendArtifact"
     }
   },
   "tags": [

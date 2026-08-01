@@ -1,3 +1,11 @@
+---
+id: "uc-export-artifact"
+type: "usecase"
+title: "中身とコメントを手元へ取り出す：uc-export-artifact"
+description: "投稿者が、公開した共有アーティファクトの中身と、それに寄せられたコメントを手元へまとめて持ち出す操作。 取り出しても公開は続く。公開を止める前に控えを取る使い方と、記録として残す使い方の両方に使う。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 中身とコメントを手元へ取り出す：uc-export-artifact
 
 ## 概要

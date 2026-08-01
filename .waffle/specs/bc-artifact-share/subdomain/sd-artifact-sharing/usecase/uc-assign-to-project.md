@@ -1,3 +1,12 @@
+---
+id: "uc-assign-to-project"
+type: "usecase"
+title: "共有アーティファクトをプロジェクトへ入れる・外す：uc-assign-to-project"
+description: "共有アーティファクトを、プロジェクトへ加えたり外したりする操作。加えるとその単位の閲覧トークンでも開けるようになる。 所属は人が明示的に選んだときにだけ成立する。中身に書かれた値によって決まることはない。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 共有アーティファクトをプロジェクトへ入れる・外す：uc-assign-to-project
 
 ## 概要

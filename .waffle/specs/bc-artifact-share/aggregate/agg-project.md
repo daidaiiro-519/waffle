@@ -1,3 +1,12 @@
+---
+id: "agg-project"
+type: "aggregate"
+title: "複数の共有アーティファクトをプロジェクトと、そのための閲覧トークンを守る集約：agg-project"
+description: "複数の共有アーティファクトを1つの閲覧トークンでまとめて見せるための単位を扱う集約。何が入っているかと、その閲覧トークンで何が開けるかを守る。 所属は人が明示的に選んだときにだけ成立する。中身に書かれた値によって所属が変わることは無い。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 複数の共有アーティファクトをプロジェクトと、そのための閲覧トークンを守る集約：agg-project
 
 ## 概要

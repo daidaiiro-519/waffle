@@ -1,26 +1,13 @@
 {
   "documentId": "uc-control-project-access",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "プロジェクトの見せ方を持ち主が変える：uc-control-project-access"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "プロジェクトの閲覧トークンを再発行したり、開けない状態にしたり、再び開けるようにする操作。渡した相手を絞り直したいときに使う。",
-        "これらは閲覧トークンを渡した相手全員に及ぶため、共有のプロジェクトでも持ち主と管理者だけが行える。"
-      ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "ControlProjectAccess"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -229,6 +216,19 @@
           "summary": "再び開ける状態に戻す。閲覧トークンは必ず新しくなる。"
         }
       ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "プロジェクトの閲覧トークンを再発行したり、開けない状態にしたり、再び開けるようにする操作。渡した相手を絞り直したいときに使う。",
+        "これらは閲覧トークンを渡した相手全員に及ぶため、共有のプロジェクトでも持ち主と管理者だけが行える。"
+      ]
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "ControlProjectAccess"
     }
   },
   "tags": [],

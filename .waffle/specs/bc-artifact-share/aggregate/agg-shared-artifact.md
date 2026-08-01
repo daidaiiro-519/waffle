@@ -1,3 +1,12 @@
+---
+id: "agg-shared-artifact"
+type: "aggregate"
+title: "公開された1つの共有アーティファクトと、それを開くための閲覧トークンを守る集約：agg-shared-artifact"
+description: "誰かに見てもらうために公開された共有アーティファクト1件を扱う集約。公開されているか、誰が開けるか、中身が入れ替わっていないかを守る。 中身に何が書かれているかは解釈しない。解釈しないことが、この集約が中身を書き換えないという約束の裏返しになっている。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 公開された1つの共有アーティファクトと、それを開くための閲覧トークンを守る集約：agg-shared-artifact
 
 ## 概要

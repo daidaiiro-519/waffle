@@ -1,3 +1,12 @@
+---
+id: "uc-post-comment"
+type: "usecase"
+title: "閲覧者が名乗ってコメントを残す：uc-post-comment"
+description: "閲覧トークンを持つ閲覧者が、共有アーティファクトにコメントを残す操作。名乗るだけでよく、あらかじめ登録されている必要はない。 ただの意見か、この方向でよいか、直してほしいか、という判定を添えられる。他のコメントへの返信としても残せる。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 閲覧者が名乗ってコメントを残す：uc-post-comment
 
 ## 概要

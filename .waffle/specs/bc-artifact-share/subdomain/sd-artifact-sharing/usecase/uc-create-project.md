@@ -1,3 +1,11 @@
+---
+id: "uc-create-project"
+type: "usecase"
+title: "まとめて見せるプロジェクトを作る：uc-create-project"
+description: "投稿者が、複数の共有アーティファクトを1つの閲覧トークンでまとめて見せるための単位を作る操作。作った時点では何も入っていない。 作るときに、自分だけが出し入れするか、招かれた人なら誰でも出し入れできるかを選ぶ。この別はあとから変えられない。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # まとめて見せるプロジェクトを作る：uc-create-project
 
 ## 概要

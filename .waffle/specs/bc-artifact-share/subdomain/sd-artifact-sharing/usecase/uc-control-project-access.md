@@ -1,3 +1,11 @@
+---
+id: "uc-control-project-access"
+type: "usecase"
+title: "プロジェクトの見せ方を持ち主が変える：uc-control-project-access"
+description: "プロジェクトの閲覧トークンを再発行したり、開けない状態にしたり、再び開けるようにする操作。渡した相手を絞り直したいときに使う。 これらは閲覧トークンを渡した相手全員に及ぶため、共有のプロジェクトでも持ち主と管理者だけが行える。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # プロジェクトの見せ方を持ち主が変える：uc-control-project-access
 
 ## 概要

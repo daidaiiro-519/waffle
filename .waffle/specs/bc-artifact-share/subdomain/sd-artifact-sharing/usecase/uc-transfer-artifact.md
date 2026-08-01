@@ -1,3 +1,11 @@
+---
+id: "uc-transfer-artifact"
+type: "usecase"
+title: "共有アーティファクトの投稿者を別の投稿者へ移す：uc-transfer-artifact"
+description: "管理者が、共有アーティファクトの投稿者を別の投稿者へ移す操作。移された人は、それを自分が公開したものと同じように扱える。 共有URLも閲覧トークンも中身もコメントも変わらない。誰が手入れできるかだけが変わる。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 共有アーティファクトの投稿者を別の投稿者へ移す：uc-transfer-artifact
 
 ## 概要

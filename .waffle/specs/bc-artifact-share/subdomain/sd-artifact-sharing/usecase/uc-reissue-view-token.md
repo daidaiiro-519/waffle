@@ -1,3 +1,12 @@
+---
+id: "uc-reissue-view-token"
+type: "usecase"
+title: "閲覧トークンを新しくして、それまでの閲覧トークンを使えなくする：uc-reissue-view-token"
+description: "渡した閲覧トークンを失効させ、新しい閲覧トークンを発行する操作。見せる相手を絞り直したいときと、閲覧トークンを紛失したときに使う。 共有URLは変わらないため、相手には新しい閲覧トークンだけを伝えればよい。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 閲覧トークンを新しくして、それまでの閲覧トークンを使えなくする：uc-reissue-view-token
 
 ## 概要

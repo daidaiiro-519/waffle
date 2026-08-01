@@ -1,26 +1,13 @@
 {
   "documentId": "uc-transfer-artifact",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "共有アーティファクトの投稿者を別の投稿者へ移す：uc-transfer-artifact"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "管理者が、共有アーティファクトの投稿者を別の投稿者へ移す操作。移された人は、それを自分が公開したものと同じように扱える。",
-        "共有URLも閲覧トークンも中身もコメントも変わらない。誰が手入れできるかだけが変わる。"
-      ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "TransferArtifact"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -208,6 +195,19 @@
       "blockType": "OperationIndex",
       "title": "操作一覧",
       "items": []
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "管理者が、共有アーティファクトの投稿者を別の投稿者へ移す操作。移された人は、それを自分が公開したものと同じように扱える。",
+        "共有URLも閲覧トークンも中身もコメントも変わらない。誰が手入れできるかだけが変わる。"
+      ]
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "TransferArtifact"
     }
   },
   "tags": [],

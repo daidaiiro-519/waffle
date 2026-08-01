@@ -1,24 +1,12 @@
 {
   "documentId": "knowledge-cand-edge-delivery-browser-trust-boundary",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v2",
+  "schemaRef": "KnowledgeSchema/v5",
   "status": "DRAFT",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "配信の端で守るときのブラウザ側の信頼境界：knowledge-cand-edge-delivery-browser-trust-boundary"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "誰が見てよいかの判定を、配信の端（CDN）と裏側のどちらへ置くべきか",
-        "持ち込まれたHTMLを配るとき、隔離の指定はどこへ掛ければよいか",
-        "オリジン間の取り決め（CORS）が要らない構成とは、何をした結果そうなっているのか",
-        "手元の検証と、コマンドラインからの確認だけで「通しで動いた」と言えるのはどこまでか",
-        "配信の端に置く判定コードには、どんな制約が付いて回るのか"
-      ],
-      "text": "配信網（CDN）の端で誰が見てよいかを判定し、持ち込まれたHTMLを同じ配信元から配る構成では、守りの主語がサーバーではなくブラウザになる。ブラウザが何を同じ出どころ（オリジン）とみなすかが設計の土台になり、指定の掛け方ひとつで、守るつもりだった画面自身が壊れる。"
     },
     "principles": {
       "blockType": "Principles",
@@ -211,6 +199,18 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "questions": [
+        "誰が見てよいかの判定を、配信の端（CDN）と裏側のどちらへ置くべきか",
+        "持ち込まれたHTMLを配るとき、隔離の指定はどこへ掛ければよいか",
+        "オリジン間の取り決め（CORS）が要らない構成とは、何をした結果そうなっているのか",
+        "手元の検証と、コマンドラインからの確認だけで「通しで動いた」と言えるのはどこまでか",
+        "配信の端に置く判定コードには、どんな制約が付いて回るのか"
+      ],
+      "text": "配信網（CDN）の端で誰が見てよいかを判定し、持ち込まれたHTMLを同じ配信元から配る構成では、守りの主語がサーバーではなくブラウザになる。ブラウザが何を同じ出どころ（オリジン）とみなすかが設計の土台になり、指定の掛け方ひとつで、守るつもりだった画面自身が壊れる。",
+      "blockType": "Overview",
+      "title": "概要"
     }
   },
   "tags": [

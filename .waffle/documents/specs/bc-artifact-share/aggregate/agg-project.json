@@ -1,21 +1,13 @@
 {
   "documentId": "agg-project",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "複数の共有アーティファクトをプロジェクトと、そのための閲覧トークンを守る集約：agg-project"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "複数の共有アーティファクトを1つの閲覧トークンでまとめて見せるための単位を扱う集約。何が入っているかと、その閲覧トークンで何が開けるかを守る。",
-        "所属は人が明示的に選んだときにだけ成立する。中身に書かれた値によって所属が変わることは無い。"
-      ]
     },
     "aggregateRoot": {
       "blockType": "AggregateRoot",
@@ -369,6 +361,14 @@
           "gherkin": "Given プロジェクトPに共有アーティファクトAが入っている\nWhen プロジェクトPの公開を止める\nThen Pの閲覧トークンでは何も開けない\nAnd 共有アーティファクトAはそれ自身の閲覧トークンで開ける",
           "covers": "この単位の公開を止めても、入っている共有アーティファクトは常にそれぞれの閲覧トークンで開ける"
         }
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "複数の共有アーティファクトを1つの閲覧トークンでまとめて見せるための単位を扱う集約。何が入っているかと、その閲覧トークンで何が開けるかを守る。",
+        "所属は人が明示的に選んだときにだけ成立する。中身に書かれた値によって所属が変わることは無い。"
       ]
     }
   },

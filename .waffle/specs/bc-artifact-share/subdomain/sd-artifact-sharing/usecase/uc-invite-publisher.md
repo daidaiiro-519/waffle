@@ -1,3 +1,11 @@
+---
+id: "uc-invite-publisher"
+type: "usecase"
+title: "管理者が投稿者を招く・外す：uc-invite-publisher"
+description: "管理者が、公開できる人を増やしたり、外したりする操作。招かれた人だけが文書を公開できる。 外しても、その人がそれまでに公開した共有アーティファクトは消えない。誰も手入れできない状態にならないよう、外す前に引き継ぎ先を決める。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 管理者が投稿者を招く・外す：uc-invite-publisher
 
 ## 概要

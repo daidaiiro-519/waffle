@@ -1,3 +1,11 @@
+---
+id: "uc-read-comments"
+type: "usecase"
+title: "寄せられたコメントを投稿者が読む：uc-read-comments"
+description: "投稿者が、自分の共有アーティファクトに寄せられたコメントを、自分の画面で読む操作。 閲覧者は閲覧トークンで開いた画面からコメントを読み書きする。投稿者はその閲覧トークンを持たないため、別の経路が要る。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 寄せられたコメントを投稿者が読む：uc-read-comments
 
 ## 概要

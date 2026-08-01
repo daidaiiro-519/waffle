@@ -1,26 +1,13 @@
 {
   "documentId": "uc-invite-publisher",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "管理者が投稿者を招く・外す：uc-invite-publisher"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "管理者が、公開できる人を増やしたり、外したりする操作。招かれた人だけが文書を公開できる。",
-        "外しても、その人がそれまでに公開した共有アーティファクトは消えない。誰も手入れできない状態にならないよう、外す前に引き継ぎ先を決める。"
-      ]
-    },
-    "name": {
-      "blockType": "Name",
-      "title": "名前",
-      "operationName": "InvitePublisher"
     },
     "actorIntent": {
       "blockType": "ActorIntent",
@@ -269,6 +256,19 @@
           "summary": "招待をもう一度送る。仮の合言葉が新しくなる。既に入っている人へは送らない。"
         }
       ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "管理者が、公開できる人を増やしたり、外したりする操作。招かれた人だけが文書を公開できる。",
+        "外しても、その人がそれまでに公開した共有アーティファクトは消えない。誰も手入れできない状態にならないよう、外す前に引き継ぎ先を決める。"
+      ]
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "InvitePublisher"
     }
   },
   "tags": [],

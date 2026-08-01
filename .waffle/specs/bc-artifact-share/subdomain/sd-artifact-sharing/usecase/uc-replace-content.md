@@ -1,3 +1,12 @@
+---
+id: "uc-replace-content"
+type: "usecase"
+title: "共有URLと閲覧トークンとコメントを保ったまま中身だけを入れ替える：uc-replace-content"
+description: "指摘を受けて直した文書を、同じ共有URLのまま新しいものへ入れ替える操作。 入れ替えた時点が区切りとしてコメントの並びに残り、それより前の指摘が古いものだと読み取れるようになる。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 共有URLと閲覧トークンとコメントを保ったまま中身だけを入れ替える：uc-replace-content
 
 ## 概要

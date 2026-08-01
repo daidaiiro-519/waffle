@@ -1,3 +1,12 @@
+---
+id: "bc-artifact-share"
+type: "bounded-context"
+title: "作った文書を渡した相手に見てもらいコメントを受け取ることを行う境界づけられたコンテキスト：bc-artifact-share"
+description: "作った文書を、渡した相手に見てもらい、その場でコメントを受け取るための文脈。文書を作った側は誰に見せるかを決め、見る側は名乗るだけで意見を残せる。 この文脈では、共有される文書の中身を解釈しない。何が書かれているかではなく、誰が見られるか・いつまで見られるか・どんなコメントが集まったかだけを扱う。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 作った文書を渡した相手に見てもらいコメントを受け取ることを行う境界づけられたコンテキスト：bc-artifact-share
 
 ## 概要

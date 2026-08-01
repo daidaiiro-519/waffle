@@ -1,21 +1,13 @@
 {
   "documentId": "agg-comment",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v6",
+  "schemaRef": "DomainSpecSchema/v8",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "閲覧者が残したコメントそのものを守る集約：agg-comment"
-    },
-    "summary": {
-      "blockType": "Summary",
-      "title": "概要",
-      "items": [
-        "閲覧者が共有アーティファクトに残したコメント1件を扱う集約。誰が何を言い、どういう判定だったのかを守る。",
-        "コメントは共有アーティファクトとは別に数え切れず増えるため、共有アーティファクトの内側には置かない。共有アーティファクトをIDで指し示すだけの関係に留める。"
-      ]
     },
     "aggregateRoot": {
       "blockType": "AggregateRoot",
@@ -236,6 +228,14 @@
           "gherkin": "Given 共有アーティファクトAに2件のコメントが残っている\nWhen 共有アーティファクトAの中身を差し替える\nThen 2件のコメントはいずれも残っている\nAnd 差し替えが行われた時点が区切りとしてコメントの並びに現れる\nAnd その区切りより前のコメントは差し替え前のものだと読み取れる",
           "covers": "共有アーティファクトの中身が差し替えられても、それまでのコメントは常に残る"
         }
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "閲覧者が共有アーティファクトに残したコメント1件を扱う集約。誰が何を言い、どういう判定だったのかを守る。",
+        "コメントは共有アーティファクトとは別に数え切れず増えるため、共有アーティファクトの内側には置かない。共有アーティファクトをIDで指し示すだけの関係に留める。"
       ]
     }
   },

@@ -1,3 +1,12 @@
+---
+id: "uc-suspend-artifact"
+type: "usecase"
+title: "見せるのを止めるが、中身もコメントも残す：uc-suspend-artifact"
+description: "公開している共有アーティファクトを開けない状態にする操作。中身もコメントも消さず、あとから再び公開できる。 止める前に、中身とコメントを手元へ取り出しておくかどうかを尋ねる。既定では取り出す。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 見せるのを止めるが、中身もコメントも残す：uc-suspend-artifact
 
 ## 概要

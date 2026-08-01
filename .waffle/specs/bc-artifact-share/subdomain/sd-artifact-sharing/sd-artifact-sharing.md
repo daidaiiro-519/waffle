@@ -1,3 +1,12 @@
+---
+id: "sd-artifact-sharing"
+type: "subdomain"
+title: "作った文書を渡した相手に見せてコメントを集めることを扱う業務領域：sd-artifact-sharing"
+description: "誰に見せるかを決め、見せ、コメントを受け取るまでの一連を扱う業務領域。文書の中身をどう作るかは扱わない。 細分化していない。公開・コメント・まとめのいずれを取り出しても、自前で作るか既製品に頼るかという投資の答えが同じになり、分けても設計判断が変わらないため。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 作った文書を渡した相手に見せてコメントを集めることを扱う業務領域：sd-artifact-sharing
 
 ## 概要

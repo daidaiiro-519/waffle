@@ -1,3 +1,12 @@
+---
+id: "agg-comment"
+type: "aggregate"
+title: "閲覧者が残したコメントそのものを守る集約：agg-comment"
+description: "閲覧者が共有アーティファクトに残したコメント1件を扱う集約。誰が何を言い、どういう判定だったのかを守る。 コメントは共有アーティファクトとは別に数え切れず増えるため、共有アーティファクトの内側には置かない。共有アーティファクトをIDで指し示すだけの関係に留める。"
+tags: ["context:artifact-share"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 閲覧者が残したコメントそのものを守る集約：agg-comment
 
 ## 概要

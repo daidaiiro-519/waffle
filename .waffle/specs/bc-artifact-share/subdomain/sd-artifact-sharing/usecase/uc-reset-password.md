@@ -1,3 +1,11 @@
+---
+id: "uc-reset-password"
+type: "usecase"
+title: "合言葉を忘れた人が自分で決め直す：uc-reset-password"
+description: "合言葉を忘れた投稿者が、登録されている宛先へ届く確認コードを頼りに、新しい合言葉を自分で決める操作。 招待に応じていない人はこれを使えない。仮の合言葉を無くした場合は、管理者が招き直す。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 合言葉を忘れた人が自分で決め直す：uc-reset-password
 
 ## 概要
