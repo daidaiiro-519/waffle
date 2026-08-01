@@ -315,7 +315,7 @@
         <div class="dec"><span class="tg">決定</span><p class="h">アップロードは招待制。匿名は許可しない</p><p class="d">Cognito User Poolのセルフサインアップを無効にし、責任者が招待する。外部IdP連携の余地は残す</p></div>
         <div class="dec"><span class="tg">決定</span><p class="h">認証はCognito。IAM Identity Centerは採らない</p><p class="d">CloudFormationに含められデプロイの追加手順がゼロだから。IICはアカウントレベルの事前設定を強いる</p></div>
         <div class="dec"><span class="tg">決定</span><p class="h">オリジンを2つに分ける</p><p class="d">認証が要る面と、トークンで見る面。独自ドメインは不要。今しか入れられない</p></div>
-        <div class="dec"><span class="tg">決定</span><p class="h">アップロードはLambda経由。UIはドラッグ＆ドロップ</p><p class="d">契約検証・slug発行・名前空間チェックを必ず通る関門に置ける</p></div>
+        <div class="dec"><span class="tg">決定</span><p class="h">アップロードはLambda経由。UIはドラッグ＆ドロップ</p><p class="d">契約検証・slug発行・名前空間チェックを必ず通る閲覧ゲートに置ける</p></div>
         <div class="dec"><span class="tg">決定</span><p class="h">テンプレート製か野良かは自動判定する</p><p class="d">metaタグが読めれば質問ゼロ、読めなければ表示名だけ聞く。利用者に宣言させない</p></div>
         <div class="dec"><span class="tg">決定</span><p class="h">タグはアクセス制御に使わない</p><p class="d">HTMLの中身に書かれた値なので、所属＝アクセススコープを決めさせると権限昇格になる。所属は人が明示的に操作する</p></div>
         <div class="dec"><span class="tg">決定</span><p class="h">CSPで契約を機械的に強制する</p><p class="d">「外部依存ゼロ」を規約でなく配信時の挙動として効かせる。数行・費用ゼロ</p></div>

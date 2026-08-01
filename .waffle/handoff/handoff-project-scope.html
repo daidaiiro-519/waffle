@@ -6,7 +6,7 @@
 <meta name="id" content="handoff-project-scope">
 <meta name="type" content="Handoff">
 <meta name="title" content="プロジェクトの個人と共有の別を、どこでどう表すか：handoff-project-scope">
-<meta name="description" content="プロジェクトを個人と共有に分ける決定を、どの保管にどう表し、どこで判定するかを引き継ぐ。閲覧する側からは違いが見えず、判定は管理の受け口ひとつに閉じる。この引き継ぎが担うユースケースは uc-create-project / uc-control-project-access と、共有の別の判定を足す uc-assign-to-project の改訂。">
+<meta name="description" content="プロジェクトを個人と共有に分ける決定を、どの保管にどう表し、どこで判定するかを引き継ぐ。閲覧する側からは違いが見えず、判定は管理APIひとつに閉じる。この引き継ぎが担うユースケースは uc-create-project / uc-control-project-access と、共有の別の判定を足す uc-assign-to-project の改訂。">
 <meta name="tags" content="">
 <style>
 @font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
@@ -138,7 +138,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
           </marker>
         </defs>
         <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
-        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">受け口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">管理API</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">中核</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">保管</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="466.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">閲覧</div></foreignObject>
@@ -161,7 +161,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <path class="flow-arrow" d="M606.0,402.0 L398.0,466.0"/>
         <path class="flow-arrow dep" d="M554.0,288.0 L190.0,352.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="372.0" y="314.0">共有の別と持ち主を読む</text>
         <path class="flow-arrow dep" d="M242.0,288.0 L606.0,352.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="424.0" y="314.0">閲覧トークンを書く</text>
-        <path class="flow-arrow dep" d="M606.0,402.0 L398.0,466.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="502.0" y="428.0">関門はここだけを読む</text>
+        <path class="flow-arrow dep" d="M606.0,402.0 L398.0,466.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="502.0" y="428.0">閲覧ゲートはここだけを読む</text>
         <path class="flow-split" d="M284.0,377.0 L304.0,377.0"/><text class="flow-caption-svg" x="294.0" y="371.0">見せるための写しを書き出す</text>
         
         <g class="flow-box " transform="translate(96.0,10.0)">
@@ -248,7 +248,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
           <rect width="604.0" height="50" rx="10"/>
           <foreignObject x="4" y="4" width="596.0" height="42">
             <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
-              <div class="title">閲覧の関門</div>
+              <div class="title">閲覧ゲート</div>
               <div class="sub">変更しない</div>
             </div>
           </foreignObject>
@@ -257,7 +257,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </svg>
       <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
     </div>
-    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 人が触る面。作る・出し入れ・見せ方を変えるはすべて管理画面から行い、CLIは一覧ページの雛形を置き直すときだけ関わる。</p></li><li><p><strong>受け口</strong>: 証明を確かめ、誰であるか（と管理者かどうか）を決めてから、操作ごとの処理へ渡す。</p></li><li><p><strong>中核</strong>: 持ち主の判定は projects.py、共有の別と投稿者の判定は manage.py が持つ。判定が別物であることを、ファイルの分かれ目として表す。</p></li><li><p><strong>保管</strong>: 索引は人へ見せるための正、トークンの保管は関門が即座に判じるための投影。共有の別は索引だけが持ち、トークンの保管には置かない。</p></li><li><p><strong>閲覧</strong>: 閲覧トークンと所属だけを見て開けるかを判じる。共有の別は知らない。閲覧する側から個人と共有の違いは見えない。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>作る: {&quot;action&quot;:&quot;create-project&quot;,&quot;displayName&quot;:&quot;検索基盤リニューアル&quot;,&quot;scope&quot;:&quot;SHARED&quot;} → {&quot;projectId&quot;:&quot;...&quot;,&quot;url&quot;:&quot;https://{閲覧の入口}/proj/{projectId}/&quot;,&quot;token&quot;:&quot;...&quot;,&quot;tokenShownOnce&quot;:true}</p></li><li><p>加える: {&quot;action&quot;:&quot;assign&quot;,&quot;artifactId&quot;:&quot;k3f9x2&quot;,&quot;projectId&quot;:&quot;p7k2xq&quot;} → 共有なら通る。個人で持ち主でなければ PROJECT_NOT_FOUND</p></li><li><p>見せ方を変える: {&quot;action&quot;:&quot;reissue-project&quot;,&quot;projectId&quot;:&quot;p7k2xq&quot;} → 持ち主か管理者なら新しい閲覧トークン。それ以外は PROJECT_NOT_FOUND</p></li><li><p>一覧: {&quot;action&quot;:&quot;projects&quot;} → 自分が持ち主のものと、共有のものが並ぶ。管理者には全部が並ぶ</p></li></ol></div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 人が触る面。作る・出し入れ・見せ方を変えるはすべて管理画面から行い、CLIは一覧ページの雛形を置き直すときだけ関わる。</p></li><li><p><strong>管理API</strong>: 証明を確かめ、誰であるか（と管理者かどうか）を決めてから、操作ごとの処理へ渡す。</p></li><li><p><strong>中核</strong>: 持ち主の判定は projects.py、共有の別と投稿者の判定は manage.py が持つ。判定が別物であることを、ファイルの分かれ目として表す。</p></li><li><p><strong>保管</strong>: 索引は人へ見せるための正、トークンの保管は閲覧ゲートが即座に判じるための投影。共有の別は索引だけが持ち、トークンの保管には置かない。</p></li><li><p><strong>閲覧</strong>: 閲覧トークンと所属だけを見て開けるかを判じる。共有の別は知らない。閲覧する側から個人と共有の違いは見えない。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>作る: {&quot;action&quot;:&quot;create-project&quot;,&quot;displayName&quot;:&quot;検索基盤リニューアル&quot;,&quot;scope&quot;:&quot;SHARED&quot;} → {&quot;projectId&quot;:&quot;...&quot;,&quot;url&quot;:&quot;https://{閲覧の入口}/proj/{projectId}/&quot;,&quot;token&quot;:&quot;...&quot;,&quot;tokenShownOnce&quot;:true}</p></li><li><p>加える: {&quot;action&quot;:&quot;assign&quot;,&quot;artifactId&quot;:&quot;k3f9x2&quot;,&quot;projectId&quot;:&quot;p7k2xq&quot;} → 共有なら通る。個人で持ち主でなければ PROJECT_NOT_FOUND</p></li><li><p>見せ方を変える: {&quot;action&quot;:&quot;reissue-project&quot;,&quot;projectId&quot;:&quot;p7k2xq&quot;} → 持ち主か管理者なら新しい閲覧トークン。それ以外は PROJECT_NOT_FOUND</p></li><li><p>一覧: {&quot;action&quot;:&quot;projects&quot;} → 自分が持ち主のものと、共有のものが並ぶ。管理者には全部が並ぶ</p></li></ol></div>
   </section>
 
   <section>
@@ -306,7 +306,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="entry">
               <div class="entry-head"><span class="badge">ddd-advisor</span></div>
               <div class="entry-viewpoint">共有の別は閲覧の可否ではなく、書き換えの可否である</div>
-              <div class="entry-consideration">個人と共有の違いは『誰が出し入れできるか』だけで、閲覧トークンを持つ人から見える範囲は同じ。したがって閲覧の関門は共有の別を知る必要がなく、知らせてもならない。関門に持ち込むと、閲覧のたびに読む値が増えて費用と遅延が乗るうえ、閲覧の判定と書き換えの判定が混ざる。</div>
+              <div class="entry-consideration">個人と共有の違いは『誰が出し入れできるか』だけで、閲覧トークンを持つ人から見える範囲は同じ。したがって閲覧ゲートは共有の別を知る必要がなく、知らせてもならない。閲覧ゲートに持ち込むと、閲覧のたびに読む値が増えて費用と遅延が乗るうえ、閲覧の判定と書き換えの判定が混ざる。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">ddd-advisor</span></div>
@@ -316,7 +316,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
               <div class="entry-viewpoint">所属を2か所に持つことになるが、役割が違う</div>
-              <div class="entry-consideration">プロジェクトの索引が持つ一覧は『何が入っているか』を人へ見せるためのもの、pp:{artifactId}は関門が『開けてよいか』を即座に判じるための投影である。同じ操作が両方を書くことで揃える。片方だけを直す経路を作らない。</div>
+              <div class="entry-consideration">プロジェクトの索引が持つ一覧は『何が入っているか』を人へ見せるためのもの、pp:{artifactId}は閲覧ゲートが『開けてよいか』を即座に判じるための投影である。同じ操作が両方を書くことで揃える。片方だけを直す経路を作らない。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
@@ -325,8 +325,8 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">platform-advisor</span></div>
-              <div class="entry-viewpoint">受け口が書ける場所を広げる必要がある</div>
-              <div class="entry-consideration">いまの資源の側の取り決めは、受け口が書けるのをアーティファクト・索引・差し替えの区切りだけに絞っている。プロジェクトの索引と一覧ページはそこに含まれないため、明示的に加えないと書けない。加える範囲は接頭辞の単位に留め、閲覧者の反応へは引き続き書けないままにする。</div>
+              <div class="entry-viewpoint">管理APIが書ける場所を広げる必要がある</div>
+              <div class="entry-consideration">いまの資源の側の取り決めは、管理APIが書けるのをアーティファクト・索引・差し替えの区切りだけに絞っている。プロジェクトの索引と一覧ページはそこに含まれないため、明示的に加えないと書けない。加える範囲は接頭辞の単位に留め、閲覧者の反応へは引き続き書けないままにする。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">ux-advisor</span></div>
@@ -337,12 +337,12 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
               <div class="entry-viewpoint">プロジェクトの索引を projects/{projectId}.json に置く</div>
-              <div class="entry-consideration">持ち主・共有の別・表示名・入っている共有アーティファクトの一覧・公開状態を持つ。共有アーティファクトの索引が meta/{artifactId}.json であるのと同じ形にし、受け口が同じやり方で読み書きできるようにする。</div>
+              <div class="entry-consideration">持ち主・共有の別・表示名・入っている共有アーティファクトの一覧・公開状態を持つ。共有アーティファクトの索引が meta/{artifactId}.json であるのと同じ形にし、管理APIが同じやり方で読み書きできるようにする。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
               <div class="entry-viewpoint">トークンの保管には共有の別を持ち込まない</div>
-              <div class="entry-consideration">proj:{projectId} は関門が読む値で、閲覧トークンの記録（値・期限・世代）と DISABLED だけを持つ。共有アーティファクトの token:{artifactId} と同じ形にする。共有の別はここに置かない（関門が読む必要が無く、置くと閲覧のたびに読まれる）。</div>
+              <div class="entry-consideration">proj:{projectId} は閲覧ゲートが読む値で、閲覧トークンの記録（値・期限・世代）と DISABLED だけを持つ。共有アーティファクトの token:{artifactId} と同じ形にする。共有の別はここに置かない（閲覧ゲートが読む必要が無く、置くと閲覧のたびに読まれる）。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
@@ -381,7 +381,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">2</span>
-              <p>プロジェクトは消せない。公開停止までとし、削除の権限は受け口に与えない（共有アーティファクトと同じ）</p>
+              <p>プロジェクトは消せない。公開停止までとし、削除の権限は管理APIに与えない（共有アーティファクトと同じ）</p>
             </div>
             <div class="constraint-item">
               <span class="num">3</span>
@@ -389,11 +389,11 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">4</span>
-              <p>所属は索引と関門用の投影の2か所に持つ。同じ操作が両方を書くことで揃えるため、片方だけを書く経路を作らない</p>
+              <p>所属は索引と閲覧ゲート用の投影の2か所に持つ。同じ操作が両方を書くことで揃えるため、片方だけを書く経路を作らない</p>
             </div>
             <div class="constraint-item">
               <span class="num">5</span>
-              <p>閲覧の関門は一切変更しない。共有の別は閲覧の可否に影響しないため、いま動いている検証14件がそのまま通ることが確かめになる</p>
+              <p>閲覧ゲートは一切変更しない。共有の別は閲覧の可否に影響しないため、いま動いている検証14件がそのまま通ることが確かめになる</p>
             </div>
             <div class="constraint-item">
               <span class="num">6</span>
@@ -422,7 +422,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/infra/cloudformation.yaml</div>
-              <div class="reason">受け口が projects/ と proj/ へ書けるよう、資源の側の取り決めと実行の権限を広げる</div>
+              <div class="reason">管理APIが projects/ と proj/ へ書けるよう、資源の側の取り決めと実行の権限を広げる</div>
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/references/templates/project-page.html</div>
@@ -430,7 +430,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/scripts/app/app.js</div>
-              <div class="reason">プロジェクトの面を、作り物ではなく受け口の応答で描く</div>
+              <div class="reason">プロジェクトの面を、作り物ではなく管理APIの応答で描く</div>
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/scripts/artifactshare.py</div>

@@ -135,7 +135,7 @@ def _count_comments(deps: Deps, artifact_id: str) -> int:
     """反応の件数。差し替えの区切りは印であって反応ではないので数えない。
 
     一覧のたびに置き場を走査する。件数が増えると呼び出しも増えるが、
-    受け口は反応そのものへ書けないため、書き込みのたびに数を控えておく
+    管理APIは反応そのものへ書けないため、書き込みのたびに数を控えておく
     手立てが無い（数えるのはここだけ、という制約と引き換えの作り）。
     """
     if not artifact_id:
@@ -291,7 +291,7 @@ def transfer(deps: Deps, caller: Caller, artifact_id: str, to_publisher: str) ->
 # ── プロジェクトへの出し入れ ────────────────────────────
 
 def _write_membership(deps: Deps, artifact_id: str, projects: list[str]) -> None:
-    """所属を、関門が読める形へ書き出す。"""
+    """所属を、閲覧ゲートが読める形へ書き出す。"""
     deps.keys.put(f"pp:{artifact_id}", " ".join(projects))
 
 
@@ -344,7 +344,7 @@ def _sync_project(deps: Deps, project_store, index: dict,
                   artifact_id: str, member: bool) -> None:
     """プロジェクトの索引と、閲覧者が見る一覧を揃える。
 
-    所属は索引（人へ見せるための正）と pp:（関門が判じるための投影）の
+    所属は索引（人へ見せるための正）と pp:（閲覧ゲートが判じるための投影）の
     2か所に持つ。片方だけを書く経路を作らないため、出し入れのたびに
     ここを通す。
     """

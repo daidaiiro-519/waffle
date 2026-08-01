@@ -1,8 +1,8 @@
-"""管理操作の受け口。
+"""管理操作の管理API。
 
 Cognitoで本人確認を通った投稿者が、ブラウザから呼ぶ唯一の入口。
 公開も、その後の管理も、すべてここを通る。閲覧者はここへ来ない
-（閲覧はトークンを見る関門だけで完結する）。
+（閲覧はトークンを見る閲覧ゲートだけで完結する）。
 
 手元のCLIは環境の構築だけを担い、ここも保管も操作しない。管理操作を
 CLIに持たせると、招かれた者だけが公開できるという前提が、AWSの権限を
@@ -231,7 +231,7 @@ def _connections() -> dict:  # pragma: no cover
 
 
 def _read_template(name: str) -> str:  # pragma: no cover
-    """同梱した雛形を読む。受け口の中に置いてある。"""
+    """同梱した雛形を読む。管理APIの中に置いてある。"""
     try:
         return (Path(__file__).parent / name).read_text(encoding="utf-8")
     except OSError:

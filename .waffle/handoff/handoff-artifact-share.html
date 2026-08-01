@@ -142,7 +142,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">利用者の入口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">業務の判定</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="466.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">集約</div></foreignObject>
-        <foreignObject class="flow-caption-fo" x="14" y="580.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">公開の受け口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="580.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">管理API</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="694.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">配信</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="808.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">保管</div></foreignObject>
         <path class="flow-split" d="M0,92.0 H700"/>
@@ -185,12 +185,12 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <path class="flow-arrow" d="M632.0,744.0 L190.0,808.0"/>
         <path class="flow-arrow" d="M632.0,744.0 L398.0,808.0"/>
         <path class="flow-arrow" d="M632.0,744.0 L606.0,808.0"/>
-        <path class="flow-arrow dep" d="M190.0,60.0 L398.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="294.0" y="86.0">契約だけに依存する（受け口の内部を知らない）</text>
+        <path class="flow-arrow dep" d="M190.0,60.0 L398.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="294.0" y="86.0">契約だけに依存する（管理APIの内部を知らない）</text>
         <path class="flow-arrow dep" d="M398.0,60.0 L398.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="86.0">同じ契約を満たせば公開できる</text>
         <path class="flow-arrow dep" d="M606.0,60.0 L398.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="502.0" y="86.0">同上（特権的な経路を持たない）</text>
         <path class="flow-arrow dep" d="M164.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="281.0" y="428.0">公開を依頼する（利用者の確認つき）</text>
-        <path class="flow-arrow dep" d="M320.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="359.0" y="428.0">同じ受け口を通す</text>
-        <path class="flow-arrow dep" d="M476.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="437.0" y="428.0">同じ受け口を通す（保管を直接叩かない）</text>
+        <path class="flow-arrow dep" d="M320.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="359.0" y="428.0">同じ管理APIを通す</text>
+        <path class="flow-arrow dep" d="M476.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="437.0" y="428.0">同じ管理APIを通す（保管を直接叩かない）</text>
         <path class="flow-arrow dep" d="M632.0,288.0 L398.0,580.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="515.0" y="428.0">同上</text>
         <path class="flow-arrow dep" d="M476.0,694.0 L398.0,402.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="437.0" y="542.0">開けるかを問い合わせる</text>
         <path class="flow-arrow dep" d="M398.0,402.0 L190.0,466.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="294.0" y="428.0">公開状態を見る（片方だけでは答えが出ない）</text>
@@ -204,7 +204,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <path class="flow-arrow dep" d="M388.0,719.0 L408.0,719.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="713.0">合鍵の照合は閲覧面にだけ載る</text>
         <path class="flow-arrow dep" d="M388.0,719.0 L564.0,719.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="476.0" y="713.0">中身を隔離された枠に入れて配る</text>
         <path class="flow-arrow dep" d="M632.0,744.0 L190.0,808.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="411.0" y="770.0">中身を読み込む（合鍵にも反応にも手が届かない）</text>
-        <path class="flow-arrow dep" d="M320.0,744.0 L606.0,808.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="463.0" y="770.0">アクセスの記録を書く（受け口からは到達不能）</text>
+        <path class="flow-arrow dep" d="M320.0,744.0 L606.0,808.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="463.0" y="770.0">アクセスの記録を書く（管理APIからは到達不能）</text>
         
         <g class="flow-box " transform="translate(96.0,10.0)">
           <rect width="188.0" height="50" rx="10"/>
@@ -280,7 +280,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
           <rect width="136.0" height="50" rx="10"/>
           <foreignObject x="4" y="4" width="128.0" height="42">
             <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
-              <div class="title">MCPの受け口</div>
+              <div class="title">MCPの管理API</div>
               <div class="sub">mcp_server.py・移設</div>
             </div>
           </foreignObject>
@@ -330,7 +330,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
           <rect width="604.0" height="50" rx="10"/>
           <foreignObject x="4" y="4" width="596.0" height="42">
             <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
-              <div class="title">公開の受け口</div>
+              <div class="title">管理API</div>
               <div class="sub">publish_artifact・新設</div>
             </div>
           </foreignObject>
@@ -409,7 +409,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </svg>
       <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
     </div>
-    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>契約に依存する側</strong>: 配信の仕組みを使う側。契約だけに依存し、受け口の内部も保管の形も知らない</p></li><li><p><strong>公開された契約</strong>: この文脈が外へ公開する唯一の依存先。中身に求めることと、受け口の呼び方を定める</p></li><li><p><strong>利用者の入口</strong>: 招かれた者が操作する経路。いずれも公開の受け口を唯一の書き込み経路とする</p></li><li><p><strong>業務の判定</strong>: 集約ひとつでは答えの出ない判定。合鍵と対象を受け取り、開けるかどうかを返す</p></li><li><p><strong>集約</strong>: 守るべき不変条件を持つ3つの集約。所属の一覧はまとめて見せる単位が持つ</p></li><li><p><strong>公開の受け口</strong>: 利用者の確認・中身の検査・符丁と合鍵の発行を必ず通る唯一の関門</p></li><li><p><strong>配信</strong>: 信頼の境界で2つに分けた配信の口と、閲覧者の合鍵を照合する関門</p></li><li><p><strong>保管</strong>: 表示物・反応・索引と、合鍵の保管、そして本体から切り離した記録の置き場</p></li></ol></div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>契約に依存する側</strong>: 配信の仕組みを使う側。契約だけに依存し、管理APIの内部も保管の形も知らない</p></li><li><p><strong>公開された契約</strong>: この文脈が外へ公開する唯一の依存先。中身に求めることと、管理APIの呼び方を定める</p></li><li><p><strong>利用者の入口</strong>: 招かれた者が操作する経路。いずれも管理APIを唯一の書き込み経路とする</p></li><li><p><strong>業務の判定</strong>: 集約ひとつでは答えの出ない判定。合鍵と対象を受け取り、開けるかどうかを返す</p></li><li><p><strong>集約</strong>: 守るべき不変条件を持つ3つの集約。所属の一覧はまとめて見せる単位が持つ</p></li><li><p><strong>管理API</strong>: 利用者の確認・中身の検査・符丁と合鍵の発行を必ず通る唯一の閲覧ゲート</p></li><li><p><strong>配信</strong>: 信頼の境界で2つに分けた配信の口と、閲覧者の合鍵を照合する閲覧ゲート</p></li><li><p><strong>保管</strong>: 表示物・反応・索引と、合鍵の保管、そして本体から切り離した記録の置き場</p></li></ol></div>
   </section>
 
   <section>
@@ -491,7 +491,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
               <div class="entry-viewpoint">予約された名前は3種あり、いずれも子の宣言と親の検査に分ける</div>
-              <div class="entry-consideration">隔離の枠を採ったことで表示上の名前の衝突は消えたが、予約された名前自体は3つ残る。表示物に添えるメタ情報の名前（子が宣言し、受け口が読み取る）、居場所のURLの接頭辞（子は決めず、符丁の発行時に親が決める）、合鍵の保管のキー接頭辞（子は関与しない）。制約を守る義務は中身の側にあるが、検査は必ず配信側に置く。中身を配信側が書き換えて吸収すると、見た目を壊す双方向の依存が生まれる。汎用の衝突検査機構は作らず、この3つそれぞれに対する最小限の検査に留める。</div>
+              <div class="entry-consideration">隔離の枠を採ったことで表示上の名前の衝突は消えたが、予約された名前自体は3つ残る。表示物に添えるメタ情報の名前（子が宣言し、管理APIが読み取る）、居場所のURLの接頭辞（子は決めず、符丁の発行時に親が決める）、合鍵の保管のキー接頭辞（子は関与しない）。制約を守る義務は中身の側にあるが、検査は必ず配信側に置く。中身を配信側が書き換えて吸収すると、見た目を壊す双方向の依存が生まれる。汎用の衝突検査機構は作らず、この3つそれぞれに対する最小限の検査に留める。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">platform-advisor</span></div>
@@ -526,18 +526,18 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">platform-advisor</span></div>
-              <div class="entry-viewpoint">反応の上書きは、エッジの関門が拒否することで防ぐ</div>
-              <div class="entry-consideration">既存が無いことを要求する条件は、書き込む側が付けるものである。閲覧画面の側で付けるだけの実装にすると、その条件を省いた直接の書き込みで従来どおり上書きでき、対策が実質0層になる。エッジの関門で、条件の付いていない反応の書き込みを拒否すること。既存の関門は形と大きさしか見ていないため、同じ位置に検査を1つ足す形になる。追加の費用は発生しない。</div>
+              <div class="entry-viewpoint">反応の上書きは、エッジの閲覧ゲートが拒否することで防ぐ</div>
+              <div class="entry-consideration">既存が無いことを要求する条件は、書き込む側が付けるものである。閲覧画面の側で付けるだけの実装にすると、その条件を省いた直接の書き込みで従来どおり上書きでき、対策が実質0層になる。エッジの閲覧ゲートで、条件の付いていない反応の書き込みを拒否すること。既存の閲覧ゲートは形と大きさしか見ていないため、同じ位置に検査を1つ足す形になる。追加の費用は発生しない。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">platform-advisor</span></div>
-              <div class="entry-viewpoint">公開の受け口の権限を接頭辞と資源の単位まで絞る</div>
-              <div class="entry-consideration">表示物と索引の置き場への書き込み、および合鍵の保管への書き込みだけに限る。合鍵の保管については接頭辞ではなく資源の識別子そのもので限定する。反応の置き場と記録の置き場への書き込みは与えない。削除の権限も与えない。指定を広く取ると、受け口が破られたときに反応と記録まで書き換えられる。保管側の設定でも同じ範囲に絞り、二重にする。</div>
+              <div class="entry-viewpoint">管理APIの権限を接頭辞と資源の単位まで絞る</div>
+              <div class="entry-consideration">表示物と索引の置き場への書き込み、および合鍵の保管への書き込みだけに限る。合鍵の保管については接頭辞ではなく資源の識別子そのもので限定する。反応の置き場と記録の置き場への書き込みは与えない。削除の権限も与えない。指定を広く取ると、管理APIが破られたときに反応と記録まで書き換えられる。保管側の設定でも同じ範囲に絞り、二重にする。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">platform-advisor</span></div>
               <div class="entry-viewpoint">記録の置き場だけは分ける</div>
-              <div class="entry-consideration">表示物・反応・索引の同居は許容できるが、アクセスの記録だけは別の資源に分け、公開の受け口からは到達できないようにする。保持期間と要件が本体と異なること、事故のときに記録が本体と同じ権限で消せる状態にあるのは調査上の基本違反であること、検査の漏れがあったときに書き込みが記録へ届く経路が同一の資源内にできること、の3点による。</div>
+              <div class="entry-consideration">表示物・反応・索引の同居は許容できるが、アクセスの記録だけは別の資源に分け、管理APIからは到達できないようにする。保持期間と要件が本体と異なること、事故のときに記録が本体と同じ権限で消せる状態にあるのは調査上の基本違反であること、検査の漏れがあったときに書き込みが記録へ届く経路が同一の資源内にできること、の3点による。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">platform-advisor</span></div>
@@ -547,12 +547,12 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
               <div class="entry-viewpoint">手元のCLIは移設ではなく分割である</div>
-              <div class="entry-consideration">既存のCLIには、文書種別の選択肢の集合と、DESIGN.mdの確定という子スキル固有の操作が埋まっている。そのまま持ってくると、親が子の種別を知る構造が実装の第一歩で固定される。汎用の配信部分だけを抜き出し、種別の選択肢と確定の操作は子スキル側へ残す。子スキル側は、配信の部分をこの受け口の呼び出しへ置き換える。</div>
+              <div class="entry-consideration">既存のCLIには、文書種別の選択肢の集合と、DESIGN.mdの確定という子スキル固有の操作が埋まっている。そのまま持ってくると、親が子の種別を知る構造が実装の第一歩で固定される。汎用の配信部分だけを抜き出し、種別の選択肢と確定の操作は子スキル側へ残す。子スキル側は、配信の部分をこの管理APIの呼び出しへ置き換える。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
-              <div class="entry-viewpoint">書き込みの経路を公開の受け口ひとつに絞る</div>
-              <div class="entry-consideration">手元のCLI・管理画面・MCPの受け口のいずれも、保管や合鍵の保管を直接操作せず、公開の受け口を通す。直接操作する経路を作ると、中身の検査を経ないアップロードが成立し、外部への依存の件数を知らせる保証も、招かれた者だけが公開できるという保証も同時に無効になる。読み取りだけの操作（一覧・取り出し）に別経路を許すなら、それを許可として明記する。</div>
+              <div class="entry-viewpoint">書き込みの経路を管理APIひとつに絞る</div>
+              <div class="entry-consideration">手元のCLI・管理画面・MCPの管理APIのいずれも、保管や合鍵の保管を直接操作せず、管理APIを通す。直接操作する経路を作ると、中身の検査を経ないアップロードが成立し、外部への依存の件数を知らせる保証も、招かれた者だけが公開できるという保証も同時に無効になる。読み取りだけの操作（一覧・取り出し）に別経路を許すなら、それを許可として明記する。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
@@ -601,7 +601,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">2</span>
-              <p>反応を残す経路に頻度の制限が無い。エッジの関門は呼び出しを跨いだ状態を持てないため、そこでの実装は原理的に不可能で、別の仕組みを入れるには月額の固定費が発生する</p>
+              <p>反応を残す経路に頻度の制限が無い。エッジの閲覧ゲートは呼び出しを跨いだ状態を持てないため、そこでの実装は原理的に不可能で、別の仕組みを入れるには月額の固定費が発生する</p>
             </div>
             <div class="constraint-item">
               <span class="num">3</span>
@@ -625,11 +625,11 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">8</span>
-              <p>保管されたものの削除は、権限を持つ責任者だけが行える。公開の受け口にも一般の利用者にも削除の権限を与えない。一般の利用者にできるのは公開の停止までで、データは取り出せる状態のまま残る。退職者の分の片付けなど、実際に消す操作は責任者の運用として行う</p>
+              <p>保管されたものの削除は、権限を持つ責任者だけが行える。管理APIにも一般の利用者にも削除の権限を与えない。一般の利用者にできるのは公開の停止までで、データは取り出せる状態のまま残る。退職者の分の片付けなど、実際に消す操作は責任者の運用として行う</p>
             </div>
             <div class="constraint-item">
               <span class="num">9</span>
-              <p>公開が途中で失敗したとき、置かれたファイルは残る（受け口が消せないため）。ただしトークンを最後に発行するため、そのファイルには誰も到達できない。到達できないまま残ったものの片付けも、責任者の運用に含まれる</p>
+              <p>公開が途中で失敗したとき、置かれたファイルは残る（管理APIが消せないため）。ただしトークンを最後に発行するため、そのファイルには誰も到達できない。到達できないまま残ったものの片付けも、責任者の運用に含まれる</p>
             </div></div>
           <div class="tab-panel" id="panel4">
             <div class="scope-item">
@@ -642,7 +642,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/infra/cloudformation.yaml</div>
-              <div class="reason">配信の口を2つに分け、認証・公開の受け口・記録の置き場を追加する</div>
+              <div class="reason">配信の口を2つに分け、認証・管理API・記録の置き場を追加する</div>
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/infra/cloudfront-function/viewer-token-gate.js</div>
@@ -650,7 +650,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/lambda/publish_artifact/main.py</div>
-              <div class="reason">利用者の確認・中身の検査・符丁と合鍵の発行・配置を行う唯一の関門</div>
+              <div class="reason">利用者の確認・中身の検査・符丁と合鍵の発行・配置を行う唯一の閲覧ゲート</div>
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/scripts/artifactshare.py</div>
@@ -658,7 +658,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/scripts/console_server.py</div>
-              <div class="reason">移設。保管や合鍵の保管を直接操作せず、公開の受け口を通す形へ改める</div>
+              <div class="reason">移設。保管や合鍵の保管を直接操作せず、管理APIを通す形へ改める</div>
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/scripts/mcp_server.py</div>
@@ -666,7 +666,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="scope-item">
               <div class="path">.waffle/documents/skills/design-share.json</div>
-              <div class="reason">配信の手順を、この基盤の受け口を呼ぶ形へ書き換える。種別の選択肢と確定の操作はこちらに残す</div>
+              <div class="reason">配信の手順を、この基盤の管理APIを呼ぶ形へ書き換える。種別の選択肢と確定の操作はこちらに残す</div>
             </div>
             <div class="scope-item">
               <div class="path">.waffle/skills/artifact-share/references/contract.md</div>

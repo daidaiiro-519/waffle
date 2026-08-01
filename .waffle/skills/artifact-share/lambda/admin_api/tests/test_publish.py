@@ -1,4 +1,4 @@
-"""公開の受け口の振る舞いを、仕様の受け入れシナリオに沿って確かめる。
+"""管理APIの振る舞いを、仕様の受け入れシナリオに沿って確かめる。
 
 実行:  python3 -m pytest lambda/admin_api/tests/ -v
 
@@ -167,14 +167,14 @@ def test_トークンは保管された記録から取り出せない():
 def test_途中で失敗したら開ける状態のものが残らない():
     """Given 途中で失敗する / When 公開しようとする / Then トークンが無く、誰も開けない
 
-    受け口には削除の権限が無いため、置かれたファイルそのものは残る。開ける状態の
+    管理APIには削除の権限が無いため、置かれたファイルそのものは残る。開ける状態の
     ものが残らないことを、トークンを最後に書く順序で保証する。
     """
     store, keys = FakeStore(fail_on="index.html"), FakeKeyStore()
     with pytest.raises(main.PublishError) as e:
         main.publish({"html": WITH_META, "authorization": "Bearer x"}, deps(store=store, keys=keys))
     assert e.value.code == "PUBLISH_FAILED"
-    assert keys.keys == {}                   # トークンが無いので関門が拒む
+    assert keys.keys == {}                   # トークンが無いので閲覧ゲートが拒む
 
 
 def test_トークンは配置がすべて済んでから書かれる():

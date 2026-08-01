@@ -281,7 +281,7 @@ https://dBBB.cloudfront.net/gallery/, /proj/ &nbsp;← ギャラリー</p>
       <h3>実装方式：Lambda経由（裏側が書く）</h3>
       <p>ブラウザが直接S3へ書く方式（Cognito Identity Poolで一時AWS認証情報を取得しSigV4署名）ではなく、<b>裏側のLambdaが自分の実行ロールで書く</b>方式を採る。理由は3つ。</p>
       <ul style="font-size:14.5px; max-width:68ch;">
-        <li><b>契約検証・slug発行・トークン生成・予約名前空間チェックを必ず通る関門に置ける。</b>ブラウザ直書きだとこれらを挟む場所が構造的に存在しない</li>
+        <li><b>契約検証・slug発行・トークン生成・予約名前空間チェックを必ず通る閲覧ゲートに置ける。</b>ブラウザ直書きだとこれらを挟む場所が構造的に存在しない</li>
         <li><b>Identity Poolが不要。</b>Cognito User Poolだけで済み、部品が1つ減る（ブラウザはJWTを持つだけでAWS認証情報を持たない）</li>
         <li><b>S3にCORS設定を追加せずに済む。</b>現行テンプレートは意図的にCORSを持たない設計で、その方針を崩さない</li>
       </ul>
@@ -384,7 +384,7 @@ https://dBBB.cloudfront.net/gallery/, /proj/ &nbsp;← ギャラリー</p>
         <div class="d-item">
           <span class="d-tag">決定</span>
           <p class="h">アップロードはLambda経由。UIはドラッグ＆ドロップ</p>
-          <p class="d">契約検証・slug発行・名前空間チェックを必ず通る関門に置け、Identity PoolもS3のCORSも不要になる</p>
+          <p class="d">契約検証・slug発行・名前空間チェックを必ず通る閲覧ゲートに置け、Identity PoolもS3のCORSも不要になる</p>
         </div>
         <div class="d-item">
           <span class="d-tag">決定</span>

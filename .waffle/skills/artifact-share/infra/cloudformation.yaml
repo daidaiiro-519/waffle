@@ -28,7 +28,7 @@ Resources:
   # ── 保管 ───────────────────────────────────────────────
 
   # アーティファクト（p/{artifactId}/）・反応（comments/{artifactId}/）・索引（meta/）を置く。
-  # 外部からの直接アクセスは一切許さず、配信の口と管理の受け口だけが触れる。
+  # 外部からの直接アクセスは一切許さず、配信の口と管理APIだけが触れる。
   ContentBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -114,7 +114,7 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${AdminDistribution}"
 
-          # 管理の受け口が書けるのは、アーティファクト・索引・差し替えの区切りだけ。
+          # 管理APIが書けるのは、アーティファクト・索引・差し替えの区切りだけ。
           # 実行ロール側でも同じ範囲に絞り、二重にする。
           - Sid: AdminApiWriteScoped
             Effect: Allow
@@ -129,7 +129,7 @@ Resources:
               - !Sub "${ContentBucket.Arn}/proj/*/index.json"
               - !Sub "${ContentBucket.Arn}/proj/*/index.html"
 
-          # 受け口が閲覧者の反応そのものへ書き込む経路を、資源の側でも塞ぐ。
+          # 管理APIが閲覧者の反応そのものへ書き込む経路を、資源の側でも塞ぐ。
           # 区切りの記録だけは許し、それ以外の反応には手を出させない。
           - Sid: AdminApiDenyElsewhere
             Effect: Deny
@@ -159,8 +159,8 @@ Resources:
 
   # token:{artifactId} / proj:{pid} / pp:{artifactId} を持つ。
   # トークンの記録は "{値}|{期限のエポック秒}|{世代番号}" の形で保存する。
-  # 期限切れと世代違いは関門がその場で失効させるため、書き換えを待たずに効く。
-  # 書き手は管理の受け口ひとつに限り、関門は読むだけ。
+  # 期限切れと世代違いは閲覧ゲートがその場で失効させるため、書き換えを待たずに効く。
+  # 書き手は管理APIひとつに限り、閲覧ゲートは読むだけ。
   TokenStore:
     Type: AWS::CloudFront::KeyValueStore
     Properties:
@@ -180,7 +180,7 @@ Resources:
       AutoVerifiedAttributes: [email]
       # 合言葉を忘れたときは、確認済みのメールだけを頼りにする。
       # 招待に応じていない人はこの経路を使えないため、その場合は
-      # 管理者が招き直す（受け口の resend-invite）
+      # 管理者が招き直す（管理APIの resend-invite）
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
@@ -195,7 +195,7 @@ Resources:
 
   # 管理者。全員の共有アーティファクトを一覧・公開停止・再発行でき、
   # 投稿者を招いたり外したりできる。他人の中身の差し替えだけはできない。
-  # 受け口はこのグループが証明に含まれるかだけを見て、名簿を引き直さない。
+  # 管理APIはこのグループが証明に含まれるかだけを見て、名簿を引き直さない。
   AdministratorGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
@@ -226,7 +226,7 @@ Resources:
         IdToken: minutes
         RefreshToken: days
 
-  # ── 管理の受け口 ───────────────────────────────────────
+  # ── 管理API ───────────────────────────────────────
 
   # 権限は接頭辞と資源の単位まで絞る。反応にも記録にも書けない。削除も持たない。
   AdminApiRole:
@@ -323,7 +323,7 @@ Resources:
           USER_POOL_CLIENT_ID: !Ref UserPoolClient
           VIEWER_DOMAIN: !GetAtt ViewerDistribution.DomainName
       # 実体は lambda/admin_api/ 配下。作成後に配置し直す。
-      # ここに置くのは、置き換え前に誤って使われないための最小の受け口。
+      # ここに置くのは、置き換え前に誤って使われないための最小の管理API。
       Code:
         ZipFile: |
           def handler(event, context):
@@ -450,9 +450,9 @@ Resources:
             AccessControlMaxAgeSec: 31536000
             IncludeSubdomains: true
             Override: true
-          # 管理画面から出ていける先を、利用者プールと受け口の2つに限る。
+          # 管理画面から出ていける先を、利用者プールと管理APIの2つに限る。
           # ここが緩いと、持ち込まれた命令が証明を外へ運び出せる。
-          # 受け口の居場所を名指しできないのは、その居場所がこの面自身に
+          # 管理APIの居場所を名指しできないのは、その居場所がこの面自身に
           # 依存しており、名指しすると資源どうしが互いを待って作れなくなるため。
           ContentSecurityPolicy:
             Override: true

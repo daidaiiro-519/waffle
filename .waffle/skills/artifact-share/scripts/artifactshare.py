@@ -18,7 +18,7 @@ Cognitoでログインした管理画面から行う。
       環境を作る。作成後に管理画面のURLと、次にすることを表示する。
 
   artifactshare update-function
-      閲覧の関門（CloudFront Functions）・管理の受け口（Lambda）・
+      閲覧ゲート（CloudFront Functions）・管理API（Lambda）・
       管理画面に、手元のソースを反映する。init のあとに必ず1回実行する。
 
   artifactshare invite <メールアドレス>
@@ -100,7 +100,7 @@ def init(stack: str, region: str | None) -> None:
     print(f"  管理画面  : https://{out.get('AdminDomain', '')}/")
     print(f"  閲覧の入口: https://{out.get('ViewerDomain', '')}/")
     print("\n続けて次の2つを行ってください。")
-    print("  1. artifactshare update-function    関門と受け口に中身を入れる")
+    print("  1. artifactshare update-function    閲覧ゲートと管理APIに中身を入れる")
     print("  2. artifactshare grant-admin <メール>  最初の管理者を決める")
     print("\nこの2つを省くと、管理画面を開いてもログインできず、"
           "共有URLもすべて開けないままになります。")
@@ -174,7 +174,7 @@ def update_function(stack: str, region: str | None) -> None:
 
     out = _outputs(stack, region)
 
-    # 閲覧の関門。CloudFront Functions は us-east-1 でのみ扱える
+    # 閲覧ゲート。CloudFront Functions は us-east-1 でのみ扱える
     gate = (SKILL / "infra" / "cloudfront-function" / "viewer-token-gate.js") \
         .read_text(encoding="utf-8")
     cf = boto3.client("cloudfront", region_name="us-east-1")
@@ -186,15 +186,15 @@ def update_function(stack: str, region: str | None) -> None:
         FunctionCode=gate.encode("utf-8"),
     )["ETag"]
     cf.publish_function(Name=name, IfMatch=etag)
-    print("閲覧の関門を反映しました。")
+    print("閲覧ゲートを反映しました。")
 
-    # 管理の受け口
+    # 管理API
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted((SKILL / "lambda" / "admin_api").glob("*.py")):
             zf.write(path, path.name)
         # 閲覧画面とプロジェクトの一覧ページの雛形は、公開や作成のたびに
-        # 読むため、受け口に同梱する
+        # 読むため、管理APIに同梱する
         for name in ("share-wrapper.html", "project-page.html"):
             zf.write(SKILL / "references" / "templates" / name, name)
 
@@ -202,7 +202,7 @@ def update_function(stack: str, region: str | None) -> None:
         FunctionName=out.get("AdminApiFunctionName", f"{stack}-admin-api"),
         ZipFile=buffer.getvalue(),
     )
-    print("管理の受け口を反映しました。")
+    print("管理APIを反映しました。")
 
     _put_admin_app(out, region)
     print("管理画面を反映しました。")
@@ -218,7 +218,7 @@ def _put_project_pages(out: dict, region: str | None) -> int:
 
     雛形はどのプロジェクトでも同じものなので、直したときは全件へ行き渡らせる
     必要がある。中身（index.json）は触らない——そちらは所属が変わったときに
-    受け口が書き直しており、ここで上書きすると新しいものを古いもので潰す。
+    管理APIが書き直しており、ここで上書きすると新しいものを古いもので潰す。
     """
     import boto3
 
@@ -250,7 +250,7 @@ def _put_project_pages(out: dict, region: str | None) -> int:
 def _put_admin_app(out: dict, region: str | None) -> None:
     """管理画面と、その設定を置く。
 
-    設定を別ファイルにするのは、環境ごとに変わる値（受け口の居場所・
+    設定を別ファイルにするのは、環境ごとに変わる値（管理APIの居場所・
     利用者プールの識別子）を画面の中に焼き込まないため。画面は
     どの環境でも同じものを置ける。
     """

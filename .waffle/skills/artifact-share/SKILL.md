@@ -147,9 +147,9 @@ URLを開く、トークンを入れる、コメントを1件書く、一覧に�
 - `references/templates/doc/`: 既定4種別のテンプレート。プレースホルダーそのものに執筆の指示が書かれている
 - `references/examples/doc/`: 同じ4種別の記入例。空のテンプレートだけでは出来上がりが想像しにくいときに見る
 - `references/templates/share-wrapper.html`: コメント欄を備えた閲覧画面。公開時に、共有するHTMLを外側から囲う
-- `infra/cloudformation.yaml`: 配信環境の構築テンプレート。閲覧用と認証用を分けた2つの配信経路、トークンの保管、公開の受け口を含む
+- `infra/cloudformation.yaml`: 配信環境の構築テンプレート。閲覧用と認証用を分けた2つの配信経路、トークンの保管、管理APIを含む
 - `infra/cloudfront-function/viewer-token-gate.js`: 閲覧者のトークンを照合し、公開停止の判定とコメント投稿の形状検査を行う
-- `lambda/publish_artifact/main.py`: 公開の受け口。利用者の確認、HTMLの検査、識別子とトークンの発行、配置を行う
+- `lambda/publish_artifact/main.py`: 管理API。利用者の確認、HTMLの検査、識別子とトークンの発行、配置を行う
 - `scripts/artifactshare.py`: 一覧・公開・差し替え・再発行・取り出し・停止・プロジェクト管理を行うCLI
 - `scripts/console_server.py`: 手元のブラウザから管理操作を行う画面
 - `scripts/mcp_server.py`: MCPクライアントから管理操作を呼び出すためのサーバー
