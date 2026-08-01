@@ -53,6 +53,7 @@ def _engine() -> RenderHandoffTemplate:
 
 def test_completionImageを含むHandoffを描画する(tmp_path):
     """
+    Scenario: completionImageを含むHandoffを描画する
     Given completionImage・designViewpoints・implementationViewpoints・constraints・title・specRefを持つ検証済みのHandoff
     When RenderHandoffTemplateを実行する
     Then .waffle/handoff/{documentId}.htmlが生成される
@@ -71,6 +72,7 @@ def test_completionImageを含むHandoffを描画する(tmp_path):
 
 def test_HandoffSchemaの新しいバージョンも描画できる(tmp_path):
     """
+    Scenario: HandoffSchemaの新しいバージョンも描画できる
     実際のHandoff document群は既にHandoffSchema/v2へ移行済みだが、本usecaseは
     完全一致でHandoffSchema/v1のみを受け付けていたため、実在する全Handoff
     documentの描画が失敗していた（実データで発覚した回帰）。バージョンではなく
@@ -85,6 +87,7 @@ def test_HandoffSchemaの新しいバージョンも描画できる(tmp_path):
 
 def test_HandoffSchema以外を描画しようとする(tmp_path):
     """
+    Scenario: HandoffSchema以外を描画しようとする
     Given schemaRefがHandoffSchema以外のDocument
     When RenderHandoffTemplateを実行する
     Then WRONG_SCHEMA_REFエラーが返り描画されない
@@ -99,6 +102,7 @@ def test_HandoffSchema以外を描画しようとする(tmp_path):
 
 def test_completionImageが無いHandoffを描画しようとする(tmp_path):
     """
+    Scenario: completionImageが無いHandoffを描画しようとする
     Given completionImageブロックを持たないHandoff
     When RenderHandoffTemplateを実行する
     Then MISSING_COMPLETION_IMAGEエラーが返り描画されない
@@ -113,6 +117,7 @@ def test_completionImageが無いHandoffを描画しようとする(tmp_path):
 
 def test_advisor名と件数のペアがレビュー状況に出力される(tmp_path):
     """
+    Scenario: advisor名と件数のペアがレビュー状況に出力される
     Given designViewpoints/implementationViewpointsが与えられたHandoff
     When RenderHandoffTemplateを実行する
     Then advisor名＋件数のペアがレビュー状況セクションに出力される
@@ -163,6 +168,7 @@ def test_expectedScopeが無いHandoffも描画できる(tmp_path):
 
 def test_reviewStatusの値をそのまま表示し新たな判定を行わない(tmp_path):
     """
+    Scenario: reviewStatusの値をそのまま表示し新たな判定を行わない
     Given requiredAdvisors・findings（resolutionStatusを含む）・completionImageConfirmedByを持つ検証済みのHandoff
     When RenderHandoffTemplateを実行する
     Then 生成されたHTMLにfindingsの件数・resolutionStatusの値がそのまま表示される
@@ -205,6 +211,7 @@ def test_reviewStatusが無いHandoffも描画できる(tmp_path):
 
 def test_契約準拠のmetaタグが出力される(tmp_path):
     """
+    Scenario: 契約準拠のmetaタグが出力される
     Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff
     When RenderHandoffTemplateを実行する
     Then 生成されたHTMLのheadにid/type/title/description/tagsの<meta>タグが出力される

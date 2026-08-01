@@ -19,6 +19,7 @@ def _engine() -> QueryDocument:
 
 def test_存在しないパスはINVALID_PATH():
     """
+    Scenario: 存在しないパスはINVALID_PATH
     Given 実在しない対象パス
     When 本usecaseを実行する
     Then INVALID_PATHエラーが返る
@@ -30,6 +31,7 @@ def test_存在しないパスはINVALID_PATH():
 
 def test_解決できないschemaRefはINVALID_SCHEMA_REF():
     """
+    Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
     Given 解決できないschemaRef
     When 本usecaseを実行する
     Then INVALID_SCHEMA_REFエラーが返る

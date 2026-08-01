@@ -321,6 +321,27 @@
           "viewpoint": "境界: 何も指定されないときに空の判定を返さない",
           "gherkin": "Scenario: どちらの指定も渡さないと拒む\n  Given 組の指定も置き場所の指定も無い\n  When ドリフト検査を実行する\n  Then MISSING_PARAMエラーが返る\n  And 空の判定を返さない",
           "covers": "受け入れ基準: MISSING_PARAM"
+        },
+        {
+          "name": "受け入れの層のテストは受け入れシナリオだけを対象にする",
+          "category": "境界値",
+          "viewpoint": "事前条件: 対象ブロックはパスから機械的に絞る。コードの性質で判定しない",
+          "gherkin": "Scenario: 受け入れの層のテストは受け入れシナリオだけを対象にする\n  Given 受け入れシナリオと保証シナリオの両方を宣言するspec\n  And tests/acceptance/配下にあり、受け入れシナリオだけを実装したテストファイル\n  When ドリフト検査を実行する\n  Then 保証シナリオはmissing_in_testsに含まれない",
+          "covers": "受け入れ基準: tests/acceptance配下はacceptanceScenariosのみ"
+        },
+        {
+          "name": "統合の層のテストは保証シナリオだけを対象にする",
+          "category": "境界値",
+          "viewpoint": "事前条件: 同上。層ごとに対象ブロックが決まる",
+          "gherkin": "Scenario: 統合の層のテストは保証シナリオだけを対象にする\n  Given 受け入れシナリオと保証シナリオの両方を宣言するspec\n  And tests/integration/配下にあり、保証シナリオだけを実装したテストファイル\n  When ドリフト検査を実行する\n  Then 受け入れシナリオはmissing_in_testsに含まれない",
+          "covers": "受け入れ基準: tests/integration配下はguaranteeScenariosのみ"
+        },
+        {
+          "name": "既知の配置に当てはまらないパスは全種を対象にする",
+          "category": "境界値",
+          "viewpoint": "境界: 絞り込めないときに黙って一部だけ見る形にしない",
+          "gherkin": "Scenario: 既知の配置に当てはまらないパスは全種を対象にする\n  Given 受け入れシナリオと保証シナリオの両方を宣言するspec\n  And いずれの層の配置にも当てはまらないテストファイル\n  When ドリフト検査を実行する\n  Then 保証シナリオがmissing_in_testsに含まれる",
+          "covers": "受け入れ基準: いずれにも一致しない場合は4種全てを対象にする"
         }
       ]
     },

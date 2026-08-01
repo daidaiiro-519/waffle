@@ -33,6 +33,7 @@ def _write(path: Path, doc: dict) -> None:
 
 def test_全Documentが最新版を参照しているとき差分なしと判定する(tmp_path):
     """
+    Scenario: 全Documentが最新版を参照しているとき差分なしと判定する
     Given 全DocumentのschemaRefが、実在する同名Schemaの最新版を指しているspecツリー
     When schema版ドリフト検査を実行する
     Then broken_references・newer_version_available・missing_declared_fields全てが空配列で返る
@@ -46,6 +47,7 @@ def test_全Documentが最新版を参照しているとき差分なしと判定
 
 def test_実在しない版を指すschemaRefを検出する(tmp_path):
     """
+    Scenario: 実在しない版を指すschemaRefを検出する
     Given 実在しない版をschemaRefに持つDocument
     When schema版ドリフト検査を実行する
     Then broken_referencesにその組が含まれる
@@ -59,6 +61,7 @@ def test_実在しない版を指すschemaRefを検出する(tmp_path):
 
 def test_最新でない版を参照しているDocumentを検出する(tmp_path):
     """
+    Scenario: 最新でない版を参照しているDocumentを検出する
     Given 同名Schemaに新しい版が実在するが、旧い版をschemaRefに持つDocument
     When schema版ドリフト検査を実行する
     Then newer_version_availableにその組が含まれる
@@ -74,6 +77,7 @@ def test_最新でない版を参照しているDocumentを検出する(tmp_path
 
 def test_Schemaが宣言する値フィールドをDocumentが持たないことを検出する(tmp_path):
     """
+    Scenario: Schemaが宣言する値フィールドをDocumentが持たないことを検出する
     Given 参照先Schemaが宣言する値フィールドのキーを実データに持たないDocument
     When schema版ドリフト検査を実行する
     Then missing_declared_fieldsにその組が含まれる

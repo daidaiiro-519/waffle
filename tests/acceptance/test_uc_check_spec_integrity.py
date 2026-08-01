@@ -36,6 +36,7 @@ def _sd(name: str, usecases: list[str]) -> dict:
 
 def test_全ての宣言と実態が一致するとき差分なしと判定する(tmp_path):
     """
+    Scenario: 全ての宣言と実態が一致するとき差分なしと判定する
     Given bc.jsonの宣言とディスク上の実ファイルが完全に一致するspecツリー
     When 参照整合性検査を実行する
     Then 10フィールド全てが空配列で返る
@@ -63,6 +64,7 @@ def test_全ての宣言と実態が一致するとき差分なしと判定す�
 
 def test_宣言されたsubdomainがディスクに無いことを検出する(tmp_path):
     """
+    Scenario: 宣言されたsubdomainがディスクに無いことを検出する
     Given bc.jsonがsubdomainを宣言するが、そのディレクトリが実在しないspecツリー
     When 参照整合性検査を実行する
     Then declared_subdomains_missing_on_diskにその名前が含まれる
@@ -79,6 +81,7 @@ def test_宣言されたsubdomainがディスクに無いことを検出する(t
 
 def test_未宣言のsubdomainがディスクにあることを検出する(tmp_path):
     """
+    Scenario: 未宣言のsubdomainがディスクにあることを検出する
     Given ディスク上に実在するがbc.jsonに宣言されていないsubdomainを含むspecツリー
     When 参照整合性検査を実行する
     Then subdomains_on_disk_not_declared_in_bcにその名前が含まれる
@@ -96,6 +99,7 @@ def test_未宣言のsubdomainがディスクにあることを検出する(tmp_
 
 def test_どのsubdomainにも属さない宙に浮いたusecaseを検出する(tmp_path):
     """
+    Scenario: どのsubdomainにも属さない宙に浮いたusecaseを検出する
     Given bc.jsonがusecaseを宣言するが、どのsubdomainのmembersにも含まれないspecツリー
     When 参照整合性検査を実行する
     Then usecases_orphaned_no_subdomainにその名前が含まれる
@@ -112,6 +116,7 @@ def test_どのsubdomainにも属さない宙に浮いたusecaseを検出する(
 
 def test_subdomainには属するがbcに未宣言のusecaseを検出する(tmp_path):
     """
+    Scenario: subdomainには属するがbcに未宣言のusecaseを検出する
     Given いずれかのsubdomainのmembersが宣言するがbc.jsonには宣言されていないusecaseを含むspecツリー
     When 参照整合性検査を実行する
     Then usecases_in_subdomain_not_declared_in_bcにその名前が含まれる
@@ -129,6 +134,7 @@ def test_subdomainには属するがbcに未宣言のusecaseを検出する(tmp_
 
 def test_宣言されたusecaseの実ファイルが無いことを検出する(tmp_path):
     """
+    Scenario: 宣言されたusecaseの実ファイルが無いことを検出する
     Given subdomainがusecaseを宣言するが、対応するjsonファイルが実在しないspecツリー
     When 参照整合性検査を実行する
     Then usecase_files_missing_on_diskにその名前が含まれる
@@ -145,6 +151,7 @@ def test_宣言されたusecaseの実ファイルが無いことを検出する(
 
 def test_未宣言のusecaseファイルがディスクにあることを検出する(tmp_path):
     """
+    Scenario: 未宣言のusecaseファイルがディスクにあることを検出する
     Given ディスク上に実在するがどのsubdomainのmembersにも宣言されていないusecaseファイルを含むspecツリー
     When 参照整合性検査を実行する
     Then usecase_files_orphaned_on_diskにその名前が含まれる
@@ -172,6 +179,7 @@ def _agg_document(entity_attributes: list[dict], value_objects: list[dict]) -> d
 
 def test_使われていない値オブジェクトを検出する(tmp_path):
     """
+    Scenario: 使われていない値オブジェクトを検出する
     Given valueObjectsに宣言されているが、entities[].attributes[].typeのどこにも現れない値オブジェクトを含む集約document
     When 参照整合性検査を実行する
     Then orphaned_value_objectsにその値オブジェクト名が含まれる
@@ -192,6 +200,7 @@ def test_使われていない値オブジェクトを検出する(tmp_path):
 
 def test_実document_jsonにある未宣言のフィールドを検出する(tmp_path):
     """
+    Scenario: 実document.jsonにある未宣言のフィールドを検出する
     Given トップレベルにDocument集約のentity属性に宣言されていないフィールドを持つ実document.json
     When 参照整合性検査を実行する
     Then undeclared_document_fieldsにそのフィールド名が含まれる
@@ -213,6 +222,7 @@ def test_実document_jsonにある未宣言のフィールドを検出する(tmp
 
 def test_複数entityの属性が全て未宣言判定に使われる(tmp_path):
     """
+    Scenario: 複数entityの属性が全て未宣言判定に使われる
     Given agg-documentが複数のentityを持ち、2つ目のentityにのみ宣言されているフィールドを持つ実document.json
     When 参照整合性検査を実行する
     Then そのフィールドはundeclared_document_fieldsに含まれない（entities[0]だけでなく全entityの属性が見られる）
@@ -240,6 +250,7 @@ def test_複数entityの属性が全て未宣言判定に使われる(tmp_path):
 
 def test_subdomainRefの食い違いを検出する(tmp_path):
     """
+    Scenario: subdomainRefの食い違いを検出する
     Given subdomainRefが指すsubdomainのmembersに自分自身が含まれていないusecase document
     When 参照整合性検査を実行する
     Then subdomain_ref_mismatchesにその組が含まれる
@@ -256,6 +267,7 @@ def test_subdomainRefの食い違いを検出する(tmp_path):
 
 def test_subdomainRef未宣言でもsubdomainのmembersに含まれていれば食い違いを検出する(tmp_path):
     """
+    Scenario: subdomainRef未宣言でもsubdomainのmembersに含まれていれば食い違いを検出する
     Given subdomainのmembersに含まれるが、自分自身にsubdomainRefを宣言していないusecase document
     When 参照整合性検査を実行する
     Then subdomain_ref_mismatchesにその組が含まれる（subdomainRefはnull）
@@ -272,6 +284,7 @@ def test_subdomainRef未宣言でもsubdomainのmembersに含まれていれば�
 
 def test_存在しない集約を指すaggregateRefを検出する(tmp_path):
     """
+    Scenario: 存在しない集約を指すaggregateRefを検出する
     Given 実在しない集約documentIdをaggregateRefに持つusecase document
     When 参照整合性検査を実行する
     Then missing_aggregate_refsにその組が含まれる

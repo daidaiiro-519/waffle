@@ -87,25 +87,25 @@
           "name": "SkillのSKILL.mdの実体パスは投影と判定される",
           "category": "正常系",
           "viewpoint": "投影判定：Skillのcanonical出力先パターンに一致するか",
-          "gherkin": "Given 実体パスが\".waffle/skills/ddd-advisor/SKILL.md\"である\nWhen CheckPathIsProjectionを実行する\nThen isProjection=trueが返り、documentKind=\"Skill\"・documentId=\"ddd-advisor\"が返る"
+          "gherkin": "Scenario: SkillのSKILL.mdの実体パスは投影と判定される\nGiven 実体パスが\".waffle/skills/ddd-advisor/SKILL.md\"である\nWhen CheckPathIsProjectionを実行する\nThen isProjection=trueが返り、documentKind=\"Skill\"・documentId=\"ddd-advisor\"が返る"
         },
         {
           "name": "AgentのCLAUDE.md実体パスは投影と判定される",
           "category": "正常系",
           "viewpoint": "投影判定：Agentのcanonical出力先パターンに一致するか",
-          "gherkin": "Given 実体パスが\".waffle/agent/waffle.md\"である\nWhen CheckPathIsProjectionを実行する\nThen isProjection=trueが返り、documentKind=\"Agent\"・documentId=\"waffle\"が返る"
+          "gherkin": "Scenario: AgentのCLAUDE.md実体パスは投影と判定される\nGiven 実体パスが\".waffle/agent/waffle.md\"である\nWhen CheckPathIsProjectionを実行する\nThen isProjection=trueが返り、documentKind=\"Agent\"・documentId=\"waffle\"が返る"
         },
         {
           "name": "手書き参照ファイルの実体パスは投影と判定されない",
           "category": "境界値",
           "viewpoint": "適用範囲の境界：投影でも原本でもない手書きファイルを誤検出しないか",
-          "gherkin": "Given 実体パスが\".waffle/skills/ddd-advisor/references/knowledge/domain-model.md\"である\nWhen CheckPathIsProjectionを実行する\nThen isProjection=falseが返る"
+          "gherkin": "Scenario: 手書き参照ファイルの実体パスは投影と判定されない\nGiven 実体パスが\".waffle/skills/ddd-advisor/references/knowledge/domain-model.md\"である\nWhen CheckPathIsProjectionを実行する\nThen isProjection=falseが返る"
         },
         {
           "name": "どのcanonicalPathTemplateにも一致しないパスは投影と判定されない",
           "category": "異常系",
           "viewpoint": "事前条件違反：未知の構造のパスを安全側（許可）に倒せるか",
-          "gherkin": "Given 実体パスが\"docs/README.md\"である\nWhen CheckPathIsProjectionを実行する\nThen isProjection=falseが返る"
+          "gherkin": "Scenario: どのcanonicalPathTemplateにも一致しないパスは投影と判定されない\nGiven 実体パスが\"docs/README.md\"である\nWhen CheckPathIsProjectionを実行する\nThen isProjection=falseが返る"
         }
       ]
     },

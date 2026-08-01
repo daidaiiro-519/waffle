@@ -173,7 +173,7 @@
           "name": "discriminator未指定はMISSING_DISCRIMINATOR",
           "category": "異常系",
           "viewpoint": "事前条件違反: discriminator分岐の未指定の拒否",
-          "gherkin": "Scenario: discriminatorが必要なschemaで未指定のときMISSING_DISCRIMINATOR\n  Given contentがdiscriminatorで分岐するschema\n  When discriminatorを指定せずにブランクテンプレート描画を実行する\n  Then MISSING_DISCRIMINATORエラーが返る",
+          "gherkin": "Scenario: discriminator未指定はMISSING_DISCRIMINATOR\n  Given contentがdiscriminatorで分岐するschema\n  When discriminatorを指定せずにブランクテンプレート描画を実行する\n  Then MISSING_DISCRIMINATORエラーが返る",
           "covers": ""
         },
         {
@@ -215,7 +215,7 @@
           "name": "x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する",
           "category": "正常系",
           "viewpoint": "x-frontmatterが指すフィールドのx-prompt-write本文がYAML frontmatterとしてプレースホルダー化されることを確認する",
-          "gherkin": "Given x-frontmatterを宣言するschema\nWhen そのschemaRefでブランクテンプレート描画を実行する\nThen 出力冒頭にx-frontmatterが指すフィールドのプレースホルダー化されたYAML frontmatterが含まれる",
+          "gherkin": "Scenario: x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する\nGiven x-frontmatterを宣言するschema\nWhen そのschemaRefでブランクテンプレート描画を実行する\nThen 出力冒頭にx-frontmatterが指すフィールドのプレースホルダー化されたYAML frontmatterが含まれる",
           "covers": "",
           "operation": ""
         },
@@ -223,7 +223,7 @@
           "name": "x_frontmatterを宣言しないschemaはfrontmatterを出力しない",
           "category": "正常系",
           "viewpoint": "x-frontmatterを持たないschemaではfrontmatterブロック自体が出力されないことを確認する",
-          "gherkin": "Given x-frontmatterを宣言しないschema\nWhen そのschemaRefでブランクテンプレート描画を実行する\nThen 出力にfrontmatterブロックが含まれない",
+          "gherkin": "Scenario: x_frontmatterを宣言しないschemaはfrontmatterを出力しない\nGiven x-frontmatterを宣言しないschema\nWhen そのschemaRefでブランクテンプレート描画を実行する\nThen 出力にfrontmatterブロックが含まれない",
           "covers": "",
           "operation": ""
         }

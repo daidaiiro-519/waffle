@@ -16,6 +16,7 @@ def _engine() -> RenderDocument:
 
 def test_存在しないパスはINVALID_PATH():
     """
+    Scenario: 存在しないパスはINVALID_PATH
     Given 実在しない対象パス
     When 本usecaseを実行する
     Then INVALID_PATHエラーが返る
@@ -27,6 +28,7 @@ def test_存在しないパスはINVALID_PATH():
 
 def test_解決できないschemaRefはINVALID_SCHEMA_REF():
     """
+    Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
     Given 解決できないschemaRef
     When 本usecaseを実行する
     Then INVALID_SCHEMA_REFエラーが返る
@@ -45,6 +47,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
 
 def test_x_render宣言どおりに決定的に描画する():
     """
+    Scenario: x-render宣言どおりに決定的に描画する
     Given responseTypesブロック(x-render宣言=table)を持つDocument
     When renderする
     Then schemaのx-render宣言どおりに整形されたMarkdownテーブルが出力に含まれる
@@ -60,6 +63,7 @@ def test_x_render宣言どおりに決定的に描画する():
 
 def test_同じDocumentを2回renderしても同一の成果物になる():
     """
+    Scenario: 同じDocumentを2回renderしても同一の成果物になる
     Given 変更されていないDocument
     When 同じDocumentを2回renderする
     Then 1回目と2回目の成果物は同一である
@@ -73,6 +77,7 @@ def test_同じDocumentを2回renderしても同一の成果物になる():
 
 def test_データが空の任意ブロックは見出しごと省略する():
     """
+    Scenario: データが空の任意ブロックは見出しごと省略する
     Given x-renderに部品が宣言されたブロックを含むが値が全て空であるDocument
     When render する
     Then そのブロックの見出しを含むセクション全体が出力から省略される
@@ -100,6 +105,7 @@ def test_データが空の任意ブロックは見出しごと省略する():
 
 def test_H1見出し直後に区切り線を入れない():
     """
+    Scenario: H1見出し直後に区切り線を入れない
     Given x-render-level=1のTitleブロックの直後にx-render-level=2のブロックが続くDocument
     When render する
     Then H1見出しと最初のH2見出しの間に区切り線(---)が入らない
@@ -130,6 +136,7 @@ def test_H1見出し直後に区切り線を入れない():
 
 def test_x_render_hiddenを宣言したブロックは本文に描画しない():
     """
+    Scenario: x-render-hiddenを宣言したブロックは本文に描画しない
     Given x-render-hidden:trueを宣言したブロックを含むDocument
     When render する
     Then そのブロックの見出し・本文が出力に一切含まれない

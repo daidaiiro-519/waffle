@@ -27,6 +27,7 @@ def _usecase_doc(operation_name: str) -> dict:
 
 def test_全usecaseの操作名と実装クラスが一致するとき差分なしと判定する(tmp_path):
     """
+    Scenario: 全usecaseの操作名と実装クラスが一致するとき差分なしと判定する
     Given 全usecaseのoperationNameが、対応する実装ファイル内の同名クラスと一致するspecツリー
     When クラス名ドリフト検査を実行する
     Then missing_implementation_file・class_name_mismatch両方が空配列で返る
@@ -46,6 +47,7 @@ def test_全usecaseの操作名と実装クラスが一致するとき差分な�
 
 def test_実装ファイルが存在しないusecaseを検出する(tmp_path):
     """
+    Scenario: 実装ファイルが存在しないusecaseを検出する
     Given operationNameから導出したファイルパスに対応する実装ファイルが実在しないusecase document
     When クラス名ドリフト検査を実行する
     Then missing_implementation_fileにその組が含まれる
@@ -83,6 +85,7 @@ def test_Java実装に対してもクラス名ドリフトを検知できる(tmp
 
 def test_クラス名が一致しないusecaseを検出する(tmp_path):
     """
+    Scenario: クラス名が一致しないusecaseを検出する
     Given 実装ファイルは実在するが、operationNameと一致するクラス定義を持たないusecase document
     When クラス名ドリフト検査を実行する
     Then class_name_mismatchにその組が含まれる

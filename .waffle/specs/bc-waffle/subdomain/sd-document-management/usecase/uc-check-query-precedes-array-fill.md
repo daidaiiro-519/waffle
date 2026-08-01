@@ -1,3 +1,11 @@
+---
+id: "uc-check-query-precedes-array-fill"
+type: "usecase"
+title: "uc-check-query-precedes-array-fill"
+description: "配列フィールドを含むdocument.jsonの書き込み（scaffold fill）は、既存の配列要素をqueryで確認せず上書きすると内容を消失させる事故が起きる。この操作順序制約（クエリ先行）を機械的に検証する。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # uc-check-query-precedes-array-fill
 
 ## 概要
@@ -65,6 +73,7 @@ sequenceDiagram
 | 異常系 | 事前条件違反：query先行の欠如を検出できるか |
 
 ```gherkin
+Scenario: 配列値を含むfillで先行queryが無い場合は拒否される
 Given targetPathが"X.json"であり、hasArrayValueがtrueである
 And queriedPathsに"X.json"が含まれていない
 When CheckQueryPrecedesArrayFillを実行する
@@ -78,6 +87,7 @@ Then 拒否判定が返り、理由に先行queryが必要である旨が含ま�
 | 正常系 | 状態遷移：正しい手順を踏んだ場合に許可されるか |
 
 ```gherkin
+Scenario: 配列値を含むfillで先行queryがある場合は許可される
 Given targetPathが"X.json"であり、hasArrayValueがtrueである
 And queriedPathsに"X.json"が含まれている
 When CheckQueryPrecedesArrayFillを実行する
@@ -91,6 +101,7 @@ Then 許可判定が返る
 | 境界値 | 適用範囲の境界：配列以外のfillはこの制約の対象外であることを確認 |
 
 ```gherkin
+Scenario: 配列値を含まないfillは先行queryの有無に関わらず許可される
 Given hasArrayValueがfalseである
 And queriedPathsが空である
 When CheckQueryPrecedesArrayFillを実行する

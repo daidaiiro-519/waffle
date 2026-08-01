@@ -12,6 +12,7 @@ def _engine() -> CheckSpecIntegrity:
 
 def test_存在しないbc_jsonはINVALID_PATH():
     """
+    Scenario: 存在しないbc.jsonはINVALID_PATH
     When 存在しないbc.jsonのパスで参照整合性検査を実行する
     Then INVALID_PATHエラーが返る
     """

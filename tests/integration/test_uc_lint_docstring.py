@@ -16,6 +16,7 @@ def _engine() -> LintDocstring:
 
 def test_存在しないパスはINVALID_PATH():
     """
+    Scenario: 存在しないパスはINVALID_PATH
     Given 実在しない対象パス
     When 本usecaseを実行する
     Then INVALID_PATHエラーが返る

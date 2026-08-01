@@ -114,8 +114,10 @@ def spec_internal_mismatches(
             continue
         for scenario in block.get("scenarios", []):
             lines = gherkin_lines(scenario.get("gherkin", ""))
-            heading = lines[0] if lines else ""
-            if heading != declaration_line(scenario["name"]):
+            # Scenario Outline: も Gherkin の正規の書き方なので受け入れる。
+            # 見出しの種類ではなく、そこに書かれた名前が正と一致するかを見る
+            declared = declaration_of(lines[0]) if lines else None
+            if declared != declaration_line(scenario["name"]):
                 mismatched.append(scenario["name"])
     return mismatched
 

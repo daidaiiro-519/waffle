@@ -15,6 +15,7 @@ def _engine() -> QueryDocumentCollection:
 
 def test_grep_documentsはディレクトリ横断でpatternに一致する値を収集する():
     """
+    Scenario: grep_documentsはディレクトリ横断でpatternに一致する値を収集する
     Given QueryDocumentCollection システム と対象ディレクトリ
     When operation grep_documents を pattern で実行する
     Then patternに一致した値がDocumentのpath単位でvalueとして返る
@@ -27,6 +28,7 @@ def test_grep_documentsはディレクトリ横断でpatternに一致する値�
 
 def test_filter_documentsはメタフィールドの一致でDocumentを絞り込む(tmp_path, monkeypatch):
     """
+    Scenario: filter_documentsはメタフィールドの一致でDocumentを絞り込む
     Given QueryDocumentCollection システム と対象ディレクトリ
     When operation filter_documents を key tags, value repo:has-udd で実行する
     Then tagsにrepo:has-uddを含むDocumentのpathとmetaがvalueとして返る
@@ -46,6 +48,7 @@ def test_filter_documentsはメタフィールドの一致でDocumentを絞り�
 
 def test_index_scan_documentsはディレクトリ横断でindexとtagsを集約する():
     """
+    Scenario: index_scan_documentsはディレクトリ横断でindexとtagsを集約する
     Given QueryDocumentCollection システム と対象ディレクトリ
     When operation index_scan_documents を実行する
     Then ディレクトリ配下の各Documentのindexとtagsがまとめてvalueとして返り、promptには各要素のpromptを参照する案内が入る
@@ -60,6 +63,7 @@ def test_index_scan_documentsはディレクトリ横断でindexとtagsを集約
 
 def test_一致するDocumentが無くても正常系で空を返す():
     """
+    Scenario: 一致するDocumentが無くても正常系で空を返す
     Given QueryDocumentCollection システム と対象ディレクトリ
     When 一致しないpatternでgrep_documentsを実行する
     Then valueは空であり、エラーにはならない
@@ -71,6 +75,7 @@ def test_一致するDocumentが無くても正常系で空を返す():
 
 def test_未知のoperationはエラーを返す():
     """
+    Scenario: 未知のoperationはエラーを返す
     Given QueryDocumentCollection システム と対象ディレクトリ
     When 未知の operation を実行する
     Then INVALID_OPERATION エラーが返る
@@ -82,6 +87,7 @@ def test_未知のoperationはエラーを返す():
 
 def test_存在しないディレクトリはエラーを返す():
     """
+    Scenario: 存在しないディレクトリはエラーを返す
     Given 実在しない対象ディレクトリ
     When 本usecaseを実行する
     Then INVALID_PATH エラーが返る
@@ -93,6 +99,7 @@ def test_存在しないディレクトリはエラーを返す():
 
 def test_不正な正規表現はエラーを返す():
     """
+    Scenario: 不正な正規表現はエラーを返す
     Given QueryDocumentCollection システム と対象ディレクトリ
     When 不正な正規表現で grep_documents を実行する
     Then INVALID_PATTERN エラーが返る

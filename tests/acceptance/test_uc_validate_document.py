@@ -40,6 +40,7 @@ def _engine() -> ValidateDocument:
 
 def test_適合する_Document_は_VALIDATED_判定になる():
     """
+    Scenario: 適合する Document は VALIDATED 判定になる
     Given schema に適合する Document
     When validate する
     Then VALIDATED 判定が返る
@@ -50,6 +51,7 @@ def test_適合する_Document_は_VALIDATED_判定になる():
 
 def test_不適合は違反詳細つきで失敗する():
     """
+    Scenario: 不適合は違反詳細つきで失敗する
     Given schema に適合しない Document
     When validate する
     Then 違反詳細つきで失敗する
@@ -68,6 +70,7 @@ def test_不適合は違反詳細つきで失敗する():
 
 def test_schemaRef_を持たない_Document_は検証できない():
     """
+    Scenario: schemaRef を持たない Document は検証できない
     Given schemaRef の無い Document
     When validate する
     Then MISSING_SCHEMA_REF エラーが返る
@@ -84,6 +87,7 @@ def test_schemaRef_を持たない_Document_は検証できない():
 @pytest.mark.parametrize("path,expected_status", _DOGFOOD_DOCUMENTS)
 def test_既存documentはschemaに適合する(path, expected_status, tmp_path):
     """
+    Scenario: 既存documentはschemaに適合する
     Given waffle自身のdocument
     When validateする
     Then 成功し、schemaのlifecycleに応じた正しいstatusになる
@@ -101,6 +105,7 @@ def test_既存documentはschemaに適合する(path, expected_status, tmp_path)
 
 def test_適合判定は実際にstatusをdocumentへ書き込む(tmp_path):
     """
+    Scenario: 適合判定は実際にstatusをdocumentへ書き込む
     Given CREATED状態の、schemaに適合するDocument
     When validateする
     Then 判定結果のstatusが実際にdocument.jsonへ書き込まれる（再読込しても反映されている）
@@ -121,6 +126,7 @@ def test_適合判定は実際にstatusをdocumentへ書き込む(tmp_path):
 
 def test_SUPERSEDEDは終端でありvalidateを受け付けない():
     """
+    Scenario: SUPERSEDEDは終端でありvalidateを受け付けない
     Given SUPERSEDED状態のDocument
     When validateする
     Then INVALID_TRANSITIONエラーが返る
@@ -141,6 +147,7 @@ def test_SUPERSEDEDは終端でありvalidateを受け付けない():
 
 def test_不正なJSONはINVALID_JSON():
     """
+    Scenario: 不正なJSONはINVALID_JSON
     Given 不正なJSONの対象ファイル
     When validateする
     Then INVALID_JSONエラーが返る

@@ -25,6 +25,7 @@ def _engine() -> InitCodingPreset:
 
 def test_プリセットから4documentを一括生成する():
     """
+    Scenario: プリセットから4documentを一括生成する
     Given python-hexagonalプリセット
     When 新しいプロダクト名でinitする
     Then tech-stack/architecture/coding-standard/test-standardの4documentが生成される
@@ -44,6 +45,7 @@ def test_プリセットから4documentを一括生成する():
 
 def test_タイトルにプロダクト固有のdocumentIdが付与される():
     """
+    Scenario: タイトルにプロダクト固有のdocumentIdが付与される
     Given python-hexagonalプリセット
     When 新しいプロダクト名でinitする
     Then 各documentのtitleは「説明句：documentId」の形式になる
@@ -57,6 +59,7 @@ def test_タイトルにプロダクト固有のdocumentIdが付与される():
 
 def test_既に存在するdocumentは上書きせずskipする():
     """
+    Scenario: 既に存在するdocumentは上書きせずskipする
     Given 既にinit済みの4document
     When 同じプロダクト名で再度initする
     Then 何も上書きされずcreatedは空、skippedに4件とも含まれる
@@ -72,6 +75,7 @@ def test_既に存在するdocumentは上書きせずskipする():
 
 def test_存在しないプリセット名はPRESET_NOT_FOUNDを返す():
     """
+    Scenario: 存在しないプリセット名はPRESET_NOT_FOUNDを返す
     Given 存在しないプリセット名
     When initする
     Then PRESET_NOT_FOUNDエラーになる

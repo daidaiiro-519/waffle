@@ -13,6 +13,7 @@ def _engine() -> QueryDocumentCollection:
 
 def test_同一条件での再実行はべき等である():
     """
+    Scenario: 同一条件での再実行はべき等である
     Given QueryDocumentCollection システム と対象ディレクトリ
     When 同一のoperationとparamsを2回連続で実行する
     Then 2回の結果は完全に一致する

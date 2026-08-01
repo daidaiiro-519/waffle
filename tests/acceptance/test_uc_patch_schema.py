@@ -64,6 +64,7 @@ def teardown_function():
 
 def test_新規ブロックを追加する():
     """
+    Scenario: 新規ブロックを追加する
     Given ブロック名・ブロック定義・紐付け先・プロパティ名
     When add_blockを実行する
     Then Schemaに新規ブロックが追加され、指定した紐付け先から参照できるようになる
@@ -83,6 +84,7 @@ def test_新規ブロックを追加する():
 
 def test_対象外の箇所は一切変更されない():
     """
+    Scenario: 対象外の箇所は一切変更されない
     Given 整形契約に従った既存のschemaファイル
     When add_blockまたはrename_blockを実行する
     Then 変更に関係のない既存の行は1バイトも変わらない
@@ -106,6 +108,7 @@ def test_対象外の箇所は一切変更されない():
 
 def test_既に存在するブロックの追加は無変更で成功する():
     """
+    Scenario: 既に存在するブロックの追加は無変更で成功する
     Given 既に追加済みのブロック名を含むadd_block操作
     When add_blockを再実行する
     Then 対象は無変更のまま成功する
@@ -128,6 +131,7 @@ def test_既に存在するブロックの追加は無変更で成功する():
 
 def test_識別子を複数箇所にわたってリネームする():
     """
+    Scenario: 識別子を複数箇所にわたってリネームする
     Given 旧短縮名・新短縮名（必須ではないブロック）
     When rename_blockを実行する
     Then Schema内でその識別子を参照する全ての箇所が新短縮名に一貫してリネームされる
@@ -150,6 +154,7 @@ def test_識別子を複数箇所にわたってリネームする():
 
 def test_必須プロパティのリネームはBACKWARD_INCOMPATIBLEとして拒否される():
     """
+    Scenario: 必須プロパティのリネームはBACKWARD_INCOMPATIBLEとして拒否される
     Given 公開済みkindのrequiredに指定されているブロックのリネーム
     When rename_blockを実行する
     Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない
@@ -163,6 +168,7 @@ def test_必須プロパティのリネームはBACKWARD_INCOMPATIBLEとして�
 
 def test_既にリネーム済みの状態への再リネームは無変更で成功する():
     """
+    Scenario: 既にリネーム済みの状態への再リネームは無変更で成功する
     Given リネーム元が既に存在せずリネーム先が既に存在する状態
     When 同じrename_block操作を再実行する
     Then 対象は無変更のまま成功する
@@ -186,6 +192,7 @@ def test_既にリネーム済みの状態への再リネームは無変更で�
 
 def test_既存ブロックの1フィールドだけを書き換える():
     """
+    Scenario: 既存ブロックの1フィールドだけを書き換える
     Given ブロック名・書き換える項目・新しい値
     When set_fieldを実行する
     Then そのブロックの指定した項目だけが新しい値に置き換わる
@@ -204,6 +211,7 @@ def test_既存ブロックの1フィールドだけを書き換える():
 
 def test_set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える():
     """
+    Scenario: set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える
     Given defNameにnull・ルート直下のドットパス・新しい値
     When set_fieldを実行する
     Then $defsではなくschemaのルート直下の値が書き換わる
@@ -225,6 +233,7 @@ def test_set_fieldはdefNameにnullを渡すとschemaのルート直下を書き
 
 def test_既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒否される():
     """
+    Scenario: 既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒否される
     Given 公開済みkindの既存フィールドの型(type)を書き換える変更
     When set_fieldを実行する
     Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない
@@ -243,6 +252,7 @@ def test_既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒�
 
 def test_set_fieldの同じ値への再実行は無変更で成功する():
     """
+    Scenario: set_fieldの同じ値への再実行は無変更で成功する
     Given 既に目的の値になっている項目
     When 同じ値でset_fieldを再実行する
     Then 対象は無変更のまま成功する
@@ -264,6 +274,7 @@ def test_set_fieldの同じ値への再実行は無変更で成功する():
 
 def test_存在しないブロックへのset_fieldはBLOCK_NOT_FOUND():
     """
+    Scenario: 存在しないブロックへのset_fieldはBLOCK_NOT_FOUND
     Given Schemaに存在しないブロック名
     When set_fieldを実行する
     Then BLOCK_NOT_FOUNDエラーが返り書き込まれない
@@ -282,6 +293,7 @@ def test_存在しないブロックへのset_fieldはBLOCK_NOT_FOUND():
 
 def test_content_defからプロパティ参照を外す():
     """
+    Scenario: content defからプロパティ参照を外す
     Given 必須ではないプロパティを持つcontent def名・プロパティ名
     When remove_blockを実行する
     Then そのcontent defからプロパティ参照が外れ、$defs内のブロック定義自体は変更されない
@@ -305,6 +317,7 @@ def test_content_defからプロパティ参照を外す():
 
 def test_既に存在しないプロパティのremove_blockは無変更で成功する():
     """
+    Scenario: 既に存在しないプロパティのremove_blockは無変更で成功する
     Given 既に除去済みのプロパティ名を含むremove_block操作
     When remove_blockを再実行する
     Then 対象は無変更のまま成功する
@@ -316,6 +329,7 @@ def test_既に存在しないプロパティのremove_blockは無変更で成�
 
 def test_必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される():
     """
+    Scenario: 必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される
     Given 公開済みkindのrequiredに指定されているプロパティ
     When remove_blockを実行する
     Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない
@@ -332,6 +346,7 @@ def test_必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして�
 
 def test_既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否される():
     """
+    Scenario: 既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否される
     Given 既存Documentを壊しうる後方互換性のない変更
     When patchを実行する
     Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない
@@ -352,6 +367,7 @@ def test_既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否さ
 
 def test_構文的に不正な結果はINVALID_SCHEMA_STRUCTUREとして拒否される():
     """
+    Scenario: 構文的に不正な結果はINVALID_SCHEMA_STRUCTUREとして拒否される
     Given 適用するとJSON Schemaとして構文的に不正になる変更
     When patchを実行する
     Then INVALID_SCHEMA_STRUCTUREエラーが返り書き込まれない
@@ -378,6 +394,7 @@ class _BrokenWriteDocumentRepository:
 
 def test_書き込み失敗はWRITE_ERRORを返す():
     """
+    Scenario: 書き込み失敗はWRITE_ERRORを返す
     Given 書き込み時にOSErrorを送出するDocumentRepository
     When add_blockを実行する
     Then WRITE_ERRORエラーが返る
@@ -396,6 +413,7 @@ def test_書き込み失敗はWRITE_ERRORを返す():
 
 def test_解決できないschemaRefはINVALID_SCHEMA_REF():
     """
+    Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
     Given 解決できないschemaRef
     When patchを実行する
     Then INVALID_SCHEMA_REFエラーが返る
@@ -407,6 +425,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
 
 def test_未知のoperationはINVALID_OPERATION():
     """
+    Scenario: 未知のoperationはINVALID_OPERATION
     Given add_block/rename_block/set_field/remove_block/add_def/add_kind_branch/create_version/set_kind_render_target以外のoperation
     When patchを実行する
     Then INVALID_OPERATIONエラーが返る
@@ -429,6 +448,7 @@ def _kind_dispatch_fixture() -> dict:
 
 def test_既存content_defへの紐付けを持たない新規defを追加する():
     """
+    Scenario: 既存content defへの紐付けを持たない新規defを追加する
     Given def名・def定義
     When add_defを実行する
     Then $defsに新規エントリが追加され、既存のcontent defには一切変更が加わらない
@@ -446,6 +466,7 @@ def test_既存content_defへの紐付けを持たない新規defを追加する
 
 def test_既に存在するdefの追加は無変更で成功する():
     """
+    Scenario: 既に存在するdefの追加は無変更で成功する
     Given 既に追加済みのdef名を含むadd_def操作
     When add_defを再実行する
     Then 対象は無変更のまま成功する
@@ -466,6 +487,7 @@ def test_既に存在するdefの追加は無変更で成功する():
 
 def test_2値のif_then_else形式に新しいkindブランチを追加する():
     """
+    Scenario: 2値のif_then_else形式に新しいkindブランチを追加する
     Given if/then/else形式（enumが既存kind値を2つのみ持つ）のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名
     When add_kind_branchを実行する
     Then discriminatorフィールドのenumに新しいkind値が追加され、ルート直下の分岐はallOf形式に正規化された上で新しいブランチを含む
@@ -497,6 +519,7 @@ def test_2値のif_then_else形式に新しいkindブランチを追加する():
 
 def test_allOf形式の分岐に新しいkindブランチを追加する():
     """
+    Scenario: allOf形式の分岐に新しいkindブランチを追加する
     Given 既にallOf形式のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名
     When add_kind_branchを実行する
     Then discriminatorフィールドのenumに新しいkind値が追加され、allOf配列に新しいブランチが追加される
@@ -535,6 +558,7 @@ def test_allOf形式の分岐に新しいkindブランチを追加する():
 
 def test_既に存在するkindブランチの追加は無変更で成功する():
     """
+    Scenario: 既に存在するkindブランチの追加は無変更で成功する
     Given 既にenumとルート分岐の両方に存在するkind値・content def紐付け
     When add_kind_branchを再実行する
     Then 対象は無変更のまま成功する
@@ -562,6 +586,7 @@ def test_既に存在するkindブランチの追加は無変更で成功する(
 
 def test_未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE():
     """
+    Scenario: 未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE
     Given if/then/else形式でもallOf形式でもないルート分岐、またはif/then/else形式でありながらenumが3つ以上のkind値を持つ状態
     When add_kind_branchを実行する
     Then UNSUPPORTED_ROOT_DISPATCH_SHAPEエラーが返り書き込まれない
@@ -580,6 +605,7 @@ def test_未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_RO
 
 def test_create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る():
     """
+    Scenario: create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る
     Given 複製元のfromSchemaRefと、複製先のschemaRef（新版）・edits
     When create_versionを実行する
     Then fromSchemaRefの内容を複製しeditsを適用した新しい版ファイルがschemaRefへ書き込まれ、fromSchemaRef自体は変更されない
@@ -598,6 +624,7 @@ def test_create_versionは既存版を複製しeditsを適用した新しい版�
 
 def test_create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない():
     """
+    Scenario: create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない
     Given 既存フィールドの型を変更するedits（通常のset_fieldなら拒否される変更）
     When create_versionを実行する
     Then BACKWARD_INCOMPATIBLEエラーにならず新版が作られる
@@ -612,6 +639,7 @@ def test_create_versionは既存フィールドの型を変えてもBACKWARD_INC
 
 def test_create_versionは既に存在する版ファイルを上書きしない():
     """
+    Scenario: create_versionは既に存在する版ファイルを上書きしない
     Given schemaRef（新版）が指す版ファイルが既に存在する状態
     When create_versionを実行する
     Then VERSION_ALREADY_EXISTSエラーが返り、既存の版ファイルは変更されない
@@ -641,6 +669,7 @@ def _kind_keyed_render_target_fixture() -> dict:
 
 def test_x_render_targetのkind別dictに新しいkind値のエントリを追加する():
     """
+    Scenario: x-render-targetのkind別dictに新しいkind値のエントリを追加する
     Given kind値・pathVars・path・deploy、およびpathVars/path/deployがkind別dict形式のschema
     When set_kind_render_targetを実行する
     Then x-render-target.pathVars/path/deployそれぞれに、そのkind値のエントリが追加される
@@ -664,6 +693,7 @@ def test_x_render_targetのkind別dictに新しいkind値のエントリを追�
 
 def test_既に存在するkind別render_targetエントリの追加は無変更で成功する():
     """
+    Scenario: 既に存在するkind別render_targetエントリの追加は無変更で成功する
     Given 既にpathVars・path・deployの全てで指定した値と一致するkind値のエントリ
     When set_kind_render_targetを再実行する
     Then 対象は無変更のまま成功する
@@ -687,6 +717,7 @@ def test_既に存在するkind別render_targetエントリの追加は無変更
 
 def test_x_render_targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE():
     """
+    Scenario: x-render-targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE
     Given x-render-target自体を持たない、またはpathVars・path・deployのいずれかがフラット形式（kind別dictでない）のschema
     When set_kind_render_targetを実行する
     Then UNSUPPORTED_RENDER_TARGET_SHAPEエラーが返り書き込まれない

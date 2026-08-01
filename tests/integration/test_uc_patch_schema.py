@@ -58,6 +58,7 @@ def teardown_function():
 
 def test_add_blockの複数回実行はべき等である():
     """
+    Scenario: add_blockの複数回実行はべき等である
     Given 同一のadd_block操作
     When 2回連続で実行する
     Then 2回目の実行結果は1回目と完全に同一である
@@ -82,6 +83,7 @@ def test_add_blockの複数回実行はべき等である():
 
 def test_rename_blockの複数回実行はべき等である():
     """
+    Scenario: rename_blockの複数回実行はべき等である
     Given 同一のrename_block操作（必須ではないブロック）
     When 2回連続で実行する
     Then 2回目の実行結果は1回目と完全に同一である
@@ -107,6 +109,7 @@ def test_rename_blockの複数回実行はべき等である():
 
 def test_set_fieldの複数回実行はべき等である():
     """
+    Scenario: set_fieldの複数回実行はべき等である
     Given 同一のset_field操作
     When 2回連続で実行する
     Then 2回目の実行結果は1回目と完全に同一である
@@ -126,6 +129,7 @@ def test_set_fieldの複数回実行はべき等である():
 
 def test_remove_blockの複数回実行はべき等である():
     """
+    Scenario: remove_blockの複数回実行はべき等である
     Given 同一のremove_block操作（必須ではないプロパティ）
     When 2回連続で実行する
     Then 2回目の実行結果は1回目と完全に同一である
@@ -162,6 +166,7 @@ def _kind_dispatch_schema() -> dict:
 
 def test_add_defの複数回実行はべき等である():
     """
+    Scenario: add_defの複数回実行はべき等である
     Given 同一のadd_def操作
     When 2回連続で実行する
     Then 2回目の実行結果は1回目と完全に同一である
@@ -180,6 +185,7 @@ def test_add_defの複数回実行はべき等である():
 
 def test_add_kind_branchの複数回実行はべき等である():
     """
+    Scenario: add_kind_branchの複数回実行はべき等である
     Given 同一のadd_kind_branch操作
     When 2回連続で実行する
     Then 2回目の実行結果は1回目と完全に同一である
@@ -205,6 +211,7 @@ def test_add_kind_branchの複数回実行はべき等である():
 
 def test_整形契約に従う既存箇所は書き込み後も不変である():
     """
+    Scenario: 整形契約に従う既存箇所は書き込み後も不変である
     Given 整形契約に従った既存のschemaファイル
     When patchを実行する
     Then 変更対象以外の既存の行はバイト単位で不変である

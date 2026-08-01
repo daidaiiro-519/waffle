@@ -34,6 +34,7 @@ def _usecase_doc(operation_name: str, operations: list[str]) -> dict:
 
 def test_宣言と実装のoperationが完全一致するとき差分なしと判定する(tmp_path):
     """
+    Scenario: 宣言と実装のoperationが完全一致するとき差分なしと判定する
     Given specが宣言するoperation名の集合と、実装のoperation分岐の集合が完全一致するusecase
     When operationドリフト検査を実行する
     Then operations_missing_in_impl・operations_undocumented_in_spec両方が空配列で返る
@@ -54,6 +55,7 @@ def test_宣言と実装のoperationが完全一致するとき差分なしと�
 
 def test_specが宣言するが実装に無いoperationを検出する(tmp_path):
     """
+    Scenario: specが宣言するが実装に無いoperationを検出する
     Given specが宣言するが実装のoperation分岐には存在しないoperation名
     When operationドリフト検査を実行する
     Then operations_missing_in_implにその組が含まれる
@@ -73,6 +75,7 @@ def test_specが宣言するが実装に無いoperationを検出する(tmp_path)
 
 def test_実装にあるがspecに未宣言のoperationを検出する(tmp_path):
     """
+    Scenario: 実装にあるがspecに未宣言のoperationを検出する
     Given 実装のoperation分岐にはあるがspecのどのシナリオにも宣言されていないoperation
     When operationドリフト検査を実行する
     Then operations_undocumented_in_specにその組が含まれる
@@ -95,6 +98,7 @@ def test_実装にあるがspecに未宣言のoperationを検出する(tmp_path)
 
 def test_operationを1件も宣言していないusecaseは対象外(tmp_path):
     """
+    Scenario: operationを1件も宣言していないusecaseは対象外
     Given acceptanceScenariosのどのシナリオにもoperationフィールドを宣言していないusecase
     When operationドリフト検査を実行する
     Then そのusecaseは突き合わせの対象にならず、差分にも現れない
@@ -111,6 +115,7 @@ def test_operationを1件も宣言していないusecaseは対象外(tmp_path):
 
 def test_存在しないdocuments_rootはINVALID_PATH(tmp_path):
     """
+    Scenario: 存在しないdocuments_rootはINVALID_PATH
     When 存在しないdocuments_rootでoperationドリフト検査を実行する
     Then INVALID_PATHエラーが返る
     """

@@ -87,19 +87,19 @@
           "name": "配列値を含むfillで先行queryが無い場合は拒否される",
           "category": "異常系",
           "viewpoint": "事前条件違反：query先行の欠如を検出できるか",
-          "gherkin": "Given targetPathが\"X.json\"であり、hasArrayValueがtrueである\nAnd queriedPathsに\"X.json\"が含まれていない\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 拒否判定が返り、理由に先行queryが必要である旨が含まれる"
+          "gherkin": "Scenario: 配列値を含むfillで先行queryが無い場合は拒否される\nGiven targetPathが\"X.json\"であり、hasArrayValueがtrueである\nAnd queriedPathsに\"X.json\"が含まれていない\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 拒否判定が返り、理由に先行queryが必要である旨が含まれる"
         },
         {
           "name": "配列値を含むfillで先行queryがある場合は許可される",
           "category": "正常系",
           "viewpoint": "状態遷移：正しい手順を踏んだ場合に許可されるか",
-          "gherkin": "Given targetPathが\"X.json\"であり、hasArrayValueがtrueである\nAnd queriedPathsに\"X.json\"が含まれている\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 許可判定が返る"
+          "gherkin": "Scenario: 配列値を含むfillで先行queryがある場合は許可される\nGiven targetPathが\"X.json\"であり、hasArrayValueがtrueである\nAnd queriedPathsに\"X.json\"が含まれている\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 許可判定が返る"
         },
         {
           "name": "配列値を含まないfillは先行queryの有無に関わらず許可される",
           "category": "境界値",
           "viewpoint": "適用範囲の境界：配列以外のfillはこの制約の対象外であることを確認",
-          "gherkin": "Given hasArrayValueがfalseである\nAnd queriedPathsが空である\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 許可判定が返る"
+          "gherkin": "Scenario: 配列値を含まないfillは先行queryの有無に関わらず許可される\nGiven hasArrayValueがfalseである\nAnd queriedPathsが空である\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 許可判定が返る"
         }
       ]
     },

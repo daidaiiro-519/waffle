@@ -48,6 +48,7 @@ def _aggregate_doc(
 
 def test_全aggregateの集約ルート名と実装クラスが一致するとき差分なしと判定する(tmp_path):
     """
+    Scenario: 全aggregateの集約ルート名と実装クラスが一致するとき差分なしと判定する
     Given 全aggregateの集約ルート名・値オブジェクトが、対応する実装ファイル内の同名クラスと一致するspecツリー
     When クラス名ドリフト検査を実行する
     Then missing_implementation_file・class_name_mismatch・attribute_mismatch・missing_value_object・value_object_attribute_mismatch全てが空配列で返る
@@ -116,6 +117,7 @@ def test_属性が空でもクラス名だけ一致すれば通っていた盲�
 
 def test_実装ファイルが存在しないaggregateを検出する(tmp_path):
     """
+    Scenario: 実装ファイルが存在しないaggregateを検出する
     Given 集約ルート名から導出したファイルパスに対応する実装ファイルが実在しないaggregate document
     When クラス名ドリフト検査を実行する
     Then missing_implementation_fileにその組が含まれる
@@ -134,6 +136,7 @@ def test_実装ファイルが存在しないaggregateを検出する(tmp_path):
 
 def test_クラス名が一致しないaggregateを検出する(tmp_path):
     """
+    Scenario: クラス名が一致しないaggregateを検出する
     Given 実装ファイルは実在するが、集約ルート名と一致するクラス定義を持たないaggregate document
     When クラス名ドリフト検査を実行する
     Then class_name_mismatchにその組が含まれる

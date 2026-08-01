@@ -86,6 +86,7 @@ sequenceDiagram
 | 正常系 | 固定テンプレートへ値が正しく差し込まれ、HTMLファイルが生成されることを確認する |
 
 ```gherkin
+Scenario: completionImageを含むHandoffを描画する
 Given completionImage・designViewpoints・implementationViewpoints・constraints・title・specRefを持つ検証済みのHandoff
 When RenderHandoffTemplateを実行する
 Then .waffle/handoff/{documentId}.htmlが生成される
@@ -98,6 +99,7 @@ Then .waffle/handoff/{documentId}.htmlが生成される
 | 異常系 | 事前条件（schemaRef）違反を検出できることを確認する |
 
 ```gherkin
+Scenario: HandoffSchema以外を描画しようとする
 Given schemaRefがHandoffSchema以外のDocument
 When RenderHandoffTemplateを実行する
 Then WRONG_SCHEMA_REFエラーが返り描画されない
@@ -110,6 +112,7 @@ Then WRONG_SCHEMA_REFエラーが返り描画されない
 | 異常系 | 必須の構造化データが欠けている場合を検出できることを確認する |
 
 ```gherkin
+Scenario: completionImageが無いHandoffを描画しようとする
 Given completionImageブロックを持たないHandoff
 When RenderHandoffTemplateを実行する
 Then MISSING_COMPLETION_IMAGEエラーが返り描画されない
@@ -122,6 +125,7 @@ Then MISSING_COMPLETION_IMAGEエラーが返り描画されない
 | 正常系 | designViewpoints/implementationViewpointsのadvisor別集計が正しく出力に反映されることを確認する |
 
 ```gherkin
+Scenario: advisor名と件数のペアがレビュー状況に出力される
 Given designViewpoints/implementationViewpointsが与えられたHandoff
 When RenderHandoffTemplateを実行する
 Then advisor名＋件数のペアがレビュー状況セクションに出力される
@@ -134,6 +138,7 @@ Then advisor名＋件数のペアがレビュー状況セクションに出力�
 | 正常系 | schemaRefの検証がバージョン完全一致ではなくHandoffSchema/プレフィックスであることを確認する（実データがHandoffSchema/v2へ移行済みで、旧v1完全一致では全件が描画失敗していた回帰の再発防止） |
 
 ```gherkin
+Scenario: HandoffSchemaの新しいバージョンも描画できる
 Given schemaRefがHandoffSchema/v2のHandoff
 When RenderHandoffTemplateを実行する
 Then 正常にHTMLが生成される
@@ -146,6 +151,7 @@ Then 正常にHTMLが生成される
 | 正常系 | document-graph Skillが読める契約（id/type/title/description/tags）がHTMLのheadにmetaタグとして正しく出力されることを確認する |
 
 ```gherkin
+Scenario: 契約準拠のmetaタグが出力される
 Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff
 When RenderHandoffTemplateを実行する
 Then 生成されたHTMLのheadにid/type/title/description/tagsの<meta>タグが出力される
@@ -158,6 +164,7 @@ Then 生成されたHTMLのheadにid/type/title/description/tagsの<meta>タグ�
 | 正常系 | render側が既存contentの値を集計・表示するだけで、合否判定そのものを新たに計算していないことを確認する（UI層に業務ルール判定ロジックを持たせないというアーキテクチャ制約の検証） |
 
 ```gherkin
+Scenario: reviewStatusの値をそのまま表示し新たな判定を行わない
 Given requiredAdvisors・findings（resolutionStatusを含む）・completionImageConfirmedByを持つ検証済みのHandoff
 When RenderHandoffTemplateを実行する
 Then 生成されたHTMLにfindingsの件数・resolutionStatusの値がそのまま表示される

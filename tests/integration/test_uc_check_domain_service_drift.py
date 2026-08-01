@@ -12,6 +12,7 @@ def _engine() -> CheckDomainServiceDrift:
 
 def test_存在しないdocuments_rootはINVALID_PATH():
     """
+    Scenario: 存在しないdocuments_rootはINVALID_PATH
     When 存在しないdocuments_rootでドリフト検査を実行する
     Then INVALID_PATHエラーが返る
     """

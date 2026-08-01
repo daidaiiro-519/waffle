@@ -372,25 +372,27 @@ Scenario: 配列のpathVarはtoolMappings経由のdeploy先へfan-outする
   Then 配列の要素ごとに1つずつsymlinkのdeploy先が作られる
 ```
 
-### x_frontmatterが指すブロックがitemsを持つときスペース区切りで結合する
+### x-frontmatterが指すブロックがitemsを持つときスペース区切りで結合する
 
 | 分類 | 観点 |
 |---|---|
 | 正常系 | x-frontmatterが指す値がtext/itemsを持つブロック形状のdictのとき、itemsが空スペース区切りの1文字列へ正規化されることを確認する |
 
 ```gherkin
+Scenario: x-frontmatterが指すブロックがitemsを持つときスペース区切りで結合する
 Given x-frontmatterがtext/itemsを持つブロック形状のdictを指すDocument
 When RenderDocumentを実行する
 Then itemsを半角スペースで結合した1つの文字列がfrontmatter値になる
 ```
 
-### DomainSpecSchemaのusecase_Specはfrontmatterでid_type_title_description_tagsを持つ
+### DomainSpecSchemaのusecase specはfrontmatterでid/type/title/description/tagsを持つ
 
 | 分類 | 観点 |
 |---|---|
 | 正常系 | document-graph Skillの契約（id/type/title/description/tags）に沿ったfrontmatterがDomainSpecSchemaのusecaseから出力されることを確認する |
 
 ```gherkin
+Scenario: DomainSpecSchemaのusecase specはfrontmatterでid/type/title/description/tagsを持つ
 Given usecase specKindのDomainSpecSchema Document
 When RenderDocumentを実行する
 Then id/type/title/descriptionを含むfrontmatterが出力される
@@ -439,7 +441,7 @@ Scenario: 同じDocumentを2回renderしても同一の成果物になる
   Then 1回目と2回目の成果物は同一である
 ```
 
-### x_render宣言どおりに決定的に描画する
+### x-render宣言どおりに決定的に描画する
 
 | 分類 | 観点 |
 |---|---|
@@ -491,7 +493,7 @@ Scenario: データが空の任意ブロックは見出しごと省略する
   Then そのブロックの見出しを含むセクション全体が出力から省略される
 ```
 
-### x_render_hiddenを宣言したブロックは本文に描画しない
+### x-render-hiddenを宣言したブロックは本文に描画しない
 
 | 分類 | 観点 |
 |---|---|

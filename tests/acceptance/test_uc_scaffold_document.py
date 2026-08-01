@@ -88,6 +88,7 @@ def teardown_function():
 
 def test_生成した骨格は自分の_schema_で_valid():
     """
+    Scenario: 生成した骨格は自分の schema で valid
     Given advisor 種別の Document（discriminator 指定済み）
     When create する
     Then 骨格は schema に適合し、status は schema の初期値である
@@ -107,6 +108,7 @@ def test_生成した骨格は自分の_schema_で_valid():
 
 def test_構造を変える値は拒否される():
     """
+    Scenario: 構造を変える値は拒否される
     Given 作成済みの Document
     When const フィールドへ値を書き込もうとする
     Then 書き込まれず skipped に記録される
@@ -182,6 +184,7 @@ def test_schema版が変わった後に新設された任意ブロックも既�
 
 def test_宣言済みの値フィールドに書き込まれる():
     """
+    Scenario: 宣言済みの値フィールドに書き込まれる
     Given 作成済みの Document
     When 宣言済みの値フィールドへ値を書き込む
     Then written に記録され、ファイルに反映される
@@ -205,6 +208,7 @@ def test_宣言済みの値フィールドに書き込まれる():
 
 def test_discriminator_が無いと候補を案内する():
     """
+    Scenario: discriminator が無いと候補を案内する
     Given 分岐のある schema
     When discriminator を指定せずに create する
     Then MISSING_DISCRIMINATOR エラーが候補つきで返る
@@ -216,6 +220,7 @@ def test_discriminator_が無いと候補を案内する():
 
 def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
     """
+    Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR
     Given 分岐のあるschemaのenumに存在しないdiscriminator値
     When createを実行する
     Then INVALID_DISCRIMINATORエラーが返る
@@ -231,6 +236,7 @@ def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
 
 def test_createはadvisor_skillの骨格を生成する():
     """
+    Scenario: createはadvisor_skillの骨格を生成する
     Given schemaRef, documentId, discriminator(skillKind=advisor)
     When createを実行する
     Then documentType/schemaRef/skillKind/statusが正しく設定され、content配下にresponseTypes/knowledgeRefsがある骨格が生成される
@@ -251,6 +257,7 @@ def test_createはadvisor_skillの骨格を生成する():
 
 def test_createはx_source_targetに骨格を書き出す():
     """
+    Scenario: createはx_source_targetに骨格を書き出す
     Given schemaRef, documentId, discriminator
     When createを実行する
     Then schemaのx-source-target宣言どおりのパスにファイルが書き出される
@@ -265,6 +272,7 @@ def test_createはx_source_targetに骨格を書き出す():
 
 def test_fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持つ():
     """
+    Scenario: fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持つ
     Given schemaRef, documentId, discriminator
     When createを実行する
     Then fillTemplateには値フィールドのpathとx-prompt-write由来のpromptを持つエントリが含まれる
@@ -364,6 +372,7 @@ def test_fillはdocumentIdとdiscriminatorキーへの書き込みを拒否す�
 
 def test_customはadvisorと構成が異なる():
     """
+    Scenario: customはadvisorと構成が異なる
     Given discriminator(skillKind=custom)
     When createを実行する
     Then advisorとは異なりcontent配下にprocessingTargetを持つ骨格が生成される
@@ -378,6 +387,7 @@ def test_customはadvisorと構成が異なる():
 
 def test_宣言済みの値フィールドを削除する():
     """
+    Scenario: 宣言済みの値フィールドを削除する
     Given 値が書き込み済みの、必須ではないフィールドのpath
     When clear_fieldを実行する
     Then そのフィールドがdocumentから削除される
@@ -403,6 +413,7 @@ def test_宣言済みの値フィールドを削除する():
 
 def test_既に存在しないフィールドのclear_fieldは無変更で成功する():
     """
+    Scenario: 既に存在しないフィールドのclear_fieldは無変更で成功する
     Given 既に削除済みのフィールドpath
     When clear_fieldを再実行する
     Then 対象は無変更のまま成功する
@@ -420,6 +431,7 @@ def test_既に存在しないフィールドのclear_fieldは無変更で成功
 
 def test_必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される():
     """
+    Scenario: 必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される
     Given schemaのrequiredに指定されているフィールドのpath
     When clear_fieldを実行する
     Then REQUIRED_FIELDエラーが返り削除されない
@@ -440,6 +452,7 @@ def test_必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否さ�
 
 def test_migrate_schemaはschemaRefを新版へ書き換える():
     """
+    Scenario: migrate_schemaはschemaRefを新版へ書き換える
     Given 別版のschemaRefを指す既存Document
     When migrate_schemaを実行する
     Then Documentのstatusはそのschema版へ書き換わる
@@ -460,6 +473,7 @@ def test_migrate_schemaはschemaRefを新版へ書き換える():
 
 def test_migrate_schemaは同じ版への書き換えに対して冪等である():
     """
+    Scenario: migrate_schemaは同じ版への書き換えに対して冪等である
     Given 既に目的のschemaRefになっているDocument
     When 同じschemaRefでmigrate_schemaを再実行する
     Then 対象は無変更のまま成功する
@@ -477,6 +491,7 @@ def test_migrate_schemaは同じ版への書き換えに対して冪等である
 
 def test_migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する():
     """
+    Scenario: migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する
     Given 解決できない移行先schemaRef
     When migrate_schemaを実行する
     Then INVALID_SCHEMA_REFエラーが返り、Documentは変更されない

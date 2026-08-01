@@ -153,7 +153,7 @@
           "covers": "操作保証: renderの決定性"
         },
         {
-          "name": "x_render宣言どおりに決定的に描画する",
+          "name": "x-render宣言どおりに決定的に描画する",
           "category": "正常系",
           "viewpoint": "描画：x-renderがtable部品を宣言したとき、その宣言どおりの構造でMarkdownテーブルとして整形される",
           "gherkin": "Scenario: x-render宣言どおりに決定的に描画する\n  Given interfaceブロック(x-render宣言=table)を持つDocument\n  When renderする\n  Then schemaのx-render宣言どおりに整形されたMarkdownテーブルが出力に含まれる",
@@ -181,7 +181,7 @@
           "covers": "操作保証: 空データの任意ブロックは見出しごと省略する"
         },
         {
-          "name": "x_render_hiddenを宣言したブロックは本文に描画しない",
+          "name": "x-render-hiddenを宣言したブロックは本文に描画しない",
           "category": "正常系",
           "viewpoint": "非表示ブロック: frontmatter等の値供給のみに使うブロックはx-render-hiddenで本文描画から除外できる",
           "gherkin": "Scenario: x-render-hiddenを宣言したブロックは本文に描画しない\n  Given x-render-hidden:trueを宣言したブロックを含むDocument\n  When render する\n  Then そのブロックの見出し・本文が出力に一切含まれない",
@@ -349,18 +349,18 @@
           "covers": "受け入れ基準: 配列pathVarのtoolMappings経由fan-out"
         },
         {
-          "name": "x_frontmatterが指すブロックがitemsを持つときスペース区切りで結合する",
+          "name": "x-frontmatterが指すブロックがitemsを持つときスペース区切りで結合する",
           "category": "正常系",
           "viewpoint": "x-frontmatterが指す値がtext/itemsを持つブロック形状のdictのとき、itemsが空スペース区切りの1文字列へ正規化されることを確認する",
-          "gherkin": "Given x-frontmatterがtext/itemsを持つブロック形状のdictを指すDocument\nWhen RenderDocumentを実行する\nThen itemsを半角スペースで結合した1つの文字列がfrontmatter値になる",
+          "gherkin": "Scenario: x-frontmatterが指すブロックがitemsを持つときスペース区切りで結合する\nGiven x-frontmatterがtext/itemsを持つブロック形状のdictを指すDocument\nWhen RenderDocumentを実行する\nThen itemsを半角スペースで結合した1つの文字列がfrontmatter値になる",
           "covers": "",
           "operation": ""
         },
         {
-          "name": "DomainSpecSchemaのusecase_Specはfrontmatterでid_type_title_description_tagsを持つ",
+          "name": "DomainSpecSchemaのusecase specはfrontmatterでid/type/title/description/tagsを持つ",
           "category": "正常系",
           "viewpoint": "document-graph Skillの契約（id/type/title/description/tags）に沿ったfrontmatterがDomainSpecSchemaのusecaseから出力されることを確認する",
-          "gherkin": "Given usecase specKindのDomainSpecSchema Document\nWhen RenderDocumentを実行する\nThen id/type/title/descriptionを含むfrontmatterが出力される",
+          "gherkin": "Scenario: DomainSpecSchemaのusecase specはfrontmatterでid/type/title/description/tagsを持つ\nGiven usecase specKindのDomainSpecSchema Document\nWhen RenderDocumentを実行する\nThen id/type/title/descriptionを含むfrontmatterが出力される",
           "covers": "",
           "operation": ""
         },

@@ -99,7 +99,7 @@
           "name": "completionImageを含むHandoffを描画する",
           "category": "正常系",
           "viewpoint": "固定テンプレートへ値が正しく差し込まれ、HTMLファイルが生成されることを確認する",
-          "gherkin": "Given completionImage・designViewpoints・implementationViewpoints・constraints・title・specRefを持つ検証済みのHandoff\nWhen RenderHandoffTemplateを実行する\nThen .waffle/handoff/{documentId}.htmlが生成される",
+          "gherkin": "Scenario: completionImageを含むHandoffを描画する\nGiven completionImage・designViewpoints・implementationViewpoints・constraints・title・specRefを持つ検証済みのHandoff\nWhen RenderHandoffTemplateを実行する\nThen .waffle/handoff/{documentId}.htmlが生成される",
           "covers": "",
           "operation": ""
         },
@@ -107,7 +107,7 @@
           "name": "HandoffSchema以外を描画しようとする",
           "category": "異常系",
           "viewpoint": "事前条件（schemaRef）違反を検出できることを確認する",
-          "gherkin": "Given schemaRefがHandoffSchema以外のDocument\nWhen RenderHandoffTemplateを実行する\nThen WRONG_SCHEMA_REFエラーが返り描画されない",
+          "gherkin": "Scenario: HandoffSchema以外を描画しようとする\nGiven schemaRefがHandoffSchema以外のDocument\nWhen RenderHandoffTemplateを実行する\nThen WRONG_SCHEMA_REFエラーが返り描画されない",
           "covers": "",
           "operation": ""
         },
@@ -115,7 +115,7 @@
           "name": "completionImageが無いHandoffを描画しようとする",
           "category": "異常系",
           "viewpoint": "必須の構造化データが欠けている場合を検出できることを確認する",
-          "gherkin": "Given completionImageブロックを持たないHandoff\nWhen RenderHandoffTemplateを実行する\nThen MISSING_COMPLETION_IMAGEエラーが返り描画されない",
+          "gherkin": "Scenario: completionImageが無いHandoffを描画しようとする\nGiven completionImageブロックを持たないHandoff\nWhen RenderHandoffTemplateを実行する\nThen MISSING_COMPLETION_IMAGEエラーが返り描画されない",
           "covers": "",
           "operation": ""
         },
@@ -123,7 +123,7 @@
           "name": "advisor名と件数のペアがレビュー状況に出力される",
           "category": "正常系",
           "viewpoint": "designViewpoints/implementationViewpointsのadvisor別集計が正しく出力に反映されることを確認する",
-          "gherkin": "Given designViewpoints/implementationViewpointsが与えられたHandoff\nWhen RenderHandoffTemplateを実行する\nThen advisor名＋件数のペアがレビュー状況セクションに出力される",
+          "gherkin": "Scenario: advisor名と件数のペアがレビュー状況に出力される\nGiven designViewpoints/implementationViewpointsが与えられたHandoff\nWhen RenderHandoffTemplateを実行する\nThen advisor名＋件数のペアがレビュー状況セクションに出力される",
           "covers": "",
           "operation": ""
         },
@@ -131,7 +131,7 @@
           "name": "HandoffSchemaの新しいバージョンも描画できる",
           "category": "正常系",
           "viewpoint": "schemaRefの検証がバージョン完全一致ではなくHandoffSchema/プレフィックスであることを確認する（実データがHandoffSchema/v2へ移行済みで、旧v1完全一致では全件が描画失敗していた回帰の再発防止）",
-          "gherkin": "Given schemaRefがHandoffSchema/v2のHandoff\nWhen RenderHandoffTemplateを実行する\nThen 正常にHTMLが生成される",
+          "gherkin": "Scenario: HandoffSchemaの新しいバージョンも描画できる\nGiven schemaRefがHandoffSchema/v2のHandoff\nWhen RenderHandoffTemplateを実行する\nThen 正常にHTMLが生成される",
           "covers": "",
           "operation": ""
         },
@@ -139,7 +139,7 @@
           "name": "契約準拠のmetaタグが出力される",
           "category": "正常系",
           "viewpoint": "document-graph Skillが読める契約（id/type/title/description/tags）がHTMLのheadにmetaタグとして正しく出力されることを確認する",
-          "gherkin": "Given completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff\nWhen RenderHandoffTemplateを実行する\nThen 生成されたHTMLのheadにid/type/title/description/tagsの<meta>タグが出力される",
+          "gherkin": "Scenario: 契約準拠のmetaタグが出力される\nGiven completionImage・title・specRef・tags・descriptionを持つ検証済みのHandoff\nWhen RenderHandoffTemplateを実行する\nThen 生成されたHTMLのheadにid/type/title/description/tagsの<meta>タグが出力される",
           "covers": "",
           "operation": ""
         },
@@ -147,7 +147,7 @@
           "name": "reviewStatusの値をそのまま表示し新たな判定を行わない",
           "category": "正常系",
           "viewpoint": "render側が既存contentの値を集計・表示するだけで、合否判定そのものを新たに計算していないことを確認する（UI層に業務ルール判定ロジックを持たせないというアーキテクチャ制約の検証）",
-          "gherkin": "Given requiredAdvisors・findings（resolutionStatusを含む）・completionImageConfirmedByを持つ検証済みのHandoff\nWhen RenderHandoffTemplateを実行する\nThen 生成されたHTMLにfindingsの件数・resolutionStatusの値がそのまま表示される\nAnd レンダリング処理内で「実装に進めてよいか」を新たに算出するロジックは実行されない",
+          "gherkin": "Scenario: reviewStatusの値をそのまま表示し新たな判定を行わない\nGiven requiredAdvisors・findings（resolutionStatusを含む）・completionImageConfirmedByを持つ検証済みのHandoff\nWhen RenderHandoffTemplateを実行する\nThen 生成されたHTMLにfindingsの件数・resolutionStatusの値がそのまま表示される\nAnd レンダリング処理内で「実装に進めてよいか」を新たに算出するロジックは実行されない",
           "covers": "",
           "operation": ""
         }

@@ -80,6 +80,7 @@ def _simple_schema() -> dict:
 
 def test_スキーマの値フィールドをプレースホルダー化したMarkdownを返す():
     """
+    Scenario: スキーマの値フィールドをプレースホルダー化したMarkdownを返す
     Given x-prompt-writeを宣言する値フィールドを持つschema
     When そのschemaRefでブランクテンプレート描画を実行する
     Then 返り値のMarkdownには、各値フィールドの位置にx-prompt-write本文を含む{{...}}形式のプレースホルダーが描画されている
@@ -91,6 +92,7 @@ def test_スキーマの値フィールドをプレースホルダー化したMa
 
 def test_x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する():
     """
+    Scenario: x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する
     Given x-frontmatterを宣言するschema
     When そのschemaRefでブランクテンプレート描画を実行する
     Then 出力冒頭にx-frontmatterが指すフィールドのプレースホルダー化されたYAML frontmatterが含まれる
@@ -107,6 +109,7 @@ def test_x_frontmatterを宣言するschemaはfrontmatterもプレースホル�
 
 def test_x_frontmatterを宣言しないschemaはfrontmatterを出力しない():
     """
+    Scenario: x_frontmatterを宣言しないschemaはfrontmatterを出力しない
     Given x-frontmatterを宣言しないschema
     When そのschemaRefでブランクテンプレート描画を実行する
     Then 出力にfrontmatterブロックが含まれない
@@ -118,6 +121,7 @@ def test_x_frontmatterを宣言しないschemaはfrontmatterを出力しない()
 
 def test_存在しないschemaRefはINVALID_SCHEMA_REF():
     """
+    Scenario: 存在しないschemaRefはINVALID_SCHEMA_REF
     Given 実在しないschemaRef
     When ブランクテンプレート描画を実行する
     Then INVALID_SCHEMA_REFエラーが返る
@@ -129,6 +133,7 @@ def test_存在しないschemaRefはINVALID_SCHEMA_REF():
 
 def test_discriminator未指定はMISSING_DISCRIMINATOR():
     """
+    Scenario: discriminator未指定はMISSING_DISCRIMINATOR
     Given contentがdiscriminatorで分岐するschema
     When discriminatorを指定せずにブランクテンプレート描画を実行する
     Then MISSING_DISCRIMINATORエラーが返る
@@ -159,6 +164,7 @@ def test_discriminator未指定はMISSING_DISCRIMINATOR():
 
 def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
     """
+    Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR
     Given 分岐のあるschemaのenumに存在しないdiscriminator値
     When ブランクテンプレート描画を実行する
     Then INVALID_DISCRIMINATORエラーが返る
@@ -189,6 +195,7 @@ def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
 
 def test_enumフィールドは選択肢を併記する():
     """
+    Scenario: enumフィールドは選択肢を併記する
     Given enumを宣言する値フィールドを持つschema
     When そのschemaRefでブランクテンプレート描画を実行する
     Then プレースホルダー文字列に選択肢一覧が含まれている
@@ -202,6 +209,7 @@ def test_enumフィールドは選択肢を併記する():
 
 def test_構造化配列要素は1件分のプレースホルダーとして描画する():
     """
+    Scenario: 構造化配列要素は1件分のプレースホルダーとして描画する
     Given 配列フィールドが構造化された要素(オブジェクト)を宣言するschema
     When そのschemaRefでブランクテンプレート描画を実行する
     Then 要素1件分のプレースホルダーオブジェクトを含む配列として描画される
@@ -266,6 +274,7 @@ def test_document_jsonへの書き込みを一切行わない():
 
 def test_schemaRefとdiscriminatorから導出したパスへファイルを書き出す():
     """
+    Scenario: schemaRefとdiscriminatorから導出したパスへファイルを書き出す
     Given discriminatorを持つschema
     When そのschemaRefでブランクテンプレート描画を実行する
     Then .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md にプレースホルダーMarkdownがファイルとして書き出されている
@@ -295,6 +304,7 @@ def test_schemaRefとdiscriminatorから導出したパスへファイルを書�
 
 def test_既存ファイルを新しい描画結果で上書きする():
     """
+    Scenario: 既存ファイルを新しい描画結果で上書きする
     Given 書き出し先に既に別内容のファイルが存在する
     When 同じschemaRef・discriminatorでブランクテンプレート描画を実行する
     Then 書き出し先のファイルが新しい描画結果で上書きされている

@@ -1,3 +1,11 @@
+---
+id: "uc-check-path-is-projection"
+type: "usecase"
+title: "uc-check-path-is-projection"
+description: "document.jsonから機械的に生成された投影（render出力、例: SKILL.md・CLAUDE.md）を、原本を経由せず直接編集してしまう事故を防ぐため、対象ファイルの実体パスが投影であるかを機械的に判定する。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # uc-check-path-is-projection
 
 ## 概要
@@ -65,6 +73,7 @@ sequenceDiagram
 | 正常系 | 投影判定：Skillのcanonical出力先パターンに一致するか |
 
 ```gherkin
+Scenario: SkillのSKILL.mdの実体パスは投影と判定される
 Given 実体パスが".waffle/skills/ddd-advisor/SKILL.md"である
 When CheckPathIsProjectionを実行する
 Then isProjection=trueが返り、documentKind="Skill"・documentId="ddd-advisor"が返る
@@ -77,6 +86,7 @@ Then isProjection=trueが返り、documentKind="Skill"・documentId="ddd-advisor
 | 正常系 | 投影判定：Agentのcanonical出力先パターンに一致するか |
 
 ```gherkin
+Scenario: AgentのCLAUDE.md実体パスは投影と判定される
 Given 実体パスが".waffle/agent/waffle.md"である
 When CheckPathIsProjectionを実行する
 Then isProjection=trueが返り、documentKind="Agent"・documentId="waffle"が返る
@@ -89,6 +99,7 @@ Then isProjection=trueが返り、documentKind="Agent"・documentId="waffle"が�
 | 境界値 | 適用範囲の境界：投影でも原本でもない手書きファイルを誤検出しないか |
 
 ```gherkin
+Scenario: 手書き参照ファイルの実体パスは投影と判定されない
 Given 実体パスが".waffle/skills/ddd-advisor/references/knowledge/domain-model.md"である
 When CheckPathIsProjectionを実行する
 Then isProjection=falseが返る
@@ -101,6 +112,7 @@ Then isProjection=falseが返る
 | 異常系 | 事前条件違反：未知の構造のパスを安全側（許可）に倒せるか |
 
 ```gherkin
+Scenario: どのcanonicalPathTemplateにも一致しないパスは投影と判定されない
 Given 実体パスが"docs/README.md"である
 When CheckPathIsProjectionを実行する
 Then isProjection=falseが返る

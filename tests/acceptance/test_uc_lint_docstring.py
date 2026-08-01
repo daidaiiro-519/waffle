@@ -14,6 +14,7 @@ def _engine(executable: str = "pydoclint") -> LintDocstring:
 
 def test_全要素が規約に適合するとき違反なしと判定する(tmp_path):
     """
+    Scenario: 全要素が規約に適合するとき違反なしと判定する
     Given DocstringSchema の google kind に適合する docstring だけを持つコードベース
     When 適合判定を実行する
     Then 違反は空配列で返り、エラーにはならない
@@ -37,6 +38,7 @@ def test_全要素が規約に適合するとき違反なしと判定する(tmp_
 
 def test_docstring_が無い公開要素を検出する(tmp_path):
     """
+    Scenario: docstring が無い公開要素を検出する
     Given docstring を持たない公開関数を含むコードベース
     When 適合判定を実行する
     Then その要素について MISSING_DOC_COMMENT 違反が報告される
@@ -51,6 +53,7 @@ def test_docstring_が無い公開要素を検出する(tmp_path):
 
 def test_Args_の引数名がシグネチャと不一致な要素を検出する(tmp_path):
     """
+    Scenario: Args の引数名がシグネチャと不一致な要素を検出する
     Given Args セクションの引数名が実シグネチャと異なる関数を含むコードベース
     When 適合判定を実行する
     Then その要素について ARGS_MISMATCH 違反が報告される
@@ -74,6 +77,7 @@ def test_Args_の引数名がシグネチャと不一致な要素を検出する
 
 def test_要約行のみの短いdocstringでもArgsセクション欠落を検出する(tmp_path):
     """
+    Scenario: 要約行のみの短いdocstringでもArgsセクション欠落を検出する
     Given 引数を持つ公開関数が、要約行のみでArgsセクションを持たない短いdocstringを持つコードベース
     When 適合判定を実行する
     Then その要素について MISSING_ARGS_SECTION 違反が報告される
@@ -92,6 +96,7 @@ def test_要約行のみの短いdocstringでもArgsセクション欠落を検�
 
 def test_Returnsセクションの欠落を検出する(tmp_path):
     """
+    Scenario: Returnsセクションの欠落を検出する
     Given 戻り値を持つ公開関数が、Returnsセクションを持たないdocstringを持つコードベース
     When 適合判定を実行する
     Then その要素について MISSING_RETURNS_SECTION 違反が報告される
@@ -110,6 +115,7 @@ def test_Returnsセクションの欠落を検出する(tmp_path):
 
 def test_Raisesセクションの欠落を検出する(tmp_path):
     """
+    Scenario: Raisesセクションの欠落を検出する
     Given 例外を送出する公開関数が、Raisesセクションを持たないdocstringを持つコードベース
     When 適合判定を実行する
     Then その要素について MISSING_RAISES_SECTION 違反が報告される
@@ -128,6 +134,7 @@ def test_Raisesセクションの欠落を検出する(tmp_path):
 
 def test_非公開要素はセクション欠落判定の対象外とする(tmp_path):
     """
+    Scenario: 非公開要素はセクション欠落判定の対象外とする
     Given 引数・戻り値・例外を持つがdocstringのセクションを欠く非公開関数を含むコードベース
     When 適合判定を実行する
     Then MISSING_ARGS_SECTION・MISSING_RETURNS_SECTION・MISSING_RAISES_SECTIONのいずれも報告されない
@@ -149,6 +156,7 @@ def test_非公開要素はセクション欠落判定の対象外とする(tmp_
 
 def test_対応する_kind_が無い言語は_UNSUPPORTED_KIND(tmp_path):
     """
+    Scenario: 対応する kind が無い言語は UNSUPPORTED_KIND
     Given DocstringSchemaに定義の無い言語、またはgoogle以外の未実装kindのコードベース
     When 適合判定を実行する
     Then UNSUPPORTED_KINDエラーが返る
@@ -162,6 +170,7 @@ def test_対応する_kind_が無い言語は_UNSUPPORTED_KIND(tmp_path):
 
 def test_対応するツールが実行環境に無いとき_TOOL_NOT_AVAILABLE(tmp_path):
     """
+    Scenario: 対応するツールが実行環境に無いとき TOOL_NOT_AVAILABLE
     Given kind に対応する lint ツールがインストールされていない環境
     When 適合判定を実行する
     Then TOOL_NOT_AVAILABLE エラーが返る

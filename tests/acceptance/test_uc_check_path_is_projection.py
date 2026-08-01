@@ -10,6 +10,7 @@ def _engine() -> CheckPathIsProjection:
 
 def test_SkillのSKILL_mdの実体パスは投影と判定される():
     """
+    Scenario: SkillのSKILL.mdの実体パスは投影と判定される
     Given 実体パスが".waffle/skills/ddd-advisor/SKILL.md"である
     When CheckPathIsProjectionを実行する
     Then isProjection=trueが返り、documentKind="Skill"・documentId="ddd-advisor"が返る
@@ -23,6 +24,7 @@ def test_SkillのSKILL_mdの実体パスは投影と判定される():
 
 def test_AgentのCLAUDE_md実体パスは投影と判定される():
     """
+    Scenario: AgentのCLAUDE.md実体パスは投影と判定される
     Given 実体パスが".waffle/agent/waffle.md"である
     When CheckPathIsProjectionを実行する
     Then isProjection=trueが返り、documentKind="Agent"・documentId="waffle"が返る
@@ -36,6 +38,7 @@ def test_AgentのCLAUDE_md実体パスは投影と判定される():
 
 def test_手書き参照ファイルの実体パスは投影と判定されない():
     """
+    Scenario: 手書き参照ファイルの実体パスは投影と判定されない
     Given 実体パスが".waffle/skills/ddd-advisor/references/knowledge/domain-model.md"である
     When CheckPathIsProjectionを実行する
     Then isProjection=falseが返る
@@ -47,6 +50,7 @@ def test_手書き参照ファイルの実体パスは投影と判定されな�
 
 def test_どのcanonicalPathTemplateにも一致しないパスは投影と判定されない():
     """
+    Scenario: どのcanonicalPathTemplateにも一致しないパスは投影と判定されない
     Given 実体パスが"docs/README.md"である
     When CheckPathIsProjectionを実行する
     Then isProjection=falseが返る

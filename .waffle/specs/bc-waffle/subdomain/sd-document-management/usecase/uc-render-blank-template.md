@@ -79,6 +79,8 @@ sequenceDiagram
 - If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。
 - If schemaのcontentがdiscriminatorで分岐し、指定されたdiscriminator値が候補enumに存在しないとき、システムはINVALID_DISCRIMINATORエラーを返す shall。
 - While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。
+- When schemaがx-frontmatterを宣言しているとき、システムはx-frontmatterが指す各フィールドのx-prompt-write本文をプレースホルダー化したYAML frontmatterを、本文の先頭に付ける shall。
+- If schemaがx-frontmatterを宣言していないとき、システムはfrontmatterブロックを出力しない shall。
 
 ---
 
@@ -134,7 +136,7 @@ Scenario: 存在しないschemaRefはINVALID_SCHEMA_REF
 | 異常系 | 事前条件違反: discriminator分岐の未指定の拒否 |
 
 ```gherkin
-Scenario: discriminatorが必要なschemaで未指定のときMISSING_DISCRIMINATOR
+Scenario: discriminator未指定はMISSING_DISCRIMINATOR
   Given contentがdiscriminatorで分岐するschema
   When discriminatorを指定せずにブランクテンプレート描画を実行する
   Then MISSING_DISCRIMINATORエラーが返る
@@ -203,6 +205,32 @@ Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR
   Given 分岐のあるschemaのenumに存在しないdiscriminator値
   When ブランクテンプレート描画を実行する
   Then INVALID_DISCRIMINATORエラーが返る
+```
+
+### x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | x-frontmatterが指すフィールドのx-prompt-write本文がYAML frontmatterとしてプレースホルダー化されることを確認する |
+
+```gherkin
+Scenario: x_frontmatterを宣言するschemaはfrontmatterもプレースホルダー化する
+Given x-frontmatterを宣言するschema
+When そのschemaRefでブランクテンプレート描画を実行する
+Then 出力冒頭にx-frontmatterが指すフィールドのプレースホルダー化されたYAML frontmatterが含まれる
+```
+
+### x_frontmatterを宣言しないschemaはfrontmatterを出力しない
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | x-frontmatterを持たないschemaではfrontmatterブロック自体が出力されないことを確認する |
+
+```gherkin
+Scenario: x_frontmatterを宣言しないschemaはfrontmatterを出力しない
+Given x-frontmatterを宣言しないschema
+When そのschemaRefでブランクテンプレート描画を実行する
+Then 出力にfrontmatterブロックが含まれない
 ```
 
 ---

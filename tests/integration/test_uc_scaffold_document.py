@@ -29,6 +29,7 @@ def teardown_function():
 
 def test_存在しないパスはINVALID_PATH():
     """
+    Scenario: 存在しないパスはINVALID_PATH
     Given 実在しない対象パス
     When 本usecaseを実行する
     Then INVALID_PATHエラーが返る
@@ -40,6 +41,7 @@ def test_存在しないパスはINVALID_PATH():
 
 def test_解決できないschemaRefはINVALID_SCHEMA_REF():
     """
+    Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
     Given 解決できないschemaRef
     When 本usecaseを実行する
     Then INVALID_SCHEMA_REFエラーが返る
@@ -54,6 +56,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
 
 def test_既存documentへの再createはvaluesを破壊しない():
     """
+    Scenario: 既存documentへの再createはvaluesを破壊しない
     Given create済みかつfillで値を書き込み済みのdocumentId
     When 同じdocumentIdでcreateを再実行する
     Then fillで書き込んだvaluesは保持されたままである
@@ -82,6 +85,7 @@ def test_既存documentへの再createはvaluesを破壊しない():
 
 def test_clear_fieldの複数回実行はべき等である():
     """
+    Scenario: clear_fieldの複数回実行はべき等である
     Given 同一のclear_field操作（必須ではないフィールド）
     When 2回連続で実行する
     Then 2回目の実行結果は1回目と完全に同一である
