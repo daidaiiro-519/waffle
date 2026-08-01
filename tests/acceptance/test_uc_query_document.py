@@ -11,7 +11,7 @@ def _engine() -> QueryDocument:
     return QueryDocument(FsDocumentRepository(), PackageSchemaRepository())
 
 
-def test_未知の_operation_はエラーを返す():
+def test_unknown_operation_is_rejected():
     """
     Scenario: 未知の operation はエラーを返す
     When 未知の operation を実行する
@@ -23,7 +23,7 @@ def test_未知の_operation_はエラーを返す():
 
 
 
-def test_scanは生テキストを返す():
+def test_scan_returns_raw_text():
     """
     Scenario: scanは生テキストを返す
     Given query システム と対象 Document
@@ -36,7 +36,7 @@ def test_scanは生テキストを返す():
     assert "documentId" in result.value["value"]
 
 
-def test_get_metaはメタ情報を返す():
+def test_get_meta_returns_meta_fields():
     """
     Scenario: get_metaはメタ情報を返す
     Given query システム と対象 Document
@@ -49,7 +49,7 @@ def test_get_metaはメタ情報を返す():
     assert result.value["prompt"]
 
 
-def test_index_scanはblockTypeとpromptをschemaから動的算出する():
+def test_index_scan_derives_block_type_and_prompt_from_schema():
     """
     Scenario: index_scanはblockTypeとpromptをschemaから動的算出する
     Given query システム と対象 Document
@@ -63,7 +63,7 @@ def test_index_scanはblockTypeとpromptをschemaから動的算出する():
     assert result.value["prompt"]
 
 
-def test_find_allは全階層を再帰収集する():
+def test_find_all_collects_recursively():
     """
     Scenario: find_allは全階層を再帰収集する
     Given query システム と対象 Document
@@ -76,7 +76,7 @@ def test_find_allは全階層を再帰収集する():
     assert result.value["prompt"]
 
 
-def test_resolve_refは参照先Documentのpathを算出する():
+def test_resolve_ref_computes_target_path():
     """
     Scenario: resolve_refは参照先Documentのpathを算出する
     Given query システム と、subdomainRefフィールドを持つ対象 Document
@@ -98,7 +98,7 @@ def test_resolve_refは参照先Documentのpathを算出する():
     assert "content" not in result.value["value"]
 
 
-def test_resolve_refはテンプレート変数を解決できないときエラーを返す(tmp_path):
+def test_resolve_ref_rejects_unresolvable_template_variable(tmp_path):
     """
     Scenario: resolve_refはテンプレート変数を解決できないときエラーを返す
     Given 参照先テンプレートが要求する変数を持たない対象 Document
@@ -129,7 +129,7 @@ def test_resolve_refはテンプレート変数を解決できないときエラ
     assert result.details[0] == "MISSING_TEMPLATE_VAR"
 
 
-def test_query_pathでblockKey指定時は単一ブロックの評価結果を返す():
+def test_query_path_with_block_key_returns_single_block():
     """
     Scenario: query_pathでblockKey指定時は単一ブロックの評価結果を返す
     Given query システム と対象 Document
@@ -146,7 +146,7 @@ def test_query_pathでblockKey指定時は単一ブロックの評価結果を�
     assert "未知の operation はエラーを返す" in result.value["value"]
 
 
-def test_query_pathでblockKey省略時はヒットしたブロックだけを配列で返す():
+def test_query_path_without_block_key_returns_matching_blocks():
     """
     Scenario: query_pathでblockKey省略時はヒットしたブロックだけを配列で返す
     Given query システム と対象 Document
@@ -165,7 +165,7 @@ def test_query_pathでblockKey省略時はヒットしたブロックだけを�
     assert "title" not in [r["blockKey"] for r in result.value["results"]]
 
 
-def test_query_pathはフィルタ条件を式内で表現できる():
+def test_query_path_expresses_filters_in_the_expression():
     """
     Scenario: query_pathはフィルタ条件を式内で表現できる
     Given query システム と対象 Document
@@ -180,7 +180,7 @@ def test_query_pathはフィルタ条件を式内で表現できる():
     assert all(item["category"] == "異常系" for item in result.value["value"])
 
 
-def test_query_pathは配列の範囲指定をスライス式で表現できる():
+def test_query_path_supports_slice_expressions():
     """
     Scenario: query_pathは配列の範囲指定をスライス式で表現できる
     Given query システム と対象 Document
@@ -195,7 +195,7 @@ def test_query_pathは配列の範囲指定をスライス式で表現できる(
     assert len(result.value["value"]) == 2
 
 
-def test_query_pathは正規表現カスタム関数で絞り込める():
+def test_query_path_supports_regular_expression_function():
     """
     Scenario: query_pathは正規表現カスタム関数で絞り込める
     Given query システム と対象 Document
@@ -210,7 +210,7 @@ def test_query_pathは正規表現カスタム関数で絞り込める():
     assert result.value["value"] == ["未知の operation はエラーを返す"]
 
 
-def test_query_pathの構文エラーはWaffle独自のエラーへ変換される():
+def test_query_path_syntax_error_becomes_a_domain_error():
     """
     Scenario: query_pathの構文エラーはWaffle独自のエラーへ変換される
     Given query システム と対象 Document
@@ -225,7 +225,7 @@ def test_query_pathの構文エラーはWaffle独自のエラーへ変換され�
     assert result.details[0] == "INVALID_JMESPATH_EXPRESSION"
 
 
-def test_query_pathでblockKey省略時_式の形に合わないブロックは静かにスキップされる():
+def test_query_path_skips_blocks_that_do_not_fit_the_expression():
     """
     Scenario: query_pathでblockKey省略時、式の形に合わないブロックは静かにスキップされる
     Given query システム と、items配列を持つブロックと持たないブロックが混在する対象 Document
@@ -245,7 +245,7 @@ def test_query_pathでblockKey省略時_式の形に合わないブロックは�
     assert "role" not in [r["blockKey"] for r in result.value["results"]]
 
 
-def test_query_pathでblockKey指定時_式の評価時型エラーはエラーを返す():
+def test_query_path_type_error_is_reported_when_block_key_given():
     """
     Scenario: query_pathでblockKey指定時、式の評価時型エラーはエラーを返す
     Given query システム と、items配列は持つがruleフィールドは持たない対象ブロック
@@ -260,7 +260,7 @@ def test_query_pathでblockKey指定時_式の評価時型エラーはエラー�
     assert result.details[0] == "INVALID_JMESPATH_EXPRESSION"
 
 
-def test_schemaRefを持たないファイルはrawで返す():
+def test_file_without_schema_ref_is_returned_raw():
     """
     Scenario: schemaRefを持たないファイルはrawで返す
     Given schemaRefを持たない対象ファイル

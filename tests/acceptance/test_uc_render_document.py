@@ -12,7 +12,7 @@ def _engine() -> RenderDocument:
     return RenderDocument(FsDocumentRepository(), PackageSchemaRepository())
 
 
-def test_検証済み_Document_を成果物に描画する():
+def test_renders_a_validated_document():
     """
     Scenario: 検証済み Document を成果物に描画する
     Given 描画対象の Document
@@ -25,7 +25,7 @@ def test_検証済み_Document_を成果物に描画する():
     assert "# コード配置・レイヤー境界・依存方向の判断を担うadvisor Skill：tech-lead-advisor" in result.value["content"]
 
 
-def test_schemaRef_を持たない_Document_は描画しない():
+def test_document_without_schema_ref_is_not_rendered():
     """
     Scenario: schemaRef を持たない Document は描画しない
     Given schemaRef の無い Document
@@ -42,7 +42,7 @@ def test_schemaRef_を持たない_Document_は描画しない():
 
 
 
-def test_deploy_すると_canonical_と_deploy_先の両方に書く(tmp_path):
+def test_deploy_writes_to_both_canonical_and_deploy_paths(tmp_path):
     """
     Scenario: deploy すると canonical と deploy 先の両方に書く
     Given deploy 先を持つ Document
@@ -92,7 +92,7 @@ class _ConfigStubDocumentRepository:
         return self._real.load(path)
 
 
-def test_配列のpathVarはtoolMappings経由のdeploy先へfan_outする(tmp_path):
+def test_array_path_var_fans_out_to_deploy_targets(tmp_path):
     """
     Scenario: 配列のpathVarはtoolMappings経由のdeploy先へfan-outする
     Given x-render-target.pathVarsで宣言した値が配列であるDocumentと、その変数を参照するtoolMappingsのpathTemplate
@@ -133,7 +133,7 @@ def test_配列のpathVarはtoolMappings経由のdeploy先へfan_outする(tmp_p
     assert (tmp_path / "links" / "advisor-b" / "x.md").is_symlink()
 
 
-def test_複数種類の配列pathVarが同時にfan_out展開される(tmp_path):
+def test_multiple_array_path_vars_fan_out_together(tmp_path):
     """
     Scenario: 複数種類の配列pathVarが同時にfan-out展開される
     Given x-render-target.pathVarsで2種類の配列値（skillRefsとagentRefs）を宣言したschemaのDocumentと、それぞれを参照するtoolMappingsのpathTemplate
@@ -178,7 +178,7 @@ def test_複数種類の配列pathVarが同時にfan_out展開される(tmp_path
     assert str(tmp_path / "agents" / "waffle" / "x.md") in result.value["deployed"]
 
 
-def test_toolMappingsがdiscriminatorごとに入れ子で宣言されているときは対応するマッピングだけを使う(tmp_path):
+def test_nested_tool_mappings_use_only_the_matching_entry(tmp_path):
     """
     Scenario: toolMappingsがdiscriminatorごとに入れ子で宣言されているときは対応するマッピングだけを使う
     Given .waffle/config.jsonのtoolMappingsが対象documentTypeについてdiscriminatorの値ごとの入れ子マッピングを持つDocument
@@ -221,7 +221,7 @@ def test_toolMappingsがdiscriminatorごとに入れ子で宣言されている�
     assert (tmp_path / "deploy-a" / "x.md").is_symlink()
 
 
-def test_AgentのtoolMappingsが入れ子化されてもorchestratorとsubagentで別々のdeploy先に解決される(tmp_path):
+def test_nested_agent_mappings_resolve_per_kind(tmp_path):
     """
     Scenario: Agentのtool対応づけが入れ子でも、種別ごとに別々のdeploy先へ解決される
     Given toolMappingsのAgentが、agentKindごとの入れ子マッピング（orchestrator/subagent）を持つDocument
@@ -270,7 +270,7 @@ def test_AgentのtoolMappingsが入れ子化されてもorchestratorとsubagent�
     assert str(tmp_path / "CLAUDE.md") not in subagent_result.value["deployed"]
 
 
-def test_入れ子のtoolMappingsに含まれないdiscriminator値はdeployされない(tmp_path):
+def test_discriminator_absent_from_nested_mappings_is_not_deployed(tmp_path):
     """
     Scenario: 入れ子の対応づけに無いdiscriminator値はdeployされない
     Given documentType向けのtoolMappingsが入れ子だが、対象Documentのdiscriminator値に対応するキーを持たない
@@ -322,7 +322,7 @@ class _FakeSchemaRepository:
         return []
 
 
-def test_discriminatorごとに異なるdeploy先へ書き分ける(tmp_path):
+def test_each_discriminator_writes_to_its_own_deploy_path(tmp_path):
     """
     Scenario: discriminatorごとに異なるdeploy先へ書き分ける
     Given deploy先がdiscriminatorの値ごとに異なる配列として宣言されたschemaのDocument
@@ -352,7 +352,7 @@ def test_discriminatorごとに異なるdeploy先へ書き分ける(tmp_path):
     assert str(tmp_path / "deploy-b.md") not in result.value["deployed"]
 
 
-def test_pathVarsで宣言したcontent値をパステンプレートの変数として使う(tmp_path):
+def test_declared_path_vars_fill_the_path_template(tmp_path):
     """
     Scenario: pathVarsで宣言したcontent値をパステンプレートの変数として使う
     Given x-render-target.pathVarsでcontentのドットパスを宣言したschemaのDocument
@@ -384,7 +384,7 @@ def test_pathVarsで宣言したcontent値をパステンプレートの変数�
     assert str(tmp_path / "waffle-deploy.md") in result.value["deployed"]
 
 
-def test_pathVarsが解決できないdeploy先はスキップしcanonicalへは書く(tmp_path):
+def test_unresolvable_path_vars_skip_deploy_but_keep_canonical(tmp_path):
     """
     Scenario: pathVarsが解決できないdeploy先はスキップしcanonicalへは書く
     Given x-render-target.pathVarsが参照するcontentのドットパスを持たないDocument
@@ -413,7 +413,7 @@ def test_pathVarsが解決できないdeploy先はスキップしcanonicalへは
     assert result.value["deployed"] == []
 
 
-def test_discriminatorごとに異なるpathVarsを解決する(tmp_path):
+def test_path_vars_resolve_per_discriminator(tmp_path):
     """
     Scenario: discriminatorごとに異なるpathVarsを解決する
     Given discriminatorの値ごとに異なるpathVars宣言（kindごとの変数マップ）を持つschemaのDocument
@@ -460,7 +460,7 @@ def test_discriminatorごとに異なるpathVarsを解決する(tmp_path):
     assert str(tmp_path / "agents" / "y.md") in result2.value["deployed"]
 
 
-def test_discriminatorごとに異なるx_frontmatterを生成する(tmp_path):
+def test_frontmatter_differs_per_discriminator(tmp_path):
     """
     Scenario: discriminatorごとに異なるx_frontmatterを生成する
     Given discriminatorの値ごとに異なるx-frontmatter宣言（kindごとのフィールドマップ）を持つschemaのDocument
@@ -501,7 +501,7 @@ def test_discriminatorごとに異なるx_frontmatterを生成する(tmp_path):
     assert "---" not in result2.value["content"]
 
 
-def test_存在しないx_frontmatterのドットパスは省略する(tmp_path):
+def test_missing_frontmatter_path_is_omitted(tmp_path):
     """
     Scenario: 存在しないx_frontmatterのドットパスは省略する
     Given x-frontmatterが宣言するドットパスに対応するcontentブロックを持たない、または値が空であるDocument
@@ -534,7 +534,7 @@ def test_存在しないx_frontmatterのドットパスは省略する(tmp_path)
     assert "permissionMode" not in result.value["content"]
 
 
-def test_x_frontmatterが指すブロックがitemsを持つときスペース区切りで結合する(tmp_path):
+def test_frontmatter_items_are_joined_with_spaces(tmp_path):
     """
     Scenario: x-frontmatterが指すブロックがitemsを持つときスペース区切りで結合する
     Given x-frontmatterがtext/itemsを持つブロック形状のdictを指すDocument
@@ -564,7 +564,7 @@ def test_x_frontmatterが指すブロックがitemsを持つときスペース�
     assert 'description: "論点1です 論点2です"' in result.value["content"]
 
 
-def test_DomainSpecSchemaのusecase_Specはfrontmatterでid_type_title_description_tagsを持つ():
+def test_usecase_spec_frontmatter_carries_the_declared_fields():
     """
     Scenario: DomainSpecSchemaのusecase specはfrontmatterでid/type/title/description/tagsを持つ
     Given usecase specKindのDomainSpecSchema Document
@@ -584,7 +584,7 @@ def test_DomainSpecSchemaのusecase_Specはfrontmatterでid_type_title_descripti
     assert "description:" in content
 
 
-def test_SkillSchemaをMarkdownにレンダリングする():
+def test_renders_a_skill_document_to_markdown():
     """
     Scenario: SkillSchemaをMarkdownにレンダリングする
     Given SkillSchemaのDocument
@@ -601,7 +601,7 @@ def test_SkillSchemaをMarkdownにレンダリングする():
     assert "## 参照knowledge" in content
 
 
-def test_frontmatterはx_frontmatterのドットパスを解決して生成する():
+def test_frontmatter_resolves_declared_dot_paths():
     """
     Scenario: frontmatterはx_frontmatterのドットパスを解決して生成する
     Given x-frontmatterを宣言するSchemaのDocument
@@ -616,7 +616,7 @@ def test_frontmatterはx_frontmatterのドットパスを解決して生成す�
     assert "tech-lead-advisor" in content
 
 
-def test_CodingSchemaはMarkdownとして描画できる():
+def test_renders_a_coding_document_to_markdown():
     """
     Scenario: CodingSchemaはMarkdownとして描画できる
     Given CodingSchemaのDocument
@@ -629,7 +629,7 @@ def test_CodingSchemaはMarkdownとして描画できる():
     assert "# " in result.value["content"]
 
 
-def test_usecase_Specは基本フローをシーケンス図に受け入れシナリオをMarkdownに出す():
+def test_usecase_spec_renders_flow_diagram_and_scenarios():
     """
     Scenario: usecase_Specは基本フローをシーケンス図に受け入れシナリオをMarkdownに出す
     Given usecase SpecのDocument
@@ -650,7 +650,7 @@ def test_usecase_Specは基本フローをシーケンス図に受け入れシ�
     assert "Scenario: 未知の operation はエラーを返す" in content
 
 
-def test_aggregate_Specは集約の構造とライフサイクルをMarkdownに出す():
+def test_aggregate_spec_renders_structure_and_lifecycle():
     """
     Scenario: aggregate_Specは集約の構造とライフサイクルをMarkdownに出す
     Given aggregate SpecのDocument
@@ -667,7 +667,7 @@ def test_aggregate_Specは集約の構造とライフサイクルをMarkdownに�
     assert "stateDiagram-v2" in content
 
 
-def test_配列値の列をbullet指定でセル内改行の箇条書きにする():
+def test_array_column_renders_as_a_bulleted_cell():
     """
     Scenario: 配列値の列をbullet指定でセル内改行の箇条書きにする
     Given bullet:trueを宣言する列を持つtable部品と、その対象フィールドが複数要素の配列であるDocument
@@ -684,7 +684,7 @@ def test_配列値の列をbullet指定でセル内改行の箇条書きにす�
     assert "- if/then/else形式でありながら、elseの暗黙値を一意に逆算できない" in content
 
 
-def test_bulletとjoin_sepが同時指定されたときbulletを優先する(tmp_path):
+def test_bullet_wins_over_join_separator(tmp_path):
     """
     Scenario: bulletとjoin_sepが同時指定されたときbulletを優先する
     Given bulletとjoin/sepの両方を宣言する列を持つtable部品
@@ -726,7 +726,7 @@ def test_bulletとjoin_sepが同時指定されたときbulletを優先する(tm
     assert "status: OrderStatus / total: Money" not in content
 
 
-def test_配列を期待する部品が配列でない値を受け取るとMALFORMED_CONTENTを返す(tmp_path):
+def test_non_array_value_for_an_array_part_is_rejected(tmp_path):
     """
     Scenario: 配列を期待する部品が配列でない値を受け取るとMALFORMED_CONTENTを返す
     Given listを宣言する部品に対応するcontent値が配列でなく文字列であるDocument
@@ -759,7 +759,7 @@ def test_配列を期待する部品が配列でない値を受け取るとMALFO
     assert not (tmp_path / "x.md").exists()
 
 
-def test_x_render_targetを持たないschemaはNO_RENDER_TARGETを返す():
+def test_schema_without_render_target_is_rejected():
     """
     Scenario: x-render-targetを持たないschemaはNO_RENDER_TARGETを返す
     Given x-render-target.pathを宣言していないschemaのDocument
@@ -771,7 +771,7 @@ def test_x_render_targetを持たないschemaはNO_RENDER_TARGETを返す():
     assert result.details[0] == "NO_RENDER_TARGET"
 
 
-def test_不正なJSONはINVALID_JSON():
+def test_malformed_json_is_rejected():
     """
     Scenario: 不正なJSONはINVALID_JSON
     Given 不正なJSONの対象ファイル

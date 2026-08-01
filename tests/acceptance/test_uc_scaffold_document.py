@@ -86,7 +86,7 @@ def teardown_function():
         _MIGRATE_FIXTURE_DIR.rmdir()
 
 
-def test_生成した骨格は自分の_schema_で_valid():
+def test_generated_skeleton_validates_against_its_schema():
     """
     Scenario: 生成した骨格は自分の schema で valid
     Given advisor 種別の Document（discriminator 指定済み）
@@ -106,7 +106,7 @@ def test_生成した骨格は自分の_schema_で_valid():
     assert isinstance(validate_result, Ok), getattr(validate_result, "details", validate_result)
 
 
-def test_構造を変える値は拒否される():
+def test_structure_changing_value_is_rejected():
     """
     Scenario: 構造を変える値は拒否される
     Given 作成済みの Document
@@ -127,7 +127,7 @@ def test_構造を変える値は拒否される():
     assert "documentType" in fill_result.value["skipped"]
 
 
-def test_constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる():
+def test_const_field_resyncs_only_on_exact_match():
     """
     Scenario: constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる
     Given 作成済みのDocument
@@ -149,7 +149,7 @@ def test_constフィールドは現行schemaの宣言値と完全一致する場
     assert "documentType" in fill_result.value["written"]
 
 
-def test_schema版が変わった後に新設された任意ブロックも既存documentへ書き込める():
+def test_newly_declared_optional_block_can_be_filled():
     """
     Scenario: schema版が変わった後に新設された任意ブロックも既存documentへ書き込める
     Given schemaが宣言する任意ブロックのキー自体を持たない既存Document
@@ -182,7 +182,7 @@ def test_schema版が変わった後に新設された任意ブロックも既�
     ]
 
 
-def test_宣言済みの値フィールドに書き込まれる():
+def test_declared_value_field_is_written():
     """
     Scenario: 宣言済みの値フィールドに書き込まれる
     Given 作成済みの Document
@@ -206,7 +206,7 @@ def test_宣言済みの値フィールドに書き込まれる():
     assert doc["content"]["purpose"]["text"] == "ドメインを分析する"
 
 
-def test_discriminator_が無いと候補を案内する():
+def test_absent_discriminator_lists_candidates():
     """
     Scenario: discriminator が無いと候補を案内する
     Given 分岐のある schema
@@ -218,7 +218,7 @@ def test_discriminator_が無いと候補を案内する():
     assert result.details[0] == "MISSING_DISCRIMINATOR"
 
 
-def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
+def test_invalid_discriminator_value_is_rejected():
     """
     Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR
     Given 分岐のあるschemaのenumに存在しないdiscriminator値
@@ -234,7 +234,7 @@ def test_不正なdiscriminator値はINVALID_DISCRIMINATOR():
 
 
 
-def test_createはadvisor_skillの骨格を生成する():
+def test_create_generates_advisor_skill_skeleton():
     """
     Scenario: createはadvisor_skillの骨格を生成する
     Given schemaRef, documentId, discriminator(skillKind=advisor)
@@ -255,7 +255,7 @@ def test_createはadvisor_skillの骨格を生成する():
     assert "knowledgeRefs" in skeleton["content"]
 
 
-def test_createはx_source_targetに骨格を書き出す():
+def test_create_writes_skeleton_to_its_source_target():
     """
     Scenario: createはx_source_targetに骨格を書き出す
     Given schemaRef, documentId, discriminator
@@ -270,7 +270,7 @@ def test_createはx_source_targetに骨格を書き出す():
     assert Path(_TEST_DOC_PATH).exists()
 
 
-def test_fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持つ():
+def test_fill_template_carries_path_and_prompt():
     """
     Scenario: fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持つ
     Given schemaRef, documentId, discriminator
@@ -287,7 +287,7 @@ def test_fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持�
     assert entries["content.purpose.text"]["prompt"]
 
 
-def test_createはCLIから渡されたrefパラメータをdocument本体にも反映する():
+def test_create_writes_reference_parameters_into_the_document():
     """
     Scenario: createに渡した参照パラメータはdocument本体にも書き込まれる
     Given schemaが宣言する任意のトップレベルフィールド（subdomainRef等）に対応する参照パラメータ
@@ -309,7 +309,7 @@ def test_createはCLIから渡されたrefパラメータをdocument本体にも
     Path(result.value["path"]).unlink(missing_ok=True)
 
 
-def test_fillTemplateにはcontent外のトップレベルのx_prompt_writeフィールドも含まれる():
+def test_fill_template_includes_top_level_fields_outside_content():
     """
     Scenario: fillTemplateにはcontent外のトップレベルのx-prompt-writeフィールドも含まれる
     Given content外にx-prompt-writeを持つトップレベルフィールド（skillRef）を宣言するschema
@@ -326,7 +326,7 @@ def test_fillTemplateにはcontent外のトップレベルのx_prompt_writeフ�
     assert entries["skillRef"]["prompt"]
 
 
-def test_fillはcontent外のトップレベルのx_prompt_writeフィールドにも書き込める():
+def test_fill_writes_top_level_fields_outside_content():
     """
     Scenario: fillはcontent外のトップレベルのx-prompt-writeフィールドにも書き込める
     Given 作成済みのDocument
@@ -350,7 +350,7 @@ def test_fillはcontent外のトップレベルのx_prompt_writeフィールド�
     assert doc["skillRef"] == "qa-advisor"
 
 
-def test_fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する():
+def test_fill_rejects_writes_to_identity_and_discriminator():
     """
     Scenario: fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する
     Given 作成済みのDocument
@@ -372,7 +372,7 @@ def test_fillはdocumentIdとdiscriminatorキーへの書き込みを拒否す�
     assert "templateKind" in fill_result.value["skipped"]
 
 
-def test_customはadvisorと構成が異なる():
+def test_custom_skill_has_a_different_composition():
     """
     Scenario: customはadvisorと構成が異なる
     Given discriminator(skillKind=custom)
@@ -387,7 +387,7 @@ def test_customはadvisorと構成が異なる():
     assert "processingTarget" in result.value["skeleton"]["content"]
 
 
-def test_宣言済みの値フィールドを削除する():
+def test_declared_value_field_is_cleared():
     """
     Scenario: 宣言済みの値フィールドを削除する
     Given 値が書き込み済みの、必須ではないフィールドのpath
@@ -413,7 +413,7 @@ def test_宣言済みの値フィールドを削除する():
     assert "tags" not in doc
 
 
-def test_既に存在しないフィールドのclear_fieldは無変更で成功する():
+def test_clearing_an_absent_field_changes_nothing():
     """
     Scenario: 既に存在しないフィールドのclear_fieldは無変更で成功する
     Given 既に削除済みのフィールドpath
@@ -431,7 +431,7 @@ def test_既に存在しないフィールドのclear_fieldは無変更で成功
     assert result.value["cleared"] is False
 
 
-def test_必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される():
+def test_clearing_a_required_field_is_rejected():
     """
     Scenario: 必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される
     Given schemaのrequiredに指定されているフィールドのpath
@@ -452,7 +452,7 @@ def test_必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否さ�
     assert "status" in doc
 
 
-def test_migrate_schemaはschemaRefを新版へ書き換える():
+def test_migrate_schema_rewrites_the_schema_ref():
     """
     Scenario: migrate_schemaはschemaRefを新版へ書き換える
     Given 別版のschemaRefを指す既存Document
@@ -473,7 +473,7 @@ def test_migrate_schemaはschemaRefを新版へ書き換える():
     assert reloaded["schemaRef"] == "TestMigrateSchemaFixture/v2"
 
 
-def test_migrate_schemaは同じ版への書き換えに対して冪等である():
+def test_migrate_schema_is_idempotent_for_the_same_version():
     """
     Scenario: migrate_schemaは同じ版への書き換えに対して冪等である
     Given 既に目的のschemaRefになっているDocument
@@ -491,7 +491,7 @@ def test_migrate_schemaは同じ版への書き換えに対して冪等である
     assert result.value["changed"] is False
 
 
-def test_migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する():
+def test_migrate_schema_rejects_an_unresolvable_schema_ref():
     """
     Scenario: migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する
     Given 解決できない移行先schemaRef

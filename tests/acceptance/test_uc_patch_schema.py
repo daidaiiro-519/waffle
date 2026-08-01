@@ -62,7 +62,7 @@ def teardown_function():
         _FIXTURE_DIR.rmdir()
 
 
-def test_新規ブロックを追加する():
+def test_adds_a_new_block():
     """
     Scenario: 新規ブロックを追加する
     Given ブロック名・ブロック定義・紐付け先・プロパティ名
@@ -82,7 +82,7 @@ def test_新規ブロックを追加する():
     assert written["$defs"]["SomeContent"]["properties"]["note"] == {"$ref": "#/$defs/NoteBlock"}
 
 
-def test_対象外の箇所は一切変更されない():
+def test_unrelated_regions_stay_untouched():
     """
     Scenario: 対象外の箇所は一切変更されない
     Given 整形契約に従った既存のschemaファイル
@@ -106,7 +106,7 @@ def test_対象外の箇所は一切変更されない():
     assert after_title_block == before_title_block
 
 
-def test_既に存在するブロックの追加は無変更で成功する():
+def test_adding_an_existing_block_changes_nothing():
     """
     Scenario: 既に存在するブロックの追加は無変更で成功する
     Given 既に追加済みのブロック名を含むadd_block操作
@@ -129,7 +129,7 @@ def test_既に存在するブロックの追加は無変更で成功する():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_識別子を複数箇所にわたってリネームする():
+def test_renames_an_identifier_everywhere():
     """
     Scenario: 識別子を複数箇所にわたってリネームする
     Given 旧短縮名・新短縮名（必須ではないブロック）
@@ -152,7 +152,7 @@ def test_識別子を複数箇所にわたってリネームする():
     assert "memo" in written["$defs"]["SomeContent"]["properties"]
 
 
-def test_必須プロパティのリネームはBACKWARD_INCOMPATIBLEとして拒否される():
+def test_renaming_a_required_property_is_rejected():
     """
     Scenario: 必須プロパティのリネームはBACKWARD_INCOMPATIBLEとして拒否される
     Given 公開済みkindのrequiredに指定されているブロックのリネーム
@@ -166,7 +166,7 @@ def test_必須プロパティのリネームはBACKWARD_INCOMPATIBLEとして�
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
 
 
-def test_既にリネーム済みの状態への再リネームは無変更で成功する():
+def test_renaming_an_already_renamed_block_changes_nothing():
     """
     Scenario: 既にリネーム済みの状態への再リネームは無変更で成功する
     Given リネーム元が既に存在せずリネーム先が既に存在する状態
@@ -190,7 +190,7 @@ def test_既にリネーム済みの状態への再リネームは無変更で�
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_既存ブロックの1フィールドだけを書き換える():
+def test_sets_a_single_field_of_an_existing_block():
     """
     Scenario: 既存ブロックの1フィールドだけを書き換える
     Given ブロック名・書き換える項目・新しい値
@@ -209,7 +209,7 @@ def test_既存ブロックの1フィールドだけを書き換える():
     assert written["$defs"]["SomeContent"] == _base_schema()["$defs"]["SomeContent"]
 
 
-def test_set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える():
+def test_set_field_targets_the_schema_root_without_def_name():
     """
     Scenario: set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える
     Given defNameにnull・ルート直下のドットパス・新しい値
@@ -231,7 +231,7 @@ def test_set_fieldはdefNameにnullを渡すとschemaのルート直下を書き
     assert written["properties"]["newTopLevelField"] == {"type": "string"}
 
 
-def test_既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒否される():
+def test_changing_the_type_of_an_existing_field_is_rejected():
     """
     Scenario: 既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒否される
     Given 公開済みkindの既存フィールドの型(type)を書き換える変更
@@ -250,7 +250,7 @@ def test_既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒�
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
 
 
-def test_set_fieldの同じ値への再実行は無変更で成功する():
+def test_setting_the_same_value_changes_nothing():
     """
     Scenario: set_fieldの同じ値への再実行は無変更で成功する
     Given 既に目的の値になっている項目
@@ -272,7 +272,7 @@ def test_set_fieldの同じ値への再実行は無変更で成功する():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_存在しないブロックへのset_fieldはBLOCK_NOT_FOUND():
+def test_set_field_on_a_missing_block_is_rejected():
     """
     Scenario: 存在しないブロックへのset_fieldはBLOCK_NOT_FOUND
     Given Schemaに存在しないブロック名
@@ -291,7 +291,7 @@ def test_存在しないブロックへのset_fieldはBLOCK_NOT_FOUND():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
 
 
-def test_content_defからプロパティ参照を外す():
+def test_removes_a_property_reference_from_the_content_def():
     """
     Scenario: content defからプロパティ参照を外す
     Given 必須ではないプロパティを持つcontent def名・プロパティ名
@@ -315,7 +315,7 @@ def test_content_defからプロパティ参照を外す():
     assert "NoteBlock" in written["$defs"]
 
 
-def test_既に存在しないプロパティのremove_blockは無変更で成功する():
+def test_removing_an_absent_property_changes_nothing():
     """
     Scenario: 既に存在しないプロパティのremove_blockは無変更で成功する
     Given 既に除去済みのプロパティ名を含むremove_block操作
@@ -327,7 +327,7 @@ def test_既に存在しないプロパティのremove_blockは無変更で成�
     assert isinstance(result, Ok) and result.value["changed"] is False
 
 
-def test_必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される():
+def test_removing_a_required_property_is_rejected():
     """
     Scenario: 必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される
     Given 公開済みkindのrequiredに指定されているプロパティ
@@ -344,7 +344,7 @@ def test_必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして�
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
 
 
-def test_既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否される():
+def test_changes_breaking_existing_documents_are_rejected():
     """
     Scenario: 既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否される
     Given 既存Documentを壊しうる後方互換性のない変更
@@ -365,7 +365,7 @@ def test_既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否さ
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
 
 
-def test_構文的に不正な結果はINVALID_SCHEMA_STRUCTUREとして拒否される():
+def test_structurally_invalid_result_is_rejected():
     """
     Scenario: 構文的に不正な結果はINVALID_SCHEMA_STRUCTUREとして拒否される
     Given 適用するとJSON Schemaとして構文的に不正になる変更
@@ -392,7 +392,7 @@ class _BrokenWriteDocumentRepository:
         raise OSError("disk full")
 
 
-def test_書き込み失敗はWRITE_ERRORを返す():
+def test_write_failure_is_reported():
     """
     Scenario: 書き込み失敗はWRITE_ERRORを返す
     Given 書き込み時にOSErrorを送出するDocumentRepository
@@ -411,7 +411,7 @@ def test_書き込み失敗はWRITE_ERRORを返す():
     assert result.details[0] == "WRITE_ERROR"
 
 
-def test_解決できないschemaRefはINVALID_SCHEMA_REF():
+def test_unresolvable_schema_ref():
     """
     Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
     Given 解決できないschemaRef
@@ -423,7 +423,7 @@ def test_解決できないschemaRefはINVALID_SCHEMA_REF():
     assert result.details[0] == "INVALID_SCHEMA_REF"
 
 
-def test_未知のoperationはINVALID_OPERATION():
+def test_unknown_operation_is_rejected():
     """
     Scenario: 未知のoperationはINVALID_OPERATION
     Given add_block/rename_block/set_field/remove_block/add_def/add_kind_branch/create_version/set_kind_render_target以外のoperation
@@ -446,7 +446,7 @@ def _kind_dispatch_fixture() -> dict:
     return schema
 
 
-def test_既存content_defへの紐付けを持たない新規defを追加する():
+def test_adds_a_def_without_binding_it_to_a_content_def():
     """
     Scenario: 既存content defへの紐付けを持たない新規defを追加する
     Given def名・def定義
@@ -464,7 +464,7 @@ def test_既存content_defへの紐付けを持たない新規defを追加する
     assert written["$defs"]["SomeContent"] == _base_schema()["$defs"]["SomeContent"]
 
 
-def test_既に存在するdefの追加は無変更で成功する():
+def test_adding_an_existing_def_changes_nothing():
     """
     Scenario: 既に存在するdefの追加は無変更で成功する
     Given 既に追加済みのdef名を含むadd_def操作
@@ -485,7 +485,7 @@ def test_既に存在するdefの追加は無変更で成功する():
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_2値のif_then_else形式に新しいkindブランチを追加する():
+def test_adds_a_kind_branch_to_an_if_then_else_dispatch():
     """
     Scenario: 2値のif_then_else形式に新しいkindブランチを追加する
     Given if/then/else形式（enumが既存kind値を2つのみ持つ）のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名
@@ -517,7 +517,7 @@ def test_2値のif_then_else形式に新しいkindブランチを追加する():
     }
 
 
-def test_allOf形式の分岐に新しいkindブランチを追加する():
+def test_adds_a_kind_branch_to_an_all_of_dispatch():
     """
     Scenario: allOf形式の分岐に新しいkindブランチを追加する
     Given 既にallOf形式のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名
@@ -556,7 +556,7 @@ def test_allOf形式の分岐に新しいkindブランチを追加する():
     assert len(written["allOf"]) == 4
 
 
-def test_既に存在するkindブランチの追加は無変更で成功する():
+def test_adding_an_existing_kind_branch_changes_nothing():
     """
     Scenario: 既に存在するkindブランチの追加は無変更で成功する
     Given 既にenumとルート分岐の両方に存在するkind値・content def紐付け
@@ -584,7 +584,7 @@ def test_既に存在するkindブランチの追加は無変更で成功する(
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE():
+def test_unknown_root_dispatch_shape_is_rejected():
     """
     Scenario: 未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE
     Given if/then/else形式でもallOf形式でもないルート分岐、またはif/then/else形式でありながらenumが3つ以上のkind値を持つ状態
@@ -603,7 +603,7 @@ def test_未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_RO
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
 
 
-def test_create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る():
+def test_create_version_copies_and_applies_edits():
     """
     Scenario: create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る
     Given 複製元のfromSchemaRefと、複製先のschemaRef（新版）・edits
@@ -622,7 +622,7 @@ def test_create_versionは既存版を複製しeditsを適用した新しい版�
     assert written["$defs"]["TitleBlock"]["properties"]["title"]["type"] == "array"
 
 
-def test_create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない():
+def test_create_version_may_change_field_types():
     """
     Scenario: create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない
     Given 既存フィールドの型を変更するedits（通常のset_fieldなら拒否される変更）
@@ -637,7 +637,7 @@ def test_create_versionは既存フィールドの型を変えてもBACKWARD_INC
     assert isinstance(result, Ok), result
 
 
-def test_create_versionは既に存在する版ファイルを上書きしない():
+def test_create_version_does_not_overwrite_an_existing_version():
     """
     Scenario: create_versionは既に存在する版ファイルを上書きしない
     Given schemaRef（新版）が指す版ファイルが既に存在する状態
@@ -667,7 +667,7 @@ def _kind_keyed_render_target_fixture() -> dict:
     return schema
 
 
-def test_x_render_targetのkind別dictに新しいkind値のエントリを追加する():
+def test_adds_a_render_target_entry_for_a_new_kind():
     """
     Scenario: x-render-targetのkind別dictに新しいkind値のエントリを追加する
     Given kind値・pathVars・path・deploy、およびpathVars/path/deployがkind別dict形式のschema
@@ -691,7 +691,7 @@ def test_x_render_targetのkind別dictに新しいkind値のエントリを追�
     assert target["pathVars"]["judgment"] == {"skillRef": "doc.skillRef"}
 
 
-def test_既に存在するkind別render_targetエントリの追加は無変更で成功する():
+def test_adding_an_existing_render_target_entry_changes_nothing():
     """
     Scenario: 既に存在するkind別render_targetエントリの追加は無変更で成功する
     Given 既にpathVars・path・deployの全てで指定した値と一致するkind値のエントリ
@@ -715,7 +715,7 @@ def test_既に存在するkind別render_targetエントリの追加は無変更
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
 
 
-def test_x_render_targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE():
+def test_unsupported_render_target_shape_is_rejected():
     """
     Scenario: x-render-targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE
     Given x-render-target自体を持たない、またはpathVars・path・deployのいずれかがフラット形式（kind別dictでない）のschema
