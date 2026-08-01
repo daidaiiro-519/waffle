@@ -5,12 +5,14 @@
 // 配信側の関数は import と KVS の取得を伴うため、そのままでは手元で動かない。
 // この検証では両方を差し替えて読み込む（関数本体には手を入れない）。
 //
-// 保管に置くのは合言葉そのものではなく、照合できる形（sha256の先頭32文字）。
-// 当初この検証は平文を置いており、関数側も平文と比べていたため、両方が
-// 同じ誤解で揃って通っていた。実環境で初めて「正しいトークンでも開けない」
-// として現れた。ここでは実際の形を作って置く。
+// 保管に置く形は infra/contract/token-records.json が正で、公開する側
+// （Python）の検証も同じ表を読む。ここで規則を書き直さないのは、書き直すと
+// 同じ規則の写しが増えるだけで、突き合わせにならないため。
+//
+// 当初この検証は保管の値を平文として置いており、関数側も平文と比べていた。
+// 両方が同じ誤解で揃って通り、実環境で初めて「正しいトークンでも開けない」
+// として現れた。表を挟むのは、その再発を止めるため。
 
-import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -25,11 +27,14 @@ const source = readFileSync(join(here, '..', 'viewer-token-gate.js'), 'utf-8')
 const work = join(mkdtempSync(join(tmpdir(), 'as-gate-')), 'gate.mjs');
 writeFileSync(work, source, 'utf-8');
 
-// 公開のときに保管へ残す形（lambda/admin_api/publish.py の token_record と同じ）
-const fingerprint = (token) =>
-  createHash('sha256').update(token).digest('hex').slice(0, 32);
-const record = (token, { expires = 0, generation = 1 } = {}) =>
-  `${fingerprint(token)}|${expires}|${generation}`;
+// 両側の唯一の共通点。ここに書かれた値をそのまま使い、規則を書き直さない
+const contract = JSON.parse(
+  readFileSync(join(here, '..', '..', 'contract', 'token-records.json'), 'utf-8'));
+const vector = (name) => {
+  const c = contract['ケース'].find((x) => x['名前'] === name);
+  if (!c) throw new Error(`契約に「${name}」がありません`);
+  return c;
+};
 
 const store = new Map();
 globalThis.__KVS = { get: async (k) => { if (!store.has(k)) throw new Error('no key'); return store.get(k); } };
@@ -52,42 +57,58 @@ const t = async (name, fn, expect) => {
   else { console.log(`NG   ${name}  期待:${expect} 実際:${got}`); fail++; }
 };
 
-// アーティファクトA: 公開中（合言葉 k1・世代 1）、プロジェクトPに所属。
+// アーティファクトA: 公開中（契約の1件目）、プロジェクトPに所属。
 // アーティファクトB: 公開停止。
-store.set('token:aaa', record('k1'));
-store.set('token:bbb', 'DISABLED');
-store.set('proj:ppp', record('pk1'));
+const v1 = vector('無期限・初回発行');       // 世代1
+const v2 = vector('再発行して世代が上がった状態');  // 世代2
+const vx = vector('期限つき（発行時刻＋有効期間が期限になる）');
+
+store.set('token:aaa', v1['保管の記録']);
+store.set('token:bbb', contract['形式']['無効の印']);
+store.set('proj:ppp', v1['保管の記録']);
 store.set('pp:aaa', 'ppp');
 store.set('pp:bbb', 'ppp');
 
 console.log('■ 仕様のシナリオ');
-await t('個別のトークンで開く',            req('/p/aaa/', { cookies: { [A+'aaa']: fingerprint('k1') + '.1' } }), 'pass-through');
-await t('プロジェクトのトークンで開く',          req('/p/aaa/', { cookies: { [P+'ppp']: fingerprint('pk1') + '.1' } }), 'pass-through');
-await t('公開停止はプロジェクトのトークンでも開けない', req('/p/bbb/', { cookies: { [P+'ppp']: fingerprint('pk1') + '.1' } }), 'status:403');
-await t('所属していないものは開けない', req('/p/ccc/', { cookies: { [P+'ppp']: fingerprint('pk1') + '.1' } }), 'status:403');
+await t('個別のトークンで開く',            req('/p/aaa/', { cookies: { [A+'aaa']: v1['手元の記録'] } }), 'pass-through');
+await t('プロジェクトのトークンで開く',          req('/p/aaa/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'pass-through');
+await t('公開停止はプロジェクトのトークンでも開けない', req('/p/bbb/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'status:403');
+await t('所属していないものは開けない', req('/p/ccc/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'status:403');
 await t('トークンなしは入力画面へ',        req('/p/aaa/'), 'status:401');
 
 console.log('■ 再発行と期限');
-store.set('token:aaa', record('k2', { generation: 2 }));   // 再発行（値と世代が変わる）
-await t('再発行前のトークンでは開けない',  req('/p/aaa/', { cookies: { [A+'aaa']: fingerprint('k1') + '.1' } }), 'status:401');
-await t('値だけ合っても世代違いは弾く', req('/p/aaa/', { cookies: { [A+'aaa']: fingerprint('k2') + '.1' } }), 'status:401');
-await t('新しいトークンでは開ける',        req('/p/aaa/', { cookies: { [A+'aaa']: fingerprint('k2') + '.2' } }), 'pass-through');
-store.set('token:ddd', record('k9', { expires: 1000000000 }));  // 期限切れ（2001年）
-await t('期限切れは入力画面へ',        req('/p/ddd/', { cookies: { [A+'ddd']: fingerprint('k9') + '.1' } }), 'status:401');
+store.set('token:aaa', v2['保管の記録']);   // 再発行（値と世代が変わる）
+await t('再発行前のトークンでは開けない',  req('/p/aaa/', { cookies: { [A+'aaa']: v1['手元の記録'] } }), 'status:401');
+await t('値だけ合っても世代違いは弾く', req('/p/aaa/', { cookies: { [A+'aaa']: v2['保管の記録'].split('|')[0] + '.1' } }), 'status:401');
+await t('新しいトークンでは開ける',        req('/p/aaa/', { cookies: { [A+'aaa']: v2['手元の記録'] } }), 'pass-through');
+store.set('token:ddd', vx['保管の記録']);  // 期限つき
+await t('期限切れは入力画面へ',        req('/p/ddd/', { cookies: { [A+'ddd']: vx['手元の記録'] } }), 'status:401');
 
 console.log('■ 合言葉を示して入る');
 const verify = (id, token) => req('/p/' + id + '/verify', { headers: { 'x-share-token': token } });
-await t('正しい合言葉なら手元の記録が渡る', verify('aaa', 'k2'), 'status:204');
-await t('違う合言葉は拒む',               verify('aaa', 'k1'), 'status:401');
+await t('正しい合言葉なら手元の記録が渡る', verify('aaa', v2['合言葉']), 'status:204');
+await t('違う合言葉は拒む',               verify('aaa', v1['合言葉']), 'status:401');
 await t('空の合言葉は拒む',               verify('aaa', ''),   'status:401');
 
+console.log('■ 所属の上限');
+const limit = contract['所属の記録']['上限'];
+const many = contract['所属の記録']['ケース'].find((c) => c['名前'] === '上限ちょうど');
+store.set('pp:eee', many['記録']);
+store.set('token:eee', v1['保管の記録']);
+for (const pid of many['プロジェクト']) store.set('proj:' + pid, v1['保管の記録']);
+for (let i = 0; i < limit; i++) {
+  const pid = many['プロジェクト'][i];
+  await t(`所属${i + 1}件目のトークンで開ける`,
+    req('/p/eee/', { cookies: { [P + pid]: v1['手元の記録'] } }), 'pass-through');
+}
+
 console.log('■ 反応の書き込み');
-const put = (h) => req('/comments/aaa/1234-abcd.json', { method: 'PUT', cookies: { [A+'aaa']: fingerprint('k2') + '.2' }, headers: h });
+const put = (h) => req('/comments/aaa/1234-abcd.json', { method: 'PUT', cookies: { [A+'aaa']: v2['手元の記録'] }, headers: h });
 await t('条件つきの書き込みは通る',    put({ 'content-type': 'application/json', 'content-length': 100, 'if-none-match': '*' }), 'pass-through');
 await t('条件なしの書き込みは拒む',    put({ 'content-type': 'application/json', 'content-length': 100 }), 'status:403');
 await t('種類が違えば拒む',            put({ 'content-type': 'text/html', 'content-length': 100, 'if-none-match': '*' }), 'status:403');
 await t('大きすぎれば拒む',            put({ 'content-type': 'application/json', 'content-length': 20000, 'if-none-match': '*' }), 'status:403');
-await t('削除は拒む',                  req('/p/aaa/', { method: 'DELETE', cookies: { [A+'aaa']: fingerprint('k2') + '.2' } }), 'status:403');
+await t('削除は拒む',                  req('/p/aaa/', { method: 'DELETE', cookies: { [A+'aaa']: v2['手元の記録'] } }), 'status:403');
 
 console.log(`\n通過 ${pass} / 失敗 ${fail}`);
 process.exit(fail ? 1 : 0);

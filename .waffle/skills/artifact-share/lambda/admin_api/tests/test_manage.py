@@ -371,3 +371,21 @@ def test_差し替えると入っている全プロジェクトの一覧が書�
 
     listing = json.loads(deps.store.get(f"proj/{pid}/index.json"))
     assert listing["artifacts"][0]["description"] == "改訂した理由"
+
+
+def test_上限を超えてプロジェクトへ加えられない():
+    """閲覧ゲートは先頭3件までしか見ない。書き手が黙って超えると、
+    投稿者には成功が返り、閲覧者だけが開けない状態になる。"""
+    deps, r, _ = with_project("SHARED")
+    ids = []
+    for i in range(manage.MAX_PROJECTS_PER_ARTIFACT + 1):
+        p = projects.create(deps, ME, f"まとめ{i}", "SHARED")
+        ids.append(p["projectId"])
+
+    for pid in ids[:manage.MAX_PROJECTS_PER_ARTIFACT]:
+        manage.assign(deps, ME, r["artifactId"], pid)
+
+    with pytest.raises(manage.ManageError) as x:
+        manage.assign(deps, ME, r["artifactId"], ids[-1])
+    assert x.value.code == "TOO_MANY_PROJECTS"
+    assert len(meta_of(deps, r["artifactId"])["projects"]) == manage.MAX_PROJECTS_PER_ARTIFACT

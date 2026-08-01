@@ -26,6 +26,13 @@ from typing import Callable
 
 from publish import inspect_html, new_token, token_record
 
+# 1つの共有アーティファクトが入れるプロジェクトの数。
+# 閲覧ゲートは、開けるかを判じるときに先頭からこの数までしか見ない
+# （読み取り回数が実行の予算に直結するため）。書き手がこれを超えて書くと、
+# 投稿者には成功が返り、閲覧者だけが開けない状態になる。
+# 数は infra/contract/token-records.json が正で、両側の検証がそこを見る。
+MAX_PROJECTS_PER_ARTIFACT = 3
+
 
 class ManageError(Exception):
     """操作できない理由を、仕様のエラーコードとともに伝える。"""
@@ -290,8 +297,23 @@ def transfer(deps: Deps, caller: Caller, artifact_id: str, to_publisher: str) ->
 
 # ── プロジェクトへの出し入れ ────────────────────────────
 
+def _require_within_limit(projects: list[str]) -> None:
+    """上限を超えていないかを、書き始める前に確かめる。"""
+    if len(projects) > MAX_PROJECTS_PER_ARTIFACT:
+        raise ManageError(
+            "TOO_MANY_PROJECTS",
+            f"1つのアーティファクトが入れるプロジェクトは{MAX_PROJECTS_PER_ARTIFACT}件までです。"
+            "どれかから外してから加えてください。")
+
+
 def _write_membership(deps: Deps, artifact_id: str, projects: list[str]) -> None:
-    """所属を、閲覧ゲートが読める形へ書き出す。"""
+    """所属を、閲覧ゲートが読める形へ書き出す。
+
+    上限を超えるものは書かずに拒む。黙って書くと、超えた分は閲覧ゲートから
+    見えないまま所属したことになり、投稿者には成功が返って閲覧者だけが
+    開けない。原因の分からない不具合になるため、ここで止める。
+    """
+    _require_within_limit(projects)     # 最後の守り。ここへ来る前に弾かれているはず
     deps.keys.put(f"pp:{artifact_id}", " ".join(projects))
 
 
@@ -313,6 +335,10 @@ def assign(deps: Deps, caller: Caller, artifact_id: str, project_id: str) -> dic
     belongs = list(meta.get("projects") or [])
     if project_id not in belongs:               # 重ねて加えても二重にならない
         belongs.append(project_id)
+    # 書き始める前に確かめる。索引を書いてから拒むと、索引と閲覧ゲート用の
+    # 記録が食い違ったまま残る
+    _require_within_limit(belongs)
+
     meta["projects"] = belongs
     _write_meta(deps, meta)
     _write_membership(deps, artifact_id, belongs)
