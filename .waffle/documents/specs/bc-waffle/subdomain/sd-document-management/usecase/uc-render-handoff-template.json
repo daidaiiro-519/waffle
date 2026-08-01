@@ -150,6 +150,27 @@
           "gherkin": "Scenario: reviewStatusの値をそのまま表示し新たな判定を行わない\nGiven requiredAdvisors・findings（resolutionStatusを含む）・completionImageConfirmedByを持つ検証済みのHandoff\nWhen RenderHandoffTemplateを実行する\nThen 生成されたHTMLにfindingsの件数・resolutionStatusの値がそのまま表示される\nAnd レンダリング処理内で「実装に進めてよいか」を新たに算出するロジックは実行されない",
           "covers": "",
           "operation": ""
+        },
+        {
+          "name": "expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される",
+          "category": "正常系",
+          "viewpoint": "任意ブロックが与えられたとき、その内容がそのまま描画されることを確認する",
+          "gherkin": "Scenario: expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される\nGiven expectedScopeブロック（path/reasonの配列）を持つHandoff\nWhen RenderHandoffTemplateを実行する\nThen 「対象範囲の見込み」タブに対象パスと理由がそのまま出力される",
+          "covers": "受け入れ基準: 任意ブロックの内容を描画する"
+        },
+        {
+          "name": "expectedScopeが無いHandoffも描画できる",
+          "category": "境界値",
+          "viewpoint": "任意ブロックの不在で描画そのものが失敗しないことを確認する",
+          "gherkin": "Scenario: expectedScopeが無いHandoffも描画できる\nGiven expectedScopeブロックを持たない（任意ブロックのため省略可能な）Handoff\nWhen RenderHandoffTemplateを実行する\nThen エラーにならず、対象範囲の見込みタブは空状態で描画される",
+          "covers": "受け入れ基準: 任意ブロックが無くても描画できる"
+        },
+        {
+          "name": "reviewStatusが無いHandoffも描画できる",
+          "category": "境界値",
+          "viewpoint": "任意ブロックの不在で描画そのものが失敗しないことを確認する",
+          "gherkin": "Scenario: reviewStatusが無いHandoffも描画できる\nGiven reviewStatusブロックを持たない（任意ブロックのため省略可能な）Handoff\nWhen RenderHandoffTemplateを実行する\nThen エラーにならず、未解決事項は0件のまま描画される",
+          "covers": "受け入れ基準: 任意ブロックが無くても描画できる"
         }
       ]
     },

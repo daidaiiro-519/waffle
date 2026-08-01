@@ -1,3 +1,12 @@
+---
+id: "uc-scaffold-document"
+type: "usecase"
+title: "Documentの骨格生成と値の書き込み：ScaffoldDocument"
+description: "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # Documentの骨格生成と値の書き込み：ScaffoldDocument
 
 ## 概要
@@ -287,6 +296,85 @@ Scenario: migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFと�
   Given 解決できない移行先schemaRef
   When migrate_schemaを実行する
   Then INVALID_SCHEMA_REFエラーが返り、Documentは変更されない
+```
+
+### constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 計算整合: 完全一致のときだけ許すことで、構造保護を保ったまま再同期できる |
+
+```gherkin
+Scenario: constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる
+Given 作成済みのDocument
+When constフィールドへ、現行schemaが宣言するconst値と完全に一致する値を書き込む
+Then 書き込みが許可される
+And 完全に一致しない値への上書きは引き続き拒否される
+```
+
+### createに渡した参照パラメータはdocument本体にも書き込まれる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 参照パラメータがパス計算にしか使われないと、作られたdocumentが自分の所属を持たない |
+
+```gherkin
+Scenario: createに渡した参照パラメータはdocument本体にも書き込まれる
+Given schemaが宣言する任意のトップレベルフィールド（subdomainRef等）に対応する参照パラメータ
+When createを実行する
+Then そのパラメータはパス計算だけでなくdocument本体にも書き込まれる
+```
+
+### fillTemplateにはcontent外のトップレベルのx-prompt-writeフィールドも含まれる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 境界: 値フィールドはcontentの中だけにあるとは限らない |
+
+```gherkin
+Scenario: fillTemplateにはcontent外のトップレベルのx-prompt-writeフィールドも含まれる
+Given content外にx-prompt-writeを持つトップレベルフィールド（skillRef）を宣言するschema
+When createを実行する
+Then fillTemplateにcontent以外のパス（skillRef）のエントリが含まれる
+```
+
+### fillはcontent外のトップレベルのx-prompt-writeフィールドにも書き込める
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 境界: 案内した経路へ実際に書き込めなければ、案内が嘘になる |
+
+```gherkin
+Scenario: fillはcontent外のトップレベルのx-prompt-writeフィールドにも書き込める
+Given 作成済みのDocument
+When content外のトップレベルフィールド（skillRef）へ値を書き込む
+Then writtenに記録され、ファイルに反映される
+```
+
+### fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 事前条件: 識別子と構造分岐が書き換わると、documentの同一性と置き場所が壊れる |
+
+```gherkin
+Scenario: fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する
+Given 作成済みのDocument
+When documentId・discriminatorキー（templateKind）へ値を書き込もうとする
+Then 書き込まれずskippedに記録される
+```
+
+### schema版が変わった後に新設された任意ブロックも既存documentへ書き込める
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 状態遷移: 既存documentがschemaの新版へ追従していない状態でも書き込めること |
+
+```gherkin
+Scenario: schema版が変わった後に新設された任意ブロックも既存documentへ書き込める
+Given schemaが宣言する任意ブロックのキー自体を持たない既存Document
+When そのブロック配下の宣言済み値フィールドへfillする
+Then writtenに記録され、ファイルに反映される
 ```
 
 ---

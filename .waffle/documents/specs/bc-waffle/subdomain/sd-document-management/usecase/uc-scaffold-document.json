@@ -304,6 +304,48 @@
           "gherkin": "Scenario: migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する\n  Given 解決できない移行先schemaRef\n  When migrate_schemaを実行する\n  Then INVALID_SCHEMA_REFエラーが返り、Documentは変更されない",
           "operation": "migrate_schema",
           "covers": "エラー: INVALID_SCHEMA_REF"
+        },
+        {
+          "name": "constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる",
+          "category": "境界値",
+          "viewpoint": "計算整合: 完全一致のときだけ許すことで、構造保護を保ったまま再同期できる",
+          "gherkin": "Scenario: constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる\nGiven 作成済みのDocument\nWhen constフィールドへ、現行schemaが宣言するconst値と完全に一致する値を書き込む\nThen 書き込みが許可される\nAnd 完全に一致しない値への上書きは引き続き拒否される",
+          "covers": "受け入れ基準: 構造を変える値は拒否される（schema版の変化に伴う再同期の例外）"
+        },
+        {
+          "name": "createに渡した参照パラメータはdocument本体にも書き込まれる",
+          "category": "正常系",
+          "viewpoint": "計算整合: 参照パラメータがパス計算にしか使われないと、作られたdocumentが自分の所属を持たない",
+          "gherkin": "Scenario: createに渡した参照パラメータはdocument本体にも書き込まれる\nGiven schemaが宣言する任意のトップレベルフィールド（subdomainRef等）に対応する参照パラメータ\nWhen createを実行する\nThen そのパラメータはパス計算だけでなくdocument本体にも書き込まれる",
+          "covers": "受け入れ基準: createはx-source-targetに骨格を書き出す（参照パラメータの反映）"
+        },
+        {
+          "name": "fillTemplateにはcontent外のトップレベルのx-prompt-writeフィールドも含まれる",
+          "category": "正常系",
+          "viewpoint": "境界: 値フィールドはcontentの中だけにあるとは限らない",
+          "gherkin": "Scenario: fillTemplateにはcontent外のトップレベルのx-prompt-writeフィールドも含まれる\nGiven content外にx-prompt-writeを持つトップレベルフィールド（skillRef）を宣言するschema\nWhen createを実行する\nThen fillTemplateにcontent以外のパス（skillRef）のエントリが含まれる",
+          "covers": "受け入れ基準: fillTemplateは値フィールドのpathとpromptを持つ"
+        },
+        {
+          "name": "fillはcontent外のトップレベルのx-prompt-writeフィールドにも書き込める",
+          "category": "正常系",
+          "viewpoint": "境界: 案内した経路へ実際に書き込めなければ、案内が嘘になる",
+          "gherkin": "Scenario: fillはcontent外のトップレベルのx-prompt-writeフィールドにも書き込める\nGiven 作成済みのDocument\nWhen content外のトップレベルフィールド（skillRef）へ値を書き込む\nThen writtenに記録され、ファイルに反映される",
+          "covers": "受け入れ基準: 宣言済みの値フィールドに書き込まれる"
+        },
+        {
+          "name": "fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する",
+          "category": "異常系",
+          "viewpoint": "事前条件: 識別子と構造分岐が書き換わると、documentの同一性と置き場所が壊れる",
+          "gherkin": "Scenario: fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する\nGiven 作成済みのDocument\nWhen documentId・discriminatorキー（templateKind）へ値を書き込もうとする\nThen 書き込まれずskippedに記録される",
+          "covers": "受け入れ基準: 構造を変える値は拒否される"
+        },
+        {
+          "name": "schema版が変わった後に新設された任意ブロックも既存documentへ書き込める",
+          "category": "境界値",
+          "viewpoint": "状態遷移: 既存documentがschemaの新版へ追従していない状態でも書き込めること",
+          "gherkin": "Scenario: schema版が変わった後に新設された任意ブロックも既存documentへ書き込める\nGiven schemaが宣言する任意ブロックのキー自体を持たない既存Document\nWhen そのブロック配下の宣言済み値フィールドへfillする\nThen writtenに記録され、ファイルに反映される",
+          "covers": "受け入れ基準: 宣言済みの値フィールドに書き込まれる"
         }
       ]
     },

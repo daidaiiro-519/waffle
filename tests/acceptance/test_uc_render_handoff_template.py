@@ -135,6 +135,7 @@ def test_advisor名と件数のペアがレビュー状況に出力される(tmp
 
 def test_expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される(tmp_path):
     """
+    Scenario: expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される
     Given expectedScopeブロック（path/reasonの配列）を持つHandoff
     When RenderHandoffTemplateを実行する
     Then 「対象範囲の見込み」タブに対象パスと理由がそのまま出力される
@@ -156,6 +157,7 @@ def test_expectedScopeを含むHandoffを描画すると対象範囲の見込み
 
 def test_expectedScopeが無いHandoffも描画できる(tmp_path):
     """
+    Scenario: expectedScopeが無いHandoffも描画できる
     Given expectedScopeブロックを持たない（任意ブロックのため省略可能な）Handoff
     When RenderHandoffTemplateを実行する
     Then エラーにならず、対象範囲の見込みタブは空状態で描画される
@@ -199,6 +201,7 @@ def test_reviewStatusの値をそのまま表示し新たな判定を行わな�
 
 def test_reviewStatusが無いHandoffも描画できる(tmp_path):
     """
+    Scenario: reviewStatusが無いHandoffも描画できる
     Given reviewStatusブロックを持たない（任意ブロックのため省略可能な）Handoff
     When RenderHandoffTemplateを実行する
     Then エラーにならず、未解決事項は0件のまま描画される

@@ -170,3 +170,42 @@ When RenderHandoffTemplateを実行する
 Then 生成されたHTMLにfindingsの件数・resolutionStatusの値がそのまま表示される
 And レンダリング処理内で「実装に進めてよいか」を新たに算出するロジックは実行されない
 ```
+
+### expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 任意ブロックが与えられたとき、その内容がそのまま描画されることを確認する |
+
+```gherkin
+Scenario: expectedScopeを含むHandoffを描画すると対象範囲の見込みタブに出力される
+Given expectedScopeブロック（path/reasonの配列）を持つHandoff
+When RenderHandoffTemplateを実行する
+Then 「対象範囲の見込み」タブに対象パスと理由がそのまま出力される
+```
+
+### expectedScopeが無いHandoffも描画できる
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 任意ブロックの不在で描画そのものが失敗しないことを確認する |
+
+```gherkin
+Scenario: expectedScopeが無いHandoffも描画できる
+Given expectedScopeブロックを持たない（任意ブロックのため省略可能な）Handoff
+When RenderHandoffTemplateを実行する
+Then エラーにならず、対象範囲の見込みタブは空状態で描画される
+```
+
+### reviewStatusが無いHandoffも描画できる
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 任意ブロックの不在で描画そのものが失敗しないことを確認する |
+
+```gherkin
+Scenario: reviewStatusが無いHandoffも描画できる
+Given reviewStatusブロックを持たない（任意ブロックのため省略可能な）Handoff
+When RenderHandoffTemplateを実行する
+Then エラーにならず、未解決事項は0件のまま描画される
+```

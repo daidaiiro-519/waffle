@@ -129,10 +129,11 @@ def test_構造を変える値は拒否される():
 
 def test_constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる():
     """
-    Given 作成済みの Document
+    Scenario: constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる
+    Given 作成済みのDocument
     When constフィールドへ、現行schemaが宣言するconst値と完全に一致する値を書き込む
-    Then 書き込みが許可される（schema版が変わりconstの値自体が変化した場合の再同期のみを許す。
-    任意の値への上書きは引き続き拒否される＝構造保護は維持される）
+    Then 書き込みが許可される
+    And 完全に一致しない値への上書きは引き続き拒否される
     """
     create_result = _engine().run(
         "create",
@@ -150,11 +151,10 @@ def test_constフィールドは現行schemaの宣言値と完全一致する場
 
 def test_schema版が変わった後に新設された任意ブロックも既存documentへ書き込める():
     """
-    Given schemaが宣言する任意ブロックのキー自体を持たない、より古いschema版の状態を保つ既存Document
-    （schemaに新規の任意ブロックが追加された後も、作成済みDocumentは追従していない状態を模す）
+    Scenario: schema版が変わった後に新設された任意ブロックも既存documentへ書き込める
+    Given schemaが宣言する任意ブロックのキー自体を持たない既存Document
     When そのブロック配下の宣言済み値フィールドへfillする
-    Then written に記録され、ファイルに反映される（ブロックのキー自体が無くても、
-    現行schemaが宣言する経路であれば新規に書き込める）
+    Then writtenに記録され、ファイルに反映される
     """
     create_result = _engine().run(
         "create",
@@ -289,11 +289,10 @@ def test_fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持�
 
 def test_createはCLIから渡されたrefパラメータをdocument本体にも反映する():
     """
-    Given schemaが宣言する任意のトップレベルフィールド(subdomainRef等)に対応するCLIパラメータ
+    Scenario: createに渡した参照パラメータはdocument本体にも書き込まれる
+    Given schemaが宣言する任意のトップレベルフィールド（subdomainRef等）に対応する参照パラメータ
     When createを実行する
     Then そのパラメータはパス計算だけでなくdocument本体にも書き込まれる
-    （--subdomainRefを渡してもcreate直後のdocument.jsonにsubdomainRefが無い、という
-    このセッション中に繰り返し起きた不具合の再発防止）
     """
     result = _engine().run(
         "create",
@@ -312,9 +311,10 @@ def test_createはCLIから渡されたrefパラメータをdocument本体にも
 
 def test_fillTemplateにはcontent外のトップレベルのx_prompt_writeフィールドも含まれる():
     """
-    Given content外にx-prompt-writeを持つトップレベルフィールド(skillRef)を宣言するschema
+    Scenario: fillTemplateにはcontent外のトップレベルのx-prompt-writeフィールドも含まれる
+    Given content外にx-prompt-writeを持つトップレベルフィールド（skillRef）を宣言するschema
     When createを実行する
-    Then fillTemplateにcontent.以外のパス(skillRef)のエントリが含まれる
+    Then fillTemplateにcontent以外のパス（skillRef）のエントリが含まれる
     """
     result = _engine().run(
         "create",
@@ -328,9 +328,10 @@ def test_fillTemplateにはcontent外のトップレベルのx_prompt_writeフ�
 
 def test_fillはcontent外のトップレベルのx_prompt_writeフィールドにも書き込める():
     """
+    Scenario: fillはcontent外のトップレベルのx-prompt-writeフィールドにも書き込める
     Given 作成済みのDocument
-    When content外のトップレベルフィールド(skillRef)へ値を書き込む
-    Then written に記録され、ファイルに反映される
+    When content外のトップレベルフィールド（skillRef）へ値を書き込む
+    Then writtenに記録され、ファイルに反映される
     """
     create_result = _engine().run(
         "create",
@@ -351,9 +352,10 @@ def test_fillはcontent外のトップレベルのx_prompt_writeフィールド�
 
 def test_fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する():
     """
+    Scenario: fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する
     Given 作成済みのDocument
-    When documentId・discriminatorキー(templateKind)へ値を書き込もうとする
-    Then 書き込まれずskippedに記録される(識別子・構造分岐は書き換え禁止)
+    When documentId・discriminatorキー（templateKind）へ値を書き込もうとする
+    Then 書き込まれずskippedに記録される
     """
     create_result = _engine().run(
         "create",
