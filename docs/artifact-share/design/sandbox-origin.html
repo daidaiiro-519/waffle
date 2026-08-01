@@ -1,0 +1,361 @@
+<title>なぜコメントが動かないのか — sandbox と不透明なオリジン</title>
+<style>
+  :root{
+    --ink:#1a1d24; --ink-soft:#4d5560; --ink-faint:#6b7480;
+    --paper:#eef0f3; --card:#ffffff; --line:#d6dae0; --line-soft:#e7eaee;
+    --ok:#2b6b5e; --ok-soft:#e2efec;
+    --bad:#a8412b; --bad-soft:#f7e9e5;
+    --note:#6b5a2f; --note-soft:#f5efe0;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e8ec; --ink-soft:#a4adb8; --ink-faint:#828c98;
+    --paper:#14161a; --card:#1d2026; --line:#333941; --line-soft:#262b32;
+    --ok:#6fb3a3; --ok-soft:#1a2c28;
+    --bad:#d98060; --bad-soft:#2e211c;
+    --note:#c9a961; --note-soft:#2a2517;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e8ec; --ink-soft:#a4adb8; --ink-faint:#828c98;
+      --paper:#14161a; --card:#1d2026; --line:#333941; --line-soft:#262b32;
+      --ok:#6fb3a3; --ok-soft:#1a2c28;
+      --bad:#d98060; --bad-soft:#2e211c;
+      --note:#c9a961; --note-soft:#2a2517;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); line-height:1.85; -webkit-font-smoothing:antialiased;}
+  .page{max-width:800px; margin:0 auto; padding:44px 22px 100px;}
+
+  header{margin-bottom:38px;}
+  .kicker{font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--ink-faint);}
+  h1{font-family:var(--serif); font-size:clamp(25px,5vw,34px); font-weight:600;
+    margin:.3em 0 .35em; line-height:1.35; text-wrap:balance;}
+  .lede{font-size:15px; color:var(--ink-soft); margin:0; max-width:62ch;}
+
+  h2{font-family:var(--serif); font-size:20px; font-weight:600;
+    margin:52px 0 6px; padding-top:22px; border-top:1px solid var(--line); text-wrap:balance;}
+  h2 .n{font-family:var(--mono); font-size:12px; color:var(--ink-faint);
+    display:block; letter-spacing:.1em; margin-bottom:5px;}
+  h3{font-size:14.5px; font-weight:600; margin:30px 0 8px;}
+  p{margin:0 0 15px; max-width:64ch;}
+  strong{font-weight:600;}
+  code{font-family:var(--mono); font-size:.88em; background:var(--line-soft);
+    padding:1px 5px; border-radius:4px;}
+
+  /* 図 */
+  .fig{margin:26px 0 30px;}
+  .fig-cap{font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);
+    margin-top:11px; line-height:1.7;}
+  .scroll{overflow-x:auto; padding-bottom:4px;}
+
+  .flow{display:grid; gap:11px; min-width:0;}
+  .box{border:1px solid var(--line); border-radius:11px; background:var(--card);
+    padding:14px 16px;}
+  .box .t{font-size:13.5px; font-weight:600; margin:0 0 3px;}
+  .box .s{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin:0;}
+  .box.ok{border-color:var(--ok); background:var(--ok-soft);}
+  .box.ok .t{color:var(--ok);}
+  .box.bad{border-color:var(--bad); background:var(--bad-soft);}
+  .box.bad .t{color:var(--bad);}
+
+  .pair{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:620px){ .pair{grid-template-columns:1fr;} }
+
+  .arrow{display:flex; align-items:center; gap:9px; font-family:var(--mono);
+    font-size:11.5px; color:var(--ink-faint); padding-left:16px;}
+  .arrow::before{content:"↓"; font-size:15px; color:var(--line);}
+  .arrow.no::before{content:"✕"; color:var(--bad);}
+  .arrow.yes::before{content:"↓"; color:var(--ok);}
+
+  /* オリジンの札 */
+  .origin{display:inline-flex; align-items:baseline; gap:7px;
+    font-family:var(--mono); font-size:11.5px; padding:4px 10px; border-radius:6px;
+    border:1px solid var(--line); background:var(--card); margin-top:9px;}
+  .origin b{font-weight:700;}
+  .origin.same{border-color:var(--ok); color:var(--ok); background:var(--ok-soft);}
+  .origin.opaque{border-color:var(--bad); color:var(--bad); background:var(--bad-soft);}
+
+  table{border-collapse:collapse; width:100%; font-size:13.5px; margin:18px 0 24px;
+    min-width:max-content;}
+  th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--line-soft);
+    vertical-align:top;}
+  th{font-size:11.5px; font-family:var(--mono); letter-spacing:.04em;
+    color:var(--ink-faint); font-weight:400; border-bottom:1px solid var(--line);}
+  td.mono{font-family:var(--mono); font-size:12px;}
+  .yes{color:var(--ok); font-weight:600;}
+  .no{color:var(--bad); font-weight:600;}
+
+  pre{font-family:var(--mono); font-size:12px; line-height:1.75; background:var(--card);
+    border:1px solid var(--line); border-radius:10px; padding:14px 16px;
+    overflow-x:auto; margin:16px 0 20px;}
+  pre .hl{color:var(--bad); font-weight:700;}
+  pre .dim{color:var(--ink-faint);}
+  pre .good{color:var(--ok); font-weight:700;}
+
+  .callout{border-left:3px solid var(--note); background:var(--note-soft);
+    padding:14px 17px; border-radius:0 9px 9px 0; margin:22px 0;}
+  .callout p{margin:0; font-size:13.5px;}
+  .callout .lbl{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--note); display:block; margin-bottom:5px;}
+
+  .verdict{border:1px solid var(--ok); background:var(--ok-soft); border-radius:12px;
+    padding:18px 20px; margin:26px 0;}
+  .verdict .lbl{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--ok); display:block; margin-bottom:6px;}
+  .verdict p{margin:0; font-size:14.5px;}
+
+  ol,ul{margin:0 0 16px; padding-left:1.4em; max-width:64ch;}
+  li{margin-bottom:7px;}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important;}}
+</style>
+
+<div class="page">
+<header>
+  <span class="kicker">artifact-share / 設計の確認</span>
+  <h1>なぜコメントが動かないのか</h1>
+  <p class="lede">閲覧画面に付けた1行のヘッダーが、守るはずだった画面自身を締め出しています。仕組みと、直し方と、この構成が最適かどうか。</p>
+</header>
+
+<h2><span class="n">01</span>いま何が起きているか</h2>
+
+<p>閲覧の配信には、持ち込まれたHTMLを閉じ込めるためのヘッダーを付けています。実測した結果がこれです。</p>
+
+<pre><span class="dim">$ curl -I https://…/p/j94np6re/</span>
+content-security-policy: default-src 'none'; … ; <span class="hl">sandbox allow-scripts allow-top-navigation-by-user-activation</span>
+
+<span class="dim">$ curl -I https://…/p/j94np6re/content.html</span>
+content-security-policy: default-src 'none'; … ; <span class="hl">sandbox allow-scripts allow-top-navigation-by-user-activation</span></pre>
+
+<p><strong>2つは別の役割を持つファイルなのに、同じヘッダーが付いています。</strong></p>
+
+<div class="fig">
+  <div class="pair">
+    <div class="box">
+      <p class="t">/p/{id}/ （閲覧画面）</p>
+      <p class="s">index.html — こちらが作ったもの</p>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:9px 0 0;">
+        コメント欄を持ち、中身を枠の中で読み込む。<strong>閉じ込める側</strong></p>
+    </div>
+    <div class="box">
+      <p class="t">/p/{id}/content.html</p>
+      <p class="s">アップロードされたHTML</p>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:9px 0 0;">
+        誰が書いたか分からない。<strong>閉じ込められる側</strong></p>
+    </div>
+  </div>
+  <p class="fig-cap">配信の既定の振る舞いが <code>/p/*</code> 全体に掛かるため、両方に同じヘッダーが付く。</p>
+</div>
+
+<h2><span class="n">02</span>sandbox は「そのページ自身」に掛かる</h2>
+
+<p>ここが誤解の出どころです。<code>sandbox</code> と聞くと「枠の中のものを閉じ込める指定」に見えますが、<strong>ヘッダーの <code>sandbox</code> は、そのヘッダーが付いて届いたページ自身を閉じ込めます。</strong></p>
+
+<p><code>&lt;iframe sandbox="…"&gt;</code> は「この枠に入るものを閉じ込めろ」という<strong>親から子への指示</strong>です。対してCSPの <code>sandbox</code> は「これを受け取ったあなたを閉じ込めろ」という<strong>ページからブラウザへの指示</strong>です。同じ言葉で向きが逆です。</p>
+
+<div class="fig">
+  <div class="flow">
+    <div class="box ok">
+      <p class="t">iframe の属性</p>
+      <p class="s">&lt;iframe sandbox="allow-scripts"&gt;</p>
+      <p style="font-size:12.5px; margin:9px 0 0;">親が、<strong>枠に入る子</strong>を閉じ込める。親自身は無傷</p>
+    </div>
+    <div class="box bad">
+      <p class="t">CSP のヘッダー</p>
+      <p class="s">content-security-policy: sandbox allow-scripts</p>
+      <p style="font-size:12.5px; margin:9px 0 0;">ブラウザが、<strong>それを受け取ったページ自身</strong>を閉じ込める</p>
+    </div>
+  </div>
+  <p class="fig-cap">向きが逆。閲覧画面には後者が付いているため、閉じ込める側が閉じ込められている。</p>
+</div>
+
+<h2><span class="n">03</span>なぜ「不透明なオリジン」になるのか</h2>
+
+<p>閉じ込めるといっても、何をどこまで許すかは札で決まります。私たちが渡している札は2枚です。</p>
+
+<table>
+  <tr><th>渡している札</th><th>意味</th></tr>
+  <tr><td class="mono">allow-scripts</td><td>JavaScriptを動かしてよい</td></tr>
+  <tr><td class="mono">allow-top-navigation-by-user-activation</td><td>人が押したときだけ、外側ごと移動してよい</td></tr>
+</table>
+
+<p><strong>渡していない札に <code>allow-same-origin</code> があります。</strong> これが無いと、ブラウザはそのページを「どこの出身でもないもの」として扱います。これが<strong>不透明なオリジン</strong>です。</p>
+
+<div class="fig">
+  <div class="pair">
+    <div class="box ok">
+      <p class="t">札があるとき</p>
+      <p class="s">allow-same-origin あり</p>
+      <span class="origin same">出身 <b>https://…cloudfront.net</b></span>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:11px 0 0;">
+        同じ出身の相手とは自由にやり取りできる</p>
+    </div>
+    <div class="box bad">
+      <p class="t">札が無いとき（いまの状態）</p>
+      <p class="s">allow-same-origin なし</p>
+      <span class="origin opaque">出身 <b>null</b></span>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:11px 0 0;">
+        自分の配信元とすら「別人」になる</p>
+    </div>
+  </div>
+  <p class="fig-cap">同じURLから届いていても、ブラウザの中では別人として扱われる。これが要点。</p>
+</div>
+
+<div class="callout">
+  <span class="lbl">なぜそんな仕組みなのか</span>
+  <p>持ち込まれたHTMLに出身を与えると、それは<strong>配信元と同じ出身</strong>になり、同じ出身の資格（Cookieや保管領域）に手が届いてしまいます。<code>allow-same-origin</code> を渡さないのは、まさにそれを防ぐためです。<strong>content.html に対しては完全に正しい</strong>設定で、閲覧画面にも掛かってしまったことだけが誤りです。</p>
+</div>
+
+<h2><span class="n">04</span>その結果、何が壊れるか</h2>
+
+<p>閲覧画面のコメント機能は、自分の配信元へ2回話しかけます。どちらも「同じ出身どうしの会話」を前提にしています。</p>
+
+<pre><span class="dim">// コメントを読む</span>
+fetch('/comments-list/' + ARTIFACT_ID)      <span class="hl">← 別人からの要求として遮断</span>
+
+<span class="dim">// コメントを書く</span>
+fetch('/comments/' + ID + '/…', {method:'PUT'})  <span class="hl">← 同上</span></pre>
+
+<div class="fig">
+  <div class="flow">
+    <div class="box bad">
+      <p class="t">閲覧画面（出身 null）</p>
+      <p class="s">/p/{id}/index.html</p>
+    </div>
+    <div class="arrow no">別オリジンへの要求として扱われる（CORSの許可が無いので遮断）</div>
+    <div class="box">
+      <p class="t">コメントの置き場</p>
+      <p class="s">/comments/… ／ /comments-list/…</p>
+    </div>
+  </div>
+</div>
+
+<p>さらに、閲覧トークンのCookieは <code>SameSite=Strict</code> で発行しています。<strong>不透明なオリジンからの要求にはCookieが添付されません</strong>ので、仮に遮断を越えられたとしても、閲覧ゲートは「トークンなし」と判定します。</p>
+
+<table>
+  <tr><th>できるはずのこと</th><th>いまの状態</th></tr>
+  <tr><td>コメントを読む</td><td class="no">できない</td></tr>
+  <tr><td>コメントを書く</td><td class="no">できない</td></tr>
+  <tr><td>閲覧トークンのCookieが送られる</td><td class="no">送られない</td></tr>
+  <tr><td>中身を枠の中に表示する</td><td class="yes">できる</td></tr>
+</table>
+
+<h2><span class="n">05</span>なぜ通し確認で気づけなかったか</h2>
+
+<p>実環境の確認は <code>curl</code> で行いました。<strong>curl はCSPを解釈しません。</strong> オリジンという概念を持たず、指示されたCookieをそのまま送ります。</p>
+
+<div class="fig">
+  <div class="pair">
+    <div class="box ok">
+      <p class="t">curl</p>
+      <p class="s">ヘッダーを受け取るが、従わない</p>
+      <p style="font-size:12.5px; margin:9px 0 0;">コメントの読み書きは<strong>成功する</strong></p>
+    </div>
+    <div class="box bad">
+      <p class="t">ブラウザ</p>
+      <p class="s">ヘッダーに従う</p>
+      <p style="font-size:12.5px; margin:9px 0 0;">コメントの読み書きは<strong>遮断される</strong></p>
+    </div>
+  </div>
+  <p class="fig-cap">同じ操作で結果が逆になる。この不具合は、道具を替えない限り永久に見つからない。</p>
+</div>
+
+<h2><span class="n">06</span>直し方</h2>
+
+<p>ヘッダーを掛ける範囲を、<strong>持ち込まれたHTMLだけ</strong>に絞ります。配信の口に経路を1本足すだけで、保管の形も、公開の処理も変えません。</p>
+
+<div class="fig">
+  <div class="scroll">
+    <table>
+      <tr><th>経路</th><th>付けるヘッダー</th><th>理由</th></tr>
+      <tr>
+        <td class="mono">/p/*/content.html</td>
+        <td class="mono"><span class="no">sandbox あり</span></td>
+        <td>持ち込まれたHTML。閉じ込める対象</td>
+      </tr>
+      <tr>
+        <td class="mono">/p/*（それ以外）</td>
+        <td class="mono"><span class="yes">sandbox なし</span></td>
+        <td>こちらが作った閲覧画面。閉じ込める側</td>
+      </tr>
+      <tr>
+        <td class="mono">/comments/* ・ /comments-list/*</td>
+        <td class="mono"><span class="yes">sandbox なし</span></td>
+        <td>コメントの読み書き。ページですらない</td>
+      </tr>
+    </table>
+  </div>
+  <p class="fig-cap">より具体的な経路が先に評価される。content.html だけが閉じ込められ、他は元に戻る。</p>
+</div>
+
+<h3>隔離は弱くなるのか</h3>
+
+<p><strong>なりません。</strong> 持ち込まれたHTMLは、いま2重に閉じ込められています。</p>
+
+<div class="fig">
+  <div class="flow">
+    <div class="box ok">
+      <p class="t">1枚目 — 枠の属性</p>
+      <p class="s">&lt;iframe sandbox="allow-scripts allow-top-navigation-by-user-activation"&gt;</p>
+      <p style="font-size:12.5px; margin:9px 0 0;">閲覧画面が枠に付けている。<strong>変更なし</strong></p>
+    </div>
+    <div class="box ok">
+      <p class="t">2枚目 — ヘッダー</p>
+      <p class="s">content-security-policy: … sandbox …</p>
+      <p style="font-size:12.5px; margin:9px 0 0;">配信が content.html に付ける。<strong>これも残す</strong></p>
+    </div>
+  </div>
+  <p class="fig-cap">2枚とも content.html に対して効いたまま。減るのは、閲覧画面に誤って掛かっていた分だけ。</p>
+</div>
+
+<h2><span class="n">07</span>これが最適な構成か</h2>
+
+<p>「持ち込まれたHTMLを、こちらの資格に触れさせずに表示する」という要件に対して、取りうる形は3つあります。</p>
+
+<div class="scroll">
+<table>
+  <tr><th>形</th><th>隔離の強さ</th><th>費用・複雑さ</th><th>評価</th></tr>
+  <tr>
+    <td><strong>別ドメインに置く</strong><br><span style="font-size:12px; color:var(--ink-soft);">中身専用のドメインを取る</span></td>
+    <td class="yes">最も強い</td>
+    <td>独自ドメインと証明書が要る</td>
+    <td class="no">要件に反する<br><span style="font-size:12px;">「AWSアカウントさえあれば完結」できなくなる</span></td>
+  </tr>
+  <tr>
+    <td><strong>枠＋ヘッダーの2重</strong><br><span style="font-size:12px; color:var(--ink-soft);">いまの形（範囲を直したもの）</span></td>
+    <td class="yes">十分</td>
+    <td>追加費用ゼロ</td>
+    <td class="yes">これを採る</td>
+  </tr>
+  <tr>
+    <td><strong>枠の属性だけ</strong><br><span style="font-size:12px; color:var(--ink-soft);">ヘッダーを付けない</span></td>
+    <td>1枚のみ</td>
+    <td>追加費用ゼロ</td>
+    <td class="no">枠の指定を1行落としただけで隔離が消える</td>
+  </tr>
+</table>
+</div>
+
+<div class="verdict">
+  <span class="lbl">結論</span>
+  <p><strong>構成は最適です。掛ける範囲だけが誤っていました。</strong> 別ドメインはこの製品の要件（AWSアカウントさえあれば完結する）と両立せず、ヘッダー無しは二重化を捨てることになります。いまの形のまま、範囲を <code>content.html</code> に絞るのが正解です。</p>
+</div>
+
+<h2><span class="n">08</span>この見落としが教えていること</h2>
+
+<p>この不具合には、直し方より重い教訓があります。</p>
+
+<ol>
+  <li><strong>curlでの通し確認は「通った」の証拠にならない。</strong> ブラウザが従う決まりを、curlは一切見ません。画面の振る舞いは画面で確かめるほかありません。</li>
+  <li><strong>安全のための設定ほど、範囲を間違えても静かに壊れる。</strong> 権限を絞りすぎた側の失敗は、エラーではなく「なぜか動かない」として現れます。</li>
+  <li><strong>「同じ配信だから同じ設定でよい」は成り立たない。</strong> 同じ <code>/p/</code> の下に、<strong>信頼するものと信頼しないもの</strong>が同居していました。信頼の境界は、URLの形とは別に引かれます。</li>
+</ol>
+
+<p style="margin-top:26px; font-size:12.5px; color:var(--ink-faint);">
+この文書は artifact-share の設計確認として作成しました。指摘の出どころは platform-advisor による構成の検証で、ヘッダーの実測により裏付けています。</p>
+</div>

@@ -456,12 +456,46 @@ Resources:
   # 持ち込まれたアーティファクトに外部への到達を許さない。これにより、契約の「自己完結」が
   # 規約ではなく配信時の振る舞いとして効く。あわせて sandbox をヘッダー側でも
   # 指定し、閲覧画面の1行が失われても隔離が残るよう二重にする。
+  # 持ち込まれたHTMLだけに掛ける。sandbox は「これを受け取ったページ自身」を
+  # 閉じ込める指定であり、閲覧画面にも掛けると閲覧画面が不透明なオリジンになる。
+  # そうなると閲覧画面から自分の配信元への通信が別の出所からの要求として扱われ、
+  # コメントの読み書きが遮断され、SameSite=Strict のCookieも送られなくなる
+  # （実環境で確かめた。curlはCSPに従わないため、curlでの確認では現れない）。
+  ContentResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-content-headers"
+        Comment: "isolate uploaded content (opaque origin)"
+        SecurityHeadersConfig:
+          ContentTypeOptions: { Override: true }
+          FrameOptions: { FrameOption: SAMEORIGIN, Override: true }
+          ReferrerPolicy: { ReferrerPolicy: no-referrer, Override: true }
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Override: true
+          ContentSecurityPolicy:
+            Override: true
+            ContentSecurityPolicy: >-
+              default-src 'none';
+              img-src 'self' data:;
+              style-src 'self' 'unsafe-inline';
+              font-src 'self' data:;
+              script-src 'self' 'unsafe-inline';
+              connect-src 'none';
+              form-action 'none';
+              base-uri 'none';
+              sandbox allow-scripts allow-top-navigation-by-user-activation
+
+  # 閲覧画面と反応の読み書きに掛ける。外部を読み込ませない指定は同じだが、
+  # sandbox は持たない——ここは持ち込まれたものではなく、こちらが作ったもの。
   ArtifactResponseHeadersPolicy:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Properties:
       ResponseHeadersPolicyConfig:
         Name: !Sub "${AWS::StackName}-artifact-headers"
-        Comment: "enforce self-contained content and isolation"
+        Comment: "enforce self-contained viewer surface"
         SecurityHeadersConfig:
           ContentTypeOptions: { Override: true }
           FrameOptions: { FrameOption: SAMEORIGIN, Override: true }
@@ -481,8 +515,7 @@ Resources:
               connect-src 'self';
               frame-src 'self';
               form-action 'none';
-              base-uri 'none';
-              sandbox allow-scripts allow-top-navigation-by-user-activation
+              base-uri 'none'
 
   # 認証が要る面。持ち込まれたアーティファクトを配らないため、隔離のための指定は持たない。
   AdminResponseHeadersPolicy:
@@ -549,6 +582,18 @@ Resources:
             - EventType: viewer-request
               FunctionARN: !GetAtt ViewerTokenGateFunction.FunctionMetadata.FunctionARN
         CacheBehaviors:
+          # 信頼の境界はURLの形と一致しない。同じ /p/ の下に、こちらが作った
+          # 閲覧画面と、持ち込まれたHTMLが同居している。前者に隔離を掛けると
+          # 閲覧画面自身が締め出される
+          - PathPattern: "p/*/content.html"
+            TargetOriginId: content-s3
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachePolicyId: !Ref CachePolicyNoCache
+            ResponseHeadersPolicyId: !Ref ContentResponseHeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt ViewerTokenGateFunction.FunctionMetadata.FunctionARN
           - PathPattern: "comments/*"
             TargetOriginId: content-s3
             ViewerProtocolPolicy: https-only
