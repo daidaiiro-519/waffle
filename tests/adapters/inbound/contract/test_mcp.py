@@ -268,21 +268,23 @@ def test_check_schema_version_driftは3フィールドの差分結果を返す()
 def test_check_usecase_class_driftは2フィールドの差分結果を返す():
     """
     Given waffle MCPサーバ
-    When check_usecase_class_driftツールをarchitectureRef付きで呼ぶ
+    When check_usecase_class_driftツールを architectureRef と documentsRoot の対で呼ぶ
     Then MCP出力は2フィールド全て空配列（自己整合済み）
     """
-    out = asyncio.run(_call("check_usecase_class_drift", {"architectureRef": "architecture-waffle"}))
+    out = asyncio.run(_call("check_usecase_class_drift", {"architectureRef": "architecture-waffle",
+                                    "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
     assert out == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
 def test_check_aggregate_class_driftは5フィールドの差分結果を返す():
     """
     Given waffle MCPサーバ
-    When check_aggregate_class_driftツールをarchitectureRef付きで呼ぶ
+    When check_aggregate_class_driftツールを architectureRef と documentsRoot の対で呼ぶ
     Then MCP出力は5フィールド全て空配列（Schema/Document両集約のEntity化が
     完了し自己整合済み）
     """
-    out = asyncio.run(_call("check_aggregate_class_drift", {"architectureRef": "architecture-waffle"}))
+    out = asyncio.run(_call("check_aggregate_class_drift", {"architectureRef": "architecture-waffle",
+                                    "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
     assert out == {
         "missing_implementation_file": [], "class_name_mismatch": [],
         "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
@@ -292,20 +294,22 @@ def test_check_aggregate_class_driftは5フィールドの差分結果を返す(
 def test_check_domain_service_driftは1フィールドの差分結果を返す():
     """
     Given waffle MCPサーバ
-    When check_domain_service_driftツールをarchitectureRef付きで呼ぶ
+    When check_domain_service_driftツールを architectureRef と documentsRoot の対で呼ぶ
     Then MCP出力は1フィールド空配列（自己整合済み）
     """
-    out = asyncio.run(_call("check_domain_service_drift", {"architectureRef": "architecture-waffle"}))
+    out = asyncio.run(_call("check_domain_service_drift", {"architectureRef": "architecture-waffle",
+                                    "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
     assert out == {"missing_implementation_file": []}
 
 
 def test_check_operation_driftは2フィールドの差分結果を返す():
     """
     Given waffle MCPサーバ
-    When check_operation_driftツールをarchitectureRef付きで呼ぶ
+    When check_operation_driftツールを architectureRef と documentsRoot の対で呼ぶ
     Then MCP出力は2フィールド全て空配列（自己整合済み）
     """
-    out = asyncio.run(_call("check_operation_drift", {"architectureRef": "architecture-waffle"}))
+    out = asyncio.run(_call("check_operation_drift", {"architectureRef": "architecture-waffle",
+                                    "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
     assert out == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
 
 
@@ -328,6 +332,7 @@ def test_srcRootを明示指定するとarchitectureRefより優先される():
     out = asyncio.run(_call("check_usecase_class_drift", {
         "srcRoot": "src/waffle/application/usecases",
         "architectureRef": "no-such-architecture-document",
+        "documentsRoot": ".waffle/documents/specs/bc-waffle",
     }))
     assert out == {"missing_implementation_file": [], "class_name_mismatch": []}
 
