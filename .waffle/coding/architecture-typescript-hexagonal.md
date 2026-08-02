@@ -23,9 +23,9 @@ TypeScriptでヘキサゴナルアーキテクチャを実装する際の層構�
 | レイヤー | 責務 | 依存してよい先 |
 |---|---|---|
 | domain | 業務ロジック・不変条件 |  |
-| application | usecaseの編成・ポート呼び出し・トランザクション境界 | domain |
+| application | usecaseの編成・ポート呼び出し・トランザクション境界 | domain / ports |
 | ports | domain/applicationが外部に要求するインターフェース定義 | domain |
-| inbound adapter | 外部プロトコルの受け口（usecaseを呼ぶだけ） | application / ports |
+| inbound adapter | 外部プロトコルの受け口（usecaseを呼ぶだけ） | application |
 | outbound adapter | portの実装。外部システムとの実際のやり取り | ports |
 
 ---

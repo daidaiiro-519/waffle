@@ -24,7 +24,8 @@
           "layer": "application",
           "responsibility": "usecaseの編成・ポート呼び出し・トランザクション境界",
           "mayDependOn": [
-            "domain"
+            "domain",
+            "ports"
           ]
         },
         {
@@ -38,8 +39,7 @@
           "layer": "inbound adapter",
           "responsibility": "外部プロトコルの受け口（usecaseを呼ぶだけ）",
           "mayDependOn": [
-            "application",
-            "ports"
+            "application"
           ]
         },
         {
