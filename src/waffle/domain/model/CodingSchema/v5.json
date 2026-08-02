@@ -1,0 +1,2947 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CodingSchema/v5",
+  "title": "CodingSchema v5",
+  "description": "has-udd Coding 集約の Schema。codingKind=tech-stack/architecture/coding-standard/test-standard/tool-integration。ブロックはアーキ/スタック非依存で固定し、中身がスタックで変わる。1スタック＝4 codingKind document（stack フィールドで束ねる）。v5の方針: (1)1つの欄に「何を決めたか」と「なぜ・どう判断するか」を同居させない——決定は閉じた語彙・パス・列挙で書き、説明は隣の欄に文で置く。(2)他ブロックが宣言した識別子を指す欄は、指す先を明記して再定義しない。(3)やり方が複数ある事柄は「どのやり方か」を宣言する軸を持つ（言語やビルドツールが強制する差を、例外ではなく選択肢として表す）。命名規則・拡張子・シナリオとテストの対応は、コード側が写しを持たずこのschemaの宣言を読む。",
+  "x-render-target": {
+    "formats": [
+      "md"
+    ],
+    "path": ".waffle/coding/{documentId}.md"
+  },
+  "x-source-target": ".waffle/documents/coding/{documentId}.json",
+  "type": "object",
+  "required": [
+    "documentId",
+    "documentType",
+    "schemaRef",
+    "codingKind",
+    "stack",
+    "status",
+    "content"
+  ],
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "x-prompt-write": "この文書を一意に識別するIDをkebab-caseで。慣例は {対象種別}-{スタック名} の順に並べる。例: tech-stack-python-hexagonal, architecture-python-hexagonal"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "Coding"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "CodingSchema/v5"
+    },
+    "codingKind": {
+      "type": "string",
+      "enum": [
+        "tech-stack",
+        "architecture",
+        "coding-standard",
+        "test-standard",
+        "tool-integration"
+      ],
+      "x-prompt-write": "tech-stack（技術選択＋非ドメイン能力）/ architecture（技術方式・配置・依存方向）/ coding-standard（命名・スタイル・docstring 規約）/ test-standard（テスト方針・種別・シナリオ束ね）のいずれか。"
+    },
+    "stack": {
+      "type": "string",
+      "x-prompt-write": "この document が属するスタック名（kebab-case）。同じスタックの tech-stack/architecture/coding-standard/test-standard の4 document で同じ値にする。例: python-hexagonal"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "ACTIVE",
+        "DEPRECATED"
+      ],
+      "x-prompt-write": "作成中は DRAFT、利用可能になったら ACTIVE、廃止する場合は DEPRECATED。"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-prompt-write": "この document を分類するタグ。例: [\"tier:backend\"]"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "_index": {
+      "description": "waffle が x-prompt-query から自動生成する。AI は直接書かない。",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "blockType",
+              "prompt"
+            ],
+            "properties": {
+              "blockType": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "content": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "codingKind": {
+            "const": "tech-stack"
+          }
+        },
+        "required": [
+          "codingKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/TechStackContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "codingKind": {
+            "const": "architecture"
+          }
+        },
+        "required": [
+          "codingKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/ArchitectureContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "codingKind": {
+            "const": "coding-standard"
+          }
+        },
+        "required": [
+          "codingKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/CodingStandardContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "codingKind": {
+            "const": "test-standard"
+          }
+        },
+        "required": [
+          "codingKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/TestStandardContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "codingKind": {
+            "const": "tool-integration"
+          }
+        },
+        "required": [
+          "codingKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/ToolIntegrationContent"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "TitleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title"
+      ],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-prompt-query": "この Coding document のタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Title"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": {
+            "tech-stack": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTech Stack仕様」を含め、読んだだけでこの仕様が技術スタックだとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
+            "architecture": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるArchitecture仕様」を含め、読んだだけでこの仕様がアーキテクチャだとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
+            "coding-standard": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるCoding Standard」を含め、読んだだけでこの仕様がコーディング規約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
+            "test-standard": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこのコーディング仕様が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTest Standard」を含め、読んだだけでこの仕様がテスト規約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。",
+            "tool-integration": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこの契約が何を定めるかを業務語彙で簡潔に表す句（識別子をそのまま繰り返さない）。末尾に「〜を定めるTool Integration仕様」を含め、読んだだけでこの仕様がツール連携契約だとわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う。"
+          }
+        }
+      }
+    },
+    "LevelEnum": {
+      "type": "string",
+      "enum": [
+        "必須",
+        "禁止",
+        "推奨"
+      ],
+      "x-prompt-write": "この規約の強制力。必須（must、違反は許容しない）／禁止（must not、行ってはならない）／推奨（should、望ましいが例外を許容する）のいずれかを選ぶ。"
+    },
+    "TechStackContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "identity",
+        "runtime",
+        "interface",
+        "libraries",
+        "tooling",
+        "policy",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "identity": {
+          "$ref": "#/$defs/IdentityBlock"
+        },
+        "runtime": {
+          "$ref": "#/$defs/RuntimeBlock"
+        },
+        "framework": {
+          "$ref": "#/$defs/FrameworkBlock"
+        },
+        "interface": {
+          "$ref": "#/$defs/InterfaceBlock"
+        },
+        "middleware": {
+          "$ref": "#/$defs/MiddlewareBlock"
+        },
+        "libraries": {
+          "$ref": "#/$defs/LibrariesBlock"
+        },
+        "tooling": {
+          "$ref": "#/$defs/ToolingBlock"
+        },
+        "policy": {
+          "$ref": "#/$defs/PolicyBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/DescriptionBlock"
+        }
+      }
+    },
+    "IdentityBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "tier",
+        "stackName"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "このスタックの素性（ティア・スタック名）を持ちます。様式(hexagonal 等)は architecture 側が SSOT なのでここには持たない。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "対象領域（ティア: backend=サーバー側 / frontend=画面側 / platform=基盤側）",
+              "from": "tier"
+            },
+            {
+              "label": "スタック名",
+              "from": "stackName"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Identity"
+        },
+        "title": {
+          "type": "string",
+          "const": "スタック概要"
+        },
+        "tier": {
+          "type": "string",
+          "enum": [
+            "backend",
+            "frontend",
+            "platform"
+          ],
+          "x-prompt-write": "このスタックが担うティア（backend=サーバー側/frontend=画面側/platform=基盤側）。下のenumから選ぶ。"
+        },
+        "stackName": {
+          "type": "string",
+          "x-prompt-write": "スタック名（kebab-case）。この文書の識別子に含まれるスタック名部分と一致させる。"
+        }
+      }
+    },
+    "RuntimeBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "languages",
+        "target",
+        "concurrency"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "実行ランタイムを持ちます。languages は走査時の言語解決に使う宣言（extensions で拡張子から言語を決める）なのでそのまま読む。target と concurrency は実行前提の説明。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "実行ターゲット",
+              "from": "target"
+            },
+            {
+              "label": "並行モデル",
+              "from": "concurrency"
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "heading": "言語",
+          "from": "languages",
+          "columns": [
+            {
+              "field": "language",
+              "header": "言語",
+              "code": true
+            },
+            {
+              "field": "version",
+              "header": "版"
+            },
+            {
+              "field": "extensions",
+              "header": "拡張子",
+              "code": true,
+              "sep": " / "
+            },
+            {
+              "field": "role",
+              "header": "役割"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Runtime"
+        },
+        "title": {
+          "type": "string",
+          "const": "ランタイム"
+        },
+        "languages": {
+          "type": "array",
+          "x-prompt-write": "このスタックが使うランタイム。1つのプロダクトが複数のランタイムを持つ構成（エッジ関数だけ別言語 等）があるため配列で宣言する。",
+          "items": {
+            "type": "object",
+            "required": [
+              "language",
+              "extensions",
+              "role"
+            ],
+            "properties": {
+              "language": {
+                "type": "string",
+                "x-prompt-write": "言語識別子。",
+                "enum": [
+                  "python",
+                  "java",
+                  "typescript",
+                  "javascript",
+                  "go",
+                  "csharp",
+                  "kotlin",
+                  "rust"
+                ]
+              },
+              "version": {
+                "type": "string",
+                "x-prompt-write": "版の制約（例: >=3.12）。固定不要なら空。"
+              },
+              "extensions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-prompt-write": "この言語の実装ファイルの拡張子（例: [\".py\"]）。走査でファイルを見つけたとき、拡張子から言語を解決する裏付けになる。"
+              },
+              "role": {
+                "type": "string",
+                "x-prompt-write": "このスタックの中での位置づけ。primary=主要な実装 / edge=実行環境が言語を強制する部分（エッジ関数等）/ tooling=補助。",
+                "enum": [
+                  "primary",
+                  "edge",
+                  "tooling"
+                ]
+              }
+            }
+          }
+        },
+        "target": {
+          "type": "string",
+          "x-prompt-write": "実行ターゲット（例: CLI / ローカルプロセス、コンテナ、サーバーレス関数）。"
+        },
+        "concurrency": {
+          "type": "string",
+          "x-prompt-write": "並行モデル（例: 同期主体（境界のみ async））。"
+        }
+      }
+    },
+    "FrameworkBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "このスタックの看板となる構造フレームワーク（1つ）を持ちます。無ければ note に理由を書き items は空にします。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "note"
+        },
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "フレームワーク",
+              "from": "name"
+            },
+            {
+              "label": "選定理由",
+              "from": "rationale"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Framework"
+        },
+        "title": {
+          "type": "string",
+          "const": "フレームワーク"
+        },
+        "name": {
+          "type": "string",
+          "x-prompt-write": "看板フレームワーク名（1つ）。無ければ空文字（例: FastAPI, React）"
+        },
+        "note": {
+          "type": "string",
+          "x-prompt-write": "name が空のとき、無い理由を1文で。name があれば空文字。"
+        },
+        "rationale": {
+          "type": "string",
+          "x-prompt-write": "name が空でなければ、他の候補（習熟度・既存資産・技術要件等）ではなくこれを選んだ理由を1文で（ADR）。name が空なら空文字。"
+        }
+      }
+    },
+    "InterfaceBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "このスタックが外部に公開するインターフェース様式（inbound の顔）を持ちます。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "style",
+          "each": [
+            {
+              "as": "keyvalue",
+              "pairs": [
+                {
+                  "label": "実装",
+                  "from": "implementation"
+                }
+              ]
+            },
+            {
+              "as": "paragraph",
+              "heading": "選定理由",
+              "from": "rationale"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Interface"
+        },
+        "title": {
+          "type": "string",
+          "const": "公開インターフェース"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "公開する様式（REST/GraphQL/gRPC/CLI/MCP/events 等）と実装ライブラリを列挙。",
+          "items": {
+            "type": "object",
+            "required": [
+              "style",
+              "implementation",
+              "rationale"
+            ],
+            "properties": {
+              "style": {
+                "type": "string",
+                "x-prompt-write": "様式（例: CLI, MCP, REST）"
+              },
+              "implementation": {
+                "type": "string",
+                "x-prompt-write": "実装ライブラリ（例: typer, fastmcp）"
+              },
+              "rationale": {
+                "type": "string",
+                "x-prompt-write": "他の候補（習熟度・既存資産・技術要件等）ではなくこの実装を選んだ理由を1文で（ADR）。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "MiddlewareBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "このスタックが依存するミドルウェア（サーバ実体：DB・キャッシュ・ブローカー・検索・APサーバー）を持ちます。クライアントライブラリは libraries 側。無ければ note に理由を書きます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "note"
+        },
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "product",
+          "each": [
+            {
+              "as": "keyvalue",
+              "pairs": [
+                {
+                  "label": "役割",
+                  "from": "role"
+                },
+                {
+                  "label": "アクセス手段",
+                  "from": "access"
+                }
+              ]
+            },
+            {
+              "as": "paragraph",
+              "heading": "選定理由",
+              "from": "rationale"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Middleware"
+        },
+        "title": {
+          "type": "string",
+          "const": "ミドルウェア"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "依存するミドルウェアを列挙（role=database/cache/message-broker/search/ap-server）。無ければ空配列にし note で理由を書く。",
+          "items": {
+            "type": "object",
+            "required": [
+              "role",
+              "product",
+              "access",
+              "rationale"
+            ],
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "database",
+                  "cache",
+                  "message-broker",
+                  "search",
+                  "ap-server"
+                ],
+                "x-prompt-write": "ミドルウェアの役割分類。下のenumから選ぶ。"
+              },
+              "product": {
+                "type": "string",
+                "x-prompt-write": "製品名（例: PostgreSQL, Redis）"
+              },
+              "access": {
+                "type": "string",
+                "x-prompt-write": "アクセスするクライアントライブラリ（例: SQLAlchemy）"
+              },
+              "rationale": {
+                "type": "string",
+                "x-prompt-write": "他の候補（別のDB製品等・実行環境の制約含む）ではなくこれを選んだ理由を1文で（ADR）。"
+              }
+            }
+          }
+        },
+        "note": {
+          "type": "string",
+          "x-prompt-write": "items が空のとき、無い理由を1文で。items があれば空文字。"
+        }
+      }
+    },
+    "LibrariesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-query": "このスタックが担う非ドメイン能力（driven・横断のみ。inbound は interface、永続化サーバは middleware）と実装ライブラリを持ちます。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "implementation",
+          "each": [
+            {
+              "as": "keyvalue",
+              "pairs": [
+                {
+                  "label": "分類",
+                  "from": "category"
+                },
+                {
+                  "label": "用途",
+                  "from": "capability"
+                },
+                {
+                  "label": "バージョン",
+                  "from": "version"
+                }
+              ]
+            },
+            {
+              "as": "paragraph",
+              "heading": "選定理由",
+              "from": "rationale"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Libraries"
+        },
+        "title": {
+          "type": "string",
+          "const": "ライブラリ"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "非ドメイン能力（observability/validation/security/messaging 等の分類）と実装ライブラリを列挙。inbound/永続化サーバは含めない。",
+          "items": {
+            "type": "object",
+            "required": [
+              "category",
+              "capability",
+              "implementation",
+              "rationale"
+            ],
+            "properties": {
+              "category": {
+                "type": "string",
+                "x-prompt-write": "能力の分類（AWS カテゴリ相当）（例: validation, observability, security）"
+              },
+              "capability": {
+                "type": "string",
+                "x-prompt-write": "用途名（例: schema-validation, logging）"
+              },
+              "implementation": {
+                "type": "string",
+                "x-prompt-write": "実装ライブラリ（例: jsonschema）"
+              },
+              "version": {
+                "type": "string",
+                "x-prompt-write": "バージョン。固定不要なら空。"
+              },
+              "rationale": {
+                "type": "string",
+                "x-prompt-write": "他の候補ではなくこの実装を選んだ理由を1文で（ADR）。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ToolingBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "packageManager",
+        "rationale"
+      ],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "パッケージ管理・lint/format 等の開発ツールを持ちます。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "パッケージ管理",
+              "from": "packageManager"
+            },
+            {
+              "label": "lint / format",
+              "from": "lintFormat"
+            },
+            {
+              "label": "選定理由",
+              "from": "rationale"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Tooling"
+        },
+        "title": {
+          "type": "string",
+          "const": "開発ツール"
+        },
+        "packageManager": {
+          "type": "string",
+          "x-prompt-write": "パッケージ管理ツール（例: uv（.venv / uv.lock 固定））"
+        },
+        "lintFormat": {
+          "type": "string",
+          "x-prompt-write": "lint/format ツール。任意なら空。"
+        },
+        "rationale": {
+          "type": "string",
+          "x-prompt-write": "他の候補ではなくこのパッケージ管理ツールを選んだ理由を1文で（ADR）。"
+        }
+      }
+    },
+    "PolicyBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 8,
+      "x-render-level": 2,
+      "x-prompt-query": "依存追加の規律を持ちます。反射的なライブラリ追加を防ぎます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "level",
+              "header": "種別"
+            },
+            {
+              "field": "rule",
+              "header": "方針"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Policy"
+        },
+        "title": {
+          "type": "string",
+          "const": "依存方針"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "依存追加の規律を列挙。",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "rule"
+            ],
+            "properties": {
+              "level": {
+                "$ref": "#/$defs/LevelEnum"
+              },
+              "rule": {
+                "type": "string",
+                "x-prompt-write": "依存ライブラリを追加する際に満たすべき方針の内容（例: 標準ライブラリ・既存依存で代替可能なら追加しない）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ArchitectureContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "layers",
+        "layout",
+        "conceptPlacement",
+        "rules",
+        "thicknessBySubdomain",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "layers": {
+          "$ref": "#/$defs/LayersBlock"
+        },
+        "layout": {
+          "$ref": "#/$defs/LayoutBlock"
+        },
+        "conceptPlacement": {
+          "$ref": "#/$defs/ConceptPlacementBlock"
+        },
+        "rules": {
+          "$ref": "#/$defs/ArchitectureRulesBlock"
+        },
+        "thicknessBySubdomain": {
+          "$ref": "#/$defs/ThicknessBySubdomainBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/DescriptionBlock"
+        },
+        "coveredContexts": {
+          "$ref": "#/$defs/CoveredContextsBlock"
+        }
+      }
+    },
+    "LayersBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "style",
+        "items"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "レイヤーと依存関係を持ちます。layer は層名の唯一の宣言で、他ブロックはこれを指す。path はファイルがどの層に属するかを決めるための宣言なので、実装を移したらここも直す。mayDependOn は import の走査結果と突き合わせる対象で、ここに無い依存は違反として報告する——実際の import に合わせて後から足すのではなく、まずその依存が正しいかを判断する。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "heading": "様式",
+          "from": "style"
+        },
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "layer",
+              "header": "レイヤー"
+            },
+            {
+              "field": "path",
+              "header": "配置",
+              "code": true
+            },
+            {
+              "field": "responsibility",
+              "header": "責務"
+            },
+            {
+              "field": "mayDependOn",
+              "header": "依存してよい先",
+              "sep": " / "
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Layers"
+        },
+        "title": {
+          "type": "string",
+          "const": "レイヤーと依存方向"
+        },
+        "style": {
+          "type": "string",
+          "x-prompt-write": "技術方式（例: ポートとアダプター（ヘキサゴナル）／オニオン／クリーン／レイヤード）。"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "レイヤーと、その実装の置き場所と依存関係。合成ルートは層ではないため含めない（layout の compositionRoot が場所を宣言する）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "layer",
+              "path",
+              "responsibility",
+              "mayDependOn"
+            ],
+            "properties": {
+              "layer": {
+                "type": "string",
+                "x-prompt-write": "レイヤー名。他のブロックはこの名前を指すので、ここが層名の唯一の宣言になる。所有されている要素（ポート等）を層として並べない。"
+              },
+              "path": {
+                "type": "string",
+                "x-prompt-write": "このレイヤーの実装が置かれるパス（layout の sourceRoot からの相対）。ファイルがどの層に属するかを決めるために使う。"
+              },
+              "responsibility": {
+                "type": "string",
+                "x-prompt-write": "このレイヤーの責務を1文で。"
+              },
+              "mayDependOn": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-prompt-write": "依存してよいレイヤー名を列挙。ここに書かれていない依存は違反として検出される。最内層は空。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "LayoutBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "tree",
+        "sourceRoot",
+        "compositionRoot",
+        "compositionRootPaths"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "ディレクトリ構成を持ちます。tree は人が全体を掴むための図であり、機械はここから決定を読み取らない。granularity と compositionRootPaths が機械の読む宣言。compositionRootPaths は依存の検査で層の規則から除外する場所なので、増やすときは配線専用に保てるかを先に確かめる。",
+      "x-render": [
+        {
+          "as": "code",
+          "from": "tree"
+        },
+        {
+          "as": "table",
+          "heading": "1ファイルの粒度",
+          "from": "granularity",
+          "columns": [
+            {
+              "field": "concept",
+              "header": "概念",
+              "code": true
+            },
+            {
+              "field": "perFile",
+              "header": "1ファイルあたり"
+            }
+          ]
+        },
+        {
+          "as": "paragraph",
+          "heading": "合成ルート（結線・DI）",
+          "from": "compositionRoot"
+        },
+        {
+          "as": "list",
+          "from": "compositionRootPaths"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Layout"
+        },
+        "title": {
+          "type": "string",
+          "const": "ディレクトリ構成"
+        },
+        "tree": {
+          "type": "string",
+          "x-prompt-write": "正典ディレクトリツリー（テキスト）。人が全体を見るための図。機械が読む決定はこの図の注釈に書かず、専用の欄へ置く。"
+        },
+        "sourceRoot": {
+          "type": "string",
+          "x-prompt-write": "実装ファイル群のソースルート（例: src/{package}）。"
+        },
+        "granularity": {
+          "type": "array",
+          "x-prompt-write": "1ファイルに置く概念の数。「1 usecase = 1 module」のような決定を、図の注釈ではなくここへ書く。",
+          "items": {
+            "type": "object",
+            "required": [
+              "concept",
+              "perFile"
+            ],
+            "properties": {
+              "concept": {
+                "type": "string",
+                "x-prompt-write": "概念の種類（conceptPlacement の concept と同じ語彙）。"
+              },
+              "perFile": {
+                "type": "integer",
+                "x-prompt-write": "1ファイルに置く数。1なら1概念1ファイル。複数を許すなら0（上限なし）。"
+              }
+            }
+          }
+        },
+        "compositionRoot": {
+          "type": "string",
+          "x-prompt-write": "合成ルート（結線・DI）の方針を1文で。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。"
+        },
+        "compositionRootPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "合成ルートの実際の場所（sourceRoot からの相対パス）。依存の検査はここを層の規則から除外し、代わりに『配線専用に保つ』を別に確かめる。"
+        }
+      }
+    },
+    "ConceptPlacementBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "概念ごとの配置を持ちます。placements は実装を探す場所そのものなので、パスをそのまま使う。role が single 以外なら、その概念は複数のファイルに分かれている。pattern は実装するときに読む方針。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "concept",
+              "header": "概念",
+              "code": true
+            },
+            {
+              "field": "placements",
+              "header": "配置",
+              "join": "`{path}`（{role}）",
+              "sep": "<br>"
+            },
+            {
+              "field": "pattern",
+              "header": "形（決定レベル）"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ConceptPlacement"
+        },
+        "title": {
+          "type": "string",
+          "const": "概念 → 実現形"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "概念ごとの配置と実現形。この概念一覧は、対応するドメイン仕様が扱う概念のキーと一致させる。",
+          "items": {
+            "type": "object",
+            "required": [
+              "concept",
+              "placements",
+              "pattern"
+            ],
+            "properties": {
+              "concept": {
+                "type": "string",
+                "x-prompt-write": "DDD概念の種類。",
+                "enum": [
+                  "usecase",
+                  "aggregate",
+                  "entity",
+                  "value-object",
+                  "domain-service",
+                  "repository",
+                  "port",
+                  "inbound-adapter",
+                  "outbound-adapter"
+                ]
+              },
+              "placements": {
+                "type": "array",
+                "x-prompt-write": "この概念の配置。1つの概念が複数の場所に分かれる場合（インターフェースと実装 等）は役割ごとに並べる。文字列に記号で連結しない——連結の規則が欄に無いと機械が辿れない。",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "role",
+                    "path"
+                  ],
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "x-prompt-write": "この配置が担う役割。single=1か所だけ / interface と implementation=宣言と実装を分ける / declaration と definition=ヘッダと本体を分ける言語。",
+                      "enum": [
+                        "single",
+                        "interface",
+                        "implementation",
+                        "declaration",
+                        "definition"
+                      ]
+                    },
+                    "path": {
+                      "type": "string",
+                      "x-prompt-write": "配置（sourceRoot からの相対パス）。"
+                    }
+                  }
+                }
+              },
+              "pattern": {
+                "type": "string",
+                "x-prompt-write": "この概念の実現方針を決定レベルで（正確な署名は書かない）。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ArchitectureRulesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "依存方向・DI・エラー伝播などの決定ルールを持ちます。ConceptPlacement で表現しきれない横断的な決定の逃がし先です。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "level",
+              "header": "種別"
+            },
+            {
+              "field": "rule",
+              "header": "規約"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ArchitectureRules"
+        },
+        "title": {
+          "type": "string",
+          "const": "規約（守るべきルール）"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "依存方向・DI の受け取り方・エラー伝播（結果型/例外の使い分け）・その他横断決定を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "rule"
+            ],
+            "properties": {
+              "level": {
+                "$ref": "#/$defs/LevelEnum"
+              },
+              "rule": {
+                "type": "string",
+                "x-prompt-write": "依存方向・DIの受け取り方・エラー伝播（結果型/例外の使い分け）等、横断的な決定ルールの内容（例: 依存は内向きのみ）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ThicknessBySubdomainBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "サブドメインの Category ごとの実装の厚みを持ちます。値は subdomain spec の Category を参照する運用とし、ここでは厚みの方針のみ宣言（二重管理を避ける）。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "category",
+              "header": "Category"
+            },
+            {
+              "field": "thickness",
+              "header": "実装の厚み"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ThicknessBySubdomain"
+        },
+        "title": {
+          "type": "string",
+          "const": "サブドメイン別の厚み"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "中核/一般/補完ごとの実装の厚み方針を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
+          "items": {
+            "type": "object",
+            "required": [
+              "category",
+              "thickness"
+            ],
+            "properties": {
+              "category": {
+                "type": "string",
+                "enum": [
+                  "中核",
+                  "一般",
+                  "補完"
+                ],
+                "x-prompt-write": "subdomain spec の Category。"
+              },
+              "thickness": {
+                "type": "string",
+                "x-prompt-write": "実装の厚み方針を1文で（例: ドメインモデルで厚く実装する）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CodingStandardContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "naming",
+        "style",
+        "docstring",
+        "rules",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "naming": {
+          "$ref": "#/$defs/NamingBlock"
+        },
+        "style": {
+          "$ref": "#/$defs/StyleBlock"
+        },
+        "docstring": {
+          "$ref": "#/$defs/DocstringBlock"
+        },
+        "rules": {
+          "$ref": "#/$defs/CodingRulesBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/DescriptionBlock"
+        }
+      }
+    },
+    "NamingBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "fileNameSuffix",
+        "cases"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "命名規約を持ちます。ファイル名の3欄と cases は照合にそのまま使う宣言なので、言い換え・要約・補完をしない——実際のコードが合わないとき、値の方を解釈で寄せず食い違いとして報告する。norms は識別子を名づけるときに読む判断の規範。appliesTo は architecture の layers が宣言した層名を指すので、ここに無い層名が必要になったら architecture 側を先に直す。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "heading": "ファイル名",
+          "pairs": [
+            {
+              "label": "由来",
+              "from": "fileNameDerivedFrom"
+            },
+            {
+              "label": "変換",
+              "from": "fileNameTransform"
+            },
+            {
+              "label": "拡張子",
+              "from": "fileNameSuffix"
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "heading": "表記",
+          "from": "cases",
+          "columns": [
+            {
+              "field": "artifact",
+              "header": "対象",
+              "code": true
+            },
+            {
+              "field": "visibility",
+              "header": "可視性"
+            },
+            {
+              "field": "case",
+              "header": "表記"
+            },
+            {
+              "field": "prefix",
+              "header": "接頭辞",
+              "code": true
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "heading": "規範",
+          "from": "norms",
+          "columns": [
+            {
+              "field": "appliesTo",
+              "header": "適用先"
+            },
+            {
+              "field": "norm",
+              "header": "規範"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Naming"
+        },
+        "title": {
+          "type": "string",
+          "const": "命名"
+        },
+        "fileNameDerivedFrom": {
+          "type": "string",
+          "x-prompt-write": "実装ファイル名を何から導くか。type=型名から / module=モジュール名から / none=独立に付ける。Javaのようにファイル名と公開型名の一致が言語仕様で要求されるなら type。",
+          "enum": [
+            "none",
+            "type",
+            "module"
+          ]
+        },
+        "fileNameTransform": {
+          "type": "string",
+          "x-prompt-write": "導出時の変換。derivedFrom=type かつ言語がそのまま一致を要求するなら identity、Pythonのようにスネークへ変換する慣習なら pascal-to-snake。derivedFrom=none なら空。",
+          "enum": [
+            "",
+            "identity",
+            "pascal-to-snake",
+            "pascal-to-kebab",
+            "lower"
+          ]
+        },
+        "fileNameSuffix": {
+          "type": "string",
+          "x-prompt-write": "実装ファイルの拡張子（例: .py / .java / .ts）。"
+        },
+        "cases": {
+          "type": "array",
+          "x-prompt-write": "成果物の種別ごとの表記。判定に使う宣言なので、語ではなく閉じた語彙で書く。（汎用限定：製品固有の語彙は書かない）",
+          "items": {
+            "type": "object",
+            "required": [
+              "artifact",
+              "case"
+            ],
+            "properties": {
+              "artifact": {
+                "type": "string",
+                "x-prompt-write": "名づける対象の種別。",
+                "enum": [
+                  "module",
+                  "type",
+                  "function",
+                  "constant",
+                  "field"
+                ]
+              },
+              "visibility": {
+                "type": "string",
+                "x-prompt-write": "可視性で表記が変わる言語（Goは先頭の大小文字が可視性そのもの）でのみ指定。変わらないなら空。",
+                "enum": [
+                  "",
+                  "public",
+                  "private",
+                  "exported",
+                  "unexported"
+                ]
+              },
+              "case": {
+                "type": "string",
+                "x-prompt-write": "表記。",
+                "enum": [
+                  "snake",
+                  "camel",
+                  "pascal",
+                  "kebab",
+                  "upper-snake"
+                ]
+              },
+              "prefix": {
+                "type": "string",
+                "x-prompt-write": "接頭辞で表す場合のみ（例: Pythonの非公開 _）。"
+              }
+            }
+          }
+        },
+        "norms": {
+          "type": "array",
+          "x-prompt-write": "機械では判定できない命名の規範。技術的接尾辞を付けない・仕様のユビキタス言語に一致させる等、判断を要する指針をここへ置く。",
+          "items": {
+            "type": "object",
+            "required": [
+              "appliesTo",
+              "norm"
+            ],
+            "properties": {
+              "appliesTo": {
+                "type": "string",
+                "x-prompt-write": "適用先。層名は architecture の layers が宣言したものをそのまま使い、ここで別途定義しない。層でない対象（語彙 等）はその呼び名を書く。"
+              },
+              "norm": {
+                "type": "string",
+                "x-prompt-write": "規範の内容。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "StyleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "コードスタイル（型注釈・関数責務・import 規律等）の決定ルールを持ちます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "level",
+              "header": "種別"
+            },
+            {
+              "field": "rule",
+              "header": "規約"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Style"
+        },
+        "title": {
+          "type": "string",
+          "const": "スタイル"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "型注釈・関数の責務範囲・import 規律等を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "rule"
+            ],
+            "properties": {
+              "level": {
+                "$ref": "#/$defs/LevelEnum"
+              },
+              "rule": {
+                "type": "string",
+                "x-prompt-write": "型注釈・関数の責務範囲・import規律等、コードスタイルに関する規約の内容（例: 全ての公開関数に型注釈を付ける）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "DocstringBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "style",
+        "syntaxKind",
+        "required",
+        "summaryGuidance",
+        "example"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "docstring の規約を持ちます。syntaxKind とタグ3欄、required の表は lint が対象と構文を決めるためにそのまま読む宣言なので、解釈で補わない。summaryGuidance と example は書くときに読む指針。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "スタイル",
+              "from": "style"
+            },
+            {
+              "label": "構文の種類",
+              "from": "syntaxKind"
+            },
+            {
+              "label": "パラメータ",
+              "from": "tagParams"
+            },
+            {
+              "label": "戻り値",
+              "from": "tagReturns"
+            },
+            {
+              "label": "例外",
+              "from": "tagRaises"
+            },
+            {
+              "label": "要約行の決まり",
+              "from": "proseMustStartWith"
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "heading": "必須とする対象",
+          "from": "required",
+          "columns": [
+            {
+              "field": "artifact",
+              "header": "対象",
+              "code": true
+            },
+            {
+              "field": "visibility",
+              "header": "可視性"
+            },
+            {
+              "field": "isRequired",
+              "header": "必須"
+            }
+          ]
+        },
+        {
+          "as": "paragraph",
+          "heading": "要約行の書き方",
+          "from": "summaryGuidance"
+        },
+        {
+          "as": "code",
+          "from": "example"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Docstring"
+        },
+        "title": {
+          "type": "string",
+          "const": "docstring"
+        },
+        "style": {
+          "type": "string",
+          "x-prompt-write": "言語標準の docstring スタイル名（例: Google スタイル docstring / Javadoc / TSDoc / Go Doc コメント）。"
+        },
+        "syntaxKind": {
+          "type": "string",
+          "x-prompt-write": "パラメータ・戻り値・例外の表し方。tagged=タグで区切る（Args:/@param 等）/ prose=タグを持たない平文（Goのドキュメントコメント）。prose の場合は条項を数えられないため、規約由来テストの単位を別に決める。",
+          "enum": [
+            "tagged",
+            "prose"
+          ]
+        },
+        "tagParams": {
+          "type": "string",
+          "x-prompt-write": "syntaxKind=tagged のとき、パラメータを表すタグ（例: Args: / @param）。prose なら空。"
+        },
+        "tagReturns": {
+          "type": "string",
+          "x-prompt-write": "syntaxKind=tagged のとき、戻り値を表すタグ（例: Returns: / @returns）。prose なら空。"
+        },
+        "tagRaises": {
+          "type": "string",
+          "x-prompt-write": "syntaxKind=tagged のとき、送出する例外を表すタグ（例: Raises: / @throws）。prose なら空。"
+        },
+        "proseMustStartWith": {
+          "type": "string",
+          "x-prompt-write": "syntaxKind=prose のとき、要約行の書き出しの決まり（例: identifier=識別子名で始める）。tagged なら空。"
+        },
+        "required": {
+          "type": "array",
+          "x-prompt-write": "docstring を必須とする対象。検査の対象を機械が決められるよう、種別と可視性の組で列挙する。",
+          "items": {
+            "type": "object",
+            "required": [
+              "artifact",
+              "visibility",
+              "isRequired"
+            ],
+            "properties": {
+              "artifact": {
+                "type": "string",
+                "x-prompt-write": "対象の種別。",
+                "enum": [
+                  "module",
+                  "type",
+                  "function",
+                  "constant",
+                  "field"
+                ]
+              },
+              "visibility": {
+                "type": "string",
+                "x-prompt-write": "可視性。any は可視性を問わない。",
+                "enum": [
+                  "any",
+                  "public",
+                  "private",
+                  "exported",
+                  "unexported"
+                ]
+              },
+              "isRequired": {
+                "type": "boolean",
+                "x-prompt-write": "docstring を必須とするか。"
+              }
+            }
+          }
+        },
+        "summaryGuidance": {
+          "type": "string",
+          "x-prompt-write": "要約行（1行目）の書き方の指針。「何をするか・いつ使うか」を検索と判断に効く語で、の旨。"
+        },
+        "example": {
+          "type": "string",
+          "x-prompt-write": "このスタイルに従った docstring のコード例。架空の汎用業務例にする。"
+        }
+      }
+    },
+    "CodingRulesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "docstring/コメントに関する決定ルールを持ちます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "level",
+              "header": "種別"
+            },
+            {
+              "field": "rule",
+              "header": "規約"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "CodingRules"
+        },
+        "title": {
+          "type": "string",
+          "const": "決定ルール"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "docstring 必須の範囲・コードから導出できる情報を書かない等を列挙。（仕様のユビキタス言語との命名一致はnamingブロックの責務であり、ここには書かない。汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "rule"
+            ],
+            "properties": {
+              "level": {
+                "$ref": "#/$defs/LevelEnum"
+              },
+              "rule": {
+                "type": "string",
+                "x-prompt-write": "docstring必須の範囲・コードから導出できる情報を書かない・仕様と異なる語彙で命名しない等、docstring/コメントに関する規約の内容（例: 公開関数のdocstringは要約行＋Args/Returnsを持つ）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "TestStandardContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "testStrategy",
+        "testPlan",
+        "testTypes",
+        "framework",
+        "scenarioBinding",
+        "placementByTarget",
+        "rules",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "testStrategy": {
+          "$ref": "#/$defs/TestStrategyBlock"
+        },
+        "testPlan": {
+          "$ref": "#/$defs/TestPlanBlock"
+        },
+        "testTypes": {
+          "$ref": "#/$defs/TestTypesBlock"
+        },
+        "framework": {
+          "$ref": "#/$defs/TestFrameworkBlock"
+        },
+        "scenarioBinding": {
+          "$ref": "#/$defs/ScenarioBindingBlock"
+        },
+        "placementByTarget": {
+          "$ref": "#/$defs/PlacementByTargetBlock"
+        },
+        "rules": {
+          "$ref": "#/$defs/TestRulesBlock"
+        },
+        "docstring": {
+          "$ref": "#/$defs/TestScenarioDocstringBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/DescriptionBlock"
+        }
+      }
+    },
+    "TestStrategyBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "shape",
+        "weights",
+        "rationale"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "テストの重心を持ちます。weights は placementByTarget と突き合わせる宣言で、emphasis=none の種別に配置行があれば矛盾。rationale は方針を問い直すときに読む。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "重心",
+              "from": "shape"
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "heading": "種別ごとの重心",
+          "from": "weights",
+          "columns": [
+            {
+              "field": "testType",
+              "header": "テスト種別",
+              "code": true
+            },
+            {
+              "field": "emphasis",
+              "header": "重心"
+            }
+          ]
+        },
+        {
+          "as": "paragraph",
+          "heading": "根拠",
+          "from": "rationale"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "TestStrategy"
+        },
+        "title": {
+          "type": "string",
+          "const": "テスト方針"
+        },
+        "shape": {
+          "type": "string",
+          "x-prompt-write": "テストの重心。",
+          "enum": [
+            "pyramid",
+            "diamond",
+            "inverted"
+          ]
+        },
+        "weights": {
+          "type": "array",
+          "x-prompt-write": "種別ごとの重心。emphasis=none と宣言した種別に配置が定義されていれば矛盾として検出できる。",
+          "items": {
+            "type": "object",
+            "required": [
+              "testType",
+              "emphasis"
+            ],
+            "properties": {
+              "testType": {
+                "type": "string",
+                "x-prompt-write": "テスト種別（testTypes が宣言した種別を指す）。"
+              },
+              "emphasis": {
+                "type": "string",
+                "x-prompt-write": "その種別にどれだけ重心を置くか。none はその種別を行わないこと。",
+                "enum": [
+                  "high",
+                  "medium",
+                  "low",
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "x-prompt-write": "その重心を選ぶ根拠。業務ロジックの実装方法から導く。"
+        }
+      }
+    },
+    "TestPlanBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "テストの実行タイミング・CI トリガー・ゲートの扱いを持ちます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "item",
+              "header": "項目"
+            },
+            {
+              "field": "value",
+              "header": "値"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "TestPlan"
+        },
+        "title": {
+          "type": "string",
+          "const": "テスト計画"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "実行タイミング・CIトリガー・ゲート（シナリオ緑必須等）・対象外とする種別を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
+          "items": {
+            "type": "object",
+            "required": [
+              "item",
+              "value"
+            ],
+            "properties": {
+              "item": {
+                "type": "string",
+                "x-prompt-write": "計画項目名（例: 実行タイミング）"
+              },
+              "value": {
+                "type": "string",
+                "x-prompt-write": "この計画項目の具体的な内容（例: 全コミット時（pre-commit））"
+              }
+            }
+          }
+        }
+      }
+    },
+    "TestTypesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "テスト種別を持ちます。testType は placementByTarget と testStrategy.weights が指す語彙の宣言。targets は architecture の layers が宣言した層名を指すので、ここで層を新設しない。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "testType",
+              "header": "テストタイプ",
+              "code": true
+            },
+            {
+              "field": "tool",
+              "header": "ツール"
+            },
+            {
+              "field": "targets",
+              "header": "対象",
+              "sep": " / "
+            },
+            {
+              "field": "note",
+              "header": "補足"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "TestTypes"
+        },
+        "title": {
+          "type": "string",
+          "const": "テストタイプ"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "このスタックで用いるテスト種別と、その対象レイヤー・ツール。",
+          "items": {
+            "type": "object",
+            "required": [
+              "testType",
+              "tool",
+              "targets"
+            ],
+            "properties": {
+              "testType": {
+                "type": "string",
+                "x-prompt-write": "共通カタログの固定語彙から選ぶ。",
+                "enum": [
+                  "unit",
+                  "integration",
+                  "acceptance",
+                  "contract",
+                  "e2e"
+                ]
+              },
+              "tool": {
+                "type": "string",
+                "x-prompt-write": "使用ツール（例: pytest）。"
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-prompt-write": "対象のレイヤー。architecture の layers が宣言した層名をそのまま使う。複数あれば配列で並べ、1つの欄に区切り文字で詰めない。"
+              },
+              "note": {
+                "type": "string",
+                "x-prompt-write": "補足（例: 要件のシナリオを見てAIが直接執筆する 等）。無ければ空。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "TestFrameworkBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "unit",
+        "acceptance"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "単体テスト・受け入れテストのフレームワークを持ちます。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "単体テスト",
+              "from": "unit"
+            },
+            {
+              "label": "受け入れテスト",
+              "from": "acceptance"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "TestFramework"
+        },
+        "title": {
+          "type": "string",
+          "const": "フレームワーク"
+        },
+        "unit": {
+          "type": "string",
+          "x-prompt-write": "単体テストFW（例: pytest）"
+        },
+        "acceptance": {
+          "type": "string",
+          "x-prompt-write": "受け入れテストFW（仕様(要件)をこのFWでネイティブに実行可能テストとして執筆する）。無ければ空（例: pytest）"
+        }
+      }
+    },
+    "ScenarioBindingBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "declarationLine",
+        "keyScope",
+        "fileNameDerivedFrom",
+        "blockPlacement"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "仕様のシナリオとテストの対応を持ちます。blockPlacement は検査が期待する配置を決めるための表で、コード側はこれを読む——同じ対応をコードに書き写さない。declarationLine と keyScope は突き合わせのキーの定義。norms は書くときに読む規範。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "heading": "突き合わせのキー",
+          "pairs": [
+            {
+              "label": "宣言行",
+              "from": "declarationLine"
+            },
+            {
+              "label": "一意の範囲",
+              "from": "keyScope"
+            },
+            {
+              "label": "ファイル名の由来",
+              "from": "fileNameDerivedFrom"
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "heading": "シナリオ種別とテストの対応",
+          "from": "blockPlacement",
+          "columns": [
+            {
+              "field": "block",
+              "header": "シナリオ種別",
+              "code": true
+            },
+            {
+              "field": "layer",
+              "header": "レイヤー"
+            },
+            {
+              "field": "testType",
+              "header": "テスト種別",
+              "code": true
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "heading": "規範",
+          "from": "norms",
+          "columns": [
+            {
+              "field": "norm",
+              "header": "規範"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ScenarioBinding"
+        },
+        "title": {
+          "type": "string",
+          "const": "シナリオの束ね方"
+        },
+        "declarationLine": {
+          "type": "string",
+          "x-prompt-write": "仕様のシナリオとテストを突き合わせるキーの形（例: Scenario: {シナリオ名}）。テストの文書コメントに置く。関数名を突き合わせのキーにしない——仕様の語彙をそのまま識別子にできる言語でしか成立しないため。"
+        },
+        "keyScope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "layer",
+              "spec",
+              "scenario"
+            ]
+          },
+          "x-prompt-write": "宣言行が一意になる範囲。シナリオ名だけでは衝突しうるので、どの組で一意かを宣言する。"
+        },
+        "fileNameDerivedFrom": {
+          "type": "string",
+          "x-prompt-write": "テストファイル名の由来。spec-document-id=対応する仕様のdocumentIdから / implementation-module=実装モジュール名から。",
+          "enum": [
+            "spec-document-id",
+            "implementation-module"
+          ]
+        },
+        "blockPlacement": {
+          "type": "array",
+          "x-prompt-write": "シナリオ種別と、対応するテストの層・種別。検査はこの表を読んで期待する配置を決めるので、コード側に同じ対応を書かない。",
+          "items": {
+            "type": "object",
+            "required": [
+              "block",
+              "layer",
+              "testType"
+            ],
+            "properties": {
+              "block": {
+                "type": "string",
+                "x-prompt-write": "仕様のシナリオブロックの種別。",
+                "enum": [
+                  "invariantScenarios",
+                  "domainServiceScenarios",
+                  "guaranteeScenarios",
+                  "acceptanceScenarios"
+                ]
+              },
+              "layer": {
+                "type": "string",
+                "x-prompt-write": "対応するテストのレイヤー。architecture の layers が宣言した層名を指す。"
+              },
+              "testType": {
+                "type": "string",
+                "x-prompt-write": "対応するテスト種別。testTypes が宣言した種別を指す。"
+              }
+            }
+          }
+        },
+        "norms": {
+          "type": "array",
+          "x-prompt-write": "機械では判定できないシナリオ束ねの規範（ケースバイケースで判定しない・シナリオに紐づかないテストは別ファイルへ 等）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "norm"
+            ],
+            "properties": {
+              "norm": {
+                "type": "string",
+                "x-prompt-write": "規範の内容。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PlacementByTargetBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "strategy",
+        "items"
+      ],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-query": "テストの配置を持ちます。layer と testType は他ブロックが宣言した語彙を指す参照で、ここで新しい名前を作らない。path は探す場所そのものなので説明を混ぜず、補足は note を読む。strategy は言語やビルドツールが形を強制する場合に行ごとで変わる。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "置き方",
+              "from": "strategy"
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "layer",
+              "header": "レイヤー"
+            },
+            {
+              "field": "testType",
+              "header": "テスト種別",
+              "code": true
+            },
+            {
+              "field": "path",
+              "header": "配置",
+              "code": true
+            },
+            {
+              "field": "strategy",
+              "header": "置き方（個別）"
+            },
+            {
+              "field": "suffix",
+              "header": "接尾辞",
+              "code": true
+            },
+            {
+              "field": "note",
+              "header": "補足"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "PlacementByTarget"
+        },
+        "title": {
+          "type": "string",
+          "const": "テスト対象別の配置"
+        },
+        "strategy": {
+          "type": "string",
+          "x-prompt-write": "テストファイルの置き方。layer-first=レイヤーを第一階層にする / type-first=テスト種別を第一階層にする / mirrored=ソースの木を鏡写しにする（Java/Mavenの src/test/java 等）/ mirrored-project=別プロジェクトに置く（.NET の Foo.Tests 等）/ colocated=ソースと同じディレクトリに置く（Goの _test.go）/ in-file=実装ファイルの中に置く（Rustの #[cfg(test)]）。言語やビルドツールが形を強制する場合があるので、行ごとに上書きできる。",
+          "enum": [
+            "layer-first",
+            "type-first",
+            "mirrored",
+            "mirrored-project",
+            "colocated",
+            "in-file"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "どのレイヤーのどの種別のテストをどこに置くか。layer と testType は他ブロックが宣言した語彙を指す。",
+          "items": {
+            "type": "object",
+            "required": [
+              "layer",
+              "testType"
+            ],
+            "properties": {
+              "layer": {
+                "type": "string",
+                "x-prompt-write": "対象のレイヤー。architecture の layers が宣言した層名をそのまま使う。"
+              },
+              "testType": {
+                "type": "string",
+                "x-prompt-write": "テスト種別。testTypes が宣言した種別をそのまま使う。"
+              },
+              "path": {
+                "type": "string",
+                "x-prompt-write": "配置パス。説明はここに書かず note へ。strategy が colocated / in-file の行では空でよい。"
+              },
+              "strategy": {
+                "type": "string",
+                "x-prompt-write": "この行だけ全体の strategy と異なる場合に指定（Rustは単体が in-file、統合が別ディレクトリ）。同じなら空。",
+                "enum": [
+                  "",
+                  "layer-first",
+                  "type-first",
+                  "mirrored",
+                  "mirrored-project",
+                  "colocated",
+                  "in-file"
+                ]
+              },
+              "suffix": {
+                "type": "string",
+                "x-prompt-write": "strategy が colocated / in-file の場合のファイル名の決まり（例: _test.go）。それ以外は空。"
+              },
+              "note": {
+                "type": "string",
+                "x-prompt-write": "補足。パス欄に説明文を混ぜない。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "TestRulesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "テストに関する決定ルールを持ちます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "level",
+              "header": "種別"
+            },
+            {
+              "field": "rule",
+              "header": "規約"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "TestRules"
+        },
+        "title": {
+          "type": "string",
+          "const": "決定ルール"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "実行可能な仕様の扱い・生成物の手書き禁止（該当する場合）・テストダブルの使用方針・時刻や乱数やID生成のような非決定的な値の固定方法（固定クロック注入・シード固定・テスト用ID生成器の許容等）を列挙。（汎用限定：製品固有の仕組み・語彙は書かない。固有事項は、種別が同じでスタックだけ異なる別の文書へ）",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "rule"
+            ],
+            "properties": {
+              "level": {
+                "$ref": "#/$defs/LevelEnum"
+              },
+              "rule": {
+                "type": "string",
+                "x-prompt-write": "実行可能な仕様の扱い・生成物の手書き禁止・テストダブルの使用方針等、テストに関する決定ルールの内容（例: モックは外部I/O境界のみに限定する）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "TestScenarioDocstringBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "style",
+        "transcriptionGuidance",
+        "target",
+        "example"
+      ],
+      "x-render-order": 5.5,
+      "x-render-level": 2,
+      "x-prompt-query": "テスト関数のdocstring（またはそれに相当するコメント）にGherkin(Given/When/Then)を記載する規約を持ちます。Gherkinで記載するのは、仕様側のシナリオ文言をテスト側に転記し、事後編集への追従をドリフト検知で捕捉するための取り決めであり、対象言語の標準docstring/コメント構文に載せて表現する。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "スタイル",
+              "from": "style"
+            },
+            {
+              "label": "対象",
+              "from": "target"
+            }
+          ]
+        },
+        {
+          "as": "paragraph",
+          "heading": "転記の指針",
+          "from": "transcriptionGuidance"
+        },
+        {
+          "as": "code",
+          "from": "example"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "TestScenarioDocstring"
+        },
+        "title": {
+          "type": "string",
+          "const": "シナリオdocstring"
+        },
+        "style": {
+          "type": "string",
+          "x-prompt-write": "対象言語の文書コメント構文に載せてシナリオを記載するスタイル。先頭にシナリオ宣言行を置き、続けてGiven/When/Thenを書く形を明示すること（例: テスト関数の文書コメント内に、シナリオ名の宣言行とGiven/When/Thenをそのまま記載）。言語によって文書コメントの位置が変わる点にも触れる（関数の内側に置く言語と、関数の直前に置く言語がある）"
+        },
+        "transcriptionGuidance": {
+          "type": "string",
+          "x-prompt-write": "テスト側の文書コメントに、対応する仕様のシナリオ（宣言行とGiven/When/Then）を一字一句そのまま転記する旨。転記が要るのは2つの役割を兼ねるため。宣言行は仕様とテストを突き合わせるキーそのものであり、これが無いテストはどの仕様にも対応していないものとして扱われる。本文は、シナリオ文言の事後編集への追従を検知する材料になる。"
+        },
+        "target": {
+          "type": "string",
+          "x-prompt-write": "この転記規約を必須にする対象（例: 受け入れシナリオ・保証シナリオ・不変条件シナリオ・ドメインサービスシナリオに対応する全テスト関数）"
+        },
+        "example": {
+          "type": "string",
+          "x-prompt-write": "シナリオ宣言行とGiven/When/Thenを転記したテスト関数のコード例（対象言語の実際の構文で）。識別子は対象言語の命名慣習に従わせ、仕様の語彙をそのまま識別子にしない。"
+        }
+      }
+    },
+    "DescriptionBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
+      "x-render-order": 0,
+      "x-render-level": 2,
+      "x-prompt-query": "この文書が何かを1〜2文で要約します。文書一覧や検索結果での要約表示としても使われます。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Description"
+        },
+        "title": {
+          "type": "string",
+          "const": "概要"
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "この文書が何を定めているかを1〜2文で。"
+        }
+      }
+    },
+    "ToolIntegrationIdentityBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "toolName",
+        "artifactKind"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "この文書が対象とするツールと成果物種別を持ちます。",
+      "x-render": [
+        {
+          "as": "keyvalue",
+          "pairs": [
+            {
+              "label": "ツール",
+              "from": "toolName"
+            },
+            {
+              "label": "成果物種別",
+              "from": "artifactKind"
+            },
+            {
+              "label": "公式ドキュメント",
+              "from": "officialDocRef"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ToolIntegrationIdentity"
+        },
+        "title": {
+          "type": "string",
+          "const": "対象ツールと成果物種別"
+        },
+        "toolName": {
+          "type": "string",
+          "x-prompt-write": "この契約が対象とするAIコーディングツール名（kebab-case）。例: claude-code, codex, github-copilot, kiro"
+        },
+        "artifactKind": {
+          "type": "string",
+          "x-prompt-write": "このツールが要求する成果物の種別。固定enumではなく自由記述（新しい種別の発見のたびにschema変更を要さないため）。既知の例: Hook, Skill, Agent(subagent), Agent(orchestrator), Instructions, PromptTemplate, ChatMode, Spec, MCPConfig, Plugin（Pluginは複数の下位artifactKindを束ねる複合種別のため、このkindのスコープ外——rulesブロックにその旨を記載する）。"
+        },
+        "officialDocRef": {
+          "type": "string",
+          "x-prompt-write": "この契約の一次情報源となる公式ドキュメントのURL。無ければ空文字。"
+        }
+      }
+    },
+    "ArtifactShapeBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "summary",
+        "fields"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "成果物の構造契約を持ちます。fields は生成物を検証するための宣言なので、requirement はそのまま判定に使い、条件付きの場合は condition を読む。summary は全体像を掴むための説明。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "summary"
+        },
+        {
+          "as": "table",
+          "from": "fields",
+          "columns": [
+            {
+              "field": "field",
+              "header": "フィールド",
+              "code": true
+            },
+            {
+              "field": "requirement",
+              "header": "必須度"
+            },
+            {
+              "field": "condition",
+              "header": "条件"
+            },
+            {
+              "field": "description",
+              "header": "説明"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ArtifactShape"
+        },
+        "title": {
+          "type": "string",
+          "const": "成果物の構造契約"
+        },
+        "summary": {
+          "type": "string",
+          "x-prompt-write": "成果物全体の構造を1〜3文で。"
+        },
+        "fields": {
+          "type": "array",
+          "x-prompt-write": "成果物が持つフィールドと必須度。必須欄の欠落を検出できるよう、必須度は閉じた語彙で書き、条件は別の欄へ置く。",
+          "items": {
+            "type": "object",
+            "required": [
+              "field",
+              "requirement",
+              "description"
+            ],
+            "properties": {
+              "field": {
+                "type": "string",
+                "x-prompt-write": "フィールド名（例: hookSpecificOutput.hookEventName）。"
+              },
+              "requirement": {
+                "type": "string",
+                "x-prompt-write": "必須度。conditional の場合は condition に条件を書く。",
+                "enum": [
+                  "required",
+                  "optional",
+                  "conditional"
+                ]
+              },
+              "condition": {
+                "type": "string",
+                "x-prompt-write": "requirement=conditional のときの条件（例: hookEventName == PreToolUse）。それ以外は空。"
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "このフィールドの意味・値の形。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "WiringBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "placements"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "ツール側への実際の登録方法（配置エントリの一覧）を持ちます。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "placements",
+          "titleFrom": "pathPattern",
+          "each": [
+            {
+              "as": "keyvalue",
+              "pairs": [
+                {
+                  "label": "配線方式",
+                  "from": "mechanism"
+                }
+              ]
+            },
+            {
+              "as": "paragraph",
+              "heading": "補足",
+              "from": "note"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Wiring"
+        },
+        "title": {
+          "type": "string",
+          "const": "配線方法"
+        },
+        "placements": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "配置エントリを列挙。単一ファイル系は1エントリ、複数ファイル1組（Kiro Specs等）は複数エントリ、レジストリ系（MCP等）は1エントリ＋noteで複数エントリが入る旨を説明する。",
+          "items": {
+            "type": "object",
+            "required": [
+              "pathPattern",
+              "mechanism",
+              "note"
+            ],
+            "properties": {
+              "pathPattern": {
+                "type": "string",
+                "x-prompt-write": "配置先のパスパターン（例: .claude/settings.json, .kiro/specs/{feature}/requirements.md）"
+              },
+              "mechanism": {
+                "type": "string",
+                "enum": [
+                  "directory-convention",
+                  "registration-array",
+                  "config-entry",
+                  "single-file"
+                ],
+                "x-prompt-write": "配線方式。directory-convention=規約に沿ったディレクトリ配置のみで自動検出される／registration-array=中央の配列へ明示登録が必要／config-entry=1設定ファイル内に複数エントリとして登録／single-file=リポジトリ内の単一ファイルとして配置（登録不要）。下のenumから選ぶ。"
+              },
+              "note": {
+                "type": "string",
+                "x-prompt-write": "この配置エントリの補足（例: 複数サーバー定義がこの1ファイルにエントリとして入る、等）。無ければ空文字。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ToolIntegrationRulesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "配線・実装時の落とし穴・規約を持ちます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "level",
+              "header": "種別"
+            },
+            {
+              "field": "rule",
+              "header": "規約"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ToolIntegrationRules"
+        },
+        "title": {
+          "type": "string",
+          "const": "規約・落とし穴"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "配線・実装時の落とし穴、規約を列挙。identity.artifactKindがPlugin等の複合種別でこのkindのスコープ外である場合は、その旨もここに一文残す。",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "rule"
+            ],
+            "properties": {
+              "level": {
+                "$ref": "#/$defs/LevelEnum"
+              },
+              "rule": {
+                "type": "string",
+                "x-prompt-write": "規約・落とし穴の内容。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ToolIntegrationContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "identity",
+        "artifactShape",
+        "wiring",
+        "rules",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "identity": {
+          "$ref": "#/$defs/ToolIntegrationIdentityBlock"
+        },
+        "artifactShape": {
+          "$ref": "#/$defs/ArtifactShapeBlock"
+        },
+        "wiring": {
+          "$ref": "#/$defs/WiringBlock"
+        },
+        "rules": {
+          "$ref": "#/$defs/ToolIntegrationRulesBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/DescriptionBlock"
+        }
+      }
+    },
+    "CoveredContextsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 0,
+      "x-render-level": 2,
+      "x-prompt-query": "このアーキテクチャが実装を受け持つ境界づけられたコンテキストを持ちます。検査はここを読んで仕様側の走査範囲を決めるので、引数で範囲を渡す必要がなくなる。1つのコンテキストを複数のスタックで実装する場合、各スタックの architecture が同じコンテキストを挙げてよい。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "CoveredContexts"
+        },
+        "title": {
+          "type": "string",
+          "const": "実装を受け持つコンテキスト"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "このアーキテクチャが実装を受け持つ境界づけられたコンテキストのdocumentId（例: bc-waffle）。ドリフト検査はこの宣言から仕様側の走査範囲を決める。"
+        }
+      }
+    }
+  },
+  "x-frontmatter": {
+    "tech-stack": {
+      "id": "doc.documentId",
+      "type": "doc.codingKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "architecture": {
+      "id": "doc.documentId",
+      "type": "doc.codingKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "coding-standard": {
+      "id": "doc.documentId",
+      "type": "doc.codingKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "test-standard": {
+      "id": "doc.documentId",
+      "type": "doc.codingKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "tool-integration": {
+      "id": "doc.documentId",
+      "type": "doc.codingKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    }
+  }
+}
