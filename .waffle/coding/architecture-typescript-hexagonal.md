@@ -22,11 +22,11 @@ TypeScriptでヘキサゴナルアーキテクチャを実装する際の層構�
 
 | レイヤー | 責務 | 依存してよい先 |
 |---|---|---|
-| domain | 業務ロジック・不変条件 |  |
-| application | usecaseの編成・ポート呼び出し・トランザクション境界 | domain / ports |
-| ports | domain/applicationが外部に要求するインターフェース定義 | domain |
-| inbound adapter | 外部プロトコルの受け口（usecaseを呼ぶだけ） | application |
-| outbound adapter | portの実装。外部システムとの実際のやり取り | ports |
+| shared | 全層から使える基盤（結果型・エラー等）。業務判断を持たない |  |
+| domain | ドメインモデル・不変条件・値 | shared |
+| application | usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する | domain / shared |
+| inbound adapter | 外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない | application / shared |
+| outbound adapter | 外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する | application / shared |
 
 ---
 
@@ -44,11 +44,13 @@ src/
   adapters/
     inbound/
     outbound/
+  shared/
+
 ```
 
 ### 合成ルート（結線・DI）
 
-inbound adapter の起動点（エントリーポイント）にのみ置く
+各エントリポイントに1つだけ置く（adapters/inbound/cli/main.py・adapters/inbound/mcp/main.py）。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ
 
 ---
 

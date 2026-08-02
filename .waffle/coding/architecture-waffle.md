@@ -23,11 +23,11 @@ Waffle自身がヘキサゴナルアーキテクチャを実装する際の層�
 
 | レイヤー | 責務 | 依存してよい先 |
 |---|---|---|
-| domain | ドメインモデル・不変条件・値 |  |
-| application | usecase の調整・トランザクション境界 | domain / ports |
-| ports | application が要求する抽象（driven interface） | domain |
-| inbound adapter | 外部からの入口（driving：API・CLI 等） | application |
-| outbound adapter | 外部への出口（driven：DB・外部サービス） | ports |
+| shared | 全層から使える基盤（結果型・エラー等）。業務判断を持たない |  |
+| domain | ドメインモデル・不変条件・値 | shared |
+| application | usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する | domain / shared |
+| inbound adapter | 外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない | application / shared |
+| outbound adapter | 外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する | application / shared |
 
 ---
 
@@ -50,7 +50,7 @@ src/{package}/
 
 ### 合成ルート（結線・DI）
 
-inbound adapter の起動点にのみ置く
+各エントリポイントに1つだけ置く（adapters/inbound/cli/main.py・adapters/inbound/mcp/main.py）。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ
 
 ---
 
