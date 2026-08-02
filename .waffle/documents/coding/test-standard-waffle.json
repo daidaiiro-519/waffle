@@ -223,10 +223,10 @@
           "note": "port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する"
         },
         {
-          "layer": "ports",
+          "layer": "application",
           "testType": "contract",
-          "path": "tests/ports/contract/",
-          "note": "同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行する"
+          "path": "tests/application/contract/",
+          "note": "port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行する"
         },
         {
           "layer": "inbound adapter",
@@ -295,7 +295,7 @@
         },
         {
           "level": "必須",
-          "rule": "テストには2つの出どころがある。仕様由来（specが宣言したシナリオを転記し、宣言行で突き合わせる）と、規約由来（portが宣言した契約を確かめる）。仕様由来は tests/domain・tests/application に置き、規約由来は tests/ports・tests/adapters に置く。この2つを同じディレクトリに混ぜると、ディレクトリを見てもどちらの保証なのか分からなくなる"
+          "rule": "テストには2つの出どころがある。仕様由来（specが宣言したシナリオを転記し、宣言行で突き合わせる）と、規約由来（portやアダプターが宣言した契約を確かめる）。この2つを同じディレクトリに混ぜると、ディレクトリを見てもどちらの保証なのか分からなくなるので、テスト種別で分ける——仕様由来は unit / acceptance と application の integration、規約由来は contract と adapters 配下の integration。この区別のために、層でない名前を第一階層に作らない（第一階層は常に architecture が宣言する層）"
         }
       ]
     },

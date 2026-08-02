@@ -125,7 +125,7 @@ def test_suspend_blocks_viewing():
 | application | `acceptance` | `tests/application/acceptance/` |  |  |  |
 | application | `integration` | `tests/application/integration/` |  |  |  |
 | application | `unit` | `tests/application/unit/` |  |  | port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する |
-| ports | `contract` | `tests/ports/contract/` |  |  | 同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行する |
+| application | `contract` | `tests/application/contract/` |  |  | port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行する |
 | inbound adapter | `contract` | `tests/adapters/inbound/contract/` |  |  |  |
 | outbound adapter | `integration` | `tests/adapters/outbound/integration/` |  |  |  |
 
@@ -147,4 +147,4 @@ def test_suspend_blocks_viewing():
 | 必須 | 集約のテストは、不変条件が常にメソッド経由でしか変更できず、直接不変条件に違反した状態を作れないことを検証する（コンストラクタ・setter等での迂回が無いこと） |
 | 必須 | 業務サービスのテストは、ステートレスであること（同じ入力に対して常に同じ結果を返し、呼び出し順序に依存しないこと）を検証する |
 | 必須 | 時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない |
-| 必須 | テストには2つの出どころがある。仕様由来（specが宣言したシナリオを転記し、宣言行で突き合わせる）と、規約由来（portが宣言した契約を確かめる）。仕様由来は tests/domain・tests/application に置き、規約由来は tests/ports・tests/adapters に置く。この2つを同じディレクトリに混ぜると、ディレクトリを見てもどちらの保証なのか分からなくなる |
+| 必須 | テストには2つの出どころがある。仕様由来（specが宣言したシナリオを転記し、宣言行で突き合わせる）と、規約由来（portやアダプターが宣言した契約を確かめる）。この2つを同じディレクトリに混ぜると、ディレクトリを見てもどちらの保証なのか分からなくなるので、テスト種別で分ける——仕様由来は unit / acceptance と application の integration、規約由来は contract と adapters 配下の integration。この区別のために、層でない名前を第一階層に作らない（第一階層は常に architecture が宣言する層） |
