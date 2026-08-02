@@ -131,4 +131,7 @@ def scenario_binding(tests_root) -> dict:
             ("application", "acceptance"): f"{root}/application/acceptance",
         },
         "fileNameSuffix": "." + "py",
+        # 拡張子から言語を決める対応も、実運用では tech-stack が宣言する。
+        # 複数のランタイムを持つスタックを想定して2つ挙げる
+        "languageBySuffix": {"py": "python", "js": "javascript", "ts": "typescript"},
     }

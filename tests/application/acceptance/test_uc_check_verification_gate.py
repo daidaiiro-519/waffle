@@ -12,6 +12,10 @@ from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
 from waffle.application.usecases.check_verification_gate import CheckVerificationGate
 from waffle.shared.result import Err, Ok
 
+from pathlib import Path as _Path
+
+from tests.fakes import scenario_binding
+
 _GHERKIN_A = "Scenario: 何かが起きる\n  Given 前提\n  When 操作する\n  Then 結果になる"
 _DOC_A = ('    """\n    Scenario: 何かが起きる\n'
           '    Given 前提\n    When 操作する\n    Then 結果になる\n    """\n')
@@ -19,6 +23,16 @@ _DOC_A = ('    """\n    Scenario: 何かが起きる\n'
 
 def _engine() -> CheckVerificationGate:
     return CheckVerificationGate(FsDocumentRepository(), TreeSitterTestFunctionExtractor())
+
+
+class _Gate:
+    """規約の宣言を毎回渡すための薄い包み。
+
+    どの拡張子がどの言語かはスタックが宣言する。テストもその宣言を与える。
+    """
+
+    def run(self, *args):
+        return _engine().run(*args, binding=scenario_binding(_Path(str(args[1])).parent))
 
 
 def _spec(tmp_path, scenarios):
@@ -60,7 +74,7 @@ def test_missing_scenario_blocks(tmp_path):
     Then statusはblockedであり、reasonsに未実装のシナリオが含まれる
     """
     spec_path = _spec(tmp_path, [_scenario("何かが起きる", _GHERKIN_A)])
-    result = _engine().run(str(spec_path), str(_test_file(tmp_path, "")),
+    result = _Gate().run(str(spec_path), str(_test_file(tmp_path, "")),
                            str(_results(tmp_path)))
 
     assert isinstance(result, Ok), result
@@ -81,7 +95,7 @@ def test_unexplained_drift_needs_human(tmp_path):
                            + "\n\ndef test_orphaned():\n    pass\n")
     results_path = _results(tmp_path, passed=["test_something_happens"])
 
-    result = _engine().run(str(spec_path), str(test_path), str(results_path))
+    result = _Gate().run(str(spec_path), str(test_path), str(results_path))
 
     assert isinstance(result, Ok), result
     assert result.value["status"] == "needs_human"
@@ -98,7 +112,7 @@ def test_failed_test_blocks(tmp_path):
     spec_path = _spec(tmp_path, [_scenario("何かが起きる", _GHERKIN_A)])
     results_path = _results(tmp_path, failed=["test_something_happens"])
 
-    result = _engine().run(str(spec_path), str(_paired_test(tmp_path)), str(results_path))
+    result = _Gate().run(str(spec_path), str(_paired_test(tmp_path)), str(results_path))
 
     assert isinstance(result, Ok), result
     assert result.value["status"] == "blocked"
@@ -115,7 +129,7 @@ def test_all_passed_is_ready(tmp_path):
     spec_path = _spec(tmp_path, [_scenario("何かが起きる", _GHERKIN_A)])
     results_path = _results(tmp_path, passed=["test_something_happens"])
 
-    result = _engine().run(str(spec_path), str(_paired_test(tmp_path)), str(results_path))
+    result = _Gate().run(str(spec_path), str(_paired_test(tmp_path)), str(results_path))
 
     assert isinstance(result, Ok), result
     assert result.value["status"] == "ready"
@@ -131,7 +145,7 @@ def test_priority_gives_single_status(tmp_path):
     spec_path = _spec(tmp_path, [_scenario("何かが起きる", _GHERKIN_A)])
     test_path = _test_file(tmp_path, "def test_orphaned():\n    pass\n")
 
-    result = _engine().run(str(spec_path), str(test_path), str(_results(tmp_path)))
+    result = _Gate().run(str(spec_path), str(test_path), str(_results(tmp_path)))
 
     assert isinstance(result, Ok), result
     assert result.value["status"] == "blocked"
@@ -148,7 +162,7 @@ def test_failed_matched_by_test_name(tmp_path):
     spec_path = _spec(tmp_path, [_scenario("何かが起きる", _GHERKIN_A)])
     results_path = _results(tmp_path, failed=["test_something_happens"])
 
-    result = _engine().run(str(spec_path), str(_paired_test(tmp_path)), str(results_path))
+    result = _Gate().run(str(spec_path), str(_paired_test(tmp_path)), str(results_path))
 
     assert isinstance(result, Ok), result
     assert result.value["status"] == "blocked"
@@ -166,7 +180,7 @@ def test_unknown_identifier_does_not_yield_ready(tmp_path):
     spec_path = _spec(tmp_path, [_scenario("何かが起きる", _GHERKIN_A)])
     results_path = _results(tmp_path, failed=["何かが起きる"])
 
-    result = _engine().run(str(spec_path), str(_paired_test(tmp_path)), str(results_path))
+    result = _Gate().run(str(spec_path), str(_paired_test(tmp_path)), str(results_path))
 
     assert isinstance(result, Ok), result
     assert result.value["status"] != "ready"
@@ -184,7 +198,7 @@ def test_duplicate_declarations_need_human(tmp_path):
     test_path = _test_file(tmp_path,
                            "def test_first():\n" + _DOC_A + "\n\ndef test_copied():\n" + _DOC_A)
 
-    result = _engine().run(str(spec_path), str(test_path), str(_results(tmp_path)))
+    result = _Gate().run(str(spec_path), str(test_path), str(_results(tmp_path)))
 
     assert isinstance(result, Ok), result
     assert result.value["status"] == "needs_human"
@@ -197,7 +211,7 @@ def test_missing_spec_path_errors(tmp_path):
     When CheckVerificationGateを実行する
     Then INVALID_PATH エラーが返る
     """
-    result = _engine().run("does/not/exist.json", str(_test_file(tmp_path, "")),
+    result = _Gate().run("does/not/exist.json", str(_test_file(tmp_path, "")),
                            str(_results(tmp_path)))
 
     assert isinstance(result, Err), result
@@ -214,7 +228,7 @@ def test_missing_test_file_path_errors(tmp_path):
     spec_path = _spec(tmp_path, [_scenario("何かが起きる", _GHERKIN_A)])
     missing = tmp_path / "tests" / "acceptance" / "no_such_test.py"
 
-    result = _engine().run(str(spec_path), str(missing), str(_results(tmp_path)))
+    result = _Gate().run(str(spec_path), str(missing), str(_results(tmp_path)))
 
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_PATH"
@@ -229,7 +243,7 @@ def test_invalid_results_path_errors(tmp_path):
     """
     spec_path = _spec(tmp_path, [_scenario("何かが起きる", _GHERKIN_A)])
 
-    result = _engine().run(str(spec_path), str(_paired_test(tmp_path)),
+    result = _Gate().run(str(spec_path), str(_paired_test(tmp_path)),
                            str(tmp_path / "no_such_results.json"))
 
     assert isinstance(result, Err), result

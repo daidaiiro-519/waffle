@@ -105,7 +105,15 @@ def resolve_scenario_binding(documents: DocumentRepository, architecture_ref: st
         if path:
             placements[(row.get("layer"), row.get("testType"))] = path.rstrip("/")
     standard_naming = _find_by_kind(coding_documents, "coding-standard", stack) or {}
+    tech_stack = _find_by_kind(coding_documents, "tech-stack", stack) or {}
+    language_by_suffix = {
+        suffix.lstrip("."): entry["language"]
+        for entry in (tech_stack.get("content", {})
+                      .get("runtime", {}).get("languages", []))
+        for suffix in entry.get("extensions", [])
+    }
     return Ok({
+        "languageBySuffix": language_by_suffix,
         "declarationLine": binding.get("declarationLine", ""),
         "blockPlacement": binding.get("blockPlacement", []),
         "placements": placements,

@@ -8,9 +8,13 @@ docs/brainstorm/brainstorm-waffle-hooks.md参照）に対応する。言語ご�
 """
 from __future__ import annotations
 
+import tree_sitter_c_sharp as tscsharp
+import tree_sitter_go as tsgo
 import tree_sitter_java as tsjava
 import tree_sitter_javascript as tsjavascript
+import tree_sitter_kotlin as tskotlin
 import tree_sitter_python as tspython
+import tree_sitter_rust as tsrust
 import tree_sitter_typescript as tstypescript
 from tree_sitter import Language, Parser, Query, QueryCursor
 
@@ -21,6 +25,12 @@ _CLASS_QUERIES = {
     "java": "(class_declaration name: (identifier) @name)",
     "typescript": "(class_declaration name: (type_identifier) @name)",
     "javascript": "(class_declaration name: (identifier) @name)",
+    # Goは構造体を type 宣言として書く。Rustは struct_item。
+    # C#/Kotlin はクラス宣言だが、名前のノード型が異なる。
+    "go": "(type_declaration (type_spec name: (type_identifier) @name))",
+    "rust": "(struct_item name: (type_identifier) @name)",
+    "csharp": "(class_declaration name: (identifier) @name)",
+    "kotlin": "(class_declaration (identifier) @name)",
 }
 
 # フィールド宣言の構文は言語ごとに全く異なる。Pythonは型注釈付きの代入文
@@ -63,6 +73,44 @@ _FIELD_QUERIES = {
           )
         )
     """,
+    "go": """
+        (type_declaration
+          (type_spec
+            name: (type_identifier) @cls
+            type: (struct_type
+              (field_declaration_list
+                (field_declaration name: (field_identifier) @field)
+              )
+            )
+          )
+        )
+    """,
+    "rust": """
+        (struct_item
+          name: (type_identifier) @cls
+          body: (field_declaration_list
+            (field_declaration name: (field_identifier) @field)
+          )
+        )
+    """,
+    "csharp": """
+        (class_declaration
+          name: (identifier) @cls
+          body: (declaration_list
+            (field_declaration
+              (variable_declaration (variable_declarator (identifier) @field))
+            )
+          )
+        )
+    """,
+    "kotlin": """
+        (class_declaration
+          (identifier) @cls
+          (class_body
+            (property_declaration (variable_declaration (identifier) @field))
+          )
+        )
+    """,
 }
 
 _LANGUAGE_MODULES = {
@@ -70,6 +118,10 @@ _LANGUAGE_MODULES = {
     "java": lambda: Language(tsjava.language()),
     "typescript": lambda: Language(tstypescript.language_typescript()),
     "javascript": lambda: Language(tsjavascript.language()),
+    "go": lambda: Language(tsgo.language()),
+    "rust": lambda: Language(tsrust.language()),
+    "csharp": lambda: Language(tscsharp.language()),
+    "kotlin": lambda: Language(tskotlin.language()),
 }
 
 

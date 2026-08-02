@@ -31,24 +31,18 @@ from waffle.domain.services.scenario_drift import (
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
 
-# ファイルの拡張子から対象言語を決める
-_LANGUAGE_BY_SUFFIX = {
-    "py": "python",
-    "java": "java",
-    "js": "javascript",
-    "mjs": "javascript",
-    "cjs": "javascript",
-    "ts": "typescript",
-    "tsx": "typescript",
-}
-
-
 def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 
-def _language_of(path: str) -> str | None:
-    return _LANGUAGE_BY_SUFFIX.get(path.rsplit(".", 1)[-1].lower())
+def _language_of(path: str, binding: dict) -> str | None:
+    """拡張子から対象言語を決める。対応は tech-stack の宣言が持つ。
+
+    どの拡張子がどの言語かはスタックが宣言する（runtime.languages[].extensions）。
+    コード側に表を持つと、言語を足したときに宣言とコードの両方を直すことになる。
+    """
+    suffix = path.rsplit(".", 1)[-1].lower()
+    return binding.get("languageBySuffix", {}).get(suffix)
 
 
 class CheckScenarioDrift:
@@ -99,18 +93,18 @@ class CheckScenarioDrift:
         if isinstance(spec_loaded, Err):
             return spec_loaded
 
-        tests_loaded = self._read_tests(test_file_path)
+        tests_loaded = self._read_tests(test_file_path, binding)
         if isinstance(tests_loaded, Err):
             return tests_loaded
 
         return Ok(self._compare(spec_loaded.value, tests_loaded.value,
                                 relevant_scenario_block_keys(test_file_path, binding)))
 
-    def _read_tests(self, test_file_path: str) -> Result[list[dict]]:
+    def _read_tests(self, test_file_path: str, binding: dict) -> Result[list[dict]]:
         if not is_confined(test_file_path):
             return _err("INVALID_PATH", f"パストラバーサルは許可されません: {test_file_path}")
 
-        language = _language_of(test_file_path)
+        language = _language_of(test_file_path, binding)
         if language is None:
             return _err("UNSUPPORTED_LANGUAGE",
                         f"文書コメントの取り出しに対応していない言語です: {test_file_path}")

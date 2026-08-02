@@ -17,9 +17,13 @@ Pythonの文書コメントは関数の内側にあるため、どのテスト�
 from __future__ import annotations
 
 from tree_sitter import Language, Node, Parser
+import tree_sitter_c_sharp as tscsharp
+import tree_sitter_go as tsgo
 import tree_sitter_java as tsjava
 import tree_sitter_javascript as tsjavascript
+import tree_sitter_kotlin as tskotlin
 import tree_sitter_python as tspython
+import tree_sitter_rust as tsrust
 import tree_sitter_typescript as tstypescript
 
 from waffle.application.ports.test_function_extractor import UnsupportedLanguage
@@ -28,6 +32,10 @@ _LANGUAGE_MODULES = {
     "python": lambda: Language(tspython.language()),
     "java": lambda: Language(tsjava.language()),
     "javascript": lambda: Language(tsjavascript.language()),
+    "go": lambda: Language(tsgo.language()),
+    "rust": lambda: Language(tsrust.language()),
+    "csharp": lambda: Language(tscsharp.language()),
+    "kotlin": lambda: Language(tskotlin.language()),
     "typescript": lambda: Language(tstypescript.language_typescript()),
 }
 
@@ -60,6 +68,29 @@ def _undecorate(text: str) -> str:
             stripped = stripped[1:].strip()
         lines.append(stripped)
     return "\n".join(lines).strip()
+
+
+def _leading_comment(node: Node, skip: tuple[str, ...] = ()) -> str:
+    """直前に並ぶコメントをまとめて返す。指定した種類のノードは飛ばす。
+
+    言語によって、文書コメントと本体の間に属性が挟まる（Rustの #[test]）。
+    また1行コメントが連続して1つの文書を成すこともある（Go）。直前の兄弟を
+    1つだけ見る作りでは、どちらも取りこぼす。
+    """
+    target = node
+    while target.prev_sibling is None and target.parent is not None:
+        target = target.parent
+    parts: list[str] = []
+    previous = target.prev_sibling
+    while previous is not None:
+        if previous.type in skip:
+            previous = previous.prev_sibling
+            continue
+        if "comment" not in previous.type:
+            break
+        parts.append(_undecorate(previous.text.decode("utf-8")))
+        previous = previous.prev_sibling
+    return "\n".join(reversed(parts)).strip()
 
 
 def _preceding_comment(node: Node) -> str:
@@ -136,11 +167,82 @@ def _js_like_tests(root: Node) -> list[dict]:
     return tests
 
 
+def _go_tests(root: Node) -> list[dict]:
+    """Goは名前が Test で始まる関数がテスト。文書コメントは直前の行コメント。"""
+    tests = []
+    for node in _walk(root):
+        if node.type != "function_declaration":
+            continue
+        name_node = node.child_by_field_name("name")
+        if name_node is None:
+            continue
+        name = name_node.text.decode("utf-8")
+        if not name.startswith("Test"):
+            continue
+        tests.append({"name": name, "doc": _leading_comment(node)})
+    return tests
+
+
+def _has_attribute(node: Node, wanted: tuple[str, ...]) -> bool:
+    """直前の属性、または子に持つ注釈から、テスト指定を探す。"""
+    previous = node.prev_sibling
+    while previous is not None and previous.type in ("attribute_item", "comment", "line_comment"):
+        if previous.type == "attribute_item":
+            text = previous.text.decode("utf-8")
+            if any(w in text for w in wanted):
+                return True
+        previous = previous.prev_sibling
+    for child in _walk(node):
+        if child.type in ("attribute_list", "annotation", "modifiers"):
+            text = child.text.decode("utf-8")
+            if any(w in text for w in wanted):
+                return True
+    return False
+
+
+def _rust_tests(root: Node) -> list[dict]:
+    """Rustは #[test] が付いた関数がテスト。属性が文書コメントと本体の間に入る。"""
+    tests = []
+    for node in _walk(root):
+        if node.type != "function_item" or not _has_attribute(node, ("test",)):
+            continue
+        name_node = node.child_by_field_name("name")
+        if name_node is None:
+            continue
+        tests.append({"name": name_node.text.decode("utf-8"),
+                      "doc": _leading_comment(node, skip=("attribute_item",))})
+    return tests
+
+
+def _attribute_tests(node_type: str, wanted: tuple[str, ...]):
+    """属性・注釈でテストを示す言語（C# / Kotlin）の収集器を作る。"""
+
+    def collect(root: Node) -> list[dict]:
+        tests = []
+        for node in _walk(root):
+            if node.type != node_type or not _has_attribute(node, wanted):
+                continue
+            name_node = node.child_by_field_name("name")
+            if name_node is None:
+                name_node = next((c for c in node.children if c.type == "identifier"), None)
+            if name_node is None:
+                continue
+            tests.append({"name": name_node.text.decode("utf-8"),
+                          "doc": _leading_comment(node)})
+        return tests
+
+    return collect
+
+
 _COLLECTORS = {
     "python": _python_tests,
     "java": _java_tests,
     "javascript": _js_like_tests,
     "typescript": _js_like_tests,
+    "go": _go_tests,
+    "rust": _rust_tests,
+    "csharp": _attribute_tests("method_declaration", ("Fact", "Test", "Theory")),
+    "kotlin": _attribute_tests("function_declaration", ("Test",)),
 }
 
 
