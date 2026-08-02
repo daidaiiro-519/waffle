@@ -20,7 +20,6 @@ document.jsonへの書き込みはprotect-document-json.pyによりEdit/Writeで
 """
 from __future__ import annotations
 
-import glob
 import json
 import os
 import re
@@ -30,8 +29,6 @@ import sys
 _USECASE_IMPL = re.compile(r"src/waffle/application/usecases/.*\.py$")
 _ENTITY_IMPL = re.compile(r"src/waffle/domain/entities/.*\.py$")
 _SERVICE_IMPL = re.compile(r"src/waffle/domain/services/.*\.py$")
-_TEST_FILE = re.compile(
-    r"tests/(?:application/(?:acceptance|integration)|domain/unit)/(test_.*)\.py$")
 _BASH_FILL_PATH = re.compile(r"waffle\s+scaffold\s+--operation\s+fill\b.*?--path\s+(\S+)")
 # tests/ という区画の中にありながら、突き合わせの対象になる配置に無いもの。
 # 対象外であることを黙って見過ごさないために見る。
@@ -51,11 +48,7 @@ _TEST_BASENAME = re.compile(r"(?:^|/)tests?/(?:.*/)?test_[^/]*\.py$")
 # .waffle/memory/ に作業項目として記録してある
 ARCHITECTURE_REF = "architecture-waffle"
 
-_USECASE_SPEC = re.compile(r"\.waffle/documents/specs/.*/usecase/(uc-[^/]+)\.json$")
-# 集約specはinvariantScenariosを持ち、domain/unitのテストと突き合わさる。
-# どの配置と突き合わせるかは scenarioBinding（test-standard）が定めており、
-# ここに持っている対応はその写しである。宣言が散文のため機械が読めない。
-_AGGREGATE_SPEC = re.compile(r"\.waffle/documents/specs/.*/aggregate/(agg-[^/]+)\.json$")
+_SPEC_FILE = re.compile(r"\.waffle/documents/specs/.*/(?:usecase|aggregate)/[^/]+\.json$")
 
 
 def _project_root() -> str:
@@ -82,8 +75,30 @@ _INFORMATIONAL = {"matched", "matched_test_names"}
 def _has_findings(data: dict | None) -> bool:
     if data is None:
         return False
+    if "results" in data:
+        # 全体走査・片側指定の形。results は判定済みの組の一覧であって
+        # driftではない。driftは各組の中にある
+        return any(_has_findings(entry) for entry in data["results"])
     return any(v for k, v in data.items()
                if k not in _INFORMATIONAL and isinstance(v, list) and v)
+
+
+def _unpaired_of(data: dict | None) -> list[str]:
+    """突き合わせ先が見つからなかったものを取り出す。
+
+    driftとは別の状態。宣言のどれもそのテストを指していない場合、
+    documentIdが空で並ぶ。
+    """
+    if not data or "missing_test_file" not in data:
+        return []
+    out = []
+    for entry in data["missing_test_file"]:
+        if entry.get("documentId"):
+            out.append(f"{entry['documentId']} の {entry['block']} に対応するテストが "
+                       f"{entry['expectedPath']} に見つかりません")
+        else:
+            out.append(f"{entry['expectedPath']} を指す宣言がどのspecにもありません")
+    return out
 
 
 def _uncheckable(data: dict | None) -> str | None:
@@ -97,38 +112,6 @@ def _uncheckable(data: dict | None) -> str | None:
     if isinstance(data.get("error"), str):
         return f"{data['error']}: {data.get('message', '')}".strip()
     return None
-
-
-def _guess_spec_path(test_stem: str) -> str | None:
-    # test_uc_check_aggregate_class_drift -> uc-check-aggregate-class-drift
-    name = test_stem.removeprefix("test_").replace("_", "-")
-    root = _project_root()
-    # usecase spec（acceptance/guarantee）と集約spec（invariant）の両方を探す。
-    for kind in ("usecase", "aggregate"):
-        matches = glob.glob(
-            os.path.join(root, f".waffle/documents/specs/**/{kind}/{name}.json"), recursive=True)
-        if matches:
-            return matches[0]
-    return None
-
-
-def _guess_test_paths(spec_path: str) -> list[str]:
-    # uc-check-aggregate-class-drift.json -> test_uc_check_aggregate_class_drift(.py)
-    m = _USECASE_SPEC.search(spec_path)
-    dirs = ("application/acceptance", "application/integration")
-    if not m:
-        m = _AGGREGATE_SPEC.search(spec_path)
-        dirs = ("domain/unit",)
-    if not m:
-        return []
-    stem = "test_" + m.group(1).replace("-", "_")
-    root = _project_root()
-    found = []
-    for d in dirs:
-        p = os.path.join(root, "tests", *d.split("/"), f"{stem}.py")
-        if os.path.isfile(p):
-            found.append(os.path.relpath(p, root))
-    return found
 
 
 def check(payload: dict) -> str | None:
@@ -145,6 +128,7 @@ def check(payload: dict) -> str | None:
         if _has_findings(data):
             reports.append(f"[{label}] {json.dumps(data, ensure_ascii=False)}")
             return
+        unpaired.extend(_unpaired_of(data))
         reason = _uncheckable(data)
         if reason:
             unpaired.append(f"{label} を実行できませんでした（{reason}）")
@@ -166,36 +150,17 @@ def check(payload: dict) -> str | None:
     if _SERVICE_IMPL.search(file_path):
         _collect("check-domain-service-drift", "domain-service-drift", *arch)
 
-    m = _TEST_FILE.search(file_path)
-    if m:
-        spec_path = _guess_spec_path(m.group(1))
-        if spec_path:
-            rel_spec = os.path.relpath(spec_path, _project_root())
-            _collect("check-scenario-drift", "scenario-drift",
-                     "--specPath", rel_spec, "--testPath", file_path, *arch)
-        else:
-            looked_for = m.group(1).removeprefix("test_").replace("_", "-")
-            unpaired.append(
-                f"{file_path} に対応するspecが見つかりません"
-                f"（usecase/aggregate の {looked_for}.json を探しました）")
-    elif _TEST_BASENAME.search(file_path):
-        unpaired.append(
-            f"{file_path} は tests/application/acceptance/ tests/application/integration/ "
-            "tests/domain/unit/ のいずれにも無いため、"
-            "scenario-driftの突き合わせ対象になりません")
+    # どのspecに対応するかは規約が宣言している。フックは推測せず、
+    # 分かっている側だけを渡して残りを検査側に解決させる
+    if _TEST_BASENAME.search(file_path):
+        _collect("check-scenario-drift", "scenario-drift",
+                 "--testPath", file_path, *arch)
 
     fm = _BASH_FILL_PATH.search(command)
     spec_path = fm.group(1).strip("'\"") if fm else ""
-    if spec_path:
-        test_paths = _guess_test_paths(spec_path)
-        if not test_paths and (_USECASE_SPEC.search(spec_path) or _AGGREGATE_SPEC.search(spec_path)):
-            unpaired.append(
-                f"{spec_path} に対応するテストファイルが見つかりません"
-                "（tests/application/acceptance/ tests/application/integration/ "
-                "tests/domain/unit/ を探しました）")
-        for test_path in test_paths:
-            _collect("check-scenario-drift", f"scenario-drift:{test_path}",
-                     "--specPath", spec_path, "--testPath", test_path, *arch)
+    if spec_path and _SPEC_FILE.search(spec_path):
+        _collect("check-scenario-drift", f"scenario-drift:{spec_path}",
+                 "--specPath", spec_path, *arch)
 
     target = file_path or spec_path
     if reports:

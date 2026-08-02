@@ -67,18 +67,30 @@ class CheckScenarioDrift:
         binding = binding or {}
         pair = spec_path is not None and test_file_path is not None
         sweep = documents_root is not None and tests_root is not None
+        one_sided = (spec_path is None) != (test_file_path is None) and documents_root is not None
 
-        if pair == sweep:
+        if pair and sweep:
             return _err(
                 "MISSING_PARAM",
-                "1組だけ検査する指定（specPath と testPath）か、"
-                "全体を検査する指定（documentsRoot と testsRoot）の"
-                "どちらか一方を与えてください。",
+                "1組の指定（specPath と testPath）と全体の指定（documentsRoot と "
+                "testsRoot）は同時に渡せません。どちらを意図したか決まらないため。",
             )
-
         if pair:
             return self._check_pair(spec_path, test_file_path, binding)
-        return self._sweep(documents_root, tests_root, binding)
+        if one_sided:
+            # 片側だけ分かっているときは、もう片方を規約の宣言から引く。
+            # 呼び出し側に推測させると、呼び出し側ごとに配置の写しが増える
+            return self._sweep(documents_root, tests_root, binding,
+                               only_spec=spec_path, only_test=test_file_path)
+        if sweep:
+            return self._sweep(documents_root, tests_root, binding)
+        return _err(
+            "MISSING_PARAM",
+            "1組だけ検査する指定（specPath と testPath）か、"
+            "片側だけの指定（specPath または testPath と documentsRoot）か、"
+            "全体を検査する指定（documentsRoot と testsRoot）の"
+            "いずれかを与えてください。",
+        )
 
     # ── 1組だけ検査する ─────────────────────────────────
 
@@ -159,13 +171,18 @@ class CheckScenarioDrift:
 
     # ── 全体を走査する ──────────────────────────────────
 
-    def _sweep(self, documents_root: str, tests_root: str, binding: dict) -> Result[dict]:
-        if not is_confined(documents_root) or not is_confined(tests_root):
-            return _err("INVALID_PATH", "パストラバーサルは許可されません")
+    def _sweep(self, documents_root: str, tests_root: str | None, binding: dict,
+               only_spec: str | None = None, only_test: str | None = None) -> Result[dict]:
+        for path in (documents_root, tests_root, only_spec, only_test):
+            if path is not None and not is_confined(path):
+                return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
             spec_paths = sorted(self._documents.list_files(documents_root, "**/*.json"))
         except FileNotFoundError:
             return _err("INVALID_PATH", f"ディレクトリが見つかりません: {documents_root}")
+
+        if only_spec is not None:
+            spec_paths = [p for p in spec_paths if p == only_spec or p.endswith(only_spec)]
 
         missing_test_file: list[dict] = []
         results: list[dict] = []
@@ -185,6 +202,8 @@ class CheckScenarioDrift:
                 # 配置は placementByTarget が宣言した位置をそのまま使う。
                 # tests_root は全体走査を選ぶ指定であって、パスの前置ではない。
                 expected = f"{placement}/{stem}"
+                if only_test is not None and expected != only_test:
+                    continue
                 try:
                     self._documents.read_text(expected)
                 except FileNotFoundError:
@@ -208,5 +227,13 @@ class CheckScenarioDrift:
                 continue
             seen.add(entry["testPath"])
             unique_results.append(entry)
+
+        if only_test is not None and not unique_results and not missing_test_file:
+            # どのspecの宣言もこのテストを指していない。黙って通すと、対応の
+            # 取れていないテストが「綺麗だった」ことと同じ見た目になる
+            missing_test_file.append({
+                "documentId": None, "block": None,
+                "expectedPath": only_test, "scenarioCount": 0,
+            })
 
         return Ok({"missing_test_file": missing_test_file, "results": unique_results})

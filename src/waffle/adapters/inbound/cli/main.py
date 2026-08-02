@@ -272,10 +272,14 @@ def check_scenario_drift(
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="シナリオ照合の規約を引くarchitecture documentのdocumentId"),
 ) -> None:
     """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。"""
+    # 片側だけ渡されたとき、もう片方を探す範囲は coveredContexts が決める
+    scope = documents_root
+    if scope is None and architecture_ref and (spec_path is None) != (test_path is None):
+        scope = _resolve_documents_root(None, architecture_ref)
     _emit(CheckScenarioDrift(_docs(), TreeSitterTestFunctionExtractor()).run(
         binding=_resolve_binding(architecture_ref),
         spec_path=spec_path, test_file_path=test_path,
-        documents_root=documents_root, tests_root=tests_root))
+        documents_root=scope, tests_root=tests_root))
 
 @app.command("check-verification-gate")
 def check_verification_gate(

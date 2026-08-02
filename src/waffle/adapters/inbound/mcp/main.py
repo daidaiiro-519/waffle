@@ -218,9 +218,14 @@ def check_scenario_drift(specPath: str = None, testPath: str = None,
     binding = _resolve_binding(architectureRef)
     if "error" in binding:
         return binding
+    scope = documentsRoot
+    if scope is None and architectureRef and (specPath is None) != (testPath is None):
+        scope = _resolve_documents_root(None, architectureRef)
+        if isinstance(scope, dict):
+            return scope
     return _dict(CheckScenarioDrift(_docs(), TreeSitterTestFunctionExtractor()).run(
         binding=binding, spec_path=specPath, test_file_path=testPath,
-        documents_root=documentsRoot, tests_root=testsRoot))
+        documents_root=scope, tests_root=testsRoot))
 
 @mcp.tool
 def check_verification_gate(specPath: str, testPath: str, testResultsPath: str, architectureRef: str = None) -> dict:
