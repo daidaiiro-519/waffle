@@ -27,9 +27,10 @@ class CheckVerificationGate:
         self._documents = documents
         self._scenario_drift = CheckScenarioDrift(documents, extractor)
 
-    def run(self, spec_path: str, test_file_path: str, test_results_path: str) -> Result[dict]:
+    def run(self, spec_path: str, test_file_path: str, test_results_path: str,
+            binding: dict | None = None) -> Result[dict]:
         drift_result = self._scenario_drift.run(
-            spec_path=spec_path, test_file_path=test_file_path)
+            spec_path=spec_path, test_file_path=test_file_path, binding=binding)
         if isinstance(drift_result, Err):
             return drift_result
         drift = drift_result.value

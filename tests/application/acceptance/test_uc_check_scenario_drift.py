@@ -14,6 +14,8 @@ from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.shared.result import Err, Ok
 
+from tests.fakes import scenario_binding
+
 GHERKIN_BODY = "  Given 前提\n  When 操作する\n  Then 結果になる"
 DOC_BODY = "    Given 前提\n    When 操作する\n    Then 結果になる"
 
@@ -66,7 +68,9 @@ def _py(*declarations: tuple[str, str]) -> str:
 
 
 def _run(spec_path: Path, test_path: Path) -> dict:
-    result = _engine().run(spec_path=str(spec_path), test_file_path=str(test_path))
+    # テストは {tests_root}/{層}/{種別}/test_x.py に置かれるので、木の根はその3つ上
+    result = _engine().run(spec_path=str(spec_path), test_file_path=str(test_path),
+                           binding=scenario_binding(test_path.parent.parent.parent))
     assert isinstance(result, Ok), result
     return result.value
 
@@ -371,7 +375,8 @@ def test_unparsable_test_file_is_invalid_source(tmp_path):
     spec_path = _spec(tmp_path, _scenario("何かが起きる"))
     test_path = _test_file(tmp_path, "def test_broken(:\n", name="test_broken.py")
 
-    result = _engine().run(spec_path=str(spec_path), test_file_path=str(test_path))
+    result = _engine().run(spec_path=str(spec_path), test_file_path=str(test_path),
+                           binding=scenario_binding(test_path.parent.parent.parent))
 
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_SOURCE"
@@ -388,7 +393,8 @@ def test_unsupported_language_is_rejected(tmp_path):
     spec_path = _spec(tmp_path, _scenario("何かが起きる"))
     test_path = _test_file(tmp_path, "-- テスト\n", name="drift_test.hs")
 
-    result = _engine().run(spec_path=str(spec_path), test_file_path=str(test_path))
+    result = _engine().run(spec_path=str(spec_path), test_file_path=str(test_path),
+                           binding=scenario_binding(test_path.parent.parent.parent))
 
     assert isinstance(result, Err), result
     assert result.details[0] == "UNSUPPORTED_LANGUAGE"
@@ -419,7 +425,8 @@ def test_sweep_lists_scenarios_without_test_file(tmp_path):
     """
     documents_root, tests_root = _tree(tmp_path)
 
-    result = _engine().run(documents_root=str(documents_root), tests_root=str(tests_root))
+    result = _engine().run(documents_root=str(documents_root), tests_root=str(tests_root),
+                           binding=scenario_binding(tests_root))
 
     assert isinstance(result, Ok), result
     assert [(m["documentId"], m["block"], m["scenarioCount"])
@@ -436,7 +443,8 @@ def test_sweep_reports_paired_results(tmp_path):
     """
     documents_root, tests_root = _tree(tmp_path)
 
-    result = _engine().run(documents_root=str(documents_root), tests_root=str(tests_root))
+    result = _engine().run(documents_root=str(documents_root), tests_root=str(tests_root),
+                           binding=scenario_binding(tests_root))
 
     assert isinstance(result, Ok), result
     results = result.value["results"]

@@ -19,10 +19,10 @@ from waffle.application.ports.test_function_extractor import (
 )
 from waffle.application.services.document_loading import load_document
 from waffle.domain.services.scenario_drift import (
-    BLOCK_PLACEMENT,
     contains_subsequence,
     declaration_of,
     docstring_lines,
+    expected_test_dir,
     relevant_scenario_block_keys,
     scenario_blocks,
     scenario_declarations,
@@ -62,7 +62,9 @@ class CheckScenarioDrift:
         test_file_path: str | None = None,
         documents_root: str | None = None,
         tests_root: str | None = None,
+        binding: dict | None = None,
     ) -> Result[dict]:
+        binding = binding or {}
         pair = spec_path is not None and test_file_path is not None
         sweep = documents_root is not None and tests_root is not None
 
@@ -75,12 +77,12 @@ class CheckScenarioDrift:
             )
 
         if pair:
-            return self._check_pair(spec_path, test_file_path)
-        return self._sweep(documents_root, tests_root)
+            return self._check_pair(spec_path, test_file_path, binding)
+        return self._sweep(documents_root, tests_root, binding)
 
     # ── 1組だけ検査する ─────────────────────────────────
 
-    def _check_pair(self, spec_path: str, test_file_path: str) -> Result[dict]:
+    def _check_pair(self, spec_path: str, test_file_path: str, binding: dict) -> Result[dict]:
         spec_loaded = load_document(self._documents, spec_path)
         if isinstance(spec_loaded, Err):
             return spec_loaded
@@ -90,7 +92,7 @@ class CheckScenarioDrift:
             return tests_loaded
 
         return Ok(self._compare(spec_loaded.value, tests_loaded.value,
-                                relevant_scenario_block_keys(test_file_path)))
+                                relevant_scenario_block_keys(test_file_path, binding)))
 
     def _read_tests(self, test_file_path: str) -> Result[list[dict]]:
         if not is_confined(test_file_path):
@@ -157,7 +159,7 @@ class CheckScenarioDrift:
 
     # ── 全体を走査する ──────────────────────────────────
 
-    def _sweep(self, documents_root: str, tests_root: str) -> Result[dict]:
+    def _sweep(self, documents_root: str, tests_root: str, binding: dict) -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(tests_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
@@ -175,8 +177,14 @@ class CheckScenarioDrift:
             document_id = spec_doc.get("documentId", "")
 
             for block, count in scenario_blocks(spec_doc).items():
-                stem = "test_" + document_id.replace("-", "_") + ".py"
-                expected = f"{tests_root}/{BLOCK_PLACEMENT[block]}/{stem}"
+                placement = expected_test_dir(binding, block)
+                if placement is None:
+                    continue
+                stem = ("test_" + document_id.replace("-", "_")
+                        + binding.get("fileNameSuffix", ""))
+                # 配置は placementByTarget が宣言した位置をそのまま使う。
+                # tests_root は全体走査を選ぶ指定であって、パスの前置ではない。
+                expected = f"{placement}/{stem}"
                 try:
                     self._documents.read_text(expected)
                 except FileNotFoundError:
@@ -186,7 +194,7 @@ class CheckScenarioDrift:
                     })
                     continue
 
-                checked = self._check_pair(spec_path, expected)
+                checked = self._check_pair(spec_path, expected, binding)
                 if isinstance(checked, Err):
                     continue
                 results.append({"documentId": document_id, "specPath": spec_path,

@@ -101,3 +101,34 @@ JAVA_NAMING = {
         {"artifact": "field", "case": "camel"},
     ],
 }
+
+
+def scenario_binding(tests_root) -> dict:
+    """シナリオ照合の宣言。テストは自分が作った木の配置を自分で宣言する。
+
+    実運用では test-standard の scenarioBinding と placementByTarget から
+    組み立てられる。テストでは同じ形を直接与えることで、配置を変えたときに
+    検査が追従することを確かめられる。
+
+    Args:
+        tests_root: テストの木の根（tmp_path 配下）。
+
+    Returns:
+        blockPlacement / placements / fileNameSuffix を持つ辞書。
+    """
+    root = str(tests_root)
+    return {
+        "declarationLine": "Scenario: {シナリオ名}",
+        "blockPlacement": [
+            {"block": "invariantScenarios", "layer": "domain", "testType": "unit"},
+            {"block": "domainServiceScenarios", "layer": "domain", "testType": "unit"},
+            {"block": "guaranteeScenarios", "layer": "application", "testType": "integration"},
+            {"block": "acceptanceScenarios", "layer": "application", "testType": "acceptance"},
+        ],
+        "placements": {
+            ("domain", "unit"): f"{root}/domain/unit",
+            ("application", "integration"): f"{root}/application/integration",
+            ("application", "acceptance"): f"{root}/application/acceptance",
+        },
+        "fileNameSuffix": "." + "py",
+    }

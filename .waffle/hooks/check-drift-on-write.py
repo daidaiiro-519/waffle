@@ -50,7 +50,6 @@ _TEST_BASENAME = re.compile(r"(?:^|/)tests?/(?:.*/)?test_[^/]*\.py$")
 # （毎回鳴る警報は鳴らない警報と同じになる）。この制限は
 # .waffle/memory/ に作業項目として記録してある
 ARCHITECTURE_REF = "architecture-waffle"
-COVERED_DOCUMENTS_ROOT = ".waffle/documents/specs/bc-waffle"
 
 _USECASE_SPEC = re.compile(r"\.waffle/documents/specs/.*/usecase/(uc-[^/]+)\.json$")
 # 集約specはinvariantScenariosを持ち、domain/unitのテストと突き合わさる。
@@ -152,8 +151,9 @@ def check(payload: dict) -> str | None:
 
     # 実装の配置は architecture document から導く。引数なしで呼ぶと
     # MISSING_PARAM が返るだけで、この4つは書かれて以来ずっと空振りしていた
-    arch = ("--architectureRef", ARCHITECTURE_REF,
-            "--documentsRoot", COVERED_DOCUMENTS_ROOT)
+    # 仕様側の範囲は architecture の coveredContexts が宣言する。
+    # 対をここに書くと、宣言を変えたときフックだけが古い範囲を見続ける。
+    arch = ("--architectureRef", ARCHITECTURE_REF)
 
 
     if _USECASE_IMPL.search(file_path):
@@ -172,7 +172,7 @@ def check(payload: dict) -> str | None:
         if spec_path:
             rel_spec = os.path.relpath(spec_path, _project_root())
             _collect("check-scenario-drift", "scenario-drift",
-                     "--specPath", rel_spec, "--testPath", file_path)
+                     "--specPath", rel_spec, "--testPath", file_path, *arch)
         else:
             looked_for = m.group(1).removeprefix("test_").replace("_", "-")
             unpaired.append(
@@ -195,7 +195,7 @@ def check(payload: dict) -> str | None:
                 "tests/domain/unit/ を探しました）")
         for test_path in test_paths:
             _collect("check-scenario-drift", f"scenario-drift:{test_path}",
-                     "--specPath", spec_path, "--testPath", test_path)
+                     "--specPath", spec_path, "--testPath", test_path, *arch)
 
     target = file_path or spec_path
     if reports:

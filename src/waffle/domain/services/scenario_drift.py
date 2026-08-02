@@ -26,16 +26,24 @@ _SCENARIO_BLOCK_KEYS = (
 
 _DECLARATION = re.compile(r"^Scenario(?:\s+Outline)?:\s*(?P<name>.+?)\s*$")
 
-# シナリオブロックの種別と、対応するテストの配置（レイヤー/テスト種別）。
-# scenarioBinding（test-standard）が定める対応をコード側で表したもの。
-# 本来は test-standard の宣言を読むべきで、この辞書はその写しである。
-# 宣言が散文のままなので機械が読めず、写しを持たざるを得ない状態が続いている。
-BLOCK_PLACEMENT = {
-    "acceptanceScenarios": "application/acceptance",
-    "guaranteeScenarios": "application/integration",
-    "invariantScenarios": "domain/unit",
-    "domainServiceScenarios": "domain/unit",
-}
+def expected_test_dir(binding: dict, block: str) -> str | None:
+    """シナリオ種別に対応するテストの配置を、規約の宣言から導く。
+
+    種別と（層・テスト種別）の対応は scenarioBinding が、その組がどのパスへ
+    置かれるかは placementByTarget が宣言する。どちらもコード側には持たない。
+
+    Args:
+        binding: 解決済みのシナリオ照合宣言（blockPlacement と placements）。
+        block: シナリオブロックの種別。
+
+    Returns:
+        配置パス。宣言が無ければ None。
+    """
+    placements = binding.get("placements", {})
+    for row in binding.get("blockPlacement", []):
+        if row.get("block") == block:
+            return placements.get((row.get("layer"), row.get("testType")))
+    return None
 
 
 def declaration_line(scenario_name: str) -> str:
@@ -69,17 +77,26 @@ def gherkin_lines(gherkin: str) -> list[str]:
     return [line.strip() for line in gherkin.strip().splitlines() if line.strip()]
 
 
-def relevant_scenario_block_keys(test_file_path: str) -> tuple[str, ...]:
-    """test_file_pathのパスパターンから、scenarioBinding（test-standard）が定める
-    配置ルールに沿って対象シナリオブロックを機械的に絞り込む。いずれのパターンにも
-    一致しないパスは、絞り込まず全種を対象にする（ケースバイケース判定はしない）。"""
-    if "tests/application/acceptance/" in test_file_path:
-        return ("acceptanceScenarios",)
-    if "tests/application/integration/" in test_file_path:
-        return ("guaranteeScenarios",)
-    if "tests/domain/unit/" in test_file_path:
-        return ("invariantScenarios", "domainServiceScenarios")
-    return _SCENARIO_BLOCK_KEYS
+def relevant_scenario_block_keys(test_file_path: str, binding: dict) -> tuple[str, ...]:
+    """テストの配置から、突き合わせ対象のシナリオ種別を絞り込む。
+
+    どの配置がどの種別に対応するかは規約が宣言する。いずれの配置にも
+    当てはまらないパスは絞り込まず全種を対象にする（ケースバイケースの
+    判定はしない）。
+
+    Args:
+        test_file_path: テストファイルのパス。
+        binding: 解決済みのシナリオ照合宣言。
+
+    Returns:
+        対象とするシナリオブロック種別。
+    """
+    placements = binding.get("placements", {})
+    matched = tuple(
+        row["block"] for row in binding.get("blockPlacement", [])
+        if (path := placements.get((row.get("layer"), row.get("testType"))))
+        and path in test_file_path)
+    return matched or _SCENARIO_BLOCK_KEYS
 
 
 def scenario_declarations(

@@ -46,7 +46,11 @@ from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.application.services.source_root_resolution import resolve_src_root
-from waffle.application.services.stack_resolution import resolve_naming
+from waffle.application.services.stack_resolution import (
+    resolve_covered_documents_root,
+    resolve_naming,
+    resolve_scenario_binding,
+)
 from waffle.shared.result import Err, Ok, Result
 
 app = typer.Typer(
@@ -89,6 +93,32 @@ def _resolve_naming(architecture_ref: str | None) -> dict:
     if not architecture_ref:
         _emit(Err("命名規約を引くために --architectureRef が必要です", ["MISSING_PARAM"]))
     result = resolve_naming(_docs(), architecture_ref)
+    if isinstance(result, Err):
+        _emit(result)
+    return result.value
+
+
+def _resolve_binding(architecture_ref: str | None) -> dict:
+    """シナリオ照合の規約を application へ委ね、失敗ならエラーを出して終了する。"""
+    if not architecture_ref:
+        _emit(Err("シナリオ照合の規約を引くために --architectureRef が必要です", ["MISSING_PARAM"]))
+    result = resolve_scenario_binding(_docs(), architecture_ref)
+    if isinstance(result, Err):
+        _emit(result)
+    return result.value
+
+
+def _resolve_documents_root(documents_root: str | None, architecture_ref: str | None) -> str:
+    """仕様側の走査範囲を決める。明示指定が無ければ規約の宣言から決める。
+
+    実装側（architectureRef）だけを絞って仕様側を絞り忘れると、別のコンテキスト
+    の仕様まで巻き込んで「実装が無い」と誤報する。対を呼び出し側に覚えさせない。
+    """
+    if documents_root:
+        return documents_root
+    if not architecture_ref:
+        _emit(Err("--documentsRoot または --architectureRef のいずれかが必要です", ["MISSING_PARAM"]))
+    result = resolve_covered_documents_root(_docs(), architecture_ref)
     if isinstance(result, Err):
         _emit(result)
     return result.value
@@ -239,9 +269,11 @@ def check_scenario_drift(
     test_path: str = typer.Option(None, "--testPath", "--test-path", help="対応するテストファイルのパス（1組だけ検査する）"),
     documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="spec documentの置き場所（全体を検査する）"),
     tests_root: str = typer.Option(None, "--testsRoot", "--tests-root", help="テストの配置ルート（全体を検査する）"),
+    architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="シナリオ照合の規約を引くarchitecture documentのdocumentId"),
 ) -> None:
     """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。"""
     _emit(CheckScenarioDrift(_docs(), TreeSitterTestFunctionExtractor()).run(
+        binding=_resolve_binding(architecture_ref),
         spec_path=spec_path, test_file_path=test_path,
         documents_root=documents_root, tests_root=tests_root))
 
@@ -253,9 +285,11 @@ def check_verification_gate(
         ..., "--testResultsPath", "--test-results-path",
         help='テスト実行結果({"passed": [...], "failed": [...]})のパス',
     ),
+    architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="シナリオ照合の規約を引くarchitecture documentのdocumentId"),
 ) -> None:
     """実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。"""
-    _emit(CheckVerificationGate(_docs(), TreeSitterTestFunctionExtractor()).run(spec_path, test_path, test_results_path))
+    _emit(CheckVerificationGate(_docs(), TreeSitterTestFunctionExtractor()).run(
+        spec_path, test_path, test_results_path, _resolve_binding(architecture_ref)))
 
 @app.command("check-query-precedes-array-fill")
 def check_query_precedes_array_fill(
@@ -285,7 +319,7 @@ def check_schema_version_drift(
 
 @app.command("check-usecase-class-drift")
 def check_usecase_class_drift(
-    documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
+    documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
     language: str = typer.Option("python", "--language", help="実装言語（python/java/typescript/javascript）"),
@@ -293,11 +327,11 @@ def check_usecase_class_drift(
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
     _emit(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(
-        documents_root, resolved_src_root, _resolve_naming(architecture_ref), language))
+        _resolve_documents_root(documents_root, architecture_ref), resolved_src_root, _resolve_naming(architecture_ref), language))
 
 @app.command("check-aggregate-class-drift")
 def check_aggregate_class_drift(
-    documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
+    documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="集約Entityクラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
     language: str = typer.Option("python", "--language", help="実装言語（python/java/typescript/javascript）"),
@@ -305,29 +339,29 @@ def check_aggregate_class_drift(
     """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "aggregate")
     _emit(CheckAggregateClassDrift(_docs(), _class_extractor()).run(
-        documents_root, resolved_src_root, _resolve_naming(architecture_ref), language))
+        _resolve_documents_root(documents_root, architecture_ref), resolved_src_root, _resolve_naming(architecture_ref), language))
 
 @app.command("check-domain-service-drift")
 def check_domain_service_drift(
-    documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
+    documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="業務サービス実装ファイルの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
 ) -> None:
     """業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "domain-service")
     _emit(CheckDomainServiceDrift(_docs()).run(
-        documents_root, resolved_src_root, _resolve_naming(architecture_ref)))
+        _resolve_documents_root(documents_root, architecture_ref), resolved_src_root, _resolve_naming(architecture_ref)))
 
 @app.command("check-operation-drift")
 def check_operation_drift(
-    documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
+    documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
 ) -> None:
     """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
     _emit(CheckOperationDrift(_docs()).run(
-        documents_root, resolved_src_root, _resolve_naming(architecture_ref)))
+        _resolve_documents_root(documents_root, architecture_ref), resolved_src_root, _resolve_naming(architecture_ref)))
 
 @app.command("scan-source-code")
 def scan_source_code(
