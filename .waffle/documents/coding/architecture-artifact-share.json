@@ -1,0 +1,257 @@
+{
+  "documentId": "architecture-artifact-share",
+  "documentType": "Coding",
+  "schemaRef": "CodingSchema/v5",
+  "codingKind": "architecture",
+  "stack": "artifact-share",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "artifact-shareが採用する層構造を定めるArchitecture仕様：architecture-artifact-share"
+    },
+    "layers": {
+      "blockType": "Layers",
+      "title": "レイヤーと依存方向",
+      "style": "ポートとアダプター（ヘキサゴナル）",
+      "items": [
+        {
+          "layer": "shared",
+          "path": "lambda/admin_api/shared",
+          "responsibility": "全層から使える基盤（結果型・エラー等）。業務判断を持たない",
+          "mayDependOn": []
+        },
+        {
+          "layer": "domain",
+          "path": "lambda/admin_api/domain",
+          "responsibility": "業務ルールと不変条件。トークンの有効性・交差条件・公開状態の判断をここに集める",
+          "mayDependOn": [
+            "shared"
+          ]
+        },
+        {
+          "layer": "application",
+          "path": "lambda/admin_api/usecases",
+          "responsibility": "usecase の調整。外部へ要求する port をここで宣言する",
+          "mayDependOn": [
+            "domain",
+            "shared"
+          ]
+        },
+        {
+          "layer": "inbound adapter",
+          "path": "lambda/admin_api",
+          "responsibility": "外部からの入口（Lambda handler・経路の振り分け）。外部入力を usecase 呼び出しへ変換するだけで、判断を持たない",
+          "mayDependOn": [
+            "application",
+            "shared"
+          ]
+        },
+        {
+          "layer": "outbound adapter",
+          "path": "lambda/admin_api/adapters",
+          "responsibility": "外部への出口（S3・KVS・Cognito）。application が宣言した port を実装する",
+          "mayDependOn": [
+            "application",
+            "shared"
+          ]
+        }
+      ]
+    },
+    "layout": {
+      "blockType": "Layout",
+      "title": "ディレクトリ構成",
+      "tree": "lambda/admin_api/\n  domain/          業務ルール（トークンの有効性・交差条件・公開状態）\n  usecases/        1 usecase = 1 module\n  ports/           application が外部へ要求するインターフェース\n  adapters/        S3 / KVS / Cognito への出口\n  shared/          結果型・エラー\n  main.py          受け口と結線（合成ルート）\ninfra/\n  cloudfront-function/   閲覧ゲート（単一ファイル・層を持たない）\n  contract/              ランタイムをまたぐデータの形\nscripts/           環境構築のCLI",
+      "sourceRoot": ".waffle/skills/artifact-share",
+      "granularity": [
+        {
+          "concept": "usecase",
+          "perFile": 1
+        },
+        {
+          "concept": "aggregate",
+          "perFile": 1
+        },
+        {
+          "concept": "domain-service",
+          "perFile": 1
+        },
+        {
+          "concept": "port",
+          "perFile": 1
+        }
+      ],
+      "compositionRoot": "Lambdaの起動点に1つだけ置く。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ",
+      "compositionRootPaths": [
+        "lambda/admin_api/main.py"
+      ]
+    },
+    "conceptPlacement": {
+      "blockType": "ConceptPlacement",
+      "title": "概念 → 実現形",
+      "items": [
+        {
+          "concept": "usecase",
+          "placements": [
+            {
+              "path": "lambda/admin_api/usecases"
+            }
+          ],
+          "pattern": "エントリメソッド1つ・ドメインは port 経由で呼ぶ"
+        },
+        {
+          "concept": "aggregate",
+          "placements": [
+            {
+              "path": "lambda/admin_api/domain"
+            }
+          ],
+          "pattern": "整合性境界を持つクラス・不変条件をメソッド内で強制"
+        },
+        {
+          "concept": "entity",
+          "placements": [
+            {
+              "path": "lambda/admin_api/domain"
+            }
+          ],
+          "pattern": "同一性は id・集約の内側でのみ可変"
+        },
+        {
+          "concept": "value-object",
+          "placements": [
+            {
+              "path": "lambda/admin_api/domain"
+            }
+          ],
+          "pattern": "不変（frozen dataclass）・値等価"
+        },
+        {
+          "concept": "domain-service",
+          "placements": [
+            {
+              "path": "lambda/admin_api/domain"
+            }
+          ],
+          "pattern": "ステートレス・複数集約を跨る判断"
+        },
+        {
+          "concept": "repository",
+          "placements": [
+            {
+              "role": "interface",
+              "path": "lambda/admin_api/ports"
+            },
+            {
+              "role": "implementation",
+              "path": "lambda/admin_api/adapters"
+            }
+          ],
+          "pattern": "aggregate の load/save・集約1つに1リポジトリ"
+        },
+        {
+          "concept": "port",
+          "placements": [
+            {
+              "path": "lambda/admin_api/ports"
+            }
+          ],
+          "pattern": "application が要求する driven インターフェース（Protocol）。構造体のフィールドとして持たず、型として宣言する"
+        },
+        {
+          "concept": "inbound-adapter",
+          "placements": [
+            {
+              "path": "lambda/admin_api"
+            }
+          ],
+          "pattern": "外部入力を usecase 呼び出しへ変換・判断を持たない"
+        },
+        {
+          "concept": "outbound-adapter",
+          "placements": [
+            {
+              "path": "lambda/admin_api/adapters"
+            }
+          ],
+          "pattern": "port を実装・外部ライブラリをここに閉じ込める。合成ルートの中に無名で書かない"
+        }
+      ]
+    },
+    "rules": {
+      "blockType": "ArchitectureRules",
+      "title": "規約（守るべきルール）",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "依存は内向きのみ"
+        },
+        {
+          "level": "必須",
+          "rule": "外部 I/O・外部ライブラリ（boto3等）は outbound adapter に閉じ込める"
+        },
+        {
+          "level": "必須",
+          "rule": "依存（port / repository）はコンストラクタ注入で受け取る（生成は合成ルートのみ）"
+        },
+        {
+          "level": "禁止",
+          "rule": "合成ルート自体に業務ロジックを書く（配線専用に保つ）"
+        },
+        {
+          "level": "禁止",
+          "rule": "outbound adapter を合成ルートの中に無名クラスとして書く。実装は独立したファイルに置き、名前で参照できるようにする"
+        },
+        {
+          "level": "必須",
+          "rule": "application 境界は結果型で成否を返す。失敗は識別可能なエラーコードを伴う"
+        },
+        {
+          "level": "必須",
+          "rule": "閲覧ゲートは実行環境の制約（単一ファイル・自前モジュール不可・サイズ上限）により層を持たない。宣言された不変条件を、同じシナリオに紐づくテストとともにその1ファイル内で実装する"
+        },
+        {
+          "level": "必須",
+          "rule": "2つのランタイムが同じ業務ルールを守るとき、ルールの宣言は spec に1つだけ置く。実装はランタイムごとに持つが、両方が同じシナリオに紐づくことで対応を保つ。コードの重複は認めるが、宣言の重複は認めない"
+        },
+        {
+          "level": "必須",
+          "rule": "ランタイムをまたいで受け渡すデータの形は infra/contract/ に置き、両方のランタイムがそこを読む。片方が形を直書きすると、もう片方を直したときに気づけない"
+        }
+      ]
+    },
+    "thicknessBySubdomain": {
+      "blockType": "ThicknessBySubdomain",
+      "title": "サブドメイン別の厚み",
+      "items": [
+        {
+          "category": "中核",
+          "thickness": "厚い設計（明示的なドメインモデル）。公開と閲覧の可否はこの製品の中核であり、判断を型で表す"
+        },
+        {
+          "category": "一般",
+          "thickness": "ライブラリを adapter で薄く包む"
+        },
+        {
+          "category": "補完",
+          "thickness": "最小のトランザクションスクリプト。一連の更新が完全に成功するか完全に失敗するかで終わることだけを守る"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "artifact-shareがヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。閲覧ゲートは実行環境の制約により層を持たないため、その扱いも併せて定める。"
+    },
+    "coveredContexts": {
+      "blockType": "CoveredContexts",
+      "title": "実装を受け持つコンテキスト",
+      "items": [
+        "bc-artifact-share"
+      ]
+    }
+  },
+  "tags": [
+    "tier:backend"
+  ]
+}

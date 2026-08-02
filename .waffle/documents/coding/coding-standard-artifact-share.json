@@ -1,0 +1,161 @@
+{
+  "documentId": "coding-standard-artifact-share",
+  "documentType": "Coding",
+  "schemaRef": "CodingSchema/v5",
+  "codingKind": "coding-standard",
+  "stack": "artifact-share",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "artifact-shareのコーディング規約を定めるCoding Standard：coding-standard-artifact-share"
+    },
+    "naming": {
+      "blockType": "Naming",
+      "title": "命名",
+      "fileNameDerivedFrom": "type",
+      "fileNameTransform": "pascal-to-snake",
+      "fileNameSuffix": ".py",
+      "cases": [
+        {
+          "artifact": "module",
+          "case": "snake"
+        },
+        {
+          "artifact": "type",
+          "case": "pascal"
+        },
+        {
+          "artifact": "function",
+          "case": "snake"
+        },
+        {
+          "artifact": "field",
+          "case": "snake"
+        },
+        {
+          "artifact": "function",
+          "visibility": "private",
+          "case": "snake",
+          "prefix": "_"
+        },
+        {
+          "artifact": "constant",
+          "case": "upper-snake"
+        }
+      ],
+      "norms": [
+        {
+          "appliesTo": "語彙",
+          "norm": "仕様のユビキタス言語に一致させる。閲覧・公開・招かれた利用者といった語を、実装都合で言い換えない"
+        },
+        {
+          "appliesTo": "domain",
+          "norm": "ユビキタス言語のみで命名する。技術的接尾辞（Impl/DTO/Manager/Helper等）を付けない"
+        },
+        {
+          "appliesTo": "application",
+          "norm": "動詞＋目的語の業務操作として命名する（例: PublishArtifact、SuspendArtifact）"
+        },
+        {
+          "appliesTo": "outbound adapter",
+          "norm": "使用する技術名を明示してよい（例: S3ArtifactStore、KvsTokenStore）。port実装であることが責務そのものなので技術名を隠す理由が無い"
+        },
+        {
+          "appliesTo": "エッジランタイム",
+          "norm": "JavaScriptの慣習（camelCase）に従う。主ランタイムの表記を持ち込まない"
+        }
+      ]
+    },
+    "style": {
+      "blockType": "Style",
+      "title": "スタイル",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "型注釈を公開関数の引数・戻り値に付ける"
+        },
+        {
+          "level": "必須",
+          "rule": "1関数＝1責務"
+        },
+        {
+          "level": "禁止",
+          "rule": "循環 import"
+        },
+        {
+          "level": "必須",
+          "rule": "importは標準ライブラリ／サードパーティ／ローカルの3グループに分け、グループ間を空行で区切る"
+        },
+        {
+          "level": "禁止",
+          "rule": "エッジランタイムで自前モジュールを読み込む（実行環境が許さない）"
+        }
+      ]
+    },
+    "docstring": {
+      "blockType": "Docstring",
+      "title": "docstring",
+      "style": "Google スタイル docstring",
+      "syntaxKind": "tagged",
+      "tagParams": "Args:",
+      "tagReturns": "Returns:",
+      "tagRaises": "Raises:",
+      "proseMustStartWith": "",
+      "required": [
+        {
+          "artifact": "module",
+          "visibility": "any",
+          "isRequired": true
+        },
+        {
+          "artifact": "type",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "function",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "function",
+          "visibility": "private",
+          "isRequired": false
+        }
+      ],
+      "summaryGuidance": "「何をするか・いつ使うか」を1行の平叙文で。ソースを開かずに検索と判断ができる語を選ぶ。",
+      "example": "def publish_artifact(deps: Deps, request: PublishRequest) -> Result[Artifact]:\n    \"\"\"アーティファクトを公開し、閲覧トークンを発行する。\n\n    Args:\n        deps: 外部との接点（保管・トークンの保管・時刻）。\n        request: 公開したい中身と、招かれた利用者の証明。\n\n    Returns:\n        発行したアーティファクト。招かれていなければ拒否の結果。\n\n    Raises:\n        なし。失敗は結果型で返す。\n    \"\"\""
+    },
+    "rules": {
+      "blockType": "CodingRules",
+      "title": "決定ルール",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "公開要素に要約行つき docstring を書く"
+        },
+        {
+          "level": "禁止",
+          "rule": "コードから導出できる情報を docstring に書く（型の列挙・実装手順の逐語説明）"
+        },
+        {
+          "level": "推奨",
+          "rule": "コメントは「なぜ」を書く（「何を」は命名と要約行が表現する）"
+        },
+        {
+          "level": "必須",
+          "rule": "エッジランタイムは層に分けられないため、業務ルールを実装した箇所には、それがどのシナリオに対応するかを文書コメントで明記する"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "artifact-shareのコーディング規約（命名・スタイル・docstring）を定める。2つのランタイムを持つため、表記は主ランタイム（Python）を基準にし、エッジ側は言語の慣習に従う。"
+    }
+  },
+  "tags": [
+    "tier:backend"
+  ]
+}

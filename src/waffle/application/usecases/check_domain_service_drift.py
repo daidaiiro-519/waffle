@@ -30,10 +30,9 @@ class CheckDomainServiceDrift:
             doc_paths = self._documents.list_files(documents_root, "**/*.json")
         except FileNotFoundError:
             return _err("INVALID_PATH", f"ディレクトリが見つかりません: {documents_root}")
-        try:
-            self._documents.list_dirs(src_root)
-        except FileNotFoundError:
-            return _err("INVALID_PATH", f"ディレクトリが見つかりません: {src_root}")
+        # 宣言された配置がまだ存在しないことは、引数の誤りではなくドリフトそのもの。
+        # 規約を先に書いて実装を後から合わせる進め方では、この状態が正常に起こる。
+        # ここで止めると「まだ何も出来ていない」ことを報告できない
 
         missing_implementation_file: list[dict] = []
         checked_groups: set[str] = set()

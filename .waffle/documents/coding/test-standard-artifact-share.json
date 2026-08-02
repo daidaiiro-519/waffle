@@ -1,0 +1,252 @@
+{
+  "documentId": "test-standard-artifact-share",
+  "documentType": "Coding",
+  "schemaRef": "CodingSchema/v5",
+  "codingKind": "test-standard",
+  "stack": "artifact-share",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "artifact-shareのテスト方針を定めるTest Standard：test-standard-artifact-share"
+    },
+    "testStrategy": {
+      "blockType": "TestStrategy",
+      "title": "テスト方針",
+      "shape": "pyramid",
+      "weights": [
+        {
+          "testType": "unit",
+          "emphasis": "high"
+        },
+        {
+          "testType": "integration",
+          "emphasis": "low"
+        },
+        {
+          "testType": "acceptance",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "contract",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "e2e",
+          "emphasis": "none"
+        }
+      ],
+      "rationale": "公開と閲覧の可否がこの製品の中核であり、その判断はドメインモデルで表す。実際のAWSに触れる検証は費用と実行時間が乗るため、境界の契約テストで代える。"
+    },
+    "testPlan": {
+      "blockType": "TestPlan",
+      "title": "テスト計画",
+      "items": [
+        {
+          "item": "実行タイミング",
+          "value": "すべての変更（コミット前ローカル・PR で CI）"
+        },
+        {
+          "item": "ゲート",
+          "value": "対応するシナリオのネイティブテストが緑であることをマージ必須条件にする"
+        },
+        {
+          "item": "対象外",
+          "value": "実際のAWS環境に対する自動テスト（上げた直後の自己点検は手動で行う）"
+        }
+      ]
+    },
+    "testTypes": {
+      "blockType": "TestTypes",
+      "title": "テストタイプ",
+      "items": [
+        {
+          "testType": "unit",
+          "tool": "pytest",
+          "targets": [
+            "domain",
+            "application"
+          ]
+        },
+        {
+          "testType": "integration",
+          "tool": "pytest",
+          "targets": [
+            "outbound adapter"
+          ]
+        },
+        {
+          "testType": "acceptance",
+          "tool": "pytest",
+          "targets": [
+            "application"
+          ],
+          "note": "仕様のシナリオを見て直接執筆する"
+        },
+        {
+          "testType": "contract",
+          "tool": "pytest",
+          "targets": [
+            "ports",
+            "inbound adapter"
+          ],
+          "note": "本物の実装と偽実装の両方が同じスイートを満たすことを確かめる。ランタイムをまたぐデータの形もここで確かめる"
+        }
+      ]
+    },
+    "framework": {
+      "blockType": "TestFramework",
+      "title": "フレームワーク",
+      "unit": "",
+      "acceptance": ""
+    },
+    "scenarioBinding": {
+      "blockType": "ScenarioBinding",
+      "title": "シナリオの束ね方",
+      "declarationLine": "Scenario: {シナリオ名}",
+      "keyScope": [
+        "layer",
+        "spec",
+        "scenario"
+      ],
+      "fileNameDerivedFrom": "spec-document-id",
+      "blockPlacement": [
+        {
+          "block": "invariantScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "domainServiceScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "guaranteeScenarios",
+          "layer": "application",
+          "testType": "integration"
+        },
+        {
+          "block": "acceptanceScenarios",
+          "layer": "application",
+          "testType": "acceptance"
+        }
+      ],
+      "norms": [
+        {
+          "norm": "突き合わせのキーは文書コメントに置いた宣言行。テスト関数の名前は突き合わせに使わない。仕様の語彙をそのまま識別子にできる言語でしか成立しないため"
+        },
+        {
+          "norm": "テスト関数の命名は対象言語の慣習に従う（PythonならASCIIのsnake_case）"
+        },
+        {
+          "norm": "仕様のシナリオに紐づかないテストは、シナリオ対応テストとは別のファイルへ置く。混ぜると常に孤立として報告され続け、警報が意味を失う"
+        },
+        {
+          "norm": "2つのランタイムが同じシナリオを実装する場合、両方のテストが同じ宣言行を持つ。どちらか一方しか無い状態を、実装が揃っていることと取り違えない"
+        },
+        {
+          "norm": "エッジランタイムの振る舞いは、配る形そのものに対して確かめる。手元のコードだけを確かめても、実行環境の制約で落ちる差分を捕まえられない"
+        }
+      ]
+    },
+    "placementByTarget": {
+      "blockType": "PlacementByTarget",
+      "title": "テスト対象別の配置",
+      "strategy": "layer-first",
+      "items": [
+        {
+          "layer": "domain",
+          "testType": "unit",
+          "path": "tests/domain/unit/"
+        },
+        {
+          "layer": "application",
+          "testType": "unit",
+          "path": "tests/application/unit/"
+        },
+        {
+          "layer": "application",
+          "testType": "acceptance",
+          "path": "tests/application/acceptance/"
+        },
+        {
+          "layer": "application",
+          "testType": "integration",
+          "path": "tests/application/integration/"
+        },
+        {
+          "layer": "ports",
+          "testType": "contract",
+          "path": "tests/ports/contract/",
+          "note": "同じ契約スイートを本物と偽実装の両方に対して実行する"
+        },
+        {
+          "layer": "inbound adapter",
+          "testType": "contract",
+          "path": "tests/adapters/inbound/contract/",
+          "note": "閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う"
+        },
+        {
+          "layer": "outbound adapter",
+          "testType": "integration",
+          "path": "tests/adapters/outbound/integration/"
+        }
+      ]
+    },
+    "rules": {
+      "blockType": "TestRules",
+      "title": "決定ルール",
+      "items": [
+        {
+          "level": "禁止",
+          "rule": "単体テストが実物のAWSサービスに依存する"
+        },
+        {
+          "level": "推奨",
+          "rule": "不変条件はテストダブルなしで検証する"
+        },
+        {
+          "level": "必須",
+          "rule": "テストファイル名は test_{対応するspecのdocumentIdをsnake_case化したもの}.py で統一する"
+        },
+        {
+          "level": "必須",
+          "rule": "tests/ 配下は architecture が宣言するレイヤーを第一階層とし、テスト種別を第二階層とする"
+        },
+        {
+          "level": "必須",
+          "rule": "port の契約テストは、本物の実装とテスト用の偽実装の両方が同じテストスイートを満たすことを確認する"
+        },
+        {
+          "level": "禁止",
+          "rule": "同じ port の偽実装を複数のテストファイルに分けて定義する。少しずつ食い違い、実物なら失敗する場面で偽実装が成功してテストが緑になる"
+        },
+        {
+          "level": "必須",
+          "rule": "時刻・乱数・ID生成のような非決定的な値は、テストダブルで決定的な値に固定する"
+        },
+        {
+          "level": "禁止",
+          "rule": "仕様の記述に、テスト層・アーキテクチャ層の内部語彙を持ち込む"
+        }
+      ]
+    },
+    "docstring": {
+      "blockType": "TestScenarioDocstring",
+      "title": "シナリオdocstring",
+      "style": "テスト関数の文書コメント（docstring）内に、先頭の宣言行「Scenario: {シナリオ名}」と、続くGiven/When/Thenをそのまま記載する",
+      "transcriptionGuidance": "文書コメントには、対応する仕様のシナリオの宣言行とGiven/When/Thenを、言い換えず一字一句そのまま転記する。宣言行は突き合わせのキーそのもの、本文はシナリオ文言の事後編集への追従を検知する材料であり、役割が異なる。",
+      "target": "usecase specのacceptanceScenarios/guaranteeScenarios、aggregate specのinvariantScenariosに対応する全テスト関数",
+      "example": "def test_suspended_artifact_cannot_be_viewed():\n    \"\"\"\n    Scenario: 公開を止めると閲覧トークンで開けない\n    Given 公開されているアーティファクト\n    When 公開を止める\n    Then 閲覧トークンで開けない\n    \"\"\""
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "artifact-shareのテスト方針・配置・シナリオの束ね方を定める。2つのランタイムが同じ業務ルールを守るため、実装は分かれても同じシナリオへ紐づける。"
+    }
+  },
+  "tags": [
+    "tier:backend"
+  ]
+}

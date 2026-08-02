@@ -1,0 +1,137 @@
+{
+  "documentId": "tech-stack-artifact-share",
+  "documentType": "Coding",
+  "schemaRef": "CodingSchema/v5",
+  "codingKind": "tech-stack",
+  "stack": "artifact-share",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "artifact-shareが採用する技術要素を定めるTech Stack仕様：tech-stack-artifact-share"
+    },
+    "identity": {
+      "blockType": "Identity",
+      "title": "スタック概要",
+      "tier": "backend",
+      "stackName": "artifact-share"
+    },
+    "runtime": {
+      "blockType": "Runtime",
+      "title": "ランタイム",
+      "languages": [
+        {
+          "language": "python",
+          "version": ">=3.11",
+          "extensions": [
+            ".py"
+          ],
+          "role": "primary"
+        },
+        {
+          "language": "javascript",
+          "extensions": [
+            ".js"
+          ],
+          "role": "edge"
+        }
+      ],
+      "target": "サーバーレス関数（Lambda）／エッジ関数（CloudFront Functions）／ローカルCLI",
+      "concurrency": "同期主体（1リクエスト1実行。共有状態を持たない）"
+    },
+    "framework": {
+      "blockType": "Framework",
+      "title": "フレームワーク",
+      "name": "",
+      "note": "Webフレームワークは使用しない。Lambdaの関数URL/API Gatewayが受け口を担い、経路の振り分けは自前のディスパッチ表で足りる規模のため。",
+      "rationale": ""
+    },
+    "interface": {
+      "blockType": "Interface",
+      "title": "公開インターフェース",
+      "items": [
+        {
+          "style": "HTTP API",
+          "implementation": "AWS Lambda（API Gateway経由）",
+          "rationale": "管理操作は認証を要し実行回数も少ないため、常駐プロセスを持たない構成が費用と運用の両面で釣り合うため"
+        },
+        {
+          "style": "閲覧ゲート",
+          "implementation": "CloudFront Functions",
+          "rationale": "閲覧のたびにLambdaを起こすと遅延と費用が乗る。トークン照合は配信の面で完結させたいため。実行環境がJavaScriptとサイズ上限を強制する点は制約として受け入れる"
+        },
+        {
+          "style": "CLI",
+          "implementation": "argparse（PEP723のインラインスクリプト）",
+          "rationale": "環境構築の手順を1ファイルで配れるようにするため。追加の依存を要求しない"
+        }
+      ]
+    },
+    "middleware": {
+      "blockType": "Middleware",
+      "title": "ミドルウェア",
+      "items": [
+        {
+          "role": "object-storage",
+          "product": "Amazon S3",
+          "access": "boto3",
+          "rationale": "公開物と索引をそのまま置ける。配信の面（CloudFront）から直接読めるため中間層が要らない"
+        },
+        {
+          "role": "key-value",
+          "product": "CloudFront KeyValueStore",
+          "access": "boto3 / cloudfront組み込みモジュール",
+          "rationale": "エッジ関数から同期で読める唯一の保管。トークン照合を配信の面で完結させるために必要"
+        },
+        {
+          "role": "identity",
+          "product": "Amazon Cognito",
+          "access": "boto3",
+          "rationale": "管理操作の認証を自前で持たないため"
+        }
+      ],
+      "note": ""
+    },
+    "libraries": {
+      "blockType": "Libraries",
+      "title": "ライブラリ",
+      "items": [
+        {
+          "category": "cloud-sdk",
+          "capability": "aws-access",
+          "implementation": "boto3",
+          "rationale": "AWSの各サービスへ触れる唯一の手段。Lambdaの実行環境に同梱されており追加の配布が要らない"
+        }
+      ]
+    },
+    "tooling": {
+      "blockType": "Tooling",
+      "title": "開発ツール",
+      "packageManager": "uv（PEP723のインラインスクリプトで依存を宣言）",
+      "lintFormat": "",
+      "rationale": "環境構築のCLIを1ファイルで配れるようにするため。Lambda側は実行環境の同梱物だけで動くので、パッケージの束ね方を持ち込まない"
+    },
+    "policy": {
+      "blockType": "Policy",
+      "title": "依存方針",
+      "items": [
+        {
+          "level": "必須",
+          "rule": "依存追加は「実行環境に同梱されているもので代替できないか」を確認してから。Lambdaとエッジ関数は配布物の大きさが実行可否に直結する"
+        },
+        {
+          "level": "禁止",
+          "rule": "エッジ関数に外部ライブラリを持ち込む（実行環境が自前モジュールの読み込みを許さない）"
+        }
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "artifact-shareがAWS上で採用する技術要素と、その選定理由を定める。閲覧の面はCloudFront Functionsという実行環境がJavaScriptを強制するため、1つのプロダクトが2つのランタイムを持つ。"
+    }
+  },
+  "tags": [
+    "tier:backend"
+  ]
+}

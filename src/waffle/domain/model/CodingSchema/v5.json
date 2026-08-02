@@ -639,11 +639,14 @@
                 "enum": [
                   "database",
                   "cache",
+                  "key-value",
+                  "object-storage",
                   "message-broker",
                   "search",
+                  "identity",
                   "ap-server"
                 ],
-                "x-prompt-write": "ミドルウェアの役割分類。下のenumから選ぶ。"
+                "x-prompt-write": "ミドルウェアの役割分類。下のenumから選ぶ。key-value は取り出しの唯一の元になる保管（キャッシュではない）、object-storage は成果物そのものの置き場、identity は認証基盤。"
               },
               "product": {
                 "type": "string",
