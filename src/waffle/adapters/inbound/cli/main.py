@@ -206,7 +206,8 @@ def patch_schema(
 ) -> None:
     """Schema定義ファイル自体への構造化編集（uc-patch-schema）。"""
     p = json.loads(params) if params else {}
-    p["schemaRef"] = schema_ref
+    if isinstance(p, dict):
+        p["schemaRef"] = schema_ref  # 形が違う場合は usecase の引数検査に判定を委ねる
     _emit(PatchSchema(_docs(), _schemas(), JsonSchemaValidator()).run(operation, p))
 
 @app.command("check-spec-integrity")

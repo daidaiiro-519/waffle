@@ -25,6 +25,13 @@ class PatchSchema:
         self._validator = validator
 
     def run(self, operation: str, params: dict) -> Result[dict]:
+        if not isinstance(params, dict):
+            # 形の違う引数のまま進むと、参照の時点で例外が境界の外へ漏れる。
+            # application 境界は結果型で成否を返す規約なので、operation を見る前に弾く。
+            return _err(
+                "INVALID_PARAM",
+                f"params は辞書で指定してください（受け取った形: {type(params).__name__}）",
+            )
         if operation == "create_version":
             return self._create_version(params)
 

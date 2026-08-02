@@ -100,6 +100,14 @@ class ScaffoldDocument:
         values = params.get("values")
         if not document_path or values is None:
             return _err("MISSING_PARAM", "fill には documentPath, values が必要です")
+        if not isinstance(values, dict):
+            # 形の違う引数で読み込みまで進むと、書き込み時に例外が境界の外へ漏れる。
+            # application 境界は結果型で成否を返す規約なので、読む前に弾く。
+            return _err(
+                "INVALID_PARAM",
+                "values は {パス: 値} の辞書で指定してください"
+                f"（受け取った形: {type(values).__name__}）",
+            )
         loaded = load_document(self._documents, document_path)
         if isinstance(loaded, Err):
             return loaded
