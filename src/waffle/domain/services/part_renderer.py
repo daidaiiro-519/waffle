@@ -132,13 +132,27 @@ def _join(chunks):
 def _fmt(v):
     return ("✓" if v else "-") if isinstance(v, bool) else v
 
+class _Absent(dict):
+    """joinテンプレートが参照するキーを要素が持たなければ空文字にする。
+
+    任意のフィールドを持つ要素と持たない要素が混ざる配列で、無い側の行に
+    既定値の語を並べずに済ませるため。空になった箇所の前後の空白は
+    要素ごとに落とすので、テンプレートの区切り文字だけが残ることはない。
+    """
+
+    def __missing__(self, key):
+        return ""
+
+
 def _mdcell(v, code=False, join=None, sep=" / ", bullet=False):
     # セル値が配列なら畳む。bullet指定は各要素を "- " 接頭辞つき <br> 区切りの箇条書きにする（join/sepより優先）。
     # bullet指定が無ければ dict 要素は join テンプレ（あれば）/ 文字列要素は str を sep で連結する
     if isinstance(v, list) and bullet:
         v = "<br>".join(f"- {it}" for it in v)
     elif isinstance(v, list):
-        v = sep.join((join.format(**it) if (join and isinstance(it, dict)) else str(it)) for it in v)
+        v = sep.join(
+            (join.format_map(_Absent(it)).strip() if (join and isinstance(it, dict)) else str(it))
+            for it in v)
     s = str(_fmt(v)).replace("|", "\\|").replace("\n", " ")
     return f"`{s}`" if code and s else s
 

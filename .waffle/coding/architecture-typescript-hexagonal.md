@@ -69,15 +69,15 @@ src/
 
 | 概念 | 配置 | 形（決定レベル） |
 |---|---|---|
-| `usecase` | `application/usecases`（single） | エントリメソッド1つ・ドメインは port 経由で呼ぶ |
-| `aggregate` | `domain/model`（single） | 不変条件はメソッド経由でのみ変更できる形にする（コンストラクタとメソッド内に検証ロジックを閉じ込める）。外部の集約はIDで参照し、直接オブジェクトとして保持しない。集約はできるだけ小さく設計する |
-| `entity` | `domain/model`（single） | 同一性はidで判定する（フィールドの値ではない）。単独では実装しない。必ず集約の内部にのみ存在する |
-| `value-object` | `domain/value-objects`（single） | 構造的等価性・不変（readonlyフィールドのみ・状態変更メソッドを持たない） |
-| `domain-service` | `domain/services`（single） | ステートレス（同じ入力に対して常に同じ結果を返す）。複数集約を単一トランザクションでまとめて変更するための抜け道にはしない（1集約=1トランザクションの原則は業務サービスがあっても変わらない） |
-| `repository` | `application/ports`（interface）<br>`adapters/outbound`（implementation） | インターフェースはports、具象はoutbound adapterに置く |
-| `port` | `application/ports`（single） | インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない |
-| `inbound-adapter` | `adapters/inbound`（single） | 外部プロトコルの受け口。usecaseを呼び出すだけで業務ロジックを持たない |
-| `outbound-adapter` | `adapters/outbound`（single） | portの実装。外部システムとの実際のやり取りを担う |
+| `usecase` | `application/usecases` | エントリメソッド1つ・ドメインは port 経由で呼ぶ |
+| `aggregate` | `domain/model` | 不変条件はメソッド経由でのみ変更できる形にする（コンストラクタとメソッド内に検証ロジックを閉じ込める）。外部の集約はIDで参照し、直接オブジェクトとして保持しない。集約はできるだけ小さく設計する |
+| `entity` | `domain/model` | 同一性はidで判定する（フィールドの値ではない）。単独では実装しない。必ず集約の内部にのみ存在する |
+| `value-object` | `domain/value-objects` | 構造的等価性・不変（readonlyフィールドのみ・状態変更メソッドを持たない） |
+| `domain-service` | `domain/services` | ステートレス（同じ入力に対して常に同じ結果を返す）。複数集約を単一トランザクションでまとめて変更するための抜け道にはしない（1集約=1トランザクションの原則は業務サービスがあっても変わらない） |
+| `repository` | interface `application/ports`<br>implementation `adapters/outbound` | インターフェースはports、具象はoutbound adapterに置く |
+| `port` | `application/ports` | インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない |
+| `inbound-adapter` | `adapters/inbound` | 外部プロトコルの受け口。usecaseを呼び出すだけで業務ロジックを持たない |
+| `outbound-adapter` | `adapters/outbound` | portの実装。外部システムとの実際のやり取りを担う |
 
 ---
 

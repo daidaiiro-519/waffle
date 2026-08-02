@@ -1111,7 +1111,7 @@
             {
               "field": "placements",
               "header": "配置",
-              "join": "`{path}`（{role}）",
+              "join": "{role} `{path}`",
               "sep": "<br>"
             },
             {
@@ -1162,20 +1162,18 @@
                 "items": {
                   "type": "object",
                   "required": [
-                    "role",
                     "path"
                   ],
                   "properties": {
                     "role": {
                       "type": "string",
-                      "x-prompt-write": "この配置が担う役割。single=1か所だけ / interface と implementation=宣言と実装を分ける / declaration と definition=ヘッダと本体を分ける言語。",
                       "enum": [
-                        "single",
                         "interface",
                         "implementation",
                         "declaration",
                         "definition"
-                      ]
+                      ],
+                      "x-prompt-write": "この配置が担う役割。1か所にしか置かない概念では指定しない（役割という区別が無いため）。interface と implementation は宣言と実装を分ける場合、declaration と definition はヘッダと本体を分ける言語の場合。"
                     },
                     "path": {
                       "type": "string",

@@ -76,15 +76,15 @@ src/{package}/
 
 | 概念 | 配置 | 形（決定レベル） |
 |---|---|---|
-| `usecase` | `application/usecases`（single） | application service・エントリメソッド1つ・ドメインは port 経由で呼ぶ |
-| `aggregate` | `domain/entities`（single） | 整合性境界を持つクラス・不変条件をメソッド内で強制・コマンドはメソッド・永続化は repository 経由 |
-| `entity` | `domain/entities`（single） | 同一性は id・集約の内側でのみ可変 |
-| `value-object` | `domain/entities`（single） | 不変（frozen dataclass）・値等価 |
-| `domain-service` | `domain/services`（single） | ステートレス・複数集約を跨る計算 |
-| `repository` | `application/ports`（interface）<br>`adapters/outbound`（implementation） | aggregate の load/save・集約1つに1リポジトリ |
-| `port` | `application/ports`（single） | application が要求する driven インターフェース（ABC / Protocol） |
-| `inbound-adapter` | `adapters/inbound`（single） | 外部入力を application 呼び出しへ変換・ロジックを持たない |
-| `outbound-adapter` | `adapters/outbound`（single） | port / repository を実装・外部ライブラリをここに閉じ込める |
+| `usecase` | `application/usecases` | application service・エントリメソッド1つ・ドメインは port 経由で呼ぶ |
+| `aggregate` | `domain/entities` | 整合性境界を持つクラス・不変条件をメソッド内で強制・コマンドはメソッド・永続化は repository 経由 |
+| `entity` | `domain/entities` | 同一性は id・集約の内側でのみ可変 |
+| `value-object` | `domain/entities` | 不変（frozen dataclass）・値等価 |
+| `domain-service` | `domain/services` | ステートレス・複数集約を跨る計算 |
+| `repository` | interface `application/ports`<br>implementation `adapters/outbound` | aggregate の load/save・集約1つに1リポジトリ |
+| `port` | `application/ports` | application が要求する driven インターフェース（ABC / Protocol） |
+| `inbound-adapter` | `adapters/inbound` | 外部入力を application 呼び出しへ変換・ロジックを持たない |
+| `outbound-adapter` | `adapters/outbound` | port / repository を実装・外部ライブラリをここに閉じ込める |
 
 ---
 

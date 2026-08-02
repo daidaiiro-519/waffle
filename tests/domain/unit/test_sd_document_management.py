@@ -398,6 +398,21 @@ def test_table_joins_array_cell_with_join_template():
     assert "status: OrderStatus / total: Money" in md
 
 
+def test_table_join_leaves_absent_field_empty():
+    """joinテンプレートが参照するキーを要素が持たなければ、その箇所は空になる。
+
+    任意のフィールドは、値が無い要素で欄そのものを消せるようにする。無い方が
+    普通である場合（1か所にしか置かない概念の役割 等）に、既定値の語を
+    全行へ並べずに済む。
+    """
+    parts = [{"as": "table", "from": "items", "columns": [
+        {"field": "name", "header": "概念"},
+        {"field": "places", "header": "配置", "join": "{role} {path}", "sep": " / "}]}]
+    data = {"items": [{"name": "usecase", "places": [{"path": "application/usecases"}]}]}
+    md = render_parts(parts, data, 3)
+    assert "| usecase | application/usecases |" in md
+
+
 def test_table_renders_array_cell_as_bullet_list():
     """
     Given bullet:trueを指定したcolumns宣言と複数要素の配列値を持つセル
