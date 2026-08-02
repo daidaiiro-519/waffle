@@ -346,6 +346,30 @@
           "viewpoint": "状態遷移: 既存documentがschemaの新版へ追従していない状態でも書き込めること",
           "gherkin": "Scenario: schema版が変わった後に新設された任意ブロックも既存documentへ書き込める\nGiven schemaが宣言する任意ブロックのキー自体を持たない既存Document\nWhen そのブロック配下の宣言済み値フィールドへfillする\nThen writtenに記録され、ファイルに反映される",
           "covers": "受け入れ基準: 宣言済みの値フィールドに書き込まれる"
+        },
+        {
+          "name": "書き込み単位でない欄を指すと何も書き込まない",
+          "category": "異常系",
+          "viewpoint": "結果の誠実さ：書けない指定を受けたら、書けた分も含めて何も変えない",
+          "gherkin": "Scenario: 書き込み単位でない欄を指すと何も書き込まない\n  Given 作成済みの Document\n  When 書き込み単位でない欄と、書き込める欄を同時に指定する\n  Then 拒否され、書き込める欄も含めて Document は変わらない\n  And 指定すべき欄の候補が示される",
+          "covers": "受け入れ基準: 書き込み結果を偽らない",
+          "operation": "fill"
+        },
+        {
+          "name": "宣言に無い欄を指すと何も書き込まない",
+          "category": "異常系",
+          "viewpoint": "結果の誠実さ：存在しない欄への指定を成功として返さない",
+          "gherkin": "Scenario: 宣言に無い欄を指すと何も書き込まない\n  Given 作成済みの Document\n  When 宣言に無い欄を指定する\n  Then 拒否され、Document は変わらない",
+          "covers": "受け入れ基準: 書き込み結果を偽らない",
+          "operation": "fill"
+        },
+        {
+          "name": "ブロックがまだ無い欄へ書くと種別も一緒に作られる",
+          "category": "正常系",
+          "viewpoint": "構造の完全性：後から新設されたブロックへ書いても、それ単体で適合する",
+          "gherkin": "Scenario: ブロックがまだ無い欄へ書くと種別も一緒に作られる\n  Given ブロックがまだ無い Document\n  When そのブロック配下の欄へ値を書き込む\n  Then ブロックの種別も一緒に作られ、Document は schema に適合する",
+          "covers": "受け入れ基準: 書き込んだ結果が schema に適合する",
+          "operation": "fill"
         }
       ]
     },

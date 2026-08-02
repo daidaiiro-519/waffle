@@ -131,18 +131,39 @@ class ScaffoldDocument:
         allowed |= {e["path"] for e in _build_fill_template(schema, content_def)}
         const_paths = _build_top_level_const_paths(schema, protected) | _build_const_paths(schema, content_def)
 
-        written: list[str] = []
-        skipped: list[str] = []
+        # 指定されたパスは、書き込む前に全件分類する。skip には性質の違う2種類が
+        # 混ざっており、同じ扱いにすると呼び出し側が誤りに気づけない。
+        #   拒否   構造保護が正しく働いた（const・documentId・discriminator）。設計どおり
+        #   不正   そんな欄は無い、または書き込み単位でない。呼び出し側の誤り
+        # 不正が1件でもあれば何も書かずに返す。書ける分だけ書くと、documentが半分だけ
+        # 更新された状態で残り、再実行時に何が済んでいるかを呼び出し側が判断する羽目になる。
+        writable: list[tuple[str, object]] = []
+        rejected: list[str] = []
+        invalid: list[str] = []
         for path, value in values.items():
             # const再同期: schema版更新でconst値自体が変わった既存documentを、現行schemaの
             # 宣言値と完全一致する値でのみ書き込み許可する（任意の値への上書きは引き続き拒否）
-            is_const_resync = path in const_paths and const_paths[path] == value
-            if (path in allowed or is_const_resync) and _set_path(doc, path, value):
+            if path in allowed or (path in const_paths and const_paths[path] == value):
+                writable.append((path, value))
+            elif path in const_paths or path in protected:
+                rejected.append(path)
+            else:
+                invalid.append(path)
+
+        if invalid:
+            return _err("INVALID_FIELD_PATH", _invalid_path_message(invalid, allowed))
+
+        written: list[str] = []
+        for path, value in writable:
+            if _set_path(doc, path, value, const_paths):
                 written.append(path)
             else:
-                skipped.append(path)  # 未知 / const（現行値と不一致）/ discriminator / 構造改変は拒否
-        self._documents.save(document_path, doc)
-        return Ok({"documentPath": document_path, "written": written, "skipped": skipped})
+                rejected.append(path)
+        # 書き込みが無ければ保存しない。無変更の保存は、書き込みを見ている周辺の仕組みへ
+        # 変更があったかのように見える（clear_field / migrate_schema と同じ扱いに揃える）
+        if written:
+            self._documents.save(document_path, doc)
+        return Ok({"documentPath": document_path, "written": written, "skipped": rejected})
 
     def _clear_field(self, params: dict) -> Result[dict]:
         document_path = params.get("documentPath")
@@ -201,20 +222,54 @@ class ScaffoldDocument:
 
 # --- schema 走査ヘルパ（純ロジック・機械的） ---
 
-def _set_path(doc: dict, path: str, value) -> bool:
+def _set_path(doc: dict, path: str, value, const_paths: dict | None = None) -> bool:
     """path上の中間キーが無ければ新設しながら値を設定する（呼び出し元がpathを既に
     allowed/const_pathsで検証済みのため、ここでの新設は現行schemaが宣言する経路に限られる。
-    schema版更新で新設された任意ブロックへ、旧版のまま追従していない既存Documentも書き込めるようにする）。"""
+    schema版更新で新設された任意ブロックへ、旧版のまま追従していない既存Documentも書き込めるようにする）。
+
+    中間キーを新設するときは、その階層がschemaでconstとして宣言している値も一緒に埋める。
+    ブロックの種別（blockType）がこれに当たり、埋めないと値だけを持つ不完全なブロックが
+    でき、書き込みは成功と報告されるのにschemaへ適合しないdocumentが残る。"""
+    const_paths = const_paths or {}
     parts = path.split(".")
     cur = doc
-    for p in parts[:-1]:
+    for i, p in enumerate(parts[:-1]):
         if not isinstance(cur, dict):
             return False
-        cur = cur.setdefault(p, {})
+        if p not in cur:
+            cur[p] = _const_defaults(const_paths, ".".join(parts[: i + 1]))
+        cur = cur[p]
     if not isinstance(cur, dict):
         return False
     cur[parts[-1]] = value
     return True
+
+
+def _const_defaults(const_paths: dict, prefix: str) -> dict:
+    """prefixが指す階層の直下にあるconstフィールドを、宣言値のまま持つdictを作る。"""
+    depth = prefix.count(".") + 1
+    return {
+        p.split(".")[-1]: v
+        for p, v in const_paths.items()
+        if p.startswith(prefix + ".") and p.count(".") == depth
+    }
+
+
+def _invalid_path_message(invalid: list[str], allowed: set) -> str:
+    """書けなかったパスごとに、何が問題で、代わりにどこを指せばよいかを述べる。
+
+    書き込み単位より粗い指定（ブロックそのものを指す等）は、単に「知らない欄」として
+    返すと呼び出し側が綴りを疑い始める。実際には正しい欄の一段上を指しているだけなので、
+    その下にある書き込み単位を候補として並べる。"""
+    lines = []
+    for path in sorted(invalid):
+        children = sorted(p for p in allowed if p.startswith(path + "."))
+        if children:
+            lines.append(f"{path} は書き込み単位ではありません。"
+                         f"{' / '.join(children)} のいずれかを指定してください")
+        else:
+            lines.append(f"{path} は schema が宣言していない欄です")
+    return "／".join(lines)
 
 def _is_required_path(schema: dict, content_def: dict, path: str) -> bool:
     """pathの直下フィールドが、その階層のschema required配列に含まれるか判定する

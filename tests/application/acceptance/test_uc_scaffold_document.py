@@ -511,3 +511,85 @@ def test_migrate_schema_rejects_an_unresolvable_schema_ref():
     assert FsDocumentRepository().load(_MIGRATE_DOC_PATH) == before
 
 
+
+
+def _skill_doc_path() -> str:
+    result = _engine().run(
+        "create",
+        {"schemaRef": _SKILL_SCHEMA, "documentId": _TEST_DOC_ID, "discriminator": {"skillKind": "advisor"}},
+    )
+    assert isinstance(result, Ok), result
+    return result.value["path"]
+
+
+def test_too_coarse_path_writes_nothing():
+    """
+    Scenario: 書き込み単位でない欄を指すと何も書き込まない
+    Given 作成済みの Document
+    When 書き込み単位でない欄と、書き込める欄を同時に指定する
+    Then 拒否され、書き込める欄も含めて Document は変わらない
+    And 指定すべき欄の候補が示される
+    """
+    path = _skill_doc_path()
+    before = Path(path).read_text()
+
+    fill_result = _engine().run(
+        "fill",
+        {"documentPath": path, "values": {
+            "content.inputExpectation": {"blockType": "InputExpectation", "items": []},
+            "content.inputExpectation.items": [{"aspect": "対象", "interpretation": "既定は現在"}],
+        }},
+    )
+    assert isinstance(fill_result, Err), fill_result
+    assert "INVALID_FIELD_PATH" in fill_result.details
+    # 書ける指定が混ざっていても、Documentは一切変わらない
+    assert Path(path).read_text() == before
+    # どこを指せばよかったのかが分かる
+    assert "content.inputExpectation.items" in fill_result.message
+
+
+def test_unknown_path_writes_nothing():
+    """
+    Scenario: 宣言に無い欄を指すと何も書き込まない
+    Given 作成済みの Document
+    When 宣言に無い欄を指定する
+    Then 拒否され、Document は変わらない
+    """
+    path = _skill_doc_path()
+    before = Path(path).read_text()
+
+    fill_result = _engine().run(
+        "fill", {"documentPath": path, "values": {"content.存在しない欄": "x"}})
+
+    assert isinstance(fill_result, Err), fill_result
+    assert "INVALID_FIELD_PATH" in fill_result.details
+    assert Path(path).read_text() == before
+
+
+def test_missing_block_is_created_with_its_block_type():
+    """
+    Scenario: ブロックがまだ無い欄へ書くと種別も一緒に作られる
+    Given ブロックがまだ無い Document
+    When そのブロック配下の欄へ値を書き込む
+    Then ブロックの種別も一緒に作られ、Document は schema に適合する
+    """
+    path = _skill_doc_path()
+    doc = FsDocumentRepository().load(path)
+    del doc["content"]["inputExpectation"]
+    FsDocumentRepository().save(path, doc)
+
+    fill_result = _engine().run(
+        "fill",
+        {"documentPath": path, "values": {"content.inputExpectation.items": [
+            {"aspect": "対象ブランチ", "interpretation": "指定が無ければ現在のブランチ"},
+        ]}},
+    )
+    assert isinstance(fill_result, Ok), fill_result
+
+    reloaded = FsDocumentRepository().load(path)
+    assert "blockType" in reloaded["content"]["inputExpectation"]
+
+    validated = ValidateDocument(
+        FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator()
+    ).run(path)
+    assert isinstance(validated, Ok), getattr(validated, "details", validated)
