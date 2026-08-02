@@ -6,6 +6,8 @@ from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.shared.result import Err
 
+from tests.fakes import JAVA_NAMING, PYTHON_NAMING
+
 
 def _engine() -> CheckOperationDrift:
     return CheckOperationDrift(FsDocumentRepository())
@@ -22,6 +24,6 @@ def test_missing_documents_root_is_invalid_path(tmp_path):
     src_root = tmp_path / "src"
     src_root.mkdir(parents=True, exist_ok=True)
 
-    result = _engine().run(str(tmp_path / "no-such-dir"), str(src_root))
+    result = _engine().run(str(tmp_path / "no-such-dir"), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_PATH"

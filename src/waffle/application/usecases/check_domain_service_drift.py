@@ -10,7 +10,7 @@ usecase/aggregateと異なり、業務サービスは「1サービス＝1ファ�
 from __future__ import annotations
 
 from waffle.application.ports.document_repository import DocumentRepository
-from waffle.domain.services.canonical_naming import to_snake_case
+from waffle.domain.services.canonical_naming import file_name
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
 
@@ -23,7 +23,7 @@ class CheckDomainServiceDrift:
     def __init__(self, documents: DocumentRepository) -> None:
         self._documents = documents
 
-    def run(self, documents_root: str, src_root: str) -> Result[dict]:
+    def run(self, documents_root: str, src_root: str, naming: dict) -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
@@ -47,7 +47,7 @@ class CheckDomainServiceDrift:
                 if not group or group in checked_groups:
                     continue
                 checked_groups.add(group)
-                expected_path = f"{src_root}/{to_snake_case(group)}.py"
+                expected_path = f"{src_root}/{file_name(group, naming)}"
                 try:
                     self._documents.read_text(expected_path)
                 except FileNotFoundError:

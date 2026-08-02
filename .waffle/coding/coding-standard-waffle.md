@@ -30,6 +30,7 @@ Waffle自身のコーディング規約（命名・スタイル・docstring）�
 | `module` |  | snake |  |
 | `type` |  | pascal |  |
 | `function` |  | snake |  |
+| `field` |  | snake |  |
 | `function` | private | snake | `_` |
 
 ### 規範

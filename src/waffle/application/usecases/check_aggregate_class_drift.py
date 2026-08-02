@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from waffle.application.ports.class_declaration_extractor import ClassDeclarationExtractor
 from waffle.application.ports.document_repository import DocumentRepository
-from waffle.domain.services.canonical_naming import language_extension, operation_name_to_module_name, to_snake_case
+from waffle.domain.services.canonical_naming import apply_case, case_for, file_name
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
 
@@ -24,26 +24,26 @@ def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 
-def _declared_attributes(doc: dict, root_name: str) -> list[str]:
+def _declared_attributes(doc: dict, root_name: str, case: str) -> list[str]:
     entities = doc.get("content", {}).get("entities", {}).get("items", [])
     root = next((e for e in entities if e.get("name") == root_name), None)
     if root is None:
         return []
-    return [to_snake_case(a["name"]) for a in root.get("attributes", [])]
+    return [apply_case(a["name"], case) for a in root.get("attributes", [])]
 
 
 def _declared_value_objects(doc: dict) -> list[str]:
     return [v["name"] for v in doc.get("content", {}).get("valueObjects", {}).get("items", [])]
 
 
-def _declared_value_object_attributes(doc: dict, vo_name: str) -> list[str] | None:
-    """値オブジェクトitemがattributesを宣言していればsnake_case変換したリストを返す。
+def _declared_value_object_attributes(doc: dict, vo_name: str, case: str) -> list[str] | None:
+    """値オブジェクトitemがattributesを宣言していれば、宣言された表記へ変換したリストを返す。
     未宣言（旧形式のdocument）ならNone（属性レベルの突き合わせをスキップする合図）。"""
     items = doc.get("content", {}).get("valueObjects", {}).get("items", [])
     vo = next((v for v in items if v.get("name") == vo_name), None)
     if vo is None or "attributes" not in vo:
         return None
-    return [to_snake_case(a["name"]) for a in vo["attributes"]]
+    return [apply_case(a["name"], case) for a in vo["attributes"]]
 
 
 class CheckAggregateClassDrift:
@@ -51,13 +51,14 @@ class CheckAggregateClassDrift:
         self._documents = documents
         self._extractor = extractor
 
-    def run(self, documents_root: str, src_root: str, language: str = "python") -> Result[dict]:
+    def run(self, documents_root: str, src_root: str, naming: dict,
+            language: str = "python") -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
-            extension = language_extension(language)
+            field_case = case_for(naming, "field")
         except ValueError as e:
-            return _err("UNSUPPORTED_LANGUAGE", str(e))
+            return _err("NAMING_NOT_DECLARED", str(e))
         try:
             doc_paths = self._documents.list_files(documents_root, "**/*.json")
         except FileNotFoundError:
@@ -80,8 +81,7 @@ class CheckAggregateClassDrift:
             root_name = doc.get("content", {}).get("aggregateRoot", {}).get("name")
             if not root_name:
                 continue
-            module_name = operation_name_to_module_name(root_name)
-            expected_path = f"{src_root}/{module_name}.{extension}"
+            expected_path = f"{src_root}/{file_name(root_name, naming)}"
             try:
                 source = self._documents.read_text(expected_path)
             except FileNotFoundError:
@@ -97,7 +97,7 @@ class CheckAggregateClassDrift:
                         "valueObjectName": vo_name, "expectedPath": expected_path,
                     })
                     continue
-                declared_vo_attributes = _declared_value_object_attributes(doc, vo_name)
+                declared_vo_attributes = _declared_value_object_attributes(doc, vo_name, field_case)
                 if declared_vo_attributes:
                     found_vo_fields = self._extractor.field_names(source, language, vo_name)
                     if set(declared_vo_attributes) != set(found_vo_fields):
@@ -112,7 +112,7 @@ class CheckAggregateClassDrift:
                     "expectedPath": expected_path, "foundClasses": found_classes,
                 })
                 continue
-            declared_attributes = _declared_attributes(doc, root_name)
+            declared_attributes = _declared_attributes(doc, root_name, field_case)
             found_fields = self._extractor.field_names(source, language, root_name)
             if declared_attributes and set(declared_attributes) != set(found_fields):
                 attribute_mismatch.append({

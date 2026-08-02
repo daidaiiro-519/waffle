@@ -37,6 +37,7 @@ from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.application.services.source_root_resolution import resolve_src_root
+from waffle.application.services.stack_resolution import resolve_naming
 from waffle.shared.result import Err, Ok, Result
 
 mcp = FastMCP("waffle")
@@ -61,6 +62,17 @@ def _resolve_src_root(src_root: str | None, architecture_ref: str | None, concep
 
 def _class_extractor() -> TreeSitterClassExtractor:
     return TreeSitterClassExtractor()
+
+def _resolve_naming(architecture_ref: str | None) -> dict:
+    """命名規約の解決を application へ委ね、失敗ならエラーdictへ翻訳する。"""
+    if not architecture_ref:
+        return {"error": "MISSING_PARAM",
+                "message": "命名規約を引くために architectureRef が必要です"}
+    result = resolve_naming(_docs(), architecture_ref)
+    if isinstance(result, Err):
+        return {"error": result.details[0], "message": result.message}
+    return result.value
+
 
 @mcp.tool
 def query_document(
@@ -196,7 +208,10 @@ def check_usecase_class_drift(
     resolved = _resolve_src_root(srcRoot, architectureRef, "usecase")
     if isinstance(resolved, dict):
         return resolved
-    return _dict(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documentsRoot, resolved, language))
+    naming = _resolve_naming(architectureRef)
+    if isinstance(naming, dict) and "error" in naming:
+        return naming
+    return _dict(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documentsRoot, resolved, naming, language))
 
 @mcp.tool
 def check_aggregate_class_drift(
@@ -206,7 +221,10 @@ def check_aggregate_class_drift(
     resolved = _resolve_src_root(srcRoot, architectureRef, "aggregate")
     if isinstance(resolved, dict):
         return resolved
-    return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documentsRoot, resolved, language))
+    naming = _resolve_naming(architectureRef)
+    if isinstance(naming, dict) and "error" in naming:
+        return naming
+    return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documentsRoot, resolved, naming, language))
 
 @mcp.tool
 def check_domain_service_drift(documentsRoot: str = ".waffle/documents", srcRoot: str | None = None, architectureRef: str | None = None) -> dict:
@@ -214,7 +232,10 @@ def check_domain_service_drift(documentsRoot: str = ".waffle/documents", srcRoot
     resolved = _resolve_src_root(srcRoot, architectureRef, "domain-service")
     if isinstance(resolved, dict):
         return resolved
-    return _dict(CheckDomainServiceDrift(_docs()).run(documentsRoot, resolved))
+    naming = _resolve_naming(architectureRef)
+    if isinstance(naming, dict) and "error" in naming:
+        return naming
+    return _dict(CheckDomainServiceDrift(_docs()).run(documentsRoot, resolved, naming))
 
 @mcp.tool
 def check_operation_drift(documentsRoot: str = ".waffle/documents", srcRoot: str | None = None, architectureRef: str | None = None) -> dict:
@@ -222,7 +243,10 @@ def check_operation_drift(documentsRoot: str = ".waffle/documents", srcRoot: str
     resolved = _resolve_src_root(srcRoot, architectureRef, "usecase")
     if isinstance(resolved, dict):
         return resolved
-    return _dict(CheckOperationDrift(_docs()).run(documentsRoot, resolved))
+    naming = _resolve_naming(architectureRef)
+    if isinstance(naming, dict) and "error" in naming:
+        return naming
+    return _dict(CheckOperationDrift(_docs()).run(documentsRoot, resolved, naming))
 
 @mcp.tool
 def scan_source_code(path: str, kind: str) -> dict | list:

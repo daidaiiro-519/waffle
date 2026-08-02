@@ -7,6 +7,8 @@ from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClass
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.shared.result import Ok
 
+from tests.fakes import JAVA_NAMING, PYTHON_NAMING
+
 
 def _engine() -> CheckUsecaseClassDrift:
     return CheckUsecaseClassDrift(FsDocumentRepository(), TreeSitterClassExtractor())
@@ -40,7 +42,7 @@ def test_all_usecase_operations_match_implementation(tmp_path):
         "class CheckScenarioDrift:\n    pass\n", encoding="utf-8"
     )
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value == {"missing_implementation_file": [], "class_name_mismatch": []}
 
@@ -57,7 +59,7 @@ def test_usecase_without_implementation_file(tmp_path):
     _write(docs_root / "usecase" / "uc-a.json", _usecase_doc("CheckScenarioDrift"))
     src_root.mkdir(parents=True, exist_ok=True)
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["missing_implementation_file"] == [
         {"documentId": "uc-a", "operationName": "CheckScenarioDrift", "expectedPath": str(src_root / "check_scenario_drift.py")}
@@ -75,11 +77,12 @@ def test_detects_class_drift_in_java_implementation(tmp_path):
     src_root = tmp_path / "src"
     _write(docs_root / "usecase" / "uc-a.json", _usecase_doc("CheckScenarioDrift"))
     src_root.mkdir(parents=True, exist_ok=True)
-    (src_root / "check_scenario_drift.java").write_text(
+    # Javaは公開クラスを含むファイルの名前が型名と一致していないとコンパイルできない
+    (src_root / "CheckScenarioDrift.java").write_text(
         "public class CheckScenarioDrift {\n    private String x;\n}\n", encoding="utf-8"
     )
 
-    result = _engine().run(str(docs_root), str(src_root), language="java")
+    result = _engine().run(str(docs_root), str(src_root), JAVA_NAMING, language="java")
     assert isinstance(result, Ok), result
     assert result.value == {"missing_implementation_file": [], "class_name_mismatch": []}
 
@@ -99,7 +102,7 @@ def test_usecase_with_mismatched_class_name(tmp_path):
         "class SomethingElse:\n    pass\n", encoding="utf-8"
     )
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["class_name_mismatch"] == [
         {

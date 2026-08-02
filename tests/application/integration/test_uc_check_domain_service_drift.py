@@ -5,6 +5,8 @@ from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.application.usecases.check_domain_service_drift import CheckDomainServiceDrift
 from waffle.shared.result import Err
 
+from tests.fakes import JAVA_NAMING, PYTHON_NAMING
+
 
 def _engine() -> CheckDomainServiceDrift:
     return CheckDomainServiceDrift(FsDocumentRepository())
@@ -16,6 +18,6 @@ def test_missing_documents_root_is_invalid_path():
     When 存在しないdocuments_rootでドリフト検査を実行する
     Then INVALID_PATHエラーが返る
     """
-    result = _engine().run("does/not/exist", ".")
+    result = _engine().run("does/not/exist", ".", PYTHON_NAMING)
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_PATH"

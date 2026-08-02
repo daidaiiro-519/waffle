@@ -10,7 +10,7 @@ usecase等）は対象外（宣言が無ければ突き合わせようがない�
 from __future__ import annotations
 
 from waffle.application.ports.document_repository import DocumentRepository
-from waffle.domain.services.canonical_naming import operation_name_to_module_name
+from waffle.domain.services.canonical_naming import file_name
 from waffle.domain.services.operation_drift import declared_operations, implemented_operations
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
@@ -24,7 +24,7 @@ class CheckOperationDrift:
     def __init__(self, documents: DocumentRepository) -> None:
         self._documents = documents
 
-    def run(self, documents_root: str, src_root: str) -> Result[dict]:
+    def run(self, documents_root: str, src_root: str, naming: dict) -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
@@ -47,8 +47,8 @@ class CheckOperationDrift:
             if not declared:
                 continue
             operation_name = doc.get("content", {}).get("usecase", {}).get("operationName")
-            module_name = operation_name_to_module_name(operation_name) if operation_name else None
-            expected_path = f"{src_root}/{module_name}.py" if module_name else None
+            expected_path = (f"{src_root}/{file_name(operation_name, naming)}"
+                             if operation_name else None)
             try:
                 source = self._documents.read_text(expected_path) if expected_path else ""
             except FileNotFoundError:

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from waffle.application.ports.class_declaration_extractor import ClassDeclarationExtractor
 from waffle.application.ports.document_repository import DocumentRepository
-from waffle.domain.services.canonical_naming import language_extension, operation_name_to_module_name
+from waffle.domain.services.canonical_naming import file_name
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
 
@@ -27,13 +27,10 @@ class CheckUsecaseClassDrift:
         self._documents = documents
         self._extractor = extractor
 
-    def run(self, documents_root: str, src_root: str, language: str = "python") -> Result[dict]:
+    def run(self, documents_root: str, src_root: str, naming: dict,
+            language: str = "python") -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
-        try:
-            extension = language_extension(language)
-        except ValueError as e:
-            return _err("UNSUPPORTED_LANGUAGE", str(e))
         try:
             doc_paths = self._documents.list_files(documents_root, "**/*.json")
         except FileNotFoundError:
@@ -57,8 +54,7 @@ class CheckUsecaseClassDrift:
             operation_name = doc.get("content", {}).get("usecase", {}).get("operationName")
             if not operation_name:
                 continue
-            module_name = operation_name_to_module_name(operation_name)
-            expected_path = f"{src_root}/{module_name}.{extension}"
+            expected_path = f"{src_root}/{file_name(operation_name, naming)}"
             try:
                 source = self._documents.read_text(expected_path)
             except FileNotFoundError:

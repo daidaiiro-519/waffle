@@ -7,6 +7,8 @@ from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClass
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.shared.result import Ok
 
+from tests.fakes import JAVA_NAMING, PYTHON_NAMING
+
 
 def _engine() -> CheckAggregateClassDrift:
     return CheckAggregateClassDrift(FsDocumentRepository(), TreeSitterClassExtractor())
@@ -61,7 +63,7 @@ def test_all_aggregate_roots_match_implementation(tmp_path):
         "class SchemaId:\n    value: str\n\n\nclass Schema:\n    schema_id: str\n    version: str\n", encoding="utf-8"
     )
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value == {
         "missing_implementation_file": [], "class_name_mismatch": [],
@@ -84,7 +86,7 @@ def test_declared_value_object_missing_in_implementation(tmp_path):
         "class SchemaId:\n    value: str\n\n\nclass Schema:\n    schema_id: str\n", encoding="utf-8"
     )
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["missing_value_object"] == [
         {"documentId": "agg-a", "aggregateRootName": "Schema", "valueObjectName": "Version", "expectedPath": str(src_root / "schema.py")}
@@ -104,7 +106,7 @@ def test_class_name_match_with_empty_attributes_is_reported(tmp_path):
     src_root.mkdir(parents=True, exist_ok=True)
     (src_root / "schema.py").write_text("class Schema:\n    pass\n", encoding="utf-8")
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["attribute_mismatch"] == [
         {
@@ -129,7 +131,7 @@ def test_aggregate_without_implementation_file(tmp_path):
     _write(docs_root / "aggregate" / "agg-a.json", _aggregate_doc("Schema"))
     src_root.mkdir(parents=True, exist_ok=True)
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["missing_implementation_file"] == [
         {"documentId": "agg-a", "aggregateRootName": "Schema", "expectedPath": str(src_root / "schema.py")}
@@ -149,7 +151,7 @@ def test_aggregate_with_mismatched_class_name(tmp_path):
     src_root.mkdir(parents=True, exist_ok=True)
     (src_root / "schema.py").write_text("class SomethingElse:\n    pass\n", encoding="utf-8")
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["class_name_mismatch"] == [
         {
@@ -179,7 +181,7 @@ def test_value_object_class_match_with_empty_attributes_is_reported(tmp_path):
         "class SchemaId:\n    pass\n\n\nclass Schema:\n    schema_id: str\n", encoding="utf-8"
     )
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["value_object_attribute_mismatch"] == [
         {
@@ -208,6 +210,6 @@ def test_value_object_without_declared_attributes_is_skipped(tmp_path):
         "class SchemaId:\n    pass\n\n\nclass Schema:\n    schema_id: str\n", encoding="utf-8"
     )
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["value_object_attribute_mismatch"] == []

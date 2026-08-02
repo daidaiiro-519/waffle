@@ -6,6 +6,8 @@ from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.application.usecases.check_domain_service_drift import CheckDomainServiceDrift
 from waffle.shared.result import Ok
 
+from tests.fakes import JAVA_NAMING, PYTHON_NAMING
+
 
 def _engine() -> CheckDomainServiceDrift:
     return CheckDomainServiceDrift(FsDocumentRepository())
@@ -37,7 +39,7 @@ def test_all_domain_services_match_implementation(tmp_path):
     src_root.mkdir(parents=True, exist_ok=True)
     (src_root / "group_a.py").write_text("def service_a():\n    pass\n", encoding="utf-8")
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value == {"missing_implementation_file": []}
 
@@ -54,7 +56,7 @@ def test_domain_service_without_implementation_file(tmp_path):
     _write(docs_root / "bc-a.json", _bc_doc([{"name": "サービスA", "responsibility": "x", "serviceName": "ServiceA", "group": "GroupA"}]))
     src_root.mkdir(parents=True, exist_ok=True)
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["missing_implementation_file"] == [
         {"documentId": "bc-a", "group": "GroupA", "expectedPath": str(src_root / "group_a.py")}
@@ -76,7 +78,7 @@ def test_services_sharing_a_group_are_checked_once(tmp_path):
     ]))
     src_root.mkdir(parents=True, exist_ok=True)
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["missing_implementation_file"] == [
         {"documentId": "bc-a", "group": "SharedGroup", "expectedPath": str(src_root / "shared_group.py")}

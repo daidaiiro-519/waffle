@@ -6,6 +6,8 @@ from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
 from waffle.shared.result import Ok
 
+from tests.fakes import JAVA_NAMING, PYTHON_NAMING
+
 
 def _engine() -> CheckOperationDrift:
     return CheckOperationDrift(FsDocumentRepository())
@@ -48,7 +50,7 @@ def test_declared_and_implemented_operations_match(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
 
@@ -66,7 +68,7 @@ def test_operation_declared_but_not_implemented(tmp_path):
     src_root.mkdir(parents=True, exist_ok=True)
     (src_root / "query_document.py").write_text('if operation == "get_block":\n    pass\n', encoding="utf-8")
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["operations_missing_in_impl"] == [
         {"documentId": "uc-a", "operation": "renamed_op", "expectedPath": str(src_root / "query_document.py")}
@@ -89,7 +91,7 @@ def test_operation_implemented_but_not_declared(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["operations_undocumented_in_spec"] == [
         {"documentId": "uc-a", "operation": "undocumented_op", "expectedPath": str(src_root / "query_document.py")}
@@ -108,6 +110,6 @@ def test_usecase_without_declared_operations_is_skipped(tmp_path):
     _write(docs_root / "usecase" / "uc-a.json", _usecase_doc("ValidateDocument", []))
     src_root.mkdir(parents=True, exist_ok=True)
 
-    result = _engine().run(str(docs_root), str(src_root))
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}

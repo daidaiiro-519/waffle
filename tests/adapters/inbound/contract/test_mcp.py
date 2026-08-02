@@ -325,16 +325,19 @@ def test_missing_both_src_root_and_architecture_ref_errors():
 
 def test_explicit_src_root_takes_precedence_over_architecture_ref():
     """
-    Given 存在しないarchitectureRefと、実在するsrcRootの両方を指定する
+    Given 実在するarchitectureRefと、実装が置かれていない別のsrcRootを指定する
     When check_usecase_class_driftツールを呼ぶ
-    Then srcRootが優先され、エラーにならない
+    Then 探す場所はsrcRootが優先され、architectureRefの配置は使われない
+
+    architectureRefはファイル名の組み立て方（命名規約の宣言）を引くために
+    必要で、srcRootが上書きするのは探す場所だけ。
     """
     out = asyncio.run(_call("check_usecase_class_drift", {
-        "srcRoot": "src/waffle/application/usecases",
-        "architectureRef": "no-such-architecture-document",
+        "srcRoot": "src/waffle/domain/services",
+        "architectureRef": "architecture-waffle",
         "documentsRoot": ".waffle/documents/specs/bc-waffle",
     }))
-    assert out == {"missing_implementation_file": [], "class_name_mismatch": []}
+    assert out["missing_implementation_file"], "srcRootが使われていれば usecase は見つからない"
 
 
 def test_unknown_architecture_ref_returns_not_found():

@@ -76,3 +76,28 @@ class FakeSchemaRepository:
         if schema_ref not in self._schemas:
             raise FileNotFoundError(schema_ref)
         return f"{schema_ref}.json"
+
+
+# 検査が読む命名規約の宣言。テストは「どの規約のもとで検査するか」を明示する。
+PYTHON_NAMING = {
+    "fileNameDerivedFrom": "type",
+    "fileNameTransform": "pascal-to-snake",
+    "fileNameSuffix": "." + "py",
+    "cases": [
+        {"artifact": "module", "case": "snake"},
+        {"artifact": "type", "case": "pascal"},
+        {"artifact": "function", "case": "snake"},
+        {"artifact": "field", "case": "snake"},
+    ],
+}
+
+JAVA_NAMING = {
+    "fileNameDerivedFrom": "type",
+    "fileNameTransform": "identity",
+    "fileNameSuffix": ".java",
+    "cases": [
+        {"artifact": "type", "case": "pascal"},
+        {"artifact": "function", "case": "camel"},
+        {"artifact": "field", "case": "camel"},
+    ],
+}

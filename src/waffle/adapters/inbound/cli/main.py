@@ -46,6 +46,7 @@ from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.application.services.source_root_resolution import resolve_src_root
+from waffle.application.services.stack_resolution import resolve_naming
 from waffle.shared.result import Err, Ok, Result
 
 app = typer.Typer(
@@ -78,6 +79,20 @@ def _resolve_src_root(src_root: str | None, architecture_ref: str | None, concep
     if isinstance(result, Err):
         _emit(result)
     return result.value
+
+def _resolve_naming(architecture_ref: str | None) -> dict:
+    """命名規約の解決を application へ委ね、失敗ならエラーを出して終了する。
+
+    --srcRoot は探す場所を上書きするが、ファイル名の組み立て方は規約の宣言
+    からしか決まらないので architectureRef が要る。
+    """
+    if not architecture_ref:
+        _emit(Err("命名規約を引くために --architectureRef が必要です", ["MISSING_PARAM"]))
+    result = resolve_naming(_docs(), architecture_ref)
+    if isinstance(result, Err):
+        _emit(result)
+    return result.value
+
 
 @app.command()
 def query(
@@ -277,7 +292,8 @@ def check_usecase_class_drift(
 ) -> None:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
-    _emit(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(documents_root, resolved_src_root, language))
+    _emit(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(
+        documents_root, resolved_src_root, _resolve_naming(architecture_ref), language))
 
 @app.command("check-aggregate-class-drift")
 def check_aggregate_class_drift(
@@ -288,7 +304,8 @@ def check_aggregate_class_drift(
 ) -> None:
     """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "aggregate")
-    _emit(CheckAggregateClassDrift(_docs(), _class_extractor()).run(documents_root, resolved_src_root, language))
+    _emit(CheckAggregateClassDrift(_docs(), _class_extractor()).run(
+        documents_root, resolved_src_root, _resolve_naming(architecture_ref), language))
 
 @app.command("check-domain-service-drift")
 def check_domain_service_drift(
@@ -298,7 +315,8 @@ def check_domain_service_drift(
 ) -> None:
     """業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "domain-service")
-    _emit(CheckDomainServiceDrift(_docs()).run(documents_root, resolved_src_root))
+    _emit(CheckDomainServiceDrift(_docs()).run(
+        documents_root, resolved_src_root, _resolve_naming(architecture_ref)))
 
 @app.command("check-operation-drift")
 def check_operation_drift(
@@ -308,7 +326,8 @@ def check_operation_drift(
 ) -> None:
     """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
-    _emit(CheckOperationDrift(_docs()).run(documents_root, resolved_src_root))
+    _emit(CheckOperationDrift(_docs()).run(
+        documents_root, resolved_src_root, _resolve_naming(architecture_ref)))
 
 @app.command("scan-source-code")
 def scan_source_code(
