@@ -3,7 +3,7 @@ id: "coding-standard-typescript-hexagonal"
 type: "coding-standard"
 title: "TypeScript/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-typescript-hexagonal"
 description: "TypeScript/ヘキサゴナル構成のコーディング規約（命名・スタイル）を定める。"
-schemaRef: "CodingSchema/v4"
+schemaRef: "CodingSchema/v5"
 ---
 
 # TypeScript/ヘキサゴナル構成のコーディング規約を定めるCoding Standard：coding-standard-typescript-hexagonal
@@ -16,16 +16,29 @@ TypeScript/ヘキサゴナル構成のコーディング規約（命名・スタ
 
 ## 命名
 
-| 対象 | 規約 |
+### ファイル名
+
+- **由来**: type
+- **変換**: pascal-to-kebab
+- **拡張子**: .ts
+
+### 表記
+
+| 対象 | 可視性 | 表記 | 接頭辞 |
+|---|---|---|---|
+| `type` |  | pascal |  |
+| `function` |  | camel |  |
+| `field` |  | camel |  |
+| `constant` |  | upper-snake |  |
+
+### 規範
+
+| 適用先 | 規範 |
 |---|---|
-| ファイル | kebab-case。例: order-repository.ts |
-| クラス・型・インターフェース | PascalCase |
-| 関数・変数・メソッド | camelCase |
-| 定数 | UPPER_SNAKE_CASE（モジュールスコープの真の定数のみ） |
-| 業務語彙 | 仕様のユビキタス言語に一致させる（実装都合の言い換えをしない） |
-| domain層の識別子 | ユビキタス言語のみで命名し、技術的接尾辞（Impl/DTO/Manager/Helper等）をつけない |
-| outbound adapter層の識別子 | 使用する技術を明示してよい。例: SqliteOrderRepository, DrizzleOrderRepository |
-| usecase | 動詞＋目的語の業務操作名で命名する。例: RequestPickup, RegisterOrder |
+| 語彙 | 仕様のユビキタス言語に一致させる（実装都合の言い換えをしない） |
+| domain | ユビキタス言語のみで命名し、技術的接尾辞（Impl/DTO/Manager/Helper等）をつけない |
+| outbound adapter | 使用する技術を明示してよい。例: SqliteOrderRepository, DrizzleOrderRepository |
+| application | 動詞＋目的語の業務操作名で命名する。例: RequestPickup, RegisterOrder |
 | レイヤー境界を越えるDTO | 境界を越えるための入れ物であると分かる名前にする。例: OrderStatusResponse, RegisterOrderCommand |
 
 ---
@@ -45,10 +58,19 @@ TypeScript/ヘキサゴナル構成のコーディング規約（命名・スタ
 ## docstring
 
 - **スタイル**: TSDoc
-- **対象**: 公開要素（exportされるclass / function / interface）。非公開（内部専用）は任意
-- **パラメータ等の構文**: @param name - 説明
-@returns 説明
-@throws {ErrorType} 説明
+- **構文の種類**: tagged
+- **パラメータ**: @param
+- **戻り値**: @returns
+- **例外**: @throws
+
+### 必須とする対象
+
+| 対象 | 可視性 | 必須 |
+|---|---|---|
+| `type` | public | ✓ |
+| `function` | public | ✓ |
+| `type` | private | - |
+| `function` | private | - |
 
 ### 要約行の書き方
 

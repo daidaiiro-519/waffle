@@ -4,7 +4,7 @@ type: "tool-integration"
 title: "Claude Code Hooksが要求する成果物形式・配線契約：tool-integration-claude-code-hooks"
 description: "Claude Code Hooksという仕組み自体が要求する、成果物（Hookスクリプト）の入出力契約とsettings.jsonへの配線方法を定める。個々のHookが何を検知しどう振る舞うかはHookSchemaの責務であり、ここでは扱わない。"
 tags: ["tier:platform"]
-schemaRef: "CodingSchema/v4"
+schemaRef: "CodingSchema/v5"
 ---
 
 # Claude Code Hooksが要求する成果物形式・配線契約：tool-integration-claude-code-hooks
@@ -27,14 +27,14 @@ Claude Code Hooksという仕組み自体が要求する、成果物（Hookス�
 
 各Hookスクリプトは実行時にstdinでJSON payloadを受け取り、判定結果をstdoutへJSONで出力する薄いプロセス。PreToolUseはブロック可否、PostToolUseは追加コンテキスト通知のみで、両者は出力フィールドの組が異なる。
 
-| フィールド | 必須度 | 説明 |
-|---|---|---|
-| tool_input（stdin） | 必須 | 発火元ツール呼び出しの引数（例: BashならcommandとしてBashコマンド文字列、Edit/WriteならfilePath）。イベント種別により中身が変わる。 |
-| transcript_path（stdin） | 任意 | セッションのtranscriptファイルへのパス。過去のツール呼び出し履歴を確認したいHookが使う。 |
-| hookSpecificOutput.hookEventName（stdout） | 必須 | PreToolUseまたはPostToolUseの固定文字列。出力先イベント種別と一致させる。 |
-| hookSpecificOutput.permissionDecision（stdout） | PreToolUseのみ条件付き必須 | denyまたはallow。denyのとき対象ツール呼び出し自体がブロックされる。 |
-| hookSpecificOutput.permissionDecisionReason（stdout） | permissionDecision=denyのとき必須 | ブロック理由の人間可読な説明文。 |
-| hookSpecificOutput.additionalContext（stdout） | PostToolUseのみ任意 | ブロックせず、追加の文脈情報としてモデルへ渡す通知文。空なら何も出力しない（沈黙）のが規約。 |
+| フィールド | 必須度 | 条件 | 説明 |
+|---|---|---|---|
+| `tool_input（stdin）` | required |  | 発火元ツール呼び出しの引数（例: BashならcommandとしてBashコマンド文字列、Edit/WriteならfilePath）。イベント種別により中身が変わる。 |
+| `transcript_path（stdin）` | optional |  | セッションのtranscriptファイルへのパス。過去のツール呼び出し履歴を確認したいHookが使う。 |
+| `hookSpecificOutput.hookEventName（stdout）` | required |  | PreToolUseまたはPostToolUseの固定文字列。出力先イベント種別と一致させる。 |
+| `hookSpecificOutput.permissionDecision（stdout）` | conditional | hookEventName == PreToolUse | denyまたはallow。denyのとき対象ツール呼び出し自体がブロックされる。 |
+| `hookSpecificOutput.permissionDecisionReason（stdout）` | conditional | permissionDecision == deny | ブロック理由の人間可読な説明文。 |
+| `hookSpecificOutput.additionalContext（stdout）` | conditional | hookEventName == PostToolUse（任意） | ブロックせず、追加の文脈情報としてモデルへ渡す通知文。空なら何も出力しない（沈黙）のが規約。 |
 
 ---
 

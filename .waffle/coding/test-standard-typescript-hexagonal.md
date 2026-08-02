@@ -3,7 +3,7 @@ id: "test-standard-typescript-hexagonal"
 type: "test-standard"
 title: "TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-typescript-hexagonal"
 description: "TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
-schemaRef: "CodingSchema/v4"
+schemaRef: "CodingSchema/v5"
 ---
 
 # TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-typescript-hexagonal
@@ -16,8 +16,21 @@ TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ご
 
 ## テスト方針
 
-- **方針**: ピラミッド形（単体テストを重視・統合はやや軽め・E2Eは行わない）
-- **根拠**: 業務ロジックの実装方法＝ドメインモデル
+- **重心**: pyramid
+
+### 種別ごとの重心
+
+| テスト種別 | 重心 |
+|---|---|
+| `unit` | high |
+| `integration` | low |
+| `acceptance` | medium |
+| `contract` | medium |
+| `e2e` | none |
+
+### 根拠
+
+業務ロジックの実装方法＝ドメインモデル
 
 ---
 
@@ -34,12 +47,12 @@ TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ご
 
 ## テストタイプ
 
-| テストタイプ | ツール | 対象 |
-|---|---|---|
-| `unit` | Vitest | domain / application |
-| `integration` | Vitest | adapters |
-| `acceptance` | Vitest（要件のシナリオを見て人間またはAIが直接執筆） | usecase |
-| `contract` | Vitest（インターフェース定義との差分検査） | 外部公開インターフェース |
+| テストタイプ | ツール | 対象 | 補足 |
+|---|---|---|---|
+| `unit` | Vitest | domain / application |  |
+| `integration` | Vitest | outbound adapter |  |
+| `acceptance` | Vitest | application | 要件のシナリオを見て人間またはAIが直接執筆する |
+| `contract` | Vitest | ports / inbound adapter | インターフェース定義との差分検査 |
 
 ---
 
@@ -52,12 +65,28 @@ TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ご
 
 ## シナリオの束ね方
 
-| 項目 | 規約 |
-|---|---|
-| 書き方 | 振る舞いはGiven/When/Then形式(Gherkin)のシナリオとして書く。1シナリオ＝1つの具体的な状況→操作→結果 |
-| 実行可能にする | 書いたシナリオはそのまま放置せず、対応する実行可能なテスト関数を書く。シナリオの文章だけでは検証済みとみなさない |
-| 対応関係 | 1仕様単位（usecase等）につき1テストファイルを基本とし、シナリオ名とテスト関数名を対応させる |
-| ドリフト検知 | シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない） |
+### 突き合わせのキー
+
+- **宣言行**: Scenario: {シナリオ名}
+- **一意の範囲**: ['layer', 'spec', 'scenario']
+- **ファイル名の由来**: spec-document-id
+
+### シナリオ種別とテストの対応
+
+| シナリオ種別 | レイヤー | テスト種別 |
+|---|---|---|
+| `invariantScenarios` | domain | `unit` |
+| `domainServiceScenarios` | domain | `unit` |
+| `guaranteeScenarios` | application | `integration` |
+| `acceptanceScenarios` | application | `acceptance` |
+
+### 規範
+
+| 規範 |
+|---|
+| 振る舞いはGiven/When/Then形式(Gherkin)のシナリオとして書く。1シナリオ＝1つの具体的な状況→操作→結果 |
+| 書いたシナリオはそのまま放置せず、対応する実行可能なテスト関数を書く。シナリオの文章だけでは検証済みとみなさない |
+| シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない） |
 
 ---
 
@@ -85,13 +114,14 @@ it("在庫不足なら失敗する", () => {
 
 ## テスト対象別の配置
 
-| 対象 | テスト種別 | 配置 |
-|---|---|---|
-| domain | unit | `src/domain/**/*.test.ts` |
-| application | unit（port はテストダブル） | `src/application/**/*.test.ts` |
-| adapters | integration | `src/adapters/**/*.test.ts` |
-| usecase | acceptance（ネイティブ） | `tests/acceptance/` |
-| システム全体の少数シナリオ | E2E | `tests/e2e/（コンポジションルートによる配線を含めて検証。件数は絞る）` |
+- **置き方**: colocated
+
+| レイヤー | テスト種別 | 配置 | 置き方（個別） | 接尾辞 | 補足 |
+|---|---|---|---|---|---|
+| domain | `unit` |  |  | `.test.ts` | 実装ファイルと同じディレクトリに置く |
+| application | `unit` |  |  | `.test.ts` | port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する |
+| outbound adapter | `integration` |  |  | `.test.ts` |  |
+| application | `acceptance` | `tests/acceptance/` | type-first |  | 仕様のシナリオに対応するテストだけは、実装と分けて1か所へ集める |
 
 ---
 

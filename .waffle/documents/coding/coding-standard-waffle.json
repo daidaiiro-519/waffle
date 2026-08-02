@@ -1,7 +1,7 @@
 {
   "documentId": "coding-standard-waffle",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v4",
+  "schemaRef": "CodingSchema/v5",
   "codingKind": "coding-standard",
   "stack": "python-hexagonal",
   "status": "ACTIVE",
@@ -50,6 +50,51 @@
           "target": "レイヤー境界を越えるDTOの識別子",
           "convention": "層の外に出るための入れ物であることが分かる名前にする（例: ShipmentStatusResponse）。ドメインオブジェクトと同じクラス名を使い回さない"
         }
+      ],
+      "fileNameDerivedFrom": "type",
+      "fileNameTransform": "pascal-to-snake",
+      "fileNameSuffix": ".py",
+      "cases": [
+        {
+          "artifact": "module",
+          "case": "snake"
+        },
+        {
+          "artifact": "type",
+          "case": "pascal"
+        },
+        {
+          "artifact": "function",
+          "case": "snake"
+        },
+        {
+          "artifact": "function",
+          "visibility": "private",
+          "case": "snake",
+          "prefix": "_"
+        }
+      ],
+      "norms": [
+        {
+          "appliesTo": "語彙",
+          "norm": "仕様（spec）のユビキタス言語に一致させる（勝手な言い換え禁止）"
+        },
+        {
+          "appliesTo": "domain",
+          "norm": "ユビキタス言語のみで構成する。Impl/DTO/Manager/Helper等の技術的接尾辞を付けない（付いている時点でその概念はドメインの言葉でなく実装都合で存在している兆候）"
+        },
+        {
+          "appliesTo": "application",
+          "norm": "動詞＋目的語の業務操作として命名する（例: RequestPickup、CancelOrder）"
+        },
+        {
+          "appliesTo": "outbound adapter",
+          "norm": "使用する技術名を明示してよい（例: PostgresShipmentRepository、InMemoryShipmentRepository）。ポート実装であることが責務そのものなので技術名を隠す理由が無い"
+        },
+        {
+          "appliesTo": "レイヤー境界を越えるDTO",
+          "norm": "層の外に出るための入れ物であることが分かる名前にする（例: ShipmentStatusResponse）。ドメインオブジェクトと同じクラス名を使い回さない"
+        }
       ]
     },
     "style": {
@@ -85,7 +130,33 @@
       "summaryGuidance": "「何をするか・いつ使うか」を1行の平叙文で。インデックスに載る前提で、検索と判断に効く語を選ぶ。",
       "target": "公開要素（module / 公開 class / 公開 function）は必須・private は任意",
       "example": "def calculate_total(order: Order, coupon: Coupon | None = None) -> Money:\n    \"\"\"注文の合計金額を計算する。クーポン適用後の金額を返す。\n\n    Args:\n        order: 対象の注文。\n        coupon: 適用するクーポン（無ければ定価のまま）。\n\n    Returns:\n        クーポン適用後の合計金額。\n\n    Raises:\n        InvalidCouponError: クーポンの適用条件を満たさない場合。\n    \"\"\"",
-      "paramSyntax": "Args:\n    name (type): 説明\nReturns:\n    説明\nRaises:\n    ExceptionType: 説明"
+      "paramSyntax": "Args:\n    name (type): 説明\nReturns:\n    説明\nRaises:\n    ExceptionType: 説明",
+      "syntaxKind": "tagged",
+      "tagParams": "Args:",
+      "tagReturns": "Returns:",
+      "tagRaises": "Raises:",
+      "required": [
+        {
+          "artifact": "module",
+          "visibility": "any",
+          "isRequired": true
+        },
+        {
+          "artifact": "type",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "function",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "function",
+          "visibility": "private",
+          "isRequired": false
+        }
+      ]
     },
     "rules": {
       "blockType": "CodingRules",

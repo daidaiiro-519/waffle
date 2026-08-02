@@ -3,7 +3,7 @@ id: "test-standard-waffle"
 type: "test-standard"
 title: "Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle"
 description: "Waffle自身のunit/integration/acceptance/contractという4層テスト構成の方針を定める。"
-schemaRef: "CodingSchema/v4"
+schemaRef: "CodingSchema/v5"
 ---
 
 # Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle
@@ -16,8 +16,21 @@ Waffle自身のunit/integration/acceptance/contractという4層テスト構成�
 
 ## テスト方針
 
-- **方針**: ピラミッド形（単体テストを重視・統合はやや軽め・E2E は行わない）
-- **根拠**: 業務ロジックの実装方法＝ドメインモデル。Waffleはspec(DomainSpecSchema)のTestScenariosを実行可能テストへ機械的に束ねるUDD(Usage-Driven Development)ループを持ち、この対応関係の詳細規約はscenarioBindingで定める。
+- **重心**: pyramid
+
+### 種別ごとの重心
+
+| テスト種別 | 重心 |
+|---|---|
+| `unit` | high |
+| `integration` | low |
+| `acceptance` | medium |
+| `contract` | medium |
+| `e2e` | none |
+
+### 根拠
+
+業務ロジックの実装方法＝ドメインモデル。Waffleはspec(DomainSpecSchema)のTestScenariosを実行可能テストへ機械的に束ねるUDD(Usage-Driven Development)ループを持ち、この対応関係の詳細規約はscenarioBindingで定める。
 
 ---
 
@@ -34,12 +47,12 @@ Waffle自身のunit/integration/acceptance/contractという4層テスト構成�
 
 ## テストタイプ
 
-| テストタイプ | ツール | 対象 |
-|---|---|---|
-| `unit` | pytest | domain / application |
-| `integration` | pytest | adapters |
-| `acceptance` | pytest（要件のシナリオを見てAIが直接執筆） | usecase |
-| `contract` | pytest（インターフェース定義との差分検査） | 外部公開インターフェース（CLI/MCP） |
+| テストタイプ | ツール | 対象 | 補足 |
+|---|---|---|---|
+| `unit` | pytest | domain / application |  |
+| `integration` | pytest | application / outbound adapter |  |
+| `acceptance` | pytest | application | 要件のシナリオを見てAIが直接執筆する |
+| `contract` | pytest | ports / inbound adapter | インターフェース定義との差分検査 |
 
 ---
 
@@ -52,17 +65,31 @@ Waffle自身のunit/integration/acceptance/contractという4層テスト構成�
 
 ## シナリオの束ね方
 
-| 項目 | 規約 |
-|---|---|
-| 対応関係 | 1 spec（DomainSpecSchemaのusecase）＝1 ネイティブテストファイル（AI執筆） |
-| ネイティブテストの配置 | tests/application/acceptance/test_{documentId}.py（documentIdはspecのdocumentIdをそのままsnake_case化） |
-| 突き合わせのキー | テストの文書コメント（Pythonならdocstring）の先頭に置いた宣言行「Scenario: {シナリオ名}」で、specのシナリオと突き合わせる。テスト関数名は突き合わせに使わない。関数名をキーにすると、仕様の語彙をそのまま識別子にできる言語でしか成立せず（シナリオ名は日本語、Pythonの識別子慣習はASCII）、識別子へ変換する過程で句読点や空白が潰れて別のシナリオと衝突しうるため |
-| テスト関数の命名 | 対象言語の命名慣習に従う（PythonならASCIIのsnake_case）。シナリオ名を識別子にしない。どのシナリオに対応するかは宣言行が持つ |
-| ドリフト検知 | 宣言行⇔シナリオ名の突き合わせで機械検出（check-scenario-drift）。未実装（specにあってテストが無い）と孤立（テストにあってspecに無い）を検出し、中身の妥当性はAIが評価する |
-| シナリオ文言の追従 | specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテストは、対応するgherkinの宣言行とGiven/When/Thenをそのまま転記する。宣言行は突き合わせのキーそのもの、本文はシナリオ文言の事後編集への追従を検知する材料であり、役割が異なる |
-| シナリオに紐づかないテストの扱い | specのシナリオに対応しない補助的なテストは、シナリオ対応テストとは別のファイルへ置く。同じファイルへ混ぜると、そのテストが常に孤立として報告され続け、警報が意味を失う。ドリフト検知はspecとテストファイルの組に対して行うため、specと組にならないファイルは検査対象にならない |
-| シナリオブロック種別とテスト配置層の対応 | invariantScenarios(aggregate)→tests/domain/unit/、domainServiceScenarios(subdomain)→tests/domain/unit/、guaranteeScenarios(usecase・operationGuaranteesと対)→tests/application/integration/、acceptanceScenarios(usecase)→tests/application/acceptance/。レイヤーが第一階層・テスト種別が第二階層という配置は placementByTarget が定めるものと同一であり、ここではシナリオブロック種別との対応だけを足す。コードの性質(純粋かport必須か)をケースバイケースで判定してはならない（ドリフト検知を非決定的にするため） |
-| 対象言語ごとの抽出 | 文書コメントの取り出しは言語ごとのadapterが担い、コアは言語の構文解析技術を知らない。Pythonの文書コメントは関数の内側にあるため構造的に対応づくが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応づかない。言語によって対応づけの確実さが異なることを前提にする |
+### 突き合わせのキー
+
+- **宣言行**: Scenario: {シナリオ名}
+- **一意の範囲**: ['layer', 'spec', 'scenario']
+- **ファイル名の由来**: spec-document-id
+
+### シナリオ種別とテストの対応
+
+| シナリオ種別 | レイヤー | テスト種別 |
+|---|---|---|
+| `invariantScenarios` | domain | `unit` |
+| `domainServiceScenarios` | domain | `unit` |
+| `guaranteeScenarios` | application | `integration` |
+| `acceptanceScenarios` | application | `acceptance` |
+
+### 規範
+
+| 規範 |
+|---|
+| テストの文書コメント（Pythonならdocstring）の先頭に置いた宣言行「Scenario: {シナリオ名}」で、specのシナリオと突き合わせる。テスト関数名は突き合わせに使わない。関数名をキーにすると、仕様の語彙をそのまま識別子にできる言語でしか成立せず（シナリオ名は日本語、Pythonの識別子慣習はASCII）、識別子へ変換する過程で句読点や空白が潰れて別のシナリオと衝突しうるため |
+| 対象言語の命名慣習に従う（PythonならASCIIのsnake_case）。シナリオ名を識別子にしない。どのシナリオに対応するかは宣言行が持つ |
+| 宣言行⇔シナリオ名の突き合わせで機械検出（check-scenario-drift）。未実装（specにあってテストが無い）と孤立（テストにあってspecに無い）を検出し、中身の妥当性はAIが評価する |
+| specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテストは、対応するgherkinの宣言行とGiven/When/Thenをそのまま転記する。宣言行は突き合わせのキーそのもの、本文はシナリオ文言の事後編集への追従を検知する材料であり、役割が異なる |
+| specのシナリオに対応しない補助的なテストは、シナリオ対応テストとは別のファイルへ置く。同じファイルへ混ぜると、そのテストが常に孤立として報告され続け、警報が意味を失う。ドリフト検知はspecとテストファイルの組に対して行うため、specと組にならないファイルは検査対象にならない |
+| 文書コメントの取り出しは言語ごとのadapterが担い、コアは言語の構文解析技術を知らない。Pythonの文書コメントは関数の内側にあるため構造的に対応づくが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応づかない。言語によって対応づけの確実さが異なることを前提にする |
 
 ---
 
@@ -90,15 +117,17 @@ def test_suspend_blocks_viewing():
 
 ## テスト対象別の配置
 
-| 対象 | テスト種別 | 配置 |
-|---|---|---|
-| domain | unit | `tests/domain/unit/` |
-| application | acceptance | `tests/application/acceptance/` |
-| application | integration | `tests/application/integration/` |
-| application | unit | `tests/application/unit/` |
-| ports | contract | `tests/ports/contract/` |
-| inbound adapter | contract | `tests/adapters/inbound/contract/` |
-| outbound adapter | integration | `tests/adapters/outbound/integration/` |
+- **置き方**: layer-first
+
+| レイヤー | テスト種別 | 配置 | 置き方（個別） | 接尾辞 | 補足 |
+|---|---|---|---|---|---|
+| domain | `unit` | `tests/domain/unit/` |  |  |  |
+| application | `acceptance` | `tests/application/acceptance/` |  |  |  |
+| application | `integration` | `tests/application/integration/` |  |  |  |
+| application | `unit` | `tests/application/unit/` |  |  | port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する |
+| ports | `contract` | `tests/ports/contract/` |  |  | 同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行する |
+| inbound adapter | `contract` | `tests/adapters/inbound/contract/` |  |  |  |
+| outbound adapter | `integration` | `tests/adapters/outbound/integration/` |  |  |  |
 
 ---
 

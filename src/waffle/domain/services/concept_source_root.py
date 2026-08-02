@@ -8,14 +8,50 @@ from __future__ import annotations
 from waffle.domain.services import path_template
 
 
+_IMPLEMENTATION_ROLES = ("single", "implementation", "definition")
+
+
+def _implementation_path(item: dict) -> str | None:
+    """1つの概念の配置の中から、実装が置かれる方を選ぶ。
+
+    概念は複数の場所に分かれることがある（インターフェースと実装、宣言と定義）。
+    実装ファイルを探すのが目的なので、実装側の役割を優先し、該当が無ければ
+    先頭を使う。
+
+    Args:
+        item: conceptPlacement の1要素。
+
+    Returns:
+        配置パス。placements が空なら None。
+    """
+    placements = item.get("placements") or []
+    for role in _IMPLEMENTATION_ROLES:
+        for placement in placements:
+            if placement.get("role") == role:
+                return placement.get("path")
+    return placements[0].get("path") if placements else None
+
+
 def resolve_source_root(layout: dict, concept_placement_items: list[dict], concept: str, **variables) -> str | None:
-    """layoutのsourceRootと、concept_placement_itemsの中からconceptに一致する
-    placementを結合し、path_template.resolveでvariablesを当てはめて解決する。
-    sourceRootが無い、またはconceptが見つからない場合はNoneを返す。"""
+    """layoutのsourceRootと、conceptに一致する概念の配置を結合して解決する。
+
+    Args:
+        layout: architecture文書の layout ブロック。
+        concept_placement_items: conceptPlacement の items。
+        concept: 解決したい概念（usecase / aggregate 等）。
+        **variables: パステンプレートへ当てはめる変数（package 等）。
+
+    Returns:
+        解決した配置パス。sourceRootが無い、conceptが見つからない、
+        配置が空のいずれかの場合は None。
+    """
     source_root = layout.get("sourceRoot")
     if not source_root:
         return None
-    placement = next((item["placement"] for item in concept_placement_items if item.get("concept") == concept), None)
+    item = next((x for x in concept_placement_items if x.get("concept") == concept), None)
+    if item is None:
+        return None
+    placement = _implementation_path(item)
     if placement is None:
         return None
     return path_template.resolve(f"{source_root}/{placement}", **variables)

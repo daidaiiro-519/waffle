@@ -4,7 +4,7 @@ type: "architecture"
 title: "Waffle自身が採用するヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-waffle"
 description: "Waffle自身がヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v4"
+schemaRef: "CodingSchema/v5"
 ---
 
 # Waffle自身が採用するヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-waffle
@@ -15,19 +15,25 @@ Waffle自身がヘキサゴナルアーキテクチャを実装する際の層�
 
 ---
 
+## 実装を受け持つコンテキスト
+
+- bc-waffle
+
+---
+
 ## レイヤーと依存方向
 
 ### 様式
 
 ポートとアダプター（ヘキサゴナル）
 
-| レイヤー | 責務 | 依存してよい先 |
-|---|---|---|
-| shared | 全層から使える基盤（結果型・エラー等）。業務判断を持たない |  |
-| domain | ドメインモデル・不変条件・値 | shared |
-| application | usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する | domain / shared |
-| inbound adapter | 外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない | application / shared |
-| outbound adapter | 外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する | application / shared |
+| レイヤー | 配置 | 責務 | 依存してよい先 |
+|---|---|---|---|
+| shared | `shared` | 全層から使える基盤（結果型・エラー等）。業務判断を持たない |  |
+| domain | `domain` | ドメインモデル・不変条件・値 | shared |
+| application | `application` | usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する | domain / shared |
+| inbound adapter | `adapters/inbound` | 外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない | application / shared |
+| outbound adapter | `adapters/outbound` | 外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する | application / shared |
 
 ---
 
@@ -48,9 +54,21 @@ src/{package}/
   shared/           共通（エラー・結果型 等）
 ```
 
+### 1ファイルの粒度
+
+| 概念 | 1ファイルあたり |
+|---|---|
+| `usecase` | 1 |
+| `aggregate` | 1 |
+| `domain-service` | 1 |
+| `port` | 1 |
+
 ### 合成ルート（結線・DI）
 
 各エントリポイントに1つだけ置く（adapters/inbound/cli/main.py・adapters/inbound/mcp/main.py）。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ
+
+- adapters/inbound/cli/main.py
+- adapters/inbound/mcp/main.py
 
 ---
 
@@ -58,15 +76,15 @@ src/{package}/
 
 | 概念 | 配置 | 形（決定レベル） |
 |---|---|---|
-| `usecase` | application/usecases | application service・エントリメソッド1つ・ドメインは port 経由で呼ぶ |
-| `aggregate` | domain/entities | 整合性境界を持つクラス・不変条件をメソッド内で強制・コマンドはメソッド・永続化は repository 経由 |
-| `entity` | domain/entities | 同一性は id・集約の内側でのみ可変 |
-| `value-object` | domain/entities | 不変（frozen dataclass）・値等価 |
-| `domain-service` | domain/services | ステートレス・複数集約を跨る計算 |
-| `repository` | application/ports（interface）＋adapters/outbound（impl） | aggregate の load/save・集約1つに1リポジトリ |
-| `port` | application/ports | application が要求する driven インターフェース（ABC / Protocol） |
-| `inbound-adapter` | adapters/inbound | 外部入力を application 呼び出しへ変換・ロジックを持たない |
-| `outbound-adapter` | adapters/outbound | port / repository を実装・外部ライブラリをここに閉じ込める |
+| `usecase` | `application/usecases`（single） | application service・エントリメソッド1つ・ドメインは port 経由で呼ぶ |
+| `aggregate` | `domain/entities`（single） | 整合性境界を持つクラス・不変条件をメソッド内で強制・コマンドはメソッド・永続化は repository 経由 |
+| `entity` | `domain/entities`（single） | 同一性は id・集約の内側でのみ可変 |
+| `value-object` | `domain/entities`（single） | 不変（frozen dataclass）・値等価 |
+| `domain-service` | `domain/services`（single） | ステートレス・複数集約を跨る計算 |
+| `repository` | `application/ports`（interface）<br>`adapters/outbound`（implementation） | aggregate の load/save・集約1つに1リポジトリ |
+| `port` | `application/ports`（single） | application が要求する driven インターフェース（ABC / Protocol） |
+| `inbound-adapter` | `adapters/inbound`（single） | 外部入力を application 呼び出しへ変換・ロジックを持たない |
+| `outbound-adapter` | `adapters/outbound`（single） | port / repository を実装・外部ライブラリをここに閉じ込める |
 
 ---
 

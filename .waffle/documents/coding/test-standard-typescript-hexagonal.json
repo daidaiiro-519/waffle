@@ -1,7 +1,7 @@
 {
   "documentId": "test-standard-typescript-hexagonal",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v4",
+  "schemaRef": "CodingSchema/v5",
   "codingKind": "test-standard",
   "stack": "typescript-hexagonal",
   "status": "DRAFT",
@@ -14,7 +14,30 @@
       "blockType": "TestStrategy",
       "title": "テスト方針",
       "pyramid": "ピラミッド形（単体テストを重視・統合はやや軽め・E2Eは行わない）",
-      "rationale": "業務ロジックの実装方法＝ドメインモデル"
+      "rationale": "業務ロジックの実装方法＝ドメインモデル",
+      "shape": "pyramid",
+      "weights": [
+        {
+          "testType": "unit",
+          "emphasis": "high"
+        },
+        {
+          "testType": "integration",
+          "emphasis": "low"
+        },
+        {
+          "testType": "acceptance",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "contract",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "e2e",
+          "emphasis": "none"
+        }
+      ]
     },
     "testPlan": {
       "blockType": "TestPlan",
@@ -45,22 +68,34 @@
         {
           "testType": "unit",
           "tool": "Vitest",
-          "target": "domain / application"
+          "targets": [
+            "domain",
+            "application"
+          ]
         },
         {
           "testType": "integration",
           "tool": "Vitest",
-          "target": "adapters"
+          "targets": [
+            "outbound adapter"
+          ]
         },
         {
           "testType": "acceptance",
-          "tool": "Vitest（要件のシナリオを見て人間またはAIが直接執筆）",
-          "target": "usecase"
+          "tool": "Vitest",
+          "targets": [
+            "application"
+          ],
+          "note": "要件のシナリオを見て人間またはAIが直接執筆する"
         },
         {
           "testType": "contract",
-          "tool": "Vitest（インターフェース定義との差分検査）",
-          "target": "外部公開インターフェース"
+          "tool": "Vitest",
+          "targets": [
+            "ports",
+            "inbound adapter"
+          ],
+          "note": "インターフェース定義との差分検査"
         }
       ]
     },
@@ -90,6 +125,46 @@
           "item": "ドリフト検知",
           "rule": "シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない）"
         }
+      ],
+      "declarationLine": "Scenario: {シナリオ名}",
+      "keyScope": [
+        "layer",
+        "spec",
+        "scenario"
+      ],
+      "fileNameDerivedFrom": "spec-document-id",
+      "blockPlacement": [
+        {
+          "block": "invariantScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "domainServiceScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "guaranteeScenarios",
+          "layer": "application",
+          "testType": "integration"
+        },
+        {
+          "block": "acceptanceScenarios",
+          "layer": "application",
+          "testType": "acceptance"
+        }
+      ],
+      "norms": [
+        {
+          "norm": "振る舞いはGiven/When/Then形式(Gherkin)のシナリオとして書く。1シナリオ＝1つの具体的な状況→操作→結果"
+        },
+        {
+          "norm": "書いたシナリオはそのまま放置せず、対応する実行可能なテスト関数を書く。シナリオの文章だけでは検証済みとみなさない"
+        },
+        {
+          "norm": "シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない）"
+        }
       ]
     },
     "placementByTarget": {
@@ -97,31 +172,31 @@
       "title": "テスト対象別の配置",
       "items": [
         {
-          "target": "domain",
-          "testKind": "unit",
-          "path": "src/domain/**/*.test.ts"
+          "layer": "domain",
+          "testType": "unit",
+          "suffix": ".test.ts",
+          "note": "実装ファイルと同じディレクトリに置く"
         },
         {
-          "target": "application",
-          "testKind": "unit（port はテストダブル）",
-          "path": "src/application/**/*.test.ts"
+          "layer": "application",
+          "testType": "unit",
+          "suffix": ".test.ts",
+          "note": "port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する"
         },
         {
-          "target": "adapters",
-          "testKind": "integration",
-          "path": "src/adapters/**/*.test.ts"
+          "layer": "outbound adapter",
+          "testType": "integration",
+          "suffix": ".test.ts"
         },
         {
-          "target": "usecase",
-          "testKind": "acceptance（ネイティブ）",
-          "path": "tests/acceptance/"
-        },
-        {
-          "target": "システム全体の少数シナリオ",
-          "testKind": "E2E",
-          "path": "tests/e2e/（コンポジションルートによる配線を含めて検証。件数は絞る）"
+          "layer": "application",
+          "testType": "acceptance",
+          "path": "tests/acceptance/",
+          "strategy": "type-first",
+          "note": "仕様のシナリオに対応するテストだけは、実装と分けて1か所へ集める"
         }
-      ]
+      ],
+      "strategy": "colocated"
     },
     "rules": {
       "blockType": "TestRules",

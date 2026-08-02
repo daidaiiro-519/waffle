@@ -1,7 +1,7 @@
 {
   "documentId": "architecture-typescript-hexagonal",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v4",
+  "schemaRef": "CodingSchema/v5",
   "codingKind": "architecture",
   "stack": "typescript-hexagonal",
   "status": "DRAFT",
@@ -17,11 +17,13 @@
       "items": [
         {
           "layer": "shared",
+          "path": "shared",
           "responsibility": "全層から使える基盤（結果型・エラー等）。業務判断を持たない",
           "mayDependOn": []
         },
         {
           "layer": "domain",
+          "path": "domain",
           "responsibility": "ドメインモデル・不変条件・値",
           "mayDependOn": [
             "shared"
@@ -29,6 +31,7 @@
         },
         {
           "layer": "application",
+          "path": "application",
           "responsibility": "usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する",
           "mayDependOn": [
             "domain",
@@ -37,6 +40,7 @@
         },
         {
           "layer": "inbound adapter",
+          "path": "adapters/inbound",
           "responsibility": "外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない",
           "mayDependOn": [
             "application",
@@ -45,6 +49,7 @@
         },
         {
           "layer": "outbound adapter",
+          "path": "adapters/outbound",
           "responsibility": "外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する",
           "mayDependOn": [
             "application",
@@ -58,7 +63,28 @@
       "title": "ディレクトリ構成",
       "tree": "src/\n  domain/\n    model/\n    value-objects/\n    services/\n  application/\n    usecases/\n    ports/\n  adapters/\n    inbound/\n    outbound/\n  shared/\n",
       "compositionRoot": "各エントリポイントに1つだけ置く（adapters/inbound/cli/main.py・adapters/inbound/mcp/main.py）。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ",
-      "sourceRoot": "src"
+      "sourceRoot": "src",
+      "granularity": [
+        {
+          "concept": "usecase",
+          "perFile": 1
+        },
+        {
+          "concept": "aggregate",
+          "perFile": 1
+        },
+        {
+          "concept": "domain-service",
+          "perFile": 1
+        },
+        {
+          "concept": "port",
+          "perFile": 1
+        }
+      ],
+      "compositionRootPaths": [
+        "adapters/inbound/main.ts"
+      ]
     },
     "conceptPlacement": {
       "blockType": "ConceptPlacement",
@@ -66,47 +92,96 @@
       "items": [
         {
           "concept": "usecase",
-          "placement": "application/usecases",
+          "placements": [
+            {
+              "role": "single",
+              "path": "application/usecases"
+            }
+          ],
           "pattern": "エントリメソッド1つ・ドメインは port 経由で呼ぶ"
         },
         {
           "concept": "aggregate",
-          "placement": "domain/model",
+          "placements": [
+            {
+              "role": "single",
+              "path": "domain/model"
+            }
+          ],
           "pattern": "不変条件はメソッド経由でのみ変更できる形にする（コンストラクタとメソッド内に検証ロジックを閉じ込める）。外部の集約はIDで参照し、直接オブジェクトとして保持しない。集約はできるだけ小さく設計する"
         },
         {
           "concept": "entity",
-          "placement": "domain/model",
+          "placements": [
+            {
+              "role": "single",
+              "path": "domain/model"
+            }
+          ],
           "pattern": "同一性はidで判定する（フィールドの値ではない）。単独では実装しない。必ず集約の内部にのみ存在する"
         },
         {
           "concept": "value-object",
-          "placement": "domain/value-objects",
+          "placements": [
+            {
+              "role": "single",
+              "path": "domain/value-objects"
+            }
+          ],
           "pattern": "構造的等価性・不変（readonlyフィールドのみ・状態変更メソッドを持たない）"
         },
         {
           "concept": "domain-service",
-          "placement": "domain/services",
+          "placements": [
+            {
+              "role": "single",
+              "path": "domain/services"
+            }
+          ],
           "pattern": "ステートレス（同じ入力に対して常に同じ結果を返す）。複数集約を単一トランザクションでまとめて変更するための抜け道にはしない（1集約=1トランザクションの原則は業務サービスがあっても変わらない）"
         },
         {
           "concept": "repository",
-          "placement": "application/ports（インターフェース）＋adapters/outbound（実装）",
+          "placements": [
+            {
+              "role": "interface",
+              "path": "application/ports"
+            },
+            {
+              "role": "implementation",
+              "path": "adapters/outbound"
+            }
+          ],
           "pattern": "インターフェースはports、具象はoutbound adapterに置く"
         },
         {
           "concept": "port",
-          "placement": "application/ports",
+          "placements": [
+            {
+              "role": "single",
+              "path": "application/ports"
+            }
+          ],
           "pattern": "インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない"
         },
         {
           "concept": "inbound-adapter",
-          "placement": "adapters/inbound",
+          "placements": [
+            {
+              "role": "single",
+              "path": "adapters/inbound"
+            }
+          ],
           "pattern": "外部プロトコルの受け口。usecaseを呼び出すだけで業務ロジックを持たない"
         },
         {
           "concept": "outbound-adapter",
-          "placement": "adapters/outbound",
+          "placements": [
+            {
+              "role": "single",
+              "path": "adapters/outbound"
+            }
+          ],
           "pattern": "portの実装。外部システムとの実際のやり取りを担う"
         }
       ]

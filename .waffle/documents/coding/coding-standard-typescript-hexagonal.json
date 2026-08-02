@@ -1,7 +1,7 @@
 {
   "documentId": "coding-standard-typescript-hexagonal",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v4",
+  "schemaRef": "CodingSchema/v5",
   "codingKind": "coding-standard",
   "stack": "typescript-hexagonal",
   "status": "DRAFT",
@@ -50,6 +50,49 @@
           "target": "レイヤー境界を越えるDTO",
           "convention": "境界を越えるための入れ物であると分かる名前にする。例: OrderStatusResponse, RegisterOrderCommand"
         }
+      ],
+      "fileNameDerivedFrom": "type",
+      "fileNameTransform": "pascal-to-kebab",
+      "fileNameSuffix": ".ts",
+      "cases": [
+        {
+          "artifact": "type",
+          "case": "pascal"
+        },
+        {
+          "artifact": "function",
+          "case": "camel"
+        },
+        {
+          "artifact": "field",
+          "case": "camel"
+        },
+        {
+          "artifact": "constant",
+          "case": "upper-snake"
+        }
+      ],
+      "norms": [
+        {
+          "appliesTo": "語彙",
+          "norm": "仕様のユビキタス言語に一致させる（実装都合の言い換えをしない）"
+        },
+        {
+          "appliesTo": "domain",
+          "norm": "ユビキタス言語のみで命名し、技術的接尾辞（Impl/DTO/Manager/Helper等）をつけない"
+        },
+        {
+          "appliesTo": "outbound adapter",
+          "norm": "使用する技術を明示してよい。例: SqliteOrderRepository, DrizzleOrderRepository"
+        },
+        {
+          "appliesTo": "application",
+          "norm": "動詞＋目的語の業務操作名で命名する。例: RequestPickup, RegisterOrder"
+        },
+        {
+          "appliesTo": "レイヤー境界を越えるDTO",
+          "norm": "境界を越えるための入れ物であると分かる名前にする。例: OrderStatusResponse, RegisterOrderCommand"
+        }
       ]
     },
     "style": {
@@ -85,7 +128,33 @@
       "summaryGuidance": "要約行（1行目）は、ソースを開かずに検索・判断できるよう「何をするか・いつ使うか」が分かる語で書く",
       "target": "公開要素（exportされるclass / function / interface）。非公開（内部専用）は任意",
       "example": "/**\n * 注文の合計金額を計算する。割引適用後の金額を返す。\n *\n * @param order - 対象の注文\n * @returns 割引適用後の合計金額\n */\nfunction calculateTotal(order: Order): Money { /* ... */ }",
-      "paramSyntax": "@param name - 説明\n@returns 説明\n@throws {ErrorType} 説明"
+      "paramSyntax": "@param name - 説明\n@returns 説明\n@throws {ErrorType} 説明",
+      "syntaxKind": "tagged",
+      "tagParams": "@param",
+      "tagReturns": "@returns",
+      "tagRaises": "@throws",
+      "required": [
+        {
+          "artifact": "type",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "function",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "type",
+          "visibility": "private",
+          "isRequired": false
+        },
+        {
+          "artifact": "function",
+          "visibility": "private",
+          "isRequired": false
+        }
+      ]
     },
     "rules": {
       "blockType": "CodingRules",

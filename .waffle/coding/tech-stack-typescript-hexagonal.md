@@ -3,7 +3,7 @@ id: "tech-stack-typescript-hexagonal"
 type: "tech-stack"
 title: "TypeScript/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-typescript-hexagonal"
 description: "TypeScript/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。"
-schemaRef: "CodingSchema/v4"
+schemaRef: "CodingSchema/v5"
 ---
 
 # TypeScript/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-typescript-hexagonal
@@ -23,9 +23,14 @@ TypeScript/ヘキサゴナル構成で採用する技術要素とその選定理
 
 ## ランタイム
 
-- **言語**: TypeScript 5.x（Node.js 20+）
 - **実行ターゲット**: ローカルプロセス（ゲートウェイ機器上で常駐）
 - **並行モデル**: 非同期主体（async/await・シングルスレッドイベントループ）
+
+### 言語
+
+| 言語 | 版 | 拡張子 | 役割 |
+|---|---|---|---|
+| `typescript` | 5.x（Node.js 20+） | `.ts` | primary |
 
 ---
 

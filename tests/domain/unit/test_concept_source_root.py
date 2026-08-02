@@ -10,7 +10,7 @@ def test_resolves_by_joining_source_root_and_placement():
     Then sourceRoot/placementの形に解決される
     """
     layout = {"sourceRoot": "src/{package}"}
-    items = [{"concept": "usecase", "placement": "application/usecases"}]
+    items = [{"concept": "usecase", "placements": [{"role": "single", "path": "application/usecases"}]}]
     result = concept_source_root.resolve_source_root(layout, items, "usecase", package="waffle")
     assert result == "src/waffle/application/usecases"
 
@@ -22,7 +22,7 @@ def test_source_root_without_placeholder_ignores_package():
     Then package変数は無視され、sourceRoot/placementがそのまま結合される
     """
     layout = {"sourceRoot": "src"}
-    items = [{"concept": "usecase", "placement": "application/usecases"}]
+    items = [{"concept": "usecase", "placements": [{"role": "single", "path": "application/usecases"}]}]
     result = concept_source_root.resolve_source_root(layout, items, "usecase", package="anything")
     assert result == "src/application/usecases"
 
@@ -34,7 +34,7 @@ def test_returns_none_without_source_root():
     Then Noneが返る
     """
     layout = {}
-    items = [{"concept": "usecase", "placement": "application/usecases"}]
+    items = [{"concept": "usecase", "placements": [{"role": "single", "path": "application/usecases"}]}]
     assert concept_source_root.resolve_source_root(layout, items, "usecase") is None
 
 

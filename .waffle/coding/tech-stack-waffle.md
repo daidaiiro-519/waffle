@@ -4,7 +4,7 @@ type: "tech-stack"
 title: "Waffle自身が採用する技術要素を定めるTech Stack仕様：tech-stack-waffle"
 description: "Waffle自身がPython/ヘキサゴナル構成で採用する技術要素とその選定理由を定める。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v4"
+schemaRef: "CodingSchema/v5"
 ---
 
 # Waffle自身が採用する技術要素を定めるTech Stack仕様：tech-stack-waffle
@@ -24,9 +24,14 @@ Waffle自身がPython/ヘキサゴナル構成で採用する技術要素とそ�
 
 ## ランタイム
 
-- **言語**: Python 3.12+
 - **実行ターゲット**: CLI / ローカルプロセス
 - **並行モデル**: 同期主体（MCP 境界のみ async）
+
+### 言語
+
+| 言語 | 版 | 拡張子 | 役割 |
+|---|---|---|---|
+| `python` | >=3.12 | `.py` | primary |
 
 ---
 

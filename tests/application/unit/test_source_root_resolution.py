@@ -10,7 +10,10 @@ from waffle.shared.result import Err, Ok
 _ARCHITECTURE = {
     "content": {
         "layout": {"sourceRoot": "src/{package}"},
-        "conceptPlacement": {"items": [{"concept": "usecase", "placement": "application/usecases"}]},
+        "conceptPlacement": {"items": [
+            {"concept": "usecase",
+             "placements": [{"role": "single", "path": "application/usecases"}]},
+        ]},
     }
 }
 

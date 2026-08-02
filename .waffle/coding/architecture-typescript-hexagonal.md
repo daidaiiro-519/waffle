@@ -3,7 +3,7 @@ id: "architecture-typescript-hexagonal"
 type: "architecture"
 title: "TypeScript/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-typescript-hexagonal"
 description: "TypeScriptでヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。"
-schemaRef: "CodingSchema/v4"
+schemaRef: "CodingSchema/v5"
 ---
 
 # TypeScript/ヘキサゴナルアーキテクチャの層構造を定めるArchitecture仕様：architecture-typescript-hexagonal
@@ -20,13 +20,13 @@ TypeScriptでヘキサゴナルアーキテクチャを実装する際の層構�
 
 ポートとアダプター（ヘキサゴナル）
 
-| レイヤー | 責務 | 依存してよい先 |
-|---|---|---|
-| shared | 全層から使える基盤（結果型・エラー等）。業務判断を持たない |  |
-| domain | ドメインモデル・不変条件・値 | shared |
-| application | usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する | domain / shared |
-| inbound adapter | 外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない | application / shared |
-| outbound adapter | 外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する | application / shared |
+| レイヤー | 配置 | 責務 | 依存してよい先 |
+|---|---|---|---|
+| shared | `shared` | 全層から使える基盤（結果型・エラー等）。業務判断を持たない |  |
+| domain | `domain` | ドメインモデル・不変条件・値 | shared |
+| application | `application` | usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する | domain / shared |
+| inbound adapter | `adapters/inbound` | 外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない | application / shared |
+| outbound adapter | `adapters/outbound` | 外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する | application / shared |
 
 ---
 
@@ -48,9 +48,20 @@ src/
 
 ```
 
+### 1ファイルの粒度
+
+| 概念 | 1ファイルあたり |
+|---|---|
+| `usecase` | 1 |
+| `aggregate` | 1 |
+| `domain-service` | 1 |
+| `port` | 1 |
+
 ### 合成ルート（結線・DI）
 
 各エントリポイントに1つだけ置く（adapters/inbound/cli/main.py・adapters/inbound/mcp/main.py）。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ
+
+- adapters/inbound/main.ts
 
 ---
 
@@ -58,15 +69,15 @@ src/
 
 | 概念 | 配置 | 形（決定レベル） |
 |---|---|---|
-| `usecase` | application/usecases | エントリメソッド1つ・ドメインは port 経由で呼ぶ |
-| `aggregate` | domain/model | 不変条件はメソッド経由でのみ変更できる形にする（コンストラクタとメソッド内に検証ロジックを閉じ込める）。外部の集約はIDで参照し、直接オブジェクトとして保持しない。集約はできるだけ小さく設計する |
-| `entity` | domain/model | 同一性はidで判定する（フィールドの値ではない）。単独では実装しない。必ず集約の内部にのみ存在する |
-| `value-object` | domain/value-objects | 構造的等価性・不変（readonlyフィールドのみ・状態変更メソッドを持たない） |
-| `domain-service` | domain/services | ステートレス（同じ入力に対して常に同じ結果を返す）。複数集約を単一トランザクションでまとめて変更するための抜け道にはしない（1集約=1トランザクションの原則は業務サービスがあっても変わらない） |
-| `repository` | application/ports（インターフェース）＋adapters/outbound（実装） | インターフェースはports、具象はoutbound adapterに置く |
-| `port` | application/ports | インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない |
-| `inbound-adapter` | adapters/inbound | 外部プロトコルの受け口。usecaseを呼び出すだけで業務ロジックを持たない |
-| `outbound-adapter` | adapters/outbound | portの実装。外部システムとの実際のやり取りを担う |
+| `usecase` | `application/usecases`（single） | エントリメソッド1つ・ドメインは port 経由で呼ぶ |
+| `aggregate` | `domain/model`（single） | 不変条件はメソッド経由でのみ変更できる形にする（コンストラクタとメソッド内に検証ロジックを閉じ込める）。外部の集約はIDで参照し、直接オブジェクトとして保持しない。集約はできるだけ小さく設計する |
+| `entity` | `domain/model`（single） | 同一性はidで判定する（フィールドの値ではない）。単独では実装しない。必ず集約の内部にのみ存在する |
+| `value-object` | `domain/value-objects`（single） | 構造的等価性・不変（readonlyフィールドのみ・状態変更メソッドを持たない） |
+| `domain-service` | `domain/services`（single） | ステートレス（同じ入力に対して常に同じ結果を返す）。複数集約を単一トランザクションでまとめて変更するための抜け道にはしない（1集約=1トランザクションの原則は業務サービスがあっても変わらない） |
+| `repository` | `application/ports`（interface）<br>`adapters/outbound`（implementation） | インターフェースはports、具象はoutbound adapterに置く |
+| `port` | `application/ports`（single） | インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない |
+| `inbound-adapter` | `adapters/inbound`（single） | 外部プロトコルの受け口。usecaseを呼び出すだけで業務ロジックを持たない |
+| `outbound-adapter` | `adapters/outbound`（single） | portの実装。外部システムとの実際のやり取りを担う |
 
 ---
 

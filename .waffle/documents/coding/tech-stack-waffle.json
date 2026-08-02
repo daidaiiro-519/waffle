@@ -1,7 +1,7 @@
 {
   "documentId": "tech-stack-waffle",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v4",
+  "schemaRef": "CodingSchema/v5",
   "codingKind": "tech-stack",
   "stack": "python-hexagonal",
   "status": "ACTIVE",
@@ -21,7 +21,17 @@
       "title": "ランタイム",
       "language": "Python 3.12+",
       "target": "CLI / ローカルプロセス",
-      "concurrency": "同期主体（MCP 境界のみ async）"
+      "concurrency": "同期主体（MCP 境界のみ async）",
+      "languages": [
+        {
+          "language": "python",
+          "version": ">=3.12",
+          "extensions": [
+            ".py"
+          ],
+          "role": "primary"
+        }
+      ]
     },
     "framework": {
       "blockType": "Framework",

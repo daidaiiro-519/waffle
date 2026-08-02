@@ -1,7 +1,7 @@
 {
   "documentId": "test-standard-waffle",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v4",
+  "schemaRef": "CodingSchema/v5",
   "codingKind": "test-standard",
   "stack": "python-hexagonal",
   "status": "ACTIVE",
@@ -14,7 +14,30 @@
       "blockType": "TestStrategy",
       "title": "テスト方針",
       "pyramid": "ピラミッド形（単体テストを重視・統合はやや軽め・E2E は行わない）",
-      "rationale": "業務ロジックの実装方法＝ドメインモデル。Waffleはspec(DomainSpecSchema)のTestScenariosを実行可能テストへ機械的に束ねるUDD(Usage-Driven Development)ループを持ち、この対応関係の詳細規約はscenarioBindingで定める。"
+      "rationale": "業務ロジックの実装方法＝ドメインモデル。Waffleはspec(DomainSpecSchema)のTestScenariosを実行可能テストへ機械的に束ねるUDD(Usage-Driven Development)ループを持ち、この対応関係の詳細規約はscenarioBindingで定める。",
+      "shape": "pyramid",
+      "weights": [
+        {
+          "testType": "unit",
+          "emphasis": "high"
+        },
+        {
+          "testType": "integration",
+          "emphasis": "low"
+        },
+        {
+          "testType": "acceptance",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "contract",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "e2e",
+          "emphasis": "none"
+        }
+      ]
     },
     "testPlan": {
       "blockType": "TestPlan",
@@ -45,22 +68,35 @@
         {
           "testType": "unit",
           "tool": "pytest",
-          "target": "domain / application"
+          "targets": [
+            "domain",
+            "application"
+          ]
         },
         {
           "testType": "integration",
           "tool": "pytest",
-          "target": "adapters"
+          "targets": [
+            "application",
+            "outbound adapter"
+          ]
         },
         {
           "testType": "acceptance",
-          "tool": "pytest（要件のシナリオを見てAIが直接執筆）",
-          "target": "usecase"
+          "tool": "pytest",
+          "targets": [
+            "application"
+          ],
+          "note": "要件のシナリオを見てAIが直接執筆する"
         },
         {
           "testType": "contract",
-          "tool": "pytest（インターフェース定義との差分検査）",
-          "target": "外部公開インターフェース（CLI/MCP）"
+          "tool": "pytest",
+          "targets": [
+            "ports",
+            "inbound adapter"
+          ],
+          "note": "インターフェース定義との差分検査"
         }
       ]
     },
@@ -110,6 +146,55 @@
           "item": "対象言語ごとの抽出",
           "rule": "文書コメントの取り出しは言語ごとのadapterが担い、コアは言語の構文解析技術を知らない。Pythonの文書コメントは関数の内側にあるため構造的に対応づくが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応づかない。言語によって対応づけの確実さが異なることを前提にする"
         }
+      ],
+      "declarationLine": "Scenario: {シナリオ名}",
+      "keyScope": [
+        "layer",
+        "spec",
+        "scenario"
+      ],
+      "fileNameDerivedFrom": "spec-document-id",
+      "blockPlacement": [
+        {
+          "block": "invariantScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "domainServiceScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "guaranteeScenarios",
+          "layer": "application",
+          "testType": "integration"
+        },
+        {
+          "block": "acceptanceScenarios",
+          "layer": "application",
+          "testType": "acceptance"
+        }
+      ],
+      "norms": [
+        {
+          "norm": "テストの文書コメント（Pythonならdocstring）の先頭に置いた宣言行「Scenario: {シナリオ名}」で、specのシナリオと突き合わせる。テスト関数名は突き合わせに使わない。関数名をキーにすると、仕様の語彙をそのまま識別子にできる言語でしか成立せず（シナリオ名は日本語、Pythonの識別子慣習はASCII）、識別子へ変換する過程で句読点や空白が潰れて別のシナリオと衝突しうるため"
+        },
+        {
+          "norm": "対象言語の命名慣習に従う（PythonならASCIIのsnake_case）。シナリオ名を識別子にしない。どのシナリオに対応するかは宣言行が持つ"
+        },
+        {
+          "norm": "宣言行⇔シナリオ名の突き合わせで機械検出（check-scenario-drift）。未実装（specにあってテストが無い）と孤立（テストにあってspecに無い）を検出し、中身の妥当性はAIが評価する"
+        },
+        {
+          "norm": "specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテストは、対応するgherkinの宣言行とGiven/When/Thenをそのまま転記する。宣言行は突き合わせのキーそのもの、本文はシナリオ文言の事後編集への追従を検知する材料であり、役割が異なる"
+        },
+        {
+          "norm": "specのシナリオに対応しない補助的なテストは、シナリオ対応テストとは別のファイルへ置く。同じファイルへ混ぜると、そのテストが常に孤立として報告され続け、警報が意味を失う。ドリフト検知はspecとテストファイルの組に対して行うため、specと組にならないファイルは検査対象にならない"
+        },
+        {
+          "norm": "文書コメントの取り出しは言語ごとのadapterが担い、コアは言語の構文解析技術を知らない。Pythonの文書コメントは関数の内側にあるため構造的に対応づくが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応づかない。言語によって対応づけの確実さが異なることを前提にする"
+        }
       ]
     },
     "placementByTarget": {
@@ -117,41 +202,44 @@
       "title": "テスト対象別の配置",
       "items": [
         {
-          "target": "domain",
-          "testKind": "unit",
+          "layer": "domain",
+          "testType": "unit",
           "path": "tests/domain/unit/"
         },
         {
-          "target": "application",
-          "testKind": "acceptance",
+          "layer": "application",
+          "testType": "acceptance",
           "path": "tests/application/acceptance/"
         },
         {
-          "target": "application",
-          "testKind": "integration",
+          "layer": "application",
+          "testType": "integration",
           "path": "tests/application/integration/"
         },
         {
-          "target": "application",
-          "testKind": "unit",
-          "path": "tests/application/unit/"
+          "layer": "application",
+          "testType": "unit",
+          "path": "tests/application/unit/",
+          "note": "port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する"
         },
         {
-          "target": "ports",
-          "testKind": "contract",
-          "path": "tests/ports/contract/"
+          "layer": "ports",
+          "testType": "contract",
+          "path": "tests/ports/contract/",
+          "note": "同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行する"
         },
         {
-          "target": "inbound adapter",
-          "testKind": "contract",
+          "layer": "inbound adapter",
+          "testType": "contract",
           "path": "tests/adapters/inbound/contract/"
         },
         {
-          "target": "outbound adapter",
-          "testKind": "integration",
+          "layer": "outbound adapter",
+          "testType": "integration",
           "path": "tests/adapters/outbound/integration/"
         }
-      ]
+      ],
+      "strategy": "layer-first"
     },
     "rules": {
       "blockType": "TestRules",

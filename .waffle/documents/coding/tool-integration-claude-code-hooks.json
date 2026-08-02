@@ -1,7 +1,7 @@
 {
   "documentId": "tool-integration-claude-code-hooks",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v4",
+  "schemaRef": "CodingSchema/v5",
   "codingKind": "tool-integration",
   "stack": "claude-code",
   "status": "ACTIVE",
@@ -24,32 +24,38 @@
       "fields": [
         {
           "field": "tool_input（stdin）",
-          "requirement": "必須",
+          "requirement": "required",
+          "condition": "",
           "description": "発火元ツール呼び出しの引数（例: BashならcommandとしてBashコマンド文字列、Edit/WriteならfilePath）。イベント種別により中身が変わる。"
         },
         {
           "field": "transcript_path（stdin）",
-          "requirement": "任意",
+          "requirement": "optional",
+          "condition": "",
           "description": "セッションのtranscriptファイルへのパス。過去のツール呼び出し履歴を確認したいHookが使う。"
         },
         {
           "field": "hookSpecificOutput.hookEventName（stdout）",
-          "requirement": "必須",
+          "requirement": "required",
+          "condition": "",
           "description": "PreToolUseまたはPostToolUseの固定文字列。出力先イベント種別と一致させる。"
         },
         {
           "field": "hookSpecificOutput.permissionDecision（stdout）",
-          "requirement": "PreToolUseのみ条件付き必須",
+          "requirement": "conditional",
+          "condition": "hookEventName == PreToolUse",
           "description": "denyまたはallow。denyのとき対象ツール呼び出し自体がブロックされる。"
         },
         {
           "field": "hookSpecificOutput.permissionDecisionReason（stdout）",
-          "requirement": "permissionDecision=denyのとき必須",
+          "requirement": "conditional",
+          "condition": "permissionDecision == deny",
           "description": "ブロック理由の人間可読な説明文。"
         },
         {
           "field": "hookSpecificOutput.additionalContext（stdout）",
-          "requirement": "PostToolUseのみ任意",
+          "requirement": "conditional",
+          "condition": "hookEventName == PostToolUse（任意）",
           "description": "ブロックせず、追加の文脈情報としてモデルへ渡す通知文。空なら何も出力しない（沈黙）のが規約。"
         }
       ]
