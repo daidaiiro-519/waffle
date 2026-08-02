@@ -23,7 +23,7 @@ def test_missing_spec_is_invalid_path():
     """
     result = _engine().run(
         spec_path="does/not/exist.json",
-        test_file_path="tests/integration/test_uc_check_scenario_drift.py")
+        test_file_path="tests/application/integration/test_uc_check_scenario_drift.py")
 
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_PATH"

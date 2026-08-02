@@ -293,12 +293,12 @@ def test_acceptance_layer_targets_acceptance_scenarios_only(tmp_path):
     """
     Scenario: 受け入れの層のテストは受け入れシナリオだけを対象にする
     Given 受け入れシナリオと保証シナリオの両方を宣言するspec
-    And tests/acceptance/配下にあり、受け入れシナリオだけを実装したテストファイル
+    And 受け入れの層に配置され、受け入れシナリオだけを実装したテストファイル
     When ドリフト検査を実行する
     Then 保証シナリオはmissing_in_testsに含まれない
     """
     spec_path = _spec_with_two_blocks(tmp_path)
-    test_dir = tmp_path / "tests" / "acceptance"
+    test_dir = tmp_path / "tests" / "application" / "acceptance"
     test_dir.mkdir(parents=True)
     test_path = _test_file(test_dir, _py(("test_accepted", "受け入れ観点で起きる")), name="test_spec.py")
 
@@ -312,12 +312,12 @@ def test_integration_layer_targets_guarantee_scenarios_only(tmp_path):
     """
     Scenario: 統合の層のテストは保証シナリオだけを対象にする
     Given 受け入れシナリオと保証シナリオの両方を宣言するspec
-    And tests/integration/配下にあり、保証シナリオだけを実装したテストファイル
+    And 統合の層に配置され、保証シナリオだけを実装したテストファイル
     When ドリフト検査を実行する
     Then 受け入れシナリオはmissing_in_testsに含まれない
     """
     spec_path = _spec_with_two_blocks(tmp_path)
-    test_dir = tmp_path / "tests" / "integration"
+    test_dir = tmp_path / "tests" / "application" / "integration"
     test_dir.mkdir(parents=True)
     test_path = _test_file(test_dir, _py(("test_guaranteed", "保証観点で起きる")), name="test_spec.py")
 
@@ -404,7 +404,7 @@ def _tree(tmp_path: Path) -> tuple[Path, Path]:
     _spec(docs, _scenario("対応がない"), _scenario("これもない"),
           document_id="uc-unpaired", name="uc-unpaired.json")
 
-    tests = tmp_path / "tests" / "acceptance"
+    tests = tmp_path / "tests" / "application" / "acceptance"
     tests.mkdir(parents=True)
     _test_file(tests, _py(("test_paired", "対応がある")), name="test_uc_paired.py")
     return tmp_path / "documents", tmp_path / "tests"

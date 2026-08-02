@@ -326,14 +326,14 @@
           "name": "受け入れの層のテストは受け入れシナリオだけを対象にする",
           "category": "境界値",
           "viewpoint": "事前条件: 対象ブロックはパスから機械的に絞る。コードの性質で判定しない",
-          "gherkin": "Scenario: 受け入れの層のテストは受け入れシナリオだけを対象にする\n  Given 受け入れシナリオと保証シナリオの両方を宣言するspec\n  And tests/acceptance/配下にあり、受け入れシナリオだけを実装したテストファイル\n  When ドリフト検査を実行する\n  Then 保証シナリオはmissing_in_testsに含まれない",
+          "gherkin": "Scenario: 受け入れの層のテストは受け入れシナリオだけを対象にする\n  Given 受け入れシナリオと保証シナリオの両方を宣言するspec\n  And 受け入れの層に配置され、受け入れシナリオだけを実装したテストファイル\n  When ドリフト検査を実行する\n  Then 保証シナリオはmissing_in_testsに含まれない",
           "covers": "受け入れ基準: tests/acceptance配下はacceptanceScenariosのみ"
         },
         {
           "name": "統合の層のテストは保証シナリオだけを対象にする",
           "category": "境界値",
           "viewpoint": "事前条件: 同上。層ごとに対象ブロックが決まる",
-          "gherkin": "Scenario: 統合の層のテストは保証シナリオだけを対象にする\n  Given 受け入れシナリオと保証シナリオの両方を宣言するspec\n  And tests/integration/配下にあり、保証シナリオだけを実装したテストファイル\n  When ドリフト検査を実行する\n  Then 受け入れシナリオはmissing_in_testsに含まれない",
+          "gherkin": "Scenario: 統合の層のテストは保証シナリオだけを対象にする\n  Given 受け入れシナリオと保証シナリオの両方を宣言するspec\n  And 統合の層に配置され、保証シナリオだけを実装したテストファイル\n  When ドリフト検査を実行する\n  Then 受け入れシナリオはmissing_in_testsに含まれない",
           "covers": "受け入れ基準: tests/integration配下はguaranteeScenariosのみ"
         },
         {

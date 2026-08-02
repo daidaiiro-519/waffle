@@ -7,6 +7,8 @@ from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.render_document import RenderDocument
 from waffle.shared.result import Err, Ok
 
+from tests.fakes import FakeSchemaRepository
+
 
 def _engine() -> RenderDocument:
     return RenderDocument(FsDocumentRepository(), PackageSchemaRepository())
@@ -311,15 +313,9 @@ def test_discriminator_absent_from_nested_mappings_is_not_deployed(tmp_path):
     assert not (tmp_path / "AGENTS.md").exists()
 
 
-class _FakeSchemaRepository:
-    def __init__(self, schema: dict) -> None:
-        self._schema = schema
-
-    def load(self, schema_ref: str) -> dict:
-        return self._schema
-
-    def list_versions(self, name: str) -> list[str]:
-        return []
+def _FakeSchemaRepository(schema: dict):
+    """Fake/v1 だけを知る偽実装を作る（共有の FakeSchemaRepository を使う）。"""
+    return FakeSchemaRepository({"Fake/v1": schema})
 
 
 def test_each_discriminator_writes_to_its_own_deploy_path(tmp_path):

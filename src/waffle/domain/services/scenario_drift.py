@@ -26,13 +26,15 @@ _SCENARIO_BLOCK_KEYS = (
 
 _DECLARATION = re.compile(r"^Scenario(?:\s+Outline)?:\s*(?P<name>.+?)\s*$")
 
-# シナリオブロックの種別と、対応するテストの配置。
-# scenarioBinding（test-standard）が定める対応をコード側で表したもの
+# シナリオブロックの種別と、対応するテストの配置（レイヤー/テスト種別）。
+# scenarioBinding（test-standard）が定める対応をコード側で表したもの。
+# 本来は test-standard の宣言を読むべきで、この辞書はその写しである。
+# 宣言が散文のままなので機械が読めず、写しを持たざるを得ない状態が続いている。
 BLOCK_PLACEMENT = {
-    "acceptanceScenarios": "acceptance",
-    "guaranteeScenarios": "integration",
-    "invariantScenarios": "unit",
-    "domainServiceScenarios": "unit",
+    "acceptanceScenarios": "application/acceptance",
+    "guaranteeScenarios": "application/integration",
+    "invariantScenarios": "domain/unit",
+    "domainServiceScenarios": "domain/unit",
 }
 
 
@@ -71,11 +73,11 @@ def relevant_scenario_block_keys(test_file_path: str) -> tuple[str, ...]:
     """test_file_pathのパスパターンから、scenarioBinding（test-standard）が定める
     配置ルールに沿って対象シナリオブロックを機械的に絞り込む。いずれのパターンにも
     一致しないパスは、絞り込まず全種を対象にする（ケースバイケース判定はしない）。"""
-    if "tests/acceptance/" in test_file_path:
+    if "tests/application/acceptance/" in test_file_path:
         return ("acceptanceScenarios",)
-    if "tests/integration/" in test_file_path:
+    if "tests/application/integration/" in test_file_path:
         return ("guaranteeScenarios",)
-    if "tests/unit/" in test_file_path:
+    if "tests/domain/unit/" in test_file_path:
         return ("invariantScenarios", "domainServiceScenarios")
     return _SCENARIO_BLOCK_KEYS
 

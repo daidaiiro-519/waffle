@@ -111,8 +111,8 @@ def _guess_test_paths(spec_path: str) -> list[str]:
     stem = "test_" + m.group(1).replace("-", "_")
     root = _project_root()
     found = []
-    for d in ("acceptance", "integration"):
-        p = os.path.join(root, "tests", d, f"{stem}.py")
+    for d in ("application/acceptance", "application/integration"):
+        p = os.path.join(root, "tests", *d.split("/"), f"{stem}.py")
         if os.path.isfile(p):
             found.append(os.path.relpath(p, root))
     return found
@@ -166,7 +166,7 @@ def check(payload: dict) -> str | None:
                 f"（{looked_for}.json を探しました）")
     elif _TEST_BASENAME.search(file_path):
         unpaired.append(
-            f"{file_path} は tests/acceptance/ tests/integration/ のいずれにも無いため、"
+            f"{file_path} は tests/application/acceptance/ tests/application/integration/ のいずれにも無いため、"
             "scenario-driftの突き合わせ対象になりません")
 
     fm = _BASH_FILL_PATH.search(command)
@@ -176,7 +176,7 @@ def check(payload: dict) -> str | None:
         if not test_paths and _USECASE_SPEC.search(spec_path):
             unpaired.append(
                 f"{spec_path} に対応するテストファイルが見つかりません"
-                "（tests/acceptance/ tests/integration/ を探しました）")
+                "（tests/application/acceptance/ tests/application/integration/ を探しました）")
         for test_path in test_paths:
             _collect("check-scenario-drift", f"scenario-drift:{test_path}",
                      "--specPath", spec_path, "--testPath", test_path)

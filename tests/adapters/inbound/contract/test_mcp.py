@@ -1,6 +1,6 @@
 """waffle MCPサーバ（inbound adapter）の契約テスト（ネイティブpytest・fastmcp in-memory Client経由）。
 
-CLIと並ぶ第2のfront-door。engineの振る舞いはtests/acceptance・tests/integrationが担保する。
+CLIと並ぶ第2のfront-door。engineの振る舞いはtests/application/acceptance・tests/application/integrationが担保する。
 ここは「MCPツール経由でengineが正しく呼ばれdictを返す」というMCP自体の公開インターフェース契約
 だけを固定する（旧features/mcp.featureから移行）。
 """
@@ -350,7 +350,7 @@ def test_check_scenario_driftは4フィールドの差分結果を返す():
     """
     out = asyncio.run(_call("check_scenario_drift", {
         "specPath": ".waffle/documents/specs/bc-waffle/subdomain/sd-reconciliation/usecase/uc-check-spec-integrity.json",
-        "testPath": "tests/integration/test_uc_check_spec_integrity.py",
+        "testPath": "tests/application/integration/test_uc_check_spec_integrity.py",
     }))
     assert set(out.keys()) == {"missing_in_tests", "orphaned_in_tests", "matched", "gherkin_mismatches",
                                  "duplicate_declarations", "spec_declaration_mismatches"}
@@ -367,7 +367,7 @@ def test_check_verification_gateはstatusとreasonsを返す(tmp_path):
 
     out = asyncio.run(_call("check_verification_gate", {
         "specPath": ".waffle/documents/specs/bc-waffle/subdomain/sd-flow-gate/usecase/uc-check-verification-gate.json",
-        "testPath": "tests/acceptance/test_uc_check_verification_gate.py",
+        "testPath": "tests/application/acceptance/test_uc_check_verification_gate.py",
         "testResultsPath": str(results_path),
     }))
     assert out["status"] == "ready"

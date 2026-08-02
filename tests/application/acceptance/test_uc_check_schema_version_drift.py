@@ -6,24 +6,33 @@ from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.shared.result import Ok
 
+from tests.fakes import FakeSchemaRepository
+
 
 _EMPTY_SCHEMA = {"properties": {"content": {"type": "object", "properties": {}}}}
 
 
-class _FakeSchemaRepository:
-    def __init__(self, versions_by_name: dict[str, list[str]], schemas_by_ref: dict[str, dict] | None = None) -> None:
-        self._versions_by_name = versions_by_name
-        self._schemas_by_ref = schemas_by_ref or {}
+def _schema_repository(
+    versions_by_name: dict[str, list[str]],
+    schemas_by_ref: dict[str, dict] | None = None,
+) -> FakeSchemaRepository:
+    """存在する版の一覧から、共有の偽実装を組み立てる。
 
-    def load(self, schema_ref: str) -> dict:
-        return self._schemas_by_ref.get(schema_ref, _EMPTY_SCHEMA)
-
-    def list_versions(self, name: str) -> list[str]:
-        return self._versions_by_name.get(name, [])
+    共有の偽実装は list_versions を schemaRef の辞書から導出するため、
+    「list_versions は知っているが load できない版」を作れない。
+    明示されなかった版には空の schema を割り当てる。
+    """
+    given = schemas_by_ref or {}
+    schemas = {
+        f"{name}/{version}": given.get(f"{name}/{version}", _EMPTY_SCHEMA)
+        for name, versions in versions_by_name.items()
+        for version in versions
+    }
+    return FakeSchemaRepository({**schemas, **given})
 
 
 def _engine(versions_by_name: dict[str, list[str]], schemas_by_ref: dict[str, dict] | None = None) -> CheckSchemaVersionDrift:
-    return CheckSchemaVersionDrift(FsDocumentRepository(), _FakeSchemaRepository(versions_by_name, schemas_by_ref))
+    return CheckSchemaVersionDrift(FsDocumentRepository(), _schema_repository(versions_by_name, schemas_by_ref))
 
 
 def _write(path: Path, doc: dict) -> None:

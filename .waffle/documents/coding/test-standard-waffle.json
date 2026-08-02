@@ -80,7 +80,7 @@
         },
         {
           "item": "ネイティブテストの配置",
-          "rule": "tests/acceptance/test_{documentId}.py（documentIdはspecのdocumentIdをそのままsnake_case化）"
+          "rule": "tests/application/acceptance/test_{documentId}.py（documentIdはspecのdocumentIdをそのままsnake_case化）"
         },
         {
           "item": "突き合わせのキー",
@@ -104,7 +104,7 @@
         },
         {
           "item": "シナリオブロック種別とテスト配置層の対応",
-          "rule": "invariantScenarios(aggregate)→domain/unit、domainServiceScenarios(subdomain)→domain/unit、guaranteeScenarios(usecase・operationGuaranteesと対)→integration、acceptanceScenarios(usecase)→acceptance。コードの性質(純粋かport必須か)をケースバイケースで判定してはならない（ドリフト検知を非決定的にするため）"
+          "rule": "invariantScenarios(aggregate)→tests/domain/unit/、domainServiceScenarios(subdomain)→tests/domain/unit/、guaranteeScenarios(usecase・operationGuaranteesと対)→tests/application/integration/、acceptanceScenarios(usecase)→tests/application/acceptance/。レイヤーが第一階層・テスト種別が第二階層という配置は placementByTarget が定めるものと同一であり、ここではシナリオブロック種別との対応だけを足す。コードの性質(純粋かport必須か)をケースバイケースで判定してはならない（ドリフト検知を非決定的にするため）"
         },
         {
           "item": "対象言語ごとの抽出",
@@ -119,32 +119,37 @@
         {
           "target": "domain",
           "testKind": "unit",
-          "path": "tests/unit/domain/"
+          "path": "tests/domain/unit/"
         },
         {
           "target": "application",
-          "testKind": "unit（port はテストダブル）",
-          "path": "tests/unit/application/（port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する）"
+          "testKind": "acceptance",
+          "path": "tests/application/acceptance/"
         },
         {
-          "target": "adapters",
-          "testKind": "integration（契約テスト）",
-          "path": "tests/integration/（同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行できると、両者の振る舞いの一致を保証しやすい）"
+          "target": "application",
+          "testKind": "integration",
+          "path": "tests/application/integration/"
         },
         {
-          "target": "usecase",
-          "testKind": "acceptance（ネイティブ）",
-          "path": "tests/acceptance/"
+          "target": "application",
+          "testKind": "unit",
+          "path": "tests/application/unit/"
         },
         {
-          "target": "システム全体の少数シナリオ",
-          "testKind": "E2E",
-          "path": "tests/e2e/（コンポジションルートによる配線を含めて検証。件数は絞る）"
-        },
-        {
-          "target": "CLI / MCP の公開インターフェース",
+          "target": "ports",
           "testKind": "contract",
-          "path": "tests/contract/"
+          "path": "tests/ports/contract/"
+        },
+        {
+          "target": "inbound adapter",
+          "testKind": "contract",
+          "path": "tests/adapters/inbound/contract/"
+        },
+        {
+          "target": "outbound adapter",
+          "testKind": "integration",
+          "path": "tests/adapters/outbound/integration/"
         }
       ]
     },
@@ -162,15 +167,15 @@
         },
         {
           "level": "必須",
-          "rule": "テストファイル名は test_{対応するspecのdocumentIdをsnake_case化したもの}.py で統一する（domain/application/adapters(integration)/acceptanceの全層に適用。実装モジュール名を由来にした命名は禁止）"
+          "rule": "テストファイル名は test_{対応するspecのdocumentIdをsnake_case化したもの}.py で統一する（仕様のシナリオに対応する全テストに適用。実装モジュール名を由来にした命名は禁止）"
         },
         {
           "level": "必須",
-          "rule": "tests/ 配下は testTypes（unit/integration/acceptance/contract/e2e）を第一階層とする。domain/applicationはunit/配下の第二階層（対象層の軸）。adaptersは単体テストではなく統合(integration)テストなので tests/unit/配下に置かず tests/integration/ を独立の第一階層にする"
+          "rule": "tests/ 配下は architecture が宣言するレイヤーを第一階層とし、テスト種別（unit/integration/acceptance/contract）を第二階層とする。第一階層のレイヤー名は architecture の layers が宣言するものをそのまま使い、ここで別途定義しない。テスト種別を第一階層にすると、レイヤーごとに取りうる種別が違うこと（domain に contract は無い、ports に unit は無い等）を構造で表せず、あり得ない組み合わせを禁止規則で塞ぐことになる（実際に「tests/unit/adapters/ に置かない」という禁止規則が必要になり、かつ守られていなかった）"
         },
         {
           "level": "推奨",
-          "rule": "application層のport経由コードは、integration層(実アダプタ)で既に検証済みの保証を、fakeに差し替えて再検証するためだけの単体テストを追加しない。追加するのは、そのコード自身が独自の分岐/判定ロジックを持ち、かつどの既存シナリオにも対応しない場合のみ（テストカバレッジは目標ではなく診断ツール）"
+          "rule": "application層のport経由コードは、tests/application/integration（実アダプタを差した検証）で既に検証済みの保証を、fakeに差し替えて再検証するためだけの単体テストを追加しない。追加するのは、そのコード自身が独自の分岐/判定ロジックを持ち、かつどの既存シナリオにも対応しない場合のみ（テストカバレッジは目標ではなく診断ツール）"
         },
         {
           "level": "必須",
@@ -199,6 +204,10 @@
         {
           "level": "必須",
           "rule": "時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない"
+        },
+        {
+          "level": "必須",
+          "rule": "テストには2つの出どころがある。仕様由来（specが宣言したシナリオを転記し、宣言行で突き合わせる）と、規約由来（portが宣言した契約を確かめる）。仕様由来は tests/domain・tests/application に置き、規約由来は tests/ports・tests/adapters に置く。この2つを同じディレクトリに混ぜると、ディレクトリを見てもどちらの保証なのか分からなくなる"
         }
       ]
     },

@@ -2,21 +2,7 @@
 from waffle.application.usecases.render_blank_template import RenderBlankTemplate
 from waffle.shared.result import Err, Ok
 
-
-class _FakeSchemaRepository:
-    def __init__(self, schemas: dict[str, dict]) -> None:
-        self._schemas = schemas
-
-    def load(self, schema_ref: str) -> dict:
-        if schema_ref not in self._schemas:
-            raise FileNotFoundError(schema_ref)
-        return self._schemas[schema_ref]
-
-    def list_versions(self, name: str) -> list[str]:
-        return []
-
-    def resolve_path(self, schema_ref: str) -> str:
-        return schema_ref
+from tests.fakes import FakeSchemaRepository
 
 
 class _FakeDocumentRepository:
@@ -46,7 +32,7 @@ class _FakeDocumentRepository:
 
 
 def _engine(schemas: dict[str, dict], documents: _FakeDocumentRepository | None = None) -> RenderBlankTemplate:
-    return RenderBlankTemplate(documents or _FakeDocumentRepository(), _FakeSchemaRepository(schemas))
+    return RenderBlankTemplate(documents or _FakeDocumentRepository(), FakeSchemaRepository(schemas))
 
 
 def _simple_schema() -> dict:
