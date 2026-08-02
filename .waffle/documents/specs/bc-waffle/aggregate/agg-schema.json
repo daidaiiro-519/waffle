@@ -194,7 +194,7 @@
           "name": "Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する",
           "category": "異常系",
           "viewpoint": "不変条件: Schemaファイル自体の物理的な整形は常に json.dumps(schema, indent=2, ensure_ascii=False) の出力と完全一致する",
-          "gherkin": "Scenario: Schemaファイルの物理整形は一意である\n  Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル\n  When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する\n  Then バイト単位で一致しない場合は不適合として検出される",
+          "gherkin": "Scenario: Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する\n  Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル\n  When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する\n  Then バイト単位で一致しない場合は不適合として検出される",
           "covers": "不変条件: Schemaファイル自体の物理的な整形は常に json.dumps(indent=2, ensure_ascii=False) の出力と完全一致する"
         }
       ]

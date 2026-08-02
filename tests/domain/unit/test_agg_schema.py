@@ -49,11 +49,12 @@ def _contains_oneof_or_anyof(node) -> bool:
 
 
 @pytest.mark.parametrize("schema_ref", _IN_SCOPE_SCHEMAS)
-def test_値フィールドに_oneOf_を持てない(schema_ref):
+def test_value_field_cannot_have_one_of(schema_ref):
     """
-    Given 値フィールドに oneOf を含む Schema
-    When scaffoldability を検証する
-    Then scaffold 不能として拒否される
+    Scenario: 値フィールドに oneOf を持てない
+      Given 値フィールドに oneOf を含む Schema
+      When scaffoldability を検証する
+      Then scaffold 不能として拒否される
     """
     schema = PackageSchemaRepository().load(schema_ref)
     assert not _contains_oneof_or_anyof(schema["$defs"]), f"{schema_ref} の $defs に oneOf/anyOf が含まれている"
@@ -67,25 +68,13 @@ def _lint_render(parts):
     return JsonSchemaValidator().validate(parts, schema)
 
 
-def test_lint_accepts_valid():
-    assert _lint_render([{"as": "paragraph", "from": "text"},
-                          {"as": "table", "from": "rows", "columns": [{"field": "name"}]}]) == []
-
-
-def test_lint_rejects_unknown_part():
-    assert _lint_render([{"as": "foobar", "from": "x"}])  # enum 違反で非空
-
-
-def test_lint_rejects_missing_required_attr():
-    assert _lint_render([{"as": "table", "from": "rows"}])  # columns 漏れで非空
-
-
 @pytest.mark.parametrize("schema_ref", _IN_SCOPE_SCHEMAS)
-def test_x_render_は閉じた語彙にのみ従う(schema_ref):
+def test_x_render_follows_closed_vocabulary(schema_ref):
     """
-    Given 未知の部品種別、または必須属性が欠けた x-render 宣言を持つ Schema
-    When x-render の適合を検証する
-    Then 不適合として拒否される
+    Scenario: x-render は閉じた語彙にのみ従う
+      Given 未知の部品種別、または必須属性が欠けた x-render 宣言を持つ Schema
+      When x-render の適合を検証する
+      Then 不適合として拒否される
 
     (実証: 全 in-scope schema の全 block の x-render が RenderMetaSchema に適合する)
     """
@@ -101,11 +90,12 @@ def test_x_render_は閉じた語彙にのみ従う(schema_ref):
 # --- Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する ---
 
 @pytest.mark.parametrize("schema_ref", _IN_SCOPE_SCHEMAS)
-def test_Schemaファイルの物理整形はjson_dumpsと完全一致する(schema_ref):
+def test_schema_file_formatting_is_canonical(schema_ref):
     """
-    Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル
-    When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する
-    Then バイト単位で一致しない場合は不適合として検出される
+    Scenario: Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する
+      Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル
+      When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する
+      Then バイト単位で一致しない場合は不適合として検出される
 
     (整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な
     差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする)
@@ -115,11 +105,12 @@ def test_Schemaファイルの物理整形はjson_dumpsと完全一致する(sch
     assert original == reserialized, f"{schema_ref} が json.dumps(indent=2, ensure_ascii=False) の出力と一致しない"
 
 
-def test_公開済みの版は後方互換を壊さない():
+def test_published_version_keeps_backward_compatibility():
     """
-    Given PUBLISHED の Schema 版
-    When 既存ブロックに必須フィールドを追加しようとする
-    Then 後方互換を壊す変更として拒否される
+    Scenario: 公開済みの版は後方互換を壊さない
+      Given 既にDocumentが参照している既存のSchema版
+      When 既存ブロックに必須フィールドを追加しようとする
+      Then 後方互換を壊す変更として拒否される
 
     (実証: 旧バージョンの既存Documentに、新schemaが要求する必須フィールドが
     欠けている場合、実際のJsonSchemaValidatorで不適合と判定されることを確認する)

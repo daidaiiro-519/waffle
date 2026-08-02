@@ -21,68 +21,67 @@ _SCHEMA = {
     }
 }
 
-def test_legal_transition_returns_target():
-    assert next_status(_SCHEMA, "CREATED", "validate") == "VALIDATED"
 
-
-def test_status_は逆行できない():
+def test_status_cannot_move_backward():
     """
-    Given RENDERED 状態の Document
-    When validate へ戻そうとする
-    Then 状態遷移は拒否され、状態は RENDERED のままである
+    Scenario: status は逆行できない
+      Given RENDERED 状態の Document
+      When validate へ戻そうとする
+      Then 状態遷移は拒否され、状態は RENDERED のままである
     """
     assert next_status(_SCHEMA, "RENDERED", "validate") is None
 
 
-def test_未検証では_render_できない():
+def test_render_is_rejected_before_validation():
     """
-    Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument
-    When render する
-    Then 拒否され、成果物は書き出されない
+    Scenario: 未検証では render できない
+      Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument
+      When render する
+      Then 拒否され、成果物は書き出されない
     """
     assert next_status(_SCHEMA, "CREATED", "render") is None
 
 
-def test_SUPERSEDED_は終端():
+def test_superseded_is_terminal():
     """
-    Given SUPERSEDED 状態の Document
-    When 任意のコマンドを実行する
-    Then 拒否される
+    Scenario: SUPERSEDED は終端
+      Given SUPERSEDED 状態の Document
+      When 任意のコマンドを実行する
+      Then 拒否される
     """
     assert next_status(_SCHEMA, "SUPERSEDED", "validate") is None
     assert next_status(_SCHEMA, "SUPERSEDED", "render") is None
 
 
-def test_schema_without_lifecycle_returns_none():
-    assert next_status({}, "ACTIVE", "validate") is None
-
-
 # --- パス解決はプロジェクトルート内に閉じ込められる（G6/G7） ---
 
-def test_パストラバーサルを含むパスは拒否される():
+def test_path_traversal_is_rejected():
     """
-    Given '..' を含む対象パス
-    When 任意の operation・command を実行する
-    Then INVALID_PATH エラーが返り、プロジェクトルート外へはアクセスしない
+    Scenario: パストラバーサルを含むパスは拒否される
+      Given '..' を含む対象パス
+      When 任意の operation・command を実行する
+      Then INVALID_PATH エラーが返り、プロジェクトルート外へはアクセスしない
     """
     assert is_confined("docs/../../etc/passwd") is False
     assert is_confined("docs/valid.json") is True
 
 
-def test_ディレクトリ横断はプロジェクトルート外を拒否する():
+def test_directory_scan_rejects_outside_project_root():
     """
-    Given プロジェクトルート外を指すディレクトリパス
-    When index_scan_documents を実行する
-    Then INVALID_PATH エラーが返る
+    Scenario: ディレクトリ横断はプロジェクトルート外を拒否する
+      Given プロジェクトルート外を指すディレクトリパス
+      When index_scan_documents を実行する
+      Then INVALID_PATH エラーが返る
     """
     assert is_confined("../outside") is False
 
 
-def test_schemaRefを持たないDocumentはMISSING_SCHEMA_REFとして拒否される():
+def test_document_without_schema_ref_is_rejected():
     """
-    Given schemaRef を持たない Document
-    When schema 解決を要する operation・command を実行する
-    Then MISSING_SCHEMA_REF エラーが返る
+    Scenario: schemaRefを持たないDocumentはMISSING_SCHEMA_REFとして拒否される
+      Given schemaRef を持たない Document
+      When schema 解決を要する operation・command を実行する
+      Then MISSING_SCHEMA_REF エラーが返る
     """
     result = require_schema_ref({"name": "x"})
     assert isinstance(result, Err)

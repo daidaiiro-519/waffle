@@ -30,7 +30,8 @@ import sys
 _USECASE_IMPL = re.compile(r"src/waffle/application/usecases/.*\.py$")
 _ENTITY_IMPL = re.compile(r"src/waffle/domain/entities/.*\.py$")
 _SERVICE_IMPL = re.compile(r"src/waffle/domain/services/.*\.py$")
-_TEST_FILE = re.compile(r"tests/(?:acceptance|integration)/(test_.*)\.py$")
+_TEST_FILE = re.compile(
+    r"tests/(?:application/(?:acceptance|integration)|domain/unit)/(test_.*)\.py$")
 _BASH_FILL_PATH = re.compile(r"waffle\s+scaffold\s+--operation\s+fill\b.*?--path\s+(\S+)")
 # tests/ という区画の中にありながら、突き合わせの対象になる配置に無いもの。
 # 対象外であることを黙って見過ごさないために見る。
@@ -52,6 +53,10 @@ ARCHITECTURE_REF = "architecture-waffle"
 COVERED_DOCUMENTS_ROOT = ".waffle/documents/specs/bc-waffle"
 
 _USECASE_SPEC = re.compile(r"\.waffle/documents/specs/.*/usecase/(uc-[^/]+)\.json$")
+# 集約specはinvariantScenariosを持ち、domain/unitのテストと突き合わさる。
+# どの配置と突き合わせるかは scenarioBinding（test-standard）が定めており、
+# ここに持っている対応はその写しである。宣言が散文のため機械が読めない。
+_AGGREGATE_SPEC = re.compile(r"\.waffle/documents/specs/.*/aggregate/(agg-[^/]+)\.json$")
 
 
 def _project_root() -> str:
@@ -99,19 +104,28 @@ def _guess_spec_path(test_stem: str) -> str | None:
     # test_uc_check_aggregate_class_drift -> uc-check-aggregate-class-drift
     name = test_stem.removeprefix("test_").replace("_", "-")
     root = _project_root()
-    matches = glob.glob(os.path.join(root, f".waffle/documents/specs/**/usecase/{name}.json"), recursive=True)
-    return matches[0] if matches else None
+    # usecase spec（acceptance/guarantee）と集約spec（invariant）の両方を探す。
+    for kind in ("usecase", "aggregate"):
+        matches = glob.glob(
+            os.path.join(root, f".waffle/documents/specs/**/{kind}/{name}.json"), recursive=True)
+        if matches:
+            return matches[0]
+    return None
 
 
 def _guess_test_paths(spec_path: str) -> list[str]:
     # uc-check-aggregate-class-drift.json -> test_uc_check_aggregate_class_drift(.py)
     m = _USECASE_SPEC.search(spec_path)
+    dirs = ("application/acceptance", "application/integration")
+    if not m:
+        m = _AGGREGATE_SPEC.search(spec_path)
+        dirs = ("domain/unit",)
     if not m:
         return []
     stem = "test_" + m.group(1).replace("-", "_")
     root = _project_root()
     found = []
-    for d in ("application/acceptance", "application/integration"):
+    for d in dirs:
         p = os.path.join(root, "tests", *d.split("/"), f"{stem}.py")
         if os.path.isfile(p):
             found.append(os.path.relpath(p, root))
@@ -162,21 +176,23 @@ def check(payload: dict) -> str | None:
         else:
             looked_for = m.group(1).removeprefix("test_").replace("_", "-")
             unpaired.append(
-                f"{file_path} に対応するusecase specが見つかりません"
-                f"（{looked_for}.json を探しました）")
+                f"{file_path} に対応するspecが見つかりません"
+                f"（usecase/aggregate の {looked_for}.json を探しました）")
     elif _TEST_BASENAME.search(file_path):
         unpaired.append(
-            f"{file_path} は tests/application/acceptance/ tests/application/integration/ のいずれにも無いため、"
+            f"{file_path} は tests/application/acceptance/ tests/application/integration/ "
+            "tests/domain/unit/ のいずれにも無いため、"
             "scenario-driftの突き合わせ対象になりません")
 
     fm = _BASH_FILL_PATH.search(command)
     spec_path = fm.group(1).strip("'\"") if fm else ""
     if spec_path:
         test_paths = _guess_test_paths(spec_path)
-        if not test_paths and _USECASE_SPEC.search(spec_path):
+        if not test_paths and (_USECASE_SPEC.search(spec_path) or _AGGREGATE_SPEC.search(spec_path)):
             unpaired.append(
                 f"{spec_path} に対応するテストファイルが見つかりません"
-                "（tests/application/acceptance/ tests/application/integration/ を探しました）")
+                "（tests/application/acceptance/ tests/application/integration/ "
+                "tests/domain/unit/ を探しました）")
         for test_path in test_paths:
             _collect("check-scenario-drift", f"scenario-drift:{test_path}",
                      "--specPath", spec_path, "--testPath", test_path)

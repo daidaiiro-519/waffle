@@ -1,3 +1,12 @@
+---
+id: "agg-schema"
+type: "aggregate"
+title: "Schema定義の型と不変条件を守る集約：Schema"
+description: "Document の型定義（Schema）の不変条件を表す集約。Document が機械生成・検証・描画できることを保証する バージョンが変わった際の既存Documentの追従はAIが個別に判断して直す（機械的な自動移行の機構はこの集約の対象外・過剰実装と判断し撤去済み） 対象は「Document の schemaRef が指しうる型」に限定する: DomainSpecSchema・PresentationSpecSchema・CodingSchema・SkillSchema・KnowledgeSchema・AgentSchema・TemplateSchema。RenderMetaSchema は Document 型定義ではなく派生構造（x-render 部品）を検証する別概念であり、この集約の対象外"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # Schema定義の型と不変条件を守る集約：Schema
 
 ## 概要
@@ -131,7 +140,7 @@ Scenario: x-render は閉じた語彙にのみ従う
 | 異常系 | 不変条件: Schemaファイル自体の物理的な整形は常に json.dumps(schema, indent=2, ensure_ascii=False) の出力と完全一致する |
 
 ```gherkin
-Scenario: Schemaファイルの物理整形は一意である
+Scenario: Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する
   Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル
   When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する
   Then バイト単位で一致しない場合は不適合として検出される

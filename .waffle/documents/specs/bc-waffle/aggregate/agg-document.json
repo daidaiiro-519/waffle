@@ -461,7 +461,7 @@
           "name": "ディレクトリ横断はプロジェクトルート外を拒否する",
           "category": "異常系",
           "viewpoint": "パス解決：index_scan_dir等のディレクトリ横断操作もルート外を拒否する",
-          "gherkin": "Scenario: ディレクトリ横断はプロジェクトルート外を拒否する\n  Given プロジェクトルート外を指すディレクトリパス\n  When index_scan_dir を実行する\n  Then INVALID_PATH エラーが返る",
+          "gherkin": "Scenario: ディレクトリ横断はプロジェクトルート外を拒否する\n  Given プロジェクトルート外を指すディレクトリパス\n  When index_scan_documents を実行する\n  Then INVALID_PATH エラーが返る",
           "covers": "不変条件: パス解決はプロジェクトルート内に閉じ込められる"
         },
         {
