@@ -54,7 +54,7 @@
     "layout": {
       "blockType": "Layout",
       "title": "ディレクトリ構成",
-      "tree": "src/\n  domain/\n    model/\n    value-objects/\n    services/\n  application/\n    usecases/\n  ports/\n  adapters/\n    inbound/\n    outbound/",
+      "tree": "src/\n  domain/\n    model/\n    value-objects/\n    services/\n  application/\n    usecases/\n    ports/\n  adapters/\n    inbound/\n    outbound/",
       "compositionRoot": "inbound adapter の起動点（エントリーポイント）にのみ置く",
       "sourceRoot": "src"
     },
@@ -89,12 +89,12 @@
         },
         {
           "concept": "repository",
-          "placement": "ports（インターフェース）／adapters/outbound（実装）",
+          "placement": "application/ports（インターフェース）＋adapters/outbound（実装）",
           "pattern": "インターフェースはports、具象はoutbound adapterに置く"
         },
         {
           "concept": "port",
-          "placement": "ports",
+          "placement": "application/ports",
           "pattern": "インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない"
         },
         {

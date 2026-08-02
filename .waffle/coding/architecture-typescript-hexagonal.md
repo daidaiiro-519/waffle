@@ -40,7 +40,7 @@ src/
     services/
   application/
     usecases/
-  ports/
+    ports/
   adapters/
     inbound/
     outbound/
@@ -61,8 +61,8 @@ inbound adapter の起動点（エントリーポイント）にのみ置く
 | `entity` | domain/model | 同一性はidで判定する（フィールドの値ではない）。単独では実装しない。必ず集約の内部にのみ存在する |
 | `value-object` | domain/value-objects | 構造的等価性・不変（readonlyフィールドのみ・状態変更メソッドを持たない） |
 | `domain-service` | domain/services | ステートレス（同じ入力に対して常に同じ結果を返す）。複数集約を単一トランザクションでまとめて変更するための抜け道にはしない（1集約=1トランザクションの原則は業務サービスがあっても変わらない） |
-| `repository` | ports（インターフェース）／adapters/outbound（実装） | インターフェースはports、具象はoutbound adapterに置く |
-| `port` | ports | インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない |
+| `repository` | application/ports（インターフェース）＋adapters/outbound（実装） | インターフェースはports、具象はoutbound adapterに置く |
+| `port` | application/ports | インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない |
 | `inbound-adapter` | adapters/inbound | 外部プロトコルの受け口。usecaseを呼び出すだけで業務ロジックを持たない |
 | `outbound-adapter` | adapters/outbound | portの実装。外部システムとの実際のやり取りを担う |
 
