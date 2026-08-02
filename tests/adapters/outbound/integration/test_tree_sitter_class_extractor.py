@@ -50,7 +50,7 @@ def _extractor() -> TreeSitterClassExtractor:
     ("typescript", _TYPESCRIPT_SRC),
     ("javascript", _JAVASCRIPT_SRC),
 ])
-def test_class_namesは全クラス名を出現順で返す(language, source):
+def test_class_names_returns_all_classes_in_order(language, source):
     """
     Given 4言語(Python/Java/TypeScript/JavaScript)いずれかのソース
     When class_namesを実行する
@@ -66,7 +66,7 @@ def test_class_namesは全クラス名を出現順で返す(language, source):
     ("typescript", _TYPESCRIPT_SRC, ["schemaId", "version"]),
     ("javascript", _JAVASCRIPT_SRC, ["schemaId", "version"]),
 ])
-def test_field_namesは指定クラスのフィールド名を出現順で返す(language, source, expected):
+def test_field_names_returns_fields_in_order(language, source, expected):
     """
     Given 4言語いずれかのソースと対象クラス名Schema
     When field_namesを実行する
@@ -76,7 +76,7 @@ def test_field_namesは指定クラスのフィールド名を出現順で返す
     assert fields == expected
 
 
-def test_field_namesは存在しないクラス名に対して空リストを返す():
+def test_field_names_returns_empty_for_unknown_class():
     """
     Given ソース内に存在しないクラス名
     When field_namesを実行する
@@ -86,7 +86,7 @@ def test_field_namesは存在しないクラス名に対して空リストを返
     assert fields == []
 
 
-def test_class_namesはサポート外の言語を拒否する():
+def test_class_names_rejects_unsupported_language():
     """
     Given サポート対象外の言語識別子
     When class_namesを実行する

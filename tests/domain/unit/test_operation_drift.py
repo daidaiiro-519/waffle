@@ -2,7 +2,7 @@
 from waffle.domain.services import operation_drift
 
 
-def test_declared_operationsはscenarioのoperationフィールドを集める():
+def test_declared_operations_collects_scenario_operations():
     """
     Given operationフィールドを持つシナリオといくつか持たないシナリオ
     When declared_operationsを実行する
@@ -22,7 +22,7 @@ def test_declared_operationsはscenarioのoperationフィールドを集める()
     assert operation_drift.declared_operations(doc) == {"get_block", "filter_items"}
 
 
-def test_declared_operationsはacceptanceScenariosが無ければ空集合():
+def test_declared_operations_is_empty_without_acceptance_scenarios():
     """
     Given acceptanceScenariosブロックを持たないDocument
     When declared_operationsを実行する
@@ -31,7 +31,7 @@ def test_declared_operationsはacceptanceScenariosが無ければ空集合():
     assert operation_drift.declared_operations({"content": {}}) == set()
 
 
-def test_implemented_operationsはoperation等価比較の文字列を集める():
+def test_implemented_operations_collects_compared_strings():
     """
     Given if operation == "..." 形式の分岐を含むソースコード
     When implemented_operationsを実行する
@@ -49,7 +49,7 @@ def run(self, operation, params):
     assert operation_drift.implemented_operations(source) == {"get_block", "filter_items"}
 
 
-def test_implemented_operationsはoperation分岐が無ければ空集合():
+def test_implemented_operations_is_empty_without_branches():
     """
     Given operation比較を含まないソースコード
     When implemented_operationsを実行する

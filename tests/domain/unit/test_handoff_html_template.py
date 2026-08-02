@@ -11,7 +11,7 @@ def _base_kwargs(layout, layers=None, handoff_kind="specToImplementation", usage
     )
 
 
-def test_層をまたぐ関係矢印は始点と終点のy座標が異なる():
+def test_cross_layer_arrow_has_different_start_and_end_y():
     """
     Given 異なる層に属する2ノード間のrelationships
     When render_handoff_htmlを呼ぶ
@@ -30,7 +30,7 @@ def test_層をまたぐ関係矢印は始点と終点のy座標が異なる():
     assert fy != ty
 
 
-def test_層ラベルがマージンに描画される():
+def test_layer_label_is_drawn_in_margin():
     """
     Given ラベル付きの2層のlayers
     When render_handoff_htmlを呼ぶ
@@ -46,7 +46,7 @@ def test_層ラベルがマージンに描画される():
     assert ">コア<" in html
 
 
-def test_長い層ラベルは折り返し用のforeignObjectで描画されノード列の外に留まる():
+def test_long_layer_label_wraps_outside_node_column():
     """
     Given ノード領域まで収まらない長さの層ラベル
     When render_handoff_htmlを呼ぶ
@@ -64,7 +64,7 @@ def test_長い層ラベルは折り返し用のforeignObjectで描画されノ�
     assert float(m.group(1)) <= 96.0
 
 
-def test_読み方セクションに層ごとの番号付き説明が出力される():
+def test_reading_section_numbers_each_layer():
     """
     Given labelとdescriptionを持つ2層のlayers
     When render_handoff_htmlを呼ぶ
@@ -82,7 +82,7 @@ def test_読み方セクションに層ごとの番号付き説明が出力さ�
     assert "業務ロジック本体。" in html
 
 
-def test_brainstormToSpec種別ではタブラベルとkickerが切り替わる():
+def test_brainstorm_to_spec_switches_tab_label_and_kicker():
     """
     Given handoff_kind=brainstormToSpec
     When render_handoff_htmlを呼ぶ
@@ -95,7 +95,7 @@ def test_brainstormToSpec種別ではタブラベルとkickerが切り替わる(
     assert "実装時の制約" not in html
 
 
-def test_expected_scopeを渡すと4つ目のタブに対象パスと理由が描画される():
+def test_expected_scope_renders_paths_and_reasons_in_fourth_tab():
     """
     Given path/reasonを持つexpected_scopeの項目
     When render_handoff_htmlを呼ぶ
@@ -112,7 +112,7 @@ def test_expected_scopeを渡すと4つ目のタブに対象パスと理由が�
     assert 'id="panel4"' in html
 
 
-def test_expected_scopeが空でも4つ目のタブは空状態で描画される():
+def test_empty_expected_scope_renders_fourth_tab_as_empty():
     """
     Given expected_scopeを渡さない
     When render_handoff_htmlを呼ぶ
@@ -124,7 +124,7 @@ def test_expected_scopeが空でも4つ目のタブは空状態で描画され�
     assert "記録なし" in html
 
 
-def test_split種別の関係は矢印なしの分離線として描画される():
+def test_split_relationship_is_drawn_without_arrowhead():
     """
     Given kind=splitのrelationshipsを持つ同じ層の2ノード
     When render_handoff_htmlを呼ぶ
@@ -141,7 +141,7 @@ def test_split種別の関係は矢印なしの分離線として描画される
     assert 'class="flow-arrow dep"' not in html
 
 
-def test_00見出しはkindごとの接尾辞を持つ():
+def test_overview_heading_has_kind_specific_suffix():
     """
     Given handoff_kindがspecToImplementation/brainstormToSpecそれぞれ
     When render_handoff_htmlを呼ぶ
@@ -154,7 +154,7 @@ def test_00見出しはkindごとの接尾辞を持つ():
     assert "00 完成イメージ — 予定されるDDD上の配置" in html_brainstorm
 
 
-def test_凡例の新設表記はkindごとに説明が付く():
+def test_legend_new_marker_is_explained_per_kind():
     """
     Given 新設ノードを含むlayersとhandoff_kind
     When render_handoff_htmlを呼ぶ
@@ -168,7 +168,7 @@ def test_凡例の新設表記はkindごとに説明が付く():
     assert "新設（今回のブレストの帰結）" in html_brainstorm
 
 
-def test_レビュー状況に未解決事項の行が常に出力される():
+def test_review_status_always_lists_open_items():
     """
     Given 任意のreview_counts
     When render_handoff_htmlを呼ぶ
@@ -180,7 +180,7 @@ def test_レビュー状況に未解決事項の行が常に出力される():
     assert "0件" in html
 
 
-def test_brainstormToSpec種別のレビュー行は分類判断件数で表示される():
+def test_brainstorm_to_spec_review_row_shows_classification_count():
     """
     Given handoff_kind=brainstormToSpecで設計観点・実装観点を持つreview_counts
     When render_handoff_htmlを呼ぶ
@@ -194,7 +194,7 @@ def test_brainstormToSpec種別のレビュー行は分類判断件数で表示�
     assert "設計観点" not in html
 
 
-def test_使われ方セクションはitemsがある場合のみ出力される():
+def test_usage_section_is_rendered_only_when_items_exist():
     """
     Given usage_examplesを持つ場合と持たない場合
     When render_handoff_htmlを呼ぶ
@@ -208,7 +208,7 @@ def test_使われ方セクションはitemsがある場合のみ出力される
     assert "使われ方" not in html_without
 
 
-def test_同じ行の関係矢印は始点と終点のy座標が一致する():
+def test_same_row_arrow_has_equal_start_and_end_y():
     """
     Given 同じ層に属する2ノード間のrelationships
     When render_handoff_htmlを呼ぶ
@@ -227,7 +227,7 @@ def test_同じ行の関係矢印は始点と終点のy座標が一致する():
     assert fy == ty
 
 
-def test_headにdocument_graph契約準拠のmetaタグが出力される():
+def test_head_emits_document_graph_meta_tags():
     """
     Given description・tagsを持つHandoff
     When render_handoff_htmlを呼ぶ
@@ -245,7 +245,7 @@ def test_headにdocument_graph契約準拠のmetaタグが出力される():
     assert '<meta name="tags" content="context:waffle, kind:handoff">' in html
 
 
-def test_descriptionとtagsが無い場合はmetaタグを空文字で出力する():
+def test_missing_description_and_tags_emit_empty_meta():
     """
     Given description・tagsを渡さないHandoff
     When render_handoff_htmlを呼ぶ

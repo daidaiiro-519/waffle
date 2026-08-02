@@ -3,7 +3,7 @@
 from waffle.domain.services import concept_source_root
 
 
-def test_sourceRootとplacementを結合して解決する():
+def test_resolves_by_joining_source_root_and_placement():
     """
     Given {package}トークンを含むsourceRootと、usecase概念のplacement
     When resolve_source_rootをpackage変数付きで実行する
@@ -15,7 +15,7 @@ def test_sourceRootとplacementを結合して解決する():
     assert result == "src/waffle/application/usecases"
 
 
-def test_プレースホルダの無いsourceRootはpackage変数を無視して解決される():
+def test_source_root_without_placeholder_ignores_package():
     """
     Given プレースホルダを含まないsourceRoot（TypeScript版の慣習）
     When package変数を渡してresolve_source_rootを実行する
@@ -27,7 +27,7 @@ def test_プレースホルダの無いsourceRootはpackage変数を無視して
     assert result == "src/application/usecases"
 
 
-def test_sourceRootが無ければNoneを返す():
+def test_returns_none_without_source_root():
     """
     Given sourceRootフィールドを持たないlayout
     When resolve_source_rootを実行する
@@ -38,7 +38,7 @@ def test_sourceRootが無ければNoneを返す():
     assert concept_source_root.resolve_source_root(layout, items, "usecase") is None
 
 
-def test_該当conceptが見つからなければNoneを返す():
+def test_returns_none_for_unknown_concept():
     """
     Given conceptPlacementに存在しないconcept名
     When resolve_source_rootを実行する
@@ -49,7 +49,7 @@ def test_該当conceptが見つからなければNoneを返す():
     assert concept_source_root.resolve_source_root(layout, items, "usecase", package="waffle") is None
 
 
-def test_package_name_from_referenceは接頭辞を剥がす():
+def test_package_name_from_reference_strips_prefix():
     """
     Given "architecture-waffle"のようなarchitectureRef（documentId）とcodingKind
     When package_name_from_referenceを実行する
@@ -58,7 +58,7 @@ def test_package_name_from_referenceは接頭辞を剥がす():
     assert concept_source_root.package_name_from_reference("architecture-waffle", "architecture") == "waffle"
 
 
-def test_package_name_from_referenceはkindプレフィックスが一致しなければNoneを返す():
+def test_package_name_from_reference_returns_none_on_kind_mismatch():
     """
     Given codingKindのプレフィックスと一致しないarchitectureRef
     When package_name_from_referenceを実行する

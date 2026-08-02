@@ -2,7 +2,8 @@
 from waffle.adapters.outbound.fs import FsDocumentRepository
 
 
-def test_linkはcanonicalへの相対シンボリックリンクを作る(tmp_path):
+def test_link_creates_relative_symlink_to_canonical(tmp_path):
+    """canonicalへの相対シンボリックリンクを作る。"""
     canonical = tmp_path / "waffle" / "skills" / "x" / "SKILL.md"
     canonical.parent.mkdir(parents=True)
     canonical.write_text("hello", encoding="utf-8")
@@ -14,7 +15,7 @@ def test_linkはcanonicalへの相対シンボリックリンクを作る(tmp_pa
     assert target.read_text(encoding="utf-8") == "hello"
 
 
-def test_親ディレクトリがcanonical側への既存シンボリックリンクでも正本を壊さない(tmp_path):
+def test_link_keeps_canonical_intact_when_parent_is_symlink(tmp_path):
     """
     Given deploy先の親ディレクトリが、canonicalの親ディレクトリへの
           既存シンボリックリンクである状態（旧来の手書きSkillのディレクトリ全体symlink）

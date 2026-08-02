@@ -2,7 +2,7 @@
 from waffle.domain.services.completion_image_layout import MARGIN_LEFT, compute_layout
 
 
-def test_単一層単一ノードはノード領域の水平中央に配置される():
+def test_single_node_layer_is_horizontally_centered():
     """
     Given 1層・1ノードのlayers
     When compute_layoutを呼ぶ
@@ -14,7 +14,7 @@ def test_単一層単一ノードはノード領域の水平中央に配置さ�
     assert node["x"] + node["width"] / 2 == (MARGIN_LEFT + result["viewbox_width"]) / 2
 
 
-def test_1対多層は親から全子への包含矢印を持つ():
+def test_one_to_many_layer_has_containment_arrows_to_all_children():
     """
     Given 1ノードの層の直後に2ノードの層があるlayers
     When compute_layoutを呼ぶ
@@ -32,7 +32,7 @@ def test_1対多層は親から全子への包含矢印を持つ():
     assert pairs == {("p", "c1"), ("p", "c2")}
 
 
-def test_同数ノードの層同士は位置的に1対1で接続される():
+def test_equal_sized_layers_connect_one_to_one():
     """
     Given 2ノードの層が2つ連続するlayers
     When compute_layoutを呼ぶ
@@ -53,7 +53,7 @@ def test_同数ノードの層同士は位置的に1対1で接続される():
     assert pairs == {("a1", "b1"), ("a2", "b2")}
 
 
-def test_層ラベルは各層の垂直中央のy座標を持つ():
+def test_layer_label_sits_at_vertical_center():
     """
     Given ラベル付きの2層のlayers
     When compute_layoutを呼ぶ
@@ -70,7 +70,7 @@ def test_層ラベルは各層の垂直中央のy座標を持つ():
     assert labels["呼出口"] == a_node["y"] + a_node["height"] / 2
 
 
-def test_同じ層内のノードは横に並び重ならない():
+def test_nodes_in_same_layer_do_not_overlap():
     """
     Given 1層に3ノードを持つlayers
     When compute_layoutを呼ぶ
@@ -87,7 +87,7 @@ def test_同じ層内のノードは横に並び重ならない():
         assert prev["x"] + prev["width"] <= nxt["x"]
 
 
-def test_relationshipsは対応するノードのx_y座標を参照した矢印になる():
+def test_relationships_reference_node_coordinates():
     """
     Given relationshipsで依存関係を1件宣言したlayers
     When compute_layoutを呼ぶ
@@ -104,7 +104,7 @@ def test_relationshipsは対応するノードのx_y座標を参照した矢印�
     ]
 
 
-def test_層の縦位置は上から順に間隔を空けて並ぶ():
+def test_layers_are_stacked_vertically_with_spacing():
     """
     Given 3層のlayers
     When compute_layoutを呼ぶ

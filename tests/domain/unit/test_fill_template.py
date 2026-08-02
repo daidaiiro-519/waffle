@@ -6,7 +6,7 @@ uc-render-blank-templateのAcceptanceCriteriaに対応する。純粋なdict操�
 from waffle.domain.services.fill_template import build_fill_template, overlay_placeholders
 
 
-def test_単純な文字列フィールドはx_prompt_write本文をプレースホルダーにする():
+def test_plain_string_field_uses_prompt_as_placeholder():
     """
     Given x-prompt-writeを持つ単純な文字列フィールドのskeleton
     When overlay_placeholdersを実行する
@@ -21,7 +21,7 @@ def test_単純な文字列フィールドはx_prompt_write本文をプレース
     assert result["content"]["title"]["blockType"] == "Title"
 
 
-def test_enumフィールドはプレースホルダーに選択肢を併記する():
+def test_enum_field_lists_choices_in_placeholder():
     """
     Given enumを持つフィールドのskeleton
     When overlay_placeholdersを実行する
@@ -35,7 +35,7 @@ def test_enumフィールドはプレースホルダーに選択肢を併記す�
     assert result["status"] == "{{状態（選択肢: CREATED / VALIDATED）}}"
 
 
-def test_構造化要素を持つ配列は要素1件分のプレースホルダーオブジェクトの配列にする():
+def test_structured_array_yields_one_placeholder_object():
     """
     Given element(構造化された要素)を宣言する配列フィールドのskeleton
     When overlay_placeholdersを実行する
@@ -52,7 +52,7 @@ def test_構造化要素を持つ配列は要素1件分のプレースホルダ�
     assert result["content"]["errors"]["items"] == [{"code": "{{エラーコード}}", "condition": "{{発生条件}}"}]
 
 
-def test_単純な配列フィールドはプレースホルダー文字列を1件だけ含む配列にする():
+def test_plain_array_yields_single_placeholder_string():
     """
     Given elementを持たない単純な配列フィールド(例: tags)のskeleton
     When overlay_placeholdersを実行する
@@ -67,7 +67,7 @@ def test_単純な配列フィールドはプレースホルダー文字列を1�
     assert result["tags"] == ["{{タグを列挙}}"]
 
 
-def test_配列の中にさらに配列を持つ要素はネストしたプレースホルダー配列にする():
+def test_nested_array_yields_nested_placeholder_array():
     """
     Given 配列の要素(オブジェクト)自身がさらに構造化された配列(例: Entities.items[].attributes)を宣言するschema
     When build_fill_templateで走査しoverlay_placeholdersで合成する
@@ -122,7 +122,7 @@ def test_配列の中にさらに配列を持つ要素はネストしたプレ�
     ]
 
 
-def test_配列の要素がプリミティブの配列プロパティを持つときもプレースホルダー配列にする():
+def test_array_item_with_primitive_array_property_yields_placeholder_array():
     """
     Given 配列の要素(オブジェクト)自身がプリミティブの配列プロパティ(例: 箇条書きのbullets: string[])を持つschema
     When build_fill_templateで走査しoverlay_placeholdersで合成する
@@ -161,7 +161,7 @@ def test_配列の要素がプリミティブの配列プロパティを持つ�
     ]
 
 
-def test_allOf合成された配列要素もオブジェクト配列として扱う():
+def test_all_of_composed_array_item_is_treated_as_object_array():
     """
     Given 配列の要素がtype:objectを明示せずallOfで合成されているschema
         （_merge_allofの返り値はtypeキーを持たずpropertiesキーだけを持つ）
@@ -196,7 +196,7 @@ def test_allOf合成された配列要素もオブジェクト配列として扱
     assert result["content"]["steps"] == [{"title": "{{タイトル}}"}]
 
 
-def test_プロンプトの無いオブジェクト配列要素も空オブジェクトを含む配列にする():
+def test_array_item_without_prompt_yields_empty_object():
     """
     Given 配列の要素はobject型だが、どのプロパティもx-prompt-writeを宣言していないschema
     When build_fill_templateで走査しoverlay_placeholdersで合成する
@@ -222,7 +222,7 @@ def test_プロンプトの無いオブジェクト配列要素も空オブジ�
     assert result["content"]["metrics"] == [{}]
 
 
-def test_自己参照的な配列は無限再帰せず有限の深さでネストした配列のままにする():
+def test_self_referential_array_stops_at_finite_depth():
     """
     Given 配列の要素が自分自身と同じ構造の配列(children)を持つ自己参照的なschema
         （例: AgentSchemaのSubStep）
@@ -267,7 +267,7 @@ def test_自己参照的な配列は無限再帰せず有限の深さでネス�
     assert isinstance(nested["children"], list)  # 打ち切り後も必ずlistのまま(文字列に潰れない)
 
 
-def test_discriminatorごとの入れ子x_prompt_writeはspec_kindに対応する文言だけを使う():
+def test_nested_prompt_uses_only_matching_spec_kind():
     """
     Given x-prompt-writeがdiscriminatorの値ごとの入れ子（kindごとの文字列）であるフィールド
     When build_fill_templateにspec_kindを渡して走査する
@@ -289,7 +289,7 @@ def test_discriminatorごとの入れ子x_prompt_writeはspec_kindに対応す�
     assert entries[0]["prompt"] == "usecase向けの文言"
 
 
-def test_discriminatorの入れ子x_prompt_writeでspec_kindが指定されないときは空文字にする():
+def test_nested_prompt_without_spec_kind_yields_empty_string():
     """
     Given x-prompt-writeがdiscriminatorの値ごとの入れ子であるフィールド
     When spec_kindを渡さずにbuild_fill_templateを実行する
@@ -309,7 +309,7 @@ def test_discriminatorの入れ子x_prompt_writeでspec_kindが指定されな�
     assert entries[0]["prompt"] == ""
 
 
-def test_x_prompt_writeがフラットな文字列のときはspec_kindを渡しても従来どおり使う():
+def test_flat_prompt_is_used_even_when_spec_kind_given():
     """
     Given x-prompt-writeがdiscriminator非依存のフラットな文字列であるフィールド
     When spec_kindを渡してbuild_fill_templateを実行する
@@ -327,7 +327,7 @@ def test_x_prompt_writeがフラットな文字列のときはspec_kindを渡し
     assert entries[0]["prompt"] == "共通の文言"
 
 
-def test_配列要素内のdiscriminatorごとの入れ子x_prompt_writeもspec_kindで解決する():
+def test_nested_prompt_inside_array_item_resolves_by_spec_kind():
     """
     Given 配列要素のプロパティのx-prompt-writeがdiscriminatorの値ごとの入れ子であるschema
     When build_fill_templateにspec_kindを渡して走査する
@@ -363,7 +363,7 @@ def test_配列要素内のdiscriminatorごとの入れ子x_prompt_writeもspec_
     assert entries[0]["element"]["code"] == "aggregateのエラーコード"
 
 
-def test_元のskeletonを変更しない():
+def test_does_not_mutate_original_skeleton():
     """
     Given 元のskeleton
     When overlay_placeholdersを実行する

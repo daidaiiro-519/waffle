@@ -43,7 +43,7 @@ def _new_block() -> dict:
 
 # --- add_block ---
 
-def test_add_blockはdefsとcontent_defのプロパティ参照を追加する():
+def test_add_block_adds_def_and_content_property():
     """
     Given ブロック名・ブロック定義・紐付け先のContent def名・プロパティ名
     When add_blockを実行する
@@ -55,7 +55,7 @@ def test_add_blockはdefsとcontent_defのプロパティ参照を追加する()
     assert result["$defs"]["SomeContent"]["properties"]["note"] == {"$ref": "#/$defs/NoteBlock"}
 
 
-def test_add_blockは既存の他のブロックを変更しない():
+def test_add_block_leaves_other_blocks_untouched():
     """
     Given 既存のブロックを含むschema
     When 新規ブロックをadd_blockする
@@ -67,7 +67,7 @@ def test_add_blockは既存の他のブロックを変更しない():
     assert result["$defs"]["TitleBlock"] == before_title_block
 
 
-def test_add_blockは既に存在するブロックに対して冪等である():
+def test_add_block_is_idempotent():
     """
     Given 既に追加済みのブロック名を含むadd_block操作
     When add_blockを再実行する
@@ -81,7 +81,7 @@ def test_add_blockは既に存在するブロックに対して冪等である()
 
 # --- rename_block ---
 
-def test_rename_blockはdefsキー_const_プロパティキー_ref参照を一貫してリネームする():
+def test_rename_block_renames_def_const_property_and_ref():
     """
     Given 旧短縮名・新短縮名
     When rename_blockを実行する
@@ -100,7 +100,7 @@ def test_rename_blockはdefsキー_const_プロパティキー_ref参照を一�
     assert "title" not in result["$defs"]["SomeContent"]["required"]
 
 
-def test_rename_blockは無関係な箇所にある同名の文字列値を変更しない():
+def test_rename_block_leaves_unrelated_strings_untouched():
     """
     Given リネーム対象の短縮名と偶然同じ文字列値を、無関係なブロックの無関係なフィールドに持つschema
     When rename_blockを実行する
@@ -119,7 +119,7 @@ def test_rename_blockは無関係な箇所にある同名の文字列値を変�
     assert result["$defs"]["NoteBlock"]["properties"]["note"]["default"] == "Title"
 
 
-def test_rename_blockは既にリネーム済みの状態に対して冪等である():
+def test_rename_block_is_idempotent():
     """
     Given リネーム元が既に存在せずリネーム先が既に存在する状態
     When 同じrename_block操作を再実行する
@@ -131,7 +131,7 @@ def test_rename_blockは既にリネーム済みの状態に対して冪等で�
     assert schema_patch.dump(once) == schema_patch.dump(twice)
 
 
-def test_rename_blockはリネーム元も先も存在しなければ拒否する():
+def test_rename_block_rejects_when_neither_name_exists():
     """
     Given リネーム元・リネーム先のいずれも存在しないschema
     When rename_blockを実行する
@@ -147,7 +147,7 @@ def test_rename_blockはリネーム元も先も存在しなければ拒否す�
 
 # --- set_field ---
 
-def test_set_fieldは指定したdefの指定したドットパスの値を書き換える():
+def test_set_field_writes_value_at_dot_path():
     """
     Given def名・ドットパス・新しい値
     When set_fieldを実行する
@@ -158,7 +158,7 @@ def test_set_fieldは指定したdefの指定したドットパスの値を書�
     assert result["$defs"]["TitleBlock"]["properties"]["title"]["type"] == "number"
 
 
-def test_set_fieldは対象外のdefを変更しない():
+def test_set_field_leaves_other_defs_untouched():
     """
     Given 複数のdefを含むschema
     When 1つのdefにset_fieldする
@@ -170,7 +170,7 @@ def test_set_fieldは対象外のdefを変更しない():
     assert result["$defs"]["SomeContent"] == before_content
 
 
-def test_set_fieldは同じ値への書き込みに対して冪等である():
+def test_set_field_is_idempotent():
     """
     Given 既に目的の値になっているフィールド
     When 同じ値でset_fieldを再実行する
@@ -182,7 +182,7 @@ def test_set_fieldは同じ値への書き込みに対して冪等である():
     assert schema_patch.dump(once) == schema_patch.dump(twice)
 
 
-def test_set_fieldはドットパス中の数字を配列インデックスとして辿る():
+def test_set_field_treats_numeric_segment_as_array_index():
     """
     Given x-render配列を含むdefと、数字を含むドットパス（例: x-render.0.columns.1.bullet）
     When set_fieldを実行する
@@ -197,7 +197,7 @@ def test_set_fieldはドットパス中の数字を配列インデックスと�
     assert result["$defs"]["TitleBlock"]["x-render"][0]["columns"][0] == {"field": "code"}
 
 
-def test_set_fieldはdefNameがNoneのときschemaのルート直下を書き換える():
+def test_set_field_writes_at_schema_root_when_def_name_is_none():
     """
     Given defNameにNone、ルート直下のドットパス（例: properties.schemaRef.const）
     When set_fieldを実行する
@@ -210,7 +210,7 @@ def test_set_fieldはdefNameがNoneのときschemaのルート直下を書き換
     assert result["$defs"] == schema["$defs"]
 
 
-def test_set_fieldは存在しないdefを拒否する():
+def test_set_field_rejects_unknown_def():
     """
     Given schemaの$defsに存在しないdef名
     When set_fieldを実行する
@@ -226,7 +226,7 @@ def test_set_fieldは存在しないdefを拒否する():
 
 # --- create_version ---
 
-def test_create_versionはeditsを順に適用した新しいschemaを返す():
+def test_create_version_applies_edits_in_order():
     """
     Given 既存schemaと複数のフィールド編集(edits)
     When create_versionを実行する
@@ -242,7 +242,7 @@ def test_create_versionはeditsを順に適用した新しいschemaを返す():
     assert result["$defs"]["SomeContent"]["properties"]["title"]["description"] == "タイトル"
 
 
-def test_create_versionは元のschemaを変更しない():
+def test_create_version_does_not_mutate_source_schema():
     """
     Given 既存schema
     When create_versionを実行する
@@ -256,7 +256,7 @@ def test_create_versionは元のschemaを変更しない():
 
 # --- remove_block ---
 
-def test_remove_blockはcontent_defのプロパティ参照を外す():
+def test_remove_block_detaches_content_property():
     """
     Given optionalなプロパティ参照を持つcontent def
     When remove_blockを実行する
@@ -267,7 +267,7 @@ def test_remove_blockはcontent_defのプロパティ参照を外す():
     assert "note" not in result["$defs"]["SomeContent"]["properties"]
 
 
-def test_remove_blockはブロック定義自体を削除しない():
+def test_remove_block_keeps_block_definition():
     """
     Given optionalなプロパティ参照を持つcontent def
     When remove_blockを実行する
@@ -278,7 +278,7 @@ def test_remove_blockはブロック定義自体を削除しない():
     assert "NoteBlock" in result["$defs"]
 
 
-def test_remove_blockは対象外のdefを変更しない():
+def test_remove_block_leaves_other_defs_untouched():
     """
     Given 複数のdefを含むschema
     When 1つのcontent defからremove_blockする
@@ -290,7 +290,7 @@ def test_remove_blockは対象外のdefを変更しない():
     assert result["$defs"]["TitleBlock"] == before_title_block
 
 
-def test_remove_blockは既に存在しないプロパティに対して冪等である():
+def test_remove_block_is_idempotent():
     """
     Given 既に存在しないプロパティ名
     When remove_blockを実行する
@@ -301,7 +301,7 @@ def test_remove_blockは既に存在しないプロパティに対して冪等�
     assert schema_patch.dump(result) == schema_patch.dump(schema)
 
 
-def test_remove_blockは存在しないcontent_defを拒否する():
+def test_remove_block_rejects_unknown_content_def():
     """
     Given schemaの$defsに存在しないcontent def名
     When remove_blockを実行する
@@ -331,7 +331,7 @@ def _kind_dispatch_schema() -> dict:
     return schema
 
 
-def test_add_defはdefsに独立した新規エントリを追加する():
+def test_add_def_adds_standalone_entry():
     """
     Given def名・def定義
     When add_defを実行する
@@ -342,7 +342,7 @@ def test_add_defはdefsに独立した新規エントリを追加する():
     assert result["$defs"]["RouterContent"] == {"type": "object", "properties": {}}
 
 
-def test_add_defは既存の他のdefを変更しない():
+def test_add_def_leaves_other_defs_untouched():
     """
     Given 既存のdefを含むschema
     When 新規defをadd_defする
@@ -354,7 +354,7 @@ def test_add_defは既存の他のdefを変更しない():
     assert result["$defs"]["SomeContent"] == before_some_content
 
 
-def test_add_defは既に存在するdefに対して冪等である():
+def test_add_def_is_idempotent():
     """
     Given 既に追加済みのdef名を含むadd_def操作
     When add_defを再実行する
@@ -368,7 +368,7 @@ def test_add_defは既に存在するdefに対して冪等である():
 
 # --- add_kind_branch ---
 
-def test_add_kind_branchはif_then_else形式をallOf形式に正規化し新ブランチを追加する():
+def test_add_kind_branch_normalizes_if_then_else_to_all_of():
     """
     Given if/then/else形式（enumが既存kind値を2つのみ持つ）のルート分岐
     When add_kind_branchを実行する
@@ -392,7 +392,7 @@ def test_add_kind_branchはif_then_else形式をallOf形式に正規化し新ブ
     }
 
 
-def test_add_kind_branchは既にallOf形式の分岐に新ブランチを追加する():
+def test_add_kind_branch_appends_to_existing_all_of():
     """
     Given 既にallOf形式のルート分岐
     When add_kind_branchを実行する
@@ -411,7 +411,7 @@ def test_add_kind_branchは既にallOf形式の分岐に新ブランチを追加
     assert len(result["allOf"]) == 4
 
 
-def test_add_kind_branchは対象外の箇所を変更しない():
+def test_add_kind_branch_leaves_unrelated_parts_untouched():
     """
     Given 既存のブロックを含むschema
     When add_kind_branchを実行する
@@ -424,7 +424,7 @@ def test_add_kind_branchは対象外の箇所を変更しない():
     assert result["$defs"]["TitleBlock"] == before_title_block
 
 
-def test_add_kind_branchは既に存在するkind値_content_def紐付けに対して冪等である():
+def test_add_kind_branch_is_idempotent():
     """
     Given 既にenumとルート分岐の両方に存在するkind値・content def紐付け
     When add_kind_branchを再実行する
@@ -437,7 +437,7 @@ def test_add_kind_branchは既に存在するkind値_content_def紐付けに対�
     assert schema_patch.dump(once) == schema_patch.dump(twice)
 
 
-def test_add_kind_branchは既存2値のif_then_else形式に対して冪等である():
+def test_add_kind_branch_is_idempotent_on_two_value_if_then_else():
     """
     Given if/then/elseの既存2値(advisor/custom)そのものを対象にした add_kind_branch
     When advisor（if分岐が表すkind値）を対象に add_kind_branchを実行する
@@ -448,7 +448,7 @@ def test_add_kind_branchは既存2値のif_then_else形式に対して冪等で�
     assert schema_patch.dump(result) == schema_patch.dump(schema)
 
 
-def test_add_kind_branchはif_then_elseでもallOfでもない形状を拒否する():
+def test_add_kind_branch_rejects_unknown_shape():
     """
     Given ルート直下にif/then/elseもallOfも持たないschema
     When add_kind_branchを実行する
@@ -463,7 +463,7 @@ def test_add_kind_branchはif_then_elseでもallOfでもない形状を拒否す
         pass
 
 
-def test_add_kind_branchはif_then_elseでenumが3値以上の不整合な状態を拒否する():
+def test_add_kind_branch_rejects_inconsistent_enum():
     """
     Given if/then/else形式でありながらenumが既に3値以上を持つ（elseの暗黙値を一意に逆算できない）schema
     When add_kind_branchを実行する
@@ -492,7 +492,7 @@ def _kind_keyed_render_target_schema() -> dict:
     }
 
 
-def test_set_kind_render_targetはpathVars_path_deployのkind別dictに新しいエントリを追加する():
+def test_set_kind_render_target_adds_entry_per_kind():
     """
     Given kind値・pathVars・path・deploy、およびpathVars/path/deployがkind別dict形式のschema
     When set_kind_render_targetを実行する
@@ -512,7 +512,7 @@ def test_set_kind_render_targetはpathVars_path_deployのkind別dictに新しい
     assert target["deploy"]["investigation-report"] == [".claude/skills/{skillRef}/references/{documentId}.md"]
 
 
-def test_set_kind_render_targetは既存の他のkindのエントリを変更しない():
+def test_set_kind_render_target_leaves_other_kinds_untouched():
     """
     Given 既存kindのエントリを含むschema
     When 新しいkindをset_kind_render_targetする
@@ -532,7 +532,7 @@ def test_set_kind_render_targetは既存の他のkindのエントリを変更し
     assert target["deploy"]["judgment"] == [".claude/skills/{skillRef}/references/{documentId}.md"]
 
 
-def test_set_kind_render_targetは既に一致するエントリに対して冪等である():
+def test_set_kind_render_target_is_idempotent():
     """
     Given 既にpathVars・path・deployの全てで指定した値と一致するkind値のエントリ
     When set_kind_render_targetを再実行する
@@ -556,7 +556,7 @@ def test_set_kind_render_targetは既に一致するエントリに対して冪�
     assert schema_patch.dump(once) == schema_patch.dump(twice)
 
 
-def test_set_kind_render_targetはx_render_targetが無いschemaを拒否する():
+def test_set_kind_render_target_rejects_schema_without_render_target():
     """
     Given x-render-target自体を持たないschema
     When set_kind_render_targetを実行する
@@ -570,7 +570,7 @@ def test_set_kind_render_targetはx_render_targetが無いschemaを拒否する(
         pass
 
 
-def test_set_kind_render_targetはpath_がフラット形式のschemaを拒否する():
+def test_set_kind_render_target_rejects_flat_path_schema():
     """
     Given x-render-target.pathがkind別dictでなくフラットな文字列であるschema
     When set_kind_render_targetを実行する
@@ -589,7 +589,7 @@ def test_set_kind_render_targetはpath_がフラット形式のschemaを拒否�
 
 # --- check_backward_compatible ---
 
-def test_公開済みkindのrequiredへの追加は後方互換違反として検出される():
+def test_adding_required_to_published_kind_breaks_compatibility():
     """
     Given 公開済みkindのContent defのrequired配列に新規エントリを追加する変更
     When 後方互換チェックを実行する
@@ -601,7 +601,7 @@ def test_公開済みkindのrequiredへの追加は後方互換違反として�
     assert violations, "required配列への追加が検出されなかった"
 
 
-def test_optionalプロパティの追加は後方互換違反にならない():
+def test_adding_optional_property_keeps_compatibility():
     """
     Given requiredに含めずに新規プロパティのみ追加した変更後schema
     When 後方互換チェックを実行する
@@ -613,7 +613,7 @@ def test_optionalプロパティの追加は後方互換違反にならない():
     assert violations == []
 
 
-def test_必須プロパティのremove_blockは後方互換違反として検出される():
+def test_removing_required_property_breaks_compatibility():
     """
     Given requiredに指定されているプロパティをremove_blockで除去した変更後schema
     When 後方互換チェックを実行する
@@ -625,7 +625,7 @@ def test_必須プロパティのremove_blockは後方互換違反として検�
     assert violations, "必須プロパティのremove_blockが検出されなかった"
 
 
-def test_必須でないプロパティのremove_blockは後方互換違反にならない():
+def test_removing_optional_property_keeps_compatibility():
     """
     Given requiredに含まれないプロパティをremove_blockで除去した変更後schema
     When 後方互換チェックを実行する
@@ -637,7 +637,7 @@ def test_必須でないプロパティのremove_blockは後方互換違反に�
     assert violations == []
 
 
-def test_必須プロパティのリネームは後方互換違反として検出される():
+def test_renaming_required_property_breaks_compatibility():
     """
     Given 公開済みkindのContent defでrequiredに指定されているブロックのリネーム
     When 後方互換チェックを実行する
@@ -649,7 +649,7 @@ def test_必須プロパティのリネームは後方互換違反として検�
     assert violations, "requiredプロパティのリネームが検出されなかった"
 
 
-def test_必須でないプロパティのリネームは後方互換違反にならない():
+def test_renaming_optional_property_keeps_compatibility():
     """
     Given 公開済みkindのContent defでrequiredに指定されていないブロックのリネーム
     When 後方互換チェックを実行する
@@ -662,7 +662,7 @@ def test_必須でないプロパティのリネームは後方互換違反に�
     assert violations == []
 
 
-def test_既存フィールドの型変更は後方互換違反として検出される():
+def test_changing_field_type_breaks_compatibility():
     """
     Given 公開済みkindの既存フィールドの型(type)を書き換える変更
     When 後方互換チェックを実行する
@@ -674,7 +674,7 @@ def test_既存フィールドの型変更は後方互換違反として検出�
     assert violations, "既存フィールドの型変更が検出されなかった"
 
 
-def test_型を変更しないset_fieldは後方互換違反にならない():
+def test_set_field_without_type_change_keeps_compatibility():
     """
     Given 型(type)以外のフィールドを書き換えるset_field
     When 後方互換チェックを実行する
@@ -688,7 +688,7 @@ def test_型を変更しないset_fieldは後方互換違反にならない():
 
 # --- dump（契約整形） ---
 
-def test_dumpはjson_dumps_indent2_ensure_ascii_falseと完全一致する():
+def test_dump_matches_json_dumps_indent2():
     """
     Given 任意のschema(dict)
     When dumpを適用する

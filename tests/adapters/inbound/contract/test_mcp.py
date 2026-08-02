@@ -30,7 +30,7 @@ async def _call(tool: str, args: dict):
         return result.data
 
 
-def test_query_documentはquery_pathでブロックを取得する():
+def test_query_document_returns_block():
     """
     Given waffle MCPサーバ
     When query_documentツールをoperation=query_path・blockKey・expression=@で呼ぶ
@@ -45,7 +45,7 @@ def test_query_documentはquery_pathでブロックを取得する():
     assert out["value"]["blockType"] == "ResponseTypes"
 
 
-def test_query_documentのエラーはerror_messageを返す():
+def test_query_document_error_returns_message():
     """
     Given waffle MCPサーバ
     When query_documentツールを未知のoperationで呼ぶ
@@ -58,7 +58,7 @@ def test_query_documentのエラーはerror_messageを返す():
     assert out["error"] == "INVALID_OPERATION"
 
 
-def test_query_documentはresolve_refで参照先pathを返す():
+def test_query_document_resolve_ref_returns_target_path():
     """
     Given waffle MCPサーバ
     When query_documentツールをoperation=resolve_refで呼ぶ
@@ -76,7 +76,7 @@ def test_query_documentはresolve_refで参照先pathを返す():
     )
 
 
-def test_query_documentはquery_pathでblockKey指定時に単一ブロックの評価結果を返す():
+def test_query_document_with_block_key_returns_single_block_result():
     """
     Given waffle MCPサーバ
     When query_documentツールをoperation=query_path・blockKey・expressionで呼ぶ
@@ -93,7 +93,7 @@ def test_query_documentはquery_pathでblockKey指定時に単一ブロックの
     assert all(item["category"] == "異常系" for item in out["value"])
 
 
-def test_query_documentはquery_pathでblockKey省略時にヒットしたブロックだけを返す():
+def test_query_document_without_block_key_returns_matching_blocks_only():
     """
     Given waffle MCPサーバ
     When query_documentツールをoperation=query_path・expressionのみで呼ぶ（blockKey省略）
@@ -107,7 +107,7 @@ def test_query_documentはquery_pathでblockKey省略時にヒットしたブロ
     assert any(r["blockKey"] == "acceptanceScenarios" for r in out["results"])
 
 
-def test_query_document_collectionはgrep_documentsで横断検索する():
+def test_query_document_collection_greps_across_documents():
     """
     Given waffle MCPサーバ
     When query_document_collectionツールをoperation=grep_documentsで呼ぶ
@@ -121,7 +121,7 @@ def test_query_document_collectionはgrep_documentsで横断検索する():
     assert any("uc-query-document.json" in p for p in out["value"])
 
 
-def test_validate_documentは適合でstatus判定を返す():
+def test_validate_document_returns_status_on_conformance():
     """
     Given waffle MCPサーバ
     When validate_documentツールを呼ぶ
@@ -133,7 +133,7 @@ def test_validate_documentは適合でstatus判定を返す():
     assert out["status"] == "ACTIVE"
 
 
-def test_render_documentはmdフォーマットを返す():
+def test_render_document_returns_md_format():
     """
     Given waffle MCPサーバ
     When render_documentツールをdeploy=falseで呼ぶ
@@ -146,7 +146,7 @@ def test_render_documentはmdフォーマットを返す():
     assert out["format"] == "md"
 
 
-def test_render_handoff_templateはHTMLを生成する(tmp_path):
+def test_render_handoff_template_generates_html(tmp_path):
     """
     Given waffle MCPサーバ
     When render_handoff_templateツールをHandoffのpathで呼ぶ
@@ -179,7 +179,7 @@ def test_render_handoff_templateはHTMLを生成する(tmp_path):
     assert output_path.read_text(encoding="utf-8")
 
 
-def test_render_document_viewerはHTMLを生成する(tmp_path):
+def test_render_document_viewer_generates_html(tmp_path):
     """
     Given waffle MCPサーバ
     When render_document_viewerツールを既存Documentのpathで呼ぶ
@@ -194,7 +194,7 @@ def test_render_document_viewerはHTMLを生成する(tmp_path):
     assert output_path.read_text(encoding="utf-8")
 
 
-def test_render_blank_templateはプレースホルダーMarkdownを返す():
+def test_render_blank_template_returns_placeholder_markdown():
     """
     Given waffle MCPサーバ
     When render_blank_templateツールをschemaRef=CodingSchema/v2で呼ぶ
@@ -208,7 +208,7 @@ def test_render_blank_templateはプレースホルダーMarkdownを返す():
     assert out["path"] == str(_BLANK_TEMPLATE_PATH)
 
 
-def test_patch_schemaはadd_blockの結果をdictで返す():
+def test_patch_schema_returns_add_block_result_as_dict():
     """
     Given waffle MCPサーバ
     When patch_schemaツールをoperation=add_blockで呼ぶ
@@ -232,7 +232,7 @@ def test_patch_schemaはadd_blockの結果をdictで返す():
     assert out["changed"] is True
 
 
-def test_check_spec_integrityは10フィールドの差分結果を返す():
+def test_check_spec_integrity_returns_ten_fields():
     """
     Given waffle MCPサーバ
     When check_spec_integrityツールをbc-waffle.jsonで呼ぶ
@@ -255,7 +255,7 @@ def test_check_spec_integrityは10フィールドの差分結果を返す():
     }
 
 
-def test_check_schema_version_driftは3フィールドの差分結果を返す():
+def test_check_schema_version_drift_returns_three_fields():
     """
     Given waffle MCPサーバ
     When check_schema_version_driftツールを呼ぶ
@@ -265,7 +265,7 @@ def test_check_schema_version_driftは3フィールドの差分結果を返す()
     assert out == {"broken_references": [], "newer_version_available": [], "missing_declared_fields": []}
 
 
-def test_check_usecase_class_driftは2フィールドの差分結果を返す():
+def test_check_usecase_class_drift_returns_two_fields():
     """
     Given waffle MCPサーバ
     When check_usecase_class_driftツールを architectureRef と documentsRoot の対で呼ぶ
@@ -276,7 +276,7 @@ def test_check_usecase_class_driftは2フィールドの差分結果を返す():
     assert out == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
-def test_check_aggregate_class_driftは5フィールドの差分結果を返す():
+def test_check_aggregate_class_drift_returns_five_fields():
     """
     Given waffle MCPサーバ
     When check_aggregate_class_driftツールを architectureRef と documentsRoot の対で呼ぶ
@@ -291,7 +291,7 @@ def test_check_aggregate_class_driftは5フィールドの差分結果を返す(
     }
 
 
-def test_check_domain_service_driftは1フィールドの差分結果を返す():
+def test_check_domain_service_drift_returns_one_field():
     """
     Given waffle MCPサーバ
     When check_domain_service_driftツールを architectureRef と documentsRoot の対で呼ぶ
@@ -302,7 +302,7 @@ def test_check_domain_service_driftは1フィールドの差分結果を返す()
     assert out == {"missing_implementation_file": []}
 
 
-def test_check_operation_driftは2フィールドの差分結果を返す():
+def test_check_operation_drift_returns_two_fields():
     """
     Given waffle MCPサーバ
     When check_operation_driftツールを architectureRef と documentsRoot の対で呼ぶ
@@ -313,7 +313,7 @@ def test_check_operation_driftは2フィールドの差分結果を返す():
     assert out == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
 
 
-def test_srcRootとarchitectureRefが両方とも無ければエラーになる():
+def test_missing_both_src_root_and_architecture_ref_errors():
     """
     Given waffle MCPサーバ
     When srcRootもarchitectureRefも指定せずcheck_usecase_class_driftツールを呼ぶ
@@ -323,7 +323,7 @@ def test_srcRootとarchitectureRefが両方とも無ければエラーになる(
     assert out["error"] == "MISSING_PARAM"
 
 
-def test_srcRootを明示指定するとarchitectureRefより優先される():
+def test_explicit_src_root_takes_precedence_over_architecture_ref():
     """
     Given 存在しないarchitectureRefと、実在するsrcRootの両方を指定する
     When check_usecase_class_driftツールを呼ぶ
@@ -337,7 +337,7 @@ def test_srcRootを明示指定するとarchitectureRefより優先される():
     assert out == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
-def test_存在しないarchitectureRefはARCHITECTURE_REF_NOT_FOUNDを返す():
+def test_unknown_architecture_ref_returns_not_found():
     """
     Given 存在しないarchitectureRef
     When srcRootを指定せずcheck_usecase_class_driftツールを呼ぶ
@@ -347,7 +347,7 @@ def test_存在しないarchitectureRefはARCHITECTURE_REF_NOT_FOUNDを返す():
     assert out["error"] == "ARCHITECTURE_REF_NOT_FOUND"
 
 
-def test_check_scenario_driftは4フィールドの差分結果を返す():
+def test_check_scenario_drift_returns_four_fields():
     """
     Given waffle MCPサーバ
     When check_scenario_driftツールを呼ぶ
@@ -361,7 +361,7 @@ def test_check_scenario_driftは4フィールドの差分結果を返す():
                                  "duplicate_declarations", "spec_declaration_mismatches"}
 
 
-def test_check_verification_gateはstatusとreasonsを返す(tmp_path):
+def test_check_verification_gate_returns_status_and_reasons(tmp_path):
     """
     Given waffle MCPサーバ
     When check_verification_gateツールを呼ぶ
@@ -379,7 +379,7 @@ def test_check_verification_gateはstatusとreasonsを返す(tmp_path):
     assert out["reasons"] == []
 
 
-def test_scan_source_codeは公開要素の一覧を返す(tmp_path):
+def test_scan_source_code_returns_public_elements(tmp_path):
     """
     Given waffle MCPサーバ
     When scan_source_codeツールをkind=googleで呼ぶ
@@ -392,7 +392,7 @@ def test_scan_source_codeは公開要素の一覧を返す(tmp_path):
     assert any(e["name"] == "f" for e in out)
 
 
-def test_lint_docstringは違反の配列を返す(tmp_path):
+def test_lint_docstring_returns_violations(tmp_path):
     """
     Given waffle MCPサーバ
     When lint_docstringツールをkind=googleで呼ぶ

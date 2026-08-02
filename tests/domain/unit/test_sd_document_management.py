@@ -11,7 +11,7 @@ from waffle.domain.services.part_renderer import MalformedContentError, render_p
 from waffle.domain.services.schema_discriminator import discriminator_key
 
 
-def test_パステンプレートは変数を解決する():
+def test_path_template_resolves_variables():
     """
     Given 変数を含むパステンプレートと解決に必要な値
     When resolve する
@@ -22,7 +22,7 @@ def test_パステンプレートは変数を解決する():
     assert path == ".waffle/documents/specs/bc-waffle/aggregate/agg-document.json"
 
 
-def test_逆解析は実パスからテンプレート変数を復元する():
+def test_reverse_parse_recovers_template_variables():
     """
     Given パステンプレートと、そのテンプレートから解決された実パス
     When reverse-parse する
@@ -35,7 +35,7 @@ def test_逆解析は実パスからテンプレート変数を復元する():
     }
 
 
-def test_テンプレートと一致しないパスは復元できない():
+def test_path_not_matching_template_cannot_be_recovered():
     """
     Given テンプレートの区切り構造と一致しない実パス
     When reverse-parse する
@@ -69,7 +69,7 @@ def test_reverse_parse_duplicate_variable_name_requires_consistent_value():
 
 # --- 描画 ---
 
-def test_paragraph_listが正しく整形される():
+def test_paragraph_and_list_render_correctly():
     """
     Given paragraph/listを宣言するx-render
     When renderする
@@ -83,7 +83,7 @@ def test_paragraph_listが正しく整形される():
     assert "- a\n- b" in md
 
 
-def test_listは配列でない値を受け取るとMalformedContentErrorを送出する():
+def test_list_raises_on_non_array_value():
     """
     Given listを宣言するx-renderと、対応するcontent値が配列でなく文字列
     When renderする
@@ -96,7 +96,7 @@ def test_listは配列でない値を受け取るとMalformedContentErrorを送�
         assert "items" in str(e)
 
 
-def test_tableは配列でない値を受け取るとMalformedContentErrorを送出する():
+def test_table_raises_on_non_array_value():
     """
     Given tableを宣言するx-renderと、対応するcontent値が配列でなく文字列
     When renderする
@@ -110,7 +110,7 @@ def test_tableは配列でない値を受け取るとMalformedContentErrorを送
         assert "items" in str(e)
 
 
-def test_sectionは配列でない値を受け取るとMalformedContentErrorを送出する():
+def test_section_raises_on_non_array_value():
     """
     Given sectionを宣言するx-renderと、対応するcontent値が配列でなく文字列
     When renderする
@@ -124,7 +124,7 @@ def test_sectionは配列でない値を受け取るとMalformedContentErrorを�
         assert "items" in str(e)
 
 
-def test_paragraphはlabelMapで値を表示ラベルに変換する():
+def test_paragraph_maps_value_to_display_label():
     """
     Given labelMapを宣言したparagraph部品と、labelMapのキーに一致するfrom値
     When renderする
@@ -137,7 +137,7 @@ def test_paragraphはlabelMapで値を表示ラベルに変換する():
     assert md == "中核"
 
 
-def test_sectionはtitleFromの値をlabelMapで表示ラベルに変換する():
+def test_section_maps_title_to_display_label():
     """
     Given labelMapを宣言したsection部品と、titleFromが指すitemフィールドの値
     When renderする
@@ -153,7 +153,7 @@ def test_sectionはtitleFromの値をlabelMapで表示ラベルに変換する()
     assert "### subdomain" not in md
 
 
-def test_tableはパイプ文字をエスケープしboolを整形する():
+def test_table_escapes_pipes_and_formats_booleans():
     """
     Given パイプ文字やbool値を含む行データ
     When tableとしてrenderする
@@ -172,7 +172,7 @@ def test_tableはパイプ文字をエスケープしboolを整形する():
     assert "| ✓ |" in md and "| - |" in md   # bool は ✓/-
 
 
-def test_sectionは入れ子とitemLabelを整形する():
+def test_section_renders_nesting_and_item_label():
     """
     Given itemLabelを持つsection宣言と入れ子のeach部品
     When renderする
@@ -187,7 +187,7 @@ def test_sectionは入れ子とitemLabelを整形する():
     assert "- x\n- y" in md
 
 
-def test_keyvalueが正しく整形される():
+def test_keyvalue_renders_correctly():
     """
     Given keyvalueを宣言するx-render
     When renderする
@@ -198,7 +198,7 @@ def test_keyvalueが正しく整形される():
     assert "- **a.md**: 説明A" in render_parts(parts, data, 3)
 
 
-def test_sectionはbadgeで条件付き強調を付与する():
+def test_section_applies_conditional_badge():
     """
     Given badge条件を満たすitemを含むsection宣言
     When renderする
@@ -215,7 +215,7 @@ def test_sectionはbadgeで条件付き強調を付与する():
     assert "一貫性単位" in md
 
 
-def test_tableはmarkFieldで識別子を太字強調する():
+def test_table_bolds_identifier_by_mark_field():
     """
     Given markFieldが真の行を含むtable宣言
     When renderする
@@ -231,7 +231,7 @@ def test_tableはmarkFieldで識別子を太字強調する():
     assert "| status | Status |" in md
 
 
-def test_statediagramが正しいMermaid構文になる():
+def test_statediagram_emits_valid_mermaid():
     """
     Given 状態遷移の配列を宣言するx-render
     When renderする
@@ -250,7 +250,7 @@ def test_statediagramが正しいMermaid構文になる():
     assert "open_state --> C: go" in md
 
 
-def test_architectureが正しいMermaid構文になる():
+def test_architecture_emits_valid_mermaid():
     """
     Given zones/connectionsを宣言するx-render
     When renderする
@@ -272,7 +272,7 @@ def test_architectureが正しいMermaid構文になる():
     assert "lb:R --> L:app" in md
 
 
-def test_flowchartが正しいMermaid構文になる():
+def test_flowchart_emits_valid_mermaid():
     """
     Given stages/transitionsを宣言するx-render
     When renderする
@@ -290,7 +290,7 @@ def test_flowchartが正しいMermaid構文になる():
     assert 'staging -->|"承認"| production' in md  # 非ASCIIラベルはクォート必須
 
 
-def test_sequenceはactor_participantを区別する():
+def test_sequence_distinguishes_actor_and_participant():
     """
     Given kind:actor/participantを含む参加者宣言
     When renderする
@@ -310,7 +310,7 @@ def test_sequenceはactor_participantを区別する():
     assert "顧客->>uc_place_order: 注文する" in md
 
 
-def test_sequenceはloop_altを入れ子で表現する():
+def test_sequence_nests_loop_and_alt():
     """
     Given loop/alt種別のstepを含むsteps配列
     When renderする
@@ -333,7 +333,7 @@ def test_sequenceはloop_altを入れ子で表現する():
     assert md.count("end") == 2
 
 
-def test_sequenceはactivate_deactivateを表現する():
+def test_sequence_renders_activate_and_deactivate():
     """
     Given activate/deactivateフラグを持つstep
     When renderする
@@ -349,7 +349,7 @@ def test_sequenceはactivate_deactivateを表現する():
     assert "B-->>-A: 応答" in md
 
 
-def test_statediagramは疑似状態を表現する():
+def test_statediagram_renders_pseudo_states():
     """
     Given pseudoStatesFromで疑似状態を宣言するx-render
     When renderする
@@ -365,7 +365,7 @@ def test_statediagramは疑似状態を表現する():
     assert "A --> 判定: check" in md
 
 
-def test_kvtableは単一行として整形される():
+def test_kvtable_renders_as_single_row():
     """
     Given kvtableを宣言するx-render
     When renderする
@@ -382,7 +382,7 @@ def test_kvtableは単一行として整形される():
     assert "正常系" in lines[2] and "状態遷移" in lines[2]
 
 
-def test_tableはjoin指定で配列セルを結合整形する():
+def test_table_joins_array_cell_with_join_template():
     """
     Given join/sepを指定したcolumns宣言と配列値を持つセル
     When renderする
@@ -398,7 +398,7 @@ def test_tableはjoin指定で配列セルを結合整形する():
     assert "status: OrderStatus / total: Money" in md
 
 
-def test_tableはbullet指定で配列セルを改行区切りの箇条書きにする():
+def test_table_renders_array_cell_as_bullet_list():
     """
     Given bullet:trueを指定したcolumns宣言と複数要素の配列値を持つセル
     When renderする
@@ -414,7 +414,7 @@ def test_tableはbullet指定で配列セルを改行区切りの箇条書きに
     assert "- ルート直下のkind分岐が、既知の形状に適合しない<br>- if/then/else形式でありながら、elseの暗黙値を一意に逆算できない" in md
 
 
-def test_tableはbulletとjoin_sepが同時指定されたときbulletを優先する():
+def test_table_prefers_bullet_over_join_when_both_given():
     """
     Given bullet:trueとjoin/sepの両方を指定したcolumns宣言と、dict要素の配列値
     When renderする
@@ -430,7 +430,7 @@ def test_tableはbulletとjoin_sepが同時指定されたときbulletを優先�
     assert "status: OrderStatus / total: Money" not in md
 
 
-def test_schemaのif直下からdiscriminatorキーを取り出す():
+def test_discriminator_key_is_read_from_top_level_if():
     """
     Given トップレベルにif.properties.specKindを持つschema
     When discriminatorキーを抽出する
@@ -440,7 +440,7 @@ def test_schemaのif直下からdiscriminatorキーを取り出す():
     assert discriminator_key(schema) == "specKind"
 
 
-def test_schemaのallOf内のifからdiscriminatorキーを取り出す():
+def test_discriminator_key_is_read_from_if_inside_all_of():
     """
     Given トップレベルにはifを持たないが、allOf内の要素にif.properties.codingKindを持つschema
     When discriminatorキーを抽出する
@@ -450,7 +450,7 @@ def test_schemaのallOf内のifからdiscriminatorキーを取り出す():
     assert discriminator_key(schema) == "codingKind"
 
 
-def test_discriminatorが無いschemaはNoneを返す():
+def test_schema_without_discriminator_returns_none():
     """
     Given ifもallOfも持たないschema
     When discriminatorキーを抽出する

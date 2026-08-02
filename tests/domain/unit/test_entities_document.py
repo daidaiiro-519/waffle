@@ -17,7 +17,7 @@ from waffle.domain.entities.document import (
 )
 
 
-def test_DocumentIdは値が等しければ等価():
+def test_document_id_is_equal_by_value():
     """
     Given 同じ値を持つ2つのDocumentId
     When 等価性を比較する
@@ -27,7 +27,7 @@ def test_DocumentIdは値が等しければ等価():
     assert DocumentId("uc-scaffold-document") != DocumentId("uc-query-document")
 
 
-def test_DocumentIdは不変():
+def test_document_id_is_immutable():
     """
     Given DocumentId
     When フィールドを変更しようとする
@@ -38,7 +38,7 @@ def test_DocumentIdは不変():
         document_id.value = "other"  # type: ignore[misc]
 
 
-def test_DocumentTypeは値が等しければ等価():
+def test_document_type_is_equal_by_value():
     """
     Given 同じ値を持つ2つのDocumentType
     When 等価性を比較する
@@ -48,7 +48,7 @@ def test_DocumentTypeは値が等しければ等価():
     assert DocumentType("DomainSpec") != DocumentType("Skill")
 
 
-def test_DiscriminatorValueは値が等しければ等価():
+def test_discriminator_value_is_equal_by_value():
     """
     Given 同じ値を持つ2つのDiscriminatorValue
     When 等価性を比較する
@@ -58,7 +58,7 @@ def test_DiscriminatorValueは値が等しければ等価():
     assert DiscriminatorValue("usecase") != DiscriminatorValue("aggregate")
 
 
-def test_SchemaRefはnameとversionの組で識別される():
+def test_schema_ref_is_identified_by_name_and_version():
     """
     Given 同じname・versionを持つ2つのSchemaRef
     When 等価性を比較する
@@ -71,7 +71,7 @@ def test_SchemaRefはnameとversionの組で識別される():
     assert a != c
 
 
-def test_Statusは値が等しければ等価():
+def test_status_is_equal_by_value():
     """
     Given 同じ値を持つ2つのStatus
     When 等価性を比較する
@@ -81,7 +81,7 @@ def test_Statusは値が等しければ等価():
     assert Status("VALIDATED") != Status("DRAFT")
 
 
-def test_Documentは宣言された全属性を持つ():
+def test_document_has_all_declared_attributes():
     """
     Given agg-document.jsonが宣言する19属性を指定してDocumentを構築する
     When 各属性を参照する

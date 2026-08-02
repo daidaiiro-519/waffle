@@ -9,7 +9,7 @@ import pytest
 from waffle.domain.entities.schema import KindProfile, Schema, SchemaId, Version
 
 
-def test_SchemaIdは値が等しければ等価():
+def test_schema_id_is_equal_by_value():
     """
     Given 同じ値を持つ2つのSchemaId
     When 等価性を比較する
@@ -19,7 +19,7 @@ def test_SchemaIdは値が等しければ等価():
     assert SchemaId("CodingSchema") != SchemaId("KnowledgeSchema")
 
 
-def test_SchemaIdは不変():
+def test_schema_id_is_immutable():
     """
     Given SchemaId
     When フィールドを変更しようとする
@@ -30,7 +30,7 @@ def test_SchemaIdは不変():
         schema_id.value = "Other"  # type: ignore[misc]
 
 
-def test_Versionは値が等しければ等価():
+def test_version_is_equal_by_value():
     """
     Given 同じ値を持つ2つのVersion
     When 等価性を比較する
@@ -40,7 +40,7 @@ def test_Versionは値が等しければ等価():
     assert Version("v2") != Version("v1")
 
 
-def test_KindProfileは名前と必須ブロック集合の組で識別される():
+def test_kind_profile_is_identified_by_name_and_required_blocks():
     """
     Given 同じname・required_blocksを持つ2つのKindProfile
     When 等価性を比較する
@@ -53,7 +53,7 @@ def test_KindProfileは名前と必須ブロック集合の組で識別される
     assert a != c
 
 
-def test_Schemaはschema_id_version_kind_profilesを持つ():
+def test_schema_has_id_version_and_kind_profiles():
     """
     Given schemaId・version・kindProfilesを指定してSchemaを構築する
     When 各属性を参照する

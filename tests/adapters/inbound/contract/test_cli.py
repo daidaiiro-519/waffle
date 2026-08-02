@@ -27,7 +27,7 @@ def teardown_function():
     _BLANK_TEMPLATE_PATH.unlink(missing_ok=True)
 
 
-def test_queryはquery_pathでブロックを取得しvalueをJSONで返す():
+def test_query_returns_block_value_as_json():
     """
     Given waffle CLI
     When query --operation query_path --path ... --blockKey responseTypes --expression @ を実行する
@@ -44,7 +44,7 @@ def test_queryはquery_pathでブロックを取得しvalueをJSONで返す():
     assert data["value"]["blockType"] == "ResponseTypes"
 
 
-def test_queryのエラーはerror_messageと非ゼロ終了で返す():
+def test_query_error_returns_message_and_nonzero_exit():
     """
     Given waffle CLI
     When 未知のoperationを実行する
@@ -59,7 +59,7 @@ def test_queryのエラーはerror_messageと非ゼロ終了で返す():
     assert data["error"] == "INVALID_OPERATION"
 
 
-def test_queryはresolve_refで参照先pathを返す():
+def test_query_resolve_ref_returns_target_path():
     """
     Given waffle CLI
     When query --operation resolve_ref ... を実行する
@@ -79,7 +79,7 @@ def test_queryはresolve_refで参照先pathを返す():
     )
 
 
-def test_queryはquery_pathでblockKey指定時に単一ブロックの評価結果を返す():
+def test_query_with_block_key_returns_single_block_result():
     """
     Given waffle CLI
     When query --operation query_path --blockKey --expression を実行する
@@ -98,7 +98,7 @@ def test_queryはquery_pathでblockKey指定時に単一ブロックの評価結
     assert all(item["category"] == "異常系" for item in data["value"])
 
 
-def test_queryはquery_pathでblockKey省略時にヒットしたブロックだけを返す():
+def test_query_without_block_key_returns_matching_blocks_only():
     """
     Given waffle CLI
     When query --operation query_path --expression を blockKey なしで実行する
@@ -114,7 +114,7 @@ def test_queryはquery_pathでblockKey省略時にヒットしたブロックだ
     assert any(r["blockKey"] == "acceptanceScenarios" for r in data["results"])
 
 
-def test_queryはquery_pathの構文エラーでINVALID_JMESPATH_EXPRESSIONを返す():
+def test_query_returns_invalid_jmespath_expression_on_syntax_error():
     """
     Given waffle CLI
     When query --operation query_path に構文エラーのexpressionを渡す
@@ -131,7 +131,7 @@ def test_queryはquery_pathの構文エラーでINVALID_JMESPATH_EXPRESSIONを�
     assert data["error"] == "INVALID_JMESPATH_EXPRESSION"
 
 
-def test_query_collectionはgrep_documentsで横断検索する():
+def test_query_collection_greps_across_documents():
     """
     Given waffle CLI
     When query-collection --operation grep_documents ... を実行する
@@ -147,7 +147,7 @@ def test_query_collectionはgrep_documentsで横断検索する():
     assert any("uc-query-document.json" in p for p in data["value"])
 
 
-def test_render_no_deployはmdフォーマットを返す():
+def test_render_no_deploy_returns_md_format():
     """
     Given waffle CLI
     When render --no-deploy を実行する
@@ -161,7 +161,7 @@ def test_render_no_deployはmdフォーマットを返す():
     assert data["format"] == "md"
 
 
-def test_render_handoff_templateはHTMLを生成する(tmp_path):
+def test_render_handoff_template_generates_html(tmp_path):
     """
     Given waffle CLI
     When render-handoff-template --path <Handoff> --outputPath <出力先> を実行する
@@ -195,7 +195,7 @@ def test_render_handoff_templateはHTMLを生成する(tmp_path):
     assert output_path.read_text(encoding="utf-8")
 
 
-def test_render_document_viewerはHTMLを生成する(tmp_path):
+def test_render_document_viewer_generates_html(tmp_path):
     """
     Given waffle CLI
     When render-document-viewer --path <既存Document> --outputPath <出力先> を実行する
@@ -212,7 +212,7 @@ def test_render_document_viewerはHTMLを生成する(tmp_path):
     assert output_path.read_text(encoding="utf-8")
 
 
-def test_render_blank_templateはプレースホルダーMarkdownを返す():
+def test_render_blank_template_returns_placeholder_markdown():
     """
     Given waffle CLI
     When render-blank-template --schemaRef CodingSchema/v2 --discriminator codingKind=coding-standard を実行する
@@ -227,7 +227,7 @@ def test_render_blank_templateはプレースホルダーMarkdownを返す():
     assert data["path"] == str(_BLANK_TEMPLATE_PATH)
 
 
-def test_validateは適合でstatus判定を返す():
+def test_validate_returns_status_on_conformance():
     """
     Given waffle CLI
     When validateを実行する
@@ -241,7 +241,7 @@ def test_validateは適合でstatus判定を返す():
     assert data["status"] == "ACTIVE"
 
 
-def test_scaffold_createは骨格を返す():
+def test_scaffold_create_returns_skeleton():
     """
     Given waffle CLI
     When scaffold --operation create を実行する
@@ -257,7 +257,7 @@ def test_scaffold_createは骨格を返す():
     assert data["skeleton"]["documentType"] == "Skill"
 
 
-def test_check_spec_integrityは10フィールドの差分結果を返す():
+def test_check_spec_integrity_returns_ten_fields():
     """
     Given waffle CLI
     When check-spec-integrity --path bc-waffle.json を実行する
@@ -283,7 +283,7 @@ def test_check_spec_integrityは10フィールドの差分結果を返す():
     }
 
 
-def test_check_schema_version_driftは3フィールドの差分結果を返す():
+def test_check_schema_version_drift_returns_three_fields():
     """
     Given waffle CLI
     When check-schema-version-drift を実行する
@@ -295,7 +295,7 @@ def test_check_schema_version_driftは3フィールドの差分結果を返す()
     assert data == {"broken_references": [], "newer_version_available": [], "missing_declared_fields": []}
 
 
-def test_check_usecase_class_driftは2フィールドの差分結果を返す():
+def test_check_usecase_class_drift_returns_two_fields():
     """
     Given waffle CLI
     When check-usecase-class-drift を architectureRef と documentsRoot の対で実行する
@@ -308,7 +308,7 @@ def test_check_usecase_class_driftは2フィールドの差分結果を返す():
     assert data == {"missing_implementation_file": [], "class_name_mismatch": []}
 
 
-def test_check_aggregate_class_driftは5フィールドの差分結果を返す():
+def test_check_aggregate_class_drift_returns_five_fields():
     """
     Given waffle CLI
     When check-aggregate-class-drift を architectureRef と documentsRoot の対で実行する
@@ -325,7 +325,7 @@ def test_check_aggregate_class_driftは5フィールドの差分結果を返す(
     }
 
 
-def test_check_domain_service_driftは1フィールドの差分結果を返す():
+def test_check_domain_service_drift_returns_one_field():
     """
     Given waffle CLI
     When check-domain-service-drift --architectureRef architecture-waffle を実行する
@@ -337,7 +337,7 @@ def test_check_domain_service_driftは1フィールドの差分結果を返す()
     assert data == {"missing_implementation_file": []}
 
 
-def test_check_operation_driftは2フィールドの差分結果を返す():
+def test_check_operation_drift_returns_two_fields():
     """
     Given waffle CLI
     When check-operation-drift を architectureRef と documentsRoot の対で実行する
@@ -350,7 +350,7 @@ def test_check_operation_driftは2フィールドの差分結果を返す():
     assert data == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
 
 
-def test_srcRootとarchitectureRefが両方とも無ければエラーになる():
+def test_missing_both_src_root_and_architecture_ref_errors():
     """
     Given waffle CLI
     When --srcRootも--architectureRefも指定せずcheck-usecase-class-driftを実行する
@@ -362,7 +362,7 @@ def test_srcRootとarchitectureRefが両方とも無ければエラーになる(
     assert data["error"] == "MISSING_PARAM"
 
 
-def test_srcRootを明示指定するとarchitectureRefより優先される():
+def test_explicit_src_root_takes_precedence_over_architecture_ref():
     """
     Given 存在しないarchitectureRefと、実在するsrcRootの両方を指定する
     When check-usecase-class-driftを実行する
@@ -376,7 +376,7 @@ def test_srcRootを明示指定するとarchitectureRefより優先される():
     assert result.exit_code == 0, result.output
 
 
-def test_存在しないarchitectureRefはARCHITECTURE_REF_NOT_FOUNDを返す():
+def test_unknown_architecture_ref_returns_not_found():
     """
     Given 存在しないarchitectureRef
     When --srcRootを指定せずcheck-usecase-class-driftを実行する
@@ -388,7 +388,7 @@ def test_存在しないarchitectureRefはARCHITECTURE_REF_NOT_FOUNDを返す():
     assert data["error"] == "ARCHITECTURE_REF_NOT_FOUND"
 
 
-def test_check_scenario_driftは4フィールドの差分結果を返す():
+def test_check_scenario_drift_returns_four_fields():
     """
     Given waffle CLI
     When check-scenario-drift --specPath --testPath を実行する
@@ -405,7 +405,7 @@ def test_check_scenario_driftは4フィールドの差分結果を返す():
                                  "duplicate_declarations", "spec_declaration_mismatches"}
 
 
-def test_check_verification_gateはstatusとreasonsを返す(tmp_path):
+def test_check_verification_gate_returns_status_and_reasons(tmp_path):
     """
     Given waffle CLI
     When check-verification-gate --specPath --testPath --testResultsPath を実行する
@@ -426,7 +426,7 @@ def test_check_verification_gateはstatusとreasonsを返す(tmp_path):
     assert data["reasons"] == []
 
 
-def test_scan_source_codeは公開要素の一覧を返す(tmp_path):
+def test_scan_source_code_returns_public_elements(tmp_path):
     """
     Given waffle CLI
     When scan-source-code --path --kind google を実行する
@@ -443,7 +443,7 @@ def test_scan_source_codeは公開要素の一覧を返す(tmp_path):
     assert any(e["name"] == "f" for e in data)
 
 
-def test_patch_schemaはadd_blockの結果をJSONで返す():
+def test_patch_schema_returns_add_block_result_as_json():
     """
     Given waffle CLI
     When patch-schema --operation add_block --schemaRef ... --params '{...}' を実行する
@@ -469,7 +469,7 @@ def test_patch_schemaはadd_blockの結果をJSONで返す():
     assert data["changed"] is True
 
 
-def test_lint_docstringは違反の配列を返す(tmp_path):
+def test_lint_docstring_returns_violations(tmp_path):
     """
     Given waffle CLI
     When lint-docstring --path --kind google を実行する
@@ -486,7 +486,7 @@ def test_lint_docstringは違反の配列を返す(tmp_path):
     assert isinstance(data, list)
 
 
-def test_check_query_precedes_array_fillはCLI経由でも直接呼び出しと同じ判定になる():
+def test_check_query_precedes_array_fill_matches_direct_call():
     """
     Given targetPathが"X.json"であり、hasArrayValueがtrueであり、queriedPathsに"X.json"が含まれていない
     When Pythonから直接CheckQueryPrecedesArrayFillを呼び出す
@@ -510,7 +510,7 @@ def test_check_query_precedes_array_fillはCLI経由でも直接呼び出しと�
     assert data == direct.value
 
 
-def test_check_path_is_projectionはCLI経由でも直接呼び出しと同じ判定になる():
+def test_check_path_is_projection_matches_direct_call():
     """
     Given 実体パスが".waffle/skills/ddd-advisor/SKILL.md"である
     When Pythonから直接CheckPathIsProjectionを呼び出す

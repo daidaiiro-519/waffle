@@ -2,37 +2,43 @@
 from waffle.domain.services.markdown_to_html import convert
 
 
-def test_見出しレベルごとにhタグへ変換する():
+def test_headings_convert_to_h_tags_by_level():
+    """見出しレベルごとにhタグへ変換する。"""
     html = convert("# H1\n\n## H2\n\n### H3")
     assert "<h1>H1</h1>" in html
     assert "<h2>H2</h2>" in html
     assert "<h3>H3</h3>" in html
 
 
-def test_段落はpタグになる():
+def test_paragraph_converts_to_p_tag():
+    """段落はpタグになる。"""
     html = convert("これは段落です。")
     assert "<p>これは段落です。</p>" in html
 
 
-def test_水平線はhrタグになる():
+def test_horizontal_rule_converts_to_hr_tag():
+    """水平線はhrタグになる。"""
     html = convert("段落1\n\n---\n\n段落2")
     assert "<hr" in html
 
 
-def test_箇条書きはulタグになる():
+def test_bullet_list_converts_to_ul_tag():
+    """箇条書きはulタグになる。"""
     html = convert("- 項目1\n- 項目2")
     assert "<ul>" in html
     assert "<li>項目1</li>" in html
     assert "<li>項目2</li>" in html
 
 
-def test_番号付き箇条書きはolタグになる():
+def test_ordered_list_converts_to_ol_tag():
+    """番号付き箇条書きはolタグになる。"""
     html = convert("1. 項目1\n2. 項目2")
     assert "<ol>" in html
     assert "<li>項目1</li>" in html
 
 
-def test_テーブルはtableタグになる():
+def test_table_converts_to_table_tag():
+    """テーブルはtableタグになる。"""
     md = "| コード | 条件 |\n|---|---|\n| `X` | 何か起きる |"
     html = convert(md)
     assert "<table>" in html
@@ -41,26 +47,30 @@ def test_テーブルはtableタグになる():
     assert "<td>何か起きる</td>" in html
 
 
-def test_テーブルはスクロール可能なコンテナで包まれる():
+def test_table_is_wrapped_in_scrollable_container():
+    """テーブルはスクロール可能なコンテナで包まれる。"""
     md = "| a | b |\n|---|---|\n| 1 | 2 |"
     html = convert(md)
     assert '<div class="table-scroll"><table>' in html
     assert "</table></div>" in html
 
 
-def test_テーブルセル内のbrタグはそのまま透過する():
+def test_br_tag_in_cell_passes_through():
+    """テーブルセル内のbrタグはそのまま透過する。"""
     md = "| 分類 | 詳細 |\n|---|---|\n| A | <br>- item1<br>- item2 |"
     html = convert(md)
     assert "<br>- item1<br>- item2" in html
 
 
-def test_インライン強調とインラインコードを変換する():
+def test_inline_emphasis_and_code_convert():
+    """インライン強調とインラインコードを変換する。"""
     html = convert("これは**重要**で`code`です。")
     assert "<strong>重要</strong>" in html
     assert "<code>code</code>" in html
 
 
-def test_mermaidコードフェンスはpre_mermaidになる():
+def test_mermaid_fence_converts_to_pre_mermaid():
+    """mermaidコードフェンスはpre.mermaidになる。"""
     md = "```mermaid\nsequenceDiagram\n  A->>B: hi\n```"
     html = convert(md)
     assert '<pre class="mermaid">' in html
@@ -68,14 +78,16 @@ def test_mermaidコードフェンスはpre_mermaidになる():
     assert "A-&gt;&gt;B: hi" in html or "A->>B: hi" in html
 
 
-def test_mermaid以外のコードフェンスはpre_codeになる():
+def test_non_mermaid_fence_converts_to_pre_code():
+    """mermaid以外のコードフェンスはpre>codeになる。"""
     md = "```python\nprint(1)\n```"
     html = convert(md)
     assert "<pre><code" in html
     assert "print(1)" in html
 
 
-def test_コードフェンス内はインライン変換されない():
+def test_inline_conversion_is_skipped_inside_fence():
+    """コードフェンス内はインライン変換されない。"""
     md = "```\n**not bold**\n```"
     html = convert(md)
     assert "**not bold**" in html

@@ -7,18 +7,21 @@ from waffle.application.usecases.query_document import _compile_jmespath, _evalu
 from waffle.shared.result import Err, Ok
 
 
-def test_正しい式はコンパイルできる():
+def test_valid_expression_compiles():
+    """正しい式はコンパイルできる。"""
     result = _compile_jmespath("items[?priority=='high'].name")
     assert isinstance(result, Ok)
 
 
-def test_構文エラーの式はINVALID_JMESPATH_EXPRESSIONへ変換される():
+def test_syntax_error_maps_to_invalid_jmespath_expression():
+    """構文エラーの式はINVALID_JMESPATH_EXPRESSIONへ変換される。"""
     result = _compile_jmespath("items[?")
     assert isinstance(result, Err)
     assert result.details[0] == "INVALID_JMESPATH_EXPRESSION"
 
 
-def test_単純な式を単一ブロックに対して評価できる():
+def test_simple_expression_evaluates_against_single_block():
+    """単純な式を単一ブロックに対して評価できる。"""
     compiled = _compile_jmespath("items[?required==`true`]").value
     root = {"items": [{"name": "a", "required": True}, {"name": "b", "required": False}]}
     result = _evaluate(compiled, root)
@@ -26,7 +29,8 @@ def test_単純な式を単一ブロックに対して評価できる():
     assert result.value == [{"name": "a", "required": True}]
 
 
-def test_regex_matchカスタム関数で絞り込める():
+def test_regex_match_custom_function_filters():
+    """regex_matchカスタム関数で絞り込める。"""
     compiled = _compile_jmespath("items[?regex_match(name, 'foo.*')]").value
     root = {"items": [{"name": "foobar"}, {"name": "baz"}]}
     result = _evaluate(compiled, root)
@@ -34,7 +38,8 @@ def test_regex_matchカスタム関数で絞り込める():
     assert result.value == [{"name": "foobar"}]
 
 
-def test_regex_matchに不正な正規表現を渡すとINVALID_JMESPATH_EXPRESSIONへ変換される():
+def test_invalid_regex_maps_to_invalid_jmespath_expression():
+    """不正な正規表現はINVALID_JMESPATH_EXPRESSIONへ変換される。"""
     compiled = _compile_jmespath("items[?regex_match(name, '(')]").value
     root = {"items": [{"name": "foobar"}]}
     result = _evaluate(compiled, root)
@@ -42,7 +47,8 @@ def test_regex_matchに不正な正規表現を渡すとINVALID_JMESPATH_EXPRESS
     assert result.details[0] == "INVALID_JMESPATH_EXPRESSION"
 
 
-def test_blockKey省略時は全ブロックへ相対式を評価しヒットしたものだけ集める():
+def test_without_block_key_collects_matching_blocks_only():
+    """blockKey省略時は全ブロックへ相対式を評価し、ヒットしたものだけ集める。"""
     compiled = _compile_jmespath("items[?priority=='high']").value
     content = {
         "blockA": {"blockType": "X", "items": [{"name": "a", "priority": "high"}]},
@@ -56,7 +62,8 @@ def test_blockKey省略時は全ブロックへ相対式を評価しヒットし
     assert result.value[0]["value"] == [{"name": "a", "priority": "high"}]
 
 
-def test_blockKey省略時にヒットが1件も無ければ空配列になる():
+def test_without_block_key_returns_empty_when_nothing_matches():
+    """blockKey省略時にヒットが1件も無ければ空配列になる。"""
     compiled = _compile_jmespath("items[?priority=='high']").value
     content = {
         "blockA": {"blockType": "X", "items": [{"name": "a", "priority": "low"}]},
@@ -67,7 +74,7 @@ def test_blockKey省略時にヒットが1件も無ければ空配列になる()
     assert result.value == []
 
 
-def test_blockKey省略時に評価時型エラーになったブロックは黙ってスキップされ他のブロックの結果は返る():
+def test_without_block_key_skips_type_error_blocks_and_keeps_others():
     """items要素にruleフィールドを持たないブロック（blockB）ではcontains(rule, ...)が
     JMESPathTypeErrorになる。blockKey省略時はこれをハードエラーにせず、そのブロックだけ
     スキップして他のブロック（blockA）の結果は正常に返す。"""
@@ -83,7 +90,8 @@ def test_blockKey省略時に評価時型エラーになったブロックは黙
     assert result.value[0]["value"] == [{"rule": "CLI経由で操作する"}]
 
 
-def test_blockKey省略時に全ブロックが評価時型エラーでも正常系で空配列になる():
+def test_without_block_key_returns_empty_when_all_blocks_type_error():
+    """blockKey省略時に全ブロックが評価時型エラーでも、正常系で空配列になる。"""
     compiled = _compile_jmespath("items[?contains(rule, 'CLI')]").value
     content = {
         "blockA": {"blockType": "X", "items": [{"title": "ruleフィールドを持たない要素"}]},
@@ -94,7 +102,7 @@ def test_blockKey省略時に全ブロックが評価時型エラーでも正常
     assert result.value == []
 
 
-def test_blockKey指定時の評価時型エラーはハードエラーとしてINVALID_JMESPATH_EXPRESSIONを返す():
+def test_with_block_key_type_error_is_hard_error():
     """blockKeyを明示指定した単一ブロック評価では、評価時型エラーもスキップせずハードエラーで返す
     （blockKey省略時の全ブロック評価とは異なる。ユーザーが明示指定したブロックに式が合わなかった
     ことをそのまま伝える）。"""
