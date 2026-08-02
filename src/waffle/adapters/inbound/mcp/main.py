@@ -36,8 +36,8 @@ from waffle.application.usecases.render_document_viewer import RenderDocumentVie
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
-from waffle.domain.services.concept_source_root import package_name_from_reference, resolve_source_root
-from waffle.shared.result import Ok, Result
+from waffle.application.services.source_root_resolution import resolve_src_root
+from waffle.shared.result import Err, Ok, Result
 
 mcp = FastMCP("waffle")
 
@@ -53,27 +53,11 @@ def _schemas() -> PackageSchemaRepository:
     return PackageSchemaRepository()
 
 def _resolve_src_root(src_root: str | None, architecture_ref: str | None, concept: str) -> str | dict:
-    """srcRootが明示指定されていればそれを優先し、無ければarchitectureRefが指す
-    architecture文書のlayout.sourceRoot/conceptPlacementから動的に解決する。
-    解決できない場合はエラーdictを返す（呼び出し側がそのままツール結果として返す）。"""
-    if src_root:
-        return src_root
-    if not architecture_ref:
-        return {"error": "MISSING_PARAM", "message": "srcRoot または architectureRef のいずれかが必要です"}
-    try:
-        doc = _docs().load(f".waffle/documents/coding/{architecture_ref}.json")
-    except FileNotFoundError:
-        return {"error": "ARCHITECTURE_REF_NOT_FOUND", "message": f"architecture document が見つかりません: {architecture_ref}"}
-    layout = doc.get("content", {}).get("layout", {})
-    items = doc.get("content", {}).get("conceptPlacement", {}).get("items", [])
-    package = package_name_from_reference(architecture_ref, "architecture") or ""
-    resolved = resolve_source_root(layout, items, concept, package=package)
-    if not resolved:
-        return {
-            "error": "ARCHITECTURE_REF_UNRESOLVED",
-            "message": f"{architecture_ref} の layout.sourceRoot / conceptPlacement（concept={concept}）から解決できません",
-        }
-    return resolved
+    """配置ルートの解決を application へ委ね、失敗ならエラーdictへ翻訳する。"""
+    result = resolve_src_root(_docs(), src_root, architecture_ref, concept)
+    if isinstance(result, Err):
+        return {"error": result.details[0], "message": result.message}
+    return result.value
 
 def _class_extractor() -> TreeSitterClassExtractor:
     return TreeSitterClassExtractor()
