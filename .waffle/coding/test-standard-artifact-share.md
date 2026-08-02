@@ -116,7 +116,7 @@ def test_suspended_artifact_cannot_be_viewed():
 | application | `unit` | `tests/application/unit/` |  |  |  |
 | application | `acceptance` | `tests/application/acceptance/` |  |  |  |
 | application | `integration` | `tests/application/integration/` |  |  |  |
-| ports | `contract` | `tests/ports/contract/` |  |  | 同じ契約スイートを本物と偽実装の両方に対して実行する |
+| application | `contract` | `tests/application/contract/` |  |  | port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する |
 | inbound adapter | `contract` | `tests/adapters/inbound/contract/` |  |  | 閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う |
 | outbound adapter | `integration` | `tests/adapters/outbound/integration/` |  |  |  |
 

@@ -915,7 +915,7 @@
       ],
       "x-render-order": 1,
       "x-render-level": 2,
-      "x-prompt-query": "レイヤーと依存関係を持ちます。layer は層名の唯一の宣言で、他ブロックはこれを指す。path はファイルがどの層に属するかを決めるための宣言なので、実装を移したらここも直す。mayDependOn は import の走査結果と突き合わせる対象で、ここに無い依存は違反として報告する——実際の import に合わせて後から足すのではなく、まずその依存が正しいかを判断する。",
+      "x-prompt-query": "レイヤーと依存関係を持ちます。layer は層名の唯一の宣言で、他ブロックはこれを指す。path はファイルを層へ解決する唯一の手がかりなので、あるファイルがどの層かを知りたいときは tree ではなく path の前方一致で決める。どの path にも一致しないファイルは、層の宣言漏れか、合成ルート（compositionRootPaths）のどちらか。path が指す先が存在しないことは、引数の誤りではなく未実装のドリフトとして扱う。mayDependOn は import の走査結果と突き合わせる対象で、ここに無い依存は違反として報告する——実際の import に合わせて後から足すのではなく、まずその依存が正しいかを判断する。",
       "x-render": [
         {
           "as": "paragraph",
@@ -974,11 +974,11 @@
             "properties": {
               "layer": {
                 "type": "string",
-                "x-prompt-write": "レイヤー名。他のブロックはこの名前を指すので、ここが層名の唯一の宣言になる。所有されている要素（ポート等）を層として並べない。"
+                "x-prompt-write": "レイヤー名。他のブロックはこの名前を指すので、ここが層名の唯一の宣言になる。所有されている要素（ポート等）を層として並べない——代わりに、所有する層の path の 配下へ置く（ports なら application の path の下）。層と所有物のどちらかは 「その要素が独自の依存規則を持つか」で決める。ports は application が外部へ要求する インターフェースであり、application と同じ依存規則に従うので層ではない。"
               },
               "path": {
                 "type": "string",
-                "x-prompt-write": "このレイヤーの実装が置かれるパス（layout の sourceRoot からの相対）。ファイルがどの層に属するかを決めるために使う。"
+                "x-prompt-write": "このレイヤー自身のディレクトリ（layout の sourceRoot からの相対）。ファイルがどの層に属するかは、この宣言だけで決まる。守ること: (1)その層が所有する要素は、このパスの配下に置く。ports は層ではなく application が所有するので、application の path が …/application なら ports は …/application/ports。所有物を層の外の兄弟ディレクトリに出さない (2)ある層の path を、別の層の path の祖先にしない。祖先にすると配下のファイルが どちらの層かパスから決まらなくなる（入口の層に sourceRoot 直下を与えると、他の全層を飲み込む）。入口も自分のディレクトリを持つ (3)実装をまだ書いていなくてもここには「あるべき配置」を書く。存在しないパスは検査が未実装として報告するので、実態に合わせて後退させない。"
               },
               "responsibility": {
                 "type": "string",
@@ -1008,7 +1008,7 @@
       ],
       "x-render-order": 2,
       "x-render-level": 2,
-      "x-prompt-query": "ディレクトリ構成を持ちます。tree は人が全体を掴むための図であり、機械はここから決定を読み取らない。granularity と compositionRootPaths が機械の読む宣言。compositionRootPaths は依存の検査で層の規則から除外する場所なので、増やすときは配線専用に保てるかを先に確かめる。",
+      "x-prompt-query": "ディレクトリ構成を持ちます。tree は layers[].path と conceptPlacement.placements の 投影であり、機械はここから決定を読み取らない。tree と layers[].path が食い違っていたら、正しいのは常に layers[].path 側——図を信じて実装を置かない。食い違いを見つけたら図を直す（宣言のほうを図に合わせない）。granularity と compositionRootPaths が機械の読む宣言。compositionRootPaths は依存の検査で層の規則から除外する場所なので、増やすときは 配線専用に保てるかを先に確かめる。",
       "x-render": [
         {
           "as": "code",
@@ -1051,7 +1051,7 @@
         },
         "tree": {
           "type": "string",
-          "x-prompt-write": "正典ディレクトリツリー（テキスト）。人が全体を見るための図。機械が読む決定はこの図の注釈に書かず、専用の欄へ置く。"
+          "x-prompt-write": "ディレクトリツリーの図（テキスト）。これは宣言ではなく投影——配置を決めているのは layers[].path と conceptPlacement.placements であり、この図はそれを人が一目で掴めるよう 並べ直したもの。書く順序は、先に layers[].path と placements を確定し、そのあとで この図をそこから起こす。逆順で書くと、図にしか存在しないディレクトリが生まれる。守ること: (1)layers[].path のすべてが、この図にノードとして現れる (2)この図にあってどの path にも対応しないディレクトリは、合成ルート（compositionRootPaths）か、rules で層を持たないと明示的に宣言した領域（別ランタイム・配布物・運用スクリプト等）に限る。それ以外は層か概念の宣言漏れ (3)機械が読む決定を図の注釈に書かず、granularity や compositionRootPaths の専用欄へ置く。"
         },
         "sourceRoot": {
           "type": "string",
@@ -1100,7 +1100,7 @@
       ],
       "x-render-order": 3,
       "x-render-level": 2,
-      "x-prompt-query": "概念ごとの配置を持ちます。placements は実装を探す場所そのものなので、パスをそのまま使う。role が single 以外なら、その概念は複数のファイルに分かれている。pattern は実装するときに読む方針。",
+      "x-prompt-query": "概念ごとの配置を持ちます。placements は実装を探す場所そのものなので、パスをそのまま使う。role は省略可で、省略なら1つの場所に収まる概念。role がある場合は同じ concept に複数の行が 並び（interface と implementation 等）、その概念は複数のファイルに分かれている。pattern は実装するときに読む方針。",
       "x-render": [
         {
           "as": "table",

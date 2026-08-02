@@ -1,0 +1,1 @@
+../../../../../.waffle/coding/test-standard-artifact-share.md

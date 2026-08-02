@@ -176,10 +176,10 @@
           "path": "tests/application/integration/"
         },
         {
-          "layer": "ports",
+          "layer": "application",
           "testType": "contract",
-          "path": "tests/ports/contract/",
-          "note": "同じ契約スイートを本物と偽実装の両方に対して実行する"
+          "path": "tests/application/contract/",
+          "note": "port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する"
         },
         {
           "layer": "inbound adapter",

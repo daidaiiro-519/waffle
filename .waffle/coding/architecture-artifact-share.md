@@ -31,9 +31,9 @@ artifact-shareがヘキサゴナルアーキテクチャを実装する際の層
 |---|---|---|---|
 | shared | `lambda/admin_api/shared` | 全層から使える基盤（結果型・エラー等）。業務判断を持たない |  |
 | domain | `lambda/admin_api/domain` | 業務ルールと不変条件。トークンの有効性・交差条件・公開状態の判断をここに集める | shared |
-| application | `lambda/admin_api/usecases` | usecase の調整。外部へ要求する port をここで宣言する | domain / shared |
-| inbound adapter | `lambda/admin_api` | 外部からの入口（Lambda handler・経路の振り分け）。外部入力を usecase 呼び出しへ変換するだけで、判断を持たない | application / shared |
-| outbound adapter | `lambda/admin_api/adapters` | 外部への出口（S3・KVS・Cognito）。application が宣言した port を実装する | application / shared |
+| application | `lambda/admin_api/application` | usecase の調整と、外部へ要求する port の宣言。usecases/ と ports/ をこの配下に持つ | domain / shared |
+| inbound adapter | `lambda/admin_api/adapters/inbound` | 外部からの入口（Lambda handler・経路の振り分け）。外部入力を usecase 呼び出しへ変換するだけで、判断を持たない | application / shared |
+| outbound adapter | `lambda/admin_api/adapters/outbound` | 外部への出口（S3・KVS・Cognito）。application が宣言した port を実装する | application / shared |
 
 ---
 
@@ -41,16 +41,19 @@ artifact-shareがヘキサゴナルアーキテクチャを実装する際の層
 
 ```
 lambda/admin_api/
-  domain/          業務ルール（トークンの有効性・交差条件・公開状態）
-  usecases/        1 usecase = 1 module
-  ports/           application が外部へ要求するインターフェース
-  adapters/        S3 / KVS / Cognito への出口
-  shared/          結果型・エラー
-  main.py          受け口と結線（合成ルート）
+  domain/                業務ルール（トークンの有効性・交差条件・公開状態）
+  application/
+    usecases/            1 usecase = 1 module
+    ports/               application が外部へ要求するインターフェース
+  adapters/
+    inbound/             受け口（Lambda handler・経路の振り分け）
+    outbound/            S3 / KVS / Cognito への出口
+  shared/                結果型・エラー
+  main.py                結線（合成ルート・層のグラフの外）
 infra/
-  cloudfront-function/   閲覧ゲート（単一ファイル・層を持たない）
+  cloudfront-function/   閲覧ゲート（層を持たないと宣言した領域）
   contract/              ランタイムをまたぐデータの形
-scripts/           環境構築のCLI
+scripts/                 環境構築のCLI（層を持たないと宣言した領域）
 ```
 
 ### 1ファイルの粒度
@@ -74,15 +77,15 @@ Lambdaの起動点に1つだけ置く。合成ルートは層のグラフの外�
 
 | 概念 | 配置 | 形（決定レベル） |
 |---|---|---|
-| `usecase` | `lambda/admin_api/usecases` | エントリメソッド1つ・ドメインは port 経由で呼ぶ |
+| `usecase` | `lambda/admin_api/application/usecases` | エントリメソッド1つ・ドメインは port 経由で呼ぶ |
 | `aggregate` | `lambda/admin_api/domain` | 整合性境界を持つクラス・不変条件をメソッド内で強制 |
 | `entity` | `lambda/admin_api/domain` | 同一性は id・集約の内側でのみ可変 |
 | `value-object` | `lambda/admin_api/domain` | 不変（frozen dataclass）・値等価 |
 | `domain-service` | `lambda/admin_api/domain` | ステートレス・複数集約を跨る判断 |
-| `repository` | interface `lambda/admin_api/ports`<br>implementation `lambda/admin_api/adapters` | aggregate の load/save・集約1つに1リポジトリ |
-| `port` | `lambda/admin_api/ports` | application が要求する driven インターフェース（Protocol）。構造体のフィールドとして持たず、型として宣言する |
-| `inbound-adapter` | `lambda/admin_api` | 外部入力を usecase 呼び出しへ変換・判断を持たない |
-| `outbound-adapter` | `lambda/admin_api/adapters` | port を実装・外部ライブラリをここに閉じ込める。合成ルートの中に無名で書かない |
+| `repository` | interface `lambda/admin_api/application/ports`<br>implementation `lambda/admin_api/adapters/outbound` | aggregate の load/save・集約1つに1リポジトリ |
+| `port` | `lambda/admin_api/application/ports` | application が要求する driven インターフェース（Protocol）。構造体のフィールドとして持たず、型として宣言する |
+| `inbound-adapter` | `lambda/admin_api/adapters/inbound` | 外部入力を usecase 呼び出しへ変換・判断を持たない |
+| `outbound-adapter` | `lambda/admin_api/adapters/outbound` | port を実装・外部ライブラリをここに閉じ込める。合成ルートの中に無名で書かない |
 
 ---
 
