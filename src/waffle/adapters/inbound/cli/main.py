@@ -399,10 +399,11 @@ def update_coding_preset(
     preset: str = typer.Option(..., "--preset", help="反映先のプリセット名（例: python-hexagonal）"),
     from_document_id: str = typer.Option(..., "--from", help="出どころとなる規約のdocumentId（例: architecture-waffle）"),
     blocks: str = typer.Option(..., "--blocks", help="戻す部分をカンマ区切りで（例: rules,layers）。丸ごとの写しは行わないため省略できない"),
+    dry_run: bool = typer.Option(False, "--dryRun", "--dry-run", help="書き換えずに、何が変わるかだけを返す"),
 ) -> None:
     """実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。"""
     names = [b.strip() for b in blocks.split(",") if b.strip()]
-    _emit(UpdateCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, from_document_id, names))
+    _emit(UpdateCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, from_document_id, names, dry_run))
 
 @app.command("init-coding-preset")
 def init_coding_preset(

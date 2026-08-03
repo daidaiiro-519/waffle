@@ -330,7 +330,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">3</span>
-              <p>何が汎用かの判断は人が持つ。この操作は判断を助けず、指定されたものを反映するだけ。誤って固有の判断を戻した場合、それを検知する仕組みは無い。</p>
+              <p>何が汎用かの判断は人が持つ。この操作は判断を助けず、指定されたものを反映するだけ——だったが、判断材料を渡さないまま人に判断させる形になっていたため、反映した部分の反映前・反映後の内容を返し、書き換えずに確かめる確認モード（dryRun）を足した。誤って固有の判断を戻そうとしても、書き換える前に気づける。ただし「これは汎用か」の判定そのものは依然として人が行う。</p>
             </div>
             <div class="constraint-item">
               <span class="num">4</span>

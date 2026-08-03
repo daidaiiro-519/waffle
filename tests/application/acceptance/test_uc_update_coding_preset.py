@@ -163,3 +163,39 @@ def test_reflecting_identical_content_changes_nothing():
     assert isinstance(result, Ok), result
     assert result.value["changed"] is False
     assert presets.saved == []
+
+
+def test_reflected_content_is_returned():
+    """
+    Scenario: 反映した部分の内容が返る
+    Given プリセットから作られ、その後に規約を直したプロダクト
+    When 直した部分を指定してプリセットへ戻す
+    Then 反映した部分について、反映前の内容と反映後の内容が返る
+    """
+    engine, _, _ = _engine()
+    result = engine.run(_PRESET, _FROM, ["rules"])
+    assert isinstance(result, Ok), result
+    assert result.value["reflected"] == [{
+        "block": "rules",
+        "before": {"blockType": "Rules", "items": [{"level": "必須", "rule": "古い規約"}]},
+        "after": {"blockType": "Rules", "items": [{"level": "必須", "rule": "直した規約"}]},
+    }]
+
+
+def test_confirmation_only_leaves_the_preset_untouched():
+    """
+    Scenario: 確認だけを求めるとプリセットは変わらない
+    Given プリセットから作られ、その後に規約を直したプロダクト
+    When 確認だけを求めて、直した部分を指定する
+    Then 変わる内容が返り、プリセットは変更されない
+    """
+    engine, presets, _ = _engine()
+    result = engine.run(_PRESET, _FROM, ["rules"], dry_run=True)
+    assert isinstance(result, Ok), result
+    # 何が変わるかは分かる
+    assert [r["block"] for r in result.value["reflected"]] == ["rules"]
+    assert result.value["changed"] is True
+    # しかし書き換えていない
+    assert presets.saved == []
+    assert presets.load(_PRESET)["architecture"]["rules"]["items"] == [
+        {"level": "必須", "rule": "古い規約"}]

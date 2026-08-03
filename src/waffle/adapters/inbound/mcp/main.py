@@ -333,10 +333,10 @@ def init_coding_preset(preset: str, product: str) -> dict:
     return _dict(InitCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, product))
 
 @mcp.tool
-def update_coding_preset(preset: str, fromDocumentId: str, blocks: list[str]) -> dict:
-    """実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。丸ごとの写しは行わないため、戻す部分の指定は省略できない。"""
-    return _dict(
-        UpdateCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, fromDocumentId, blocks))
+def update_coding_preset(preset: str, fromDocumentId: str, blocks: list[str], dryRun: bool = False) -> dict:
+    """実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。丸ごとの写しは行わないため、戻す部分の指定は省略できない。dryRunを真にすると書き換えずに何が変わるかだけを返す。"""
+    return _dict(UpdateCodingPreset(_docs(), PackageCodingPresetRepository()).run(
+        preset, fromDocumentId, blocks, dryRun))
 
 @mcp.tool
 def check_path_is_projection(realPath: str) -> dict:

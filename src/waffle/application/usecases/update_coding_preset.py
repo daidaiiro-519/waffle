@@ -27,7 +27,7 @@ class UpdateCodingPreset:
         self._presets = presets
 
     def run(self, preset_name: str | None = None, from_document_id: str | None = None,
-            blocks: list[str] | None = None) -> Result[dict]:
+            blocks: list[str] | None = None, dry_run: bool = False) -> Result[dict]:
         blocks = blocks or []
         if not preset_name or not from_document_id or not blocks:
             return _err(
@@ -75,17 +75,23 @@ class UpdateCodingPreset:
                 f"規約 {from_document_id} が持たない部分です: {' / '.join(absent)}",
             )
 
-        changed = [b for b in blocks if preset_content[b] != document_content[b]]
-        for block in changed:
-            preset_content[block] = document_content[block]
-        # 内容が一致していれば書き換えない。無変更の保存は、ファイルの更新を見ている
-        # 周辺の仕組みには変更と区別がつかない（clear_field / fill と扱いを揃える）
-        if changed:
+        changed = sorted(b for b in blocks if preset_content[b] != document_content[b])
+        # 何が汎用かの判断は人が持つ、と決めた以上、人が判断できる材料を返す。
+        # ブロック名と変更の有無だけでは、その判断は誰にもできない
+        reflected = [{"block": b, "before": preset_content[b], "after": document_content[b]}
+                     for b in changed]
+
+        if changed and not dry_run:
+            for block in changed:
+                preset_content[block] = document_content[block]
+            # 内容が一致していれば書き換えない。無変更の保存は、ファイルの更新を見ている
+            # 周辺の仕組みには変更と区別がつかない（clear_field / fill と扱いを揃える）
             self._presets.save(preset_name, preset)
 
         return Ok({
             "preset": preset_name,
             "codingKind": coding_kind,
-            "reflected": sorted(changed),
+            "reflected": reflected,
             "changed": bool(changed),
+            "applied": bool(changed) and not dry_run,
         })
