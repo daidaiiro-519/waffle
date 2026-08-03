@@ -13,9 +13,9 @@ from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.import_extractor import ImportExtractor, UnsupportedLanguage
 from waffle.application.services.stack_resolution import resolve_layer_graph
 from waffle.domain.services.layer_assignment import (
-    candidate_paths,
     layer_of,
     overlapping_layer_paths,
+    resolve_reference,
 )
 from waffle.shared.result import Err, Ok, Result
 
@@ -70,6 +70,19 @@ class CheckLayerDrift:
         except FileNotFoundError:
             files = []
 
+        # 依存先が規約の範囲の中に実在するかを確かめるための索引。実在を見ないと、
+        # 層と同じ名前を持つ外部ライブラリを層への依存と取り違える
+        known_files: set = set()
+        known_dirs: set = set()
+        for path in files:
+            if not path.startswith(src_root + "/"):
+                continue
+            relative = path[len(src_root) + 1:]
+            known_files.add(relative.rsplit(".", 1)[0])
+            parts = relative.split("/")[:-1]
+            for i in range(1, len(parts) + 1):
+                known_dirs.add("/".join(parts[:i]))
+
         violations = []
         unassigned = []
         for path in sorted(set(files)):
@@ -93,7 +106,8 @@ class CheckLayerDrift:
                 unassigned.append({"path": path})
                 continue
             violations.extend(self._violations_of(
-                source, path, relative, layer, language, layers, may_depend_on))
+                source, path, relative, layer, language, layers, may_depend_on,
+                known_files, known_dirs))
 
         return Ok({
             "violations": violations,
@@ -102,8 +116,8 @@ class CheckLayerDrift:
         })
 
     def _violations_of(self, source: str, path: str, relative: str, layer: str,
-                       language: str, layers: list[dict],
-                       may_depend_on: dict) -> list[dict]:
+                       language: str, layers: list[dict], may_depend_on: dict,
+                       known_files: set, known_dirs: set) -> list[dict]:
         try:
             references = self._extractor.imports(source, language)
         except (UnsupportedLanguage, SyntaxError):
@@ -115,7 +129,8 @@ class CheckLayerDrift:
         allowed = may_depend_on.get(layer, set())
         found = []
         for reference in references:
-            target = self._layer_of_reference(reference, from_dir, layers)
+            resolved = resolve_reference(reference, from_dir, known_files, known_dirs)
+            target = layer_of(resolved, layers) if resolved is not None else None
             if target is None or target == layer:
                 # 解決できない参照は規約の受け持つ範囲の外（標準・外部ライブラリ）。
                 # 同じ層の中の依存は、mayDependOn の宣言を要さない
@@ -124,12 +139,3 @@ class CheckLayerDrift:
                 found.append({"path": path, "layer": layer,
                               "imports": reference, "importedLayer": target})
         return found
-
-    def _layer_of_reference(self, reference: str, from_dir: str,
-                            layers: list[dict]) -> str | None:
-        """依存の参照が指す層を決める。長い候補から順に、層に属するものを採る。"""
-        for candidate in candidate_paths(reference, from_dir):
-            layer = layer_of(candidate, layers)
-            if layer is not None:
-                return layer
-        return None

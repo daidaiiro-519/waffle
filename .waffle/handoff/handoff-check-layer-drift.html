@@ -374,7 +374,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">2</span>
-              <p>依存先の解決は、参照から作った候補パスの実在で決める。同名のファイルが複数の層に存在する場合、後ろ側からの最長一致が意図と違う層を指す可能性がある。</p>
+              <p>依存先の解決は、参照から作った候補パスが規約の範囲の中に実在するかで決める。実装当初は実在を確かめておらず、層と同じ名前を持つ外部ライブラリ（layers に shared があるプロジェクトでの import shared 等）を層への依存と取り違える誤検知があった。テストで再現させてから実在確認を通す形へ直した。残る取り違えの芽は、同名のファイルが複数の層に実在する場合に、後ろ側からの最長一致が意図と違う層を指しうること。</p>
             </div>
             <div class="constraint-item">
               <span class="num">3</span>
@@ -387,6 +387,10 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="constraint-item">
               <span class="num">5</span>
               <p>実装して分かったこと: 中身の無いファイル（パッケージの目印等）は層の割り当ての対象から外す。外さないと、どの層にも属さない同じ顔ぶれが毎回並び、報告そのものが読まれなくなる。境界値シナリオとしてspecに宣言した。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">6</span>
+              <p>1つの並びだけからなる参照（import shared 等）が、ファイルではなくディレクトリにしか当たらない場合は解決しない。その形は「規約の中のパッケージ」と「同名の外部ライブラリ」を構文からは区別できないため、取り違えるより報告しない方を選んだ。規約の中のパッケージを直接指す書き方は見逃す（見逃しの範囲を、誤検知と引き換えに受け入れた）。</p>
             </div></div>
           <div class="tab-panel" id="panel4">
             <div class="scope-item">

@@ -82,6 +82,40 @@ def reference_segments(reference: str) -> list[str]:
     return [s for s in text.split("/") if s and s != "*"]
 
 
+def resolve_reference(reference: str, from_dir: str, known_files: set,
+                      known_dirs: set) -> str | None:
+    """依存の参照が、規約の受け持つ範囲の中のどこを指すかを決める。
+
+    候補を長い順に見て、実在するものを採る。実在を確かめないと、層と同じ名前を持つ
+    外部ライブラリ（layers に shared があるプロジェクトでの `import shared` 等）を
+    層への依存と取り違える。
+
+    1つの並びだけからなる参照が、ファイルではなくディレクトリにしか当たらない場合は
+    解決しない。その形は「規約の中のパッケージ」と「同名の外部ライブラリ」を
+    構文からは区別できず、どちらと決めるにはプロジェクトの取り込み規約を
+    宣言させる必要があるため。取り違えるより、報告しない方を選ぶ。
+
+    Args:
+        reference: 取り出したままの依存の参照。
+        from_dir: その依存を書いたファイルがあるディレクトリ（sourceRoot からの相対）。
+        known_files: 走査で見つかったファイルの相対パス（拡張子を落としたもの）。
+        known_dirs: 上記ファイルの親ディレクトリの相対パス。
+
+    Returns:
+        解決した相対パス。範囲の外なら None。
+    """
+    candidates = candidate_paths(reference, from_dir)
+    single_segment = not is_relative_reference(reference) and len(candidates) == 1
+    for candidate in candidates:
+        stripped = candidate.rsplit(".", 1)[0] if "." in candidate.rsplit("/", 1)[-1] else candidate
+        for form in (candidate, stripped):
+            if form in known_files:
+                return form
+            if form in known_dirs and not single_segment:
+                return form
+    return None
+
+
 def candidate_paths(reference: str, from_dir: str = "") -> list[str]:
     """その依存が指しうる、sourceRoot からの相対パスの候補を長い順に並べる。
 

@@ -145,8 +145,14 @@ def test_dependency_outside_the_declared_scope_is_ignored():
     Then 違反は報告されない
     """
     result = _run({
-        f"{_SRC}/domain/order.py": "import json\nimport dataclasses\n",
+        f"{_SRC}/domain/order.py": (
+            "import json\n"
+            "import dataclasses\n"
+            # 層と同じ名前を持つ外部ライブラリ。置き場所の下に実在しないので対象外
+            "import application\n"
+            "import shared.logging\n"),
         f"{_SRC}/shared/result.py": "",
+        f"{_SRC}/application/publish.py": "",
     })
     assert isinstance(result, Ok), result
     assert result.value["violations"] == []
