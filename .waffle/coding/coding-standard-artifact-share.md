@@ -40,7 +40,7 @@ artifact-shareのコーディング規約（命名・スタイル・docstring）
 |---|---|
 | 語彙 | 仕様のユビキタス言語に一致させる。閲覧・公開・招かれた利用者といった語を、実装都合で言い換えない |
 | domain | ユビキタス言語のみで命名する。技術的接尾辞（Impl/DTO/Manager/Helper等）を付けない |
-| application | 動詞＋目的語の業務操作として命名する（例: PublishArtifact、SuspendArtifact） |
+| application | 動詞＋目的語の業務操作として命名し、対応する usecase spec が宣言する操作名とそのまま一致させる（例: PublishArtifact、SuspendArtifact）。Engine 等の装飾的な接尾辞を付けない。ファイル名はこのブロックのファイル名3欄が導く |
 | outbound adapter | 使用する技術名を明示してよい（例: S3ArtifactStore、KvsTokenStore）。port実装であることが責務そのものなので技術名を隠す理由が無い |
 | エッジランタイム | JavaScriptの慣習（camelCase）に従う。主ランタイムの表記を持ち込まない |
 
