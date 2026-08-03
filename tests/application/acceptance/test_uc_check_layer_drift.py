@@ -261,3 +261,71 @@ def test_empty_file_is_not_counted_as_unassigned():
     }, _architecture(layers=layers))
     assert isinstance(result, Ok), result
     assert [u["path"] for u in result.value["unassigned"]] == [f"{_SRC}/util/helper.py"]
+
+
+def test_mutual_references_are_reported_as_a_cycle():
+    """
+    Scenario: 互いを参照し合う実装は循環として報告する
+    Given 層の置き場所を宣言した規約
+    And 同じ層の中で互いを参照し合う2つの実装
+    When 層の差分を確かめる
+    Then その2つが循環として報告される
+    """
+    result = _run({
+        f"{_SRC}/domain/order.py": "import probe.domain.shipment\n",
+        f"{_SRC}/domain/shipment.py": "import probe.domain.order\n",
+    }, _architecture(layers=[{"layer": "domain", "path": "domain", "mayDependOn": []}]))
+    assert isinstance(result, Ok), result
+    assert result.value["cycles"] == [{"members": ["domain/order", "domain/shipment"]}]
+    # 向きの規則では捕まらない（どちらの向きも同じ層の中なので許されている）
+    assert result.value["violations"] == []
+
+
+def test_cycle_through_three_files_is_reported():
+    """
+    Scenario: 3つ以上を経由する循環も報告する
+    Given 層の置き場所を宣言した規約
+    And 3つの実装が順に参照して元へ戻る依存
+    When 層の差分を確かめる
+    Then その3つが1つの循環として報告される
+    """
+    result = _run({
+        f"{_SRC}/domain/a.py": "import probe.domain.b\n",
+        f"{_SRC}/domain/b.py": "import probe.domain.c\n",
+        f"{_SRC}/domain/c.py": "import probe.domain.a\n",
+    }, _architecture(layers=[{"layer": "domain", "path": "domain", "mayDependOn": []}]))
+    assert isinstance(result, Ok), result
+    assert result.value["cycles"] == [{"members": ["domain/a", "domain/b", "domain/c"]}]
+
+
+def test_the_same_cycle_is_reported_once():
+    """
+    Scenario: 同じ循環を始点ごとに重複して報告しない
+    Given 循環を含む実装
+    When 層の差分を確かめる
+    Then その循環は1件だけ報告される
+    """
+    result = _run({
+        f"{_SRC}/domain/a.py": "import probe.domain.b\n",
+        f"{_SRC}/domain/b.py": "import probe.domain.a\n",
+        # 循環の外から両方を参照しても、循環の件数は変わらない
+        f"{_SRC}/domain/caller.py": "import probe.domain.a\nimport probe.domain.b\n",
+    }, _architecture(layers=[{"layer": "domain", "path": "domain", "mayDependOn": []}]))
+    assert isinstance(result, Ok), result
+    assert len(result.value["cycles"]) == 1
+
+
+def test_one_way_dependencies_produce_no_cycle():
+    """
+    Scenario: 循環が無ければ何も報告しない
+    Given 一方向にだけ参照する実装
+    When 層の差分を確かめる
+    Then 循環は報告されない
+    """
+    result = _run({
+        f"{_SRC}/domain/a.py": "import probe.domain.b\n",
+        f"{_SRC}/domain/b.py": "import probe.domain.c\n",
+        f"{_SRC}/domain/c.py": "",
+    }, _architecture(layers=[{"layer": "domain", "path": "domain", "mayDependOn": []}]))
+    assert isinstance(result, Ok), result
+    assert result.value["cycles"] == []

@@ -62,6 +62,10 @@ _IMPORT_QUERIES = {
 # CommonJS の require はimport構文ではなく関数呼び出しなので、クエリの対象にならない。
 _REQUIRE_LANGUAGES = ("javascript", "typescript")
 
+# Python の `from パッケージ import モジュール` は、参照先がモジュール名の側にある。
+# 取り込み元だけを見るとパッケージ止まりになり、ファイル単位の依存が辿れない。
+_FROM_IMPORT_LANGUAGES = ("python",)
+
 
 def _language(name: str) -> Language:
     if name not in _LANGUAGES:
@@ -81,6 +85,8 @@ class TreeSitterImportExtractor:
             found.append((node.start_byte, _clean(node.text.decode("utf-8"))))
         if language in _REQUIRE_LANGUAGES:
             found.extend(_require_references(tree.root_node))
+        if language in _FROM_IMPORT_LANGUAGES:
+            found.extend(_from_import_members(tree.root_node))
 
         # 出現順に揃える（クエリの結果は種類ごとにまとまって返るため）
         return [text for _, text in sorted(found) if text]
@@ -116,4 +122,32 @@ def _require_references(root) -> list[tuple[int, str]]:
             for part in argument.children:
                 if part.type == "string_fragment":
                     found.append((part.start_byte, _clean(part.text.decode("utf-8"))))
+    return found
+
+
+def _from_import_members(root) -> list[tuple[int, str]]:
+    """`from パッケージ import モジュール` を、パッケージまで含めた参照として組み直す。
+
+    取り込み元だけではパッケージ止まりになり、どのファイルに依存しているかが辿れない。
+    取り込む名前がモジュールなのかクラスなのかは構文からは分からないので、両方を
+    参照として出す。実在しない方は解決の段階で落ちる。
+    """
+    found: list[tuple[int, str]] = []
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        stack.extend(node.children)
+        if node.type != "import_from_statement":
+            continue
+        module = node.child_by_field_name("module_name")
+        if module is None or module.type != "dotted_name":
+            continue
+        prefix = module.text.decode("utf-8")
+        for child in node.children:
+            if child.type == "dotted_name" and child != module:
+                found.append((child.start_byte, f"{prefix}.{child.text.decode('utf-8')}"))
+            elif child.type == "aliased_import":
+                name = child.child_by_field_name("name")
+                if name is not None:
+                    found.append((name.start_byte, f"{prefix}.{name.text.decode('utf-8')}"))
     return found

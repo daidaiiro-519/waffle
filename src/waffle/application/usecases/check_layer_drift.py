@@ -12,6 +12,7 @@ from __future__ import annotations
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.import_extractor import ImportExtractor, UnsupportedLanguage
 from waffle.application.services.stack_resolution import resolve_layer_graph
+from waffle.domain.services.dependency_cycles import find_cycles
 from waffle.domain.services.layer_assignment import (
     layer_of,
     overlapping_layer_paths,
@@ -85,6 +86,8 @@ class CheckLayerDrift:
 
         violations = []
         unassigned = []
+        # 実装どうしの依存グラフ。層の向きの規則では捕まらない循環をここから見つける
+        graph: dict = {}
         for path in sorted(set(files)):
             relative = path[len(src_root) + 1:] if path.startswith(src_root + "/") else path
             if relative in composition_roots:
@@ -105,37 +108,54 @@ class CheckLayerDrift:
             if layer is None:
                 unassigned.append({"path": path})
                 continue
-            violations.extend(self._violations_of(
+            node = relative.rsplit(".", 1)[0]
+            found, targets = self._inspect(
                 source, path, relative, layer, language, layers, may_depend_on,
-                known_files, known_dirs))
+                known_files, known_dirs)
+            violations.extend(found)
+            if targets:
+                graph[node] = targets
 
         return Ok({
             "violations": violations,
+            "cycles": [{"members": c} for c in find_cycles(graph)],
             "unassigned": unassigned,
             "missing_layer_dirs": missing_layer_dirs,
         })
 
-    def _violations_of(self, source: str, path: str, relative: str, layer: str,
-                       language: str, layers: list[dict], may_depend_on: dict,
-                       known_files: set, known_dirs: set) -> list[dict]:
+    def _inspect(self, source: str, path: str, relative: str, layer: str,
+                 language: str, layers: list[dict], may_depend_on: dict,
+                 known_files: set, known_dirs: set) -> tuple[list[dict], set]:
         try:
             references = self._extractor.imports(source, language)
         except (UnsupportedLanguage, SyntaxError):
             # 解析できないファイルは違反ではない。宣言と実装の食い違いを見る検査であって、
             # 解析器の対応範囲を報告する検査ではない
-            return []
+            return [], set()
 
         from_dir = "/".join(relative.split("/")[:-1])
         allowed = may_depend_on.get(layer, set())
         found = []
+        targets: set = set()
+        resolutions: dict = {}
         for reference in references:
             resolved = resolve_reference(reference, from_dir, known_files, known_dirs)
-            target = layer_of(resolved, layers) if resolved is not None else None
+            if resolved is not None:
+                resolutions[reference] = resolved
+        # 同じ取り込み文から出た、粗い参照と細かい参照の両方が解決することがある
+        # （パッケージとその中のモジュール）。同じ依存を二重に数えないよう、
+        # 細かい方だけを残す
+        for reference, resolved in resolutions.items():
+            if any(other != reference and other.startswith(reference + ".")
+                   for other in resolutions):
+                continue
+            if resolved in known_files and resolved != relative.rsplit(".", 1)[0]:
+                targets.add(resolved)
+            target = layer_of(resolved, layers)
             if target is None or target == layer:
-                # 解決できない参照は規約の受け持つ範囲の外（標準・外部ライブラリ）。
                 # 同じ層の中の依存は、mayDependOn の宣言を要さない
                 continue
             if target not in allowed:
                 found.append({"path": path, "layer": layer,
                               "imports": reference, "importedLayer": target})
-        return found
+        return found, targets

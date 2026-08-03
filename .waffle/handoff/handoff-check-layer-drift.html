@@ -269,7 +269,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </svg>
       <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
     </div>
-    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 開発者がこの検査を呼ぶ入口。CLIとMCPの両方から同じユースケースを呼ぶ。</p></li><li><p><strong>コア</strong>: 規約から層・置き場所・依存してよい先を読み、実装の依存と突き合わせる判断そのもの。違反・宣言漏れ・未実装の3種を返す。</p></li><li><p><strong>ポート</strong>: コアが外部へ要求する口。依存を取り出す口は今回新設し、ファイルの読み出しは既存の口をそのまま使う。</p></li><li><p><strong>実装</strong>: ポートを満たす具体。言語ごとの構文差はここだけが知る。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle check-layer-drift --architectureRef architecture-waffle</p></li><li><p>違反が無ければ {&quot;violations&quot;: [], &quot;unassigned&quot;: [], &quot;missing_layer_dirs&quot;: []} を返す</p></li><li><p>宣言が許していない依存があれば、違反した実装・その層・使っている相手の層を列挙する</p></li><li><p>置き場所どうしが飲み込み合っていれば、実装を走査せず OVERLAPPING_LAYER_PATHS を返す</p></li></ol></div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 開発者がこの検査を呼ぶ入口。CLIとMCPの両方から同じユースケースを呼ぶ。</p></li><li><p><strong>コア</strong>: 規約から層・置き場所・依存してよい先を読み、実装の依存と突き合わせる判断そのもの。違反・宣言漏れ・未実装の3種を返す。</p></li><li><p><strong>ポート</strong>: コアが外部へ要求する口。依存を取り出す口は今回新設し、ファイルの読み出しは既存の口をそのまま使う。</p></li><li><p><strong>実装</strong>: ポートを満たす具体。言語ごとの構文差はここだけが知る。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle check-layer-drift --architectureRef architecture-waffle</p></li><li><p>違反・循環・宣言漏れ・未実装のいずれも無ければ、4つとも空の一覧を返す</p></li><li><p>宣言が許していない依存があれば、違反した実装・その層・使っている相手の層を列挙する</p></li><li><p>置き場所どうしが飲み込み合っていれば、実装を走査せず OVERLAPPING_LAYER_PATHS を返す</p></li><li><p>同じ層の中で互いを参照し合う実装は、向きの規則では違反にならないが循環として報告される</p></li></ol></div>
   </section>
 
   <section>
@@ -289,7 +289,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
       </div>
       <div class="coverage-list">
-        <div class="review-row"><span class="who">orchestrator（advisor未相談・要レビュー）</span><span class="detail">設計観点 6件／実装観点 5件</span></div>
+        <div class="review-row"><span class="who">orchestrator（advisor未相談・要レビュー）</span><span class="detail">設計観点 7件／実装観点 5件</span></div>
         <div class="review-row"><span class="who">未解決事項</span><span class="detail">11件</span></div>
       </div>
     </div>
@@ -340,6 +340,11 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
               <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
               <div class="entry-viewpoint">同じ層の中の依存は、宣言を要さない</div>
               <div class="entry-consideration">mayDependOn は他の層への依存を宣言する欄であり、自分自身を書かせると全層に自分の名前が並んで宣言が冗長になる。自層への依存は常に許す。最内層（mayDependOn が空）が自層内で完結するのは正常な状態。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">向きの規則で捕まらない依存を、別の所見として持つ</div>
+              <div class="entry-consideration">層をまたぐ循環は依存してよい先の宣言が防ぐが、同じ層の中の循環はどちらの向きも許されているため規則に照らしても違反にならない。強連結成分で求め、始点をどこに取っても1件として返す。深さ優先で辿った順に報告すると、ファイルを見る順序という本質と無関係な要因で件数が変わる。</div>
             </div></div>
           <div class="tab-panel" id="panel2">
             <div class="entry">
