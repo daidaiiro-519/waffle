@@ -19,6 +19,7 @@ from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
+from waffle.adapters.outbound.tree_sitter_import_extractor import TreeSitterImportExtractor
 from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
 from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
     TreeSitterTestFunctionExtractor,
@@ -33,6 +34,7 @@ from waffle.application.usecases.check_query_precedes_array_fill import CheckQue
 from waffle.application.usecases.check_verification_gate import CheckVerificationGate
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.application.usecases.check_domain_service_drift import CheckDomainServiceDrift
+from waffle.application.usecases.check_layer_drift import CheckLayerDrift
 from waffle.application.usecases.init_coding_preset import InitCodingPreset
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
@@ -344,6 +346,13 @@ def check_aggregate_class_drift(
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "aggregate")
     _emit(CheckAggregateClassDrift(_docs(), _class_extractor()).run(
         _resolve_documents_root(documents_root, architecture_ref), resolved_src_root, _resolve_naming(architecture_ref), language))
+
+@app.command("check-layer-drift")
+def check_layer_drift(
+    architecture_ref: str = typer.Option(..., "--architectureRef", "--architecture-ref", help="層・置き場所・依存してよい先を宣言するarchitecture documentのdocumentId（例: architecture-waffle）"),
+) -> None:
+    """宣言した層の依存の向きが実装でも守られているかを検証（uc-check-layer-drift）。"""
+    _emit(CheckLayerDrift(_docs(), TreeSitterImportExtractor()).run(architecture_ref))
 
 @app.command("check-domain-service-drift")
 def check_domain_service_drift(

@@ -1,0 +1,442 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>層の宣言と実装の依存を突き合わせる検査の引き継ぎ：handoff-check-layer-drift</title>
+<meta name="id" content="handoff-check-layer-drift">
+<meta name="type" content="Handoff">
+<meta name="title" content="層の宣言と実装の依存を突き合わせる検査の引き継ぎ：handoff-check-layer-drift">
+<meta name="description" content="uc-check-layer-drift の実装への引き継ぎ。規約が宣言する層・置き場所・依存してよい先を唯一の基準とし、検査コードが層の語彙も言語ごとの表も持たないようにするための判断を伝える。">
+<meta name="tags" content="">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>層の宣言と実装の依存を突き合わせる検査の引き継ぎ：handoff-check-layer-drift</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>uc-check-layer-drift</dd>
+      <dt>documentId</dt><dd>handoff-check-layer-drift</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 412" width="100%" height="412">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">コア</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ポート</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実装</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-arrow" d="M242.0,60.0 L164.0,124.0"/>
+        <path class="flow-arrow" d="M242.0,60.0 L320.0,124.0"/>
+        <path class="flow-arrow" d="M242.0,60.0 L476.0,124.0"/>
+        <path class="flow-arrow" d="M242.0,60.0 L632.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L164.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L320.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L476.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L632.0,124.0"/>
+        <path class="flow-arrow" d="M164.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M164.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M320.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M320.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M476.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M476.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M632.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M632.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L554.0,352.0"/>
+        <path class="flow-arrow dep" d="M232.0,149.0 L564.0,149.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="143.0">置き場所への前方一致で層を決める</text>
+        <path class="flow-arrow dep" d="M232.0,149.0 L408.0,149.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="320.0" y="143.0">走査対象の拡張子を規約から引く</text>
+        <path class="flow-arrow dep" d="M242.0,352.0 L242.0,288.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="242.0" y="314.0">8言語ぶんの構文差を吸収する</text>
+        
+        <g class="flow-box new" transform="translate(96.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">waffle check-layer-drift</div>
+              <div class="sub">CLI</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(408.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">check_layer_drift</div>
+              <div class="sub">MCP</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">層の突き合わせ</div>
+              <div class="sub">CheckLayerDrift</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box " transform="translate(252.0,124.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">置き場所の解決</div>
+              <div class="sub">source_root_resolution</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,124.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">規約の読み出し</div>
+              <div class="sub">stack_resolution</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(564.0,124.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ファイルを層へ割り当てる</div>
+              <div class="sub">layer_assignment</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">依存の取り出し</div>
+              <div class="sub">ImportExtractor</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ファイルの読み出し</div>
+              <div class="sub">DocumentRepository</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">8</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">tree-sitterによる取り出し</div>
+              <div class="sub">TreeSitterImportExtractor</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">9</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ファイルシステム</div>
+              <div class="sub">FsDocumentRepository</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">10</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 開発者がこの検査を呼ぶ入口。CLIとMCPの両方から同じユースケースを呼ぶ。</p></li><li><p><strong>コア</strong>: 規約から層・置き場所・依存してよい先を読み、実装の依存と突き合わせる判断そのもの。違反・宣言漏れ・未実装の3種を返す。</p></li><li><p><strong>ポート</strong>: コアが外部へ要求する口。依存を取り出す口は今回新設し、ファイルの読み出しは既存の口をそのまま使う。</p></li><li><p><strong>実装</strong>: ポートを満たす具体。言語ごとの構文差はここだけが知る。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle check-layer-drift --architectureRef architecture-waffle</p></li><li><p>違反が無ければ {&quot;violations&quot;: [], &quot;unassigned&quot;: [], &quot;missing_layer_dirs&quot;: []} を返す</p></li><li><p>宣言が許していない依存があれば、違反した実装・その層・使っている相手の層を列挙する</p></li><li><p>置き場所どうしが飲み込み合っていれば、実装を走査せず OVERLAPPING_LAYER_PATHS を返す</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">orchestrator（advisor未相談・要レビュー）</span><span class="detail">設計観点 6件／実装観点 5件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">11件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">ファイルを層へ割り当てる手がかりは置き場所だけにする</div>
+              <div class="entry-consideration">あるファイルがどの層かは、規約が宣言する置き場所への前方一致で決める（最長一致を採る）。ディレクトリツリーの図は投影であって宣言ではないので参照しない。この方針は LayersBlock の x-prompt-query に既に明記してあり、検査はその読み方に従う。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">宣言の健全性を、実装を見る前に確かめる</div>
+              <div class="entry-consideration">ある層の置き場所が別の層の置き場所を含んでいると、配下のファイルがどちらの層か前方一致では決まらない。この状態で実装を走査すると結果が無意味になるので、走査の前に宣言だけを見て弾く。実際に artifact-share でこの誤りが起きていた（入口の層が sourceRoot 直下を占め、他の全層を飲み込んでいた）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">依存先の解決に、新しい宣言軸を足さない</div>
+              <div class="entry-consideration">依存の書き方は言語ごとに違う（Pythonはドット区切り、TypeScriptは相対パス、Goはモジュールパス）。これを規約の新しい欄として宣言させると、プロジェクトごとに埋める項目が増える。代わりに、取り出した参照から候補パスを後ろ側から順に作り、置き場所の下に実在する最長のものを採る。実在しなければ規約の受け持つ範囲の外（標準ライブラリ・外部ライブラリ）とみなして無視する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">ports は層ではないので、特別扱いを持ち込まない</div>
+              <div class="entry-consideration">ports は application が所有する要素であり、application の置き場所の配下にある。前方一致で解決すれば application として扱われるので、検査側に ports の概念は要らない。逆に、ports を層として特別扱いするコードを書くと、その扱いが規約の宣言と二重になる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">走査する言語は規約が決める</div>
+              <div class="entry-consideration">どの拡張子を走査するかは tech-stack の runtime.languages[].extensions が宣言する。検査コードに拡張子の表を持たない（言語拡張の際に同じ表を二箇所直すことになるため）。対応する構文解析器を持たない言語のファイルは、違反ではなく走査対象外として扱う。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">同じ層の中の依存は、宣言を要さない</div>
+              <div class="entry-consideration">mayDependOn は他の層への依存を宣言する欄であり、自分自身を書かせると全層に自分の名前が並んで宣言が冗長になる。自層への依存は常に許す。最内層（mayDependOn が空）が自層内で完結するのは正常な状態。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">依存を取り出すポートを新設する</div>
+              <div class="entry-consideration">既存の抽出ポートは class_declaration_extractor（型名・フィールド名）と test_function_extractor（テスト関数と文書コメント）だけで、依存を取り出す口が無い。ImportExtractor を新設し、tree-sitter アダプターが8言語ぶんの構文差を吸収する。言語ごとのノード型は推測せず、実際に解析して確かめてから書く（言語拡張時と同じ手順）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">置き場所の解決は既存サービスを再利用する</div>
+              <div class="entry-consideration">sourceRoot の解決（{package} 置換を含む）は source_root_resolution に、規約からの読み出しは stack_resolution に既にある。同じ解決を検査ごとに書き直すと、今日直したような宣言の読み方の違いが再び生まれる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">置き場所の不在はエラーではなくドリフトとして返す</div>
+              <div class="entry-consideration">既存の4検査は、宣言された置き場所が無いときエラーで止まっていたのを、未実装の所見として返すよう今日改めた。新設する検査も同じ扱いに揃える（規約を先に書いて実装を後から合わせる進め方では、この状態が正常に起きる）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">テストの置き場所と名前は規約が決める</div>
+              <div class="entry-consideration">受け入れシナリオは tests/application/acceptance/、保証シナリオは tests/application/integration/、ポートの契約テストは tests/application/contract/。ファイル名は test_uc_check_layer_drift.py。テスト関数の文書コメントの先頭に宣言行を置き、spec のシナリオと突き合わせる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">自分自身に掛けて、既知の答えと突き合わせる</div>
+              <div class="entry-consideration">waffle 自身の規約は層5つと依存の向きを宣言しており、実装は今日その宣言へ揃えた。実装後にこの検査を waffle 自身へ掛け、違反が出ないことを確かめる。出た場合は、検査の誤りか、今日の宣言修正の漏れかを切り分ける材料になる。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>本セッションはサブエージェント委譲を行わない設定のため、設計観点・実装観点はOrchestrator自身の調査に基づく。ddd-advisor / tech-lead-advisor のレビューは未実施で、reviewStatus に open のまま残している。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>依存先の解決は、参照から作った候補パスの実在で決める。同名のファイルが複数の層に存在する場合、後ろ側からの最長一致が意図と違う層を指す可能性がある。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>実行時に組み立てられる依存（文字列によるモジュール参照・動的な読み込み）は構文解析では取り出せないため、検出できない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>1つのプロダクトが複数のランタイムを持つ場合（artifact-share の閲覧ゲート等）、層を持たないと宣言した領域は機械可読な宣言を持たないため、走査から外れるのではなく 『どの層にも属さない実装』として毎回報告される。実装して確かめた結果、引き継ぎ時点の見込み（走査対象から外れる）は誤りだった。黙って除外するより見えている方がよいと判断して現状のままとし、宣言で除外を表す軸を持つかは別サイクルで扱う。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">5</span>
+              <p>実装して分かったこと: 中身の無いファイル（パッケージの目印等）は層の割り当ての対象から外す。外さないと、どの層にも属さない同じ顔ぶれが毎回並び、報告そのものが読まれなくなる。境界値シナリオとしてspecに宣言した。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">src/waffle/application/ports/import_extractor.py</div>
+              <div class="reason">依存を取り出すポートの新設</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/outbound/tree_sitter_import_extractor.py</div>
+              <div class="reason">8言語ぶんの構文差を吸収する実装</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/check_layer_drift.py</div>
+              <div class="reason">突き合わせ本体</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/layer_assignment.py</div>
+              <div class="reason">置き場所からファイルの層を決める純ロジックと、置き場所どうしの祖先関係の検出</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/services/stack_resolution.py</div>
+              <div class="reason">層・依存してよい先・走査対象拡張子の読み出しを足す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/cli/main.py</div>
+              <div class="reason">CLIの入口と結線</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/mcp/main.py</div>
+              <div class="reason">MCPの入口と結線</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/application/acceptance/test_uc_check_layer_drift.py</div>
+              <div class="reason">受け入れシナリオ9件に対応するテスト</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/application/integration/test_uc_check_layer_drift.py</div>
+              <div class="reason">保証シナリオ2件に対応するテスト</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/application/contract/test_import_extractor.py</div>
+              <div class="reason">新設ポートの契約テスト（本物と偽実装の両方に同じスイートを掛ける）</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/documents/coding/test-standard-waffle.json</div>
+              <div class="reason">契約テストの置き場所が application/contract であることは宣言済み。変更不要の見込み</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

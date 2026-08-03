@@ -78,6 +78,7 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-render-handoff-template
 - uc-render-document-viewer
 - uc-init-coding-preset
+- uc-check-layer-drift
 
 ---
 

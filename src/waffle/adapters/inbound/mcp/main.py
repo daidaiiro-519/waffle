@@ -25,6 +25,8 @@ from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseCl
 from waffle.application.usecases.check_verification_gate import CheckVerificationGate
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.application.usecases.check_domain_service_drift import CheckDomainServiceDrift
+from waffle.application.usecases.check_layer_drift import CheckLayerDrift
+from waffle.adapters.outbound.tree_sitter_import_extractor import TreeSitterImportExtractor
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
@@ -271,6 +273,11 @@ def check_aggregate_class_drift(
     if isinstance(naming, dict) and "error" in naming:
         return naming
     return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(scope, resolved, naming, language))
+
+@mcp.tool
+def check_layer_drift(architectureRef: str) -> dict:
+    """宣言した層の依存の向きが実装でも守られているかを検証（uc-check-layer-drift）。architectureRefが宣言する層・置き場所・依存してよい先だけを基準に使う。"""
+    return _dict(CheckLayerDrift(_docs(), TreeSitterImportExtractor()).run(architectureRef))
 
 @mcp.tool
 def check_domain_service_drift(documentsRoot: str = None, srcRoot: str | None = None, architectureRef: str | None = None) -> dict:

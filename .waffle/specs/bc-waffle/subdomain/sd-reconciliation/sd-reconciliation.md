@@ -1,3 +1,12 @@
+---
+id: "sd-reconciliation"
+type: "subdomain"
+title: "スペックの3種のドリフト検知を担うサブドメイン：sd-reconciliation"
+description: "スペック自身が嘘をつかないよう、3種類のドリフト（スペック内部の参照整合性・スペックとテストシナリオの対応関係・Document集約とSchema版の対応関係）を機械的に検知し続ける業務領域。spec 同士（bc/subdomain/usecase の宣言と実ファイル）の参照整合性、spec の TestScenarios と対応するテストコードのシナリオ名の整合、Document が参照する Schema の版が実在し最新であるかという、複数の異なるデータ領域（Spec・ソースコード・Schema）をまたいで一貫性を保つ。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # スペックの3種のドリフト検知を担うサブドメイン：sd-reconciliation
 
 ## 名前
@@ -33,6 +42,7 @@
 - uc-check-operation-drift
 - uc-check-aggregate-class-drift
 - uc-check-domain-service-drift
+- uc-check-layer-drift
 
 ---
 

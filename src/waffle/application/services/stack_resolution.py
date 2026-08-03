@@ -12,7 +12,7 @@ from __future__ import annotations
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.shared.result import Err, Ok, Result
 
-__all__ = ["resolve_naming", "resolve_scenario_binding"]
+__all__ = ["resolve_naming", "resolve_scenario_binding", "resolve_layer_graph"]
 
 CODING_ROOT = ".waffle/documents/coding"
 
@@ -157,3 +157,56 @@ def resolve_covered_documents_root(documents: DocumentRepository,
     if len(contexts) == 1:
         return Ok(f"{SPECS_ROOT}/{contexts[0]}")
     return Ok(SPECS_ROOT)
+
+
+def resolve_layer_graph(documents: DocumentRepository, architecture_ref: str) -> Result[dict]:
+    """architectureRef から、層の突き合わせに要る宣言を1つにまとめて返す。
+
+    層・置き場所・依存してよい先は architecture が、走査対象の拡張子は同じスタックの
+    tech-stack が宣言する。検査ごとにこの引き当てを書き直すと、宣言の読み方が
+    検査ごとに食い違う余地が生まれる。
+
+    Args:
+        documents: 規約文書を読むための DocumentRepository。
+        architecture_ref: 参照する architecture document の documentId。
+
+    Returns:
+        srcRoot / layers / compositionRootPaths / languageBySuffix を持つ Ok、
+        または失敗を表す Err。失敗のコードは ARCHITECTURE_REF_NOT_FOUND /
+        ARCHITECTURE_REF_UNRESOLVED のいずれか。
+    """
+    from waffle.domain.services import path_template
+    from waffle.domain.services.concept_source_root import package_name_from_reference
+
+    coding_documents = _load_coding_documents(documents)
+    architecture = next((d for d in coding_documents
+                         if d.get("documentId") == architecture_ref), None)
+    if architecture is None:
+        return _err("ARCHITECTURE_REF_NOT_FOUND",
+                    f"architecture document が見つかりません: {architecture_ref}")
+
+    content = architecture.get("content", {})
+    layout = content.get("layout", {})
+    layers = content.get("layers", {}).get("items", [])
+    source_root = layout.get("sourceRoot")
+    if not source_root or not layers:
+        return _err("ARCHITECTURE_REF_UNRESOLVED",
+                    f"{architecture_ref} が layout.sourceRoot または layers を宣言していません")
+
+    package = package_name_from_reference(architecture_ref, "architecture") or ""
+    src_root = path_template.resolve(source_root, package=package)
+
+    # 走査対象の拡張子は tech-stack が宣言する。検査コードに拡張子の表を持たない
+    stack = architecture.get("stack")
+    tech_stack = _find_by_kind(coding_documents, "tech-stack", stack) or {}
+    language_by_suffix = {}
+    for language in tech_stack.get("content", {}).get("runtime", {}).get("languages", []):
+        for extension in language.get("extensions", []):
+            language_by_suffix[extension.lstrip(".").lower()] = language.get("language")
+
+    return Ok({
+        "srcRoot": src_root,
+        "layers": layers,
+        "compositionRootPaths": layout.get("compositionRootPaths", []),
+        "languageBySuffix": language_by_suffix,
+    })

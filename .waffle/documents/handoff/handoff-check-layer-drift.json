@@ -1,0 +1,367 @@
+{
+  "documentId": "handoff-check-layer-drift",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "層の宣言と実装の依存を突き合わせる検査の引き継ぎ：handoff-check-layer-drift"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-check-layer-drift"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "ファイルを層へ割り当てる手がかりは置き場所だけにする",
+          "consideration": "あるファイルがどの層かは、規約が宣言する置き場所への前方一致で決める（最長一致を採る）。ディレクトリツリーの図は投影であって宣言ではないので参照しない。この方針は LayersBlock の x-prompt-query に既に明記してあり、検査はその読み方に従う。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "宣言の健全性を、実装を見る前に確かめる",
+          "consideration": "ある層の置き場所が別の層の置き場所を含んでいると、配下のファイルがどちらの層か前方一致では決まらない。この状態で実装を走査すると結果が無意味になるので、走査の前に宣言だけを見て弾く。実際に artifact-share でこの誤りが起きていた（入口の層が sourceRoot 直下を占め、他の全層を飲み込んでいた）。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "依存先の解決に、新しい宣言軸を足さない",
+          "consideration": "依存の書き方は言語ごとに違う（Pythonはドット区切り、TypeScriptは相対パス、Goはモジュールパス）。これを規約の新しい欄として宣言させると、プロジェクトごとに埋める項目が増える。代わりに、取り出した参照から候補パスを後ろ側から順に作り、置き場所の下に実在する最長のものを採る。実在しなければ規約の受け持つ範囲の外（標準ライブラリ・外部ライブラリ）とみなして無視する。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "ports は層ではないので、特別扱いを持ち込まない",
+          "consideration": "ports は application が所有する要素であり、application の置き場所の配下にある。前方一致で解決すれば application として扱われるので、検査側に ports の概念は要らない。逆に、ports を層として特別扱いするコードを書くと、その扱いが規約の宣言と二重になる。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "走査する言語は規約が決める",
+          "consideration": "どの拡張子を走査するかは tech-stack の runtime.languages[].extensions が宣言する。検査コードに拡張子の表を持たない（言語拡張の際に同じ表を二箇所直すことになるため）。対応する構文解析器を持たない言語のファイルは、違反ではなく走査対象外として扱う。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "同じ層の中の依存は、宣言を要さない",
+          "consideration": "mayDependOn は他の層への依存を宣言する欄であり、自分自身を書かせると全層に自分の名前が並んで宣言が冗長になる。自層への依存は常に許す。最内層（mayDependOn が空）が自層内で完結するのは正常な状態。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "依存を取り出すポートを新設する",
+          "consideration": "既存の抽出ポートは class_declaration_extractor（型名・フィールド名）と test_function_extractor（テスト関数と文書コメント）だけで、依存を取り出す口が無い。ImportExtractor を新設し、tree-sitter アダプターが8言語ぶんの構文差を吸収する。言語ごとのノード型は推測せず、実際に解析して確かめてから書く（言語拡張時と同じ手順）。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "置き場所の解決は既存サービスを再利用する",
+          "consideration": "sourceRoot の解決（{package} 置換を含む）は source_root_resolution に、規約からの読み出しは stack_resolution に既にある。同じ解決を検査ごとに書き直すと、今日直したような宣言の読み方の違いが再び生まれる。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "置き場所の不在はエラーではなくドリフトとして返す",
+          "consideration": "既存の4検査は、宣言された置き場所が無いときエラーで止まっていたのを、未実装の所見として返すよう今日改めた。新設する検査も同じ扱いに揃える（規約を先に書いて実装を後から合わせる進め方では、この状態が正常に起きる）。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "テストの置き場所と名前は規約が決める",
+          "consideration": "受け入れシナリオは tests/application/acceptance/、保証シナリオは tests/application/integration/、ポートの契約テストは tests/application/contract/。ファイル名は test_uc_check_layer_drift.py。テスト関数の文書コメントの先頭に宣言行を置き、spec のシナリオと突き合わせる。"
+        },
+        {
+          "advisor": "orchestrator（advisor未相談・要レビュー）",
+          "viewpoint": "自分自身に掛けて、既知の答えと突き合わせる",
+          "consideration": "waffle 自身の規約は層5つと依存の向きを宣言しており、実装は今日その宣言へ揃えた。実装後にこの検査を waffle 自身へ掛け、違反が出ないことを確かめる。出た場合は、検査の誤りか、今日の宣言修正の漏れかを切り分ける材料になる。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "本セッションはサブエージェント委譲を行わない設定のため、設計観点・実装観点はOrchestrator自身の調査に基づく。ddd-advisor / tech-lead-advisor のレビューは未実施で、reviewStatus に open のまま残している。",
+        "依存先の解決は、参照から作った候補パスの実在で決める。同名のファイルが複数の層に存在する場合、後ろ側からの最長一致が意図と違う層を指す可能性がある。",
+        "実行時に組み立てられる依存（文字列によるモジュール参照・動的な読み込み）は構文解析では取り出せないため、検出できない。",
+        "1つのプロダクトが複数のランタイムを持つ場合（artifact-share の閲覧ゲート等）、層を持たないと宣言した領域は機械可読な宣言を持たないため、走査から外れるのではなく 『どの層にも属さない実装』として毎回報告される。実装して確かめた結果、引き継ぎ時点の見込み（走査対象から外れる）は誤りだった。黙って除外するより見えている方がよいと判断して現状のままとし、宣言で除外を表す軸を持つかは別サイクルで扱う。",
+        "実装して分かったこと: 中身の無いファイル（パッケージの目印等）は層の割り当ての対象から外す。外さないと、どの層にも属さない同じ顔ぶれが毎回並び、報告そのものが読まれなくなる。境界値シナリオとしてspecに宣言した。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "開発者がこの検査を呼ぶ入口。CLIとMCPの両方から同じユースケースを呼ぶ。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "waffle check-layer-drift",
+              "sub": "CLI",
+              "status": "new"
+            },
+            {
+              "id": "mcp",
+              "title": "check_layer_drift",
+              "sub": "MCP",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "コア",
+          "description": "規約から層・置き場所・依存してよい先を読み、実装の依存と突き合わせる判断そのもの。違反・宣言漏れ・未実装の3種を返す。",
+          "nodes": [
+            {
+              "id": "uc",
+              "title": "層の突き合わせ",
+              "sub": "CheckLayerDrift",
+              "status": "new"
+            },
+            {
+              "id": "resolve",
+              "title": "置き場所の解決",
+              "sub": "source_root_resolution",
+              "status": "existing"
+            },
+            {
+              "id": "stack",
+              "title": "規約の読み出し",
+              "sub": "stack_resolution",
+              "status": "existing"
+            },
+            {
+              "id": "assign",
+              "title": "ファイルを層へ割り当てる",
+              "sub": "layer_assignment",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "ポート",
+          "description": "コアが外部へ要求する口。依存を取り出す口は今回新設し、ファイルの読み出しは既存の口をそのまま使う。",
+          "nodes": [
+            {
+              "id": "impt",
+              "title": "依存の取り出し",
+              "sub": "ImportExtractor",
+              "status": "new"
+            },
+            {
+              "id": "docs",
+              "title": "ファイルの読み出し",
+              "sub": "DocumentRepository",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "実装",
+          "description": "ポートを満たす具体。言語ごとの構文差はここだけが知る。",
+          "nodes": [
+            {
+              "id": "ts",
+              "title": "tree-sitterによる取り出し",
+              "sub": "TreeSitterImportExtractor",
+              "status": "new"
+            },
+            {
+              "id": "fs",
+              "title": "ファイルシステム",
+              "sub": "FsDocumentRepository",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "uc",
+          "to": "assign",
+          "kind": "dependency",
+          "label": "置き場所への前方一致で層を決める"
+        },
+        {
+          "from": "uc",
+          "to": "stack",
+          "kind": "dependency",
+          "label": "走査対象の拡張子を規約から引く"
+        },
+        {
+          "from": "ts",
+          "to": "impt",
+          "kind": "dependency",
+          "label": "8言語ぶんの構文差を吸収する"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "uv run waffle check-layer-drift --architectureRef architecture-waffle",
+        "違反が無ければ {\"violations\": [], \"unassigned\": [], \"missing_layer_dirs\": []} を返す",
+        "宣言が許していない依存があれば、違反した実装・その層・使っている相手の層を列挙する",
+        "置き場所どうしが飲み込み合っていれば、実装を走査せず OVERLAPPING_LAYER_PATHS を返す"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "uc-check-layer-drift の実装への引き継ぎ。規約が宣言する層・置き場所・依存してよい先を唯一の基準とし、検査コードが層の語彙も言語ごとの表も持たないようにするための判断を伝える。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/application/ports/import_extractor.py",
+          "reason": "依存を取り出すポートの新設"
+        },
+        {
+          "path": "src/waffle/adapters/outbound/tree_sitter_import_extractor.py",
+          "reason": "8言語ぶんの構文差を吸収する実装"
+        },
+        {
+          "path": "src/waffle/application/usecases/check_layer_drift.py",
+          "reason": "突き合わせ本体"
+        },
+        {
+          "path": "src/waffle/domain/services/layer_assignment.py",
+          "reason": "置き場所からファイルの層を決める純ロジックと、置き場所どうしの祖先関係の検出"
+        },
+        {
+          "path": "src/waffle/application/services/stack_resolution.py",
+          "reason": "層・依存してよい先・走査対象拡張子の読み出しを足す"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/cli/main.py",
+          "reason": "CLIの入口と結線"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/mcp/main.py",
+          "reason": "MCPの入口と結線"
+        },
+        {
+          "path": "tests/application/acceptance/test_uc_check_layer_drift.py",
+          "reason": "受け入れシナリオ9件に対応するテスト"
+        },
+        {
+          "path": "tests/application/integration/test_uc_check_layer_drift.py",
+          "reason": "保証シナリオ2件に対応するテスト"
+        },
+        {
+          "path": "tests/application/contract/test_import_extractor.py",
+          "reason": "新設ポートの契約テスト（本物と偽実装の両方に同じスイートを掛ける）"
+        },
+        {
+          "path": ".waffle/documents/coding/test-standard-waffle.json",
+          "reason": "契約テストの置き場所が application/contract であることは宣言済み。変更不要の見込み"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "advisor未相談。レビュー待ち"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": []
+}
