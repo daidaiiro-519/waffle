@@ -139,7 +139,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         </defs>
         <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">コア</div></foreignObject>
-        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ポート</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">application が要求する口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実装</div></foreignObject>
         <path class="flow-split" d="M0,92.0 H700"/>
         <path class="flow-split" d="M0,206.0 H700"/>
@@ -236,7 +236,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </svg>
       <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
     </div>
-    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 開発者がこの反映を呼ぶ入口。CLIとMCPから同じ操作を呼ぶ。</p></li><li><p><strong>コア</strong>: プリセットと規約を読み、指定された部分だけをプリセットへ移す判断。何を戻すかは決めない。</p></li><li><p><strong>ポート</strong>: プリセットと規約の読み書き。プリセットの側に書き込みを足す。</p></li><li><p><strong>実装</strong>: パッケージ内のプリセットと、ファイルシステム上の規約。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle update-coding-preset --preset python-hexagonal --from architecture-waffle --blocks rules</p></li><li><p>反映した部分と、変更があったかどうかを返す</p></li><li><p>内容が既に一致していれば、プリセットを書き換えず changed が偽で返る</p></li><li><p>プリセットが持たない部分を指定すると UNKNOWN_BLOCK で拒否され、プリセットは変わらない</p></li></ol></div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 開発者がこの反映を呼ぶ入口。CLIとMCPから同じ操作を呼ぶ。</p></li><li><p><strong>コア</strong>: プリセットと規約を読み、指定された部分だけをプリセットへ移す判断。何を戻すかは決めない。</p></li><li><p><strong>application が要求する口</strong>: プリセットと規約の読み書き。プリセットの側に書き込みを足す。</p></li><li><p><strong>実装</strong>: パッケージ内のプリセットと、ファイルシステム上の規約。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle update-coding-preset --preset python-hexagonal --from architecture-waffle --blocks rules</p></li><li><p>反映した部分と、変更があったかどうかを返す</p></li><li><p>内容が既に一致していれば、プリセットを書き換えず changed が偽で返る</p></li><li><p>プリセットが持たない部分を指定すると UNKNOWN_BLOCK で拒否され、プリセットは変わらない</p></li></ol></div>
   </section>
 
   <section>
@@ -286,7 +286,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="entry">
               <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
               <div class="entry-viewpoint">反映はプリセットへの一方向に限る</div>
-              <div class="entry-consideration">プリセットとプロダクトの双方向同期にすると、どちらが正かが場面ごとに変わり、宣言の出どころが決まらなくなる。プロダクトの規約はプロダクトが持ち、プリセットはそこから育つ、という向きを固定する。プロダクト側は決して書き換えない。</div>
+              <div class="entry-consideration">プリセットとプロダクトの双方向同期にすると、どちらが正かが場面ごとに変わり、宣言の出どころが決まらなくなる。プロダクトの規約はプロダクトが持ち、プリセットへは一方向に反映する、という向きを固定する。プロダクト側は決して書き換えない。なお、この操作は指定されたブロックを反映先の内容で置き換えるので、複数のプロダクトから同じブロックへ反映すると最後の1つが残る。複数の経験を蓄積する形にはなっていない。</div>
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>

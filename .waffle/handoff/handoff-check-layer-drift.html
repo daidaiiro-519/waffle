@@ -139,7 +139,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         </defs>
         <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">コア</div></foreignObject>
-        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ポート</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">application が要求する口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実装</div></foreignObject>
         <path class="flow-split" d="M0,92.0 H700"/>
         <path class="flow-split" d="M0,206.0 H700"/>
@@ -269,7 +269,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </svg>
       <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
     </div>
-    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 開発者がこの検査を呼ぶ入口。CLIとMCPの両方から同じユースケースを呼ぶ。</p></li><li><p><strong>コア</strong>: 規約から層・置き場所・依存してよい先を読み、実装の依存と突き合わせる判断そのもの。違反・宣言漏れ・未実装の3種を返す。</p></li><li><p><strong>ポート</strong>: コアが外部へ要求する口。依存を取り出す口は今回新設し、ファイルの読み出しは既存の口をそのまま使う。</p></li><li><p><strong>実装</strong>: ポートを満たす具体。言語ごとの構文差はここだけが知る。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle check-layer-drift --architectureRef architecture-waffle</p></li><li><p>違反・循環・宣言漏れ・未実装のいずれも無ければ、4つとも空の一覧を返す</p></li><li><p>宣言が許していない依存があれば、違反した実装・その層・使っている相手の層を列挙する</p></li><li><p>置き場所どうしが飲み込み合っていれば、実装を走査せず OVERLAPPING_LAYER_PATHS を返す</p></li><li><p>同じ層の中で互いを参照し合う実装は、向きの規則では違反にならないが循環として報告される</p></li></ol></div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 開発者がこの検査を呼ぶ入口。CLIとMCPの両方から同じユースケースを呼ぶ。</p></li><li><p><strong>コア</strong>: 規約から層・置き場所・依存してよい先を読み、実装の依存と突き合わせる判断そのもの。違反・宣言漏れ・未実装の3種を返す。</p></li><li><p><strong>application が要求する口</strong>: コアが外部へ要求する口。依存を取り出す口は今回新設し、ファイルの読み出しは既存の口をそのまま使う。</p></li><li><p><strong>実装</strong>: ポートを満たす具体。言語ごとの構文差はここだけが知る。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle check-layer-drift --architectureRef architecture-waffle</p></li><li><p>違反・循環・宣言漏れ・未実装のいずれも無ければ、4つとも空の一覧を返す</p></li><li><p>宣言が許していない依存があれば、違反した実装・その層・使っている相手の層を列挙する</p></li><li><p>置き場所どうしが飲み込み合っていれば、実装を走査せず OVERLAPPING_LAYER_PATHS を返す</p></li><li><p>同じ層の中で互いを参照し合う実装は、向きの規則では違反にならないが循環として報告される</p></li></ol></div>
   </section>
 
   <section>

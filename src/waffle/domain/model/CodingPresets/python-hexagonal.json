@@ -230,6 +230,14 @@
         },
         {
           "level": "必須",
+          "rule": "aggregate / entity の状態フィールドは、外部から直接代入できないようにする（不変化・private 化・読み取り専用プロパティ等、言語機能で経路そのものを塞ぐ）。不変条件を強制するメソッドを用意するだけでは完了とみなさない——メソッドを経由しない代入が残っていれば、その経路から不変条件を迂回できる"
+        },
+        {
+          "level": "禁止",
+          "rule": "外側から受け取った値を domain オブジェクトのフィールドへ直接代入する。状態変更は意図を表すコマンドとして渡し、集約のメソッド呼び出しとして実行する"
+        },
+        {
+          "level": "必須",
           "rule": "合成ルート（結線・DI）はシステムの最も外側の起動点（inbound adapter のエントリポイント）に置き、各エントリポイントに1つだけ持つ。層のグラフの外にあり、実際の場所は layout の compositionRootPaths が宣言する（ここでは繰り返さない）。依存（port / repository）はコンストラクタ注入で受け取り、生成は合成ルートだけが行う"
         },
         {
@@ -250,7 +258,7 @@
         },
         {
           "level": "禁止",
-          "rule": "ドメイン例外の握り潰し（境界で結果型に写像する）"
+          "rule": "例外の握り潰し（ドメイン例外・技術的例外を問わない）。境界では結果型へ写像するか、回復不能な致命的失敗として上位へ伝播させるかのいずれかとし、失敗を黙って捨てない"
         },
         {
           "level": "必須",
@@ -266,15 +274,11 @@
         },
         {
           "level": "必須",
-          "rule": "監査ログ・認可のような業務要件としての横断的関心事は、「何を記録すべきか・誰が実行を許可されるか」の判断を domain/application が持ち、実際の記録・認証手段はport 経由で outbound adapter に委譲する"
+          "rule": "監査ログ・認可のような業務要件としての横断的関心事は、「何を記録すべきか・誰が実行を許可されるか」の判断を domain/application が持ち、実際の記録・認証手段は port 経由で outbound adapter に委譲する"
         },
         {
           "level": "禁止",
           "rule": "認可チェックを domain 層の集約メソッドの中に直接書く（「誰がログインしているか」という技術的な認証の仕組みに domain 層が依存し、依存方向が逆転する）"
-        },
-        {
-          "level": "必須",
-          "rule": "usecase 実装クラス名は、対応する usecase spec が宣言する操作名とそのまま一致させる（Engine 等の装飾的な接尾辞を付けない）。ファイル名の導き方は coding-standard の naming が宣言する（ここでは繰り返さない）"
         }
       ]
     },
@@ -346,6 +350,55 @@
         {
           "target": "レイヤー境界を越えるDTOの識別子",
           "convention": "層の外に出るための入れ物であることが分かる名前にする（例: ShipmentStatusResponse）。ドメインオブジェクトと同じクラス名を使い回さない"
+        }
+      ],
+      "fileNameDerivedFrom": "type",
+      "fileNameTransform": "pascal-to-snake",
+      "fileNameSuffix": ".py",
+      "cases": [
+        {
+          "artifact": "module",
+          "case": "snake"
+        },
+        {
+          "artifact": "type",
+          "case": "pascal"
+        },
+        {
+          "artifact": "function",
+          "case": "snake"
+        },
+        {
+          "artifact": "field",
+          "case": "snake"
+        },
+        {
+          "artifact": "function",
+          "visibility": "private",
+          "case": "snake",
+          "prefix": "_"
+        }
+      ],
+      "norms": [
+        {
+          "appliesTo": "語彙",
+          "norm": "仕様（spec）のユビキタス言語に一致させる（勝手な言い換え禁止）"
+        },
+        {
+          "appliesTo": "domain",
+          "norm": "ユビキタス言語のみで構成する。Impl/DTO/Manager/Helper等の技術的接尾辞を付けない（付いている時点でその概念はドメインの言葉でなく実装都合で存在している兆候）"
+        },
+        {
+          "appliesTo": "application",
+          "norm": "動詞＋目的語の業務操作として命名し、対応する usecase spec が宣言する操作名とそのまま一致させる（例: RequestPickup、CancelOrder）。Engine 等の装飾的な接尾辞を付けない。ファイル名はこのブロックのファイル名3欄が導く"
+        },
+        {
+          "appliesTo": "outbound adapter",
+          "norm": "使用する技術名を明示してよい（例: PostgresShipmentRepository、InMemoryShipmentRepository）。ポート実装であることが責務そのものなので技術名を隠す理由が無い"
+        },
+        {
+          "appliesTo": "レイヤー境界を越えるDTO",
+          "norm": "層の外に出るための入れ物であることが分かる名前にする（例: ShipmentStatusResponse）。ドメインオブジェクトと同じクラス名を使い回さない"
         }
       ]
     },
