@@ -1,0 +1,231 @@
+{
+  "documentId": "uc-update-coding-preset",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "実践で確かめた規約を次の出発点へ戻す：uc-update-coding-preset"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "UpdateCodingPreset"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "開発者",
+      "intent": "実際のプロダクトで確かめた規約を、次に作るプロダクトの出発点へ反映したい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "出発点となるプリセットは一度書かれたきり、実践から更新される経路が無い。プリセットから作ったプロダクトで規約の誤りを見つけて直しても、プリセットは誤ったまま残り、以後そこから作られるすべてのプロダクトへ同じ誤りが配られ続ける。",
+        "プリセットを手で直す運用にすると、直したことが記録に残らず、次も手で直すことになる。出発点を育てる行為そのものを、製品の操作として持つ必要がある。",
+        "一方で、プロダクト固有の判断（そのプロダクトが受け持つ範囲・特定の入口に固有の取り決め）をプリセットへ戻すと、無関係なプロダクトへ余計な制約が配られる。何が汎用かの判断は人が持ち、機械は反映だけを担う。"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "開発者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "開発者",
+          "to": "プリセットの更新",
+          "message": "プリセット・出どころの規約・戻す部分を指定する",
+          "kind": "command"
+        },
+        {
+          "from": "プリセットの更新",
+          "to": "プリセットの更新",
+          "message": "プリセットと出どころの規約を読む",
+          "kind": "self"
+        },
+        {
+          "from": "プリセットの更新",
+          "to": "プリセットの更新",
+          "message": "指定された部分が、プリセットと出どころの双方にあることを確かめる",
+          "kind": "self"
+        },
+        {
+          "from": "プリセットの更新",
+          "to": "プリセットの更新",
+          "message": "内容が既に一致していれば書き換えない",
+          "kind": "self"
+        },
+        {
+          "from": "プリセットの更新",
+          "to": "開発者",
+          "message": "反映した部分と、変更の有無",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "指定された部分の内容が、プリセットとプロダクトで一致している",
+        "指定されなかった部分は、プリセットの元の内容のまま残っている",
+        "プロダクトの規約は変更されていない（プリセットへの一方向の反映）"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 戻す部分が指定されたとき、プリセットの更新は その部分だけをプリセットへ反映する shall",
+        "When 戻す部分が指定されなかったとき、プリセットの更新は 反映を行わず拒否する shall",
+        "If 指定された部分をプリセットが持たないならば、プリセットの更新は 反映を行わず拒否する shall",
+        "If 指定された部分をプロダクトの規約が持たないならば、プリセットの更新は 反映を行わず拒否する shall",
+        "When 指定された部分の内容がプリセットとプロダクトで既に一致しているとき、プリセットの更新は プリセットを書き換えず、変更が無かったことを示す shall",
+        "While 反映を行う間、プリセットの更新は プロダクトの規約を変更しない shall"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "MISSING_PARAM",
+          "condition": [
+            "プリセット・出どころの規約・戻す部分のいずれかが指定されていない"
+          ]
+        },
+        {
+          "code": "PRESET_NOT_FOUND",
+          "condition": [
+            "指定されたプリセットが存在しない"
+          ]
+        },
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "出どころとして指定された規約が存在しない"
+          ]
+        },
+        {
+          "code": "UNKNOWN_BLOCK",
+          "condition": [
+            "指定された部分をプリセットが持たない",
+            "指定された部分を出どころの規約が持たない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "指定した部分がプリセットへ反映される",
+          "category": "正常系",
+          "viewpoint": "反映：実践で確かめた規約を、次のプロダクトの出発点へ戻せる",
+          "gherkin": "Scenario: 指定した部分がプリセットへ反映される\n  Given プリセットから作られ、その後に規約を直したプロダクト\n  When 直した部分を指定してプリセットへ戻す\n  Then プリセットのその部分が、プロダクトの内容と一致する",
+          "covers": "受け入れ基準: 指定された部分だけをプリセットへ反映する"
+        },
+        {
+          "name": "指定しなかった部分は変わらない",
+          "category": "正常系",
+          "viewpoint": "反映：プロダクト固有の判断がプリセットへ紛れ込まない",
+          "gherkin": "Scenario: 指定しなかった部分は変わらない\n  Given プリセットから作られ、その後に複数の箇所を直したプロダクト\n  When そのうち1つだけを指定してプリセットへ戻す\n  Then 指定しなかった部分はプリセットの元の内容のまま残る",
+          "covers": "受け入れ基準: 指定された部分だけをプリセットへ反映する"
+        },
+        {
+          "name": "戻す部分を指定しないと拒否される",
+          "category": "異常系",
+          "viewpoint": "事前条件：丸ごとの写しを既定にしない",
+          "gherkin": "Scenario: 戻す部分を指定しないと拒否される\n  Given プリセットから作られたプロダクト\n  When 戻す部分を指定せずにプリセットへ戻そうとする\n  Then 拒否される",
+          "covers": "受け入れ基準: 何を戻すかの指定を必須とする"
+        },
+        {
+          "name": "プリセットが持たない部分は戻せない",
+          "category": "異常系",
+          "viewpoint": "境界：プロダクト固有の項目をプリセットの語彙へ持ち込まない",
+          "gherkin": "Scenario: プリセットが持たない部分は戻せない\n  Given プリセットが持たない項目を持つプロダクトの規約\n  When その項目を指定してプリセットへ戻そうとする\n  Then 拒否され、プリセットは変わらない",
+          "covers": "受け入れ基準: プリセットが持たない部分への書き込みを拒否する"
+        },
+        {
+          "name": "プロダクトが持たない部分は戻せない",
+          "category": "異常系",
+          "viewpoint": "事前条件：出どころの無い反映を成功として返さない",
+          "gherkin": "Scenario: プロダクトが持たない部分は戻せない\n  Given 指定した部分を持たないプロダクトの規約\n  When その部分を指定してプリセットへ戻そうとする\n  Then 拒否され、プリセットは変わらない",
+          "covers": "受け入れ基準: プリセットが持たない部分への書き込みを拒否する"
+        },
+        {
+          "name": "同じ内容を戻してもプリセットは変わらない",
+          "category": "境界値",
+          "viewpoint": "冪等：既に一致している反映を変更として扱わない",
+          "gherkin": "Scenario: 同じ内容を戻してもプリセットは変わらない\n  Given プリセットとプロダクトで内容が既に一致している部分\n  When その部分を指定してプリセットへ戻す\n  Then プリセットは変更されず、変更が無かったことが分かる",
+          "covers": "受け入れ基準: 内容が一致しているときはプリセットを書き換えない"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 指定されたプリセットが存在しないとき、システムは PRESET_NOT_FOUND エラーを返す shall（プリセットを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
+        "When 出どころとして指定された規約が存在しないとき、システムは INVALID_PATH エラーを返す shall（同上）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "存在しないプリセットはPRESET_NOT_FOUND",
+          "category": "異常系",
+          "viewpoint": "エラー：プリセットの不在",
+          "gherkin": "Scenario: 存在しないプリセットはPRESET_NOT_FOUND\n  When 存在しないプリセットを指定して反映する\n  Then PRESET_NOT_FOUNDエラーが返る"
+        },
+        {
+          "name": "存在しない規約はINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：出どころとなる規約の不在",
+          "gherkin": "Scenario: 存在しない規約はINVALID_PATH\n  When 存在しない規約を出どころに指定して反映する\n  Then INVALID_PATHエラーが返る"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "反映先のプリセットが存在する",
+        "出どころとなるプロダクトの規約が存在する"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "実際のプロダクトで確かめた規約のうち、指定された部分だけを、次に作るプロダクトの出発点となるプリセットへ反映する。",
+        "何を戻すかの指定を必須とし、丸ごとの写しは行わない。プロダクト固有の判断をプリセットへ紛れ込ませないため、汎用かどうかの判断は人が持つ。"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-document-management"
+}

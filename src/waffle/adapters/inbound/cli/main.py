@@ -36,6 +36,7 @@ from waffle.application.usecases.check_aggregate_class_drift import CheckAggrega
 from waffle.application.usecases.check_domain_service_drift import CheckDomainServiceDrift
 from waffle.application.usecases.check_layer_drift import CheckLayerDrift
 from waffle.application.usecases.init_coding_preset import InitCodingPreset
+from waffle.application.usecases.update_coding_preset import UpdateCodingPreset
 from waffle.application.usecases.lint_docstring import LintDocstring
 from waffle.application.usecases.patch_schema import PatchSchema
 from waffle.application.usecases.query_document import QueryDocument
@@ -392,6 +393,16 @@ def lint_docstring(
     """対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。"""
     scan_engine = ScanSourceCode(_docs(), PythonAstSourceScanner())
     _emit(LintDocstring(scan_engine, PydoclintLinter()).run(path, kind))
+
+@app.command("update-coding-preset")
+def update_coding_preset(
+    preset: str = typer.Option(..., "--preset", help="反映先のプリセット名（例: python-hexagonal）"),
+    from_document_id: str = typer.Option(..., "--from", help="出どころとなる規約のdocumentId（例: architecture-waffle）"),
+    blocks: str = typer.Option(..., "--blocks", help="戻す部分をカンマ区切りで（例: rules,layers）。丸ごとの写しは行わないため省略できない"),
+) -> None:
+    """実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。"""
+    names = [b.strip() for b in blocks.split(",") if b.strip()]
+    _emit(UpdateCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, from_document_id, names))
 
 @app.command("init-coding-preset")
 def init_coding_preset(

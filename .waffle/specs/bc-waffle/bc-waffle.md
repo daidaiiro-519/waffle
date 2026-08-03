@@ -79,6 +79,7 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-render-document-viewer
 - uc-init-coding-preset
 - uc-check-layer-drift
+- uc-update-coding-preset
 
 ---
 

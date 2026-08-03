@@ -20,6 +20,13 @@ class PackageCodingPresetRepository(CodingPresetRepository):
         text = ref.read_text(encoding="utf-8")
         return json.loads(text)
 
+    def save(self, preset_name: str, preset: dict) -> None:
+        ref = resources.files(_PACKAGE) / _DIR / f"{preset_name}.json"
+        # 既存のプリセットと同じ体裁で書き戻す（差分が体裁の違いで埋もれないように）
+        text = json.dumps(preset, indent=2, ensure_ascii=False) + "\n"
+        with resources.as_file(ref) as path:
+            path.write_text(text, encoding="utf-8")
+
     def list_names(self) -> list[str]:
         names: list[str] = []
         ref = resources.files(_PACKAGE) / _DIR

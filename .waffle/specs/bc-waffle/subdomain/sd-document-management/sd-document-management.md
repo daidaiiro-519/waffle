@@ -45,6 +45,7 @@ Document管理
 - uc-render-handoff-template
 - uc-render-document-viewer
 - uc-init-coding-preset
+- uc-update-coding-preset
 
 ---
 

@@ -1,0 +1,382 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>実践で確かめた規約を次の出発点へ戻す操作の引き継ぎ：handoff-update-coding-preset</title>
+<meta name="id" content="handoff-update-coding-preset">
+<meta name="type" content="Handoff">
+<meta name="title" content="実践で確かめた規約を次の出発点へ戻す操作の引き継ぎ：handoff-update-coding-preset">
+<meta name="description" content="uc-update-coding-preset の実装への引き継ぎ。プリセットを実践から育てる経路を製品の操作として持たせるための判断と、丸ごとの写しを避ける理由を伝える。">
+<meta name="tags" content="">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>実践で確かめた規約を次の出発点へ戻す操作の引き継ぎ：handoff-update-coding-preset</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>uc-update-coding-preset</dd>
+      <dt>documentId</dt><dd>handoff-update-coding-preset</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 412" width="100%" height="412">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">コア</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ポート</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実装</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-arrow" d="M242.0,60.0 L242.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L554.0,124.0"/>
+        <path class="flow-arrow" d="M242.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M554.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L554.0,352.0"/>
+        <path class="flow-arrow dep" d="M242.0,174.0 L242.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="242.0" y="200.0">読んで、指定された部分だけ書き戻す</text>
+        <path class="flow-arrow dep" d="M554.0,174.0 L242.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="200.0">既存：プリセットからプロダクトを作る（逆向き）</text>
+        
+        <g class="flow-box new" transform="translate(96.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">waffle update-coding-preset</div>
+              <div class="sub">CLI</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(408.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">update_coding_preset</div>
+              <div class="sub">MCP</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">プリセットの更新</div>
+              <div class="sub">UpdateCodingPreset</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,124.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">プリセットからの生成</div>
+              <div class="sub">InitCodingPreset</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">プリセットの読み書き</div>
+              <div class="sub">CodingPresetRepository</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">規約の読み出し</div>
+              <div class="sub">DocumentRepository</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">パッケージ内のプリセット</div>
+              <div class="sub">PackageCodingPresetRepository</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ファイルシステム</div>
+              <div class="sub">FsDocumentRepository</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">8</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 開発者がこの反映を呼ぶ入口。CLIとMCPから同じ操作を呼ぶ。</p></li><li><p><strong>コア</strong>: プリセットと規約を読み、指定された部分だけをプリセットへ移す判断。何を戻すかは決めない。</p></li><li><p><strong>ポート</strong>: プリセットと規約の読み書き。プリセットの側に書き込みを足す。</p></li><li><p><strong>実装</strong>: パッケージ内のプリセットと、ファイルシステム上の規約。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle update-coding-preset --preset python-hexagonal --from architecture-waffle --blocks rules</p></li><li><p>反映した部分と、変更があったかどうかを返す</p></li><li><p>内容が既に一致していれば、プリセットを書き換えず changed が偽で返る</p></li><li><p>プリセットが持たない部分を指定すると UNKNOWN_BLOCK で拒否され、プリセットは変わらない</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">orchestrator（advisor未相談・要レビュー）</span><span class="detail">設計観点 4件／実装観点 4件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">8件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">戻す単位はブロック。丸ごとの写しにしない</div>
+              <div class="entry-consideration">プリセットは汎用、プロダクトの規約は固有の判断を含む。実際に architecture の coveredContexts はプロダクト固有で、プリセットは持っていない。丸ごと写すとこうした項目がプリセットへ紛れ込み、無関係なプロダクトへ余計な制約が配られる。何が汎用かの判断は人が持ち、機械は指定されたブロックの反映だけを担う。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">反映はプリセットへの一方向に限る</div>
+              <div class="entry-consideration">プリセットとプロダクトの双方向同期にすると、どちらが正かが場面ごとに変わり、宣言の出どころが決まらなくなる。プロダクトの規約はプロダクトが持ち、プリセットはそこから育つ、という向きを固定する。プロダクト側は決して書き換えない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">プリセットが持たないブロックへは書き込まない</div>
+              <div class="entry-consideration">プリセットの語彙を、反映のたびに増やせるようにしない。プリセットが持っていない項目を書き込めると、どのプロダクトの都合でその項目が入ったのかが後から辿れなくなる。プリセットの構成を変えるのは、プリセットそのものを設計し直す別の判断。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">内容が一致していれば書き換えない</div>
+              <div class="entry-consideration">無変更の書き込みは、ファイルの更新を見ている周辺の仕組みには変更と区別がつかない。既存の clear_field / migrate_schema / fill と同じく、変更の有無を返し、変更が無ければ保存しない。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">プリセットの読み書きポートに書き込みを足す</div>
+              <div class="entry-consideration">CodingPresetRepository は load / list_names だけで、書き込む口が無い。save を足す。プリセットはパッケージ内（waffle/domain/model/CodingPresets/）に置かれ、importlib.resources で解決される。書き込みはソースツリーに対する操作であり、インストール済みパッケージへの書き込みを意図しない点を制約として記録する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">対象の種類は出どころの規約から決まる</div>
+              <div class="entry-consideration">プリセットは tech-stack / architecture / coding-standard / test-standard の4種類を持つ。どれへ反映するかは、出どころの規約が持つ codingKind から決まるので、呼び出し側に指定させない（指定させると、取り違えた組み合わせを受け付けてしまう）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">この操作自体を、今回の修正で実証する</div>
+              <div class="entry-consideration">architecture の規約19件を15件へ整理した結果は、まだプリセットへ届いていない。実装後の最初の実行としてこの反映を行い、プリセットの規約が15件になることを確かめる。作った仕組みが、それを必要とした当の問題を解けることを確認する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">orchestrator（advisor未相談・要レビュー）</span></div>
+              <div class="entry-viewpoint">テストの置き場所と名前は規約が決める</div>
+              <div class="entry-consideration">受け入れシナリオは tests/application/acceptance/、保証シナリオは tests/application/integration/。ファイル名は test_uc_update_coding_preset.py。テスト関数の文書コメントの先頭に宣言行を置き、spec のシナリオと突き合わせる。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>本セッションはサブエージェント委譲を行わない設定のため、設計観点・実装観点はOrchestrator自身の調査に基づく。ddd-advisor / tech-lead-advisor のレビューは未実施で、reviewStatus に open のまま残している。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>プリセットの書き込みはソースツリーに対する操作。インストール済みパッケージの中身を書き換える用途は想定しない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>何が汎用かの判断は人が持つ。この操作は判断を助けず、指定されたものを反映するだけ。誤って固有の判断を戻した場合、それを検知する仕組みは無い。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>init-coding-preset が生成する document の schemaRef が CodingSchema/v4 のまま固定されている（現行は v5）。この操作の対象外だが、プリセットまわりの別のずれとして記録する。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">src/waffle/application/ports/coding_preset_repository.py</div>
+              <div class="reason">save の追加（現在は load / list_names のみ）</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/outbound/coding_preset_repo.py</div>
+              <div class="reason">save の実装</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/update_coding_preset.py</div>
+              <div class="reason">反映本体</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/cli/main.py</div>
+              <div class="reason">CLIの入口と結線</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/mcp/main.py</div>
+              <div class="reason">MCPの入口と結線</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/application/acceptance/test_uc_update_coding_preset.py</div>
+              <div class="reason">受け入れシナリオ6件に対応するテスト</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/application/integration/test_uc_update_coding_preset.py</div>
+              <div class="reason">保証シナリオ2件に対応するテスト</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/application/contract/test_coding_preset_repository.py</div>
+              <div class="reason">書き込みを足したポートの契約テスト</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/model/CodingPresets/python-hexagonal</div>
+              <div class="reason">実装後の最初の実行で、規約15件がここへ反映される</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
