@@ -17,7 +17,14 @@ from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClass
 from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
     TreeSitterTestFunctionExtractor,
 )
+from waffle.adapters.outbound.coding_preset_repo import PackageCodingPresetRepository
+from waffle.application.usecases.check_path_is_projection import CheckPathIsProjection
+from waffle.application.usecases.check_query_precedes_array_fill import (
+    CheckQueryPrecedesArrayFill,
+)
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
+from waffle.application.usecases.init_coding_preset import InitCodingPreset
+from waffle.application.usecases.update_coding_preset import UpdateCodingPreset
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
@@ -319,3 +326,36 @@ def lint_docstring(path: str, kind: str) -> dict | list:
     """対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。"""
     scan_engine = ScanSourceCode(_docs(), PythonAstSourceScanner())
     return _dict(LintDocstring(scan_engine, PydoclintLinter()).run(path, kind))
+
+@mcp.tool
+def init_coding_preset(preset: str, product: str) -> dict:
+    """プリセットからtech-stack/architecture/coding-standard/test-standardの4documentを一括生成（uc-init-coding-preset）。"""
+    return _dict(InitCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, product))
+
+@mcp.tool
+def update_coding_preset(preset: str, fromDocumentId: str, blocks: list[str]) -> dict:
+    """実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。丸ごとの写しは行わないため、戻す部分の指定は省略できない。"""
+    return _dict(
+        UpdateCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, fromDocumentId, blocks))
+
+@mcp.tool
+def check_path_is_projection(realPath: str) -> dict:
+    """実体パスがdocument.json（原本）からの投影かどうかを判定（uc-check-path-is-projection）。"""
+    return _dict(CheckPathIsProjection(_docs()).run(realPath))
+
+@mcp.tool
+def check_query_precedes_array_fill(targetPath: str, hasArrayValue: bool, queriedPaths: list[str]) -> dict:
+    """配列fillの前に対象pathへのqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。"""
+    return _dict(CheckQueryPrecedesArrayFill().run(targetPath, hasArrayValue, queriedPaths))
+
+
+def main() -> None:
+    """MCPサーバを標準入出力で起動する。
+
+    合成ルートの一部（起動と結線のみ）。業務ロジックはここに書かない。
+    """
+    mcp.run()
+
+
+if __name__ == "__main__":
+    main()
