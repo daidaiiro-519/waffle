@@ -139,7 +139,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         </defs>
         <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">コア</div></foreignObject>
-        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ポート</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">application が要求する口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実装</div></foreignObject>
         <path class="flow-split" d="M0,92.0 H700"/>
         <path class="flow-split" d="M0,206.0 H700"/>
@@ -224,7 +224,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </svg>
       <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
     </div>
-    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: waffle render（CLI・新設）／render_document（MCP・新設）。document.jsonを人間可読な成果物へ描画する入口。</p></li><li><p><strong>コア</strong>: RenderDocument（新設）。frontmatter生成＋body描画＋x-render-target.pathへのcanonical書き込み＋deploy(symlink/copy)を行う。schema適合検証はしない（検証はuc-validate-documentの責務・疎結合）。</p></li><li><p><strong>ポート</strong>: DocumentRepository（既存・読み書き＋symlink）とSchemaRepository（既存・schema読み込み）。コア層はこの2つのportにのみ依存する。</p></li><li><p><strong>実装</strong>: FsDocumentRepository・PackageSchemaRepository（いずれも既存）。それぞれのportを実装し、DI時にコアへ差し込まれる。</p></li></ol></div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: waffle render（CLI・新設）／render_document（MCP・新設）。document.jsonを人間可読な成果物へ描画する入口。</p></li><li><p><strong>コア</strong>: RenderDocument（新設）。frontmatter生成＋body描画＋x-render-target.pathへのcanonical書き込み＋deploy(symlink/copy)を行う。schema適合検証はしない（検証はuc-validate-documentの責務・疎結合）。</p></li><li><p><strong>application が要求する口</strong>: DocumentRepository（既存・読み書き＋symlink）とSchemaRepository（既存・schema読み込み）。コア層はこの2つのportにのみ依存する。</p></li><li><p><strong>実装</strong>: FsDocumentRepository・PackageSchemaRepository（いずれも既存）。それぞれのportを実装し、DI時にコアへ差し込まれる。</p></li></ol></div>
   </section>
 
   <section>

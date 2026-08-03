@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <title>実装完了→検証フェーズへ進んでよいかを機械的に判定する実装引き継ぎ：handoff-uc-check-verification-gate</title>
+<meta name="id" content="handoff-uc-check-verification-gate">
+<meta name="type" content="Handoff">
+<meta name="title" content="実装完了→検証フェーズへ進んでよいかを機械的に判定する実装引き継ぎ：handoff-uc-check-verification-gate">
+<meta name="description" content="実装完了から検証フェーズへ進んでよいかを機械的に判定するusecaseの設計判断を実装へ引き継ぐ。">
+<meta name="tags" content="">
 <style>
 @font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
 :root {
@@ -79,9 +84,13 @@ h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-t
 .tabs input { position: absolute; opacity: 0; pointer-events: none; }
 .tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
 .tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
-#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
-#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3 { display: block; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
 .entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
 .entry:first-child { border-top: none; padding-top: 0; }
 .entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
@@ -130,7 +139,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         </defs>
         <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">コア</div></foreignObject>
-        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ポート</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">application が要求する口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実装</div></foreignObject>
         <path class="flow-split" d="M0,92.0 H700"/>
         <path class="flow-split" d="M0,206.0 H700"/>
@@ -205,7 +214,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </svg>
       <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
     </div>
-    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: waffle check-verification-gate（CLI・新設）／check_verification_gate（MCP・新設）。人間・AI・Orchestratorがこのusecaseを実際に呼び出す入口で、どちらも同じusecaseを呼ぶだけの薄いアダプタにする。</p></li><li><p><strong>コア</strong>: CheckScenarioDrift（既存）とCheckVerificationGate（新設）。新設usecaseは既存usecaseを内部でコンポジション（再利用）し、判定ロジック（優先順位: missing_in_tests &gt; orphaned/mismatch &gt; failed &gt; ready）だけを追加する——ゼロから照合ロジックを再実装しない。</p></li><li><p><strong>ポート</strong>: DocumentRepository（既存interface）。コア層はこのportにのみ依存し、具体的な実装は知らない（依存方向逆転の原則）。</p></li><li><p><strong>実装</strong>: FsDocumentRepository（既存）。portを実装し、DI（依存性注入）時にコアへ差し込まれる。今回の新設分でこのportに新しい実装は要らない。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>waffle check-verification-gate --specPath &lt;spec&gt; --testPath &lt;test&gt; --testResultsPath &lt;results.json&gt; のように、spec・テストファイル・抽象化された実行結果ファイルのpathを渡して呼ぶ。</p></li><li><p>返り値は {&quot;status&quot;: &quot;ready|blocked|needs_human&quot;, &quot;reasons&quot;: [...]}。Orchestratorはこの結果を見て、次フェーズ（実装完了→検証）へ進んでよいかを機械的に判断する。</p></li></ol></div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: waffle check-verification-gate（CLI・新設）／check_verification_gate（MCP・新設）。人間・AI・Orchestratorがこのusecaseを実際に呼び出す入口で、どちらも同じusecaseを呼ぶだけの薄いアダプタにする。</p></li><li><p><strong>コア</strong>: CheckScenarioDrift（既存）とCheckVerificationGate（新設）。新設usecaseは既存usecaseを内部でコンポジション（再利用）し、判定ロジック（優先順位: missing_in_tests &gt; orphaned/mismatch &gt; failed &gt; ready）だけを追加する——ゼロから照合ロジックを再実装しない。</p></li><li><p><strong>application が要求する口</strong>: DocumentRepository（既存interface）。コア層はこのportにのみ依存し、具体的な実装は知らない（依存方向逆転の原則）。</p></li><li><p><strong>実装</strong>: FsDocumentRepository（既存）。portを実装し、DI（依存性注入）時にコアへ差し込まれる。今回の新設分でこのportに新しい実装は要らない。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>waffle check-verification-gate --specPath &lt;spec&gt; --testPath &lt;test&gt; --testResultsPath &lt;results.json&gt; のように、spec・テストファイル・抽象化された実行結果ファイルのpathを渡して呼ぶ。</p></li><li><p>返り値は {&quot;status&quot;: &quot;ready|blocked|needs_human&quot;, &quot;reasons&quot;: [...]}。Orchestratorはこの結果を見て、次フェーズ（実装完了→検証）へ進んでよいかを機械的に判断する。</p></li></ol></div>
   </section>
 
   <section>
@@ -240,10 +249,12 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <input type="radio" name="tabs" id="tab1" checked>
         <input type="radio" name="tabs" id="tab2">
         <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
         <div class="tab-labels">
           <label for="tab1">spec作成の結論</label>
           <label for="tab2">実装方針</label>
-          <label for="tab3">実装への申し送り</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
         </div>
         <div class="tab-panels">
           <div class="tab-panel" id="panel1">
@@ -281,6 +292,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
               <span class="num">3</span>
               <p>mutation score等の検出力指標は今回のスコープ外（brainstormの合意通り、最初の1フェーズ分＝テスト緑＋spec対応関係のみを実装する。検出力指標は2件目のフェーズが必要になった時点で改めて検討する）。</p>
             </div></div>
+          <div class="tab-panel" id="panel4"><p class="empty-state">記録なし。</p></div>
         </div>
       </div>
     </div>

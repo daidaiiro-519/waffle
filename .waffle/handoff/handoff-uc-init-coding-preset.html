@@ -84,9 +84,13 @@ h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-t
 .tabs input { position: absolute; opacity: 0; pointer-events: none; }
 .tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
 .tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
-#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
-#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3 { display: block; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
 .entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
 .entry:first-child { border-top: none; padding-top: 0; }
 .entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
@@ -135,7 +139,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         </defs>
         <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">コア</div></foreignObject>
-        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ポート</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">application が要求する口</div></foreignObject>
         <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実装</div></foreignObject>
         <path class="flow-split" d="M0,92.0 H700"/>
         <path class="flow-split" d="M0,206.0 H700"/>
@@ -209,7 +213,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </svg>
       <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
     </div>
-    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: waffle init-coding-preset（CLI・新設）。プリセット名とプロダクト名を受け取る入口。</p></li><li><p><strong>コア</strong>: InitCodingPreset（新設）。プリセットを解決し、4kind分のdocumentを冪等に生成する。</p></li><li><p><strong>ポート</strong>: 既存のDocumentRepositoryと、新設のCodingPresetRepository。</p></li><li><p><strong>実装</strong>: FsDocumentRepository（既存）とPackageCodingPresetRepository（新設）。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>waffle init-coding-preset --preset python-hexagonal --product my-service を実行すると、tech-stack-my-service.json等4documentがACTIVE状態で生成される</p></li><li><p>同じコマンドを再実行しても既存documentは変更されず、createdは空・skippedに4件が記録される</p></li></ol></div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: waffle init-coding-preset（CLI・新設）。プリセット名とプロダクト名を受け取る入口。</p></li><li><p><strong>コア</strong>: InitCodingPreset（新設）。プリセットを解決し、4kind分のdocumentを冪等に生成する。</p></li><li><p><strong>application が要求する口</strong>: 既存のDocumentRepositoryと、新設のCodingPresetRepository。</p></li><li><p><strong>実装</strong>: FsDocumentRepository（既存）とPackageCodingPresetRepository（新設）。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>waffle init-coding-preset --preset python-hexagonal --product my-service を実行すると、tech-stack-my-service.json等4documentがACTIVE状態で生成される</p></li><li><p>同じコマンドを再実行しても既存documentは変更されず、createdは空・skippedに4件が記録される</p></li></ol></div>
   </section>
 
   <section>
@@ -243,10 +247,12 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <input type="radio" name="tabs" id="tab1" checked>
         <input type="radio" name="tabs" id="tab2">
         <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
         <div class="tab-labels">
           <label for="tab1">spec作成の結論</label>
           <label for="tab2">実装方針</label>
-          <label for="tab3">実装への申し送り</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
         </div>
         <div class="tab-panels">
           <div class="tab-panel" id="panel1">
@@ -285,6 +291,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
               <span class="num">2</span>
               <p>現時点でプリセットはpython-hexagonal/typescript-hexagonalの2種のみ。新しいプリセットの追加手段（CLIからの登録等）は今回の実装に含まれず、パッケージへの直接配置のみをサポートする</p>
             </div></div>
+          <div class="tab-panel" id="panel4"><p class="empty-state">記録なし。</p></div>
         </div>
       </div>
     </div>
