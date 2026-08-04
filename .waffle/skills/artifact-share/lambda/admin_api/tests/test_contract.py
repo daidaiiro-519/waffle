@@ -27,7 +27,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import manage  # noqa: E402
 import publish  # noqa: E402
-from domain import view_token  # noqa: E402
+from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
+from domain.view_subject import ViewSubject  # noqa: E402
 
 CONTRACT = json.loads(
     (Path(__file__).resolve().parents[3] / "infra" / "contract" / "token-records.json")
@@ -39,23 +40,29 @@ def cases():
     return CONTRACT["ケース"]
 
 
+def _stored(case):
+    """実際に書き出す経路を通して、保管へ残った記録を取り出す。
+
+    組み立ての関数を直接呼ぶのではなく口を通すのは、経路の途中で形が変わって
+    いたら気づけないため。ずれたまま両側の検証が緑で通ったのが、この検証を
+    置くきっかけだった。
+    """
+    keys = _Collector()
+    KvsViewGate(keys).allow(ViewSubject.artifact("aaaaaaaa"), case["合言葉"],
+                            case["発行時刻"], ttl=case["有効期間"],
+                            generation=case["世代"])
+    return keys.written["token:aaaaaaaa"]
+
+
 @pytest.mark.parametrize("case", cases(), ids=[c["名前"] for c in cases()])
 def test_保管へ残す形が契約と一致する(case):
-    got = view_token.token_record(
-        case["合言葉"], case["発行時刻"],
-        ttl=case["有効期間"], generation=case["世代"],
-    )
-    assert got == case["保管の記録"]
+    assert _stored(case) == case["保管の記録"]
 
 
 @pytest.mark.parametrize("case", cases(), ids=[c["名前"] for c in cases()])
 def test_手元の記録は保管の1つ目の欄と世代をつないだもの(case):
     """閲覧ゲートが手元へ渡す値。組み立てるのは向こうだが、材料はこちらが決める。"""
-    stored = view_token.token_record(
-        case["合言葉"], case["発行時刻"],
-        ttl=case["有効期間"], generation=case["世代"],
-    )
-    fingerprint, _expires, generation = stored.split("|")
+    fingerprint, _expires, generation = _stored(case).split("|")
     assert f"{fingerprint}.{generation}" == case["手元の記録"]
 
 
@@ -70,7 +77,7 @@ def test_所属の記録が契約と一致する():
     deps = main.Connections(store=None, keys=_Collector(), now=None)
 
     for case in membership["ケース"]:
-        manage._write_membership(deps.keys, "aaaaaaaa", case["プロジェクト"])
+        manage._write_membership(deps.gate, "aaaaaaaa", case["プロジェクト"])
         assert deps.keys.written["pp:aaaaaaaa"] == case["記録"]
 
 
@@ -81,7 +88,7 @@ def test_上限を超える所属は受け付けない():
     deps = main.Connections(store=None, keys=_Collector(), now=None)
 
     with pytest.raises(manage.ManageError) as x:
-        manage._write_membership(deps.keys, "aaaaaaaa", [f"p{i}" for i in range(limit + 1)])
+        manage._write_membership(deps.gate, "aaaaaaaa", [f"p{i}" for i in range(limit + 1)])
     assert x.value.code == "TOO_MANY_PROJECTS"
 
 

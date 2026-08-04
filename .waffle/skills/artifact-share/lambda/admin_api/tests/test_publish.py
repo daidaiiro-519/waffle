@@ -14,6 +14,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import publish  # noqa: E402
+from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
 from adapters.outbound.stored_viewer_site import StoredViewerSite  # noqa: E402
 from adapters.outbound.stored_shared_artifact_repository import (  # noqa: E402
     StoredSharedArtifactRepository,
@@ -53,7 +54,7 @@ def wiring(store=None, keys=None, user="publisher-1", wrapper="<html>{{アーテ
     return dict(
         artifacts=StoredSharedArtifactRepository(store),
         viewer=StoredViewerSite(store, wrapper_template=wrapper),
-        tokens=keys if keys is not None else FakeKeyStore(),
+        gate=KvsViewGate(keys if keys is not None else FakeKeyStore()),
         identify=lambda _token: user,
         clock=lambda: 1_700_000_000,
     )

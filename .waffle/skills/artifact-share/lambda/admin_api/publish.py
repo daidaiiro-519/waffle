@@ -12,15 +12,19 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 
 from domain.html_inspection import inspect_html
 from domain.identifier import new_artifact_id
 from domain.publication import MAX_CONTENT_BYTES
-from domain.view_token import new_token, token_record
+from domain.artifact_content import fingerprint as content_fingerprint
+from domain.view_subject import ViewSubject
+from domain.view_token import new_token
 from shared.errors import PublishError
-from application.ports import Clock, PublisherIdentifier, ViewTokenStore
+from application.ports import Clock, PublisherIdentifier
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.view_gate import ViewGatePort
+from application.ports.viewer_site import ViewerSitePort
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.viewer_site import ViewerSitePort
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -40,7 +44,7 @@ from typing import Callable
 
 # ── 公開 ────────────────────────────────────────────────
 
-def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, identify: PublisherIdentifier, clock: Clock, request: dict) -> dict:
+def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, request: dict) -> dict:
     """アップロードされたHTMLを公開し、URLとトークンを返す。
 
     途中で失敗したときに開ける状態のものを残さないことを、書き込む順序で保証する。
@@ -93,7 +97,7 @@ def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens:
             "tags": found["tags"],
             "uploadedBy": publisher,
             "externalRefs": found["externalRefs"],
-            "contentHash": hashlib.sha256(content.encode("utf-8")).hexdigest(),
+            "contentHash": content_fingerprint(content),
             "wrapperHash": page_version,
             "publishedAt": now,
             "updatedAt": now,
@@ -101,7 +105,7 @@ def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens:
         artifacts.save(record)
 
         # トークンは最後に書く。ここまで成功して初めて開ける状態になる
-        tokens.put(f"token:{artifact_id}", token_record(token, now))
+        gate.allow(ViewSubject.artifact(artifact_id), token, now)
     except PublishError:
         raise
     except Exception as e:

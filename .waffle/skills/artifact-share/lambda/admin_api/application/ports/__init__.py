@@ -6,5 +6,5 @@ adapters/outbound が持つ。
 architecture: architecture-artifact-share の conceptPlacement（port）
 """
 from application.ports.ports import (  # noqa: F401
-    Caller, Clock, PublisherDirectory, PublisherIdentifier, ViewTokenStore,
+    Caller, Clock, PublisherDirectory, PublisherIdentifier,
 )

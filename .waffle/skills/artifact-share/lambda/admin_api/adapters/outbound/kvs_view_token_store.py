@@ -5,8 +5,10 @@ infra/contract/ にあり、両方がそこを読む。
 """
 from __future__ import annotations
 
+from adapters.outbound.key_value_store import KeyValueStore
 
-class KvsViewTokenStore:
+
+class KvsViewTokenStore(KeyValueStore):
     def __init__(self, kvs_arn: str):
         import boto3
 

@@ -32,6 +32,7 @@ from adapters.outbound.kvs_view_token_store import KvsViewTokenStore
 from adapters.outbound.s3_artifact_store import S3ArtifactStore
 from adapters.outbound.stored_comment_repository import StoredCommentRepository
 from adapters.outbound.stored_project_repository import StoredProjectRepository
+from adapters.outbound.kvs_view_gate import KvsViewGate
 from adapters.outbound.stored_viewer_site import StoredViewerSite
 from adapters.outbound.stored_shared_artifact_repository import (
     StoredSharedArtifactRepository,
@@ -72,6 +73,11 @@ class Connections:
         return StoredCommentRepository(self.store)
 
     @property
+    def gate(self):
+        """閲覧の面が判じるための材料を渡す口。"""
+        return KvsViewGate(self.keys)
+
+    @property
     def viewer(self):
         """閲覧の面への配置と、そこへの案内。"""
         return StoredViewerSite(self.store, self.wrapper_template,
@@ -101,7 +107,7 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
     try:
         if action == "publish":
             c = _publish_deps()
-            result = publish.publish(c.artifacts, c.viewer, c.keys, c.identify, c.now, {**body, "authorization": authorization})
+            result = publish.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {**body, "authorization": authorization})
         else:
             result = _dispatch(action, Connections(**_connections()), caller, body)
         return _response(200, result)
@@ -130,11 +136,11 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
 ROUTES = {
     "list":        lambda d, c, b: manage.list_artifacts(d.artifacts, d.comments, c),
     "replace":     lambda d, c, b: manage.replace_content(d.artifacts, d.projects, d.comments, d.viewer, d.now, c, b.get("artifactId", ""), b.get("html", "")),
-    "rotate":      lambda d, c, b: manage.reissue_token(d.artifacts, d.viewer, d.keys, d.now, c, b.get("artifactId", "")),
-    "disable":     lambda d, c, b: manage.suspend(d.artifacts, d.keys, d.now, c, b.get("artifactId", "")),
-    "enable":      lambda d, c, b: manage.resume(d.artifacts, d.viewer, d.keys, d.now, c, b.get("artifactId", "")),
-    "assign":      lambda d, c, b: manage.assign(d.artifacts, d.projects, d.viewer, d.keys, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "unassign":    lambda d, c, b: manage.unassign(d.artifacts, d.projects, d.viewer, d.keys, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "rotate":      lambda d, c, b: manage.reissue_token(d.artifacts, d.viewer, d.gate, d.now, c, b.get("artifactId", "")),
+    "disable":     lambda d, c, b: manage.suspend(d.artifacts, d.gate, d.now, c, b.get("artifactId", "")),
+    "enable":      lambda d, c, b: manage.resume(d.artifacts, d.viewer, d.gate, d.now, c, b.get("artifactId", "")),
+    "assign":      lambda d, c, b: manage.assign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "unassign":    lambda d, c, b: manage.unassign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
     "transfer":    lambda d, c, b: manage.transfer(d.artifacts, d.directory, d.now, c, b.get("artifactId", ""), b.get("toPublisher", "")),
     "comments":    lambda d, c, b: comment_store.read(d.artifacts, d.comments, c, b.get("artifactId", "")),
     "export":      lambda d, c, b: comment_store.export(d.artifacts, d.comments, d.viewer, c, b.get("artifactId", "")),
@@ -146,10 +152,10 @@ ROUTES = {
 
     "projects":        lambda d, c, b: projects.list_projects(d.projects, c),
     "project":         lambda d, c, b: projects.detail(d.artifacts, d.projects, d.viewer, c, b.get("projectId", "")),
-    "create-project":  lambda d, c, b: projects.create(d.artifacts, d.projects, d.viewer, d.keys, d.now, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
-    "reissue-project": lambda d, c, b: projects.reissue_token(d.projects, d.viewer, d.keys, d.now, c, b.get("projectId", "")),
-    "disable-project": lambda d, c, b: projects.suspend(d.projects, d.keys, d.now, c, b.get("projectId", "")),
-    "enable-project":  lambda d, c, b: projects.resume(d.projects, d.viewer, d.keys, d.now, c, b.get("projectId", "")),
+    "create-project":  lambda d, c, b: projects.create(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
+    "reissue-project": lambda d, c, b: projects.reissue_token(d.projects, d.viewer, d.gate, d.now, c, b.get("projectId", "")),
+    "disable-project": lambda d, c, b: projects.suspend(d.projects, d.gate, d.now, c, b.get("projectId", "")),
+    "enable-project":  lambda d, c, b: projects.resume(d.projects, d.viewer, d.gate, d.now, c, b.get("projectId", "")),
 }
 
 

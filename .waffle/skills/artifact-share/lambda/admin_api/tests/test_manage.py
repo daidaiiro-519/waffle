@@ -73,7 +73,7 @@ def setup(keys=None):
             now=lambda: 1_700_000_000,
             viewer_domain="viewer.example.net",
         )
-    result = publish.publish(c.artifacts, c.viewer, c.keys, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
+    result = publish.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(
         store=store, keys=key_store,
         now=lambda: 1_700_000_100,
@@ -94,8 +94,8 @@ def test_他人が公開したものは存在しないものとして扱う():
 
     for call in (
         lambda: manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, SOMEONE_ELSE, r["artifactId"], HTML),
-        lambda: manage.reissue_token(deps.artifacts, deps.viewer, deps.keys, deps.now, SOMEONE_ELSE, r["artifactId"]),
-        lambda: manage.suspend(deps.artifacts, deps.keys, deps.now, SOMEONE_ELSE, r["artifactId"]),
+        lambda: manage.reissue_token(deps.artifacts, deps.viewer, deps.gate, deps.now, SOMEONE_ELSE, r["artifactId"]),
+        lambda: manage.suspend(deps.artifacts, deps.gate, deps.now, SOMEONE_ELSE, r["artifactId"]),
     ):
         with pytest.raises(manage.ManageError) as x:
             call()
@@ -122,7 +122,7 @@ def test_一覧にトークンは含まれない():
 def test_一覧は公開中と停止中を区別して返す():
     deps, r = setup()
     assert manage.list_artifacts(deps.artifacts, deps.comments, ME)["artifacts"][0]["status"] == "active"
-    manage.suspend(deps.artifacts, deps.keys, deps.now, ME, r["artifactId"])
+    manage.suspend(deps.artifacts, deps.gate, deps.now, ME, r["artifactId"])
     assert manage.list_artifacts(deps.artifacts, deps.comments, ME)["artifacts"][0]["status"] == "disabled"
 
 
@@ -153,7 +153,7 @@ def test_差し替えると区切りの記録が反応の並びに残る():
 
 def test_公開が止まっているものは差し替えられない():
     deps, r = setup()
-    manage.suspend(deps.artifacts, deps.keys, deps.now, ME, r["artifactId"])
+    manage.suspend(deps.artifacts, deps.gate, deps.now, ME, r["artifactId"])
 
     with pytest.raises(manage.ManageError) as x:
         manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, ME, r["artifactId"], HTML)
@@ -173,7 +173,7 @@ def test_再発行するとトークンと世代が変わりURLは変わらな�
     deps, r = setup()
     before = deps.keys.get(f"token:{r['artifactId']}")
 
-    again = manage.reissue_token(deps.artifacts, deps.viewer, deps.keys, deps.now, ME, r["artifactId"])
+    again = manage.reissue_token(deps.artifacts, deps.viewer, deps.gate, deps.now, ME, r["artifactId"])
 
     after = deps.keys.get(f"token:{r['artifactId']}")
     assert after != before
@@ -187,7 +187,7 @@ def test_再発行するとトークンと世代が変わりURLは変わらな�
 
 def test_停止すると開けなくなるがデータは残る():
     deps, r = setup()
-    manage.suspend(deps.artifacts, deps.keys, deps.now, ME, r["artifactId"])
+    manage.suspend(deps.artifacts, deps.gate, deps.now, ME, r["artifactId"])
 
     assert deps.keys.get(f"token:{r['artifactId']}") == "DISABLED"
     assert deps.store.get(f"p/{r['artifactId']}/content.html")
@@ -197,9 +197,9 @@ def test_停止すると開けなくなるがデータは残る():
 def test_再開するとトークンが必ず新しくなる():
     """止めた意図が、再開によって失われないことを確かめる"""
     deps, r = setup()
-    manage.suspend(deps.artifacts, deps.keys, deps.now, ME, r["artifactId"])
+    manage.suspend(deps.artifacts, deps.gate, deps.now, ME, r["artifactId"])
 
-    again = manage.resume(deps.artifacts, deps.viewer, deps.keys, deps.now, ME, r["artifactId"])
+    again = manage.resume(deps.artifacts, deps.viewer, deps.gate, deps.now, ME, r["artifactId"])
 
     assert again["token"] != r["token"]
     assert deps.keys.get(f"token:{r['artifactId']}").split("|")[2] == "2"
@@ -209,7 +209,7 @@ def test_再開するとトークンが必ず新しくなる():
 def test_止まっていないものは再開できない():
     deps, r = setup()
     with pytest.raises(manage.ManageError) as x:
-        manage.resume(deps.artifacts, deps.viewer, deps.keys, deps.now, ME, r["artifactId"])
+        manage.resume(deps.artifacts, deps.viewer, deps.gate, deps.now, ME, r["artifactId"])
     assert x.value.code == "NOT_SUSPENDED"
 
 
@@ -218,7 +218,7 @@ def test_止まっていないものは再開できない():
 def test_加えるとプロジェクトのトークンで開ける範囲に入る():
     deps, r, pid = with_project("PERSONAL")
 
-    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
 
     assert deps.keys.get(f"pp:{r['artifactId']}") == pid
     assert meta_of(deps, r["artifactId"])["projects"] == [pid]
@@ -226,8 +226,8 @@ def test_加えるとプロジェクトのトークンで開ける範囲に入�
 
 def test_重ねて加えても二重に入らない():
     deps, r, pid = with_project("PERSONAL")
-    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
-    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
+    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
 
     assert meta_of(deps, r["artifactId"])["projects"] == [pid]
 
@@ -235,15 +235,15 @@ def test_重ねて加えても二重に入らない():
 def test_無いプロジェクトへは加えられない():
     deps, r = setup()
     with pytest.raises(manage.ManageError) as x:
-        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], "nope")
+        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], "nope")
     assert x.value.code == "PROJECT_NOT_FOUND"
 
 
 def test_外してもアーティファクト自体は生き続ける():
     deps, r, pid = with_project("PERSONAL")
-    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
 
-    manage.unassign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.unassign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
 
     assert meta_of(deps, r["artifactId"])["projects"] == []
     assert deps.keys.get(f"token:{r['artifactId']}") != "DISABLED"   # 個別には開ける
@@ -290,7 +290,7 @@ def with_project(scope, owner=None):
     """プロジェクトが1つある状態を作る。既定では自分（ME）が作ったもの。"""
     deps, r = setup()
     deps.project_page = "<html>{{プロジェクトID}}</html>"
-    p = projects.create(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, owner or ME, "まとめ", scope)
+    p = projects.create(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, owner or ME, "まとめ", scope)
     return deps, r, p["projectId"]
 
 
@@ -298,7 +298,7 @@ def test_共有なら他の人も自分のものを入れられる():
     """持ち主が『誰でも入れてよい』と決めた前提が働く"""
     deps, r, pid = with_project("SHARED", owner=OTHER)
 
-    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
 
     assert deps.keys.get(f"pp:{r['artifactId']}") == pid
     assert pid in meta_of(deps, r["artifactId"])["projects"]
@@ -309,14 +309,14 @@ def test_個人のプロジェクトへは持ち主しか入れられない():
     deps, r, pid = with_project("PERSONAL", owner=OTHER)
 
     with pytest.raises(manage.ManageError) as x:
-        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
     assert x.value.code == "PROJECT_NOT_FOUND"
     assert meta_of(deps, r["artifactId"])["projects"] == []
 
 
 def test_自分のプロジェクトへは個人でも入れられる():
     deps, r, pid = with_project("PERSONAL")
-    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
     assert pid in meta_of(deps, r["artifactId"])["projects"]
 
 
@@ -325,16 +325,16 @@ def test_他人のアーティファクトは共有でも動かせない():
     deps, r, pid = with_project("SHARED")
 
     with pytest.raises(manage.ManageError) as x:
-        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, SOMEONE_ELSE, r["artifactId"], pid)
+        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, SOMEONE_ELSE, r["artifactId"], pid)
     assert x.value.code == "ARTIFACT_NOT_FOUND"
 
 
 def test_公開が止まっているプロジェクトへは入れられない():
     deps, r, pid = with_project("SHARED")
-    projects.suspend(deps.projects, deps.keys, deps.now, ME, pid)
+    projects.suspend(deps.projects, deps.gate, deps.now, ME, pid)
 
     with pytest.raises(manage.ManageError) as x:
-        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
     assert x.value.code == "PROJECT_SUSPENDED"
 
 
@@ -342,13 +342,13 @@ def test_出し入れするとプロジェクトの索引と一覧が揃う():
     """所属は索引と閲覧ゲート用の投影の2か所に持つ。片方だけを書く経路を作らない"""
     deps, r, pid = with_project("SHARED")
 
-    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
     index = json.loads(deps.store.get(f"projects/{pid}.json"))
     listing = json.loads(deps.store.get(f"proj/{pid}/index.json"))
     assert index["memberArtifactIds"] == [r["artifactId"]]
     assert [a["artifactId"] for a in listing["artifacts"]] == [r["artifactId"]]
 
-    manage.unassign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.unassign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
     index = json.loads(deps.store.get(f"projects/{pid}.json"))
     listing = json.loads(deps.store.get(f"proj/{pid}/index.json"))
     assert index["memberArtifactIds"] == []
@@ -363,7 +363,7 @@ def test_差し替えると入っている全プロジェクトの一覧が書�
     中身から読み直す種別・要約・分類の目印である。
     """
     deps, r, pid = with_project("SHARED")
-    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+    manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
 
     revised = HTML.replace("</head>", '<meta name="description" content="改訂した理由"></head>')
     manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, ME, r["artifactId"], revised)
@@ -378,14 +378,14 @@ def test_上限を超えてプロジェクトへ加えられない():
     deps, r, _ = with_project("SHARED")
     ids = []
     for i in range(manage.MAX_PROJECTS_PER_ARTIFACT + 1):
-        p = projects.create(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, f"まとめ{i}", "SHARED")
+        p = projects.create(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, f"まとめ{i}", "SHARED")
         ids.append(p["projectId"])
 
     for pid in ids[:manage.MAX_PROJECTS_PER_ARTIFACT]:
-        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], pid)
+        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], pid)
 
     with pytest.raises(manage.ManageError) as x:
-        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.keys, deps.now, ME, r["artifactId"], ids[-1])
+        manage.assign(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, ME, r["artifactId"], ids[-1])
     assert x.value.code == "TOO_MANY_PROJECTS"
     assert len(meta_of(deps, r["artifactId"])["projects"]) == manage.MAX_PROJECTS_PER_ARTIFACT
 

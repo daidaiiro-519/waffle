@@ -26,7 +26,12 @@ from typing import Callable
 
 from application.artifact_access import require_manageable
 from shared.errors import ManageError
-from application.ports import Caller, Clock, PublisherDirectory, ViewTokenStore
+from application.ports import Caller, Clock, PublisherDirectory
+from application.ports.comment_repository import CommentRepository
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.view_gate import ViewGatePort
+from application.ports.viewer_site import ViewerSitePort
 from application.ports.comment_repository import CommentRepository
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -53,7 +58,8 @@ from application.ports.shared_artifact_repository import SharedArtifactRepositor
 from domain.html_inspection import inspect_html
 from domain.publication import (ACTIVE, DISABLED, MAX_PROJECTS_PER_ARTIFACT,
                                 is_published, is_suspended, within_project_limit)
-from domain.view_token import generation_of, new_token, token_record
+from domain.view_subject import ViewSubject
+from domain.view_token import new_token
 
 # 1つの共有アーティファクトが入れるプロジェクトの数。
 # 閲覧ゲートは、開けるかを判じるときに先頭からこの数までしか見ない
@@ -168,27 +174,22 @@ def replace_content(artifacts: SharedArtifactRepository, projects: ProjectReposi
 
 # ── トークンの再発行 ────────────────────────────────────
 
-def _generation(tokens: ViewTokenStore, artifact_id: str) -> int:
+def _generation(gate: ViewGatePort, artifact_id: str) -> int:
     """いま何代目か。読めなければ1代目として扱い、再発行そのものは止めない。"""
-    try:
-        record = tokens.get(f"token:{artifact_id}")
-    except Exception:
-        return 1
-    return generation_of(record)
+    return gate.generation_of(ViewSubject.artifact(artifact_id))
 
 
-def _issue(tokens: ViewTokenStore, clock: Clock, artifact_id: str, generation: int) -> str:
+def _issue(gate: ViewGatePort, clock: Clock, artifact_id: str, generation: int) -> str:
     token = new_token()
-    tokens.put(f"token:{artifact_id}",
-                  token_record(token, clock(), generation=generation))
+    gate.allow(ViewSubject.artifact(artifact_id), token, clock(), generation=generation)
     return token
 
 
-def reissue_token(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str) -> dict:
+def reissue_token(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
     """新しいトークンを発行し、それまでのものを失効させる。URLは変えない。"""
     meta = require_manageable(artifacts, caller, artifact_id)
-    generation = _generation(tokens, artifact_id) + 1
-    token = _issue(tokens, clock, artifact_id, generation)
+    generation = _generation(gate, artifact_id) + 1
+    token = _issue(gate, clock, artifact_id, generation)
     _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "token": token,
@@ -198,19 +199,19 @@ def reissue_token(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, t
 
 # ── 停止と再開 ──────────────────────────────────────────
 
-def suspend(artifacts: SharedArtifactRepository, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str) -> dict:
+def suspend(artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
     """公開を止める。中身も反応も消さない。"""
     meta = require_manageable(artifacts, caller, artifact_id)
     _require_published(meta)
 
-    tokens.put(f"token:{artifact_id}", "DISABLED")
+    gate.close(ViewSubject.artifact(artifact_id))
     meta["status"] = DISABLED
     _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "status": DISABLED}
 
 
-def resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str) -> dict:
+def resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
     """再び開けるようにする。トークンは必ず新しくなる。
 
     止める理由の多くは見せる相手を絞り直すことにあるため、止める前の
@@ -220,8 +221,8 @@ def resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens: 
     if not is_suspended(meta):
         raise ManageError("NOT_SUSPENDED", "公開は止まっていません。")
 
-    generation = _generation(tokens, artifact_id) + 1
-    token = _issue(tokens, clock, artifact_id, generation)
+    generation = _generation(gate, artifact_id) + 1
+    token = _issue(gate, clock, artifact_id, generation)
     meta["status"] = ACTIVE
     _write_meta(artifacts, clock, meta)
 
@@ -271,7 +272,7 @@ def _require_within_limit(project_ids: list[str]) -> None:
             "どれかから外してから加えてください。")
 
 
-def _write_membership(tokens: ViewTokenStore, artifact_id: str, project_ids: list[str]) -> None:
+def _write_membership(gate: ViewGatePort, artifact_id: str, project_ids: list[str]) -> None:
     """所属を、閲覧ゲートが読める形へ書き出す。
 
     上限を超えるものは書かずに拒む。黙って書くと、超えた分は閲覧ゲートから
@@ -279,10 +280,10 @@ def _write_membership(tokens: ViewTokenStore, artifact_id: str, project_ids: lis
     開けない。原因の分からない不具合になるため、ここで止める。
     """
     _require_within_limit(project_ids)     # 最後の守り。ここへ来る前に弾かれているはず
-    tokens.put(f"pp:{artifact_id}", " ".join(project_ids))
+    gate.set_membership(artifact_id, project_ids)
 
 
-def assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトへ加える。人の明示的な操作でのみ成立する。
 
     加えられるのは自分が公開したものだけ。入れ先は、共有なら誰でも、
@@ -306,13 +307,13 @@ def assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
 
     meta["projects"] = belongs
     _write_meta(artifacts, clock, meta)
-    _write_membership(tokens, artifact_id, belongs)
+    _write_membership(gate, artifact_id, belongs)
     _sync_project(artifacts, projects, viewer, clock, project_store, index, artifact_id, member=True)
 
     return {"artifactId": artifact_id, "projects": belongs}
 
 
-def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトから外す。共有アーティファクト自体は個別の閲覧トークンで開けるまま残る。"""
     import projects as project_store
 
@@ -325,7 +326,7 @@ def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, v
     belongs = [p for p in (meta.get("projects") or []) if p != project_id]
     meta["projects"] = belongs
     _write_meta(artifacts, clock, meta)
-    _write_membership(tokens, artifact_id, belongs)
+    _write_membership(gate, artifact_id, belongs)
     _sync_project(artifacts, projects, viewer, clock, project_store, index, artifact_id, member=False)
 
     return {"artifactId": artifact_id, "projects": belongs}
@@ -334,7 +335,7 @@ def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, v
 def _sync_project(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, clock: Clock, project_store, index: dict, artifact_id: str, member: bool) -> None:
     """プロジェクトの索引と、閲覧者が見る一覧を揃える。
 
-    所属は索引（人へ見せるための正）と pp:（閲覧ゲートが判じるための投影）の
+    所属は索引（人へ見せるための正）と、閲覧ゲートが判じるための投影の
     2か所に持つ。片方だけを書く経路を作らないため、出し入れのたびに
     ここを通す。
     """

@@ -36,7 +36,7 @@ def setup():
         store=store, keys=keys, identify=lambda _t: ME.id,
         wrapper_template="<html>{{アーティファクトID}}</html>",
         now=lambda: 1_700_000_000, viewer_domain="viewer.example.net")
-    r = publish.publish(c.artifacts, c.viewer, c.keys, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
+    r = publish.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(store=store, keys=keys, now=lambda: 1_700_000_100,
                        viewer_domain="viewer.example.net")
     return deps, r["artifactId"]
@@ -113,7 +113,7 @@ def test_管理者は他人のものも読める():
 def test_公開が止まっていても読める():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
-    manage.suspend(deps.artifacts, deps.keys, deps.now, ME, aid)
+    manage.suspend(deps.artifacts, deps.gate, deps.now, ME, aid)
     assert len(comments.read(deps.artifacts, deps.comments, ME, aid)["comments"]) == 1
 
 
@@ -173,7 +173,7 @@ def test_取り出しても何も変わらない():
 def test_公開が止まっていても取り出せる():
     """止めてからでは取り出せないと、迷ったときに止められなくなる"""
     deps, aid = setup()
-    manage.suspend(deps.artifacts, deps.keys, deps.now, ME, aid)
+    manage.suspend(deps.artifacts, deps.gate, deps.now, ME, aid)
     assert comments.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)["content"] == HTML
 
 

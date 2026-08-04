@@ -34,7 +34,7 @@ def setup():
         store=store, keys=keys, identify=lambda _t: X.id,
         wrapper_template="<html>{{アーティファクトID}}</html>",
         now=lambda: 1_700_000_000, viewer_domain="viewer.example.net")
-    result = publish.publish(c.artifacts, c.viewer, c.keys, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
+    result = publish.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(
         store=store, keys=keys,
         directory=FakeDirectory({
@@ -69,13 +69,13 @@ def test_管理者は他人のものを公開停止_再開_再発行できる():
     deps, r = setup()
     aid = r["artifactId"]
 
-    manage.suspend(deps.artifacts, deps.keys, deps.now, ADMIN, aid)
+    manage.suspend(deps.artifacts, deps.gate, deps.now, ADMIN, aid)
     assert meta_of(deps, aid)["status"] == "disabled"
 
-    manage.resume(deps.artifacts, deps.viewer, deps.keys, deps.now, ADMIN, aid)
+    manage.resume(deps.artifacts, deps.viewer, deps.gate, deps.now, ADMIN, aid)
     assert meta_of(deps, aid)["status"] == "active"
 
-    again = manage.reissue_token(deps.artifacts, deps.viewer, deps.keys, deps.now, ADMIN, aid)
+    again = manage.reissue_token(deps.artifacts, deps.viewer, deps.gate, deps.now, ADMIN, aid)
     assert again["token"]
 
 
@@ -95,7 +95,7 @@ def test_第三者には見つからないものとして拒む():
     """拒否と不在を区別させないことで、そこに何かがあること自体を伝えない"""
     deps, r = setup()
     with pytest.raises(manage.ManageError) as x:
-        manage.suspend(deps.artifacts, deps.keys, deps.now, Y, r["artifactId"])
+        manage.suspend(deps.artifacts, deps.gate, deps.now, Y, r["artifactId"])
     assert x.value.code == "ARTIFACT_NOT_FOUND"
 
 
@@ -107,7 +107,7 @@ def test_移した先が手入れできるようになる():
 
     assert result["event"] == "ArtifactTransferred"
     assert meta_of(deps, r["artifactId"])["uploadedBy"] == Y.id
-    manage.suspend(deps.artifacts, deps.keys, deps.now, Y, r["artifactId"])          # Yが扱える
+    manage.suspend(deps.artifacts, deps.gate, deps.now, Y, r["artifactId"])          # Yが扱える
 
 
 def test_移す前の人は扱えなくなる():
@@ -116,7 +116,7 @@ def test_移す前の人は扱えなくなる():
     manage.transfer(deps.artifacts, deps.directory, deps.now, ADMIN, r["artifactId"], Y.id)
 
     with pytest.raises(manage.ManageError) as x:
-        manage.suspend(deps.artifacts, deps.keys, deps.now, X, r["artifactId"])
+        manage.suspend(deps.artifacts, deps.gate, deps.now, X, r["artifactId"])
     assert x.value.code == "ARTIFACT_NOT_FOUND"
 
 
@@ -158,7 +158,7 @@ def test_招かれていない人へは移せない():
 def test_公開停止されているものも移せる():
     """止まっているものこそ引き継ぎ先が要る"""
     deps, r = setup()
-    manage.suspend(deps.artifacts, deps.keys, deps.now, X, r["artifactId"])
+    manage.suspend(deps.artifacts, deps.gate, deps.now, X, r["artifactId"])
 
     manage.transfer(deps.artifacts, deps.directory, deps.now, ADMIN, r["artifactId"], Y.id)
 

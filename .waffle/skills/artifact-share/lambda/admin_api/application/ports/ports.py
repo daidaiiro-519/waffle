@@ -20,16 +20,6 @@ from domain.caller import Caller  # noqa: F401
 
 
 
-class ViewTokenStore(Protocol):
-    """閲覧トークンの保管。閲覧の面から同期で読める唯一の置き場所。"""
-
-    def put(self, key: str, value: str) -> None:
-        """指定した鍵で値を置く。既にあれば置き換える。"""
-        ...
-
-    def get(self, key: str) -> str | None:
-        """指定した鍵の値を取り出す。無ければ None。"""
-        ...
 
 
 class PublisherDirectory(Protocol):

@@ -24,6 +24,7 @@ from application.ports.shared_artifact_repository import SharedArtifactRepositor
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
 
 
 

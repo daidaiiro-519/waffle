@@ -21,7 +21,11 @@ from __future__ import annotations
 import json
 
 from shared.errors import ManageError, ProjectError
-from application.ports import Caller, Clock, ViewTokenStore
+from application.ports import Caller, Clock
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.view_gate import ViewGatePort
+from application.ports.viewer_site import ViewerSitePort
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.viewer_site import ViewerSitePort
@@ -42,7 +46,8 @@ from application.ports.shared_artifact_repository import SharedArtifactRepositor
 from domain.identifier import new_project_id
 from domain.publication import (ACTIVE, DISABLED, PERSONAL, SHARED,
                                 is_known_scope, is_published, is_suspended)
-from domain.view_token import generation_of, new_token, token_record
+from domain.view_subject import ViewSubject
+from domain.view_token import new_token
 
 
 # 誰が共有アーティファクトを出し入れできるか
@@ -113,7 +118,7 @@ def _write_page(viewer: ViewerSitePort, project_id: str) -> None:
 
 # ── 作る ────────────────────────────────────────────────
 
-def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
+def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
     """プロジェクトを作り、閲覧トークンを発行する。作った時点では何も入っていない。
 
     共有の別はここでしか決まらない。変える操作を用意しないことが、
@@ -144,7 +149,7 @@ def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
     write_listing(artifacts, viewer, index)
 
     # 閲覧トークンは最後に書く。ここまで成功して初めて開ける状態になる
-    tokens.put(f"proj:{project_id}", token_record(token, now))
+    gate.allow(ViewSubject.project(project_id), token, now)
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
             "url": viewer.project_url(project_id), "name": name, "scope": scope,
@@ -153,34 +158,32 @@ def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
 
 # ── 見せ方を変える ──────────────────────────────────────
 
-def _generation(tokens: ViewTokenStore, project_id: str) -> int:
+def _generation(gate: ViewGatePort, project_id: str) -> int:
     """いま何代目か。読めなければ1代目として扱い、再発行そのものは止めない。"""
     try:
-        record = tokens.get(f"proj:{project_id}")
+        return gate.generation_of(ViewSubject.project(project_id))
     except Exception:
         return 1
-    return generation_of(record)
 
 
-def _issue(tokens: ViewTokenStore, clock: Clock, project_id: str, generation: int) -> str:
+def _issue(gate: ViewGatePort, clock: Clock, project_id: str, generation: int) -> str:
     token = new_token()
-    tokens.put(f"proj:{project_id}",
-                  token_record(token, clock(), generation=generation))
+    gate.allow(ViewSubject.project(project_id), token, clock(), generation=generation)
     return token
 
 
-def reissue_token(projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, project_id: str) -> dict:
+def reissue_token(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
     """新しい閲覧トークンを発行し、それまでのものを使えなくする。URLは変えない。"""
     index = _read_own(projects, caller, project_id)
-    generation = _generation(tokens, project_id) + 1
-    token = _issue(tokens, clock, project_id, generation)
+    generation = _generation(gate, project_id) + 1
+    token = _issue(gate, clock, project_id, generation)
     _write_index(projects, clock, index)
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
             "url": viewer.project_url(project_id), "generation": generation}
 
 
-def suspend(projects: ProjectRepository, tokens: ViewTokenStore, clock: Clock, caller: Caller, project_id: str) -> dict:
+def suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
     """このプロジェクトの閲覧トークンでは何も開けない状態にする。
 
     入っている共有アーティファクトは、それぞれの閲覧トークンで引き続き開ける。
@@ -190,21 +193,21 @@ def suspend(projects: ProjectRepository, tokens: ViewTokenStore, clock: Clock, c
     if not is_published(index):
         raise ProjectError("NOT_ACTIVE", "すでに公開が止まっています。")
 
-    tokens.put(f"proj:{project_id}", "DISABLED")
+    gate.close(ViewSubject.project(project_id))
     index["status"] = DISABLED
     _write_index(projects, clock, index)
 
     return {"projectId": project_id, "status": DISABLED}
 
 
-def resume(projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, project_id: str) -> dict:
+def resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
     """再び開ける状態に戻す。閲覧トークンは必ず新しくなる。"""
     index = _read_own(projects, caller, project_id)
     if not is_suspended(index):
         raise ProjectError("NOT_SUSPENDED", "公開は止まっていません。")
 
-    generation = _generation(tokens, project_id) + 1
-    token = _issue(tokens, clock, project_id, generation)
+    generation = _generation(gate, project_id) + 1
+    token = _issue(gate, clock, project_id, generation)
     index["status"] = ACTIVE
     _write_index(projects, clock, index)
 
