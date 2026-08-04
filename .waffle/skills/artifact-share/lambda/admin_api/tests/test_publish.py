@@ -14,6 +14,9 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import publish  # noqa: E402
+from adapters.outbound.stored_shared_artifact_repository import (  # noqa: E402
+    StoredSharedArtifactRepository,
+)
 from domain import html_inspection, identifier  # noqa: E402
 
 
@@ -45,8 +48,10 @@ class FakeKeyStore:
 
 def wiring(store=None, keys=None, user="publisher-1", wrapper="<html>{{アーティファクトID}}</html>"):
     """公開が要る口を組み立てて返す。名前で渡すので、口が増えても呼び側は動かない。"""
+    store = store if store is not None else FakeStore()
     return dict(
-        store=store if store is not None else FakeStore(),
+        artifacts=StoredSharedArtifactRepository(store),
+        store=store,
         tokens=keys if keys is not None else FakeKeyStore(),
         identify=lambda _token: user,
         clock=lambda: 1_700_000_000,
@@ -98,10 +103,7 @@ def test_識別情報が無ければ題名を尋ねる():
 
 
 def test_題名を与えれば識別情報が無くても公開できる():
-    result = publish.publish(
-        request={"html": WITHOUT_META, "displayName": "離脱率メモ", "authorization": "Bearer x"},
-        **wiring()
-    )
+    result = publish.publish(request={"html": WITHOUT_META, "displayName": "離脱率メモ", "authorization": "Bearer x"}, **wiring())
     assert result["artifactId"]
     assert result["descriptor"]["title"] == "離脱率メモ"
     assert result["metaSource"] == "manual"

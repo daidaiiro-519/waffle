@@ -13,16 +13,9 @@ architecture が「application が要求する driven インターフェース�
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Protocol
 
-
-@dataclass
-class Caller:
-    """操作している人。誰であるかと、管理者かどうかだけを持つ。"""
-
-    id: str
-    is_admin: bool = False
+from domain.caller import Caller  # noqa: F401
 
 
 class ArtifactStore(Protocol):

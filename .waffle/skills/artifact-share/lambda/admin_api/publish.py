@@ -21,6 +21,7 @@ from domain.publication import MAX_CONTENT_BYTES
 from domain.view_token import new_token, token_record
 from shared.errors import PublishError
 from application.ports import ArtifactStore, Clock, PublisherIdentifier, ViewTokenStore
+from application.ports.shared_artifact_repository import SharedArtifactRepository
 import time
 from dataclasses import dataclass
 from typing import Callable
@@ -29,7 +30,7 @@ from typing import Callable
 
 # ── 公開 ────────────────────────────────────────────────
 
-def publish(store: ArtifactStore, tokens: ViewTokenStore, identify: PublisherIdentifier, clock: Clock, wrapper_template: str, viewer_domain: str, request: dict) -> dict:
+def publish(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: ViewTokenStore, identify: PublisherIdentifier, clock: Clock, wrapper_template: str, viewer_domain: str, request: dict) -> dict:
     """アップロードされたHTMLを公開し、URLとトークンを返す。
 
     途中で失敗したときに開ける状態のものを残さないことを、書き込む順序で保証する。
@@ -69,7 +70,6 @@ def publish(store: ArtifactStore, tokens: ViewTokenStore, identify: PublisherIde
 
     index_key = f"p/{artifact_id}/index.html"
     content_key = f"p/{artifact_id}/content.html"
-    meta_key = f"meta/{artifact_id}.json"
 
     try:
         # アップロードされたものは書き換えずにそのまま置く
@@ -97,7 +97,7 @@ def publish(store: ArtifactStore, tokens: ViewTokenStore, identify: PublisherIde
             "publishedAt": now,
             "updatedAt": now,
         }
-        store.put(meta_key, json.dumps(record, ensure_ascii=False), "application/json")
+        artifacts.save(record)
 
         # トークンは最後に書く。ここまで成功して初めて開ける状態になる
         tokens.put(f"token:{artifact_id}", token_record(token, now))

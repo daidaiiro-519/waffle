@@ -7,6 +7,8 @@
 """
 from __future__ import annotations
 
+from domain.caller import Caller
+
 # 公開の状態。閲覧の面もこの語をそのまま読む
 ACTIVE = "active"
 DISABLED = "disabled"
@@ -41,3 +43,13 @@ def within_project_limit(projects: list[str]) -> bool:
 def is_known_scope(scope: str) -> bool:
     """出し入れの範囲として認めている値か。"""
     return scope in SCOPES
+
+
+def manageable_by(meta: dict, caller: Caller) -> bool:
+    """その人がこの共有アーティファクトを手入れしてよいか。
+
+    公開した本人か、管理者であること。扱えないものは「拒む」ではなく
+    「見つからない」として扱う決まりだが、その言い換えはここではしない。
+    誰に向けて何と答えるかは、呼び出し側が決める。
+    """
+    return caller.is_admin or meta.get("uploadedBy") == caller.id

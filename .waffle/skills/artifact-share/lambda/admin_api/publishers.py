@@ -17,6 +17,7 @@ import json
 
 from shared.errors import PublisherError
 from application.ports import Caller, ArtifactStore, PublisherDirectory
+from application.ports.shared_artifact_repository import SharedArtifactRepository
 
 
 
@@ -73,7 +74,7 @@ def _status_of(person) -> str:
     return getattr(person, "status", "")
 
 
-def remove(store: ArtifactStore, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
+def remove(artifacts: SharedArtifactRepository, store: ArtifactStore, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
     """公開できる人から外す。公開したものには一切触れない。
 
     外したあと、その人が公開したもののうち引き継ぎ先が決まっていないものは
@@ -88,24 +89,17 @@ def remove(store: ArtifactStore, directory: PublisherDirectory, caller: Caller, 
     if not directory.find(publisher_id):
         raise PublisherError("PUBLISHER_NOT_FOUND", "その人は招かれていません。")
 
-    orphaned = _count_artifacts(store, publisher_id)
+    orphaned = _count_artifacts(artifacts, publisher_id)
     directory.remove(publisher_id)
 
     return {"publisherId": publisher_id, "orphanedArtifacts": orphaned,
             "event": "PublisherRemoved"}
 
 
-def _count_artifacts(store: ArtifactStore, publisher_id: str) -> int:
+def _count_artifacts(artifacts: SharedArtifactRepository, publisher_id: str) -> int:
     """その人が公開した共有アーティファクトの件数。"""
-    count = 0
-    for key in store.list("meta/"):
-        try:
-            meta = json.loads(store.get(key))
-        except Exception:
-            continue
-        if meta.get("uploadedBy") == publisher_id:
-            count += 1
-    return count
+    found, _ = artifacts.all()
+    return sum(1 for meta in found if meta.get("uploadedBy") == publisher_id)
 
 
 def list_publishers(directory: PublisherDirectory, caller: Caller) -> list[dict]:

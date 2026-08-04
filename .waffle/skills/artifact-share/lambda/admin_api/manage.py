@@ -24,8 +24,10 @@ import time
 from dataclasses import dataclass
 from typing import Callable
 
+from application.artifact_access import require_manageable
 from shared.errors import ManageError
 from application.ports import Caller, ArtifactStore, Clock, PublisherDirectory, ViewTokenStore
+from application.ports.shared_artifact_repository import SharedArtifactRepository
 from domain.html_inspection import inspect_html
 from domain.publication import (ACTIVE, DISABLED, MAX_PROJECTS_PER_ARTIFACT,
                                 is_published, is_suspended, within_project_limit)
@@ -42,29 +44,11 @@ from domain.view_token import generation_of, new_token, token_record
 
 # ── 索引の読み書き ──────────────────────────────────────
 
-def _meta_key(artifact_id: str) -> str:
-    return f"meta/{artifact_id}.json"
 
 
-def _read_meta(store: ArtifactStore, caller: Caller, artifact_id: str) -> dict:
-    """扱ってよい索引を読む。扱えないものは見つからないものとして扱う。
-
-    投稿者は自分が公開したもの、管理者は全員のものを扱える。
-    """
-    try:
-        meta = json.loads(store.get(_meta_key(artifact_id)))
-    except Exception as e:
-        raise ManageError("ARTIFACT_NOT_FOUND", "見つかりません。") from e
-
-    if not caller.is_admin and meta.get("uploadedBy") != caller.id:
-        raise ManageError("ARTIFACT_NOT_FOUND", "見つかりません。")
-    return meta
-
-
-def _write_meta(store: ArtifactStore, clock: Clock, meta: dict) -> None:
+def _write_meta(artifacts: SharedArtifactRepository, clock: Clock, meta: dict) -> None:
     meta["updatedAt"] = clock()
-    store.put(_meta_key(meta["artifactId"]),
-                   json.dumps(meta, ensure_ascii=False), "application/json")
+    artifacts.save(meta)
 
 
 def _viewer_url(viewer_domain: str, artifact_id: str) -> str:
@@ -79,7 +63,7 @@ def _require_published(meta: dict) -> None:
 
 # ── 一覧 ────────────────────────────────────────────────
 
-def list_artifacts(store: ArtifactStore, caller: Caller) -> dict:
+def list_artifacts(artifacts: SharedArtifactRepository, store: ArtifactStore, caller: Caller) -> dict:
     """扱えるものを新しい順に並べる。トークンは含めない。
 
     投稿者には自分が公開したものだけ、管理者には全員のものが並ぶ。
@@ -90,13 +74,9 @@ def list_artifacts(store: ArtifactStore, caller: Caller) -> dict:
     「公開したはずのものが消えた」と気づけないため（コメントの読み出しと
     同じ扱い）。
     """
-    rows, unreadable = [], 0
-    for key in store.list("meta/"):
-        try:
-            meta = json.loads(store.get(key))
-        except Exception:
-            unreadable += 1
-            continue
+    found, unreadable = artifacts.all()
+    rows = []
+    for meta in found:
         if not caller.is_admin and meta.get("uploadedBy") != caller.id:
             continue
         rows.append({
@@ -130,13 +110,13 @@ def _count_comments(store: ArtifactStore, artifact_id: str) -> int:
 
 # ── 差し替え ────────────────────────────────────────────
 
-def replace_content(store: ArtifactStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str, html: str) -> dict:
+def replace_content(artifacts: SharedArtifactRepository, store: ArtifactStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str, html: str) -> dict:
     """中身だけを入れ替える。URL・トークン・これまでの反応は保つ。
 
     入れ替えた時点を区切りとして反応の並びに残す。これより前の指摘が
     入れ替え前のものだと読み取れるようにするため。
     """
-    meta = _read_meta(store, caller, artifact_id)
+    meta = require_manageable(artifacts, caller, artifact_id)
     if meta.get("uploadedBy") != caller.id:
         # 管理者であっても他人の中身には手を出せない。集まったコメントが
         # 何に対する反応かを、投稿者の知らないうちに変えないため。
@@ -169,8 +149,8 @@ def replace_content(store: ArtifactStore, clock: Clock, viewer_domain: str, call
             "tags": found["tags"],
         })
     meta["externalRefs"] = found["externalRefs"]
-    _write_meta(store, clock, meta)
-    _refresh_listings(store, meta)
+    _write_meta(artifacts, clock, meta)
+    _refresh_listings(artifacts, store, meta)
 
     return {"artifactId": artifact_id, "url": _viewer_url(viewer_domain, artifact_id),
             "externalRefs": found["externalRefs"]}
@@ -194,12 +174,12 @@ def _issue(tokens: ViewTokenStore, clock: Clock, artifact_id: str, generation: i
     return token
 
 
-def reissue_token(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str) -> dict:
+def reissue_token(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str) -> dict:
     """新しいトークンを発行し、それまでのものを失効させる。URLは変えない。"""
-    meta = _read_meta(store, caller, artifact_id)
+    meta = require_manageable(artifacts, caller, artifact_id)
     generation = _generation(tokens, artifact_id) + 1
     token = _issue(tokens, clock, artifact_id, generation)
-    _write_meta(store, clock, meta)
+    _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "token": token,
             "url": _viewer_url(viewer_domain, artifact_id), "generation": generation,
@@ -208,32 +188,32 @@ def reissue_token(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, vi
 
 # ── 停止と再開 ──────────────────────────────────────────
 
-def suspend(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str) -> dict:
+def suspend(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str) -> dict:
     """公開を止める。中身も反応も消さない。"""
-    meta = _read_meta(store, caller, artifact_id)
+    meta = require_manageable(artifacts, caller, artifact_id)
     _require_published(meta)
 
     tokens.put(f"token:{artifact_id}", "DISABLED")
     meta["status"] = DISABLED
-    _write_meta(store, clock, meta)
+    _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "status": DISABLED}
 
 
-def resume(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str) -> dict:
+def resume(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str) -> dict:
     """再び開けるようにする。トークンは必ず新しくなる。
 
     止める理由の多くは見せる相手を絞り直すことにあるため、止める前の
     トークンを復活させない。
     """
-    meta = _read_meta(store, caller, artifact_id)
+    meta = require_manageable(artifacts, caller, artifact_id)
     if not is_suspended(meta):
         raise ManageError("NOT_SUSPENDED", "公開は止まっていません。")
 
     generation = _generation(tokens, artifact_id) + 1
     token = _issue(tokens, clock, artifact_id, generation)
     meta["status"] = ACTIVE
-    _write_meta(store, clock, meta)
+    _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "token": token,
             "url": _viewer_url(viewer_domain, artifact_id), "generation": generation,
@@ -242,7 +222,7 @@ def resume(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_do
 
 # ── 引き継ぎ ────────────────────────────────────────────
 
-def transfer(store: ArtifactStore, directory: PublisherDirectory, clock: Clock, caller: Caller, artifact_id: str, to_publisher: str) -> dict:
+def transfer(artifacts: SharedArtifactRepository, store: ArtifactStore, directory: PublisherDirectory, clock: Clock, caller: Caller, artifact_id: str, to_publisher: str) -> dict:
     """投稿者を別の投稿者へ移す。手入れできる人が替わるだけの操作。
 
     共有URL・閲覧トークン・中身・コメント・公開状態のいずれも変えない。
@@ -256,7 +236,7 @@ def transfer(store: ArtifactStore, directory: PublisherDirectory, clock: Clock, 
         # する経路の両方を、ここひとつで塞ぐ
         raise ManageError("NOT_ADMINISTRATOR", "投稿者を移せるのは管理者だけです。")
 
-    meta = _read_meta(store, caller, artifact_id)
+    meta = require_manageable(artifacts, caller, artifact_id)
 
     if not (directory and directory.find(to_publisher)):
         # 招かれていない人へ移すと、その場で誰も手入れできない状態に戻る
@@ -264,7 +244,7 @@ def transfer(store: ArtifactStore, directory: PublisherDirectory, clock: Clock, 
 
     previous = meta.get("uploadedBy", "")
     meta["uploadedBy"] = to_publisher
-    _write_meta(store, clock, meta)
+    _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "from": previous, "to": to_publisher,
             "event": "ArtifactTransferred"}
@@ -292,7 +272,7 @@ def _write_membership(tokens: ViewTokenStore, artifact_id: str, projects: list[s
     tokens.put(f"pp:{artifact_id}", " ".join(projects))
 
 
-def assign(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def assign(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトへ加える。人の明示的な操作でのみ成立する。
 
     加えられるのは自分が公開したものだけ。入れ先は、共有なら誰でも、
@@ -300,7 +280,7 @@ def assign(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: C
     """
     import projects as project_store
 
-    meta = _read_meta(store, caller, artifact_id)
+    meta = require_manageable(artifacts, caller, artifact_id)
     if meta.get("uploadedBy") != caller.id and not caller.is_admin:
         # 他人のものを、勝手に誰かの見せる範囲へ入れられない
         raise ManageError("ARTIFACT_NOT_FOUND", "見つかりません。")
@@ -315,18 +295,18 @@ def assign(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: C
     _require_within_limit(belongs)
 
     meta["projects"] = belongs
-    _write_meta(store, clock, meta)
+    _write_meta(artifacts, clock, meta)
     _write_membership(tokens, artifact_id, belongs)
-    _sync_project(store, clock, project_store, index, artifact_id, member=True)
+    _sync_project(artifacts, store, clock, project_store, index, artifact_id, member=True)
 
     return {"artifactId": artifact_id, "projects": belongs}
 
 
-def unassign(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def unassign(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトから外す。共有アーティファクト自体は個別の閲覧トークンで開けるまま残る。"""
     import projects as project_store
 
-    meta = _read_meta(store, caller, artifact_id)
+    meta = require_manageable(artifacts, caller, artifact_id)
     if meta.get("uploadedBy") != caller.id and not caller.is_admin:
         raise ManageError("ARTIFACT_NOT_FOUND", "見つかりません。")
 
@@ -334,14 +314,14 @@ def unassign(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller:
 
     belongs = [p for p in (meta.get("projects") or []) if p != project_id]
     meta["projects"] = belongs
-    _write_meta(store, clock, meta)
+    _write_meta(artifacts, clock, meta)
     _write_membership(tokens, artifact_id, belongs)
-    _sync_project(store, clock, project_store, index, artifact_id, member=False)
+    _sync_project(artifacts, store, clock, project_store, index, artifact_id, member=False)
 
     return {"artifactId": artifact_id, "projects": belongs}
 
 
-def _sync_project(store: ArtifactStore, clock: Clock, project_store, index: dict, artifact_id: str, member: bool) -> None:
+def _sync_project(artifacts: SharedArtifactRepository, store: ArtifactStore, clock: Clock, project_store, index: dict, artifact_id: str, member: bool) -> None:
     """プロジェクトの索引と、閲覧者が見る一覧を揃える。
 
     所属は索引（人へ見せるための正）と pp:（閲覧ゲートが判じるための投影）の
@@ -355,10 +335,10 @@ def _sync_project(store: ArtifactStore, clock: Clock, project_store, index: dict
     index["updatedAt"] = clock()
     store.put(f"projects/{index['projectId']}.json",
                    json.dumps(index, ensure_ascii=False), "application/json")
-    project_store.write_listing(store, index)
+    project_store.write_listing(artifacts, store, index)
 
 
-def _refresh_listings(store: ArtifactStore, meta: dict) -> None:
+def _refresh_listings(artifacts: SharedArtifactRepository, store: ArtifactStore, meta: dict) -> None:
     """このアーティファクトが入っている全プロジェクトの一覧を書き直す。
 
     一覧は表示名を含むため、差し替えで名前が変わったときに書き直さないと、
@@ -369,4 +349,4 @@ def _refresh_listings(store: ArtifactStore, meta: dict) -> None:
     for project_id in meta.get("projects") or []:
         index = project_store.read_index(store, project_id)
         if index:
-            project_store.write_listing(store, index)
+            project_store.write_listing(artifacts, store, index)

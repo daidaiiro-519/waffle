@@ -114,7 +114,7 @@ def test_重ねて招いても増えず状態も変わらない():
 
 def test_外された人は名簿から消える():
     deps, directory = setup()
-    publishers.remove(deps.store, deps.directory, ADMIN, "publisher-2")
+    publishers.remove(deps.artifacts, deps.store, deps.directory, ADMIN, "publisher-2")
     assert directory.find("publisher-2") is None
 
 
@@ -126,7 +126,7 @@ def test_外しても公開したものは残る():
     deps, _ = setup(objects=artifact_owned_by("publisher-2"))
     deps.keys.put("token:aaaaaaaa", "abc|0|1")
 
-    publishers.remove(deps.store, deps.directory, ADMIN, "publisher-2")
+    publishers.remove(deps.artifacts, deps.store, deps.directory, ADMIN, "publisher-2")
 
     meta = json.loads(deps.store.get("meta/aaaaaaaa.json"))
     assert meta["status"] == "active"
@@ -139,7 +139,7 @@ def test_手入れできなくなるものがあれば件数を伝える():
         objects.update(artifact_owned_by("publisher-2", f"art{i}"))
     deps, _ = setup(objects=objects)
 
-    result = publishers.remove(deps.store, deps.directory, ADMIN, "publisher-2")
+    result = publishers.remove(deps.artifacts, deps.store, deps.directory, ADMIN, "publisher-2")
 
     assert result["orphanedArtifacts"] == 3
 
@@ -148,7 +148,7 @@ def test_管理者は自分自身を外せない():
     """管理者が一人もいない状態へ落ちる経路を塞ぐ"""
     deps, directory = setup()
     with pytest.raises(publishers.PublisherError) as x:
-        publishers.remove(deps.store, deps.directory, ADMIN, ADMIN.id)
+        publishers.remove(deps.artifacts, deps.store, deps.directory, ADMIN, ADMIN.id)
     assert x.value.code == "CANNOT_REMOVE_SELF"
     assert directory.find(ADMIN.id) is not None
 
@@ -156,14 +156,14 @@ def test_管理者は自分自身を外せない():
 def test_招かれていない人は外せない():
     deps, _ = setup()
     with pytest.raises(publishers.PublisherError) as x:
-        publishers.remove(deps.store, deps.directory, ADMIN, "no-such-person")
+        publishers.remove(deps.artifacts, deps.store, deps.directory, ADMIN, "no-such-person")
     assert x.value.code == "PUBLISHER_NOT_FOUND"
 
 
 def test_管理者でない者は外せない():
     deps, directory = setup()
     with pytest.raises(publishers.PublisherError) as x:
-        publishers.remove(deps.store, deps.directory, SOMEONE, "admin-1")
+        publishers.remove(deps.artifacts, deps.store, deps.directory, SOMEONE, "admin-1")
     assert x.value.code == "NOT_ADMINISTRATOR"
     assert directory.find("admin-1") is not None
 

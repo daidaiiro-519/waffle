@@ -23,6 +23,7 @@ import json
 from manage import ManageError
 from shared.errors import ProjectError
 from application.ports import Caller, ArtifactStore, Clock, ViewTokenStore
+from application.ports.shared_artifact_repository import SharedArtifactRepository
 from domain.identifier import new_project_id
 from domain.publication import (ACTIVE, DISABLED, PERSONAL, SHARED,
                                 is_known_scope, is_published, is_suspended)
@@ -74,7 +75,7 @@ def _viewer_url(viewer_domain: str, project_id: str) -> str:
 
 # ── 一覧ページの書き出し ────────────────────────────────
 
-def write_listing(store: ArtifactStore, index: dict) -> None:
+def write_listing(artifacts: SharedArtifactRepository, store: ArtifactStore, index: dict) -> None:
     """閲覧者が見る一覧の中身を書き出す。
 
     雛形（index.html）はどのプロジェクトでも同じものを置き、この中身
@@ -86,9 +87,8 @@ def write_listing(store: ArtifactStore, index: dict) -> None:
     """
     rows = []
     for artifact_id in index.get("memberArtifactIds", []):
-        try:
-            meta = json.loads(store.get(f"meta/{artifact_id}.json"))
-        except Exception:
+        meta = artifacts.find(artifact_id)
+        if meta is None:
             continue
         if not is_published(meta):
             continue          # 止まっているものは並べない（開けないため）
@@ -117,7 +117,7 @@ def _write_page(store: ArtifactStore, project_page: str, project_id: str) -> Non
 
 # ── 作る ────────────────────────────────────────────────
 
-def create(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, project_page: str, viewer_domain: str, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
+def create(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, project_page: str, viewer_domain: str, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
     """プロジェクトを作り、閲覧トークンを発行する。作った時点では何も入っていない。
 
     共有の別はここでしか決まらない。変える操作を用意しないことが、
@@ -145,7 +145,7 @@ def create(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, project_p
     }
     _write_index(store, clock, index)
     _write_page(store, project_page, project_id)
-    write_listing(store, index)
+    write_listing(artifacts, store, index)
 
     # 閲覧トークンは最後に書く。ここまで成功して初めて開ける状態になる
     tokens.put(f"proj:{project_id}", token_record(token, now))
@@ -255,7 +255,7 @@ def list_projects(store: ArtifactStore, caller: Caller) -> dict:
 
 # ── 中身を見る ──────────────────────────────────────────
 
-def detail(store: ArtifactStore, viewer_domain: str, caller: Caller, project_id: str) -> dict:
+def detail(artifacts: SharedArtifactRepository, store: ArtifactStore, viewer_domain: str, caller: Caller, project_id: str) -> dict:
     """プロジェクトと、いま入っている共有アーティファクトを返す。
 
     見られるのは、そこへ自分のものを出し入れできる人（持ち主・管理者・
@@ -274,9 +274,8 @@ def detail(store: ArtifactStore, viewer_domain: str, caller: Caller, project_id:
 
     rows = []
     for artifact_id in index.get("memberArtifactIds", []):
-        try:
-            meta = json.loads(store.get(f"meta/{artifact_id}.json"))
-        except Exception:
+        meta = artifacts.find(artifact_id)
+        if meta is None:
             continue
         rows.append({
             "artifactId": artifact_id,
