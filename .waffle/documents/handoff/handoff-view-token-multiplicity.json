@@ -1,0 +1,335 @@
+{
+  "documentId": "handoff-view-token-multiplicity",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "閲覧トークンを複数持ちへ変える実装の引き継ぎ：handoff-view-token-multiplicity"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-issue-view-token"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "閲覧トークンはエンティティであり、集約の内側に持つ",
+          "consideration": "個別に無効化でき名前を持つため同一性が要る。かつ「同時に有効なのは5本まで」は本数を数えて初めて守れる不変条件なので、IDによる外部参照ではなく集約の内側に含める。閲覧トークンそのものの値は一度しか示さないため、公開した人が一覧で選ぶための ViewTokenId を別に持つ。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "格納の向きを逆転させ、指紋から対象を引く",
+          "consideration": "いまは対象IDからトークン1本を引いている（token:{artifactId} / proj:{projectId}）。複数持ちにすると1レコードに詰め込むことになり、サイズ上限に当たる。提示された閲覧トークンの指紋から引く形（tok:{指紋} → 対象種別・対象ID・期限）へ逆転させれば、何本あっても読み取りは1回で済む。いまのプロジェクト経路は proj: と pp: で2回引いているので、経路によっては現在より減る。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "一括無効化のために、対象の状態を別キーへ置く",
+          "consideration": "KVS は前方一致検索を持たないため、対象に紐づく閲覧トークンの一覧を引けない。公開停止は対象の全経路を閉じる操作なので、状態を別キー（state:{対象ID}）に持ち、ゲートは2回引く。金銭コストには影響しない（CloudFront Functions の課金は呼び出し回数に対するもので、1呼び出しの中の読み取り回数は請求に現れない）。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "期限切れの記録の削除は、集約の不変条件ではなく操作の事後条件",
+          "consideration": "定期実行の仕組みを持たない構成なので、削除は発行と一覧のときに行う（遅延削除）。誰も操作しない間は記録が残るため、「期限を過ぎた記録は常に残らない」は不変条件としては偽になる。上限の判定は『無効にされておらず、かつ期限を過ぎていない』本数で行い、記録が一時的に残っていても矛盾しないようにする。"
+        },
+        {
+          "advisor": "platform-advisor",
+          "viewpoint": "2つのランタイムのデプロイは原子的でない",
+          "consideration": "エッジ関数と Lambda は別々に、順番にデプロイされる。その間、片側だけが新しい形式になった状態が必ず存在する。記録の形を変える今回の変更では、この隙間に「正しい閲覧トークンなのに開けない」が発生する。2026-08-01 に実際に起きた障害と同種で、しかも両側のテストはそれぞれ最新の契約に対して緑になるため構造的に捕まらない。"
+        },
+        {
+          "advisor": "platform-advisor",
+          "viewpoint": "実行予算は数値を写さず、読み取り回数の上限を自分で宣言する",
+          "consideration": "AWS のクォータ値を仕様へ書き写すと宣言の重複になり、AWS が変えたときに腐ったことに気づけない。制御できるのは「何回引くか」なので、そちらを規約として宣言し、その回数で予算に収まるかをデプロイ時に実測する。予算超過は 5xx（全閲覧の停止）であり、性能ではなく可用性の問題。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "platform-advisor",
+          "viewpoint": "読み手を先に、書き手を後にデプロイする",
+          "consideration": "エッジゲート（読み手）を先に出し、新旧どちらの記録形式も受け付けられる状態にしてから、管理API（書き手）を新形式へ切り替える。ゲートは publish 後に各エッジへ伝播する時間があるため、切り替わりは瞬時ではない。既存の test_deployed_gate.py を、デプロイの最終段として必須実行にする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "既存データの移行が要る",
+          "consideration": "稼働中の環境には token:{artifactId} と proj:{projectId} の記録が実在する。向きを逆転させると、これらは新しいキーからは引けない。移行の手立て（旧キーを読んで新キーを書く一度きりの操作、または一定期間の両対応）を用意しないと、既に渡してある閲覧トークンが一斉に使えなくなる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "実装は稼働中であり、未着手ではない",
+          "consideration": "閲覧ゲートは296行の実コードで実環境へデプロイ済み、実障害も経験している。未着手なのは lambda/admin_api の層構造への再編だけ。今回の変更は『これから書くもの』ではなく『動いているものの差し替え』として扱う。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "対象による差は1箇所にだけ置く",
+          "consideration": "共有アーティファクトとプロジェクトは同じ仕組みで動く。実装でも共通の経路にし、違いは期限の上限の判定だけにする（アーティファクトは1ヶ月上限、プロジェクトは期限を設けない指定が可能）。対象ごとに関数を分けると、同じ規則が2箇所に生まれる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "テストの置き場所は規約が決める",
+          "consideration": "test-standard-artifact-share が宣言する配置に従う。ただし現状のテストは lambda/admin_api/tests/ にあり、宣言された配置と一致していない（検査が宣言漏れ11件として報告している）。今回の変更でテストを足す前に、配置を宣言どおりにするかどうかを決める必要がある。決めないまま足すと、宣言漏れが増える。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "閲覧ゲートは実環境で稼働中。2026-08-01 に記録の形の食い違いによる障害が実際に起きており、そのとき実装も検証も同じ誤解で揃っていたため137件すべて緑のまま実環境でだけ現れた。同種のリスクが今回の変更にもある。",
+        "CloudFront Functions の実行時間予算の正確な数値は未確認。ゲート自身は「最悪でおよそ5回」と自己申告しているが実測値ではない。読み取りが1回増えるため、デプロイ前に実測する。",
+        "既存の閲覧トークンは、移行の手立てが無ければ一斉に使えなくなる。",
+        "テストが宣言された配置と一致していない（宣言漏れ11件）。今回の変更の前提として、配置を直すか、直さないと決めるかが要る。",
+        "コメントの書き込みに件数の上限も保持期間も無い。トークンを持つ相手は無制限に書き込め、誰も消せない。閲覧トークンの無効化で止められるため受容しているが、費用の上限をどう見るかは未決。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "公開した人が4つの操作を呼ぶ入口。CLI・Web UI・MCP の3経路。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "ds.sh",
+              "sub": "CLI",
+              "status": "existing"
+            },
+            {
+              "id": "web",
+              "title": "管理コンソール",
+              "sub": "scripts/app",
+              "status": "existing"
+            },
+            {
+              "id": "mcp",
+              "title": "MCPサーバ",
+              "sub": "scripts/mcp_server.py",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "コア",
+          "description": "閲覧トークンの4操作。対象を問わず共通の経路にし、違いは期限の上限だけ。",
+          "nodes": [
+            {
+              "id": "issue",
+              "title": "発行",
+              "sub": "IssueViewToken",
+              "status": "new"
+            },
+            {
+              "id": "revoke",
+              "title": "個別無効化",
+              "sub": "RevokeViewToken",
+              "status": "new"
+            },
+            {
+              "id": "revokeall",
+              "title": "一括無効化",
+              "sub": "RevokeAllViewTokens",
+              "status": "new"
+            },
+            {
+              "id": "list",
+              "title": "一覧",
+              "sub": "ListViewTokens",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "application が要求する口",
+          "description": "閲覧トークンの保管と、対象の状態の保管。",
+          "nodes": [
+            {
+              "id": "store",
+              "title": "閲覧トークンの保管",
+              "sub": "tok:{指紋}",
+              "status": "new"
+            },
+            {
+              "id": "state",
+              "title": "対象の状態の保管",
+              "sub": "state:{対象ID}",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "実装",
+          "description": "エッジから同期で読める保管と、公開した人が読む正本。",
+          "nodes": [
+            {
+              "id": "kvs",
+              "title": "KeyValueStore",
+              "sub": "照合のための投影",
+              "status": "existing"
+            },
+            {
+              "id": "s3",
+              "title": "S3のメタ",
+              "sub": "名前・期限の正本",
+              "status": "existing"
+            },
+            {
+              "id": "gate",
+              "title": "閲覧ゲート",
+              "sub": "viewer-token-gate.js",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "ds.sh token issue <slug> --name 'デザインチーム' --days 7",
+        "ds.sh token list <slug>   名前と期限が返る。閲覧トークンそのものの値は返らない",
+        "ds.sh token revoke <slug> --name 'デザインチーム'",
+        "ds.sh token revoke-all <slug>   渡した相手を一度に全て外す。公開は止まらない"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "閲覧トークンを1本から複数へ変える実装への引き継ぎ。担うユースケースは uc-issue-view-token / uc-revoke-view-token / uc-revoke-all-view-tokens / uc-list-view-tokens / uc-publish-artifact / uc-suspend-artifact / uc-resume-artifact / uc-create-project / uc-control-project-access。稼働中の実装の差し替えであり、2つのランタイムのデプロイが原子的でない点が最大の risk。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/publish.py",
+          "reason": "トークンの発行と記録形式。ID_ALPHABET・new_token・token_record"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/manage.py",
+          "reason": "reissue_token を4操作へ置き換え。suspend/resume の意味変更"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/projects.py",
+          "reason": "プロジェクト側を共通の経路へ寄せる"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/main.py",
+          "reason": "ディスパッチ表から rotate を外し、4操作を足す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/infra/cloudfront-function/viewer-token-gate.js",
+          "reason": "指紋から引く形へ。状態の読み取りを足して2回に"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/infra/contract/token-records.json",
+          "reason": "記録形式の変更。値は実装から生成せず独立に算出する"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/scripts/artifactshare.py",
+          "reason": "デプロイ順序（読み手を先に）と、既存データの移行"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/scripts/app/app.js",
+          "reason": "一覧・発行・無効化の画面"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor",
+        "platform-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "集約のレビューを経て反映済み"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "集約のレビューを経て反映済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "resolved",
+          "note": "集約のレビューを経て反映済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "resolved",
+          "note": "集約のレビューを経て反映済み"
+        },
+        {
+          "advisor": "platform-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "実装時に確かめる"
+        },
+        {
+          "advisor": "platform-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "open",
+          "note": "実装時に確かめる"
+        },
+        {
+          "advisor": "platform-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "open",
+          "note": "デプロイ手順として実装時に確定する"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "open",
+          "note": "移行の手立てが未決"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "テストの配置を直すかどうかが未決"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": []
+}
