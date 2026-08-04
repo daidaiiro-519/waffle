@@ -8,9 +8,13 @@
 入れているのに、閲覧の面は平文と比べていた。実装も検証も同じ誤解で書かれて
 おり、実環境でだけ「正しいトークンでも開けない」として現れた。
 
+有効な記録は1つの値へ詰める。閲覧の面は1回の読み取りで区切って全件を突き
+合わせるだけなので、本数の上限を知らない。先頭から決まった数しか読まない
+実装にならないため、上限を伝え忘れて「投稿者には成功が返り閲覧者だけが
+開けない」状態にはならない。上限は書き手だけが守る。
+
 記録の並べ方（区切り・指紋の長さ・止めたことを表す綴り）と、対象ごとの鍵の
-付け方はここだけが知る。application は「開けるようにする・止める」としか
-言わない。
+付け方はここだけが知る。
 """
 from __future__ import annotations
 
@@ -18,8 +22,9 @@ import hashlib
 
 from domain.view_subject import ARTIFACT, PROJECT, ViewSubject
 
-# 記録の区切り。閲覧の面も同じ区切りで分ける
-SEPARATOR = "|"
+# 記録どうしの区切りと、1件の中の欄の区切り
+RECORD_SEPARATOR = ";"
+FIELD_SEPARATOR = "|"
 
 # 止めたことを表す記録。閲覧の面はこれを見たら通さない
 CLOSED = "DISABLED"
@@ -36,40 +41,37 @@ MEMBERSHIP_PREFIX = "pp:"
 
 
 class KvsViewGate:
+    """閲覧の面へ、いま誰が開けるのかを渡す。"""
+
     def __init__(self, keys):
         self._keys = keys
 
-    def allow(self, subject: ViewSubject, token: str, at: int,
-              ttl: int = 0, generation: int = 1) -> None:
-        self._keys.put(_key(subject), _record(token, at, ttl, generation))
+    def replace_grants(self, subject: ViewSubject, grants: list[tuple[str, int]]) -> None:
+        """その対象を開けられる閲覧トークンを、この顔ぶれに置き換える。
+
+        渡すのは（指紋, 期限）の並び。1本も無ければ、誰も開けないが公開は
+        止まっていない状態になる——止めたこととは別の意味を持つ。
+        """
+        self._keys.put(_key(subject), RECORD_SEPARATOR.join(
+            FIELD_SEPARATOR.join((fingerprint, str(expires_at)))
+            for fingerprint, expires_at in grants))
 
     def close(self, subject: ViewSubject) -> None:
+        """その対象を、どの閲覧トークンでも開けないようにする。"""
         self._keys.put(_key(subject), CLOSED)
 
-    def generation_of(self, subject: ViewSubject) -> int:
-        try:
-            record = self._keys.get(_key(subject))
-        except Exception:
-            return 1
-        if not record or record == CLOSED:
-            return 1
-        parts = record.split(SEPARATOR)
-        return int(parts[2]) if len(parts) > 2 else 1
+    def fingerprint_of(self, token: str) -> str:
+        """閲覧トークンを、照合にだけ使える形へ変える。元へは戻せない。"""
+        return fingerprint(token)
 
     def set_membership(self, artifact_id: str, project_ids: list[str]) -> None:
+        """その共有アーティファクトが、どのプロジェクトから開けるかを伝える。"""
         self._keys.put(f"{MEMBERSHIP_PREFIX}{artifact_id}",
                        MEMBERSHIP_SEPARATOR.join(project_ids))
 
 
 def _key(subject: ViewSubject) -> str:
     return f"{PREFIX[subject.kind]}{subject.id}"
-
-
-def _record(token: str, at: int, ttl: int, generation: int) -> str:
-    """保管へ残す記録を組み立てる。閲覧の面はこれを分けて読む。"""
-    return SEPARATOR.join((fingerprint(token),
-                           str(at + ttl if ttl > 0 else 0),
-                           str(generation)))
 
 
 def fingerprint(token: str) -> str:

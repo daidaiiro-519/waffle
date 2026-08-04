@@ -155,15 +155,14 @@ def test_空のHTMLは公開できない():
 # ── 操作保証 ────────────────────────────────────────────
 
 def test_トークンは保管された記録から取り出せない():
-    """返したトークンそのものは保管に残さない（世代と期限だけを添えた記録を残す）"""
+    """返したトークンそのものは保管に残さない（照合の形と期限だけを残す）"""
     keys = FakeKeyStore()
     result = publish.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(keys=keys))
 
     record = keys.keys["token:" + result["artifactId"]]
-    value, expires, generation = record.split("|")
+    value, expires = record.split("|")
     assert value != result["token"]          # そのままは残さない
-    assert generation == "1"
-    assert int(expires) >= 0
+    assert int(expires) > 0                  # 期限は必ず付く
 
 
 def test_途中で失敗したら開ける状態のものが残らない():

@@ -27,6 +27,8 @@ import manage
 import projects
 import publish
 import publishers
+from application import view_tokens
+from domain.view_subject import ViewSubject
 from adapters.outbound.cognito_publisher_directory import CognitoPublisherDirectory
 from adapters.outbound.kvs_view_token_store import KvsViewTokenStore
 from adapters.outbound.s3_artifact_store import S3ArtifactStore
@@ -117,6 +119,9 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
     except projects.ProjectError as e:
         return _response(404 if e.code == "PROJECT_NOT_FOUND" else 400,
                          {"error": e.code, "message": e.message})
+    except view_tokens.ViewTokenError as e:
+        return _response(404 if e.code == "TARGET_NOT_FOUND" else 400,
+                         {"error": e.code, "message": e.message})
     except publishers.PublisherError as e:
         return _response(403 if e.code == "NOT_ADMINISTRATOR" else 400,
                          {"error": e.code, "message": e.message})
@@ -125,6 +130,13 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
                   "NOT_ADMINISTRATOR": 403,
                   "NOT_THE_PUBLISHER": 403}.get(e.code, 400)
         return _response(status, {"error": e.code, "message": e.message})
+
+
+def _subject(body: dict):
+    """要求が指している対象を読む。共有アーティファクトかプロジェクトのどちらか。"""
+    if body.get("projectId"):
+        return ViewSubject.project(body["projectId"])
+    return ViewSubject.artifact(body.get("artifactId", ""))
 
 
 # 操作の名前と、その行き先。
@@ -136,12 +148,21 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
 ROUTES = {
     "list":        lambda d, c, b: manage.list_artifacts(d.artifacts, d.comments, c),
     "replace":     lambda d, c, b: manage.replace_content(d.artifacts, d.projects, d.comments, d.viewer, d.now, c, b.get("artifactId", ""), b.get("html", "")),
-    "rotate":      lambda d, c, b: manage.reissue_token(d.artifacts, d.viewer, d.gate, d.now, c, b.get("artifactId", "")),
     "disable":     lambda d, c, b: manage.suspend(d.artifacts, d.gate, d.now, c, b.get("artifactId", "")),
     "enable":      lambda d, c, b: manage.resume(d.artifacts, d.viewer, d.gate, d.now, c, b.get("artifactId", "")),
     "assign":      lambda d, c, b: manage.assign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
     "unassign":    lambda d, c, b: manage.unassign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
     "transfer":    lambda d, c, b: manage.transfer(d.artifacts, d.directory, d.now, c, b.get("artifactId", ""), b.get("toPublisher", "")),
+    "issue-token":      lambda d, c, b: view_tokens.issue(
+        d.artifacts, d.projects, d.gate, d.now, c, _subject(b), b.get("name", ""),
+        b.get("ttl")),
+    "view-tokens":      lambda d, c, b: view_tokens.list_tokens(
+        d.artifacts, d.projects, d.now, c, _subject(b)),
+    "revoke-token":     lambda d, c, b: view_tokens.revoke(
+        d.artifacts, d.projects, d.gate, d.now, c, _subject(b), b.get("tokenId", "")),
+    "revoke-all-tokens": lambda d, c, b: view_tokens.revoke_all(
+        d.artifacts, d.projects, d.gate, d.now, c, _subject(b)),
+
     "comments":    lambda d, c, b: comment_store.read(d.artifacts, d.comments, c, b.get("artifactId", "")),
     "export":      lambda d, c, b: comment_store.export(d.artifacts, d.comments, d.viewer, c, b.get("artifactId", "")),
 
@@ -153,7 +174,6 @@ ROUTES = {
     "projects":        lambda d, c, b: projects.list_projects(d.projects, c),
     "project":         lambda d, c, b: projects.detail(d.artifacts, d.projects, d.viewer, c, b.get("projectId", "")),
     "create-project":  lambda d, c, b: projects.create(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
-    "reissue-project": lambda d, c, b: projects.reissue_token(d.projects, d.viewer, d.gate, d.now, c, b.get("projectId", "")),
     "disable-project": lambda d, c, b: projects.suspend(d.projects, d.gate, d.now, c, b.get("projectId", "")),
     "enable-project":  lambda d, c, b: projects.resume(d.projects, d.viewer, d.gate, d.now, c, b.get("projectId", "")),
 }

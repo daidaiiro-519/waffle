@@ -104,9 +104,8 @@ def test_閲覧トークンは記録から取り出せない():
     r = projects.create(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, X, "まとめ", "PERSONAL")
 
     record = deps.keys.get(f"proj:{r['projectId']}")
-    value, expires, generation = record.split("|")
+    value, expires = record.split("|")
     assert value != r["token"]           # そのままは残さない
-    assert generation == "1"
     assert "token" not in index_of(deps, r["projectId"])
 
 
@@ -116,19 +115,13 @@ def owned(deps, scope="PERSONAL"):
     return projects.create(deps.artifacts, deps.projects, deps.viewer, deps.gate, deps.now, X, "検索基盤リニューアル", scope)
 
 
-def test_再発行すると世代が上がりURLは変わらない():
+def test_作ると最初の1本が渡される():
     deps = setup()
     r = owned(deps)
-    before = deps.keys.get(f"proj:{r['projectId']}")
 
-    again = projects.reissue_token(deps.projects, deps.viewer, deps.gate, deps.now, X, r["projectId"])
-
-    after = deps.keys.get(f"proj:{r['projectId']}")
-    assert before.split("|")[2] == "1"
-    assert after.split("|")[2] == "2"
-    assert again["url"] == r["url"]
-    assert again["token"] != r["token"]
-
+    tokens = index_of(deps, r["projectId"])["viewTokens"]
+    assert len(tokens) == 1
+    assert r["token"] not in str(tokens)
 
 def test_公開停止すると開けなくなるが中身は残る():
     deps = setup()
@@ -140,15 +133,15 @@ def test_公開停止すると開けなくなるが中身は残る():
     assert deps.store.get(f"proj/{r['projectId']}/index.json")
 
 
-def test_再開すると閲覧トークンが必ず新しくなる():
+def test_再開すると止める前の閲覧トークンがそのまま使える():
     deps = setup()
     r = owned(deps)
+    before = deps.keys.get(f"proj:{r['projectId']}")
     projects.suspend(deps.projects, deps.gate, deps.now, X, r["projectId"])
 
-    again = projects.resume(deps.projects, deps.viewer, deps.gate, deps.now, X, r["projectId"])
+    projects.resume(deps.projects, deps.viewer, deps.gate, deps.now, X, r["projectId"])
 
-    assert again["token"] != r["token"]
-    assert deps.keys.get(f"proj:{r['projectId']}").split("|")[2] == "2"
+    assert deps.keys.get(f"proj:{r['projectId']}") == before
     assert index_of(deps, r["projectId"])["status"] == "active"
 
 
@@ -176,11 +169,9 @@ def test_共有でも持ち主以外は見せ方を変えられない():
     deps = setup()
     r = owned(deps, scope="SHARED")
 
-    for call in (lambda: projects.suspend(deps.projects, deps.gate, deps.now, Y, r["projectId"]),
-                 lambda: projects.reissue_token(deps.projects, deps.viewer, deps.gate, deps.now, Y, r["projectId"])):
-        with pytest.raises(projects.ProjectError) as x:
-            call()
-        assert x.value.code == "PROJECT_NOT_FOUND"
+    with pytest.raises(projects.ProjectError) as x:
+        projects.suspend(deps.projects, deps.gate, deps.now, Y, r["projectId"])
+    assert x.value.code == "PROJECT_NOT_FOUND"
 
     assert index_of(deps, r["projectId"])["status"] == "active"
 

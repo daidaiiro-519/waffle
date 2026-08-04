@@ -19,7 +19,10 @@ from domain.identifier import new_artifact_id
 from domain.publication import MAX_CONTENT_BYTES
 from domain.artifact_content import fingerprint as content_fingerprint
 from domain.view_subject import ViewSubject
-from domain.view_token import new_token
+
+# 公開したときに最初に発行される1本の名前。あとから名前を付けて増やせる
+FIRST_TOKEN_NAME = "最初の共有"
+from domain import view_token
 from shared.errors import PublishError
 from application.ports import Clock, PublisherIdentifier
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -79,8 +82,11 @@ def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: V
             raise PublishError("NAME_REQUIRED", "表示名を入力してください。")
 
     artifact_id = new_artifact_id()
-    token = new_token()
+    token = view_token.new_token()
     now = clock()
+    first = view_token.issued(view_token.new_token_id(), FIRST_TOKEN_NAME,
+                              gate.fingerprint_of(token),
+                              view_token.expires_at(now), now)
 
     try:
         page_version = viewer.place_artifact(artifact_id, content, title)
@@ -101,11 +107,13 @@ def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: V
             "wrapperHash": page_version,
             "publishedAt": now,
             "updatedAt": now,
+            "viewTokens": [first],
         }
         artifacts.save(record)
 
-        # トークンは最後に書く。ここまで成功して初めて開ける状態になる
-        gate.allow(ViewSubject.artifact(artifact_id), token, now)
+        # 閲覧の面へ渡すのは最後。ここまで成功して初めて開ける状態になる
+        gate.replace_grants(ViewSubject.artifact(artifact_id),
+                            view_token.grants([first], now))
     except PublishError:
         raise
     except Exception as e:

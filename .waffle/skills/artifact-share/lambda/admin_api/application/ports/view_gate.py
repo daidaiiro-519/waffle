@@ -4,8 +4,8 @@
 渡してある材料だけを見て開けるかどうかを決める。だからここへ渡すのは
 「いま開けてよいか」を判じ切れるだけのものでなければならない。
 
-記録をどう並べるか、鍵をどう付けるかは実装が決める。並べ方は閲覧の面と
-共通の取り決め（infra/contract/）として置かれており、実装がそれを読む。
+記録をどう並べるか、鍵をどう付けるかは実装が決める。並べ方は閲覧の面と共通の
+取り決め（infra/contract/）として置かれており、実装がそれを読む。
 
 architecture: architecture-artifact-share の conceptPlacement（outbound-adapter）
 """
@@ -17,13 +17,17 @@ from domain.view_subject import ViewSubject
 
 
 class ViewGatePort(Protocol):
-    """閲覧の面が判じるための材料を渡す。"""
+    """閲覧の面へ、いま誰が開けるのかを渡す。"""
 
-    def allow(self, subject: ViewSubject, token: str, at: int,
-              ttl: int = 0, generation: int = 1) -> None:
-        """その対象を、この閲覧トークンで開けるようにする。
+    def replace_grants(self, subject: ViewSubject, grants: list[tuple[str, int]]) -> None:
+        """その対象を開けられる閲覧トークンを、この顔ぶれに置き換える。
 
-        閲覧トークンそのものの値は残さない。照合できる形だけを渡す。
+        渡すのは（照合に使う形, 期限）の並び。1本ずつ足したり外したりするので
+        はなく毎回すべてを渡すのは、閲覧の面がその時点の顔ぶれだけを見るため。
+        足し引きの履歴は、公開する側が持つ。
+
+        1本も無い並びを渡すと、誰も開けないが公開は止まっていない状態になる。
+        止めたこととは別の意味を持つ。
         """
         ...
 
@@ -31,8 +35,13 @@ class ViewGatePort(Protocol):
         """その対象を、どの閲覧トークンでも開けないようにする。"""
         ...
 
-    def generation_of(self, subject: ViewSubject) -> int:
-        """いま何代目か。読めなければ1代目として扱う。"""
+    def fingerprint_of(self, token: str) -> str:
+        """その閲覧トークンを、閲覧の面が照合に使う形へ変える。
+
+        公開する側はこの形を控え、閲覧トークンそのものの値は残さない。作り方を
+        この口が持つのは、控える形が向こうの面の認める形と一字一句同じでなければ
+        ならないため——向こうと話す側が決めなければ、ずれても気づけない。
+        """
         ...
 
     def set_membership(self, artifact_id: str, project_ids: list[str]) -> None:

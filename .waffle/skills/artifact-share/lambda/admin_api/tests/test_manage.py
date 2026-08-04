@@ -94,7 +94,6 @@ def test_他人が公開したものは存在しないものとして扱う():
 
     for call in (
         lambda: manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, SOMEONE_ELSE, r["artifactId"], HTML),
-        lambda: manage.reissue_token(deps.artifacts, deps.viewer, deps.gate, deps.now, SOMEONE_ELSE, r["artifactId"]),
         lambda: manage.suspend(deps.artifacts, deps.gate, deps.now, SOMEONE_ELSE, r["artifactId"]),
     ):
         with pytest.raises(manage.ManageError) as x:
@@ -167,23 +166,16 @@ def test_空の中身には差し替えられない():
     assert x.value.code == "EMPTY_CONTENT"
 
 
-# ── トークンの再発行 ────────────────────────────────────
+# ── 閲覧トークン ────────────────────────────────────────
 
-def test_再発行するとトークンと世代が変わりURLは変わらない():
+def test_公開すると最初の1本が渡される():
+    """相手ごとに増やせるが、公開した時点で1本は渡されている"""
     deps, r = setup()
-    before = deps.keys.get(f"token:{r['artifactId']}")
 
-    again = manage.reissue_token(deps.artifacts, deps.viewer, deps.gate, deps.now, ME, r["artifactId"])
-
-    after = deps.keys.get(f"token:{r['artifactId']}")
-    assert after != before
-    assert before.split("|")[2] == "1"
-    assert after.split("|")[2] == "2"        # 世代が上がる
-    assert again["url"] == r["url"]          # URLは変わらない
-    assert again["token"] != r["token"]
-
-
-# ── 停止と再開 ──────────────────────────────────────────
+    tokens = meta_of(deps, r["artifactId"])["viewTokens"]
+    assert len(tokens) == 1
+    assert r["token"]
+    assert r["token"] not in str(tokens)
 
 def test_停止すると開けなくなるがデータは残る():
     deps, r = setup()
@@ -194,15 +186,16 @@ def test_停止すると開けなくなるがデータは残る():
     assert meta_of(deps, r["artifactId"])["status"] == "disabled"
 
 
-def test_再開するとトークンが必ず新しくなる():
-    """止めた意図が、再開によって失われないことを確かめる"""
+def test_再開すると止める前の閲覧トークンがそのまま使える():
+    """止めるのは全ての経路を一度に閉じる操作で、渡した相手を選び直す操作ではない"""
     deps, r = setup()
+    before = deps.keys.get(f"token:{r['artifactId']}")
     manage.suspend(deps.artifacts, deps.gate, deps.now, ME, r["artifactId"])
+    assert deps.keys.get(f"token:{r['artifactId']}") == "DISABLED"
 
-    again = manage.resume(deps.artifacts, deps.viewer, deps.gate, deps.now, ME, r["artifactId"])
+    manage.resume(deps.artifacts, deps.viewer, deps.gate, deps.now, ME, r["artifactId"])
 
-    assert again["token"] != r["token"]
-    assert deps.keys.get(f"token:{r['artifactId']}").split("|")[2] == "2"
+    assert deps.keys.get(f"token:{r['artifactId']}") == before
     assert meta_of(deps, r["artifactId"])["status"] == "active"
 
 

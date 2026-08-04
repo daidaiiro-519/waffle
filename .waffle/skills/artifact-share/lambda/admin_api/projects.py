@@ -47,7 +47,10 @@ from domain.identifier import new_project_id
 from domain.publication import (ACTIVE, DISABLED, PERSONAL, SHARED,
                                 is_known_scope, is_published, is_suspended)
 from domain.view_subject import ViewSubject
-from domain.view_token import new_token
+from domain import view_token
+
+# 作ったときに最初に発行される1本の名前。あとから名前を付けて増やせる
+FIRST_TOKEN_NAME = "最初の共有"
 
 
 # 誰が共有アーティファクトを出し入れできるか
@@ -131,8 +134,11 @@ def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
         raise ProjectError("SCOPE_REQUIRED", "個人か共有かを選んでください。")
 
     project_id = new_project_id()
-    token = new_token()
+    token = view_token.new_token()
     now = clock()
+    first = view_token.issued(view_token.new_token_id(), FIRST_TOKEN_NAME,
+                              gate.fingerprint_of(token),
+                              view_token.expires_at(now), now)
 
     index = {
         "projectId": project_id,
@@ -142,14 +148,16 @@ def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
         "scope": scope,
         "status": ACTIVE,
         "memberArtifactIds": [],
+        "viewTokens": [first],
         "createdAt": now,
     }
     _write_index(projects, clock, index)
     _write_page(viewer, project_id)
     write_listing(artifacts, viewer, index)
 
-    # 閲覧トークンは最後に書く。ここまで成功して初めて開ける状態になる
-    gate.allow(ViewSubject.project(project_id), token, now)
+    # 閲覧の面へ渡すのは最後。ここまで成功して初めて開ける状態になる
+    gate.replace_grants(ViewSubject.project(project_id),
+                        view_token.grants([first], now))
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
             "url": viewer.project_url(project_id), "name": name, "scope": scope,
@@ -157,30 +165,6 @@ def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
 
 
 # ── 見せ方を変える ──────────────────────────────────────
-
-def _generation(gate: ViewGatePort, project_id: str) -> int:
-    """いま何代目か。読めなければ1代目として扱い、再発行そのものは止めない。"""
-    try:
-        return gate.generation_of(ViewSubject.project(project_id))
-    except Exception:
-        return 1
-
-
-def _issue(gate: ViewGatePort, clock: Clock, project_id: str, generation: int) -> str:
-    token = new_token()
-    gate.allow(ViewSubject.project(project_id), token, clock(), generation=generation)
-    return token
-
-
-def reissue_token(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
-    """新しい閲覧トークンを発行し、それまでのものを使えなくする。URLは変えない。"""
-    index = _read_own(projects, caller, project_id)
-    generation = _generation(gate, project_id) + 1
-    token = _issue(gate, clock, project_id, generation)
-    _write_index(projects, clock, index)
-
-    return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": viewer.project_url(project_id), "generation": generation}
 
 
 def suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
@@ -201,18 +185,23 @@ def suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, calle
 
 
 def resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
-    """再び開ける状態に戻す。閲覧トークンは必ず新しくなる。"""
+    """再び開ける状態に戻す。
+
+    止める前に渡していた閲覧トークンのうち、期限内で無効にしていないものを
+    そのまま使える状態に戻す。
+    """
     index = _read_own(projects, caller, project_id)
     if not is_suspended(index):
         raise ProjectError("NOT_SUSPENDED", "公開は止まっていません。")
 
-    generation = _generation(gate, project_id) + 1
-    token = _issue(gate, clock, project_id, generation)
+    now = clock()
+    gate.replace_grants(ViewSubject.project(project_id),
+                        view_token.grants(index.get("viewTokens"), now))
     index["status"] = ACTIVE
     _write_index(projects, clock, index)
 
-    return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": viewer.project_url(project_id), "generation": generation,
+    return {"projectId": project_id,
+            "url": viewer.project_url(project_id),
             "status": ACTIVE}
 
 

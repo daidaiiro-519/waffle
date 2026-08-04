@@ -65,7 +65,7 @@ def test_一覧には誰が公開したかが分かる():
     assert manage.list_artifacts(deps.artifacts, deps.comments, ADMIN)["artifacts"][0]["uploadedBy"] == X.id
 
 
-def test_管理者は他人のものを公開停止_再開_再発行できる():
+def test_管理者は他人のものを公開停止_再開できる():
     deps, r = setup()
     aid = r["artifactId"]
 
@@ -75,8 +75,7 @@ def test_管理者は他人のものを公開停止_再開_再発行できる():
     manage.resume(deps.artifacts, deps.viewer, deps.gate, deps.now, ADMIN, aid)
     assert meta_of(deps, aid)["status"] == "active"
 
-    again = manage.reissue_token(deps.artifacts, deps.viewer, deps.gate, deps.now, ADMIN, aid)
-    assert again["token"]
+    assert deps.keys.get(f"token:{aid}") != "DISABLED"
 
 
 def test_管理者でも他人の中身は差し替えられない():

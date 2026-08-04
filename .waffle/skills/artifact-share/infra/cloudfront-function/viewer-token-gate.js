@@ -107,9 +107,12 @@ function setCookie(name, value) {
   };
 }
 
-// 保管されたトークンの記録を読む。
-//   形式: "{値}|{期限のエポック秒}|{世代番号}"（期限0は無期限）
-//   "DISABLED" は公開停止。読めない場合は未発行として扱う。
+// 保管された記録を読む。
+//   形式: "{照合の形}|{期限のエポック秒}" を ";" でつないだもの（期限0は期限なし）
+//   "DISABLED" は公開停止。空は「誰にも渡していない」で、公開は止まっていない。
+// 1つの対象に複数の閲覧トークンを渡せる。ここにある記録をすべて見るだけなので、
+// 本数の上限は知らない——先頭から決まった数しか読まない実装にすると、書き手が
+// 上限を伝え忘れたときに閲覧者だけが開けない状態になる。
 // 期限切れはここで失効させる。保管の書き換えを待たずに効く。
 async function readKey(kvsKey) {
   let raw;
@@ -118,28 +121,33 @@ async function readKey(kvsKey) {
   } catch (e) {
     return null;                       // 未発行
   }
-  if (!raw || raw === 'DISABLED') {
+  if (raw === 'DISABLED') {
     return { disabled: true };         // 公開停止
   }
-  const parts = raw.split('|');
-  const value = parts[0];
-  const expires = parts.length > 1 ? parseInt(parts[1], 10) : 0;
-  const generation = parts.length > 2 ? parts[2] : '1';
-  if (expires > 0 && Math.floor(Date.now() / 1000) > expires) {
+  if (!raw) {
+    return { values: [], disabled: false };   // 誰にも渡していない
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const values = [];
+  let anyExpired = false;
+  for (const record of raw.split(';')) {
+    if (!record) continue;
+    const parts = record.split('|');
+    const expires = parts.length > 1 ? parseInt(parts[1], 10) : 0;
+    if (expires > 0 && now > expires) { anyExpired = true; continue; }
+    values.push(parts[0]);
+  }
+  if (values.length === 0 && anyExpired) {
     return { expired: true };
   }
-  return { value: value, generation: generation, disabled: false };
+  return { values: values, disabled: false };
 }
 
-// 閲覧者が持つトークンと、保管された記録が一致するか。
-// 値だけでなく世代番号も突き合わせる（再発行のたびに世代が上がる）。
+// 閲覧者が持つ値と、保管された記録のどれかが一致するか。
+// 1本ずつが独立しているので、他の記録が入れ替わっても手元の値は効き続ける。
 function matches(cookieValue, record) {
-  if (!cookieValue || !record || !record.value) return false;
-  const sep = cookieValue.lastIndexOf('.');
-  if (sep < 0) return false;
-  const value = cookieValue.slice(0, sep);
-  const generation = cookieValue.slice(sep + 1);
-  return value === record.value && generation === record.generation;
+  if (!cookieValue || !record || !record.values) return false;
+  return record.values.indexOf(cookieValue) >= 0;
 }
 
 function extractArtifactId(uri) {
@@ -170,8 +178,8 @@ async function handleProject(request, pid, uri, method) {
   }
   if (uri === '/proj/' + pid + '/verify') {
     const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value.trim() : '';
-    if (supplied && fingerprint(supplied) === record.value) {
-      return setCookie(PROJECT_COOKIE + pid, record.value + '.' + record.generation);
+    if (supplied && matches(fingerprint(supplied), record)) {
+      return setCookie(PROJECT_COOKIE + pid, fingerprint(supplied));
     }
     return { statusCode: 401, statusDescription: 'Unauthorized' };
   }
@@ -245,8 +253,8 @@ async function handler(event) {
 
   if (uri === '/p/' + artifactId + '/verify') {
     const supplied = request.headers['x-share-token'] ? request.headers['x-share-token'].value.trim() : '';
-    if (supplied && fingerprint(supplied) === record.value) {
-      return setCookie(ARTIFACT_COOKIE + artifactId, record.value + '.' + record.generation);
+    if (supplied && matches(fingerprint(supplied), record)) {
+      return setCookie(ARTIFACT_COOKIE + artifactId, fingerprint(supplied));
     }
     return { statusCode: 401, statusDescription: 'Unauthorized' };
   }

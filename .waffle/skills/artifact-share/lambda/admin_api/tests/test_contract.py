@@ -37,7 +37,8 @@ CONTRACT = json.loads(
 
 
 def cases():
-    return CONTRACT["ケース"]
+    """書き手が作る形の事例。読み手だけの事例（期限切れが残った状態など）は除く。"""
+    return [c for c in CONTRACT["ケース"] if not c.get("書き手は作らない")]
 
 
 def _stored(case):
@@ -48,9 +49,11 @@ def _stored(case):
     置くきっかけだった。
     """
     keys = _Collector()
-    KvsViewGate(keys).allow(ViewSubject.artifact("aaaaaaaa"), case["合言葉"],
-                            case["発行時刻"], ttl=case["有効期間"],
-                            generation=case["世代"])
+    gate = KvsViewGate(keys)
+    gate.replace_grants(
+        ViewSubject.artifact("aaaaaaaa"),
+        [(gate.fingerprint_of(token), expiry)
+         for token, expiry in zip(case["合言葉"], case["期限"])])
     return keys.written["token:aaaaaaaa"]
 
 
@@ -60,15 +63,17 @@ def test_保管へ残す形が契約と一致する(case):
 
 
 @pytest.mark.parametrize("case", cases(), ids=[c["名前"] for c in cases()])
-def test_手元の記録は保管の1つ目の欄と世代をつないだもの(case):
+def test_手元の記録は各記録の1つ目の欄(case):
     """閲覧ゲートが手元へ渡す値。組み立てるのは向こうだが、材料はこちらが決める。"""
-    fingerprint, _expires, generation = _stored(case).split("|")
-    assert f"{fingerprint}.{generation}" == case["手元の記録"]
+    stored = _stored(case)
+    got = [r.split("|")[0] for r in stored.split(";")] if stored else []
+    assert got == case["手元の記録"]
 
 
 def test_合言葉そのものは記録に現れない():
-    for case in cases():
-        assert case["合言葉"] not in case["保管の記録"]
+    for case in CONTRACT["ケース"]:
+        for token in case["合言葉"]:
+            assert token not in case["保管の記録"]
 
 
 def test_所属の記録が契約と一致する():

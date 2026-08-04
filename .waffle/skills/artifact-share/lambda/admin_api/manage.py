@@ -59,7 +59,7 @@ from domain.html_inspection import inspect_html
 from domain.publication import (ACTIVE, DISABLED, MAX_PROJECTS_PER_ARTIFACT,
                                 is_published, is_suspended, within_project_limit)
 from domain.view_subject import ViewSubject
-from domain.view_token import new_token
+from domain import view_token
 
 # 1つの共有アーティファクトが入れるプロジェクトの数。
 # 閲覧ゲートは、開けるかを判じるときに先頭からこの数までしか見ない
@@ -172,29 +172,6 @@ def replace_content(artifacts: SharedArtifactRepository, projects: ProjectReposi
             "externalRefs": found["externalRefs"]}
 
 
-# ── トークンの再発行 ────────────────────────────────────
-
-def _generation(gate: ViewGatePort, artifact_id: str) -> int:
-    """いま何代目か。読めなければ1代目として扱い、再発行そのものは止めない。"""
-    return gate.generation_of(ViewSubject.artifact(artifact_id))
-
-
-def _issue(gate: ViewGatePort, clock: Clock, artifact_id: str, generation: int) -> str:
-    token = new_token()
-    gate.allow(ViewSubject.artifact(artifact_id), token, clock(), generation=generation)
-    return token
-
-
-def reissue_token(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
-    """新しいトークンを発行し、それまでのものを失効させる。URLは変えない。"""
-    meta = require_manageable(artifacts, caller, artifact_id)
-    generation = _generation(gate, artifact_id) + 1
-    token = _issue(gate, clock, artifact_id, generation)
-    _write_meta(artifacts, clock, meta)
-
-    return {"artifactId": artifact_id, "token": token,
-            "url": viewer.artifact_url(artifact_id), "generation": generation,
-            "tokenShownOnce": True}
 
 
 # ── 停止と再開 ──────────────────────────────────────────
@@ -212,23 +189,24 @@ def suspend(artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Cloc
 
 
 def resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
-    """再び開けるようにする。トークンは必ず新しくなる。
+    """再び開けるようにする。
 
-    止める理由の多くは見せる相手を絞り直すことにあるため、止める前の
-    トークンを復活させない。
+    止める前に渡していた閲覧トークンのうち、期限内で無効にしていないものを
+    そのまま使える状態に戻す。止めるのは全ての経路を一度に閉じる操作であって、
+    渡した相手を選び直す操作ではない——選び直したいなら1本ずつ外せばよい。
     """
     meta = require_manageable(artifacts, caller, artifact_id)
     if not is_suspended(meta):
         raise ManageError("NOT_SUSPENDED", "公開は止まっていません。")
 
-    generation = _generation(gate, artifact_id) + 1
-    token = _issue(gate, clock, artifact_id, generation)
+    now = clock()
+    gate.replace_grants(ViewSubject.artifact(artifact_id),
+                        view_token.grants(meta.get("viewTokens"), now))
     meta["status"] = ACTIVE
     _write_meta(artifacts, clock, meta)
 
-    return {"artifactId": artifact_id, "token": token,
-            "url": viewer.artifact_url(artifact_id), "generation": generation,
-            "status": ACTIVE, "tokenShownOnce": True}
+    return {"artifactId": artifact_id, "url": viewer.artifact_url(artifact_id),
+            "status": ACTIVE}
 
 
 # ── 引き継ぎ ────────────────────────────────────────────

@@ -63,13 +63,16 @@ const t = async (name, fn, expect) => {
 
 // アーティファクトA: 公開中（契約の1件目）、プロジェクトPに所属。
 // アーティファクトB: 公開停止。
-const v1 = vector('無期限・初回発行');       // 世代1
-const v2 = vector('再発行して世代が上がった状態');  // 世代2
-const vx = vector('期限つき（発行時刻＋有効期間が期限になる）');
+const one = vector('1本だけ渡している（期限なし）');
+const two = vector('2本を別々の相手へ渡している');
+const vx = vector('1本だけ渡している（期限つき）');
+const none = vector('1本も渡していない（公開は止まっていない）');
+const mixed = vector('2本のうち1本は期限を過ぎている');
+const v1 = { 手元の記録: one['手元の記録'][0], 合言葉: one['合言葉'][0] };
 
-store.set('token:aaa', v1['保管の記録']);
+store.set('token:aaa', one['保管の記録']);
 store.set('token:bbb', contract['形式']['無効の印']);
-store.set('proj:ppp', v1['保管の記録']);
+store.set('proj:ppp', one['保管の記録']);
 store.set('pp:aaa', 'ppp');
 store.set('pp:bbb', 'ppp');
 
@@ -80,26 +83,40 @@ await t('公開停止はプロジェクトのトークンでも開けない', re
 await t('所属していないものは開けない', req('/p/ccc/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'status:403');
 await t('トークンなしは入力画面へ',        req('/p/aaa/'), 'status:401');
 
-console.log('■ 再発行と期限');
-store.set('token:aaa', v2['保管の記録']);   // 再発行（値と世代が変わる）
-await t('再発行前のトークンでは開けない',  req('/p/aaa/', { cookies: { [A+'aaa']: v1['手元の記録'] } }), 'status:401');
-await t('値だけ合っても世代違いは弾く', req('/p/aaa/', { cookies: { [A+'aaa']: v2['保管の記録'].split('|')[0] + '.1' } }), 'status:401');
-await t('新しいトークンでは開ける',        req('/p/aaa/', { cookies: { [A+'aaa']: v2['手元の記録'] } }), 'pass-through');
+console.log('■ 複数の相手へ渡す');
+store.set('token:aaa', two['保管の記録']);   // 2本を別々の相手へ
+await t('1人目のトークンで開ける',   req('/p/aaa/', { cookies: { [A+'aaa']: two['手元の記録'][0] } }), 'pass-through');
+await t('2人目のトークンでも開ける', req('/p/aaa/', { cookies: { [A+'aaa']: two['手元の記録'][1] } }), 'pass-through');
+await t('渡していない値では開けない', req('/p/aaa/', { cookies: { [A+'aaa']: 'x'.repeat(32) } }), 'status:401');
+store.set('token:ggg', mixed['保管の記録']);
+await t('期限切れが混じっていても残った1本は開ける',
+  req('/p/ggg/', { cookies: { [A+'ggg']: mixed['手元の記録'][0] } }), 'pass-through');
+await t('混じった中の期限切れでは開けない',
+  req('/p/ggg/', { cookies: { [A+'ggg']: two['手元の記録'][0] } }), 'status:401');
+
+console.log('■ 1本だけ外す');
+store.set('token:aaa', one['保管の記録']);   // 2人目の記録を取り除いた状態
+await t('残した相手はそのまま開ける', req('/p/aaa/', { cookies: { [A+'aaa']: two['手元の記録'][0] } }), 'pass-through');
+await t('外した相手は開けない',       req('/p/aaa/', { cookies: { [A+'aaa']: two['手元の記録'][1] } }), 'status:401');
+
+console.log('■ 全部外す・期限');
+store.set('token:fff', none['保管の記録']);  // 誰にも渡していないが公開は止まっていない
+await t('誰にも渡していなければ入力画面へ', req('/p/fff/', { cookies: { [A+'fff']: v1['手元の記録'] } }), 'status:401');
 store.set('token:ddd', vx['保管の記録']);  // 期限つき
-await t('期限切れは入力画面へ',        req('/p/ddd/', { cookies: { [A+'ddd']: vx['手元の記録'] } }), 'status:401');
+await t('期限切れは入力画面へ',        req('/p/ddd/', { cookies: { [A+'ddd']: vx['手元の記録'][0] } }), 'status:401');
 
 console.log('■ 合言葉を示して入る');
 const verify = (id, token) => req('/p/' + id + '/verify', { headers: { 'x-share-token': token } });
-await t('正しい合言葉なら手元の記録が渡る', verify('aaa', v2['合言葉']), 'status:204');
-await t('違う合言葉は拒む',               verify('aaa', v1['合言葉']), 'status:401');
+await t('正しい合言葉なら手元の記録が渡る', verify('aaa', one['合言葉'][0]), 'status:204');
+await t('渡していない合言葉は拒む',        verify('aaa', two['合言葉'][1]), 'status:401');
 await t('空の合言葉は拒む',               verify('aaa', ''),   'status:401');
 
 console.log('■ 所属の上限');
 const limit = contract['所属の記録']['上限'];
 const many = contract['所属の記録']['ケース'].find((c) => c['名前'] === '上限ちょうど');
 store.set('pp:eee', many['記録']);
-store.set('token:eee', v1['保管の記録']);
-for (const pid of many['プロジェクト']) store.set('proj:' + pid, v1['保管の記録']);
+store.set('token:eee', one['保管の記録']);
+for (const pid of many['プロジェクト']) store.set('proj:' + pid, one['保管の記録']);
 for (let i = 0; i < limit; i++) {
   const pid = many['プロジェクト'][i];
   await t(`所属${i + 1}件目のトークンで開ける`,
@@ -107,12 +124,12 @@ for (let i = 0; i < limit; i++) {
 }
 
 console.log('■ 反応の書き込み');
-const put = (h) => req('/comments/aaa/1234-abcd.json', { method: 'PUT', cookies: { [A+'aaa']: v2['手元の記録'] }, headers: h });
+const put = (h) => req('/comments/aaa/1234-abcd.json', { method: 'PUT', cookies: { [A+'aaa']: v1['手元の記録'] }, headers: h });
 await t('条件つきの書き込みは通る',    put({ 'content-type': 'application/json', 'content-length': 100, 'if-none-match': '*' }), 'pass-through');
 await t('条件なしの書き込みは拒む',    put({ 'content-type': 'application/json', 'content-length': 100 }), 'status:403');
 await t('種類が違えば拒む',            put({ 'content-type': 'text/html', 'content-length': 100, 'if-none-match': '*' }), 'status:403');
 await t('大きすぎれば拒む',            put({ 'content-type': 'application/json', 'content-length': 20000, 'if-none-match': '*' }), 'status:403');
-await t('削除は拒む',                  req('/p/aaa/', { method: 'DELETE', cookies: { [A+'aaa']: v2['手元の記録'] } }), 'status:403');
+await t('削除は拒む',                  req('/p/aaa/', { method: 'DELETE', cookies: { [A+'aaa']: v1['手元の記録'] } }), 'status:403');
 
 console.log(`\n通過 ${pass} / 失敗 ${fail}`);
 process.exit(fail ? 1 : 0);

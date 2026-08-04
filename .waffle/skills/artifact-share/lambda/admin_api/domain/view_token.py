@@ -1,24 +1,47 @@
-"""閲覧トークン。
+"""閲覧トークンと、1つの対象が同時に持てるその顔ぶれ。
 
 渡した相手の手元にしか無い状態を保つことが、これが鍵として働く前提になる。
 だから保管には残さず、照合できる形（指紋）だけを残す。その形をどう作り、
-どう並べるかは保管の側の取り決めであり、ここには現れない。
+どう並べるかは閲覧の面との取り決めであり、ここには現れない。
+
+1本が1つの配布先を表す。相手ごとに別々に渡し、あとから1本だけ外せることが
+この仕組みの要で、外す操作が使いにくいと結局使われなくなる。
 
 期限を必ず持たせるのは、渡した相手を外す手立てが人手の操作だけだと、押し忘れた
 ときに渡したものが永久に開き続けるため。期限は各配信の口が自分の時計で判じる
 ので、無効化の伝わりを待たずに効く唯一の手立てになる。
 
-対象の仕様: agg-shared-artifact / uc-issue-view-token
+対象の仕様: agg-shared-artifact / uc-issue-view-token / uc-list-view-tokens /
+uc-revoke-view-token / uc-revoke-all-view-tokens
 """
 from __future__ import annotations
 
 from domain.identifier import random_chars
+from domain.view_subject import ARTIFACT
 
 TOKEN_GROUPS = 3
 TOKEN_GROUP_LENGTH = 4
+TOKEN_ID_LENGTH = 6
 
-# 既定の有効期間（秒）。0 は期限なし
-DEFAULT_TOKEN_TTL = 0
+WEEK = 7 * 24 * 60 * 60
+MONTH = 30 * 24 * 60 * 60
+
+# 期限を指定しなかったときの有効期間
+DEFAULT_TTL = WEEK
+
+# 共有アーティファクトの閲覧トークンに許す最長の有効期間。
+# 続けて見せたい場合はまとめの側で扱う——回覧するものと、置いておく場は別。
+MAX_TTL = MONTH
+
+# 期限なしを表す値
+NO_EXPIRY = 0
+
+ACTIVE = "ACTIVE"
+REVOKED = "REVOKED"
+
+# 同時に有効な閲覧トークンの上限。どれを外すかは公開した人が一覧から選ぶ操作
+# なので、選べる数に収まっている必要がある
+MAX_ACTIVE = 5
 
 
 def new_token() -> str:
@@ -29,6 +52,91 @@ def new_token() -> str:
     return "-".join(random_chars(TOKEN_GROUP_LENGTH) for _ in range(TOKEN_GROUPS))
 
 
-def expires_at(now: int, ttl: int = DEFAULT_TOKEN_TTL) -> int:
+def new_token_id() -> str:
+    """1本の閲覧トークンを、対象の中で指すための識別子。"""
+    return random_chars(TOKEN_ID_LENGTH)
+
+
+def expires_at(now: int, ttl: int | None = None) -> int:
     """いつ使えなくなるか。0 は期限なしを表す。"""
-    return now + ttl if ttl > 0 else 0
+    if ttl is None:
+        ttl = DEFAULT_TTL
+    return now + ttl if ttl > 0 else NO_EXPIRY
+
+
+def within_expiry_limit(kind: str, now: int, expiry: int) -> bool:
+    """その対象に許される期限か。
+
+    共有アーティファクトは必ず有限で、発行した時点から1ヶ月を超えない。
+    プロジェクトは置いておく場なので、期限なしを選べる。
+    """
+    if kind != ARTIFACT:
+        return True
+    return NO_EXPIRY < expiry <= now + MAX_TTL
+
+
+def is_active(token: dict, now: int) -> bool:
+    """いま使える閲覧トークンか。無効にされておらず、期限を過ぎていないこと。"""
+    if token.get("status") != ACTIVE:
+        return False
+    expiry = token.get("expiresAt", NO_EXPIRY)
+    return expiry == NO_EXPIRY or expiry > now
+
+
+def active_tokens(tokens: list[dict], now: int) -> list[dict]:
+    """いま使えるものだけを、渡した順のまま返す。"""
+    return [t for t in tokens or [] if is_active(t, now)]
+
+
+def within_active_limit(tokens: list[dict], now: int) -> bool:
+    """これ以上増やせるか。期限を過ぎたものは数に含めない。"""
+    return len(active_tokens(tokens, now)) < MAX_ACTIVE
+
+
+def name_is_free(tokens: list[dict], name: str, now: int) -> bool:
+    """その名前をまだ使っていないか。
+
+    名前は、どれを外すかを公開した人が選ぶための手がかりなので、有効なものの
+    中で重なってはいけない。
+    """
+    return all(t.get("name") != name for t in active_tokens(tokens, now))
+
+
+def issued(token_id: str, name: str, fingerprint: str, expiry: int, at: int) -> dict:
+    """発行した1本の記録。閲覧トークンそのものの値は含めない。"""
+    return {
+        "tokenId": token_id,
+        "name": name,
+        "fingerprint": fingerprint,
+        "expiresAt": expiry,
+        "status": ACTIVE,
+        "issuedAt": at,
+    }
+
+
+def without_expired(tokens: list[dict], now: int) -> list[dict]:
+    """期限を過ぎたものの記録を取り除く。
+
+    残しても外す対象にはならず、一覧を埋めて選びにくくするだけ。見る側からは
+    期限切れと初めから無いものを区別しないので、記録の有無は開けるかどうかに
+    影響しない。
+    """
+    return [t for t in tokens or []
+            if t.get("status") == REVOKED or is_active(t, now)]
+
+
+def revoked(tokens: list[dict], token_id: str) -> list[dict]:
+    """その1本だけを使えなくする。他はそのまま。"""
+    return [dict(t, status=REVOKED) if t.get("tokenId") == token_id else t
+            for t in tokens or []]
+
+
+def all_revoked(tokens: list[dict], now: int) -> list[dict]:
+    """いま使えるものをすべて使えなくする。"""
+    return [dict(t, status=REVOKED) if is_active(t, now) else t for t in tokens or []]
+
+
+def grants(tokens: list[dict], now: int) -> list[tuple[str, int]]:
+    """閲覧の面へ渡す顔ぶれ。使えるものだけを（照合の形, 期限）で並べる。"""
+    return [(t["fingerprint"], t.get("expiresAt", NO_EXPIRY))
+            for t in active_tokens(tokens, now)]

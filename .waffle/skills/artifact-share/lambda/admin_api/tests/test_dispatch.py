@@ -30,7 +30,8 @@ class Reached(Exception):
 
 @pytest.fixture(autouse=True)
 def stub_every_destination(monkeypatch):
-    for module_name in ("manage", "publishers", "projects", "comment_store"):
+    for module_name in ("manage", "publishers", "projects", "comment_store",
+                        "view_tokens"):
         module = getattr(main, module_name)
         for name in dir(module):
             attr = getattr(module, name)
@@ -58,12 +59,15 @@ def destination_of(action, body=None):
 ROUTING = {
     "list": "manage.list_artifacts",
     "replace": "manage.replace_content",
-    "rotate": "manage.reissue_token",
     "disable": "manage.suspend",
     "enable": "manage.resume",
     "assign": "manage.assign",
     "unassign": "manage.unassign",
     "transfer": "manage.transfer",
+    "issue-token": "view_tokens.issue",
+    "view-tokens": "view_tokens.list_tokens",
+    "revoke-token": "view_tokens.revoke",
+    "revoke-all-tokens": "view_tokens.revoke_all",
     "comments": "comment_store.read",
     "export": "comment_store.export",
     "invite": "publishers.invite",
@@ -73,7 +77,6 @@ ROUTING = {
     "projects": "projects.list_projects",
     "project": "projects.detail",
     "create-project": "projects.create",
-    "reissue-project": "projects.reissue_token",
     "disable-project": "projects.suspend",
     "enable-project": "projects.resume",
 }
@@ -120,5 +123,5 @@ def test_body_の値がそのまま渡る():
 def test_無い値は空文字として渡る():
     """呼び出し側の欠落を、行き先の手前で例外にしない（判定は行き先が持つ）"""
     with pytest.raises(Reached) as x:
-        main._dispatch("rotate", EMPTY, manage.Caller("p1"), {})
+        main._dispatch("disable", EMPTY, manage.Caller("p1"), {})
     assert x.value.passed[-1] == ""
