@@ -53,3 +53,12 @@ def manageable_by(meta: dict, caller: Caller) -> bool:
     誰に向けて何と答えるかは、呼び出し側が決める。
     """
     return caller.is_admin or meta.get("uploadedBy") == caller.id
+
+
+def may_manage_publishers(caller: Caller) -> bool:
+    """招かれている人の顔ぶれを出し入れしてよいか。
+
+    管理者だけ。誰が招かれているかは、共有の相手を社外へ広げたときに社内の
+    顔ぶれまで伝わらないよう、投稿者どうしにも見せない。
+    """
+    return caller.is_admin

@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import manage  # noqa: E402
 import projects  # noqa: E402
-import publish  # noqa: E402
+from application.usecases import publish_artifact  # noqa: E402
 
 
 class FakeStore:
@@ -73,7 +73,7 @@ def setup(keys=None):
             now=lambda: 1_700_000_000,
             viewer_domain="viewer.example.net",
         )
-    result = publish.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
+    result = publish_artifact.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(
         store=store, keys=key_store,
         now=lambda: 1_700_000_100,

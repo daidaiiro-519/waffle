@@ -1,51 +1,29 @@
-"""公開。
+"""手元の文書を、渡した相手に見てもらえる状態にする。
 
-アップロードされたHTMLを受け取り、閲覧できる状態にして、URLとトークンを返す。
-利用者の確認・中身の検査・artifactIdとトークンの発行・配置を担う。公開の経路は
+利用者の確認・中身の検査・識別子と閲覧トークンの発行・配置を担う。公開の経路は
 これひとつだけで、中身の検査を経ずに保管へ書き込む手段は用意しない。
 
-外部への接続は依存として受け取る。実際の接続を組み立てるのは main.py だけで、
-ここは渡されたものだけを使う。検証のときは偽の依存を渡せる。
+閲覧の面へ渡すのは最後。そこまで成功して初めて開ける状態になるので、途中で
+失敗しても誰にも開けないものが残るだけで済む。
 
-対象の仕様: uc-publish-artifact / agg-shared-artifact
+対象の仕様: uc-publish-artifact
 """
-
 from __future__ import annotations
 
-import json
-
-from domain.html_inspection import inspect_html
-from domain.identifier import new_artifact_id
-from domain.publication import MAX_CONTENT_BYTES
-from domain.artifact_content import fingerprint as content_fingerprint
-from domain.view_subject import ViewSubject
-
-# 公開したときに最初に発行される1本の名前。あとから名前を付けて増やせる
-FIRST_TOKEN_NAME = "最初の共有"
-from domain import view_token
-from shared.errors import PublishError
 from application.ports import Clock, PublisherIdentifier
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-import time
-from dataclasses import dataclass
-from typing import Callable
+from domain import view_token
+from domain.artifact_content import fingerprint as content_fingerprint
+from domain.html_inspection import inspect_html
+from domain.identifier import new_artifact_id
+from domain.publication import ACTIVE, MAX_CONTENT_BYTES
+from domain.view_subject import ViewSubject
+from shared.errors import PublishError
 
+FIRST_TOKEN_NAME = "最初の共有"
 
-
-# ── 公開 ────────────────────────────────────────────────
 
 def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, request: dict) -> dict:
     """アップロードされたHTMLを公開し、URLとトークンを返す。

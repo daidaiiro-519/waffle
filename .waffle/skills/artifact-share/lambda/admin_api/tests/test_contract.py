@@ -26,7 +26,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import manage  # noqa: E402
-import publish  # noqa: E402
+from application.usecases import publish_artifact  # noqa: E402
 from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
 from domain.view_subject import ViewSubject  # noqa: E402
 

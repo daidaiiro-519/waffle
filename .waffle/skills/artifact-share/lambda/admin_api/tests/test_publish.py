@@ -13,7 +13,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import publish  # noqa: E402
+from shared.errors import PublishError  # noqa: E402
+
+from application.usecases import publish_artifact  # noqa: E402
 from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
 from adapters.outbound.stored_viewer_site import StoredViewerSite  # noqa: E402
 from adapters.outbound.stored_shared_artifact_repository import (  # noqa: E402
@@ -82,7 +84,7 @@ WITH_EXTERNAL = """<!doctype html><html><head>
 
 def test_識別情報が添えられていれば何も尋ねずに公開できる():
     """Given metaタグがある / When 公開する / Then 居場所とトークンが返り、情報が控えられる"""
-    result = publish.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring())
+    result = publish_artifact.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring())
 
     assert result["artifactId"]
     assert result["token"]
@@ -97,13 +99,13 @@ def test_識別情報が添えられていれば何も尋ねずに公開でき�
 
 def test_識別情報が無ければ題名を尋ねる():
     """Given metaタグが無い / When 題名を与えずに公開しようとする / Then 題名を尋ねられる"""
-    with pytest.raises(publish.PublishError) as e:
-        publish.publish(request={"html": WITHOUT_META, "authorization": "Bearer x"}, **wiring())
+    with pytest.raises(PublishError) as e:
+        publish_artifact.publish(request={"html": WITHOUT_META, "authorization": "Bearer x"}, **wiring())
     assert e.value.code == "NAME_REQUIRED"
 
 
 def test_題名を与えれば識別情報が無くても公開できる():
-    result = publish.publish(request={"html": WITHOUT_META, "displayName": "離脱率メモ", "authorization": "Bearer x"}, **wiring())
+    result = publish_artifact.publish(request={"html": WITHOUT_META, "displayName": "離脱率メモ", "authorization": "Bearer x"}, **wiring())
     assert result["artifactId"]
     assert result["descriptor"]["title"] == "離脱率メモ"
     assert result["metaSource"] == "manual"
@@ -112,7 +114,7 @@ def test_題名を与えれば識別情報が無くても公開できる():
 def test_渡したHTMLがそのまま保たれる():
     """Given HTMLを渡す / When 公開する / Then 保管された中身は渡したものと完全に一致する"""
     store = FakeStore()
-    result = publish.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(store=store))
+    result = publish_artifact.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(store=store))
 
     content_key = "p/" + result["artifactId"] + "/content.html"
     assert store.objects[content_key]["body"] == WITH_META
@@ -121,7 +123,7 @@ def test_渡したHTMLがそのまま保たれる():
 
 def test_閲覧画面が別に配置されアーティファクトIDが埋まる():
     store = FakeStore()
-    result = publish.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(store=store))
+    result = publish_artifact.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(store=store))
 
     index_key = "p/" + result["artifactId"] + "/index.html"
     assert result["artifactId"] in store.objects[index_key]["body"]
@@ -132,8 +134,8 @@ def test_招かれていない者は公開できない():
     """Given 招かれていない / When 公開しようとする / Then 拒まれ、何も残らない"""
     store, keys = FakeStore(), FakeKeyStore()
     d = wiring(store=store, keys=keys, user=None, wrapper="<html></html>")
-    with pytest.raises(publish.PublishError) as e:
-        publish.publish(request={"html": WITH_META, "authorization": "Bearer bad"}, **d)
+    with pytest.raises(PublishError) as e:
+        publish_artifact.publish(request={"html": WITH_META, "authorization": "Bearer bad"}, **d)
     assert e.value.code == "NOT_INVITED"
     assert store.objects == {}
     assert keys.keys == {}
@@ -141,14 +143,14 @@ def test_招かれていない者は公開できない():
 
 def test_外部への参照は件数を添えて公開する():
     """Given 外部を3件参照している / When 公開する / Then 公開はされ、件数が伝わる"""
-    result = publish.publish(request={"html": WITH_EXTERNAL, "displayName": "d", "authorization": "Bearer x"}, **wiring())
+    result = publish_artifact.publish(request={"html": WITH_EXTERNAL, "displayName": "d", "authorization": "Bearer x"}, **wiring())
     assert result["externalRefs"] == 3
     assert result["artifactId"]
 
 
 def test_空のHTMLは公開できない():
-    with pytest.raises(publish.PublishError) as e:
-        publish.publish(request={"html": "   ", "authorization": "Bearer x"}, **wiring())
+    with pytest.raises(PublishError) as e:
+        publish_artifact.publish(request={"html": "   ", "authorization": "Bearer x"}, **wiring())
     assert e.value.code == "EMPTY_CONTENT"
 
 
@@ -157,7 +159,7 @@ def test_空のHTMLは公開できない():
 def test_トークンは保管された記録から取り出せない():
     """返したトークンそのものは保管に残さない（照合の形と期限だけを残す）"""
     keys = FakeKeyStore()
-    result = publish.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(keys=keys))
+    result = publish_artifact.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(keys=keys))
 
     record = keys.keys["token:" + result["artifactId"]]
     value, expires = record.split("|")
@@ -172,8 +174,8 @@ def test_途中で失敗したら開ける状態のものが残らない():
     ものが残らないことを、トークンを最後に書く順序で保証する。
     """
     store, keys = FakeStore(fail_on="index.html"), FakeKeyStore()
-    with pytest.raises(publish.PublishError) as e:
-        publish.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(store=store, keys=keys))
+    with pytest.raises(PublishError) as e:
+        publish_artifact.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(store=store, keys=keys))
     assert e.value.code == "PUBLISH_FAILED"
     assert keys.keys == {}                   # トークンが無いので閲覧ゲートが拒む
 
@@ -181,8 +183,8 @@ def test_途中で失敗したら開ける状態のものが残らない():
 def test_トークンは配置がすべて済んでから書かれる():
     """トークンの書き込みで失敗しても、それは最後の一手なので順序は崩れない"""
     store, keys = FakeStore(), FakeKeyStore(fail=True)
-    with pytest.raises(publish.PublishError):
-        publish.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(store=store, keys=keys))
+    with pytest.raises(PublishError):
+        publish_artifact.publish(request={"html": WITH_META, "authorization": "Bearer x"}, **wiring(store=store, keys=keys))
     assert keys.keys == {}                   # 開ける状態にはならない
     assert len(store.objects) == 3           # 配置自体は済んでいる（到達はできない）
 

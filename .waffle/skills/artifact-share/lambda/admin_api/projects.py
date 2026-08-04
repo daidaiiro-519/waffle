@@ -26,23 +26,6 @@ from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
 from domain.identifier import new_project_id
 from domain.publication import (ACTIVE, DISABLED, PERSONAL, SHARED,
                                 is_known_scope, is_published, is_suspended)
@@ -54,8 +37,6 @@ FIRST_TOKEN_NAME = "最初の共有"
 
 
 # 誰が共有アーティファクトを出し入れできるか
-
-
 
 
 # ── 索引の読み書き ──────────────────────────────────────

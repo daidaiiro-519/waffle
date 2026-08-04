@@ -22,13 +22,14 @@ from pathlib import Path
 
 import dataclasses
 
-import comments as comment_store
+from application.usecases import export_artifact, read_comments
 import manage
 import projects
-import publish
-import publishers
+from application.usecases import publish_artifact
+from application.usecases import invite_publisher, list_publishers
 from application import view_tokens
 from domain.view_subject import ViewSubject
+from shared.errors import PublisherError
 from adapters.outbound.cognito_publisher_directory import CognitoPublisherDirectory
 from adapters.outbound.kvs_view_token_store import KvsViewTokenStore
 from adapters.outbound.s3_artifact_store import S3ArtifactStore
@@ -109,11 +110,11 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
     try:
         if action == "publish":
             c = _publish_deps()
-            result = publish.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {**body, "authorization": authorization})
+            result = publish_artifact.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {**body, "authorization": authorization})
         else:
             result = _dispatch(action, Connections(**_connections()), caller, body)
         return _response(200, result)
-    except publish.PublishError as e:
+    except PublishError as e:
         return _response(403 if e.code == "NOT_INVITED" else 400,
                          {"error": e.code, "message": e.message})
     except projects.ProjectError as e:
@@ -122,7 +123,7 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
     except view_tokens.ViewTokenError as e:
         return _response(404 if e.code == "TARGET_NOT_FOUND" else 400,
                          {"error": e.code, "message": e.message})
-    except publishers.PublisherError as e:
+    except PublisherError as e:
         return _response(403 if e.code == "NOT_ADMINISTRATOR" else 400,
                          {"error": e.code, "message": e.message})
     except manage.ManageError as e:
@@ -163,13 +164,13 @@ ROUTES = {
     "revoke-all-tokens": lambda d, c, b: view_tokens.revoke_all(
         d.artifacts, d.projects, d.gate, d.now, c, _subject(b)),
 
-    "comments":    lambda d, c, b: comment_store.read(d.artifacts, d.comments, c, b.get("artifactId", "")),
-    "export":      lambda d, c, b: comment_store.export(d.artifacts, d.comments, d.viewer, c, b.get("artifactId", "")),
+    "comments":    lambda d, c, b: read_comments.read(d.artifacts, d.comments, c, b.get("artifactId", "")),
+    "export":      lambda d, c, b: export_artifact.export(d.artifacts, d.comments, d.viewer, c, b.get("artifactId", "")),
 
-    "invite":          lambda d, c, b: publishers.invite(d.directory, c, b.get("email", "")),
-    "publishers":      lambda d, c, b: {"publishers": publishers.list_publishers(d.directory, c)},
-    "resend-invite":   lambda d, c, b: publishers.resend_invite(d.directory, c, b.get("publisherId", "")),
-    "remove-publisher": lambda d, c, b: publishers.remove(d.artifacts, d.directory, c, b.get("publisherId", "")),
+    "invite":          lambda d, c, b: invite_publisher.invite(d.directory, c, b.get("email", "")),
+    "publishers":      lambda d, c, b: {"publishers": list_publishers.list_publishers(d.directory, c)},
+    "resend-invite":   lambda d, c, b: invite_publisher.resend_invite(d.directory, c, b.get("publisherId", "")),
+    "remove-publisher": lambda d, c, b: invite_publisher.remove(d.artifacts, d.directory, c, b.get("publisherId", "")),
 
     "projects":        lambda d, c, b: projects.list_projects(d.projects, c),
     "project":         lambda d, c, b: projects.detail(d.artifacts, d.projects, d.viewer, c, b.get("projectId", "")),

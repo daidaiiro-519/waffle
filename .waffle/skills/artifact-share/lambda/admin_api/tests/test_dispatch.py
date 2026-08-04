@@ -30,7 +30,7 @@ class Reached(Exception):
 
 @pytest.fixture(autouse=True)
 def stub_every_destination(monkeypatch):
-    for module_name in ("manage", "publishers", "projects", "comment_store",
+    for module_name in ("manage", "invite_publisher", "list_publishers", "projects", "read_comments", "export_artifact",
                         "view_tokens"):
         module = getattr(main, module_name)
         for name in dir(module):
@@ -68,12 +68,12 @@ ROUTING = {
     "view-tokens": "view_tokens.list_tokens",
     "revoke-token": "view_tokens.revoke",
     "revoke-all-tokens": "view_tokens.revoke_all",
-    "comments": "comment_store.read",
-    "export": "comment_store.export",
-    "invite": "publishers.invite",
-    "publishers": "publishers.list_publishers",
-    "resend-invite": "publishers.resend_invite",
-    "remove-publisher": "publishers.remove",
+    "comments": "read_comments.read",
+    "export": "export_artifact.export",
+    "invite": "invite_publisher.invite",
+    "publishers": "list_publishers.list_publishers",
+    "resend-invite": "invite_publisher.resend_invite",
+    "remove-publisher": "invite_publisher.remove",
     "projects": "projects.list_projects",
     "project": "projects.detail",
     "create-project": "projects.create",
@@ -89,7 +89,7 @@ def test_操作が意図した行き先へ届く(action, expected):
 
 def test_名簿からの削除はその操作でしか起きない():
     """以前は、行き先の無い操作すべてがここへ落ちていた"""
-    reached_remove = [a for a in ROUTING if destination_of(a) == "publishers.remove"]
+    reached_remove = [a for a in ROUTING if destination_of(a) == "invite_publisher.remove"]
     assert reached_remove == ["remove-publisher"]
 
 

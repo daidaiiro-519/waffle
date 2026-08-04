@@ -17,7 +17,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import manage  # noqa: E402
-import publish  # noqa: E402
+from application.usecases import publish_artifact  # noqa: E402
 
 from test_publishers import FakeDirectory  # noqa: E402
 from test_manage import HTML, FakeKeyStore, FakeStore  # noqa: E402
@@ -34,7 +34,7 @@ def setup():
         store=store, keys=keys, identify=lambda _t: X.id,
         wrapper_template="<html>{{アーティファクトID}}</html>",
         now=lambda: 1_700_000_000, viewer_domain="viewer.example.net")
-    result = publish.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
+    result = publish_artifact.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(
         store=store, keys=keys,
         directory=FakeDirectory({

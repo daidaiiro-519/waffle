@@ -1,36 +1,26 @@
-"""公開できる人の出し入れ。
+"""公開できる人の顔ぶれを、いまの体制に合わせる。
 
-管理者が投稿者を招いたり外したりする。名簿そのものはこの文脈の外にあり、
-ここは「誰が招けるか」と「外したとき何が起きてはならないか」だけを担う。
+管理者が投稿者を招き、送り直し、外す。名簿そのものはこの文脈の外にあり、
+ここは「誰が出し入れできるか」と「外したとき何が起きてはならないか」だけを担う。
 
-外しても、その人が公開した共有アーティファクトは公開されたまま残す。
-閲覧者の手元の共有URLが、投稿者の異動という内輪の事情で黙って死んでは
-ならないため。代わりに、引き継ぎ先が決まっていないものの件数を管理者へ
-伝え、引き継ぐかどうかを人に決めさせる。
+外しても、その人が公開した共有アーティファクトは公開されたまま残す。閲覧者の
+手元の共有URLが、投稿者の異動という内輪の事情で黙って死んではならないため。
+代わりに、引き継ぎ先が決まっていないものの件数を管理者へ伝え、引き継ぐかどうかを
+人に決めさせる。
 
 対象の仕様: uc-invite-publisher
 """
-
 from __future__ import annotations
 
-import json
-
-from shared.errors import PublisherError
 from application.ports import Caller, PublisherDirectory
 from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-
-
+from domain.publication import may_manage_publishers
+from shared.errors import PublisherError
 
 
 def _require_admin(caller: Caller) -> None:
-    if not caller.is_admin:
+    """判定は domain が持つ。ここが決めるのは、断るときに何と伝えるかだけ。"""
+    if not may_manage_publishers(caller):
         raise PublisherError("NOT_ADMINISTRATOR",
                              "投稿者を出し入れできるのは管理者だけです。")
 
@@ -107,27 +97,3 @@ def _count_artifacts(artifacts: SharedArtifactRepository, publisher_id: str) -> 
     """その人が公開した共有アーティファクトの件数。"""
     found, _ = artifacts.all()
     return sum(1 for meta in found if meta.get("uploadedBy") == publisher_id)
-
-
-def list_publishers(directory: PublisherDirectory, caller: Caller) -> list[dict]:
-    """招かれている人を並べる。管理者だけが見られる。
-
-    誰が招かれているかを投稿者どうしに見せないのは、共有の相手を
-    社外へ広げたときに、社内の顔ぶれまで一緒に伝わらないようにするため。
-
-    合言葉に関わるものは一切含めない。名簿が持っていても、ここから外へ出さない。
-    """
-    _require_admin(caller)
-
-    admins = set(directory.admins())
-    rows = []
-    for person in directory.list():
-        email = person.get("email", "")
-        rows.append({
-            "id": person["id"],
-            "name": email.split("@")[0] if email else person["id"],
-            "email": email,
-            "status": person.get("status", ""),
-            "admin": person["id"] in admins,
-        })
-    return rows

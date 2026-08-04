@@ -32,29 +32,6 @@ from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
-from application.ports.comment_repository import CommentRepository
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.comment_repository import CommentRepository
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.comment_repository import CommentRepository
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.comment_repository import CommentRepository
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.viewer_site import ViewerSitePort
-from application.ports.comment_repository import CommentRepository
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.comment_repository import CommentRepository
-from application.ports.project_repository import ProjectRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
-from application.ports.shared_artifact_repository import SharedArtifactRepository
 from domain.html_inspection import inspect_html
 from domain.publication import (ACTIVE, DISABLED, MAX_PROJECTS_PER_ARTIFACT,
                                 is_published, is_suspended, within_project_limit)
@@ -68,10 +45,7 @@ from domain import view_token
 # 数は infra/contract/token-records.json が正で、両側の検証がそこを見る。
 
 
-
-
 # ── 索引の読み書き ──────────────────────────────────────
-
 
 
 def _write_meta(artifacts: SharedArtifactRepository, clock: Clock, meta: dict) -> None:
@@ -170,8 +144,6 @@ def replace_content(artifacts: SharedArtifactRepository, projects: ProjectReposi
 
     return {"artifactId": artifact_id, "url": viewer.artifact_url(artifact_id),
             "externalRefs": found["externalRefs"]}
-
-
 
 
 # ── 停止と再開 ──────────────────────────────────────────
