@@ -306,7 +306,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 3件／実装観点 6件</span></div>
         <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 3件</span></div>
         <div class="review-row"><span class="who">Orchestrator</span><span class="detail">設計観点 1件／実装観点 1件</span></div>
-        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>
       </div>
     </div>
   </section>
@@ -405,11 +405,11 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="constraint-item">
               <span class="num">2</span>
-              <p>agg-shared-artifact は SharedArtifact と ArtifactViewToken を1つの集約と宣言しているが、実装では S3 と KVS という2つの保管先へ別々に書き込んでいる。片方だけが成功した状態が残りうる。この層移行では解かない。</p>
+              <p>閲覧ゲートは有効な記録の上限本数を知らない。有効な記録を１つの値に詰め、ゲートは1回の読み取りで区切って全件を突き合わせる。上限5本は書き込み側の不変条件だけになる。この形なら pp: で起きた「投稿者には成功が返り閲覧者だけが開けない」型の不具合が構造的に起きない。infra/contract/ へ書くのは本数ではなく記録の区切り方。</p>
             </div>
             <div class="constraint-item">
               <span class="num">3</span>
-              <p>閲覧ゲート（CloudFront Functions）が上限5本を知る必要があるなら、pp: の上限3と同じ理由で infra/contract/ へ明記しなければならない。明記しないと、投稿者には成功が返り閲覧者だけが開けない不具合が再発する。</p>
+              <p>agg-shared-artifact は SharedArtifact と ArtifactViewToken を1つの集約と宣言しているが、実装では S3 と KVS という2つの保管先へ別々に書き込んでいる。片方だけが成功した状態が残りうる。この層移行では解かない。</p>
             </div>
             <div class="constraint-item">
               <span class="num">4</span>
@@ -418,6 +418,10 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="constraint-item">
               <span class="num">5</span>
               <p>旧モデルの manage.reissue_token / projects.reissue_token は、複数トークンモデルへの移行で置き換わる。uc-control-project-access へは加えない（spec 自身が「閲覧トークンの発行と無効化は対象を問わず別扱い」と宣言済み）。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">6</span>
+              <p>中身（HTML本体）は agg-shared-artifact の一貫性の境界の外へ出した。集約は contentFingerprint だけを持ち、中身は ArtifactId で指して別の port から読み書きする。これに伴い ArtifactContent はこの集約の値オブジェクト一覧から外した。</p>
             </div></div>
           <div class="tab-panel" id="panel4">
             <div class="scope-item">
