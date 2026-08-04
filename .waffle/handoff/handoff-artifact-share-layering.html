@@ -1,0 +1,469 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>保管の語彙で止まっている口を、業務の語彙へ戻して層を分ける：handoff-artifact-share-layering</title>
+<meta name="id" content="handoff-artifact-share-layering">
+<meta name="type" content="Handoff">
+<meta name="title" content="保管の語彙で止まっている口を、業務の語彙へ戻して層を分ける：handoff-artifact-share-layering">
+<meta name="description" content="artifact-share の admin_api を、宣言された5層（shared / domain / application / inbound adapter / outbound adapter）へ移す作業を引き継ぐ。domain 層は作成済みで、ここからは port の形を保管の語彙から業務の語彙へ戻し、その上へ usecase を移す。対象は uc-list-my-artifacts / uc-browse-projects / uc-list-publishers を含む 21 ユースケース全体。">
+<meta name="tags" content="context:artifact-share">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>保管の語彙で止まっている口を、業務の語彙へ戻して層を分ける：handoff-artifact-share-layering</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>uc-list-my-artifacts</dd>
+      <dt>documentId</dt><dd>handoff-artifact-share-layering</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 526" width="100%" height="526">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ユースケース</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実現</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="466.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">業務の判断</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-split" d="M0,434.0 H700"/>
+        <path class="flow-arrow" d="M242.0,60.0 L242.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L554.0,124.0"/>
+        <path class="flow-arrow" d="M242.0,174.0 L164.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,174.0 L320.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,174.0 L476.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,174.0 L632.0,238.0"/>
+        <path class="flow-arrow" d="M554.0,174.0 L164.0,238.0"/>
+        <path class="flow-arrow" d="M554.0,174.0 L320.0,238.0"/>
+        <path class="flow-arrow" d="M554.0,174.0 L476.0,238.0"/>
+        <path class="flow-arrow" d="M554.0,174.0 L632.0,238.0"/>
+        <path class="flow-arrow" d="M164.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M164.0,288.0 L554.0,352.0"/>
+        <path class="flow-arrow" d="M320.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M320.0,288.0 L554.0,352.0"/>
+        <path class="flow-arrow" d="M476.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M476.0,288.0 L554.0,352.0"/>
+        <path class="flow-arrow" d="M632.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M632.0,288.0 L554.0,352.0"/>
+        <path class="flow-arrow" d="M242.0,402.0 L398.0,466.0"/>
+        <path class="flow-arrow" d="M554.0,402.0 L398.0,466.0"/>
+        <path class="flow-arrow dep" d="M242.0,60.0 L242.0,352.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="242.0" y="200.0">口の実物を組み立てる（合成ルートだけが行う）</text>
+        <path class="flow-arrow dep" d="M554.0,174.0 L164.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="359.0" y="200.0">読みの操作も集約の読み取りを通る</text>
+        <path class="flow-split" d="M554.0,402.0 L398.0,466.0"/><text class="flow-caption-svg" x="476.0" y="428.0">並べ方はこちら、値の意味は domain</text>
+        
+        <g class="flow-box " transform="translate(96.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">合成ルート</div>
+              <div class="sub">main.py（層の外）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(408.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">受け口</div>
+              <div class="sub">adapters/inbound</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">書きの操作</div>
+              <div class="sub">公開・差し替え・開閉・引き継ぎ・出し入れ</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(408.0,124.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">読みの操作</div>
+              <div class="sub">一覧・中身・反応の読み取り</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">集約の読み書き</div>
+              <div class="sub">SharedArtifact / Project / Comment</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(252.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">閲覧面へ出す</div>
+              <div class="sub">ViewerSitePort</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(408.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">閲覧ゲートへ渡す</div>
+              <div class="sub">ViewGatePort</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+        <g class="flow-box " transform="translate(564.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">招かれている人の名簿</div>
+              <div class="sub">PublisherDirectory</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">8</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">保管への読み書き</div>
+              <div class="sub">adapters/outbound</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">9</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(408.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">閲覧ゲートへの書き出し</div>
+              <div class="sub">adapters/outbound（符号化を含む）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">10</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,466.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">識別子・閲覧トークン・HTMLの検査・公開の状態</div>
+              <div class="sub">domain/</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">11</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: Lambda の起動点。合成ルート（main.py）は層のグラフの外にあり、口の実物を組み立てて配るだけに徒する。inbound adapter は受け取った要求をユースケースの呼び出しへ変え、判断を持たない。</p></li><li><p><strong>ユースケース</strong>: 21の業務操作を1ファイル1つずつ置く。ファイル名は spec の operationName から導かれ、check-usecase-class-drift が機械的に突き合わせる。写し方は薄い手続きで、集約をクラスとして組まない。</p></li><li><p><strong>口</strong>: application が「何を必要としているか」の視点で宣言する。集約の load/save を担う repository と、集約の状態ではないもの（閲覧面へ出した成果物・閲覧ゲートが判じるための投影）を担う port を分ける。鍵の文字列はここを通らない。</p></li><li><p><strong>実現</strong>: 口を実装し、外部の仕組みをここへ閉じ込める。鍵の組み立ても、記録の並べ方（| 区切り・32文字への切り詰め）もここの関心事。ランタイムをまたぐ契約を読むのもここ。</p></li><li><p><strong>業務の判断</strong>: 外との出入りを持たない層。作成済み。値の意味（指紋・期限・世代・上限）はここに残り、並べ方は実現層へ出る。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>一覧を求める: ListMyArtifacts が SharedArtifactRepository から自分のものを取り、CommentRepository に反応の件数を尋ね、更新の新しい順に返す</p></li><li><p>中身を見る: BrowseProjects の detail が ProjectRepository でプロジェクトを読み、入っている共有アーティファクトの表示名を SharedArtifactRepository から集める</p></li><li><p>公開を止める: SuspendArtifact が集約を読み、domain の判定で公開中かを確かめ、repository へ保存し、ViewGatePort へ止めたことを渡す（鍵も記録の並べ方も usecase は知らない）</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 3件／実装観点 6件</span></div>
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 3件</span></div>
+        <div class="review-row"><span class="who">Orchestrator</span><span class="detail">設計観点 1件／実装観点 1件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">port の形はアダプターの都合で決まっている</div>
+              <div class="entry-consideration">ArtifactStore.put(key, body, content_type) の content_type は application が知る理由が説明できない S3 の語彙であり、architecture の禁止規約に該当する。docstring は「S3のクライアントではない」と主張しているが、名前だけが業務語で型の形は保管庫のまま。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">「鍵の組み立てだけ adapter へ移す」は独立した選択肢ではない</div>
+              <div class="entry-consideration">鍵を adapter が組むなら application は対象を業務語で指すしかなく、それは既に repository のメソッド呼び出しである。名前が get のまま残るだけなので、中途半端な移行先として選ばない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">現在の ArtifactStore は3種類のものを運んでいる</div>
+              <div class="entry-consideration">集約の状態（meta / projects / comments）は repository へ、閲覧面へ出した成果物（p/ ・proj/ の HTML と index.json）は ViewerSitePort へ、閲覧ゲートが判じるための投影（token: / proj: / pp:）は ViewGatePort へ。成果物の描画を repository.save に含めない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">一覧・照会は usecase として立てる（読み取りモデルを別に作らない）</div>
+              <div class="entry-consideration">CQRS の適用条件（更新と参照を単一の永続化モデルで満たせなくなった）を満たしていない。加えて、このコンテキストは既に uc-list-view-tokens / uc-read-comments という純粋な読みの usecase を宣言済みで、同じ性質の操作を別概念で扱うと語彙の一貫性が崩れる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">一覧と詳細を別の usecase に割らない</div>
+              <div class="entry-consideration">割ると分割の根拠が「画面が2つあるから」になり、利用者の意図ではなく画面構成が spec の構造を決める。一覧で候補を絞り、中身を見て入れ先を決めるのは1つの場面である。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">中身（HTML本体）は集約の内側に置かない</div>
+              <div class="entry-consideration">agg-shared-artifact の不変条件（公開状態・閲覧トークンの本数・名前の重複）はどれも中身を読まない。中身は毎回運ぶには大きく、しかも閲覧の面が直接読む対象。ArtifactContentStore として別の port に残すが、引数は鍵の文字列ではなく ArtifactId にする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">Orchestrator</span></div>
+              <div class="entry-viewpoint">層の厚みをめぐる2つの軸を分ける</div>
+              <div class="entry-consideration">advisor 2体とも「補完なのに5層＋perFile 1 は矛盾」と述べたが、これは別の軸を混同している。どこに置くか（配置）は2ランタイム境界の実在と、宣言を機械的に突き合わせられることが根拠。どう書くか（厚み）は補完のままで、集約をクラスとして組まない。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">旧 port を最後まで生かしたまま、新しい port を並行して立てる</div>
+              <div class="entry-consideration">呼び出し元を1つずつ移し、旧 port は最後の利用者を失った時点で削除する。これで各段の終わりにテストが緑を保てる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">テストの偽物を書き換える段を閉じ込める</div>
+              <div class="entry-consideration">168件の多くが「文字列鍵をキーとする辞書の偽 store」を前提にしている。実装本体の移動コスト（鍵の組み立て9種類・約40行、json 変換9箇所）より、テスト側の書き換えのほうが大きい。repository を入れる段に集中させる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">test_contract.py と test_deployed_gate.py は最後まで動かさない</div>
+              <div class="entry-consideration">この2つは移行の正しさを外から測る唯一の固定点であり、一緒に動かすと基準が消える。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">同名別値の DISABLED が衝突している</div>
+              <div class="entry-consideration">manage.py が domain.publication の DISABLED（公開状態「disabled」）を import しているため、KVS 用の DISABLED（「DISABLED」）を使えず文字列を直書きしている。符号化を adapter へ移す段で解消する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">ViewGatePort に list を生やさない</div>
+              <div class="entry-consideration">KVS に一覧操作が無い（put / get のみ）ため、生やすと adapter が実装できないか全件走査になる。閲覧トークンの一覧の正は S3 側（集約の状態）に持ち、KVS は投影に徹させる。既に pp: が同じ構図を取っている。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">_read_meta と require_writable は3つに割る</div>
+              <div class="entry-consideration">どちらも「読み出し＋業務判定」を１関数に持っている。読み出し→repository、可視性・書き込み可否の判定→domain、エラーコードへの写像→application。この分割で comments から manage._read_meta への private 借用が消える。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">Orchestrator</span></div>
+              <div class="entry-viewpoint">符号化と値の意味を分ける</div>
+              <div class="entry-consideration">advisor の見解が分かれた点。値の意味（指紋・期限・世代、上限本数、期限切れの扱い）は domain。並べ方（| 区切り・32文字への切り詰め・DISABLED という綴り）は outbound adapter。infra/contract/ を読むのは adapter 側。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>複数トークンモデル（名前つき・個別期限・個別失効・有効な上限5本）の実装は、この層移行の途中（outbound port の形を決めた直後）に置く。前に置くと複製されたコードの上に新しい記録形式が載り、後に置くと削除が確定している reissue_token を丁寧に切り出してから捨てることになる。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>agg-shared-artifact は SharedArtifact と ArtifactViewToken を1つの集約と宣言しているが、実装では S3 と KVS という2つの保管先へ別々に書き込んでいる。片方だけが成功した状態が残りうる。この層移行では解かない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>閲覧ゲート（CloudFront Functions）が上限5本を知る必要があるなら、pp: の上限3と同じ理由で infra/contract/ へ明記しなければならない。明記しないと、投稿者には成功が返り閲覧者だけが開けない不具合が再発する。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>uc-sign-in / uc-reset-password / uc-post-comment は admin_api の外側（Cognito ・閲覧の面）が担う。この層移行の対象外。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">5</span>
+              <p>旧モデルの manage.reissue_token / projects.reissue_token は、複数トークンモデルへの移行で置き換わる。uc-control-project-access へは加えない（spec 自身が「閲覧トークンの発行と無効化は対象を問わず別扱い」と宣言済み）。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/shared/</div>
+              <div class="reason">四つに分かれているエラー型（ManageError / ProjectError / PublishError / PublisherError）を1つへ統合する</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/application/ports/</div>
+              <div class="reason">port の宣言の置き場所。宣言が指定するのはここで、いまは直下の ports.py にある</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/adapters/outbound/</div>
+              <div class="reason">main.py の無名クラス（_Store / _Keys / _Directory）を名前付きへ出す。合成ルートの中に無名で書かないという宣言に現在違反している</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/application/usecases/</div>
+              <div class="reason">21ユースケースの置き場所。check-usecase-class-drift が期待するファイル名は宣言から導かれる</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/manage.py</div>
+              <div class="reason">ユースケースと保管アクセスが混在している。分割後に空になって削除される</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/projects.py</div>
+              <div class="reason">同上。manage との相互参照もこの分割で消える</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/comments.py</div>
+              <div class="reason">manage._read_meta という private 関数を別モジュールから import している。repository 導入でこの経路が消えることを完了条件に含める</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/domain/view_token.py</div>
+              <div class="reason">符号化（| 区切り・32文字への切り詰め）を outbound adapter へ出し、値の意味だけを残す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/infra/contract/token-records.json</div>
+              <div class="reason">上限5本を閲覧ゲートが知る必要があるなら、ここへ明記する</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/adapters/inbound/</div>
+              <div class="reason">ROUTES 表とエラー→HTTP の写像を移し、main.py を配線専用にする</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

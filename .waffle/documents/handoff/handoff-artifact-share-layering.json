@@ -1,0 +1,342 @@
+{
+  "documentId": "handoff-artifact-share-layering",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "保管の語彙で止まっている口を、業務の語彙へ戻して層を分ける：handoff-artifact-share-layering"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-list-my-artifacts"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "port の形はアダプターの都合で決まっている",
+          "consideration": "ArtifactStore.put(key, body, content_type) の content_type は application が知る理由が説明できない S3 の語彙であり、architecture の禁止規約に該当する。docstring は「S3のクライアントではない」と主張しているが、名前だけが業務語で型の形は保管庫のまま。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "「鍵の組み立てだけ adapter へ移す」は独立した選択肢ではない",
+          "consideration": "鍵を adapter が組むなら application は対象を業務語で指すしかなく、それは既に repository のメソッド呼び出しである。名前が get のまま残るだけなので、中途半端な移行先として選ばない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "現在の ArtifactStore は3種類のものを運んでいる",
+          "consideration": "集約の状態（meta / projects / comments）は repository へ、閲覧面へ出した成果物（p/ ・proj/ の HTML と index.json）は ViewerSitePort へ、閲覧ゲートが判じるための投影（token: / proj: / pp:）は ViewGatePort へ。成果物の描画を repository.save に含めない。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "一覧・照会は usecase として立てる（読み取りモデルを別に作らない）",
+          "consideration": "CQRS の適用条件（更新と参照を単一の永続化モデルで満たせなくなった）を満たしていない。加えて、このコンテキストは既に uc-list-view-tokens / uc-read-comments という純粋な読みの usecase を宣言済みで、同じ性質の操作を別概念で扱うと語彙の一貫性が崩れる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "一覧と詳細を別の usecase に割らない",
+          "consideration": "割ると分割の根拠が「画面が2つあるから」になり、利用者の意図ではなく画面構成が spec の構造を決める。一覧で候補を絞り、中身を見て入れ先を決めるのは1つの場面である。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "中身（HTML本体）は集約の内側に置かない",
+          "consideration": "agg-shared-artifact の不変条件（公開状態・閲覧トークンの本数・名前の重複）はどれも中身を読まない。中身は毎回運ぶには大きく、しかも閲覧の面が直接読む対象。ArtifactContentStore として別の port に残すが、引数は鍵の文字列ではなく ArtifactId にする。"
+        },
+        {
+          "advisor": "Orchestrator",
+          "viewpoint": "層の厚みをめぐる2つの軸を分ける",
+          "consideration": "advisor 2体とも「補完なのに5層＋perFile 1 は矛盾」と述べたが、これは別の軸を混同している。どこに置くか（配置）は2ランタイム境界の実在と、宣言を機械的に突き合わせられることが根拠。どう書くか（厚み）は補完のままで、集約をクラスとして組まない。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "旧 port を最後まで生かしたまま、新しい port を並行して立てる",
+          "consideration": "呼び出し元を1つずつ移し、旧 port は最後の利用者を失った時点で削除する。これで各段の終わりにテストが緑を保てる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "テストの偽物を書き換える段を閉じ込める",
+          "consideration": "168件の多くが「文字列鍵をキーとする辞書の偽 store」を前提にしている。実装本体の移動コスト（鍵の組み立て9種類・約40行、json 変換9箇所）より、テスト側の書き換えのほうが大きい。repository を入れる段に集中させる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "test_contract.py と test_deployed_gate.py は最後まで動かさない",
+          "consideration": "この2つは移行の正しさを外から測る唯一の固定点であり、一緒に動かすと基準が消える。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "同名別値の DISABLED が衝突している",
+          "consideration": "manage.py が domain.publication の DISABLED（公開状態「disabled」）を import しているため、KVS 用の DISABLED（「DISABLED」）を使えず文字列を直書きしている。符号化を adapter へ移す段で解消する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "ViewGatePort に list を生やさない",
+          "consideration": "KVS に一覧操作が無い（put / get のみ）ため、生やすと adapter が実装できないか全件走査になる。閲覧トークンの一覧の正は S3 側（集約の状態）に持ち、KVS は投影に徹させる。既に pp: が同じ構図を取っている。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "_read_meta と require_writable は3つに割る",
+          "consideration": "どちらも「読み出し＋業務判定」を１関数に持っている。読み出し→repository、可視性・書き込み可否の判定→domain、エラーコードへの写像→application。この分割で comments から manage._read_meta への private 借用が消える。"
+        },
+        {
+          "advisor": "Orchestrator",
+          "viewpoint": "符号化と値の意味を分ける",
+          "consideration": "advisor の見解が分かれた点。値の意味（指紋・期限・世代、上限本数、期限切れの扱い）は domain。並べ方（| 区切り・32文字への切り詰め・DISABLED という綴り）は outbound adapter。infra/contract/ を読むのは adapter 側。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "複数トークンモデル（名前つき・個別期限・個別失効・有効な上限5本）の実装は、この層移行の途中（outbound port の形を決めた直後）に置く。前に置くと複製されたコードの上に新しい記録形式が載り、後に置くと削除が確定している reissue_token を丁寧に切り出してから捨てることになる。",
+        "agg-shared-artifact は SharedArtifact と ArtifactViewToken を1つの集約と宣言しているが、実装では S3 と KVS という2つの保管先へ別々に書き込んでいる。片方だけが成功した状態が残りうる。この層移行では解かない。",
+        "閲覧ゲート（CloudFront Functions）が上限5本を知る必要があるなら、pp: の上限3と同じ理由で infra/contract/ へ明記しなければならない。明記しないと、投稿者には成功が返り閲覧者だけが開けない不具合が再発する。",
+        "uc-sign-in / uc-reset-password / uc-post-comment は admin_api の外側（Cognito ・閲覧の面）が担う。この層移行の対象外。",
+        "旧モデルの manage.reissue_token / projects.reissue_token は、複数トークンモデルへの移行で置き換わる。uc-control-project-access へは加えない（spec 自身が「閲覧トークンの発行と無効化は対象を問わず別扱い」と宣言済み）。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "Lambda の起動点。合成ルート（main.py）は層のグラフの外にあり、口の実物を組み立てて配るだけに徒する。inbound adapter は受け取った要求をユースケースの呼び出しへ変え、判断を持たない。",
+          "nodes": [
+            {
+              "id": "root",
+              "title": "合成ルート",
+              "sub": "main.py（層の外）",
+              "status": "existing"
+            },
+            {
+              "id": "inbound",
+              "title": "受け口",
+              "sub": "adapters/inbound",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "ユースケース",
+          "description": "21の業務操作を1ファイル1つずつ置く。ファイル名は spec の operationName から導かれ、check-usecase-class-drift が機械的に突き合わせる。写し方は薄い手続きで、集約をクラスとして組まない。",
+          "nodes": [
+            {
+              "id": "uc_write",
+              "title": "書きの操作",
+              "sub": "公開・差し替え・開閉・引き継ぎ・出し入れ",
+              "status": "new"
+            },
+            {
+              "id": "uc_read",
+              "title": "読みの操作",
+              "sub": "一覧・中身・反応の読み取り",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "口",
+          "description": "application が「何を必要としているか」の視点で宣言する。集約の load/save を担う repository と、集約の状態ではないもの（閲覧面へ出した成果物・閲覧ゲートが判じるための投影）を担う port を分ける。鍵の文字列はここを通らない。",
+          "nodes": [
+            {
+              "id": "repo",
+              "title": "集約の読み書き",
+              "sub": "SharedArtifact / Project / Comment",
+              "status": "new"
+            },
+            {
+              "id": "viewer",
+              "title": "閲覧面へ出す",
+              "sub": "ViewerSitePort",
+              "status": "new"
+            },
+            {
+              "id": "gate",
+              "title": "閲覧ゲートへ渡す",
+              "sub": "ViewGatePort",
+              "status": "new"
+            },
+            {
+              "id": "directory",
+              "title": "招かれている人の名簿",
+              "sub": "PublisherDirectory",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "実現",
+          "description": "口を実装し、外部の仕組みをここへ閉じ込める。鍵の組み立ても、記録の並べ方（| 区切り・32文字への切り詰め）もここの関心事。ランタイムをまたぐ契約を読むのもここ。",
+          "nodes": [
+            {
+              "id": "s3",
+              "title": "保管への読み書き",
+              "sub": "adapters/outbound",
+              "status": "new"
+            },
+            {
+              "id": "kvs",
+              "title": "閲覧ゲートへの書き出し",
+              "sub": "adapters/outbound（符号化を含む）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "業務の判断",
+          "description": "外との出入りを持たない層。作成済み。値の意味（指紋・期限・世代・上限）はここに残り、並べ方は実現層へ出る。",
+          "nodes": [
+            {
+              "id": "domain",
+              "title": "識別子・閲覧トークン・HTMLの検査・公開の状態",
+              "sub": "domain/",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "root",
+          "to": "s3",
+          "kind": "dependency",
+          "label": "口の実物を組み立てる（合成ルートだけが行う）"
+        },
+        {
+          "from": "uc_read",
+          "to": "repo",
+          "kind": "dependency",
+          "label": "読みの操作も集約の読み取りを通る"
+        },
+        {
+          "from": "kvs",
+          "to": "domain",
+          "kind": "split",
+          "label": "並べ方はこちら、値の意味は domain"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "一覧を求める: ListMyArtifacts が SharedArtifactRepository から自分のものを取り、CommentRepository に反応の件数を尋ね、更新の新しい順に返す",
+        "中身を見る: BrowseProjects の detail が ProjectRepository でプロジェクトを読み、入っている共有アーティファクトの表示名を SharedArtifactRepository から集める",
+        "公開を止める: SuspendArtifact が集約を読み、domain の判定で公開中かを確かめ、repository へ保存し、ViewGatePort へ止めたことを渡す（鍵も記録の並べ方も usecase は知らない）"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "artifact-share の admin_api を、宣言された5層（shared / domain / application / inbound adapter / outbound adapter）へ移す作業を引き継ぐ。domain 層は作成済みで、ここからは port の形を保管の語彙から業務の語彙へ戻し、その上へ usecase を移す。対象は uc-list-my-artifacts / uc-browse-projects / uc-list-publishers を含む 21 ユースケース全体。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/shared/",
+          "reason": "四つに分かれているエラー型（ManageError / ProjectError / PublishError / PublisherError）を1つへ統合する"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/application/ports/",
+          "reason": "port の宣言の置き場所。宣言が指定するのはここで、いまは直下の ports.py にある"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/adapters/outbound/",
+          "reason": "main.py の無名クラス（_Store / _Keys / _Directory）を名前付きへ出す。合成ルートの中に無名で書かないという宣言に現在違反している"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/application/usecases/",
+          "reason": "21ユースケースの置き場所。check-usecase-class-drift が期待するファイル名は宣言から導かれる"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/manage.py",
+          "reason": "ユースケースと保管アクセスが混在している。分割後に空になって削除される"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/projects.py",
+          "reason": "同上。manage との相互参照もこの分割で消える"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/comments.py",
+          "reason": "manage._read_meta という private 関数を別モジュールから import している。repository 導入でこの経路が消えることを完了条件に含める"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/view_token.py",
+          "reason": "符号化（| 区切り・32文字への切り詰め）を outbound adapter へ出し、値の意味だけを残す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/infra/contract/token-records.json",
+          "reason": "上限5本を閲覧ゲートが知る必要があるなら、ここへ明記する"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/adapters/inbound/",
+          "reason": "ROUTES 表とエラー→HTTP の写像を移し、main.py を配線専用にする"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "open",
+          "note": "agg-shared-artifact の content 属性を集約から外すかは未決。repository の形を確定させる前に決める必要がある"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "閲覧ゲートが上限5本を知る必要があるかは未確認。複数トークンモデルの着手前に確定させる"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "一覧・照会を3ユースケースとして新設し、bc / sd の members へ登録済み"
+        },
+        {
+          "advisor": "Orchestrator",
+          "refBlock": "designViewpoints",
+          "refIndex": 6,
+          "resolutionStatus": "resolved",
+          "note": "thicknessBySubdomain の中核行から製品固有の記述を外し、補完行へ「集約をクラスとして組まない」を明示済み"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ]
+}
