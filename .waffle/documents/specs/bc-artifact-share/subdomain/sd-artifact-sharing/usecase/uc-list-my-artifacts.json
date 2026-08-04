@@ -1,0 +1,199 @@
+{
+  "documentId": "uc-list-my-artifacts",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "手入れできる共有アーティファクトを見渡す：uc-list-my-artifacts"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "ListMyArtifacts"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "自分が手入れできる共有アーティファクトを見渡し、次に何を直すかを決める"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、投稿者は自分が何を公開したかを覚えている場合にしか手入れできない。共有URLを控えていなければ、公開したものへ到達する手段が無くなる",
+        "管理者が引き継ぎ先を決めるには、誰が何を公開しているかを先に見渡せる必要がある。見渡す手段が無いと、投稿者が抜けたときに手入れできなくなるものを数えられない",
+        "一部の記録が読めないときに黙って落とすと、投稿者は「公開したはずのものが消えた」としか見えない。飛ばした件数を伝えることで、失われたのか読めないだけなのかを区別できる"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "共有アーティファクト",
+          "message": "手入れできるものを見渡す",
+          "kind": "command"
+        },
+        {
+          "from": "共有アーティファクト",
+          "to": "共有アーティファクト",
+          "message": "投稿者本人のものだけに絞る（管理者は全員分）",
+          "kind": "self"
+        },
+        {
+          "from": "共有アーティファクト",
+          "to": "コメント",
+          "message": "寄せられた反応の件数を尋ねる",
+          "kind": "command"
+        },
+        {
+          "from": "共有アーティファクト",
+          "to": "投稿者",
+          "message": "更新の新しい順に並べた一覧と、読めなかった件数",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "何も変わらない。読み取るだけの操作であり、共有アーティファクトの状態も閲覧トークンも動かない"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 投稿者が見渡しを求めたとき、自分が公開した共有アーティファクトだけを返すこと",
+        "When 管理者が見渡しを求めたとき、招かれている全員の共有アーティファクトを返すこと",
+        "When 一覧を返すとき、更新の新しいものから順に並べること",
+        "When 一覧を返すとき、閲覧トークンそのものの値を含めないこと",
+        "When 一覧を返すとき、各共有アーティファクトに寄せられた反応の件数を添えること",
+        "If 読めない記録があるとき、それを飛ばして残りを返し、飛ばした件数を添えること",
+        "While 公開が止まっている間も、その共有アーティファクトを一覧に含め、止まっていることが分かる状態で返すこと"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": []
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "投稿者Xと投稿者Yが招かれている。",
+      "scenarios": [
+        {
+          "name": "自分が公開したものだけが並ぶ",
+          "category": "正常系",
+          "viewpoint": "可視性の境界。他人のものが混ざらないことを確かめる",
+          "gherkin": "Scenario: 自分が公開したものだけが並ぶ\n  Given 投稿者XがAを公開している\n  And 投稿者YがBを公開している\n  When 投稿者Xが見渡しを求める\n  Then A だけが返る\n  And B は含まれない",
+          "covers": "When 投稿者が見渡しを求めたとき、自分が公開した共有アーティファクトだけを返すこと"
+        },
+        {
+          "name": "管理者には全員のものが並ぶ",
+          "category": "正常系",
+          "viewpoint": "可視性の境界。管理者だけが境界を越えられることを確かめる",
+          "gherkin": "Scenario: 管理者には全員のものが並ぶ\n  Given 投稿者XがAを公開している\n  And 投稿者YがBを公開している\n  When 管理者が見渡しを求める\n  Then A と B の両方が返る\n  And それぞれを公開した人が分かる",
+          "covers": "When 管理者が見渡しを求めたとき、招かれている全員の共有アーティファクトを返すこと"
+        },
+        {
+          "name": "新しく直したものが先頭に来る",
+          "category": "正常系",
+          "viewpoint": "並び順。次に手を入れる候補が先頭に来ることを確かめる",
+          "gherkin": "Scenario: 新しく直したものが先頭に来る\n  Given 投稿者XがAを公開し、その後 B を公開している\n  And その後 A の中身を差し替えている\n  When 投稿者Xが見渡しを求める\n  Then A が B より先に並ぶ",
+          "covers": "When 一覧を返すとき、更新の新しいものから順に並べること"
+        },
+        {
+          "name": "閲覧トークンは一覧に現れない",
+          "category": "正常系",
+          "viewpoint": "漏えい。一覧は控えとして保存されることがあるため、トークンを含めない",
+          "gherkin": "Scenario: 閲覧トークンは一覧に現れない\n  Given 投稿者XがAを公開し、閲覧トークンを受け取っている\n  When 投稿者Xが見渡しを求める\n  Then 返った一覧のどこにも、その閲覧トークンの値は現れない",
+          "covers": "When 一覧を返すとき、閲覧トークンそのものの値を含めないこと"
+        },
+        {
+          "name": "寄せられた反応の件数が添う",
+          "category": "正常系",
+          "viewpoint": "判断材料。次に何を直すかを決めるのに反応の有無が要る",
+          "gherkin": "Scenario: 寄せられた反応の件数が添う\n  Given 投稿者XがAを公開している\n  And A に反応が2件寄せられている\n  When 投稿者Xが見渡しを求める\n  Then A の行に反応が2件と添う",
+          "covers": "When 一覧を返すとき、各共有アーティファクトに寄せられた反応の件数を添えること"
+        },
+        {
+          "name": "読めない記録があっても残りは返る",
+          "category": "異常系",
+          "viewpoint": "部分的な失敗。１件の不具合で一覧全体が失われないことを確かめる",
+          "gherkin": "Scenario: 読めない記録があっても残りは返る\n  Given 投稿者XがAとBを公開している\n  And A の記録が読めない状態になっている\n  When 投稿者Xが見渡しを求める\n  Then B が返る\n  And 読めなかった件数が1と伝わる",
+          "covers": "If 読めない記録があるとき、それを飛ばして残りを返し、飛ばした件数を添えること"
+        },
+        {
+          "name": "公開を止めているものも並ぶ",
+          "category": "境界値",
+          "viewpoint": "状態をまたぐ可視性。止めたものを見失わないことを確かめる",
+          "gherkin": "Scenario: 公開を止めているものも並ぶ\n  Given 投稿者XがAを公開し、その後公開を止めている\n  When 投稿者Xが見渡しを求める\n  Then A が並び、止まっていることが分かる",
+          "covers": "While 公開が止まっている間も、その共有アーティファクトを一覧に含め、止まっていることが分かる状態で返すこと"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 見渡しを何度求めても、共有アーティファクトの状態も閲覧トークンも変わらないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "投稿者XがAを公開している。",
+      "scenarios": [
+        {
+          "name": "何度見渡しても何も変わらない",
+          "category": "正常系",
+          "viewpoint": "べき等性。読み取りが副作用を持たないことを確かめる",
+          "gherkin": "Scenario: 何度見渡しても何も変わらない\n  Given 投稿者Xが見渡しを求めている\n  When 同じ見渡しをもう一度求める\n  Then 同じ一覧が返る\n  And A の公開の状態も閲覧トークンも変わっていない",
+          "covers": "When 見渡しを何度求めても、共有アーティファクトの状態も閲覧トークンも変わらないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "投稿者として招かれており、誰であるかを示す証明を持っている"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "投稿者が手入れできる共有アーティファクトを、更新の新しい順に見渡す。投稿者には自分のものだけ、管理者には全員のものが並ぶ。",
+        "閲覧トークンそのものの値は含めない。読めない記録は飛ばして残りを返し、飛ばした件数を添える。"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-shared-artifact"
+}

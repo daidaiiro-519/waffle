@@ -1,0 +1,185 @@
+{
+  "documentId": "uc-list-publishers",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "公開できる人の顔ぶれを確かめる：uc-list-publishers"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "ListPublishers"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "管理者",
+      "intent": "いま誰が公開できるのかを確かめ、招き直す相手・外す相手を選ぶ"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、管理者は招き直しや外す相手を宛先を覚えている場合にしか選べない。顔ぶれを体制に合わせる操作の手前で止まる",
+        "他の人に顔ぶれを見せないこと自体が守るべき規則である。共有の相手を社外へ広げたときに、社内の顔ぶれまで一緒に伝わらないようにする",
+        "まだ仮の合言葉のままの人がいることを見分けられないと、招き直すべき相手を見逃す"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "管理者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "管理者",
+          "to": "投稿者",
+          "message": "招かれている人を並べてもらう",
+          "kind": "command"
+        },
+        {
+          "from": "投稿者",
+          "to": "投稿者",
+          "message": "求めた人が管理者かを確かめる",
+          "kind": "self"
+        },
+        {
+          "from": "投稿者",
+          "to": "管理者",
+          "message": "宛先・状態・管理者かどうかの一覧",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "何も変わらない。読み取るだけの操作であり、名簿は動かない"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 管理者が一覧を求めたとき、招かれている人をすべて返すこと",
+        "When 一覧を返すとき、それぞれが管理者かどうかが分かる状態で返すこと",
+        "When 一覧を返すとき、まだ仮の合言葉のままの人と、既に入っている人を区別できる状態で返すこと",
+        "When 一覧を返すとき、合言葉に関わるものを一切含めないこと",
+        "If 管理者でない者が一覧を求めたとき、拒むこと"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "NOT_ADMINISTRATOR",
+          "condition": [
+            "求めた人が管理者ではない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "管理者Aと投稿者Xが招かれている。",
+      "scenarios": [
+        {
+          "name": "招かれている人がすべて並ぶ",
+          "category": "正常系",
+          "viewpoint": "網羅性。外す相手を選ぶには漏れがあってはならない",
+          "gherkin": "Scenario: 招かれている人がすべて並ぶ\n  When 管理者Aが一覧を求める\n  Then 管理者Aと投稿者Xの両方が並ぶ",
+          "covers": "When 管理者が一覧を求めたとき、招かれている人をすべて返すこと"
+        },
+        {
+          "name": "管理者かどうかが分かる",
+          "category": "正常系",
+          "viewpoint": "判断材料。管理者は自分自身を外せないため、どれが管理者かが見えている必要がある",
+          "gherkin": "Scenario: 管理者かどうかが分かる\n  When 管理者Aが一覧を求める\n  Then A は管理者として、X はそうでないと分かる",
+          "covers": "When 一覧を返すとき、それぞれが管理者かどうかが分かる状態で返すこと"
+        },
+        {
+          "name": "まだ入っていない人を見分けられる",
+          "category": "正常系",
+          "viewpoint": "状態の区別。招き直すべき相手を選ぶのに要る",
+          "gherkin": "Scenario: まだ入っていない人を見分けられる\n  Given 投稿者Zが招かれたが、まだ自分の合言葉を決めていない\n  When 管理者Aが一覧を求める\n  Then Z が、まだ入っていない状態として並ぶ",
+          "covers": "When 一覧を返すとき、まだ仮の合言葉のままの人と、既に入っている人を区別できる状態で返すこと"
+        },
+        {
+          "name": "合言葉に関わるものは一切出ない",
+          "category": "正常系",
+          "viewpoint": "漏えい。名簿が持っていても、ここから外へ出さない",
+          "gherkin": "Scenario: 合言葉に関わるものは一切出ない\n  When 管理者Aが一覧を求める\n  Then 返った一覧のどこにも、合言葉や仮の合言葉は現れない",
+          "covers": "When 一覧を返すとき、合言葉に関わるものを一切含めないこと"
+        },
+        {
+          "name": "管理者でない者は顔ぶれを見られない",
+          "category": "異常系",
+          "viewpoint": "事前条件違反。顔ぶれを投稿者どうしに見せないという規則そのものを確かめる",
+          "gherkin": "Scenario: 管理者でない者は顔ぶれを見られない\n  When 投稿者Xが一覧を求める\n  Then 管理者でないことを理由に拒まれる\n  And 顔ぶれは一切返らない",
+          "covers": "If 管理者でない者が一覧を求めたとき、拒むこと"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 一覧を何度求めても、招かれている人の名簿は変わらないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "管理者Aと投稿者Xが招かれている。",
+      "scenarios": [
+        {
+          "name": "何度見ても名簿は変わらない",
+          "category": "正常系",
+          "viewpoint": "べき等性。名簿はこの文脈の外にある仕組みなので、読み取りがそこを動かさないことを確かめる",
+          "gherkin": "Scenario: 何度見ても名簿は変わらない\n  Given 管理者Aが一覧を見ている\n  When 同じ一覧をもう一度求める\n  Then 同じ顔ぶれが返る\n  And 誰の状態も変わっていない",
+          "covers": "When 一覧を何度求めても、招かれている人の名簿は変わらないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": [
+        "招かれている人の名簿（この文脈の外にある仕組み）"
+      ]
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "管理者としての証明を持っている"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "管理者が、招かれている人の顔ぶれを確かめる。それぞれが管理者か、まだ仮の合言葉のままかが分かる。",
+        "見られるのは管理者だけで、合言葉に関わるものは一切返さない。"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing"
+}

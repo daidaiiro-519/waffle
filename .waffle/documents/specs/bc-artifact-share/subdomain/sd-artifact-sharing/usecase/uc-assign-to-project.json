@@ -13,7 +13,7 @@
       "blockType": "ActorIntent",
       "title": "主アクターと意図",
       "actor": "投稿者",
-      "intent": "複数の共有アーティファクトを1つの閲覧トークンでまとめて見てもらえるようにする"
+      "intent": "まとめて見てもらう範囲を、加える・外すで調整する"
     },
     "usecaseRationale": {
       "blockType": "UsecaseRationale",
@@ -223,7 +223,16 @@
     "operationIndex": {
       "blockType": "OperationIndex",
       "title": "操作一覧",
-      "items": []
+      "items": [
+        {
+          "operation": "assign",
+          "summary": "共有アーティファクトをプロジェクトへ加える。以後はそのプロジェクトの閲覧トークンでも開けるようになる。"
+        },
+        {
+          "operation": "unassign",
+          "summary": "共有アーティファクトをプロジェクトから外す。共有アーティファクト自体と、それ自身の閲覧トークンは失われない。"
+        }
+      ]
     },
     "description": {
       "blockType": "Summary",

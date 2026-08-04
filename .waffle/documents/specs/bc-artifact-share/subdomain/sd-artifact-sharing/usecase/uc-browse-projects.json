@@ -1,0 +1,246 @@
+{
+  "documentId": "uc-browse-projects",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "プロジェクトの顔ぶれと中身を確かめる：uc-browse-projects"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "BrowseProjects"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "出し入れできるプロジェクトの顔ぶれと中身を確かめ、自分のものをどこへ入れるかを決める"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "これが無いと、投稿者は自分の共有アーティファクトをどこへ入れるべきかを決められない。入れ先の候補が見えなければ、プロジェクトへ加える操作自体が使えない",
+        "一覧だけでは、そのプロジェクトにいま何が入っているかが分からない。重複して入れてしまうか、入っているものを外す判断ができない",
+        "公開が止まっているプロジェクトの中身を見られないと、再開するか中身を外すかを決められないまま封じ込められる"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "プロジェクト",
+          "message": "出し入れできるものを並べてもらう",
+          "kind": "command"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "投稿者",
+          "message": "持ち主のものと共有のものの一覧",
+          "kind": "return"
+        },
+        {
+          "from": "投稿者",
+          "to": "プロジェクト",
+          "message": "1つの中身を見せてもらう",
+          "kind": "command"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "共有アーティファクト",
+          "message": "入っているものの表示名と状態を尋ねる",
+          "kind": "command"
+        },
+        {
+          "from": "プロジェクト",
+          "to": "投稿者",
+          "message": "プロジェクトの概要と、入っているものの一覧",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "何も変わらない。読み取るだけの操作であり、プロジェクトの状態も所属も閲覧トークンも動かない"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 投稿者が一覧を求めたとき、自分が持ち主のものと、共有のものを返すこと",
+        "When 管理者が一覧を求めたとき、すべてのプロジェクトを返すこと",
+        "When 一覧を返すとき、他人が持ち主の個人のプロジェクトを含めないこと",
+        "When 投稿者が1つの中身を求めたとき、入っている共有アーティファクトを表示名つきで、更新の新しい順に返すこと",
+        "When 中身を返すとき、それぞれが自分のものかどうかが分かる状態で返すこと",
+        "While プロジェクトの公開が止まっている間も、中身を返すこと",
+        "When 一覧も中身も、閲覧トークンそのものの値を含めないこと",
+        "If 読めない記録があるとき、それを飛ばして残りを返し、飛ばした件数を添えること",
+        "If 見れないプロジェクトの中身を求められたとき、存在しないものとして拒むこと"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "PROJECT_NOT_FOUND",
+          "condition": [
+            "指されたプロジェクトが存在しない",
+            "存在するが、その人が見られない（他人が持ち主の個人のプロジェクト）"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "投稿者Xと投稿者Yが招かれている。",
+      "scenarios": [
+        {
+          "name": "持ち主のものと共有のものが並ぶ",
+          "category": "正常系",
+          "viewpoint": "可視性の境界。入れ先の候補として正しいものだけが並ぶことを確かめる",
+          "gherkin": "Scenario: 持ち主のものと共有のものが並ぶ\n  Given 投稿者Xが個人のプロジェクトPを作っている\n  And 投稿者Yが共有のプロジェクトQを作っている\n  When 投稿者Xが一覧を求める\n  Then P と Q が並ぶ",
+          "covers": "When 投稿者が一覧を求めたとき、自分が持ち主のものと、共有のものを返すこと",
+          "operation": "list"
+        },
+        {
+          "name": "他人の個人のプロジェクトは並ばない",
+          "category": "正常系",
+          "viewpoint": "可視性の境界。個人のものが漏れないことを確かめる",
+          "gherkin": "Scenario: 他人の個人のプロジェクトは並ばない\n  Given 投稿者Yが個人のプロジェクトRを作っている\n  When 投稿者Xが一覧を求める\n  Then R は含まれない",
+          "covers": "When 一覧を返すとき、他人が持ち主の個人のプロジェクトを含めないこと",
+          "operation": "list"
+        },
+        {
+          "name": "管理者にはすべてが並ぶ",
+          "category": "正常系",
+          "viewpoint": "可視性の境界。管理者だけが境界を越えられることを確かめる",
+          "gherkin": "Scenario: 管理者にはすべてが並ぶ\n  Given 投稿者Yが個人のプロジェクトRを作っている\n  When 管理者が一覧を求める\n  Then R が含まれる",
+          "covers": "When 管理者が一覧を求めたとき、すべてのプロジェクトを返すこと",
+          "operation": "list"
+        },
+        {
+          "name": "中身が名前つきで返る",
+          "category": "正常系",
+          "viewpoint": "判断材料。何が入っているかを識別子ではなく表示名で分かることを確かめる",
+          "gherkin": "Scenario: 中身が名前つきで返る\n  Given プロジェクトPに共有アーティファクトAが入っている\n  When 投稿者XがPの中身を求める\n  Then A の表示名と状態が返る",
+          "covers": "When 投稿者が1つの中身を求めたとき、入っている共有アーティファクトを表示名つきで、更新の新しい順に返すこと",
+          "operation": "detail"
+        },
+        {
+          "name": "自分のものかどうかが分かる",
+          "category": "正常系",
+          "viewpoint": "判断材料。共有のプロジェクトでは他人のものも並ぶため、外せるのがどれかを区別する",
+          "gherkin": "Scenario: 自分のものかどうかが分かる\n  Given 共有のプロジェクトQに、投稿者XのAと投稿者YのBが入っている\n  When 投稿者XがQの中身を求める\n  Then A は自分のもの、B はそうでないと分かる",
+          "covers": "When 中身を返すとき、それぞれが自分のものかどうかが分かる状態で返すこと",
+          "operation": "detail"
+        },
+        {
+          "name": "止まっていても中身は見られる",
+          "category": "境界値",
+          "viewpoint": "状態をまたぐ可視性。再開するか外すかを決めるのに中身が要る",
+          "gherkin": "Scenario: 止まっていても中身は見られる\n  Given プロジェクトPの公開が止まっている\n  When 投稿者XがPの中身を求める\n  Then 入っているものの一覧が返る",
+          "covers": "While プロジェクトの公開が止まっている間も、中身を返すこと",
+          "operation": "detail"
+        },
+        {
+          "name": "見れないプロジェクトは存在しない扱いになる",
+          "category": "異常系",
+          "viewpoint": "存在の漏えい。拒否と区別できると、あること自体が伝わる",
+          "gherkin": "Scenario: 見れないプロジェクトは存在しない扱いになる\n  Given 投稿者Yが個人のプロジェクトRを作っている\n  When 投稿者XがRの中身を求める\n  Then 見つからないとして拒まれる\n  And 存在しない識別子を指したときと同じ答えになる",
+          "covers": "If 見れないプロジェクトの中身を求められたとき、存在しないものとして拒むこと",
+          "operation": "detail"
+        },
+        {
+          "name": "読めない記録があっても残りは返る",
+          "category": "異常系",
+          "viewpoint": "部分的な失敗。１件の不具合で一覧全体が失われないことを確かめる",
+          "gherkin": "Scenario: 読めない記録があっても残りは返る\n  Given 投稿者XがプロジェクトPとQを作っている\n  And P の記録が読めない状態になっている\n  When 投稿者Xが一覧を求める\n  Then Q が返る\n  And 読めなかった件数が1と伝わる",
+          "covers": "If 読めない記録があるとき、それを飛ばして残りを返し、飛ばした件数を添えること",
+          "operation": "list"
+        },
+        {
+          "name": "閲覧トークンはどちらにも現れない",
+          "category": "正常系",
+          "viewpoint": "漏えい。一覧と中身の両方で確かめる",
+          "gherkin": "Scenario: 閲覧トークンはどちらにも現れない\n  Given 投稿者XがプロジェクトPを作り、閲覧トークンを受け取っている\n  When 投稿者Xが一覧と P の中身を求める\n  Then どちらの答えにも、その閲覧トークンの値は現れない",
+          "covers": "When 一覧も中身も、閲覧トークンそのものの値を含めないこと"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 一覧も中身も何度求めても、プロジェクトの状態も所属も閲覧トークンも変わらないこと"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "投稿者XがプロジェクトPを作っている。",
+      "scenarios": [
+        {
+          "name": "何度見ても何も変わらない",
+          "category": "正常系",
+          "viewpoint": "べき等性。読み取りが副作用を持たないことを確かめる",
+          "gherkin": "Scenario: 何度見ても何も変わらない\n  Given 投稿者Xが一覧と P の中身を見ている\n  When 同じものをもう一度求める\n  Then 同じ答えが返る\n  And P の公開の状態も所属も閲覧トークンも変わっていない",
+          "covers": "When 一覧も中身も何度求めても、プロジェクトの状態も所属も閲覧トークンも変わらないこと"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": [
+        {
+          "operation": "list",
+          "summary": "出し入れできるプロジェクトを並べる。持ち主のものと共有のものが並び、管理者にはすべてが並ぶ。"
+        },
+        {
+          "operation": "detail",
+          "summary": "1つのプロジェクトの概要と、いま入っている共有アーティファクトを返す。"
+        }
+      ]
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "投稿者として招かれており、誰であるかを示す証明を持っている"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "投稿者が出し入れできるプロジェクトを並べ、そのうち1つの中身を開いて確かめる。一覧で候補を絞り、中身を見て入れ先を決めるという一続きの場面を担う。",
+        "どちらも読み取るだけで、閲覧トークンそのものの値は返さない。"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing",
+  "aggregateRef": "agg-project"
+}

@@ -91,6 +91,9 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-revoke-view-token
 - uc-revoke-all-view-tokens
 - uc-list-view-tokens
+- uc-list-my-artifacts
+- uc-browse-projects
+- uc-list-publishers
 
 ---
 
