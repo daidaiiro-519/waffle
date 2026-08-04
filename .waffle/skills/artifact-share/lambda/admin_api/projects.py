@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 
 from manage import ManageError
-from ports import Caller, Deps
+from ports import Caller, ArtifactStore, Clock, ViewTokenStore
 from publish import ID_ALPHABET, new_token, token_record
 
 import secrets
@@ -53,41 +53,41 @@ def _index_key(project_id: str) -> str:
     return f"projects/{project_id}.json"
 
 
-def read_index(deps: Deps, project_id: str) -> dict | None:
+def read_index(store: ArtifactStore, project_id: str) -> dict | None:
     """プロジェクトの索引を読む。無ければ None。"""
     try:
-        return json.loads(deps.store.get(_index_key(project_id)))
+        return json.loads(store.get(_index_key(project_id)))
     except Exception:
         return None
 
 
-def _write_index(deps: Deps, index: dict) -> None:
-    index["updatedAt"] = deps.now()
-    deps.store.put(_index_key(index["projectId"]),
+def _write_index(store: ArtifactStore, clock: Clock, index: dict) -> None:
+    index["updatedAt"] = clock()
+    store.put(_index_key(index["projectId"]),
                    json.dumps(index, ensure_ascii=False), "application/json")
 
 
-def _read_own(deps: Deps, caller: Caller, project_id: str) -> dict:
+def _read_own(store: ArtifactStore, caller: Caller, project_id: str) -> dict:
     """見せ方を変えてよいプロジェクトの索引を読む。
 
     持ち主と管理者だけが通る。それ以外は、拒むのではなく見つからないものと
     して扱う。無いものと他人のものを同じ拒み方にすることで、そこに何かが
     あること自体を読み取らせない。
     """
-    index = read_index(deps, project_id)
+    index = read_index(store, project_id)
     if not index or not (caller.is_admin or index.get("owner") == caller.id):
         raise ProjectError("PROJECT_NOT_FOUND", "見つかりません。")
     return index
 
 
-def _viewer_url(deps: Deps, project_id: str) -> str:
-    domain = deps.viewer_domain or "{viewer-domain}"
+def _viewer_url(viewer_domain: str, project_id: str) -> str:
+    domain = viewer_domain or "{viewer-domain}"
     return f"https://{domain}/proj/{project_id}/"
 
 
 # ── 一覧ページの書き出し ────────────────────────────────
 
-def write_listing(deps: Deps, index: dict) -> None:
+def write_listing(store: ArtifactStore, index: dict) -> None:
     """閲覧者が見る一覧の中身を書き出す。
 
     雛形（index.html）はどのプロジェクトでも同じものを置き、この中身
@@ -100,7 +100,7 @@ def write_listing(deps: Deps, index: dict) -> None:
     rows = []
     for artifact_id in index.get("memberArtifactIds", []):
         try:
-            meta = json.loads(deps.store.get(f"meta/{artifact_id}.json"))
+            meta = json.loads(store.get(f"meta/{artifact_id}.json"))
         except Exception:
             continue
         if meta.get("status") != "active":
@@ -114,7 +114,7 @@ def write_listing(deps: Deps, index: dict) -> None:
         })
     rows.sort(key=lambda r: r["updatedAt"], reverse=True)
 
-    deps.store.put(
+    store.put(
         f"proj/{index['projectId']}/index.json",
         json.dumps({"name": index.get("displayName", ""), "artifacts": rows},
                    ensure_ascii=False),
@@ -122,16 +122,15 @@ def write_listing(deps: Deps, index: dict) -> None:
     )
 
 
-def _write_page(deps: Deps, project_id: str) -> None:
+def _write_page(store: ArtifactStore, project_page: str, project_id: str) -> None:
     """一覧ページの雛形を置く。中身は index.json から読む。"""
-    page = (deps.project_page or "").replace("{{プロジェクトID}}", project_id)
-    deps.store.put(f"proj/{project_id}/index.html", page, "text/html; charset=utf-8")
+    page = (project_page or "").replace("{{プロジェクトID}}", project_id)
+    store.put(f"proj/{project_id}/index.html", page, "text/html; charset=utf-8")
 
 
 # ── 作る ────────────────────────────────────────────────
 
-def create(deps: Deps, caller: Caller, display_name: str,
-           scope: str, project_key: str = "") -> dict:
+def create(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, project_page: str, viewer_domain: str, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
     """プロジェクトを作り、閲覧トークンを発行する。作った時点では何も入っていない。
 
     共有の別はここでしか決まらない。変える操作を用意しないことが、
@@ -145,7 +144,7 @@ def create(deps: Deps, caller: Caller, display_name: str,
 
     project_id = new_project_id()
     token = new_token()
-    now = deps.now()
+    now = clock()
 
     index = {
         "projectId": project_id,
@@ -157,23 +156,23 @@ def create(deps: Deps, caller: Caller, display_name: str,
         "memberArtifactIds": [],
         "createdAt": now,
     }
-    _write_index(deps, index)
-    _write_page(deps, project_id)
-    write_listing(deps, index)
+    _write_index(store, clock, index)
+    _write_page(store, project_page, project_id)
+    write_listing(store, index)
 
     # 閲覧トークンは最後に書く。ここまで成功して初めて開ける状態になる
-    deps.keys.put(f"proj:{project_id}", token_record(token, now))
+    tokens.put(f"proj:{project_id}", token_record(token, now))
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": _viewer_url(deps, project_id), "name": name, "scope": scope,
+            "url": _viewer_url(viewer_domain, project_id), "name": name, "scope": scope,
             "event": "ProjectCreated"}
 
 
 # ── 見せ方を変える ──────────────────────────────────────
 
-def _generation(deps: Deps, project_id: str) -> int:
+def _generation(tokens: ViewTokenStore, project_id: str) -> int:
     try:
-        record = deps.keys.get(f"proj:{project_id}")
+        record = tokens.get(f"proj:{project_id}")
     except Exception:
         return 1
     if record == "DISABLED":
@@ -182,60 +181,60 @@ def _generation(deps: Deps, project_id: str) -> int:
     return int(parts[2]) if len(parts) > 2 else 1
 
 
-def _issue(deps: Deps, project_id: str, generation: int) -> str:
+def _issue(tokens: ViewTokenStore, clock: Clock, project_id: str, generation: int) -> str:
     token = new_token()
-    deps.keys.put(f"proj:{project_id}",
-                  token_record(token, deps.now(), generation=generation))
+    tokens.put(f"proj:{project_id}",
+                  token_record(token, clock(), generation=generation))
     return token
 
 
-def reissue_token(deps: Deps, caller: Caller, project_id: str) -> dict:
+def reissue_token(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, project_id: str) -> dict:
     """新しい閲覧トークンを発行し、それまでのものを使えなくする。URLは変えない。"""
-    index = _read_own(deps, caller, project_id)
-    generation = _generation(deps, project_id) + 1
-    token = _issue(deps, project_id, generation)
-    _write_index(deps, index)
+    index = _read_own(store, caller, project_id)
+    generation = _generation(tokens, project_id) + 1
+    token = _issue(tokens, clock, project_id, generation)
+    _write_index(store, clock, index)
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": _viewer_url(deps, project_id), "generation": generation}
+            "url": _viewer_url(viewer_domain, project_id), "generation": generation}
 
 
-def suspend(deps: Deps, caller: Caller, project_id: str) -> dict:
+def suspend(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, project_id: str) -> dict:
     """このプロジェクトの閲覧トークンでは何も開けない状態にする。
 
     入っている共有アーティファクトは、それぞれの閲覧トークンで引き続き開ける。
     プロジェクトは見せ方の束ねであって、入れ物ではない。
     """
-    index = _read_own(deps, caller, project_id)
+    index = _read_own(store, caller, project_id)
     if index.get("status") != "active":
         raise ProjectError("NOT_ACTIVE", "すでに公開が止まっています。")
 
-    deps.keys.put(f"proj:{project_id}", "DISABLED")
+    tokens.put(f"proj:{project_id}", "DISABLED")
     index["status"] = "disabled"
-    _write_index(deps, index)
+    _write_index(store, clock, index)
 
     return {"projectId": project_id, "status": "disabled"}
 
 
-def resume(deps: Deps, caller: Caller, project_id: str) -> dict:
+def resume(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, project_id: str) -> dict:
     """再び開ける状態に戻す。閲覧トークンは必ず新しくなる。"""
-    index = _read_own(deps, caller, project_id)
+    index = _read_own(store, caller, project_id)
     if index.get("status") != "disabled":
         raise ProjectError("NOT_SUSPENDED", "公開は止まっていません。")
 
-    generation = _generation(deps, project_id) + 1
-    token = _issue(deps, project_id, generation)
+    generation = _generation(tokens, project_id) + 1
+    token = _issue(tokens, clock, project_id, generation)
     index["status"] = "active"
-    _write_index(deps, index)
+    _write_index(store, clock, index)
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": _viewer_url(deps, project_id), "generation": generation,
+            "url": _viewer_url(viewer_domain, project_id), "generation": generation,
             "status": "active"}
 
 
 # ── 一覧 ────────────────────────────────────────────────
 
-def list_projects(deps: Deps, caller: Caller) -> dict:
+def list_projects(store: ArtifactStore, caller: Caller) -> dict:
     """出し入れできるプロジェクトを並べる。閲覧トークンは含めない。
 
     自分が持ち主のものと、共有のものが並ぶ。管理者には全部が並ぶ。
@@ -245,9 +244,9 @@ def list_projects(deps: Deps, caller: Caller) -> dict:
     落とすと、作ったはずのプロジェクトが消えたように見える。
     """
     rows, unreadable = [], 0
-    for key in deps.store.list("projects/"):
+    for key in store.list("projects/"):
         try:
-            index = json.loads(deps.store.get(key))
+            index = json.loads(store.get(key))
         except Exception:
             unreadable += 1
             continue
@@ -271,7 +270,7 @@ def list_projects(deps: Deps, caller: Caller) -> dict:
 
 # ── 中身を見る ──────────────────────────────────────────
 
-def detail(deps: Deps, caller: Caller, project_id: str) -> dict:
+def detail(store: ArtifactStore, viewer_domain: str, caller: Caller, project_id: str) -> dict:
     """プロジェクトと、いま入っている共有アーティファクトを返す。
 
     見られるのは、そこへ自分のものを出し入れできる人（持ち主・管理者・
@@ -281,7 +280,7 @@ def detail(deps: Deps, caller: Caller, project_id: str) -> dict:
     公開が止まっていても見られる。止めたものを再開するか外すかを決めるのに
     中身が要るため。閲覧トークンは含めない。
     """
-    index = read_index(deps, project_id)
+    index = read_index(store, project_id)
     if not index:
         raise ProjectError("PROJECT_NOT_FOUND", "見つかりません。")
     if not (caller.is_admin or index.get("owner") == caller.id
@@ -291,7 +290,7 @@ def detail(deps: Deps, caller: Caller, project_id: str) -> dict:
     rows = []
     for artifact_id in index.get("memberArtifactIds", []):
         try:
-            meta = json.loads(deps.store.get(f"meta/{artifact_id}.json"))
+            meta = json.loads(store.get(f"meta/{artifact_id}.json"))
         except Exception:
             continue
         rows.append({
@@ -314,7 +313,7 @@ def detail(deps: Deps, caller: Caller, project_id: str) -> dict:
             "status": index.get("status", ""),
             "owner": index.get("owner", ""),
             "isMine": index.get("owner") == caller.id,
-            "url": _viewer_url(deps, project_id),
+            "url": _viewer_url(viewer_domain, project_id),
         },
         "artifacts": rows,
     }
@@ -322,13 +321,13 @@ def detail(deps: Deps, caller: Caller, project_id: str) -> dict:
 
 # ── 出し入れの可否（manage.py から使う） ────────────────
 
-def require_writable(deps: Deps, caller: Caller, project_id: str) -> dict:
+def require_writable(store: ArtifactStore, caller: Caller, project_id: str) -> dict:
     """共有アーティファクトを出し入れしてよいプロジェクトかを確かめる。
 
     共有なら招かれた投稿者なら誰でも、個人なら持ち主だけ。管理者は両方。
     見せ方を変える操作と違い、こちらは共有の別を見る。
     """
-    index = read_index(deps, project_id)
+    index = read_index(store, project_id)
     if not index:
         raise ManageError("PROJECT_NOT_FOUND", "そのプロジェクトはありません。")
     if index.get("status") != "active":

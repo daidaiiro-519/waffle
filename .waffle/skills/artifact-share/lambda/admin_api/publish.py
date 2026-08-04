@@ -18,7 +18,7 @@ import json
 import re
 import secrets
 
-from ports import Deps
+from ports import ArtifactStore, Clock, PublisherIdentifier, ViewTokenStore
 import time
 from dataclasses import dataclass
 from typing import Callable
@@ -142,7 +142,7 @@ def token_record(token: str, now: int, ttl: int = DEFAULT_TOKEN_TTL, generation:
 
 # ── 公開 ────────────────────────────────────────────────
 
-def publish(request: dict, deps: Deps) -> dict:
+def publish(store: ArtifactStore, tokens: ViewTokenStore, identify: PublisherIdentifier, clock: Clock, wrapper_template: str, viewer_domain: str, request: dict) -> dict:
     """アップロードされたHTMLを公開し、URLとトークンを返す。
 
     途中で失敗したときに開ける状態のものを残さないことを、書き込む順序で保証する。
@@ -153,7 +153,7 @@ def publish(request: dict, deps: Deps) -> dict:
     与えると、破られたときの被害が反応や記録にまで及ぶため。到達できないまま
     残ったファイルの片付けは、権限を持つ責任者の運用として行う。
     """
-    publisher = deps.identify(request.get("authorization", ""))
+    publisher = identify(request.get("authorization", ""))
     if not publisher:
         raise PublishError("NOT_INVITED", "公開できるのは招かれた利用者だけです。")
 
@@ -178,7 +178,7 @@ def publish(request: dict, deps: Deps) -> dict:
 
     artifact_id = new_artifact_id()
     token = new_token()
-    now = deps.now()
+    now = clock()
 
     index_key = f"p/{artifact_id}/index.html"
     content_key = f"p/{artifact_id}/content.html"
@@ -186,12 +186,12 @@ def publish(request: dict, deps: Deps) -> dict:
 
     try:
         # アップロードされたものは書き換えずにそのまま置く
-        deps.store.put(content_key, content, "text/html; charset=utf-8")
+        store.put(content_key, content, "text/html; charset=utf-8")
 
         # 閲覧画面はこちらが組み立てる。中身には触れない
-        viewer = deps.wrapper_template.replace("{{アーティファクトID}}", artifact_id)
+        viewer = wrapper_template.replace("{{アーティファクトID}}", artifact_id)
         viewer = viewer.replace("{{表示名}}", title)
-        deps.store.put(index_key, viewer, "text/html; charset=utf-8")
+        store.put(index_key, viewer, "text/html; charset=utf-8")
 
         record = {
             "artifactId": artifact_id,
@@ -206,21 +206,21 @@ def publish(request: dict, deps: Deps) -> dict:
             "uploadedBy": publisher,
             "externalRefs": found["externalRefs"],
             "contentHash": hashlib.sha256(content.encode("utf-8")).hexdigest(),
-            "wrapperHash": hashlib.sha256(deps.wrapper_template.encode("utf-8")).hexdigest(),
+            "wrapperHash": hashlib.sha256(wrapper_template.encode("utf-8")).hexdigest(),
             "publishedAt": now,
             "updatedAt": now,
         }
-        deps.store.put(meta_key, json.dumps(record, ensure_ascii=False), "application/json")
+        store.put(meta_key, json.dumps(record, ensure_ascii=False), "application/json")
 
         # トークンは最後に書く。ここまで成功して初めて開ける状態になる
-        deps.keys.put(f"token:{artifact_id}", token_record(token, now))
+        tokens.put(f"token:{artifact_id}", token_record(token, now))
     except PublishError:
         raise
     except Exception as e:
         # トークンを書く前に失敗しているため、置かれたものは誰にも開けない
         raise PublishError("PUBLISH_FAILED", f"公開できませんでした: {e}") from e
 
-    domain = deps.viewer_domain or "{viewer-domain}"
+    domain = viewer_domain or "{viewer-domain}"
     return {
         "artifactId": artifact_id,
         "token": token,               # 返すのはこの一度きり。保管には残さない

@@ -20,11 +20,33 @@ import json
 import os
 from pathlib import Path
 
+import dataclasses
+
 import comments as comment_store
 import manage
 import projects
 import publish
 import publishers
+
+
+@dataclasses.dataclass
+class Connections:
+    """合成ルートが組み立てた結線の束。
+
+    これは port ではない。port は能力ごとの型として ports.py にあり、各操作は
+    自分が必要とする口だけを受け取る。ここは、その口の実物を1か所で組み立てて
+    経路表へ配るための入れ物にすぎない。
+    """
+
+    store: object
+    keys: object
+    now: object
+    viewer_domain: str = ""
+    identify: object = None
+    directory: object = None
+    wrapper_template: str = ""
+    project_page: str = ""
+
 
 # 管理者のグループ名。Cognitoのトークンに含まれていれば管理者とみなす
 ADMIN_GROUP = "administrators"
@@ -48,10 +70,12 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
 
     try:
         if action == "publish":
-            result = publish.publish({**body, "authorization": authorization},
-                                     _publish_deps())
+            c = _publish_deps()
+            result = publish.publish(c.store, c.keys, c.identify, c.now,
+                                     c.wrapper_template, c.viewer_domain,
+                                     {**body, "authorization": authorization})
         else:
-            result = _dispatch(action, manage.Deps(**_connections()), caller, body)
+            result = _dispatch(action, Connections(**_connections()), caller, body)
         return _response(200, result)
     except publish.PublishError as e:
         return _response(403 if e.code == "NOT_INVITED" else 400,
@@ -76,29 +100,28 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
 # 1つ増やして行き先を書き忘れると、その操作は黙って削除を実行していた。
 # 表であれば、行き先の無い操作は下で落ちる。
 ROUTES = {
-    "list":        lambda d, c, b: manage.list_artifacts(d, c),
-    "replace":     lambda d, c, b: manage.replace_content(d, c, b.get("artifactId", ""), b.get("html", "")),
-    "rotate":      lambda d, c, b: manage.reissue_token(d, c, b.get("artifactId", "")),
-    "disable":     lambda d, c, b: manage.suspend(d, c, b.get("artifactId", "")),
-    "enable":      lambda d, c, b: manage.resume(d, c, b.get("artifactId", "")),
-    "assign":      lambda d, c, b: manage.assign(d, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "unassign":    lambda d, c, b: manage.unassign(d, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "transfer":    lambda d, c, b: manage.transfer(d, c, b.get("artifactId", ""), b.get("toPublisher", "")),
-    "comments":    lambda d, c, b: comment_store.read(d, c, b.get("artifactId", "")),
-    "export":      lambda d, c, b: comment_store.export(d, c, b.get("artifactId", "")),
+    "list":        lambda d, c, b: manage.list_artifacts(d.store, c),
+    "replace":     lambda d, c, b: manage.replace_content(d.store, d.now, d.viewer_domain, c, b.get("artifactId", ""), b.get("html", "")),
+    "rotate":      lambda d, c, b: manage.reissue_token(d.store, d.keys, d.now, d.viewer_domain, c, b.get("artifactId", "")),
+    "disable":     lambda d, c, b: manage.suspend(d.store, d.keys, d.now, c, b.get("artifactId", "")),
+    "enable":      lambda d, c, b: manage.resume(d.store, d.keys, d.now, d.viewer_domain, c, b.get("artifactId", "")),
+    "assign":      lambda d, c, b: manage.assign(d.store, d.keys, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "unassign":    lambda d, c, b: manage.unassign(d.store, d.keys, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "transfer":    lambda d, c, b: manage.transfer(d.store, d.directory, d.now, c, b.get("artifactId", ""), b.get("toPublisher", "")),
+    "comments":    lambda d, c, b: comment_store.read(d.store, c, b.get("artifactId", "")),
+    "export":      lambda d, c, b: comment_store.export(d.store, c, b.get("artifactId", "")),
 
-    "invite":          lambda d, c, b: publishers.invite(d, c, b.get("email", "")),
-    "publishers":      lambda d, c, b: {"publishers": publishers.list_publishers(d, c)},
-    "resend-invite":   lambda d, c, b: publishers.resend_invite(d, c, b.get("publisherId", "")),
-    "remove-publisher": lambda d, c, b: publishers.remove(d, c, b.get("publisherId", "")),
+    "invite":          lambda d, c, b: publishers.invite(d.directory, c, b.get("email", "")),
+    "publishers":      lambda d, c, b: {"publishers": publishers.list_publishers(d.directory, c)},
+    "resend-invite":   lambda d, c, b: publishers.resend_invite(d.directory, c, b.get("publisherId", "")),
+    "remove-publisher": lambda d, c, b: publishers.remove(d.store, d.directory, c, b.get("publisherId", "")),
 
-    "projects":        lambda d, c, b: projects.list_projects(d, c),
-    "project":         lambda d, c, b: projects.detail(d, c, b.get("projectId", "")),
-    "create-project":  lambda d, c, b: projects.create(d, c, b.get("displayName", ""),
-                                                       b.get("scope", ""), b.get("projectKey", "")),
-    "reissue-project": lambda d, c, b: projects.reissue_token(d, c, b.get("projectId", "")),
-    "disable-project": lambda d, c, b: projects.suspend(d, c, b.get("projectId", "")),
-    "enable-project":  lambda d, c, b: projects.resume(d, c, b.get("projectId", "")),
+    "projects":        lambda d, c, b: projects.list_projects(d.store, c),
+    "project":         lambda d, c, b: projects.detail(d.store, d.viewer_domain, c, b.get("projectId", "")),
+    "create-project":  lambda d, c, b: projects.create(d.store, d.keys, d.now, d.project_page, d.viewer_domain, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
+    "reissue-project": lambda d, c, b: projects.reissue_token(d.store, d.keys, d.now, d.viewer_domain, c, b.get("projectId", "")),
+    "disable-project": lambda d, c, b: projects.suspend(d.store, d.keys, d.now, c, b.get("projectId", "")),
+    "enable-project":  lambda d, c, b: projects.resume(d.store, d.keys, d.now, d.viewer_domain, c, b.get("projectId", "")),
 }
 
 
@@ -241,11 +264,11 @@ def _read_template(name: str) -> str:  # pragma: no cover
         return ""
 
 
-def _publish_deps() -> publish.Deps:  # pragma: no cover
+def _publish_deps() -> Connections:  # pragma: no cover
     connections = _connections()
     connections.pop("directory")          # 公開は名簿を読まない
     connections.pop("project_page")       # 公開はプロジェクトの雛形を要らない
-    return publish.Deps(
+    return Connections(
         identify=lambda auth: (_identify(auth) or manage.Caller("")).id or None,
         wrapper_template=(Path(__file__).parent / "share-wrapper.html")
         .read_text(encoding="utf-8"),

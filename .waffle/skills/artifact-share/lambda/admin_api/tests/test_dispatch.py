@@ -42,9 +42,14 @@ def stub_every_destination(monkeypatch):
                     raising=False)
 
 
+# 行き先だけを見たいので、結線は空でよい。ただし経路表は束から口を取り出して
+# 渡すため、属性そのものは在る必要がある
+EMPTY = main.Connections(store=None, keys=None, now=None)
+
+
 def destination_of(action, body=None):
     with pytest.raises(Reached) as x:
-        main._dispatch(action, None, manage.Caller("p1"), body or {})
+        main._dispatch(action, EMPTY, manage.Caller("p1"), body or {})
     return x.value.where
 
 
@@ -106,14 +111,14 @@ def test_この検証が表の全部を見ている():
 
 def test_body_の値がそのまま渡る():
     with pytest.raises(Reached) as x:
-        main._dispatch("assign", None, manage.Caller("p1"),
+        main._dispatch("assign", EMPTY, manage.Caller("p1"),
                        {"artifactId": "aaa", "projectId": "ppp"})
-    _deps, caller, artifact_id, project_id = x.value.passed
+    caller, artifact_id, project_id = x.value.passed[-3:]
     assert (caller.id, artifact_id, project_id) == ("p1", "aaa", "ppp")
 
 
 def test_無い値は空文字として渡る():
     """呼び出し側の欠落を、行き先の手前で例外にしない（判定は行き先が持つ）"""
     with pytest.raises(Reached) as x:
-        main._dispatch("rotate", None, manage.Caller("p1"), {})
-    assert x.value.passed[2] == ""
+        main._dispatch("rotate", EMPTY, manage.Caller("p1"), {})
+    assert x.value.passed[-1] == ""

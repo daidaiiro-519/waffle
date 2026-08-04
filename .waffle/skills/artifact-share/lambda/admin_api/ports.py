@@ -1,16 +1,20 @@
 """application が外部へ要求する口。
 
-同じ名前の Deps が publish.py と manage.py に別々にあり、片方だけを直しても
-もう片方が気づけない状態だった。外部との接点は1箇所で宣言する。
+architecture が「application が要求する driven インターフェース（Protocol）。
+構造体のフィールドとして持たず、型として宣言する」と定めているため、
+依存をひとまとめの構造体にせず、能力ごとに型を分ける。
 
-ここに置くのは「何を必要としているか」であって、どう実現するかではない。
-実物の組み立ては合成ルート（main.py）が行う。
+こうすると、ある操作が何を必要としているかが引数の型から読める。
+まとめて渡す形だと、使わないものまで含めて全員に配ることになり、
+どの操作が何に依存しているかが型から失われる。
+
+名前は業務の言葉で付ける。ArtifactStore は「共有アーティファクトの保管」であって
+「S3 のクライアント」ではない。何で実現するかは adapter 側の関心事。
 """
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
-from typing import Callable
+from typing import Protocol
 
 
 @dataclass
@@ -21,25 +25,71 @@ class Caller:
     is_admin: bool = False
 
 
-@dataclass
-class Deps:
-    """外部との接点。
+class ArtifactStore(Protocol):
+    """公開したものと、それに付いた記録の保管。削除は持たない。"""
 
-    store             保管の読み書き（put/get/list）。削除は持たない
-    keys              閲覧トークンの保管の読み書き（put/get）
-    now               現在時刻（エポック秒）。検証で固定できるようにする
-    viewer_domain     閲覧の面の配信ドメイン。共有URLの組み立てに使う
-    identify          利用者の証明から、その人を表す値を返す。招かれていなければ None
-    directory         招かれている人の名簿（find/invite/remove）。この文脈の外にある
-    wrapper_template  閲覧画面の雛形。{{アーティファクトID}} を置き換えて配置する
-    project_page      プロジェクトの一覧ページの雛形。どのプロジェクトにも同じものを置く
-    """
+    def put(self, key: str, body: bytes | str, content_type: str) -> None:
+        """指定した場所へ置く。既にあれば置き換える。"""
+        ...
 
-    store: object
-    keys: object
-    now: Callable[[], int] = lambda: int(time.time())
-    viewer_domain: str = ""
-    identify: object = None
-    directory: object = None
-    wrapper_template: str = ""
-    project_page: str = ""
+    def get(self, key: str) -> bytes | None:
+        """指定した場所から取り出す。無ければ None。"""
+        ...
+
+    def list(self, prefix: str) -> list[str]:
+        """その始まりを持つ場所を列挙する。"""
+        ...
+
+
+class ViewTokenStore(Protocol):
+    """閲覧トークンの保管。閲覧の面から同期で読める唯一の置き場所。"""
+
+    def put(self, key: str, value: str) -> None:
+        """指定した鍵で値を置く。既にあれば置き換える。"""
+        ...
+
+    def get(self, key: str) -> str | None:
+        """指定した鍵の値を取り出す。無ければ None。"""
+        ...
+
+
+class PublisherDirectory(Protocol):
+    """招かれている人の名簿。この文脈の外にある仕組み。"""
+
+    def find(self, email: str) -> dict | None:
+        """その宛先で招かれている人を探す。居なければ None。"""
+        ...
+
+    def list(self) -> list[dict]:
+        """招かれている人を列挙する。"""
+        ...
+
+    def admins(self) -> list[dict]:
+        """管理者を列挙する。"""
+        ...
+
+    def invite(self, email: str) -> dict:
+        """その宛先の人を招く。"""
+        ...
+
+    def resend(self, email: str) -> None:
+        """招きを送り直す。"""
+        ...
+
+    def remove(self, email: str) -> None:
+        """その人を名簿から外す。"""
+        ...
+
+
+class PublisherIdentifier(Protocol):
+    """利用者の証明から、その人を表す値を返す。招かれていなければ None。"""
+
+    def __call__(self, authorization: str) -> str | None:
+        ...
+
+
+class Clock(Protocol):
+    """現在時刻（エポック秒）。検証で固定できるようにするために口として持つ。"""
+
+    def __call__(self) -> int:
+        ...

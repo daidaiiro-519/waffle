@@ -16,6 +16,7 @@ JavaScript側の検証も同じ表を読む。
 突き合わせにならない。
 """
 
+import main
 import json
 import sys
 from pathlib import Path
@@ -65,10 +66,10 @@ def test_合言葉そのものは記録に現れない():
 def test_所属の記録が契約と一致する():
     """書き手と読み手が同じ区切りを使っていることを確かめる。"""
     membership = CONTRACT["所属の記録"]
-    deps = manage.Deps(store=None, keys=_Collector())
+    deps = main.Connections(store=None, keys=_Collector(), now=None)
 
     for case in membership["ケース"]:
-        manage._write_membership(deps, "aaaaaaaa", case["プロジェクト"])
+        manage._write_membership(deps.keys, "aaaaaaaa", case["プロジェクト"])
         assert deps.keys.written["pp:aaaaaaaa"] == case["記録"]
 
 
@@ -76,10 +77,10 @@ def test_上限を超える所属は受け付けない():
     """読み手は先頭から上限までしか見ない。書き手が黙って超えると、
     投稿者には成功が返り、閲覧者だけが開けない状態になる。"""
     limit = CONTRACT["所属の記録"]["上限"]
-    deps = manage.Deps(store=None, keys=_Collector())
+    deps = main.Connections(store=None, keys=_Collector(), now=None)
 
     with pytest.raises(manage.ManageError) as x:
-        manage._write_membership(deps, "aaaaaaaa", [f"p{i}" for i in range(limit + 1)])
+        manage._write_membership(deps.keys, "aaaaaaaa", [f"p{i}" for i in range(limit + 1)])
     assert x.value.code == "TOO_MANY_PROJECTS"
 
 

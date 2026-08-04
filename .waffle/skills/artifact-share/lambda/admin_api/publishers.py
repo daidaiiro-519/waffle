@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 
-from ports import Caller, Deps
+from ports import Caller, ArtifactStore, PublisherDirectory
 
 
 class PublisherError(Exception):
@@ -33,7 +33,7 @@ def _require_admin(caller: Caller) -> None:
                              "投稿者を出し入れできるのは管理者だけです。")
 
 
-def invite(deps: Deps, caller: Caller, email: str) -> dict:
+def invite(directory: PublisherDirectory, caller: Caller, email: str) -> dict:
     """公開できる人を増やす。
 
     同じ宛先を重ねて招いても二重にはならず、その人の合言葉も、公開した
@@ -43,12 +43,12 @@ def invite(deps: Deps, caller: Caller, email: str) -> dict:
     if not (email or "").strip():
         raise PublisherError("EMAIL_REQUIRED", "招く相手の宛先を入力してください。")
 
-    publisher_id = deps.directory.invite(email.strip())
+    publisher_id = directory.invite(email.strip())
     return {"publisherId": publisher_id, "email": email.strip(),
             "event": "PublisherInvited"}
 
 
-def resend_invite(deps: Deps, caller: Caller, publisher_id: str) -> dict:
+def resend_invite(directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
     """招待をもう一度送る。仮の合言葉が新しくなる。
 
     招待に応じていない人は、利用者プールの再設定（合言葉を忘れたときの
@@ -60,7 +60,7 @@ def resend_invite(deps: Deps, caller: Caller, publisher_id: str) -> dict:
     """
     _require_admin(caller)
 
-    person = deps.directory.find(publisher_id)
+    person = directory.find(publisher_id)
     if not person:
         raise PublisherError("PUBLISHER_NOT_FOUND", "その人は招かれていません。")
     if _status_of(person) != "invited":
@@ -68,7 +68,7 @@ def resend_invite(deps: Deps, caller: Caller, publisher_id: str) -> dict:
                              "その人はもう入っています。送り直すと、"
                              "本人が決めたパスワードが使えなくなります。")
 
-    deps.directory.resend(publisher_id)
+    directory.resend(publisher_id)
     return {"publisherId": publisher_id, "event": "PublisherInvited"}
 
 
@@ -79,7 +79,7 @@ def _status_of(person) -> str:
     return getattr(person, "status", "")
 
 
-def remove(deps: Deps, caller: Caller, publisher_id: str) -> dict:
+def remove(store: ArtifactStore, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
     """公開できる人から外す。公開したものには一切触れない。
 
     外したあと、その人が公開したもののうち引き継ぎ先が決まっていないものは
@@ -91,22 +91,22 @@ def remove(deps: Deps, caller: Caller, publisher_id: str) -> dict:
         # 管理者が一人もいない状態へ落ちる経路を塞ぐ
         raise PublisherError("CANNOT_REMOVE_SELF", "自分自身は外せません。")
 
-    if not deps.directory.find(publisher_id):
+    if not directory.find(publisher_id):
         raise PublisherError("PUBLISHER_NOT_FOUND", "その人は招かれていません。")
 
-    orphaned = _count_artifacts(deps, publisher_id)
-    deps.directory.remove(publisher_id)
+    orphaned = _count_artifacts(store, publisher_id)
+    directory.remove(publisher_id)
 
     return {"publisherId": publisher_id, "orphanedArtifacts": orphaned,
             "event": "PublisherRemoved"}
 
 
-def _count_artifacts(deps: Deps, publisher_id: str) -> int:
+def _count_artifacts(store: ArtifactStore, publisher_id: str) -> int:
     """その人が公開した共有アーティファクトの件数。"""
     count = 0
-    for key in deps.store.list("meta/"):
+    for key in store.list("meta/"):
         try:
-            meta = json.loads(deps.store.get(key))
+            meta = json.loads(store.get(key))
         except Exception:
             continue
         if meta.get("uploadedBy") == publisher_id:
@@ -114,7 +114,7 @@ def _count_artifacts(deps: Deps, publisher_id: str) -> int:
     return count
 
 
-def list_publishers(deps: Deps, caller: Caller) -> list[dict]:
+def list_publishers(directory: PublisherDirectory, caller: Caller) -> list[dict]:
     """招かれている人を並べる。管理者だけが見られる。
 
     誰が招かれているかを投稿者どうしに見せないのは、共有の相手を
@@ -124,9 +124,9 @@ def list_publishers(deps: Deps, caller: Caller) -> list[dict]:
     """
     _require_admin(caller)
 
-    admins = set(deps.directory.admins())
+    admins = set(directory.admins())
     rows = []
-    for person in deps.directory.list():
+    for person in directory.list():
         email = person.get("email", "")
         rows.append({
             "id": person["id"],

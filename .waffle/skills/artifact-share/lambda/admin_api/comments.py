@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 
 from manage import _read_meta
-from ports import Caller, Deps
+from ports import Caller, ArtifactStore
 
 
 def _prefix(artifact_id: str) -> str:
@@ -32,7 +32,7 @@ def _record_id(key: str) -> str:
     return key.rsplit("/", 1)[-1].removesuffix(".json")
 
 
-def read(deps: Deps, caller: Caller, artifact_id: str) -> dict:
+def read(store: ArtifactStore, caller: Caller, artifact_id: str) -> dict:
     """寄せられたコメントを、古いものから順に返す。
 
     差し替えの区切りも同じ並びに含める。分けて返すと、どの指摘が差し替え
@@ -46,13 +46,13 @@ def read(deps: Deps, caller: Caller, artifact_id: str) -> dict:
     """
     # 扱える範囲の判定は既にあるものを通す。拒み方（見つからないものとして
     # 扱う）も自動的に揃う
-    _read_meta(deps, caller, artifact_id)
+    _read_meta(store, caller, artifact_id)
 
     rows, unreadable = [], 0
     # 鍵は先頭に時刻を持つため、鍵の順がそのまま寄せられた順になる
-    for key in sorted(deps.store.list(_prefix(artifact_id))):
+    for key in sorted(store.list(_prefix(artifact_id))):
         try:
-            record = json.loads(deps.store.get(key))
+            record = json.loads(store.get(key))
         except Exception:
             unreadable += 1
             continue
@@ -63,7 +63,7 @@ def read(deps: Deps, caller: Caller, artifact_id: str) -> dict:
     return {"artifactId": artifact_id, "comments": rows, "unreadable": unreadable}
 
 
-def export(deps: Deps, caller: Caller, artifact_id: str) -> dict:
+def export(store: ArtifactStore, caller: Caller, artifact_id: str) -> dict:
     """中身と、それまでに寄せられたコメントをまとめて返す。
 
     読むだけの操作で、公開状態も閲覧トークンもコメントも変えない。公開を
@@ -76,14 +76,14 @@ def export(deps: Deps, caller: Caller, artifact_id: str) -> dict:
     閲覧トークンは含めない。取り出したものが渡り歩いても、それだけで開ける
     状態にならないようにする。
     """
-    meta = _read_meta(deps, caller, artifact_id)
+    meta = _read_meta(store, caller, artifact_id)
 
     try:
-        content = deps.store.get(f"p/{artifact_id}/content.html")
+        content = store.get(f"p/{artifact_id}/content.html")
     except Exception:
         content = ""
 
-    found = read(deps, caller, artifact_id)
+    found = read(store, caller, artifact_id)
 
     return {
         "artifactId": artifact_id,

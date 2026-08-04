@@ -9,6 +9,7 @@
 閲覧ゲートはこの別を知らず、判定はすべてここに閉じる。
 """
 
+import main
 import json
 import sys
 from pathlib import Path
@@ -28,7 +29,7 @@ ADMIN = manage.Caller("admin-1", is_admin=True)
 
 
 def setup():
-    return manage.Deps(
+    return main.Connections(
         store=FakeStore(), keys=FakeKeyStore(),
         project_page="<html data-project=\"{{プロジェクトID}}\"></html>",
         now=lambda: 1_700_000_000, viewer_domain="viewer.example.net",
@@ -47,7 +48,7 @@ def listing_of(deps, project_id):
 
 def test_作ると共有URLと閲覧トークンが返る():
     deps = setup()
-    r = projects.create(deps, X, "検索基盤リニューアル", "PERSONAL")
+    r = projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "検索基盤リニューアル", "PERSONAL")
 
     assert r["url"] == f"https://viewer.example.net/proj/{r['projectId']}/"
     assert r["token"]
@@ -57,7 +58,7 @@ def test_作ると共有URLと閲覧トークンが返る():
 
 def test_作った人が持ち主になり共有の別が残る():
     deps = setup()
-    r = projects.create(deps, X, "検索基盤リニューアル", "SHARED")
+    r = projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "検索基盤リニューアル", "SHARED")
 
     index = index_of(deps, r["projectId"])
     assert index["owner"] == X.id
@@ -68,14 +69,14 @@ def test_作った人が持ち主になり共有の別が残る():
 
 def test_作った直後は何も入っていない():
     deps = setup()
-    r = projects.create(deps, X, "空のまとめ", "PERSONAL")
+    r = projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "空のまとめ", "PERSONAL")
     assert listing_of(deps, r["projectId"])["artifacts"] == []
 
 
 def test_一覧ページの雛形と中身が置かれる():
     """雛形はどのプロジェクトでも同じもの、中身はこのプロジェクトのもの"""
     deps = setup()
-    r = projects.create(deps, X, "検索基盤リニューアル", "PERSONAL")
+    r = projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "検索基盤リニューアル", "PERSONAL")
 
     page = deps.store.get(f"proj/{r['projectId']}/index.html")
     assert "{{プロジェクトID}}" not in page
@@ -86,7 +87,7 @@ def test_一覧ページの雛形と中身が置かれる():
 def test_表示名が空なら作らない():
     deps = setup()
     with pytest.raises(projects.ProjectError) as x:
-        projects.create(deps, X, "   ", "PERSONAL")
+        projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "   ", "PERSONAL")
     assert x.value.code == "NAME_REQUIRED"
     assert deps.keys.keys == {}          # 閲覧トークンは発行されない
 
@@ -94,13 +95,13 @@ def test_表示名が空なら作らない():
 def test_想定外の共有の別では作らない():
     deps = setup()
     with pytest.raises(projects.ProjectError) as x:
-        projects.create(deps, X, "まとめ", "EVERYONE")
+        projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "まとめ", "EVERYONE")
     assert x.value.code == "SCOPE_REQUIRED"
 
 
 def test_閲覧トークンは記録から取り出せない():
     deps = setup()
-    r = projects.create(deps, X, "まとめ", "PERSONAL")
+    r = projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "まとめ", "PERSONAL")
 
     record = deps.keys.get(f"proj:{r['projectId']}")
     value, expires, generation = record.split("|")
@@ -112,7 +113,7 @@ def test_閲覧トークンは記録から取り出せない():
 # ── 見せ方を変える ──────────────────────────────────────
 
 def owned(deps, scope="PERSONAL"):
-    return projects.create(deps, X, "検索基盤リニューアル", scope)
+    return projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "検索基盤リニューアル", scope)
 
 
 def test_再発行すると世代が上がりURLは変わらない():
@@ -120,7 +121,7 @@ def test_再発行すると世代が上がりURLは変わらない():
     r = owned(deps)
     before = deps.keys.get(f"proj:{r['projectId']}")
 
-    again = projects.reissue_token(deps, X, r["projectId"])
+    again = projects.reissue_token(deps.store, deps.keys, deps.now, deps.viewer_domain, X, r["projectId"])
 
     after = deps.keys.get(f"proj:{r['projectId']}")
     assert before.split("|")[2] == "1"
@@ -132,7 +133,7 @@ def test_再発行すると世代が上がりURLは変わらない():
 def test_公開停止すると開けなくなるが中身は残る():
     deps = setup()
     r = owned(deps)
-    projects.suspend(deps, X, r["projectId"])
+    projects.suspend(deps.store, deps.keys, deps.now, X, r["projectId"])
 
     assert deps.keys.get(f"proj:{r['projectId']}") == "DISABLED"
     assert index_of(deps, r["projectId"])["status"] == "disabled"
@@ -142,9 +143,9 @@ def test_公開停止すると開けなくなるが中身は残る():
 def test_再開すると閲覧トークンが必ず新しくなる():
     deps = setup()
     r = owned(deps)
-    projects.suspend(deps, X, r["projectId"])
+    projects.suspend(deps.store, deps.keys, deps.now, X, r["projectId"])
 
-    again = projects.resume(deps, X, r["projectId"])
+    again = projects.resume(deps.store, deps.keys, deps.now, deps.viewer_domain, X, r["projectId"])
 
     assert again["token"] != r["token"]
     assert deps.keys.get(f"proj:{r['projectId']}").split("|")[2] == "2"
@@ -155,7 +156,7 @@ def test_止まっていないものは再開できない():
     deps = setup()
     r = owned(deps)
     with pytest.raises(projects.ProjectError) as x:
-        projects.resume(deps, X, r["projectId"])
+        projects.resume(deps.store, deps.keys, deps.now, deps.viewer_domain, X, r["projectId"])
     assert x.value.code == "NOT_SUSPENDED"
 
 
@@ -163,7 +164,7 @@ def test_管理者は自分が作ったものでなくても扱える():
     """持ち主が抜けたあとに、誰も止められないプロジェクトが残らないこと"""
     deps = setup()
     r = owned(deps)
-    projects.suspend(deps, ADMIN, r["projectId"])
+    projects.suspend(deps.store, deps.keys, deps.now, ADMIN, r["projectId"])
     assert index_of(deps, r["projectId"])["status"] == "disabled"
 
 
@@ -175,8 +176,8 @@ def test_共有でも持ち主以外は見せ方を変えられない():
     deps = setup()
     r = owned(deps, scope="SHARED")
 
-    for call in (lambda: projects.suspend(deps, Y, r["projectId"]),
-                 lambda: projects.reissue_token(deps, Y, r["projectId"])):
+    for call in (lambda: projects.suspend(deps.store, deps.keys, deps.now, Y, r["projectId"]),
+                 lambda: projects.reissue_token(deps.store, deps.keys, deps.now, deps.viewer_domain, Y, r["projectId"])):
         with pytest.raises(projects.ProjectError) as x:
             call()
         assert x.value.code == "PROJECT_NOT_FOUND"
@@ -190,9 +191,9 @@ def test_無いプロジェクトと他人のものを同じ拒み方にする()
     r = owned(deps)
 
     with pytest.raises(projects.ProjectError) as a:
-        projects.suspend(deps, Y, r["projectId"])
+        projects.suspend(deps.store, deps.keys, deps.now, Y, r["projectId"])
     with pytest.raises(projects.ProjectError) as b:
-        projects.suspend(deps, Y, "no-such-project")
+        projects.suspend(deps.store, deps.keys, deps.now, Y, "no-such-project")
     assert a.value.code == b.value.code == "PROJECT_NOT_FOUND"
 
 
@@ -200,11 +201,11 @@ def test_無いプロジェクトと他人のものを同じ拒み方にする()
 
 def test_一覧には自分のものと共有のものが並ぶ():
     deps = setup()
-    mine = projects.create(deps, X, "自分の", "PERSONAL")
-    shared = projects.create(deps, Y, "みんなの", "SHARED")
-    others = projects.create(deps, Y, "他人の", "PERSONAL")
+    mine = projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "自分の", "PERSONAL")
+    shared = projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, Y, "みんなの", "SHARED")
+    others = projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, Y, "他人の", "PERSONAL")
 
-    ids = {p["projectId"] for p in projects.list_projects(deps, X)["projects"]}
+    ids = {p["projectId"] for p in projects.list_projects(deps.store, X)["projects"]}
     assert mine["projectId"] in ids
     assert shared["projectId"] in ids        # 共有なら自分のものを入れられる
     assert others["projectId"] not in ids
@@ -212,15 +213,15 @@ def test_一覧には自分のものと共有のものが並ぶ():
 
 def test_管理者の一覧には全部が並ぶ():
     deps = setup()
-    projects.create(deps, X, "自分の", "PERSONAL")
-    projects.create(deps, Y, "他人の", "PERSONAL")
-    assert len(projects.list_projects(deps, ADMIN)["projects"]) == 2
+    projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "自分の", "PERSONAL")
+    projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, Y, "他人の", "PERSONAL")
+    assert len(projects.list_projects(deps.store, ADMIN)["projects"]) == 2
 
 
 def test_一覧に閲覧トークンは含まれない():
     deps = setup()
     owned(deps)
-    for row in projects.list_projects(deps, X)["projects"]:
+    for row in projects.list_projects(deps.store, X)["projects"]:
         assert "token" not in row
 
 
@@ -241,7 +242,7 @@ def test_中身に入っているものが名前つきで返る():
     artifact(deps, "aaaaaaaa", "検索基盤の選定")
     manage_assign(deps, X, "aaaaaaaa", r["projectId"])
 
-    got = projects.detail(deps, X, r["projectId"])
+    got = projects.detail(deps.store, deps.viewer_domain, X, r["projectId"])
 
     assert got["project"]["name"] == "検索基盤リニューアル"
     assert [a["artifactId"] for a in got["artifacts"]] == ["aaaaaaaa"]
@@ -251,7 +252,7 @@ def test_中身に入っているものが名前つきで返る():
 def test_中身に閲覧トークンは含まれない():
     deps = setup()
     r = owned(deps)
-    got = projects.detail(deps, X, r["projectId"])
+    got = projects.detail(deps.store, deps.viewer_domain, X, r["projectId"])
     assert "token" not in got["project"]
 
 
@@ -259,14 +260,14 @@ def test_共有なら持ち主でなくても中身を見られる():
     """そこへ自分のものを入れるには、いま何が入っているかが見えている必要がある"""
     deps = setup()
     r = owned(deps, scope="SHARED")
-    assert projects.detail(deps, Y, r["projectId"])["project"]["projectId"] == r["projectId"]
+    assert projects.detail(deps.store, deps.viewer_domain, Y, r["projectId"])["project"]["projectId"] == r["projectId"]
 
 
 def test_個人なら持ち主以外は中身を見られない():
     deps = setup()
     r = owned(deps)
     with pytest.raises(projects.ProjectError) as x:
-        projects.detail(deps, Y, r["projectId"])
+        projects.detail(deps.store, deps.viewer_domain, Y, r["projectId"])
     assert x.value.code == "PROJECT_NOT_FOUND"
 
 
@@ -274,22 +275,22 @@ def test_公開が止まっていても持ち主は中身を見られる():
     """止めたものを再開するか外すかを決めるのに、中身が見えている必要がある"""
     deps = setup()
     r = owned(deps)
-    projects.suspend(deps, X, r["projectId"])
-    assert projects.detail(deps, X, r["projectId"])["project"]["status"] == "disabled"
+    projects.suspend(deps.store, deps.keys, deps.now, X, r["projectId"])
+    assert projects.detail(deps.store, deps.viewer_domain, X, r["projectId"])["project"]["status"] == "disabled"
 
 
 def manage_assign(deps, caller, artifact_id, project_id):
     import manage as m
-    return m.assign(deps, caller, artifact_id, project_id)
+    return m.assign(deps.store, deps.keys, deps.now, caller, artifact_id, project_id)
 
 
 def test_読めない記録があっても残りが並ぶ():
     """一覧が黙って短くなると、作ったはずのプロジェクトが消えたように見える"""
     deps = setup()
-    projects.create(deps, X, "設計レビュー", projects.PERSONAL, "")
+    projects.create(deps.store, deps.keys, deps.now, deps.project_page, deps.viewer_domain, X, "設計レビュー", projects.PERSONAL, "")
     deps.store.put("projects/broken.json", "{壊れている", "application/json")
 
-    got = projects.list_projects(deps, X)
+    got = projects.list_projects(deps.store, X)
 
     assert len(got["projects"]) == 1
     assert got["unreadable"] == 1
