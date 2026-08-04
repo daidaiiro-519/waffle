@@ -19,6 +19,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import main  # noqa: E402
+from adapters.inbound import admin_api  # noqa: E402
 from application.ports import Caller  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
@@ -46,7 +47,7 @@ USECASES = [
 def stub_every_destination(monkeypatch):
     """どの型へ届いても、その名前を持って止まるようにする。"""
     for name in USECASES:
-        usecase = getattr(main, name)
+        usecase = getattr(admin_api, name)
         monkeypatch.setattr(
             usecase, "run",
             (lambda n: lambda self, *a, **k: (_ for _ in ()).throw(
@@ -61,7 +62,7 @@ EMPTY = main.Connections(store=None, keys=None, now=None)
 
 def destination_of(action, body=None):
     with pytest.raises(Reached) as x:
-        main._dispatch(action, EMPTY, Caller("p1"), body or {})
+        admin_api.dispatch(action, EMPTY, Caller("p1"), body or {})
     passed = x.value.passed
     # 操作を分岐で持つ型は、最初の引数がその識別子になる
     if passed and isinstance(passed[0], str):
@@ -110,7 +111,7 @@ def test_名簿からの削除はその操作でしか起きない():
 
 def test_知らない操作は落ちる():
     with pytest.raises(ManageError) as x:
-        main._dispatch("こんな操作はない", EMPTY, Caller("p1"), {})
+        admin_api.dispatch("こんな操作はない", EMPTY, Caller("p1"), {})
     assert x.value.code == "UNKNOWN_ACTION"
 
 
@@ -118,18 +119,18 @@ def test_知らない操作は落ちる():
 
 def test_受け付ける操作はすべて行き先を持つ():
     """片方だけ増やすと、受け付けたのに行き先が無い操作ができる"""
-    assert main.ACTIONS - {"publish"} == set(main.ROUTES)
+    assert admin_api.ACTIONS - {"publish"} == set(admin_api.ROUTES)
 
 
 def test_この検証が表の全部を見ている():
-    assert set(ROUTING) == set(main.ROUTES)
+    assert set(ROUTING) == set(admin_api.ROUTES)
 
 
 # ── 渡す値 ──────────────────────────────────────────────
 
 def test_body_の値がそのまま渡る():
     with pytest.raises(Reached) as x:
-        main._dispatch("assign", EMPTY, Caller("p1"),
+        admin_api.dispatch("assign", EMPTY, Caller("p1"),
                        {"artifactId": "aaa", "projectId": "ppp"})
     _operation, caller, artifact_id, project_id = x.value.passed
     assert (caller.id, artifact_id, project_id) == ("p1", "aaa", "ppp")
@@ -138,5 +139,5 @@ def test_body_の値がそのまま渡る():
 def test_無い値は空文字として渡る():
     """呼び出し側の欠落を、行き先の手前で例外にしない（判定は行き先が持つ）"""
     with pytest.raises(Reached) as x:
-        main._dispatch("disable", EMPTY, Caller("p1"), {})
+        admin_api.dispatch("disable", EMPTY, Caller("p1"), {})
     assert x.value.passed[-1] == ""
