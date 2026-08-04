@@ -46,7 +46,7 @@ def _write_membership(gate: ViewGatePort, artifact_id: str, project_ids: list[st
     gate.set_membership(artifact_id, project_ids)
 
 
-def assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def _assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトへ加える。人の明示的な操作でのみ成立する。
 
     加えられるのは自分が公開したものだけ。入れ先は、共有なら誰でも、
@@ -74,7 +74,7 @@ def assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
     return {"artifactId": artifact_id, "projects": belongs}
 
 
-def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def _unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトから外す。共有アーティファクト自体は個別の閲覧トークンで開けるまま残る。"""
     meta = require_manageable(artifacts, caller, artifact_id)
     if meta.get("uploadedBy") != caller.id and not caller.is_admin:
@@ -89,3 +89,25 @@ def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, v
     sync_project(artifacts, projects, viewer, clock, index, artifact_id, member=False)
 
     return {"artifactId": artifact_id, "projects": belongs}
+
+
+class AssignArtifactToProject:
+    """まとめて見てもらう範囲を、加える・外すで調整する。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._projects = projects
+        self._viewer = viewer
+        self._gate = gate
+        self._clock = clock
+
+    def run(self, operation: str, caller: Caller, artifact_id: str, project_id: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        if operation == "assign":
+            return _assign(self._artifacts, self._projects, self._viewer, self._gate, self._clock, caller, artifact_id, project_id)
+        if operation == "unassign":
+            return _unassign(self._artifacts, self._projects, self._viewer, self._gate, self._clock, caller, artifact_id, project_id)
+        raise ValueError(f"知らない操作です: {operation}")

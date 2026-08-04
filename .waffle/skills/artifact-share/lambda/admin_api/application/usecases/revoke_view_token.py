@@ -19,7 +19,7 @@ from domain.view_subject import ViewSubject
 from application.view_token_access import TOKEN_NOT_FOUND
 
 
-def revoke(artifacts: SharedArtifactRepository, projects: ProjectRepository,
+def _revoke(artifacts: SharedArtifactRepository, projects: ProjectRepository,
            gate: ViewGatePort, clock: Clock, caller: Caller, subject: ViewSubject,
            token_id: str) -> dict:
     """その1本だけを使えなくする。他の相手はそのまま見られる。"""
@@ -34,3 +34,20 @@ def revoke(artifacts: SharedArtifactRepository, projects: ProjectRepository,
     save_tokens(artifacts, projects, clock, record, tokens)
     gate.replace_grants(subject, view_token.grants(tokens, now))
     return {"tokenId": token_id, "revoked": True}
+
+
+class RevokeViewToken:
+    """ある相手にだけ見せるのをやめる。他の相手はそのまま見られるようにしておく。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, gate: ViewGatePort, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._projects = projects
+        self._gate = gate
+        self._clock = clock
+
+    def run(self, caller: Caller, subject: ViewSubject, token_id: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _revoke(self._artifacts, self._projects, self._gate, self._clock, caller, subject, token_id)

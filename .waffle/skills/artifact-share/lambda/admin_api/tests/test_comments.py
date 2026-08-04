@@ -18,13 +18,13 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from application.usecases import (  # noqa: E402
-    export_artifact,
-    publish_artifact,
-    read_comments,
-    replace_artifact_content,
-    suspend_artifact,
-)
+from usecase_builder import build  # noqa: E402
+from application.usecases.export_artifact import ExportArtifact  # noqa: E402
+from application.usecases.publish_artifact import PublishArtifact  # noqa: E402
+from application.usecases.read_comments import ReadComments  # noqa: E402
+from application.usecases.replace_artifact_content import ReplaceArtifactContent  # noqa: E402
+from application.usecases.suspend_artifact import SuspendArtifact  # noqa: E402
+
 from application.ports import Caller  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
@@ -43,7 +43,7 @@ def setup():
         store=store, keys=keys, identify=lambda _t: ME.id,
         wrapper_template="<html>{{アーティファクトID}}</html>",
         now=lambda: 1_700_000_000, viewer_domain="viewer.example.net")
-    r = publish_artifact.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
+    r = build(c, PublishArtifact).run({"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(store=store, keys=keys, now=lambda: 1_700_000_100,
                        viewer_domain="viewer.example.net")
     return deps, r["artifactId"]
@@ -67,7 +67,7 @@ def test_寄せられた順に読める():
     post(deps, aid, 1700000003, "山田", "ここが分かりません")
     post(deps, aid, 1700000002, "佐藤", "1点直してほしい", "revise")
 
-    got = read_comments.read(deps.artifacts, deps.comments, ME, aid)
+    got = build(deps, ReadComments).run(ME, aid)
 
     assert [c["author"] for c in got["comments"]] == ["田中", "佐藤", "山田"]
     assert got["comments"][0]["decision"] == "approve"
@@ -79,7 +79,7 @@ def test_保存されている形のまま返る():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
 
-    c = read_comments.read(deps.artifacts, deps.comments, ME, aid)["comments"][0]
+    c = build(deps, ReadComments).run(ME, aid)["comments"][0]
     assert set(c) >= {"kind", "author", "decision", "body", "parentId", "postedAt"}
 
 
@@ -88,7 +88,7 @@ def test_返信がどれへの返信かが分かる():
     post(deps, aid, 1700000001, "山田", "質問です")
     post(deps, aid, 1700000002, "投稿者", "回答です", parent="1700000001-abcd1234")
 
-    got = read_comments.read(deps.artifacts, deps.comments, ME, aid)
+    got = build(deps, ReadComments).run(ME, aid)
     assert got["comments"][1]["parentId"] == "1700000001-abcd1234"
 
 
@@ -96,10 +96,10 @@ def test_差し替えの区切りが並びに現れる():
     """どの指摘が差し替え前のものかを読み取れるようにする"""
     deps, aid = setup()
     post(deps, aid, 1700000001, "佐藤", "直してほしい", "revise")
-    replace_artifact_content.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, ME, aid, HTML.replace("本文", "直した"))
+    build(deps, ReplaceArtifactContent).run(ME, aid, HTML.replace("本文", "直した"))
     post(deps, aid, 1700000200, "佐藤", "直りました", "approve")
 
-    kinds = [c["kind"] for c in read_comments.read(deps.artifacts, deps.comments, ME, aid)["comments"]]
+    kinds = [c["kind"] for c in build(deps, ReadComments).run(ME, aid)["comments"]]
     assert kinds == ["comment", "divider", "comment"]
 
 
@@ -107,21 +107,21 @@ def test_他人のものは読めない():
     """寄せられた指摘には、渡した相手しか知らない内容が含まれうる"""
     deps, aid = setup()
     with pytest.raises(ManageError) as x:
-        read_comments.read(deps.artifacts, deps.comments, SOMEONE_ELSE, aid)
+        build(deps, ReadComments).run(SOMEONE_ELSE, aid)
     assert x.value.code == "ARTIFACT_NOT_FOUND"
 
 
 def test_管理者は他人のものも読める():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
-    assert len(read_comments.read(deps.artifacts, deps.comments, ADMIN, aid)["comments"]) == 1
+    assert len(build(deps, ReadComments).run(ADMIN, aid)["comments"]) == 1
 
 
 def test_公開が止まっていても読める():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
-    suspend_artifact.suspend(deps.artifacts, deps.gate, deps.now, ME, aid)
-    assert len(read_comments.read(deps.artifacts, deps.comments, ME, aid)["comments"]) == 1
+    build(deps, SuspendArtifact).run(ME, aid)
+    assert len(build(deps, ReadComments).run(ME, aid)["comments"]) == 1
 
 
 def test_読めない記録があっても残りが返る():
@@ -131,7 +131,7 @@ def test_読めない記録があっても残りが返る():
     deps.store.put(f"comments/{aid}/1700000002-broken.json", "{壊れている", "application/json")
     post(deps, aid, 1700000003, "佐藤", "これも読める")
 
-    got = read_comments.read(deps.artifacts, deps.comments, ME, aid)
+    got = build(deps, ReadComments).run(ME, aid)
 
     assert [c["author"] for c in got["comments"]] == ["田中", "佐藤"]
     # 黙って落とすと、投稿者が「これで全部だ」と思い込む
@@ -143,8 +143,8 @@ def test_読んでも何も変わらない():
     post(deps, aid, 1700000001, "田中", "本文")
     before = dict(deps.store.objects)
 
-    read_comments.read(deps.artifacts, deps.comments, ME, aid)
-    read_comments.read(deps.artifacts, deps.comments, ME, aid)
+    build(deps, ReadComments).run(ME, aid)
+    build(deps, ReadComments).run(ME, aid)
 
     assert deps.store.objects == before
 
@@ -155,7 +155,7 @@ def test_中身とコメントがまとめて返る():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
 
-    got = export_artifact.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)
+    got = build(deps, ExportArtifact).run(ME, aid)
 
     assert got["content"] == HTML
     assert got["name"] == "検索基盤の選定"
@@ -169,8 +169,8 @@ def test_取り出しても何も変わらない():
     store_before = dict(deps.store.objects)
     keys_before = dict(deps.keys.keys)
 
-    first = export_artifact.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)
-    second = export_artifact.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)
+    first = build(deps, ExportArtifact).run(ME, aid)
+    second = build(deps, ExportArtifact).run(ME, aid)
 
     assert first == second
     assert deps.store.objects == store_before
@@ -180,19 +180,19 @@ def test_取り出しても何も変わらない():
 def test_公開が止まっていても取り出せる():
     """止めてからでは取り出せないと、迷ったときに止められなくなる"""
     deps, aid = setup()
-    suspend_artifact.suspend(deps.artifacts, deps.gate, deps.now, ME, aid)
-    assert export_artifact.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)["content"] == HTML
+    build(deps, SuspendArtifact).run(ME, aid)
+    assert build(deps, ExportArtifact).run(ME, aid)["content"] == HTML
 
 
 def test_取り出したものに閲覧トークンは含まれない():
     """渡り歩いても、それだけで開ける状態にならないようにする"""
     deps, aid = setup()
-    got = json.dumps(export_artifact.export(deps.artifacts, deps.comments, deps.viewer, ME, aid), ensure_ascii=False)
+    got = json.dumps(build(deps, ExportArtifact).run(ME, aid), ensure_ascii=False)
     assert "token" not in got
 
 
 def test_他人のものは取り出せない():
     deps, aid = setup()
     with pytest.raises(ManageError) as x:
-        export_artifact.export(deps.artifacts, deps.comments, deps.viewer, SOMEONE_ELSE, aid)
+        build(deps, ExportArtifact).run(SOMEONE_ELSE, aid)
     assert x.value.code == "ARTIFACT_NOT_FOUND"

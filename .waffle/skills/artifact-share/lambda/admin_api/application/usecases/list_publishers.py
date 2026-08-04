@@ -21,7 +21,7 @@ def _require_admin(caller: Caller) -> None:
                              "投稿者を出し入れできるのは管理者だけです。")
 
 
-def list_publishers(directory: PublisherDirectory, caller: Caller) -> list[dict]:
+def _list_publishers(directory: PublisherDirectory, caller: Caller) -> list[dict]:
     """招かれている人を並べる。管理者だけが見られる。
 
     誰が招かれているかを投稿者どうしに見せないのは、共有の相手を
@@ -43,3 +43,17 @@ def list_publishers(directory: PublisherDirectory, caller: Caller) -> list[dict]
             "admin": person["id"] in admins,
         })
     return rows
+
+
+class ListPublishers:
+    """いま誰が公開できるのかを確かめる。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, directory: PublisherDirectory) -> None:
+        self._directory = directory
+
+    def run(self, caller: Caller) -> list[dict]:
+        """このユースケースの唯一の入口。"""
+        return _list_publishers(self._directory, caller)

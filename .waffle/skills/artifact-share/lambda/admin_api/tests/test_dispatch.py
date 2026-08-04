@@ -6,6 +6,9 @@
 理由で）。だが振り分け自体は接続を要さない純粋な対応づけで、しかも
 間違えたときの被害が大きい——以前は連なった分岐の最後が名簿からの削除で、
 行き先を書き忘れた操作はすべて黙って削除を実行する形だった。
+
+ユースケースが型になったので、差し替えるのは唯一の入口（run）にする。届いた
+時点で止め、どの型のどの操作へ届いたかだけを見る。
 """
 
 import sys
@@ -15,29 +18,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from application.usecases import (  # noqa: E402
-    assign_artifact_to_project,
-    browse_projects,
-    control_project_access,
-    create_project,
-    export_artifact,
-    invite_publisher,
-    issue_view_token,
-    list_my_artifacts,
-    list_publishers,
-    list_view_tokens,
-    read_comments,
-    replace_artifact_content,
-    resume_artifact,
-    revoke_all_view_tokens,
-    revoke_view_token,
-    suspend_artifact,
-    transfer_artifact,
-)
+import main  # noqa: E402
 from application.ports import Caller  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
-
-import main  # noqa: E402
 
 
 class Reached(Exception):
@@ -49,37 +32,26 @@ class Reached(Exception):
         self.where, self.passed = where, passed
 
 
+# 行き先として名乗る型。ここに無い型へ届いたら、その時点で分かる
+USECASES = [
+    "AssignArtifactToProject", "BrowseProjects", "ControlProjectAccess", "CreateProject",
+    "ExportArtifact", "InvitePublisher", "IssueViewToken", "ListMyArtifacts",
+    "ListPublishers", "ListViewTokens", "ReadComments", "ReplaceArtifactContent",
+    "ResumeArtifact", "RevokeAllViewTokens", "RevokeViewToken", "SuspendArtifact",
+    "TransferArtifact",
+]
+
+
 @pytest.fixture(autouse=True)
 def stub_every_destination(monkeypatch):
-    for module_name in (
-        "assign_artifact_to_project",
-        "browse_projects",
-        "control_project_access",
-        "create_project",
-        "export_artifact",
-        "invite_publisher",
-        "issue_view_token",
-        "list_my_artifacts",
-        "list_publishers",
-        "list_view_tokens",
-        "publish_artifact",
-        "read_comments",
-        "replace_artifact_content",
-        "resume_artifact",
-        "revoke_all_view_tokens",
-        "revoke_view_token",
-        "suspend_artifact",
-        "transfer_artifact",
-    ):
-        module = getattr(main, module_name)
-        for name in dir(module):
-            attr = getattr(module, name)
-            if callable(attr) and not name.startswith("_") and name.islower():
-                monkeypatch.setattr(
-                    module, name,
-                    (lambda m, n: lambda *a, **k: (_ for _ in ()).throw(
-                        Reached(f"{m}.{n}", a)))(module_name, name),
-                    raising=False)
+    """どの型へ届いても、その名前を持って止まるようにする。"""
+    for name in USECASES:
+        usecase = getattr(main, name)
+        monkeypatch.setattr(
+            usecase, "run",
+            (lambda n: lambda self, *a, **k: (_ for _ in ()).throw(
+                Reached(n, a + tuple(k.values()))))(name),
+            raising=False)
 
 
 # 行き先だけを見たいので、結線は空でよい。ただし経路表は束から口を取り出して
@@ -90,34 +62,38 @@ EMPTY = main.Connections(store=None, keys=None, now=None)
 def destination_of(action, body=None):
     with pytest.raises(Reached) as x:
         main._dispatch(action, EMPTY, Caller("p1"), body or {})
+    passed = x.value.passed
+    # 操作を分岐で持つ型は、最初の引数がその識別子になる
+    if passed and isinstance(passed[0], str):
+        return f"{x.value.where}.{passed[0]}"
     return x.value.where
 
 
 # ── 行き先の対応 ────────────────────────────────────────
 
 ROUTING = {
-    "list": "list_my_artifacts.list_artifacts",
-    "replace": "replace_artifact_content.replace_content",
-    "disable": "suspend_artifact.suspend",
-    "enable": "resume_artifact.resume",
-    "assign": "assign_artifact_to_project.assign",
-    "unassign": "assign_artifact_to_project.unassign",
-    "transfer": "transfer_artifact.transfer",
-    "issue-token": "issue_view_token.issue",
-    "view-tokens": "list_view_tokens.list_tokens",
-    "revoke-token": "revoke_view_token.revoke",
-    "revoke-all-tokens": "revoke_all_view_tokens.revoke_all",
-    "comments": "read_comments.read",
-    "export": "export_artifact.export",
-    "invite": "invite_publisher.invite",
-    "publishers": "list_publishers.list_publishers",
-    "resend-invite": "invite_publisher.resend_invite",
-    "remove-publisher": "invite_publisher.remove",
-    "projects": "browse_projects.list_projects",
-    "project": "browse_projects.detail",
-    "create-project": "create_project.create",
-    "disable-project": "control_project_access.suspend",
-    "enable-project": "control_project_access.resume",
+    "list": "ListMyArtifacts",
+    "replace": "ReplaceArtifactContent",
+    "disable": "SuspendArtifact",
+    "enable": "ResumeArtifact",
+    "assign": "AssignArtifactToProject.assign",
+    "unassign": "AssignArtifactToProject.unassign",
+    "transfer": "TransferArtifact",
+    "issue-token": "IssueViewToken",
+    "view-tokens": "ListViewTokens",
+    "revoke-token": "RevokeViewToken",
+    "revoke-all-tokens": "RevokeAllViewTokens",
+    "comments": "ReadComments",
+    "export": "ExportArtifact",
+    "invite": "InvitePublisher.invite",
+    "publishers": "ListPublishers",
+    "resend-invite": "InvitePublisher.resend",
+    "remove-publisher": "InvitePublisher.remove",
+    "projects": "BrowseProjects.list",
+    "project": "BrowseProjects.detail",
+    "create-project": "CreateProject",
+    "disable-project": "ControlProjectAccess.suspend",
+    "enable-project": "ControlProjectAccess.resume",
 }
 
 
@@ -128,13 +104,13 @@ def test_操作が意図した行き先へ届く(action, expected):
 
 def test_名簿からの削除はその操作でしか起きない():
     """以前は、行き先の無い操作すべてがここへ落ちていた"""
-    reached_remove = [a for a in ROUTING if destination_of(a) == "invite_publisher.remove"]
-    assert reached_remove == ["remove-publisher"]
+    reached = [a for a in ROUTING if destination_of(a) == "InvitePublisher.remove"]
+    assert reached == ["remove-publisher"]
 
 
 def test_知らない操作は落ちる():
     with pytest.raises(ManageError) as x:
-        main._dispatch("こんな操作はない", None, Caller("p1"), {})
+        main._dispatch("こんな操作はない", EMPTY, Caller("p1"), {})
     assert x.value.code == "UNKNOWN_ACTION"
 
 
@@ -155,7 +131,7 @@ def test_body_の値がそのまま渡る():
     with pytest.raises(Reached) as x:
         main._dispatch("assign", EMPTY, Caller("p1"),
                        {"artifactId": "aaa", "projectId": "ppp"})
-    caller, artifact_id, project_id = x.value.passed[-3:]
+    _operation, caller, artifact_id, project_id = x.value.passed
     assert (caller.id, artifact_id, project_id) == ("p1", "aaa", "ppp")
 
 

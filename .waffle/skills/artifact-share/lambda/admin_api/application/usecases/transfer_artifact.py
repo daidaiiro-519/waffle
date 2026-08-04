@@ -20,7 +20,7 @@ def _write_meta(artifacts: SharedArtifactRepository, clock: Clock, meta: dict) -
     artifacts.save(meta)
 
 
-def transfer(artifacts: SharedArtifactRepository, directory: PublisherDirectory, clock: Clock, caller: Caller, artifact_id: str, to_publisher: str) -> dict:
+def _transfer(artifacts: SharedArtifactRepository, directory: PublisherDirectory, clock: Clock, caller: Caller, artifact_id: str, to_publisher: str) -> dict:
     """投稿者を別の投稿者へ移す。手入れできる人が替わるだけの操作。
 
     共有URL・閲覧トークン・中身・コメント・公開状態のいずれも変えない。
@@ -46,3 +46,19 @@ def transfer(artifacts: SharedArtifactRepository, directory: PublisherDirectory,
 
     return {"artifactId": artifact_id, "from": previous, "to": to_publisher,
             "event": "ArtifactTransferred"}
+
+
+class TransferArtifact:
+    """投稿者が抜けたあとも、その共有アーティファクトを手入れできる人を残す。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, directory: PublisherDirectory, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._directory = directory
+        self._clock = clock
+
+    def run(self, caller: Caller, artifact_id: str, to_publisher: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _transfer(self._artifacts, self._directory, self._clock, caller, artifact_id, to_publisher)

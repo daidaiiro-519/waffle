@@ -15,7 +15,7 @@ from application.ports.comment_repository import CommentRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 
 
-def list_artifacts(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller) -> dict:
+def _list_artifacts(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller) -> dict:
     """扱えるものを新しい順に並べる。トークンは含めない。
 
     投稿者には自分が公開したものだけ、管理者には全員のものが並ぶ。
@@ -45,3 +45,18 @@ def list_artifacts(artifacts: SharedArtifactRepository, comments: CommentReposit
         })
     return {"artifacts": sorted(rows, key=lambda r: r["updatedAt"], reverse=True),
             "unreadable": unreadable}
+
+
+class ListMyArtifacts:
+    """手入れできる共有アーティファクトを見渡し、次に何を直すかを決める。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, comments: CommentRepository) -> None:
+        self._artifacts = artifacts
+        self._comments = comments
+
+    def run(self, caller: Caller) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _list_artifacts(self._artifacts, self._comments, caller)

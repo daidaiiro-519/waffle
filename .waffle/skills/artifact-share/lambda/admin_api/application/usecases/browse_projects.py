@@ -19,7 +19,7 @@ from domain.publication import PERSONAL, SHARED
 from shared.errors import ProjectError
 
 
-def list_projects(projects: ProjectRepository, caller: Caller) -> dict:
+def _list_projects(projects: ProjectRepository, caller: Caller) -> dict:
     """出し入れできるプロジェクトを並べる。閲覧トークンは含めない。
 
     自分が持ち主のものと、共有のものが並ぶ。管理者には全部が並ぶ。
@@ -49,7 +49,7 @@ def list_projects(projects: ProjectRepository, caller: Caller) -> dict:
             "unreadable": unreadable}
 
 
-def detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, caller: Caller, project_id: str) -> dict:
+def _detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, caller: Caller, project_id: str) -> dict:
     """プロジェクトと、いま入っている共有アーティファクトを返す。
 
     見られるのは、そこへ自分のものを出し入れできる人（持ち主・管理者・
@@ -95,3 +95,23 @@ def detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
         },
         "artifacts": rows,
     }
+
+
+class BrowseProjects:
+    """まとめの顔ぶれと中身を確かめ、自分のものをどこへ入れるかを決める。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort) -> None:
+        self._artifacts = artifacts
+        self._projects = projects
+        self._viewer = viewer
+
+    def run(self, operation: str, caller: Caller, project_id: str = "") -> dict:
+        """このユースケースの唯一の入口。"""
+        if operation == "list":
+            return _list_projects(self._projects, caller)
+        if operation == "detail":
+            return _detail(self._artifacts, self._projects, self._viewer, caller, project_id)
+        raise ValueError(f"知らない操作です: {operation}")

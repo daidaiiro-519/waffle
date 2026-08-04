@@ -16,10 +16,10 @@ from application.ports import Caller
 from application.ports.comment_repository import CommentRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.viewer_site import ViewerSitePort
-from application.usecases.read_comments import read
+from application.usecases.read_comments import ReadComments
 
 
-def export(artifacts: SharedArtifactRepository, comments: CommentRepository, viewer: ViewerSitePort, caller: Caller, artifact_id: str) -> dict:
+def _export(artifacts: SharedArtifactRepository, comments: CommentRepository, viewer: ViewerSitePort, caller: Caller, artifact_id: str) -> dict:
     """中身と、それまでに寄せられたコメントをまとめて返す。
 
     読むだけの操作で、公開状態も閲覧トークンもコメントも変えない。公開を
@@ -36,7 +36,7 @@ def export(artifacts: SharedArtifactRepository, comments: CommentRepository, vie
 
     content = viewer.read_artifact_content(artifact_id)
 
-    found = read(artifacts, comments, caller, artifact_id)
+    found = ReadComments(artifacts, comments).run(caller, artifact_id)
 
     return {
         "artifactId": artifact_id,
@@ -52,3 +52,19 @@ def export(artifacts: SharedArtifactRepository, comments: CommentRepository, vie
         "comments": found["comments"],
         "unreadable": found["unreadable"],
     }
+
+
+class ExportArtifact:
+    """この環境が無くなっても、渡したものと返ってきたものが手元に残る状態にする。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, comments: CommentRepository, viewer: ViewerSitePort) -> None:
+        self._artifacts = artifacts
+        self._comments = comments
+        self._viewer = viewer
+
+    def run(self, caller: Caller, artifact_id: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _export(self._artifacts, self._comments, self._viewer, caller, artifact_id)

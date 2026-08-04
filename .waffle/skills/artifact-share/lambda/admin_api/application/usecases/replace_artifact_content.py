@@ -30,7 +30,7 @@ def _require_published(meta: dict) -> None:
         raise ManageError("NOT_PUBLISHED", "公開が止まっています。先に再公開してください。")
 
 
-def replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepository, comments: CommentRepository, viewer: ViewerSitePort, clock: Clock, caller: Caller, artifact_id: str, html: str) -> dict:
+def _replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepository, comments: CommentRepository, viewer: ViewerSitePort, clock: Clock, caller: Caller, artifact_id: str, html: str) -> dict:
     """中身だけを入れ替える。URL・トークン・これまでの反応は保つ。
 
     入れ替えた時点を区切りとして反応の並びに残す。これより前の指摘が
@@ -70,3 +70,21 @@ def replace_content(artifacts: SharedArtifactRepository, projects: ProjectReposi
 
     return {"artifactId": artifact_id, "url": viewer.artifact_url(artifact_id),
             "externalRefs": found["externalRefs"]}
+
+
+class ReplaceArtifactContent:
+    """指摘を受けて直したものを、同じ相手に同じ共有URLで見てもらう。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, comments: CommentRepository, viewer: ViewerSitePort, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._projects = projects
+        self._comments = comments
+        self._viewer = viewer
+        self._clock = clock
+
+    def run(self, caller: Caller, artifact_id: str, html: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _replace_content(self._artifacts, self._projects, self._comments, self._viewer, self._clock, caller, artifact_id, html)

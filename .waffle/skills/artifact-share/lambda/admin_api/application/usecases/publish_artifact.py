@@ -25,7 +25,7 @@ from shared.errors import PublishError
 FIRST_TOKEN_NAME = "最初の共有"
 
 
-def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, request: dict) -> dict:
+def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, request: dict) -> dict:
     """アップロードされたHTMLを公開し、URLとトークンを返す。
 
     途中で失敗したときに開ける状態のものを残さないことを、書き込む順序で保証する。
@@ -114,3 +114,21 @@ def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: V
         "needsName": False,
         "tokenShownOnce": True,       # 呼び出し側へ、二度は示せないことを伝える
     }
+
+
+class PublishArtifact:
+    """手元の文書を、渡した相手に見てもらえる状態にする。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._viewer = viewer
+        self._gate = gate
+        self._identify = identify
+        self._clock = clock
+
+    def run(self, request: dict) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _publish(self._artifacts, self._viewer, self._gate, self._identify, self._clock, request)

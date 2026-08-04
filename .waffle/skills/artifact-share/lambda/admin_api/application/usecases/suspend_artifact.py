@@ -27,7 +27,7 @@ def _require_published(meta: dict) -> None:
         raise ManageError("NOT_PUBLISHED", "公開が止まっています。先に再公開してください。")
 
 
-def suspend(artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
+def _suspend(artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
     """公開を止める。中身も反応も消さない。"""
     meta = require_manageable(artifacts, caller, artifact_id)
     _require_published(meta)
@@ -37,3 +37,19 @@ def suspend(artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Cloc
     _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "status": DISABLED}
+
+
+class SuspendArtifact:
+    """見せるのを止めるが、記録は失わずに残しておく。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._gate = gate
+        self._clock = clock
+
+    def run(self, caller: Caller, artifact_id: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _suspend(self._artifacts, self._gate, self._clock, caller, artifact_id)

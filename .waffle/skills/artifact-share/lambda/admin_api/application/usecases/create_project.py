@@ -25,7 +25,7 @@ from shared.errors import ProjectError
 FIRST_TOKEN_NAME = "最初の共有"
 
 
-def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
+def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
     """プロジェクトを作り、閲覧トークンを発行する。作った時点では何も入っていない。
 
     共有の別はここでしか決まらない。変える操作を用意しないことが、
@@ -66,3 +66,21 @@ def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
             "url": viewer.project_url(project_id), "name": name, "scope": scope,
             "event": "ProjectCreated"}
+
+
+class CreateProject:
+    """関わりのある共有アーティファクトを、1つの閲覧トークンでまとめて見せられるように
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._projects = projects
+        self._viewer = viewer
+        self._gate = gate
+        self._clock = clock
+
+    def run(self, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
+        """このユースケースの唯一の入口。"""
+        return _create(self._artifacts, self._projects, self._viewer, self._gate, self._clock, caller, display_name, scope, project_key)

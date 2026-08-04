@@ -25,9 +25,10 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from application.usecases import (  # noqa: E402
-    assign_artifact_to_project,
+from application.usecases.assign_artifact_to_project import (  # noqa: E402
+    _write_membership as write_membership,
 )
+
 
 from shared.errors import ManageError  # noqa: E402
 
@@ -86,7 +87,7 @@ def test_所属の記録が契約と一致する():
     deps = main.Connections(store=None, keys=_Collector(), now=None)
 
     for case in membership["ケース"]:
-        assign_artifact_to_project._write_membership(deps.gate, "aaaaaaaa", case["プロジェクト"])
+        write_membership(deps.gate, "aaaaaaaa", case["プロジェクト"])
         assert deps.keys.written["pp:aaaaaaaa"] == case["記録"]
 
 
@@ -97,7 +98,7 @@ def test_上限を超える所属は受け付けない():
     deps = main.Connections(store=None, keys=_Collector(), now=None)
 
     with pytest.raises(ManageError) as x:
-        assign_artifact_to_project._write_membership(deps.gate, "aaaaaaaa", [f"p{i}" for i in range(limit + 1)])
+        write_membership(deps.gate, "aaaaaaaa", [f"p{i}" for i in range(limit + 1)])
     assert x.value.code == "TOO_MANY_PROJECTS"
 
 

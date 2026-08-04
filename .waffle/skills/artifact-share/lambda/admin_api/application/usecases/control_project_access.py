@@ -21,7 +21,7 @@ from domain.view_subject import ViewSubject
 from shared.errors import ProjectError
 
 
-def suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
+def _suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
     """このプロジェクトの閲覧トークンでは何も開けない状態にする。
 
     入っている共有アーティファクトは、それぞれの閲覧トークンで引き続き開ける。
@@ -38,7 +38,7 @@ def suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, calle
     return {"projectId": project_id, "status": DISABLED}
 
 
-def resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
+def _resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
     """再び開ける状態に戻す。
 
     止める前に渡していた閲覧トークンのうち、期限内で無効にしていないものを
@@ -57,3 +57,24 @@ def resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePo
     return {"projectId": project_id,
             "url": viewer.project_url(project_id),
             "status": ACTIVE}
+
+
+class ControlProjectAccess:
+    """まとめて渡した相手の範囲を、あとから絞り直す。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock) -> None:
+        self._projects = projects
+        self._viewer = viewer
+        self._gate = gate
+        self._clock = clock
+
+    def run(self, operation: str, caller: Caller, project_id: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        if operation == "suspend":
+            return _suspend(self._projects, self._gate, self._clock, caller, project_id)
+        if operation == "resume":
+            return _resume(self._projects, self._viewer, self._gate, self._clock, caller, project_id)
+        raise ValueError(f"知らない操作です: {operation}")

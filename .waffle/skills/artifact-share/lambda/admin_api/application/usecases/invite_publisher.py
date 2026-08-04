@@ -25,7 +25,7 @@ def _require_admin(caller: Caller) -> None:
                              "投稿者を出し入れできるのは管理者だけです。")
 
 
-def invite(directory: PublisherDirectory, caller: Caller, email: str) -> dict:
+def _invite(directory: PublisherDirectory, caller: Caller, email: str) -> dict:
     """公開できる人を増やす。
 
     同じ宛先を重ねて招いても二重にはならず、その人の合言葉も、公開した
@@ -40,7 +40,7 @@ def invite(directory: PublisherDirectory, caller: Caller, email: str) -> dict:
             "event": "PublisherInvited"}
 
 
-def resend_invite(directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
+def _resend_invite(directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
     """招待をもう一度送る。仮の合言葉が新しくなる。
 
     招待に応じていない人は、利用者プールの再設定（合言葉を忘れたときの
@@ -71,7 +71,7 @@ def _status_of(person) -> str:
     return getattr(person, "status", "")
 
 
-def remove(artifacts: SharedArtifactRepository, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
+def _remove(artifacts: SharedArtifactRepository, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
     """公開できる人から外す。公開したものには一切触れない。
 
     外したあと、その人が公開したもののうち引き継ぎ先が決まっていないものは
@@ -97,3 +97,24 @@ def _count_artifacts(artifacts: SharedArtifactRepository, publisher_id: str) -> 
     """その人が公開した共有アーティファクトの件数。"""
     found, _ = artifacts.all()
     return sum(1 for meta in found if meta.get("uploadedBy") == publisher_id)
+
+
+class InvitePublisher:
+    """公開できる人の顔ぶれを、いまの体制に合わせる。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, directory: PublisherDirectory) -> None:
+        self._artifacts = artifacts
+        self._directory = directory
+
+    def run(self, operation: str, caller: Caller, email: str = "", publisher_id: str = "") -> dict:
+        """このユースケースの唯一の入口。"""
+        if operation == "invite":
+            return _invite(self._directory, caller, email)
+        if operation == "remove":
+            return _remove(self._artifacts, self._directory, caller, publisher_id)
+        if operation == "resend":
+            return _resend_invite(self._directory, caller, publisher_id)
+        raise ValueError(f"知らない操作です: {operation}")

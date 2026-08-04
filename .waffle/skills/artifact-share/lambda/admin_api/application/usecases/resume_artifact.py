@@ -24,7 +24,7 @@ def _write_meta(artifacts: SharedArtifactRepository, clock: Clock, meta: dict) -
     artifacts.save(meta)
 
 
-def resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
+def _resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
     """再び開けるようにする。
 
     止める前に渡していた閲覧トークンのうち、期限内で無効にしていないものを
@@ -43,3 +43,20 @@ def resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: Vi
 
     return {"artifactId": artifact_id, "url": viewer.artifact_url(artifact_id),
             "status": ACTIVE}
+
+
+class ResumeArtifact:
+    """止めていたものを、もう一度見てもらえる状態に戻す。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._viewer = viewer
+        self._gate = gate
+        self._clock = clock
+
+    def run(self, caller: Caller, artifact_id: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _resume(self._artifacts, self._viewer, self._gate, self._clock, caller, artifact_id)

@@ -18,7 +18,7 @@ from domain.view_subject import ViewSubject
 
 
 
-def list_tokens(artifacts: SharedArtifactRepository, projects: ProjectRepository,
+def _list_tokens(artifacts: SharedArtifactRepository, projects: ProjectRepository,
                 clock: Clock, caller: Caller, subject: ViewSubject) -> dict:
     """いま渡している相手を確かめる。閲覧トークンそのものの値は返さない。"""
     record = require_manageable_subject(artifacts, projects, caller, subject)
@@ -28,3 +28,19 @@ def list_tokens(artifacts: SharedArtifactRepository, projects: ProjectRepository
          "expiresAt": t.get("expiresAt", view_token.NO_EXPIRY),
          "issuedAt": t.get("issuedAt", 0)}
         for t in view_token.active_tokens(record.get("viewTokens"), now)]}
+
+
+class ListViewTokens:
+    """いま誰に見せているかを確かめ、外したいものを選ぶ。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._projects = projects
+        self._clock = clock
+
+    def run(self, caller: Caller, subject: ViewSubject) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _list_tokens(self._artifacts, self._projects, self._clock, caller, subject)

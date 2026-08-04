@@ -16,7 +16,7 @@ from application.ports.comment_repository import CommentRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 
 
-def read(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller, artifact_id: str) -> dict:
+def _read(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller, artifact_id: str) -> dict:
     """寄せられたコメントを、古いものから順に返す。
 
     差し替えの区切りも同じ並びに含める。分けて返すと、どの指摘が差し替え
@@ -37,3 +37,18 @@ def read(artifacts: SharedArtifactRepository, comments: CommentRepository, calle
         record.setdefault("kind", "comment")
 
     return {"artifactId": artifact_id, "comments": rows, "unreadable": unreadable}
+
+
+class ReadComments:
+    """自分が渡したものにどんな反応が来たかを知る。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, comments: CommentRepository) -> None:
+        self._artifacts = artifacts
+        self._comments = comments
+
+    def run(self, caller: Caller, artifact_id: str) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _read(self._artifacts, self._comments, caller, artifact_id)

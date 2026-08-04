@@ -20,7 +20,7 @@ from application.view_token_access import (DUPLICATE_TOKEN_NAME, EXPIRY_TOO_FAR,
                                            TOKEN_LIMIT_REACHED)
 
 
-def issue(artifacts: SharedArtifactRepository, projects: ProjectRepository,
+def _issue(artifacts: SharedArtifactRepository, projects: ProjectRepository,
           gate: ViewGatePort, clock: Clock, caller: Caller, subject: ViewSubject,
           name: str, ttl: int | None = None) -> dict:
     """閲覧トークンを1本増やし、その値を一度だけ返す。
@@ -56,3 +56,20 @@ def issue(artifacts: SharedArtifactRepository, projects: ProjectRepository,
 
     return {"tokenId": tokens[-1]["tokenId"], "name": name, "token": token,
             "expiresAt": expiry, "tokenShownOnce": True}
+
+
+class IssueViewToken:
+    """見せたい相手ごとに別々の閲覧トークンを渡し、あとから個別に外せるようにする。
+
+    口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
+    """
+
+    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, gate: ViewGatePort, clock: Clock) -> None:
+        self._artifacts = artifacts
+        self._projects = projects
+        self._gate = gate
+        self._clock = clock
+
+    def run(self, caller: Caller, subject: ViewSubject, name: str, ttl: int | None = None) -> dict:
+        """このユースケースの唯一の入口。"""
+        return _issue(self._artifacts, self._projects, self._gate, self._clock, caller, subject, name, ttl)

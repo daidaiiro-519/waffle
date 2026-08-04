@@ -31,14 +31,24 @@ from adapters.outbound.stored_shared_artifact_repository import (
     StoredSharedArtifactRepository,
 )
 from adapters.outbound.stored_viewer_site import StoredViewerSite
-from application.usecases import (
-    assign_artifact_to_project, browse_projects, control_project_access,
-    create_project, export_artifact, invite_publisher, issue_view_token,
-    list_my_artifacts, list_publishers, list_view_tokens, publish_artifact,
-    read_comments, replace_artifact_content, resume_artifact,
-    revoke_all_view_tokens, revoke_view_token, suspend_artifact,
-    transfer_artifact,
-)
+from application.usecases.assign_artifact_to_project import AssignArtifactToProject
+from application.usecases.browse_projects import BrowseProjects
+from application.usecases.control_project_access import ControlProjectAccess
+from application.usecases.create_project import CreateProject
+from application.usecases.export_artifact import ExportArtifact
+from application.usecases.invite_publisher import InvitePublisher
+from application.usecases.issue_view_token import IssueViewToken
+from application.usecases.list_my_artifacts import ListMyArtifacts
+from application.usecases.list_publishers import ListPublishers
+from application.usecases.list_view_tokens import ListViewTokens
+from application.usecases.publish_artifact import PublishArtifact
+from application.usecases.read_comments import ReadComments
+from application.usecases.replace_artifact_content import ReplaceArtifactContent
+from application.usecases.resume_artifact import ResumeArtifact
+from application.usecases.revoke_all_view_tokens import RevokeAllViewTokens
+from application.usecases.revoke_view_token import RevokeViewToken
+from application.usecases.suspend_artifact import SuspendArtifact
+from application.usecases.transfer_artifact import TransferArtifact
 from application.view_token_access import ViewTokenError
 from domain.view_subject import ViewSubject
 from shared.errors import ManageError, ProjectError, PublisherError
@@ -112,7 +122,8 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
     try:
         if action == "publish":
             c = _publish_deps()
-            result = publish_artifact.publish(c.artifacts, c.viewer, c.gate, c.identify, c.now, {**body, "authorization": authorization})
+            result = PublishArtifact(c.artifacts, c.viewer, c.gate, c.identify, c.now).run(
+                {**body, "authorization": authorization})
         else:
             result = _dispatch(action, Connections(**_connections()), caller, body)
         return _response(200, result)
@@ -149,37 +160,69 @@ def _subject(body: dict):
 # 1つ増やして行き先を書き忘れると、その操作は黙って削除を実行していた。
 # 表であれば、行き先の無い操作は下で落ちる。
 ROUTES = {
-    "list":        lambda d, c, b: list_my_artifacts.list_artifacts(d.artifacts, d.comments, c),
-    "replace":     lambda d, c, b: replace_artifact_content.replace_content(d.artifacts, d.projects, d.comments, d.viewer, d.now, c, b.get("artifactId", ""), b.get("html", "")),
-    "disable":     lambda d, c, b: suspend_artifact.suspend(d.artifacts, d.gate, d.now, c, b.get("artifactId", "")),
-    "enable":      lambda d, c, b: resume_artifact.resume(d.artifacts, d.viewer, d.gate, d.now, c, b.get("artifactId", "")),
-    "assign":      lambda d, c, b: assign_artifact_to_project.assign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "unassign":    lambda d, c, b: assign_artifact_to_project.unassign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "transfer":    lambda d, c, b: transfer_artifact.transfer(d.artifacts, d.directory, d.now, c, b.get("artifactId", ""), b.get("toPublisher", "")),
-    "issue-token":      lambda d, c, b: issue_view_token.issue(
-        d.artifacts, d.projects, d.gate, d.now, c, _subject(b), b.get("name", ""),
-        b.get("ttl")),
-    "view-tokens":      lambda d, c, b: list_view_tokens.list_tokens(
-        d.artifacts, d.projects, d.now, c, _subject(b)),
-    "revoke-token":     lambda d, c, b: revoke_view_token.revoke(
-        d.artifacts, d.projects, d.gate, d.now, c, _subject(b), b.get("tokenId", "")),
-    "revoke-all-tokens": lambda d, c, b: revoke_all_view_tokens.revoke_all(
-        d.artifacts, d.projects, d.gate, d.now, c, _subject(b)),
+    "list":        lambda d, c, b: ListMyArtifacts(d.artifacts, d.comments).run(c),
+    "replace":     lambda d, c, b: ReplaceArtifactContent(
+        d.artifacts, d.projects, d.comments, d.viewer, d.now
+    ).run(c, b.get("artifactId", ""), b.get("html", "")),
+    "disable":     lambda d, c, b: SuspendArtifact(d.artifacts, d.gate, d.now).run(
+        c, b.get("artifactId", "")),
+    "enable":      lambda d, c, b: ResumeArtifact(d.artifacts, d.viewer, d.gate, d.now).run(
+        c, b.get("artifactId", "")),
+    "assign":      lambda d, c, b: _assign(d).run(
+        "assign", c, b.get("artifactId", ""), b.get("projectId", "")),
+    "unassign":    lambda d, c, b: _assign(d).run(
+        "unassign", c, b.get("artifactId", ""), b.get("projectId", "")),
+    "transfer":    lambda d, c, b: TransferArtifact(d.artifacts, d.directory, d.now).run(
+        c, b.get("artifactId", ""), b.get("toPublisher", "")),
 
-    "comments":    lambda d, c, b: read_comments.read(d.artifacts, d.comments, c, b.get("artifactId", "")),
-    "export":      lambda d, c, b: export_artifact.export(d.artifacts, d.comments, d.viewer, c, b.get("artifactId", "")),
+    "issue-token":       lambda d, c, b: IssueViewToken(
+        d.artifacts, d.projects, d.gate, d.now
+    ).run(c, _subject(b), b.get("name", ""), b.get("ttl")),
+    "view-tokens":       lambda d, c, b: ListViewTokens(
+        d.artifacts, d.projects, d.now).run(c, _subject(b)),
+    "revoke-token":      lambda d, c, b: RevokeViewToken(
+        d.artifacts, d.projects, d.gate, d.now).run(c, _subject(b), b.get("tokenId", "")),
+    "revoke-all-tokens": lambda d, c, b: RevokeAllViewTokens(
+        d.artifacts, d.projects, d.gate, d.now).run(c, _subject(b)),
 
-    "invite":          lambda d, c, b: invite_publisher.invite(d.directory, c, b.get("email", "")),
-    "publishers":      lambda d, c, b: {"publishers": list_publishers.list_publishers(d.directory, c)},
-    "resend-invite":   lambda d, c, b: invite_publisher.resend_invite(d.directory, c, b.get("publisherId", "")),
-    "remove-publisher": lambda d, c, b: invite_publisher.remove(d.artifacts, d.directory, c, b.get("publisherId", "")),
+    "comments":    lambda d, c, b: ReadComments(d.artifacts, d.comments).run(
+        c, b.get("artifactId", "")),
+    "export":      lambda d, c, b: ExportArtifact(d.artifacts, d.comments, d.viewer).run(
+        c, b.get("artifactId", "")),
 
-    "projects":        lambda d, c, b: browse_projects.list_projects(d.projects, c),
-    "project":         lambda d, c, b: browse_projects.detail(d.artifacts, d.projects, d.viewer, c, b.get("projectId", "")),
-    "create-project":  lambda d, c, b: create_project.create(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
-    "disable-project": lambda d, c, b: control_project_access.suspend(d.projects, d.gate, d.now, c, b.get("projectId", "")),
-    "enable-project":  lambda d, c, b: control_project_access.resume(d.projects, d.viewer, d.gate, d.now, c, b.get("projectId", "")),
+    "invite":           lambda d, c, b: _publishers(d).run("invite", c, email=b.get("email", "")),
+    "resend-invite":    lambda d, c, b: _publishers(d).run(
+        "resend", c, publisher_id=b.get("publisherId", "")),
+    "remove-publisher": lambda d, c, b: _publishers(d).run(
+        "remove", c, publisher_id=b.get("publisherId", "")),
+    "publishers":       lambda d, c, b: {"publishers": ListPublishers(d.directory).run(c)},
+
+    "projects":        lambda d, c, b: _browse(d).run("list", c),
+    "project":         lambda d, c, b: _browse(d).run("detail", c, b.get("projectId", "")),
+    "create-project":  lambda d, c, b: CreateProject(
+        d.artifacts, d.projects, d.viewer, d.gate, d.now
+    ).run(c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
+    "disable-project": lambda d, c, b: _project_access(d).run("suspend", c, b.get("projectId", "")),
+    "enable-project":  lambda d, c, b: _project_access(d).run("resume", c, b.get("projectId", "")),
 }
+
+
+# 複数の操作を持つユースケースは、組み立てを1か所にまとめる。
+# 同じ結線を行き先ごとに書くと、口を1つ足したときの直し漏れが出る
+def _assign(d) -> AssignArtifactToProject:
+    return AssignArtifactToProject(d.artifacts, d.projects, d.viewer, d.gate, d.now)
+
+
+def _publishers(d) -> InvitePublisher:
+    return InvitePublisher(d.artifacts, d.directory)
+
+
+def _browse(d) -> BrowseProjects:
+    return BrowseProjects(d.artifacts, d.projects, d.viewer)
+
+
+def _project_access(d) -> ControlProjectAccess:
+    return ControlProjectAccess(d.projects, d.viewer, d.gate, d.now)
 
 
 
