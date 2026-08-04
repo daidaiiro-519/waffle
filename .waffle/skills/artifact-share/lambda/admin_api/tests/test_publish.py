@@ -14,6 +14,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import publish  # noqa: E402
+from adapters.outbound.stored_viewer_site import StoredViewerSite  # noqa: E402
 from adapters.outbound.stored_shared_artifact_repository import (  # noqa: E402
     StoredSharedArtifactRepository,
 )
@@ -51,12 +52,10 @@ def wiring(store=None, keys=None, user="publisher-1", wrapper="<html>{{アーテ
     store = store if store is not None else FakeStore()
     return dict(
         artifacts=StoredSharedArtifactRepository(store),
-        store=store,
+        viewer=StoredViewerSite(store, wrapper_template=wrapper),
         tokens=keys if keys is not None else FakeKeyStore(),
         identify=lambda _token: user,
         clock=lambda: 1_700_000_000,
-        wrapper_template=wrapper,
-        viewer_domain="",
     )
 
 

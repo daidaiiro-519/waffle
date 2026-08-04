@@ -21,7 +21,19 @@ from __future__ import annotations
 import json
 
 from shared.errors import ManageError, ProjectError
-from application.ports import Caller, ArtifactStore, Clock, ViewTokenStore
+from application.ports import Caller, Clock, ViewTokenStore
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.project_repository import ProjectRepository
@@ -63,14 +75,9 @@ def _read_own(projects: ProjectRepository, caller: Caller, project_id: str) -> d
     return index
 
 
-def _viewer_url(viewer_domain: str, project_id: str) -> str:
-    domain = viewer_domain or "{viewer-domain}"
-    return f"https://{domain}/proj/{project_id}/"
-
-
 # ── 一覧ページの書き出し ────────────────────────────────
 
-def write_listing(artifacts: SharedArtifactRepository, store: ArtifactStore, index: dict) -> None:
+def write_listing(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, index: dict) -> None:
     """閲覧者が見る一覧の中身を書き出す。
 
     雛形（index.html）はどのプロジェクトでも同じものを置き、この中身
@@ -96,23 +103,17 @@ def write_listing(artifacts: SharedArtifactRepository, store: ArtifactStore, ind
         })
     rows.sort(key=lambda r: r["updatedAt"], reverse=True)
 
-    store.put(
-        f"proj/{index['projectId']}/index.json",
-        json.dumps({"name": index.get("displayName", ""), "artifacts": rows},
-                   ensure_ascii=False),
-        "application/json",
-    )
+    viewer.place_project_listing(index["projectId"], index.get("displayName", ""), rows)
 
 
-def _write_page(store: ArtifactStore, project_page: str, project_id: str) -> None:
-    """一覧ページの雛形を置く。中身は index.json から読む。"""
-    page = (project_page or "").replace("{{プロジェクトID}}", project_id)
-    store.put(f"proj/{project_id}/index.html", page, "text/html; charset=utf-8")
+def _write_page(viewer: ViewerSitePort, project_id: str) -> None:
+    """一覧ページを置く。中身は別に置く一覧から読む。"""
+    viewer.place_project(project_id)
 
 
 # ── 作る ────────────────────────────────────────────────
 
-def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, project_page: str, viewer_domain: str, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
+def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
     """プロジェクトを作り、閲覧トークンを発行する。作った時点では何も入っていない。
 
     共有の別はここでしか決まらない。変える操作を用意しないことが、
@@ -139,14 +140,14 @@ def create(artifacts: SharedArtifactRepository, projects: ProjectRepository, sto
         "createdAt": now,
     }
     _write_index(projects, clock, index)
-    _write_page(store, project_page, project_id)
-    write_listing(artifacts, store, index)
+    _write_page(viewer, project_id)
+    write_listing(artifacts, viewer, index)
 
     # 閲覧トークンは最後に書く。ここまで成功して初めて開ける状態になる
     tokens.put(f"proj:{project_id}", token_record(token, now))
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": _viewer_url(viewer_domain, project_id), "name": name, "scope": scope,
+            "url": viewer.project_url(project_id), "name": name, "scope": scope,
             "event": "ProjectCreated"}
 
 
@@ -168,7 +169,7 @@ def _issue(tokens: ViewTokenStore, clock: Clock, project_id: str, generation: in
     return token
 
 
-def reissue_token(projects: ProjectRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, project_id: str) -> dict:
+def reissue_token(projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, project_id: str) -> dict:
     """新しい閲覧トークンを発行し、それまでのものを使えなくする。URLは変えない。"""
     index = _read_own(projects, caller, project_id)
     generation = _generation(tokens, project_id) + 1
@@ -176,10 +177,10 @@ def reissue_token(projects: ProjectRepository, store: ArtifactStore, tokens: Vie
     _write_index(projects, clock, index)
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": _viewer_url(viewer_domain, project_id), "generation": generation}
+            "url": viewer.project_url(project_id), "generation": generation}
 
 
-def suspend(projects: ProjectRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, project_id: str) -> dict:
+def suspend(projects: ProjectRepository, tokens: ViewTokenStore, clock: Clock, caller: Caller, project_id: str) -> dict:
     """このプロジェクトの閲覧トークンでは何も開けない状態にする。
 
     入っている共有アーティファクトは、それぞれの閲覧トークンで引き続き開ける。
@@ -196,7 +197,7 @@ def suspend(projects: ProjectRepository, store: ArtifactStore, tokens: ViewToken
     return {"projectId": project_id, "status": DISABLED}
 
 
-def resume(projects: ProjectRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, project_id: str) -> dict:
+def resume(projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, project_id: str) -> dict:
     """再び開ける状態に戻す。閲覧トークンは必ず新しくなる。"""
     index = _read_own(projects, caller, project_id)
     if not is_suspended(index):
@@ -208,7 +209,7 @@ def resume(projects: ProjectRepository, store: ArtifactStore, tokens: ViewTokenS
     _write_index(projects, clock, index)
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": _viewer_url(viewer_domain, project_id), "generation": generation,
+            "url": viewer.project_url(project_id), "generation": generation,
             "status": ACTIVE}
 
 
@@ -246,7 +247,7 @@ def list_projects(projects: ProjectRepository, caller: Caller) -> dict:
 
 # ── 中身を見る ──────────────────────────────────────────
 
-def detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer_domain: str, caller: Caller, project_id: str) -> dict:
+def detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, caller: Caller, project_id: str) -> dict:
     """プロジェクトと、いま入っている共有アーティファクトを返す。
 
     見られるのは、そこへ自分のものを出し入れできる人（持ち主・管理者・
@@ -288,7 +289,7 @@ def detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, vie
             "status": index.get("status", ""),
             "owner": index.get("owner", ""),
             "isMine": index.get("owner") == caller.id,
-            "url": _viewer_url(viewer_domain, project_id),
+            "url": viewer.project_url(project_id),
         },
         "artifacts": rows,
     }

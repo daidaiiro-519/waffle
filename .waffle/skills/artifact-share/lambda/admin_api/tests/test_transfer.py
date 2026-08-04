@@ -34,7 +34,7 @@ def setup():
         store=store, keys=keys, identify=lambda _t: X.id,
         wrapper_template="<html>{{アーティファクトID}}</html>",
         now=lambda: 1_700_000_000, viewer_domain="viewer.example.net")
-    result = publish.publish(c.artifacts, c.store, c.keys, c.identify, c.now, c.wrapper_template, c.viewer_domain, {"html": HTML, "authorization": "Bearer x"})
+    result = publish.publish(c.artifacts, c.viewer, c.keys, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(
         store=store, keys=keys,
         directory=FakeDirectory({
@@ -72,10 +72,10 @@ def test_管理者は他人のものを公開停止_再開_再発行できる():
     manage.suspend(deps.artifacts, deps.keys, deps.now, ADMIN, aid)
     assert meta_of(deps, aid)["status"] == "disabled"
 
-    manage.resume(deps.artifacts, deps.keys, deps.now, deps.viewer_domain, ADMIN, aid)
+    manage.resume(deps.artifacts, deps.viewer, deps.keys, deps.now, ADMIN, aid)
     assert meta_of(deps, aid)["status"] == "active"
 
-    again = manage.reissue_token(deps.artifacts, deps.keys, deps.now, deps.viewer_domain, ADMIN, aid)
+    again = manage.reissue_token(deps.artifacts, deps.viewer, deps.keys, deps.now, ADMIN, aid)
     assert again["token"]
 
 
@@ -85,7 +85,7 @@ def test_管理者でも他人の中身は差し替えられない():
     before = deps.store.get(f"p/{r['artifactId']}/content.html")
 
     with pytest.raises(manage.ManageError) as x:
-        manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.store, deps.now, deps.viewer_domain, ADMIN, r["artifactId"], HTML.replace("本文", "別"))
+        manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, ADMIN, r["artifactId"], HTML.replace("本文", "別"))
 
     assert x.value.code == "NOT_THE_PUBLISHER"
     assert deps.store.get(f"p/{r['artifactId']}/content.html") == before

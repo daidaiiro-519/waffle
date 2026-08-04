@@ -36,7 +36,7 @@ def setup():
         store=store, keys=keys, identify=lambda _t: ME.id,
         wrapper_template="<html>{{アーティファクトID}}</html>",
         now=lambda: 1_700_000_000, viewer_domain="viewer.example.net")
-    r = publish.publish(c.artifacts, c.store, c.keys, c.identify, c.now, c.wrapper_template, c.viewer_domain, {"html": HTML, "authorization": "Bearer x"})
+    r = publish.publish(c.artifacts, c.viewer, c.keys, c.identify, c.now, {"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(store=store, keys=keys, now=lambda: 1_700_000_100,
                        viewer_domain="viewer.example.net")
     return deps, r["artifactId"]
@@ -89,7 +89,7 @@ def test_差し替えの区切りが並びに現れる():
     """どの指摘が差し替え前のものかを読み取れるようにする"""
     deps, aid = setup()
     post(deps, aid, 1700000001, "佐藤", "直してほしい", "revise")
-    manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.store, deps.now, deps.viewer_domain, ME, aid, HTML.replace("本文", "直した"))
+    manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, ME, aid, HTML.replace("本文", "直した"))
     post(deps, aid, 1700000200, "佐藤", "直りました", "approve")
 
     kinds = [c["kind"] for c in comments.read(deps.artifacts, deps.comments, ME, aid)["comments"]]
@@ -148,7 +148,7 @@ def test_中身とコメントがまとめて返る():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
 
-    got = comments.export(deps.artifacts, deps.comments, deps.store, ME, aid)
+    got = comments.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)
 
     assert got["content"] == HTML
     assert got["name"] == "検索基盤の選定"
@@ -162,8 +162,8 @@ def test_取り出しても何も変わらない():
     store_before = dict(deps.store.objects)
     keys_before = dict(deps.keys.keys)
 
-    first = comments.export(deps.artifacts, deps.comments, deps.store, ME, aid)
-    second = comments.export(deps.artifacts, deps.comments, deps.store, ME, aid)
+    first = comments.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)
+    second = comments.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)
 
     assert first == second
     assert deps.store.objects == store_before
@@ -174,18 +174,18 @@ def test_公開が止まっていても取り出せる():
     """止めてからでは取り出せないと、迷ったときに止められなくなる"""
     deps, aid = setup()
     manage.suspend(deps.artifacts, deps.keys, deps.now, ME, aid)
-    assert comments.export(deps.artifacts, deps.comments, deps.store, ME, aid)["content"] == HTML
+    assert comments.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)["content"] == HTML
 
 
 def test_取り出したものに閲覧トークンは含まれない():
     """渡り歩いても、それだけで開ける状態にならないようにする"""
     deps, aid = setup()
-    got = json.dumps(comments.export(deps.artifacts, deps.comments, deps.store, ME, aid), ensure_ascii=False)
+    got = json.dumps(comments.export(deps.artifacts, deps.comments, deps.viewer, ME, aid), ensure_ascii=False)
     assert "token" not in got
 
 
 def test_他人のものは取り出せない():
     deps, aid = setup()
     with pytest.raises(manage.ManageError) as x:
-        comments.export(deps.artifacts, deps.comments, deps.store, SOMEONE_ELSE, aid)
+        comments.export(deps.artifacts, deps.comments, deps.viewer, SOMEONE_ELSE, aid)
     assert x.value.code == "ARTIFACT_NOT_FOUND"

@@ -26,7 +26,23 @@ from typing import Callable
 
 from application.artifact_access import require_manageable
 from shared.errors import ManageError
-from application.ports import Caller, ArtifactStore, Clock, PublisherDirectory, ViewTokenStore
+from application.ports import Caller, Clock, PublisherDirectory, ViewTokenStore
+from application.ports.comment_repository import CommentRepository
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.comment_repository import CommentRepository
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.comment_repository import CommentRepository
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.comment_repository import CommentRepository
+from application.ports.project_repository import ProjectRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
 from application.ports.comment_repository import CommentRepository
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -55,11 +71,6 @@ from domain.view_token import generation_of, new_token, token_record
 def _write_meta(artifacts: SharedArtifactRepository, clock: Clock, meta: dict) -> None:
     meta["updatedAt"] = clock()
     artifacts.save(meta)
-
-
-def _viewer_url(viewer_domain: str, artifact_id: str) -> str:
-    domain = viewer_domain or "{viewer-domain}"
-    return f"https://{domain}/p/{artifact_id}/"
 
 
 def _require_published(meta: dict) -> None:
@@ -113,7 +124,7 @@ def _count_comments(comments: CommentRepository, artifact_id: str) -> int:
 
 # ── 差し替え ────────────────────────────────────────────
 
-def replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepository, comments: CommentRepository, store: ArtifactStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str, html: str) -> dict:
+def replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepository, comments: CommentRepository, viewer: ViewerSitePort, clock: Clock, caller: Caller, artifact_id: str, html: str) -> dict:
     """中身だけを入れ替える。URL・トークン・これまでの反応は保つ。
 
     入れ替えた時点を区切りとして反応の並びに残す。これより前の指摘が
@@ -135,7 +146,7 @@ def replace_content(artifacts: SharedArtifactRepository, projects: ProjectReposi
     found = inspect_html(html)
     now = clock()
 
-    store.put(f"p/{artifact_id}/content.html", html, "text/html; charset=utf-8")
+    viewer.replace_artifact_content(artifact_id, html)
 
     # 差し替えの区切り。反応と同じ並びに載る1件の印として残す
     comments.add_replacement_divider(artifact_id, now)
@@ -149,9 +160,9 @@ def replace_content(artifacts: SharedArtifactRepository, projects: ProjectReposi
         })
     meta["externalRefs"] = found["externalRefs"]
     _write_meta(artifacts, clock, meta)
-    _refresh_listings(artifacts, projects, store, meta)
+    _refresh_listings(artifacts, projects, viewer, meta)
 
-    return {"artifactId": artifact_id, "url": _viewer_url(viewer_domain, artifact_id),
+    return {"artifactId": artifact_id, "url": viewer.artifact_url(artifact_id),
             "externalRefs": found["externalRefs"]}
 
 
@@ -173,7 +184,7 @@ def _issue(tokens: ViewTokenStore, clock: Clock, artifact_id: str, generation: i
     return token
 
 
-def reissue_token(artifacts: SharedArtifactRepository, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str) -> dict:
+def reissue_token(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str) -> dict:
     """新しいトークンを発行し、それまでのものを失効させる。URLは変えない。"""
     meta = require_manageable(artifacts, caller, artifact_id)
     generation = _generation(tokens, artifact_id) + 1
@@ -181,7 +192,7 @@ def reissue_token(artifacts: SharedArtifactRepository, tokens: ViewTokenStore, c
     _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "token": token,
-            "url": _viewer_url(viewer_domain, artifact_id), "generation": generation,
+            "url": viewer.artifact_url(artifact_id), "generation": generation,
             "tokenShownOnce": True}
 
 
@@ -199,7 +210,7 @@ def suspend(artifacts: SharedArtifactRepository, tokens: ViewTokenStore, clock: 
     return {"artifactId": artifact_id, "status": DISABLED}
 
 
-def resume(artifacts: SharedArtifactRepository, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str) -> dict:
+def resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str) -> dict:
     """再び開けるようにする。トークンは必ず新しくなる。
 
     止める理由の多くは見せる相手を絞り直すことにあるため、止める前の
@@ -215,7 +226,7 @@ def resume(artifacts: SharedArtifactRepository, tokens: ViewTokenStore, clock: C
     _write_meta(artifacts, clock, meta)
 
     return {"artifactId": artifact_id, "token": token,
-            "url": _viewer_url(viewer_domain, artifact_id), "generation": generation,
+            "url": viewer.artifact_url(artifact_id), "generation": generation,
             "status": ACTIVE, "tokenShownOnce": True}
 
 
@@ -271,7 +282,7 @@ def _write_membership(tokens: ViewTokenStore, artifact_id: str, project_ids: lis
     tokens.put(f"pp:{artifact_id}", " ".join(project_ids))
 
 
-def assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトへ加える。人の明示的な操作でのみ成立する。
 
     加えられるのは自分が公開したものだけ。入れ先は、共有なら誰でも、
@@ -296,12 +307,12 @@ def assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, sto
     meta["projects"] = belongs
     _write_meta(artifacts, clock, meta)
     _write_membership(tokens, artifact_id, belongs)
-    _sync_project(artifacts, projects, store, clock, project_store, index, artifact_id, member=True)
+    _sync_project(artifacts, projects, viewer, clock, project_store, index, artifact_id, member=True)
 
     return {"artifactId": artifact_id, "projects": belongs}
 
 
-def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトから外す。共有アーティファクト自体は個別の閲覧トークンで開けるまま残る。"""
     import projects as project_store
 
@@ -315,12 +326,12 @@ def unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, s
     meta["projects"] = belongs
     _write_meta(artifacts, clock, meta)
     _write_membership(tokens, artifact_id, belongs)
-    _sync_project(artifacts, projects, store, clock, project_store, index, artifact_id, member=False)
+    _sync_project(artifacts, projects, viewer, clock, project_store, index, artifact_id, member=False)
 
     return {"artifactId": artifact_id, "projects": belongs}
 
 
-def _sync_project(artifacts: SharedArtifactRepository, projects: ProjectRepository, store: ArtifactStore, clock: Clock, project_store, index: dict, artifact_id: str, member: bool) -> None:
+def _sync_project(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, clock: Clock, project_store, index: dict, artifact_id: str, member: bool) -> None:
     """プロジェクトの索引と、閲覧者が見る一覧を揃える。
 
     所属は索引（人へ見せるための正）と pp:（閲覧ゲートが判じるための投影）の
@@ -333,10 +344,10 @@ def _sync_project(artifacts: SharedArtifactRepository, projects: ProjectReposito
     index["memberArtifactIds"] = ids
     index["updatedAt"] = clock()
     projects.save(index)
-    project_store.write_listing(artifacts, store, index)
+    project_store.write_listing(artifacts, viewer, index)
 
 
-def _refresh_listings(artifacts: SharedArtifactRepository, projects: ProjectRepository, store: ArtifactStore, meta: dict) -> None:
+def _refresh_listings(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, meta: dict) -> None:
     """このアーティファクトが入っている全プロジェクトの一覧を書き直す。
 
     一覧は表示名を含むため、差し替えで名前が変わったときに書き直さないと、
@@ -347,4 +358,4 @@ def _refresh_listings(artifacts: SharedArtifactRepository, projects: ProjectRepo
     for project_id in meta.get("projects") or []:
         index = project_store.read_index(projects, project_id)
         if index:
-            project_store.write_listing(artifacts, store, index)
+            project_store.write_listing(artifacts, viewer, index)

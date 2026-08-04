@@ -18,20 +18,6 @@ from typing import Protocol
 from domain.caller import Caller  # noqa: F401
 
 
-class ArtifactStore(Protocol):
-    """公開したものと、それに付いた記録の保管。削除は持たない。"""
-
-    def put(self, key: str, body: bytes | str, content_type: str) -> None:
-        """指定した場所へ置く。既にあれば置き換える。"""
-        ...
-
-    def get(self, key: str) -> bytes | None:
-        """指定した場所から取り出す。無ければ None。"""
-        ...
-
-    def list(self, prefix: str) -> list[str]:
-        """その始まりを持つ場所を列挙する。"""
-        ...
 
 
 class ViewTokenStore(Protocol):

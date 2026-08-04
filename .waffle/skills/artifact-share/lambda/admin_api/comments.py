@@ -20,7 +20,19 @@ from __future__ import annotations
 import json
 
 from application.artifact_access import require_manageable
-from application.ports import Caller, ArtifactStore
+from application.ports import Caller
+from application.ports.comment_repository import CommentRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.comment_repository import CommentRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.comment_repository import CommentRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.comment_repository import CommentRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
 from application.ports.comment_repository import CommentRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.comment_repository import CommentRepository
@@ -51,7 +63,7 @@ def read(artifacts: SharedArtifactRepository, comments: CommentRepository, calle
     return {"artifactId": artifact_id, "comments": rows, "unreadable": unreadable}
 
 
-def export(artifacts: SharedArtifactRepository, comments: CommentRepository, store: ArtifactStore, caller: Caller, artifact_id: str) -> dict:
+def export(artifacts: SharedArtifactRepository, comments: CommentRepository, viewer: ViewerSitePort, caller: Caller, artifact_id: str) -> dict:
     """中身と、それまでに寄せられたコメントをまとめて返す。
 
     読むだけの操作で、公開状態も閲覧トークンもコメントも変えない。公開を
@@ -66,10 +78,7 @@ def export(artifacts: SharedArtifactRepository, comments: CommentRepository, sto
     """
     meta = require_manageable(artifacts, caller, artifact_id)
 
-    try:
-        content = store.get(f"p/{artifact_id}/content.html")
-    except Exception:
-        content = ""
+    content = viewer.read_artifact_content(artifact_id)
 
     found = read(artifacts, comments, caller, artifact_id)
 

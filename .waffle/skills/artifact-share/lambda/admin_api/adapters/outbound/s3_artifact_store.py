@@ -5,8 +5,10 @@ application は「置く・取り出す・並べる」としか言わない。�
 """
 from __future__ import annotations
 
+from adapters.outbound.object_store import ObjectStore
 
-class S3ArtifactStore:
+
+class S3ArtifactStore(ObjectStore):
     def __init__(self, bucket: str):
         import boto3
 

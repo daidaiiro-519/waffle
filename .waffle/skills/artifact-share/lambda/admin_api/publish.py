@@ -20,7 +20,15 @@ from domain.identifier import new_artifact_id
 from domain.publication import MAX_CONTENT_BYTES
 from domain.view_token import new_token, token_record
 from shared.errors import PublishError
-from application.ports import ArtifactStore, Clock, PublisherIdentifier, ViewTokenStore
+from application.ports import Clock, PublisherIdentifier, ViewTokenStore
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.viewer_site import ViewerSitePort
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -32,7 +40,7 @@ from typing import Callable
 
 # ── 公開 ────────────────────────────────────────────────
 
-def publish(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: ViewTokenStore, identify: PublisherIdentifier, clock: Clock, wrapper_template: str, viewer_domain: str, request: dict) -> dict:
+def publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, tokens: ViewTokenStore, identify: PublisherIdentifier, clock: Clock, request: dict) -> dict:
     """アップロードされたHTMLを公開し、URLとトークンを返す。
 
     途中で失敗したときに開ける状態のものを残さないことを、書き込む順序で保証する。
@@ -70,17 +78,8 @@ def publish(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: V
     token = new_token()
     now = clock()
 
-    index_key = f"p/{artifact_id}/index.html"
-    content_key = f"p/{artifact_id}/content.html"
-
     try:
-        # アップロードされたものは書き換えずにそのまま置く
-        store.put(content_key, content, "text/html; charset=utf-8")
-
-        # 閲覧画面はこちらが組み立てる。中身には触れない
-        viewer = wrapper_template.replace("{{アーティファクトID}}", artifact_id)
-        viewer = viewer.replace("{{表示名}}", title)
-        store.put(index_key, viewer, "text/html; charset=utf-8")
+        page_version = viewer.place_artifact(artifact_id, content, title)
 
         record = {
             "artifactId": artifact_id,
@@ -95,7 +94,7 @@ def publish(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: V
             "uploadedBy": publisher,
             "externalRefs": found["externalRefs"],
             "contentHash": hashlib.sha256(content.encode("utf-8")).hexdigest(),
-            "wrapperHash": hashlib.sha256(wrapper_template.encode("utf-8")).hexdigest(),
+            "wrapperHash": page_version,
             "publishedAt": now,
             "updatedAt": now,
         }
@@ -109,11 +108,10 @@ def publish(artifacts: SharedArtifactRepository, store: ArtifactStore, tokens: V
         # トークンを書く前に失敗しているため、置かれたものは誰にも開けない
         raise PublishError("PUBLISH_FAILED", f"公開できませんでした: {e}") from e
 
-    domain = viewer_domain or "{viewer-domain}"
     return {
         "artifactId": artifact_id,
         "token": token,               # 返すのはこの一度きり。保管には残さない
-        "url": f"https://{domain}/p/{artifact_id}/",
+        "url": viewer.artifact_url(artifact_id),
         "descriptor": {
             "documentId": found["documentId"],
             "docType": found["docType"],
