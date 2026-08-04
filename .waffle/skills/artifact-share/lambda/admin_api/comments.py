@@ -21,19 +21,14 @@ import json
 
 from application.artifact_access import require_manageable
 from application.ports import Caller, ArtifactStore
+from application.ports.comment_repository import CommentRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.comment_repository import CommentRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 
 
-def _prefix(artifact_id: str) -> str:
-    return f"comments/{artifact_id}/"
-
-
-def _record_id(key: str) -> str:
-    """鍵から、そのコメント1件を指す識別子を取り出す。返信先はこれで指される。"""
-    return key.rsplit("/", 1)[-1].removesuffix(".json")
-
-
-def read(artifacts: SharedArtifactRepository, store: ArtifactStore, caller: Caller, artifact_id: str) -> dict:
+def read(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller, artifact_id: str) -> dict:
     """寄せられたコメントを、古いものから順に返す。
 
     差し替えの区切りも同じ並びに含める。分けて返すと、どの指摘が差し替え
@@ -49,22 +44,14 @@ def read(artifacts: SharedArtifactRepository, store: ArtifactStore, caller: Call
     # 扱う）も自動的に揃う
     require_manageable(artifacts, caller, artifact_id)
 
-    rows, unreadable = [], 0
-    # 鍵は先頭に時刻を持つため、鍵の順がそのまま寄せられた順になる
-    for key in sorted(store.list(_prefix(artifact_id))):
-        try:
-            record = json.loads(store.get(key))
-        except Exception:
-            unreadable += 1
-            continue
-        record["id"] = _record_id(key)
+    rows, unreadable = comments.list_of(artifact_id)
+    for record in rows:
         record.setdefault("kind", "comment")
-        rows.append(record)
 
     return {"artifactId": artifact_id, "comments": rows, "unreadable": unreadable}
 
 
-def export(artifacts: SharedArtifactRepository, store: ArtifactStore, caller: Caller, artifact_id: str) -> dict:
+def export(artifacts: SharedArtifactRepository, comments: CommentRepository, store: ArtifactStore, caller: Caller, artifact_id: str) -> dict:
     """中身と、それまでに寄せられたコメントをまとめて返す。
 
     読むだけの操作で、公開状態も閲覧トークンもコメントも変えない。公開を
@@ -84,7 +71,7 @@ def export(artifacts: SharedArtifactRepository, store: ArtifactStore, caller: Ca
     except Exception:
         content = ""
 
-    found = read(artifacts, store, caller, artifact_id)
+    found = read(artifacts, comments, caller, artifact_id)
 
     return {
         "artifactId": artifact_id,

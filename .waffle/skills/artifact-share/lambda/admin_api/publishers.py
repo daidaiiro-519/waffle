@@ -18,6 +18,8 @@ import json
 from shared.errors import PublisherError
 from application.ports import Caller, ArtifactStore, PublisherDirectory
 from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
 
 
 
@@ -74,7 +76,7 @@ def _status_of(person) -> str:
     return getattr(person, "status", "")
 
 
-def remove(artifacts: SharedArtifactRepository, store: ArtifactStore, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
+def remove(artifacts: SharedArtifactRepository, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
     """公開できる人から外す。公開したものには一切触れない。
 
     外したあと、その人が公開したもののうち引き継ぎ先が決まっていないものは

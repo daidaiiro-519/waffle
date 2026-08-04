@@ -22,6 +22,8 @@ from domain.view_token import new_token, token_record
 from shared.errors import PublishError
 from application.ports import ArtifactStore, Clock, PublisherIdentifier, ViewTokenStore
 from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
+from application.ports.shared_artifact_repository import SharedArtifactRepository
 import time
 from dataclasses import dataclass
 from typing import Callable

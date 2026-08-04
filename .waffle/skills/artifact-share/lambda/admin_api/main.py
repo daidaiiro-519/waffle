@@ -30,6 +30,8 @@ import publishers
 from adapters.outbound.cognito_publisher_directory import CognitoPublisherDirectory
 from adapters.outbound.kvs_view_token_store import KvsViewTokenStore
 from adapters.outbound.s3_artifact_store import S3ArtifactStore
+from adapters.outbound.stored_comment_repository import StoredCommentRepository
+from adapters.outbound.stored_project_repository import StoredProjectRepository
 from adapters.outbound.stored_shared_artifact_repository import (
     StoredSharedArtifactRepository,
 )
@@ -57,6 +59,16 @@ class Connections:
     def artifacts(self):
         """共有アーティファクトの読み書き。保管の上に載せて組み立てる。"""
         return StoredSharedArtifactRepository(self.store)
+
+    @property
+    def projects(self):
+        """プロジェクトの読み書き。"""
+        return StoredProjectRepository(self.store)
+
+    @property
+    def comments(self):
+        """寄せられた反応の読み書き。"""
+        return StoredCommentRepository(self.store)
 
 
 # 管理者のグループ名。Cognitoのトークンに含まれていれば管理者とみなす
@@ -109,28 +121,28 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
 # 1つ増やして行き先を書き忘れると、その操作は黙って削除を実行していた。
 # 表であれば、行き先の無い操作は下で落ちる。
 ROUTES = {
-    "list":        lambda d, c, b: manage.list_artifacts(d.artifacts, d.store, c),
-    "replace":     lambda d, c, b: manage.replace_content(d.artifacts, d.store, d.now, d.viewer_domain, c, b.get("artifactId", ""), b.get("html", "")),
-    "rotate":      lambda d, c, b: manage.reissue_token(d.artifacts, d.store, d.keys, d.now, d.viewer_domain, c, b.get("artifactId", "")),
-    "disable":     lambda d, c, b: manage.suspend(d.artifacts, d.store, d.keys, d.now, c, b.get("artifactId", "")),
-    "enable":      lambda d, c, b: manage.resume(d.artifacts, d.store, d.keys, d.now, d.viewer_domain, c, b.get("artifactId", "")),
-    "assign":      lambda d, c, b: manage.assign(d.artifacts, d.store, d.keys, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "unassign":    lambda d, c, b: manage.unassign(d.artifacts, d.store, d.keys, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "transfer":    lambda d, c, b: manage.transfer(d.artifacts, d.store, d.directory, d.now, c, b.get("artifactId", ""), b.get("toPublisher", "")),
-    "comments":    lambda d, c, b: comment_store.read(d.artifacts, d.store, c, b.get("artifactId", "")),
-    "export":      lambda d, c, b: comment_store.export(d.artifacts, d.store, c, b.get("artifactId", "")),
+    "list":        lambda d, c, b: manage.list_artifacts(d.artifacts, d.comments, c),
+    "replace":     lambda d, c, b: manage.replace_content(d.artifacts, d.projects, d.comments, d.store, d.now, d.viewer_domain, c, b.get("artifactId", ""), b.get("html", "")),
+    "rotate":      lambda d, c, b: manage.reissue_token(d.artifacts, d.keys, d.now, d.viewer_domain, c, b.get("artifactId", "")),
+    "disable":     lambda d, c, b: manage.suspend(d.artifacts, d.keys, d.now, c, b.get("artifactId", "")),
+    "enable":      lambda d, c, b: manage.resume(d.artifacts, d.keys, d.now, d.viewer_domain, c, b.get("artifactId", "")),
+    "assign":      lambda d, c, b: manage.assign(d.artifacts, d.projects, d.store, d.keys, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "unassign":    lambda d, c, b: manage.unassign(d.artifacts, d.projects, d.store, d.keys, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "transfer":    lambda d, c, b: manage.transfer(d.artifacts, d.directory, d.now, c, b.get("artifactId", ""), b.get("toPublisher", "")),
+    "comments":    lambda d, c, b: comment_store.read(d.artifacts, d.comments, c, b.get("artifactId", "")),
+    "export":      lambda d, c, b: comment_store.export(d.artifacts, d.comments, d.store, c, b.get("artifactId", "")),
 
     "invite":          lambda d, c, b: publishers.invite(d.directory, c, b.get("email", "")),
     "publishers":      lambda d, c, b: {"publishers": publishers.list_publishers(d.directory, c)},
     "resend-invite":   lambda d, c, b: publishers.resend_invite(d.directory, c, b.get("publisherId", "")),
-    "remove-publisher": lambda d, c, b: publishers.remove(d.artifacts, d.store, d.directory, c, b.get("publisherId", "")),
+    "remove-publisher": lambda d, c, b: publishers.remove(d.artifacts, d.directory, c, b.get("publisherId", "")),
 
-    "projects":        lambda d, c, b: projects.list_projects(d.store, c),
-    "project":         lambda d, c, b: projects.detail(d.artifacts, d.store, d.viewer_domain, c, b.get("projectId", "")),
-    "create-project":  lambda d, c, b: projects.create(d.artifacts, d.store, d.keys, d.now, d.project_page, d.viewer_domain, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
-    "reissue-project": lambda d, c, b: projects.reissue_token(d.store, d.keys, d.now, d.viewer_domain, c, b.get("projectId", "")),
-    "disable-project": lambda d, c, b: projects.suspend(d.store, d.keys, d.now, c, b.get("projectId", "")),
-    "enable-project":  lambda d, c, b: projects.resume(d.store, d.keys, d.now, d.viewer_domain, c, b.get("projectId", "")),
+    "projects":        lambda d, c, b: projects.list_projects(d.projects, c),
+    "project":         lambda d, c, b: projects.detail(d.artifacts, d.projects, d.viewer_domain, c, b.get("projectId", "")),
+    "create-project":  lambda d, c, b: projects.create(d.artifacts, d.projects, d.store, d.keys, d.now, d.project_page, d.viewer_domain, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
+    "reissue-project": lambda d, c, b: projects.reissue_token(d.projects, d.store, d.keys, d.now, d.viewer_domain, c, b.get("projectId", "")),
+    "disable-project": lambda d, c, b: projects.suspend(d.projects, d.store, d.keys, d.now, c, b.get("projectId", "")),
+    "enable-project":  lambda d, c, b: projects.resume(d.projects, d.store, d.keys, d.now, d.viewer_domain, c, b.get("projectId", "")),
 }
 
 
