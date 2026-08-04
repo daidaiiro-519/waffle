@@ -14,6 +14,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import publish  # noqa: E402
+from domain import html_inspection, identifier  # noqa: E402
 
 
 # ── 偽の依存 ────────────────────────────────────────────
@@ -188,7 +189,7 @@ def test_トークンは配置がすべて済んでから書かれる():
 # ── 検査（純粋な処理） ──────────────────────────────────
 
 def test_metaタグを読み取る():
-    d = publish.inspect_html(WITH_META)
+    d = html_inspection.inspect_html(WITH_META)
     assert d["documentId"] == "adr-search-backend"
     assert d["docType"] == "DecisionRecord"
     assert d["title"] == "検索基盤にPostgreSQLを採用する"   # titleタグより優先する
@@ -197,24 +198,24 @@ def test_metaタグを読み取る():
 
 
 def test_metaタグが無ければタイトルだけ拾う():
-    d = publish.inspect_html(WITHOUT_META)
+    d = html_inspection.inspect_html(WITHOUT_META)
     assert d["detected"] is False
     assert d["title"] == "会員登録フローの離脱率メモ"
     assert d["docType"] == ""
 
 
 def test_外部への参照を数える():
-    assert publish.inspect_html(WITH_EXTERNAL)["externalRefs"] == 3
-    assert publish.inspect_html(WITH_META)["externalRefs"] == 0
+    assert html_inspection.inspect_html(WITH_EXTERNAL)["externalRefs"] == 3
+    assert html_inspection.inspect_html(WITH_META)["externalRefs"] == 0
 
 
 def test_data_URIは外部への参照に数えない():
     html = '<html><body><img src="data:image/png;base64,AAAA"></body></html>'
-    assert publish.inspect_html(html)["externalRefs"] == 0
+    assert html_inspection.inspect_html(html)["externalRefs"] == 0
 
 
 def test_アーティファクトIDは紛らわしい文字を避ける():
-    ids = {publish.new_artifact_id() for _ in range(200)}
+    ids = {identifier.new_artifact_id() for _ in range(200)}
     assert len(ids) == 200                      # 重ならない
     for value in ids:
         assert len(value) == 8

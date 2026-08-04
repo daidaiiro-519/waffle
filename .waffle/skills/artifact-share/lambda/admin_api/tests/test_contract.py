@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import manage  # noqa: E402
 import publish  # noqa: E402
+from domain import view_token  # noqa: E402
 
 CONTRACT = json.loads(
     (Path(__file__).resolve().parents[3] / "infra" / "contract" / "token-records.json")
@@ -40,7 +41,7 @@ def cases():
 
 @pytest.mark.parametrize("case", cases(), ids=[c["名前"] for c in cases()])
 def test_保管へ残す形が契約と一致する(case):
-    got = publish.token_record(
+    got = view_token.token_record(
         case["合言葉"], case["発行時刻"],
         ttl=case["有効期間"], generation=case["世代"],
     )
@@ -50,7 +51,7 @@ def test_保管へ残す形が契約と一致する(case):
 @pytest.mark.parametrize("case", cases(), ids=[c["名前"] for c in cases()])
 def test_手元の記録は保管の1つ目の欄と世代をつないだもの(case):
     """閲覧ゲートが手元へ渡す値。組み立てるのは向こうだが、材料はこちらが決める。"""
-    stored = publish.token_record(
+    stored = view_token.token_record(
         case["合言葉"], case["発行時刻"],
         ttl=case["有効期間"], generation=case["世代"],
     )

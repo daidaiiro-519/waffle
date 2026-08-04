@@ -22,16 +22,13 @@ import json
 
 from manage import ManageError
 from ports import Caller, ArtifactStore, Clock, ViewTokenStore
-from publish import ID_ALPHABET, new_token, token_record
+from domain.identifier import new_project_id
+from domain.publication import (ACTIVE, DISABLED, PERSONAL, SHARED,
+                                is_known_scope, is_published, is_suspended)
+from domain.view_token import generation_of, new_token, token_record
 
-import secrets
 
 # 誰が共有アーティファクトを出し入れできるか
-PERSONAL = "PERSONAL"      # 持ち主だけ
-SHARED = "SHARED"          # 招かれた投稿者なら誰でも、自分のものを
-SCOPES = (PERSONAL, SHARED)
-
-PROJECT_ID_LENGTH = 6
 
 
 class ProjectError(Exception):
@@ -41,10 +38,6 @@ class ProjectError(Exception):
         super().__init__(message)
         self.code = code
         self.message = message
-
-
-def new_project_id() -> str:
-    return "".join(secrets.choice(ID_ALPHABET) for _ in range(PROJECT_ID_LENGTH))
 
 
 # ── 索引の読み書き ──────────────────────────────────────
@@ -103,7 +96,7 @@ def write_listing(store: ArtifactStore, index: dict) -> None:
             meta = json.loads(store.get(f"meta/{artifact_id}.json"))
         except Exception:
             continue
-        if meta.get("status") != "active":
+        if not is_published(meta):
             continue          # 止まっているものは並べない（開けないため）
         rows.append({
             "artifactId": artifact_id,
@@ -139,7 +132,7 @@ def create(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, project_p
     name = (display_name or "").strip()
     if not name:
         raise ProjectError("NAME_REQUIRED", "表示名を入力してください。")
-    if scope not in SCOPES:
+    if not is_known_scope(scope):
         raise ProjectError("SCOPE_REQUIRED", "個人か共有かを選んでください。")
 
     project_id = new_project_id()
@@ -152,7 +145,7 @@ def create(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, project_p
         "projectKey": (project_key or "").strip(),
         "owner": caller.id,
         "scope": scope,
-        "status": "active",
+        "status": ACTIVE,
         "memberArtifactIds": [],
         "createdAt": now,
     }
@@ -171,14 +164,12 @@ def create(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, project_p
 # ── 見せ方を変える ──────────────────────────────────────
 
 def _generation(tokens: ViewTokenStore, project_id: str) -> int:
+    """いま何代目か。読めなければ1代目として扱い、再発行そのものは止めない。"""
     try:
         record = tokens.get(f"proj:{project_id}")
     except Exception:
         return 1
-    if record == "DISABLED":
-        return 1
-    parts = record.split("|")
-    return int(parts[2]) if len(parts) > 2 else 1
+    return generation_of(record)
 
 
 def _issue(tokens: ViewTokenStore, clock: Clock, project_id: str, generation: int) -> str:
@@ -206,30 +197,30 @@ def suspend(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: 
     プロジェクトは見せ方の束ねであって、入れ物ではない。
     """
     index = _read_own(store, caller, project_id)
-    if index.get("status") != "active":
+    if not is_published(index):
         raise ProjectError("NOT_ACTIVE", "すでに公開が止まっています。")
 
     tokens.put(f"proj:{project_id}", "DISABLED")
-    index["status"] = "disabled"
+    index["status"] = DISABLED
     _write_index(store, clock, index)
 
-    return {"projectId": project_id, "status": "disabled"}
+    return {"projectId": project_id, "status": DISABLED}
 
 
 def resume(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, project_id: str) -> dict:
     """再び開ける状態に戻す。閲覧トークンは必ず新しくなる。"""
     index = _read_own(store, caller, project_id)
-    if index.get("status") != "disabled":
+    if not is_suspended(index):
         raise ProjectError("NOT_SUSPENDED", "公開は止まっていません。")
 
     generation = _generation(tokens, project_id) + 1
     token = _issue(tokens, clock, project_id, generation)
-    index["status"] = "active"
+    index["status"] = ACTIVE
     _write_index(store, clock, index)
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
             "url": _viewer_url(viewer_domain, project_id), "generation": generation,
-            "status": "active"}
+            "status": ACTIVE}
 
 
 # ── 一覧 ────────────────────────────────────────────────
@@ -330,7 +321,7 @@ def require_writable(store: ArtifactStore, caller: Caller, project_id: str) -> d
     index = read_index(store, project_id)
     if not index:
         raise ManageError("PROJECT_NOT_FOUND", "そのプロジェクトはありません。")
-    if index.get("status") != "active":
+    if not is_published(index):
         raise ManageError("PROJECT_SUSPENDED", "そのプロジェクトは公開が止まっています。")
 
     if caller.is_admin or index.get("owner") == caller.id:

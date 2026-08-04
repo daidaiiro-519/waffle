@@ -25,14 +25,16 @@ from dataclasses import dataclass
 from typing import Callable
 
 from ports import Caller, ArtifactStore, Clock, PublisherDirectory, ViewTokenStore
-from publish import inspect_html, new_token, token_record
+from domain.html_inspection import inspect_html
+from domain.publication import (ACTIVE, DISABLED, MAX_PROJECTS_PER_ARTIFACT,
+                                is_published, is_suspended, within_project_limit)
+from domain.view_token import generation_of, new_token, token_record
 
 # 1つの共有アーティファクトが入れるプロジェクトの数。
 # 閲覧ゲートは、開けるかを判じるときに先頭からこの数までしか見ない
 # （読み取り回数が実行の予算に直結するため）。書き手がこれを超えて書くと、
 # 投稿者には成功が返り、閲覧者だけが開けない状態になる。
 # 数は infra/contract/token-records.json が正で、両側の検証がそこを見る。
-MAX_PROJECTS_PER_ARTIFACT = 3
 
 
 class ManageError(Exception):
@@ -77,7 +79,7 @@ def _viewer_url(viewer_domain: str, artifact_id: str) -> str:
 
 
 def _require_published(meta: dict) -> None:
-    if meta.get("status") != "active":
+    if not is_published(meta):
         raise ManageError("NOT_PUBLISHED", "公開が止まっています。先に再公開してください。")
 
 
@@ -183,14 +185,12 @@ def replace_content(store: ArtifactStore, clock: Clock, viewer_domain: str, call
 # ── トークンの再発行 ────────────────────────────────────
 
 def _generation(tokens: ViewTokenStore, artifact_id: str) -> int:
+    """いま何代目か。読めなければ1代目として扱い、再発行そのものは止めない。"""
     try:
         record = tokens.get(f"token:{artifact_id}")
     except Exception:
         return 1
-    if record == "DISABLED":
-        return 1
-    parts = record.split("|")
-    return int(parts[2]) if len(parts) > 2 else 1
+    return generation_of(record)
 
 
 def _issue(tokens: ViewTokenStore, clock: Clock, artifact_id: str, generation: int) -> str:
@@ -220,10 +220,10 @@ def suspend(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, caller: 
     _require_published(meta)
 
     tokens.put(f"token:{artifact_id}", "DISABLED")
-    meta["status"] = "disabled"
+    meta["status"] = DISABLED
     _write_meta(store, clock, meta)
 
-    return {"artifactId": artifact_id, "status": "disabled"}
+    return {"artifactId": artifact_id, "status": DISABLED}
 
 
 def resume(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_domain: str, caller: Caller, artifact_id: str) -> dict:
@@ -233,17 +233,17 @@ def resume(store: ArtifactStore, tokens: ViewTokenStore, clock: Clock, viewer_do
     トークンを復活させない。
     """
     meta = _read_meta(store, caller, artifact_id)
-    if meta.get("status") != "disabled":
+    if not is_suspended(meta):
         raise ManageError("NOT_SUSPENDED", "公開は止まっていません。")
 
     generation = _generation(tokens, artifact_id) + 1
     token = _issue(tokens, clock, artifact_id, generation)
-    meta["status"] = "active"
+    meta["status"] = ACTIVE
     _write_meta(store, clock, meta)
 
     return {"artifactId": artifact_id, "token": token,
             "url": _viewer_url(viewer_domain, artifact_id), "generation": generation,
-            "status": "active", "tokenShownOnce": True}
+            "status": ACTIVE, "tokenShownOnce": True}
 
 
 # ── 引き継ぎ ────────────────────────────────────────────
@@ -280,7 +280,7 @@ def transfer(store: ArtifactStore, directory: PublisherDirectory, clock: Clock, 
 
 def _require_within_limit(projects: list[str]) -> None:
     """上限を超えていないかを、書き始める前に確かめる。"""
-    if len(projects) > MAX_PROJECTS_PER_ARTIFACT:
+    if not within_project_limit(projects):
         raise ManageError(
             "TOO_MANY_PROJECTS",
             f"1つのアーティファクトが入れるプロジェクトは{MAX_PROJECTS_PER_ARTIFACT}件までです。"

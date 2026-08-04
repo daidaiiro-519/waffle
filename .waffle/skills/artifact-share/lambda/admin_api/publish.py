@@ -13,28 +13,16 @@
 from __future__ import annotations
 
 import hashlib
-import html.parser
 import json
-import re
-import secrets
 
+from domain.html_inspection import inspect_html
+from domain.identifier import new_artifact_id
+from domain.publication import MAX_CONTENT_BYTES
+from domain.view_token import new_token, token_record
 from ports import ArtifactStore, Clock, PublisherIdentifier, ViewTokenStore
 import time
 from dataclasses import dataclass
 from typing import Callable
-
-# 読み間違えやすい文字（l, o, 0, 1）を外した英数字
-ID_ALPHABET = "abcdefghijkmnpqrstuvwxyz23456789"
-ID_LENGTH = 8
-TOKEN_GROUPS = 3
-TOKEN_GROUP_LENGTH = 4
-
-# 受け取るHTMLの上限。これを超えるものは、署名付きの経路で直接受け渡す設計へ移す
-MAX_CONTENT_BYTES = 5 * 1024 * 1024
-
-# トークンの既定の有効期限（秒）。0 は無期限
-DEFAULT_TOKEN_TTL = 0
-
 
 class PublishError(Exception):
     """公開できない理由を、仕様のエラーコードとともに伝える。"""
@@ -43,101 +31,6 @@ class PublishError(Exception):
         super().__init__(message)
         self.code = code
         self.message = message
-
-
-# ── 中身の検査 ──────────────────────────────────────────
-
-class _HeadParser(html.parser.HTMLParser):
-    """head の meta と title、そして外部への参照を拾う。
-
-    中身を書き換えるためではなく、読み取るためだけに解析する。
-    解析に失敗しても公開は止めない（検査は補助であって、公開を拒む判定ではない）。
-    """
-
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.meta: dict[str, str] = {}
-        self.title = ""
-        self.external = 0
-        self._in_title = False
-
-    def handle_starttag(self, tag, attrs):
-        a = {k.lower(): (v or "") for k, v in attrs}
-        if tag == "meta" and "name" in a:
-            self.meta[a["name"].lower()] = a.get("content", "").strip()
-        elif tag == "title":
-            self._in_title = True
-        elif tag == "script" and _is_external(a.get("src", "")):
-            self.external += 1
-        elif tag == "img" and _is_external(a.get("src", "")):
-            self.external += 1
-        elif tag == "link" and "stylesheet" in a.get("rel", "").lower():
-            if _is_external(a.get("href", "")):
-                self.external += 1
-
-    def handle_endtag(self, tag):
-        if tag == "title":
-            self._in_title = False
-
-    def handle_data(self, data):
-        if self._in_title and not self.title:
-            self.title = data.strip()
-
-
-def _is_external(url: str) -> bool:
-    """別のホストを指しているか。data: での埋め込みは外部ではない。"""
-    return bool(re.match(r"^(https?:)?//", url.strip(), re.IGNORECASE))
-
-
-def inspect_html(content: str) -> dict:
-    """HTMLから、控えるべき情報と外部への参照の件数を読み取る。
-
-    契約のmetaタグ（id と type）が揃っていれば、利用者に何も尋ねずに公開できる。
-    揃っていなければ、題名だけを尋ねる。
-    """
-    parser = _HeadParser()
-    try:
-        parser.feed(content)
-    except Exception:
-        pass  # 解析に失敗しても、控える情報が減るだけで公開は妨げない
-
-    meta = parser.meta
-    tags = [t.strip() for t in meta.get("tags", "").split(",") if t.strip()]
-    return {
-        "documentId": meta.get("id", ""),
-        "docType": meta.get("type", ""),
-        "title": meta.get("title", "") or parser.title,
-        "description": meta.get("description", ""),
-        "tags": tags,
-        "externalRefs": parser.external,
-        "detected": bool(meta.get("id") and meta.get("type")),
-    }
-
-
-# ── 発行 ────────────────────────────────────────────────
-
-def new_artifact_id() -> str:
-    return "".join(secrets.choice(ID_ALPHABET) for _ in range(ID_LENGTH))
-
-
-def new_token() -> str:
-    groups = [
-        "".join(secrets.choice(ID_ALPHABET) for _ in range(TOKEN_GROUP_LENGTH))
-        for _ in range(TOKEN_GROUPS)
-    ]
-    return "-".join(groups)
-
-
-def token_record(token: str, now: int, ttl: int = DEFAULT_TOKEN_TTL, generation: int = 1) -> str:
-    """トークンの保管に残す記録。
-
-    トークンそのものは残さず、照合できる形だけを残す。有効期限と世代番号を
-    添えるのは、再発行しただけでは閲覧者の手元の記録が生き残るため。
-    照合の側は、値と世代の両方が一致したときだけ通す。
-    """
-    digest = hashlib.sha256(token.encode("utf-8")).hexdigest()[:32]
-    expires = now + ttl if ttl > 0 else 0
-    return f"{digest}|{expires}|{generation}"
 
 
 # ── 公開 ────────────────────────────────────────────────
