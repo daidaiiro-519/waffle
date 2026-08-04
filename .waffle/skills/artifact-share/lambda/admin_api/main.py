@@ -27,6 +27,9 @@ import manage
 import projects
 import publish
 import publishers
+from adapters.outbound.cognito_publisher_directory import CognitoPublisherDirectory
+from adapters.outbound.kvs_view_token_store import KvsViewTokenStore
+from adapters.outbound.s3_artifact_store import S3ArtifactStore
 
 
 @dataclasses.dataclass
@@ -141,119 +144,14 @@ def _dispatch(action, deps, caller, body):
 # ── 外部との接続 ────────────────────────────────────────
 
 def _connections() -> dict:  # pragma: no cover
-    import boto3
-
-    bucket = os.environ["CONTENT_BUCKET"]
-    kvs_arn = os.environ["KVS_ARN"]
-    pool = os.environ["USER_POOL_ID"]
-    s3 = boto3.client("s3")
-    kvs = boto3.client("cloudfront-keyvaluestore")
-    idp = boto3.client("cognito-idp")
-
-    class _Store:
-        def put(self, key, body, content_type):
-            # 使う照合方式をこちらで決める。実行環境の既定に任せると、
-            # 追加の部品を要求されて書き込めないことがある
-            s3.put_object(Bucket=bucket, Key=key,
-                          Body=body.encode("utf-8"), ContentType=content_type,
-                          ChecksumAlgorithm="CRC32")
-
-        def get(self, key):
-            return s3.get_object(Bucket=bucket, Key=key)["Body"].read().decode("utf-8")
-
-        def list(self, prefix):
-            keys, token = [], None
-            while True:
-                kw = {"Bucket": bucket, "Prefix": prefix}
-                if token:
-                    kw["ContinuationToken"] = token
-                res = s3.list_objects_v2(**kw)
-                keys += [o["Key"] for o in res.get("Contents", [])]
-                if not res.get("IsTruncated"):
-                    return keys
-                token = res["NextContinuationToken"]
-
-    class _Keys:
-        def put(self, key, value):
-            etag = kvs.describe_key_value_store(KvsARN=kvs_arn)["ETag"]
-            kvs.put_key(KvsARN=kvs_arn, Key=key, Value=value, IfMatch=etag)
-
-        def get(self, key):
-            return kvs.get_key(KvsARN=kvs_arn, Key=key)["Value"]
-
-    class _Directory:
-        """招かれている人の名簿。実体は利用者プール。"""
-
-        def find(self, publisher_id):
-            try:
-                got = idp.admin_get_user(UserPoolId=pool, Username=publisher_id)
-            except Exception:
-                return None
-            # 仮の合言葉のまま入っていない人は、まだ招待に応じていない
-            got["status"] = ("invited" if got.get("UserStatus") == "FORCE_CHANGE_PASSWORD"
-                             else "active")
-            return got
-
-        def invite(self, email):
-            """招いて、名簿が持つ識別子を返す。
-
-            宛先で入る設定にしてあるため、名簿の識別子は宛先そのものではない。
-            公開したものの持ち主はこの識別子で記録されるので、宛先を返すと
-            招いた直後に引き継ぎ先として指せなくなる。
-            """
-            try:
-                created = idp.admin_create_user(
-                    UserPoolId=pool, Username=email,
-                    UserAttributes=[{"Name": "email", "Value": email},
-                                    {"Name": "email_verified", "Value": "true"}],
-                    DesiredDeliveryMediums=["EMAIL"])
-                return created["User"]["Username"]
-            except idp.exceptions.UsernameExistsException:
-                # 既に招かれている。合言葉も公開したものも変えない
-                return idp.admin_get_user(UserPoolId=pool, Username=email)["Username"]
-
-        def remove(self, publisher_id):
-            idp.admin_delete_user(UserPoolId=pool, Username=publisher_id)
-
-        def list(self):
-            people, token = [], None
-            while True:
-                kw = {"UserPoolId": pool, "Limit": 60}
-                if token:
-                    kw["PaginationToken"] = token
-                res = idp.list_users(**kw)
-                for u in res.get("Users", []):
-                    attrs = {a["Name"]: a["Value"] for a in u.get("Attributes", [])}
-                    people.append({
-                        "id": u["Username"],
-                        "email": attrs.get("email", ""),
-                        # 仮の合言葉のまま入っていない人は、まだ招待に応じていない
-                        "status": ("invited" if u.get("UserStatus") == "FORCE_CHANGE_PASSWORD"
-                                   else "active"),
-                    })
-                token = res.get("PaginationToken")
-                if not token:
-                    return people
-
-        def resend(self, publisher_id):
-            person = self.find(publisher_id) or {}
-            email = {a["Name"]: a["Value"]
-                     for a in person.get("UserAttributes", [])}.get("email", publisher_id)
-            idp.admin_create_user(
-                UserPoolId=pool, Username=publisher_id,
-                UserAttributes=[{"Name": "email", "Value": email},
-                                {"Name": "email_verified", "Value": "true"}],
-                MessageAction="RESEND",
-                DesiredDeliveryMediums=["EMAIL"])
-
-        def admins(self):
-            res = idp.list_users_in_group(UserPoolId=pool,
-                                          GroupName=ADMIN_GROUP, Limit=60)
-            return {u["Username"] for u in res.get("Users", [])}
-
-    return {"store": _Store(), "keys": _Keys(), "directory": _Directory(),
-            "project_page": _read_template("project-page.html"),
-            "viewer_domain": os.environ.get("VIEWER_DOMAIN", "")}
+    """口の実物を組み立てる。ここは配線だけで、実装は adapters が持つ。"""
+    return {
+        "store": S3ArtifactStore(os.environ["CONTENT_BUCKET"]),
+        "keys": KvsViewTokenStore(os.environ["KVS_ARN"]),
+        "directory": CognitoPublisherDirectory(os.environ["USER_POOL_ID"], ADMIN_GROUP),
+        "project_page": _read_template("project-page.html"),
+        "viewer_domain": os.environ.get("VIEWER_DOMAIN", ""),
+    }
 
 
 def _read_template(name: str) -> str:  # pragma: no cover

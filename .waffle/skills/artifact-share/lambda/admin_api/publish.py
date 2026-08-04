@@ -19,18 +19,12 @@ from domain.html_inspection import inspect_html
 from domain.identifier import new_artifact_id
 from domain.publication import MAX_CONTENT_BYTES
 from domain.view_token import new_token, token_record
-from ports import ArtifactStore, Clock, PublisherIdentifier, ViewTokenStore
+from shared.errors import PublishError
+from application.ports import ArtifactStore, Clock, PublisherIdentifier, ViewTokenStore
 import time
 from dataclasses import dataclass
 from typing import Callable
 
-class PublishError(Exception):
-    """公開できない理由を、仕様のエラーコードとともに伝える。"""
-
-    def __init__(self, code: str, message: str):
-        super().__init__(message)
-        self.code = code
-        self.message = message
 
 
 # ── 公開 ────────────────────────────────────────────────

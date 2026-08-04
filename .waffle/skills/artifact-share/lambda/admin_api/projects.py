@@ -21,7 +21,8 @@ from __future__ import annotations
 import json
 
 from manage import ManageError
-from ports import Caller, ArtifactStore, Clock, ViewTokenStore
+from shared.errors import ProjectError
+from application.ports import Caller, ArtifactStore, Clock, ViewTokenStore
 from domain.identifier import new_project_id
 from domain.publication import (ACTIVE, DISABLED, PERSONAL, SHARED,
                                 is_known_scope, is_published, is_suspended)
@@ -31,13 +32,6 @@ from domain.view_token import generation_of, new_token, token_record
 # 誰が共有アーティファクトを出し入れできるか
 
 
-class ProjectError(Exception):
-    """操作できない理由を、仕様のエラーコードとともに伝える。"""
-
-    def __init__(self, code: str, message: str):
-        super().__init__(message)
-        self.code = code
-        self.message = message
 
 
 # ── 索引の読み書き ──────────────────────────────────────

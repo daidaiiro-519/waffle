@@ -24,7 +24,8 @@ import time
 from dataclasses import dataclass
 from typing import Callable
 
-from ports import Caller, ArtifactStore, Clock, PublisherDirectory, ViewTokenStore
+from shared.errors import ManageError
+from application.ports import Caller, ArtifactStore, Clock, PublisherDirectory, ViewTokenStore
 from domain.html_inspection import inspect_html
 from domain.publication import (ACTIVE, DISABLED, MAX_PROJECTS_PER_ARTIFACT,
                                 is_published, is_suspended, within_project_limit)
@@ -37,13 +38,6 @@ from domain.view_token import generation_of, new_token, token_record
 # 数は infra/contract/token-records.json が正で、両側の検証がそこを見る。
 
 
-class ManageError(Exception):
-    """操作できない理由を、仕様のエラーコードとともに伝える。"""
-
-    def __init__(self, code: str, message: str):
-        super().__init__(message)
-        self.code = code
-        self.message = message
 
 
 # ── 索引の読み書き ──────────────────────────────────────

@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 
 from manage import _read_meta
-from ports import Caller, ArtifactStore
+from application.ports import Caller, ArtifactStore
 
 
 def _prefix(artifact_id: str) -> str:

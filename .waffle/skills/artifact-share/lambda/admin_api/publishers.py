@@ -15,16 +15,10 @@ from __future__ import annotations
 
 import json
 
-from ports import Caller, ArtifactStore, PublisherDirectory
+from shared.errors import PublisherError
+from application.ports import Caller, ArtifactStore, PublisherDirectory
 
 
-class PublisherError(Exception):
-    """操作できない理由を、仕様のエラーコードとともに伝える。"""
-
-    def __init__(self, code: str, message: str):
-        super().__init__(message)
-        self.code = code
-        self.message = message
 
 
 def _require_admin(caller: Caller) -> None:
