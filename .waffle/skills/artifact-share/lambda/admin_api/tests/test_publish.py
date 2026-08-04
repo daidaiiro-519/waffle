@@ -13,9 +13,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from application.usecases import (  # noqa: E402
+    publish_artifact,
+)
+
 from shared.errors import PublishError  # noqa: E402
 
-from application.usecases import publish_artifact  # noqa: E402
 from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
 from adapters.outbound.stored_viewer_site import StoredViewerSite  # noqa: E402
 from adapters.outbound.stored_shared_artifact_repository import (  # noqa: E402

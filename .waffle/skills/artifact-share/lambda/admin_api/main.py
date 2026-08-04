@@ -8,38 +8,40 @@ Cognitoで本人確認を通った投稿者が、ブラウザから呼ぶ唯一�
 CLIに持たせると、招かれた者だけが公開できるという前提が、AWSの権限を
 持つ人の手元で成り立たなくなるため。
 
-外部との接続を知っているのはこのファイルだけで、publish.py と manage.py は
-渡されたものだけを使う。
+外部との接続を知っているのはこのファイルだけで、ユースケースは渡されたもの
+だけを使う。ここは層のグラフの外にある合成ルートで、配線だけを持つ。
 
-対象の仕様: bc-artifact-share 配下のユースケース7件
+対象の仕様: bc-artifact-share 配下のユースケース
 """
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import os
 from pathlib import Path
 
-import dataclasses
-
-from application.usecases import export_artifact, read_comments
-import manage
-import projects
-from application.usecases import publish_artifact
-from application.usecases import invite_publisher, list_publishers
-from application import view_tokens
-from domain.view_subject import ViewSubject
-from shared.errors import PublisherError
 from adapters.outbound.cognito_publisher_directory import CognitoPublisherDirectory
+from adapters.outbound.kvs_view_gate import KvsViewGate
 from adapters.outbound.kvs_view_token_store import KvsViewTokenStore
 from adapters.outbound.s3_artifact_store import S3ArtifactStore
 from adapters.outbound.stored_comment_repository import StoredCommentRepository
 from adapters.outbound.stored_project_repository import StoredProjectRepository
-from adapters.outbound.kvs_view_gate import KvsViewGate
-from adapters.outbound.stored_viewer_site import StoredViewerSite
 from adapters.outbound.stored_shared_artifact_repository import (
     StoredSharedArtifactRepository,
 )
+from adapters.outbound.stored_viewer_site import StoredViewerSite
+from application.usecases import (
+    assign_artifact_to_project, browse_projects, control_project_access,
+    create_project, export_artifact, invite_publisher, issue_view_token,
+    list_my_artifacts, list_publishers, list_view_tokens, publish_artifact,
+    read_comments, replace_artifact_content, resume_artifact,
+    revoke_all_view_tokens, revoke_view_token, suspend_artifact,
+    transfer_artifact,
+)
+from application.view_token_access import ViewTokenError
+from domain.view_subject import ViewSubject
+from shared.errors import ManageError, ProjectError, PublisherError
 
 
 @dataclasses.dataclass
@@ -117,16 +119,16 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
     except PublishError as e:
         return _response(403 if e.code == "NOT_INVITED" else 400,
                          {"error": e.code, "message": e.message})
-    except projects.ProjectError as e:
+    except ProjectError as e:
         return _response(404 if e.code == "PROJECT_NOT_FOUND" else 400,
                          {"error": e.code, "message": e.message})
-    except view_tokens.ViewTokenError as e:
+    except ViewTokenError as e:
         return _response(404 if e.code == "TARGET_NOT_FOUND" else 400,
                          {"error": e.code, "message": e.message})
     except PublisherError as e:
         return _response(403 if e.code == "NOT_ADMINISTRATOR" else 400,
                          {"error": e.code, "message": e.message})
-    except manage.ManageError as e:
+    except ManageError as e:
         status = {"ARTIFACT_NOT_FOUND": 404,
                   "NOT_ADMINISTRATOR": 403,
                   "NOT_THE_PUBLISHER": 403}.get(e.code, 400)
@@ -147,21 +149,21 @@ def _subject(body: dict):
 # 1つ増やして行き先を書き忘れると、その操作は黙って削除を実行していた。
 # 表であれば、行き先の無い操作は下で落ちる。
 ROUTES = {
-    "list":        lambda d, c, b: manage.list_artifacts(d.artifacts, d.comments, c),
-    "replace":     lambda d, c, b: manage.replace_content(d.artifacts, d.projects, d.comments, d.viewer, d.now, c, b.get("artifactId", ""), b.get("html", "")),
-    "disable":     lambda d, c, b: manage.suspend(d.artifacts, d.gate, d.now, c, b.get("artifactId", "")),
-    "enable":      lambda d, c, b: manage.resume(d.artifacts, d.viewer, d.gate, d.now, c, b.get("artifactId", "")),
-    "assign":      lambda d, c, b: manage.assign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "unassign":    lambda d, c, b: manage.unassign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
-    "transfer":    lambda d, c, b: manage.transfer(d.artifacts, d.directory, d.now, c, b.get("artifactId", ""), b.get("toPublisher", "")),
-    "issue-token":      lambda d, c, b: view_tokens.issue(
+    "list":        lambda d, c, b: list_my_artifacts.list_artifacts(d.artifacts, d.comments, c),
+    "replace":     lambda d, c, b: replace_artifact_content.replace_content(d.artifacts, d.projects, d.comments, d.viewer, d.now, c, b.get("artifactId", ""), b.get("html", "")),
+    "disable":     lambda d, c, b: suspend_artifact.suspend(d.artifacts, d.gate, d.now, c, b.get("artifactId", "")),
+    "enable":      lambda d, c, b: resume_artifact.resume(d.artifacts, d.viewer, d.gate, d.now, c, b.get("artifactId", "")),
+    "assign":      lambda d, c, b: assign_artifact_to_project.assign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "unassign":    lambda d, c, b: assign_artifact_to_project.unassign(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("artifactId", ""), b.get("projectId", "")),
+    "transfer":    lambda d, c, b: transfer_artifact.transfer(d.artifacts, d.directory, d.now, c, b.get("artifactId", ""), b.get("toPublisher", "")),
+    "issue-token":      lambda d, c, b: issue_view_token.issue(
         d.artifacts, d.projects, d.gate, d.now, c, _subject(b), b.get("name", ""),
         b.get("ttl")),
-    "view-tokens":      lambda d, c, b: view_tokens.list_tokens(
+    "view-tokens":      lambda d, c, b: list_view_tokens.list_tokens(
         d.artifacts, d.projects, d.now, c, _subject(b)),
-    "revoke-token":     lambda d, c, b: view_tokens.revoke(
+    "revoke-token":     lambda d, c, b: revoke_view_token.revoke(
         d.artifacts, d.projects, d.gate, d.now, c, _subject(b), b.get("tokenId", "")),
-    "revoke-all-tokens": lambda d, c, b: view_tokens.revoke_all(
+    "revoke-all-tokens": lambda d, c, b: revoke_all_view_tokens.revoke_all(
         d.artifacts, d.projects, d.gate, d.now, c, _subject(b)),
 
     "comments":    lambda d, c, b: read_comments.read(d.artifacts, d.comments, c, b.get("artifactId", "")),
@@ -172,11 +174,11 @@ ROUTES = {
     "resend-invite":   lambda d, c, b: invite_publisher.resend_invite(d.directory, c, b.get("publisherId", "")),
     "remove-publisher": lambda d, c, b: invite_publisher.remove(d.artifacts, d.directory, c, b.get("publisherId", "")),
 
-    "projects":        lambda d, c, b: projects.list_projects(d.projects, c),
-    "project":         lambda d, c, b: projects.detail(d.artifacts, d.projects, d.viewer, c, b.get("projectId", "")),
-    "create-project":  lambda d, c, b: projects.create(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
-    "disable-project": lambda d, c, b: projects.suspend(d.projects, d.gate, d.now, c, b.get("projectId", "")),
-    "enable-project":  lambda d, c, b: projects.resume(d.projects, d.viewer, d.gate, d.now, c, b.get("projectId", "")),
+    "projects":        lambda d, c, b: browse_projects.list_projects(d.projects, c),
+    "project":         lambda d, c, b: browse_projects.detail(d.artifacts, d.projects, d.viewer, c, b.get("projectId", "")),
+    "create-project":  lambda d, c, b: create_project.create(d.artifacts, d.projects, d.viewer, d.gate, d.now, c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
+    "disable-project": lambda d, c, b: control_project_access.suspend(d.projects, d.gate, d.now, c, b.get("projectId", "")),
+    "enable-project":  lambda d, c, b: control_project_access.resume(d.projects, d.viewer, d.gate, d.now, c, b.get("projectId", "")),
 }
 
 
@@ -189,7 +191,7 @@ ACTIONS = set(ROUTES) | {"publish"}
 def _dispatch(action, deps, caller, body):
     route = ROUTES.get(action)
     if route is None:
-        raise manage.ManageError("UNKNOWN_ACTION", "その操作はありません。")
+        raise ManageError("UNKNOWN_ACTION", "その操作はありません。")
     return route(deps, caller, body)
 
 
@@ -219,14 +221,14 @@ def _publish_deps() -> Connections:  # pragma: no cover
     connections.pop("directory")          # 公開は名簿を読まない
     connections.pop("project_page")       # 公開はプロジェクトの雛形を要らない
     return Connections(
-        identify=lambda auth: (_identify(auth) or manage.Caller("")).id or None,
+        identify=lambda auth: (_identify(auth) or Caller("")).id or None,
         wrapper_template=(Path(__file__).parent / "share-wrapper.html")
         .read_text(encoding="utf-8"),
         **connections,
     )
 
 
-def _identify(authorization: str) -> manage.Caller | None:  # pragma: no cover
+def _identify(authorization: str) -> Caller | None:  # pragma: no cover
     """利用者の証明を検証し、誰であるかと管理者かどうかを返す。
 
     招かれていなければ None。管理者かどうかは、証明に含まれるグループで決める
@@ -237,7 +239,7 @@ def _identify(authorization: str) -> manage.Caller | None:  # pragma: no cover
                     os.environ["USER_POOL_CLIENT_ID"])
     if not claims:
         return None
-    return manage.Caller(id=claims["username"],
+    return Caller(id=claims["username"],
                          is_admin=ADMIN_GROUP in claims.get("groups", []))
 
 

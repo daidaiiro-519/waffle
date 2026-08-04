@@ -18,15 +18,22 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from application.usecases import export_artifact, read_comments  # noqa: E402
-import manage  # noqa: E402
-from application.usecases import publish_artifact  # noqa: E402
+from application.usecases import (  # noqa: E402
+    export_artifact,
+    publish_artifact,
+    read_comments,
+    replace_artifact_content,
+    suspend_artifact,
+)
+from application.ports import Caller  # noqa: E402
+from shared.errors import ManageError  # noqa: E402
+
 
 from test_manage import HTML, FakeKeyStore, FakeStore  # noqa: E402
 
-ME = manage.Caller("publisher-1")
-SOMEONE_ELSE = manage.Caller("publisher-2")
-ADMIN = manage.Caller("admin-1", is_admin=True)
+ME = Caller("publisher-1")
+SOMEONE_ELSE = Caller("publisher-2")
+ADMIN = Caller("admin-1", is_admin=True)
 
 
 def setup():
@@ -89,7 +96,7 @@ def test_差し替えの区切りが並びに現れる():
     """どの指摘が差し替え前のものかを読み取れるようにする"""
     deps, aid = setup()
     post(deps, aid, 1700000001, "佐藤", "直してほしい", "revise")
-    manage.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, ME, aid, HTML.replace("本文", "直した"))
+    replace_artifact_content.replace_content(deps.artifacts, deps.projects, deps.comments, deps.viewer, deps.now, ME, aid, HTML.replace("本文", "直した"))
     post(deps, aid, 1700000200, "佐藤", "直りました", "approve")
 
     kinds = [c["kind"] for c in read_comments.read(deps.artifacts, deps.comments, ME, aid)["comments"]]
@@ -99,7 +106,7 @@ def test_差し替えの区切りが並びに現れる():
 def test_他人のものは読めない():
     """寄せられた指摘には、渡した相手しか知らない内容が含まれうる"""
     deps, aid = setup()
-    with pytest.raises(manage.ManageError) as x:
+    with pytest.raises(ManageError) as x:
         read_comments.read(deps.artifacts, deps.comments, SOMEONE_ELSE, aid)
     assert x.value.code == "ARTIFACT_NOT_FOUND"
 
@@ -113,7 +120,7 @@ def test_管理者は他人のものも読める():
 def test_公開が止まっていても読める():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
-    manage.suspend(deps.artifacts, deps.gate, deps.now, ME, aid)
+    suspend_artifact.suspend(deps.artifacts, deps.gate, deps.now, ME, aid)
     assert len(read_comments.read(deps.artifacts, deps.comments, ME, aid)["comments"]) == 1
 
 
@@ -173,7 +180,7 @@ def test_取り出しても何も変わらない():
 def test_公開が止まっていても取り出せる():
     """止めてからでは取り出せないと、迷ったときに止められなくなる"""
     deps, aid = setup()
-    manage.suspend(deps.artifacts, deps.gate, deps.now, ME, aid)
+    suspend_artifact.suspend(deps.artifacts, deps.gate, deps.now, ME, aid)
     assert export_artifact.export(deps.artifacts, deps.comments, deps.viewer, ME, aid)["content"] == HTML
 
 
@@ -186,6 +193,6 @@ def test_取り出したものに閲覧トークンは含まれない():
 
 def test_他人のものは取り出せない():
     deps, aid = setup()
-    with pytest.raises(manage.ManageError) as x:
+    with pytest.raises(ManageError) as x:
         export_artifact.export(deps.artifacts, deps.comments, deps.viewer, SOMEONE_ELSE, aid)
     assert x.value.code == "ARTIFACT_NOT_FOUND"

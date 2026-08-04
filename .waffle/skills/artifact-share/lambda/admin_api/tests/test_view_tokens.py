@@ -18,8 +18,15 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from application.usecases import (  # noqa: E402
+    issue_view_token,
+    list_view_tokens,
+    revoke_all_view_tokens,
+    revoke_view_token,
+)
+from application.view_token_access import ViewTokenError  # noqa: E402
+
 from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
-from application import view_tokens  # noqa: E402
 from application.ports import Caller  # noqa: E402
 from domain import view_token  # noqa: E402
 from domain.view_subject import ViewSubject  # noqa: E402
@@ -75,7 +82,7 @@ def clock_at(t=NOW):
 
 def issue(artifacts, projects, gate, name, ttl=None, caller=ME,
           subject=None, at=NOW):
-    return view_tokens.issue(artifacts, projects, gate, clock_at(at), caller,
+    return issue_view_token.issue(artifacts, projects, gate, clock_at(at), caller,
                              subject or ViewSubject.artifact(AID), name, ttl)
 
 
@@ -108,7 +115,7 @@ def test_共有アーティファクトへ1ヶ月を超える期限は付けら�
     """遠い先を選べると、期限があることが形だけになる"""
     artifacts, projects, gate = setup()
 
-    with pytest.raises(view_tokens.ViewTokenError) as x:
+    with pytest.raises(ViewTokenError) as x:
         issue(artifacts, projects, gate, "ずっと", ttl=view_token.MONTH + 1)
     assert x.value.code == "EXPIRY_TOO_FAR"
     assert artifacts.find(AID)["viewTokens"] == []
@@ -129,7 +136,7 @@ def test_上限に達していたら発行しない():
     for i in range(view_token.MAX_ACTIVE):
         issue(artifacts, projects, gate, f"相手{i}")
 
-    with pytest.raises(view_tokens.ViewTokenError) as x:
+    with pytest.raises(ViewTokenError) as x:
         issue(artifacts, projects, gate, "もう1人")
     assert x.value.code == "TOKEN_LIMIT_REACHED"
     assert len(artifacts.find(AID)["viewTokens"]) == view_token.MAX_ACTIVE
@@ -153,7 +160,7 @@ def test_有効なものに同じ名前があれば発行しない():
     artifacts, projects, gate = setup()
     issue(artifacts, projects, gate, "レビュー班")
 
-    with pytest.raises(view_tokens.ViewTokenError) as x:
+    with pytest.raises(ViewTokenError) as x:
         issue(artifacts, projects, gate, "レビュー班")
     assert x.value.code == "DUPLICATE_TOKEN_NAME"
 
@@ -174,7 +181,7 @@ def test_発行しても前の閲覧トークンは無効にならない():
 def test_招かれていない者は発行できない():
     artifacts, projects, gate = setup()
 
-    with pytest.raises(view_tokens.ViewTokenError) as x:
+    with pytest.raises(ViewTokenError) as x:
         issue(artifacts, projects, gate, "勝手に", caller=OTHER)
     assert x.value.code == "TARGET_NOT_FOUND"
 
@@ -185,7 +192,7 @@ def test_一覧は名前と期限を返し値は返さない():
     artifacts, projects, gate = setup()
     issue(artifacts, projects, gate, "レビュー班", ttl=view_token.WEEK)
 
-    got = view_tokens.list_tokens(artifacts, projects, clock_at(), ME,
+    got = list_view_tokens.list_tokens(artifacts, projects, clock_at(), ME,
                                   ViewSubject.artifact(AID))
 
     assert [t["name"] for t in got["viewTokens"]] == ["レビュー班"]
@@ -199,7 +206,7 @@ def test_期限を過ぎたものは一覧に現れず記録も残らない():
     issue(artifacts, projects, gate, "短い", ttl=view_token.WEEK)
 
     later = NOW + view_token.WEEK + 1
-    got = view_tokens.list_tokens(artifacts, projects, clock_at(later), ME,
+    got = list_view_tokens.list_tokens(artifacts, projects, clock_at(later), ME,
                                   ViewSubject.artifact(AID))
     assert got["viewTokens"] == []
 
@@ -211,7 +218,7 @@ def test_期限を過ぎたものは一覧に現れず記録も残らない():
 def test_1本も無ければ空の一覧が返る():
     artifacts, projects, gate = setup()
 
-    got = view_tokens.list_tokens(artifacts, projects, clock_at(), ME,
+    got = list_view_tokens.list_tokens(artifacts, projects, clock_at(), ME,
                                   ViewSubject.artifact(AID))
     assert got["viewTokens"] == []
 
@@ -223,7 +230,7 @@ def test_1本だけを無効にでき他はそのまま():
     a = issue(artifacts, projects, gate, "1人目")
     issue(artifacts, projects, gate, "2人目")
 
-    view_tokens.revoke(artifacts, projects, gate, clock_at(), ME,
+    revoke_view_token.revoke(artifacts, projects, gate, clock_at(), ME,
                        ViewSubject.artifact(AID), a["tokenId"])
 
     left = view_token.active_tokens(artifacts.find(AID)["viewTokens"], NOW)
@@ -236,7 +243,7 @@ def test_無効化しても公開は止まらない():
     artifacts, projects, gate = setup()
     a = issue(artifacts, projects, gate, "1人目")
 
-    view_tokens.revoke(artifacts, projects, gate, clock_at(), ME,
+    revoke_view_token.revoke(artifacts, projects, gate, clock_at(), ME,
                        ViewSubject.artifact(AID), a["tokenId"])
 
     assert artifacts.find(AID)["status"] == "active"
@@ -247,9 +254,9 @@ def test_既に無効なものを無効にしても成功する():
     artifacts, projects, gate = setup()
     a = issue(artifacts, projects, gate, "1人目")
     subject = ViewSubject.artifact(AID)
-    view_tokens.revoke(artifacts, projects, gate, clock_at(), ME, subject, a["tokenId"])
+    revoke_view_token.revoke(artifacts, projects, gate, clock_at(), ME, subject, a["tokenId"])
 
-    got = view_tokens.revoke(artifacts, projects, gate, clock_at(), ME,
+    got = revoke_view_token.revoke(artifacts, projects, gate, clock_at(), ME,
                              subject, a["tokenId"])
     assert got["revoked"] is True
 
@@ -257,8 +264,8 @@ def test_既に無効なものを無効にしても成功する():
 def test_無い閲覧トークンは無効にできない():
     artifacts, projects, gate = setup()
 
-    with pytest.raises(view_tokens.ViewTokenError) as x:
-        view_tokens.revoke(artifacts, projects, gate, clock_at(), ME,
+    with pytest.raises(ViewTokenError) as x:
+        revoke_view_token.revoke(artifacts, projects, gate, clock_at(), ME,
                            ViewSubject.artifact(AID), "nope")
     assert x.value.code == "TOKEN_NOT_FOUND"
 
@@ -268,7 +275,7 @@ def test_一括で外しても公開は止まらない():
     issue(artifacts, projects, gate, "1人目")
     issue(artifacts, projects, gate, "2人目")
 
-    got = view_tokens.revoke_all(artifacts, projects, gate, clock_at(), ME,
+    got = revoke_all_view_tokens.revoke_all(artifacts, projects, gate, clock_at(), ME,
                                  ViewSubject.artifact(AID))
 
     assert got["revoked"] == 2
@@ -283,7 +290,7 @@ def test_一括で外してもまとめの閲覧トークンは使えたまま()
     issue(artifacts, projects, gate, "まとめ", subject=ViewSubject.project(PID))
     issue(artifacts, projects, gate, "個別")
 
-    view_tokens.revoke_all(artifacts, projects, gate, clock_at(), ME,
+    revoke_all_view_tokens.revoke_all(artifacts, projects, gate, clock_at(), ME,
                            ViewSubject.artifact(AID))
 
     assert gate._keys.written["proj:" + PID] != ""
@@ -292,7 +299,7 @@ def test_一括で外してもまとめの閲覧トークンは使えたまま()
 def test_1本も無い状態で一括して外しても成功する():
     artifacts, projects, gate = setup()
 
-    got = view_tokens.revoke_all(artifacts, projects, gate, clock_at(), ME,
+    got = revoke_all_view_tokens.revoke_all(artifacts, projects, gate, clock_at(), ME,
                                  ViewSubject.artifact(AID))
     assert got["revoked"] == 0
 

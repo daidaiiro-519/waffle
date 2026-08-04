@@ -15,15 +15,19 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from application.usecases import (  # noqa: E402
+    invite_publisher,
+    list_publishers,
+)
+from application.ports import Caller  # noqa: E402
+
 from shared.errors import PublisherError  # noqa: E402
 
-import manage  # noqa: E402
-from application.usecases import invite_publisher, list_publishers  # noqa: E402
 
 from test_manage import FakeKeyStore, FakeStore  # noqa: E402
 
-ADMIN = manage.Caller("admin-1", is_admin=True)
-SOMEONE = manage.Caller("publisher-2")
+ADMIN = Caller("admin-1", is_admin=True)
+SOMEONE = Caller("publisher-2")
 
 
 class FakeDirectory:
@@ -227,7 +231,7 @@ def test_管理者でなければ送り直せない():
         "newbie": {"email": "new@example.com", "status": "invited"},
     })
     with pytest.raises(PublisherError) as x:
-        invite_publisher.resend_invite(deps.directory, manage.Caller("newbie"), "newbie")
+        invite_publisher.resend_invite(deps.directory, Caller("newbie"), "newbie")
     assert x.value.code == "NOT_ADMINISTRATOR"
 
 

@@ -15,8 +15,29 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from application.usecases import (  # noqa: E402
+    assign_artifact_to_project,
+    browse_projects,
+    control_project_access,
+    create_project,
+    export_artifact,
+    invite_publisher,
+    issue_view_token,
+    list_my_artifacts,
+    list_publishers,
+    list_view_tokens,
+    read_comments,
+    replace_artifact_content,
+    resume_artifact,
+    revoke_all_view_tokens,
+    revoke_view_token,
+    suspend_artifact,
+    transfer_artifact,
+)
+from application.ports import Caller  # noqa: E402
+from shared.errors import ManageError  # noqa: E402
+
 import main  # noqa: E402
-import manage  # noqa: E402
 
 
 class Reached(Exception):
@@ -30,8 +51,26 @@ class Reached(Exception):
 
 @pytest.fixture(autouse=True)
 def stub_every_destination(monkeypatch):
-    for module_name in ("manage", "invite_publisher", "list_publishers", "projects", "read_comments", "export_artifact",
-                        "view_tokens"):
+    for module_name in (
+        "assign_artifact_to_project",
+        "browse_projects",
+        "control_project_access",
+        "create_project",
+        "export_artifact",
+        "invite_publisher",
+        "issue_view_token",
+        "list_my_artifacts",
+        "list_publishers",
+        "list_view_tokens",
+        "publish_artifact",
+        "read_comments",
+        "replace_artifact_content",
+        "resume_artifact",
+        "revoke_all_view_tokens",
+        "revoke_view_token",
+        "suspend_artifact",
+        "transfer_artifact",
+    ):
         module = getattr(main, module_name)
         for name in dir(module):
             attr = getattr(module, name)
@@ -50,35 +89,35 @@ EMPTY = main.Connections(store=None, keys=None, now=None)
 
 def destination_of(action, body=None):
     with pytest.raises(Reached) as x:
-        main._dispatch(action, EMPTY, manage.Caller("p1"), body or {})
+        main._dispatch(action, EMPTY, Caller("p1"), body or {})
     return x.value.where
 
 
 # ── 行き先の対応 ────────────────────────────────────────
 
 ROUTING = {
-    "list": "manage.list_artifacts",
-    "replace": "manage.replace_content",
-    "disable": "manage.suspend",
-    "enable": "manage.resume",
-    "assign": "manage.assign",
-    "unassign": "manage.unassign",
-    "transfer": "manage.transfer",
-    "issue-token": "view_tokens.issue",
-    "view-tokens": "view_tokens.list_tokens",
-    "revoke-token": "view_tokens.revoke",
-    "revoke-all-tokens": "view_tokens.revoke_all",
+    "list": "list_my_artifacts.list_artifacts",
+    "replace": "replace_artifact_content.replace_content",
+    "disable": "suspend_artifact.suspend",
+    "enable": "resume_artifact.resume",
+    "assign": "assign_artifact_to_project.assign",
+    "unassign": "assign_artifact_to_project.unassign",
+    "transfer": "transfer_artifact.transfer",
+    "issue-token": "issue_view_token.issue",
+    "view-tokens": "list_view_tokens.list_tokens",
+    "revoke-token": "revoke_view_token.revoke",
+    "revoke-all-tokens": "revoke_all_view_tokens.revoke_all",
     "comments": "read_comments.read",
     "export": "export_artifact.export",
     "invite": "invite_publisher.invite",
     "publishers": "list_publishers.list_publishers",
     "resend-invite": "invite_publisher.resend_invite",
     "remove-publisher": "invite_publisher.remove",
-    "projects": "projects.list_projects",
-    "project": "projects.detail",
-    "create-project": "projects.create",
-    "disable-project": "projects.suspend",
-    "enable-project": "projects.resume",
+    "projects": "browse_projects.list_projects",
+    "project": "browse_projects.detail",
+    "create-project": "create_project.create",
+    "disable-project": "control_project_access.suspend",
+    "enable-project": "control_project_access.resume",
 }
 
 
@@ -94,8 +133,8 @@ def test_名簿からの削除はその操作でしか起きない():
 
 
 def test_知らない操作は落ちる():
-    with pytest.raises(manage.ManageError) as x:
-        main._dispatch("こんな操作はない", None, manage.Caller("p1"), {})
+    with pytest.raises(ManageError) as x:
+        main._dispatch("こんな操作はない", None, Caller("p1"), {})
     assert x.value.code == "UNKNOWN_ACTION"
 
 
@@ -114,7 +153,7 @@ def test_この検証が表の全部を見ている():
 
 def test_body_の値がそのまま渡る():
     with pytest.raises(Reached) as x:
-        main._dispatch("assign", EMPTY, manage.Caller("p1"),
+        main._dispatch("assign", EMPTY, Caller("p1"),
                        {"artifactId": "aaa", "projectId": "ppp"})
     caller, artifact_id, project_id = x.value.passed[-3:]
     assert (caller.id, artifact_id, project_id) == ("p1", "aaa", "ppp")
@@ -123,5 +162,5 @@ def test_body_の値がそのまま渡る():
 def test_無い値は空文字として渡る():
     """呼び出し側の欠落を、行き先の手前で例外にしない（判定は行き先が持つ）"""
     with pytest.raises(Reached) as x:
-        main._dispatch("disable", EMPTY, manage.Caller("p1"), {})
+        main._dispatch("disable", EMPTY, Caller("p1"), {})
     assert x.value.passed[-1] == ""
