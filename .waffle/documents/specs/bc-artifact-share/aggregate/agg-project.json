@@ -39,10 +39,6 @@
               "type": "ProjectKey"
             },
             {
-              "name": "viewToken",
-              "type": "ProjectViewToken"
-            },
-            {
               "name": "status",
               "type": "ProjectStatus"
             },
@@ -60,6 +56,41 @@
             },
             {
               "name": "createdAt",
+              "type": "string"
+            },
+            {
+              "name": "viewTokens",
+              "type": "ProjectViewToken[]"
+            }
+          ]
+        },
+        {
+          "name": "ProjectViewToken",
+          "role": "このプロジェクトに入っている共有アーティファクトをまとめて開くための閲覧トークン1本。1つの配布先を表し、渡す人数は問わない。個別に無効にできるよう、集約の中で同一性を持つ",
+          "isRoot": false,
+          "attributes": [
+            {
+              "name": "tokenId",
+              "type": "ViewTokenId"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "fingerprint",
+              "type": "string"
+            },
+            {
+              "name": "expiresAt",
+              "type": "ViewTokenExpiry"
+            },
+            {
+              "name": "status",
+              "type": "ViewTokenStatus"
+            },
+            {
+              "name": "issuedAt",
               "type": "string"
             }
           ]
@@ -88,21 +119,6 @@
           "attributes": [
             {
               "name": "value",
-              "type": "string"
-            }
-          ]
-        },
-        {
-          "name": "ProjectViewToken",
-          "represents": "この単位に入っている共有アーティファクトをまとめて開くための閲覧トークン",
-          "behavior": "不変。作成時に一度だけ示され、以後は見返せない。個々の共有アーティファクトの閲覧トークンとは別のもので、個々の共有アーティファクトが公開を止めても失効しない。",
-          "attributes": [
-            {
-              "name": "value",
-              "type": "string"
-            },
-            {
-              "name": "issuedAt",
               "type": "string"
             }
           ]
@@ -139,6 +155,39 @@
               "type": "string"
             }
           ]
+        },
+        {
+          "name": "ViewTokenId",
+          "represents": "1本の閲覧トークンを、プロジェクトの中で一意に指す識別子",
+          "behavior": "不変。発行時に決まり、無効にしても変わらない。閲覧トークンそのものの値とは別で、こちらは持ち主が一覧で見て選ぶために使う。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ViewTokenExpiry",
+          "represents": "1本の閲覧トークンが使えなくなる時点",
+          "behavior": "不変。プロジェクトの閲覧トークンでは、期限を設けないことも選べる。置いておく場として使うため、回覧するものと同じ扱いにしない。期限を設けたときは、その時点を過ぎたあとに延ばすことはできない。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ViewTokenStatus",
+          "represents": "1本の閲覧トークンが使える状態にあるかどうか",
+          "behavior": "不変。ACTIVE と REVOKED のいずれか。無効にすると REVOKED になり、元へは戻らない。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
         }
       ]
     },
@@ -161,10 +210,40 @@
           ]
         },
         {
-          "rule": "この単位の閲覧トークンは、個々の共有アーティファクトの閲覧トークンの再発行や公開停止によって常に失効しない",
+          "rule": "プロジェクトは、閲覧トークンそのものの値を常に保持せず、指紋だけを持つ",
+          "enforcement": "schema",
+          "rationale": [
+            "渡した相手の手元にしか無い状態を保つことが、閲覧トークンが鍵として働く前提であるため。"
+          ]
+        },
+        {
+          "rule": "閲覧トークンを1本無効にしても、他の閲覧トークンは常に使えたままになる",
           "enforcement": "guard",
           "rationale": [
-            "まとめて見せる相手と、1件だけ見せる相手は別であるため。片方の都合でもう片方の閲覧トークンが失効すると、渡し直しが際限なく発生する。"
+            "1つの配布先を外すために他の配布先まで巻き添えで外れると、外す操作が使いにくくなり、結局使われなくなるため。"
+          ]
+        },
+        {
+          "rule": "同時に有効な閲覧トークンは、常に5本を超えない。有効とは、無効にされておらず、かつ期限を過ぎていないことをいう",
+          "enforcement": "guard",
+          "rationale": [
+            "どれを無効にするかは持ち主が一覧から選ぶ操作であるため、選べる数に収まっている必要があるため。",
+            "共有アーティファクトと同じ仕組みで動かすため、同じ本数にそろえる。"
+          ]
+        },
+        {
+          "rule": "1つのプロジェクトの中で、有効な閲覧トークンの名前は常に重ならない",
+          "enforcement": "guard",
+          "rationale": [
+            "名前は、どれを無効にするかを持ち主が選ぶための手がかりであるため。"
+          ]
+        },
+        {
+          "rule": "プロジェクトの閲覧トークンには期限を設けないことを常に許す",
+          "enforcement": "schema",
+          "rationale": [
+            "プロジェクトは回覧するものではなく、置いておく場であるため。渡して終わりではないものに、必ず切れる期限を課す必然がない。",
+            "この結果、共有アーティファクト側の期限はプロジェクト経由で迂回できる。恒久的に見せたいものはプロジェクトに入れる、という使い分けになる。"
           ]
         },
         {
@@ -228,7 +307,19 @@
         {
           "from": "ACTIVE",
           "to": "ACTIVE",
-          "command": "reissueViewToken",
+          "command": "issueViewToken",
+          "condition": "有効な閲覧トークンが5本未満で、同じ名前の有効な閲覧トークンが無いこと"
+        },
+        {
+          "from": "ACTIVE",
+          "to": "ACTIVE",
+          "command": "revokeViewToken",
+          "condition": ""
+        },
+        {
+          "from": "ACTIVE",
+          "to": "ACTIVE",
+          "command": "revokeAllViewTokens",
           "condition": ""
         },
         {
@@ -268,12 +359,6 @@
           "postState": "ACTIVE"
         },
         {
-          "name": "reissueViewToken",
-          "description": "新しい閲覧トークンを発行し、それまでの閲覧トークンを使えなくする。入っている共有アーティファクトは変わらない。",
-          "requiresState": "ACTIVE",
-          "postState": "ACTIVE"
-        },
-        {
           "name": "suspend",
           "description": "この単位を開けない状態にする。入っている共有アーティファクトはそれぞれの閲覧トークンで引き続き開ける。",
           "requiresState": "ACTIVE",
@@ -281,9 +366,31 @@
         },
         {
           "name": "resume",
-          "description": "再び開けるようにする。閲覧トークンは必ず新しくなる。",
+          "description": "再び開けるようにする。止める前の閲覧トークンは、期限内で無効にされていなければそのまま使える。",
           "requiresState": "SUSPENDED",
           "postState": "ACTIVE"
+        },
+        {
+          "name": "issueViewToken",
+          "description": "名前と期限を与えて閲覧トークンを1本発行する。それまでの閲覧トークンは使えたまま残る。期限を設けないことも選べる。同時に有効な閲覧トークンが5本あるとき、および有効な閲覧トークンと同じ名前を与えようとしたときは発行できない。あわせて、期限を過ぎた閲覧トークンの記録を取り除く。",
+          "requiresState": "PUBLISHED",
+          "postState": "PUBLISHED"
+        },
+        {
+          "name": "revokeViewToken",
+          "description": "閲覧トークンを1本だけ無効にする。他の閲覧トークンは使えたまま残る。",
+          "requiresState": "PUBLISHED",
+          "postState": "PUBLISHED"
+        },
+        {
+          "name": "revokeAllViewTokens",
+          "description": "有効な閲覧トークンをすべて無効にする。渡した相手を一度に全て外したいときに使う。入っている共有アーティファクトは、それぞれの閲覧トークンでは開けたまま残る。",
+          "requiresState": "PUBLISHED",
+          "postState": "PUBLISHED"
+        },
+        {
+          "name": "listViewTokens",
+          "description": "有効な閲覧トークンの一覧を、名前・期限とともに返す。あわせて、期限を過ぎた閲覧トークンの記録を取り除く。閲覧トークンそのものの値は返さない。"
         }
       ]
     },
