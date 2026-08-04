@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 
-from manage import Caller, Deps
+from ports import Caller, Deps
 
 
 class PublisherError(Exception):

@@ -24,6 +24,7 @@ import time
 from dataclasses import dataclass
 from typing import Callable
 
+from ports import Caller, Deps
 from publish import inspect_html, new_token, token_record
 
 # 1つの共有アーティファクトが入れるプロジェクトの数。
@@ -41,33 +42,6 @@ class ManageError(Exception):
         super().__init__(message)
         self.code = code
         self.message = message
-
-
-@dataclass
-class Caller:
-    """操作している人。誰であるかと、管理者かどうかだけを持つ。"""
-
-    id: str
-    is_admin: bool = False
-
-
-@dataclass
-class Deps:
-    """外部との接点。実物の組み立ては handler が行う。
-
-    store         保管の読み書き（put/get/list）。削除は持たない
-    keys          トークンの保管の読み書き（put/get）
-    directory     招かれている人の名簿（find/invite/remove）。この文脈の外にある
-    project_page  プロジェクトの一覧ページの雛形。どのプロジェクトにも同じものを置く
-    now           現在時刻（エポック秒）。検証で固定できるようにする
-    """
-
-    store: object
-    keys: object
-    directory: object = None
-    project_page: str = ""
-    now: Callable[[], int] = lambda: int(time.time())
-    viewer_domain: str = ""
 
 
 # ── 索引の読み書き ──────────────────────────────────────

@@ -19,7 +19,8 @@ from __future__ import annotations
 
 import json
 
-from manage import Caller, Deps, _read_meta
+from manage import _read_meta
+from ports import Caller, Deps
 
 
 def _prefix(artifact_id: str) -> str:

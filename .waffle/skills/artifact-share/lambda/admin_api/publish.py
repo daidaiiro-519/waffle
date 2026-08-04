@@ -17,6 +17,8 @@ import html.parser
 import json
 import re
 import secrets
+
+from ports import Deps
 import time
 from dataclasses import dataclass
 from typing import Callable
@@ -41,25 +43,6 @@ class PublishError(Exception):
         super().__init__(message)
         self.code = code
         self.message = message
-
-
-@dataclass
-class Deps:
-    """外部との接点。実物の組み立ては handler が行う。
-
-    store            保管への書き込み（put(key, body, content_type)）
-    keys             トークンの保管への書き込み（put(key, value)）
-    identify         利用者の証明から、その人を表す値を返す。招かれていなければ None
-    wrapper_template 閲覧画面の雛形。{{アーティファクトID}} を置き換えて配置する
-    now              現在時刻（エポック秒）。検証で固定できるようにする
-    """
-
-    store: object
-    keys: object
-    identify: Callable[[str], str | None]
-    wrapper_template: str
-    now: Callable[[], int] = lambda: int(time.time())
-    viewer_domain: str = ""
 
 
 # ── 中身の検査 ──────────────────────────────────────────

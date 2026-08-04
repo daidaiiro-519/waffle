@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import json
 
-from manage import Caller, Deps, ManageError
+from manage import ManageError
+from ports import Caller, Deps
 from publish import ID_ALPHABET, new_token, token_record
 
 import secrets
