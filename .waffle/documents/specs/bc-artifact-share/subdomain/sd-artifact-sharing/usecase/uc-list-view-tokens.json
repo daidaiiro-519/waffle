@@ -1,0 +1,176 @@
+{
+  "documentId": "uc-list-view-tokens",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "どの配布先が生きているかを見る：uc-list-view-tokens"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "ListViewTokens"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "いま誰に見せているかを確かめ、外したいものを選びたい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "配布先ごとに外せても、いま何が生きているかを見られなければ、どれを外すかを選べない。外す操作は一覧があって初めて成り立つ。",
+        "期限を過ぎた閲覧トークンの記録は、無効にする対象にならないのに一覧を埋める。見るたびに取り除くことで、定期実行の仕組みを持たずに溜まらないようにする。"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "閲覧トークンの一覧",
+          "message": "対象を指定して一覧を求める",
+          "kind": "command"
+        },
+        {
+          "from": "閲覧トークンの一覧",
+          "to": "閲覧トークンの一覧",
+          "message": "期限を過ぎた閲覧トークンの記録を取り除く",
+          "kind": "self"
+        },
+        {
+          "from": "閲覧トークンの一覧",
+          "to": "投稿者",
+          "message": "有効な閲覧トークンの名前と期限",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "有効な閲覧トークンの名前と期限が返っている",
+        "閲覧トークンそのものの値は返っていない",
+        "期限を過ぎていた閲覧トークンの記録が取り除かれている"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 一覧を求めたとき、一覧は 有効な閲覧トークンの名前と期限を返す shall",
+        "While 一覧を返す間、一覧は 閲覧トークンそのものの値を返さない shall",
+        "When 期限を過ぎた閲覧トークンがあるとき、一覧は その記録を取り除く shall",
+        "If 有効な閲覧トークンが1本も無いならば、一覧は 空の一覧を返す shall"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "TARGET_NOT_FOUND",
+          "condition": [
+            "対象の共有アーティファクトまたはプロジェクトが存在しない",
+            "操作する者が対象の投稿者・持ち主でも管理者でもない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "有効な閲覧トークンの名前と期限が返る",
+          "category": "正常系",
+          "viewpoint": "選べる状態：どれを外すか判断する材料が渡ることを確かめる",
+          "gherkin": "Scenario: 有効な閲覧トークンの名前と期限が返る\n  Given 「デザインチーム」と「定例レビュー」という名前の閲覧トークンがある対象\n  When 一覧を求める\n  Then 2つの名前と、それぞれの期限が返る",
+          "covers": "受け入れ基準: 有効な閲覧トークンの名前と期限を返す"
+        },
+        {
+          "name": "閲覧トークンそのものの値は返らない",
+          "category": "正常系",
+          "viewpoint": "秘匿：発行の一度きりという性質が保たれることを確かめる",
+          "gherkin": "Scenario: 閲覧トークンそのものの値は返らない\n  Given 閲覧トークンがある対象\n  When 一覧を求める\n  Then 閲覧トークンそのものの値は含まれていない",
+          "covers": "受け入れ基準: 閲覧トークンそのものの値を返さない"
+        },
+        {
+          "name": "期限を過ぎた閲覧トークンは一覧に現れず記録も残らない",
+          "category": "正常系",
+          "viewpoint": "遅延削除：見るたびに片付くことを確かめる",
+          "gherkin": "Scenario: 期限を過ぎた閲覧トークンは一覧に現れず記録も残らない\n  Given 有効な閲覧トークンが1本と、期限を過ぎた閲覧トークンが2本ある対象\n  When 一覧を求める\n  Then 返るのは有効な1本だけである\n  And 期限を過ぎた閲覧トークンの記録は残っていない",
+          "covers": "受け入れ基準: 期限を過ぎた閲覧トークンの記録を取り除く"
+        },
+        {
+          "name": "1本も無ければ空の一覧が返る",
+          "category": "境界値",
+          "viewpoint": "境界：誰にも渡していない状態を失敗として扱わない",
+          "gherkin": "Scenario: 1本も無ければ空の一覧が返る\n  Given 有効な閲覧トークンが1本も無い対象\n  When 一覧を求める\n  Then 空の一覧が返る",
+          "covers": "受け入れ基準: 1本も無いならば空の一覧を返す"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 対象が存在しない、または操作する者に権限が無いとき、システムは TARGET_NOT_FOUND エラーを返す shall（対象を特定し権限を確かめる解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "権限の無い者にはTARGET_NOT_FOUND",
+          "category": "異常系",
+          "viewpoint": "エラー：対象の存在と権限の欠如を区別しない",
+          "gherkin": "Scenario: 権限の無い者にはTARGET_NOT_FOUND\n  When 対象の投稿者でも管理者でもない者がこの操作を求める\n  Then TARGET_NOT_FOUNDエラーが返る"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象が存在する"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "対象の有効な閲覧トークンを、名前と期限とともに一覧する操作。どれを外すかを選ぶために使う。",
+        "閲覧トークンそのものの値は返さない。あわせて、期限を過ぎた閲覧トークンの記録を取り除く。"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing"
+}

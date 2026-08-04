@@ -1,0 +1,225 @@
+{
+  "documentId": "uc-issue-view-token",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "配布先ごとに閲覧トークンを発行する：uc-issue-view-token"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "IssueViewToken"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "見せたい相手ごとに別々の閲覧トークンを渡し、あとから個別に外せるようにしたい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "1本の閲覧トークンを全員へ配ると、ある相手だけを外したいときに、他の相手まで巻き添えで外れる。配布先ごとに分けておけば、外したい相手だけを外せる。",
+        "渡した相手を外す手立てが人手の操作だけだと、押し忘れたときに渡したものが永久に開き続ける。発行のたびに期限を与えることで、忘れても一度は必ず閉じる。"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "閲覧トークンの発行",
+          "message": "対象と名前と期限を指定して発行を求める",
+          "kind": "command"
+        },
+        {
+          "from": "閲覧トークンの発行",
+          "to": "閲覧トークンの発行",
+          "message": "有効な本数と名前の重なりを確かめる",
+          "kind": "self"
+        },
+        {
+          "from": "閲覧トークンの発行",
+          "to": "閲覧トークンの発行",
+          "message": "期限を過ぎた閲覧トークンの記録を取り除く",
+          "kind": "self"
+        },
+        {
+          "from": "閲覧トークンの発行",
+          "to": "投稿者",
+          "message": "発行した閲覧トークン（この一度だけ）",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "新しい閲覧トークンが1本増えており、それまでの閲覧トークンはすべて使えたまま残っている",
+        "発行した閲覧トークンには名前と期限がある",
+        "期限を過ぎていた閲覧トークンの記録が取り除かれている"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 名前と期限を指定して発行を求めたとき、閲覧トークンの発行は 新しい閲覧トークンを1本増やし、その値を一度だけ返す shall",
+        "When 期限を指定しなかったとき、閲覧トークンの発行は 1週間の期限を与える shall",
+        "If 対象が共有アーティファクトであり、発行した時点から1ヶ月を超える期限を指定したならば、閲覧トークンの発行は 発行を行わず拒む shall",
+        "If 対象がプロジェクトならば、閲覧トークンの発行は 期限を設けない指定を受け付ける shall",
+        "If 有効な閲覧トークンが上限に達しているならば、閲覧トークンの発行は 発行を行わず拒む shall",
+        "If 有効な閲覧トークンに同じ名前があるならば、閲覧トークンの発行は 発行を行わず拒む shall",
+        "While 発行を行う間、閲覧トークンの発行は それまでの閲覧トークンをどれも無効にしない shall"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "TARGET_NOT_FOUND",
+          "condition": [
+            "対象の共有アーティファクトまたはプロジェクトが存在しない",
+            "操作する者が対象の投稿者・持ち主でも管理者でもない"
+          ]
+        },
+        {
+          "code": "TOKEN_LIMIT_REACHED",
+          "condition": [
+            "有効な閲覧トークンが上限に達している"
+          ]
+        },
+        {
+          "code": "DUPLICATE_TOKEN_NAME",
+          "condition": [
+            "有効な閲覧トークンに同じ名前がある"
+          ]
+        },
+        {
+          "code": "EXPIRY_TOO_FAR",
+          "condition": [
+            "共有アーティファクトに対し、発行した時点から1ヶ月を超える期限を指定した"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "発行しても既存の閲覧トークンは使えたまま残る",
+          "category": "正常系",
+          "viewpoint": "巻き添えの回避：発行が既存の配布先へ影響しないことを確かめる",
+          "gherkin": "Scenario: 発行しても既存の閲覧トークンは使えたまま残る\n  Given 閲覧トークンが1本ある共有アーティファクト\n  When 新しい閲覧トークンを発行する\n  Then 新しい閲覧トークンで開ける\n  And それまでの閲覧トークンでも開ける",
+          "covers": "受け入れ基準: それまでの閲覧トークンをどれも無効にしない"
+        },
+        {
+          "name": "期限を指定しないと1週間になる",
+          "category": "正常系",
+          "viewpoint": "既定値：指定を省いても必ず期限が付くことを確かめる",
+          "gherkin": "Scenario: 期限を指定しないと1週間になる\n  Given 公開されている共有アーティファクト\n  When 期限を指定せずに閲覧トークンを発行する\n  Then その閲覧トークンの期限は発行から1週間後である",
+          "covers": "受け入れ基準: 期限を指定しなかったとき1週間の期限を与える"
+        },
+        {
+          "name": "1ヶ月を超える期限は拒まれる",
+          "category": "境界値",
+          "viewpoint": "値域：期限があることが形だけにならないことを確かめる",
+          "gherkin": "Scenario: 1ヶ月を超える期限は拒まれる\n  Given 公開されている共有アーティファクト\n  When 発行から1ヶ月を超える期限を指定して発行を求める\n  Then EXPIRY_TOO_FAR として拒まれる",
+          "covers": "受け入れ基準: 1ヶ月を超える期限を指定したとき拒む"
+        },
+        {
+          "name": "プロジェクトには期限を設けない指定ができる",
+          "category": "正常系",
+          "viewpoint": "対象による差：置いておく場と回覧するものを区別することを確かめる",
+          "gherkin": "Scenario: プロジェクトには期限を設けない指定ができる\n  Given 公開されているプロジェクト\n  When 期限を設けない指定で閲覧トークンを発行する\n  Then 発行できる",
+          "covers": "受け入れ基準: プロジェクトならば期限を設けない指定を受け付ける"
+        },
+        {
+          "name": "上限に達していると発行できない",
+          "category": "異常系",
+          "viewpoint": "上限：選べる数に収まっていることを確かめる",
+          "gherkin": "Scenario: 上限に達していると発行できない\n  Given 有効な閲覧トークンが上限に達している共有アーティファクト\n  When 新しい閲覧トークンを発行しようとする\n  Then TOKEN_LIMIT_REACHED として拒まれる",
+          "covers": "受け入れ基準: 上限に達しているとき拒む"
+        },
+        {
+          "name": "同じ名前では発行できない",
+          "category": "異常系",
+          "viewpoint": "一意性：どれを無効にするか選べる状態を保つことを確かめる",
+          "gherkin": "Scenario: 同じ名前では発行できない\n  Given 「デザインチーム」という名前の有効な閲覧トークンがある対象\n  When 同じ名前で発行を求める\n  Then DUPLICATE_TOKEN_NAME として拒まれる",
+          "covers": "受け入れ基準: 同じ名前があるとき拒む"
+        },
+        {
+          "name": "期限を過ぎた閲覧トークンは発行のときに取り除かれる",
+          "category": "正常系",
+          "viewpoint": "遅延削除：定期実行の仕組みを持たずに記録が溜まらないことを確かめる",
+          "gherkin": "Scenario: 期限を過ぎた閲覧トークンは発行のときに取り除かれる\n  Given 期限を過ぎた閲覧トークンがある対象\n  When 新しい閲覧トークンを発行する\n  Then 期限を過ぎた閲覧トークンの記録は残っていない",
+          "covers": "受け入れ基準: 新しい閲覧トークンを1本増やす"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 対象が存在しない、または操作する者に権限が無いとき、システムは TARGET_NOT_FOUND エラーを返す shall（対象を特定し権限を確かめる解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "権限の無い者にはTARGET_NOT_FOUND",
+          "category": "異常系",
+          "viewpoint": "エラー：対象の存在と権限の欠如を区別しない",
+          "gherkin": "Scenario: 権限の無い者にはTARGET_NOT_FOUND\n  When 対象の投稿者でも管理者でもない者がこの操作を求める\n  Then TARGET_NOT_FOUNDエラーが返る"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象が公開されている",
+        "有効な閲覧トークンが上限に達していない"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "見せたい相手ごとに閲覧トークンを1本ずつ発行する操作。名前と期限を与え、あとから個別に外せるようにする。",
+        "発行した閲覧トークンの値はこの一度だけ示され、以後は見返せない。"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing"
+}

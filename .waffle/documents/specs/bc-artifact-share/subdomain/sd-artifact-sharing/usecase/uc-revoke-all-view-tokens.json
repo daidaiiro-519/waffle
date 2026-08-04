@@ -1,0 +1,176 @@
+{
+  "documentId": "uc-revoke-all-view-tokens",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "渡した相手を一度に全て外す：uc-revoke-all-view-tokens"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "RevokeAllViewTokens"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "投稿者",
+      "intent": "渡した相手を一度に全て外したい。誰に渡したかを思い出さずに、まとめて閉じたい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "配布先ごとに外せるようにした結果、全員を外すには1つずつ辿る必要が生じた。急いで閉じたいときに、渡した相手を数え上げてからでないと閉じられないのでは間に合わない。",
+        "公開を止める操作では代われない。公開を止めるのは一時的に閉じることであり、再開すれば止める前の相手が戻ってくる。渡した相手を外すこととは別の操作になる。"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "投稿者",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "投稿者",
+          "to": "閲覧トークンの一括無効化",
+          "message": "対象を指定して、まとめて外すことを求める",
+          "kind": "command"
+        },
+        {
+          "from": "閲覧トークンの一括無効化",
+          "to": "閲覧トークンの一括無効化",
+          "message": "有効な閲覧トークンをすべて使えなくする",
+          "kind": "self"
+        },
+        {
+          "from": "閲覧トークンの一括無効化",
+          "to": "投稿者",
+          "message": "外した本数",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "対象の閲覧トークンでは、どれでも開けなくなっている",
+        "対象の公開は止まっていない",
+        "共有アーティファクトが対象の場合、まとめの側の閲覧トークンからは引き続き開ける"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 一括の無効化を求めたとき、一括無効化は 対象の有効な閲覧トークンをすべて使えなくする shall",
+        "While 一括無効化を行う間、一括無効化は 対象の公開を止めない shall",
+        "While 一括無効化を行う間、一括無効化は 対象が入っているまとめの閲覧トークンを使えなくしない shall",
+        "If 有効な閲覧トークンが1本も無いならば、一括無効化は 何も変えずに成功する shall"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "TARGET_NOT_FOUND",
+          "condition": [
+            "対象の共有アーティファクトまたはプロジェクトが存在しない",
+            "操作する者が対象の投稿者・持ち主でも管理者でもない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "すべての閲覧トークンが一度に使えなくなる",
+          "category": "正常系",
+          "viewpoint": "一括：渡した相手を数え上げずに閉じられることを確かめる",
+          "gherkin": "Scenario: すべての閲覧トークンが一度に使えなくなる\n  Given 閲覧トークンが3本ある共有アーティファクト\n  When まとめて外すことを求める\n  Then 3本のいずれでも開けない",
+          "covers": "受け入れ基準: 有効な閲覧トークンをすべて使えなくする"
+        },
+        {
+          "name": "まとめて外しても公開は止まらない",
+          "category": "正常系",
+          "viewpoint": "境界：一括無効化と公開停止が別の手段であることを確かめる",
+          "gherkin": "Scenario: まとめて外しても公開は止まらない\n  Given 閲覧トークンが2本ある共有アーティファクト\n  When まとめて外すことを求める\n  Then 対象の公開は止まっていない\n  And 新しい閲覧トークンを発行すれば再び見せられる",
+          "covers": "受け入れ基準: 対象の公開を止めない"
+        },
+        {
+          "name": "まとめの側の閲覧トークンからは引き続き開ける",
+          "category": "正常系",
+          "viewpoint": "範囲：外す範囲が対象自身の閲覧トークンに限られることを確かめる",
+          "gherkin": "Scenario: まとめの側の閲覧トークンからは引き続き開ける\n  Given 共有アーティファクトAがプロジェクトPに入っている\n  When Aの閲覧トークンをまとめて外す\n  Then Pの閲覧トークンでAを開ける",
+          "covers": "受け入れ基準: まとめの閲覧トークンを使えなくしない"
+        },
+        {
+          "name": "1本も無い状態でまとめて外しても変わらない",
+          "category": "境界値",
+          "viewpoint": "冪等：外す対象が無くても失敗しないことを確かめる",
+          "gherkin": "Scenario: 1本も無い状態でまとめて外しても変わらない\n  Given 有効な閲覧トークンが1本も無い共有アーティファクト\n  When まとめて外すことを求める\n  Then 成功し、対象の公開は止まっていない",
+          "covers": "受け入れ基準: 1本も無いならば何も変えずに成功する"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 対象が存在しない、または操作する者に権限が無いとき、システムは TARGET_NOT_FOUND エラーを返す shall（対象を特定し権限を確かめる解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "権限の無い者にはTARGET_NOT_FOUND",
+          "category": "異常系",
+          "viewpoint": "エラー：対象の存在と権限の欠如を区別しない",
+          "gherkin": "Scenario: 権限の無い者にはTARGET_NOT_FOUND\n  When 対象の投稿者でも管理者でもない者がこの操作を求める\n  Then TARGET_NOT_FOUNDエラーが返る"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象が存在する"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "対象の有効な閲覧トークンをすべて使えなくする操作。渡した相手を一度に全て外したいときに使う。",
+        "対象の公開は止まらないため、新しい閲覧トークンを発行すれば再び見せられる。"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-artifact-sharing"
+}

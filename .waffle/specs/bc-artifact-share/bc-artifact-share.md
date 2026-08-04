@@ -75,7 +75,6 @@ schemaRef: "DomainSpecSchema/v8"
 
 - uc-publish-artifact
 - uc-replace-content
-- uc-reissue-view-token
 - uc-suspend-artifact
 - uc-resume-artifact
 - uc-assign-to-project
@@ -88,6 +87,10 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-control-project-access
 - uc-export-artifact
 - uc-read-comments
+- uc-issue-view-token
+- uc-revoke-view-token
+- uc-revoke-all-view-tokens
+- uc-list-view-tokens
 
 ---
 
