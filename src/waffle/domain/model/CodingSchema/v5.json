@@ -207,7 +207,7 @@
       ],
       "x-render-order": 0,
       "x-render-level": 1,
-      "x-prompt-query": "この Coding document のタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
+      "x-prompt-query": "まず何を定める文書かを掴むために読みます。説明部分が識別子の言い換えになっていたら、何を定めるかがまだ決まっていない合図です。",
       "x-render": [],
       "properties": {
         "blockType": {
@@ -291,7 +291,7 @@
       ],
       "x-render-order": 1,
       "x-render-level": 2,
-      "x-prompt-query": "このスタックの素性（ティア・スタック名）を持ちます。様式(hexagonal 等)は architecture 側が SSOT なのでここには持たない。",
+      "x-prompt-query": "どのスタックの話かを最初に読みます。様式（ヘキサゴナル等）はここではなくarchitecture が正本なので、ここに様式が書かれていたら二重管理を疑ってください。",
       "x-render": [
         {
           "as": "keyvalue",
@@ -459,7 +459,7 @@
       ],
       "x-render-order": 3,
       "x-render-level": 2,
-      "x-prompt-query": "このスタックの看板となる構造フレームワーク（1つ）を持ちます。無ければ note に理由を書き items は空にします。",
+      "x-prompt-query": "このスタックの土台となる構造フレームワークを読みます。1つだけのはずで、複数並んでいたら土台が定まっていません。空のときは note に理由があるはずで、理由の無い空は未記入です。",
       "x-render": [
         {
           "as": "paragraph",
@@ -511,7 +511,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "このスタックが外部に公開するインターフェース様式（inbound の顔）を持ちます。",
+      "x-prompt-query": "外部からの入口がどういう様式かを読みます。ここに挙がっていない入口を実装が持っていたら、宣言されていない経路です。",
       "x-render": [
         {
           "as": "section",
@@ -581,7 +581,7 @@
       ],
       "x-render-order": 5,
       "x-render-level": 2,
-      "x-prompt-query": "このスタックが依存するミドルウェア（サーバ実体：DB・キャッシュ・ブローカー・検索・APサーバー）を持ちます。クライアントライブラリは libraries 側。無ければ note に理由を書きます。",
+      "x-prompt-query": "依存するサーバ実体を読みます。クライアントライブラリはここではなく libraries にあるため、ライブラリ名が混じっていたら置き場所が誤っています。空のときは note に理由があるはずです。",
       "x-render": [
         {
           "as": "paragraph",
@@ -678,7 +678,7 @@
       ],
       "x-render-order": 6,
       "x-render-level": 2,
-      "x-prompt-query": "このスタックが担う非ドメイン能力（driven・横断のみ。inbound は interface、永続化サーバは middleware）と実装ライブラリを持ちます。",
+      "x-prompt-query": "業務に属さない能力を何で賄っているかを読みます。入口は interface、保管のサーバはmiddleware が持つため、それらがここに混じっていないかを確かめてください。",
       "x-render": [
         {
           "as": "section",
@@ -766,7 +766,7 @@
       ],
       "x-render-order": 7,
       "x-render-level": 2,
-      "x-prompt-query": "パッケージ管理・lint/format 等の開発ツールを持ちます。",
+      "x-prompt-query": "手元とCIで動く道具を読みます。ここに無い道具を前提にした手順があれば、その手順は誰の環境でも動くとは限りません。",
       "x-render": [
         {
           "as": "keyvalue",
@@ -818,7 +818,7 @@
       ],
       "x-render-order": 8,
       "x-render-level": 2,
-      "x-prompt-query": "依存追加の規律を持ちます。反射的なライブラリ追加を防ぎます。",
+      "x-prompt-query": "依存を増やしてよいかの規律を読みます。ライブラリを足そうとするたびにここへ戻り、level（必須・推奨・禁止）に照らしてください。反射的な追加を止めるための場所です。",
       "x-render": [
         {
           "as": "table",
@@ -1203,7 +1203,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "依存方向・DI・エラー伝播などの決定ルールを持ちます。ConceptPlacement で表現しきれない横断的な決定の逃がし先です。",
+      "x-prompt-query": "配置だけでは表せない横断的な決まりを読みます。依存の向き・組み立て方・失敗の伝え方など、どのファイルにも書かれないが全体に効くものがここにあります。level が禁止の項目は、例外なく守られているかを実装と突き合わせてください。",
       "x-render": [
         {
           "as": "table",
@@ -1260,7 +1260,7 @@
       ],
       "x-render-order": 5,
       "x-render-level": 2,
-      "x-prompt-query": "サブドメインの Category ごとの実装の厚みを持ちます。値は subdomain spec の Category を参照する運用とし、ここでは厚みの方針のみ宣言（二重管理を避ける）。",
+      "x-prompt-query": "業務領域の分類ごとに、どれだけ作り込むかを読みます。分類そのものは subdomain の仕様が正本なので、ここで分類を決め直さないでください。",
       "x-render": [
         {
           "as": "table",
@@ -1532,7 +1532,7 @@
       ],
       "x-render-order": 2,
       "x-render-level": 2,
-      "x-prompt-query": "コードスタイル（型注釈・関数責務・import 規律等）の決定ルールを持ちます。",
+      "x-prompt-query": "書き方の決まりを読みます。level が禁止の項目は、道具で止められていない限り人が守るしかないため、レビューで見る対象になります。",
       "x-render": [
         {
           "as": "table",
@@ -1750,7 +1750,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "docstring/コメントに関する決定ルールを持ちます。",
+      "x-prompt-query": "文書コメントと注釈についての決まりを読みます。level が必須の項目は、lint-docstring の判定と食い違っていないかを確かめてください。",
       "x-render": [
         {
           "as": "table",
@@ -1949,7 +1949,7 @@
       ],
       "x-render-order": 2,
       "x-render-level": 2,
-      "x-prompt-query": "テストの実行タイミング・CI トリガー・ゲートの扱いを持ちます。",
+      "x-prompt-query": "いつテストを走らせ、何を通過条件にするかを読みます。ゲートに挙がった条件は、実際にCIで止まる仕組みがあるかを確かめてください。宣言だけのゲートは効きません。",
       "x-render": [
         {
           "as": "table",
@@ -2095,7 +2095,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "単体テスト・受け入れテストのフレームワークを持ちます。",
+      "x-prompt-query": "テストを動かす道具を読みます。ここに無い道具でテストが書かれていたら、その一群は宣言の外にあります。",
       "x-render": [
         {
           "as": "keyvalue",
@@ -2411,7 +2411,7 @@
       ],
       "x-render-order": 7,
       "x-render-level": 2,
-      "x-prompt-query": "テストに関する決定ルールを持ちます。",
+      "x-prompt-query": "テストの書き方の決まりを読みます。level が禁止の項目は、破ると実物なら失敗する場面で緑になる類の落とし穴を指しているため、特に実装と突き合わせてください。",
       "x-render": [
         {
           "as": "table",
@@ -2471,7 +2471,7 @@
       ],
       "x-render-order": 5.5,
       "x-render-level": 2,
-      "x-prompt-query": "テスト関数のdocstring（またはそれに相当するコメント）にGherkin(Given/When/Then)を記載する規約を持ちます。Gherkinで記載するのは、仕様側のシナリオ文言をテスト側に転記し、事後編集への追従をドリフト検知で捕捉するための取り決めであり、対象言語の標準docstring/コメント構文に載せて表現する。",
+      "x-prompt-query": "テストの文書コメントに何をどう書くかの取り決めを読みます。仕様のシナリオをそのまま写す形が前提で、写しがずれるとドリフト検知が拾います。言い換えや要約をしてよいかの判断材料として読んでください。",
       "x-render": [
         {
           "as": "keyvalue",
@@ -2532,7 +2532,7 @@
       ],
       "x-render-order": 0,
       "x-render-level": 2,
-      "x-prompt-query": "この文書が何かを1〜2文で要約します。文書一覧や検索結果での要約表示としても使われます。",
+      "x-prompt-query": "この文書を開かずに済ませるかどうかを判断するために読みます。ここで用が足りるなら先へ進む必要はありません。",
       "x-render": [
         {
           "as": "paragraph",
@@ -2564,7 +2564,7 @@
       ],
       "x-render-order": 1,
       "x-render-level": 2,
-      "x-prompt-query": "この文書が対象とするツールと成果物種別を持ちます。",
+      "x-prompt-query": "どのツールのどの成果物を扱う文書かを最初に読みます。手元のツールと違えば、以降の配線はそのままでは使えません。",
       "x-render": [
         {
           "as": "keyvalue",
@@ -2706,7 +2706,7 @@
       ],
       "x-render-order": 3,
       "x-render-level": 2,
-      "x-prompt-query": "ツール側への実際の登録方法（配置エントリの一覧）を持ちます。",
+      "x-prompt-query": "ツール側へ実際にどう登録するかを読みます。ここに書かれた場所と手順は、そのまま実行する対象です。順序が書かれている場合、入れ替えると動きません。",
       "x-render": [
         {
           "as": "section",
@@ -2783,7 +2783,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "配線・実装時の落とし穴・規約を持ちます。",
+      "x-prompt-query": "配線でつまずく点を読みます。level が禁止の項目は、過去に実際に踏んだ落とし穴であることが多いため、同じ手順を書く前に必ず照らしてください。",
       "x-render": [
         {
           "as": "table",

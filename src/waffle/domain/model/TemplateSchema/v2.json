@@ -206,7 +206,7 @@
       ],
       "x-render-order": 0,
       "x-render-level": 1,
-      "x-prompt-query": "このTemplateのタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
+      "x-prompt-query": "まず何を扱う文書かを掴むために読みます。説明部分が識別子の言い換えになっていたら、何を扱うかがまだ決まっていない合図です。",
       "x-render": [],
       "properties": {
         "blockType": {
@@ -229,7 +229,7 @@
       ],
       "x-render-order": 1,
       "x-render-level": 2,
-      "x-prompt-query": "この判断相談テンプレートがいつ使われるべきかと、判断フローに入る直前に相談対象を一文でスコープするopeningLineを持ちます。属するSkill本文にある発動条件の一覧（どんな相談で発動するかを示す表）と内容が重複するが、テンプレート単体で見た時にも発動条件・対象の掴み方が分かるよう残す。",
+      "x-prompt-query": "この型を使う場面かどうかを見極めるために読みます。属する技能の本文にある発動条件の一覧とは別で、こちらは1つの型に絞った条件です。",
       "x-render": [
         {
           "as": "paragraph",
@@ -269,7 +269,7 @@
       ],
       "x-render-order": 2,
       "x-render-level": 2,
-      "x-prompt-query": "判断フローに入る前に、判断の前提となる分類・階層を確認させる任意の前置きセクションを持ちます（例: tech-lead-advisorの『サブドメイン分類』、qa-advisorの『階層の確認』）。前提確認が不要な骨格では空配列。",
+      "x-prompt-query": "判断へ入る前に、前提となる分類を確かめるために読みます。ここを飛ばすと、後段の判断が違う土俵の上で行われます。空なら前置きは不要という意味です。",
       "x-render": [
         {
           "as": "section",
@@ -415,7 +415,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "診断フローの結果として示すべき判定結果の書き方を持ちます。",
+      "x-prompt-query": "結論をどう書くかを読みます。次に何をすべきかはここではなく推奨の側が持つため、混ぜないでください。",
       "x-render": [
         {
           "as": "paragraph",
@@ -446,7 +446,7 @@
       ],
       "x-render-order": 5,
       "x-render-level": 2,
-      "x-prompt-query": "判定を踏まえて次に何をすべきかの書き方を持ちます。判定セクションと明確に分離し、同じセクションに混在させない。",
+      "x-prompt-query": "次の一手をどう書くかを読みます。判定と同じ節に混ぜると、何が事実で何が提案かが読み手に区別できなくなります。",
       "x-render": [
         {
           "as": "paragraph",
@@ -478,7 +478,7 @@
       ],
       "x-render-order": 6,
       "x-render-level": 2,
-      "x-prompt-query": "判定・推奨アクションの後に必要な、骨格固有の追加セクション（例: qa-advisorの『診断的差し戻し』）を持ちます。不要なら空配列。",
+      "x-prompt-query": "この型に固有の追加節があるかを読みます。空なら、判定と推奨だけで完結するという意味です。",
       "x-render": [
         {
           "as": "section",
@@ -568,7 +568,7 @@
       ],
       "x-render-order": 1,
       "x-render-level": 2,
-      "x-prompt-query": "investigation Skillが報告する『分かったこと』セクションの書き方を持ちます。",
+      "x-prompt-query": "分かったことをどう書くかを読みます。分からなかったことと混ぜないための指針がここにあります。",
       "x-render": [
         {
           "as": "paragraph",
@@ -599,7 +599,7 @@
       ],
       "x-render-order": 2,
       "x-render-level": 2,
-      "x-prompt-query": "investigation Skillが報告する『分からなかったこと』セクションの書き方を持ちます。",
+      "x-prompt-query": "分からなかったことをどう書くかを読みます。確かめられなかった事項を分かったかのように書かないための歯止めです。",
       "x-render": [
         {
           "as": "paragraph",
@@ -630,7 +630,7 @@
       ],
       "x-render-order": 3,
       "x-render-level": 2,
-      "x-prompt-query": "investigation Skillが根拠をどう書くべきかの指示を持ちます。",
+      "x-prompt-query": "根拠をどう示すかを読みます。読み手が同じ場所を開いて確かめられる形になっているかが基準です。",
       "x-render": [
         {
           "as": "paragraph",
@@ -689,7 +689,7 @@
       ],
       "x-render-order": -1,
       "x-render-level": 2,
-      "x-prompt-query": "この判断テンプレートが何を扱うかを1〜2文で要約します。OKF frontmatterのdescriptionとしても使われます。",
+      "x-prompt-query": "この型を開くかどうかを判断するために読みます。ここで用が足りるなら先へ進む必要はありません。",
       "x-render": [
         {
           "as": "paragraph",

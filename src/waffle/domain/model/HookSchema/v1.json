@@ -181,7 +181,7 @@
       ],
       "x-render-order": 1,
       "x-render-level": 2,
-      "x-prompt-query": "このHookが機械的に強制するCLAUDE.md運用ルール・防ぎたい事故を持ちます。",
+      "x-prompt-query": "この仕掛けが何の事故を防いでいるかを読みます。挙動を変えるときは、ここで防いでいる事故が再び起きないかを先に確かめてください。",
       "x-render": [
         {
           "as": "paragraph",
@@ -212,7 +212,7 @@
       ],
       "x-render-order": 2,
       "x-render-level": 2,
-      "x-prompt-query": "このHookがいつ働くかの人間可読な意図説明を持ちます。settings.json側のPreToolUse/PostToolUse・matcherが実際の配線の正本であり、このフィールドはそれを重複定義するものではありません。",
+      "x-prompt-query": "いつ働くかの意図を読みます。実際の配線は設定ファイル側が正本なので、食い違ったら設定の方を信じ、この記述の方を直してください。",
       "x-render": [
         {
           "as": "paragraph",
@@ -274,7 +274,7 @@
       ],
       "x-render-order": 3,
       "x-render-level": 2,
-      "x-prompt-query": "スクリプト自身が完結して持つ判定ロジックの人間可読な説明を持ちます。",
+      "x-prompt-query": "スクリプトが何を判定しているかを読みます。実物のコードが正本なので、挙動を確かめるときはここで済ませずコードへ当たってください。",
       "x-render": [
         {
           "as": "paragraph",
@@ -305,7 +305,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "対応するhookスクリプトの実体パスを持ちます。",
+      "x-prompt-query": "実体がどこにあるかを読みます。この道が切れていれば、仕掛けは登録されていても働きません。",
       "x-render": [
         {
           "as": "paragraph",

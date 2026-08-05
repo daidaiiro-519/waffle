@@ -205,7 +205,7 @@
       ],
       "x-render-order": 0,
       "x-render-level": 1,
-      "x-prompt-query": "このSkillのタイトルを持ちます。「業務語彙の説明：識別子」の形式でh1になります。",
+      "x-prompt-query": "まず何を扱う文書かを掴むために読みます。説明部分が識別子の言い換えになっていたら、何を扱うかがまだ決まっていない合図です。",
       "x-render": [],
       "properties": {
         "blockType": {
@@ -263,7 +263,7 @@
       "x-render-order": 10,
       "x-render-level": 2,
       "x-render-hidden": true,
-      "x-prompt-query": "このSkillがモデルによる自動呼び出し対象かどうかを持ちます。frontmatterのdisable-model-invocationとして使われます。",
+      "x-prompt-query": "この技能が勝手に呼ばれるかどうかを読みます。自動で呼ばれない設定なら、使うときは名指しで呼ぶ必要があります。",
       "x-render": [],
       "properties": {
         "blockType": {
@@ -323,7 +323,7 @@
       ],
       "x-render-order": 4,
       "x-render-level": 2,
-      "x-prompt-query": "このSkillを呼び出す際に渡されるべき情報と、情報が不足・曖昧な場合の解釈方法を持ちます。テキストベース疎結合の入力（自然言語の意図）を受け手がどう構造化するかの手引きであり、呼び出しごとに解釈がぶれて再現性が損なわれることを防ぎます。",
+      "x-prompt-query": "呼び出し側から渡された言葉をどう受け取るかを読みます。明示されなかった項目をどう補うかまで書かれているはずで、書かれていなければ、呼び出しのたびに解釈がぶれます。",
       "x-render": [
         {
           "as": "table",
@@ -381,7 +381,7 @@
       ],
       "x-render-order": 7,
       "x-render-level": 2,
-      "x-prompt-query": "このSkillの実行結果・報告の形式を持ちます。ブロック自体が無ければ自由形式。",
+      "x-prompt-query": "何をどう返すかを読みます。ブロックが無ければ形は自由という意味です。",
       "x-render": [
         {
           "as": "paragraph",
@@ -601,7 +601,7 @@
       ],
       "x-render-order": 8,
       "x-render-level": 2,
-      "x-prompt-query": "このSkillの実行制約を持ちます。Skillを実行する前に確認すべきガードレールの一覧です。",
+      "x-prompt-query": "実行前に必ず読みます。ここに挙がった制約は、手順の途中で都合が悪くなっても曲げてよいものではありません。",
       "x-render": [
         {
           "as": "list",
@@ -807,7 +807,7 @@
       ],
       "x-render-order": 5,
       "x-render-level": 2,
-      "x-prompt-query": "このrouter Skillが持つルーティング表を持ちます。単独では目的を完結できないSkillについて、どのadvisor Skillと組み合わせる必要があるかを判断するための表です。",
+      "x-prompt-query": "誰と組めばよいかを引くために読みます。いつ呼ぶかはここでは決まらないので、呼ぶ時機は呼び出し側が判断してください。表に無い技能は、単独で完結すると読みます。",
       "x-render": [
         {
           "as": "table",
@@ -931,7 +931,7 @@
       ],
       "x-render-order": 6,
       "x-render-level": 2,
-      "x-prompt-query": "advisor同士の境界・委譲マップを持ちます。あるadvisorの相談範囲外となる隣接領域が、どのadvisorの領域に該当するかを一元的に記録します。個々のadvisorの本文には他advisor名を書かせない代わりに、ここに集約します。",
+      "x-prompt-query": "相談が範囲外だったときに、次にどこへ回すかを引くために読みます。個々の相談役の本文には他の相談役への言及が無いため、越境の判断はここに集まっています。",
       "x-render": [
         {
           "as": "table",
