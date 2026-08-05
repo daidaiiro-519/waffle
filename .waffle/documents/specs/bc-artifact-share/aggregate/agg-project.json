@@ -126,7 +126,7 @@
         {
           "name": "ProjectStatus",
           "represents": "この単位が開けるかどうか",
-          "behavior": "不変。ACTIVE と SUSPENDED のいずれか。",
+          "behavior": "不変。PUBLISHED と SUSPENDED のいずれか。共有アーティファクトと同じ語を使う——語彙は「公開停止」「再公開」を両方に用いており、同じ状態に2つの綴りを持たない。",
           "attributes": [
             {
               "name": "value",
@@ -282,55 +282,55 @@
       "blockType": "Lifecycle",
       "title": "ライフサイクル",
       "states": [
-        "ACTIVE",
+        "PUBLISHED",
         "SUSPENDED"
       ],
       "transitions": [
         {
           "from": "[*]",
-          "to": "ACTIVE",
+          "to": "PUBLISHED",
           "command": "create",
           "condition": "招かれた者による作成であること"
         },
         {
-          "from": "ACTIVE",
-          "to": "ACTIVE",
+          "from": "PUBLISHED",
+          "to": "PUBLISHED",
           "command": "addArtifact",
           "condition": ""
         },
         {
-          "from": "ACTIVE",
-          "to": "ACTIVE",
+          "from": "PUBLISHED",
+          "to": "PUBLISHED",
           "command": "removeArtifact",
           "condition": ""
         },
         {
-          "from": "ACTIVE",
-          "to": "ACTIVE",
+          "from": "PUBLISHED",
+          "to": "PUBLISHED",
           "command": "issueViewToken",
           "condition": "有効な閲覧トークンが5本未満で、同じ名前の有効な閲覧トークンが無いこと"
         },
         {
-          "from": "ACTIVE",
-          "to": "ACTIVE",
+          "from": "PUBLISHED",
+          "to": "PUBLISHED",
           "command": "revokeViewToken",
           "condition": ""
         },
         {
-          "from": "ACTIVE",
-          "to": "ACTIVE",
+          "from": "PUBLISHED",
+          "to": "PUBLISHED",
           "command": "revokeAllViewTokens",
           "condition": ""
         },
         {
-          "from": "ACTIVE",
+          "from": "PUBLISHED",
           "to": "SUSPENDED",
           "command": "suspend",
           "condition": ""
         },
         {
           "from": "SUSPENDED",
-          "to": "ACTIVE",
+          "to": "PUBLISHED",
           "command": "resume",
           "condition": ""
         }

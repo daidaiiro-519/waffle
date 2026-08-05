@@ -85,7 +85,7 @@ Project
 
 | 表す値 | 振る舞い |
 |---|---|
-| この単位が開けるかどうか | 不変。ACTIVE と SUSPENDED のいずれか。 |
+| この単位が開けるかどうか | 不変。PUBLISHED と SUSPENDED のいずれか。共有アーティファクトと同じ語を使う——語彙は「公開停止」「再公開」を両方に用いており、同じ状態に2つの綴りを持たない。 |
 
 | 属性 | 型 |
 |---|---|
@@ -165,28 +165,28 @@ Project
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ACTIVE: create
-    ACTIVE --> ACTIVE: addArtifact
-    ACTIVE --> ACTIVE: removeArtifact
-    ACTIVE --> ACTIVE: issueViewToken
-    ACTIVE --> ACTIVE: revokeViewToken
-    ACTIVE --> ACTIVE: revokeAllViewTokens
-    ACTIVE --> SUSPENDED: suspend
-    SUSPENDED --> ACTIVE: resume
+    [*] --> PUBLISHED: create
+    PUBLISHED --> PUBLISHED: addArtifact
+    PUBLISHED --> PUBLISHED: removeArtifact
+    PUBLISHED --> PUBLISHED: issueViewToken
+    PUBLISHED --> PUBLISHED: revokeViewToken
+    PUBLISHED --> PUBLISHED: revokeAllViewTokens
+    PUBLISHED --> SUSPENDED: suspend
+    SUSPENDED --> PUBLISHED: resume
 ```
 
 ### 遷移
 
 | from | to | command | 条件 |
 |---|---|---|---|
-| [*] | ACTIVE | create | 招かれた者による作成であること |
-| ACTIVE | ACTIVE | addArtifact |  |
-| ACTIVE | ACTIVE | removeArtifact |  |
-| ACTIVE | ACTIVE | issueViewToken | 有効な閲覧トークンが5本未満で、同じ名前の有効な閲覧トークンが無いこと |
-| ACTIVE | ACTIVE | revokeViewToken |  |
-| ACTIVE | ACTIVE | revokeAllViewTokens |  |
-| ACTIVE | SUSPENDED | suspend |  |
-| SUSPENDED | ACTIVE | resume |  |
+| [*] | PUBLISHED | create | 招かれた者による作成であること |
+| PUBLISHED | PUBLISHED | addArtifact |  |
+| PUBLISHED | PUBLISHED | removeArtifact |  |
+| PUBLISHED | PUBLISHED | issueViewToken | 有効な閲覧トークンが5本未満で、同じ名前の有効な閲覧トークンが無いこと |
+| PUBLISHED | PUBLISHED | revokeViewToken |  |
+| PUBLISHED | PUBLISHED | revokeAllViewTokens |  |
+| PUBLISHED | SUSPENDED | suspend |  |
+| SUSPENDED | PUBLISHED | resume |  |
 
 ---
 

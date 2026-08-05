@@ -266,47 +266,6 @@ stateDiagram-v2
 
 ## ドメインイベント
 
-### ArtifactPublished
-
-#### 発行契機
-
-publish
-
-#### ペイロード
-
-| 項目 | 意味 |
-|---|---|
-| artifactId | 公開された共有アーティファクトを指すID |
-| publishedBy | 公開した人 |
-
-### ViewTokenIssued
-
-#### 発行契機
-
-issueViewToken
-
-#### ペイロード
-
-| 項目 | 意味 |
-|---|---|
-| artifactId | 閲覧トークンを発行した共有アーティファクトを指すID |
-| tokenId | 発行した閲覧トークンを指す識別子 |
-| name | その閲覧トークンがどの配布先のものかを表す名前 |
-| expiresAt | その閲覧トークンが使えなくなる時点 |
-
-### ViewTokenRevoked
-
-#### 発行契機
-
-revokeViewToken
-
-#### ペイロード
-
-| 項目 | 意味 |
-|---|---|
-| artifactId | 閲覧トークンを無効にした共有アーティファクトを指すID |
-| tokenId | 無効にした閲覧トークンを指す識別子 |
-
 ### ArtifactContentReplaced
 
 #### 発行契機
@@ -319,32 +278,6 @@ replaceContent
 |---|---|
 | artifactId | 差し替えられた共有アーティファクトを指すID |
 | replacedAt | 差し替えが行われた時点。この時点を境に、それ以前の指摘が差し替え前のものであると読み取れる |
-
-### ArtifactSuspended
-
-#### 発行契機
-
-suspend
-
-#### ペイロード
-
-| 項目 | 意味 |
-|---|---|
-| artifactId | 公開を止めた共有アーティファクトを指すID |
-
-### ArtifactTransferred
-
-#### 発行契機
-
-transfer
-
-#### ペイロード
-
-| 項目 | 意味 |
-|---|---|
-| artifactId | 引き継がれた共有アーティファクトを指すID |
-| from | それまでの投稿者 |
-| to | 新しい投稿者 |
 
 ---
 
