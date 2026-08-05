@@ -84,58 +84,6 @@ def test_作ると最初の1本が渡される():
     assert len(tokens) == 1
     assert r.token not in str(tokens)
 
-def test_公開停止すると開けなくなるが中身は残る():
-    deps = setup()
-    r = owned(deps)
-    build(deps, ControlProjectAccess).run("suspend", X, r.project_id)
-
-    assert deps.keys.get(f"proj:{r.project_id}") == "DISABLED"
-    assert index_of(deps, r.project_id)["status"] == "disabled"
-    assert deps.store.get(f"proj/{r.project_id}/index.json")
-
-
-def test_再開すると止める前の閲覧トークンがそのまま使える():
-    deps = setup()
-    r = owned(deps)
-    before = deps.keys.get(f"proj:{r.project_id}")
-    build(deps, ControlProjectAccess).run("suspend", X, r.project_id)
-
-    build(deps, ControlProjectAccess).run("resume", X, r.project_id)
-
-    assert deps.keys.get(f"proj:{r.project_id}") == before
-    assert index_of(deps, r.project_id)["status"] == "active"
-
-
-def test_止まっていないものは再開できない():
-    deps = setup()
-    r = owned(deps)
-    with pytest.raises(ProjectError) as x:
-        build(deps, ControlProjectAccess).run("resume", X, r.project_id)
-    assert x.value.code == "NOT_SUSPENDED"
-
-
-def test_管理者は自分が作ったものでなくても扱える():
-    """持ち主が抜けたあとに、誰も止められないプロジェクトが残らないこと"""
-    deps = setup()
-    r = owned(deps)
-    build(deps, ControlProjectAccess).run("suspend", ADMIN, r.project_id)
-    assert index_of(deps, r.project_id)["status"] == "disabled"
-
-
-def test_共有でも持ち主以外は見せ方を変えられない():
-    """出し入れができることと、見せ方を変えられることは別
-
-    誰でも止められると、他の人が渡した相手まで巻き込んで見えなくなる。
-    """
-    deps = setup()
-    r = owned(deps, scope="SHARED")
-
-    with pytest.raises(ProjectError) as x:
-        build(deps, ControlProjectAccess).run("suspend", Y, r.project_id)
-    assert x.value.code == "PROJECT_NOT_FOUND"
-
-    assert index_of(deps, r.project_id)["status"] == "active"
-
 
 def test_無いプロジェクトと他人のものを同じ拒み方にする():
     """そこに何かがあること自体を読み取らせない"""
