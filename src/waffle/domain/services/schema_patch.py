@@ -107,6 +107,33 @@ def set_field(schema: dict, def_name: str | None, field_path: str, value) -> dic
     return new_schema
 
 
+def remove_field(schema: dict, def_name: str | None, field_path: str) -> dict:
+    """$defs[def_name]内のドットパス(field_path)が指すフィールドを、キーごと取り除く（冪等）。
+
+    set_fieldにNoneを渡してもキーは残りnullが書かれるだけで、誤って足したフィールドを
+    元に戻せない。スキーマにとって「値がnull」と「そのフィールドが無い」は別の状態であり、
+    前者は契約に無いキーが残り続けることを意味する。def_nameにNoneを渡すと$defsではなく
+    schemaのルート直下を対象にする（set_fieldと同じ扱い）。"""
+    if def_name is not None and def_name not in schema["$defs"]:
+        raise BlockNotFoundError(f"{def_name} が $defs に存在しない")
+    new_schema = json.loads(dump(schema))
+    cur = new_schema if def_name is None else new_schema["$defs"][def_name]
+    parts = field_path.split(".")
+    for part in parts[:-1]:
+        key = int(part) if isinstance(cur, list) else part
+        if not isinstance(cur, list) and key not in cur:
+            return schema
+        cur = cur[key]
+    last = int(parts[-1]) if isinstance(cur, list) else parts[-1]
+    if isinstance(cur, list):
+        if last >= len(cur):
+            return schema
+    elif last not in cur:
+        return schema
+    del cur[last]
+    return new_schema
+
+
 def create_version(base_schema: dict, edits: list[dict]) -> dict:
     """base_schemaを複製し、edits（defName/fieldPath/valueの列）をset_fieldと同じ経路で順に
     適用した新しいschemaを返す。新版はまだどのDocumentも参照していない未公開の状態のため、

@@ -74,6 +74,14 @@ class PatchSchema:
                 new_schema = schema_patch.set_field(old_schema, params["defName"], params["fieldPath"], params["value"])
             except schema_patch.BlockNotFoundError as e:
                 return _err("BLOCK_NOT_FOUND", str(e))
+        elif operation == "remove_field":
+            # 誤って足したフィールドを、キーごと取り除く。valueは受け取らない
+            if not params.get("fieldPath") or "defName" not in params:
+                return _err("MISSING_PARAM", "remove_field には defName, fieldPath が必要です")
+            try:
+                new_schema = schema_patch.remove_field(old_schema, params["defName"], params["fieldPath"])
+            except schema_patch.BlockNotFoundError as e:
+                return _err("BLOCK_NOT_FOUND", str(e))
         elif operation == "remove_block":
             required = ("contentDefName", "propName")
             if not all(params.get(k) for k in required):

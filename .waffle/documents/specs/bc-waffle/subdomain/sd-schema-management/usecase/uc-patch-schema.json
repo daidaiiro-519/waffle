@@ -128,7 +128,11 @@
         "When set_kind_render_targetでkind値・pathVars・path・deployが与えられたとき、システムはx-render-target.pathVars/path/deployそれぞれのkind別dictに、そのkind値のエントリを追加する shall。",
         "While 対象のkind値のエントリが既にpathVars・path・deployの全てで指定した値と一致しているとき、set_kind_render_targetは無変更で成功する shall。",
         "If set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でないとき、システムはUNSUPPORTED_RENDER_TARGET_SHAPEエラーを返し書き込みを拒否する shall。",
-        "When set_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。"
+        "When set_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。",
+        "When remove_fieldでブロック名・項目パスが与えられたとき、システムはその項目をキーごと取り除く shall（値をnullにするのではなく、キー自体を消す）。",
+        "While remove_fieldの対象項目が既に存在しないとき、remove_fieldは無変更で成功する shall。",
+        "If remove_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。",
+        "When remove_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。"
       ]
     },
     "errors": {
@@ -435,6 +439,38 @@
           "viewpoint": "set_field: defNameにnullを渡すと$defsではなくschemaのルート直下（$id・properties.schemaRef.const等）を対象にできる",
           "gherkin": "Scenario: set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える\n  Given defNameにnull・ルート直下のドットパス・新しい値\n  When set_fieldを実行する\n  Then $defsではなくschemaのルート直下の値が書き換わる",
           "covers": "受け入れ基準: set_fieldのdefName=nullによるルート直下対象化"
+        },
+        {
+          "name": "項目をキーごと取り除く",
+          "category": "正常系",
+          "viewpoint": "remove_field：値をnullにするのではなくキー自体を消す",
+          "gherkin": "Scenario: 項目をキーごと取り除く\n  Given ブロック名と項目パス\n  When remove_fieldを実行する\n  Then その項目はキーごと消える\n  And 同じ階層の他の項目は残る",
+          "covers": "受け入れ基準: remove_fieldは項目をキーごと取り除く",
+          "operation": "remove_field"
+        },
+        {
+          "name": "無い項目を取り除いても成功する",
+          "category": "境界値",
+          "viewpoint": "remove_field：対象が既に無い状態を失敗として扱わない",
+          "gherkin": "Scenario: 無い項目を取り除いても成功する\n  Given 既に存在しない項目パス\n  When remove_fieldを実行する\n  Then 無変更で成功する",
+          "covers": "受け入れ基準: 対象項目が既に存在しないとき無変更で成功する",
+          "operation": "remove_field"
+        },
+        {
+          "name": "無いブロックの項目は取り除けない",
+          "category": "異常系",
+          "viewpoint": "remove_field：対象ブロックの不在を書き込み前に拒む",
+          "gherkin": "Scenario: 無いブロックの項目は取り除けない\n  Given Schemaに存在しないブロック名\n  When remove_fieldを実行する\n  Then BLOCK_NOT_FOUNDエラーが返り、書き込みは行われない",
+          "covers": "受け入れ基準: 対象ブロックが存在しないときBLOCK_NOT_FOUND",
+          "operation": "remove_field"
+        },
+        {
+          "name": "ルート直下の項目も取り除ける",
+          "category": "正常系",
+          "viewpoint": "remove_field：defNameがnullのときの解決先",
+          "gherkin": "Scenario: ルート直下の項目も取り除ける\n  Given defNameとしてnull\n  When remove_fieldを実行する\n  Then $defsではなくschemaのルート直下の項目が消える",
+          "covers": "受け入れ基準: defNameがnullのときルート直下を対象にする",
+          "operation": "remove_field"
         }
       ]
     },
@@ -449,7 +485,8 @@
         "When 同じadd_def操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
         "When 同じadd_kind_branch操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
         "When 同じset_kind_render_target操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。"
+        "While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。",
+        "When 同じremove_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。"
       ]
     },
     "guaranteeScenarios": {
@@ -512,6 +549,12 @@
           "viewpoint": "べき等性：同じset_kind_render_target操作を複数回実行しても結果が変わらない",
           "gherkin": "Scenario: set_kind_render_targetの複数回実行はべき等である\n  Given 同一のset_kind_render_target操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
           "covers": "操作保証: set_kind_render_targetのべき等性"
+        },
+        {
+          "name": "remove_fieldの複数回実行はべき等である",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じremove_field操作を複数回実行しても結果が変わらない",
+          "gherkin": "Scenario: remove_fieldの複数回実行はべき等である\n  Given 同一のremove_field操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である"
         }
       ]
     },
@@ -550,6 +593,10 @@
         {
           "operation": "set_kind_render_target",
           "summary": "x-render-target.pathVars/path/deployの、kind別dict形式の各マップに、新しいkind値のエントリを追加する"
+        },
+        {
+          "operation": "remove_field",
+          "summary": "既存ブロックの指定した項目を、キーごと取り除く"
         }
       ]
     },

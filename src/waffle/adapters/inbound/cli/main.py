@@ -248,7 +248,7 @@ def scaffold(
 
 @app.command("patch-schema")
 def patch_schema(
-    operation: str = typer.Option(..., "--operation", help="add_block / rename_block / set_field / remove_block / add_def / add_kind_branch / create_version"),
+    operation: str = typer.Option(..., "--operation", help="add_block / rename_block / set_field / remove_field / remove_block / add_def / add_kind_branch / create_version"),
     schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref"),
     params: str = typer.Option(None, "--params", help="operation固有パラメータのJSONオブジェクト"),
 ) -> None:

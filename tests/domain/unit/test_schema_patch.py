@@ -696,3 +696,66 @@ def test_dump_matches_json_dumps_indent2():
     """
     schema = _base_schema()
     assert schema_patch.dump(schema) == json.dumps(schema, indent=2, ensure_ascii=False) + "\n"
+
+
+# --- remove_field ---
+
+def test_remove_field_deletes_the_key_itself():
+    """
+    Given def内のドットパスが指すフィールド
+    When remove_fieldを実行する
+    Then そのキー自体が消える（nullが残らない）
+    """
+    schema = _base_schema()
+    result = schema_patch.remove_field(schema, "TitleBlock", "properties.title.type")
+    assert "type" not in result["$defs"]["TitleBlock"]["properties"]["title"]
+
+
+def test_remove_field_leaves_siblings_untouched():
+    """
+    Given 同じ階層に複数のフィールドがあるdef
+    When 片方をremove_fieldする
+    Then もう片方は残る
+    """
+    schema = _base_schema()
+    schema = schema_patch.set_field(schema, "TitleBlock", "properties.title.x-note", "残る")
+    result = schema_patch.remove_field(schema, "TitleBlock", "properties.title.type")
+    assert result["$defs"]["TitleBlock"]["properties"]["title"]["x-note"] == "残る"
+
+
+def test_remove_field_is_idempotent():
+    """
+    Given 既に存在しないフィールド
+    When remove_fieldを実行する
+    Then 出力は変更前と完全に同一である
+    """
+    schema = _base_schema()
+    once = schema_patch.remove_field(schema, "TitleBlock", "properties.title.type")
+    twice = schema_patch.remove_field(once, "TitleBlock", "properties.title.type")
+    assert twice == once
+
+
+def test_remove_field_rejects_unknown_def():
+    """
+    Given $defsに無いdef名
+    When remove_fieldを実行する
+    Then BlockNotFoundErrorになる
+    """
+    schema = _base_schema()
+    try:
+        schema_patch.remove_field(schema, "NoSuchBlock", "properties.title.type")
+        raise AssertionError("BlockNotFoundError にならなかった")
+    except schema_patch.BlockNotFoundError:
+        pass
+
+
+def test_remove_field_reaches_root_when_def_name_is_none():
+    """
+    Given def名にNoneを渡す
+    When remove_fieldを実行する
+    Then $defsの外側にあるルート直下のフィールドが消える
+    """
+    schema = _base_schema()
+    schema = schema_patch.set_field(schema, None, "x-temporary", "消す")
+    result = schema_patch.remove_field(schema, None, "x-temporary")
+    assert "x-temporary" not in result

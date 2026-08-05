@@ -1,3 +1,11 @@
+---
+id: "uc-patch-schema"
+type: "usecase"
+title: "Schema定義ファイルを安全に部分編集する：PatchSchema"
+description: "既存のSchema定義ファイルに対し、新規ブロック追加（add_block）・識別子リネーム（rename_block）・既存ブロックの1フィールド書き換え（set_field）という構造化操作を、対象外の箇所を一切変更せず（最小diff）、後方互換チェック・JSON Schema構文検証を通過した場合のみ適用する。AIはブロック定義・識別子名・書き換える値だけを与え、schemaファイル内の他の記述には一切触れない。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # Schema定義ファイルを安全に部分編集する：PatchSchema
 
 ## 概要
@@ -40,6 +48,7 @@ Orchestrator（HarnessAgent）
 | `add_kind_branch` | discriminatorフィールドのenumに新しいkind値を追加し、ルート直下のkind分岐に新しいブランチを追加する |
 | `create_version` | 既存schema（fromSchemaRef）を複製し、editsを適用した新しいschema版ファイル（schemaRef）を作る。新版はまだ未公開のためbackward-compatチェックの対象外 |
 | `set_kind_render_target` | x-render-target.pathVars/path/deployの、kind別dict形式の各マップに、新しいkind値のエントリを追加する |
+| `remove_field` | 既存ブロックの指定した項目を、キーごと取り除く |
 
 ---
 
@@ -108,6 +117,10 @@ sequenceDiagram
 - While 対象のkind値のエントリが既にpathVars・path・deployの全てで指定した値と一致しているとき、set_kind_render_targetは無変更で成功する shall。
 - If set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でないとき、システムはUNSUPPORTED_RENDER_TARGET_SHAPEエラーを返し書き込みを拒否する shall。
 - When set_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。
+- When remove_fieldでブロック名・項目パスが与えられたとき、システムはその項目をキーごと取り除く shall（値をnullにするのではなく、キー自体を消す）。
+- While remove_fieldの対象項目が既に存在しないとき、remove_fieldは無変更で成功する shall。
+- If remove_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。
+- When remove_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。
 
 ---
 
@@ -121,6 +134,7 @@ sequenceDiagram
 - When 同じadd_kind_branch操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
 - When 同じset_kind_render_target操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
 - While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。
+- When 同じremove_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
 
 ---
 
@@ -545,6 +559,59 @@ Scenario: set_fieldはdefNameにnullを渡すとschemaのルート直下を書�
   Then $defsではなくschemaのルート直下の値が書き換わる
 ```
 
+### 項目をキーごと取り除く
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | remove_field：値をnullにするのではなくキー自体を消す |
+
+```gherkin
+Scenario: 項目をキーごと取り除く
+  Given ブロック名と項目パス
+  When remove_fieldを実行する
+  Then その項目はキーごと消える
+  And 同じ階層の他の項目は残る
+```
+
+### 無い項目を取り除いても成功する
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | remove_field：対象が既に無い状態を失敗として扱わない |
+
+```gherkin
+Scenario: 無い項目を取り除いても成功する
+  Given 既に存在しない項目パス
+  When remove_fieldを実行する
+  Then 無変更で成功する
+```
+
+### 無いブロックの項目は取り除けない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | remove_field：対象ブロックの不在を書き込み前に拒む |
+
+```gherkin
+Scenario: 無いブロックの項目は取り除けない
+  Given Schemaに存在しないブロック名
+  When remove_fieldを実行する
+  Then BLOCK_NOT_FOUNDエラーが返り、書き込みは行われない
+```
+
+### ルート直下の項目も取り除ける
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | remove_field：defNameがnullのときの解決先 |
+
+```gherkin
+Scenario: ルート直下の項目も取り除ける
+  Given defNameとしてnull
+  When remove_fieldを実行する
+  Then $defsではなくschemaのルート直下の項目が消える
+```
+
 ---
 
 ## 操作保証シナリオ
@@ -649,6 +716,19 @@ Scenario: 整形契約に従う既存箇所は書き込み後も不変である
 ```gherkin
 Scenario: set_kind_render_targetの複数回実行はべき等である
   Given 同一のset_kind_render_target操作
+  When 2回連続で実行する
+  Then 2回目の実行結果は1回目と完全に同一である
+```
+
+### remove_fieldの複数回実行はべき等である
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | べき等性：同じremove_field操作を複数回実行しても結果が変わらない |
+
+```gherkin
+Scenario: remove_fieldの複数回実行はべき等である
+  Given 同一のremove_field操作
   When 2回連続で実行する
   Then 2回目の実行結果は1回目と完全に同一である
 ```

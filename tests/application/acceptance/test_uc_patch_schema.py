@@ -733,3 +733,81 @@ def test_unsupported_render_target_shape_is_rejected():
     assert isinstance(result, Err), result
     assert result.details[0] == "UNSUPPORTED_RENDER_TARGET_SHAPE"
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
+
+
+# --- remove_field ---
+
+def test_項目をキーごと取り除く():
+    """
+    Scenario: 項目をキーごと取り除く
+    Given ブロック名と項目パス
+    When remove_fieldを実行する
+    Then その項目はキーごと消える
+    And 同じ階層の他の項目は残る
+    """
+    _engine().run("set_field", {
+        "schemaRef": _SCHEMA_REF, "defName": "TitleBlock",
+        "fieldPath": "properties.title.description", "value": "残る"})
+
+    result = _engine().run("remove_field", {
+        "schemaRef": _SCHEMA_REF, "defName": "TitleBlock",
+        "fieldPath": "properties.title.type"})
+
+    assert isinstance(result, Ok), result
+    written = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
+    title = written["$defs"]["TitleBlock"]["properties"]["title"]
+    assert "type" not in title          # nullではなく、キーごと消える
+    assert title["description"] == "残る"
+
+
+def test_無い項目を取り除いても成功する():
+    """
+    Scenario: 無い項目を取り除いても成功する
+    Given 既に存在しない項目パス
+    When remove_fieldを実行する
+    Then 無変更で成功する
+    """
+    before = _FIXTURE_PATH.read_text(encoding="utf-8")
+
+    result = _engine().run("remove_field", {
+        "schemaRef": _SCHEMA_REF, "defName": "TitleBlock",
+        "fieldPath": "properties.title.存在しない項目"})
+
+    assert isinstance(result, Ok), result
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
+
+
+def test_無いブロックの項目は取り除けない():
+    """
+    Scenario: 無いブロックの項目は取り除けない
+    Given Schemaに存在しないブロック名
+    When remove_fieldを実行する
+    Then BLOCK_NOT_FOUNDエラーが返り、書き込みは行われない
+    """
+    before = _FIXTURE_PATH.read_text(encoding="utf-8")
+
+    result = _engine().run("remove_field", {
+        "schemaRef": _SCHEMA_REF, "defName": "NoSuchBlock",
+        "fieldPath": "properties.title.type"})
+
+    assert isinstance(result, Err)
+    assert result.details == ["BLOCK_NOT_FOUND"]
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == before
+
+
+def test_ルート直下の項目も取り除ける():
+    """
+    Scenario: ルート直下の項目も取り除ける
+    Given defNameとしてnull
+    When remove_fieldを実行する
+    Then $defsではなくschemaのルート直下の項目が消える
+    """
+    _engine().run("set_field", {
+        "schemaRef": _SCHEMA_REF, "defName": None,
+        "fieldPath": "x-一時的な印", "value": "消す"})
+
+    result = _engine().run("remove_field", {
+        "schemaRef": _SCHEMA_REF, "defName": None, "fieldPath": "x-一時的な印"})
+
+    assert isinstance(result, Ok), result
+    assert "x-一時的な印" not in json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))

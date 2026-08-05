@@ -266,3 +266,24 @@ def test_set_kind_render_target_is_idempotent():
 
     assert isinstance(result, Ok), result
     assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
+
+
+def test_remove_fieldの複数回実行はべき等である():
+    """
+    Scenario: remove_fieldの複数回実行はべき等である
+    Given 同一のremove_field操作
+    When 2回連続で実行する
+    Then 2回目の実行結果は1回目と完全に同一である
+    """
+    params = {
+        "schemaRef": _SCHEMA_REF,
+        "defName": "TitleBlock",
+        "fieldPath": "properties.title.type",
+    }
+    _engine().run("remove_field", params)
+    after_first = _FIXTURE_PATH.read_text(encoding="utf-8")
+
+    result = _engine().run("remove_field", params)
+
+    assert isinstance(result, Ok), result
+    assert _FIXTURE_PATH.read_text(encoding="utf-8") == after_first
