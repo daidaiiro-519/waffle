@@ -93,7 +93,7 @@ def test_返信がどれへの返信かが分かる():
 
 
 def test_差し替えの区切りが並びに現れる():
-    """どの指摘が差し替え前のものかを読み取れるようにする"""
+    """差し替えの区切りも、反応と同じ並びに1件として載る"""
     deps, aid = setup()
     post(deps, aid, 1700000001, "佐藤", "直してほしい", "revise")
     build(deps, ReplaceArtifactContent).run(ME, aid, HTML.replace("本文", "直した"))

@@ -138,7 +138,13 @@ def test_一覧は公開中と停止中を区別して返す():
 # ── 差し替え ────────────────────────────────────────────
 
 def test_差し替えてもURLとトークンの同一性が保たれる():
-    """Given 公開済み / When 差し替える / Then IDもトークンも変わらない"""
+    """
+    Scenario: 差し替えても共有URLは変わらない
+    Given 共有アーティファクトAの共有URLが閲覧者へ渡されている
+    When 中身を差し替える
+    Then 共有URLは変わらない
+    And 閲覧者は同じ共有URLで新しい中身を見られる
+    """
     deps, r = setup()
     before = deps.keys.get(f"token:{r['artifactId']}")
 
@@ -150,7 +156,13 @@ def test_差し替えてもURLとトークンの同一性が保たれる():
 
 
 def test_差し替えると区切りの記録が反応の並びに残る():
-    """これより前の指摘が差し替え前のものだと読み取れるようにする"""
+    """
+    Scenario: 差し替えてもコメントが残る
+    Given 共有アーティファクトAに3件のコメントが集まっている
+    When 中身を差し替える
+    Then 3件のコメントはいずれも残っている
+    And 差し替えが行われた時点が区切りとして読み取れる
+    """
     deps, r = setup()
     build(deps, ReplaceArtifactContent).run(ME, r["artifactId"], HTML.replace("本文", "直した"))
 
@@ -197,7 +209,12 @@ def test_停止すると開けなくなるがデータは残る():
 
 
 def test_再開すると止める前の閲覧トークンがそのまま使える():
-    """止めるのは全ての経路を一度に閉じる操作で、渡した相手を選び直す操作ではない"""
+    """
+    Scenario: 再開しても期限内の閲覧トークンはそのまま使える
+    Given 公開を止めた共有アーティファクトと、期限内で無効にされていない閲覧トークン
+    When 公開を再開する
+    Then その閲覧トークンで開ける
+    """
     deps, r = setup()
     before = deps.keys.get(f"token:{r['artifactId']}")
     build(deps, SuspendArtifact).run(ME, r["artifactId"])
@@ -254,7 +271,12 @@ def test_外してもアーティファクト自体は生き続ける():
 
 
 def test_中身に書いた分類の目印では所属できない():
-    """所属は人の明示的な操作でしか成立しない"""
+    """
+    Scenario: 分類の目印を書き換えても見られる相手は増えない
+    Given 共有アーティファクトAはどのプロジェクトにも所属していない
+    When 別のプロジェクトの名前を分類の目印として書いた中身へ差し替える
+    Then そのプロジェクトの閲覧トークンでは開けないままである
+    """
     deps, r, pid = with_project("PERSONAL")
     tagged = HTML.replace("</head>", '<meta name="tags" content="ppp"></head>')
 
