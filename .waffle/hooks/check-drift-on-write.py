@@ -22,13 +22,11 @@ from __future__ import annotations
 
 import json
 import os
+import fnmatch
 import re
 import subprocess
 import sys
 
-_USECASE_IMPL = re.compile(r"src/waffle/application/usecases/.*\.py$")
-_ENTITY_IMPL = re.compile(r"src/waffle/domain/entities/.*\.py$")
-_SERVICE_IMPL = re.compile(r"src/waffle/domain/services/.*\.py$")
 _BASH_FILL_PATH = re.compile(r"waffle\s+scaffold\s+--operation\s+fill\b.*?--path\s+(\S+)")
 # tests/ という区画の中にありながら、突き合わせの対象になる配置に無いもの。
 # 対象外であることを黙って見過ごさないために見る。
@@ -36,19 +34,15 @@ _BASH_FILL_PATH = re.compile(r"waffle\s+scaffold\s+--operation\s+fill\b.*?--path
 # ファイル名だけで判定してはいけない。test_ で始まる名前のソースファイル
 # （例: ports/test_function_extractor.py）はテストではなく、実際に誤検知した
 _TEST_BASENAME = re.compile(r"(?:^|/)tests?/(?:.*/)?test_[^/]*\.py$")
-# 実装の配置ルールを持つ architecture document と、それが実現する範囲。
-#
-# 実装の置き場所は architecture document に1つだけ定義されており、境界づけ
-# られたコンテキストからスタックを辿る手段がまだ無い。範囲を絞らないと、
-# 別のスタックに載っているコンテキスト（実装を伴うSkill）の集約が
-# 「実装が無い」と誤って報告される——実際にはあり、探す場所が違うだけ。
-#
-# 絞っていること自体は静的な既知の事実なので、書き込みのたびには報告しない
-# （毎回鳴る警報は鳴らない警報と同じになる）。この制限は
-# .waffle/memory/ に作業項目として記録してある
-ARCHITECTURE_REF = "architecture-waffle"
-
 _SPEC_FILE = re.compile(r"\.waffle/documents/specs/.*/(?:usecase|aggregate)/[^/]+\.json$")
+
+# 概念ごとに、その概念のずれを見る検査。どの概念がどこに置かれるかは
+# architecture が宣言しており、ここには書かない
+_CHECKS_BY_CONCEPT = {
+    "usecase": ("check-usecase-class-drift", "check-operation-drift"),
+    "aggregate": ("check-aggregate-class-drift",),
+    "domain-service": ("check-domain-service-drift",),
+}
 
 # 規約documentの名前は、それが従うアーキテクチャと接尾辞を共有する。
 # この対応をここで推測せず、配置を宣言している規約そのものから引く
@@ -71,16 +65,20 @@ def _relative(file_path: str) -> str:
         return file_path
 
 
-def _architecture_for(rel_path: str) -> str:
+def _architecture_for(rel_path: str) -> str | None:
     """そのテストの配置を宣言している規約を探し、対応するアーキテクチャを返す。
 
     アーキテクチャは1つではない（このリポジトリ自身と、出荷物である
     artifact-share は別の配置ルールを持つ）。1つに決め打つと、片方の
     テストは何を書いても「どのspecにも対応が無い」と報告され続ける。
+
+    どの規約も宣言していない道なら None を返す。既定のアーキテクチャへ
+    寄せて答えを作らない——見当違いの相手と突き合わせた結果は、
+    突き合わせ先が無いことより質が悪い。
     """
     directory = os.path.dirname(rel_path)
     if not directory:
-        return ARCHITECTURE_REF
+        return None
     data = _run_waffle("query-collection", "--operation", "grep_documents",
                        "--path", ".waffle/documents/coding",
                        "--pattern", re.escape(directory + "/"))
@@ -93,7 +91,79 @@ def _architecture_for(rel_path: str) -> str:
         # 宣言そのものと一致した規約だけを、その配置の持ち主とみなす
         if any(str(h.get("value", "")).rstrip("/") == directory for h in hits):
             return "architecture-" + doc_id[len(_TEST_STANDARD):]
-    return ARCHITECTURE_REF
+    return None
+
+
+def _architecture_of_spec(spec_path: str) -> str | None:
+    """その仕様が属するコンテキストの実装を受け持つアーキテクチャを返す。
+
+    どのコンテキストを受け持つかは architecture の coveredContexts が宣言する。
+    対をここに書くと、宣言を変えたときフックだけが古い範囲を見続ける。
+    """
+    parts = _relative(spec_path).split("/")
+    if "specs" not in parts:
+        return None
+    context = parts[parts.index("specs") + 1]
+    for ref in _architecture_refs():
+        data = _run_waffle("query", "--operation", "query_path",
+                           "--path", f".waffle/documents/coding/{ref}.json",
+                           "--expression", "@")
+        for block in (data or {}).get("results", []):
+            if block["blockKey"] == "coveredContexts":
+                if context in block["value"].get("items", []):
+                    return ref
+    return None
+
+
+def _architecture_refs() -> list[str]:
+    """宣言されているアーキテクチャの名前を集める。中身はここでは読まない。"""
+    coding = os.path.join(_project_root(), ".waffle", "documents", "coding")
+    try:
+        names = os.listdir(coding)
+    except OSError:  # pragma: no cover — 規約の置き場所が無い環境
+        return []
+    return sorted(n.removesuffix(".json") for n in names
+                  if n.startswith("architecture-") and n.endswith(".json"))
+
+
+def _same_place(directory: str, source_root: str, placement: str) -> bool:
+    """書かれた道が、宣言された配置そのものかを判定する。
+
+    sourceRoot は {package} のような差し替え箇所を持つことがある。
+    そこはどの名前でも一致させる（実際の名前は言語側の都合で決まり、
+    どの概念を置くかという宣言とは別の話）。
+    """
+    declared = f"{source_root.rstrip('/')}/{placement.strip('/')}"
+    return fnmatch.fnmatch(directory, re.sub(r"\{[^}]+\}", "*", declared))
+
+
+def _concepts_at(rel_path: str) -> list[tuple[str, str]]:
+    """その道に何を置くと宣言されているかを、architecture から引く。
+
+    概念と配置の対応は architecture document が宣言しており、検知本体も
+    そこから導いている（application/services/source_root_resolution.py）。
+    フックだけが同じ知識を別の形で持つと、アーキテクチャを増やしたときに
+    片方だけが古くなる。実際にそうなっていた——出荷物側の実装は、
+    書いても一度も検査されていなかった。
+
+    Returns:
+        (概念, architectureRef) の一覧。宣言のどれとも一致しなければ空。
+    """
+    directory = os.path.dirname(rel_path)
+    if not directory:
+        return []
+    found: list[tuple[str, str]] = []
+    for ref in _architecture_refs():
+        data = _run_waffle("query", "--operation", "query_path",
+                           "--path", f".waffle/documents/coding/{ref}.json",
+                           "--expression", "@")
+        blocks = {b["blockKey"]: b["value"] for b in (data or {}).get("results", [])}
+        source_root = (blocks.get("layout") or {}).get("sourceRoot", "")
+        for item in (blocks.get("conceptPlacement") or {}).get("items", []):
+            for placement in item.get("placements", []):
+                if _same_place(directory, source_root, placement.get("path", "")):
+                    found.append((item["concept"], ref))
+    return found
 
 
 def _run_waffle(*args: str) -> dict | None:
@@ -174,36 +244,40 @@ def check(payload: dict) -> str | None:
         if reason:
             unpaired.append(f"{label} を実行できませんでした（{reason}）")
 
-    # 実装の配置は architecture document から導く。引数なしで呼ぶと
-    # MISSING_PARAM が返るだけで、この4つは書かれて以来ずっと空振りしていた
-    # 仕様側の範囲は architecture の coveredContexts が宣言する。
-    # 対をここに書くと、宣言を変えたときフックだけが古い範囲を見続ける。
-    arch = ("--architectureRef", ARCHITECTURE_REF)
-
-
-    if _USECASE_IMPL.search(file_path):
-        _collect("check-usecase-class-drift", "usecase-class-drift", *arch)
-        _collect("check-operation-drift", "operation-drift", *arch)
-
-    if _ENTITY_IMPL.search(file_path):
-        _collect("check-aggregate-class-drift", "aggregate-class-drift", *arch)
-
-    if _SERVICE_IMPL.search(file_path):
-        _collect("check-domain-service-drift", "domain-service-drift", *arch)
+    # 書かれた道に何を置くと宣言されているかを引き、その概念の検査だけを回す。
+    # どの道にどの概念が住むかをここに書かない——それは architecture の宣言であり、
+    # 検知本体も同じ宣言から導いている
+    if file_path:
+        fired: set[tuple[str, str]] = set()
+        for concept, ref in _concepts_at(_relative(file_path)):
+            for cmd in _CHECKS_BY_CONCEPT.get(concept, ()):
+                if (cmd, ref) in fired:
+                    continue
+                fired.add((cmd, ref))
+                _collect(cmd, f"{concept}:{ref}", "--architectureRef", ref)
 
     # どのspecに対応するかは規約が宣言している。フックは推測せず、
     # 分かっている側だけを渡して残りを検査側に解決させる
     if _TEST_BASENAME.search(file_path):
         rel = _relative(file_path)
-        _collect("check-scenario-drift", "scenario-drift",
-                 "--testPath", rel,
-                 "--architectureRef", _architecture_for(rel))
+        ref = _architecture_for(rel)
+        if ref:
+            _collect("check-scenario-drift", "scenario-drift",
+                     "--testPath", rel, "--architectureRef", ref)
+        else:
+            unpaired.append(f"{rel} は、どの規約もテストの置き場所として"
+                            "宣言していない道にあります")
 
     fm = _BASH_FILL_PATH.search(command)
     spec_path = fm.group(1).strip("'\"") if fm else ""
     if spec_path and _SPEC_FILE.search(spec_path):
-        _collect("check-scenario-drift", f"scenario-drift:{spec_path}",
-                 "--specPath", spec_path, *arch)
+        ref = _architecture_of_spec(spec_path)
+        if ref:
+            _collect("check-scenario-drift", f"scenario-drift:{spec_path}",
+                     "--specPath", spec_path, "--architectureRef", ref)
+        else:
+            unpaired.append(f"{spec_path} が属するコンテキストの実装を、"
+                            "どのアーキテクチャも受け持つと宣言していません")
 
     target = file_path or spec_path
     if reports:
