@@ -26,7 +26,8 @@ from application.ports import Caller  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
 
-from test_manage import HTML, FakeKeyStore, FakeStore  # noqa: E402
+from fakes import FakeKeyStore, FakeStore  # noqa: E402
+from test_manage import HTML  # noqa: E402
 
 ME = Caller("publisher-1")
 SOMEONE_ELSE = Caller("publisher-2")

@@ -15,6 +15,8 @@ import json
 
 import pytest
 
+from fakes import FakeKeyStore, FakeStore
+
 from usecase_builder import build  # noqa: E402
 from application.usecases.assign_artifact_to_project import AssignArtifactToProject  # noqa: E402
 from application.usecases.control_project_access import ControlProjectAccess  # noqa: E402
@@ -32,35 +34,6 @@ from domain.shared_artifact import MAX_PROJECTS  # noqa: E402  # 旧 MAX_PROJECT
 from domain.project import PERSONAL  # noqa: E402
 from domain.project import SHARED  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
-
-
-class FakeStore:
-    def __init__(self, objects=None):
-        self.objects = dict(objects or {})
-
-    def put(self, key, body, content_type):
-        self.objects[key] = {"body": body, "content_type": content_type}
-
-    def get(self, key):
-        if key not in self.objects:
-            raise KeyError(key)
-        return self.objects[key]["body"]
-
-    def list(self, prefix):
-        return [k for k in sorted(self.objects) if k.startswith(prefix)]
-
-
-class FakeKeyStore:
-    def __init__(self, keys=None):
-        self.keys = dict(keys or {})
-
-    def put(self, key, value):
-        self.keys[key] = value
-
-    def get(self, key):
-        if key not in self.keys:
-            raise KeyError(key)
-        return self.keys[key]
 
 
 HTML = """<!doctype html><html><head>

@@ -21,7 +21,7 @@ from application.ports import Caller  # noqa: E402
 from shared.errors import PublisherError  # noqa: E402
 
 
-from test_manage import FakeKeyStore, FakeStore  # noqa: E402
+from fakes import FakeKeyStore, FakeStore  # noqa: E402
 
 ADMIN = Caller("admin-1", is_admin=True)
 SOMEONE = Caller("publisher-2")

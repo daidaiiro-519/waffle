@@ -26,7 +26,7 @@ from domain.project import SHARED  # noqa: E402
 from shared.errors import ProjectError  # noqa: E402
 
 
-from test_manage import FakeKeyStore, FakeStore  # noqa: E402
+from fakes import FakeKeyStore, FakeStore  # noqa: E402
 
 X = Caller("publisher-x")
 Y = Caller("publisher-y")
