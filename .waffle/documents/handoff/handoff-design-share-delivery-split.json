@@ -1,0 +1,347 @@
+{
+  "documentId": "handoff-design-share-delivery-split",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "デザインを作る側から配る仕組みを切り離し、共通の記述形式でつなぐ作業の引き継ぎ：handoff-design-share-delivery-split"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "bc-artifact-share（文脈マップ）・uc-publish-artifact・design-share（Skill仕様）"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "記述形式の所有者を先に決める",
+          "consideration": "この記述形式（id・type・title・description・tags）は、書く側と読む側の実装２箇所の暗黙の一致として存在しており、仕様としてどこにも所有されていない。内部モデルから切り離されていない状態は『公開された言語』ではなく『モデルの共有』であり、話者を３つ目に増やす前に項目レベルで書き下す必要がある。所有者は読む側（入力の形を決めているサービス提供側）とする。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "共通の記述形式に従うことは依存を消さない",
+          "consideration": "公開された言語という手法の効果は依存を消すことではなく、依存先を内部実装から契約へ移すことにある。「依存ではない」と言い切ると、項目名が1つ変わったときに三者が同時に壊れるという事実が設計判断から消える。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "実行時の識別不要を、設計時の記録不要とすり替えない",
+          "consideration": "配る側が生成元を知らないのは公開された言語が正しく機能している証拠だが、それを理由に文脈マップへ書かないと、話者数と影響範囲が記録されない。次に記述形式を変えるとき「壊れるのは読む側だけ」という誤った前提で作業され、作る側が黙って壊れる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "『採用』は作る側の語彙に属する",
+          "consideration": "複数案から1案を採用する行為は中身への評価判断であり、中身を解釈しない配る側には属さない（『区切りの記録』は差し替え時の印であって採用の記録ではない）。移し先が無いのではなく、作る側の語彙として残し、記録先をDESIGN.mdの記述に留めて仕組みは作らない。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "関係の名前は上下で別々に呼ぶ",
+          "consideration": "上流側から見れば『公開された言語』、下流側から見れば『従属する（Conformist）』であり、単一の名前で呼ぶと変換層を置くか否かが未定のまま残る。作る側に腐敗防止層は置かない（５項目は成果物の外皮のラベル付けにすぎず、中核モデルの表現に干渉しないため）。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "公開の技術的詳細は配る側が所有する",
+          "consideration": "認証方式・証明のヘッダ名・操作の振り分けはすべて配る側の技術的詳細であり、この形状に合わせたクライアントを作る側が書くのは『アダプター側でポートを定義する』アンチパターンにあたる。公開を行う窓口は配る側が所有し、作る側が知るのは「HTMLを渡すとURLが返る」ことだけにする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "入口をひとつに保つ制約の読み方",
+          "consideration": "この制約が禁じているのは「クラウドの権限を持つ人の手元から、招待の関門を迂回して操作できてしまうこと」である。本人確認を経る公開窓口はこの禁止に抵触しない（関門は同じままで、そこを通る窓口が増えるだけ）。一方で、クラウドの権限で動く既存の環境構築CLIのサブコマンドとして公開を足すのは、この禁止に正面から抵触する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "記述形式への適合は依存方向の恒久ルール違反にあたらない",
+          "consideration": "恒久ルールが禁じているのは「特定の外部システムの有無を実行時に判定して振る舞いを分ける」ことであり、無条件に従う出力フォーマットは別物。ただし作る側のSKILL.md・knowledgeに「配る側が読むから」という理由を書いてはならない——書いた瞬間に依存が文書上で言語化され、次の変更者が分岐を書き始める。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "識別子を２種類の語として分ける",
+          "consideration": "内容識別子（何であるか＝作る側が決める）と配信識別子（どこでどう配られるか＝配る側が発行する）を別の語として定義する。同じ「識別子」で呼び続けると実装時に必ず再統合される。すべてを配る側が持つ設計では、生成物は公開されるまで自分が何であるかを名乗れず、差し替えが成立しなくなる。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "記述形式の書き下し先には既存の前例がある",
+          "consideration": "配る側にはすでに「説明・形式・ケース」を持ち、両側のテストが唯一の共通点として読む契約ファイルの前例がある（閲覧トークンの記録形式）。記述形式も同型なので、同じ場所・同じ形で置き、新しい置き場所を発明しない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "認証呼び出しの重複を後追いでなく設計時点で避ける",
+          "consideration": "管理画面に既に本人確認の呼び出しがあるため、公開窓口を新設すると同じ理由で変更される箇所が2つに分散する。実例が２件揃っているので、後から共通化するのではなく初めから一箇所にまとめてよい。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "依存の不在を検査できる形にする",
+          "consideration": "作る側のコードに認証方式・証明ヘッダ名・認証フロー名といった語が1つも現れないことを、レビュー時の機械的なチェック項目にする（grepで足りる）。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "雛形を廃して規約へ移す",
+          "consideration": "コメントUIを外した後に残る雛形本体には、規約と独立した変更理由がない（情報のない間接層）。ただし散文の説明だけでは属性名が揺れるため、コピーして使える短い実形の例をSKILL.md内に唯一の出典として置く。雛形ファイルを残してよいのは、機械が読んで検証に使う場合だけ。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "話者数を検知点にする",
+          "consideration": "AIが実装を担う環境では、同じ形式を読み書きする箇所を増やすコストが下がり、「そろそろ契約を切り出すか」という工数由来の検知点が消える。工数に依存しない検知点（同じ形式の読み書きが３箇所目に達したら契約を切り出す等）を設けることを検討する。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "UIモックの採用を状態として管理する仕組みを持たない。採用の事実はDESIGN.mdと成果物フォルダの記述に留める（ddd-advisorの判定に従い、意図して仕組みを作らない）。",
+        "作る側が持っていた配信の機能は復活させない。表示名だけの変更・プロジェクトの削除・プロジェクト単位の取り出し・ローカルとクラウドの同期判定は、配る側に無いままでよい。必要になったときに、配る側自身の機能として別に決める。",
+        "クラウド上の旧い配信基盤の撤去は未実施。撤去を行う手段（旧CLIとその設定）は削除済みのため、履歴から取り出す必要がある。",
+        "本人確認の呼び出しが、管理画面（ブラウザのJavaScript）と手元の受け口（Python）の2箇所にある。別のランタイムなのでコードは共有できない。両方が同じ admin/config.json を読むことで居場所の二重だけは避けてあるが、認証の手順自体の重複は残る。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "書く側",
+          "description": "文書やUIモックを作る側。design-share はDESIGN.mdとUIモックを、bc-waffle は引き継ぎ文書を、どちらも単体で開けるHTMLとして出す。どちらも、配る側のことを知らない。",
+          "nodes": [
+            {
+              "id": "ds",
+              "title": "デザインを作る",
+              "sub": "design-share",
+              "status": "existing"
+            },
+            {
+              "id": "wf",
+              "title": "引き継ぎ文書を描く",
+              "sub": "bc-waffle",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "共通の記述形式",
+          "description": "HTMLの head に置く、それ自身が何であるかを名乗る項目。識別子と種別が必須で、題名・要約・分類の目印は任意。いまは実装２箇所の暗黙の一致として存在しており、ここを文書として立てるのが今回の中心。",
+          "nodes": [
+            {
+              "id": "meta",
+              "title": "自己記述メタデータの取り決め",
+              "sub": "document-meta（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "読む側・配る側",
+          "description": "記述形式を読み、誰が書いたかを問わず公開する側。公開窓口をこちら側が持つことで、本人確認の手順を書く側が知らなくて済む。",
+          "nodes": [
+            {
+              "id": "pub",
+              "title": "公開を呼ぶ窓口",
+              "sub": "新設",
+              "status": "new"
+            },
+            {
+              "id": "api",
+              "title": "管理操作の受け口",
+              "sub": "uc-publish-artifact",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "ds",
+          "to": "pub",
+          "kind": "dependency",
+          "label": "HTMLのパスを渡すとURLが返る（認証の手順を知らない）"
+        },
+        {
+          "from": "pub",
+          "to": "api",
+          "kind": "dependency",
+          "label": "既存の公開操作を呼ぶ"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "作る側が生成したHTMLの head に `<meta name=\"id\" content=\"waffle-lp-hero\">` と `<meta name=\"type\" content=\"UIMock\">` が入っている。",
+        "公開窓口はHTMLのパスを受け取り、本人確認を経て既存の公開操作を呼び、共有URLと閲覧トークンを返す。",
+        "作る側から見えるのは「HTMLのパスを渡すとURLが返る」ことだけで、認証方式の名前はコードに現れない。",
+        "同じモックを作り直して再度渡しても、内容識別子が同じなので見る側には同じものの新しい版として届く。"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "design-share から配信機能を切り離し、作ったものを渡す側と配る側を HTML の自己記述メタデータという共通の記述形式だけでつなぐ。担うのは bc-artifact-share（文脈マップへの話者追加）・uc-publish-artifact（既存の公開操作を呼ぶ窓口の新設）・design-share（作ることだけを担うSkillへの縮小）の3つで、記述形式の書き下しと所有者の確定を含む。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": ".waffle/skills/artifact-share/infra/contract/document-meta.json",
+          "reason": "記述形式を項目レベルで書き下す先（新設）。既存の token-records.json と同じ形式に揃える"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/test_contract.py",
+          "reason": "読む側の実装が契約ファイルと一致するかを突き合わせる（既存ファイルへの追記）"
+        },
+        {
+          "path": "src/waffle/domain/services/handoff_html_template.py",
+          "reason": "書く側のもう一方の出力が契約と一致するかの確認（必要ならテスト追加）"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/scripts/",
+          "reason": "公開窓口の設置先。環境構築CLIのサブコマンドとしては足さない"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/scripts/app/app.js",
+          "reason": "本人確認の呼び出しが既にある箇所。公開窓口との重複をここで解消する"
+        },
+        {
+          "path": ".waffle/documents/skills/design-share.json",
+          "reason": "記述形式の実形の例を置く先。契約ファイル確定後に項目名を突き合わせる"
+        },
+        {
+          "path": ".waffle/documents/specs/bc-artifact-share/bc-artifact-share.json",
+          "reason": "話者の記録は追加済み。契約の所有者を決めた後に文脈マップの文面を見直す可能性がある"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "infra/contract/document-meta.json へ項目レベルで書き下し、所有者を読む側とした。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "依存が残る事実を制約として記録した。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "resolved",
+          "note": "bc-artifact-share の文脈マップに話者を１行追加し、出自を解釈しないことを明記した。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "design-share のガードレールに、採用は記述として残し仕組みを持たないと明記した。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "Handoffには記録したが、文脈マップは上流側の名前だけを持ち、下流側の名前を記録する欄がない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "resolved",
+          "note": "公開の窓口を artifact-share のMCPとして新設した。作る側に認証の手順は現れない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 6,
+          "resolutionStatus": "resolved",
+          "note": "環境を作るCLIのサブコマンドにはせず、別のプログラムとして置いた。資格の違いを architecture の規約へ書いた。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 7,
+          "resolutionStatus": "resolved",
+          "note": "design-share のSKILL.md に配る側の名前を一切書いていない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 8,
+          "resolutionStatus": "open",
+          "note": "作る側の内容識別子は定義済み。配信識別子との対比を語として置く先が未定。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "既存の token-records.json と同じ場所・同じ形で置き、両側の検証がそこを読む。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "別ランタイムのためコードは共有できない。居場所の二重だけを admin/config.json で避け、手順の重複は制約として記録した。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "open",
+          "note": "検査項目の置き場所が未定。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "雛形を削除し、SKILL.md のStep7に実形の例を置いた。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "検知点を設けるかは未決。"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": [
+    "context:artifact-share",
+    "context:design-share"
+  ]
+}

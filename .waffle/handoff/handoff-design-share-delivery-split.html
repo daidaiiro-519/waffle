@@ -1,0 +1,371 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>デザインを作る側から配る仕組みを切り離し、共通の記述形式でつなぐ作業の引き継ぎ：handoff-design-share-delivery-split</title>
+<meta name="id" content="handoff-design-share-delivery-split">
+<meta name="type" content="Handoff">
+<meta name="title" content="デザインを作る側から配る仕組みを切り離し、共通の記述形式でつなぐ作業の引き継ぎ：handoff-design-share-delivery-split">
+<meta name="description" content="design-share から配信機能を切り離し、作ったものを渡す側と配る側を HTML の自己記述メタデータという共通の記述形式だけでつなぐ。担うのは bc-artifact-share（文脈マップへの話者追加）・uc-publish-artifact（既存の公開操作を呼ぶ窓口の新設）・design-share（作ることだけを担うSkillへの縮小）の3つで、記述形式の書き下しと所有者の確定を含む。">
+<meta name="tags" content="context:artifact-share, context:design-share">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>デザインを作る側から配る仕組みを切り離し、共通の記述形式でつなぐ作業の引き継ぎ：handoff-design-share-delivery-split</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>bc-artifact-share（文脈マップ）・uc-publish-artifact・design-share（Skill仕様）</dd>
+      <dt>documentId</dt><dd>handoff-design-share-delivery-split</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 298" width="100%" height="298">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">書く側</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">共通の記述形式</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">読む側・配る側</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-arrow" d="M242.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow dep" d="M242.0,60.0 L242.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="242.0" y="143.0">HTMLのパスを渡すとURLが返る（認証の手順を知らない）</text>
+        <path class="flow-arrow dep" d="M388.0,263.0 L408.0,263.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="257.0">既存の公開操作を呼ぶ</text>
+        
+        <g class="flow-box " transform="translate(96.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">デザインを作る</div>
+              <div class="sub">design-share</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">引き継ぎ文書を描く</div>
+              <div class="sub">bc-waffle</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">自己記述メタデータの取り決め</div>
+              <div class="sub">document-meta（新設）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">公開を呼ぶ窓口</div>
+              <div class="sub">新設</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">管理操作の受け口</div>
+              <div class="sub">uc-publish-artifact</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>書く側</strong>: 文書やUIモックを作る側。design-share はDESIGN.mdとUIモックを、bc-waffle は引き継ぎ文書を、どちらも単体で開けるHTMLとして出す。どちらも、配る側のことを知らない。</p></li><li><p><strong>共通の記述形式</strong>: HTMLの head に置く、それ自身が何であるかを名乗る項目。識別子と種別が必須で、題名・要約・分類の目印は任意。いまは実装２箇所の暗黙の一致として存在しており、ここを文書として立てるのが今回の中心。</p></li><li><p><strong>読む側・配る側</strong>: 記述形式を読み、誰が書いたかを問わず公開する側。公開窓口をこちら側が持つことで、本人確認の手順を書く側が知らなくて済む。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>作る側が生成したHTMLの head に `&lt;meta name=&quot;id&quot; content=&quot;waffle-lp-hero&quot;&gt;` と `&lt;meta name=&quot;type&quot; content=&quot;UIMock&quot;&gt;` が入っている。</p></li><li><p>公開窓口はHTMLのパスを受け取り、本人確認を経て既存の公開操作を呼び、共有URLと閲覧トークンを返す。</p></li><li><p>作る側から見えるのは「HTMLのパスを渡すとURLが返る」ことだけで、認証方式の名前はコードに現れない。</p></li><li><p>同じモックを作り直して再度渡しても、内容識別子が同じなので見る側には同じものの新しい版として届く。</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 5件／実装観点 2件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 4件／実装観点 3件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">4件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">記述形式の所有者を先に決める</div>
+              <div class="entry-consideration">この記述形式（id・type・title・description・tags）は、書く側と読む側の実装２箇所の暗黙の一致として存在しており、仕様としてどこにも所有されていない。内部モデルから切り離されていない状態は『公開された言語』ではなく『モデルの共有』であり、話者を３つ目に増やす前に項目レベルで書き下す必要がある。所有者は読む側（入力の形を決めているサービス提供側）とする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">共通の記述形式に従うことは依存を消さない</div>
+              <div class="entry-consideration">公開された言語という手法の効果は依存を消すことではなく、依存先を内部実装から契約へ移すことにある。「依存ではない」と言い切ると、項目名が1つ変わったときに三者が同時に壊れるという事実が設計判断から消える。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">実行時の識別不要を、設計時の記録不要とすり替えない</div>
+              <div class="entry-consideration">配る側が生成元を知らないのは公開された言語が正しく機能している証拠だが、それを理由に文脈マップへ書かないと、話者数と影響範囲が記録されない。次に記述形式を変えるとき「壊れるのは読む側だけ」という誤った前提で作業され、作る側が黙って壊れる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">『採用』は作る側の語彙に属する</div>
+              <div class="entry-consideration">複数案から1案を採用する行為は中身への評価判断であり、中身を解釈しない配る側には属さない（『区切りの記録』は差し替え時の印であって採用の記録ではない）。移し先が無いのではなく、作る側の語彙として残し、記録先をDESIGN.mdの記述に留めて仕組みは作らない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">関係の名前は上下で別々に呼ぶ</div>
+              <div class="entry-consideration">上流側から見れば『公開された言語』、下流側から見れば『従属する（Conformist）』であり、単一の名前で呼ぶと変換層を置くか否かが未定のまま残る。作る側に腐敗防止層は置かない（５項目は成果物の外皮のラベル付けにすぎず、中核モデルの表現に干渉しないため）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">公開の技術的詳細は配る側が所有する</div>
+              <div class="entry-consideration">認証方式・証明のヘッダ名・操作の振り分けはすべて配る側の技術的詳細であり、この形状に合わせたクライアントを作る側が書くのは『アダプター側でポートを定義する』アンチパターンにあたる。公開を行う窓口は配る側が所有し、作る側が知るのは「HTMLを渡すとURLが返る」ことだけにする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">入口をひとつに保つ制約の読み方</div>
+              <div class="entry-consideration">この制約が禁じているのは「クラウドの権限を持つ人の手元から、招待の関門を迂回して操作できてしまうこと」である。本人確認を経る公開窓口はこの禁止に抵触しない（関門は同じままで、そこを通る窓口が増えるだけ）。一方で、クラウドの権限で動く既存の環境構築CLIのサブコマンドとして公開を足すのは、この禁止に正面から抵触する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">記述形式への適合は依存方向の恒久ルール違反にあたらない</div>
+              <div class="entry-consideration">恒久ルールが禁じているのは「特定の外部システムの有無を実行時に判定して振る舞いを分ける」ことであり、無条件に従う出力フォーマットは別物。ただし作る側のSKILL.md・knowledgeに「配る側が読むから」という理由を書いてはならない——書いた瞬間に依存が文書上で言語化され、次の変更者が分岐を書き始める。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">識別子を２種類の語として分ける</div>
+              <div class="entry-consideration">内容識別子（何であるか＝作る側が決める）と配信識別子（どこでどう配られるか＝配る側が発行する）を別の語として定義する。同じ「識別子」で呼び続けると実装時に必ず再統合される。すべてを配る側が持つ設計では、生成物は公開されるまで自分が何であるかを名乗れず、差し替えが成立しなくなる。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">記述形式の書き下し先には既存の前例がある</div>
+              <div class="entry-consideration">配る側にはすでに「説明・形式・ケース」を持ち、両側のテストが唯一の共通点として読む契約ファイルの前例がある（閲覧トークンの記録形式）。記述形式も同型なので、同じ場所・同じ形で置き、新しい置き場所を発明しない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">認証呼び出しの重複を後追いでなく設計時点で避ける</div>
+              <div class="entry-consideration">管理画面に既に本人確認の呼び出しがあるため、公開窓口を新設すると同じ理由で変更される箇所が2つに分散する。実例が２件揃っているので、後から共通化するのではなく初めから一箇所にまとめてよい。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">依存の不在を検査できる形にする</div>
+              <div class="entry-consideration">作る側のコードに認証方式・証明ヘッダ名・認証フロー名といった語が1つも現れないことを、レビュー時の機械的なチェック項目にする（grepで足りる）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">雛形を廃して規約へ移す</div>
+              <div class="entry-consideration">コメントUIを外した後に残る雛形本体には、規約と独立した変更理由がない（情報のない間接層）。ただし散文の説明だけでは属性名が揺れるため、コピーして使える短い実形の例をSKILL.md内に唯一の出典として置く。雛形ファイルを残してよいのは、機械が読んで検証に使う場合だけ。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">話者数を検知点にする</div>
+              <div class="entry-consideration">AIが実装を担う環境では、同じ形式を読み書きする箇所を増やすコストが下がり、「そろそろ契約を切り出すか」という工数由来の検知点が消える。工数に依存しない検知点（同じ形式の読み書きが３箇所目に達したら契約を切り出す等）を設けることを検討する。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>UIモックの採用を状態として管理する仕組みを持たない。採用の事実はDESIGN.mdと成果物フォルダの記述に留める（ddd-advisorの判定に従い、意図して仕組みを作らない）。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>作る側が持っていた配信の機能は復活させない。表示名だけの変更・プロジェクトの削除・プロジェクト単位の取り出し・ローカルとクラウドの同期判定は、配る側に無いままでよい。必要になったときに、配る側自身の機能として別に決める。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>クラウド上の旧い配信基盤の撤去は未実施。撤去を行う手段（旧CLIとその設定）は削除済みのため、履歴から取り出す必要がある。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>本人確認の呼び出しが、管理画面（ブラウザのJavaScript）と手元の受け口（Python）の2箇所にある。別のランタイムなのでコードは共有できない。両方が同じ admin/config.json を読むことで居場所の二重だけは避けてあるが、認証の手順自体の重複は残る。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/infra/contract/document-meta.json</div>
+              <div class="reason">記述形式を項目レベルで書き下す先（新設）。既存の token-records.json と同じ形式に揃える</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/tests/test_contract.py</div>
+              <div class="reason">読む側の実装が契約ファイルと一致するかを突き合わせる（既存ファイルへの追記）</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/handoff_html_template.py</div>
+              <div class="reason">書く側のもう一方の出力が契約と一致するかの確認（必要ならテスト追加）</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/scripts/</div>
+              <div class="reason">公開窓口の設置先。環境構築CLIのサブコマンドとしては足さない</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/scripts/app/app.js</div>
+              <div class="reason">本人確認の呼び出しが既にある箇所。公開窓口との重複をここで解消する</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/documents/skills/design-share.json</div>
+              <div class="reason">記述形式の実形の例を置く先。契約ファイル確定後に項目名を突き合わせる</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/documents/specs/bc-artifact-share/bc-artifact-share.json</div>
+              <div class="reason">話者の記録は追加済み。契約の所有者を決めた後に文脈マップの文面を見直す可能性がある</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

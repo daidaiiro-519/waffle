@@ -1,0 +1,153 @@
+{
+  "説明": [
+    "文書が自分自身を名乗る形の契約。文書を作る側が書き、公開の受け口が読む。",
+    "書く側は複数あり、互いを知らない。読む側は誰が書いたかを問わない。この表が",
+    "全員の唯一の共通点で、どちらかの実装がこの表と食い違えば落ちる。",
+    "",
+    "この表は、読む側の内部の呼び名で書いていない。読む側は自分の言葉へ、書く側も",
+    "自分の言葉へ、それぞれこの表から写す。どちらかの内部の形をここへ持ち込むと、",
+    "その実装を変えたときに契約まで動いてしまい、共通点である意味が消える。",
+    "",
+    "値は実装から生成していない。手で置いてある——生成すると、同じ規則の写しが",
+    "1つ増えるだけで、突き合わせにならないため。",
+    "",
+    "識別子と種別の2つが揃って初めて『名乗れている』と見なす。揃っていなければ",
+    "読む側は題名だけを人に尋ねる。題名は、この表に無ければ文書の題を代わりに読む。",
+    "",
+    "外部への参照の数は、公開してよいかの判定には使わない。控えるだけで、公開は",
+    "止めない。単体で開ける文書かどうかを、あとから人が見るための手がかり。"
+  ],
+  "形式": {
+    "置き場所": "文書のhead",
+    "識別子": "<meta name=\"id\" content=\"{この文書を指す名前}\">",
+    "種別": "<meta name=\"type\" content=\"{この文書が何であるか}\">",
+    "題名": "<meta name=\"title\" content=\"{一覧で見分けるための題}\">",
+    "要約": "<meta name=\"description\" content=\"{短い説明}\">",
+    "分類の目印": "<meta name=\"tags\" content=\"{目印をカンマで区切って並べたもの}\">",
+    "必須": ["識別子", "種別"],
+    "題名が無いとき": "文書の題（title要素）を代わりに読む",
+    "分類の目印の区切り": ",",
+    "分類の目印の前後の空白": "取り除く",
+    "外部への参照に数えるもの": "別のホストを指す script のsrc・img のsrc・stylesheetのlink のhref",
+    "外部への参照に数えないもの": "data: での埋め込み・同じ場所を指す相対の道筋"
+  },
+  "ケース": [
+    {
+      "名前": "5つすべてを名乗っている",
+      "文書": "<html><head><meta name=\"id\" content=\"waffle-lp-hero\"><meta name=\"type\" content=\"UIMock\"><meta name=\"title\" content=\"待ち時間の見える受付\"><meta name=\"description\" content=\"順番待ちの人数を先に見せる案\"><meta name=\"tags\" content=\"lp, hero, waffle\"><title>使われない題</title></head><body></body></html>",
+      "読み取り": {
+        "識別子": "waffle-lp-hero",
+        "種別": "UIMock",
+        "題名": "待ち時間の見える受付",
+        "要約": "順番待ちの人数を先に見せる案",
+        "分類の目印": ["lp", "hero", "waffle"],
+        "外部への参照": 0,
+        "揃っている": true
+      }
+    },
+    {
+      "名前": "必須の2つだけを名乗っている",
+      "文書": "<html><head><meta name=\"id\" content=\"design-spec-2026\"><meta name=\"type\" content=\"DesignSpec\"></head><body></body></html>",
+      "読み取り": {
+        "識別子": "design-spec-2026",
+        "種別": "DesignSpec",
+        "題名": "",
+        "要約": "",
+        "分類の目印": [],
+        "外部への参照": 0,
+        "揃っている": true
+      }
+    },
+    {
+      "名前": "題名を名乗らず、文書の題を代わりに読む",
+      "文書": "<html><head><meta name=\"id\" content=\"postmortem-0801\"><meta name=\"type\" content=\"Postmortem\"><title>閲覧ゲートの取り違え</title></head><body></body></html>",
+      "読み取り": {
+        "識別子": "postmortem-0801",
+        "種別": "Postmortem",
+        "題名": "閲覧ゲートの取り違え",
+        "要約": "",
+        "分類の目印": [],
+        "外部への参照": 0,
+        "揃っている": true
+      }
+    },
+    {
+      "名前": "何も名乗っていない",
+      "文書": "<html><head><title>ただの手元のページ</title></head><body></body></html>",
+      "読み取り": {
+        "識別子": "",
+        "種別": "",
+        "題名": "ただの手元のページ",
+        "要約": "",
+        "分類の目印": [],
+        "外部への参照": 0,
+        "揃っている": false
+      }
+    },
+    {
+      "名前": "種別だけあって識別子が無いので、揃っていない",
+      "文書": "<html><head><meta name=\"type\" content=\"UIMock\"><title>下書き</title></head><body></body></html>",
+      "読み取り": {
+        "識別子": "",
+        "種別": "UIMock",
+        "題名": "下書き",
+        "要約": "",
+        "分類の目印": [],
+        "外部への参照": 0,
+        "揃っている": false
+      }
+    },
+    {
+      "名前": "分類の目印の前後の空白を取り除き、空のものは落とす",
+      "文書": "<html><head><meta name=\"id\" content=\"spec-comment-put\"><meta name=\"type\" content=\"FunctionalSpec\"><meta name=\"tags\" content=\"  api ,, comments ,  \"></head><body></body></html>",
+      "読み取り": {
+        "識別子": "spec-comment-put",
+        "種別": "FunctionalSpec",
+        "題名": "",
+        "要約": "",
+        "分類の目印": ["api", "comments"],
+        "外部への参照": 0,
+        "揃っている": true
+      }
+    },
+    {
+      "名前": "外部への参照を数える",
+      "文書": "<html><head><meta name=\"id\" content=\"mixed\"><meta name=\"type\" content=\"UIMock\"><link rel=\"stylesheet\" href=\"https://example.com/a.css\"><script src=\"//example.com/b.js\"></script></head><body><img src=\"https://example.com/c.png\"></body></html>",
+      "読み取り": {
+        "識別子": "mixed",
+        "種別": "UIMock",
+        "題名": "",
+        "要約": "",
+        "分類の目印": [],
+        "外部への参照": 3,
+        "揃っている": true
+      }
+    },
+    {
+      "名前": "埋め込みと相対の道筋は外部に数えない",
+      "文書": "<html><head><meta name=\"id\" content=\"selfcontained\"><meta name=\"type\" content=\"UIMock\"><style>@font-face{src:url(data:font/woff2;base64,AAAA)}</style></head><body><img src=\"data:image/png;base64,AAAA\"><img src=\"./local.png\"><script src=\"/also-local.js\"></script></body></html>",
+      "読み取り": {
+        "識別子": "selfcontained",
+        "種別": "UIMock",
+        "題名": "",
+        "要約": "",
+        "分類の目印": [],
+        "外部への参照": 0,
+        "揃っている": true
+      }
+    },
+    {
+      "名前": "名乗りの綴りが大文字でも読む",
+      "文書": "<html><head><META NAME=\"ID\" CONTENT=\"upper-case\"><META NAME=\"Type\" CONTENT=\"UIMock\"></head><body></body></html>",
+      "読み取り": {
+        "識別子": "upper-case",
+        "種別": "UIMock",
+        "題名": "",
+        "要約": "",
+        "分類の目印": [],
+        "外部への参照": 0,
+        "揃っている": true
+      }
+    }
+  ]
+}

@@ -61,7 +61,7 @@
     "layout": {
       "blockType": "Layout",
       "title": "ディレクトリ構成",
-      "tree": "lambda/admin_api/\n  domain/                業務ルール（トークンの有効性・交差条件・公開状態）\n  application/\n    usecases/            1 usecase = 1 module\n    ports/               application が外部へ要求するインターフェース\n  adapters/\n    inbound/             受け口（Lambda handler・経路の振り分け）\n    outbound/            S3 / KVS / Cognito への出口\n  shared/                結果型・エラー\n  main.py                結線（合成ルート・層のグラフの外）\ninfra/\n  cloudfront-function/   閲覧ゲート（層を持たないと宣言した領域）\n  contract/              ランタイムをまたぐデータの形\nscripts/                 環境構築のCLI（層を持たないと宣言した領域）",
+      "tree": "lambda/admin_api/\n  domain/                業務ルール（トークンの有効性・交差条件・公開状態）\n  application/\n    usecases/            1 usecase = 1 module\n    ports/               application が外部へ要求するインターフェース\n  adapters/\n    inbound/             受け口（Lambda handler・経路の振り分け）\n    outbound/            S3 / KVS / Cognito への出口\n  shared/                結果型・エラー\n  main.py                結線（合成ルート・層のグラフの外）\ninfra/\n  cloudfront-function/   閲覧ゲート（層を持たないと宣言した領域）\n  contract/              ランタイムをまたぐデータの形\nscripts/                 手元で動くプログラム（層を持たないと宣言した領域）\n  artifactshare.py       環境を作るCLI。クラウドの権限で動くため、管理操作を持たない\n  mcp/                   招かれた投稿者としての受け口。合言葉で本人確認を通り、クラウドの権限を使わない",
       "sourceRoot": ".waffle/skills/artifact-share",
       "granularity": [
         {
@@ -261,6 +261,14 @@
         {
           "level": "必須",
           "rule": "ランタイムをまたいで受け渡すデータの形は infra/contract/ に置き、両方のランタイムがそこを読む。片方が形を直書きすると、もう片方を直したときに気づけない"
+        },
+        {
+          "level": "必須",
+          "rule": "手元で動くプログラムは、動く資格で分ける。クラウドの権限で動くもの（環境を作るCLI）と、合言葉で本人確認を通り招かれた投稿者として動くもの（受け口）を、別のプログラムとして置く"
+        },
+        {
+          "level": "禁止",
+          "rule": "クラウドの権限で動くプログラムに管理操作を持たせる／本人確認で動くプログラムにクラウドの権限を使う操作を足す。どちらも「招かれた者だけが公開できる」という前提を、権限を持つ人の手元で成り立たなくする。同じ場所に置いてあることを理由に2つを統合しない"
         }
       ]
     },
