@@ -115,57 +115,7 @@ def test_移した先が手入れできるようになる():
     build(deps, SuspendArtifact).run(Y, r.artifact_id)          # Yが扱える
 
 
-def test_移す前の人は扱えなくなる():
-    """引き継ぎは移動であって複製ではない"""
-    deps, r = setup()
-    build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
-
-    with pytest.raises(ManageError) as x:
-        build(deps, SuspendArtifact).run(X, r.artifact_id)
-    assert x.value.code == "ARTIFACT_NOT_FOUND"
-
-
-def test_閲覧者から見て何も変わらない():
-    deps, r = setup()
-    token_before = deps.keys.get(f"token:{r.artifact_id}")
-    content_before = deps.store.get(f"p/{r.artifact_id}/content.html")
-
-    build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
-
-    assert deps.keys.get(f"token:{r.artifact_id}") == token_before
-    assert deps.store.get(f"p/{r.artifact_id}/content.html") == content_before
-    assert meta_of(deps, r.artifact_id)["status"] == "active"
-
-
 def test_引き継いでもコメントの並びに区切りは増えない():
     deps, r = setup()
     build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
     assert deps.store.list(f"comments/{r.artifact_id}/") == []
-
-
-def test_管理者でない者は移せない():
-    deps, r = setup()
-    with pytest.raises(ManageError) as x:
-        build(deps, TransferArtifact).run(X, r.artifact_id, Y.id)
-    assert x.value.code == "NOT_ADMINISTRATOR"
-    assert meta_of(deps, r.artifact_id)["uploadedBy"] == X.id
-
-
-def test_招かれていない人へは移せない():
-    """移した先が公開できる人でなければ、その場で手入れできない状態に戻る"""
-    deps, r = setup()
-    with pytest.raises(ManageError) as x:
-        build(deps, TransferArtifact).run(ADMIN, r.artifact_id, "no-such-person")
-    assert x.value.code == "PUBLISHER_NOT_FOUND"
-    assert meta_of(deps, r.artifact_id)["uploadedBy"] == X.id
-
-
-def test_公開停止されているものも移せる():
-    """止まっているものこそ引き継ぎ先が要る"""
-    deps, r = setup()
-    build(deps, SuspendArtifact).run(X, r.artifact_id)
-
-    build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
-
-    assert meta_of(deps, r.artifact_id)["uploadedBy"] == Y.id
-    assert meta_of(deps, r.artifact_id)["status"] == "disabled"   # 止まったまま

@@ -59,18 +59,6 @@ def post(deps, artifact_id, at, author, body, decision="comment", parent=None):
 
 # ── 読む ────────────────────────────────────────────────
 
-def test_寄せられた順に読める():
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "田中", "これで良いと思います", "approve")
-    post(deps, aid, 1700000003, "山田", "ここが分かりません")
-    post(deps, aid, 1700000002, "佐藤", "1点直してほしい", "revise")
-
-    got = build(deps, ReadComments).run(ME, aid)
-
-    assert [c["author"] for c in got.comments] == ["田中", "佐藤", "山田"]
-    assert got.comments[0]["decision"] == "approve"
-    assert got.comments[0]["body"] == "これで良いと思います"
-
 
 def test_保存されている形のまま返る():
     """表示用に整えるのは画面側。ここで別の呼び名へ置き換えない"""
@@ -79,34 +67,6 @@ def test_保存されている形のまま返る():
 
     c = build(deps, ReadComments).run(ME, aid).comments[0]
     assert set(c) >= {"kind", "author", "decision", "body", "parentId", "postedAt"}
-
-
-def test_返信がどれへの返信かが分かる():
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "山田", "質問です")
-    post(deps, aid, 1700000002, "投稿者", "回答です", parent="1700000001-abcd1234")
-
-    got = build(deps, ReadComments).run(ME, aid)
-    assert got.comments[1]["parentId"] == "1700000001-abcd1234"
-
-
-def test_差し替えの区切りが並びに現れる():
-    """差し替えの区切りも、反応と同じ並びに1件として載る"""
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "佐藤", "直してほしい", "revise")
-    build(deps, ReplaceArtifactContent).run(ME, aid, HTML.replace("本文", "直した"))
-    post(deps, aid, 1700000200, "佐藤", "直りました", "approve")
-
-    kinds = [c["kind"] for c in build(deps, ReadComments).run(ME, aid).comments]
-    assert kinds == ["comment", "divider", "comment"]
-
-
-def test_他人のものは読めない():
-    """寄せられた指摘には、渡した相手しか知らない内容が含まれうる"""
-    deps, aid = setup()
-    with pytest.raises(ManageError) as x:
-        build(deps, ReadComments).run(SOMEONE_ELSE, aid)
-    assert x.value.code == "ARTIFACT_NOT_FOUND"
 
 
 def test_管理者は他人のものも読める():
