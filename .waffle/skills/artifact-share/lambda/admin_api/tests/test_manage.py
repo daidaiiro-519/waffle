@@ -30,7 +30,9 @@ from application.usecases.resume_artifact import ResumeArtifact  # noqa: E402
 from application.usecases.suspend_artifact import SuspendArtifact  # noqa: E402
 
 from application.ports import Caller  # noqa: E402
-from domain.publication import MAX_PROJECTS_PER_ARTIFACT, PERSONAL, SHARED  # noqa: E402
+from domain.shared_artifact import MAX_PROJECTS  # noqa: E402  # 旧 MAX_PROJECTS_PER_ARTIFACT
+from domain.project import PERSONAL  # noqa: E402
+from domain.project import SHARED  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
 
@@ -425,17 +427,17 @@ def test_上限を超えてプロジェクトへ加えられない():
     投稿者には成功が返り、閲覧者だけが開けない状態になる。"""
     deps, r, _ = with_project("SHARED")
     ids = []
-    for i in range(MAX_PROJECTS_PER_ARTIFACT + 1):
+    for i in range(MAX_PROJECTS + 1):
         p = build(deps, CreateProject).run(ME, f"まとめ{i}", "SHARED")
         ids.append(p["projectId"])
 
-    for pid in ids[:MAX_PROJECTS_PER_ARTIFACT]:
+    for pid in ids[:MAX_PROJECTS]:
         build(deps, AssignArtifactToProject).run("assign", ME, r["artifactId"], pid)
 
     with pytest.raises(ManageError) as x:
         build(deps, AssignArtifactToProject).run("assign", ME, r["artifactId"], ids[-1])
     assert x.value.code == "TOO_MANY_PROJECTS"
-    assert len(meta_of(deps, r["artifactId"])["projects"]) == MAX_PROJECTS_PER_ARTIFACT
+    assert len(meta_of(deps, r["artifactId"])["projects"]) == MAX_PROJECTS
 
 
 def test_読めない記録があっても残りが並ぶ():

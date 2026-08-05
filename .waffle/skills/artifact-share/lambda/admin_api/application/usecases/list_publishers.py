@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 from application.ports import Caller, PublisherDirectory
-from domain.publication import may_manage_publishers
+from domain.caller import may_manage_publishers
 from shared.errors import PublisherError
 
 

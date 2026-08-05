@@ -17,9 +17,8 @@ from application.project_access import save_project
 from application.viewer_listing import place_project_page, write_listing
 from domain import view_token
 from domain.identifier import new_project_id
-from domain.project import (PUBLISHED, Project, ProjectId, ProjectKey,
+from domain.project import (PUBLISHED, Project, ProjectId, ProjectKey, is_known_scope,
                             ProjectOwner, ProjectScope, ProjectStatus)
-from domain.publication import is_known_scope
 from domain.view_subject import ViewSubject
 from shared.errors import ProjectError
 

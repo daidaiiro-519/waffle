@@ -18,7 +18,6 @@ from application.ports.shared_artifact_repository import SharedArtifactRepositor
 from application.ports.viewer_site import ViewerSitePort
 from application.viewer_listing import refresh_listings
 from domain.html_inspection import inspect_html
-from domain.publication import is_published
 from shared.errors import ManageError
 
 

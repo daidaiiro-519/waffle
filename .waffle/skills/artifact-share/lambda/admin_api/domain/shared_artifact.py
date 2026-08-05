@@ -26,6 +26,9 @@ SUSPENDED = "SUSPENDED"
 # 1つの共有アーティファクトが同時に入れるプロジェクトの数
 MAX_PROJECTS = 3
 
+# 受け取る中身の上限。これを超えるものは、署名付きの経路で直接受け渡す設計へ移す
+MAX_CONTENT_BYTES = 5 * 1024 * 1024
+
 # 目印の出どころ
 EXTRACTED = "extracted"   # 中身から取り出した
 MANUAL = "manual"         # 人が与えた

@@ -18,9 +18,9 @@ from domain import view_token
 from domain.artifact_content import fingerprint as content_fingerprint
 from domain.html_inspection import inspect_html
 from domain.identifier import new_artifact_id
-from domain.publication import MAX_CONTENT_BYTES
 from domain.shared_artifact import EXTRACTED, MANUAL
 from domain.shared_artifact import (ArtifactDescriptor, ArtifactId, ArtifactStatus,
+                                    MAX_CONTENT_BYTES,
                                     PUBLISHED, PublisherId, SharedArtifact)
 from domain.view_subject import ViewSubject
 from shared.errors import PublishError

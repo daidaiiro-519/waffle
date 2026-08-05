@@ -17,3 +17,12 @@ class Caller:
 
     id: str
     is_admin: bool = False
+
+
+def may_manage_publishers(caller: Caller) -> bool:
+    """招かれている人の顔ぶれを出し入れしてよいか。
+
+    管理者だけ。誰が招かれているかは、共有の相手を社外へ広げたときに社内の
+    顔ぶれまで伝わらないよう、投稿者どうしにも見せない。
+    """
+    return caller.is_admin

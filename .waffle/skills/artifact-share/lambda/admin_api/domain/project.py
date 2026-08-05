@@ -24,6 +24,11 @@ PERSONAL = "PERSONAL"   # 持ち主だけ
 SHARED = "SHARED"       # 招かれた投稿者なら誰でも、自分のものを
 
 
+def is_known_scope(scope: str) -> bool:
+    """出し入れの範囲として認めている値か。"""
+    return scope in (PERSONAL, SHARED)
+
+
 @dataclass(frozen=True)
 class ProjectId:
     """プロジェクトを一意に指す短いID。"""
