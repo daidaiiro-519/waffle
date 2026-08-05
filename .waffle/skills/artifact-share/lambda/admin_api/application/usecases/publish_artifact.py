@@ -18,7 +18,10 @@ from domain import view_token
 from domain.artifact_content import fingerprint as content_fingerprint
 from domain.html_inspection import inspect_html
 from domain.identifier import new_artifact_id
-from domain.publication import ACTIVE, MAX_CONTENT_BYTES
+from domain.publication import MAX_CONTENT_BYTES
+from domain.shared_artifact import EXTRACTED, MANUAL
+from domain.shared_artifact import (ArtifactDescriptor, ArtifactId, ArtifactStatus,
+                                    PUBLISHED, PublisherId, SharedArtifact)
 from domain.view_subject import ViewSubject
 from shared.errors import PublishError
 
@@ -51,10 +54,10 @@ def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: 
 
     if found["detected"]:
         title = found["title"] or display_name
-        meta_source = "extracted"
+        meta_source = EXTRACTED
     else:
         title = display_name or found["title"]
-        meta_source = "manual"
+        meta_source = MANUAL
         if not display_name:
             # 題名だけを尋ねる。ここで尋ねる項目を増やさない
             raise PublishError("NAME_REQUIRED", "表示名を入力してください。")
@@ -62,36 +65,35 @@ def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: 
     artifact_id = new_artifact_id()
     token = view_token.new_token()
     now = clock()
-    first = view_token.issued(view_token.new_token_id(), FIRST_TOKEN_NAME,
-                              gate.fingerprint_of(token),
+    first = view_token.issued(FIRST_TOKEN_NAME, gate.fingerprint_of(token),
                               view_token.expires_at(now), now)
 
     try:
-        page_version = viewer.place_artifact(artifact_id, content, title)
+        viewer.place_artifact(artifact_id, content, title)
 
-        record = {
-            "artifactId": artifact_id,
-            "name": title,
-            "status": "active",
-            "projects": [],
-            "metaSource": meta_source,
-            "docType": found["docType"],
-            "documentId": found["documentId"],
-            "description": found["description"],
-            "tags": found["tags"],
-            "uploadedBy": publisher,
-            "externalRefs": found["externalRefs"],
-            "contentHash": content_fingerprint(content),
-            "wrapperHash": page_version,
-            "publishedAt": now,
-            "updatedAt": now,
-            "viewTokens": [first],
-        }
-        artifacts.save(record)
+        artifacts.save(SharedArtifact(
+            artifact_id=ArtifactId(artifact_id),
+            display_name=title,
+            content_fingerprint=content_fingerprint(content),
+            view_tokens=(first,),
+            status=ArtifactStatus(PUBLISHED),
+            published_by=PublisherId(publisher),
+            descriptor=ArtifactDescriptor(
+                document_id=found["documentId"],
+                doc_type=found["docType"],
+                title=title,
+                description=found["description"],
+                labels=tuple(found["tags"]),
+                source=meta_source,
+            ),
+            published_at=now,
+            updated_at=now,
+            external_resource_count=found["externalRefs"],
+        ))
 
         # 閲覧の面へ渡すのは最後。ここまで成功して初めて開ける状態になる
         gate.replace_grants(ViewSubject.artifact(artifact_id),
-                            view_token.grants([first], now))
+                            view_token.grants((first,), now))
     except PublishError:
         raise
     except Exception as e:

@@ -29,6 +29,14 @@ from application.view_token_access import ViewTokenError  # noqa: E402
 from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
 from application.ports import Caller  # noqa: E402
 from domain import view_token  # noqa: E402
+from domain.project import (  # noqa: E402
+    PUBLISHED as PROJECT_PUBLISHED, Project, ProjectId, ProjectKey,
+    ProjectOwner, ProjectScope, ProjectStatus, SHARED,
+)
+from domain.shared_artifact import (  # noqa: E402
+    ArtifactDescriptor, ArtifactId, ArtifactStatus, PUBLISHED,
+    PublisherId, SharedArtifact,
+)
 from domain.view_subject import ViewSubject  # noqa: E402
 
 ME = Caller("publisher-1")
@@ -52,7 +60,11 @@ class FakeKeys:
 
 
 class FakeRepo:
-    """識別子で引ける記録の置き場所。共有アーティファクトにもプロジェクトにも使う。"""
+    """識別子で引ける置き場所。共有アーティファクトにもプロジェクトにも使う。
+
+    保管の形ではなく集約そのものを持つ。ここで確かめたいのは操作の振る舞いで
+    あって、保管との翻訳ではない（翻訳は test_repository_translation が見る）。
+    """
 
     def __init__(self, records=None):
         self.records = dict(records or {})
@@ -60,8 +72,9 @@ class FakeRepo:
     def find(self, key):
         return self.records.get(key)
 
-    def save(self, record):
-        self.records[record.get("artifactId") or record["projectId"]] = record
+    def save(self, aggregate):
+        key = getattr(aggregate, "artifact_id", None) or aggregate.project_id
+        self.records[key.value] = aggregate
 
     def all(self):
         return list(self.records.values()), 0
@@ -82,10 +95,16 @@ class Wiring:
 
 def setup(tokens=None, owner="publisher-1"):
     """公開済みのものが1件あり、プロジェクトも1つある状態を作る。"""
-    artifacts = FakeRepo({AID: {"artifactId": AID, "uploadedBy": owner,
-                                "status": "active", "viewTokens": list(tokens or [])}})
-    projects = FakeRepo({PID: {"projectId": PID, "owner": owner,
-                               "status": "active", "viewTokens": list(tokens or [])}})
+    artifacts = FakeRepo({AID: SharedArtifact(
+        artifact_id=ArtifactId(AID), display_name="設計レビュー", content_fingerprint="",
+        view_tokens=tuple(tokens or ()), status=ArtifactStatus(PUBLISHED),
+        published_by=PublisherId(owner), descriptor=ArtifactDescriptor(),
+        published_at=NOW, updated_at=NOW)})
+    projects = FakeRepo({PID: Project(
+        project_id=ProjectId(PID), display_name="まとめ", project_key=ProjectKey(),
+        status=ProjectStatus(PROJECT_PUBLISHED), owner=ProjectOwner(owner),
+        scope=ProjectScope(SHARED), created_at=NOW,
+        view_tokens=tuple(tokens or ()), updated_at=NOW)})
     gate = KvsViewGate(FakeKeys())
     return Wiring(artifacts, projects, gate)
 
@@ -108,7 +127,7 @@ def test_名前と期限を指定して発行すると値が一度だけ返る()
     assert r["expiresAt"] == NOW + view_token.WEEK
     assert r["tokenShownOnce"] is True
     # 記録には値そのものが残らない
-    stored = deps.artifacts.find(AID)["viewTokens"]
+    stored = deps.artifacts.find(AID).view_tokens
     assert r["token"] not in str(stored)
 
 
@@ -132,7 +151,7 @@ def test_共有アーティファクトへ1ヶ月を超える期限は付けら�
     with pytest.raises(ViewTokenError) as x:
         issue(deps, "ずっと", ttl=view_token.MONTH + 1)
     assert x.value.code == "EXPIRY_TOO_FAR"
-    assert deps.artifacts.find(AID)["viewTokens"] == []
+    assert deps.artifacts.find(AID).view_tokens == ()
 
 
 def test_プロジェクトには期限なしを選べる():
@@ -159,7 +178,7 @@ def test_上限に達していたら発行しない():
     with pytest.raises(ViewTokenError) as x:
         issue(deps, "もう1人")
     assert x.value.code == "TOKEN_LIMIT_REACHED"
-    assert len(deps.artifacts.find(AID)["viewTokens"]) == view_token.MAX_ACTIVE
+    assert len(deps.artifacts.find(AID).view_tokens) == view_token.MAX_ACTIVE
 
 
 def test_期限切れは上限の数に含めない():
@@ -177,7 +196,7 @@ def test_期限切れは上限の数に含めない():
     r = issue(deps, "新しい相手", at=later)
 
     assert r["token"]
-    assert len(deps.artifacts.find(AID)["viewTokens"]) == 1
+    assert len(deps.artifacts.find(AID).view_tokens) == 1
 
 
 def test_有効なものに同じ名前があれば発行しない():
@@ -201,8 +220,8 @@ def test_発行しても前の閲覧トークンは無効にならない():
 
     issue(deps, "2人目")
 
-    names = [t["name"] for t in
-             view_token.active_tokens(deps.artifacts.find(AID)["viewTokens"], NOW)]
+    names = [t.name for t in
+             view_token.usable(deps.artifacts.find(AID).view_tokens, NOW)]
     assert names == ["1人目", "2人目"]
     assert deps.gate._keys.written["token:" + AID].count(";") == 1
     assert first["token"]
@@ -240,7 +259,7 @@ def test_期限を過ぎたものは一覧に現れず記録も残らない():
 
     # 次に何かを書くときに記録からも消える
     issue(deps, "新しい相手", at=later)
-    assert len(deps.artifacts.find(AID)["viewTokens"]) == 1
+    assert len(deps.artifacts.find(AID).view_tokens) == 1
 
 
 def test_1本も無ければ空の一覧が返る():
@@ -266,8 +285,8 @@ def test_1本だけを無効にでき他はそのまま():
 
     build(deps, RevokeViewToken).run(ME, ViewSubject.artifact(AID), a["tokenId"])
 
-    left = view_token.active_tokens(deps.artifacts.find(AID)["viewTokens"], NOW)
-    assert [t["name"] for t in left] == ["2人目"]
+    left = view_token.usable(deps.artifacts.find(AID).view_tokens, NOW)
+    assert [t.name for t in left] == ["2人目"]
     # 閲覧の面へも、残った1本だけが渡っている
     assert deps.gate._keys.written["token:" + AID].count(";") == 0
 
@@ -278,7 +297,7 @@ def test_無効化しても公開は止まらない():
 
     build(deps, RevokeViewToken).run(ME, ViewSubject.artifact(AID), a["tokenId"])
 
-    assert deps.artifacts.find(AID)["status"] == "active"
+    assert deps.artifacts.find(AID).status.is_published()
     assert deps.gate._keys.written["token:" + AID] != "DISABLED"
 
 
@@ -315,8 +334,8 @@ def test_一括で外しても公開は止まらない():
     got = build(deps, RevokeAllViewTokens).run(ME, ViewSubject.artifact(AID))
 
     assert got["revoked"] == 2
-    assert view_token.active_tokens(deps.artifacts.find(AID)["viewTokens"], NOW) == []
-    assert deps.artifacts.find(AID)["status"] == "active"
+    assert view_token.usable(deps.artifacts.find(AID).view_tokens, NOW) == ()
+    assert deps.artifacts.find(AID).status.is_published()
     assert deps.gate._keys.written["token:" + AID] == ""
 
 

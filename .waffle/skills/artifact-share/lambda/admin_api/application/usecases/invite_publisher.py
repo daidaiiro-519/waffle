@@ -96,7 +96,7 @@ def _remove(artifacts: SharedArtifactRepository, directory: PublisherDirectory, 
 def _count_artifacts(artifacts: SharedArtifactRepository, publisher_id: str) -> int:
     """その人が公開した共有アーティファクトの件数。"""
     found, _ = artifacts.all()
-    return sum(1 for meta in found if meta.get("uploadedBy") == publisher_id)
+    return sum(1 for a in found if a.published_by.value == publisher_id)
 
 
 class InvitePublisher:

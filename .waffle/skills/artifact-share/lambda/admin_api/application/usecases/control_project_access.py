@@ -16,7 +16,7 @@ from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
 from application.project_access import require_own, save_project
 from domain import view_token
-from domain.publication import ACTIVE, DISABLED, is_published, is_suspended
+from domain.project import PUBLISHED, SUSPENDED
 from domain.view_subject import ViewSubject
 from shared.errors import ProjectError
 
@@ -27,15 +27,14 @@ def _suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, call
     入っている共有アーティファクトは、それぞれの閲覧トークンで引き続き開ける。
     プロジェクトは見せ方の束ねであって、入れ物ではない。
     """
-    index = require_own(projects, caller, project_id)
-    if not is_published(index):
+    project = require_own(projects, caller, project_id)
+    if not project.status.is_published():
         raise ProjectError("NOT_ACTIVE", "すでに公開が止まっています。")
 
     gate.close(ViewSubject.project(project_id))
-    index["status"] = DISABLED
-    save_project(projects, clock, index)
+    save_project(projects, clock, project.suspended(clock()))
 
-    return {"projectId": project_id, "status": DISABLED}
+    return {"projectId": project_id, "status": SUSPENDED}
 
 
 def _resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
@@ -44,19 +43,18 @@ def _resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGateP
     止める前に渡していた閲覧トークンのうち、期限内で無効にしていないものを
     そのまま使える状態に戻す。
     """
-    index = require_own(projects, caller, project_id)
-    if not is_suspended(index):
+    project = require_own(projects, caller, project_id)
+    if not project.status.is_suspended():
         raise ProjectError("NOT_SUSPENDED", "公開は止まっていません。")
 
     now = clock()
     gate.replace_grants(ViewSubject.project(project_id),
-                        view_token.grants(index.get("viewTokens"), now))
-    index["status"] = ACTIVE
-    save_project(projects, clock, index)
+                        view_token.grants(project.view_tokens, now))
+    save_project(projects, clock, project.resumed(now))
 
     return {"projectId": project_id,
             "url": viewer.project_url(project_id),
-            "status": ACTIVE}
+            "status": PUBLISHED}
 
 
 class ControlProjectAccess:

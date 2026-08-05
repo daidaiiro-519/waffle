@@ -23,15 +23,15 @@ def _revoke(artifacts: SharedArtifactRepository, projects: ProjectRepository,
            gate: ViewGatePort, clock: Clock, caller: Caller, subject: ViewSubject,
            token_id: str) -> dict:
     """その1本だけを使えなくする。他の相手はそのまま見られる。"""
-    record = require_manageable_subject(artifacts, projects, caller, subject)
+    target = require_manageable_subject(artifacts, projects, caller, subject)
     now = clock()
-    tokens = view_token.without_expired(record.get("viewTokens"), now)
+    tokens = view_token.without_expired(target.view_tokens, now)
 
-    if all(t.get("tokenId") != token_id for t in tokens):
+    if all(t.token_id.value != token_id for t in tokens):
         raise ViewTokenError(TOKEN_NOT_FOUND, "その閲覧トークンはありません。")
 
     tokens = view_token.revoked(tokens, token_id)
-    save_tokens(artifacts, projects, clock, record, tokens)
+    save_tokens(artifacts, projects, clock, subject, target, tokens)
     gate.replace_grants(subject, view_token.grants(tokens, now))
     return {"tokenId": token_id, "revoked": True}
 

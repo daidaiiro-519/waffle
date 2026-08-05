@@ -31,19 +31,19 @@ def _list_projects(projects: ProjectRepository, caller: Caller) -> dict:
     found, unreadable = projects.all()
     rows = []
     for index in found:
-        mine = index.get("owner") == caller.id
-        if not (caller.is_admin or mine or index.get("scope") == SHARED):
+        mine = index.owner.value == caller.id
+        if not (caller.is_admin or mine or index.scope.is_shared()):
             continue
         rows.append({
-            "projectId": index.get("projectId", ""),
-            "name": index.get("displayName", ""),
-            "projectKey": index.get("projectKey", ""),
-            "scope": index.get("scope", PERSONAL),
-            "status": index.get("status", ""),
-            "owner": index.get("owner", ""),
+            "projectId": index.project_id.value,
+            "name": index.display_name,
+            "projectKey": index.project_key.value,
+            "scope": index.scope.value,
+            "status": index.status.value,
+            "owner": index.owner.value,
             "isMine": mine,
-            "artifactCount": len(index.get("memberArtifactIds", [])),
-            "updatedAt": index.get("updatedAt", 0),
+            "artifactCount": len(projects.members_of(index.project_id.value)),
+            "updatedAt": index.updated_at,
         })
     return {"projects": sorted(rows, key=lambda r: r["updatedAt"], reverse=True),
             "unreadable": unreadable}
@@ -62,35 +62,34 @@ def _detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
     index = read_index(projects, project_id)
     if not index:
         raise ProjectError("PROJECT_NOT_FOUND", "見つかりません。")
-    if not (caller.is_admin or index.get("owner") == caller.id
-            or index.get("scope") == SHARED):
+    if not index.accepts_membership_from(caller.id, caller.is_admin):
         raise ProjectError("PROJECT_NOT_FOUND", "見つかりません。")
 
     rows = []
-    for artifact_id in index.get("memberArtifactIds", []):
+    for artifact_id in projects.members_of(index.project_id.value):
         meta = artifacts.find(artifact_id)
         if meta is None:
             continue
         rows.append({
             "artifactId": artifact_id,
-            "name": meta.get("name", ""),
-            "docType": meta.get("docType", ""),
-            "status": meta.get("status", ""),
-            "uploadedBy": meta.get("uploadedBy", ""),
-            "isMine": meta.get("uploadedBy") == caller.id,
-            "updatedAt": meta.get("updatedAt", 0),
+            "name": meta.display_name,
+            "docType": meta.descriptor.doc_type,
+            "status": meta.status.value,
+            "uploadedBy": meta.published_by.value,
+            "isMine": meta.published_by.value == caller.id,
+            "updatedAt": meta.updated_at,
         })
     rows.sort(key=lambda r: r["updatedAt"], reverse=True)
 
     return {
         "project": {
-            "projectId": index.get("projectId", ""),
-            "name": index.get("displayName", ""),
-            "projectKey": index.get("projectKey", ""),
-            "scope": index.get("scope", PERSONAL),
-            "status": index.get("status", ""),
-            "owner": index.get("owner", ""),
-            "isMine": index.get("owner") == caller.id,
+            "projectId": index.project_id.value,
+            "name": index.display_name,
+            "projectKey": index.project_key.value,
+            "scope": index.scope.value,
+            "status": index.status.value,
+            "owner": index.owner.value,
+            "isMine": index.owner.value == caller.id,
             "url": viewer.project_url(project_id),
         },
         "artifacts": rows,

@@ -191,7 +191,8 @@ def test_トークンは配置がすべて済んでから書かれる():
     with pytest.raises(PublishError):
         publishing(store=store, keys=keys).run({"html": WITH_META, "authorization": "Bearer x"})
     assert keys.keys == {}                   # 開ける状態にはならない
-    assert len(store.objects) == 3           # 配置自体は済んでいる（到達はできない）
+    # 中身・閲覧画面・雛形の版・記録の4つは置き終えている（到達はできない）
+    assert len(store.objects) == 4
 
 
 # ── 検査（純粋な処理） ──────────────────────────────────

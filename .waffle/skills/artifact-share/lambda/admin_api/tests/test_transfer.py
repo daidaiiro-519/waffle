@@ -47,9 +47,9 @@ def setup():
     deps = main.Connections(
         store=store, keys=keys,
         directory=FakeDirectory({
-            X.id: {"email": "x@example.com", "status": "active"},
-            Y.id: {"email": "y@example.com", "status": "active"},
-            ADMIN.id: {"email": "a@example.com", "status": "active"},
+            X.id: {"email": "x@example.com", "status": "PUBLISHED"},
+            Y.id: {"email": "y@example.com", "status": "PUBLISHED"},
+            ADMIN.id: {"email": "a@example.com", "status": "PUBLISHED"},
         }),
         now=lambda: 1_700_000_100, viewer_domain="viewer.example.net",
     )
@@ -113,7 +113,7 @@ def test_移した先が手入れできるようになる():
     deps, r = setup()
     result = build(deps, TransferArtifact).run(ADMIN, r["artifactId"], Y.id)
 
-    assert result["event"] == "ArtifactTransferred"
+    assert result["to"] == Y.id
     assert meta_of(deps, r["artifactId"])["uploadedBy"] == Y.id
     build(deps, SuspendArtifact).run(Y, r["artifactId"])          # Yが扱える
 

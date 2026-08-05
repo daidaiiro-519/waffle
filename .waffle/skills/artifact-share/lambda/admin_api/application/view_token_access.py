@@ -9,7 +9,6 @@ from __future__ import annotations
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
-from domain.publication import manageable_by
 from domain.view_subject import ARTIFACT, ViewSubject
 from shared.errors import ApplicationError
 
@@ -24,27 +23,26 @@ class ViewTokenError(ApplicationError):
     """閲覧トークンを扱えない。"""
 
 
-def require_manageable_subject(artifacts: SharedArtifactRepository, projects: ProjectRepository,
-          caller: Caller, subject: ViewSubject) -> dict:
-    """扱ってよい対象を取り出す。扱えないものは見つからないものとして扱う。"""
-    if subject.kind == ARTIFACT:
-        record = artifacts.find(subject.id)
-        allowed = record is not None and manageable_by(record, caller)
-    else:
-        record = projects.find(subject.id)
-        allowed = record is not None and (
-            caller.is_admin or record.get("owner") == caller.id)
+def require_manageable_subject(artifacts: SharedArtifactRepository,
+                               projects: ProjectRepository, caller: Caller,
+                               subject: ViewSubject):
+    """扱ってよい対象を取り出す。扱えないものは見つからないものとして扱う。
 
-    if not allowed:
+    共有アーティファクトかプロジェクトのどちらかを返す。どちらも
+    with_view_tokens で顔ぶれを差し替えられるので、呼び出し側は種別を
+    見分けなくてよい。
+    """
+    found = (artifacts if subject.kind == ARTIFACT else projects).find(subject.id)
+    if found is None or not found.manageable_by(caller.id, caller.is_admin):
         raise ViewTokenError(TARGET_NOT_FOUND, "見つかりません。")
-    return record
+    return found
 
 
 def save_tokens(artifacts: SharedArtifactRepository, projects: ProjectRepository,
-          clock: Clock, record: dict, tokens: list[dict]) -> None:
-    record["viewTokens"] = tokens
-    record["updatedAt"] = clock()
-    if "artifactId" in record:
-        artifacts.save(record)
+                clock: Clock, subject: ViewSubject, target, tokens) -> None:
+    """顔ぶれを差し替えて残す。置き場所だけを種別で振り分ける。"""
+    updated = target.with_view_tokens(tuple(tokens), clock())
+    if subject.kind == ARTIFACT:
+        artifacts.save(updated)
     else:
-        projects.save(record)
+        projects.save(updated)

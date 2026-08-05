@@ -10,14 +10,10 @@ from __future__ import annotations
 
 from application.artifact_access import require_manageable
 from application.ports import Caller, Clock
+from domain.shared_artifact import PublisherId
 from application.ports import PublisherDirectory
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from shared.errors import ManageError
-
-
-def _write_meta(artifacts: SharedArtifactRepository, clock: Clock, meta: dict) -> None:
-    meta["updatedAt"] = clock()
-    artifacts.save(meta)
 
 
 def _transfer(artifacts: SharedArtifactRepository, directory: PublisherDirectory, clock: Clock, caller: Caller, artifact_id: str, to_publisher: str) -> dict:
@@ -34,18 +30,16 @@ def _transfer(artifacts: SharedArtifactRepository, directory: PublisherDirectory
         # する経路の両方を、ここひとつで塞ぐ
         raise ManageError("NOT_ADMINISTRATOR", "投稿者を移せるのは管理者だけです。")
 
-    meta = require_manageable(artifacts, caller, artifact_id)
+    artifact = require_manageable(artifacts, caller, artifact_id)
 
     if not (directory and directory.find(to_publisher)):
         # 招かれていない人へ移すと、その場で誰も手入れできない状態に戻る
         raise ManageError("PUBLISHER_NOT_FOUND", "移す先が招かれていません。")
 
-    previous = meta.get("uploadedBy", "")
-    meta["uploadedBy"] = to_publisher
-    _write_meta(artifacts, clock, meta)
+    previous = artifact.published_by.value
+    artifacts.save(artifact.transferred_to(PublisherId(to_publisher), clock()))
 
-    return {"artifactId": artifact_id, "from": previous, "to": to_publisher,
-            "event": "ArtifactTransferred"}
+    return {"artifactId": artifact_id, "from": previous, "to": to_publisher}
 
 
 class TransferArtifact:

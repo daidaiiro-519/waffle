@@ -21,13 +21,12 @@ from domain.view_subject import ViewSubject
 def _list_tokens(artifacts: SharedArtifactRepository, projects: ProjectRepository,
                 clock: Clock, caller: Caller, subject: ViewSubject) -> dict:
     """いま渡している相手を確かめる。閲覧トークンそのものの値は返さない。"""
-    record = require_manageable_subject(artifacts, projects, caller, subject)
+    target = require_manageable_subject(artifacts, projects, caller, subject)
     now = clock()
     return {"viewTokens": [
-        {"tokenId": t["tokenId"], "name": t.get("name", ""),
-         "expiresAt": t.get("expiresAt", view_token.NO_EXPIRY),
-         "issuedAt": t.get("issuedAt", 0)}
-        for t in view_token.active_tokens(record.get("viewTokens"), now)]}
+        {"tokenId": t.token_id.value, "name": t.name,
+         "expiresAt": t.expires_at.value, "issuedAt": t.issued_at}
+        for t in view_token.usable(target.view_tokens, now)]}
 
 
 class ListViewTokens:

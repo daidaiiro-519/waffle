@@ -17,12 +17,12 @@ from typing import Protocol
 class ViewerSitePort(Protocol):
     """閲覧の面への配置と、そこへの案内。"""
 
-    def place_artifact(self, artifact_id: str, content: str, display_name: str) -> str:
+    def place_artifact(self, artifact_id: str, content: str, display_name: str) -> None:
         """中身と、それを見せる画面を置く。
 
-        中身は書き換えずにそのまま置く。画面はこちらが組み立てる。
-        使った画面の版を返す——あとで雛形を変えたときに、置き直しが要るものを
-        見分けられるようにするため。
+        中身は書き換えずにそのまま置く。画面はこちらが組み立てる。使った画面の
+        版もこの面が控える——雛形を直したときに置き直しが要るものを見分ける
+        ためのもので、共有アーティファクトの状態ではない。
         """
         ...
 

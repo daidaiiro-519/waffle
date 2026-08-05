@@ -28,20 +28,20 @@ def _list_artifacts(artifacts: SharedArtifactRepository, comments: CommentReposi
     """
     found, unreadable = artifacts.all()
     rows = []
-    for meta in found:
-        if not caller.is_admin and meta.get("uploadedBy") != caller.id:
+    for artifact in found:
+        if not artifact.manageable_by(caller.id, caller.is_admin):
             continue
         rows.append({
-            "artifactId": meta.get("artifactId", ""),
-            "name": meta.get("name", ""),
-            "status": meta.get("status", ""),
-            "docType": meta.get("docType", ""),
-            "description": meta.get("description", ""),
-            "tags": meta.get("tags", []),
-            "projects": meta.get("projects", []),
-            "uploadedBy": meta.get("uploadedBy", ""),
-            "updatedAt": meta.get("updatedAt", 0),
-            "comments": comments.count_of(meta.get("artifactId", "")),
+            "artifactId": artifact.artifact_id.value,
+            "name": artifact.display_name,
+            "status": artifact.status.value,
+            "docType": artifact.descriptor.doc_type,
+            "description": artifact.descriptor.description,
+            "tags": list(artifact.descriptor.labels),
+            "projects": list(artifact.projects),
+            "uploadedBy": artifact.published_by.value,
+            "updatedAt": artifact.updated_at,
+            "comments": comments.count_of(artifact.artifact_id.value),
         })
     return {"artifacts": sorted(rows, key=lambda r: r["updatedAt"], reverse=True),
             "unreadable": unreadable}

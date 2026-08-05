@@ -15,10 +15,10 @@ from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
-from domain.publication import is_published
 
 
-def write_listing(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, index: dict) -> None:
+def write_listing(artifacts: SharedArtifactRepository, projects: ProjectRepository,
+                  viewer: ViewerSitePort, project) -> None:
     """閲覧者が見る一覧の中身を書き出す。
 
     雛形（index.html）はどのプロジェクトでも同じものを置き、この中身
@@ -29,22 +29,20 @@ def write_listing(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, i
     表示名が変わったときにも書き直す必要がある。
     """
     rows = []
-    for artifact_id in index.get("memberArtifactIds", []):
-        meta = artifacts.find(artifact_id)
-        if meta is None:
-            continue
-        if not is_published(meta):
+    for artifact_id in projects.members_of(project.project_id.value):
+        artifact = artifacts.find(artifact_id)
+        if artifact is None or not artifact.status.is_published():
             continue          # 止まっているものは並べない（開けないため）
         rows.append({
             "artifactId": artifact_id,
-            "name": meta.get("name", ""),
-            "docType": meta.get("docType", ""),
-            "description": meta.get("description", ""),
-            "updatedAt": meta.get("updatedAt", 0),
+            "name": artifact.display_name,
+            "docType": artifact.descriptor.doc_type,
+            "description": artifact.descriptor.description,
+            "updatedAt": artifact.updated_at,
         })
     rows.sort(key=lambda r: r["updatedAt"], reverse=True)
 
-    viewer.place_project_listing(index["projectId"], index.get("displayName", ""), rows)
+    viewer.place_project_listing(project.project_id.value, project.display_name, rows)
 
 
 def place_project_page(viewer: ViewerSitePort, project_id: str) -> None:
@@ -52,29 +50,29 @@ def place_project_page(viewer: ViewerSitePort, project_id: str) -> None:
     viewer.place_project(project_id)
 
 
-def sync_project(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, clock: Clock, index: dict, artifact_id: str, member: bool) -> None:
-    """プロジェクトの索引と、閲覧者が見る一覧を揃える。
+def sync_project(artifacts: SharedArtifactRepository, projects: ProjectRepository,
+                 viewer: ViewerSitePort, clock: Clock, project, artifact_id: str,
+                 member: bool) -> None:
+    """所属の投影を書き直し、閲覧者向けの一覧も揃える。
 
-    所属は索引（人へ見せるための正）と、閲覧ゲートが判じるための投影の
-    2か所に持つ。片方だけを書く経路を作らないため、出し入れのたびに
-    ここを通す。
+    正は共有アーティファクトの側にある。ここが書くのは、閲覧者へ見せるために
+    組み立て直せる投影であり、失敗しても作り直せる。
     """
-    ids = [a for a in index.get("memberArtifactIds", []) if a != artifact_id]
+    ids = [a for a in projects.members_of(project.project_id.value) if a != artifact_id]
     if member:
         ids.append(artifact_id)
-    index["memberArtifactIds"] = ids
-    index["updatedAt"] = clock()
-    projects.save(index)
-    write_listing(artifacts, viewer, index)
+    projects.replace_members(project.project_id.value, ids)
+    write_listing(artifacts, projects, viewer, project)
 
 
-def refresh_listings(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, meta: dict) -> None:
-    """このアーティファクトが入っている全プロジェクトの一覧を書き直す。
+def refresh_listings(artifacts: SharedArtifactRepository, projects: ProjectRepository,
+                     viewer: ViewerSitePort, artifact) -> None:
+    """その共有アーティファクトが入っている全てのプロジェクトの一覧を書き直す。
 
-    一覧は表示名を含むため、差し替えで名前が変わったときに書き直さないと、
-    閲覧者へ古い名前が見え続ける。
+    一覧は表示名を含むため、所属が変わったときだけでなく表示名が変わったときにも
+    書き直す必要がある。
     """
-    for project_id in meta.get("projects") or []:
-        index = read_index(projects, project_id)
-        if index:
-            write_listing(artifacts, viewer, index)
+    for project_id in artifact.projects:
+        project = read_index(projects, project_id)
+        if project:
+            write_listing(artifacts, projects, viewer, project)

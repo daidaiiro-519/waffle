@@ -17,22 +17,16 @@ from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
 from application.project_access import require_writable
 from application.viewer_listing import sync_project
-from domain.publication import MAX_PROJECTS_PER_ARTIFACT, within_project_limit
+from domain.shared_artifact import MAX_PROJECTS
 from shared.errors import ManageError
 
 
-def _write_meta(artifacts: SharedArtifactRepository, clock: Clock, meta: dict) -> None:
-    meta["updatedAt"] = clock()
-    artifacts.save(meta)
-
-
-def _require_within_limit(project_ids: list[str]) -> None:
-    """上限を超えていないかを、書き始める前に確かめる。"""
-    if not within_project_limit(project_ids):
-        raise ManageError(
-            "TOO_MANY_PROJECTS",
-            f"1つのアーティファクトが入れるプロジェクトは{MAX_PROJECTS_PER_ARTIFACT}件までです。"
-            "どれかから外してから加えてください。")
+def _reject_over_limit() -> None:
+    """上限を超えることを断る。判定は集約が持ち、ここは伝え方だけを決める。"""
+    raise ManageError(
+        "TOO_MANY_PROJECTS",
+        f"1つのアーティファクトが入れるプロジェクトは{MAX_PROJECTS}件までです。"
+        "どれかから外してから加えてください。")
 
 
 def _write_membership(gate: ViewGatePort, artifact_id: str, project_ids: list[str]) -> None:
@@ -42,7 +36,8 @@ def _write_membership(gate: ViewGatePort, artifact_id: str, project_ids: list[st
     見えないまま所属したことになり、投稿者には成功が返って閲覧者だけが
     開けない。原因の分からない不具合になるため、ここで止める。
     """
-    _require_within_limit(project_ids)     # 最後の守り。ここへ来る前に弾かれているはず
+    if len(project_ids) > MAX_PROJECTS:   # 最後の守り。ここへ来る前に弾かれているはず
+        _reject_over_limit()
     gate.set_membership(artifact_id, project_ids)
 
 
@@ -52,22 +47,21 @@ def _assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
     加えられるのは自分が公開したものだけ。入れ先は、共有なら誰でも、
     個人なら持ち主だけ。この2つの判定を両方通ったときにだけ成立する。
     """
-    meta = require_manageable(artifacts, caller, artifact_id)
-    if meta.get("uploadedBy") != caller.id and not caller.is_admin:
+    artifact = require_manageable(artifacts, caller, artifact_id)
+    if artifact.published_by.value != caller.id and not caller.is_admin:
         # 他人のものを、勝手に誰かの見せる範囲へ入れられない
         raise ManageError("ARTIFACT_NOT_FOUND", "見つかりません。")
 
     index = require_writable(projects, caller, project_id)
 
-    belongs = list(meta.get("projects") or [])
-    if project_id not in belongs:               # 重ねて加えても二重にならない
-        belongs.append(project_id)
-    # 書き始める前に確かめる。索引を書いてから拒むと、索引と閲覧ゲート用の
-    # 記録が食い違ったまま残る
-    _require_within_limit(belongs)
+    # 書き始める前に確かめる。記録を書いてから拒むと、記録と閲覧ゲート用の
+    # 投影が食い違ったまま残る
+    if not artifact.can_join(project_id):
+        _reject_over_limit()
 
-    meta["projects"] = belongs
-    _write_meta(artifacts, clock, meta)
+    joined = artifact.joined(project_id, clock())   # 重ねて加えても二重にならない
+    belongs = list(joined.projects)
+    artifacts.save(joined)
     _write_membership(gate, artifact_id, belongs)
     sync_project(artifacts, projects, viewer, clock, index, artifact_id, member=True)
 
@@ -76,15 +70,15 @@ def _assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
 
 def _unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
     """プロジェクトから外す。共有アーティファクト自体は個別の閲覧トークンで開けるまま残る。"""
-    meta = require_manageable(artifacts, caller, artifact_id)
-    if meta.get("uploadedBy") != caller.id and not caller.is_admin:
+    artifact = require_manageable(artifacts, caller, artifact_id)
+    if artifact.published_by.value != caller.id and not caller.is_admin:
         raise ManageError("ARTIFACT_NOT_FOUND", "見つかりません。")
 
     index = require_writable(projects, caller, project_id)
 
-    belongs = [p for p in (meta.get("projects") or []) if p != project_id]
-    meta["projects"] = belongs
-    _write_meta(artifacts, clock, meta)
+    left = artifact.left(project_id, clock())
+    belongs = list(left.projects)
+    artifacts.save(left)
     _write_membership(gate, artifact_id, belongs)
     sync_project(artifacts, projects, viewer, clock, index, artifact_id, member=False)
 

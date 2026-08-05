@@ -21,13 +21,13 @@ def _revoke_all(artifacts: SharedArtifactRepository, projects: ProjectRepository
                gate: ViewGatePort, clock: Clock, caller: Caller,
                subject: ViewSubject) -> dict:
     """渡した相手を一度にすべて外す。公開そのものは止めない。"""
-    record = require_manageable_subject(artifacts, projects, caller, subject)
+    target = require_manageable_subject(artifacts, projects, caller, subject)
     now = clock()
-    tokens = view_token.without_expired(record.get("viewTokens"), now)
-    revoked_count = len(view_token.active_tokens(tokens, now))
+    tokens = view_token.without_expired(target.view_tokens, now)
+    revoked_count = len(view_token.usable(tokens, now))
 
     tokens = view_token.all_revoked(tokens, now)
-    save_tokens(artifacts, projects, clock, record, tokens)
+    save_tokens(artifacts, projects, clock, subject, target, tokens)
     gate.replace_grants(subject, view_token.grants(tokens, now))
     return {"revoked": revoked_count}
 

@@ -17,7 +17,9 @@ from application.project_access import save_project
 from application.viewer_listing import place_project_page, write_listing
 from domain import view_token
 from domain.identifier import new_project_id
-from domain.publication import ACTIVE, is_known_scope
+from domain.project import (PUBLISHED, Project, ProjectId, ProjectKey,
+                            ProjectOwner, ProjectScope, ProjectStatus)
+from domain.publication import is_known_scope
 from domain.view_subject import ViewSubject
 from shared.errors import ProjectError
 
@@ -40,32 +42,30 @@ def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
     project_id = new_project_id()
     token = view_token.new_token()
     now = clock()
-    first = view_token.issued(view_token.new_token_id(), FIRST_TOKEN_NAME,
-                              gate.fingerprint_of(token),
+    first = view_token.issued(FIRST_TOKEN_NAME, gate.fingerprint_of(token),
                               view_token.expires_at(now), now)
 
-    index = {
-        "projectId": project_id,
-        "displayName": name,
-        "projectKey": (project_key or "").strip(),
-        "owner": caller.id,
-        "scope": scope,
-        "status": ACTIVE,
-        "memberArtifactIds": [],
-        "viewTokens": [first],
-        "createdAt": now,
-    }
-    save_project(projects, clock, index)
+    project = Project(
+        project_id=ProjectId(project_id),
+        display_name=name,
+        project_key=ProjectKey((project_key or "").strip()),
+        status=ProjectStatus(PUBLISHED),
+        owner=ProjectOwner(caller.id),
+        scope=ProjectScope(scope),
+        created_at=now,
+        view_tokens=(first,),
+        updated_at=now,
+    )
+    save_project(projects, clock, project)
     place_project_page(viewer, project_id)
-    write_listing(artifacts, viewer, index)
+    write_listing(artifacts, projects, viewer, project)
 
     # 閲覧の面へ渡すのは最後。ここまで成功して初めて開ける状態になる
     gate.replace_grants(ViewSubject.project(project_id),
-                        view_token.grants([first], now))
+                        view_token.grants((first,), now))
 
     return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": viewer.project_url(project_id), "name": name, "scope": scope,
-            "event": "ProjectCreated"}
+            "url": viewer.project_url(project_id), "name": name, "scope": scope}
 
 
 class CreateProject:

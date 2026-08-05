@@ -61,8 +61,7 @@ def test_作ると共有URLと閲覧トークンが返る():
     assert r["url"] == f"https://viewer.example.net/proj/{r['projectId']}/"
     assert r["token"]
     assert r["tokenShownOnce"] is True
-    assert r["event"] == "ProjectCreated"
-
+    
 
 def test_作った人が持ち主になり共有の別が残る():
     deps = setup()
@@ -71,7 +70,7 @@ def test_作った人が持ち主になり共有の別が残る():
     index = index_of(deps, r["projectId"])
     assert index["owner"] == X.id
     assert index["scope"] == "SHARED"
-    assert index["status"] == "active"
+    assert index["status"] == "active"      # 保管の綴り。業務では PUBLISHED
     assert index["memberArtifactIds"] == []
 
 
@@ -275,7 +274,7 @@ def test_公開が止まっていても持ち主は中身を見られる():
     deps = setup()
     r = owned(deps)
     build(deps, ControlProjectAccess).run("suspend", X, r["projectId"])
-    assert build(deps, BrowseProjects).run("detail", X, r["projectId"])["project"]["status"] == "disabled"
+    assert build(deps, BrowseProjects).run("detail", X, r["projectId"])["project"]["status"] == "SUSPENDED"
 
 
 def manage_assign(deps, caller, artifact_id, project_id):

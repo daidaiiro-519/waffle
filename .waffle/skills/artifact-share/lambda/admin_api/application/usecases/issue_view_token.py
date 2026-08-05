@@ -28,9 +28,9 @@ def _issue(artifacts: SharedArtifactRepository, projects: ProjectRepository,
     それまでの閲覧トークンはどれも無効にしない。相手ごとに別々に渡せることが
     この操作の目的であり、増やすたびに前のものが切れては目的を果たさない。
     """
-    record = require_manageable_subject(artifacts, projects, caller, subject)
+    target = require_manageable_subject(artifacts, projects, caller, subject)
     now = clock()
-    tokens = view_token.without_expired(record.get("viewTokens"), now)
+    tokens = view_token.without_expired(target.view_tokens, now)
 
     if not view_token.within_active_limit(tokens, now):
         raise ViewTokenError(
@@ -48,14 +48,14 @@ def _issue(artifacts: SharedArtifactRepository, projects: ProjectRepository,
             "期限が遠すぎます。共有アーティファクトの閲覧トークンは1ヶ月までです。")
 
     token = view_token.new_token()
-    tokens.append(view_token.issued(view_token.new_token_id(), name,
-                                    gate.fingerprint_of(token), expiry, now))
+    issued = view_token.issued(name, gate.fingerprint_of(token), expiry, now)
+    tokens = tokens + (issued,)
 
-    save_tokens(artifacts, projects, clock, record, tokens)
+    save_tokens(artifacts, projects, clock, subject, target, tokens)
     gate.replace_grants(subject, view_token.grants(tokens, now))
 
-    return {"tokenId": tokens[-1]["tokenId"], "name": name, "token": token,
-            "expiresAt": expiry, "tokenShownOnce": True}
+    return {"tokenId": issued.token_id.value, "name": name, "token": token,
+            "expiresAt": expiry.value, "tokenShownOnce": True}
 
 
 class IssueViewToken:

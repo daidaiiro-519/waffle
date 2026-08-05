@@ -130,9 +130,9 @@ def test_一覧にトークンは含まれない():
 
 def test_一覧は公開中と停止中を区別して返す():
     deps, r = setup()
-    assert build(deps, ListMyArtifacts).run(ME)["artifacts"][0]["status"] == "active"
+    assert build(deps, ListMyArtifacts).run(ME)["artifacts"][0]["status"] == "PUBLISHED"
     build(deps, SuspendArtifact).run(ME, r["artifactId"])
-    assert build(deps, ListMyArtifacts).run(ME)["artifacts"][0]["status"] == "disabled"
+    assert build(deps, ListMyArtifacts).run(ME)["artifacts"][0]["status"] == "SUSPENDED"
 
 
 # ── 差し替え ────────────────────────────────────────────

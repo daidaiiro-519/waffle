@@ -8,6 +8,8 @@
 from __future__ import annotations
 
 from application.artifact_access import require_manageable
+from domain.artifact_content import fingerprint as content_fingerprint
+from domain.shared_artifact import ArtifactDescriptor, EXTRACTED
 from application.ports import Caller, Clock
 from application.artifact_access import NOT_FOUND
 from application.ports.comment_repository import CommentRepository
@@ -20,31 +22,22 @@ from domain.publication import is_published
 from shared.errors import ManageError
 
 
-def _write_meta(artifacts: SharedArtifactRepository, clock: Clock, meta: dict) -> None:
-    meta["updatedAt"] = clock()
-    artifacts.save(meta)
-
-
-def _require_published(meta: dict) -> None:
-    if not is_published(meta):
-        raise ManageError("NOT_PUBLISHED", "公開が止まっています。先に再公開してください。")
-
-
 def _replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepository, comments: CommentRepository, viewer: ViewerSitePort, clock: Clock, caller: Caller, artifact_id: str, html: str) -> dict:
     """中身だけを入れ替える。URL・トークン・これまでの反応は保つ。
 
     入れ替えた時点を区切りとして反応の並びに残す。これより前の指摘が
     入れ替え前のものだと読み取れるようにするため。
     """
-    meta = require_manageable(artifacts, caller, artifact_id)
-    if meta.get("uploadedBy") != caller.id:
+    artifact = require_manageable(artifacts, caller, artifact_id)
+    if artifact.published_by.value != caller.id:
         # 管理者であっても他人の中身には手を出せない。集まったコメントが
         # 何に対する反応かを、投稿者の知らないうちに変えないため。
         # ここで「見つからない」と返さないのは、管理者は一覧でその存在を
         # 既に知っており、嘘になるから
         raise ManageError("NOT_THE_PUBLISHER",
                           "中身を差し替えられるのは、公開した本人だけです。")
-    _require_published(meta)
+    if not artifact.status.is_published():
+        raise ManageError("NOT_PUBLISHED", "公開が止まっています。先に再公開してください。")
 
     if not html or not html.strip():
         raise ManageError("EMPTY_CONTENT", "中身が空です。")
@@ -57,16 +50,16 @@ def _replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepos
     # 差し替えの区切り。反応と同じ並びに載る1件の印として残す
     comments.add_replacement_divider(artifact_id, now)
 
+    descriptor = artifact.descriptor
     if found["detected"]:
-        meta.update({
-            "docType": found["docType"],
-            "documentId": found["documentId"],
-            "description": found["description"],
-            "tags": found["tags"],
-        })
-    meta["externalRefs"] = found["externalRefs"]
-    _write_meta(artifacts, clock, meta)
-    refresh_listings(artifacts, projects, viewer, meta)
+        descriptor = ArtifactDescriptor(
+            document_id=found["documentId"], doc_type=found["docType"],
+            title=artifact.display_name, description=found["description"],
+            labels=tuple(found["tags"]), source=EXTRACTED)
+    updated = artifact.with_content(content_fingerprint(html), descriptor,
+                                    found["externalRefs"], now)
+    artifacts.save(updated)
+    refresh_listings(artifacts, projects, viewer, updated)
 
     return {"artifactId": artifact_id, "url": viewer.artifact_url(artifact_id),
             "externalRefs": found["externalRefs"]}

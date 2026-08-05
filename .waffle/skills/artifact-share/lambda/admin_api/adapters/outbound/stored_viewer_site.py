@@ -28,7 +28,7 @@ class StoredViewerSite:
         self._project_page = project_page
         self._domain = viewer_domain
 
-    def place_artifact(self, artifact_id: str, content: str, display_name: str) -> str:
+    def place_artifact(self, artifact_id: str, content: str, display_name: str) -> None:
         # アップロードされたものは書き換えずにそのまま置く
         self._store.put(_content_key(artifact_id), content, HTML)
 
@@ -37,7 +37,11 @@ class StoredViewerSite:
         page = page.replace(DISPLAY_NAME_MARK, display_name)
         self._store.put(_index_key(artifact_id), page, HTML)
 
-        return hashlib.sha256(self._wrapper.encode("utf-8")).hexdigest()
+        # 使った雛形の版を、この面の側で控える。雛形を直したときに置き直しが
+        # 要るものを見分けるためのもので、共有アーティファクトの状態ではない
+        self._store.put(_version_key(artifact_id),
+                        hashlib.sha256(self._wrapper.encode("utf-8")).hexdigest(),
+                        "text/plain; charset=utf-8")
 
     def replace_artifact_content(self, artifact_id: str, content: str) -> None:
         self._store.put(_content_key(artifact_id), content, HTML)
@@ -73,3 +77,7 @@ def _content_key(artifact_id: str) -> str:
 
 def _index_key(artifact_id: str) -> str:
     return f"p/{artifact_id}/index.html"
+
+
+def _version_key(artifact_id: str) -> str:
+    return f"p/{artifact_id}/page-version.txt"

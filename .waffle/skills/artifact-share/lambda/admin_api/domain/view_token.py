@@ -11,8 +11,12 @@
 ときに渡したものが永久に開き続けるため。期限は各配信の口が自分の時計で判じる
 ので、無効化の伝わりを待たずに効く唯一の手立てになる。
 
-対象の仕様: agg-shared-artifact / uc-issue-view-token / uc-list-view-tokens /
-uc-revoke-view-token / uc-revoke-all-view-tokens
+2つの集約が同じ形の閲覧トークンを持ち、宣言も両方に同じ名前で並んでいる。
+ここへ1つだけ置いて共有する——集約ごとのファイルへ写すと同じ語が2回定義され、
+語彙の一貫性そのものが壊れる。
+
+対象の仕様: agg-shared-artifact / agg-project / uc-issue-view-token /
+uc-list-view-tokens / uc-revoke-view-token / uc-revoke-all-view-tokens
 """
 from __future__ import annotations
 
@@ -46,110 +50,7 @@ REVOKED = "REVOKED"
 MAX_ACTIVE = 5
 
 
-def new_token() -> str:
-    """閲覧トークンを発行する。
-
-    区切って読みやすくするのは、口頭やチャットで渡されることがあるため。
-    """
-    return "-".join(random_chars(TOKEN_GROUP_LENGTH) for _ in range(TOKEN_GROUPS))
-
-
-def new_token_id() -> str:
-    """1本の閲覧トークンを、対象の中で指すための識別子。"""
-    return random_chars(TOKEN_ID_LENGTH)
-
-
-def expires_at(now: int, ttl: int | None = None) -> int:
-    """いつ使えなくなるか。0 は期限なしを表す。"""
-    if ttl is None:
-        ttl = DEFAULT_TTL
-    return now + ttl if ttl > 0 else NO_EXPIRY
-
-
-def within_expiry_limit(kind: str, now: int, expiry: int) -> bool:
-    """その対象に許される期限か。
-
-    共有アーティファクトは必ず有限で、発行した時点から1ヶ月を超えない。
-    プロジェクトは置いておく場なので、期限なしを選べる。
-    """
-    if kind != ARTIFACT:
-        return True
-    return NO_EXPIRY < expiry <= now + MAX_TTL
-
-
-def is_active(token: dict, now: int) -> bool:
-    """いま使える閲覧トークンか。無効にされておらず、期限を過ぎていないこと。"""
-    if token.get("status") != ACTIVE:
-        return False
-    expiry = token.get("expiresAt", NO_EXPIRY)
-    return expiry == NO_EXPIRY or expiry > now
-
-
-def active_tokens(tokens: list[dict], now: int) -> list[dict]:
-    """いま使えるものだけを、渡した順のまま返す。"""
-    return [t for t in tokens or [] if is_active(t, now)]
-
-
-def within_active_limit(tokens: list[dict], now: int) -> bool:
-    """これ以上増やせるか。期限を過ぎたものは数に含めない。"""
-    return len(active_tokens(tokens, now)) < MAX_ACTIVE
-
-
-def name_is_free(tokens: list[dict], name: str, now: int) -> bool:
-    """その名前をまだ使っていないか。
-
-    名前は、どれを外すかを公開した人が選ぶための手がかりなので、有効なものの
-    中で重なってはいけない。
-    """
-    return all(t.get("name") != name for t in active_tokens(tokens, now))
-
-
-def issued(token_id: str, name: str, fingerprint: str, expiry: int, at: int) -> dict:
-    """発行した1本の記録。閲覧トークンそのものの値は含めない。"""
-    return {
-        "tokenId": token_id,
-        "name": name,
-        "fingerprint": fingerprint,
-        "expiresAt": expiry,
-        "status": ACTIVE,
-        "issuedAt": at,
-    }
-
-
-def without_expired(tokens: list[dict], now: int) -> list[dict]:
-    """期限を過ぎたものの記録を取り除く。
-
-    残しても外す対象にはならず、一覧を埋めて選びにくくするだけ。見る側からは
-    期限切れと初めから無いものを区別しないので、記録の有無は開けるかどうかに
-    影響しない。
-    """
-    return [t for t in tokens or []
-            if t.get("status") == REVOKED or is_active(t, now)]
-
-
-def revoked(tokens: list[dict], token_id: str) -> list[dict]:
-    """その1本だけを使えなくする。他はそのまま。"""
-    return [dict(t, status=REVOKED) if t.get("tokenId") == token_id else t
-            for t in tokens or []]
-
-
-def all_revoked(tokens: list[dict], now: int) -> list[dict]:
-    """いま使えるものをすべて使えなくする。"""
-    return [dict(t, status=REVOKED) if is_active(t, now) else t for t in tokens or []]
-
-
-def grants(tokens: list[dict], now: int) -> list[tuple[str, int]]:
-    """閲覧の面へ渡す顔ぶれ。使えるものだけを（照合の形, 期限）で並べる。"""
-    return [(t["fingerprint"], t.get("expiresAt", NO_EXPIRY))
-            for t in active_tokens(tokens, now)]
-
-
-# ── 値と、1本の閲覧トークン ──────────────────────────
-#
-# 2つの集約が同じ形の閲覧トークンを持つ。宣言も両方に同じ名前で並んでいるので、
-# ここへ1つだけ置いて共有する。集約ごとのファイルへ写すと、同じ語が2回定義され、
-# 語彙の一貫性そのものが壊れる。
-
+# ── 値 ──────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class ViewTokenId:
@@ -210,3 +111,91 @@ class ViewToken:
 # 集約ごとの呼び分け。形は同じで、指している相手だけが違う
 ArtifactViewToken = ViewToken
 ProjectViewToken = ViewToken
+
+
+# ── 発行 ────────────────────────────────────────────────
+
+def new_token() -> str:
+    """閲覧トークンを発行する。
+
+    区切って読みやすくするのは、口頭やチャットで渡されることがあるため。
+    """
+    return "-".join(random_chars(TOKEN_GROUP_LENGTH) for _ in range(TOKEN_GROUPS))
+
+
+def expires_at(now: int, ttl: int | None = None) -> ViewTokenExpiry:
+    """いつ使えなくなるか。省いたときは既定の有効期間を与える。"""
+    if ttl is None:
+        ttl = DEFAULT_TTL
+    return ViewTokenExpiry(now + ttl if ttl > 0 else NO_EXPIRY)
+
+
+def within_expiry_limit(kind: str, now: int, expiry: ViewTokenExpiry) -> bool:
+    """その対象に許される期限か。
+
+    共有アーティファクトは必ず有限で、発行した時点から1ヶ月を超えない。
+    プロジェクトは置いておく場なので、期限なしを選べる。
+    """
+    if kind != ARTIFACT:
+        return True
+    return not expiry.is_endless() and expiry.value <= now + MAX_TTL
+
+
+def issued(name: str, fingerprint: str, expiry: ViewTokenExpiry, at: int) -> ViewToken:
+    """発行した1本。閲覧トークンそのものの値は含めない。"""
+    return ViewToken(
+        token_id=ViewTokenId(random_chars(TOKEN_ID_LENGTH)),
+        name=name,
+        fingerprint=fingerprint,
+        expires_at=expiry,
+        status=ViewTokenStatus(ACTIVE),
+        issued_at=at,
+    )
+
+
+# ── 顔ぶれを見る・変える ────────────────────────────────
+
+def usable(tokens: tuple[ViewToken, ...], now: int) -> tuple[ViewToken, ...]:
+    """いま使えるものだけを、渡した順のまま返す。"""
+    return tuple(t for t in tokens or () if t.is_usable(now))
+
+
+def within_active_limit(tokens: tuple[ViewToken, ...], now: int) -> bool:
+    """これ以上増やせるか。期限を過ぎたものは数に含めない。"""
+    return len(usable(tokens, now)) < MAX_ACTIVE
+
+
+def name_is_free(tokens: tuple[ViewToken, ...], name: str, now: int) -> bool:
+    """その名前をまだ使っていないか。
+
+    名前は、どれを外すかを公開した人が選ぶための手がかりなので、有効なものの
+    中で重なってはいけない。
+    """
+    return all(t.name != name for t in usable(tokens, now))
+
+
+def without_expired(tokens: tuple[ViewToken, ...], now: int) -> tuple[ViewToken, ...]:
+    """期限を過ぎたものの記録を取り除く。
+
+    残しても外す対象にはならず、一覧を埋めて選びにくくするだけ。見る側からは
+    期限切れと初めから無いものを区別しないので、記録の有無は開けるかどうかに
+    影響しない。
+    """
+    return tuple(t for t in tokens or ()
+                 if not t.status.is_active() or t.is_usable(now))
+
+
+def revoked(tokens: tuple[ViewToken, ...], token_id: str) -> tuple[ViewToken, ...]:
+    """その1本だけを使えなくする。他はそのまま。"""
+    return tuple(t.revoked() if t.token_id.value == token_id else t
+                 for t in tokens or ())
+
+
+def all_revoked(tokens: tuple[ViewToken, ...], now: int) -> tuple[ViewToken, ...]:
+    """いま使えるものをすべて使えなくする。"""
+    return tuple(t.revoked() if t.is_usable(now) else t for t in tokens or ())
+
+
+def grants(tokens: tuple[ViewToken, ...], now: int) -> list[tuple[str, int]]:
+    """閲覧の面へ渡す顔ぶれ。使えるものだけを（照合の形, 期限）で並べる。"""
+    return [(t.fingerprint, t.expires_at.value) for t in usable(tokens, now)]

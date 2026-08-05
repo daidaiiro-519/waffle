@@ -126,12 +126,31 @@ def _dispatch(action, deps, caller, body):
     return route(deps, caller, body)
 
 
+# 業務の語と、外へ返す綴りの対応。管理画面はこの綴りで分岐している
+OUTWARD_STATUS = {"PUBLISHED": "active", "SUSPENDED": "disabled"}
+
+
 def dispatch(action: str, connections, caller: Caller, body: dict):
-    """操作の名前から行き先を引き、そこへ渡す。"""
+    """操作の名前から行き先を引き、そこへ渡し、答えを外の言葉へ直す。"""
     route = ROUTES.get(action)
     if route is None:
         raise ManageError("UNKNOWN_ACTION", "その操作はありません。")
-    return route(connections, caller, body)
+    return _outward(route(connections, caller, body))
+
+
+def _outward(value):
+    """業務の語を、外が読む綴りへ直す。
+
+    公開の状態は、業務では PUBLISHED / SUSPENDED、外では active / disabled と
+    呼ぶ。同じ概念の別の層の綴りであり、どちらかへ寄せるのではなく、この境界で
+    翻訳する。
+    """
+    if isinstance(value, dict):
+        return {k: (OUTWARD_STATUS.get(v, v) if k == "status" else _outward(v))
+                for k, v in value.items()}
+    if isinstance(value, list):
+        return [_outward(v) for v in value]
+    return value
 
 
 # 業務上の失敗を、外の言葉へ写す。既定は400で、それ以外はここに並べる

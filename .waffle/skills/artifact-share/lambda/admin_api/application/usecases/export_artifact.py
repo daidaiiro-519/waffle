@@ -32,7 +32,7 @@ def _export(artifacts: SharedArtifactRepository, comments: CommentRepository, vi
     閲覧トークンは含めない。取り出したものが渡り歩いても、それだけで開ける
     状態にならないようにする。
     """
-    meta = require_manageable(artifacts, caller, artifact_id)
+    artifact = require_manageable(artifacts, caller, artifact_id)
 
     content = viewer.read_artifact_content(artifact_id)
 
@@ -40,14 +40,14 @@ def _export(artifacts: SharedArtifactRepository, comments: CommentRepository, vi
 
     return {
         "artifactId": artifact_id,
-        "name": meta.get("name", ""),
-        "docType": meta.get("docType", ""),
-        "documentId": meta.get("documentId", ""),
-        "description": meta.get("description", ""),
-        "tags": meta.get("tags", []),
-        "status": meta.get("status", ""),
-        "publishedAt": meta.get("publishedAt", 0),
-        "updatedAt": meta.get("updatedAt", 0),
+        "name": artifact.display_name,
+        "docType": artifact.descriptor.doc_type,
+        "documentId": artifact.descriptor.document_id,
+        "description": artifact.descriptor.description,
+        "tags": list(artifact.descriptor.labels),
+        "status": artifact.status.value,
+        "publishedAt": artifact.published_at,
+        "updatedAt": artifact.updated_at,
         "content": content,
         "comments": found["comments"],
         "unreadable": found["unreadable"],
