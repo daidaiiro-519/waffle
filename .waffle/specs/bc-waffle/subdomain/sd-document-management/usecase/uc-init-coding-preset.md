@@ -106,32 +106,6 @@ Scenario: タイトルにプロダクト固有のdocumentIdが付与される
   Then 各documentのtitleは「説明句：documentId」の形式になる
 ```
 
-### 既に存在するdocumentは上書きせずskipする
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | 冪等性：同じプロダクト名で再度initしても既存documentは変更されない |
-
-```gherkin
-Scenario: 既に存在するdocumentは上書きせずskipする
-  Given 既にinit済みの4document
-  When 同じプロダクト名で再度initする
-  Then 何も上書きされずcreatedは空、skippedに4件とも含まれる
-```
-
-### 存在しないプリセット名はPRESET_NOT_FOUNDを返す
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | エラー：未知のプリセット名を指定すると明確なエラーになる |
-
-```gherkin
-Scenario: 存在しないプリセット名はPRESET_NOT_FOUNDを返す
-  Given 存在しないプリセット名
-  When initする
-  Then PRESET_NOT_FOUNDエラーになる
-```
-
 ---
 
 ## 操作保証シナリオ

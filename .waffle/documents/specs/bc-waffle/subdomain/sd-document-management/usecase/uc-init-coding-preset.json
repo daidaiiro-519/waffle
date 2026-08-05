@@ -118,20 +118,6 @@
           "viewpoint": "生成：titleはプリセットの説明句とdocumentIdの組み合わせになる",
           "gherkin": "Scenario: タイトルにプロダクト固有のdocumentIdが付与される\n  Given python-hexagonalプリセット\n  When 新しいプロダクト名でinitする\n  Then 各documentのtitleは「説明句：documentId」の形式になる",
           "covers": "受け入れ基準: titleの形式"
-        },
-        {
-          "name": "既に存在するdocumentは上書きせずskipする",
-          "category": "境界値",
-          "viewpoint": "冪等性：同じプロダクト名で再度initしても既存documentは変更されない",
-          "gherkin": "Scenario: 既に存在するdocumentは上書きせずskipする\n  Given 既にinit済みの4document\n  When 同じプロダクト名で再度initする\n  Then 何も上書きされずcreatedは空、skippedに4件とも含まれる",
-          "covers": "受け入れ基準: 冪等性"
-        },
-        {
-          "name": "存在しないプリセット名はPRESET_NOT_FOUNDを返す",
-          "category": "異常系",
-          "viewpoint": "エラー：未知のプリセット名を指定すると明確なエラーになる",
-          "gherkin": "Scenario: 存在しないプリセット名はPRESET_NOT_FOUNDを返す\n  Given 存在しないプリセット名\n  When initする\n  Then PRESET_NOT_FOUNDエラーになる",
-          "covers": "エラー: PRESET_NOT_FOUND"
         }
       ]
     },

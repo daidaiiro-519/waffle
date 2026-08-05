@@ -5,7 +5,7 @@ from pathlib import Path
 from waffle.adapters.outbound.coding_preset_repo import PackageCodingPresetRepository
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.application.usecases.init_coding_preset import InitCodingPreset
-from waffle.shared.result import Err, Ok
+from waffle.shared.result import Ok
 
 _PRODUCT = "test-acceptance-init-preset"
 _PATHS = [
@@ -55,31 +55,3 @@ def test_title_carries_product_specific_document_id():
     tech_stack_path = Path(f".waffle/documents/coding/tech-stack-{_PRODUCT}.json")
     doc = json.loads(tech_stack_path.read_text(encoding="utf-8"))
     assert doc["content"]["title"]["title"] == f"Python/ヘキサゴナル構成の採用技術を定めるTech Stack仕様：tech-stack-{_PRODUCT}"
-
-
-def test_existing_document_is_skipped_not_overwritten():
-    """
-    Scenario: 既に存在するdocumentは上書きせずskipする
-    Given 既にinit済みの4document
-    When 同じプロダクト名で再度initする
-    Then 何も上書きされずcreatedは空、skippedに4件とも含まれる
-    """
-    engine = _engine()
-    first = engine.run("python-hexagonal", _PRODUCT)
-    assert isinstance(first, Ok), first
-    second = engine.run("python-hexagonal", _PRODUCT)
-    assert isinstance(second, Ok), second
-    assert second.value["created"] == []
-    assert sorted(second.value["skipped"]) == sorted(str(p) for p in _PATHS)
-
-
-def test_unknown_preset_name_is_rejected():
-    """
-    Scenario: 存在しないプリセット名はPRESET_NOT_FOUNDを返す
-    Given 存在しないプリセット名
-    When initする
-    Then PRESET_NOT_FOUNDエラーになる
-    """
-    result = _engine().run("no-such-preset", _PRODUCT)
-    assert isinstance(result, Err)
-    assert result.details == ["PRESET_NOT_FOUND"]

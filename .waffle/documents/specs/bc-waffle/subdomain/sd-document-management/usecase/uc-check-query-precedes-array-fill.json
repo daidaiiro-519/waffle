@@ -119,7 +119,7 @@
           "name": "直接呼び出しとCLI呼び出しで同じ判定結果になる",
           "category": "正常系",
           "viewpoint": "提供チャネルの一貫性：呼び出し経路によらず判定が変わらないか",
-          "gherkin": "Given targetPathが\"X.json\"であり、hasArrayValueがtrueであり、queriedPathsに\"X.json\"が含まれていない\nWhen Pythonから直接CheckQueryPrecedesArrayFillを呼び出す\nThen 拒否判定が返る\nWhen 同じ入力をCLI経由（waffle check-query-precedes-array-fill）で呼び出す\nThen 同じ拒否判定が返る",
+          "gherkin": "Scenario: 直接呼び出しとCLI呼び出しで同じ判定結果になる\n  Given targetPathが\"X.json\"であり、hasArrayValueがtrueであり、queriedPathsに\"X.json\"が含まれていない\n  When Pythonから直接CheckQueryPrecedesArrayFillを呼び出す\n  Then 拒否判定が返る\n  When 同じ入力をCLI経由（waffle check-query-precedes-array-fill）で呼び出す\n  Then 同じ拒否判定が返る",
           "covers": "同一入力に対する呼び出し経路間の判定一貫性"
         }
       ]

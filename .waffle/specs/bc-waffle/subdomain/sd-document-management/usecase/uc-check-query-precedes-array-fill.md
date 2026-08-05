@@ -119,9 +119,10 @@ Then 許可判定が返る
 | 正常系 | 提供チャネルの一貫性：呼び出し経路によらず判定が変わらないか |
 
 ```gherkin
-Given targetPathが"X.json"であり、hasArrayValueがtrueであり、queriedPathsに"X.json"が含まれていない
-When Pythonから直接CheckQueryPrecedesArrayFillを呼び出す
-Then 拒否判定が返る
-When 同じ入力をCLI経由（waffle check-query-precedes-array-fill）で呼び出す
-Then 同じ拒否判定が返る
+Scenario: 直接呼び出しとCLI呼び出しで同じ判定結果になる
+  Given targetPathが"X.json"であり、hasArrayValueがtrueであり、queriedPathsに"X.json"が含まれていない
+  When Pythonから直接CheckQueryPrecedesArrayFillを呼び出す
+  Then 拒否判定が返る
+  When 同じ入力をCLI経由（waffle check-query-precedes-array-fill）で呼び出す
+  Then 同じ拒否判定が返る
 ```
