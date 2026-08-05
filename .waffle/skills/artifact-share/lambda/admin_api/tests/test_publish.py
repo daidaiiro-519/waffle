@@ -91,15 +91,15 @@ def test_識別情報が添えられていれば何も尋ねずに公開でき�
     """Given metaタグがある / When 公開する / Then 居場所とトークンが返り、情報が控えられる"""
     result = publishing().run({"html": WITH_META, "authorization": "Bearer x"})
 
-    assert result["artifactId"]
-    assert result["token"]
-    assert result["url"].endswith("/p/" + result["artifactId"] + "/")
-    assert result["descriptor"]["title"] == "検索基盤にPostgreSQLを採用する"
-    assert result["descriptor"]["docType"] == "DecisionRecord"
-    assert result["descriptor"]["documentId"] == "adr-search-backend"
-    assert result["descriptor"]["tags"] == ["backend", "search", "database"]
-    assert result["metaSource"] == "extracted"
-    assert result["needsName"] is False
+    assert result.artifact_id
+    assert result.token
+    assert result.url.endswith("/p/" + result.artifact_id + "/")
+    assert result.descriptor.title == "検索基盤にPostgreSQLを採用する"
+    assert result.descriptor.doc_type == "DecisionRecord"
+    assert result.descriptor.document_id == "adr-search-backend"
+    assert result.descriptor.tags == ("backend", "search", "database")
+    assert result.meta_source == "extracted"
+    assert result.needs_name is False
 
 
 def test_識別情報が無ければ題名を尋ねる():
@@ -111,9 +111,9 @@ def test_識別情報が無ければ題名を尋ねる():
 
 def test_題名を与えれば識別情報が無くても公開できる():
     result = publishing().run({"html": WITHOUT_META, "displayName": "離脱率メモ", "authorization": "Bearer x"})
-    assert result["artifactId"]
-    assert result["descriptor"]["title"] == "離脱率メモ"
-    assert result["metaSource"] == "manual"
+    assert result.artifact_id
+    assert result.descriptor.title == "離脱率メモ"
+    assert result.meta_source == "manual"
 
 
 def test_渡したHTMLがそのまま保たれる():
@@ -121,7 +121,7 @@ def test_渡したHTMLがそのまま保たれる():
     store = FakeStore()
     result = publishing(store=store).run({"html": WITH_META, "authorization": "Bearer x"})
 
-    content_key = "p/" + result["artifactId"] + "/content.html"
+    content_key = "p/" + result.artifact_id + "/content.html"
     assert store.objects[content_key]["body"] == WITH_META
     assert store.objects[content_key]["content_type"].startswith("text/html")
 
@@ -130,8 +130,8 @@ def test_閲覧画面が別に配置されアーティファクトIDが埋まる
     store = FakeStore()
     result = publishing(store=store).run({"html": WITH_META, "authorization": "Bearer x"})
 
-    index_key = "p/" + result["artifactId"] + "/index.html"
-    assert result["artifactId"] in store.objects[index_key]["body"]
+    index_key = "p/" + result.artifact_id + "/index.html"
+    assert result.artifact_id in store.objects[index_key]["body"]
     assert "{{アーティファクトID}}" not in store.objects[index_key]["body"]
 
 
@@ -149,8 +149,8 @@ def test_招かれていない者は公開できない():
 def test_外部への参照は件数を添えて公開する():
     """Given 外部を3件参照している / When 公開する / Then 公開はされ、件数が伝わる"""
     result = publishing().run({"html": WITH_EXTERNAL, "displayName": "d", "authorization": "Bearer x"})
-    assert result["externalRefs"] == 3
-    assert result["artifactId"]
+    assert result.external_refs == 3
+    assert result.artifact_id
 
 
 def test_空のHTMLは公開できない():
@@ -166,9 +166,9 @@ def test_トークンは保管された記録から取り出せない():
     keys = FakeKeyStore()
     result = publishing(keys=keys).run({"html": WITH_META, "authorization": "Bearer x"})
 
-    record = keys.keys["token:" + result["artifactId"]]
+    record = keys.keys["token:" + result.artifact_id]
     value, expires = record.split("|")
-    assert value != result["token"]          # そのままは残さない
+    assert value != result.token          # そのままは残さない
     assert int(expires) > 0                  # 期限は必ず付く
 
 

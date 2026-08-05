@@ -11,6 +11,7 @@
 
 import main
 import json
+from dataclasses import asdict
 import sys
 from pathlib import Path
 
@@ -46,7 +47,7 @@ def setup():
     r = build(c, PublishArtifact).run({"html": HTML, "authorization": "Bearer x"})
     deps = main.Connections(store=store, keys=keys, now=lambda: 1_700_000_100,
                        viewer_domain="viewer.example.net")
-    return deps, r["artifactId"]
+    return deps, r.artifact_id
 
 
 def post(deps, artifact_id, at, author, body, decision="comment", parent=None):
@@ -69,9 +70,9 @@ def test_寄せられた順に読める():
 
     got = build(deps, ReadComments).run(ME, aid)
 
-    assert [c["author"] for c in got["comments"]] == ["田中", "佐藤", "山田"]
-    assert got["comments"][0]["decision"] == "approve"
-    assert got["comments"][0]["body"] == "これで良いと思います"
+    assert [c["author"] for c in got.comments] == ["田中", "佐藤", "山田"]
+    assert got.comments[0]["decision"] == "approve"
+    assert got.comments[0]["body"] == "これで良いと思います"
 
 
 def test_保存されている形のまま返る():
@@ -79,7 +80,7 @@ def test_保存されている形のまま返る():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
 
-    c = build(deps, ReadComments).run(ME, aid)["comments"][0]
+    c = build(deps, ReadComments).run(ME, aid).comments[0]
     assert set(c) >= {"kind", "author", "decision", "body", "parentId", "postedAt"}
 
 
@@ -89,7 +90,7 @@ def test_返信がどれへの返信かが分かる():
     post(deps, aid, 1700000002, "投稿者", "回答です", parent="1700000001-abcd1234")
 
     got = build(deps, ReadComments).run(ME, aid)
-    assert got["comments"][1]["parentId"] == "1700000001-abcd1234"
+    assert got.comments[1]["parentId"] == "1700000001-abcd1234"
 
 
 def test_差し替えの区切りが並びに現れる():
@@ -99,7 +100,7 @@ def test_差し替えの区切りが並びに現れる():
     build(deps, ReplaceArtifactContent).run(ME, aid, HTML.replace("本文", "直した"))
     post(deps, aid, 1700000200, "佐藤", "直りました", "approve")
 
-    kinds = [c["kind"] for c in build(deps, ReadComments).run(ME, aid)["comments"]]
+    kinds = [c["kind"] for c in build(deps, ReadComments).run(ME, aid).comments]
     assert kinds == ["comment", "divider", "comment"]
 
 
@@ -114,14 +115,14 @@ def test_他人のものは読めない():
 def test_管理者は他人のものも読める():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
-    assert len(build(deps, ReadComments).run(ADMIN, aid)["comments"]) == 1
+    assert len(build(deps, ReadComments).run(ADMIN, aid).comments) == 1
 
 
 def test_公開が止まっていても読める():
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
     build(deps, SuspendArtifact).run(ME, aid)
-    assert len(build(deps, ReadComments).run(ME, aid)["comments"]) == 1
+    assert len(build(deps, ReadComments).run(ME, aid).comments) == 1
 
 
 def test_読めない記録があっても残りが返る():
@@ -133,9 +134,9 @@ def test_読めない記録があっても残りが返る():
 
     got = build(deps, ReadComments).run(ME, aid)
 
-    assert [c["author"] for c in got["comments"]] == ["田中", "佐藤"]
+    assert [c["author"] for c in got.comments] == ["田中", "佐藤"]
     # 黙って落とすと、投稿者が「これで全部だ」と思い込む
-    assert got["unreadable"] == 1
+    assert got.unreadable == 1
 
 
 def test_読んでも何も変わらない():
@@ -157,9 +158,9 @@ def test_中身とコメントがまとめて返る():
 
     got = build(deps, ExportArtifact).run(ME, aid)
 
-    assert got["content"] == HTML
-    assert got["name"] == "検索基盤の選定"
-    assert len(got["comments"]) == 1
+    assert got.content == HTML
+    assert got.name == "検索基盤の選定"
+    assert len(got.comments) == 1
 
 
 def test_取り出しても何も変わらない():
@@ -181,13 +182,13 @@ def test_公開が止まっていても取り出せる():
     """止めてからでは取り出せないと、迷ったときに止められなくなる"""
     deps, aid = setup()
     build(deps, SuspendArtifact).run(ME, aid)
-    assert build(deps, ExportArtifact).run(ME, aid)["content"] == HTML
+    assert build(deps, ExportArtifact).run(ME, aid).content == HTML
 
 
 def test_取り出したものに閲覧トークンは含まれない():
     """渡り歩いても、それだけで開ける状態にならないようにする"""
     deps, aid = setup()
-    got = json.dumps(build(deps, ExportArtifact).run(ME, aid), ensure_ascii=False)
+    got = json.dumps(asdict(build(deps, ExportArtifact).run(ME, aid)), ensure_ascii=False)
     assert "token" not in got
 
 

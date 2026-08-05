@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.artifact_access import require_manageable
 from application.ports import Caller, Clock
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -19,7 +21,16 @@ from domain.view_subject import ViewSubject
 from shared.errors import ManageError
 
 
-def _resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
+
+@dataclass(frozen=True)
+class ResumedArtifact:
+    """再開した結果。共有URLは止める前と同じで、閲覧者は何もしなくてよい。"""
+
+    artifact_id: str
+    url: str
+    status: str
+
+def _resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> ResumedArtifact:
     """再び開けるようにする。
 
     止める前に渡していた閲覧トークンのうち、期限内で無効にしていないものを
@@ -35,8 +46,8 @@ def _resume(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: V
                         view_token.grants(artifact.view_tokens, now))
     artifacts.save(artifact.resumed(now))
 
-    return {"artifactId": artifact_id, "url": viewer.artifact_url(artifact_id),
-            "status": PUBLISHED}
+    return ResumedArtifact(artifact_id=artifact_id,
+                           url=viewer.artifact_url(artifact_id), status=PUBLISHED)
 
 
 class ResumeArtifact:
@@ -51,6 +62,6 @@ class ResumeArtifact:
         self._gate = gate
         self._clock = clock
 
-    def run(self, caller: Caller, artifact_id: str) -> dict:
+    def run(self, caller: Caller, artifact_id: str) -> ResumedArtifact:
         """このユースケースの唯一の入口。"""
         return _resume(self._artifacts, self._viewer, self._gate, self._clock, caller, artifact_id)

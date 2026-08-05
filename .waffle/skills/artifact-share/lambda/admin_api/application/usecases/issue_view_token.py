@@ -7,6 +7,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -20,9 +22,20 @@ from application.view_token_access import (DUPLICATE_TOKEN_NAME, EXPIRY_TOO_FAR,
                                            TOKEN_LIMIT_REACHED)
 
 
+
+@dataclass(frozen=True)
+class IssuedViewToken:
+    """発行した結果。閲覧トークンの値はこの一度きり示され、以後は見返せない。"""
+
+    token_id: str
+    name: str
+    token: str
+    expires_at: int
+    token_shown_once: bool = True
+
 def _issue(artifacts: SharedArtifactRepository, projects: ProjectRepository,
           gate: ViewGatePort, clock: Clock, caller: Caller, subject: ViewSubject,
-          name: str, ttl: int | None = None) -> dict:
+          name: str, ttl: int | None = None) -> IssuedViewToken:
     """閲覧トークンを1本増やし、その値を一度だけ返す。
 
     それまでの閲覧トークンはどれも無効にしない。相手ごとに別々に渡せることが
@@ -54,8 +67,8 @@ def _issue(artifacts: SharedArtifactRepository, projects: ProjectRepository,
     save_tokens(artifacts, projects, clock, subject, target, tokens)
     gate.replace_grants(subject, view_token.grants(tokens, now))
 
-    return {"tokenId": issued.token_id.value, "name": name, "token": token,
-            "expiresAt": expiry.value, "tokenShownOnce": True}
+    return IssuedViewToken(token_id=issued.token_id.value, name=name, token=token,
+                           expires_at=expiry.value)
 
 
 class IssueViewToken:
@@ -70,6 +83,6 @@ class IssueViewToken:
         self._gate = gate
         self._clock = clock
 
-    def run(self, caller: Caller, subject: ViewSubject, name: str, ttl: int | None = None) -> dict:
+    def run(self, caller: Caller, subject: ViewSubject, name: str, ttl: int | None = None) -> IssuedViewToken:
         """このユースケースの唯一の入口。"""
         return _issue(self._artifacts, self._projects, self._gate, self._clock, caller, subject, name, ttl)

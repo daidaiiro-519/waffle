@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.artifact_access import require_manageable
 from application.ports import Caller, Clock
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -17,7 +19,15 @@ from domain.view_subject import ViewSubject
 from shared.errors import ManageError
 
 
-def _suspend(artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> dict:
+
+@dataclass(frozen=True)
+class SuspendedArtifact:
+    """止めた結果。どの閲覧トークンでも開けない状態になったことを伝える。"""
+
+    artifact_id: str
+    status: str
+
+def _suspend(artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str) -> SuspendedArtifact:
     """公開を止める。中身も反応も消さない。"""
     artifact = require_manageable(artifacts, caller, artifact_id)
     if not artifact.status.is_published():
@@ -26,7 +36,7 @@ def _suspend(artifacts: SharedArtifactRepository, gate: ViewGatePort, clock: Clo
     gate.close(ViewSubject.artifact(artifact_id))
     artifacts.save(artifact.suspended(clock()))
 
-    return {"artifactId": artifact_id, "status": SUSPENDED}
+    return SuspendedArtifact(artifact_id=artifact_id, status=SUSPENDED)
 
 
 class SuspendArtifact:
@@ -40,6 +50,6 @@ class SuspendArtifact:
         self._gate = gate
         self._clock = clock
 
-    def run(self, caller: Caller, artifact_id: str) -> dict:
+    def run(self, caller: Caller, artifact_id: str) -> SuspendedArtifact:
         """このユースケースの唯一の入口。"""
         return _suspend(self._artifacts, self._gate, self._clock, caller, artifact_id)

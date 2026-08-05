@@ -9,6 +9,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.artifact_access import require_manageable
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
@@ -20,6 +22,14 @@ from application.viewer_listing import sync_project
 from domain.shared_artifact import MAX_PROJECTS
 from shared.errors import ManageError
 
+
+
+@dataclass(frozen=True)
+class ArtifactMembership:
+    """出し入れした結果。いまどのプロジェクトに入っているかを返す。"""
+
+    artifact_id: str
+    projects: tuple[str, ...]
 
 def _reject_over_limit() -> None:
     """上限を超えることを断る。判定は集約が持ち、ここは伝え方だけを決める。"""
@@ -41,7 +51,7 @@ def _write_membership(gate: ViewGatePort, artifact_id: str, project_ids: list[st
     gate.set_membership(artifact_id, project_ids)
 
 
-def _assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def _assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> ArtifactMembership:
     """プロジェクトへ加える。人の明示的な操作でのみ成立する。
 
     加えられるのは自分が公開したものだけ。入れ先は、共有なら誰でも、
@@ -65,10 +75,10 @@ def _assign(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
     _write_membership(gate, artifact_id, belongs)
     sync_project(artifacts, projects, viewer, clock, index, artifact_id, member=True)
 
-    return {"artifactId": artifact_id, "projects": belongs}
+    return ArtifactMembership(artifact_id=artifact_id, projects=tuple(belongs))
 
 
-def _unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> dict:
+def _unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, artifact_id: str, project_id: str) -> ArtifactMembership:
     """プロジェクトから外す。共有アーティファクト自体は個別の閲覧トークンで開けるまま残る。"""
     artifact = require_manageable(artifacts, caller, artifact_id)
     if artifact.published_by.value != caller.id and not caller.is_admin:
@@ -82,7 +92,7 @@ def _unassign(artifacts: SharedArtifactRepository, projects: ProjectRepository, 
     _write_membership(gate, artifact_id, belongs)
     sync_project(artifacts, projects, viewer, clock, index, artifact_id, member=False)
 
-    return {"artifactId": artifact_id, "projects": belongs}
+    return ArtifactMembership(artifact_id=artifact_id, projects=tuple(belongs))
 
 
 class AssignArtifactToProject:
@@ -98,7 +108,7 @@ class AssignArtifactToProject:
         self._gate = gate
         self._clock = clock
 
-    def run(self, operation: str, caller: Caller, artifact_id: str, project_id: str) -> dict:
+    def run(self, operation: str, caller: Caller, artifact_id: str, project_id: str) -> ArtifactMembership:
         """このユースケースの唯一の入口。"""
         if operation == "assign":
             return _assign(self._artifacts, self._projects, self._viewer, self._gate, self._clock, caller, artifact_id, project_id)

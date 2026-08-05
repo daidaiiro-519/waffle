@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -26,7 +28,19 @@ from shared.errors import ProjectError
 FIRST_TOKEN_NAME = "最初の共有"
 
 
-def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
+
+@dataclass(frozen=True)
+class CreatedProject:
+    """作った結果。最初の1本の閲覧トークンは、この一度きり示される。"""
+
+    project_id: str
+    token: str
+    url: str
+    name: str
+    scope: str
+    token_shown_once: bool = True
+
+def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, display_name: str, scope: str, project_key: str = "") -> CreatedProject:
     """プロジェクトを作り、閲覧トークンを発行する。作った時点では何も入っていない。
 
     共有の別はここでしか決まらない。変える操作を用意しないことが、
@@ -63,8 +77,8 @@ def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
     gate.replace_grants(ViewSubject.project(project_id),
                         view_token.grants((first,), now))
 
-    return {"projectId": project_id, "token": token, "tokenShownOnce": True,
-            "url": viewer.project_url(project_id), "name": name, "scope": scope}
+    return CreatedProject(project_id=project_id, token=token,
+                          url=viewer.project_url(project_id), name=name, scope=scope)
 
 
 class CreateProject:
@@ -80,6 +94,6 @@ class CreateProject:
         self._gate = gate
         self._clock = clock
 
-    def run(self, caller: Caller, display_name: str, scope: str, project_key: str = "") -> dict:
+    def run(self, caller: Caller, display_name: str, scope: str, project_key: str = "") -> CreatedProject:
         """このユースケースの唯一の入口。"""
         return _create(self._artifacts, self._projects, self._viewer, self._gate, self._clock, caller, display_name, scope, project_key)

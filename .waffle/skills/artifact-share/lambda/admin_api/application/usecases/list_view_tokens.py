@@ -7,6 +7,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -18,15 +20,32 @@ from domain.view_subject import ViewSubject
 
 
 
+
+@dataclass(frozen=True)
+class ViewTokenRow:
+    """一覧の1行。閲覧トークンそのものの値は持たない。"""
+
+    token_id: str
+    name: str
+    expires_at: int
+    issued_at: int
+
+
+@dataclass(frozen=True)
+class ViewTokens:
+    """いま渡している相手の一覧。"""
+
+    view_tokens: tuple[ViewTokenRow, ...]
+
 def _list_tokens(artifacts: SharedArtifactRepository, projects: ProjectRepository,
-                clock: Clock, caller: Caller, subject: ViewSubject) -> dict:
+                clock: Clock, caller: Caller, subject: ViewSubject) -> ViewTokens:
     """いま渡している相手を確かめる。閲覧トークンそのものの値は返さない。"""
     target = require_manageable_subject(artifacts, projects, caller, subject)
     now = clock()
-    return {"viewTokens": [
-        {"tokenId": t.token_id.value, "name": t.name,
-         "expiresAt": t.expires_at.value, "issuedAt": t.issued_at}
-        for t in view_token.usable(target.view_tokens, now)]}
+    return ViewTokens(view_tokens=tuple(
+        ViewTokenRow(token_id=t.token_id.value, name=t.name,
+                     expires_at=t.expires_at.value, issued_at=t.issued_at)
+        for t in view_token.usable(target.view_tokens, now)))
 
 
 class ListViewTokens:
@@ -40,6 +59,6 @@ class ListViewTokens:
         self._projects = projects
         self._clock = clock
 
-    def run(self, caller: Caller, subject: ViewSubject) -> dict:
+    def run(self, caller: Caller, subject: ViewSubject) -> ViewTokens:
         """このユースケースの唯一の入口。"""
         return _list_tokens(self._artifacts, self._projects, self._clock, caller, subject)

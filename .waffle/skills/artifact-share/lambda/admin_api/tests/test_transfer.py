@@ -64,19 +64,19 @@ def meta_of(deps, artifact_id):
 
 def test_管理者は他人のものも一覧できる():
     deps, r = setup()
-    ids = [row["artifactId"] for row in build(deps, ListMyArtifacts).run(ADMIN)["artifacts"]]
-    assert ids == [r["artifactId"]]
+    ids = [row.artifact_id for row in build(deps, ListMyArtifacts).run(ADMIN).artifacts]
+    assert ids == [r.artifact_id]
 
 
 def test_一覧には誰が公開したかが分かる():
     """管理者が全員のものを見るとき、持ち主が読めないと引き継ぎ先を決められない"""
     deps, r = setup()
-    assert build(deps, ListMyArtifacts).run(ADMIN)["artifacts"][0]["uploadedBy"] == X.id
+    assert build(deps, ListMyArtifacts).run(ADMIN).artifacts[0].uploaded_by == X.id
 
 
 def test_管理者は他人のものを公開停止_再開できる():
     deps, r = setup()
-    aid = r["artifactId"]
+    aid = r.artifact_id
 
     build(deps, SuspendArtifact).run(ADMIN, aid)
     assert meta_of(deps, aid)["status"] == "disabled"
@@ -90,20 +90,20 @@ def test_管理者は他人のものを公開停止_再開できる():
 def test_管理者でも他人の中身は差し替えられない():
     """集まったコメントが何に対する反応かを、投稿者の知らないうちに変えない"""
     deps, r = setup()
-    before = deps.store.get(f"p/{r['artifactId']}/content.html")
+    before = deps.store.get(f"p/{r.artifact_id}/content.html")
 
     with pytest.raises(ManageError) as x:
-        build(deps, ReplaceArtifactContent).run(ADMIN, r["artifactId"], HTML.replace("本文", "別"))
+        build(deps, ReplaceArtifactContent).run(ADMIN, r.artifact_id, HTML.replace("本文", "別"))
 
     assert x.value.code == "NOT_THE_PUBLISHER"
-    assert deps.store.get(f"p/{r['artifactId']}/content.html") == before
+    assert deps.store.get(f"p/{r.artifact_id}/content.html") == before
 
 
 def test_第三者には見つからないものとして拒む():
     """拒否と不在を区別させないことで、そこに何かがあること自体を伝えない"""
     deps, r = setup()
     with pytest.raises(ManageError) as x:
-        build(deps, SuspendArtifact).run(Y, r["artifactId"])
+        build(deps, SuspendArtifact).run(Y, r.artifact_id)
     assert x.value.code == "ARTIFACT_NOT_FOUND"
 
 
@@ -111,64 +111,64 @@ def test_第三者には見つからないものとして拒む():
 
 def test_移した先が手入れできるようになる():
     deps, r = setup()
-    result = build(deps, TransferArtifact).run(ADMIN, r["artifactId"], Y.id)
+    result = build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
 
-    assert result["to"] == Y.id
-    assert meta_of(deps, r["artifactId"])["uploadedBy"] == Y.id
-    build(deps, SuspendArtifact).run(Y, r["artifactId"])          # Yが扱える
+    assert result.moved_to == Y.id
+    assert meta_of(deps, r.artifact_id)["uploadedBy"] == Y.id
+    build(deps, SuspendArtifact).run(Y, r.artifact_id)          # Yが扱える
 
 
 def test_移す前の人は扱えなくなる():
     """引き継ぎは移動であって複製ではない"""
     deps, r = setup()
-    build(deps, TransferArtifact).run(ADMIN, r["artifactId"], Y.id)
+    build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
 
     with pytest.raises(ManageError) as x:
-        build(deps, SuspendArtifact).run(X, r["artifactId"])
+        build(deps, SuspendArtifact).run(X, r.artifact_id)
     assert x.value.code == "ARTIFACT_NOT_FOUND"
 
 
 def test_閲覧者から見て何も変わらない():
     deps, r = setup()
-    token_before = deps.keys.get(f"token:{r['artifactId']}")
-    content_before = deps.store.get(f"p/{r['artifactId']}/content.html")
+    token_before = deps.keys.get(f"token:{r.artifact_id}")
+    content_before = deps.store.get(f"p/{r.artifact_id}/content.html")
 
-    build(deps, TransferArtifact).run(ADMIN, r["artifactId"], Y.id)
+    build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
 
-    assert deps.keys.get(f"token:{r['artifactId']}") == token_before
-    assert deps.store.get(f"p/{r['artifactId']}/content.html") == content_before
-    assert meta_of(deps, r["artifactId"])["status"] == "active"
+    assert deps.keys.get(f"token:{r.artifact_id}") == token_before
+    assert deps.store.get(f"p/{r.artifact_id}/content.html") == content_before
+    assert meta_of(deps, r.artifact_id)["status"] == "active"
 
 
 def test_引き継いでもコメントの並びに区切りは増えない():
     deps, r = setup()
-    build(deps, TransferArtifact).run(ADMIN, r["artifactId"], Y.id)
-    assert deps.store.list(f"comments/{r['artifactId']}/") == []
+    build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
+    assert deps.store.list(f"comments/{r.artifact_id}/") == []
 
 
 def test_管理者でない者は移せない():
     deps, r = setup()
     with pytest.raises(ManageError) as x:
-        build(deps, TransferArtifact).run(X, r["artifactId"], Y.id)
+        build(deps, TransferArtifact).run(X, r.artifact_id, Y.id)
     assert x.value.code == "NOT_ADMINISTRATOR"
-    assert meta_of(deps, r["artifactId"])["uploadedBy"] == X.id
+    assert meta_of(deps, r.artifact_id)["uploadedBy"] == X.id
 
 
 def test_招かれていない人へは移せない():
     """移した先が公開できる人でなければ、その場で手入れできない状態に戻る"""
     deps, r = setup()
     with pytest.raises(ManageError) as x:
-        build(deps, TransferArtifact).run(ADMIN, r["artifactId"], "no-such-person")
+        build(deps, TransferArtifact).run(ADMIN, r.artifact_id, "no-such-person")
     assert x.value.code == "PUBLISHER_NOT_FOUND"
-    assert meta_of(deps, r["artifactId"])["uploadedBy"] == X.id
+    assert meta_of(deps, r.artifact_id)["uploadedBy"] == X.id
 
 
 def test_公開停止されているものも移せる():
     """止まっているものこそ引き継ぎ先が要る"""
     deps, r = setup()
-    build(deps, SuspendArtifact).run(X, r["artifactId"])
+    build(deps, SuspendArtifact).run(X, r.artifact_id)
 
-    build(deps, TransferArtifact).run(ADMIN, r["artifactId"], Y.id)
+    build(deps, TransferArtifact).run(ADMIN, r.artifact_id, Y.id)
 
-    assert meta_of(deps, r["artifactId"])["uploadedBy"] == Y.id
-    assert meta_of(deps, r["artifactId"])["status"] == "disabled"   # 止まったまま
+    assert meta_of(deps, r.artifact_id)["uploadedBy"] == Y.id
+    assert meta_of(deps, r.artifact_id)["status"] == "disabled"   # 止まったまま

@@ -7,6 +7,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -19,9 +21,17 @@ from domain.view_subject import ViewSubject
 from application.view_token_access import TOKEN_NOT_FOUND
 
 
+
+@dataclass(frozen=True)
+class RevokedViewToken:
+    """1本を外した結果。他の相手はそのまま見られる。"""
+
+    token_id: str
+    revoked: bool = True
+
 def _revoke(artifacts: SharedArtifactRepository, projects: ProjectRepository,
            gate: ViewGatePort, clock: Clock, caller: Caller, subject: ViewSubject,
-           token_id: str) -> dict:
+           token_id: str) -> RevokedViewToken:
     """その1本だけを使えなくする。他の相手はそのまま見られる。"""
     target = require_manageable_subject(artifacts, projects, caller, subject)
     now = clock()
@@ -33,7 +43,7 @@ def _revoke(artifacts: SharedArtifactRepository, projects: ProjectRepository,
     tokens = view_token.revoked(tokens, token_id)
     save_tokens(artifacts, projects, clock, subject, target, tokens)
     gate.replace_grants(subject, view_token.grants(tokens, now))
-    return {"tokenId": token_id, "revoked": True}
+    return RevokedViewToken(token_id=token_id)
 
 
 class RevokeViewToken:
@@ -48,6 +58,6 @@ class RevokeViewToken:
         self._gate = gate
         self._clock = clock
 
-    def run(self, caller: Caller, subject: ViewSubject, token_id: str) -> dict:
+    def run(self, caller: Caller, subject: ViewSubject, token_id: str) -> RevokedViewToken:
         """このユースケースの唯一の入口。"""
         return _revoke(self._artifacts, self._projects, self._gate, self._clock, caller, subject, token_id)

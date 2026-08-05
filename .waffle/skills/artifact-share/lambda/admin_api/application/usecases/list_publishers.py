@@ -9,10 +9,23 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller, PublisherDirectory
 from domain.caller import may_manage_publishers
 from shared.errors import PublisherError
 
+
+
+@dataclass(frozen=True)
+class PublisherRow:
+    """名簿の1行。合言葉に関わるものは一切持たない。"""
+
+    id: str
+    name: str
+    email: str
+    status: str
+    admin: bool
 
 def _require_admin(caller: Caller) -> None:
     """判定は domain が持つ。ここが決めるのは、断るときに何と伝えるかだけ。"""
@@ -21,7 +34,7 @@ def _require_admin(caller: Caller) -> None:
                              "投稿者を出し入れできるのは管理者だけです。")
 
 
-def _list_publishers(directory: PublisherDirectory, caller: Caller) -> list[dict]:
+def _list_publishers(directory: PublisherDirectory, caller: Caller) -> list[PublisherRow]:
     """招かれている人を並べる。管理者だけが見られる。
 
     誰が招かれているかを投稿者どうしに見せないのは、共有の相手を
@@ -35,13 +48,13 @@ def _list_publishers(directory: PublisherDirectory, caller: Caller) -> list[dict
     rows = []
     for person in directory.list():
         email = person.get("email", "")
-        rows.append({
-            "id": person["id"],
-            "name": email.split("@")[0] if email else person["id"],
-            "email": email,
-            "status": person.get("status", ""),
-            "admin": person["id"] in admins,
-        })
+        rows.append(PublisherRow(
+            id=person["id"],
+            name=email.split("@")[0] if email else person["id"],
+            email=email,
+            status=person.get("status", ""),
+            admin=person["id"] in admins,
+        ))
     return rows
 
 
@@ -54,6 +67,6 @@ class ListPublishers:
     def __init__(self, directory: PublisherDirectory) -> None:
         self._directory = directory
 
-    def run(self, caller: Caller) -> list[dict]:
+    def run(self, caller: Caller) -> list[PublisherRow]:
         """このユースケースの唯一の入口。"""
         return _list_publishers(self._directory, caller)

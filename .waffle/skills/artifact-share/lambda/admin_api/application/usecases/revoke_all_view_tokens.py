@@ -6,6 +6,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -17,9 +19,16 @@ from domain.view_subject import ViewSubject
 
 
 
+
+@dataclass(frozen=True)
+class RevokedAllViewTokens:
+    """まとめて外した結果。何本外れたかを返す。公開そのものは止まっていない。"""
+
+    revoked: int
+
 def _revoke_all(artifacts: SharedArtifactRepository, projects: ProjectRepository,
                gate: ViewGatePort, clock: Clock, caller: Caller,
-               subject: ViewSubject) -> dict:
+               subject: ViewSubject) -> RevokedAllViewTokens:
     """渡した相手を一度にすべて外す。公開そのものは止めない。"""
     target = require_manageable_subject(artifacts, projects, caller, subject)
     now = clock()
@@ -29,7 +38,7 @@ def _revoke_all(artifacts: SharedArtifactRepository, projects: ProjectRepository
     tokens = view_token.all_revoked(tokens, now)
     save_tokens(artifacts, projects, clock, subject, target, tokens)
     gate.replace_grants(subject, view_token.grants(tokens, now))
-    return {"revoked": revoked_count}
+    return RevokedAllViewTokens(revoked=revoked_count)
 
 
 class RevokeAllViewTokens:
@@ -44,6 +53,6 @@ class RevokeAllViewTokens:
         self._gate = gate
         self._clock = clock
 
-    def run(self, caller: Caller, subject: ViewSubject) -> dict:
+    def run(self, caller: Caller, subject: ViewSubject) -> RevokedAllViewTokens:
         """このユースケースの唯一の入口。"""
         return _revoke_all(self._artifacts, self._projects, self._gate, self._clock, caller, subject)

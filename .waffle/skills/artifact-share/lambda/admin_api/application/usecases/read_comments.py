@@ -10,13 +10,27 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.artifact_access import require_manageable
 from application.ports import Caller
 from application.ports.comment_repository import CommentRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 
 
-def _read(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller, artifact_id: str) -> dict:
+
+@dataclass(frozen=True)
+class Comments:
+    """寄せられた反応。差し替えの区切りも同じ並びに含む。
+
+    1件ずつは保存されている形のまま返す。表示用に整えるのは画面側が行う。
+    """
+
+    artifact_id: str
+    comments: tuple[dict, ...]
+    unreadable: int
+
+def _read(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller, artifact_id: str) -> Comments:
     """寄せられたコメントを、古いものから順に返す。
 
     差し替えの区切りも同じ並びに含める。分けて返すと、どの指摘が差し替え
@@ -36,7 +50,8 @@ def _read(artifacts: SharedArtifactRepository, comments: CommentRepository, call
     for record in rows:
         record.setdefault("kind", "comment")
 
-    return {"artifactId": artifact_id, "comments": rows, "unreadable": unreadable}
+    return Comments(artifact_id=artifact_id, comments=tuple(rows),
+                    unreadable=unreadable)
 
 
 class ReadComments:
@@ -49,6 +64,6 @@ class ReadComments:
         self._artifacts = artifacts
         self._comments = comments
 
-    def run(self, caller: Caller, artifact_id: str) -> dict:
+    def run(self, caller: Caller, artifact_id: str) -> Comments:
         """このユースケースの唯一の入口。"""
         return _read(self._artifacts, self._comments, caller, artifact_id)

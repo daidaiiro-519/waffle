@@ -11,6 +11,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.artifact_access import require_manageable
 from application.ports import Caller
 from application.ports.comment_repository import CommentRepository
@@ -19,7 +21,29 @@ from application.ports.viewer_site import ViewerSitePort
 from application.usecases.read_comments import ReadComments
 
 
-def _export(artifacts: SharedArtifactRepository, comments: CommentRepository, viewer: ViewerSitePort, caller: Caller, artifact_id: str) -> dict:
+
+@dataclass(frozen=True)
+class ExportedArtifact:
+    """取り出した中身と、それまでに寄せられた反応。
+
+    閲覧トークンは含めない。取り出したものが渡り歩いても、それだけで開ける
+    状態にならないようにする。
+    """
+
+    artifact_id: str
+    name: str
+    doc_type: str
+    document_id: str
+    description: str
+    tags: tuple[str, ...]
+    status: str
+    published_at: int
+    updated_at: int
+    content: str
+    comments: tuple[dict, ...]
+    unreadable: int
+
+def _export(artifacts: SharedArtifactRepository, comments: CommentRepository, viewer: ViewerSitePort, caller: Caller, artifact_id: str) -> ExportedArtifact:
     """中身と、それまでに寄せられたコメントをまとめて返す。
 
     読むだけの操作で、公開状態も閲覧トークンもコメントも変えない。公開を
@@ -38,20 +62,20 @@ def _export(artifacts: SharedArtifactRepository, comments: CommentRepository, vi
 
     found = ReadComments(artifacts, comments).run(caller, artifact_id)
 
-    return {
-        "artifactId": artifact_id,
-        "name": artifact.display_name,
-        "docType": artifact.descriptor.doc_type,
-        "documentId": artifact.descriptor.document_id,
-        "description": artifact.descriptor.description,
-        "tags": list(artifact.descriptor.labels),
-        "status": artifact.status.value,
-        "publishedAt": artifact.published_at,
-        "updatedAt": artifact.updated_at,
-        "content": content,
-        "comments": found["comments"],
-        "unreadable": found["unreadable"],
-    }
+    return ExportedArtifact(
+        artifact_id=artifact_id,
+        name=artifact.display_name,
+        doc_type=artifact.descriptor.doc_type,
+        document_id=artifact.descriptor.document_id,
+        description=artifact.descriptor.description,
+        tags=artifact.descriptor.labels,
+        status=artifact.status.value,
+        published_at=artifact.published_at,
+        updated_at=artifact.updated_at,
+        content=content,
+        comments=found.comments,
+        unreadable=found.unreadable,
+    )
 
 
 class ExportArtifact:
@@ -65,6 +89,6 @@ class ExportArtifact:
         self._comments = comments
         self._viewer = viewer
 
-    def run(self, caller: Caller, artifact_id: str) -> dict:
+    def run(self, caller: Caller, artifact_id: str) -> ExportedArtifact:
         """このユースケースの唯一の入口。"""
         return _export(self._artifacts, self._comments, self._viewer, caller, artifact_id)

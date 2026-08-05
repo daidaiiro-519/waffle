@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+
 from application.artifact_access import require_manageable
 from application.ports import Caller, Clock
 from domain.shared_artifact import PublisherId
@@ -16,7 +18,16 @@ from application.ports.shared_artifact_repository import SharedArtifactRepositor
 from shared.errors import ManageError
 
 
-def _transfer(artifacts: SharedArtifactRepository, directory: PublisherDirectory, clock: Clock, caller: Caller, artifact_id: str, to_publisher: str) -> dict:
+
+@dataclass(frozen=True)
+class TransferredArtifact:
+    """引き継いだ結果。誰から誰へ移ったかを、管理者が確かめられるようにする。"""
+
+    artifact_id: str
+    moved_from: str = field(metadata={"json": "from"}, default="")
+    moved_to: str = field(metadata={"json": "to"}, default="")
+
+def _transfer(artifacts: SharedArtifactRepository, directory: PublisherDirectory, clock: Clock, caller: Caller, artifact_id: str, to_publisher: str) -> TransferredArtifact:
     """投稿者を別の投稿者へ移す。手入れできる人が替わるだけの操作。
 
     共有URL・閲覧トークン・中身・コメント・公開状態のいずれも変えない。
@@ -39,7 +50,8 @@ def _transfer(artifacts: SharedArtifactRepository, directory: PublisherDirectory
     previous = artifact.published_by.value
     artifacts.save(artifact.transferred_to(PublisherId(to_publisher), clock()))
 
-    return {"artifactId": artifact_id, "from": previous, "to": to_publisher}
+    return TransferredArtifact(artifact_id=artifact_id, moved_from=previous,
+                               moved_to=to_publisher)
 
 
 class TransferArtifact:
@@ -53,6 +65,6 @@ class TransferArtifact:
         self._directory = directory
         self._clock = clock
 
-    def run(self, caller: Caller, artifact_id: str, to_publisher: str) -> dict:
+    def run(self, caller: Caller, artifact_id: str, to_publisher: str) -> TransferredArtifact:
         """このユースケースの唯一の入口。"""
         return _transfer(self._artifacts, self._directory, self._clock, caller, artifact_id, to_publisher)

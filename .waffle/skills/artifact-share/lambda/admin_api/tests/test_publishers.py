@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from dataclasses import fields
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -89,8 +90,7 @@ def test_招かれた人は公開できるようになる():
     deps, directory = setup()
     result = build(deps, InvitePublisher).run("invite", ADMIN, email="new@example.com")
 
-    assert directory.find(result["publisherId"])["email"] == "new@example.com"
-    assert result["event"] == "PublisherInvited"
+    assert directory.find(result.publisher_id)["email"] == "new@example.com"
 
 
 def test_管理者でない者は招けない():
@@ -112,7 +112,7 @@ def test_重ねて招いても増えず状態も変わらない():
 
     again = build(deps, InvitePublisher).run("invite", ADMIN, email="new@example.com")
 
-    assert again["publisherId"] == first["publisherId"]
+    assert again.publisher_id == first.publisher_id
     assert len(directory.people) == count
 
 
@@ -147,7 +147,7 @@ def test_手入れできなくなるものがあれば件数を伝える():
 
     result = build(deps, InvitePublisher).run("remove", ADMIN, publisher_id="publisher-2")
 
-    assert result["orphanedArtifacts"] == 3
+    assert result.orphaned_artifacts == 3
 
 
 def test_管理者は自分自身を外せない():
@@ -178,12 +178,12 @@ def test_管理者でない者は外せない():
 
 def test_招かれている人を一覧できる():
     deps, _ = setup()
-    rows = {r["id"]: r for r in build(deps, ListPublishers).run(ADMIN)}
+    rows = {r.id: r for r in build(deps, ListPublishers).run(ADMIN)}
 
     assert set(rows) == {"admin-1", "publisher-2"}
-    assert rows["admin-1"]["admin"] is True       # 管理者は印がつく
-    assert rows["publisher-2"]["admin"] is False
-    assert rows["publisher-2"]["email"] == "p2@example.com"
+    assert rows["admin-1"].admin is True       # 管理者は印がつく
+    assert rows["publisher-2"].admin is False
+    assert rows["publisher-2"].email == "p2@example.com"
 
 
 def test_管理者でなければ一覧できない():
@@ -197,7 +197,7 @@ def test_管理者でなければ一覧できない():
 def test_一覧に合言葉に関わるものが含まれない():
     deps, _ = setup()
     for row in build(deps, ListPublishers).run(ADMIN):
-        assert set(row) == {"id", "name", "email", "status", "admin"}
+        assert {f.name for f in fields(row)} == {"id", "name", "email", "status", "admin"}
 
 
 # ── 招待を送り直す ──────────────────────────────────────
@@ -212,7 +212,6 @@ def test_招待に応じていない人へ送り直せる():
 
     result = build(deps, InvitePublisher).run("resend", ADMIN, publisher_id="newbie")
 
-    assert result["event"] == "PublisherInvited"
     assert directory.resent == ["newbie"]
 
 
@@ -248,5 +247,5 @@ def test_招待が返す識別子は一覧のものと揃っている():
     deps, _ = setup()
     invited = build(deps, InvitePublisher).run("invite", ADMIN, email="new@example.com")
 
-    listed = {r["id"] for r in build(deps, ListPublishers).run(ADMIN)}
-    assert invited["publisherId"] in listed
+    listed = {r.id for r in build(deps, ListPublishers).run(ADMIN)}
+    assert invited.publisher_id in listed

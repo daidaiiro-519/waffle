@@ -12,11 +12,33 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller, PublisherDirectory
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from domain.caller import may_manage_publishers
 from shared.errors import PublisherError
 
+
+
+@dataclass(frozen=True)
+class InvitedPublisher:
+    """招いた・送り直した結果。"""
+
+    publisher_id: str
+    email: str = ""
+
+
+@dataclass(frozen=True)
+class RemovedPublisher:
+    """外した結果。
+
+    手入れできる人が居なくなったものの件数を添える。公開したものは残すと
+    決めている以上、引き継ぐかどうかを人に決めさせる必要がある。
+    """
+
+    publisher_id: str
+    orphaned_artifacts: int
 
 def _require_admin(caller: Caller) -> None:
     """判定は domain が持つ。ここが決めるのは、断るときに何と伝えるかだけ。"""
@@ -25,7 +47,7 @@ def _require_admin(caller: Caller) -> None:
                              "投稿者を出し入れできるのは管理者だけです。")
 
 
-def _invite(directory: PublisherDirectory, caller: Caller, email: str) -> dict:
+def _invite(directory: PublisherDirectory, caller: Caller, email: str) -> InvitedPublisher:
     """公開できる人を増やす。
 
     同じ宛先を重ねて招いても二重にはならず、その人の合言葉も、公開した
@@ -36,11 +58,10 @@ def _invite(directory: PublisherDirectory, caller: Caller, email: str) -> dict:
         raise PublisherError("EMAIL_REQUIRED", "招く相手の宛先を入力してください。")
 
     publisher_id = directory.invite(email.strip())
-    return {"publisherId": publisher_id, "email": email.strip(),
-            "event": "PublisherInvited"}
+    return InvitedPublisher(publisher_id=publisher_id, email=email.strip())
 
 
-def _resend_invite(directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
+def _resend_invite(directory: PublisherDirectory, caller: Caller, publisher_id: str) -> InvitedPublisher:
     """招待をもう一度送る。仮の合言葉が新しくなる。
 
     招待に応じていない人は、利用者プールの再設定（合言葉を忘れたときの
@@ -61,7 +82,7 @@ def _resend_invite(directory: PublisherDirectory, caller: Caller, publisher_id: 
                              "本人が決めたパスワードが使えなくなります。")
 
     directory.resend(publisher_id)
-    return {"publisherId": publisher_id, "event": "PublisherInvited"}
+    return InvitedPublisher(publisher_id=publisher_id)
 
 
 def _status_of(person) -> str:
@@ -71,7 +92,7 @@ def _status_of(person) -> str:
     return getattr(person, "status", "")
 
 
-def _remove(artifacts: SharedArtifactRepository, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> dict:
+def _remove(artifacts: SharedArtifactRepository, directory: PublisherDirectory, caller: Caller, publisher_id: str) -> RemovedPublisher:
     """公開できる人から外す。公開したものには一切触れない。
 
     外したあと、その人が公開したもののうち引き継ぎ先が決まっていないものは
@@ -89,8 +110,7 @@ def _remove(artifacts: SharedArtifactRepository, directory: PublisherDirectory, 
     orphaned = _count_artifacts(artifacts, publisher_id)
     directory.remove(publisher_id)
 
-    return {"publisherId": publisher_id, "orphanedArtifacts": orphaned,
-            "event": "PublisherRemoved"}
+    return RemovedPublisher(publisher_id=publisher_id, orphaned_artifacts=orphaned)
 
 
 def _count_artifacts(artifacts: SharedArtifactRepository, publisher_id: str) -> int:
@@ -109,7 +129,7 @@ class InvitePublisher:
         self._artifacts = artifacts
         self._directory = directory
 
-    def run(self, operation: str, caller: Caller, email: str = "", publisher_id: str = "") -> dict:
+    def run(self, operation: str, caller: Caller, email: str = "", publisher_id: str = "") -> InvitedPublisher | RemovedPublisher:
         """このユースケースの唯一の入口。"""
         if operation == "invite":
             return _invite(self._directory, caller, email)

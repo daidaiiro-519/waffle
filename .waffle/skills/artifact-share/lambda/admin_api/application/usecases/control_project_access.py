@@ -10,6 +10,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
 from application.ports.view_gate import ViewGatePort
@@ -21,7 +23,16 @@ from domain.view_subject import ViewSubject
 from shared.errors import ProjectError
 
 
-def _suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
+
+@dataclass(frozen=True)
+class ProjectAccess:
+    """まとめの見せ方を変えた結果。"""
+
+    project_id: str
+    status: str
+    url: str = ""
+
+def _suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> ProjectAccess:
     """このプロジェクトの閲覧トークンでは何も開けない状態にする。
 
     入っている共有アーティファクトは、それぞれの閲覧トークンで引き続き開ける。
@@ -34,10 +45,10 @@ def _suspend(projects: ProjectRepository, gate: ViewGatePort, clock: Clock, call
     gate.close(ViewSubject.project(project_id))
     save_project(projects, clock, project.suspended(clock()))
 
-    return {"projectId": project_id, "status": SUSPENDED}
+    return ProjectAccess(project_id=project_id, status=SUSPENDED)
 
 
-def _resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> dict:
+def _resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, project_id: str) -> ProjectAccess:
     """再び開ける状態に戻す。
 
     止める前に渡していた閲覧トークンのうち、期限内で無効にしていないものを
@@ -52,9 +63,8 @@ def _resume(projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGateP
                         view_token.grants(project.view_tokens, now))
     save_project(projects, clock, project.resumed(now))
 
-    return {"projectId": project_id,
-            "url": viewer.project_url(project_id),
-            "status": PUBLISHED}
+    return ProjectAccess(project_id=project_id, status=PUBLISHED,
+                         url=viewer.project_url(project_id))
 
 
 class ControlProjectAccess:
@@ -69,7 +79,7 @@ class ControlProjectAccess:
         self._gate = gate
         self._clock = clock
 
-    def run(self, operation: str, caller: Caller, project_id: str) -> dict:
+    def run(self, operation: str, caller: Caller, project_id: str) -> ProjectAccess:
         """このユースケースの唯一の入口。"""
         if operation == "suspend":
             return _suspend(self._projects, self._gate, self._clock, caller, project_id)

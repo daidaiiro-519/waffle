@@ -10,6 +10,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
@@ -19,7 +21,65 @@ from domain.project import PERSONAL, SHARED
 from shared.errors import ProjectError
 
 
-def _list_projects(projects: ProjectRepository, caller: Caller) -> dict:
+
+@dataclass(frozen=True)
+class ProjectRow:
+    """一覧の1行。入っているものの件数だけを添え、中身は詳しく見るときに読む。"""
+
+    project_id: str
+    name: str
+    project_key: str
+    scope: str
+    status: str
+    owner: str
+    is_mine: bool
+    artifact_count: int
+    updated_at: int
+
+
+@dataclass(frozen=True)
+class ProjectSummary:
+    """1つのまとめの概要。閲覧トークンそのものの値は持たない。"""
+
+    project_id: str
+    name: str
+    project_key: str
+    scope: str
+    status: str
+    owner: str
+    is_mine: bool
+    url: str
+
+
+@dataclass(frozen=True)
+class MemberRow:
+    """まとめに入っている共有アーティファクト1件。"""
+
+    artifact_id: str
+    name: str
+    doc_type: str
+    status: str
+    uploaded_by: str
+    is_mine: bool
+    updated_at: int
+
+
+@dataclass(frozen=True)
+class Projects:
+    """出し入れできるまとめの一覧。"""
+
+    projects: tuple[ProjectRow, ...]
+    unreadable: int
+
+
+@dataclass(frozen=True)
+class ProjectDetail:
+    """1つのまとめと、いま入っているもの。"""
+
+    project: ProjectSummary
+    artifacts: tuple[MemberRow, ...]
+
+def _list_projects(projects: ProjectRepository, caller: Caller) -> Projects:
     """出し入れできるプロジェクトを並べる。閲覧トークンは含めない。
 
     自分が持ち主のものと、共有のものが並ぶ。管理者には全部が並ぶ。
@@ -34,22 +94,23 @@ def _list_projects(projects: ProjectRepository, caller: Caller) -> dict:
         mine = index.owner.value == caller.id
         if not (caller.is_admin or mine or index.scope.is_shared()):
             continue
-        rows.append({
-            "projectId": index.project_id.value,
-            "name": index.display_name,
-            "projectKey": index.project_key.value,
-            "scope": index.scope.value,
-            "status": index.status.value,
-            "owner": index.owner.value,
-            "isMine": mine,
-            "artifactCount": len(projects.members_of(index.project_id.value)),
-            "updatedAt": index.updated_at,
-        })
-    return {"projects": sorted(rows, key=lambda r: r["updatedAt"], reverse=True),
-            "unreadable": unreadable}
+        rows.append(ProjectRow(
+            project_id=index.project_id.value,
+            name=index.display_name,
+            project_key=index.project_key.value,
+            scope=index.scope.value,
+            status=index.status.value,
+            owner=index.owner.value,
+            is_mine=mine,
+            artifact_count=len(projects.members_of(index.project_id.value)),
+            updated_at=index.updated_at,
+        ))
+    return Projects(
+        projects=tuple(sorted(rows, key=lambda r: r.updated_at, reverse=True)),
+        unreadable=unreadable)
 
 
-def _detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, caller: Caller, project_id: str) -> dict:
+def _detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, caller: Caller, project_id: str) -> ProjectDetail:
     """プロジェクトと、いま入っている共有アーティファクトを返す。
 
     見られるのは、そこへ自分のものを出し入れできる人（持ち主・管理者・
@@ -70,30 +131,30 @@ def _detail(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
         meta = artifacts.find(artifact_id)
         if meta is None:
             continue
-        rows.append({
-            "artifactId": artifact_id,
-            "name": meta.display_name,
-            "docType": meta.descriptor.doc_type,
-            "status": meta.status.value,
-            "uploadedBy": meta.published_by.value,
-            "isMine": meta.published_by.value == caller.id,
-            "updatedAt": meta.updated_at,
-        })
-    rows.sort(key=lambda r: r["updatedAt"], reverse=True)
+        rows.append(MemberRow(
+            artifact_id=artifact_id,
+            name=meta.display_name,
+            doc_type=meta.descriptor.doc_type,
+            status=meta.status.value,
+            uploaded_by=meta.published_by.value,
+            is_mine=meta.published_by.value == caller.id,
+            updated_at=meta.updated_at,
+        ))
+    rows.sort(key=lambda r: r.updated_at, reverse=True)
 
-    return {
-        "project": {
-            "projectId": index.project_id.value,
-            "name": index.display_name,
-            "projectKey": index.project_key.value,
-            "scope": index.scope.value,
-            "status": index.status.value,
-            "owner": index.owner.value,
-            "isMine": index.owner.value == caller.id,
-            "url": viewer.project_url(project_id),
-        },
-        "artifacts": rows,
-    }
+    return ProjectDetail(
+        project=ProjectSummary(
+            project_id=index.project_id.value,
+            name=index.display_name,
+            project_key=index.project_key.value,
+            scope=index.scope.value,
+            status=index.status.value,
+            owner=index.owner.value,
+            is_mine=index.owner.value == caller.id,
+            url=viewer.project_url(project_id),
+        ),
+        artifacts=tuple(rows),
+    )
 
 
 class BrowseProjects:
@@ -107,7 +168,7 @@ class BrowseProjects:
         self._projects = projects
         self._viewer = viewer
 
-    def run(self, operation: str, caller: Caller, project_id: str = "") -> dict:
+    def run(self, operation: str, caller: Caller, project_id: str = "") -> Projects | ProjectDetail:
         """このユースケースの唯一の入口。"""
         if operation == "list":
             return _list_projects(self._projects, caller)

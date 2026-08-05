@@ -10,12 +10,38 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Caller
 from application.ports.comment_repository import CommentRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 
 
-def _list_artifacts(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller) -> dict:
+
+@dataclass(frozen=True)
+class ArtifactRow:
+    """一覧の1行。閲覧トークンそのものの値は持たない。"""
+
+    artifact_id: str
+    name: str
+    status: str
+    doc_type: str
+    description: str
+    tags: tuple[str, ...]
+    projects: tuple[str, ...]
+    uploaded_by: str
+    updated_at: int
+    comments: int
+
+
+@dataclass(frozen=True)
+class MyArtifacts:
+    """見渡した結果。読めなかった件数を添えるのは、黙って落とさないため。"""
+
+    artifacts: tuple[ArtifactRow, ...]
+    unreadable: int
+
+def _list_artifacts(artifacts: SharedArtifactRepository, comments: CommentRepository, caller: Caller) -> MyArtifacts:
     """扱えるものを新しい順に並べる。トークンは含めない。
 
     投稿者には自分が公開したものだけ、管理者には全員のものが並ぶ。
@@ -31,20 +57,21 @@ def _list_artifacts(artifacts: SharedArtifactRepository, comments: CommentReposi
     for artifact in found:
         if not artifact.manageable_by(caller.id, caller.is_admin):
             continue
-        rows.append({
-            "artifactId": artifact.artifact_id.value,
-            "name": artifact.display_name,
-            "status": artifact.status.value,
-            "docType": artifact.descriptor.doc_type,
-            "description": artifact.descriptor.description,
-            "tags": list(artifact.descriptor.labels),
-            "projects": list(artifact.projects),
-            "uploadedBy": artifact.published_by.value,
-            "updatedAt": artifact.updated_at,
-            "comments": comments.count_of(artifact.artifact_id.value),
-        })
-    return {"artifacts": sorted(rows, key=lambda r: r["updatedAt"], reverse=True),
-            "unreadable": unreadable}
+        rows.append(ArtifactRow(
+            artifact_id=artifact.artifact_id.value,
+            name=artifact.display_name,
+            status=artifact.status.value,
+            doc_type=artifact.descriptor.doc_type,
+            description=artifact.descriptor.description,
+            tags=artifact.descriptor.labels,
+            projects=artifact.projects,
+            uploaded_by=artifact.published_by.value,
+            updated_at=artifact.updated_at,
+            comments=comments.count_of(artifact.artifact_id.value),
+        ))
+    return MyArtifacts(
+        artifacts=tuple(sorted(rows, key=lambda r: r.updated_at, reverse=True)),
+        unreadable=unreadable)
 
 
 class ListMyArtifacts:
@@ -57,6 +84,6 @@ class ListMyArtifacts:
         self._artifacts = artifacts
         self._comments = comments
 
-    def run(self, caller: Caller) -> dict:
+    def run(self, caller: Caller) -> MyArtifacts:
         """このユースケースの唯一の入口。"""
         return _list_artifacts(self._artifacts, self._comments, caller)

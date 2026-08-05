@@ -122,13 +122,13 @@ def test_名前と期限を指定して発行すると値が一度だけ返る()
 
     r = issue(deps, "レビュー班", ttl=view_token.WEEK)
 
-    assert r["token"]
-    assert r["name"] == "レビュー班"
-    assert r["expiresAt"] == NOW + view_token.WEEK
-    assert r["tokenShownOnce"] is True
+    assert r.token
+    assert r.name == "レビュー班"
+    assert r.expires_at == NOW + view_token.WEEK
+    assert r.token_shown_once is True
     # 記録には値そのものが残らない
     stored = deps.artifacts.find(AID).view_tokens
-    assert r["token"] not in str(stored)
+    assert r.token not in str(stored)
 
 
 def test_期限を指定しなければ1週間になる():
@@ -136,7 +136,7 @@ def test_期限を指定しなければ1週間になる():
 
     r = issue(deps, "レビュー班")
 
-    assert r["expiresAt"] == NOW + view_token.WEEK
+    assert r.expires_at == NOW + view_token.WEEK
 
 
 def test_共有アーティファクトへ1ヶ月を超える期限は付けられない():
@@ -161,7 +161,7 @@ def test_プロジェクトには期限なしを選べる():
     r = issue(deps, "常設", ttl=0,
               subject=ViewSubject.project(PID))
 
-    assert r["expiresAt"] == view_token.NO_EXPIRY
+    assert r.expires_at == view_token.NO_EXPIRY
 
 
 def test_上限に達していたら発行しない():
@@ -195,7 +195,7 @@ def test_期限切れは上限の数に含めない():
     later = NOW + view_token.WEEK + 1
     r = issue(deps, "新しい相手", at=later)
 
-    assert r["token"]
+    assert r.token
     assert len(deps.artifacts.find(AID).view_tokens) == 1
 
 
@@ -224,7 +224,7 @@ def test_発行しても前の閲覧トークンは無効にならない():
              view_token.usable(deps.artifacts.find(AID).view_tokens, NOW)]
     assert names == ["1人目", "2人目"]
     assert deps.gate._keys.written["token:" + AID].count(";") == 1
-    assert first["token"]
+    assert first.token
 
 
 def test_招かれていない者は発行できない():
@@ -243,10 +243,10 @@ def test_一覧は名前と期限を返し値は返さない():
 
     got = build(deps, ListViewTokens).run(ME, ViewSubject.artifact(AID))
 
-    assert [t["name"] for t in got["viewTokens"]] == ["レビュー班"]
-    assert got["viewTokens"][0]["expiresAt"] == NOW + view_token.WEEK
-    assert "token" not in got["viewTokens"][0]
-    assert "fingerprint" not in got["viewTokens"][0]
+    assert [t.name for t in got.view_tokens] == ["レビュー班"]
+    assert got.view_tokens[0].expires_at == NOW + view_token.WEEK
+    assert not hasattr(got.view_tokens[0], "token")
+    assert not hasattr(got.view_tokens[0], "fingerprint")
 
 
 def test_期限を過ぎたものは一覧に現れず記録も残らない():
@@ -255,7 +255,7 @@ def test_期限を過ぎたものは一覧に現れず記録も残らない():
 
     later = NOW + view_token.WEEK + 1
     got = build(deps.at(later), ListViewTokens).run(ME, ViewSubject.artifact(AID))
-    assert got["viewTokens"] == []
+    assert got.view_tokens == ()
 
     # 次に何かを書くときに記録からも消える
     issue(deps, "新しい相手", at=later)
@@ -266,7 +266,7 @@ def test_1本も無ければ空の一覧が返る():
     deps = setup()
 
     got = build(deps, ListViewTokens).run(ME, ViewSubject.artifact(AID))
-    assert got["viewTokens"] == []
+    assert got.view_tokens == ()
 
 
 # ── 無効化 ──────────────────────────────────────────────
@@ -283,7 +283,7 @@ def test_1本だけを無効にでき他はそのまま():
     a = issue(deps, "1人目")
     issue(deps, "2人目")
 
-    build(deps, RevokeViewToken).run(ME, ViewSubject.artifact(AID), a["tokenId"])
+    build(deps, RevokeViewToken).run(ME, ViewSubject.artifact(AID), a.token_id)
 
     left = view_token.usable(deps.artifacts.find(AID).view_tokens, NOW)
     assert [t.name for t in left] == ["2人目"]
@@ -295,7 +295,7 @@ def test_無効化しても公開は止まらない():
     deps = setup()
     a = issue(deps, "1人目")
 
-    build(deps, RevokeViewToken).run(ME, ViewSubject.artifact(AID), a["tokenId"])
+    build(deps, RevokeViewToken).run(ME, ViewSubject.artifact(AID), a.token_id)
 
     assert deps.artifacts.find(AID).status.is_published()
     assert deps.gate._keys.written["token:" + AID] != "DISABLED"
@@ -305,10 +305,10 @@ def test_既に無効なものを無効にしても成功する():
     deps = setup()
     a = issue(deps, "1人目")
     subject = ViewSubject.artifact(AID)
-    build(deps, RevokeViewToken).run(ME, subject, a["tokenId"])
+    build(deps, RevokeViewToken).run(ME, subject, a.token_id)
 
-    got = build(deps, RevokeViewToken).run(ME, subject, a["tokenId"])
-    assert got["revoked"] is True
+    got = build(deps, RevokeViewToken).run(ME, subject, a.token_id)
+    assert got.revoked is True
 
 
 def test_無い閲覧トークンは無効にできない():
@@ -333,7 +333,7 @@ def test_一括で外しても公開は止まらない():
 
     got = build(deps, RevokeAllViewTokens).run(ME, ViewSubject.artifact(AID))
 
-    assert got["revoked"] == 2
+    assert got.revoked == 2
     assert view_token.usable(deps.artifacts.find(AID).view_tokens, NOW) == ()
     assert deps.artifacts.find(AID).status.is_published()
     assert deps.gate._keys.written["token:" + AID] == ""
@@ -360,11 +360,11 @@ def test_1本も無い状態で一括して外しても成功する():
     deps = setup()
 
     got = build(deps, RevokeAllViewTokens).run(ME, ViewSubject.artifact(AID))
-    assert got["revoked"] == 0
+    assert got.revoked == 0
 
 
 def test_管理者は他人のものも扱える():
     deps = setup(owner="publisher-2")
 
     r = issue(deps, "管理者から", caller=ADMIN)
-    assert r["token"]
+    assert r.token

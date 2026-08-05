@@ -7,6 +7,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.artifact_access import require_manageable
 from domain.artifact_content import fingerprint as content_fingerprint
 from domain.shared_artifact import ArtifactDescriptor, EXTRACTED
@@ -21,7 +23,16 @@ from domain.html_inspection import inspect_html
 from shared.errors import ManageError
 
 
-def _replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepository, comments: CommentRepository, viewer: ViewerSitePort, clock: Clock, caller: Caller, artifact_id: str, html: str) -> dict:
+
+@dataclass(frozen=True)
+class ReplacedArtifactContent:
+    """差し替えた結果。共有URLは変わらず、外部への参照の件数を添える。"""
+
+    artifact_id: str
+    url: str
+    external_refs: int
+
+def _replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepository, comments: CommentRepository, viewer: ViewerSitePort, clock: Clock, caller: Caller, artifact_id: str, html: str) -> ReplacedArtifactContent:
     """中身だけを入れ替える。URL・トークン・これまでの反応は保つ。
 
     入れ替えた時点を区切りとして反応の並びに残す。これより前の指摘が
@@ -60,8 +71,9 @@ def _replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepos
     artifacts.save(updated)
     refresh_listings(artifacts, projects, viewer, updated)
 
-    return {"artifactId": artifact_id, "url": viewer.artifact_url(artifact_id),
-            "externalRefs": found["externalRefs"]}
+    return ReplacedArtifactContent(artifact_id=artifact_id,
+                                   url=viewer.artifact_url(artifact_id),
+                                   external_refs=found["externalRefs"])
 
 
 class ReplaceArtifactContent:
@@ -77,6 +89,6 @@ class ReplaceArtifactContent:
         self._viewer = viewer
         self._clock = clock
 
-    def run(self, caller: Caller, artifact_id: str, html: str) -> dict:
+    def run(self, caller: Caller, artifact_id: str, html: str) -> ReplacedArtifactContent:
         """このユースケースの唯一の入口。"""
         return _replace_content(self._artifacts, self._projects, self._comments, self._viewer, self._clock, caller, artifact_id, html)

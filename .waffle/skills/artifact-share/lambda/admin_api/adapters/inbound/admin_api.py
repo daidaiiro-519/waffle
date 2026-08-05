@@ -10,6 +10,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import fields, is_dataclass
+
 from application.ports import Caller
 from application.usecases.assign_artifact_to_project import AssignArtifactToProject
 from application.usecases.browse_projects import BrowseProjects
@@ -139,18 +141,39 @@ def dispatch(action: str, connections, caller: Caller, body: dict):
 
 
 def _outward(value):
-    """業務の語を、外が読む綴りへ直す。
+    """ユースケースが返した型を、外が読む形へ直す。
 
-    公開の状態は、業務では PUBLISHED / SUSPENDED、外では active / disabled と
-    呼ぶ。同じ概念の別の層の綴りであり、どちらかへ寄せるのではなく、この境界で
-    翻訳する。
+    直すのは2つ。欄の名前（業務は artifact_id、外は artifactId）と、公開の状態
+    （業務は PUBLISHED / SUSPENDED、外は active / disabled）。同じ概念の別の層の
+    綴りであり、どちらかへ寄せるのではなく、この境界で翻訳する。
+
+    欄の名前は機械的に直せるが、そうならないものもある（引き継ぎの from / to は
+    Python の予約語と重なるため別の名前で持つ）。その場合は型の側が外向きの名前を
+    宣言し、ここはそれに従う。
     """
-    if isinstance(value, dict):
-        return {k: (OUTWARD_STATUS.get(v, v) if k == "status" else _outward(v))
-                for k, v in value.items()}
-    if isinstance(value, list):
+    if is_dataclass(value) and not isinstance(value, type):
+        return {_outward_name(f): _outward_value(f.name, getattr(value, f.name))
+                for f in fields(value)}
+    if isinstance(value, (list, tuple)):
         return [_outward(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _outward(v) for k, v in value.items()}
     return value
+
+
+def _outward_name(f) -> str:
+    """外が読む欄の名前。型が宣言していればそれを使い、無ければ機械的に直す。"""
+    declared = f.metadata.get("json")
+    if declared:
+        return declared
+    head, *rest = f.name.split("_")
+    return head + "".join(w.capitalize() for w in rest)
+
+
+def _outward_value(name: str, value):
+    if name == "status" and isinstance(value, str):
+        return OUTWARD_STATUS.get(value, value)
+    return _outward(value)
 
 
 # 業務上の失敗を、外の言葉へ写す。既定は400で、それ以外はここに並べる

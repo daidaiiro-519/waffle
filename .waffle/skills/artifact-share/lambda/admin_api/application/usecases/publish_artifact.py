@@ -10,6 +10,8 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from application.ports import Clock, PublisherIdentifier
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
@@ -28,7 +30,32 @@ from shared.errors import PublishError
 FIRST_TOKEN_NAME = "最初の共有"
 
 
-def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, request: dict) -> dict:
+
+@dataclass(frozen=True)
+class PublishedDescriptor:
+    """公開したものに添えられた、控えるべき情報。"""
+
+    document_id: str
+    doc_type: str
+    title: str
+    description: str
+    tags: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class PublishedArtifact:
+    """公開した結果。閲覧トークンはこの一度きり示され、以後は見返せない。"""
+
+    artifact_id: str
+    token: str
+    url: str
+    descriptor: PublishedDescriptor
+    meta_source: str
+    external_refs: int
+    needs_name: bool = False
+    token_shown_once: bool = True
+
+def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, request: dict) -> PublishedArtifact:
     """アップロードされたHTMLを公開し、URLとトークンを返す。
 
     途中で失敗したときに開ける状態のものを残さないことを、書き込む順序で保証する。
@@ -100,22 +127,20 @@ def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: 
         # トークンを書く前に失敗しているため、置かれたものは誰にも開けない
         raise PublishError("PUBLISH_FAILED", f"公開できませんでした: {e}") from e
 
-    return {
-        "artifactId": artifact_id,
-        "token": token,               # 返すのはこの一度きり。保管には残さない
-        "url": viewer.artifact_url(artifact_id),
-        "descriptor": {
-            "documentId": found["documentId"],
-            "docType": found["docType"],
-            "title": title,
-            "description": found["description"],
-            "tags": found["tags"],
-        },
-        "metaSource": meta_source,
-        "externalRefs": found["externalRefs"],
-        "needsName": False,
-        "tokenShownOnce": True,       # 呼び出し側へ、二度は示せないことを伝える
-    }
+    return PublishedArtifact(
+        artifact_id=artifact_id,
+        token=token,                  # 返すのはこの一度きり。保管には残さない
+        url=viewer.artifact_url(artifact_id),
+        descriptor=PublishedDescriptor(
+            document_id=found["documentId"],
+            doc_type=found["docType"],
+            title=title,
+            description=found["description"],
+            tags=tuple(found["tags"]),
+        ),
+        meta_source=meta_source,
+        external_refs=found["externalRefs"],
+    )
 
 
 class PublishArtifact:
@@ -131,6 +156,6 @@ class PublishArtifact:
         self._identify = identify
         self._clock = clock
 
-    def run(self, request: dict) -> dict:
+    def run(self, request: dict) -> PublishedArtifact:
         """このユースケースの唯一の入口。"""
         return _publish(self._artifacts, self._viewer, self._gate, self._identify, self._clock, request)
