@@ -158,39 +158,40 @@
         {
           "layer": "domain",
           "testType": "unit",
-          "path": "tests/domain/unit/"
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/domain/unit/",
+          "note": "配置はリポジトリ直下からの道で書く。検査はここをそのまま探すので、根を別に渡して補う仕組みは無い"
         },
         {
           "layer": "application",
           "testType": "unit",
-          "path": "tests/application/unit/"
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/application/unit/"
         },
         {
           "layer": "application",
           "testType": "acceptance",
-          "path": "tests/application/acceptance/"
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/application/acceptance/"
         },
         {
           "layer": "application",
           "testType": "integration",
-          "path": "tests/application/integration/"
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/application/integration/"
         },
         {
           "layer": "application",
           "testType": "contract",
-          "path": "tests/application/contract/",
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/application/contract/",
           "note": "port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する"
         },
         {
           "layer": "inbound adapter",
           "testType": "contract",
-          "path": "tests/adapters/inbound/contract/",
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/adapters/inbound/contract/",
           "note": "閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う"
         },
         {
           "layer": "outbound adapter",
           "testType": "integration",
-          "path": "tests/adapters/outbound/integration/"
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/adapters/outbound/integration/"
         }
       ]
     },

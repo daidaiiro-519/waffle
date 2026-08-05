@@ -112,13 +112,13 @@ def test_suspended_artifact_cannot_be_viewed():
 
 | レイヤー | テスト種別 | 配置 | 置き方（個別） | 接尾辞 | 補足 |
 |---|---|---|---|---|---|
-| domain | `unit` | `tests/domain/unit/` |  |  |  |
-| application | `unit` | `tests/application/unit/` |  |  |  |
-| application | `acceptance` | `tests/application/acceptance/` |  |  |  |
-| application | `integration` | `tests/application/integration/` |  |  |  |
-| application | `contract` | `tests/application/contract/` |  |  | port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する |
-| inbound adapter | `contract` | `tests/adapters/inbound/contract/` |  |  | 閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う |
-| outbound adapter | `integration` | `tests/adapters/outbound/integration/` |  |  |  |
+| domain | `unit` | `.waffle/skills/artifact-share/lambda/admin_api/tests/domain/unit/` |  |  | 配置はリポジトリ直下からの道で書く。検査はここをそのまま探すので、根を別に渡して補う仕組みは無い |
+| application | `unit` | `.waffle/skills/artifact-share/lambda/admin_api/tests/application/unit/` |  |  |  |
+| application | `acceptance` | `.waffle/skills/artifact-share/lambda/admin_api/tests/application/acceptance/` |  |  |  |
+| application | `integration` | `.waffle/skills/artifact-share/lambda/admin_api/tests/application/integration/` |  |  |  |
+| application | `contract` | `.waffle/skills/artifact-share/lambda/admin_api/tests/application/contract/` |  |  | port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する |
+| inbound adapter | `contract` | `.waffle/skills/artifact-share/lambda/admin_api/tests/adapters/inbound/contract/` |  |  | 閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う |
+| outbound adapter | `integration` | `.waffle/skills/artifact-share/lambda/admin_api/tests/adapters/outbound/integration/` |  |  |  |
 
 ---
 
