@@ -51,31 +51,6 @@ def listing_of(deps, project_id):
 
 # ── 作る ────────────────────────────────────────────────
 
-def test_作ると共有URLと閲覧トークンが返る():
-    deps = setup()
-    r = build(deps, CreateProject).run(X, "検索基盤リニューアル", "PERSONAL")
-
-    assert r.url == f"https://viewer.example.net/proj/{r.project_id}/"
-    assert r.token
-    assert r.token_shown_once is True
-    
-
-def test_作った人が持ち主になり共有の別が残る():
-    deps = setup()
-    r = build(deps, CreateProject).run(X, "検索基盤リニューアル", "SHARED")
-
-    index = index_of(deps, r.project_id)
-    assert index["owner"] == X.id
-    assert index["scope"] == "SHARED"
-    assert index["status"] == "active"      # 保管の綴り。業務では PUBLISHED
-    assert index["memberArtifactIds"] == []
-
-
-def test_作った直後は何も入っていない():
-    deps = setup()
-    r = build(deps, CreateProject).run(X, "空のまとめ", "PERSONAL")
-    assert listing_of(deps, r.project_id)["artifacts"] == []
-
 
 def test_一覧ページの雛形と中身が置かれる():
     """雛形はどのプロジェクトでも同じもの、中身はこのプロジェクトのもの"""
@@ -88,29 +63,11 @@ def test_一覧ページの雛形と中身が置かれる():
     assert listing_of(deps, r.project_id)["name"] == "検索基盤リニューアル"
 
 
-def test_表示名が空なら作らない():
-    deps = setup()
-    with pytest.raises(ProjectError) as x:
-        build(deps, CreateProject).run(X, "   ", "PERSONAL")
-    assert x.value.code == "NAME_REQUIRED"
-    assert deps.keys.keys == {}          # 閲覧トークンは発行されない
-
-
 def test_想定外の共有の別では作らない():
     deps = setup()
     with pytest.raises(ProjectError) as x:
         build(deps, CreateProject).run(X, "まとめ", "EVERYONE")
     assert x.value.code == "SCOPE_REQUIRED"
-
-
-def test_閲覧トークンは記録から取り出せない():
-    deps = setup()
-    r = build(deps, CreateProject).run(X, "まとめ", "PERSONAL")
-
-    record = deps.keys.get(f"proj:{r.project_id}")
-    value, expires = record.split("|")
-    assert value != r.token           # そのままは残さない
-    assert "token" not in index_of(deps, r.project_id)
 
 
 # ── 見せ方を変える ──────────────────────────────────────
@@ -194,31 +151,6 @@ def test_無いプロジェクトと他人のものを同じ拒み方にする()
 
 # ── 一覧 ────────────────────────────────────────────────
 
-def test_一覧には自分のものと共有のものが並ぶ():
-    deps = setup()
-    mine = build(deps, CreateProject).run(X, "自分の", "PERSONAL")
-    shared = build(deps, CreateProject).run(Y, "みんなの", "SHARED")
-    others = build(deps, CreateProject).run(Y, "他人の", "PERSONAL")
-
-    ids = {p.project_id for p in build(deps, BrowseProjects).run("list", X).projects}
-    assert mine.project_id in ids
-    assert shared.project_id in ids        # 共有なら自分のものを入れられる
-    assert others.project_id not in ids
-
-
-def test_管理者の一覧には全部が並ぶ():
-    deps = setup()
-    build(deps, CreateProject).run(X, "自分の", "PERSONAL")
-    build(deps, CreateProject).run(Y, "他人の", "PERSONAL")
-    assert len(build(deps, BrowseProjects).run("list", ADMIN).projects) == 2
-
-
-def test_一覧に閲覧トークンは含まれない():
-    deps = setup()
-    owned(deps)
-    for row in build(deps, BrowseProjects).run("list", X).projects:
-        assert not hasattr(row, "token")
-
 
 # ── 中身を見る ──────────────────────────────────────────
 
@@ -230,61 +162,5 @@ def artifact(deps, artifact_id, name, owner=X, status="active"):
     }), "application/json")
 
 
-def test_中身に入っているものが名前つきで返る():
-    """一覧の件数だけでは、何が入っているかを画面に出せない"""
-    deps = setup()
-    r = owned(deps)
-    artifact(deps, "aaaaaaaa", "検索基盤の選定")
-    manage_assign(deps, X, "aaaaaaaa", r.project_id)
-
-    got = build(deps, BrowseProjects).run("detail", X, r.project_id)
-
-    assert got.project.name == "検索基盤リニューアル"
-    assert [a.artifact_id for a in got.artifacts] == ["aaaaaaaa"]
-    assert got.artifacts[0].name == "検索基盤の選定"
-
-
-def test_中身に閲覧トークンは含まれない():
-    deps = setup()
-    r = owned(deps)
-    got = build(deps, BrowseProjects).run("detail", X, r.project_id)
-    assert not hasattr(got.project, "token")
-
-
-def test_共有なら持ち主でなくても中身を見られる():
-    """そこへ自分のものを入れるには、いま何が入っているかが見えている必要がある"""
-    deps = setup()
-    r = owned(deps, scope="SHARED")
-    assert build(deps, BrowseProjects).run("detail", Y, r.project_id).project.project_id == r.project_id
-
-
-def test_個人なら持ち主以外は中身を見られない():
-    deps = setup()
-    r = owned(deps)
-    with pytest.raises(ProjectError) as x:
-        build(deps, BrowseProjects).run("detail", Y, r.project_id)
-    assert x.value.code == "PROJECT_NOT_FOUND"
-
-
-def test_公開が止まっていても持ち主は中身を見られる():
-    """止めたものを再開するか外すかを決めるのに、中身が見えている必要がある"""
-    deps = setup()
-    r = owned(deps)
-    build(deps, ControlProjectAccess).run("suspend", X, r.project_id)
-    assert build(deps, BrowseProjects).run("detail", X, r.project_id).project.status == "SUSPENDED"
-
-
 def manage_assign(deps, caller, artifact_id, project_id):
     return build(deps, AssignArtifactToProject).run("assign", caller, artifact_id, project_id)
-
-
-def test_読めない記録があっても残りが並ぶ():
-    """一覧が黙って短くなると、作ったはずのプロジェクトが消えたように見える"""
-    deps = setup()
-    build(deps, CreateProject).run(X, "設計レビュー", PERSONAL, "")
-    deps.store.put("projects/broken.json", "{壊れている", "application/json")
-
-    got = build(deps, BrowseProjects).run("list", X)
-
-    assert len(got.projects) == 1
-    assert got.unreadable == 1

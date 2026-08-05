@@ -43,3 +43,18 @@ def listing_of(deps, project_id):
 
 def owned(deps, caller=X, name="検索基盤リニューアル", scope="PERSONAL"):
     return build(deps, CreateProject).run(caller, name, scope)
+
+
+def artifact(deps, artifact_id, name, owner=X, status="active"):
+    """保管に共有アーティファクトの記録を1件置く。"""
+    deps.store.put(f"meta/{artifact_id}.json", json.dumps({
+        "artifactId": artifact_id, "name": name, "status": status,
+        "docType": "DecisionRecord", "description": "", "tags": [],
+        "uploadedBy": owner.id, "projects": [], "updatedAt": 1,
+    }), "application/json")
+
+
+def assign(deps, caller, artifact_id, project_id):
+    from application.usecases.assign_artifact_to_project import AssignArtifactToProject
+    return build(deps, AssignArtifactToProject).run(
+        "assign", caller, artifact_id, project_id)
