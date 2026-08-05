@@ -1,0 +1,142 @@
+<div class="page">
+  <div class="appbar">
+    <div class="brand">artifact<span>share</span></div>
+    <nav class="nav">
+      <a href="#" class="cur">アーティファクト</a>
+      <a href="#">プロジェクト</a>
+    </nav>
+    <div class="whoami"><span class="avatar">DA</span>daidaiiro</div>
+  </div>
+
+  <!-- ══ メイン ══ -->
+  <section class="view on" id="v-home">
+    <div class="drop" id="dz">
+      <div class="glyph">
+        <div class="sheet b"></div>
+        <div class="sheet f"><i></i><i></i><i></i></div>
+        <span class="tag-html">HTML</span>
+      </div>
+      <div class="dtxt">
+        <h2>HTMLをここにドロップして公開</h2>
+        <p class="d-sub">1ファイル・自己完結のHTML。共有用のURLとトークンを発行します。</p>
+      </div>
+      <div class="dact">
+        <button class="btn ghost" type="button" id="pick">ファイルを選ぶ</button>
+        <input type="file" id="fileinput" accept=".html,.htm,text/html" hidden>
+      </div>
+    </div>
+
+    <div class="lhead">
+      <h1>あなたのアーティファクト</h1>
+      <span class="count" id="count"></span>
+      <span class="scope">自分がアップロードしたものだけが並びます</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+        <input type="search" id="q" placeholder="タイトル・タグで絞り込む" aria-label="絞り込み">
+      </div>
+      <div class="filters">
+        <div class="fgroup">
+          <span class="flabel">プロジェクト</span>
+          <label class="fchip"><input type="checkbox" data-f="proj" value="検索基盤リニューアル"><span>検索基盤リニューアル</span></label>
+          <label class="fchip"><input type="checkbox" data-f="proj" value="決済まわりの改善"><span>決済まわりの改善</span></label>
+          <label class="fchip"><input type="checkbox" data-f="proj" value="社内ツール"><span>社内ツール</span></label>
+        </div>
+        <div class="fgroup">
+          <span class="flabel">状態</span>
+          <label class="fchip"><input type="checkbox" data-f="off" value="1"><span>止めたものも表示</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+  </section>
+
+  <!-- ══ 確認 ══ -->
+  <section class="view" id="v-confirm">
+    <h1 class="vt">内容を確認</h1>
+    <p class="lede" id="confirm-lede"></p>
+    <div class="card">
+      <div class="filerow">
+        <span class="fname" id="c-fname"></span>
+        <span class="fsize" id="c-fsize"></span>
+      </div>
+      <div class="notice" id="c-extwarn" hidden>
+        <span class="ic">!</span>
+        <p id="c-extwarn-text"></p>
+      </div>
+      <div class="readout" id="c-readout" hidden>
+        <div class="rhead">
+          <span class="check"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.4l2.4 2.4 4.6-5"/></svg></span>
+          このHTMLから読み取りました
+        </div>
+        <dl class="kv" id="c-kv"></dl>
+      </div>
+      <div id="c-manual" hidden>
+        <div class="field">
+          <label for="c-name">表示名<span class="req">必須</span></label>
+          <input id="c-name" type="text" placeholder="一覧で見分けるための名前">
+        </div>
+        <details class="optional">
+          <summary>説明とタグを付ける（省略可）</summary>
+          <div class="inner">
+            <div class="field">
+              <label for="c-desc">説明</label>
+              <input id="c-desc" type="text" placeholder="どんな内容かを一文で">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label for="c-tags">タグ</label>
+              <input id="c-tags" type="text" placeholder="カンマ区切り　例: marketing, 試算">
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="picker">
+        <p class="plabel">プロジェクトに入れる（任意）</p>
+        <p class="phelp">入れたプロジェクトの閲覧トークンで、これも開けるようになります。</p>
+        <div class="pchips">
+          <label class="pchip"><input type="checkbox" name="proj" value="検索基盤リニューアル"><span>検索基盤リニューアル</span></label>
+          <label class="pchip"><input type="checkbox" name="proj" value="決済まわりの改善"><span>決済まわりの改善</span></label>
+          <label class="pchip"><input type="checkbox" name="proj" value="社内ツール"><span>社内ツール</span></label>
+        </div>
+      </div>
+      <p class="phelp" id="proj-limit">入れられるのは3件までです。</p>
+      <div class="actions" style="margin-top:16px;">
+        <button class="btn" type="button" id="publish">公開する</button>
+        <span class="spacer"></span>
+        <button class="btn ghost" type="button" id="cancel">やめる</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 完了 ══ -->
+  <section class="view" id="v-done">
+    <div class="dhead">
+      <span class="check"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.4l2.4 2.4 4.6-5"/></svg></span>
+      <span class="t">公開しました</span>
+    </div>
+    <p class="lede" id="done-name"></p>
+    <div class="card">
+      <div class="urlrow">
+        <span class="u" id="d-url"></span>
+        <button class="copy" type="button" data-copy="d-url">URLをコピー</button>
+      </div>
+      <div class="tokenbox">
+        <p class="tlabel">閲覧用トークン — この画面を離れると二度と表示できません</p>
+        <p class="warn" id="d-expiry" style="margin:0 0 10px;"></p>
+        <div class="tval">
+          <code id="d-token"></code>
+          <button class="copy" type="button" data-copy="d-token">コピー</button>
+        </div>
+        <p class="warn">URLとトークンは別々の手段で渡してください。これは「最初の共有」という名前の配布先に発行された1本目です。別の相手にも見せるときは、配布先ごとに新しく発行してください——1本ずつ独立して無効にできます。</p>
+      </div>
+      <p class="belongs" id="d-belongs"></p>
+      <div class="nextrow">
+        <button class="btn ghost" type="button">開いて確認する</button>
+        <button class="btn ghost" type="button" id="back">一覧に戻る</button>
+      </div>
+    </div>
+  </section>
+</div>

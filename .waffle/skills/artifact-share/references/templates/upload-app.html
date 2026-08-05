@@ -40,10 +40,11 @@
       --token-bg:#0e1113; --token-ink:#f0ede6; --token-gold:#d9b26a;
     }
   }
+
+  }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
   .page{max-width:940px; margin:0 auto; padding:34px 22px 90px;}
-
   .appbar{display:flex; align-items:center; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:30px;}
   .brand{font-family:var(--serif); font-size:19px; font-weight:600;}
   .brand span{color:var(--accent);}
@@ -53,7 +54,6 @@
   .nav a:hover:not(.cur){background:var(--line-soft);}
   .whoami{margin-left:auto; display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-soft);}
   .avatar{width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; font-size:11px; font-weight:700;}
-
   .btn{font:inherit; font-size:13px; font-weight:600; padding:8px 18px; border-radius:7px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer;}
   .btn:hover{filter:brightness(1.08);}
   .btn.ghost{background:transparent; color:var(--accent);}
@@ -63,7 +63,6 @@
   .card{border:1px solid var(--line); border-radius:12px; background:var(--card); padding:18px;}
   .view{display:none;}
   .view.on{display:block;}
-
   /* ── dropzone（メイン） ── */
   .drop{border:2px dashed var(--line); border-radius:14px; background:var(--card); padding:30px 26px; text-align:center;
     transition:border-color .15s, background .15s; margin-bottom:34px; display:flex; align-items:center; gap:22px; text-align:left;}
@@ -79,13 +78,11 @@
   .drop h2{font-size:16px; margin:0 0 3px; font-weight:600;}
   .drop .d-sub{font-size:12.5px; color:var(--ink-soft); margin:0;}
   .drop .dact{flex-shrink:0;}
-
   /* ── list ── */
   .lhead{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
   .lhead h1{font-family:var(--serif); font-size:20px; font-weight:600; margin:0;}
   .lhead .count{font-size:12.5px; color:var(--ink-faint);}
   .scope{margin-left:auto; font-size:11.5px; color:var(--ink-faint);}
-
   .toolbar{display:flex; flex-direction:column; gap:11px; margin-bottom:16px;}
   .search{position:relative;}
   .search input{width:100%; font:inherit; font-size:13.5px; padding:9px 12px 9px 34px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
@@ -97,7 +94,6 @@
   .fchip input, .pchip input{position:absolute; opacity:0; width:0; height:0;}
   .fchip span{display:inline-block; font-size:12px; padding:3px 11px; border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink-soft); cursor:pointer;}
   .fchip input:checked + span{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;}
-
   .list{border:1px solid var(--line); border-radius:12px; background:var(--card);}
   .row{display:grid; grid-template-columns:1fr auto auto; gap:4px 16px; padding:15px 18px; border-top:1px solid var(--line-soft); align-items:center;}
   .row:first-child{border-top:none; border-radius:12px 12px 0 0;}
@@ -106,7 +102,6 @@
   .row.off{background:var(--off-soft);}
   .row.off .title{color:var(--ink-soft);}
   .row.justnow{animation:pop 1.4s ease;}
-  @keyframes pop{from{background:var(--accent-soft);} to{background:transparent;}}
   .main{grid-column:1; min-width:0;}
   .title{font-size:14.5px; font-weight:600; margin:0 0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .sub{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);}
@@ -138,7 +133,6 @@
   .iconbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
   .iconbtn svg{width:15px; height:15px; stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round;}
   .iconbtn.ok{color:var(--ok); border-color:var(--ok);}
-
   .menu{position:relative;}
   .menu ul{position:absolute; right:0; top:calc(100% + 5px); z-index:10; min-width:186px; margin:0; padding:5px; list-style:none;
     background:var(--card); border:1px solid var(--line); border-radius:9px; box-shadow:0 6px 22px rgba(0,0,0,.13);}
@@ -150,7 +144,6 @@
   .menu li button.danger{color:var(--live);}
   .empty{padding:46px 24px; text-align:center; color:var(--ink-faint);}
   .empty p{font-size:13.5px; margin:0;}
-
   /* ── confirm ── */
   h1.vt{font-family:var(--serif); font-size:23px; font-weight:600; margin:0 0 5px;}
   .lede{color:var(--ink-soft); font-size:13.5px; margin:0 0 22px;}
@@ -190,7 +183,6 @@
   .pchip input:checked + span::before{background:var(--accent); border-color:var(--accent);}
   .actions{display:flex; gap:9px; align-items:center; padding-top:3px;}
   .actions .spacer{flex:1;}
-
   /* ── done ── */
   .dhead{display:flex; align-items:center; gap:9px; margin-bottom:16px;}
   .dhead .t{font-family:var(--serif); font-size:19px; font-weight:600;}
@@ -204,10 +196,10 @@
   .tval code{font-family:var(--mono); font-size:17px; letter-spacing:.06em; color:var(--token-ink); word-break:break-all;}
   .tokenbox .copy{background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.22); color:var(--token-ink);}
   .tokenbox .warn{font-size:11.5px; color:#b6b0a4; margin:11px 0 0; line-height:1.65;}
+  .hint{font-size:12px; color:var(--ink-faint); line-height:1.65; margin:10px 0 0;}
   .belongs{font-size:12.5px; color:var(--ink-soft); margin:0 0 15px; display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
   .belongs .pb{font-size:11.5px; background:var(--accent-soft); color:var(--accent); padding:2px 9px; border-radius:11px;}
   .nextrow{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
-
   /* ── dialog ── */
   dialog{border:1px solid var(--line); border-radius:13px; background:var(--card); color:var(--ink);
     padding:0; max-width:460px; width:calc(100% - 32px); box-shadow:0 14px 50px rgba(0,0,0,.24);}
@@ -244,7 +236,6 @@
   .cmsum{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--ink-faint);
     padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid var(--line-soft);}
   .cmsum b{color:var(--ink);}
-
   /* コピー完了の通知 */
   .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(10px); z-index:60;
     background:var(--ink); color:var(--paper); font-size:13px; font-weight:600; padding:10px 20px;
@@ -252,7 +243,6 @@
     transition:opacity .18s, transform .18s; display:flex; align-items:center; gap:8px;}
   .toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
   .toast svg{width:15px; height:15px; stroke:currentColor; stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round;}
-
   .dropmini{border:2px dashed var(--line); border-radius:10px; background:var(--paper); padding:20px 16px;
     text-align:center; margin-bottom:13px; transition:border-color .15s, background .15s;}
   .dropmini.hot{border-color:var(--accent); background:var(--accent-soft);}
@@ -261,47 +251,8 @@
   .btn.danger-b{background:transparent; border-color:var(--live); color:var(--live);}
   .btn.danger-b:hover{background:rgba(180,85,63,.1); filter:none;}
   .dlg-pane{display:none;} .dlg-pane.on{display:block;}
-
-  @media (max-width:660px){
-    .drop{flex-direction:column; text-align:center;}
-    .row{grid-template-columns:1fr auto;}
-    .comments{grid-column:1/-1; grid-row:2; text-align:left; margin-top:6px;}
-    .cwhen{display:inline; margin-left:6px;}
-    .mrow{grid-template-columns:1fr auto;}
-    .mcount{grid-column:1/-1; grid-row:2; text-align:left; margin-top:5px;}
-    .mcount b{display:inline; margin-right:4px;}
-    .lhead{flex-wrap:wrap;}
-    #invite-open{margin-left:0 !important; width:100%; margin-top:10px;}
   }
   @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important;}}
-
-  /* ── 管理者の画面に固有のもの ── */
-
-  .rolechip{font-size:10.5px; letter-spacing:.02em; padding:2px 8px; border-radius:11px; white-space:nowrap;}
-  .rolechip.admin{background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);}
-  .rolechip.member{background:var(--line-soft); color:var(--ink-soft); border:1px solid var(--line);}
-  .rolechip.pending{background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn);}
-
-  .mrow{display:grid; grid-template-columns:1fr auto auto; gap:4px 16px; padding:15px 18px;
-    border-top:1px solid var(--line-soft); align-items:center;}
-  .mrow:first-child{border-top:none;}
-  .mname{font-size:14px; font-weight:600; margin:0 0 3px;}
-  .mmail{font-size:11.5px; color:var(--ink-faint); font-family:var(--mono);}
-  .mcount{font-size:11.5px; color:var(--ink-soft); text-align:right; white-space:nowrap;}
-  .mcount b{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; display:block; color:var(--ink);}
-
-  .hint{font-size:12px; color:var(--ink-faint); line-height:1.65; margin:10px 0 0;}
-  .warnbox{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:9px;
-    background:var(--warn-soft); border:1px solid var(--warn); margin:14px 0 0;}
-  .warnbox .ic{flex-shrink:0; width:17px; height:17px; border-radius:50%; background:var(--warn); color:var(--card);
-    font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;}
-  .warnbox p{margin:0; font-size:12.5px; line-height:1.65; color:var(--ink);}
-  .warnbox b{font-variant-numeric:tabular-nums;}
-
-  select.pick{width:100%; font:inherit; font-size:13.5px; padding:9px 11px; border:1px solid var(--line);
-    border-radius:8px; background:var(--card); color:var(--ink);}
-  .field input[type=email]{width:100%; font:inherit; font-size:13.5px; padding:9px 11px;
-    border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink);}
 
   /* ── ログイン ── */
   .gate{position:fixed; inset:0; z-index:100; background:var(--paper);
@@ -528,7 +479,7 @@
         </div>
         <div class="fgroup">
           <span class="flabel">状態</span>
-          <label class="fchip"><input type="checkbox" data-f="off" value="1"><span>無効化済みも表示</span></label>
+          <label class="fchip"><input type="checkbox" data-f="off" value="1"><span>止めたものも表示</span></label>
         </div>
       </div>
     </div>
@@ -584,10 +535,11 @@
           <label class="pchip"><input type="checkbox" name="proj" value="社内ツール"><span>社内ツール</span></label>
         </div>
       </div>
+      <p class="phelp" id="proj-limit">入れられるのは3件までです。</p>
       <div class="actions" style="margin-top:16px;">
         <button class="btn" type="button" id="publish">公開する</button>
         <span class="spacer"></span>
-        <button class="linkbtn" type="button" id="cancel">やめる</button>
+        <button class="btn ghost" type="button" id="cancel">やめる</button>
       </div>
     </div>
   </section>
@@ -606,19 +558,22 @@
       </div>
       <div class="tokenbox">
         <p class="tlabel">閲覧用トークン — この画面を離れると二度と表示できません</p>
+        <p class="warn" id="d-expiry" style="margin:0 0 10px;"></p>
         <div class="tval">
           <code id="d-token"></code>
           <button class="copy" type="button" data-copy="d-token">コピー</button>
         </div>
-        <p class="warn">URLとトークンは別々の手段で渡してください。紛失した場合は再発行になり、それまでのトークンは使えなくなります。</p>
+        <p class="warn">URLとトークンは別々の手段で渡してください。これは「最初の共有」という名前の配布先に発行された1本目です。別の相手にも見せるときは、配布先ごとに新しく発行してください——1本ずつ独立して無効にできます。</p>
       </div>
       <p class="belongs" id="d-belongs"></p>
       <div class="nextrow">
         <button class="btn ghost" type="button">開いて確認する</button>
-        <button class="linkbtn" type="button" id="back">一覧に戻る</button>
+        <button class="btn ghost" type="button" id="back">一覧に戻る</button>
       </div>
     </div>
   </section>
+</div>
+
   <section class="view" id="v-members">
     <div class="lhead">
       <h1>メンバー</h1>
@@ -630,8 +585,8 @@
     <p class="hint">
       管理者を増やすには、AWSの権限を持つ人が手元で <code>artifactshare grant-admin</code> を実行します。
       管理者どうしで増やせないようにしてあるのは、誰が最終的な責任を負うのかを辿れるようにするためです。
-    </p>
-  </section>
+    </p>  </section>
+
 <!-- ══ プロジェクト ══ -->
 <section class="view" id="v-projects">
   <div class="lhead">
@@ -675,246 +630,6 @@
   </div>
 </section>
 
-
-</div>
-<dialog id="dlg-rotate">
-  <div class="dlg-pane on" id="rot-1">
-    <div class="dlg-head">
-      <h2>トークンを再発行しますか</h2>
-      <p class="target" id="rot-target"></p>
-    </div>
-    <div class="dlg-body">
-      <p>新しいトークンを発行すると、<strong>今のトークンはその場で使えなくなります</strong>。すでに共有した相手には、新しいトークンを渡し直す必要があります。</p>
-      <div class="keep">
-        <div><span class="ky">変わらない</span><span>URL・これまでに寄せられたコメント</span></div>
-        <div><span class="kn">変わる</span><span>閲覧用トークン（旧トークンでのアクセスは即座に不可）</span></div>
-      </div>
-      <p style="font-size:12px;">切り替えが行き渡るまで少し時間がかかることがあります。直後は一時的に開けない場合があります。</p>
-    </div>
-    <div class="dlg-act">
-      <button class="linkbtn" type="button" data-close>やめる</button>
-      <button class="btn" type="button" id="rot-go">再発行する</button>
-    </div>
-  </div>
-
-  <div class="dlg-pane" id="rot-2">
-    <div class="dlg-head">
-      <h2>新しいトークンを発行しました</h2>
-      <p class="target" id="rot-target2"></p>
-    </div>
-    <div class="dlg-body">
-      <div class="tokenbox" style="margin-bottom:13px;">
-        <p class="tlabel">この画面を閉じると二度と表示できません</p>
-        <div class="tval">
-          <code id="rot-token"></code>
-          <button class="copy" type="button" data-copy="rot-token">コピー</button>
-        </div>
-      </div>
-      <p>共有相手へ渡し直してください。URLは変わっていないので、トークンだけを伝えれば足ります。</p>
-    </div>
-    <div class="dlg-act">
-      <span class="spacer"></span>
-      <button class="btn" type="button" data-close>閉じる</button>
-    </div>
-  </div>
-</dialog>
-
-<!-- ══ 無効化 ══ -->
-<dialog id="dlg-disable">
-  <div class="dlg-head">
-    <h2>公開を止めますか</h2>
-    <p class="target" id="dis-target"></p>
-  </div>
-  <div class="dlg-body">
-    <div class="keep">
-      <div><span class="kn">止まる</span><span>URLを開いてもアクセスできなくなる（トークンを持っていても不可）</span></div>
-      <div><span class="ky">残る</span><span>本体もコメントも消えない。あとから再公開すれば元のURLで再開できる</span></div>
-    </div>
-    <div class="optline">
-      <input type="checkbox" id="dis-export" checked>
-      <label for="dis-export">先にエクスポートする
-        <span class="sub">本体と寄せられたコメントをzipで手元に保存してから止めます。</span>
-      </label>
-    </div>
-  </div>
-  <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
-    <button class="btn danger-b" type="button" data-close>無効化する</button>
-  </div>
-</dialog>
-
-<!-- ══ コメントを読む ══ -->
-<dialog id="dlg-comments">
-  <div class="dlg-head">
-    <h2>寄せられたコメント</h2>
-    <p class="target" id="cm-target"></p>
-  </div>
-  <div class="dlg-body">
-    <div class="cmsum" id="cm-sum"></div>
-    <div class="cmlist" id="cm-list"></div>
-  </div>
-  <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>閉じる</button>
-    <button class="btn" type="button" data-close>開いて返信する</button>
-  </div>
-</dialog>
-
-<!-- ══ エクスポート ══ -->
-<dialog id="dlg-export">
-  <div class="dlg-head">
-    <h2>手元に保存しますか</h2>
-    <p class="target" id="exp-target"></p>
-  </div>
-  <div class="dlg-body">
-    <p>公開はそのまま続きます。取り出すだけの操作です。</p>
-    <div class="keep">
-      <div><span class="ky">含まれる</span><span>本体のHTML・寄せられたコメント全件・表示名や種別などの情報</span></div>
-      <div><span class="kn">含まれない</span><span>閲覧用トークン（保存されていないため取り出せません）</span></div>
-    </div>
-    <p style="font-size:12px;">zipファイルとしてダウンロードされます。中のHTMLはそのまま開けますが、コメントは同梱のJSONで確認してください。</p>
-  </div>
-  <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
-    <button class="btn" type="button" data-close>ダウンロード</button>
-  </div>
-</dialog>
-
-<!-- ══ 再公開 ══ -->
-<dialog id="dlg-republish">
-  <div class="dlg-pane on" id="rep2-1">
-    <div class="dlg-head">
-      <h2>もう一度公開しますか</h2>
-      <p class="target" id="rep2-target"></p>
-    </div>
-    <div class="dlg-body">
-      <p>再公開すると<strong>新しいトークンが発行されます</strong>。無効化する前のトークンは使えないままなので、共有相手には新しいトークンを渡す必要があります。</p>
-      <div class="keep">
-        <div><span class="ky">戻る</span><span>URL（無効化前と同じ）・本体・これまでのコメント</span></div>
-        <div><span class="kn">変わる</span><span>閲覧用トークン（必ず新しくなる）</span></div>
-      </div>
-    </div>
-    <div class="dlg-act">
-      <button class="linkbtn" type="button" data-close>やめる</button>
-      <button class="btn" type="button" id="rep2-go">再公開する</button>
-    </div>
-  </div>
-
-  <div class="dlg-pane" id="rep2-2">
-    <div class="dlg-head">
-      <h2>再公開しました</h2>
-      <p class="target" id="rep2-target2"></p>
-    </div>
-    <div class="dlg-body">
-      <div class="tokenbox" style="margin-bottom:13px;">
-        <p class="tlabel">この画面を閉じると二度と表示できません</p>
-        <div class="tval">
-          <code id="rep2-token"></code>
-          <button class="copy" type="button" data-copy="rep2-token">コピー</button>
-        </div>
-      </div>
-      <p>公開が行き渡るまで少し時間がかかることがあります。すぐに開けないときは、少し待ってから再読み込みしてください。</p>
-    </div>
-    <div class="dlg-act">
-      <span class="spacer"></span>
-      <button class="btn" type="button" data-close>閉じる</button>
-    </div>
-  </div>
-</dialog>
-
-<!-- ══ 差し替え ══ -->
-<dialog id="dlg-replace">
-  <div class="dlg-head">
-    <h2>中身を差し替えますか</h2>
-    <p class="target" id="rep-target"></p>
-  </div>
-  <div class="dlg-body">
-    <p>レビュー中に指摘を直したときは、新しく公開せずここから差し替えてください。<strong>コメントのやり取りが途切れません。</strong></p>
-    <div class="keep">
-      <div><span class="ky">変わらない</span><span>URL・トークン・これまでのコメント</span></div>
-      <div><span class="kn">変わる</span><span>表示される中身（差し替えたHTML）</span></div>
-    </div>
-    <div class="dropmini" id="repdz">
-      <p>新しいHTMLをここにドロップ</p>
-      <button class="btn ghost" type="button" id="rep-pick">ファイルを選ぶ</button>
-      <input type="file" id="rep-file" accept=".html,.htm,text/html" hidden>
-    </div>
-    <p style="font-size:11.5px;">metaタグがあれば、説明やタグも読み直します。</p>
-  </div>
-  <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
-  </div>
-</dialog>
-
-<dialog id="dlg-transfer">
-    <form method="dialog">
-      <div class="dlg-head"><h2 id="tr-title">引き継ぐ</h2>
-        <p class="target" id="tr-lede"></p></div>
-      <div class="dlg-body">
-        
-        <div class="field">
-          <label for="tr-to">引き継ぎ先</label>
-          <select class="pick" id="tr-to"></select>
-        </div>
-        <div class="keep">
-          <div><span class="ky">変わらない</span><span>共有URL・閲覧トークン・中身・これまでのコメント</span></div>
-          <div><span class="kn">変わる</span><span>手入れできる人（差し替え・公開停止・再発行を行える人）</span></div>
-        </div>
-        <p style="font-size:12px;">渡した相手の手元では何も起きません。開いている画面もそのままです。</p>
-      </div>
-      <div class="dlg-act">
-        <button class="btn ghost" value="cancel">やめる</button>
-        <button class="btn" id="tr-go" value="ok">引き継ぐ</button>
-      </div>
-    </form>
-  </dialog>
-
-  <!-- ══ 招く ══ -->
-  <dialog id="dlg-invite">
-    <form method="dialog">
-      <div class="dlg-head"><h2>メンバーを招く</h2>
-        <p class="target">招かれた人だけが公開できます</p></div>
-      <div class="dlg-body">
-        <p>招くと、仮のパスワードが本人宛に届きます。</p>
-        <div class="field">
-          <label for="inv-mail">メールアドレス</label>
-          <input type="email" id="inv-mail" placeholder="name@example.com" autocomplete="off">
-        </div>
-      </div>
-      <div class="dlg-act">
-        <button class="btn ghost" value="cancel">やめる</button>
-        <button class="btn" id="inv-go" value="ok">招く</button>
-      </div>
-    </form>
-  </dialog>
-
-  <!-- ══ 外す ══ -->
-  <dialog id="dlg-remove">
-    <form method="dialog">
-      <div class="dlg-head"><h2 id="rm-title">メンバーから外す</h2>
-        <p class="target" id="rm-lede"></p></div>
-      <div class="dlg-body">
-        <div class="warnbox" id="rm-warn" hidden>
-          <span class="ic">!</span>
-          <p id="rm-warn-text"></p>
-        </div>
-        <div class="field" id="rm-field" hidden>
-          <label for="rm-to">まとめて引き継ぐ</label>
-          <select class="pick" id="rm-to"></select>
-        </div>
-        <div class="keep">
-          <div><span class="ky">変わらない</span><span>その人が公開したもの・共有URL・閲覧トークン・コメント</span></div>
-          <div><span class="kn">変わる</span><span>この人が新しく公開できるかどうか</span></div>
-        </div>
-      </div>
-      <div class="dlg-act">
-        <button class="btn ghost" value="cancel">やめる</button>
-        <button class="btn danger-b" id="rm-go" value="ok">外す</button>
-      </div>
-    </form>
-  </dialog>
-
-  <div class="toast" id="toast" role="status" aria-live="polite">
-    <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.7 2.7L11 4.6"/></svg>
 <!-- ══ プロジェクトを作る ══ -->
 <dialog id="dlg-newproj">
   <div class="dlg-pane on" id="np-1">
@@ -1004,6 +719,323 @@
   </div>
 </dialog>
 
+<!-- ══ 配布先 ══ -->
+<dialog id="dlg-tokens">
+  <!-- 一覧 -->
+  <div class="dlg-pane on" id="tk-1">
+    <div class="dlg-head">
+      <h2>配布先</h2>
+      <p class="target" id="tk-target"></p>
+    </div>
+    <div class="dlg-body">
+      <p class="tkcap">配布先ごとに閲覧トークンを1本ずつ発行します。1本が1つの配布先で、人数は問いません（チームまるごとに1本でも構いません）。無効にするのも1本ずつで、他の配布先には及びません。<strong>一度無効にすると元へは戻せません。</strong></p>
+      <div class="tkhead">
+        <span id="tk-n"></span>
+        <button class="linkbtn danger" type="button" id="tk-revokeall">すべて無効にする</button>
+      </div>
+      <div class="tklist" id="tk-list"></div>
+      <p class="tkcount" id="tk-count"></p>
+      <p class="hint" id="tk-ro" hidden>公開を止めている間は、発行も無効化もできません。再公開すると、ここにある閲覧トークンはそのまま使えるようになります。</p>
+    </div>
+    <div class="dlg-act">
+      <button class="btn ghost" type="button" data-close>閉じる</button>
+      <button class="btn" type="button" id="tk-add">閲覧トークンを発行</button>
+    </div>
+  </div>
+
+  <!-- 増やす -->
+  <div class="dlg-pane" id="tk-2">
+    <div class="dlg-head">
+      <h2>閲覧トークンを発行する</h2>
+      <p class="target" id="tk-target2"></p>
+    </div>
+    <div class="dlg-body">
+      <div class="field">
+        <label for="tk-name">配布先の名前 <span class="req">必須</span></label>
+        <input id="tk-name" type="text" placeholder="例: 経理チーム">
+        <p class="hint">あとでどれを無効にするか選ぶための手がかりです。アーティファクトの表示名とは別のものを付けます。</p>
+      </div>
+      <div class="field">
+        <label id="tk-ttl-label">見られる期間</label>
+        <div class="fgroup" role="radiogroup" aria-labelledby="tk-ttl-label">
+          <label class="fchip"><input type="radio" name="tk-ttl" value="7" checked><span>1週間</span></label>
+          <label class="fchip"><input type="radio" name="tk-ttl" value="month"><span>1ヶ月</span></label>
+          <label class="fchip"><input type="radio" name="tk-ttl" value="date"><span>日付を指定</span></label>
+        </div>
+        <div class="tkdate" id="tk-date-wrap" hidden>
+          <input type="date" id="tk-date" aria-label="見られる最終日">
+        </div>
+        <p class="hint" id="tk-ttl-hint">期限を過ぎたものは自動で無効になります。</p>
+      </div>
+      <p class="gerr" id="tk-err" hidden></p>
+    </div>
+    <div class="dlg-act">
+      <button class="btn ghost" type="button" id="tk-back">戻る</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="tk-go">発行する</button>
+    </div>
+  </div>
+
+  <!-- 発行の結果 -->
+  <div class="dlg-pane" id="tk-3">
+    <div class="dlg-head">
+      <h2>閲覧トークンを発行しました</h2>
+      <p class="target" id="tk-target3"></p>
+    </div>
+    <div class="dlg-body">
+      <div class="urlrow">
+        <span class="u" id="tk-url"></span>
+        <button class="copy" type="button" data-copy="tk-url">URLをコピー</button>
+      </div>
+      <div class="tokenbox">
+        <p class="tlabel" id="tk-issued"></p>
+        <div class="tval">
+          <code id="tk-token"></code>
+          <button class="copy" type="button" data-copy="tk-token">コピー</button>
+        </div>
+        <p class="warn">URLとトークンは別々の手段で渡してください。トークンはこの画面を閉じると二度と表示できません（URLはいつでも確認できます）。これまでに渡したトークンは、どれもそのまま使えます。</p>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="tk-done">配布先へ戻る</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══ 閲覧トークンを無効にする ══ -->
+<dialog id="dlg-revoke">
+  <div class="dlg-head">
+    <h2 id="rv-head">この閲覧トークンを無効にしますか</h2>
+    <p class="target" id="rv-target"></p>
+  </div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">できなくなる</span><span id="rv-kn">この配布先に渡したトークンでは開けなくなる（元へは戻せません）</span></div>
+      <div><span class="ky">変わらない</span><span id="rv-ky">他の配布先のトークン・URL・寄せられたコメント。公開そのものも止まりません</span></div>
+    </div>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" id="rv-go">無効にする</button>
+  </div>
+</dialog>
+
+<!-- ══ プロジェクトを変える ══ -->
+<dialog id="dlg-projects">
+  <div class="dlg-head">
+    <h2>プロジェクトを変える</h2>
+    <p class="target" id="pj-target"></p>
+  </div>
+  <div class="dlg-body">
+    <p>プロジェクトに入れると、そのプロジェクトの閲覧トークンを持つ人も開けるようになります。外しても、このアーティファクト自体と、直接渡した配布先はそのまま残ります。</p>
+    <div class="pjpicked" id="pj-picked"></div>
+    <div class="pjsearch">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg>
+      <input id="pj-q" type="text" placeholder="プロジェクトを探して追加" autocomplete="off">
+    </div>
+    <div class="pjlist" id="pj-list"></div>
+    <p class="hint" id="pj-limit"></p>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn" type="button" id="pj-go">保存する</button>
+  </div>
+</dialog>
+
+<!-- ══ 公開を止める ══ -->
+<dialog id="dlg-disable">
+  <div class="dlg-head">
+    <h2>公開を止めますか</h2>
+    <p class="target" id="dis-target"></p>
+  </div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">止まる</span><span id="dis-stop">渡したトークンで開いてもアクセスできなくなる</span></div>
+      <div><span class="ky">残る</span><span>本体もコメントも消えない。あとから再公開すれば元のURLで再開できる</span></div>
+      <div><span class="ky">残る</span><span><strong>渡した閲覧トークンは無効になりません。</strong>再公開すると、止める前に渡した相手はまた開けるようになります。相手を外したいときは〈配布先〉から無効にしてください</span></div>
+    </div>
+    <p class="hint">止まるまで少し時間がかかることがあります。押した直後はまだ開けることがあります。</p>
+    <div class="optline">
+      <input type="checkbox" id="dis-export" checked>
+      <label for="dis-export">先にエクスポートする
+        <span class="sub">本体と寄せられたコメントをzipで手元に保存してから止めます。</span>
+      </label>
+    </div>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" data-close>公開を止める</button>
+  </div>
+</dialog>
+
+<!-- ══ コメントを読む ══ -->
+<dialog id="dlg-comments">
+  <div class="dlg-head">
+    <h2>寄せられたコメント</h2>
+    <p class="target" id="cm-target"></p>
+  </div>
+  <div class="dlg-body">
+    <div class="cmsum" id="cm-sum"></div>
+    <div class="cmlist" id="cm-list"></div>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>閉じる</button>
+    <button class="btn" type="button" data-close>開いて返信する</button>
+  </div>
+</dialog>
+
+<!-- ══ エクスポート ══ -->
+<dialog id="dlg-export">
+  <div class="dlg-head">
+    <h2>手元に保存しますか</h2>
+    <p class="target" id="exp-target"></p>
+  </div>
+  <div class="dlg-body">
+    <p>公開はそのまま続きます。取り出すだけの操作です。</p>
+    <div class="keep">
+      <div><span class="ky">含まれる</span><span>本体のHTML・寄せられたコメント全件・差し替えの区切りの記録・表示名や種別などの情報</span></div>
+      <div><span class="kn">含まれない</span><span>閲覧用トークン（保存されていないため取り出せません）</span></div>
+    </div>
+    <p style="font-size:12px;">まとめてダウンロードされます。コメントは、誰がいつ何を言ったかと、差し替えの区切りが同じ並びで添えられます。</p>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn" type="button" data-close>ダウンロード</button>
+  </div>
+</dialog>
+
+<!-- ══ 再公開 ══ -->
+<dialog id="dlg-republish">
+  <div class="dlg-pane on" id="rep2-1">
+    <div class="dlg-head">
+      <h2>もう一度公開しますか</h2>
+      <p class="target" id="rep2-target"></p>
+    </div>
+    <div class="dlg-body">
+      <p>再公開しても<strong>新しいトークンは発行されません</strong>。公開を止める前に渡していたトークンは、期限内で無効にしていなければ、そのまま使えます。</p>
+      <div class="keep">
+        <div><span class="ky">戻る</span><span>URL（止める前と同じ）・本体・これまでのコメント</span></div>
+        <div><span class="ky">そのまま</span><span>渡していた閲覧トークン（期限内で無効にしていないもの）</span></div>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <button class="btn ghost" type="button" data-close>やめる</button>
+      <button class="btn" type="button" id="rep2-go">再公開する</button>
+    </div>
+  </div>
+
+  <div class="dlg-pane" id="rep2-2">
+    <div class="dlg-head">
+      <h2>再公開しました</h2>
+      <p class="target" id="rep2-target2"></p>
+    </div>
+    <div class="dlg-body">
+      <p>止める前に渡していた閲覧トークンは、期限内で無効にしていなければそのまま使えます。新しく渡す相手があるときは、配布先を足してください。</p>
+      <p>公開が行き渡るまで少し時間がかかることがあります。すぐに開けないときは、少し待ってから再読み込みしてください。</p>
+    </div>
+    <div class="dlg-act">
+      <span class="spacer"></span>
+      <button class="btn" type="button" data-close>閉じる</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══ 差し替え ══ -->
+<dialog id="dlg-replace">
+  <div class="dlg-head">
+    <h2>中身を差し替えますか</h2>
+    <p class="target" id="rep-target"></p>
+  </div>
+  <div class="dlg-body">
+    <p>レビュー中に指摘を直したときは、新しく公開せずここから差し替えてください。<strong>コメントのやり取りが途切れません。</strong></p>
+    <div class="keep">
+      <div><span class="ky">変わらない</span><span>URL・渡した閲覧トークン・これまでのコメント</span></div>
+      <div><span class="kn">変わる</span><span>表示される中身（差し替えたHTML）</span></div>
+    </div>
+    <div class="dropmini" id="repdz">
+      <p>新しいHTMLをここにドロップ</p>
+      <button class="btn ghost" type="button" id="rep-pick">ファイルを選ぶ</button>
+      <input type="file" id="rep-file" accept=".html,.htm,text/html" hidden>
+    </div>
+    <p style="font-size:11.5px;">中身だけが入れ替わります。表示名・種別・分類の目印は変わりません。</p>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+  </div>
+</dialog>
+
+
+<!-- ══ 引き継ぐ ══ -->
+<dialog id="dlg-transfer">
+    <form method="dialog">
+      <div class="dlg-head"><h2 id="tr-title">引き継ぐ</h2>
+        <p class="target" id="tr-lede"></p></div>
+      <div class="dlg-body">
+        
+        <div class="field">
+          <label for="tr-to">引き継ぎ先</label>
+          <select class="pick" id="tr-to"></select>
+        </div>
+        <div class="keep">
+          <div><span class="ky">変わらない</span><span>共有URL・閲覧トークン・中身・これまでのコメント</span></div>
+          <div><span class="kn">変わる</span><span>手入れできる人（差し替え・公開停止・閲覧トークンの発行と無効化を行える人）</span></div>
+        </div>
+        <p style="font-size:12px;">渡した相手の手元では何も起きません。開いている画面もそのままです。</p>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn" id="tr-go" value="ok">引き継ぐ</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ══ 招く ══ -->
+  <dialog id="dlg-invite">
+    <form method="dialog">
+      <div class="dlg-head"><h2>メンバーを招く</h2>
+        <p class="target">招かれた人だけが公開できます</p></div>
+      <div class="dlg-body">
+        <p>招くと、仮のパスワードが本人宛に届きます。</p>
+        <div class="field">
+          <label for="inv-mail">メールアドレス</label>
+          <input type="email" id="inv-mail" placeholder="name@example.com" autocomplete="off">
+        </div>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn" id="inv-go" value="ok">招く</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ══ 外す ══ -->
+  <dialog id="dlg-remove">
+    <form method="dialog">
+      <div class="dlg-head"><h2 id="rm-title">メンバーから外す</h2>
+        <p class="target" id="rm-lede"></p></div>
+      <div class="dlg-body">
+        <div class="warnbox" id="rm-warn" hidden>
+          <span class="ic">!</span>
+          <p id="rm-warn-text"></p>
+        </div>
+        <div class="field" id="rm-field" hidden>
+          <label for="rm-to">まとめて引き継ぐ</label>
+          <select class="pick" id="rm-to"></select>
+        </div>
+        <div class="keep">
+          <div><span class="ky">変わらない</span><span>その人が公開したもの・共有URL・閲覧トークン・コメント</span></div>
+          <div><span class="kn">変わる</span><span>この人が新しく公開できるかどうか</span></div>
+        </div>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn danger-b" id="rm-go" value="ok">外す</button>
+      </div>
+    </form>
+  </dialog>
+
+  
 <script>
 (function () {
   'use strict';

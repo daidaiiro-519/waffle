@@ -1,0 +1,246 @@
+<!-- ══ 配布先 ══ -->
+<dialog id="dlg-tokens">
+  <!-- 一覧 -->
+  <div class="dlg-pane on" id="tk-1">
+    <div class="dlg-head">
+      <h2>配布先</h2>
+      <p class="target" id="tk-target"></p>
+    </div>
+    <div class="dlg-body">
+      <p class="tkcap">配布先ごとに閲覧トークンを1本ずつ発行します。1本が1つの配布先で、人数は問いません（チームまるごとに1本でも構いません）。無効にするのも1本ずつで、他の配布先には及びません。<strong>一度無効にすると元へは戻せません。</strong></p>
+      <div class="tkhead">
+        <span id="tk-n"></span>
+        <button class="linkbtn danger" type="button" id="tk-revokeall">すべて無効にする</button>
+      </div>
+      <div class="tklist" id="tk-list"></div>
+      <p class="tkcount" id="tk-count"></p>
+      <p class="hint" id="tk-ro" hidden>公開を止めている間は、発行も無効化もできません。再公開すると、ここにある閲覧トークンはそのまま使えるようになります。</p>
+    </div>
+    <div class="dlg-act">
+      <button class="btn ghost" type="button" data-close>閉じる</button>
+      <button class="btn" type="button" id="tk-add">閲覧トークンを発行</button>
+    </div>
+  </div>
+
+  <!-- 増やす -->
+  <div class="dlg-pane" id="tk-2">
+    <div class="dlg-head">
+      <h2>閲覧トークンを発行する</h2>
+      <p class="target" id="tk-target2"></p>
+    </div>
+    <div class="dlg-body">
+      <div class="field">
+        <label for="tk-name">配布先の名前 <span class="req">必須</span></label>
+        <input id="tk-name" type="text" placeholder="例: 経理チーム">
+        <p class="hint">あとでどれを無効にするか選ぶための手がかりです。アーティファクトの表示名とは別のものを付けます。</p>
+      </div>
+      <div class="field">
+        <label id="tk-ttl-label">見られる期間</label>
+        <div class="fgroup" role="radiogroup" aria-labelledby="tk-ttl-label">
+          <label class="fchip"><input type="radio" name="tk-ttl" value="7" checked><span>1週間</span></label>
+          <label class="fchip"><input type="radio" name="tk-ttl" value="month"><span>1ヶ月</span></label>
+          <label class="fchip"><input type="radio" name="tk-ttl" value="date"><span>日付を指定</span></label>
+        </div>
+        <div class="tkdate" id="tk-date-wrap" hidden>
+          <input type="date" id="tk-date" aria-label="見られる最終日">
+        </div>
+        <p class="hint" id="tk-ttl-hint">期限を過ぎたものは自動で無効になります。</p>
+      </div>
+      <p class="gerr" id="tk-err" hidden></p>
+    </div>
+    <div class="dlg-act">
+      <button class="btn ghost" type="button" id="tk-back">戻る</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="tk-go">発行する</button>
+    </div>
+  </div>
+
+  <!-- 発行の結果 -->
+  <div class="dlg-pane" id="tk-3">
+    <div class="dlg-head">
+      <h2>閲覧トークンを発行しました</h2>
+      <p class="target" id="tk-target3"></p>
+    </div>
+    <div class="dlg-body">
+      <div class="urlrow">
+        <span class="u" id="tk-url"></span>
+        <button class="copy" type="button" data-copy="tk-url">URLをコピー</button>
+      </div>
+      <div class="tokenbox">
+        <p class="tlabel" id="tk-issued"></p>
+        <div class="tval">
+          <code id="tk-token"></code>
+          <button class="copy" type="button" data-copy="tk-token">コピー</button>
+        </div>
+        <p class="warn">URLとトークンは別々の手段で渡してください。トークンはこの画面を閉じると二度と表示できません（URLはいつでも確認できます）。これまでに渡したトークンは、どれもそのまま使えます。</p>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="tk-done">配布先へ戻る</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══ 閲覧トークンを無効にする ══ -->
+<dialog id="dlg-revoke">
+  <div class="dlg-head">
+    <h2 id="rv-head">この閲覧トークンを無効にしますか</h2>
+    <p class="target" id="rv-target"></p>
+  </div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">できなくなる</span><span id="rv-kn">この配布先に渡したトークンでは開けなくなる（元へは戻せません）</span></div>
+      <div><span class="ky">変わらない</span><span id="rv-ky">他の配布先のトークン・URL・寄せられたコメント。公開そのものも止まりません</span></div>
+    </div>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" id="rv-go">無効にする</button>
+  </div>
+</dialog>
+
+<!-- ══ プロジェクトを変える ══ -->
+<dialog id="dlg-projects">
+  <div class="dlg-head">
+    <h2>プロジェクトを変える</h2>
+    <p class="target" id="pj-target"></p>
+  </div>
+  <div class="dlg-body">
+    <p>プロジェクトに入れると、そのプロジェクトの閲覧トークンを持つ人も開けるようになります。外しても、このアーティファクト自体と、直接渡した配布先はそのまま残ります。</p>
+    <div class="pjpicked" id="pj-picked"></div>
+    <div class="pjsearch">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg>
+      <input id="pj-q" type="text" placeholder="プロジェクトを探して追加" autocomplete="off">
+    </div>
+    <div class="pjlist" id="pj-list"></div>
+    <p class="hint" id="pj-limit"></p>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn" type="button" id="pj-go">保存する</button>
+  </div>
+</dialog>
+
+<!-- ══ 公開を止める ══ -->
+<dialog id="dlg-disable">
+  <div class="dlg-head">
+    <h2>公開を止めますか</h2>
+    <p class="target" id="dis-target"></p>
+  </div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">止まる</span><span id="dis-stop">渡したトークンで開いてもアクセスできなくなる</span></div>
+      <div><span class="ky">残る</span><span>本体もコメントも消えない。あとから再公開すれば元のURLで再開できる</span></div>
+      <div><span class="ky">残る</span><span><strong>渡した閲覧トークンは無効になりません。</strong>再公開すると、止める前に渡した相手はまた開けるようになります。相手を外したいときは〈配布先〉から無効にしてください</span></div>
+    </div>
+    <p class="hint">止まるまで少し時間がかかることがあります。押した直後はまだ開けることがあります。</p>
+    <div class="optline">
+      <input type="checkbox" id="dis-export" checked>
+      <label for="dis-export">先にエクスポートする
+        <span class="sub">本体と寄せられたコメントをzipで手元に保存してから止めます。</span>
+      </label>
+    </div>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" data-close>公開を止める</button>
+  </div>
+</dialog>
+
+<!-- ══ コメントを読む ══ -->
+<dialog id="dlg-comments">
+  <div class="dlg-head">
+    <h2>寄せられたコメント</h2>
+    <p class="target" id="cm-target"></p>
+  </div>
+  <div class="dlg-body">
+    <div class="cmsum" id="cm-sum"></div>
+    <div class="cmlist" id="cm-list"></div>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>閉じる</button>
+    <button class="btn" type="button" data-close>開いて返信する</button>
+  </div>
+</dialog>
+
+<!-- ══ エクスポート ══ -->
+<dialog id="dlg-export">
+  <div class="dlg-head">
+    <h2>手元に保存しますか</h2>
+    <p class="target" id="exp-target"></p>
+  </div>
+  <div class="dlg-body">
+    <p>公開はそのまま続きます。取り出すだけの操作です。</p>
+    <div class="keep">
+      <div><span class="ky">含まれる</span><span>本体のHTML・寄せられたコメント全件・差し替えの区切りの記録・表示名や種別などの情報</span></div>
+      <div><span class="kn">含まれない</span><span>閲覧用トークン（保存されていないため取り出せません）</span></div>
+    </div>
+    <p style="font-size:12px;">まとめてダウンロードされます。コメントは、誰がいつ何を言ったかと、差し替えの区切りが同じ並びで添えられます。</p>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn" type="button" data-close>ダウンロード</button>
+  </div>
+</dialog>
+
+<!-- ══ 再公開 ══ -->
+<dialog id="dlg-republish">
+  <div class="dlg-pane on" id="rep2-1">
+    <div class="dlg-head">
+      <h2>もう一度公開しますか</h2>
+      <p class="target" id="rep2-target"></p>
+    </div>
+    <div class="dlg-body">
+      <p>再公開しても<strong>新しいトークンは発行されません</strong>。公開を止める前に渡していたトークンは、期限内で無効にしていなければ、そのまま使えます。</p>
+      <div class="keep">
+        <div><span class="ky">戻る</span><span>URL（止める前と同じ）・本体・これまでのコメント</span></div>
+        <div><span class="ky">そのまま</span><span>渡していた閲覧トークン（期限内で無効にしていないもの）</span></div>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <button class="btn ghost" type="button" data-close>やめる</button>
+      <button class="btn" type="button" id="rep2-go">再公開する</button>
+    </div>
+  </div>
+
+  <div class="dlg-pane" id="rep2-2">
+    <div class="dlg-head">
+      <h2>再公開しました</h2>
+      <p class="target" id="rep2-target2"></p>
+    </div>
+    <div class="dlg-body">
+      <p>止める前に渡していた閲覧トークンは、期限内で無効にしていなければそのまま使えます。新しく渡す相手があるときは、配布先を足してください。</p>
+      <p>公開が行き渡るまで少し時間がかかることがあります。すぐに開けないときは、少し待ってから再読み込みしてください。</p>
+    </div>
+    <div class="dlg-act">
+      <span class="spacer"></span>
+      <button class="btn" type="button" data-close>閉じる</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══ 差し替え ══ -->
+<dialog id="dlg-replace">
+  <div class="dlg-head">
+    <h2>中身を差し替えますか</h2>
+    <p class="target" id="rep-target"></p>
+  </div>
+  <div class="dlg-body">
+    <p>レビュー中に指摘を直したときは、新しく公開せずここから差し替えてください。<strong>コメントのやり取りが途切れません。</strong></p>
+    <div class="keep">
+      <div><span class="ky">変わらない</span><span>URL・渡した閲覧トークン・これまでのコメント</span></div>
+      <div><span class="kn">変わる</span><span>表示される中身（差し替えたHTML）</span></div>
+    </div>
+    <div class="dropmini" id="repdz">
+      <p>新しいHTMLをここにドロップ</p>
+      <button class="btn ghost" type="button" id="rep-pick">ファイルを選ぶ</button>
+      <input type="file" id="rep-file" accept=".html,.htm,text/html" hidden>
+    </div>
+    <p style="font-size:11.5px;">中身だけが入れ替わります。表示名・種別・分類の目印は変わりません。</p>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+  </div>
+</dialog>
+

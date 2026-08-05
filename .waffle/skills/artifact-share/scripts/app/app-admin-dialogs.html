@@ -1,0 +1,70 @@
+<!-- ══ 引き継ぐ ══ -->
+<dialog id="dlg-transfer">
+    <form method="dialog">
+      <div class="dlg-head"><h2 id="tr-title">引き継ぐ</h2>
+        <p class="target" id="tr-lede"></p></div>
+      <div class="dlg-body">
+        
+        <div class="field">
+          <label for="tr-to">引き継ぎ先</label>
+          <select class="pick" id="tr-to"></select>
+        </div>
+        <div class="keep">
+          <div><span class="ky">変わらない</span><span>共有URL・閲覧トークン・中身・これまでのコメント</span></div>
+          <div><span class="kn">変わる</span><span>手入れできる人（差し替え・公開停止・閲覧トークンの発行と無効化を行える人）</span></div>
+        </div>
+        <p style="font-size:12px;">渡した相手の手元では何も起きません。開いている画面もそのままです。</p>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn" id="tr-go" value="ok">引き継ぐ</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ══ 招く ══ -->
+  <dialog id="dlg-invite">
+    <form method="dialog">
+      <div class="dlg-head"><h2>メンバーを招く</h2>
+        <p class="target">招かれた人だけが公開できます</p></div>
+      <div class="dlg-body">
+        <p>招くと、仮のパスワードが本人宛に届きます。</p>
+        <div class="field">
+          <label for="inv-mail">メールアドレス</label>
+          <input type="email" id="inv-mail" placeholder="name@example.com" autocomplete="off">
+        </div>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn" id="inv-go" value="ok">招く</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ══ 外す ══ -->
+  <dialog id="dlg-remove">
+    <form method="dialog">
+      <div class="dlg-head"><h2 id="rm-title">メンバーから外す</h2>
+        <p class="target" id="rm-lede"></p></div>
+      <div class="dlg-body">
+        <div class="warnbox" id="rm-warn" hidden>
+          <span class="ic">!</span>
+          <p id="rm-warn-text"></p>
+        </div>
+        <div class="field" id="rm-field" hidden>
+          <label for="rm-to">まとめて引き継ぐ</label>
+          <select class="pick" id="rm-to"></select>
+        </div>
+        <div class="keep">
+          <div><span class="ky">変わらない</span><span>その人が公開したもの・共有URL・閲覧トークン・コメント</span></div>
+          <div><span class="kn">変わる</span><span>この人が新しく公開できるかどうか</span></div>
+        </div>
+      </div>
+      <div class="dlg-act">
+        <button class="btn ghost" value="cancel">やめる</button>
+        <button class="btn danger-b" id="rm-go" value="ok">外す</button>
+      </div>
+    </form>
+  </dialog>
+
+  
