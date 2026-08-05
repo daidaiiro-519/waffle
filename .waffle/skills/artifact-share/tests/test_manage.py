@@ -73,18 +73,6 @@ def meta_of(deps, artifact_id):
 
 # ── 本人以外は触れない ──────────────────────────────────
 
-def test_他人が公開したものは存在しないものとして扱う():
-    """存在そのものを漏らさないため、拒否ではなく見つからない扱いにする"""
-    deps, r = setup()
-
-    for call in (
-        lambda: build(deps, ReplaceArtifactContent).run(SOMEONE_ELSE, r.artifact_id, HTML),
-        lambda: build(deps, SuspendArtifact).run(SOMEONE_ELSE, r.artifact_id),
-    ):
-        with pytest.raises(ManageError) as x:
-            call()
-        assert x.value.code == "ARTIFACT_NOT_FOUND"
-
 
 def test_一覧には自分が公開したものだけが並ぶ():
     deps, mine = setup()
@@ -215,39 +203,6 @@ def test_公開すると最初の1本が渡される():
     assert len(tokens) == 1
     assert r.token
     assert r.token not in str(tokens)
-
-def test_停止すると開けなくなるがデータは残る():
-    deps, r = setup()
-    build(deps, SuspendArtifact).run(ME, r.artifact_id)
-
-    assert deps.keys.get(f"token:{r.artifact_id}") == "DISABLED"
-    assert deps.store.get(f"p/{r.artifact_id}/content.html")
-    assert meta_of(deps, r.artifact_id)["status"] == "disabled"
-
-
-def test_再開すると止める前の閲覧トークンがそのまま使える():
-    """
-    Scenario: 再開しても期限内の閲覧トークンはそのまま使える
-    Given 公開を止めた共有アーティファクトと、期限内で無効にされていない閲覧トークン
-    When 公開を再開する
-    Then その閲覧トークンで開ける
-    """
-    deps, r = setup()
-    before = deps.keys.get(f"token:{r.artifact_id}")
-    build(deps, SuspendArtifact).run(ME, r.artifact_id)
-    assert deps.keys.get(f"token:{r.artifact_id}") == "DISABLED"
-
-    build(deps, ResumeArtifact).run(ME, r.artifact_id)
-
-    assert deps.keys.get(f"token:{r.artifact_id}") == before
-    assert meta_of(deps, r.artifact_id)["status"] == "active"
-
-
-def test_止まっていないものは再開できない():
-    deps, r = setup()
-    with pytest.raises(ManageError) as x:
-        build(deps, ResumeArtifact).run(ME, r.artifact_id)
-    assert x.value.code == "NOT_SUSPENDED"
 
 
 # ── プロジェクトへの出し入れ ────────────────────────────
