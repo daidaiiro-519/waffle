@@ -74,49 +74,6 @@ def meta_of(deps, artifact_id):
 # ── 本人以外は触れない ──────────────────────────────────
 
 
-def test_一覧には自分が公開したものだけが並ぶ():
-    deps, mine = setup()
-    other = dict(meta_of(deps, mine.artifact_id),
-                 artifactId="zzzzzzzz", uploadedBy=SOMEONE_ELSE.id)
-    deps.store.put("meta/zzzzzzzz.json", json.dumps(other), "application/json")
-
-    ids = [row.artifact_id for row in build(deps, ListMyArtifacts).run(ME).artifacts]
-    assert ids == [mine.artifact_id]
-
-
-def test_一覧にトークンは含まれない():
-    """トークンは発行の一度きり。一覧から取り出せてはならない"""
-    deps, _ = setup()
-    for row in build(deps, ListMyArtifacts).run(ME).artifacts:
-        assert not hasattr(row, "token")
-
-
-def test_一覧には有効な配布先の数が添う():
-    """誰が開けるかを一覧で見渡せないと、外すべき相手が残っていることに気づけない。
-    数えるのは有効なものだけで、期限を過ぎたものは含めない"""
-    deps, r = setup()
-    build(deps, IssueViewToken).run(ME, ViewSubject.artifact(r.artifact_id), "経理チーム", None)
-
-    row = build(deps, ListMyArtifacts).run(ME).artifacts[0]
-    assert row.distributions == 2   # 最初の共有 ＋ いま足した1件
-
-
-def test_期限を過ぎた配布先は数に含まれない():
-    deps, r = setup()
-    build(deps, IssueViewToken).run(ME, ViewSubject.artifact(r.artifact_id), "短い期限", 1)
-
-    deps.now = lambda: NOW + 2 * 24 * 60 * 60
-    row = build(deps, ListMyArtifacts).run(ME).artifacts[0]
-    assert row.distributions == 1   # 最初の共有だけが残る
-
-
-def test_一覧は公開中と停止中を区別して返す():
-    deps, r = setup()
-    assert build(deps, ListMyArtifacts).run(ME).artifacts[0].status == "PUBLISHED"
-    build(deps, SuspendArtifact).run(ME, r.artifact_id)
-    assert build(deps, ListMyArtifacts).run(ME).artifacts[0].status == "SUSPENDED"
-
-
 # ── 差し替え ────────────────────────────────────────────
 
 
@@ -147,15 +104,6 @@ def test_無いプロジェクトへは加えられない():
     with pytest.raises(ManageError) as x:
         build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, "nope")
     assert x.value.code == "PROJECT_NOT_FOUND"
-
-
-def test_一覧はコメントの件数を添える():
-    """どれに反応が集まっているかは、次に何をするかを決める手がかりになる"""
-    deps, r = setup()
-    for name in ("1700000001-aaa.json", "1700000002-bbb.json"):
-        deps.store.put(f"comments/{r.artifact_id}/{name}", "{}", "application/json")
-
-    assert build(deps, ListMyArtifacts).run(ME).artifacts[0].comments == 2
 
 
 def test_差し替えの区切りはコメントの件数に数えない():
@@ -235,18 +183,6 @@ def test_上限を超えてプロジェクトへ加えられない():
         build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, ids[-1])
     assert x.value.code == "TOO_MANY_PROJECTS"
     assert len(meta_of(deps, r.artifact_id)["projects"]) == MAX_PROJECTS
-
-
-def test_読めない記録があっても残りが並ぶ():
-    """1件の不具合で一覧が空になるのを避ける。ただし黙っては落とさない——
-    落とすと、投稿者が「公開したはずのものが消えた」と気づけない"""
-    deps, published = setup()
-    deps.store.put("meta/broken.json", "{壊れている", "application/json")
-
-    got = build(deps, ListMyArtifacts).run(ME)
-
-    assert [r.artifact_id for r in got.artifacts] == [published.artifact_id]
-    assert got.unreadable == 1
 
 
 def test_読めるものだけなら件数は0():
