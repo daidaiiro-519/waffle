@@ -155,6 +155,29 @@ def test_差し替えてもURLとトークンの同一性が保たれる():
     assert deps.keys.get(f"token:{r['artifactId']}") == before
 
 
+def test_差し替えると前の中身は一部も残らない():
+    """
+    Scenario: 差し替えても中身は部分的に書き換わらない
+    Given 共有アーティファクトAが公開されている
+    When 新しい文書で中身を差し替える
+    Then 中身は新しいものと完全に一致する
+    And 差し替え前の中身の一部が残ることはない
+
+    短いものへ差し替えて確かめる。上書きが部分的だと、前の中身の末尾が
+    そのまま残る——長いもので確かめると、一致の検証を通ってしまう。
+    """
+    deps, r = setup()
+    長い前の中身 = HTML.replace("本文", "本文" + "ここは消えるはず" * 20)
+    build(deps, ReplaceArtifactContent).run(ME, r["artifactId"], 長い前の中身)
+
+    短い新しい中身 = HTML.replace("本文", "短い")
+    build(deps, ReplaceArtifactContent).run(ME, r["artifactId"], 短い新しい中身)
+
+    置かれたもの = deps.store.get(f"p/{r['artifactId']}/content.html")
+    assert 置かれたもの == 短い新しい中身
+    assert "ここは消えるはず" not in 置かれたもの
+
+
 def test_差し替えると区切りの記録が反応の並びに残る():
     """
     Scenario: 差し替えてもコメントが残る
