@@ -1,0 +1,282 @@
+{
+  "documentId": "handoff-artifact-share-aggregate-types",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "業務の語彙が住む場所をコードに作る：handoff-artifact-share-aggregate-types"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "agg-shared-artifact"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ユーザー",
+          "viewpoint": "検査が求めているのはユビキタス言語そのもの",
+          "consideration": "check-aggregate-class-drift が突き合わせているのは構造ではなく名前だけであり、「会話・仕様・コードで同じ言葉を使う」を機械化したものである。型が無いと語彙は文字列のキーとしてしか存在せず、ClassDeclarationExtractor から見えないので、離れても誰も気づかない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "集約を型にすべき最も強い理由は、ポートの形にある",
+          "consideration": "SharedArtifactRepository は find() -> dict / save(dict) を宣言しており、配置は application/ports だが形は保管の都合で決まっている。architecture の禁止条項「配置が application/ports であっても、その形をアダプターの都合で決めているなら依存方向は実質的に逆転している」に該当する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "宣言どうしが矛盾していた",
+          "consideration": "conceptPlacement が集約を「整合性境界を持つクラス」、値オブジェクトを「不変（frozen dataclass）」と宣言しているのに、thicknessBySubdomain の補完行へ書き足した一文だけが外れ値だった。禁止と助言の優先順位の問題ではない。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "属性名は宣言（業務の言葉）を正とする",
+          "consideration": "実装の名前は、同義語の乱立（displayName / name が両方の集約で別々に使われている）か、実装都合の語彙（uploadedBy は技術操作の語で、業務上の出来事は公開）のいずれかに該当する。実装側が一語に統一されていない以上、「実装を正とすれば動かさずに済む」という利点は最初から存在しない。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "descriptor は値オブジェクトである",
+          "consideration": "5つの値は inspect_html が一度に返し、応答では実装自身が組み立て直しており、不変条件（分類の目印が見られる相手を変えない）が一組全体にかかっている。組み立て規則（取り出せたか人が与えたか）という引き取るべき振る舞いも実在する。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "所属の正は共有アーティファクトの側",
+          "consideration": "強い一貫性を要求する不変条件（同時に3件まで）は共有アーティファクトの側にしか無く、プロジェクトの側の一覧は閲覧者へ見せるために組み立て直せる投影である。投影は失敗しても作り直せるので、どちらが正か分からなくなる状態にはならない。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "翻訳表の契約テストを、翻訳の実装より先に置く",
+          "consideration": "翻訳表が誤っても、テストが同じ翻訳表を使って書かれていれば全件緑になる。2026-08-01に実際に起きた事故と同型の条件であり、契約ファイルが採った対策（値を実装から生成しない）を同じく適用する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "repository の docstring が実装より先に進んでいる",
+          "consideration": "StoredSharedArtifactRepository の docstring は「記録と保管の間の変換をここだけが知る」と述べているが、実際にあるのは鍵の組み立てと JSON 化だけで、変換は1行も無い。この回で実装するのは、docstring が既に存在すると宣言している機能である。"
+        },
+        {
+          "advisor": "オーケストレータ（実測）",
+          "viewpoint": "status は infra/contract/ の対象ではない",
+          "consideration": "domain/publication.py の docstring は「閲覧の面もこの語をそのまま読む」と述べるが、実測すると閲覧の面（CloudFront Functions）は meta を一度も読んでいない。0件。読んでいるのは管理画面の7箇所で、応答の形の関心事である。この docstring は実装の回で直す。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "应答の形が専用の型になっていない",
+          "consideration": "全ユースケースが素の dict を返し、受け口へそのまま渡っている。architecture の禁止条項は「必要な値だけを持つ専用の型にする」と定めており、集約を型にするのと同じ理由で未達である。この回で扱うか次へ回すかを明示的に決める。"
+        },
+        {
+          "advisor": "オーケストレータ",
+          "viewpoint": "安全網は既に張ってある",
+          "consideration": "集約の不変条件12件すべてが、それを検証しているテストと結びついている（test_manage 5件・test_view_tokens 7件）。属性名を動かしたときに何が壊れたかを、宣言の言葉で言える。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "check-aggregate-class-drift は、宣言された値オブジェクトをすべて集約ルートと同じファイルの中で探す。ViewTokenId / ViewTokenExpiry / ViewTokenStatus は両方の集約に宣言されているので、この要求に従うと同じ語が2回定義され、ユビキタス言語を壊す。実装は domain/view_token.py を両方が共有する形を保つ。この3件は missing_value_object として報告され続けるが、既知の非両立として扱い、緑にすることを完了条件に含めない。検査側の修正（VO の探索範囲を value-object の placements から取る）は Waffle 本体の変更なので別サイクル。",
+        "保管の欄名（name / uploadedBy / contentHash / metaSource / externalRefs / wrapperHash）は変えない。repository が翻訳するので既存データの移行は不要。変えるのは domain と application が使う語彙だけ。",
+        "応答の status の値（\"active\" / \"disabled\"）も変えない。管理画面が7箇所で読んでおり、変えるなら app.js を同時に直す必要がある。domain の PUBLISHED / SUSPENDED との対応は受け口が翻訳する。",
+        "Project.memberArtifactIds を集約の属性から外したが、保管の記録には残る。repository はこれを集約の状態としてではなく、一覧を組み立てるための投影として扱う。全共有アーティファクトを走査して作り直す経路は、この回では実装しない。",
+        "wrapperHash を集約の外へ出すと決めたが、いまは meta に書いている。閲覧の面の側へ移す作業はこの回に含めるか、含めないなら明示的に次へ回す。",
+        "agg-comment の判断は保留する。この集約を作るコードは admin_api に存在せず（uc-post-comment は閲覧の面が担う）、比較対象を誤る。_record_id が鍵から識別子を復元している件だけは admin_api 側の事実として記録できる。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "業務の語彙",
+          "description": "宣言された名前が、型として存在する層。ここに名前があって初めて、宣言との突き合わせが機械に見える。dict のキーは見えない。",
+          "nodes": [
+            {
+              "id": "sa",
+              "title": "共有アーティファクト",
+              "sub": "SharedArtifact",
+              "status": "new"
+            },
+            {
+              "id": "pj",
+              "title": "プロジェクト",
+              "sub": "Project",
+              "status": "new"
+            },
+            {
+              "id": "vt",
+              "title": "閲覧トークンの値",
+              "sub": "domain/view_token（2集約が共有）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "口",
+          "description": "集約の型で宣言し直す。いまは dict を受け渡しており、配置は application/ports だが形は保管の都合で決まっている。",
+          "nodes": [
+            {
+              "id": "repo",
+              "title": "集約の読み書き",
+              "sub": "SharedArtifactRepository / ProjectRepository",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "翻訳",
+          "description": "保管の欄名と集約の属性名を結ぶ唇一の場所。ここだけが両方の語彙を知る。",
+          "nodes": [
+            {
+              "id": "tr",
+              "title": "保管と集約の間の変換",
+              "sub": "adapters/outbound",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "保管",
+          "description": "欄名は変えない。既存の記録がそのまま読めることが、移行を不要にする根拠である。",
+          "nodes": [
+            {
+              "id": "s3",
+              "title": "name / uploadedBy / contentHash のまま",
+              "sub": "meta/{識別子}.json",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "tr",
+          "to": "sa",
+          "kind": "dependency",
+          "label": "保管の欄名を業務の語彙へ直す"
+        },
+        {
+          "from": "vt",
+          "to": "sa",
+          "kind": "split",
+          "label": "2集約が共有するので別の場所に置く"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "取り出す: artifacts.find(artifact_id) が SharedArtifact を返す。呼び出し側は displayName / publishedBy という業務の言葉で読む",
+        "残す: artifacts.save(artifact) が、name / uploadedBy へ直して保管へ置く",
+        "判じる: is_published(artifact) が、dict ではなく SharedArtifact を受け取る"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "集約を3つの薄い型として作り、repository が保管の形と集約の形を翻訳する作業を引き継ぐ。宣言と実装で属性名が食い違っているのは、語彙が型として住む場所を持たず、dict のキーとしてしか存在していないためである。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/shared_artifact.py",
+          "reason": "SharedArtifact と、その集約固有の値オブジェクト（ArtifactId / ArtifactDescriptor / ArtifactStatus / PublisherId）"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/project.py",
+          "reason": "Project と、その集約固有の値オブジェクト（ProjectId / ProjectKey / ProjectScope / ProjectOwner / ProjectStatus）"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/view_token.py",
+          "reason": "ViewTokenId / ViewTokenExpiry / ViewTokenStatus。2つの集約が共有するのでここに置く"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/adapters/outbound/stored_shared_artifact_repository.py",
+          "reason": "保管の欄名と集約の属性名を翻訳する。docstring はこの機能があると既に宣言している"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/adapters/outbound/stored_project_repository.py",
+          "reason": "同上。あわせて memberArtifactIds を集約の状態から外し、投影として扱う"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/application/ports/shared_artifact_repository.py",
+          "reason": "find() -> dict / save(dict) を集約の型で宣言し直す。ここが形の逆転の根である"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/publication.py",
+          "reason": "is_published(meta: dict) 等が保管の記録を直接受け取っている。集約の型を受け取る形へ。DISABLED の docstring の誤りも直す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/application/usecases/",
+          "reason": "18のユースケースが meta.get(...) で保管の欄名を読んでいる。集約の属性へ"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/tests/test_contract_repository.py",
+          "reason": "翻訳表の契約テストを新設する（翻訳の実装より先）"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "resolved",
+          "note": "thicknessBySubdomain の補完行から一文を削除済み（47cbee5）"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "resolved",
+          "note": "所属の正を共有アーティファクト側へ寄せ、Project.memberArtifactIds を属性から外した（d52927b）"
+        },
+        {
+          "advisor": "オーケストレータ（実測）",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "status を infra/contract/ へ置くという ddd-advisor の推奨は、実測した結果前提が崩れた。constraints に記録済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "open",
+          "note": "応答を専用の型にするかどうかは未決。この回に含めるか次へ回すかを着手前に決める"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ]
+}
