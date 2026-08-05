@@ -50,9 +50,50 @@ ARCHITECTURE_REF = "architecture-waffle"
 
 _SPEC_FILE = re.compile(r"\.waffle/documents/specs/.*/(?:usecase|aggregate)/[^/]+\.json$")
 
+# 規約documentの名前は、それが従うアーキテクチャと接尾辞を共有する。
+# この対応をここで推測せず、配置を宣言している規約そのものから引く
+_TEST_STANDARD = "test-standard-"
+
 
 def _project_root() -> str:
     return os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd())
+
+
+def _relative(file_path: str) -> str:
+    """リポジトリ直下からの道にする。
+
+    規約が宣言する配置は直下からの道で書かれており、検査はそれをそのまま
+    探す。絶対パスのまま渡すと、どの宣言とも一致せず「宣言が無い」に見える。
+    """
+    try:
+        return os.path.relpath(os.path.realpath(file_path), _project_root())
+    except ValueError:  # pragma: no cover — 別ドライブ（Windows）
+        return file_path
+
+
+def _architecture_for(rel_path: str) -> str:
+    """そのテストの配置を宣言している規約を探し、対応するアーキテクチャを返す。
+
+    アーキテクチャは1つではない（このリポジトリ自身と、出荷物である
+    artifact-share は別の配置ルールを持つ）。1つに決め打つと、片方の
+    テストは何を書いても「どのspecにも対応が無い」と報告され続ける。
+    """
+    directory = os.path.dirname(rel_path)
+    if not directory:
+        return ARCHITECTURE_REF
+    data = _run_waffle("query-collection", "--operation", "grep_documents",
+                       "--path", ".waffle/documents/coding",
+                       "--pattern", re.escape(directory + "/"))
+    for doc_path, hits in (data or {}).get("value", {}).items():
+        doc_id = os.path.basename(doc_path).removesuffix(".json")
+        if not doc_id.startswith(_TEST_STANDARD):
+            continue
+        # 部分一致では足りない。tests/domain/unit/ は、別のアーキテクチャが
+        # 宣言する .../lambda/admin_api/tests/domain/unit/ の一部でもある。
+        # 宣言そのものと一致した規約だけを、その配置の持ち主とみなす
+        if any(str(h.get("value", "")).rstrip("/") == directory for h in hits):
+            return "architecture-" + doc_id[len(_TEST_STANDARD):]
+    return ARCHITECTURE_REF
 
 
 def _run_waffle(*args: str) -> dict | None:
@@ -153,8 +194,10 @@ def check(payload: dict) -> str | None:
     # どのspecに対応するかは規約が宣言している。フックは推測せず、
     # 分かっている側だけを渡して残りを検査側に解決させる
     if _TEST_BASENAME.search(file_path):
+        rel = _relative(file_path)
         _collect("check-scenario-drift", "scenario-drift",
-                 "--testPath", file_path, *arch)
+                 "--testPath", rel,
+                 "--architectureRef", _architecture_for(rel))
 
     fm = _BASH_FILL_PATH.search(command)
     spec_path = fm.group(1).strip("'\"") if fm else ""
