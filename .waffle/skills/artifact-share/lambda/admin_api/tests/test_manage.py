@@ -23,6 +23,7 @@ from usecase_builder import build  # noqa: E402
 from application.usecases.assign_artifact_to_project import AssignArtifactToProject  # noqa: E402
 from application.usecases.control_project_access import ControlProjectAccess  # noqa: E402
 from application.usecases.create_project import CreateProject  # noqa: E402
+from application.usecases.issue_view_token import IssueViewToken  # noqa: E402
 from application.usecases.list_my_artifacts import ListMyArtifacts  # noqa: E402
 from application.usecases.publish_artifact import PublishArtifact  # noqa: E402
 from application.usecases.replace_artifact_content import ReplaceArtifactContent  # noqa: E402
@@ -30,6 +31,7 @@ from application.usecases.resume_artifact import ResumeArtifact  # noqa: E402
 from application.usecases.suspend_artifact import SuspendArtifact  # noqa: E402
 
 from application.ports import Caller  # noqa: E402
+from domain.view_subject import ViewSubject  # noqa: E402
 from domain.shared_artifact import MAX_PROJECTS  # noqa: E402  # 旧 MAX_PROJECTS_PER_ARTIFACT
 from domain.project import PERSONAL  # noqa: E402
 from domain.project import SHARED  # noqa: E402
@@ -68,6 +70,8 @@ class FakeKeyStore:
 HTML = """<!doctype html><html><head>
 <meta name="id" content="adr-x"><meta name="type" content="DecisionRecord">
 <meta name="title" content="検索基盤の選定"><title>別</title></head><body>本文</body></html>"""
+
+NOW = 1_700_000_000
 
 ME = Caller("publisher-1")
 SOMEONE_ELSE = Caller("publisher-2")
@@ -128,6 +132,25 @@ def test_一覧にトークンは含まれない():
     deps, _ = setup()
     for row in build(deps, ListMyArtifacts).run(ME).artifacts:
         assert not hasattr(row, "token")
+
+
+def test_一覧には有効な配布先の数が添う():
+    """誰が開けるかを一覧で見渡せないと、外すべき相手が残っていることに気づけない。
+    数えるのは有効なものだけで、期限を過ぎたものは含めない"""
+    deps, r = setup()
+    build(deps, IssueViewToken).run(ME, ViewSubject.artifact(r.artifact_id), "経理チーム", None)
+
+    row = build(deps, ListMyArtifacts).run(ME).artifacts[0]
+    assert row.distributions == 2   # 最初の共有 ＋ いま足した1件
+
+
+def test_期限を過ぎた配布先は数に含まれない():
+    deps, r = setup()
+    build(deps, IssueViewToken).run(ME, ViewSubject.artifact(r.artifact_id), "短い期限", 1)
+
+    deps.now = lambda: NOW + 2 * 24 * 60 * 60
+    row = build(deps, ListMyArtifacts).run(ME).artifacts[0]
+    assert row.distributions == 1   # 最初の共有だけが残る
 
 
 def test_一覧は公開中と停止中を区別して返す():

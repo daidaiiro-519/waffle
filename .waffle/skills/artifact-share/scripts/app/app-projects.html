@@ -98,34 +98,3 @@
   </div>
 </dialog>
 
-<!-- ══ プロジェクトの閲覧トークンを再発行 ══ -->
-<dialog id="dlg-projrotate">
-  <div class="dlg-pane on" id="pr-1">
-    <div class="dlg-head"><h2>閲覧トークンを再発行しますか</h2>
-      <p class="target" id="pr-target"></p></div>
-    <div class="dlg-body">
-      <p>新しいトークンを発行すると、<strong>今のトークンは使えなくなります</strong>。
-      このプロジェクトを渡した相手全員へ、新しいトークンを渡し直すことになります。</p>
-      <div class="keep">
-        <div><span class="ky">変わらない</span><span>URL・入っているアーティファクト・コメント</span></div>
-        <div><span class="kn">変わる</span><span>プロジェクトの閲覧トークン</span></div>
-      </div>
-    </div>
-    <div class="dlg-act">
-      <button class="linkbtn" type="button" data-close>やめる</button>
-      <button class="btn" type="button" id="pr-go">再発行する</button>
-    </div>
-  </div>
-  <div class="dlg-pane" id="pr-2">
-    <div class="dlg-head"><h2>再発行しました</h2><p class="target" id="pr-target2"></p></div>
-    <div class="dlg-body">
-      <div class="tokenbox">
-        <p class="tlabel">この画面を閉じると二度と表示できません</p>
-        <div class="tval"><code id="pr-token"></code>
-          <button class="copy" type="button" data-copy="pr-token">コピー</button></div>
-      </div>
-    </div>
-    <div class="dlg-act"><span class="spacer"></span>
-      <button class="btn" type="button" data-close>閉じる</button></div>
-  </div>
-</dialog>

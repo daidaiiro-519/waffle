@@ -687,37 +687,6 @@
   </div>
 </dialog>
 
-<!-- ══ プロジェクトの閲覧トークンを再発行 ══ -->
-<dialog id="dlg-projrotate">
-  <div class="dlg-pane on" id="pr-1">
-    <div class="dlg-head"><h2>閲覧トークンを再発行しますか</h2>
-      <p class="target" id="pr-target"></p></div>
-    <div class="dlg-body">
-      <p>新しいトークンを発行すると、<strong>今のトークンは使えなくなります</strong>。
-      このプロジェクトを渡した相手全員へ、新しいトークンを渡し直すことになります。</p>
-      <div class="keep">
-        <div><span class="ky">変わらない</span><span>URL・入っているアーティファクト・コメント</span></div>
-        <div><span class="kn">変わる</span><span>プロジェクトの閲覧トークン</span></div>
-      </div>
-    </div>
-    <div class="dlg-act">
-      <button class="linkbtn" type="button" data-close>やめる</button>
-      <button class="btn" type="button" id="pr-go">再発行する</button>
-    </div>
-  </div>
-  <div class="dlg-pane" id="pr-2">
-    <div class="dlg-head"><h2>再発行しました</h2><p class="target" id="pr-target2"></p></div>
-    <div class="dlg-body">
-      <div class="tokenbox">
-        <p class="tlabel">この画面を閉じると二度と表示できません</p>
-        <div class="tval"><code id="pr-token"></code>
-          <button class="copy" type="button" data-copy="pr-token">コピー</button></div>
-      </div>
-    </div>
-    <div class="dlg-act"><span class="spacer"></span>
-      <button class="btn" type="button" data-close>閉じる</button></div>
-  </div>
-</dialog>
 
 <!-- ══ 配布先 ══ -->
 <dialog id="dlg-tokens">
@@ -1368,10 +1337,11 @@
     var entries = [['開く']];
     // 中身を差し替えられるのは公開した本人だけ。管理者にも出さない
     if (mine && item.status === 'active') entries.push(['差し替えてアップロード']);
-    if (item.status === 'active') entries.push(['トークンを再発行']);
+    if (item.status === 'active') entries.push(['配布先'], ['プロジェクトを変える']);
+    if (item.status !== 'active') entries.push(['配布先を見る']);
     entries.push(['エクスポート']);
     if (session.admin) entries.push(['sep'], ['引き継ぐ']);
-    entries.push(['sep'], item.status === 'active' ? ['無効化する', 'danger'] : ['再公開する']);
+    entries.push(['sep'], item.status === 'active' ? ['公開を止める'] : ['再公開する']);
 
     entries.forEach(function (it) {
       var li = document.createElement('li');
@@ -1461,6 +1431,7 @@
       sub.appendChild(d.docType ? chip('dtype', d.docType) : chip('dtype none', '種別なし'));
       (d.projects || []).forEach(function (p) { sub.appendChild(chip('proj', p)); });
       (d.tags || []).forEach(function (g) { sub.appendChild(chip('tag', g)); });
+      if (d.status === 'active') sub.appendChild(chip('dist', '配布先 ' + (d.distributions || 0) + '件'));
       sub.appendChild(chip('', fmtDate(d.updatedAt) + ' 更新'));
       main.append(t, sub);
 
@@ -1520,13 +1491,10 @@
     if (label === '差し替えてアップロード') { $('rep-target').textContent = item.name; openDlg('dlg-replace'); return; }
     if (label === '引き継ぐ') return openTransfer(item);
 
-    if (label === 'トークンを再発行') {
-      $('rot-target').textContent = item.name;
-      $('rot-1').classList.add('on'); $('rot-2').classList.remove('on');
-      openDlg('dlg-rotate');
-      return;
-    }
-    if (label === '無効化する') { $('dis-target').textContent = item.name; openDlg('dlg-disable'); return; }
+    if (label === '配布先') return openTokens(item, false);
+    if (label === '配布先を見る') return openTokens(item, true);
+    if (label === 'プロジェクトを変える') return openProjects(item);
+    if (label === '公開を止める') { $('dis-target').textContent = item.name; openDlg('dlg-disable'); return; }
     if (label === '再公開する') {
       $('rep2-target').textContent = item.name;
       $('rep2-1').classList.add('on'); $('rep2-2').classList.remove('on');
@@ -1535,20 +1503,10 @@
     }
   }
 
-  $('rot-go').addEventListener('click', function (e) {
-    e.preventDefault();
-    api('rotate', { artifactId: target.artifactId }).then(function (d) {
-      $('rot-target2').textContent = target.name;
-      $('rot-token').textContent = d.token;
-      $('rot-1').classList.remove('on'); $('rot-2').classList.add('on');
-    }).catch(fail);
-  });
-
   $('rep2-go').addEventListener('click', function (e) {
     e.preventDefault();
-    api('enable', { artifactId: target.artifactId }).then(function (d) {
+    api('enable', { artifactId: target.artifactId }).then(function () {
       $('rep2-target2').textContent = target.name;
-      $('rep2-token').textContent = d.token;
       $('rep2-1').classList.remove('on'); $('rep2-2').classList.add('on');
       load();
     }).catch(fail);
@@ -1962,10 +1920,8 @@
   $('pd-back').addEventListener('click', function () { view('v-projects'); });
 
   $('pd-rotate').addEventListener('click', function () {
-    $('pr-target').textContent = opened.project.name;
-    $('pr-1').classList.add('on'); $('pr-2').classList.remove('on');
-    targetProject = { projectId: opened.project.projectId, name: opened.project.name };
-    openDlg('dlg-projrotate');
+    openTokens({ artifactId: null, projectId: opened.project.projectId,
+                 name: opened.project.name, status: opened.project.status }, false);
   });
 
   function projectMenu(p) {
@@ -1978,8 +1934,8 @@
 
     var active = p.status === 'active';
     var entries = [['URLをコピー']];
-    if (active) entries.push(['閲覧トークンを再発行']);
-    entries.push(['sep'], active ? ['無効化する', 'danger'] : ['再公開する']);
+    if (active) entries.push(['配布先']);
+    entries.push(['sep'], active ? ['公開を止める'] : ['再公開する']);
 
     entries.forEach(function (it) {
       var li = document.createElement('li');
@@ -2011,6 +1967,259 @@
     return wrap;
   }
 
+  /* ── 配布先 ──
+     1つの対象（共有アーティファクトかプロジェクト）に、閲覧トークンを複数持てる。
+     一覧が返すのは名前と期限だけで、値は発行の瞬間にしか出ない。 */
+  var TK_MAX = 5;
+  var tkTarget = null, tkReadOnly = false, tkList = [], tkPending = null;
+
+  function tkSubject() {
+    return tkTarget.projectId ? { projectId: tkTarget.projectId }
+                              : { artifactId: tkTarget.artifactId };
+  }
+  function tkIsProject() { return !!tkTarget.projectId; }
+  function tkPane(n) {
+    ['tk-1', 'tk-2', 'tk-3'].forEach(function (id, i) {
+      $(id).classList.toggle('on', i === n - 1);
+    });
+  }
+  function tkDays(expiresAt) {
+    if (!expiresAt) return null;                       // 期限なし（プロジェクトだけ）
+    return Math.max(0, Math.ceil((expiresAt * 1000 - Date.now()) / 86400000));
+  }
+  function tkWhen(t) {
+    var d = tkDays(t.expiresAt);
+    if (d === null) return '期限なし';
+    if (d === 0) return '今日まで — 今日の終わりに期限切れ';
+    if (d === 1) return '明日まで — あと1日';
+    return fmtDate(t.expiresAt) + 'まで（あと' + d + '日）';
+  }
+
+  function openTokens(item, readOnly) {
+    tkTarget = item; tkReadOnly = !!readOnly; tkList = [];
+    var label = (tkIsProject() ? 'プロジェクト：' : '共有アーティファクト：') + item.name;
+    ['tk-target', 'tk-target2', 'tk-target3'].forEach(function (id) { $(id).textContent = label; });
+    $('tk-url').textContent = tkIsProject()
+      ? 'https://' + CONFIG.viewerDomain + '/proj/' + item.projectId + '/'
+      : 'https://' + CONFIG.viewerDomain + '/p/' + item.artifactId + '/';
+    tkPane(1); tkRender(true); openDlg('dlg-tokens');
+    api('view-tokens', tkSubject()).then(function (d) {
+      tkList = d.viewTokens || [];
+      tkRender(false);
+    }).catch(fail);
+  }
+
+  function tkRender(loading) {
+    var box = $('tk-list'); box.textContent = '';
+    if (loading) {
+      var w = document.createElement('div'); w.className = 'tkempty';
+      var wp = document.createElement('p'); wp.textContent = '読み込んでいます…';
+      w.appendChild(wp); box.appendChild(w);
+      $('tk-add').hidden = true; $('tk-revokeall').hidden = true;
+      $('tk-count').hidden = true; $('tk-n').textContent = ''; $('tk-ro').hidden = true;
+      return;
+    }
+    if (!tkList.length) {
+      var e = document.createElement('div'); e.className = 'tkempty';
+      var msg = document.createElement('p');
+      msg.textContent = tkIsProject()
+        ? 'いまは誰もこのプロジェクトを開けません。公開そのものは止まっていません。'
+        : 'いまは誰も開けません。公開そのものは止まっていません。閲覧トークンを発行すると、その配布先だけが開けるようになります。';
+      e.appendChild(msg);
+      if (!tkReadOnly) {
+        var go = document.createElement('button');
+        go.className = 'btn'; go.type = 'button'; go.textContent = '閲覧トークンを発行';
+        go.addEventListener('click', tkOpenAdd);
+        e.appendChild(go);
+      }
+      box.appendChild(e);
+    }
+    tkList.slice().sort(function (a, b) {
+      if (!a.expiresAt) return 1;
+      if (!b.expiresAt) return -1;
+      return a.expiresAt - b.expiresAt;
+    }).forEach(function (t) {
+      var row = document.createElement('div'); row.className = 'tkrow';
+      var n = document.createElement('span'); n.className = 'tkname'; n.textContent = t.name;
+      var d = tkDays(t.expiresAt);
+      var w = document.createElement('span');
+      w.className = 'tkwhen' + (d !== null && d <= 1 ? ' soon' : '');
+      w.textContent = tkWhen(t);
+      row.append(n, w);
+      if (!tkReadOnly) {
+        var off = document.createElement('button');
+        off.className = 'tkoff'; off.type = 'button'; off.textContent = '無効にする';
+        off.setAttribute('aria-label', t.name + ' の閲覧トークンを無効にする');
+        off.addEventListener('click', function () { tkAsk(t); });
+        row.appendChild(off);
+      }
+      box.appendChild(row);
+    });
+    var full = tkList.length >= TK_MAX;
+    $('tk-n').textContent = tkList.length ? '配布先 ' + tkList.length + '件' : '';
+    var c = $('tk-count');
+    c.hidden = !tkList.length;
+    c.textContent = '同時に渡せるのは' + TK_MAX + '件まで'
+      + (full ? '。発行するには、どれかを先に無効にするか、期限切れを待ってください。' : '');
+    c.classList.toggle('full', full);
+    $('tk-add').hidden = tkReadOnly || !tkList.length;
+    $('tk-add').disabled = full;
+    $('tk-revokeall').hidden = tkReadOnly || !tkList.length;
+    $('tk-ro').hidden = !tkReadOnly;
+  }
+
+  function tkOpenAdd() {
+    $('tk-name').value = '';
+    var week = document.querySelector('input[name="tk-ttl"][value="7"]');
+    if (week) week.checked = true;
+    $('tk-err').hidden = true;
+    tkPane(2);
+    setTimeout(function () { $('tk-name').focus(); }, 40);
+  }
+  $('tk-add').addEventListener('click', tkOpenAdd);
+  $('tk-back').addEventListener('click', function () { tkPane(1); });
+  $('tk-done').addEventListener('click', function () {
+    tkPane(1);
+    api('view-tokens', tkSubject()).then(function (d) {
+      tkList = d.viewTokens || []; tkRender(false); load();
+    }).catch(fail);
+  });
+  /* 発行の直後だけは Esc を受けない。二度と表示できない値が、
+     手応えのないひと押しで消えるのを防ぐ */
+  $('dlg-tokens').addEventListener('cancel', function (e) {
+    if ($('tk-3').classList.contains('on')) e.preventDefault();
+  });
+
+  $('tk-go').addEventListener('click', function () {
+    var name = $('tk-name').value.trim(), err = $('tk-err');
+    if (!name) { err.textContent = '配布先の名前を入れてください。'; err.hidden = false; return; }
+    var picked = document.querySelector('input[name="tk-ttl"]:checked');
+    var pick = picked ? picked.value : '7';
+    var body = { name: name };
+    if (tkTarget.projectId) body.projectId = tkTarget.projectId;
+    else body.artifactId = tkTarget.artifactId;
+    if (pick !== 'none') body.ttl = (pick === 'month' ? 30 : parseInt(pick, 10)) * 24 * 60 * 60;
+    err.hidden = true;
+    api('issue-token', body).then(function (d) {
+      $('tk-issued').textContent = '配布先「' + name + '」の閲覧トークン';
+      $('tk-token').textContent = d.token;
+      tkPane(3);
+    }).catch(function (e) { err.textContent = (e && e.message) || '発行できませんでした。'; err.hidden = false; });
+  });
+
+  function tkAsk(t) {
+    tkPending = t;
+    var rest = tkList.length - 1;
+    $('rv-head').textContent = 'この閲覧トークンを無効にしますか';
+    $('rv-target').textContent = t.name + ' — ' + tkTarget.name;
+    $('rv-kn').textContent = 'この配布先に渡したトークンでは開けなくなる。一度無効にすると元へは戻せません';
+    $('rv-ky').textContent = (rest > 0 ? '他の' + rest + '件の配布先のトークン・' : '')
+      + 'URL・寄せられたコメント。公開そのものも止まりません'
+      + (rest === 0 ? '（これで誰も開けなくなります）' : '');
+    openDlg('dlg-revoke');
+  }
+  $('tk-revokeall').addEventListener('click', function () {
+    tkPending = null;
+    $('rv-head').textContent = 'すべての閲覧トークンを無効にしますか';
+    $('rv-target').textContent = tkTarget.name;
+    $('rv-kn').textContent = 'いま渡している' + tkList.length
+      + '件ぶんのトークンが、すべて開けなくなる。元へは戻せません';
+    $('rv-ky').textContent = tkIsProject()
+      ? '入っているアーティファクトは、それぞれの閲覧トークンで引き続き開けます。公開そのものも止まりません'
+      : 'URL・寄せられたコメント。公開そのものも止まりません';
+    openDlg('dlg-revoke');
+  });
+  $('rv-go').addEventListener('click', function () {
+    var body = tkSubject(), action = 'revoke-all-tokens';
+    if (tkPending) { action = 'revoke-token'; body.tokenId = tkPending.tokenId; }
+    var count = tkList.length;
+    api(action, body).then(function () {
+      $('dlg-revoke').close();
+      toast(tkPending ? tkPending.name + ' の閲覧トークンを無効にしました'
+                      : count + '件の閲覧トークンを無効にしました');
+      return api('view-tokens', tkSubject());
+    }).then(function (d) {
+      tkList = d.viewTokens || []; tkRender(false); load();
+    }).catch(fail);
+  });
+
+  /* ── プロジェクトを変える ──
+     所属は「誰が開けるか」を広げる操作なので、公開したあとも変えられる必要がある */
+  var PROJ_MAX = 3;
+  var pjItem = null, pjPicked = [];
+
+  function openProjects(item) {
+    pjItem = item;
+    pjPicked = (item.projects || []).slice();
+    $('pj-target').textContent = item.name;
+    $('pj-q').value = '';
+    pjRender();
+    openDlg('dlg-projects');
+    if (!PROJECTS.length) loadProjects();
+  }
+
+  function pjRender() {
+    var picked = $('pj-picked'); picked.textContent = '';
+    pjPicked.forEach(function (name) {
+      var tag = document.createElement('span'); tag.className = 'pjtag';
+      tag.appendChild(document.createTextNode(name));
+      var x = document.createElement('button');
+      x.type = 'button'; x.textContent = '✕';
+      x.setAttribute('aria-label', name + ' から外す');
+      x.addEventListener('click', function () {
+        pjPicked = pjPicked.filter(function (v) { return v !== name; });
+        pjRender();
+      });
+      tag.appendChild(x); picked.appendChild(tag);
+    });
+
+    var full = pjPicked.length >= PROJ_MAX;
+    var q = $('pj-q').value.trim();
+    var rest = PROJECTS.filter(function (p) {
+      return p.status === 'active' && pjPicked.indexOf(p.name) < 0 && (!q || p.name.indexOf(q) >= 0);
+    });
+
+    var box = $('pj-list'); box.textContent = '';
+    if (!rest.length) {
+      var none = document.createElement('div'); none.className = 'pjnone';
+      none.textContent = q ? '「' + q + '」に当たるプロジェクトはありません。'
+                           : 'ほかに入れられるプロジェクトはありません。';
+      box.appendChild(none);
+    }
+    rest.forEach(function (p) {
+      var b = document.createElement('button');
+      b.className = 'pjopt'; b.type = 'button'; b.textContent = p.name;
+      b.disabled = full;
+      b.addEventListener('click', function () {
+        pjPicked.push(p.name); $('pj-q').value = ''; pjRender();
+      });
+      box.appendChild(b);
+    });
+
+    $('pj-limit').textContent = '入れられるのは' + PROJ_MAX + '件までです'
+      + (full ? '。追加するには、どれかを先に外してください。'
+              : '（いま' + pjPicked.length + '件）。');
+  }
+
+  $('pj-q').addEventListener('input', pjRender);
+  $('pj-go').addEventListener('click', function () {
+    var was = pjItem.projects || [];
+    var byName = {};
+    PROJECTS.forEach(function (p) { byName[p.name] = p.projectId; });
+    var added = pjPicked.filter(function (n) { return was.indexOf(n) < 0; });
+    var removed = was.filter(function (n) { return pjPicked.indexOf(n) < 0; });
+    var calls = added.map(function (n) {
+      return api('assign', { artifactId: pjItem.artifactId, projectId: byName[n] });
+    }).concat(removed.map(function (n) {
+      return api('unassign', { artifactId: pjItem.artifactId, projectId: byName[n] });
+    }));
+    Promise.all(calls).then(function () {
+      $('dlg-projects').close();
+      toast(pjPicked.length ? 'プロジェクトを更新しました' : 'どのプロジェクトからも外しました');
+      load();
+    }).catch(fail);
+  });
+
   var targetProject = null;
 
   function projectAct(label, p) {
@@ -2020,34 +2229,18 @@
                function () { toast('URLをコピーしました'); });
       return;
     }
-    if (label === '閲覧トークンを再発行') {
-      $('pr-target').textContent = p.name;
-      $('pr-1').classList.add('on'); $('pr-2').classList.remove('on');
-      openDlg('dlg-projrotate');
-      return;
-    }
-    if (label === '無効化する') {
+    if (label === '配布先') return openTokens(
+      { artifactId: null, projectId: p.projectId, name: p.name, status: p.status }, false);
+    if (label === '公開を止める') {
       api('disable-project', { projectId: p.projectId })
         .then(function () { toast('公開を止めました。入っているものは個別に開けます'); loadProjects(); })
         .catch(fail);
       return;
     }
-    api('enable-project', { projectId: p.projectId }).then(function (d) {
-      $('pr-target2').textContent = p.name;
-      $('pr-token').textContent = d.token;
-      $('pr-1').classList.remove('on'); $('pr-2').classList.add('on');
-      openDlg('dlg-projrotate');
-      loadProjects();
-    }).catch(fail);
+    api('enable-project', { projectId: p.projectId })
+      .then(function () { toast('再公開しました。止める前に渡した閲覧トークンはそのまま使えます'); loadProjects(); })
+      .catch(fail);
   }
-
-  $('pr-go').addEventListener('click', function () {
-    api('reissue-project', { projectId: targetProject.projectId }).then(function (d) {
-      $('pr-target2').textContent = targetProject.name;
-      $('pr-token').textContent = d.token;
-      $('pr-1').classList.remove('on'); $('pr-2').classList.add('on');
-    }).catch(fail);
-  });
 
   $('new-project').addEventListener('click', function () {
     $('np-name').value = '';

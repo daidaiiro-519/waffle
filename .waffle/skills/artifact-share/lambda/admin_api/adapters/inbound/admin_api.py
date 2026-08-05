@@ -48,7 +48,7 @@ def _subject(body: dict):
 # 1つ増やして行き先を書き忘れると、その操作は黙って削除を実行していた。
 # 表であれば、行き先の無い操作は下で落ちる。
 ROUTES = {
-    "list":        lambda d, c, b: ListMyArtifacts(d.artifacts, d.comments).run(c),
+    "list":        lambda d, c, b: ListMyArtifacts(d.artifacts, d.comments, d.now).run(c),
     "replace":     lambda d, c, b: ReplaceArtifactContent(
         d.artifacts, d.projects, d.comments, d.viewer, d.now
     ).run(c, b.get("artifactId", ""), b.get("html", "")),
