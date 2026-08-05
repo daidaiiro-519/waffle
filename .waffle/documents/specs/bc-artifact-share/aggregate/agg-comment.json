@@ -31,6 +31,10 @@
               "type": "CommentId"
             },
             {
+              "name": "kind",
+              "type": "EntryKind"
+            },
+            {
               "name": "targetArtifactId",
               "type": "ArtifactId"
             },
@@ -105,6 +109,17 @@
               "type": "string"
             }
           ]
+        },
+        {
+          "name": "EntryKind",
+          "represents": "並びに載る1件が、閲覧者のコメントなのか、差し替えの区切りなのか",
+          "behavior": "不変。閲覧者が残したものは『コメント』、中身の差し替えに伴って仕組みが残したものは『区切り』になる。区切りには名乗りも判定も無い。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
         }
       ]
     },
@@ -156,6 +171,12 @@
           "to": "POSTED",
           "command": "post",
           "condition": "対象の共有アーティファクトが開ける状態であること"
+        },
+        {
+          "from": "[*]",
+          "to": "POSTED",
+          "command": "recordReplacement",
+          "condition": "対象の共有アーティファクトの中身が差し替えられたこと"
         }
       ]
     },
@@ -168,32 +189,19 @@
           "description": "名乗りと本文と判定を添えてコメントを残す。残した後は変えられない。",
           "requiresState": null,
           "postState": "POSTED"
+        },
+        {
+          "name": "recordReplacement",
+          "description": "中身が差し替えられたことを、コメントと同じ並びに1件の区切りとして残す。閲覧者ではなく仕組みが残すため、名乗りも判定も持たない。どの指摘が差し替え前のものかは、この区切りでしか読み取れない。",
+          "requiresState": null,
+          "postState": "POSTED"
         }
       ]
     },
     "domainEvents": {
       "blockType": "DomainEvents",
       "title": "ドメインイベント",
-      "items": [
-        {
-          "name": "CommentPosted",
-          "raisedBy": "post",
-          "payload": [
-            {
-              "name": "commentId",
-              "meaning": "残されたコメントを指すID"
-            },
-            {
-              "name": "targetArtifactId",
-              "meaning": "コメントが向けられた共有アーティファクトを指すID"
-            },
-            {
-              "name": "verdict",
-              "meaning": "添えられた判定"
-            }
-          ]
-        }
-      ]
+      "items": []
     },
     "invariantScenarios": {
       "blockType": "InvariantScenarios",

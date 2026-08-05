@@ -455,29 +455,25 @@
         {
           "name": "listViewTokens",
           "description": "有効な閲覧トークンの一覧を、名前・期限とともに返す。あわせて、期限を過ぎた閲覧トークンの記録を取り除く。閲覧トークンそのものの値は返さない。"
+        },
+        {
+          "name": "joinProject",
+          "description": "この共有アーティファクトをプロジェクトへ加える。人が明示的に選んだ結果としてのみ実行される。同時に入れるプロジェクトは3件を超えない。",
+          "requiresState": "PUBLISHED",
+          "postState": "PUBLISHED"
+        },
+        {
+          "name": "leaveProject",
+          "description": "この共有アーティファクトをプロジェクトから外す。共有アーティファクト自体は失われず、それぞれの閲覧トークンで引き続き開ける。",
+          "requiresState": "PUBLISHED",
+          "postState": "PUBLISHED"
         }
       ]
     },
     "domainEvents": {
       "blockType": "DomainEvents",
       "title": "ドメインイベント",
-      "items": [
-        {
-          "name": "ArtifactContentReplaced",
-          "raisedBy": "replaceContent",
-          "payload": [
-            {
-              "name": "artifactId",
-              "meaning": "差し替えられた共有アーティファクトを指すID"
-            },
-            {
-              "name": "replacedAt",
-              "meaning": "差し替えが行われた時点。この時点を境に、それ以前の指摘が差し替え前のものであると読み取れる"
-            }
-          ],
-          "description": "中身が差し替えられたこと。これだけは業務の記録として実際に残る——反応の並びに「区切りの記録」として現れ、閲覧者も投稿者も読む。どの指摘が差し替え前のものかは、この区切りでしか読み取れない。"
-        }
-      ]
+      "items": []
     },
     "invariantScenarios": {
       "blockType": "InvariantScenarios",

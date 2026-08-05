@@ -35,6 +35,7 @@ Comment
 | 属性 | 型 |
 |---|---|
 | commentId | CommentId |
+| kind | EntryKind |
 | targetArtifactId | ArtifactId |
 | author | AuthorName |
 | body | CommentBody |
@@ -86,6 +87,16 @@ Comment
 |---|---|
 | value | string |
 
+### EntryKind
+
+| 表す値 | 振る舞い |
+|---|---|
+| 並びに載る1件が、閲覧者のコメントなのか、差し替えの区切りなのか | 不変。閲覧者が残したものは『コメント』、中身の差し替えに伴って仕組みが残したものは『区切り』になる。区切りには名乗りも判定も無い。 |
+
+| 属性 | 型 |
+|---|---|
+| value | string |
+
 ---
 
 ## 不変条件
@@ -104,6 +115,7 @@ Comment
 ```mermaid
 stateDiagram-v2
     [*] --> POSTED: post
+    [*] --> POSTED: recordReplacement
 ```
 
 ### 遷移
@@ -111,6 +123,7 @@ stateDiagram-v2
 | from | to | command | 条件 |
 |---|---|---|---|
 | [*] | POSTED | post | 対象の共有アーティファクトが開ける状態であること |
+| [*] | POSTED | recordReplacement | 対象の共有アーティファクトの中身が差し替えられたこと |
 
 ---
 
@@ -124,23 +137,13 @@ stateDiagram-v2
 |---|---|---|
 | None | POSTED |  |
 
----
+### recordReplacement
 
-## ドメインイベント
+中身が差し替えられたことを、コメントと同じ並びに1件の区切りとして残す。閲覧者ではなく仕組みが残すため、名乗りも判定も持たない。どの指摘が差し替え前のものかは、この区切りでしか読み取れない。
 
-### CommentPosted
-
-#### 発行契機
-
-post
-
-#### ペイロード
-
-| 項目 | 意味 |
-|---|---|
-| commentId | 残されたコメントを指すID |
-| targetArtifactId | コメントが向けられた共有アーティファクトを指すID |
-| verdict | 添えられた判定 |
+| 前提 | 後 | 発行イベント |
+|---|---|---|
+| None | POSTED |  |
 
 ---
 

@@ -347,18 +347,6 @@
           "postState": "ACTIVE"
         },
         {
-          "name": "addArtifact",
-          "description": "共有アーティファクトをこの単位へ加える。人が明示的に選んだ結果としてのみ実行される。",
-          "requiresState": "ACTIVE",
-          "postState": "ACTIVE"
-        },
-        {
-          "name": "removeArtifact",
-          "description": "共有アーティファクトをこの単位から外す。共有アーティファクト自体は失われず、それぞれの閲覧トークンで引き続き開ける。",
-          "requiresState": "ACTIVE",
-          "postState": "ACTIVE"
-        },
-        {
           "name": "suspend",
           "description": "この単位を開けない状態にする。入っている共有アーティファクトはそれぞれの閲覧トークンで引き続き開ける。",
           "requiresState": "ACTIVE",
@@ -397,36 +385,7 @@
     "domainEvents": {
       "blockType": "DomainEvents",
       "title": "ドメインイベント",
-      "items": [
-        {
-          "name": "ArtifactAssignedToProject",
-          "raisedBy": "addArtifact",
-          "payload": [
-            {
-              "name": "projectId",
-              "meaning": "加え先のプロジェクト"
-            },
-            {
-              "name": "artifactId",
-              "meaning": "加えられた共有アーティファクトを指すID"
-            }
-          ]
-        },
-        {
-          "name": "ArtifactRemovedFromProject",
-          "raisedBy": "removeArtifact",
-          "payload": [
-            {
-              "name": "projectId",
-              "meaning": "外し元のプロジェクト"
-            },
-            {
-              "name": "artifactId",
-              "meaning": "外された共有アーティファクトを指すID"
-            }
-          ]
-        }
-      ]
+      "items": []
     },
     "invariantScenarios": {
       "blockType": "InvariantScenarios",
