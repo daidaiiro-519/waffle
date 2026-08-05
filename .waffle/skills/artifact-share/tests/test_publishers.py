@@ -21,145 +21,18 @@ from application.ports import Caller  # noqa: E402
 from shared.errors import PublisherError  # noqa: E402
 
 
-from fakes import FakeKeyStore, FakeStore  # noqa: E402
+from publisher_setup import (  # noqa: E402
+    ADMIN, SOMEONE, artifact_owned_by, setup,
+)
 
 ADMIN = Caller("admin-1", is_admin=True)
 SOMEONE = Caller("publisher-2")
 
 
-class FakeDirectory:
-    """招かれている人の名簿。実物はこの文脈の外にある。"""
-
-    def __init__(self, people=None):
-        self.people = dict(people or {})   # id -> {"email", "status"}
-
-    def find(self, publisher_id):
-        return self.people.get(publisher_id)
-
-    def invite(self, email):
-        # 宛先で入る設定のため、名簿が持つ識別子は宛先とは別の値になる
-        for pid, person in self.people.items():
-            if person["email"] == email:
-                return pid                  # 既に招かれていればそのまま返す
-        pid = f"id-{len(self.people) + 1}"
-        self.people[pid] = {"email": email, "status": "invited"}
-        return pid
-
-    def remove(self, publisher_id):
-        self.people.pop(publisher_id, None)
-
-    def list(self):
-        return [{"id": pid, "email": p["email"], "status": p["status"]}
-                for pid, p in sorted(self.people.items())]
-
-    def admins(self):
-        return {"admin-1"}
-
-    def resend(self, publisher_id):
-        self.resent = getattr(self, "resent", [])
-        self.resent.append(publisher_id)
-
-
-def setup(people=None, objects=None):
-    directory = FakeDirectory(people if people is not None else {
-        "admin-1": {"email": "admin@example.com", "status": "active"},
-        "publisher-2": {"email": "p2@example.com", "status": "active"},
-    })
-    deps = main.Connections(
-        store=FakeStore(objects or {}), keys=FakeKeyStore(),
-        directory=directory, now=lambda: 1_700_000_000,
-        viewer_domain="viewer.example.net",
-    )
-    return deps, directory
-
-
-def artifact_owned_by(publisher, artifact_id="aaaaaaaa", status="active"):
-    meta = {"artifactId": artifact_id, "name": "文書", "status": status,
-            "projects": [], "tags": [], "uploadedBy": publisher, "updatedAt": 1}
-    return {f"meta/{artifact_id}.json": {"body": json.dumps(meta),
-                                         "content_type": "application/json"}}
-
-
 # ── 招く ────────────────────────────────────────────────
-
-def test_招かれた人は公開できるようになる():
-    deps, directory = setup()
-    result = build(deps, InvitePublisher).run("invite", ADMIN, email="new@example.com")
-
-    assert directory.find(result.publisher_id)["email"] == "new@example.com"
-
-
-def test_管理者でない者は招けない():
-    deps, directory = setup()
-    before = dict(directory.people)
-
-    with pytest.raises(PublisherError) as x:
-        build(deps, InvitePublisher).run("invite", SOMEONE, email="new@example.com")
-
-    assert x.value.code == "NOT_ADMINISTRATOR"
-    assert directory.people == before      # 名簿は変わっていない
-
-
-def test_重ねて招いても増えず状態も変わらない():
-    """Given 既に招かれている / When もう一度招く / Then 二重にならない"""
-    deps, directory = setup()
-    first = build(deps, InvitePublisher).run("invite", ADMIN, email="new@example.com")
-    count = len(directory.people)
-
-    again = build(deps, InvitePublisher).run("invite", ADMIN, email="new@example.com")
-
-    assert again.publisher_id == first.publisher_id
-    assert len(directory.people) == count
 
 
 # ── 外す ────────────────────────────────────────────────
-
-def test_外された人は名簿から消える():
-    deps, directory = setup()
-    build(deps, InvitePublisher).run("remove", ADMIN, publisher_id="publisher-2")
-    assert directory.find("publisher-2") is None
-
-
-def test_外しても公開したものは残る():
-    """Given その人が公開している / When 外す / Then 公開されたまま残る
-
-    閲覧者の手元の共有URLが、投稿者の異動で黙って死んではならない。
-    """
-    deps, _ = setup(objects=artifact_owned_by("publisher-2"))
-    deps.keys.put("token:aaaaaaaa", "abc|0|1")
-
-    build(deps, InvitePublisher).run("remove", ADMIN, publisher_id="publisher-2")
-
-    meta = json.loads(deps.store.get("meta/aaaaaaaa.json"))
-    assert meta["status"] == "active"
-    assert deps.keys.get("token:aaaaaaaa") == "abc|0|1"   # 閲覧トークンも失効しない
-
-
-def test_手入れできなくなるものがあれば件数を伝える():
-    objects = {}
-    for i in range(3):
-        objects.update(artifact_owned_by("publisher-2", f"art{i}"))
-    deps, _ = setup(objects=objects)
-
-    result = build(deps, InvitePublisher).run("remove", ADMIN, publisher_id="publisher-2")
-
-    assert result.orphaned_artifacts == 3
-
-
-def test_管理者は自分自身を外せない():
-    """管理者が一人もいない状態へ落ちる経路を塞ぐ"""
-    deps, directory = setup()
-    with pytest.raises(PublisherError) as x:
-        build(deps, InvitePublisher).run("remove", ADMIN, publisher_id=ADMIN.id)
-    assert x.value.code == "CANNOT_REMOVE_SELF"
-    assert directory.find(ADMIN.id) is not None
-
-
-def test_招かれていない人は外せない():
-    deps, _ = setup()
-    with pytest.raises(PublisherError) as x:
-        build(deps, InvitePublisher).run("remove", ADMIN, publisher_id="no-such-person")
-    assert x.value.code == "PUBLISHER_NOT_FOUND"
 
 
 def test_管理者でない者は外せない():
@@ -172,52 +45,8 @@ def test_管理者でない者は外せない():
 
 # ── 一覧 ────────────────────────────────────────────────
 
-def test_招かれている人を一覧できる():
-    deps, _ = setup()
-    rows = {r.id: r for r in build(deps, ListPublishers).run(ADMIN)}
-
-    assert set(rows) == {"admin-1", "publisher-2"}
-    assert rows["admin-1"].admin is True       # 管理者は印がつく
-    assert rows["publisher-2"].admin is False
-    assert rows["publisher-2"].email == "p2@example.com"
-
-
-def test_管理者でなければ一覧できない():
-    """誰が招かれているかは、投稿者どうしには見せない"""
-    deps, _ = setup()
-    with pytest.raises(PublisherError) as x:
-        build(deps, ListPublishers).run(SOMEONE)
-    assert x.value.code == "NOT_ADMINISTRATOR"
-
-
-def test_一覧に合言葉に関わるものが含まれない():
-    deps, _ = setup()
-    for row in build(deps, ListPublishers).run(ADMIN):
-        assert {f.name for f in fields(row)} == {"id", "name", "email", "status", "admin"}
-
 
 # ── 招待を送り直す ──────────────────────────────────────
-
-def test_招待に応じていない人へ送り直せる():
-    """仮のパスワードを無くした人は、自分では解決できない。
-    その状態では利用者プールの再設定が使えないため、招き直すしかない。"""
-    deps, directory = setup(people={
-        "admin-1": {"email": "admin@example.com", "status": "active"},
-        "newbie": {"email": "new@example.com", "status": "invited"},
-    })
-
-    result = build(deps, InvitePublisher).run("resend", ADMIN, publisher_id="newbie")
-
-    assert directory.resent == ["newbie"]
-
-
-def test_既に入っている人へは送り直さない():
-    """送り直すと仮のパスワードに戻り、本人が決めたものが使えなくなる"""
-    deps, directory = setup()
-    with pytest.raises(PublisherError) as x:
-        build(deps, InvitePublisher).run("resend", ADMIN, publisher_id="publisher-2")
-    assert x.value.code == "ALREADY_ACTIVE"
-    assert getattr(directory, "resent", []) == []
 
 
 def test_管理者でなければ送り直せない():

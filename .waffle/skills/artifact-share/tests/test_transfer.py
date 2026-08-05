@@ -24,7 +24,7 @@ from application.ports import Caller  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
 
-from test_publishers import FakeDirectory  # noqa: E402
+from publisher_setup import FakeDirectory  # noqa: E402
 from fakes import FakeKeyStore, FakeStore  # noqa: E402
 from test_manage import HTML  # noqa: E402
 
