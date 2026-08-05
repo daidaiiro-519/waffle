@@ -24,7 +24,7 @@ artifact-shareがAWS上で採用する技術要素と、その選定理由を定
 
 ## ランタイム
 
-- **実行ターゲット**: サーバーレス関数（Lambda）／エッジ関数（CloudFront Functions）／ローカルCLI
+- **実行ターゲット**: サーバーレス関数（Lambda）／エッジ関数（CloudFront Functions）／利用者のブラウザ（管理画面・閲覧画面）／ローカルCLI
 - **並行モデル**: 同期主体（1リクエスト1実行。共有状態を持たない）
 
 ### 言語
@@ -33,6 +33,7 @@ artifact-shareがAWS上で採用する技術要素と、その選定理由を定
 |---|---|---|---|
 | `python` | >=3.11 | `.py` | primary |
 | `javascript` |  | `.js` | edge |
+| `javascript` |  | `.js / .html` | browser |
 
 ---
 

@@ -119,6 +119,7 @@ def test_suspended_artifact_cannot_be_viewed():
 | application | `contract` | `.waffle/skills/artifact-share/tests/application/contract/` |  |  | port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する |
 | inbound adapter | `contract` | `.waffle/skills/artifact-share/tests/adapters/inbound/contract/` |  |  | 閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う |
 | outbound adapter | `integration` | `.waffle/skills/artifact-share/tests/adapters/outbound/integration/` |  |  |  |
+| browser | `contract` | `.waffle/skills/artifact-share/tests/browser/contract/` |  |  | 利用者のブラウザで動く出荷物（管理画面・閲覧画面）を確かめる。ブラウザは層を持たないため、確かめるのは振る舞いではなく、出荷物どうしで二重に書かれた規則が一致していること。実行を伴わないので Python で書く |
 
 ---
 
