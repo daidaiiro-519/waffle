@@ -43,6 +43,7 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-check-aggregate-class-drift
 - uc-check-domain-service-drift
 - uc-check-layer-drift
+- uc-check-prompt-contract
 
 ---
 

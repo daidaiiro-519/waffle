@@ -25,6 +25,7 @@ from waffle.application.usecases.check_query_precedes_array_fill import (
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
 from waffle.application.usecases.init_coding_preset import InitCodingPreset
 from waffle.application.usecases.update_coding_preset import UpdateCodingPreset
+from waffle.application.usecases.check_prompt_contract import CheckPromptContract
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
@@ -241,6 +242,11 @@ def check_verification_gate(specPath: str, testPath: str, testResultsPath: str, 
     """実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。"""
     return _dict(CheckVerificationGate(_docs(), TreeSitterTestFunctionExtractor()).run(
         specPath, testPath, testResultsPath, _resolve_binding(architectureRef)))
+
+@mcp.tool
+def check_prompt_contract(schemaRef: str) -> dict:
+    """Schemaの指示が然るべき場所に然るべき名前で置かれているかを検証（uc-check-prompt-contract）。"""
+    return _dict(CheckPromptContract(_schemas()).run(schemaRef))
 
 @mcp.tool
 def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict:

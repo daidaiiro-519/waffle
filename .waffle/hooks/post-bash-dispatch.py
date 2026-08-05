@@ -2,7 +2,7 @@
 """PostToolUse:Bash集約ディスパッチャ。
 
 check-drift-on-write.py・notify-advisor-consultation.py・
-notify-validate-render-after-write.pyの3本がBashコマンド1回ごとに個別の
+notify-validate-render-after-write.py・check-prompt-contract-on-write.pyがBashコマンド1回ごとに個別の
 python3プロセスとして起動し、うち2本が同一のtranscriptファイルを独立に
 全読みしていた（tech-lead-advisor敵対的検証で指摘された実行時の重複）。
 
@@ -47,11 +47,15 @@ def main() -> None:
     notify_validate_render_after_write = _load(
         "notify-validate-render-after-write.py", "_notify_validate_render_after_write"
     )
+    check_prompt_contract_on_write = _load(
+        "check-prompt-contract-on-write.py", "_check_prompt_contract_on_write"
+    )
 
     messages = [
         check_drift_on_write.check(payload),
         notify_advisor_consultation.check(payload, transcript_text),
         notify_validate_render_after_write.check(payload, transcript_text),
+        check_prompt_contract_on_write.check(payload),
     ]
     combined = "\n".join(m for m in messages if m)
     if combined:

@@ -236,6 +236,43 @@ def _walk_fill(schema, d, path, entries, is_required, spec_kind: str | None = No
     entries.append(entry)
 
 
+def build_prompt_coverage(schema: dict, content_def_: dict) -> list[dict]:
+    """記入対象の葉を、指示の有無に関わらず列挙する（契約の被覆を測るため）。
+
+    build_fill_template とは走査を共有するが、フィルタだけが違う。あちらは
+    x-prompt-write を持たない葉を黙って捨てるため、構造上「無いもの」を報告できない。
+    ここは捨てずに hasPrompt で区別して返す。
+
+    「記入対象」の定義は build_fill_template と同一にする——$ref は解決し、object は
+    再帰し、const で固定された欄は除き、配列は要素の中まで降りる。数え方をここで
+    作り直すと、走査が2箇所に分かれてやがて食い違う。
+    """
+    leaves: list[dict] = []
+    _walk_coverage(schema, content_def_, "content", leaves)
+    return leaves
+
+
+def _walk_coverage(schema, d, path, leaves):
+    if "$ref" in d:
+        return _walk_coverage(schema, resolve_ref(schema, d["$ref"]), path, leaves)
+    d = _merge_allof(schema, d) if "allOf" in d else d
+    if d.get("type") == "object" or "properties" in d:
+        for k, v in d.get("properties", {}).items():
+            _walk_coverage(schema, v, f"{path}.{k}", leaves)
+        return
+    if "const" in d:
+        return  # 値が決まっている欄は、書き込む場所ではない
+    leaves.append({"path": path, "hasPrompt": "x-prompt-write" in d})
+    if d.get("type") == "array":
+        item = d.get("items", {})
+        if "$ref" in item:
+            item = resolve_ref(schema, item["$ref"])
+        item = _merge_allof(schema, item)
+        if _is_object_schema(item):
+            for k, v in item.get("properties", {}).items():
+                _walk_coverage(schema, v, f"{path}[].{k}", leaves)
+
+
 def _build_element(schema, item, depth: int = 0, max_depth: int = 2, spec_kind: str | None = None) -> dict:
     """配列itemのプロパティごとのprompt(x-prompt-write)を集める。プロパティ自身が
     さらに構造化された配列(例: Entities.items[].attributes)の場合、ネストしたelementとして

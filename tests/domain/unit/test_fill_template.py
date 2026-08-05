@@ -3,7 +3,11 @@
 uc-render-blank-templateのAcceptanceCriteriaに対応する。純粋なdict操作のみでportを
 必要としないため、全件をdomain層に置く。
 """
-from waffle.domain.services.fill_template import build_fill_template, overlay_placeholders
+from waffle.domain.services.fill_template import (
+    build_fill_template,
+    build_prompt_coverage,
+    overlay_placeholders,
+)
 
 
 def test_plain_string_field_uses_prompt_as_placeholder():
@@ -375,3 +379,125 @@ def test_does_not_mutate_original_skeleton():
     overlay_placeholders(skeleton, entries)
 
     assert skeleton["content"]["title"]["title"] == ""
+
+
+# --- build_prompt_coverage（指示の有無に関わらず記入対象を列挙する） ---
+
+def test_coverage_lists_leaves_without_prompt():
+    """
+    Given x-prompt-writeを持たない葉があるcontent定義
+    When build_prompt_coverageで走査する
+    Then その葉が、指示を持たないものとして列挙される
+    """
+    content = {
+        "type": "object",
+        "properties": {
+            "title": {
+                "type": "object",
+                "properties": {
+                    "blockType": {"const": "Title"},
+                    "text": {"type": "string", "x-prompt-write": "題名を書く"},
+                    "note": {"type": "string"},
+                },
+            },
+        },
+    }
+
+    leaves = build_prompt_coverage({}, content)
+
+    by_path = {leaf["path"]: leaf["hasPrompt"] for leaf in leaves}
+    assert by_path["content.title.text"] is True
+    assert by_path["content.title.note"] is False
+    assert "content.title.blockType" not in by_path   # 固定された欄は記入対象でない
+
+
+def test_coverage_descends_into_nested_array_items():
+    """
+    Given 配列の要素の中に、さらに記入対象を持つcontent定義
+    When build_prompt_coverageで走査する
+    Then 奥にある記入対象も列挙される（ブロック直下だけを見て数え落とさない）
+    """
+    content = {
+        "type": "object",
+        "properties": {
+            "entities": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "x-prompt-write": "エンティティを列挙",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "attributes": {
+                                    "type": "array",
+                                    "x-prompt-write": "属性を列挙",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {"type": "string",
+                                                     "x-prompt-write": "属性名"},
+                                            "unit": {"type": "string"},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+
+    by_path = {leaf["path"]: leaf["hasPrompt"]
+               for leaf in build_prompt_coverage({}, content)}
+
+    assert by_path["content.entities.items[].attributes[].name"] is True
+    assert by_path["content.entities.items[].attributes[].unit"] is False
+
+
+def test_coverage_accepts_prompt_written_per_kind():
+    """
+    Given x-prompt-writeが種別ごとの対応表として書かれたcontent定義
+    When build_prompt_coverageで走査する
+    Then その葉は指示を持つものとして扱われる（文字列でないことを欠落と数えない）
+    """
+    content = {
+        "type": "object",
+        "properties": {
+            "title": {
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string",
+                             "x-prompt-write": {"usecase": "操作の名前", "aggregate": "集約の名前"}},
+                },
+            },
+        },
+    }
+
+    leaves = build_prompt_coverage({}, content)
+
+    assert leaves[0]["hasPrompt"] is True
+
+
+def test_coverage_resolves_ref_before_judging():
+    """
+    Given 葉が他所の定義を指しており、指示は指し示す先にあるcontent定義
+    When build_prompt_coverageで走査する
+    Then その葉は指示を持つものとして扱われる
+    """
+    schema = {"$defs": {"LevelEnum": {"type": "string", "x-prompt-write": "強さを選ぶ"}}}
+    content = {
+        "type": "object",
+        "properties": {
+            "rules": {
+                "type": "object",
+                "properties": {"level": {"$ref": "#/$defs/LevelEnum"}},
+            },
+        },
+    }
+
+    leaves = build_prompt_coverage(schema, content)
+
+    assert leaves[0]["path"] == "content.rules.level"
+    assert leaves[0]["hasPrompt"] is True

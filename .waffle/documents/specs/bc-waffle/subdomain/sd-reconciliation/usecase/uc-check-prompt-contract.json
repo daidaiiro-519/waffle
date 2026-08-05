@@ -1,0 +1,233 @@
+{
+  "documentId": "uc-check-prompt-contract",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "スキーマの指示の置かれ方を確かめる：uc-check-prompt-contract"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "CheckPromptContract"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "スキーマを書き換える者",
+      "intent": "自分が足した指示が、実際に読まれる場所に置かれているかを確かめたい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "指示が抜けたまま気づかないと、その欄を埋める者はガイダンス無しで値を決めることになり、書き手ごとに違うものが入る。実際に12ブロックで抜けていた。",
+        "指示は、読まれない場所へ置いても書いた本人には気づけない。ブロック直下に書き込み用の指示を置く、契約に無いキーを足す——どちらも見た目には揃っているのに、誰にも届かない。実際にこの3つとも起きた。",
+        "置かれ方は人が数えると間違える。同じ測定を3回試み、3回とも誤った。原因は毎回同じで、どこに置かれるべきかを知っている既存の走査を借りずに、その場で数え方を作り直したこと。人に守らせる規約ではなく、機械が持つべき判定である。"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [],
+      "steps": [
+        {
+          "from": "スキーマを書き換える者",
+          "to": "スキーマ一式",
+          "kind": "command",
+          "message": "指示の置かれ方の確認を依頼する"
+        },
+        {
+          "from": "スキーマ一式",
+          "to": "スキーマ一式",
+          "kind": "self",
+          "message": "スキーマごとに最新の版だけを選ぶ"
+        },
+        {
+          "from": "スキーマ一式",
+          "to": "雛形の走査",
+          "kind": "command",
+          "message": "指示が読まれる場所を集めるよう依頼する"
+        },
+        {
+          "from": "雛形の走査",
+          "to": "スキーマ一式",
+          "kind": "return",
+          "message": "引く単位と記入対象、それぞれの指示の有無を返す"
+        },
+        {
+          "from": "スキーマ一式",
+          "to": "スキーマ一式",
+          "kind": "self",
+          "message": "実在する指示の場所と突き合わせ、足りないものと読まれないものを分ける"
+        },
+        {
+          "from": "スキーマ一式",
+          "to": "スキーマを書き換える者",
+          "kind": "return",
+          "message": "観点ごとの一覧を返す"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "読み方の指示が無いブロックの一覧が返っている",
+        "書き方の指示が無い記入対象の一覧が返っている",
+        "契約に無い名前の指示の一覧が返っている",
+        "スキーマそのものは変わっていない"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 確認を求めたとき、システムは blockType を持つ定義のうち読み方の指示が無いものを返す shall。",
+        "When 確認を求めたとき、システムは値を書き込む欄のうち書き方の指示が無いものを返す shall。",
+        "When 確認を求めたとき、システムは x-prompt-query と x-prompt-write 以外のx-prompt- で始まるキーを返す shall（契約が認める名前はこの2つだけ）。",
+        "When 記入対象がどこかを決めるとき、システムは雛形を組み立てる既存の走査をそのまま使う shall（数え方をこの操作の側で作り直さない）。",
+        "While 確認を行う間、システムは指示の中身が指示として適切かを判定しない shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "SCHEMA_NOT_FOUND",
+          "condition": [
+            "対象のスキーマが1つも見つからない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "読み方の指示が無いブロックを見つける",
+          "category": "異常系",
+          "viewpoint": "被覆：引く単位に指示があるか",
+          "gherkin": "Scenario: 読み方の指示が無いブロックを見つける\n  Given 読み方の指示を持たないブロックがあるスキーマ\n  When 確認を求める\n  Then そのブロックが、読み方の指示が無いものとして返る",
+          "covers": "受け入れ基準: 読み方の指示が無いブロックを返す"
+        },
+        {
+          "name": "書き方の指示が無い記入対象を見つける",
+          "category": "異常系",
+          "viewpoint": "被覆：値を書き込む欄に指示があるか",
+          "gherkin": "Scenario: 書き方の指示が無い記入対象を見つける\n  Given 書き方の指示を持たない記入対象があるスキーマ\n  When 確認を求める\n  Then その記入対象が、書き方の指示が無いものとして返る",
+          "covers": "受け入れ基準: 書き方の指示が無い記入対象を返す"
+        },
+        {
+          "name": "契約に無い名前の指示を見つける",
+          "category": "異常系",
+          "viewpoint": "契約：使ってよい名前は2つだけ",
+          "gherkin": "Scenario: 契約に無い名前の指示を見つける\n  Given x-prompt-query でも x-prompt-write でもない x-prompt- で始まるキーを持つスキーマ\n  When 確認を求める\n  Then そのキーが、契約に無い名前として返る",
+          "covers": "受け入れ基準: 契約に無い名前の指示を返す"
+        },
+        {
+          "name": "入れ子の奥にある記入対象も見落とさない",
+          "category": "境界値",
+          "viewpoint": "反例：ブロック直下だけを見ると、奥にある指示を数え落とす",
+          "gherkin": "Scenario: 入れ子の奥にある記入対象も見落とさない\n  Given 配列の要素の中に、さらに記入対象を持つスキーマ\n  And その記入対象には書き方の指示がある\n  When 確認を求める\n  Then その記入対象は、指示が無いものとして返らない",
+          "covers": "受け入れ基準: 記入対象は雛形を組み立てる既存の走査で決める"
+        },
+        {
+          "name": "種別ごとに書き分けられた指示を欠落と数えない",
+          "category": "境界値",
+          "viewpoint": "反例：指示は1つの文字列とは限らず、種別ごとの対応表でも書ける",
+          "gherkin": "Scenario: 種別ごとに書き分けられた指示を欠落と数えない\n  Given 書き方の指示が、種別ごとの対応表として書かれているスキーマ\n  When 確認を求める\n  Then その記入対象は、指示が無いものとして返らない",
+          "covers": "受け入れ基準: 記入対象は雛形を組み立てる既存の走査で決める"
+        },
+        {
+          "name": "他所を指している欄は、指し示す先で判定する",
+          "category": "境界値",
+          "viewpoint": "反例：欄そのものではなく、解決した先に指示が置かれていることがある",
+          "gherkin": "Scenario: 他所を指している欄は、指し示す先で判定する\n  Given 記入対象が他所の定義を指しており、指示はその先にあるスキーマ\n  When 確認を求める\n  Then その記入対象は、指示が無いものとして返らない",
+          "covers": "受け入れ基準: 記入対象は雛形を組み立てる既存の走査で決める"
+        },
+        {
+          "name": "固定された欄は記入対象に数えない",
+          "category": "境界値",
+          "viewpoint": "境界：値が決まっている欄は、書き込む場所ではない",
+          "gherkin": "Scenario: 固定された欄は記入対象に数えない\n  Given 値が固定された欄を持つスキーマ\n  When 確認を求める\n  Then その欄は、指示が無いものとして返らない",
+          "covers": "受け入れ基準: 記入対象は雛形を組み立てる既存の走査で決める"
+        },
+        {
+          "name": "指示の中身が説明文でも欠落として返さない",
+          "category": "正常系",
+          "viewpoint": "境界：置かれ方だけを見る。中身の良し悪しは判定しない",
+          "gherkin": "Scenario: 指示の中身が説明文でも欠落として返さない\n  Given 読み方の指示が、読み方ではなく項目の説明になっているスキーマ\n  When 確認を求める\n  Then そのブロックは、指示が無いものとして返らない",
+          "covers": "受け入れ基準: 指示の中身が指示として適切かを判定しない"
+        },
+        {
+          "name": "契約が守られていれば何も返らない",
+          "category": "正常系",
+          "viewpoint": "静けさ：守られているときに鳴らない",
+          "gherkin": "Scenario: 契約が守られていれば何も返らない\n  Given 3つの規則をすべて満たすスキーマ\n  When 確認を求める\n  Then どの一覧も空である",
+          "covers": "受け入れ基準: 読み方の指示が無いブロックを返す"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 同じ確認を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
+        "While 確認を行う間、システムはスキーマを一切書き換えない shall。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "何度確かめても結果が変わらない",
+          "category": "境界値",
+          "viewpoint": "べき等性：確認は状態を持たない",
+          "gherkin": "Scenario: 何度確かめても結果が変わらない\n  Given 同じスキーマ\n  When 確認を2回続けて求める\n  Then 2回目の結果は1回目と完全に同一である"
+        },
+        {
+          "name": "確かめてもスキーマは変わらない",
+          "category": "正常系",
+          "viewpoint": "副作用の不在：見るだけの操作",
+          "gherkin": "Scenario: 確かめてもスキーマは変わらない\n  Given 指示の欠落があるスキーマ\n  When 確認を求める\n  Then スキーマの中身は確認の前後で一致する"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象となるスキーマが1つ以上ある"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "スキーマが定める2つの指示——引いた人向けの x-prompt-query と、値を書き込むときに読む x-prompt-write——が、然るべき場所に然るべき名前で置かれているかを確かめる操作。",
+        "指示の中身が良いかどうかは判定しない。置かれ方だけを見る。"
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-reconciliation"
+}

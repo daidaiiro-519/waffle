@@ -25,6 +25,7 @@ from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
     TreeSitterTestFunctionExtractor,
 )
 from waffle.application.usecases.check_scenario_drift import CheckScenarioDrift
+from waffle.application.usecases.check_prompt_contract import CheckPromptContract
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
@@ -323,6 +324,13 @@ def check_schema_version_drift(
 ) -> None:
     """DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。"""
     _emit(CheckSchemaVersionDrift(_docs(), _schemas()).run(documents_root))
+
+@app.command("check-prompt-contract")
+def check_prompt_contract(
+    schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref", help="確かめる対象のschemaRef（例: DomainSpecSchema/v8）"),
+) -> None:
+    """Schemaの指示が然るべき場所に然るべき名前で置かれているかを検証（uc-check-prompt-contract）。"""
+    _emit(CheckPromptContract(_schemas()).run(schema_ref))
 
 @app.command("check-usecase-class-drift")
 def check_usecase_class_drift(

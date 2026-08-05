@@ -1,0 +1,1 @@
+../../.waffle/hooks/check-prompt-contract-on-write.py

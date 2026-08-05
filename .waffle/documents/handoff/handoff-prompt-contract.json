@@ -1,0 +1,157 @@
+{
+  "documentId": "handoff-prompt-contract",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "スキーマの指示の置かれ方を確かめる仕組みの引き継ぎ：handoff-prompt-contract"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-check-prompt-contract"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "検査が属する一貫性の境界",
+          "consideration": "この検査は Schema だけで閉じ、Document を一切参照しない。Document 群の走査を前提とする check-schema-version-drift へ相乗りさせると、Document が0件の Schema が無検査になる（PresentationSpecSchema は実際に0件）。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "語の一義性",
+          "consideration": "「drift（版のズレ）」に「契約の欠落」を同居させない。報告を読む側が毎回どちらの意味かを推測することになる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "被覆と質を分ける",
+          "consideration": "指示が在るかは決定的に判定できるが、指示になっているかは意味の理解を要する。同じ検査に混ぜると、説明文だが存在はするものが緑で通り、検査がグリーンなのに契約が破れている状態を正当化する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "中核サブドメインの方針との整合",
+          "consideration": "sd-reconciliation の implementationGuidance が「宣言と実態の突き合わせは自前の決定的コードで書き、AIに判定を委ねない」と明記している。中身の自動判定はこれに反する。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "走査は再利用する",
+          "consideration": "記入対象がどこかを決める定義は fill_template.py にしかない。検査が独自に走査を書けば二箇所を直すことになり、やがて宣言とコードが食い違う。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "ただし既存関数はそのままでは使えない",
+          "consideration": "_walk_fill は x-prompt-write を持たない葉を黙って捨てるため、構造上「無いもの」を報告できない。走査を共有する兄弟関数を同じファイルへ置き、指示の有無に関わらず葉を返す。再利用すべきは走査であってフィルタではない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "個別の構造の扱いは既存の規約が答えを持つ",
+          "consideration": "種別ごとの辞書は _select_prompt、$ref は resolve_ref、配列の要素は _build_element の別経路、const は _walk_fill が明示的にスキップ。discriminator を持つスキーマは discriminator_candidates で全ての値を回す。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "返す形は既存11検査に揃える",
+          "consideration": "名前付きリストを持つ dict を Ok で返し、合否の真偽値も重大度も返さない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "発火はスキーマが書かれたとき",
+          "consideration": "正規の書き込み経路は patch-schema だけなので、フックはそこを見る。フックに判定ロジックは持たせず、この検査を呼ぶだけにする（既存の check-drift-on-write と同型）。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "指示の中身が指示として適切かは判定しない。過去に同じ機械判定を一度試しており（docs/planning/x-prompt-write-audit.md、「20字未満」を代理指標にした棚卸し）、人が読み直すと3スキーマ計17件中12件が「改善不要」だった。約7割の誤検出。",
+        "今回の測定も、判定語彙を変えるたびに 140→120→89→81 と動いた。測っていたのはスキーマの状態ではなく、その回に採用した語彙表だった。正規表現を実装に固定すれば、それが新しい契約になる。",
+        "指示が実際にAIへ届くかどうかは、この検査の担当ではない。契約は置かれ方であり、届け方は別の関心事。",
+        "この引き継ぎを書いた者は、同じ測定を繰り返し誤った。原因は毎回同じで、既存の走査を借りずにその場で数え方を作り直したこと。走査を再利用する制約は、この失敗への直接の答え。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [],
+      "relationships": []
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": []
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "uc-check-prompt-contract の実装への引き継ぎ。スキーマが定める2つの指示（x-prompt-query / x-prompt-write）が、然るべき場所に然るべき名前で置かれているかを、スキーマが書かれるたびに確かめる。中身の良し悪しは判定しない。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/domain/services/fill_template.py",
+          "reason": "走査を共有する兄弟関数を足す。既存の build_fill_template は変えない"
+        },
+        {
+          "path": "src/waffle/application/usecases/check_prompt_contract.py",
+          "reason": "新規。3つの一覧を組み立てて返す"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/cli/main.py",
+          "reason": "入口を1つ足す（既存の check-* と同型）"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/mcp/main.py",
+          "reason": "入口を1つ足す（既存の check-* と同型）"
+        },
+        {
+          "path": ".waffle/hooks/",
+          "reason": "スキーマが書かれたときに、この検査を呼ぶフックを足す"
+        },
+        {
+          "path": "tests/domain/unit/test_fill_template.py",
+          "reason": "兄弟関数の走査を、3つの反例（葉の階層・種別ごとの辞書・$ref経由）で確かめる"
+        },
+        {
+          "path": "tests/application/acceptance/test_uc_check_prompt_contract.py",
+          "reason": "受け入れシナリオ9件と1対1にする"
+        },
+        {
+          "path": "tests/application/integration/test_uc_check_prompt_contract.py",
+          "reason": "操作保証シナリオ2件と1対1にする"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": []
+}

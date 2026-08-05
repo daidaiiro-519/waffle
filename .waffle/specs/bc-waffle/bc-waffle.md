@@ -80,6 +80,7 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-init-coding-preset
 - uc-check-layer-drift
 - uc-update-coding-preset
+- uc-check-prompt-contract
 
 ---
 
