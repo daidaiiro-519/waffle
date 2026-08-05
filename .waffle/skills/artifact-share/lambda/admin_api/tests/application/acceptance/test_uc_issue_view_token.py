@@ -138,3 +138,20 @@ def test_期限を過ぎた閲覧トークンは発行のときに取り除か�
     assert r.token
     assert [t.name for t in deps.artifacts.find(AID).view_tokens] == ["新しい相手"]
 
+
+
+def test_発行した閲覧トークンの値はそのとき一度だけ返る():
+    """
+    Scenario: 発行した閲覧トークンの値はそのとき一度だけ返る
+    Given 公開されている共有アーティファクト
+    When 名前と期限を指定して閲覧トークンを発行する
+    Then その閲覧トークンの値が返る
+    And 記録には値そのものが残っていない
+    """
+    deps = setup()
+
+    r = issue(deps, "レビュー班", ttl=view_token.WEEK)
+
+    assert r.token
+    assert r.token_shown_once is True
+    assert r.token not in str(deps.artifacts.find(AID).view_tokens)

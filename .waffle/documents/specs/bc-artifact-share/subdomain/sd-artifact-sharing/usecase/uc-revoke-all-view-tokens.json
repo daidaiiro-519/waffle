@@ -142,6 +142,12 @@
           "category": "異常系",
           "viewpoint": "エラー：対象の存在と権限の欠如を区別しない",
           "gherkin": "Scenario: 権限の無い者にはTARGET_NOT_FOUND\n  When 対象の投稿者でも管理者でもない者がこの操作を求める\n  Then TARGET_NOT_FOUNDエラーが返る"
+        },
+        {
+          "name": "管理者は他人の対象でも操作できる",
+          "category": "正常系",
+          "viewpoint": "権限：投稿者でなくても管理者は通ることを確かめる（TARGET_NOT_FOUNDの裏側）",
+          "gherkin": "Scenario: 管理者は他人の対象でも操作できる\n  When 対象の投稿者ではない管理者がこの操作を求める\n  Then 拒まれずに操作できる"
         }
       ]
     },

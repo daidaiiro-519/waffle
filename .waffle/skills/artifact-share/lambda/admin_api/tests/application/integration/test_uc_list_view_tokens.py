@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import pytest  # noqa: E402
 
 from usecase_builder import build  # noqa: E402
-from view_token_setup import AID, OTHER, issue, setup  # noqa: E402
+from view_token_setup import ADMIN, AID, OTHER, issue, setup  # noqa: E402
 from application.usecases.list_view_tokens import ListViewTokens  # noqa: E402
 from application.view_token_access import ViewTokenError  # noqa: E402
 from domain.view_subject import ViewSubject  # noqa: E402
@@ -35,3 +35,16 @@ def test_権限の無い者にはTARGET_NOT_FOUND():
         build(deps, ListViewTokens).run(OTHER, ViewSubject.artifact(AID))
 
     assert x.value.code == "TARGET_NOT_FOUND"
+
+
+def test_管理者は他人の対象でも操作できる():
+    """
+    Scenario: 管理者は他人の対象でも操作できる
+    When 対象の投稿者ではない管理者がこの操作を求める
+    Then 拒まれずに操作できる
+    """
+    deps = setup(owner="publisher-2")
+
+    got = build(deps, ListViewTokens).run(ADMIN, ViewSubject.artifact(AID))
+
+    assert got.view_tokens == ()
