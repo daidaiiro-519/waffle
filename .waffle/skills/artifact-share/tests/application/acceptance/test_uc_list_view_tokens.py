@@ -9,16 +9,11 @@
 対象の仕様: uc-list-view-tokens
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from usecase_builder import build  # noqa: E402
-from view_token_setup import AID, ME, NOW, issue, setup  # noqa: E402
-from application.usecases.list_view_tokens import ListViewTokens  # noqa: E402
-from domain import view_token  # noqa: E402
-from domain.view_subject import ViewSubject  # noqa: E402
+from usecase_builder import build
+from view_token_setup import AID, ME, NOW, issue, setup
+from application.usecases.list_view_tokens import ListViewTokens
+from domain import view_token
+from domain.view_subject import ViewSubject
 
 DAY = 24 * 60 * 60
 

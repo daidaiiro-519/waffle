@@ -11,12 +11,8 @@
 時点で止め、どの型のどの操作へ届いたかだけを見る。
 """
 
-import sys
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import main  # noqa: E402
 from adapters.inbound import admin_api  # noqa: E402

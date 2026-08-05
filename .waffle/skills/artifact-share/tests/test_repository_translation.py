@@ -14,12 +14,8 @@ repository だけで、そこが唯一この対応を知る。
 だけ現れた。翻訳表を実装より先に固定するのは、その再発を止めるため。
 """
 
-import sys
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from adapters.outbound.stored_project_repository import (  # noqa: E402
     from_record as project_from_record,

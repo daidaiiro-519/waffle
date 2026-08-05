@@ -6,12 +6,8 @@
 外部への接続は依存として渡す形にしてあるため、この検証では偽の依存を渡す。
 """
 
-import sys
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from usecase_builder import build  # noqa: E402
 from application.usecases.publish_artifact import PublishArtifact  # noqa: E402

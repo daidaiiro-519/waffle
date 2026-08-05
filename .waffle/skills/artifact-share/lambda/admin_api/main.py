@@ -154,7 +154,7 @@ def _identify(authorization: str) -> Caller | None:  # pragma: no cover
     招かれていなければ None。管理者かどうかは、証明に含まれるグループで決める
     （こちらで名簿を引き直さない。証明そのものが唯一の根拠であるため）。
     """
-    from cognito import verify
+    from adapters.outbound.cognito import verify
     claims = verify(authorization, os.environ["USER_POOL_ID"],
                     os.environ["USER_POOL_CLIENT_ID"])
     if not claims:

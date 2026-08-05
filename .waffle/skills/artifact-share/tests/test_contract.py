@@ -18,12 +18,10 @@ JavaScript側の検証も同じ表を読む。
 
 import main
 import json
-import sys
 from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from application.usecases.assign_artifact_to_project import (  # noqa: E402
     _write_membership as write_membership,
@@ -36,7 +34,7 @@ from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
 from domain.view_subject import ViewSubject  # noqa: E402
 
 CONTRACT = json.loads(
-    (Path(__file__).resolve().parents[3] / "infra" / "contract" / "token-records.json")
+    (Path(__file__).resolve().parents[1] / "infra" / "contract" / "token-records.json")
     .read_text(encoding="utf-8")
 )
 

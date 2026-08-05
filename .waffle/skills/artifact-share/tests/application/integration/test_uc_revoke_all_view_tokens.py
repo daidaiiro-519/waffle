@@ -9,18 +9,13 @@
 対象の仕様: uc-revoke-all-view-tokens（操作保証）
 """
 
-import sys
-from pathlib import Path
+import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-import pytest  # noqa: E402
-
-from usecase_builder import build  # noqa: E402
-from view_token_setup import ADMIN, AID, OTHER, issue, setup  # noqa: E402
-from application.usecases.revoke_all_view_tokens import RevokeAllViewTokens  # noqa: E402
-from application.view_token_access import ViewTokenError  # noqa: E402
-from domain.view_subject import ViewSubject  # noqa: E402
+from usecase_builder import build
+from view_token_setup import ADMIN, AID, OTHER, issue, setup
+from application.usecases.revoke_all_view_tokens import RevokeAllViewTokens
+from application.view_token_access import ViewTokenError
+from domain.view_subject import ViewSubject
 
 
 def test_権限の無い者にはTARGET_NOT_FOUND():

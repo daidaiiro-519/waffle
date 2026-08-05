@@ -12,15 +12,11 @@
 
 import base64
 import json
-import sys
 import time
-from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import cognito  # noqa: E402
+import adapters.outbound.cognito as cognito
 
 POOL = "ap-northeast-1_abc123"
 CLIENT = "client-1"

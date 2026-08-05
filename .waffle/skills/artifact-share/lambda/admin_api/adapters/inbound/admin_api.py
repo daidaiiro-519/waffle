@@ -31,14 +31,8 @@ from application.usecases.revoke_view_token import RevokeViewToken
 from application.usecases.suspend_artifact import SuspendArtifact
 from application.usecases.transfer_artifact import TransferArtifact
 from application.view_token_access import ViewTokenError
-from domain.view_subject import ViewSubject
+from application.view_subject_request import subject_from
 from shared.errors import ManageError, ProjectError, PublisherError, PublishError
-
-def _subject(body: dict):
-    """要求が指している対象を読む。共有アーティファクトかプロジェクトのどちらか。"""
-    if body.get("projectId"):
-        return ViewSubject.project(body["projectId"])
-    return ViewSubject.artifact(body.get("artifactId", ""))
 
 
 # 操作の名前と、その行き先。
@@ -65,13 +59,13 @@ ROUTES = {
 
     "issue-token":       lambda d, c, b: IssueViewToken(
         d.artifacts, d.projects, d.gate, d.now
-    ).run(c, _subject(b), b.get("name", ""), b.get("ttl")),
+    ).run(c, subject_from(b), b.get("name", ""), b.get("ttl")),
     "view-tokens":       lambda d, c, b: ListViewTokens(
-        d.artifacts, d.projects, d.now).run(c, _subject(b)),
+        d.artifacts, d.projects, d.now).run(c, subject_from(b)),
     "revoke-token":      lambda d, c, b: RevokeViewToken(
-        d.artifacts, d.projects, d.gate, d.now).run(c, _subject(b), b.get("tokenId", "")),
+        d.artifacts, d.projects, d.gate, d.now).run(c, subject_from(b), b.get("tokenId", "")),
     "revoke-all-tokens": lambda d, c, b: RevokeAllViewTokens(
-        d.artifacts, d.projects, d.gate, d.now).run(c, _subject(b)),
+        d.artifacts, d.projects, d.gate, d.now).run(c, subject_from(b)),
 
     "comments":    lambda d, c, b: ReadComments(d.artifacts, d.comments).run(
         c, b.get("artifactId", "")),

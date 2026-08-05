@@ -14,17 +14,15 @@ infra/contract/document-meta.json が全員の唯一の共通点で、書く側�
 """
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from domain.html_inspection import inspect_html  # noqa: E402
 
 CONTRACT = json.loads(
-    (Path(__file__).resolve().parents[3] / "infra" / "contract" / "document-meta.json")
+    (Path(__file__).resolve().parents[1] / "infra" / "contract" / "document-meta.json")
     .read_text(encoding="utf-8")
 )
 

@@ -9,17 +9,12 @@
 対象の仕様: uc-issue-view-token
 """
 
-import sys
-from pathlib import Path
+import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-import pytest  # noqa: E402
-
-from view_token_setup import AID, NOW, PID, issue, setup  # noqa: E402
-from application.view_token_access import ViewTokenError  # noqa: E402
-from domain import view_token  # noqa: E402
-from domain.view_subject import ViewSubject  # noqa: E402
+from view_token_setup import AID, NOW, PID, issue, setup
+from application.view_token_access import ViewTokenError
+from domain import view_token
+from domain.view_subject import ViewSubject
 
 
 def test_発行しても既存の閲覧トークンは使えたまま残る():

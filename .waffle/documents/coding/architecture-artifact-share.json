@@ -17,13 +17,13 @@
       "items": [
         {
           "layer": "shared",
-          "path": "lambda/admin_api/shared",
+          "path": "shared",
           "responsibility": "全層から使える基盤（結果型・エラー等）。業務判断を持たない",
           "mayDependOn": []
         },
         {
           "layer": "domain",
-          "path": "lambda/admin_api/domain",
+          "path": "domain",
           "responsibility": "業務ルールと不変条件。トークンの有効性・交差条件・公開状態の判断をここに集める",
           "mayDependOn": [
             "shared"
@@ -31,7 +31,7 @@
         },
         {
           "layer": "application",
-          "path": "lambda/admin_api/application",
+          "path": "application",
           "responsibility": "usecase の調整と、外部へ要求する port の宣言。usecases/ と ports/ をこの配下に持つ",
           "mayDependOn": [
             "domain",
@@ -40,7 +40,7 @@
         },
         {
           "layer": "inbound adapter",
-          "path": "lambda/admin_api/adapters/inbound",
+          "path": "adapters/inbound",
           "responsibility": "外部からの入口（Lambda handler・経路の振り分け）。外部入力を usecase 呼び出しへ変換するだけで、判断を持たない",
           "mayDependOn": [
             "application",
@@ -49,10 +49,11 @@
         },
         {
           "layer": "outbound adapter",
-          "path": "lambda/admin_api/adapters/outbound",
-          "responsibility": "外部への出口（S3・KVS・Cognito）。application が宣言した port を実装する",
+          "path": "adapters/outbound",
+          "responsibility": "外部への出口（S3・KVS・Cognito）。application が宣言した port を実装する。保管の形と集約の相互の移し替えがここの仕事なので、domain を知ってよい（入口側は知らない——どちらの対象かを決めるのは業務の判断であり、application が担う）",
           "mayDependOn": [
             "application",
+            "domain",
             "shared"
           ]
         }
@@ -61,8 +62,8 @@
     "layout": {
       "blockType": "Layout",
       "title": "ディレクトリ構成",
-      "tree": "lambda/admin_api/\n  domain/                業務ルール（トークンの有効性・交差条件・公開状態）\n  application/\n    usecases/            1 usecase = 1 module\n    ports/               application が外部へ要求するインターフェース\n  adapters/\n    inbound/             受け口（Lambda handler・経路の振り分け）\n    outbound/            S3 / KVS / Cognito への出口\n  shared/                結果型・エラー\n  main.py                結線（合成ルート・層のグラフの外）\ninfra/\n  cloudfront-function/   閲覧ゲート（層を持たないと宣言した領域）\n  contract/              ランタイムをまたぐデータの形\nscripts/                 手元で動くプログラム（層を持たないと宣言した領域）\n  artifactshare.py       環境を作るCLI。クラウドの権限で動くため、管理操作を持たない\n  mcp/                   招かれた投稿者としての受け口。合言葉で本人確認を通り、クラウドの権限を使わない",
-      "sourceRoot": ".waffle/skills/artifact-share",
+      "tree": "domain/                業務ルール（トークンの有効性・交差条件・公開状態）\napplication/\n  usecases/            1 usecase = 1 module\n  ports/               application が外部へ要求するインターフェース\nadapters/\n  inbound/             受け口（Lambda handler・経路の振り分け）\n  outbound/            S3 / KVS / Cognito への出口\nshared/                結果型・エラー\nmain.py                結線（合成ルート・層のグラフの外）\n\nこの根の外（スキル直下）に、層を持たないと宣言した領域が並ぶ:\n  tests/                 テスト。配置は test-standard-artifact-share が宣言する\n  infra/cloudfront-function/  閲覧ゲート（別ランタイム）\n  infra/contract/        ランタイムをまたぐデータの形\n  scripts/               手元で動くプログラム\n    artifactshare.py     環境を作るCLI。クラウドの権限で動くため、管理操作を持たない\n    mcp/                 招かれた投稿者としての受け口。合言葉で本人確認を通り、クラウドの権限を使わない",
+      "sourceRoot": ".waffle/skills/artifact-share/lambda/admin_api",
       "granularity": [
         {
           "concept": "usecase",
@@ -83,7 +84,7 @@
       ],
       "compositionRoot": "Lambdaの起動点に1つだけ置く。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ",
       "compositionRootPaths": [
-        "lambda/admin_api/main.py"
+        "main.py"
       ]
     },
     "conceptPlacement": {
@@ -94,7 +95,7 @@
           "concept": "usecase",
           "placements": [
             {
-              "path": "lambda/admin_api/application/usecases"
+              "path": "application/usecases"
             }
           ],
           "pattern": "エントリメソッド1つ・ドメインは port 経由で呼ぶ"
@@ -103,7 +104,7 @@
           "concept": "aggregate",
           "placements": [
             {
-              "path": "lambda/admin_api/domain"
+              "path": "domain"
             }
           ],
           "pattern": "整合性境界を持つクラス・不変条件をメソッド内で強制"
@@ -112,7 +113,7 @@
           "concept": "entity",
           "placements": [
             {
-              "path": "lambda/admin_api/domain"
+              "path": "domain"
             }
           ],
           "pattern": "同一性は id・集約の内側でのみ可変"
@@ -121,7 +122,7 @@
           "concept": "value-object",
           "placements": [
             {
-              "path": "lambda/admin_api/domain"
+              "path": "domain"
             }
           ],
           "pattern": "不変（frozen dataclass）・値等価"
@@ -130,7 +131,7 @@
           "concept": "domain-service",
           "placements": [
             {
-              "path": "lambda/admin_api/domain"
+              "path": "domain"
             }
           ],
           "pattern": "ステートレス・複数集約を跨る判断"
@@ -140,11 +141,11 @@
           "placements": [
             {
               "role": "interface",
-              "path": "lambda/admin_api/application/ports"
+              "path": "application/ports"
             },
             {
               "role": "implementation",
-              "path": "lambda/admin_api/adapters/outbound"
+              "path": "adapters/outbound"
             }
           ],
           "pattern": "aggregate の load/save・集約1つに1リポジトリ"
@@ -153,7 +154,7 @@
           "concept": "port",
           "placements": [
             {
-              "path": "lambda/admin_api/application/ports"
+              "path": "application/ports"
             }
           ],
           "pattern": "application が要求する driven インターフェース（Protocol）。構造体のフィールドとして持たず、型として宣言する"
@@ -162,7 +163,7 @@
           "concept": "inbound-adapter",
           "placements": [
             {
-              "path": "lambda/admin_api/adapters/inbound"
+              "path": "adapters/inbound"
             }
           ],
           "pattern": "外部入力を usecase 呼び出しへ変換・判断を持たない"
@@ -171,7 +172,7 @@
           "concept": "outbound-adapter",
           "placements": [
             {
-              "path": "lambda/admin_api/adapters/outbound"
+              "path": "adapters/outbound"
             }
           ],
           "pattern": "port を実装・外部ライブラリをここに閉じ込める。合成ルートの中に無名で書かない"

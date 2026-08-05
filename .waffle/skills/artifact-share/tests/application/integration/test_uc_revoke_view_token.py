@@ -1,4 +1,4 @@
-"""いま誰に見せているかを確かめる操作が、対象を特定し権限を確かめる契約を守っているかを確かめる。
+"""見せる相手を1つ外す操作が、対象を特定し権限を確かめる契約を守っているかを確かめる。
 
 実行:  python3 -m pytest lambda/admin_api/tests/ -v
 
@@ -6,21 +6,16 @@
 そのまま写したもの。ここで確かめるのは、この操作そのものの結果ではなく、
 操作へ入る前段の解決プロセスが返す答え。
 
-対象の仕様: uc-list-view-tokens（操作保証）
+対象の仕様: uc-revoke-view-token（操作保証）
 """
 
-import sys
-from pathlib import Path
+import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-import pytest  # noqa: E402
-
-from usecase_builder import build  # noqa: E402
-from view_token_setup import ADMIN, AID, OTHER, issue, setup  # noqa: E402
-from application.usecases.list_view_tokens import ListViewTokens  # noqa: E402
-from application.view_token_access import ViewTokenError  # noqa: E402
-from domain.view_subject import ViewSubject  # noqa: E402
+from usecase_builder import build
+from view_token_setup import ADMIN, AID, OTHER, issue, setup
+from application.usecases.revoke_view_token import RevokeViewToken
+from application.view_token_access import ViewTokenError
+from domain.view_subject import ViewSubject
 
 
 def test_権限の無い者にはTARGET_NOT_FOUND():
@@ -30,9 +25,11 @@ def test_権限の無い者にはTARGET_NOT_FOUND():
     Then TARGET_NOT_FOUNDエラーが返る
     """
     deps = setup()
+    issued = issue(deps, "1人目")
 
     with pytest.raises(ViewTokenError) as x:
-        build(deps, ListViewTokens).run(OTHER, ViewSubject.artifact(AID))
+        build(deps, RevokeViewToken).run(
+            OTHER, ViewSubject.artifact(AID), issued.token_id)
 
     assert x.value.code == "TARGET_NOT_FOUND"
 
@@ -45,6 +42,9 @@ def test_管理者は他人の対象でも操作できる():
     """
     deps = setup(owner="publisher-2")
 
-    got = build(deps, ListViewTokens).run(ADMIN, ViewSubject.artifact(AID))
+    issued = issue(deps, "1人目", caller=ADMIN)
 
-    assert got.view_tokens == ()
+    got = build(deps, RevokeViewToken).run(
+        ADMIN, ViewSubject.artifact(AID), issued.token_id)
+
+    assert got.revoked is True

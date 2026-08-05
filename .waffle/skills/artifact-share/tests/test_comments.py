@@ -12,12 +12,8 @@
 import main
 import json
 from dataclasses import asdict
-import sys
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from usecase_builder import build  # noqa: E402
 from application.usecases.export_artifact import ExportArtifact  # noqa: E402

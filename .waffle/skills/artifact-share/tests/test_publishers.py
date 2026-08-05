@@ -8,13 +8,9 @@
 
 import main
 import json
-import sys
-from pathlib import Path
 
 import pytest
 from dataclasses import fields
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from usecase_builder import build  # noqa: E402
 from application.usecases.invite_publisher import InvitePublisher  # noqa: E402

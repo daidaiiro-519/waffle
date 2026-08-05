@@ -11,12 +11,8 @@
 
 import main
 import json
-import sys
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from usecase_builder import build  # noqa: E402
 from application.usecases.assign_artifact_to_project import AssignArtifactToProject  # noqa: E402
