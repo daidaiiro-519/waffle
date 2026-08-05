@@ -40,9 +40,9 @@ Project
 | status | ProjectStatus |
 | owner | ProjectOwner |
 | scope | ProjectScope |
-| memberArtifactIds | ArtifactId[] |
 | createdAt | string |
 | viewTokens | ProjectViewToken[] |
+| updatedAt | string |
 
 ### ProjectViewToken
 
