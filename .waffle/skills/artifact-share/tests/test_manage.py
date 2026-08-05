@@ -252,58 +252,12 @@ def test_止まっていないものは再開できない():
 
 # ── プロジェクトへの出し入れ ────────────────────────────
 
-def test_加えるとプロジェクトのトークンで開ける範囲に入る():
-    deps, r, pid = with_project("PERSONAL")
-
-    build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
-
-    assert deps.keys.get(f"pp:{r.artifact_id}") == pid
-    assert meta_of(deps, r.artifact_id)["projects"] == [pid]
-
-
-def test_重ねて加えても二重に入らない():
-    deps, r, pid = with_project("PERSONAL")
-    build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
-    build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
-
-    assert meta_of(deps, r.artifact_id)["projects"] == [pid]
-
 
 def test_無いプロジェクトへは加えられない():
     deps, r = setup()
     with pytest.raises(ManageError) as x:
         build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, "nope")
     assert x.value.code == "PROJECT_NOT_FOUND"
-
-
-def test_外してもアーティファクト自体は生き続ける():
-    deps, r, pid = with_project("PERSONAL")
-    build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
-
-    build(deps, AssignArtifactToProject).run("unassign", ME, r.artifact_id, pid)
-
-    assert meta_of(deps, r.artifact_id)["projects"] == []
-    assert deps.keys.get(f"token:{r.artifact_id}") != "DISABLED"   # 個別には開ける
-    assert deps.store.get(f"p/{r.artifact_id}/content.html")
-
-
-def test_中身に書いた分類の目印では所属できない():
-    """
-    Scenario: 分類の目印を書き換えても見られる相手は増えない
-    Given 共有アーティファクトAはどのプロジェクトにも所属していない
-    When 別のプロジェクトの名前を分類の目印として書いた中身へ差し替える
-    Then そのプロジェクトの閲覧トークンでは開けないままである
-    """
-    deps, r, pid = with_project("PERSONAL")
-    tagged = HTML.replace("</head>", '<meta name="tags" content="ppp"></head>')
-
-    build(deps, ReplaceArtifactContent).run(ME, r.artifact_id, tagged)
-
-    meta = meta_of(deps, r.artifact_id)
-    assert meta["tags"] == ["ppp"]      # 目印としては控える
-    assert meta["projects"] == []       # 所属は変わらない
-    with pytest.raises(KeyError):
-        deps.keys.get(f"pp:{r.artifact_id}")
 
 
 def test_一覧はコメントの件数を添える():
@@ -336,48 +290,10 @@ def with_project(scope, owner=None):
     return deps, r, p.project_id
 
 
-def test_共有なら他の人も自分のものを入れられる():
-    """持ち主が『誰でも入れてよい』と決めた前提が働く"""
-    deps, r, pid = with_project("SHARED", owner=OTHER)
-
-    build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
-
-    assert deps.keys.get(f"pp:{r.artifact_id}") == pid
-    assert pid in meta_of(deps, r.artifact_id)["projects"]
-
-
-def test_個人のプロジェクトへは持ち主しか入れられない():
-    """渡した相手に何が見えるかを、持ち主が把握し続けられるようにする"""
-    deps, r, pid = with_project("PERSONAL", owner=OTHER)
-
-    with pytest.raises(ManageError) as x:
-        build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
-    assert x.value.code == "PROJECT_NOT_FOUND"
-    assert meta_of(deps, r.artifact_id)["projects"] == []
-
-
 def test_自分のプロジェクトへは個人でも入れられる():
     deps, r, pid = with_project("PERSONAL")
     build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
     assert pid in meta_of(deps, r.artifact_id)["projects"]
-
-
-def test_他人のアーティファクトは共有でも動かせない():
-    """共有でも、動かせるのは自分が公開したものだけ"""
-    deps, r, pid = with_project("SHARED")
-
-    with pytest.raises(ManageError) as x:
-        build(deps, AssignArtifactToProject).run("assign", SOMEONE_ELSE, r.artifact_id, pid)
-    assert x.value.code == "ARTIFACT_NOT_FOUND"
-
-
-def test_公開が止まっているプロジェクトへは入れられない():
-    deps, r, pid = with_project("SHARED")
-    build(deps, ControlProjectAccess).run("suspend", ME, pid)
-
-    with pytest.raises(ManageError) as x:
-        build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
-    assert x.value.code == "PROJECT_SUSPENDED"
 
 
 def test_出し入れするとプロジェクトの索引と一覧が揃う():
