@@ -189,6 +189,40 @@
     .arow{grid-template-columns:1fr auto;}
     .comments{grid-column:1/-1; grid-row:2; text-align:left; margin-top:6px;}
   }
+  .gerr{font-size:12.5px; color:var(--live); margin:0 0 13px; line-height:1.7;}
+  .hint{font-size:12px; color:var(--ink-faint); line-height:1.65; margin:10px 0 0;}
+  .fld .fchip span{font-size:13px; padding:8px 18px;}
+  .tkcap{font-size:12.5px; color:var(--ink-soft); margin:0 0 12px; line-height:1.7;}
+  .tkhead{display:flex; align-items:baseline; gap:12px; margin-bottom:11px;}
+  .tkhead span{font-size:12px; font-weight:600;}
+  .tkhead .linkbtn{margin-left:auto; padding:0;}
+  .tklist{border:1px solid var(--line-soft); border-radius:9px; overflow:hidden; margin-bottom:11px;}
+  .tkrow{display:grid; grid-template-columns:1fr auto; gap:2px 12px; align-items:center;
+    padding:10px 12px; border-top:1px solid var(--line-soft);}
+  .tkrow:first-child{border-top:none;}
+  .tkname{grid-column:1; font-size:13.5px; font-weight:600;}
+  .tkwhen{grid-column:1; font-size:11px; color:var(--ink-faint);}
+  .tkwhen.soon{color:var(--warn); font-weight:600;}
+  .tkoff{grid-column:2; grid-row:1/3; font:inherit; font-size:11.5px; background:none;
+    border:1px solid var(--line); border-radius:6px; padding:4px 11px; color:var(--live); cursor:pointer;}
+  .tkoff:hover{border-color:var(--live);}
+  .tkoff:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .tkempty{padding:26px 24px; text-align:center; color:var(--ink-faint); font-size:12.5px;}
+  .tkempty p{margin:0 0 13px;}
+  .tkcount{font-size:11.5px; color:var(--ink-faint); margin:0;}
+  .tkcount.full{color:var(--warn); font-weight:600;}
+  .linkbtn.danger{color:var(--live);}
+
+  /* 絞り込み行と同じチップを、入力欄の中でも使う */
+  .fgroup{display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .fchip{position:relative;}
+  .fchip input{position:absolute; opacity:0; width:0; height:0;}
+  .fchip span{display:inline-block; font-size:12px; padding:3px 11px; border:1px solid var(--line);
+    border-radius:14px; background:var(--card); color:var(--ink-soft); cursor:pointer;}
+  .fchip input:checked + span{border-color:var(--accent); background:var(--accent-soft);
+    color:var(--accent); font-weight:600;}
+  .fchip input:focus-visible + span{outline:2px solid var(--accent); outline-offset:2px;}
+  .fld label .req{color:var(--warn); font-weight:400; font-size:11px; margin-left:5px;}
 </style>
 
 <div class="page">
@@ -231,9 +265,8 @@
           <button class="copy" type="button" data-copy="d-url">URLをコピー</button>
         </div>
         <div class="tokenline">
-          <span class="tmask">••••-••••-••••</span>
-          <span class="tnote">トークンは発行したときの一度しか表示されません。分からなくなった場合は再発行してください（それまでのトークンは使えなくなります）。</span>
-          <button class="btn ghost sm" type="button" id="btn-rotate">トークンを再発行</button>
+          <span class="tnote" id="d-distnote"></span>
+          <button class="btn ghost sm" type="button" id="btn-tokens">配布先</button>
         </div>
       </div>
     </div>
@@ -255,10 +288,9 @@
     <div class="sec">
       <div class="danger">
         <h3>公開を止める</h3>
-        <p>無効化するとプロジェクトのURLは開けなくなりますが、中のアーティファクトは個別のURLとトークンで引き続き見られます。データは消えず、あとから再公開できます。</p>
+        <p>止めるとプロジェクトのURLは開けなくなりますが、中のアーティファクトは個別のURLと閲覧トークンで引き続き見られます。データは消えず、あとから再公開できます。渡したプロジェクト閲覧トークンは無効になりません——相手を外したいときは〈配布先〉から無効にしてください。</p>
         <div class="drow">
-          <button class="btn danger-b sm" type="button" id="btn-disable">無効化する</button>
-          <button class="btn danger-b sm" type="button" id="btn-delete">プロジェクトを削除</button>
+          <button class="btn danger-b sm" type="button" id="btn-disable">公開を止める</button>
         </div>
       </div>
     </div>
@@ -302,7 +334,7 @@
       </div>
     </div>
     <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn ghost" type="button" data-close>やめる</button>
     <button class="btn" type="button" id="np-go">作成する</button>
   </div>
   </div>
@@ -324,33 +356,84 @@
   </div>
 </dialog>
 
-<!-- ══ トークン再発行 ══ -->
-<dialog id="dlg-rotate">
-  <div class="dlg-pane on" id="rot-1">
-    <div class="dlg-head"><h2>トークンを再発行しますか</h2><p class="target" id="rot-target"></p></div>
+<!-- ══ 配布先 ══ -->
+<dialog id="dlg-tokens">
+  <div class="dlg-pane on" id="tk-1">
+    <div class="dlg-head"><h2>配布先</h2><p class="target" id="tk-target"></p></div>
     <div class="dlg-body">
-      <p>新しいトークンを発行すると、<strong>今のトークンはその場で使えなくなります</strong>。このプロジェクトを共有した相手全員に、新しいトークンを渡し直す必要があります。</p>
-      <div class="keep">
-        <div><span class="ky">変わらない</span><span>プロジェクトのURL・入っているアーティファクト・コメント</span></div>
-        <div><span class="kn">変わる</span><span>プロジェクトの閲覧用トークン</span></div>
+      <p class="tkcap">配布先ごとに閲覧トークンを1本ずつ発行します。1本が1つの配布先で、人数は問いません。無効にするのも1本ずつで、他の配布先には及びません。<strong>一度無効にすると元へは戻せません。</strong></p>
+      <div class="tkhead">
+        <span id="tk-n"></span>
+        <button class="linkbtn danger" type="button" id="tk-revokeall">すべて無効にする</button>
       </div>
-      <p style="font-size:12px;">各アーティファクトに個別のトークンを渡している相手は、そのまま閲覧を続けられます。</p>
+      <div class="tklist" id="tk-list"></div>
+      <p class="tkcount" id="tk-count"></p>
     </div>
     <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
-    <button class="btn" type="button" id="rot-go">再発行する</button>
-  </div>
-  </div>
-  <div class="dlg-pane" id="rot-2">
-    <div class="dlg-head"><h2>新しいトークンを発行しました</h2><p class="target" id="rot-target2"></p></div>
-    <div class="dlg-body">
-      <div class="tokenbox" style="margin-bottom:13px;">
-        <p class="tlabel">この画面を閉じると二度と表示できません</p>
-        <div class="tval"><code id="rot-token"></code><button class="copy" type="button" data-copy="rot-token">コピー</button></div>
-      </div>
-      <p>URLは変わっていないので、トークンだけを伝えれば足ります。</p>
+      <button class="btn ghost" type="button" data-close>閉じる</button>
+      <button class="btn" type="button" id="tk-add">閲覧トークンを発行</button>
     </div>
-    <div class="dlg-act"><span class="spacer"></span><button class="btn" type="button" data-close>閉じる</button></div>
+  </div>
+
+  <div class="dlg-pane" id="tk-2">
+    <div class="dlg-head"><h2>閲覧トークンを発行する</h2><p class="target" id="tk-target2"></p></div>
+    <div class="dlg-body">
+      <div class="fld">
+        <label for="tk-name">配布先の名前 <span class="req">必須</span></label>
+        <input id="tk-name" type="text" placeholder="例: 経理チーム" autocomplete="off">
+        <p class="hint">あとでどれを無効にするか選ぶための手がかりです。プロジェクトの表示名とは別のものを付けます。</p>
+      </div>
+      <div class="fld">
+        <label id="tk-ttl-label">見られる期間</label>
+        <div class="fgroup" role="radiogroup" aria-labelledby="tk-ttl-label">
+          <label class="fchip"><input type="radio" name="tk-ttl" value="7" checked><span>1週間</span></label>
+          <label class="fchip"><input type="radio" name="tk-ttl" value="month"><span>1ヶ月</span></label>
+          <label class="fchip"><input type="radio" name="tk-ttl" value="none"><span>期限なし</span></label>
+        </div>
+        <p class="hint">置いておく場として使うため、プロジェクトは期限なしも選べます（アーティファクト1件ずつの閲覧トークンは、必ず期限を持ちます）。</p>
+      </div>
+      <p class="gerr" id="tk-err" hidden></p>
+    </div>
+    <div class="dlg-act">
+      <button class="btn ghost" type="button" id="tk-back">戻る</button>
+      <button class="btn" type="button" id="tk-go">発行する</button>
+    </div>
+  </div>
+
+  <div class="dlg-pane" id="tk-3">
+    <div class="dlg-head"><h2>閲覧トークンを発行しました</h2><p class="target" id="tk-target3"></p></div>
+    <div class="dlg-body">
+      <div class="urlrow">
+        <span class="u" id="tk-url"></span>
+        <button class="copy" type="button" data-copy="tk-url">URLをコピー</button>
+      </div>
+      <div class="tokenbox">
+        <p class="tlabel" id="tk-issued"></p>
+        <div class="tval">
+          <code id="tk-token"></code>
+          <button class="copy" type="button" data-copy="tk-token">コピー</button>
+        </div>
+        <p class="warn">URLとトークンは別々の手段で渡してください。トークンはこの画面を閉じると二度と表示できません。これまでに渡したトークンは、どれもそのまま使えます。</p>
+      </div>
+    </div>
+    <div class="dlg-act">
+      <button class="btn" type="button" id="tk-done">配布先へ戻る</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══ 閲覧トークンを無効にする ══ -->
+<dialog id="dlg-revoke">
+  <div class="dlg-head"><h2 id="rv-head"></h2><p class="target" id="rv-target"></p></div>
+  <div class="dlg-body">
+    <div class="keep">
+      <div><span class="kn">できなくなる</span><span id="rv-kn"></span></div>
+      <div><span class="ky">変わらない</span><span id="rv-ky"></span></div>
+    </div>
+  </div>
+  <div class="dlg-act">
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" id="rv-go">無効にする</button>
   </div>
 </dialog>
 
@@ -368,7 +451,7 @@
     <p style="font-size:11.5px;">すでにこのプロジェクトに入っているものは表示されません。</p>
   </div>
   <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn ghost" type="button" data-close>やめる</button>
     <button class="btn" type="button" data-close>追加する</button>
   </div>
 </dialog>
@@ -384,7 +467,7 @@
     <p style="font-size:12px;">外すだけで、アーティファクトが消えることはありません。あとから追加し直せます。</p>
   </div>
   <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
+    <button class="btn ghost" type="button" data-close>やめる</button>
     <button class="btn danger-b" type="button" data-close>外す</button>
   </div>
 </dialog>
@@ -406,27 +489,8 @@
     </div>
   </div>
   <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
-    <button class="btn danger-b" type="button" data-close>無効化する</button>
-  </div>
-</dialog>
-
-<!-- ══ 削除 ══ -->
-<dialog id="dlg-delete">
-  <div class="dlg-head"><h2>プロジェクトを削除しますか</h2><p class="target" id="del-target"></p></div>
-  <div class="dlg-body">
-    <div class="keep">
-      <div><span class="kn">消える</span><span>プロジェクトそのもの・URL・トークン（元に戻せません）</span></div>
-      <div><span class="ky">消えない</span><span>入っていたアーティファクトとコメント。所属が外れるだけで、個別のURLとトークンで引き続き見られる</span></div>
-    </div>
-    <div class="fld">
-      <label for="del-confirm">確認のため、プロジェクトキーを入力してください</label>
-      <input id="del-confirm" type="text" placeholder="" autocomplete="off">
-    </div>
-  </div>
-  <div class="dlg-act">
-    <button class="linkbtn" type="button" data-close>やめる</button>
-    <button class="btn danger-b" type="button" data-close>削除する</button>
+    <button class="btn ghost" type="button" data-close>やめる</button>
+    <button class="btn danger-b" type="button" data-close>公開を止める</button>
   </div>
 </dialog>
 
@@ -494,7 +558,7 @@
       st.append(n, l);
 
       var end = document.createElement('div'); end.className = 'pend';
-      end.appendChild(p.active ? chip('status on','公開中') : chip('status no','無効化済み'));
+      end.appendChild(p.active ? chip('status on','公開中') : chip('status no','公開停止中'));
       end.appendChild(chip('chev','›'));
 
       el.append(main, st, end);
@@ -511,8 +575,9 @@
     $('d-key').textContent = p.key;
     var st = $('d-status');
     st.className = 'status ' + (p.active ? 'on' : 'no');
-    st.textContent = p.active ? '公開中' : '無効化済み';
+    st.textContent = p.active ? '公開中' : '公開停止中';
     $('d-url').textContent = 'https://dbbb1234.cloudfront.net/proj/' + p.pid + '/';
+    $('d-distnote').textContent = '配布先ごとに閲覧トークンを1本ずつ発行します。トークンは発行したときの一度しか表示されません。';
 
     var arts = ARTS[p.id] || [];
     $('d-artcount').textContent = arts.length + '件';
@@ -615,25 +680,128 @@
     $('new-1').classList.remove('on'); $('new-2').classList.add('on');
   });
 
-  $('btn-rotate').addEventListener('click', function(){
-    $('rot-target').textContent = $('d-name').textContent;
-    $('rot-target2').textContent = $('d-name').textContent;
-    $('rot-1').classList.add('on'); $('rot-2').classList.remove('on');
-    open('dlg-rotate');
+  /* ── 配布先 ──
+     プロジェクトの閲覧トークンは、置いておく場として使うため期限なしも選べる。
+     それ以外はアーティファクト1件ずつのものと同じ扱いにする */
+  var TK_MAX = 5;
+  var tokens = [{ name:'最初の共有', days:null }, { name:'定例レビュー', days:9 }];
+  var tkPending = null;
+
+  function tkMaxDays(){
+    var now = new Date(), lim = new Date();
+    lim.setMonth(lim.getMonth() + 1);
+    return Math.round((lim - now) / 86400000);
+  }
+  function tkMd(d){ var x = new Date(); x.setDate(x.getDate() + d); return (x.getMonth()+1) + '/' + x.getDate(); }
+  function tkPane(n){ ['tk-1','tk-2','tk-3'].forEach(function(id,i){ $(id).classList.toggle('on', i === n-1); }); }
+
+  function tkRender(){
+    var box = $('tk-list'); box.textContent = '';
+    if (!tokens.length) {
+      var e = document.createElement('div'); e.className = 'tkempty';
+      var msg = document.createElement('p');
+      msg.textContent = 'いまは誰もこのプロジェクトを開けません。公開そのものは止まっていません。';
+      var go = document.createElement('button');
+      go.className = 'btn'; go.type = 'button'; go.textContent = '閲覧トークンを発行';
+      go.addEventListener('click', tkOpenAdd);
+      e.appendChild(msg); e.appendChild(go); box.appendChild(e);
+    }
+    tokens.slice().sort(function(a,b){
+      if (a.days === null) return 1;
+      if (b.days === null) return -1;
+      return a.days - b.days;
+    }).forEach(function(t){
+      var row = document.createElement('div'); row.className = 'tkrow';
+      var n = document.createElement('span'); n.className = 'tkname'; n.textContent = t.name;
+      var w = document.createElement('span');
+      w.className = 'tkwhen' + (t.days !== null && t.days <= 1 ? ' soon' : '');
+      w.textContent = t.days === null ? '期限なし'
+        : t.days === 0 ? '今日まで — 今日の終わりに期限切れ'
+        : t.days === 1 ? '明日まで — あと1日'
+        : tkMd(t.days) + 'まで（あと' + t.days + '日）';
+      var off = document.createElement('button');
+      off.className = 'tkoff'; off.type = 'button'; off.textContent = '無効にする';
+      off.setAttribute('aria-label', t.name + ' の閲覧トークンを無効にする');
+      off.addEventListener('click', function(){ tkAsk(t); });
+      row.appendChild(n); row.appendChild(w); row.appendChild(off);
+      box.appendChild(row);
+    });
+    var full = tokens.length >= TK_MAX;
+    $('tk-n').textContent = tokens.length ? '配布先 ' + tokens.length + '件' : '';
+    var c = $('tk-count');
+    c.hidden = !tokens.length;
+    c.textContent = '同時に渡せるのは' + TK_MAX + '件まで'
+      + (full ? '。発行するには、どれかを先に無効にするか、期限切れを待ってください。' : '');
+    c.classList.toggle('full', full);
+    $('tk-add').hidden = !tokens.length;
+    $('tk-add').disabled = full;
+    $('tk-revokeall').hidden = !tokens.length;
+  }
+
+  $('btn-tokens').addEventListener('click', function(){
+    ['tk-target','tk-target2','tk-target3'].forEach(function(id){
+      $(id).textContent = 'プロジェクト：' + $('d-name').textContent;
+    });
+    $('tk-url').textContent = $('d-url').textContent;
+    tkPane(1); tkRender(); open('dlg-tokens');
   });
-  $('rot-go').addEventListener('click', function(){
-    $('rot-token').textContent = randToken();
-    $('rot-1').classList.remove('on'); $('rot-2').classList.add('on');
+
+  function tkOpenAdd(){
+    $('tk-name').value = '';
+    document.querySelector('input[name="tk-ttl"][value="7"]').checked = true;
+    $('tk-err').hidden = true;
+    tkPane(2); $('tk-name').focus();
+  }
+  $('tk-add').addEventListener('click', tkOpenAdd);
+  $('tk-back').addEventListener('click', function(){ tkPane(1); });
+  $('tk-go').addEventListener('click', function(){
+    var name = $('tk-name').value.trim(), err = $('tk-err');
+    if (!name) { err.textContent = '配布先の名前を入れてください。'; err.hidden = false; return; }
+    if (tokens.some(function(t){ return t.name === name; })) {
+      err.textContent = '配布先「' + name + '」はすでにあります。別の名前にするか、先にその配布先の閲覧トークンを無効にしてください。';
+      err.hidden = false; return;
+    }
+    if (tokens.length >= TK_MAX) {
+      err.textContent = '同時に渡せるのは' + TK_MAX + '件までです。どれかを先に無効にしてください。';
+      err.hidden = false; return;
+    }
+    err.hidden = true;
+    var pick = document.querySelector('input[name="tk-ttl"]:checked').value;
+    tokens.push({ name: name, days: pick === 'none' ? null : pick === 'month' ? tkMaxDays() : parseInt(pick, 10) });
+    $('tk-issued').textContent = '配布先「' + name + '」の閲覧トークン';
+    $('tk-token').textContent = randToken();
+    tkPane(3);
+  });
+  $('tk-done').addEventListener('click', function(){ tkPane(1); tkRender(); });
+  $('dlg-tokens').addEventListener('cancel', function(e){
+    if ($('tk-3').classList.contains('on')) e.preventDefault();
+  });
+
+  function tkAsk(t){
+    tkPending = t;
+    $('rv-head').textContent = 'この閲覧トークンを無効にしますか';
+    $('rv-target').textContent = t.name + ' — ' + $('d-name').textContent;
+    $('rv-kn').textContent = 'この配布先に渡したトークンでは、このプロジェクトを開けなくなる。一度無効にすると元へは戻せません';
+    $('rv-ky').textContent = '他の配布先のトークン・入っているアーティファクト・コメント。'
+      + '入っているアーティファクトは、それぞれの閲覧トークンで引き続き開けます';
+    open('dlg-revoke');
+  }
+  $('tk-revokeall').addEventListener('click', function(){
+    tkPending = null;
+    $('rv-head').textContent = 'すべての閲覧トークンを無効にしますか';
+    $('rv-target').textContent = $('d-name').textContent;
+    $('rv-kn').textContent = 'いま渡している' + tokens.length + '件ぶんのトークンで、このプロジェクトを開けなくなる。元へは戻せません';
+    $('rv-ky').textContent = '入っているアーティファクトは、それぞれの閲覧トークンで引き続き開けます。公開そのものも止まりません';
+    open('dlg-revoke');
+  });
+  $('rv-go').addEventListener('click', function(){
+    if (tkPending) { tokens = tokens.filter(function(t){ return t !== tkPending; }); }
+    else { tokens = []; }
+    $('dlg-revoke').close(); tkRender();
   });
 
   $('btn-disable').addEventListener('click', function(){
     $('dis-target').textContent = $('d-name').textContent; open('dlg-disable');
-  });
-  $('btn-delete').addEventListener('click', function(){
-    $('del-target').textContent = $('d-name').textContent;
-    $('del-confirm').value = '';
-    $('del-confirm').placeholder = $('d-key').textContent;
-    open('dlg-delete');
   });
 
   document.querySelectorAll('dialog [data-close]').forEach(function(b){

@@ -331,7 +331,7 @@
         </div>
         <div class="fgroup">
           <span class="flabel">状態</span>
-          <label class="fchip"><input type="checkbox" data-f="off" value="1"><span>無効化済みも表示</span></label>
+          <label class="fchip"><input type="checkbox" data-f="off" value="1"><span>止めたものも表示</span></label>
         </div>
       </div>
     </div>
@@ -368,7 +368,7 @@
         </div>
         <div class="keep">
           <div><span class="ky">変わらない</span><span>共有URL・閲覧トークン・中身・これまでのコメント</span></div>
-          <div><span class="kn">変わる</span><span>手入れできる人（差し替え・公開停止・再発行を行える人）</span></div>
+          <div><span class="kn">変わる</span><span>手入れできる人（差し替え・公開停止・閲覧トークンの発行と無効化を行える人）</span></div>
         </div>
         <p style="font-size:12px;">渡した相手の手元では何も起きません。開いている画面もそのままです。</p>
       </div>
@@ -512,9 +512,9 @@
     var entries = [['開く']];
     // 中身の差し替えは公開した本人だけ。他人のものには出さない
     if (mine && item.active) entries.push(['差し替えてアップロード']);
-    if (item.active) entries.push(['トークンを再発行']);
+    if (item.active) entries.push(['配布先']);
     entries.push(['エクスポート'], ['sep'], ['引き継ぐ']);
-    entries.push(['sep'], item.active ? ['無効化する', 'danger'] : ['再公開する']);
+    entries.push(['sep'], item.active ? ['公開を止める'] : ['再公開する']);
 
     entries.forEach(function (it) {
       var li = document.createElement('li');
@@ -550,9 +550,9 @@
 
   function act(label, item) {
     if (label === '引き継ぐ') return openTransfer(item);
-    if (label === '無効化する') { item.active = false; renderList(); return toast('公開を止めました。中身もコメントも残っています'); }
+    if (label === '公開を止める') { item.active = false; renderList(); return toast('公開を止めました。中身もコメントも、渡した閲覧トークンも残っています'); }
     if (label === '再公開する') { item.active = true; renderList(); return toast('再公開しました。閲覧トークンは新しくなっています'); }
-    if (label === 'トークンを再発行') return toast('新しい閲覧トークンを発行しました');
+    if (label === '配布先') return toast('配布先ごとに閲覧トークンを発行・無効化できます（この画面ではアーティファクトの面と同じ操作になります）');
     if (label === 'エクスポート') return toast('中身とコメントをまとめて取り出しました');
     toast(label);
   }
@@ -612,7 +612,7 @@
       } else { c.disabled = true; }
 
       var end = document.createElement('div'); end.className = 'rowend';
-      end.appendChild(d.active ? chip('status on', '公開中') : chip('status no', '無効化済み'));
+      end.appendChild(d.active ? chip('status on', '公開中') : chip('status no', '公開停止中'));
 
       if (d.active) {
         var cp = document.createElement('button');
@@ -774,7 +774,7 @@
       var strong = document.createElement('b'); strong.textContent = count + '件';
       warn.append(document.createTextNode('この人が公開したものが '), strong,
                   document.createTextNode(' あります。このまま外すと、公開を止めることも'
-                    + '閲覧トークンを再発行することも、誰にもできなくなります。'));
+                    + '閲覧トークンを発行することも無効にすることも、誰にもできなくなります。'));
       fillPicker($('rm-to'), p.id);
     }
     $('dlg-remove').showModal();
