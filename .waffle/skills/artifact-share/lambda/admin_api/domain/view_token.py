@@ -16,6 +16,8 @@ uc-revoke-view-token / uc-revoke-all-view-tokens
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, replace
+
 from domain.identifier import random_chars
 from domain.view_subject import ARTIFACT
 
@@ -140,3 +142,71 @@ def grants(tokens: list[dict], now: int) -> list[tuple[str, int]]:
     """閲覧の面へ渡す顔ぶれ。使えるものだけを（照合の形, 期限）で並べる。"""
     return [(t["fingerprint"], t.get("expiresAt", NO_EXPIRY))
             for t in active_tokens(tokens, now)]
+
+
+# ── 値と、1本の閲覧トークン ──────────────────────────
+#
+# 2つの集約が同じ形の閲覧トークンを持つ。宣言も両方に同じ名前で並んでいるので、
+# ここへ1つだけ置いて共有する。集約ごとのファイルへ写すと、同じ語が2回定義され、
+# 語彙の一貫性そのものが壊れる。
+
+
+@dataclass(frozen=True)
+class ViewTokenId:
+    """1本の閲覧トークンを、対象の中で一意に指す識別子。
+
+    閲覧トークンそのものの値とは別で、こちらは公開した人が一覧で見て選ぶために
+    使う。無効化しても変わらない。
+    """
+
+    value: str
+
+
+@dataclass(frozen=True)
+class ViewTokenExpiry:
+    """1本の閲覧トークンが使えなくなる時点。0 は期限なしを表す。"""
+
+    value: int = NO_EXPIRY
+
+    def is_endless(self) -> bool:
+        return self.value == NO_EXPIRY
+
+    def has_passed(self, now: int) -> bool:
+        return not self.is_endless() and self.value <= now
+
+
+@dataclass(frozen=True)
+class ViewTokenStatus:
+    """使える状態にあるかどうか。ACTIVE と REVOKED のいずれか。
+
+    無効にすると REVOKED になり、元へは戻らない。
+    """
+
+    value: str = ACTIVE
+
+    def is_active(self) -> bool:
+        return self.value == ACTIVE
+
+
+@dataclass(frozen=True)
+class ViewToken:
+    """渡した相手1つ分の閲覧トークン。値そのものは持たず、照合できる形だけを持つ。"""
+
+    token_id: ViewTokenId
+    name: str
+    fingerprint: str
+    expires_at: ViewTokenExpiry
+    status: ViewTokenStatus
+    issued_at: int
+
+    def is_usable(self, now: int) -> bool:
+        """いま使えるか。無効にされておらず、期限を過ぎていないこと。"""
+        return self.status.is_active() and not self.expires_at.has_passed(now)
+
+    def revoked(self) -> "ViewToken":
+        return replace(self, status=ViewTokenStatus(REVOKED))
+
+
+# 集約ごとの呼び分け。形は同じで、指している相手だけが違う
+ArtifactViewToken = ViewToken
+ProjectViewToken = ViewToken
