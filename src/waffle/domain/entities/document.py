@@ -1,5 +1,8 @@
-"""Document集約のEntity/ValueObject（agg-document.jsonのEntities/ValueObjects
-ブロックが仕様そのもの）。
+"""Document集約のEntity（agg-document.jsonのEntitiesブロックが仕様そのもの）。
+
+値オブジェクトは同一性を持たず複数の集約が使ってよいので、別の置き場所
+（domain/value_objects/document.py）にある。ここに置くのは、ルートを通じてしか
+触れないものだけ。
 
 check-aggregate-class-driftが検証する対象。Schema集約（domain/entities/schema.py）
 と同じ方針で、複雑な業務ロジックメソッドを持たせず、値オブジェクトの不変性・値に

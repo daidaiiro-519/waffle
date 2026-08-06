@@ -1,5 +1,8 @@
-"""Schema集約のEntity/ValueObject（agg-schema.jsonのEntities/ValueObjectsブロックが
-仕様そのもの）。
+"""Schema集約のEntity（agg-schema.jsonのEntitiesブロックが仕様そのもの）。
+
+値オブジェクトは同一性を持たず複数の集約が使ってよいので、別の置き場所
+（domain/value_objects/schema.py）にある。ここに置くのは、ルートを通じてしか
+触れないものだけ。
 
 check-aggregate-class-driftが検証する対象。ddd-advisorの判断（agg-schema.jsonの
 Invariants 9件中8件は静的構造制約でありJSON Schema自体が担保、手続き的な1件
