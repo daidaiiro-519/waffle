@@ -12,6 +12,7 @@
 
 対象の仕様: uc-sign-in / uc-post-comment / agg-comment（出荷物どうしの契約）
 """
+import json
 import re
 from pathlib import Path
 
@@ -92,3 +93,22 @@ def test_閲覧画面は上書きを拒む宣言を必ず付けて書き込む()
 def test_閲覧ゲートは上書きの宣言が無い書き込みを拒む():
     """送る側と検査する側の両方に同じ規則がある。片方だけでは守れない。"""
     assert "ifNoneMatch !== '*'" in GATE
+
+
+def test_区切りかどうかを鍵で決める():
+    """本文の値で決めると、閲覧者が区切りだと名乗れる。閲覧ゲートは要求の本文を
+    読めないので、本文を根拠にする限り防げない。鍵なら検査できる。"""
+    contract = json.loads(
+        (SKILL / "infra" / "contract" / "comment-entries.json").read_text(
+            encoding="utf-8"))
+    marker = contract["形式"]["区切りの目印"]
+
+    # 閲覧画面は鍵で決める（本文の kind を信じない）
+    assert f"key.endsWith('{marker}')" in VIEWER
+    assert "String(rec.kind" not in VIEWER
+    # 閲覧ゲートは、閲覧者がその鍵で書くことを拒む
+    assert f"uri.endsWith('{marker}')" in GATE
+    # 業務のLambdaが書く区切りも同じ目印を使う
+    repository = (SKILL / "lambda" / "admin_api" / "adapters" / "outbound"
+                  / "stored_comment_repository.py").read_text(encoding="utf-8")
+    assert f'DIVIDER_SUFFIX = "{marker}"' in repository

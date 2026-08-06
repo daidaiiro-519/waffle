@@ -129,6 +129,9 @@ await t('条件つきの書き込みは通る',    put({ 'content-type': 'applic
 await t('条件なしの書き込みは拒む',    put({ 'content-type': 'application/json', 'content-length': 100 }), 'status:403');
 await t('種類が違えば拒む',            put({ 'content-type': 'text/html', 'content-length': 100, 'if-none-match': '*' }), 'status:403');
 await t('大きすぎれば拒む',            put({ 'content-type': 'application/json', 'content-length': 20000, 'if-none-match': '*' }), 'status:403');
+await t('区切りの鍵での書き込みは拒む',
+  req('/comments/aaa/1700000200-replaced.json', { method: 'PUT', cookies: { [A+'aaa']: v1['手元の記録'] }, headers: { 'content-type': 'application/json', 'content-length': 100, 'if-none-match': '*' } }),
+  'status:403');
 await t('削除は拒む',                  req('/p/aaa/', { method: 'DELETE', cookies: { [A+'aaa']: v1['手元の記録'] } }), 'status:403');
 
 console.log(`\n通過 ${pass} / 失敗 ${fail}`);

@@ -279,6 +279,10 @@ async function handler(event) {
       ? request.headers['if-none-match'].value.trim() : '';
 
     if (!keyOk) return deny(403);
+    // 差し替えの区切りは仕組みだけが残す。閲覧者がこの鍵で書けると、
+    // 嘘の「ここで中身が差し替えられました」を並びに差し込める。
+    // 本文では防げない——ここは要求の本文を読めないため（infra/contract/comment-entries.json）
+    if (uri.endsWith('-replaced.json')) return deny(403);
     if (ct.split(';')[0].trim() !== 'application/json') return deny(403);
     if (!(len > 0) || len > 16384) return deny(403);      // 16KBまで
     if (ifNoneMatch !== '*') return deny(403);            // 上書きの宣言が無いものは通さない

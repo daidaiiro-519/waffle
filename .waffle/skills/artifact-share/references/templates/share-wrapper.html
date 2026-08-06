@@ -394,7 +394,10 @@
             .then(function (rec) {
               if (!rec) return;
               loaded[key] = {
-                kind: String(rec.kind || 'comment'),
+                // 区切りかどうかは鍵の末尾で決める。本文の値では決めない——
+                // 本文は閲覧者が自由に書けるため、区切りだと名乗れてしまう
+                // （infra/contract/comment-entries.json）
+                kind: key.endsWith('-replaced.json') ? 'divider' : 'comment',
                 author: String(rec.author == null ? '名無し' : rec.author),
                 body: String(rec.body == null ? '' : rec.body),
                 decision: String(rec.decision || 'comment'),
