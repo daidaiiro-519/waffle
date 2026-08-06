@@ -163,47 +163,88 @@
       "items": [
         {
           "concept": "usecase",
-          "placement": "application/usecases",
+          "placements": [
+            {
+              "path": "application/usecases"
+            }
+          ],
           "pattern": "application service・エントリメソッド1つ・ドメインは port 経由で呼ぶ"
         },
         {
           "concept": "aggregate",
-          "placement": "domain/model",
+          "placements": [
+            {
+              "path": "domain/entities"
+            }
+          ],
           "pattern": "整合性境界を持つクラス・不変条件をメソッド内で強制・コマンドはメソッド・永続化は repository 経由"
         },
         {
           "concept": "entity",
-          "placement": "domain/model",
+          "placements": [
+            {
+              "path": "domain/entities"
+            }
+          ],
           "pattern": "同一性は id・集約の内側でのみ可変"
         },
         {
           "concept": "value-object",
-          "placement": "domain/model",
+          "placements": [
+            {
+              "path": "domain/value_objects"
+            }
+          ],
           "pattern": "不変（frozen dataclass）・値等価"
         },
         {
           "concept": "domain-service",
-          "placement": "domain/services",
+          "placements": [
+            {
+              "path": "domain/services"
+            }
+          ],
           "pattern": "ステートレス・複数集約を跨る計算"
         },
         {
           "concept": "repository",
-          "placement": "application/ports（interface）＋adapters/outbound（impl）",
+          "placements": [
+            {
+              "role": "interface",
+              "path": "application/ports"
+            },
+            {
+              "role": "implementation",
+              "path": "adapters/outbound"
+            }
+          ],
           "pattern": "aggregate の load/save・集約1つに1リポジトリ"
         },
         {
           "concept": "port",
-          "placement": "application/ports",
+          "placements": [
+            {
+              "path": "application/ports"
+            }
+          ],
           "pattern": "application が要求する driven インターフェース（ABC / Protocol）"
         },
         {
           "concept": "inbound-adapter",
-          "placement": "adapters/inbound",
+          "placements": [
+            {
+              "path": "adapters/inbound"
+            }
+          ],
           "pattern": "外部入力を application 呼び出しへ変換・ロジックを持たない"
         },
         {
           "concept": "outbound-adapter",
-          "placement": "adapters/outbound",
+          "placements": [
+            {
+              "path": "adapters/outbound"
+            }
+          ],
           "pattern": "port / repository を実装・外部ライブラリをここに閉じ込める"
         }
       ]
