@@ -42,7 +42,8 @@ Waffle自身がヘキサゴナルアーキテクチャを実装する際の層�
 ```
 src/{package}/
   domain/
-    entities/       value-object, entity, aggregate
+    entities/       entity, aggregate（ルートを通じてのみ触れるもの）
+    value_objects/  value-object（同一性を持たず、複数の集約が使ってよい値）
     model/          schema.jsonそのもの（JSON Schema定義の同梱データ。DDD実装クラスの置き場ではない）
     services/       domain-service
   application/
@@ -79,7 +80,7 @@ src/{package}/
 | `usecase` | `application/usecases` | application service・エントリメソッド1つ・ドメインは port 経由で呼ぶ |
 | `aggregate` | `domain/entities` | 整合性境界を持つクラス・不変条件をメソッド内で強制・コマンドはメソッド・永続化は repository 経由 |
 | `entity` | `domain/entities` | 同一性は id・集約の内側でのみ可変 |
-| `value-object` | `domain/entities` | 不変（frozen dataclass）・値等価 |
+| `value-object` | `domain/value_objects` | 不変（frozen dataclass）・値等価 |
 | `domain-service` | `domain/services` | ステートレス・複数集約を跨る計算 |
 | `repository` | interface `application/ports`<br>implementation `adapters/outbound` | aggregate の load/save・集約1つに1リポジトリ |
 | `port` | `application/ports` | application が要求する driven インターフェース（ABC / Protocol） |
