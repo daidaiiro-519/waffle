@@ -320,7 +320,7 @@ def test_check_aggregate_class_drift_returns_five_fields():
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert data == {
-        "missing_implementation_file": [], "class_name_mismatch": [],
+        "ambiguous_value_object": [], "missing_implementation_file": [], "class_name_mismatch": [],
         "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
     }
 

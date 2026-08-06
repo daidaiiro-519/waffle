@@ -65,3 +65,15 @@ def package_name_from_reference(reference: str, coding_kind: str) -> str | None:
     if not reference.startswith(prefix):
         return None
     return reference[len(prefix):]
+
+
+def declares_per_file(layout: dict, concept: str) -> bool:
+    """その概念に「1ファイルに1つ」の粒度が宣言されているか。
+
+    宣言があればファイル単位で探し、無ければ配置ディレクトリ単位で探す。
+    どちらかを検査が独自に決めると、宣言と検査が別々に漂流する。
+    """
+    for item in layout.get("granularity") or []:
+        if item.get("concept") == concept:
+            return bool(item.get("perFile"))
+    return False

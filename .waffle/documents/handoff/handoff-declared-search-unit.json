@@ -1,0 +1,146 @@
+{
+  "documentId": "handoff-declared-search-unit",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "探索の単位を宣言から決める仕組みの引き継ぎ：handoff-declared-search-unit"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-check-aggregate-class-drift"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "値オブジェクトの共有は正当",
+          "consideration": "集約の一貫性境界が縛るのは可変な状態と外部集約の実体参照であって、不変な値の型定義ではない。ViewTokenId(\"abc\") はどちらの集約から見ても同じ値で、越えられる境界がそもそも無い。集約ごとに別の型を作ると、同じ言葉を2回定義することになり、コンテキスト内側の言葉の一貫性を自ら壊す。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "どちらの集約に属するかという問いが誤り",
+          "consideration": "値オブジェクトは集約の所有物ではなく、境界づけられたコンテキストの語彙。両方のspecに宣言されているのは重複ではなく「両方がこの語彙を使う」という事実の正確な記述。片方から消すとそのspecはモデルとして不完全になる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "「同じファイル」はDDDの原則ではない",
+          "consideration": "domain-model は同一性・不変性・一貫性境界・ID参照しか述べておらず、ファイルやモジュールへの言及は一切ない。実装上の便宜であり、しかも配置の権限はarchitecture 仕様が持っている。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "宣言されていない規約を検査が持っていた",
+          "consideration": "layout.granularity が perFile を宣言しているのは usecase / aggregate / domain-service / port の4つで、value-object と entity は入っていない。conceptPlacement が value-object に与えているのはディレクトリ。検査の「1ファイル前提」だけが宣言の裏付けを持たない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "引き受ける欠点",
+          "consideration": "ディレクトリ単位にすると「宣言した集約の外へ値オブジェクトが漏れた」検知は失われる。取り戻すならそれは宣言として書くべきで、検査の暗黙の既定値に戻すべきではない。共有の実例が1組しかない今、宣言の形を決めるのは時期尚早。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "探索の単位は宣言から決める",
+          "consideration": "「value-object を特別扱いする」ではなく「granularity に perFile 宣言がある概念はファイル単位、無い概念は conceptPlacement のディレクトリ単位」という規則にする。同じ穴が entity にも開いており（現在は照合対象外なので潜在）、概念名で分岐するとまた同じことが起きる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "ポートは変えない",
+          "consideration": "ClassDeclarationExtractor に class_names_in_directory のような口を足すと、構文解析ポートにファイル探索を混ぜることになり、偽実装へ差し替えるときにファイルシステムまで偽装が要る。ファイル列挙は既存の DocumentRepository.list_files に任せ、組み合わせを usecase 側で行う。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "下位のディレクトリへは降りない",
+          "consideration": "conceptPlacement が指すのは1つのディレクトリ。再帰にすると宣言していないサブパッケージまで拾う。glob は拡張子の直下一致にとどめる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "クラス名だけでなく元のソースも保持する",
+          "consideration": "属性の照合には、そのクラスが定義されたファイルのソースが要る。名前の集合だけを集めると照合できない。同じ配置ディレクトリを複数の集約が共有するので、対応表はループの外で1度だけ作る。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "新たに開く穴を認識しておく",
+          "consideration": "同名クラスが複数ファイルにある場合、最初に当たった方で属性を照合する。実測では現在ゼロ件だが、正しさは保証されない。テストが実装と同居する規約のスタック（Go の _test.go 等）では、テスト内の同名クラスを拾いうる。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "bc-waffle の検査結果は変わらない（実測で現在すべて空、かつ緩和方向にしか動かない）。bc-artifact-share の missing_value_object 6件が0件になる。",
+        "agg-comment の missing_implementation_file 1件はこの変更と無関係に残る（Comment 集約に Python の実装が無い。守っているのは4つの実行環境）。",
+        "この6件は境界違反の検知ではなく、検査が独断で足した前提の出力だった。view_token.py は「集約ごとのファイルへ写すと同じ語が2回定義され、語彙の一貫性が壊れる」と理由を明記して共有を選んでいる。検査はその正しい判断を毎回不合格にしていた。",
+        "別途、埋もれているドリフトが1件ある。両集約が ViewTokenExpiry.value を string と宣言しているが実装は int。検査はフィールド名しか比べないため検出されない。この変更とは別に直す。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [],
+      "relationships": []
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": []
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "uc-check-aggregate-class-drift の実装への引き継ぎ。値オブジェクトを探す範囲を、検査が独自に決めるのをやめ、architecture の宣言（layout.granularity と conceptPlacement）から決めるようにする。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/application/usecases/check_aggregate_class_drift.py",
+          "reason": "値オブジェクトの探索を、宣言された単位で行う形へ変える"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/cli/main.py",
+          "reason": "value-object の配置解決を足して usecase へ渡す（既定値ありで後方互換）"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/mcp/main.py",
+          "reason": "同上"
+        },
+        {
+          "path": "tests/application/acceptance/test_uc_check_aggregate_class_drift.py",
+          "reason": "新しい3シナリオと1対1にする。既存の「rootファイルに無ければmissing」を期待するテストは、期待の反転として更新する"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": []
+}

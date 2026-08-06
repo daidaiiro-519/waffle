@@ -51,8 +51,31 @@ class CheckAggregateClassDrift:
         self._documents = documents
         self._extractor = extractor
 
+    def _value_object_index(self, root: str, naming: dict, language: str) -> dict:
+        """配置ディレクトリの直下から、クラス名とその定義元のソースの対応を作る。
+
+        下位のディレクトリへは降りない。conceptPlacement が指すのは1つの
+        ディレクトリであり、降りると宣言されていない区画まで拾うため。
+
+        同じ名前が複数のファイルにあるときは、どちらとも決めずに覚えておく。
+        先に当たった方を黙って採ると、答えがファイル名の順で決まってしまう。
+        """
+        index: dict[str, list[tuple[str, str]]] = {}
+        try:
+            paths = self._documents.list_files(root, f"*{naming['fileNameSuffix']}")
+        except FileNotFoundError:
+            return index
+        for path in sorted(paths):
+            try:
+                source = self._documents.read_text(path)
+            except FileNotFoundError:  # pragma: no cover — 列挙直後に消えた場合
+                continue
+            for name in self._extractor.class_names(source, language):
+                index.setdefault(name, []).append((path, source))
+        return index
+
     def run(self, documents_root: str, src_root: str, naming: dict,
-            language: str = "python") -> Result[dict]:
+            language: str = "python", value_object_root: str | None = None) -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
@@ -72,6 +95,13 @@ class CheckAggregateClassDrift:
         attribute_mismatch: list[dict] = []
         missing_value_object: list[dict] = []
         value_object_attribute_mismatch: list[dict] = []
+        ambiguous_value_object: list[dict] = []
+
+        # 値オブジェクトの探索範囲。architecture が value-object に perFile を
+        # 宣言していれば呼び出し元は渡さず、集約ルートと同じファイルを見る。
+        # 宣言していなければ配置ディレクトリを渡してくる
+        vo_index = (self._value_object_index(value_object_root, naming, language)
+                    if value_object_root else None)
 
         for doc_path in doc_paths:
             doc = self._documents.load(doc_path)
@@ -90,19 +120,34 @@ class CheckAggregateClassDrift:
                 continue
             found_classes = self._extractor.class_names(source, language)
             for vo_name in _declared_value_objects(doc):
-                if vo_name not in found_classes:
+                if vo_index is None:
+                    found_here = vo_name in found_classes
+                    vo_source, vo_path = source, expected_path
+                else:
+                    where = vo_index.get(vo_name, [])
+                    found_here = bool(where)
+                    if len(where) > 1:
+                        ambiguous_value_object.append({
+                            "documentId": doc["documentId"], "aggregateRootName": root_name,
+                            "valueObjectName": vo_name,
+                            "foundIn": [p for p, _ in where],
+                        })
+                        continue
+                    vo_path, vo_source = where[0] if where else (value_object_root, "")
+                if not found_here:
                     missing_value_object.append({
                         "documentId": doc["documentId"], "aggregateRootName": root_name,
-                        "valueObjectName": vo_name, "expectedPath": expected_path,
+                        "valueObjectName": vo_name,
+                        "expectedPath": value_object_root or expected_path,
                     })
                     continue
                 declared_vo_attributes = _declared_value_object_attributes(doc, vo_name, field_case)
                 if declared_vo_attributes:
-                    found_vo_fields = self._extractor.field_names(source, language, vo_name)
+                    found_vo_fields = self._extractor.field_names(vo_source, language, vo_name)
                     if set(declared_vo_attributes) != set(found_vo_fields):
                         value_object_attribute_mismatch.append({
                             "documentId": doc["documentId"], "aggregateRootName": root_name,
-                            "valueObjectName": vo_name, "expectedPath": expected_path,
+                            "valueObjectName": vo_name, "expectedPath": vo_path,
                             "declaredAttributes": declared_vo_attributes, "foundFields": found_vo_fields,
                         })
             if root_name not in found_classes:
@@ -121,6 +166,7 @@ class CheckAggregateClassDrift:
                 })
 
         return Ok({
+            "ambiguous_value_object": ambiguous_value_object,
             "missing_implementation_file": missing_implementation_file,
             "class_name_mismatch": class_name_mismatch,
             "attribute_mismatch": attribute_mismatch,

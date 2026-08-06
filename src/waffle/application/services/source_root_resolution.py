@@ -14,12 +14,13 @@ from __future__ import annotations
 
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.domain.services.concept_source_root import (
+    declares_per_file,
     package_name_from_reference,
     resolve_source_root,
 )
 from waffle.shared.result import Err, Ok, Result
 
-__all__ = ["resolve_src_root"]
+__all__ = ["resolve_src_root", "resolve_directory_scoped_root"]
 
 _ARCHITECTURE_PATH = ".waffle/documents/coding/{architecture_ref}.json"
 
@@ -75,3 +76,30 @@ def resolve_src_root(
             f"（concept={concept}）から解決できません",
         )
     return Ok(resolved)
+
+
+def resolve_directory_scoped_root(
+    documents: DocumentRepository,
+    architecture_ref: str | None,
+    concept: str,
+) -> str | None:
+    """その概念を、配置ディレクトリ単位で探すべきときにだけ、その配置を返す。
+
+    architecture の layout.granularity がその概念に「1ファイルに1つ」を宣言して
+    いればファイル単位なので None を返す（呼び出し側は従来どおり1ファイルを見る）。
+    宣言が無ければ配置ディレクトリを返す。
+
+    どちらで探すかを決める権限は architecture にあり、検査はそれを読むだけにする。
+    """
+    if not architecture_ref:
+        return None
+    try:
+        document = documents.load(
+            _ARCHITECTURE_PATH.format(architecture_ref=architecture_ref))
+    except FileNotFoundError:
+        return None
+    content = document.get("content", {})
+    if declares_per_file(content.get("layout", {}), concept):
+        return None
+    resolved = resolve_src_root(documents, None, architecture_ref, concept)
+    return resolved.value if isinstance(resolved, Ok) else None

@@ -33,7 +33,8 @@
       "items": [
         "Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root）が与えられている",
         "集約Entityクラスの配置ルートディレクトリ（src_root）が与えられている",
-        "実装言語（language）が与えられている。省略時はpython"
+        "実装言語（language）が与えられている。省略時はpython",
+        "概念ごとの配置と粒度を宣言するarchitecture documentが与えられている（layout.granularityとconceptPlacement）"
       ]
     },
     "mainFlow": {
@@ -81,7 +82,7 @@
         "ファイルパスの導出は、集約ルート名をsnake_caseに変換し、src_root配下に{name}.pyとして配置されている前提で行う",
         "クラス名・フィールド名の抽出は構文解析のみで行い、実行や意味理解はしない（宣言された名前と、実装ファイル内に存在するクラス定義名・フィールド宣言名の機械的な突き合わせのみ）",
         "属性名の対応は、Entities宣言のcamelCase属性名(例: kindProfiles)をsnake_case(例: kind_profiles)に変換した上で、実装クラスのフィールド名集合と完全一致するかで判定する",
-        "値オブジェクトの対応は、ValueObjectsが宣言する名前(例: SchemaId)が、集約ルートと同じ実装ファイル内のクラス定義名として存在するかで判定する",
+        "値オブジェクトの対応は、ValueObjectsが宣言する名前(例: SchemaId)が、value-objectに宣言された探索範囲のクラス定義名として存在するかで判定する。探索範囲は、layout.granularityがvalue-objectにperFileを宣言していれば集約ルートと同じ実装ファイル、宣言していなければconceptPlacementがvalue-objectに与える配置ディレクトリの直下",
         "値オブジェクトの属性対応は、ValueObjects宣言のitemがattributesを持つ場合のみ行う（attributesはDomainSpecSchemaで任意項目のため）。宣言されたattributesのcamelCase属性名をsnake_caseに変換した上で、その値オブジェクトの実装クラスが実際に持つフィールド集合と完全一致するかで判定する。attributesを宣言していない値オブジェクトは、クラスの実在確認（missing_value_object）のみで属性対応は対象外とする",
         "aggregate specがEntitiesの属性を1件も宣言していない場合は、attribute_mismatchの対象外とする（宣言が無い以上、比較しようがないため）",
         "missing_implementation_file・class_name_mismatch・attribute_mismatch・missing_value_object・value_object_attribute_mismatchの全てが空配列であれば、全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクト・値オブジェクトの属性集合が一致している（正常系）"
@@ -91,10 +92,12 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
+        "While 配置ディレクトリ単位で探すとき、システムはそのディレクトリの直下だけを見て、下位のディレクトリへは降りない shall（conceptPlacementが指すのは1つのディレクトリであり、降りると宣言されていない区画まで拾うため）。",
+        "When 概念ごとの探索範囲を決めるとき、システムはarchitectureのlayout.granularityがその概念にperFileを宣言していればファイル単位、宣言していなければconceptPlacementが与える配置ディレクトリ単位とする shall（配置を決める権限はarchitectureにあり、この操作は宣言を読むだけで独自の規則を持たない）。",
         "When aggregate specの集約ルート名から導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。",
         "When 実装ファイルは実在するが、集約ルート名と一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。",
         "When クラス名は一致するが、Entitiesが宣言する属性集合(snake_case変換後)と実装クラスのフィールド集合が一致しないとき、システムはその組をattribute_mismatchに含める shall。",
-        "When ValueObjectsが宣言する値オブジェクト名に対応するクラス定義が、同じ実装ファイル内に見つからないとき、システムはその組をmissing_value_objectに含める shall。",
+        "When ValueObjectsが宣言する値オブジェクト名に対応するクラス定義が、その概念に宣言された探索範囲のどこにも見つからないとき、システムはその組をmissing_value_objectに含める shall。",
         "When 値オブジェクトのクラス定義は見つかるが、ValueObjects宣言のattributes(宣言されている場合、snake_case変換後)と実装クラスのフィールド集合が一致しないとき、システムはその組をvalue_object_attribute_mismatchに含める shall。",
         "While 値オブジェクトのValueObjects宣言がattributesを持たないとき、システムはその値オブジェクトをvalue_object_attribute_mismatchの対象外とする shall。",
         "While 全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクト・値オブジェクトの属性集合が一致しているとき、システムは5フィールド全てを空配列で返す shall。",
@@ -174,6 +177,27 @@
           "viewpoint": "境界: 宣言が無いものを比較して不一致にしない",
           "gherkin": "Scenario: 値オブジェクトがattributesを宣言していなければ属性対応は対象外にする\nGiven valueObjects宣言がattributesを持たない値オブジェクト\nWhen クラス名ドリフト検査を実行する\nThen value_object_attribute_mismatchにその組は含まれない",
           "covers": "受け入れ基準: 宣言された値オブジェクトが実装に存在しないとき検出する（宣言が無い場合）"
+        },
+        {
+          "name": "粒度が宣言されていない概念はディレクトリ単位で探す",
+          "category": "正常系",
+          "viewpoint": "権限：配置を決めるのはarchitectureであり、この操作ではない",
+          "gherkin": "Scenario: 粒度が宣言されていない概念はディレクトリ単位で探す\n  Given layout.granularityがvalue-objectにperFileを宣言していないarchitecture\n  And 宣言された値オブジェクトが、集約ルートとは別のモジュールに定義されている\n  When ドリフト検査を実行する\n  Then その値オブジェクトはmissing_value_objectに含まれない",
+          "covers": "受け入れ基準: 探索範囲はgranularityのperFile宣言の有無で決める"
+        },
+        {
+          "name": "粒度が宣言されている概念はファイル単位で探す",
+          "category": "正常系",
+          "viewpoint": "権限：宣言があるときは、その宣言に従って狭く探す",
+          "gherkin": "Scenario: 粒度が宣言されている概念はファイル単位で探す\n  Given layout.granularityがvalue-objectにperFileを宣言しているarchitecture\n  And 宣言された値オブジェクトが、集約ルートとは別のモジュールに定義されている\n  When ドリフト検査を実行する\n  Then その値オブジェクトはmissing_value_objectに含まれる",
+          "covers": "受け入れ基準: 探索範囲はgranularityのperFile宣言の有無で決める"
+        },
+        {
+          "name": "配置ディレクトリの下位までは降りない",
+          "category": "境界値",
+          "viewpoint": "範囲：宣言されていない区画を拾わない",
+          "gherkin": "Scenario: 配置ディレクトリの下位までは降りない\n  Given 値オブジェクトが、配置ディレクトリの下位のディレクトリに定義されている\n  When ドリフト検査を実行する\n  Then その値オブジェクトはmissing_value_objectに含まれる",
+          "covers": "受け入れ基準: 配置ディレクトリの直下だけを見る"
         }
       ]
     },

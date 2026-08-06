@@ -46,7 +46,10 @@ from waffle.application.usecases.render_document_viewer import RenderDocumentVie
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
-from waffle.application.services.source_root_resolution import resolve_src_root
+from waffle.application.services.source_root_resolution import (
+    resolve_directory_scoped_root,
+    resolve_src_root,
+)
 from waffle.application.services.stack_resolution import (
     resolve_covered_documents_root,
     resolve_naming,
@@ -285,7 +288,10 @@ def check_aggregate_class_drift(
     naming = _resolve_naming(architectureRef)
     if isinstance(naming, dict) and "error" in naming:
         return naming
-    return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(scope, resolved, naming, language))
+    # 値オブジェクトをどこまで探すかは architecture の宣言が決める
+    value_object_root = resolve_directory_scoped_root(_docs(), architectureRef, "value-object")
+    return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(
+        scope, resolved, naming, language, value_object_root))
 
 @mcp.tool
 def check_layer_drift(architectureRef: str) -> dict:

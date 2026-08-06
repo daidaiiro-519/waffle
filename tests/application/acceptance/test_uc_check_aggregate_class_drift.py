@@ -66,6 +66,7 @@ def test_all_aggregate_roots_match_implementation(tmp_path):
     result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value == {
+        "ambiguous_value_object": [],
         "missing_implementation_file": [], "class_name_mismatch": [],
         "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
     }
@@ -213,3 +214,73 @@ def test_value_object_without_declared_attributes_is_skipped(tmp_path):
     result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
     assert result.value["value_object_attribute_mismatch"] == []
+
+
+def test_粒度が宣言されていない概念はディレクトリ単位で探す(tmp_path):
+    """
+    Scenario: 粒度が宣言されていない概念はディレクトリ単位で探す
+    Given layout.granularityがvalue-objectにperFileを宣言していないarchitecture
+    And 宣言された値オブジェクトが、集約ルートとは別のモジュールに定義されている
+    When ドリフト検査を実行する
+    Then その値オブジェクトはmissing_value_objectに含まれない
+    """
+    docs_root = tmp_path / "documents"
+    src_root = tmp_path / "src"
+    _write(docs_root / "aggregate" / "agg-a.json",
+           _aggregate_doc("Schema", ["schemaId"], ["SchemaId"]))
+    src_root.mkdir(parents=True, exist_ok=True)
+    (src_root / "schema.py").write_text("class Schema:\n    schema_id: str\n", encoding="utf-8")
+    (src_root / "schema_id.py").write_text("class SchemaId:\n    value: str\n", encoding="utf-8")
+
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING,
+                           value_object_root=str(src_root))
+
+    assert isinstance(result, Ok), result
+    assert result.value["missing_value_object"] == []
+
+
+def test_粒度が宣言されている概念はファイル単位で探す(tmp_path):
+    """
+    Scenario: 粒度が宣言されている概念はファイル単位で探す
+    Given layout.granularityがvalue-objectにperFileを宣言しているarchitecture
+    And 宣言された値オブジェクトが、集約ルートとは別のモジュールに定義されている
+    When ドリフト検査を実行する
+    Then その値オブジェクトはmissing_value_objectに含まれる
+    """
+    docs_root = tmp_path / "documents"
+    src_root = tmp_path / "src"
+    _write(docs_root / "aggregate" / "agg-a.json",
+           _aggregate_doc("Schema", ["schemaId"], ["SchemaId"]))
+    src_root.mkdir(parents=True, exist_ok=True)
+    (src_root / "schema.py").write_text("class Schema:\n    schema_id: str\n", encoding="utf-8")
+    (src_root / "schema_id.py").write_text("class SchemaId:\n    value: str\n", encoding="utf-8")
+
+    # value_object_root を渡さない＝ファイル単位（集約ルートと同じファイル）で探す
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
+
+    assert isinstance(result, Ok), result
+    assert [v["valueObjectName"] for v in result.value["missing_value_object"]] == ["SchemaId"]
+
+
+def test_配置ディレクトリの下位までは降りない(tmp_path):
+    """
+    Scenario: 配置ディレクトリの下位までは降りない
+    Given 値オブジェクトが、配置ディレクトリの下位のディレクトリに定義されている
+    When ドリフト検査を実行する
+    Then その値オブジェクトはmissing_value_objectに含まれる
+    """
+    docs_root = tmp_path / "documents"
+    src_root = tmp_path / "src"
+    _write(docs_root / "aggregate" / "agg-a.json",
+           _aggregate_doc("Schema", ["schemaId"], ["SchemaId"]))
+    src_root.mkdir(parents=True, exist_ok=True)
+    (src_root / "schema.py").write_text("class Schema:\n    schema_id: str\n", encoding="utf-8")
+    deeper = src_root / "nested"
+    deeper.mkdir()
+    (deeper / "schema_id.py").write_text("class SchemaId:\n    value: str\n", encoding="utf-8")
+
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING,
+                           value_object_root=str(src_root))
+
+    assert isinstance(result, Ok), result
+    assert [v["valueObjectName"] for v in result.value["missing_value_object"]] == ["SchemaId"]

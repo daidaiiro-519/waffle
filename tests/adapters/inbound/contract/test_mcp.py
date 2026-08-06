@@ -286,7 +286,7 @@ def test_check_aggregate_class_drift_returns_five_fields():
     out = asyncio.run(_call("check_aggregate_class_drift", {"architectureRef": "architecture-waffle",
                                     "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
     assert out == {
-        "missing_implementation_file": [], "class_name_mismatch": [],
+        "ambiguous_value_object": [], "missing_implementation_file": [], "class_name_mismatch": [],
         "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
     }
 
