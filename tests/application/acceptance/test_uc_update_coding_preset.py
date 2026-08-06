@@ -199,3 +199,55 @@ def test_confirmation_only_leaves_the_preset_untouched():
     assert presets.saved == []
     assert presets.load(_PRESET)["architecture"]["rules"]["items"] == [
         {"level": "必須", "rule": "古い規約"}]
+
+
+def _mixed() -> tuple:
+    """汎用の欄と、そのプロダクト固有の欄を同居させたブロックを持つ組。"""
+    preset = _preset()
+    preset["architecture"]["layout"] = {
+        "sourceRoot": "src/{package}", "granularity": None,
+        "compositionRootPaths": None}
+    document = _document()
+    document["content"]["layout"] = {
+        "sourceRoot": "src/{package}",
+        "granularity": [{"concept": "aggregate", "perFile": 1}],
+        "compositionRootPaths": ["adapters/inbound/cli/main.py"]}
+    presets = _FakePresets({_PRESET: preset})
+    engine, _, _ = _engine(presets, _FakeDocuments({_PATH: document}))
+    return engine, presets, preset
+
+
+def test_ブロックの中の欄だけを戻す():
+    """
+    Scenario: ブロックの中の欄だけを戻す
+    Given 汎用の欄と、そのプロダクト固有の欄を同居させているブロック
+    When その汎用の欄だけを指定して反映を求める
+    Then プリセットのその欄だけが変わる
+    And 同じブロックの他の欄は変わっていない
+    """
+    engine, presets, preset = _mixed()
+
+    result = engine.run(_PRESET, _FROM, ["layout.granularity"])
+
+    assert isinstance(result, Ok), result
+    assert presets.saved == [_PRESET]
+    layout = preset["architecture"]["layout"]
+    assert layout["granularity"] == [{"concept": "aggregate", "perFile": 1}]
+    assert layout["compositionRootPaths"] is None   # 固有の欄は置き去りにする
+
+
+def test_無い欄は指定できない():
+    """
+    Scenario: 無い欄は指定できない
+    Given プリセットが持たない欄の名前
+    When その欄を指定して反映を求める
+    Then UNKNOWN_BLOCK として拒まれる
+    And プリセットは書き換えられていない
+    """
+    engine, presets, _ = _mixed()
+
+    result = engine.run(_PRESET, _FROM, ["layout.存在しない欄"])
+
+    assert isinstance(result, Err)
+    assert result.details == ["UNKNOWN_BLOCK"]
+    assert presets.saved == []

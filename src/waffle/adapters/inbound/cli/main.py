@@ -412,7 +412,7 @@ def lint_docstring(
 def update_coding_preset(
     preset: str = typer.Option(..., "--preset", help="反映先のプリセット名（例: python-hexagonal）"),
     from_document_id: str = typer.Option(..., "--from", help="出どころとなる規約のdocumentId（例: architecture-waffle）"),
-    blocks: str = typer.Option(..., "--blocks", help="戻す部分をカンマ区切りで（例: rules,layers）。丸ごとの写しは行わないため省略できない"),
+    blocks: str = typer.Option(..., "--blocks", help="戻す部分をカンマ区切りで（例: rules,layers,layout.granularity）。ブロックの中の欄まで指定できる。丸ごとの写しは行わないため省略できない"),
     dry_run: bool = typer.Option(False, "--dryRun", "--dry-run", help="書き換えずに、何が変わるかだけを返す"),
 ) -> None:
     """実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。"""

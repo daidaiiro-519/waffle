@@ -21,6 +21,39 @@ def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 
+
+def _split(selection: str) -> tuple[str, str | None]:
+    """指定を、ブロックと、その中の欄に分ける。欄の指定が無ければ None。"""
+    block, _, field = selection.partition(".")
+    return block, field or None
+
+
+def _absent(content: dict, selections: list[str]) -> list[str]:
+    """指定のうち、その中身が持たないものを返す。欄まで指定されていれば欄まで見る。"""
+    out = []
+    for selection in selections:
+        block, field = _split(selection)
+        if block not in content:
+            out.append(selection)
+        elif field is not None and (not isinstance(content[block], dict)
+                                    or field not in content[block]):
+            out.append(selection)
+    return out
+
+
+def _value_at(content: dict, selection: str):
+    block, field = _split(selection)
+    return content[block] if field is None else content[block][field]
+
+
+def _write_at(content: dict, selection: str, value) -> None:
+    block, field = _split(selection)
+    if field is None:
+        content[block] = value
+    else:
+        content[block][field] = value
+
+
 class UpdateCodingPreset:
     def __init__(self, documents: DocumentRepository, presets: CodingPresetRepository) -> None:
         self._documents = documents
@@ -60,7 +93,7 @@ class UpdateCodingPreset:
 
         # 書き込む前に全件を確かめる。書ける分だけ書くと、プリセットが半分だけ
         # 更新された状態で残る
-        missing = [b for b in blocks if b not in preset_content]
+        missing = _absent(preset_content, blocks)
         if missing:
             return _err(
                 "UNKNOWN_BLOCK",
@@ -68,22 +101,24 @@ class UpdateCodingPreset:
                 f"{' / '.join(missing)}。プリセットの構成を変えるのは、"
                 f"プリセットそのものを設計し直す別の判断です",
             )
-        absent = [b for b in blocks if b not in document_content]
+        absent = _absent(document_content, blocks)
         if absent:
             return _err(
                 "UNKNOWN_BLOCK",
                 f"規約 {from_document_id} が持たない部分です: {' / '.join(absent)}",
             )
 
-        changed = sorted(b for b in blocks if preset_content[b] != document_content[b])
+        changed = sorted(b for b in blocks
+                         if _value_at(preset_content, b) != _value_at(document_content, b))
         # 何が汎用かの判断は人が持つ、と決めた以上、人が判断できる材料を返す。
         # ブロック名と変更の有無だけでは、その判断は誰にもできない
-        reflected = [{"block": b, "before": preset_content[b], "after": document_content[b]}
+        reflected = [{"block": b, "before": _value_at(preset_content, b),
+                      "after": _value_at(document_content, b)}
                      for b in changed]
 
         if changed and not dry_run:
-            for block in changed:
-                preset_content[block] = document_content[block]
+            for selection in changed:
+                _write_at(preset_content, selection, _value_at(document_content, selection))
             # 内容が一致していれば書き換えない。無変更の保存は、ファイルの更新を見ている
             # 周辺の仕組みには変更と区別がつかない（clear_field / fill と扱いを揃える）
             self._presets.save(preset_name, preset)
