@@ -1515,7 +1515,14 @@
   document.querySelectorAll('#dlg-disable [value="ok"], #dlg-disable .btn.danger-b')
     .forEach(function (b) {
       b.addEventListener('click', function () {
-        api('disable', { artifactId: target.artifactId })
+        // 尋ねた答えに従う。既定は取り出してから止める——止めたあとでも取り出せるが、
+        // 止める判断をした人が手元に持たないまま画面を離れると、次に開くまで
+        // 中身を確かめられない
+        var first = $('dis-export').checked
+          ? exportArtifact(target)
+          : Promise.resolve();
+        Promise.resolve(first)
+          .then(function () { return api('disable', { artifactId: target.artifactId }); })
           .then(function () { toast('公開を止めました。中身もコメントも残っています'); load(); })
           .catch(fail);
       });
@@ -1733,7 +1740,8 @@
   /* ── 取り出す ──────────────────────────────────────
      まとめるのはここ。管理APIは読むだけで、保管へは書かない。 */
   function exportArtifact(item) {
-    api('export', { artifactId: item.artifactId }).then(function (d) {
+    // 呼び出し元が終わりを待てるように返す（止める前に取り出す経路が使う）
+    return api('export', { artifactId: item.artifactId }).then(function (d) {
       var name = (d.name || item.artifactId).replace(/[\\/:*?"<>|]/g, '_');
       save(name + '.html', d.content, 'text/html;charset=utf-8');
       save(name + '.comments.json',

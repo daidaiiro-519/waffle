@@ -8,6 +8,8 @@
 対象の仕様: uc-suspend-artifact
 """
 import json
+import re
+from pathlib import Path
 
 import pytest
 
@@ -17,6 +19,10 @@ from application.usecases.export_artifact import ExportArtifact
 from application.usecases.suspend_artifact import SuspendArtifact
 from shared.errors import ManageError
 from usecase_builder import build
+
+SKILL = Path(__file__).resolve().parents[3]
+ADMIN_APP = (SKILL / "scripts" / "app" / "app.js").read_text(encoding="utf-8")
+DIALOGS = (SKILL / "scripts" / "app" / "app-dialogs.html").read_text(encoding="utf-8")
 
 
 def _comment(deps, artifact_id, at, author, body):
@@ -126,3 +132,26 @@ def test_管理者は自分のものでなくても扱える():
 
     assert meta_of(deps, r.artifact_id)["status"] == "disabled"
     assert deps.keys.get(f"token:{r.artifact_id}") == "DISABLED"
+
+
+def test_止める前に取り出すかを尋ねる():
+    """
+    Scenario: 止める前に取り出すかを尋ねる
+    When 投稿者が停止を求める
+    Then 手元へ取り出すかどうかを尋ねられる
+    And 何も選ばなければ取り出したうえで停止する
+
+    尋ねるのは管理画面。止めたあとでも取り出せるが、止める判断をした人が手元に
+    持たないまま画面を離れると、次に開くまで中身を確かめられない。
+    """
+    # 尋ねる。そして何も選ばなければ取り出す側に倒れている
+    dialog = DIALOGS[DIALOGS.index('<dialog id="dlg-disable">'):]
+    dialog = dialog[:dialog.index("</dialog>")]
+    assert 'id="dis-export"' in dialog
+    assert re.search(r'id="dis-export"[^>]*\bchecked\b', dialog)
+
+    # 尋ねた答えが実際に使われ、取り出してから止める
+    confirm = ADMIN_APP[ADMIN_APP.index("#dlg-disable [value=\"ok\"]"):]
+    confirm = confirm[:confirm.index("/* ── 公開")]
+    assert "$('dis-export').checked" in confirm
+    assert confirm.index("exportArtifact") < confirm.index("api('disable'")
