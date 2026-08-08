@@ -208,9 +208,9 @@ class ScaffoldDocument:
 
     def _clear_field(self, params: dict) -> Result[dict]:
         document_path = params.get("documentPath")
-        path = params.get("path")
-        if not document_path or not path:
-            return _err("MISSING_PARAM", "clear_field には documentPath, path が必要です")
+        field_path = params.get("fieldPath")
+        if not document_path or not field_path:
+            return _err("MISSING_PARAM", "clear_field には documentPath, fieldPath が必要です")
         loaded = load_document(self._documents, document_path)
         if isinstance(loaded, Err):
             return loaded
@@ -230,10 +230,10 @@ class ScaffoldDocument:
         discriminator = {disc_key: doc.get(disc_key)} if disc_key else {}
         content_def = _content_def(schema, discriminator)
 
-        if _is_required_path(schema, content_def, path):
-            return _err("REQUIRED_FIELD", f"必須フィールドは削除できません: {path}")
+        if _is_required_path(schema, content_def, field_path):
+            return _err("REQUIRED_FIELD", f"必須フィールドは削除できません: {field_path}")
 
-        cleared = _clear_path(doc, path)
+        cleared = _clear_path(doc, field_path)
         if cleared:
             self._documents.save(document_path, doc)
         return Ok({"documentPath": document_path, "cleared": cleared})

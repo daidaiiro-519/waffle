@@ -241,13 +241,13 @@ def query_collection(
 @app.command(help="document.json を成果物にレンダリングして deploy（uc-render-document）。")
 def render(
     path: str = typer.Option(..., "--path"),
-    no_deploy: bool = typer.Option(False, "--no-deploy"),
+    deploy: bool = typer.Option(True, "--deploy/--no-deploy", help="描画した成果物を、schemaが定める配置先へ置くかどうか"),
 ) -> None:
     """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
 
     Args:
         path: 描画する対象のdocumentの置き場所
-        no_deploy: 描画した成果物を、schemaが定める配置先へ置かずに済ませるかどうか
+        deploy: 描画した成果物を、schemaが定める配置先へ置くかどうか
 
     Returns:
         なし。結果は標準出力へ書き出す。
@@ -255,7 +255,7 @@ def render(
     Raises:
         なし。失敗は終了コードで表す。
     """
-    _emit(RenderDocument(_docs(), _schemas()).run(path, deploy=not no_deploy))
+    _emit(RenderDocument(_docs(), _schemas()).run(path, deploy=deploy))
 
 @app.command("render-handoff-template", help="HandoffのDocument.jsonを固定HTMLテンプレートへ描画する（uc-render-handoff-template）。")
 def render_handoff_template(
@@ -341,7 +341,7 @@ def scaffold(
     discriminator: str = typer.Option(None, "--discriminator", help="key=value 形式（例: skillKind=engine）"),
     context_ref: str = typer.Option(None, "--contextRef", "--context-ref", help="所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合）"),
     subdomain_ref: str = typer.Option(None, "--subdomainRef", "--subdomain-ref", help="usecase が属する subdomain の documentId"),
-    path: str = typer.Option(None, "--path", help="fill / clear_field 対象の documentPath"),
+    document_path: str = typer.Option(None, "--documentPath", "--document-path", "--path", help="既にあるdocumentの置き場所。値の書き込み・欄の除去・版の移行の対象になる"),
     values: str = typer.Option(None, "--values", help="fill する値の JSON オブジェクト"),
     field_path: str = typer.Option(None, "--fieldPath", "--field-path", help="clear_field で削除する値フィールドのドットパス"),
 ) -> None:
@@ -354,7 +354,7 @@ def scaffold(
         discriminator: key=value 形式（例: skillKind=engine）
         context_ref: 所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合）
         subdomain_ref: usecase が属する subdomain の documentId
-        path: fill / clear_field 対象の documentPath
+        document_path: 既にあるdocumentの置き場所。値の書き込み・欄の除去・版の移行の対象になる
         values: fill する値の JSON オブジェクト
         field_path: clear_field で削除する値フィールドのドットパス
 
@@ -374,11 +374,11 @@ def scaffold(
         if subdomain_ref:
             params["subdomainRef"] = subdomain_ref
     elif operation == "fill":
-        params = {"documentPath": path, "values": json.loads(values) if values else {}}
+        params = {"documentPath": document_path, "values": json.loads(values) if values else {}}
     elif operation == "clear_field":
-        params = {"documentPath": path, "path": field_path}
+        params = {"documentPath": document_path, "fieldPath": field_path}
     elif operation == "migrate_schema":
-        params = {"documentPath": path, "schemaRef": schema_ref}
+        params = {"documentPath": document_path, "schemaRef": schema_ref}
     else:
         params = {}
     _emit(ScaffoldDocument(_docs(), _schemas()).run(operation, params))

@@ -97,7 +97,7 @@ def test_clear_field_is_idempotent():
     assert isinstance(create_result, Ok), create_result
     _engine().run("fill", {"documentPath": create_result.value["path"], "values": {"tags": ["context:test"]}})
 
-    params = {"documentPath": create_result.value["path"], "path": "tags"}
+    params = {"documentPath": create_result.value["path"], "fieldPath": "tags"}
     _engine().run("clear_field", params)
     after_first = Path(create_result.value["path"]).read_text(encoding="utf-8")
     result = _engine().run("clear_field", params)

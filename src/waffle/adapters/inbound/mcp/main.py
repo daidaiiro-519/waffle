@@ -285,7 +285,7 @@ def scaffold_document(
         discriminator: key=value 形式（例: skillKind=engine）
         contextRef: 所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合）
         subdomainRef: usecase が属する subdomain の documentId
-        documentPath: 値を書き込む対象の、既にあるdocumentの置き場所
+        documentPath: 既にあるdocumentの置き場所。値の書き込み・欄の除去・版の移行の対象になる
         values: fill する値の JSON オブジェクト
         fieldPath: clear_field で削除する値フィールドのドットパス
 
@@ -306,7 +306,7 @@ def scaffold_document(
     elif operation == "fill":
         params = {"documentPath": documentPath, "values": values or {}}
     elif operation == "clear_field":
-        params = {"documentPath": documentPath, "path": fieldPath}
+        params = {"documentPath": documentPath, "fieldPath": fieldPath}
     elif operation == "migrate_schema":
         params = {"documentPath": documentPath, "schemaRef": schemaRef}
     else:
@@ -633,11 +633,11 @@ def update_coding_preset(preset: str, fromDocumentId: str, blocks: list[str], dr
         preset, fromDocumentId, blocks, dryRun))
 
 @mcp.tool(description="実体パスがdocument.json（原本）からの投影かどうかを判定（uc-check-path-is-projection）。")
-def check_path_is_projection(realPath: str) -> dict:
+def check_path_is_projection(resolvedPath: str) -> dict:
     """受け取った引数をユースケースへ渡し、結果を辞書で返す。
 
     Args:
-        realPath: 判定対象の実体パス（symlink解決済み）
+        resolvedPath: 判定対象の実体パス（symlink解決済み）
 
     Returns:
         その操作の結果。
@@ -645,7 +645,7 @@ def check_path_is_projection(realPath: str) -> dict:
     Raises:
         なし。失敗は結果の中で表す。
     """
-    return _dict(CheckPathIsProjection(_schemas()).run(realPath))
+    return _dict(CheckPathIsProjection(_schemas()).run(resolvedPath))
 
 @mcp.tool(description="配列fillの前に対象pathへのqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。")
 def check_query_precedes_array_fill(targetPath: str, hasArrayValue: bool, queriedPaths: list[str]) -> dict:

@@ -51,10 +51,10 @@ Orchestrator（HarnessAgent）
 | `discriminator` | key=value 形式（例: skillKind=engine） |
 | `contextRef` | 所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合） |
 | `subdomainRef` | usecase が属する subdomain の documentId |
-| `path` | fill / clear_field 対象の documentPath |
+| `fieldPath` | clear_fieldで取り除く値フィールドまでのドットパス |
 | `values` | fill する値の JSON オブジェクト |
 | `fieldPath` | clear_field で削除する値フィールドのドットパス |
-| `documentPath` | 値を書き込む対象の、既にあるdocumentの置き場所 |
+| `documentPath` | 既にあるdocumentの置き場所。値の書き込み・欄の除去・版の移行の対象になる |
 
 ---
 
@@ -88,7 +88,7 @@ sequenceDiagram
 - If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。
 - If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。
 - If 分岐のある schema で discriminator の値が候補enumに存在しないとき、システムは INVALID_DISCRIMINATOR を返し候補を案内する shall。
-- When clear_fieldでdocumentPath・pathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。
+- When clear_fieldでdocumentPath・fieldPathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。
 - While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。
 - If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。
 - When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。

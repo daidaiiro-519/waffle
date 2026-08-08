@@ -405,7 +405,7 @@ def test_declared_value_field_is_cleared():
     )
     assert isinstance(fill_result, Ok), fill_result
 
-    clear_result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "path": "tags"})
+    clear_result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "fieldPath": "tags"})
     assert isinstance(clear_result, Ok), clear_result
     assert clear_result.value["cleared"] is True
 
@@ -426,7 +426,7 @@ def test_clearing_an_absent_field_changes_nothing():
     )
     assert isinstance(create_result, Ok), create_result
 
-    result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "path": "no_such_field"})
+    result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "fieldPath": "no_such_field"})
     assert isinstance(result, Ok), result
     assert result.value["cleared"] is False
 
@@ -444,7 +444,7 @@ def test_clearing_a_required_field_is_rejected():
     )
     assert isinstance(create_result, Ok), create_result
 
-    result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "path": "status"})
+    result = _engine().run("clear_field", {"documentPath": create_result.value["path"], "fieldPath": "status"})
     assert isinstance(result, Err), result
     assert result.details[0] == "REQUIRED_FIELD"
 
