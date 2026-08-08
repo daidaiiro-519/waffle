@@ -33,8 +33,23 @@ def add_block(
     schema: dict, block_name: str, block_def: dict, content_def_name: str, prop_name: str, required: bool = False
 ) -> dict:
     """$defsに新規ブロックを追加し、対応するContent defにプロパティ参照を追加する（冪等）。
-    required=Trueの場合、対象Content defのrequired配列にもprop_nameを追加する
-    （公開済みkindに対して行うと後方互換違反になりうる。呼び出し側がcheck_backward_compatibleで確認する）。"""
+
+    Args:
+        schema: 編集対象のschema。書き換えず、新しいdictを返す。
+        block_name: $defsへ追加するブロック定義の名前。
+        block_def: そのブロックの定義そのもの。
+        content_def_name: 参照を追加する先のContent defの名前。
+        prop_name: Content def上でそのブロックを指すプロパティ名。
+        required: 対象Content defのrequired配列にもprop_nameを追加するか。
+            公開済みkindに対して行うと後方互換違反になりうるので、
+            呼び出し側がcheck_backward_compatibleで確認する。
+
+    Returns:
+        ブロックを追加した新しいschema。既に存在すれば元のschemaをそのまま。
+
+    Raises:
+        なし。
+    """
     if block_name in schema["$defs"]:
         return schema
     new_schema = json.loads(dump(schema))
@@ -49,7 +64,20 @@ def add_block(
 
 def rename_block(schema: dict, old_short_name: str, new_short_name: str) -> dict:
     """$defsキー名・blockType const・プロパティキー名・required配列・$ref参照文字列を
-    一貫してリネームする（冪等。旧ブロックが既に無く新ブロックが既にあれば完了済みとみなす）。"""
+    一貫してリネームする（冪等）。
+
+    Args:
+        schema: 編集対象のschema。
+        old_short_name: リネーム元の短縮名（Block接尾辞を除いたもの）。
+        new_short_name: リネーム先の短縮名。
+
+    Returns:
+        リネーム後の新しいschema。旧ブロックが既に無く新ブロックが既にあれば、
+        完了済みとみなして元のschemaをそのまま。
+
+    Raises:
+        BlockNotFoundError: リネーム元・リネーム先のいずれも$defsに存在しない。
+    """
     old_block, new_block = f"{old_short_name}Block", f"{new_short_name}Block"
     if old_block not in schema["$defs"]:
         if new_block in schema["$defs"]:
@@ -91,7 +119,20 @@ def set_field(schema: dict, def_name: str | None, field_path: str, value) -> dic
     既存ブロックのフィールド単位で行うための汎用操作。パス中の数字は配列インデックスとして辿る
     （x-render配列内のcolumns等、リストを含む構造への部分編集に対応する）。def_nameにNoneを
     渡すと$defsではなくschemaのルート直下を対象にする（$idやproperties.schemaRef.const等、
-    $defsの外側にあるフィールドの書き換えに対応する）。"""
+    $defsの外側にあるフィールドの書き換えに対応する）。
+
+    Args:
+        schema: 編集対象のschema。
+        def_name: 対象の$defsエントリ名。Noneならschemaのルート直下を対象にする。
+        field_path: 書き換える値までのドットパス。数字は配列の位置として辿る。
+        value: 書き込む値。
+
+    Returns:
+        書き換え後の新しいschema。既に同じ値なら元のschemaをそのまま。
+
+    Raises:
+        BlockNotFoundError: def_nameが$defsに存在しない。
+    """
     if def_name is not None and def_name not in schema["$defs"]:
         raise BlockNotFoundError(f"{def_name} が $defs に存在しない")
     new_schema = json.loads(dump(schema))
@@ -113,7 +154,19 @@ def remove_field(schema: dict, def_name: str | None, field_path: str) -> dict:
     set_fieldにNoneを渡してもキーは残りnullが書かれるだけで、誤って足したフィールドを
     元に戻せない。スキーマにとって「値がnull」と「そのフィールドが無い」は別の状態であり、
     前者は契約に無いキーが残り続けることを意味する。def_nameにNoneを渡すと$defsではなく
-    schemaのルート直下を対象にする（set_fieldと同じ扱い）。"""
+    schemaのルート直下を対象にする（set_fieldと同じ扱い）。
+
+    Args:
+        schema: 編集対象のschema。
+        def_name: 対象の$defsエントリ名。Noneならschemaのルート直下を対象にする。
+        field_path: 取り除くフィールドまでのドットパス。
+
+    Returns:
+        取り除いた後の新しいschema。そのフィールドが既に無ければ元のschemaをそのまま。
+
+    Raises:
+        BlockNotFoundError: def_nameが$defsに存在しない。
+    """
     if def_name is not None and def_name not in schema["$defs"]:
         raise BlockNotFoundError(f"{def_name} が $defs に存在しない")
     new_schema = json.loads(dump(schema))
@@ -138,7 +191,18 @@ def create_version(base_schema: dict, edits: list[dict]) -> dict:
     """base_schemaを複製し、edits（defName/fieldPath/valueの列）をset_fieldと同じ経路で順に
     適用した新しいschemaを返す。新版はまだどのDocumentも参照していない未公開の状態のため、
     check_backward_compatibleの対象にしない（呼び出し元はこの結果に対して互換性チェックを
-    行わない）。"""
+    行わない）。
+
+    Args:
+        base_schema: 複製元のschema。
+        edits: defName / fieldPath / value を持つ編集の列。順に適用する。
+
+    Returns:
+        編集を適用した新しいschema。
+
+    Raises:
+        BlockNotFoundError: 編集が指すdefNameが$defsに存在しない。
+    """
     schema = json.loads(dump(base_schema))
     for edit in edits:
         schema = set_field(schema, edit.get("defName"), edit["fieldPath"], edit["value"])
@@ -149,7 +213,19 @@ def remove_block(schema: dict, content_def_name: str, prop_name: str) -> dict:
     """$defs[content_def_name]のpropertiesからprop_nameへの参照を外す（冪等）。
     $defs内のブロック定義自体は削除しない（他のcontent defから参照され続けている
     可能性があるため）。requiredに指定されているプロパティの除去は
-    check_backward_compatibleが後方互換違反として検出する（呼び出し側が確認する）。"""
+    check_backward_compatibleが後方互換違反として検出する（呼び出し側が確認する）。
+
+    Args:
+        schema: 編集対象のschema。
+        content_def_name: 参照を外す先のContent defの名前。
+        prop_name: 外すプロパティ名。
+
+    Returns:
+        参照を外した新しいschema。既に無ければ元のschemaをそのまま。
+
+    Raises:
+        BlockNotFoundError: content_def_nameが$defsに存在しない。
+    """
     if content_def_name not in schema["$defs"]:
         raise BlockNotFoundError(f"{content_def_name} が $defs に存在しない")
     if prop_name not in schema["$defs"][content_def_name].get("properties", {}):
@@ -162,7 +238,19 @@ def remove_block(schema: dict, content_def_name: str, prop_name: str) -> dict:
 def add_def(schema: dict, def_name: str, def_body: dict) -> dict:
     """$defsに、既存content defへの紐付けを持たない独立した新規エントリを追加する（冪等）。
     新しいkindのcontent def（例: RouterContent）をゼロから作るときに使う。
-    紐付け（ルート直下のkind分岐への組み込み）はadd_kind_branchが別途担う。"""
+    紐付け（ルート直下のkind分岐への組み込み）はadd_kind_branchが別途担う。
+
+    Args:
+        schema: 編集対象のschema。
+        def_name: 追加する$defsエントリの名前。
+        def_body: そのエントリの定義そのもの。
+
+    Returns:
+        追加後の新しいschema。既に同名のエントリがあれば元のschemaをそのまま。
+
+    Raises:
+        なし。
+    """
     if def_name in schema["$defs"]:
         return schema
     new_schema = json.loads(dump(schema))
@@ -194,7 +282,21 @@ def add_kind_branch(schema: dict, discriminator_field: str, kind_value: str, con
     新しいブランチを追加する（冪等）。既存がif/then/else形式（2値限定の二分岐）の場合は、
     elseブランチが暗黙に表していたkind値をenumから逆算した上でallOf形式（N分岐）に
     正規化してから新ブランチを追加する（enumがkind値の唯一の情報源になるよう、
-    暗黙のelseを残さない）。"""
+    暗黙のelseを残さない）。
+
+    Args:
+        schema: 編集対象のschema。
+        discriminator_field: kindを表すフィールド名。
+        kind_value: 追加するkindの値。
+        content_def_name: そのkindが指すContent defの名前。
+
+    Returns:
+        分岐を追加した新しいschema。既に同じkindがあれば元のschemaをそのまま。
+
+    Raises:
+        UnsupportedRootDispatchShapeError: ルート直下のkind分岐が、
+            if/then/else形式でもallOf形式でもない未知の形をしている。
+    """
     new_content_ref = f"#/$defs/{content_def_name}"
 
     if "allOf" in schema:
@@ -255,7 +357,22 @@ def add_kind_branch(schema: dict, discriminator_field: str, kind_value: str, con
 def set_kind_render_target(schema: dict, kind_value: str, path_vars: dict, path: str, deploy: list) -> dict:
     """x-render-target.pathVars/path/deploy（いずれもkind別dict形式）に、新しいkind値の
     エントリを追加する（冪等）。add_kind_branchが担うルート直下のkind分岐（content参照）とは
-    別に、render/deploy先を決めるx-render-target側にもkind別のエントリが必要なため。"""
+    別に、render/deploy先を決めるx-render-target側にもkind別のエントリが必要なため。
+
+    Args:
+        schema: 編集対象のschema。
+        kind_value: エントリを追加するkindの値。
+        path_vars: そのkindの描画に使うパス変数。
+        path: そのkindの描画先。
+        deploy: そのkindの配置先の一覧。
+
+    Returns:
+        エントリを追加した新しいschema。既に同じ内容なら元のschemaをそのまま。
+
+    Raises:
+        UnsupportedRenderTargetShapeError: x-render-target自体が無い、または
+            pathVars/path/deployがkind別のdict形式になっていない。
+    """
     target = schema.get("x-render-target")
     if not isinstance(target, dict):
         raise UnsupportedRenderTargetShapeError("x-render-targetが存在しない")
@@ -289,6 +406,16 @@ def check_backward_compatible(old_schema: dict, new_schema: dict) -> list[str]:
     表現し、配列全体を丸ごとreplaceすることはない。エントリのリネーム（rename_block）も
     要素単位のreplaceとして現れ、旧エントリ名を持つ既存instanceを壊しうる点でadd と
     同じ扱いが必要（remove単体は制約が緩む方向のため許容する）。
+
+    Args:
+        old_schema: 変更前のschema。
+        new_schema: 変更後のschema。
+
+    Returns:
+        後方互換を壊す変更の説明の一覧。壊すものが無ければ空配列。
+
+    Raises:
+        なし。
     """
     patch = jsonpatch.make_patch(old_schema, new_schema)
     violations: list[str] = []
@@ -307,5 +434,15 @@ def check_backward_compatible(old_schema: dict, new_schema: dict) -> list[str]:
 
 
 def dump(schema: dict) -> str:
-    """agg-schemaが定める整形契約。"""
+    """agg-schemaが定める整形でschemaを文字列にする。
+
+    Args:
+        schema: 文字列にするschema。
+
+    Returns:
+        2スペース字下げ・非ASCIIをそのまま・末尾に改行を持つJSON文字列。
+
+    Raises:
+        なし。
+    """
     return json.dumps(schema, indent=2, ensure_ascii=False) + "\n"

@@ -51,6 +51,15 @@ def declaration_line(scenario_name: str) -> str:
 
     名前を唯一の正とし、gherkin本文中の見出し行は信用しない。名前が二箇所に
     存在すると、片方だけ直されたときにどちらが正しいか機械では決まらない。
+
+    Args:
+        scenario_name: シナリオの名前。
+
+    Returns:
+        突き合わせのキーとなる宣言行。
+
+    Raises:
+        なし。
     """
     return f"Scenario: {scenario_name}"
 
@@ -60,6 +69,15 @@ def declaration_of(doc_text: str) -> str | None:
 
     先頭行である必要はない。自分の言葉での説明を前に書いてよい。
     飾り（三重引用符・ブロックコメントの記号等）は adapter が落とし済み。
+
+    Args:
+        doc_text: テストの文書コメントの本文。
+
+    Returns:
+        見つかった宣言行。無ければ None。
+
+    Raises:
+        なし。
     """
     for line in doc_text.splitlines():
         matched = _DECLARATION.match(line.strip())
@@ -73,6 +91,15 @@ def gherkin_lines(gherkin: str) -> list[str]:
 
     見出し行を除かない。見出し行は突き合わせのキーそのものであり、転記の
     対象から外すと、キーがテストの中に現れなくなる。
+
+    Args:
+        gherkin: シナリオのgherkin本文。
+
+    Returns:
+        前後の空白を落とした非空行の並び。
+
+    Raises:
+        なし。
     """
     return [line.strip() for line in gherkin.strip().splitlines() if line.strip()]
 
@@ -102,7 +129,18 @@ def relevant_scenario_block_keys(test_file_path: str, binding: dict) -> tuple[st
 def scenario_declarations(
     spec_doc: dict, block_keys: tuple[str, ...] = _SCENARIO_BLOCK_KEYS
 ) -> dict[str, dict]:
-    """spec document から 宣言行 -> {name, gherkin} のマップを作る。"""
+    """spec document から 宣言行 -> {name, gherkin} のマップを作る。
+
+    Args:
+        spec_doc: 対象のspec document。
+        block_keys: 対象とするシナリオブロックの種別。省略すると全種。
+
+    Returns:
+        宣言行をキーに、シナリオの名前とgherkin本文の行を持つマップ。
+
+    Raises:
+        なし。
+    """
     content = spec_doc.get("content", {})
     result: dict[str, dict] = {}
     for block_key in block_keys:
@@ -124,6 +162,16 @@ def spec_internal_mismatches(
     """spec自身の gherkin 先頭の宣言行が、シナリオの名前と食い違うものを返す。
 
     名前が二箇所に存在するため、どちらが正かを機械が決められる状態を保つ。
+
+    Args:
+        spec_doc: 対象のspec document。
+        block_keys: 対象とするシナリオブロックの種別。省略すると全種。
+
+    Returns:
+        食い違っているシナリオの説明の一覧。食い違いが無ければ空配列。
+
+    Raises:
+        なし。
     """
     content = spec_doc.get("content", {})
     mismatched: list[str] = []
@@ -142,7 +190,17 @@ def spec_internal_mismatches(
 
 
 def scenario_blocks(spec_doc: dict) -> dict[str, int]:
-    """この document が宣言しているシナリオブロックと、その件数を返す。"""
+    """この document が宣言しているシナリオブロックと、その件数を返す。
+
+    Args:
+        spec_doc: 対象のspec document。
+
+    Returns:
+        シナリオを持つブロックの種別をキーに、その件数を持つマップ。
+
+    Raises:
+        なし。
+    """
     content = spec_doc.get("content", {})
     return {
         key: len(content[key].get("scenarios", []))
@@ -152,11 +210,33 @@ def scenario_blocks(spec_doc: dict) -> dict[str, int]:
 
 
 def docstring_lines(docstring: str) -> list[str]:
+    """文書コメントを、前後の空白を落とした非空行の並びにする。
+
+    Args:
+        docstring: テストの文書コメントの本文。
+
+    Returns:
+        前後の空白を落とした非空行の並び。
+
+    Raises:
+        なし。
+    """
     return [ln.strip() for ln in docstring.splitlines() if ln.strip()]
 
 
 def contains_subsequence(haystack: list[str], needle: list[str]) -> bool:
-    """needle が haystack の中に連続した部分列として（順序通り）出現するか。"""
+    """needle が haystack の中に連続した部分列として（順序通り）出現するか。
+
+    Args:
+        haystack: 探される側の行の並び。
+        needle: 探す側の行の並び。
+
+    Returns:
+        連続した部分列として現れれば True。needle が空なら常に True。
+
+    Raises:
+        なし。
+    """
     if not needle:
         return True
     n = len(needle)
