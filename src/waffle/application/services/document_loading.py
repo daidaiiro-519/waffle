@@ -25,7 +25,19 @@ def _err(code: str, message: str) -> Err:
 
 
 def load_document(documents: DocumentRepository, path: str) -> Result[dict]:
-    """G6パス確認＋document読込＋エラーマッピング(INVALID_PATH/INVALID_JSON)。"""
+    """G6パス確認＋document読込＋エラーマッピング(INVALID_PATH/INVALID_JSON)。
+
+    Args:
+        documents: documentを読むためのDocumentRepository。
+        path: 読み込むdocumentのパス。
+
+    Returns:
+        読み込んだdocumentを持つOk、または失敗を表すErr。
+        失敗のコードは INVALID_PATH / INVALID_JSON のいずれか。
+
+    Raises:
+        なし。失敗は結果型で返す。
+    """
     if not is_confined(path):
         return _err("INVALID_PATH", f"パストラバーサルは許可されません: {path}")
     try:
@@ -37,7 +49,18 @@ def load_document(documents: DocumentRepository, path: str) -> Result[dict]:
 
 
 def load_schema(schemas: SchemaRepository, schema_ref: str) -> Result[dict]:
-    """schema解決＋エラーマッピング(INVALID_SCHEMA_REF)。"""
+    """schema解決＋エラーマッピング(INVALID_SCHEMA_REF)。
+
+    Args:
+        schemas: schemaを読むためのSchemaRepository。
+        schema_ref: 解決するschemaRef。
+
+    Returns:
+        解決したschemaを持つOk、または INVALID_SCHEMA_REF を表すErr。
+
+    Raises:
+        なし。失敗は結果型で返す。
+    """
     try:
         return Ok(schemas.load(schema_ref))
     except (FileNotFoundError, ModuleNotFoundError):

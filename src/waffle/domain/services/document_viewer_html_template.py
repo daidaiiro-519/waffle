@@ -82,7 +82,23 @@ def render_viewer_html(
     description: str,
     body_html: str,
 ) -> str:
-    """MD正本から変換した本文HTMLを、OKF frontmatter付きの自己完結HTMLへ組み立てる。"""
+    """MD正本から変換した本文HTMLを、OKF frontmatter付きの自己完結HTMLへ組み立てる。
+
+    Args:
+        title: 見出しに出す題名。
+        document_id: この文書の識別子。
+        schema_ref: この文書が従うschemaRef。
+        tags: この文書に付いたタグの並び。
+        updated_at: 最後に更新した時点。
+        description: 一覧に出す短い説明。
+        body_html: MD正本から変換済みの本文HTML。
+
+    Returns:
+        frontmatterを備えた自己完結のHTML文字列。
+
+    Raises:
+        なし。
+    """
     description_html = f'<p class="description">{_e(description)}</p>' if description else ""
     return f"""<!doctype html>
 <html>

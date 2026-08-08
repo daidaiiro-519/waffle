@@ -62,7 +62,17 @@ def _render_table(lines: list[str]) -> str:
 
 
 def convert(markdown_text: str) -> str:
-    """WaffleのMarkdown正本をHTML断片へ変換する。"""
+    """WaffleのMarkdown正本をHTML断片へ変換する。
+
+    Args:
+        markdown_text: 変換するMarkdownの本文。
+
+    Returns:
+        変換後のHTML断片。
+
+    Raises:
+        なし。
+    """
     lines = markdown_text.split("\n")
     out: list[str] = []
     i = 0

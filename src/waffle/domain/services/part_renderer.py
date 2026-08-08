@@ -22,13 +22,35 @@ _ARRAY_PART_KINDS = {"list", "table", "section", "sequence", "statediagram", "ar
 
 
 def render_parts(parts: list[dict], data: dict, level: int) -> str:
-    """parts(宣言の配列) を data(block の値) から Markdown に描画する。level=小見出しの基準レベル。"""
+    """parts(宣言の配列) を data(block の値) から Markdown に描画する。level=小見出しの基準レベル。
+
+    Args:
+        parts: 描画の宣言の並び。
+        data: 描画に使うブロックの値。
+        level: 小見出しの基準となる見出しの深さ。
+
+    Returns:
+        連結したMarkdown断片。
+
+    Raises:
+        MalformedContentError: 宣言が要求する形と値の形が合わない。
+    """
     return _join((render_part(p, data, level)) for p in parts)
 
 
 def render_body(content: dict, defs: dict) -> str:
     """document.contentの各ブロックをx-render-orderでソートし、見出し＋x-render本体を
-    連結してMarkdown本文にする（RenderDocument/RenderBlankTemplate共通）。"""
+
+    Args:
+        content: documentのcontent。
+        defs: schemaの$defs。描画の宣言を引くために使う。
+
+    Returns:
+        見出しと本体を連結したMarkdown本文。
+
+    Raises:
+        MalformedContentError: 宣言が要求する形と値の形が合わない。
+    """
     ordered = []
     for _key, block in content.items():
         bdef = defs.get(block["blockType"] + "Block", {})
@@ -60,7 +82,19 @@ def render_body(content: dict, defs: dict) -> str:
 
 
 def render_part(part: dict, data: dict, level: int) -> str:
-    """単一の RenderPart 宣言を Markdown 断片に描画する（対応する data が空なら空文字を返し部品ごと省略する）。"""
+    """単一の RenderPart 宣言を Markdown 断片に描画する（対応する data が空なら空文字を返し部品ごと省略する）。
+
+    Args:
+        part: 単一の描画の宣言。
+        data: 描画に使うブロックの値。
+        level: 小見出しの基準となる見出しの深さ。
+
+    Returns:
+        Markdown断片。対応する値が空なら空文字（部品ごと省略する）。
+
+    Raises:
+        MalformedContentError: 宣言が要求する形と値の形が合わない。
+    """
     kind = part["as"]
     # kvtable は from を取らず現在の data 自身を1行として描く
     src = data.get(part["from"]) if "from" in part else None

@@ -31,7 +31,18 @@ def _layer_containment_pairs(prev_nodes: list[dict], next_nodes: list[dict]) -> 
 
 
 def compute_layout(layers: list[dict], relationships: list[dict]) -> dict:
-    """layers/relationshipsから、ノードのx/y/width/height・包含矢印・関係矢印を計算する。"""
+    """layers/relationshipsから、ノードのx/y/width/height・包含矢印・関係矢印を計算する。
+
+    Args:
+        layers: 上から並ぶ層の宣言。各層は横に並ぶノードを持つ。
+        relationships: 隣接する層の包含では表せない、特別な関係の宣言。
+
+    Returns:
+        ノードの位置と大きさ、包含の矢印、関係の矢印を持つ描画用のデータ。
+
+    Raises:
+        なし。
+    """
     nodes: list[dict] = []
     layer_node_lists: list[list[dict]] = []
     layer_labels: list[dict] = []

@@ -68,6 +68,17 @@ def build_top_level_fill_template(schema: dict, protected: set, spec_kind: str |
     documentId・discriminator キー（agentKind/skillKind/specKind/templateKind 等）は、
     それ自体がdocumentの識別子・構造分岐を決める値であり、作成後の書き換えは別のdocumentへの
     変質を意味するため、protected として明示的に除外する。
+
+    Args:
+        schema: 走査する対象のschema。
+        protected: 書き換えを許さないキーの集合。
+        spec_kind: 分岐のあるschemaで対象とする種別。分岐が無ければNone。
+
+    Returns:
+        記入対象の道と指示を持つ項目の並び。
+
+    Raises:
+        なし。
     """
     entries: list = []
     required = set(schema.get("required", []))
@@ -80,7 +91,17 @@ def build_top_level_fill_template(schema: dict, protected: set, spec_kind: str |
 
 def build_const_paths(schema: dict, content: dict) -> dict:
     """constを持つ値フィールドのpath→現行schemaが宣言するconst値の対応を機械的に走査する。
-    fillのconst再同期（値が現行schemaの宣言値と完全一致する場合のみの書き込み許可）が使う。"""
+
+    Args:
+        schema: 走査する対象のschema。
+        content: 対象とするContent defの定義。
+
+    Returns:
+        値フィールドの道をキーに、schemaが宣言するconst値を持つ対応。
+
+    Raises:
+        なし。
+    """
     paths: dict = {}
     _walk_const(schema, content, "content", paths)
     return paths
@@ -178,7 +199,17 @@ def _placeholder_object(element: dict) -> dict:
 def overlay_placeholders(skeleton: dict, entries: list) -> dict:
     """skeletonのコピーに、entries(build_fill_template等の出力)が指すpathへ
     x-prompt-write本文を{{...}}プレースホルダーとして上書きする。elementを持つ配列は
-    要素1件分のプレースホルダーオブジェクトを含む配列にする。副作用なし（コピーを返す）。"""
+
+    Args:
+        skeleton: 上書きの元になる骨格。書き換えず、複製へ書き込む。
+        entries: 記入対象の道と指示を持つ項目の並び。
+
+    Returns:
+        指示をプレースホルダーとして埋めた新しい骨格。
+
+    Raises:
+        なし。
+    """
     out = copy.deepcopy(skeleton)
     for entry in entries:
         if "element" in entry:
@@ -246,6 +277,16 @@ def build_prompt_coverage(schema: dict, content_def_: dict) -> list[dict]:
     「記入対象」の定義は build_fill_template と同一にする——$ref は解決し、object は
     再帰し、const で固定された欄は除き、配列は要素の中まで降りる。数え方をここで
     作り直すと、走査が2箇所に分かれてやがて食い違う。
+
+    Args:
+        schema: 走査する対象のschema。
+        content_def_: 対象とするContent defの定義。
+
+    Returns:
+        記入対象の葉ごとに、その道と指示の有無を持つ項目の並び。
+
+    Raises:
+        なし。
     """
     leaves: list[dict] = []
     _walk_coverage(schema, content_def_, "content", leaves)

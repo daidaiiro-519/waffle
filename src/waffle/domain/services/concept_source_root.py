@@ -60,7 +60,17 @@ def resolve_source_root(layout: dict, concept_placement_items: list[dict], conce
 def package_name_from_reference(reference: str, coding_kind: str) -> str | None:
     """architectureRef等のdocumentId（例: 'architecture-waffle'）から、
     '{codingKind}-' 接頭辞（例: 'architecture-'）を剥がしてproduct名を復元する。
-    接頭辞が一致しなければNoneを返す。"""
+
+    Args:
+        reference: 参照のdocumentId（例: 'architecture-waffle'）。
+        coding_kind: 剥がす接頭辞にあたる種別（例: 'architecture'）。
+
+    Returns:
+        復元したproduct名。接頭辞が一致しなければ None。
+
+    Raises:
+        なし。
+    """
     prefix = f"{coding_kind}-"
     if not reference.startswith(prefix):
         return None
@@ -72,6 +82,16 @@ def declares_per_file(layout: dict, concept: str) -> bool:
 
     宣言があればファイル単位で探し、無ければ配置ディレクトリ単位で探す。
     どちらかを検査が独自に決めると、宣言と検査が別々に漂流する。
+
+    Args:
+        layout: architectureのlayoutブロック。
+        concept: 粒度を知りたい概念。
+
+    Returns:
+        「1ファイルに1つ」が宣言されていれば True。
+
+    Raises:
+        なし。
     """
     for item in layout.get("granularity") or []:
         if item.get("concept") == concept:

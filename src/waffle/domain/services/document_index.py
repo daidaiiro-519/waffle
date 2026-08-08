@@ -7,7 +7,18 @@ from __future__ import annotations
 
 
 def build_block_index(doc: dict, schema: dict) -> dict:
-    """blockType × schema.x-prompt-query から索引を読み取り時に動的算出する（保存はしない）。"""
+    """blockType × schema.x-prompt-query から索引を読み取り時に動的算出する（保存はしない）。
+
+    Args:
+        doc: 索引を作る対象のdocument。
+        schema: そのdocumentのschema。
+
+    Returns:
+        blockKeyをキーに、読み取りの指示と値の並びを持つ索引。
+
+    Raises:
+        なし。
+    """
     defs = schema.get("$defs", {})
     out: dict[str, dict] = {}
     for key, block in doc.get("content", {}).items():

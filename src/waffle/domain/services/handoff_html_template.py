@@ -364,6 +364,30 @@ def render_handoff_html(
 
     <head>には、document-graph Skill（Waffle非依存の外部Skill）が読む契約
     （id/type/title/description/tags を<meta>で表現）を満たすタグも出力する。
+
+    Args:
+        title: 見出しに出す題名。
+        document_id: この引き継ぎの識別子。
+        spec_ref: 引き継ぎ元のspecの識別子。
+        layout: 完成イメージの描画用データ。
+        layers: 完成イメージの層の宣言。
+        review_counts: レビュー状況の件数（参加したadvisorごとの観点数など）。
+        design_viewpoints: 設計観点の並び。
+        implementation_viewpoints: 実装観点の並び。
+        constraints: 既知の制約の並び。
+        handoff_kind: この引き継ぎの種別。
+        usage_examples: 利用例の並び。
+        description: 一覧に出す短い説明。
+        tags: この文書に付いたタグの並び。
+        expected_scope: 触る見込みの場所の並び。
+        findings: 各観点の解消状態の並び。
+        completion_image_confirmed_by: 完成イメージの確認の記録。
+
+    Returns:
+        固定テンプレートへ値を差し込んだ自己完結のHTML文字列。
+
+    Raises:
+        なし。
     """
     svg_width = layout["viewbox_width"]
     svg_height = layout["viewbox_height"]

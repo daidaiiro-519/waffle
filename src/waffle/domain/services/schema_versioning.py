@@ -6,7 +6,17 @@
 from __future__ import annotations
 
 def version_number(ref: str) -> int | None:
-    """'Foo/v2' や 'v2' からバージョン番号を取り出す。解釈できなければNone。"""
+    """'Foo/v2' や 'v2' からバージョン番号を取り出す。解釈できなければNone。
+
+    Args:
+        ref: 版を取り出す対象の文字列。
+
+    Returns:
+        版の番号。解釈できなければ None。
+
+    Raises:
+        なし。
+    """
     version = ref.rpartition("/")[2]
     if not version.startswith("v") or not version[1:].isdigit():
         return None

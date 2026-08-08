@@ -11,14 +11,34 @@ import re
 
 
 def resolve(template: str, **variables) -> str:
-    """テンプレート文字列に既知の変数を当てはめて具体パスを作る。"""
+    """テンプレート文字列に既知の変数を当てはめて具体パスを作る。
+
+    Args:
+        template: 変数を含むテンプレート文字列。
+
+    Returns:
+        既知の変数を当てはめた具体パス。
+
+    Raises:
+        なし。
+    """
     return template.format(**variables)
 
 
 def blank_template_path(schema_ref: str, discriminator: dict) -> str:
     """schemaRef（例: 'CodingSchema/v2'）とdiscriminator（例: {"codingKind": "coding-standard"}）
     から、render-blank-templateの書き出し先パスを機械的に導出する。discriminatorを
-    持たないschemaは版までのパスにする。"""
+
+    Args:
+        schema_ref: 対象のschemaRef（例: 'CodingSchema/v5'）。
+        discriminator: 種別を決める値。持たないschemaでは空でよい。
+
+    Returns:
+        雛形の書き出し先パス。discriminatorを持たないschemaは版までのパス。
+
+    Raises:
+        なし。
+    """
     name, _, version = schema_ref.partition("/")
     if discriminator:
         value = next(iter(discriminator.values()))
@@ -33,6 +53,16 @@ def reverse_parse(template: str, concrete_path: str) -> dict | None:
     ".../{documentId}/{documentId}.json"）は、2回目以降はバックリファレンスにして
     「同じ値が繰り返されている」ことを要求する（Python の正規表現は同名グループを
     重複定義できないため）。
+
+    Args:
+        template: 変数を含むテンプレート文字列。
+        concrete_path: 突き合わせる具体パス。
+
+    Returns:
+        変数名をキーに実際の値を持つ辞書。一致しなければ None。
+
+    Raises:
+        なし。
     """
     pattern = re.escape(template)
     var_names = re.findall(r"\\\{(\w+)\\\}", pattern)

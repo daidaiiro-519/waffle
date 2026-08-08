@@ -62,7 +62,17 @@ def layer_of(relative_path: str, layers: list[dict]) -> str | None:
 
 
 def is_relative_reference(reference: str) -> bool:
-    """その依存が、書いた場所からの相対で指されているか。"""
+    """その依存が、書いた場所からの相対で指されているか。
+
+    Args:
+        reference: 判定する依存の参照文字列。
+
+    Returns:
+        書いた場所からの相対で指されていれば True。
+
+    Raises:
+        なし。
+    """
     return reference.startswith(".")
 
 

@@ -8,7 +8,19 @@ from __future__ import annotations
 
 
 def next_status(schema: dict, current_status: str | None, command: str) -> str | None:
-    """schema の x-lifecycle に従い、command 実行後の status を返す。遷移が定義されていなければ None。"""
+    """schema の x-lifecycle に従い、command 実行後の status を返す。遷移が定義されていなければ None。
+
+    Args:
+        schema: 遷移を宣言しているschema。
+        current_status: いまのstatus。
+        command: 実行しようとしている操作。
+
+    Returns:
+        遷移後のstatus。その遷移が宣言されていなければ None。
+
+    Raises:
+        なし。
+    """
     lifecycle = schema.get("x-lifecycle")
     if lifecycle is None:
         return None
