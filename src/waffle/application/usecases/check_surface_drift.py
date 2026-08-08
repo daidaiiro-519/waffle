@@ -42,21 +42,22 @@ def _normalized(name: str) -> str:
     return _NOT_ALPHANUMERIC.sub("", name.lower())
 
 
-def _declared_inputs(doc: dict) -> list[str] | None:
-    """そのユースケースが宣言している入力の名前を取り出す。
+def _declared_inputs(doc: dict) -> dict[str, str] | None:
+    """そのユースケースが宣言している入力を取り出す。
 
     Args:
         doc: ユースケースのspec document。
 
     Returns:
-        宣言された入力の名前。1つも宣言していなければ None。
+        入力の名前から説明への対応。1つも宣言していなければ None。
 
     Raises:
         なし。
     """
     items = doc.get("content", {}).get("inputs", {}).get("items") or []
-    names = [item["name"] for item in items if item.get("name")]
-    return names or None
+    declared = {item["name"]: item.get("description", "")
+                for item in items if item.get("name")}
+    return declared or None
 
 
 class CheckSurfaceDrift:
@@ -101,6 +102,7 @@ class CheckSurfaceDrift:
 
         missing_input: list[dict] = []
         undeclared_input: list[dict] = []
+        description_mismatch: list[dict] = []
 
         for surface_path in surface_paths:
             if not is_confined(surface_path):
@@ -116,11 +118,22 @@ class CheckSurfaceDrift:
                     document_id, inputs = declared[reference]
                     taken = {_normalized(p): p for p in entry["params"]}
                     wanted = {_normalized(n): n for n in inputs}
+                    shown = {_normalized(k): v
+                             for k, v in (entry.get("paramDescriptions") or {}).items()}
                     for key, name in wanted.items():
                         if key not in taken:
                             missing_input.append({
                                 "documentId": document_id, "operationName": reference,
                                 "inputName": name, "surfacePath": surface_path,
+                            })
+                            # 名前が見つからないことは報告済み。同じ食い違いを
+                            # 説明の器でもう一度数えない
+                            continue
+                        if shown.get(key, "") != inputs[name]:
+                            description_mismatch.append({
+                                "documentId": document_id, "operationName": reference,
+                                "inputName": name, "declared": inputs[name],
+                                "shown": shown.get(key, ""), "surfacePath": surface_path,
                             })
                     for key, name in taken.items():
                         if key not in wanted:
@@ -132,4 +145,5 @@ class CheckSurfaceDrift:
         return Ok({
             "missing_input": missing_input,
             "undeclared_input": undeclared_input,
+            "description_mismatch": description_mismatch,
         })

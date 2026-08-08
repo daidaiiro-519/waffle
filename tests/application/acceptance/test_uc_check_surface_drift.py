@@ -13,15 +13,18 @@ def _engine() -> CheckSurfaceDrift:
 
 
 def _write_spec(root: Path, document_id: str, operation_name: str,
-                inputs: list[str] | None) -> None:
+                inputs: list[str] | None,
+                descriptions: dict[str, str] | None = None) -> None:
     content = {
         "usecase": {"blockType": "Usecase", "title": "名前",
                     "operationName": operation_name},
     }
     if inputs is not None:
+        described = descriptions or {}
         content["inputs"] = {
             "blockType": "Inputs", "title": "入力",
-            "items": [{"name": n, "description": f"{n}の説明"} for n in inputs],
+            "items": [{"name": n, "description": described.get(n, f"{n}の説明")}
+                      for n in inputs],
         }
     path = root / "usecase" / f"{document_id}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -136,9 +139,87 @@ def test_all_surfaces_agree_returns_empty(tmp_path):
     docs = tmp_path / "documents"
     _write_spec(docs, "uc-a", "DoSomething", ["path", "language"])
     surface = tmp_path / "cli.py"
-    _write_surface(surface, "def run_it(path: str, language: str) -> None:\n"
-                            "    DoSomething().run(path, language)\n")
+    _write_surface(surface,
+                   "def run_it(path: str, language: str) -> None:\n"
+                   '    """配線。\n\n'
+                   "    Args:\n"
+                   "        path: pathの説明\n"
+                   "        language: languageの説明\n"
+                   '    """\n'
+                   "    DoSomething().run(path, language)\n")
 
     result = _engine().run(str(docs), [str(surface)])
     assert isinstance(result, Ok), result
-    assert result.value == {"missing_input": [], "undeclared_input": []}
+    assert result.value == {"missing_input": [], "undeclared_input": [],
+                            "description_mismatch": []}
+
+
+def test_description_differs_from_declaration(tmp_path):
+    """
+    Scenario: 説明が宣言とずれていることを見つける
+    Given ある入力の説明を宣言しているユースケース仕様
+    And その入力に別の説明を見せている口
+    When 受け口の食い違いを調べる
+    Then その組が description_mismatch に現れる
+    And 宣言された説明と口が見せている説明の両方が報告に含まれている
+    """
+    docs = tmp_path / "documents"
+    _write_spec(docs, "uc-a", "DoSomething", ["path"], {"path": "対象の置き場所"})
+    surface = tmp_path / "cli.py"
+    _write_surface(surface,
+                   "import typer\n"
+                   'def run_it(path: str = typer.Option(..., "--path", help="古い説明")) -> None:\n'
+                   "    DoSomething().run(path)\n")
+
+    result = _engine().run(str(docs), [str(surface)])
+    assert isinstance(result, Ok), result
+    assert result.value["description_mismatch"] == [
+        {"documentId": "uc-a", "operationName": "DoSomething", "inputName": "path",
+         "declared": "対象の置き場所", "shown": "古い説明", "surfacePath": str(surface)}
+    ]
+
+
+def test_surface_shows_no_description(tmp_path):
+    """
+    Scenario: 口が説明を見せていないことを見つける
+    Given ある入力の説明を宣言しているユースケース仕様
+    And その入力に説明を持たない口
+    When 受け口の食い違いを調べる
+    Then その組が description_mismatch に現れる
+    """
+    docs = tmp_path / "documents"
+    _write_spec(docs, "uc-a", "DoSomething", ["path"], {"path": "対象の置き場所"})
+    surface = tmp_path / "cli.py"
+    _write_surface(surface, "def run_it(path: str) -> None:\n"
+                            "    DoSomething().run(path)\n")
+
+    result = _engine().run(str(docs), [str(surface)])
+    assert isinstance(result, Ok), result
+    assert result.value["description_mismatch"] == [
+        {"documentId": "uc-a", "operationName": "DoSomething", "inputName": "path",
+         "declared": "対象の置き場所", "shown": "", "surfacePath": str(surface)}
+    ]
+
+
+def test_matching_description_is_not_reported(tmp_path):
+    """
+    Scenario: 説明が一致していれば報告しない
+    Given ある入力の説明を宣言しているユースケース仕様
+    And 同じ説明を見せている口
+    When 受け口の食い違いを調べる
+    Then description_mismatch は空である
+    """
+    docs = tmp_path / "documents"
+    _write_spec(docs, "uc-a", "DoSomething", ["path"], {"path": "対象の置き場所"})
+    surface = tmp_path / "cli.py"
+    _write_surface(surface,
+                   "def run_it(path: str) -> None:\n"
+                   '    """配線。\n\n'
+                   "    Args:\n"
+                   "        path: 対象の置き場所\n"
+                   '    """\n'
+                   "    DoSomething().run(path)\n")
+
+    result = _engine().run(str(docs), [str(surface)])
+    assert isinstance(result, Ok), result
+    assert result.value["description_mismatch"] == []

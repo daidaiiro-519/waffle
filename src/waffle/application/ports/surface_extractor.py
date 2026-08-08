@@ -28,8 +28,9 @@ class SurfaceExtractor(Protocol):
             language: そのソースの言語。
 
         Returns:
-            入口ごとに {name, params, references} を持つ辞書の並び。
-            params は受け取る入力の名前、references はその入口が参照している名前。
+            入口ごとに {name, params, paramDescriptions, references} を持つ辞書の並び。
+            params は受け取る入力の名前、paramDescriptions は利用者へ見せている説明、
+            references はその入口が参照している名前。
 
         Raises:
             UnsupportedLanguage: 対応するadapterを持たない言語。
