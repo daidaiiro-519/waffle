@@ -405,6 +405,9 @@
         },
         "description": {
           "$ref": "#/$defs/SummaryBlock"
+        },
+        "inputs": {
+          "$ref": "#/$defs/InputsBlock"
         }
       }
     },
@@ -2447,6 +2450,65 @@
         "operationName": {
           "type": "string",
           "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に（例: CheckScenarioDrift）。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
+        }
+      }
+    },
+    "InputsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "この操作を外から呼ぶときに渡す値の一覧を読みます。受け口（CLI/MCP等）の引数はこの宣言の写しであり、名前と説明が食い違っていればドリフトです。実装の引数名をここへ合わせるのではなく、ここに合わせて実装を直します。受け口を持たない内部専用のユースケースでは空です。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "name",
+              "header": "入力",
+              "code": true
+            },
+            {
+              "field": "description",
+              "header": "説明"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Inputs"
+        },
+        "title": {
+          "type": "string",
+          "const": "入力"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "外から渡す値を列挙してください。受け口の引数と1対1に対応させること。受け口を持たない内部専用のユースケースでは空配列のままにする（自動的に描画から省略される）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "description"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "入力の識別子。実装の引数名と完全一致させる（受け口の綴りの流儀は規約のnamingが決めるので、ここには業務側の名前を1つだけ書く）。"
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "その値が何であるかを業務語彙で一文で。利用者が読む説明にそのまま使われるので、実装の都合や型の話を書かない。"
+              }
+            }
+          }
         }
       }
     }
