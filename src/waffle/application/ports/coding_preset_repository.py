@@ -9,6 +9,7 @@ from typing import Protocol
 
 
 class CodingPresetRepository(Protocol):
+    """規約のプリセットを読み書きする。"""
     def load(self, preset_name: str) -> dict:
         """preset_name（例: python-hexagonal）に対応する、tech-stack/architecture/
         coding-standard/test-standardの4kind分のcontentを持つプリセットをdictで返す。

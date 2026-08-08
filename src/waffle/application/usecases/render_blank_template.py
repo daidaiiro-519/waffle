@@ -70,11 +70,24 @@ def _render_frontmatter_placeholders(schema: dict, spec_kind: str | None, prompt
 
 
 class RenderBlankTemplate:
+    """値を埋めていない雛形を、schemaから書き出す。"""
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
         self._schemas = schemas
 
     def run(self, schema_ref: str, discriminator: dict | None = None) -> Result[dict]:
+        """値を埋めていない雛形を、schemaから書き出す。
+
+        Args:
+            schema_ref: 対象とするschemaを指す参照。
+            discriminator: 分岐のあるschemaで、どの種別かを決める値。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         schema_result = load_schema(self._schemas, schema_ref)
         if isinstance(schema_result, Err):
             return schema_result

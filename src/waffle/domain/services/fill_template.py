@@ -8,6 +8,18 @@ import copy
 
 
 def resolve_ref(schema: dict, ref: str):
+    """参照を辿って、その先の定義を返す。
+
+    Args:
+        schema: 辿る対象のschema。
+        ref: 辿る参照。
+
+    Returns:
+        参照先の定義。
+
+    Raises:
+        なし。
+    """
     node = schema
     for part in ref.lstrip("#/").split("/"):
         node = node[part]
@@ -22,6 +34,18 @@ def _matches(if_clause: dict, discriminator: dict) -> bool:
 
 
 def content_def(schema: dict, discriminator: dict) -> dict:
+    """その種別に対応するContent defを選ぶ。
+
+    Args:
+        schema: 選ぶ元のschema。
+        discriminator: どの種別かを決める値。
+
+    Returns:
+        その種別のContent def。
+
+    Raises:
+        なし。
+    """
     if "if" in schema:
         branch = schema.get("then", {}) if _matches(schema["if"], discriminator) else schema.get("else", {})
         ref = branch.get("properties", {}).get("content", {}).get("$ref")
@@ -57,6 +81,19 @@ def _select_prompt(value, spec_kind: str | None):
 
 
 def build_fill_template(schema: dict, content: dict, spec_kind: str | None = None) -> list:
+    """記入する対象の道と指示を、schemaから組み立てる。
+
+    Args:
+        schema: 走査する対象のschema。
+        content: 対象とするContent def。
+        spec_kind: 分岐のあるschemaで対象とする種別。分岐が無ければ None。
+
+    Returns:
+        記入対象の道と指示を持つ項目の並び。
+
+    Raises:
+        なし。
+    """
     entries: list = []
     _walk_fill(schema, content, "content", entries, is_required=True, spec_kind=spec_kind)
     return entries
@@ -108,6 +145,18 @@ def build_const_paths(schema: dict, content: dict) -> dict:
 
 
 def build_top_level_const_paths(schema: dict, protected: set) -> dict:
+    """contentの外側にある、値の決まった欄を集める。
+
+    Args:
+        schema: 走査する対象のschema。
+        protected: 書き換えを許さないキーの集合。
+
+    Returns:
+        欄の道をキーに、schemaが宣言する値を持つ対応。
+
+    Raises:
+        なし。
+    """
     paths: dict = {}
     for key, prop in schema.get("properties", {}).items():
         if key == "content" or key in protected:
@@ -128,10 +177,34 @@ def _walk_const(schema, d, path, paths):
 
 
 def discriminator_candidates(schema: dict, key: str) -> list:
+    """その分岐が取りうる値を並べる。
+
+    Args:
+        schema: 走査する対象のschema。
+        key: 分岐を決める欄の名前。
+
+    Returns:
+        取りうる値の一覧。
+
+    Raises:
+        なし。
+    """
     return schema.get("properties", {}).get(key, {}).get("enum", [])
 
 
 def skeleton_from_def(schema: dict, d: dict):
+    """1つの定義から、値を埋めていない骨格を組み立てる。
+
+    Args:
+        schema: 組み立ての元になるschema。
+        d: 骨格を作る対象の定義。
+
+    Returns:
+        値を埋めていない骨格。
+
+    Raises:
+        なし。
+    """
     if "$ref" in d:
         return skeleton_from_def(schema, resolve_ref(schema, d["$ref"]))
     if "const" in d:
@@ -153,6 +226,22 @@ def skeleton_from_def(schema: dict, d: dict):
 
 
 def build_skeleton(schema, document_id, disc_key, discriminator, content_def, extra_refs) -> dict:
+    """documentの骨格を、schemaから丸ごと組み立てる。
+
+    Args:
+        schema: 組み立ての元になるschema。
+        document_id: 作るdocumentの識別子。
+        disc_key: 分岐を決める欄の名前。分岐が無ければ None。
+        discriminator: どの種別かを決める値。
+        content_def: その種別のContent def。
+        extra_refs: 道の組み立てに使う変数。
+
+    Returns:
+        値を埋めていない骨格。
+
+    Raises:
+        なし。
+    """
     props = schema.get("properties", {})
     out: dict = {}
     for name in schema.get("required", []):

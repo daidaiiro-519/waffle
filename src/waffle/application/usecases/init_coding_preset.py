@@ -27,11 +27,24 @@ def _err(code: str, message: str) -> Err:
 
 
 class InitCodingPreset:
+    """プリセットから、プロダクト固有の規約一式を作る。"""
     def __init__(self, documents: DocumentRepository, presets: CodingPresetRepository) -> None:
         self._documents = documents
         self._presets = presets
 
     def run(self, preset_name: str, product_name: str) -> Result[dict]:
+        """プリセットから、プロダクト固有の規約一式を作る。
+
+        Args:
+            preset_name: 対象とするプリセットの名前。
+            product_name: 新しく作るプロダクトの名前。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         if not preset_name or not product_name:
             return _err("MISSING_PARAM", "preset_name, product_name が必要です")
         try:

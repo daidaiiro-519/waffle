@@ -25,6 +25,7 @@ class UnsupportedLanguage(Exception):
 
 
 class TestFunctionExtractor(Protocol):
+    """テストの名前と文書コメントを取り出す。"""
     def test_functions(self, source: str, language: str) -> list[dict]:
         """sourceに含まれるテストを、出現順で返す。
 

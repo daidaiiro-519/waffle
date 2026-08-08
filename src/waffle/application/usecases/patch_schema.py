@@ -19,12 +19,25 @@ def _err(code: str, message: str) -> Err:
 
 
 class PatchSchema:
+    """schemaの定義そのものを、構造を保ったまま編集する。"""
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository, validator: Validator) -> None:
         self._documents = documents
         self._schemas = schemas
         self._validator = validator
 
     def run(self, operation: str, params: dict) -> Result[dict]:
+        """schemaの定義そのものを、構造を保ったまま編集する。
+
+        Args:
+            operation: 行う操作の種類。
+            params: その操作に固有の引数。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         if not isinstance(params, dict):
             # 形の違う引数のまま進むと、参照の時点で例外が境界の外へ漏れる。
             # application 境界は結果型で成否を返す規約なので、operation を見る前に弾く。

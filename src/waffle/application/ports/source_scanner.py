@@ -12,6 +12,7 @@ class UnsupportedKind(Exception):
 
 
 class SourceScanner(Protocol):
+    """ソースの要素を、docstringごと構造として取り出す。"""
     def scan(self, source: str, path: str, kind: str) -> list[dict]:
         """source(ソーステキスト)を kind の規約に従って走査し、公開要素ごとの
         構造化抽出結果({path, kind, elementKind, name, hasDocstring, signatureParams,

@@ -5,6 +5,7 @@ from typing import Protocol
 
 
 class DocumentRepository(Protocol):
+    """documentとその周りのファイルを読み書きする。"""
     def load(self, path: str) -> dict:
         """path の document.json を dict で返す。"""
         ...

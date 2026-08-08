@@ -46,6 +46,7 @@ def _language_of(path: str, binding: dict) -> str | None:
 
 
 class CheckScenarioDrift:
+    """シナリオの宣言と、テストの文書コメントの食い違いを見つける。"""
     def __init__(self, documents: DocumentRepository, extractor: TestFunctionExtractor) -> None:
         self._documents = documents
         self._extractor = extractor
@@ -58,6 +59,21 @@ class CheckScenarioDrift:
         tests_root: str | None = None,
         binding: dict | None = None,
     ) -> Result[dict]:
+        """シナリオの宣言と、テストの文書コメントの食い違いを見つける。
+
+        Args:
+            spec_path: 対象とする仕様の置き場所。
+            test_file_path: その仕様に対応するテストの置き場所。
+            documents_root: 突き合わせの対象とする仕様の置き場所。
+            tests_root: テストの配置ルート。全体を突き合わせるときに使う。
+            binding: シナリオの種別とテストの配置の対応を宣言している規約。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         binding = binding or {}
         pair = spec_path is not None and test_file_path is not None
         sweep = documents_root is not None and tests_root is not None

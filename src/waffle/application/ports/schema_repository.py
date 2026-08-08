@@ -5,6 +5,7 @@ from typing import Protocol
 
 
 class SchemaRepository(Protocol):
+    """schemaを解決し、その版を数え上げる。"""
     def load(self, schema_ref: str) -> dict:
         """schemaRef（例: 'CodingSchema/v2'）から schema(dict) を返す。"""
         ...

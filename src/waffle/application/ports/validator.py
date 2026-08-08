@@ -5,6 +5,7 @@ from typing import Protocol
 
 
 class Validator(Protocol):
+    """documentがschemaに適合しているかを判じる。"""
     def validate(self, document: dict, schema: dict) -> list[str]:
         """schema 適合を検証し、違反メッセージのリストを返す（空リスト=PASS）。"""
         ...

@@ -20,11 +20,24 @@ def _err(code: str, message: str) -> Err:
 
 
 class RenderDocumentViewer:
+    """MD正本を、外部依存の無いHTMLへ変換する。"""
     def __init__(self, documents: DocumentRepository, render_document: RenderDocument) -> None:
         self._documents = documents
         self._render_document = render_document
 
     def run(self, document_path: str, output_path: str) -> Result[dict]:
+        """MD正本を、外部依存の無いHTMLへ変換する。
+
+        Args:
+            document_path: 対象とするdocumentの置き場所。
+            output_path: 成果物を書き出す先。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         rendered = self._render_document.run(document_path, deploy=False)
         if isinstance(rendered, Err):
             return _err("RENDER_FAILED", f"MDへの描画に失敗しました: {rendered.message}")

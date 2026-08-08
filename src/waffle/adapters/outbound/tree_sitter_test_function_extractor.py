@@ -250,6 +250,18 @@ class TreeSitterTestFunctionExtractor:
     """tree-sitter でテストの名前と文書コメントを取り出す。"""
 
     def test_functions(self, source: str, language: str) -> list[dict]:
+        """テストの名前と文書コメントを取り出す。
+
+        Args:
+            source: 読む対象のテストのソース。
+            language: そのソースの言語。
+
+        Returns:
+            テストごとの名前と文書コメントの一覧。
+
+        Raises:
+            なし。
+        """
         if language not in _LANGUAGE_MODULES:
             raise UnsupportedLanguage(language)
 

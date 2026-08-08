@@ -21,10 +21,22 @@ _NOT_PROJECTION = {"isProjection": False, "documentKind": None, "documentId": No
 
 
 class CheckPathIsProjection:
+    """その実体パスが、documentからの投影かどうかを判じる。"""
     def __init__(self, schemas: SchemaRepository) -> None:
         self._schemas = schemas
 
     def run(self, resolved_path: str) -> Result[dict]:
+        """その実体パスが、documentからの投影かどうかを判じる。
+
+        Args:
+            resolved_path: 判定対象の実体パス（symlinkを解決した後のもの）。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         found = deploy_target_resolution.find_projection(
             deploy_target_resolution.canonical_templates(self._load_all()), resolved_path,
         )

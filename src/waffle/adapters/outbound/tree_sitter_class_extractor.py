@@ -133,7 +133,20 @@ def _language(language: str) -> Language:
 
 
 class TreeSitterClassExtractor:
+    """クラスの名前と欄の取り出しを、言語を問わない構文解析で行う。"""
     def class_names(self, source: str, language: str) -> list[str]:
+        """ソースに定義されているクラスの名前を並べる。
+
+        Args:
+            source: 読む対象のソース。
+            language: そのソースの言語。
+
+        Returns:
+            クラスの名前の一覧。
+
+        Raises:
+            なし。
+        """
         lang = _language(language)
         tree = Parser(lang).parse(source.encode("utf-8"))
         query = Query(lang, _CLASS_QUERIES[language])
@@ -142,6 +155,19 @@ class TreeSitterClassExtractor:
         return [source_bytes[n.start_byte:n.end_byte].decode("utf-8") for n in captures.get("name", [])]
 
     def field_names(self, source: str, language: str, class_name: str) -> list[str]:
+        """1つのクラスが持つ欄の名前を並べる。
+
+        Args:
+            source: 読む対象のソース。
+            language: そのソースの言語。
+            class_name: 欄を数える対象のクラスの名前。
+
+        Returns:
+            欄の名前の一覧。
+
+        Raises:
+            なし。
+        """
         lang = _language(language)
         tree = Parser(lang).parse(source.encode("utf-8"))
         query = Query(lang, _FIELD_QUERIES[language])

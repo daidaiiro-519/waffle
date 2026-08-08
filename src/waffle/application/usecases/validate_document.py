@@ -16,6 +16,7 @@ def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 class ValidateDocument:
+    """documentがschemaに適合しているかを確かめる。"""
     def __init__(
         self,
         documents: DocumentRepository,
@@ -27,6 +28,17 @@ class ValidateDocument:
         self._validator = validator
 
     def run(self, document_path: str) -> Result[dict]:
+        """documentがschemaに適合しているかを確かめる。
+
+        Args:
+            document_path: 対象とするdocumentの置き場所。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         loaded = load_document(self._documents, document_path)
         if isinstance(loaded, Err):
             return loaded

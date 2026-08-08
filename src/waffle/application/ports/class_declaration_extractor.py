@@ -12,6 +12,7 @@ from typing import Protocol
 
 
 class ClassDeclarationExtractor(Protocol):
+    """ソースから、クラスの名前とその欄を取り出す。"""
     def class_names(self, source: str, language: str) -> list[str]:
         """sourceに定義されている全クラス名を、出現順で返す。"""
         ...

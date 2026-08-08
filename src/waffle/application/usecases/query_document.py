@@ -57,11 +57,25 @@ _PROMPT_INDEX_SCAN = "各ブロックの索引です。各要素のprompt（valu
 _PROMPT_RESOLVE_REF = "参照先Documentのpathです。中身は取得されていません。必要ならこのpathに対してquery_path等を別途実行してください。"
 
 class QueryDocument:
+    """1つのdocumentの中身を、意味のある単位で読み取る。"""
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
         self._schemas = schemas
 
     def run(self, operation: str, path: str, params: dict | None = None) -> Result[dict]:
+        """1つのdocumentの中身を、意味のある単位で読み取る。
+
+        Args:
+            operation: 行う操作の種類。
+            path: 対象の置き場所。
+            params: その操作に固有の引数。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         params = params or {}
         if operation not in _REQUIRED:
             return _err("INVALID_OPERATION", f"未知の operation: {operation}")

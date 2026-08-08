@@ -55,12 +55,27 @@ def _write_at(content: dict, selection: str, value) -> None:
 
 
 class UpdateCodingPreset:
+    """実際のプロダクトで確かめた規約を、プリセットへ戻す。"""
     def __init__(self, documents: DocumentRepository, presets: CodingPresetRepository) -> None:
         self._documents = documents
         self._presets = presets
 
     def run(self, preset_name: str | None = None, from_document_id: str | None = None,
             blocks: list[str] | None = None, dry_run: bool = False) -> Result[dict]:
+        """実際のプロダクトで確かめた規約を、プリセットへ戻す。
+
+        Args:
+            preset_name: 対象とするプリセットの名前。
+            from_document_id: プリセットへ戻す元となる、実際のプロダクトの規約の識別子。
+            blocks: 戻す部分。ブロックの中の欄まで指定できる。
+            dry_run: 実際には書き込まず、何が変わるかだけを返すかどうか。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         blocks = blocks or []
         if not preset_name or not from_document_id or not blocks:
             return _err(

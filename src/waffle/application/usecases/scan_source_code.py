@@ -16,11 +16,24 @@ def _err(code: str, message: str) -> Err:
 
 
 class ScanSourceCode:
+    """対象のコードから、docstringを構造として取り出す。"""
     def __init__(self, documents: DocumentRepository, scanner: SourceScanner) -> None:
         self._documents = documents
         self._scanner = scanner
 
     def run(self, target_path: str, kind: str) -> Result[list[dict]]:
+        """対象のコードから、docstringを構造として取り出す。
+
+        Args:
+            target_path: 走査する対象の置き場所。
+            kind: docstringの流儀。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         if not is_confined(target_path):
             return _err("INVALID_PATH", f"パストラバーサルは許可されません: {target_path}")
         try:

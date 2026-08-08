@@ -21,10 +21,24 @@ def _err(code: str, message: str) -> Err:
 
 
 class CheckOperationDrift:
+    """操作の宣言と、実装の分岐の食い違いを見つける。"""
     def __init__(self, documents: DocumentRepository) -> None:
         self._documents = documents
 
     def run(self, documents_root: str, src_root: str, naming: dict) -> Result[dict]:
+        """操作の宣言と、実装の分岐の食い違いを見つける。
+
+        Args:
+            documents_root: 突き合わせの対象とする仕様の置き場所。
+            src_root: 実装を探す配置ルート。
+            naming: 名前の綴りの流儀を宣言している規約の naming ブロック。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:

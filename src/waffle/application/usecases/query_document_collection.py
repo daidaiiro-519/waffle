@@ -30,11 +30,25 @@ _PROMPT_FILTER = "対象ディレクトリ配下でkey/valueに一致したDocum
 _PROMPT_INDEX_SCAN_DOCUMENTS = "ディレクトリ配下の各Documentの索引です。各Documentのblocksの各要素にそのブロックの読み方の指針（prompt）が入っています。"
 
 class QueryDocumentCollection:
+    """複数のdocumentを横断して読み取る。"""
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
         self._schemas = schemas
 
     def run(self, operation: str, directory: str, params: dict | None = None) -> Result[dict]:
+        """複数のdocumentを横断して読み取る。
+
+        Args:
+            operation: 行う操作の種類。
+            directory: 横断して読む対象が置かれているディレクトリ。
+            params: その操作に固有の引数。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         params = params or {}
         if operation not in _REQUIRED:
             return _err("INVALID_OPERATION", f"未知の operation: {operation}")

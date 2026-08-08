@@ -16,10 +16,23 @@ def _split(members: list[str]) -> list[str]:
 
 
 class CheckSpecIntegrity:
+    """仕様どうしの参照が、互いに辻褄が合っているかを確かめる。"""
     def __init__(self, documents: DocumentRepository) -> None:
         self._documents = documents
 
     def run(self, bc_path: str, documents_root: str) -> Result[dict]:
+        """仕様どうしの参照が、互いに辻褄が合っているかを確かめる。
+
+        Args:
+            bc_path: 境界づけられたコンテキストの仕様の置き場所。
+            documents_root: 突き合わせの対象とする仕様の置き場所。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         loaded = load_document(self._documents, bc_path)
         if isinstance(loaded, Err):
             return loaded

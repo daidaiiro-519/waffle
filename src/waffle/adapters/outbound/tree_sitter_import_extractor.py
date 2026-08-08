@@ -74,7 +74,20 @@ def _language(name: str) -> Language:
 
 
 class TreeSitterImportExtractor:
+    """依存の取り出しを、言語を問わない構文解析で行う。"""
     def imports(self, source: str, language: str) -> list[str]:
+        """ソースが宣言している依存を並べる。
+
+        Args:
+            source: 読む対象のソース。
+            language: そのソースの言語。
+
+        Returns:
+            依存先の一覧。
+
+        Raises:
+            なし。
+        """
         lang = _language(language)
         source_bytes = source.encode("utf-8")
         tree = Parser(lang).parse(source_bytes)

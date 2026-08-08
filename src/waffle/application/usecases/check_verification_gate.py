@@ -22,6 +22,7 @@ def _err(code: str, message: str) -> Err:
 
 
 class CheckVerificationGate:
+    """実装から検証の段階へ進んでよいかを判じる。"""
     def __init__(self, documents: DocumentRepository,
                  extractor: TestFunctionExtractor) -> None:
         self._documents = documents
@@ -29,6 +30,20 @@ class CheckVerificationGate:
 
     def run(self, spec_path: str, test_file_path: str, test_results_path: str,
             binding: dict | None = None) -> Result[dict]:
+        """実装から検証の段階へ進んでよいかを判じる。
+
+        Args:
+            spec_path: 対象とする仕様の置き場所。
+            test_file_path: その仕様に対応するテストの置き場所。
+            test_results_path: テストの実行結果の置き場所。
+            binding: シナリオの種別とテストの配置の対応を宣言している規約。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         drift_result = self._scenario_drift.run(
             spec_path=spec_path, test_file_path=test_file_path, binding=binding)
         if isinstance(drift_result, Err):

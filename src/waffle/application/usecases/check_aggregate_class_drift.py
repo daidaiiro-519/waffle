@@ -49,6 +49,7 @@ def _declared_value_object_attributes(doc: dict, vo_name: str, case: str) -> lis
 
 
 class CheckAggregateClassDrift:
+    """集約の宣言と、その実装の食い違いを見つける。"""
     def __init__(self, documents: DocumentRepository, extractor: ClassDeclarationExtractor) -> None:
         self._documents = documents
         self._extractor = extractor
@@ -79,6 +80,22 @@ class CheckAggregateClassDrift:
     def run(self, documents_root: str, src_root: str, naming: dict,
             language: str = "python", value_object_root: str | None = None,
             root_search_unit: SearchUnit | None = None) -> Result[dict]:
+        """集約の宣言と、その実装の食い違いを見つける。
+
+        Args:
+            documents_root: 突き合わせの対象とする仕様の置き場所。
+            src_root: 実装を探す配置ルート。
+            naming: 名前の綴りの流儀を宣言している規約の naming ブロック。
+            language: 実装が書かれている言語。
+            value_object_root: 値オブジェクトを探す配置ディレクトリ。ファイル単位で探すなら None。
+            root_search_unit: 集約ルート・操作をどの単位で探すか。渡さなければファイル単位。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:

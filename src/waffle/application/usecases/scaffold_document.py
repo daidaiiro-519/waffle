@@ -29,11 +29,24 @@ def _err(code: str, message: str) -> Err:
     return Err(message, [code])
 
 class ScaffoldDocument:
+    """documentの骨格を作り、宣言された欄へ値を書き込む。"""
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
         self._schemas = schemas
 
     def run(self, operation: str, params: dict | None = None) -> Result[dict]:
+        """documentの骨格を作り、宣言された欄へ値を書き込む。
+
+        Args:
+            operation: 行う操作の種類。
+            params: その操作に固有の引数。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         params = params or {}
         if operation == "create":
             return self._create(params)

@@ -18,11 +18,24 @@ def _err(code: str, message: str) -> Err:
 
 
 class LintDocstring:
+    """docstringが規約どおりの形をしているかを確かめる。"""
     def __init__(self, scan_source_code: ScanSourceCode, linter: DocstringLinter) -> None:
         self._scan_source_code = scan_source_code
         self._linter = linter
 
     def run(self, target_path: str, kind: str) -> Result[list[dict]]:
+        """docstringが規約どおりの形をしているかを確かめる。
+
+        Args:
+            target_path: 走査する対象の置き場所。
+            kind: docstringの流儀。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         scan_result = self._scan_source_code.run(target_path, kind)
         if isinstance(scan_result, Err):
             return scan_result

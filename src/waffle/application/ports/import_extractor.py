@@ -15,6 +15,7 @@ class UnsupportedLanguage(Exception):
 
 
 class ImportExtractor(Protocol):
+    """ソースが宣言している依存を取り出す。"""
     def imports(self, source: str, language: str) -> list[str]:
         """source が宣言している依存の参照を、出現順で返す。
 

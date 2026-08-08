@@ -63,6 +63,7 @@ def _config_declares(tool_mappings: dict, document_type: str | None) -> bool:
 
 
 class RenderDocument:
+    """documentを成果物へ描画し、宣言された配置先へ置く。"""
     def __init__(
         self,
         documents: DocumentRepository,
@@ -73,6 +74,18 @@ class RenderDocument:
         self._schema_cache: list[dict] | None = None
 
     def run(self, document_path: str, deploy: bool = True) -> Result[dict]:
+        """documentを成果物へ描画し、宣言された配置先へ置く。
+
+        Args:
+            document_path: 対象とするdocumentの置き場所。
+            deploy: 描画した成果物を、schemaが定める配置先へ置くかどうか。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         loaded = load_document(self._documents, document_path)
         if isinstance(loaded, Err):
             return loaded

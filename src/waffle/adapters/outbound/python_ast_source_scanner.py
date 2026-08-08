@@ -116,7 +116,21 @@ def _element(path: str, kind: str, element_kind: str, name: str, doc: str | None
 
 
 class PythonAstSourceScanner(SourceScanner):
+    """ソースからの要素の取り出しを、Pythonの構文木で行う。"""
     def scan(self, source: str, path: str, kind: str) -> list[dict]:
+        """1つのソースから、公開されている要素を取り出す。
+
+        Args:
+            source: 読む対象のソース。
+            path: そのソースの置き場所。
+            kind: docstringの流儀。
+
+        Returns:
+            要素ごとの構造の一覧。
+
+        Raises:
+            UnsupportedKind: その流儀に対応していない。
+        """
         if kind != "google":
             raise UnsupportedKind(kind)
 

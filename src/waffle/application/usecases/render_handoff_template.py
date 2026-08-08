@@ -30,10 +30,23 @@ def _count_by_advisor(design_viewpoints: list[dict], implementation_viewpoints: 
 
 
 class RenderHandoffTemplate:
+    """引き継ぎ文書を、固定の型のHTMLへ描画する。"""
     def __init__(self, documents: DocumentRepository) -> None:
         self._documents = documents
 
     def run(self, document_path: str, output_path: str) -> Result[dict]:
+        """引き継ぎ文書を、固定の型のHTMLへ描画する。
+
+        Args:
+            document_path: 対象とするdocumentの置き場所。
+            output_path: 成果物を書き出す先。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         loaded = load_document(self._documents, document_path)
         if isinstance(loaded, Err):
             return loaded

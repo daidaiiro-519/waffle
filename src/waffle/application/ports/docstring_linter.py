@@ -19,6 +19,7 @@ class ToolNotAvailable(Exception):
 
 
 class DocstringLinter(Protocol):
+    """docstringが規約どおりの形をしているかを判じる。"""
     def lint(self, target_path: str, kind: str) -> list[dict]:
         """target_path配下をkindの規約に従って検証し、構造違反
         ({path, elementKind, name, code, detail})の配列を返す。

@@ -23,10 +23,24 @@ _CODE_MAP = {
 
 
 class PydoclintLinter(DocstringLinter):
+    """docstringの形の判定を、既存のlintツールで行う。"""
     def __init__(self, executable: str = "pydoclint") -> None:
         self._executable = executable
 
     def lint(self, target_path: str, kind: str) -> list[dict]:
+        """docstringの形を、既存のlintツールに判じさせる。
+
+        Args:
+            target_path: 判じる対象の置き場所。
+            kind: docstringの流儀。
+
+        Returns:
+            違反の一覧。正規化した形で返す。
+
+        Raises:
+            UnsupportedKind: その流儀に対応するツールが無い。
+            ToolNotAvailable: ツールが実行環境に無い。
+        """
         if kind != "google":
             raise UnsupportedKind(kind)
 

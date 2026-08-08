@@ -26,11 +26,23 @@ def _err(code: str, message: str) -> Err:
 
 
 class CheckLayerDrift:
+    """層の宣言と、実装が実際に持っている依存の食い違いを見つける。"""
     def __init__(self, documents: DocumentRepository, extractor: ImportExtractor) -> None:
         self._documents = documents
         self._extractor = extractor
 
     def run(self, architecture_ref: str | None = None) -> Result[dict]:
+        """層の宣言と、実装が実際に持っている依存の食い違いを見つける。
+
+        Args:
+            architecture_ref: 層・置き場所・依存してよい先を宣言している規約への参照。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         if not architecture_ref:
             return _err("MISSING_PARAM", "architectureRef が必要です")
 

@@ -29,11 +29,23 @@ def _path_exists(doc: dict, path: str) -> bool:
 
 
 class CheckSchemaVersionDrift:
+    """documentが指すschemaの参照が、実在し最新かを確かめる。"""
     def __init__(self, documents: DocumentRepository, schemas: SchemaRepository) -> None:
         self._documents = documents
         self._schemas = schemas
 
     def run(self, documents_root: str) -> Result[dict]:
+        """documentが指すschemaの参照が、実在し最新かを確かめる。
+
+        Args:
+            documents_root: 突き合わせの対象とする仕様の置き場所。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         if not is_confined(documents_root):
             return _err("INVALID_PATH", f"パストラバーサルは許可されません: {documents_root}")
         try:

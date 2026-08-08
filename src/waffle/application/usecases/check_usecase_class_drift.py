@@ -25,6 +25,7 @@ def _err(code: str, message: str) -> Err:
 
 
 class CheckUsecaseClassDrift:
+    """操作の宣言と、その実装クラスの食い違いを見つける。"""
     def __init__(self, documents: DocumentRepository, extractor: ClassDeclarationExtractor) -> None:
         self._documents = documents
         self._extractor = extractor
@@ -32,6 +33,21 @@ class CheckUsecaseClassDrift:
     def run(self, documents_root: str, src_root: str, naming: dict,
             language: str = "python",
             root_search_unit: SearchUnit | None = None) -> Result[dict]:
+        """操作の宣言と、その実装クラスの食い違いを見つける。
+
+        Args:
+            documents_root: 突き合わせの対象とする仕様の置き場所。
+            src_root: 実装を探す配置ルート。
+            naming: 名前の綴りの流儀を宣言している規約の naming ブロック。
+            language: 実装が書かれている言語。
+            root_search_unit: 集約ルート・操作をどの単位で探すか。渡さなければファイル単位。
+
+        Returns:
+            その操作の結果を持つ Ok、または失敗を表す Err。
+
+        Raises:
+            なし。失敗は結果型で返す。
+        """
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
