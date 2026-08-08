@@ -20,6 +20,7 @@ from waffle.adapters.outbound.pydoclint_linter import PydoclintLinter
 from waffle.adapters.outbound.python_ast_source_scanner import PythonAstSourceScanner
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.adapters.outbound.tree_sitter_import_extractor import TreeSitterImportExtractor
+from waffle.adapters.outbound.python_ast_surface_extractor import PythonAstSurfaceExtractor
 from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
 from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
     TreeSitterTestFunctionExtractor,
@@ -29,6 +30,7 @@ from waffle.application.usecases.check_prompt_contract import CheckPromptContrac
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
 from waffle.application.usecases.check_spec_integrity import CheckSpecIntegrity
 from waffle.application.usecases.check_operation_drift import CheckOperationDrift
+from waffle.application.usecases.check_surface_drift import CheckSurfaceDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.application.usecases.check_path_is_projection import CheckPathIsProjection
 from waffle.application.usecases.check_query_precedes_array_fill import CheckQueryPrecedesArrayFill
@@ -56,6 +58,7 @@ from waffle.application.services.source_root_resolution import (
 )
 from waffle.application.services.stack_resolution import (
     resolve_covered_documents_root,
+    resolve_layer_graph,
     resolve_naming,
     resolve_scenario_binding,
 )
@@ -84,6 +87,21 @@ def _schemas() -> PackageSchemaRepository:
 
 def _class_extractor() -> TreeSitterClassExtractor:
     return TreeSitterClassExtractor()
+
+def _surface_extractor() -> PythonAstSurfaceExtractor:
+    return PythonAstSurfaceExtractor()
+
+def _composition_root_paths(architecture_ref: str) -> list[str] | Err:
+    """外へ差し出す口の在り処を、規約の宣言から引く。
+
+    どのファイルが配線であるかは compositionRootPaths が既に宣言していて、
+    依存の検査もそこを読んでいる。検査ごとに別の見当をつけない。
+    """
+    resolved = resolve_layer_graph(_docs(), architecture_ref)
+    if isinstance(resolved, Err):
+        return resolved
+    src_root = resolved.value["srcRoot"]
+    return [f"{src_root}/{path}" for path in resolved.value["compositionRootPaths"]]
 
 def _resolve_src_root(src_root: str | None, architecture_ref: str | None, concept: str) -> str:
     """配置ルートの解決を application へ委ね、失敗ならエラーを出して終了する。"""
@@ -335,6 +353,20 @@ def check_prompt_contract(
 ) -> None:
     """Schemaの指示が然るべき場所に然るべき名前で置かれているかを検証（uc-check-prompt-contract）。"""
     _emit(CheckPromptContract(_schemas()).run(schema_ref))
+
+@app.command("check-surface-drift")
+def check_surface_drift(
+    documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
+    architecture_ref: str = typer.Option(..., "--architectureRef", "--architecture-ref", help="外へ差し出す口の在り処を宣言しているarchitecture documentのdocumentId（例: architecture-waffle）"),
+    language: str = typer.Option("python", "--language", help="口のソースの言語"),
+) -> None:
+    """受け口が見せる入力が仕様の宣言と一致しているかを検証（uc-check-surface-drift）。"""
+    surfaces = _composition_root_paths(architecture_ref)
+    if isinstance(surfaces, Err):
+        _emit(surfaces)
+        return
+    _emit(CheckSurfaceDrift(_docs(), _surface_extractor()).run(
+        _resolve_documents_root(documents_root, architecture_ref), surfaces, language))
 
 @app.command("check-usecase-class-drift")
 def check_usecase_class_drift(
