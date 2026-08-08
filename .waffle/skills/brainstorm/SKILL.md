@@ -82,6 +82,6 @@ references/placeholder-definitions.mdの共通定義票、およびモードご�
 
 ## 参照
 
-- `.claude/skills/brainstorm/references/placeholder-definitions.md`: 共通＋モードごとのプレースフォルダー定義票。
-- `.claude/skills/brainstorm/references/template-idea.md`: アイデア発散モード用のスケルトンテンプレート。
-- `.claude/skills/brainstorm/references/template-problem.md`: 問題解決モード用のスケルトンテンプレート。
+- `references/placeholder-definitions.md`: 共通＋モードごとのプレースフォルダー定義票。
+- `references/template-idea.md`: アイデア発散モード用のスケルトンテンプレート。
+- `references/template-problem.md`: 問題解決モード用のスケルトンテンプレート。

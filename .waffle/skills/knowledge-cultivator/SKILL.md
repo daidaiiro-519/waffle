@@ -94,5 +94,4 @@ template-candidate-review.mdを用い、候補ごとにAI初期見解→ユー�
 ## 参照
 
 - `templates/knowledge.md`: knowledge候補を下書き状態で記録するための雛形（プレースホルダー付きMarkdown）。実行環境が専用の記録手段を提供していない場合に使う。
-- `.claude/skills/knowledge-cultivator/references/template-candidate-review.md`: 候補審査の対話ループ用テンプレート（このSkill専用、brainstormとは独立）。
-- `docs/brainstorm/brainstorm-advisor-knowledge-growth.md`: このSkillの設計背景となったブレスト記録（8論点合意）。
+- `references/template-candidate-review.md`: 候補審査の対話ループ用テンプレート（このSkill専用、brainstormとは独立）。

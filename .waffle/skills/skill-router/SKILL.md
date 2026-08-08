@@ -68,5 +68,4 @@ description: "実務Skill（Investigation/Spec-authoring/Handoff-authoring/Imple
 
 ## 参照
 
-- `docs/brainstorm/brainstorm-advisor-di-and-subagent-roles.md`: skill-routerという概念に収束するまでの設計経緯（訂正の連鎖）とroutingTableの列構成・ガードレールの確定根拠
 - `references/porting-guide.md`: skill-routerを他プロジェクトへ移植する具体手順（Orchestrator側のdelegationPatterns追加・routingTable/advisorBoundariesの書き直し方）

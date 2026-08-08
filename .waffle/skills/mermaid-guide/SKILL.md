@@ -65,21 +65,21 @@ references/syntax-overview.mdを読み込み、表現したい内容に対応す
 
 ## 参照
 
-- `.claude/skills/mermaid-guide/references/syntax-overview.md`: 全構文一覧と選択基準。
-- `.claude/skills/mermaid-guide/references/pattern-flowchart.md`: フローチャート。
-- `.claude/skills/mermaid-guide/references/pattern-sequence.md`: シーケンス図。
-- `.claude/skills/mermaid-guide/references/pattern-class.md`: クラス図。
-- `.claude/skills/mermaid-guide/references/pattern-er.md`: ER図。
-- `.claude/skills/mermaid-guide/references/pattern-state.md`: 状態遷移図。
-- `.claude/skills/mermaid-guide/references/pattern-quadrant.md`: 象限チャート。
-- `.claude/skills/mermaid-guide/references/pattern-mindmap.md`: マインドマップ。
-- `.claude/skills/mermaid-guide/references/pattern-timeline.md`: タイムライン。
-- `.claude/skills/mermaid-guide/references/pattern-journey.md`: ユーザージャーニー。
-- `.claude/skills/mermaid-guide/references/pattern-gantt.md`: ガントチャート。
-- `.claude/skills/mermaid-guide/references/pattern-pie.md`: 円グラフ。
-- `.claude/skills/mermaid-guide/references/pattern-git.md`: Gitグラフ。
-- `.claude/skills/mermaid-guide/references/pattern-requirement.md`: 要件図。
-- `.claude/skills/mermaid-guide/references/pattern-sankey.md`: サンキー図（beta）。
-- `.claude/skills/mermaid-guide/references/pattern-xychart.md`: XYチャート（beta）。
-- `.claude/skills/mermaid-guide/references/pattern-block.md`: ブロック図（beta）。
-- `.claude/skills/mermaid-guide/references/pattern-architecture.md`: アーキテクチャ図（beta）。
+- `references/syntax-overview.md`: 全構文一覧と選択基準。
+- `references/pattern-flowchart.md`: フローチャート。
+- `references/pattern-sequence.md`: シーケンス図。
+- `references/pattern-class.md`: クラス図。
+- `references/pattern-er.md`: ER図。
+- `references/pattern-state.md`: 状態遷移図。
+- `references/pattern-quadrant.md`: 象限チャート。
+- `references/pattern-mindmap.md`: マインドマップ。
+- `references/pattern-timeline.md`: タイムライン。
+- `references/pattern-journey.md`: ユーザージャーニー。
+- `references/pattern-gantt.md`: ガントチャート。
+- `references/pattern-pie.md`: 円グラフ。
+- `references/pattern-git.md`: Gitグラフ。
+- `references/pattern-requirement.md`: 要件図。
+- `references/pattern-sankey.md`: サンキー図（beta）。
+- `references/pattern-xychart.md`: XYチャート（beta）。
+- `references/pattern-block.md`: ブロック図（beta）。
+- `references/pattern-architecture.md`: アーキテクチャ図（beta）。

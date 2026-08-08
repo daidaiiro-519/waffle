@@ -72,7 +72,7 @@ Scrum Guideの内容は改変せず引用する形で回答する。
 
 ## 参照
 
-- `.claude/skills/scrum-knowledge/references/knowledge/scrum-guide.md`: Scrum Guide 2020 全内容（定義・三本柱・価値基準・チーム構成・イベント・アーティファクト・コミットメント・Time-box）。
-- `.claude/skills/scrum-knowledge/references/knowledge/agile-manifesto.md`: アジャイル宣言4つの価値＋12の原則＋Scrumとの対応表。
-- `.claude/skills/scrum-knowledge/references/terminology.md`: 用語統一方針（正式用語と使用しない表現の対応表）。
-- `.claude/skills/scrum-knowledge/references/usage-by-agent-role.md`: has-uddでの活用方針（PO/SM/Dev/QA Agentごとの参照知識）。
+- `references/knowledge/scrum-guide.md`: Scrum Guide 2020 全内容（定義・三本柱・価値基準・チーム構成・イベント・アーティファクト・コミットメント・Time-box）。
+- `references/knowledge/agile-manifesto.md`: アジャイル宣言4つの価値＋12の原則＋Scrumとの対応表。
+- `references/terminology.md`: 用語統一方針（正式用語と使用しない表現の対応表）。
+- `references/usage-by-agent-role.md`: has-uddでの活用方針（PO/SM/Dev/QA Agentごとの参照知識）。

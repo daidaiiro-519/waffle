@@ -103,4 +103,3 @@ references/knowledge-template.mdを読み込み、専門領域ごとの概念（
 
 - `references/skill-template-advisor.md`: advisor SKILL.mdの雛形（role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrailsの8ブロック）
 - `references/knowledge-template.md`: backbone knowledge文書の雛形（principles/classifications/decisionCriteria/examples/antiPatterns等）
-- `docs/brainstorm/brainstorm-advisor-creator-skill.md`: このSkillの設計経緯（論点1〜4の合意内容・訂正の記録）
