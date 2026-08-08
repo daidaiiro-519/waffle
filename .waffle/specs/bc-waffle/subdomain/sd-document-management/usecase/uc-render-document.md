@@ -64,6 +64,9 @@ sequenceDiagram
 - x-frontmatterも同様に、discriminatorの値ごとに異なるフィールド宣言（kindごとの{フィールド名: ドットパス}の組）として書ける（discriminatorによってcontentの形が変わり、frontmatterに出すべきフィールド自体も変わるため。frontmatterを持たないdiscriminator値は宣言しなければ生成されない）
 - x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空（空文字・空配列・null）である場合、そのfrontmatterフィールドは省略する（フィールドの省略＝上書きしない、という意味をpart_renderer全体の空値省略規約と一貫させる）
 - x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言する場合、それぞれの配列は独立にfan-out展開され、両方に対応するdeploy先へ書かれる（1種類の配列pathVarのみを想定した実装からの一般化）
+- 対象Documentの種別に対応する配置先が1つも解決できない場合、成果物はcanonicalにのみ書かれ、配置は行われない（配置先を持たないことは、配置を意図的に省略した結果ではなく、その種別が配置先を定義していないことの帰結である）
+- 1つの配置先は、ちょうど1つのDocumentに所有される。配置先が指す正本が他のDocumentの正本である場合、その配置先へは書き込まれず、成果物は失われない
+- 書き込まなかった配置先がある場合、その配置先と書き込まなかった理由が結果に含まれる（黙って省略しない）
 
 ---
 
@@ -85,6 +88,9 @@ sequenceDiagram
 - When x-frontmatterが指すドットパスの解決値がtext・itemsのいずれかを持つブロック形状のdictであるとき、システムはtextがあればそれを使い、無ければitemsを半角スペース区切りで結合した文字列をfrontmatter値として使う shall。
 - If 対象schemaがx-render-target.pathを宣言していないとき、システムはNO_RENDER_TARGETエラーを返し描画しない shall（専用の成果物確定コマンドを使うべきschemaであることを示す）。
 - When x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、システムはそれぞれの配列を独立にfan-out展開し、両方に対応するdeploy先へ書き込む shall。
+- If 対象Documentの種別に対応する配置先が1つも解決できないとき、システムはcanonicalへのみ書き込み、配置を行わない shall。
+- If 解決した配置先が指す正本が他のDocumentの正本であるとき、システムはDEPLOY_TARGET_OWNED_BY_OTHERを返し、その配置先へ書き込まない shall。
+- When 解決した配置先のいずれかへ書き込まなかったとき、システムはその配置先と理由を結果に含める shall。
 
 ---
 
@@ -107,6 +113,7 @@ sequenceDiagram
 |---|---|
 | `MALFORMED_CONTENT` | - list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取った |
 | `NO_RENDER_TARGET` | - 対象schemaがx-render-target.pathを宣言していない（専用のrenderコマンドを使うべき成果物のため、汎用render経路を意図的に持たない） |
+| `DEPLOY_TARGET_OWNED_BY_OTHER` | - 解決した配置先が指す正本が、対象Document以外のDocumentの正本である（1つの配置先は1つのDocumentにのみ所有されるという不変条件に反する） |
 
 ---
 
@@ -422,6 +429,32 @@ Scenario: 複数種類の配列pathVarが同時にfan-out展開される
   Given x-render-target.pathVarsで2種類の配列値（skillRefsとagentRefs）を宣言したschemaのDocumentと、それぞれを参照するtoolMappingsのpathTemplate
   When deployを有効にしてrenderする
   Then skillRefsの各要素とagentRefsの各要素それぞれに対応するdeploy先が全て作られる
+```
+
+### Agentのtool対応づけが入れ子でも、種別ごとに別々のdeploy先へ解決される
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 対応づけをフラットから入れ子へ移しても、既存documentのdeploy先が変わらないこと |
+
+```gherkin
+Scenario: Agentのtool対応づけが入れ子でも、種別ごとに別々のdeploy先へ解決される
+Given toolMappingsのAgentが、agentKindごとの入れ子マッピング（orchestrator/subagent）を持つDocument
+When agentKind=orchestratorとagentKind=subagentのそれぞれをdeployを有効にしてrenderする
+Then orchestratorとsubagentは、それぞれ別々のdeploy先へ解決される
+```
+
+### 入れ子の対応づけに無いdiscriminator値はdeployされない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 境界: 対応づけに無い値が、他の値のdeploy先を誤って共有しないこと |
+
+```gherkin
+Scenario: 入れ子の対応づけに無いdiscriminator値はdeployされない
+Given documentType向けのtoolMappingsが入れ子だが、対象Documentのdiscriminator値に対応するキーを持たない
+When deployを有効にしてrenderする
+Then そのtoolのdeploy先には何も書かれない
 ```
 
 ---
