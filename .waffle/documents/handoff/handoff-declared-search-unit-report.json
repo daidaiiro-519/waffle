@@ -1,0 +1,276 @@
+{
+  "documentId": "handoff-declared-search-unit-report",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "探した範囲のどこにも無いことを別の器で報告する実装への引き継ぎ：handoff-declared-search-unit-report"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-check-aggregate-class-drift"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "報告の器を分ける理由",
+          "consideration": "ファイルが1つ無いことと、探した範囲のどこにも無いことは別の事実。同じ expectedPath というキーに両方の意味を載せると、受け手（CLI/MCP/hook）はキー名から意味を決められず、判断を再構成する必要が出る。探索単位が違うものは別の入れ物にする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "縮退の経路は既にある",
+          "consideration": "source_root_resolution.py:81-105 の resolve_directory_scoped_root がdeclares_per_file を読み、宣言があれば None（ファイル単位）、無ければ配置ディレクトリを返す。既に value-object でのみ使われている。新しい機構を作るのではなく、この経路を集約と操作へ広げる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "宣言の欠落は Err にしない",
+          "consideration": "check_layer_drift.py:119-124 が violations/cycles/unassigned/missing_layer_dirs という名前付きバケットの辞書を返す先例があり、cli/main.py:70-76 の _emit は Ok なら中身に関わらず exit 0。重大度の体系を新設せず、バケット名を分けるだけで足りる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "挙動は1件も変わらない",
+          "consideration": "architecture-waffle / architecture-artifact-share / architecture-typescript-hexagonal の3つとも usecase・aggregate・domain-service・port に perFile 1 を宣言している。得られるのは将来のドリフト防止と、宣言を正本にした状態への一致。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "resolve_directory_scoped_root の戻り値",
+          "consideration": "現状 perFile宣言あり／architectureRefが無い／documentが見つからない／解決できないの4状態をすべて None に潰しており、呼び出し側から「宣言に従った結果」と「宣言を読めなかった結果」を見分けられない。集約と操作へ広げる前にここを直す。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "新しいバケットのフィールド",
+          "consideration": "missing_implementation_in_scope は expectedPath を持たず、searchedRoot とconcept を持つ。1つの道を指す形にしないことで、受け手が探索単位を取り違えない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "値オブジェクトの探索は非再帰のまま",
+          "consideration": "check_aggregate_class_drift.py:65 の list_files(root, f\"*{suffix}\") は意図的な非再帰（conceptPlacement が指すのは1つのディレクトリで、降りると宣言されていない区画まで拾うため）。集約ルートの探索も同じ規則に揃える。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "この引き継ぎでは docstring 側（lint-docstring が coding-standard を読まない件）を扱わない。サブドメイン分類が違い（こちらは sd-reconciliation で中核、あちらはsd-docstring-linting で一般）、docstring 側は未確定の論点を3つ抱えている。まとめると合意待ちがこちらを止める。",
+        "ただし「宣言の欠落は Err にせず Ok の専用バケットで返す」という規約は両方に現れる。この引き継ぎで確定させ、docstring 側の spec がこれを参照する順序にする。",
+        "tech-lead-advisor は python_ast_source_scanner の _is_public をアダプターから外すことも勧めたが、採らない。uc-scan-source-code の受け入れ基準が「各公開要素を返す」と明記しており、private を運ぶ必要は現時点で実証されていない。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "呼出口",
+          "description": "CLI と MCP が、architecture の参照から探索の単位を解決して検査へ渡す。どちらも同じ解決を通す。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "CLI",
+              "sub": "check-aggregate-class-drift 等",
+              "status": "existing"
+            },
+            {
+              "id": "mcp",
+              "title": "MCP",
+              "sub": "同じ操作を公開",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "解決",
+          "description": "宣言から探索の単位を決める。いまは4つの事情をすべて None に潰しているので、見分けられる形へ変える。",
+          "nodes": [
+            {
+              "id": "rdsr",
+              "title": "探索単位の解決",
+              "sub": "resolve_directory_scoped_root",
+              "status": "new"
+            },
+            {
+              "id": "dpf",
+              "title": "宣言の読み取り",
+              "sub": "declares_per_file",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "検査",
+          "description": "集約と操作の検査が、渡された単位に従って探す。ファイル単位ならファイルの不在を、ディレクトリ単位なら範囲に無いことを報告する。",
+          "nodes": [
+            {
+              "id": "agg",
+              "title": "集約と実装の食い違い",
+              "sub": "check_aggregate_class_drift",
+              "status": "new"
+            },
+            {
+              "id": "uc",
+              "title": "操作と実装の食い違い",
+              "sub": "check_usecase_class_drift",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "報告",
+          "description": "探し方によって器を分ける。1つの道を指すものと、探した範囲を伝えるものを同じキーに載せない。",
+          "nodes": [
+            {
+              "id": "mif",
+              "title": "ファイルが無い",
+              "sub": "missing_implementation_file / expectedPath",
+              "status": "existing"
+            },
+            {
+              "id": "mis",
+              "title": "範囲のどこにも無い",
+              "sub": "missing_implementation_in_scope / searchedRoot",
+              "status": "new"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "rdsr",
+          "to": "dpf",
+          "kind": "dependency",
+          "label": "宣言の読み取りを内部で使う"
+        },
+        {
+          "from": "mif",
+          "to": "mis",
+          "kind": "split",
+          "label": "探し方が違うので器を分ける"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": []
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "uc-check-aggregate-class-drift と uc-check-usecase-class-drift の実装を、探索の単位の宣言に従わせる。ディレクトリ単位に落ちたときの報告先を新しく設ける。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/application/services/source_root_resolution.py",
+          "reason": "4状態を None に潰している戻り値を、見分けられる形に変える"
+        },
+        {
+          "path": "src/waffle/application/usecases/check_aggregate_class_drift.py",
+          "reason": "113行目の expected_path 決め打ちを宣言経由へ。新バケットを足す"
+        },
+        {
+          "path": "src/waffle/application/usecases/check_usecase_class_drift.py",
+          "reason": "56行目の expected_path 決め打ちを宣言経由へ。新バケットを足す"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/cli/main.py",
+          "reason": "両検査の呼び出しへ architectureRef 由来の探索単位を渡す"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/mcp/main.py",
+          "reason": "同上"
+        },
+        {
+          "path": "tests/application/acceptance/",
+          "reason": "新規シナリオ4件（各specに2件）に対応するテスト"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "受け入れ基準として spec に書き込み済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "resolved",
+          "note": "expectedScope に反映"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "resolved",
+          "note": "「中断せず続ける」を受け入れ基準に書き込み済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "実測で確認済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "open",
+          "note": "4状態をどう表すか（例外か、専用の型か）は実装時に決める"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "resolved",
+          "note": "searchedRoot を持たせることを受け入れ基準に明記"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "open",
+          "note": "集約ルートの探索も非再帰に揃えるかは、実装時に既存の値オブジェクト側と突き合わせて決める"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": "ユーザーへ提示して確認を待っている状態。"
+      }
+    }
+  },
+  "tags": [
+    "topic:drift-detection",
+    "subdomain:sd-reconciliation"
+  ]
+}
