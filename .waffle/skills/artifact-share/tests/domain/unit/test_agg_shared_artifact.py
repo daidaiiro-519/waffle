@@ -201,11 +201,12 @@ def test_1ヶ月を超える期限は与えられない():
     When 発行した時点から1ヶ月を超える期限で閲覧トークンを発行しようとする
     Then 発行できない
     """
+    artifact = _artifact()
     too_far = view_token.expires_at(NOW, view_token.MONTH + 1)
     within = view_token.expires_at(NOW, view_token.MONTH)
 
-    assert not view_token.within_expiry_limit("artifact", NOW, too_far)
-    assert view_token.within_expiry_limit("artifact", NOW, within)
+    assert not artifact.accepts_expiry(too_far, NOW)
+    assert artifact.accepts_expiry(within, NOW)
 
 
 def test_有効な閲覧トークンが1本も無くても公開は続く():

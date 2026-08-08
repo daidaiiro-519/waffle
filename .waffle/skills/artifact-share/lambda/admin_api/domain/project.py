@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from domain.view_token import ProjectViewToken
+from domain.view_token import ProjectViewToken, ViewTokenExpiry
 
 # 公開されているかどうか。共有アーティファクトと同じ語を使う
 PUBLISHED = "PUBLISHED"
@@ -104,6 +104,26 @@ class Project:
         投稿者なら誰でも自分のものを入れられる。
         """
         return self.manageable_by(caller_id, is_admin) or self.scope.is_shared()
+
+    # ── 閲覧トークンに許すこと ────────────────────────
+
+    def accepts_expiry(self, expiry: ViewTokenExpiry, now: int) -> bool:
+        """その期限で閲覧トークンを発行してよいかを判じる。
+
+        置いておく場なので、期限を設けないことも選べる。共有アーティファクト
+        1件と違い、まとめは渡したあとも使われ続けることが前提にある。
+
+        Args:
+            expiry: 与えようとしている期限。
+            now: 発行しようとしている時点。
+
+        Returns:
+            与えてよければ True。まとめはどの期限も受け入れる。
+
+        Raises:
+            なし。
+        """
+        return True
 
     # ── 状態を変える ──────────────────────────────────
 

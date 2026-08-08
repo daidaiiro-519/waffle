@@ -55,7 +55,7 @@ def _issue(artifacts: SharedArtifactRepository, projects: ProjectRepository,
                              "その名前は既に使っています。別の名前を付けてください。")
 
     expiry = view_token.expires_at(now, ttl)
-    if not view_token.within_expiry_limit(subject.kind, now, expiry):
+    if not target.accepts_expiry(expiry, now):
         raise ViewTokenError(
             EXPIRY_TOO_FAR,
             "期限が遠すぎます。共有アーティファクトの閲覧トークンは1ヶ月までです。")

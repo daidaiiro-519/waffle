@@ -23,7 +23,6 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from domain.identifier import random_chars
-from domain.view_subject import ARTIFACT
 
 TOKEN_GROUPS = 3
 TOKEN_GROUP_LENGTH = 4
@@ -34,10 +33,6 @@ MONTH = 30 * 24 * 60 * 60
 
 # 期限を指定しなかったときの有効期間
 DEFAULT_TTL = WEEK
-
-# 共有アーティファクトの閲覧トークンに許す最長の有効期間。
-# 続けて見せたい場合はまとめの側で扱う——回覧するものと、置いておく場は別。
-MAX_TTL = MONTH
 
 # 期限なしを表す値
 NO_EXPIRY = 0
@@ -128,17 +123,6 @@ def expires_at(now: int, ttl: int | None = None) -> ViewTokenExpiry:
     if ttl is None:
         ttl = DEFAULT_TTL
     return ViewTokenExpiry(now + ttl if ttl > 0 else NO_EXPIRY)
-
-
-def within_expiry_limit(kind: str, now: int, expiry: ViewTokenExpiry) -> bool:
-    """その対象に許される期限か。
-
-    共有アーティファクトは必ず有限で、発行した時点から1ヶ月を超えない。
-    プロジェクトは置いておく場なので、期限なしを選べる。
-    """
-    if kind != ARTIFACT:
-        return True
-    return not expiry.is_endless() and expiry.value <= now + MAX_TTL
 
 
 def issued(name: str, fingerprint: str, expiry: ViewTokenExpiry, at: int) -> ViewToken:

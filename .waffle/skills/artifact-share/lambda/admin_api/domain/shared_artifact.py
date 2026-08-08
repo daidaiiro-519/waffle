@@ -17,11 +17,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 
-from domain.view_token import ArtifactViewToken
+from domain.view_token import MONTH, ArtifactViewToken, ViewTokenExpiry
 
 # 公開されているかどうか
 PUBLISHED = "PUBLISHED"
 SUSPENDED = "SUSPENDED"
+
+# 閲覧トークンに与えてよい期限の上限。発行した時点からここまで
+MAX_TTL = MONTH
 
 # 1つの共有アーティファクトが同時に入れるプロジェクトの数
 MAX_PROJECTS = 3
@@ -103,6 +106,26 @@ class SharedArtifact:
         その言い換えはここではしない。誰に向けて何と答えるかは呼び出し側が決める。
         """
         return is_admin or self.published_by.value == caller_id
+
+    # ── 閲覧トークンに許すこと ────────────────────────
+
+    def accepts_expiry(self, expiry: ViewTokenExpiry, now: int) -> bool:
+        """その期限で閲覧トークンを発行してよいかを判じる。
+
+        期限は必ず有限で、発行した時点から1ヶ月を超えない。渡した相手を外す
+        手立てが人手の操作だけだと、押し忘れたときに永久に開き続けるため。
+
+        Args:
+            expiry: 与えようとしている期限。
+            now: 発行しようとしている時点。
+
+        Returns:
+            与えてよければ True。
+
+        Raises:
+            なし。
+        """
+        return not expiry.is_endless() and expiry.value <= now + MAX_TTL
 
     # ── 状態を変える ──────────────────────────────────
 
