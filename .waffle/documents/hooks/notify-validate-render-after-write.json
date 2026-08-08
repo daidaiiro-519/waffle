@@ -22,7 +22,7 @@
     "behavior": {
       "blockType": "Behavior",
       "title": "判定ロジック",
-      "text": "このHookはfill/patch自体の実行直後には発火しない（validate/renderはまだ未来のコマンドで、その時点では必ず「未実行」判定になり無意味な通知になるため）。代わりに、transcript内のBashコマンド列を辿り、fill/patch-schemaで書き換えた対象（--pathまたは--schemaRef）を記録する。その後、同じ対象への追加fillが続く間は「まとめて後でvalidate/renderする運用」として何もしない。対象が別のtargetへ切り替わった時点（＝直前の対象への作業が一区切りついたとみなせるタイミング）で、直前の対象に対してwaffle validate・waffle renderの両方の呼び出しが間に挟まっていたかを確認する。どちらか（または両方）が見つからなければ、不足しているコマンド名を含めてadditionalContextとして通知する（ブロックはしない）。transcriptからコマンド列を抽出する際、heredocの本体やコメント行に書かれた文字列（実行されていないコマンド例等）は判定対象から除外する。"
+      "text": "このHookはfill/patch自体の実行直後には発火しない（validate/renderはまだ未来のコマンドで、その時点では必ず「未実行」判定になり無意味な通知になるため）。代わりに、transcript内のBashコマンド列を辿り、fill/patch-schemaで書き換えた対象（--pathまたは--schemaRef）を記録する。その後、同じ対象への追加fillが続く間は「まとめて後でvalidate/renderする運用」として何もしない。対象が別のtargetへ切り替わった時点（＝直前の対象への作業が一区切りついたとみなせるタイミング）で、直前の対象に対してwaffle validate・waffle renderの両方の呼び出しが間に挟まっていたかを確認する。どちらか（または両方）が見つからなければ、不足しているコマンド名を含めてadditionalContextとして通知する（ブロックはしない）。transcriptからコマンド列を抽出する際、heredocの本体やコメント行に書かれた文字列（実行されていないコマンド例等）は判定対象から除外する。対象がschemaそのもの（--schemaRefで指定され--pathを持たない）のときは、閉じる手段が違う。waffle validateもwaffle renderも--pathしか取らないため、schemaRefを対象にその2つを実行することはできない。schemaに対して実在する確認手段はwaffle check-prompt-contract（指示が然るべき場所にあるか）とwaffle render-blank-template（雛形の再生成）の2つなので、対象がschemaのときはこの2つが間に挟まっていたかを確認する。1回のBash呼び出しに複数のコマンドが並ぶことがあるので、waffleの呼び出し単位へ割ってから見る。丸ごと1つの文字列として扱うと、別々の行に書かれた読み取りの--pathと、まったく関係のないpatch-schemaが同じ塊になり、実際には触っていない道を「書き換えた対象」として記録してしまう（実際にこの誤検知が長時間鳴り続けた）。あわせて--helpを含む呼び出しは書き換えとして数えない——使い方を見ているだけで、閉じ忘れではない。"
     },
     "scriptRef": {
       "blockType": "ScriptRef",
@@ -35,7 +35,8 @@
       "items": [
         "新しいdrift検知ロジックをこのHookスクリプトに持ち込まない（check-drift-on-write.pyの責務と混同しない）。ここで確認するのはコマンドの実行有無のみで、内容の正しさは判定しない",
         "ブロックしない（PostToolUse通知のみ）。process-reliability論点1と同じ、通知に留める運用方針を踏襲する",
-        "同一documentPathに対する複数回のfillをまとめて1回のvalidate/renderで済ませる運用を妨げない（fillのたびに毎回通知するのではなく、最後のfillから見て後続にvalidate/renderがあるかで判定する）"
+        "同一documentPathに対する複数回のfillをまとめて1回のvalidate/renderで済ませる運用を妨げない（fillのたびに毎回通知するのではなく、最後のfillから見て後続にvalidate/renderがあるかで判定する）",
+        "1回のBash呼び出しを丸ごと1つのコマンドとして扱わない。対象の取り違えが起きる。"
       ]
     }
   }

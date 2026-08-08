@@ -26,10 +26,17 @@ _FILL_CMD = re.compile(r"waffle\s+scaffold\s+--operation\s+fill\b")
 _PATCH_CMD = re.compile(r"waffle\s+patch-schema\b")
 _VALIDATE_CMD = re.compile(r"waffle\s+validate\b")
 _RENDER_CMD = re.compile(r"waffle\s+render(-handoff-template)?\b")
+# schemaそのものを書き換えたときの「閉じ方」は document とは別。
+# waffle validate / render は --path しか取らないので、schemaRefを対象に
+# 実行する手段が無い。schemaに対して実在する確認手段はこの2つ。
+_SCHEMA_VALIDATE_CMD = re.compile(r"waffle\s+check-prompt-contract\b")
+_SCHEMA_RENDER_CMD = re.compile(r"waffle\s+render-blank-template\b")
 _PATH_ARG = re.compile(r"--path\s+(\S+)")
 _SCHEMA_REF_ARG = re.compile(r"--schema(?:Ref|-ref)\s+(\S+)")
 
 _WAFFLE_CMD = re.compile(r"\bwaffle\s+\S+")
+# 使い方を見ているだけのものは、実行された書き換えではない
+_HELP_ONLY = re.compile(r"--help\b")
 _HEREDOC_OPEN = re.compile(r"<<-?\s*['\"]?(\w+)['\"]?")
 
 
@@ -41,6 +48,21 @@ def _target(command: str) -> str | None:
     if m:
         return m.group(1).strip("'\"")
     return None
+
+
+def _is_schema_target(command: str) -> bool:
+    """その対象が、documentではなくschemaそのものか。
+
+    Args:
+        command: 判定するBashコマンド。
+
+    Returns:
+        --path を持たず --schemaRef で対象を指していれば True。
+
+    Raises:
+        なし。
+    """
+    return not _PATH_ARG.search(command) and bool(_SCHEMA_REF_ARG.search(command))
 
 
 def _strip_non_executable_regions(command: str) -> str:
@@ -86,17 +108,41 @@ def _bash_commands(transcript_text: str) -> list[str]:
             if not isinstance(command, str):
                 continue
             executable = _strip_non_executable_regions(command)
-            if _WAFFLE_CMD.search(executable):
-                commands.append(executable)
+            commands.extend(_waffle_invocations(executable))
     return commands
+
+
+def _waffle_invocations(command: str) -> list[str]:
+    """1回の呼び出しに並んだwaffleの呼び出しを、1つずつに割る。
+
+    丸ごと1つの文字列として扱うと、別々の行に書かれた読み取りの --path と、
+    まったく関係のない patch-schema が同じ塊になる。書き換えた対象が、実際には
+    触っていない道になってしまう。
+
+    Args:
+        command: 実行されたBashコマンドの全体。
+
+    Returns:
+        waffleの呼び出しごとに切り分けた文字列の並び。
+
+    Raises:
+        なし。
+    """
+    found = []
+    for line in command.splitlines():
+        for part in re.split(r"[;|]|&&|\|\|", line):
+            if _WAFFLE_CMD.search(part) and not _HELP_ONLY.search(part):
+                found.append(part.strip())
+    return found
 
 
 def check(payload: dict, transcript_text: str | None = None) -> str | None:
     tool_input = payload.get("tool_input", {})
-    command = _strip_non_executable_regions(tool_input.get("command", ""))
-
-    if not _WAFFLE_CMD.search(command):
+    raw_command = _strip_non_executable_regions(tool_input.get("command", ""))
+    invocations = _waffle_invocations(raw_command)
+    if not invocations:
         return None
+    command = invocations[-1]
 
     if transcript_text is None:
         transcript_path = payload.get("transcript_path", "")
@@ -114,6 +160,7 @@ def check(payload: dict, transcript_text: str | None = None) -> str | None:
     # 直近のfill/patch対象を、その後のコマンド列から見て閉じられたか判定する。
     # 「次に別のtargetへ向けたコマンドが来た」時点でのみ発火する。
     last_write_target: str | None = None
+    last_is_schema = False
     validated = False
     rendered = False
 
@@ -121,13 +168,16 @@ def check(payload: dict, transcript_text: str | None = None) -> str | None:
         target = _target(cmd)
         if (_FILL_CMD.search(cmd) or _PATCH_CMD.search(cmd)) and target:
             last_write_target = target
+            last_is_schema = _is_schema_target(cmd)
             validated = False
             rendered = False
             continue
         if last_write_target and target == last_write_target:
-            if _VALIDATE_CMD.search(cmd):
+            validate_cmd = _SCHEMA_VALIDATE_CMD if last_is_schema else _VALIDATE_CMD
+            render_cmd = _SCHEMA_RENDER_CMD if last_is_schema else _RENDER_CMD
+            if validate_cmd.search(cmd):
                 validated = True
-            if _RENDER_CMD.search(cmd):
+            if render_cmd.search(cmd):
                 rendered = True
 
     if last_write_target is None:
@@ -138,14 +188,16 @@ def check(payload: dict, transcript_text: str | None = None) -> str | None:
     if current_is_write and current_target == last_write_target:
         # 同じ対象への追加fillは「まとめて後でvalidate/renderする」運用を妨げない
         return None
-    if current_target == last_write_target and (_VALIDATE_CMD.search(command) or _RENDER_CMD.search(command)):
+    closing = ((_SCHEMA_VALIDATE_CMD, _SCHEMA_RENDER_CMD) if last_is_schema
+               else (_VALIDATE_CMD, _RENDER_CMD))
+    if current_target == last_write_target and any(c.search(command) for c in closing):
         return None
 
     missing = []
     if not validated:
-        missing.append("waffle validate")
+        missing.append("waffle check-prompt-contract" if last_is_schema else "waffle validate")
     if not rendered:
-        missing.append("waffle render")
+        missing.append("waffle render-blank-template" if last_is_schema else "waffle render")
     if not missing:
         return None
 
