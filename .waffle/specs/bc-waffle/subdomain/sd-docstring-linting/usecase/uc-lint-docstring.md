@@ -1,3 +1,12 @@
+---
+id: "uc-lint-docstring"
+type: "usecase"
+title: "docstringの規約適合を検証する：LintDocstring"
+description: "ソースコードの docstring が規約どおりの構造か（必須セクションの有無・引数名と実シグネチャの整合）を、kind ごとに確立された既存 lint ツールを呼び出して判定する。自前の照合ロジックは持たない。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # docstringの規約適合を検証する：LintDocstring
 
 ## 概要
@@ -67,17 +76,19 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When kindがgoogleのとき、システムは対応する既存lintツール（pydoclint）を起動し、その出力を正規化して返す shall。
+- When 対象の規約が与えられたとき、システムはそのdocstringブロックが宣言するsyntaxKindとタグ3欄を読み、対応する既存lintツールの構文へ写して起動し、その出力を正規化して返す shall（どの構文で判定するかを決める権限は規約にあり、この操作は宣言を読んで道具の能力へ写すだけにする）。
 - If kindがgoogle以外のとき、システムはUNSUPPORTED_KINDエラーを返す shall（対応するadapterが未実装のため。将来adapterを追加した際は、godoc/rustdocはdocstringの有無のみを判定しARGS_MISMATCH相当は判定しない設計とする）。
 - When 既存lintツールが「引数の記載漏れ・余分な記載」を報告したとき、システムはこれをcode=ARGS_MISMATCHとして正規化する shall。
 - When 要素のhasDocstringがfalseのとき、システムはcode=MISSING_DOC_COMMENTの違反として報告する shall。
 - When 公開関数が引数を持つのにArgsセクションを欠いているとき、システムはcode=MISSING_ARGS_SECTIONの違反として報告する shall。
 - When 公開関数が戻り値を持つのにReturnsセクションを欠いているとき、システムはcode=MISSING_RETURNS_SECTIONの違反として報告する shall。
 - When 公開関数が例外を送出するのにRaisesセクションを欠いているとき、システムはcode=MISSING_RAISES_SECTIONの違反として報告する shall。
-- While 非公開要素であるとき、システムはMISSING_ARGS_SECTION/MISSING_RETURNS_SECTION/MISSING_RAISES_SECTIONの判定対象から除外する shall。
+- While 規約のdocstring.requiredが、その要素種別と可視性の組にisRequired=falseを宣言しているとき、システムはその要素を判定の対象から除外する shall（どの要素に何を求めるかを決めるのは規約であり、この操作が独自の規則を持たない）。
 - While 全要素が適合しているとき、システムは空配列を返す（正常系）shall。
 - If 対象言語に対応するDocstringSchemaのkindが無い、またはkindに対応するadapterが未実装のとき、システムはUNSUPPORTED_KINDエラーを返す shall。
 - If kindに対応する既存lintツールが実行環境に存在しないとき、システムはTOOL_NOT_AVAILABLEエラーを返す shall。
+- If 規約が宣言する構文へ既存lintツールが追随できないとき、システムはUNSUPPORTED_SYNTAXエラーを返す shall（引数の誤りを表すUNSUPPORTED_KINDとは別に扱う。前者は呼び出しの誤り、後者は宣言と道具の能力の隔たりであり、同じ器に入れると宣言できるが効かない欄が黙って残る）。
+- When 規約のdocstring.requiredがある要素種別と可視性の組にisRequired=trueを宣言しているとき、システムはその組の要素にdocstringが無いことをMISSING_DOC_COMMENTとして報告する shall（moduleを含む。除外する要素種別を実装側で決めない）。
 
 ---
 
@@ -93,6 +104,7 @@ sequenceDiagram
 |---|---|
 | `UNSUPPORTED_KIND` | - 対象言語に対応する DocstringSchema の kind が無い |
 | `TOOL_NOT_AVAILABLE` | - kind に対応する既存 lint ツールが実行環境に存在しない |
+| `UNSUPPORTED_SYNTAX` | - 規約が宣言するdocstringの構文へ、対応する既存lintツールが追随できない |
 
 ---
 
@@ -213,6 +225,47 @@ Scenario: 対応するツールが実行環境に無いとき TOOL_NOT_AVAILABLE
   Given kind に対応する lint ツールがインストールされていない環境
   When 適合判定を実行する
   Then TOOL_NOT_AVAILABLE エラーが返る
+```
+
+### 構文は規約の宣言から決まる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 宣言に従う：道具の既定に合わせない |
+
+```gherkin
+Scenario: 構文は規約の宣言から決まる
+  Given docstringブロックがタグの綴りを宣言している規約
+  When その規約でdocstringの適合を確かめる
+  Then 宣言された構文に対応する道具の設定で判定される
+```
+
+### 宣言に道具が追随できないことを黙って通さない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 隔たりの可視化：宣言できるが効かない欄を残さない |
+
+```gherkin
+Scenario: 宣言に道具が追随できないことを黙って通さない
+  Given 既存lintツールが持たない構文を宣言している規約
+  When その規約でdocstringの適合を確かめる
+  Then UNSUPPORTED_SYNTAXとして報告される
+  And 呼び出しの誤りを表すUNSUPPORTED_KINDとは区別されている
+```
+
+### 求める対象は規約の表が決める
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 宣言に従う：除外する要素種別を実装が決めない |
+
+```gherkin
+Scenario: 求める対象は規約の表が決める
+  Given moduleにdocstringを求めると宣言している規約
+  And docstringを持たないモジュール
+  When docstringの適合を確かめる
+  Then そのモジュールがMISSING_DOC_COMMENTとして報告される
 ```
 
 ---

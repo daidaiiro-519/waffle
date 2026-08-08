@@ -1,3 +1,12 @@
+---
+id: "uc-scan-source-code"
+type: "usecase"
+title: "ソースコードからdocstringを構造化抽出する：ScanSourceCode"
+description: "AI がソースコード本体を直接読まずに、DocstringSchema の kind に従って docstring を構造化抽出したインデックスビューを取得する。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # ソースコードからdocstringを構造化抽出する：ScanSourceCode
 
 ## 概要
@@ -60,13 +69,15 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 対象パスと kind が与えられたとき、システムは各公開要素を {path, kind, elementKind, name, hasDocstring, signatureParams, summary, body, args, returns, raises, attributes} の構造で返す shall。
+- When 対象パスと kind が与えられたとき、システムは各要素を {path, kind, elementKind, name, visibility, hasDocstring, signatureParams, summary, body, args, returns, raises, attributes} の構造で返す shall。
 - When 要素が function/method であるとき、システムは実シグネチャの引数名を signatureParams に含める shall（docstring の記載有無によらない）。
 - When 要素が module/class であるとき、システムは signatureParams を空配列で返す shall。
 - When 要素が class であるとき、システムは公開属性の説明（Attributes 相当のセクション）を attributes に含める shall。class 以外は attributes を空配列で返す shall。
 - When 要素に docstring が無いとき、システムは summary/body/args/returns/raises/attributes を空値（空文字・空配列）で返し、走査全体は失敗させない shall。
 - While 対象言語に対応する DocstringSchema の kind が無いとき、システムは UNSUPPORTED_KIND エラーを返す shall。
 - When ソースコードの本体（docstring 以外の行）を返す必要がないとき、システムは本体を読み込んだ上でも構造化データ以外を出力に含めない shall。
+- When 対象パスがディレクトリのとき、システムはその配下を再帰的に走査する shall（直下だけを見ると、階層を持つコードベースでは走査結果がほぼ空になり、「docstringが無い」を一件も報告できなくなる）。
+- When 要素を返すとき、システムは公開・非公開を問わず全要素を返し、どちらであるかを visibility に添える shall（どの要素にdocstringを求めるかはcoding-standardのdocstring.requiredが宣言する。走査が先に捨てると、その宣言の可視性の軸が判定側へ届く前に消える）。
 
 ---
 
@@ -124,6 +135,33 @@ Scenario: 対応する kind が無い言語は UNSUPPORTED_KIND
   Given DocstringSchema に定義の無い言語のコードベース
   When 対象パスを走査する
   Then UNSUPPORTED_KIND エラーが返る
+```
+
+### 階層を持つ対象は下まで走査する
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 宣言に従う：走査の範囲を実装が独自に決めない |
+
+```gherkin
+Scenario: 階層を持つ対象は下まで走査する
+  Given 直下にはソースを持たず、下位のディレクトリにだけソースを持つ対象パス
+  When ソースコードの走査を求める
+  Then 下位のディレクトリにある要素が結果に含まれる
+```
+
+### 非公開の要素も可視性を添えて返す
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 判定材料を捨てない：絞るのは宣言を読む側の仕事 |
+
+```gherkin
+Scenario: 非公開の要素も可視性を添えて返す
+  Given 公開の関数と非公開の関数を持つソース
+  When ソースコードの走査を求める
+  Then どちらも結果に含まれる
+  And それぞれに公開か非公開かがvisibilityとして添えられている
 ```
 
 ---
