@@ -40,6 +40,15 @@ specやknowledge等のdocument.jsonの内容を、認知負荷の低い見やす
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `path` | 閲覧用の形にする対象のdocumentの置き場所 |
+| `outputPath` | 閲覧用の成果物を書き出す先 |
+
+---
+
 ## 基本フロー
 
 ```mermaid

@@ -45,9 +45,9 @@ schemaRef: "DomainSpecSchema/v8"
 
 | 入力 | 説明 |
 |---|---|
-| `documentsRoot` | 突き合わせの対象とするユースケース仕様が置かれている場所 |
-| `architectureRef` | 外へ差し出す口の在り処を宣言している構成の規約への参照 |
-| `language` | 口のソースが書かれている言語 |
+| `documentsRoot` | 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる |
+| `architectureRef` | 外へ差し出す口の在り処を宣言しているarchitecture documentのdocumentId（例: architecture-waffle） |
+| `language` | 口のソースの言語 |
 
 ---
 

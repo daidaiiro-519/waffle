@@ -64,6 +64,16 @@ Orchestrator（HarnessAgent）
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `operation` | add_block / rename_block / set_field / remove_field / remove_block / add_def / add_kind_branch / create_version |
+| `schemaRef` | 編集する対象のschemaを指す参照 |
+| `params` | operation固有パラメータのJSONオブジェクト |
+
+---
+
 ## 基本フロー
 
 ```mermaid

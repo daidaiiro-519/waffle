@@ -611,6 +611,24 @@
       "items": [
         "既存のSchema定義ファイルに対し、新規ブロック追加（add_block）・識別子リネーム（rename_block）・既存ブロックの1フィールド書き換え（set_field）という構造化操作を、対象外の箇所を一切変更せず（最小diff）、後方互換チェック・JSON Schema構文検証を通過した場合のみ適用する。AIはブロック定義・識別子名・書き換える値だけを与え、schemaファイル内の他の記述には一切触れない。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "operation",
+          "description": "add_block / rename_block / set_field / remove_field / remove_block / add_def / add_kind_branch / create_version"
+        },
+        {
+          "name": "schemaRef",
+          "description": "編集する対象のschemaを指す参照"
+        },
+        {
+          "name": "params",
+          "description": "operation固有パラメータのJSONオブジェクト"
+        }
+      ]
     }
   },
   "tags": [],

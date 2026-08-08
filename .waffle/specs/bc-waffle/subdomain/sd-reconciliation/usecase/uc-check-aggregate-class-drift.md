@@ -41,6 +41,17 @@ aggregate specの集約ルート名と実装クラス名が一致しているか
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `documentsRoot` | 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる |
+| `srcRoot` | 集約Entityクラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先） |
+| `architectureRef` | srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle） |
+| `language` | 実装言語（python/java/typescript/javascript） |
+
+---
+
 ## 基本フロー
 
 ```mermaid

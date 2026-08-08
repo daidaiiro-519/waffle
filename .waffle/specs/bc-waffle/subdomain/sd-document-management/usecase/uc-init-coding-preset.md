@@ -33,6 +33,15 @@ Orchestrator
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `preset` | プリセット名（例: python-hexagonal） |
+| `product` | プロダクト名（documentIdのサフィックスになる。例: waffle） |
+
+---
+
 ## 基本フロー
 
 ```mermaid

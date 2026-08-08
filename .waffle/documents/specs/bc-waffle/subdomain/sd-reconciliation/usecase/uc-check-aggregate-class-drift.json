@@ -255,6 +255,28 @@
       "items": [
         "aggregate specが宣言する集約ルート名(aggregateRoot.name)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。check-usecase-class-driftと同型の検知を集約にも適用し、集約の構造がJSON Schemaのみで表現されドリフトを検知できない盲点を埋める。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "documentsRoot",
+          "description": "仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"
+        },
+        {
+          "name": "srcRoot",
+          "description": "集約Entityクラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"
+        },
+        {
+          "name": "architectureRef",
+          "description": "srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"
+        },
+        {
+          "name": "language",
+          "description": "実装言語（python/java/typescript/javascript）"
+        }
+      ]
     }
   },
   "tags": [],

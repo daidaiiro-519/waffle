@@ -41,6 +41,14 @@ schemaRef: "DomainSpecSchema/v8"
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `schemaRef` | 確かめる対象のschemaRef（例: DomainSpecSchema/v8） |
+
+---
+
 ## 基本フロー
 
 ```mermaid

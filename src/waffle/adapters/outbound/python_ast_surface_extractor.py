@@ -45,9 +45,35 @@ class PythonAstSurfaceExtractor:
             found.append({
                 "name": node.name,
                 "params": [a.arg for a in node.args.args if a.arg not in ("self", "cls")],
-                "references": sorted(_called_names(node)),
+                "references": sorted(_invoked_names(node) or _called_names(node)),
             })
         return found
+
+
+def _invoked_names(node: ast.AST) -> set[str]:
+    """その入口が、作ってすぐ呼び出している名前を集める。
+
+    1つの入口が複数の操作を組み立てることがある（片方を相手の部品として渡す等）。
+    作っただけの名前まで数えると、部品として渡された側もその入口の操作だと
+    見なしてしまう。呼び出されたものだけが、その入口が差し出している操作。
+
+    Args:
+        node: 走査の起点となる構文木のノード。
+
+    Returns:
+        作られた直後にメソッドを呼ばれた識別子の集合。
+
+    Raises:
+        なし。
+    """
+    names: set[str] = set()
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Attribute):
+            continue
+        target = child.value
+        if isinstance(target, ast.Call) and isinstance(target.func, ast.Name):
+            names.add(target.func.id)
+    return names
 
 
 def _called_names(node: ast.AST) -> set[str]:

@@ -1,3 +1,11 @@
+---
+id: "uc-check-domain-service-drift"
+type: "usecase"
+title: "業務サービス名と実装ファイルの対応を検証する：CheckDomainServiceDrift"
+description: "bounded-context specが宣言する業務サービスのgroup（実装ファイル単位）が、実際に対応するファイルとして実在するかを機械的に検証する。1業務サービス＝1ファイルという規約を強制せず、複数サービスが同じgroupを共有し同じファイルに同居することを許容した上で、宣言と実装の対応関係のドリフトを検出する。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 業務サービス名と実装ファイルの対応を検証する：CheckDomainServiceDrift
 
 ## 概要
@@ -28,6 +36,16 @@ Orchestrator（HarnessAgent）
 
 - Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root）が与えられている
 - 業務サービス実装ファイルの配置ルートディレクトリ（src_root）が与えられている
+
+---
+
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `documentsRoot` | 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる |
+| `srcRoot` | 業務サービス実装ファイルの配置ルートディレクトリ（明示指定時は--architectureRefより優先） |
+| `architectureRef` | srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle） |
 
 ---
 

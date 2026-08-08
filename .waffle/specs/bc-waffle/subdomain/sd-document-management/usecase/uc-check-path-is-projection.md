@@ -32,6 +32,14 @@ Edit/Writeしようとしているファイルの実体パスが、document.json
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `resolvedPath` | 判定対象の実体パス（symlink解決済み） |
+
+---
+
 ## 基本フロー
 
 ```mermaid

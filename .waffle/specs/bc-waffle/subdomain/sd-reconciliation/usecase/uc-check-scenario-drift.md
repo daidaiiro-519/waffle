@@ -41,6 +41,18 @@ specのシナリオ宣言とテストコードの対応関係が保たれてい�
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `specPath` | spec.json のパス（1組だけ検査する） |
+| `testPath` | 対応するテストファイルのパス（1組だけ検査する） |
+| `documentsRoot` | spec documentの置き場所（全体を検査する） |
+| `testsRoot` | テストの配置ルート（全体を検査する） |
+| `architectureRef` | シナリオ照合の規約を引くarchitecture documentのdocumentId |
+
+---
+
 ## 基本フロー
 
 ```mermaid

@@ -352,6 +352,44 @@
       "items": [
         "AI がファイルを直接読まずに、Document の必要な意味単位（ブロック・フィールド・条件一致・全階層）だけを取得する。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "operation",
+          "description": "documentに対して行う読み取りの種類"
+        },
+        {
+          "name": "path",
+          "description": "読み取る対象のdocumentの置き場所"
+        },
+        {
+          "name": "blockKey",
+          "description": "読み取る対象を1つのブロックへ絞るときの、そのブロックの識別子"
+        },
+        {
+          "name": "field",
+          "description": "読み取る対象を1つの欄へ絞るときの、その欄の名前"
+        },
+        {
+          "name": "fieldName",
+          "description": "欄そのものではなく、欄の名前で探すときの手がかり"
+        },
+        {
+          "name": "targetSchemaRef",
+          "description": "読み取りの解釈に使うschemaを、documentの宣言とは別に指定する参照"
+        },
+        {
+          "name": "targetDiscriminator",
+          "description": "key=value 形式（例: specKind=subdomain）"
+        },
+        {
+          "name": "expression",
+          "description": "query_path用のJMESPath式（1ブロックの内側を起点とした相対式）。document.json自体のパスは--pathのため別名にしている"
+        }
+      ]
     }
   }
 }

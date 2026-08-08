@@ -41,6 +41,14 @@ schemaRef: "DomainSpecSchema/v8"
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `architectureRef` | 層・置き場所・依存してよい先を宣言するarchitecture documentのdocumentId（例: architecture-waffle） |
+
+---
+
 ## 基本フロー
 
 ```mermaid

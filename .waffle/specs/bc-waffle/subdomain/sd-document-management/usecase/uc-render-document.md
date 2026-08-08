@@ -39,6 +39,15 @@ Orchestrator（HarnessAgent）
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `path` | 描画する対象のdocumentの置き場所 |
+| `deploy` | 描画した成果物を、schemaが定める配置先へ置くかどうか |
+
+---
+
 ## 基本フロー
 
 ```mermaid

@@ -199,6 +199,28 @@
       "items": [
         "usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "documentsRoot",
+          "description": "仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"
+        },
+        {
+          "name": "srcRoot",
+          "description": "usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"
+        },
+        {
+          "name": "architectureRef",
+          "description": "srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"
+        },
+        {
+          "name": "language",
+          "description": "実装言語（python/java/typescript/javascript）"
+        }
+      ]
     }
   },
   "tags": []

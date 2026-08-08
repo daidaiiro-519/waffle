@@ -51,6 +51,21 @@ Orchestrator（HarnessAgent）
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `operation` | documentに対して行う読み取りの種類 |
+| `path` | 読み取る対象のdocumentの置き場所 |
+| `blockKey` | 読み取る対象を1つのブロックへ絞るときの、そのブロックの識別子 |
+| `field` | 読み取る対象を1つの欄へ絞るときの、その欄の名前 |
+| `fieldName` | 欄そのものではなく、欄の名前で探すときの手がかり |
+| `targetSchemaRef` | 読み取りの解釈に使うschemaを、documentの宣言とは別に指定する参照 |
+| `targetDiscriminator` | key=value 形式（例: specKind=subdomain） |
+| `expression` | query_path用のJMESPath式（1ブロックの内側を起点とした相対式）。document.json自体のパスは--pathのため別名にしている |
+
+---
+
 ## 基本フロー
 
 ```mermaid

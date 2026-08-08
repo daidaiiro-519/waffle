@@ -1,3 +1,11 @@
+---
+id: "uc-check-operation-drift"
+type: "usecase"
+title: "operation名と実装のoperation分岐の一致を検証する：CheckOperationDrift"
+description: "usecase specのacceptanceScenariosが宣言するoperation名と、対応する実装が実際に持つoperation分岐の文字列が一致しているかを機械的に検証する。複数の操作をoperation引数で分岐するusecase（QueryDocument等）の操作名が、specの自由記述にしか現れず実装から乖離しても誰も気づけない、という盲点を検出する。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # operation名と実装のoperation分岐の一致を検証する：CheckOperationDrift
 
 ## 概要
@@ -29,6 +37,16 @@ usecase specが宣言するoperation名と実装のoperation分岐が一致し�
 
 - Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root）が与えられている
 - usecase実装クラスの配置ルートディレクトリ（src_root）が与えられている
+
+---
+
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `documentsRoot` | 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる |
+| `srcRoot` | usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先） |
+| `architectureRef` | srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle） |
 
 ---
 

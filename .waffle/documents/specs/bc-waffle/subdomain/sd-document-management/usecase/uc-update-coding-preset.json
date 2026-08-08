@@ -259,6 +259,28 @@
         "何を戻すかの指定を必須とし、丸ごとの写しは行わない。プロダクト固有の判断をプリセットへ紛れ込ませないため、汎用かどうかの判断は人が持つ。",
         "戻す単位はブロックだけでなく、ブロックの中の欄まで指定できる。汎用の欄と、そのプロダクト固有の欄が同じブロックに同居することがあるため——例えば構成の宣言は、概念ごとの粒度（汎用）と合成ルートの実際の道（固有）を一緒に持つ。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "preset",
+          "description": "反映先のプリセット名（例: python-hexagonal）"
+        },
+        {
+          "name": "fromDocumentId",
+          "description": "出どころとなる規約のdocumentId（例: architecture-waffle）"
+        },
+        {
+          "name": "blocks",
+          "description": "戻す部分をカンマ区切りで（例: rules,layers,layout.granularity）。ブロックの中の欄まで指定できる。丸ごとの写しは行わないため省略できない"
+        },
+        {
+          "name": "dryRun",
+          "description": "書き換えずに、何が変わるかだけを返す"
+        }
+      ]
     }
   },
   "tags": [],

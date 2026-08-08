@@ -164,6 +164,24 @@
       "items": [
         "bounded-context specが宣言する業務サービスのgroup（実装ファイル単位）が、実際に対応するファイルとして実在するかを機械的に検証する。1業務サービス＝1ファイルという規約を強制せず、複数サービスが同じgroupを共有し同じファイルに同居することを許容した上で、宣言と実装の対応関係のドリフトを検出する。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "documentsRoot",
+          "description": "仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"
+        },
+        {
+          "name": "srcRoot",
+          "description": "業務サービス実装ファイルの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"
+        },
+        {
+          "name": "architectureRef",
+          "description": "srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"
+        }
+      ]
     }
   },
   "tags": [],

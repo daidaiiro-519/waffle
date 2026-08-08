@@ -1,3 +1,12 @@
+---
+id: "uc-validate-document"
+type: "usecase"
+title: "Documentがschemaに適合するか検証する：ValidateDocument"
+description: "Document の content が schema に適合するかを検証し、適合可否と違反詳細を返す（副作用なし）。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # Documentがschemaに適合するか検証する：ValidateDocument
 
 ## 概要
@@ -27,6 +36,14 @@ Orchestrator（HarnessAgent）
 ## 事前条件
 
 - 対象 Document が存在する
+
+---
+
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `path` | 適合を確かめる対象のdocumentの置き場所 |
 
 ---
 

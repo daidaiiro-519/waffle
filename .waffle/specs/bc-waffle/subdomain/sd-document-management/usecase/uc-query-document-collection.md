@@ -1,3 +1,11 @@
+---
+id: "uc-query-document-collection"
+type: "usecase"
+title: "複数Documentを横断してパターン検索・属性絞り込みする：QueryDocumentCollection"
+description: "AIが単一Document内では完結しない要求（複数Documentにまたがるパターン検索・属性による絞り込み）を、ディレクトリ単位で一括して満たす。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # 複数Documentを横断してパターン検索・属性絞り込みする：QueryDocumentCollection
 
 ## 概要
@@ -39,6 +47,20 @@ Orchestrator（HarnessAgent）
 ## 事前条件
 
 - 対象ディレクトリのパスが要望テキストで与えられている
+
+---
+
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `operation` | 複数のdocumentをまたいで行う読み取りの種類 |
+| `path` | 対象ディレクトリ |
+| `pattern` | 対象とするdocumentを絞り込む道の形 |
+| `field` | 各documentから取り出す欄の名前 |
+| `key` | 絞り込みに使う欄の名前 |
+| `value` | その欄が取るべき値 |
+| `fields` | カンマ区切りのフィールド名一覧 |
 
 ---
 

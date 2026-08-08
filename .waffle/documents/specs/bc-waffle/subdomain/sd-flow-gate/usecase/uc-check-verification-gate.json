@@ -239,6 +239,28 @@
       "items": [
         "対象usecase specのacceptanceScenariosと実装済みテストの対応関係、および渡されたテスト実行結果から、検証フェーズへ進んでよいか（ready/blocked/needs_human）を判定する。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "specPath",
+          "description": "spec.json のパス"
+        },
+        {
+          "name": "testPath",
+          "description": "対応するテストファイル(.py)のパス"
+        },
+        {
+          "name": "testResultsPath",
+          "description": "テスト実行結果({\"passed\": [...], \"failed\": [...]})のパス"
+        },
+        {
+          "name": "architectureRef",
+          "description": "シナリオ照合の規約を引くarchitecture documentのdocumentId"
+        }
+      ]
     }
   },
   "tags": [],

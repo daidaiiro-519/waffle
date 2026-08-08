@@ -39,6 +39,15 @@ Orchestrator（HarnessAgent）または人間の執筆者
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `schemaRef` | どのschemaの雛形を書き出すかを指す参照 |
+| `discriminator` | key=value 形式（例: codingKind=coding-standard） |
+
+---
+
 ## 基本フロー
 
 ```mermaid

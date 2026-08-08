@@ -41,6 +41,17 @@ Orchestrator（HarnessAgent）
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `specPath` | spec.json のパス |
+| `testPath` | 対応するテストファイル(.py)のパス |
+| `testResultsPath` | テスト実行結果({"passed": [...], "failed": [...]})のパス |
+| `architectureRef` | シナリオ照合の規約を引くarchitecture documentのdocumentId |
+
+---
+
 ## 基本フロー
 
 ```mermaid

@@ -407,6 +407,52 @@
       "items": [
         "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "operation",
+          "description": "documentに対して行う書き込みの種類"
+        },
+        {
+          "name": "schemaRef",
+          "description": "骨格を作るときに従うschemaを指す参照"
+        },
+        {
+          "name": "documentId",
+          "description": "作るdocumentを一意に指す識別子"
+        },
+        {
+          "name": "discriminator",
+          "description": "key=value 形式（例: skillKind=engine）"
+        },
+        {
+          "name": "contextRef",
+          "description": "所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合）"
+        },
+        {
+          "name": "subdomainRef",
+          "description": "usecase が属する subdomain の documentId"
+        },
+        {
+          "name": "path",
+          "description": "fill / clear_field 対象の documentPath"
+        },
+        {
+          "name": "values",
+          "description": "fill する値の JSON オブジェクト"
+        },
+        {
+          "name": "fieldPath",
+          "description": "clear_field で削除する値フィールドのドットパス"
+        },
+        {
+          "name": "documentPath",
+          "description": "値を書き込む対象の、既にあるdocumentの置き場所"
+        }
+      ]
     }
   }
 }

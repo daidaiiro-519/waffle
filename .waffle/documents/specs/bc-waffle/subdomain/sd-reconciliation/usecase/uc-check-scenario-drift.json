@@ -356,6 +356,32 @@
       "items": [
         "spec の TestScenarios（acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenarios）が宣言するシナリオ名と、対応するテストファイルの test_* 関数名を突き合わせ、未実装のシナリオ・宣言に対応しない孤立テストを機械的に検出する。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "specPath",
+          "description": "spec.json のパス（1組だけ検査する）"
+        },
+        {
+          "name": "testPath",
+          "description": "対応するテストファイルのパス（1組だけ検査する）"
+        },
+        {
+          "name": "documentsRoot",
+          "description": "spec documentの置き場所（全体を検査する）"
+        },
+        {
+          "name": "testsRoot",
+          "description": "テストの配置ルート（全体を検査する）"
+        },
+        {
+          "name": "architectureRef",
+          "description": "シナリオ照合の規約を引くarchitecture documentのdocumentId"
+        }
+      ]
     }
   }
 }

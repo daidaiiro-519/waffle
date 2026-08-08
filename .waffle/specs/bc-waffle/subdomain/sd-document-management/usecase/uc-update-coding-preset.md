@@ -43,6 +43,17 @@ schemaRef: "DomainSpecSchema/v8"
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `preset` | 反映先のプリセット名（例: python-hexagonal） |
+| `fromDocumentId` | 出どころとなる規約のdocumentId（例: architecture-waffle） |
+| `blocks` | 戻す部分をカンマ区切りで（例: rules,layers,layout.granularity）。ブロックの中の欄まで指定できる。丸ごとの写しは行わないため省略できない |
+| `dryRun` | 書き換えずに、何が変わるかだけを返す |
+
+---
+
 ## 基本フロー
 
 ```mermaid

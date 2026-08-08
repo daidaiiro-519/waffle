@@ -46,6 +46,15 @@ Orchestrator（HarnessAgent）
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `path` | 対象コードベース(ディレクトリ)のパス |
+| `kind` | DocstringSchemaのkind（現状はgoogleのみ対応） |
+
+---
+
 ## 基本フロー
 
 ```mermaid

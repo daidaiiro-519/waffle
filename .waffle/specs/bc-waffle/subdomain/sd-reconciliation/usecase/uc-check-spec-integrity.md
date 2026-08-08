@@ -1,3 +1,12 @@
+---
+id: "uc-check-spec-integrity"
+type: "usecase"
+title: "スペック内部の参照整合性を検証する：CheckSpecIntegrity"
+description: "bounded-context が宣言する members(subdomain/usecase) と、ディスク上に実在する subdomain/usecase ドキュメントの参照整合性を検証する。加えて、各集約内部の値オブジェクトの使用整合性・Document集約とその実インスタンスとの整合性・usecase間の相互参照(subdomainRef/aggregateRef)の整合性も検証する。宣言と実態がずれている箇所（宙に浮いた参照・未宣言の実体・不整合な相互参照）を機械的に検出する。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # スペック内部の参照整合性を検証する：CheckSpecIntegrity
 
 ## 概要
@@ -28,6 +37,15 @@ spec ツリー内部の参照整合性（宣言と実ファイルの対応）が
 
 - 対象 bounded-context の bc.json のパスが与えられている
 - Document集約の実インスタンス群を走査する対象ディレクトリ（documents_root。通常は.waffle/documents/）が与えられている
+
+---
+
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `path` | bounded-context の bc.json のパス |
+| `documentsRoot` | Document集約の実インスタンス群を走査する対象ディレクトリ |
 
 ---
 

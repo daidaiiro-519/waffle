@@ -32,6 +32,16 @@ Orchestrator
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `targetPath` | fill対象のdocument.jsonパス |
+| `hasArrayValue` | 値に配列を含むか |
+| `queriedPaths` | 同一セッション内で既にqueryされたpathのJSON配列。例: ["a.json"] |
+
+---
+
 ## 基本フロー
 
 ```mermaid

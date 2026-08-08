@@ -159,6 +159,16 @@
       "items": [
         "Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。"
       ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "documentsRoot",
+          "description": "Document集約の実インスタンス群を走査する対象ディレクトリ"
+        }
+      ]
     }
   }
 }

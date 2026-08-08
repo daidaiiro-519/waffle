@@ -41,6 +41,23 @@ Orchestrator（HarnessAgent）
 
 ---
 
+## 入力
+
+| 入力 | 説明 |
+|---|---|
+| `operation` | documentに対して行う書き込みの種類 |
+| `schemaRef` | 骨格を作るときに従うschemaを指す参照 |
+| `documentId` | 作るdocumentを一意に指す識別子 |
+| `discriminator` | key=value 形式（例: skillKind=engine） |
+| `contextRef` | 所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合） |
+| `subdomainRef` | usecase が属する subdomain の documentId |
+| `path` | fill / clear_field 対象の documentPath |
+| `values` | fill する値の JSON オブジェクト |
+| `fieldPath` | clear_field で削除する値フィールドのドットパス |
+| `documentPath` | 値を書き込む対象の、既にあるdocumentの置き場所 |
+
+---
+
 ## 基本フロー
 
 ```mermaid
