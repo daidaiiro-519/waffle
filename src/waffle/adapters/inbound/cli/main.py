@@ -51,6 +51,7 @@ from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.application.services.source_root_resolution import (
     resolve_directory_scoped_root,
+    resolve_search_unit,
     resolve_src_root,
 )
 from waffle.application.services.stack_resolution import (
@@ -344,8 +345,11 @@ def check_usecase_class_drift(
 ) -> None:
     """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
+    # 1つのファイルで探すか、配置ディレクトリで探すかは architecture の宣言が決める
+    unit = resolve_search_unit(_docs(), architecture_ref, "usecase")
     _emit(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(
-        _resolve_documents_root(documents_root, architecture_ref), resolved_src_root, _resolve_naming(architecture_ref), language))
+        _resolve_documents_root(documents_root, architecture_ref), resolved_src_root,
+        _resolve_naming(architecture_ref), language, unit))
 
 @app.command("check-aggregate-class-drift")
 def check_aggregate_class_drift(
@@ -358,9 +362,11 @@ def check_aggregate_class_drift(
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "aggregate")
     # 値オブジェクトをどこまで探すかは architecture の宣言が決める
     value_object_root = resolve_directory_scoped_root(_docs(), architecture_ref, "value-object")
+    # 集約ルート自身の探し方も同じ宣言から決める
+    unit = resolve_search_unit(_docs(), architecture_ref, "aggregate")
     _emit(CheckAggregateClassDrift(_docs(), _class_extractor()).run(
         _resolve_documents_root(documents_root, architecture_ref), resolved_src_root,
-        _resolve_naming(architecture_ref), language, value_object_root))
+        _resolve_naming(architecture_ref), language, value_object_root, unit))
 
 @app.command("check-layer-drift")
 def check_layer_drift(

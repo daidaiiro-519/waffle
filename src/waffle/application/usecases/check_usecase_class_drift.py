@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from waffle.application.ports.class_declaration_extractor import ClassDeclarationExtractor
 from waffle.application.ports.document_repository import DocumentRepository
+from waffle.application.services.class_index import build_class_index
+from waffle.application.services.source_root_resolution import SearchUnit
 from waffle.domain.services.canonical_naming import file_name
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
@@ -28,7 +30,8 @@ class CheckUsecaseClassDrift:
         self._extractor = extractor
 
     def run(self, documents_root: str, src_root: str, naming: dict,
-            language: str = "python") -> Result[dict]:
+            language: str = "python",
+            root_search_unit: SearchUnit | None = None) -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
@@ -40,7 +43,15 @@ class CheckUsecaseClassDrift:
         # ここで止めると「まだ何も出来ていない」ことを報告できない
 
         missing_implementation_file: list[dict] = []
+        missing_implementation_in_scope: list[dict] = []
         class_name_mismatch: list[dict] = []
+
+        # 探し方は architecture の宣言が決める。渡されなければファイル単位
+        unit = root_search_unit or SearchUnit(per_file=True)
+        scope_index = (
+            build_class_index(self._documents, self._extractor,
+                              unit.root or src_root, naming["fileNameSuffix"], language)
+            if not unit.per_file else None)
 
         for doc_path in doc_paths:
             doc = self._documents.load(doc_path)
@@ -52,6 +63,15 @@ class CheckUsecaseClassDrift:
                 continue
             operation_name = doc.get("content", {}).get("usecase", {}).get("operationName")
             if not operation_name:
+                continue
+            if scope_index is not None:
+                # 配置ディレクトリのどこかにあればよい。無いことは「あるはずの
+                # 1ファイルが無い」とは別の事実なので、別の器へ入れる
+                if operation_name not in scope_index:
+                    missing_implementation_in_scope.append({
+                        "documentId": doc["documentId"], "operationName": operation_name,
+                        "concept": "usecase", "searchedRoot": unit.root or src_root,
+                    })
                 continue
             expected_path = f"{src_root}/{file_name(operation_name, naming)}"
             try:
@@ -70,5 +90,6 @@ class CheckUsecaseClassDrift:
 
         return Ok({
             "missing_implementation_file": missing_implementation_file,
+            "missing_implementation_in_scope": missing_implementation_in_scope,
             "class_name_mismatch": class_name_mismatch,
         })

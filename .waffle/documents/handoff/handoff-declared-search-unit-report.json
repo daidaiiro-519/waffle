@@ -65,7 +65,8 @@
       "items": [
         "この引き継ぎでは docstring 側（lint-docstring が coding-standard を読まない件）を扱わない。サブドメイン分類が違い（こちらは sd-reconciliation で中核、あちらはsd-docstring-linting で一般）、docstring 側は未確定の論点を3つ抱えている。まとめると合意待ちがこちらを止める。",
         "ただし「宣言の欠落は Err にせず Ok の専用バケットで返す」という規約は両方に現れる。この引き継ぎで確定させ、docstring 側の spec がこれを参照する順序にする。",
-        "tech-lead-advisor は python_ast_source_scanner の _is_public をアダプターから外すことも勧めたが、採らない。uc-scan-source-code の受け入れ基準が「各公開要素を返す」と明記しており、private を運ぶ必要は現時点で実証されていない。"
+        "tech-lead-advisor は python_ast_source_scanner の _is_public をアダプターから外すことも勧めたが、採らない。uc-scan-source-code の受け入れ基準が「各公開要素を返す」と明記しており、private を運ぶ必要は現時点で実証されていない。",
+        "SearchUnit の declared は、いまどの呼び出し側も読んでいない。宣言の欠落を報告する受け入れ基準を今回のspecに置かなかったため。型としては「宣言に従った結果のファイル単位」と「宣言へ辿り着けなかった結果のファイル単位」を区別できるが、出力には現れない。読み手を作るなら受け入れ基準を先に足す。"
       ]
     },
     "completionImage": {
@@ -243,8 +244,8 @@
           "advisor": "tech-lead-advisor",
           "refBlock": "implementationViewpoints",
           "refIndex": 0,
-          "resolutionStatus": "open",
-          "note": "4状態をどう表すか（例外か、専用の型か）は実装時に決める"
+          "resolutionStatus": "resolved",
+          "note": "探し方を表す SearchUnit を作り、宣言を読めたかどうかを declared で添えた。ただし declared を読む呼び出し側はまだ無い"
         },
         {
           "advisor": "tech-lead-advisor",
@@ -257,15 +258,15 @@
           "advisor": "tech-lead-advisor",
           "refBlock": "implementationViewpoints",
           "refIndex": 2,
-          "resolutionStatus": "open",
-          "note": "集約ルートの探索も非再帰に揃えるかは、実装時に既存の値オブジェクト側と突き合わせて決める"
+          "resolutionStatus": "resolved",
+          "note": "集約ルート・操作・値オブジェクトの走査を build_class_index へ寄せ、下位へ降りない規則を1箇所に揃えた"
         }
       ],
       "completionImageConfirmedBy": {
-        "confirmed": false,
-        "confirmedBy": "",
-        "confirmedAt": "",
-        "note": "ユーザーへ提示して確認を待っている状態。"
+        "confirmed": true,
+        "confirmedBy": "daidaiiro",
+        "confirmedAt": "2026-08-08",
+        "note": "提示のうえ実装の許可を得た。"
       }
     }
   },

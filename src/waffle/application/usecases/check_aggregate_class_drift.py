@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from waffle.application.ports.class_declaration_extractor import ClassDeclarationExtractor
 from waffle.application.ports.document_repository import DocumentRepository
+from waffle.application.services.class_index import build_class_index
+from waffle.application.services.source_root_resolution import SearchUnit
 from waffle.domain.services.canonical_naming import apply_case, case_for, file_name
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
@@ -75,7 +77,8 @@ class CheckAggregateClassDrift:
         return index
 
     def run(self, documents_root: str, src_root: str, naming: dict,
-            language: str = "python", value_object_root: str | None = None) -> Result[dict]:
+            language: str = "python", value_object_root: str | None = None,
+            root_search_unit: SearchUnit | None = None) -> Result[dict]:
         if not is_confined(documents_root) or not is_confined(src_root):
             return _err("INVALID_PATH", "パストラバーサルは許可されません")
         try:
@@ -93,6 +96,7 @@ class CheckAggregateClassDrift:
         missing_implementation_file: list[dict] = []
         class_name_mismatch: list[dict] = []
         attribute_mismatch: list[dict] = []
+        missing_implementation_in_scope: list[dict] = []
         missing_value_object: list[dict] = []
         value_object_attribute_mismatch: list[dict] = []
         ambiguous_value_object: list[dict] = []
@@ -103,6 +107,13 @@ class CheckAggregateClassDrift:
         vo_index = (self._value_object_index(value_object_root, naming, language)
                     if value_object_root else None)
 
+        # 集約ルート自身の探し方も architecture の宣言が決める。渡されなければファイル単位
+        unit = root_search_unit or SearchUnit(per_file=True)
+        scope_index = (
+            build_class_index(self._documents, self._extractor,
+                              unit.root or src_root, naming["fileNameSuffix"], language)
+            if not unit.per_file else None)
+
         for doc_path in doc_paths:
             doc = self._documents.load(doc_path)
             if doc.get("specKind") != "aggregate":
@@ -110,14 +121,26 @@ class CheckAggregateClassDrift:
             root_name = doc.get("content", {}).get("aggregateRoot", {}).get("name")
             if not root_name:
                 continue
-            expected_path = f"{src_root}/{file_name(root_name, naming)}"
-            try:
-                source = self._documents.read_text(expected_path)
-            except FileNotFoundError:
-                missing_implementation_file.append({
-                    "documentId": doc["documentId"], "aggregateRootName": root_name, "expectedPath": expected_path,
-                })
-                continue
+            if scope_index is not None:
+                # 配置ディレクトリのどこかにあればよい。無いことは「あるはずの
+                # 1ファイルが無い」とは別の事実なので、別の器へ入れる
+                where_root = scope_index.get(root_name, [])
+                if not where_root:
+                    missing_implementation_in_scope.append({
+                        "documentId": doc["documentId"], "aggregateRootName": root_name,
+                        "concept": "aggregate", "searchedRoot": unit.root or src_root,
+                    })
+                    continue
+                expected_path, source = where_root[0]
+            else:
+                expected_path = f"{src_root}/{file_name(root_name, naming)}"
+                try:
+                    source = self._documents.read_text(expected_path)
+                except FileNotFoundError:
+                    missing_implementation_file.append({
+                        "documentId": doc["documentId"], "aggregateRootName": root_name, "expectedPath": expected_path,
+                    })
+                    continue
             found_classes = self._extractor.class_names(source, language)
             for vo_name in _declared_value_objects(doc):
                 if vo_index is None:
@@ -168,6 +191,7 @@ class CheckAggregateClassDrift:
         return Ok({
             "ambiguous_value_object": ambiguous_value_object,
             "missing_implementation_file": missing_implementation_file,
+            "missing_implementation_in_scope": missing_implementation_in_scope,
             "class_name_mismatch": class_name_mismatch,
             "attribute_mismatch": attribute_mismatch,
             "missing_value_object": missing_value_object,

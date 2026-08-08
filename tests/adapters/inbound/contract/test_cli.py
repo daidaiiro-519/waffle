@@ -295,24 +295,24 @@ def test_check_schema_version_drift_returns_three_fields():
     assert data == {"broken_references": [], "newer_version_available": [], "missing_declared_fields": []}
 
 
-def test_check_usecase_class_drift_returns_two_fields():
+def test_check_usecase_class_drift_returns_three_fields():
     """
     Given waffle CLI
     When check-usecase-class-drift を architectureRef と documentsRoot の対で実行する
-    Then 終了コードは0で、出力JSONは2フィールド全て空配列（自己整合済み）
+    Then 終了コードは0で、出力JSONは3フィールド全て空配列（自己整合済み）
     """
     result = _runner.invoke(app, ["check-usecase-class-drift", "--architectureRef", "architecture-waffle",
                                  "--documentsRoot", ".waffle/documents/specs/bc-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert data == {"missing_implementation_file": [], "class_name_mismatch": []}
+    assert data == {"missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": []}
 
 
-def test_check_aggregate_class_drift_returns_five_fields():
+def test_check_aggregate_class_drift_returns_six_fields():
     """
     Given waffle CLI
     When check-aggregate-class-drift を architectureRef と documentsRoot の対で実行する
-    Then 終了コードは0で、出力JSONは5フィールド全て空配列（Schema/Document
+    Then 終了コードは0で、出力JSONは6フィールド全て空配列（Schema/Document
     両集約のEntity化が完了し自己整合済み）
     """
     result = _runner.invoke(app, ["check-aggregate-class-drift", "--architectureRef", "architecture-waffle",
@@ -320,7 +320,7 @@ def test_check_aggregate_class_drift_returns_five_fields():
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert data == {
-        "ambiguous_value_object": [], "missing_implementation_file": [], "class_name_mismatch": [],
+        "ambiguous_value_object": [], "missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": [],
         "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
     }
 
@@ -341,7 +341,7 @@ def test_check_operation_drift_returns_two_fields():
     """
     Given waffle CLI
     When check-operation-drift を architectureRef と documentsRoot の対で実行する
-    Then 終了コードは0で、出力JSONは2フィールド全て空配列（自己整合済み）
+    Then 終了コードは0で、出力JSONは3フィールド全て空配列（自己整合済み）
     """
     result = _runner.invoke(app, ["check-operation-drift", "--architectureRef", "architecture-waffle",
                                  "--documentsRoot", ".waffle/documents/specs/bc-waffle"])

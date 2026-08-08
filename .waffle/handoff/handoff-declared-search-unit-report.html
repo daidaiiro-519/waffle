@@ -257,7 +257,8 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       </div>
       <div class="coverage-list">
         <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 4件／実装観点 3件</span></div>
-        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>
+        <div class="review-row"><span class="who">完成イメージ確認済み</span><span class="detail">daidaiiro／2026-08-08</span></div>
       </div>
     </div>
   </section>
@@ -326,6 +327,10 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="constraint-item">
               <span class="num">3</span>
               <p>tech-lead-advisor は python_ast_source_scanner の _is_public をアダプターから外すことも勧めたが、採らない。uc-scan-source-code の受け入れ基準が「各公開要素を返す」と明記しており、private を運ぶ必要は現時点で実証されていない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>SearchUnit の declared は、いまどの呼び出し側も読んでいない。宣言の欠落を報告する受け入れ基準を今回のspecに置かなかったため。型としては「宣言に従った結果のファイル単位」と「宣言へ辿り着けなかった結果のファイル単位」を区別できるが、出力には現れない。読み手を作るなら受け入れ基準を先に足す。</p>
             </div></div>
           <div class="tab-panel" id="panel4">
             <div class="scope-item">

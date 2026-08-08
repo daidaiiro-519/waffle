@@ -48,6 +48,7 @@ from waffle.application.usecases.scan_source_code import ScanSourceCode
 from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.application.services.source_root_resolution import (
     resolve_directory_scoped_root,
+    resolve_search_unit,
     resolve_src_root,
 )
 from waffle.application.services.stack_resolution import (
@@ -271,7 +272,9 @@ def check_usecase_class_drift(
     naming = _resolve_naming(architectureRef)
     if isinstance(naming, dict) and "error" in naming:
         return naming
-    return _dict(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(scope, resolved, naming, language))
+    # 1つのファイルで探すか、配置ディレクトリで探すかは architecture の宣言が決める
+    unit = resolve_search_unit(_docs(), architectureRef, "usecase")
+    return _dict(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(scope, resolved, naming, language, unit))
 
 @mcp.tool
 def check_aggregate_class_drift(
@@ -290,8 +293,10 @@ def check_aggregate_class_drift(
         return naming
     # 値オブジェクトをどこまで探すかは architecture の宣言が決める
     value_object_root = resolve_directory_scoped_root(_docs(), architectureRef, "value-object")
+    # 集約ルート自身の探し方も同じ宣言から決める
+    unit = resolve_search_unit(_docs(), architectureRef, "aggregate")
     return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(
-        scope, resolved, naming, language, value_object_root))
+        scope, resolved, naming, language, value_object_root, unit))
 
 @mcp.tool
 def check_layer_drift(architectureRef: str) -> dict:

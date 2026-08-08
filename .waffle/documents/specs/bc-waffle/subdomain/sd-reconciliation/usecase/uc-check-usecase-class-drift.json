@@ -90,7 +90,7 @@
       "items": [
         "When usecase specのoperationNameから導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。",
         "When 実装ファイルは実在するが、operationNameと一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。",
-        "While 全usecaseの操作名と実装クラスが一致しているとき、システムはmissing_implementation_file・class_name_mismatch両方を空配列で返す shall。",
+        "While 全usecaseの操作名と実装クラスが一致しているとき、システムはmissing_implementation_file・missing_implementation_in_scope・class_name_mismatchの3つ全てを空配列で返す shall。",
         "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
         "If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。",
         "While languageが指定されないとき、システムはpythonとして扱う shall。",

@@ -265,18 +265,18 @@ def test_check_schema_version_drift_returns_three_fields():
     assert out == {"broken_references": [], "newer_version_available": [], "missing_declared_fields": []}
 
 
-def test_check_usecase_class_drift_returns_two_fields():
+def test_check_usecase_class_drift_returns_three_fields():
     """
     Given waffle MCPサーバ
     When check_usecase_class_driftツールを architectureRef と documentsRoot の対で呼ぶ
-    Then MCP出力は2フィールド全て空配列（自己整合済み）
+    Then MCP出力は3フィールド全て空配列（自己整合済み）
     """
     out = asyncio.run(_call("check_usecase_class_drift", {"architectureRef": "architecture-waffle",
                                     "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
-    assert out == {"missing_implementation_file": [], "class_name_mismatch": []}
+    assert out == {"missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": []}
 
 
-def test_check_aggregate_class_drift_returns_five_fields():
+def test_check_aggregate_class_drift_returns_six_fields():
     """
     Given waffle MCPサーバ
     When check_aggregate_class_driftツールを architectureRef と documentsRoot の対で呼ぶ
@@ -286,7 +286,7 @@ def test_check_aggregate_class_drift_returns_five_fields():
     out = asyncio.run(_call("check_aggregate_class_drift", {"architectureRef": "architecture-waffle",
                                     "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
     assert out == {
-        "ambiguous_value_object": [], "missing_implementation_file": [], "class_name_mismatch": [],
+        "ambiguous_value_object": [], "missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": [],
         "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
     }
 

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.adapters.outbound.tree_sitter_class_extractor import TreeSitterClassExtractor
+from waffle.application.services.source_root_resolution import SearchUnit
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
 from waffle.shared.result import Ok
 
@@ -67,7 +68,7 @@ def test_all_aggregate_roots_match_implementation(tmp_path):
     assert isinstance(result, Ok), result
     assert result.value == {
         "ambiguous_value_object": [],
-        "missing_implementation_file": [], "class_name_mismatch": [],
+        "missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": [],
         "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
     }
 
@@ -284,3 +285,53 @@ def test_配置ディレクトリの下位までは降りない(tmp_path):
 
     assert isinstance(result, Ok), result
     assert [v["valueObjectName"] for v in result.value["missing_value_object"]] == ["SchemaId"]
+
+
+def test_directory_scope_reports_missing_in_scope(tmp_path):
+    """
+    Scenario: 宣言がなければ配置ディレクトリのどこにも無いことを報告する
+    Given granularityがaggregateにperFileを宣言していないarchitecture
+    And 集約ルート名と一致するクラスが配置ディレクトリのどこにも無い
+    When 集約と実装の食い違いを調べる
+    Then その組がmissing_implementation_in_scopeに現れる
+    And 探した配置ディレクトリがsearchedRootとして添えられている
+    And missing_implementation_fileは空のままである
+    """
+    docs_root = tmp_path / "documents"
+    src_root = tmp_path / "src"
+    _write(docs_root / "aggregate" / "agg-a.json", _aggregate_doc("Schema"))
+    (src_root / "inner").mkdir(parents=True, exist_ok=True)
+    (src_root / "other.py").write_text("class SomethingElse:\n    pass\n", encoding="utf-8")
+
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING,
+                           root_search_unit=SearchUnit(per_file=False, root=str(src_root)))
+    assert isinstance(result, Ok), result
+    assert result.value["missing_implementation_in_scope"] == [
+        {"documentId": "agg-a", "aggregateRootName": "Schema",
+         "concept": "aggregate", "searchedRoot": str(src_root)}
+    ]
+    assert result.value["missing_implementation_file"] == []
+
+
+def test_file_scope_reports_only_missing_file(tmp_path):
+    """
+    Scenario: 宣言があればファイルの不在だけを報告する
+    Given granularityがaggregateにperFile 1を宣言しているarchitecture
+    And 集約ルート名から導出したファイルが存在しない
+    When 集約と実装の食い違いを調べる
+    Then その組がmissing_implementation_fileに現れる
+    And missing_implementation_in_scopeは空のままである
+    """
+    docs_root = tmp_path / "documents"
+    src_root = tmp_path / "src"
+    _write(docs_root / "aggregate" / "agg-a.json", _aggregate_doc("Schema"))
+    src_root.mkdir(parents=True, exist_ok=True)
+
+    result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING,
+                           root_search_unit=SearchUnit(per_file=True))
+    assert isinstance(result, Ok), result
+    assert result.value["missing_implementation_file"] == [
+        {"documentId": "agg-a", "aggregateRootName": "Schema",
+         "expectedPath": str(src_root / "schema.py")}
+    ]
+    assert result.value["missing_implementation_in_scope"] == []
