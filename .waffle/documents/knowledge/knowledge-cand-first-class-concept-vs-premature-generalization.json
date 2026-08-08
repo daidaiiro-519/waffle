@@ -1,0 +1,96 @@
+{
+  "documentId": "knowledge-cand-first-class-concept-vs-premature-generalization",
+  "documentType": "Knowledge",
+  "schemaRef": "KnowledgeSchema/v5",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "第一級の概念として立てる要求と、早すぎる一般化を避ける規律の衝突を裁く着眼点：knowledge-cand-first-class-concept-vs-premature-generalization"
+    },
+    "principles": {
+      "blockType": "Principles",
+      "title": "原則",
+      "items": [
+        "『別概念として名前を持たせよ』は概念の同定に関する原則であり、その概念をどの構造で表すか（種別の値か、直交する属性か）までは決めない。",
+        "『実例1件から一般化するな』は、まだ形の分からない変種を先回りして吸収する汎用機構（ポリシーエンジン・DSL・設定駆動の分岐）を対象とした警告である。列挙値や属性を1つ増やす行為は、この警告の射程外である。",
+        "両者が衝突して見えるときは、提案されている変更が『名前を与える』側なのか『未知の変種を吸収する枠組みを作る』側なのかを判別すると、多くの場合いずれか一方の射程にしか入らない。",
+        "概念を種別（discriminator）の値として表すと、その種別に対応する内容の形を定義する義務が生じる。内容の形が既存の値と同一になる場合、それは種別ではなく直交する軸であるという徴候である。"
+      ]
+    },
+    "classifications": {
+      "blockType": "Classifications",
+      "title": "分類",
+      "items": [
+        {
+          "name": "名前を与える変更",
+          "description": "既に観測されている振る舞いの違いに、正式な識別子と構造上の居場所を与える。実例1件でも成立する"
+        },
+        {
+          "name": "枠組みを作る変更",
+          "description": "まだ観測されていない変種を吸収できるよう、汎用の記述手段（ポリシー・DSL・設定駆動の分岐）を用意する。実例が複数必要"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "decisionCriteria": {
+      "blockType": "DecisionCriteria",
+      "title": "判断基準",
+      "emptyReason": "分岐の形はまだ1事例からしか得られておらず、判断の分岐点として構造化するには早い。採用審査で複数事例が揃った時点で構造化する。",
+      "stages": [],
+      "transitions": []
+    },
+    "examples": {
+      "blockType": "Examples",
+      "title": "実例",
+      "text": "ある文書基盤で、他プロジェクトへ移植するための雛形文書が実運用中の文書と同じ配置先を奪い合う事故が起きた。設計原則の側からは『雛形は責務の異なる別概念だから正式な名前を持たせよ』、規律の側からは『雛形は今1件しかないので一般化するな』という逆の助言が出た。判別してみると、前者は名前を与える変更を指し、後者が想定していたのは『配置先を任意に記述できる汎用ポリシー機構』であり、両者は別のものを対象にしていた。結果として、名前は与えるが汎用機構は作らない、という形に落ち着いた。さらに、その名前を種別の値として足すと雛形の内容の形が実運用文書と同一になることが分かり、種別ではなく直交する属性として表すべきだと判明した。"
+    },
+    "antiPatterns": {
+      "blockType": "AntiPatterns",
+      "title": "アンチパターン",
+      "items": [
+        {
+          "name": "射程を確かめずに規律を適用する",
+          "problem": "『実例2件以上』のような規律を、名前を与えるだけの変更にも機械的に当てはめ、既に観測されている違いを構造に刻む機会を逃す"
+        },
+        {
+          "name": "直交する軸を種別の値として表す",
+          "problem": "種別ごとに内容の形を定義する必要があるため、既存の値と同一の形をもう1つ定義することになり、以後その2つを同期し続ける義務が生まれる"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "provenance": {
+      "blockType": "Provenance",
+      "title": "出典・根拠の透明性",
+      "source": "確立された出典に基づく概念ではなく、2026-08-08のadvisor並列相談で実際に生じた見解の衝突から抽出した候補。ddd-advisorのubiquitous-language原則と、tech-lead-advisorのevidence-based-scope規律の射程の違いに由来する。",
+      "caveats": "実例が1件のみであり、この着眼点自体がまだ一般化に足るかは未検証。他の衝突事例で同じ判別が効くかを確認する必要がある。"
+    },
+    "relatedConcepts": {
+      "blockType": "RelatedConcepts",
+      "title": "関連概念",
+      "items": [
+        {
+          "conceptId": "ubiquitous-language",
+          "note": "『振る舞いに違いがあれば別概念として定義する』という側の原則の出どころ"
+        },
+        {
+          "conceptId": "evidence-based-scope",
+          "note": "『実例が揃うまで一般化しない』という側の規律の出どころ"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "実例が1件しかない概念に、正式な名前と構造を与えるべきか",
+        "『早すぎる一般化を避けよ』という警告は、この変更を対象にしているか",
+        "概念を立てる場所として、種別（discriminator）と直交する属性のどちらが正しいか"
+      ],
+      "text": "『振る舞いが異なるなら別概念として名前を持たせよ』という設計原則と、『実例1件から一般化するな』という規律は、同じ変更に対して逆の結論を出すことがある。両者の射程を分けて裁くための着眼点を扱う。"
+    }
+  },
+  "tags": []
+}

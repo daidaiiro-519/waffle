@@ -11,5 +11,5 @@
 - [依頼された軸から外れない](feedback_stay_on_the_asked_axis.md) — docstringは「形式に沿っているか」。有無・可視性・dunderへ広げない。軸ごとに件数を測れば本題が分かる
 - [規約に分類による場合分けを持ち込まない](feedback_no_conditional_branching_in_architecture_rules.md) — フォルダはconceptPlacementが直接1つ宣言する。1文書が複数分類を束ねるので導出規則は文書内で分岐を生む
 - [ドメイン層のフォルダは種類単位で確定(2026-08-07)](project_domain_folder_unit_is_kind_based.md) — 集約単位は共有される値オブジェクト(ViewToken 3件×2集約)で破綻。未了の実害4件も併記
-- [renderは確認用の読み取りではない](feedback_render_is_not_a_read_operation.md) — deploy先はschema固定。雛形documentをrenderしてCLAUDE.md/AGENTS.mdを壊した実例あり
+- [renderは確認用の読み取りではない](feedback_render_is_not_a_read_operation.md) — 配置先の真実源は.waffle/config.json。orchestratorだけ定数パスで、雛形renderがCLAUDE.md/AGENTS.mdを壊した実例あり
 - [design-shareの旧配信機能は復活させない](feedback_design_share_delivery_is_not_restored.md) — 「一時的に失われる」と書くと移植TODOとして読まれる。判断が済んでいる形で書く

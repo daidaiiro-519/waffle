@@ -1,0 +1,288 @@
+{
+  "documentId": "handoff-deploy-target-ownership",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "配置先の所有権と雛形の別種別化を実装へ引き継ぐ：handoff-deploy-target-ownership"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-render-document"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "投影先を識別子の関数にする（エンティティを値として扱わない）",
+          "consideration": "agentKind=orchestratorの文書はdocumentIdで区別されるエンティティなのに、投影先CLAUDE.mdがそれを引数に取らないため、投影側で2つのエンティティが同一の値に潰れている。これはCQRSの投影におけるキー欠落で、後の投影が先の投影を無条件に上書きする。事故は偶発ではなく必然であり、同じ操作をすれば必ず再現する。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "雛形は未完成品ではなく責務の異なる別概念として名前を持たせる",
+          "consideration": "雛形は(1)値がプレースホルダー(2)投影されない(3)他プロジェクトで実体化されるために存在する、の3点で実運用文書と責務が異なる。statusで表すと「完成度」と「種類」の二義になり、タグで表すとrender経路から読まれず不変条件を持てない。ubiquitous-languageの「振る舞いに違いがあれば別概念として定義する」に該当する。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "schemaが形を、configが位置を決めるという現在の分担は変えない",
+          "consideration": "CLAUDE.mdや.claude/skills/という具体パスは特定AIツールの読み取り規約であり、外部連係の関心事。文書側へ持たせるとポートとアダプターが避けようとしている基盤詳細の侵入になる。scope.pathを配置先へ流用する案は、管轄範囲と設置座標という別概念に同じ語を使うことになり原則レベルで退けられる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "pathTemplateの変数化は原理的に成立しない",
+          "consideration": "CLAUDE.mdはWaffleが決められる値ではなく外部ツールがリポジトリルートで固定的に読むファイル名。{documentId}を差し込めばツールから読まれなくなる（衝突は消えるが機能も消える）。解くべき問いは「どこへ置くか」ではなく「1枠しかないスロットを誰が占有するか」であり、これは設置環境の情報。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "canonicalパスの真実源はschemaへ寄せ、config側の定義は廃止する",
+          "consideration": "deploy先は設置環境で変わるためconfig、canonicalパスは文書型の定義で変わるためschema、と変更理由が異なる。加えて表現力が非対称で、schema側はdiscriminatorごとの分岐を持てるがconfig側は型ごと1本の平坦な文字列しか持てない。表現力の低い側を真実源にすると分岐を持つ型で表現不能になる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "雛形は種別の値ではなく、種別と直交する役割として表す",
+          "consideration": "agentKindの値として雛形を足すと、AgentSchemaはその値に対応する内容の形を定義することになり、それはorchestratorとまったく同じ形になる（雛形は形が違うのではなく、同じ形で値が埋まっていないもの）。同じ形が2つ生まれ、雛形を作るたびに増える。全schema共通のdocumentRole（既定instance／template）として直交軸に置き、内容の形は1つのまま保つ。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "雛形の除外はif文ではなく、配置先の解決キーに役割を含めることで表す",
+          "consideration": "renderに『documentRoleがtemplateなら飛ばす』という条件分岐を書くと、投影アダプターが文書の分類語彙を知る形になり依存の向きが逆行する。解決キーを(documentType, documentRole, discriminator)に拡張し、config.jsonにはrole=instanceの宣言だけを置く。雛形はキーに対応する宣言が存在しないため配置先が解決できず、結果として配置されない（条件による除外ではなく構造的な不可能性）。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "配置先解決の純ロジックをdomain/servicesへ抽出する",
+          "consideration": "現在の_resolve_tool_deploy_targetsは前半でconfig.jsonのI/Oを行い後半で規則の適用を行っており、変更理由の異なる2つが1メソッドに同居している。src/waffle/domain/services/deploy_target_resolution.pyを新設し、render_document.pyのモジュールレベル関数_resolve_single_mapping_targetsと変換規則をそこへ移す。入力は読み込み済みのdictのみとし、ファイルI/Oを持たせない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "ガードはhookではなくrender usecase側に置く",
+          "consideration": "mcp__waffle__render_documentというMCP経路が実在するため、Bashコマンド文字列を検査するhookは同じusecaseへの別の入口を素通りする。既存のEdit/Write用hookが成立しているのは「実体パス1つを渡せば判定できる」入力形だからで、renderは入力がdocument.jsonであり配置先を知るにはコアの解決ロジック全体が必要になる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "所有権判定をdomain serviceとして抽出しcheck_path_is_projectionと共有する",
+          "consideration": "usecaseからusecaseを呼ぶのではなく、共通のdomain serviceへ抽出して両者が呼ぶ形にする。CheckPathIsProjectionはconfig/schema読み出しとResult包装のみを担う薄いusecaseにする。symlink解決はアダプター（DocumentRepository）側の責務として既存の分業を踏襲する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "スキップは黙って握りつぶさず理由を返す",
+          "consideration": "所有者宣言や種別分離によって配置先が解決されない場合、静かに何もdeployされない状態は設定漏れと区別がつかない。renderの結果に配置先と理由（例: NOT_DEPLOY_OWNER）を明示的に含める。既存の_err規約に合わせる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "1実例からの一般化を避ける",
+          "consideration": "今回の実例はAgent.orchestratorの1件のみ。documentTypeごとに任意の配置ポリシーを記述できる汎用ポリシー機構へ一般化すると、config.jsonがDSL化して真実源一元化の成果を相殺する。2件目（別の定数スロット、または別documentTypeでの同種の衝突）が観測されるまで共通化しない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "canonicalパスの真実源はこの増分で一度に切り替える",
+          "consideration": "config.jsonのcanonicalPathTemplatesを削除し、check_path_is_projectionがschemaのx-render-target.pathを逆マッチするよう変更する。暫定の二重読み期間は置かない。切替の取りこぼしは、逆マッチ失敗時に無症状でisProjection: Falseを返す現在の挙動により検知できないため、テストで担保する。SchemaRepositoryのCheckPathIsProjectionへの注入はcomposition root 1箇所で配線する。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "AgentSchema/v3のx-render-targetの実値は未確認（schema.jsonの直接読み取りがhookで禁止されており、schemaを閲覧するCLI操作が存在しないため）。雛形を別種別にした際、config.jsonのtoolMappingsに該当kindのマッピングが無いと_resolve_tool_deploy_targetsがNoneを返し、後方互換フォールバックでschema側のx-render-target.deployが読まれる経路がある。実装前にこの経路の挙動を確認すること",
+        "docs/templates/CLAUDE.generic.mdは手作業で同期された写しであり、同期を保つ仕組みが無い。雛形が別種別として立ち、canonical成果物が自動生成されるようになった時点でこの写しは不要になるが、削除は移植手順の参照先を確認してから行う",
+        "canonicalパスの二重定義の解消（config.jsonのcanonicalPathTemplates廃止）は、check_path_is_projectionが逆マッチ失敗時に例外ではなくisProjection: Falseを返すため、移行途中で保護が無症状のまま失われうる。両方読んで不一致なら失敗させる暫定期間を置くか、一度に切り替えるかを実装時に決める",
+        "「role skill」から「practitioner skill（実務Skill）」への語彙変更は、schemaのフィールド名にもコードにも識別子として存在せず、文章中の言い回しのみ。対象はskill-routerのSKILL.md・このリポジトリのCLAUDE.md・汎用テンプレートの3つに限られる",
+        "documentRoleは全schemaに追加する新規トップレベルキーであり、fill/createは新規キーを後追いマージしない。8本のschemaすべてを直接編集し、既存の全documentへ既定値instanceを反映する必要がある。CLAUDE.mdのjudgmentTasksが例外的に許容している操作に該当する"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "宣言",
+          "description": "どこへ置くかを宣言する層。設置環境の情報はconfig、文書型の定義はschemaが持つ。",
+          "nodes": [
+            {
+              "id": "config",
+              "title": ".waffle/config.json",
+              "sub": "toolMappings（要変更・canonicalPathTemplatesは廃止）",
+              "status": "existing"
+            },
+            {
+              "id": "agentschema",
+              "title": "AgentSchema/v3",
+              "sub": "雛形を表すagentKindを追加（要変更）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "判断",
+          "description": "配置先を解決し、所有権を判定する純ロジック。ファイルI/Oを持たない。",
+          "nodes": [
+            {
+              "id": "dtr",
+              "title": "deploy_target_resolution",
+              "sub": "domain/services（新設）",
+              "status": "new"
+            },
+            {
+              "id": "pt",
+              "title": "path_template",
+              "sub": "domain/services（変更なし）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "調整",
+          "description": "宣言を読み、判断へ渡し、結果に従って書く。業務ルールそのものは持たない。",
+          "nodes": [
+            {
+              "id": "render",
+              "title": "render_document",
+              "sub": "配置前に所有権を検査（要変更）",
+              "status": "existing"
+            },
+            {
+              "id": "checkproj",
+              "title": "check_path_is_projection",
+              "sub": "判定をdomain serviceへ委譲（要変更）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "文書",
+          "description": "実運用の定義と、移植用の雛形。種別が異なるため配置先の解決も異なる。",
+          "nodes": [
+            {
+              "id": "waffle",
+              "title": "waffle",
+              "sub": "orchestrator／CLAUDE.mdを所有（変更なし）",
+              "status": "existing"
+            },
+            {
+              "id": "tmpl",
+              "title": "orchestrator-template",
+              "sub": "雛形／配置先を持たない（改名・種別移行）",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "uv run waffle render --path .waffle/documents/agent/orchestrator-template.json  # canonicalのみ生成され、CLAUDE.md/AGENTS.mdは書き換えられない",
+        "uv run waffle render --path .waffle/documents/agent/waffle.json  # 従来どおりCLAUDE.md/AGENTS.mdへ配置される"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "uc-render-document・uc-check-path-is-projectionの2つのusecaseにまたがる変更を実装へ引き継ぐ。配置先を持たない文書は配置しないこと、1つの配置先はちょうど1つの文書に所有されること、および他プロジェクト移植用の雛形を正式な別種別として立てることを扱う。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/domain/services/deploy_target_resolution.py",
+          "reason": "新設。配置先解決の純ロジックと所有権判定を置く"
+        },
+        {
+          "path": "src/waffle/application/usecases/render_document.py",
+          "reason": "配置前の所有権検査の追加と、_resolve_single_mapping_targets等のdomain serviceへの移設"
+        },
+        {
+          "path": "src/waffle/application/usecases/check_path_is_projection.py",
+          "reason": "canonicalパスの真実源をschemaへ切り替え、判定ロジックをdomain serviceと共有する"
+        },
+        {
+          "path": ".waffle/config.json",
+          "reason": "canonicalPathTemplatesの廃止と、雛形種別に対応するtoolMappingsの扱い"
+        },
+        {
+          "path": "src/waffle/domain/model/AgentSchema/v3.json",
+          "reason": "雛形を表す新しいagentKindの追加（patch-schema経由）"
+        },
+        {
+          "path": ".waffle/documents/agent/generic-role-skill-orchestrator.json",
+          "reason": "orchestrator-templateへの改名と、新種別への移行"
+        },
+        {
+          "path": ".waffle/documents/skills/skill-router.json",
+          "reason": "「role skill」から「practitioner skill」への語彙変更"
+        },
+        {
+          "path": ".waffle/documents/agent/waffle.json",
+          "reason": "同上。このリポジトリのCLAUDE.mdの語彙変更"
+        },
+        {
+          "path": "docs/templates/CLAUDE.generic.md",
+          "reason": "手作業の写し。canonical成果物が自動生成されるようになった後の扱いを決める"
+        },
+        {
+          "path": "src/waffle/domain/model/*/v*.json（現行版8本）",
+          "reason": "documentRoleの新規トップレベルキー追加。既定値instance"
+        },
+        {
+          "path": ".waffle/documents/**/*.json",
+          "reason": "既存documentへのdocumentRole既定値の反映（backfill）"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "resolved",
+          "note": "雛形を正式な別概念として立てる（B案）を採用して決着"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "resolved",
+          "note": "canonicalパスの二重定義はこの増分に含め、暫定期間を置かず一度に切り替えると決定"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 5,
+          "resolutionStatus": "resolved",
+          "note": "雛形は全documentType共通の直交する役割（documentRole）として表すと決定。agentKindへの値追加は、内容の形が種別ごとに分かれる構造上、orchestratorと同一の形をもう1つ定義することになるため採らない。tech-lead-advisorの『1実例からの一般化を避けよ』はconfig.jsonのポリシーDSL化を対象にした警告であり、列挙値1つの追加は射程外と判断した"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": []
+}
