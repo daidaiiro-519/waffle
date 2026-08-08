@@ -1,0 +1,266 @@
+{
+  "documentId": "handoff-skill-bundle-export",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "Skill群の書き出しを、specを書く工程へ引き継ぐ：handoff-skill-bundle-export"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-export-skill-bundle"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "『作成中だから配らない』は既存のstatusで表現済みであり、新しい軸を立てない",
+          "consideration": "配布から外したい2件（artifact-share・design-share）は実測でstatus DRAFT。20件中DRAFTはこの2件だけで、除外したい集合と完全に一致する。配布側にexcluded相当の値を新設すると、status DRAFTと同じ事実を指す語が2つ生まれ、食い違ったときどちらが正しいか決める術がなくなる。書き出しの選別を『statusがACTIVE以上のものだけ』と定めれば、schema変更も新しい値も不要で、完成時にACTIVEへ上げるだけで配布対象へ復帰する。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "distributionTierの語義は現状のまま固定し、配布の選別に流用しない",
+          "consideration": "distributionTierの現在の意味は『Waffleが標準同梱するか、ユーザーが育てる任意か』という提供元視点の不変な区分。ここに『今回の書き出しに含めるか』という可変の選別を重ねると、同じ語が文脈で違う対象を指す。加えて20件中12件にしか設定されておらず、既存語義での一貫性がすでに崩れかけている。意味を広げる前に未設定8件を埋めるのが先。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "選別規則は文書側のフラグではなく、書き出し側が持つ",
+          "consideration": "『何を書き出すか』は書き出しユースケースの関心事であって、Skill文書自身の不変条件ではない。文書側にフラグを増やすのは下流（配布）の都合を上流（文書モデル）へ滲ませる行為。文書側は既存の識別可能な属性（status・documentRole・skillKind・出自）を素材として提供するだけに留める。この形なら、将来『社内配布』『OSS配布』のように書き出しが複数になっても、書き出し定義の追加だけで吸収できる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "documentRoleとは片方向の含意にとどまるため、兼用せず解決キーも変えない",
+          "consideration": "documentRole=templateはその存在理由から配布対象になるが、逆は成立しない（advisorのknowledgeやcoding規約はinstanceでありながら配布したい）。片方向の含意しかない2つを1フィールドに兼ねるのは一語一義に反する。また解決キー(tool, documentRole, documentType, discriminator)が守る不変条件は『配置先が一意に決まること』であり、配布包含とは無関係。キーに足すと集約を大きくしすぎるアンチパターンになる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "coding規約の3系統は『出自』という不変の軸であり、これだけは新設に値する",
+          "consideration": "プリセット由来／このプロジェクト固有／他プロジェクト由来は、時間とともに変化しない不変の属性で、由来するコンテキストが違うという事実を表す。可変な属性（status・配布包含）と同じフィールドに混ぜると、変更のたびに不変であるはずの情報が書き換わりうる。実例も3系統13件と十分にある。命名は『配布』『利用』といった操作の語を混ぜず、由来だけを指す語にする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "書き出しはapplication層のユースケースとして新設する",
+          "consideration": "CLIとMCPはどちらも同格のPrimaryアダプターであり、既存のcheck-*8種・render・scaffoldが例外なくユースケースとして実装され両方から呼べる形で揃っている。書き出しだけを例外にする理由が事実として見つからない。CLIのみに閉じる案・シェルスクリプト案は、ユースケース層とポートを経由せずファイルシステムへ直接触るためレイヤーのバイパスに該当する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "選別ロジックはdomain serviceへ抽出し、deploy_target_resolutionとは別ファイルに置く",
+          "consideration": "配布方針は業務ルールなのでドメイン側。ただしdeploy_target_resolutionとは変更理由が異なる——前者は投影の解決キーと所有権のルールで変わり、後者は配布方針で変わる。混ぜると解決キーに手を入れるたびに配布方針が巻き込まれて壊れる。関係はあり、配布対象の実体パス集合を得るために投影先の解決結果を入力として受け取る。この2つを順に呼ぶ調整はユースケースの責務。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "複製操作は既存のDocumentRepositoryへメソッドを1つ足し、新ポートは立てない",
+          "consideration": "cp -rL相当のsymlink追跡・再帰コピーはアダプター（fs.py）に閉じ、ポートには『リンクを実体化する』という意図だけを出す（例: 引数dereference）。ポート切り出しの実例は現時点で1件のみのため一般化しない。将来切り出すなら『配布物ポート』ではなくFileTreeRepositoryとして、write_text/link/list_files/resolve_real_pathごと分離するのが責務の切れ目として自然。配布専用ポートを立てると、複製という汎用操作が1ユースケースに紐づき、次に複製が要るとき2つ目のポートを産む。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "壊れたリンクの不在は書き出しの事後条件として検査し、破れていればErrを返す",
+          "consideration": "書き出した結果に壊れたリンクが残っているなら、それは検査対象の所見ではなく書き出しの失敗そのもの。Errを返さずに壊れた成果物を残すと、不変条件のカプセル化が満たされない。既存のcheck-*が『検査だけを行い修正しない』形で揃っているのはコマンドとクエリを分ける規律の現れだが、この規律は『コマンドが自分の事後条件を確かめてはいけない』とは言わない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "参照到達性の単体検査コマンドは、要求が実際に出るまで切り出さない",
+          "consideration": "『書き出さなくても問える健全性』なので独立したcheck-*として立てる余地はあるが、実例はまだ1件。いま切り出すとCLI/MCP両方のコマンド登録とテストが恒久的に1本増える。切り出しを待てば、後でexportから検査ロジックを引き出す小さな移設が1回発生するだけで、こちらの方が安く可逆。切り出す際は判定の実体をdomain serviceの純関数に置き、exportとcheckの両方がそれを呼ぶ（ユースケースがユースケースを呼ぶ形にはしない）。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "配布対象の目印を先に決めないと、除外対象のリテラルがコードに埋まる",
+          "consideration": "判定をdomain serviceに置いても、判定に使う値が文書側に無ければ『artifact-shareとdesign-shareは除く』という固有名がコードに書き込まれる。これは配置の問題ではなくモデルの欠落。ただしddd-advisorの結論（statusで足りる）を採るなら、この懸念は解消する。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "advisorへ渡した前提に誤りがあった。artifact-share・design-shareのstatusをACTIVEと伝えたが、実際はDRAFT。ddd-advisorが実物確認で訂正し、こちらでも20件を確認して裏を取った。この訂正により『配布から外す仕組みを新設する』必要が消え、schema変更ゼロで要求が満たせる結論に変わっている",
+        "distributionTierが20件中12件にしか設定されていない（未設定: investigation / handoff-authoring / implementation / spec-authoring / skill-router / platform-advisor / design-share / ux-advisor）。この一貫性回復は本増分の対象外だが、放置すると『未設定はcoreかoptionalか』が文書から判定できない状態が続く",
+        "実測値は cp -r で壊れたリンク86件、cp -rL で0件、実体化後210ファイル・1.9MB。この測定は .claude/skills 配下の20Skillを対象にしたもので、.waffle/agent・.waffle/hooks は含めていない",
+        "tech-lead-advisorはサブドメイン分類を中核と仮定して回答している。一般・補完と判定される場合、domain serviceへの抽出は緩めてよい"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "入口",
+          "description": "どちらも同格の薄いアダプター。業務ルールを内包しない。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "waffle export-skill-bundle",
+              "sub": "CLI（要変更）",
+              "status": "existing"
+            },
+            {
+              "id": "mcp",
+              "title": "MCPツール",
+              "sub": "公開するかは未決",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "調整",
+          "description": "投影先を解決し、配布対象を絞り、複製し、事後条件を確かめる。",
+          "nodes": [
+            {
+              "id": "export",
+              "title": "export_skill_bundle",
+              "sub": "application/usecases（新設）",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "判断",
+          "description": "何を含めるかを決める純ロジック。ファイルI/Oを持たない。",
+          "nodes": [
+            {
+              "id": "sel",
+              "title": "distribution_selection",
+              "sub": "domain/services（新設）",
+              "status": "new"
+            },
+            {
+              "id": "dtr",
+              "title": "deploy_target_resolution",
+              "sub": "domain/services（変更なし・入力として使う）",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "実行",
+          "description": "リンクを実体化して複製する技術的詳細を閉じ込める。",
+          "nodes": [
+            {
+              "id": "port",
+              "title": "DocumentRepository",
+              "sub": "ports（メソッド追加）",
+              "status": "existing"
+            },
+            {
+              "id": "fs",
+              "title": "FsDocumentRepository",
+              "sub": "adapters/outbound（要変更）",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": []
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "brainstormToSpec"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "uv run waffle export-skill-bundle --outputPath /tmp/bundle  # statusがACTIVE以上のSkillだけを、リンクを実体化して書き出す",
+        "uv run waffle export-skill-bundle --outputPath /tmp/bundle  # 壊れたリンクが残ればErrを返し、書き出しは失敗として扱われる"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "Waffleを使っていないプロジェクトへSkill群を配るための書き出し操作について、spec作成へ渡す判断材料を記録する。uc-export-skill-bundleを新設する前提で、配布対象の選び方・操作の置き場所・検証の組み込み方までを扱う。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": ".waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-export-skill-bundle.json",
+          "reason": "新規spec。この引き継ぎが書かせようとしている対象"
+        },
+        {
+          "path": "src/waffle/application/usecases/export_skill_bundle.py",
+          "reason": "新設。対象を選び、実体化して複製し、事後条件を検査する調整"
+        },
+        {
+          "path": "src/waffle/domain/services/distribution_selection.py",
+          "reason": "新設。何を含めるかの判定を純関数として置く。ファイルI/Oを持たせない"
+        },
+        {
+          "path": "src/waffle/application/ports/document_repository.py",
+          "reason": "複製メソッドの追加。実体化の意図だけをシグネチャに出す"
+        },
+        {
+          "path": "src/waffle/adapters/outbound/fs.py",
+          "reason": "cp -rL相当の実装。symlink追跡の技術的詳細をここに閉じる"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/cli/main.py",
+          "reason": "コマンド登録。既存check-*と同じ薄いアダプターに留める"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/mcp/main.py",
+          "reason": "同上。公開するかは未決（constraints参照）"
+        },
+        {
+          "path": "src/waffle/domain/model/CodingSchema/v5.json",
+          "reason": "出自を表す不変の属性の追加（未決。artifact-share系4件の扱い次第）"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "open",
+          "note": "coding規約の他プロジェクト由来4件（artifact-share系）がこのリポジトリに置かれている意図が未確認。意図的な相乗りなら出自属性の新設が正しいが、暫定的な置き場なら正しい解決は文書の移設であり、属性を足すべきではない"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "open",
+          "note": "MCPへ書き出しを公開するかが未決。配布が人間の手動操作専用と確定しているなら、ユースケース化は維持しつつMCPツールの登録だけ見送る選択もある"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "『作成中だから配らない』はstatus DRAFTで表現済みと確認。schema変更ゼロで要求を満たせる"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "本日拡張した解決キーには手を入れないと決着"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": []
+}

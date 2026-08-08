@@ -400,11 +400,11 @@ def test_scan_source_code_returns_public_elements(tmp_path):
 def test_lint_docstring_returns_violations(tmp_path):
     """
     Given waffle MCPサーバ
-    When lint_docstringツールをkind=googleで呼ぶ
+    When lint_docstringツールを規約への参照つきで呼ぶ
     Then MCP出力は違反の配列（適合すれば空配列）
     """
     sample = tmp_path / "sample.py"
     sample.write_text('def f():\n    """要約。"""\n    pass\n', encoding="utf-8")
 
-    out = asyncio.run(_call("lint_docstring", {"path": str(tmp_path), "kind": "google"}))
+    out = asyncio.run(_call("lint_docstring", {"path": str(tmp_path), "standardRef": ".waffle/documents/coding/coding-standard-waffle.json"}))
     assert isinstance(out, list)

@@ -581,12 +581,12 @@ def scan_source_code(path: str, kind: str) -> dict | list:
     return _dict(ScanSourceCode(_docs(), PythonAstSourceScanner()).run(path, kind))
 
 @mcp.tool(description="対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。")
-def lint_docstring(path: str, kind: str) -> dict | list:
+def lint_docstring(path: str, standardRef: str) -> dict | list:
     """受け取った引数をユースケースへ渡し、結果を辞書で返す。
 
     Args:
-        path: 対象コードベース(ディレクトリ)のパス
-        kind: DocstringSchemaのkind（現状はgoogleのみ対応）
+        path: 確かめる対象のコードベースの置き場所
+        standardRef: どの構文で判定するかを宣言している規約のdocumentの置き場所
 
     Returns:
         その操作の結果。
@@ -595,7 +595,7 @@ def lint_docstring(path: str, kind: str) -> dict | list:
         なし。失敗は結果の中で表す。
     """
     scan_engine = ScanSourceCode(_docs(), PythonAstSourceScanner())
-    return _dict(LintDocstring(scan_engine, PydoclintLinter()).run(path, kind))
+    return _dict(LintDocstring(scan_engine, PydoclintLinter()).run(path, standardRef))
 
 @mcp.tool(description="プリセットからtech-stack/architecture/coding-standard/test-standardの4documentを一括生成（uc-init-coding-preset）。")
 def init_coding_preset(preset: str, product: str) -> dict:

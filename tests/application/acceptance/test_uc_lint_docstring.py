@@ -31,7 +31,7 @@ def test_all_elements_conform_to_the_standard(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine().run(str(tmp_path), "google")
+    result = _engine().run(str(tmp_path), _standard(tmp_path))
     assert isinstance(result, Ok), result
     assert result.value == []
 
@@ -45,7 +45,7 @@ def test_public_element_without_docstring(tmp_path):
     """
     (tmp_path / "sample.py").write_text("def undocumented(x):\n    return x\n", encoding="utf-8")
 
-    result = _engine().run(str(tmp_path), "google")
+    result = _engine().run(str(tmp_path), _standard(tmp_path))
     assert isinstance(result, Ok), result
     violation = next(v for v in result.value if v["name"] == "undocumented")
     assert violation["code"] == "MISSING_DOC_COMMENT"
@@ -69,7 +69,7 @@ def test_args_names_do_not_match_signature(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine().run(str(tmp_path), "google")
+    result = _engine().run(str(tmp_path), _standard(tmp_path))
     assert isinstance(result, Ok), result
     violation = next(v for v in result.value if v["name"] == "mismatched")
     assert violation["code"] == "ARGS_MISMATCH"
@@ -89,7 +89,7 @@ def test_missing_args_section_in_summary_only_docstring(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine().run(str(tmp_path), "google")
+    result = _engine().run(str(tmp_path), _standard(tmp_path))
     assert isinstance(result, Ok), result
     assert any(v["name"] == "f" and v["code"] == "MISSING_ARGS_SECTION" for v in result.value)
 
@@ -108,7 +108,7 @@ def test_missing_returns_section(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine().run(str(tmp_path), "google")
+    result = _engine().run(str(tmp_path), _standard(tmp_path))
     assert isinstance(result, Ok), result
     assert any(v["name"] == "f" and v["code"] == "MISSING_RETURNS_SECTION" for v in result.value)
 
@@ -127,7 +127,7 @@ def test_missing_raises_section(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine().run(str(tmp_path), "google")
+    result = _engine().run(str(tmp_path), _standard(tmp_path))
     assert isinstance(result, Ok), result
     assert any(v["name"] == "f" and v["code"] == "MISSING_RAISES_SECTION" for v in result.value)
 
@@ -148,7 +148,7 @@ def test_private_element_is_skipped(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine().run(str(tmp_path), "google")
+    result = _engine().run(str(tmp_path), _standard(tmp_path))
     assert isinstance(result, Ok), result
     codes = {"MISSING_ARGS_SECTION", "MISSING_RETURNS_SECTION", "MISSING_RAISES_SECTION"}
     assert not any(v["name"] == "_f" and v["code"] in codes for v in result.value)
@@ -163,7 +163,7 @@ def test_unsupported_kind_is_rejected(tmp_path):
     """
     (tmp_path / "sample.py").write_text("def f():\n    pass\n", encoding="utf-8")
 
-    result = _engine().run(str(tmp_path), "cobol")
+    result = _engine().run(str(tmp_path), _standard(tmp_path, tags=("Parameters", "Returns", "Raises")))
     assert isinstance(result, Err), result
     assert result.details[0] == "UNSUPPORTED_KIND"
 
@@ -180,6 +180,59 @@ def test_missing_tool_is_reported(tmp_path):
         encoding="utf-8",
     )
 
-    result = _engine(executable="no-such-lint-tool").run(str(tmp_path), "google")
+    result = _engine(executable="no-such-lint-tool").run(str(tmp_path), _standard(tmp_path))
     assert isinstance(result, Err), result
     assert result.details[0] == "TOOL_NOT_AVAILABLE"
+
+
+def _standard(tmp_path, tags=("Args:", "Returns:", "Raises:"), syntax="tagged"):
+    """規約のdocstringブロックだけを持つ、最小のcoding-standardを作る。"""
+    import json
+    path = tmp_path / "documents" / "coding" / "coding-standard-fake.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "documentId": "coding-standard-fake", "codingKind": "coding-standard",
+        "content": {"docstring": {
+            "blockType": "Docstring", "title": "docstring",
+            "syntaxKind": syntax, "tagParams": tags[0],
+            "tagReturns": tags[1], "tagRaises": tags[2],
+        }},
+    }, ensure_ascii=False), encoding="utf-8")
+    return str(path)
+
+
+def test_syntax_comes_from_the_standard(tmp_path):
+    """
+    Scenario: 構文は規約の宣言から決まる
+    Given docstringブロックがタグの綴りを宣言している規約
+    When その規約でdocstringの適合を確かめる
+    Then 宣言された構文に対応する道具の設定で判定される
+    """
+    (tmp_path / "sample.py").write_text(
+        'def greet(name):\n'
+        '    """挨拶を返す。\n\n'
+        '    Args:\n'
+        '        name: 相手の名前。\n\n'
+        '    Returns:\n'
+        '        挨拶文。\n'
+        '    """\n'
+        '    return f"hello {name}"\n',
+        encoding="utf-8",
+    )
+    result = _engine().run(str(tmp_path), _standard(tmp_path))
+    assert isinstance(result, Ok), result
+    assert result.value == []
+
+
+def test_syntax_the_tool_cannot_follow_is_reported(tmp_path):
+    """
+    Scenario: 宣言に道具が追随できないことを黙って通さない
+    Given 既存lintツールが持たない構文を宣言している規約
+    When その規約でdocstringの適合を確かめる
+    Then UNSUPPORTED_SYNTAXとして報告される
+    And 呼び出しの誤りを表すUNSUPPORTED_KINDとは区別されている
+    """
+    standard = _standard(tmp_path, tags=("@param", "@returns", "@throws"))
+    result = _engine().run(str(tmp_path), standard)
+    assert isinstance(result, Err), result
+    assert result.details == ["UNSUPPORTED_SYNTAX"]

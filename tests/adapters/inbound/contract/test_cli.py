@@ -480,14 +480,14 @@ def test_patch_schema_returns_add_block_result_as_json():
 def test_lint_docstring_returns_violations(tmp_path):
     """
     Given waffle CLI
-    When lint-docstring --path --kind google を実行する
+    When lint-docstring --path --standardRef を実行する
     Then 終了コードは0で、出力JSONは違反の配列（適合すれば空配列）
     """
     sample = tmp_path / "sample.py"
     sample.write_text('def f():\n    """要約。"""\n    pass\n', encoding="utf-8")
 
     result = _runner.invoke(app, [
-        "lint-docstring", "--path", str(tmp_path), "--kind", "google",
+        "lint-docstring", "--path", str(tmp_path), "--standardRef", ".waffle/documents/coding/coding-standard-waffle.json",
     ])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)

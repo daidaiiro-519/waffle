@@ -731,14 +731,14 @@ def scan_source_code(
 
 @app.command("lint-docstring", help="対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。")
 def lint_docstring(
-    path: str = typer.Option(..., "--path", help="対象コードベース(ディレクトリ)のパス"),
-    kind: str = typer.Option(..., "--kind", help="DocstringSchemaのkind（現状はgoogleのみ対応）"),
+    path: str = typer.Option(..., "--path", help="確かめる対象のコードベースの置き場所"),
+    standard_ref: str = typer.Option(..., "--standardRef", "--standard-ref", help="どの構文で判定するかを宣言している規約のdocumentの置き場所"),
 ) -> None:
     """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
 
     Args:
-        path: 対象コードベース(ディレクトリ)のパス
-        kind: DocstringSchemaのkind（現状はgoogleのみ対応）
+        path: 確かめる対象のコードベースの置き場所
+        standard_ref: どの構文で判定するかを宣言している規約のdocumentの置き場所
 
     Returns:
         なし。結果は標準出力へ書き出す。
@@ -747,7 +747,7 @@ def lint_docstring(
         なし。失敗は終了コードで表す。
     """
     scan_engine = ScanSourceCode(_docs(), PythonAstSourceScanner())
-    _emit(LintDocstring(scan_engine, PydoclintLinter()).run(path, kind))
+    _emit(LintDocstring(scan_engine, PydoclintLinter()).run(path, standard_ref))
 
 @app.command("update-coding-preset", help="実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。")
 def update_coding_preset(
