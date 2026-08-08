@@ -1,0 +1,382 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Skill群の書き出しを、specを書く工程へ引き継ぐ：handoff-skill-bundle-export</title>
+<meta name="id" content="handoff-skill-bundle-export">
+<meta name="type" content="Handoff">
+<meta name="title" content="Skill群の書き出しを、specを書く工程へ引き継ぐ：handoff-skill-bundle-export">
+<meta name="description" content="Waffleを使っていないプロジェクトへSkill群を配るための書き出し操作について、spec作成へ渡す判断材料を記録する。uc-export-skill-bundleを新設する前提で、配布対象の選び方・操作の置き場所・検証の組み込み方までを扱う。">
+<meta name="tags" content="">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">ブレスト→specハンドオフ</div>
+    <h1>Skill群の書き出しを、specを書く工程へ引き継ぐ：handoff-skill-bundle-export</h1>
+    <dl>
+      <dt>これから書くspec</dt><dd>uc-export-skill-bundle</dd>
+      <dt>documentId</dt><dd>handoff-skill-bundle-export</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定されるDDD上の配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 412" width="100%" height="412">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">入口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">調整</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">判断</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">実行</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-arrow" d="M242.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M554.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L554.0,352.0"/>
+        
+        <g class="flow-box " transform="translate(96.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">waffle export-skill-bundle</div>
+              <div class="sub">CLI（要変更）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,10.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">MCPツール</div>
+              <div class="sub">公開するかは未決</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">export_skill_bundle</div>
+              <div class="sub">application/usecases（新設）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">distribution_selection</div>
+              <div class="sub">domain/services（新設）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">deploy_target_resolution</div>
+              <div class="sub">domain/services（変更なし・入力として使う）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">DocumentRepository</div>
+              <div class="sub">ports（メソッド追加）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">FsDocumentRepository</div>
+              <div class="sub">adapters/outbound（要変更）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回のブレストの帰結）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>入口</strong>: どちらも同格の薄いアダプター。業務ルールを内包しない。</p></li><li><p><strong>調整</strong>: 投影先を解決し、配布対象を絞り、複製し、事後条件を確かめる。</p></li><li><p><strong>判断</strong>: 何を含めるかを決める純ロジック。ファイルI/Oを持たない。</p></li><li><p><strong>実行</strong>: リンクを実体化して複製する技術的詳細を閉じ込める。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>uv run waffle export-skill-bundle --outputPath /tmp/bundle  # statusがACTIVE以上のSkillだけを、リンクを実体化して書き出す</p></li><li><p>uv run waffle export-skill-bundle --outputPath /tmp/bundle  # 壊れたリンクが残ればErrを返し、書き出しは失敗として扱われる</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">分類判断 5件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">分類判断 6件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">ブレストの結論</label>
+          <label for="tab2">仕様方針</label>
+          <label for="tab3">仕様時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">『作成中だから配らない』は既存のstatusで表現済みであり、新しい軸を立てない</div>
+              <div class="entry-consideration">配布から外したい2件（artifact-share・design-share）は実測でstatus DRAFT。20件中DRAFTはこの2件だけで、除外したい集合と完全に一致する。配布側にexcluded相当の値を新設すると、status DRAFTと同じ事実を指す語が2つ生まれ、食い違ったときどちらが正しいか決める術がなくなる。書き出しの選別を『statusがACTIVE以上のものだけ』と定めれば、schema変更も新しい値も不要で、完成時にACTIVEへ上げるだけで配布対象へ復帰する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">distributionTierの語義は現状のまま固定し、配布の選別に流用しない</div>
+              <div class="entry-consideration">distributionTierの現在の意味は『Waffleが標準同梱するか、ユーザーが育てる任意か』という提供元視点の不変な区分。ここに『今回の書き出しに含めるか』という可変の選別を重ねると、同じ語が文脈で違う対象を指す。加えて20件中12件にしか設定されておらず、既存語義での一貫性がすでに崩れかけている。意味を広げる前に未設定8件を埋めるのが先。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">選別規則は文書側のフラグではなく、書き出し側が持つ</div>
+              <div class="entry-consideration">『何を書き出すか』は書き出しユースケースの関心事であって、Skill文書自身の不変条件ではない。文書側にフラグを増やすのは下流（配布）の都合を上流（文書モデル）へ滲ませる行為。文書側は既存の識別可能な属性（status・documentRole・skillKind・出自）を素材として提供するだけに留める。この形なら、将来『社内配布』『OSS配布』のように書き出しが複数になっても、書き出し定義の追加だけで吸収できる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">documentRoleとは片方向の含意にとどまるため、兼用せず解決キーも変えない</div>
+              <div class="entry-consideration">documentRole=templateはその存在理由から配布対象になるが、逆は成立しない（advisorのknowledgeやcoding規約はinstanceでありながら配布したい）。片方向の含意しかない2つを1フィールドに兼ねるのは一語一義に反する。また解決キー(tool, documentRole, documentType, discriminator)が守る不変条件は『配置先が一意に決まること』であり、配布包含とは無関係。キーに足すと集約を大きくしすぎるアンチパターンになる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">coding規約の3系統は『出自』という不変の軸であり、これだけは新設に値する</div>
+              <div class="entry-consideration">プリセット由来／このプロジェクト固有／他プロジェクト由来は、時間とともに変化しない不変の属性で、由来するコンテキストが違うという事実を表す。可変な属性（status・配布包含）と同じフィールドに混ぜると、変更のたびに不変であるはずの情報が書き換わりうる。実例も3系統13件と十分にある。命名は『配布』『利用』といった操作の語を混ぜず、由来だけを指す語にする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">書き出しはapplication層のユースケースとして新設する</div>
+              <div class="entry-consideration">CLIとMCPはどちらも同格のPrimaryアダプターであり、既存のcheck-*8種・render・scaffoldが例外なくユースケースとして実装され両方から呼べる形で揃っている。書き出しだけを例外にする理由が事実として見つからない。CLIのみに閉じる案・シェルスクリプト案は、ユースケース層とポートを経由せずファイルシステムへ直接触るためレイヤーのバイパスに該当する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">選別ロジックはdomain serviceへ抽出し、deploy_target_resolutionとは別ファイルに置く</div>
+              <div class="entry-consideration">配布方針は業務ルールなのでドメイン側。ただしdeploy_target_resolutionとは変更理由が異なる——前者は投影の解決キーと所有権のルールで変わり、後者は配布方針で変わる。混ぜると解決キーに手を入れるたびに配布方針が巻き込まれて壊れる。関係はあり、配布対象の実体パス集合を得るために投影先の解決結果を入力として受け取る。この2つを順に呼ぶ調整はユースケースの責務。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">複製操作は既存のDocumentRepositoryへメソッドを1つ足し、新ポートは立てない</div>
+              <div class="entry-consideration">cp -rL相当のsymlink追跡・再帰コピーはアダプター（fs.py）に閉じ、ポートには『リンクを実体化する』という意図だけを出す（例: 引数dereference）。ポート切り出しの実例は現時点で1件のみのため一般化しない。将来切り出すなら『配布物ポート』ではなくFileTreeRepositoryとして、write_text/link/list_files/resolve_real_pathごと分離するのが責務の切れ目として自然。配布専用ポートを立てると、複製という汎用操作が1ユースケースに紐づき、次に複製が要るとき2つ目のポートを産む。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">壊れたリンクの不在は書き出しの事後条件として検査し、破れていればErrを返す</div>
+              <div class="entry-consideration">書き出した結果に壊れたリンクが残っているなら、それは検査対象の所見ではなく書き出しの失敗そのもの。Errを返さずに壊れた成果物を残すと、不変条件のカプセル化が満たされない。既存のcheck-*が『検査だけを行い修正しない』形で揃っているのはコマンドとクエリを分ける規律の現れだが、この規律は『コマンドが自分の事後条件を確かめてはいけない』とは言わない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">参照到達性の単体検査コマンドは、要求が実際に出るまで切り出さない</div>
+              <div class="entry-consideration">『書き出さなくても問える健全性』なので独立したcheck-*として立てる余地はあるが、実例はまだ1件。いま切り出すとCLI/MCP両方のコマンド登録とテストが恒久的に1本増える。切り出しを待てば、後でexportから検査ロジックを引き出す小さな移設が1回発生するだけで、こちらの方が安く可逆。切り出す際は判定の実体をdomain serviceの純関数に置き、exportとcheckの両方がそれを呼ぶ（ユースケースがユースケースを呼ぶ形にはしない）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">配布対象の目印を先に決めないと、除外対象のリテラルがコードに埋まる</div>
+              <div class="entry-consideration">判定をdomain serviceに置いても、判定に使う値が文書側に無ければ『artifact-shareとdesign-shareは除く』という固有名がコードに書き込まれる。これは配置の問題ではなくモデルの欠落。ただしddd-advisorの結論（statusで足りる）を採るなら、この懸念は解消する。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>advisorへ渡した前提に誤りがあった。artifact-share・design-shareのstatusをACTIVEと伝えたが、実際はDRAFT。ddd-advisorが実物確認で訂正し、こちらでも20件を確認して裏を取った。この訂正により『配布から外す仕組みを新設する』必要が消え、schema変更ゼロで要求が満たせる結論に変わっている</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>distributionTierが20件中12件にしか設定されていない（未設定: investigation / handoff-authoring / implementation / spec-authoring / skill-router / platform-advisor / design-share / ux-advisor）。この一貫性回復は本増分の対象外だが、放置すると『未設定はcoreかoptionalか』が文書から判定できない状態が続く</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>実測値は cp -r で壊れたリンク86件、cp -rL で0件、実体化後210ファイル・1.9MB。この測定は .claude/skills 配下の20Skillを対象にしたもので、.waffle/agent・.waffle/hooks は含めていない</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>tech-lead-advisorはサブドメイン分類を中核と仮定して回答している。一般・補完と判定される場合、domain serviceへの抽出は緩めてよい</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">.waffle/documents/specs/bc-waffle/subdomain/sd-document-management/usecase/uc-export-skill-bundle.json</div>
+              <div class="reason">新規spec。この引き継ぎが書かせようとしている対象</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/export_skill_bundle.py</div>
+              <div class="reason">新設。対象を選び、実体化して複製し、事後条件を検査する調整</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/distribution_selection.py</div>
+              <div class="reason">新設。何を含めるかの判定を純関数として置く。ファイルI/Oを持たせない</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/ports/document_repository.py</div>
+              <div class="reason">複製メソッドの追加。実体化の意図だけをシグネチャに出す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/outbound/fs.py</div>
+              <div class="reason">cp -rL相当の実装。symlink追跡の技術的詳細をここに閉じる</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/cli/main.py</div>
+              <div class="reason">コマンド登録。既存check-*と同じ薄いアダプターに留める</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/mcp/main.py</div>
+              <div class="reason">同上。公開するかは未決（constraints参照）</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/model/CodingSchema/v5.json</div>
+              <div class="reason">出自を表す不変の属性の追加（未決。artifact-share系4件の扱い次第）</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
