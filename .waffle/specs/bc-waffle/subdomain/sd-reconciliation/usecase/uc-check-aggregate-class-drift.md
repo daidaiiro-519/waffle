@@ -81,6 +81,9 @@ sequenceDiagram
 - If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。
 - If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。
 - While languageが指定されないとき、システムはpythonとして扱う shall。
+- When 集約がディレクトリ単位で探すと宣言されていて、集約ルート名と一致するクラス定義がその配置ディレクトリのどこにも見つからないとき、システムはその組をmissing_implementation_in_scopeに含める shall（探した範囲を伝えるため、1つの道を指すexpectedPathではなくsearchedRootを持たせる）。
+- While 集約がファイル単位で探すと宣言されているとき、システムは集約ルート名から導出したファイルパスの不在のみをmissing_implementation_fileに含め、ディレクトリ単位の報告を行わない shall（2つの探し方の結果を同じ器に入れると、受け手が同じキーから読むべき意味を決められなくなるため）。
+- While granularityがその概念にperFileを宣言していないとき、システムは検査を中断せず、ディレクトリ単位の探索を続ける shall（宣言が無いことは引数の誤りではなく、そのプロジェクトがまだ決めていないという事実であり、報告して先へ進む）。
 
 ---
 
@@ -231,6 +234,37 @@ Scenario: 配置ディレクトリの下位までは降りない
   Given 値オブジェクトが、配置ディレクトリの下位のディレクトリに定義されている
   When ドリフト検査を実行する
   Then その値オブジェクトはmissing_value_objectに含まれる
+```
+
+### 宣言がなければ配置ディレクトリのどこにも無いことを報告する
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 宣言に従う：探し方が変われば報告の器も変わる |
+
+```gherkin
+Scenario: 宣言がなければ配置ディレクトリのどこにも無いことを報告する
+  Given granularityがaggregateにperFileを宣言していないarchitecture
+  And 集約ルート名と一致するクラスが配置ディレクトリのどこにも無い
+  When 集約と実装の食い違いを調べる
+  Then その組がmissing_implementation_in_scopeに現れる
+  And 探した配置ディレクトリがsearchedRootとして添えられている
+  And missing_implementation_fileは空のままである
+```
+
+### 宣言があればファイルの不在だけを報告する
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 宣言に従う：2つの探し方の結果を混ぜない |
+
+```gherkin
+Scenario: 宣言があればファイルの不在だけを報告する
+  Given granularityがaggregateにperFile 1を宣言しているarchitecture
+  And 集約ルート名から導出したファイルが存在しない
+  When 集約と実装の食い違いを調べる
+  Then その組がmissing_implementation_fileに現れる
+  And missing_implementation_in_scopeは空のままである
 ```
 
 ---
