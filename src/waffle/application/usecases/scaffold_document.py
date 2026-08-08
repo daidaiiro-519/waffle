@@ -18,6 +18,7 @@ from waffle.domain.services.fill_template import build_const_paths as _build_con
 from waffle.domain.services.fill_template import build_fill_template as _build_fill_template
 from waffle.domain.services.fill_template import build_skeleton as _build_skeleton
 from waffle.domain.services.fill_template import build_top_level_const_paths as _build_top_level_const_paths
+from waffle.domain.services.schema_versioning import has_version, latest_version, version_number
 from waffle.domain.services.fill_template import build_top_level_fill_template as _build_top_level_fill_template
 from waffle.domain.services.fill_template import content_def as _content_def
 from waffle.domain.services.fill_template import discriminator_candidates as _discriminator_candidates
@@ -44,11 +45,51 @@ class ScaffoldDocument:
             return self._migrate_schema(params)
         return _err("INVALID_OPERATION", f"未知の operation: {operation}")
 
+    def _latest_ref(self, schema_ref: str) -> Result[str]:
+        """新しく作ってよい版へ解決する。
+
+        版が書かれていなければ最新へ補い、書かれていて最新でなければ拒む。
+        指示や手順に版を書かせると、schemaが1つ上がった瞬間から古い版を指す。
+        版を省けるようにして初めて、その固定を消せる。
+
+        既存documentを運ぶ migrate_schema はこの制限の対象にしない。運ぶ操作まで
+        塞ぐと、移行の道そのものが無くなる。
+
+        Args:
+            schema_ref: 与えられた schemaRef（'Foo' でも 'Foo/v2' でもよい）。
+
+        Returns:
+            作ってよい版まで含んだ schemaRef を持つ Ok、または拒否を表す Err。
+
+        Raises:
+            なし。
+        """
+        name = schema_ref.partition("/")[0]
+        latest = latest_version(self._schemas.list_versions(name))
+        if latest is None:
+            return Ok(schema_ref)
+        if not has_version(schema_ref):
+            return Ok(f"{name}/{latest}")
+        if version_number(schema_ref) != version_number(latest):
+            return _err(
+                "OUTDATED_SCHEMA_REF",
+                f"{name} の最新は {latest} です。新しい document は最新の版で作ります"
+                f"（既存 document を運ぶ場合は migrate_schema を使ってください）",
+            )
+        return Ok(schema_ref)
+
     def _create(self, params: dict) -> Result[dict]:
         schema_ref = params.get("schemaRef")
         document_id = params.get("documentId")
         if not schema_ref or not document_id:
             return _err("MISSING_PARAM", "create には schemaRef, documentId が必要です")
+        resolved_ref = self._latest_ref(schema_ref)
+        if isinstance(resolved_ref, Err):
+            return resolved_ref
+        schema_ref = resolved_ref.value
+        # 以降は解決後の版を正本にする。元の指定が残ると、骨格やパスの
+        # 組み立てが版を欠いたままの文字列を使ってしまう
+        params = {**params, "schemaRef": schema_ref}
         schema_result = load_schema(self._schemas, schema_ref)
         if isinstance(schema_result, Err):
             return schema_result

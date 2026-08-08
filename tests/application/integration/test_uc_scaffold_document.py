@@ -10,7 +10,7 @@ from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.shared.result import Err, Ok
 
-_SKILL_SCHEMA = "SkillSchema/v1"
+_SKILL_SCHEMA = "SkillSchema/v2"
 _TEST_DOC_ID = "test-acceptance-poc-migration"
 _TEST_DOC_PATH = f".waffle/documents/skills/{_TEST_DOC_ID}.json"
 
@@ -69,7 +69,7 @@ def test_recreate_preserves_existing_values():
 
     fill_result = _engine().run(
         "fill",
-        {"documentPath": create_result.value["path"], "values": {"content.purpose.text": "ドメインを分析する"}},
+        {"documentPath": create_result.value["path"], "values": {"content.description.text": "ドメインを分析する"}},
     )
     assert isinstance(fill_result, Ok), fill_result
 
@@ -80,7 +80,7 @@ def test_recreate_preserves_existing_values():
     assert isinstance(recreate_result, Ok), recreate_result
 
     doc = FsDocumentRepository().load(create_result.value["path"])
-    assert doc["content"]["purpose"]["text"] == "ドメインを分析する"
+    assert doc["content"]["description"]["text"] == "ドメインを分析する"
 
 
 def test_clear_field_is_idempotent():

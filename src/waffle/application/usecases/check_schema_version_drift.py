@@ -9,7 +9,7 @@ from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.domain.services.fill_template import build_fill_template, content_def
 from waffle.domain.services.schema_discriminator import discriminator_key
-from waffle.domain.services.schema_versioning import version_number
+from waffle.domain.services.schema_versioning import latest_version, version_number
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
 
@@ -55,7 +55,7 @@ class CheckSchemaVersionDrift:
             if version not in versions:
                 broken_references.append({"document": doc_path, "schemaRef": schema_ref})
                 continue
-            latest = max(versions, key=version_number)
+            latest = latest_version(versions)
             if version_number(version) != version_number(latest):
                 newer_version_available.append({
                     "document": doc_path,

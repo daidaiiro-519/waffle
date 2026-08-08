@@ -9,12 +9,12 @@ from waffle.application.usecases.scaffold_document import ScaffoldDocument
 from waffle.application.usecases.validate_document import ValidateDocument
 from waffle.shared.result import Err, Ok
 
-_SKILL_SCHEMA = "SkillSchema/v1"
+_SKILL_SCHEMA = "SkillSchema/v2"
 _TEST_DOC_ID = "test-acceptance-poc-migration"
 _TEST_DOC_PATH = f".waffle/documents/skills/{_TEST_DOC_ID}.json"
 _CUSTOM_DOC_ID = "test-acceptance-scaffold-custom"
 _CUSTOM_DOC_PATH = f".waffle/documents/skills/{_CUSTOM_DOC_ID}.json"
-_TEMPLATE_SCHEMA = "TemplateSchema/v1"
+_TEMPLATE_SCHEMA = "TemplateSchema/v2"
 _TEMPLATE_DOC_ID = "test-acceptance-scaffold-template"
 _TEMPLATE_DOC_PATH = f".waffle/documents/templates/{_TEMPLATE_DOC_ID}.json"
 
@@ -197,13 +197,13 @@ def test_declared_value_field_is_written():
 
     fill_result = _engine().run(
         "fill",
-        {"documentPath": create_result.value["path"], "values": {"content.purpose.text": "ドメインを分析する"}},
+        {"documentPath": create_result.value["path"], "values": {"content.description.text": "ドメインを分析する"}},
     )
     assert isinstance(fill_result, Ok), fill_result
-    assert "content.purpose.text" in fill_result.value["written"]
+    assert "content.description.text" in fill_result.value["written"]
 
     doc = FsDocumentRepository().load(create_result.value["path"])
-    assert doc["content"]["purpose"]["text"] == "ドメインを分析する"
+    assert doc["content"]["description"]["text"] == "ドメインを分析する"
 
 
 def test_absent_discriminator_lists_candidates():
@@ -283,8 +283,8 @@ def test_fill_template_carries_path_and_prompt():
     )
     assert isinstance(result, Ok), result
     entries = {e["path"]: e for e in result.value["fillTemplate"]}
-    assert "content.purpose.text" in entries
-    assert entries["content.purpose.text"]["prompt"]
+    assert "content.description.text" in entries
+    assert entries["content.description.text"]["prompt"]
 
 
 def test_create_writes_reference_parameters_into_the_document():
@@ -297,7 +297,7 @@ def test_create_writes_reference_parameters_into_the_document():
     result = _engine().run(
         "create",
         {
-            "schemaRef": "DomainSpecSchema/v4",
+            "schemaRef": "DomainSpecSchema/v8",
             "documentId": "test-acceptance-scaffold-subdomain-ref",
             "discriminator": {"specKind": "usecase"},
             "contextRef": "bc-waffle",
@@ -593,3 +593,43 @@ def test_missing_block_is_created_with_its_block_type():
         FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator()
     ).run(path)
     assert isinstance(validated, Ok), getattr(validated, "details", validated)
+
+
+def test_schema_ref_without_version_resolves_to_latest():
+    """
+    Scenario: 版を省けば最新の版で作られる
+    Given 複数の版を持つschemaの名前
+    And その名前に版を付けずに指定する
+    When 骨格の生成を求める
+    Then 最新の版で骨格が作られる
+    """
+    _write_migrate_fixtures()
+    path = ".waffle/documents/test-latest-resolution.json"
+    result = _engine().run("create", {
+        "schemaRef": "TestMigrateSchemaFixture",
+        "documentId": "test-latest-resolution",
+        "path": path,
+    })
+    assert isinstance(result, Ok), result
+    assert result.value["skeleton"]["schemaRef"] == "TestMigrateSchemaFixture/v2"
+    Path(path).unlink(missing_ok=True)
+
+
+def test_outdated_schema_ref_is_refused():
+    """
+    Scenario: 古い版を明示したら作らせない
+    Given 複数の版を持つschemaのうち、最新ではない版
+    When その版を明示して骨格の生成を求める
+    Then OUTDATED_SCHEMA_REFとして拒まれる
+    And 骨格は作られない
+    """
+    _write_migrate_fixtures()
+    path = ".waffle/documents/test-outdated-refused.json"
+    result = _engine().run("create", {
+        "schemaRef": "TestMigrateSchemaFixture/v1",
+        "documentId": "test-outdated-refused",
+        "path": path,
+    })
+    assert isinstance(result, Err), result
+    assert result.details == ["OUTDATED_SCHEMA_REF"]
+    assert not Path(path).exists()

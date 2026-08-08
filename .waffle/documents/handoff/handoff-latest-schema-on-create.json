@@ -1,0 +1,180 @@
+{
+  "documentId": "handoff-latest-schema-on-create",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "骨格の生成を最新の版に限る実装への引き継ぎ：handoff-latest-schema-on-create"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-scaffold-document"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "最新を求める処理は既にある",
+          "consideration": "check_schema_version_drift.py:53-59 が list_versions(name) と version_number で最新を求めている。作成の経路がそれを参照していないだけで、新しい判定を作る必要はない。置き場所を揃えて共有する。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "逃げ道を設けない理由",
+          "consideration": "ユーザーが「最新版以外を使用することはない」と明言した。--allowOutdated のような抜け道を先に用意すると、抜け道の方が既定になる。必要になったときに足す。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "migrate_schema は塞がない",
+          "consideration": "既存documentを段階的に運ぶ操作であり、createの制限をここへ持ち込むと移行そのものができなくなる。受け入れ基準にも明記済み。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "指示文書から版を消せるようになる",
+          "consideration": "版を省けるようになって初めて、CLAUDE.md等が版を書かずに済む。実装後に .waffle/documents/agent/waffle.json の記述から版を外す。これをやらないと、今回の事故の再発条件がそのまま残る。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "fill と validate は対象外",
+          "consideration": "どちらもdocument自身のschemaRefを使うので、createの制限とは無関係。誤って共通の入口に置くと、既存documentの更新が全部止まる。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "既存documentへの影響を先に測る",
+          "consideration": "実装後に check-schema-version-drift を流し、newer_version_available が空のままであることを確かめる。ここが空でないなら、既存documentの側に先に手を入れる必要がある。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "版の比較は数値で行う（v10 が v9 より新しいと判定できること）。文字列の大小で比べると v10 < v9 になる。",
+        "この変更で、版を省いた指定が初めて通るようになる。いまは INVALID_SCHEMA_REF で弾かれており、そこに依存したテストがあれば直す。",
+        "着手前は「createを古い版で呼ぶテストは2件」と見積もったが、実際は26件が落ちた。setup_function の中で雛形を作っているものを数え漏らしていた。見積もりは文字列の走査で出したもので、実際に動かすまで正しい数は分からなかった。",
+        "SkillSchema は v1→v2 で purpose ブロックが description に変わっていた。テストの版を上げると、その差がそのまま失敗として出る。版を上げる作業は「数字を差し替える」だけでは終わらない。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "受け口",
+          "description": "骨格の生成を受け取る。版を省いた指定も受け付けるようになる。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "CLI / MCP",
+              "sub": "scaffold create",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "組み立て",
+          "description": "渡されたschemaRefを、作ってよい版かどうか確かめてから使う。",
+          "nodes": [
+            {
+              "id": "sd",
+              "title": "骨格の組み立て",
+              "sub": "scaffold_document",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "版の判定",
+          "description": "その名前の版を並べ、最新を決める。作成と版のドリフト検査が同じ判定を使う。",
+          "nodes": [
+            {
+              "id": "sv",
+              "title": "版の比較と最新の決定",
+              "sub": "schema_versioning",
+              "status": "new"
+            },
+            {
+              "id": "cvd",
+              "title": "版のドリフト検査",
+              "sub": "check_schema_version_drift",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "cvd",
+          "to": "sv",
+          "kind": "dependency",
+          "label": "同じ判定を使う（写しを持たない）"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": []
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "uc-scaffold-document のcreateで、版を省いたら最新へ解決し、最新でない版を明示したら拒むようにする。migrate_schema はこの制限の対象にしない。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/application/usecases/scaffold_document.py",
+          "reason": "create の schemaRef 解決に、最新かどうかの判定を挟む"
+        },
+        {
+          "path": "src/waffle/domain/services/schema_versioning.py",
+          "reason": "最新を求める処理の置き場所（既存の版比較と揃える）"
+        },
+        {
+          "path": "src/waffle/application/usecases/check_schema_version_drift.py",
+          "reason": "同じ判定を持っているので、共有先へ寄せる"
+        },
+        {
+          "path": "tests/application/acceptance/test_uc_scaffold_document.py",
+          "reason": "新規シナリオ2件に対応するテスト"
+        },
+        {
+          "path": ".waffle/documents/agent/waffle.json",
+          "reason": "実装後、指示から版の記述を外す"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [],
+      "findings": [],
+      "completionImageConfirmedBy": {
+        "confirmed": true,
+        "confirmedBy": "daidaiiro",
+        "confirmedAt": "2026-08-08",
+        "note": "提示のうえ実装の許可を得た。実装まで完了。"
+      }
+    }
+  },
+  "tags": [
+    "topic:schema-versioning",
+    "subdomain:sd-document-management"
+  ]
+}

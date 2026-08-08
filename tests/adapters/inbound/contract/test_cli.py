@@ -249,7 +249,7 @@ def test_scaffold_create_returns_skeleton():
     """
     result = _runner.invoke(app, [
         "scaffold", "--operation", "create",
-        "--schemaRef", "SkillSchema/v1", "--documentId", "scaffold-demo",
+        "--schemaRef", "SkillSchema/v2", "--documentId", "scaffold-demo",
         "--discriminator", "skillKind=custom",
     ])
     assert result.exit_code == 0, result.output

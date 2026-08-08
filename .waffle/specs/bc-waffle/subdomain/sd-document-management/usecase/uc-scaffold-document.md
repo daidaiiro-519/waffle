@@ -77,6 +77,9 @@ sequenceDiagram
 - When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。
 - While Documentのschemaが既に目的のschemaRefであるとき、migrate_schemaは無変更で成功する shall。
 - If migrate_schemaの移行先schemaRefが解決できないとき、システムはINVALID_SCHEMA_REFエラーを返し書き換えを拒否する shall。
+- When createで版を含まないschemaRefが与えられたとき、システムはその名前の最新の版へ解決して骨格を生成する shall（指示や手順に版を書かせないため。書かれた版はschemaが上がった瞬間から古い版を指す）。
+- If createで最新でない版のschemaRefが明示されたとき、システムはOUTDATED_SCHEMA_REFエラーを返し骨格を生成しない shall（最新以外の版で新しいdocumentを作る用途を持たないため）。
+- While migrate_schemaに移行先のschemaRefが与えられたとき、システムはその版が最新かどうかを問わず書き換える shall（既存documentを段階的に運ぶ操作であり、createの制限をここへ持ち込むと移行の道が塞がるため）。
 
 ---
 
@@ -98,6 +101,7 @@ sequenceDiagram
 | `INVALID_DISCRIMINATOR` | - 分岐のあるschemaでdiscriminatorの値がenumに存在しない（候補enumを案内） |
 | `REQUIRED_FIELD` | - clear_fieldの削除対象がschemaの必須フィールドである |
 | `INVALID_SCHEMA_REF` | - migrate_schemaの移行先schemaRefが解決できない |
+| `OUTDATED_SCHEMA_REF` | - createで指定されたschemaRefの版が、そのschemaの最新ではない |
 
 ---
 
@@ -415,6 +419,34 @@ Scenario: ブロックがまだ無い欄へ書くと種別も一緒に作られ�
   Given ブロックがまだ無い Document
   When そのブロック配下の欄へ値を書き込む
   Then ブロックの種別も一緒に作られ、Document は schema に適合する
+```
+
+### 版を省けば最新の版で作られる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 指示に版を書かせない：書かれた版は必ず腐る |
+
+```gherkin
+Scenario: 版を省けば最新の版で作られる
+  Given 複数の版を持つschemaの名前
+  And その名前に版を付けずに指定する
+  When 骨格の生成を求める
+  Then 最新の版で骨格が作られる
+```
+
+### 古い版を明示したら作らせない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 誤りの検出：古い版のdocumentを作ってから気づく事態を防ぐ |
+
+```gherkin
+Scenario: 古い版を明示したら作らせない
+  Given 複数の版を持つschemaのうち、最新ではない版
+  When その版を明示して骨格の生成を求める
+  Then OUTDATED_SCHEMA_REFとして拒まれる
+  And 骨格は作られない
 ```
 
 ---
