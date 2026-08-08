@@ -38,7 +38,17 @@ STORED_SUSPENDED = "disabled"
 
 
 def from_record(record: dict) -> Project:
-    """保管の記録を、業務の語彙を持つプロジェクトへ直す。"""
+    """保管の記録を、業務の語彙を持つプロジェクトへ直す。
+
+    Args:
+        record: 保管から読んだ記録。
+
+    Returns:
+        業務の語彙を持つプロジェクト。
+
+    Raises:
+        なし。
+    """
     return Project(
         project_id=ProjectId(record.get("projectId", "")),
         display_name=record.get("displayName", ""),
@@ -54,7 +64,18 @@ def from_record(record: dict) -> Project:
 
 
 def to_record(project: Project, base: dict | None = None) -> dict:
-    """プロジェクトを、保管の記録へ戻す。投影は元の記録から引き継ぐ。"""
+    """プロジェクトを、保管の記録へ戻す。投影は元の記録から引き継ぐ。
+
+    Args:
+        project: 保管へ戻すプロジェクト。
+        base: 元の記録。投影はここから引き継ぐ。
+
+    Returns:
+        保管の記録。
+
+    Raises:
+        なし。
+    """
     record = dict(base or {})
     record.update({
         "projectId": project.project_id.value,

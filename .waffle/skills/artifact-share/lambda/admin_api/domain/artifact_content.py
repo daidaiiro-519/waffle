@@ -14,5 +14,15 @@ import hashlib
 
 
 def fingerprint(content: str) -> str:
-    """中身から、同じものかを確かめるための形を作る。"""
+    """中身から、同じものかを確かめるための形を作る。
+
+    Args:
+        content: 中身そのもの。
+
+    Returns:
+        同じものかを確かめるための形。
+
+    Raises:
+        なし。
+    """
     return hashlib.sha256(content.encode("utf-8")).hexdigest()

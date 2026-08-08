@@ -43,6 +43,18 @@ def verify(authorization: str, pool_id: str, client_id: str,
 
     どれか1つでも欠けたら None を返す。理由を呼び出し元へ細かく伝えない
     のは、どこまで合っていたのかを外から探れないようにするため。
+
+    Args:
+        authorization: 受け取った証明。
+        pool_id: 証明を発行した側の識別子。
+        client_id: 宛先として期待する識別子。
+        verify_signature: 署名を検証する処理。
+
+    Returns:
+        利用者名と所属を持つ辞書。通せないものは None。
+
+    Raises:
+        なし。
     """
     token = (authorization or "").strip()
     if token.lower().startswith("bearer "):
@@ -96,7 +108,17 @@ def verify(authorization: str, pool_id: str, client_id: str,
 # ── 署名の検証 ──────────────────────────────────────────
 
 def signature_verifier(load_jwks: Callable[[], dict]) -> Callable[[bytes, bytes, str], bool]:
-    """公開鍵の一覧を取ってくる手段を受け取り、署名を検証する処理を返す。"""
+    """公開鍵の一覧を取ってくる手段を受け取り、署名を検証する処理を返す。
+
+    Args:
+        load_jwks: 公開鍵の一覧を取ってくる手段。
+
+    Returns:
+        署名を検証する処理。
+
+    Raises:
+        なし。
+    """
 
     def check(message: bytes, signature: bytes, kid: str) -> bool:
         key = _find_key(load_jwks(), kid)

@@ -15,12 +15,35 @@ NOT_FOUND = "PROJECT_NOT_FOUND"
 
 
 def read_index(projects: ProjectRepository, project_id: str) -> Project | None:
-    """プロジェクトを読む。無ければ None。"""
+    """プロジェクトを読む。無ければ None。
+
+    Args:
+        projects: プロジェクトの保管。
+        project_id: 読むプロジェクトの識別子。
+
+    Returns:
+        プロジェクト。無ければ None。
+
+    Raises:
+        なし。
+    """
     return projects.find(project_id)
 
 
 def save_project(projects: ProjectRepository, clock: Clock, project: Project) -> Project:
-    """更新した時点を刻んで残す。"""
+    """更新した時点を刻んで残す。
+
+    Args:
+        projects: プロジェクトの保管。
+        clock: いまの時点を得る手段。
+        project: 残すプロジェクト。
+
+    Returns:
+        更新した時点を刻んだプロジェクト。
+
+    Raises:
+        なし。
+    """
     from dataclasses import replace
     stamped = replace(project, updated_at=clock())
     projects.save(stamped)
@@ -28,7 +51,19 @@ def save_project(projects: ProjectRepository, clock: Clock, project: Project) ->
 
 
 def require_own(projects: ProjectRepository, caller: Caller, project_id: str) -> Project:
-    """見せ方を変えてよいプロジェクトを取り出す。持ち主か管理者だけ。"""
+    """見せ方を変えてよいプロジェクトを取り出す。持ち主か管理者だけ。
+
+    Args:
+        projects: プロジェクトの保管。
+        caller: 要求してきた人。
+        project_id: 取り出すプロジェクトの識別子。
+
+    Returns:
+        見せ方を変えてよいプロジェクト。
+
+    Raises:
+        ProjectError: 見つからない、または持ち主でも管理者でもない。
+    """
     project = projects.find(project_id)
     if project is None or not project.manageable_by(caller.id, caller.is_admin):
         raise ProjectError(NOT_FOUND, "見つかりません。")
@@ -41,6 +76,17 @@ def require_writable(projects: ProjectRepository, caller: Caller,
 
     個人のプロジェクトへ他人が入れようとしたときは、無いものと同じ拒み方に
     する——区別できると、存在そのものが読み取れてしまう。
+
+    Args:
+        projects: プロジェクトの保管。
+        caller: 要求してきた人。
+        project_id: 取り出すプロジェクトの識別子。
+
+    Returns:
+        共有アーティファクトを出し入れしてよいプロジェクト。
+
+    Raises:
+        ProjectError: 見つからない、または出し入れしてよい相手ではない。
     """
     project = projects.find(project_id)
     if project is None:

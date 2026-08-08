@@ -14,7 +14,17 @@ import re
 
 
 def is_external(url: str) -> bool:
-    """別のホストを指しているか。data: での埋め込みは外部ではない。"""
+    """別のホストを指しているか。data: での埋め込みは外部ではない。
+
+    Args:
+        url: 判定する参照先。
+
+    Returns:
+        別のホストを指していれば True。data: での埋め込みは外部ではない。
+
+    Raises:
+        なし。
+    """
     return bool(re.match(r"^(https?:)?//", url.strip(), re.IGNORECASE))
 
 
@@ -56,6 +66,15 @@ def inspect_html(content: str) -> dict:
 
     契約のmetaタグ（id と type）が揃っていれば、利用者に何も尋ねずに公開できる。
     揃っていなければ、題名だけを尋ねる。
+
+    Args:
+        content: 読み取る対象のHTML。
+
+    Returns:
+        控えるべき情報と、外部への参照の件数を持つ辞書。
+
+    Raises:
+        なし。
     """
     parser = _HeadParser()
     try:

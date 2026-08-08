@@ -17,6 +17,15 @@ def subject_from(body: dict) -> ViewSubject:
     """要求の中身から、閲覧トークンで開ける対象を1つ読む。
 
     プロジェクトの指定があればプロジェクト、無ければ共有アーティファクト。
+
+    Args:
+        body: 要求の中身。
+
+    Returns:
+        閲覧トークンで開ける対象。
+
+    Raises:
+        なし。
     """
     if body.get("projectId"):
         return ViewSubject.project(body["projectId"])

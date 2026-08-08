@@ -31,6 +31,19 @@ def require_manageable_subject(artifacts: SharedArtifactRepository,
     共有アーティファクトかプロジェクトのどちらかを返す。どちらも
     with_view_tokens で顔ぶれを差し替えられるので、呼び出し側は種別を
     見分けなくてよい。
+
+    Args:
+        artifacts: 共有アーティファクトの保管。
+        projects: プロジェクトの保管。
+        caller: 要求してきた人。
+        subject: 閲覧トークンで開ける対象。
+
+    Returns:
+        扱ってよい対象の集約。
+
+    Raises:
+        ArtifactError: 共有アーティファクトが見つからない、または扱えない。
+        ProjectError: プロジェクトが見つからない、または扱えない。
     """
     found = (artifacts if subject.kind == ARTIFACT else projects).find(subject.id)
     if found is None or not found.manageable_by(caller.id, caller.is_admin):
@@ -40,7 +53,22 @@ def require_manageable_subject(artifacts: SharedArtifactRepository,
 
 def save_tokens(artifacts: SharedArtifactRepository, projects: ProjectRepository,
                 clock: Clock, subject: ViewSubject, target, tokens) -> None:
-    """顔ぶれを差し替えて残す。置き場所だけを種別で振り分ける。"""
+    """顔ぶれを差し替えて残す。置き場所だけを種別で振り分ける。
+
+    Args:
+        artifacts: 共有アーティファクトの保管。
+        projects: プロジェクトの保管。
+        clock: いまの時点を得る手段。
+        subject: 閲覧トークンで開ける対象。
+        target: 対象の集約。
+        tokens: 差し替える閲覧トークンの顔ぶれ。
+
+    Returns:
+        なし。
+
+    Raises:
+        なし。
+    """
     updated = target.with_view_tokens(tuple(tokens), clock())
     if subject.kind == ARTIFACT:
         artifacts.save(updated)

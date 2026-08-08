@@ -30,6 +30,18 @@ def write_listing(artifacts: SharedArtifactRepository, projects: ProjectReposito
 
     共有アーティファクトの表示名を含むため、所属が変わったときだけでなく
     表示名が変わったときにも書き直す必要がある。
+
+    Args:
+        artifacts: 共有アーティファクトの保管。
+        projects: プロジェクトの保管。
+        viewer: 閲覧の面への書き出し口。
+        project: 一覧を書き出すプロジェクト。
+
+    Returns:
+        なし。
+
+    Raises:
+        なし。
     """
     rows = []
     for artifact_id in projects.members_of(project.project_id.value):
@@ -49,7 +61,18 @@ def write_listing(artifacts: SharedArtifactRepository, projects: ProjectReposito
 
 
 def place_project_page(viewer: ViewerSitePort, project_id: str) -> None:
-    """一覧ページを置く。中身は別に置く一覧から読む。"""
+    """一覧ページを置く。中身は別に置く一覧から読む。
+
+    Args:
+        viewer: 閲覧の面への書き出し口。
+        project_id: 一覧ページを置くプロジェクトの識別子。
+
+    Returns:
+        なし。
+
+    Raises:
+        なし。
+    """
     viewer.place_project(project_id)
 
 
@@ -60,6 +83,21 @@ def sync_project(artifacts: SharedArtifactRepository, projects: ProjectRepositor
 
     正は共有アーティファクトの側にある。ここが書くのは、閲覧者へ見せるために
     組み立て直せる投影であり、失敗しても作り直せる。
+
+    Args:
+        artifacts: 共有アーティファクトの保管。
+        projects: プロジェクトの保管。
+        viewer: 閲覧の面への書き出し口。
+        clock: いまの時点を得る手段。
+        project: 対象のプロジェクト。
+        artifact_id: 出し入れした共有アーティファクトの識別子。
+        member: 入れるなら真、外すなら偽。
+
+    Returns:
+        なし。
+
+    Raises:
+        なし。
     """
     ids = [a for a in projects.members_of(project.project_id.value) if a != artifact_id]
     if member:
@@ -74,6 +112,18 @@ def refresh_listings(artifacts: SharedArtifactRepository, projects: ProjectRepos
 
     一覧は表示名を含むため、所属が変わったときだけでなく表示名が変わったときにも
     書き直す必要がある。
+
+    Args:
+        artifacts: 共有アーティファクトの保管。
+        projects: プロジェクトの保管。
+        viewer: 閲覧の面への書き出し口。
+        artifact: 書き直すきっかけになった共有アーティファクト。
+
+    Returns:
+        なし。
+
+    Raises:
+        なし。
     """
     for project_id in artifact.projects:
         project = read_index(projects, project_id)

@@ -88,6 +88,18 @@ ADMIN_GROUP = "administrators"
 
 
 def handler(event, context):  # pragma: no cover - 実際の接続を組み立てるだけ
+    """入ってきた要求を受け取り、受け口へ渡して応答を返す。
+
+    Args:
+        event: 受け取った要求そのもの。
+        context: 実行環境が添える情報。この処理では使わない。
+
+    Returns:
+        外の言葉へ直した応答。
+
+    Raises:
+        なし。失敗は応答の形で返す。
+    """
     body = json.loads(event.get("body") or "{}")
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     # 証明は x-id-token で届く。authorization は配信の口が関数へ署名するのに

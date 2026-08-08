@@ -24,5 +24,14 @@ def may_manage_publishers(caller: Caller) -> bool:
 
     管理者だけ。誰が招かれているかは、共有の相手を社外へ広げたときに社内の
     顔ぶれまで伝わらないよう、投稿者どうしにも見せない。
+
+    Args:
+        caller: 要求してきた人。
+
+    Returns:
+        顔ぶれを出し入れしてよければ True。
+
+    Raises:
+        なし。
     """
     return caller.is_admin

@@ -127,7 +127,20 @@ OUTWARD_STATUS = {"PUBLISHED": "active", "SUSPENDED": "disabled"}
 
 
 def dispatch(action: str, connections, caller: Caller, body: dict):
-    """操作の名前から行き先を引き、そこへ渡し、答えを外の言葉へ直す。"""
+    """操作の名前から行き先を引き、そこへ渡し、答えを外の言葉へ直す。
+
+    Args:
+        action: 要求された操作の名前。
+        connections: 外との接点をまとめたもの。
+        caller: 要求してきた人。
+        body: 要求の中身。
+
+    Returns:
+        外の言葉へ直した応答。
+
+    Raises:
+        なし。失敗は応答の形で返す。
+    """
     route = ROUTES.get(action)
     if route is None:
         raise ManageError("UNKNOWN_ACTION", "その操作はありません。")
@@ -182,7 +195,17 @@ STATUS = {
 
 
 def status_of(error) -> int:
-    """その失敗を、外の言葉のどれで返すか。"""
+    """その失敗を、外の言葉のどれで返すか。
+
+    Args:
+        error: 起きた失敗。
+
+    Returns:
+        外の言葉での状態を表す番号。
+
+    Raises:
+        なし。
+    """
     for kind, codes in STATUS.items():
         if isinstance(error, kind):
             return codes.get(error.code, 400)

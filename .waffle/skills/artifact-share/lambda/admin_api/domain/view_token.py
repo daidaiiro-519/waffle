@@ -114,19 +114,49 @@ def new_token() -> str:
     """閲覧トークンを発行する。
 
     区切って読みやすくするのは、口頭やチャットで渡されることがあるため。
+
+    Returns:
+        渡す相手に見せる閲覧トークンそのものの値。
+
+    Raises:
+        なし。
     """
     return "-".join(random_chars(TOKEN_GROUP_LENGTH) for _ in range(TOKEN_GROUPS))
 
 
 def expires_at(now: int, ttl: int | None = None) -> ViewTokenExpiry:
-    """いつ使えなくなるか。省いたときは既定の有効期間を与える。"""
+    """いつ使えなくなるか。省いたときは既定の有効期間を与える。
+
+    Args:
+        now: 発行する時点。
+        ttl: 有効期間。省くと既定の有効期間を使う。
+
+    Returns:
+        使えなくなる時点。
+
+    Raises:
+        なし。
+    """
     if ttl is None:
         ttl = DEFAULT_TTL
     return ViewTokenExpiry(now + ttl if ttl > 0 else NO_EXPIRY)
 
 
 def issued(name: str, fingerprint: str, expiry: ViewTokenExpiry, at: int) -> ViewToken:
-    """発行した1本。閲覧トークンそのものの値は含めない。"""
+    """発行した1本。閲覧トークンそのものの値は含めない。
+
+    Args:
+        name: この1本に付ける名前。
+        fingerprint: 照合にだけ使える形。
+        expiry: 使えなくなる時点。
+        at: 発行した時点。
+
+    Returns:
+        発行した閲覧トークン1本。
+
+    Raises:
+        なし。
+    """
     return ViewToken(
         token_id=ViewTokenId(random_chars(TOKEN_ID_LENGTH)),
         name=name,
@@ -140,12 +170,34 @@ def issued(name: str, fingerprint: str, expiry: ViewTokenExpiry, at: int) -> Vie
 # ── 顔ぶれを見る・変える ────────────────────────────────
 
 def usable(tokens: tuple[ViewToken, ...], now: int) -> tuple[ViewToken, ...]:
-    """いま使えるものだけを、渡した順のまま返す。"""
+    """いま使えるものだけを、渡した順のまま返す。
+
+    Args:
+        tokens: 対象の閲覧トークンの顔ぶれ。
+        now: いまの時点。
+
+    Returns:
+        いま使えるものだけを、渡した順のまま並べたもの。
+
+    Raises:
+        なし。
+    """
     return tuple(t for t in tokens or () if t.is_usable(now))
 
 
 def within_active_limit(tokens: tuple[ViewToken, ...], now: int) -> bool:
-    """これ以上増やせるか。期限を過ぎたものは数に含めない。"""
+    """これ以上増やせるか。期限を過ぎたものは数に含めない。
+
+    Args:
+        tokens: 対象の閲覧トークンの顔ぶれ。
+        now: いまの時点。
+
+    Returns:
+        これ以上増やせれば True。期限を過ぎたものは数に含めない。
+
+    Raises:
+        なし。
+    """
     return len(usable(tokens, now)) < MAX_ACTIVE
 
 
@@ -154,6 +206,17 @@ def name_is_free(tokens: tuple[ViewToken, ...], name: str, now: int) -> bool:
 
     名前は、どれを外すかを公開した人が選ぶための手がかりなので、有効なものの
     中で重なってはいけない。
+
+    Args:
+        tokens: 対象の閲覧トークンの顔ぶれ。
+        name: 使おうとしている名前。
+        now: いまの時点。
+
+    Returns:
+        まだ使っていなければ True。
+
+    Raises:
+        なし。
     """
     return all(t.name != name for t in usable(tokens, now))
 
@@ -164,22 +227,65 @@ def without_expired(tokens: tuple[ViewToken, ...], now: int) -> tuple[ViewToken,
     残しても外す対象にはならず、一覧を埋めて選びにくくするだけ。見る側からは
     期限切れと初めから無いものを区別しないので、記録の有無は開けるかどうかに
     影響しない。
+
+    Args:
+        tokens: 対象の閲覧トークンの顔ぶれ。
+        now: いまの時点。
+
+    Returns:
+        期限を過ぎたものの記録を取り除いた顔ぶれ。
+
+    Raises:
+        なし。
     """
     return tuple(t for t in tokens or ()
                  if not t.status.is_active() or t.is_usable(now))
 
 
 def revoked(tokens: tuple[ViewToken, ...], token_id: str) -> tuple[ViewToken, ...]:
-    """その1本だけを使えなくする。他はそのまま。"""
+    """その1本だけを使えなくする。他はそのまま。
+
+    Args:
+        tokens: 対象の閲覧トークンの顔ぶれ。
+        token_id: 使えなくする1本の識別子。
+
+    Returns:
+        その1本だけを使えなくした顔ぶれ。
+
+    Raises:
+        なし。
+    """
     return tuple(t.revoked() if t.token_id.value == token_id else t
                  for t in tokens or ())
 
 
 def all_revoked(tokens: tuple[ViewToken, ...], now: int) -> tuple[ViewToken, ...]:
-    """いま使えるものをすべて使えなくする。"""
+    """いま使えるものをすべて使えなくする。
+
+    Args:
+        tokens: 対象の閲覧トークンの顔ぶれ。
+        now: いまの時点。
+
+    Returns:
+        いま使えるものをすべて使えなくした顔ぶれ。
+
+    Raises:
+        なし。
+    """
     return tuple(t.revoked() if t.is_usable(now) else t for t in tokens or ())
 
 
 def grants(tokens: tuple[ViewToken, ...], now: int) -> list[tuple[str, int]]:
-    """閲覧の面へ渡す顔ぶれ。使えるものだけを（照合の形, 期限）で並べる。"""
+    """閲覧の面へ渡す顔ぶれ。使えるものだけを（照合の形, 期限）で並べる。
+
+    Args:
+        tokens: 対象の閲覧トークンの顔ぶれ。
+        now: いまの時点。
+
+    Returns:
+        使えるものだけを（照合の形, 期限）の組で並べたもの。
+
+    Raises:
+        なし。
+    """
     return [(t.fingerprint, t.expires_at.value) for t in usable(tokens, now)]

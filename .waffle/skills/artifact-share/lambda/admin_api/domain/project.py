@@ -25,7 +25,17 @@ SHARED = "SHARED"       # 招かれた投稿者なら誰でも、自分のもの
 
 
 def is_known_scope(scope: str) -> bool:
-    """出し入れの範囲として認めている値か。"""
+    """出し入れの範囲として認めている値か。
+
+    Args:
+        scope: 判定する出し入れの範囲。
+
+    Returns:
+        認めている値であれば True。
+
+    Raises:
+        なし。
+    """
     return scope in (PERSONAL, SHARED)
 
 

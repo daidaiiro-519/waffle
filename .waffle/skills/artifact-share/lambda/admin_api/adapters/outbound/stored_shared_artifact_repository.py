@@ -43,7 +43,17 @@ STORED_SUSPENDED = "disabled"
 
 
 def from_record(record: dict) -> SharedArtifact:
-    """保管の記録を、業務の語彙を持つ共有アーティファクトへ直す。"""
+    """保管の記録を、業務の語彙を持つ共有アーティファクトへ直す。
+
+    Args:
+        record: 保管から読んだ記録。
+
+    Returns:
+        業務の語彙を持つ共有アーティファクト。
+
+    Raises:
+        なし。
+    """
     return SharedArtifact(
         artifact_id=ArtifactId(record.get("artifactId", "")),
         display_name=record.get("name", ""),
@@ -72,6 +82,16 @@ def to_record(artifact: SharedArtifact, base: dict | None = None) -> dict:
 
     base には元の記録を渡す。集約が知らない欄をそこから引き継ぐため——渡さないと、
     保存のたびに閲覧の面の関心事が消える。
+
+    Args:
+        artifact: 保管へ戻す共有アーティファクト。
+        base: 元の記録。
+
+    Returns:
+        保管の記録。
+
+    Raises:
+        なし。
     """
     record = dict(base or {})
     record.update({

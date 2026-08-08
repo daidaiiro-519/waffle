@@ -23,6 +23,17 @@ def require_manageable(artifacts: SharedArtifactRepository, caller: Caller,
     """手入れしてよい共有アーティファクトを取り出す。
 
     無いときも、扱えないときも、同じ答えを返す。
+
+    Args:
+        artifacts: 共有アーティファクトの保管。
+        caller: 要求してきた人。
+        artifact_id: 取り出す共有アーティファクトの識別子。
+
+    Returns:
+        手入れしてよい共有アーティファクト。
+
+    Raises:
+        ArtifactError: 見つからない、または手入れしてよい相手ではない。
     """
     artifact = artifacts.find(artifact_id)
     if artifact is None or not artifact.manageable_by(caller.id, caller.is_admin):

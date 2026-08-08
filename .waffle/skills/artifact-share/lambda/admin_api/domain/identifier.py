@@ -18,15 +18,39 @@ PROJECT_ID_LENGTH = 6
 
 
 def new_artifact_id() -> str:
-    """共有アーティファクトを1つ指す識別子を発行する。"""
+    """共有アーティファクトを1つ指す識別子を発行する。
+
+    Returns:
+        共有アーティファクトを1つ指す識別子。
+
+    Raises:
+        なし。
+    """
     return random_chars(ARTIFACT_ID_LENGTH)
 
 
 def new_project_id() -> str:
-    """プロジェクトを1つ指す識別子を発行する。"""
+    """プロジェクトを1つ指す識別子を発行する。
+
+    Returns:
+        プロジェクトを1つ指す識別子。
+
+    Raises:
+        なし。
+    """
     return random_chars(PROJECT_ID_LENGTH)
 
 
 def random_chars(length: int) -> str:
-    """読み間違えにくい字種から、推測できない並びを作る。"""
+    """読み間違えにくい字種から、推測できない並びを作る。
+
+    Args:
+        length: 作る並びの長さ。
+
+    Returns:
+        読み間違えにくい字種からなる、推測できない並び。
+
+    Raises:
+        なし。
+    """
     return "".join(secrets.choice(ID_ALPHABET) for _ in range(length))

@@ -75,5 +75,15 @@ def _key(subject: ViewSubject) -> str:
 
 
 def fingerprint(token: str) -> str:
-    """閲覧トークンから、照合にだけ使える形を作る。元へは戻せない。"""
+    """閲覧トークンから、照合にだけ使える形を作る。元へは戻せない。
+
+    Args:
+        token: 閲覧トークンそのものの値。
+
+    Returns:
+        照合にだけ使える形。元の値へは戻せない。
+
+    Raises:
+        なし。
+    """
     return hashlib.sha256(token.encode("utf-8")).hexdigest()[:FINGERPRINT_LENGTH]
