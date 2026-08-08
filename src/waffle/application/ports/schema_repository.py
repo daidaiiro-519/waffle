@@ -13,6 +13,10 @@ class SchemaRepository(Protocol):
         """name（例: 'CodingSchema'）配下に実在する版識別子（例: ['v1', 'v2']）一覧を返す。無ければ空配列。"""
         ...
 
+    def list_names(self) -> list[str]:
+        """実在する schema 名（例: ['AgentSchema', 'SkillSchema']）一覧を返す。"""
+        ...
+
     def resolve_path(self, schema_ref: str) -> str:
         """schemaRef（例: 'CodingSchema/v2'）が実際に存在するファイルパスを返す。"""
         ...

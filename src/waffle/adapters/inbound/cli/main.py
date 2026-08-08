@@ -320,7 +320,7 @@ def check_path_is_projection(
     resolved_path: str = typer.Option(..., "--resolvedPath", "--resolved-path", help="判定対象の実体パス（symlink解決済み）"),
 ) -> None:
     """実体パスがdocument.jsonからの投影かどうかを判定（uc-check-path-is-projection）。"""
-    _emit(CheckPathIsProjection(_docs()).run(resolved_path))
+    _emit(CheckPathIsProjection(_schemas()).run(resolved_path))
 
 @app.command("check-schema-version-drift")
 def check_schema_version_drift(

@@ -17,7 +17,7 @@ import json
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.application.services.document_loading import load_document, load_schema, require_schema_ref
-from waffle.domain.services import path_template
+from waffle.domain.services import deploy_target_resolution, path_template
 from waffle.domain.services.lifecycle_guard import next_status
 from waffle.domain.services.part_renderer import MalformedContentError
 from waffle.domain.services.part_renderer import render_body as _render_body_service
@@ -50,35 +50,16 @@ def _select_field_map(value: dict, spec_kind: str | None) -> dict:
         return value.get(spec_kind, {}) if spec_kind else {}
     return value
 
-def _resolve_single_mapping_targets(mapping: dict, path_vars: dict) -> list[tuple[str, str]]:
-    """1つのtoolMappingsマッピングからdeploy先を解決する。
-
-    pathTemplateが参照する配列値のpathVar（例: skillRefs）だけを見て要素ごとに
-    fan-outする。同じdocumentTypeに複数マッピング（例: skillRefs用・agentRefs用）が
-    並んでいても、各マッピングは自分のpathTemplateが参照する配列変数だけを見るため
-    互いに干渉しない。"""
-    template = mapping["pathTemplate"]
-    mode = mapping.get("mode", "render")
-    array_vars = {
-        k: v for k, v in path_vars.items() if isinstance(v, list) and f"{{{k}}}" in template
-    }
-    targets: list[tuple[str, str]] = []
-    if array_vars:
-        var_name, values = next(iter(array_vars.items()))
-        for value in values:
-            scalar_vars = {**path_vars, var_name: value}
-            try:
-                dp = path_template.resolve(template, **scalar_vars)
-            except KeyError:
-                continue
-            targets.append((dp, mode))
-    else:
-        try:
-            dp = path_template.resolve(template, **path_vars)
-        except KeyError:
-            return targets
-        targets.append((dp, mode))
-    return targets
+def _config_declares(tool_mappings: dict, document_type: str | None) -> bool:
+    """toolMappingsが、そのdocumentTypeの宣言を（役割を問わず）1つでも持つか。"""
+    if not document_type:
+        return False
+    return any(
+        document_type in by_document_type
+        for tool_config in tool_mappings.values()
+        for by_document_type in tool_config.values()
+        if isinstance(by_document_type, dict)
+    )
 
 
 class RenderDocument:
@@ -89,6 +70,7 @@ class RenderDocument:
     ) -> None:
         self._documents = documents
         self._schemas = schemas
+        self._schema_cache: list[dict] | None = None
 
     def run(self, document_path: str, deploy: bool = True) -> Result[dict]:
         loaded = load_document(self._documents, document_path)
@@ -143,70 +125,104 @@ class RenderDocument:
 
         canonical = path_template.resolve(path_template_str, **path_vars) if path_template_str else ""
         deployed: list[str] = []
+        skipped: list[dict] = []
         if deploy and canonical:
+            targets, resolve_skipped = self._resolve_deploy_targets(doc, target, path_vars, spec_kind)
+            skipped.extend(resolve_skipped)
+            conflict = self._find_ownership_conflict(doc["documentId"], targets)
+            if conflict is not None:
+                dp, owner = conflict
+                return _err(
+                    "DEPLOY_TARGET_OWNED_BY_OTHER",
+                    f"{dp} は既に {owner} の成果物です。1つの配置先は1つのDocumentにのみ所有されます",
+                )
             try:
                 # canonical（.waffle 配下）に書く
                 self._documents.write_text(canonical, output)
-                tool_targets = self._resolve_tool_deploy_targets(doc.get("documentType"), path_vars, spec_kind)
-                if tool_targets is not None:
-                    # .waffle/config.json が対応するdocumentTypeを持つ場合はそちらを唯一の真実源にする
-                    # （x-render-target.deployは読まない。真実源が2箇所に分散するのを避けるため）
-                    for dp, mode in tool_targets:
-                        if mode == "symlink":
-                            self._documents.link(canonical, dp)
-                        else:
-                            self._documents.write_text(dp, output)
-                        deployed.append(dp)
-                else:
-                    # deploy: 同一フォーマットは verbatim copy（更新漏れ防止のため render に内蔵）。
-                    # deployテンプレートが参照する変数がpath_varsに無い場合（例: skillRef未宣言の
-                    # document）、そのdeploy先だけをスキップする（canonicalの書き込みは妨げない）。
-                    for dep in _select_deploy(target.get("deploy", []), spec_kind):
-                        try:
-                            dp = path_template.resolve(dep, **path_vars)
-                        except KeyError:
-                            continue
+                for dp, mode in targets:
+                    if mode == "symlink":
+                        self._documents.link(canonical, dp)
+                    else:
                         self._documents.write_text(dp, output)
-                        deployed.append(dp)
+                    deployed.append(dp)
             except OSError as e:
                 return _err("WRITE_ERROR", f"書き込みに失敗しました: {e}")
 
         return Ok({
-            "path": canonical, "deployed": deployed, "format": fmt, "content": output,
+            "path": canonical, "deployed": deployed, "skipped": skipped,
+            "format": fmt, "content": output,
         })
 
-    def _resolve_tool_deploy_targets(
-        self, document_type: str | None, path_vars: dict, spec_kind: str | None,
-    ) -> list[tuple[str, str]] | None:
-        """.waffle/config.json の toolMappings から documentType 向けのdeploy先を解決する。
+    def _resolve_deploy_targets(
+        self, doc: dict, target: dict, path_vars: dict, spec_kind: str | None,
+    ) -> tuple[list[tuple[str, str]], list[dict]]:
+        """配置先を解決する。
 
-        config.json が無い、または documentType に対応するマッピングが1つも無ければ None を返し、
-        呼び出し元は従来通り x-render-target.deploy を読む（後方互換フォールバック）。
-        1つでも対応があれば、そのdocumentTypeについては config.json を唯一の真実源として扱う。
+        .waffle/config.json の toolMappings が対象documentTypeの宣言を持てば、そちらを
+        唯一の真実源にする（x-render-target.deployは読まない。真実源が2箇所に分散するのを
+        避けるため）。宣言を持たないdocumentTypeについてのみ、schema側のdeployを読む。
+
+        判定を「そのdocumentTypeの宣言があるか」で行うのは、解決キー（役割・discriminator）
+        に対応する宣言が無いことを、schema側へのフォールバックと取り違えないため。雛形は
+        まさにこの「documentTypeの宣言はあるが、自分の役割の宣言は無い」状態に置かれる。
         """
-        try:
-            raw = self._documents.read_text(".waffle/config.json")
-        except (OSError, FileNotFoundError):
-            return None
-        try:
-            config = json.loads(raw)
-        except json.JSONDecodeError:
-            return None
+        tool_mappings = self._load_tool_mappings()
+        document_type = doc.get("documentType")
+        document_role = doc.get("documentRole", deploy_target_resolution.DEFAULT_DOCUMENT_ROLE)
+        if _config_declares(tool_mappings, document_type):
+            mappings = deploy_target_resolution.select_mappings(
+                tool_mappings, document_type, document_role, spec_kind,
+            )
+        else:
+            mappings = [
+                {"pathTemplate": dep, "mode": "render"}
+                for dep in _select_deploy(target.get("deploy", []), spec_kind)
+            ]
 
         targets: list[tuple[str, str]] = []
-        for tool_config in config.get("toolMappings", {}).values():
-            mapping = tool_config.get(document_type) if document_type else None
-            if isinstance(mapping, dict):
-                mapping = _select_field_map(mapping, spec_kind)
-            if not mapping:
-                continue
-            # 同じdocumentTypeに対し複数のマッピングを持てる（例: skillRefsを参照するSkill向け
-            # マッピングと、agentRefsを参照するAgent向けマッピングを別々に定義する）。単一の
-            # マッピング（旧来の辞書1つ）はリスト化して同じ経路で処理する。
-            mapping_list = mapping if isinstance(mapping, list) else [mapping]
-            for single_mapping in mapping_list:
-                targets.extend(_resolve_single_mapping_targets(single_mapping, path_vars))
-        return targets or None
+        skipped: list[dict] = []
+        for mapping in mappings:
+            resolved, unresolved = deploy_target_resolution.resolve_targets(mapping, path_vars)
+            targets.extend(resolved)
+            skipped.extend(unresolved)
+        return targets, skipped
+
+    def _find_ownership_conflict(
+        self, document_id: str, targets: list[tuple[str, str]],
+    ) -> tuple[str, str] | None:
+        """配置先のいずれかが他のDocumentの成果物であれば、その配置先と所有者を返す。"""
+        if not targets:
+            return None
+        templates = deploy_target_resolution.canonical_templates(self._all_schemas())
+        for dp, _mode in targets:
+            real = self._documents.resolve_real_path(dp)
+            if not real:
+                continue  # まだ何も置かれていない配置先は、誰にも所有されていない
+            projection = deploy_target_resolution.find_projection(templates, real)
+            if projection and projection[1] != document_id:
+                return dp, projection[1]
+        return None
+
+    def _all_schemas(self) -> list[dict]:
+        """出荷されている全schemaを読み込む（canonicalテンプレートの収集用）。"""
+        if self._schema_cache is None:
+            loaded: list[dict] = []
+            for name in self._schemas.list_names():
+                for version in self._schemas.list_versions(name):
+                    try:
+                        loaded.append(self._schemas.load(f"{name}/{version}"))
+                    except (FileNotFoundError, ValueError):
+                        continue
+            self._schema_cache = loaded
+        return self._schema_cache
+
+    def _load_tool_mappings(self) -> dict:
+        """.waffle/config.json の toolMappings を返す。読めなければ空。"""
+        try:
+            config = json.loads(self._documents.read_text(".waffle/config.json"))
+        except (OSError, FileNotFoundError, json.JSONDecodeError):
+            return {}
+        return config.get("toolMappings", {})
 
     def _resolve_path_vars(self, doc: dict, schema: dict, document_path: str, spec_kind: str | None) -> dict:
         """x-render-target のパステンプレートに渡す変数を組み立てる。

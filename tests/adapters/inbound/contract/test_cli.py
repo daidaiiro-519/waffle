@@ -526,10 +526,10 @@ def test_check_path_is_projection_matches_direct_call():
     When 同じ入力をCLI経由（waffle check-path-is-projection）で呼び出す
     Then 同じ判定結果が返る
     """
-    from waffle.adapters.outbound.fs import FsDocumentRepository
+    from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
     from waffle.application.usecases.check_path_is_projection import CheckPathIsProjection
 
-    direct = CheckPathIsProjection(FsDocumentRepository()).run(".waffle/skills/ddd-advisor/SKILL.md")
+    direct = CheckPathIsProjection(PackageSchemaRepository()).run(".waffle/skills/ddd-advisor/SKILL.md")
     assert direct.value["isProjection"] is True
 
     result = _runner.invoke(app, [

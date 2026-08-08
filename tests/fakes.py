@@ -33,6 +33,10 @@ class FakeSchemaRepository:
     def __init__(self, schemas: dict[str, dict]) -> None:
         self._schemas = dict(schemas)
 
+    def list_names(self) -> list[str]:
+        """知っている schemaRef の名前部分を重複なく返す。"""
+        return sorted({ref.split("/")[0] for ref in self._schemas})
+
     def load(self, schema_ref: str) -> dict:
         """schemaRef から schema を返す。
 

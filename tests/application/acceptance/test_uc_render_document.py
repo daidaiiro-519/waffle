@@ -93,6 +93,9 @@ class _ConfigStubDocumentRepository:
     def load(self, path: str) -> dict:
         return self._real.load(path)
 
+    def resolve_real_path(self, path: str) -> str:
+        return self._real.resolve_real_path(path)
+
 
 def test_array_path_var_fans_out_to_deploy_targets(tmp_path):
     """
@@ -112,7 +115,9 @@ def test_array_path_var_fans_out_to_deploy_targets(tmp_path):
     config_json = json.dumps({
         "toolMappings": {
             "claude-code": {
-                "FakeMulti": {"pathTemplate": str(tmp_path / "links" / "{skillRefs}" / "{documentId}.md"), "mode": "symlink"}
+                "instance": {
+                    "FakeMulti": {"pathTemplate": str(tmp_path / "links" / "{skillRefs}" / "{documentId}.md"), "mode": "symlink"}
+                }
             }
         }
     })
@@ -156,10 +161,12 @@ def test_multiple_array_path_vars_fan_out_together(tmp_path):
     config_json = json.dumps({
         "toolMappings": {
             "claude-code": {
-                "FakeMulti": [
-                    {"pathTemplate": str(tmp_path / "skills" / "{skillRefs}" / "{documentId}.md"), "mode": "symlink"},
-                    {"pathTemplate": str(tmp_path / "agents" / "{agentRefs}" / "{documentId}.md"), "mode": "symlink"},
-                ]
+                "instance": {
+                    "FakeMulti": [
+                        {"pathTemplate": str(tmp_path / "skills" / "{skillRefs}" / "{documentId}.md"), "mode": "symlink"},
+                        {"pathTemplate": str(tmp_path / "agents" / "{agentRefs}" / "{documentId}.md"), "mode": "symlink"},
+                    ]
+                }
             }
         }
     })
@@ -198,9 +205,11 @@ def test_nested_tool_mappings_use_only_the_matching_entry(tmp_path):
     config_json = json.dumps({
         "toolMappings": {
             "claude-code": {
-                "FakeMulti": {
-                    "a": {"pathTemplate": str(tmp_path / "deploy-a" / "{documentId}.md"), "mode": "symlink"},
-                    "b": {"pathTemplate": str(tmp_path / "deploy-b" / "{documentId}.md"), "mode": "symlink"},
+                "instance": {
+                    "FakeMulti": {
+                        "a": {"pathTemplate": str(tmp_path / "deploy-a" / "{documentId}.md"), "mode": "symlink"},
+                        "b": {"pathTemplate": str(tmp_path / "deploy-b" / "{documentId}.md"), "mode": "symlink"},
+                    }
                 }
             }
         }
@@ -241,9 +250,11 @@ def test_nested_agent_mappings_resolve_per_kind(tmp_path):
     config_json = json.dumps({
         "toolMappings": {
             "claude-code": {
-                "Agent": {
-                    "orchestrator": {"pathTemplate": str(tmp_path / "CLAUDE.md"), "mode": "symlink"},
-                    "subagent": {"pathTemplate": str(tmp_path / "agents" / "{documentId}.md"), "mode": "symlink"},
+                "instance": {
+                    "Agent": {
+                        "orchestrator": {"pathTemplate": str(tmp_path / "CLAUDE.md"), "mode": "symlink"},
+                        "subagent": {"pathTemplate": str(tmp_path / "agents" / "{documentId}.md"), "mode": "symlink"},
+                    }
                 }
             }
         }
@@ -290,8 +301,10 @@ def test_discriminator_absent_from_nested_mappings_is_not_deployed(tmp_path):
     config_json = json.dumps({
         "toolMappings": {
             "codex": {
-                "Agent": {
-                    "orchestrator": {"pathTemplate": str(tmp_path / "AGENTS.md"), "mode": "symlink"},
+                "instance": {
+                    "Agent": {
+                        "orchestrator": {"pathTemplate": str(tmp_path / "AGENTS.md"), "mode": "symlink"},
+                    }
                 }
             }
         }
@@ -781,3 +794,135 @@ def test_malformed_json_is_rejected():
     result = _engine().run(path, deploy=False)
     assert isinstance(result, Err), result
     assert result.details[0] == "INVALID_JSON"
+
+
+def _role_config(tmp_path, *, canonical_template: str) -> str:
+    """documentRoleを解決キーに含むtoolMappings。instanceの宣言だけを持ち、templateの宣言は持たない。"""
+    return json.dumps({
+        "canonicalPathTemplates": {"Fake": canonical_template},
+        "toolMappings": {
+            "some-tool": {
+                "instance": {
+                    "Fake": {"pathTemplate": str(tmp_path / "deploy" / "{documentId}.md"), "mode": "render"},
+                },
+            },
+        },
+    })
+
+
+def _fake_schema(tmp_path) -> dict:
+    return {
+        "properties": {"content": {"type": "object", "properties": {}}},
+        "x-render-target": {"formats": ["md"], "path": str(tmp_path / "canonical" / "{documentId}.md")},
+    }
+
+
+def _write_doc(tmp_path, name: str, doc: dict) -> str:
+    p = tmp_path / f"{name}.json"
+    p.write_text(json.dumps(doc), encoding="utf-8")
+    return str(p)
+
+
+def test_template_role_document_is_not_deployed(tmp_path):
+    """
+    Scenario: 雛形は配置先が解決できないため配置されない
+    Given documentRoleがtemplateのDocumentと、instanceの宣言だけを持つtoolMappings
+    When deployを有効にしてrenderする
+    Then canonicalにのみ書かれ、配置先は1つも返らない
+    """
+    doc_path = _write_doc(tmp_path, "tmpl", {
+        "documentId": "tmpl", "documentType": "Fake", "documentRole": "template",
+        "schemaRef": "Fake/v1", "content": {},
+    })
+    documents = _ConfigStubDocumentRepository(
+        FsDocumentRepository(), _role_config(tmp_path, canonical_template=str(tmp_path / "canonical" / "{documentId}.md")),
+    )
+    result = RenderDocument(documents, _FakeSchemaRepository(_fake_schema(tmp_path))).run(doc_path, deploy=True)
+
+    assert isinstance(result, Ok), result
+    assert result.value["deployed"] == []
+    assert (tmp_path / "canonical" / "tmpl.md").exists()
+    assert not (tmp_path / "deploy" / "tmpl.md").exists()
+
+
+def test_instance_role_document_is_deployed(tmp_path):
+    """
+    Scenario: 実体は宣言どおりの配置先へ配置される
+    Given documentRoleを宣言しないDocument（既定でinstance）
+    When deployを有効にしてrenderする
+    Then instanceの宣言が示す配置先へ書かれる
+    """
+    doc_path = _write_doc(tmp_path, "real", {
+        "documentId": "real", "documentType": "Fake", "schemaRef": "Fake/v1", "content": {},
+    })
+    documents = _ConfigStubDocumentRepository(
+        FsDocumentRepository(), _role_config(tmp_path, canonical_template=str(tmp_path / "canonical" / "{documentId}.md")),
+    )
+    result = RenderDocument(documents, _FakeSchemaRepository(_fake_schema(tmp_path))).run(doc_path, deploy=True)
+
+    assert isinstance(result, Ok), result
+    assert result.value["deployed"] == [str(tmp_path / "deploy" / "real.md")]
+
+
+def test_deploy_target_owned_by_another_document_is_not_overwritten(tmp_path):
+    """
+    Scenario: 他のDocumentが所有する配置先は上書きしない
+    Given 配置先が既に別Documentの正本を指しているとき
+    When deployを有効にしてrenderする
+    Then DEPLOY_TARGET_OWNED_BY_OTHERが返り、その配置先は書き換えられない
+    """
+    canonical_template = str(tmp_path / "canonical" / "{documentId}.md")
+    (tmp_path / "canonical").mkdir()
+    (tmp_path / "deploy").mkdir()
+    other_canonical = tmp_path / "canonical" / "other.md"
+    other_canonical.write_text("先客の成果物", encoding="utf-8")
+    deploy_path = tmp_path / "deploy" / "shared.md"
+    deploy_path.symlink_to(other_canonical)
+
+    config = json.dumps({
+        "canonicalPathTemplates": {"Fake": canonical_template},
+        "toolMappings": {
+            "some-tool": {
+                "instance": {"Fake": {"pathTemplate": str(deploy_path), "mode": "symlink"}},
+            },
+        },
+    })
+    doc_path = _write_doc(tmp_path, "mine", {
+        "documentId": "mine", "documentType": "Fake", "schemaRef": "Fake/v1", "content": {},
+    })
+    documents = _ConfigStubDocumentRepository(FsDocumentRepository(), config)
+    result = RenderDocument(documents, _FakeSchemaRepository(_fake_schema(tmp_path))).run(doc_path, deploy=True)
+
+    assert isinstance(result, Err), result
+    assert result.details[0] == "DEPLOY_TARGET_OWNED_BY_OTHER"
+    assert deploy_path.resolve() == other_canonical.resolve()
+    assert other_canonical.read_text(encoding="utf-8") == "先客の成果物"
+
+
+def test_unresolvable_path_var_is_reported_as_skipped(tmp_path):
+    """
+    Scenario: 解決できなかった配置先は理由とともに結果へ含める
+    Given pathTemplateが参照する変数をDocumentが持たないとき
+    When deployを有効にしてrenderする
+    Then その配置先と理由がskippedに現れ、canonicalへの書き込みは続く
+    """
+    config = json.dumps({
+        "canonicalPathTemplates": {"Fake": str(tmp_path / "canonical" / "{documentId}.md")},
+        "toolMappings": {
+            "some-tool": {
+                "instance": {"Fake": {"pathTemplate": str(tmp_path / "deploy" / "{missingVar}.md"), "mode": "render"}},
+            },
+        },
+    })
+    doc_path = _write_doc(tmp_path, "novar", {
+        "documentId": "novar", "documentType": "Fake", "schemaRef": "Fake/v1", "content": {},
+    })
+    documents = _ConfigStubDocumentRepository(FsDocumentRepository(), config)
+    result = RenderDocument(documents, _FakeSchemaRepository(_fake_schema(tmp_path))).run(doc_path, deploy=True)
+
+    assert isinstance(result, Ok), result
+    assert result.value["deployed"] == []
+    assert result.value["skipped"] == [
+        {"path": str(tmp_path / "deploy" / "{missingVar}.md"), "reason": "UNRESOLVED_PATH_VAR"},
+    ]
+    assert (tmp_path / "canonical" / "novar.md").exists()

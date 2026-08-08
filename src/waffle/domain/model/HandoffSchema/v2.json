@@ -67,6 +67,17 @@
     },
     "content": {
       "$ref": "#/$defs/HandoffContent"
+    },
+    "documentRole": {
+      "type": "string",
+      "enum": [
+        "instance",
+        "template"
+      ],
+      "default": "instance",
+      "description": "この文書が実体（instance）か、他プロジェクトで実体化されるための雛形（template）かを表す。documentTypeと直交する軸で、配置先の解決キーに含まれる。",
+      "x-prompt-write": "この文書が、そのまま使われる実体（instance）か、他プロジェクトへ持っていって値を埋めるための雛形（template）かを選んでください。値がプレースホルダーのまま置かれ、このリポジトリでは配置先を持たない文書だけが template です。省略すると instance になります。",
+      "x-prompt-query": "この文書が実体か雛形かを読みます。template の文書は配置先を持たないため、成果物が配置されていなくても未設定ではありません。逆に instance で配置先が空なら、そのdocumentTypeの宣言が漏れている合図です。"
     }
   },
   "$defs": {

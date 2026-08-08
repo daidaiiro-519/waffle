@@ -83,7 +83,7 @@ def test_status_is_equal_by_value():
 
 def test_document_has_all_declared_attributes():
     """
-    Given agg-document.jsonが宣言する19属性を指定してDocumentを構築する
+    Given agg-document.jsonが宣言する全属性を指定してDocumentを構築する
     When 各属性を参照する
     Then 全属性がそのまま保持されている
     """
@@ -110,7 +110,9 @@ def test_document_has_all_declared_attributes():
         content={},
         tags=["context:waffle"],
         distribution_tier=None,
+        document_role="instance",
     )
     assert document.document_id == DocumentId("uc-scaffold-document")
     assert document.spec_kind == DiscriminatorValue("usecase")
     assert document.tags == ["context:waffle"]
+    assert document.document_role == "instance"

@@ -358,7 +358,7 @@ def update_coding_preset(preset: str, fromDocumentId: str, blocks: list[str], dr
 @mcp.tool
 def check_path_is_projection(realPath: str) -> dict:
     """実体パスがdocument.json（原本）からの投影かどうかを判定（uc-check-path-is-projection）。"""
-    return _dict(CheckPathIsProjection(_docs()).run(realPath))
+    return _dict(CheckPathIsProjection(_schemas()).run(realPath))
 
 @mcp.tool
 def check_query_precedes_array_fill(targetPath: str, hasArrayValue: bool, queriedPaths: list[str]) -> dict:

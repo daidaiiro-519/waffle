@@ -44,6 +44,14 @@ class PackageSchemaRepository(SchemaRepository):
                     versions.append(child.name.removesuffix(".json"))
         return versions
 
+    def list_names(self) -> list[str]:
+        names: list[str] = []
+        for package in _PACKAGES:
+            for child in resources.files(package).iterdir():
+                if child.is_dir() and not child.name.startswith("_") and child.name not in names:
+                    names.append(child.name)
+        return sorted(names)
+
     def resolve_path(self, schema_ref: str) -> str:
         *dirs, name = schema_ref.split("/")
         for package in _PACKAGES:

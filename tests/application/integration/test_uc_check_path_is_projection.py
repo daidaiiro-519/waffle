@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
+from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.check_path_is_projection import CheckPathIsProjection
 from waffle.shared.result import Ok
 
@@ -33,7 +34,7 @@ def test_直接呼び出しとCLI呼び出しで同じ判定結果になる():
     When 同じ入力をCLI経由（waffle check-path-is-projection）で呼び出す
     Then 同じ判定結果が返る
     """
-    direct = CheckPathIsProjection(FsDocumentRepository()).run(_PATH)
+    direct = CheckPathIsProjection(PackageSchemaRepository()).run(_PATH)
     assert isinstance(direct, Ok)
     assert direct.value["isProjection"] is True
 

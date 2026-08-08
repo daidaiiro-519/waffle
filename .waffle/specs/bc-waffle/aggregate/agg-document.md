@@ -54,6 +54,7 @@ Document
 | updatedAt | 日時文字列（ISO8601） |
 | content | 構造化データ（schema 準拠） |
 | tags | 文字列配列 |
+| documentRole | 文字列（enum: instance/template） |
 | distributionTier | 文字列（enum: core/optional） |
 
 ---

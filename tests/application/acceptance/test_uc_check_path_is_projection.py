@@ -1,11 +1,11 @@
 """uc-check-path-is-projection の受け入れテスト（ネイティブpytest、実configを使用）。"""
-from waffle.adapters.outbound.fs import FsDocumentRepository
+from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.check_path_is_projection import CheckPathIsProjection
 from waffle.shared.result import Ok
 
 
 def _engine() -> CheckPathIsProjection:
-    return CheckPathIsProjection(FsDocumentRepository())
+    return CheckPathIsProjection(PackageSchemaRepository())
 
 
 def test_skill_markdown_path_is_projection():

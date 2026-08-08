@@ -28,6 +28,10 @@ class FsDocumentRepository(DocumentRepository):
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(text, encoding="utf-8")
 
+    def resolve_real_path(self, path: str) -> str:
+        p = Path(path)
+        return str(p.resolve()) if p.exists() else ""
+
     def link(self, canonical: str, path: str) -> None:
         target = Path(path)
         canonical_abs = Path(canonical).resolve()

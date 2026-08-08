@@ -45,3 +45,4 @@ class Document:
     content: dict
     tags: list[str]
     distribution_tier: str | None
+    document_role: str

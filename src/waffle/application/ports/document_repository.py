@@ -25,6 +25,11 @@ class DocumentRepository(Protocol):
         """path のファイルを生テキストで返す（scan / raw フォールバック用）。無ければ FileNotFoundError。"""
         ...
 
+    def resolve_real_path(self, path: str) -> str:
+        """path のシンボリックリンクを辿った実体パスを返す。path に何も無ければ空文字を返す
+        （まだ何も置かれていない配置先は、誰にも所有されていないことを意味する）。"""
+        ...
+
     def list_json(self, directory: str) -> list[str]:
         """directory 直下の *.json パス一覧（昇順）。ディレクトリが無ければ FileNotFoundError。"""
         ...
