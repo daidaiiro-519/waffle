@@ -1,0 +1,218 @@
+{
+  "documentId": "handoff-surface-drift",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "受け口の入力を宣言と突き合わせる実装への引き継ぎ：handoff-surface-drift"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-check-surface-drift"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "なぜ検査を先に作るか",
+          "consideration": "119関数の利用者向けの文を手で移してから検査を作ると、移し間違いを検知できないまま確定してしまう。検査→宣言を埋める→移す、の順にする。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "綴りを正規化して比べる理由",
+          "consideration": "同じ入力が口ごとに違う綴りで現れる（--documentsRoot / documentsRoot / documents_root）。どの綴りが正しいかを決める宣言はいま無く、それを必要とする実例も出ていない。区切りと大小を落として同一視し、名前の有無だけを見る。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "実際に見つかっている食い違い",
+          "consideration": "CLIとMCPで両方にある操作20件を突き合わせたところ、1件が食い違っていた——uc-check-path-is-projection の入力が、CLIでは resolvedPath、MCPでは realPath。しかもMCP側には説明が一切ない。残り19件は揃っており、この方式で誤検知は出ない。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "口の種類を問わない設計にする理由",
+          "consideration": "artifact-share の受け口は要求本文のキー（b.get(\"artifactId\")）で入力を受け取っており、CLI/MCPとは取り出し方が違う。宣言と突き合わせるという中身は同じなので、取り出しだけを言語・口ごとのアダプターへ寄せる（既存のClassDeclarationExtractor / TestFunctionExtractor と同じ形）。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "既存の材料で足りる範囲",
+          "consideration": "scan_source_code は既に signatureParams（実際の引数名）を返す。CLI・MCPの入力の取り出しはこれで足りる。新しい取り出しが要るのは、typerのOptionに書かれた説明と、要求本文のキーを読むとき。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "操作と仕様の対応づけ",
+          "consideration": "CLIの関数名とMCPの関数名が揃っていない（query / query_document、render / render_document など6件）。どのユースケースの口かを決めるのに関数名は使えないので、docstringに手書きされている（uc-...）か、別の対応づけが要る。ここは実装時に決める。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "説明の一致は次の増分",
+          "consideration": "この増分では名前の有無だけを見る。説明の突き合わせは、typerのOptionからhelpを取り出す新しい抽出が要るため分ける。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "naming.cases の artifact は module / type / function / constant / field の5つで、入力に当たる値が無い。かつ naming.cases は対象ごとの宣言で、口ごとではない。1つのスタックが複数の口を持つと綴りが分かれるため、綴りまで検知したくなったらこの構造から見直す必要がある（今回は正規化で回避する）。",
+        "artifact-share の受け口は入力の説明を一切持たない（typerのhelpに当たるものが無い）。宣言を埋めても、突き合わせる相手が無い状態が残る。",
+        "CLIの関数の docstring は typer が --help へそのまま印字し、MCPの docstring は fastmcp がツールの説明にする（どちらも実測で確認）。移し先は decorator の help / description。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "宣言",
+          "description": "ユースケース仕様が、外から渡す値を業務語彙で1つずつ宣言する。受け口が見せる説明の正本はここ。",
+          "nodes": [
+            {
+              "id": "spec",
+              "title": "ユースケース仕様",
+              "sub": "inputs ブロック",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "突き合わせ",
+          "description": "宣言と、口が実際に受け取る入力を比べる。綴りは区切りと大小を落として同一視する。",
+          "nodes": [
+            {
+              "id": "chk",
+              "title": "受け口の食い違いの検査",
+              "sub": "check_surface_drift",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "取り出し",
+          "description": "口ごとに入力の取り出し方が違う。取り出しだけをここへ寄せ、突き合わせの中身は共通にする。",
+          "nodes": [
+            {
+              "id": "port",
+              "title": "口の入力を取り出す受け口",
+              "sub": "port",
+              "status": "new"
+            },
+            {
+              "id": "scan",
+              "title": "ソースの走査",
+              "sub": "scan_source_code / signatureParams",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "口",
+          "description": "同じ操作を別々の形で外へ差し出している。どれも同じ宣言を指しているかだけが問われる。",
+          "nodes": [
+            {
+              "id": "cli",
+              "title": "命令行",
+              "sub": "typer",
+              "status": "existing"
+            },
+            {
+              "id": "mcp",
+              "title": "道具呼び出し",
+              "sub": "fastmcp",
+              "status": "existing"
+            },
+            {
+              "id": "http",
+              "title": "要求本文",
+              "sub": "artifact-share（次の増分）",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "chk",
+          "to": "spec",
+          "kind": "dependency",
+          "label": "宣言を正本として読む"
+        },
+        {
+          "from": "port",
+          "to": "scan",
+          "kind": "dependency",
+          "label": "既存の走査を使う"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": []
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "uc-check-surface-drift を実装し、ユースケースが宣言する入力と、CLI・MCPが実際に受け取る引数を突き合わせる。あわせて25件のユースケース仕様に入力を埋め、利用者向けの文をdocstringから外へ移す。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/application/usecases/check_surface_drift.py",
+          "reason": "新規。宣言と口の入力を突き合わせる"
+        },
+        {
+          "path": "src/waffle/application/ports/",
+          "reason": "口の入力を取り出すport（口ごとの取り出しをアダプターへ寄せる）"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/cli/main.py",
+          "reason": "検査の呼び出し口を足す。利用者向けの文を decorator へ移す"
+        },
+        {
+          "path": "src/waffle/adapters/inbound/mcp/main.py",
+          "reason": "同上"
+        },
+        {
+          "path": ".waffle/documents/specs/bc-waffle/**/usecase/*.json",
+          "reason": "25件の仕様に入力を埋める"
+        },
+        {
+          "path": "tests/application/acceptance/test_uc_check_surface_drift.py",
+          "reason": "新規シナリオ5件と操作保証2件"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [],
+      "findings": [],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": "advisorへの相談は行っていない。構造の判断はユーザーとの往復で確定した（1つの入れ物が2つの意味を運んでいた／綴りの正規化で足りる）。"
+      }
+    }
+  },
+  "tags": [
+    "topic:surface-drift",
+    "subdomain:sd-reconciliation"
+  ]
+}

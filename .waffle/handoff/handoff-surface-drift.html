@@ -1,0 +1,354 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>受け口の入力を宣言と突き合わせる実装への引き継ぎ：handoff-surface-drift</title>
+<meta name="id" content="handoff-surface-drift">
+<meta name="type" content="Handoff">
+<meta name="title" content="受け口の入力を宣言と突き合わせる実装への引き継ぎ：handoff-surface-drift">
+<meta name="description" content="uc-check-surface-drift を実装し、ユースケースが宣言する入力と、CLI・MCPが実際に受け取る引数を突き合わせる。あわせて25件のユースケース仕様に入力を埋め、利用者向けの文をdocstringから外へ移す。">
+<meta name="tags" content="topic:surface-drift, subdomain:sd-reconciliation">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>受け口の入力を宣言と突き合わせる実装への引き継ぎ：handoff-surface-drift</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>uc-check-surface-drift</dd>
+      <dt>documentId</dt><dd>handoff-surface-drift</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 412" width="100%" height="412">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">宣言</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">突き合わせ</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">取り出し</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">口</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-arrow" d="M398.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L190.0,352.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L606.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L190.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L606.0,352.0"/>
+        <path class="flow-arrow dep" d="M398.0,124.0 L398.0,60.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="86.0">宣言を正本として読む</text>
+        <path class="flow-arrow dep" d="M388.0,263.0 L408.0,263.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="257.0">既存の走査を使う</text>
+        
+        <g class="flow-box new" transform="translate(96.0,10.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ユースケース仕様</div>
+              <div class="sub">inputs ブロック</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">受け口の食い違いの検査</div>
+              <div class="sub">check_surface_drift</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">口の入力を取り出す受け口</div>
+              <div class="sub">port</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ソースの走査</div>
+              <div class="sub">scan_source_code / signatureParams</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">命令行</div>
+              <div class="sub">typer</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box " transform="translate(304.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">道具呼び出し</div>
+              <div class="sub">fastmcp</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box " transform="translate(512.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">要求本文</div>
+              <div class="sub">artifact-share（次の増分）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>宣言</strong>: ユースケース仕様が、外から渡す値を業務語彙で1つずつ宣言する。受け口が見せる説明の正本はここ。</p></li><li><p><strong>突き合わせ</strong>: 宣言と、口が実際に受け取る入力を比べる。綴りは区切りと大小を落として同一視する。</p></li><li><p><strong>取り出し</strong>: 口ごとに入力の取り出し方が違う。取り出しだけをここへ寄せ、突き合わせの中身は共通にする。</p></li><li><p><strong>口</strong>: 同じ操作を別々の形で外へ差し出している。どれも同じ宣言を指しているかだけが問われる。</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">（Orchestrator）</span><span class="detail">設計観点 4件／実装観点 3件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">（Orchestrator）</span></div>
+              <div class="entry-viewpoint">なぜ検査を先に作るか</div>
+              <div class="entry-consideration">119関数の利用者向けの文を手で移してから検査を作ると、移し間違いを検知できないまま確定してしまう。検査→宣言を埋める→移す、の順にする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">（Orchestrator）</span></div>
+              <div class="entry-viewpoint">綴りを正規化して比べる理由</div>
+              <div class="entry-consideration">同じ入力が口ごとに違う綴りで現れる（--documentsRoot / documentsRoot / documents_root）。どの綴りが正しいかを決める宣言はいま無く、それを必要とする実例も出ていない。区切りと大小を落として同一視し、名前の有無だけを見る。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">（Orchestrator）</span></div>
+              <div class="entry-viewpoint">実際に見つかっている食い違い</div>
+              <div class="entry-consideration">CLIとMCPで両方にある操作20件を突き合わせたところ、1件が食い違っていた——uc-check-path-is-projection の入力が、CLIでは resolvedPath、MCPでは realPath。しかもMCP側には説明が一切ない。残り19件は揃っており、この方式で誤検知は出ない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">（Orchestrator）</span></div>
+              <div class="entry-viewpoint">口の種類を問わない設計にする理由</div>
+              <div class="entry-consideration">artifact-share の受け口は要求本文のキー（b.get(&quot;artifactId&quot;)）で入力を受け取っており、CLI/MCPとは取り出し方が違う。宣言と突き合わせるという中身は同じなので、取り出しだけを言語・口ごとのアダプターへ寄せる（既存のClassDeclarationExtractor / TestFunctionExtractor と同じ形）。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">（Orchestrator）</span></div>
+              <div class="entry-viewpoint">既存の材料で足りる範囲</div>
+              <div class="entry-consideration">scan_source_code は既に signatureParams（実際の引数名）を返す。CLI・MCPの入力の取り出しはこれで足りる。新しい取り出しが要るのは、typerのOptionに書かれた説明と、要求本文のキーを読むとき。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">（Orchestrator）</span></div>
+              <div class="entry-viewpoint">操作と仕様の対応づけ</div>
+              <div class="entry-consideration">CLIの関数名とMCPの関数名が揃っていない（query / query_document、render / render_document など6件）。どのユースケースの口かを決めるのに関数名は使えないので、docstringに手書きされている（uc-...）か、別の対応づけが要る。ここは実装時に決める。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">（Orchestrator）</span></div>
+              <div class="entry-viewpoint">説明の一致は次の増分</div>
+              <div class="entry-consideration">この増分では名前の有無だけを見る。説明の突き合わせは、typerのOptionからhelpを取り出す新しい抽出が要るため分ける。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>naming.cases の artifact は module / type / function / constant / field の5つで、入力に当たる値が無い。かつ naming.cases は対象ごとの宣言で、口ごとではない。1つのスタックが複数の口を持つと綴りが分かれるため、綴りまで検知したくなったらこの構造から見直す必要がある（今回は正規化で回避する）。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>artifact-share の受け口は入力の説明を一切持たない（typerのhelpに当たるものが無い）。宣言を埋めても、突き合わせる相手が無い状態が残る。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>CLIの関数の docstring は typer が --help へそのまま印字し、MCPの docstring は fastmcp がツールの説明にする（どちらも実測で確認）。移し先は decorator の help / description。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/check_surface_drift.py</div>
+              <div class="reason">新規。宣言と口の入力を突き合わせる</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/ports/</div>
+              <div class="reason">口の入力を取り出すport（口ごとの取り出しをアダプターへ寄せる）</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/cli/main.py</div>
+              <div class="reason">検査の呼び出し口を足す。利用者向けの文を decorator へ移す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/mcp/main.py</div>
+              <div class="reason">同上</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/documents/specs/bc-waffle/**/usecase/*.json</div>
+              <div class="reason">25件の仕様に入力を埋める</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">tests/application/acceptance/test_uc_check_surface_drift.py</div>
+              <div class="reason">新規シナリオ5件と操作保証2件</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
