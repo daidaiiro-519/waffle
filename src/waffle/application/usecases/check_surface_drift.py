@@ -60,6 +60,8 @@ def _declared_inputs(doc: dict) -> list[str] | None:
 
 
 class CheckSurfaceDrift:
+    """宣言された入力と、口が実際に受け取る入力の食い違いを見つける。"""
+
     def __init__(self, documents: DocumentRepository, extractor: SurfaceExtractor) -> None:
         self._documents = documents
         self._extractor = extractor

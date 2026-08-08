@@ -96,6 +96,15 @@ def _composition_root_paths(architecture_ref: str) -> list[str] | Err:
 
     どのファイルが配線であるかは compositionRootPaths が既に宣言していて、
     依存の検査もそこを読んでいる。検査ごとに別の見当をつけない。
+
+    Args:
+        architecture_ref: 口の在り処を宣言しているarchitecture documentのdocumentId。
+
+    Returns:
+        口のソースのパスの並び。規約を解決できなければ Err。
+
+    Raises:
+        なし。
     """
     resolved = resolve_layer_graph(_docs(), architecture_ref)
     if isinstance(resolved, Err):
@@ -354,13 +363,28 @@ def check_prompt_contract(
     """Schemaの指示が然るべき場所に然るべき名前で置かれているかを検証（uc-check-prompt-contract）。"""
     _emit(CheckPromptContract(_schemas()).run(schema_ref))
 
-@app.command("check-surface-drift")
+@app.command(
+    "check-surface-drift",
+    help="受け口が見せる入力が仕様の宣言と一致しているかを検証（uc-check-surface-drift）。",
+)
 def check_surface_drift(
     documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     architecture_ref: str = typer.Option(..., "--architectureRef", "--architecture-ref", help="外へ差し出す口の在り処を宣言しているarchitecture documentのdocumentId（例: architecture-waffle）"),
     language: str = typer.Option("python", "--language", help="口のソースの言語"),
 ) -> None:
-    """受け口が見せる入力が仕様の宣言と一致しているかを検証（uc-check-surface-drift）。"""
+    """宣言された入力と口が受け取る入力を突き合わせ、結果を標準出力へ書き出す。
+
+    Args:
+        documents_root: 仕様側の走査範囲。省略時は規約の宣言から決まる。
+        architecture_ref: 口の在り処を宣言しているarchitecture documentのdocumentId。
+        language: 口のソースが書かれている言語。
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     surfaces = _composition_root_paths(architecture_ref)
     if isinstance(surfaces, Err):
         _emit(surfaces)
