@@ -12,6 +12,8 @@ domain/services/concept_source_root.py が担う。ここはport経由の読込�
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.domain.services.concept_source_root import (
     declares_per_file,
@@ -20,9 +22,25 @@ from waffle.domain.services.concept_source_root import (
 )
 from waffle.shared.result import Err, Ok, Result
 
-__all__ = ["resolve_src_root", "resolve_directory_scoped_root"]
+__all__ = ["SearchUnit", "resolve_src_root", "resolve_search_unit",
+           "resolve_directory_scoped_root"]
 
 _ARCHITECTURE_PATH = ".waffle/documents/coding/{architecture_ref}.json"
+
+
+@dataclass(frozen=True)
+class SearchUnit:
+    """その概念を、1つのファイルで探すか、配置ディレクトリで探すか。
+
+    宣言を読めたかどうかを一緒に運ぶ。読めた結果のファイル単位と、読めなかった
+    ためのファイル単位は、同じ探し方でも意味が違う。前者は宣言に従った状態で、
+    後者はそのプロジェクトがまだ決めていない状態。呼び出し側がこれを見分けられ
+    ないと、宣言の欠落を報告できない。
+    """
+
+    per_file: bool
+    root: str | None = None
+    declared: bool = True
 
 
 def _err(code: str, message: str) -> Err:
@@ -78,28 +96,67 @@ def resolve_src_root(
     return Ok(resolved)
 
 
+def resolve_search_unit(
+    documents: DocumentRepository,
+    architecture_ref: str | None,
+    concept: str,
+) -> SearchUnit:
+    """その概念をどの単位で探すかを、architecture の宣言から決める。
+
+    layout.granularity がその概念に「1ファイルに1つ」を宣言していればファイル
+    単位、宣言していなければ conceptPlacement が与える配置ディレクトリ単位。
+    どちらで探すかを決める権限は architecture にあり、検査はそれを読むだけにする。
+
+    宣言そのものへ辿り着けないとき（参照が渡されない・その文書が無い・配置を
+    導けない）はファイル単位に落とすが、declared を False にしてそのことを伝える。
+    黙って落とすと、宣言に従った結果と区別がつかなくなる。
+
+    Args:
+        documents: architecture文書を読むためのDocumentRepository。
+        architecture_ref: 参照するarchitecture documentのdocumentId。
+        concept: 探索の単位を知りたい概念（aggregate / usecase / value-object 等）。
+
+    Returns:
+        探し方を表す SearchUnit。ディレクトリ単位のときだけ root を持つ。
+
+    Raises:
+        なし。宣言へ辿り着けないことは失敗ではなく、declared=False で表す。
+    """
+    if not architecture_ref:
+        return SearchUnit(per_file=True, declared=False)
+    try:
+        document = documents.load(
+            _ARCHITECTURE_PATH.format(architecture_ref=architecture_ref))
+    except FileNotFoundError:
+        return SearchUnit(per_file=True, declared=False)
+    content = document.get("content", {})
+    if declares_per_file(content.get("layout", {}), concept):
+        return SearchUnit(per_file=True)
+    resolved = resolve_src_root(documents, None, architecture_ref, concept)
+    if not isinstance(resolved, Ok):
+        return SearchUnit(per_file=True, declared=False)
+    return SearchUnit(per_file=False, root=resolved.value)
+
+
 def resolve_directory_scoped_root(
     documents: DocumentRepository,
     architecture_ref: str | None,
     concept: str,
 ) -> str | None:
-    """その概念を、配置ディレクトリ単位で探すべきときにだけ、その配置を返す。
+    """その概念を配置ディレクトリ単位で探すべきときにだけ、その配置を返す。
 
-    architecture の layout.granularity がその概念に「1ファイルに1つ」を宣言して
-    いればファイル単位なので None を返す（呼び出し側は従来どおり1ファイルを見る）。
-    宣言が無ければ配置ディレクトリを返す。
+    ファイル単位で探す概念については None を返す。探し方そのものを知りたい場合は
+    resolve_search_unit を使う——こちらは配置だけを取り出す薄い形。
 
-    どちらで探すかを決める権限は architecture にあり、検査はそれを読むだけにする。
+    Args:
+        documents: architecture文書を読むためのDocumentRepository。
+        architecture_ref: 参照するarchitecture documentのdocumentId。
+        concept: 解決したい概念。
+
+    Returns:
+        ディレクトリ単位で探すならその配置、そうでなければ None。
+
+    Raises:
+        なし。
     """
-    if not architecture_ref:
-        return None
-    try:
-        document = documents.load(
-            _ARCHITECTURE_PATH.format(architecture_ref=architecture_ref))
-    except FileNotFoundError:
-        return None
-    content = document.get("content", {})
-    if declares_per_file(content.get("layout", {}), concept):
-        return None
-    resolved = resolve_src_root(documents, None, architecture_ref, concept)
-    return resolved.value if isinstance(resolved, Ok) else None
+    return resolve_search_unit(documents, architecture_ref, concept).root

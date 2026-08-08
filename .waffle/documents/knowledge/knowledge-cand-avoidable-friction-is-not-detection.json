@@ -1,22 +1,12 @@
 {
   "documentId": "knowledge-cand-avoidable-friction-is-not-detection",
   "documentType": "Knowledge",
-  "schemaRef": "KnowledgeSchema/v2",
+  "schemaRef": "KnowledgeSchema/v5",
   "status": "DRAFT",
   "content": {
     "title": {
       "blockType": "Title",
       "title": "避けられる摩擦は検知ではない：knowledge-cand-avoidable-friction-is-not-detection"
-    },
-    "overview": {
-      "blockType": "Overview",
-      "title": "概要",
-      "questions": [
-        "「その構成にすれば実装者が困るから歪みに気づける」という論法を採ってよいか",
-        "設計の歪みを表に出す手段として、構成の作り替えと機械検査のどちらを選ぶか",
-        "ある仕組みが検知として数えられるかは、どこで見分けるか"
-      ],
-      "text": "実装者が困ること自体を、設計の歪みを見つける手段として数えてはならない。困った人がその場で回避した瞬間に消えるので、同じ入力に同じ結果を返さない。"
     },
     "principles": {
       "blockType": "Principles",
@@ -163,11 +153,24 @@
         }
       ],
       "emptyReason": ""
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "「その構成にすれば実装者が困るから歪みに気づける」という論法を採ってよいか",
+        "設計の歪みを表に出す手段として、構成の作り替えと機械検査のどちらを選ぶか",
+        "ある仕組みが検知として数えられるかは、どこで見分けるか"
+      ],
+      "text": "実装者が困ること自体を、設計の歪みを見つける手段として数えてはならない。困った人がその場で回避した瞬間に消えるので、同じ入力に同じ結果を返さない。"
     }
   },
   "tags": [
     "framework:architecture",
     "topic:drift-detection"
   ],
-  "skillRef": "tech-lead-advisor"
+  "knowledgeKind": "process",
+  "skillRefs": [
+    "tech-lead-advisor"
+  ]
 }
