@@ -65,9 +65,28 @@ class ViewTokenExpiry:
     value: int = NO_EXPIRY
 
     def is_endless(self) -> bool:
+        """期限を持たないか。
+
+        Returns:
+            期限なしであれば True。
+
+        Raises:
+            なし。
+        """
         return self.value == NO_EXPIRY
 
     def has_passed(self, now: int) -> bool:
+        """その時点で、もう過ぎているか。
+
+        Args:
+            now: 判じる時点。
+
+        Returns:
+            期限を持ち、かつ過ぎていれば True。
+
+        Raises:
+            なし。
+        """
         return not self.is_endless() and self.value <= now
 
 
@@ -81,6 +100,14 @@ class ViewTokenStatus:
     value: str = ACTIVE
 
     def is_active(self) -> bool:
+        """まだ無効にされていないか。
+
+        Returns:
+            無効にされていなければ True。
+
+        Raises:
+            なし。
+        """
         return self.value == ACTIVE
 
 
@@ -100,6 +127,14 @@ class ViewToken:
         return self.status.is_active() and not self.expires_at.has_passed(now)
 
     def revoked(self) -> "ViewToken":
+        """この1本を使えなくしたものを返す。元へは戻らない。
+
+        Returns:
+            使えなくした状態の閲覧トークン。
+
+        Raises:
+            なし。
+        """
         return replace(self, status=ViewTokenStatus(REVOKED))
 
 

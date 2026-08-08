@@ -16,10 +16,22 @@ DIVIDER_SUFFIX = "-replaced.json"
 
 
 class StoredCommentRepository:
+    """寄せられた反応を、保管の上で読み書きする。"""
     def __init__(self, store):
         self._store = store
 
     def list_of(self, artifact_id: str) -> tuple[list[dict], int]:
+        """1件の共有アーティファクトに寄せられた反応を並べる。
+
+        Args:
+            artifact_id: 対象の共有アーティファクトの識別子。
+
+        Returns:
+            反応の一覧と、その総数。
+
+        Raises:
+            なし。
+        """
         found, unreadable = [], 0
         for key in sorted(self._store.list(_prefix(artifact_id))):
             try:
@@ -32,12 +44,35 @@ class StoredCommentRepository:
         return found, unreadable
 
     def count_of(self, artifact_id: str) -> int:
+        """1件の共有アーティファクトに寄せられた反応の数を数える。
+
+        Args:
+            artifact_id: 対象の共有アーティファクトの識別子。
+
+        Returns:
+            反応の数。
+
+        Raises:
+            なし。
+        """
         if not artifact_id:
             return 0
         return sum(1 for key in self._store.list(_prefix(artifact_id))
                    if not key.endswith(DIVIDER_SUFFIX))
 
     def add_replacement_divider(self, artifact_id: str, at: int) -> None:
+        """中身を差し替えた区切りを、反応の並びへ挟む。
+
+        Args:
+            artifact_id: 対象の共有アーティファクトの識別子。
+            at: 差し替えた時点。
+
+        Returns:
+            なし。
+
+        Raises:
+            なし。
+        """
         self._store.put(
             f"{_prefix(artifact_id)}{at}{DIVIDER_SUFFIX}",
             json.dumps({"kind": "divider", "postedAt": at}, ensure_ascii=False),

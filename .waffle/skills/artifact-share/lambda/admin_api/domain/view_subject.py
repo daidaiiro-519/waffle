@@ -25,8 +25,30 @@ class ViewSubject:
 
     @staticmethod
     def artifact(artifact_id: str) -> "ViewSubject":
+        """共有アーティファクト1件を指す対象を作る。
+
+        Args:
+            artifact_id: 指す共有アーティファクトの識別子。
+
+        Returns:
+            その1件を指す対象。
+
+        Raises:
+            なし。
+        """
         return ViewSubject(ARTIFACT, artifact_id)
 
     @staticmethod
     def project(project_id: str) -> "ViewSubject":
+        """プロジェクト1つを指す対象を作る。
+
+        Args:
+            project_id: 指すプロジェクトの識別子。
+
+        Returns:
+            その1つを指す対象。
+
+        Raises:
+            なし。
+        """
         return ViewSubject(PROJECT, project_id)

@@ -115,20 +115,51 @@ def _token_to(t: ViewToken) -> dict:
 
 
 class StoredProjectRepository:
+    """プロジェクトを、保管の上で読み書きする。"""
     def __init__(self, store):
         self._store = store
 
     def find(self, project_id: str) -> Project | None:
+        """1つのプロジェクトを読む。
+
+        Args:
+            project_id: 読む対象の識別子。
+
+        Returns:
+            そのプロジェクト。無ければ None。
+
+        Raises:
+            なし。
+        """
         record = self._raw(project_id)
         return from_record(record) if record is not None else None
 
     def save(self, project: Project) -> None:
+        """1つのプロジェクトを残す。
+
+        Args:
+            project: 残すプロジェクト。
+
+        Returns:
+            なし。
+
+        Raises:
+            なし。
+        """
         base = self._raw(project.project_id.value) or {}
         self._store.put(_key(project.project_id.value),
                         json.dumps(to_record(project, base), ensure_ascii=False),
                         "application/json")
 
     def all(self) -> tuple[list[Project], int]:
+        """保管にある全てのプロジェクトを並べる。
+
+        Returns:
+            プロジェクトの一覧と、その総数。
+
+        Raises:
+            なし。
+        """
         found, unreadable = [], 0
         for key in self._store.list(PREFIX):
             try:

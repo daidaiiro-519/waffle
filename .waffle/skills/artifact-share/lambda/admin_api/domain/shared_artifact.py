@@ -58,9 +58,25 @@ class ArtifactStatus:
     value: str
 
     def is_published(self) -> bool:
+        """いま公開されているか。
+
+        Returns:
+            公開されていれば True。
+
+        Raises:
+            なし。
+        """
         return self.value == PUBLISHED
 
     def is_suspended(self) -> bool:
+        """いま公開を止めているか。
+
+        Returns:
+            止めていれば True。
+
+        Raises:
+            なし。
+        """
         return self.value == SUSPENDED
 
 

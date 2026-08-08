@@ -137,20 +137,51 @@ def _token_to(t: ViewToken) -> dict:
 
 
 class StoredSharedArtifactRepository:
+    """共有アーティファクトを、保管の上で読み書きする。"""
     def __init__(self, store):
         self._store = store
 
     def find(self, artifact_id: str) -> SharedArtifact | None:
+        """1件の共有アーティファクトを読む。
+
+        Args:
+            artifact_id: 読む対象の識別子。
+
+        Returns:
+            その共有アーティファクト。無ければ None。
+
+        Raises:
+            なし。
+        """
         record = self._raw(artifact_id)
         return from_record(record) if record is not None else None
 
     def save(self, artifact: SharedArtifact) -> None:
+        """1件の共有アーティファクトを残す。
+
+        Args:
+            artifact: 残す共有アーティファクト。
+
+        Returns:
+            なし。
+
+        Raises:
+            なし。
+        """
         base = self._raw(artifact.artifact_id.value) or {}
         self._store.put(_key(artifact.artifact_id.value),
                         json.dumps(to_record(artifact, base), ensure_ascii=False),
                         "application/json")
 
     def all(self) -> tuple[list[SharedArtifact], int]:
+        """保管にある全ての共有アーティファクトを並べる。
+
+        Returns:
+            共有アーティファクトの一覧と、その総数。
+
+        Raises:
+            なし。
+        """
         found, unreadable = [], 0
         for key in self._store.list(PREFIX):
             try:

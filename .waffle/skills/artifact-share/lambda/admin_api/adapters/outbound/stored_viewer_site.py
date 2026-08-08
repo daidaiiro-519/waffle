@@ -21,6 +21,7 @@ JSON = "application/json"
 
 
 class StoredViewerSite:
+    """閲覧の面へ置くことを、保管と配信の口の上で行う。"""
     def __init__(self, store, wrapper_template: str = "", project_page: str = "",
                  viewer_domain: str = ""):
         self._store = store
@@ -30,6 +31,19 @@ class StoredViewerSite:
 
     def place_artifact(self, artifact_id: str, content: str, display_name: str) -> None:
         # アップロードされたものは書き換えずにそのまま置く
+        """共有アーティファクトを、閲覧できる形で置く。
+
+        Args:
+            artifact_id: 置く対象の識別子。
+            content: 置く中身。
+            display_name: 閲覧者に見せる名前。
+
+        Returns:
+            なし。
+
+        Raises:
+            なし。
+        """
         self._store.put(_content_key(artifact_id), content, HTML)
 
         # 閲覧画面はこちらが組み立てる。中身には触れない
@@ -44,20 +58,67 @@ class StoredViewerSite:
                         "text/plain; charset=utf-8")
 
     def replace_artifact_content(self, artifact_id: str, content: str) -> None:
+        """置いてある中身だけを差し替える。共有URLも閲覧トークンも変えない。
+
+        Args:
+            artifact_id: 差し替える対象の識別子。
+            content: 新しい中身。
+
+        Returns:
+            なし。
+
+        Raises:
+            なし。
+        """
         self._store.put(_content_key(artifact_id), content, HTML)
 
     def read_artifact_content(self, artifact_id: str) -> str:
+        """置いてある中身を読み返す。
+
+        Args:
+            artifact_id: 読む対象の識別子。
+
+        Returns:
+            置いてある中身。
+
+        Raises:
+            なし。
+        """
         try:
             return self._store.get(_content_key(artifact_id))
         except Exception:
             return ""
 
     def place_project(self, project_id: str) -> None:
+        """プロジェクトの入口となる頁を置く。
+
+        Args:
+            project_id: 置く対象の識別子。
+
+        Returns:
+            なし。
+
+        Raises:
+            なし。
+        """
         page = (self._project_page or "").replace(PROJECT_ID_MARK, project_id)
         self._store.put(f"proj/{project_id}/index.html", page, HTML)
 
     def place_project_listing(self, project_id: str, display_name: str,
                               artifacts: list[dict]) -> None:
+        """プロジェクトに入っているものの一覧を書き出す。
+
+        Args:
+            project_id: 対象のプロジェクトの識別子。
+            display_name: 閲覧者に見せる名前。
+            artifacts: 一覧に並べる共有アーティファクト。
+
+        Returns:
+            なし。
+
+        Raises:
+            なし。
+        """
         self._store.put(
             f"proj/{project_id}/index.json",
             json.dumps({"name": display_name, "artifacts": artifacts}, ensure_ascii=False),
@@ -65,9 +126,31 @@ class StoredViewerSite:
         )
 
     def artifact_url(self, artifact_id: str) -> str:
+        """共有アーティファクトを開くための道を組み立てる。
+
+        Args:
+            artifact_id: 対象の識別子。
+
+        Returns:
+            閲覧者へ渡す道。
+
+        Raises:
+            なし。
+        """
         return f"https://{self._domain or '{viewer-domain}'}/p/{artifact_id}/"
 
     def project_url(self, project_id: str) -> str:
+        """プロジェクトを開くための道を組み立てる。
+
+        Args:
+            project_id: 対象の識別子。
+
+        Returns:
+            閲覧者へ渡す道。
+
+        Raises:
+            なし。
+        """
         return f"https://{self._domain or '{viewer-domain}'}/proj/{project_id}/"
 
 
