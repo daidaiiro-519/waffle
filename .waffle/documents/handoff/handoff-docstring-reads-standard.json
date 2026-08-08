@@ -1,0 +1,288 @@
+{
+  "documentId": "handoff-docstring-reads-standard",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "docstringの検査が規約の宣言を読む実装への引き継ぎ：handoff-docstring-reads-standard"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-lint-docstring"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "走査が壊れているのを先に直す",
+          "consideration": "scan_source_code.py:27 が list_files(target_path, \"*.py\") と ** を付けずに呼んでおり、fs.py:65 の Path.glob は再帰しない。src/waffle 全体を渡しても1要素しか返らず、MISSING_DOC_COMMENT は事実上死んでいる。これを直さない限り、requiredの表を読んでも報告は0件のままで、他の変更が効いたかを検証できない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "直す場所は fs.py ではない",
+          "consideration": "list_files はパターン駆動で、check_aggregate_class_drift.py:65 は「配置ディレクトリの直下だけを見る」ことを受け入れ基準として宣言した意図的な非再帰。fs.py を常に再帰にすると、その宣言を壊す。直すのは scan_source_code のパターン側。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "適合判定は一般領域なので既製品に委ねる",
+          "consideration": "sd-docstring-linting の分類は generic で、rationale は「適合判定は実績あるパッケージに委ねられ、waffle独自の差別化を生まない」と述べている。宣言どおりのタグ照合を自前実装する方向は、この記録済みの分類に反する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "道具の能力には上限がある",
+          "consideration": "pydoclint --style は numpy/google/sphinx しか受け付けない（実行して確認）。tagParams を任意の綴りとして尊重することは不可能。だから宣言を道具の能力へ写し、写せないことを黙って握りつぶさずUNSUPPORTED_SYNTAXとして報告する。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "宣言そのものを直した",
+          "consideration": "uc-lint-docstring の受け入れ基準が「kindがgoogleのとき」「非公開要素であるとき除外する」と、規約から導くべきことをspec自身で決め打っていた。実装をそこへ合わせるのではなく、宣言の側を直した。宣言は途中の姿であり、誤っていれば直す対象であるという規律（knowledge-cand-declaration-text-arbitrates-violation-claims）に従っている。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "ポートの引数はコアの語彙にする",
+          "consideration": "DocstringLinter.lint(target_path, kind) の kind は pydoclint の --style の値そのもので、アダプター側の語彙がポートに漏れている。規約から解決した値（syntaxKind・タグ3欄・requiredの表）を渡し、道具の設定への写像はアダプターの責務にする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "走査は可視性を捨てない",
+          "consideration": "python_ast_source_scanner.py:85 の _is_public と :129/:133/:136 の絞り込みで、非公開要素はアダプターの段階で捨てられ usecase へ届かない。requiredの表は可視性の軸で判断すると宣言しているので、判断の材料を判断の手前で捨てている状態。全要素を返し、絞るのは宣言を読む側にする。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "語彙の写像を置く場所",
+          "consideration": "走査が返す elementKind は module/class/function、宣言側の artifact 語彙はmodule/type/function。type↔class の写像が要る。言語に依存しない純計算なのでdomain/services（concept_source_root.declares_per_file と同型）へ置く。"
+        },
+        {
+          "advisor": "（Orchestrator）",
+          "viewpoint": "報告件数が増えることを先に測る",
+          "consideration": "走査が再帰するようになると MISSING_DOC_COMMENT が新規に出る。実装前後で件数を測り、増えた分が宣言どおりの対象かを確かめてから確定する。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "requiredの表は module/any・type/public・function/public・function/private の4行しか宣言しておらず、type/private の行も dunder（__init__ 等）の扱いも宣言していない。現状 _is_public は __init__ を非公開扱いにしているが、これは宣言に無い判断。実装で埋めず、宣言の空白として扱う。",
+        "coding-standard-typescript-hexagonal は module の行を持たない。同じ表なのにスタックごとに欠け方が違うので、可視性と要素種別の語彙を確定させるまで「宣言が無い組」をどう扱うかを決め打たない。",
+        "既存の違反は373件（waffle 261 / artifact-share 112）。この変更で数が増える。報告は全件出すが、失敗として扱う範囲（hookやゲート）をどう段階適用するかは別の判断として残す。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "規約",
+          "description": "docstringブロックが、どの要素に何を求めるか（requiredの表）とどの構文で書くか（syntaxKindとタグ3欄）を宣言する。",
+          "nodes": [
+            {
+              "id": "std",
+              "title": "コーディング規約",
+              "sub": "docstring ブロック",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "判定",
+          "description": "宣言を読んで対象を決め、構文は道具の能力へ写す。写せないことは黙って通さない。",
+          "nodes": [
+            {
+              "id": "lint",
+              "title": "docstringの適合を確かめる",
+              "sub": "lint_docstring",
+              "status": "new"
+            },
+            {
+              "id": "vocab",
+              "title": "要素種別の語彙の写像",
+              "sub": "domain/services",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "走査",
+          "description": "対象の配下を下まで見て、公開・非公開を問わず全要素を可視性つきで返す。絞るのは判定の側。",
+          "nodes": [
+            {
+              "id": "scan",
+              "title": "ソースコードの走査",
+              "sub": "scan_source_code",
+              "status": "new"
+            },
+            {
+              "id": "ast",
+              "title": "構文木からの取り出し",
+              "sub": "python_ast_source_scanner",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "道具",
+          "description": "既製のlintツールが構文の適合を見る。能力に無い宣言が来たら呼び出しの誤りとは別のこととして返す。",
+          "nodes": [
+            {
+              "id": "port",
+              "title": "適合判定の受け口",
+              "sub": "DocstringLinter port",
+              "status": "new"
+            },
+            {
+              "id": "tool",
+              "title": "既製のlintツール",
+              "sub": "pydoclint",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "lint",
+          "to": "std",
+          "kind": "dependency",
+          "label": "対象と構文を宣言から読む"
+        },
+        {
+          "from": "port",
+          "to": "tool",
+          "kind": "dependency",
+          "label": "宣言を道具の設定へ写す"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": []
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "uc-scan-source-code と uc-lint-docstring の実装を、規約のdocstringブロックの宣言に従わせる。走査の再帰と可視性の保持、判定の構文と対象を宣言から決めること、道具が追随できないときの報告を含む。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/application/usecases/scan_source_code.py",
+          "reason": "27行目の走査パターンを配下まで届くものへ。可視性を結果に載せる"
+        },
+        {
+          "path": "src/waffle/adapters/outbound/python_ast_source_scanner.py",
+          "reason": "公開要素だけを残す絞り込みをやめ、可視性を添えて全要素を返す"
+        },
+        {
+          "path": "src/waffle/application/ports/docstring_linter.py",
+          "reason": "引数を kind から規約の値へ。能力ギャップを表す例外を足す"
+        },
+        {
+          "path": "src/waffle/adapters/outbound/pydoclint_linter.py",
+          "reason": "宣言を --style へ写す。写せない宣言を能力ギャップとして返す"
+        },
+        {
+          "path": "src/waffle/application/usecases/lint_docstring.py",
+          "reason": "requiredの表を読んで対象を決める。module の除外をやめる"
+        },
+        {
+          "path": "src/waffle/domain/services/",
+          "reason": "要素種別の語彙（type ↔ class）の写像の置き場所"
+        },
+        {
+          "path": "tests/application/acceptance/test_uc_scan_source_code.py",
+          "reason": "新規シナリオ2件"
+        },
+        {
+          "path": "tests/application/acceptance/test_uc_lint_docstring.py",
+          "reason": "新規シナリオ3件"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "受け入れ基準へ反映済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "resolved",
+          "note": "受け入れ基準へ反映済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "resolved",
+          "note": "受け入れ基準へ反映済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "受け入れ基準へ反映済み"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "open",
+          "note": "ポートの引数をどの形（値の組か、専用の型か）で渡すかは実装時に決める"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "resolved",
+          "note": "uc-scan-source-code の受け入れ基準を直し、全要素を返す形にした"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "open",
+          "note": "dunder と type/private の語彙が宣言されていないため、写像の完全な形をまだ決められない。宣言の空白として制約に記録済み"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": "ユーザーへ提示して確認を待っている状態。"
+      }
+    }
+  },
+  "tags": [
+    "topic:docstring",
+    "subdomain:sd-docstring-linting"
+  ]
+}
