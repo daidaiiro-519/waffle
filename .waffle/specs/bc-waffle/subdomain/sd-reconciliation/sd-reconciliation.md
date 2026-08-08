@@ -44,6 +44,7 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-check-domain-service-drift
 - uc-check-layer-drift
 - uc-check-prompt-contract
+- uc-check-surface-drift
 
 ---
 

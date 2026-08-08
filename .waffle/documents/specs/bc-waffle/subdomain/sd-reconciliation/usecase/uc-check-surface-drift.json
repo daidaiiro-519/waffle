@@ -1,0 +1,226 @@
+{
+  "documentId": "uc-check-surface-drift",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "受け口が見せる入力と宣言の食い違いを見つける：uc-check-surface-drift"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "CheckSurfaceDrift"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "仕様を正本として保つ人",
+      "intent": "外から呼ばれる口が、仕様の宣言どおりの入力を見せているかを確かめたい"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "同じ操作が口ごとに違う名前の入力を見せていても、いま誰も気づかない。実際に、ある操作の同じ入力が一方の口では『解決済みの道』、もう一方では『実際の道』という別の名前になっていた。使う人はそれが同じものだと分からない。",
+        "入力の説明が口の中にしか無いと、仕様を直しても口が古い説明を見せ続ける。正本がどちらか決まっていない状態では、食い違ったときにどちらを直すかも決まらない。"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "仕様を正本として保つ人",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "仕様を正本として保つ人",
+          "to": "受け口の食い違いの検査",
+          "message": "宣言と口を突き合わせてほしい",
+          "kind": "command"
+        },
+        {
+          "from": "受け口の食い違いの検査",
+          "to": "受け口の食い違いの検査",
+          "message": "規約から口の在り処を読む",
+          "kind": "self"
+        },
+        {
+          "from": "受け口の食い違いの検査",
+          "to": "受け口の食い違いの検査",
+          "message": "各ユースケースの宣言された入力を集める",
+          "kind": "self"
+        },
+        {
+          "from": "受け口の食い違いの検査",
+          "to": "受け口の食い違いの検査",
+          "message": "口が実際に受け取る入力を集める",
+          "kind": "self"
+        },
+        {
+          "from": "受け口の食い違いの検査",
+          "to": "仕様を正本として保つ人",
+          "message": "食い違いの一覧",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "宣言と口の食い違いが、種別ごとに分かれた一覧として得られている",
+        "対象の仕様も口も、この操作によって書き換えられていない"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 宣言された入力が、その操作を差し出す口のどこにも見つからないとき、システムはその組を missing_input に含める shall。",
+        "If 口が受け取る入力が、対応するユースケースのどこにも宣言されていないとき、システムはその組を undeclared_input に含める shall。",
+        "While 名前を突き合わせるとき、システムは区切りと大文字小文字の違いを無視して同じ名前とみなす shall（同じ入力が口ごとに違う綴りで現れるため。どの綴りが正しいかはこの操作の関心ではない）。",
+        "While ある操作を複数の口が差し出しているとき、システムは口ごとに突き合わせ、どの口の話かを報告に含める shall（片方の口だけが宣言と食い違う場合があるため）。",
+        "While 入力を1つも宣言していないユースケースがあるとき、システムはそのユースケースを突き合わせの対象から外す shall（宣言が無ければ突き合わせようがない）。",
+        "While 全ての口が宣言どおりの入力を見せているとき、システムは2つの一覧を空配列で返す shall。",
+        "If 対象の置き場所または規約への参照が解決できないとき、システムはINVALID_PATH エラーを返す shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "仕様の置き場所が存在しない、またはパストラバーサルを含む"
+          ]
+        },
+        {
+          "code": "ARCHITECTURE_REF_NOT_FOUND",
+          "condition": [
+            "構成の規約への参照が解決できない"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "宣言された入力が口に無いことを見つける",
+          "category": "異常系",
+          "viewpoint": "正本への追随：宣言を足しても口が追いついていない状態を捕まえる",
+          "covers": "受け入れ基準: 宣言された入力が口に見つからないとき missing_input",
+          "gherkin": "Scenario: 宣言された入力が口に無いことを見つける\n  Given ある入力を宣言しているユースケース仕様\n  And その入力を受け取らない口\n  When 受け口の食い違いを調べる\n  Then その組が missing_input に現れる\n  And どの口の話かが報告に含まれている"
+        },
+        {
+          "name": "宣言に無い入力を口が受け取っていることを見つける",
+          "category": "異常系",
+          "viewpoint": "正本への追随：口が勝手に増やした入力を捕まえる",
+          "covers": "受け入れ基準: 宣言されていない入力を undeclared_input に含める",
+          "gherkin": "Scenario: 宣言に無い入力を口が受け取っていることを見つける\n  Given 入力を1つだけ宣言しているユースケース仕様\n  And 宣言に無い入力も受け取る口\n  When 受け口の食い違いを調べる\n  Then その組が undeclared_input に現れる"
+        },
+        {
+          "name": "綴りが違っても同じ入力とみなす",
+          "category": "境界値",
+          "viewpoint": "誤検知を出さない：綴りの流儀はこの操作の関心ではない",
+          "covers": "受け入れ基準: 区切りと大文字小文字の違いを無視して同じ名前とみなす",
+          "gherkin": "Scenario: 綴りが違っても同じ入力とみなす\n  Given 区切り記号つきの綴りで入力を受け取る口\n  And 大文字区切りの綴りで同じ入力を受け取る別の口\n  When 受け口の食い違いを調べる\n  Then どちらも宣言と一致したものとして扱われる\n  And 2つの一覧は空のままである"
+        },
+        {
+          "name": "入力を宣言していないユースケースは対象外",
+          "category": "境界値",
+          "viewpoint": "宣言が無ければ突き合わせない：無宣言を違反として扱わない",
+          "covers": "受け入れ基準: 入力を1つも宣言していないユースケースを対象から外す",
+          "gherkin": "Scenario: 入力を宣言していないユースケースは対象外\n  Given 入力を1つも宣言していないユースケース仕様\n  And その操作を差し出す口\n  When 受け口の食い違いを調べる\n  Then そのユースケースは2つの一覧のどちらにも現れない"
+        },
+        {
+          "name": "全て揃っていれば空を返す",
+          "category": "正常系",
+          "viewpoint": "自己整合：揃っている状態で余計な報告を出さない",
+          "covers": "受け入れ基準: 全ての口が宣言どおりのとき2つの一覧を空で返す",
+          "gherkin": "Scenario: 全て揃っていれば空を返す\n  Given 全ての口が宣言どおりの入力を見せている状態\n  When 受け口の食い違いを調べる\n  Then missing_input と undeclared_input はどちらも空である"
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "When 受け口の食い違いを調べたとき、システムは対象の仕様も口も書き換えない shall。",
+        "While 同じ仕様と同じ口に対して繰り返し調べたとき、システムは常に同じ一覧を返す shall。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "調べても何も書き換えない",
+          "category": "正常系",
+          "viewpoint": "読み取り専用：確かめる操作が対象を変えてしまわない",
+          "covers": "操作保証: 対象の仕様も口も書き換えない",
+          "gherkin": "Scenario: 調べても何も書き換えない\n  Given 食い違いを含む仕様と口\n  When 受け口の食い違いを調べる\n  Then 仕様の中身は調べる前と同じである\n  And 口の中身も調べる前と同じである"
+        },
+        {
+          "name": "繰り返し調べても同じ結果になる",
+          "category": "正常系",
+          "viewpoint": "べき等性：報告が呼び出しの回数で変わらない",
+          "covers": "操作保証: 繰り返し調べても常に同じ一覧を返す",
+          "gherkin": "Scenario: 繰り返し調べても同じ結果になる\n  Given 食い違いを含む仕様と口\n  When 受け口の食い違いを続けて2回調べる\n  Then 2回の結果は同じである"
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象のユースケース仕様に、外から渡す値が宣言されている",
+        "構成の規約が、外へ差し出す口がどこにあるかを宣言している"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "ユースケースが宣言する入力と、その操作を外へ差し出している口が実際に受け取る入力を突き合わせ、宣言に無い入力・宣言されているのに口に無い入力を機械的に見つける。",
+        "口の種類（命令行・道具呼び出し・要求本文など）は問わない。どの口も同じ宣言を指しているかだけを見る。"
+      ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "仕様の置き場所",
+          "description": "突き合わせの対象とするユースケース仕様が置かれている場所"
+        },
+        {
+          "name": "構成の規約への参照",
+          "description": "外へ差し出す口の在り処と、名前の綴りの流儀を宣言している規約"
+        }
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-reconciliation"
+}

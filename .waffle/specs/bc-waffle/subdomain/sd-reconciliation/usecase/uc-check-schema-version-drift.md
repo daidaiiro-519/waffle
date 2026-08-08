@@ -1,3 +1,12 @@
+---
+id: "uc-check-schema-version-drift"
+type: "usecase"
+title: "DocumentとSchema版の対応関係を検証する：CheckSchemaVersionDrift"
+description: "Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # DocumentとSchema版の対応関係を検証する：CheckSchemaVersionDrift
 
 ## 概要
