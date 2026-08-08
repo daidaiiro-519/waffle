@@ -70,6 +70,7 @@ schemaRef: "DomainSpecSchema/v8"
 - uc-check-surface-drift
 - uc-check-usecase-class-drift
 - uc-check-verification-gate
+- uc-export-skill-bundle
 - uc-init-coding-preset
 - uc-lint-docstring
 - uc-patch-schema

@@ -19,6 +19,7 @@ from waffle.adapters.outbound.tree_sitter_test_function_extractor import (
 )
 from waffle.adapters.outbound.coding_preset_repo import PackageCodingPresetRepository
 from waffle.application.usecases.check_path_is_projection import CheckPathIsProjection
+from waffle.application.usecases.export_skill_bundle import ExportSkillBundle
 from waffle.application.usecases.check_query_precedes_array_fill import (
     CheckQueryPrecedesArrayFill,
 )
@@ -646,6 +647,22 @@ def check_path_is_projection(resolvedPath: str) -> dict:
         なし。失敗は結果の中で表す。
     """
     return _dict(CheckPathIsProjection(_schemas()).run(resolvedPath))
+
+@mcp.tool(description="Skillの一式を、道具立てのない相手へ持ち出せる形で書き出す（uc-export-skill-bundle）。")
+def export_skill_bundle(outputPath: str, documentsRoot: str = ".waffle/documents/skills") -> dict:
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        outputPath: 一式を書き出す先の場所
+        documentsRoot: Skill documentの置き場
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
+    return _dict(ExportSkillBundle(_docs()).run(outputPath, documentsRoot))
 
 @mcp.tool(description="配列fillの前に対象pathへのqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。")
 def check_query_precedes_array_fill(targetPath: str, hasArrayValue: bool, queriedPaths: list[str]) -> dict:

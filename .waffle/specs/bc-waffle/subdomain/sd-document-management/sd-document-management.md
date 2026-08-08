@@ -46,6 +46,7 @@ Document管理
 - uc-render-document-viewer
 - uc-init-coding-preset
 - uc-update-coding-preset
+- uc-export-skill-bundle
 
 ---
 

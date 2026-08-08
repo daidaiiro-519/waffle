@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 
 from waffle.application.ports.document_repository import DocumentRepository
@@ -78,6 +79,76 @@ class FsDocumentRepository(DocumentRepository):
         """
         p = Path(path)
         return str(p.resolve()) if p.exists() else ""
+
+    def copy_tree(self, source: str, destination: str, dereference: bool,
+                  exclude: tuple[str, ...] = ()) -> None:
+        """source のフォルダを destination へ複製する。
+
+        Args:
+            source: 複製元のフォルダ。
+            destination: 複製先のフォルダ。
+            dereference: 真なら指し示しを中身そのものへ置き直す。指し示す先が無い
+                ものだけは指し示しのまま残し、複製が欠けたことを後段が拾えるようにする。
+            exclude: 複製から外す、destination から見た相対パス。
+
+        Returns:
+            なし。
+
+        Raises:
+            OSError: 読み書きに失敗した。
+        """
+        src = Path(source)
+        dst = Path(destination)
+        excluded = {e.strip("/") for e in exclude}
+        stack: list[tuple[Path, Path]] = [(src, dst)]
+        while stack:
+            current, target_dir = stack.pop()
+            target_dir.mkdir(parents=True, exist_ok=True)
+            for entry in sorted(current.iterdir()):
+                target = target_dir / entry.name
+                relative = target.relative_to(dst).as_posix()
+                if relative in excluded:
+                    continue
+                resolved = entry.resolve()
+                if dereference and entry.is_symlink() and not resolved.exists():
+                    # 指し示す先が無いものは、指し示しのまま残す。黙って落とすと
+                    # 一式が欠けたことに誰も気づけないため、後段の検査に拾わせる
+                    self._replace_with_symlink(target, entry)
+                elif entry.is_dir() and (dereference or not entry.is_symlink()):
+                    stack.append((resolved if entry.is_symlink() else entry, target))
+                elif entry.is_symlink() and not dereference:
+                    self._replace_with_symlink(target, entry)
+                else:
+                    self._replace(target)
+                    shutil.copyfile(resolved if entry.is_symlink() else entry, target)
+
+    @staticmethod
+    def _replace(target: Path) -> None:
+        if target.is_symlink() or target.exists():
+            target.unlink()
+
+    def _replace_with_symlink(self, target: Path, entry: Path) -> None:
+        self._replace(target)
+        target.symlink_to(os.readlink(entry))
+
+    def list_broken_links(self, directory: str) -> list[str]:
+        """directory 配下で、指し示す先が存在しないものを集める。
+
+        Args:
+            directory: 走査するフォルダ。
+
+        Returns:
+            指し示す先の無いものの一覧（昇順）。無ければ空配列。
+
+        Raises:
+            なし。
+        """
+        root = Path(directory)
+        if not root.exists():
+            return []
+        return sorted(
+            str(p) for p in root.rglob("*") if p.is_symlink() and not p.resolve().exists()
+        )
 
     def link(self, canonical: str, path: str) -> None:
         """正本への参照を、指定された場所に張る。

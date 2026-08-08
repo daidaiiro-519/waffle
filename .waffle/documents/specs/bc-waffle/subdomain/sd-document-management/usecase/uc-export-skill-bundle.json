@@ -1,0 +1,230 @@
+{
+  "documentId": "uc-export-skill-bundle",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v8",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "Skillの一式を、道具立てのない相手へ持ち出せる形で書き出す：uc-export-skill-bundle"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": "ExportSkillBundle"
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "Skillの一式を他のプロジェクトへ渡そうとする人",
+      "intent": "渡した相手が、こちらの道具立てを持たないまま、そのままSkillを使える形の一式を得る"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "Skillの一式は、別の場所にある知識を指し示す形で組み立てられている。指し示しをそのまま複製すると、渡した先では指し示す先が無く、助言を担うSkillが根拠を1つも読めない状態で届く。しかもその壊れ方は静かで、根拠が無いとは言わずにそれらしい答えを返してしまう。",
+        "何を含めるかを人が毎回選ぶと、選び漏れと選び過ぎの両方が起きる。含める条件を決めておき、機械的に選ぶ。"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "渡す人",
+          "kind": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "from": "渡す人",
+          "to": "SkillBundle",
+          "message": "一式を書き出す",
+          "kind": "command"
+        },
+        {
+          "from": "SkillBundle",
+          "to": "SkillBundle",
+          "message": "仕上がっているSkillだけを選ぶ",
+          "kind": "self"
+        },
+        {
+          "from": "SkillBundle",
+          "to": "SkillBundle",
+          "message": "指し示しを中身そのものへ置き直して書き出す",
+          "kind": "self"
+        },
+        {
+          "from": "SkillBundle",
+          "to": "SkillBundle",
+          "message": "指し示す先の無いものが残っていないか確かめる",
+          "kind": "self"
+        },
+        {
+          "from": "SkillBundle",
+          "to": "",
+          "message": "SkillBundleExported",
+          "kind": "event"
+        },
+        {
+          "from": "SkillBundle",
+          "to": "渡す人",
+          "message": "書き出した先と、含めたもの・含めなかったものを返す",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "書き出した一式の中に、指し示す先の無いものが1つも残っていない",
+        "仕上がっていないSkillは一式に含まれない",
+        "受け取る側が自分で用意すべきものは、一式に含まれない",
+        "含めなかったものは、その理由とともに結果に現れる",
+        "書き出しは元の一式を変えない。何度行っても元の側は同じままである"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        "When 書き出し先が与えられたとき、システムは仕上がっているSkillだけを選び、その一式を書き出す shall。",
+        "When 別の場所を指し示す形で置かれているものがあるとき、システムは指し示しをやめて中身そのものを書き出す shall。",
+        "When 受け取る側が自分で用意すべきものが一式の中にあるとき、システムはそれを書き出さない shall。",
+        "If 書き出した一式に指し示す先の無いものが残ったとき、システムはBROKEN_REFERENCE_IN_BUNDLEを返し、その書き出しを成功として扱わない shall。",
+        "When 仕上がっていないSkillを一式から外したとき、システムはその識別子と外した理由を結果に含める shall。",
+        "If 書き出しの対象になるSkillが1つも無いとき、システムはEMPTY_BUNDLEを返し書き出さない shall。",
+        "While 書き出しを繰り返すとき、システムは元の一式を一切変えない shall。"
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "BROKEN_REFERENCE_IN_BUNDLE",
+          "condition": [
+            "書き出した一式の中に、指し示す先の無いものが残っている（渡した先で読めないものが混ざるため、書き出しの失敗として扱う）"
+          ]
+        },
+        {
+          "code": "EMPTY_BUNDLE",
+          "condition": [
+            "書き出しの対象になるSkillが1つも無い"
+          ]
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "指し示しを中身そのものへ置き直して書き出す",
+          "category": "正常系",
+          "viewpoint": "計算整合: 別の場所を指す形のものが、中身を伴って書き出されるか",
+          "gherkin": "Scenario: 指し示しを中身そのものへ置き直して書き出す\n  Given 別の場所にある知識を指し示す形で組み立てられたSkill\n  When 一式を書き出す\n  Then 書き出した先には知識の中身そのものが置かれ、指し示す先の無いものは1つも残らない",
+          "covers": ""
+        },
+        {
+          "name": "仕上がっていないSkillは含めない",
+          "category": "正常系",
+          "viewpoint": "選別: 段階による絞り込みが効いているか",
+          "gherkin": "Scenario: 仕上がっていないSkillは含めない\n  Given 仕上がったSkillと、まだ仕上がっていないSkillが混在している\n  When 一式を書き出す\n  Then 仕上がったSkillだけが書き出され、仕上がっていないものは識別子と理由が結果に現れる",
+          "covers": ""
+        },
+        {
+          "name": "指し示す先の無いものが残れば失敗として扱う",
+          "category": "異常系",
+          "viewpoint": "事後条件: 壊れた一式を成功として返さないか",
+          "gherkin": "Scenario: 指し示す先の無いものが残れば失敗として扱う\n  Given 中身へ置き直せない指し示しを含むSkill\n  When 一式を書き出す\n  Then BROKEN_REFERENCE_IN_BUNDLEが返り、その書き出しは成功として扱われない",
+          "covers": ""
+        },
+        {
+          "name": "対象が1つも無ければ書き出さない",
+          "category": "異常系",
+          "viewpoint": "事前条件: 空の一式を作らないか",
+          "gherkin": "Scenario: 対象が1つも無ければ書き出さない\n  Given 仕上がったSkillが1つも無い\n  When 一式を書き出す\n  Then EMPTY_BUNDLEが返り、書き出しは行われない",
+          "covers": ""
+        },
+        {
+          "name": "受け取る側が自分で用意する決まりごとは含めない",
+          "category": "正常系",
+          "viewpoint": "選別: 渡した先が自分で持つべきものを持ち込まないか",
+          "gherkin": "Scenario: 受け取る側が自分で用意する決まりごとは含めない\n  Given 受け取る側が自分で用意すべき決まりごとを抱えたSkill\n  When 一式を書き出す\n  Then その決まりごとは書き出されず、Skillそのものは書き出される",
+          "covers": ""
+        }
+      ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": [
+        "While 同じ内容に対して書き出しを繰り返すとき、システムは常に同じ一式を書き出す shall（べき等性）。",
+        "While 書き出しを行うとき、システムは元の一式を一切変えない shall（読み取りのみ）。"
+      ]
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "同じ内容なら同じ一式を書き出す",
+          "category": "正常系",
+          "viewpoint": "べき等性: 元が変わっていなければ、繰り返しても同じ一式になることを確認する",
+          "gherkin": "Scenario: 同じ内容なら同じ一式を書き出す\n  Given 元の一式が変わっていない\n  When 書き出しを2回行う\n  Then 2回とも同じものが同じ場所に並ぶ",
+          "covers": ""
+        },
+        {
+          "name": "書き出しても元は変わらない",
+          "category": "正常系",
+          "viewpoint": "読み取りのみ: 書き出しが元の一式へ副作用を持たないことを確認する",
+          "gherkin": "Scenario: 書き出しても元は変わらない\n  Given 元の一式\n  When 書き出しを行う\n  Then 元の一式は書き出す前と同じままである",
+          "covers": ""
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "書き出しの対象になるSkillが1つ以上ある"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "Skillの一式を、渡した先でそのまま使える形へ書き出す。渡した先はこちらの仕組みを持たないため、別の場所を指し示す形で置かれているものは、指し示すのをやめて中身そのものを置き直す。",
+        "何を含めるかは、それぞれのSkillが今どの段階にあるかで決まる。仕上がっていないものは含めない。"
+      ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "outputPath",
+          "description": "一式を書き出す先の場所"
+        }
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-document-management"
+}

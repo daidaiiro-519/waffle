@@ -31,6 +31,20 @@ class DocumentRepository(Protocol):
         （まだ何も置かれていない配置先は、誰にも所有されていないことを意味する）。"""
         ...
 
+    def copy_tree(self, source: str, destination: str, dereference: bool,
+                  exclude: tuple[str, ...] = ()) -> None:
+        """source のフォルダを destination へ複製する。
+
+        dereference が真なら、別の場所を指し示す形で置かれているものは指し示すのを
+        やめて中身そのものを置く（指し示す先が無いものは複製しない）。exclude には
+        source から見た相対パスを渡し、その配下を複製から外す。
+        """
+        ...
+
+    def list_broken_links(self, directory: str) -> list[str]:
+        """directory 配下で、指し示す先が存在しないものの一覧を返す。無ければ空配列。"""
+        ...
+
     def list_json(self, directory: str) -> list[str]:
         """directory 直下の *.json パス一覧（昇順）。ディレクトリが無ければ FileNotFoundError。"""
         ...

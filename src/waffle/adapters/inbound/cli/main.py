@@ -33,6 +33,7 @@ from waffle.application.usecases.check_operation_drift import CheckOperationDrif
 from waffle.application.usecases.check_surface_drift import CheckSurfaceDrift
 from waffle.application.usecases.check_usecase_class_drift import CheckUsecaseClassDrift
 from waffle.application.usecases.check_path_is_projection import CheckPathIsProjection
+from waffle.application.usecases.export_skill_bundle import ExportSkillBundle
 from waffle.application.usecases.check_query_precedes_array_fill import CheckQueryPrecedesArrayFill
 from waffle.application.usecases.check_verification_gate import CheckVerificationGate
 from waffle.application.usecases.check_aggregate_class_drift import CheckAggregateClassDrift
@@ -525,6 +526,25 @@ def check_path_is_projection(
         なし。失敗は終了コードで表す。
     """
     _emit(CheckPathIsProjection(_schemas()).run(resolved_path))
+
+@app.command("export-skill-bundle", help="Skillの一式を、道具立てのない相手へ持ち出せる形で書き出す（uc-export-skill-bundle）。")
+def export_skill_bundle(
+    output_path: str = typer.Option(..., "--outputPath", "--output-path", help="一式を書き出す先の場所"),
+    documents_root: str = typer.Option(".waffle/documents/skills", "--documentsRoot", "--documents-root", help="Skill documentの置き場"),
+) -> None:
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        output_path: 一式を書き出す先の場所
+        documents_root: Skill documentの置き場
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
+    _emit(ExportSkillBundle(_docs()).run(output_path, documents_root))
 
 @app.command("check-schema-version-drift", help="DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。")
 def check_schema_version_drift(
