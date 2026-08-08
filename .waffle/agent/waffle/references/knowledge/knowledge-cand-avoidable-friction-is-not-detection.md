@@ -1,0 +1,1 @@
+../../../../knowledge/ACTIVE/knowledge-cand-avoidable-friction-is-not-detection.md
