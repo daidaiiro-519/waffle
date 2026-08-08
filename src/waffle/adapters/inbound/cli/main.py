@@ -159,7 +159,7 @@ def _resolve_documents_root(documents_root: str | None, architecture_ref: str | 
     return result.value
 
 
-@app.command()
+@app.command(help="document.json へのセマンティック・クエリ（uc-query-document）。")
 def query(
     operation: str = typer.Option(..., "--operation"),
     path: str = typer.Option(..., "--path"),
@@ -176,7 +176,24 @@ def query(
         help="query_path用のJMESPath式（1ブロックの内側を起点とした相対式）。document.json自体のパスは--pathのため別名にしている",
     ),
 ) -> None:
-    """document.json へのセマンティック・クエリ（uc-query-document）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        operation: documentに対して行う読み取りの種類
+        path: 読み取る対象のdocumentの置き場所
+        block_key: 読み取る対象を1つのブロックへ絞るときの、そのブロックの識別子
+        field: 読み取る対象を1つの欄へ絞るときの、その欄の名前
+        field_name: 欄そのものではなく、欄の名前で探すときの手がかり
+        target_schema_ref: 読み取りの解釈に使うschemaを、documentの宣言とは別に指定する参照
+        target_discriminator: key=value 形式（例: specKind=subdomain）
+        expression: query_path用のJMESPath式（1ブロックの内側を起点とした相対式）。document.json自体のパスは--pathのため別名にしている
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     raw = {
         "blockKey": block_key, "field": field,
         "fieldName": field_name,
@@ -188,7 +205,7 @@ def query(
         params["targetDiscriminator"] = {k: v}
     _emit(QueryDocument(_docs(), _schemas()).run(operation, path, params))
 
-@app.command("query-collection")
+@app.command("query-collection", help="複数document.jsonを横断するセマンティック・クエリ（uc-query-document-collection）。")
 def query_collection(
     operation: str = typer.Option(..., "--operation"),
     path: str = typer.Option(..., "--path", help="対象ディレクトリ"),
@@ -198,55 +215,125 @@ def query_collection(
     value: str = typer.Option(None, "--value"),
     fields: str = typer.Option(None, "--fields", help="カンマ区切りのフィールド名一覧"),
 ) -> None:
-    """複数document.jsonを横断するセマンティック・クエリ（uc-query-document-collection）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        operation: 複数のdocumentをまたいで行う読み取りの種類
+        path: 対象ディレクトリ
+        pattern: 対象とするdocumentを絞り込む道の形
+        field: 各documentから取り出す欄の名前
+        key: 絞り込みに使う欄の名前
+        value: その欄が取るべき値
+        fields: カンマ区切りのフィールド名一覧
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     raw = {"pattern": pattern, "field": field, "key": key, "value": value}
     params = {k: v for k, v in raw.items() if v is not None}
     if fields:
         params["fields"] = [f.strip() for f in fields.split(",") if f.strip()]
     _emit(QueryDocumentCollection(_docs(), _schemas()).run(operation, path, params))
 
-@app.command()
+@app.command(help="document.json を成果物にレンダリングして deploy（uc-render-document）。")
 def render(
     path: str = typer.Option(..., "--path"),
     no_deploy: bool = typer.Option(False, "--no-deploy"),
 ) -> None:
-    """document.json を成果物にレンダリングして deploy（uc-render-document）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        path: 描画する対象のdocumentの置き場所
+        no_deploy: 描画した成果物を、schemaが定める配置先へ置かずに済ませるかどうか
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(RenderDocument(_docs(), _schemas()).run(path, deploy=not no_deploy))
 
-@app.command("render-handoff-template")
+@app.command("render-handoff-template", help="HandoffのDocument.jsonを固定HTMLテンプレートへ描画する（uc-render-handoff-template）。")
 def render_handoff_template(
     path: str = typer.Option(..., "--path"),
     output_path: str = typer.Option(..., "--outputPath", "--output-path"),
 ) -> None:
-    """HandoffのDocument.jsonを固定HTMLテンプレートへ描画する（uc-render-handoff-template）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        path: 引き継ぎ文書の置き場所
+        output_path: 引き継ぎの成果物を書き出す先
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(RenderHandoffTemplate(_docs()).run(path, output_path))
 
-@app.command("render-document-viewer")
+@app.command("render-document-viewer", help="document.jsonのMD正本をCSS付きの自己完結HTMLへ変換する（uc-render-document-viewer）。")
 def render_document_viewer(
     path: str = typer.Option(..., "--path"),
     output_path: str = typer.Option(..., "--outputPath", "--output-path"),
 ) -> None:
-    """document.jsonのMD正本をCSS付きの自己完結HTMLへ変換する（uc-render-document-viewer）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        path: 閲覧用の形にする対象のdocumentの置き場所
+        output_path: 閲覧用の成果物を書き出す先
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(RenderDocumentViewer(_docs(), RenderDocument(_docs(), _schemas())).run(path, output_path))
 
-@app.command("render-blank-template")
+@app.command("render-blank-template", help="schemaRefが宣言する値フィールドをx-prompt-write本文のプレースホルダーとして描画する（uc-render-blank-template）。")
 def render_blank_template(
     schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref"),
     discriminator: str = typer.Option(None, "--discriminator", help="key=value 形式（例: codingKind=coding-standard）"),
 ) -> None:
-    """schemaRefが宣言する値フィールドをx-prompt-write本文のプレースホルダーとして描画する（uc-render-blank-template）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        schema_ref: どのschemaの雛形を書き出すかを指す参照
+        discriminator: key=value 形式（例: codingKind=coding-standard）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     params = {}
     if discriminator:
         k, _, v = discriminator.partition("=")
         params = {k: v}
     _emit(RenderBlankTemplate(_docs(), _schemas()).run(schema_ref, params))
 
-@app.command()
+@app.command(help="document を schema 適合検証（uc-validate-document）。")
 def validate(path: str = typer.Option(..., "--path")) -> None:
-    """document を schema 適合検証（uc-validate-document）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        path: 適合を確かめる対象のdocumentの置き場所
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(ValidateDocument(_docs(), _schemas(), JsonSchemaValidator()).run(path))
 
-@app.command()
+@app.command(help="document.json の骨格生成 / 値書き込み / フィールド削除 / schemaRef移行（uc-scaffold-document）。operation: create / fill / clear_field / migrate_schema。")
 def scaffold(
     operation: str = typer.Option(..., "--operation"),
     schema_ref: str = typer.Option(None, "--schemaRef", "--schema-ref"),
@@ -258,7 +345,25 @@ def scaffold(
     values: str = typer.Option(None, "--values", help="fill する値の JSON オブジェクト"),
     field_path: str = typer.Option(None, "--fieldPath", "--field-path", help="clear_field で削除する値フィールドのドットパス"),
 ) -> None:
-    """document.json の骨格生成 / 値書き込み / フィールド削除 / schemaRef移行（uc-scaffold-document）。operation: create / fill / clear_field / migrate_schema。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        operation: documentに対して行う書き込みの種類
+        schema_ref: 骨格を作るときに従うschemaを指す参照
+        document_id: 作るdocumentを一意に指す識別子
+        discriminator: key=value 形式（例: skillKind=engine）
+        context_ref: 所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合）
+        subdomain_ref: usecase が属する subdomain の documentId
+        path: fill / clear_field 対象の documentPath
+        values: fill する値の JSON オブジェクト
+        field_path: clear_field で削除する値フィールドのドットパス
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     if operation == "create":
         params: dict = {"schemaRef": schema_ref, "documentId": document_id}
         if discriminator:
@@ -278,27 +383,50 @@ def scaffold(
         params = {}
     _emit(ScaffoldDocument(_docs(), _schemas()).run(operation, params))
 
-@app.command("patch-schema")
+@app.command("patch-schema", help="Schema定義ファイル自体への構造化編集（uc-patch-schema）。")
 def patch_schema(
     operation: str = typer.Option(..., "--operation", help="add_block / rename_block / set_field / remove_field / remove_block / add_def / add_kind_branch / create_version"),
     schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref"),
     params: str = typer.Option(None, "--params", help="operation固有パラメータのJSONオブジェクト"),
 ) -> None:
-    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        operation: add_block / rename_block / set_field / remove_field / remove_block / add_def / add_kind_branch / create_version
+        schema_ref: 編集する対象のschemaを指す参照
+        params: operation固有パラメータのJSONオブジェクト
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     p = json.loads(params) if params else {}
     if isinstance(p, dict):
         p["schemaRef"] = schema_ref  # 形が違う場合は usecase の引数検査に判定を委ねる
     _emit(PatchSchema(_docs(), _schemas(), JsonSchemaValidator()).run(operation, p))
 
-@app.command("check-spec-integrity")
+@app.command("check-spec-integrity", help="bc.jsonのmembers宣言とディスク上の実ファイルの参照整合性を検証（uc-check-spec-integrity）。")
 def check_spec_integrity(
     path: str = typer.Option(..., "--path", help="bounded-context の bc.json のパス"),
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
 ) -> None:
-    """bc.jsonのmembers宣言とディスク上の実ファイルの参照整合性を検証（uc-check-spec-integrity）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        path: bounded-context の bc.json のパス
+        documents_root: Document集約の実インスタンス群を走査する対象ディレクトリ
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(CheckSpecIntegrity(_docs()).run(path, documents_root))
 
-@app.command("check-scenario-drift")
+@app.command("check-scenario-drift", help="specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。")
 def check_scenario_drift(
     spec_path: str = typer.Option(None, "--specPath", "--spec-path", help="spec.json のパス（1組だけ検査する）"),
     test_path: str = typer.Option(None, "--testPath", "--test-path", help="対応するテストファイルのパス（1組だけ検査する）"),
@@ -306,7 +434,21 @@ def check_scenario_drift(
     tests_root: str = typer.Option(None, "--testsRoot", "--tests-root", help="テストの配置ルート（全体を検査する）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="シナリオ照合の規約を引くarchitecture documentのdocumentId"),
 ) -> None:
-    """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        spec_path: spec.json のパス（1組だけ検査する）
+        test_path: 対応するテストファイルのパス（1組だけ検査する）
+        documents_root: spec documentの置き場所（全体を検査する）
+        tests_root: テストの配置ルート（全体を検査する）
+        architecture_ref: シナリオ照合の規約を引くarchitecture documentのdocumentId
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     # 片側だけ渡されたとき、もう片方を探す範囲は coveredContexts が決める
     scope = documents_root
     if scope is None and architecture_ref and (spec_path is None) != (test_path is None):
@@ -316,7 +458,7 @@ def check_scenario_drift(
         spec_path=spec_path, test_file_path=test_path,
         documents_root=scope, tests_root=tests_root))
 
-@app.command("check-verification-gate")
+@app.command("check-verification-gate", help="実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。")
 def check_verification_gate(
     spec_path: str = typer.Option(..., "--specPath", "--spec-path", help="spec.json のパス"),
     test_path: str = typer.Option(..., "--testPath", "--test-path", help="対応するテストファイル(.py)のパス"),
@@ -326,11 +468,24 @@ def check_verification_gate(
     ),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="シナリオ照合の規約を引くarchitecture documentのdocumentId"),
 ) -> None:
-    """実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        spec_path: spec.json のパス
+        test_path: 対応するテストファイル(.py)のパス
+        test_results_path: テスト実行結果({"passed": [...], "failed": [...]})のパス
+        architecture_ref: シナリオ照合の規約を引くarchitecture documentのdocumentId
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(CheckVerificationGate(_docs(), TreeSitterTestFunctionExtractor()).run(
         spec_path, test_path, test_results_path, _resolve_binding(architecture_ref)))
 
-@app.command("check-query-precedes-array-fill")
+@app.command("check-query-precedes-array-fill", help="配列fillの前にqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。")
 def check_query_precedes_array_fill(
     target_path: str = typer.Option(..., "--targetPath", "--target-path", help="fill対象のdocument.jsonパス"),
     has_array_value: bool = typer.Option(..., "--hasArrayValue", "--has-array-value", help="値に配列を含むか"),
@@ -339,28 +494,70 @@ def check_query_precedes_array_fill(
         help="同一セッション内で既にqueryされたpathのJSON配列。例: [\"a.json\"]",
     ),
 ) -> None:
-    """配列fillの前にqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        target_path: fill対象のdocument.jsonパス
+        has_array_value: 値に配列を含むか
+        queried_paths: 同一セッション内で既にqueryされたpathのJSON配列。例: ["a.json"]
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(CheckQueryPrecedesArrayFill().run(target_path, has_array_value, json.loads(queried_paths)))
 
-@app.command("check-path-is-projection")
+@app.command("check-path-is-projection", help="実体パスがdocument.jsonからの投影かどうかを判定（uc-check-path-is-projection）。")
 def check_path_is_projection(
     resolved_path: str = typer.Option(..., "--resolvedPath", "--resolved-path", help="判定対象の実体パス（symlink解決済み）"),
 ) -> None:
-    """実体パスがdocument.jsonからの投影かどうかを判定（uc-check-path-is-projection）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        resolved_path: 判定対象の実体パス（symlink解決済み）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(CheckPathIsProjection(_schemas()).run(resolved_path))
 
-@app.command("check-schema-version-drift")
+@app.command("check-schema-version-drift", help="DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。")
 def check_schema_version_drift(
     documents_root: str = typer.Option(".waffle/documents", "--documentsRoot", "--documents-root", help="Document集約の実インスタンス群を走査する対象ディレクトリ"),
 ) -> None:
-    """DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        documents_root: Document集約の実インスタンス群を走査する対象ディレクトリ
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(CheckSchemaVersionDrift(_docs(), _schemas()).run(documents_root))
 
-@app.command("check-prompt-contract")
+@app.command("check-prompt-contract", help="Schemaの指示が然るべき場所に然るべき名前で置かれているかを検証（uc-check-prompt-contract）。")
 def check_prompt_contract(
     schema_ref: str = typer.Option(..., "--schemaRef", "--schema-ref", help="確かめる対象のschemaRef（例: DomainSpecSchema/v8）"),
 ) -> None:
-    """Schemaの指示が然るべき場所に然るべき名前で置かれているかを検証（uc-check-prompt-contract）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        schema_ref: 確かめる対象のschemaRef（例: DomainSpecSchema/v8）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(CheckPromptContract(_schemas()).run(schema_ref))
 
 @app.command(
@@ -392,14 +589,27 @@ def check_surface_drift(
     _emit(CheckSurfaceDrift(_docs(), _surface_extractor()).run(
         _resolve_documents_root(documents_root, architecture_ref), surfaces, language))
 
-@app.command("check-usecase-class-drift")
+@app.command("check-usecase-class-drift", help="usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。")
 def check_usecase_class_drift(
     documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
     language: str = typer.Option("python", "--language", help="実装言語（python/java/typescript/javascript）"),
 ) -> None:
-    """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        documents_root: 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる
+        src_root: usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）
+        architecture_ref: srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）
+        language: 実装言語（python/java/typescript/javascript）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
     # 1つのファイルで探すか、配置ディレクトリで探すかは architecture の宣言が決める
     unit = resolve_search_unit(_docs(), architecture_ref, "usecase")
@@ -407,14 +617,27 @@ def check_usecase_class_drift(
         _resolve_documents_root(documents_root, architecture_ref), resolved_src_root,
         _resolve_naming(architecture_ref), language, unit))
 
-@app.command("check-aggregate-class-drift")
+@app.command("check-aggregate-class-drift", help="aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。")
 def check_aggregate_class_drift(
     documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="集約Entityクラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
     language: str = typer.Option("python", "--language", help="実装言語（python/java/typescript/javascript）"),
 ) -> None:
-    """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        documents_root: 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる
+        src_root: 集約Entityクラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）
+        architecture_ref: srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）
+        language: 実装言語（python/java/typescript/javascript）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "aggregate")
     # 値オブジェクトをどこまで探すかは architecture の宣言が決める
     value_object_root = resolve_directory_scoped_root(_docs(), architecture_ref, "value-object")
@@ -424,74 +647,161 @@ def check_aggregate_class_drift(
         _resolve_documents_root(documents_root, architecture_ref), resolved_src_root,
         _resolve_naming(architecture_ref), language, value_object_root, unit))
 
-@app.command("check-layer-drift")
+@app.command("check-layer-drift", help="宣言した層の依存の向きが実装でも守られているかを検証（uc-check-layer-drift）。")
 def check_layer_drift(
     architecture_ref: str = typer.Option(..., "--architectureRef", "--architecture-ref", help="層・置き場所・依存してよい先を宣言するarchitecture documentのdocumentId（例: architecture-waffle）"),
 ) -> None:
-    """宣言した層の依存の向きが実装でも守られているかを検証（uc-check-layer-drift）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        architecture_ref: 層・置き場所・依存してよい先を宣言するarchitecture documentのdocumentId（例: architecture-waffle）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(CheckLayerDrift(_docs(), TreeSitterImportExtractor()).run(architecture_ref))
 
-@app.command("check-domain-service-drift")
+@app.command("check-domain-service-drift", help="業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。")
 def check_domain_service_drift(
     documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="業務サービス実装ファイルの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
 ) -> None:
-    """業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        documents_root: 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる
+        src_root: 業務サービス実装ファイルの配置ルートディレクトリ（明示指定時は--architectureRefより優先）
+        architecture_ref: srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "domain-service")
     _emit(CheckDomainServiceDrift(_docs()).run(
         _resolve_documents_root(documents_root, architecture_ref), resolved_src_root, _resolve_naming(architecture_ref)))
 
-@app.command("check-operation-drift")
+@app.command("check-operation-drift", help="usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。")
 def check_operation_drift(
     documents_root: str = typer.Option(None, "--documentsRoot", "--documents-root", help="仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる"),
     src_root: str = typer.Option(None, "--srcRoot", "--src-root", help="usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）"),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）"),
 ) -> None:
-    """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        documents_root: 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる
+        src_root: usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）
+        architecture_ref: srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     resolved_src_root = _resolve_src_root(src_root, architecture_ref, "usecase")
     _emit(CheckOperationDrift(_docs()).run(
         _resolve_documents_root(documents_root, architecture_ref), resolved_src_root, _resolve_naming(architecture_ref)))
 
-@app.command("scan-source-code")
+@app.command("scan-source-code", help="対象コードベースの公開要素のdocstringを構造化抽出（uc-scan-source-code）。")
 def scan_source_code(
     path: str = typer.Option(..., "--path", help="対象コードベース(ディレクトリ)のパス"),
     kind: str = typer.Option(..., "--kind", help="DocstringSchemaのkind（現状はgoogleのみ対応）"),
 ) -> None:
-    """対象コードベースの公開要素のdocstringを構造化抽出（uc-scan-source-code）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        path: 対象コードベース(ディレクトリ)のパス
+        kind: DocstringSchemaのkind（現状はgoogleのみ対応）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(ScanSourceCode(_docs(), PythonAstSourceScanner()).run(path, kind))
 
-@app.command("lint-docstring")
+@app.command("lint-docstring", help="対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。")
 def lint_docstring(
     path: str = typer.Option(..., "--path", help="対象コードベース(ディレクトリ)のパス"),
     kind: str = typer.Option(..., "--kind", help="DocstringSchemaのkind（現状はgoogleのみ対応）"),
 ) -> None:
-    """対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        path: 対象コードベース(ディレクトリ)のパス
+        kind: DocstringSchemaのkind（現状はgoogleのみ対応）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     scan_engine = ScanSourceCode(_docs(), PythonAstSourceScanner())
     _emit(LintDocstring(scan_engine, PydoclintLinter()).run(path, kind))
 
-@app.command("update-coding-preset")
+@app.command("update-coding-preset", help="実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。")
 def update_coding_preset(
     preset: str = typer.Option(..., "--preset", help="反映先のプリセット名（例: python-hexagonal）"),
     from_document_id: str = typer.Option(..., "--from", help="出どころとなる規約のdocumentId（例: architecture-waffle）"),
     blocks: str = typer.Option(..., "--blocks", help="戻す部分をカンマ区切りで（例: rules,layers,layout.granularity）。ブロックの中の欄まで指定できる。丸ごとの写しは行わないため省略できない"),
     dry_run: bool = typer.Option(False, "--dryRun", "--dry-run", help="書き換えずに、何が変わるかだけを返す"),
 ) -> None:
-    """実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        preset: 反映先のプリセット名（例: python-hexagonal）
+        from_document_id: 出どころとなる規約のdocumentId（例: architecture-waffle）
+        blocks: 戻す部分をカンマ区切りで（例: rules,layers,layout.granularity）。ブロックの中の欄まで指定できる。丸ごとの写しは行わないため省略できない
+        dry_run: 書き換えずに、何が変わるかだけを返す
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     names = [b.strip() for b in blocks.split(",") if b.strip()]
     _emit(UpdateCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, from_document_id, names, dry_run))
 
-@app.command("init-coding-preset")
+@app.command("init-coding-preset", help="CodingSchemaプリセットからtech-stack/architecture/coding-standard/test-standardの4documentを一括生成（uc-init-coding-preset）。")
 def init_coding_preset(
     preset: str = typer.Option(..., "--preset", help="プリセット名（例: python-hexagonal）"),
     product: str = typer.Option(..., "--product", help="プロダクト名（documentIdのサフィックスになる。例: waffle）"),
 ) -> None:
-    """CodingSchemaプリセットからtech-stack/architecture/coding-standard/test-standardの4documentを一括生成（uc-init-coding-preset）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Args:
+        preset: プリセット名（例: python-hexagonal）
+        product: プロダクト名（documentIdのサフィックスになる。例: waffle）
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     _emit(InitCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, product))
 
-@app.command()
+@app.command(help="MCP サーバを起動（query_document / render_document / … を MCP ツールとして公開）。")
 def serve() -> None:
-    """MCP サーバを起動（query_document / render_document / … を MCP ツールとして公開）。"""
+    """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
+
+    Returns:
+        なし。結果は標準出力へ書き出す。
+
+    Raises:
+        なし。失敗は終了コードで表す。
+    """
     from waffle.adapters.inbound.mcp.main import mcp
 
     mcp.run()

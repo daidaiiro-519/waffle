@@ -116,7 +116,7 @@ def _resolve_documents_root(documents_root: str | None, architecture_ref: str | 
     return result.value
 
 
-@mcp.tool
+@mcp.tool(description="document.json へのセマンティック・クエリ（uc-query-document）。")
 def query_document(
     operation: str,
     path: str,
@@ -127,7 +127,24 @@ def query_document(
     targetDiscriminator: dict | None = None,
     expression: str | None = None,
 ) -> dict:
-    """document.json へのセマンティック・クエリ（uc-query-document）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        operation: documentに対して行う読み取りの種類
+        path: 読み取る対象のdocumentの置き場所
+        blockKey: 読み取る対象を1つのブロックへ絞るときの、そのブロックの識別子
+        field: 読み取る対象を1つの欄へ絞るときの、その欄の名前
+        fieldName: 欄そのものではなく、欄の名前で探すときの手がかり
+        targetSchemaRef: 読み取りの解釈に使うschemaを、documentの宣言とは別に指定する参照
+        targetDiscriminator: key=value 形式（例: specKind=subdomain）
+        expression: query_path用のJMESPath式（1ブロックの内側を起点とした相対式）。document.json自体のパスは--pathのため別名にしている
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     raw = {
         "blockKey": blockKey, "field": field,
         "fieldName": fieldName,
@@ -137,7 +154,7 @@ def query_document(
     params = {k: v for k, v in raw.items() if v is not None}
     return _dict(QueryDocument(_docs(), _schemas()).run(operation, path, params))
 
-@mcp.tool
+@mcp.tool(description="複数document.jsonを横断するセマンティック・クエリ（uc-query-document-collection）。pathは対象ディレクトリ。")
 def query_document_collection(
     operation: str,
     path: str,
@@ -147,37 +164,107 @@ def query_document_collection(
     value: str | None = None,
     fields: list[str] | None = None,
 ) -> dict:
-    """複数document.jsonを横断するセマンティック・クエリ（uc-query-document-collection）。pathは対象ディレクトリ。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        operation: 複数のdocumentをまたいで行う読み取りの種類
+        path: 対象ディレクトリ
+        pattern: 対象とするdocumentを絞り込む道の形
+        field: 各documentから取り出す欄の名前
+        key: 絞り込みに使う欄の名前
+        value: その欄が取るべき値
+        fields: カンマ区切りのフィールド名一覧
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     raw = {"pattern": pattern, "field": field, "key": key, "value": value, "fields": fields}
     params = {k: v for k, v in raw.items() if v is not None}
     return _dict(QueryDocumentCollection(_docs(), _schemas()).run(operation, path, params))
 
-@mcp.tool
+@mcp.tool(description="document.json を成果物にレンダリングして deploy（uc-render-document）。")
 def render_document(path: str, deploy: bool = True) -> dict:
-    """document.json を成果物にレンダリングして deploy（uc-render-document）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        path: 描画する対象のdocumentの置き場所
+        deploy: 描画した成果物を、schemaが定める配置先へ置くかどうか
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(RenderDocument(_docs(), _schemas()).run(path, deploy=deploy))
 
-@mcp.tool
+@mcp.tool(description="HandoffのDocument.jsonを固定HTMLテンプレートへ描画する（uc-render-handoff-template）。")
 def render_handoff_template(path: str, outputPath: str) -> dict:
-    """HandoffのDocument.jsonを固定HTMLテンプレートへ描画する（uc-render-handoff-template）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        path: 引き継ぎ文書の置き場所
+        outputPath: 引き継ぎの成果物を書き出す先
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(RenderHandoffTemplate(_docs()).run(path, outputPath))
 
-@mcp.tool
+@mcp.tool(description="document.jsonのMD正本をCSS付きの自己完結HTMLへ変換する（uc-render-document-viewer）。")
 def render_document_viewer(path: str, outputPath: str) -> dict:
-    """document.jsonのMD正本をCSS付きの自己完結HTMLへ変換する（uc-render-document-viewer）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        path: 閲覧用の形にする対象のdocumentの置き場所
+        outputPath: 閲覧用の成果物を書き出す先
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(RenderDocumentViewer(_docs(), RenderDocument(_docs(), _schemas())).run(path, outputPath))
 
-@mcp.tool
+@mcp.tool(description="schemaRefが宣言する値フィールドをx-prompt-write本文のプレースホルダーとして描画する（uc-render-blank-template）。")
 def render_blank_template(schemaRef: str, discriminator: dict | None = None) -> dict:
-    """schemaRefが宣言する値フィールドをx-prompt-write本文のプレースホルダーとして描画する（uc-render-blank-template）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        schemaRef: どのschemaの雛形を書き出すかを指す参照
+        discriminator: key=value 形式（例: codingKind=coding-standard）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(RenderBlankTemplate(_docs(), _schemas()).run(schemaRef, discriminator or {}))
 
-@mcp.tool
+@mcp.tool(description="document を schema 適合検証（uc-validate-document）。")
 def validate_document(path: str) -> dict:
-    """document を schema 適合検証（uc-validate-document）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        path: 適合を確かめる対象のdocumentの置き場所
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(ValidateDocument(_docs(), _schemas(), JsonSchemaValidator()).run(path))
 
-@mcp.tool
+@mcp.tool(description="document.json の骨格生成 / 値書き込み / フィールド削除 / schemaRef移行（uc-scaffold-document）。operation: create / fill / clear_field / migrate_schema。")
 def scaffold_document(
     operation: str,
     schemaRef: str | None = None,
@@ -189,7 +276,25 @@ def scaffold_document(
     values: dict | None = None,
     fieldPath: str | None = None,
 ) -> dict:
-    """document.json の骨格生成 / 値書き込み / フィールド削除 / schemaRef移行（uc-scaffold-document）。operation: create / fill / clear_field / migrate_schema。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        operation: documentに対して行う書き込みの種類
+        schemaRef: 骨格を作るときに従うschemaを指す参照
+        documentId: 作るdocumentを一意に指す識別子
+        discriminator: key=value 形式（例: skillKind=engine）
+        contextRef: 所属する bounded-context の documentId（ネストしたx-source-targetが要求する場合）
+        subdomainRef: usecase が属する subdomain の documentId
+        documentPath: 値を書き込む対象の、既にあるdocumentの置き場所
+        values: fill する値の JSON オブジェクト
+        fieldPath: clear_field で削除する値フィールドのドットパス
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     if operation == "create":
         params: dict = {"schemaRef": schemaRef, "documentId": documentId}
         if discriminator:
@@ -208,26 +313,59 @@ def scaffold_document(
         params = {}
     return _dict(ScaffoldDocument(_docs(), _schemas()).run(operation, params))
 
-@mcp.tool
+@mcp.tool(description="Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block / rename_block / set_field / remove_field / remove_block / add_def / add_kind_branch / create_version。")
 def patch_schema(operation: str, schemaRef: str, params: dict | None = None) -> dict:
-    """Schema定義ファイル自体への構造化編集（uc-patch-schema）。operation: add_block / rename_block / set_field / remove_field / remove_block / add_def / add_kind_branch / create_version。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        operation: add_block / rename_block / set_field / remove_field / remove_block / add_def / add_kind_branch / create_version
+        schemaRef: 編集する対象のschemaを指す参照
+        params: operation固有パラメータのJSONオブジェクト
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     p = dict(params or {})
     p["schemaRef"] = schemaRef
     return _dict(PatchSchema(_docs(), _schemas(), JsonSchemaValidator()).run(operation, p))
 
-@mcp.tool
+@mcp.tool(description="bc.jsonのmembers宣言とディスク上の実ファイルの参照整合性を検証（uc-check-spec-integrity）。")
 def check_spec_integrity(path: str, documentsRoot: str = ".waffle/documents") -> dict:
-    """bc.jsonのmembers宣言とディスク上の実ファイルの参照整合性を検証（uc-check-spec-integrity）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        path: bounded-context の bc.json のパス
+        documentsRoot: Document集約の実インスタンス群を走査する対象ディレクトリ
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(CheckSpecIntegrity(_docs()).run(path, documentsRoot))
 
-@mcp.tool
+@mcp.tool(description="specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。  specPath と testPath で1組だけ検査するか、documentsRoot と testsRoot で 全体を走査するかのどちらか一方を指定する。")
 def check_scenario_drift(specPath: str = None, testPath: str = None,
                          documentsRoot: str = None, testsRoot: str = None,
                          architectureRef: str = None) -> dict:
-    """specのシナリオとテストコードの対応関係を検証（uc-check-scenario-drift）。
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
 
-    specPath と testPath で1組だけ検査するか、documentsRoot と testsRoot で
-    全体を走査するかのどちらか一方を指定する。
+    Args:
+        specPath: spec.json のパス（1組だけ検査する）
+        testPath: 対応するテストファイルのパス（1組だけ検査する）
+        documentsRoot: spec documentの置き場所（全体を検査する）
+        testsRoot: テストの配置ルート（全体を検査する）
+        architectureRef: シナリオ照合の規約を引くarchitecture documentのdocumentId
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
     """
     binding = _resolve_binding(architectureRef)
     if "error" in binding:
@@ -241,27 +379,73 @@ def check_scenario_drift(specPath: str = None, testPath: str = None,
         binding=binding, spec_path=specPath, test_file_path=testPath,
         documents_root=scope, tests_root=testsRoot))
 
-@mcp.tool
+@mcp.tool(description="実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。")
 def check_verification_gate(specPath: str, testPath: str, testResultsPath: str, architectureRef: str = None) -> dict:
-    """実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        specPath: spec.json のパス
+        testPath: 対応するテストファイル(.py)のパス
+        testResultsPath: テスト実行結果({"passed": [...], "failed": [...]})のパス
+        architectureRef: シナリオ照合の規約を引くarchitecture documentのdocumentId
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(CheckVerificationGate(_docs(), TreeSitterTestFunctionExtractor()).run(
         specPath, testPath, testResultsPath, _resolve_binding(architectureRef)))
 
-@mcp.tool
+@mcp.tool(description="Schemaの指示が然るべき場所に然るべき名前で置かれているかを検証（uc-check-prompt-contract）。")
 def check_prompt_contract(schemaRef: str) -> dict:
-    """Schemaの指示が然るべき場所に然るべき名前で置かれているかを検証（uc-check-prompt-contract）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        schemaRef: 確かめる対象のschemaRef（例: DomainSpecSchema/v8）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(CheckPromptContract(_schemas()).run(schemaRef))
 
-@mcp.tool
+@mcp.tool(description="DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。")
 def check_schema_version_drift(documentsRoot: str = ".waffle/documents") -> dict:
-    """DocumentのschemaRefが実在し最新であるかを検証（uc-check-schema-version-drift）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        documentsRoot: Document集約の実インスタンス群を走査する対象ディレクトリ
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(CheckSchemaVersionDrift(_docs(), _schemas()).run(documentsRoot))
 
-@mcp.tool
+@mcp.tool(description="usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。")
 def check_usecase_class_drift(
     documentsRoot: str = None, srcRoot: str | None = None, architectureRef: str | None = None, language: str = "python"
 ) -> dict:
-    """usecase specの操作名と実装クラス名が一致しているかを検証（uc-check-usecase-class-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        documentsRoot: 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる
+        srcRoot: usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）
+        architectureRef: srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）
+        language: 実装言語（python/java/typescript/javascript）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     resolved = _resolve_src_root(srcRoot, architectureRef, "usecase")
     if isinstance(resolved, dict):
         return resolved
@@ -276,11 +460,24 @@ def check_usecase_class_drift(
     unit = resolve_search_unit(_docs(), architectureRef, "usecase")
     return _dict(CheckUsecaseClassDrift(_docs(), _class_extractor()).run(scope, resolved, naming, language, unit))
 
-@mcp.tool
+@mcp.tool(description="aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。")
 def check_aggregate_class_drift(
     documentsRoot: str = None, srcRoot: str | None = None, architectureRef: str | None = None, language: str = "python"
 ) -> dict:
-    """aggregate specの集約ルート名と実装クラス名が一致しているかを検証（uc-check-aggregate-class-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        documentsRoot: 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる
+        srcRoot: 集約Entityクラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）
+        architectureRef: srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）
+        language: 実装言語（python/java/typescript/javascript）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     resolved = _resolve_src_root(srcRoot, architectureRef, "aggregate")
     if isinstance(resolved, dict):
         return resolved
@@ -298,14 +495,36 @@ def check_aggregate_class_drift(
     return _dict(CheckAggregateClassDrift(_docs(), _class_extractor()).run(
         scope, resolved, naming, language, value_object_root, unit))
 
-@mcp.tool
+@mcp.tool(description="宣言した層の依存の向きが実装でも守られているかを検証（uc-check-layer-drift）。architectureRefが宣言する層・置き場所・依存してよい先だけを基準に使う。")
 def check_layer_drift(architectureRef: str) -> dict:
-    """宣言した層の依存の向きが実装でも守られているかを検証（uc-check-layer-drift）。architectureRefが宣言する層・置き場所・依存してよい先だけを基準に使う。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        architectureRef: 層・置き場所・依存してよい先を宣言するarchitecture documentのdocumentId（例: architecture-waffle）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(CheckLayerDrift(_docs(), TreeSitterImportExtractor()).run(architectureRef))
 
-@mcp.tool
+@mcp.tool(description="業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。")
 def check_domain_service_drift(documentsRoot: str = None, srcRoot: str | None = None, architectureRef: str | None = None) -> dict:
-    """業務サービスのgroupと実装ファイルが一致しているかを検証（uc-check-domain-service-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        documentsRoot: 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる
+        srcRoot: 業務サービス実装ファイルの配置ルートディレクトリ（明示指定時は--architectureRefより優先）
+        architectureRef: srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     resolved = _resolve_src_root(srcRoot, architectureRef, "domain-service")
     if isinstance(resolved, dict):
         return resolved
@@ -318,9 +537,21 @@ def check_domain_service_drift(documentsRoot: str = None, srcRoot: str | None = 
         return naming
     return _dict(CheckDomainServiceDrift(_docs()).run(scope, resolved, naming))
 
-@mcp.tool
+@mcp.tool(description="usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。")
 def check_operation_drift(documentsRoot: str = None, srcRoot: str | None = None, architectureRef: str | None = None) -> dict:
-    """usecase specが宣言するoperation名と実装のoperation分岐が一致しているかを検証（uc-check-operation-drift）。srcRoot省略時はarchitectureRefが指すarchitecture documentから動的解決する。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        documentsRoot: 仕様側の走査範囲。未指定なら architectureRef が受け持つコンテキストから決まる
+        srcRoot: usecase実装クラスの配置ルートディレクトリ（明示指定時は--architectureRefより優先）
+        architectureRef: srcRoot未指定時に参照するarchitecture documentのdocumentId（例: architecture-waffle）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     resolved = _resolve_src_root(srcRoot, architectureRef, "usecase")
     if isinstance(resolved, dict):
         return resolved
@@ -333,36 +564,104 @@ def check_operation_drift(documentsRoot: str = None, srcRoot: str | None = None,
         return naming
     return _dict(CheckOperationDrift(_docs()).run(scope, resolved, naming))
 
-@mcp.tool
+@mcp.tool(description="対象コードベースの公開要素のdocstringを構造化抽出（uc-scan-source-code）。")
 def scan_source_code(path: str, kind: str) -> dict | list:
-    """対象コードベースの公開要素のdocstringを構造化抽出（uc-scan-source-code）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        path: 対象コードベース(ディレクトリ)のパス
+        kind: DocstringSchemaのkind（現状はgoogleのみ対応）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(ScanSourceCode(_docs(), PythonAstSourceScanner()).run(path, kind))
 
-@mcp.tool
+@mcp.tool(description="対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。")
 def lint_docstring(path: str, kind: str) -> dict | list:
-    """対象コードベースのdocstringが規約どおりか既存lintツールで検証（uc-lint-docstring）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        path: 対象コードベース(ディレクトリ)のパス
+        kind: DocstringSchemaのkind（現状はgoogleのみ対応）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     scan_engine = ScanSourceCode(_docs(), PythonAstSourceScanner())
     return _dict(LintDocstring(scan_engine, PydoclintLinter()).run(path, kind))
 
-@mcp.tool
+@mcp.tool(description="プリセットからtech-stack/architecture/coding-standard/test-standardの4documentを一括生成（uc-init-coding-preset）。")
 def init_coding_preset(preset: str, product: str) -> dict:
-    """プリセットからtech-stack/architecture/coding-standard/test-standardの4documentを一括生成（uc-init-coding-preset）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        preset: プリセット名（例: python-hexagonal）
+        product: プロダクト名（documentIdのサフィックスになる。例: waffle）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(InitCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, product))
 
-@mcp.tool
+@mcp.tool(description="実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。丸ごとの写しは行わないため、戻す部分の指定は省略できない。dryRunを真にすると書き換えずに何が変わるかだけを返す。")
 def update_coding_preset(preset: str, fromDocumentId: str, blocks: list[str], dryRun: bool = False) -> dict:
-    """実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。丸ごとの写しは行わないため、戻す部分の指定は省略できない。dryRunを真にすると書き換えずに何が変わるかだけを返す。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        preset: 反映先のプリセット名（例: python-hexagonal）
+        fromDocumentId: 出どころとなる規約のdocumentId（例: architecture-waffle）
+        blocks: 戻す部分をカンマ区切りで（例: rules,layers,layout.granularity）。ブロックの中の欄まで指定できる。丸ごとの写しは行わないため省略できない
+        dryRun: 書き換えずに、何が変わるかだけを返す
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(UpdateCodingPreset(_docs(), PackageCodingPresetRepository()).run(
         preset, fromDocumentId, blocks, dryRun))
 
-@mcp.tool
+@mcp.tool(description="実体パスがdocument.json（原本）からの投影かどうかを判定（uc-check-path-is-projection）。")
 def check_path_is_projection(realPath: str) -> dict:
-    """実体パスがdocument.json（原本）からの投影かどうかを判定（uc-check-path-is-projection）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        realPath: 判定対象の実体パス（symlink解決済み）
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(CheckPathIsProjection(_schemas()).run(realPath))
 
-@mcp.tool
+@mcp.tool(description="配列fillの前に対象pathへのqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。")
 def check_query_precedes_array_fill(targetPath: str, hasArrayValue: bool, queriedPaths: list[str]) -> dict:
-    """配列fillの前に対象pathへのqueryが先行しているかを判定（uc-check-query-precedes-array-fill）。"""
+    """受け取った引数をユースケースへ渡し、結果を辞書で返す。
+
+    Args:
+        targetPath: fill対象のdocument.jsonパス
+        hasArrayValue: 値に配列を含むか
+        queriedPaths: 同一セッション内で既にqueryされたpathのJSON配列。例: ["a.json"]
+
+    Returns:
+        その操作の結果。
+
+    Raises:
+        なし。失敗は結果の中で表す。
+    """
     return _dict(CheckQueryPrecedesArrayFill().run(targetPath, hasArrayValue, queriedPaths))
 
 
