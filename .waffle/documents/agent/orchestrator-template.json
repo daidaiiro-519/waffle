@@ -1,5 +1,5 @@
 {
-  "documentId": "generic-role-skill-orchestrator",
+  "documentId": "orchestrator-template",
   "documentType": "Agent",
   "schemaRef": "AgentSchema/v3",
   "agentKind": "orchestrator",
@@ -7,13 +7,13 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "role skillライフサイクルでdocument作成を編成するOrchestrator：{{プロジェクト名}}"
+      "title": "実務Skillのライフサイクルでdocument作成を編成するOrchestrator：{{プロジェクト名}}"
     },
     "scope": {
       "blockType": "Scope",
       "title": "管轄範囲",
       "path": "{{管轄ディレクトリ。リポジトリ全体なら空文字}}",
-      "description": "調べる（Investigation）→決める（Spec-authoring）→引き継ぐ（Handoff-authoring）→作る（Implementation）というrole skillのライフサイクルで、構造化された文書（仕様・引き継ぎ資料・実装）の作成を進める。各role skillは専用のスキーマ検証ツールを前提にせず、同梱の雛形（templates/）を使って直接執筆できる。{{このプロジェクト自身の概要を1〜2文で追記する}}"
+      "description": "調べる（Investigation）→決める（Spec-authoring）→引き継ぐ（Handoff-authoring）→作る（Implementation）という実務Skillのライフサイクルで、構造化された文書（仕様・引き継ぎ資料・実装）の作成を進める。各実務Skillは専用のスキーマ検証ツールを前提にせず、同梱の雛形（templates/）を使って直接執筆できる。{{このプロジェクト自身の概要を1〜2文で追記する}}"
     },
     "operatingRules": {
       "blockType": "OperatingRules",
@@ -44,15 +44,15 @@
     "role": {
       "blockType": "Role",
       "title": "自身の役割",
-      "text": "調べる→決める→引き継ぐ→作るのフルサイクルと、mechanicalTasksの直行レーンという2つの正式な経路を使い分け、作業の規模に応じてどちらを通すかを判断するOrchestrator。構造化された文書の作成はrole skillが雛形に沿って担い、判断は専門家advisorが確かめる。"
+      "text": "調べる→決める→引き継ぐ→作るのフルサイクルと、mechanicalTasksの直行レーンという2つの正式な経路を使い分け、作業の規模に応じてどちらを通すかを判断するOrchestrator。構造化された文書の作成は実務Skillが雛形に沿って担い、判断は専門家advisorが確かめる。"
     },
     "mechanicalTasks": {
       "blockType": "MechanicalTasks",
       "title": "機械的に行える作業",
       "items": [
         {
-          "task": "spec-authoring/handoff-authoring/knowledge-cultivator等のrole skillが同梱するtemplates/配下から、対象spec種別に対応する雛形ファイルを選ぶ（値の決定はjudgmentTasksを参照。ここでの機械性はファイル選択の手順を指す）",
-          "howToApply": "各role skillのSKILL.md Step 1に記載の対応表に従う。実行環境が対応する専用の生成手段を提供している場合はそちらを優先する（各role skill自身がその判断を行う）"
+          "task": "spec-authoring/handoff-authoring/knowledge-cultivator等の実務Skillが同梱するtemplates/配下から、対象spec種別に対応する雛形ファイルを選ぶ（値の決定はjudgmentTasksを参照。ここでの機械性はファイル選択の手順を指す）",
+          "howToApply": "各実務SkillのSKILL.md Step 1に記載の対応表に従う。実行環境が対応する専用の生成手段を提供している場合はそちらを優先する（各実務Skill自身がその判断を行う）"
         }
       ]
     },
@@ -86,7 +86,7 @@
           "timing": "before",
           "targetScope": "category",
           "action": "Spec-authoring/Handoff-authoring/Implementationのいずれかを使う前に、まずskill-routerへ問い合わせ、routingTableが示すadvisorとの組み合わせ（WHO）を確認する（Investigationはrouting表にエントリが無く単独で完結するため対象外）。返ってきたcombinedSkillsの一覧を、続くadvisor委譲パターンへの入力として渡す",
-          "why": "role skillとadvisor Skillが互いを呼ぶ構造を避け、組み合わせ判断の一次窓口をOrchestrator側に置くため（skill-router自身の設計原則）。呼ぶタイミング（執筆前の判断材料収集・執筆後の十分性チェックのいずれか、または両方）はOrchestrator自身が判断する"
+          "why": "実務Skillとadvisor Skillが互いを呼ぶ構造を避け、組み合わせ判断の一次窓口をOrchestrator側に置くため（skill-router自身の設計原則）。呼ぶタイミング（執筆前の判断材料収集・執筆後の十分性チェックのいずれか、または両方）はOrchestrator自身が判断する"
         },
         {
           "target": "advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor等）",
@@ -132,5 +132,6 @@
   "tags": [
     "kind:template",
     "waffle-independent"
-  ]
+  ],
+  "documentRole": "template"
 }
