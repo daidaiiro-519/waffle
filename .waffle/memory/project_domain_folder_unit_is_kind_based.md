@@ -18,3 +18,6 @@ ddd-advisor は集約単位への差し戻しを勧めたが、その要の根�
 - `resolve_directory_scoped_root` が4つの状態（perFile宣言あり／architectureRef無し／document見つからず／解決できず）をすべて `None` に潰している
 - 非ルートentityは属性も存在も一切検査されていない（`_declared_attributes` が `name == root_name` のみ）。`ArtifactViewToken = ViewToken` の別名共有はこの穴の内側にあるため、別名対応だけしても検知は1件も増えない
 - python-hexagonal プリセットの `tree`（`domain/model/`）と `conceptPlacement`（`domain/entities`・`domain/value_objects`）が食い違っている。直すのは `tree` 側（`layout` の x-prompt が「食い違いを見つけたら図を直す」と定めている）
+- `lint-docstring` が coding-standard の `docstring` ブロックを読んでいない。`LintDocstring.run(target_path, kind)` は `kind="google"` という文字列を受け取るだけで、`tagParams`/`tagReturns`/`tagRaises`/`syntaxKind`/`proseMustStartWith`/`required`（可視性の表）は `src/waffle` に文字列として存在しない。タグ検査自体は port 経由の外部lintツールが行っており、たまたま google 既定と一致しているだけ。規約側でタグ名を変えても追随しない。`expected_path` が `granularity` を読まない件と同じ型の欠陥で、「検査は宣言を読む」という1つのspecにまとめるのが筋
+- `agg-project` 不変条件7（閲覧トークンに期限を設けないことを許す）に、invariantScenario もテストも無い。シナリオ追加はspec変更なので別サイクル
+- artifact-share の docstring 違反は domain だけで59件（2026-08-08時点、内訳 MISSING_DOC_COMMENT 11 / MISSING_ARGS_SECTION 15 / ARGS_MISMATCH 15 / MISSING_RETURNS_SECTION 18）。application 35・adapters 28 は未再測
