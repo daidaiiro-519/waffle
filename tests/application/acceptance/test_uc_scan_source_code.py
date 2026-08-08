@@ -66,3 +66,24 @@ def test_unsupported_kind_is_rejected(tmp_path):
     result = _engine().run(str(tmp_path), "cobol")
     assert isinstance(result, Err), result
     assert result.details[0] == "UNSUPPORTED_KIND"
+
+
+def test_scans_nested_directories(tmp_path):
+    """
+    Scenario: 階層を持つ対象は下まで走査する
+    Given 直下にはソースを持たず、下位のディレクトリにだけソースを持つ対象パス
+    When ソースコードの走査を求める
+    Then 下位のディレクトリにある要素が結果に含まれる
+    """
+    nested = tmp_path / "inner" / "deeper"
+    nested.mkdir(parents=True)
+    (nested / "sample.py").write_text(
+        'def greet(name):\n'
+        '    """挨拶を返す。"""\n'
+        '    return name\n',
+        encoding="utf-8",
+    )
+
+    result = _engine().run(str(tmp_path), "google")
+    assert isinstance(result, Ok), result
+    assert [e["name"] for e in result.value if e["elementKind"] == "function"] == ["greet"]

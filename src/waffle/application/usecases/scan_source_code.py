@@ -24,7 +24,9 @@ class ScanSourceCode:
         if not is_confined(target_path):
             return _err("INVALID_PATH", f"パストラバーサルは許可されません: {target_path}")
         try:
-            files = self._documents.list_files(target_path, "*.py")
+            # 配下まで届く形で渡す。直下だけを見ると、階層を持つコードベースでは
+            # 走査結果がほぼ空になり、「docstringが無い」を一件も報告できない
+            files = self._documents.list_files(target_path, "**/*.py")
         except FileNotFoundError:
             return _err("INVALID_PATH", f"ディレクトリが見つかりません: {target_path}")
 
