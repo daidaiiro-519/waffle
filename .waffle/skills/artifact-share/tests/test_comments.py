@@ -27,7 +27,7 @@ from shared.errors import ManageError  # noqa: E402
 
 
 from fakes import FakeKeyStore, FakeStore  # noqa: E402
-from test_manage import HTML  # noqa: E402
+from manage_setup import HTML  # noqa: E402
 
 ME = Caller("publisher-1")
 SOMEONE_ELSE = Caller("publisher-2")

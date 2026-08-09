@@ -17,6 +17,7 @@ import pytest
 
 from fakes import FakeKeyStore, FakeStore
 
+from manage_setup import HTML  # noqa: E402
 from usecase_builder import build  # noqa: E402
 from application.usecases.assign_artifact_to_project import AssignArtifactToProject  # noqa: E402
 from application.usecases.control_project_access import ControlProjectAccess  # noqa: E402
@@ -38,9 +39,6 @@ from domain.value_objects.project import SHARED  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
 
-HTML = """<!doctype html><html><head>
-<meta name="id" content="adr-x"><meta name="type" content="DecisionRecord">
-<meta name="title" content="検索基盤の選定"><title>別</title></head><body>本文</body></html>"""
 
 NOW = 1_700_000_000
 
