@@ -77,9 +77,9 @@ store.set('pp:aaa', 'ppp');
 store.set('pp:bbb', 'ppp');
 
 console.log('■ 仕様のシナリオ');
-await t('個別のトークンで開く',            req('/p/aaa/', { cookies: { [A+'aaa']: v1['手元の記録'] } }), 'pass-through');
-await t('プロジェクトのトークンで開く',          req('/p/aaa/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'pass-through');
-await t('公開停止はプロジェクトのトークンでも開けない', req('/p/bbb/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'status:403');
+await t('個別の閲覧トークンで開く',            req('/p/aaa/', { cookies: { [A+'aaa']: v1['手元の記録'] } }), 'pass-through');
+await t('プロジェクト閲覧トークンで開く',          req('/p/aaa/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'pass-through');
+await t('公開停止したものはプロジェクト閲覧トークンでも開けない', req('/p/bbb/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'status:403');
 await t('所属していないものは開けない', req('/p/ccc/', { cookies: { [P+'ppp']: v1['手元の記録'] } }), 'status:403');
 await t('トークンなしは入力画面へ',        req('/p/aaa/'), 'status:401');
 
@@ -96,8 +96,10 @@ await t('混じった中の期限切れでは開けない',
 
 console.log('■ 1本だけ外す');
 store.set('token:aaa', one['保管の記録']);   // 2人目の記録を取り除いた状態
-await t('残した相手はそのまま開ける', req('/p/aaa/', { cookies: { [A+'aaa']: two['手元の記録'][0] } }), 'pass-through');
-await t('外した相手は開けない',       req('/p/aaa/', { cookies: { [A+'aaa']: two['手元の記録'][1] } }), 'status:401');
+// 仕様のシナリオ「無効にした閲覧トークンは使えない」。Then が2つあるので2行に分かれる。
+// ラベルの頭を仕様の名前と同じにしてあるのは、突き合わせのキーだから
+await t('無効にした閲覧トークンは使えない：もう一方の閲覧トークンでは開ける', req('/p/aaa/', { cookies: { [A+'aaa']: two['手元の記録'][0] } }), 'pass-through');
+await t('無効にした閲覧トークンは使えない：開けない',                     req('/p/aaa/', { cookies: { [A+'aaa']: two['手元の記録'][1] } }), 'status:401');
 
 console.log('■ 全部外す・期限');
 store.set('token:fff', none['保管の記録']);  // 誰にも渡していないが公開は止まっていない
