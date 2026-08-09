@@ -76,6 +76,7 @@ sequenceDiagram
 - 対象Documentの種別に対応する配置先が1つも解決できない場合、成果物はcanonicalにのみ書かれ、配置は行われない（配置先を持たないことは、配置を意図的に省略した結果ではなく、その種別が配置先を定義していないことの帰結である）
 - 1つの配置先は、ちょうど1つのDocumentに所有される。配置先が指す正本が他のDocumentの正本である場合、その配置先へは書き込まれず、成果物は失われない
 - 書き込まなかった配置先がある場合、その配置先と書き込まなかった理由が結果に含まれる（黙って省略しない）
+- 配置先の解決には、文書が実体か雛形かも鍵に含まれる。雛形は他の場所で値を埋めて使われるものなので、この場に配置先を持たない。
 
 ---
 
@@ -100,6 +101,8 @@ sequenceDiagram
 - If 対象Documentの種別に対応する配置先が1つも解決できないとき、システムはcanonicalへのみ書き込み、配置を行わない shall。
 - If 解決した配置先が指す正本が他のDocumentの正本であるとき、システムはDEPLOY_TARGET_OWNED_BY_OTHERを返し、その配置先へ書き込まない shall。
 - When 解決した配置先のいずれかへ書き込まなかったとき、システムはその配置先と理由を結果に含める shall。
+- While 対象Documentが雛形であり、宣言が実体向けのものしか無いとき、システムは配置先を1つも解決せず、正本にのみ書き込む shall。
+- While 対象Documentが役割を宣言していないとき、システムはそれを実体として扱い、実体向けの宣言が示す配置先へ書き込む shall。
 
 ---
 
@@ -464,6 +467,58 @@ Scenario: 入れ子の対応づけに無いdiscriminator値はdeployされない
 Given documentType向けのtoolMappingsが入れ子だが、対象Documentのdiscriminator値に対応するキーを持たない
 When deployを有効にしてrenderする
 Then そのtoolのdeploy先には何も書かれない
+```
+
+### 雛形は配置先が解決できないため配置されない
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 境界: 役割によって配置先の引き方が変わる。雛形は配置先を持たないことが正しい姿 |
+
+```gherkin
+Scenario: 雛形は配置先が解決できないため配置されない
+  Given documentRoleがtemplateのDocumentと、instanceの宣言だけを持つtoolMappings
+  When deployを有効にしてrenderする
+  Then canonicalにのみ書かれ、配置先は1つも返らない
+```
+
+### 実体は宣言どおりの配置先へ配置される
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 役割を宣言しない文書は実体として扱う（既定が効いていることの確認） |
+
+```gherkin
+Scenario: 実体は宣言どおりの配置先へ配置される
+  Given documentRoleを宣言しないDocument（既定でinstance）
+  When deployを有効にしてrenderする
+  Then instanceの宣言が示す配置先へ書かれる
+```
+
+### 他のDocumentが所有する配置先は上書きしない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー: 1つの配置先は1つの文書にのみ所有される。先客の成果物を失わせない |
+
+```gherkin
+Scenario: 他のDocumentが所有する配置先は上書きしない
+  Given 配置先が既に別Documentの正本を指しているとき
+  When deployを有効にしてrenderする
+  Then DEPLOY_TARGET_OWNED_BY_OTHERが返り、その配置先は書き換えられない
+```
+
+### 解決できなかった配置先は理由とともに結果へ含める
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 境界: 解決できない配置先を黙って落とさず、理由とともに結果へ出す |
+
+```gherkin
+Scenario: 解決できなかった配置先は理由とともに結果へ含める
+  Given pathTemplateが参照する変数をDocumentが持たないとき
+  When deployを有効にしてrenderする
+  Then その配置先と理由がskippedに現れ、canonicalへの書き込みは続く
 ```
 
 ---
