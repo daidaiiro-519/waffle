@@ -79,7 +79,7 @@
             },
             {
               "name": "fingerprint",
-              "type": "string"
+              "type": "ViewTokenFingerprint"
             },
             {
               "name": "expiresAt",
@@ -182,6 +182,32 @@
           "name": "ViewTokenStatus",
           "represents": "1本の閲覧トークンが使える状態にあるかどうか",
           "behavior": "不変。ACTIVE と REVOKED のいずれか。無効にすると REVOKED になり、元へは戻らない。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ViewSubject",
+          "represents": "1本の閲覧トークンで開ける対象",
+          "behavior": "不変。共有アーティファクト1件を指すか、プロジェクト1つを指すかのいずれか。どちらも同じ形の閲覧トークンで開き、同じように止められるが、指しているものは別なので取り違えられないよう種別を持つ。閲覧の面がこれをどう見分けるか（鍵の付け方）は、この値には現れない。",
+          "attributes": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ViewTokenFingerprint",
+          "represents": "1本の閲覧トークンが本物かを照合するための形",
+          "behavior": "不変。閲覧トークンそのものは渡した相手の手元にしか無く、こちらは照合できる形だけを残す。中身の指紋とは別の概念なので、同じ語で呼ばない。どう作りどう並べるかは閲覧の面との取り決めであり、この値には現れない。",
           "attributes": [
             {
               "name": "value",

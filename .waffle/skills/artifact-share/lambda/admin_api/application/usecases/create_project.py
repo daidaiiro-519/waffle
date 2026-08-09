@@ -12,16 +12,23 @@ from dataclasses import dataclass
 
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
+from application.ports.identifier import IdGenerator
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
 from application.project_access import save_project
 from application.viewer_listing import place_project_page, write_listing
-from domain import view_token
-from domain.identifier import new_project_id
-from domain.project import (PUBLISHED, Project, ProjectId, ProjectKey, is_known_scope,
-                            ProjectOwner, ProjectScope, ProjectStatus)
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.project import (
+    PUBLISHED,
+    ProjectKey,
+    is_known_scope,
+    ProjectOwner,
+    ProjectScope,
+    ProjectStatus,
+)
+from domain.entities.project import Project
+from domain.value_objects.view_subject import ViewSubject
 from shared.errors import ProjectError
 
 # 作ったときに最初に発行される1本の名前。あとから名前を付けて増やせる
@@ -40,7 +47,7 @@ class CreatedProject:
     scope: str
     token_shown_once: bool = True
 
-def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, caller: Caller, display_name: str, scope: str, project_key: str = "") -> CreatedProject:
+def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, ids: IdGenerator, caller: Caller, display_name: str, scope: str, project_key: str = "") -> CreatedProject:
     """プロジェクトを作り、閲覧トークンを発行する。作った時点では何も入っていない。
 
     共有の別はここでしか決まらない。変える操作を用意しないことが、
@@ -52,14 +59,15 @@ def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
     if not is_known_scope(scope):
         raise ProjectError("SCOPE_REQUIRED", "個人か共有かを選んでください。")
 
-    project_id = new_project_id()
-    token = view_token.new_token()
+    project_id = ids.new_project_id()
+    token = ids.new_view_token_secret()
     now = clock()
-    first = view_token.issued(FIRST_TOKEN_NAME, gate.fingerprint_of(token),
+    first = view_token.issued(ids.new_view_token_id(), FIRST_TOKEN_NAME,
+                              gate.fingerprint_of(token),
                               view_token.expires_at(now), now)
 
     project = Project(
-        project_id=ProjectId(project_id),
+        project_id=project_id,
         display_name=name,
         project_key=ProjectKey((project_key or "").strip()),
         status=ProjectStatus(PUBLISHED),
@@ -70,15 +78,15 @@ def _create(artifacts: SharedArtifactRepository, projects: ProjectRepository, vi
         updated_at=now,
     )
     save_project(projects, clock, project)
-    place_project_page(viewer, project_id)
+    place_project_page(viewer, project_id.value)
     write_listing(artifacts, projects, viewer, project)
 
     # 閲覧の面へ渡すのは最後。ここまで成功して初めて開ける状態になる
-    gate.replace_grants(ViewSubject.project(project_id),
+    gate.replace_grants(ViewSubject.project(project_id.value),
                         view_token.grants((first,), now))
 
-    return CreatedProject(project_id=project_id, token=token,
-                          url=viewer.project_url(project_id), name=name, scope=scope)
+    return CreatedProject(project_id=project_id.value, token=token,
+                          url=viewer.project_url(project_id.value), name=name, scope=scope)
 
 
 class CreateProject:
@@ -87,13 +95,14 @@ class CreateProject:
     口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
     """
 
-    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock) -> None:
+    def __init__(self, artifacts: SharedArtifactRepository, projects: ProjectRepository, viewer: ViewerSitePort, gate: ViewGatePort, clock: Clock, ids: IdGenerator) -> None:
         self._artifacts = artifacts
         self._projects = projects
         self._viewer = viewer
         self._gate = gate
         self._clock = clock
+        self._ids = ids
 
     def run(self, caller: Caller, display_name: str, scope: str, project_key: str = "") -> CreatedProject:
         """このユースケースの唯一の入口。"""
-        return _create(self._artifacts, self._projects, self._viewer, self._gate, self._clock, caller, display_name, scope, project_key)
+        return _create(self._artifacts, self._projects, self._viewer, self._gate, self._clock, self._ids, caller, display_name, scope, project_key)

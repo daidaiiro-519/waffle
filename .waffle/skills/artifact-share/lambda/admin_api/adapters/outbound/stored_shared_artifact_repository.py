@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 
-from domain.shared_artifact import (
+from domain.value_objects.shared_artifact import (
     ArtifactDescriptor,
     ArtifactId,
     ArtifactStatus,
@@ -24,13 +24,15 @@ from domain.shared_artifact import (
     PUBLISHED,
     PublisherId,
     SUSPENDED,
-    SharedArtifact,
 )
-from domain.view_token import (
+from domain.entities.shared_artifact import SharedArtifact
+from domain.value_objects.artifact_content import ContentFingerprint
+from domain.value_objects.view_token import (
     ACTIVE,
     NO_EXPIRY,
     ViewToken,
     ViewTokenExpiry,
+    ViewTokenFingerprint,
     ViewTokenId,
     ViewTokenStatus,
 )
@@ -57,7 +59,7 @@ def from_record(record: dict) -> SharedArtifact:
     return SharedArtifact(
         artifact_id=ArtifactId(record.get("artifactId", "")),
         display_name=record.get("name", ""),
-        content_fingerprint=record.get("contentHash", ""),
+        content_fingerprint=ContentFingerprint(record.get("contentHash", "")),
         view_tokens=tuple(_token_from(t) for t in record.get("viewTokens") or []),
         status=ArtifactStatus(
             SUSPENDED if record.get("status") == STORED_SUSPENDED else PUBLISHED),
@@ -106,7 +108,7 @@ def to_record(artifact: SharedArtifact, base: dict | None = None) -> dict:
         "tags": list(artifact.descriptor.labels),
         "uploadedBy": artifact.published_by.value,
         "externalRefs": artifact.external_resource_count,
-        "contentHash": artifact.content_fingerprint,
+        "contentHash": artifact.content_fingerprint.value,
         "publishedAt": artifact.published_at,
         "updatedAt": artifact.updated_at,
         "viewTokens": [_token_to(t) for t in artifact.view_tokens],
@@ -118,7 +120,7 @@ def _token_from(t: dict) -> ViewToken:
     return ViewToken(
         token_id=ViewTokenId(t.get("tokenId", "")),
         name=t.get("name", ""),
-        fingerprint=t.get("fingerprint", ""),
+        fingerprint=ViewTokenFingerprint(t.get("fingerprint", "")),
         expires_at=ViewTokenExpiry(t.get("expiresAt", NO_EXPIRY)),
         status=ViewTokenStatus(t.get("status", ACTIVE)),
         issued_at=t.get("issuedAt", 0),
@@ -129,7 +131,7 @@ def _token_to(t: ViewToken) -> dict:
     return {
         "tokenId": t.token_id.value,
         "name": t.name,
-        "fingerprint": t.fingerprint,
+        "fingerprint": t.fingerprint.value,
         "expiresAt": t.expires_at.value,
         "status": t.status.value,
         "issuedAt": t.issued_at,

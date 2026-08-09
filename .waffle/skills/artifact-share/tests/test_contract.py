@@ -31,7 +31,7 @@ from application.usecases.assign_artifact_to_project import (  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
 from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
-from domain.view_subject import ViewSubject  # noqa: E402
+from domain.value_objects.view_subject import ViewSubject  # noqa: E402
 
 CONTRACT = json.loads(
     (Path(__file__).resolve().parents[1] / "infra" / "contract" / "token-records.json")
@@ -55,7 +55,7 @@ def _stored(case):
     gate = KvsViewGate(keys)
     gate.replace_grants(
         ViewSubject.artifact("aaaaaaaa"),
-        [(gate.fingerprint_of(token), expiry)
+        [(gate.fingerprint_of(token).value, expiry)
          for token, expiry in zip(case["合言葉"], case["期限"])])
     return keys.written["token:aaaaaaaa"]
 

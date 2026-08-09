@@ -10,11 +10,17 @@
 
 対象の仕様: agg-shared-artifact（不変条件）
 """
-from domain import view_token
-from domain.shared_artifact import (
-    PUBLISHED, SUSPENDED, ArtifactDescriptor, ArtifactId, ArtifactStatus,
-    PublisherId, SharedArtifact,
+from domain.value_objects import view_token
+from domain.value_objects.view_token import ViewTokenFingerprint, ViewTokenId
+from domain.value_objects.shared_artifact import (
+    PUBLISHED,
+    SUSPENDED,
+    ArtifactDescriptor,
+    ArtifactId,
+    ArtifactStatus,
+    PublisherId,
 )
+from domain.entities.shared_artifact import SharedArtifact
 
 NOW = 1_700_000_000
 A = "aaaaaaaa"
@@ -32,7 +38,8 @@ def _artifact(tokens=(), status=PUBLISHED, projects=(), fingerprint="もとの�
 
 
 def _token(name, ttl=view_token.WEEK, at=NOW):
-    return view_token.issued(name, f"fingerprint-{name}",
+    return view_token.issued(ViewTokenId("t-" + name), name,
+                            ViewTokenFingerprint(f"fingerprint-{name}"),
                              view_token.expires_at(at, ttl), at)
 
 

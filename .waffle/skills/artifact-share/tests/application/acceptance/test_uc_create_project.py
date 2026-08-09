@@ -126,5 +126,5 @@ def test_共有の別はあとから変えられない():
 
 
 def _project(project_id):
-    from domain.view_subject import ViewSubject
+    from domain.value_objects.view_subject import ViewSubject
     return ViewSubject.project(project_id)

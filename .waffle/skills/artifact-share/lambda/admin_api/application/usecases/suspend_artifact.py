@@ -14,8 +14,8 @@ from application.artifact_access import require_manageable
 from application.ports import Caller, Clock
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
-from domain.shared_artifact import SUSPENDED
-from domain.view_subject import ViewSubject
+from domain.value_objects.shared_artifact import SUSPENDED
+from domain.value_objects.view_subject import ViewSubject
 from shared.errors import ManageError
 
 

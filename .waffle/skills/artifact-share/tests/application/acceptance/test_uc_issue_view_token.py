@@ -13,8 +13,8 @@ import pytest
 
 from view_token_setup import AID, NOW, PID, issue, setup
 from application.view_token_access import ViewTokenError
-from domain import view_token
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.view_subject import ViewSubject
 
 
 def test_発行しても既存の閲覧トークンは使えたまま残る():

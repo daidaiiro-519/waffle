@@ -17,9 +17,9 @@ from application.ports.project_repository import ProjectRepository
 from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
 from application.project_access import require_own, save_project
-from domain import view_token
-from domain.project import PUBLISHED, SUSPENDED
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.project import PUBLISHED, SUSPENDED
+from domain.value_objects.view_subject import ViewSubject
 from shared.errors import ProjectError
 
 

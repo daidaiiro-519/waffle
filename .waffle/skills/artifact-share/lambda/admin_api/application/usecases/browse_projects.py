@@ -17,7 +17,7 @@ from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.viewer_site import ViewerSitePort
 from application.project_access import read_index
-from domain.project import PERSONAL, SHARED
+from domain.value_objects.project import PERSONAL, SHARED
 from shared.errors import ProjectError
 
 

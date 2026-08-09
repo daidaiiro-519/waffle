@@ -38,7 +38,7 @@
             },
             {
               "name": "contentFingerprint",
-              "type": "string"
+              "type": "ContentFingerprint"
             },
             {
               "name": "viewTokens",
@@ -90,7 +90,7 @@
             },
             {
               "name": "fingerprint",
-              "type": "string"
+              "type": "ViewTokenFingerprint"
             },
             {
               "name": "expiresAt",
@@ -202,6 +202,43 @@
           "name": "PublisherId",
           "represents": "公開した人を指す識別子",
           "behavior": "不変。招かれた者にのみ与えられる。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ViewSubject",
+          "represents": "1本の閲覧トークンで開ける対象",
+          "behavior": "不変。共有アーティファクト1件を指すか、プロジェクト1つを指すかのいずれか。どちらも同じ形の閲覧トークンで開き、同じように止められるが、指しているものは別なので取り違えられないよう種別を持つ。閲覧の面がこれをどう見分けるか（鍵の付け方）は、この値には現れない。",
+          "attributes": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ViewTokenFingerprint",
+          "represents": "1本の閲覧トークンが本物かを照合するための形",
+          "behavior": "不変。閲覧トークンそのものは渡した相手の手元にしか無く、こちらは照合できる形だけを残す。中身の指紋とは別の概念なので、同じ語で呼ばない。どう作りどう並べるかは閲覧の面との取り決めであり、この値には現れない。",
+          "attributes": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ContentFingerprint",
+          "represents": "公開された中身が同じものかを確かめるための形",
+          "behavior": "不変。中身そのものは集約の一貫性の境界の外にあり、集約はこの形だけを持つ。手元へ取り出したものが公開した中身と一致することを、あとから確かめるために使う。閲覧トークンの指紋とは別の概念なので、同じ語で呼ばない。",
           "attributes": [
             {
               "name": "value",

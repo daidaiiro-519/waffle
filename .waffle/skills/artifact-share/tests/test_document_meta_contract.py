@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 
-from domain.html_inspection import inspect_html  # noqa: E402
+from domain.services.html_inspection import inspect_html  # noqa: E402
 
 CONTRACT = json.loads(
     (Path(__file__).resolve().parents[1] / "infra" / "contract" / "document-meta.json")
@@ -28,14 +28,19 @@ CONTRACT = json.loads(
 
 # 契約の言葉と、この実装の内部の呼び名の対応。ここだけが境目。
 INWARD = {
-    "識別子": "documentId",
-    "種別": "docType",
+    "識別子": "document_id",
+    "種別": "doc_type",
     "題名": "title",
     "要約": "description",
-    "分類の目印": "tags",
-    "外部への参照": "externalRefs",
+    "分類の目印": "labels",
+    "外部への参照": "external_refs",
     "揃っている": "detected",
 }
+
+
+def _plain(value):
+    """契約は並びを配列で書く。型の側は組で持つので、比べる前に揃える。"""
+    return list(value) if isinstance(value, tuple) else value
 
 
 def cases():
@@ -46,7 +51,7 @@ def cases():
 def test_読み取りが契約と一致する(case):
     got = inspect_html(case["文書"])
     expected = {INWARD[k]: v for k, v in case["読み取り"].items()}
-    assert {k: got[k] for k in expected} == expected
+    assert {k: _plain(getattr(got, k)) for k in expected} == expected
 
 
 def test_契約が挙げる必須の欄が揃わなければ名乗れていない():
@@ -60,7 +65,7 @@ def test_契約が挙げる必須の欄が揃わなければ名乗れていな�
             f'<meta name="{ {"識別子": "id", "種別": "type"}[f] }" content="x">'
             for f in present
         )
-        assert inspect_html(f"<html><head>{tags}</head></html>")["detected"] is False
+        assert inspect_html(f"<html><head>{tags}</head></html>").detected is False
 
 
 def test_契約の全ての欄が読み取りに現れる():

@@ -58,7 +58,7 @@ ROUTES = {
         c, b.get("artifactId", ""), b.get("toPublisher", "")),
 
     "issue-token":       lambda d, c, b: IssueViewToken(
-        d.artifacts, d.projects, d.gate, d.now
+        d.artifacts, d.projects, d.gate, d.now, d.ids
     ).run(c, subject_from(b), b.get("name", ""), b.get("ttl")),
     "view-tokens":       lambda d, c, b: ListViewTokens(
         d.artifacts, d.projects, d.now).run(c, subject_from(b)),
@@ -82,7 +82,7 @@ ROUTES = {
     "projects":        lambda d, c, b: _browse(d).run("list", c),
     "project":         lambda d, c, b: _browse(d).run("detail", c, b.get("projectId", "")),
     "create-project":  lambda d, c, b: CreateProject(
-        d.artifacts, d.projects, d.viewer, d.gate, d.now
+        d.artifacts, d.projects, d.viewer, d.gate, d.now, d.ids
     ).run(c, b.get("displayName", ""), b.get("scope", ""), b.get("projectKey", "")),
     "disable-project": lambda d, c, b: _project_access(d).run("suspend", c, b.get("projectId", "")),
     "enable-project":  lambda d, c, b: _project_access(d).run("resume", c, b.get("projectId", "")),

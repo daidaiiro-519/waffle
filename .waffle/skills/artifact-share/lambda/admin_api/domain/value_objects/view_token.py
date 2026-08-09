@@ -15,14 +15,15 @@
 ここへ1つだけ置いて共有する——集約ごとのファイルへ写すと同じ語が2回定義され、
 語彙の一貫性そのものが壊れる。
 
+推測できない並びを作る手立ては実行環境に結びつくので、この層には無い。発行の
+ときに、作られた値を受け取る。
+
 対象の仕様: agg-shared-artifact / agg-project / uc-issue-view-token /
 uc-list-view-tokens / uc-revoke-view-token / uc-revoke-all-view-tokens
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-
-from domain.identifier import random_chars
 
 TOKEN_GROUPS = 3
 TOKEN_GROUP_LENGTH = 4
@@ -53,6 +54,20 @@ class ViewTokenId:
 
     閲覧トークンそのものの値とは別で、こちらは公開した人が一覧で見て選ぶために
     使う。無効化しても変わらない。
+    """
+
+    value: str
+
+
+@dataclass(frozen=True)
+class ViewTokenFingerprint:
+    """1本の閲覧トークンが本物かを照合するための形。
+
+    閲覧トークンそのものは渡した相手の手元にしか無く、こちらは照合できる形だけ
+    を残す。中身の指紋とは別の概念なので、同じ語で呼ばない——どちらも素の文字列
+    のままだと、取り違えても何も起きない。
+
+    どう作りどう並べるかは閲覧の面との取り決めなので、ここには現れない。
     """
 
     value: str
@@ -117,7 +132,7 @@ class ViewToken:
 
     token_id: ViewTokenId
     name: str
-    fingerprint: str
+    fingerprint: ViewTokenFingerprint
     expires_at: ViewTokenExpiry
     status: ViewTokenStatus
     issued_at: int
@@ -145,20 +160,6 @@ ProjectViewToken = ViewToken
 
 # ── 発行 ────────────────────────────────────────────────
 
-def new_token() -> str:
-    """閲覧トークンを発行する。
-
-    区切って読みやすくするのは、口頭やチャットで渡されることがあるため。
-
-    Returns:
-        渡す相手に見せる閲覧トークンそのものの値。
-
-    Raises:
-        なし。
-    """
-    return "-".join(random_chars(TOKEN_GROUP_LENGTH) for _ in range(TOKEN_GROUPS))
-
-
 def expires_at(now: int, ttl: int | None = None) -> ViewTokenExpiry:
     """いつ使えなくなるか。省いたときは既定の有効期間を与える。
 
@@ -177,10 +178,15 @@ def expires_at(now: int, ttl: int | None = None) -> ViewTokenExpiry:
     return ViewTokenExpiry(now + ttl if ttl > 0 else NO_EXPIRY)
 
 
-def issued(name: str, fingerprint: str, expiry: ViewTokenExpiry, at: int) -> ViewToken:
+def issued(token_id: ViewTokenId, name: str, fingerprint: ViewTokenFingerprint,
+           expiry: ViewTokenExpiry, at: int) -> ViewToken:
     """発行した1本。閲覧トークンそのものの値は含めない。
 
+    一覧で選ぶための識別子は、推測できない並びを作る口が作ったものを受け取る。
+    作る手立てが実行環境に結びつくため、この層では作らない。
+
     Args:
+        token_id: 一覧で選ぶための識別子。
         name: この1本に付ける名前。
         fingerprint: 照合にだけ使える形。
         expiry: 使えなくなる時点。
@@ -193,7 +199,7 @@ def issued(name: str, fingerprint: str, expiry: ViewTokenExpiry, at: int) -> Vie
         なし。
     """
     return ViewToken(
-        token_id=ViewTokenId(random_chars(TOKEN_ID_LENGTH)),
+        token_id=token_id,
         name=name,
         fingerprint=fingerprint,
         expires_at=expiry,
@@ -323,4 +329,4 @@ def grants(tokens: tuple[ViewToken, ...], now: int) -> list[tuple[str, int]]:
     Raises:
         なし。
     """
-    return [(t.fingerprint, t.expires_at.value) for t in usable(tokens, now)]
+    return [(t.fingerprint.value, t.expires_at.value) for t in usable(tokens, now)]

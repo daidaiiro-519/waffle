@@ -49,10 +49,10 @@ def test_寄せられた順に読める():
 
     got = _read(deps, ME, r.artifact_id)
 
-    assert [c["author"] for c in got] == ["田中", "佐藤", "山田"]
-    assert got[0]["decision"] == "approve"
-    assert got[0]["body"] == "これで良いと思います"
-    assert got[0]["postedAt"]
+    assert [c.author for c in got] == ["田中", "佐藤", "山田"]
+    assert got[0].verdict == "approve"
+    assert got[0].body == "これで良いと思います"
+    assert got[0].posted_at
 
 
 def test_返信がどれへの返信か分かる():
@@ -69,7 +69,7 @@ def test_返信がどれへの返信か分かる():
 
     got = _read(deps, ME, r.artifact_id)
 
-    assert got[1]["parentId"] == "1700000010-abcd1234"
+    assert got[1].parent_id == "1700000010-abcd1234"
 
 
 def test_差し替えの区切りが並びに現れる():
@@ -85,7 +85,7 @@ def test_差し替えの区切りが並びに現れる():
         ME, r.artifact_id, HTML.replace("本文", "直した"))
     _post(deps, r.artifact_id, 1_700_000_200, "佐藤", "差し替え後の指摘")
 
-    kinds = [c["kind"] for c in _read(deps, ME, r.artifact_id)]
+    kinds = [c.kind for c in _read(deps, ME, r.artifact_id)]
 
     assert kinds == ["comment", "divider", "comment"]
 
@@ -121,7 +121,7 @@ def test_公開が止まっていても読める():
 
     got = _read(deps, ME, r.artifact_id)
 
-    assert [c["author"] for c in got] == ["田中"]
+    assert [c.author for c in got] == ["田中"]
 
 
 def test_読んでも何も変わらない():

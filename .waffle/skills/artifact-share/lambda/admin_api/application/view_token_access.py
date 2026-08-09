@@ -9,7 +9,7 @@ from __future__ import annotations
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
-from domain.view_subject import ARTIFACT, ViewSubject
+from domain.value_objects.view_subject import ARTIFACT, ViewSubject
 from shared.errors import ApplicationError
 
 TARGET_NOT_FOUND = "TARGET_NOT_FOUND"

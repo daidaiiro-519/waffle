@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import hashlib
 
-from domain.view_subject import ARTIFACT, PROJECT, ViewSubject
+from domain.value_objects.view_subject import ARTIFACT, PROJECT, ViewSubject
+from domain.value_objects.view_token import ViewTokenFingerprint
 
 # 記録どうしの区切りと、1件の中の欄の区切り
 RECORD_SEPARATOR = ";"
@@ -60,9 +61,9 @@ class KvsViewGate:
         """その対象を、どの閲覧トークンでも開けないようにする。"""
         self._keys.put(_key(subject), CLOSED)
 
-    def fingerprint_of(self, token: str) -> str:
+    def fingerprint_of(self, token: str) -> ViewTokenFingerprint:
         """閲覧トークンを、照合にだけ使える形へ変える。元へは戻せない。"""
-        return fingerprint(token)
+        return ViewTokenFingerprint(view_token_fingerprint(token))
 
     def set_membership(self, artifact_id: str, project_ids: list[str]) -> None:
         """その共有アーティファクトが、どのプロジェクトから開けるかを伝える。"""
@@ -74,8 +75,11 @@ def _key(subject: ViewSubject) -> str:
     return f"{PREFIX[subject.kind]}{subject.id}"
 
 
-def fingerprint(token: str) -> str:
+def view_token_fingerprint(token: str) -> str:
     """閲覧トークンから、照合にだけ使える形を作る。元へは戻せない。
+
+    中身の指紋とは別の対象を指す。同じ綴りにすると、どちらの層のものか
+    名前から判別できない。
 
     Args:
         token: 閲覧トークンそのものの値。

@@ -12,7 +12,7 @@ from adapters.outbound.stored_shared_artifact_repository import (
 from adapters.outbound.stored_viewer_site import StoredViewerSite
 from application.usecases.publish_artifact import PublishArtifact
 
-from fakes import FakeKeyStore, FakeStore  # noqa: F401  再輸出
+from fakes import FakeIdGenerator, FakeKeyStore, FakeStore  # noqa: F401  再輸出
 
 NOW = 1_700_000_000
 
@@ -27,6 +27,7 @@ def publishing(store=None, keys=None, user="publisher-1",
         KvsViewGate(keys if keys is not None else FakeKeyStore()),
         lambda _token: user,
         lambda: NOW,
+        FakeIdGenerator(),
     )
 
 

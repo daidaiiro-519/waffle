@@ -1,0 +1,465 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>業務の語彙が住む棚を3つに分ける：handoff-artifact-share-domain-layout</title>
+<meta name="id" content="handoff-artifact-share-domain-layout">
+<meta name="type" content="Handoff">
+<meta name="title" content="業務の語彙が住む棚を3つに分ける：handoff-artifact-share-domain-layout">
+<meta name="description" content="artifact-share の業務の語彙の置き場所を、いまの1つの棚（domain 直下）から、Waffle 本体と同じ3つの棚（entities / value_objects / services）へ分ける作業を引き継ぐ。同じヘキサゴナルの流儀を採っておきながら棚の分け方だけが違っており、そのため宣言された概念（集約・値・業務サービス）を検査が区別できない状態にある。この引き継ぎが担う仕様は次の4件（agg-shared-artifact / agg-project / agg-comment / bc-artifact-share の業務サービス ResolveViewability）。">
+<meta name="tags" content="context:artifact-share">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>業務の語彙が住む棚を3つに分ける：handoff-artifact-share-domain-layout</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>agg-shared-artifact</dd>
+      <dt>documentId</dt><dd>handoff-artifact-share-domain-layout</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 298" width="100%" height="298">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">業務の語彙</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">この層から出るもの</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">宣言</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-arrow" d="M190.0,60.0 L242.0,124.0"/>
+        <path class="flow-arrow" d="M190.0,60.0 L554.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,60.0 L242.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,60.0 L554.0,124.0"/>
+        <path class="flow-arrow" d="M606.0,60.0 L242.0,124.0"/>
+        <path class="flow-arrow" d="M606.0,60.0 L554.0,124.0"/>
+        <path class="flow-arrow" d="M242.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M554.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow dep" d="M242.0,238.0 L190.0,60.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="216.0" y="143.0">どの概念をどこへ置くかを定める</text>
+        <path class="flow-arrow dep" d="M242.0,238.0 L398.0,60.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="320.0" y="143.0">同上</text>
+        <path class="flow-arrow dep" d="M242.0,238.0 L606.0,60.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="424.0" y="143.0">同上</text>
+        <path class="flow-split" d="M284.0,35.0 L304.0,35.0"/><text class="flow-caption-svg" x="294.0" y="29.0">同居していた値を切り出す</text>
+        <path class="flow-arrow dep" d="M554.0,238.0 L606.0,60.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="580.0" y="143.0">宣言だけある業務サービスの置き場所が決まる</text>
+        
+        <g class="flow-box new" transform="translate(96.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">整合性の境界を持つもの</div>
+              <div class="sub">domain/entities</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(304.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">書き換えられない値</div>
+              <div class="sub">domain/value_objects</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(512.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">集約の内側に置けない判断</div>
+              <div class="sub">domain/services</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">操作している人</div>
+              <div class="sub">application</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(408.0,124.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">識別子を発行する</div>
+              <div class="sub">口の宣言と、外への出口の実装</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">配置の宣言</div>
+              <div class="sub">architecture-artifact-share</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">語彙の宣言</div>
+              <div class="sub">集約仕様・文脈仕様</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>業務の語彙</strong>: 3つの棚に分かれ、宣言された概念ごとに置き場所が決まっている。何が置かれているかを、宣言から機械的に言える</p></li><li><p><strong>この層から出るもの</strong>: 業務の語彙ではないと判定され、別の持ち場へ移るもの</p></li><li><p><strong>宣言</strong>: 置き場所と書き方を定める側。実装より先に直す</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">ユーザー</span><span class="detail">設計観点 1件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 6件／実装観点 8件</span></div>
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 3件／実装観点 3件</span></div>
+        <div class="review-row"><span class="who">オーケストレータ（実測）</span><span class="detail">実装観点 2件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">1件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ユーザー</span></div>
+              <div class="entry-viewpoint">同じ流儀を採るなら棚の分け方も揃える</div>
+              <div class="entry-consideration">artifact-share と Waffle 本体はどちらもポートとアダプターの流儀を採っている。それでいて業務の語彙の棚だけが片方は1つ、もう片方は3つに分かれている。違える理由がどこにも記録されていない以上、揃える側に倒す。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">棚を1つにしていると、検査が概念を見分けられない</div>
+              <div class="entry-consideration">集約も値も業務サービスも同じ場所を指しているため、そこに置かれたものが何なのかを宣言から機械的に言えない。3つに分けて初めて、宣言した概念ごとに正しい場所と突き合わせられる。宣言だけあって実装の無い業務サービスの置き場所も、これで決まる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">棚へ移す前に、その層にあるべきかを1件ずつ問い直す</div>
+              <div class="entry-consideration">いま domain にある8つのうち3つは、「domain に置かれている」という事実だけが所属の根拠になっていた。移動先を決めてから所属を追認すると、誤った所属が新しい棚で固定される。棚を増やす作業に見えるが、順序は逆である。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">実装にあって仕様に無い語彙は、仕様が追いついていない合図</div>
+              <div class="entry-consideration">閲覧トークンで開ける対象は、業務サービスの説明文が既に名前を伏せたまま説明している。名前が仕様に無いだけで、概念は仕様にある。こうした語彙は実装都合ではないので、仕様へ宣言を足す側で解く。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">宣言の側が実態より狭いときは、宣言を直す</div>
+              <div class="entry-consideration">業務サービスの書き方として「複数の集約を跨る判断」とだけ宣言しているが、Waffle 本体の同じ棚には単一の関心事に閉じた計算が20件以上並び、それで検査を通している。つまりこれは定義ではなく代表例の一つである。実装を宣言へ無理に合わせるのではなく、宣言の文言を実態へ広げる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">外から見えない仕組みに結びつく依存だけを、この層から出す</div>
+              <div class="entry-consideration">判断の基準は「外部の作者が書いたものか」ではなく「実行環境・基盤・枠組みに結びついているか」。同じ入力に同じ答えを返すだけの計算は、標準の部品を使っていてもこの層に残せる。逆に、環境から予測できない値を読むものは残せない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">同じ語が2つの別の対象を指している</div>
+              <div class="entry-consideration">指紋という一語が、公開された中身の指紋と閲覧トークンの指紋の両方に使われている。しかも集約が持つ2つの欄はどちらも素の文字列で、取り違えても何も起きない。これは同じものを2つの語で呼ぶ誤りの裏返しで、症状は逆だが原因は同じである。関数名を変えるだけでは解けず、概念そのものを型として分ける以外にない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">判定に集約の状態が寄与しないなら、その集約の不変条件ではない</div>
+              <div class="entry-consideration">業務ルールであることと、特定の集約の不変条件であることは別の判定である。後者は「その集約の状態が判定に寄与するか」でしか決まらない。どのインスタンスに対して呼んでも同じ答えを返す判定を集約に間借りさせると、その集約は自分と無関係な事実を知る責務を負う。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">判定の唯一の入力を所有しているのが外の仕組みなら、その判定を最も内側へ置かない</div>
+              <div class="entry-consideration">管理者という区分が存在すること、誰がそれに属するかを決めているのは、この文脈ではなく外の名簿である。その語彙に依る判定を最も内側の層へ置くと、内側から外のモデルへ向かう依存が生まれる。腐敗を防ぐ層のすぐ内側に置くのが、依存の届く範囲を最も狭く保つ。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">外にあるものが外にあると書かれていないと、帰属先の議論が終わらない</div>
+              <div class="entry-consideration">招かれている人の名簿がこの文脈の集約ではないという事実そのものが、仕様が持つべき境界の情報である。これが書かれていなかったために、この規則をどこへ置くかで見解が割れた。境界さえ埋まれば同じ議論は再発しない。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">ファイルごと動かすだけでは終わらない</div>
+              <div class="entry-consideration">集約のファイルの中に、宣言済みの値が8つ同居している。ファイルごと集約の棚へ移すと、それらが値の棚ではない場所に取り残され、新しい宣言と食い違う。値を切り出す作業は、棚を分ける以上、避けて通れない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">宣言を先に直してから実装を動かす</div>
+              <div class="entry-consideration">置き場所の宣言と業務サービスの書き方の宣言を先に直さないと、実装を動かした瞬間に宣言と食い違う。図は宣言の投影なので、宣言を直してから図を追随させる。逆はしない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">1ファイルに1つという宣言は、いまは足さない</div>
+              <div class="entry-consideration">値について1ファイル1つを宣言すると、2つの集約が共有している閲覧トークンの値をばらばらのファイルへ割ることになり、共有を保つという決定と正面から衝突する。本体側も同じ宣言のまま3つの棚で通しているので、必要になった実例が出てから足せばよい。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">確かめるのは値の側、作るのは外への出口の側</div>
+              <div class="entry-consideration">この2つは排他ではなく、値の側に不変条件があって初めて出口の側が安全になる。生成の関数をどこへ置いても、値が素の文字列を無検証で受け取る限り不正な値は作れてしまう。読み違えにくい字種と桁数の定義は値の側が正本として持ち、出口の側はそれを使って組み立てるだけにする。順序として分けられないので、まとめて行う。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">操作している人を表す値は、書き換えられないようにする</div>
+              <div class="entry-consideration">許してよいかを判じたあとで、管理者かどうかを差し替えられる経路が残る。判断の入力は動かせない形にする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">仕様と実装で名前が食い違っている箇所を、同じ機会に直す</div>
+              <div class="entry-consideration">コメントに添える判定は、仕様の言葉と実装の言葉が別々になっている。指しているものの振る舞いに違いは無いので、これは書き分けではなく単なる言い換えの乱立である。自分たちが動かせる側（実装の名前）を仕様へ寄せる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">オーケストレータ（実測）</span></div>
+              <div class="entry-viewpoint">取り込み先の書き換えは48ファイル・約72箇所</div>
+              <div class="entry-consideration">実装28・テスト20。配布の仕組みは業務の語彙の置き場所を名指ししておらず、テストの取り込み方も道ごと見る設定になっているため、棚を増やしても壊れない。移動そのものは安全で、判断を要するのは分類だけである。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">不変条件を足すと、隠れていた不整合が例外として現れる</div>
+              <div class="entry-consideration">保管された記録から識別子を組み立てる2箇所が、欄が欠けているときに空文字を渡している。値の側に検証を入れると、ここが例外になる。隠れていたものが見えるようになるだけなので歓迎してよいが、規約が定めるとおり、境界を越える前に結果型へ写す処理を併せて用意する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">上げられたHTMLの読み取りは割るが、置き場所は動かさない</div>
+              <div class="entry-consideration">変わる理由が2つに分かれているので割る。書かれ方が変われば読み取りが変わり、業務の決めごとが変われば採否の規則が変わる。ただし移す先が無い——入口の側は業務の語彙を知らず、出口の側は外への出口であって解析はそこに当たらない。対象のHTMLは既に呼び出しの引数として内側へ渡っており、越える境界が存在しない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">規則の正本を仕様側に置くなら、その正本が一語一義であること</div>
+              <div class="entry-consideration">同じ規則が2つの操作の事前条件に、別々の言い回しで宣言されている。指しているものに違いが無い以上これは書き分けではない。片方だけが将来書き換えられたとき、別の規則になったのか言い回しが違うだけなのかを読み手が判別できなくなる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">この判定が覆る条件を、境界の宣言と一緒に書き残す</div>
+              <div class="entry-consideration">いま役割だけで答えが出るのは、名簿の見え方が誰にとっても一律だからである。公開範囲によって見える顔ぶれが変わる要求が出れば、判定は集約の状態を読み始め、その時点で業務サービスへ戻る。隣の集約には既に、公開範囲を読んで可否を決める判定が実在する。いまの判定は今の規則の形に対して正しいのであって、恒久的な割り当てではない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">方針として置くと、定義が1箇所であることを構造では強制できなくなる</div>
+              <div class="entry-consideration">業務の語彙の側に置けば「内側にある規則を外側が作り直すのはおかしい」という層の決まりが抑止になる。方針として置く場合、3つ目の操作が現れたときに管理者かどうかを直に書いてしまう経路が開いたままになる。それでもこちらを採るのは、抑止を得るために外の仕組みの語彙への依存を最も内側まで引き込むほうが、はるかに大きな支払いだからである。代わりの歯止めは、規則の正本が仕様側にあることと、扱ってよいかの判定を3つのファイルに集める並びの2つ。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">オーケストレータ（実測）</span></div>
+              <div class="entry-viewpoint">外にあるものが「無い」と宣言されている</div>
+              <div class="entry-consideration">文脈マップの項目が空で、この欄の書き方の指示によれば、空は「他と直接やり取りしないという決定」を意味する。一方で個々の操作の側は「この文脈の外にある仕組み」と宣言している。書き忘れではなく、事実に反する決定が宣言されている状態なので、追記ではなく訂正として扱う。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>宣言と実装の対応を確かめる仕組みは、業務の語彙を1つの根の下からしか探せない。層を持たないと宣言した出荷物（閲覧画面・閲覧ゲート・管理画面・環境の定義）にある実装は、この作業を終えても見えないままである。ここを解くには宣言の側に複数のランタイムを表す手立てが要り、それは別サイクルになる。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>閲覧可否の判定は、宣言だけがあって業務の語彙の側に実装が無い。振る舞いはエッジの関門が持っている。棚を作っても、正本をこちらへ置くかエッジを正とするかは別の判断であり、この作業だけでは決まらない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>仕様は補完（最小の手続き）と宣言しているが、実装は不変条件を持つ集約と書き換えられない値を厚く持っている。実装を薄い側へ巻き戻すことはしない。仕様の記述が実装に追いついていないずれとして、別に扱う。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>コメントの集約には型が無く、そのため仕様の言葉と実装の言葉のずれが誰にも気づかれていない。棚を3つに分けること自体はこのずれを直さない。型を作って初めて、この種のずれが検知できるようになる。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">5</span>
+              <p>以前の引き継ぎに『2つの集約が共有する閲覧トークンの値は、既知の非両立として報告され続ける』と記録されているが、これは既に解消済みである。共有される値はディレクトリ単位で探されるようになっており、実際に0件で通る。古い記録を根拠に『緑にしなくてよい』と判断しないこと。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">6</span>
+              <p>名簿を扱ってよいかの判定を方針として置くことで、その定義が1箇所であることを層の決まりで強制できなくなる。承知の上で受容した不利であり、代わりの歯止めは仕様側の正本と、判定を集めるファイルの並びに委ねる。3つ目の操作を足すときは、直に書かずこの方針を呼ぶこと。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">7</span>
+              <p>識別子に不変条件を足すと、保管された記録から組み立てる2箇所が、欄の欠けた古い記録に対して例外を投げるようになる。これは隠れていた不整合が見えるようになるだけだが、結果型への翻訳を用意しないまま出すと、読み取り全体が落ちる。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">.waffle/documents/coding/architecture-artifact-share.json</div>
+              <div class="reason">conceptPlacement の置き場所を3つへ分け、layout.tree を追随させる。domain-service の pattern も直す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/domain/entities/</div>
+              <div class="reason">集約ルート SharedArtifact / Project の新しい置き場所</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/domain/value_objects/</div>
+              <div class="reason">宣言済みの値の置き場所。いま集約ファイルの中に同居している8つをここへ出す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/domain/services/</div>
+              <div class="reason">業務サービスの置き場所。宣言だけあって実装が無い ResolveViewability もここへ</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/domain/caller.py</div>
+              <div class="reason">domain の語彙ではないため、この層から出す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/domain/identifier.py</div>
+              <div class="reason">推測できない並びを作る手立てが実行環境に結びついているため、この層から出す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/application/ports/</div>
+              <div class="reason">識別子を発行する口を新しく宣言する。既にある時計の口と同じ形にする</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/lambda/admin_api/adapters/outbound/</div>
+              <div class="reason">識別子を発行する口の実装を置く。同名の別関数（トークンの指紋）の改名もここ</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/skills/artifact-share/tests/</div>
+              <div class="reason">48ファイル・約72箇所の取り込み先の書き換え。振る舞いは変えない</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

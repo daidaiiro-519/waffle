@@ -16,7 +16,7 @@ from application.usecases.issue_view_token import IssueViewToken
 from application.usecases.list_my_artifacts import ListMyArtifacts
 from application.usecases.replace_artifact_content import ReplaceArtifactContent
 from application.usecases.suspend_artifact import SuspendArtifact
-from domain.view_subject import ViewSubject
+from domain.value_objects.view_subject import ViewSubject
 from usecase_builder import build
 
 

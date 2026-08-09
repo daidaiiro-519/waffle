@@ -16,7 +16,7 @@ import pytest
 from project_setup import ADMIN, X, Y, artifact, assign, index_of, owned, setup
 from application.usecases.control_project_access import ControlProjectAccess
 from application.usecases.issue_view_token import IssueViewToken
-from domain.view_subject import ViewSubject
+from domain.value_objects.view_subject import ViewSubject
 from shared.errors import ProjectError
 from usecase_builder import build
 

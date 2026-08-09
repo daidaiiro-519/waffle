@@ -29,10 +29,12 @@ from application.usecases.resume_artifact import ResumeArtifact  # noqa: E402
 from application.usecases.suspend_artifact import SuspendArtifact  # noqa: E402
 
 from application.ports import Caller  # noqa: E402
-from domain.view_subject import ViewSubject  # noqa: E402
-from domain.shared_artifact import MAX_PROJECTS  # noqa: E402  # 旧 MAX_PROJECTS_PER_ARTIFACT
-from domain.project import PERSONAL  # noqa: E402
-from domain.project import SHARED  # noqa: E402
+from domain.value_objects.view_subject import ViewSubject  # noqa: E402
+from domain.entities.shared_artifact import (
+    MAX_PROJECTS  # noqa: E402  # 旧 MAX_PROJECTS_PER_ARTIFACT,
+)
+from domain.value_objects.project import PERSONAL  # noqa: E402
+from domain.value_objects.project import SHARED  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
 

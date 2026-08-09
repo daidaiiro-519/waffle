@@ -21,8 +21,8 @@ from application.usecases.control_project_access import ControlProjectAccess  # 
 from application.usecases.create_project import CreateProject  # noqa: E402
 
 from application.ports import Caller  # noqa: E402
-from domain.project import PERSONAL  # noqa: E402
-from domain.project import SHARED  # noqa: E402
+from domain.value_objects.project import PERSONAL  # noqa: E402
+from domain.value_objects.project import SHARED  # noqa: E402
 from shared.errors import ProjectError  # noqa: E402
 
 

@@ -12,8 +12,8 @@
 from usecase_builder import build
 from view_token_setup import AID, ME, NOW, PID, issue, setup
 from application.usecases.revoke_all_view_tokens import RevokeAllViewTokens
-from domain import view_token
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.view_subject import ViewSubject
 
 
 def test_すべての閲覧トークンが一度に使えなくなる():

@@ -25,9 +25,9 @@ from adapters.outbound.stored_shared_artifact_repository import (  # noqa: E402
     from_record as artifact_from_record,
     to_record as artifact_to_record,
 )
-from domain.project import PUBLISHED as PROJECT_PUBLISHED  # noqa: E402
-from domain.shared_artifact import EXTRACTED, PUBLISHED, SUSPENDED  # noqa: E402
-from domain.view_token import ACTIVE  # noqa: E402
+from domain.value_objects.project import PUBLISHED as PROJECT_PUBLISHED  # noqa: E402
+from domain.value_objects.shared_artifact import EXTRACTED, PUBLISHED, SUSPENDED  # noqa: E402
+from domain.value_objects.view_token import ACTIVE  # noqa: E402
 
 # いま保管に残っている形。欄名も値も、実物のとおりに書く
 共有アーティファクトの記録 = {
@@ -79,7 +79,7 @@ def test_保管の欄名が業務の語へ直る():
     assert a.artifact_id.value == "aaaaaaaa"
     assert a.display_name == "検索基盤にPostgreSQLを採用する"
     assert a.published_by.value == "publisher-1"
-    assert a.content_fingerprint == "c4a7c5c66b583eb3a49cb973802390c3"
+    assert a.content_fingerprint.value == "c4a7c5c66b583eb3a49cb973802390c3"
     assert a.external_resource_count == 3
 
 

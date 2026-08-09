@@ -19,7 +19,7 @@ from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
 from application.project_access import require_writable
 from application.viewer_listing import sync_project
-from domain.shared_artifact import MAX_PROJECTS
+from domain.entities.shared_artifact import MAX_PROJECTS
 from shared.errors import ManageError
 
 

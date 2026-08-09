@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from application.ports import Caller, Clock
 from application.ports.comment_repository import CommentRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
-from domain import view_token
+from domain.value_objects import view_token
 
 
 

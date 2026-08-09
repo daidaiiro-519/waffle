@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 from application.ports import Caller, PublisherDirectory
 from application.ports.shared_artifact_repository import SharedArtifactRepository
-from domain.caller import may_manage_publishers
+from application.publisher_access import may_manage_publishers
 from shared.errors import PublisherError
 
 

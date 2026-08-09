@@ -10,7 +10,7 @@
 """
 from __future__ import annotations
 
-from domain.view_subject import ViewSubject
+from domain.value_objects.view_subject import ViewSubject
 
 
 def subject_from(body: dict) -> ViewSubject:

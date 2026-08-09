@@ -13,7 +13,7 @@ import inspect
 # ユースケースが名乗る口の名前 → 結線が持つ属性の名前
 ATTR = {"artifacts": "artifacts", "projects": "projects", "comments": "comments",
         "viewer": "viewer", "gate": "gate", "directory": "directory",
-        "identify": "identify", "clock": "now"}
+        "identify": "identify", "clock": "now", "ids": "ids"}
 
 
 def build(connections, usecase):

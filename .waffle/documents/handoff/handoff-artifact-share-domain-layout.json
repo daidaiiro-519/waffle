@@ -1,0 +1,413 @@
+{
+  "documentId": "handoff-artifact-share-domain-layout",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "業務の語彙が住む棚を3つに分ける：handoff-artifact-share-domain-layout"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "agg-shared-artifact"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "ユーザー",
+          "viewpoint": "同じ流儀を採るなら棚の分け方も揃える",
+          "consideration": "artifact-share と Waffle 本体はどちらもポートとアダプターの流儀を採っている。それでいて業務の語彙の棚だけが片方は1つ、もう片方は3つに分かれている。違える理由がどこにも記録されていない以上、揃える側に倒す。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "棚を1つにしていると、検査が概念を見分けられない",
+          "consideration": "集約も値も業務サービスも同じ場所を指しているため、そこに置かれたものが何なのかを宣言から機械的に言えない。3つに分けて初めて、宣言した概念ごとに正しい場所と突き合わせられる。宣言だけあって実装の無い業務サービスの置き場所も、これで決まる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "棚へ移す前に、その層にあるべきかを1件ずつ問い直す",
+          "consideration": "いま domain にある8つのうち3つは、「domain に置かれている」という事実だけが所属の根拠になっていた。移動先を決めてから所属を追認すると、誤った所属が新しい棚で固定される。棚を増やす作業に見えるが、順序は逆である。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "実装にあって仕様に無い語彙は、仕様が追いついていない合図",
+          "consideration": "閲覧トークンで開ける対象は、業務サービスの説明文が既に名前を伏せたまま説明している。名前が仕様に無いだけで、概念は仕様にある。こうした語彙は実装都合ではないので、仕様へ宣言を足す側で解く。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "宣言の側が実態より狭いときは、宣言を直す",
+          "consideration": "業務サービスの書き方として「複数の集約を跨る判断」とだけ宣言しているが、Waffle 本体の同じ棚には単一の関心事に閉じた計算が20件以上並び、それで検査を通している。つまりこれは定義ではなく代表例の一つである。実装を宣言へ無理に合わせるのではなく、宣言の文言を実態へ広げる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "外から見えない仕組みに結びつく依存だけを、この層から出す",
+          "consideration": "判断の基準は「外部の作者が書いたものか」ではなく「実行環境・基盤・枠組みに結びついているか」。同じ入力に同じ答えを返すだけの計算は、標準の部品を使っていてもこの層に残せる。逆に、環境から予測できない値を読むものは残せない。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "同じ語が2つの別の対象を指している",
+          "consideration": "指紋という一語が、公開された中身の指紋と閲覧トークンの指紋の両方に使われている。しかも集約が持つ2つの欄はどちらも素の文字列で、取り違えても何も起きない。これは同じものを2つの語で呼ぶ誤りの裏返しで、症状は逆だが原因は同じである。関数名を変えるだけでは解けず、概念そのものを型として分ける以外にない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "判定に集約の状態が寄与しないなら、その集約の不変条件ではない",
+          "consideration": "業務ルールであることと、特定の集約の不変条件であることは別の判定である。後者は「その集約の状態が判定に寄与するか」でしか決まらない。どのインスタンスに対して呼んでも同じ答えを返す判定を集約に間借りさせると、その集約は自分と無関係な事実を知る責務を負う。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "判定の唯一の入力を所有しているのが外の仕組みなら、その判定を最も内側へ置かない",
+          "consideration": "管理者という区分が存在すること、誰がそれに属するかを決めているのは、この文脈ではなく外の名簿である。その語彙に依る判定を最も内側の層へ置くと、内側から外のモデルへ向かう依存が生まれる。腐敗を防ぐ層のすぐ内側に置くのが、依存の届く範囲を最も狭く保つ。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "外にあるものが外にあると書かれていないと、帰属先の議論が終わらない",
+          "consideration": "招かれている人の名簿がこの文脈の集約ではないという事実そのものが、仕様が持つべき境界の情報である。これが書かれていなかったために、この規則をどこへ置くかで見解が割れた。境界さえ埋まれば同じ議論は再発しない。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "ファイルごと動かすだけでは終わらない",
+          "consideration": "集約のファイルの中に、宣言済みの値が8つ同居している。ファイルごと集約の棚へ移すと、それらが値の棚ではない場所に取り残され、新しい宣言と食い違う。値を切り出す作業は、棚を分ける以上、避けて通れない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "宣言を先に直してから実装を動かす",
+          "consideration": "置き場所の宣言と業務サービスの書き方の宣言を先に直さないと、実装を動かした瞬間に宣言と食い違う。図は宣言の投影なので、宣言を直してから図を追随させる。逆はしない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "1ファイルに1つという宣言は、いまは足さない",
+          "consideration": "値について1ファイル1つを宣言すると、2つの集約が共有している閲覧トークンの値をばらばらのファイルへ割ることになり、共有を保つという決定と正面から衝突する。本体側も同じ宣言のまま3つの棚で通しているので、必要になった実例が出てから足せばよい。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "確かめるのは値の側、作るのは外への出口の側",
+          "consideration": "この2つは排他ではなく、値の側に不変条件があって初めて出口の側が安全になる。生成の関数をどこへ置いても、値が素の文字列を無検証で受け取る限り不正な値は作れてしまう。読み違えにくい字種と桁数の定義は値の側が正本として持ち、出口の側はそれを使って組み立てるだけにする。順序として分けられないので、まとめて行う。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "操作している人を表す値は、書き換えられないようにする",
+          "consideration": "許してよいかを判じたあとで、管理者かどうかを差し替えられる経路が残る。判断の入力は動かせない形にする。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "仕様と実装で名前が食い違っている箇所を、同じ機会に直す",
+          "consideration": "コメントに添える判定は、仕様の言葉と実装の言葉が別々になっている。指しているものの振る舞いに違いは無いので、これは書き分けではなく単なる言い換えの乱立である。自分たちが動かせる側（実装の名前）を仕様へ寄せる。"
+        },
+        {
+          "advisor": "オーケストレータ（実測）",
+          "viewpoint": "取り込み先の書き換えは48ファイル・約72箇所",
+          "consideration": "実装28・テスト20。配布の仕組みは業務の語彙の置き場所を名指ししておらず、テストの取り込み方も道ごと見る設定になっているため、棚を増やしても壊れない。移動そのものは安全で、判断を要するのは分類だけである。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "不変条件を足すと、隠れていた不整合が例外として現れる",
+          "consideration": "保管された記録から識別子を組み立てる2箇所が、欄が欠けているときに空文字を渡している。値の側に検証を入れると、ここが例外になる。隠れていたものが見えるようになるだけなので歓迎してよいが、規約が定めるとおり、境界を越える前に結果型へ写す処理を併せて用意する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "上げられたHTMLの読み取りは割るが、置き場所は動かさない",
+          "consideration": "変わる理由が2つに分かれているので割る。書かれ方が変われば読み取りが変わり、業務の決めごとが変われば採否の規則が変わる。ただし移す先が無い——入口の側は業務の語彙を知らず、出口の側は外への出口であって解析はそこに当たらない。対象のHTMLは既に呼び出しの引数として内側へ渡っており、越える境界が存在しない。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "規則の正本を仕様側に置くなら、その正本が一語一義であること",
+          "consideration": "同じ規則が2つの操作の事前条件に、別々の言い回しで宣言されている。指しているものに違いが無い以上これは書き分けではない。片方だけが将来書き換えられたとき、別の規則になったのか言い回しが違うだけなのかを読み手が判別できなくなる。"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "viewpoint": "この判定が覆る条件を、境界の宣言と一緒に書き残す",
+          "consideration": "いま役割だけで答えが出るのは、名簿の見え方が誰にとっても一律だからである。公開範囲によって見える顔ぶれが変わる要求が出れば、判定は集約の状態を読み始め、その時点で業務サービスへ戻る。隣の集約には既に、公開範囲を読んで可否を決める判定が実在する。いまの判定は今の規則の形に対して正しいのであって、恒久的な割り当てではない。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "方針として置くと、定義が1箇所であることを構造では強制できなくなる",
+          "consideration": "業務の語彙の側に置けば「内側にある規則を外側が作り直すのはおかしい」という層の決まりが抑止になる。方針として置く場合、3つ目の操作が現れたときに管理者かどうかを直に書いてしまう経路が開いたままになる。それでもこちらを採るのは、抑止を得るために外の仕組みの語彙への依存を最も内側まで引き込むほうが、はるかに大きな支払いだからである。代わりの歯止めは、規則の正本が仕様側にあることと、扱ってよいかの判定を3つのファイルに集める並びの2つ。"
+        },
+        {
+          "advisor": "オーケストレータ（実測）",
+          "viewpoint": "外にあるものが「無い」と宣言されている",
+          "consideration": "文脈マップの項目が空で、この欄の書き方の指示によれば、空は「他と直接やり取りしないという決定」を意味する。一方で個々の操作の側は「この文脈の外にある仕組み」と宣言している。書き忘れではなく、事実に反する決定が宣言されている状態なので、追記ではなく訂正として扱う。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "宣言と実装の対応を確かめる仕組みは、業務の語彙を1つの根の下からしか探せない。層を持たないと宣言した出荷物（閲覧画面・閲覧ゲート・管理画面・環境の定義）にある実装は、この作業を終えても見えないままである。ここを解くには宣言の側に複数のランタイムを表す手立てが要り、それは別サイクルになる。",
+        "閲覧可否の判定は、宣言だけがあって業務の語彙の側に実装が無い。振る舞いはエッジの関門が持っている。棚を作っても、正本をこちらへ置くかエッジを正とするかは別の判断であり、この作業だけでは決まらない。",
+        "仕様は補完（最小の手続き）と宣言しているが、実装は不変条件を持つ集約と書き換えられない値を厚く持っている。実装を薄い側へ巻き戻すことはしない。仕様の記述が実装に追いついていないずれとして、別に扱う。",
+        "コメントの集約には型が無く、そのため仕様の言葉と実装の言葉のずれが誰にも気づかれていない。棚を3つに分けること自体はこのずれを直さない。型を作って初めて、この種のずれが検知できるようになる。",
+        "以前の引き継ぎに『2つの集約が共有する閲覧トークンの値は、既知の非両立として報告され続ける』と記録されているが、これは既に解消済みである。共有される値はディレクトリ単位で探されるようになっており、実際に0件で通る。古い記録を根拠に『緑にしなくてよい』と判断しないこと。",
+        "名簿を扱ってよいかの判定を方針として置くことで、その定義が1箇所であることを層の決まりで強制できなくなる。承知の上で受容した不利であり、代わりの歯止めは仕様側の正本と、判定を集めるファイルの並びに委ねる。3つ目の操作を足すときは、直に書かずこの方針を呼ぶこと。",
+        "識別子に不変条件を足すと、保管された記録から組み立てる2箇所が、欄の欠けた古い記録に対して例外を投げるようになる。これは隠れていた不整合が見えるようになるだけだが、結果型への翻訳を用意しないまま出すと、読み取り全体が落ちる。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "業務の語彙",
+          "description": "3つの棚に分かれ、宣言された概念ごとに置き場所が決まっている。何が置かれているかを、宣言から機械的に言える",
+          "nodes": [
+            {
+              "id": "ent",
+              "title": "整合性の境界を持つもの",
+              "sub": "domain/entities",
+              "status": "new"
+            },
+            {
+              "id": "vo",
+              "title": "書き換えられない値",
+              "sub": "domain/value_objects",
+              "status": "new"
+            },
+            {
+              "id": "svc",
+              "title": "集約の内側に置けない判断",
+              "sub": "domain/services",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "この層から出るもの",
+          "description": "業務の語彙ではないと判定され、別の持ち場へ移るもの",
+          "nodes": [
+            {
+              "id": "caller",
+              "title": "操作している人",
+              "sub": "application",
+              "status": "new"
+            },
+            {
+              "id": "idgen",
+              "title": "識別子を発行する",
+              "sub": "口の宣言と、外への出口の実装",
+              "status": "new"
+            }
+          ]
+        },
+        {
+          "label": "宣言",
+          "description": "置き場所と書き方を定める側。実装より先に直す",
+          "nodes": [
+            {
+              "id": "arch",
+              "title": "配置の宣言",
+              "sub": "architecture-artifact-share",
+              "status": "existing"
+            },
+            {
+              "id": "spec",
+              "title": "語彙の宣言",
+              "sub": "集約仕様・文脈仕様",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "arch",
+          "to": "ent",
+          "kind": "dependency",
+          "label": "どの概念をどこへ置くかを定める"
+        },
+        {
+          "from": "arch",
+          "to": "vo",
+          "kind": "dependency",
+          "label": "同上"
+        },
+        {
+          "from": "arch",
+          "to": "svc",
+          "kind": "dependency",
+          "label": "同上"
+        },
+        {
+          "from": "ent",
+          "to": "vo",
+          "kind": "split",
+          "label": "同居していた値を切り出す"
+        },
+        {
+          "from": "spec",
+          "to": "svc",
+          "kind": "dependency",
+          "label": "宣言だけある業務サービスの置き場所が決まる"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": []
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "artifact-share の業務の語彙の置き場所を、いまの1つの棚（domain 直下）から、Waffle 本体と同じ3つの棚（entities / value_objects / services）へ分ける作業を引き継ぐ。同じヘキサゴナルの流儀を採っておきながら棚の分け方だけが違っており、そのため宣言された概念（集約・値・業務サービス）を検査が区別できない状態にある。この引き継ぎが担う仕様は次の4件（agg-shared-artifact / agg-project / agg-comment / bc-artifact-share の業務サービス ResolveViewability）。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": ".waffle/documents/coding/architecture-artifact-share.json",
+          "reason": "conceptPlacement の置き場所を3つへ分け、layout.tree を追随させる。domain-service の pattern も直す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/entities/",
+          "reason": "集約ルート SharedArtifact / Project の新しい置き場所"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/value_objects/",
+          "reason": "宣言済みの値の置き場所。いま集約ファイルの中に同居している8つをここへ出す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/services/",
+          "reason": "業務サービスの置き場所。宣言だけあって実装が無い ResolveViewability もここへ"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/caller.py",
+          "reason": "domain の語彙ではないため、この層から出す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/domain/identifier.py",
+          "reason": "推測できない並びを作る手立てが実行環境に結びついているため、この層から出す"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/application/ports/",
+          "reason": "識別子を発行する口を新しく宣言する。既にある時計の口と同じ形にする"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/lambda/admin_api/adapters/outbound/",
+          "reason": "識別子を発行する口の実装を置く。同名の別関数（トークンの指紋）の改名もここ"
+        },
+        {
+          "path": ".waffle/skills/artifact-share/tests/",
+          "reason": "48ファイル・約72箇所の取り込み先の書き換え。振る舞いは変えない"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "ファイルごと動かすだけで済むという当初の見込みが誤りだった指摘を受け、集約に同居する値の切り出しを作業に含めた"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "閲覧トークンで開ける対象が仕様に宣言されていない指摘を受け、仕様へ足す側で解くことを観点に加えた"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 4,
+          "resolutionStatus": "resolved",
+          "note": "業務サービスの書き方の宣言が実態より狭い指摘を受け、宣言を直す側で解くことにした"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 6,
+          "resolutionStatus": "resolved",
+          "note": "中身の指紋の置き場所。敵対的検証で tech-lead-advisor が撤回し、書き換えられない値として新設することで合意。反対理由が『素の関数のままにする』を前提にしていたため、実体のある値を作るなら消えると認めた。根拠の主柱も『散る』から一語二義の破れへ差し替わった。閲覧トークン側の指紋にも別名を与える"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 8,
+          "resolutionStatus": "resolved",
+          "note": "上げられたHTMLの読み取りを割るかどうか。敵対的検証で双方が合流。ddd-advisor が腐敗を防ぐ層という持ち出しを撤回（HTMLは外の文脈のモデルではなく単なる入力の書式）、tech-lead-advisor が『置いてよいは、そのままでよいを意味しない』を認めて分割を受け入れた。割るが移さない、で決着"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "resolved",
+          "note": "識別子の発行の置き場所。敵対的検証で双方が合流。ddd-advisor が『生成が値の内側になければ守れない』を撤回（不変条件は生成経路ではなく型の入り口で守られる）、tech-lead-advisor が『排他ではなく、値の不変条件があって初めて口が安全になる』として同時実施を主張。確かめるのは値、作るのは出口、まとめて実施で決着"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 7,
+          "resolutionStatus": "resolved",
+          "note": "名簿を扱ってよいかの判定の置き場所。3往復を要した。ddd-advisor は集約の内側→業務サービス→方針へと2段階で撤回し、最終的に条件付きで受諾。決め手は2つで、(1)判定が集約の状態を1バイトも参照せず、素の値にすると同語反復しか残らないこと、(2)ddd-advisor が domain 残留を求めた唯一の理由『規則が仕様から漏れ続ける』が、実測で否定されたこと（規則も理由も既に2つの操作の事前条件と存在意義に宣言済み）。tech-lead-advisor 側も、集約が素の値で権限判断を受ける書き方が既に実在するという指摘を受けて、自らの論拠の一本を撤回した"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 9,
+          "resolutionStatus": "resolved",
+          "note": "上記の合意の条件として双方が要求した追記。招かれている人の名簿が外の文脈であり、この文脈が従属する下流であることを、文脈マップへ訂正として書く。tech-lead-advisor は独立にこれを支持し、この論点の副産物のうち最も長く残る価値があると評価した。放置すると、将来の読み手が『名簿の集約が実装漏れしている』と誤読して取り込む改修を始める"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 9,
+          "resolutionStatus": "resolved",
+          "note": "ddd-advisor が受諾の条件として提示。規則の正本を仕様側に置くと決めた以上、その正本が一語一義であることまでが条件になる"
+        },
+        {
+          "advisor": "ddd-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 10,
+          "resolutionStatus": "resolved",
+          "note": "ddd-advisor が受諾の条件として提示。いまの割り当ては今の規則の形に対して正しいのであって恒久的ではない、と明示しておく"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 11,
+          "resolutionStatus": "acceptedAsConstraint",
+          "note": "受諾しても失われるものとして tech-lead-advisor 自身が申告。定義が1箇所であることを層の決まりで強制できなくなる。代償が見合うと判断して受容した"
+        },
+        {
+          "advisor": "オーケストレータ",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "open",
+          "note": "閲覧可否の判定の正本をこちらへ置くか、エッジを正とするか。ddd-advisor はこちらを正本にしエッジは複製として突き合わせるべきとしている。この作業に含めるかを含めて未決着"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": ""
+      }
+    }
+  },
+  "tags": [
+    "context:artifact-share"
+  ]
+}

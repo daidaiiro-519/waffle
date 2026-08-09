@@ -24,6 +24,7 @@ from adapters.inbound.admin_api import ACTIONS, dispatch, status_of
 from adapters.outbound.cognito_publisher_directory import CognitoPublisherDirectory
 from adapters.outbound.kvs_view_gate import KvsViewGate
 from adapters.outbound.kvs_view_token_store import KvsViewTokenStore
+from adapters.outbound.random_identifier import RandomIdGenerator
 from adapters.outbound.s3_artifact_store import S3ArtifactStore
 from adapters.outbound.stored_comment_repository import StoredCommentRepository
 from adapters.outbound.stored_project_repository import StoredProjectRepository
@@ -55,6 +56,7 @@ class Connections:
     directory: object = None
     wrapper_template: str = ""
     project_page: str = ""
+    ids: object = dataclasses.field(default_factory=RandomIdGenerator)
 
     @property
     def artifacts(self):
@@ -118,7 +120,7 @@ def handler(event, context):  # pragma: no cover - 実際の接続を組み立�
     try:
         if action == "publish":
             c = _publish_deps()
-            result = PublishArtifact(c.artifacts, c.viewer, c.gate, c.identify, c.now).run(
+            result = PublishArtifact(c.artifacts, c.viewer, c.gate, c.identify, c.now, c.ids).run(
                 {**body, "authorization": authorization})
         else:
             result = dispatch(action, Connections(**_connections()), caller, body)

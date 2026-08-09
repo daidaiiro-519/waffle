@@ -31,4 +31,4 @@ def test_閲覧トークンを控えていなくても読める():
     # 閲覧トークンを一切渡さずに読む
     got = build(deps, ReadComments).run(ME, r.artifact_id)
 
-    assert [c["author"] for c in got.comments] == ["田中"]
+    assert [c.author for c in got.comments] == ["田中"]

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from application.ports import Caller
 from application.ports.shared_artifact_repository import SharedArtifactRepository
-from domain.shared_artifact import SharedArtifact
+from domain.entities.shared_artifact import SharedArtifact
 from shared.errors import ManageError
 
 NOT_FOUND = "ARTIFACT_NOT_FOUND"

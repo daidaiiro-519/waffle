@@ -16,8 +16,8 @@ from application.usecases.issue_view_token import IssueViewToken
 from application.usecases.resume_artifact import ResumeArtifact
 from application.usecases.revoke_view_token import RevokeViewToken
 from application.usecases.suspend_artifact import SuspendArtifact
-from domain import view_token
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.view_subject import ViewSubject
 from shared.errors import ManageError
 from usecase_builder import build
 

@@ -11,9 +11,8 @@ from __future__ import annotations
 
 import json
 
-from domain.project import (
+from domain.value_objects.project import (
     PUBLISHED,
-    Project,
     ProjectId,
     ProjectKey,
     ProjectOwner,
@@ -21,11 +20,13 @@ from domain.project import (
     ProjectStatus,
     SUSPENDED,
 )
-from domain.view_token import (
+from domain.entities.project import Project
+from domain.value_objects.view_token import (
     ACTIVE,
     NO_EXPIRY,
     ViewToken,
     ViewTokenExpiry,
+    ViewTokenFingerprint,
     ViewTokenId,
     ViewTokenStatus,
 )
@@ -96,7 +97,7 @@ def _token_from(t: dict) -> ViewToken:
     return ViewToken(
         token_id=ViewTokenId(t.get("tokenId", "")),
         name=t.get("name", ""),
-        fingerprint=t.get("fingerprint", ""),
+        fingerprint=ViewTokenFingerprint(t.get("fingerprint", "")),
         expires_at=ViewTokenExpiry(t.get("expiresAt", NO_EXPIRY)),
         status=ViewTokenStatus(t.get("status", ACTIVE)),
         issued_at=t.get("issuedAt", 0),
@@ -107,7 +108,7 @@ def _token_to(t: ViewToken) -> dict:
     return {
         "tokenId": t.token_id.value,
         "name": t.name,
-        "fingerprint": t.fingerprint,
+        "fingerprint": t.fingerprint.value,
         "expiresAt": t.expires_at.value,
         "status": t.status.value,
         "issuedAt": t.issued_at,

@@ -15,13 +15,13 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 
-from domain.view_token import MONTH, ArtifactViewToken, ViewTokenExpiry
-
-# 公開されているかどうか
-PUBLISHED = "PUBLISHED"
-SUSPENDED = "SUSPENDED"
+from domain.value_objects.artifact_content import ContentFingerprint
+from domain.value_objects.shared_artifact import (
+    PUBLISHED, SUSPENDED, ArtifactDescriptor, ArtifactId, ArtifactStatus, PublisherId,
+)
+from domain.value_objects.view_token import MONTH, ArtifactViewToken, ViewTokenExpiry
 
 # 閲覧トークンに与えてよい期限の上限。発行した時点からここまで
 MAX_TTL = MONTH
@@ -32,70 +32,6 @@ MAX_PROJECTS = 3
 # 受け取る中身の上限。これを超えるものは、署名付きの経路で直接受け渡す設計へ移す
 MAX_CONTENT_BYTES = 5 * 1024 * 1024
 
-# 目印の出どころ
-EXTRACTED = "extracted"   # 中身から取り出した
-MANUAL = "manual"         # 人が与えた
-
-
-@dataclass(frozen=True)
-class ArtifactId:
-    """公開された共有アーティファクトを一意に指す短いID。"""
-
-    value: str
-
-
-@dataclass(frozen=True)
-class PublisherId:
-    """公開した人を指す識別子。招かれた者にのみ与えられる。"""
-
-    value: str
-
-
-@dataclass(frozen=True)
-class ArtifactStatus:
-    """公開されているかどうか。PUBLISHED と SUSPENDED のいずれか。"""
-
-    value: str
-
-    def is_published(self) -> bool:
-        """いま公開されているか。
-
-        Returns:
-            公開されていれば True。
-
-        Raises:
-            なし。
-        """
-        return self.value == PUBLISHED
-
-    def is_suspended(self) -> bool:
-        """いま公開を止めているか。
-
-        Returns:
-            止めていれば True。
-
-        Raises:
-            なし。
-        """
-        return self.value == SUSPENDED
-
-
-@dataclass(frozen=True)
-class ArtifactDescriptor:
-    """共有アーティファクトに添えられた識別子・種別・題名・要約・分類の目印。
-
-    中身に書かれていれば取り出し、書かれていなければ題名だけを人が与える。
-    種別と分類の目印は保持するだけで、値の意味を解釈しない——解釈すると、
-    中身に書ける値が誰に見せるかを左右してしまう。
-    """
-
-    document_id: str = ""
-    doc_type: str = ""
-    title: str = ""
-    description: str = ""
-    labels: tuple[str, ...] = ()
-    source: str = MANUAL
-
 
 @dataclass(frozen=True)
 class SharedArtifact:
@@ -103,7 +39,7 @@ class SharedArtifact:
 
     artifact_id: ArtifactId
     display_name: str
-    content_fingerprint: str
+    content_fingerprint: ContentFingerprint
     view_tokens: tuple[ArtifactViewToken, ...]
     status: ArtifactStatus
     published_by: PublisherId
@@ -153,7 +89,7 @@ class SharedArtifact:
         """もう一度見てもらえる状態に戻す。閲覧トークンはそのまま。"""
         return replace(self, status=ArtifactStatus(PUBLISHED), updated_at=at)
 
-    def with_content(self, fingerprint: str, descriptor: ArtifactDescriptor,
+    def with_content(self, fingerprint: ContentFingerprint, descriptor: ArtifactDescriptor,
                      external_resource_count: int, at: int) -> "SharedArtifact":
         """中身を丸ごと差し替える。共有URLも閲覧トークンも変えない。"""
         return replace(self, content_fingerprint=fingerprint, descriptor=descriptor,

@@ -12,8 +12,8 @@
 from usecase_builder import build
 from view_token_setup import AID, ME, NOW, issue, setup
 from application.usecases.list_view_tokens import ListViewTokens
-from domain import view_token
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.view_subject import ViewSubject
 
 DAY = 24 * 60 * 60
 

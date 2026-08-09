@@ -9,6 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from fakes import FakeIdGenerator  # noqa: E402
 from usecase_builder import build  # noqa: E402
 from application.usecases.issue_view_token import IssueViewToken  # noqa: E402
 from application.usecases.list_view_tokens import ListViewTokens  # noqa: E402
@@ -18,17 +19,30 @@ from application.usecases.revoke_view_token import RevokeViewToken  # noqa: E402
 from application.view_token_access import ViewTokenError  # noqa: E402
 
 from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
+from domain.value_objects.artifact_content import ContentFingerprint  # noqa: E402
 from application.ports import Caller  # noqa: E402
-from domain import view_token  # noqa: E402
-from domain.project import (  # noqa: E402
-    PUBLISHED as PROJECT_PUBLISHED, Project, ProjectId, ProjectKey,
-    ProjectOwner, ProjectScope, ProjectStatus, SHARED,
+from domain.value_objects import view_token  # noqa: E402
+from domain.value_objects.project import (
+    # noqa: E402
+    PUBLISHED as PROJECT_PUBLISHED,
+    ProjectId,
+    ProjectKey,
+    ProjectOwner,
+    ProjectScope,
+    ProjectStatus,
+    SHARED,
 )
-from domain.shared_artifact import (  # noqa: E402
-    ArtifactDescriptor, ArtifactId, ArtifactStatus, PUBLISHED,
-    PublisherId, SharedArtifact,
+from domain.entities.project import Project
+from domain.value_objects.shared_artifact import (
+    # noqa: E402
+    ArtifactDescriptor,
+    ArtifactId,
+    ArtifactStatus,
+    PUBLISHED,
+    PublisherId,
 )
-from domain.view_subject import ViewSubject  # noqa: E402
+from domain.entities.shared_artifact import SharedArtifact
+from domain.value_objects.view_subject import ViewSubject  # noqa: E402
 
 ME = Caller("publisher-1")
 OTHER = Caller("publisher-2")
@@ -74,20 +88,25 @@ class FakeRepo:
 class Wiring:
     """検証のための結線の束。合成ルートが持つのと同じ名前で口を持つ。"""
 
-    def __init__(self, artifacts, projects, gate, at=None):
+    def __init__(self, artifacts, projects, gate, at=None, ids=None):
         self.artifacts, self.projects, self.gate = artifacts, projects, gate
         self.comments = self.viewer = self.directory = self.identify = None
         self.now = (lambda: at) if at is not None else (lambda: NOW)
+        # 発行の口は引き継ぐ。作り直すと採番がやり直しになり、
+        # 別々に発行したはずのものが同じ識別子を持つ
+        self.ids = ids or FakeIdGenerator()
 
     def at(self, when):
         """時計だけを進めた同じ結線。"""
-        return Wiring(self.artifacts, self.projects, self.gate, at=when)
+        return Wiring(self.artifacts, self.projects, self.gate, at=when,
+                      ids=self.ids)
 
 
 def setup(tokens=None, owner="publisher-1"):
     """公開済みのものが1件あり、プロジェクトも1つある状態を作る。"""
     artifacts = FakeRepo({AID: SharedArtifact(
-        artifact_id=ArtifactId(AID), display_name="設計レビュー", content_fingerprint="",
+        artifact_id=ArtifactId(AID), display_name="設計レビュー",
+        content_fingerprint=ContentFingerprint(""),
         view_tokens=tuple(tokens or ()), status=ArtifactStatus(PUBLISHED),
         published_by=PublisherId(owner), descriptor=ArtifactDescriptor(),
         published_at=NOW, updated_at=NOW)})

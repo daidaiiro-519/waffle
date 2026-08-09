@@ -13,7 +13,7 @@ from project_setup import X, artifact, assign, owned, setup
 from application.usecases.control_project_access import ControlProjectAccess
 from application.usecases.issue_view_token import IssueViewToken
 from application.usecases.revoke_view_token import RevokeViewToken
-from domain.view_subject import ViewSubject
+from domain.value_objects.view_subject import ViewSubject
 from usecase_builder import build
 
 AID = "aaaaaaaa"

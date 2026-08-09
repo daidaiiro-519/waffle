@@ -120,7 +120,8 @@ def test_手入れできなくなるものがあれば件数を伝える():
     """
     objects = {}
     for i in range(3):
-        objects.update(artifact_owned_by("publisher-2", f"art{i}"))
+        # 識別子は字種と桁数の決まりを満たす形にする（読み違えやすい文字を使わない）
+            objects.update(artifact_owned_by("publisher-2", "aaaaaaa" + "bcd"[i]))
     deps, _ = setup(objects=objects)
 
     result = _remove(deps, publisher_id="publisher-2")

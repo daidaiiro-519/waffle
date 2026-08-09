@@ -13,18 +13,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from application.ports import Clock, PublisherIdentifier
+from application.ports.identifier import IdGenerator
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
-from domain import view_token
-from domain.artifact_content import fingerprint as content_fingerprint
-from domain.html_inspection import inspect_html
-from domain.identifier import new_artifact_id
-from domain.shared_artifact import EXTRACTED, MANUAL
-from domain.shared_artifact import (ArtifactDescriptor, ArtifactId, ArtifactStatus,
-                                    MAX_CONTENT_BYTES,
-                                    PUBLISHED, PublisherId, SharedArtifact)
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.artifact_content import ContentFingerprint
+from domain.services.html_inspection import inspect_html
+from domain.value_objects.shared_artifact import (
+    ArtifactDescriptor,
+    ArtifactStatus,
+    PUBLISHED,
+    PublisherId,
+)
+from domain.entities.shared_artifact import MAX_CONTENT_BYTES, SharedArtifact
+from domain.value_objects.view_subject import ViewSubject
 from shared.errors import PublishError
 
 FIRST_TOKEN_NAME = "最初の共有"
@@ -55,7 +58,7 @@ class PublishedArtifact:
     needs_name: bool = False
     token_shown_once: bool = True
 
-def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, request: dict) -> PublishedArtifact:
+def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, ids: IdGenerator, request: dict) -> PublishedArtifact:
     """アップロードされたHTMLを公開し、URLとトークンを返す。
 
     途中で失敗したときに開ける状態のものを残さないことを、書き込む順序で保証する。
@@ -79,47 +82,40 @@ def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: 
     found = inspect_html(content)
     display_name = (request.get("displayName") or "").strip()
 
-    if found["detected"]:
-        title = found["title"] or display_name
-        meta_source = EXTRACTED
-    else:
-        title = display_name or found["title"]
-        meta_source = MANUAL
-        if not display_name:
-            # 題名だけを尋ねる。ここで尋ねる項目を増やさない
-            raise PublishError("NAME_REQUIRED", "表示名を入力してください。")
+    if not found.detected and not display_name:
+        # 題名だけを尋ねる。ここで尋ねる項目を増やさない
+        raise PublishError("NAME_REQUIRED", "表示名を入力してください。")
 
-    artifact_id = new_artifact_id()
-    token = view_token.new_token()
+    # 読み取れたものと人が与えた題名の採否は、目印そのものが決める
+    descriptor = ArtifactDescriptor.of(found, display_name)
+    title = descriptor.title
+    meta_source = descriptor.source
+
+    artifact_id = ids.new_artifact_id()
+    token = ids.new_view_token_secret()
     now = clock()
-    first = view_token.issued(FIRST_TOKEN_NAME, gate.fingerprint_of(token),
+    first = view_token.issued(ids.new_view_token_id(), FIRST_TOKEN_NAME,
+                              gate.fingerprint_of(token),
                               view_token.expires_at(now), now)
 
     try:
-        viewer.place_artifact(artifact_id, content, title)
+        viewer.place_artifact(artifact_id.value, content, title)
 
         artifacts.save(SharedArtifact(
-            artifact_id=ArtifactId(artifact_id),
+            artifact_id=artifact_id,
             display_name=title,
-            content_fingerprint=content_fingerprint(content),
+            content_fingerprint=ContentFingerprint.of(content),
             view_tokens=(first,),
             status=ArtifactStatus(PUBLISHED),
             published_by=PublisherId(publisher),
-            descriptor=ArtifactDescriptor(
-                document_id=found["documentId"],
-                doc_type=found["docType"],
-                title=title,
-                description=found["description"],
-                labels=tuple(found["tags"]),
-                source=meta_source,
-            ),
+            descriptor=descriptor,
             published_at=now,
             updated_at=now,
-            external_resource_count=found["externalRefs"],
+            external_resource_count=found.external_refs,
         ))
 
         # 閲覧の面へ渡すのは最後。ここまで成功して初めて開ける状態になる
-        gate.replace_grants(ViewSubject.artifact(artifact_id),
+        gate.replace_grants(ViewSubject.artifact(artifact_id.value),
                             view_token.grants((first,), now))
     except PublishError:
         raise
@@ -128,18 +124,18 @@ def _publish(artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: 
         raise PublishError("PUBLISH_FAILED", f"公開できませんでした: {e}") from e
 
     return PublishedArtifact(
-        artifact_id=artifact_id,
+        artifact_id=artifact_id.value,
         token=token,                  # 返すのはこの一度きり。保管には残さない
-        url=viewer.artifact_url(artifact_id),
+        url=viewer.artifact_url(artifact_id.value),
         descriptor=PublishedDescriptor(
-            document_id=found["documentId"],
-            doc_type=found["docType"],
+            document_id=descriptor.document_id,
+            doc_type=descriptor.doc_type,
             title=title,
-            description=found["description"],
-            tags=tuple(found["tags"]),
+            description=descriptor.description,
+            tags=descriptor.labels,
         ),
         meta_source=meta_source,
-        external_refs=found["externalRefs"],
+        external_refs=found.external_refs,
     )
 
 
@@ -149,13 +145,14 @@ class PublishArtifact:
     口はここで受け取り、操作のたびに渡し回さない。組み立てるのは合成ルートだけ。
     """
 
-    def __init__(self, artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock) -> None:
+    def __init__(self, artifacts: SharedArtifactRepository, viewer: ViewerSitePort, gate: ViewGatePort, identify: PublisherIdentifier, clock: Clock, ids: IdGenerator) -> None:
         self._artifacts = artifacts
         self._viewer = viewer
         self._gate = gate
         self._identify = identify
         self._clock = clock
+        self._ids = ids
 
     def run(self, request: dict) -> PublishedArtifact:
         """このユースケースの唯一の入口。"""
-        return _publish(self._artifacts, self._viewer, self._gate, self._identify, self._clock, request)
+        return _publish(self._artifacts, self._viewer, self._gate, self._identify, self._clock, self._ids, request)

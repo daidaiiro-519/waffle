@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from application.ports import Caller, Clock
 from application.ports.project_repository import ProjectRepository
-from domain.project import Project
+from domain.entities.project import Project
 from shared.errors import ManageError, ProjectError
 
 NOT_FOUND = "PROJECT_NOT_FOUND"

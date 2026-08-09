@@ -15,9 +15,9 @@ from application.ports import Caller, Clock
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.view_gate import ViewGatePort
 from application.ports.viewer_site import ViewerSitePort
-from domain import view_token
-from domain.shared_artifact import PUBLISHED
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.shared_artifact import PUBLISHED
+from domain.value_objects.view_subject import ViewSubject
 from shared.errors import ManageError
 
 

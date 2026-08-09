@@ -18,7 +18,7 @@ from application.ports import Caller
 from application.ports.comment_repository import CommentRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.viewer_site import ViewerSitePort
-from application.usecases.read_comments import ReadComments
+from application.usecases.read_comments import CommentEntry, ReadComments
 
 
 
@@ -40,7 +40,7 @@ class ExportedArtifact:
     published_at: int
     updated_at: int
     content: str
-    comments: tuple[dict, ...]
+    comments: tuple[CommentEntry, ...]
     unreadable: int
 
 def _export(artifacts: SharedArtifactRepository, comments: CommentRepository, viewer: ViewerSitePort, caller: Caller, artifact_id: str) -> ExportedArtifact:

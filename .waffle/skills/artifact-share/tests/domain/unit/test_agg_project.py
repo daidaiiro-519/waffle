@@ -11,15 +11,26 @@
 
 対象の仕様: agg-project（不変条件）
 """
-from domain import view_token
-from domain.project import (
-    PERSONAL, PUBLISHED, Project, ProjectId, ProjectKey, ProjectOwner,
-    ProjectScope, ProjectStatus,
+from domain.value_objects import view_token
+from domain.value_objects.view_token import ViewTokenFingerprint, ViewTokenId
+from domain.value_objects.project import (
+    PERSONAL,
+    PUBLISHED,
+    ProjectId,
+    ProjectKey,
+    ProjectOwner,
+    ProjectScope,
+    ProjectStatus,
 )
-from domain.shared_artifact import (
-    ArtifactDescriptor, ArtifactId, ArtifactStatus, PublisherId, SharedArtifact,
+from domain.entities.project import Project
+from domain.value_objects.shared_artifact import (
+    ArtifactDescriptor,
+    ArtifactId,
+    ArtifactStatus,
+    PublisherId,
 )
-from domain.shared_artifact import PUBLISHED as ARTIFACT_PUBLISHED
+from domain.entities.shared_artifact import SharedArtifact
+from domain.value_objects.shared_artifact import PUBLISHED as ARTIFACT_PUBLISHED
 
 NOW = 1_700_000_000
 P = "p7k2xq"
@@ -46,7 +57,8 @@ def _artifact(artifact_id=A, projects=(), tokens=(), tags=()):
 
 
 def _token(name="配布先", ttl=view_token.WEEK):
-    return view_token.issued(name, "fingerprint-" + name,
+    return view_token.issued(ViewTokenId("t-" + name), name,
+                            ViewTokenFingerprint("fingerprint-" + name),
                              view_token.expires_at(NOW, ttl), NOW)
 
 

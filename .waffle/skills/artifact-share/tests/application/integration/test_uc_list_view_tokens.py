@@ -15,7 +15,7 @@ from usecase_builder import build
 from view_token_setup import ADMIN, AID, OTHER, issue, setup
 from application.usecases.list_view_tokens import ListViewTokens
 from application.view_token_access import ViewTokenError
-from domain.view_subject import ViewSubject
+from domain.value_objects.view_subject import ViewSubject
 
 
 def test_権限の無い者にはTARGET_NOT_FOUND():

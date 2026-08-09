@@ -60,13 +60,22 @@ def post(deps, artifact_id, at, author, body, decision="comment", parent=None):
 # ── 読む ────────────────────────────────────────────────
 
 
-def test_保存されている形のまま返る():
-    """表示用に整えるのは画面側。ここで別の呼び名へ置き換えない"""
+def test_業務の語彙で返り欠けが無い():
+    """外の綴りへ直すのは受け口の仕事。ここが返すのは業務の語彙。
+
+    判定だけは保管も画面も decision と呼び、業務は判定と呼ぶ。既に書かれた
+    記録の欄名を変えられないための食い違いで、対応は受け口が宣言する。
+    """
     deps, aid = setup()
     post(deps, aid, 1700000001, "田中", "本文")
 
     c = build(deps, ReadComments).run(ME, aid).comments[0]
-    assert set(c) >= {"kind", "author", "decision", "body", "parentId", "postedAt"}
+
+    assert (c.kind, c.author, c.body) == ("comment", "田中", "本文")
+    assert c.verdict == "comment"      # 添えなければ、ただの意見
+    assert c.parent_id is None
+    assert c.posted_at
+    assert c.id == "1700000001-abcd1234"
 
 
 def test_管理者は他人のものも読める():
@@ -91,7 +100,7 @@ def test_読めない記録があっても残りが返る():
 
     got = build(deps, ReadComments).run(ME, aid)
 
-    assert [c["author"] for c in got.comments] == ["田中", "佐藤"]
+    assert [c.author for c in got.comments] == ["田中", "佐藤"]
     # 黙って落とすと、投稿者が「これで全部だ」と思い込む
     assert got.unreadable == 1
 

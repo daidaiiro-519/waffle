@@ -15,8 +15,8 @@ from application.ports.shared_artifact_repository import SharedArtifactRepositor
 from application.ports.view_gate import ViewGatePort
 from application.view_token_access import (ViewTokenError, require_manageable_subject,
                                            save_tokens)
-from domain import view_token
-from domain.view_subject import ViewSubject
+from domain.value_objects import view_token
+from domain.value_objects.view_subject import ViewSubject
 
 
 

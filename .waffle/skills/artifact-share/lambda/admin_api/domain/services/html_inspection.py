@@ -5,12 +5,19 @@
 
 解析に失敗しても公開は止めない。検査は補助であって、公開を拒む判定ではない。
 
+ここが担うのは読み取りだけで、読み取れた値と人が与えた値のどちらを採るかは
+決めない。その採否は一組全体にかかる不変条件なので、目印そのものが持つ。
+変わる理由が別なので分けてある——書かれ方が変われば読み取りが変わり、業務の
+決めごとが変われば採否が変わる。
+
 対象の仕様: uc-publish-artifact / agg-shared-artifact
 """
 from __future__ import annotations
 
 import html.parser
 import re
+
+from domain.value_objects.shared_artifact import ReadFromContent
 
 
 def is_external(url: str) -> bool:
@@ -61,17 +68,18 @@ class _HeadParser(html.parser.HTMLParser):
             self.title = data.strip()
 
 
-def inspect_html(content: str) -> dict:
+def inspect_html(content: str) -> ReadFromContent:
     """HTMLから、控えるべき情報と外部への参照の件数を読み取る。
 
-    契約のmetaタグ（id と type）が揃っていれば、利用者に何も尋ねずに公開できる。
-    揃っていなければ、題名だけを尋ねる。
+    契約の目印（id と type）が揃っていれば、利用者に何も尋ねずに公開できる。
+    揃っているかどうかは伝えるだけで、揃っていないときに何を尋ねるかは
+    ここでは決めない。
 
     Args:
         content: 読み取る対象のHTML。
 
     Returns:
-        控えるべき情報と、外部への参照の件数を持つ辞書。
+        読み取れたもの。採否はまだ決まっていない。
 
     Raises:
         なし。
@@ -83,13 +91,13 @@ def inspect_html(content: str) -> dict:
         pass  # 解析に失敗しても、控える情報が減るだけで公開は妨げない
 
     meta = parser.meta
-    tags = [t.strip() for t in meta.get("tags", "").split(",") if t.strip()]
-    return {
-        "documentId": meta.get("id", ""),
-        "docType": meta.get("type", ""),
-        "title": meta.get("title", "") or parser.title,
-        "description": meta.get("description", ""),
-        "tags": tags,
-        "externalRefs": parser.external,
-        "detected": bool(meta.get("id") and meta.get("type")),
-    }
+    labels = tuple(t.strip() for t in meta.get("tags", "").split(",") if t.strip())
+    return ReadFromContent(
+        document_id=meta.get("id", ""),
+        doc_type=meta.get("type", ""),
+        title=meta.get("title", "") or parser.title,
+        description=meta.get("description", ""),
+        labels=labels,
+        external_refs=parser.external,
+        detected=bool(meta.get("id") and meta.get("type")),
+    )

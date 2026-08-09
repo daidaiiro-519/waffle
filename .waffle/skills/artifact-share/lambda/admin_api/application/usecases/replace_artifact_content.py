@@ -7,11 +7,11 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from application.artifact_access import require_manageable
-from domain.artifact_content import fingerprint as content_fingerprint
-from domain.shared_artifact import ArtifactDescriptor, EXTRACTED
+from domain.value_objects.artifact_content import ContentFingerprint
+from domain.value_objects.shared_artifact import ArtifactDescriptor
 from application.ports import Caller, Clock
 from application.artifact_access import NOT_FOUND
 from application.ports.comment_repository import CommentRepository
@@ -19,7 +19,7 @@ from application.ports.project_repository import ProjectRepository
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from application.ports.viewer_site import ViewerSitePort
 from application.viewer_listing import refresh_listings
-from domain.html_inspection import inspect_html
+from domain.services.html_inspection import inspect_html
 from shared.errors import ManageError
 
 
@@ -60,20 +60,18 @@ def _replace_content(artifacts: SharedArtifactRepository, projects: ProjectRepos
     # 差し替えの区切り。反応と同じ並びに載る1件の印として残す
     comments.add_replacement_divider(artifact_id, now)
 
+    # 読み取れたときだけ差し替える。読み取れなければ、それまでの目印を保つ
     descriptor = artifact.descriptor
-    if found["detected"]:
-        descriptor = ArtifactDescriptor(
-            document_id=found["documentId"], doc_type=found["docType"],
-            title=artifact.display_name, description=found["description"],
-            labels=tuple(found["tags"]), source=EXTRACTED)
-    updated = artifact.with_content(content_fingerprint(html), descriptor,
-                                    found["externalRefs"], now)
+    if found.detected:
+        descriptor = replace(ArtifactDescriptor.of(found), title=artifact.display_name)
+    updated = artifact.with_content(ContentFingerprint.of(html), descriptor,
+                                    found.external_refs, now)
     artifacts.save(updated)
     refresh_listings(artifacts, projects, viewer, updated)
 
     return ReplacedArtifactContent(artifact_id=artifact_id,
                                    url=viewer.artifact_url(artifact_id),
-                                   external_refs=found["externalRefs"])
+                                   external_refs=found.external_refs)
 
 
 class ReplaceArtifactContent:

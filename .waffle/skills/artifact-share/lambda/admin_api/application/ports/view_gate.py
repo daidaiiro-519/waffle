@@ -13,7 +13,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from domain.view_subject import ViewSubject
+from domain.value_objects.view_subject import ViewSubject
+from domain.value_objects.view_token import ViewTokenFingerprint
 
 
 class ViewGatePort(Protocol):
@@ -35,7 +36,7 @@ class ViewGatePort(Protocol):
         """その対象を、どの閲覧トークンでも開けないようにする。"""
         ...
 
-    def fingerprint_of(self, token: str) -> str:
+    def fingerprint_of(self, token: str) -> ViewTokenFingerprint:
         """その閲覧トークンを、閲覧の面が照合に使う形へ変える。
 
         公開する側はこの形を控え、閲覧トークンそのものの値は残さない。作り方を

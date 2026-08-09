@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from domain.caller import Caller  # noqa: F401
+from application.caller import Caller  # noqa: F401
 
 
 

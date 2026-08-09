@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from application.artifact_access import require_manageable
 from application.ports import Caller, Clock
-from domain.shared_artifact import PublisherId
+from domain.value_objects.shared_artifact import PublisherId
 from application.ports import PublisherDirectory
 from application.ports.shared_artifact_repository import SharedArtifactRepository
 from shared.errors import ManageError

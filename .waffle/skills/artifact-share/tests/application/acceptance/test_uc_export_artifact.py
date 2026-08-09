@@ -50,9 +50,9 @@ def test_中身とコメントがまとめて手元に来る():
     assert got.content == HTML
     assert len(got.comments) == 3
     for comment in got.comments:
-        assert comment["author"]
-        assert comment["body"]
-        assert comment["postedAt"]
+        assert comment.author
+        assert comment.body
+        assert comment.posted_at
 
 
 def test_差し替えの区切りも一緒に来る():
@@ -70,7 +70,7 @@ def test_差し替えの区切りも一緒に来る():
 
     got = build(deps, ExportArtifact).run(ME, r.artifact_id)
 
-    kinds = [c["kind"] for c in got.comments]
+    kinds = [c.kind for c in got.comments]
     assert kinds == ["comment", "divider", "comment"]
 
 
