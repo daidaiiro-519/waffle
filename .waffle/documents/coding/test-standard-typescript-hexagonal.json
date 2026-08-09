@@ -173,29 +173,35 @@
         {
           "layer": "domain",
           "testType": "unit",
-          "suffix": ".test.ts",
-          "note": "実装ファイルと同じディレクトリに置く"
+          "path": "tests/unit/",
+          "note": "ドメインの単体テスト"
         },
         {
           "layer": "application",
           "testType": "unit",
-          "suffix": ".test.ts",
+          "path": "tests/unit/",
           "note": "port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する"
+        },
+        {
+          "layer": "application",
+          "testType": "integration",
+          "path": "tests/integration/",
+          "note": "操作保証に対応するテスト"
         },
         {
           "layer": "outbound adapter",
           "testType": "integration",
-          "suffix": ".test.ts"
+          "path": "tests/integration/",
+          "note": "外へ出る口の統合テスト"
         },
         {
           "layer": "application",
           "testType": "acceptance",
           "path": "tests/acceptance/",
-          "strategy": "type-first",
-          "note": "仕様のシナリオに対応するテストだけは、実装と分けて1か所へ集める"
+          "note": "仕様のシナリオに対応するテストを1か所へ集める"
         }
       ],
-      "strategy": "colocated"
+      "strategy": "type-first"
     },
     "rules": {
       "blockType": "TestRules",

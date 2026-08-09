@@ -113,14 +113,15 @@ it("在庫不足なら失敗する", () => {
 
 ## テスト対象別の配置
 
-- **置き方**: colocated
+- **置き方**: type-first
 
 | レイヤー | テスト種別 | 配置 | 置き方（個別） | 接尾辞 | 補足 |
 |---|---|---|---|---|---|
-| domain | `unit` |  |  | `.test.ts` | 実装ファイルと同じディレクトリに置く |
-| application | `unit` |  |  | `.test.ts` | port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する |
-| outbound adapter | `integration` |  |  | `.test.ts` |  |
-| application | `acceptance` | `tests/acceptance/` | type-first |  | 仕様のシナリオに対応するテストだけは、実装と分けて1か所へ集める |
+| domain | `unit` | `tests/unit/` |  |  | ドメインの単体テスト |
+| application | `unit` | `tests/unit/` |  |  | port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する |
+| application | `integration` | `tests/integration/` |  |  | 操作保証に対応するテスト |
+| outbound adapter | `integration` | `tests/integration/` |  |  | 外へ出る口の統合テスト |
+| application | `acceptance` | `tests/acceptance/` |  |  | 仕様のシナリオに対応するテストを1か所へ集める |
 
 ---
 
