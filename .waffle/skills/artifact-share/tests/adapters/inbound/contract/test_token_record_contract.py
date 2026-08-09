@@ -102,6 +102,20 @@ def test_上限を超える所属は受け付けない():
     assert x.value.code == "TOO_MANY_PROJECTS"
 
 
+def test_上限ちょうどの所属は受け付ける():
+    """超える側だけを見ていると、1つ手前で拒むずれに気づけない。
+
+    上端が通ることを確かめないと、上限そのものを間違えても検証は緑のままになる。
+    """
+    limit = CONTRACT["所属の記録"]["上限"]
+    deps = main.Connections(store=None, keys=_Collector(), now=None)
+
+    write_membership(deps.gate, "aaaaaaaa", [f"p{i}" for i in range(limit)])
+
+    assert deps.gate._keys.written["pp:aaaaaaaa"].split(" ") == [
+        f"p{i}" for i in range(limit)]
+
+
 class _Collector:
     def __init__(self):
         self.written = {}
