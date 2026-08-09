@@ -25,9 +25,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+from conftest import SKILL
+
 import pytest
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = SKILL
 SOURCE = ROOT / "infra" / "cloudfront-function" / "viewer-token-gate.js"
 SCENARIOS = ROOT / "infra" / "cloudfront-function" / "tests" / "viewer-token-gate.test.mjs"
 

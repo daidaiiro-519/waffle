@@ -16,13 +16,15 @@ infra/contract/document-meta.json が全員の唯一の共通点で、書く側�
 import json
 from pathlib import Path
 
+from conftest import SKILL
+
 import pytest
 
 
 from domain.services.html_inspection import inspect_html  # noqa: E402
 
 CONTRACT = json.loads(
-    (Path(__file__).resolve().parents[1] / "infra" / "contract" / "document-meta.json")
+    (SKILL / "infra" / "contract" / "document-meta.json")
     .read_text(encoding="utf-8")
 )
 

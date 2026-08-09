@@ -16,7 +16,8 @@ import json
 import re
 from pathlib import Path
 
-SKILL = Path(__file__).resolve().parents[3]
+from conftest import SKILL
+
 CLOUDFORMATION = (SKILL / "infra" / "cloudformation.yaml").read_text(encoding="utf-8")
 ADMIN_APP = (SKILL / "scripts" / "app" / "app.js").read_text(encoding="utf-8")
 VIEWER = (SKILL / "references" / "templates" / "share-wrapper.html").read_text(

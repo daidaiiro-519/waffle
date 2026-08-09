@@ -20,6 +20,8 @@ import main
 import json
 from pathlib import Path
 
+from conftest import SKILL
+
 import pytest
 
 
@@ -34,7 +36,7 @@ from adapters.outbound.kvs_view_gate import KvsViewGate  # noqa: E402
 from domain.value_objects.view_subject import ViewSubject  # noqa: E402
 
 CONTRACT = json.loads(
-    (Path(__file__).resolve().parents[1] / "infra" / "contract" / "token-records.json")
+    (SKILL / "infra" / "contract" / "token-records.json")
     .read_text(encoding="utf-8")
 )
 

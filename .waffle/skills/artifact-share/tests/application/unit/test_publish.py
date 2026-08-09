@@ -4,15 +4,16 @@
 
 シナリオと1対1で対応するものは application/acceptance/ と
 application/integration/ にある。ここに残すのは、どのシナリオにも書かれて
-いないが崩れると困ること——閲覧画面の組み立て、metaタグの読み取り、
-外部参照の数え方、識別子の作り方。
+いないが崩れると困ること——閲覧画面の組み立てと、置く順序。
+
+上げられたHTMLの読み取りは、契約表を回す検証が上位互換に覆っている。
+識別子の作り方は、作る側の層で確かめる。
 
 対象の仕様: uc-publish-artifact（受け入れ基準のうち、シナリオを持たないもの）
 """
 import pytest
 
 from publish_setup import WITH_META, FakeKeyStore, FakeStore, publishing
-from adapters.outbound.random_identifier import RandomIdGenerator
 from shared.errors import PublishError
 
 
@@ -36,10 +37,3 @@ def test_トークンは配置がすべて済んでから書かれる():
 
     assert keys.keys == {}  # 開ける状態にはならない
 
-
-def test_アーティファクトIDは紛らわしい文字を避ける():
-    ids = {RandomIdGenerator().new_artifact_id().value for _ in range(200)}
-    assert len(ids) == 200                      # 重ならない
-    for value in ids:
-        assert len(value) == 8
-        assert not set(value) & set("lo01")     # 読み間違えやすい文字を使わない

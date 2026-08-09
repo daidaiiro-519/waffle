@@ -11,9 +11,11 @@ import importlib.util
 import sys
 from pathlib import Path
 
+from conftest import SKILL
+
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = SKILL
 
 
 @pytest.fixture(scope="module")

@@ -16,6 +16,8 @@
 import json
 from pathlib import Path
 
+from conftest import SKILL
+
 from adapters.inbound.admin_api import _outward
 from adapters.outbound.stored_comment_repository import (
     DIVIDER_SUFFIX, StoredCommentRepository,
@@ -23,7 +25,6 @@ from adapters.outbound.stored_comment_repository import (
 from application.usecases.read_comments import CommentEntry, Comments
 from fakes import FakeStore
 
-SKILL = Path(__file__).resolve().parents[4]
 CONTRACT = json.loads(
     (SKILL / "infra" / "contract" / "comment-entries.json").read_text(encoding="utf-8"))
 VIEWER = (SKILL / "references" / "templates" / "share-wrapper.html").read_text(

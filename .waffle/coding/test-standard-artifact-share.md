@@ -49,7 +49,7 @@ artifact-shareのテスト方針・配置・シナリオの束ね方を定める
 
 | テストタイプ | ツール | 対象 | 補足 |
 |---|---|---|---|
-| `unit` | pytest | domain / application |  |
+| `unit` | pytest | domain / application / cli |  |
 | `integration` | pytest | outbound adapter |  |
 | `acceptance` | pytest | application | 仕様のシナリオを見て直接執筆する |
 | `contract` | pytest | ports / inbound adapter | 本物の実装と偽実装の両方が同じスイートを満たすことを確かめる。ランタイムをまたぐデータの形もここで確かめる |
@@ -116,9 +116,10 @@ def test_suspended_artifact_cannot_be_viewed():
 | application | `acceptance` | `.waffle/skills/artifact-share/tests/application/acceptance/` |  |  |  |
 | application | `integration` | `.waffle/skills/artifact-share/tests/application/integration/` |  |  |  |
 | application | `contract` | `.waffle/skills/artifact-share/tests/application/contract/` |  |  | port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する |
-| inbound adapter | `contract` | `.waffle/skills/artifact-share/tests/adapters/inbound/contract/` |  |  | 閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う |
+| inbound adapter | `contract` | `.waffle/skills/artifact-share/tests/adapters/inbound/contract/` |  |  | 閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う。ランタイムをまたぐデータの形の合意も、確かめている実装がどの層にあるかではなく、その合意が誰との間で結ばれているかで置き場所が決まるため、外と結ぶものはここへ置く |
 | outbound adapter | `integration` | `.waffle/skills/artifact-share/tests/adapters/outbound/integration/` |  |  |  |
 | browser | `contract` | `.waffle/skills/artifact-share/tests/browser/contract/` |  |  | 利用者のブラウザで動く出荷物（管理画面・閲覧画面）を確かめる。ブラウザは層を持たないため、確かめるのは振る舞いではなく、出荷物どうしで二重に書かれた規則が一致していること。実行を伴わないので Python で書く |
+| cli | `unit` | `.waffle/skills/artifact-share/tests/cli/unit/` |  |  | 環境を作る手元のプログラムを確かめる。層の外にあるため、確かめるのは層の責務ではなく、自己点検の判断が壊れた環境で実際に落ちること。実行環境は差し替えて固定する。招かれた投稿者として動く受け口はまだ確かめるものが無いので、行を分けない |
 
 ---
 
@@ -128,10 +129,11 @@ def test_suspended_artifact_cannot_be_viewed():
 |---|---|
 | 禁止 | 単体テストが実物のAWSサービスに依存する |
 | 推奨 | 不変条件はテストダブルなしで検証する |
-| 必須 | テストファイル名は test_{対応するspecのdocumentIdをsnake_case化したもの}.py で統一する |
-| 必須 | tests/ 配下は architecture が宣言するレイヤーを第一階層とし、テスト種別を第二階層とする |
+| 必須 | 仕様のシナリオに対応するテストファイルの名前は test_{対応するspecのdocumentIdをsnake_case化したもの}.py で統一する。シナリオに紐づかないテストは、確かめている対象で命名する |
+| 必須 | tests/ 配下は architecture が宣言するレイヤーを第一階層とし、テスト種別を第二階層とする。ただし補助のモジュール（結線・偽物・足場）はテストではないため、この対象に含めない。取り込みの道を通す仕掛けが直下にあり、下層はそこに依存して動く |
 | 必須 | port の契約テストは、本物の実装とテスト用の偽実装の両方が同じテストスイートを満たすことを確認する |
 | 禁止 | 同じ port の偽実装を複数のテストファイルに分けて定義する。少しずつ食い違い、実物なら失敗する場面で偽実装が成功してテストが緑になる |
+| 禁止 | 同じ足場を、テストのファイルと補助のモジュールの両方に持つ。片方だけが育ち、片方だけが失敗を作れる状態になる。テストが別のテストを足場として取り込むことも同じ理由で行わない |
 | 必須 | 時刻・乱数・ID生成のような非決定的な値は、テストダブルで決定的な値に固定する |
 | 禁止 | 仕様の記述に、テスト層・アーキテクチャ層の内部語彙を持ち込む |
 
