@@ -8,6 +8,7 @@
 対象の仕様: uc-export-artifact
 """
 import json
+from dataclasses import asdict
 
 import pytest
 
@@ -48,6 +49,7 @@ def test_中身とコメントがまとめて手元に来る():
     got = build(deps, ExportArtifact).run(ME, r.artifact_id)
 
     assert got.content == HTML
+    assert got.name == "検索基盤の選定"
     assert len(got.comments) == 3
     for comment in got.comments:
         assert comment.author
@@ -139,6 +141,7 @@ def test_閲覧トークンは含まれない():
 
     got = build(deps, ExportArtifact).run(ME, r.artifact_id)
 
-    assert r.token not in repr(got)
-    assert not hasattr(got, "token")
+    got = json.dumps(asdict(got), ensure_ascii=False)
+    assert r.token not in got
+    assert "token" not in got      # 値だけでなく欄の名前も見る
     assert not hasattr(got, "view_tokens")

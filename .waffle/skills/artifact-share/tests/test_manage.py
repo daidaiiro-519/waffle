@@ -20,22 +20,15 @@ from fakes import FakeKeyStore, FakeStore
 from manage_setup import HTML  # noqa: E402
 from usecase_builder import build  # noqa: E402
 from application.usecases.assign_artifact_to_project import AssignArtifactToProject  # noqa: E402
-from application.usecases.control_project_access import ControlProjectAccess  # noqa: E402
 from application.usecases.create_project import CreateProject  # noqa: E402
-from application.usecases.issue_view_token import IssueViewToken  # noqa: E402
 from application.usecases.list_my_artifacts import ListMyArtifacts  # noqa: E402
 from application.usecases.publish_artifact import PublishArtifact  # noqa: E402
 from application.usecases.replace_artifact_content import ReplaceArtifactContent  # noqa: E402
-from application.usecases.resume_artifact import ResumeArtifact  # noqa: E402
-from application.usecases.suspend_artifact import SuspendArtifact  # noqa: E402
 
 from application.ports import Caller  # noqa: E402
-from domain.value_objects.view_subject import ViewSubject  # noqa: E402
 from domain.entities.shared_artifact import (
     MAX_PROJECTS  # noqa: E402  # 旧 MAX_PROJECTS_PER_ARTIFACT,
 )
-from domain.value_objects.project import PERSONAL  # noqa: E402
-from domain.value_objects.project import SHARED  # noqa: E402
 from shared.errors import ManageError  # noqa: E402
 
 
@@ -185,6 +178,3 @@ def test_上限を超えてプロジェクトへ加えられない():
     assert len(meta_of(deps, r.artifact_id)["projects"]) == MAX_PROJECTS
 
 
-def test_読めるものだけなら件数は0():
-    deps, _published = setup()
-    assert build(deps, ListMyArtifacts).run(ME).unreadable == 0

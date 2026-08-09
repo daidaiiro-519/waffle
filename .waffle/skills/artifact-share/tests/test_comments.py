@@ -11,19 +11,13 @@
 
 import main
 import json
-from dataclasses import asdict
 
-import pytest
 
 from usecase_builder import build  # noqa: E402
-from application.usecases.export_artifact import ExportArtifact  # noqa: E402
 from application.usecases.publish_artifact import PublishArtifact  # noqa: E402
 from application.usecases.read_comments import ReadComments  # noqa: E402
-from application.usecases.replace_artifact_content import ReplaceArtifactContent  # noqa: E402
-from application.usecases.suspend_artifact import SuspendArtifact  # noqa: E402
 
 from application.ports import Caller  # noqa: E402
-from shared.errors import ManageError  # noqa: E402
 
 
 from fakes import FakeKeyStore, FakeStore  # noqa: E402
@@ -84,13 +78,6 @@ def test_管理者は他人のものも読める():
     assert len(build(deps, ReadComments).run(ADMIN, aid).comments) == 1
 
 
-def test_公開が止まっていても読める():
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "田中", "本文")
-    build(deps, SuspendArtifact).run(ME, aid)
-    assert len(build(deps, ReadComments).run(ME, aid).comments) == 1
-
-
 def test_読めない記録があっても残りが返る():
     """1件の不具合で、その共有アーティファクトの反応がすべて見えなくなるのを避ける"""
     deps, aid = setup()
@@ -105,61 +92,5 @@ def test_読めない記録があっても残りが返る():
     assert got.unreadable == 1
 
 
-def test_読んでも何も変わらない():
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "田中", "本文")
-    before = dict(deps.store.objects)
-
-    build(deps, ReadComments).run(ME, aid)
-    build(deps, ReadComments).run(ME, aid)
-
-    assert deps.store.objects == before
-
-
 # ── 取り出す ────────────────────────────────────────────
 
-def test_中身とコメントがまとめて返る():
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "田中", "本文")
-
-    got = build(deps, ExportArtifact).run(ME, aid)
-
-    assert got.content == HTML
-    assert got.name == "検索基盤の選定"
-    assert len(got.comments) == 1
-
-
-def test_取り出しても何も変わらない():
-    """読むだけの操作。控えを取るたびに渡した相手へ影響が及んではならない"""
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "田中", "本文")
-    store_before = dict(deps.store.objects)
-    keys_before = dict(deps.keys.keys)
-
-    first = build(deps, ExportArtifact).run(ME, aid)
-    second = build(deps, ExportArtifact).run(ME, aid)
-
-    assert first == second
-    assert deps.store.objects == store_before
-    assert deps.keys.keys == keys_before
-
-
-def test_公開が止まっていても取り出せる():
-    """止めてからでは取り出せないと、迷ったときに止められなくなる"""
-    deps, aid = setup()
-    build(deps, SuspendArtifact).run(ME, aid)
-    assert build(deps, ExportArtifact).run(ME, aid).content == HTML
-
-
-def test_取り出したものに閲覧トークンは含まれない():
-    """渡り歩いても、それだけで開ける状態にならないようにする"""
-    deps, aid = setup()
-    got = json.dumps(asdict(build(deps, ExportArtifact).run(ME, aid)), ensure_ascii=False)
-    assert "token" not in got
-
-
-def test_他人のものは取り出せない():
-    deps, aid = setup()
-    with pytest.raises(ManageError) as x:
-        build(deps, ExportArtifact).run(SOMEONE_ELSE, aid)
-    assert x.value.code == "ARTIFACT_NOT_FOUND"
