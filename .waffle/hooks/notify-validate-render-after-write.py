@@ -41,12 +41,27 @@ _HEREDOC_OPEN = re.compile(r"<<-?\s*['\"]?(\w+)['\"]?")
 
 
 def _target(command: str) -> str | None:
-    m = _PATH_ARG.search(command)
-    if m:
-        return m.group(1).strip("'\"")
-    m = _SCHEMA_REF_ARG.search(command)
-    if m:
-        return m.group(1).strip("'\"")
+    """そのコマンドが書き換えている対象を、コマンドの文字列から読み取る。
+
+    展開されていないシェル変数（`--path $T` 等）は対象として扱わない。記録に残る
+    のは打たれた文字列そのもので、変数はここでは中身を持たない。これを対象として
+    覚えると、実在しない相手を待ち続けることになり、以後どのコマンドでも警告が
+    出続ける（実際にそうなった）。
+
+    Args:
+        command: 判定するBashコマンド。
+
+    Returns:
+        書き換え対象の文字列。読み取れない場合と、変数のままの場合は None。
+
+    Raises:
+        なし。
+    """
+    for pattern in (_PATH_ARG, _SCHEMA_REF_ARG):
+        m = pattern.search(command)
+        if m:
+            target = m.group(1).strip("'\"")
+            return None if "$" in target else target
     return None
 
 

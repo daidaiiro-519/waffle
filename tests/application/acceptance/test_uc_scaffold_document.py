@@ -16,6 +16,7 @@ _CUSTOM_DOC_ID = "test-acceptance-scaffold-custom"
 _CUSTOM_DOC_PATH = f".waffle/documents/skills/{_CUSTOM_DOC_ID}.json"
 _CODING_SCHEMA = "CodingSchema"   # 版を書かない。最新へ解決される
 _CODING_DOC_ID = "test-acceptance-scaffold-coding"
+_CODING_DOC_PATH = f".waffle/documents/coding/{_CODING_DOC_ID}.json"
 _TEMPLATE_SCHEMA = "TemplateSchema/v2"
 _TEMPLATE_DOC_ID = "test-acceptance-scaffold-template"
 _TEMPLATE_DOC_PATH = f".waffle/documents/templates/{_TEMPLATE_DOC_ID}.json"
@@ -75,6 +76,7 @@ def setup_function():
     Path(_CUSTOM_DOC_PATH).unlink(missing_ok=True)
     Path(_TEMPLATE_DOC_PATH).unlink(missing_ok=True)
     Path(_MIGRATE_DOC_PATH).unlink(missing_ok=True)
+    Path(_CODING_DOC_PATH).unlink(missing_ok=True)
 
 
 def teardown_function():
@@ -82,6 +84,7 @@ def teardown_function():
     Path(_CUSTOM_DOC_PATH).unlink(missing_ok=True)
     Path(_TEMPLATE_DOC_PATH).unlink(missing_ok=True)
     Path(_MIGRATE_DOC_PATH).unlink(missing_ok=True)
+    Path(_CODING_DOC_PATH).unlink(missing_ok=True)
     _MIGRATE_FIXTURE_V1.unlink(missing_ok=True)
     _MIGRATE_FIXTURE_V2.unlink(missing_ok=True)
     if _MIGRATE_FIXTURE_DIR.exists() and not any(_MIGRATE_FIXTURE_DIR.iterdir()):
