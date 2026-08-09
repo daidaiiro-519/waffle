@@ -1,0 +1,279 @@
+{
+  "documentId": "handoff-test-file-naming-from-declaration",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "テストファイルの名前の導出を、検査のコードから規約の宣言へ移す"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-check-scenario-drift"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "名前の欄だけでは、全ての言語を覆えない",
+          "consideration": "テストが実装ファイルの中に住む言語と、置き場所そのものが決まっている言語がある。前者は名前の問題ですらなく、後者は置き場所の宣言が要る。よってこの作業は「名前」だけを扱い、「置き場所」には触れない。両方を1つの作業に入れると、完了の条件が際限なく広がる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "テストファイルの末尾を、実装ファイルの拡張子から借りてはいけない",
+          "consideration": "いまの検査は実装ファイルの拡張子をテストファイルの末尾として使っている。同じとは限らない（末尾そのものがテストであることを表す言語がある）。テスト規約に名づけの器を新設し、実装の規約からの流用を止めた。片方を足して両方残すのが最悪の形になる。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "同じ名前に、別の概念を持たせない",
+          "consideration": "名前の由来を表す欄が、実装ファイル用とテスト用の2箇所に同じ名前で存在していた。取りうる値が1つも重ならない別概念だったので、テスト側は別のブロックの別の欄名にした。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "未宣言と、空を明示的に宣言したことを区別する",
+          "consideration": "前置や中置は、要らない言語では空が正しい値になる。未宣言を空とみなして続けると、規約の書き損じが正しい名前として通る。よって名づけの欄は全て必須にし、要らない欄には空を書かせる。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "宣言と実装を同時に動かすと、合格条件が自分で自分を満たす",
+          "consideration": "実装を書いてから宣言をその出力に合わせると、何をしても緑になる。宣言する値を先に決めて凍結し、その後に実装を書く。"
+        },
+        {
+          "advisor": "（利用者の判断）",
+          "viewpoint": "置き場所が既に表している区別を、名前でも繰り返さない",
+          "consideration": "仕様の種別は置き場所が表しているので、名前の接頭辞は重複している。落とす接頭辞を宣言する欄を設けた。段Aでは空にして出力を保ち、段Bで実際に落とす。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "綴りの変換を直すと、名前の検査以外にも波及する",
+          "consideration": "語の切り出しを変えると、実装ファイル名を導く部品を経由して4つの別の検知に届く。どれも「見つからなければ差分として報告する」構造なので、ずれても例外ではなく報告件数の静かな変化として現れる。回帰の対象にこの4つを必ず含める。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "綴りの変換の修正は、区切りを足すだけに限る",
+          "consideration": "正規化してから組み立て直す書き方にすると、先頭や末尾の区切りが落ちる。非公開を先頭の記号で表す規約と正面から衝突する。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "既存のテストが、綴りの変換を1つの入力でしか固定していない",
+          "consideration": "区切り記号を含む入力が1件も検証されていないので、回帰が出ても赤くならない。直す前に、区切り記号入りの入力を表記ごとに固定するテストを足す。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "合格条件を、テストが緑であることに置かない",
+          "consideration": "全体を検査する操作は、相手が1つも見つからなくても正常終了する。テストは自前の材料で動くので、突き合わせの実績は測られない。合格条件は、導出した期待パスの集合が変更前と完全に一致することに置く。件数の一致では「たまたま同数」を排除できない。"
+        },
+        {
+          "advisor": "（進行の判断）",
+          "viewpoint": "段Bそのものが、この作業が効いていることの証明になる",
+          "consideration": "いま接頭辞を外すには検査のコードを書き換えるしかない。段Aの後は宣言を1つ変えるだけで済む。実際に多数のテストファイルが改名されることが、宣言が読まれている証拠になる。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "段Aでは、導出されるパスの集合を1文字も変えない。差分が出たらそれは全て誤りとして扱う。",
+        "実装モジュール名を由来にする道は、この作業では実装しない。宣言されたら明示的に失敗させる（黙って別の由来へ倒さない）。",
+        "置き場所の宣言（配置の方式・末尾だけで表す形）は実装しない。この作業を終えても、置き場所を末尾で表すスタックは通らないままである。そのことを仕様に書き残す。",
+        "新しい部品を作らない。綴りの変換は既にある部品を直して使う。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "宣言",
+          "description": "テスト規約が、テストファイルの名前の作り方を持つ。検査はここだけを読む。",
+          "nodes": [
+            {
+              "id": "naming",
+              "title": "テストファイルの名づけ",
+              "sub": "由来・落とす接頭辞・前置・表記・中置・末尾",
+              "status": "new"
+            },
+            {
+              "id": "placement",
+              "title": "テストの配置",
+              "sub": "シナリオ種別と置き場所の対応",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "解決",
+          "description": "規約を読み、検査が使える形にして渡す。ここが唯一の合流点。",
+          "nodes": [
+            {
+              "id": "resolve",
+              "title": "規約の解決",
+              "sub": "スタックごとの宣言を1つにまとめる",
+              "status": "existing"
+            },
+            {
+              "id": "case",
+              "title": "綴りの変換",
+              "sub": "区切り記号も語の区切りとして扱う",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "検査",
+          "description": "仕様のシナリオと、実在するテストを突き合わせる。名前の作り方を1つも知らない。",
+          "nodes": [
+            {
+              "id": "drift",
+              "title": "シナリオの突き合わせ",
+              "sub": "名前の綴りの規則を持たない",
+              "status": "existing"
+            },
+            {
+              "id": "others",
+              "title": "他の4つの突き合わせ",
+              "sub": "綴りの変換を共有している",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "naming",
+          "to": "resolve",
+          "kind": "dependency",
+          "label": "名前の作り方を渡す"
+        },
+        {
+          "from": "placement",
+          "to": "resolve",
+          "kind": "dependency",
+          "label": "置き場所を渡す"
+        },
+        {
+          "from": "resolve",
+          "to": "drift",
+          "kind": "dependency",
+          "label": "解決済みの宣言だけを渡す"
+        },
+        {
+          "from": "case",
+          "to": "drift",
+          "kind": "dependency",
+          "label": "宣言された表記へ変換する"
+        },
+        {
+          "from": "case",
+          "to": "others",
+          "kind": "dependency",
+          "label": "同じ変換を共有する（回帰の経路）"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "いまの形: 前置「test_」＋ 仕様の識別子を snake にしたもの ＋ 末尾「.py」",
+        "段B後: 落とす接頭辞に仕様の種別を並べると、同じ宣言のまま名前から種別が消える",
+        "末尾で表す言語: 前置は空、中置に「.test」、末尾に「.ts」を宣言すると、その形の名前になる"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "このHandoffが担うユースケース: uc-check-scenario-drift。併せて uc-scaffold-document と uc-init-coding-preset の不具合修正が前提として済んでいる。いま検査は、突き合わせる相手のテストファイルの名前を自分で組み立てている——前置・綴りの変換・名前の由来をコードが持ち、規約から来るのは拡張子だけ。そのためテストの名前がPythonの流儀に固定され、他の言語では成立しない。この3つを規約の宣言へ移す。作業は2段に分ける。段Aは導出を宣言から行うように変えるが出力は1文字も変えない。段Bは宣言を1つ変えて、置き場所と重複している接頭辞を落とす。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/application/usecases/check_scenario_drift.py",
+          "reason": "テストファイル名の組み立てから、前置・綴りの変換・由来を取り除き、宣言から導く"
+        },
+        {
+          "path": "src/waffle/domain/services/canonical_naming.py",
+          "reason": "語の切り出しが大文字小文字の境目しか見ていないため、区切り記号を語の区切りとして足す"
+        },
+        {
+          "path": "src/waffle/domain/services/scenario_drift.py",
+          "reason": "名前の導出を置く先の候補。置き場所を導く関数が既にここにあり、名前だけが呼び出し側に残っている"
+        },
+        {
+          "path": "src/waffle/application/services/stack_resolution.py",
+          "reason": "新しい名づけの宣言を解決して検査へ渡す。実装ファイルの拡張子の流用をここで止める"
+        },
+        {
+          "path": "tests/domain/unit/test_canonical_naming.py",
+          "reason": "区切り記号を含む入力を表記ごとに固定してから、綴りの変換を直す"
+        },
+        {
+          "path": "tests/",
+          "reason": "段Bで、置き場所と重複する接頭辞を持つテストファイルを改名する"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor",
+        "qa-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "綴りの変換の呼び出し元を2箇所と伝えていたが、実測では実装ファイル名を導く部品経由で4つの検知へ届く。回帰の範囲を広げた。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 1,
+          "resolutionStatus": "resolved",
+          "note": "末尾の所有者を1つに決めた。テスト規約に名づけの器を新設し、実装の規約からの流用を止めた。必須にするため schema の版を上げた。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "open",
+          "note": "置き場所を宣言していない行は、報告には現れるが検査対象には入らない。この作業では方式を実装しないため、末尾だけで置き場所を表すスタックは通らないままになる。"
+        },
+        {
+          "advisor": "（実測）",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 3,
+          "resolutionStatus": "open",
+          "note": "別の作業で、仕様に無いシナリオを名乗るテストが4件ある。この作業とは無関係だが、突き合わせの結果が常に赤いままになる。"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": "提示待ち"
+      }
+    }
+  },
+  "tags": []
+}
