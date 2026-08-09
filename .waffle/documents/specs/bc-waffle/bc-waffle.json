@@ -171,7 +171,7 @@
           "name": "paragraph・listが正しく整形される",
           "category": "正常系",
           "viewpoint": "paragraph/listの整形保証",
-          "gherkin": "Scenario: paragraph/listが正しく整形される\n  Given paragraph/listを宣言するx-render\n  When renderする\n  Then paragraphは地の文、listは箇条書きとして整形される",
+          "gherkin": "Scenario: paragraph・listが正しく整形される\n  Given paragraph/listを宣言するx-render\n  When renderする\n  Then paragraphは地の文、listは箇条書きとして整形される",
           "covers": "業務サービス: 各部品種別ごとの整形規則"
         },
         {
@@ -227,21 +227,21 @@
           "name": "sequenceはactor・participantを区別する",
           "category": "境界値",
           "viewpoint": "sequenceのactor/participant区別保証",
-          "gherkin": "Scenario: sequenceはactor/participantを区別する\n  Given kind:actor/participantを含む参加者宣言\n  When renderする\n  Then actor/participantそれぞれの宣言がMermaid構文で区別される",
+          "gherkin": "Scenario: sequenceはactor・participantを区別する\n  Given kind:actor/participantを含む参加者宣言\n  When renderする\n  Then actor/participantそれぞれの宣言がMermaid構文で区別される",
           "covers": "業務サービス: 各部品種別ごとの整形規則"
         },
         {
           "name": "sequenceはloop・altを入れ子で表現する",
           "category": "正常系",
           "viewpoint": "sequenceのloop/alt入れ子保証",
-          "gherkin": "Scenario: sequenceはloop/altを入れ子で表現する\n  Given loop/alt種別のstepを含むsteps配列\n  When renderする\n  Then loop/altブロックが正しく入れ子のMermaid構文になる",
+          "gherkin": "Scenario: sequenceはloop・altを入れ子で表現する\n  Given loop/alt種別のstepを含むsteps配列\n  When renderする\n  Then loop/altブロックが正しく入れ子のMermaid構文になる",
           "covers": "業務サービス: 各部品種別ごとの整形規則"
         },
         {
           "name": "sequenceはactivate・deactivateを表現する",
           "category": "境界値",
           "viewpoint": "sequenceのactivate/deactivate保証",
-          "gherkin": "Scenario: sequenceはactivate/deactivateを表現する\n  Given activate/deactivateフラグを持つstep\n  When renderする\n  Then Mermaidのアクティベーション記法(+/-)が正しく付与される",
+          "gherkin": "Scenario: sequenceはactivate・deactivateを表現する\n  Given activate/deactivateフラグを持つstep\n  When renderする\n  Then Mermaidのアクティベーション記法(+/-)が正しく付与される",
           "covers": "業務サービス: 各部品種別ごとの整形規則"
         },
         {

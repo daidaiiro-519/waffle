@@ -146,7 +146,7 @@ Scenario: テンプレートと一致しないパスは復元できない
 | 正常系 | paragraph/listの整形保証 |
 
 ```gherkin
-Scenario: paragraph/listが正しく整形される
+Scenario: paragraph・listが正しく整形される
   Given paragraph/listを宣言するx-render
   When renderする
   Then paragraphは地の文、listは箇条書きとして整形される
@@ -250,7 +250,7 @@ Scenario: statediagramは疑似状態を表現する
 | 境界値 | sequenceのactor/participant区別保証 |
 
 ```gherkin
-Scenario: sequenceはactor/participantを区別する
+Scenario: sequenceはactor・participantを区別する
   Given kind:actor/participantを含む参加者宣言
   When renderする
   Then actor/participantそれぞれの宣言がMermaid構文で区別される
@@ -263,7 +263,7 @@ Scenario: sequenceはactor/participantを区別する
 | 正常系 | sequenceのloop/alt入れ子保証 |
 
 ```gherkin
-Scenario: sequenceはloop/altを入れ子で表現する
+Scenario: sequenceはloop・altを入れ子で表現する
   Given loop/alt種別のstepを含むsteps配列
   When renderする
   Then loop/altブロックが正しく入れ子のMermaid構文になる
@@ -276,7 +276,7 @@ Scenario: sequenceはloop/altを入れ子で表現する
 | 境界値 | sequenceのactivate/deactivate保証 |
 
 ```gherkin
-Scenario: sequenceはactivate/deactivateを表現する
+Scenario: sequenceはactivate・deactivateを表現する
   Given activate/deactivateフラグを持つstep
   When renderする
   Then Mermaidのアクティベーション記法(+/-)が正しく付与される
