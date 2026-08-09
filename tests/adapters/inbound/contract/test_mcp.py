@@ -358,7 +358,7 @@ def test_check_scenario_drift_returns_four_fields():
     """
     out = asyncio.run(_call("check_scenario_drift", {
         "specPath": ".waffle/documents/specs/bc-waffle/subdomain/sd-reconciliation/usecase/uc-check-spec-integrity.json",
-        "testPath": "tests/application/integration/test_uc_check_spec_integrity.py",
+        "testPath": "tests/application/integration/test_check_spec_integrity.py",
         "architectureRef": "architecture-waffle",
     }))
     assert set(out.keys()) == {"missing_in_tests", "orphaned_in_tests", "matched", "gherkin_mismatches",
@@ -376,7 +376,7 @@ def test_check_verification_gate_returns_status_and_reasons(tmp_path):
 
     out = asyncio.run(_call("check_verification_gate", {
         "specPath": ".waffle/documents/specs/bc-waffle/subdomain/sd-flow-gate/usecase/uc-check-verification-gate.json",
-        "testPath": "tests/application/acceptance/test_uc_check_verification_gate.py",
+        "testPath": "tests/application/acceptance/test_check_verification_gate.py",
         "architectureRef": "architecture-waffle",
         "testResultsPath": str(results_path),
     }))
