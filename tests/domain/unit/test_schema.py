@@ -18,6 +18,8 @@ import pytest
 
 from waffle.adapters.outbound.jsonschema_validator import JsonSchemaValidator
 from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
+from tests.fakes import base_schema, new_block
+from waffle.domain.services import schema_patch
 
 _IN_SCOPE_SCHEMAS = ["SkillSchema/v1", "AgentSchema/v2", "TemplateSchema/v1", "CodingSchema/v2", "DomainSpecSchema/v5", "PresentationSpecSchema/v1", "PlatformSpec/v1"]
 _PACKAGES = ["waffle.domain.model", "waffle.domain.value_objects", "waffle.application.dto"]
@@ -122,3 +124,119 @@ def test_published_version_keeps_backward_compatibility():
     }
     errors = JsonSchemaValidator().validate(old_document, new_schema_with_required_field)
     assert errors, "後方互換を壊す変更（必須フィールド追加）が誤って適合と判定された"
+
+
+def test_adding_required_to_published_kind_breaks_compatibility():
+    """
+    Scenario: requiredへの追加は後方互換違反として検出される
+    Given 公開済みのschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema
+    When 後方互換チェックを実行する
+    Then 違反として検出される
+    """
+    old_schema = base_schema()
+    new_schema = schema_patch.add_block(old_schema, "NoteBlock", new_block(), "SomeContent", "note", required=True)
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations, "required配列への追加が検出されなかった"
+
+
+def test_adding_optional_property_keeps_compatibility():
+    """
+    Scenario: optionalプロパティの追加は後方互換違反にならない
+    Given 公開済みのschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema
+    When 後方互換チェックを実行する
+    Then 違反として検出されない
+    """
+    old_schema = base_schema()
+    new_schema = schema_patch.add_block(old_schema, "NoteBlock", new_block(), "SomeContent", "note")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations == []
+
+
+def test_removing_required_property_breaks_compatibility():
+    """
+    Scenario: requiredなプロパティの除去は後方互換違反として検出される
+    Given requiredに指定されているプロパティをremove_blockで除去した変更後schema
+    When 後方互換チェックを実行する
+    Then 違反として検出される
+    """
+    old_schema = base_schema()
+    new_schema = schema_patch.remove_block(old_schema, "SomeContent", "title")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations, "必須プロパティのremove_blockが検出されなかった"
+
+
+def test_removing_optional_property_keeps_compatibility():
+    """
+    Scenario: requiredでないプロパティの除去は後方互換違反にならない
+    Given requiredに含まれないプロパティをremove_blockで除去した変更後schema
+    When 後方互換チェックを実行する
+    Then 違反として検出されない
+    """
+    old_schema = schema_patch.add_block(base_schema(), "NoteBlock", new_block(), "SomeContent", "note", required=False)
+    new_schema = schema_patch.remove_block(old_schema, "SomeContent", "note")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations == []
+
+
+def test_renaming_required_property_breaks_compatibility():
+    """
+    Scenario: requiredなプロパティの改名は後方互換違反として検出される
+    Given 公開済みkindのContent defでrequiredに指定されているブロックのリネーム
+    When 後方互換チェックを実行する
+    Then 違反として検出される（旧プロパティ名を持つ既存instanceが新schemaのrequiredを満たせなくなるため）
+    """
+    old_schema = base_schema()
+    new_schema = schema_patch.rename_block(old_schema, "Title", "Heading")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations, "requiredプロパティのリネームが検出されなかった"
+
+
+def test_renaming_optional_property_keeps_compatibility():
+    """
+    Scenario: requiredでないプロパティの改名は後方互換違反にならない
+    Given 公開済みkindのContent defでrequiredに指定されていないブロックのリネーム
+    When 後方互換チェックを実行する
+    Then 違反として検出されない
+    """
+    old_schema = base_schema()
+    old_schema = schema_patch.add_block(old_schema, "NoteBlock", new_block(), "SomeContent", "note")
+    new_schema = schema_patch.rename_block(old_schema, "Note", "Memo")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations == []
+
+
+def test_changing_field_type_breaks_compatibility():
+    """
+    Scenario: 既存フィールドの型変更は後方互換違反として検出される
+    Given 公開済みkindの既存フィールドの型(type)を書き換える変更
+    When 後方互換チェックを実行する
+    Then 違反として検出される（旧型の値を持つ既存instanceが新schemaの型制約を満たせなくなるため）
+    """
+    old_schema = base_schema()
+    new_schema = schema_patch.set_field(old_schema, "TitleBlock", "properties.title.type", "number")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations, "既存フィールドの型変更が検出されなかった"
+
+
+def test_set_field_without_type_change_keeps_compatibility():
+    """
+    Scenario: 型を変えない書き換えは後方互換違反にならない
+    Given 型(type)以外のフィールドを書き換えるset_field
+    When 後方互換チェックを実行する
+    Then 違反として検出されない
+    """
+    old_schema = base_schema()
+    new_schema = schema_patch.set_field(old_schema, "TitleBlock", "properties.title.description", "タイトル文字列")
+    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
+    assert violations == []
+
+
+def test_dump_matches_json_dumps_indent2():
+    """
+    Scenario: 契約整形は契約が定める形と完全一致する
+    Given 任意の整形が施されたschema
+    When 契約整形を適用する
+    Then 出力は契約が定める形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する
+    """
+    schema = base_schema()
+    assert schema_patch.dump(schema) == json.dumps(schema, indent=2, ensure_ascii=False) + "\n"

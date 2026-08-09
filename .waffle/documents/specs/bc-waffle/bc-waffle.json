@@ -132,18 +132,6 @@
           "group": "SchemaDiscriminator"
         },
         {
-          "name": "後方互換チェック",
-          "responsibility": "変更前後のschemaの差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。",
-          "serviceName": "CheckBackwardCompatible",
-          "group": "SchemaPatch"
-        },
-        {
-          "name": "契約整形",
-          "responsibility": "schemaファイルの物理的な整形を、agg-schemaが定める契約（2段の字下げ・非ASCII文字はそのまま・末尾に改行）に一意に揃える。Schema集約の不変条件を実際に適用する。",
-          "serviceName": "FormatContract",
-          "group": "SchemaPatch"
-        },
-        {
           "name": "ソースルート解決",
           "responsibility": "CodingSchema（Coding集約）のarchitecture文書が持つlayout.sourceRootとconceptPlacementから、指定した概念（usecase等）の実装ファイル配置パスを導出する。drift-check系の複数usecaseが共通して依存する（特定の集約に属さない・言語/アーキテクチャに依存しない汎用計算）。",
           "serviceName": "ResolveConceptSourceRoot",
@@ -304,27 +292,6 @@
           "viewpoint": "discriminatorキー抽出：ifもallOf内のifも持たないschemaは分岐を持たない",
           "gherkin": "Scenario: discriminatorが無いschemaはNoneを返す\n  Given ifもallOfも持たないschema\n  When discriminatorキーを抽出する\n  Then Noneが返る",
           "covers": "ドメインサービス: discriminatorキー抽出"
-        },
-        {
-          "name": "requiredへの追加は後方互換違反として検出される",
-          "category": "異常系",
-          "viewpoint": "後方互換チェック：公開済みkindのContent defのrequired配列に新規エントリを追加する変更を検出する",
-          "gherkin": "Scenario: requiredへの追加は後方互換違反として検出される\n  Given 公開済みのschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出される",
-          "covers": "ドメインサービス: 後方互換チェック"
-        },
-        {
-          "name": "optionalプロパティの追加は後方互換違反にならない",
-          "category": "正常系",
-          "viewpoint": "後方互換チェック：requiredに含まれない新規プロパティの追加は既存instanceを壊さない",
-          "gherkin": "Scenario: optionalプロパティの追加は後方互換違反にならない\n  Given 公開済みのschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出されない",
-          "covers": "ドメインサービス: 後方互換チェック"
-        },
-        {
-          "name": "契約整形は契約が定める形と完全一致する",
-          "category": "正常系",
-          "viewpoint": "契約整形：schemaファイルの物理整形がagg-schemaの不変条件と一致する",
-          "gherkin": "Scenario: 契約整形は契約が定める形と完全一致する\n  Given 任意の整形が施されたschema\n  When 契約整形を適用する\n  Then 出力は契約が定める形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する",
-          "covers": "ドメインサービス: 契約整形"
         }
       ]
     },

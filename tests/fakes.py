@@ -149,3 +149,36 @@ def scenario_binding(tests_root) -> dict:
         # 複数のランタイムを持つスタックを想定して2つ挙げる
         "languageBySuffix": {"py": "python", "js": "javascript", "ts": "typescript"},
     }
+
+
+def base_schema() -> dict:
+    return {
+        "$defs": {
+            "SomeContent": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                    "title": {"$ref": "#/$defs/TitleBlock"},
+                },
+            },
+            "TitleBlock": {
+                "type": "object",
+                "required": ["blockType", "title"],
+                "properties": {
+                    "blockType": {"type": "string", "const": "Title"},
+                    "title": {"type": "string"},
+                },
+            },
+        }
+    }
+
+
+def new_block() -> dict:
+    return {
+        "type": "object",
+        "required": ["blockType", "note"],
+        "properties": {
+            "blockType": {"type": "string", "const": "Note"},
+            "note": {"type": "string"},
+        },
+    }

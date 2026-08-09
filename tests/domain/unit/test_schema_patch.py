@@ -6,9 +6,10 @@ port(DocumentRepository/SchemaRepository)を必要としないため、全件を
 import json
 
 from waffle.domain.services import schema_patch
+from tests.fakes import base_schema, new_block
 
 
-def _base_schema() -> dict:
+def base_schema() -> dict:
     return {
         "$defs": {
             "SomeContent": {
@@ -30,7 +31,7 @@ def _base_schema() -> dict:
     }
 
 
-def _new_block() -> dict:
+def new_block() -> dict:
     return {
         "type": "object",
         "required": ["blockType", "note"],
@@ -49,8 +50,8 @@ def test_add_block_adds_def_and_content_property():
     When add_blockを実行する
     Then $defsに新規ブロックが追加され、対応するContent defにプロパティ参照が追加される
     """
-    schema = _base_schema()
-    result = schema_patch.add_block(schema, "NoteBlock", _new_block(), "SomeContent", "note")
+    schema = base_schema()
+    result = schema_patch.add_block(schema, "NoteBlock", new_block(), "SomeContent", "note")
     assert "NoteBlock" in result["$defs"]
     assert result["$defs"]["SomeContent"]["properties"]["note"] == {"$ref": "#/$defs/NoteBlock"}
 
@@ -61,9 +62,9 @@ def test_add_block_leaves_other_blocks_untouched():
     When 新規ブロックをadd_blockする
     Then 既存のブロックの内容は変わらない
     """
-    schema = _base_schema()
+    schema = base_schema()
     before_title_block = json.loads(json.dumps(schema["$defs"]["TitleBlock"]))
-    result = schema_patch.add_block(schema, "NoteBlock", _new_block(), "SomeContent", "note")
+    result = schema_patch.add_block(schema, "NoteBlock", new_block(), "SomeContent", "note")
     assert result["$defs"]["TitleBlock"] == before_title_block
 
 
@@ -73,9 +74,9 @@ def test_add_block_is_idempotent():
     When add_blockを再実行する
     Then 対象は無変更のまま成功する
     """
-    schema = _base_schema()
-    once = schema_patch.add_block(schema, "NoteBlock", _new_block(), "SomeContent", "note")
-    twice = schema_patch.add_block(once, "NoteBlock", _new_block(), "SomeContent", "note")
+    schema = base_schema()
+    once = schema_patch.add_block(schema, "NoteBlock", new_block(), "SomeContent", "note")
+    twice = schema_patch.add_block(once, "NoteBlock", new_block(), "SomeContent", "note")
     assert schema_patch.dump(once) == schema_patch.dump(twice)
 
 
@@ -88,7 +89,7 @@ def test_rename_block_renames_def_const_property_and_ref():
     Then $defsキー名・blockType const・プロパティキー名・required配列内エントリ・
     $ref参照文字列がすべて新短縮名に一貫してリネームされる
     """
-    schema = _base_schema()
+    schema = base_schema()
     result = schema_patch.rename_block(schema, "Title", "Heading")
     assert "HeadingBlock" in result["$defs"]
     assert "TitleBlock" not in result["$defs"]
@@ -106,7 +107,7 @@ def test_rename_block_leaves_unrelated_strings_untouched():
     When rename_blockを実行する
     Then その無関係な文字列値は変更されない（識別子としての一致だけを対象にする）
     """
-    schema = _base_schema()
+    schema = base_schema()
     schema["$defs"]["NoteBlock"] = {
         "type": "object",
         "required": ["blockType", "note"],
@@ -125,7 +126,7 @@ def test_rename_block_is_idempotent():
     When 同じrename_block操作を再実行する
     Then 対象は無変更のまま成功する
     """
-    schema = _base_schema()
+    schema = base_schema()
     once = schema_patch.rename_block(schema, "Title", "Heading")
     twice = schema_patch.rename_block(once, "Title", "Heading")
     assert schema_patch.dump(once) == schema_patch.dump(twice)
@@ -137,7 +138,7 @@ def test_rename_block_rejects_when_neither_name_exists():
     When rename_blockを実行する
     Then BLOCK_NOT_FOUNDに相当する例外が送出される
     """
-    schema = _base_schema()
+    schema = base_schema()
     try:
         schema_patch.rename_block(schema, "NoSuchBlock", "AlsoNoSuchBlock")
         assert False, "例外が送出されなかった"
@@ -153,7 +154,7 @@ def test_set_field_writes_value_at_dot_path():
     When set_fieldを実行する
     Then そのdef内の指定パスの値だけが書き換わる
     """
-    schema = _base_schema()
+    schema = base_schema()
     result = schema_patch.set_field(schema, "TitleBlock", "properties.title.type", "number")
     assert result["$defs"]["TitleBlock"]["properties"]["title"]["type"] == "number"
 
@@ -164,7 +165,7 @@ def test_set_field_leaves_other_defs_untouched():
     When 1つのdefにset_fieldする
     Then 他のdefの内容は変わらない
     """
-    schema = _base_schema()
+    schema = base_schema()
     before_content = json.loads(json.dumps(schema["$defs"]["SomeContent"]))
     result = schema_patch.set_field(schema, "TitleBlock", "properties.title.type", "number")
     assert result["$defs"]["SomeContent"] == before_content
@@ -176,7 +177,7 @@ def test_set_field_is_idempotent():
     When 同じ値でset_fieldを再実行する
     Then 出力は変更前と完全に同一である
     """
-    schema = _base_schema()
+    schema = base_schema()
     once = schema_patch.set_field(schema, "TitleBlock", "properties.title.type", "number")
     twice = schema_patch.set_field(once, "TitleBlock", "properties.title.type", "number")
     assert schema_patch.dump(once) == schema_patch.dump(twice)
@@ -188,7 +189,7 @@ def test_set_field_treats_numeric_segment_as_array_index():
     When set_fieldを実行する
     Then 配列の該当インデックスの値だけが書き換わる
     """
-    schema = _base_schema()
+    schema = base_schema()
     schema["$defs"]["TitleBlock"]["x-render"] = [
         {"as": "table", "columns": [{"field": "code"}, {"field": "condition"}]}
     ]
@@ -203,7 +204,7 @@ def test_set_field_writes_at_schema_root_when_def_name_is_none():
     When set_fieldを実行する
     Then $defsではなくschemaのルート直下の値が書き換わる
     """
-    schema = _base_schema()
+    schema = base_schema()
     schema["properties"] = {"schemaRef": {"const": "Foo/v1"}}
     result = schema_patch.set_field(schema, None, "properties.schemaRef.const", "Foo/v2")
     assert result["properties"]["schemaRef"]["const"] == "Foo/v2"
@@ -216,7 +217,7 @@ def test_set_field_rejects_unknown_def():
     When set_fieldを実行する
     Then BLOCK_NOT_FOUNDに相当する例外が送出される
     """
-    schema = _base_schema()
+    schema = base_schema()
     try:
         schema_patch.set_field(schema, "NoSuchBlock", "properties.title.type", "number")
         assert False, "例外が送出されなかった"
@@ -232,7 +233,7 @@ def test_create_version_applies_edits_in_order():
     When create_versionを実行する
     Then 各editが順に適用された新しいschemaが返る
     """
-    schema = _base_schema()
+    schema = base_schema()
     edits = [
         {"defName": "TitleBlock", "fieldPath": "properties.title.type", "value": "array"},
         {"defName": "SomeContent", "fieldPath": "properties.title.description", "value": "タイトル"},
@@ -248,7 +249,7 @@ def test_create_version_does_not_mutate_source_schema():
     When create_versionを実行する
     Then 引数として渡した元のschemaは変更されない
     """
-    schema = _base_schema()
+    schema = base_schema()
     before = json.loads(json.dumps(schema))
     schema_patch.create_version(schema, [{"defName": "TitleBlock", "fieldPath": "properties.title.type", "value": "array"}])
     assert schema == before
@@ -262,7 +263,7 @@ def test_remove_block_detaches_content_property():
     When remove_blockを実行する
     Then そのプロパティ参照がcontent defから外れる
     """
-    schema = schema_patch.add_block(_base_schema(), "NoteBlock", _new_block(), "SomeContent", "note", required=False)
+    schema = schema_patch.add_block(base_schema(), "NoteBlock", new_block(), "SomeContent", "note", required=False)
     result = schema_patch.remove_block(schema, "SomeContent", "note")
     assert "note" not in result["$defs"]["SomeContent"]["properties"]
 
@@ -273,7 +274,7 @@ def test_remove_block_keeps_block_definition():
     When remove_blockを実行する
     Then $defs内のブロック定義自体は残る（他のcontent defから参照されうるため）
     """
-    schema = schema_patch.add_block(_base_schema(), "NoteBlock", _new_block(), "SomeContent", "note", required=False)
+    schema = schema_patch.add_block(base_schema(), "NoteBlock", new_block(), "SomeContent", "note", required=False)
     result = schema_patch.remove_block(schema, "SomeContent", "note")
     assert "NoteBlock" in result["$defs"]
 
@@ -284,7 +285,7 @@ def test_remove_block_leaves_other_defs_untouched():
     When 1つのcontent defからremove_blockする
     Then 他のdefの内容は変わらない
     """
-    schema = schema_patch.add_block(_base_schema(), "NoteBlock", _new_block(), "SomeContent", "note", required=False)
+    schema = schema_patch.add_block(base_schema(), "NoteBlock", new_block(), "SomeContent", "note", required=False)
     before_title_block = json.loads(json.dumps(schema["$defs"]["TitleBlock"]))
     result = schema_patch.remove_block(schema, "SomeContent", "note")
     assert result["$defs"]["TitleBlock"] == before_title_block
@@ -296,7 +297,7 @@ def test_remove_block_is_idempotent():
     When remove_blockを実行する
     Then 出力は変更前と完全に同一である
     """
-    schema = _base_schema()
+    schema = base_schema()
     result = schema_patch.remove_block(schema, "SomeContent", "no_such_prop")
     assert schema_patch.dump(result) == schema_patch.dump(schema)
 
@@ -307,7 +308,7 @@ def test_remove_block_rejects_unknown_content_def():
     When remove_blockを実行する
     Then BLOCK_NOT_FOUNDに相当する例外が送出される
     """
-    schema = _base_schema()
+    schema = base_schema()
     try:
         schema_patch.remove_block(schema, "NoSuchContent", "title")
         assert False, "例外が送出されなかった"
@@ -319,7 +320,7 @@ def test_remove_block_rejects_unknown_content_def():
 
 def _kind_dispatch_schema() -> dict:
     """if/then/else形式（2値）のkind分岐を持つschema。SkillSchemaのskillKind分岐を模す。"""
-    schema = _base_schema()
+    schema = base_schema()
     schema["properties"] = {
         "skillKind": {"type": "string", "enum": ["advisor", "custom"]},
     }
@@ -337,7 +338,7 @@ def test_add_def_adds_standalone_entry():
     When add_defを実行する
     Then $defsに新規エントリが追加される（既存content defへの紐付けは行わない）
     """
-    schema = _base_schema()
+    schema = base_schema()
     result = schema_patch.add_def(schema, "RouterContent", {"type": "object", "properties": {}})
     assert result["$defs"]["RouterContent"] == {"type": "object", "properties": {}}
 
@@ -348,7 +349,7 @@ def test_add_def_leaves_other_defs_untouched():
     When 新規defをadd_defする
     Then 既存のdefの内容は変わらない
     """
-    schema = _base_schema()
+    schema = base_schema()
     before_some_content = json.loads(json.dumps(schema["$defs"]["SomeContent"]))
     result = schema_patch.add_def(schema, "RouterContent", {"type": "object", "properties": {}})
     assert result["$defs"]["SomeContent"] == before_some_content
@@ -360,7 +361,7 @@ def test_add_def_is_idempotent():
     When add_defを再実行する
     Then 対象は無変更のまま成功する
     """
-    schema = _base_schema()
+    schema = base_schema()
     once = schema_patch.add_def(schema, "RouterContent", {"type": "object", "properties": {}})
     twice = schema_patch.add_def(once, "RouterContent", {"type": "object", "properties": {}})
     assert schema_patch.dump(once) == schema_patch.dump(twice)
@@ -454,7 +455,7 @@ def test_add_kind_branch_rejects_unknown_shape():
     When add_kind_branchを実行する
     Then UnsupportedRootDispatchShapeErrorが送出される
     """
-    schema = _base_schema()
+    schema = base_schema()
     schema["properties"] = {"skillKind": {"type": "string", "enum": ["advisor", "custom"]}}
     try:
         schema_patch.add_kind_branch(schema, "skillKind", "router", "RouterContent")
@@ -589,113 +590,24 @@ def test_set_kind_render_target_rejects_flat_path_schema():
 
 # --- check_backward_compatible ---
 
-def test_adding_required_to_published_kind_breaks_compatibility():
-    """
-    Given 公開済みkindのContent defのrequired配列に新規エントリを追加する変更
-    When 後方互換チェックを実行する
-    Then 違反として検出される
-    """
-    old_schema = _base_schema()
-    new_schema = schema_patch.add_block(old_schema, "NoteBlock", _new_block(), "SomeContent", "note", required=True)
-    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
-    assert violations, "required配列への追加が検出されなかった"
 
 
-def test_adding_optional_property_keeps_compatibility():
-    """
-    Given requiredに含めずに新規プロパティのみ追加した変更後schema
-    When 後方互換チェックを実行する
-    Then 違反として検出されない
-    """
-    old_schema = _base_schema()
-    new_schema = schema_patch.add_block(old_schema, "NoteBlock", _new_block(), "SomeContent", "note")
-    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
-    assert violations == []
 
 
-def test_removing_required_property_breaks_compatibility():
-    """
-    Given requiredに指定されているプロパティをremove_blockで除去した変更後schema
-    When 後方互換チェックを実行する
-    Then 違反として検出される
-    """
-    old_schema = _base_schema()
-    new_schema = schema_patch.remove_block(old_schema, "SomeContent", "title")
-    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
-    assert violations, "必須プロパティのremove_blockが検出されなかった"
 
 
-def test_removing_optional_property_keeps_compatibility():
-    """
-    Given requiredに含まれないプロパティをremove_blockで除去した変更後schema
-    When 後方互換チェックを実行する
-    Then 違反として検出されない
-    """
-    old_schema = schema_patch.add_block(_base_schema(), "NoteBlock", _new_block(), "SomeContent", "note", required=False)
-    new_schema = schema_patch.remove_block(old_schema, "SomeContent", "note")
-    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
-    assert violations == []
 
 
-def test_renaming_required_property_breaks_compatibility():
-    """
-    Given 公開済みkindのContent defでrequiredに指定されているブロックのリネーム
-    When 後方互換チェックを実行する
-    Then 違反として検出される（旧プロパティ名を持つ既存instanceが新schemaのrequiredを満たせなくなるため）
-    """
-    old_schema = _base_schema()
-    new_schema = schema_patch.rename_block(old_schema, "Title", "Heading")
-    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
-    assert violations, "requiredプロパティのリネームが検出されなかった"
 
 
-def test_renaming_optional_property_keeps_compatibility():
-    """
-    Given 公開済みkindのContent defでrequiredに指定されていないブロックのリネーム
-    When 後方互換チェックを実行する
-    Then 違反として検出されない
-    """
-    old_schema = _base_schema()
-    old_schema = schema_patch.add_block(old_schema, "NoteBlock", _new_block(), "SomeContent", "note")
-    new_schema = schema_patch.rename_block(old_schema, "Note", "Memo")
-    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
-    assert violations == []
 
 
-def test_changing_field_type_breaks_compatibility():
-    """
-    Given 公開済みkindの既存フィールドの型(type)を書き換える変更
-    When 後方互換チェックを実行する
-    Then 違反として検出される（旧型の値を持つ既存instanceが新schemaの型制約を満たせなくなるため）
-    """
-    old_schema = _base_schema()
-    new_schema = schema_patch.set_field(old_schema, "TitleBlock", "properties.title.type", "number")
-    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
-    assert violations, "既存フィールドの型変更が検出されなかった"
 
 
-def test_set_field_without_type_change_keeps_compatibility():
-    """
-    Given 型(type)以外のフィールドを書き換えるset_field
-    When 後方互換チェックを実行する
-    Then 違反として検出されない
-    """
-    old_schema = _base_schema()
-    new_schema = schema_patch.set_field(old_schema, "TitleBlock", "properties.title.description", "タイトル文字列")
-    violations = schema_patch.check_backward_compatible(old_schema, new_schema)
-    assert violations == []
 
 
 # --- dump（契約整形） ---
 
-def test_dump_matches_json_dumps_indent2():
-    """
-    Given 任意のschema(dict)
-    When dumpを適用する
-    Then 出力はjson.dumps(schema, indent=2, ensure_ascii=False)+改行と完全一致する
-    """
-    schema = _base_schema()
-    assert schema_patch.dump(schema) == json.dumps(schema, indent=2, ensure_ascii=False) + "\n"
 
 
 # --- remove_field ---
@@ -706,7 +618,7 @@ def test_remove_field_deletes_the_key_itself():
     When remove_fieldを実行する
     Then そのキー自体が消える（nullが残らない）
     """
-    schema = _base_schema()
+    schema = base_schema()
     result = schema_patch.remove_field(schema, "TitleBlock", "properties.title.type")
     assert "type" not in result["$defs"]["TitleBlock"]["properties"]["title"]
 
@@ -717,7 +629,7 @@ def test_remove_field_leaves_siblings_untouched():
     When 片方をremove_fieldする
     Then もう片方は残る
     """
-    schema = _base_schema()
+    schema = base_schema()
     schema = schema_patch.set_field(schema, "TitleBlock", "properties.title.x-note", "残る")
     result = schema_patch.remove_field(schema, "TitleBlock", "properties.title.type")
     assert result["$defs"]["TitleBlock"]["properties"]["title"]["x-note"] == "残る"
@@ -729,7 +641,7 @@ def test_remove_field_is_idempotent():
     When remove_fieldを実行する
     Then 出力は変更前と完全に同一である
     """
-    schema = _base_schema()
+    schema = base_schema()
     once = schema_patch.remove_field(schema, "TitleBlock", "properties.title.type")
     twice = schema_patch.remove_field(once, "TitleBlock", "properties.title.type")
     assert twice == once
@@ -741,7 +653,7 @@ def test_remove_field_rejects_unknown_def():
     When remove_fieldを実行する
     Then BlockNotFoundErrorになる
     """
-    schema = _base_schema()
+    schema = base_schema()
     try:
         schema_patch.remove_field(schema, "NoSuchBlock", "properties.title.type")
         raise AssertionError("BlockNotFoundError にならなかった")
@@ -755,7 +667,7 @@ def test_remove_field_reaches_root_when_def_name_is_none():
     When remove_fieldを実行する
     Then $defsの外側にあるルート直下のフィールドが消える
     """
-    schema = _base_schema()
+    schema = base_schema()
     schema = schema_patch.set_field(schema, None, "x-temporary", "消す")
     result = schema_patch.remove_field(schema, None, "x-temporary")
     assert "x-temporary" not in result

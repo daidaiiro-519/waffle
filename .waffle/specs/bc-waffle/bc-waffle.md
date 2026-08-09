@@ -94,8 +94,6 @@ schemaRef: "DomainSpecSchema/v8"
 | パステンプレート解決 | x-source-target/x-render-target のパステンプレートを document の値で解決(resolve)し、逆に実パスからテンプレート変数を復元(reverse-parse)する。scaffold/render/query の複数usecaseが共通して依存する（特定の集約に属さない）。 |
 | 整形描画 | x-render宣言(Schema集約の値オブジェクト)とDocument集約のcontent dataの両方を参照してMarkdownへ整形する。RenderMetaSchemaが定義する部品種別(paragraph/list/table/keyvalue/section/kvtable/sequence/statediagram/architecture/flowchart)ごとに決定的な整形規則を持つ。特定の集約に属さない（Schema集約とDocument集約にまたがる計算）。 |
 | discriminatorキー抽出 | schemaのallOf if/then構造から、どのフィールド（specKind/codingKind/skillKind等）がkindのdiscriminatorとして機能しているかを機械的に取り出す。scaffold/renderの複数usecaseが共通して依存する（特定の集約に属さない・Schema集約の構造そのものを読むがSchema集約の外から呼ばれる編成ロジック）。 |
-| 後方互換チェック | 変更前後のschemaの差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。 |
-| 契約整形 | schemaファイルの物理的な整形を、agg-schemaが定める契約（2段の字下げ・非ASCII文字はそのまま・末尾に改行）に一意に揃える。Schema集約の不変条件を実際に適用する。 |
 | ソースルート解決 | CodingSchema（Coding集約）のarchitecture文書が持つlayout.sourceRootとconceptPlacementから、指定した概念（usecase等）の実装ファイル配置パスを導出する。drift-check系の複数usecaseが共通して依存する（特定の集約に属さない・言語/アーキテクチャに依存しない汎用計算）。 |
 
 ---
@@ -373,43 +371,4 @@ Scenario: discriminatorが無いschemaはNoneを返す
   Given ifもallOfも持たないschema
   When discriminatorキーを抽出する
   Then Noneが返る
-```
-
-### requiredへの追加は後方互換違反として検出される
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | 後方互換チェック：公開済みkindのContent defのrequired配列に新規エントリを追加する変更を検出する |
-
-```gherkin
-Scenario: requiredへの追加は後方互換違反として検出される
-  Given 公開済みのschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema
-  When 後方互換チェックを実行する
-  Then 違反として検出される
-```
-
-### optionalプロパティの追加は後方互換違反にならない
-
-| 分類 | 観点 |
-|---|---|
-| 正常系 | 後方互換チェック：requiredに含まれない新規プロパティの追加は既存instanceを壊さない |
-
-```gherkin
-Scenario: optionalプロパティの追加は後方互換違反にならない
-  Given 公開済みのschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema
-  When 後方互換チェックを実行する
-  Then 違反として検出されない
-```
-
-### 契約整形は契約が定める形と完全一致する
-
-| 分類 | 観点 |
-|---|---|
-| 正常系 | 契約整形：schemaファイルの物理整形がagg-schemaの不変条件と一致する |
-
-```gherkin
-Scenario: 契約整形は契約が定める形と完全一致する
-  Given 任意の整形が施されたschema
-  When 契約整形を適用する
-  Then 出力は契約が定める形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する
 ```
