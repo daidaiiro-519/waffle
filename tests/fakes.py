@@ -118,7 +118,7 @@ def scenario_binding(tests_root) -> dict:
         tests_root: テストの木の根（tmp_path 配下）。
 
     Returns:
-        blockPlacement / placements / fileNameSuffix を持つ辞書。
+        blockPlacement / placements / testFileNaming を持つ辞書。
     """
     root = str(tests_root)
     return {
@@ -134,7 +134,16 @@ def scenario_binding(tests_root) -> dict:
             ("application", "integration"): f"{root}/application/integration",
             ("application", "acceptance"): f"{root}/application/acceptance",
         },
-        "fileNameSuffix": "." + "py",
+        # テストファイルの名前の作り方も規約が宣言する。要らない欄には
+        # 空を宣言する（未宣言と区別するため、欄そのものは必ず置く）
+        "testFileNaming": {
+            "derivedFrom": "spec-document-id",
+            "strip": [],
+            "prefix": "test_",
+            "case": "snake",
+            "infix": "",
+            "suffix": "." + "py",
+        },
         # 拡張子から言語を決める対応も、実運用では tech-stack が宣言する。
         # 複数のランタイムを持つスタックを想定して2つ挙げる
         "languageBySuffix": {"py": "python", "js": "javascript", "ts": "typescript"},

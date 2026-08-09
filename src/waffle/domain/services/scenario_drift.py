@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import re
 
+from waffle.domain.services.canonical_naming import apply_case
+
 _SCENARIO_BLOCK_KEYS = (
     "acceptanceScenarios",
     "guaranteeScenarios",
@@ -44,6 +46,58 @@ def expected_test_dir(binding: dict, block: str) -> str | None:
         if row.get("block") == block:
             return placements.get((row.get("layer"), row.get("testType")))
     return None
+
+
+REQUIRED_NAMING_FIELDS = ("derivedFrom", "strip", "prefix", "case", "infix", "suffix")
+
+
+def missing_naming_fields(naming: dict) -> list[str]:
+    """テストファイル名を組み立てるのに足りない宣言を返す。
+
+    欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通る。
+    空が正しい値になる欄（前置・中置）があるため、未宣言と「空を宣言した」を
+    区別する必要がある。よってキーの有無を見る。
+
+    Args:
+        naming: test-standard の testFileNaming ブロック。
+
+    Returns:
+        足りない欄の名前。全て揃っていれば空。
+    """
+    return [f for f in REQUIRED_NAMING_FIELDS if f not in naming]
+
+
+def test_file_name(document_id: str, naming: dict) -> str:
+    """仕様の識別子から、規約が宣言した形のテストファイル名を組み立てる。
+
+    綴りの規則はここに持たない。落とす接頭辞・前置・表記・中置・末尾は
+    すべて宣言から来る。置き場所が既に表している区別（仕様の種別など）は
+    落とす接頭辞で取り除く。
+
+    Args:
+        document_id: 対応する仕様の識別子。
+        naming: test-standard の testFileNaming ブロック。
+
+    Returns:
+        拡張子まで含むテストファイル名。
+
+    Raises:
+        ValueError: 宣言に無い表記や、対応していない由来を指定された場合。
+    """
+    derived_from = naming.get("derivedFrom")
+    if derived_from != "spec-document-id":
+        raise ValueError(
+            f"対応していない由来です: {derived_from}"
+            "（いま組み立てられるのは spec-document-id のみ）")
+
+    base = document_id
+    for prefix in naming.get("strip", []):
+        if prefix and base.startswith(prefix):
+            base = base[len(prefix):]
+            break
+
+    return (naming["prefix"] + apply_case(base, naming["case"])
+            + naming["infix"] + naming["suffix"])
 
 
 def declaration_line(scenario_name: str) -> str:

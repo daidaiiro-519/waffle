@@ -23,10 +23,12 @@ from waffle.domain.services.scenario_drift import (
     declaration_of,
     docstring_lines,
     expected_test_dir,
+    missing_naming_fields,
     relevant_scenario_block_keys,
     scenario_blocks,
     scenario_declarations,
     spec_internal_mismatches,
+    test_file_name,
 )
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
@@ -194,7 +196,20 @@ class CheckScenarioDrift:
         if only_spec is not None:
             spec_paths = [p for p in spec_paths if p == only_spec or p.endswith(only_spec)]
 
+        naming = binding.get("testFileNaming", {})
+        lacking = missing_naming_fields(naming)
+        if lacking:
+            return _err(
+                "MISSING_DECLARATION",
+                "テストファイルの名前を組み立てる宣言が規約にありません: "
+                f"{' / '.join(lacking)}"
+                "（欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通ります。"
+                "要らない欄には空を宣言してください）")
+
         missing_test_file: list[dict] = []
+        # 置き場所が宣言されていない種別は、黙って対象から外さない。外すと
+        # 宣言の欠落と検査に通ったことが同じ見た目になる
+        unplaced: dict[str, int] = {}
         results: list[dict] = []
         for spec_path in spec_paths:
             loaded = load_document(self._documents, spec_path)
@@ -206,9 +221,12 @@ class CheckScenarioDrift:
             for block, count in scenario_blocks(spec_doc).items():
                 placement = expected_test_dir(binding, block)
                 if placement is None:
+                    unplaced[block] = unplaced.get(block, 0) + count
                     continue
-                stem = ("test_" + document_id.replace("-", "_")
-                        + binding.get("fileNameSuffix", ""))
+                try:
+                    stem = test_file_name(document_id, naming)
+                except ValueError as e:
+                    return _err("MISSING_DECLARATION", str(e))
                 # 配置は placementByTarget が宣言した位置をそのまま使う。
                 # tests_root は全体走査を選ぶ指定であって、パスの前置ではない。
                 expected = f"{placement}/{stem}"
@@ -246,4 +264,9 @@ class CheckScenarioDrift:
                 "expectedPath": only_test, "scenarioCount": 0,
             })
 
-        return Ok({"missing_test_file": missing_test_file, "results": unique_results})
+        return Ok({
+            "missing_test_file": missing_test_file,
+            "missing_placement": [{"block": block, "scenarioCount": count}
+                                  for block, count in sorted(unplaced.items())],
+            "results": unique_results,
+        })

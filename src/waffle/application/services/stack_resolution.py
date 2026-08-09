@@ -117,8 +117,10 @@ def resolve_scenario_binding(documents: DocumentRepository, architecture_ref: st
         "declarationLine": binding.get("declarationLine", ""),
         "blockPlacement": binding.get("blockPlacement", []),
         "placements": placements,
-        "fileNameSuffix": (standard_naming.get("content", {})
-                           .get("naming", {}).get("fileNameSuffix", "")),
+        # テストファイルの名前の作り方は test-standard が持つ。実装ファイルの
+        # 拡張子（coding-standard の naming）を流用しない——テストファイルの
+        # 末尾が実装ファイルの拡張子と同じとは限らない
+        "testFileNaming": content.get("testFileNaming", {}),
     })
 
 

@@ -13,10 +13,24 @@ from __future__ import annotations
 import re
 
 _BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
+_SEPARATOR = re.compile(r"(?<!^)[-_]")
+
+
+def _split_words(name: str, separator: str) -> str:
+    """語の区切りを、指定された記号へ揃える。
+
+    区切りは2種類ある。大文字の始まりと、既に置かれている区切り記号。
+    後者を見ないと、区切り記号で綴られた識別子（仕様の識別子はこの形）を
+    1語とみなし、どの表記を指定しても変換されないまま返る。
+
+    先頭の区切りは残す。非公開を先頭の記号で表す規約があるため、
+    正規化して組み立て直すとその規約と衝突する。
+    """
+    return _SEPARATOR.sub(separator, _BOUNDARY.sub(separator, name)).lower()
 
 
 def to_snake_case(name: str) -> str:
-    """PascalCase / camelCase を snake_case へ変換する。
+    """識別子を snake_case へ変換する。
 
     Args:
         name: 変換する識別子。
@@ -24,11 +38,11 @@ def to_snake_case(name: str) -> str:
     Returns:
         snake_case の識別子。
     """
-    return _BOUNDARY.sub("_", name).lower()
+    return _split_words(name, "_")
 
 
 def _to_kebab_case(name: str) -> str:
-    return _BOUNDARY.sub("-", name).lower()
+    return _split_words(name, "-")
 
 
 def _to_camel_case(name: str) -> str:
