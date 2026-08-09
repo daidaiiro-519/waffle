@@ -15,7 +15,17 @@
       "title": "ランタイム",
       "language": "TypeScript 5.x（Node.js 20+）",
       "target": "ローカルプロセス（ゲートウェイ機器上で常駐）",
-      "concurrency": "非同期主体（async/await・シングルスレッドイベントループ）"
+      "concurrency": "非同期主体（async/await・シングルスレッドイベントループ）",
+      "languages": [
+        {
+          "language": "typescript",
+          "version": "5.x（Node.js 20+）",
+          "extensions": [
+            ".ts"
+          ],
+          "role": "primary"
+        }
+      ]
     },
     "framework": {
       "blockType": "Framework",
@@ -99,37 +109,44 @@
       "style": "ポートとアダプター（ヘキサゴナル）",
       "items": [
         {
-          "layer": "domain",
-          "responsibility": "業務ロジック・不変条件",
+          "layer": "shared",
+          "path": "shared",
+          "responsibility": "全層から使える基盤（結果型・エラー等）。業務判断を持たない",
           "mayDependOn": []
         },
         {
-          "layer": "application",
-          "responsibility": "usecaseの編成・ポート呼び出し・トランザクション境界",
+          "layer": "domain",
+          "path": "domain",
+          "responsibility": "ドメインモデル・不変条件・値",
           "mayDependOn": [
-            "domain"
+            "shared"
           ]
         },
         {
-          "layer": "ports",
-          "responsibility": "domain/applicationが外部に要求するインターフェース定義",
+          "layer": "application",
+          "path": "application",
+          "responsibility": "usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する",
           "mayDependOn": [
-            "domain"
+            "domain",
+            "shared"
           ]
         },
         {
           "layer": "inbound adapter",
-          "responsibility": "外部プロトコルの受け口（usecaseを呼ぶだけ）",
+          "path": "adapters/inbound",
+          "responsibility": "外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない",
           "mayDependOn": [
             "application",
-            "ports"
+            "shared"
           ]
         },
         {
           "layer": "outbound adapter",
-          "responsibility": "portの実装。外部システムとの実際のやり取り",
+          "path": "adapters/outbound",
+          "responsibility": "外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する",
           "mayDependOn": [
-            "ports"
+            "application",
+            "shared"
           ]
         }
       ]
@@ -138,8 +155,29 @@
       "blockType": "Layout",
       "title": "ディレクトリ構成",
       "tree": "src/\n  domain/\n    model/\n    value-objects/\n    services/\n  application/\n    usecases/\n  ports/\n  adapters/\n    inbound/\n    outbound/",
-      "compositionRoot": "inbound adapter の起動点（エントリーポイント）にのみ置く",
-      "sourceRoot": "src"
+      "compositionRoot": "各エントリポイントに1つだけ置く（adapters/inbound/cli/main.py・adapters/inbound/mcp/main.py）。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ",
+      "sourceRoot": "src",
+      "granularity": [
+        {
+          "concept": "usecase",
+          "perFile": 1
+        },
+        {
+          "concept": "aggregate",
+          "perFile": 1
+        },
+        {
+          "concept": "domain-service",
+          "perFile": 1
+        },
+        {
+          "concept": "port",
+          "perFile": 1
+        }
+      ],
+      "compositionRootPaths": [
+        "adapters/inbound/main.ts"
+      ]
     },
     "conceptPlacement": {
       "blockType": "ConceptPlacement",
@@ -147,47 +185,88 @@
       "items": [
         {
           "concept": "usecase",
-          "placement": "application/usecases",
+          "placements": [
+            {
+              "path": "application/usecases"
+            }
+          ],
           "pattern": "エントリメソッド1つ・ドメインは port 経由で呼ぶ"
         },
         {
           "concept": "aggregate",
-          "placement": "domain/model",
+          "placements": [
+            {
+              "path": "domain/model"
+            }
+          ],
           "pattern": "不変条件はメソッド経由でのみ変更できる形にする（コンストラクタとメソッド内に検証ロジックを閉じ込める）。外部の集約はIDで参照し、直接オブジェクトとして保持しない。集約はできるだけ小さく設計する"
         },
         {
           "concept": "entity",
-          "placement": "domain/model",
+          "placements": [
+            {
+              "path": "domain/model"
+            }
+          ],
           "pattern": "同一性はidで判定する（フィールドの値ではない）。単独では実装しない。必ず集約の内部にのみ存在する"
         },
         {
           "concept": "value-object",
-          "placement": "domain/value-objects",
+          "placements": [
+            {
+              "path": "domain/value-objects"
+            }
+          ],
           "pattern": "構造的等価性・不変（readonlyフィールドのみ・状態変更メソッドを持たない）"
         },
         {
           "concept": "domain-service",
-          "placement": "domain/services",
+          "placements": [
+            {
+              "path": "domain/services"
+            }
+          ],
           "pattern": "ステートレス（同じ入力に対して常に同じ結果を返す）。複数集約を単一トランザクションでまとめて変更するための抜け道にはしない（1集約=1トランザクションの原則は業務サービスがあっても変わらない）"
         },
         {
           "concept": "repository",
-          "placement": "ports（インターフェース）／adapters/outbound（実装）",
+          "placements": [
+            {
+              "role": "interface",
+              "path": "application/ports"
+            },
+            {
+              "role": "implementation",
+              "path": "adapters/outbound"
+            }
+          ],
           "pattern": "インターフェースはports、具象はoutbound adapterに置く"
         },
         {
           "concept": "port",
-          "placement": "ports",
+          "placements": [
+            {
+              "path": "application/ports"
+            }
+          ],
           "pattern": "インターフェース定義のみ・実装を持たない。ポートは常にコア（domain/application）が「何を必要とするか」の視点で定義し、アダプター側の実装都合に引きずられない"
         },
         {
           "concept": "inbound-adapter",
-          "placement": "adapters/inbound",
+          "placements": [
+            {
+              "path": "adapters/inbound"
+            }
+          ],
           "pattern": "外部プロトコルの受け口。usecaseを呼び出すだけで業務ロジックを持たない"
         },
         {
           "concept": "outbound-adapter",
-          "placement": "adapters/outbound",
+          "placements": [
+            {
+              "path": "adapters/outbound"
+            }
+          ],
           "pattern": "portの実装。外部システムとの実際のやり取りを担う"
         }
       ]
@@ -303,6 +382,49 @@
           "target": "レイヤー境界を越えるDTO",
           "convention": "境界を越えるための入れ物であると分かる名前にする。例: OrderStatusResponse, RegisterOrderCommand"
         }
+      ],
+      "fileNameDerivedFrom": "type",
+      "fileNameTransform": "pascal-to-kebab",
+      "fileNameSuffix": ".ts",
+      "cases": [
+        {
+          "artifact": "type",
+          "case": "pascal"
+        },
+        {
+          "artifact": "function",
+          "case": "camel"
+        },
+        {
+          "artifact": "field",
+          "case": "camel"
+        },
+        {
+          "artifact": "constant",
+          "case": "upper-snake"
+        }
+      ],
+      "norms": [
+        {
+          "appliesTo": "語彙",
+          "norm": "仕様のユビキタス言語に一致させる（実装都合の言い換えをしない）"
+        },
+        {
+          "appliesTo": "domain",
+          "norm": "ユビキタス言語のみで命名し、技術的接尾辞（Impl/DTO/Manager/Helper等）をつけない"
+        },
+        {
+          "appliesTo": "outbound adapter",
+          "norm": "使用する技術を明示してよい。例: SqliteOrderRepository, DrizzleOrderRepository"
+        },
+        {
+          "appliesTo": "application",
+          "norm": "動詞＋目的語の業務操作名で命名する。例: RequestPickup, RegisterOrder"
+        },
+        {
+          "appliesTo": "レイヤー境界を越えるDTO",
+          "norm": "境界を越えるための入れ物であると分かる名前にする。例: OrderStatusResponse, RegisterOrderCommand"
+        }
       ]
     },
     "style": {
@@ -338,7 +460,33 @@
       "summaryGuidance": "要約行（1行目）は、ソースを開かずに検索・判断できるよう「何をするか・いつ使うか」が分かる語で書く",
       "target": "公開要素（exportされるclass / function / interface）。非公開（内部専用）は任意",
       "example": "/**\n * 注文の合計金額を計算する。割引適用後の金額を返す。\n *\n * @param order - 対象の注文\n * @returns 割引適用後の合計金額\n */\nfunction calculateTotal(order: Order): Money { /* ... */ }",
-      "paramSyntax": "@param name - 説明\n@returns 説明\n@throws {ErrorType} 説明"
+      "paramSyntax": "@param name - 説明\n@returns 説明\n@throws {ErrorType} 説明",
+      "syntaxKind": "tagged",
+      "tagParams": "@param",
+      "tagReturns": "@returns",
+      "tagRaises": "@throws",
+      "required": [
+        {
+          "artifact": "type",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "function",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "type",
+          "visibility": "private",
+          "isRequired": false
+        },
+        {
+          "artifact": "function",
+          "visibility": "private",
+          "isRequired": false
+        }
+      ]
     },
     "rules": {
       "blockType": "CodingRules",
@@ -369,7 +517,30 @@
       "blockType": "TestStrategy",
       "title": "テスト方針",
       "pyramid": "ピラミッド形（単体テストを重視・統合はやや軽め・E2Eは行わない）",
-      "rationale": "業務ロジックの実装方法＝ドメインモデル"
+      "rationale": "業務ロジックの実装方法＝ドメインモデル",
+      "shape": "pyramid",
+      "weights": [
+        {
+          "testType": "unit",
+          "emphasis": "high"
+        },
+        {
+          "testType": "integration",
+          "emphasis": "low"
+        },
+        {
+          "testType": "acceptance",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "contract",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "e2e",
+          "emphasis": "none"
+        }
+      ]
     },
     "testPlan": {
       "blockType": "TestPlan",
@@ -400,22 +571,34 @@
         {
           "testType": "unit",
           "tool": "Vitest",
-          "target": "domain / application"
+          "targets": [
+            "domain",
+            "application"
+          ]
         },
         {
           "testType": "integration",
           "tool": "Vitest",
-          "target": "adapters"
+          "targets": [
+            "outbound adapter"
+          ]
         },
         {
           "testType": "acceptance",
-          "tool": "Vitest（要件のシナリオを見て人間またはAIが直接執筆）",
-          "target": "usecase"
+          "tool": "Vitest",
+          "targets": [
+            "application"
+          ],
+          "note": "要件のシナリオを見て人間またはAIが直接執筆する"
         },
         {
           "testType": "contract",
-          "tool": "Vitest（インターフェース定義との差分検査）",
-          "target": "外部公開インターフェース"
+          "tool": "Vitest",
+          "targets": [
+            "ports",
+            "inbound adapter"
+          ],
+          "note": "インターフェース定義との差分検査"
         }
       ]
     },
@@ -445,6 +628,45 @@
           "item": "ドリフト検知",
           "rule": "シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない）"
         }
+      ],
+      "declarationLine": "Scenario: {シナリオ名}",
+      "keyScope": [
+        "layer",
+        "spec",
+        "scenario"
+      ],
+      "blockPlacement": [
+        {
+          "block": "invariantScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "domainServiceScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "guaranteeScenarios",
+          "layer": "application",
+          "testType": "integration"
+        },
+        {
+          "block": "acceptanceScenarios",
+          "layer": "application",
+          "testType": "acceptance"
+        }
+      ],
+      "norms": [
+        {
+          "norm": "振る舞いはGiven/When/Then形式(Gherkin)のシナリオとして書く。1シナリオ＝1つの具体的な状況→操作→結果"
+        },
+        {
+          "norm": "書いたシナリオはそのまま放置せず、対応する実行可能なテスト関数を書く。シナリオの文章だけでは検証済みとみなさない"
+        },
+        {
+          "norm": "シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない）"
+        }
       ]
     },
     "placementByTarget": {
@@ -452,31 +674,31 @@
       "title": "テスト対象別の配置",
       "items": [
         {
-          "target": "domain",
-          "testKind": "unit",
-          "path": "src/domain/**/*.test.ts"
+          "layer": "domain",
+          "testType": "unit",
+          "suffix": ".test.ts",
+          "note": "実装ファイルと同じディレクトリに置く"
         },
         {
-          "target": "application",
-          "testKind": "unit（port はテストダブル）",
-          "path": "src/application/**/*.test.ts"
+          "layer": "application",
+          "testType": "unit",
+          "suffix": ".test.ts",
+          "note": "port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する"
         },
         {
-          "target": "adapters",
-          "testKind": "integration",
-          "path": "src/adapters/**/*.test.ts"
+          "layer": "outbound adapter",
+          "testType": "integration",
+          "suffix": ".test.ts"
         },
         {
-          "target": "usecase",
-          "testKind": "acceptance（ネイティブ）",
-          "path": "tests/acceptance/"
-        },
-        {
-          "target": "システム全体の少数シナリオ",
-          "testKind": "E2E",
-          "path": "tests/e2e/（コンポジションルートによる配線を含めて検証。件数は絞る）"
+          "layer": "application",
+          "testType": "acceptance",
+          "path": "tests/acceptance/",
+          "strategy": "type-first",
+          "note": "仕様のシナリオに対応するテストだけは、実装と分けて1か所へ集める"
         }
-      ]
+      ],
+      "strategy": "colocated"
     },
     "rules": {
       "blockType": "TestRules",
@@ -532,6 +754,16 @@
       "blockType": "Description",
       "title": "概要",
       "text": "TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
+    },
+    "testFileNaming": {
+      "blockType": "TestFileNaming",
+      "title": "テストファイルの名づけ",
+      "derivedFrom": "spec-document-id",
+      "strip": [],
+      "prefix": "",
+      "case": "camel",
+      "infix": ".test",
+      "suffix": ".ts"
     }
   }
 }

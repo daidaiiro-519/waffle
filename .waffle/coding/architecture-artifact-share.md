@@ -4,7 +4,7 @@ type: "architecture"
 title: "artifact-shareが採用する層構造を定めるArchitecture仕様：architecture-artifact-share"
 description: "artifact-shareがヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。閲覧ゲートは実行環境の制約により層を持たないため、その扱いも併せて定める。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v5"
+schemaRef: "CodingSchema/v6"
 ---
 
 # artifact-shareが採用する層構造を定めるArchitecture仕様：architecture-artifact-share
@@ -40,7 +40,10 @@ artifact-shareがヘキサゴナルアーキテクチャを実装する際の層
 ## ディレクトリ構成
 
 ```
-domain/                業務ルール（トークンの有効性・交差条件・公開状態）
+domain/
+  entities/            整合性の境界を持つもの（集約・エンティティ）
+  value_objects/       書き換えられない値。2つの集約が共有するものもここに1つ置く
+  services/            集約の内側に置けない業務上の判断・計算
 application/
   usecases/            1 usecase = 1 module
   ports/               application が外部へ要求するインターフェース
@@ -86,10 +89,10 @@ Lambdaの起動点に1つだけ置く。合成ルートは層のグラフの外�
 | 概念 | 配置 | 形（決定レベル） |
 |---|---|---|
 | `usecase` | `application/usecases` | エントリメソッド1つ・ドメインは port 経由で呼ぶ |
-| `aggregate` | `domain` | 整合性境界を持つクラス・不変条件をメソッド内で強制 |
-| `entity` | `domain` | 同一性は id・集約の内側でのみ可変 |
-| `value-object` | `domain` | 不変（frozen dataclass）・値等価 |
-| `domain-service` | `domain` | ステートレス・複数集約を跨る判断 |
+| `aggregate` | `domain/entities` | 整合性境界を持つクラス・不変条件をメソッド内で強制 |
+| `entity` | `domain/entities` | 同一性は id・集約の内側でのみ可変 |
+| `value-object` | `domain/value_objects` | 不変（frozen dataclass）・値等価。2つの集約が同じ名前で宣言する値は、複製せず1つ置いて共有する |
+| `domain-service` | `domain/services` | ステートレス・集約の内側に置けない業務上の計算や判断（複数集約を跨るものを含む） |
 | `repository` | interface `application/ports`<br>implementation `adapters/outbound` | aggregate の load/save・集約1つに1リポジトリ |
 | `port` | `application/ports` | application が要求する driven インターフェース（Protocol）。構造体のフィールドとして持たず、型として宣言する |
 | `inbound-adapter` | `adapters/inbound` | 外部入力を usecase 呼び出しへ変換・判断を持たない |

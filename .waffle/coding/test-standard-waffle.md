@@ -3,7 +3,7 @@ id: "test-standard-waffle"
 type: "test-standard"
 title: "Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle"
 description: "Waffle自身のunit/integration/acceptance/contractという4層テスト構成の方針を定める。"
-schemaRef: "CodingSchema/v5"
+schemaRef: "CodingSchema/v6"
 ---
 
 # Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle
@@ -69,7 +69,6 @@ Waffle自身のunit/integration/acceptance/contractという4層テスト構成�
 
 - **宣言行**: Scenario: {シナリオ名}
 - **一意の範囲**: ['layer', 'spec', 'scenario']
-- **ファイル名の由来**: spec-document-id
 
 ### シナリオ種別とテストの対応
 
@@ -148,3 +147,7 @@ def test_suspend_blocks_viewing():
 | 必須 | 業務サービスのテストは、ステートレスであること（同じ入力に対して常に同じ結果を返し、呼び出し順序に依存しないこと）を検証する |
 | 必須 | 時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない |
 | 必須 | テストには2つの出どころがある。仕様由来（specが宣言したシナリオを転記し、宣言行で突き合わせる）と、規約由来（portやアダプターが宣言した契約を確かめる）。この2つを同じディレクトリに混ぜると、ディレクトリを見てもどちらの保証なのか分からなくなるので、テスト種別で分ける——仕様由来は unit / acceptance と application の integration、規約由来は contract と adapters 配下の integration。この区別のために、層でない名前を第一階層に作らない（第一階層は常に architecture が宣言する層） |
+
+---
+
+## テストファイルの名づけ

@@ -4,7 +4,7 @@ type: "test-standard"
 title: "artifact-shareのテスト方針を定めるTest Standard：test-standard-artifact-share"
 description: "artifact-shareのテスト方針・配置・シナリオの束ね方を定める。2つのランタイムが同じ業務ルールを守るため、実装は分かれても同じシナリオへ紐づける。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v5"
+schemaRef: "CodingSchema/v6"
 ---
 
 # artifact-shareのテスト方針を定めるTest Standard：test-standard-artifact-share
@@ -62,14 +62,13 @@ artifact-shareのテスト方針・配置・シナリオの束ね方を定める
 
 - **宣言行**: Scenario: {シナリオ名}
 - **一意の範囲**: ['layer', 'spec', 'scenario']
-- **ファイル名の由来**: spec-document-id
 
 ### シナリオ種別とテストの対応
 
 | シナリオ種別 | レイヤー | テスト種別 |
 |---|---|---|
 | `invariantScenarios` | domain | `unit` |
-| `domainServiceScenarios` | domain | `unit` |
+| `domainServiceScenarios` | inbound adapter | `contract` |
 | `guaranteeScenarios` | application | `integration` |
 | `acceptanceScenarios` | application | `acceptance` |
 
@@ -135,3 +134,7 @@ def test_suspended_artifact_cannot_be_viewed():
 | 禁止 | 同じ port の偽実装を複数のテストファイルに分けて定義する。少しずつ食い違い、実物なら失敗する場面で偽実装が成功してテストが緑になる |
 | 必須 | 時刻・乱数・ID生成のような非決定的な値は、テストダブルで決定的な値に固定する |
 | 禁止 | 仕様の記述に、テスト層・アーキテクチャ層の内部語彙を持ち込む |
+
+---
+
+## テストファイルの名づけ

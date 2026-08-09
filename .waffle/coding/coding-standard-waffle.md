@@ -4,7 +4,7 @@ type: "coding-standard"
 title: "Waffle自身が採用するコーディング規約を定めるCoding Standard：coding-standard-waffle"
 description: "Waffle自身のコーディング規約（命名・スタイル・docstring）を定める。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v5"
+schemaRef: "CodingSchema/v6"
 ---
 
 # Waffle自身が採用するコーディング規約を定めるCoding Standard：coding-standard-waffle

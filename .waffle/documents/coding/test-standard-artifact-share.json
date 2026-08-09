@@ -1,7 +1,7 @@
 {
   "documentId": "test-standard-artifact-share",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v5",
+  "schemaRef": "CodingSchema/v6",
   "codingKind": "test-standard",
   "stack": "artifact-share",
   "status": "ACTIVE",
@@ -109,7 +109,6 @@
         "spec",
         "scenario"
       ],
-      "fileNameDerivedFrom": "spec-document-id",
       "blockPlacement": [
         {
           "block": "invariantScenarios",
@@ -118,8 +117,8 @@
         },
         {
           "block": "domainServiceScenarios",
-          "layer": "domain",
-          "testType": "unit"
+          "layer": "inbound adapter",
+          "testType": "contract"
         },
         {
           "block": "guaranteeScenarios",
@@ -251,6 +250,16 @@
       "blockType": "Description",
       "title": "概要",
       "text": "artifact-shareのテスト方針・配置・シナリオの束ね方を定める。2つのランタイムが同じ業務ルールを守るため、実装は分かれても同じシナリオへ紐づける。"
+    },
+    "testFileNaming": {
+      "blockType": "TestFileNaming",
+      "title": "テストファイルの名づけ",
+      "derivedFrom": "spec-document-id",
+      "strip": [],
+      "prefix": "test_",
+      "case": "snake",
+      "infix": "",
+      "suffix": ".py"
     }
   },
   "tags": [

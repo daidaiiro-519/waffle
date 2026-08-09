@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "CodingSchema/v5",
+  "$id": "CodingSchema/v6",
   "title": "CodingSchema v5",
   "description": "has-udd Coding 集約の Schema。codingKind=tech-stack/architecture/coding-standard/test-standard/tool-integration。ブロックはアーキ/スタック非依存で固定し、中身がスタックで変わる。1スタック＝4 codingKind document（stack フィールドで束ねる）。v5の方針: (1)1つの欄に「何を決めたか」と「なぜ・どう判断するか」を同居させない——決定は閉じた語彙・パス・列挙で書き、説明は隣の欄に文で置く。(2)他ブロックが宣言した識別子を指す欄は、指す先を明記して再定義しない。(3)やり方が複数ある事柄は「どのやり方か」を宣言する軸を持つ（言語やビルドツールが強制する差を、例外ではなく選択肢として表す）。命名規則・拡張子・シナリオとテストの対応は、コード側が写しを持たずこのschemaの宣言を読む。",
   "x-render-target": {
@@ -31,7 +31,7 @@
     },
     "schemaRef": {
       "type": "string",
-      "const": "CodingSchema/v5"
+      "const": "CodingSchema/v6"
     },
     "codingKind": {
       "type": "string",
@@ -1821,7 +1821,8 @@
         "scenarioBinding",
         "placementByTarget",
         "rules",
-        "description"
+        "description",
+        "testFileNaming"
       ],
       "additionalProperties": false,
       "properties": {

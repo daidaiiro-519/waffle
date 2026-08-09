@@ -15,7 +15,17 @@
       "title": "ランタイム",
       "language": "Python 3.12+",
       "target": "CLI / ローカルプロセス",
-      "concurrency": "同期主体（MCP 境界のみ async）"
+      "concurrency": "同期主体（MCP 境界のみ async）",
+      "languages": [
+        {
+          "language": "python",
+          "version": ">=3.12",
+          "extensions": [
+            ".py"
+          ],
+          "role": "primary"
+        }
+      ]
     },
     "framework": {
       "blockType": "Framework",
@@ -115,37 +125,44 @@
       "style": "ポートとアダプター（ヘキサゴナル）",
       "items": [
         {
-          "layer": "domain",
-          "responsibility": "ドメインモデル・不変条件・値",
+          "layer": "shared",
+          "path": "shared",
+          "responsibility": "全層から使える基盤（結果型・エラー等）。業務判断を持たない",
           "mayDependOn": []
         },
         {
-          "layer": "application",
-          "responsibility": "usecase の調整・トランザクション境界",
+          "layer": "domain",
+          "path": "domain",
+          "responsibility": "ドメインモデル・不変条件・値",
           "mayDependOn": [
-            "domain",
-            "ports"
+            "shared"
           ]
         },
         {
-          "layer": "ports",
-          "responsibility": "application が要求する抽象（driven interface）",
+          "layer": "application",
+          "path": "application",
+          "responsibility": "usecase の調整・トランザクション境界。外部へ要求する port をここで宣言する",
           "mayDependOn": [
-            "domain"
+            "domain",
+            "shared"
           ]
         },
         {
           "layer": "inbound adapter",
-          "responsibility": "外部からの入口（driving：API・CLI 等）",
+          "path": "adapters/inbound",
+          "responsibility": "外部からの入口（driving：API・CLI 等）。外部入力を application 呼び出しへ変換するだけで、判断を持たない",
           "mayDependOn": [
-            "application"
+            "application",
+            "shared"
           ]
         },
         {
           "layer": "outbound adapter",
-          "responsibility": "外部への出口（driven：DB・外部サービス）",
+          "path": "adapters/outbound",
+          "responsibility": "外部への出口（driven：DB・外部サービス）。application が宣言した port を実装する",
           "mayDependOn": [
-            "ports"
+            "application",
+            "shared"
           ]
         }
       ]
@@ -154,8 +171,29 @@
       "blockType": "Layout",
       "title": "ディレクトリ構成",
       "tree": "src/{package}/\n  domain/\n    model/          value-object, entity, aggregate\n    services/       domain-service\n  application/\n    usecases/       1 usecase = 1 module\n    ports/          driven interface の定義\n  adapters/\n    inbound/        driving（api, cli, ...）\n    outbound/       driven（db, external, ...）\n  shared/           共通（エラー・結果型 等）",
-      "compositionRoot": "inbound adapter の起動点にのみ置く",
-      "sourceRoot": "src/{package}"
+      "compositionRoot": "各エントリポイントに1つだけ置く（adapters/inbound/cli/main.py・adapters/inbound/mcp/main.py）。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ",
+      "sourceRoot": "src/{package}",
+      "granularity": [
+        {
+          "concept": "usecase",
+          "perFile": 1
+        },
+        {
+          "concept": "aggregate",
+          "perFile": 1
+        },
+        {
+          "concept": "domain-service",
+          "perFile": 1
+        },
+        {
+          "concept": "port",
+          "perFile": 1
+        }
+      ],
+      "compositionRootPaths": [
+        "adapters/inbound/main.py"
+      ]
     },
     "conceptPlacement": {
       "blockType": "ConceptPlacement",
@@ -476,7 +514,33 @@
       "summaryGuidance": "「何をするか・いつ使うか」を1行の平叙文で。インデックスに載る前提で、検索と判断に効く語を選ぶ。",
       "target": "公開要素（module / 公開 class / 公開 function）は必須・private は任意",
       "example": "def calculate_total(order: Order, coupon: Coupon | None = None) -> Money:\n    \"\"\"注文の合計金額を計算する。クーポン適用後の金額を返す。\n\n    Args:\n        order: 対象の注文。\n        coupon: 適用するクーポン（無ければ定価のまま）。\n\n    Returns:\n        クーポン適用後の合計金額。\n\n    Raises:\n        InvalidCouponError: クーポンの適用条件を満たさない場合。\n    \"\"\"",
-      "paramSyntax": "Args:\n    name (type): 説明\nReturns:\n    説明\nRaises:\n    ExceptionType: 説明"
+      "paramSyntax": "Args:\n    name (type): 説明\nReturns:\n    説明\nRaises:\n    ExceptionType: 説明",
+      "syntaxKind": "tagged",
+      "tagParams": "Args:",
+      "tagReturns": "Returns:",
+      "tagRaises": "Raises:",
+      "required": [
+        {
+          "artifact": "module",
+          "visibility": "any",
+          "isRequired": true
+        },
+        {
+          "artifact": "type",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "function",
+          "visibility": "public",
+          "isRequired": true
+        },
+        {
+          "artifact": "function",
+          "visibility": "private",
+          "isRequired": false
+        }
+      ]
     },
     "rules": {
       "blockType": "CodingRules",
@@ -511,7 +575,30 @@
       "blockType": "TestStrategy",
       "title": "テスト方針",
       "pyramid": "ピラミッド形（単体テストを重視・統合はやや軽め・E2E は行わない）",
-      "rationale": "業務ロジックの実装方法＝ドメインモデル"
+      "rationale": "業務ロジックの実装方法＝ドメインモデル。Waffleはspec(DomainSpecSchema)のTestScenariosを実行可能テストへ機械的に束ねるUDD(Usage-Driven Development)ループを持ち、この対応関係の詳細規約はscenarioBindingで定める。",
+      "shape": "pyramid",
+      "weights": [
+        {
+          "testType": "unit",
+          "emphasis": "high"
+        },
+        {
+          "testType": "integration",
+          "emphasis": "low"
+        },
+        {
+          "testType": "acceptance",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "contract",
+          "emphasis": "medium"
+        },
+        {
+          "testType": "e2e",
+          "emphasis": "none"
+        }
+      ]
     },
     "testPlan": {
       "blockType": "TestPlan",
@@ -542,22 +629,35 @@
         {
           "testType": "unit",
           "tool": "pytest",
-          "target": "domain / application"
+          "targets": [
+            "domain",
+            "application"
+          ]
         },
         {
           "testType": "integration",
           "tool": "pytest",
-          "target": "adapters"
+          "targets": [
+            "application",
+            "outbound adapter"
+          ]
         },
         {
           "testType": "acceptance",
-          "tool": "pytest（要件のシナリオを見て人間またはAIが直接執筆）",
-          "target": "usecase"
+          "tool": "pytest",
+          "targets": [
+            "application"
+          ],
+          "note": "要件のシナリオを見てAIが直接執筆する"
         },
         {
           "testType": "contract",
-          "tool": "pytest（インターフェース定義との差分検査）",
-          "target": "外部公開インターフェース（CLI/API/RPC等。無ければこの行自体を省略）"
+          "tool": "pytest",
+          "targets": [
+            "ports",
+            "inbound adapter"
+          ],
+          "note": "インターフェース定義との差分検査"
         }
       ]
     },
@@ -572,20 +672,88 @@
       "title": "シナリオの束ね方",
       "items": [
         {
-          "item": "書き方",
-          "rule": "振る舞いはGiven/When/Then形式(Gherkin)のシナリオとして書く。1シナリオ＝1つの具体的な状況→操作→結果"
-        },
-        {
-          "item": "実行可能にする",
-          "rule": "書いたシナリオはそのまま放置せず、対応する実行可能なテスト関数を書く。シナリオの文章だけでは「検証済み」とみなさない"
-        },
-        {
           "item": "対応関係",
-          "rule": "1仕様単位（usecase等）につき1テストファイルを基本とし、シナリオ名とテスト関数名を対応させる（例: シナリオ「在庫不足なら失敗する」→関数名test_在庫不足なら失敗する）"
+          "rule": "1 spec（DomainSpecSchemaのusecase）＝1 ネイティブテストファイル（AI執筆）"
+        },
+        {
+          "item": "ネイティブテストの配置",
+          "rule": "tests/application/acceptance/test_{documentId}.py（documentIdはspecのdocumentIdをそのままsnake_case化）"
+        },
+        {
+          "item": "突き合わせのキー",
+          "rule": "テストの文書コメント（Pythonならdocstring）の先頭に置いた宣言行「Scenario: {シナリオ名}」で、specのシナリオと突き合わせる。テスト関数名は突き合わせに使わない。関数名をキーにすると、仕様の語彙をそのまま識別子にできる言語でしか成立せず（シナリオ名は日本語、Pythonの識別子慣習はASCII）、識別子へ変換する過程で句読点や空白が潰れて別のシナリオと衝突しうるため"
+        },
+        {
+          "item": "テスト関数の命名",
+          "rule": "対象言語の命名慣習に従う（PythonならASCIIのsnake_case）。シナリオ名を識別子にしない。どのシナリオに対応するかは宣言行が持つ"
         },
         {
           "item": "ドリフト検知",
-          "rule": "シナリオ名とテスト関数名を機械的に突き合わせ、対応するテストが無いシナリオ・対応するシナリオが無いテスト関数を検出する（中身の意味が正しいかどうかまでは自動判定しない）"
+          "rule": "宣言行⇔シナリオ名の突き合わせで機械検出（check-scenario-drift）。未実装（specにあってテストが無い）と孤立（テストにあってspecに無い）を検出し、中身の妥当性はAIが評価する"
+        },
+        {
+          "item": "シナリオ文言の追従",
+          "rule": "specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテストは、対応するgherkinの宣言行とGiven/When/Thenをそのまま転記する。宣言行は突き合わせのキーそのもの、本文はシナリオ文言の事後編集への追従を検知する材料であり、役割が異なる"
+        },
+        {
+          "item": "シナリオに紐づかないテストの扱い",
+          "rule": "specのシナリオに対応しない補助的なテストは、シナリオ対応テストとは別のファイルへ置く。同じファイルへ混ぜると、そのテストが常に孤立として報告され続け、警報が意味を失う。ドリフト検知はspecとテストファイルの組に対して行うため、specと組にならないファイルは検査対象にならない"
+        },
+        {
+          "item": "シナリオブロック種別とテスト配置層の対応",
+          "rule": "invariantScenarios(aggregate)→tests/domain/unit/、domainServiceScenarios(subdomain)→tests/domain/unit/、guaranteeScenarios(usecase・operationGuaranteesと対)→tests/application/integration/、acceptanceScenarios(usecase)→tests/application/acceptance/。レイヤーが第一階層・テスト種別が第二階層という配置は placementByTarget が定めるものと同一であり、ここではシナリオブロック種別との対応だけを足す。コードの性質(純粋かport必須か)をケースバイケースで判定してはならない（ドリフト検知を非決定的にするため）"
+        },
+        {
+          "item": "対象言語ごとの抽出",
+          "rule": "文書コメントの取り出しは言語ごとのadapterが担い、コアは言語の構文解析技術を知らない。Pythonの文書コメントは関数の内側にあるため構造的に対応づくが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応づかない。言語によって対応づけの確実さが異なることを前提にする"
+        }
+      ],
+      "declarationLine": "Scenario: {シナリオ名}",
+      "keyScope": [
+        "layer",
+        "spec",
+        "scenario"
+      ],
+      "blockPlacement": [
+        {
+          "block": "invariantScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "domainServiceScenarios",
+          "layer": "domain",
+          "testType": "unit"
+        },
+        {
+          "block": "guaranteeScenarios",
+          "layer": "application",
+          "testType": "integration"
+        },
+        {
+          "block": "acceptanceScenarios",
+          "layer": "application",
+          "testType": "acceptance"
+        }
+      ],
+      "norms": [
+        {
+          "norm": "テストの文書コメント（Pythonならdocstring）の先頭に置いた宣言行「Scenario: {シナリオ名}」で、specのシナリオと突き合わせる。テスト関数名は突き合わせに使わない。関数名をキーにすると、仕様の語彙をそのまま識別子にできる言語でしか成立せず（シナリオ名は日本語、Pythonの識別子慣習はASCII）、識別子へ変換する過程で句読点や空白が潰れて別のシナリオと衝突しうるため"
+        },
+        {
+          "norm": "対象言語の命名慣習に従う（PythonならASCIIのsnake_case）。シナリオ名を識別子にしない。どのシナリオに対応するかは宣言行が持つ"
+        },
+        {
+          "norm": "宣言行⇔シナリオ名の突き合わせで機械検出（check-scenario-drift）。未実装（specにあってテストが無い）と孤立（テストにあってspecに無い）を検出し、中身の妥当性はAIが評価する"
+        },
+        {
+          "norm": "specのGuaranteeScenarios/AcceptanceScenarios/InvariantScenarios/DomainServiceScenariosに対応するテストは、対応するgherkinの宣言行とGiven/When/Thenをそのまま転記する。宣言行は突き合わせのキーそのもの、本文はシナリオ文言の事後編集への追従を検知する材料であり、役割が異なる"
+        },
+        {
+          "norm": "specのシナリオに対応しない補助的なテストは、シナリオ対応テストとは別のファイルへ置く。同じファイルへ混ぜると、そのテストが常に孤立として報告され続け、警報が意味を失う。ドリフト検知はspecとテストファイルの組に対して行うため、specと組にならないファイルは検査対象にならない"
+        },
+        {
+          "norm": "文書コメントの取り出しは言語ごとのadapterが担い、コアは言語の構文解析技術を知らない。Pythonの文書コメントは関数の内側にあるため構造的に対応づくが、Java/TypeScript/JavaScriptでは関数の直前に置かれるため近接でしか対応づかない。言語によって対応づけの確実さが異なることを前提にする"
         }
       ]
     },
@@ -594,31 +762,44 @@
       "title": "テスト対象別の配置",
       "items": [
         {
-          "target": "domain",
-          "testKind": "unit",
-          "path": "tests/unit/domain/"
+          "layer": "domain",
+          "testType": "unit",
+          "path": "tests/domain/unit/"
         },
         {
-          "target": "application",
-          "testKind": "unit（port はテストダブル）",
-          "path": "tests/unit/application/（port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する）"
+          "layer": "application",
+          "testType": "acceptance",
+          "path": "tests/application/acceptance/"
         },
         {
-          "target": "adapters",
-          "testKind": "integration（契約テスト）",
-          "path": "tests/integration/（同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行できると、両者の振る舞いの一致を保証しやすい）"
+          "layer": "application",
+          "testType": "integration",
+          "path": "tests/application/integration/"
         },
         {
-          "target": "usecase",
-          "testKind": "acceptance（ネイティブ）",
-          "path": "tests/acceptance/"
+          "layer": "application",
+          "testType": "unit",
+          "path": "tests/application/unit/",
+          "note": "port経由の編成ロジック自身が独自の分岐/判定を持つ場合のみ追加する"
         },
         {
-          "target": "システム全体の少数シナリオ",
-          "testKind": "E2E",
-          "path": "tests/e2e/（コンポジションルートによる配線を含めて検証。件数は絞る）"
+          "layer": "application",
+          "testType": "contract",
+          "path": "tests/application/contract/",
+          "note": "port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約テストスイートを、本物のadapterとテスト用の偽実装の両方に対して実行する"
+        },
+        {
+          "layer": "inbound adapter",
+          "testType": "contract",
+          "path": "tests/adapters/inbound/contract/"
+        },
+        {
+          "layer": "outbound adapter",
+          "testType": "integration",
+          "path": "tests/adapters/outbound/integration/"
         }
-      ]
+      ],
+      "strategy": "layer-first"
     },
     "rules": {
       "blockType": "TestRules",
@@ -634,15 +815,15 @@
         },
         {
           "level": "必須",
-          "rule": "テストファイル名は対応する仕様の識別子に対応させて統一する（実装モジュール名を由来にした命名は禁止）"
+          "rule": "テストファイル名は test_{対応するspecのdocumentIdをsnake_case化したもの}.py で統一する（仕様のシナリオに対応する全テストに適用。実装モジュール名を由来にした命名は禁止）"
         },
         {
           "level": "必須",
-          "rule": "tests/ 配下は testTypes（unit/integration/acceptance/contract/e2e）を第一階層とする。domain/applicationはunit/配下の第二階層（対象層の軸）。adaptersは単体テストではなく統合(integration)テストなので tests/unit/配下に置かず tests/integration/ を独立の第一階層にする"
+          "rule": "tests/ 配下は architecture が宣言するレイヤーを第一階層とし、テスト種別（unit/integration/acceptance/contract）を第二階層とする。第一階層のレイヤー名は architecture の layers が宣言するものをそのまま使い、ここで別途定義しない。テスト種別を第一階層にすると、レイヤーごとに取りうる種別が違うこと（domain に contract は無い、ports に unit は無い等）を構造で表せず、あり得ない組み合わせを禁止規則で塞ぐことになる（実際に「tests/unit/adapters/ に置かない」という禁止規則が必要になり、かつ守られていなかった）"
         },
         {
           "level": "推奨",
-          "rule": "application層のport経由コードは、integration層(実アダプタ)で既に検証済みの保証を、fakeに差し替えて再検証するためだけの単体テストを追加しない。追加するのは、そのコード自身が独自の分岐/判定ロジックを持ち、かつどの既存シナリオにも対応しない場合のみ（テストカバレッジは目標ではなく診断ツール）"
+          "rule": "application層のport経由コードは、tests/application/integration（実アダプタを差した検証）で既に検証済みの保証を、fakeに差し替えて再検証するためだけの単体テストを追加しない。追加するのは、そのコード自身が独自の分岐/判定ロジックを持ち、かつどの既存シナリオにも対応しない場合のみ（テストカバレッジは目標ではなく診断ツール）"
         },
         {
           "level": "必須",
@@ -671,14 +852,18 @@
         {
           "level": "必須",
           "rule": "時刻・乱数・ID生成のような非決定的な値は、テストダブル（固定クロック・シード固定・テスト用ID生成器）で決定的な値に固定する。本物のシステム時刻・乱数源に依存するアサーションを書かない"
+        },
+        {
+          "level": "必須",
+          "rule": "テストには2つの出どころがある。仕様由来（specが宣言したシナリオを転記し、宣言行で突き合わせる）と、規約由来（portやアダプターが宣言した契約を確かめる）。この2つを同じディレクトリに混ぜると、ディレクトリを見てもどちらの保証なのか分からなくなるので、テスト種別で分ける——仕様由来は unit / acceptance と application の integration、規約由来は contract と adapters 配下の integration。この区別のために、層でない名前を第一階層に作らない（第一階層は常に architecture が宣言する層）"
         }
       ]
     },
     "docstring": {
-      "style": "pytestの三重引用符docstring内にGiven/When/Thenをそのまま記載する",
-      "transcriptionGuidance": "docstring本文には、対応するspec（usecase/aggregate/subdomain）のシナリオ（Given/When/Then）を一字一句そのまま転記する。関数名の一致だけでは、シナリオ文言の事後編集への追従を検知できないため。",
-      "target": "acceptanceScenarios/guaranteeScenarios/invariantScenarios/domainServiceScenariosに対応する全テスト関数",
-      "example": "def test_在庫不足なら失敗する():\n    \"\"\"\n    Given 在庫が1個の商品\n    When 2個注文する\n    Then 在庫不足エラーになる\n    \"\"\"\n    ...",
+      "style": "対象言語の文書コメント構文に、先頭の宣言行「Scenario: {シナリオ名}」と、続くGiven/When/Thenをそのまま記載する（Pythonならpytestの三重引用符docstring内）。文書コメントの位置は言語で異なり、Pythonは関数の内側、Java/TypeScript/JavaScriptは関数の直前に置く",
+      "transcriptionGuidance": "文書コメントには、対応するspecのシナリオの宣言行とGiven/When/Thenを、人間が言い換えず一字一句そのまま転記する。転記が要るのは2つの役割を兼ねるため。宣言行はspecとテストを突き合わせるキーそのものであり、これを持たないテストはどのシナリオにも対応しないものとして扱われる。本文は、シナリオ文言の事後編集への追従を検知する材料になる（キーの一致だけでは文言の編集を検知できない）",
+      "target": "usecase specのacceptanceScenarios/guaranteeScenarios、aggregate specのinvariantScenarios、bounded-context specのdomainServiceScenariosに対応する全テスト関数",
+      "example": "def test_suspend_blocks_viewing():\n    \"\"\"\n    Scenario: 止めると開けなくなる\n    Given 共有アーティファクトAが公開されている\n    When 共有アーティファクトAの公開を止める\n    Then 共有アーティファクトAの閲覧トークンで開けない\n    \"\"\"\n    ...",
       "blockType": "TestScenarioDocstring",
       "title": "シナリオdocstring"
     },
@@ -686,6 +871,16 @@
       "blockType": "Description",
       "title": "概要",
       "text": "Python/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
+    },
+    "testFileNaming": {
+      "blockType": "TestFileNaming",
+      "title": "テストファイルの名づけ",
+      "derivedFrom": "spec-document-id",
+      "strip": [],
+      "prefix": "test_",
+      "case": "snake",
+      "infix": "",
+      "suffix": ".py"
     }
   }
 }

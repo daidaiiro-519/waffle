@@ -1,7 +1,7 @@
 {
   "documentId": "test-standard-typescript-hexagonal",
   "documentType": "Coding",
-  "schemaRef": "CodingSchema/v5",
+  "schemaRef": "CodingSchema/v6",
   "codingKind": "test-standard",
   "stack": "typescript-hexagonal",
   "status": "DRAFT",
@@ -132,7 +132,6 @@
         "spec",
         "scenario"
       ],
-      "fileNameDerivedFrom": "spec-document-id",
       "blockPlacement": [
         {
           "block": "invariantScenarios",
@@ -252,6 +251,16 @@
       "blockType": "Description",
       "title": "概要",
       "text": "TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
+    },
+    "testFileNaming": {
+      "blockType": "TestFileNaming",
+      "title": "テストファイルの名づけ",
+      "derivedFrom": "spec-document-id",
+      "strip": [],
+      "prefix": "",
+      "case": "camel",
+      "infix": ".test",
+      "suffix": ".ts"
     }
   },
   "tags": []
