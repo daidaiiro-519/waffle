@@ -263,7 +263,8 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
         <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 2件／実装観点 2件</span></div>
         <div class="review-row"><span class="who">qa-advisor</span><span class="detail">設計観点 3件／実装観点 4件</span></div>
         <div class="review-row"><span class="who">オーケストレータ（実測）</span><span class="detail">設計観点 1件／実装観点 1件</span></div>
-        <div class="review-row"><span class="who">未解決事項</span><span class="detail">1件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">0件</span></div>
+        <div class="review-row"><span class="who">完成イメージ確認済み</span><span class="detail">オーケストレータ</span></div>
       </div>
     </div>
   </section>
@@ -374,6 +375,14 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             <div class="constraint-item">
               <span class="num">6</span>
               <p>ランタイムをまたぐ合意の検証を、業務の側の契約の行へ置いてはならない。その行には『本物と偽実装の両方が同じスイートを満たす』という必須ルールが掛かっており、本物1つしか通らない検証を入れると、ルールが形式的には掛かっているのに実際には効いていない状態を作る。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">7</span>
+              <p>招かれている人の名簿の口は、本物が利用者プールへ直接つながるため、本物と偽物を突き合わせる束の対象にできない。規約が実物のサービスに依存する単体の検証を禁じているためで、偽物の側だけを保つ。この除外は宣言の側にも書いた——書かないと、3つのうち2つしか対象になっていないことが誰にも見えない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">8</span>
+              <p>鍵と値の保管の読み取りを口から落としたので、書いたものを読み返す検証は、偽物が自分の記録を見せる面を直接見る形になっている。口の読み取りとして確かめると、本番に無い経路を固定することになる。</p>
             </div></div>
           <div class="tab-panel" id="panel4">
             <div class="scope-item">
