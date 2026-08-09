@@ -87,14 +87,14 @@ def test_x_render_follows_closed_vocabulary(schema_ref):
 # --- 公開済みの版は後方互換を壊さない ---
 # (port不要・純粋なValidator呼び出しで検証できる不変条件)
 
-# --- Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する ---
+# --- Schemaファイルの物理整形は一意に定まる形と完全一致する ---
 
 @pytest.mark.parametrize("schema_ref", _IN_SCOPE_SCHEMAS)
 def test_schema_file_formatting_is_canonical(schema_ref):
     """
-    Scenario: Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する
+    Scenario: Schemaファイルの物理整形は一意に定まる形と完全一致する
       Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル
-      When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する
+      When 契約が定める形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と比較する
       Then バイト単位で一致しない場合は不適合として検出される
 
     (整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な

@@ -265,7 +265,7 @@ def test_writes_file_to_path_derived_from_schema_ref():
     Scenario: schemaRefとdiscriminatorから導出したパスへファイルを書き出す
     Given discriminatorを持つschema
     When そのschemaRefでブランクテンプレート描画を実行する
-    Then .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md にプレースホルダーMarkdownがファイルとして書き出されている
+    Then schemaRefとdiscriminatorから導出したパスに、プレースホルダーMarkdownがファイルとして書き出されている
     """
     schema = {
         "required": ["documentId", "kind", "content"],

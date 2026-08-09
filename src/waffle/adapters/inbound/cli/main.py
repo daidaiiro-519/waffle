@@ -461,20 +461,20 @@ def check_scenario_drift(
 
 @app.command("check-verification-gate", help="実装完了→検証フェーズへ進んでよいかを判定（uc-check-verification-gate）。")
 def check_verification_gate(
-    spec_path: str = typer.Option(..., "--specPath", "--spec-path", help="spec.json のパス"),
-    test_path: str = typer.Option(..., "--testPath", "--test-path", help="対応するテストファイル(.py)のパス"),
+    spec_path: str = typer.Option(..., "--specPath", "--spec-path", help="検査の対象とする仕様のパス"),
+    test_path: str = typer.Option(..., "--testPath", "--test-path", help="対応するテストファイルのパス"),
     test_results_path: str = typer.Option(
         ..., "--testResultsPath", "--test-results-path",
-        help='テスト実行結果({"passed": [...], "failed": [...]})のパス',
+        help="通ったテストと落ちたテストを記録した、実行結果のパス",
     ),
     architecture_ref: str = typer.Option(None, "--architectureRef", "--architecture-ref", help="シナリオ照合の規約を引くarchitecture documentのdocumentId"),
 ) -> None:
     """受け取った引数をユースケースへ渡し、結果を標準出力へ書き出す。
 
     Args:
-        spec_path: spec.json のパス
-        test_path: 対応するテストファイル(.py)のパス
-        test_results_path: テスト実行結果({"passed": [...], "failed": [...]})のパス
+        spec_path: 検査の対象とする仕様のパス
+        test_path: 対応するテストファイルのパス
+        test_results_path: 通ったテストと落ちたテストを記録した、実行結果のパス
         architecture_ref: シナリオ照合の規約を引くarchitecture documentのdocumentId
 
     Returns:
@@ -810,7 +810,7 @@ def init_coding_preset(
     Raises:
         なし。失敗は終了コードで表す。
     """
-    _emit(InitCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, product))
+    _emit(InitCodingPreset(_docs(), PackageCodingPresetRepository(), _schemas()).run(preset, product))
 
 @app.command(help="MCP サーバを起動（query_document / render_document / … を MCP ツールとして公開）。")
 def serve() -> None:

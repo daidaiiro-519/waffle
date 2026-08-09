@@ -14,6 +14,8 @@ _TEST_DOC_ID = "test-acceptance-poc-migration"
 _TEST_DOC_PATH = f".waffle/documents/skills/{_TEST_DOC_ID}.json"
 _CUSTOM_DOC_ID = "test-acceptance-scaffold-custom"
 _CUSTOM_DOC_PATH = f".waffle/documents/skills/{_CUSTOM_DOC_ID}.json"
+_CODING_SCHEMA = "CodingSchema"   # 版を書かない。最新へ解決される
+_CODING_DOC_ID = "test-acceptance-scaffold-coding"
 _TEMPLATE_SCHEMA = "TemplateSchema/v2"
 _TEMPLATE_DOC_ID = "test-acceptance-scaffold-template"
 _TEMPLATE_DOC_PATH = f".waffle/documents/templates/{_TEMPLATE_DOC_ID}.json"
@@ -633,3 +635,35 @@ def test_outdated_schema_ref_is_refused():
     assert isinstance(result, Err), result
     assert result.details == ["OUTDATED_SCHEMA_REF"]
     assert not Path(path).exists()
+
+
+def test_clearing_an_optional_field_inside_a_required_block_succeeds():
+    """
+    Scenario: 必須ブロックの中にある必須でない欄は削除できる
+    Given schemaのrequiredに指定されているブロックのpath
+    And そのブロックの中にある、requiredに指定されていない欄のpath
+    When その欄に対してclear_fieldを実行する
+    Then その欄がdocumentから削除される
+    And REQUIRED_FIELDエラーにならない
+    """
+    create_result = _engine().run(
+        "create",
+        {"schemaRef": _CODING_SCHEMA, "documentId": _CODING_DOC_ID,
+         "discriminator": {"codingKind": "test-standard"}},
+    )
+    assert isinstance(create_result, Ok), create_result
+    path = create_result.value["path"]
+
+    filled = _engine().run(
+        "fill", {"documentPath": path, "values": {"content.scenarioBinding.norms": ["消される欄"]}})
+    assert isinstance(filled, Ok), filled
+    assert filled.value["written"] == ["content.scenarioBinding.norms"], filled.value
+
+    result = _engine().run(
+        "clear_field", {"documentPath": path, "fieldPath": "content.scenarioBinding.norms"})
+    assert isinstance(result, Ok), result
+    assert result.value["cleared"] is True
+
+    doc = FsDocumentRepository().load(path)
+    assert "norms" not in doc["content"]["scenarioBinding"]
+    assert "scenarioBinding" in doc["content"]

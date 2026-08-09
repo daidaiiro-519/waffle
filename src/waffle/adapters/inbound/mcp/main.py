@@ -385,9 +385,9 @@ def check_verification_gate(specPath: str, testPath: str, testResultsPath: str, 
     """受け取った引数をユースケースへ渡し、結果を辞書で返す。
 
     Args:
-        specPath: spec.json のパス
-        testPath: 対応するテストファイル(.py)のパス
-        testResultsPath: テスト実行結果({"passed": [...], "failed": [...]})のパス
+        specPath: 検査の対象とする仕様のパス
+        testPath: 対応するテストファイルのパス
+        testResultsPath: 通ったテストと落ちたテストを記録した、実行結果のパス
         architectureRef: シナリオ照合の規約を引くarchitecture documentのdocumentId
 
     Returns:
@@ -612,7 +612,7 @@ def init_coding_preset(preset: str, product: str) -> dict:
     Raises:
         なし。失敗は結果の中で表す。
     """
-    return _dict(InitCodingPreset(_docs(), PackageCodingPresetRepository()).run(preset, product))
+    return _dict(InitCodingPreset(_docs(), PackageCodingPresetRepository(), _schemas()).run(preset, product))
 
 @mcp.tool(description="実践で確かめた規約の指定部分を、次の出発点となるプリセットへ反映（uc-update-coding-preset）。丸ごとの写しは行わないため、戻す部分の指定は省略できない。dryRunを真にすると書き換えずに何が変わるかだけを返す。")
 def update_coding_preset(preset: str, fromDocumentId: str, blocks: list[str], dryRun: bool = False) -> dict:

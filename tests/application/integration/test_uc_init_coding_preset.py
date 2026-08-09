@@ -7,6 +7,7 @@ from pathlib import Path
 
 from waffle.adapters.outbound.coding_preset_repo import PackageCodingPresetRepository
 from waffle.adapters.outbound.fs import FsDocumentRepository
+from waffle.adapters.outbound.schema_repo import PackageSchemaRepository
 from waffle.application.usecases.init_coding_preset import InitCodingPreset
 from waffle.shared.result import Err, Ok
 
@@ -23,7 +24,7 @@ def teardown_function():
 
 
 def _engine() -> InitCodingPreset:
-    return InitCodingPreset(FsDocumentRepository(), PackageCodingPresetRepository())
+    return InitCodingPreset(FsDocumentRepository(), PackageCodingPresetRepository(), PackageSchemaRepository())
 
 
 def test_既に生成済みのdocumentは再initで変更されない():

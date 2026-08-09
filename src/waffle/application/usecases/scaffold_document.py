@@ -15,6 +15,7 @@ from waffle.application.ports.schema_repository import SchemaRepository
 from waffle.application.services.document_loading import load_document, load_schema, require_schema_ref
 from waffle.domain.services import path_template
 from waffle.domain.services.fill_template import build_const_paths as _build_const_paths
+from waffle.domain.services.fill_template import resolve_ref as _resolve_ref
 from waffle.domain.services.fill_template import build_fill_template as _build_fill_template
 from waffle.domain.services.fill_template import build_skeleton as _build_skeleton
 from waffle.domain.services.fill_template import build_top_level_const_paths as _build_top_level_const_paths
@@ -326,12 +327,24 @@ def _invalid_path_message(invalid: list[str], allowed: set) -> str:
     return "／".join(lines)
 
 def _is_required_path(schema: dict, content_def: dict, path: str) -> bool:
-    """pathの直下フィールドが、その階層のschema required配列に含まれるか判定する
-    （トップレベルはschema自身、content配下はcontent_defのrequiredを見る）。"""
+    """pathが指す欄そのものが、それを持つ定義のrequired配列に含まれるか判定する。
+
+    必須かどうかは欄そのもので決まる。入れ物が必須であることを中身が必須である
+    ことと取り違えると、必須ブロックの中の欄が1つも消せなくなる（実際にそうなって
+    いた）。よってpathの手前を辿り、最後の要素の親の宣言を見る。
+    """
     parts = path.split(".")
-    if parts[0] == "content" and len(parts) >= 2:
-        return parts[1] in content_def.get("required", [])
-    return parts[0] in schema.get("required", [])
+    if parts[0] != "content" or len(parts) < 2:
+        return parts[0] in schema.get("required", [])
+
+    node = content_def
+    for part in parts[1:-1]:
+        node = node.get("properties", {}).get(part, {})
+        if "$ref" in node:
+            node = _resolve_ref(schema, node["$ref"])
+        if not isinstance(node, dict):
+            return False
+    return parts[-1] in node.get("required", [])
 
 def _clear_path(doc: dict, path: str) -> bool:
     """path上のキーが実在すれば削除する（冪等：存在しなければ何もせずFalseを返す）。"""

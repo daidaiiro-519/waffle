@@ -11,8 +11,11 @@ import json
 
 from waffle.application.ports.coding_preset_repository import CodingPresetRepository
 from waffle.application.ports.document_repository import DocumentRepository
+from waffle.application.ports.schema_repository import SchemaRepository
+from waffle.domain.services.schema_versioning import latest_version
 from waffle.shared.result import Err, Ok, Result
 
+_SCHEMA_NAME = "CodingSchema"
 _KINDS = ("tech-stack", "architecture", "coding-standard", "test-standard")
 _TAGS_BY_KIND = {
     "tech-stack": ["tier:backend"],
@@ -28,9 +31,20 @@ def _err(code: str, message: str) -> Err:
 
 class InitCodingPreset:
     """プリセットから、プロダクト固有の規約一式を作る。"""
-    def __init__(self, documents: DocumentRepository, presets: CodingPresetRepository) -> None:
+    def __init__(self, documents: DocumentRepository, presets: CodingPresetRepository,
+                 schemas: SchemaRepository) -> None:
         self._documents = documents
         self._presets = presets
+        self._schemas = schemas
+
+    def _latest_schema_ref(self) -> str:
+        """作られる規約が指す版を、いまある版から決める。
+
+        版をここに書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、
+        作られた規約が最初から検証を通らなくなる（実際にそうなっていた）。
+        """
+        latest = latest_version(self._schemas.list_versions(_SCHEMA_NAME))
+        return f"{_SCHEMA_NAME}/{latest}" if latest else _SCHEMA_NAME
 
     def run(self, preset_name: str, product_name: str) -> Result[dict]:
         """プリセットから、プロダクト固有の規約一式を作る。
@@ -52,6 +66,7 @@ class InitCodingPreset:
         except FileNotFoundError:
             return _err("PRESET_NOT_FOUND", f"プリセットが見つかりません: {preset_name}")
 
+        schema_ref = self._latest_schema_ref()
         created: list[str] = []
         skipped: list[str] = []
         for kind in _KINDS:
@@ -64,7 +79,7 @@ class InitCodingPreset:
             document = {
                 "documentId": document_id,
                 "documentType": "Coding",
-                "schemaRef": "CodingSchema/v4",
+                "schemaRef": schema_ref,
                 "codingKind": kind,
                 "stack": preset_name,
                 "status": "ACTIVE",
