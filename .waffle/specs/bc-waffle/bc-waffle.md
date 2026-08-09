@@ -372,3 +372,81 @@ Scenario: discriminatorが無いschemaはNoneを返す
   When discriminatorキーを抽出する
   Then Noneが返る
 ```
+
+### 実装の置き場所は、ソースルートと概念の配置を結合して決まる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 宣言だけから実装の置き場所を導く（推測しない） |
+
+```gherkin
+Scenario: 実装の置き場所は、ソースルートと概念の配置を結合して決まる
+  Given {package}トークンを含むsourceRootと、usecase概念のplacement
+  When resolve_source_rootをpackage変数付きで実行する
+  Then sourceRoot/placementの形に解決される
+```
+
+### ソースルートに変数が無ければ、渡された値は無視される
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 計算整合: 宣言だけから実装の置き場所を導く（推測しない） |
+
+```gherkin
+Scenario: ソースルートに変数が無ければ、渡された値は無視される
+  Given プレースホルダを含まないsourceRoot（TypeScript版の慣習）
+  When package変数を渡してresolve_source_rootを実行する
+  Then package変数は無視され、sourceRoot/placementがそのまま結合される
+```
+
+### ソースルートが宣言されていなければ解決しない
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 計算整合: 宣言だけから実装の置き場所を導く（推測しない） |
+
+```gherkin
+Scenario: ソースルートが宣言されていなければ解決しない
+  Given sourceRootフィールドを持たないlayout
+  When resolve_source_rootを実行する
+  Then Noneが返る
+```
+
+### 宣言に無い概念は解決しない
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 計算整合: 宣言だけから実装の置き場所を導く（推測しない） |
+
+```gherkin
+Scenario: 宣言に無い概念は解決しない
+  Given conceptPlacementに存在しないconcept名
+  When resolve_source_rootを実行する
+  Then Noneが返る
+```
+
+### 規約の識別子から製品名を取り出す
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 宣言だけから実装の置き場所を導く（推測しない） |
+
+```gherkin
+Scenario: 規約の識別子から製品名を取り出す
+  Given "architecture-waffle"のようなarchitectureRef（documentId）とcodingKind
+  When package_name_from_referenceを実行する
+  Then "architecture-"接頭辞を剥がしたproduct名が返る
+```
+
+### 識別子の種別が食い違えば製品名を取り出さない
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 境界: 取り出せる場合と取り出せない場合の対 |
+
+```gherkin
+Scenario: 識別子の種別が食い違えば製品名を取り出さない
+  Given codingKindのプレフィックスと一致しないarchitectureRef
+  When package_name_from_referenceを実行する
+  Then Noneが返る
+```

@@ -292,6 +292,48 @@
           "viewpoint": "discriminatorキー抽出：ifもallOf内のifも持たないschemaは分岐を持たない",
           "gherkin": "Scenario: discriminatorが無いschemaはNoneを返す\n  Given ifもallOfも持たないschema\n  When discriminatorキーを抽出する\n  Then Noneが返る",
           "covers": "ドメインサービス: discriminatorキー抽出"
+        },
+        {
+          "name": "実装の置き場所は、ソースルートと概念の配置を結合して決まる",
+          "category": "正常系",
+          "viewpoint": "計算整合: 宣言だけから実装の置き場所を導く（推測しない）",
+          "gherkin": "Scenario: 実装の置き場所は、ソースルートと概念の配置を結合して決まる\n  Given {package}トークンを含むsourceRootと、usecase概念のplacement\n  When resolve_source_rootをpackage変数付きで実行する\n  Then sourceRoot/placementの形に解決される",
+          "covers": "業務サービス: ソースルート解決"
+        },
+        {
+          "name": "ソースルートに変数が無ければ、渡された値は無視される",
+          "category": "境界値",
+          "viewpoint": "計算整合: 宣言だけから実装の置き場所を導く（推測しない）",
+          "gherkin": "Scenario: ソースルートに変数が無ければ、渡された値は無視される\n  Given プレースホルダを含まないsourceRoot（TypeScript版の慣習）\n  When package変数を渡してresolve_source_rootを実行する\n  Then package変数は無視され、sourceRoot/placementがそのまま結合される",
+          "covers": "業務サービス: ソースルート解決"
+        },
+        {
+          "name": "ソースルートが宣言されていなければ解決しない",
+          "category": "境界値",
+          "viewpoint": "計算整合: 宣言だけから実装の置き場所を導く（推測しない）",
+          "gherkin": "Scenario: ソースルートが宣言されていなければ解決しない\n  Given sourceRootフィールドを持たないlayout\n  When resolve_source_rootを実行する\n  Then Noneが返る",
+          "covers": "業務サービス: ソースルート解決"
+        },
+        {
+          "name": "宣言に無い概念は解決しない",
+          "category": "境界値",
+          "viewpoint": "計算整合: 宣言だけから実装の置き場所を導く（推測しない）",
+          "gherkin": "Scenario: 宣言に無い概念は解決しない\n  Given conceptPlacementに存在しないconcept名\n  When resolve_source_rootを実行する\n  Then Noneが返る",
+          "covers": "業務サービス: ソースルート解決"
+        },
+        {
+          "name": "規約の識別子から製品名を取り出す",
+          "category": "正常系",
+          "viewpoint": "計算整合: 宣言だけから実装の置き場所を導く（推測しない）",
+          "gherkin": "Scenario: 規約の識別子から製品名を取り出す\n  Given \"architecture-waffle\"のようなarchitectureRef（documentId）とcodingKind\n  When package_name_from_referenceを実行する\n  Then \"architecture-\"接頭辞を剥がしたproduct名が返る",
+          "covers": "業務サービス: ソースルート解決"
+        },
+        {
+          "name": "識別子の種別が食い違えば製品名を取り出さない",
+          "category": "境界値",
+          "viewpoint": "境界: 取り出せる場合と取り出せない場合の対",
+          "gherkin": "Scenario: 識別子の種別が食い違えば製品名を取り出さない\n  Given codingKindのプレフィックスと一致しないarchitectureRef\n  When package_name_from_referenceを実行する\n  Then Noneが返る",
+          "covers": "業務サービス: ソースルート解決"
         }
       ]
     },

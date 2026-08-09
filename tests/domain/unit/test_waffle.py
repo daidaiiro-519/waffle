@@ -8,7 +8,7 @@
 （test_document_management.py 側に残してある）。
 """
 
-from waffle.domain.services import path_template
+from waffle.domain.services import concept_source_root, path_template
 from waffle.domain.services.part_renderer import render_parts
 from waffle.domain.services.schema_discriminator import discriminator_key
 
@@ -355,3 +355,73 @@ def test_schema_without_discriminator_returns_none():
     Then Noneが返る
     """
     assert discriminator_key({}) is None
+
+
+def test_resolves_by_joining_source_root_and_placement():
+    """
+    Scenario: 実装の置き場所は、ソースルートと概念の配置を結合して決まる
+    Given {package}トークンを含むsourceRootと、usecase概念のplacement
+    When resolve_source_rootをpackage変数付きで実行する
+    Then sourceRoot/placementの形に解決される
+    """
+    layout = {"sourceRoot": "src/{package}"}
+    items = [{"concept": "usecase", "placements": [{"role": "single", "path": "application/usecases"}]}]
+    result = concept_source_root.resolve_source_root(layout, items, "usecase", package="waffle")
+    assert result == "src/waffle/application/usecases"
+
+
+def test_source_root_without_placeholder_ignores_package():
+    """
+    Scenario: ソースルートに変数が無ければ、渡された値は無視される
+    Given プレースホルダを含まないsourceRoot（TypeScript版の慣習）
+    When package変数を渡してresolve_source_rootを実行する
+    Then package変数は無視され、sourceRoot/placementがそのまま結合される
+    """
+    layout = {"sourceRoot": "src"}
+    items = [{"concept": "usecase", "placements": [{"role": "single", "path": "application/usecases"}]}]
+    result = concept_source_root.resolve_source_root(layout, items, "usecase", package="anything")
+    assert result == "src/application/usecases"
+
+
+def test_returns_none_without_source_root():
+    """
+    Scenario: ソースルートが宣言されていなければ解決しない
+    Given sourceRootフィールドを持たないlayout
+    When resolve_source_rootを実行する
+    Then Noneが返る
+    """
+    layout = {}
+    items = [{"concept": "usecase", "placements": [{"role": "single", "path": "application/usecases"}]}]
+    assert concept_source_root.resolve_source_root(layout, items, "usecase") is None
+
+
+def test_returns_none_for_unknown_concept():
+    """
+    Scenario: 宣言に無い概念は解決しない
+    Given conceptPlacementに存在しないconcept名
+    When resolve_source_rootを実行する
+    Then Noneが返る
+    """
+    layout = {"sourceRoot": "src/{package}"}
+    items = [{"concept": "aggregate", "placement": "domain/model"}]
+    assert concept_source_root.resolve_source_root(layout, items, "usecase", package="waffle") is None
+
+
+def test_package_name_from_reference_strips_prefix():
+    """
+    Scenario: 規約の識別子から製品名を取り出す
+    Given "architecture-waffle"のようなarchitectureRef（documentId）とcodingKind
+    When package_name_from_referenceを実行する
+    Then "architecture-"接頭辞を剥がしたproduct名が返る
+    """
+    assert concept_source_root.package_name_from_reference("architecture-waffle", "architecture") == "waffle"
+
+
+def test_package_name_from_reference_returns_none_on_kind_mismatch():
+    """
+    Scenario: 識別子の種別が食い違えば製品名を取り出さない
+    Given codingKindのプレフィックスと一致しないarchitectureRef
+    When package_name_from_referenceを実行する
+    Then Noneが返る
+    """
+    assert concept_source_root.package_name_from_reference("tech-stack-waffle", "architecture") is None
