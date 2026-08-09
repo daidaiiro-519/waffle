@@ -85,7 +85,7 @@ Document の型定義（構造・描画・記入/読取指示）の一貫性単�
 | 再帰は常に有界である（無限ネストを許さない） | schema | - 機械走査が停止することを保証する |
 | 各ブロックの x-render は常に RenderMetaSchema の閉じた語彙にのみ従う | schema | - 描画がロジックを持たず決定的であることを保つ |
 | status の enum は常に遷移順に並び、先頭が初期状態である | schema | - scaffold が初期状態を enum 先頭から一意に決められる |
-| 公開済みの版は遡って構造を変えない（後方互換を壊さない） | guard | - 既存 Document が破損しないよう版の進化を安全にする |
+| 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない） | guard | - 既存 Document が破損しないよう版の進化を安全にする |
 | 各 kind の KindProfile は同一版内で不変であり、他 kind のブロックを持たない（discriminator として機能する） | schema | - kind ごとの content 構造の一貫性を保証し、scaffold/validate が kind から構造を一意に決定できるようにする |
 | Schema集約が対象とするのは Document の schemaRef が指しうる型のみ（派生構造を検証する schema は対象外） | schema | - 一貫性境界を「schemaRef の解決先」に閉じ、無関係な検証用 schema を集約に含めない |
 | Schemaファイル自体の物理的な整形は、常に一意に定まる形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する | schema | - 整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする<br>- 複数の書式が混在すると、機械編集のたびにどの書式に合わせるべきかが曖昧になり、フォーマット破壊のリスクが生まれる |
@@ -107,14 +107,14 @@ Scenario: 値フィールドに oneOf を持てない
   Then scaffold 不能として拒否される
 ```
 
-### 公開済みの版は後方互換を壊さない
+### 一度作った版は後方互換を壊さない
 
 | 分類 | 観点 |
 |---|---|
 | 異常系 | 不変条件: 公開済みの版は遡って構造を変えない |
 
 ```gherkin
-Scenario: 公開済みの版は後方互換を壊さない
+Scenario: 一度作った版は後方互換を壊さない
   Given 既にDocumentが参照している既存のSchema版
   When 既存ブロックに必須フィールドを追加しようとする
   Then 後方互換を壊す変更として拒否される
@@ -154,7 +154,7 @@ Scenario: Schemaファイルの物理整形は一意に定まる形と完全一�
 
 ```gherkin
 Scenario: requiredへの追加は後方互換違反として検出される
-  Given 公開済みのschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema
+  Given 既にある版のschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema
   When 後方互換チェックを実行する
   Then 違反として検出される
 ```
@@ -167,7 +167,7 @@ Scenario: requiredへの追加は後方互換違反として検出される
 
 ```gherkin
 Scenario: optionalプロパティの追加は後方互換違反にならない
-  Given 公開済みのschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema
+  Given 既にある版のschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema
   When 後方互換チェックを実行する
   Then 違反として検出されない
 ```

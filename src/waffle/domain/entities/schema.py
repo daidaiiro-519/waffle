@@ -6,7 +6,7 @@
 
 check-aggregate-class-driftが検証する対象。ddd-advisorの判断（agg-schema.jsonの
 Invariants 9件中8件は静的構造制約でありJSON Schema自体が担保、手続き的な1件
-（後方互換性）は既にschema_patch.pyのcheck_backward_compatible()が担う）に基づき、
+（後方互換性: その版に適合している既存のDocumentを壊さないこと）は既にschema_patch.pyのcheck_backward_compatible()が担う）に基づき、
 ここでは複雑な業務ロジックメソッドを持たせず、値オブジェクトの不変性・値による
 等価性という宣言された構造のみを表現する薄いEntityとする。
 """

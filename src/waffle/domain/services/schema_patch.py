@@ -41,7 +41,7 @@ def add_block(
         content_def_name: 参照を追加する先のContent defの名前。
         prop_name: Content def上でそのブロックを指すプロパティ名。
         required: 対象Content defのrequired配列にもprop_nameを追加するか。
-            公開済みkindに対して行うと後方互換違反になりうるので、
+            既に document がその版を指している場合、後方互換違反になりうるので、
             呼び出し側がcheck_backward_compatibleで確認する。
 
     Returns:
@@ -399,7 +399,7 @@ _PROPERTY_ENTRY = re.compile(r"^/\$defs/([^/]+)/properties/([^/]+)$")
 
 
 def check_backward_compatible(old_schema: dict, new_schema: dict) -> list[str]:
-    """既存instanceを壊しうる変更（公開済みkindのrequired配列への追加・エントリのリネーム、
+    """既存instanceを壊しうる変更（required配列への追加・エントリのリネーム、
     既存フィールドの型変更、必須プロパティの除去等）を検出する。違反が無ければ空配列。
 
     jsonpatchはrequired配列の変更を常に要素単位のadd/replace（例: /required/0）として

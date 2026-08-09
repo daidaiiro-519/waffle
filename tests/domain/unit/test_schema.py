@@ -54,9 +54,9 @@ def _contains_oneof_or_anyof(node) -> bool:
 def test_value_field_cannot_have_one_of(schema_ref):
     """
     Scenario: 値フィールドに oneOf を持てない
-      Given 値フィールドに oneOf を含む Schema
-      When scaffoldability を検証する
-      Then scaffold 不能として拒否される
+    Given 値フィールドに oneOf を含む Schema
+    When scaffoldability を検証する
+    Then scaffold 不能として拒否される
     """
     schema = PackageSchemaRepository().load(schema_ref)
     assert not _contains_oneof_or_anyof(schema["$defs"]), f"{schema_ref} の $defs に oneOf/anyOf が含まれている"
@@ -109,7 +109,7 @@ def test_schema_file_formatting_is_canonical(schema_ref):
 
 def test_published_version_keeps_backward_compatibility():
     """
-    Scenario: 公開済みの版は後方互換を壊さない
+    Scenario: 一度作った版は後方互換を壊さない
       Given 既にDocumentが参照している既存のSchema版
       When 既存ブロックに必須フィールドを追加しようとする
       Then 後方互換を壊す変更として拒否される
@@ -129,7 +129,7 @@ def test_published_version_keeps_backward_compatibility():
 def test_adding_required_to_published_kind_breaks_compatibility():
     """
     Scenario: requiredへの追加は後方互換違反として検出される
-    Given 公開済みのschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema
+    Given 既にある版のschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema
     When 後方互換チェックを実行する
     Then 違反として検出される
     """
@@ -142,7 +142,7 @@ def test_adding_required_to_published_kind_breaks_compatibility():
 def test_adding_optional_property_keeps_compatibility():
     """
     Scenario: optionalプロパティの追加は後方互換違反にならない
-    Given 公開済みのschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema
+    Given 既にある版のschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema
     When 後方互換チェックを実行する
     Then 違反として検出されない
     """

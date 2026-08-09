@@ -129,7 +129,7 @@
           ]
         },
         {
-          "rule": "公開済みの版は遡って構造を変えない（後方互換を壊さない）",
+          "rule": "一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）",
           "enforcement": "guard",
           "rationale": [
             "既存 Document が破損しないよう版の進化を安全にする"
@@ -177,10 +177,10 @@
           "covers": "不変条件: 値フィールドは oneOf/anyOf を持たない"
         },
         {
-          "name": "公開済みの版は後方互換を壊さない",
+          "name": "一度作った版は後方互換を壊さない",
           "category": "異常系",
           "viewpoint": "不変条件: 公開済みの版は遡って構造を変えない",
-          "gherkin": "Scenario: 公開済みの版は後方互換を壊さない\n  Given 既にDocumentが参照している既存のSchema版\n  When 既存ブロックに必須フィールドを追加しようとする\n  Then 後方互換を壊す変更として拒否される",
+          "gherkin": "Scenario: 一度作った版は後方互換を壊さない\n  Given 既にDocumentが参照している既存のSchema版\n  When 既存ブロックに必須フィールドを追加しようとする\n  Then 後方互換を壊す変更として拒否される",
           "covers": "不変条件: 公開済みの版は後方互換を壊さない"
         },
         {
@@ -201,15 +201,15 @@
           "name": "requiredへの追加は後方互換違反として検出される",
           "category": "異常系",
           "viewpoint": "後方互換チェック：公開済みkindのContent defのrequired配列に新規エントリを追加する変更を検出する",
-          "gherkin": "Scenario: requiredへの追加は後方互換違反として検出される\n  Given 公開済みのschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出される",
-          "covers": "不変条件: 公開済みの版は遡って構造を変えない（後方互換を壊さない）"
+          "gherkin": "Scenario: requiredへの追加は後方互換違反として検出される\n  Given 既にある版のschemaと、あるContent defのrequired配列に新規エントリを追加した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出される",
+          "covers": "不変条件: 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）"
         },
         {
           "name": "optionalプロパティの追加は後方互換違反にならない",
           "category": "正常系",
           "viewpoint": "後方互換チェック：requiredに含まれない新規プロパティの追加は既存instanceを壊さない",
-          "gherkin": "Scenario: optionalプロパティの追加は後方互換違反にならない\n  Given 公開済みのschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出されない",
-          "covers": "不変条件: 公開済みの版は遡って構造を変えない（後方互換を壊さない）"
+          "gherkin": "Scenario: optionalプロパティの追加は後方互換違反にならない\n  Given 既にある版のschemaと、requiredに含めずに新規プロパティのみ追加した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出されない",
+          "covers": "不変条件: 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）"
         },
         {
           "name": "契約整形は契約が定める形と完全一致する",
@@ -223,42 +223,42 @@
           "category": "異常系",
           "viewpoint": "境界: 公開済みの版に対する変更が、既存の instance を壊すかどうかの場合分け",
           "gherkin": "Scenario: requiredなプロパティの除去は後方互換違反として検出される\n  Given requiredに指定されているプロパティをremove_blockで除去した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出される",
-          "covers": "不変条件: 公開済みの版は遡って構造を変えない（後方互換を壊さない）"
+          "covers": "不変条件: 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）"
         },
         {
           "name": "requiredでないプロパティの除去は後方互換違反にならない",
           "category": "正常系",
           "viewpoint": "境界: 公開済みの版に対する変更が、既存の instance を壊すかどうかの場合分け",
           "gherkin": "Scenario: requiredでないプロパティの除去は後方互換違反にならない\n  Given requiredに含まれないプロパティをremove_blockで除去した変更後schema\n  When 後方互換チェックを実行する\n  Then 違反として検出されない",
-          "covers": "不変条件: 公開済みの版は遡って構造を変えない（後方互換を壊さない）"
+          "covers": "不変条件: 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）"
         },
         {
           "name": "requiredなプロパティの改名は後方互換違反として検出される",
           "category": "異常系",
           "viewpoint": "境界: 公開済みの版に対する変更が、既存の instance を壊すかどうかの場合分け",
           "gherkin": "Scenario: requiredなプロパティの改名は後方互換違反として検出される\n  Given 公開済みkindのContent defでrequiredに指定されているブロックのリネーム\n  When 後方互換チェックを実行する\n  Then 違反として検出される（旧プロパティ名を持つ既存instanceが新schemaのrequiredを満たせなくなるため）",
-          "covers": "不変条件: 公開済みの版は遡って構造を変えない（後方互換を壊さない）"
+          "covers": "不変条件: 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）"
         },
         {
           "name": "requiredでないプロパティの改名は後方互換違反にならない",
           "category": "正常系",
           "viewpoint": "境界: 公開済みの版に対する変更が、既存の instance を壊すかどうかの場合分け",
           "gherkin": "Scenario: requiredでないプロパティの改名は後方互換違反にならない\n  Given 公開済みkindのContent defでrequiredに指定されていないブロックのリネーム\n  When 後方互換チェックを実行する\n  Then 違反として検出されない",
-          "covers": "不変条件: 公開済みの版は遡って構造を変えない（後方互換を壊さない）"
+          "covers": "不変条件: 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）"
         },
         {
           "name": "既存フィールドの型変更は後方互換違反として検出される",
           "category": "異常系",
           "viewpoint": "境界: 公開済みの版に対する変更が、既存の instance を壊すかどうかの場合分け",
           "gherkin": "Scenario: 既存フィールドの型変更は後方互換違反として検出される\n  Given 公開済みkindの既存フィールドの型(type)を書き換える変更\n  When 後方互換チェックを実行する\n  Then 違反として検出される（旧型の値を持つ既存instanceが新schemaの型制約を満たせなくなるため）",
-          "covers": "不変条件: 公開済みの版は遡って構造を変えない（後方互換を壊さない）"
+          "covers": "不変条件: 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）"
         },
         {
           "name": "型を変えない書き換えは後方互換違反にならない",
           "category": "正常系",
           "viewpoint": "境界: 公開済みの版に対する変更が、既存の instance を壊すかどうかの場合分け",
           "gherkin": "Scenario: 型を変えない書き換えは後方互換違反にならない\n  Given 型(type)以外のフィールドを書き換えるset_field\n  When 後方互換チェックを実行する\n  Then 違反として検出されない",
-          "covers": "不変条件: 公開済みの版は遡って構造を変えない（後方互換を壊さない）"
+          "covers": "不変条件: 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）"
         }
       ]
     },
