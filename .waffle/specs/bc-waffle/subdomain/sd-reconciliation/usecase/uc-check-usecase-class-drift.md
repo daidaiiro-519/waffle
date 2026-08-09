@@ -57,7 +57,7 @@ usecase specの操作名と実装クラス名が一致しているかを確認�
 sequenceDiagram
     Orchestrator->>UsecaseClassTree: documents_root/src_rootを指定してクラス名ドリフト検査を依頼する
     UsecaseClassTree->>UsecaseClassTree: documents_root配下のusecase document(specKind=usecase)を走査し、各documentのcontent.name.operationNameを集める
-    UsecaseClassTree->>UsecaseClassTree: 各operationNameをsnake_caseに変換し、対応する実装ファイル（src_root配下）が実在するかを確認する
+    UsecaseClassTree->>UsecaseClassTree: 各operationNameに対応する実装が実在するかを確認する
     UsecaseClassTree->>UsecaseClassTree: 実在するファイルをASTで解析してクラス定義名を抽出し、operationNameと一致するクラスが含まれるか確認する
     UsecaseClassTree-->>Orchestrator: missing_implementation_file・class_name_mismatchの2つのオブジェクト配列を返す
 ```
@@ -67,7 +67,6 @@ sequenceDiagram
 ## 事後条件
 
 - 返り値は次の2フィールドを持つ: missing_implementation_file（operationNameから導出したファイルパスが実在しないusecaseの組）・class_name_mismatch（実装ファイルは実在するが、operationNameと一致するクラス定義が含まれていないusecaseの組）
-- ファイルパスの導出は、operationNameをsnake_caseに変換し（例: CheckScenarioDrift→check_scenario_drift）、src_root配下に{name}.pyとして配置されている前提で行う
 - クラス名の抽出はASTのみで行い、実行や意味理解はしない（宣言された名前と、実装ファイル内に存在するクラス定義名の機械的な突き合わせのみ）
 - missing_implementation_file・class_name_mismatchの両方が空配列であれば、全usecaseの操作名と実装クラスが一致している（正常系）
 

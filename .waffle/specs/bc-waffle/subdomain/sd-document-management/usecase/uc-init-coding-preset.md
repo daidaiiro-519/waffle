@@ -68,6 +68,7 @@ sequenceDiagram
 - 生成されたdocumentのtitleは「プリセットの説明句：documentId」の形式になる
 - 既に存在するdocumentは上書きせずskipする（冪等）
 - 存在しないプリセット名を指定するとPRESET_NOT_FOUNDエラーになる
+- When プリセットからプロダクト固有の規約を作るとき、システムはその規約のschemaの最新の版を指す shall（作る側に版を書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、作られた規約が最初から検証を通らなくなる）。
 
 ---
 
@@ -113,6 +114,19 @@ Scenario: タイトルにプロダクト固有のdocumentIdが付与される
   Given python-hexagonalプリセット
   When 新しいプロダクト名でinitする
   Then 各documentのtitleは「説明句：documentId」の形式になる
+```
+
+### プリセットから作る規約は最新の版を指す
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 計算整合: 版を作る側に書き留めない。schemaが上がっても追随することの証明 |
+
+```gherkin
+Scenario: プリセットから作る規約は最新の版を指す
+  Given 規約のschemaに複数の版がある
+  When プリセットからプロダクト固有の規約を作る
+  Then 作られた規約はそのschemaの最新の版を指す
 ```
 
 ---

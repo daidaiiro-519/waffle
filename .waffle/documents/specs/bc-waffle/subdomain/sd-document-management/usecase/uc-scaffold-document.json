@@ -393,6 +393,13 @@
           "viewpoint": "誤りの検出：古い版のdocumentを作ってから気づく事態を防ぐ",
           "covers": "受け入れ基準: 最新でない版のschemaRefはOUTDATED_SCHEMA_REFで拒む",
           "gherkin": "Scenario: 古い版を明示したら作らせない\n  Given 複数の版を持つschemaのうち、最新ではない版\n  When その版を明示して骨格の生成を求める\n  Then OUTDATED_SCHEMA_REFとして拒まれる\n  And 骨格は作られない"
+        },
+        {
+          "name": "必須ブロックの中にある必須でない欄は削除できる",
+          "category": "境界値",
+          "viewpoint": "境界: 必須かどうかは欄そのもので決まる。入れ物が必須であることを、中身が必須であることと取り違えない",
+          "gherkin": "Scenario: 必須ブロックの中にある必須でない欄は削除できる\n  Given schemaのrequiredに指定されているブロックのpath\n  And そのブロックの中にある、requiredに指定されていない欄のpath\n  When その欄に対してclear_fieldを実行する\n  Then その欄がdocumentから削除される\n  And REQUIRED_FIELDエラーにならない",
+          "covers": "受け入れ基準: clear_fieldは指定された値フィールドをdocumentから削除する"
         }
       ]
     },

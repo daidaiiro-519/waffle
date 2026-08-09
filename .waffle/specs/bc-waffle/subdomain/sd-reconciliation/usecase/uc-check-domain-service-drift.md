@@ -55,7 +55,7 @@ Orchestrator（HarnessAgent）
 sequenceDiagram
     Orchestrator->>DomainServiceFileTree: documents_root/src_rootを指定してドリフト検査を依頼する
     DomainServiceFileTree->>DomainServiceFileTree: documents_root配下のbounded-context document(specKind=bounded-context)を走査し、各documentのcontent.domainServices.itemsが宣言するgroupを集める
-    DomainServiceFileTree->>DomainServiceFileTree: 各groupに対応する実装ファイル（src_root配下）が実在するかを確認する
+    DomainServiceFileTree->>DomainServiceFileTree: 各groupに対応する実装が実在するかを確認する
     DomainServiceFileTree-->>Orchestrator: missing_implementation_fileのオブジェクト配列を返す
 ```
 
@@ -64,7 +64,6 @@ sequenceDiagram
 ## 事後条件
 
 - 返り値はmissing_implementation_file（groupから導出したファイルパスが実在しない業務サービスの組）フィールドを持つ
-- ファイルパスの導出は、groupをsnake_caseに変換し、src_root配下に{group}.pyとして配置されている前提で行う
 - 同じgroupを持つ複数の業務サービスは、1回のファイル存在確認にまとめられる（同じファイルを重複してチェックしない）
 - ファイルの実在確認のみを行い、ファイル内の具体的な関数・クラス定義までは検証しない（内容の正しさはTDDが別途担保する）
 - missing_implementation_fileが空配列であれば、全業務サービスのgroupと実装ファイルが一致している（正常系）

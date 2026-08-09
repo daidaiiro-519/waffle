@@ -80,7 +80,7 @@ Orchestrator（HarnessAgent）
 sequenceDiagram
     actor Orchestrator
     Orchestrator->>Schema: patch(operation, params)
-    Schema->>Schema: 変更後の構造(dict)を組み立てる
+    Schema->>Schema: 変更後の構造を組み立てる
     Schema->>Schema: 後方互換チェック
     Schema->>Schema: JSON Schema構文検証
     Note over Schema: SchemaPatched

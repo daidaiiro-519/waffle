@@ -56,7 +56,7 @@ sequenceDiagram
     Orchestrator->>RenderBlankTemplate: render_blank_template(schemaRef, discriminator)
     RenderBlankTemplate->>RenderBlankTemplate: schemaを読み、content_defを解決する
     RenderBlankTemplate->>RenderBlankTemplate: skeletonとfillTemplateを機械走査する（scaffold createと同じ走査ロジックを共有）
-    RenderBlankTemplate->>RenderBlankTemplate: fillTemplateの各エントリのpromptを{{...}}プレースホルダーとしてskeletonへ上書きする
+    RenderBlankTemplate->>RenderBlankTemplate: 各記入対象の指示を、プレースホルダーとしてひな形へ埋め込む
     RenderBlankTemplate->>RenderBlankTemplate: 合成したcontentを、x-render宣言に従ってMarkdownへ描画する（render-documentと同じ本文描画部品を共有）
     RenderBlankTemplate->>RenderBlankTemplate: schemaRef・discriminatorから書き出し先パスを導出し、Markdown本文をファイルへ保存する
     RenderBlankTemplate-->>Orchestrator: プレースホルダーMarkdown本文と書き出し先パス
@@ -66,8 +66,8 @@ sequenceDiagram
 
 ## 事後条件
 
-- 返り値はcontent・pathの2フィールドを持つ: content（対象schemaのcontent構造を各値フィールドがx-prompt-write本文を{{...}}として埋め込んだ状態でMarkdown化したもの）・path（実際に書き出したファイルの相対パス）
-- 書き出し先のパスは、schemaRefとdiscriminatorから機械的に導出する: .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md（discriminatorを持たないschemaは .waffle/templates/blank/{schemaName}/{version}.md）
+- 返り値はcontent・pathの2フィールドを持つ: content（対象schemaのcontent構造を、各値フィールドが記入指示をプレースホルダーとして埋め込んだ状態でMarkdown化したもの）・path（実際に書き出したファイルの相対パス）
+- 書き出し先のパスは、schemaRefとdiscriminatorから機械的に導出する
 - 同じschemaRef・discriminatorに対して再実行すると、書き出し先の既存ファイルを新しい描画結果で上書きする（冪等）
 - document.jsonはどこにも作成・保存しない（書き出すのはcontentのプレースホルダーMarkdownのみ）
 - 省略可能なブロック・フィールドも含め、schemaが宣言する記入対象を全て埋める（実際のdocumentでは値が無ければ省略される任意ブロックも、テンプレートでは記入指示を示すため省略しない）
@@ -187,7 +187,7 @@ Scenario: 構造化配列要素は1件分のプレースホルダーとして描
 Scenario: schemaRefとdiscriminatorから導出したパスへファイルを書き出す
   Given discriminatorを持つschema
   When そのschemaRefでブランクテンプレート描画を実行する
-  Then .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md にプレースホルダーMarkdownがファイルとして書き出されている
+  Then schemaRefとdiscriminatorから導出したパスに、プレースホルダーMarkdownがファイルとして書き出されている
 ```
 
 ### 既存ファイルを新しい描画結果で上書きする

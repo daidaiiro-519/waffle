@@ -50,7 +50,7 @@
         },
         {
           "term": "reconcile",
-          "definition": "スペックが嘘をつかないよう、7種類のドリフト（スペック内部の参照整合性・スペックとテストシナリオの対応関係・Document集約とSchema版の対応関係・usecase操作名と実装クラス名の対応関係・集約仕様と実装Entity/ValueObjectの対応関係・usecase operationの宣言と実装分岐の対応関係・業務サービスのgroupと実装ファイルの対応関係）を機械的に検知し続けること。docstring の構造化抽出・規約適合検証（uc-scan-source-code/uc-lint-docstring）はreconcileが使う部品であり、reconcile本体ではない。"
+          "definition": "スペックが嘘をつかないよう、宣言と実装の対応が食い違っていないかを機械的に検知し続けること。docstring の構造化抽出や規約への適合判定は、この検知が使う部品であって、reconcile 自体ではない。"
         }
       ]
     },
@@ -133,13 +133,13 @@
         },
         {
           "name": "後方互換チェック",
-          "responsibility": "変更前後のschema(dict)の差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。",
+          "responsibility": "変更前後のschemaの差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。",
           "serviceName": "CheckBackwardCompatible",
           "group": "SchemaPatch"
         },
         {
           "name": "契約整形",
-          "responsibility": "schemaファイルの物理的な整形をagg-schemaが定める契約（json.dumps(indent=2, ensure_ascii=False)+改行）に一意に揃える。Schema集約の不変条件を実際に適用する。",
+          "responsibility": "schemaファイルの物理的な整形を、agg-schemaが定める契約（2段の字下げ・非ASCII文字はそのまま・末尾に改行）に一意に揃える。Schema集約の不変条件を実際に適用する。",
           "serviceName": "FormatContract",
           "group": "SchemaPatch"
         },
@@ -320,10 +320,10 @@
           "covers": "ドメインサービス: 後方互換チェック"
         },
         {
-          "name": "契約整形はjson.dumpsの出力と完全一致する",
+          "name": "契約整形は契約が定める形と完全一致する",
           "category": "正常系",
           "viewpoint": "契約整形：schemaファイルの物理整形がagg-schemaの不変条件と一致する",
-          "gherkin": "Scenario: 契約整形はjson.dumpsの出力と完全一致する\n  Given 任意の整形が施されたschema(dict)\n  When 契約整形を適用する\n  Then 出力はjson.dumps(schema, indent=2, ensure_ascii=False)+改行と完全一致する",
+          "gherkin": "Scenario: 契約整形は契約が定める形と完全一致する\n  Given 任意の整形が施されたschema\n  When 契約整形を適用する\n  Then 出力は契約が定める形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する",
           "covers": "ドメインサービス: 契約整形"
         }
       ]

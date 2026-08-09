@@ -150,7 +150,7 @@
           ]
         },
         {
-          "rule": "Schemaファイル自体の物理的な整形は、常にPython標準ライブラリの json.dumps(schema, indent=2, ensure_ascii=False) + 改行 の出力と完全一致する",
+          "rule": "Schemaファイル自体の物理的な整形は、常に一意に定まる形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する",
           "enforcement": "schema",
           "rationale": [
             "整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする",
@@ -191,11 +191,11 @@
           "covers": "不変条件: 各ブロックの x-render は常に RenderMetaSchema の閉じた語彙にのみ従う"
         },
         {
-          "name": "Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する",
+          "name": "Schemaファイルの物理整形は一意に定まる形と完全一致する",
           "category": "異常系",
-          "viewpoint": "不変条件: Schemaファイル自体の物理的な整形は常に json.dumps(schema, indent=2, ensure_ascii=False) の出力と完全一致する",
-          "gherkin": "Scenario: Schemaファイルの物理整形は json.dumps(indent=2) と完全一致する\n  Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル\n  When 標準の json.dumps(indent=2, ensure_ascii=False) で再シリアライズした結果と比較する\n  Then バイト単位で一致しない場合は不適合として検出される",
-          "covers": "不変条件: Schemaファイル自体の物理的な整形は常に json.dumps(indent=2, ensure_ascii=False) の出力と完全一致する"
+          "viewpoint": "不変条件: Schemaファイル自体の物理的な整形は常に一意に定まる形と完全一致する",
+          "gherkin": "Scenario: Schemaファイルの物理整形は一意に定まる形と完全一致する\n  Given 独自の整形（コンパクト配列・キー長揃え等）が施されたSchemaファイル\n  When 契約が定める形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と比較する\n  Then バイト単位で一致しない場合は不適合として検出される",
+          "covers": "不変条件: Schemaファイル自体の物理的な整形は常に一意に定まる形と完全一致する"
         }
       ]
     },

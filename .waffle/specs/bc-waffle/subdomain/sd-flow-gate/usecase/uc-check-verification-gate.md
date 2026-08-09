@@ -37,7 +37,7 @@ Orchestrator（HarnessAgent）
 
 - 対象usecase specのpathが要望テキストで与えられている
 - 対象specに対応するネイティブテストファイルのpathが要望テキストで与えられている
-- テスト実行結果を{passed: [...], failed: [...]}という形式で持つファイルのpathが要望テキストで与えられている。ここに並ぶのはテスト実行環境が報告する識別子（テストの名前）であって、シナリオ名ではない。両者は別の語彙であり、対応づけはspec⇄テストの照合結果が持つ対で行う
+- 通ったテストと落ちたテストを記録した実行結果のファイルのpathが要望テキストで与えられている。ここに並ぶのはテスト実行環境が報告する識別子（テストの名前）であって、シナリオ名ではない。両者は別の語彙であり、対応づけはspec⇄テストの照合結果が持つ対で行う
 
 ---
 
@@ -45,9 +45,9 @@ Orchestrator（HarnessAgent）
 
 | 入力 | 説明 |
 |---|---|
-| `specPath` | spec.json のパス |
-| `testPath` | 対応するテストファイル(.py)のパス |
-| `testResultsPath` | テスト実行結果({"passed": [...], "failed": [...]})のパス |
+| `specPath` | 検査の対象とする仕様のパス |
+| `testPath` | 対応するテストファイルのパス |
+| `testResultsPath` | 通ったテストと落ちたテストを記録した、実行結果のパス |
 | `architectureRef` | シナリオ照合の規約を引くarchitecture documentのdocumentId |
 
 ---

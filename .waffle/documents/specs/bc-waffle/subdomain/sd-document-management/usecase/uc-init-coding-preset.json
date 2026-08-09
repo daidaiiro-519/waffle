@@ -79,7 +79,8 @@
         "1回の呼び出しでtech-stack/architecture/coding-standard/test-standardの4documentが生成される",
         "生成されたdocumentのtitleは「プリセットの説明句：documentId」の形式になる",
         "既に存在するdocumentは上書きせずskipする（冪等）",
-        "存在しないプリセット名を指定するとPRESET_NOT_FOUNDエラーになる"
+        "存在しないプリセット名を指定するとPRESET_NOT_FOUNDエラーになる",
+        "When プリセットからプロダクト固有の規約を作るとき、システムはその規約のschemaの最新の版を指す shall（作る側に版を書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、作られた規約が最初から検証を通らなくなる）。"
       ]
     },
     "errors": {
@@ -118,6 +119,13 @@
           "viewpoint": "生成：titleはプリセットの説明句とdocumentIdの組み合わせになる",
           "gherkin": "Scenario: タイトルにプロダクト固有のdocumentIdが付与される\n  Given python-hexagonalプリセット\n  When 新しいプロダクト名でinitする\n  Then 各documentのtitleは「説明句：documentId」の形式になる",
           "covers": "受け入れ基準: titleの形式"
+        },
+        {
+          "name": "プリセットから作る規約は最新の版を指す",
+          "category": "正常系",
+          "viewpoint": "計算整合: 版を作る側に書き留めない。schemaが上がっても追随することの証明",
+          "gherkin": "Scenario: プリセットから作る規約は最新の版を指す\n  Given 規約のschemaに複数の版がある\n  When プリセットからプロダクト固有の規約を作る\n  Then 作られた規約はそのschemaの最新の版を指す",
+          "covers": "受け入れ基準: プリセットから作る規約はschemaの最新の版を指す"
         }
       ]
     },

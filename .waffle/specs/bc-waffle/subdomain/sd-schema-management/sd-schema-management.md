@@ -1,3 +1,11 @@
+---
+id: "sd-schema-management"
+type: "subdomain"
+title: "Schema定義ファイル自体の作成・部分編集を担うサブドメイン：sd-schema-management"
+description: "AIに構造を推論させず、システムが決定的にSchema定義ファイル自体を作成・部分編集（ブロック追加・リネーム等）する業務領域。Documentの値ではなくDocumentの型定義そのものを対象とする点でsd-document-managementと責務が異なる（agg-document/agg-schemaが既に別集約であるのと同型の区別）。"
+schemaRef: "DomainSpecSchema/v8"
+---
+
 # Schema定義ファイル自体の作成・部分編集を担うサブドメイン：sd-schema-management
 
 ## 名前
@@ -34,6 +42,6 @@ Schema管理
 ## 詳細設計ガイド
 
 - Schema編集はDocument編集より一段リスクが高い（既存Documentの適合性を左右するため）
-- 物理的な整形はagg-schemaが定める契約（json.dumps(indent=2, ensure_ascii=False)相当）に一意に従わせる
+- 物理的な整形はagg-schemaが定める契約に一意に従わせる
 - 部分編集は素のdict操作＋契約整形で最小diffを保証する
 - 後方互換チェック（既存instanceを壊しうる変更の検出）を書き込み前に必ず通す

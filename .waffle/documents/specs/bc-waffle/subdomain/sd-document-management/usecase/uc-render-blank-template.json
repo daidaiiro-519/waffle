@@ -66,7 +66,7 @@
         {
           "from": "RenderBlankTemplate",
           "to": "RenderBlankTemplate",
-          "message": "fillTemplateの各エントリのpromptを{{...}}プレースホルダーとしてskeletonへ上書きする",
+          "message": "各記入対象の指示を、プレースホルダーとしてひな形へ埋め込む",
           "kind": "self"
         },
         {
@@ -93,8 +93,8 @@
       "blockType": "Postconditions",
       "title": "事後条件",
       "items": [
-        "返り値はcontent・pathの2フィールドを持つ: content（対象schemaのcontent構造を各値フィールドがx-prompt-write本文を{{...}}として埋め込んだ状態でMarkdown化したもの）・path（実際に書き出したファイルの相対パス）",
-        "書き出し先のパスは、schemaRefとdiscriminatorから機械的に導出する: .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md（discriminatorを持たないschemaは .waffle/templates/blank/{schemaName}/{version}.md）",
+        "返り値はcontent・pathの2フィールドを持つ: content（対象schemaのcontent構造を、各値フィールドが記入指示をプレースホルダーとして埋め込んだ状態でMarkdown化したもの）・path（実際に書き出したファイルの相対パス）",
+        "書き出し先のパスは、schemaRefとdiscriminatorから機械的に導出する",
         "同じschemaRef・discriminatorに対して再実行すると、書き出し先の既存ファイルを新しい描画結果で上書きする（冪等）",
         "document.jsonはどこにも作成・保存しない（書き出すのはcontentのプレースホルダーMarkdownのみ）",
         "省略可能なブロック・フィールドも含め、schemaが宣言する記入対象を全て埋める（実際のdocumentでは値が無ければ省略される任意ブロックも、テンプレートでは記入指示を示すため省略しない）",
@@ -194,7 +194,7 @@
           "name": "schemaRefとdiscriminatorから導出したパスへファイルを書き出す",
           "category": "正常系",
           "viewpoint": "状態遷移: 描画結果がファイルとして永続化されるか",
-          "gherkin": "Scenario: schemaRefとdiscriminatorから導出したパスへファイルを書き出す\n  Given discriminatorを持つschema\n  When そのschemaRefでブランクテンプレート描画を実行する\n  Then .waffle/templates/blank/{schemaName}/{version}/{discriminatorValue}.md にプレースホルダーMarkdownがファイルとして書き出されている",
+          "gherkin": "Scenario: schemaRefとdiscriminatorから導出したパスへファイルを書き出す\n  Given discriminatorを持つschema\n  When そのschemaRefでブランクテンプレート描画を実行する\n  Then schemaRefとdiscriminatorから導出したパスに、プレースホルダーMarkdownがファイルとして書き出されている",
           "covers": ""
         },
         {

@@ -34,7 +34,7 @@ schemaRef: "DomainSpecSchema/v8"
 | `骨格(scaffold)` | schema を機械走査して生成した、値が空の schema 準拠 Document の雛形。 |
 | `UDD ループ` | Spec を正本とし、検証・描画・受け入れテストを通じて仕様と実装の整合を保つ開発サイクル。 |
 | `不変条件` | 集約が常に満たす業務ルール。static は schema、dynamic は guard が守る。 |
-| `reconcile` | スペックが嘘をつかないよう、7種類のドリフト（スペック内部の参照整合性・スペックとテストシナリオの対応関係・Document集約とSchema版の対応関係・usecase操作名と実装クラス名の対応関係・集約仕様と実装Entity/ValueObjectの対応関係・usecase operationの宣言と実装分岐の対応関係・業務サービスのgroupと実装ファイルの対応関係）を機械的に検知し続けること。docstring の構造化抽出・規約適合検証（uc-scan-source-code/uc-lint-docstring）はreconcileが使う部品であり、reconcile本体ではない。 |
+| `reconcile` | スペックが嘘をつかないよう、宣言と実装の対応が食い違っていないかを機械的に検知し続けること。docstring の構造化抽出や規約への適合判定は、この検知が使う部品であって、reconcile 自体ではない。 |
 
 ---
 
@@ -94,8 +94,8 @@ schemaRef: "DomainSpecSchema/v8"
 | パステンプレート解決 | x-source-target/x-render-target のパステンプレートを document の値で解決(resolve)し、逆に実パスからテンプレート変数を復元(reverse-parse)する。scaffold/render/query の複数usecaseが共通して依存する（特定の集約に属さない）。 |
 | 整形描画 | x-render宣言(Schema集約の値オブジェクト)とDocument集約のcontent dataの両方を参照してMarkdownへ整形する。RenderMetaSchemaが定義する部品種別(paragraph/list/table/keyvalue/section/kvtable/sequence/statediagram/architecture/flowchart)ごとに決定的な整形規則を持つ。特定の集約に属さない（Schema集約とDocument集約にまたがる計算）。 |
 | discriminatorキー抽出 | schemaのallOf if/then構造から、どのフィールド（specKind/codingKind/skillKind等）がkindのdiscriminatorとして機能しているかを機械的に取り出す。scaffold/renderの複数usecaseが共通して依存する（特定の集約に属さない・Schema集約の構造そのものを読むがSchema集約の外から呼ばれる編成ロジック）。 |
-| 後方互換チェック | 変更前後のschema(dict)の差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。 |
-| 契約整形 | schemaファイルの物理的な整形をagg-schemaが定める契約（json.dumps(indent=2, ensure_ascii=False)+改行）に一意に揃える。Schema集約の不変条件を実際に適用する。 |
+| 後方互換チェック | 変更前後のschemaの差分を計算し、公開済みkindのrequired配列への追加等、既存instanceを壊しうる変更を検出する。特定の集約に属さない純粋な差分計算ロジック。 |
+| 契約整形 | schemaファイルの物理的な整形を、agg-schemaが定める契約（2段の字下げ・非ASCII文字はそのまま・末尾に改行）に一意に揃える。Schema集約の不変条件を実際に適用する。 |
 | ソースルート解決 | CodingSchema（Coding集約）のarchitecture文書が持つlayout.sourceRootとconceptPlacementから、指定した概念（usecase等）の実装ファイル配置パスを導出する。drift-check系の複数usecaseが共通して依存する（特定の集約に属さない・言語/アーキテクチャに依存しない汎用計算）。 |
 
 ---
@@ -401,15 +401,15 @@ Scenario: optionalプロパティの追加は後方互換違反にならない
   Then 違反として検出されない
 ```
 
-### 契約整形はjson.dumpsの出力と完全一致する
+### 契約整形は契約が定める形と完全一致する
 
 | 分類 | 観点 |
 |---|---|
 | 正常系 | 契約整形：schemaファイルの物理整形がagg-schemaの不変条件と一致する |
 
 ```gherkin
-Scenario: 契約整形はjson.dumpsの出力と完全一致する
-  Given 任意の整形が施されたschema(dict)
+Scenario: 契約整形は契約が定める形と完全一致する
+  Given 任意の整形が施されたschema
   When 契約整形を適用する
-  Then 出力はjson.dumps(schema, indent=2, ensure_ascii=False)+改行と完全一致する
+  Then 出力は契約が定める形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する
 ```
