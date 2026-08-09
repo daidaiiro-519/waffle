@@ -13,4 +13,8 @@
 - [規約に分類による場合分けを持ち込まない](feedback_no_conditional_branching_in_architecture_rules.md) — フォルダはconceptPlacementが直接1つ宣言する。1文書が複数分類を束ねるので導出規則は文書内で分岐を生む
 - [ドメイン層のフォルダは種類単位で確定(2026-08-07)](project_domain_folder_unit_is_kind_based.md) — 集約単位は共有される値オブジェクト(ViewToken 3件×2集約)で破綻。未了の実害4件も併記
 - [renderは確認用の読み取りではない](feedback_render_is_not_a_read_operation.md) — 配置先の真実源は.waffle/config.json。orchestratorだけ定数パスで、雛形renderがCLAUDE.md/AGENTS.mdを壊した実例あり
+- [仕様と実装の抽象境界の結論(2026-08-09)](project_ddd_abstraction_boundary_conclusions.md) — 原則/Waffleの設計判断/未採用の提案を三分割。ポートを仕様に書く案は取り下げ、根拠つき
+- [仕様の語彙にパターン名を入れない](feedback_no_pattern_names_in_spec_vocabulary.md) — port/Primary/Secondaryは様式の語彙。使えるのは規約から下だけ。同日3回持ち込んだ
+- [選択肢を並べて「どうしますか」と聞かない](feedback_lead_with_position_before_asking.md) — 見解・推奨・理由・衝突を先に出し、問いは自分の案への可否確認の形にする
+- [名前と実体を一対一にする(2026-08-09)](project_block_key_must_equal_block_type.md) — 鍵(blockKey⇄blockType)と形(同じblockTypeが違う構造)の両方。schemaの読み書き手順つき
 - [design-shareの旧配信機能は復活させない](feedback_design_share_delivery_is_not_restored.md) — 「一時的に失われる」と書くと移植TODOとして読まれる。判断が済んでいる形で書く
