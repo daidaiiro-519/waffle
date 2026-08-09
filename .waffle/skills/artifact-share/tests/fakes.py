@@ -34,21 +34,21 @@ class FakeStore:
 
 
 class FakeKeyStore:
-    """閲覧の面へ渡す鍵の置き場の偽物。書き込みを失敗させることもできる。"""
+    """閲覧の面へ渡す鍵の置き場の偽物。書き込みを失敗させることもできる。
 
-    def __init__(self, keys=None, fail=False):
-        self.keys = dict(keys or {})
+    この口に読み取りは無い。業務のLambdaは書くだけで、読むのは別のランタイム
+    （閲覧ゲート）だからである。検証が書いたものを見たいときは written を直接見る
+    ——口の読み取りとして確かめると、本番に無い経路を固定することになる。
+    """
+
+    def __init__(self, written=None, fail=False):
+        self.written = dict(written or {})
         self.fail = fail
 
     def put(self, key, value):
         if self.fail:
             raise RuntimeError("トークンの保管に失敗しました")
-        self.keys[key] = value
-
-    def get(self, key):
-        if key not in self.keys:
-            raise KeyError(key)
-        return self.keys[key]
+        self.written[key] = value
 
 
 class FakeIdGenerator:

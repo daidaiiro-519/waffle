@@ -90,7 +90,7 @@ def test_招かれていない者は公開できない():
 
     assert e.value.code == "NOT_INVITED"
     assert store.objects == {}
-    assert keys.keys == {}
+    assert keys.written == {}
 
 
 def test_外部の場所を参照していれば件数を伝える():

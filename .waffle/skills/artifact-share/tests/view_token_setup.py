@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from fakes import FakeIdGenerator  # noqa: E402
+from fakes import FakeIdGenerator, FakeKeyStore  # noqa: E402
 from usecase_builder import build  # noqa: E402
 from application.usecases.issue_view_token import IssueViewToken  # noqa: E402
 from application.usecases.list_view_tokens import ListViewTokens  # noqa: E402
@@ -51,17 +51,6 @@ ADMIN = Caller("admin-1", is_admin=True)
 NOW = 1_700_000_000
 AID = "aaaaaaaa"
 PID = "p7k2xq"
-
-
-class FakeKeys:
-    def __init__(self):
-        self.written = {}
-
-    def put(self, key, value):
-        self.written[key] = value
-
-    def get(self, key):
-        return self.written[key]
 
 
 class FakeRepo:
@@ -115,7 +104,7 @@ def setup(tokens=None, owner="publisher-1"):
         status=ProjectStatus(PROJECT_PUBLISHED), owner=ProjectOwner(owner),
         scope=ProjectScope(SHARED), created_at=NOW,
         view_tokens=tuple(tokens or ()), updated_at=NOW)})
-    gate = KvsViewGate(FakeKeys())
+    gate = KvsViewGate(FakeKeyStore())
     return Wiring(artifacts, projects, gate)
 
 

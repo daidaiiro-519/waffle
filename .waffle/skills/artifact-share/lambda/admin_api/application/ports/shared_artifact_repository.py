@@ -12,19 +12,21 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from domain.entities.shared_artifact import SharedArtifact
+
 
 class SharedArtifactRepository(Protocol):
     """agg-shared-artifact の読み書き。集約1つに1つ。"""
 
-    def find(self, artifact_id: str) -> dict | None:
+    def find(self, artifact_id: str) -> SharedArtifact | None:
         """その識別子の共有アーティファクトを取り出す。無ければ None。"""
         ...
 
-    def save(self, artifact: dict) -> None:
+    def save(self, artifact: SharedArtifact) -> None:
         """共有アーティファクトを残す。既にあれば置き換える。"""
         ...
 
-    def all(self) -> tuple[list[dict], int]:
+    def all(self) -> tuple[list[SharedArtifact], int]:
         """あるものを全て取り出す。
 
         読めなかったものは飛ばし、その件数を添えて返す。1件の不具合で

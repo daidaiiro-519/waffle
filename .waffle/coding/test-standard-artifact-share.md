@@ -4,7 +4,7 @@ type: "test-standard"
 title: "artifact-shareのテスト方針を定めるTest Standard：test-standard-artifact-share"
 description: "artifact-shareのテスト方針・配置・シナリオの束ね方を定める。2つのランタイムが同じ業務ルールを守るため、実装は分かれても同じシナリオへ紐づける。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v6"
+schemaRef: "CodingSchema/v7"
 ---
 
 # artifact-shareのテスト方針を定めるTest Standard：test-standard-artifact-share
@@ -111,15 +111,13 @@ def test_suspended_artifact_cannot_be_viewed():
 
 ## テスト対象別の配置
 
-- **置き方**: layer-first
-
 | レイヤー | テスト種別 | 配置 | 置き方（個別） | 接尾辞 | 補足 |
 |---|---|---|---|---|---|
 | domain | `unit` | `.waffle/skills/artifact-share/tests/domain/unit/` |  |  | 配置はリポジトリ直下からの道で書く。検査はここをそのまま探すので、根を別に渡して補う仕組みは無い |
 | application | `unit` | `.waffle/skills/artifact-share/tests/application/unit/` |  |  |  |
 | application | `acceptance` | `.waffle/skills/artifact-share/tests/application/acceptance/` |  |  |  |
 | application | `integration` | `.waffle/skills/artifact-share/tests/application/integration/` |  |  |  |
-| application | `contract` | `.waffle/skills/artifact-share/tests/application/contract/` |  |  | port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する |
+| application | `contract` | `.waffle/skills/artifact-share/tests/application/contract/` |  |  | port は層ではなく application が所有する要素なので、その契約テストも application の下に置く。同じ契約スイートを本物と偽実装の両方に対して実行する。対象は、本物を実物のサービスへ繋がずに動かせる口だけ——集約の読み書きと識別子の発行。招かれている人の名簿は、本物が利用者プールへ直接つながるためこの束の対象外とし、偽物の側だけを保つ（規約が実物のサービスに依存する単体の検証を禁じている）。書き漏らしではなく、意図した除外である |
 | inbound adapter | `contract` | `.waffle/skills/artifact-share/tests/adapters/inbound/contract/` |  |  | 閲覧ゲートの振る舞いもここで確かめる。エッジランタイムは層を持たないため、入口としてまとめて扱う。ランタイムをまたぐデータの形の合意も、確かめている実装がどの層にあるかではなく、その合意が誰との間で結ばれているかで置き場所が決まるため、外と結ぶものはここへ置く |
 | outbound adapter | `integration` | `.waffle/skills/artifact-share/tests/adapters/outbound/integration/` |  |  |  |
 | browser | `contract` | `.waffle/skills/artifact-share/tests/browser/contract/` |  |  | 利用者のブラウザで動く出荷物（管理画面・閲覧画面）を確かめる。ブラウザは層を持たないため、確かめるのは振る舞いではなく、出荷物どうしで二重に書かれた規則が一致していること。実行を伴わないので Python で書く |

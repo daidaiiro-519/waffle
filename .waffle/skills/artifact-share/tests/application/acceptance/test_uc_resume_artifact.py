@@ -39,12 +39,12 @@ def test_再開しても止める前の閲覧トークンで開ける():
     Then その閲覧トークンで開ける
     """
     deps, r = setup()
-    before = deps.keys.get(f"token:{r.artifact_id}")
+    before = deps.keys.written[f"token:{r.artifact_id}"]
     build(deps, SuspendArtifact).run(ME, r.artifact_id)
 
     build(deps, ResumeArtifact).run(ME, r.artifact_id)
 
-    assert deps.keys.get(f"token:{r.artifact_id}") == before
+    assert deps.keys.written[f"token:{r.artifact_id}"] == before
     assert meta_of(deps, r.artifact_id)["status"] == "active"
 
 
@@ -64,7 +64,7 @@ def test_止める前に無効にした閲覧トークンは再開しても戻�
     build(deps, ResumeArtifact).run(ME, r.artifact_id)
 
     # 記録には残るが、開ける対象からは外れる（閲覧の面へ渡るのは1本だけ）
-    grants = deps.keys.get(f"token:{r.artifact_id}")
+    grants = deps.keys.written[f"token:{r.artifact_id}"]
     assert grants.count(";") == 0
     assert extra.token not in grants
 
@@ -86,7 +86,7 @@ def test_止めている間に期限が切れた閲覧トークンは再開し�
     build(deps, ResumeArtifact).run(ME, r.artifact_id)
 
     # 期限を過ぎたものは、記録に残っていても開ける対象にならない
-    grants = deps.keys.get(f"token:{r.artifact_id}")
+    grants = deps.keys.written[f"token:{r.artifact_id}"]
     assert grants != "DISABLED"
     assert grants.count(";") == 0
 
@@ -120,13 +120,13 @@ def test_止まっていないものは再開できない():
     And 閲覧トークンは変わらない
     """
     deps, r = setup()
-    before = deps.keys.get(f"token:{r.artifact_id}")
+    before = deps.keys.written[f"token:{r.artifact_id}"]
 
     with pytest.raises(ManageError) as x:
         build(deps, ResumeArtifact).run(ME, r.artifact_id)
 
     assert x.value.code == "NOT_SUSPENDED"
-    assert deps.keys.get(f"token:{r.artifact_id}") == before
+    assert deps.keys.written[f"token:{r.artifact_id}"] == before
 
 
 def test_他人のものは見つからないものとして拒む():
@@ -156,10 +156,10 @@ def test_管理者は自分のものでなくても扱える():
     And 止める前の閲覧トークンのうち、期限内で無効にされていないものはそのまま使える
     """
     deps, r = setup()
-    before = deps.keys.get(f"token:{r.artifact_id}")
+    before = deps.keys.written[f"token:{r.artifact_id}"]
     build(deps, SuspendArtifact).run(ME, r.artifact_id)
 
     build(deps, ResumeArtifact).run(ADMIN, r.artifact_id)
 
     assert meta_of(deps, r.artifact_id)["status"] == "active"
-    assert deps.keys.get(f"token:{r.artifact_id}") == before
+    assert deps.keys.written[f"token:{r.artifact_id}"] == before

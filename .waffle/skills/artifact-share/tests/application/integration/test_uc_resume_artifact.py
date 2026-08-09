@@ -25,10 +25,10 @@ def test_失敗しても閲覧トークンは変わらない():
     """
     deps, r = setup()
     build(deps, SuspendArtifact).run(ME, r.artifact_id)
-    before = dict(deps.keys.keys)
+    before = dict(deps.keys.written)
 
     with pytest.raises(ManageError):
         build(deps, ResumeArtifact).run(SOMEONE_ELSE, r.artifact_id)
 
     assert meta_of(deps, r.artifact_id)["status"] == "disabled"
-    assert deps.keys.keys == before
+    assert deps.keys.written == before

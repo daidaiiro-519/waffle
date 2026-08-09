@@ -22,10 +22,10 @@ def test_何度見渡しても何も変わらない():
     deps, r = setup()
     first = build(deps, ListMyArtifacts).run(ME)
     status_before = meta_of(deps, r.artifact_id)["status"]
-    keys_before = dict(deps.keys.keys)
+    keys_before = dict(deps.keys.written)
 
     second = build(deps, ListMyArtifacts).run(ME)
 
     assert second == first
     assert meta_of(deps, r.artifact_id)["status"] == status_before
-    assert deps.keys.keys == keys_before
+    assert deps.keys.written == keys_before

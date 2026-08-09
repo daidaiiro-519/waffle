@@ -9,18 +9,20 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from domain.entities.project import Project
+
 
 class ProjectRepository(Protocol):
     """agg-project の読み書き。集約1つに1つ。"""
 
-    def find(self, project_id: str) -> dict | None:
+    def find(self, project_id: str) -> Project | None:
         """その識別子のプロジェクトを取り出す。無ければ None。"""
         ...
 
-    def save(self, project: dict) -> None:
+    def save(self, project: Project) -> None:
         """プロジェクトを残す。既にあれば置き換える。"""
         ...
 
-    def all(self) -> tuple[list[dict], int]:
+    def all(self) -> tuple[list[Project], int]:
         """あるものを全て取り出す。読めなかったものは飛ばし、その件数を添える。"""
         ...

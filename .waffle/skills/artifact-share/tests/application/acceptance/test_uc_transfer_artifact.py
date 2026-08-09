@@ -75,12 +75,12 @@ def test_閲覧者から見て何も変わらない():
                                "parentId": None,
                                "postedAt": "2026-07-01T10:00:00Z"},
                               ensure_ascii=False), "application/json")
-    token_before = deps.keys.get(f"token:{r.artifact_id}")
+    token_before = deps.keys.written[f"token:{r.artifact_id}"]
     content_before = deps.store.get(f"p/{r.artifact_id}/content.html")
 
     _transfer(deps, ADMIN, r.artifact_id, Y.id)
 
-    assert deps.keys.get(f"token:{r.artifact_id}") == token_before
+    assert deps.keys.written[f"token:{r.artifact_id}"] == token_before
     assert deps.store.get(f"p/{r.artifact_id}/content.html") == content_before
     assert len(deps.store.list(f"comments/{r.artifact_id}/")) == 1
 

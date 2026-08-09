@@ -87,12 +87,12 @@ def test_取り出しても何も変わらない():
     """
     deps, r = setup()
     _three_comments(deps, r.artifact_id)
-    token_before = deps.keys.get(f"token:{r.artifact_id}")
+    token_before = deps.keys.written[f"token:{r.artifact_id}"]
 
     build(deps, ExportArtifact).run(ME, r.artifact_id)
 
     assert meta_of(deps, r.artifact_id)["status"] == "active"
-    assert deps.keys.get(f"token:{r.artifact_id}") == token_before
+    assert deps.keys.written[f"token:{r.artifact_id}"] == token_before
     assert len(deps.store.list(f"comments/{r.artifact_id}/")) == 3
 
 

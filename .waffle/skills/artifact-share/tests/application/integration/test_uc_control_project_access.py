@@ -49,7 +49,7 @@ def test_見せ方を変えても中身とコメントは動かない():
         _comment(deps, AID, at, author, "意見")
 
     content_before = deps.store.get(f"p/{AID}/content.html")
-    token_before = deps.keys.get(f"token:{AID}")
+    token_before = deps.keys.written[f"token:{AID}"]
     comments_before = deps.store.list(f"comments/{AID}/")
     assert len(comments_before) == 3
 
@@ -61,5 +61,5 @@ def test_見せ方を変えても中身とコメントは動かない():
     build(deps, ControlProjectAccess).run("resume", X, p.project_id)
 
     assert deps.store.get(f"p/{AID}/content.html") == content_before
-    assert deps.keys.get(f"token:{AID}") == token_before
+    assert deps.keys.written[f"token:{AID}"] == token_before
     assert deps.store.list(f"comments/{AID}/") == comments_before

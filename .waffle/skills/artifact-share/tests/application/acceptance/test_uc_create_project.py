@@ -77,7 +77,7 @@ def test_表示名が空なら作らない():
         build(deps, CreateProject).run(X, "   ", "PERSONAL")
 
     assert x.value.code == "NAME_REQUIRED"
-    assert deps.keys.keys == {}
+    assert deps.keys.written == {}
 
 
 def test_招かれていない者は作れない(monkeypatch):

@@ -44,7 +44,7 @@ def test_止めると開けなくなる():
 
     build(deps, SuspendArtifact).run(ME, r.artifact_id)
 
-    assert deps.keys.get(f"token:{r.artifact_id}") == "DISABLED"
+    assert deps.keys.written[f"token:{r.artifact_id}"] == "DISABLED"
     assert meta_of(deps, r.artifact_id)["status"] == "disabled"
 
 
@@ -63,7 +63,7 @@ def test_プロジェクト閲覧トークンでも開けない():
 
     build(deps, SuspendArtifact).run(ME, r.artifact_id)
 
-    assert deps.keys.get(f"token:{r.artifact_id}") == "DISABLED"
+    assert deps.keys.written[f"token:{r.artifact_id}"] == "DISABLED"
 
 
 def test_中身もコメントも残る():
@@ -131,7 +131,7 @@ def test_管理者は自分のものでなくても扱える():
     build(deps, SuspendArtifact).run(ADMIN, r.artifact_id)
 
     assert meta_of(deps, r.artifact_id)["status"] == "disabled"
-    assert deps.keys.get(f"token:{r.artifact_id}") == "DISABLED"
+    assert deps.keys.written[f"token:{r.artifact_id}"] == "DISABLED"
 
 
 def test_止める前に取り出すかを尋ねる():

@@ -29,7 +29,7 @@ def test_何度見ても何も変わらない():
     first_list = engine.run("list", X)
     first_detail = engine.run("detail", X, p.project_id)
     before = index_of(deps, p.project_id)
-    before_keys = dict(deps.keys.keys)
+    before_keys = dict(deps.keys.written)
 
     second_list = engine.run("list", X)
     second_detail = engine.run("detail", X, p.project_id)
@@ -39,4 +39,4 @@ def test_何度見ても何も変わらない():
     after = index_of(deps, p.project_id)
     assert after["status"] == before["status"]
     assert after["memberArtifactIds"] == before["memberArtifactIds"]
-    assert deps.keys.keys == before_keys
+    assert deps.keys.written == before_keys

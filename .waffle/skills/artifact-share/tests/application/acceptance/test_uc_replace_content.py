@@ -44,13 +44,13 @@ def test_共有URLと閲覧トークンを保ったまま入れ替わる():
     And 閲覧トークンも変わらない
     """
     deps, r = setup()
-    token_before = deps.keys.get(f"token:{r.artifact_id}")
+    token_before = deps.keys.written[f"token:{r.artifact_id}"]
 
     build(deps, ReplaceArtifactContent).run(ME, r.artifact_id, REVISED)
 
     assert deps.store.get(f"p/{r.artifact_id}/content.html") == REVISED
     assert deps.store.get(f"p/{r.artifact_id}/index.html")  # 同じ居場所に在り続ける
-    assert deps.keys.get(f"token:{r.artifact_id}") == token_before
+    assert deps.keys.written[f"token:{r.artifact_id}"] == token_before
 
 
 def test_コメントが残り区切りが現れる():

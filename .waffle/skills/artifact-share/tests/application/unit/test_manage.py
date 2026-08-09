@@ -86,7 +86,7 @@ def test_出し入れするとプロジェクトの索引と一覧が揃う():
     listing = json.loads(deps.store.get(f"proj/{pid}/index.json"))
     assert index["memberArtifactIds"] == []
     assert listing["artifacts"] == []
-    assert deps.keys.get(f"pp:{r.artifact_id}") == ""
+    assert deps.keys.written[f"pp:{r.artifact_id}"] == ""
 
 
 def test_差し替えると入っている全プロジェクトの一覧が書き直される():

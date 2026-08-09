@@ -26,4 +26,4 @@ def test_重ねて加えても一度分と同じ():
     build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
 
     assert meta_of(deps, r.artifact_id)["projects"] == [pid]
-    assert deps.keys.get(f"pp:{r.artifact_id}") == pid
+    assert deps.keys.written[f"pp:{r.artifact_id}"] == pid

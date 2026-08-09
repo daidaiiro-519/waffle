@@ -37,13 +37,13 @@ def test_加えるとプロジェクト閲覧トークンで開ける():
     And 共有アーティファクトA自身の閲覧トークンも引き続き使える
     """
     deps, r, pid = with_project("PERSONAL")
-    own_token = deps.keys.get(f"token:{r.artifact_id}")
+    own_token = deps.keys.written[f"token:{r.artifact_id}"]
 
     _assign(deps, ME, r.artifact_id, pid)
 
-    assert deps.keys.get(f"pp:{r.artifact_id}") == pid
+    assert deps.keys.written[f"pp:{r.artifact_id}"] == pid
     assert meta_of(deps, r.artifact_id)["projects"] == [pid]
-    assert deps.keys.get(f"token:{r.artifact_id}") == own_token
+    assert deps.keys.written[f"token:{r.artifact_id}"] == own_token
 
 
 def test_外しても共有アーティファクトは生きている():
@@ -59,9 +59,9 @@ def test_外しても共有アーティファクトは生きている():
 
     _assign(deps, ME, r.artifact_id, pid, operation="unassign")
 
-    assert deps.keys.get(f"pp:{r.artifact_id}") == ""
+    assert deps.keys.written[f"pp:{r.artifact_id}"] == ""
     assert meta_of(deps, r.artifact_id)["projects"] == []
-    assert deps.keys.get(f"token:{r.artifact_id}") != "DISABLED"
+    assert deps.keys.written[f"token:{r.artifact_id}"] != "DISABLED"
     assert deps.store.get(f"p/{r.artifact_id}/content.html")
 
 
@@ -79,7 +79,7 @@ def test_複数の単位に同時に入れる():
     _assign(deps, ME, r.artifact_id, q)
 
     assert sorted(meta_of(deps, r.artifact_id)["projects"]) == sorted([p, q])
-    belongs = deps.keys.get(f"pp:{r.artifact_id}").split(MEMBERSHIP_SEPARATOR)
+    belongs = deps.keys.written[f"pp:{r.artifact_id}"].split(MEMBERSHIP_SEPARATOR)
     assert set(belongs) == {p, q}
 
 
@@ -100,7 +100,7 @@ def test_中身に書いた値では所属できない():
     assert meta["tags"] == [pid]      # 目印としては控える
     assert meta["projects"] == []     # 所属は変わらない
     with pytest.raises(KeyError):
-        deps.keys.get(f"pp:{r.artifact_id}")
+        deps.keys.written[f"pp:{r.artifact_id}"]
 
 
 def test_停止している共有アーティファクトは加えても開けない():
@@ -117,7 +117,7 @@ def test_停止している共有アーティファクトは加えても開け�
     _assign(deps, ME, r.artifact_id, pid)
 
     assert meta_of(deps, r.artifact_id)["projects"] == [pid]
-    assert deps.keys.get(f"token:{r.artifact_id}") == "DISABLED"
+    assert deps.keys.written[f"token:{r.artifact_id}"] == "DISABLED"
 
 
 def test_停止している単位へは加えられない():
@@ -150,7 +150,7 @@ def test_共有なら他の人も自分のものを入れられる():
 
     _assign(deps, ME, r.artifact_id, pid)
 
-    assert deps.keys.get(f"pp:{r.artifact_id}") == pid
+    assert deps.keys.written[f"pp:{r.artifact_id}"] == pid
     assert pid in meta_of(deps, r.artifact_id)["projects"]
 
 

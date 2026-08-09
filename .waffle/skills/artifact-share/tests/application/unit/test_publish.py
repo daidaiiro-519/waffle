@@ -35,5 +35,5 @@ def test_トークンは配置がすべて済んでから書かれる():
         publishing(store=store, keys=keys).run(
             {"html": WITH_META, "authorization": "Bearer x"})
 
-    assert keys.keys == {}  # 開ける状態にはならない
+    assert keys.written == {}  # 開ける状態にはならない
 

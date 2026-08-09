@@ -39,12 +39,12 @@ def test_公開停止しても中身は個別の閲覧トークンで開ける()
     assign(deps, X, "aaaaaaaa", p.project_id)
     build(deps, IssueViewToken).run(
         X, ViewSubject.artifact("aaaaaaaa"), "別の相手", None)
-    for_artifact = deps.keys.get("token:aaaaaaaa")
+    for_artifact = deps.keys.written["token:aaaaaaaa"]
 
     _control(deps, "suspend", X, p.project_id)
 
-    assert deps.keys.get(f"proj:{p.project_id}") == "DISABLED"
-    assert deps.keys.get("token:aaaaaaaa") == for_artifact
+    assert deps.keys.written[f"proj:{p.project_id}"] == "DISABLED"
+    assert deps.keys.written["token:aaaaaaaa"] == for_artifact
 
 
 def test_管理者は自分が作ったものでなくても扱える():
@@ -114,11 +114,11 @@ def test_再び開けるようにしても止める前の閲覧トークンで�
     p = owned(deps, caller=X)
     artifact(deps, "aaaaaaaa", "検索基盤の選定")
     assign(deps, X, "aaaaaaaa", p.project_id)
-    before = deps.keys.get(f"proj:{p.project_id}")
+    before = deps.keys.written[f"proj:{p.project_id}"]
     _control(deps, "suspend", X, p.project_id)
 
     _control(deps, "resume", X, p.project_id)
 
-    assert deps.keys.get(f"proj:{p.project_id}") == before
+    assert deps.keys.written[f"proj:{p.project_id}"] == before
     assert index_of(deps, p.project_id)["status"] == "active"
     assert "aaaaaaaa" in index_of(deps, p.project_id)["memberArtifactIds"]

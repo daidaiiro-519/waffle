@@ -108,7 +108,7 @@ def test_外しても公開したものは残る():
     _remove(deps, publisher_id="publisher-2")
 
     assert json.loads(deps.store.get("meta/aaaaaaaa.json"))["status"] == "active"
-    assert deps.keys.get("token:aaaaaaaa") == "abc|0|1"
+    assert deps.keys.written["token:aaaaaaaa"] == "abc|0|1"
 
 
 def test_手入れできなくなるものがあれば件数を伝える():

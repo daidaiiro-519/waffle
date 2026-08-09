@@ -26,7 +26,7 @@ def test_トークンは後から取り出せない():
 
     result = publishing(keys=keys).run({"html": WITH_META, "authorization": "Bearer x"})
 
-    record = keys.keys["token:" + result.artifact_id]
+    record = keys.written["token:" + result.artifact_id]
     value, expires = record.split("|")
     assert value != result.token       # そのままは残さない
     assert result.token not in record  # 部分としても残さない
@@ -51,4 +51,4 @@ def test_失敗したら誰も開けない():
             {"html": WITH_META, "authorization": "Bearer x"})
 
     assert e.value.code == "PUBLISH_FAILED"
-    assert keys.keys == {}  # トークンが無いので閲覧ゲートが拒む
+    assert keys.written == {}  # トークンが無いので閲覧ゲートが拒む

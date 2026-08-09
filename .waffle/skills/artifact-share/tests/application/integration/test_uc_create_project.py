@@ -22,7 +22,7 @@ def test_閲覧トークンは後から取り出せない():
 
     r = owned(deps)
 
-    record = deps.keys.get(f"proj:{r.project_id}")
+    record = deps.keys.written[f"proj:{r.project_id}"]
     value, expires = record.split("|")
     assert value != r.token          # そのままは残さない
     assert r.token not in record     # 部分としても残さない

@@ -32,16 +32,3 @@ class KvsViewTokenStore(KeyValueStore):
         etag = self._kvs.describe_key_value_store(KvsARN=self._arn)["ETag"]
         self._kvs.put_key(KvsARN=self._arn, Key=key, Value=value, IfMatch=etag)
 
-    def get(self, key):
-        """1つの鍵の値を読む。
-
-        Args:
-            key: 読む対象の鍵。
-
-        Returns:
-            その鍵の値。無ければ空。
-
-        Raises:
-            なし。
-        """
-        return self._kvs.get_key(KvsARN=self._arn, Key=key)["Value"]

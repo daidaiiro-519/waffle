@@ -17,11 +17,11 @@ def test_外しても閲覧トークンは失効しない():
     """
     deps, _ = setup(objects=artifact_owned_by("publisher-2"))
     deps.keys.put("token:aaaaaaaa", "abc|0|1")
-    before = dict(deps.keys.keys)
+    before = dict(deps.keys.written)
 
     build(deps, InvitePublisher).run("remove", ADMIN, publisher_id="publisher-2")
 
-    assert deps.keys.keys == before
+    assert deps.keys.written == before
 
 
 def test_招待が返す識別子は一覧のものと揃っている():

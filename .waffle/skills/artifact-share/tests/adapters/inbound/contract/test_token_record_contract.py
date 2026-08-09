@@ -21,6 +21,7 @@ import json
 from pathlib import Path
 
 from conftest import SKILL
+from fakes import FakeKeyStore
 
 import pytest
 
@@ -53,7 +54,7 @@ def _stored(case):
     いたら気づけないため。ずれたまま両側の検証が緑で通ったのが、この検証を
     置くきっかけだった。
     """
-    keys = _Collector()
+    keys = FakeKeyStore()
     gate = KvsViewGate(keys)
     gate.replace_grants(
         ViewSubject.artifact("aaaaaaaa"),
@@ -84,7 +85,7 @@ def test_合言葉そのものは記録に現れない():
 def test_所属の記録が契約と一致する():
     """書き手と読み手が同じ区切りを使っていることを確かめる。"""
     membership = CONTRACT["所属の記録"]
-    deps = main.Connections(store=None, keys=_Collector(), now=None)
+    deps = main.Connections(store=None, keys=FakeKeyStore(), now=None)
 
     for case in membership["ケース"]:
         write_membership(deps.gate, "aaaaaaaa", case["プロジェクト"])
@@ -95,7 +96,7 @@ def test_上限を超える所属は受け付けない():
     """読み手は先頭から上限までしか見ない。書き手が黙って超えると、
     投稿者には成功が返り、閲覧者だけが開けない状態になる。"""
     limit = CONTRACT["所属の記録"]["上限"]
-    deps = main.Connections(store=None, keys=_Collector(), now=None)
+    deps = main.Connections(store=None, keys=FakeKeyStore(), now=None)
 
     with pytest.raises(ManageError) as x:
         write_membership(deps.gate, "aaaaaaaa", [f"p{i}" for i in range(limit + 1)])
@@ -108,7 +109,7 @@ def test_上限ちょうどの所属は受け付ける():
     上端が通ることを確かめないと、上限そのものを間違えても検証は緑のままになる。
     """
     limit = CONTRACT["所属の記録"]["上限"]
-    deps = main.Connections(store=None, keys=_Collector(), now=None)
+    deps = main.Connections(store=None, keys=FakeKeyStore(), now=None)
 
     write_membership(deps.gate, "aaaaaaaa", [f"p{i}" for i in range(limit)])
 
@@ -116,9 +117,3 @@ def test_上限ちょうどの所属は受け付ける():
         f"p{i}" for i in range(limit)]
 
 
-class _Collector:
-    def __init__(self):
-        self.written = {}
-
-    def put(self, key, value):
-        self.written[key] = value

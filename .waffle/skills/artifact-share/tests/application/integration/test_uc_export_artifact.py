@@ -29,7 +29,7 @@ def test_何度取り出しても同じものが返る():
                                "postedAt": "2026-07-01T10:00:00Z"},
                               ensure_ascii=False), "application/json")
     objects_before = json.dumps(deps.store.objects, ensure_ascii=False, sort_keys=True)
-    keys_before = dict(deps.keys.keys)
+    keys_before = dict(deps.keys.written)
 
     first = build(deps, ExportArtifact).run(ME, r.artifact_id)
     second = build(deps, ExportArtifact).run(ME, r.artifact_id)
@@ -37,4 +37,4 @@ def test_何度取り出しても同じものが返る():
     assert second == first
     assert json.dumps(deps.store.objects, ensure_ascii=False,
                       sort_keys=True) == objects_before
-    assert deps.keys.keys == keys_before
+    assert deps.keys.written == keys_before
