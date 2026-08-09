@@ -6,11 +6,8 @@
 名簿への接続は依存として渡す形にしてあるため、この検証では偽の名簿を渡す。
 """
 
-import main
-import json
 
 import pytest
-from dataclasses import fields
 
 from usecase_builder import build  # noqa: E402
 from application.usecases.invite_publisher import InvitePublisher  # noqa: E402
@@ -22,17 +19,9 @@ from shared.errors import PublisherError  # noqa: E402
 
 
 from publisher_setup import (  # noqa: E402
-    ADMIN, SOMEONE, artifact_owned_by, setup,
+    ADMIN, SOMEONE, setup,
 )
 
-ADMIN = Caller("admin-1", is_admin=True)
-SOMEONE = Caller("publisher-2")
-
-
-# ── 招く ────────────────────────────────────────────────
-
-
-# ── 外す ────────────────────────────────────────────────
 
 
 def test_管理者でない者は外せない():
@@ -42,11 +31,6 @@ def test_管理者でない者は外せない():
     assert x.value.code == "NOT_ADMINISTRATOR"
     assert directory.find("admin-1") is not None
 
-
-# ── 一覧 ────────────────────────────────────────────────
-
-
-# ── 招待を送り直す ──────────────────────────────────────
 
 
 def test_管理者でなければ送り直せない():

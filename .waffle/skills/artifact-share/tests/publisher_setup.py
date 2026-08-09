@@ -67,9 +67,3 @@ def artifact_owned_by(publisher, artifact_id="aaaaaaaa", status="active"):
             "projects": [], "tags": [], "uploadedBy": publisher, "updatedAt": 1}
     return {f"meta/{artifact_id}.json": {"body": json.dumps(meta),
                                          "content_type": "application/json"}}
-
-def artifact_owned_by(publisher, artifact_id="aaaaaaaa", status="active"):
-    meta = {"artifactId": artifact_id, "name": "文書", "status": status,
-            "projects": [], "tags": [], "uploadedBy": publisher, "updatedAt": 1}
-    return {f"meta/{artifact_id}.json": {"body": json.dumps(meta),
-                                         "content_type": "application/json"}}

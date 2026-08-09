@@ -9,47 +9,20 @@
 閲覧ゲートはこの別を知らず、判定はすべてここに閉じる。
 """
 
-import main
-import json
 
 import pytest
 
+from project_setup import (  # noqa: E402
+    X, Y, index_of, listing_of, owned, setup,
+)
 from usecase_builder import build  # noqa: E402
-from application.usecases.assign_artifact_to_project import AssignArtifactToProject  # noqa: E402
-from application.usecases.browse_projects import BrowseProjects  # noqa: E402
 from application.usecases.control_project_access import ControlProjectAccess  # noqa: E402
 from application.usecases.create_project import CreateProject  # noqa: E402
 
-from application.ports import Caller  # noqa: E402
-from domain.value_objects.project import PERSONAL  # noqa: E402
-from domain.value_objects.project import SHARED  # noqa: E402
 from shared.errors import ProjectError  # noqa: E402
 
 
-from fakes import FakeKeyStore, FakeStore  # noqa: E402
 
-X = Caller("publisher-x")
-Y = Caller("publisher-y")
-ADMIN = Caller("admin-1", is_admin=True)
-
-
-def setup():
-    return main.Connections(
-        store=FakeStore(), keys=FakeKeyStore(),
-        project_page="<html data-project=\"{{プロジェクトID}}\"></html>",
-        now=lambda: 1_700_000_000, viewer_domain="viewer.example.net",
-    )
-
-
-def index_of(deps, project_id):
-    return json.loads(deps.store.get(f"projects/{project_id}.json"))
-
-
-def listing_of(deps, project_id):
-    return json.loads(deps.store.get(f"proj/{project_id}/index.json"))
-
-
-# ── 作る ────────────────────────────────────────────────
 
 
 def test_一覧ページの雛形と中身が置かれる():
@@ -72,10 +45,6 @@ def test_想定外の共有の別では作らない():
 
 # ── 見せ方を変える ──────────────────────────────────────
 
-def owned(deps, scope="PERSONAL"):
-    return build(deps, CreateProject).run(X, "検索基盤リニューアル", scope)
-
-
 def test_作ると最初の1本が渡される():
     deps = setup()
     r = owned(deps)
@@ -97,18 +66,6 @@ def test_無いプロジェクトと他人のものを同じ拒み方にする()
     assert a.value.code == b.value.code == "PROJECT_NOT_FOUND"
 
 
-# ── 一覧 ────────────────────────────────────────────────
-
 
 # ── 中身を見る ──────────────────────────────────────────
 
-def artifact(deps, artifact_id, name, owner=X, status="active"):
-    deps.store.put(f"meta/{artifact_id}.json", json.dumps({
-        "artifactId": artifact_id, "name": name, "status": status,
-        "docType": "DecisionRecord", "description": "", "tags": [],
-        "uploadedBy": owner.id, "projects": [], "updatedAt": 1,
-    }), "application/json")
-
-
-def manage_assign(deps, caller, artifact_id, project_id):
-    return build(deps, AssignArtifactToProject).run("assign", caller, artifact_id, project_id)

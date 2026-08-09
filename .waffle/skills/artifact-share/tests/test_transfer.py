@@ -7,49 +7,15 @@ uc-resume-artifact / uc-reissue-view-token / uc-replace-content の
 「誰が扱えるか」の受け入れ基準。
 """
 
-import main
-import json
 
 
 from usecase_builder import build  # noqa: E402
 from application.usecases.list_my_artifacts import ListMyArtifacts  # noqa: E402
-from application.usecases.publish_artifact import PublishArtifact  # noqa: E402
 from application.usecases.transfer_artifact import TransferArtifact  # noqa: E402
 
-from application.ports import Caller  # noqa: E402
 
 
-from publisher_setup import FakeDirectory  # noqa: E402
-from fakes import FakeKeyStore, FakeStore  # noqa: E402
-from manage_setup import HTML  # noqa: E402
-
-X = Caller("publisher-x")
-Y = Caller("publisher-y")
-ADMIN = Caller("admin-1", is_admin=True)
-
-
-def setup():
-    """XがAを公開しており、Yも招かれている状態を作る。"""
-    store, keys = FakeStore(), FakeKeyStore()
-    c = main.Connections(
-        store=store, keys=keys, identify=lambda _t: X.id,
-        wrapper_template="<html>{{アーティファクトID}}</html>",
-        now=lambda: 1_700_000_000, viewer_domain="viewer.example.net")
-    result = build(c, PublishArtifact).run({"html": HTML, "authorization": "Bearer x"})
-    deps = main.Connections(
-        store=store, keys=keys,
-        directory=FakeDirectory({
-            X.id: {"email": "x@example.com", "status": "PUBLISHED"},
-            Y.id: {"email": "y@example.com", "status": "PUBLISHED"},
-            ADMIN.id: {"email": "a@example.com", "status": "PUBLISHED"},
-        }),
-        now=lambda: 1_700_000_100, viewer_domain="viewer.example.net",
-    )
-    return deps, result
-
-
-def meta_of(deps, artifact_id):
-    return json.loads(deps.store.get(f"meta/{artifact_id}.json"))
+from transfer_setup import ADMIN, X, Y, setup  # noqa: E402
 
 
 # ── 管理者が扱える範囲 ──────────────────────────────────

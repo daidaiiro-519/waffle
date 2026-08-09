@@ -21,12 +21,8 @@ from application.ports import Caller  # noqa: E402
 
 
 from fakes import FakeKeyStore, FakeStore  # noqa: E402
-from manage_setup import HTML  # noqa: E402
-
-ME = Caller("publisher-1")
+from manage_setup import ADMIN, HTML, ME  # noqa: E402
 SOMEONE_ELSE = Caller("publisher-2")
-ADMIN = Caller("admin-1", is_admin=True)
-
 
 def setup():
     """公開済みのものが1件ある状態を作る。"""
@@ -50,8 +46,6 @@ def post(deps, artifact_id, at, author, body, decision="comment", parent=None):
                     "postedAt": f"2026-07-{at % 30 + 1:02d}T10:00:00Z"}, ensure_ascii=False),
         "application/json")
 
-
-# ── 読む ────────────────────────────────────────────────
 
 
 def test_業務の語彙で返り欠けが無い():

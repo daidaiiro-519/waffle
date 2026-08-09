@@ -10,19 +10,18 @@
   uc-resume-artifact / uc-assign-to-project
 """
 
-import main
 import json
 
 import pytest
 
-from fakes import FakeKeyStore, FakeStore
 
-from manage_setup import HTML  # noqa: E402
+from manage_setup import (  # noqa: E402
+    HTML, ME, meta_of, setup, with_project,
+)
 from usecase_builder import build  # noqa: E402
 from application.usecases.assign_artifact_to_project import AssignArtifactToProject  # noqa: E402
 from application.usecases.create_project import CreateProject  # noqa: E402
 from application.usecases.list_my_artifacts import ListMyArtifacts  # noqa: E402
-from application.usecases.publish_artifact import PublishArtifact  # noqa: E402
 from application.usecases.replace_artifact_content import ReplaceArtifactContent  # noqa: E402
 
 from application.ports import Caller  # noqa: E402
@@ -33,41 +32,10 @@ from shared.errors import ManageError  # noqa: E402
 
 
 
-NOW = 1_700_000_000
 
-ME = Caller("publisher-1")
 SOMEONE_ELSE = Caller("publisher-2")
 
 
-def setup(keys=None):
-    """公開済みのものが1件ある状態を作り、依存と公開の結果を返す。"""
-    store = FakeStore()
-    key_store = keys if keys is not None else FakeKeyStore()
-
-    c = main.Connections(
-            store=store, keys=key_store,
-            identify=lambda _t: ME.id,
-            wrapper_template="<html>{{アーティファクトID}}</html>",
-            now=lambda: 1_700_000_000,
-            viewer_domain="viewer.example.net",
-        )
-    result = build(c, PublishArtifact).run({"html": HTML, "authorization": "Bearer x"})
-    deps = main.Connections(
-        store=store, keys=key_store,
-        now=lambda: 1_700_000_100,
-        viewer_domain="viewer.example.net",
-    )
-    return deps, result
-
-
-def meta_of(deps, artifact_id):
-    return json.loads(deps.store.get(f"meta/{artifact_id}.json"))
-
-
-# ── 本人以外は触れない ──────────────────────────────────
-
-
-# ── 差し替え ────────────────────────────────────────────
 
 
 def test_空の中身には差し替えられない():
@@ -110,14 +78,6 @@ def test_差し替えの区切りはコメントの件数に数えない():
 # ── 共有と個人で出し入れの可否が変わる ──────────────────
 
 OTHER = Caller("publisher-9")
-
-
-def with_project(scope, owner=None):
-    """プロジェクトが1つある状態を作る。既定では自分（ME）が作ったもの。"""
-    deps, r = setup()
-    deps.project_page = "<html>{{プロジェクトID}}</html>"
-    p = build(deps, CreateProject).run(owner or ME, "まとめ", scope)
-    return deps, r, p.project_id
 
 
 def test_自分のプロジェクトへは個人でも入れられる():
