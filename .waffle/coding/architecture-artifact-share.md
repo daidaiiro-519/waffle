@@ -4,7 +4,7 @@ type: "architecture"
 title: "artifact-shareが採用する層構造を定めるArchitecture仕様：architecture-artifact-share"
 description: "artifact-shareがヘキサゴナルアーキテクチャを実装する際の層構造・依存方向を定める。閲覧ゲートは実行環境の制約により層を持たないため、その扱いも併せて定める。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v6"
+schemaRef: "CodingSchema/v7"
 ---
 
 # artifact-shareが採用する層構造を定めるArchitecture仕様：architecture-artifact-share

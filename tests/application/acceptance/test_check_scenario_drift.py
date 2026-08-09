@@ -484,3 +484,32 @@ def test_no_invocation_style_rejected():
 
     assert isinstance(result, Err), result
     assert result.details[0] == "MISSING_PARAM"
+
+
+def test_block_specific_placement_row_wins(tmp_path):
+    """
+    Scenario: 種別まで指定した配置行を優先する
+    Given 同じ層とテスト種別に対して、種別を指定した行と指定していない行の両方を持つ規約
+    When spec documentの置き場所とテストの配置ルートを指定して検査する
+    Then 種別を指定した行が示す場所でテストを探す
+    """
+    import json
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "agg-thing.json").write_text(json.dumps({
+        "documentId": "agg-thing",
+        "content": {"invariantScenarios": {"scenarios": [
+            {"name": "不変が保たれる", "gherkin": "Scenario: 不変が保たれる\n  Then 保たれる"}]}},
+    }, ensure_ascii=False), encoding="utf-8")
+
+    tests_root = tmp_path / "t"
+    binding = scenario_binding(tests_root)
+    # 同じ組に、広い行と細かい行の両方を置く
+    binding["placements"][("domain", "unit", "invariantScenarios")] = str(tmp_path / "model")
+
+    result = _engine().run(documents_root=str(docs), tests_root=str(tests_root),
+                           binding=binding)
+
+    expected = result.value["missing_test_file"][0]["expectedPath"]
+    assert expected == str(tmp_path / "model" / "test_agg_thing.py"), expected
+    assert str(tests_root) not in expected

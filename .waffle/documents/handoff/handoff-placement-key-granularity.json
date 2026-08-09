@@ -1,0 +1,241 @@
+{
+  "documentId": "handoff-placement-key-granularity",
+  "documentType": "Handoff",
+  "schemaRef": "HandoffSchema/v2",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "テストの置き場所を、シナリオ種別まで書き分けられるようにする"
+    },
+    "specRef": {
+      "blockType": "SpecRef",
+      "title": "引き継ぎ元spec",
+      "specRef": "uc-check-scenario-drift"
+    },
+    "designViewpoints": {
+      "blockType": "DesignViewpoints",
+      "title": "設計観点",
+      "items": [
+        {
+          "advisor": "（利用者の判断）",
+          "viewpoint": "置き方の呼び名は、機械が読むものではない",
+          "consideration": "規約を書く人が、その言語とアーキテクチャに合う置き場所を書けば足りる。呼び名は書いた場所の形を言い直しているだけで、読まなくても正しく動く。6つの呼び名のうち5つはこれに当たる。"
+        },
+        {
+          "advisor": "（利用者の判断）",
+          "viewpoint": "強制されるものと、慣習で選ばれるものを混ぜない",
+          "consideration": "テストを実装の隣に置くかどうかは、言語が強制する場合と道具の慣習である場合がある。強制されないものは置き場所を素直に書く。この線引きで、TypeScriptは置き場所を書く側になった。"
+        },
+        {
+          "advisor": "（実測）",
+          "viewpoint": "残る違いは「別のファイルが存在しない」形だけ",
+          "consideration": "テストが実装ファイルの中にある言語では、書くべきディレクトリが存在しない。これは置き場所の書き方の問題ではなく、検査が「1つの仕様に1つのテストファイルが対応する」という前提を持てなくなるという構造の違い。別の作業として、その言語の実物を手元に置いてから設計する。"
+        },
+        {
+          "advisor": "tech-lead-advisor",
+          "viewpoint": "置き場所の家を動かさない",
+          "consideration": "配置の宣言は、シナリオに紐づかないテスト（契約テスト等）も持っている。種別ごとの宣言へ作り変えると、それらの居場所が無くなる。よって家はそのままにして、必要な行だけ鍵を細くする。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "実装しない形が黙って通らないようにする",
+          "consideration": "宣言できる語彙に、実装が対応していない値が残ると、宣言されたときに黙って別の解釈へ倒れる。呼び名を取り除いたことで、この危険自体が消えた（読む値が無くなったため）。"
+        }
+      ]
+    },
+    "implementationViewpoints": {
+      "blockType": "ImplementationViewpoints",
+      "title": "実装観点",
+      "items": [
+        {
+          "advisor": "（設計）",
+          "viewpoint": "引き方は、細かい行を先に見て、無ければ広い行へ落ちる",
+          "consideration": "種別を指定した行があればそれを使い、無ければ種別を指定していない行を使う。指定していない行しか無い規約（いまのPython/TypeScript）は1文字も変わらない。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "合格条件は、導出されたパスの集合が変わらないこと",
+          "consideration": "この変更は既存の規約の読み方を変えない。よって Python と TypeScript の導出結果は変更前と完全に一致するはず。件数ではなく集合で比べる。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "viewpoint": "細かい行が実際に優先されることを、別に確かめる",
+          "consideration": "既存の規約には細かい行が1つも無いので、集合の一致だけでは新しい規則が働いていることを示せない。同じ組に対して細かい行と広い行の両方を持つ規約を作り、細かい行が勝つことを確かめる筋書きが要る。"
+        },
+        {
+          "advisor": "（実測）",
+          "viewpoint": "置き方の呼び名は必須の欄だったので、版を上げた",
+          "consideration": "必須プロパティの除去は後方互換の検査が止める。止まるべきものが止まったので版を上げ、13の規約を運んだ。"
+        }
+      ]
+    },
+    "constraints": {
+      "blockType": "Constraints",
+      "title": "既知の制約・トレードオフ",
+      "items": [
+        "既存の規約の読み方を変えない。導出されたパスの集合は変更前と完全に一致すること。",
+        "テストが実装ファイルの中にある形は、この作業では実装しない。その言語の実物を手元に置いてから別に設計する。",
+        "置き場所の宣言の家を動かさない。シナリオに紐づかないテストの居場所を奪わない。"
+      ]
+    },
+    "completionImage": {
+      "blockType": "CompletionImage",
+      "title": "完成イメージ",
+      "layers": [
+        {
+          "label": "宣言",
+          "description": "規約が、テストの置き場所を書く。必要な行だけ種別まで細かくできる。",
+          "nodes": [
+            {
+              "id": "place",
+              "title": "テストの配置",
+              "sub": "層・テスト種別・（必要なら）シナリオ種別 → 場所",
+              "status": "existing"
+            },
+            {
+              "id": "bind",
+              "title": "シナリオの束ね方",
+              "sub": "シナリオ種別 → 層とテスト種別",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "解決",
+          "description": "宣言を読み、種別まで含めた鍵で持つ。",
+          "nodes": [
+            {
+              "id": "resolve",
+              "title": "規約の解決",
+              "sub": "細かい行と広い行を、両方そのまま持つ",
+              "status": "existing"
+            }
+          ]
+        },
+        {
+          "label": "検査",
+          "description": "細かい行を先に見て、無ければ広い行へ落ちる。置き方の呼び名は知らない。",
+          "nodes": [
+            {
+              "id": "dir",
+              "title": "置き場所の導出",
+              "sub": "種別を指定した行が優先される",
+              "status": "existing"
+            },
+            {
+              "id": "name",
+              "title": "名前の導出",
+              "sub": "名づけの宣言から組み立てる（変更なし）",
+              "status": "existing"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "bind",
+          "to": "resolve",
+          "kind": "dependency",
+          "label": "種別から層とテスト種別を渡す"
+        },
+        {
+          "from": "place",
+          "to": "resolve",
+          "kind": "dependency",
+          "label": "場所を渡す"
+        },
+        {
+          "from": "resolve",
+          "to": "dir",
+          "kind": "dependency",
+          "label": "解決済みの宣言だけを渡す"
+        },
+        {
+          "from": "dir",
+          "to": "name",
+          "kind": "dependency",
+          "label": "場所が決まってから名前を組み立てる"
+        }
+      ]
+    },
+    "handoffKind": {
+      "blockType": "HandoffKind",
+      "value": "specToImplementation"
+    },
+    "usageExamples": {
+      "blockType": "UsageExamples",
+      "title": "使われ方（実際の呼び出し例）",
+      "items": [
+        "書き分けない言語: 層とテスト種別だけを書く。いまの規約はすべてこの形",
+        "書き分ける言語: 同じ層・同じテスト種別に対して、集約のテストと業務サービスのテストを別の場所へ書く",
+        "鏡写しにする言語: 鏡写しになった場所を、そのまま置き場所として書く"
+      ]
+    },
+    "description": {
+      "blockType": "Description",
+      "title": "概要",
+      "text": "このHandoffが担うユースケース: uc-check-scenario-drift。テストをどこに置くかは規約が宣言し、検査はそれを強制する。ところが宣言の鍵が「層とテスト種別」までなので、同じ組に属しながら別の場所へ置かれる種別を書き分けられない。テストを実装と同じディレクトリに置く言語では、集約のテストと業務サービスのテストが別のディレクトリに居るため、この粒度では片方しか書けない。鍵をシナリオ種別まで細かくできるようにする。あわせて、置き方の呼び名（層を第一階層にする・鏡写しにする・実装と同居する 等）を取り除く。書いた場所の形につけた名前にすぎず、機械が読む必要が無い。"
+    },
+    "expectedScope": {
+      "blockType": "ExpectedScope",
+      "title": "対象範囲の見込み",
+      "items": [
+        {
+          "path": "src/waffle/domain/services/scenario_drift.py",
+          "reason": "置き場所の引き方に、種別を指定した行を優先する規則を入れる"
+        },
+        {
+          "path": "src/waffle/application/services/stack_resolution.py",
+          "reason": "配置の宣言を解決するとき、種別まで含めた鍵で持つ"
+        },
+        {
+          "path": "tests/domain/unit/test_scenario_drift.py",
+          "reason": "細かい行が広い行より優先されることを、境界として固定する"
+        },
+        {
+          "path": "tests/application/integration/test_check_scenario_drift.py",
+          "reason": "仕様の筋書きに対応する統合テストを足す"
+        }
+      ]
+    },
+    "reviewStatus": {
+      "blockType": "ReviewStatus",
+      "title": "レビュー状況",
+      "requiredAdvisors": [
+        "ddd-advisor",
+        "tech-lead-advisor",
+        "qa-advisor"
+      ],
+      "findings": [
+        {
+          "advisor": "（利用者の訂正）",
+          "refBlock": "designViewpoints",
+          "refIndex": 0,
+          "resolutionStatus": "resolved",
+          "note": "置き方の呼び名を6つとも実装する計画だったが、5つは書いた場所の形につけた名前にすぎず、機械が読む必要が無いと指摘された。実装対象が消えた。"
+        },
+        {
+          "advisor": "（利用者の訂正）",
+          "refBlock": "designViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "open",
+          "note": "テストが実装ファイルの中にある形は、この作業では実装しない。対象言語が要求するので保留ではなく、別の作業として必ず行う。"
+        },
+        {
+          "advisor": "qa-advisor",
+          "refBlock": "implementationViewpoints",
+          "refIndex": 2,
+          "resolutionStatus": "open",
+          "note": "細かい行を実際に使う規約が、いまのリポジトリに1つも無い。筋書きで働きを確かめるが、実物での検証は対象言語の規約が現れるまで待つ。"
+        }
+      ],
+      "completionImageConfirmedBy": {
+        "confirmed": false,
+        "confirmedBy": "",
+        "confirmedAt": "",
+        "note": "提示待ち"
+      }
+    }
+  },
+  "tags": []
+}

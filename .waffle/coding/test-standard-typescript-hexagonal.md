@@ -3,7 +3,7 @@ id: "test-standard-typescript-hexagonal"
 type: "test-standard"
 title: "TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-typescript-hexagonal"
 description: "TypeScript/ヘキサゴナル構成のテスト方針（テスト種別・層ごとの戦略）を定める。"
-schemaRef: "CodingSchema/v6"
+schemaRef: "CodingSchema/v7"
 ---
 
 # TypeScript/ヘキサゴナル構成のテスト方針を定めるTest Standard：test-standard-typescript-hexagonal
@@ -112,8 +112,6 @@ it("在庫不足なら失敗する", () => {
 ---
 
 ## テスト対象別の配置
-
-- **置き方**: type-first
 
 | レイヤー | テスト種別 | 配置 | 置き方（個別） | 接尾辞 | 補足 |
 |---|---|---|---|---|---|

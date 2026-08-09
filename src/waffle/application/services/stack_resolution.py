@@ -103,7 +103,10 @@ def resolve_scenario_binding(documents: DocumentRepository, architecture_ref: st
     for row in content.get("placementByTarget", {}).get("items", []):
         path = row.get("path")
         if path:
-            placements[(row.get("layer"), row.get("testType"))] = path.rstrip("/")
+            # シナリオ種別まで指定した行と、指定していない行を区別して持つ。
+            # 同じ組に属しながら別の場所へ置かれる種別を書き分けられるようにする
+            key = (row.get("layer"), row.get("testType"), row.get("block") or None)
+            placements[key] = path.rstrip("/")
     standard_naming = _find_by_kind(coding_documents, "coding-standard", stack) or {}
     tech_stack = _find_by_kind(coding_documents, "tech-stack", stack) or {}
     language_by_suffix = {

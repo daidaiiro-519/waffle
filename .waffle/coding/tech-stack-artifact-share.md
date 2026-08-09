@@ -4,7 +4,7 @@ type: "tech-stack"
 title: "artifact-shareが採用する技術要素を定めるTech Stack仕様：tech-stack-artifact-share"
 description: "artifact-shareがAWS上で採用する技術要素と、その選定理由を定める。閲覧の面はCloudFront Functionsという実行環境がJavaScriptを強制するため、1つのプロダクトが2つのランタイムを持つ。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v6"
+schemaRef: "CodingSchema/v7"
 ---
 
 # artifact-shareが採用する技術要素を定めるTech Stack仕様：tech-stack-artifact-share

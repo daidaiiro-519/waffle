@@ -4,7 +4,7 @@ type: "tool-integration"
 title: "Claude Code Hooksが要求する成果物形式・配線契約：tool-integration-claude-code-hooks"
 description: "Claude Code Hooksという仕組み自体が要求する、成果物（Hookスクリプト）の入出力契約とsettings.jsonへの配線方法を定める。個々のHookが何を検知しどう振る舞うかはHookSchemaの責務であり、ここでは扱わない。"
 tags: ["tier:platform"]
-schemaRef: "CodingSchema/v6"
+schemaRef: "CodingSchema/v7"
 ---
 
 # Claude Code Hooksが要求する成果物形式・配線契約：tool-integration-claude-code-hooks

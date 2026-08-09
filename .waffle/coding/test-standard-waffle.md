@@ -3,7 +3,7 @@ id: "test-standard-waffle"
 type: "test-standard"
 title: "Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle"
 description: "Waffle自身のunit/integration/acceptance/contractという4層テスト構成の方針を定める。"
-schemaRef: "CodingSchema/v6"
+schemaRef: "CodingSchema/v7"
 ---
 
 # Waffle自身のテスト方針（4層テスト構成）を定めるTest Standard：test-standard-waffle
@@ -115,8 +115,6 @@ def test_suspend_blocks_viewing():
 ---
 
 ## テスト対象別の配置
-
-- **置き方**: layer-first
 
 | レイヤー | テスト種別 | 配置 | 置き方（個別） | 接尾辞 | 補足 |
 |---|---|---|---|---|---|

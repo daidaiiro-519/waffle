@@ -129,10 +129,11 @@ def scenario_binding(tests_root) -> dict:
             {"block": "guaranteeScenarios", "layer": "application", "testType": "integration"},
             {"block": "acceptanceScenarios", "layer": "application", "testType": "acceptance"},
         ],
+        # 鍵は（層・テスト種別・シナリオ種別）。種別を指定しない行は None を置く
         "placements": {
-            ("domain", "unit"): f"{root}/domain/unit",
-            ("application", "integration"): f"{root}/application/integration",
-            ("application", "acceptance"): f"{root}/application/acceptance",
+            ("domain", "unit", None): f"{root}/domain/unit",
+            ("application", "integration", None): f"{root}/application/integration",
+            ("application", "acceptance", None): f"{root}/application/acceptance",
         },
         # テストファイルの名前の作り方も規約が宣言する。要らない欄には
         # 空を宣言する（未宣言と区別するため、欄そのものは必ず置く）

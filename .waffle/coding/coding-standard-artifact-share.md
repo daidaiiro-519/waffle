@@ -4,7 +4,7 @@ type: "coding-standard"
 title: "artifact-shareのコーディング規約を定めるCoding Standard：coding-standard-artifact-share"
 description: "artifact-shareのコーディング規約（命名・スタイル・docstring）を定める。2つのランタイムを持つため、表記は主ランタイム（Python）を基準にし、エッジ側は言語の慣習に従う。"
 tags: ["tier:backend"]
-schemaRef: "CodingSchema/v6"
+schemaRef: "CodingSchema/v7"
 ---
 
 # artifact-shareのコーディング規約を定めるCoding Standard：coding-standard-artifact-share

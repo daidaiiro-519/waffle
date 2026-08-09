@@ -44,8 +44,20 @@ def expected_test_dir(binding: dict, block: str) -> str | None:
     placements = binding.get("placements", {})
     for row in binding.get("blockPlacement", []):
         if row.get("block") == block:
-            return placements.get((row.get("layer"), row.get("testType")))
+            return _declared_path(placements, row.get("layer"), row.get("testType"), block)
     return None
+
+
+def _declared_path(placements: dict, layer: str, test_type: str, block: str) -> str | None:
+    """層とテスト種別の組に対して、規約が宣言した置き場所を返す。
+
+    シナリオ種別まで指定した行があればそれを使い、無ければ種別を指定して
+    いない行を使う。同じ組に属しながら別の場所へ置かれる種別（テストを実装と
+    同じディレクトリに置く言語では、集約と業務サービスが別の場所に居る）を
+    書き分けられるようにするため、細かい行を先に見る。
+    """
+    return (placements.get((layer, test_type, block))
+            or placements.get((layer, test_type, None)))
 
 
 REQUIRED_NAMING_FIELDS = ("derivedFrom", "strip", "prefix", "case", "infix", "suffix")
@@ -175,7 +187,8 @@ def relevant_scenario_block_keys(test_file_path: str, binding: dict) -> tuple[st
     placements = binding.get("placements", {})
     matched = tuple(
         row["block"] for row in binding.get("blockPlacement", [])
-        if (path := placements.get((row.get("layer"), row.get("testType"))))
+        if (path := _declared_path(placements, row.get("layer"),
+                                   row.get("testType"), row["block"]))
         and path in test_file_path)
     return matched or _SCENARIO_BLOCK_KEYS
 

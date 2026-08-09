@@ -145,7 +145,7 @@ def test_unplaced_scenario_block_is_reported(tmp_path):
     docs = _spec_tree(tmp_path)
     tests_root = tmp_path / "t"
     binding = scenario_binding(tests_root)
-    del binding["placements"][("application", "acceptance")]
+    del binding["placements"][("application", "acceptance", None)]
 
     result = _engine().run(documents_root=str(docs), tests_root=str(tests_root),
                            binding=binding)
