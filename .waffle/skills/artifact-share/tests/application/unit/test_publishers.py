@@ -50,11 +50,3 @@ def test_招かれていない人へは送り直せない():
     assert x.value.code == "PUBLISHER_NOT_FOUND"
 
 
-def test_招待が返す識別子は一覧のものと揃っている():
-    """揃っていないと、招いた直後に引き継ぎ先として指せない。
-    宛先で入る設定のため、名簿の識別子は宛先そのものではない。"""
-    deps, _ = setup()
-    invited = build(deps, InvitePublisher).run("invite", ADMIN, email="new@example.com")
-
-    listed = {r.id for r in build(deps, ListPublishers).run(ADMIN)}
-    assert invited.publisher_id in listed

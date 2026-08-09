@@ -175,3 +175,22 @@ def test_公開を止めているものも並ぶ():
     rows = _rows(deps)
     assert [row.artifact_id for row in rows] == [r.artifact_id]
     assert rows[0].status == "SUSPENDED"
+
+
+def test_差し替えの区切りはコメントの件数に数えない():
+    """
+    Scenario: 差し替えの区切りはコメントの件数に数えない
+      Given 共有アーティファクトAに2件のコメントがあり、一度差し替えられている
+      When 投稿者Xが見渡しを求める
+      Then 添えられる反応の件数は2である
+
+    区切りは印であって、誰かの反応ではない。
+    """
+    deps, r = setup()
+    _comment(deps, r.artifact_id, 1_700_000_010, "田中")
+    _comment(deps, r.artifact_id, 1_700_000_020, "佐藤")
+
+    build(deps, ReplaceArtifactContent).run(
+        ME, r.artifact_id, HTML.replace("本文", "直した"))
+
+    assert _rows(deps)[0].comments == 2

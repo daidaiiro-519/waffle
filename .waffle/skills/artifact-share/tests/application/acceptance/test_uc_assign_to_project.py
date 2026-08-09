@@ -14,6 +14,8 @@ from manage_setup import (
     HTML, ME, OTHER, SOMEONE_ELSE, meta_of, project, with_project,
 )
 from adapters.outbound.kvs_view_gate import MEMBERSHIP_SEPARATOR
+from application.usecases.create_project import CreateProject
+from domain.entities.shared_artifact import MAX_PROJECTS
 from application.usecases.assign_artifact_to_project import AssignArtifactToProject
 from application.usecases.control_project_access import ControlProjectAccess
 from application.usecases.replace_artifact_content import ReplaceArtifactContent
@@ -185,3 +187,29 @@ def test_他人の共有アーティファクトは出し入れできない():
         _assign(deps, SOMEONE_ELSE, r.artifact_id, pid)
 
     assert x.value.code == "ARTIFACT_NOT_FOUND"
+
+
+def test_上限を超えてプロジェクトへ加えられない():
+    """
+    Scenario: 上限を超えてプロジェクトへ加えられない
+      Given 共有アーティファクトAが上限の数だけプロジェクトに入っている
+      When Aをもう1つのプロジェクトへ加えようとする
+      Then TOO_MANY_PROJECTS として拒まれる
+
+    閲覧の面は先頭から決まった数しか見ない。書き手が黙って超えると、
+    投稿者には成功が返り、閲覧者だけが開けない状態になる。
+    """
+    deps, r, _ = with_project("SHARED")
+    ids = []
+    for i in range(MAX_PROJECTS + 1):
+        p = build(deps, CreateProject).run(ME, f"まとめ{i}", "SHARED")
+        ids.append(p.project_id)
+
+    for pid in ids[:MAX_PROJECTS]:
+        _assign(deps, ME, r.artifact_id, pid)
+
+    with pytest.raises(ManageError) as x:
+        _assign(deps, ME, r.artifact_id, ids[-1])
+
+    assert x.value.code == "TOO_MANY_PROJECTS"
+    assert len(meta_of(deps, r.artifact_id)["projects"]) == MAX_PROJECTS

@@ -128,3 +128,20 @@ def test_管理者でも他人の中身は差し替えられない():
     assert x.value.code == "NOT_THE_PUBLISHER"
     assert deps.store.get(f"p/{r.artifact_id}/content.html") == before
     assert len(_entries(deps, r.artifact_id)) == 1
+
+
+def test_空の中身には差し替えられない():
+    """
+    Scenario: 空の中身には差し替えられない
+      Given 共有アーティファクトAが公開されている
+      When 空の中身で差し替えようとする
+      Then EMPTY_CONTENT として拒まれる
+      And それまでの中身は変わらない
+    """
+    deps, r = setup()
+
+    with pytest.raises(ManageError) as x:
+        build(deps, ReplaceArtifactContent).run(ME, r.artifact_id, "   ")
+
+    assert x.value.code == "EMPTY_CONTENT"
+    assert deps.store.get(f"p/{r.artifact_id}/content.html") == HTML

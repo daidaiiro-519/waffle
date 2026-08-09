@@ -66,25 +66,5 @@ def test_業務の語彙で返り欠けが無い():
     assert c.id == "1700000001-abcd1234"
 
 
-def test_管理者は他人のものも読める():
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "田中", "本文")
-    assert len(build(deps, ReadComments).run(ADMIN, aid).comments) == 1
-
-
-def test_読めない記録があっても残りが返る():
-    """1件の不具合で、その共有アーティファクトの反応がすべて見えなくなるのを避ける"""
-    deps, aid = setup()
-    post(deps, aid, 1700000001, "田中", "読める")
-    deps.store.put(f"comments/{aid}/1700000002-broken.json", "{壊れている", "application/json")
-    post(deps, aid, 1700000003, "佐藤", "これも読める")
-
-    got = build(deps, ReadComments).run(ME, aid)
-
-    assert [c.author for c in got.comments] == ["田中", "佐藤"]
-    # 黙って落とすと、投稿者が「これで全部だ」と思い込む
-    assert got.unreadable == 1
-
-
 # ── 取り出す ────────────────────────────────────────────
 

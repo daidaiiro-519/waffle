@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from manage_setup import HTML, ME, SOMEONE_ELSE, setup
+from manage_setup import ADMIN, HTML, ME, SOMEONE_ELSE, setup
 from application.usecases.read_comments import ReadComments
 from application.usecases.replace_artifact_content import ReplaceArtifactContent
 from application.usecases.suspend_artifact import SuspendArtifact
@@ -145,3 +145,40 @@ def test_読んでも何も変わらない():
     assert second == first
     assert json.dumps(deps.store.objects, ensure_ascii=False,
                       sort_keys=True) == objects_before
+
+
+def test_管理者は他人のものも読める():
+    """
+    Scenario: 管理者は他人のものも読める
+      Given Aの投稿者はXである
+      When 管理者がAのコメントを読み出す
+      Then 寄せられたコメントが返る
+
+    拒む側の筋書きは既にあるが、許す側が無かった。
+    """
+    deps, r = setup()
+    _post(deps, r.artifact_id, 1_700_000_010, "田中", "意見")
+
+    assert len(_read(deps, ADMIN, r.artifact_id)) == 1
+
+
+def test_読めない記録があっても残りが返る():
+    """
+    Scenario: 読めない記録があっても残りが返る
+      Given Aに3件の記録があり、うち1件が読めない状態になっている
+      When Xが読み出しを求める
+      Then 読める2件が返る
+      And 読めなかった件数が1と伝わる
+
+    黙って落とすと、投稿者は「これで全部だ」と思い込む。
+    """
+    deps, r = setup()
+    _post(deps, r.artifact_id, 1_700_000_010, "田中", "読める")
+    deps.store.put(f"comments/{r.artifact_id}/1700000020-broken.json",
+                   "{壊れている", "application/json")
+    _post(deps, r.artifact_id, 1_700_000_030, "佐藤", "これも読める")
+
+    got = ReadComments(deps.artifacts, deps.comments).run(ME, r.artifact_id)
+
+    assert [c.author for c in got.comments] == ["田中", "佐藤"]
+    assert got.unreadable == 1

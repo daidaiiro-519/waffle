@@ -38,13 +38,6 @@ SOMEONE_ELSE = Caller("publisher-2")
 
 
 
-def test_空の中身には差し替えられない():
-    deps, r = setup()
-    with pytest.raises(ManageError) as x:
-        build(deps, ReplaceArtifactContent).run(ME, r.artifact_id, "   ")
-    assert x.value.code == "EMPTY_CONTENT"
-
-
 # ── 閲覧トークン ────────────────────────────────────────
 
 def test_公開すると最初の1本が渡される():
@@ -65,14 +58,6 @@ def test_無いプロジェクトへは加えられない():
     with pytest.raises(ManageError) as x:
         build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, "nope")
     assert x.value.code == "PROJECT_NOT_FOUND"
-
-
-def test_差し替えの区切りはコメントの件数に数えない():
-    """区切りは印であって、誰かの反応ではない"""
-    deps, r = setup()
-    build(deps, ReplaceArtifactContent).run(ME, r.artifact_id, HTML.replace("本文", "直した"))
-
-    assert build(deps, ListMyArtifacts).run(ME).artifacts[0].comments == 0
 
 
 # ── 共有と個人で出し入れの可否が変わる ──────────────────
@@ -118,23 +103,5 @@ def test_差し替えると入っている全プロジェクトの一覧が書�
 
     listing = json.loads(deps.store.get(f"proj/{pid}/index.json"))
     assert listing["artifacts"][0]["description"] == "改訂した理由"
-
-
-def test_上限を超えてプロジェクトへ加えられない():
-    """閲覧ゲートは先頭3件までしか見ない。書き手が黙って超えると、
-    投稿者には成功が返り、閲覧者だけが開けない状態になる。"""
-    deps, r, _ = with_project("SHARED")
-    ids = []
-    for i in range(MAX_PROJECTS + 1):
-        p = build(deps, CreateProject).run(ME, f"まとめ{i}", "SHARED")
-        ids.append(p.project_id)
-
-    for pid in ids[:MAX_PROJECTS]:
-        build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, pid)
-
-    with pytest.raises(ManageError) as x:
-        build(deps, AssignArtifactToProject).run("assign", ME, r.artifact_id, ids[-1])
-    assert x.value.code == "TOO_MANY_PROJECTS"
-    assert len(meta_of(deps, r.artifact_id)["projects"]) == MAX_PROJECTS
 
 

@@ -36,13 +36,6 @@ def test_一覧ページの雛形と中身が置かれる():
     assert listing_of(deps, r.project_id)["name"] == "検索基盤リニューアル"
 
 
-def test_想定外の共有の別では作らない():
-    deps = setup()
-    with pytest.raises(ProjectError) as x:
-        build(deps, CreateProject).run(X, "まとめ", "EVERYONE")
-    assert x.value.code == "SCOPE_REQUIRED"
-
-
 # ── 見せ方を変える ──────────────────────────────────────
 
 def test_作ると最初の1本が渡される():

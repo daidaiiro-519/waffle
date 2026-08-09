@@ -128,3 +128,18 @@ def test_共有の別はあとから変えられない():
 def _project(project_id):
     from domain.value_objects.view_subject import ViewSubject
     return ViewSubject.project(project_id)
+
+
+def test_想定外の共有の別では作らない():
+    """
+    Scenario: 想定外の共有の別では作らない
+      Given 個人でも共有でもない範囲が示されている
+      When プロジェクトを作ろうとする
+      Then SCOPE_REQUIRED として拒まれる
+    """
+    deps = setup()
+
+    with pytest.raises(ProjectError) as x:
+        build(deps, CreateProject).run(X, "まとめ", "EVERYONE")
+
+    assert x.value.code == "SCOPE_REQUIRED"
