@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-criteria-coverage",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v9",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -79,7 +79,7 @@
         "返り値は unreferenced（どのシナリオからも指されていない受け入れ基準）を持つ",
         "返り値は dangling（実在しない識別子を指しているシナリオと、その識別子）を持つ",
         "返り値は duplicate_ids（同一文書内で重複している識別子）を持つ",
-        "返り値は unlinked_scenarios（満たす条件を1件も挙げていないシナリオ）を持つ",
+        "返り値は unlinked_scenarios（満たす基準を1件も挙げていないシナリオ）を持つ",
         "返り値は uncovered_by_omission（満たす基準の欄そのものが未記入のシナリオ）を持つ。未記入を黙って対象から外すと、宣言の欠落と検査に通ったことが同じ見た目になる",
         "結び付きの有無だけを判定し、シナリオが指した条件を実際に確かめているかは判定しない"
       ]
@@ -88,13 +88,34 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When ある受け入れ基準がどのシナリオからも指されていないとき、システムはその基準を unreferenced に含める shall。",
-        "When シナリオが同一文書内に実在しない識別子を指しているとき、システムはその組を dangling に含める shall。",
-        "When 同一文書内で受け入れ基準の識別子が重複しているとき、システムはその識別子を duplicate_ids に含める shall。",
-        "When シナリオが満たす条件を1件も挙げていないとき、システムはそのシナリオを unlinked_scenarios に含める shall。",
-        "When シナリオが満たす基準の欄そのものを持たないとき、システムはそのシナリオを uncovered_by_omission に含める shall。",
-        "While すべての受け入れ基準がいずれかのシナリオから指されているとき、システムは unreferenced を空配列で返す shall。",
-        "While 走査範囲が指定されたとき、システムは配下のすべての仕様文書を対象にする shall。"
+        {
+          "id": "reports-unreferenced",
+          "text": "When ある受け入れ基準がどのシナリオからも指されていないとき、システムはその基準を unreferenced に含める shall。"
+        },
+        {
+          "id": "reports-dangling",
+          "text": "When シナリオが同一文書内に実在しない識別子を指しているとき、システムはその組を dangling に含める shall。"
+        },
+        {
+          "id": "reports-duplicate-ids",
+          "text": "When 同一文書内で受け入れ基準の識別子が重複しているとき、システムはその識別子を duplicate_ids に含める shall。"
+        },
+        {
+          "id": "reports-unlinked-scenarios",
+          "text": "When シナリオが満たす基準を1件も挙げていないとき、システムはそのシナリオを unlinked_scenarios に含める shall。"
+        },
+        {
+          "id": "reports-omission",
+          "text": "When シナリオが満たす基準の欄そのものを持たないとき、システムはそのシナリオを uncovered_by_omission に含める shall。"
+        },
+        {
+          "id": "empty-when-complete",
+          "text": "While すべての受け入れ基準がいずれかのシナリオから指されているとき、システムは unreferenced を空配列で返す shall。"
+        },
+        {
+          "id": "scans-root",
+          "text": "While 走査範囲が指定されたとき、システムは配下のすべての仕様文書を対象にする shall。"
+        }
       ]
     },
     "errors": {
@@ -115,53 +136,67 @@
       "background": "",
       "scenarios": [
         {
-          "name": "どのシナリオからも指されていない条件を挙げる",
+          "name": "どのシナリオからも指されていない基準を挙げる",
           "category": "異常系",
-          "viewpoint": "宣言の突き合わせ：条件側から見た欠けを検出できるか",
-          "gherkin": "Scenario: どのシナリオからも指されていない条件を挙げる\n  Given 受け入れ基準を3件持ち、そのうち2件だけを指すシナリオを持つ仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then 指されていない1件が unreferenced に現れる",
-          "covers": ""
+          "viewpoint": "宣言の突き合わせ：基準の側から見た欠けを検出できるか",
+          "gherkin": "Scenario: どのシナリオからも指されていない基準を挙げる\n  Given 受け入れ基準を3件持ち、そのうち2件だけを指すシナリオを持つ仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then 指されていない1件が unreferenced に現れる",
+          "satisfies": [
+            "reports-unreferenced"
+          ]
         },
         {
           "name": "実在しない識別子を指しているシナリオを挙げる",
           "category": "異常系",
           "viewpoint": "参照の健全性：指す先が在るかを確かめられるか",
           "gherkin": "Scenario: 実在しない識別子を指しているシナリオを挙げる\n  Given 同一文書内に無い識別子を指すシナリオを持つ仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then そのシナリオと識別子の組が dangling に現れる",
-          "covers": ""
+          "satisfies": [
+            "reports-dangling"
+          ]
         },
         {
           "name": "重複した識別子を挙げる",
           "category": "異常系",
           "viewpoint": "参照の健全性：指す先が一意に定まるか",
           "gherkin": "Scenario: 重複した識別子を挙げる\n  Given 同じ識別子を持つ受け入れ基準を2件持つ仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then その識別子が duplicate_ids に現れる",
-          "covers": ""
+          "satisfies": [
+            "reports-duplicate-ids"
+          ]
         },
         {
           "name": "どの基準も挙げていないシナリオを挙げる",
           "category": "異常系",
-          "viewpoint": "宣言の突き合わせ：シナリオ側から見た欠けを検出できるか",
-          "gherkin": "Scenario: どの基準も挙げていないシナリオを挙げる\n  Given 満たす条件を空で宣言したシナリオを持つ仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then そのシナリオが unlinked_scenarios に現れる",
-          "covers": ""
+          "viewpoint": "宣言の突き合わせ：シナリオの側から見た欠けを検出できるか",
+          "gherkin": "Scenario: どの基準も挙げていないシナリオを挙げる\n  Given 満たす基準を空で宣言したシナリオを持つ仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then そのシナリオが unlinked_scenarios に現れる",
+          "satisfies": [
+            "reports-unlinked-scenarios"
+          ]
         },
         {
           "name": "満たす基準の欄を持たないシナリオを挙げる",
           "category": "境界値",
           "viewpoint": "欠落と合格の区別：未記入を黙って対象外にしないか",
           "gherkin": "Scenario: 満たす基準の欄を持たないシナリオを挙げる\n  Given 満たす基準の欄そのものを持たないシナリオを持つ仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then そのシナリオが uncovered_by_omission に現れる\n  And unreferenced には現れない",
-          "covers": ""
+          "satisfies": [
+            "reports-omission"
+          ]
         },
         {
           "name": "すべて指されているときは欠けなしと判定する",
           "category": "正常系",
           "viewpoint": "宣言の突き合わせ：整合しているときに空で返るか",
           "gherkin": "Scenario: すべて指されているときは欠けなしと判定する\n  Given すべての受け入れ基準がいずれかのシナリオから指されている仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then unreferenced が空で返る\n  And dangling が空で返る",
-          "covers": ""
+          "satisfies": [
+            "empty-when-complete"
+          ]
         },
         {
           "name": "走査範囲を指定すると配下をまとめて確かめる",
           "category": "正常系",
           "viewpoint": "走査の範囲：複数の仕様文書を一度に対象にできるか",
           "gherkin": "Scenario: 走査範囲を指定すると配下をまとめて確かめる\n  Given 指されていない条件を持つ仕様文書が2件ある走査範囲\n  When その走査範囲で受け入れ基準にシナリオが付いているかを確かめる\n  Then 2件とも unreferenced に現れる",
-          "covers": ""
+          "satisfies": [
+            "scans-root"
+          ]
         }
       ]
     },
@@ -169,7 +204,10 @@
       "blockType": "OperationGuarantees",
       "title": "操作保証",
       "items": [
-        "When 対象のパスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        {
+          "id": "invalid-path",
+          "text": "When 対象のパスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        }
       ]
     },
     "guaranteeScenarios": {
@@ -182,7 +220,9 @@
           "category": "異常系",
           "viewpoint": "解決プロセスの契約：対象を取得できないときの扱い",
           "gherkin": "Scenario: 存在しないパスは受け付けない\n  Given 存在しないパス\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then INVALID_PATH エラーが返る",
-          "covers": ""
+          "satisfies": [
+            "invalid-path"
+          ]
         }
       ]
     },

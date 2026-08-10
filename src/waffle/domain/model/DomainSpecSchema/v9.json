@@ -1,0 +1,2653 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "DomainSpecSchema/v8",
+  "title": "DomainSpecSchema v4",
+  "description": "waffle の Spec 家族のうち、業務ロジック層（ドメイン層・DDD管轄）を扱う Spec 集約（UDD の核）。旧称 SpecSchema（spec は DDD より広い上位概念であり、UI層を扱う PresentationSpecSchema が別家族として存在するため改名）。specKind=bounded-context/subdomain/aggregate/usecase（DDD 語彙に整合）。content はドメイン語彙のみ（技術スタック/アーキ構成は CodingTemplate の担当）。集約=Commands/Invariants/Lifecycle、ユースケース=基本フロー(シーケンス)、整合の契約=TestScenarios(Gherkin)。描画は MD を正本とする（Google OKF 整合のため HTML は生成しない・HTML が要る場合は既存技術で MD から導出する viewer 側の責務）。 v3: usecase階層に「なぜこのusecaseが必要か」を書くUsecaseRationaleブロックを追加（SubdomainCategoryのrationaleと対称）。 v4: NameBlockのプロパティ名をname(ブロックキーと同名で不格好)からoperationNameに変更（このusecaseという操作のPascalCase名であることを明示。将来の実装engineクラス名導出の基準にもなる）。",
+  "x-render-target": {
+    "formats": [
+      "md"
+    ],
+    "path": {
+      "bounded-context": ".waffle/specs/{contextRef}/{documentId}.md",
+      "aggregate": ".waffle/specs/{contextRef}/aggregate/{documentId}.md",
+      "subdomain": ".waffle/specs/{contextRef}/subdomain/{documentId}/{documentId}.md",
+      "usecase": ".waffle/specs/{contextRef}/subdomain/{subdomainRef}/usecase/{documentId}.md"
+    }
+  },
+  "x-source-target": {
+    "bounded-context": ".waffle/documents/specs/{contextRef}/{documentId}.json",
+    "aggregate": ".waffle/documents/specs/{contextRef}/aggregate/{documentId}.json",
+    "subdomain": ".waffle/documents/specs/{contextRef}/subdomain/{documentId}/{documentId}.json",
+    "usecase": ".waffle/documents/specs/{contextRef}/subdomain/{subdomainRef}/usecase/{documentId}.json"
+  },
+  "x-lifecycle": {
+    "transitions": [
+      {
+        "from": null,
+        "to": "CREATED",
+        "command": "create"
+      },
+      {
+        "from": "CREATED",
+        "to": "VALIDATED",
+        "command": "validate"
+      },
+      {
+        "from": "VALIDATED",
+        "to": "VALIDATED",
+        "command": "validate"
+      },
+      {
+        "from": "RENDERED",
+        "to": "RENDERED",
+        "command": "validate"
+      },
+      {
+        "from": "VALIDATED",
+        "to": "RENDERED",
+        "command": "render"
+      },
+      {
+        "from": "VALIDATED",
+        "to": "SUPERSEDED",
+        "command": "supersede"
+      },
+      {
+        "from": "RENDERED",
+        "to": "SUPERSEDED",
+        "command": "supersede"
+      }
+    ]
+  },
+  "type": "object",
+  "required": [
+    "documentId",
+    "documentType",
+    "schemaRef",
+    "specKind",
+    "status",
+    "content"
+  ],
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "x-prompt-write": "この Spec を一意に識別する ID を kebab-case で。bounded-context は bc-、subdomain は sd-、aggregate は agg-、usecase は uc- 接頭辞を推奨。例: uc-place-order"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "DomainSpec"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "DomainSpecSchema/v9"
+    },
+    "specKind": {
+      "type": "string",
+      "enum": [
+        "bounded-context",
+        "subdomain",
+        "aggregate",
+        "usecase"
+      ],
+      "x-prompt-write": "DDDの階層で選ぶ。bounded-context=同じ言葉が通る境界(製品文脈・最外) / subdomain=その中の業務領域(中核/一般/補完・ユースケースの束) / aggregate=一貫性の単位(不変条件を持つ実体・名詞) / usecase=1つの操作(動詞)。迷ったら: 不変条件を持つ実体→aggregate、〜する操作→usecase、業務の括り→subdomain、文脈全体→bounded-context。"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "VALIDATED",
+        "RENDERED",
+        "SUPERSEDED"
+      ],
+      "x-prompt-write": "作成直後は CREATED。検証通過で VALIDATED、render 済で RENDERED、後続版に置換で SUPERSEDED。"
+    },
+    "subdomainRef": {
+      "type": "string",
+      "x-prompt-write": "usecase のみ: この操作が属するサブドメインの識別子。例: sd-order-management"
+    },
+    "aggregateRef": {
+      "type": "string",
+      "x-prompt-write": "usecase のみ: この操作が対象とする集約の識別子。アプリケーション層からドメイン層への依存を表す。"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-prompt-write": "この Spec を分類するタグ。例: [\"context:orders\"]"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "_index": {
+      "description": "waffle が x-prompt-query から自動生成する。AI は直接書かない。",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "blockType",
+              "prompt"
+            ],
+            "properties": {
+              "blockType": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "content": {
+      "type": "object"
+    },
+    "documentRole": {
+      "type": "string",
+      "enum": [
+        "instance",
+        "template"
+      ],
+      "default": "instance",
+      "description": "この文書が実体（instance）か、他プロジェクトで実体化されるための雛形（template）かを表す。documentTypeと直交する軸で、配置先の解決キーに含まれる。",
+      "x-prompt-write": "この文書が、そのまま使われる実体（instance）か、他プロジェクトへ持っていって値を埋めるための雛形（template）かを選んでください。値がプレースホルダーのまま置かれ、このリポジトリでは配置先を持たない文書だけが template です。省略すると instance になります。",
+      "x-prompt-query": "この文書が実体か雛形かを読みます。template の文書は配置先を持たないため、成果物が配置されていなくても未設定ではありません。逆に instance で配置先が空なら、そのdocumentTypeの宣言が漏れている合図です。"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "bounded-context"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/BoundedContextContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "subdomain"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/SubdomainContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "aggregate"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/AggregateContent"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "usecase"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/UsecaseContent"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "BoundedContextContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "ubiquitousLanguage",
+        "members"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "ubiquitousLanguage": {
+          "$ref": "#/$defs/UbiquitousLanguageBlock"
+        },
+        "members": {
+          "$ref": "#/$defs/MembersBlock"
+        },
+        "contextMap": {
+          "$ref": "#/$defs/ContextMapBlock"
+        },
+        "domainServices": {
+          "$ref": "#/$defs/DomainServicesBlock"
+        },
+        "domainServiceScenarios": {
+          "$ref": "#/$defs/DomainServiceScenariosBlock"
+        },
+        "boundedContext": {
+          "$ref": "#/$defs/BoundedContextBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "SubdomainContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "category",
+        "members",
+        "implementationGuidance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "category": {
+          "$ref": "#/$defs/SubdomainCategoryBlock"
+        },
+        "members": {
+          "$ref": "#/$defs/SubdomainMembersBlock"
+        },
+        "implementationGuidance": {
+          "$ref": "#/$defs/ImplementationGuidanceBlock"
+        },
+        "externalSolution": {
+          "$ref": "#/$defs/ExternalSolutionBlock"
+        },
+        "subdomain": {
+          "$ref": "#/$defs/SubdomainBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "AggregateContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "aggregateRoot",
+        "entities",
+        "invariants",
+        "commands"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "aggregateRoot": {
+          "$ref": "#/$defs/AggregateRootBlock"
+        },
+        "entities": {
+          "$ref": "#/$defs/EntitiesBlock"
+        },
+        "valueObjects": {
+          "$ref": "#/$defs/ValueObjectsBlock"
+        },
+        "invariants": {
+          "$ref": "#/$defs/InvariantsBlock"
+        },
+        "lifecycle": {
+          "$ref": "#/$defs/LifecycleBlock"
+        },
+        "commands": {
+          "$ref": "#/$defs/CommandsBlock"
+        },
+        "domainEvents": {
+          "$ref": "#/$defs/DomainEventsBlock"
+        },
+        "invariantScenarios": {
+          "$ref": "#/$defs/InvariantScenariosBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        }
+      }
+    },
+    "UsecaseContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "usecase",
+        "actorIntent",
+        "usecaseRationale",
+        "mainFlow",
+        "postconditions",
+        "acceptanceCriteria",
+        "acceptanceScenarios"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "usecase": {
+          "$ref": "#/$defs/UsecaseBlock"
+        },
+        "actorIntent": {
+          "$ref": "#/$defs/ActorIntentBlock"
+        },
+        "usecaseRationale": {
+          "$ref": "#/$defs/UsecaseRationaleBlock"
+        },
+        "mainFlow": {
+          "$ref": "#/$defs/MainFlowBlock"
+        },
+        "postconditions": {
+          "$ref": "#/$defs/PostconditionsBlock"
+        },
+        "acceptanceCriteria": {
+          "$ref": "#/$defs/AcceptanceCriteriaBlock"
+        },
+        "errors": {
+          "$ref": "#/$defs/ErrorsBlock"
+        },
+        "acceptanceScenarios": {
+          "$ref": "#/$defs/AcceptanceScenariosBlock"
+        },
+        "operationGuarantees": {
+          "$ref": "#/$defs/OperationGuaranteesBlock"
+        },
+        "guaranteeScenarios": {
+          "$ref": "#/$defs/GuaranteeScenariosBlock"
+        },
+        "operationIndex": {
+          "$ref": "#/$defs/OperationIndexBlock"
+        },
+        "externalActors": {
+          "$ref": "#/$defs/ExternalActorsBlock"
+        },
+        "preconditions": {
+          "$ref": "#/$defs/PreconditionsBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        },
+        "inputs": {
+          "$ref": "#/$defs/InputsBlock"
+        }
+      }
+    },
+    "TitleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title"
+      ],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-prompt-query": "まず何を扱う文書かを掴むために読みます。説明部分が識別子の言い換えになっていたら、この文書が何を扱うかがまだ決まっていない合図です。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Title"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": {
+            "bounded-context": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。末尾に「〜を行う境界づけられたコンテキスト」を含め、読んだだけでDDDのどれにあたるかがわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。",
+            "subdomain": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。末尾に「〜を担うサブドメイン」を含め、読んだだけでDDDのどれにあたるかがわかるようにしてください。識別子部分はこの文書自身の一意な識別子をそのまま使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。",
+            "aggregate": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。末尾に「〜を守る集約」を含め、読んだだけでDDDのどれにあたるかがわかるようにしてください。識別子部分はその集約のルートを表す正式名と同じ値を使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。",
+            "usecase": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの構成要素が何であるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。種別を表す語（〜を守る集約 等）は付けない。識別子部分はその操作を表す正式名と同じ値を使う（識別子は既に別の箇所が正であり、ここでは表示のためだけに引用する。実装と乖離しても他のフィールドのように機械的ドリフト検知の対象にならないため、識別子以外の実装レベルの詳細をここに書き込まない）。"
+          }
+        }
+      }
+    },
+    "SummaryBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "この Spec の概要を1〜2文で持ちます。人の即スキャンと AI の意図把握に使います。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Summary"
+        },
+        "title": {
+          "type": "string",
+          "const": "概要"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": {
+            "bounded-context": "論点ごとに列挙する（1〜2項目が目安）。この境界づけられたコンテキストが担う業務領域と、その境界（何を内側に含み、何を含まないか）を1〜2文で（ドメイン語彙のみ・技術用語禁止）。隣接する境界づけられたコンテキストとの違いが伝わるようにする。",
+            "subdomain": "論点ごとに列挙する（1〜2項目が目安）。このサブドメインが担う業務上の関心事を1〜2文で（ドメイン語彙のみ・技術用語禁止）。親となる境界づけられたコンテキストの中で、なぜこの単位に切り出されているかが伝わるようにする。",
+            "aggregate": "論点ごとに列挙する（1〜2項目が目安）。この集約が守る一貫性（不変条件）の中心が何かを1〜2文で（ドメイン語彙のみ・技術用語禁止）。個々のフィールドの説明ではなく、この集約が存在する理由（何を壊れた状態にしないためか）を書く。",
+            "usecase": "論点ごとに列挙する（1〜2項目が目安）。このusecaseが達成する業務上の操作を1〜2文で（ドメイン語彙のみ・技術用語禁止）。actorIntentが「誰が・何を達成したいか」を書く場所であるのに対し、ここはその操作自体を第三者向けに要約する場所（両者を混同しない）。どうやって実現するか（突き合わせの方式・参照するフィールド名・ファイル名の規則）は書かない——手段は基本フローと受け入れ基準が持つ。ここに手段を書くと、手段が変わったときに概要だけが古くなり、どの検知にも映らない（実際に、突き合わせのキーを誤って述べたまま残った）。"
+          },
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "UbiquitousLanguageBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "この文脈のユビキタス言語(用語→定義)を持ちます。AI の grounding・語彙統一に使います。この bc 内に閉じます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "term",
+              "header": "用語",
+              "code": true
+            },
+            {
+              "field": "definition",
+              "header": "定義"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "UbiquitousLanguage"
+        },
+        "title": {
+          "type": "string",
+          "const": "ユビキタス言語"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "この文脈の主要な用語と定義を網羅的に列挙。業務エキスパートと同じ言葉で（技術用語を混ぜない）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "term",
+              "definition"
+            ],
+            "properties": {
+              "term": {
+                "type": "string",
+                "x-prompt-write": "用語（この文脈での呼び名）。"
+              },
+              "definition": {
+                "type": "string",
+                "x-prompt-write": "その用語が指すものを1文で。個数や具体の列挙を書かない——数えたものが増減すると、定義のほうが古くなる（実際に「7種類のドリフト（…）」と数え上げた定義が、検知が増えて嘘になった）。何がそれであるかを述べ、どれだけあるかは述べない。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "MembersBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "この境界に何が属するかを読みます。ここに無いものは境界の外にあると読みます。ディスク上の実体と食い違うことがあるため、spec整合性の検査結果と併せて読んでください。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "kind",
+          "labelMap": {
+            "subdomain": "サブドメイン",
+            "aggregate": "集約",
+            "usecase": "業務ユースケース"
+          },
+          "each": [
+            {
+              "as": "list",
+              "from": "members"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Members"
+        },
+        "title": {
+          "type": "string",
+          "const": "構成要素"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "種別ごとに所属メンバーの id を列挙。",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "members"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "subdomain",
+                  "aggregate",
+                  "usecase"
+                ],
+                "x-prompt-write": "メンバーの種別。下のenum（subdomain/aggregate/usecase）から選ぶ。"
+              },
+              "members": {
+                "type": "array",
+                "x-prompt-write": "その種別のidを配列で列挙。",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ContextMapBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "他の境界との関わりを読みます。関係の種別が、こちら側の変更がどこまで届くかを決めます。空なら、この境界は他と直接やり取りしないという決定です。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "counterpart",
+              "header": "相手コンテキスト"
+            },
+            {
+              "field": "relationship",
+              "header": "関係"
+            },
+            {
+              "field": "content",
+              "header": "内容"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ContextMap"
+        },
+        "title": {
+          "type": "string",
+          "const": "文脈マップ"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "他 bc との関係を列挙。関係種別=パートナー/顧客・供給/従属/腐敗防止層/公開された言語 等。1 bc しか無ければ空。",
+          "items": {
+            "type": "object",
+            "required": [
+              "counterpart",
+              "relationship",
+              "content"
+            ],
+            "properties": {
+              "counterpart": {
+                "type": "string",
+                "x-prompt-write": "相手の bounded-context 名。"
+              },
+              "relationship": {
+                "type": "string",
+                "x-prompt-write": "関係種別（パートナー/顧客・供給/腐敗防止層 等）。"
+              },
+              "content": {
+                "type": "string",
+                "x-prompt-write": "他bounded-contextと何を連係するかを1文で（例: 注文確定イベントを配送コンテキストへ連携）"
+              }
+            }
+          }
+        }
+      }
+    },
+    "SubdomainCategoryBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "classification",
+        "rationale"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "実装にどれだけ手をかけるかを決めるために読みます。中核なら厚く、補完なら薄く。根拠の書かれていない分類は、後段の実装の厚みを支えられません。",
+      "x-render": [
+        {
+          "heading": "分類",
+          "as": "paragraph",
+          "from": "classification",
+          "labelMap": {
+            "core": "中核",
+            "supporting": "補完",
+            "generic": "一般"
+          }
+        },
+        {
+          "heading": "根拠",
+          "as": "list",
+          "from": "rationale"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "SubdomainCategory"
+        },
+        "title": {
+          "type": "string",
+          "const": "サブドメイン分類"
+        },
+        "classification": {
+          "type": "string",
+          "enum": [
+            "core",
+            "supporting",
+            "generic"
+          ],
+          "x-prompt-write": "中核=core / 補完=supporting / 一般=generic。競争優位を生むか・既製品があるかで判定。"
+        },
+        "rationale": {
+          "type": "array",
+          "x-prompt-write": "根拠を独立した論点ごとに列挙する。そのカテゴリーである根拠（差別化の有無）。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SubdomainMembersBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "この業務領域が何をするかを、属するユースケースの並びから読み取ります。並びが業務の流れとして繋がらないなら、領域の切り方を疑ってください。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "SubdomainMembers"
+        },
+        "title": {
+          "type": "string",
+          "const": "業務ユースケース一覧"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "この業務領域に属する usecase の id を列挙。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ImplementationGuidanceBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "実装の厚みを決めるために読みます。カテゴリーの分類と矛盾していないかを確かめてください。中核なのに薄い、補完なのに厚いという組み合わせは、どちらかが誤りです。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ImplementationGuidance"
+        },
+        "title": {
+          "type": "string",
+          "const": "詳細設計ガイド"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "実装方針を論点ごとに列挙する。実装方針を1〜2文で。中核=ドメインモデルで厚く/一般=既製ライブラリを薄く包む/補完=薄いトランザクションスクリプト。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ExternalSolutionBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "text"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "自前で作らず既製品に任せる範囲を読みます。一般の業務領域でのみ意味を持つため、中核の領域にこれが書かれていたら、分類か判断のどちらかを疑ってください。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ExternalSolution"
+        },
+        "title": {
+          "type": "string",
+          "const": "外部解決策"
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "採用する既製ライブラリ/サービス名と、それが業務上のどんな能力を代替するかを1文で。中核/補完の業務領域（既製品に頼らず自前で実装する領域）なら不要。"
+        }
+      }
+    },
+    "DomainServicesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-query": "集約単体では表現しにくい、あるいは複数の集約にまたがる業務ロジックを読みます。入り口は2つあります——集約を跨ぐか、跨がないが集約が構造上それを持てないか。後者で挙げるときは、なぜ持てないのかが responsibility に書かれているはずです。書かれていなければ、その集約へ戻すべき合図です。業務ロジックでないもの（出力の見た目・書式・座標、外部の道具の語彙への変換、業務の語彙を1つも含まない汎用の計算）はここに置きません。置く場所が無いなら、それは層か概念の宣言が足りない合図です。どちらの入り口にも当てはまらないのに、属すべき集約が見当たらないときは、業務サービスへ逃がす前に集約の宣言漏れを疑ってください。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "name",
+              "header": "業務サービス"
+            },
+            {
+              "field": "responsibility",
+              "header": "責務"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "DomainServices"
+        },
+        "title": {
+          "type": "string",
+          "const": "ドメインサービス"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "複数集約に跨る/集約に収まらないステートレスな業務ロジックを列挙。無ければ空。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "responsibility"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "業務サービス名（例: パステンプレート解決 / 整形描画（ドメイン語彙で、他の集約に属さない業務ロジックであることが分かる名前にする））"
+              },
+              "responsibility": {
+                "type": "string",
+                "x-prompt-write": "何を計算/判定するかと、入力→出力（何を受け何を返すか）を1文で。あわせて、どちらの入り口でここに居るのかを書く——跨ぐ場合はどの集約とどの集約か、跨がない場合はその集約が構造上それを持てない理由。理由を書けないなら、それはその集約へ戻すべきものです。実装手順は書かない。"
+              },
+              "serviceName": {
+                "type": "string",
+                "x-prompt-write": "業務サービスのコード識別子をPascalCaseで（例: CheckBackwardCompatible）。実装ファイル内の関数名としてto_snake_case変換した形でそのまま使われる。"
+              },
+              "group": {
+                "type": "string",
+                "x-prompt-write": "実装ファイルの単位をPascalCaseで（例: SchemaPatch）。同じgroupを持つ複数サービスが同じ実装ファイルに同居してよい。to_snake_case変換したものがsrc_root配下のファイル名（{group}.py）になる。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "AggregateRootBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "name"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "整合性の境界がどこかを読みます。externalRefs に挙がった相手は、この集約が直接持たずIDで指すだけの関係です。持ってしまっていないかを実装と突き合わせてください。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "name"
+        },
+        {
+          "as": "list",
+          "heading": "外部参照（ID）",
+          "from": "externalRefs"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "AggregateRoot"
+        },
+        "title": {
+          "type": "string",
+          "const": "集約ルート"
+        },
+        "name": {
+          "type": "string",
+          "x-prompt-write": "ルートエンティティ名（ドメイン語彙）（例: Order）"
+        },
+        "externalRefs": {
+          "type": "array",
+          "x-prompt-write": "ID で参照する他集約を列挙（オブジェクトは内部に持たない・図6-4）（例: Customer, Product）。無ければ空。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "EntitiesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "集約の内側にある、同一性を持つものを読みます。ルートを通さずに変えられるものがあれば、境界の外へ出すべき合図です。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "name",
+          "badge": {
+            "from": "isRoot",
+            "text": "集約ルート"
+          },
+          "each": [
+            {
+              "as": "paragraph",
+              "from": "role"
+            },
+            {
+              "as": "table",
+              "from": "attributes",
+              "columns": [
+                {
+                  "field": "name",
+                  "header": "属性",
+                  "markField": "isId",
+                  "markSuffix": "（識別子）"
+                },
+                {
+                  "field": "type",
+                  "header": "型"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Entities"
+        },
+        "title": {
+          "type": "string",
+          "const": "エンティティ"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "集約内エンティティ（識別子を持ち状態が変わる）を列挙。最低1つ＝集約ルート。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "role",
+              "isRoot",
+              "attributes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "エンティティ名（例: Order / OrderLine）"
+              },
+              "role": {
+                "type": "string",
+                "x-prompt-write": "このエンティティが集約内で担う役割を1文で（例: 注文全体の整合性を保つ集約ルート）"
+              },
+              "isRoot": {
+                "type": "boolean",
+                "x-prompt-write": "集約ルートなら true（1つだけ）。"
+              },
+              "attributes": {
+                "type": "array",
+                "minItems": 1,
+                "x-prompt-write": "属性を列挙。識別子も属性の1つとして含め isId:true を付ける。型は値オブジェクト名で。",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "type"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "x-prompt-write": "属性名（例: status / orderId）"
+                    },
+                    "type": {
+                      "type": "string",
+                      "x-prompt-write": "型（値オブジェクト名・他エンティティ・ID）（例: OrderStatus / OrderLine[] / customerId）"
+                    },
+                    "isId": {
+                      "type": "boolean",
+                      "x-prompt-write": "この属性が識別子なら true（エンティティに1つ）。"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ValueObjectsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "エンティティの属性が何の型かを読みます。behavior に不変であることが書かれているかを確かめてください。値と呼びながら変わるものは、エンティティである可能性があります。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "kvtable",
+              "columns": [
+                {
+                  "field": "represents",
+                  "header": "表す値"
+                },
+                {
+                  "field": "behavior",
+                  "header": "振る舞い"
+                }
+              ]
+            },
+            {
+              "as": "table",
+              "from": "attributes",
+              "columns": [
+                {
+                  "field": "name",
+                  "header": "属性"
+                },
+                {
+                  "field": "type",
+                  "header": "型"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ValueObjects"
+        },
+        "title": {
+          "type": "string",
+          "const": "値オブジェクト"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "エンティティ属性の型となる値オブジェクトを列挙。無ければ空。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "represents",
+              "behavior"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "値オブジェクト名（例: Money）"
+              },
+              "represents": {
+                "type": "string",
+                "x-prompt-write": "何を表すか。例: 通貨つきの金額"
+              },
+              "behavior": {
+                "type": "string",
+                "x-prompt-write": "振る舞い・制約・等価判定（例: 不変）。加算は同一通貨のみ。負値不可。"
+              },
+              "attributes": {
+                "type": "array",
+                "x-prompt-write": "属性を列挙（任意。宣言すると、実装クラスのフィールドとの一致が後工程で機械的に検証される）。型は値オブジェクト名/プリミティブ型で。",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "type"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "x-prompt-write": "属性名（例: amount）"
+                    },
+                    "type": {
+                      "type": "string",
+                      "x-prompt-write": "型（例: string / number / SchemaId[]）"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "InvariantsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "この集約が何を守っているかを読みます。集約の境界はここで決まります。ある不変条件を守るのに他の集約を読む必要があるなら、境界の引き方が誤っています。1つも無いなら、それは集約ではありません。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "id",
+              "header": "符号"
+            },
+            {
+              "field": "rule",
+              "header": "ルール"
+            },
+            {
+              "field": "enforcement",
+              "header": "守り方"
+            },
+            {
+              "field": "rationale",
+              "header": "根拠"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Invariants"
+        },
+        "title": {
+          "type": "string",
+          "const": "不変条件"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "集約が常に満たす不変条件を最低1つ列挙。1つも挙げられないなら、それは集約でなく値オブジェクトか単なるデータ。",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "rule",
+              "enforcement",
+              "rationale"
+            ],
+            "properties": {
+              "rule": {
+                "type": "string",
+                "x-prompt-write": "不変条件（「〜は常に〜」の形）（例: 注文明細の数量は常に1以上である）"
+              },
+              "enforcement": {
+                "type": "string",
+                "enum": [
+                  "schema",
+                  "guard"
+                ],
+                "x-prompt-write": "静的(値/構造)=schema が守る / 動的(状態遷移など)=guard が守る。"
+              },
+              "rationale": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-prompt-write": "その不変条件が必要な業務上の根拠を、独立した論点ごとに配列で列挙"
+              },
+              "id": {
+                "type": "string",
+                "x-prompt-write": "この基準を指すための短い符号を書いてください。シナリオがこの符号で「どの基準を満たすか」を指します。位置にも本文にも依存しない語にしてください——連番は並べ替えで指す先が変わり、本文から作った名前は文言を直すと壊れます。一度振った符号は変えないでください（例: rejects-duplicate-name）。",
+                "x-prompt-query": "シナリオがこの基準を指すための符号です。業務の語彙ではないので、人へ説明するときはこの符号ではなく本文を引用してください。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "LifecycleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "states",
+        "transitions"
+      ],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-query": "集約の状態と遷移表(from→to＋契機コマンド)を持ちます。遷移は guard が読んで enforce します。",
+      "x-render": [
+        {
+          "as": "statediagram",
+          "from": "transitions"
+        },
+        {
+          "as": "table",
+          "heading": "遷移",
+          "from": "transitions",
+          "columns": [
+            {
+              "field": "from",
+              "header": "from"
+            },
+            {
+              "field": "to",
+              "header": "to"
+            },
+            {
+              "field": "command",
+              "header": "command"
+            },
+            {
+              "field": "condition",
+              "header": "条件"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Lifecycle"
+        },
+        "title": {
+          "type": "string",
+          "const": "ライフサイクル"
+        },
+        "states": {
+          "type": "array",
+          "x-prompt-write": "取りうる状態を列挙（例: PLACED, PAID, SHIPPED）。状態を持たない集約なら空。",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "x-prompt-write": "状態遷移を列挙（from→to＋契機 command）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to",
+              "command"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "x-prompt-write": "遷移元の状態。statesで宣言済みの値の中から選ぶ。集約インスタンスがまだ存在しない新規生成コマンドの場合のみ、開始疑似状態を表す\"[*]\"を使う。例: CREATED"
+              },
+              "to": {
+                "type": "string",
+                "x-prompt-write": "遷移先の状態。statesで宣言済みの値の中から選ぶ。例: VALIDATED"
+              },
+              "command": {
+                "type": "string",
+                "x-prompt-write": "この遷移を起こすコマンド。commandsで宣言済みのコマンド名の中から選ぶ（新しいコマンド名をここで作らない）。例: validate"
+              },
+              "condition": {
+                "type": "string",
+                "x-prompt-write": "遷移の追加条件があれば。無ければ空。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CommandsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "外から状態を変える唯一の入口を読みます。requiresState と postState が、ライフサイクルの遷移と食い違っていないかを確かめてください。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "paragraph",
+              "from": "description"
+            },
+            {
+              "as": "kvtable",
+              "columns": [
+                {
+                  "field": "requiresState",
+                  "header": "前提"
+                },
+                {
+                  "field": "postState",
+                  "header": "後"
+                },
+                {
+                  "field": "emits",
+                  "header": "発行イベント",
+                  "sep": ", "
+                }
+              ]
+            },
+            {
+              "as": "table",
+              "from": "params",
+              "columns": [
+                {
+                  "field": "name",
+                  "header": "引数"
+                },
+                {
+                  "field": "meaning",
+                  "header": "意味"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Commands"
+        },
+        "title": {
+          "type": "string",
+          "const": "コマンド"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "集約が公開する状態変更コマンドを列挙（命令形・ドメイン語彙）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "description"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "コマンド名（命令形）（例: place / 確定する）"
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "何をするか・どの不変条件を守るかを1文で（実装手順は書かない）。"
+              },
+              "requiresState": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "x-prompt-write": "実行に必要な前提状態。集約インスタンスがまだ存在しない新規生成コマンドの場合は null（曖昧な文字列プレースホルダーは使わない）。"
+              },
+              "postState": {
+                "type": "string",
+                "x-prompt-write": "成功後の状態。この集約のlifecycle.statesで宣言済みの値の中から選ぶ（新しい状態名をここで作らない）。例: VALIDATED"
+              },
+              "params": {
+                "type": "array",
+                "x-prompt-write": "引数（ドメインデータ）。無ければ空。",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "meaning"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "x-prompt-write": "引数名。ドメイン語彙で（例: quantity）"
+                    },
+                    "meaning": {
+                      "type": "string",
+                      "x-prompt-write": "この引数が何を表すかを1文で（例: 注文する数量）"
+                    }
+                  }
+                }
+              },
+              "emits": {
+                "type": "array",
+                "x-prompt-write": "発行するドメインイベント名（過去形）。無ければ空。",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DomainEventsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 8,
+      "x-render-level": 2,
+      "x-prompt-query": "集約が発行する出来事を読みます。raisedBy が指すコマンドがコマンド一覧に実在するかを確かめてください。空なら、未記入ではなく『この集約はイベントを持たない』という決定です。出来事が記録として残り人が読むものは、イベントではなくエンティティ・値オブジェクト・コマンドの側に現れます。",
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "paragraph",
+              "heading": "発行契機",
+              "from": "raisedBy"
+            },
+            {
+              "as": "table",
+              "heading": "ペイロード",
+              "from": "payload",
+              "columns": [
+                {
+                  "field": "name",
+                  "header": "項目"
+                },
+                {
+                  "field": "meaning",
+                  "header": "意味"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "DomainEvents"
+        },
+        "title": {
+          "type": "string",
+          "const": "ドメインイベント"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "発行するドメインイベントを列挙。無ければ空。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "raisedBy"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "イベント名（必ず過去形）（例: OrderPlaced）"
+              },
+              "raisedBy": {
+                "type": "string",
+                "x-prompt-write": "どのコマンド/契機で発行されるか。commandsで宣言済みのコマンド名の中から選ぶ。例: place"
+              },
+              "payload": {
+                "type": "array",
+                "x-prompt-write": "イベントが運ぶデータ。無ければ空。",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "meaning"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "x-prompt-write": "ペイロード項目名（例: quantity）"
+                    },
+                    "meaning": {
+                      "type": "string",
+                      "x-prompt-write": "このペイロード項目が何を表すかを1文で（例: 確定した数量）"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ActorIntentBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "actor",
+        "intent"
+      ],
+      "x-render-order": 3,
+      "x-render-level": 2,
+      "x-prompt-query": "誰が何のためにこの操作を求めるかを読みます。以降の受け入れ基準は、この意図が満たされたかどうかで測ります。意図と基準が噛み合っていなければ、どちらかが古いままです。",
+      "x-render": [
+        {
+          "heading": "主アクター",
+          "as": "paragraph",
+          "from": "actor"
+        },
+        {
+          "heading": "意図",
+          "as": "paragraph",
+          "from": "intent"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ActorIntent"
+        },
+        "title": {
+          "type": "string",
+          "const": "主アクターと意図"
+        },
+        "actor": {
+          "type": "string",
+          "x-prompt-write": "主アクター（業務上の役割）（例: 顧客）"
+        },
+        "intent": {
+          "type": "string",
+          "x-prompt-write": "何を達成したいか（1文）（例: カートの商品を注文として確定する）"
+        }
+      }
+    },
+    "UsecaseRationaleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "なぜこの操作が要るかを読みます。仕組み（どう動くか）が書かれていたら、それは概要か事後条件の内容が紛れ込んでいます。無かったら何が起きるかが読み取れるはずです。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "UsecaseRationale"
+        },
+        "title": {
+          "type": "string",
+          "const": "存在意義"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "存在しなかった場合に起きる問題・防いでいるリスクを、独立した論点ごとに列挙する。このusecaseが存在しなかった場合に起きる問題、または防いでいるリスクを1〜2文で。メカニズム（何をするか）ではなく目的（なぜ必要か）を書く。actorIntent.intentが「何を達成したいか」を書く場所であるのに対し、ここは「それがなぜ業務上重要か」を書く場所（両者を混同しない）。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ExternalActorsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "この操作に巻き込まれる外部を読みます。ここに挙がった相手との境界は、契約として別に定める必要があります。空なら、この操作は境界の内側で完結するという決定です。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "ExternalActors"
+        },
+        "title": {
+          "type": "string",
+          "const": "関与する外部"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "関与する副アクター・隣接コンテキストを列挙（同じ外部システム＝業務領域の境界）。無ければ空。採用した製品や道具の名前は書かない（それはサブドメインの外部解決策が持つ）。同じコンテキストの中にある別のユースケースや、この操作の戻り値の型も、外部ではないので書かない。実際にその3種が書き込まれ、どれも境界の外に居なかった。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PreconditionsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "操作を始めてよい状態を読みます。ここに書かれていない前提を実装が要求していたら、その操作は誰も知らない条件の上で動いています。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Preconditions"
+        },
+        "title": {
+          "type": "string",
+          "const": "事前条件"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "操作開始前に成立している必要がある条件を列挙。無ければ空。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "MainFlowBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "steps"
+      ],
+      "x-render-order": 6,
+      "x-render-level": 2,
+      "x-prompt-query": "相互作用の順序を読みます。分岐と失敗はエラーの側が担うため、ここは一本道になっているはずです。分岐が現れていたら、書く場所を間違えています。",
+      "x-render": [
+        {
+          "as": "sequence",
+          "from": "steps",
+          "participantsFrom": "participants"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "MainFlow"
+        },
+        "title": {
+          "type": "string",
+          "const": "基本フロー"
+        },
+        "participants": {
+          "type": "array",
+          "x-prompt-write": "stepsに登場する送り手/受け手のうち、主アクター（ActorIntentのactorと同じ名前）を kind=actor（棒人間アイコン）として宣言する。集約等のシステム側は宣言不要（省略時は participant として自動描画される）。無ければ空配列。",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "kind"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "x-prompt-write": "識別子。stepsのfrom/toと同じ表記に揃える。"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "actor",
+                  "participant"
+                ],
+                "x-prompt-write": "人間/主アクターなら actor、集約等のシステム側なら participant。"
+              }
+            }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "x-prompt-write": "主アクターと集約(と業務サービス・他集約)の相互作用を順に列挙。participant は必ずドメインの役者（技術コンポーネント=Controller/Repository/DB 等は書かない）。粒度は主要な相互作用のみ（内部処理の細部や UI 操作は書かない）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "message",
+              "kind"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "x-prompt-write": "送り手（ドメインの役者）。"
+              },
+              "to": {
+                "type": "string",
+                "x-prompt-write": "受け手（ドメインの役者）。event の場合は空でよい。"
+              },
+              "message": {
+                "type": "string",
+                "x-prompt-write": "メッセージ（コマンド/返り値/イベント名）。"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "command",
+                  "self",
+                  "return",
+                  "event"
+                ],
+                "x-prompt-write": "command=呼び出し / self=自分への処理 / return=返り値 / event=イベント発行。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PostconditionsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "操作が成功した後に何が変わっているかを読みます。受け入れシナリオの Then は、ここに書かれた状態を確かめる形になります。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Postconditions"
+        },
+        "title": {
+          "type": "string",
+          "const": "事後条件"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "成功時に成立する結果（集約の状態変化・発行イベント）を列挙。どうやってその結果に至るか（導出の手順・綴りの流儀・ファイル名の規則）は書かない——それらは規約が宣言しており、ここへ写すと規約が変わったときに仕様だけが古くなる（実際に、綴りと拡張子を写した記述が残った）。",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AcceptanceCriteriaBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 8,
+      "x-render-level": 2,
+      "x-prompt-query": "合否の基準を読みます。各項目は独立したEARS文であり、項目どうしに AND/OR のような関係はありません（それぞれ単独で真である契約）。shall は推奨ではなく必須の制約として読みます。各基準に対応する受け入れシナリオがあるかを確かめてください——筋書きの無い基準は、誰も検証していません。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "id",
+              "header": "符号"
+            },
+            {
+              "field": "text",
+              "header": "基準"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "AcceptanceCriteria"
+        },
+        "title": {
+          "type": "string",
+          "const": "受け入れ基準"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "受け入れ条件を EARS で列挙（When/While/If … shall …）。一意・検証可能・ドメイン語彙のみ。",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "x-prompt-write": "この基準を指すための短い符号を書いてください。シナリオがこの符号で「どの基準を満たすか」を指します。位置にも本文にも依存しない語にしてください——連番は並べ替えで指す先が変わり、本文から作った名前は文言を直すと壊れます。一度振った符号は変えないでください（例: rejects-duplicate-name）。",
+                "x-prompt-query": "シナリオがこの基準を指すための符号です。業務の語彙ではないので、人へ説明するときはこの符号ではなく本文を引用してください。"
+              },
+              "text": {
+                "type": "string",
+                "x-prompt-write": "この基準の本文を EARS で書いてください（When/While/If … shall …）。1つの基準は1つの主張にしてください——「〜し、かつ〜する」のように主張が2つ入っているものは、基準が2つある状態です。一意・検証可能・ドメイン語彙のみ。"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ]
+          }
+        }
+      },
+      "x-prompt-write": "受け入れ基準をEARS形式で列挙してください。各項目は独立した1文で、項目どうしに AND/OR の関係を作りません。shall は推奨ではなく必須の制約として書きます。書くのは、この境界づけられたコンテキスト自身が守る義務だけです——外部の仕組みが実現し、こちらは前提にしているだけの振る舞いは、ここではなく前提条件か関与する外部として書きます（外部の義務をここに書くと、こちらのテストで確かめようがないものが基準として残り、いつまでも満たされないものとして報告され続けます）。判断に迷ったら、基本フローの participants にこの文脈の内側の者がいるかを見てください。"
+    },
+    "ErrorsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 10,
+      "x-render-level": 2,
+      "x-prompt-query": "失敗の仕方を読みます。コードごとに条件が尽くされているか、条件が重なっていないかを確かめてください。重なるコードは、どちらが返るか決まりません。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "code",
+              "header": "コード",
+              "code": true
+            },
+            {
+              "field": "condition",
+              "header": "条件",
+              "bullet": true
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Errors"
+        },
+        "title": {
+          "type": "string",
+          "const": "エラー"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "失敗するコードと条件を列挙。ドメインの出来事として。無ければ空。",
+          "items": {
+            "type": "object",
+            "required": [
+              "code",
+              "condition"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "x-prompt-write": "エラーコード（例: OUT_OF_STOCK）"
+              },
+              "condition": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-prompt-write": "そのエラーコードが返る条件を、独立した論点ごとに配列で列挙。1論点なら1要素でよい。例: [\"対象ファイルが存在しない\"]"
+              }
+            }
+          }
+        }
+      }
+    },
+    "InvariantScenariosBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "scenarios"
+      ],
+      "x-render-order": 10,
+      "x-render-level": 2,
+      "x-prompt-query": "不変条件が実際に守られているかを確かめる筋書きを読みます。先頭の宣言行（Scenario: 名前）が突き合わせのキーで、テストの文書コメントと一字一句で照合されます。不変条件の各項目に対応する筋書きがあるかを確かめてください。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "heading": "背景",
+          "from": "background"
+        },
+        {
+          "as": "section",
+          "from": "scenarios",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "kvtable",
+              "columns": [
+                {
+                  "field": "category",
+                  "header": "分類"
+                },
+                {
+                  "field": "viewpoint",
+                  "header": "観点"
+                },
+                {
+                  "field": "satisfies",
+                  "header": "満たす基準"
+                }
+              ]
+            },
+            {
+              "as": "code",
+              "from": "gherkin",
+              "lang": "gherkin"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "InvariantScenarios"
+        },
+        "title": {
+          "type": "string",
+          "const": "不変条件シナリオ"
+        },
+        "background": {
+          "type": "string",
+          "x-prompt-write": "複数シナリオ共通の前提（Gherkin Background 相当）。無ければ空文字。"
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "1シナリオ1要素で列挙。集約の各不変条件を網羅し、1不変条件1シナリオにする。各シナリオは分類・観点・Gherkin を持つ。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "category",
+              "viewpoint",
+              "gherkin"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "シナリオ名（概要）。"
+              },
+              "category": {
+                "type": "string",
+                "x-prompt-write": "分類: 正常系 / 異常系 / 境界値。"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点: 側面（状態遷移/計算整合/事前条件 等）＋検証の狙い。"
+              },
+              "gherkin": {
+                "type": "string",
+                "x-prompt-write": "このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。"
+              },
+              "satisfies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "x-prompt-write": "このシナリオが満たす基準の符号を、同じ文書の中から選んで並べてください。1つのシナリオが複数の基準を満たすことは普通にあります（1回の流れで観測できることが複数あるため）。どの基準も満たさないシナリオは書けません——指す先が無いときは、シナリオを消すのではなく、満たすべき基準のほうを書き足してください。ここに書くのは符号だけで、説明文は書きません。",
+                "x-prompt-query": "このシナリオがどの基準を担っているかを読みます。符号が指す先が実在するかは機械が確かめますが、そのシナリオが実際にその基準を確かめているかは確かめません。読み手の責務です。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "AcceptanceScenariosBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "scenarios"
+      ],
+      "x-render-order": 11,
+      "x-render-level": 2,
+      "x-prompt-query": "受け入れ基準が実際に満たされているかを確かめる筋書きを読みます。先頭の宣言行（Scenario: 名前）が突き合わせのキーで、テストの文書コメントと一字一句で照合されます。operation が書かれている場合、それは実装の分岐と突き合わされる宣言です。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "heading": "背景",
+          "from": "background"
+        },
+        {
+          "as": "section",
+          "from": "scenarios",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "kvtable",
+              "columns": [
+                {
+                  "field": "category",
+                  "header": "分類"
+                },
+                {
+                  "field": "viewpoint",
+                  "header": "観点"
+                },
+                {
+                  "field": "satisfies",
+                  "header": "満たす基準"
+                }
+              ]
+            },
+            {
+              "as": "code",
+              "from": "gherkin",
+              "lang": "gherkin"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "AcceptanceScenarios"
+        },
+        "title": {
+          "type": "string",
+          "const": "受け入れシナリオ"
+        },
+        "background": {
+          "type": "string",
+          "x-prompt-write": "複数シナリオ共通の前提（Gherkin Background 相当）。無ければ空文字。"
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "1シナリオ1要素で列挙。検証観点（正常系／異常系（事前条件違反・各エラー）／境界値）を網羅し、1ルール1シナリオにする。各シナリオは分類・観点・Gherkin を持つ。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "category",
+              "viewpoint",
+              "gherkin"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "シナリオ名（概要）。"
+              },
+              "category": {
+                "type": "string",
+                "x-prompt-write": "分類: 正常系 / 異常系 / 境界値。"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点: 側面（状態遷移/計算整合/事前条件 等）＋検証の狙い。"
+              },
+              "gherkin": {
+                "type": "string",
+                "x-prompt-write": "このシナリオの Given/When/Then（Scenario: 1つ・実行可能なテストとして書き起こせる形）。ドメイン語彙で書き、実装詳細（クラス名/API/SQL/UI 操作）は書かない。"
+              },
+              "operation": {
+                "type": "string",
+                "x-prompt-write": "このシナリオが検証する操作の識別子（任意）。usecaseの実装がoperation引数で複数の操作を分岐する場合のみ設定し、その操作を指す文字列そのものを設定する（例: get_block）。実装コードのoperation分岐と機械的に突き合わせる仕組みがあるため、gherkin本文に埋め込む代わりにここへ構造化して書く。単一操作のusecaseでは省略する。"
+              },
+              "satisfies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "x-prompt-write": "このシナリオが満たす基準の符号を、同じ文書の中から選んで並べてください。1つのシナリオが複数の基準を満たすことは普通にあります（1回の流れで観測できることが複数あるため）。どの基準も満たさないシナリオは書けません——指す先が無いときは、シナリオを消すのではなく、満たすべき基準のほうを書き足してください。ここに書くのは符号だけで、説明文は書きません。",
+                "x-prompt-query": "このシナリオがどの基準を担っているかを読みます。符号が指す先が実在するかは機械が確かめますが、そのシナリオが実際にその基準を確かめているかは確かめません。読み手の責務です。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "OperationGuaranteesBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 9,
+      "x-render-level": 2,
+      "x-prompt-query": "1回の実行の結果ではなく、この操作が全体として約束することを読みます。受け入れ基準と重なる項目があれば、どちらか一方が余分です。",
+      "x-render": [
+        {
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "OperationGuarantees"
+        },
+        "title": {
+          "type": "string",
+          "const": "操作保証"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "保証をEARSで列挙（When/While/If … shall …）。書いてよいのは『何を保証するか』だけ（べき等性・一貫性・提供チャネルの一貫性等）。『どう実現するか』（具体的なDB技法・ロック機構・実装技術）は実装方針の担当領域であり、ここには書かない。判定基準（このusecaseに書くか、対象集約の不変条件に書くか）: 同じ資源を操作する複数usecaseの間で、この保証内容が重複するか？ 重複するなら対象集約側の不変条件として書く。このusecase固有の業務理由でのみ必要な保証だけをここに書く。性能の生数値（応答時間・スループット等）は非機能テストの担当領域であり、ここには書かない。",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "x-prompt-write": "この基準を指すための短い符号を書いてください。シナリオがこの符号で「どの基準を満たすか」を指します。位置にも本文にも依存しない語にしてください——連番は並べ替えで指す先が変わり、本文から作った名前は文言を直すと壊れます。一度振った符号は変えないでください（例: rejects-duplicate-name）。",
+                "x-prompt-query": "シナリオがこの基準を指すための符号です。業務の語彙ではないので、人へ説明するときはこの符号ではなく本文を引用してください。"
+              },
+              "text": {
+                "type": "string",
+                "x-prompt-write": "この保証の本文を EARS で書いてください。書いてよいのは『何を保証するか』だけ（べき等性・一貫性・提供チャネルの一貫性等）で、『どう実現するか』は書きません。1つの保証は1つの主張にしてください。"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "GuaranteeScenariosBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "scenarios"
+      ],
+      "x-render-order": 12,
+      "x-render-level": 2,
+      "x-prompt-query": "操作保証が守られているかを確かめる筋書きを読みます。先頭の宣言行が突き合わせのキーです。保証の各項目に対応する筋書きがあるかを確かめてください。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "heading": "背景",
+          "from": "background"
+        },
+        {
+          "as": "section",
+          "from": "scenarios",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "kvtable",
+              "columns": [
+                {
+                  "field": "category",
+                  "header": "分類"
+                },
+                {
+                  "field": "viewpoint",
+                  "header": "観点"
+                },
+                {
+                  "field": "satisfies",
+                  "header": "満たす基準"
+                }
+              ]
+            },
+            {
+              "as": "code",
+              "from": "gherkin",
+              "lang": "gherkin"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "GuaranteeScenarios"
+        },
+        "title": {
+          "type": "string",
+          "const": "操作保証シナリオ"
+        },
+        "background": {
+          "type": "string",
+          "x-prompt-write": "複数シナリオ共通の前提。無ければ空文字。"
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "1シナリオ1要素。OperationGuaranteesの各項目を最低1つのシナリオで検証する。呼び出し経路（Pythonコードからの直接呼び出し／CLI／MCP）をまたいで同じ保証が成立するかを確認したい場合は、経路ごとにシナリオを分けてよい（同じ保証・異なるバインディング）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "category",
+              "viewpoint",
+              "gherkin"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "シナリオ名（概要）。"
+              },
+              "category": {
+                "type": "string",
+                "x-prompt-write": "分類: 正常系 / 異常系 / 境界値。"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点: べき等性/一貫性/提供チャネルの一貫性 等＋検証の狙い。"
+              },
+              "gherkin": {
+                "type": "string",
+                "x-prompt-write": "Given/When/Then。ドメイン語彙で書き、実装詳細は書かない。"
+              },
+              "satisfies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "x-prompt-write": "このシナリオが満たす基準の符号を、同じ文書の中から選んで並べてください。1つのシナリオが複数の基準を満たすことは普通にあります（1回の流れで観測できることが複数あるため）。どの基準も満たさないシナリオは書けません——指す先が無いときは、シナリオを消すのではなく、満たすべき基準のほうを書き足してください。ここに書くのは符号だけで、説明文は書きません。",
+                "x-prompt-query": "このシナリオがどの基準を担っているかを読みます。符号が指す先が実在するかは機械が確かめますが、そのシナリオが実際にその基準を確かめているかは確かめません。読み手の責務です。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "DomainServiceScenariosBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "scenarios"
+      ],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "業務サービスが何を計算し何を判定するかを確かめる筋書きを読みます。操作保証の筋書きとは別物で、こちらは計算の中身を見ます。先頭の宣言行が突き合わせのキーです。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "heading": "背景",
+          "from": "background"
+        },
+        {
+          "as": "section",
+          "from": "scenarios",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "kvtable",
+              "columns": [
+                {
+                  "field": "category",
+                  "header": "分類"
+                },
+                {
+                  "field": "viewpoint",
+                  "header": "観点"
+                },
+                {
+                  "field": "satisfies",
+                  "header": "満たす基準"
+                }
+              ]
+            },
+            {
+              "as": "code",
+              "from": "gherkin",
+              "lang": "gherkin"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "DomainServiceScenarios"
+        },
+        "title": {
+          "type": "string",
+          "const": "業務サービスシナリオ"
+        },
+        "background": {
+          "type": "string",
+          "x-prompt-write": "複数シナリオ共通の前提。無ければ空文字。"
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "1シナリオ1要素。domainServicesの各項目が何を計算/判定するかを最低1つのシナリオで検証する。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "category",
+              "viewpoint",
+              "gherkin"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "シナリオ名（概要）。"
+              },
+              "category": {
+                "type": "string",
+                "x-prompt-write": "分類: 正常系 / 異常系 / 境界値。"
+              },
+              "viewpoint": {
+                "type": "string",
+                "x-prompt-write": "観点: 何を計算/判定するか＋検証の狙い。"
+              },
+              "gherkin": {
+                "type": "string",
+                "x-prompt-write": "Given/When/Then。ドメイン語彙で書き、実装詳細は書かない。"
+              },
+              "satisfies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "x-prompt-write": "このシナリオが満たす基準の符号を、同じ文書の中から選んで並べてください。1つのシナリオが複数の基準を満たすことは普通にあります（1回の流れで観測できることが複数あるため）。どの基準も満たさないシナリオは書けません——指す先が無いときは、シナリオを消すのではなく、満たすべき基準のほうを書き足してください。ここに書くのは符号だけで、説明文は書きません。",
+                "x-prompt-query": "このシナリオがどの基準を担っているかを読みます。符号が指す先が実在するかは機械が確かめますが、そのシナリオが実際にその基準を確かめているかは確かめません。読み手の責務です。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "OperationIndexBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-prompt-query": "1つのユースケースが複数の操作へ分岐する場合の見取り図として読みます。実装の分岐と突き合わされる宣言は各受け入れシナリオの operation が担うため、ここに並んでいるだけでは宣言になりません。単一操作なら空です。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "operation",
+              "header": "操作",
+              "code": true
+            },
+            {
+              "field": "summary",
+              "header": "概要"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "OperationIndex"
+        },
+        "title": {
+          "type": "string",
+          "const": "操作一覧"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "operation引数で分岐する操作ごとに、その識別子(operation)と概要(summary)を列挙してください。受け入れシナリオのoperationフィールドで使う値と同じ識別子を使うこと。単一操作のusecaseでは空配列のままにする（自動的に描画から省略される）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "operation",
+              "summary"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "x-prompt-write": "操作の識別子（例: get_block）。実装のoperation分岐の文字列と完全一致させる。"
+              },
+              "summary": {
+                "type": "string",
+                "x-prompt-write": "この操作が何をするかの一文説明（業務語彙で）。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "SubdomainBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "name"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "この文書自身が何を指すかを読みます。ファイル名や識別子と食い違っていないかを確かめてください。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "name"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Subdomain"
+        },
+        "title": {
+          "type": "string",
+          "const": "名前"
+        },
+        "name": {
+          "type": "string",
+          "x-prompt-write": "このサブドメインの名前をドメイン語彙で簡潔に（識別子やタイトルの説明文とは別に、名前だけを独立して機械的に参照できるようにする）。例: フェーズゲート判定"
+        }
+      }
+    },
+    "BoundedContextBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "name"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "この文書自身が何を指すかを読みます。ファイル名や識別子と食い違っていないかを確かめてください。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "name"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "BoundedContext"
+        },
+        "title": {
+          "type": "string",
+          "const": "名前"
+        },
+        "name": {
+          "type": "string",
+          "x-prompt-write": "この境界づけられたコンテキストの名前をドメイン語彙で簡潔に（識別子やタイトルの説明文とは別に、名前だけを独立して機械的に参照できるようにする）。例: スキーマ駆動Document基盤"
+        }
+      }
+    },
+    "UsecaseBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "operationName"
+      ],
+      "x-render-order": 2,
+      "x-render-level": 2,
+      "x-prompt-query": "この文書自身が何を指すかを読みます。ファイル名や識別子と食い違っていないかを確かめてください。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "operationName"
+        }
+      ],
+      "x-render-hidden": true,
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Usecase"
+        },
+        "title": {
+          "type": "string",
+          "const": "名前"
+        },
+        "operationName": {
+          "type": "string",
+          "x-prompt-write": "このusecaseの操作名をPascalCaseで一意に（例: CheckScenarioDrift）。この名前は対応する実装クラス名としてそのまま使われる（coding-standardのusecase実装クラス命名規約を参照）。summary/actorIntentが日本語で説明する操作を、ユビキタス言語の識別子として1語に凝縮したもの。"
+        }
+      }
+    },
+    "InputsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-prompt-query": "この操作を外から呼ぶときに渡す値の一覧を読みます。受け口（CLI/MCP等）が利用者へ見せる引数の説明は、この宣言が正本です。受け口の側に書かれた説明がここと違っていれば、直すのは受け口の側。受け口を持たない内部専用のユースケースでは空です。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "name",
+              "header": "入力",
+              "code": true
+            },
+            {
+              "field": "description",
+              "header": "説明"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Inputs"
+        },
+        "title": {
+          "type": "string",
+          "const": "入力"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "外から渡す値を列挙してください。受け口の引数と1対1に対応させること。受け口を持たない内部専用のユースケースでは空配列のままにする（自動的に描画から省略される）。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "description"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "入力の識別子を1つ書いてください。綴りはcamelCaseで揃える。受け口ごとに実際の綴りは変わる（区切り記号つき／大文字区切り）が、その違いは突き合わせが吸収するので、ここでは1つの形だけを書きます。業務語彙は説明のほうが運びます。"
+              },
+              "description": {
+                "type": "string",
+                "x-prompt-write": "その値が何であるかを業務語彙で一文で。利用者が読む説明にそのまま使われるので、実装の都合や型の話を書かない。"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-frontmatter": {
+    "bounded-context": {
+      "id": "doc.documentId",
+      "type": "doc.specKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "subdomain": {
+      "id": "doc.documentId",
+      "type": "doc.specKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "aggregate": {
+      "id": "doc.documentId",
+      "type": "doc.specKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    },
+    "usecase": {
+      "id": "doc.documentId",
+      "type": "doc.specKind",
+      "title": "doc.content.title.title",
+      "description": "doc.content.description",
+      "tags": "doc.tags",
+      "schemaRef": "doc.schemaRef",
+      "updatedAt": "doc.updatedAt"
+    }
+  }
+}
