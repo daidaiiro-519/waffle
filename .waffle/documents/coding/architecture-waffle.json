@@ -61,7 +61,7 @@
     "layout": {
       "blockType": "Layout",
       "title": "ディレクトリ構成",
-      "tree": "src/{package}/\n  domain/\n    entities/       entity, aggregate（ルートを通じてのみ触れるもの）\n    value_objects/  value-object（同一性を持たず、複数の集約が使ってよい値）\n    model/          schema.jsonそのもの（JSON Schema定義の同梱データ。DDD実装クラスの置き場ではない）\n    services/       domain-service\n  application/\n    usecases/       1 usecase = 1 module\n    ports/          driven interface の定義\n  adapters/\n    inbound/        driving（api, cli, ...）\n    outbound/       driven（db, external, ...）\n  shared/           共通（エラー・結果型 等）",
+      "tree": "src/{package}/\n  domain/\n    entities/       entity, aggregate（ルートを通じてのみ触れるもの）\n    value_objects/  value-object（同一性を持たず、複数の集約が使ってよい値）\n    model/          schema.jsonそのもの（JSON Schema定義の同梱データ。DDD実装クラスの置き場ではない）\n    services/       domain-service\n  application/\n    usecases/       1 usecase = 1 module\n    ports/          driven interface の定義\n    services/       ポート経由で読み、ドメインへ渡す共有手続き\n  adapters/\n    inbound/        driving（api, cli, ...）\n    outbound/       driven（db, external, ...）\n  shared/           共通（エラー・結果型 等）",
       "compositionRoot": "各エントリポイントに1つだけ置く（adapters/inbound/cli/main.py・adapters/inbound/mcp/main.py）。合成ルートは層のグラフの外にあり、結線のためにすべてを知ってよい唯一の場所。配線専用に保つ",
       "sourceRoot": "src/{package}",
       "granularity": [
@@ -176,6 +176,15 @@
             }
           ],
           "pattern": "port / repository を実装・外部ライブラリをここに閉じ込める"
+        },
+        {
+          "concept": "application-service",
+          "placements": [
+            {
+              "path": "application/services"
+            }
+          ],
+          "pattern": "ポートを通して外から読み、ドメインが使える形にして渡す。複数のユースケースが共有する手続きだけを置き、業務の判断は持たない（判断はドメイン層が持つ）。"
         }
       ]
     },
