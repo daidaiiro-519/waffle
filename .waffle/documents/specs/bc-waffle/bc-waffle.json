@@ -133,9 +133,39 @@
         },
         {
           "name": "ソースルート解決",
-          "responsibility": "規約が宣言する実装の置き場所（ソースルートと概念ごとの配置）から、指定した概念の実装ファイルの置き場所を導く。規約を表す集約がこの境界づけられたコンテキストにまだ宣言されていないため、いずれの集約にも属せない状態でここに居る。その集約を宣言した時点で、そちらへ戻すかどうかを判断し直す。",
+          "responsibility": "規約の architecture 文書が宣言するソースルートと概念ごとの配置から、指定した概念の実装ファイルの置き場所を導く。規約の宣言は物差しとして受け取るだけで、測る対象は集約の外にあるため、いずれの集約もこの計算を持てない。（測る対象は実装ファイルの置き場所）",
           "serviceName": "ResolveConceptSourceRoot",
           "group": "ConceptSourceRoot"
+        },
+        {
+          "name": "表記の適用",
+          "serviceName": "ApplyCase",
+          "group": "CanonicalNaming",
+          "responsibility": "規約の coding-standard 文書が宣言する表記に従って、識別子の綴りを変換する。規約の宣言は物差しとして受け取るだけで、測る対象は集約の外にあるため、いずれの集約もこの計算を持てない。（測る対象は実装上の識別子）"
+        },
+        {
+          "name": "実装ファイル名の導出",
+          "serviceName": "FileName",
+          "group": "CanonicalNaming",
+          "responsibility": "規約の coding-standard 文書が宣言する変換と末尾から、型の名前を実装ファイルの名前へ導く。規約の宣言は物差しとして受け取るだけで、測る対象は集約の外にあるため、いずれの集約もこの計算を持てない。（測る対象は実装ファイルの名前）"
+        },
+        {
+          "name": "層の割り当て",
+          "serviceName": "LayerOf",
+          "group": "LayerAssignment",
+          "responsibility": "規約の architecture 文書が宣言する層とその置き場所から、あるファイルがどの層に属するかを決める。規約の宣言は物差しとして受け取るだけで、測る対象は集約の外にあるため、いずれの集約もこの計算を持てない。（測る対象はソースファイルの位置）"
+        },
+        {
+          "name": "実装の棚卸し",
+          "serviceName": "OrphanedImplementationFiles",
+          "group": "ImplementationInventory",
+          "responsibility": "規約が宣言した配置に実在するファイルと、仕様が名指しした実装ファイルを突き合わせ、名指しされていないものを返す。規約の宣言は物差しとして受け取るだけで、測る対象は集約の外にあるため、いずれの集約もこの計算を持てない。（測る対象は実在するファイル）"
+        },
+        {
+          "name": "シナリオの突き合わせ",
+          "serviceName": "ScenarioDeclarations",
+          "group": "ScenarioDrift",
+          "responsibility": "仕様が宣言するシナリオと、テストの文書コメントに置かれた宣言行を突き合わせる。規約の test-standard 文書（シナリオの束ね方・テストの配置・テストファイルの名づけ）と coding-standard 文書（表記）と、対象の仕様文書の3つを横断して読むため、複数の集約にまたがる計算。"
         }
       ],
       "blockType": "DomainServices",
