@@ -1,1 +1,1 @@
-../../../../knowledge/DRAFT/knowledge-cand-comparison-principle-needs-retrieval-path.md
+../../../../knowledge/ACTIVE/knowledge-cand-comparison-principle-needs-retrieval-path.md

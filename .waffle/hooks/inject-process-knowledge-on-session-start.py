@@ -37,16 +37,47 @@ def _run_cli(args: list[str]) -> dict | None:
         return None
 
 
-def _collect_summaries() -> list[str]:
+def _filtered_paths(key: str, value: str) -> set[str] | None:
+    """knowledge配下を1つの条件で絞り、該当したパスの集合を返す。
+
+    Args:
+        key: 絞り込みに使うトップレベルのフィールド名。
+        value: そのフィールドが持つべき値。
+
+    Returns:
+        該当したdocumentのパスの集合。取得できなかった場合は None。
+
+    Raises:
+        なし。
+    """
     filtered = _run_cli([
         "query-collection", "--operation", "filter_documents",
-        "--path", ".waffle/documents/knowledge", "--key", "agentRefs", "--value", "waffle",
+        "--path", ".waffle/documents/knowledge", "--key", key, "--value", value,
     ])
     if not filtered or "value" not in filtered:
+        return None
+    return set(filtered["value"].keys())
+
+
+def _collect_summaries() -> list[str]:
+    """Orchestrator宛の、採用済みknowledgeの要約を集める。
+
+    下書きのまま置かれているものは注入しない。配布の経路がstatusを見ないと、
+    審査を経ていない候補が採用済みのものと区別なく並び、下書きに留める意味が消える。
+
+    Returns:
+        「- パス: 概要」の形の行の並び。1件も無ければ空。
+
+    Raises:
+        なし。
+    """
+    for_orchestrator = _filtered_paths("agentRefs", "waffle")
+    adopted = _filtered_paths("status", "ACTIVE")
+    if for_orchestrator is None or adopted is None:
         return []
 
     summaries: list[str] = []
-    for doc_path in sorted(filtered["value"].keys()):
+    for doc_path in sorted(for_orchestrator & adopted):
         text_result = _run_cli([
             "query", "--operation", "query_path", "--path", doc_path,
             "--blockKey", "description", "--expression", "text",

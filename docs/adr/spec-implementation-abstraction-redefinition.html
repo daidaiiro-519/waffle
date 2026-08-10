@@ -1,0 +1,699 @@
+<title>仕様の段構造と、そこから導く再定義</title>
+<style>
+  :root {
+    --paper:      #EDF0F3;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F7F9;
+    --ink:        #171B23;
+    --ink-soft:   #4B5563;
+    --ink-faint:  #79828F;
+    --rule:       #D3DAE2;
+    --rule-soft:  #E4E9EE;
+
+    --problem:    #7A4368;
+    --problem-bg: #F3E9F0;
+    --solution:   #16636B;
+    --solution-bg:#E2EFF0;
+    --warn:       #9A4A21;
+    --warn-bg:    #F7EAE2;
+    --dead:       #8A8F98;
+
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
+    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+      --rule:#2E3742; --rule-soft:#242C37;
+      --problem:#D19CC0; --problem-bg:#2C1F2A;
+      --solution:#6BC0C7; --solution-bg:#132A2C;
+      --warn:#E0A17A; --warn-bg:#2E211A;
+      --dead:#767E8A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --problem:#D19CC0; --problem-bg:#2C1F2A;
+    --solution:#6BC0C7; --solution-bg:#132A2C;
+    --warn:#E0A17A; --warn-bg:#2E211A;
+    --dead:#767E8A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.85;
+    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+  .col { max-width: 40rem; }
+
+  header { display: flex; flex-direction: column; gap: .9rem; }
+  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+
+  section { display: flex; flex-direction: column; gap: 1.4rem; }
+  h2 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
+    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem;
+  }
+  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
+  h2 .side { margin-left: auto; font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
+  p { margin: 0; }
+  .col > p + p { margin-top: .9rem; }
+  strong { font-weight: 700; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 3px; padding: .08em .34em; }
+
+  .verdict { display: grid; grid-template-columns: repeat(auto-fit,minmax(15rem,1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .verdict > div { background: var(--surface); padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .45rem; }
+  .verdict dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .verdict dd { margin: 0; font-size: .95rem; line-height: 1.7; }
+  .verdict .big { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
+
+  .ladder { display: flex; flex-direction: column; }
+  .rung { display: grid; grid-template-columns: 12.5rem 1fr; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; }
+  @media (max-width: 38rem) { .rung { grid-template-columns: 1fr; } .rung-name { border-right: none; border-bottom: 1px solid var(--rule-soft); } }
+  .rung-name { padding: 1.1rem 1.2rem; border-right: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: .3rem; justify-content: center; }
+  .rung-name b { font-family: var(--serif); font-size: 1.02rem; font-weight: 600; line-height: 1.45; }
+  .rung-name span { font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); letter-spacing: .04em; }
+  .rung-body { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 30rem) { .rung-body { grid-template-columns: 1fr; } .cell + .cell { border-left: none; border-top: 1px solid var(--rule-soft); } }
+  .cell { padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
+  .cell + .cell { border-left: 1px solid var(--rule-soft); }
+  .cell .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .cell .v { font-size: .95rem; line-height: 1.6; }
+  .cell .m { font-size: .8rem; color: var(--ink-soft); line-height: 1.6; }
+  .link { width: 2px; height: 1.6rem; background: var(--rule); position: relative; margin-left: 6.25rem; }
+  .link::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
+  .link span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  .aside-note { display: flex; gap: .85rem; align-items: flex-start; background: var(--surface-2); border-left: 3px solid var(--problem); padding: 1rem 1.15rem; border-radius: 0 2px 2px 0; font-size: .92rem; line-height: 1.75; color: var(--ink-soft); }
+  .aside-note.warn { border-left-color: var(--warn); }
+  .aside-note b { color: var(--ink); }
+
+  .spaces { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; }
+  @media (max-width: 40rem) { .spaces { grid-template-columns: 1fr; } .spaces .bridge { padding: 1.2rem 0; } }
+  .space { border: 1px solid var(--rule); border-radius: 2px; padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .75rem; background: var(--surface); }
+  .space.problem { border-top: 3px solid var(--problem); }
+  .space.solution { border-top: 3px solid var(--solution); }
+  .space-label { font-family: var(--mono); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; }
+  .space.problem .space-label { color: var(--problem); }
+  .space.solution .space-label { color: var(--solution); }
+  .space b { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
+  .space p { font-size: .88rem; color: var(--ink-soft); line-height: 1.7; }
+  .space ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .3rem; font-size: .84rem; color: var(--ink-soft); }
+  .space li::before { content: "· "; color: var(--ink-faint); }
+  .bridge { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: 0 1.1rem; }
+  .bridge .arrow { font-family: var(--mono); font-size: 1.1rem; color: var(--ink-faint); letter-spacing: -.1em; }
+  .bridge .cap { font-size: .74rem; font-family: var(--mono); color: var(--ink-faint); text-align: center; line-height: 1.5; }
+
+  /* four families */
+  .families { display: flex; flex-direction: column; }
+  .family { display: grid; grid-template-columns: 3rem 1fr; border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); }
+  .family-idx { background: var(--surface-2); border-right: 1px solid var(--rule-soft); display: flex; align-items: flex-start; justify-content: center; padding-top: 1.25rem; font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); }
+  .family-main { padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .8rem; }
+  .family-q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .family-main > b { font-family: var(--serif); font-size: 1.14rem; font-weight: 600; }
+  .family-main > p { font-size: .93rem; line-height: 1.75; color: var(--ink-soft); }
+  .must { display: flex; flex-direction: column; gap: .35rem; padding-top: .2rem; }
+  .must div { font-size: .87rem; line-height: 1.65; display: flex; gap: .55rem; }
+  .must div::before { content: "▸"; color: var(--ink-faint); flex: none; font-size: .7rem; transform: translateY(.35em); }
+  .must div.strike { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--rule); }
+  .must div.strike::before { content: "×"; text-decoration: none; }
+  .family-flow { height: 1.5rem; width: 2px; background: var(--rule); margin-left: 1.5rem; position: relative; }
+  .family-flow::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
+  .family-flow span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .73rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  /* gap table */
+  .gapwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; font-size: .9rem; }
+  th, td { text-align: left; padding: .85rem 1rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; line-height: 1.65; }
+  th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; background: var(--surface-2); }
+  tr:last-child td { border-bottom: none; }
+  td.name { font-weight: 700; white-space: nowrap; }
+  .pill { font-family: var(--mono); font-size: .68rem; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
+  .pill.ok { color: var(--solution); background: var(--solution-bg); }
+  .pill.part { color: var(--warn); background: var(--warn-bg); }
+  .pill.none { color: var(--warn); background: var(--warn-bg); font-weight: 700; }
+
+  .board { display: grid; grid-template-columns: repeat(auto-fit,minmax(17rem,1fr)); gap: 1.1rem; }
+  .panel { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .panel-head { padding: .8rem 1.1rem; border-bottom: 1px solid var(--rule-soft); background: var(--surface-2); display: flex; align-items: baseline; justify-content: space-between; gap: .8rem; }
+  .panel-head b { font-size: .92rem; }
+  .panel-head .count { font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .panel ul { margin: 0; padding: .9rem 1.1rem 1.1rem; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .panel li { display: flex; align-items: baseline; gap: .6rem; font-size: .88rem; line-height: 1.6; }
+  .dot { width: .5rem; height: .5rem; border-radius: 50%; flex: none; transform: translateY(-.1em); }
+  .dot.live { background: var(--solution); }
+  .dot.dead { background: var(--dead); }
+  .panel li code { background: transparent; border: none; padding: 0; font-size: .84em; }
+  .panel li .note { color: var(--ink-faint); font-size: .78rem; }
+
+  .trees { display: grid; grid-template-columns: repeat(auto-fit,minmax(20rem,1fr)); gap: 1.1rem; }
+  .tree { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .tree-head { padding: .75rem 1.1rem; border-bottom: 1px solid var(--rule-soft); display: flex; align-items: center; justify-content: space-between; gap: .8rem; background: var(--surface-2); }
+  .tree-head b { font-size: .9rem; font-weight: 700; }
+  .tag { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
+  .tag.bad { color: var(--warn); background: var(--warn-bg); }
+  .tag.good { color: var(--solution); background: var(--solution-bg); }
+  .tree pre { margin: 0; padding: 1.1rem 1.2rem 1.3rem; font-family: var(--mono); font-size: .8rem; line-height: 1.85; overflow-x: auto; color: var(--ink-soft); }
+  .tree pre .p { color: var(--problem); font-weight: 700; }
+  .tree pre .s { color: var(--solution); font-weight: 700; }
+  .tree pre .cmt { color: var(--ink-faint); }
+
+  .loop { display: flex; flex-wrap: wrap; }
+  .loop-step { flex: 1 1 8rem; border: 1px solid var(--rule); background: var(--surface); padding: .9rem 1rem; display: flex; flex-direction: column; gap: .25rem; border-radius: 2px; }
+  .loop-step + .loop-step { border-left: none; }
+  .loop-step b { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
+  .loop-step span { font-size: .76rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  .open { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .open > div { background: var(--surface); padding: 1.05rem 1.2rem; display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; }
+  @media (max-width: 34rem) { .open > div { grid-template-columns: 1fr; gap: .3rem; } }
+  .open .q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .open .a { font-size: .93rem; line-height: 1.75; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1.2rem; font-size: .82rem; color: var(--ink-faint); line-height: 1.8; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">仕様の構造 / 再定義のための整理</div>
+    <h1>受け入れ基準と振る舞いは、段を変えて繰り返す</h1>
+    <p class="lede">抽象概念は2つではなく1つで、段が複数あるだけでした。この仮説から必要な宣言を導き直します。いまのスキーマは、導いたあとの突き合わせ先として参照します。</p>
+  </header>
+
+  <dl class="verdict">
+    <div>
+      <dt>抽象概念の数</dt>
+      <dd class="big">1つ</dd>
+      <dd>受け入れ基準と振る舞いの対。これが段を変えて繰り返します。</dd>
+    </div>
+    <div>
+      <dt>宣言の種類</dt>
+      <dd class="big">契約と所属</dd>
+      <dd>契約の対を持つのは業務ユースケース・集約・業務サービスの3つ。文脈は所属を担い、サブドメインは分類に留まります。</dd>
+    </div>
+    <div>
+      <dt>要求される宣言</dt>
+      <dd class="big">5つの族</dd>
+      <dd>語彙・契約・配置・照合・時機。うち2つは、いま宣言する場所がありません。</dd>
+    </div>
+  </dl>
+
+  <section>
+    <h2><span class="num">01</span>つなぎ方は1つ</h2>
+    <div class="col">
+      <p>仕様と実装をつなぐ経路は1つで、<strong>受け入れ条件 → それに対する振る舞いのシナリオ → 実装への転写 → 照合</strong>という形をしています。この形を持つのは3つで、どこであっても経路は変わりません。</p>
+    </div>
+
+    <div class="ladder">
+      <div class="rung">
+        <div class="rung-name"><b>業務ユースケース</b><span>use case</span></div>
+        <div class="rung-body">
+          <div class="cell"><div class="k">受け入れ条件</div><div class="v">EARS 形式の要件</div></div>
+          <div class="cell"><div class="k">振る舞いのシナリオ</div><div class="v">受け入れの筋書き</div><div class="m">転写先は<strong>受け入れの検証</strong></div></div>
+        </div>
+      </div>
+      <div class="link"><span>同じ形</span></div>
+      <div class="rung">
+        <div class="rung-name"><b>集約</b><span>aggregate</span></div>
+        <div class="rung-body">
+          <div class="cell"><div class="k">受け入れ条件</div><div class="v">不変条件</div></div>
+          <div class="cell"><div class="k">振る舞いのシナリオ</div><div class="v">不変条件の筋書き</div><div class="m">転写先は<strong>業務領域の単体検証</strong></div></div>
+        </div>
+      </div>
+      <div class="link"><span>同じ形</span></div>
+      <div class="rung">
+        <div class="rung-name"><b>業務サービス</b><span>domain service</span></div>
+        <div class="rung-body">
+          <div class="cell"><div class="k">受け入れ条件</div><div class="v">満たすべき判断の規則</div></div>
+          <div class="cell"><div class="k">振る舞いのシナリオ</div><div class="v">業務サービスの筋書き</div><div class="m">転写先は<strong>口の契約検証</strong></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="aside-note">
+        <div>「常に」の形をしている不変条件も、つなぎ方が変わる理由にはなりません——その不変条件に対する筋書きを書いて転写すれば、ユースケースとまったく同じ経路に乗ります。したがって担保の不足は<b>仕組みの不足としてではなく、宣言の対の欠けとして現れます</b>。</div>
+      </div>
+    </div>
+
+    <h3 style="margin:.6rem 0 0;font-family:var(--sans);font-size:.88rem;font-weight:700;letter-spacing:.04em;color:var(--ink-soft)">境界づけられたコンテキストが担うもの</h3>
+    <div class="col">
+      <p>BC はこの対を持ちません。ただし<strong>何も担わないわけではありません</strong>——契約とは別種の宣言、<strong>所属</strong>を担います。この文脈に何が属するのか、という参照構造そのものです。</p>
+    </div>
+
+    <div class="board">
+      <div class="panel">
+        <div class="panel-head"><b>契約の宣言</b><span class="count">3 要素</span></div>
+        <ul>
+          <li><span class="dot live"></span><div>業務ユースケース<br><span class="note">受け入れ条件 ＋ 振る舞いのシナリオ</span></div></li>
+          <li><span class="dot live"></span><div>集約<br><span class="note">不変条件 ＋ 振る舞いのシナリオ</span></div></li>
+          <li><span class="dot live"></span><div>業務サービス<br><span class="note">満たすべき規則 ＋ 振る舞いのシナリオ</span></div></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><b>所属の宣言</b><span class="count">文脈が持つ</span></div>
+        <ul>
+          <li><span class="dot live"></span><div>一覧<br><span class="note">この文脈に属する要素の列挙（意図）</span></div></li>
+          <li><span class="dot live"></span><div>所在の規則<br><span class="note">各種別が仕様側・実装側のどこに、どういう名前で在るか</span></div></li>
+          <li><span class="dot live"></span><div>走査の領域<br><span class="note">規則が及ぶ範囲。文脈と実装根の対応</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col">
+      <p>この3つが揃うと、所属は<strong>2方向で照合できます</strong>。方向ごとに見つかる失敗が違います。</p>
+    </div>
+
+    <div class="chain-2" style="display:flex;flex-wrap:wrap;gap:1rem">
+      <div class="panel" style="flex:1 1 18rem">
+        <div class="panel-head"><b>一覧 → 実物</b><span class="count">欠けの検知</span></div>
+        <ul>
+          <li><span class="dot live"></span><div>属すると宣言されたのに、仕様文書が無い</div></li>
+          <li><span class="dot live"></span><div>仕様は在るのに、実装の成果物が無い</div></li>
+          <li><span class="dot live"></span><div><b>一覧が無ければ、この方向は定義できない</b></div></li>
+        </ul>
+      </div>
+      <div class="panel" style="flex:1 1 18rem">
+        <div class="panel-head"><b>領域 → 一覧</b><span class="count">余りの検知</span></div>
+        <ul>
+          <li><span class="dot live"></span><div>領域に在るのに、どの一覧にも載っていない</div></li>
+          <li><span class="dot live"></span><div>実装は在るのに、どの仕様も名指ししていない</div></li>
+          <li><span class="dot live"></span><div><b>領域が無ければ、この方向は定義できない</b></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="aside-note">
+        <div><b>照合の起点は一覧でなければなりません。</b>領域の走査を起点にすると、一覧に載っていないものも普通に処理されてしまい、一覧が正である意味が消えます。走査は余りを出すためだけに使います。</div>
+      </div>
+      <p>判定に使える手がかりは、要素の種類ごとに異なります。</p>
+    </div>
+
+    <div class="gapwrap">
+      <table>
+        <thead>
+          <tr><th>要素</th><th>仕様側の実物</th><th>実装側の実物</th><th>照合できる深さ</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">集約</td><td>仕様文書</td><td>実体のクラス</td><td>ファイルの存在／クラス名／<strong>属性の一致</strong></td></tr>
+          <tr><td class="name">業務ユースケース</td><td>仕様文書</td><td>ユースケースのクラス</td><td>ファイルの存在／クラス名</td></tr>
+          <tr><td class="name">業務サービス</td><td>仕様の項目</td><td>実装ファイル</td><td>ファイルの存在</td></tr>
+          <tr><td class="name">振る舞いのシナリオ</td><td>筋書き</td><td>検証コードの説明文</td><td><strong>宣言行と本文の一字一句</strong></td></tr>
+          <tr><td class="name">サブドメイン</td><td>仕様文書</td><td>—（対応物なし）</td><td>仕様側のみ</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <div class="aside-note warn">
+        <div><b>いまの実物との差：</b>手がかりも検知も大半は既にあり、両方向とも動いています（ユースケース 3 件の欠け、業務サービス 1 件の余りを実際に検出）。ただし<b>照合の起点が一覧ではなく領域の走査になっています</b>。仕様文書がディスクに在れば、一覧に載っていなくても照合を通ります。所属の一覧が唯一の正として機能していない状態です。あわせて、一覧の種別に業務サービスが無く、集約は仕様側の余りの向きが見られていません。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>サブドメインは段ではない</h2>
+    <div class="col">
+      <p>サブドメインと境界づけられたコンテキストは、<strong>包含ではなく対応</strong>の関係です。片方は業務活動として見つかるもの、もう片方はソフトウェアとして設計されるもので、住んでいる空間が違います。</p>
+    </div>
+    <div class="spaces">
+      <div class="space problem">
+        <div class="space-label">見つかるもの</div>
+        <b>サブドメイン<br>（業務領域）</b>
+        <p>企業の事業活動を細分化した業務活動の単位。中核・一般・補完に分類する。</p>
+        <ul>
+          <li>問うのは「自社で作り込むか、既製品に任せるか」</li>
+          <li>投資判断の道具</li>
+          <li>まとめて真であるべきことを持たない</li>
+        </ul>
+      </div>
+      <div class="bridge"><div class="arrow">──▶</div><div class="cap">対応<br>（写像）</div></div>
+      <div class="space solution">
+        <div class="space-label">設計するもの</div>
+        <b>境界づけられた<br>コンテキスト</b>
+        <p>ある言葉が一貫した意味を持ち続けられる範囲であり、そのモデルが実装として独立している範囲。</p>
+        <ul>
+          <li>実装が対応するので、満たす／満たさないが言える</li>
+          <li>だから受け入れ基準を持てる</li>
+          <li>業務ユースケースはここに属する</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>仮説が要求する5つの宣言<span class="side">助言役の検証を反映</span></h2>
+    <div class="col">
+      <p>「各段の受け入れ基準と振る舞いが満たされていれば全体の品質が担保される」を機械に支えさせるには、何が宣言されている必要があるか。既存の形からではなく、仮説から導きます。</p>
+      <p>導かれるのは5つで、<strong>どれも他の4つからは導けません</strong>。当初は4つとしていましたが、検証で<strong>語彙が抜けている</strong>ことが分かりました。照合が「文言で突き合わせる」と言う以上、その文言が何を指すかは先に決まっていなければなりません。</p>
+    </div>
+
+    <div class="families">
+      <div class="family">
+        <div class="family-idx">0</div>
+        <div class="family-main">
+          <div class="family-q">どの言葉が何を指すか</div>
+          <b>語彙</b>
+          <p>境界の内側で一貫した意味を持つ言葉。契約の各段も、照合の一致判定も、これを参照する。境界づけられたコンテキストの定義そのものが「ある言葉が一貫した意味を持ち続けられる範囲」なので、最上段は語彙が先に立たなければ範囲すら定まらない。</p>
+          <div class="must">
+            <div>その語がどの段のどの単位を指すか</div>
+            <div>業務に詳しい人が自分の言葉として読めるか</div>
+            <div>仕様と実装が同じ文字列で名乗る規則</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="family-flow"><span>言葉が決まらないと、何が正しいかも言えない</span></div>
+
+      <div class="family">
+        <div class="family-idx">Ⅰ</div>
+        <div class="family-main">
+          <div class="family-q">何が正しいか</div>
+          <b>契約</b>
+          <p>段ごとの受け入れ基準と振る舞い。そして「この基準はこの振る舞いが覆う」という対応。</p>
+          <div class="must">
+            <div>3 要素それぞれに、受け入れ条件と振る舞いのシナリオの対がある</div>
+            <div>どの条件をどのシナリオが担当するかの対応が、実在する宣言だけを指せる</div>
+            <div>文脈に何が属するかという所属の宣言（＝「この集合で全部」という主張）</div>
+            <div>情報の不在を主張する規則（保持しない・残らない）も、言明としてはここに属する</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="family-flow"><span>契約が定まらないと、置き場所も決まらない</span></div>
+
+      <div class="family">
+        <div class="family-idx">Ⅱ</div>
+        <div class="family-main">
+          <div class="family-q">どこに何があるか</div>
+          <b>配置</b>
+          <p>実装側の置き場所と形。末端の振る舞いが接する先を特定するために要る。<strong>照合が無くても意味を持つ事柄だけ</strong>がここに属する——人が実装やテストを書くときに要るものが基準。</p>
+          <div class="must">
+            <div>末端の振る舞いが、実装のどこと対応するか</div>
+            <div>テストの置き場所と層の構成（層の境界から導かれるため配置の側）</div>
+            <div>手で書くものと、宣言から起こすものの区別</div>
+            <div>情報の不在を主張する規則を、書けない形で実現するための配置（<strong>言明そのものは契約の側</strong>）</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="family-flow"><span>何と何が在るかが決まって、はじめて突き合わせられる</span></div>
+
+      <div class="family">
+        <div class="family-idx">Ⅲ</div>
+        <div class="family-main">
+          <div class="family-q">何と何をどう突き合わせるか</div>
+          <b>照合の設定</b>
+          <p>シナリオと実装は文言で、受け入れ条件とシナリオは対応の宣言で突き合わせる。ただし<strong>「照合そのもの」ではなく「照合の設定」</strong>。宣言はパラメータ空間の中の一点を指し、空間そのもの（どんなパラメータがありえて、各値が何を意味するか）はコードが定義する。この線を引かないと、いまのエンジンが読める範囲がそのまま族の範囲になってしまう。</p>
+          <div class="must">
+            <div>一致を判定するキーの書式</div>
+            <div>一致の厳しさ（完全一致／連続部分列／順序不同）</div>
+            <div>差分の呼び名と重大度</div>
+            <div>宣言が欠けている場合の扱い（黙って外さない）</div>
+            <div>宣言そのものが揃っているかの自己検査</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="family-flow"><span>照合の中身が固まって、はじめて自動で走らせられる</span></div>
+
+      <div class="family">
+        <div class="family-idx">Ⅳ</div>
+        <div class="family-main">
+          <div class="family-q">いつ突き合わせるか</div>
+          <b>時機</b>
+          <p>照合をいつ走らせるか。そして違反したとき<strong>止めるか、知らせるか</strong>。ここが独立している理由は「照合と別の関心事だから」ではなく、<strong>合意の主体が違うから</strong>——遮断するかどうかは組織的な判断で、照合の規則からは導けない。</p>
+          <div class="must">
+            <div>走らせる契機</div>
+            <div>違反したとき遮断するか通知するか</div>
+            <div class="strike">差分をどれだけ重く扱うか（これは照合の側）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="aside-note">
+        <div>この5つは<b>順に依存します</b>。語彙が決まらないと何が正しいか言えず、契約が決まらないと配置が決まらず、配置が決まらないと照合できず、照合が固まらないうちに常時化すると誤検知を鳴らし続けて信用を失います。<b>この依存が、そのまま進め方の順序になります。</b></div>
+      </div>
+      <div class="aside-note warn">
+        <div><b>依存の逆流が2件、実物で起きています。</b>照合の側が対象ブロックの一覧を固定表として持っているため、契約が5つ目の種類を持った瞬間に黙って落とされます（照合が実効的な契約の範囲を決めている）。また常時化の側が照合結果の意味を独自に解釈しており、<b>2026年8月1日に実際の事故になりました</b>——132 件の筋書きが誰とも突き合わされていない状態を「ずれ無し」と読んでいます。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>いまの姿<span class="side">突き合わせ先としての参考</span></h2>
+    <div class="col">
+      <p>導いた4つを、いまある宣言と突き合わせます。<strong>ここは出発点ではなく、差分を測るための参照です。</strong></p>
+    </div>
+
+    <div class="gapwrap">
+      <table>
+        <thead>
+          <tr><th>族</th><th>いまの宣言の場所</th><th>状態</th><th>差分</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name">0 語彙</td>
+            <td>ドメイン仕様のスキーマ（文脈の段）</td>
+            <td><span class="pill part">読み手なし</span></td>
+            <td>欄は在り 38 件記入済み。ただし読む実装が 0。族として独立させるか、契約の内側に置くかが未決</td>
+          </tr>
+          <tr>
+            <td class="name">Ⅰ 契約</td>
+            <td>ドメイン仕様のスキーマ</td>
+            <td><span class="pill part">一部</span></td>
+            <td>文脈の段に基準の欄が無い。基準と振る舞いの対応を運ぶ欄は、必須でも型付きでもない</td>
+          </tr>
+          <tr>
+            <td class="name">Ⅱ 配置</td>
+            <td>コーディングのスキーマ</td>
+            <td><span class="pill ok">在る</span></td>
+            <td>置き場所と層は宣言できている。手書きと生成の区別、表現の制約の置き場所は未定</td>
+          </tr>
+          <tr>
+            <td class="name">Ⅲ 照合</td>
+            <td>—</td>
+            <td><span class="pill none">場所が無い</span></td>
+            <td>対象ブロックの一覧はコードの定数に、置き場所の対応は試験方針の文書に分かれている</td>
+          </tr>
+          <tr>
+            <td class="name">Ⅳ 時機</td>
+            <td>フックのスキーマ</td>
+            <td><span class="pill part">先行</span></td>
+            <td>照合が固まる前に形が決まっている。Ⅲ が定まってから見直す</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <div class="aside-note warn">
+        <div><b>4つのうち1つに、宣言する場所がありません。</b>照合の規則は、いま一部がコードの中の 4 要素のタプルとして、一部が試験方針の文書として、別々に存在しています。「宣言が正で、コードは宣言を読むだけ」という原則に対する、既知の例外です。</div>
+      </div>
+    </div>
+
+    <h3 style="margin:0;font-family:var(--sans);font-size:.88rem;font-weight:700;letter-spacing:.04em;color:var(--ink-soft)">契約の側の実測</h3>
+    <div class="board">
+      <div class="panel">
+        <div class="panel-head"><b>機械が読んでいる</b><span class="count">4 ブロック</span></div>
+        <ul>
+          <li><span class="dot live"></span><div><code>acceptanceScenarios</code><br><span class="note">ユースケースの振る舞い</span></div></li>
+          <li><span class="dot live"></span><div><code>guaranteeScenarios</code><br><span class="note">操作保証の振る舞い</span></div></li>
+          <li><span class="dot live"></span><div><code>invariantScenarios</code><br><span class="note">不変条件の振る舞い</span></div></li>
+          <li><span class="dot live"></span><div><code>domainServiceScenarios</code><br><span class="note">業務サービスの振る舞い</span></div></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><b>誰も読んでいない</b><span class="count">7 ブロック</span></div>
+        <ul>
+          <li><span class="dot dead"></span><div><code>ubiquitousLanguage</code><br><span class="note">語彙。1 文脈で 38 件記入済み</span></div></li>
+          <li><span class="dot dead"></span><div><code>acceptanceCriteria</code><br><span class="note">受け入れ基準。147 件記入済み</span></div></li>
+          <li><span class="dot dead"></span><div><code>operationGuarantees</code><br><span class="note">操作保証</span></div></li>
+          <li><span class="dot dead"></span><div><code>invariants</code><br><span class="note">不変条件。32 件記入済み</span></div></li>
+          <li><span class="dot dead"></span><div><code>commands</code><br><span class="note">集約のコマンド</span></div></li>
+          <li><span class="dot dead"></span><div><code>covers</code><br><span class="note">基準と振る舞いの対応。記入率 3 分の 1</span></div></li>
+          <li><span class="dot dead"></span><div><code>enforcement</code><br><span class="note">不変条件の守り方</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col">
+      <p><strong>振る舞いの側は4段すべて読まれていて、基準の側は1つも読まれていません。</strong>ただし、読まれていない7つすべてに読み手を作る必要はありません。</p>
+    </div>
+
+    <div class="gapwrap">
+      <table>
+        <thead>
+          <tr><th>読まれていない宣言</th><th>照合として定義できるか</th><th>ひとつ下で覆われるか</th><th>どうするか</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">受け入れ条件（EARS）</td><td>いいえ（自然言語）</td><td>はい</td><td rowspan="3">条件そのものの読み手は作らない。<strong>対が揃っているかの読み手だけ作る</strong></td></tr>
+          <tr><td class="name">不変条件</td><td>いいえ</td><td>はい</td></tr>
+          <tr><td class="name">集約のコマンド</td><td>いいえ</td><td>はい</td></tr>
+          <tr><td class="name">条件とシナリオの対応</td><td><strong>はい</strong>（識別子の集合演算）</td><td>—</td><td><strong>読み手を作る。これが「どの条件にシナリオが無いか」を数える本体</strong></td></tr>
+          <tr><td class="name">不変条件の守り方</td><td>いいえ</td><td>いいえ（情報の不在）</td><td>畳むのでも読み手を作るのでもなく、宣言の型を<strong>「禁止する構造」へ書き換える</strong></td></tr>
+          <tr><td class="name">語彙</td><td>いいえ（人が読めるか、は機械に判定できない）</td><td>—</td><td>一致の判定基準として照合が参照する。人が主体で保つ族</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <p>作るべき読み手は<strong>2種類だけ</strong>です——<strong>対が揃っているかの判定</strong>と<strong>禁止構造</strong>。前者の形は既に在ります（宣言された一覧とディスク上の実在を両方向で差分する検査が動いています）。後者も既に在ります（層の依存の宣言を読む検査）。どちらも新しい発明ではなく、既存の形の2件目の用途です。</p>
+      <div class="aside-note warn">
+        <div><b>実測での対の欠けは3箇所です。</b>集約は不変条件 17 件に対しシナリオ 12 件で 5 件分が足りず、業務サービスはシナリオ 5 件があるのに受け入れ条件そのものが無く、そして対応の記入が 17 件中 4 件しかないため<b>どの 5 件かを機械が特定できません</b>。</div>
+      </div>
+    </div>
+
+    <h3 style="margin:.8rem 0 0;font-family:var(--sans);font-size:.88rem;font-weight:700;letter-spacing:.04em;color:var(--ink-soft)">置き場所の実測</h3>
+    <div class="trees">
+      <div class="tree">
+        <div class="tree-head"><b>いまの並び</b><span class="tag bad">概念と逆向き</span></div>
+<pre>specs/
+└─ <span class="s">bc-waffle/</span>            <span class="cmt">解決空間</span>
+   ├─ bc-waffle.json
+   ├─ aggregate/
+   └─ <span class="p">subdomain/</span>         <span class="cmt">問題空間が</span>
+      └─ <span class="p">sd-validation/</span>  <span class="cmt">内側にある</span>
+         └─ usecase/
+            └─ uc-*.json</pre>
+      </div>
+      <div class="tree">
+        <div class="tree-head"><b>対応を参照で表す形</b><span class="tag good">導いた形</span></div>
+<pre>specs/
+├─ <span class="p">subdomain/</span>            <span class="cmt">問題空間</span>
+│  └─ sd-*.json
+└─ <span class="s">bc/</span>                   <span class="cmt">解決空間</span>
+   └─ <span class="s">bc-waffle/</span>
+      ├─ bc-waffle.json
+      ├─ aggregate/
+      └─ usecase/
+         └─ uc-*.json  <span class="cmt">subdomainRef で</span>
+                       <span class="cmt">対応先を指す</span></pre>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="aside-note warn">
+        <div><b>移動の規模：</b>仕様文書 74 件（ユースケース 48・サブドメイン 8・集約 5）、パスを直書きしているテスト 11 ファイル・約 60 箇所、実装コードの定数 1 つ、引き継ぎ文書 2 件。<b>並行セッションが担当していた範囲と正面から重なります。</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>進め方</h2>
+    <div class="col">
+      <p>03 で導いた依存が、そのまま順序です。各段階は 06 のループを 1 周して進みます。</p>
+    </div>
+    <div class="gapwrap">
+      <table>
+        <thead>
+          <tr><th>順</th><th>やること</th><th>通過条件</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name">00</td>
+            <td>仮説を段の梯子の形に書き直し、採用可否を決める</td>
+            <td>以降すべてがこの仮説を前提にするため、確定していないと積んだものが揺れる</td>
+          </tr>
+          <tr>
+            <td class="name">0</td>
+            <td>語彙を、契約と照合の両方が参照できる形にする。族として独立させるか契約の内側に置くかを決める</td>
+            <td>照合の一致判定が、語彙の宣言を基準にしていると言える</td>
+          </tr>
+          <tr>
+            <td class="name">Ⅰ</td>
+            <td>対の欠けを埋める。集約のシナリオ不足、業務サービスの受け入れ条件、条件とシナリオの対応。あわせて置き場所を対応の形に直す</td>
+            <td>3つとも対が揃い、対応が実在する宣言だけを指している</td>
+          </tr>
+          <tr>
+            <td class="name">Ⅱ</td>
+            <td>配置を宣言できるようにする。末端が実装と接する点、表現の制約の置き場所、手書きと生成の区別</td>
+            <td>1つの文脈で、梯子が仕様から実装まで欠けなく通っている</td>
+          </tr>
+          <tr>
+            <td class="name">Ⅲ</td>
+            <td>照合の規則に宣言の場所を与える。いまコードと試験方針に分かれているものを、宣言へ寄せる</td>
+            <td>検知が緑を返したとき、それが「適合している」であって「見ていない」ではないと言える</td>
+          </tr>
+          <tr>
+            <td class="name">Ⅳ</td>
+            <td>時機を宣言し、常時化する。既存のフックの形は、ここで初めて見直す</td>
+            <td>照合の規則が変わっても、走らせ方の宣言だけで追随できる</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span>変わらないもの</h2>
+    <div class="col">
+      <p>宣言も検知も作り替えますが、<strong>作り方そのものは変えません。</strong></p>
+    </div>
+    <div class="loop">
+      <div class="loop-step"><b>調べる</b><span>investigation</span></div>
+      <div class="loop-step"><b>決める</b><span>spec</span></div>
+      <div class="loop-step"><b>引き継ぐ</b><span>handoff</span></div>
+      <div class="loop-step"><b>作る</b><span>implementation</span></div>
+    </div>
+    <div class="col">
+      <div class="aside-note">
+        <div>組み合わせるべき助言役は、その都度ルーティング表に問い合わせて決めます。<b>複数の助言役へは同時に投げ、独立した意見として突き合わせる</b>——1 体ずつ順に呼ぶと、後から呼んだ側が前の結論に引きずられます。この運用も変わりません。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">07</span>まだ決まっていないこと</h2>
+    <div class="open">
+      <div>
+        <div class="q">語彙の置き所</div>
+        <div class="a">独立した族にするか、契約の内側に置くかで助言が割れています。独立させると変更の波及が小さく、内側に置くと所有者が自然です。実物では既に契約側の欄として在るため、族として扱いつつ持ち主は契約側、という折衷が有力です。</div>
+      </div>
+      <div>
+        <div class="q">対の充足と転写</div>
+        <div class="a">対が揃っていることと、そのシナリオが実装へ実際に転写されていることは別です。<strong>揃っていても転写されていなければ何も担保しません。</strong>2つを別々に測る必要があります。</div>
+      </div>
+      <div>
+        <div class="q">段の数</div>
+        <div class="a">3 段構造は、集約と不変条件を持つ実装方法でしか成立しません。単純な業務領域では集約の段が空になり 2 段に潰れます。段数を固定した宣言形式は、この差を表現できません。</div>
+      </div>
+      <div>
+        <div class="q">並行作業</div>
+        <div class="a">置き場所の変更はテスト 11 ファイルと bc-waffle の仕様に触ります。並行セッションの状況で、Ⅰ の実行時期が変わります。</div>
+      </div>
+      <div>
+        <div class="q">仮説の検証</div>
+        <div class="a">当てはめて確かめた業務領域はまだ 1 件（補完に分類されたもの）だけです。中核に分類される領域で一度通す必要があります。</div>
+      </div>
+      <div>
+        <div class="q">所属の鏡</div>
+        <div class="a">仕様側の所属の宣言を、実装側でも集合として照合するか。実装の成果物を持つ要素に限られますが、仕様が正である以上、同じ参照構造で突き合わせられるのが望ましいはずです。</div>
+      </div>
+      <div>
+        <div class="q">既存の扱い</div>
+        <div class="a">誰も読んでいない 6 ブロックは、読み手を作るか畳むかを 1 つずつ決めます。惰性で残すと、宣言したから守られているという誤解が積み上がります。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    段の梯子と 4 つの族は、このリポジトリが持つ <code>subdomain</code> / <code>bounded-context</code> / <code>business-domain</code> の各知識を土台に、相談を通じて到達した仮説からの導出です。まだ実装で検証されていません。04 節の数値は実装コードと仕様文書の走査による実測で、既存の形は導出の出発点ではなく差分の測り先として置いています。
+  </footer>
+
+</div>

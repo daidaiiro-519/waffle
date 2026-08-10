@@ -1,0 +1,354 @@
+<title>ADR：受け入れ条件と振る舞いのシナリオの対応をどう宣言するか</title>
+<style>
+  :root {
+    --paper:#EDF0F3; --surface:#FFFFFF; --surface-2:#F5F7F9;
+    --ink:#171B23; --ink-soft:#4B5563; --ink-faint:#79828F;
+    --rule:#D3DAE2; --rule-soft:#E4E9EE;
+    --claim:#7A4368;  --claim-bg:#F3E9F0;
+    --flow:#16636B;   --flow-bg:#E2EFF0;
+    --warn:#9A4A21;   --warn-bg:#F7EAE2;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+      --rule:#2E3742; --rule-soft:#242C37;
+      --claim:#D19CC0; --claim-bg:#2C1F2A;
+      --flow:#6BC0C7; --flow-bg:#132A2C;
+      --warn:#E0A17A; --warn-bg:#2E211A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --claim:#D19CC0; --claim-bg:#2C1F2A;
+    --flow:#6BC0C7; --flow-bg:#132A2C;
+    --warn:#E0A17A; --warn-bg:#2E211A;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper); color: var(--ink); font-family: var(--sans);
+    font-size: 16px; line-height: 1.85; margin: 0;
+    padding: clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 58rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3rem; }
+  .col { max-width: 39rem; }
+
+  header { display: flex; flex-direction: column; gap: .8rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .meta .st { color: var(--claim); }
+  h1 { font-family: var(--serif); font-size: clamp(1.55rem,3.8vw,2.2rem); line-height: 1.4; font-weight: 600; margin: 0; text-wrap: balance; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+
+  section { display: flex; flex-direction: column; gap: 1.3rem; }
+  h2 { font-family: var(--serif); font-size: 1.3rem; font-weight: 600; margin: 0; padding-bottom: .6rem; border-bottom: 1px solid var(--rule); display: flex; align-items: baseline; gap: .8rem; }
+  h2 .num { font-family: var(--mono); font-size: .7rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
+  h3 { font-family: var(--sans); font-size: .87rem; font-weight: 700; letter-spacing: .04em; margin: 0; color: var(--ink-soft); }
+  p { margin: 0; }
+  .col > p + p { margin-top: .85rem; }
+  strong { font-weight: 700; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 3px; padding: .08em .34em; }
+
+  .ask { border: 1px solid var(--rule); border-left: 4px solid var(--claim); border-radius: 2px; background: var(--surface); padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: .5rem; }
+  .ask .k { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .ask b { font-family: var(--serif); font-size: 1.16rem; font-weight: 600; line-height: 1.5; }
+  .ask p { font-size: .92rem; color: var(--ink-soft); }
+
+  /* 定義 */
+  .defs { display: grid; grid-template-columns: repeat(auto-fit,minmax(17rem,1fr)); gap: 1rem; }
+  .def { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); padding: 1.15rem 1.3rem 1.3rem; display: flex; flex-direction: column; gap: .55rem; }
+  .def.claim { border-top: 3px solid var(--claim); }
+  .def.flow { border-top: 3px solid var(--flow); }
+  .def .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; }
+  .def.claim .k { color: var(--claim); }
+  .def.flow .k { color: var(--flow); }
+  .def b { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
+  .def p { font-size: .9rem; color: var(--ink-soft); line-height: 1.7; }
+  .def .cut { font-size: .84rem; color: var(--ink); border-top: 1px dashed var(--rule); padding-top: .55rem; }
+
+  /* 交差の図 */
+  .cross { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); padding: 1.3rem; overflow-x: auto; }
+  .crossgrid { display: grid; grid-template-columns: 9.5rem repeat(3, minmax(6.5rem,1fr)); gap: .4rem; min-width: 32rem; }
+  .cx { padding: .55rem .7rem; border-radius: 2px; font-size: .8rem; line-height: 1.5; }
+  .cx.corner { background: transparent; }
+  .cx.head-flow { background: var(--flow-bg); color: var(--flow); font-weight: 700; text-align: center; }
+  .cx.head-claim { background: var(--claim-bg); color: var(--claim); font-weight: 700; }
+  .cx.hit { background: var(--surface-2); border: 1px solid var(--rule); text-align: center; font-family: var(--mono); font-size: .95rem; color: var(--ink); }
+  .cx.miss { border: 1px dashed var(--rule-soft); text-align: center; color: var(--ink-faint); font-family: var(--mono); font-size: .95rem; }
+
+  /* 複製の図 */
+  .dup { display: grid; grid-template-columns: repeat(auto-fit,minmax(19rem,1fr)); gap: 1rem; }
+  .dupbox { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); overflow: hidden; }
+  .dupbox.bad { border-color: var(--warn); }
+  .dup-head { padding: .75rem 1.1rem; border-bottom: 1px solid var(--rule-soft); background: var(--surface-2); display: flex; align-items: baseline; justify-content: space-between; gap: .7rem; }
+  .dup-head b { font-size: .92rem; }
+  .tagx { font-family: var(--mono); font-size: .64rem; letter-spacing: .06em; padding: .2em .55em; border-radius: 2px; white-space: nowrap; }
+  .tagx.bad { color: var(--warn); background: var(--warn-bg); }
+  .tagx.ok { color: var(--flow); background: var(--flow-bg); }
+  pre { margin: 0; padding: .9rem 1.1rem 1.1rem; font-family: var(--mono); font-size: .75rem; line-height: 1.8; overflow-x: auto; color: var(--ink-soft); }
+  pre.wide { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); }
+  pre .rep { color: var(--warn); font-weight: 700; }
+  pre .good { color: var(--flow); font-weight: 700; }
+  pre .dim { color: var(--ink-faint); }
+
+  .aside-note { display: flex; gap: .8rem; align-items: flex-start; background: var(--surface-2); border-left: 3px solid var(--claim); padding: .95rem 1.15rem; border-radius: 0 2px 2px 0; font-size: .9rem; line-height: 1.75; color: var(--ink-soft); }
+  .aside-note b { color: var(--ink); }
+  .aside-note.warn { border-left-color: var(--warn); }
+
+  .decision { border: 2px solid var(--flow); border-radius: 2px; background: var(--surface); padding: 1.35rem 1.45rem; display: flex; flex-direction: column; gap: .85rem; }
+  .decision .k { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--flow); }
+  .decision .v { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; line-height: 1.5; }
+  .decision ol { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .4rem; font-size: .94rem; line-height: 1.75; }
+  .decision ol li::marker { color: var(--ink-faint); font-family: var(--mono); font-size: .85rem; }
+
+  .scope { display: grid; grid-template-columns: repeat(auto-fit,minmax(17rem,1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .scope > div { background: var(--surface); padding: 1.1rem 1.25rem 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+  .scope .k { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .scope ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .45rem; font-size: .89rem; line-height: 1.7; }
+  .scope li { display: flex; gap: .55rem; }
+  .scope li::before { content: "▸"; color: var(--ink-faint); flex: none; font-size: .7rem; transform: translateY(.4em); }
+
+  .open { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .open > div { background: var(--surface); padding: 1rem 1.15rem; display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; }
+  @media (max-width: 34rem) { .open > div { grid-template-columns: 1fr; gap: .3rem; } }
+  .open .q { font-family: var(--mono); font-size: .69rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .open .a { font-size: .91rem; line-height: 1.75; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1.15rem; font-size: .81rem; color: var(--ink-faint); line-height: 1.8; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="meta">
+      <span>ADR / 意思決定の記録</span>
+      <span class="st">状態：決定待ち</span>
+      <span>2026-08-10</span>
+    </div>
+    <h1>受け入れ条件と振る舞いのシナリオの対応を、どう宣言するか</h1>
+    <p class="lede">2つの定義だけから導きます。既存の文書がどうなっているかは、いま置き換えようとしている方式の下で書かれたものなので、根拠に使いません。</p>
+  </header>
+
+  <div class="ask">
+    <div class="k">決めること</div>
+    <b>「この受け入れ条件を、この振る舞いのシナリオが満たす」という対応を、どういう形で宣言するか</b>
+    <p>対応の情報そのものは必要です。これが無いと「どの条件にシナリオが付いていないか」を機械が言えません。</p>
+  </div>
+
+  <section>
+    <h2><span class="num">01</span>前提となる2つの定義</h2>
+    <div class="defs">
+      <div class="def claim">
+        <div class="k">満たすべきこと</div>
+        <b>受け入れ条件</b>
+        <p>満たすべきことの1単位。<strong>1つの条件は1つの主張</strong>で、複数の状況にまたがって成り立つことを述べる。</p>
+        <div class="cut">切り口は<strong>「主張」</strong></div>
+      </div>
+      <div class="def flow">
+        <div class="k">満たしていると言える筋書き</div>
+        <b>振る舞いのシナリオ</b>
+        <p>システムを1回通した筋書き。Given と When が1つの流れを定め、Then がその流れで観測できることを述べる。</p>
+        <div class="cut">切り口は<strong>「流れ」</strong></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="aside-note">
+        <div>「控え、<b>かつ</b>尋ねない」のように1項目に主張が2つ入っているものは、条件が1つではなく<b>2つある状態</b>です。これは定義から出ることで、書き方の好みではありません。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>導出：切り口が違うので、対応は多対多になる</h2>
+    <div class="col">
+      <p>条件は主張で切り、シナリオは流れで切ります。<strong>同じものを違う軸で切った2つの分割の間の対応は、一般に多対多になります。</strong>これが結論で、他に何も要りません。</p>
+      <p>両方向とも定義から出ます。</p>
+    </div>
+
+    <div class="cross">
+      <div class="crossgrid">
+        <div class="cx corner"></div>
+        <div class="cx head-flow">流れ①</div>
+        <div class="cx head-flow">流れ②</div>
+        <div class="cx head-flow">流れ③</div>
+
+        <div class="cx head-claim">主張 A</div>
+        <div class="cx hit">●</div>
+        <div class="cx hit">●</div>
+        <div class="cx miss">−</div>
+
+        <div class="cx head-claim">主張 B</div>
+        <div class="cx hit">●</div>
+        <div class="cx miss">−</div>
+        <div class="cx hit">●</div>
+
+        <div class="cx head-claim">主張 C</div>
+        <div class="cx miss">−</div>
+        <div class="cx miss">−</div>
+        <div class="cx hit">●</div>
+      </div>
+    </div>
+
+    <div class="defs">
+      <div class="def claim">
+        <div class="k">横に見る</div>
+        <b>1つの主張 → 複数の流れ</b>
+        <p>主張は複数の状況にまたがります。流れは1つの状況しか通りません。したがって1つの主張を確かめる流れは複数ありえます——境界の内と外、別の入口、別の前提。</p>
+      </div>
+      <div class="def flow">
+        <div class="k">縦に見る</div>
+        <b>1つの流れ → 複数の主張</b>
+        <p>1つの流れを通すと、結果と状態の変化が同時に生じます。そこで観測できることは1つとは限りません。したがって1つの流れが複数の主張を同時に満たしえます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>縦を1つに強制しない理由</h2>
+    <div class="col">
+      <p>「1つのシナリオは1つの主張だけを確かめる」と決めることもできます。そう決めれば対応は1対多に収まり、入れ子で表せます。<strong>採りません。</strong>理由は1つで、定義から出ます。</p>
+      <p>同じ流れに対して Then を分けて別のシナリオにすると、<strong>Given と When が複製されます。</strong></p>
+    </div>
+
+    <div class="dup">
+      <div class="dupbox bad">
+        <div class="dup-head"><b>1主張1シナリオを強制すると</b><span class="tagx bad">宣言が複製される</span></div>
+<pre>Scenario: 貸し出すと台帳に記録される
+  <span class="rep">Given 貸出可能な備品と、借りる資格のある人</span>
+  <span class="rep">When  その人がその備品を借りる</span>
+  Then  台帳に貸出が記録される
+
+Scenario: 貸し出すと返却期限が伝えられる
+  <span class="rep">Given 貸出可能な備品と、借りる資格のある人</span>   <span class="dim">← 同じ</span>
+  <span class="rep">When  その人がその備品を借りる</span>              <span class="dim">← 同じ</span>
+  Then  返却期限が伝えられる
+
+Scenario: 貸し出すと在庫が1つ減る
+  <span class="rep">Given 貸出可能な備品と、借りる資格のある人</span>   <span class="dim">← 同じ</span>
+  <span class="rep">When  その人がその備品を借りる</span>              <span class="dim">← 同じ</span>
+  Then  在庫が1つ減る</pre>
+      </div>
+
+      <div class="dupbox">
+        <div class="dup-head"><b>流れで書くと</b><span class="tagx ok">複製が生じない</span></div>
+<pre>Scenario: 資格のある人が備品を借りる
+  <span class="good">Given 貸出可能な備品と、借りる資格のある人</span>
+  <span class="good">When  その人がその備品を借りる</span>
+  Then  台帳に貸出が記録される
+  And   返却期限が伝えられる
+  And   在庫が1つ減る
+
+<span class="dim">この筋書きが満たす主張は3つ。
+対応を宣言できれば、それで足りる。</span></pre>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="aside-note warn">
+        <div><b>複製された Given と When には、検知が付きません。</b>文言の照合はシナリオ単位で行われるので、3つのうち1つだけを直しても何も落ちません。<b>宣言の複製に検知が無い状態は、この仕組みが避けると決めた壊れ方そのものです。</b>それを構造的に生み出す設計は採れません。</div>
+      </div>
+      <h3>反対材料が1つあるが、成立しない</h3>
+      <p>「1つの流れですべて述べると、壊れたときにどの主張が破れたか特定しにくい」——これは成立しません。<strong>特定は実行時に得られます。</strong>シナリオは実装へ転写され、Then の行ごとに確かめられます。落ちれば、どの行かは結果に現れます。仕様側の粒度で特定する必要はありません。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>形の選択</h2>
+    <div class="col">
+      <p>多対多を表せる形は、実質的に参照だけです。入れ子は<strong>縦方向（1つの流れが複数の主張を満たす）を表せません</strong>——その流れをどれか1つの主張の下にしか置けず、残りは「シナリオを持たない主張」に見えてしまいます。</p>
+      <p>対応の形は、条件に識別子を持たせ、シナリオがそれを並べるものにします。</p>
+    </div>
+
+<pre class="wide">受け入れ条件
+  { <span class="good">"id": "ac-recorded"</span>,  "text": "貸出は台帳に記録されること" }
+  { <span class="good">"id": "ac-due-date"</span>,  "text": "借りた人に返却期限が伝えられること" }
+  { <span class="good">"id": "ac-stock"</span>,     "text": "貸出のたびに在庫が1つ減ること" }
+
+振る舞いのシナリオ
+  { "name": "資格のある人が備品を借りる",
+    <span class="good">"satisfies": ["ac-recorded", "ac-due-date", "ac-stock"]</span>,
+    "gherkin": "Given …\nWhen …\nThen …\nAnd …\nAnd …" }</pre>
+
+    <div class="col">
+      <div class="aside-note">
+        <div>参照が壊れうる形であることは承知のうえです。<b>ただし壊れ方が違います。</b>指す先が実在しないことは機械が判定できるので、検査で弾けます。入れ子が抱える「表せないものがある」は、検査では埋められません。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>決定</h2>
+    <div class="decision">
+      <div class="k">決定</div>
+      <div class="v">受け入れ条件に識別子を持たせ、振る舞いのシナリオが満たす条件の識別子を並べる</div>
+      <ol>
+        <li>受け入れ条件は<strong>識別子を持つ構造の並び</strong>になる。1つの条件は1つの主張とする</li>
+        <li>シナリオは、満たす条件の識別子を並べる。<strong>多対多を許す</strong></li>
+        <li>指す識別子が0件のシナリオは許さない。ただし趣旨は不要なシナリオの排除ではなく、<strong>条件の書き漏れを発見させること</strong>——0件で止まったとき、書き手はシナリオを消すのではなく条件を書き足す</li>
+        <li>同じ文書内に実在する識別子しか書けない。実在しない参照と識別子の重複は検査で弾く</li>
+        <li>識別子は<strong>手書きの短い符号</strong>とし、意味を込めすぎない。連番は並べ替えに弱く、本文から導く名前は文言の修正に弱いため</li>
+        <li>不変条件も同じ形を使う。ただし<strong>既定の多重度が違う</strong>——受け入れ条件はトリガを持つので1対1が既定、不変条件は「常に」なので1対多が既定</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span>担保する範囲と、しない範囲</h2>
+    <div class="scope">
+      <div>
+        <div class="k">この仕組みが担保する</div>
+        <ul>
+          <li>どのシナリオからも指されていない条件が無いこと</li>
+          <li>指す先が実在すること</li>
+          <li>識別子が重複していないこと</li>
+          <li>どの条件も満たさないシナリオが無いこと</li>
+        </ul>
+      </div>
+      <div>
+        <div class="k">担保しない</div>
+        <ul>
+          <li><strong>その対応が正しいこと。</strong>指すことは主張であって、検証ではない</li>
+          <li>シナリオの Then が、指した条件を実際に確かめていること</li>
+          <li>条件そのものが、業務として妥当であること</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="aside-note warn">
+        <div><b>指す先を機械が確かめられることは、対応が正しいことを意味しません。</b>最も安い埋め方は、もっともらしい識別子を並べることです。しかも識別子は<b>読んでも正しく見えます</b>——散文なら言い換えにすぎないと読めば分かりますが、符号にはその手がかりがありません。<br><br>したがってこの検査の位置づけは<b>「品質のゲート」ではなく「読むべき箇所の当たり付け」</b>です。対応の妥当性は読み手の責務であることを、書き手向けの指示に明記して残します。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">07</span>まだ決まっていないこと</h2>
+    <div class="open">
+      <div>
+        <div class="q">参照の向き</div>
+        <div class="a">シナリオが条件を指す向きを採りました。逆向きもありえます。前者を選んだのは、シナリオが実装へ転写される単位であり、既に名前という鍵を持っているためです。</div>
+      </div>
+      <div>
+        <div class="q">同じ形の対</div>
+        <div class="a">操作保証とその筋書きも同じ構造です。<strong>構造は同時に決める</strong>べきです——別々にやると、対応の表を2度書くことになります。</div>
+      </div>
+      <div>
+        <div class="q">業務サービス</div>
+        <div class="a">業務サービスには受け入れ条件の欄そのものがありません。対の片側が無いため、この決定の適用より前に、条件の欄を設ける判断が要ります。</div>
+      </div>
+      <div>
+        <div class="q">複合文の扱い</div>
+        <div class="a">「1つの条件は1つの主張」は定義ですが、それを機械が確かめられるかは別です。1項目に含まれる主張の数を数える手段を持つかどうかは未決です。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    この決定は 01 の2つの定義だけから導いています。既存の文書がどう書かれているかは根拠に使っていません——それは、いま置き換えようとしている方式の下で書かれたものだからです。03・04 の例は、導出を読みやすくするための架空の題材で、証拠ではありません。移行の手順・規模・順序は、決定の根拠と混ざらないよう別の文書に分けます。
+  </footer>
+
+</div>

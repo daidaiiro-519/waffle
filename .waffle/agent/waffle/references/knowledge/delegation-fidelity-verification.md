@@ -1,1 +1,1 @@
-../../../../knowledge/DRAFT/delegation-fidelity-verification.md
+../../../../knowledge/ACTIVE/delegation-fidelity-verification.md

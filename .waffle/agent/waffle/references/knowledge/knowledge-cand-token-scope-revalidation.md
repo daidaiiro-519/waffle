@@ -1,1 +1,0 @@
-../../../../knowledge/DEPRECATED/knowledge-cand-token-scope-revalidation.md

@@ -1,0 +1,449 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>受け入れ条件と振る舞いのシナリオの対応を宣言できるようにする：handoff-criteria-scenario-link</title>
+<meta name="id" content="handoff-criteria-scenario-link">
+<meta name="type" content="Handoff">
+<meta name="title" content="受け入れ条件と振る舞いのシナリオの対応を宣言できるようにする：handoff-criteria-scenario-link">
+<meta name="description" content="uc-check-criteria-coverage の実装と、それが読む宣言（受け入れ条件の識別子と、振る舞いのシナリオが満たす条件の並び）をスキーマへ入れるための引き継ぎ。既存の全仕様文書の移行手順を含む。">
+<meta name="tags" content="context:waffle, topic:traceability">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>受け入れ条件と振る舞いのシナリオの対応を宣言できるようにする：handoff-criteria-scenario-link</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>uc-check-criteria-coverage</dd>
+      <dt>documentId</dt><dd>handoff-criteria-scenario-link</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 412" width="100%" height="412">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">呼出口</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">アプリケーション</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">ドメイン</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">宣言</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-arrow" d="M398.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L242.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L554.0,238.0"/>
+        <path class="flow-arrow" d="M242.0,288.0 L242.0,352.0"/>
+        <path class="flow-arrow" d="M554.0,288.0 L554.0,352.0"/>
+        <path class="flow-arrow dep" d="M388.0,263.0 L408.0,263.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="257.0">対の表を1箇所から読む</text>
+        <path class="flow-split" d="M398.0,124.0 L398.0,60.0"/><text class="flow-caption-svg" x="398.0" y="86.0">文書1件と走査範囲の2系統を持つ</text>
+        
+        <g class="flow-box new" transform="translate(96.0,10.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">受け入れ条件の被覆を確かめる</div>
+              <div class="sub">CLI / MCP</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="604.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="596.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">被覆の確認</div>
+              <div class="sub">CheckCriteriaCoverage</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">被覆の突き合わせ</div>
+              <div class="sub">criteria_coverage（純関数）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">条件と筋書きの対の表</div>
+              <div class="sub">scenario_drift（拡張）</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">受け入れ条件</div>
+              <div class="sub">識別子を持つ構造</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(408.0,352.0)">
+          <rect width="292.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="284.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">振る舞いのシナリオ</div>
+              <div class="sub">満たす条件の並び</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>呼出口</strong>: 利用者が被覆の確認を求める入口。文書1件を指す形と、走査範囲を指す形の2系統を持つ。</p></li><li><p><strong>アプリケーション</strong>: 仕様文書を取得し、突き合わせの純関数を回して結果をまとめる編成。取得の経路だけを知り、突き合わせ方は知らない。</p></li><li><p><strong>ドメイン</strong>: 宣言された識別子の集合と、筋書きが指した識別子の集合を突き合わせる純関数。どの条件ブロックがどの筋書きブロックと対をなすかの表は、既存の照合が持つ表を拡張して1箇所に置く。</p></li><li><p><strong>宣言</strong>: 突き合わせの対象となる宣言。受け入れ条件は識別子を持つ構造になり、振る舞いのシナリオは満たす条件の識別子を並べる。</p></li></ol><h3 style="margin-top:1.3rem">使われ方（実際の呼び出し例）</h3><ol class="reading-steps"><li><p>waffle check-criteria-coverage --path &lt;仕様文書&gt; → {unreferenced, dangling, duplicate_ids, unlinked_scenarios, uncovered_by_omission}</p></li><li><p>waffle check-criteria-coverage --documentsRoot &lt;走査範囲&gt; → 配下の全仕様文書をまとめて確かめる</p></li><li><p>指されていない条件が1件も無ければ unreferenced は空配列で返る</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 8件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 3件／実装観点 8件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">対応が多対多になるのは定義からの帰結である</div>
+              <div class="entry-consideration">受け入れ条件は「主張」で切り、振る舞いのシナリオは「流れ」で切る。切り口が違う2つの分割の間の対応は一般に多対多になる。既存文書にそう書かれているからではなく、定義からそうなる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">1つのシナリオを1つの主張に絞らない</div>
+              <div class="entry-consideration">同じ流れに対して Then を分けて別のシナリオにすると、Given と When が複製される。文言の照合はシナリオ単位なので、複製された前提には検知が付かない。「どの主張が破れたか特定しにくい」は理由にならず、特定は実行時に得られる。実装で条件を1対1へ揃え直したくなっても、この理由に立ち返ること。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">参照を採り、入れ子を採らない</div>
+              <div class="entry-consideration">入れ子は、1つの流れが複数の主張を満たす側を表せない。その流れをどれか1つの主張の下にしか置けず、残りは筋書きを持たない主張に見える。参照が壊れうることは検査で判定できるが、入れ子が表せないことは検査では埋められない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">1つの条件は1つの主張である</div>
+              <div class="entry-consideration">「控え、かつ尋ねない」のように1項目に主張が2つ入っているものは、条件が2つある状態。識別子を振る前に割らないと、1つの識別子が2つの契約を指す状態が固定され、以後その識別子が何を指すかが読み手ごとに変わる。1項目に含まれる shall の個数は文字列だけで数えられる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">既定の多重度を、受け入れ条件と不変条件で分ける</div>
+              <div class="entry-consideration">受け入れ条件は When/If のトリガを持つため1対1が既定になる。不変条件は「常に」であり、1つの筋書きが示せるのは反例の起きない一断面にすぎないため、1対多が既定になる。同じ既定を当てると集約側がほぼ全件逸脱扱いになる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">識別子は業務の言葉ではない</div>
+              <div class="entry-consideration">識別子はどう名付けても業務語彙ではないため、それが仕様を指す一次的な手段になると、業務に詳しい人が参加できない語彙が中心に座る。人が読む成果物と会話では、識別子ではなく条件の文そのものを引用する。『受け入れ基準: 〜』という短縮ラベルの慣習も、この機会に廃止する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">0件禁止の趣旨は、不要物の排除ではなく条件の欠けの発見である</div>
+              <div class="entry-consideration">どの条件も指さないシナリオが0件で弾かれたとき、書き手が取るべき行動はシナリオを消すことではなく条件を書き足すこと。この趣旨を書き手向けの指示に明記しないと、規則が逆向きに働く。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">業務サービスも同じ版で対象に含める</div>
+              <div class="entry-consideration">業務サービスは契約の対を持つ3つのうちの1つであり、受け入れ条件の欄が無いことは旧方式の欠落であって、対象外にする理由ではない。除外すると欠けを残したまま版を上げ、後でもう一度上げることになる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">契約の対は、それを担う要素が持つ</div>
+              <div class="entry-consideration">集約と業務ユースケースでは、文書そのものが契約の担い手なので、条件も筋書きも文書レベルに来る。業務サービスは違い、文書は境界づけられたコンテキストで、その中に担い手が複数いる。したがって業務サービスの条件と筋書きは、サービスの要素の中に持つ。いま筋書きが文脈レベルの平らな並びになっているのは旧方式の形であって、置き場所の根拠にはならない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">識別子が満たすべきことは2つだけ</div>
+              <div class="entry-consideration">並べ替えで指す先が変わらないこと、文言の修正で壊れないこと。連番は前者に、本文から導く名前は後者に反する。どちらも満たすのは、位置にも本文にも依存しない手書きの符号である。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">読まれない量の報告は、報告しないのと同じ</div>
+              <div class="entry-consideration">欠落を欠落として報告することと、報告が読まれる量に収まっていることは、どちらも譲れない。両立させる唯一の手は、出す場面によって量を変えることである。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">同型の実装が既にあり、新しい検知の考え方は要らない</div>
+              <div class="entry-consideration">check_spec_integrity の orphaned_value_objects が、「同一文書内で宣言された名前の集合から、別のブロックが参照した名前の集合を引く」という一字一句同じ演算をしている。これを写せばよい。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">純ロジックと取得を層で分ける</div>
+              <div class="entry-consideration">domain/services/criteria_coverage.py に document の dict だけを受け取る純関数を置き、application/usecases/check_criteria_coverage.py が port 経由で読んで回す。scenario_drift.py と check_scenario_drift.py の対がそのまま手本になる。check_spec_integrity.py は集合演算をアプリケーション層に直書きしているが、これは真似ない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">対の表を2箇所に持たない</div>
+              <div class="entry-consideration">どの条件ブロックがどの筋書きブロックと対をなすかの表は、scenario_drift.py の _SCENARIO_BLOCK_KEYS を拡張して1箇所に置く。同じ知識を2箇所に持つと、対を増やしたとき片方だけが古くなる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">実在検査は validate では実現できない</div>
+              <div class="entry-consideration">同一文書内の別配列に値が実在するかは、いまの検証器（JSON Schema 単体）の語彙では表現できない。識別子の重複も uniqueItems では弾けない（要素オブジェクト全体の同一性しか見ないため）。どちらも新設する検査の結果キーとして実装する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">未記入を一括で報告しない</div>
+              <div class="entry-consideration">「黙って対象外にしない」作法は既に3箇所に実装されているが、いずれも報告範囲が書き込み対象に絞られている。移行中の未記入が毎回すべて鳴る形は同型ではなく、3回目には読まれなくなる。未記入は件数の要約に留め、実データの列挙は明示的な全体走査のときだけにする。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">識別子の不変性は機械では強制できない</div>
+              <div class="entry-consideration">書き込み保護はトップレベル欄にしか効かず、配列要素の中のフィールドには仕組みが無い。また前の版と比べる実装が存在しない（既存の検査はすべて現在のツリーだけを見る）。不変性は規約として運用に回すしかない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">既存の照合には干渉しない</div>
+              <div class="entry-consideration">筋書きと検証コードの照合が読むのは name と gherkin の2欄だけで、欄を1つ増やしても変化しない。既に operation 欄という前例もある。一方、描画側は影響を受ける——条件が構造になるため、x-render の宣言を箇条書きから表へ変える必要がある（レンダラ側の変更は不要）。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">操作保証も同時に構造を決める</div>
+              <div class="entry-consideration">操作保証とその筋書きも同じ形をしている。別々にやると、版を2回上げ、全文書を2回移行し、対の表を2回書くことになる。構造は同時に、データの移行は後の波でよい。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>既存の仕様文書の実測は、方針を決める根拠ではなく、方針に照らして判定される対象である。基準は今回定めた宣言の形の側にあり、実測が示すのは『どこが基準から外れているか』でしかない。移行で直す対象を見つけるために実測を当てるのは有用だが、実測に合わせて宣言の形を決め直してはならない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>スキーマの集約が「一度作った版は、遡って構造を変えない」と宣言している。したがって既存の版を編集する選択肢は無く、新しい版を作ったうえで文書を移行する。これは進め方の好みではなく、不変条件からの帰結である。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>同じ集約が「各ブロックの x-render は閉じた語彙にのみ従う」と宣言している。受け入れ条件が構造になることで描画を箇条書きから表へ変えるが、その語彙の範囲で行う。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>同じ集約が「content の各ブロックは additionalProperties を常に閉じる」と宣言している。新しい欄は properties に明示する。後から緩める余地は無い。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">5</span>
+              <p>既存53文書の移行は実装ではなく仕様の修正作業である。識別子を振る操作は機械的だが、どの筋書きがどの条件を満たすかの判断は人が行う。廃止する欄に残る約88%の記入が、その判断の下書きになる。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">6</span>
+              <p>この検査が担保するのは「対応が書かれていること」までで、「その対応が正しいこと」は担保しない。シナリオの Then が指した条件を実際に確かめているかは機械には判定できない。位置づけは品質のゲートではなく、読むべき箇所の当たり付けとする。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">7</span>
+              <p>識別子は読んでも正しく見えるため、無関係な対応を書かれても気づけない。この点は廃止する自由文の欄より悪化する（散文なら読めば言い換えだと分かる）。対応の妥当性は読み手の責務であることを、書き手向けの指示に残す。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">8</span>
+              <p>移行中は識別子を必須にできない。必須にした瞬間、移行が済むまで全文書が検証不適合になる。スキーマ上は任意とし、未記入は新設する検査が報告する分担にする。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">9</span>
+              <p>廃止する対応欄の値は、全体では約88%が記入されている。識別子への翻訳の下書きとして使えるため、欄の削除は移行完了後の最後の手順とする。先に消すと、唯一の人手の対応情報を失う。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/model/DomainSpecSchema/v9.json</div>
+              <div class="reason">受け入れ条件・操作保証に識別子を足し、筋書きの covers を satisfies へ置き換える</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/model/DomainSpecSchema/v9.json（業務サービス）</div>
+              <div class="reason">業務サービスの要素が、自分の受け入れ条件と振る舞いの筋書きを持つ形にする。文脈レベルの平らな筋書きの並びは、この形へ移す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/criteria_coverage.py</div>
+              <div class="reason">宣言された識別子の集合と参照された識別子の集合を突き合わせる純関数（新規）</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/scenario_drift.py</div>
+              <div class="reason">条件ブロックと筋書きブロックの対の表を、ここへ拡張して1箇所に持つ</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/check_criteria_coverage.py</div>
+              <div class="reason">port 経由で文書を読み、純関数を回す編成（新規）</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/cli/main.py</div>
+              <div class="reason">コマンドの登録</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/adapters/inbound/mcp/main.py</div>
+              <div class="reason">コマンドの登録</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/documents/specs/</div>
+              <div class="reason">全仕様文書の移行（識別子の付与と、対応欄からの翻訳）。文書単位で進める</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/templates/blank/DomainSpecSchema/v9/</div>
+              <div class="reason">空欄テンプレートの再生成。版を上げても自動では追随しない</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/hooks/check-drift-on-write.py</div>
+              <div class="reason">仕様文書への書き込みを捕まえる既存の分岐へ、新しい検査を足す</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/model/DomainSpecSchema/v9.json（x-prompt）</div>
+              <div class="reason">新しい欄の書き手向け・読み手向けの指示。指示の置かれ方の契約を確かめる検査が通る必要がある</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/documents/specs/bc-waffle/aggregate/agg-schema.json</div>
+              <div class="reason">版を遡って変えない・x-render の語彙・additionalProperties の3つが、この変更を縛る。修正ではなく遵守の確認対象</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

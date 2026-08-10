@@ -1,1 +1,0 @@
-../../../../../.waffle/knowledge/DEPRECATED/knowledge-cand-post-generation-consistency-check.md
