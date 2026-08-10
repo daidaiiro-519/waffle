@@ -18,3 +18,4 @@
 - [選択肢を並べて「どうしますか」と聞かない](feedback_lead_with_position_before_asking.md) — 見解・推奨・理由・衝突を先に出し、問いは自分の案への可否確認の形にする
 - [名前と実体を一対一にする(2026-08-09)](project_block_key_must_equal_block_type.md) — 鍵(blockKey⇄blockType)と形(同じblockTypeが違う構造)の両方。schemaの読み書き手順つき
 - [design-shareの旧配信機能は復活させない](feedback_design_share_delivery_is_not_restored.md) — 「一時的に失われる」と書くと移植TODOとして読まれる。判断が済んでいる形で書く
+- [実例の件数で能力の要否を決めない](feedback_evidence_based_scope_is_not_for_capability_decisions.md) — 抽象化のタイミングの基準であって、作るか作らないかの判断には使えない。3度目の再発
