@@ -1,0 +1,1 @@
+../../../../knowledge/ACTIVE/knowledge-cand-operation-contract-closes-invariants.md
