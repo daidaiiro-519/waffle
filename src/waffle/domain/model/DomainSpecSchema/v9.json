@@ -11,14 +11,27 @@
       "bounded-context": ".waffle/specs/{contextRef}/{documentId}.md",
       "aggregate": ".waffle/specs/{contextRef}/aggregate/{documentId}.md",
       "subdomain": ".waffle/specs/{contextRef}/subdomain/{documentId}/{documentId}.md",
-      "usecase": ".waffle/specs/{contextRef}/subdomain/{subdomainRef}/usecase/{documentId}.md"
+      "usecase": ".waffle/specs/{contextRef}/subdomain/{subdomainRef}/usecase/{documentId}.md",
+      "domain-service": ".waffle/specs/{contextRef}/domain-service/{documentId}.md"
+    },
+    "pathVars": {
+      "domain-service": {
+        "contextRef": "contextRef",
+        "documentId": "documentId"
+      }
+    },
+    "deploy": {
+      "domain-service": [
+        ".waffle/specs/{contextRef}/domain-service/{documentId}.md"
+      ]
     }
   },
   "x-source-target": {
     "bounded-context": ".waffle/documents/specs/{contextRef}/{documentId}.json",
     "aggregate": ".waffle/documents/specs/{contextRef}/aggregate/{documentId}.json",
     "subdomain": ".waffle/documents/specs/{contextRef}/subdomain/{documentId}/{documentId}.json",
-    "usecase": ".waffle/documents/specs/{contextRef}/subdomain/{subdomainRef}/usecase/{documentId}.json"
+    "usecase": ".waffle/documents/specs/{contextRef}/subdomain/{subdomainRef}/usecase/{documentId}.json",
+    "domain-service": ".waffle/documents/specs/{contextRef}/domain-service/{documentId}.json"
   },
   "x-lifecycle": {
     "transitions": [
@@ -87,7 +100,8 @@
         "bounded-context",
         "subdomain",
         "aggregate",
-        "usecase"
+        "usecase",
+        "domain-service"
       ],
       "x-prompt-write": "DDDの階層で選ぶ。bounded-context=同じ言葉が通る境界(製品文脈・最外) / subdomain=その中の業務領域(中核/一般/補完・ユースケースの束) / aggregate=一貫性の単位(不変条件を持つ実体・名詞) / usecase=1つの操作(動詞)。迷ったら: 不変条件を持つ実体→aggregate、〜する操作→usecase、業務の括り→subdomain、文脈全体→bounded-context。"
     },
@@ -240,6 +254,25 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "specKind": {
+            "const": "domain-service"
+          }
+        },
+        "required": [
+          "specKind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/DomainServiceContent"
+          }
+        }
+      }
     }
   ],
   "$defs": {
@@ -264,12 +297,6 @@
         },
         "contextMap": {
           "$ref": "#/$defs/ContextMapBlock"
-        },
-        "domainServices": {
-          "$ref": "#/$defs/DomainServicesBlock"
-        },
-        "domainServiceScenarios": {
-          "$ref": "#/$defs/DomainServiceScenariosBlock"
         },
         "boundedContext": {
           "$ref": "#/$defs/BoundedContextBlock"
@@ -2597,6 +2624,93 @@
           }
         }
       }
+    },
+    "DomainServiceBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "x-render-order": 12,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "kvtable",
+          "columns": [
+            {
+              "field": "serviceName",
+              "header": "実装の名前"
+            },
+            {
+              "field": "group",
+              "header": "置き場所の束"
+            },
+            {
+              "field": "responsibility",
+              "header": "引き受けていること"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "const": "DomainService"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "このブロックの見出しを書いてください（例: 業務サービス）。",
+          "x-prompt-query": "このブロックが何を語っているかの見出しです。"
+        },
+        "serviceName": {
+          "type": "string",
+          "x-prompt-write": "実装がこの業務サービスを名乗るときの名前を書いてください。実装側の呼び名と完全に一致させます（突き合わせの鍵になります）。",
+          "x-prompt-query": "実装のどれがこの業務サービスかを指す名前です。実物と一致しているかは機械が確かめます。"
+        },
+        "group": {
+          "type": "string",
+          "x-prompt-write": "この業務サービスの実装を置くファイルの束を書いてください。関連する複数の業務サービスが同じファイルに同居することがあるため、1つの束を複数の業務サービスが共有してかまいません。",
+          "x-prompt-query": "実装ファイルの場所を導くための束です。同じ束を共有する業務サービスは同じファイルに在ります。"
+        },
+        "responsibility": {
+          "type": "string",
+          "x-prompt-write": "この業務サービスが引き受けている判断や計算を、業務語彙で1〜2文で書いてください。満たすべきことは受け入れ基準のほうに書くので、ここには書きません。",
+          "x-prompt-query": "この業務サービスが何を引き受けているかを読みます。"
+        }
+      },
+      "required": [
+        "blockType",
+        "title",
+        "serviceName",
+        "group",
+        "responsibility"
+      ],
+      "x-prompt-query": "この業務サービスが何を引き受け、実装のどれとして在るかを読みます。満たすべきことは受け入れ基準のほうに書かれているので、そちらと合わせて読んでください。"
+    },
+    "DomainServiceContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock",
+          "x-prompt-write": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの業務サービスが何を引き受けるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。識別子部分はこの文書自身の識別子をそのまま使う。"
+        },
+        "description": {
+          "$ref": "#/$defs/SummaryBlock"
+        },
+        "domainService": {
+          "$ref": "#/$defs/DomainServiceBlock"
+        },
+        "acceptanceCriteria": {
+          "$ref": "#/$defs/AcceptanceCriteriaBlock"
+        },
+        "acceptanceScenarios": {
+          "$ref": "#/$defs/AcceptanceScenariosBlock"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "domainService",
+        "acceptanceCriteria",
+        "acceptanceScenarios"
+      ]
     }
   },
   "x-frontmatter": {
