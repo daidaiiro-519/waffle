@@ -87,7 +87,6 @@ src/{package}/
 | `port` | `application/ports` | application が要求する driven インターフェース（ABC / Protocol） |
 | `inbound-adapter` | `adapters/inbound` | 外部入力を application 呼び出しへ変換・ロジックを持たない |
 | `outbound-adapter` | `adapters/outbound` | port / repository を実装・外部ライブラリをここに閉じ込める |
-| `application-service` | `application/services` | ポートを通して外から読み、ドメインが使える形にして渡す。複数のユースケースが共有する手続きだけを置き、業務の判断は持たない（判断はドメイン層が持つ）。 |
 
 ---
 
