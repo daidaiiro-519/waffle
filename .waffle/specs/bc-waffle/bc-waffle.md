@@ -91,10 +91,10 @@ schemaRef: "DomainSpecSchema/v8"
 
 | 業務サービス | 責務 |
 |---|---|
-| パステンプレート解決 | x-source-target/x-render-target のパステンプレートを document の値で解決(resolve)し、逆に実パスからテンプレート変数を復元(reverse-parse)する。scaffold/render/query の複数usecaseが共通して依存する（特定の集約に属さない）。 |
-| 整形描画 | x-render宣言(Schema集約の値オブジェクト)とDocument集約のcontent dataの両方を参照してMarkdownへ整形する。RenderMetaSchemaが定義する部品種別(paragraph/list/table/keyvalue/section/kvtable/sequence/statediagram/architecture/flowchart)ごとに決定的な整形規則を持つ。特定の集約に属さない（Schema集約とDocument集約にまたがる計算）。 |
-| discriminatorキー抽出 | schemaのallOf if/then構造から、どのフィールド（specKind/codingKind/skillKind等）がkindのdiscriminatorとして機能しているかを機械的に取り出す。scaffold/renderの複数usecaseが共通して依存する（特定の集約に属さない・Schema集約の構造そのものを読むがSchema集約の外から呼ばれる編成ロジック）。 |
-| ソースルート解決 | CodingSchema（Coding集約）のarchitecture文書が持つlayout.sourceRootとconceptPlacementから、指定した概念（usecase等）の実装ファイル配置パスを導出する。drift-check系の複数usecaseが共通して依存する（特定の集約に属さない・言語/アーキテクチャに依存しない汎用計算）。 |
+| パステンプレート解決 | Schema集約が宣言するパステンプレート（成果物と原本の置き場所）と、Document集約が持つ値の両方を読んで実際のパスへ解決し、逆に実パスからテンプレート変数を復元する。Schema集約とDocument集約にまたがる計算。 |
+| 整形描画 | Schema集約の値オブジェクトが宣言する描画の指定と、Document集約のcontentの両方を参照してMarkdownへ整形する。部品の種別ごとに決定的な整形規則を持つ。Schema集約とDocument集約にまたがる計算。 |
+| discriminatorキー抽出 | schemaの分岐構造から、どのフィールドが種別の判別子として働いているかを取り出す。Schema集約1つに閉じるが、その集約は識別子・版・種別ごとの輪郭だけを持ち、schemaの構造そのものを保持していないため、構造を読むこの計算を集約の中に置けない。 |
+| ソースルート解決 | 規約が宣言する実装の置き場所（ソースルートと概念ごとの配置）から、指定した概念の実装ファイルの置き場所を導く。規約を表す集約がこの境界づけられたコンテキストにまだ宣言されていないため、いずれの集約にも属せない状態でここに居る。その集約を宣言した時点で、そちらへ戻すかどうかを判断し直す。 |
 
 ---
 
