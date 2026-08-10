@@ -1,0 +1,170 @@
+{
+  "documentId": "ds-resolve-concept-source-root",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v9",
+  "specKind": "domain-service",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "規約の宣言から実装の置き場所を導く：ds-resolve-concept-source-root"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "規約が宣言する実装の根と概念の配置から、指定された概念の実装がどこに置かれるかを導く。",
+        "実装の根がパス変数を含むときは、規約の識別子からその値を導く。",
+        "導くのは宣言からだけで、実際のファイルの有無は見ない。"
+      ]
+    },
+    "existenceRationale": {
+      "blockType": "ExistenceRationale",
+      "title": "存在意義",
+      "items": [
+        "測る対象が集約の外にある。規約の宣言は物差しとして受け取るだけで、測る相手は実装ファイルの置き場所である。どの集約もその置き場所を持っていないので、この計算を内側に置けない。",
+        "この計算はどの集約の状態も変えない。宣言を読んだ時点の値で答えが決まる。"
+      ]
+    },
+    "referencedAggregates": {
+      "blockType": "ReferencedAggregates",
+      "title": "参照する集約",
+      "items": []
+    },
+    "inputsOutputs": {
+      "blockType": "InputsOutputs",
+      "title": "入力と出力",
+      "inputs": [
+        {
+          "name": "実装の根",
+          "meaning": "規約が宣言する、実装ファイルの置き場所の起点。パス変数を含むことがある。"
+        },
+        {
+          "name": "概念の配置",
+          "meaning": "規約が宣言する、概念ごとの置き場所。実装の根からの相対で書かれる。"
+        },
+        {
+          "name": "概念",
+          "meaning": "置き場所を知りたい対象。業務ユースケース・集約・値オブジェクトなど。"
+        },
+        {
+          "name": "パス変数の値",
+          "meaning": "実装の根がパス変数を含むときに埋める値。"
+        },
+        {
+          "name": "規約の識別子",
+          "meaning": "どの規約の宣言かを指すもの。パス変数の値を導くのに使う。"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "実装の置き場所",
+          "meaning": "実装の根と概念の配置をつないだ、その概念の実装が置かれる場所。"
+        },
+        {
+          "name": "パス変数の値",
+          "meaning": "規約の識別子から導いた、実装の根を埋めるための値。"
+        }
+      ],
+      "undefinedInputs": [
+        "規約が実装の根を宣言していないとき。",
+        "指定された概念が、概念の配置に宣言されていないとき。",
+        "規約の識別子が、その規約の種別と食い違っているとき。"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        {
+          "id": "joins-root-and-placement",
+          "text": "When 実装の根と、指定された概念の配置がどちらも宣言されているとき、システムは両者をつないだ実装の置き場所を返す shall。"
+        },
+        {
+          "id": "ignores-unused-values",
+          "text": "While 実装の根がパス変数を含まないとき、システムは渡されたパス変数の値を使わずに置き場所を返す shall。"
+        },
+        {
+          "id": "no-root-no-answer",
+          "text": "If 規約が実装の根を宣言していないとき、システムは答えが無いことを返す shall。"
+        },
+        {
+          "id": "unknown-concept-no-answer",
+          "text": "If 指定された概念が概念の配置に宣言されていないとき、システムは答えが無いことを返す shall。"
+        },
+        {
+          "id": "derives-value-from-reference",
+          "text": "When 規約の識別子と、その規約の種別が与えられたとき、システムは識別子から種別の印を取り除いた値を返す shall。"
+        },
+        {
+          "id": "mismatched-reference-no-answer",
+          "text": "If 規約の識別子がその種別の印と食い違っているとき、システムは答えが無いことを返す shall。"
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "実装の根と概念の配置をつないで置き場所を導く",
+          "category": "正常系",
+          "viewpoint": "宣言だけから導く：推測を混ぜずに置き場所を決められるか",
+          "satisfies": [
+            "joins-root-and-placement"
+          ],
+          "gherkin": "Scenario: 実装の根と概念の配置をつないで置き場所を導く\n  Given パス変数を含む実装の根と、業務ユースケースの配置が宣言された規約\n  When 業務ユースケースの実装の置き場所を導く\n  Then 実装の根と配置をつないだ置き場所が返る"
+        },
+        {
+          "name": "実装の根にパス変数が無ければ渡した値は使われない",
+          "category": "境界値",
+          "viewpoint": "宣言だけから導く：宣言に無いものを勝手に足さないか",
+          "satisfies": [
+            "ignores-unused-values"
+          ],
+          "gherkin": "Scenario: 実装の根にパス変数が無ければ渡した値は使われない\n  Given パス変数を含まない実装の根\n  When パス変数の値を渡して実装の置き場所を導く\n  Then 渡した値は使われず、実装の根と配置がそのままつながる"
+        },
+        {
+          "name": "実装の根が宣言されていなければ答えが無い",
+          "category": "境界値",
+          "viewpoint": "宣言だけから導く：宣言が欠けているときに答えを作らないか",
+          "satisfies": [
+            "no-root-no-answer"
+          ],
+          "gherkin": "Scenario: 実装の根が宣言されていなければ答えが無い\n  Given 実装の根を宣言していない規約\n  When 実装の置き場所を導く\n  Then 答えが無いことが返る"
+        },
+        {
+          "name": "宣言に無い概念は答えが無い",
+          "category": "境界値",
+          "viewpoint": "宣言だけから導く：知らない概念に置き場所を与えないか",
+          "satisfies": [
+            "unknown-concept-no-answer"
+          ],
+          "gherkin": "Scenario: 宣言に無い概念は答えが無い\n  Given 概念の配置に宣言されていない概念\n  When その概念の実装の置き場所を導く\n  Then 答えが無いことが返る"
+        },
+        {
+          "name": "規約の識別子からパス変数の値を導く",
+          "category": "正常系",
+          "viewpoint": "値の導出：識別子から種別の印を取り除けるか",
+          "satisfies": [
+            "derives-value-from-reference"
+          ],
+          "gherkin": "Scenario: 規約の識別子からパス変数の値を導く\n  Given 種別の印を頭に持つ規約の識別子と、その種別\n  When パス変数の値を導く\n  Then 印を取り除いた値が返る"
+        },
+        {
+          "name": "識別子と種別が食い違えば値を導かない",
+          "category": "境界値",
+          "viewpoint": "値の導出：導ける場合と導けない場合の対",
+          "satisfies": [
+            "mismatched-reference-no-answer"
+          ],
+          "gherkin": "Scenario: 識別子と種別が食い違えば値を導かない\n  Given その種別の印と一致しない規約の識別子\n  When パス変数の値を導く\n  Then 答えが無いことが返る"
+        }
+      ]
+    }
+  },
+  "tags": [
+    "framework:waffle"
+  ]
+}
