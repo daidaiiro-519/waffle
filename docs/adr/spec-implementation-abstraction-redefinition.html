@@ -213,38 +213,44 @@
   <section>
     <h2><span class="num">01</span>つなぎ方は1つ</h2>
     <div class="col">
-      <p>仕様と実装をつなぐ経路は1つで、<strong>受け入れ条件 → それに対する振る舞いのシナリオ → 実装への転写 → 照合</strong>という形をしています。この形を持つのは3つで、どこであっても経路は変わりません。</p>
+      <p>仕様と実装をつなぐ経路は1つで、<strong>受け入れ基準 → それに対するシナリオ → 実装への転写 → 照合</strong>という形をしています。この形を持つのは3つで、どこであっても経路は変わりません。</p>
     </div>
 
     <div class="ladder">
       <div class="rung">
         <div class="rung-name"><b>業務ユースケース</b><span>use case</span></div>
         <div class="rung-body">
-          <div class="cell"><div class="k">受け入れ条件</div><div class="v">EARS 形式の要件</div></div>
-          <div class="cell"><div class="k">振る舞いのシナリオ</div><div class="v">受け入れの筋書き</div><div class="m">転写先は<strong>受け入れの検証</strong></div></div>
+          <div class="cell"><div class="k">受け入れ基準</div><div class="v">EARS 形式の要件</div></div>
+          <div class="cell"><div class="k">シナリオ</div><div class="v">受け入れのシナリオ</div><div class="m">転写先は<strong>受け入れの検証</strong></div></div>
         </div>
       </div>
       <div class="link"><span>同じ形</span></div>
       <div class="rung">
         <div class="rung-name"><b>集約</b><span>aggregate</span></div>
         <div class="rung-body">
-          <div class="cell"><div class="k">受け入れ条件</div><div class="v">不変条件</div></div>
-          <div class="cell"><div class="k">振る舞いのシナリオ</div><div class="v">不変条件の筋書き</div><div class="m">転写先は<strong>業務領域の単体検証</strong></div></div>
+          <div class="cell"><div class="k">受け入れ基準</div><div class="v">不変条件</div></div>
+          <div class="cell"><div class="k">シナリオ</div><div class="v">不変条件のシナリオ</div><div class="m">転写先は<strong>業務領域の単体検証</strong></div></div>
         </div>
       </div>
       <div class="link"><span>同じ形</span></div>
       <div class="rung">
         <div class="rung-name"><b>業務サービス</b><span>domain service</span></div>
         <div class="rung-body">
-          <div class="cell"><div class="k">受け入れ条件</div><div class="v">満たすべき判断の規則</div></div>
-          <div class="cell"><div class="k">振る舞いのシナリオ</div><div class="v">業務サービスの筋書き</div><div class="m">転写先は<strong>口の契約検証</strong></div></div>
+          <div class="cell"><div class="k">受け入れ基準</div><div class="v">満たすべき判断の規則</div></div>
+          <div class="cell"><div class="k">シナリオ</div><div class="v">業務サービスのシナリオ</div><div class="m">転写先は<strong>口の契約検証</strong></div></div>
         </div>
       </div>
     </div>
 
     <div class="col">
       <div class="aside-note">
-        <div>「常に」の形をしている不変条件も、つなぎ方が変わる理由にはなりません——その不変条件に対する筋書きを書いて転写すれば、ユースケースとまったく同じ経路に乗ります。したがって担保の不足は<b>仕組みの不足としてではなく、宣言の対の欠けとして現れます</b>。</div>
+        <div>「常に」の形をしている不変条件も、つなぎ方が変わる理由にはなりません——その不変条件に対するシナリオを書いて転写すれば、ユースケースとまったく同じ経路に乗ります。したがって担保の不足は<b>仕組みの不足としてではなく、宣言の対の欠けとして現れます</b>。</div>
+      </div>
+      <h3 style="margin:.6rem 0 0;font-family:var(--sans);font-size:.88rem;font-weight:700;letter-spacing:.04em;color:var(--ink-soft)">3つは構造としても対等である</h3>
+      <p>つなぎ方が同じである以上、<strong>宣言のされ方も同じでなければなりません</strong>。3つとも受け入れ基準とシナリオを持ち、3つとも実装の成果物を持ちます。片方だけを別の形で書く根拠がありません。</p>
+      <p>したがって<strong>業務サービスも、業務ユースケース・集約と同じく独自の文書を持ちます</strong>。文脈の文書の中の一項目として置くと、扱いだけが特例になります。</p>
+      <div class="aside-note warn">
+        <div><b>いまは業務サービスだけが、文脈の文書の中の一項目です。</b>この非対称から次の4つが派生しています——基準とシナリオを要素の中に入れ子で持つことになる／対の突き合わせがブロック対ブロックで書けない／所属の一覧に業務サービスの種別が無い／実装との照合が他の2つと違う仕組みで動く。<b>3つを対等にすると、4つとも消えます。</b></div>
       </div>
     </div>
 
@@ -257,9 +263,9 @@
       <div class="panel">
         <div class="panel-head"><b>契約の宣言</b><span class="count">3 要素</span></div>
         <ul>
-          <li><span class="dot live"></span><div>業務ユースケース<br><span class="note">受け入れ条件 ＋ 振る舞いのシナリオ</span></div></li>
-          <li><span class="dot live"></span><div>集約<br><span class="note">不変条件 ＋ 振る舞いのシナリオ</span></div></li>
-          <li><span class="dot live"></span><div>業務サービス<br><span class="note">満たすべき規則 ＋ 振る舞いのシナリオ</span></div></li>
+          <li><span class="dot live"></span><div>業務ユースケース<br><span class="note">受け入れ基準 ＋ シナリオ</span></div></li>
+          <li><span class="dot live"></span><div>集約<br><span class="note">不変条件 ＋ シナリオ</span></div></li>
+          <li><span class="dot live"></span><div>業務サービス<br><span class="note">満たすべき規則 ＋ シナリオ</span></div></li>
         </ul>
       </div>
       <div class="panel">
@@ -311,7 +317,7 @@
           <tr><td class="name">集約</td><td>仕様文書</td><td>実体のクラス</td><td>ファイルの存在／クラス名／<strong>属性の一致</strong></td></tr>
           <tr><td class="name">業務ユースケース</td><td>仕様文書</td><td>ユースケースのクラス</td><td>ファイルの存在／クラス名</td></tr>
           <tr><td class="name">業務サービス</td><td>仕様の項目</td><td>実装ファイル</td><td>ファイルの存在</td></tr>
-          <tr><td class="name">振る舞いのシナリオ</td><td>筋書き</td><td>検証コードの説明文</td><td><strong>宣言行と本文の一字一句</strong></td></tr>
+          <tr><td class="name">シナリオ</td><td>シナリオ</td><td>検証コードの説明文</td><td><strong>宣言行と本文の一字一句</strong></td></tr>
           <tr><td class="name">サブドメイン</td><td>仕様文書</td><td>—（対応物なし）</td><td>仕様側のみ</td></tr>
         </tbody>
       </table>
@@ -385,8 +391,8 @@
           <b>契約</b>
           <p>段ごとの受け入れ基準と振る舞い。そして「この基準はこの振る舞いが覆う」という対応。</p>
           <div class="must">
-            <div>3 要素それぞれに、受け入れ条件と振る舞いのシナリオの対がある</div>
-            <div>どの条件をどのシナリオが担当するかの対応が、実在する宣言だけを指せる</div>
+            <div>3 要素それぞれに、受け入れ基準とシナリオの対がある</div>
+            <div>どの基準をどのシナリオが担当するかの対応が、実在する宣言だけを指せる</div>
             <div>文脈に何が属するかという所属の宣言（＝「この集合で全部」という主張）</div>
             <div>情報の不在を主張する規則（保持しない・残らない）も、言明としてはここに属する</div>
           </div>
@@ -417,7 +423,7 @@
         <div class="family-main">
           <div class="family-q">何と何をどう突き合わせるか</div>
           <b>照合の設定</b>
-          <p>シナリオと実装は文言で、受け入れ条件とシナリオは対応の宣言で突き合わせる。ただし<strong>「照合そのもの」ではなく「照合の設定」</strong>。宣言はパラメータ空間の中の一点を指し、空間そのもの（どんなパラメータがありえて、各値が何を意味するか）はコードが定義する。この線を引かないと、いまのエンジンが読める範囲がそのまま族の範囲になってしまう。</p>
+          <p>シナリオと実装は文言で、受け入れ基準とシナリオは対応の宣言で突き合わせる。ただし<strong>「照合そのもの」ではなく「照合の設定」</strong>。宣言はパラメータ空間の中の一点を指し、空間そのもの（どんなパラメータがありえて、各値が何を意味するか）はコードが定義する。この線を引かないと、いまのエンジンが読める範囲がそのまま族の範囲になってしまう。</p>
           <div class="must">
             <div>一致を判定するキーの書式</div>
             <div>一致の厳しさ（完全一致／連続部分列／順序不同）</div>
@@ -450,7 +456,7 @@
         <div>この5つは<b>順に依存します</b>。語彙が決まらないと何が正しいか言えず、契約が決まらないと配置が決まらず、配置が決まらないと照合できず、照合が固まらないうちに常時化すると誤検知を鳴らし続けて信用を失います。<b>この依存が、そのまま進め方の順序になります。</b></div>
       </div>
       <div class="aside-note warn">
-        <div><b>依存の逆流が2件、実物で起きています。</b>照合の側が対象ブロックの一覧を固定表として持っているため、契約が5つ目の種類を持った瞬間に黙って落とされます（照合が実効的な契約の範囲を決めている）。また常時化の側が照合結果の意味を独自に解釈しており、<b>2026年8月1日に実際の事故になりました</b>——132 件の筋書きが誰とも突き合わされていない状態を「ずれ無し」と読んでいます。</div>
+        <div><b>依存の逆流が2件、実物で起きています。</b>照合の側が対象ブロックの一覧を固定表として持っているため、契約が5つ目の種類を持った瞬間に黙って落とされます（照合が実効的な契約の範囲を決めている）。また常時化の側が照合結果の意味を独自に解釈しており、<b>2026年8月1日に実際の事故になりました</b>——132 件のシナリオが誰とも突き合わされていない状態を「ずれ無し」と読んでいます。</div>
       </div>
     </div>
   </section>
@@ -533,7 +539,7 @@
     </div>
 
     <div class="col">
-      <p><strong>振る舞いの側は4段すべて読まれていて、基準の側は1つも読まれていません。</strong>ただし、読まれていない7つすべてに読み手を作る必要はありません。</p>
+      <p><strong>シナリオの側は4段すべて読まれていて、基準の側は1つも読まれていません。</strong>ただし、読まれていない7つすべてに読み手を作る必要はありません。</p>
     </div>
 
     <div class="gapwrap">
@@ -542,10 +548,10 @@
           <tr><th>読まれていない宣言</th><th>照合として定義できるか</th><th>ひとつ下で覆われるか</th><th>どうするか</th></tr>
         </thead>
         <tbody>
-          <tr><td class="name">受け入れ条件（EARS）</td><td>いいえ（自然言語）</td><td>はい</td><td rowspan="3">条件そのものの読み手は作らない。<strong>対が揃っているかの読み手だけ作る</strong></td></tr>
+          <tr><td class="name">受け入れ基準（EARS）</td><td>いいえ（自然言語）</td><td>はい</td><td rowspan="3">条件そのものの読み手は作らない。<strong>対が揃っているかの読み手だけ作る</strong></td></tr>
           <tr><td class="name">不変条件</td><td>いいえ</td><td>はい</td></tr>
           <tr><td class="name">集約のコマンド</td><td>いいえ</td><td>はい</td></tr>
-          <tr><td class="name">条件とシナリオの対応</td><td><strong>はい</strong>（識別子の集合演算）</td><td>—</td><td><strong>読み手を作る。これが「どの条件にシナリオが無いか」を数える本体</strong></td></tr>
+          <tr><td class="name">基準とシナリオの対応</td><td><strong>はい</strong>（識別子の集合演算）</td><td>—</td><td><strong>読み手を作る。これが「どの基準にシナリオが無いか」を数える本体</strong></td></tr>
           <tr><td class="name">不変条件の守り方</td><td>いいえ</td><td>いいえ（情報の不在）</td><td>畳むのでも読み手を作るのでもなく、宣言の型を<strong>「禁止する構造」へ書き換える</strong></td></tr>
           <tr><td class="name">語彙</td><td>いいえ（人が読めるか、は機械に判定できない）</td><td>—</td><td>一致の判定基準として照合が参照する。人が主体で保つ族</td></tr>
         </tbody>
@@ -555,7 +561,7 @@
     <div class="col">
       <p>作るべき読み手は<strong>2種類だけ</strong>です——<strong>対が揃っているかの判定</strong>と<strong>禁止構造</strong>。前者の形は既に在ります（宣言された一覧とディスク上の実在を両方向で差分する検査が動いています）。後者も既に在ります（層の依存の宣言を読む検査）。どちらも新しい発明ではなく、既存の形の2件目の用途です。</p>
       <div class="aside-note warn">
-        <div><b>実測での対の欠けは3箇所です。</b>集約は不変条件 17 件に対しシナリオ 12 件で 5 件分が足りず、業務サービスはシナリオ 5 件があるのに受け入れ条件そのものが無く、そして対応の記入が 17 件中 4 件しかないため<b>どの 5 件かを機械が特定できません</b>。</div>
+        <div><b>実測での対の欠けは3箇所です。</b>集約は不変条件 17 件に対しシナリオ 12 件で 5 件分が足りず、業務サービスはシナリオ 5 件があるのに受け入れ基準そのものが無く、そして対応の記入が 17 件中 4 件しかないため<b>どの 5 件かを機械が特定できません</b>。</div>
       </div>
     </div>
 
@@ -581,9 +587,11 @@
    └─ <span class="s">bc-waffle/</span>
       ├─ bc-waffle.json
       ├─ aggregate/
-      └─ usecase/
-         └─ uc-*.json  <span class="cmt">subdomainRef で</span>
-                       <span class="cmt">対応先を指す</span></pre>
+      ├─ usecase/
+      │  └─ uc-*.json  <span class="cmt">subdomainRef で</span>
+      │                <span class="cmt">対応先を指す</span>
+      └─ domain-service/  <span class="cmt">3つ目の担い手も</span>
+         └─ ds-*.json     <span class="cmt">同じ並びに置く</span></pre>
       </div>
     </div>
 
@@ -617,7 +625,7 @@
           </tr>
           <tr>
             <td class="name">Ⅰ</td>
-            <td>対の欠けを埋める。集約のシナリオ不足、業務サービスの受け入れ条件、条件とシナリオの対応。あわせて置き場所を対応の形に直す</td>
+            <td>対の欠けを埋める。集約のシナリオ不足、業務サービスの受け入れ基準、基準とシナリオの対応。あわせて置き場所を対応の形に直す</td>
             <td>3つとも対が揃い、対応が実在する宣言だけを指している</td>
           </tr>
           <tr>
