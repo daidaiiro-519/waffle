@@ -1,0 +1,129 @@
+{
+  "documentId": "ds-resolve-path-template",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v9",
+  "specKind": "domain-service",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "置き場所の宣言と値から実際の在り処を導く：ds-resolve-path-template"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "置き場所のひな型と、そこへ入る値の両方を読んで、実際の在り処を導く。",
+        "逆に、実際の在り処からひな型の変数を復元する向きも持つ。"
+      ]
+    },
+    "existenceRationale": {
+      "blockType": "ExistenceRationale",
+      "title": "存在意義",
+      "items": [
+        "ひな型を宣言しているのはスキーマで、そこへ入る値を持っているのは文書である。どちらか一方だけでは在り処が決まらないため、どちらの内側にも置けない。",
+        "在り処を導く計算は、スキーマと文書のどちらの状態も変えない。読み取った時点の値で決まればよく、両者が同時に最新である必要が無いため、強い一貫性を要求しない。",
+        "在り処が変わるのは、ひな型か値のどちらかが変わったときだけで、その変更はそれぞれの内側で完結する。またがるのは読み取りだけである。"
+      ]
+    },
+    "referencedAggregates": {
+      "blockType": "ReferencedAggregates",
+      "title": "参照する集約",
+      "items": [
+        {
+          "aggregate": "agg-schema",
+          "mode": "参照のみ",
+          "reason": "置き場所のひな型と、そこに現れる変数の並びを読む。"
+        },
+        {
+          "aggregate": "agg-document",
+          "mode": "参照のみ",
+          "reason": "ひな型の変数に入る値（識別子や所属の参照）を読む。"
+        }
+      ]
+    },
+    "inputsOutputs": {
+      "blockType": "InputsOutputs",
+      "title": "入力と出力",
+      "inputs": [
+        {
+          "name": "置き場所のひな型",
+          "meaning": "変数を含んだ、在り処の書き方の型。"
+        },
+        {
+          "name": "変数に入る値",
+          "meaning": "ひな型の変数それぞれに対応する実際の値。"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "実際の在り処",
+          "meaning": "ひな型の変数がすべて値に置き換わった、ひとつに定まる在り処。"
+        },
+        {
+          "name": "復元された値",
+          "meaning": "実際の在り処から読み取った、ひな型の変数それぞれの値。"
+        }
+      ],
+      "undefinedInputs": [
+        "ひな型が要求する変数のうち、値が与えられていないものがあるとき。",
+        "復元しようとした在り処が、ひな型の区切り構造と一致しないとき。"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        {
+          "id": "resolves-all-vars",
+          "text": "When ひな型と、その変数すべてに対応する値が与えられたとき、システムは変数を値に置き換えた在り処をひとつ返す shall。"
+        },
+        {
+          "id": "reverse-recovers-vars",
+          "text": "When ひな型と、そのひな型から導かれた在り処が与えられたとき、システムは導出に使った値と同じ値を復元する shall。"
+        },
+        {
+          "id": "reverse-rejects-mismatch",
+          "text": "If 与えられた在り処がひな型の区切り構造と一致しないとき、システムは復元を失敗として返す shall。"
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "ひな型の変数を値に置き換える",
+          "category": "正常系",
+          "viewpoint": "導出：変数がすべて埋まるとき在り処がひとつに定まるか",
+          "satisfies": [
+            "resolves-all-vars"
+          ],
+          "gherkin": "Scenario: ひな型の変数を値に置き換える\n  Given 変数を含む置き場所のひな型と、その変数すべてに対応する値\n  When 在り処を導く\n  Then すべての変数が値に置き換わった在り処がひとつ返る"
+        },
+        {
+          "name": "在り処から変数の値を復元する",
+          "category": "正常系",
+          "viewpoint": "逆向きの一意性：導出の逆として同じ値を取り出せるか",
+          "satisfies": [
+            "reverse-recovers-vars"
+          ],
+          "gherkin": "Scenario: 在り処から変数の値を復元する\n  Given 置き場所のひな型と、そのひな型から導かれた在り処\n  When 変数の値を復元する\n  Then 導出に使った値と同じ値が復元される"
+        },
+        {
+          "name": "ひな型と構造の合わない在り処は復元できない",
+          "category": "異常系",
+          "viewpoint": "逆向きの健全性：構造の合わない入力を決められないものとして扱えるか",
+          "satisfies": [
+            "reverse-rejects-mismatch"
+          ],
+          "gherkin": "Scenario: ひな型と構造の合わない在り処は復元できない\n  Given ひな型の区切り構造と一致しない在り処\n  When 変数の値を復元する\n  Then 復元は失敗する"
+        }
+      ]
+    }
+  },
+  "tags": [
+    "framework:waffle"
+  ]
+}
