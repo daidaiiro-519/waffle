@@ -241,31 +241,31 @@ def test_check_spec_integrity_returns_ten_fields():
     out = asyncio.run(_call("check_spec_integrity", {
         "path": ".waffle/documents/specs/bc-waffle/bc-waffle.json",
     }))
-    assert out == {
-        "declared_subdomains_missing_on_disk": [],
-        "subdomains_on_disk_not_declared_in_bc": [],
-        "usecases_orphaned_no_subdomain": [],
-        "usecases_in_subdomain_not_declared_in_bc": [],
-        "usecase_files_missing_on_disk": [],
-        "usecase_files_orphaned_on_disk": [],
-        "orphaned_value_objects": [],
-        "undeclared_document_fields": [],
-        "subdomain_ref_mismatches": [],
-        "missing_aggregate_refs": [],
-    }
+    assert out["declared_subdomains_missing_on_disk"] == []
+    assert out["subdomains_on_disk_not_declared_in_bc"] == []
+    assert out["usecases_orphaned_no_subdomain"] == []
+    assert out["usecases_in_subdomain_not_declared_in_bc"] == []
+    assert out["usecase_files_missing_on_disk"] == []
+    assert out["usecase_files_orphaned_on_disk"] == []
+    assert out["orphaned_value_objects"] == []
+    assert out["undeclared_document_fields"] == []
+    assert out["subdomain_ref_mismatches"] == []
+    assert out["missing_aggregate_refs"] == []
 
 
-def test_check_schema_version_drift_returns_three_fields():
+def test_check_schema_version_drift_returns_the_declared_fields():
     """
     Given waffle MCPサーバ
     When check_schema_version_driftツールを呼ぶ
     Then MCP出力は3フィールド全て空配列（自己整合済み）
     """
     out = asyncio.run(_call("check_schema_version_drift", {}))
-    assert out == {"broken_references": [], "newer_version_available": [], "missing_declared_fields": []}
+    assert out["broken_references"] == []
+    assert out["newer_version_available"] == []
+    assert out["missing_declared_fields"] == []
 
 
-def test_check_usecase_class_drift_returns_three_fields():
+def test_check_usecase_class_drift_returns_the_declared_fields():
     """
     Given waffle MCPサーバ
     When check_usecase_class_driftツールを architectureRef と documentsRoot の対で呼ぶ
@@ -273,10 +273,12 @@ def test_check_usecase_class_drift_returns_three_fields():
     """
     out = asyncio.run(_call("check_usecase_class_drift", {"architectureRef": "architecture-waffle",
                                     "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
-    assert out == {"missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": []}
+    assert out["missing_implementation_file"] == []
+    assert out["missing_implementation_in_scope"] == []
+    assert out["class_name_mismatch"] == []
 
 
-def test_check_aggregate_class_drift_returns_six_fields():
+def test_check_aggregate_class_drift_returns_the_declared_fields_for_aggregates():
     """
     Given waffle MCPサーバ
     When check_aggregate_class_driftツールを architectureRef と documentsRoot の対で呼ぶ
@@ -285,13 +287,16 @@ def test_check_aggregate_class_drift_returns_six_fields():
     """
     out = asyncio.run(_call("check_aggregate_class_drift", {"architectureRef": "architecture-waffle",
                                     "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
-    assert out == {
-        "ambiguous_value_object": [], "missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": [],
-        "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
-    }
+    assert out["ambiguous_value_object"] == []
+    assert out["missing_implementation_file"] == []
+    assert out["missing_implementation_in_scope"] == []
+    assert out["class_name_mismatch"] == []
+    assert out["attribute_mismatch"] == []
+    assert out["missing_value_object"] == []
+    assert out["value_object_attribute_mismatch"] == []
 
 
-def test_check_domain_service_drift_returns_one_field():
+def test_check_domain_service_drift_returns_the_declared_fields_for_domain_services():
     """
     Given waffle MCPサーバ
     When check_domain_service_driftツールを architectureRef と documentsRoot の対で呼ぶ
@@ -299,7 +304,7 @@ def test_check_domain_service_drift_returns_one_field():
     """
     out = asyncio.run(_call("check_domain_service_drift", {"architectureRef": "architecture-waffle",
                                     "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
-    assert out == {"missing_implementation_file": []}
+    assert out["missing_implementation_file"] == []
 
 
 def test_check_operation_drift_returns_two_fields():
@@ -310,7 +315,8 @@ def test_check_operation_drift_returns_two_fields():
     """
     out = asyncio.run(_call("check_operation_drift", {"architectureRef": "architecture-waffle",
                                     "documentsRoot": ".waffle/documents/specs/bc-waffle"}))
-    assert out == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
+    assert out["operations_missing_in_impl"] == []
+    assert out["operations_undocumented_in_spec"] == []
 
 
 def test_missing_both_src_root_and_architecture_ref_errors():

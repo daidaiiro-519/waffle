@@ -74,6 +74,7 @@ sequenceDiagram
 - 値オブジェクトの属性対応は、ValueObjects宣言のitemがattributesを持つ場合のみ行う（attributesは任意項目のため）。宣言されたattributesの集合と、その値オブジェクトの実装クラスが実際に持つフィールド集合が完全一致するかで判定する。attributesを宣言していない値オブジェクトは、クラスの実在確認（missing_value_object）のみで属性対応は対象外とする
 - aggregate specがEntitiesの属性を1件も宣言していない場合は、attribute_mismatchの対象外とする（宣言が無い以上、比較しようがないため）
 - missing_implementation_file・class_name_mismatch・attribute_mismatch・missing_value_object・value_object_attribute_mismatchの全てが空配列であれば、全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクト・値オブジェクトの属性集合が一致している（正常系）
+- 返り値は orphaned_implementation_file を持つ。規約が集約の配置として宣言した場所に在りながら、どの仕様からも名指しされていない実装ファイルの一覧である。仕様が実装を説明できているかは、宣言した分を数えるだけでは分からない——宣言しなければ何を実装しても綺麗に見えるため。
 
 ---
 
@@ -94,6 +95,7 @@ sequenceDiagram
 - When 集約がディレクトリ単位で探すと宣言されていて、集約ルート名と一致するクラス定義がその配置ディレクトリのどこにも見つからないとき、システムはその組をmissing_implementation_in_scopeに含める shall（探した範囲を伝えるため、1つの道を指すexpectedPathではなくsearchedRootを持たせる）。
 - While 集約がファイル単位で探すと宣言されているとき、システムは集約ルート名から導出したファイルパスの不在のみをmissing_implementation_fileに含め、ディレクトリ単位の報告を行わない shall（2つの探し方の結果を同じ器に入れると、受け手が同じキーから読むべき意味を決められなくなるため）。
 - While granularityがその概念にperFileを宣言していないとき、システムは検査を中断せず、ディレクトリ単位の探索を続ける shall（宣言が無いことは引数の誤りではなく、そのプロジェクトがまだ決めていないという事実であり、報告して先へ進む）。
+- When 規約が集約の配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。
 
 ---
 
@@ -275,6 +277,20 @@ Scenario: 宣言があればファイルの不在だけを報告する
   When 集約と実装の食い違いを調べる
   Then その組がmissing_implementation_fileに現れる
   And missing_implementation_in_scopeは空のままである
+```
+
+### 宣言に無い実装ファイルを孤立として検出する
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | ドリフト: 逆走。仕様に無い集約が実装側の都合で増えている |
+
+```gherkin
+Scenario: 宣言に無い実装ファイルを孤立として検出する
+  Given 規約が集約の配置として宣言した場所
+  And その場所に在るが、どの仕様も名指ししていない実装ファイル
+  When ドリフト検査を実行する
+  Then orphaned_implementation_file にそのファイルが含まれる
 ```
 
 ---

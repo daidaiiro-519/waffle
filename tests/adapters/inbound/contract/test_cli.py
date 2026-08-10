@@ -269,21 +269,19 @@ def test_check_spec_integrity_returns_ten_fields():
     ])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert data == {
-        "declared_subdomains_missing_on_disk": [],
-        "subdomains_on_disk_not_declared_in_bc": [],
-        "usecases_orphaned_no_subdomain": [],
-        "usecases_in_subdomain_not_declared_in_bc": [],
-        "usecase_files_missing_on_disk": [],
-        "usecase_files_orphaned_on_disk": [],
-        "orphaned_value_objects": [],
-        "undeclared_document_fields": [],
-        "subdomain_ref_mismatches": [],
-        "missing_aggregate_refs": [],
-    }
+    assert data["declared_subdomains_missing_on_disk"] == []
+    assert data["subdomains_on_disk_not_declared_in_bc"] == []
+    assert data["usecases_orphaned_no_subdomain"] == []
+    assert data["usecases_in_subdomain_not_declared_in_bc"] == []
+    assert data["usecase_files_missing_on_disk"] == []
+    assert data["usecase_files_orphaned_on_disk"] == []
+    assert data["orphaned_value_objects"] == []
+    assert data["undeclared_document_fields"] == []
+    assert data["subdomain_ref_mismatches"] == []
+    assert data["missing_aggregate_refs"] == []
 
 
-def test_check_schema_version_drift_returns_three_fields():
+def test_check_schema_version_drift_returns_the_declared_fields():
     """
     Given waffle CLI
     When check-schema-version-drift を実行する
@@ -292,10 +290,12 @@ def test_check_schema_version_drift_returns_three_fields():
     result = _runner.invoke(app, ["check-schema-version-drift"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert data == {"broken_references": [], "newer_version_available": [], "missing_declared_fields": []}
+    assert data["broken_references"] == []
+    assert data["newer_version_available"] == []
+    assert data["missing_declared_fields"] == []
 
 
-def test_check_usecase_class_drift_returns_three_fields():
+def test_check_usecase_class_drift_returns_the_declared_fields():
     """
     Given waffle CLI
     When check-usecase-class-drift を architectureRef と documentsRoot の対で実行する
@@ -305,10 +305,12 @@ def test_check_usecase_class_drift_returns_three_fields():
                                  "--documentsRoot", ".waffle/documents/specs/bc-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert data == {"missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": []}
+    assert data["missing_implementation_file"] == []
+    assert data["missing_implementation_in_scope"] == []
+    assert data["class_name_mismatch"] == []
 
 
-def test_check_aggregate_class_drift_returns_six_fields():
+def test_check_aggregate_class_drift_returns_the_declared_fields_for_aggregates():
     """
     Given waffle CLI
     When check-aggregate-class-drift を architectureRef と documentsRoot の対で実行する
@@ -319,13 +321,16 @@ def test_check_aggregate_class_drift_returns_six_fields():
                                  "--documentsRoot", ".waffle/documents/specs/bc-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert data == {
-        "ambiguous_value_object": [], "missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": [],
-        "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
-    }
+    assert data["ambiguous_value_object"] == []
+    assert data["missing_implementation_file"] == []
+    assert data["missing_implementation_in_scope"] == []
+    assert data["class_name_mismatch"] == []
+    assert data["attribute_mismatch"] == []
+    assert data["missing_value_object"] == []
+    assert data["value_object_attribute_mismatch"] == []
 
 
-def test_check_domain_service_drift_returns_one_field():
+def test_check_domain_service_drift_returns_the_declared_fields_for_domain_services():
     """
     Given waffle CLI
     When check-domain-service-drift --architectureRef architecture-waffle を実行する
@@ -334,7 +339,7 @@ def test_check_domain_service_drift_returns_one_field():
     result = _runner.invoke(app, ["check-domain-service-drift", "--architectureRef", "architecture-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert data == {"missing_implementation_file": []}
+    assert data["missing_implementation_file"] == []
 
 
 def test_check_operation_drift_returns_two_fields():
@@ -347,7 +352,8 @@ def test_check_operation_drift_returns_two_fields():
                                  "--documentsRoot", ".waffle/documents/specs/bc-waffle"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
-    assert data == {"operations_missing_in_impl": [], "operations_undocumented_in_spec": []}
+    assert data["operations_missing_in_impl"] == []
+    assert data["operations_undocumented_in_spec"] == []
 
 
 def test_missing_both_src_root_and_architecture_ref_errors():

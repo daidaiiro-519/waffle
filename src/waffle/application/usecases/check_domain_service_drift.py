@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.domain.services.canonical_naming import file_name
+from waffle.domain.services.implementation_inventory import (
+    orphaned_implementation_files,
+)
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
 
@@ -49,6 +52,8 @@ class CheckDomainServiceDrift:
         # ここで止めると「まだ何も出来ていない」ことを報告できない
 
         missing_implementation_file: list[dict] = []
+        # 仕様が名指しした実装ファイル。逆向きの突き合わせに使う
+        declared_paths: set[str] = set()
         checked_groups: set[str] = set()
 
         for doc_path in doc_paths:
@@ -61,6 +66,7 @@ class CheckDomainServiceDrift:
                     continue
                 checked_groups.add(group)
                 expected_path = f"{src_root}/{file_name(group, naming)}"
+                declared_paths.add(expected_path)
                 try:
                     self._documents.read_text(expected_path)
                 except FileNotFoundError:
@@ -68,4 +74,20 @@ class CheckDomainServiceDrift:
                         "documentId": doc["documentId"], "group": group, "expectedPath": expected_path,
                     })
 
-        return Ok({"missing_implementation_file": missing_implementation_file})
+        return Ok({
+            "missing_implementation_file": missing_implementation_file,
+            "orphaned_implementation_file": self._orphaned(src_root, naming, declared_paths),
+        })
+
+    def _orphaned(self, src_root: str, naming: dict, declared_paths: set[str]) -> list[str]:
+        """宣言された配置に在るが、どの仕様も名指ししていない実装ファイルを返す。
+
+        宣言した分を数えるだけでは、仕様が実装を説明できているかは分からない
+        ——宣言しなければ何を実装しても綺麗に見えるため。
+        """
+        try:
+            actual = self._documents.list_files(src_root, f"*{naming['fileNameSuffix']}")
+        except FileNotFoundError:
+            return []
+        return orphaned_implementation_files(
+            sorted(actual), declared_paths, naming.get("nonImplementationFileNames", []))

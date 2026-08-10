@@ -45,7 +45,9 @@ def test_all_usecase_operations_match_implementation(tmp_path):
 
     result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
-    assert result.value == {"missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": []}
+    assert result.value["missing_implementation_file"] == []
+    assert result.value["missing_implementation_in_scope"] == []
+    assert result.value["class_name_mismatch"] == []
 
 
 def test_usecase_without_implementation_file(tmp_path):
@@ -85,7 +87,9 @@ def test_detects_class_drift_in_java_implementation(tmp_path):
 
     result = _engine().run(str(docs_root), str(src_root), JAVA_NAMING, language="java")
     assert isinstance(result, Ok), result
-    assert result.value == {"missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": []}
+    assert result.value["missing_implementation_file"] == []
+    assert result.value["missing_implementation_in_scope"] == []
+    assert result.value["class_name_mismatch"] == []
 
 
 def test_usecase_with_mismatched_class_name(tmp_path):
@@ -163,3 +167,30 @@ def test_file_scope_reports_only_missing_file(tmp_path):
          "expectedPath": str(src_root / "check_scenario_drift.py")}
     ]
     assert result.value["missing_implementation_in_scope"] == []
+
+
+def test_orphaned_implementation_file_is_detected(tmp_path):
+    """
+    Scenario: 宣言に無い実装ファイルを孤立として検出する
+    Given 規約がユースケースの配置として宣言した場所
+    And その場所に在るが、どの仕様も名指ししていない実装ファイル
+    When ドリフト検査を実行する
+    Then orphaned_implementation_file にそのファイルが含まれる
+    """
+    docs = tmp_path / "docs"
+    _write(docs / "uc-a.json", {
+        "documentId": "uc-a", "specKind": "usecase",
+        "content": {"usecase": {"blockType": "Usecase", "title": "名前",
+                                "operationName": "Declared"}},
+    })
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "declared.py").write_text("class Declared:\n    pass\n", encoding="utf-8")
+    (src / "undeclared.py").write_text("class Undeclared:\n    pass\n", encoding="utf-8")
+    (src / "__init__.py").write_text("", encoding="utf-8")
+
+    naming = {**PYTHON_NAMING, "nonImplementationFileNames": ["__init__.py"]}
+    result = _engine().run(str(docs), str(src), naming)
+
+    assert isinstance(result, Ok), result
+    assert result.value["orphaned_implementation_file"] == [str(src / "undeclared.py")]

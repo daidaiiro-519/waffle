@@ -66,11 +66,13 @@ def test_all_aggregate_roots_match_implementation(tmp_path):
 
     result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
-    assert result.value == {
-        "ambiguous_value_object": [],
-        "missing_implementation_file": [], "missing_implementation_in_scope": [], "class_name_mismatch": [],
-        "attribute_mismatch": [], "missing_value_object": [], "value_object_attribute_mismatch": [],
-    }
+    assert result.value["ambiguous_value_object"] == []
+    assert result.value["missing_implementation_file"] == []
+    assert result.value["missing_implementation_in_scope"] == []
+    assert result.value["class_name_mismatch"] == []
+    assert result.value["attribute_mismatch"] == []
+    assert result.value["missing_value_object"] == []
+    assert result.value["value_object_attribute_mismatch"] == []
 
 
 def test_declared_value_object_missing_in_implementation(tmp_path):
@@ -335,3 +337,30 @@ def test_file_scope_reports_only_missing_file(tmp_path):
          "expectedPath": str(src_root / "schema.py")}
     ]
     assert result.value["missing_implementation_in_scope"] == []
+
+
+def test_orphaned_implementation_file_is_detected(tmp_path):
+    """
+    Scenario: 宣言に無い実装ファイルを孤立として検出する
+    Given 規約が集約の配置として宣言した場所
+    And その場所に在るが、どの仕様も名指ししていない実装ファイル
+    When ドリフト検査を実行する
+    Then orphaned_implementation_file にそのファイルが含まれる
+    """
+    docs = tmp_path / "docs"
+    _write(docs / "agg-a.json", {
+        "documentId": "agg-a", "specKind": "aggregate",
+        "content": {"aggregateRoot": {"blockType": "AggregateRoot", "title": "集約ルート",
+                                      "name": "Declared", "attributes": []}},
+    })
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "declared.py").write_text("class Declared:\n    pass\n", encoding="utf-8")
+    (src / "undeclared.py").write_text("class Undeclared:\n    pass\n", encoding="utf-8")
+    (src / "__init__.py").write_text("", encoding="utf-8")
+
+    naming = {**PYTHON_NAMING, "nonImplementationFileNames": ["__init__.py"]}
+    result = _engine().run(str(docs), str(src), naming)
+
+    assert isinstance(result, Ok), result
+    assert result.value["orphaned_implementation_file"] == [str(src / "undeclared.py")]

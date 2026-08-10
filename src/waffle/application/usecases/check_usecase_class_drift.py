@@ -15,6 +15,9 @@ from waffle.application.ports.class_declaration_extractor import ClassDeclaratio
 from waffle.application.ports.document_repository import DocumentRepository
 from waffle.application.services.class_index import build_class_index
 from waffle.application.services.source_root_resolution import SearchUnit
+from waffle.domain.services.implementation_inventory import (
+    orphaned_implementation_files,
+)
 from waffle.domain.services.canonical_naming import file_name
 from waffle.shared.path_confinement import is_confined
 from waffle.shared.result import Err, Ok, Result
@@ -61,6 +64,8 @@ class CheckUsecaseClassDrift:
         missing_implementation_file: list[dict] = []
         missing_implementation_in_scope: list[dict] = []
         class_name_mismatch: list[dict] = []
+        # 仕様が名指しした実装ファイル。逆向きの突き合わせに使う
+        declared_paths: set[str] = set()
 
         # 探し方は architecture の宣言が決める。渡されなければファイル単位
         unit = root_search_unit or SearchUnit(per_file=True)
@@ -90,6 +95,7 @@ class CheckUsecaseClassDrift:
                     })
                 continue
             expected_path = f"{src_root}/{file_name(operation_name, naming)}"
+            declared_paths.add(expected_path)
             try:
                 source = self._documents.read_text(expected_path)
             except FileNotFoundError:
@@ -108,4 +114,18 @@ class CheckUsecaseClassDrift:
             "missing_implementation_file": missing_implementation_file,
             "missing_implementation_in_scope": missing_implementation_in_scope,
             "class_name_mismatch": class_name_mismatch,
+            "orphaned_implementation_file": self._orphaned(src_root, naming, declared_paths),
         })
+
+    def _orphaned(self, src_root: str, naming: dict, declared_paths: set[str]) -> list[str]:
+        """宣言された配置に在るが、どの仕様も名指ししていない実装ファイルを返す。
+
+        宣言した分を数えるだけでは、仕様が実装を説明できているかは分からない
+        ——宣言しなければ何を実装しても綺麗に見えるため。
+        """
+        try:
+            actual = self._documents.list_files(src_root, f"*{naming['fileNameSuffix']}")
+        except FileNotFoundError:
+            return []
+        return orphaned_implementation_files(
+            sorted(actual), declared_paths, naming.get("nonImplementationFileNames", []))

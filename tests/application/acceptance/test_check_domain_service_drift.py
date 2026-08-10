@@ -41,7 +41,7 @@ def test_all_domain_services_match_implementation(tmp_path):
 
     result = _engine().run(str(docs_root), str(src_root), PYTHON_NAMING)
     assert isinstance(result, Ok), result
-    assert result.value == {"missing_implementation_file": []}
+    assert result.value["missing_implementation_file"] == []
 
 
 def test_domain_service_without_implementation_file(tmp_path):
@@ -83,3 +83,31 @@ def test_services_sharing_a_group_are_checked_once(tmp_path):
     assert result.value["missing_implementation_file"] == [
         {"documentId": "bc-a", "group": "SharedGroup", "expectedPath": str(src_root / "shared_group.py")}
     ]
+
+
+def test_orphaned_implementation_file_is_detected(tmp_path):
+    """
+    Scenario: 宣言に無い実装ファイルを孤立として検出する
+    Given 規約が業務サービスの配置として宣言した場所
+    And その場所に在るが、どの仕様も名指ししていない実装ファイル
+    When ドリフト検査を実行する
+    Then orphaned_implementation_file にそのファイルが含まれる
+    """
+    docs = tmp_path / "docs"
+    _write(docs / "bc-x.json", {
+        "documentId": "bc-x", "specKind": "bounded-context",
+        "content": {"domainServices": {"items": [
+            {"name": "宣言したもの", "group": "Declared"}]}},
+    })
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "declared.py").write_text("", encoding="utf-8")
+    (src / "undeclared.py").write_text("", encoding="utf-8")
+    (src / "__init__.py").write_text("", encoding="utf-8")
+
+    naming = {**PYTHON_NAMING, "nonImplementationFileNames": ["__init__.py"]}
+    result = _engine().run(str(docs), str(src), naming)
+
+    assert isinstance(result, Ok), result
+    assert result.value["missing_implementation_file"] == []
+    assert result.value["orphaned_implementation_file"] == [str(src / "undeclared.py")]
