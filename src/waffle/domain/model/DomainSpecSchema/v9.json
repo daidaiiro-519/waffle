@@ -1198,10 +1198,6 @@
           "from": "items",
           "columns": [
             {
-              "field": "id",
-              "header": "符号"
-            },
-            {
               "field": "rule",
               "header": "ルール"
             },
@@ -1843,10 +1839,6 @@
           "from": "items",
           "columns": [
             {
-              "field": "id",
-              "header": "符号"
-            },
-            {
               "field": "text",
               "header": "基準"
             }
@@ -1982,10 +1974,6 @@
                 {
                   "field": "viewpoint",
                   "header": "観点"
-                },
-                {
-                  "field": "satisfies",
-                  "header": "満たす基準"
                 }
               ]
             },
@@ -2084,10 +2072,6 @@
                 {
                   "field": "viewpoint",
                   "header": "観点"
-                },
-                {
-                  "field": "satisfies",
-                  "header": "満たす基準"
                 }
               ]
             },
@@ -2171,8 +2155,14 @@
       "x-prompt-query": "1回の実行の結果ではなく、この操作が全体として約束することを読みます。受け入れ基準と重なる項目があれば、どちらか一方が余分です。",
       "x-render": [
         {
-          "as": "list",
-          "from": "items"
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "text",
+              "header": "保証"
+            }
+          ]
         }
       ],
       "properties": {
@@ -2240,10 +2230,6 @@
                 {
                   "field": "viewpoint",
                   "header": "観点"
-                },
-                {
-                  "field": "satisfies",
-                  "header": "満たす基準"
                 }
               ]
             },
@@ -2342,10 +2328,6 @@
                 {
                   "field": "viewpoint",
                   "header": "観点"
-                },
-                {
-                  "field": "satisfies",
-                  "header": "満たす基準"
                 }
               ]
             },
@@ -2625,77 +2607,255 @@
         }
       }
     },
-    "DomainServiceBlock": {
+    "ExistenceRationaleBlock": {
       "type": "object",
       "additionalProperties": false,
-      "x-render-order": 12,
+      "x-render-order": 3,
       "x-render-level": 2,
       "x-render": [
         {
-          "as": "kvtable",
+          "as": "list",
+          "from": "items"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "const": "ExistenceRationale"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "このブロックの見出しを書いてください（例: 存在意義）。",
+          "x-prompt-query": "このブロックが何を語っているかの見出しです。"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "なぜこの計算を集約の内側に置けないのかを、論点ごとに1件ずつ配列で書いてください。「複数の集約にまたがるから」は理由になりません（同じことの言い換えです）。書くべきは、なぜその一貫性が結果整合で足りるのか——強い一貫性が要るなら、それは集約の境界の引き方を直すべき合図です。"
+        }
+      },
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "x-prompt-query": "この計算が集約の内側に置けない理由を読みます。理由が同じことの言い換えになっていたら、集約の境界を引き直せる可能性があります。"
+    },
+    "ReferencedAggregatesBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "x-render-order": 4,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
           "columns": [
             {
-              "field": "serviceName",
-              "header": "実装の名前"
+              "field": "aggregate",
+              "header": "集約"
             },
             {
-              "field": "group",
-              "header": "置き場所の束"
+              "field": "mode",
+              "header": "触れ方"
             },
             {
-              "field": "responsibility",
-              "header": "引き受けていること"
+              "field": "reason",
+              "header": "何のために"
             }
           ]
         }
       ],
       "properties": {
         "blockType": {
-          "const": "DomainService"
+          "const": "ReferencedAggregates"
         },
         "title": {
           "type": "string",
-          "x-prompt-write": "このブロックの見出しを書いてください（例: 業務サービス）。",
+          "x-prompt-write": "このブロックの見出しを書いてください（例: 参照する集約）。",
           "x-prompt-query": "このブロックが何を語っているかの見出しです。"
         },
-        "serviceName": {
-          "type": "string",
-          "x-prompt-write": "実装がこの業務サービスを名乗るときの名前を書いてください。実装側の呼び名と完全に一致させます（突き合わせの鍵になります）。",
-          "x-prompt-query": "実装のどれがこの業務サービスかを指す名前です。実物と一致しているかは機械が確かめます。"
-        },
-        "group": {
-          "type": "string",
-          "x-prompt-write": "この業務サービスの実装を置くファイルの束を書いてください。関連する複数の業務サービスが同じファイルに同居することがあるため、1つの束を複数の業務サービスが共有してかまいません。",
-          "x-prompt-query": "実装ファイルの場所を導くための束です。同じ束を共有する業務サービスは同じファイルに在ります。"
-        },
-        "responsibility": {
-          "type": "string",
-          "x-prompt-write": "この業務サービスが引き受けている判断や計算を、業務語彙で1〜2文で書いてください。満たすべきことは受け入れ基準のほうに書くので、ここには書きません。",
-          "x-prompt-query": "この業務サービスが何を引き受けているかを読みます。"
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "この計算が触れる集約を、1件ずつ配列で挙げてください。変更を伴うものが2つ以上並ぶなら、集約の境界の引き方を疑ってください。",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "aggregate": {
+                "type": "string",
+                "x-prompt-write": "触れる集約の識別子を書いてください。",
+                "x-prompt-query": "この計算がどの集約に触れるかを読みます。"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "参照のみ",
+                  "変更を伴う"
+                ],
+                "x-prompt-write": "その集約を読むだけなら「参照のみ」、状態を変えるなら「変更を伴う」を選んでください。変更を伴う集約が2つ以上並ぶなら、集約の境界の引き方を疑ってください。",
+                "x-prompt-query": "その集約を読むだけか、変えるかを読みます。変えるものが2つ以上あれば境界の引き直しを検討します。"
+              },
+              "reason": {
+                "type": "string",
+                "x-prompt-write": "その集約から何を得る（何を変える）のかを1文で書いてください。",
+                "x-prompt-query": "その集約に触れる目的を読みます。"
+              }
+            },
+            "required": [
+              "aggregate",
+              "mode",
+              "reason"
+            ]
+          }
         }
       },
       "required": [
         "blockType",
         "title",
-        "serviceName",
-        "group",
-        "responsibility"
+        "items"
       ],
-      "x-prompt-query": "この業務サービスが何を引き受け、実装のどれとして在るかを読みます。満たすべきことは受け入れ基準のほうに書かれているので、そちらと合わせて読んでください。"
+      "x-prompt-query": "この計算がどの集約にまたがるかを読みます。1つしか並んでいなければ、その集約の内側に置けたはずです。"
+    },
+    "InputsOutputsBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "x-render-order": 5,
+      "x-render-level": 2,
+      "x-render": [
+        {
+          "as": "table",
+          "from": "inputs",
+          "heading": "受け取るもの",
+          "columns": [
+            {
+              "field": "name",
+              "header": "名前"
+            },
+            {
+              "field": "meaning",
+              "header": "意味"
+            }
+          ]
+        },
+        {
+          "as": "table",
+          "from": "outputs",
+          "heading": "返すもの",
+          "columns": [
+            {
+              "field": "name",
+              "header": "名前"
+            },
+            {
+              "field": "meaning",
+              "header": "意味"
+            }
+          ]
+        },
+        {
+          "as": "list",
+          "from": "undefinedInputs",
+          "heading": "決められない入力",
+          "emptyText": "決められない入力は無い。"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "const": "InputsOutputs"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "このブロックの見出しを書いてください（例: 入力と出力）。",
+          "x-prompt-query": "このブロックが何を語っているかの見出しです。"
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "この計算が受け取るものを、1件ずつ配列で挙げてください。",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "受け取るものの名前を業務語彙で書いてください。",
+                "x-prompt-query": "この計算が何を受け取るかを読みます。"
+              },
+              "meaning": {
+                "type": "string",
+                "x-prompt-write": "それが何を表すかを業務語彙で1文で書いてください。",
+                "x-prompt-query": "受け取るものの意味を読みます。"
+              }
+            },
+            "required": [
+              "name",
+              "meaning"
+            ]
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "この計算が返すものを、1件ずつ配列で挙げてください。",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-prompt-write": "返すものの名前を業務語彙で書いてください。",
+                "x-prompt-query": "この計算が何を返すかを読みます。"
+              },
+              "meaning": {
+                "type": "string",
+                "x-prompt-write": "それが何を表すかを業務語彙で1文で書いてください。",
+                "x-prompt-query": "返すものの意味を読みます。"
+              }
+            },
+            "required": [
+              "name",
+              "meaning"
+            ]
+          }
+        },
+        "undefinedInputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "この計算が答えを決められない入力を配列で書いてください。状態を持たない計算の失敗は、状態の不整合ではなく、写像が決まらない入力としてしか現れません。処理の後始末や代替の手順はここに書きません（それは呼ぶ側の仕事です）。"
+        }
+      },
+      "required": [
+        "blockType",
+        "title",
+        "inputs",
+        "outputs"
+      ],
+      "x-prompt-query": "この計算が何から何を決めるかを読みます。集約にとっての不変条件に相当する固定点が、業務サービスではこの対応そのものです。"
     },
     "DomainServiceContent": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "title": {
-          "$ref": "#/$defs/TitleBlock",
-          "x-prompt-write": "「業務エキスパートが理解できる日本語の説明：識別子」の形式で設定してください。説明部分はこの業務サービスが何を引き受けるかを業務語彙で簡潔に表す句（識別子やクラス名をそのまま繰り返さない）。識別子部分はこの文書自身の識別子をそのまま使う。"
+          "$ref": "#/$defs/TitleBlock"
         },
         "description": {
           "$ref": "#/$defs/SummaryBlock"
         },
-        "domainService": {
-          "$ref": "#/$defs/DomainServiceBlock"
+        "existenceRationale": {
+          "$ref": "#/$defs/ExistenceRationaleBlock"
+        },
+        "referencedAggregates": {
+          "$ref": "#/$defs/ReferencedAggregatesBlock"
+        },
+        "inputsOutputs": {
+          "$ref": "#/$defs/InputsOutputsBlock"
         },
         "acceptanceCriteria": {
           "$ref": "#/$defs/AcceptanceCriteriaBlock"
@@ -2707,7 +2867,9 @@
       "required": [
         "title",
         "description",
-        "domainService",
+        "existenceRationale",
+        "referencedAggregates",
+        "inputsOutputs",
         "acceptanceCriteria",
         "acceptanceScenarios"
       ]
