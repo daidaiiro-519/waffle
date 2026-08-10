@@ -266,7 +266,7 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
       <div class="coverage-list">
         <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 7件</span></div>
         <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 2件／実装観点 6件</span></div>
-        <div class="review-row"><span class="who">未解決事項</span><span class="detail">3件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
         <div class="review-row"><span class="who">完成イメージ確認済み</span><span class="detail">daidaiiro／2026-08-10</span></div>
       </div>
     </div>
@@ -330,8 +330,8 @@ a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-
             </div>
             <div class="entry">
               <div class="entry-head"><span class="badge">ddd-advisor</span></div>
-              <div class="entry-viewpoint">シナリオを持てない条件を、欠けとして数えない</div>
-              <div class="entry-consideration">情報の不在を主張する規則（保持しない・残らない・追記しかできない・保持期限を超えない）は、観測するための操作を作った時点で規則そのものが壊れるため、シナリオを持てない。そのまま数えると欠けとして永久に鳴り続け、本物の欠けがその中に埋もれる。担保の手段が振る舞いではないことを基準の側が名乗れるようにする。</div>
+              <div class="entry-viewpoint">不変条件はすべてシナリオを持つ</div>
+              <div class="entry-consideration">「値そのものを保持しない」のように、値オブジェクトや属性の宣言が既に言っていることは、不変条件へ重ねて書かない。構造の宣言と、それを実物と突き合わせる検知が担保する。重複を外すと、残る不変条件はすべて操作をまたぐ振る舞いの主張になり、例外なくシナリオを持つ。守り方を区別する欄（enforcement）は、この整理で不要になったので v9 から外した。</div>
             </div></div>
           <div class="tab-panel" id="panel2">
             <div class="entry">

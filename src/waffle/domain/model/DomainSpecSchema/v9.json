@@ -1179,10 +1179,6 @@
               "header": "ルール"
             },
             {
-              "field": "enforcement",
-              "header": "守り方"
-            },
-            {
               "field": "rationale",
               "header": "根拠"
             }
@@ -1207,21 +1203,12 @@
             "required": [
               "id",
               "rule",
-              "enforcement",
               "rationale"
             ],
             "properties": {
               "rule": {
                 "type": "string",
-                "x-prompt-write": "不変条件（「〜は常に〜」の形）（例: 注文明細の数量は常に1以上である）"
-              },
-              "enforcement": {
-                "type": "string",
-                "enum": [
-                  "schema",
-                  "guard"
-                ],
-                "x-prompt-write": "静的(値/構造)=schema が守る / 動的(状態遷移など)=guard が守る。"
+                "x-prompt-write": "この集約が常に満たす不変条件を「〜は常に〜」の形で書いてください。値オブジェクトや属性の宣言がすでに言っていることは、ここへ重ねて書かないでください（「その項目を持たない」等は、属性の宣言が言っています）。ここに書くのは、操作をまたいでも成り立つという振る舞いの主張だけです。"
               },
               "rationale": {
                 "type": "array",
