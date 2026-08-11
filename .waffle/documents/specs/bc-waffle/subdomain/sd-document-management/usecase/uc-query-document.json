@@ -119,7 +119,9 @@
         "If query_pathのpathがJMESPathとして構文エラーであるとき、システムはjmespathの生例外をそのまま返さず、Waffle独自のエラーコード・メッセージへ変換して返す shall。",
         "While query_pathを実行するとき、pathは常に1ブロックの内側を起点とした相対式として評価される shall（doc全体や複数blockTypeを跨ぐ横断検索が必要な場合は既存のfind_allを使う）。",
         "While operationにquery_pathをblockKey省略で実行し、あるblockKeyに対するpathの評価がJMESPathの評価時型エラー（式の形が対象ブロックの構造に合わない）になったとき、システムはそのblockKeyを結果から静かにスキップし、クエリ全体を失敗させない shall（構文エラーとは区別する。全blockKeyがスキップされresultsが空配列になるのも正常系とする）。",
-        "If operationにquery_pathをblockKey指定で実行し、pathの評価がJMESPathの評価時型エラーになったとき、システムはINVALID_JMESPATH_EXPRESSIONエラーを返す shall（ユーザーが明示指定した単一ブロックに式が合わなかったことをそのまま伝える）。"
+        "If operationにquery_pathをblockKey指定で実行し、pathの評価がJMESPathの評価時型エラーになったとき、システムはINVALID_JMESPATH_EXPRESSIONエラーを返す shall（ユーザーが明示指定した単一ブロックに式が合わなかったことをそのまま伝える）。",
+        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
+        "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
       ]
     },
     "errors": {
@@ -154,6 +156,18 @@
           "code": "MISSING_TEMPLATE_VAR",
           "condition": [
             "resolve_ref でテンプレート変数（contextRef等）を解決できない"
+          ]
+        },
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "対象パスが存在しないとき"
+          ]
+        },
+        {
+          "code": "INVALID_SCHEMA_REF",
+          "condition": [
+            "対象のschemaRefを解決できないとき"
           ]
         }
       ]
@@ -283,37 +297,33 @@
           "gherkin": "Scenario: query_pathでblockKey指定時、式の評価時型エラーはエラーを返す\n  Given query システム と、items配列は持つがruleフィールドは持たない対象ブロック\n  When operation query_path を blockKey で明示指定し、ruleフィールドを前提とした path \"items[?contains(rule, 'CLI')]\" で実行する\n  Then エラーコード INVALID_JMESPATH_EXPRESSION が返る",
           "covers": "受け入れ基準: query_pathのblockKey指定時の評価時型エラー",
           "operation": "query_path"
+        },
+        {
+          "name": "対象パスが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象パスが存在しないとき",
+          "gherkin": "Scenario: 対象パスが存在しないときのときINVALID_PATH\n  Given 対象パスが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
+        },
+        {
+          "name": "対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のschemaRefを解決できないとき",
+          "gherkin": "Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF\n  Given 対象のschemaRefを解決できないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_SCHEMA_REF エラーが返る",
+          "covers": "エラー: INVALID_SCHEMA_REF"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないパスはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる",
-          "gherkin": "Scenario: 存在しないパスはINVALID_PATH\n  Given 実在しない対象パス\n  When 本usecaseを実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: 対象パスが存在しないときはINVALID_PATHを返す"
-        },
-        {
-          "name": "解決できないschemaRefはINVALID_SCHEMA_REF",
-          "category": "異常系",
-          "viewpoint": "解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる",
-          "gherkin": "Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF\n  Given 解決できないschemaRef\n  When 本usecaseを実行する\n  Then INVALID_SCHEMA_REFエラーが返る",
-          "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

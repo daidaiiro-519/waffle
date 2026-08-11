@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scaffold-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v9",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-document-management",
@@ -33,7 +33,8 @@
       "items": [
         "生成対象の schema と documentId が与えられている",
         "分岐のある schema では discriminator が与えられている",
-        "clear_fieldの場合: 対象のdocumentPath・削除する値フィールドのpathが与えられている"
+        "clear_fieldの場合: 対象のdocumentPath・削除する値フィールドのpathが与えられている",
+        "要素操作の場合: 対象のdocumentPathが与えられ、その document が適合の検証を通っている（鍵を宣言した配列に鍵の重複が無いことは、要素操作より先に検証が担保する）"
       ]
     },
     "mainFlow": {
@@ -92,20 +93,146 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When schemaRef と documentId が与えられたとき、システムは schema に適合する骨格を生成する shall（status=schema の enum 先頭）。",
-        "When fill で値が与えられたとき、システムは宣言済み値フィールドにのみ書き込む shall。",
-        "If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。",
-        "If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。",
-        "If 分岐のある schema で discriminator の値が候補enumに存在しないとき、システムは INVALID_DISCRIMINATOR を返し候補を案内する shall。",
-        "When clear_fieldでdocumentPath・fieldPathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。",
-        "While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。",
-        "If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。",
-        "When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。",
-        "While Documentのschemaが既に目的のschemaRefであるとき、migrate_schemaは無変更で成功する shall。",
-        "If migrate_schemaの移行先schemaRefが解決できないとき、システムはINVALID_SCHEMA_REFエラーを返し書き換えを拒否する shall。",
-        "When createで版を含まないschemaRefが与えられたとき、システムはその名前の最新の版へ解決して骨格を生成する shall（指示や手順に版を書かせないため。書かれた版はschemaが上がった瞬間から古い版を指す）。",
-        "If createで最新でない版のschemaRefが明示されたとき、システムはOUTDATED_SCHEMA_REFエラーを返し骨格を生成しない shall（最新以外の版で新しいdocumentを作る用途を持たないため）。",
-        "While migrate_schemaに移行先のschemaRefが与えられたとき、システムはその版が最新かどうかを問わず書き換える shall（既存documentを段階的に運ぶ操作であり、createの制限をここへ持ち込むと移行の道が塞がるため）。"
+        {
+          "id": "skeleton-conforms-to-schema",
+          "text": "When schemaRef と documentId が与えられたとき、システムは schema に適合する骨格を生成する shall（status=schema の enum 先頭）。"
+        },
+        {
+          "id": "fill-writes-declared-fields-only",
+          "text": "When fill で値が与えられたとき、システムは宣言済み値フィールドにのみ書き込む shall。"
+        },
+        {
+          "id": "rejects-structure-changing-values",
+          "text": "If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。"
+        },
+        {
+          "id": "missing-discriminator",
+          "text": "If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。"
+        },
+        {
+          "id": "invalid-discriminator",
+          "text": "If 分岐のある schema で discriminator の値が候補enumに存在しないとき、システムは INVALID_DISCRIMINATOR を返し候補を案内する shall。"
+        },
+        {
+          "id": "clear-field-removes",
+          "text": "When clear_fieldでdocumentPath・fieldPathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。"
+        },
+        {
+          "id": "clear-field-idempotent",
+          "text": "While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。"
+        },
+        {
+          "id": "clear-field-protects-required",
+          "text": "If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。"
+        },
+        {
+          "id": "migrate-rewrites-schema-ref",
+          "text": "When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。"
+        },
+        {
+          "id": "migrate-idempotent",
+          "text": "While Documentのschemaが既に目的のschemaRefであるとき、migrate_schemaは無変更で成功する shall。"
+        },
+        {
+          "id": "migrate-invalid-schema-ref",
+          "text": "If migrate_schemaの移行先schemaRefが解決できないとき、システムはINVALID_SCHEMA_REFエラーを返し書き換えを拒否する shall。"
+        },
+        {
+          "id": "create-resolves-latest-version",
+          "text": "When createで版を含まないschemaRefが与えられたとき、システムはその名前の最新の版へ解決して骨格を生成する shall（指示や手順に版を書かせないため。書かれた版はschemaが上がった瞬間から古い版を指す）。"
+        },
+        {
+          "id": "create-rejects-outdated-version",
+          "text": "If createで最新でない版のschemaRefが明示されたとき、システムはOUTDATED_SCHEMA_REFエラーを返し骨格を生成しない shall（最新以外の版で新しいdocumentを作る用途を持たないため）。"
+        },
+        {
+          "id": "migrate-accepts-any-version",
+          "text": "While migrate_schemaに移行先のschemaRefが与えられたとき、システムはその版が最新かどうかを問わず書き換える shall（既存documentを段階的に運ぶ操作であり、createの制限をここへ持ち込むと移行の道が塞がるため）。"
+        },
+        {
+          "id": "reports-actual-write-result",
+          "text": "When 書き込みを終えたとき、システムは実際に書き込んだ欄だけを written に、書き込まなかった欄を skipped に記録する shall（書き込み結果を偽らない）。"
+        },
+        {
+          "id": "create-persists-skeleton",
+          "text": "When create が骨格を生成したとき、システムは schema が宣言する置き場所へ骨格を書き出し、create に渡された参照パラメータを document 本体にも書き込む shall。"
+        },
+        {
+          "id": "fill-template-carries-guidance",
+          "text": "When create が骨格を生成したとき、システムは記入対象の道とその執筆ガイダンスを fillTemplate として返す shall（content の外にあるトップレベルの欄も含む）。"
+        },
+        {
+          "id": "creates-missing-block-kind",
+          "text": "When まだ存在しないブロックの中の欄へ書き込むとき、システムはそのブロックの種別も一緒に作り、書き込んだ結果が schema に適合する状態にする shall。"
+        },
+        {
+          "id": "element-add",
+          "text": "When 鍵を宣言した配列へ add_element で要素が与えられたとき、システムは既存の要素を一度も読み込ませることなく、その要素を加える shall（読み出して組み立て直す手順を挟まないことが、この操作の目的そのもの）。"
+        },
+        {
+          "id": "element-retire",
+          "text": "When 鍵を宣言した配列へ retire_element で鍵が与えられたとき、システムは宣言された参照をたどってその鍵が指されていないことを確かめてから、取り下げを適用する shall。"
+        },
+        {
+          "id": "retire-blocked-by-reference",
+          "text": "If retire_element の対象の鍵が、宣言された参照のいずれかからまだ指されているとき、システムは STILL_REFERENCED を返し、指している場所を示して取り除かない shall。"
+        },
+        {
+          "id": "unknown-element-key-fails",
+          "text": "If 要素操作が、指定された鍵を持つ要素が無いために適用できなかったとき、システムは UNKNOWN_ELEMENT_KEY を返す shall。"
+        },
+        {
+          "id": "rejects-wholesale-replace-on-declared-array",
+          "text": "If 鍵を宣言した配列に対して fill で配列全体が与えられたとき、システムは WHOLESALE_REPLACE_NOT_ALLOWED を返し、使うべき要素操作を案内して書き込まない shall。"
+        },
+        {
+          "id": "element-ops-are-atomic",
+          "text": "If 複数の要素操作のうち1つでも受け付けられないとき、システムはどの操作も適用せず、Document へ何も保存しない shall（配列の中で起きる失敗だけでなく、順序配列の拒否・丸ごと置き換えの拒否・宣言の誤りなど、配列の外で起きる失敗も含む）。"
+        },
+        {
+          "id": "element-add-fills-const",
+          "text": "When 要素を加えるとき、システムは schema がその要素に宣言する固定値を集めて渡し、書き込んだ結果が schema に適合する状態にする shall。"
+        },
+        {
+          "id": "ordered-array-rejects-element-ops",
+          "text": "If 順序そのものが意味を持つと宣言された配列へ要素操作が与えられたとき、システムは ELEMENT_OPS_NOT_APPLICABLE を返し、その配列は丸ごと置き換えて書き換えるものだと案内する shall。"
+        },
+        {
+          "id": "undeclared-array-keeps-wholesale",
+          "text": "While 配列が鍵も順序も宣言していないとき、システムは従来どおり fill による丸ごとの置き換えを受け付ける shall。"
+        },
+        {
+          "id": "ordered-and-key-declarations-are-exclusive",
+          "text": "If 同じ配列に順序の宣言と鍵の宣言が両方あるとき、システムは ELEMENT_OPS_NOT_APPLICABLE を返し、宣言そのものが誤っていることを示す shall（どちらが優先かを実装が黙って決めないため）。"
+        },
+        {
+          "id": "fill-template-carries-element-declarations",
+          "text": "When 記入対象の道と執筆ガイダンスを返すとき、システムは配列については鍵の宣言・参照関係の宣言・順序の宣言も併せて返す shall（書き手に渡る指示に現れない宣言は、書き手にとって存在しないため）。"
+        },
+        {
+          "id": "element-ops-are-persisted",
+          "text": "When 要素操作がすべて受け付けられたとき、システムは書き換えた配列を Document へ保存し、その配列の道を written に記録する shall。"
+        },
+        {
+          "id": "invalid-path",
+          "text": "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        },
+        {
+          "id": "invalid-schema-ref",
+          "text": "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        },
+        {
+          "id": "create-idempotent-structure",
+          "text": "When 同じ documentId で create を複数回実行したとき、システムの生成する構造（schema由来の骨格の形）は常にべき等である shall。"
+        },
+        {
+          "id": "create-preserves-existing-values",
+          "text": "While document.json が既に存在するとき、create を再実行しても、fill で書き込まれた既存の values は保持され、破壊されない shall（values 自体の再現性はシステムの管轄外・呼び出し側の責務）。"
+        },
+        {
+          "id": "element-ops-target-document",
+          "text": "When 要素操作が与えられたとき、システムは常に Document 全体を対象として読み書きし、要素だけを切り離して指させない shall。"
+        }
       ]
     },
     "errors": {
@@ -141,54 +268,50 @@
           "condition": [
             "createで指定されたschemaRefの版が、そのschemaの最新ではない"
           ]
+        },
+        {
+          "code": "UNKNOWN_ELEMENT_KEY",
+          "condition": [
+            "要素操作が指した鍵を持つ要素が、対象の配列に存在しない"
+          ]
+        },
+        {
+          "code": "STILL_REFERENCED",
+          "condition": [
+            "取り下げようとした要素の鍵が、宣言された参照からまだ指されている"
+          ]
+        },
+        {
+          "code": "WHOLESALE_REPLACE_NOT_ALLOWED",
+          "condition": [
+            "鍵を宣言した配列に対して、values で配列全体が与えられた"
+          ]
+        },
+        {
+          "code": "ELEMENT_OPS_NOT_APPLICABLE",
+          "condition": [
+            "順序そのものが意味を持つと宣言された配列に対して、要素操作が与えられた",
+            "同じ配列に順序の宣言と鍵の宣言が両方あるとき（宣言そのものの誤りであり、鍵を見に行く前にこれを返す）"
+          ]
+        },
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "対象パスが存在しないとき"
+          ]
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 同じ documentId で create を複数回実行したとき、システム の生成する構造（schema由来の骨格の形）は常にべき等である shall。",
-        "While document.json が既に存在するとき、create を再実行しても、fill で書き込まれた既存の values は保持され、破壊されない shall（values 自体の再現性はシステムの管轄外・呼び出し側の責務）。",
-        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 同じclear_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "既存documentへの再createはvaluesを破壊しない",
-          "category": "境界値",
-          "viewpoint": "べき等性：fill済みのvaluesはcreateの再実行で保持される",
-          "gherkin": "Scenario: 既存documentへの再createはvaluesを破壊しない\n  Given create済みかつfillで値を書き込み済みのdocumentId\n  When 同じdocumentIdでcreateを再実行する\n  Then fillで書き込んだvaluesは保持されたままである",
-          "covers": "操作保証: 既存values の保持"
-        },
-        {
-          "name": "存在しないパスはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる",
-          "gherkin": "Scenario: 存在しないパスはINVALID_PATH\n  Given 実在しない対象パス\n  When 本usecaseを実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: 対象パスが存在しないときはINVALID_PATHを返す"
-        },
-        {
-          "name": "解決できないschemaRefはINVALID_SCHEMA_REF",
-          "category": "異常系",
-          "viewpoint": "解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる",
-          "gherkin": "Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF\n  Given 解決できないschemaRef\n  When 本usecaseを実行する\n  Then INVALID_SCHEMA_REFエラーが返る",
-          "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
-        },
-        {
-          "name": "clear_fieldの複数回実行はべき等である",
-          "category": "境界値",
-          "viewpoint": "べき等性：同じclear_field操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: clear_fieldの複数回実行はべき等である\n  Given 同一のclear_field操作（必須ではないフィールド）\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
-          "covers": "操作保証: clear_fieldのべき等性"
-        }
-      ]
+      "scenarios": []
     },
     "acceptanceScenarios": {
       "blockType": "AcceptanceScenarios",
@@ -200,95 +323,119 @@
           "category": "正常系",
           "viewpoint": "骨格生成：生成骨格は schema 適合・status は初期値",
           "gherkin": "Scenario: 生成した骨格は自分の schema で valid\n  Given advisor 種別の Document（discriminator 指定済み）\n  When create する\n  Then 骨格は schema に適合し、status は schema の初期値である",
-          "covers": "受け入れ基準: 骨格は schema に適合",
-          "operation": "create"
+          "operation": "create",
+          "satisfies": [
+            "skeleton-conforms-to-schema"
+          ]
         },
         {
           "name": "構造を変える値は拒否される",
           "category": "異常系",
           "viewpoint": "構造保護：const フィールドへの書き込みは skipped",
           "gherkin": "Scenario: 構造を変える値は拒否される\n  Given 作成済みの Document\n  When const フィールドへ値を書き込もうとする\n  Then 書き込まれず skipped に記録される",
-          "covers": "受け入れ基準: 構造を変える値は拒否",
-          "operation": "fill"
+          "operation": "fill",
+          "satisfies": [
+            "rejects-structure-changing-values"
+          ]
         },
         {
           "name": "宣言済みの値フィールドに書き込まれる",
           "category": "正常系",
           "viewpoint": "fill：宣言済み値フィールドへの書き込みは written に記録される",
           "gherkin": "Scenario: 宣言済みの値フィールドに書き込まれる\n  Given 作成済みの Document\n  When 宣言済みの値フィールドへ値を書き込む\n  Then written に記録され、ファイルに反映される",
-          "covers": "受け入れ基準: fill で値が宣言済み値フィールドにのみ書き込まれる",
-          "operation": "fill"
+          "operation": "fill",
+          "satisfies": [
+            "fill-writes-declared-fields-only"
+          ]
         },
         {
           "name": "discriminator が無いと候補を案内する",
           "category": "異常系",
           "viewpoint": "エラー：分岐のある schema で discriminator 未指定は MISSING_DISCRIMINATOR",
           "gherkin": "Scenario: discriminator が無いと候補を案内する\n  Given 分岐のある schema\n  When discriminator を指定せずに create する\n  Then MISSING_DISCRIMINATOR エラーが候補つきで返る",
-          "covers": "エラー: MISSING_DISCRIMINATOR",
-          "operation": "create"
+          "operation": "create",
+          "satisfies": [
+            "missing-discriminator"
+          ]
         },
         {
           "name": "createはadvisor_skillの骨格を生成する",
           "category": "正常系",
           "viewpoint": "骨格生成：discriminator(skillKind=advisor)からschema分岐に沿った骨格が組まれる",
           "gherkin": "Scenario: createはadvisor_skillの骨格を生成する\n  Given schemaRef, documentId, discriminator(skillKind=advisor)\n  When createを実行する\n  Then documentType/schemaRef/skillKind/statusが正しく設定され、content配下にresponseTypes/knowledgeRefsがある骨格が生成される",
-          "covers": "コマンド: create",
-          "operation": "create"
+          "operation": "create",
+          "satisfies": [
+            "skeleton-conforms-to-schema"
+          ]
         },
         {
           "name": "createはx_source_targetに骨格を書き出す",
           "category": "正常系",
           "viewpoint": "永続化：createはschema宣言のx-source-targetへ骨格ファイルを書き出す",
           "gherkin": "Scenario: createはx_source_targetに骨格を書き出す\n  Given schemaRef, documentId, discriminator\n  When createを実行する\n  Then schemaのx-source-target宣言どおりのパスにファイルが書き出される",
-          "covers": "コマンド: create（永続化）",
-          "operation": "create"
+          "operation": "create",
+          "satisfies": [
+            "create-persists-skeleton"
+          ]
         },
         {
           "name": "fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持つ",
           "category": "正常系",
           "viewpoint": "fillTemplate：createが返すfillTemplateは値フィールドのpath×x-prompt-writeの一覧である",
           "gherkin": "Scenario: fillTemplateは値フィールドのpathとprompt_x_prompt_writeを持つ\n  Given schemaRef, documentId, discriminator\n  When createを実行する\n  Then fillTemplateには値フィールドのpathとx-prompt-write由来のpromptを持つエントリが含まれる",
-          "covers": "コマンド: create（fillTemplate）",
-          "operation": "create"
+          "operation": "create",
+          "satisfies": [
+            "fill-template-carries-guidance"
+          ]
         },
         {
           "name": "customはadvisorと構成が異なる",
           "category": "正常系",
           "viewpoint": "discriminator分岐：skillKind=customはadvisorと異なるcontent構造(processingTarget)を持つ",
           "gherkin": "Scenario: customはadvisorと構成が異なる\n  Given discriminator(skillKind=custom)\n  When createを実行する\n  Then advisorとは異なりcontent配下にprocessingTargetを持つ骨格が生成される",
-          "covers": "discriminator: skillKind=custom",
-          "operation": "create"
+          "operation": "create",
+          "satisfies": [
+            "skeleton-conforms-to-schema"
+          ]
         },
         {
           "name": "宣言済みの値フィールドを削除する",
           "category": "正常系",
           "viewpoint": "clear_field：必須ではない値フィールドをdocumentから削除する",
           "gherkin": "Scenario: 宣言済みの値フィールドを削除する\n  Given 値が書き込み済みの、必須ではないフィールドのpath\n  When clear_fieldを実行する\n  Then そのフィールドがdocumentから削除される",
-          "covers": "受け入れ基準: clear_fieldでのフィールド削除",
-          "operation": "clear_field"
+          "operation": "clear_field",
+          "satisfies": [
+            "clear-field-removes"
+          ]
         },
         {
           "name": "既に存在しないフィールドのclear_fieldは無変更で成功する",
           "category": "境界値",
           "viewpoint": "clear_field：冪等性",
           "gherkin": "Scenario: 既に存在しないフィールドのclear_fieldは無変更で成功する\n  Given 既に削除済みのフィールドpath\n  When clear_fieldを再実行する\n  Then 対象は無変更のまま成功する",
-          "covers": "受け入れ基準: clear_fieldの冪等性",
-          "operation": "clear_field"
+          "operation": "clear_field",
+          "satisfies": [
+            "clear-field-idempotent"
+          ]
         },
         {
           "name": "必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される",
           "category": "異常系",
           "viewpoint": "clear_field：構造保護：必須フィールドの削除を拒否する",
           "gherkin": "Scenario: 必須フィールドのclear_fieldはREQUIRED_FIELDとして拒否される\n  Given schemaのrequiredに指定されているフィールドのpath\n  When clear_fieldを実行する\n  Then REQUIRED_FIELDエラーが返り削除されない",
-          "covers": "受け入れ基準: clear_fieldの構造保護",
-          "operation": "clear_field"
+          "operation": "clear_field",
+          "satisfies": [
+            "clear-field-protects-required"
+          ]
         },
         {
           "name": "不正なdiscriminator値はINVALID_DISCRIMINATOR",
           "category": "異常系",
           "viewpoint": "事前条件違反: enumに無いdiscriminator値の拒否",
           "gherkin": "Scenario: 不正なdiscriminator値はINVALID_DISCRIMINATOR\n  Given 分岐のあるschemaのenumに存在しないdiscriminator値\n  When createを実行する\n  Then INVALID_DISCRIMINATORエラーが返る",
-          "covers": ""
+          "satisfies": [
+            "invalid-discriminator"
+          ]
         },
         {
           "name": "migrate_schemaはschemaRefを新版へ書き換える",
@@ -296,7 +443,9 @@
           "viewpoint": "migrate_schema: 既に解決可能な別のschema版へDocumentのschemaRefを書き換える",
           "gherkin": "Scenario: migrate_schemaはschemaRefを新版へ書き換える\n  Given 別版のschemaRefを指す既存Document\n  When migrate_schemaを実行する\n  Then Documentのstatusはそのschema版へ書き換わる",
           "operation": "migrate_schema",
-          "covers": "受け入れ基準: migrate_schemaによるschemaRef書き換え"
+          "satisfies": [
+            "migrate-rewrites-schema-ref"
+          ]
         },
         {
           "name": "migrate_schemaは同じ版への書き換えに対して冪等である",
@@ -304,7 +453,9 @@
           "viewpoint": "migrate_schema: 冪等性",
           "gherkin": "Scenario: migrate_schemaは同じ版への書き換えに対して冪等である\n  Given 既に目的のschemaRefになっているDocument\n  When 同じschemaRefでmigrate_schemaを再実行する\n  Then 対象は無変更のまま成功する",
           "operation": "migrate_schema",
-          "covers": "受け入れ基準: migrate_schemaの冪等性"
+          "satisfies": [
+            "migrate-idempotent"
+          ]
         },
         {
           "name": "migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する",
@@ -312,94 +463,282 @@
           "viewpoint": "migrate_schema: 対象取り違えの防止",
           "gherkin": "Scenario: migrate_schemaは解決できないschemaRefをINVALID_SCHEMA_REFとして拒否する\n  Given 解決できない移行先schemaRef\n  When migrate_schemaを実行する\n  Then INVALID_SCHEMA_REFエラーが返り、Documentは変更されない",
           "operation": "migrate_schema",
-          "covers": "エラー: INVALID_SCHEMA_REF"
+          "satisfies": [
+            "migrate-invalid-schema-ref"
+          ]
         },
         {
           "name": "constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる",
           "category": "境界値",
           "viewpoint": "計算整合: 完全一致のときだけ許すことで、構造保護を保ったまま再同期できる",
           "gherkin": "Scenario: constフィールドは現行schemaの宣言値と完全一致する場合のみ再同期できる\nGiven 作成済みのDocument\nWhen constフィールドへ、現行schemaが宣言するconst値と完全に一致する値を書き込む\nThen 書き込みが許可される\nAnd 完全に一致しない値への上書きは引き続き拒否される",
-          "covers": "受け入れ基準: 構造を変える値は拒否される（schema版の変化に伴う再同期の例外）"
+          "satisfies": [
+            "rejects-structure-changing-values"
+          ]
         },
         {
           "name": "createに渡した参照パラメータはdocument本体にも書き込まれる",
           "category": "正常系",
           "viewpoint": "計算整合: 参照パラメータがパス計算にしか使われないと、作られたdocumentが自分の所属を持たない",
           "gherkin": "Scenario: createに渡した参照パラメータはdocument本体にも書き込まれる\nGiven schemaが宣言する任意のトップレベルフィールド（subdomainRef等）に対応する参照パラメータ\nWhen createを実行する\nThen そのパラメータはパス計算だけでなくdocument本体にも書き込まれる",
-          "covers": "受け入れ基準: createはx-source-targetに骨格を書き出す（参照パラメータの反映）"
+          "satisfies": [
+            "create-persists-skeleton"
+          ]
         },
         {
           "name": "fillTemplateにはcontent外のトップレベルのx-prompt-writeフィールドも含まれる",
           "category": "正常系",
           "viewpoint": "境界: 値フィールドはcontentの中だけにあるとは限らない",
           "gherkin": "Scenario: fillTemplateにはcontent外のトップレベルのx-prompt-writeフィールドも含まれる\nGiven content外にx-prompt-writeを持つトップレベルフィールド（skillRef）を宣言するschema\nWhen createを実行する\nThen fillTemplateにcontent以外のパス（skillRef）のエントリが含まれる",
-          "covers": "受け入れ基準: fillTemplateは値フィールドのpathとpromptを持つ"
+          "satisfies": [
+            "fill-template-carries-guidance"
+          ]
         },
         {
           "name": "fillはcontent外のトップレベルのx-prompt-writeフィールドにも書き込める",
           "category": "正常系",
           "viewpoint": "境界: 案内した経路へ実際に書き込めなければ、案内が嘘になる",
           "gherkin": "Scenario: fillはcontent外のトップレベルのx-prompt-writeフィールドにも書き込める\nGiven 作成済みのDocument\nWhen content外のトップレベルフィールド（skillRef）へ値を書き込む\nThen writtenに記録され、ファイルに反映される",
-          "covers": "受け入れ基準: 宣言済みの値フィールドに書き込まれる"
+          "satisfies": [
+            "fill-writes-declared-fields-only"
+          ]
         },
         {
           "name": "fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する",
           "category": "異常系",
           "viewpoint": "事前条件: 識別子と構造分岐が書き換わると、documentの同一性と置き場所が壊れる",
           "gherkin": "Scenario: fillはdocumentIdとdiscriminatorキーへの書き込みを拒否する\nGiven 作成済みのDocument\nWhen documentId・discriminatorキー（templateKind）へ値を書き込もうとする\nThen 書き込まれずskippedに記録される",
-          "covers": "受け入れ基準: 構造を変える値は拒否される"
+          "satisfies": [
+            "rejects-structure-changing-values"
+          ]
         },
         {
           "name": "schema版が変わった後に新設された任意ブロックも既存documentへ書き込める",
           "category": "境界値",
           "viewpoint": "状態遷移: 既存documentがschemaの新版へ追従していない状態でも書き込めること",
           "gherkin": "Scenario: schema版が変わった後に新設された任意ブロックも既存documentへ書き込める\nGiven schemaが宣言する任意ブロックのキー自体を持たない既存Document\nWhen そのブロック配下の宣言済み値フィールドへfillする\nThen writtenに記録され、ファイルに反映される",
-          "covers": "受け入れ基準: 宣言済みの値フィールドに書き込まれる"
+          "satisfies": [
+            "fill-writes-declared-fields-only"
+          ]
         },
         {
           "name": "書き込み単位でない欄を指すと何も書き込まない",
           "category": "異常系",
           "viewpoint": "結果の誠実さ：書けない指定を受けたら、書けた分も含めて何も変えない",
           "gherkin": "Scenario: 書き込み単位でない欄を指すと何も書き込まない\n  Given 作成済みの Document\n  When 書き込み単位でない欄と、書き込める欄を同時に指定する\n  Then 拒否され、書き込める欄も含めて Document は変わらない\n  And 指定すべき欄の候補が示される",
-          "covers": "受け入れ基準: 書き込み結果を偽らない",
-          "operation": "fill"
+          "operation": "fill",
+          "satisfies": [
+            "reports-actual-write-result"
+          ]
         },
         {
           "name": "宣言に無い欄を指すと何も書き込まない",
           "category": "異常系",
           "viewpoint": "結果の誠実さ：存在しない欄への指定を成功として返さない",
           "gherkin": "Scenario: 宣言に無い欄を指すと何も書き込まない\n  Given 作成済みの Document\n  When 宣言に無い欄を指定する\n  Then 拒否され、Document は変わらない",
-          "covers": "受け入れ基準: 書き込み結果を偽らない",
-          "operation": "fill"
+          "operation": "fill",
+          "satisfies": [
+            "reports-actual-write-result"
+          ]
         },
         {
           "name": "ブロックがまだ無い欄へ書くと種別も一緒に作られる",
           "category": "正常系",
           "viewpoint": "構造の完全性：後から新設されたブロックへ書いても、それ単体で適合する",
           "gherkin": "Scenario: ブロックがまだ無い欄へ書くと種別も一緒に作られる\n  Given ブロックがまだ無い Document\n  When そのブロック配下の欄へ値を書き込む\n  Then ブロックの種別も一緒に作られ、Document は schema に適合する",
-          "covers": "受け入れ基準: 書き込んだ結果が schema に適合する",
-          "operation": "fill"
+          "operation": "fill",
+          "satisfies": [
+            "creates-missing-block-kind"
+          ]
         },
         {
           "name": "版を省けば最新の版で作られる",
           "category": "正常系",
           "viewpoint": "指示に版を書かせない：書かれた版は必ず腐る",
-          "covers": "受け入れ基準: 版を含まないschemaRefは最新の版へ解決する",
-          "gherkin": "Scenario: 版を省けば最新の版で作られる\n  Given 複数の版を持つschemaの名前\n  And その名前に版を付けずに指定する\n  When 骨格の生成を求める\n  Then 最新の版で骨格が作られる"
+          "gherkin": "Scenario: 版を省けば最新の版で作られる\n  Given 複数の版を持つschemaの名前\n  And その名前に版を付けずに指定する\n  When 骨格の生成を求める\n  Then 最新の版で骨格が作られる",
+          "satisfies": [
+            "create-resolves-latest-version"
+          ]
         },
         {
           "name": "古い版を明示したら作らせない",
           "category": "異常系",
           "viewpoint": "誤りの検出：古い版のdocumentを作ってから気づく事態を防ぐ",
-          "covers": "受け入れ基準: 最新でない版のschemaRefはOUTDATED_SCHEMA_REFで拒む",
-          "gherkin": "Scenario: 古い版を明示したら作らせない\n  Given 複数の版を持つschemaのうち、最新ではない版\n  When その版を明示して骨格の生成を求める\n  Then OUTDATED_SCHEMA_REFとして拒まれる\n  And 骨格は作られない"
+          "gherkin": "Scenario: 古い版を明示したら作らせない\n  Given 複数の版を持つschemaのうち、最新ではない版\n  When その版を明示して骨格の生成を求める\n  Then OUTDATED_SCHEMA_REFとして拒まれる\n  And 骨格は作られない",
+          "satisfies": [
+            "create-rejects-outdated-version"
+          ]
         },
         {
           "name": "必須ブロックの中にある必須でない欄は削除できる",
           "category": "境界値",
           "viewpoint": "境界: 必須かどうかは欄そのもので決まる。入れ物が必須であることを、中身が必須であることと取り違えない",
           "gherkin": "Scenario: 必須ブロックの中にある必須でない欄は削除できる\n  Given schemaのrequiredに指定されているブロックのpath\n  And そのブロックの中にある、requiredに指定されていない欄のpath\n  When その欄に対してclear_fieldを実行する\n  Then その欄がdocumentから削除される\n  And REQUIRED_FIELDエラーにならない",
-          "covers": "受け入れ基準: clear_fieldは指定された値フィールドをdocumentから削除する"
+          "satisfies": [
+            "clear-field-removes"
+          ]
+        },
+        {
+          "name": "要素を1件足すのに既存を読み込ませない",
+          "category": "正常系",
+          "viewpoint": "要素の同一性：足す操作が、配列全体を経由せずに済むか",
+          "satisfies": [
+            "element-add"
+          ],
+          "gherkin": "Scenario: 要素を1件足すのに既存を読み込ませない\n  Given 受け入れ基準を3件持つ Document\n  When 基準を1件 add_element で加える\n  Then 配列は4件になり、既存の3件はそのまま残る"
+        },
+        {
+          "name": "参照が残っていない要素は取り下げられる",
+          "category": "正常系",
+          "viewpoint": "取り下げの前提：参照が外れていれば通るか",
+          "satisfies": [
+            "element-retire"
+          ],
+          "gherkin": "Scenario: 参照が残っていない要素は取り下げられる\n  Given どのシナリオからも指されていない受け入れ基準\n  When その鍵を指して retire_element する\n  Then その要素が配列から取り除かれる"
+        },
+        {
+          "name": "参照が残っている要素は取り下げられない",
+          "category": "異常系",
+          "viewpoint": "取り下げの前提：宣言された参照関係から可否が導かれるか",
+          "satisfies": [
+            "retire-blocked-by-reference"
+          ],
+          "gherkin": "Scenario: 参照が残っている要素は取り下げられない\n  Given あるシナリオの satisfies から指されている受け入れ基準\n  When その鍵を指して retire_element する\n  Then PRECONDITION_NOT_MET が返り、参照しているシナリオが示され、要素は残る"
+        },
+        {
+          "name": "存在しない鍵を指すと失敗する",
+          "category": "異常系",
+          "viewpoint": "要素の同一性：指し間違いを、黙って足すことで埋めないか",
+          "satisfies": [
+            "unknown-element-key-fails"
+          ],
+          "gherkin": "Scenario: 存在しない鍵を指すと失敗する\n  Given その鍵を持つ要素が無い配列\n  When その鍵を指して edit_element する\n  Then UNKNOWN_ELEMENT_KEY が返り、要素は増えない"
+        },
+        {
+          "name": "鍵を宣言した配列は丸ごと置き換えられない",
+          "category": "異常系",
+          "viewpoint": "取りこぼしの遮断：取りこぼす手順そのものへ入れないか",
+          "satisfies": [
+            "rejects-wholesale-replace-on-declared-array"
+          ],
+          "gherkin": "Scenario: 鍵を宣言した配列は丸ごと置き換えられない\n  Given 鍵を宣言した受け入れ基準の配列\n  When fill でその配列へ要素の並びを丸ごと渡す\n  Then WHOLESALE_REPLACE_NOT_ALLOWED が返り、使うべき要素操作が案内され、何も書き込まれない"
+        },
+        {
+          "name": "1つでも受け付けられない要素操作があれば何も適用しない",
+          "category": "異常系",
+          "viewpoint": "原子性：途中まで適用された状態を残さないか",
+          "satisfies": [
+            "element-ops-are-atomic"
+          ],
+          "gherkin": "Scenario: 1つでも受け付けられない要素操作があれば何も適用しない\n  Given 3件の要素操作のうち1件が存在しない鍵を指している\n  When 3件をまとめて適用する\n  Then どの操作も適用されず、配列は操作前のまま"
+        },
+        {
+          "name": "要素を足すと固定値も補われる",
+          "category": "正常系",
+          "viewpoint": "適合の保持：書き込みが成功と報告されて不適合が残ることを防げるか",
+          "satisfies": [
+            "element-add-fills-const"
+          ],
+          "gherkin": "Scenario: 要素を足すと固定値も補われる\n  Given 要素に固定値の欄を宣言している配列\n  When 固定値の欄を含めずに要素を add_element で加える\n  Then 固定値が補われ、書き込んだ結果が schema に適合する"
+        },
+        {
+          "name": "順序が意味を持つ配列に要素操作は使えない",
+          "category": "異常系",
+          "viewpoint": "並びの扱い：並び全体が1つの値である配列を、要素へ分解させないか",
+          "satisfies": [
+            "ordered-array-rejects-element-ops"
+          ],
+          "gherkin": "Scenario: 順序が意味を持つ配列に要素操作は使えない\n  Given 順序そのものが意味を持つと宣言された手順の配列\n  When その配列へ add_element する\n  Then ELEMENT_OPS_NOT_APPLICABLE が返り、丸ごと置き換えて書き換えるものだと案内される"
+        },
+        {
+          "name": "何も宣言していない配列は今までどおり書き換えられる",
+          "category": "境界値",
+          "viewpoint": "並びの扱い：宣言していない配列の書き換え方を変えていないか",
+          "satisfies": [
+            "undeclared-array-keeps-wholesale"
+          ],
+          "gherkin": "Scenario: 何も宣言していない配列は今までどおり書き換えられる\n  Given 鍵も順序も宣言していない配列\n  When fill でその配列へ並びを丸ごと渡す\n  Then 従来どおり書き込まれる"
+        },
+        {
+          "name": "順序が意味を持つ配列からは取り下げもできない",
+          "category": "異常系",
+          "viewpoint": "並びの扱い：3つの要素操作すべてが等しく塞がれているか",
+          "satisfies": [
+            "ordered-array-rejects-element-ops"
+          ],
+          "gherkin": "Scenario: 順序が意味を持つ配列からは取り下げもできない\n  Given 順序そのものが意味を持つと宣言された手順の配列\n  When その配列へ retire_element する\n  Then ELEMENT_OPS_NOT_APPLICABLE が返り、丸ごと置き換えて書き換えるものだと案内される"
+        },
+        {
+          "name": "順序と鍵を両方宣言した配列は宣言の誤りとして返る",
+          "category": "異常系",
+          "viewpoint": "宣言の整合：実装が優先順位を黙って決めないか",
+          "satisfies": [
+            "ordered-and-key-declarations-are-exclusive"
+          ],
+          "gherkin": "Scenario: 順序と鍵を両方宣言した配列は宣言の誤りとして返る\n  Given 順序の宣言と鍵の宣言を両方持つ配列\n  When その配列へ add_element する\n  Then ELEMENT_OPS_NOT_APPLICABLE が返り、宣言そのものの誤りとして示される"
+        },
+        {
+          "name": "記入指示に鍵の宣言が現れる",
+          "category": "正常系",
+          "viewpoint": "宣言の到達：宣言が engine の内側だけで使われていないか",
+          "satisfies": [
+            "fill-template-carries-element-declarations"
+          ],
+          "gherkin": "Scenario: 記入指示に鍵の宣言が現れる\n  Given 鍵と参照関係を宣言した配列を持つ schema\n  When 骨格を生成して記入指示を受け取る\n  Then その配列の記入指示に、鍵の欄と参照関係の宣言が現れている"
+        },
+        {
+          "name": "受け付けられた要素操作は Document に残る",
+          "category": "正常系",
+          "viewpoint": "保存：書き換えた配列が、実際に Document へ書き戻されるか",
+          "satisfies": [
+            "element-ops-are-persisted"
+          ],
+          "gherkin": "Scenario: 受け付けられた要素操作は Document に残る\n  Given 鍵を宣言した配列を持つ Document\n  When 要素を1件 add_element する\n  Then 再び読み込んでもその要素が残っており、written にその配列の道が記録されている"
+        },
+        {
+          "name": "対象パスが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象パスが存在しないとき",
+          "gherkin": "Scenario: 対象パスが存在しないときのときINVALID_PATH\n  Given 対象パスが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "satisfies": [
+            "invalid-path"
+          ]
+        },
+        {
+          "name": "対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のschemaRefを解決できないとき",
+          "gherkin": "Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF\n  Given 対象のschemaRefを解決できないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_SCHEMA_REF エラーが返る",
+          "satisfies": [
+            "invalid-schema-ref"
+          ]
+        },
+        {
+          "name": "同じdocumentIdでのcreateは骨格の形を変えない",
+          "category": "境界値",
+          "viewpoint": "べき等性：create を繰り返しても骨格の形が変わらないこと",
+          "gherkin": "Scenario: 同じdocumentIdでのcreateは骨格の形を変えない\n  Given create 済みの documentId\n  When 同じ documentId で create を再実行する\n  Then 生成される骨格の形は1回目と同一である",
+          "satisfies": [
+            "create-idempotent-structure"
+          ]
+        },
+        {
+          "name": "既存documentへの再createはvaluesを破壊しない",
+          "category": "境界値",
+          "viewpoint": "べき等性：fill済みのvaluesはcreateの再実行で保持される",
+          "gherkin": "Scenario: 既存documentへの再createはvaluesを破壊しない\n  Given create済みかつfillで値を書き込み済みのdocumentId\n  When 同じdocumentIdでcreateを再実行する\n  Then fillで書き込んだvaluesは保持されたままである",
+          "satisfies": [
+            "create-preserves-existing-values"
+          ]
+        },
+        {
+          "name": "要素操作でも読み書きの対象は Document 全体である",
+          "category": "境界値",
+          "viewpoint": "集約の単位：要素だけを切り離して指させないこと",
+          "gherkin": "Scenario: 要素操作でも読み書きの対象は Document 全体である\n  Given 鍵を宣言した配列を持つ Document\n  When 要素を1件 add_element する\n  Then 読み書きの対象は Document 全体であり、配列や要素だけを指す経路は外部へ現れない",
+          "satisfies": [
+            "element-ops-target-document"
+          ]
         }
       ]
     },
@@ -452,12 +791,12 @@
           "description": "fill する値の JSON オブジェクト"
         },
         {
-          "name": "fieldPath",
-          "description": "clear_field で削除する値フィールドのドットパス"
-        },
-        {
           "name": "documentPath",
           "description": "既にあるdocumentの置き場所。値の書き込み・欄の除去・版の移行の対象になる"
+        },
+        {
+          "name": "elementOps",
+          "description": "要素操作の並び。1回の呼び出しで複数を受け取り、全か無かで適用される。各操作は「種類（足す／欄を直す／取り下げる）・対象の配列の道・鍵の値・書き込む中身」を持つ。values とは別の引数であり、配列を丸ごと渡す経路とは混ざらない"
         }
       ]
     }

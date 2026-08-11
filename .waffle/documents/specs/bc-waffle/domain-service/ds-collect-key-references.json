@@ -1,0 +1,167 @@
+{
+  "documentId": "ds-collect-key-references",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v9",
+  "specKind": "domain-service",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "宣言をたどって、鍵を指している場所を集める：ds-collect-key-references"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "参照関係の宣言と Document を受け取り、ある鍵を指している場所を集めて返す。",
+        "集めた結果は、要素を取り下げてよいかの判断と、参照の欠けの検知の両方に使う。",
+        "宣言されていない参照は集めない。どこが指しうるかは宣言だけが決める。"
+      ]
+    },
+    "existenceRationale": {
+      "blockType": "ExistenceRationale",
+      "title": "存在意義",
+      "items": [
+        "2つの集約にまたがる。走査する相手は Document の中身だが、どこをたどるべきかという宣言は Schema が持っている。Document は自分がどこから指されるかを知らず、Schema は中身を知らないので、この突き合わせをどちらの内側にも置けない。",
+        "この計算はどの集約の状態も変えない。読み取った時点の中身から答えが決まる。"
+      ]
+    },
+    "referencedAggregates": {
+      "blockType": "ReferencedAggregates",
+      "title": "参照する集約",
+      "items": [
+        {
+          "aggregate": "agg-document",
+          "mode": "参照のみ",
+          "reason": "走査して参照を集める相手は Document の中身である。"
+        },
+        {
+          "aggregate": "agg-schema",
+          "mode": "参照のみ",
+          "reason": "どこをたどるべきかという参照関係の宣言を得る。"
+        }
+      ]
+    },
+    "inputsOutputs": {
+      "blockType": "InputsOutputs",
+      "title": "入力と出力",
+      "inputs": [
+        {
+          "name": "参照関係の宣言",
+          "meaning": "ある配列の鍵が Document のどこから指されるかの宣言。配列へ降りることと欄をたどることだけを並べた道として書かれ、値による絞り込みを持たない。"
+        },
+        {
+          "name": "手がかりの欄",
+          "meaning": "指している側の要素の、人が見分けるための欄の名前。参照関係の宣言と一緒に置かれる。"
+        },
+        {
+          "name": "Document の中身",
+          "meaning": "走査の対象。"
+        },
+        {
+          "name": "探す鍵",
+          "meaning": "指されているかを知りたい鍵。"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "指している場所",
+          "meaning": "その鍵を指していた場所と、その場所が属する要素を人が見分けられる手がかり。"
+        },
+        {
+          "name": "指す先が無い参照",
+          "meaning": "宣言に沿って集めた参照のうち、対応する鍵が存在しなかったもの。"
+        }
+      ],
+      "undefinedInputs": [
+        "参照関係が宣言されていないとき（集める対象が定まらない。宣言が無い配列は、指されていないものとして扱う）。"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        {
+          "id": "collects-declared-references",
+          "text": "When 参照関係が宣言されているとき、システムはその宣言がたどる場所だけを走査し、探す鍵を指している場所を集める shall。"
+        },
+        {
+          "id": "ignores-undeclared-places",
+          "text": "While 宣言されていない場所に同じ文字列があるとき、システムはそれを参照として集めない shall。"
+        },
+        {
+          "id": "no-declaration-means-unreferenced",
+          "text": "While その配列に参照関係が宣言されていないとき、システムは指している場所が無いものとして返す shall。"
+        },
+        {
+          "id": "identifies-referring-element",
+          "text": "When 指している場所を返すとき、システムはその場所が属する要素を人が見分けられる手がかりを添える shall（どこを直せば取り下げられるかが分かるようにするため）。"
+        },
+        {
+          "id": "collects-dangling-references",
+          "text": "When 宣言に沿って集めた参照のうち、対応する鍵が配列に存在しないものがあるとき、システムはそれを指す先が無い参照として返す shall。"
+        },
+        {
+          "id": "declaration-has-no-conditions",
+          "text": "While 参照関係の宣言をたどるとき、システムは配列へ降りることと欄をたどることだけを行い、値による絞り込みを行わない shall（絞り込みを書けるようにすると、宣言が小さな条件式の言語になり、Schema 側から規律を迂回できてしまうため）。"
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "宣言がたどる場所から参照を集める",
+          "category": "正常系",
+          "viewpoint": "宣言だけをたどる：指している場所を見つけられるか",
+          "satisfies": [
+            "collects-declared-references",
+            "identifies-referring-element"
+          ],
+          "gherkin": "Scenario: 宣言がたどる場所から参照を集める\n  Given 受け入れ基準の鍵がシナリオの satisfies から指されると宣言された Document\n  When ある基準の鍵を指している場所を集める\n  Then そのシナリオが、名前とともに返る"
+        },
+        {
+          "name": "宣言されていない場所の同じ文字列は参照ではない",
+          "category": "境界値",
+          "viewpoint": "宣言だけをたどる：たまたま一致した文字列を参照と数えないか",
+          "satisfies": [
+            "ignores-undeclared-places"
+          ],
+          "gherkin": "Scenario: 宣言されていない場所の同じ文字列は参照ではない\n  Given 宣言されていない欄に、探す鍵と同じ文字列がある Document\n  When その鍵を指している場所を集める\n  Then 指している場所は無いと返る"
+        },
+        {
+          "name": "参照関係が宣言されていなければ指されていない",
+          "category": "境界値",
+          "viewpoint": "宣言だけをたどる：宣言が無いことを、答えの不在として扱えるか",
+          "satisfies": [
+            "no-declaration-means-unreferenced"
+          ],
+          "gherkin": "Scenario: 参照関係が宣言されていなければ指されていない\n  Given 参照関係を宣言していない配列\n  When その要素の鍵を指している場所を集める\n  Then 指している場所は無いと返る"
+        },
+        {
+          "name": "指す先が無い参照を見つける",
+          "category": "異常系",
+          "viewpoint": "対の照合：宣言された参照の先が欠けていることを見つけられるか",
+          "satisfies": [
+            "collects-dangling-references"
+          ],
+          "gherkin": "Scenario: 指す先が無い参照を見つける\n  Given 存在しない基準の鍵を satisfies が指している Document\n  When 宣言に沿って参照を集める\n  Then その参照が、指す先が無い参照として返る"
+        },
+        {
+          "name": "宣言は値による絞り込みを持たない",
+          "category": "境界値",
+          "viewpoint": "宣言の表現力：条件式の言語を抱え込んでいないか",
+          "satisfies": [
+            "declaration-has-no-conditions"
+          ],
+          "gherkin": "Scenario: 宣言は値による絞り込みを持たない\n  Given 配列を2段またぐ参照関係の宣言\n  When その宣言をたどって参照を集める\n  Then たどった経路には値による絞り込みが1つも現れず、配列へ降りることと欄をたどることだけで到達している"
+        }
+      ]
+    }
+  },
+  "tags": [
+    "framework:waffle"
+  ]
+}

@@ -121,7 +121,11 @@
         "If テストファイルの言語が文書コメントの取り出しに対応していないとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。",
         "While テストの置かれた場所が、規約が宣言したいずれかの配置に当てはまるとき、システムはその配置に対応づくシナリオ種別だけを対象に突き合わせを行う shall。",
         "While テストの置かれた場所が、規約が宣言したどの配置にも当てはまらないとき、システムは宣言されている全てのシナリオ種別を対象に突き合わせを行う shall（絞り込めないときに黙って一部だけを見る形にしない）。",
-        "While 規約の配置の宣言に、対象のシナリオ種別まで指定した行があるとき、システムはその行を、種別を指定していない行より優先する shall。"
+        "While 規約の配置の宣言に、対象のシナリオ種別まで指定した行があるとき、システムはその行を、種別を指定していない行より優先する shall。",
+        "When 対象のspec.jsonまたはテストファイルが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
+        "When 名前を組み立てる宣言が規約に無いとき、システムは MISSING_DECLARATION エラーを返す shall（欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通る）。",
+        "When 全体を検査するとき、システムはテストファイルの名前を、規約が宣言した由来・落とす接頭辞・表記・前置・中置・末尾だけから組み立てる shall（名前の綴りの規則を検査の側に持たない）。",
+        "When あるシナリオ種別に対応する置き場所が規約に宣言されていないとき、システムはその種別を missing_placement に含める shall（黙って対象から外すと、宣言の欠落と検査に通ったことが同じ見た目になる）。"
       ]
     },
     "errors": {
@@ -158,67 +162,25 @@
           "condition": [
             "テストファイルの言語に対応するadapterが無い"
           ]
+        },
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "対象のspec.jsonまたはテストファイルが存在しないとき"
+          ]
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 対象のspec.jsonまたはテストファイルが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 全体を検査するとき、システムはテストファイルの名前を、規約が宣言した由来・落とす接頭辞・表記・前置・中置・末尾だけから組み立てる shall（名前の綴りの規則を検査の側に持たない）。",
-        "When 名前を組み立てる宣言が規約に無いとき、システムは MISSING_DECLARATION エラーを返す shall（欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通る）。",
-        "When あるシナリオ種別に対応する置き場所が規約に宣言されていないとき、システムはその種別を missing_placement に含める shall（黙って対象から外すと、宣言の欠落と検査に通ったことが同じ見た目になる）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないspec.jsonはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "エラー：spec.jsonの不在",
-          "gherkin": "Scenario: 存在しないspec.jsonはINVALID_PATH\n  When 存在しないspec.jsonのパスでドリフト検査を実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: spec.jsonが存在しないときINVALID_PATH"
-        },
-        {
-          "name": "存在しないテストファイルはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "エラー：テストファイルの不在",
-          "gherkin": "Scenario: 存在しないテストファイルはINVALID_PATH\n  When 存在しないテストファイルのパスでドリフト検査を実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: テストファイルが存在しないときINVALID_PATH"
-        },
-        {
-          "name": "テストファイルの名前を規約の宣言から組み立てる",
-          "category": "正常系",
-          "viewpoint": "計算整合: 名前の綴りの規則が検査の側に無いことの証明。この一点がこの変更の核心",
-          "gherkin": "Scenario: テストファイルの名前を規約の宣言から組み立てる\n  Given 落とす接頭辞・前置・表記・中置・末尾を宣言している規約\n  And その宣言どおりの名前を持つテストファイル\n  When spec documentの置き場所とテストの配置ルートを指定して検査する\n  Then そのテストファイルが突き合わせの相手として見つかる",
-          "covers": "操作保証: テストファイルの名前を規約の宣言だけから組み立てる"
-        },
-        {
-          "name": "名前の宣言を変えると探す先も変わる",
-          "category": "境界値",
-          "viewpoint": "計算整合: 宣言を読み捨てて元の綴りを内部で作り直しても、この筋書きだけが赤くなる",
-          "gherkin": "Scenario: 名前の宣言を変えると探す先も変わる\n  Given 前置を別の値へ変更した規約\n  And 変更前の宣言で組み立てた名前のテストファイル\n  When spec documentの置き場所とテストの配置ルートを指定して検査する\n  Then そのシナリオブロックがmissing_test_fileに含まれる",
-          "covers": "操作保証: テストファイルの名前を規約の宣言だけから組み立てる"
-        },
-        {
-          "name": "名前を組み立てる宣言が無ければMISSING_DECLARATION",
-          "category": "異常系",
-          "viewpoint": "エラー: 欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通る",
-          "gherkin": "Scenario: 名前を組み立てる宣言が無ければMISSING_DECLARATION\n  Given テストファイルの名前の組み立て方を宣言していない規約\n  When spec documentの置き場所とテストの配置ルートを指定して検査する\n  Then MISSING_DECLARATIONエラーが返る\n  And 欠けた宣言を空とみなして検査を続けない",
-          "covers": "操作保証: 名前を組み立てる宣言が無いときMISSING_DECLARATION"
-        },
-        {
-          "name": "置き場所が宣言されていない種別はmissing_placementに現れる",
-          "category": "境界値",
-          "viewpoint": "境界: 黙って対象から外すと、宣言の欠落と検査に通ったことが同じ見た目になる",
-          "gherkin": "Scenario: 置き場所が宣言されていない種別はmissing_placementに現れる\n  Given あるシナリオ種別に対応する置き場所を宣言していない規約\n  And その種別のシナリオを宣言しているspec\n  When spec documentの置き場所とテストの配置ルートを指定して検査する\n  Then missing_placementにその種別が含まれる\n  And その種別を黙って対象から外さない",
-          "covers": "操作保証: 置き場所が宣言されていない種別をmissing_placementに含める"
-        }
-      ]
+      "scenarios": []
     },
     "acceptanceScenarios": {
       "blockType": "AcceptanceScenarios",
@@ -385,6 +347,41 @@
           "viewpoint": "境界: 同じ層・同じテスト種別でも、種別ごとに別の場所へ置かれる言語がある",
           "gherkin": "Scenario: 種別まで指定した配置行を優先する\n  Given 同じ層とテスト種別に対して、種別を指定した行と指定していない行の両方を持つ規約\n  When spec documentの置き場所とテストの配置ルートを指定して検査する\n  Then 種別を指定した行が示す場所でテストを探す",
           "covers": "受け入れ基準: 種別まで指定した配置行を優先する"
+        },
+        {
+          "name": "対象のspec.jsonまたはテストファイルが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のspec.jsonまたはテストファイルが存在しないとき",
+          "gherkin": "Scenario: 対象のspec.jsonまたはテストファイルが存在しないときのときINVALID_PATH\n  Given 対象のspec.jsonまたはテストファイルが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
+        },
+        {
+          "name": "名前を組み立てる宣言が規約に無いときのときMISSING_DECLARATION",
+          "category": "異常系",
+          "viewpoint": "エラー：名前を組み立てる宣言が規約に無いとき",
+          "gherkin": "Scenario: 名前を組み立てる宣言が規約に無いときのときMISSING_DECLARATION\n  Given 名前を組み立てる宣言が規約に無いとき状況\n  When 本ユースケースを実行する\n  Then MISSING_DECLARATION エラーが返る",
+          "covers": "エラー: MISSING_DECLARATION"
+        },
+        {
+          "name": "テストファイルの名前を規約の宣言から組み立てる",
+          "category": "正常系",
+          "viewpoint": "計算整合: 名前の綴りの規則が検査の側に無いことの証明。この一点がこの変更の核心",
+          "gherkin": "Scenario: テストファイルの名前を規約の宣言から組み立てる\n  Given 落とす接頭辞・前置・表記・中置・末尾を宣言している規約\n  And その宣言どおりの名前を持つテストファイル\n  When spec documentの置き場所とテストの配置ルートを指定して検査する\n  Then そのテストファイルが突き合わせの相手として見つかる",
+          "covers": "操作保証からの移設"
+        },
+        {
+          "name": "名前の宣言を変えると探す先も変わる",
+          "category": "境界値",
+          "viewpoint": "計算整合: 宣言を読み捨てて元の綴りを内部で作り直しても、この筋書きだけが赤くなる",
+          "gherkin": "Scenario: 名前の宣言を変えると探す先も変わる\n  Given 前置を別の値へ変更した規約\n  And 変更前の宣言で組み立てた名前のテストファイル\n  When spec documentの置き場所とテストの配置ルートを指定して検査する\n  Then そのシナリオブロックがmissing_test_fileに含まれる",
+          "covers": "操作保証からの移設"
+        },
+        {
+          "name": "置き場所が宣言されていない種別はmissing_placementに現れる",
+          "category": "境界値",
+          "viewpoint": "境界: 黙って対象から外すと、宣言の欠落と検査に通ったことが同じ見た目になる",
+          "gherkin": "Scenario: 置き場所が宣言されていない種別はmissing_placementに現れる\n  Given あるシナリオ種別に対応する置き場所を宣言していない規約\n  And その種別のシナリオを宣言しているspec\n  When spec documentの置き場所とテストの配置ルートを指定して検査する\n  Then missing_placementにその種別が含まれる\n  And その種別を黙って対象から外さない",
+          "covers": "操作保証からの移設"
         }
       ]
     },

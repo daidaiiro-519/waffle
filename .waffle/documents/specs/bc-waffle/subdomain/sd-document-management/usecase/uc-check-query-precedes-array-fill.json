@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-query-precedes-array-fill",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v9",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -68,9 +68,30 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When hasArrayValueがtrueかつtargetPathがqueriedPathsに含まれないとき、CheckQueryPrecedesArrayFillは拒否判定と理由を返さなければならない（shall）",
-        "When hasArrayValueがtrueかつtargetPathがqueriedPathsに含まれるとき、CheckQueryPrecedesArrayFillは許可判定を返さなければならない（shall）",
-        "When hasArrayValueがfalseのとき、CheckQueryPrecedesArrayFillはqueriedPathsの内容に関わらず許可判定を返さなければならない（shall）"
+        {
+          "id": "denies-array-fill-without-query",
+          "text": "When 配列の値を含む書き込みで、対象の道が先行して読まれていないとき、システムは拒否判定と理由を返す shall。"
+        },
+        {
+          "id": "allows-array-fill-after-query",
+          "text": "When 配列の値を含む書き込みで、対象の道が先行して読まれているとき、システムは許可判定を返す shall。"
+        },
+        {
+          "id": "allows-non-array-fill",
+          "text": "While 配列の値を含まない書き込みのとき、システムは先行して読まれたかに関わらず許可判定を返す shall。"
+        },
+        {
+          "id": "does-not-prescribe-forbidden-procedure",
+          "text": "When 拒否判定の理由を返すとき、システムは丸ごとの置き換えだけを手順として示さず、鍵を宣言した配列では要素操作を使うことも併せて示す shall（鍵を宣言した配列では丸ごとの置き換えが engine 側で拒まれるため、この判定より手前で拒否しながら engine が禁じた手順を勧めると、進む道が無くなる）。"
+        },
+        {
+          "id": "element-ops-are-out-of-scope",
+          "text": "While 書き込みが要素操作として与えられたとき、システムは配列の値を含む書き込みとして扱わず、許可判定を返す shall（要素操作は既存の要素を読まずに済ませるための経路であり、先行して読ませることはその目的と正面から反するため）。"
+        },
+        {
+          "id": "same-verdict-regardless-of-caller",
+          "text": "When 同一の入力を渡したとき、システムは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返す shall。"
+        }
       ]
     },
     "errors": {
@@ -87,42 +108,68 @@
           "name": "配列値を含むfillで先行queryが無い場合は拒否される",
           "category": "異常系",
           "viewpoint": "事前条件違反：query先行の欠如を検出できるか",
-          "gherkin": "Scenario: 配列値を含むfillで先行queryが無い場合は拒否される\nGiven targetPathが\"X.json\"であり、hasArrayValueがtrueである\nAnd queriedPathsに\"X.json\"が含まれていない\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 拒否判定が返り、理由に先行queryが必要である旨が含まれる"
+          "gherkin": "Scenario: 配列値を含むfillで先行queryが無い場合は拒否される\nGiven targetPathが\"X.json\"であり、hasArrayValueがtrueである\nAnd queriedPathsに\"X.json\"が含まれていない\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 拒否判定が返り、理由に先行queryが必要である旨が含まれる",
+          "satisfies": [
+            "denies-array-fill-without-query"
+          ]
         },
         {
           "name": "配列値を含むfillで先行queryがある場合は許可される",
           "category": "正常系",
           "viewpoint": "状態遷移：正しい手順を踏んだ場合に許可されるか",
-          "gherkin": "Scenario: 配列値を含むfillで先行queryがある場合は許可される\nGiven targetPathが\"X.json\"であり、hasArrayValueがtrueである\nAnd queriedPathsに\"X.json\"が含まれている\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 許可判定が返る"
+          "gherkin": "Scenario: 配列値を含むfillで先行queryがある場合は許可される\nGiven targetPathが\"X.json\"であり、hasArrayValueがtrueである\nAnd queriedPathsに\"X.json\"が含まれている\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 許可判定が返る",
+          "satisfies": [
+            "allows-array-fill-after-query"
+          ]
         },
         {
           "name": "配列値を含まないfillは先行queryの有無に関わらず許可される",
           "category": "境界値",
           "viewpoint": "適用範囲の境界：配列以外のfillはこの制約の対象外であることを確認",
-          "gherkin": "Scenario: 配列値を含まないfillは先行queryの有無に関わらず許可される\nGiven hasArrayValueがfalseである\nAnd queriedPathsが空である\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 許可判定が返る"
+          "gherkin": "Scenario: 配列値を含まないfillは先行queryの有無に関わらず許可される\nGiven hasArrayValueがfalseである\nAnd queriedPathsが空である\nWhen CheckQueryPrecedesArrayFillを実行する\nThen 許可判定が返る",
+          "satisfies": [
+            "allows-non-array-fill"
+          ]
+        },
+        {
+          "name": "拒否の理由は要素操作の道も示す",
+          "category": "境界値",
+          "viewpoint": "案内の整合：手前の判定が、engine の禁じた手順だけを勧めていないか",
+          "satisfies": [
+            "does-not-prescribe-forbidden-procedure"
+          ],
+          "gherkin": "Scenario: 拒否の理由は要素操作の道も示す\n  Given 配列の値を含み、先行して読まれていない書き込み\n  When 判定する\n  Then 拒否判定とともに、丸ごとの置き換えと要素操作の両方の道が示される"
+        },
+        {
+          "name": "要素操作は先行して読むことを求められない",
+          "category": "正常系",
+          "viewpoint": "案内の整合：要素操作の目的を、この判定が打ち消していないか",
+          "satisfies": [
+            "element-ops-are-out-of-scope"
+          ],
+          "gherkin": "Scenario: 要素操作は先行して読むことを求められない\n  Given 先行して読まれていない、要素操作としての書き込み\n  When 判定する\n  Then 許可判定が返る"
+        },
+        {
+          "name": "直接呼び出しとCLI呼び出しで同じ判定結果になる",
+          "category": "正常系",
+          "viewpoint": "提供チャネルの一貫性：呼び出し経路によらず判定が変わらないか",
+          "gherkin": "Scenario: 直接呼び出しとCLI呼び出しで同じ判定結果になる\n  Given targetPathが\"X.json\"であり、hasArrayValueがtrueであり、queriedPathsに\"X.json\"が含まれていない\n  When Pythonから直接CheckQueryPrecedesArrayFillを呼び出す\n  Then 拒否判定が返る\n  When 同じ入力をCLI経由（waffle check-query-precedes-array-fill）で呼び出す\n  Then 同じ拒否判定が返る",
+          "satisfies": [
+            "same-verdict-regardless-of-caller"
+          ]
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 同一の入力(targetPath, hasArrayValue, queriedPaths)を渡したとき、CheckQueryPrecedesArrayFillは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返さなければならない（shall）"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "直接呼び出しとCLI呼び出しで同じ判定結果になる",
-          "category": "正常系",
-          "viewpoint": "提供チャネルの一貫性：呼び出し経路によらず判定が変わらないか",
-          "gherkin": "Scenario: 直接呼び出しとCLI呼び出しで同じ判定結果になる\n  Given targetPathが\"X.json\"であり、hasArrayValueがtrueであり、queriedPathsに\"X.json\"が含まれていない\n  When Pythonから直接CheckQueryPrecedesArrayFillを呼び出す\n  Then 拒否判定が返る\n  When 同じ入力をCLI経由（waffle check-query-precedes-array-fill）で呼び出す\n  Then 同じ拒否判定が返る",
-          "covers": "同一入力に対する呼び出し経路間の判定一貫性"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

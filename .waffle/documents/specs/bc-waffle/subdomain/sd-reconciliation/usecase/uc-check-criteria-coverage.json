@@ -97,10 +97,6 @@
           "text": "When シナリオが同一文書内に実在しない識別子を指しているとき、システムはその組を dangling に含める shall。"
         },
         {
-          "id": "reports-duplicate-ids",
-          "text": "When 同一文書内で受け入れ基準の識別子が重複しているとき、システムはその識別子を duplicate_ids に含める shall。"
-        },
-        {
           "id": "reports-unlinked-scenarios",
           "text": "When シナリオが満たす基準を1件も挙げていないとき、システムはそのシナリオを unlinked_scenarios に含める shall。"
         },
@@ -115,6 +111,10 @@
         {
           "id": "scans-root",
           "text": "While 走査範囲が指定されたとき、システムは配下のすべての仕様文書を対象にする shall。"
+        },
+        {
+          "id": "invalid-path",
+          "text": "When 対象のパスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
         }
       ]
     },
@@ -154,15 +154,6 @@
           ]
         },
         {
-          "name": "重複した識別子を挙げる",
-          "category": "異常系",
-          "viewpoint": "参照の健全性：指す先が一意に定まるか",
-          "gherkin": "Scenario: 重複した識別子を挙げる\n  Given 同じ識別子を持つ受け入れ基準を2件持つ仕様文書\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then その識別子が duplicate_ids に現れる",
-          "satisfies": [
-            "reports-duplicate-ids"
-          ]
-        },
-        {
           "name": "どの基準も挙げていないシナリオを挙げる",
           "category": "異常系",
           "viewpoint": "宣言の突き合わせ：シナリオの側から見た欠けを検出できるか",
@@ -197,34 +188,28 @@
           "satisfies": [
             "scans-root"
           ]
+        },
+        {
+          "name": "対象のパスが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のパスが存在しないとき",
+          "gherkin": "Scenario: 対象のパスが存在しないときのときINVALID_PATH\n  Given 対象のパスが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "satisfies": [
+            "invalid-path"
+          ]
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        {
-          "id": "invalid-path",
-          "text": "When 対象のパスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
-        }
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないパスは受け付けない",
-          "category": "異常系",
-          "viewpoint": "解決プロセスの契約：対象を取得できないときの扱い",
-          "gherkin": "Scenario: 存在しないパスは受け付けない\n  Given 存在しないパス\n  When 受け入れ基準にシナリオが付いているかを確かめる\n  Then INVALID_PATH エラーが返る",
-          "satisfies": [
-            "invalid-path"
-          ]
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

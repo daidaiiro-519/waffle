@@ -105,7 +105,8 @@
         "While 全要素が適合しているとき、システムは空配列を返す（正常系）shall。",
         "If 写した流儀に対応するadapterが未実装のとき、システムはUNSUPPORTED_KINDエラーを返す shall。",
         "If 写した流儀に対応する既存lintツールが実行環境に存在しないとき、システムはTOOL_NOT_AVAILABLEエラーを返す shall。",
-        "If 規約が宣言する構文へ既存lintツールが追随できないとき、システムはUNSUPPORTED_SYNTAXエラーを返す shall（引数の誤りを表すUNSUPPORTED_KINDとは別に扱う。前者は呼び出しの誤り、後者は宣言と道具の能力の隔たりであり、同じ器に入れると宣言できるが効かない欄が黙って残る）。"
+        "If 規約が宣言する構文へ既存lintツールが追随できないとき、システムはUNSUPPORTED_SYNTAXエラーを返す shall（引数の誤りを表すUNSUPPORTED_KINDとは別に扱う。前者は呼び出しの誤り、後者は宣言と道具の能力の隔たりであり、同じ器に入れると宣言できるが効かない欄が黙って残る）。",
+        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
       ]
     },
     "errors": {
@@ -128,6 +129,12 @@
           "code": "UNSUPPORTED_SYNTAX",
           "condition": [
             "規約が宣言するdocstringの構文へ、対応する既存lintツールが追随できない"
+          ]
+        },
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "対象パスが存在しないとき"
           ]
         }
       ]
@@ -213,29 +220,26 @@
           "viewpoint": "隔たりの可視化：宣言できるが効かない欄を残さない",
           "covers": "受け入れ基準: 規約が宣言する構文へ追随できないときUNSUPPORTED_SYNTAX",
           "gherkin": "Scenario: 宣言に道具が追随できないことを黙って通さない\n  Given 既存lintツールが持たない構文を宣言している規約\n  When その規約でdocstringの適合を確かめる\n  Then UNSUPPORTED_SYNTAXとして報告される\n  And 呼び出しの誤りを表すUNSUPPORTED_KINDとは区別されている"
+        },
+        {
+          "name": "対象パスが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象パスが存在しないとき",
+          "gherkin": "Scenario: 対象パスが存在しないときのときINVALID_PATH\n  Given 対象パスが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないパスはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる",
-          "gherkin": "Scenario: 存在しないパスはINVALID_PATH\n  Given 実在しない対象パス\n  When 本usecaseを実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: 対象パスが存在しないときはINVALID_PATHを返す"
-        }
-      ]
+      "scenarios": []
     },
     "usecase": {
       "operationName": "LintDocstring",

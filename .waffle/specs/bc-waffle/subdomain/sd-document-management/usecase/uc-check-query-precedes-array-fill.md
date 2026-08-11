@@ -3,7 +3,7 @@ id: "uc-check-query-precedes-array-fill"
 type: "usecase"
 title: "uc-check-query-precedes-array-fill"
 description: "配列フィールドを含むdocument.jsonの書き込み（scaffold fill）は、既存の配列要素をqueryで確認せず上書きすると内容を消失させる事故が起きる。この操作順序制約（クエリ先行）を機械的に検証する。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v9"
 ---
 
 # uc-check-query-precedes-array-fill
@@ -62,15 +62,21 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When hasArrayValueがtrueかつtargetPathがqueriedPathsに含まれないとき、CheckQueryPrecedesArrayFillは拒否判定と理由を返さなければならない（shall）
-- When hasArrayValueがtrueかつtargetPathがqueriedPathsに含まれるとき、CheckQueryPrecedesArrayFillは許可判定を返さなければならない（shall）
-- When hasArrayValueがfalseのとき、CheckQueryPrecedesArrayFillはqueriedPathsの内容に関わらず許可判定を返さなければならない（shall）
+| 基準 |
+|---|
+| When 配列の値を含む書き込みで、対象の道が先行して読まれていないとき、システムは拒否判定と理由を返す shall。 |
+| When 配列の値を含む書き込みで、対象の道が先行して読まれているとき、システムは許可判定を返す shall。 |
+| While 配列の値を含まない書き込みのとき、システムは先行して読まれたかに関わらず許可判定を返す shall。 |
+| When 拒否判定の理由を返すとき、システムは丸ごとの置き換えだけを手順として示さず、鍵を宣言した配列では要素操作を使うことも併せて示す shall（鍵を宣言した配列では丸ごとの置き換えが engine 側で拒まれるため、この判定より手前で拒否しながら engine が禁じた手順を勧めると、進む道が無くなる）。 |
+| While 書き込みが要素操作として与えられたとき、システムは配列の値を含む書き込みとして扱わず、許可判定を返す shall（要素操作は既存の要素を読まずに済ませるための経路であり、先行して読ませることはその目的と正面から反するため）。 |
 
 ---
 
 ## 操作保証
 
-- When 同一の入力(targetPath, hasArrayValue, queriedPaths)を渡したとき、CheckQueryPrecedesArrayFillは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返さなければならない（shall）
+| 保証 |
+|---|
+| When 同一の入力を渡したとき、システムは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返す shall。 |
 
 ---
 
@@ -116,6 +122,32 @@ Given hasArrayValueがfalseである
 And queriedPathsが空である
 When CheckQueryPrecedesArrayFillを実行する
 Then 許可判定が返る
+```
+
+### 拒否の理由は要素操作の道も示す
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 案内の整合：手前の判定が、engine の禁じた手順だけを勧めていないか |
+
+```gherkin
+Scenario: 拒否の理由は要素操作の道も示す
+  Given 配列の値を含み、先行して読まれていない書き込み
+  When 判定する
+  Then 拒否判定とともに、丸ごとの置き換えと要素操作の両方の道が示される
+```
+
+### 要素操作は先行して読むことを求められない
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 案内の整合：要素操作の目的を、この判定が打ち消していないか |
+
+```gherkin
+Scenario: 要素操作は先行して読むことを求められない
+  Given 先行して読まれていない、要素操作としての書き込み
+  When 判定する
+  Then 許可判定が返る
 ```
 
 ---

@@ -80,7 +80,9 @@
         "生成されたdocumentのtitleは「プリセットの説明句：documentId」の形式になる",
         "既に存在するdocumentは上書きせずskipする（冪等）",
         "存在しないプリセット名を指定するとPRESET_NOT_FOUNDエラーになる",
-        "When プリセットからプロダクト固有の規約を作るとき、システムはその規約のschemaの最新の版を指す shall（作る側に版を書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、作られた規約が最初から検証を通らなくなる）。"
+        "When プリセットからプロダクト固有の規約を作るとき、システムはその規約のschemaの最新の版を指す shall（作る側に版を書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、作られた規約が最初から検証を通らなくなる）。",
+        "When 存在しないpresetNameが指定されたとき、システムはPRESET_NOT_FOUNDエラーを返す shall。",
+        "When 同じpresetName・productNameでinitを複数回実行したとき、既に生成済みのdocumentはシステムによって変更されない shall（冪等性）。"
       ]
     },
     "errors": {
@@ -126,37 +128,33 @@
           "viewpoint": "計算整合: 版を作る側に書き留めない。schemaが上がっても追随することの証明",
           "gherkin": "Scenario: プリセットから作る規約は最新の版を指す\n  Given 規約のschemaに複数の版がある\n  When プリセットからプロダクト固有の規約を作る\n  Then 作られた規約はそのschemaの最新の版を指す",
           "covers": "受け入れ基準: プリセットから作る規約はschemaの最新の版を指す"
+        },
+        {
+          "name": "存在しないpresetNameが指定されたときのときPRESET_NOT_FOUND",
+          "category": "異常系",
+          "viewpoint": "エラー：存在しないpresetNameが指定されたとき",
+          "gherkin": "Scenario: 存在しないpresetNameが指定されたときのときPRESET_NOT_FOUND\n  Given 存在しないpresetNameが指定されたとき状況\n  When 本ユースケースを実行する\n  Then PRESET_NOT_FOUND エラーが返る",
+          "covers": "エラー: PRESET_NOT_FOUND"
+        },
+        {
+          "name": "既に生成済みのdocumentは再initで変更されない",
+          "category": "境界値",
+          "viewpoint": "べき等性：同じpresetName・productNameで複数回initしても既存documentは保持される",
+          "gherkin": "Scenario: 既に生成済みのdocumentは再initで変更されない\n  Given 既にinit済みの4document\n  When 同じpresetName・productNameでinitを再実行する\n  Then 既存の4documentは一切変更されない",
+          "covers": "操作保証からの移設"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 同じpresetName・productNameでinitを複数回実行したとき、既に生成済みのdocumentはシステムによって変更されない shall（冪等性）。",
-        "When 存在しないpresetNameが指定されたとき、システムはPRESET_NOT_FOUNDエラーを返す shall。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "既に生成済みのdocumentは再initで変更されない",
-          "category": "境界値",
-          "viewpoint": "べき等性：同じpresetName・productNameで複数回initしても既存documentは保持される",
-          "gherkin": "Scenario: 既に生成済みのdocumentは再initで変更されない\n  Given 既にinit済みの4document\n  When 同じpresetName・productNameでinitを再実行する\n  Then 既存の4documentは一切変更されない",
-          "covers": "操作保証: 冪等性"
-        },
-        {
-          "name": "存在しないプリセット名はPRESET_NOT_FOUND",
-          "category": "異常系",
-          "viewpoint": "解決契約：presetNameが解決できないとき、PRESET_NOT_FOUNDになる",
-          "gherkin": "Scenario: 存在しないプリセット名はPRESET_NOT_FOUND\n  Given 存在しないpresetName\n  When initを実行する\n  Then PRESET_NOT_FOUNDエラーが返る",
-          "covers": "操作保証: presetNameを解決できないときはPRESET_NOT_FOUNDを返す"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

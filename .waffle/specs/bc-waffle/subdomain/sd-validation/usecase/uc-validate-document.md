@@ -4,7 +4,7 @@ type: "usecase"
 title: "Documentがschemaに適合するか検証する：ValidateDocument"
 description: "Document の content が schema に適合するかを検証し、適合可否と違反詳細を返す（副作用なし）。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v9"
 ---
 
 # Documentがschemaに適合するか検証する：ValidateDocument
@@ -70,17 +70,25 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 適合する Document が与えられたとき、システムは VALIDATED 判定を返す shall。
-- When 不適合のとき、システムは違反詳細つきで失敗を返す shall。
-- If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返す shall。
-- When 適合し状態遷移も可能なとき、システムは判定したstatusを実際にDocumentへ書き込む shall。
+| 基準 |
+|---|
+| When 適合する Document が与えられたとき、システムは VALIDATED 判定を返す shall。 |
+| When 不適合のとき、システムは違反詳細つきで失敗を返す shall。 |
+| If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返す shall。 |
+| When 適合し状態遷移も可能なとき、システムは判定したstatusを実際にDocumentへ書き込む shall。 |
+| If 対象ファイルが JSON として解釈できないとき、システムは INVALID_JSON を返す shall。 |
+| If Document が終端の状態にあるとき、システムは INVALID_TRANSITION を返し、状態を変えない shall。 |
+| If 鍵を宣言した配列の中に、同じ鍵を持つ要素が2つ以上あるとき、システムは不適合として、その配列と重複した鍵を違反詳細に含めて返す shall。 |
+| If 鍵を宣言した配列が、参照関係の宣言を持たないとき、システムは不適合としてその配列を違反詳細に含めて返す shall（どこからも指されないことが正しいなら、指されない旨を宣言させるため。宣言の欠けを『指されていない』と読むと、取り下げの規律が黙って効かなくなる）。 |
 
 ---
 
 ## 操作保証
 
-- When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
-- When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| 保証 |
+|---|
+| When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
+| When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
@@ -175,6 +183,58 @@ Scenario: 適合判定は実際にstatusをdocumentへ書き込む
   Given CREATED状態の、schemaに適合するDocument
   When validateする
   Then 判定結果のstatusが実際にdocument.jsonへ書き込まれる（再読込しても反映されている）
+```
+
+### 鍵が重複した配列は不適合になる
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 要素の同一性：鍵が要素を一意に指すという前提が崩れていないか |
+
+```gherkin
+Scenario: 鍵が重複した配列は不適合になる
+  Given 鍵を宣言した配列に、同じ鍵を持つ要素が2つある Document
+  When 適合を検証する
+  Then 不適合となり、違反詳細にその配列と重複した鍵が含まれる
+```
+
+### 鍵を宣言していない配列は値が重なっていても適合する
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 要素の同一性：一意性の要求が、宣言した配列にだけ及んでいるか |
+
+```gherkin
+Scenario: 鍵を宣言していない配列は値が重なっていても適合する
+  Given 鍵を宣言していない配列に、同じ値の要素が2つある Document
+  When 適合を検証する
+  Then 適合と判定される
+```
+
+### 鍵を宣言して参照関係を宣言していない配列は不適合になる
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 宣言の完全性：宣言の欠けが、規律の沈黙にならないか |
+
+```gherkin
+Scenario: 鍵を宣言して参照関係を宣言していない配列は不適合になる
+  Given 鍵は宣言しているが参照関係を宣言していない配列を持つ Schema と、それに従う Document
+  When 適合を検証する
+  Then 不適合となり、違反詳細にその配列が含まれる
+```
+
+### 指されないことを宣言した配列は適合する
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 宣言の完全性：指されない配列を書けなくしていないか |
+
+```gherkin
+Scenario: 指されないことを宣言した配列は適合する
+  Given 鍵を宣言し、どこからも指されない旨を宣言した配列
+  When 適合を検証する
+  Then 適合と判定される
 ```
 
 ---

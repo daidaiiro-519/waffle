@@ -75,7 +75,6 @@ sequenceDiagram
 ## 操作保証
 
 - When 同じpresetName・productNameでinitを複数回実行したとき、既に生成済みのdocumentはシステムによって変更されない shall（冪等性）。
-- When 存在しないpresetNameが指定されたとき、システムはPRESET_NOT_FOUNDエラーを返す shall。
 
 ---
 
@@ -144,17 +143,4 @@ Scenario: 既に生成済みのdocumentは再initで変更されない
   Given 既にinit済みの4document
   When 同じpresetName・productNameでinitを再実行する
   Then 既存の4documentは一切変更されない
-```
-
-### 存在しないプリセット名はPRESET_NOT_FOUND
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | 解決契約：presetNameが解決できないとき、PRESET_NOT_FOUNDになる |
-
-```gherkin
-Scenario: 存在しないプリセット名はPRESET_NOT_FOUND
-  Given 存在しないpresetName
-  When initを実行する
-  Then PRESET_NOT_FOUNDエラーが返る
 ```

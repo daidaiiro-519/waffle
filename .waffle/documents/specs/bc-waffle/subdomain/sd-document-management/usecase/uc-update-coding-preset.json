@@ -93,7 +93,9 @@
         "When 反映が行われたとき、プリセットの更新は 反映した部分ごとに反映前と反映後の内容を返す shall",
         "When 確認だけが求められたとき、プリセットの更新は 変わる内容を返し、プリセットを書き換えない shall",
         "When 戻す部分としてブロックの中の欄が指定されたとき、プリセットの更新は そのブロックの他の欄を変えずに、指定された欄だけを反映する shall",
-        "If 指定された欄をプリセットまたはプロダクトの規約が持たないならば、プリセットの更新は 反映を行わず拒否する shall"
+        "If 指定された欄をプリセットまたはプロダクトの規約が持たないならば、プリセットの更新は 反映を行わず拒否する shall",
+        "When 指定されたプリセットが存在しないとき、システムは PRESET_NOT_FOUND エラーを返す shall（プリセットを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
+        "When 出どころとして指定された規約が存在しないとき、システムは INVALID_PATH エラーを返す shall（同上）。"
       ]
     },
     "errors": {
@@ -203,35 +205,33 @@
           "viewpoint": "誤りの検出：綴り違いを黙って通さない",
           "gherkin": "Scenario: 無い欄は指定できない\n  Given プリセットが持たない欄の名前\n  When その欄を指定して反映を求める\n  Then UNKNOWN_BLOCK として拒まれる\n  And プリセットは書き換えられていない",
           "covers": "受け入れ基準: 指定された欄を持たないならば拒む"
+        },
+        {
+          "name": "指定されたプリセットが存在しないときのときPRESET_NOT_FOUND",
+          "category": "異常系",
+          "viewpoint": "エラー：指定されたプリセットが存在しないとき",
+          "gherkin": "Scenario: 指定されたプリセットが存在しないときのときPRESET_NOT_FOUND\n  Given 指定されたプリセットが存在しないとき状況\n  When 本ユースケースを実行する\n  Then PRESET_NOT_FOUND エラーが返る",
+          "covers": "エラー: PRESET_NOT_FOUND"
+        },
+        {
+          "name": "出どころとして指定された規約が存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：出どころとして指定された規約が存在しないとき",
+          "gherkin": "Scenario: 出どころとして指定された規約が存在しないときのときINVALID_PATH\n  Given 出どころとして指定された規約が存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 指定されたプリセットが存在しないとき、システムは PRESET_NOT_FOUND エラーを返す shall（プリセットを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 出どころとして指定された規約が存在しないとき、システムは INVALID_PATH エラーを返す shall（同上）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないプリセットはPRESET_NOT_FOUND",
-          "category": "異常系",
-          "viewpoint": "エラー：プリセットの不在",
-          "gherkin": "Scenario: 存在しないプリセットはPRESET_NOT_FOUND\n  When 存在しないプリセットを指定して反映する\n  Then PRESET_NOT_FOUNDエラーが返る"
-        },
-        {
-          "name": "存在しない規約はINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "エラー：出どころとなる規約の不在",
-          "gherkin": "Scenario: 存在しない規約はINVALID_PATH\n  When 存在しない規約を出どころに指定して反映する\n  Then INVALID_PATHエラーが返る"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

@@ -1,7 +1,7 @@
 {
   "documentId": "uc-validate-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v9",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-validation",
@@ -83,16 +83,65 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 適合する Document が与えられたとき、システムは VALIDATED 判定を返す shall。",
-        "When 不適合のとき、システムは違反詳細つきで失敗を返す shall。",
-        "If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返す shall。",
-        "When 適合し状態遷移も可能なとき、システムは判定したstatusを実際にDocumentへ書き込む shall。"
+        {
+          "id": "conformant-is-validated",
+          "text": "When 適合する Document が与えられたとき、システムは VALIDATED 判定を返す shall。"
+        },
+        {
+          "id": "nonconformant-fails-with-details",
+          "text": "When 不適合のとき、システムは違反詳細つきで失敗を返す shall。"
+        },
+        {
+          "id": "missing-schema-ref",
+          "text": "If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返す shall。"
+        },
+        {
+          "id": "writes-judged-status",
+          "text": "When 適合し状態遷移も可能なとき、システムは判定したstatusを実際にDocumentへ書き込む shall。"
+        },
+        {
+          "id": "unparsable-input",
+          "text": "If 対象ファイルが JSON として解釈できないとき、システムは INVALID_JSON を返す shall。"
+        },
+        {
+          "id": "terminal-status-rejected",
+          "text": "If Document が終端の状態にあるとき、システムは INVALID_TRANSITION を返し、状態を変えない shall。"
+        },
+        {
+          "id": "duplicate-element-key-rejected",
+          "text": "If 鍵を宣言した配列の中に、同じ鍵を持つ要素が2つ以上あるとき、システムは不適合として、その配列と重複した鍵を違反詳細に含めて返す shall。"
+        },
+        {
+          "id": "keyed-array-declares-references",
+          "text": "If 鍵を宣言した配列が、参照関係の宣言を持たないとき、システムは不適合としてその配列を違反詳細に含めて返す shall（どこからも指されないことが正しいなら、指されない旨を宣言させるため。宣言の欠けを『指されていない』と読むと、取り下げの規律が黙って効かなくなる）。"
+        },
+        {
+          "id": "invalid-path",
+          "text": "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        },
+        {
+          "id": "invalid-schema-ref",
+          "text": "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        }
       ]
     },
     "errors": {
       "blockType": "Errors",
       "title": "エラー",
-      "items": []
+      "items": [
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "対象パスが存在しないとき"
+          ]
+        },
+        {
+          "code": "INVALID_SCHEMA_REF",
+          "condition": [
+            "対象のschemaRefを解決できないとき"
+          ]
+        }
+      ]
     },
     "acceptanceScenarios": {
       "blockType": "AcceptanceScenarios",
@@ -104,80 +153,131 @@
           "category": "正常系",
           "viewpoint": "適合判定：適合する Document は VALIDATED",
           "gherkin": "Scenario: 適合する Document は VALIDATED 判定になる\n  Given schema に適合する Document\n  When validate する\n  Then VALIDATED 判定が返る",
-          "covers": "受け入れ基準: 適合は VALIDATED 判定"
+          "satisfies": [
+            "conformant-is-validated"
+          ]
         },
         {
           "name": "不適合は違反詳細つきで失敗する",
           "category": "異常系",
           "viewpoint": "適合判定：不適合は違反詳細つきで失敗",
           "gherkin": "Scenario: 不適合は違反詳細つきで失敗する\n  Given schema に適合しない Document\n  When validate する\n  Then 違反詳細つきで失敗する",
-          "covers": "受け入れ基準: 不適合は違反詳細つきで失敗"
+          "satisfies": [
+            "nonconformant-fails-with-details"
+          ]
         },
         {
           "name": "schemaRef を持たない Document は検証できない",
           "category": "異常系",
           "viewpoint": "エラー：schemaRef 欠如は MISSING_SCHEMA_REF",
           "gherkin": "Scenario: schemaRef を持たない Document は検証できない\n  Given schemaRef の無い Document\n  When validate する\n  Then MISSING_SCHEMA_REF エラーが返る",
-          "covers": "エラー: MISSING_SCHEMA_REF"
+          "satisfies": [
+            "missing-schema-ref"
+          ]
         },
         {
           "name": "既存documentはschemaに適合する",
           "category": "正常系",
           "viewpoint": "dogfood：waffle自身が持つ全document(skill/coding/spec)がそれぞれのschemaに適合し、正しいstatusになる(dogfood横断regression)",
           "gherkin": "Scenario Outline: 既存documentはschemaに適合する\n  Given waffle自身のdocument\n  When validateする\n  Then 成功し、schemaのlifecycleに応じた正しいstatusになる",
-          "covers": "dogfood: 全document横断の自己整合性"
+          "satisfies": [
+            "conformant-is-validated",
+            "writes-judged-status"
+          ]
         },
         {
           "name": "SUPERSEDEDは終端でありvalidateを受け付けない",
           "category": "異常系",
           "viewpoint": "終端状態：SUPERSEDED状態のDocumentへのvalidateはINVALID_TRANSITIONとして拒否される",
           "gherkin": "Scenario: SUPERSEDEDは終端でありvalidateを受け付けない\n  Given SUPERSEDED状態のDocument\n  When validateする\n  Then INVALID_TRANSITIONエラーが返る",
-          "covers": "agg-documentの不変条件: SUPERSEDEDは終端であり以後どのコマンドも受け付けない"
+          "satisfies": [
+            "terminal-status-rejected"
+          ]
         },
         {
           "name": "不正なJSONはINVALID_JSON",
           "category": "異常系",
           "viewpoint": "エラー：対象ファイルがJSONとして解釈できないときの失敗",
           "gherkin": "Scenario: 不正なJSONはINVALID_JSON\n  Given 不正なJSONの対象ファイル\n  When validateする\n  Then INVALID_JSONエラーが返る",
-          "covers": "エラー: JSON解釈不能"
+          "satisfies": [
+            "unparsable-input"
+          ]
         },
         {
           "name": "適合判定は実際にstatusをdocumentへ書き込む",
           "category": "正常系",
           "viewpoint": "永続化：適合し状態遷移も可能なとき、判定結果を実際にdocumentへ書き込む",
           "gherkin": "Scenario: 適合判定は実際にstatusをdocumentへ書き込む\n  Given CREATED状態の、schemaに適合するDocument\n  When validateする\n  Then 判定結果のstatusが実際にdocument.jsonへ書き込まれる（再読込しても反映されている）",
-          "covers": "受け入れ基準: 判定したstatusを実際にDocumentへ書き込む"
+          "satisfies": [
+            "writes-judged-status"
+          ]
+        },
+        {
+          "name": "鍵が重複した配列は不適合になる",
+          "category": "異常系",
+          "viewpoint": "要素の同一性：鍵が要素を一意に指すという前提が崩れていないか",
+          "satisfies": [
+            "duplicate-element-key-rejected"
+          ],
+          "gherkin": "Scenario: 鍵が重複した配列は不適合になる\n  Given 鍵を宣言した配列に、同じ鍵を持つ要素が2つある Document\n  When 適合を検証する\n  Then 不適合となり、違反詳細にその配列と重複した鍵が含まれる"
+        },
+        {
+          "name": "鍵を宣言していない配列は値が重なっていても適合する",
+          "category": "境界値",
+          "viewpoint": "要素の同一性：一意性の要求が、宣言した配列にだけ及んでいるか",
+          "satisfies": [
+            "duplicate-element-key-rejected"
+          ],
+          "gherkin": "Scenario: 鍵を宣言していない配列は値が重なっていても適合する\n  Given 鍵を宣言していない配列に、同じ値の要素が2つある Document\n  When 適合を検証する\n  Then 適合と判定される"
+        },
+        {
+          "name": "鍵を宣言して参照関係を宣言していない配列は不適合になる",
+          "category": "異常系",
+          "viewpoint": "宣言の完全性：宣言の欠けが、規律の沈黙にならないか",
+          "satisfies": [
+            "keyed-array-declares-references"
+          ],
+          "gherkin": "Scenario: 鍵を宣言して参照関係を宣言していない配列は不適合になる\n  Given 鍵は宣言しているが参照関係を宣言していない配列を持つ Schema と、それに従う Document\n  When 適合を検証する\n  Then 不適合となり、違反詳細にその配列が含まれる"
+        },
+        {
+          "name": "指されないことを宣言した配列は適合する",
+          "category": "境界値",
+          "viewpoint": "宣言の完全性：指されない配列を書けなくしていないか",
+          "satisfies": [
+            "keyed-array-declares-references"
+          ],
+          "gherkin": "Scenario: 指されないことを宣言した配列は適合する\n  Given 鍵を宣言し、どこからも指されない旨を宣言した配列\n  When 適合を検証する\n  Then 適合と判定される"
+        },
+        {
+          "name": "対象パスが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象パスが存在しないとき",
+          "gherkin": "Scenario: 対象パスが存在しないときのときINVALID_PATH\n  Given 対象パスが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "satisfies": [
+            "invalid-path"
+          ]
+        },
+        {
+          "name": "対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のschemaRefを解決できないとき",
+          "gherkin": "Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF\n  Given 対象のschemaRefを解決できないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_SCHEMA_REF エラーが返る",
+          "satisfies": [
+            "invalid-schema-ref"
+          ]
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないパスはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる",
-          "gherkin": "Scenario: 存在しないパスはINVALID_PATH\n  Given 実在しない対象パス\n  When 本usecaseを実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: 対象パスが存在しないときはINVALID_PATHを返す"
-        },
-        {
-          "name": "解決できないschemaRefはINVALID_SCHEMA_REF",
-          "category": "異常系",
-          "viewpoint": "解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる",
-          "gherkin": "Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF\n  Given 解決できないschemaRef\n  When 本usecaseを実行する\n  Then INVALID_SCHEMA_REFエラーが返る",
-          "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
-        }
-      ]
+      "scenarios": []
     },
     "usecase": {
       "operationName": "ValidateDocument",

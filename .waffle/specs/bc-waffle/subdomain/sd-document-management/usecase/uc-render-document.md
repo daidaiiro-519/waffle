@@ -110,11 +110,8 @@ sequenceDiagram
 
 - When 同じ Document を複数回 render したとき、システムは常に同一の成果物を生成する shall（決定的：入力が同じなら出力も同じ）。
 - When x-render が RenderMetaSchema の各部品種別（paragraph/list/table/keyvalue/code/section/kvtable/sequence/statediagram/architecture/flowchart）を宣言したとき、システムはその種別ごとの整形規則に従って決定的に描画する shall。
-- When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
-- When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
 - When ブロックのx-renderが宣言する部品が全て空データで描画結果が空になったとき、システムはそのブロックの見出しごと省略する shall（タイトルだけが残る空セクションを防ぐ）。
 - When ブロック定義がx-render-hiddenを宣言しているとき、システムはそのブロックを本文に一切描画しない shall（frontmatter等の値供給のみに使う非表示ブロックを表現できる）。
-- When schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき、システムは INVALID_TRANSITION エラーを返す shall（宣言しないschema種別はstatusを問わない）。
 - When レベル1（H1）の見出しブロックの直後に別のブロックが続くとき、システムはその間に区切り線（---）を挿入しない shall（多くのビューアがH1自体に下線を描画するため、直後の---は二重線に見えてしまう）。
 
 ---
@@ -126,6 +123,9 @@ sequenceDiagram
 | `MALFORMED_CONTENT` | - list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取った |
 | `NO_RENDER_TARGET` | - 対象schemaがx-render-target.pathを宣言していない（専用のrenderコマンドを使うべき成果物のため、汎用render経路を意図的に持たない） |
 | `DEPLOY_TARGET_OWNED_BY_OTHER` | - 解決した配置先が指す正本が、対象Document以外のDocumentの正本である（1つの配置先は1つのDocumentにのみ所有されるという不変条件に反する） |
+| `INVALID_PATH` | - 対象パスが存在しないとき |
+| `INVALID_SCHEMA_REF` | - 対象のschemaRefを解決できないとき |
+| `INVALID_TRANSITION` | - schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき |
 
 ---
 
@@ -551,32 +551,6 @@ Scenario: x-render宣言どおりに決定的に描画する
   Then schemaのx-render宣言どおりに整形されたMarkdownテーブルが出力に含まれる
 ```
 
-### 存在しないパスはINVALID_PATH
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | 解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる |
-
-```gherkin
-Scenario: 存在しないパスはINVALID_PATH
-  Given 実在しない対象パス
-  When 本usecaseを実行する
-  Then INVALID_PATHエラーが返る
-```
-
-### 解決できないschemaRefはINVALID_SCHEMA_REF
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | 解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる |
-
-```gherkin
-Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
-  Given 解決できないschemaRef
-  When 本usecaseを実行する
-  Then INVALID_SCHEMA_REFエラーが返る
-```
-
 ### データが空の任意ブロックは見出しごと省略する
 
 | 分類 | 観点 |
@@ -601,19 +575,6 @@ Scenario: x-render-hiddenを宣言したブロックは本文に描画しない
   Given x-render-hidden:trueを宣言したブロックを含むDocument
   When render する
   Then そのブロックの見出し・本文が出力に一切含まれない
-```
-
-### 未検証ではrenderできない
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | 状態遷移：schemaがrenderをVALIDATED起点の遷移として宣言する場合、VALIDATED前提が効く |
-
-```gherkin
-Scenario: 未検証ではrenderできない
-  Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument
-  When renderする
-  Then INVALID_TRANSITIONエラーが返り、成果物は書き出されない
 ```
 
 ### H1見出し直後に区切り線を入れない

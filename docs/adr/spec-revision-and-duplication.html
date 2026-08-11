@@ -1,0 +1,454 @@
+<title>検証で何が変わったか、そして重複していないか</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --warn:#8A6410; --warn-soft:#F5EDDA; --warn-line:#C9AE72;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --warn:#D6B36A; --warn-soft:#2A2418; --warn-line:#5C4E2C;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --warn:#D6B36A; --warn-soft:#2A2418; --warn-line:#5C4E2C;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:56rem;margin:0 auto;display:flex;flex-direction:column;gap:3rem}
+.narrow{max-width:42rem}
+
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.4rem);
+  line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+
+section{display:flex;flex-direction:column;gap:1.15rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:.7rem 0 -.3rem}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+
+/* 集計 */
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:.9rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.7rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.78rem;color:var(--faint);line-height:1.5}
+.stat.bad{border-color:var(--bad-line);background:var(--bad-soft)}
+.stat.bad .n{color:var(--bad)}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+
+/* 変更 */
+.change{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;
+  display:flex;flex-direction:column}
+.change>h4{margin:0;padding:.7rem .95rem;background:var(--sunk);border-bottom:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:.5rem .8rem;align-items:baseline}
+.change>h4 .who{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:var(--faint);white-space:nowrap}
+.change>h4 .what{font-family:var(--serif);font-size:1rem;font-weight:600;flex:1;min-width:14rem}
+.ba{display:grid;grid-template-columns:1fr}
+@media(min-width:50rem){.ba{grid-template-columns:1fr 1fr}}
+.side{padding:.85rem .95rem;display:flex;flex-direction:column;gap:.45rem;font-size:.86rem;line-height:1.75}
+.side+.side{border-top:1px solid var(--line)}
+@media(min-width:50rem){.side+.side{border-top:none;border-left:1px solid var(--line)}}
+.side .tag{font-family:var(--mono);font-size:.64rem;letter-spacing:.1em}
+.side.before .tag{color:var(--bad)}
+.side.after .tag{color:var(--ok)}
+.side .q{font-family:var(--mono);font-size:.78rem;line-height:1.8;color:var(--muted);
+  background:var(--sunk);padding:.5rem .6rem;border-radius:4px;overflow-x:auto}
+.side.before .q{border-left:2px solid var(--bad-line)}
+.side.after .q{border-left:2px solid var(--ok-line)}
+.why{padding:.65rem .95rem;border-top:1px dashed var(--line);font-size:.82rem;color:var(--muted);line-height:1.7}
+.why b{color:var(--ink)}
+
+/* 表 */
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:36rem}
+th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.id{font-family:var(--mono);font-size:.78rem;color:var(--muted);white-space:nowrap}
+.dupe td{background:var(--bad-soft)}
+.mine{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;padding:.15em .5em;border-radius:99px;
+  background:var(--bad);color:var(--surface);white-space:nowrap}
+.old{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;padding:.15em .5em;border-radius:99px;
+  border:1px solid var(--line-strong);color:var(--faint);white-space:nowrap}
+
+/* 注意箱 */
+.box{border-radius:6px;padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.7rem}
+.box.warn{background:var(--warn-soft);border:1px solid var(--warn-line)}
+.box.warn h3{color:var(--warn);margin:0}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0}
+.box p,.box li{font-size:.9rem}
+.box ul{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.45rem}
+
+ul.plain{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;max-width:42rem}
+ul.plain li{line-height:1.8}
+
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);
+  font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / 仕様の改訂と重複の実測</span>
+  <h1>検証で何が変わったか、そして重複していないか</h1>
+  <p class="standfirst">2人の敵対的検証で仕様が8箇所変わりました。あわせて「同じことを何度も書いていないか」を実際に数えたところ、<strong>15組の重複</strong>が見つかりました。うち6組は今回私が作ったものです。ただし1件ずつ見直すと、<strong>削って済むのは1組だけ</strong>で、残りは業務ユースケースにしか言えないことを含んでいました。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">8</span><span class="l">検証で変わった箇所</span></div>
+    <div class="stat bad"><span class="n">6</span><span class="l">今回作った重複<br>（同じ主張を2階層に）</span></div>
+    <div class="stat"><span class="n">9</span><span class="l">既存の重複<br>（冪等が基準と保証に）</span></div>
+    <div class="stat ok"><span class="n">1</span><span class="l">削って済む重複<br>（残りは文言の整理）</span></div>
+  </div>
+</section>
+
+<!-- ══ Part 1 ══════════════════════════ -->
+<section>
+  <h2>Ⅰ. 検証で変わった8箇所</h2>
+  <p class="narrow">左が私が最初に書いたもの、右が直したもの。重い順に並べています。</p>
+
+  <div class="change">
+    <h4><span class="who">tech-lead</span><span class="what">基準どうしが正面から矛盾していた</span></h4>
+    <div class="ba">
+      <div class="side before"><span class="tag">修正前</span>
+        <p>2つの基準を、同じ文書の隣り合う項目として書いていました。</p>
+        <div class="q">enum-value-removal-is-incompatible:
+  候補値の除去は拒否する shall
+
+remove-kind-branch:
+  分岐・<b>その enum 値</b>・描画先を
+  まとめて取り除く shall</div>
+      </div>
+      <div class="side after"><span class="tag">修正後</span>
+        <p>互換の関門を通らない操作を、免除として明示列挙する形にしました。</p>
+        <div class="q">enum-value-removal-is-incompatible:
+  <b>互換の関門を通る操作の</b>変更が
+  候補値の除去を含むとき拒否する shall
+
+＋ compat-gate-exemptions-are-enumerated
+＋ remove-kind-branch-breaks-existing-documents</div>
+      </div>
+    </div>
+    <div class="why"><b>なぜ気づけなかったか</b> ── 私は「互換を守る基準」と「互換をわざと壊す基準」を、互いを見ないまま書きました。tech-lead は成立しない理由を1行で示しています——<code>patch_schema.py:134</code> の関門は <code>create_version</code> を除く全操作が通る唯一の関門で、<code>remove_kind_branch</code> は定義上必ず enum 値を除去するので、<strong>自分の生んだ除去に自分で拒まれます</strong>。</div>
+  </div>
+
+  <div class="change">
+    <h4><span class="who">ddd</span><span class="what">宣言し忘れが、黙って許可へ倒れていた</span></h4>
+    <div class="ba">
+      <div class="side before"><span class="tag">修正前</span>
+        <div class="q">no-declaration-means-unreferenced:
+  参照関係を宣言していない配列は
+  <b>指している場所が無いもの</b>として返す
+
+element-retire:
+  参照が残っていなければ取り除く</div>
+        <p>この2つを合わせると、鍵だけ宣言して参照関係を忘れた配列で<strong>取り下げが常に成功します</strong>。</p>
+      </div>
+      <div class="side after"><span class="tag">修正後</span>
+        <div class="q">＋ keyed-array-declares-references:
+  鍵を宣言した配列が参照関係の宣言を
+  持たないとき、<b>不適合</b>として返す shall
+  （指されないのが正しいなら、
+    指されない旨を宣言させる）</div>
+        <p>宣言の欠けを検証が捕まえるので、忘れたまま進めません。</p>
+      </div>
+    </div>
+    <div class="why"><b>ddd の言葉</b> ── 「engine が業務を知ったのではなく、<strong>書き手が毎回宣言を思い出したときだけ業務が守られる</strong>状態になっています。前回の異議への回答としては半分です」</div>
+  </div>
+
+  <div class="change">
+    <h4><span class="who">tech-lead</span><span class="what">テストの Given が書けなかった</span></h4>
+    <div class="ba">
+      <div class="side before"><span class="tag">修正前</span>
+        <div class="q">入力: operation / schemaRef / documentId /
+      discriminator / contextRef / subdomainRef /
+      <b>fieldPath</b> / values / <b>fieldPath</b> / documentPath</div>
+        <p>要素操作の引数が1つもなく、<code>fieldPath</code> は二重に書かれていました。「3件の操作のうち1件が失敗」というシナリオを、渡す引数が無いまま書いていたことになります。</p>
+      </div>
+      <div class="side after"><span class="tag">修正後</span>
+        <div class="q">＋ elementOps:
+   要素操作の並び。1回の呼び出しで複数を受け取り、
+   全か無かで適用される。
+   <b>values とは別の引数</b>であり、配列を丸ごと渡す
+   経路とは混ざらない
+
+（重複していた fieldPath を1つに）</div>
+      </div>
+    </div>
+    <div class="why"><b>副次的に解けたこと</b> ── <code>values</code> と別の引数にしたことで、先行読み取りを求める hook の判定（<code>--values</code> に配列があるかを見る）に掛からなくなりました。要素操作の眼目は「既存を読ませない」ことなので、掛かると目的が打ち消されます。</div>
+  </div>
+
+  <div class="change">
+    <h4><span class="who">ddd</span><span class="what">失敗の名前だけが汎用語に戻っていた</span></h4>
+    <div class="ba">
+      <div class="side before"><span class="tag">修正前</span>
+        <div class="q"><b>PRECONDITION_NOT_MET</b>
+  （前提が満たされていない）
+
+errors ブロック: 5件のまま
+  新設の4つの失敗は未登録</div>
+      </div>
+      <div class="side after"><span class="tag">修正後</span>
+        <div class="q"><b>STILL_REFERENCED</b>
+  （まだ指されている）
+
+errors ブロック: 9件
+  UNKNOWN_ELEMENT_KEY /
+  STILL_REFERENCED /
+  WHOLESALE_REPLACE_NOT_ALLOWED /
+  ELEMENT_OPS_NOT_APPLICABLE</div>
+      </div>
+    </div>
+    <div class="why"><b>ddd の言葉</b> ── 「同じ追加分の他の名は起きた事実を名指しているのに、<strong>最も業務ルールらしい失敗だけが一般名</strong>です。操作名は業務の言葉になりましたが、失敗の名は <code>remove</code> 時代のままです」</div>
+  </div>
+
+  <div class="change">
+    <h4><span class="who">tech-lead</span><span class="what">宣言の書き方が決まっていなかった</span></h4>
+    <div class="ba">
+      <div class="side before"><span class="tag">修正前</span>
+        <p>「参照関係の宣言」とだけ書き、どう書くかは未定でした。ところが基準は配列を2段またぐ道を要求しています。</p>
+        <div class="q">入力: 参照関係の宣言 / Document の中身 / 探す鍵
+      （書式は未定）</div>
+      </div>
+      <div class="side after"><span class="tag">修正後</span>
+        <div class="q">述語を持たないセグメント列＋手がかりの欄:
+
+at: [content, acceptanceScenarios,
+     scenarios, [], satisfies, []]
+handle: name
+
+＋ declaration-has-no-conditions:
+  値による絞り込みを行わない shall</div>
+      </div>
+    </div>
+    <div class="why"><b>なぜ JMESPath を使わないか</b> ── 既にリポジトリにあるので依存は増えません。ただし述語（<code>[?status=='ACTIVE']</code>）を書けてしまうと、<strong>「条件式の言語を持たせない」という今回の判断そのものを Schema 側から迂回できます</strong>。書けない表記を選びました。</div>
+  </div>
+
+  <div class="change">
+    <h4><span class="who">ddd</span><span class="what">存在意義が、同じ文書の中で否定されていた</span></h4>
+    <div class="ba">
+      <div class="side before"><span class="tag">修正前</span>
+        <div class="q">存在意義: 「測る対象が<b>集約の外</b>にある」
+参照する集約: <b>[]</b>（空）</div>
+        <p>「外」がどこなのかがモデル上どこにも現れていませんでした。</p>
+      </div>
+      <div class="side after"><span class="tag">修正後</span>
+        <div class="q">参照する集約:
+  agg-document（参照のみ）
+    書き換える対象の配列は Document の中身
+  agg-schema（参照のみ）
+    どの欄が鍵かという宣言と固定値を得る
+
+存在意義: 「2つの集約にまたがる。…
+  どちらの集約も相手の中身を知らない」</div>
+      </div>
+    </div>
+    <div class="why"><b>波及</b> ── 同じ穴が、このセッションで先に移設した既存の業務サービス3件（<code>ds-resolve-path-template</code> 等）にも残っています。今回の範囲外として Handoff に記録しました。</div>
+  </div>
+
+  <div class="change">
+    <h4><span class="who">tech-lead</span><span class="what">hook が、engine の禁じた手順を勧めていた</span></h4>
+    <div class="ba">
+      <div class="side before"><span class="tag">修正前</span>
+        <p>hook は engine より手前で止めるため、利用者が見るのは hook の文言だけです。</p>
+        <div class="q">「query で現在値取得 → 組み立て →
+  fill で丸ごと置き換え」
+
+  ↑ この仕様が禁じた手順そのもの</div>
+      </div>
+      <div class="side after"><span class="tag">修正後</span>
+        <div class="q">＋ does-not-prescribe-forbidden-procedure
+＋ element-ops-are-out-of-scope
+
+  拒否の理由には丸ごとの置き換えと
+  要素操作の<b>両方の道</b>を示す</div>
+      </div>
+    </div>
+    <div class="why"><b>これが無いと</b> ── 手前で拒否されながら、engine が禁じた手順だけを勧められるので、<strong>進む道が無くなります</strong>。</div>
+  </div>
+
+  <div class="change">
+    <h4><span class="who">私の不備</span><span class="what">検証に関連仕様を渡し忘れた</span></h4>
+    <div class="ba">
+      <div class="side before"><span class="tag">両者の指摘</span>
+        <p>「<code>collects-dangling-references</code>（参照の欠けの検知）には<strong>消費者が仕様上どこにも存在しない</strong>。早すぎる一般化では」</p>
+      </div>
+      <div class="side after"><span class="tag">実際</span>
+        <div class="q">uc-check-criteria-coverage:
+  <b>reports-dangling</b>
+  シナリオが実在しない識別子を指しているとき
+  その組を dangling に含める shall</div>
+        <p>消費者は実在しました。<strong>私がその仕様を dispatch に渡し忘れただけ</strong>です。</p>
+      </div>
+    </div>
+    <div class="why"><b>Handoff に open で残した</b> ── 指摘自体は解消ですが、敵対的検証へ関連仕様を渡す手順は未整備のままです。渡し忘れれば、同じ「存在するものが存在しない」判定がまた出ます。</div>
+  </div>
+</section>
+
+<!-- ══ Part 2 ══════════════════════════ -->
+<section>
+  <h2>Ⅱ. 重複していないか、実際に数えた</h2>
+
+  <div class="box warn">
+    <h3>結論：しています。2種類、15組。</h3>
+    <p>「同じことを何度も書いていないか」という懸念は当たっていました。ただし種類が2つあり、責任の所在が違います。</p>
+  </div>
+
+  <h3>種類A ── 同じ主張を、業務ユースケースと業務サービスの両方に書いた（6組・今回作った）</h3>
+  <p class="narrow">「足した要素は末尾に付く」を「先頭に付く」へ変えたいとき、<strong>2箇所を直すことになります</strong>。これは重複の定義そのものです。</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th></th><th>uc-scaffold-document</th><th>ds-patch-array-element</th><th>差</th></tr></thead>
+      <tbody>
+        <tr class="dupe"><td><span class="mine">今回</span></td><td class="id">element-add<br>末尾へ加える</td><td class="id">adds-to-tail<br>末尾へ加えた配列を返す</td><td>実質なし</td></tr>
+        <tr class="dupe"><td><span class="mine">今回</span></td><td class="id">element-edit<br>指定欄だけ、鍵は変えない</td><td class="id">edits-named-fields-only<br>指定欄だけ、鍵は変えない</td><td>なし</td></tr>
+        <tr class="dupe"><td><span class="mine">今回</span></td><td class="id">element-retire<br>取り除く</td><td class="id">removes-by-key<br>取り除いた配列を返す</td><td>uc に取り下げの前提が付く</td></tr>
+        <tr class="dupe"><td><span class="mine">今回</span></td><td class="id">unknown-element-key-fails</td><td class="id">unknown-key-is-not-created</td><td>uc がコード名を持つ</td></tr>
+        <tr class="dupe"><td><span class="mine">今回</span></td><td class="id">element-ops-are-atomic</td><td class="id">all-or-nothing</td><td>なし</td></tr>
+        <tr class="dupe"><td><span class="mine">今回</span></td><td class="id">element-add-fills-const</td><td class="id">fills-const-on-add</td><td>なし</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>種類B ── 冪等を、受け入れ基準と操作保証の両方に書いた（10組・9組は既存）</h3>
+  <p class="narrow"><code>uc-patch-schema</code> で、9つの操作すべてが両方に書かれています。<strong>8組は私が来る前からあり、私はそのパターンを1組増やしました。</strong></p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th></th><th>受け入れ基準</th><th>操作保証</th></tr></thead>
+      <tbody>
+        <tr><td><span class="old">既存</span></td><td class="id">add-block-idempotent<br><span style="color:var(--faint)">既に存在するとき無変更で成功する</span></td><td class="id">add-block-idempotent-op<br><span style="color:var(--faint)">複数回実行しても結果は常にべき等</span></td></tr>
+        <tr><td><span class="old">既存</span></td><td class="id">rename-block / set-field / remove-block /<br>add-def / add-kind-branch /<br>set-kind-render-target / remove-field</td><td class="id">同じ7件に <code>-op</code> が付いたもの</td></tr>
+        <tr class="dupe"><td><span class="mine">今回</span></td><td class="id">remove-kind-branch-idempotent</td><td class="id">remove-kind-branch-idempotent-op</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow">私は既存の並びに合わせて1組足しました。<strong>倣ったこと自体は自然ですが、倣った先が重複だったので、重複を1組増やしています。</strong></p>
+</section>
+
+<section>
+  <h2>Ⅲ. 削るのではなく、分ける</h2>
+
+  <div class="box warn">
+    <h3>訂正：最初に出した「5件を削る」案は誤りでした</h3>
+    <p>5件のうち<strong>3件は、業務ユースケースにしか言えないこと</strong>を含んでいます。削ると capability の中核の主張と、tech-lead が名指しした穴の手当てが同時に消えます。</p>
+  </div>
+
+  <h3>手本は既にリポジトリの中にあった</h3>
+  <p class="narrow"><code>ds-resolve-path-template</code> は「パス変数を値に置き換えた実パスを返す」と主張します。それを使う <code>uc-render-document</code> は、<strong>その写像を一度も言い直していません</strong>。uc が主張するのは次の3種類だけです。</p>
+  <ul class="plain">
+    <li><strong>どこから何を取るか</strong>（「schema が pathVars で宣言した content 値を変数として使う」）</li>
+    <li><strong>解決できないときどうするか</strong>（「その変数を使う配置先だけをスキップし、正本への書き込みは継続する」）</li>
+    <li><strong>書き込みの結果</strong>（「書き込まなかった配置先と理由を結果に含める」）</li>
+  </ul>
+  <p class="narrow">つまり私の6組は既存の癖ではなく、<strong>この手本からの逸脱</strong>です。そして正しい直し方は削除ではなく、<strong>uc の文から ds の意味論だけを抜くこと</strong>でした。</p>
+
+  <h3>1件ずつの判定</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>uc の基準</th><th>ds が持つ部分（抜く）</th><th>uc にしか言えない部分</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="id">element-add</td><td>末尾へ加える</td><td><strong>既存の要素を読み込ませることなく</strong> ── ds は配列を受け取った時点で全件持っているので、これを主張できない。<strong>この capability の中核の主張そのもの</strong></td><td style="color:var(--bad)"><strong>残す</strong></td></tr>
+        <tr><td class="id">element-add-fills-const</td><td>渡された固定値を補う</td><td><strong>schema から固定値を集めて渡す</strong> ── ds は固定値を入力として受け取るだけ。集める側は uc</td><td style="color:var(--bad)"><strong>残す</strong></td></tr>
+        <tr><td class="id">element-ops-are-atomic</td><td>配列を書き換えずに返す</td><td><strong>何も保存しない</strong>。さらに uc の失敗には ds から見えないもの（順序配列の拒否・丸ごと置き換えの拒否・宣言の誤り）が含まれる</td><td style="color:var(--bad)"><strong>残す</strong></td></tr>
+        <tr><td class="id">unknown-element-key-fails</td><td>鍵が無ければ適用しない</td><td>失敗に <code>UNKNOWN_ELEMENT_KEY</code> という<strong>外向きの名前</strong>を与える</td><td style="color:var(--warn)">名前だけに絞る</td></tr>
+        <tr class="dupe"><td class="id">element-edit</td><td>指定欄だけ書き換え、鍵は変えない</td><td><strong>無い</strong></td><td style="color:var(--ok)"><strong>落とす</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <h3>そして落とすと、逆に穴が開きます</h3>
+    <p><code>element-edit</code> を落とすと、<strong>「要素操作の結果が Document へ保存される」を主張する基準が1つも無くなります</strong>。今それを言っているのは <code>element-add</code> / <code>element-edit</code> / <code>element-retire</code> の3つだけで、どれも ds の言い直しの形で書かれているからです。落とすなら、代わりに uc 固有の基準を1件足す必要があります。</p>
+    <div style="font-family:var(--mono);font-size:.78rem;line-height:1.9;background:var(--sunk);padding:.7rem .8rem;border-radius:4px;overflow-x:auto">＋ element-ops-are-persisted:
+   When 要素操作がすべて受け付けられたとき、
+   システムは書き換えた配列を Document へ保存し、
+   書き換えた配列の道を written に記録する shall。</div>
+  </div>
+
+  <h3>差し引き</h3>
+  <p class="narrow"><strong>落ちるのは1件、足すのが1件。基準の数は 30 のまま変わりません。</strong>変わるのは4件の文言で、ds が持つ意味論をそこから抜きます。「重複が15組ある」は事実ですが、<strong>そのうち削って済むのは1組だけ</strong>でした。</p>
+
+  <h3>種類B ── 規約が既に裁いていた</h3>
+  <p class="narrow">「別の判断が要る」と言って先送りしましたが、これも誤りでした。<strong>操作保証ブロックの執筆ガイダンス自身が答えを持っています。</strong></p>
+  <div style="font-family:var(--mono);font-size:.8rem;line-height:1.9;background:var(--sunk);padding:.8rem .9rem;border-radius:4px;overflow-x:auto;max-width:42rem">1回の実行の結果ではなく、この操作が全体として約束することを読みます。
+<b>受け入れ基準と重なる項目があれば、どちらか一方が余分です。</b></div>
+  <p class="narrow">どちらが余分かも、種類Aと同じ問い方で決まりました。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th></th><th>文</th><th>主張していること</th></tr></thead>
+      <tbody>
+        <tr><td>受け入れ基準</td><td class="id">既に存在するとき<br>add_block は<strong>無変更で成功する</strong></td><td>成功すること（エラーにならない）＋ 変わらないこと</td></tr>
+        <tr class="dupe"><td>操作保証</td><td class="id">同じ操作を複数回実行したとき<br>結果は常にべき等である</td><td>変わらないことだけ。<strong>同じエラーを返し続けても「べき等」に含まれる</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow">ここでも<strong>汎用に見える側のほうが主張が少なく</strong>、種類Aと同じ構図でした。受け入れ基準を残し、重なる操作保証を落としました。</p>
+  <ul class="plain">
+    <li><code>uc-patch-schema</code> ── 操作保証 11→2、保証シナリオ 9→1</li>
+    <li><code>uc-scaffold-document</code> ── 操作保証 6→5、保証シナリオ 5→5</li>
+    <li>全ユースケースを走査し、両方に冪等を書いている仕様は<strong>残っていません</strong></li>
+  </ul>
+
+  <div class="box warn">
+    <h3>作業中に、記録したばかりのアンチパターンを踏みました</h3>
+    <p>「べき等」という文字列で機械的に拾ったため、<code>create-idempotent-structure</code>（対応する受け入れ基準が<strong>存在しない</strong>＝重複ではない）まで落としました。1件ずつ「削ると誰も主張しなくなるか」を問わず、括りでまとめて処理した結果です。戻したうえで、筋書きが無いまま残っていたので併せて起こしました。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 数え直すと</h2>
+  <p class="narrow">この capability のために私が新しく書いた受け入れ基準は、削ったあとで次のようになります。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>仕様</th><th>この capability の追加</th><th>移設で表に出た欠け</th></tr></thead>
+      <tbody>
+        <tr><td>uc-scaffold-document</td><td>12（うち4件は文言から ds の意味論を抜く。<strong>数は変わらない</strong>）</td><td>4（既存のシナリオが指していたのに基準として無かったもの）</td></tr>
+        <tr><td>uc-patch-schema</td><td>9</td><td>1</td></tr>
+        <tr><td>uc-validate-document</td><td>2</td><td>2</td></tr>
+        <tr><td>uc-check-query-precedes-array-fill</td><td>2</td><td>0</td></tr>
+        <tr><td>ds-patch-array-element</td><td>7</td><td>—</td></tr>
+        <tr><td>ds-collect-key-references</td><td>6</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow">「移設で表に出た欠け」の7件は、この capability のために書いたものではありません。<strong>v9 はシナリオから基準への参照を必須にするので、移設すると「参照しているのに存在しない基準」が浮きます</strong>。移設そのものが検査として働いた結果です。</p>
+</section>
+
+<footer>
+  重複の数はすべて waffle query で実際に数えたもの。<br>
+  種類Bの9組のうち8組は、このセッションより前から存在。<br>
+  種類A・種類Bとも適用済み。種類Aは基準30・シナリオ40のまま（4件の文言から業務サービスの意味論を抜き、element-edit を落として element-ops-are-persisted を起こした）。<br>
+  種類Bは重なる操作保証10件と保証シナリオ9件を落とし、重複でなかった1件を戻して筋書きを起こした。全ユースケースを走査し、残存なし。
+</footer>
+
+</div>

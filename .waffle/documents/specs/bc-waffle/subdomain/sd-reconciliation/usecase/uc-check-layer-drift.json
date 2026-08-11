@@ -109,7 +109,9 @@
         "If 基準となる規約が指定されていない、または見つからないならば、層の突き合わせは 確認を行わず拒否する shall",
         "When ファイルが何も宣言していない（中身が無い）とき、層の突き合わせは そのファイルを層の割り当ての対象にしない shall",
         "When 実装どうしが互いを辿って元へ戻る依存を持つとき、層の突き合わせは それを1つの循環として報告する shall",
-        "When 同じ循環が複数の始点から辿れるとき、層の突き合わせは それを1件だけ報告する shall"
+        "When 同じ循環が複数の始点から辿れるとき、層の突き合わせは それを1件だけ報告する shall",
+        "When 指定された規約が見つからないとき、システムは ARCHITECTURE_REF_NOT_FOUND エラーを返す shall（規約を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
+        "When 指定された規約が層の置き場所を決めるのに足りる宣言を持たないとき、システムは ARCHITECTURE_REF_UNRESOLVED エラーを返す shall（同上）。"
       ]
     },
     "errors": {
@@ -245,35 +247,33 @@
           "viewpoint": "依存の健全性：閉じた依存が無い状態を差分として出さない",
           "gherkin": "Scenario: 循環が無ければ何も報告しない\n  Given 一方向にだけ参照する実装\n  When 層の差分を確かめる\n  Then 循環は報告されない",
           "covers": "受け入れ基準: 閉じた依存を循環として報告する"
+        },
+        {
+          "name": "指定された規約が見つからないときのときARCHITECTURE_REF_NOT_FOUND",
+          "category": "異常系",
+          "viewpoint": "エラー：指定された規約が見つからないとき",
+          "gherkin": "Scenario: 指定された規約が見つからないときのときARCHITECTURE_REF_NOT_FOUND\n  Given 指定された規約が見つからないとき状況\n  When 本ユースケースを実行する\n  Then ARCHITECTURE_REF_NOT_FOUND エラーが返る",
+          "covers": "エラー: ARCHITECTURE_REF_NOT_FOUND"
+        },
+        {
+          "name": "指定された規約が層の置き場所を決めるのに足りる宣言を持たないときのときARCHITECTURE_REF_UNRESOLVED",
+          "category": "異常系",
+          "viewpoint": "エラー：指定された規約が層の置き場所を決めるのに足りる宣言を持たないとき",
+          "gherkin": "Scenario: 指定された規約が層の置き場所を決めるのに足りる宣言を持たないときのときARCHITECTURE_REF_UNRESOLVED\n  Given 指定された規約が層の置き場所を決めるのに足りる宣言を持たないとき状況\n  When 本ユースケースを実行する\n  Then ARCHITECTURE_REF_UNRESOLVED エラーが返る",
+          "covers": "エラー: ARCHITECTURE_REF_UNRESOLVED"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 指定された規約が見つからないとき、システムは ARCHITECTURE_REF_NOT_FOUND エラーを返す shall（規約を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 指定された規約が層の置き場所を決めるのに足りる宣言を持たないとき、システムは ARCHITECTURE_REF_UNRESOLVED エラーを返す shall（同上）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "見つからない規約はARCHITECTURE_REF_NOT_FOUND",
-          "category": "異常系",
-          "viewpoint": "エラー：規約の不在",
-          "gherkin": "Scenario: 見つからない規約はARCHITECTURE_REF_NOT_FOUND\n  When 存在しない規約を指定して層の差分を確かめる\n  Then ARCHITECTURE_REF_NOT_FOUNDエラーが返る"
-        },
-        {
-          "name": "置き場所を決められない規約はARCHITECTURE_REF_UNRESOLVED",
-          "category": "異常系",
-          "viewpoint": "エラー：規約が置き場所の宣言を欠く",
-          "gherkin": "Scenario: 置き場所を決められない規約はARCHITECTURE_REF_UNRESOLVED\n  When 層の置き場所を決めるのに足りる宣言を持たない規約を指定して層の差分を確かめる\n  Then ARCHITECTURE_REF_UNRESOLVEDエラーが返る"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

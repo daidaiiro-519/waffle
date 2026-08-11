@@ -1,0 +1,83 @@
+{
+  "documentId": "knowledge-cand-usecase-does-not-restate-service",
+  "documentType": "Knowledge",
+  "schemaRef": "KnowledgeSchema/v5",
+  "status": "DRAFT",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "業務ユースケースの受け入れ基準は、業務サービスの写像を言い直さない"
+    },
+    "principles": {
+      "blockType": "Principles",
+      "title": "原則",
+      "items": [
+        "業務ユースケースが主張すべきなのは、業務サービスには言えないことだけである。写像そのもの（何をどう変換するか）は業務サービスが持ち、業務ユースケースは「どこから何を取るか」「解決できないときどうするか」「書き込みの結果」を持つ。",
+        "重複を見つけたときの正しい直し方は削除ではなく、境界の引き直しである。1つの文が両方の性質を含んでいることが多く、削ると片側にしか言えないことまで落ちる。",
+        "削除の可否は、1件ずつ「削ると誰も主張しなくなるものは何か」を問うて決める。重複という括りでまとめて落とすと、数は減るが主張が欠ける。",
+        "純粋な計算を業務サービスへ委譲した業務ユースケースでは、委譲した計算の意味論を業務ユースケース側で繰り返さない。繰り返すと、規則を変えるたびに2箇所を直すことになる。"
+      ]
+    },
+    "classifications": {
+      "blockType": "Classifications",
+      "title": "分類",
+      "items": [],
+      "emptyReason": "分類を要する対象ではなく、単一の規律のため。"
+    },
+    "decisionCriteria": {
+      "blockType": "DecisionCriteria",
+      "title": "判断基準",
+      "emptyReason": "段階を経る判断ではなく、1件ごとの問いのため（descriptionのquestionsを使う）。",
+      "stages": [],
+      "transitions": []
+    },
+    "examples": {
+      "blockType": "Examples",
+      "title": "実例",
+      "text": ""
+    },
+    "antiPatterns": {
+      "blockType": "AntiPatterns",
+      "title": "アンチパターン",
+      "items": [
+        {
+          "name": "重複の件数を目的にした整理",
+          "problem": "「30→26にする」のように数の減少を成果として扱うと、1件ずつ何が失われるかを見ないまま落としてしまう。数は変わらなくても境界が正しく引ければ整理は成功している。"
+        },
+        {
+          "name": "委譲先の契約を呼び出し側で繰り返す",
+          "problem": "業務ユースケースが業務サービスの写像を言い直すと、写像の規則を変えるときに2箇所を直すことになり、片方だけ直る事故が起きる。"
+        }
+      ],
+      "emptyReason": ""
+    },
+    "provenance": {
+      "blockType": "Provenance",
+      "title": "出典・根拠の透明性",
+      "source": "Waffleの配列の要素単位編集の仕様執筆（2026-08-11）。同じ主張を業務ユースケースと業務サービスの両方に書いた6組を実測で発見し、5件を削る案を出したところ、ユーザーから「業務ユースケースに必要な処理なのに取り下げようとしていないか」と指摘を受けた。1件ずつ見直すと3件は業務ユースケースにしか言えないことを含んでおり、実際に削れたのは1件、しかも代わりに1件足す必要があった。",
+      "caveats": "リポジトリには既に正しい手本があった（ds-resolve-path-templateの写像を、uc-render-documentは一度も言い直していない）。既存の形を先に確かめていれば、逸脱そのものが起きなかった可能性がある。"
+    },
+    "relatedConcepts": {
+      "blockType": "RelatedConcepts",
+      "title": "関連概念",
+      "items": [],
+      "emptyReason": "関連づける既存knowledgeを未特定のため（審査時に確認する）。"
+    },
+    "description": {
+      "blockType": "Overview",
+      "title": "概要",
+      "questions": [
+        "この基準は業務サービスにも言えるか",
+        "業務ユースケースにしか言えない部分は、その文のどこか",
+        "削ると、どの主張が誰にも主張されなくなるか"
+      ],
+      "text": "業務ユースケースと業務サービスの両方に同じ主張が書かれているとき、その重複をどちらかの削除で解消しようとすると、片側にしか言えないことまで一緒に落ちる。境界は数ではなく「その主張は業務サービスに言えるか」で引く。"
+    }
+  },
+  "tags": [
+    "framework:waffle"
+  ],
+  "skillRefs": [
+    "ddd-advisor"
+  ]
+}

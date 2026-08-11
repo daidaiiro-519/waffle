@@ -3,7 +3,7 @@ id: "uc-patch-schema"
 type: "usecase"
 title: "Schema定義ファイルを安全に部分編集する：PatchSchema"
 description: "既存のSchema定義ファイルに対し、新規ブロック追加（add_block）・識別子リネーム（rename_block）・既存ブロックの1フィールド書き換え（set_field）という構造化操作を、対象外の箇所を一切変更せず（最小diff）、後方互換チェック・JSON Schema構文検証を通過した場合のみ適用する。AIはブロック定義・識別子名・書き換える値だけを与え、schemaファイル内の他の記述には一切触れない。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v9"
 ---
 
 # Schema定義ファイルを安全に部分編集する：PatchSchema
@@ -100,51 +100,57 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When add_blockでブロック名・ブロック定義・紐付け先が与えられたとき、システムはSchemaに新規ブロックを追加し、指定した紐付け先から参照できるようにする shall。
-- While 対象ブロックが既に存在するとき、add_blockは無変更で成功する shall。
-- When rename_blockで旧短縮名・新短縮名が与えられたとき、システムはSchema内でその識別子を参照する全ての箇所を一貫してリネームする shall。
-- While リネーム元が既に存在せず、リネーム先が既に存在するとき、rename_blockは無変更で成功する shall。
-- If 変更が既存Documentを壊しうる後方互換性のない変更を含むとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall。
-- If 生成結果がJSON Schemaとして構文的に不正なとき、システムはINVALID_SCHEMA_STRUCTUREエラーを返し書き込みを拒否する shall。
-- When 書き込みを行うとき、システムは対象ブロック・対象参照以外の箇所を一切変更しない shall。
-- When set_fieldでブロック名・項目パス・新しい値が与えられたとき、システムはそのブロックの指定した項目だけを新しい値に置き換える shall。
-- While 指定した項目が既に目的の値であるとき、set_fieldは無変更で成功する shall。
-- If set_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。
-- If 書き込み時にI/Oエラーが発生したとき、システムはWRITE_ERRORエラーを返す shall。
-- When remove_blockでcontent def名・プロパティ名が与えられたとき、システムはそのcontent defからプロパティ参照を外す shall。
-- While 対象プロパティが既に存在しないとき、remove_blockは無変更で成功する shall。
-- If remove_blockの対象プロパティがrequired配列に含まれているとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall（必須プロパティの削除は既存Documentを壊しうるため、先にset_fieldや別の手順でrequiredから外すことを求める）。
-- When add_defでdef名・def定義が与えられたとき、システムはSchemaの$defsに新規エントリを追加する（既存content defへの紐付けは行わない） shall。
-- While 対象defが既に存在するとき、add_defは無変更で成功する shall。
-- When add_kind_branchでdiscriminatorフィールド名・新しいkind値・紐付け先content def名が与えられたとき、システムはそのフィールドのenumに新しい値を追加し、ルート直下のkind分岐に新しいブランチを追加する shall。
-- While ルート直下のkind分岐がif/then/elseの単一分岐形式であり、かつdiscriminatorフィールドのenumが既存kind値を2つのみ持つとき、add_kind_branchはelseブランチが暗黙に表していたkind値をenumから逆算し、allOf形式の複数分岐に正規化した上で新しいブランチを追加する shall。
-- While 対象のkind値・content def紐付けの組が既にkind分岐に存在するとき、add_kind_branchは無変更で成功する shall。
-- If add_kind_branchの対象となるルート直下のkind分岐の形状が、既知の形状（if/then/else形式・allOf形式）に適合しない、またはif/then/else形式でありながらelseの暗黙値を一意に逆算できないとき、システムはUNSUPPORTED_ROOT_DISPATCH_SHAPEエラーを返し書き込みを拒否する shall。
-- When create_versionでfromSchemaRef・schemaRef（新版）・editsが与えられたとき、システムはfromSchemaRefの内容を複製し、editsを適用した新しいschema版ファイルをschemaRefへ書き込む shall。
-- While create_versionのschemaRef（新版）が既に存在するとき、システムはVERSION_ALREADY_EXISTSエラーを返し書き込みを拒否する shall。
-- When create_versionのeditsが既存フィールドの型を変更するとき、システムはbackward-compatチェックを行わずに書き込む shall（新版はまだどのDocumentも参照していないため）。
-- When set_kind_render_targetでkind値・pathVars・path・deployが与えられたとき、システムはx-render-target.pathVars/path/deployそれぞれのkind別dictに、そのkind値のエントリを追加する shall。
-- While 対象のkind値のエントリが既にpathVars・path・deployの全てで指定した値と一致しているとき、set_kind_render_targetは無変更で成功する shall。
-- If set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でないとき、システムはUNSUPPORTED_RENDER_TARGET_SHAPEエラーを返し書き込みを拒否する shall。
-- When set_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。
-- When remove_fieldでブロック名・項目パスが与えられたとき、システムはその項目をキーごと取り除く shall（値をnullにするのではなく、キー自体を消す）。
-- While remove_fieldの対象項目が既に存在しないとき、remove_fieldは無変更で成功する shall。
-- If remove_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。
-- When remove_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。
+| 基準 |
+|---|
+| When add_blockでブロック名・ブロック定義・紐付け先が与えられたとき、システムはSchemaに新規ブロックを追加し、指定した紐付け先から参照できるようにする shall。 |
+| While 対象ブロックが既に存在するとき、add_blockは無変更で成功する shall。 |
+| When rename_blockで旧短縮名・新短縮名が与えられたとき、システムはSchema内でその識別子を参照する全ての箇所を一貫してリネームする shall。 |
+| While リネーム元が既に存在せず、リネーム先が既に存在するとき、rename_blockは無変更で成功する shall。 |
+| If 変更が既存Documentを壊しうる後方互換性のない変更を含むとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall。 |
+| If 生成結果がJSON Schemaとして構文的に不正なとき、システムはINVALID_SCHEMA_STRUCTUREエラーを返し書き込みを拒否する shall。 |
+| When 書き込みを行うとき、システムは対象ブロック・対象参照以外の箇所を一切変更しない shall。 |
+| When set_fieldでブロック名・項目パス・新しい値が与えられたとき、システムはそのブロックの指定した項目だけを新しい値に置き換える shall。 |
+| While 指定した項目が既に目的の値であるとき、set_fieldは無変更で成功する shall。 |
+| If set_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。 |
+| If 書き込み時にI/Oエラーが発生したとき、システムはWRITE_ERRORエラーを返す shall。 |
+| When remove_blockでcontent def名・プロパティ名が与えられたとき、システムはそのcontent defからプロパティ参照を外す shall。 |
+| While 対象プロパティが既に存在しないとき、remove_blockは無変更で成功する shall。 |
+| If remove_blockの対象プロパティがrequired配列に含まれているとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall（必須プロパティの削除は既存Documentを壊しうるため、先にset_fieldや別の手順でrequiredから外すことを求める）。 |
+| When add_defでdef名・def定義が与えられたとき、システムはSchemaの$defsに新規エントリを追加する（既存content defへの紐付けは行わない） shall。 |
+| While 対象defが既に存在するとき、add_defは無変更で成功する shall。 |
+| When add_kind_branchでdiscriminatorフィールド名・新しいkind値・紐付け先content def名が与えられたとき、システムはそのフィールドのenumに新しい値を追加し、ルート直下のkind分岐に新しいブランチを追加する shall。 |
+| While ルート直下のkind分岐がif/then/elseの単一分岐形式であり、かつdiscriminatorフィールドのenumが既存kind値を2つのみ持つとき、add_kind_branchはelseブランチが暗黙に表していたkind値をenumから逆算し、allOf形式の複数分岐に正規化した上で新しいブランチを追加する shall。 |
+| While 対象のkind値・content def紐付けの組が既にkind分岐に存在するとき、add_kind_branchは無変更で成功する shall。 |
+| If add_kind_branchの対象となるルート直下のkind分岐の形状が、既知の形状（if/then/else形式・allOf形式）に適合しない、またはif/then/else形式でありながらelseの暗黙値を一意に逆算できないとき、システムはUNSUPPORTED_ROOT_DISPATCH_SHAPEエラーを返し書き込みを拒否する shall。 |
+| When create_versionでfromSchemaRef・schemaRef（新版）・editsが与えられたとき、システムはfromSchemaRefの内容を複製し、editsを適用した新しいschema版ファイルをschemaRefへ書き込む shall。 |
+| While create_versionのschemaRef（新版）が既に存在するとき、システムはVERSION_ALREADY_EXISTSエラーを返し書き込みを拒否する shall。 |
+| When create_versionのeditsが既存フィールドの型を変更するとき、システムはbackward-compatチェックを行わずに書き込む shall（新版はまだどのDocumentも参照していないため）。 |
+| When set_kind_render_targetでkind値・pathVars・path・deployが与えられたとき、システムはx-render-target.pathVars/path/deployそれぞれのkind別dictに、そのkind値のエントリを追加する shall。 |
+| While 対象のkind値のエントリが既にpathVars・path・deployの全てで指定した値と一致しているとき、set_kind_render_targetは無変更で成功する shall。 |
+| If set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でないとき、システムはUNSUPPORTED_RENDER_TARGET_SHAPEエラーを返し書き込みを拒否する shall。 |
+| When set_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。 |
+| When remove_fieldでブロック名・項目パスが与えられたとき、システムはその項目をキーごと取り除く shall（値をnullにするのではなく、キー自体を消す）。 |
+| While remove_fieldの対象項目が既に存在しないとき、remove_fieldは無変更で成功する shall。 |
+| If remove_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。 |
+| When remove_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。 |
+| If 未知の operation が与えられたとき、システムは INVALID_OPERATION を返し書き込みを拒否する shall。 |
+| If 互換の関門を通る操作の変更が、種別の候補値（enum）の除去を含むとき、システムは BACKWARD_INCOMPATIBLE エラーを返し書き込みを拒否する shall（その候補値を指す既存Documentを壊しうるため）。 |
+| If 変更が $defs エントリの除去を含み、そのエントリがどこかから参照されているとき、システムは BACKWARD_INCOMPATIBLE エラーを返し書き込みを拒否する shall。 |
+| When remove_kind_branch で discriminator フィールド名と kind 値が与えられたとき、システムはルート直下の該当ブランチ・その enum 値・x-render-target のその kind のエントリを、ひとつの操作としてまとめて取り除く shall（半端に整合しない Schema を残さないため）。この操作は種別を捨てることそのものを目的とするため、互換の関門を通らない。 |
+| While 対象の kind 値がどこにも存在しないとき、remove_kind_branch は無変更で成功する shall。 |
+| If remove_kind_branch の途中でいずれかの箇所を取り除けないとき、システムはどの箇所も取り除かずに、その箇所に対応するエラー（描画先の形が既知でないときは UNSUPPORTED_RENDER_TARGET_SHAPE、ルート直下の分岐の形が既知でないときは UNSUPPORTED_ROOT_DISPATCH_SHAPE）を返す shall。 |
+| While ある操作が互換の関門を通らないとき、システムはその操作を免除された操作として明示的に列挙し、その操作自身の基準で何を壊してよいかを述べる shall（免除が暗黙に増えると、関門があるという主張そのものが意味を失うため）。 |
+| While remove_kind_branch が種別を取り除くとき、システムはその種別を指す既存Documentが壊れることを、この操作の結果として認める shall。実際にそのようなDocumentが残っていないかの確認は、schema版のドリフトを見る側の責務であり、この操作は行わない（Schemaを編集する操作にDocumentの走査を持ち込まないため）。 |
+| If remove_kind_branch の対象のルート直下の分岐が if/then/else 形式であるとき、システムは UNSUPPORTED_ROOT_DISPATCH_SHAPE を返し取り除かない shall（片方を取り除くと残った else が全ての種別を受けてしまい、構造が壊れるため。先に add_kind_branch で allOf 形式へ正規化することを求める）。 |
+| While remove_kind_branch のあと分岐が1つだけ残るとき、システムは allOf 形式のまま残す shall（if/then/else 形式へ戻すと、次の取り消しが上の基準で塞がるため）。 |
 
 ---
 
 ## 操作保証
 
-- When 同じadd_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
-- When 同じrename_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
-- When 同じset_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
-- When 同じremove_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
-- When 同じadd_def操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
-- When 同じadd_kind_branch操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
-- When 同じset_kind_render_target操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
-- While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。
-- When 同じremove_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
+| 保証 |
+|---|
+| While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。 |
 
 ---
 
@@ -161,6 +167,7 @@ sequenceDiagram
 | `UNSUPPORTED_ROOT_DISPATCH_SHAPE` | - add_kind_branchの対象となるルート直下のkind分岐が、既知の形状（if/then/else形式・allOf形式）に適合しない<br>- if/then/else形式でありながら、elseの暗黙値を一意に逆算できない |
 | `VERSION_ALREADY_EXISTS` | - create_versionのschemaRef（新版）が指す版ファイルが既に存在する |
 | `UNSUPPORTED_RENDER_TARGET_SHAPE` | - set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でない |
+| `INVALID_SCHEMA_REF` | - 対象のschemaRefを解決できないとき |
 
 ---
 
@@ -622,87 +629,139 @@ Scenario: ルート直下の項目も取り除ける
   Then $defsではなくschemaのルート直下の項目が消える
 ```
 
+### 種別の候補値の除去は後方互換を壊すものとして拒まれる
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 互換の検査：候補値の除去が検査を素通りしないか |
+
+```gherkin
+Scenario: 種別の候補値の除去は後方互換を壊すものとして拒まれる
+  Given 3つの候補値を持つ種別の欄
+  When remove_field でその候補値のうち1つを取り除く
+  Then BACKWARD_INCOMPATIBLE が返り、Schema は変わらない
+```
+
+### 参照されている定義の除去は後方互換を壊すものとして拒まれる
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 互換の検査：参照されたまま定義が消えないか |
+
+```gherkin
+Scenario: 参照されている定義の除去は後方互換を壊すものとして拒まれる
+  Given どこかから参照されている $defs エントリ
+  When remove_field でそのエントリを取り除く
+  Then BACKWARD_INCOMPATIBLE が返り、Schema は変わらない
+```
+
+### 種別の取り消しは分岐と候補値と描画先を同時に取り除く
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 取り消しの原子性：整合したまま消せるか |
+
+```gherkin
+Scenario: 種別の取り消しは分岐と候補値と描画先を同時に取り除く
+  Given 分岐・候補値・描画先の3箇所に現れている kind 値
+  When その kind を remove_kind_branch する
+  Then 3箇所すべてから取り除かれ、残った Schema は構文的にも整合している
+```
+
+### 既に無い種別の取り消しは無変更で成功する
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 取り消しの原子性：繰り返しても結果が変わらないか |
+
+```gherkin
+Scenario: 既に無い種別の取り消しは無変更で成功する
+  Given どこにも存在しない kind 値
+  When その kind を remove_kind_branch する
+  Then 無変更で成功する
+```
+
+### 一部を取り除けないときは何も取り除かない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 取り消しの原子性：半端に整合しない Schema を残さないか |
+
+```gherkin
+Scenario: 一部を取り除けないときは何も取り除かない
+  Given 分岐と候補値には現れるが、描画先の形が既知でない Schema
+  When その kind を remove_kind_branch する
+  Then UNSUPPORTED_RENDER_TARGET_SHAPE が返り、分岐も候補値も取り除かれていない
+```
+
+### 新版を作るときは候補値を取り除ける
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 互換の検査：意図した破壊の道が塞がっていないか |
+
+```gherkin
+Scenario: 新版を作るときは候補値を取り除ける
+  Given 候補値を短くした enum を set_field で書き込む edits
+  When create_version で新しい版を作る
+  Then BACKWARD_INCOMPATIBLE にならず、候補値の減った新版が書き出される
+```
+
+### 種別の取り消しは互換の関門を通らない
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 免除の規律：取り消しが自分の生んだ候補値の除去に自分で拒まれないか |
+
+```gherkin
+Scenario: 種別の取り消しは互換の関門を通らない
+  Given allOf 形式の分岐を3つ持ち、そのうち1つを取り消す Schema
+  When remove_kind_branch する
+  Then BACKWARD_INCOMPATIBLE にならず、3箇所から取り除かれる
+```
+
+### 取り消される種別を指す既存Documentは壊れる
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 免除の規律：免除された操作が何を壊すかが宣言されているか |
+
+```gherkin
+Scenario: 取り消される種別を指す既存Documentは壊れる
+  Given 取り消す種別を指している既存Document
+  When その種別を remove_kind_branch する
+  Then 取り消しは成功し、そのDocumentが不適合になったことはschema版のドリフトを見る側で検知される
+```
+
+### 正規化されていない分岐からは取り消せない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 分岐の形：残った else が全種別を受ける壊れ方を防げるか |
+
+```gherkin
+Scenario: 正規化されていない分岐からは取り消せない
+  Given ルート直下が if/then/else 形式の Schema
+  When その kind を remove_kind_branch する
+  Then UNSUPPORTED_ROOT_DISPATCH_SHAPE が返り、Schema は変わらない
+```
+
+### 分岐が1つだけ残っても allOf 形式のまま残る
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 分岐の形：次の取り消しの道を塞がないか |
+
+```gherkin
+Scenario: 分岐が1つだけ残っても allOf 形式のまま残る
+  Given allOf 形式の分岐を2つ持つ Schema
+  When 片方を remove_kind_branch する
+  Then 残った1つは allOf 形式のまま置かれている
+```
+
 ---
 
 ## 操作保証シナリオ
-
-### add_blockの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じadd_block操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: add_blockの複数回実行はべき等である
-  Given 同一のadd_block操作
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
-```
-
-### rename_blockの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じrename_block操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: rename_blockの複数回実行はべき等である
-  Given 同一のrename_block操作（必須ではないブロック）
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
-```
-
-### set_fieldの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じset_field操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: set_fieldの複数回実行はべき等である
-  Given 同一のset_field操作
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
-```
-
-### remove_blockの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じremove_block操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: remove_blockの複数回実行はべき等である
-  Given 同一のremove_block操作（必須ではないプロパティ）
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
-```
-
-### add_defの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じadd_def操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: add_defの複数回実行はべき等である
-  Given 同一のadd_def操作
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
-```
-
-### add_kind_branchの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じadd_kind_branch操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: add_kind_branchの複数回実行はべき等である
-  Given 同一のadd_kind_branch操作
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
-```
 
 ### 整形契約に従う既存箇所は書き込み後も不変である
 
@@ -715,30 +774,4 @@ Scenario: 整形契約に従う既存箇所は書き込み後も不変である
   Given 整形契約に従った既存のschemaファイル
   When patchを実行する
   Then 変更対象以外の既存の行はバイト単位で不変である
-```
-
-### set_kind_render_targetの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じset_kind_render_target操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: set_kind_render_targetの複数回実行はべき等である
-  Given 同一のset_kind_render_target操作
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
-```
-
-### remove_fieldの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じremove_field操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: remove_fieldの複数回実行はべき等である
-  Given 同一のremove_field操作
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
 ```

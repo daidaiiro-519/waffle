@@ -97,7 +97,9 @@
         "If 書き出した一式に指し示す先の無いものが残ったとき、システムはBROKEN_REFERENCE_IN_BUNDLEを返し、その書き出しを成功として扱わない shall。",
         "When 仕上がっていないSkillを一式から外したとき、システムはその識別子と外した理由を結果に含める shall。",
         "If 書き出しの対象になるSkillが1つも無いとき、システムはEMPTY_BUNDLEを返し書き出さない shall。",
-        "While 書き出しを繰り返すとき、システムは元の一式を一切変えない shall。"
+        "While 書き出しを繰り返すとき、システムは元の一式を一切変えない shall。",
+        "While 同じ内容に対して書き出しを繰り返すとき、システムは常に同じ一式を書き出す shall（べき等性）。",
+        "While 書き出しを行うとき、システムは元の一式を一切変えない shall（読み取りのみ）。"
       ]
     },
     "errors": {
@@ -157,37 +159,33 @@
           "viewpoint": "選別: 渡した先が自分で持つべきものを持ち込まないか",
           "gherkin": "Scenario: 受け取る側が自分で用意する決まりごとは含めない\n  Given 受け取る側が自分で用意すべき決まりごとを抱えたSkill\n  When 一式を書き出す\n  Then その決まりごとは書き出されず、Skillそのものは書き出される",
           "covers": ""
-        }
-      ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": [
-        "While 同じ内容に対して書き出しを繰り返すとき、システムは常に同じ一式を書き出す shall（べき等性）。",
-        "While 書き出しを行うとき、システムは元の一式を一切変えない shall（読み取りのみ）。"
-      ]
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": [
+        },
         {
           "name": "同じ内容なら同じ一式を書き出す",
           "category": "正常系",
           "viewpoint": "べき等性: 元が変わっていなければ、繰り返しても同じ一式になることを確認する",
           "gherkin": "Scenario: 同じ内容なら同じ一式を書き出す\n  Given 元の一式が変わっていない\n  When 書き出しを2回行う\n  Then 2回とも同じものが同じ場所に並ぶ",
-          "covers": ""
+          "covers": "操作保証からの移設"
         },
         {
           "name": "書き出しても元は変わらない",
           "category": "正常系",
           "viewpoint": "読み取りのみ: 書き出しが元の一式へ副作用を持たないことを確認する",
           "gherkin": "Scenario: 書き出しても元は変わらない\n  Given 元の一式\n  When 書き出しを行う\n  Then 元の一式は書き出す前と同じままである",
-          "covers": ""
+          "covers": "操作保証からの移設"
         }
       ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": []
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

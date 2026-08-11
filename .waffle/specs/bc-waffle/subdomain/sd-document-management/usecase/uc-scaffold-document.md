@@ -4,7 +4,7 @@ type: "usecase"
 title: "Documentの骨格生成と値の書き込み：ScaffoldDocument"
 description: "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v9"
 ---
 
 # Documentの骨格生成と値の書き込み：ScaffoldDocument
@@ -38,6 +38,7 @@ Orchestrator（HarnessAgent）
 - 生成対象の schema と documentId が与えられている
 - 分岐のある schema では discriminator が与えられている
 - clear_fieldの場合: 対象のdocumentPath・削除する値フィールドのpathが与えられている
+- 要素操作の場合: 対象のdocumentPathが与えられ、その document が適合の検証を通っている（鍵を宣言した配列に鍵の重複が無いことは、要素操作より先に検証が担保する）
 
 ---
 
@@ -53,8 +54,8 @@ Orchestrator（HarnessAgent）
 | `subdomainRef` | usecase が属する subdomain の documentId |
 | `fieldPath` | clear_fieldで取り除く値フィールドまでのドットパス |
 | `values` | fill する値の JSON オブジェクト |
-| `fieldPath` | clear_field で削除する値フィールドのドットパス |
 | `documentPath` | 既にあるdocumentの置き場所。値の書き込み・欄の除去・版の移行の対象になる |
+| `elementOps` | 要素操作の並び。1回の呼び出しで複数を受け取り、全か無かで適用される。各操作は「種類（足す／欄を直す／取り下げる）・対象の配列の道・鍵の値・書き込む中身」を持つ。values とは別の引数であり、配列を丸ごと渡す経路とは混ざらない |
 
 ---
 
@@ -83,30 +84,48 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When schemaRef と documentId が与えられたとき、システムは schema に適合する骨格を生成する shall（status=schema の enum 先頭）。
-- When fill で値が与えられたとき、システムは宣言済み値フィールドにのみ書き込む shall。
-- If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。
-- If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。
-- If 分岐のある schema で discriminator の値が候補enumに存在しないとき、システムは INVALID_DISCRIMINATOR を返し候補を案内する shall。
-- When clear_fieldでdocumentPath・fieldPathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。
-- While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。
-- If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。
-- When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。
-- While Documentのschemaが既に目的のschemaRefであるとき、migrate_schemaは無変更で成功する shall。
-- If migrate_schemaの移行先schemaRefが解決できないとき、システムはINVALID_SCHEMA_REFエラーを返し書き換えを拒否する shall。
-- When createで版を含まないschemaRefが与えられたとき、システムはその名前の最新の版へ解決して骨格を生成する shall（指示や手順に版を書かせないため。書かれた版はschemaが上がった瞬間から古い版を指す）。
-- If createで最新でない版のschemaRefが明示されたとき、システムはOUTDATED_SCHEMA_REFエラーを返し骨格を生成しない shall（最新以外の版で新しいdocumentを作る用途を持たないため）。
-- While migrate_schemaに移行先のschemaRefが与えられたとき、システムはその版が最新かどうかを問わず書き換える shall（既存documentを段階的に運ぶ操作であり、createの制限をここへ持ち込むと移行の道が塞がるため）。
+| 基準 |
+|---|
+| When schemaRef と documentId が与えられたとき、システムは schema に適合する骨格を生成する shall（status=schema の enum 先頭）。 |
+| When fill で値が与えられたとき、システムは宣言済み値フィールドにのみ書き込む shall。 |
+| If 構造を変える値や const / discriminator が与えられたとき、システムは拒否し skipped に記録する shall。 |
+| If 分岐のある schema で discriminator が無いとき、システムは MISSING_DISCRIMINATOR を返し候補を案内する shall。 |
+| If 分岐のある schema で discriminator の値が候補enumに存在しないとき、システムは INVALID_DISCRIMINATOR を返し候補を案内する shall。 |
+| When clear_fieldでdocumentPath・fieldPathが与えられたとき、システムはその値フィールドをdocumentから削除する shall。 |
+| While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。 |
+| If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。 |
+| When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。 |
+| While Documentのschemaが既に目的のschemaRefであるとき、migrate_schemaは無変更で成功する shall。 |
+| If migrate_schemaの移行先schemaRefが解決できないとき、システムはINVALID_SCHEMA_REFエラーを返し書き換えを拒否する shall。 |
+| When createで版を含まないschemaRefが与えられたとき、システムはその名前の最新の版へ解決して骨格を生成する shall（指示や手順に版を書かせないため。書かれた版はschemaが上がった瞬間から古い版を指す）。 |
+| If createで最新でない版のschemaRefが明示されたとき、システムはOUTDATED_SCHEMA_REFエラーを返し骨格を生成しない shall（最新以外の版で新しいdocumentを作る用途を持たないため）。 |
+| While migrate_schemaに移行先のschemaRefが与えられたとき、システムはその版が最新かどうかを問わず書き換える shall（既存documentを段階的に運ぶ操作であり、createの制限をここへ持ち込むと移行の道が塞がるため）。 |
+| When 書き込みを終えたとき、システムは実際に書き込んだ欄だけを written に、書き込まなかった欄を skipped に記録する shall（書き込み結果を偽らない）。 |
+| When create が骨格を生成したとき、システムは schema が宣言する置き場所へ骨格を書き出し、create に渡された参照パラメータを document 本体にも書き込む shall。 |
+| When create が骨格を生成したとき、システムは記入対象の道とその執筆ガイダンスを fillTemplate として返す shall（content の外にあるトップレベルの欄も含む）。 |
+| When まだ存在しないブロックの中の欄へ書き込むとき、システムはそのブロックの種別も一緒に作り、書き込んだ結果が schema に適合する状態にする shall。 |
+| When 鍵を宣言した配列へ add_element で要素が与えられたとき、システムは既存の要素を一度も読み込ませることなく、その要素を加える shall（読み出して組み立て直す手順を挟まないことが、この操作の目的そのもの）。 |
+| When 鍵を宣言した配列へ retire_element で鍵が与えられたとき、システムは宣言された参照をたどってその鍵が指されていないことを確かめてから、取り下げを適用する shall。 |
+| If retire_element の対象の鍵が、宣言された参照のいずれかからまだ指されているとき、システムは STILL_REFERENCED を返し、指している場所を示して取り除かない shall。 |
+| If 要素操作が、指定された鍵を持つ要素が無いために適用できなかったとき、システムは UNKNOWN_ELEMENT_KEY を返す shall。 |
+| If 鍵を宣言した配列に対して fill で配列全体が与えられたとき、システムは WHOLESALE_REPLACE_NOT_ALLOWED を返し、使うべき要素操作を案内して書き込まない shall。 |
+| If 複数の要素操作のうち1つでも受け付けられないとき、システムはどの操作も適用せず、Document へ何も保存しない shall（配列の中で起きる失敗だけでなく、順序配列の拒否・丸ごと置き換えの拒否・宣言の誤りなど、配列の外で起きる失敗も含む）。 |
+| When 要素を加えるとき、システムは schema がその要素に宣言する固定値を集めて渡し、書き込んだ結果が schema に適合する状態にする shall。 |
+| If 順序そのものが意味を持つと宣言された配列へ要素操作が与えられたとき、システムは ELEMENT_OPS_NOT_APPLICABLE を返し、その配列は丸ごと置き換えて書き換えるものだと案内する shall。 |
+| While 配列が鍵も順序も宣言していないとき、システムは従来どおり fill による丸ごとの置き換えを受け付ける shall。 |
+| If 同じ配列に順序の宣言と鍵の宣言が両方あるとき、システムは ELEMENT_OPS_NOT_APPLICABLE を返し、宣言そのものが誤っていることを示す shall（どちらが優先かを実装が黙って決めないため）。 |
+| When 記入対象の道と執筆ガイダンスを返すとき、システムは配列については鍵の宣言・参照関係の宣言・順序の宣言も併せて返す shall（書き手に渡る指示に現れない宣言は、書き手にとって存在しないため）。 |
+| When 要素操作がすべて受け付けられたとき、システムは書き換えた配列を Document へ保存し、その配列の道を written に記録する shall。 |
 
 ---
 
 ## 操作保証
 
-- When 同じ documentId で create を複数回実行したとき、システム の生成する構造（schema由来の骨格の形）は常にべき等である shall。
-- While document.json が既に存在するとき、create を再実行しても、fill で書き込まれた既存の values は保持され、破壊されない shall（values 自体の再現性はシステムの管轄外・呼び出し側の責務）。
-- When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
-- When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
-- When 同じclear_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。
+| 保証 |
+|---|
+| When 同じ documentId で create を複数回実行したとき、システムの生成する構造（schema由来の骨格の形）は常にべき等である shall。 |
+| While document.json が既に存在するとき、create を再実行しても、fill で書き込まれた既存の values は保持され、破壊されない shall（values 自体の再現性はシステムの管轄外・呼び出し側の責務）。 |
+| When 要素操作が与えられたとき、システムは常に Document 全体を対象として読み書きし、要素だけを切り離して指させない shall。 |
 
 ---
 
@@ -119,6 +138,11 @@ sequenceDiagram
 | `REQUIRED_FIELD` | - clear_fieldの削除対象がschemaの必須フィールドである |
 | `INVALID_SCHEMA_REF` | - migrate_schemaの移行先schemaRefが解決できない |
 | `OUTDATED_SCHEMA_REF` | - createで指定されたschemaRefの版が、そのschemaの最新ではない |
+| `UNKNOWN_ELEMENT_KEY` | - 要素操作が指した鍵を持つ要素が、対象の配列に存在しない |
+| `STILL_REFERENCED` | - 取り下げようとした要素の鍵が、宣言された参照からまだ指されている |
+| `WHOLESALE_REPLACE_NOT_ALLOWED` | - 鍵を宣言した配列に対して、values で配列全体が与えられた |
+| `ELEMENT_OPS_NOT_APPLICABLE` | - 順序そのものが意味を持つと宣言された配列に対して、要素操作が与えられた<br>- 同じ配列に順序の宣言と鍵の宣言が両方あるとき（宣言そのものの誤りであり、鍵を見に行く前にこれを返す） |
+| `INVALID_PATH` | - 対象パスが存在しないとき |
 
 ---
 
@@ -481,9 +505,191 @@ Scenario: 必須ブロックの中にある必須でない欄は削除できる
   And REQUIRED_FIELDエラーにならない
 ```
 
+### 要素を1件足すのに既存を読み込ませない
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 要素の同一性：足す操作が、配列全体を経由せずに済むか |
+
+```gherkin
+Scenario: 要素を1件足すのに既存を読み込ませない
+  Given 受け入れ基準を3件持つ Document
+  When 基準を1件 add_element で加える
+  Then 配列は4件になり、既存の3件はそのまま残る
+```
+
+### 参照が残っていない要素は取り下げられる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 取り下げの前提：参照が外れていれば通るか |
+
+```gherkin
+Scenario: 参照が残っていない要素は取り下げられる
+  Given どのシナリオからも指されていない受け入れ基準
+  When その鍵を指して retire_element する
+  Then その要素が配列から取り除かれる
+```
+
+### 参照が残っている要素は取り下げられない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 取り下げの前提：宣言された参照関係から可否が導かれるか |
+
+```gherkin
+Scenario: 参照が残っている要素は取り下げられない
+  Given あるシナリオの satisfies から指されている受け入れ基準
+  When その鍵を指して retire_element する
+  Then PRECONDITION_NOT_MET が返り、参照しているシナリオが示され、要素は残る
+```
+
+### 存在しない鍵を指すと失敗する
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 要素の同一性：指し間違いを、黙って足すことで埋めないか |
+
+```gherkin
+Scenario: 存在しない鍵を指すと失敗する
+  Given その鍵を持つ要素が無い配列
+  When その鍵を指して edit_element する
+  Then UNKNOWN_ELEMENT_KEY が返り、要素は増えない
+```
+
+### 鍵を宣言した配列は丸ごと置き換えられない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 取りこぼしの遮断：取りこぼす手順そのものへ入れないか |
+
+```gherkin
+Scenario: 鍵を宣言した配列は丸ごと置き換えられない
+  Given 鍵を宣言した受け入れ基準の配列
+  When fill でその配列へ要素の並びを丸ごと渡す
+  Then WHOLESALE_REPLACE_NOT_ALLOWED が返り、使うべき要素操作が案内され、何も書き込まれない
+```
+
+### 1つでも受け付けられない要素操作があれば何も適用しない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 原子性：途中まで適用された状態を残さないか |
+
+```gherkin
+Scenario: 1つでも受け付けられない要素操作があれば何も適用しない
+  Given 3件の要素操作のうち1件が存在しない鍵を指している
+  When 3件をまとめて適用する
+  Then どの操作も適用されず、配列は操作前のまま
+```
+
+### 要素を足すと固定値も補われる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 適合の保持：書き込みが成功と報告されて不適合が残ることを防げるか |
+
+```gherkin
+Scenario: 要素を足すと固定値も補われる
+  Given 要素に固定値の欄を宣言している配列
+  When 固定値の欄を含めずに要素を add_element で加える
+  Then 固定値が補われ、書き込んだ結果が schema に適合する
+```
+
+### 順序が意味を持つ配列に要素操作は使えない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 並びの扱い：並び全体が1つの値である配列を、要素へ分解させないか |
+
+```gherkin
+Scenario: 順序が意味を持つ配列に要素操作は使えない
+  Given 順序そのものが意味を持つと宣言された手順の配列
+  When その配列へ add_element する
+  Then ELEMENT_OPS_NOT_APPLICABLE が返り、丸ごと置き換えて書き換えるものだと案内される
+```
+
+### 何も宣言していない配列は今までどおり書き換えられる
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 並びの扱い：宣言していない配列の書き換え方を変えていないか |
+
+```gherkin
+Scenario: 何も宣言していない配列は今までどおり書き換えられる
+  Given 鍵も順序も宣言していない配列
+  When fill でその配列へ並びを丸ごと渡す
+  Then 従来どおり書き込まれる
+```
+
+### 順序が意味を持つ配列からは取り下げもできない
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 並びの扱い：3つの要素操作すべてが等しく塞がれているか |
+
+```gherkin
+Scenario: 順序が意味を持つ配列からは取り下げもできない
+  Given 順序そのものが意味を持つと宣言された手順の配列
+  When その配列へ retire_element する
+  Then ELEMENT_OPS_NOT_APPLICABLE が返り、丸ごと置き換えて書き換えるものだと案内される
+```
+
+### 順序と鍵を両方宣言した配列は宣言の誤りとして返る
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 宣言の整合：実装が優先順位を黙って決めないか |
+
+```gherkin
+Scenario: 順序と鍵を両方宣言した配列は宣言の誤りとして返る
+  Given 順序の宣言と鍵の宣言を両方持つ配列
+  When その配列へ add_element する
+  Then ELEMENT_OPS_NOT_APPLICABLE が返り、宣言そのものの誤りとして示される
+```
+
+### 記入指示に鍵の宣言が現れる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 宣言の到達：宣言が engine の内側だけで使われていないか |
+
+```gherkin
+Scenario: 記入指示に鍵の宣言が現れる
+  Given 鍵と参照関係を宣言した配列を持つ schema
+  When 骨格を生成して記入指示を受け取る
+  Then その配列の記入指示に、鍵の欄と参照関係の宣言が現れている
+```
+
+### 受け付けられた要素操作は Document に残る
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 保存：書き換えた配列が、実際に Document へ書き戻されるか |
+
+```gherkin
+Scenario: 受け付けられた要素操作は Document に残る
+  Given 鍵を宣言した配列を持つ Document
+  When 要素を1件 add_element する
+  Then 再び読み込んでもその要素が残っており、written にその配列の道が記録されている
+```
+
 ---
 
 ## 操作保証シナリオ
+
+### 同じdocumentIdでのcreateは骨格の形を変えない
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | べき等性：create を繰り返しても骨格の形が変わらないこと |
+
+```gherkin
+Scenario: 同じdocumentIdでのcreateは骨格の形を変えない
+  Given create 済みの documentId
+  When 同じ documentId で create を再実行する
+  Then 生成される骨格の形は1回目と同一である
+```
 
 ### 既存documentへの再createはvaluesを破壊しない
 
@@ -498,41 +704,15 @@ Scenario: 既存documentへの再createはvaluesを破壊しない
   Then fillで書き込んだvaluesは保持されたままである
 ```
 
-### 存在しないパスはINVALID_PATH
+### 要素操作でも読み書きの対象は Document 全体である
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | 解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる |
+| 境界値 | 集約の単位：要素だけを切り離して指させないこと |
 
 ```gherkin
-Scenario: 存在しないパスはINVALID_PATH
-  Given 実在しない対象パス
-  When 本usecaseを実行する
-  Then INVALID_PATHエラーが返る
-```
-
-### 解決できないschemaRefはINVALID_SCHEMA_REF
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | 解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる |
-
-```gherkin
-Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
-  Given 解決できないschemaRef
-  When 本usecaseを実行する
-  Then INVALID_SCHEMA_REFエラーが返る
-```
-
-### clear_fieldの複数回実行はべき等である
-
-| 分類 | 観点 |
-|---|---|
-| 境界値 | べき等性：同じclear_field操作を複数回実行しても結果が変わらない |
-
-```gherkin
-Scenario: clear_fieldの複数回実行はべき等である
-  Given 同一のclear_field操作（必須ではないフィールド）
-  When 2回連続で実行する
-  Then 2回目の実行結果は1回目と完全に同一である
+Scenario: 要素操作でも読み書きの対象は Document 全体である
+  Given 鍵を宣言した配列を持つ Document
+  When 要素を1件 add_element する
+  Then 読み書きの対象は Document 全体であり、配列や要素だけを指す経路は外部へ現れない
 ```

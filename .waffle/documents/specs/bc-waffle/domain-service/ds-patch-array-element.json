@@ -1,0 +1,182 @@
+{
+  "documentId": "ds-patch-array-element",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v9",
+  "specKind": "domain-service",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "鍵で配列の要素を書き換える：ds-patch-array-element"
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "鍵の宣言と配列、それに要素操作を受け取り、書き換えたあとの配列を返す。",
+        "足す・欄を直す・取り除くの3つを扱い、どれも鍵を通して要素を指す。",
+        "配列そのものは受け取るだけで、どの Document から来たかは知らない。"
+      ]
+    },
+    "existenceRationale": {
+      "blockType": "ExistenceRationale",
+      "title": "存在意義",
+      "items": [
+        "2つの集約にまたがる。書き換える相手は Document の中身だが、どの欄が鍵かという物差しは Schema が持っている。どちらの集約も相手の中身を知らないので、この突き合わせをどちらの内側にも置けない。",
+        "この計算はどの集約の状態も変えない。受け取った配列から新しい配列を作って返すだけで、書き戻す先を知らない。"
+      ]
+    },
+    "referencedAggregates": {
+      "blockType": "ReferencedAggregates",
+      "title": "参照する集約",
+      "items": [
+        {
+          "aggregate": "agg-document",
+          "mode": "参照のみ",
+          "reason": "書き換える対象の配列は Document の中身であり、書き換えた結果は Document へ戻される。"
+        },
+        {
+          "aggregate": "agg-schema",
+          "mode": "参照のみ",
+          "reason": "どの欄が鍵かという宣言と、要素に補うべき固定値を得る。"
+        }
+      ]
+    },
+    "inputsOutputs": {
+      "blockType": "InputsOutputs",
+      "title": "入力と出力",
+      "inputs": [
+        {
+          "name": "要素の鍵",
+          "meaning": "配列の中で要素を一意に指す欄の名前。"
+        },
+        {
+          "name": "配列",
+          "meaning": "書き換える対象の、要素の集まり。"
+        },
+        {
+          "name": "要素操作",
+          "meaning": "足す・欄を直す・取り除くのいずれかと、その対象と値。"
+        },
+        {
+          "name": "要素の固定値",
+          "meaning": "Schema が要素に宣言する、書き手が決めない値。"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "書き換えたあとの配列",
+          "meaning": "すべての要素操作を適用した結果。"
+        },
+        {
+          "name": "適用できなかった操作",
+          "meaning": "鍵が見つからない等で受け付けられなかった操作と、その理由。"
+        }
+      ],
+      "undefinedInputs": [
+        "配列の中に同じ鍵を持つ要素が2つ以上あるとき（要素を一意に指せないため、この計算は答えを持たない。一意性は適合の検証が先に担保する）。",
+        "鍵の宣言が、要素に実在しない欄を指しているとき。"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        {
+          "id": "adds-to-tail",
+          "text": "When 足す操作が与えられたとき、システムは配列の末尾へその要素を加えた配列を返す shall。"
+        },
+        {
+          "id": "fills-const-on-add",
+          "text": "When 足す要素に固定値の欄が含まれていないとき、システムはその固定値を補って加える shall。"
+        },
+        {
+          "id": "edits-named-fields-only",
+          "text": "When 欄を直す操作が与えられたとき、システムは鍵が一致する要素の、指定された欄だけを書き換えた配列を返す shall（鍵と他の欄は変えない）。"
+        },
+        {
+          "id": "removes-by-key",
+          "text": "When 取り除く操作が与えられたとき、システムは鍵が一致する要素を除いた配列を返す shall。"
+        },
+        {
+          "id": "unknown-key-is-not-created",
+          "text": "If 指定された鍵を持つ要素が配列に無いとき、システムはその操作を適用できなかったものとして返し、要素を新たに作らない shall。"
+        },
+        {
+          "id": "all-or-nothing",
+          "text": "If ひとつでも適用できない操作があるとき、システムはどの操作も適用していない配列を返す shall。"
+        },
+        {
+          "id": "preserves-order-of-untouched",
+          "text": "While 操作の対象になっていない要素があるとき、システムはそれらの並び順を変えない shall。"
+        }
+      ]
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "",
+      "scenarios": [
+        {
+          "name": "足した要素は末尾に付く",
+          "category": "正常系",
+          "viewpoint": "書き換えの写像：足す位置が定まっているか",
+          "satisfies": [
+            "adds-to-tail",
+            "preserves-order-of-untouched"
+          ],
+          "gherkin": "Scenario: 足した要素は末尾に付く\n  Given 3件の要素を持つ配列\n  When 要素を1件足す\n  Then 4件になり、元の3件は同じ順序で先頭から並んでいる"
+        },
+        {
+          "name": "足す要素に固定値が補われる",
+          "category": "正常系",
+          "viewpoint": "書き換えの写像：宣言された固定値が欠けたまま残らないか",
+          "satisfies": [
+            "fills-const-on-add"
+          ],
+          "gherkin": "Scenario: 足す要素に固定値が補われる\n  Given 固定値の欄を宣言している要素の配列\n  When 固定値の欄を含めずに要素を足す\n  Then 加わった要素に固定値が入っている"
+        },
+        {
+          "name": "欄を直しても鍵と他の欄は変わらない",
+          "category": "正常系",
+          "viewpoint": "書き換えの写像：直すことと別物に置き換えることを分けられるか",
+          "satisfies": [
+            "edits-named-fields-only"
+          ],
+          "gherkin": "Scenario: 欄を直しても鍵と他の欄は変わらない\n  Given 鍵と2つの欄を持つ要素\n  When 片方の欄だけを直す\n  Then その欄だけが変わり、鍵ともう片方の欄は元のまま"
+        },
+        {
+          "name": "鍵が一致する要素だけが取り除かれる",
+          "category": "正常系",
+          "viewpoint": "書き換えの写像：指した1件だけに効くか",
+          "satisfies": [
+            "removes-by-key",
+            "preserves-order-of-untouched"
+          ],
+          "gherkin": "Scenario: 鍵が一致する要素だけが取り除かれる\n  Given 3件の要素を持つ配列\n  When 真ん中の要素の鍵を指して取り除く\n  Then 2件になり、残った2件の順序は変わらない"
+        },
+        {
+          "name": "無い鍵を指しても要素は作られない",
+          "category": "異常系",
+          "viewpoint": "指し間違い：黙って足すことで埋めないか",
+          "satisfies": [
+            "unknown-key-is-not-created"
+          ],
+          "gherkin": "Scenario: 無い鍵を指しても要素は作られない\n  Given その鍵を持つ要素が無い配列\n  When その鍵を指して欄を直す\n  Then 適用できなかった操作として返り、配列の件数は変わらない"
+        },
+        {
+          "name": "1件でも適用できなければ何も適用しない",
+          "category": "異常系",
+          "viewpoint": "全か無か：途中まで適用された配列を返さないか",
+          "satisfies": [
+            "all-or-nothing"
+          ],
+          "gherkin": "Scenario: 1件でも適用できなければ何も適用しない\n  Given 3件の操作のうち1件が無い鍵を指している\n  When 3件をまとめて適用する\n  Then 返る配列は操作前と同じ"
+        }
+      ]
+    }
+  },
+  "tags": [
+    "framework:waffle"
+  ]
+}

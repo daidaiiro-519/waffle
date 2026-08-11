@@ -100,29 +100,20 @@
         "When 実在するdocument.jsonが持つトップレベルフィールドが、Document集約のentity属性に宣言されていないとき、システムはそのフィールド名をundeclared_document_fieldsに含める shall。",
         "When usecaseのsubdomainRefと参照先subdomainのmembers宣言が食い違うとき、システムはその組をsubdomain_ref_mismatchesに含める shall。",
         "When usecaseがsubdomainRefを宣言していないが、いずれかのsubdomainのmembersに自分自身が含まれているとき、システムはその組（subdomainRefはnull）をsubdomain_ref_mismatchesに含める shall。",
-        "When usecaseのaggregateRefが指す集約が実在しないとき、システムはその組をmissing_aggregate_refsに含める shall。"
+        "When usecaseのaggregateRefが指す集約が実在しないとき、システムはその組をmissing_aggregate_refsに含める shall。",
+        "When 対象のbc.jsonが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 対象のbc.jsonが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないbc.jsonはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "エラー：走査起点の不在",
-          "gherkin": "Scenario: 存在しないbc.jsonはINVALID_PATH\n  When 存在しないbc.jsonのパスで参照整合性検査を実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: 対象のbc.jsonが存在しないときINVALID_PATH"
-        }
-      ]
+      "scenarios": []
     },
     "acceptanceScenarios": {
       "blockType": "AcceptanceScenarios",
@@ -219,6 +210,13 @@
           "viewpoint": "agg-documentが複数のentityを持つとき、entities[0]だけでなく全entityの属性を未宣言判定の母集合に使う",
           "gherkin": "Scenario: 複数entityの属性が全て未宣言判定に使われる\n  Given agg-documentが複数のentityを持ち、2つ目のentityにのみ宣言されているフィールドを持つ実document.json\n  When 参照整合性検査を実行する\n  Then そのフィールドはundeclared_document_fieldsに含まれない（entities[0]だけでなく全entityの属性が見られる）",
           "covers": "受け入れ基準: undeclared_document_fields"
+        },
+        {
+          "name": "対象のbc.jsonが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のbc.jsonが存在しないとき",
+          "gherkin": "Scenario: 対象のbc.jsonが存在しないときのときINVALID_PATH\n  Given 対象のbc.jsonが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
         }
       ]
     },
@@ -245,6 +243,18 @@
         {
           "name": "documentsRoot",
           "description": "Document集約の実インスタンス群を走査する対象ディレクトリ"
+        }
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": [
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "対象のbc.jsonが存在しないとき"
+          ]
         }
       ]
     }

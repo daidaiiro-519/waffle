@@ -109,9 +109,7 @@ sequenceDiagram
 
 ## 操作保証
 
-- When 対象のspec.jsonまたはテストファイルが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
 - When 全体を検査するとき、システムはテストファイルの名前を、規約が宣言した由来・落とす接頭辞・表記・前置・中置・末尾だけから組み立てる shall（名前の綴りの規則を検査の側に持たない）。
-- When 名前を組み立てる宣言が規約に無いとき、システムは MISSING_DECLARATION エラーを返す shall（欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通る）。
 - When あるシナリオ種別に対応する置き場所が規約に宣言されていないとき、システムはその種別を missing_placement に含める shall（黙って対象から外すと、宣言の欠落と検査に通ったことが同じ見た目になる）。
 
 ---
@@ -125,6 +123,7 @@ sequenceDiagram
 | `INVALID_SOURCE` | - 対象のテストファイルが構文解析できない |
 | `INVALID_JSON` | - 対象のspec.jsonが存在するが不正なJSON |
 | `UNSUPPORTED_LANGUAGE` | - テストファイルの言語に対応するadapterが無い |
+| `INVALID_PATH` | - 対象のspec.jsonまたはテストファイルが存在しないとき |
 
 ---
 
@@ -451,30 +450,6 @@ Scenario: 種別まで指定した配置行を優先する
 
 ## 操作保証シナリオ
 
-### 存在しないspec.jsonはINVALID_PATH
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | エラー：spec.jsonの不在 |
-
-```gherkin
-Scenario: 存在しないspec.jsonはINVALID_PATH
-  When 存在しないspec.jsonのパスでドリフト検査を実行する
-  Then INVALID_PATHエラーが返る
-```
-
-### 存在しないテストファイルはINVALID_PATH
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | エラー：テストファイルの不在 |
-
-```gherkin
-Scenario: 存在しないテストファイルはINVALID_PATH
-  When 存在しないテストファイルのパスでドリフト検査を実行する
-  Then INVALID_PATHエラーが返る
-```
-
 ### テストファイルの名前を規約の宣言から組み立てる
 
 | 分類 | 観点 |
@@ -501,20 +476,6 @@ Scenario: 名前の宣言を変えると探す先も変わる
   And 変更前の宣言で組み立てた名前のテストファイル
   When spec documentの置き場所とテストの配置ルートを指定して検査する
   Then そのシナリオブロックがmissing_test_fileに含まれる
-```
-
-### 名前を組み立てる宣言が無ければMISSING_DECLARATION
-
-| 分類 | 観点 |
-|---|---|
-| 異常系 | エラー: 欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通る |
-
-```gherkin
-Scenario: 名前を組み立てる宣言が無ければMISSING_DECLARATION
-  Given テストファイルの名前の組み立て方を宣言していない規約
-  When spec documentの置き場所とテストの配置ルートを指定して検査する
-  Then MISSING_DECLARATIONエラーが返る
-  And 欠けた宣言を空とみなして検査を続けない
 ```
 
 ### 置き場所が宣言されていない種別はmissing_placementに現れる

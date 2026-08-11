@@ -85,7 +85,8 @@
         "While 全業務サービスのgroupと実装ファイルが一致しているとき、システムはmissing_implementation_fileを空配列で返す shall。",
         "While 複数の業務サービスが同じgroupを共有しているとき、システムは対応するファイルの存在確認を1回にまとめる shall（重複報告しない）。",
         "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
-        "When 規約が業務サービスの配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。"
+        "When 規約が業務サービスの配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。",
+        "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
       ]
     },
     "errors": {
@@ -132,29 +133,26 @@
           "viewpoint": "ドリフト: 逆走。仕様に無い業務サービスが実装側の都合で増えている",
           "gherkin": "Scenario: 宣言に無い実装ファイルを孤立として検出する\n  Given 規約が業務サービスの配置として宣言した場所\n  And その場所に在るが、どの仕様も名指ししていない実装ファイル\n  When ドリフト検査を実行する\n  Then orphaned_implementation_file にそのファイルが含まれる",
           "covers": "受け入れ基準: 宣言に無い実装ファイルを孤立として検出する"
+        },
+        {
+          "name": "対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のdocuments_rootまたはsrc_rootが存在しないとき",
+          "gherkin": "Scenario: 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH\n  Given 対象のdocuments_rootまたはsrc_rootが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないdocuments_rootはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "エラー：走査起点の不在",
-          "gherkin": "Scenario: 存在しないdocuments_rootはINVALID_PATH\n  When 存在しないdocuments_rootでドリフト検査を実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: documents_rootが存在しないときINVALID_PATH"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

@@ -96,7 +96,9 @@
         "When statusを返すとき、システムはその根拠をreasonsに含める shall。reasonsにはシナリオ名を用いる shall（人間が読む面はspecの語彙で表す）。",
         "If specPathが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
         "If testFilePathが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
-        "If testResultsPathが存在しない、またはJSONとして解釈できないとき、システムはINVALID_TEST_RESULTSエラーを返す shall。"
+        "If testResultsPathが存在しない、またはJSONとして解釈できないとき、システムはINVALID_TEST_RESULTSエラーを返す shall。",
+        "While 同一の入力で複数回実行しても、システムは同じstatusを返す shall（副作用の無い読み取り専用操作）。",
+        "When 判定を行うとき、システムはテスト自体を実行しない shall（既に生成済みのtestResultsPathを読むのみ。実行はOrchestrator側の責務）。"
       ]
     },
     "errors": {
@@ -198,30 +200,26 @@
           "viewpoint": "ドリフト: どのテストがそのシナリオを検証しているかが決まらない状態を、通過させない",
           "gherkin": "Scenario: 同じ宣言行を複数のテストが名乗っているときneeds_humanを返す\n  Given 同一の宣言行を2件のテストが名乗っている状態\n  When 検証ゲートの判定を実行する\n  Then status needs_human が返る",
           "covers": "受け入れ基準: duplicate_declarationsがあるときneeds_human"
+        },
+        {
+          "name": "同一入力での再実行はべき等である",
+          "category": "正常系",
+          "viewpoint": "べき等性：同一のspecPath/testFilePath/testResultsPathを2回実行しても結果が一致する",
+          "gherkin": "Scenario: 同一入力での再実行はべき等である\n  Given CheckVerificationGate システム と同一の入力\n  When 2回連続で実行する\n  Then 2回の結果は完全に一致する",
+          "covers": "操作保証からの移設"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "While 同一の入力で複数回実行しても、システムは同じstatusを返す shall（副作用の無い読み取り専用操作）。",
-        "When 判定を行うとき、システムはテスト自体を実行しない shall（既に生成済みのtestResultsPathを読むのみ。実行はOrchestrator側の責務）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "同一入力での再実行はべき等である",
-          "category": "正常系",
-          "viewpoint": "べき等性：同一のspecPath/testFilePath/testResultsPathを2回実行しても結果が一致する",
-          "gherkin": "Scenario: 同一入力での再実行はべき等である\n  Given CheckVerificationGate システム と同一の入力\n  When 2回連続で実行する\n  Then 2回の結果は完全に一致する",
-          "covers": "操作保証: べき等性"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

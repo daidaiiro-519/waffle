@@ -91,7 +91,9 @@
         "If 対象の置き場所または規約への参照が解決できないとき、システムはINVALID_PATH エラーを返す shall。",
         "When 宣言された入力の説明と、口が利用者へ見せている説明が一致しないとき、システムはその組を description_mismatch に含める shall（説明は宣言が正本で、口はその写しを見せている。写しがずれても気づけないと、宣言を置いた意味が無い）。",
         "While 口が入力の説明を1つも見せていないとき、システムはその入力をdescription_mismatch に含める shall（宣言された説明が利用者へ届いていない状態であり、一致しているとは言えない）。",
-        "While 宣言された入力が口に見つからないとき、システムは説明の一致を問わない shall（名前が見つからないことは既に報告済みで、同じ食い違いを2つの器で二重に数えない）。"
+        "While 宣言された入力が口に見つからないとき、システムは説明の一致を問わない shall（名前が見つからないことは既に報告済みで、同じ食い違いを2つの器で二重に数えない）。",
+        "When 受け口の食い違いを調べたとき、システムは対象の仕様も口も書き換えない shall。",
+        "While 同じ仕様と同じ口に対して繰り返し調べたとき、システムは常に同じ一覧を返す shall。"
       ]
     },
     "errors": {
@@ -172,37 +174,33 @@
           "viewpoint": "誤検知を出さない：一致しているものを鳴らさない",
           "gherkin": "Scenario: 説明が一致していれば報告しない\n  Given ある入力の説明を宣言しているユースケース仕様\n  And 同じ説明を見せている口\n  When 受け口の食い違いを調べる\n  Then description_mismatch は空である",
           "covers": "受け入れ基準: 説明が一致しないとき description_mismatch"
+        },
+        {
+          "name": "調べても何も書き換えない",
+          "category": "正常系",
+          "viewpoint": "読み取り専用：確かめる操作が対象を変えてしまわない",
+          "gherkin": "Scenario: 調べても何も書き換えない\n  Given 食い違いを含む仕様と口\n  When 受け口の食い違いを調べる\n  Then 仕様の中身は調べる前と同じである\n  And 口の中身も調べる前と同じである",
+          "covers": "操作保証からの移設"
+        },
+        {
+          "name": "繰り返し調べても同じ結果になる",
+          "category": "正常系",
+          "viewpoint": "べき等性：報告が呼び出しの回数で変わらない",
+          "gherkin": "Scenario: 繰り返し調べても同じ結果になる\n  Given 食い違いを含む仕様と口\n  When 受け口の食い違いを続けて2回調べる\n  Then 2回の結果は同じである",
+          "covers": "操作保証からの移設"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 受け口の食い違いを調べたとき、システムは対象の仕様も口も書き換えない shall。",
-        "While 同じ仕様と同じ口に対して繰り返し調べたとき、システムは常に同じ一覧を返す shall。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "調べても何も書き換えない",
-          "category": "正常系",
-          "viewpoint": "読み取り専用：確かめる操作が対象を変えてしまわない",
-          "covers": "操作保証: 対象の仕様も口も書き換えない",
-          "gherkin": "Scenario: 調べても何も書き換えない\n  Given 食い違いを含む仕様と口\n  When 受け口の食い違いを調べる\n  Then 仕様の中身は調べる前と同じである\n  And 口の中身も調べる前と同じである"
-        },
-        {
-          "name": "繰り返し調べても同じ結果になる",
-          "category": "正常系",
-          "viewpoint": "べき等性：報告が呼び出しの回数で変わらない",
-          "covers": "操作保証: 繰り返し調べても常に同じ一覧を返す",
-          "gherkin": "Scenario: 繰り返し調べても同じ結果になる\n  Given 食い違いを含む仕様と口\n  When 受け口の食い違いを続けて2回調べる\n  Then 2回の結果は同じである"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

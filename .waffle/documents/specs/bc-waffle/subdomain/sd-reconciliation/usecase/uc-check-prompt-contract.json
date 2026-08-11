@@ -90,7 +90,9 @@
         "When 確認を求めたとき、システムは値を書き込む欄のうち書き方の指示が無いものを返す shall。",
         "When 確認を求めたとき、システムは x-prompt-query と x-prompt-write 以外のx-prompt- で始まるキーを返す shall（契約が認める名前はこの2つだけ）。",
         "When 記入対象がどこかを決めるとき、システムは雛形を組み立てる既存の走査をそのまま使う shall（数え方をこの操作の側で作り直さない）。",
-        "While 確認を行う間、システムは指示の中身が指示として適切かを判定しない shall。"
+        "While 確認を行う間、システムは指示の中身が指示として適切かを判定しない shall。",
+        "When 同じ確認を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
+        "While 確認を行う間、システムはスキーマを一切書き換えない shall。"
       ]
     },
     "errors": {
@@ -172,35 +174,33 @@
           "viewpoint": "静けさ：守られているときに鳴らない",
           "gherkin": "Scenario: 契約が守られていれば何も返らない\n  Given 3つの規則をすべて満たすスキーマ\n  When 確認を求める\n  Then どの一覧も空である",
           "covers": "受け入れ基準: 読み方の指示が無いブロックを返す"
+        },
+        {
+          "name": "何度確かめても結果が変わらない",
+          "category": "境界値",
+          "viewpoint": "べき等性：確認は状態を持たない",
+          "gherkin": "Scenario: 何度確かめても結果が変わらない\n  Given 同じスキーマ\n  When 確認を2回続けて求める\n  Then 2回目の結果は1回目と完全に同一である",
+          "covers": "操作保証からの移設"
+        },
+        {
+          "name": "確かめてもスキーマは変わらない",
+          "category": "正常系",
+          "viewpoint": "副作用の不在：見るだけの操作",
+          "gherkin": "Scenario: 確かめてもスキーマは変わらない\n  Given 指示の欠落があるスキーマ\n  When 確認を求める\n  Then スキーマの中身は確認の前後で一致する",
+          "covers": "操作保証からの移設"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 同じ確認を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "While 確認を行う間、システムはスキーマを一切書き換えない shall。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "何度確かめても結果が変わらない",
-          "category": "境界値",
-          "viewpoint": "べき等性：確認は状態を持たない",
-          "gherkin": "Scenario: 何度確かめても結果が変わらない\n  Given 同じスキーマ\n  When 確認を2回続けて求める\n  Then 2回目の結果は1回目と完全に同一である"
-        },
-        {
-          "name": "確かめてもスキーマは変わらない",
-          "category": "正常系",
-          "viewpoint": "副作用の不在：見るだけの操作",
-          "gherkin": "Scenario: 確かめてもスキーマは変わらない\n  Given 指示の欠落があるスキーマ\n  When 確認を求める\n  Then スキーマの中身は確認の前後で一致する"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

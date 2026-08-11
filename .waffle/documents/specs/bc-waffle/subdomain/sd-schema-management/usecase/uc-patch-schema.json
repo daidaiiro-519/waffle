@@ -1,7 +1,7 @@
 {
   "documentId": "uc-patch-schema",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v9",
   "specKind": "usecase",
   "subdomainRef": "sd-schema-management",
   "status": "VALIDATED",
@@ -102,37 +102,178 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When add_blockでブロック名・ブロック定義・紐付け先が与えられたとき、システムはSchemaに新規ブロックを追加し、指定した紐付け先から参照できるようにする shall。",
-        "While 対象ブロックが既に存在するとき、add_blockは無変更で成功する shall。",
-        "When rename_blockで旧短縮名・新短縮名が与えられたとき、システムはSchema内でその識別子を参照する全ての箇所を一貫してリネームする shall。",
-        "While リネーム元が既に存在せず、リネーム先が既に存在するとき、rename_blockは無変更で成功する shall。",
-        "If 変更が既存Documentを壊しうる後方互換性のない変更を含むとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall。",
-        "If 生成結果がJSON Schemaとして構文的に不正なとき、システムはINVALID_SCHEMA_STRUCTUREエラーを返し書き込みを拒否する shall。",
-        "When 書き込みを行うとき、システムは対象ブロック・対象参照以外の箇所を一切変更しない shall。",
-        "When set_fieldでブロック名・項目パス・新しい値が与えられたとき、システムはそのブロックの指定した項目だけを新しい値に置き換える shall。",
-        "While 指定した項目が既に目的の値であるとき、set_fieldは無変更で成功する shall。",
-        "If set_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。",
-        "If 書き込み時にI/Oエラーが発生したとき、システムはWRITE_ERRORエラーを返す shall。",
-        "When remove_blockでcontent def名・プロパティ名が与えられたとき、システムはそのcontent defからプロパティ参照を外す shall。",
-        "While 対象プロパティが既に存在しないとき、remove_blockは無変更で成功する shall。",
-        "If remove_blockの対象プロパティがrequired配列に含まれているとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall（必須プロパティの削除は既存Documentを壊しうるため、先にset_fieldや別の手順でrequiredから外すことを求める）。",
-        "When add_defでdef名・def定義が与えられたとき、システムはSchemaの$defsに新規エントリを追加する（既存content defへの紐付けは行わない） shall。",
-        "While 対象defが既に存在するとき、add_defは無変更で成功する shall。",
-        "When add_kind_branchでdiscriminatorフィールド名・新しいkind値・紐付け先content def名が与えられたとき、システムはそのフィールドのenumに新しい値を追加し、ルート直下のkind分岐に新しいブランチを追加する shall。",
-        "While ルート直下のkind分岐がif/then/elseの単一分岐形式であり、かつdiscriminatorフィールドのenumが既存kind値を2つのみ持つとき、add_kind_branchはelseブランチが暗黙に表していたkind値をenumから逆算し、allOf形式の複数分岐に正規化した上で新しいブランチを追加する shall。",
-        "While 対象のkind値・content def紐付けの組が既にkind分岐に存在するとき、add_kind_branchは無変更で成功する shall。",
-        "If add_kind_branchの対象となるルート直下のkind分岐の形状が、既知の形状（if/then/else形式・allOf形式）に適合しない、またはif/then/else形式でありながらelseの暗黙値を一意に逆算できないとき、システムはUNSUPPORTED_ROOT_DISPATCH_SHAPEエラーを返し書き込みを拒否する shall。",
-        "When create_versionでfromSchemaRef・schemaRef（新版）・editsが与えられたとき、システムはfromSchemaRefの内容を複製し、editsを適用した新しいschema版ファイルをschemaRefへ書き込む shall。",
-        "While create_versionのschemaRef（新版）が既に存在するとき、システムはVERSION_ALREADY_EXISTSエラーを返し書き込みを拒否する shall。",
-        "When create_versionのeditsが既存フィールドの型を変更するとき、システムはbackward-compatチェックを行わずに書き込む shall（新版はまだどのDocumentも参照していないため）。",
-        "When set_kind_render_targetでkind値・pathVars・path・deployが与えられたとき、システムはx-render-target.pathVars/path/deployそれぞれのkind別dictに、そのkind値のエントリを追加する shall。",
-        "While 対象のkind値のエントリが既にpathVars・path・deployの全てで指定した値と一致しているとき、set_kind_render_targetは無変更で成功する shall。",
-        "If set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でないとき、システムはUNSUPPORTED_RENDER_TARGET_SHAPEエラーを返し書き込みを拒否する shall。",
-        "When set_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。",
-        "When remove_fieldでブロック名・項目パスが与えられたとき、システムはその項目をキーごと取り除く shall（値をnullにするのではなく、キー自体を消す）。",
-        "While remove_fieldの対象項目が既に存在しないとき、remove_fieldは無変更で成功する shall。",
-        "If remove_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。",
-        "When remove_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。"
+        {
+          "id": "add-block",
+          "text": "When add_blockでブロック名・ブロック定義・紐付け先が与えられたとき、システムはSchemaに新規ブロックを追加し、指定した紐付け先から参照できるようにする shall。"
+        },
+        {
+          "id": "add-block-idempotent",
+          "text": "While 対象ブロックが既に存在するとき、add_blockは無変更で成功する shall。"
+        },
+        {
+          "id": "rename-block",
+          "text": "When rename_blockで旧短縮名・新短縮名が与えられたとき、システムはSchema内でその識別子を参照する全ての箇所を一貫してリネームする shall。"
+        },
+        {
+          "id": "rename-block-idempotent",
+          "text": "While リネーム元が既に存在せず、リネーム先が既に存在するとき、rename_blockは無変更で成功する shall。"
+        },
+        {
+          "id": "backward-incompatible-rejected",
+          "text": "If 変更が既存Documentを壊しうる後方互換性のない変更を含むとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "invalid-schema-structure-rejected",
+          "text": "If 生成結果がJSON Schemaとして構文的に不正なとき、システムはINVALID_SCHEMA_STRUCTUREエラーを返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "untouched-parts-unchanged",
+          "text": "When 書き込みを行うとき、システムは対象ブロック・対象参照以外の箇所を一切変更しない shall。"
+        },
+        {
+          "id": "set-field",
+          "text": "When set_fieldでブロック名・項目パス・新しい値が与えられたとき、システムはそのブロックの指定した項目だけを新しい値に置き換える shall。"
+        },
+        {
+          "id": "set-field-idempotent",
+          "text": "While 指定した項目が既に目的の値であるとき、set_fieldは無変更で成功する shall。"
+        },
+        {
+          "id": "set-field-block-not-found",
+          "text": "If set_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "write-error",
+          "text": "If 書き込み時にI/Oエラーが発生したとき、システムはWRITE_ERRORエラーを返す shall。"
+        },
+        {
+          "id": "remove-block",
+          "text": "When remove_blockでcontent def名・プロパティ名が与えられたとき、システムはそのcontent defからプロパティ参照を外す shall。"
+        },
+        {
+          "id": "remove-block-idempotent",
+          "text": "While 対象プロパティが既に存在しないとき、remove_blockは無変更で成功する shall。"
+        },
+        {
+          "id": "remove-block-required-rejected",
+          "text": "If remove_blockの対象プロパティがrequired配列に含まれているとき、システムはBACKWARD_INCOMPATIBLEエラーを返し書き込みを拒否する shall（必須プロパティの削除は既存Documentを壊しうるため、先にset_fieldや別の手順でrequiredから外すことを求める）。"
+        },
+        {
+          "id": "add-def",
+          "text": "When add_defでdef名・def定義が与えられたとき、システムはSchemaの$defsに新規エントリを追加する（既存content defへの紐付けは行わない） shall。"
+        },
+        {
+          "id": "add-def-idempotent",
+          "text": "While 対象defが既に存在するとき、add_defは無変更で成功する shall。"
+        },
+        {
+          "id": "add-kind-branch",
+          "text": "When add_kind_branchでdiscriminatorフィールド名・新しいkind値・紐付け先content def名が与えられたとき、システムはそのフィールドのenumに新しい値を追加し、ルート直下のkind分岐に新しいブランチを追加する shall。"
+        },
+        {
+          "id": "add-kind-branch-normalizes-dispatch",
+          "text": "While ルート直下のkind分岐がif/then/elseの単一分岐形式であり、かつdiscriminatorフィールドのenumが既存kind値を2つのみ持つとき、add_kind_branchはelseブランチが暗黙に表していたkind値をenumから逆算し、allOf形式の複数分岐に正規化した上で新しいブランチを追加する shall。"
+        },
+        {
+          "id": "add-kind-branch-idempotent",
+          "text": "While 対象のkind値・content def紐付けの組が既にkind分岐に存在するとき、add_kind_branchは無変更で成功する shall。"
+        },
+        {
+          "id": "add-kind-branch-unsupported-shape",
+          "text": "If add_kind_branchの対象となるルート直下のkind分岐の形状が、既知の形状（if/then/else形式・allOf形式）に適合しない、またはif/then/else形式でありながらelseの暗黙値を一意に逆算できないとき、システムはUNSUPPORTED_ROOT_DISPATCH_SHAPEエラーを返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "create-version",
+          "text": "When create_versionでfromSchemaRef・schemaRef（新版）・editsが与えられたとき、システムはfromSchemaRefの内容を複製し、editsを適用した新しいschema版ファイルをschemaRefへ書き込む shall。"
+        },
+        {
+          "id": "create-version-already-exists",
+          "text": "While create_versionのschemaRef（新版）が既に存在するとき、システムはVERSION_ALREADY_EXISTSエラーを返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "create-version-skips-compat-check",
+          "text": "When create_versionのeditsが既存フィールドの型を変更するとき、システムはbackward-compatチェックを行わずに書き込む shall（新版はまだどのDocumentも参照していないため）。"
+        },
+        {
+          "id": "set-kind-render-target",
+          "text": "When set_kind_render_targetでkind値・pathVars・path・deployが与えられたとき、システムはx-render-target.pathVars/path/deployそれぞれのkind別dictに、そのkind値のエントリを追加する shall。"
+        },
+        {
+          "id": "set-kind-render-target-idempotent",
+          "text": "While 対象のkind値のエントリが既にpathVars・path・deployの全てで指定した値と一致しているとき、set_kind_render_targetは無変更で成功する shall。"
+        },
+        {
+          "id": "set-kind-render-target-unsupported-shape",
+          "text": "If set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でないとき、システムはUNSUPPORTED_RENDER_TARGET_SHAPEエラーを返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "set-field-root-scope",
+          "text": "When set_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。"
+        },
+        {
+          "id": "remove-field",
+          "text": "When remove_fieldでブロック名・項目パスが与えられたとき、システムはその項目をキーごと取り除く shall（値をnullにするのではなく、キー自体を消す）。"
+        },
+        {
+          "id": "remove-field-idempotent",
+          "text": "While remove_fieldの対象項目が既に存在しないとき、remove_fieldは無変更で成功する shall。"
+        },
+        {
+          "id": "remove-field-block-not-found",
+          "text": "If remove_fieldの対象ブロックがSchemaに存在しないとき、システムはBLOCK_NOT_FOUNDエラーを返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "remove-field-root-scope",
+          "text": "When remove_fieldにdefNameとしてnullが与えられたとき、システムは$defsではなくschemaのルート直下を対象にfieldPathを解決する shall。"
+        },
+        {
+          "id": "unknown-operation-rejected",
+          "text": "If 未知の operation が与えられたとき、システムは INVALID_OPERATION を返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "enum-value-removal-is-incompatible",
+          "text": "If 互換の関門を通る操作の変更が、種別の候補値（enum）の除去を含むとき、システムは BACKWARD_INCOMPATIBLE エラーを返し書き込みを拒否する shall（その候補値を指す既存Documentを壊しうるため）。"
+        },
+        {
+          "id": "def-removal-is-incompatible",
+          "text": "If 変更が $defs エントリの除去を含み、そのエントリがどこかから参照されているとき、システムは BACKWARD_INCOMPATIBLE エラーを返し書き込みを拒否する shall。"
+        },
+        {
+          "id": "remove-kind-branch",
+          "text": "When remove_kind_branch で discriminator フィールド名と kind 値が与えられたとき、システムはルート直下の該当ブランチ・その enum 値・x-render-target のその kind のエントリを、ひとつの操作としてまとめて取り除く shall（半端に整合しない Schema を残さないため）。この操作は種別を捨てることそのものを目的とするため、互換の関門を通らない。"
+        },
+        {
+          "id": "remove-kind-branch-idempotent",
+          "text": "While 対象の kind 値がどこにも存在しないとき、remove_kind_branch は無変更で成功する shall。"
+        },
+        {
+          "id": "remove-kind-branch-partial-not-left",
+          "text": "If remove_kind_branch の途中でいずれかの箇所を取り除けないとき、システムはどの箇所も取り除かずに、その箇所に対応するエラー（描画先の形が既知でないときは UNSUPPORTED_RENDER_TARGET_SHAPE、ルート直下の分岐の形が既知でないときは UNSUPPORTED_ROOT_DISPATCH_SHAPE）を返す shall。"
+        },
+        {
+          "id": "compat-gate-exemptions-are-enumerated",
+          "text": "While ある操作が互換の関門を通らないとき、システムはその操作を免除された操作として明示的に列挙し、その操作自身の基準で何を壊してよいかを述べる shall（免除が暗黙に増えると、関門があるという主張そのものが意味を失うため）。"
+        },
+        {
+          "id": "remove-kind-branch-breaks-existing-documents",
+          "text": "While remove_kind_branch が種別を取り除くとき、システムはその種別を指す既存Documentが壊れることを、この操作の結果として認める shall。実際にそのようなDocumentが残っていないかの確認は、schema版のドリフトを見る側の責務であり、この操作は行わない（Schemaを編集する操作にDocumentの走査を持ち込まないため）。"
+        },
+        {
+          "id": "remove-kind-branch-requires-normalized-dispatch",
+          "text": "If remove_kind_branch の対象のルート直下の分岐が if/then/else 形式であるとき、システムは UNSUPPORTED_ROOT_DISPATCH_SHAPE を返し取り除かない shall（片方を取り除くと残った else が全ての種別を受けてしまい、構造が壊れるため。先に add_kind_branch で allOf 形式へ正規化することを求める）。"
+        },
+        {
+          "id": "remove-kind-branch-keeps-allof-shape",
+          "text": "While remove_kind_branch のあと分岐が1つだけ残るとき、システムは allOf 形式のまま残す shall（if/then/else 形式へ戻すと、次の取り消しが上の基準で塞がるため）。"
+        },
+        {
+          "id": "invalid-schema-ref",
+          "text": "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        },
+        {
+          "id": "minimal-diff",
+          "text": "While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。"
+        }
       ]
     },
     "errors": {
@@ -193,6 +334,12 @@
           "condition": [
             "set_kind_render_targetの対象schemaがx-render-target自体を持たない、またはpathVars・path・deployのいずれかがkind別dict形式でない"
           ]
+        },
+        {
+          "code": "INVALID_SCHEMA_REF",
+          "condition": [
+            "対象のschemaRefを解決できないとき"
+          ]
         }
       ]
     },
@@ -206,357 +353,463 @@
           "category": "正常系",
           "viewpoint": "add_block：Schemaへの新規ブロック追加と紐付け先からの参照",
           "gherkin": "Scenario: 新規ブロックを追加する\n  Given ブロック名・ブロック定義・紐付け先・プロパティ名\n  When add_blockを実行する\n  Then Schemaに新規ブロックが追加され、指定した紐付け先から参照できるようになる",
-          "covers": "受け入れ基準: add_blockでのブロック追加",
-          "operation": "add_block"
+          "operation": "add_block",
+          "satisfies": [
+            "add-block"
+          ]
         },
         {
           "name": "既に存在するブロックの追加は無変更で成功する",
           "category": "境界値",
           "viewpoint": "add_block：冪等性",
           "gherkin": "Scenario: 既に存在するブロックの追加は無変更で成功する\n  Given 既に追加済みのブロック名を含むadd_block操作\n  When add_blockを再実行する\n  Then 対象は無変更のまま成功する",
-          "covers": "受け入れ基準: add_blockの冪等性",
-          "operation": "add_block"
+          "operation": "add_block",
+          "satisfies": [
+            "add-block-idempotent"
+          ]
         },
         {
           "name": "識別子を複数箇所にわたってリネームする",
           "category": "正常系",
           "viewpoint": "rename_block：Schema内でその識別子を参照する全ての箇所の一貫したリネーム",
           "gherkin": "Scenario: 識別子を複数箇所にわたってリネームする\n  Given 旧短縮名・新短縮名（必須ではないブロック）\n  When rename_blockを実行する\n  Then Schema内でその識別子を参照する全ての箇所が新短縮名に一貫してリネームされる",
-          "covers": "受け入れ基準: rename_blockでの識別子リネーム",
-          "operation": "rename_block"
+          "operation": "rename_block",
+          "satisfies": [
+            "rename-block"
+          ]
         },
         {
           "name": "既にリネーム済みの状態への再リネームは無変更で成功する",
           "category": "境界値",
           "viewpoint": "rename_block：冪等性",
           "gherkin": "Scenario: 既にリネーム済みの状態への再リネームは無変更で成功する\n  Given リネーム元が既に存在せずリネーム先が既に存在する状態\n  When 同じrename_block操作を再実行する\n  Then 対象は無変更のまま成功する",
-          "covers": "受け入れ基準: rename_blockの冪等性",
-          "operation": "rename_block"
+          "operation": "rename_block",
+          "satisfies": [
+            "rename-block-idempotent"
+          ]
         },
         {
           "name": "既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否される",
           "category": "異常系",
           "viewpoint": "後方互換チェック：既存Documentを壊しうる変更を拒否する",
           "gherkin": "Scenario: 既存Documentを壊す変更はBACKWARD_INCOMPATIBLEとして拒否される\n  Given 既存Documentを壊しうる後方互換性のない変更\n  When patchを実行する\n  Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない",
-          "covers": "受け入れ基準: 後方互換チェック"
+          "satisfies": [
+            "backward-incompatible-rejected"
+          ]
         },
         {
           "name": "構文的に不正な結果はINVALID_SCHEMA_STRUCTUREとして拒否される",
           "category": "異常系",
           "viewpoint": "書き込み前のJSON Schema構文検証",
           "gherkin": "Scenario: 構文的に不正な結果はINVALID_SCHEMA_STRUCTUREとして拒否される\n  Given 適用するとJSON Schemaとして構文的に不正になる変更\n  When patchを実行する\n  Then INVALID_SCHEMA_STRUCTUREエラーが返り書き込まれない",
-          "covers": "受け入れ基準: 書き込み前のJSON Schema構文検証"
+          "satisfies": [
+            "invalid-schema-structure-rejected"
+          ]
         },
         {
           "name": "対象外の箇所は一切変更されない",
           "category": "正常系",
           "viewpoint": "最小diff：変更に無関係な箇所のバイトは1つも変わらない",
           "gherkin": "Scenario: 対象外の箇所は一切変更されない\n  Given 整形契約に従った既存のschemaファイル\n  When add_blockまたはrename_blockを実行する\n  Then 変更に関係のない既存の行は1バイトも変わらない",
-          "covers": "受け入れ基準: 対象外の箇所の不変性"
+          "satisfies": [
+            "untouched-parts-unchanged"
+          ]
         },
         {
           "name": "解決できないschemaRefはINVALID_SCHEMA_REF",
           "category": "異常系",
           "viewpoint": "解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる",
           "gherkin": "Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF\n  Given 解決できないschemaRef\n  When patchを実行する\n  Then INVALID_SCHEMA_REFエラーが返る",
-          "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
+          "satisfies": [
+            "schema-ref-unresolvable"
+          ]
         },
         {
           "name": "未知のoperationはINVALID_OPERATION",
           "category": "異常系",
           "viewpoint": "operationの妥当性検証：add_block/rename_block/set_field/remove_block/add_def/add_kind_branch/create_version/set_kind_render_target以外を拒否する",
           "gherkin": "Scenario: 未知のoperationはINVALID_OPERATION\n  Given add_block/rename_block/set_field/remove_block/add_def/add_kind_branch/create_version/set_kind_render_target以外のoperation\n  When patchを実行する\n  Then INVALID_OPERATIONエラーが返る",
-          "covers": "受け入れ基準: 未知operationの拒否"
+          "satisfies": [
+            "unknown-operation-rejected"
+          ]
         },
         {
           "name": "既存ブロックの1フィールドだけを書き換える",
           "category": "正常系",
           "viewpoint": "set_field：指定したブロックの指定した項目だけを新しい値に置き換える",
           "gherkin": "Scenario: 既存ブロックの1フィールドだけを書き換える\n  Given ブロック名・書き換える項目・新しい値\n  When set_fieldを実行する\n  Then そのブロックの指定した項目だけが新しい値に置き換わる",
-          "covers": "受け入れ基準: set_fieldでの項目書き換え",
-          "operation": "set_field"
+          "operation": "set_field",
+          "satisfies": [
+            "set-field"
+          ]
         },
         {
           "name": "set_fieldの同じ値への再実行は無変更で成功する",
           "category": "境界値",
           "viewpoint": "set_field：冪等性",
           "gherkin": "Scenario: set_fieldの同じ値への再実行は無変更で成功する\n  Given 既に目的の値になっている項目\n  When 同じ値でset_fieldを再実行する\n  Then 対象は無変更のまま成功する",
-          "covers": "受け入れ基準: set_fieldの冪等性",
-          "operation": "set_field"
+          "operation": "set_field",
+          "satisfies": [
+            "set-field-idempotent"
+          ]
         },
         {
           "name": "存在しないブロックへのset_fieldはBLOCK_NOT_FOUND",
           "category": "異常系",
           "viewpoint": "set_field：対象取り違えの防止",
           "gherkin": "Scenario: 存在しないブロックへのset_fieldはBLOCK_NOT_FOUND\n  Given Schemaに存在しないブロック名\n  When set_fieldを実行する\n  Then BLOCK_NOT_FOUNDエラーが返り書き込まれない",
-          "covers": "受け入れ基準: set_fieldでの対象存在確認",
-          "operation": "set_field"
+          "operation": "set_field",
+          "satisfies": [
+            "set-field-block-not-found"
+          ]
         },
         {
           "name": "書き込み失敗はWRITE_ERRORを返す",
           "category": "異常系",
           "viewpoint": "Port障害：書き込み先へのI/Oエラーをエラーとして構造化して返す",
           "gherkin": "Scenario: 書き込み失敗はWRITE_ERRORを返す\n  Given 書き込み時にOSErrorを送出するDocumentRepository\n  When add_blockを実行する\n  Then WRITE_ERRORエラーが返る",
-          "covers": "受け入れ基準: 書き込み失敗時のWRITE_ERROR"
+          "satisfies": [
+            "write-error"
+          ]
         },
         {
           "name": "必須プロパティのリネームはBACKWARD_INCOMPATIBLEとして拒否される",
           "category": "異常系",
           "viewpoint": "後方互換チェック：requiredに指定されているブロックのリネームを拒否する",
           "gherkin": "Scenario: 必須プロパティのリネームはBACKWARD_INCOMPATIBLEとして拒否される\n  Given 公開済みkindのrequiredに指定されているブロックのリネーム\n  When rename_blockを実行する\n  Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない",
-          "covers": "受け入れ基準: 後方互換チェック"
+          "satisfies": [
+            "backward-incompatible-rejected"
+          ]
         },
         {
           "name": "既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒否される",
           "category": "異常系",
           "viewpoint": "後方互換チェック：既存フィールドの型変更を拒否する",
           "gherkin": "Scenario: 既存フィールドの型変更はBACKWARD_INCOMPATIBLEとして拒否される\n  Given 公開済みkindの既存フィールドの型(type)を書き換える変更\n  When set_fieldを実行する\n  Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない",
-          "covers": "受け入れ基準: 後方互換チェック"
+          "satisfies": [
+            "backward-incompatible-rejected"
+          ]
         },
         {
           "name": "content defからプロパティ参照を外す",
           "category": "正常系",
           "viewpoint": "remove_block：content defから対象プロパティ参照を外す。ブロック定義自体は$defsに残る",
           "gherkin": "Scenario: content defからプロパティ参照を外す\n  Given 必須ではないプロパティを持つcontent def名・プロパティ名\n  When remove_blockを実行する\n  Then そのcontent defからプロパティ参照が外れ、$defs内のブロック定義自体は変更されない",
-          "covers": "受け入れ基準: remove_blockでのプロパティ参照除去",
-          "operation": "remove_block"
+          "operation": "remove_block",
+          "satisfies": [
+            "remove-block"
+          ]
         },
         {
           "name": "既に存在しないプロパティのremove_blockは無変更で成功する",
           "category": "境界値",
           "viewpoint": "remove_block：冪等性",
           "gherkin": "Scenario: 既に存在しないプロパティのremove_blockは無変更で成功する\n  Given 既に除去済みのプロパティ名を含むremove_block操作\n  When remove_blockを再実行する\n  Then 対象は無変更のまま成功する",
-          "covers": "受け入れ基準: remove_blockの冪等性",
-          "operation": "remove_block"
+          "operation": "remove_block",
+          "satisfies": [
+            "remove-block-idempotent"
+          ]
         },
         {
           "name": "必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される",
           "category": "異常系",
           "viewpoint": "後方互換チェック：requiredに指定されているプロパティの除去を拒否する",
           "gherkin": "Scenario: 必須プロパティのremove_blockはBACKWARD_INCOMPATIBLEとして拒否される\n  Given 公開済みkindのrequiredに指定されているプロパティ\n  When remove_blockを実行する\n  Then BACKWARD_INCOMPATIBLEエラーが返り書き込まれない",
-          "covers": "受け入れ基準: remove_blockの後方互換チェック",
-          "operation": "remove_block"
+          "operation": "remove_block",
+          "satisfies": [
+            "remove-block-required-rejected"
+          ]
         },
         {
           "name": "既存content defへの紐付けを持たない新規defを追加する",
           "category": "正常系",
           "viewpoint": "add_def：$defsへの独立した新規エントリの追加",
           "gherkin": "Scenario: 既存content defへの紐付けを持たない新規defを追加する\n  Given def名・def定義\n  When add_defを実行する\n  Then $defsに新規エントリが追加され、既存のcontent defには一切変更が加わらない",
-          "covers": "受け入れ基準: add_defでの新規def追加",
-          "operation": "add_def"
+          "operation": "add_def",
+          "satisfies": [
+            "add-def"
+          ]
         },
         {
           "name": "既に存在するdefの追加は無変更で成功する",
           "category": "境界値",
           "viewpoint": "add_def：冪等性",
           "gherkin": "Scenario: 既に存在するdefの追加は無変更で成功する\n  Given 既に追加済みのdef名を含むadd_def操作\n  When add_defを再実行する\n  Then 対象は無変更のまま成功する",
-          "covers": "受け入れ基準: add_defの冪等性",
-          "operation": "add_def"
+          "operation": "add_def",
+          "satisfies": [
+            "add-def-idempotent"
+          ]
         },
         {
           "name": "2値のif_then_else形式に新しいkindブランチを追加する",
           "category": "正常系",
           "viewpoint": "add_kind_branch：if/then/elseからallOf形式への正規化と新ブランチの追加",
           "gherkin": "Scenario: 2値のif_then_else形式に新しいkindブランチを追加する\n  Given if/then/else形式（enumが既存kind値を2つのみ持つ）のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名\n  When add_kind_branchを実行する\n  Then discriminatorフィールドのenumに新しいkind値が追加され、ルート直下の分岐はallOf形式に正規化された上で新しいブランチを含む",
-          "covers": "受け入れ基準: add_kind_branchでのif/then/elseからallOfへの正規化",
-          "operation": "add_kind_branch"
+          "operation": "add_kind_branch",
+          "satisfies": [
+            "add-kind-branch-normalizes-dispatch"
+          ]
         },
         {
           "name": "allOf形式の分岐に新しいkindブランチを追加する",
           "category": "正常系",
           "viewpoint": "add_kind_branch：既にallOf形式の分岐への新規ブランチ追加",
           "gherkin": "Scenario: allOf形式の分岐に新しいkindブランチを追加する\n  Given 既にallOf形式のルート分岐、discriminatorフィールド名、新しいkind値、紐付け先content def名\n  When add_kind_branchを実行する\n  Then discriminatorフィールドのenumに新しいkind値が追加され、allOf配列に新しいブランチが追加される",
-          "covers": "受け入れ基準: add_kind_branchでのブランチ追加",
-          "operation": "add_kind_branch"
+          "operation": "add_kind_branch",
+          "satisfies": [
+            "add-kind-branch"
+          ]
         },
         {
           "name": "既に存在するkindブランチの追加は無変更で成功する",
           "category": "境界値",
           "viewpoint": "add_kind_branch：冪等性",
           "gherkin": "Scenario: 既に存在するkindブランチの追加は無変更で成功する\n  Given 既にenumとルート分岐の両方に存在するkind値・content def紐付け\n  When add_kind_branchを再実行する\n  Then 対象は無変更のまま成功する",
-          "covers": "受け入れ基準: add_kind_branchの冪等性",
-          "operation": "add_kind_branch"
+          "operation": "add_kind_branch",
+          "satisfies": [
+            "add-kind-branch-idempotent"
+          ]
         },
         {
           "name": "未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE",
           "category": "異常系",
           "viewpoint": "add_kind_branch：対応できない分岐形状の拒否",
           "gherkin": "Scenario: 未知の形状のルート分岐へのadd_kind_branchはUNSUPPORTED_ROOT_DISPATCH_SHAPE\n  Given if/then/else形式でもallOf形式でもないルート分岐、またはif/then/else形式でありながらenumが3つ以上のkind値を持つ状態\n  When add_kind_branchを実行する\n  Then UNSUPPORTED_ROOT_DISPATCH_SHAPEエラーが返り書き込まれない",
-          "covers": "受け入れ基準: add_kind_branchでの未知形状の拒否",
-          "operation": "add_kind_branch"
+          "operation": "add_kind_branch",
+          "satisfies": [
+            "add-kind-branch-unsupported-shape"
+          ]
         },
         {
           "name": "create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る",
           "category": "正常系",
           "viewpoint": "create_version: fromSchemaRefの内容を複製し、editsを適用した新しいschema版ファイルを作る",
           "gherkin": "Scenario: create_versionは既存版を複製しeditsを適用した新しい版ファイルを作る\n  Given 複製元のfromSchemaRefと、複製先のschemaRef（新版）・edits\n  When create_versionを実行する\n  Then fromSchemaRefの内容を複製しeditsを適用した新しい版ファイルがschemaRefへ書き込まれ、fromSchemaRef自体は変更されない",
-          "covers": "受け入れ基準: create_versionによる新版作成",
-          "operation": "create_version"
+          "operation": "create_version",
+          "satisfies": [
+            "create-version"
+          ]
         },
         {
           "name": "create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない",
           "category": "正常系",
           "viewpoint": "create_version: 新版はまだどのDocumentも参照していないためbackward-compatチェックの対象外",
           "gherkin": "Scenario: create_versionは既存フィールドの型を変えてもBACKWARD_INCOMPATIBLEにならない\n  Given 既存フィールドの型を変更するedits（通常のset_fieldなら拒否される変更）\n  When create_versionを実行する\n  Then BACKWARD_INCOMPATIBLEエラーにならず新版が作られる",
-          "covers": "受け入れ基準: create_versionはbackward-compatチェックを行わない",
-          "operation": "create_version"
+          "operation": "create_version",
+          "satisfies": [
+            "create-version-skips-compat-check"
+          ]
         },
         {
           "name": "create_versionは既に存在する版ファイルを上書きしない",
           "category": "異常系",
           "viewpoint": "create_version: 対象取り違え・誤上書きの防止",
           "gherkin": "Scenario: create_versionは既に存在する版ファイルを上書きしない\n  Given schemaRef（新版）が指す版ファイルが既に存在する状態\n  When create_versionを実行する\n  Then VERSION_ALREADY_EXISTSエラーが返り、既存の版ファイルは変更されない",
-          "covers": "エラー: VERSION_ALREADY_EXISTS",
-          "operation": "create_version"
+          "operation": "create_version",
+          "satisfies": [
+            "create-version-already-exists"
+          ]
         },
         {
           "name": "x-render-targetのkind別dictに新しいkind値のエントリを追加する",
           "category": "正常系",
           "viewpoint": "set_kind_render_target：pathVars/path/deployそれぞれのkind別dictへの新規エントリ追加",
           "gherkin": "Scenario: x-render-targetのkind別dictに新しいkind値のエントリを追加する\n  Given kind値・pathVars・path・deploy、およびpathVars/path/deployがkind別dict形式のschema\n  When set_kind_render_targetを実行する\n  Then x-render-target.pathVars/path/deployそれぞれに、そのkind値のエントリが追加される",
-          "covers": "受け入れ基準: set_kind_render_targetでのエントリ追加",
-          "operation": "set_kind_render_target"
+          "operation": "set_kind_render_target",
+          "satisfies": [
+            "set-kind-render-target"
+          ]
         },
         {
           "name": "既に存在するkind別render_targetエントリの追加は無変更で成功する",
           "category": "境界値",
           "viewpoint": "set_kind_render_target：冪等性",
           "gherkin": "Scenario: 既に存在するkind別render_targetエントリの追加は無変更で成功する\n  Given 既にpathVars・path・deployの全てで指定した値と一致するkind値のエントリ\n  When set_kind_render_targetを再実行する\n  Then 対象は無変更のまま成功する",
-          "covers": "受け入れ基準: set_kind_render_targetの冪等性",
-          "operation": "set_kind_render_target"
+          "operation": "set_kind_render_target",
+          "satisfies": [
+            "set-kind-render-target-idempotent"
+          ]
         },
         {
           "name": "x-render-targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE",
           "category": "異常系",
           "viewpoint": "set_kind_render_target：対応できない形状の拒否",
           "gherkin": "Scenario: x-render-targetがkind別dict形式でないschemaへのset_kind_render_targetはUNSUPPORTED_RENDER_TARGET_SHAPE\n  Given x-render-target自体を持たない、またはpathVars・path・deployのいずれかがフラット形式（kind別dictでない）のschema\n  When set_kind_render_targetを実行する\n  Then UNSUPPORTED_RENDER_TARGET_SHAPEエラーが返り書き込まれない",
-          "covers": "受け入れ基準: set_kind_render_targetでの未知形状の拒否",
-          "operation": "set_kind_render_target"
+          "operation": "set_kind_render_target",
+          "satisfies": [
+            "set-kind-render-target-unsupported-shape"
+          ]
         },
         {
           "name": "set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える",
           "category": "正常系",
           "viewpoint": "set_field: defNameにnullを渡すと$defsではなくschemaのルート直下（$id・properties.schemaRef.const等）を対象にできる",
           "gherkin": "Scenario: set_fieldはdefNameにnullを渡すとschemaのルート直下を書き換える\n  Given defNameにnull・ルート直下のドットパス・新しい値\n  When set_fieldを実行する\n  Then $defsではなくschemaのルート直下の値が書き換わる",
-          "covers": "受け入れ基準: set_fieldのdefName=nullによるルート直下対象化"
+          "satisfies": [
+            "set-field-root-scope"
+          ]
         },
         {
           "name": "項目をキーごと取り除く",
           "category": "正常系",
           "viewpoint": "remove_field：値をnullにするのではなくキー自体を消す",
           "gherkin": "Scenario: 項目をキーごと取り除く\n  Given ブロック名と項目パス\n  When remove_fieldを実行する\n  Then その項目はキーごと消える\n  And 同じ階層の他の項目は残る",
-          "covers": "受け入れ基準: remove_fieldは項目をキーごと取り除く",
-          "operation": "remove_field"
+          "operation": "remove_field",
+          "satisfies": [
+            "remove-field"
+          ]
         },
         {
           "name": "無い項目を取り除いても成功する",
           "category": "境界値",
           "viewpoint": "remove_field：対象が既に無い状態を失敗として扱わない",
           "gherkin": "Scenario: 無い項目を取り除いても成功する\n  Given 既に存在しない項目パス\n  When remove_fieldを実行する\n  Then 無変更で成功する",
-          "covers": "受け入れ基準: 対象項目が既に存在しないとき無変更で成功する",
-          "operation": "remove_field"
+          "operation": "remove_field",
+          "satisfies": [
+            "remove-field-idempotent"
+          ]
         },
         {
           "name": "無いブロックの項目は取り除けない",
           "category": "異常系",
           "viewpoint": "remove_field：対象ブロックの不在を書き込み前に拒む",
           "gherkin": "Scenario: 無いブロックの項目は取り除けない\n  Given Schemaに存在しないブロック名\n  When remove_fieldを実行する\n  Then BLOCK_NOT_FOUNDエラーが返り、書き込みは行われない",
-          "covers": "受け入れ基準: 対象ブロックが存在しないときBLOCK_NOT_FOUND",
-          "operation": "remove_field"
+          "operation": "remove_field",
+          "satisfies": [
+            "remove-field-block-not-found"
+          ]
         },
         {
           "name": "ルート直下の項目も取り除ける",
           "category": "正常系",
           "viewpoint": "remove_field：defNameがnullのときの解決先",
           "gherkin": "Scenario: ルート直下の項目も取り除ける\n  Given defNameとしてnull\n  When remove_fieldを実行する\n  Then $defsではなくschemaのルート直下の項目が消える",
-          "covers": "受け入れ基準: defNameがnullのときルート直下を対象にする",
-          "operation": "remove_field"
-        }
-      ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": [
-        "When 同じadd_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "When 同じrename_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "When 同じset_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "When 同じremove_block操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "When 同じadd_def操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "When 同じadd_kind_branch操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "When 同じset_kind_render_target操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。",
-        "When 同じremove_field操作を複数回実行したとき、システムの生成する結果は常にべき等である shall。"
-      ]
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": [
-        {
-          "name": "add_blockの複数回実行はべき等である",
-          "category": "境界値",
-          "viewpoint": "べき等性：同じadd_block操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: add_blockの複数回実行はべき等である\n  Given 同一のadd_block操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
-          "covers": "操作保証: add_blockのべき等性"
+          "operation": "remove_field",
+          "satisfies": [
+            "remove-field-root-scope"
+          ]
         },
         {
-          "name": "rename_blockの複数回実行はべき等である",
-          "category": "境界値",
-          "viewpoint": "べき等性：同じrename_block操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: rename_blockの複数回実行はべき等である\n  Given 同一のrename_block操作（必須ではないブロック）\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
-          "covers": "操作保証: rename_blockのべき等性"
+          "name": "種別の候補値の除去は後方互換を壊すものとして拒まれる",
+          "category": "異常系",
+          "viewpoint": "互換の検査：候補値の除去が検査を素通りしないか",
+          "satisfies": [
+            "enum-value-removal-is-incompatible"
+          ],
+          "gherkin": "Scenario: 種別の候補値の除去は後方互換を壊すものとして拒まれる\n  Given 3つの候補値を持つ種別の欄\n  When remove_field でその候補値のうち1つを取り除く\n  Then BACKWARD_INCOMPATIBLE が返り、Schema は変わらない"
         },
         {
-          "name": "set_fieldの複数回実行はべき等である",
-          "category": "境界値",
-          "viewpoint": "べき等性：同じset_field操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: set_fieldの複数回実行はべき等である\n  Given 同一のset_field操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
-          "covers": "操作保証: set_fieldのべき等性"
+          "name": "参照されている定義の除去は後方互換を壊すものとして拒まれる",
+          "category": "異常系",
+          "viewpoint": "互換の検査：参照されたまま定義が消えないか",
+          "satisfies": [
+            "def-removal-is-incompatible"
+          ],
+          "gherkin": "Scenario: 参照されている定義の除去は後方互換を壊すものとして拒まれる\n  Given どこかから参照されている $defs エントリ\n  When remove_field でそのエントリを取り除く\n  Then BACKWARD_INCOMPATIBLE が返り、Schema は変わらない"
         },
         {
-          "name": "remove_blockの複数回実行はべき等である",
-          "category": "境界値",
-          "viewpoint": "べき等性：同じremove_block操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: remove_blockの複数回実行はべき等である\n  Given 同一のremove_block操作（必須ではないプロパティ）\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
-          "covers": "操作保証: remove_blockのべき等性"
+          "name": "種別の取り消しは分岐と候補値と描画先を同時に取り除く",
+          "category": "正常系",
+          "viewpoint": "取り消しの原子性：整合したまま消せるか",
+          "satisfies": [
+            "remove-kind-branch"
+          ],
+          "gherkin": "Scenario: 種別の取り消しは分岐と候補値と描画先を同時に取り除く\n  Given 分岐・候補値・描画先の3箇所に現れている kind 値\n  When その kind を remove_kind_branch する\n  Then 3箇所すべてから取り除かれ、残った Schema は構文的にも整合している"
         },
         {
-          "name": "add_defの複数回実行はべき等である",
+          "name": "既に無い種別の取り消しは無変更で成功する",
           "category": "境界値",
-          "viewpoint": "べき等性：同じadd_def操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: add_defの複数回実行はべき等である\n  Given 同一のadd_def操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
-          "covers": "操作保証: add_defのべき等性"
+          "viewpoint": "取り消しの原子性：繰り返しても結果が変わらないか",
+          "satisfies": [
+            "remove-kind-branch-idempotent"
+          ],
+          "gherkin": "Scenario: 既に無い種別の取り消しは無変更で成功する\n  Given どこにも存在しない kind 値\n  When その kind を remove_kind_branch する\n  Then 無変更で成功する"
         },
         {
-          "name": "add_kind_branchの複数回実行はべき等である",
+          "name": "一部を取り除けないときは何も取り除かない",
+          "category": "異常系",
+          "viewpoint": "取り消しの原子性：半端に整合しない Schema を残さないか",
+          "satisfies": [
+            "remove-kind-branch-partial-not-left"
+          ],
+          "gherkin": "Scenario: 一部を取り除けないときは何も取り除かない\n  Given 分岐と候補値には現れるが、描画先の形が既知でない Schema\n  When その kind を remove_kind_branch する\n  Then UNSUPPORTED_RENDER_TARGET_SHAPE が返り、分岐も候補値も取り除かれていない"
+        },
+        {
+          "name": "新版を作るときは候補値を取り除ける",
           "category": "境界値",
-          "viewpoint": "べき等性：同じadd_kind_branch操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: add_kind_branchの複数回実行はべき等である\n  Given 同一のadd_kind_branch操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
-          "covers": "操作保証: add_kind_branchのべき等性"
+          "viewpoint": "互換の検査：意図した破壊の道が塞がっていないか",
+          "satisfies": [
+            "create-version-skips-compat-check"
+          ],
+          "gherkin": "Scenario: 新版を作るときは候補値を取り除ける\n  Given 候補値を短くした enum を set_field で書き込む edits\n  When create_version で新しい版を作る\n  Then BACKWARD_INCOMPATIBLE にならず、候補値の減った新版が書き出される"
+        },
+        {
+          "name": "種別の取り消しは互換の関門を通らない",
+          "category": "境界値",
+          "viewpoint": "免除の規律：取り消しが自分の生んだ候補値の除去に自分で拒まれないか",
+          "satisfies": [
+            "remove-kind-branch",
+            "compat-gate-exemptions-are-enumerated"
+          ],
+          "gherkin": "Scenario: 種別の取り消しは互換の関門を通らない\n  Given allOf 形式の分岐を3つ持ち、そのうち1つを取り消す Schema\n  When remove_kind_branch する\n  Then BACKWARD_INCOMPATIBLE にならず、3箇所から取り除かれる"
+        },
+        {
+          "name": "取り消される種別を指す既存Documentは壊れる",
+          "category": "境界値",
+          "viewpoint": "免除の規律：免除された操作が何を壊すかが宣言されているか",
+          "satisfies": [
+            "remove-kind-branch-breaks-existing-documents"
+          ],
+          "gherkin": "Scenario: 取り消される種別を指す既存Documentは壊れる\n  Given 取り消す種別を指している既存Document\n  When その種別を remove_kind_branch する\n  Then 取り消しは成功し、そのDocumentが不適合になったことはschema版のドリフトを見る側で検知される"
+        },
+        {
+          "name": "正規化されていない分岐からは取り消せない",
+          "category": "異常系",
+          "viewpoint": "分岐の形：残った else が全種別を受ける壊れ方を防げるか",
+          "satisfies": [
+            "remove-kind-branch-requires-normalized-dispatch"
+          ],
+          "gherkin": "Scenario: 正規化されていない分岐からは取り消せない\n  Given ルート直下が if/then/else 形式の Schema\n  When その kind を remove_kind_branch する\n  Then UNSUPPORTED_ROOT_DISPATCH_SHAPE が返り、Schema は変わらない"
+        },
+        {
+          "name": "分岐が1つだけ残っても allOf 形式のまま残る",
+          "category": "境界値",
+          "viewpoint": "分岐の形：次の取り消しの道を塞がないか",
+          "satisfies": [
+            "remove-kind-branch-keeps-allof-shape"
+          ],
+          "gherkin": "Scenario: 分岐が1つだけ残っても allOf 形式のまま残る\n  Given allOf 形式の分岐を2つ持つ Schema\n  When 片方を remove_kind_branch する\n  Then 残った1つは allOf 形式のまま置かれている"
+        },
+        {
+          "name": "対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のschemaRefを解決できないとき",
+          "gherkin": "Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF\n  Given 対象のschemaRefを解決できないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_SCHEMA_REF エラーが返る",
+          "satisfies": [
+            "invalid-schema-ref"
+          ]
         },
         {
           "name": "整形契約に従う既存箇所は書き込み後も不変である",
           "category": "正常系",
           "viewpoint": "最小diff：整形契約に従う既存部分はpatch後もバイト単位で不変",
           "gherkin": "Scenario: 整形契約に従う既存箇所は書き込み後も不変である\n  Given 整形契約に従った既存のschemaファイル\n  When patchを実行する\n  Then 変更対象以外の既存の行はバイト単位で不変である",
-          "covers": "操作保証: 最小diffの保証"
-        },
-        {
-          "name": "set_kind_render_targetの複数回実行はべき等である",
-          "category": "境界値",
-          "viewpoint": "べき等性：同じset_kind_render_target操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: set_kind_render_targetの複数回実行はべき等である\n  Given 同一のset_kind_render_target操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である",
-          "covers": "操作保証: set_kind_render_targetのべき等性"
-        },
-        {
-          "name": "remove_fieldの複数回実行はべき等である",
-          "category": "境界値",
-          "viewpoint": "べき等性：同じremove_field操作を複数回実行しても結果が変わらない",
-          "gherkin": "Scenario: remove_fieldの複数回実行はべき等である\n  Given 同一のremove_field操作\n  When 2回連続で実行する\n  Then 2回目の実行結果は1回目と完全に同一である"
+          "satisfies": [
+            "minimal-diff"
+          ]
         }
       ]
+    },
+    "operationGuarantees": {
+      "blockType": "OperationGuarantees",
+      "title": "操作保証",
+      "items": []
+    },
+    "guaranteeScenarios": {
+      "blockType": "GuaranteeScenarios",
+      "title": "操作保証シナリオ",
+      "background": "",
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

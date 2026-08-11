@@ -114,7 +114,15 @@
         "If 解決した配置先が指す正本が他のDocumentの正本であるとき、システムはDEPLOY_TARGET_OWNED_BY_OTHERを返し、その配置先へ書き込まない shall。",
         "When 解決した配置先のいずれかへ書き込まなかったとき、システムはその配置先と理由を結果に含める shall。",
         "While 対象Documentが雛形であり、宣言が実体向けのものしか無いとき、システムは配置先を1つも解決せず、正本にのみ書き込む shall。",
-        "While 対象Documentが役割を宣言していないとき、システムはそれを実体として扱い、実体向けの宣言が示す配置先へ書き込む shall。"
+        "While 対象Documentが役割を宣言していないとき、システムはそれを実体として扱い、実体向けの宣言が示す配置先へ書き込む shall。",
+        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
+        "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
+        "When schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき、システムは INVALID_TRANSITION エラーを返す shall（宣言しないschema種別はstatusを問わない）。",
+        "When 同じ Document を複数回 render したとき、システムは常に同一の成果物を生成する shall（決定的：入力が同じなら出力も同じ）。",
+        "When x-render が RenderMetaSchema の各部品種別（paragraph/list/table/keyvalue/code/section/kvtable/sequence/statediagram/architecture/flowchart）を宣言したとき、システムはその種別ごとの整形規則に従って決定的に描画する shall。",
+        "When ブロックのx-renderが宣言する部品が全て空データで描画結果が空になったとき、システムはそのブロックの見出しごと省略する shall（タイトルだけが残る空セクションを防ぐ）。",
+        "When ブロック定義がx-render-hiddenを宣言しているとき、システムはそのブロックを本文に一切描画しない shall（frontmatter等の値供給のみに使う非表示ブロックを表現できる）。",
+        "When レベル1（H1）の見出しブロックの直後に別のブロックが続くとき、システムはその間に区切り線（---）を挿入しない shall（多くのビューアがH1自体に下線を描画するため、直後の---は二重線に見えてしまう）。"
       ]
     },
     "errors": {
@@ -138,85 +146,37 @@
           "condition": [
             "解決した配置先が指す正本が、対象Document以外のDocumentの正本である（1つの配置先は1つのDocumentにのみ所有されるという不変条件に反する）"
           ]
+        },
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "対象パスが存在しないとき"
+          ]
+        },
+        {
+          "code": "INVALID_SCHEMA_REF",
+          "condition": [
+            "対象のschemaRefを解決できないとき"
+          ]
+        },
+        {
+          "code": "INVALID_TRANSITION",
+          "condition": [
+            "schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき"
+          ]
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 同じ Document を複数回 render したとき、システムは常に同一の成果物を生成する shall（決定的：入力が同じなら出力も同じ）。",
-        "When x-render が RenderMetaSchema の各部品種別（paragraph/list/table/keyvalue/code/section/kvtable/sequence/statediagram/architecture/flowchart）を宣言したとき、システムはその種別ごとの整形規則に従って決定的に描画する shall。",
-        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When ブロックのx-renderが宣言する部品が全て空データで描画結果が空になったとき、システムはそのブロックの見出しごと省略する shall（タイトルだけが残る空セクションを防ぐ）。",
-        "When ブロック定義がx-render-hiddenを宣言しているとき、システムはそのブロックを本文に一切描画しない shall（frontmatter等の値供給のみに使う非表示ブロックを表現できる）。",
-        "When schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき、システムは INVALID_TRANSITION エラーを返す shall（宣言しないschema種別はstatusを問わない）。",
-        "When レベル1（H1）の見出しブロックの直後に別のブロックが続くとき、システムはその間に区切り線（---）を挿入しない shall（多くのビューアがH1自体に下線を描画するため、直後の---は二重線に見えてしまう）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "同じDocumentを2回renderしても同一の成果物になる",
-          "category": "境界値",
-          "viewpoint": "決定性：入力が変わらなければ出力も変わらない",
-          "gherkin": "Scenario: 同じDocumentを2回renderしても同一の成果物になる\n  Given 変更されていないDocument\n  When 同じDocumentを2回renderする\n  Then 1回目と2回目の成果物は同一である",
-          "covers": "操作保証: renderの決定性"
-        },
-        {
-          "name": "x-render宣言どおりに決定的に描画する",
-          "category": "正常系",
-          "viewpoint": "描画：x-renderがtable部品を宣言したとき、その宣言どおりの構造でMarkdownテーブルとして整形される",
-          "gherkin": "Scenario: x-render宣言どおりに決定的に描画する\n  Given interfaceブロック(x-render宣言=table)を持つDocument\n  When renderする\n  Then schemaのx-render宣言どおりに整形されたMarkdownテーブルが出力に含まれる",
-          "covers": "操作保証: x-renderの各部品種別ごとの整形規則に従った決定的描画"
-        },
-        {
-          "name": "存在しないパスはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる",
-          "gherkin": "Scenario: 存在しないパスはINVALID_PATH\n  Given 実在しない対象パス\n  When 本usecaseを実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: 対象パスが存在しないときはINVALID_PATHを返す"
-        },
-        {
-          "name": "解決できないschemaRefはINVALID_SCHEMA_REF",
-          "category": "異常系",
-          "viewpoint": "解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる",
-          "gherkin": "Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF\n  Given 解決できないschemaRef\n  When 本usecaseを実行する\n  Then INVALID_SCHEMA_REFエラーが返る",
-          "covers": "操作保証: schemaRefを解決できないときはINVALID_SCHEMA_REFを返す"
-        },
-        {
-          "name": "データが空の任意ブロックは見出しごと省略する",
-          "category": "正常系",
-          "viewpoint": "省略規則: x-renderが部品を宣言していても対応データが全て空なら描画結果は空になり、ブロックの見出しごと出力から消える",
-          "gherkin": "Scenario: データが空の任意ブロックは見出しごと省略する\n  Given x-renderに部品が宣言されたブロックを含むが値が全て空であるDocument\n  When render する\n  Then そのブロックの見出しを含むセクション全体が出力から省略される",
-          "covers": "操作保証: 空データの任意ブロックは見出しごと省略する"
-        },
-        {
-          "name": "x-render-hiddenを宣言したブロックは本文に描画しない",
-          "category": "正常系",
-          "viewpoint": "非表示ブロック: frontmatter等の値供給のみに使うブロックはx-render-hiddenで本文描画から除外できる",
-          "gherkin": "Scenario: x-render-hiddenを宣言したブロックは本文に描画しない\n  Given x-render-hidden:trueを宣言したブロックを含むDocument\n  When render する\n  Then そのブロックの見出し・本文が出力に一切含まれない",
-          "covers": "操作保証: x-render-hidden指定のブロックは本文に描画しない"
-        },
-        {
-          "name": "未検証ではrenderできない",
-          "category": "異常系",
-          "viewpoint": "状態遷移：schemaがrenderをVALIDATED起点の遷移として宣言する場合、VALIDATED前提が効く",
-          "gherkin": "Scenario: 未検証ではrenderできない\n  Given schemaがrenderをVALIDATED起点の遷移として宣言しているのに、CREATED状態のDocument\n  When renderする\n  Then INVALID_TRANSITIONエラーが返り、成果物は書き出されない",
-          "covers": "操作保証: schemaがrenderを状態遷移コマンドとして宣言する場合はVALIDATED以降でなければrenderできない"
-        },
-        {
-          "name": "H1見出し直後に区切り線を入れない",
-          "category": "境界値",
-          "viewpoint": "区切り線抑制：レベル1(H1)の見出しブロック直後は区切り線(---)を入れない（多くのビューアがH1自体に下線を描画するため二重線に見えるのを防ぐ）",
-          "gherkin": "Scenario: H1見出し直後に区切り線を入れない\n  Given x-render-level=1のTitleブロックの直後にx-render-level=2のブロックが続くDocument\n  When render する\n  Then H1見出しと最初のH2見出しの間に区切り線(---)が入らない",
-          "covers": "操作保証: レベル1(H1)見出し直後には区切り線を挿入しない"
-        }
-      ]
+      "scenarios": []
     },
     "acceptanceScenarios": {
       "blockType": "AcceptanceScenarios",
@@ -434,6 +394,62 @@
           "viewpoint": "境界: 解決できない配置先を黙って落とさず、理由とともに結果へ出す",
           "gherkin": "Scenario: 解決できなかった配置先は理由とともに結果へ含める\n  Given pathTemplateが参照する変数をDocumentが持たないとき\n  When deployを有効にしてrenderする\n  Then その配置先と理由がskippedに現れ、canonicalへの書き込みは続く",
           "covers": "受け入れ基準: 解決できない配置先はスキップし、正本への書き込みは続ける"
+        },
+        {
+          "name": "対象パスが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象パスが存在しないとき",
+          "gherkin": "Scenario: 対象パスが存在しないときのときINVALID_PATH\n  Given 対象パスが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
+        },
+        {
+          "name": "対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のschemaRefを解決できないとき",
+          "gherkin": "Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF\n  Given 対象のschemaRefを解決できないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_SCHEMA_REF エラーが返る",
+          "covers": "エラー: INVALID_SCHEMA_REF"
+        },
+        {
+          "name": "schemaがrenderを状態遷移コマンドとして宣言しているのに、DocumeのときINVALID_TRANSITION",
+          "category": "異常系",
+          "viewpoint": "エラー：schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさない",
+          "gherkin": "Scenario: schemaがrenderを状態遷移コマンドとして宣言しているのに、DocumeのときINVALID_TRANSITION\n  Given schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_TRANSITION エラーが返る",
+          "covers": "エラー: INVALID_TRANSITION"
+        },
+        {
+          "name": "同じDocumentを2回renderしても同一の成果物になる",
+          "category": "境界値",
+          "viewpoint": "決定性：入力が変わらなければ出力も変わらない",
+          "gherkin": "Scenario: 同じDocumentを2回renderしても同一の成果物になる\n  Given 変更されていないDocument\n  When 同じDocumentを2回renderする\n  Then 1回目と2回目の成果物は同一である",
+          "covers": "操作保証からの移設"
+        },
+        {
+          "name": "x-render宣言どおりに決定的に描画する",
+          "category": "正常系",
+          "viewpoint": "描画：x-renderがtable部品を宣言したとき、その宣言どおりの構造でMarkdownテーブルとして整形される",
+          "gherkin": "Scenario: x-render宣言どおりに決定的に描画する\n  Given interfaceブロック(x-render宣言=table)を持つDocument\n  When renderする\n  Then schemaのx-render宣言どおりに整形されたMarkdownテーブルが出力に含まれる",
+          "covers": "操作保証からの移設"
+        },
+        {
+          "name": "データが空の任意ブロックは見出しごと省略する",
+          "category": "正常系",
+          "viewpoint": "省略規則: x-renderが部品を宣言していても対応データが全て空なら描画結果は空になり、ブロックの見出しごと出力から消える",
+          "gherkin": "Scenario: データが空の任意ブロックは見出しごと省略する\n  Given x-renderに部品が宣言されたブロックを含むが値が全て空であるDocument\n  When render する\n  Then そのブロックの見出しを含むセクション全体が出力から省略される",
+          "covers": "操作保証からの移設"
+        },
+        {
+          "name": "x-render-hiddenを宣言したブロックは本文に描画しない",
+          "category": "正常系",
+          "viewpoint": "非表示ブロック: frontmatter等の値供給のみに使うブロックはx-render-hiddenで本文描画から除外できる",
+          "gherkin": "Scenario: x-render-hiddenを宣言したブロックは本文に描画しない\n  Given x-render-hidden:trueを宣言したブロックを含むDocument\n  When render する\n  Then そのブロックの見出し・本文が出力に一切含まれない",
+          "covers": "操作保証からの移設"
+        },
+        {
+          "name": "H1見出し直後に区切り線を入れない",
+          "category": "境界値",
+          "viewpoint": "区切り線抑制：レベル1(H1)の見出しブロック直後は区切り線(---)を入れない（多くのビューアがH1自体に下線を描画するため二重線に見えるのを防ぐ）",
+          "gherkin": "Scenario: H1見出し直後に区切り線を入れない\n  Given x-render-level=1のTitleブロックの直後にx-render-level=2のブロックが続くDocument\n  When render する\n  Then H1見出しと最初のH2見出しの間に区切り線(---)が入らない",
+          "covers": "操作保証からの移設"
         }
       ]
     },

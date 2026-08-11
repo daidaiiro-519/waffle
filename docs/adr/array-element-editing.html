@@ -1,0 +1,332 @@
+<title>配列の部分編集：入れる前と後で、何がどう変わるか</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:3rem}
+.narrow{max-width:42rem}
+
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.75rem,4.4vw,2.5rem);
+  line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+.meta{display:flex;flex-wrap:wrap;gap:.4rem 1.5rem;font-family:var(--mono);font-size:.72rem;
+  color:var(--faint);border-top:1px solid var(--line);padding-top:1rem;margin-top:.5rem}
+
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+
+/* ── 場面 ─────────────────────── */
+.scene{display:flex;flex-direction:column;gap:1rem}
+.scene-head{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:baseline;
+  padding-bottom:.6rem;border-bottom:1px solid var(--line-strong)}
+.scene-head .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;
+  color:var(--faint);text-transform:uppercase;white-space:nowrap}
+.scene-head .want{font-family:var(--serif);font-size:1.15rem;font-weight:600;flex:1;min-width:16rem}
+
+.ba{display:grid;grid-template-columns:1fr;gap:1rem}
+@media(min-width:52rem){.ba{grid-template-columns:1fr 1fr}}
+.col{border:1px solid var(--line);border-radius:6px;background:var(--surface);
+  display:flex;flex-direction:column;overflow:hidden}
+.col.now{border-color:var(--bad-line)}
+.col.after{border-color:var(--ok-line)}
+.col>h3{margin:0;padding:.55rem .9rem;font-family:var(--mono);font-size:.7rem;
+  letter-spacing:.1em;font-weight:400;border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:1rem;align-items:center}
+.col.now>h3{background:var(--bad-soft);color:var(--bad);border-bottom-color:var(--bad-line)}
+.col.after>h3{background:var(--ok-soft);color:var(--ok);border-bottom-color:var(--ok-line)}
+.col>h3 .badge{font-size:.64rem;letter-spacing:.06em;opacity:.85}
+
+pre{margin:0;padding:.85rem .9rem;overflow-x:auto;font-family:var(--mono);
+  font-size:.75rem;line-height:1.9;color:var(--ink);white-space:pre}
+pre+pre{border-top:1px dashed var(--line)}
+.c{color:var(--faint)}
+.k{color:var(--ok)}
+.err{color:var(--bad);font-weight:700}
+.gone{color:var(--bad);text-decoration:line-through;text-decoration-thickness:1.5px}
+.kept{color:var(--ok)}
+.you{color:var(--muted)}
+
+.outcome{padding:.7rem .9rem;border-top:1px solid var(--line);font-size:.85rem;
+  display:flex;gap:.6rem;align-items:flex-start;line-height:1.7;margin-top:auto}
+.outcome .mark{font-family:var(--mono);font-weight:700;flex-shrink:0}
+.col.now .outcome .mark{color:var(--bad)}
+.col.after .outcome .mark{color:var(--ok)}
+.outcome b{color:var(--ink)}
+
+.note{font-size:.87rem;color:var(--muted);padding-left:1rem;border-left:3px solid var(--line-strong);max-width:42rem}
+
+/* ── 表 ─────────────────────── */
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:34rem}
+th,td{text-align:left;padding:.65rem .85rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.67rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.no{color:var(--bad)}
+td.yes{color:var(--ok)}
+
+ul.plain{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.55rem;max-width:42rem}
+ul.plain li{line-height:1.8}
+
+.ask{background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;
+  padding:1.2rem 1.35rem;display:flex;flex-direction:column;gap:.9rem;max-width:42rem}
+.ask h3{font-family:var(--serif);font-size:1.05rem;margin:0}
+.ask .q{display:flex;flex-direction:column;gap:.3rem;padding-bottom:.8rem;border-bottom:1px solid var(--line)}
+.ask .q:last-child{border-bottom:none;padding-bottom:0}
+.ask .q .lab{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;color:var(--faint)}
+.ask .q p{font-size:.9rem}
+.ask .q .rec{font-size:.85rem;color:var(--ok)}
+
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);
+  font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / 変更前後</span>
+  <h1>配列の部分編集を入れると、動作はこう変わる</h1>
+  <p class="standfirst">4つの場面を、実際にコマンドを叩いた出力で並べた。左が今の動作、右が変更後。<strong>場面1と2の「今」は推測ではなく、実物の Document で実行した結果</strong>（測定後に元へ戻してある）。</p>
+  <div class="meta">
+    <span>題材: ds-extract-discriminator-key（受け入れ基準3件）</span>
+    <span>測定日: 2026-08-11</span>
+  </div>
+</header>
+
+<!-- 場面1 ───────────────────────────── -->
+<section class="scene">
+  <div class="scene-head">
+    <span class="tag">場面 1</span>
+    <span class="want">受け入れ基準を1件だけ足したい</span>
+  </div>
+
+  <div class="ba">
+    <div class="col now">
+      <h3>今<span class="badge">実測</span></h3>
+<pre><span class="c">$ waffle scaffold --operation fill \
+    --values '{"content.acceptanceCriteria<span class="you">.items[].id</span>":
+               "new-criterion"}'</span>
+
+{"error": <span class="err">"INVALID_FIELD_PATH"</span>,
+ "message": "content.acceptanceCriteria.items[].id
+             は schema が宣言していない欄です"}</pre>
+      <div class="outcome"><span class="mark">✕</span><div>要素を指す道は<b>そもそも受け付けない</b>。記入可能な道を組み立てる走査が配列で再帰を止めているため、要素の道は1本も存在しない。</div></div>
+    </div>
+
+    <div class="col after">
+      <h3>変更後</h3>
+<pre><span class="c">$ waffle scaffold --operation <span class="k">基準を足す</span> \
+    --path .../ds-extract-discriminator-key.json \
+    --element '{"id": "new-criterion",
+                "text": "When ... システムは ... shall。"}'</span>
+
+{"documentPath": "...",
+ "added": [<span class="k">"new-criterion"</span>],
+ "items": <span class="k">4</span>}</pre>
+      <div class="outcome"><span class="mark">✓</span><div>既存3件を<b>一度も読まずに</b>1件足せる。読み出し→組み立て→書き戻しが消えるので、その途中で落とす事故も消える。</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 場面2 ───────────────────────────── -->
+<section class="scene">
+  <div class="scene-head">
+    <span class="tag">場面 2</span>
+    <span class="want">同じことを、今できる形でやってしまったとき</span>
+  </div>
+
+  <div class="ba">
+    <div class="col now">
+      <h3>今<span class="badge">実測</span></h3>
+<pre><span class="c">$ waffle scaffold --operation fill \
+    --values '{"content.acceptanceCriteria.items":
+               [{"id":"zz-probe", "text":"..."}]}'</span>
+
+{"written": ["content.acceptanceCriteria.items"],
+ "skipped": []}          <span class="err">← 成功と報告される</span></pre>
+<pre><span class="c">$ waffle query ... 'items[].id'</span>
+
+[<span class="gone">"top-level-branch"</span>, <span class="gone">"nested-branch"</span>, <span class="gone">"no-branch"</span>,
+ <span class="err">"zz-probe"</span>]
+  <span class="err">→ ['zz-probe']</span>   <span class="c">3件が消えた</span></pre>
+      <div class="outcome"><span class="mark">✕</span><div><b>既存3件が黙って消え、成功と報告される。</b>Hook も止めなかった（このセッションで一度 query していたため通過。ただし引いたのは <code>id</code> だけで、組み立て直すには足りない中身）。<code>validate</code> も通る。</div></div>
+    </div>
+
+    <div class="col after">
+      <h3>変更後</h3>
+<pre><span class="c">$ waffle scaffold --operation fill \
+    --values '{"content.acceptanceCriteria.items":
+               [{"id":"zz-probe", "text":"..."}]}'</span>
+
+{"error": <span class="err">"WHOLESALE_REPLACE_NOT_ALLOWED"</span>,
+ "message": "この配列は要素ごとに編集します。
+             基準を足す / 基準の文言を直す /
+             基準を取り下げる のいずれかを使ってください"}</pre>
+      <div class="outcome"><span class="mark">✓</span><div>操作を宣言した配列は、<b>丸ごと置き換える形そのものが塞がる</b>。取りこぼす手順に入れなくなる。</div></div>
+    </div>
+  </div>
+  <p class="note">この場面が、この変更で本当に消したいものです。場面1は不便なだけですが、場面2は<strong>失敗したのに成功と報告される</strong>。そして今、消えた基準に気づく仕組みはありません——<code>check-criteria-coverage</code> は仕様があるだけで未実装です。</p>
+</section>
+
+<!-- 場面3 ───────────────────────────── -->
+<section class="scene">
+  <div class="scene-head">
+    <span class="tag">場面 3</span>
+    <span class="want">使わなくなった受け入れ基準を取り下げたい</span>
+  </div>
+
+  <div class="ba">
+    <div class="col now">
+      <h3>今</h3>
+<pre><span class="c">$ waffle query ...      <span class="you"># 3件を読み出す</span>
+$ <span class="you"># 手元で1件を抜いた配列を組み立てる</span>
+$ waffle scaffold --operation fill \
+    --values '{"...items": [残りの2件]}'</span>
+
+{"written": ["content.acceptanceCriteria.items"]}</pre>
+<pre><span class="c">その基準を指しているシナリオ:</span>
+scenarios[1].satisfies = [<span class="err">"nested-branch"</span>]
+                          <span class="err">↑ 宙に浮いたまま残る</span></pre>
+      <div class="outcome"><span class="mark">✕</span><div>参照が残っていても<b>そのまま消える</b>。engine は「取り下げに伴う業務ルール」を1つも知らない。</div></div>
+    </div>
+
+    <div class="col after">
+      <h3>変更後</h3>
+<pre><span class="c">$ waffle scaffold --operation <span class="k">基準を取り下げる</span> \
+    --key nested-branch</span>
+
+{"error": <span class="err">"PRECONDITION_NOT_MET"</span>,
+ "message": "この基準を指すシナリオが残っています:
+             『束ねられた要素の中の分岐から
+               種別の欄を取り出す』"}</pre>
+<pre><span class="c">シナリオを先に外してから、もう一度:</span>
+
+{"removed": [<span class="k">"nested-branch"</span>], "items": <span class="k">2</span>}</pre>
+      <div class="outcome"><span class="mark">✓</span><div>Schema が「取り下げには<b>参照するシナリオが無いこと</b>が要る」と宣言し、engine がそれを検査する。順序を守れば通る。</div></div>
+    </div>
+  </div>
+  <p class="note">ここが <code>add</code> / <code>remove</code> / <code>replace</code> という汎用の3操作にしなかった理由です。<strong>「足す」と「取り下げる」は守るべきことが違う</strong>のに、汎用3操作はその違いを同じ形に潰してしまう。</p>
+</section>
+
+<!-- 場面4 ───────────────────────────── -->
+<section class="scene">
+  <div class="scene-head">
+    <span class="tag">場面 4</span>
+    <span class="want">Schema から、使わなくなった種別を消したい</span>
+  </div>
+
+  <div class="ba">
+    <div class="col now">
+      <h3>今<span class="badge">コード確認済</span></h3>
+<pre><span class="c">$ waffle patch-schema --operation remove_field \
+    --defName null \
+    --fieldPath 'properties.specKind.enum.3'</span>
+
+{"ok": true}          <span class="err">← 互換検査を素通り</span></pre>
+<pre><span class="c">検査が見ているのは3つだけ:</span>
+  required 配列への add/replace
+  既存フィールドの type 変更
+  必須プロパティの remove
+<span class="err">enum 値の除去も $defs の除去も、どれにも当たらない</span></pre>
+      <div class="outcome"><span class="mark">✕</span><div>その種別を指す Document を壊す変更が、<b>無傷で通る</b>。しかも分岐・enum・描画先を人が順に消すので、途中で止まると壊れた Schema が残る。</div></div>
+    </div>
+
+    <div class="col after">
+      <h3>変更後</h3>
+<pre><span class="c">$ waffle patch-schema --operation <span class="k">remove_kind_branch</span> \
+    --kind domain-service</span>
+
+{"error": <span class="err">"BACKWARD_INCOMPATIBLE"</span>,
+ "message": "enum 値の除去は後方互換を壊します:
+             /properties/specKind/enum/3"}</pre>
+<pre><span class="c">意図した破壊なら、版を上げてから:</span>
+
+{"removed": {"branch": <span class="k">1</span>, "enum": <span class="k">1</span>,
+             "renderTarget": <span class="k">1</span>}}   <span class="c">3箇所を同時に</span></pre>
+      <div class="outcome"><span class="mark">✓</span><div>互換を壊す変更が<b>止まる</b>。通すときは分岐・enum・描画先が<b>まとめて</b>消えるので、半端な Schema が残らない。</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- まとめ ───────────────────────────── -->
+<section>
+  <h2>まとめると、変わるのは4つ</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th></th><th>今</th><th>変更後</th></tr></thead>
+      <tbody>
+        <tr><td>1件足す</td><td class="no">全件を読み、手元で組み直し、丸ごと書き戻す</td><td class="yes">既存を読まずに1件足す</td></tr>
+        <tr><td>組み立てで取りこぼしたとき</td><td class="no">成功と報告され、消えたことに誰も気づかない</td><td class="yes">丸ごと置き換える形自体が塞がる</td></tr>
+        <tr><td>参照されている基準を消したとき</td><td class="no">そのまま消え、シナリオの参照が宙に浮く</td><td class="yes">前提を検査して止まる</td></tr>
+        <tr><td>Schema から種別を消したとき</td><td class="no">互換検査を素通りし、3箇所を人が順に消す</td><td class="yes">違反として止まり、通せば3箇所同時</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>入れるときに、同時に必要なもの</h2>
+  <p class="narrow">要素単位で書けるようにすると、丸ごと置き換えが副作用として持っていた「全体を一度読ませる強制力」が消えます。何も足さないと、失敗が<strong>欠落（見える）から不整合（見えない）へ移るだけ</strong>で、悪化しかねない。だから次の4つは同じ回に入れます。</p>
+  <ul class="plain">
+    <li><strong>鍵の一意性を <code>validate</code> で検査する。</strong>今これが無いので、鍵が重複した配列では部分編集が黙って最初の1件だけを書き換えうる。</li>
+    <li><strong>1つでも不正があれば何も書かない。</strong>3件のうち1件だけ通る状態は、いま消したい「何が済んでいるか分からない」を細かい粒度で再現する。</li>
+    <li><strong>要素を足すときの固定値の補完。</strong>今の補完はオブジェクトにしか降りず配列へ入らないため、このままだと「成功と報告されるのに schema へ適合しない Document」が残る。</li>
+    <li><strong>鍵が見つからなければ失敗させる。</strong>黙って足す挙動にはしない。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>判断が要るのはここだけ</h2>
+  <div class="ask">
+    <div class="q">
+      <span class="lab">D2 ── 操作の名前</span>
+      <p>汎用の <code>add</code>/<code>remove</code>/<code>replace</code> にするか、場面3のように<strong>配列ごとに業務の言葉と前提を宣言する</strong>か。汎用にすると場面3の右側は作れません。</p>
+      <p class="rec">推奨 ── 宣言する側。ただし最初は<strong>受け入れ基準とシナリオの2配列だけ</strong>で実証し、前提の検査が効くと確かめてから広げる。</p>
+    </div>
+    <div class="q">
+      <span class="lab">D6 ── Schema 側をどこまで</span>
+      <p>場面4の <code>remove_kind_branch</code> を足すか。足さなくても、<strong>enum 値の除去を互換検査に加えるだけ</strong>で左側の「素通り」は消えます。</p>
+      <p class="rec">推奨 ── 互換検査は今すぐ。<code>remove_kind_branch</code> は場面1〜3の後。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  場面1・2 の「今」は ds-extract-discriminator-key.json で実際に実行した出力（測定後 git で復元）。<br>
+  場面3・4 の「今」は実装コードを読んで確認。「変更後」はいずれも提案であり、出力の形は実装時に確定する。
+</footer>
+
+</div>

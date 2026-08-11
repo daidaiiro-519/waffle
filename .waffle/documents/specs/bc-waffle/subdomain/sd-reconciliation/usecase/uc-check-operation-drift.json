@@ -84,7 +84,8 @@
         "When 実装のoperation分岐にはあるがusecase specのどのシナリオにも宣言されていない操作があるとき、システムはその組をoperations_undocumented_in_specに含める shall。",
         "While acceptanceScenariosにoperationフィールドを1件も宣言していないusecaseであるとき、システムはそのusecaseを突き合わせの対象にしない shall。",
         "While 宣言と実装のoperationが完全に一致しているとき、システムはoperations_missing_in_impl・operations_undocumented_in_spec両方を空配列で返す shall。",
-        "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+        "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
+        "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
       ]
     },
     "errors": {
@@ -131,29 +132,26 @@
           "viewpoint": "対象外：単一操作のusecase等、operationフィールドを1件も宣言していないusecaseは突き合わせない",
           "gherkin": "Scenario: operationを1件も宣言していないusecaseは対象外\n  Given acceptanceScenariosのどのシナリオにもoperationフィールドを宣言していないusecase\n  When operationドリフト検査を実行する\n  Then そのusecaseは突き合わせの対象にならず、差分にも現れない",
           "covers": "受け入れ基準: operationフィールド無しは対象外"
+        },
+        {
+          "name": "対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象のdocuments_rootまたはsrc_rootが存在しないとき",
+          "gherkin": "Scenario: 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH\n  Given 対象のdocuments_rootまたはsrc_rootが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないdocuments_rootはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "エラー：走査起点の不在",
-          "gherkin": "Scenario: 存在しないdocuments_rootはINVALID_PATH\n  When 存在しないdocuments_rootでoperationドリフト検査を実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: documents_rootが存在しないときINVALID_PATH"
-        }
-      ]
+      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

@@ -85,7 +85,8 @@
         "When 要素に docstring が無いとき、システムは summary/body/args/returns/raises/attributes を空値（空文字・空配列）で返し、走査全体は失敗させない shall。",
         "While 対象言語に対応する DocstringSchema の kind が無いとき、システムは UNSUPPORTED_KIND エラーを返す shall。",
         "When ソースコードの本体（docstring 以外の行）を返す必要がないとき、システムは本体を読み込んだ上でも構造化データ以外を出力に含めない shall。",
-        "When 対象パスがディレクトリのとき、システムはその配下を再帰的に走査する shall（直下だけを見ると、階層を持つコードベースでは走査結果がほぼ空になり、「docstringが無い」を一件も報告できなくなる）。"
+        "When 対象パスがディレクトリのとき、システムはその配下を再帰的に走査する shall（直下だけを見ると、階層を持つコードベースでは走査結果がほぼ空になり、「docstringが無い」を一件も報告できなくなる）。",
+        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
       ]
     },
     "errors": {
@@ -102,6 +103,12 @@
           "code": "INVALID_SOURCE",
           "condition": [
             "対象ファイルが構文解析できない（言語のパーサでエラー）"
+          ]
+        },
+        {
+          "code": "INVALID_PATH",
+          "condition": [
+            "対象パスが存在しないとき"
           ]
         }
       ]
@@ -138,29 +145,26 @@
           "viewpoint": "宣言に従う：走査の範囲を実装が独自に決めない",
           "covers": "受け入れ基準: 対象パスがディレクトリのとき配下を再帰的に走査する",
           "gherkin": "Scenario: 階層を持つ対象は下まで走査する\n  Given 直下にはソースを持たず、下位のディレクトリにだけソースを持つ対象パス\n  When ソースコードの走査を求める\n  Then 下位のディレクトリにある要素が結果に含まれる"
+        },
+        {
+          "name": "対象パスが存在しないときのときINVALID_PATH",
+          "category": "異常系",
+          "viewpoint": "エラー：対象パスが存在しないとき",
+          "gherkin": "Scenario: 対象パスが存在しないときのときINVALID_PATH\n  Given 対象パスが存在しないとき状況\n  When 本ユースケースを実行する\n  Then INVALID_PATH エラーが返る",
+          "covers": "エラー: INVALID_PATH"
         }
       ]
     },
     "operationGuarantees": {
       "blockType": "OperationGuarantees",
       "title": "操作保証",
-      "items": [
-        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
-      ]
+      "items": []
     },
     "guaranteeScenarios": {
       "blockType": "GuaranteeScenarios",
       "title": "操作保証シナリオ",
       "background": "",
-      "scenarios": [
-        {
-          "name": "存在しないパスはINVALID_PATH",
-          "category": "異常系",
-          "viewpoint": "解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる",
-          "gherkin": "Scenario: 存在しないパスはINVALID_PATH\n  Given 実在しない対象パス\n  When 本usecaseを実行する\n  Then INVALID_PATHエラーが返る",
-          "covers": "操作保証: 対象パスが存在しないときはINVALID_PATHを返す"
-        }
-      ]
+      "scenarios": []
     },
     "usecase": {
       "operationName": "ScanSourceCode",

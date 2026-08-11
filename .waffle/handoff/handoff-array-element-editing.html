@@ -1,0 +1,500 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>配列を、要素の鍵で編集できるようにする</title>
+<meta name="id" content="handoff-array-element-editing">
+<meta name="type" content="Handoff">
+<meta name="title" content="配列を、要素の鍵で編集できるようにする">
+<meta name="description" content="Document の配列を要素の鍵で部分編集できるようにする capability の引き継ぎ。担うユースケース: uc-scaffold-document / uc-validate-document / uc-patch-schema / uc-check-query-precedes-array-fill / uc-check-criteria-coverage、および業務サービス ds-patch-array-element / ds-collect-key-references。配列は今、記入可能な道の走査が配列で止まるため丸ごとしか書き換えられず、足したい1件だけを渡すと既存が黙って消えて成功と報告される（実測で確認済み）。これを、鍵の宣言・参照関係の宣言・順序の宣言という3つの宣言と、add_element / edit_element / retire_element の3操作で置き換える。">
+<meta name="tags" content="framework:waffle">
+<style>
+@font-face { font-family: "Ledger Slab"; src: local("Roboto Slab"), local("Georgia"); }
+:root {
+  --paper: #f3f1ec; --ink: #23241f; --ink-dim: #63645a; --ink-faint: #8c8d80;
+  --line: #ddd9cd; --surface: #ffffff; --surface-sunken: #faf9f5;
+  --accent: #2f5c46; --accent-soft: #e6f0ea; --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(35,36,31,0.04), 0 4px 14px rgba(35,36,31,0.05);
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --serif: "Ledger Slab", "Hiragino Mincho ProN", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+  --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+  --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1c18; --ink: #eceae2; --ink-dim: #b0af9f; --ink-faint: #7c7b6d;
+    --line: #37382f; --surface: #232420; --surface-sunken: #1f201c;
+    --accent: #82c4a4; --accent-soft: #1c332a; --accent-ink: #14211b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 18px rgba(0,0,0,0.25);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+header.masthead { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.6rem 1.8rem; margin-bottom: 2rem; }
+.masthead .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+h1 { font-family: var(--serif); font-size: clamp(1.5rem, 3.6vw, 2.05rem); font-weight: 600; margin: 0.35rem 0 0.7rem; text-wrap: balance; }
+.masthead dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.6rem; }
+.masthead dt { white-space: nowrap; }
+.masthead dd { margin: 0; color: var(--ink-dim); overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.table-scroll table { border-collapse: collapse; width: 100%; min-width: max-content; }
+section { margin-bottom: 1.6rem; }
+h2 { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem 0.2rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 1.5rem 1.6rem; }
+.flow-card { overflow-x: auto; }
+.flow-card svg { display: block; min-width: 660px; }
+.flow-box rect { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.3; rx: 10; }
+.flow-box.new rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.flow-box.new .flow-html .title { font-weight: 700; color: var(--accent); }
+.flow-arrow { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+.flow-arrow.dep { stroke: var(--accent); stroke-dasharray: 4 3; }
+.flow-num circle { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.flow-num text { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--accent); }
+.flow-caption-svg { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-faint); text-anchor: middle; }
+.flow-caption-html { height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.3; color: var(--ink-faint); text-align: left; overflow-wrap: break-word; word-break: break-word; }
+.flow-split { stroke: var(--ink-faint); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.flow-html { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; line-height: 1.4; color: var(--ink); text-align: center; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+.flow-html .title { font-weight: 600; }
+.flow-html .sub { color: var(--ink-faint); font-size: 9.5px; margin-top: 2px; }
+.legend { display: flex; gap: 1.4rem; margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend .swatch { width: 0.9rem; height: 0.9rem; border-radius: 3px; }
+.legend .swatch.existing { background: var(--surface-sunken); border: 1.3px solid var(--line); }
+.legend .swatch.new { background: var(--accent-soft); border: 1.4px dashed var(--accent); }
+.progress-rail { display: flex; align-items: center; margin-bottom: 1.3rem; }
+.rail-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+.rail-step .dot { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--surface-sunken); border: 1.5px solid var(--line); flex-shrink: 0; }
+.rail-step.done .dot { background: var(--ink-faint); border-color: var(--ink-faint); }
+.rail-step.current .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rail-step .label { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); margin-top: 0.5rem; text-align: center; }
+.rail-step.current .label { color: var(--accent); font-weight: 600; }
+.rail-connector { flex: 1.4; height: 1.5px; background: var(--line); margin-bottom: 1.3rem; }
+.rail-connector.done { background: var(--ink-faint); }
+.coverage-list { border-top: 1px solid var(--line); padding-top: 1rem; }
+.review-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.2rem; flex-wrap: wrap; padding: 0.55rem 0; }
+.review-row .who { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); flex-shrink: 0; }
+.review-row .detail { font-family: var(--mono); font-size: 0.77rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.tabs-card { padding: 0; overflow: hidden; }
+.tabs input { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.9rem 1rem 0; }
+.tab-labels label { padding: 0.55rem 1.1rem; border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-dim); cursor: pointer; background: var(--surface-sunken); border: 1px solid var(--line); overflow-wrap: anywhere; text-align: center; }
+#tab1:checked ~ .tab-labels label[for="tab1"], #tab2:checked ~ .tab-labels label[for="tab2"], #tab3:checked ~ .tab-labels label[for="tab3"], #tab4:checked ~ .tab-labels label[for="tab4"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab-panel { display: none; padding: 1.5rem 1.7rem 1.8rem; }
+#tab1:checked ~ .tab-panels #panel1, #tab2:checked ~ .tab-panels #panel2, #tab3:checked ~ .tab-panels #panel3, #tab4:checked ~ .tab-panels #panel4 { display: block; }
+.scope-item { border-top: 1px solid var(--line); padding: 0.9rem 0; max-width: 62ch; }
+.scope-item:first-child { border-top: none; padding-top: 0; }
+.scope-item .path { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); overflow-wrap: anywhere; }
+.scope-item .reason { color: var(--ink-dim); font-size: 0.9rem; line-height: 1.7; margin-top: 0.3rem; }
+.entry { border-top: 1px solid var(--line); padding: 1.1rem 0; max-width: 60ch; }
+.entry:first-child { border-top: none; padding-top: 0; }
+.entry-head { display: flex; gap: 0.4rem; margin-bottom: 0.55rem; }
+.entry-head .badge { font-family: var(--mono); font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--line); color: var(--ink-dim); }
+.entry-viewpoint { font-weight: 600; margin-bottom: 0.5rem; line-height: 1.55; overflow-wrap: anywhere; }
+.entry-consideration { color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.empty-state { font-size: 0.9rem; color: var(--ink-faint); font-style: italic; }
+.constraint-item { display: flex; gap: 0.9rem; align-items: baseline; max-width: 60ch; padding: 0.9rem 0; border-top: 1px solid var(--line); }
+.constraint-item:first-child { border-top: none; padding-top: 0; }
+.constraint-item .num { font-family: var(--mono); color: var(--accent); background: var(--accent-soft); font-size: 0.72rem; flex-shrink: 0; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.constraint-item p { margin: 0; color: var(--ink-dim); font-size: 0.93rem; line-height: 1.75; overflow-wrap: anywhere; }
+.reading-card { margin-top: 0.9rem; }
+.reading-card h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.9rem; }
+.reading-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.reading-steps li { counter-increment: step; display: flex; gap: 0.85rem; align-items: baseline; padding: 0.65rem 0; border-top: 1px solid var(--line); max-width: 62ch; }
+.reading-steps li:first-child { border-top: none; padding-top: 0; }
+.reading-steps li::before { content: counter(step); font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-soft); flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.reading-steps p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); line-height: 1.7; }
+.reading-steps strong { color: var(--ink); font-weight: 600; }
+a:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Handoff Record</div>
+    <h1>配列を、要素の鍵で編集できるようにする</h1>
+    <dl>
+      <dt>引き継ぎ元spec</dt><dd>uc-scaffold-document</dd>
+      <dt>documentId</dt><dd>handoff-array-element-editing</dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2>00 完成イメージ — 予定される実装配置</h2>
+    <div class="card flow-card">
+      <svg viewBox="0 0 700 412" width="100%" height="412">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--ink-faint)"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <foreignObject class="flow-caption-fo" x="14" y="10.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">宣言</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="124.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">業務サービス</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="238.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">業務ユースケース</div></foreignObject>
+        <foreignObject class="flow-caption-fo" x="14" y="352.0" width="76" height="50"><div xmlns="http://www.w3.org/1999/xhtml" class="flow-caption-html">受け口</div></foreignObject>
+        <path class="flow-split" d="M0,92.0 H700"/>
+        <path class="flow-split" d="M0,206.0 H700"/>
+        <path class="flow-split" d="M0,320.0 H700"/>
+        <path class="flow-arrow" d="M190.0,60.0 L190.0,124.0"/>
+        <path class="flow-arrow" d="M398.0,60.0 L398.0,124.0"/>
+        <path class="flow-arrow" d="M606.0,60.0 L606.0,124.0"/>
+        <path class="flow-arrow" d="M190.0,174.0 L164.0,238.0"/>
+        <path class="flow-arrow" d="M190.0,174.0 L320.0,238.0"/>
+        <path class="flow-arrow" d="M190.0,174.0 L476.0,238.0"/>
+        <path class="flow-arrow" d="M190.0,174.0 L632.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L164.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L320.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L476.0,238.0"/>
+        <path class="flow-arrow" d="M398.0,174.0 L632.0,238.0"/>
+        <path class="flow-arrow" d="M606.0,174.0 L164.0,238.0"/>
+        <path class="flow-arrow" d="M606.0,174.0 L320.0,238.0"/>
+        <path class="flow-arrow" d="M606.0,174.0 L476.0,238.0"/>
+        <path class="flow-arrow" d="M606.0,174.0 L632.0,238.0"/>
+        <path class="flow-arrow" d="M164.0,288.0 L190.0,352.0"/>
+        <path class="flow-arrow" d="M164.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M164.0,288.0 L606.0,352.0"/>
+        <path class="flow-arrow" d="M320.0,288.0 L190.0,352.0"/>
+        <path class="flow-arrow" d="M320.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M320.0,288.0 L606.0,352.0"/>
+        <path class="flow-arrow" d="M476.0,288.0 L190.0,352.0"/>
+        <path class="flow-arrow" d="M476.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M476.0,288.0 L606.0,352.0"/>
+        <path class="flow-arrow" d="M632.0,288.0 L190.0,352.0"/>
+        <path class="flow-arrow" d="M632.0,288.0 L398.0,352.0"/>
+        <path class="flow-arrow" d="M632.0,288.0 L606.0,352.0"/>
+        <path class="flow-arrow dep" d="M190.0,60.0 L190.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="190.0" y="86.0">要素を一意に指す</text>
+        <path class="flow-arrow dep" d="M190.0,60.0 L320.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="255.0" y="143.0">一意性を検査する</text>
+        <path class="flow-arrow dep" d="M398.0,60.0 L398.0,124.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="86.0">たどる道</text>
+        <path class="flow-arrow dep" d="M398.0,60.0 L320.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="359.0" y="143.0">宣言の欠けを検査する</text>
+        <path class="flow-arrow dep" d="M606.0,60.0 L164.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="385.0" y="143.0">要素操作を塞ぐ</text>
+        <path class="flow-arrow dep" d="M512.0,149.0 L284.0,149.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="398.0" y="143.0">鍵と固定値</text>
+        <path class="flow-arrow dep" d="M512.0,149.0 L492.0,149.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="502.0" y="143.0">参照関係</text>
+        <path class="flow-arrow dep" d="M190.0,174.0 L164.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="177.0" y="200.0">書き換えた配列</text>
+        <path class="flow-arrow dep" d="M398.0,174.0 L164.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="281.0" y="200.0">取り下げてよいか</text>
+        <path class="flow-arrow dep" d="M398.0,174.0 L632.0,238.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="515.0" y="200.0">指す先が無い参照</text>
+        <path class="flow-arrow dep" d="M190.0,352.0 L164.0,288.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="177.0" y="314.0">operation を渡す</text>
+        <path class="flow-arrow dep" d="M398.0,352.0 L164.0,288.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="281.0" y="314.0">operation を渡す</text>
+        <path class="flow-arrow dep" d="M606.0,352.0 L164.0,288.0" marker-end="url(#arrow-accent)"/><text class="flow-caption-svg" x="385.0" y="314.0">手前で通す／止める</text>
+        
+        <g class="flow-box new" transform="translate(96.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">鍵の宣言</div>
+              <div class="sub">どの欄が要素を一意に指すか</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">1</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(304.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">参照関係の宣言</div>
+              <div class="sub">その鍵がどこから指されるか</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">2</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(512.0,10.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">順序の宣言</div>
+              <div class="sub">並び全体でひとつの値であること</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">3</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(96.0,124.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ds-patch-array-element</div>
+              <div class="sub">鍵で要素を書き換える写像</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">4</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(304.0,124.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">ds-collect-key-references</div>
+              <div class="sub">宣言をたどって参照を集める</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">5</text></g>
+        </g>
+        <g class="flow-box new" transform="translate(512.0,124.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">宣言の読み出し</div>
+              <div class="sub">3つの宣言を Schema から取り出す</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">6</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">uc-scaffold-document</div>
+              <div class="sub">要素操作の受け付けと保存</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">7</text></g>
+        </g>
+        <g class="flow-box " transform="translate(252.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">uc-validate-document</div>
+              <div class="sub">鍵の一意性と宣言の完全性</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">8</text></g>
+        </g>
+        <g class="flow-box " transform="translate(408.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">uc-patch-schema</div>
+              <div class="sub">種別の取り消しと互換の関門</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">9</text></g>
+        </g>
+        <g class="flow-box " transform="translate(564.0,238.0)">
+          <rect width="136.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="128.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">uc-check-criteria-coverage</div>
+              <div class="sub">参照の欠けの検知</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">10</text></g>
+        </g>
+        <g class="flow-box " transform="translate(96.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">CLI</div>
+              <div class="sub">waffle scaffold --operation add_element 等</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">11</text></g>
+        </g>
+        <g class="flow-box " transform="translate(304.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">MCP</div>
+              <div class="sub">同じ operation を公開する</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">12</text></g>
+        </g>
+        <g class="flow-box " transform="translate(512.0,352.0)">
+          <rect width="188.0" height="50" rx="10"/>
+          <foreignObject x="4" y="4" width="180.0" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="flow-html">
+              <div class="title">先行読み取りの判定</div>
+              <div class="sub">要素操作は対象外として通す</div>
+            </div>
+          </foreignObject>
+          <g class="flow-num"><circle cx="0" cy="0" r="10"/><text x="0" y="4" text-anchor="middle">13</text></g>
+        </g>
+      </svg>
+      <div class="legend"><span><span class="swatch existing"></span>既存</span><span><span class="swatch new"></span>新設（今回の実装対象）</span></div>
+    </div>
+    <div class="card reading-card"><h3>読み方</h3><ol class="reading-steps"><li><p><strong>宣言</strong>: 配列ノードごとに Schema へ置く。要素側の共有定義には置かない（同じ定義を参照する別の配列まで巻き添えにするため）。3つとも記入指示へ抜けるので、書き手にも見える。</p></li><li><p><strong>業務サービス</strong>: どれも agg-document と agg-schema の2つにまたがり、どちらの状態も変えない純粋な計算。ds-patch-array-element は鍵の指し方の規則が変われば変わり、ds-collect-key-references は参照のたどり方が変われば変わるので、分けている。</p></li><li><p><strong>業務ユースケース</strong>: 新しい業務ユースケースは立てない。uc-scaffold-document の既存の編成（読む→書き込み先を解決する→書く→保存する）を要素操作もそのまま使うため、別に立てると同じ編成が3箇所へ複製される。</p></li><li><p><strong>受け口</strong>: operation 名と引数を素通しするだけで、判定を持たせない。hook だけは engine より手前で止めるため、engine が禁じた手順だけを勧めないよう理由の文言を直す。</p></li></ol></div>
+  </section>
+
+  <section>
+    <h2>01 レビュー状況</h2>
+    <div class="card">
+      <div class="progress-rail">
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト提案</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">advisor<br>レビュー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">ブレスト完了<br>サマリー</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step done"><div class="dot"></div><div class="label">spec作成</div></div>
+        <div class="rail-connector done"></div>
+        <div class="rail-step current"><div class="dot"></div><div class="label">Handoff記録</div></div>
+        <div class="rail-connector "></div>
+        <div class="rail-step "><div class="dot"></div><div class="label">実装</div></div>
+      </div>
+      <div class="coverage-list">
+        <div class="review-row"><span class="who">ddd-advisor</span><span class="detail">設計観点 4件</span></div>
+        <div class="review-row"><span class="who">tech-lead-advisor</span><span class="detail">設計観点 1件／実装観点 6件</span></div>
+        <div class="review-row"><span class="who">未解決事項</span><span class="detail">2件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 詳細</h2>
+    <div class="card tabs-card">
+      <div class="tabs">
+        <input type="radio" name="tabs" id="tab1" checked>
+        <input type="radio" name="tabs" id="tab2">
+        <input type="radio" name="tabs" id="tab3">
+        <input type="radio" name="tabs" id="tab4">
+        <div class="tab-labels">
+          <label for="tab1">spec作成の結論</label>
+          <label for="tab2">実装方針</label>
+          <label for="tab3">実装時の制約</label>
+          <label for="tab4">対象範囲の見込み</label>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel" id="panel1">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">集約の原則と要素編集は矛盾しない</div>
+              <div class="entry-consideration">集約の原則は「丸ごとしか書き換えられない」ではなく「1つの集約は1つのトランザクションで変更される」であり、集約ルートを経由して内部要素を足すのは正しい使い方そのもの。矛盾が生じるのは要素を Document から切り離して単独に指せるようにしたときだけなので、対象は常に Document、検証単位も Document 全体という2条件を成立条件として置いた。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">汎用CRUDでは、削除に伴う業務ルールが潰れる</div>
+              <div class="entry-consideration">「基準を足す」と「基準を取り下げる」は守るべきことが違い、汎用の add/remove/replace はこの違いを同じ形に潰す。sd-document-management / sd-schema-management がどちらも中核と宣言されている以上、名付ける側に倒すべきという判断。そこで retire_element（取り下げる）という語を選び、参照が先に外れていることを語自体に含意させた。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">宣言の不在が、許可へ倒れてはならない</div>
+              <div class="entry-consideration">「宣言が無い＝指されていない」と読むと、鍵だけ宣言して参照関係を宣言し忘れた配列で取り下げが常に成功する。engine が業務を知ったのではなく、書き手が毎回思い出したときだけ業務が守られる状態になる。そこで uc-validate-document に keyed-array-declares-references を置き、鍵を宣言した配列は参照関係の宣言を持つことを不適合の検査で強制した。指されないことが正しいなら、指されない旨を宣言させる。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">ddd-advisor</span></div>
+              <div class="entry-viewpoint">同義語を並立させない</div>
+              <div class="entry-consideration">Document 側の「取り下げ」と Schema 側の「除去」は同じ業務ルール（指されているものは取り除けない）でありながら、語も返す名も参照の集め方も違っていた。同一の境界づけられたコンテキストの中の同義語の乱立として指摘を受け、Schema 側にも同じ規律を通す形で解いた。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">業務サービスの分け方は、変更理由の違いに対応している</div>
+              <div class="entry-consideration">ds-patch-array-element は鍵の指し方の規則が変われば変わり、ds-collect-key-references は参照のたどり方が変われば変わる。変更理由が別なので統合しない。両者とも agg-document と agg-schema の2つにまたがるため、referencedAggregates にそれを明記した。</div>
+            </div></div>
+          <div class="tab-panel" id="panel2">
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">丸ごと置き換えしかできないのは、走査が配列で止まっているから</div>
+              <div class="entry-consideration">fill_template.py:331-356 の _walk_fill は配列に達すると再帰を止め、要素の中身を entry[&#x27;element&#x27;] にしまうだけで、要素の道を allowed に1本も積まない。運用の癖ではなく allowed 集合の作り方そのものに由来する。したがって判定を「集合への所属」から「分解」へ変える必要がある。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">互換の関門は単一で、取り消しが自分に拒まれる</div>
+              <div class="entry-consideration">patch_schema.py:134 の check_backward_compatible は create_version を除く全 operation が必ず通る唯一の関門。remove_kind_branch は定義上必ず enum 値を除去するため、enum 除去を違反として実装すると remove_kind_branch が自分の生んだ除去に自分で拒まれ、そのシナリオは絶対に緑にならない。免除を operation 単位で明示列挙し、免除された操作は自分の基準で何を壊すかを述べる形にした。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">宣言の表記は、条件式の言語にしない</div>
+              <div class="entry-consideration">参照関係は配列を2段またぐ道を表せる必要があるが、述語を書けるようにすると「条件式言語を持たせない」という設計判断を Schema 側から迂回できてしまう。配列へ降りることと欄をたどることだけを並べたセグメント列とし、人が見分けるための欄（手がかり）を同じ宣言の中に並記する。JMESPath の流用は、ドメイン層への式評価器の降下と述語による迂回の2点で採らない。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">業務サービスのテストが全部緑でも、固定値の欠落は検出されない</div>
+              <div class="entry-consideration">fill_template.py:168-176 の _walk_const は object にしか降りず配列へ入らない。ds 側は固定値を入力として受け取る設計なので、単体テストでは手で渡せば緑になる。element-add-fills-const は必ず業務ユースケース側の受け入れテストとして端から端まで通すこと。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">鍵の一意性検査は、外部ライブラリのアダプターへ入れない</div>
+              <div class="entry-consideration">jsonschema_validator.py は外部 library を閉じ込める outbound adapter であり、Waffle 固有の業務ルールの置き場所ではない。ここへ入れるとポートの契約がコア側の知らない検査を含み始める。ドメインサービスとして書き、validate_document.py の run() が既存の errors と併合する。</div>
+            </div>
+            <div class="entry">
+              <div class="entry-head"><span class="badge">tech-lead-advisor</span></div>
+              <div class="entry-viewpoint">hook が engine より手前で、engine が禁じた手順を勧める</div>
+              <div class="entry-consideration">require-query-before-array-fill は PreToolUse で deny するため、鍵を宣言した配列への丸ごと置き換えは engine へ到達せず、利用者は「query してから丸ごと置き換えろ」という、この仕様が禁じた手順だけを見る。要素操作は values とは別の引数にして hook の判定に掛からないようにし、拒否の理由には両方の道を示させる。</div>
+            </div></div>
+          <div class="tab-panel" id="panel3">
+            <div class="constraint-item">
+              <span class="num">1</span>
+              <p>要素を Document から切り離して単独に指せるようにしない。対象は常に Document 全体、検証単位も Document 全体。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">2</span>
+              <p>鍵の欄名を共通の名前へ統一しない。id / name / code / term の書き分けをそのまま保つ。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">3</span>
+              <p>文字列の並びで値そのものを鍵にしない。部分編集が要るほど重要なら構造化して欄を与える。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">4</span>
+              <p>順序が意味を持つ配列を「鍵が無い配列」として表さない。順序であることを積極的に宣言する。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">5</span>
+              <p>参照関係の宣言に、値による絞り込み（述語）を書けるようにしない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">6</span>
+              <p>鍵の一意性検査を ValidateDocument へ同時に入れる。別の回へ送るなら要素編集自体を送る。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">7</span>
+              <p>要素操作は、1つでも受け付けられないものがあれば何も適用しない。</p>
+            </div>
+            <div class="constraint-item">
+              <span class="num">8</span>
+              <p>PatchSchema に Document の走査を持ち込まない。取り消される種別を指す Document が残っていないかの確認は、schema版のドリフトを見る側の責務。</p>
+            </div></div>
+          <div class="tab-panel" id="panel4">
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/element_key_declaration.py</div>
+              <div class="reason">鍵・参照関係・順序の3つの宣言を schema から読み出す語彙。fill 経路と validate 経路の2つの usecase が使うため、fill_template.py へ寄せず独立させる。鍵の一意性検査もここへ同居させる。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/patch_array_element.py</div>
+              <div class="reason">ds-patch-array-element の実装。鍵で要素を足す・欄を直す・取り除く写像と、全か無か。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/collect_key_references.py</div>
+              <div class="reason">ds-collect-key-references の実装。宣言のセグメント列をたどって参照を集める。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/fill_template.py</div>
+              <div class="reason">_walk_const を配列へ降ろす（要素の固定値）。entry へ鍵・参照関係・順序の宣言を載せて記入指示へ抜けさせる。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/scaffold_document.py</div>
+              <div class="reason">elementOps の受け付け、丸ごと置き換えの拒否と案内、全か無かの保存。着手前に allowed / const_paths / protected の組み立てを切り出す（_fill と _clear_field で既に重複しており、要素操作で3箇所目になる）。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/validate_document.py</div>
+              <div class="reason">鍵の一意性と、鍵を宣言した配列が参照関係の宣言を持つことを、既存の errors へ併合。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/services/schema_patch.py</div>
+              <div class="reason">check_backward_compatible へ enum 値除去と参照された $defs 除去を追加。remove_kind_branch を add_kind_branch の隣に新設。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/application/usecases/patch_schema.py</div>
+              <div class="reason">remove_kind_branch の分岐追加と、互換の関門を通らない操作の明示列挙。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">.waffle/hooks/require-query-before-array-fill.py</div>
+              <div class="reason">要素操作を配列の値を含む書き込みとして扱わない。拒否の理由に要素操作の道も示す。</div>
+            </div>
+            <div class="scope-item">
+              <div class="path">src/waffle/domain/model/DomainSpecSchema/v9.json</div>
+              <div class="reason">受け入れ基準とシナリオの配列へ、鍵の宣言と参照関係の宣言を実際に置く（この capability の最初の適用先であり、dogfood の対象そのもの）。</div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
