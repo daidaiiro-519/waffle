@@ -22,3 +22,4 @@
 - [v10移設の状況とbc-artifact-shareの据え置き](project_v10_migration_status.md) — 操作保証を廃止、bc-waffleは41件が未追従(v8:31/v9:10、covers 229件)、artifact-shareは意図的にv8
 - [走っている作業の連鎖と現在地(2026-08-11)](project_inflight_work_2026_08_11.md) — 配列要素編集→v10→版ドリフト→41件移設→サブドメイン是正→knowledge欠落、で脱線中
 - [集約クラス検査の誤検知とトランザクション境界](project_aggregate_drift_and_transaction.md) — 中間項が機械可読でないのが原因、knowledge片付け後に着手
+- [変換のたびに書籍の実例を置き換える](feedback_replace_book_examples_in_conversion.md) — 構造は保ち題材だけ差し替え、grepで0件確認。1本目の訂正を規則にせず2度指摘された

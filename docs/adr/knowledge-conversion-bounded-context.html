@@ -1,0 +1,287 @@
+<title>bounded-context の変換 ── 2本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+/* プレビュー */
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.fig{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.fig .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.fig .meta div{font-size:.84rem;line-height:1.7}
+.fig .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto}
+.fig table{min-width:18rem;font-size:.79rem;border:none;border-radius:0}
+.fig .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 2本目</span>
+  <h1><code>bounded-context</code> を書き起こし版から移す</h1>
+  <p class="standfirst">旧要約版93行 → <strong>191行</strong>。落ちていた「発見／設計／対応」の3節が戻り、今日のサブドメイン議論の根拠がそろいました。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">28</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">+11</span><span class="l">旧要約版で落ちていた節</span></div>
+    <div class="stat"><span class="n">2</span><span class="l">図（囲み2つ）</span></div>
+    <div class="stat"><span class="n">1</span><span class="l">原文（表）</span></div>
+    <div class="stat"><span class="n">191</span><span class="l">行（旧93 / 書起し291）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>区切られた文脈とは</td><td>あり</td><td>定義</td></tr>
+        <tr><td class="new">なぜ必要か（図3-3）</td><td>×</td><td>同じ言葉が文脈ごとに別の意味を持つ。図で示す</td></tr>
+        <tr><td class="new">文脈の境界 ＋ 建物の図面のたとえ</td><td>×</td><td>モデルの境界を広げすぎると役に立たなくなる</td></tr>
+        <tr><td class="new">同じ言葉の定義（改良版）</td><td>×</td><td>組織全体の統一ではなく、文脈の内側に限定される</td></tr>
+        <tr><td>区切られた文脈の大きさ</td><td>一部</td><td>大きさより「モデルが役に立つか」が基準</td></tr>
+        <tr><td class="new">業務領域 ── 発見</td><td><strong>×</strong></td><td>分類は事業側の役割。技術者は識別する</td></tr>
+        <tr><td class="new">区切られた文脈 ── 設計</td><td><strong>×</strong></td><td>境界の選択は設計判断。技術者が決定できる</td></tr>
+        <tr><td class="new">業務領域と区切られた文脈の対応</td><td><strong>×</strong></td><td>1対1に限らない。<strong>同じデータを操作するユースケースの集まりを分散させない</strong></td></tr>
+        <tr><td class="new">物理的な境界</td><td>×</td><td>独立したサービス／プロジェクトとして実装する</td></tr>
+        <tr><td class="new">所有権の境界（図3-8）</td><td>×</td><td>1文脈1チーム。関係は単方向</td></tr>
+        <tr><td class="new">現実世界の区切られた文脈</td><td>×</td><td>業務エキスパートの頭の中に存在する</td></tr>
+        <tr><td class="new">言葉の意味論（「当日」の表）</td><td>×</td><td>意味は文脈が決める</td></tr>
+        <tr><td class="new">両立しないモデルがそれぞれ役に立つ</td><td>×</td><td>評価基準は真理ではなく、役に立つか</td></tr>
+        <tr><td class="new">大きなモデルを1つ作らない</td><td>×</td><td>小さなモデルの組み合わせで足りる</td></tr>
+        <tr><td>アンチパターン ×4</td><td>あり</td><td>統一の強制／複数チーム／細分化しすぎ／1対1の固定観念</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ok">
+    <h3>今日の議論の根拠が、これで手元に来ました</h3>
+    <p>ADR で「サブドメインと境界づけられたコンテキストは<strong>包含ではなく対応</strong>」と決めたとき、その根拠にあたる3節（発見・設計・対応）が knowledge に無く、advisor はそれを読まずに判断していました。とくに<strong>「同じデータを操作するユースケースの集まりを、複数の文脈へ分散させない」</strong>という規則は、今日の7分割の妥当性に直接効きます。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 完全プレビュー</h2>
+  <p class="narrow">描画された191行を、そのまま並べています。<strong>図・読み取りの文・関係の表が3点セット</strong>で出るようになりました。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / bounded-context</span><span>ノード28 ・ 図2 ・ 原文1</span></div>
+    <div class="doc-body">
+
+      <div class="node"><div class="node-h"><span class="nm">区切られた文脈とは</span><span class="kind">定義</span></div>
+        <p>同じ言葉（ユビキタス言語）が通用する範囲を定義した境界。モデルの境界であり、同時にシステムを実装する単位の境界でもある。同じ言葉を一貫した意味で使えるのは、区切られた文脈の内側だけである。</p></div>
+
+      <div class="node"><div class="node-h"><span class="nm">なぜ必要か</span><span class="kind">補足</span><span class="src">図3-3</span><span class="restored">戻した</span></div>
+        <p>一つの言葉が文脈によって異なる意味を持つことがある。同じ言葉を文脈ごとに小さく分割し、それぞれの文脈へ割り当てることで解く。事業活動がそれなりの規模になれば、言葉の意味が衝突し文脈が暗黙化するのは本来の姿であり、区切られた文脈はその暗黙の文脈を明確にする方法である。</p>
+        <div class="fig">
+          <div class="meta">
+            <div><b>意図</b>同じ言葉が文脈ごとに別の意味を持つことと、文脈を区切ればそれが解けることを示す</div>
+            <div><b>読み取り</b>「注文」という同じ言葉が、受注の文脈では顧客が出した申込みを指し、倉庫の文脈では棚から品を集める作業の単位を指す。文脈を分けることで、それぞれの内側で言葉の意味が一つに定まる。</div>
+          </div>
+<pre class="mermaid">
+flowchart LR
+    subgraph g0["受注の文脈"]
+        n0["注文（顧客の申込み）"]
+        n1["顧客"]
+    end
+    subgraph g1["倉庫の文脈"]
+        n2["注文（集品の作業単位）"]
+        n3["棚"]
+    end
+    n0 --> n1
+    n2 --> n3
+</pre>
+        </div>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">文脈の境界</span><span class="kind">判断基準</span><span class="src">3.2.1</span><span class="restored">戻した</span></div>
+        <p>モデルには必ず境界がある。境界を広げすぎるとそのモデルは役に立たなくなる。区切られた文脈は、個々の課題領域に特化したモデルを作るための手法であり、同じ言葉の一貫性を保つための境界でもある。</p>
+        <div class="node d2"><div class="node-h"><span class="nm">建物の図面のたとえ</span><span class="kind">補足</span></div>
+          <p>建物の意匠図・構造図・設備図は、それぞれ異なる目的に特化したモデルであり、設備図を見ても柱がどこまで細くできるかは判断できない。同じ言葉も同様で、ある文脈で使われる言葉が別の文脈ではまったく役に立たないことがある。</p></div>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">同じ言葉の定義（改良版）</span><span class="kind">定義</span><span class="src">3.2.2</span><span class="restored">戻した</span></div>
+        <p>「同じ言葉」は組織全体で統一した言葉という意味ではない。通用する範囲は区切られた文脈の境界の内部に限定され、文脈ごとの固有のモデルを表現することに焦点を合わせる。同じ言葉を定義・利用するには、その言葉が通用する範囲を明確にした区切られた文脈が要る。</p></div>
+
+      <div class="node"><div class="node-h"><span class="nm">区切られた文脈の大きさ</span><span class="kind">判断基準</span><span class="src">3.2.3</span></div>
+        <p>大きさ自体は重要ではなく、モデルが役に立つかどうかが基準になる。同じ言葉の一貫性に注目することで、その言葉が通用するもっとも広い範囲を特定できる。それ以上広げると一貫性が失われる。大きな文脈を小さく切り分ける理由は、開発チームを増やす場合・非機能要件に対応するために開発単位を分ける場合・スケールアウトが必要な機能を切り離す場合。</p></div>
+
+      <div class="node"><div class="node-h"><span class="nm">業務領域と区切られた文脈の関係</span><span class="kind">対比</span><span class="src">3.3</span><span class="restored">戻した</span></div>
+        <p>業務領域の「分割」と、区切られた文脈の「分割」は目的が異なる。</p>
+        <div class="node d2"><div class="node-h"><span class="nm">業務領域 ── 発見</span><span class="kind">対比</span><span class="src">3.3.1</span></div>
+          <p>事業活動を分析し、業務領域を中核・補完・一般に分類する。企業がどのように競合他社と差別化を図ろうとしているかを明らかにする作業であり、事業活動とシステムへの要求事項からユースケースを定義するのは事業側の役割。ソフトウェア技術者は事業活動を分析して業務領域とそのカテゴリーを識別する。</p></div>
+        <div class="node d2"><div class="node-h"><span class="nm">区切られた文脈 ── 設計</span><span class="kind">対比</span><span class="src">3.3.2</span></div>
+          <p>モデルの境界をどう選ぶかは設計判断である。ソフトウェア設計の視点から、どのように事業活動を小さく扱いやすい単位に分割するかを決める。業務領域は事業方針によって決まる構造だが、区切られた文脈はプロジェクトの目的と制約条件に合わせてソフトウェア技術者が決定できる。</p></div>
+        <div class="node d2"><div class="node-h"><span class="nm">業務領域と区切られた文脈の対応</span><span class="kind">判断基準</span><span class="src">3.3.3</span></div>
+          <p>一対一に対応させることが最善の場合もあるし、別の方針で分割することが役立つ場合もある。小さなシステムなら単一の文脈で開発でき、モデルの不整合が見つかれば複数へ分割し、さらに業務領域ごとに細分化することもできる。重要なのは、<strong>同じデータに対して操作を行うユースケースの集まりを特定し、その集まりを複数の区切られた文脈へ分散させないこと</strong>。また、一つの業務領域でも課題が複数あれば課題ごとに別のモデルを作るほうがよいことがあり、「一つの業務領域に一つのモデル」という固定観念は持たない。</p></div>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">文脈の境界が決めるもの</span><span class="kind">定義</span><span class="src">3.4</span><span class="restored">戻した</span></div>
+        <p>区切られた文脈は、システムの物理的な境界と、システムの所有権の境界を決める手法である。</p>
+        <div class="node d2"><div class="node-h"><span class="nm">物理的な境界</span><span class="kind">定義</span><span class="src">3.4.1</span></div>
+          <p>区切られた文脈はモデルの境界を定義し、同時にシステムを実装する単位を定義する。独立したサービスまたはプロジェクトとして実装し、他の文脈から切り離して開発・変更・バージョン管理する。一つの文脈が複数の業務領域を含む場合、物理的には単一の境界、論理的には複数の業務領域の境界（名前空間・モジュール・パッケージで表現）になる。</p></div>
+        <div class="node d2"><div class="node-h"><span class="nm">所有権の境界</span><span class="kind">定義</span><span class="src">3.4.2</span></div>
+          <p>一つの区切られた文脈の開発・変更・保守を担当するのは一つのチームである。複数のチームが一つの文脈を担当してはいけない（一つのソフトウェアに異なるモデルが無意識に混入するのを防ぐため）。チームと文脈の関係は単方向で、一つのチームが複数の文脈を所有することはできる。お互いのモデルとシステムをどう連係させるかの約束事は明示的に決める。</p>
+          <div class="fig">
+            <div class="meta">
+              <div><b>意図</b>チームと文脈の担当関係が単方向であることを示す</div>
+              <div><b>読み取り</b>1つのチームが複数の文脈を担当することはできるが、1つの文脈を複数のチームが担当することはできない。関係は単方向である。</div>
+            </div>
+<pre class="mermaid">
+flowchart TD
+    n0["チーム1"]
+    n1["チーム2"]
+    n2["受注の文脈"]
+    n3["在庫の文脈"]
+    n4["請求の文脈"]
+    n0 -->|"担当"| n2
+    n0 -->|"担当"| n3
+    n1 -->|"担当"| n4
+</pre>
+            <div class="tablewrap"><table>
+              <thead><tr><th>から</th><th>へ</th><th>関係</th></tr></thead>
+              <tbody>
+                <tr><td>チーム1</td><td>受注の文脈</td><td>担当</td></tr>
+                <tr><td>チーム1</td><td>在庫の文脈</td><td>担当</td></tr>
+                <tr><td>チーム2</td><td>請求の文脈</td><td>担当</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">現実世界の区切られた文脈</span><span class="kind">補足</span><span class="src">3.5</span><span class="restored">戻した</span></div>
+        <p>区切られた文脈は事業活動や業務領域のように明白には存在しない。しかし業務エキスパートの頭の中に、業務のとらえ方として存在する。業務エキスパートが事業活動に関わるヒト・モノ・コトをどのようにとらえているかを意識することで把握できる。</p>
+        <div class="node d2"><div class="node-h"><span class="nm">言葉の意味論</span><span class="kind">補足</span><span class="src">3.5.1</span></div>
+          <p>区切られた文脈は、言語学の「意味論的な領域」にもとづく。意味論的な領域とは、言葉が同じ意味で使われる範囲のことである。</p>
+          <div class="fig">
+            <div class="meta">
+              <div><b>意図</b>同じ言葉が文脈ごとに別の意味を持つことを、身近な例で示す</div>
+              <div><b>読み取り</b>「当日」は、受注の文脈では注文が入った日、倉庫の文脈では集品を行う日、会計の文脈では売上を計上する日、利用者の文脈では荷物が届く日を指す。どれも誤りではなく、それぞれの文脈の内側で正しい。言葉の意味は文脈が決める。</div>
+            </div>
+            <div class="tablewrap"><table>
+              <thead><tr><th>文脈</th><th>「当日」の意味</th></tr></thead>
+              <tbody>
+                <tr><td>受注の文脈</td><td>注文が入った日</td></tr>
+                <tr><td>倉庫の文脈</td><td>棚から品を集める作業を行う日</td></tr>
+                <tr><td>会計の文脈</td><td>売上を計上する日</td></tr>
+                <tr><td>利用者の文脈</td><td>荷物が届く日</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+        <div class="node d2"><div class="node-h"><span class="nm">両立しないモデルが、それぞれの文脈で役に立つ</span><span class="kind">実例</span><span class="src">3.5.2</span></div>
+          <p>同じ工事に対して、概算の見積りと詳細の見積りは異なる金額を出す。概算は商談の初期に、詳細は着工前に役に立つ。数字が食い違うからどちらかが誤りだ、とはならない。知識の本当の評価基準は真理かどうかではなく、役に立つかどうかである。</p></div>
+        <div class="node d2"><div class="node-h"><span class="nm">大きなモデルを1つ作らない</span><span class="kind">実例</span><span class="src">3.5.3</span></div>
+          <p>新しいサーバーラックが機械室の扉を通るかを確かめるのに、建物の3次元モデルを作るのは明らかに過剰である。床に引いた幅の印と、扉の高さを測ったメモという2つの小さなモデルで足りる。個別の課題を解決するシンプルなモデルを組み合わせて目的を達成できるなら、「何にでも手を出して、どれもちゃんとできていない」単一の入り組んだモデルは要らない。</p></div>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">アンチパターン</span><span class="kind">アンチパターン</span></div>
+        <p>区切られた文脈でよく起きる誤り。</p>
+        <div class="node d2"><div class="node-h"><span class="nm">組織全体で同じ言葉を統一しようとする</span><span class="kind">アンチパターン</span></div>
+          <p>「同じ言葉」は組織全体の共通言語ではない。文脈の外では一貫性を強制しなくてよい。無理に統一しようとすると、業務ごとのモデルの独立性が失われる。</p></div>
+        <div class="node d2"><div class="node-h"><span class="nm">複数のチームで一つの区切られた文脈を担当する</span><span class="kind">アンチパターン</span></div>
+          <p>複数チームが担当すると、一つのソフトウェアに異なるモデルが無意識に混入する。通信規約を明示せず暗黙の依存が生まれる。一つの文脈は一つのチームが所有する。</p></div>
+        <div class="node d2"><div class="node-h"><span class="nm">区切られた文脈を細かく分割しすぎる</span><span class="kind">アンチパターン</span></div>
+          <p>細分化しすぎると、それらを組み合わせて全体を組み立てることがやっかいになる。大きさは「モデルが役に立つか」で判断する。</p></div>
+        <div class="node d2"><div class="node-h"><span class="nm">一つの業務領域に一つのモデルという固定観念</span><span class="kind">アンチパターン</span></div>
+          <p>業務領域と区切られた文脈を1対1に限定すると課題解決の柔軟性が失われる。一つの業務領域に複数の課題があれば、課題ごとに別のモデルを作ったほうがよい場合がある。</p></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 気づいたこと</h2>
+  <div class="box bad">
+    <h3>図3-5〜3-7 は落としました</h3>
+    <p>書き起こし版には「段階的な分割の流れ（図3-5→3-6→3-7）」の図がありましたが、<strong>節点を並べただけで関係を持たない図</strong>だったため、文章へ畳みました。「小さなシステムなら単一の文脈で開発でき、不整合が見つかれば分割し、さらに業務領域ごとに細分化できる」という内容は<strong>「業務領域と区切られた文脈の対応」の文章に入っています</strong>。図として残す価値があると判断されれば戻します。</p>
+  </div>
+  <div class="box ok">
+    <h3>ノード28に対して、書き起こし版の見出しは24</h3>
+    <p>増えているのは、書き起こし版で本文の中に埋もれていたもの（図面のたとえ・両立しないモデルの話・搬入の話）を、独立したノードとして立てたためです。粒度は落ちていません。</p>
+  </div>
+</section>
+
+<footer>
+  旧要約版93行・書き起こし版291行・変換後191行（描画結果の実測）。<br>
+  実例は著作権への配慮から書籍固有の企業例を避けた題材で書き、図が示す関係の構造は原文のまま保っている。<br>
+  図はすべて宣言（節点・関係・囲み）から描画したもの。
+</footer>
+
+</div>

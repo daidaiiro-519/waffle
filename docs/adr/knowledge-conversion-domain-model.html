@@ -1,0 +1,259 @@
+<title>domain-model の変換 ── 3本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.74rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.79rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 3本目</span>
+  <h1><code>domain-model</code> を書き起こし版から移す</h1>
+  <p class="standfirst">残存率が最も低かった1本（25%）。旧要約版112行 → <strong>382行</strong>。集約・業務サービス・トランザクション境界の定義が、コードと図つきで戻りました。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">27</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">+19</span><span class="l">旧要約版で落ちていた節</span></div>
+    <div class="stat"><span class="n">3</span><span class="l">図</span></div>
+    <div class="stat"><span class="n">10</span><span class="l">原文（C#7・SQL1・表2）</span></div>
+    <div class="stat"><span class="n">382</span><span class="l">行（旧112 / 書起し431）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. 何が戻ったか</h2>
+  <p class="narrow">旧要約版に残っていたのは、定義と分類とアンチパターンだけでした。<strong>実装の形を示すコードが全滅していました。</strong></p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>ドメインモデルとは</td><td>あり</td><td>4つの部品からなる</td></tr>
+        <tr><td>値オブジェクト</td><td>一部</td><td>＋不変性を示すコード</td></tr>
+        <tr><td class="new">　値オブジェクトをいつ使うか</td><td>×</td><td>事業活動を表現する基本部品</td></tr>
+        <tr><td class="new">　基本データ型から値オブジェクトへ</td><td>×</td><td>規則が外へ散らばる形と、内側に集まる形の対比</td></tr>
+        <tr><td>エンティティ</td><td>一部</td><td>＋識別子と状態変化を示すコード</td></tr>
+        <tr><td>集約</td><td>定義のみ</td><td>下に8つの子ノード</td></tr>
+        <tr><td class="new">　一貫性を強制する</td><td>×</td><td>状態を変えられるのは内部だけ</td></tr>
+        <tr><td class="new">　コマンド</td><td>×</td><td>2つの書き方（メソッド／パラメーターオブジェクト）</td></tr>
+        <tr><td class="new">　並行処理管理</td><td><strong>×</strong></td><td>版番号による排他。<strong>SQLで示す</strong></td></tr>
+        <tr><td class="new">　トランザクションの境界</td><td><strong>×</strong></td><td><strong>1集約＝1トランザクション。またぐなら境界が誤り</strong></td></tr>
+        <tr><td class="new">　エンティティの階層構造</td><td>×</td><td>図6-3。階層全体が1つの集約</td></tr>
+        <tr><td class="new">　他の集約を参照する</td><td>×</td><td>識別子で指す理由と、内部に持つかの判断</td></tr>
+        <tr><td class="new">　集約のルート</td><td>×</td><td>図6-5。外部が触れるのはルートだけ</td></tr>
+        <tr><td class="new">　業務イベント</td><td>×</td><td>名前は過去形。発行と購読</td></tr>
+        <tr><td class="new">　同じ言葉を厳密に反映する</td><td>×</td><td>すべての名前を文脈の同じ言葉で</td></tr>
+        <tr><td>業務サービス</td><td>一部</td><td>＋計算だけを行う形のコード</td></tr>
+        <tr><td class="new">　マイクロサービスとは無関係</td><td>×</td><td>用語の混同を避ける</td></tr>
+        <tr><td class="new">　抜け道ではない</td><td><strong>×</strong></td><td>複数集約を1トランザクションで変える手段ではない</td></tr>
+        <tr><td class="new">複雑さの扱い方</td><td>×</td><td>自由度を下げると扱いが簡単になる</td></tr>
+        <tr><td class="new">4つの部品の対比</td><td>×</td><td>識別子・状態変化・特徴の表</td></tr>
+        <tr><td class="new">どの部品を使うか</td><td>×</td><td>判断の分岐（図）</td></tr>
+        <tr><td>アンチパターン ×5</td><td>あり</td><td>基本データ型への執着ほか</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ok">
+    <h3>今日ずっと参照していた2つの根拠が、これで手元に来ました</h3>
+    <p><strong>「1集約＝1トランザクション」</strong>と<strong>「業務サービスは状態を持たない」</strong>——今日の議論で何度も引いたのに、どちらも旧要約版には無く、書き起こし版を直接読んで確かめていました。とくに前者は、語彙に「トランザクション」を足す判断の出どころでもあります。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 抜粋プレビュー</h2>
+  <p class="narrow">382行あるので、<strong>戻った中でも重い5つ</strong>を抜き出します。図とコードは実際の描画結果です。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / domain-model（抜粋）</span><span>全27ノード中5件</span></div>
+    <div class="doc-body">
+
+      <div class="node"><div class="node-h"><span class="nm">並行処理管理</span><span class="kind">判断基準</span><span class="restored">戻した</span></div>
+        <p>一貫性の保証でもっとも重要な部分。複数の処理が同じ集約を変更するとき、先の更新を後の更新が上書きしないようにする。集約に版番号を持たせ、読んだときの版と一致する場合だけ書き込む。</p>
+        <div class="blk">
+          <div class="meta">
+            <div><b>意図</b>後から来た更新が、先に来た更新を黙って上書きしないようにする仕組みを示す</div>
+            <div><b>読み取り</b>集約は版番号を持ち、更新は「読んだときの版と今の版が同じなら書く」という条件で行う。一致しなければ例外を上げ、呼び出し元が読み直してやり直す。条件を書かずに更新すると、後から来たほうが黙って勝つ。</div>
+          </div>
+<pre>UPDATE shipments
+SET status = @new_status,
+    agg_version = agg_version + 1
+WHERE shipment_id = @id AND agg_version = @expected_version;</pre>
+        </div>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">トランザクションの境界</span><span class="kind">判断基準</span><span class="restored">戻した</span></div>
+        <p>1つの集約のインスタンスが1つのトランザクションの単位になる。集約内部のすべての状態は単一のトランザクションとして確定する。<strong>複数の集約にまたがるトランザクションを実行してはいけない</strong>——そうしたくなったなら、集約の境界がまちがっている。</p>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">集約のルート</span><span class="kind">定義</span><span class="src">図6-5</span><span class="restored">戻した</span></div>
+        <p>外部に公開するインターフェース役のエンティティは1つにする。それが集約のルート。内部の他のエンティティの状態を変えるコマンドも、必ずルートを経由して実行する。</p>
+        <div class="blk">
+          <div class="meta">
+            <div><b>意図</b>外部が触れるのは集約のルートだけであることを示す</div>
+            <div><b>読み取り</b>アプリケーション層はルートへコマンドを渡すだけで、内側のエンティティへ直接は触れない。内側の状態を変えるコマンドも、必ずルートを経由する。</div>
+          </div>
+<pre class="mermaid">
+flowchart LR
+    subgraph g0["集約"]
+        n0["配送の依頼（ルート）"]
+        n1["連絡記録"]
+        n2["添付"]
+    end
+    n3["アプリケーション層"]
+    n3 -->|"コマンド"| n0
+    n0 -->|"1対多"| n1
+    n1 -->|"1対多"| n2
+</pre>
+        </div>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">業務サービス ── 抜け道ではない</span><span class="kind">判断基準</span><span class="restored">戻した</span></div>
+        <p>1集約＝1トランザクションの原則は変わらない。業務サービスは複数の集約を参照する計算を書くのに役立つが、<strong>複数の集約を単一のトランザクションで変更するための抜け道ではない</strong>。</p>
+      </div>
+
+      <div class="node"><div class="node-h"><span class="nm">複雑さの扱い方</span><span class="kind">定義</span><span class="src">6.2.3</span><span class="restored">戻した</span></div>
+        <p>集約と値オブジェクトの背景にある考え方は、不変条件をカプセル化して複雑さを小さくすること。システムの複雑さは自由度——独立して変化できる状態の個数——で決まる。不変条件を加えると制約が増え、自由度が下がり、振る舞いを制御・予測するのが簡単になる。</p>
+        <div class="blk">
+          <div class="meta">
+            <div><b>意図</b>不変条件を入れると自由度が下がり、扱いが簡単になることを示す</div>
+            <div><b>読み取り</b>上の型は5つの欄がすべて独立に動くので、取りうる状態の組み合わせが多い。下の型は2つが決まれば残り3つが決まるので、独立に動く欄は2つ。一見すると下のほうが複雑に見えるが、振る舞いを予測するのは下のほうが簡単である。</div>
+          </div>
+<pre>// 自由度5（5つの欄がすべて独立して変化できる）
+public class A { public int V1, V2, V3, V4, V5; }
+
+// 自由度2（V1 と V4 だけが独立。残りはそこから決まる）
+public class B {
+    public int V1 { get =&gt; _v1; set { _v1 = value; V2 = value/2; V3 = value/3; } }
+    public int V4 { get =&gt; _v4; set { _v4 = value; V5 = value*2; } }
+    public int V2 { get; private set; }
+    public int V3 { get; private set; }
+    public int V5 { get; private set; }
+}</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 置き換えたもの</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書籍の題材</th><th>置き換え先</th><th>保った構造</th></tr></thead>
+      <tbody>
+        <tr><td>Ticket / Message / Attachment</td><td>配送の依頼 / 連絡記録 / 添付</td><td>1対多の2段階層が1つの集約になる</td></tr>
+        <tr><td>Escalate（エスカレーション）</td><td>優先配送への切り替え</td><td>条件を満たしたときだけ状態を変え、過去形のイベントを記録する</td></tr>
+        <tr><td>Color（色の混合）</td><td>Weight（重さの加算）</td><td>不変で、変更時に新しいインスタンスを返す</td></tr>
+        <tr><td>Person（氏名・電話・身長）</td><td>Shipment（受取人・電話・重さ・郵便番号）</td><td>素の型で持つ形と、値オブジェクトで持つ形の対比</td></tr>
+        <tr><td>応答期限の計算サービス</td><td>同（担当者・方針・勤務予定）</td><td>状態を持たず、複数の集約から読んで計算だけ返す</td></tr>
+        <tr><td>ClassA / ClassB（自由度）</td><td>A / B（欄名を V1〜V5 に）</td><td>自由度5と自由度2の対比</td></tr>
+        <tr><td>人名（提唱者・引用元）</td><td>削除</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>機械で確認しました</h3>
+    <p>書籍固有の語（Ticket・Escalat・Color・Person・Agent・Attachment・人名）を grep して<strong>0件</strong>。前回は目視で済ませて2度目の指摘を受けたので、今回は手順に組み込んでいます。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 気づいたこと</h2>
+  <div class="box bad">
+    <h3>アプリケーション層のコード例は落としました</h3>
+    <p>書き起こし版には、集約を読み込み・コマンドを実行し・保存し、競合の例外を捕まえるコード例がありました。<strong>これは業務ロジックの実装ではなくアプリケーション層の配線</strong>で、この knowledge の主題（4つの部品）から外れます。内容は「並行処理管理」の読み取りに文章として入っています。戻す価値があれば戻します。</p>
+  </div>
+  <p class="narrow">進み具合は <strong>3 / 19本</strong>。残り16本・約3,800行です。次は <code>ubiquitous-language</code>（177行・残存55%、今日の語彙の議論の出どころ）か、<code>business-logic-simple</code>（210行・残存50%、トランザクションスクリプトとアクティブレコードの定義＝集約クラス検査の分岐に必要）を勧めます。</p>
+</section>
+
+<footer>
+  旧要約版112行・書き起こし版431行・変換後382行（描画結果の実測）。<br>
+  実例とコードの題材は架空の業務（配送の依頼）へ置き換え、コードが示す構造は保っている。<br>
+  図はすべて宣言（節点・関係・囲み）から描画したもの。
+</footer>
+
+</div>
