@@ -1,0 +1,1 @@
+../../../../knowledge/ACTIVE/knowledge-cand-aggregate-declaration-is-not-class-existence.md

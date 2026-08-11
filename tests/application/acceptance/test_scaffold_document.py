@@ -302,7 +302,7 @@ def test_create_writes_reference_parameters_into_the_document():
     result = _engine().run(
         "create",
         {
-            "schemaRef": "DomainSpecSchema/v8",
+            "schemaRef": "DomainSpecSchema/v10",
             "documentId": "test-acceptance-scaffold-subdomain-ref",
             "discriminator": {"specKind": "usecase"},
             "contextRef": "bc-waffle",

@@ -285,14 +285,15 @@ def test_check_schema_version_drift_returns_the_declared_fields():
     """
     Given waffle CLI
     When check-schema-version-drift を実行する
-    Then 終了コードは0で、出力JSONは3フィールド全て空配列（自己整合済み）
+    Then 終了コードは0で、出力JSONは3フィールド全て空配列であり、判定も追従済み（自己整合済み）
     """
     result = _runner.invoke(app, ["check-schema-version-drift"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert data["broken_references"] == []
-    assert data["newer_version_available"] == []
+    assert data["outdated_references"] == []
     assert data["missing_declared_fields"] == []
+    assert data["aligned"] is True
 
 
 def test_check_usecase_class_drift_returns_the_declared_fields():

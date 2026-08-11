@@ -261,7 +261,8 @@ def test_check_schema_version_drift_returns_the_declared_fields():
     """
     out = asyncio.run(_call("check_schema_version_drift", {}))
     assert out["broken_references"] == []
-    assert out["newer_version_available"] == []
+    assert out["outdated_references"] == []
+    assert out["aligned"] is True
     assert out["missing_declared_fields"] == []
 
 

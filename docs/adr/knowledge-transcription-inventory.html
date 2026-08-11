@@ -1,0 +1,277 @@
+<title>書き起こし版に何が入っているか</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:56rem;margin:0 auto;display:flex;flex-direction:column;gap:3rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.4rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.15rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:.7rem 0 -.3rem}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.9rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.7rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.76rem;color:var(--faint);line-height:1.5}
+.stat.bad{border-color:var(--bad-line);background:var(--bad-soft)}
+.stat.bad .n{color:var(--bad)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:30rem}
+th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{display:block;height:.5rem;background:var(--ok-line);border-radius:2px;margin-top:.3rem}
+/* 木 vs 平ら */
+.cmp{display:grid;grid-template-columns:1fr;gap:1rem}
+@media(min-width:50rem){.cmp{grid-template-columns:1fr 1fr}}
+.pane{border:1px solid var(--line);border-radius:6px;background:var(--surface);display:flex;flex-direction:column;overflow:hidden}
+.pane.now{border-color:var(--ok-line)}
+.pane.flat{border-color:var(--bad-line)}
+.pane>h4{margin:0;padding:.6rem .9rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;
+  font-weight:400;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:.6rem}
+.pane.now>h4{background:var(--ok-soft);color:var(--ok);border-bottom-color:var(--ok-line)}
+.pane.flat>h4{background:var(--bad-soft);color:var(--bad);border-bottom-color:var(--bad-line)}
+.pane pre{margin:0;padding:.85rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.75rem;line-height:1.9;white-space:pre}
+.lost{color:var(--bad);font-weight:700}
+.kept{color:var(--muted)}
+.samples{display:flex;flex-direction:column;gap:1rem}
+.sample{border:1px solid var(--line);border-radius:6px;background:var(--surface);overflow:hidden}
+.sample>h4{margin:0;padding:.55rem .9rem;background:var(--sunk);border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:.7rem;color:var(--muted);font-weight:400;
+  display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.sample>h4 .src{color:var(--faint);font-size:.66rem}
+.sample pre{margin:0;padding:.85rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.74rem;line-height:1.85;white-space:pre;color:var(--ink)}
+.box{border-radius:6px;padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.7rem;max-width:42rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0}
+.box p,.box li{font-size:.9rem}
+ul.plain{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;max-width:42rem}
+ul.plain li{line-height:1.8}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の中身の棚卸し</span>
+  <h1>書き起こし版に何が入っているか</h1>
+  <p class="standfirst">git 履歴から戻した19本・4,750行を実際に数えました。定義と分類が並んだ読み物ではなく、図と実装コードを含んだ<strong>深さ4の木</strong>でした。いまの器はその39%しか受け止められません。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">19</span><span class="l">ファイル</span></div>
+    <div class="stat"><span class="n">4,750</span><span class="l">行</span></div>
+    <div class="stat"><span class="n">372</span><span class="l">見出し</span></div>
+    <div class="stat"><span class="n">258</span><span class="l">コードブロック</span></div>
+    <div class="stat"><span class="n">164</span><span class="l">表の行</span></div>
+    <div class="stat bad"><span class="n">39%</span><span class="l">いまの器に落ちる見出し</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. コードブロックの中身</h2>
+  <p class="narrow">258個あります。半分近くが図（mermaid と ASCII 図）で、残りが実装コードとデータの例です。</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>種類</th><th class="num">件数</th><th>何が書かれているか</th></tr></thead>
+      <tbody>
+        <tr><td><code>(言語指定なし)</code></td><td class="num">55<span class="bar" style="width:55%"></span></td><td>層の重なりなどの ASCII 図</td></tr>
+        <tr><td><code>mermaid</code></td><td class="num">43<span class="bar" style="width:43%"></span></td><td>依存の向き・状態遷移・判断の分岐</td></tr>
+        <tr><td><code>csharp</code></td><td class="num">24<span class="bar" style="width:24%"></span></td><td>集約・ポートとアダプター・排他制御の実装</td></tr>
+        <tr><td><code>json</code></td><td class="num">5<span class="bar" style="width:5%"></span></td><td>イベントの形</td></tr>
+        <tr><td><code>sql</code> / <code>javascript</code></td><td class="num">2<span class="bar" style="width:2%"></span></td><td>楽観的排他制御のクエリ／イベントの対比</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="samples">
+    <div class="sample">
+      <h4><span>mermaid ── 43個</span><span class="src">architecture-patterns.md</span></h4>
+<pre>flowchart TD
+    P["プレゼンテーション層\n（UI層）"]
+    S["サービス層\n（アプリケーション層）"]
+    B["業務ロジック層\n（ドメイン層）"]
+    D["データアクセス層\n（インフラ層）"]
+
+    P --&gt; S --&gt; B --&gt; D</pre>
+    </div>
+
+    <div class="sample">
+      <h4><span>csharp ── 24個</span><span class="src">architecture-patterns.md</span></h4>
+<pre>// ポート（業務ロジック層に定義）
+public interface IMessaging {
+    void Publish(IDomainEvent domainEvent);
+}
+
+// アダプター（インフラストラクチャ層に定義）
+public class SQSBus : IMessaging {
+    public void Publish(IDomainEvent domainEvent) { ... }
+}</pre>
+    </div>
+
+    <div class="sample">
+      <h4><span>sql ── 楽観的排他制御</span><span class="src">domain-model.md</span></h4>
+<pre>UPDATE tickets
+SET ticket_status = @new_status,
+    agg_version = agg_version + 1
+WHERE ticket_id=@id AND agg_version=@expected_version;</pre>
+    </div>
+
+    <div class="sample">
+      <h4><span>javascript ── 二種類のイベントの対比</span><span class="src">event-driven-architecture.md</span></h4>
+<pre>// イベント通知: 婚姻届済という事実だけ
+eventNotification = {
+  "type": "婚姻届済",
+  "person-id": "01b9a761",
+  "payload": { "details": "/01b9a761/marriage-data" }
+};
+
+// イベントによる状態転送: 姓の変更まで運ぶ
+ecst = {
+  "type": "個人情報変更済",
+  "payload": { "new-last-name": "Williams" }
+};</pre>
+    </div>
+  </div>
+
+  <p class="narrow"><strong>これらは説明の飾りではなく、判断の根拠そのものです。</strong>「ポートは業務ロジック層に、アダプターはインフラ層に」という依存の向きは、文章より上のコードのほうが正確に伝わります。いまの器は本文を文字列の並びとして持つので、この種の中身を入れる場所がありません。</p>
+</section>
+
+<section>
+  <h2>Ⅱ. 形が違う ── 木と、平らな並び</h2>
+  <p class="narrow">見出しは <code>#</code> から <code>####</code> まで4段あり、親の下に最大10個の子がぶら下がります。<code>subdomain.md</code> で並べると、こうなります。</p>
+
+  <div class="cmp">
+    <div class="pane now">
+      <h4><span>書き起こし版</span><span>222行 / 見出し16</span></h4>
+<pre><span class="kept">定義
+3つの分類
+  ├ 中核
+  ├ 一般
+  └ 補完
+判断基準</span>
+<span class="lost">分類マトリクス（図1-1）
+比較表</span>
+<span class="kept">具体例</span>
+<span class="lost">  ├ ライブチケット社
+  ├ バス・オンデマンド社
+  ├ 顧客サービス部門の細分化（図1-2）
+  ├ 業務領域の境界 = 強く関連する
+  │   ユースケースの集まり（図1-3）
+  └ 細分化しすぎの例（図1-4）
+細分化の焦点
+用語補足</span>
+<span class="kept">アンチパターン
+関連概念</span></pre>
+    </div>
+    <div class="pane flat">
+      <h4><span>要約版（いまの器）</span><span>114行 / 見出し8</span></h4>
+<pre><span class="kept">概要
+原則
+分類
+判断基準
+実例        ← 架空の物流に差し替え
+アンチパターン
+出典・根拠の透明性
+関連概念</span>
+
+<span class="lost">（子を持てない。図も、
+　書籍の実例も、
+　境界の見つけ方も入らない）</span></pre>
+    </div>
+  </div>
+
+  <div class="box bad">
+    <h3>落ちたのは、まさに今日必要だった1行でした</h3>
+    <p><strong>「業務領域の境界 = 強く関連するユースケースの集まり（図1-3）」</strong> ──「業務領域はユースケースの集まりとして定義できる。同じアクター・同じ外部システムとつながり、密接に関係するデータを操作するユースケース群がひとつの業務領域を形成する」。</p>
+    <p>サブドメインの切り方を検証していたとき、この基準が knowledge に無かったため、advisor は「ユースケースの集まりが業務領域を形成する」という考えを<strong>誤りと判定しました</strong>。書籍にはある記述です。</p>
+  </div>
+
+  <p class="narrow"><code>bounded-context.md</code> でも同じことが起きています。落ちたのは<strong>「業務領域（3.3.1）→『発見』」「区切られた文脈（3.3.2）→『設計』」「業務領域と区切られた文脈の対応（3.3.3）」</strong>——問題空間と解決空間を「包含ではなく対応」と決めたときの、書籍側の根拠にあたる節です。</p>
+</section>
+
+<section>
+  <h2>Ⅲ. なぜ落ちたのか</h2>
+  <p class="narrow">見出し372件を、いまの器が持つブロックの語彙で分類しました。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>器に対応するブロックがある</th><th class="num">件</th><th>対応が無い</th><th class="num">件</th></tr></thead>
+      <tbody>
+        <tr><td>判断基準／関連概念／アンチパターン</td><td class="num">59</td><td rowspan="4"><strong>下位概念そのものが見出しになっているもの</strong><br><span style="color:var(--faint)">「レイヤードアーキテクチャ」「ポートとアダプター」「CQRS」「文脈の境界」「物理的な境界」「所有権の境界」…</span></td><td rowspan="4" class="num"><strong>227</strong></td></tr>
+        <tr><td>手順／実装</td><td class="num">44</td></tr>
+        <tr><td>図表／具体例／比較</td><td class="num">24</td></tr>
+        <tr><td>定義／分類／利点欠点／用語／なぜ</td><td class="num">18</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="narrow">対応が無い227件の大半は、<strong>下位概念の名前</strong>です。knowledge 文書は「1つの概念に固定のブロックがぶら下がる」形ではなく、<strong>概念の木</strong>でした。親概念の下に下位概念があり、その下位概念がまた定義や使いどころを持つ。</p>
+
+  <div class="box bad">
+    <h3>平らな器に木を入れれば、枝が落ちる</h3>
+    <p>落ちたのが<strong>手順</strong>（〜を特定する・〜を調べる）と<strong>関係の説明</strong>（AとBの対応、発見と設計）だったのは偶然ではありません。それらが枝の側にあったからです。幹（定義・分類）は残り、枝が消えました。</p>
+    <p>そして削除のコミットは「重複となり不要」と書いています。<strong>重複かどうかを確かめる手段が無いまま、重複だと判断されました。</strong></p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 判断してほしいこと</h2>
+
+  <div class="box ok">
+    <h3>器に足すべきは「手順ブロック」ではなく、概念が入れ子になれること</h3>
+    <p>ブロックを3つ足しても、次に木が来たらまた落ちます。1つのノードが<strong>名前・説明・本文・子ノード</strong>を持ち、深さを有界にする形にすれば、書き起こしの木がそのまま入ります。<code>agg-schema</code> の不変条件「再帰は常に有界である」と整合し、実測では深さ3で足ります。</p>
+  </div>
+
+  <h3>本文の中身をどこまで構造化するか</h3>
+  <ul class="plain">
+    <li><strong>Markdown のまま持つ</strong> ── コード258個・表164行・図43個をそのまま格納する。器の制約で書けないものが無くなる。ただし機械が読めるのは「本文がある」ことまで</li>
+    <li><strong>描画の部品に対応させる</strong> ── 表・コード・箇条書きを構造として持つ。機械で扱えるが、<strong>また「器に入る形しか書けない」に戻る恐れ</strong>があり、今回の失敗の再演になりうる</li>
+  </ul>
+  <p class="narrow">私は前者を勧めます。今回の欠落は「構造化しすぎたから」起きたので、同じ方向へもう一歩進めるのは危ういと考えます。</p>
+</section>
+
+<footer>
+  数はすべて復元した19ファイルを実際に数えたもの。標本は原文からの抜粋。<br>
+  原本（342ページ・スキャン画像）はテキスト層が無く、全文の突き合わせはできない。<br>
+  書き起こし版は 2026-07-10 に「重複となり不要」として削除され、git 履歴から復元した。
+</footer>
+
+</div>

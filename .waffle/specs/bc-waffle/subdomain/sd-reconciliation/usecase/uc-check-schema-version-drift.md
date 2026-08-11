@@ -2,16 +2,17 @@
 id: "uc-check-schema-version-drift"
 type: "usecase"
 title: "DocumentとSchema版の対応関係を検証する：CheckSchemaVersionDrift"
-description: "Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。"
+description: "Document の schema 参照を、実在する Schema の版と突き合わせ、指す先の無い参照・最新でない参照・追従していない欄を機械的に検出する。 最新でない参照は情報ではなく違反として上げる。古いまま置くことに帰結が無いと、版はいつまでも追いつかない。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v10"
 ---
 
 # DocumentとSchema版の対応関係を検証する：CheckSchemaVersionDrift
 
 ## 概要
 
-- Document集約の実インスタンス群が持つschemaRefを、実在するSchemaの版集合と突き合わせ、指す先が存在しない参照・最新版でない参照を機械的に検出する。加えて、参照先Schemaが現在宣言する値フィールド（fillTemplateのpath）にDocumentの実インスタンスが追従できているかも確認する。Schemaが進化した際に既存Documentが気づかれず陳腐化するリスクに対する第4のドリフト検知。
+- Document の schema 参照を、実在する Schema の版と突き合わせ、指す先の無い参照・最新でない参照・追従していない欄を機械的に検出する。
+- 最新でない参照は情報ではなく違反として上げる。古いまま置くことに帰結が無いと、版はいつまでも追いつかない。
 
 ---
 
@@ -43,7 +44,7 @@ Documentが参照するSchemaの版が実在し、かつ最新であるかを確
 
 | 入力 | 説明 |
 |---|---|
-| `documentsRoot` | Document集約の実インスタンス群を走査する対象ディレクトリ |
+| `documentsRoot` | Documentの実インスタンス群を走査する対象ディレクトリ |
 
 ---
 
@@ -72,86 +73,88 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When Documentのschema参照が指す版が実在しないとき、システムはその組をbroken_referencesに含める shall。
-- When Documentのschema参照は実在するが、同名Schemaの最新版でないとき、システムはその組（参照先の最新schemaRef付き）をnewer_version_availableに含める shall。
-- When 参照先Schemaが宣言する値フィールドのpathを、Documentの実データが持たないとき、システムはその組をmissing_declared_fieldsに含める shall。
-- While 全DocumentのSchema参照が実在しかつ最新であり、宣言済みフィールドにも追従しているとき、システムはbroken_references・newer_version_available・missing_declared_fields全てを空配列で返す shall。
-- If 対象のdocuments_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。
+| 基準 |
+|---|
+| When Documentのschema参照が指す版が実在しないとき、システムはその組を、指す先の無い参照として返す shall。 |
+| When Documentが最新でない版を指しているとき、システムはその組を、追いついていない参照として返す shall。 |
+| When 参照先Schemaが宣言する値フィールドのpathを、Documentの実データが持たないとき、システムはその組を、追従していない欄として返す shall。 |
+| When いずれかの一覧が空でないとき、システムは追従できていないという判定を結果に含める shall（一覧を並べるだけでは、呼び出し側が失敗として扱えず、古いまま置くことに帰結が生まれない）。 |
+| While 全Documentのschema参照が実在しかつ最新であり、宣言済みフィールドにも追従しているとき、システムは全ての一覧を空で返し、追従できているという判定を返す shall。 |
+| If 走査の対象が存在しないとき、システムは INVALID_PATH エラーを返す shall。 |
 
 ---
 
-## 操作保証
+## エラー
 
-- When 対象のdocuments_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| コード | 条件 |
+|---|---|
+| `INVALID_PATH` | - 対象のdocuments_rootが存在しないとき |
 
 ---
 
 ## 受け入れシナリオ
 
-### 全Documentが最新版を参照しているとき差分なしと判定する
+### 追従できていれば全て空で、判定も追従済みになる
 
 | 分類 | 観点 |
 |---|---|
-| 正常系 | 整合：全参照が実在かつ最新、かつ宣言済みフィールドにも追従は正常系（空配列） |
+| 正常系 | 判定：揃っているときに余計な失敗を出さないか |
 
 ```gherkin
-Scenario: 全Documentが最新版を参照しているとき差分なしと判定する
-  Given 全DocumentのschemaRefが、実在する同名Schemaの最新版を指しているspecツリー
-  When schema版ドリフト検査を実行する
-  Then broken_references・newer_version_available・missing_declared_fields全てが空配列で返る
+Scenario: 追従できていれば全て空で、判定も追従済みになる
+  Given 全Documentが最新の版を指し、宣言済みの欄も揃っている置き場所
+  When 版の追従を調べる
+  Then 全ての一覧が空で、追従できているという判定が返る
 ```
 
-### 実在しない版を指すschemaRefを検出する
+### 実在しない版を指す参照を見つける
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | ドリフト：schemaRefが指す版が実在しない |
+| 異常系 | 参照の実在：指す先の無い参照を見つけられるか |
 
 ```gherkin
-Scenario: 実在しない版を指すschemaRefを検出する
-  Given 実在しない版をschemaRefに持つDocument
-  When schema版ドリフト検査を実行する
-  Then broken_referencesにその組が含まれる
+Scenario: 実在しない版を指す参照を見つける
+  Given 実在しない版を指すDocument
+  When 版の追従を調べる
+  Then その組が指す先の無い参照として返り、追従できていないという判定が返る
 ```
 
-### 最新でない版を参照しているDocumentを検出する
+### 最新でない版を指す参照を見つける
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | ドリフト：参照は実在するが最新版でない |
+| 異常系 | 版の追従：古いまま置かれた参照を見つけられるか |
 
 ```gherkin
-Scenario: 最新でない版を参照しているDocumentを検出する
-  Given 同名Schemaに新しい版が実在するが、旧い版をschemaRefに持つDocument
-  When schema版ドリフト検査を実行する
-  Then newer_version_availableにその組が含まれる
+Scenario: 最新でない版を指す参照を見つける
+  Given 最新でない版を指すDocument
+  When 版の追従を調べる
+  Then その組が追いついていない参照として返り、追従できていないという判定が返る
 ```
 
-### Schemaが宣言する値フィールドをDocumentが持たないことを検出する
+### 宣言された欄を持たないDocumentを見つける
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | ドリフト：参照先Schemaが宣言する値フィールドにDocumentが追従できていない |
+| 異常系 | 欄の追従：宣言に実データが追いついていないことを見つけられるか |
 
 ```gherkin
-Scenario: Schemaが宣言する値フィールドをDocumentが持たないことを検出する
-  Given 参照先Schemaが宣言する値フィールドのキーを実データに持たないDocument
-  When schema版ドリフト検査を実行する
-  Then missing_declared_fieldsにその組が含まれる
+Scenario: 宣言された欄を持たないDocumentを見つける
+  Given Schemaが宣言する必須の欄を持たないDocument
+  When 版の追従を調べる
+  Then その組が追従していない欄として返り、追従できていないという判定が返る
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないdocuments_rootはINVALID_PATH
+### 走査の対象が無ければINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | エラー：走査起点の不在 |
+| 異常系 | エラー：走査の対象が実在しないとき |
 
 ```gherkin
-Scenario: 存在しないdocuments_rootはINVALID_PATH
-  When 存在しないdocuments_rootでschema版ドリフト検査を実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 走査の対象が無ければINVALID_PATH
+  Given 実在しない走査の対象
+  When 版の追従を調べる
+  Then INVALID_PATH エラーが返る
 ```

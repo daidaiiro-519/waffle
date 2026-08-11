@@ -95,27 +95,30 @@ DDD(ドメイン駆動設計)についての概念質問(「〜とは」)・設�
 
 ## 参照knowledge
 
-- `references/knowledge/business-domain.md`: ビジネスドメイン（事業領域）の全体像
-- `references/knowledge/subdomain.md`: 業務領域（サブドメイン）の中核・一般・補完分類
-- `references/knowledge/domain-expert.md`: 業務エキスパートとの関わり方
-- `references/knowledge/ubiquitous-language.md`: 同じ言葉（ユビキタス言語）
-- `references/knowledge/bounded-context.md`: 境界づけられたコンテキスト
-- `references/knowledge/context-integration.md`: コンテキストどうしの連携パターン（良きパートナー・公開ホストサービス・腐敗防止層等）
-- `references/knowledge/business-logic-simple.md`: 単純な業務ロジックの実装（トランザクションスクリプト・アクティブレコード）
-- `references/knowledge/domain-model.md`: ドメインモデル（値オブジェクト・エンティティ・集約・業務サービス）
-- `references/knowledge/event-sourced-domain-model.md`: イベント履歴式ドメインモデル（イベントソーシング・投影）
-- `references/knowledge/architecture-patterns.md`: 技術方式（レイヤードアーキテクチャ・ポートとアダプター・CQRS）
-- `references/knowledge/communication.md`: コンテキスト間の通信（モデル変換・送信箱・サーガ・プロセスマネージャー）
-- `references/knowledge/design-heuristics.md`: 設計の経験則（実装方法・技術方式・テスト方針の総合判定）
-- `references/knowledge/evolving-design.md`: 設計を進化させる（業務領域の変化・実装方法の移行・組織変更への対応）
-- `references/knowledge/event-storming.md`: イベントストーミング（ワークショップ技法）
-- `references/knowledge/real-world-ddd.md`: 現実世界のDDD導入（戦略的分析・ストラングラー方式・段階的導入）
-- `references/knowledge/microservices.md`: マイクロサービスとコンテキスト・サブドメインの関係
-- `references/knowledge/event-driven-architecture.md`: イベント駆動型アーキテクチャ
-- `references/knowledge/data-mesh.md`: データメッシュ（分析系モデルとDDDの組み合わせ）
-- `references/knowledge/closing-heuristics.md`: 実装方法を選択する経験則の総括
+- `references/archive/knowledge-v1-book-transcription/business-domain.md`: ビジネスドメイン（事業領域）の全体像
+- `references/archive/knowledge-v1-book-transcription/subdomain.md`: 業務領域（サブドメイン）の中核・一般・補完分類
+- `references/archive/knowledge-v1-book-transcription/domain-expert.md`: 業務エキスパートとの関わり方
+- `references/archive/knowledge-v1-book-transcription/ubiquitous-language.md`: 同じ言葉（ユビキタス言語）
+- `references/archive/knowledge-v1-book-transcription/bounded-context.md`: 境界づけられたコンテキスト
+- `references/archive/knowledge-v1-book-transcription/context-integration.md`: コンテキストどうしの連携パターン（良きパートナー・公開ホストサービス・腐敗防止層等）
+- `references/archive/knowledge-v1-book-transcription/business-logic-simple.md`: 単純な業務ロジックの実装（トランザクションスクリプト・アクティブレコード）
+- `references/archive/knowledge-v1-book-transcription/domain-model.md`: ドメインモデル（値オブジェクト・エンティティ・集約・業務サービス）
+- `references/archive/knowledge-v1-book-transcription/event-sourced-domain-model.md`: イベント履歴式ドメインモデル（イベントソーシング・投影）
+- `references/archive/knowledge-v1-book-transcription/architecture-patterns.md`: 技術方式（レイヤードアーキテクチャ・ポートとアダプター・CQRS）
+- `references/archive/knowledge-v1-book-transcription/communication.md`: コンテキスト間の通信（モデル変換・送信箱・サーガ・プロセスマネージャー）
+- `references/archive/knowledge-v1-book-transcription/design-heuristics.md`: 設計の経験則（実装方法・技術方式・テスト方針の総合判定）
+- `references/archive/knowledge-v1-book-transcription/evolving-design.md`: 設計を進化させる（業務領域の変化・実装方法の移行・組織変更への対応）
+- `references/archive/knowledge-v1-book-transcription/event-storming.md`: イベントストーミング（ワークショップ技法）
+- `references/archive/knowledge-v1-book-transcription/real-world-ddd.md`: 現実世界のDDD導入（戦略的分析・ストラングラー方式・段階的導入）
+- `references/archive/knowledge-v1-book-transcription/microservices.md`: マイクロサービスとコンテキスト・サブドメインの関係
+- `references/archive/knowledge-v1-book-transcription/event-driven-architecture.md`: イベント駆動型アーキテクチャ
+- `references/archive/knowledge-v1-book-transcription/data-mesh.md`: データメッシュ（分析系モデルとDDDの組み合わせ）
+- `references/archive/knowledge-v1-book-transcription/closing-heuristics.md`: 実装方法を選択する経験則の総括
 - `references/template-concept.md`: 概念質問への回答テンプレート
 - `references/template-judgment.md`: 判断相談への回答テンプレート
 - `references/template-implementation.md`: 実装相談への回答テンプレート
 - `.claude/skills/mermaid-guide/references/syntax-overview.md`: Mermaid構文選定ガイド
 - `.claude/skills/mermaid-guide/references/pattern-{構文名}.md`: 各Mermaid構文のテンプレート
+- `references/knowledge/architecture-evidence-based-scope.md`: 採用済みの knowledge 候補
+- `references/knowledge/knowledge-cand-aggregate-declaration-is-not-class-existence.md`: 採用済みの knowledge 候補
+- `references/knowledge/knowledge-cand-declaration-text-arbitrates-violation-claims.md`: 採用済みの knowledge 候補

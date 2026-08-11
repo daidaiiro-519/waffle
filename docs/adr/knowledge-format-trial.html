@@ -1,0 +1,544 @@
+<title>knowledge の新しい形 ── 全体像と、subdomain の完全プレビュー</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:58rem;margin:0 auto;display:flex;flex-direction:column;gap:3rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.15rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:.7rem 0 -.3rem}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.split{display:grid;grid-template-columns:1fr;gap:1rem}
+@media(min-width:52rem){.split{grid-template-columns:1fr 1fr}}
+.pane{border:1px solid var(--line);border-radius:6px;background:var(--surface);display:flex;flex-direction:column;overflow:hidden}
+.pane.old{border-color:var(--bad-line)} .pane.new{border-color:var(--ok-line)}
+.pane>h4{margin:0;padding:.55rem .9rem;background:var(--sunk);border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:var(--muted);font-weight:400;
+  display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.pane.old>h4{background:var(--bad-soft);color:var(--bad);border-bottom-color:var(--bad-line)}
+.pane.new>h4{background:var(--ok-soft);color:var(--ok);border-bottom-color:var(--ok-line)}
+.pane pre{margin:0;padding:.85rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.85;white-space:pre;color:var(--ink)}
+.k{color:var(--ok)} .v{color:var(--bad)} .c{color:var(--faint)} .add{color:var(--ok);font-weight:700}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.ok{color:var(--ok)} td.no{color:var(--bad)}
+.box{border-radius:6px;padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.7rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0}
+.box p,.box li{font-size:.9rem}
+ul.plain{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;max-width:44rem}
+ul.plain li{line-height:1.8}
+
+/* ── プレビュー本体 ── */
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.7rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.72rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.6rem 1.5rem 2rem;display:flex;flex-direction:column;gap:1.5rem}
+.node{display:flex;flex-direction:column;gap:.6rem}
+.node.depth1{padding-left:0}
+.node.depth2{padding-left:1.1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.5rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.08rem}
+.node.depth2 .node-h .nm{font-size:.98rem}
+.node-h .kind{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.66rem;color:var(--faint)}
+.node p{font-size:.93rem}
+.fig{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.fig .meta{padding:.6rem .85rem;display:flex;flex-direction:column;gap:.35rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.fig .meta div{font-size:.85rem;line-height:1.7}
+.fig .meta b{font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;color:var(--faint);
+  display:inline-block;min-width:4.6rem}
+pre.mermaid{background:transparent;margin:0;padding:1rem .8rem;text-align:center;overflow-x:auto}
+.fig table{min-width:20rem;font-size:.8rem;border-radius:0;border:none}
+.fig .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+.verbatim{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.verbatim .meta{padding:.6rem .85rem;border-bottom:1px solid var(--line);font-size:.85rem;line-height:1.7}
+.verbatim .meta b{font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.6rem}
+.verbatim pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.74rem;line-height:1.8;white-space:pre;color:var(--muted)}
+.anti{border-left:3px solid var(--bad);background:var(--bad-soft);padding:.7rem .9rem;border-radius:0 4px 4px 0}
+.anti b{display:block;font-size:.9rem;margin-bottom:.2rem}
+.anti p{font-size:.86rem;color:var(--muted)}
+.rel{display:flex;flex-wrap:wrap;gap:.4rem}
+.rel span{font-family:var(--mono);font-size:.72rem;background:var(--sunk);padding:.15em .5em;border-radius:3px;color:var(--muted)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の器の作り直し</span>
+  <h1>全体像と、<code>subdomain</code> の完全プレビュー</h1>
+  <p class="standfirst">図・表・文が同じことを言う形にします。図を描画できない読み手でも意味が取れるよう、どの図にも<strong>意図・読み取り・関係の表</strong>を必須にしました。下は書き起こし版222行を、この形で丸ごと表したものです。</p>
+</header>
+
+<!-- ═══ Ⅰ 全体像 ═══ -->
+<section>
+  <h2>Ⅰ. 全体像</h2>
+  <p class="narrow">knowledge 文書は「1つの概念に固定のブロックがぶら下がる」形ではなく、<strong>概念の木</strong>でした。ノードが子ノードを持て、各ノードが文・図・表・原文を持てる。それだけです。</p>
+
+  <div class="split">
+    <div class="pane new">
+      <h4><span>ノードの形</span><span>再帰する単位</span></h4>
+<pre>{
+  <span class="k">"name"</span>:      <span class="c">// 概念の名前</span>
+  <span class="k">"kind"</span>:      <span class="c">// 定義 / 分類 / 判断基準 / 実例 /</span>
+                <span class="c">// 対比 / 補足 / アンチパターン / 関連</span>
+  <span class="k">"sourceRef"</span>: <span class="c">// 図1-3、1.2.3.3 など出典の位置</span>
+  <span class="k">"summary"</span>:   <span class="c">// 文章（常に必須）</span>
+
+  <span class="c">// 以下は在るものだけ</span>
+  <span class="k">"figure"</span>:    <span class="c">// 節点と関係の宣言</span>
+  <span class="k">"table"</span>:     <span class="c">// 見出しと行</span>
+  <span class="k">"verbatim"</span>:  <span class="c">// 規則性の無い原文</span>
+                <span class="c">// ＝コード・象限図など</span>
+
+  <span class="k">"children"</span>:  <span class="c">// 子ノード（深さ3まで）</span>
+}</pre>
+    </div>
+    <div class="pane new">
+      <h4><span>図の形</span><span>単独では置けない</span></h4>
+<pre>"figure": {
+  <span class="add">"intent"</span>:   <span class="c">// 何を示す図か（必須）</span>
+  <span class="add">"reading"</span>:  <span class="c">// 図から何が言えるか（必須）</span>
+                <span class="c">// ← 描画しなくても意味が取れる文</span>
+  <span class="k">"direction"</span>: <span class="c">// LR / TD</span>
+  <span class="k">"groups"</span>:   [{ label, nodes[] }]
+  <span class="k">"nodes"</span>:    [ ... ]
+  <span class="k">"edges"</span>:    [{ from, to, label?, <span class="add">means?</span> }]
+}
+
+<span class="c">// 描画側は、図と一緒に</span>
+<span class="c">// 「関係の表」も必ず出す</span>
+
+"verbatim": {
+  <span class="add">"intent"</span>:   <span class="c">// 何を示す例か（必須）</span>
+  <span class="add">"reading"</span>:  <span class="c">// そこから何が言えるか（必須）</span>
+  <span class="k">"lang"</span>:     <span class="c">// csharp / mermaid / sql …</span>
+  <span class="k">"source"</span>:   <span class="c">// 原文（変換しない）</span>
+}
+<span class="c">// 原文のまま持つことと、描画できることは</span>
+<span class="c">// 両立する（mermaid ならそのまま描ける）</span></pre>
+    </div>
+  </div>
+
+  <div class="box ok">
+    <h3>規則性のあるものは構造に、無いものは原文のまま</h3>
+    <p>実測で分けました——<strong>図42個と表は構造に</strong>（節点と矢印という規則がある）、<strong>コード31個と象限図1個は原文のまま</strong>（規則が無い）。ただし原文側にも「何を示す例か」を必須にします。今回の欠落は<strong>何が大事かがどこにも書かれていなかった</strong>ために起きたので、それをその場に書かせます。</p>
+  </div>
+</section>
+
+<!-- ═══ Ⅱ Schema の変更点 ═══ -->
+<section>
+  <h2>Ⅱ. Schema の変更点</h2>
+
+  <div class="split">
+    <div class="pane old">
+      <h4><span>いま（KnowledgeSchema/v5）</span><span>平らな8ブロック</span></h4>
+<pre>KnowledgeContent {
+  description
+  <span class="v">principles</span>        <span class="c">// 文字列の並び</span>
+  <span class="v">classifications</span>   <span class="c">// name + description</span>
+  <span class="v">decisionCriteria</span>  <span class="c">// stages + transitions</span>
+  <span class="v">examples</span>          <span class="c">// text（1つだけ）</span>
+  <span class="v">antiPatterns</span>      <span class="c">// name + problem</span>
+  provenance
+  relatedConcepts
+}
+
+<span class="c">// 子を持てない</span>
+<span class="c">// 図・表・コードを持てない</span>
+<span class="c">// 出典の位置（図1-3）を持てない</span></pre>
+    </div>
+    <div class="pane new">
+      <h4><span>提案（v6）</span><span>木＋3つの持ち方</span></h4>
+<pre>KnowledgeContent {
+  description
+  <span class="add">nodes[]</span>           <span class="c">// ConceptNode の並び</span>
+  provenance
+  relatedConcepts
+}
+
+<span class="add">ConceptNode</span> {
+  name / kind / sourceRef / summary
+  figure? / table? / verbatim?
+  <span class="add">children[]</span>        <span class="c">// ConceptNode（深さ3まで）</span>
+}
+
+<span class="c">// 既存の5ブロックは kind として残る</span>
+<span class="c">// → 語彙を捨てず、木の中の役割になる</span></pre>
+    </div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>変更</th><th>理由</th><th>由来</th></tr></thead>
+      <tbody>
+        <tr><td>5ブロックを <code>nodes[]</code> に畳む</td><td>見出し372件のうち227件が「下位概念の名前」で、平らなブロックには置けない</td><td>実測</td></tr>
+        <tr><td><code>children[]</code> を有界に再帰させる</td><td>親の下に最大10個の子。深さ4（<code>#</code>〜<code>####</code>）</td><td>実測 ＋ <code>agg-schema</code> の不変条件「再帰は常に有界」</td></tr>
+        <tr><td><code>figure</code> を足す</td><td>図42個。節点と矢印という規則がある</td><td>既存 <code>completionImage</code> と同型</td></tr>
+        <tr><td><code>figure.intent</code> / <code>reading</code> を必須にする</td><td>図だけでは読み手が意味を取れない。書き起こし版でも83%は説明文が添えられていた</td><td>実測</td></tr>
+        <tr><td><code>table</code> を足す</td><td>表164行。比較表は knowledge の骨格</td><td>実測</td></tr>
+        <tr><td><code>verbatim</code>（言語＋意図＋<strong>読み取り</strong>＋原文）を足す</td><td>コード31個・象限図1個。構造化すると肝が消える。ただし<strong>図と同じく読み取りを必須にする</strong>——原文だけでは意味が取れない</td><td>実測</td></tr>
+        <tr><td><code>sourceRef</code> を足す</td><td>「図1-3」「1.2.3.3」を持てないと、原本に当たれない</td><td>今日、当たり直しに苦労した</td></tr>
+        <tr><td><strong>実例は抽象化して置き換える</strong>（規則として明文化）</td><td>著作権への配慮。書籍固有の企業例・図版は用いず、教材用の架空ドメインへ置き換える。<strong>ただし図が示す関係の構造は保つ</strong>——置き換えて構造まで崩れると、示していたことが消える</td><td>要約版の <code>provenance</code> が既に同じ方針を明記していた</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ Ⅲ 完全プレビュー ═══ -->
+<section>
+  <h2>Ⅲ. <code>subdomain</code> の完全プレビュー</h2>
+  <p class="narrow">書き起こし版222行・見出し16件を、新しい形で描画した全体です。<strong>省略はありません。</strong></p>
+
+  <div class="doc">
+    <div class="doc-head">
+      <span>knowledge / subdomain</span>
+      <span>ノード16 ・ 図4 ・ 表1 ・ 原文1</span>
+    </div>
+    <div class="doc-body">
+
+      <!-- 定義 -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">業務領域（サブドメイン）とは</span><span class="kind">定義</span></div>
+        <p>企業の事業活動全体を細分化した個々の業務活動の単位。すべての業務領域が連動することで顧客へのサービス提供活動が成り立つ。</p>
+      </div>
+
+      <!-- 3つの分類 -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">3つの分類</span><span class="kind">分類</span></div>
+        <p>業務領域は中核・一般・補完の3つに分類される。</p>
+
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">中核の業務領域（Core）</span><span class="kind">分類</span></div>
+          <p>競合他社との差別化を生み出す業務活動。他社がまねできない独自製品・サービス・業務プロセスの最適化が対象で、必然的に複雑になる（単純なら競合がすぐ追いつける）。継続的な革新・進化が必要で「完了」がない。社内開発必須で、外部委託・パッケージ利用は戦略的リスク。</p>
+        </div>
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">一般的な業務領域（Generic）</span><span class="kind">分類</span></div>
+          <p>どの企業も同じやり方で解決する業務活動。競争優位を生まないが事業運営に不可欠。業務知識の観点では「わからないことがわかっている」領域。実績あるパッケージ製品・クラウドサービスで賄え、自社開発より既製品の活用が費用対効果で優れる。</p>
+        </div>
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">補完的な業務領域（Supporting）</span><span class="kind">分類</span></div>
+          <p>事業活動を支えるが、競争優位を生まない業務活動。業務ロジックが単純（基本的に CRUD・ETL 操作）で、他社も同じことを簡単にできる。社内開発でもよいが外部委託も有力な選択肢で、成長途上の若手技術者の育成の場として活用できる。</p>
+        </div>
+      </div>
+
+      <!-- 判断基準 -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">判断基準</span><span class="kind">判断基準</span></div>
+        <p>3つのステップで分類を決める。</p>
+        <div class="fig">
+          <div class="meta">
+            <div><b>意図</b>業務領域を中核・一般・補完のどれに分類するかを、順に問うて決める</div>
+            <div><b>読み取り</b>まず「誰かがお金を払ってくれる業務か」を問い、YES なら次に「外部サービスを導入するより自分たちで作った方が簡単で安いか」を問う。ここで YES なら補完、NO なら中核。最初の問いが NO なら「実績あるパッケージ製品・クラウドサービスが存在するか」を問い、YES なら一般、NO なら補完。</div>
+          </div>
+<pre class="mermaid">
+flowchart TD
+  Q1{"誰かがお金を払ってくれる業務か"}
+  Q2{"外部サービスを導入するより自分たちで作った方が簡単で安いか"}
+  Q3{"実績あるパッケージ製品・クラウドサービスが存在するか"}
+  R1["中核の業務領域"]
+  R2["補完の業務領域"]
+  R3["一般的な業務領域"]
+  Q1 -->|YES| Q2
+  Q1 -->|NO| Q3
+  Q2 -->|YES| R2
+  Q2 -->|NO| R1
+  Q3 -->|YES| R3
+  Q3 -->|NO| R2
+</pre>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>問い</th><th>答え</th><th>行き先</th></tr></thead>
+              <tbody>
+                <tr><td>誰かがお金を払ってくれる業務か</td><td>YES</td><td>ステップ2へ</td></tr>
+                <tr><td>誰かがお金を払ってくれる業務か</td><td>NO</td><td>ステップ3へ</td></tr>
+                <tr><td>外部サービスの方が簡単で安いか</td><td>YES</td><td>補完</td></tr>
+                <tr><td>外部サービスの方が簡単で安いか</td><td>NO</td><td>中核</td></tr>
+                <tr><td>実績あるパッケージ製品が存在するか</td><td>YES</td><td>一般（既製品を使う）</td></tr>
+                <tr><td>実績あるパッケージ製品が存在するか</td><td>NO</td><td>補完（自社開発するが手を抜いてよい）</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">ソースコードから判断する場合</span><span class="kind">補足</span></div>
+          <p>「そのプログラムはデータ入力の CRUD 画面の集まりか」── YES ならおそらく補完的な業務領域。NO（複雑なアルゴリズム・業務ルール・制約条件がある）なら、典型的な中核の業務領域。</p>
+        </div>
+      </div>
+
+      <!-- 分類マトリクス -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">分類マトリクス</span><span class="kind">対比</span><span class="src">図1-1</span></div>
+        <p>2軸で業務領域のカテゴリーが決まる。左下のグレーゾーンはパッケージ製品の有無で一般か補完かが決まる。</p>
+        <div class="fig">
+          <div class="meta">
+            <div><b>意図</b>差別化の大小と業務ロジックの複雑さという2軸で、4つの分類が定まることを示す</div>
+            <div><b>読み取り</b>差別化が大きく複雑さも高い象限が中核。差別化は小さいが複雑な象限が一般。差別化も複雑さも小さい象限はグレーゾーンで、実績あるパッケージ製品が存在すれば一般、しなければ補完になる。差別化が大きく複雑さが低い象限は補完。</div>
+            <div><b>持ち方</b>節点と矢印では表せないため<strong>原文のまま</strong>持つ。ただし描画はできる。</div>
+          </div>
+<pre class="mermaid">
+quadrantChart
+    title 業務領域の分類
+    x-axis "差別化 小" --> "差別化 大"
+    y-axis "複雑さ 小" --> "複雑さ 大"
+    quadrant-1 中核
+    quadrant-2 一般
+    quadrant-3 グレーゾーン
+    quadrant-4 補完
+</pre>
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>差別化</th><th>業務ロジックの複雑さ</th><th>分類</th></tr></thead>
+              <tbody>
+                <tr><td>大</td><td>高い</td><td>中核</td></tr>
+                <tr><td>小</td><td>高い</td><td>一般</td></tr>
+                <tr><td>小</td><td>低い</td><td>一般または補完（パッケージ製品の有無で決まる）</td></tr>
+                <tr><td>大</td><td>低い</td><td>補完</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 比較表 -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">比較表</span><span class="kind">対比</span></div>
+        <p>3つの分類を観点ごとに並べたもの。</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>観点</th><th>中核</th><th>一般</th><th>補完</th></tr></thead>
+            <tbody>
+              <tr><td>競争優位</td><td class="ok">○ 生む</td><td class="no">× 生まない</td><td class="no">× 生まない</td></tr>
+              <tr><td>複雑さ</td><td>複雑</td><td>複雑</td><td>単純</td></tr>
+              <tr><td>変化の頻度</td><td>多い</td><td>少ない</td><td>少ない</td></tr>
+              <tr><td>実装方針</td><td>社内開発必須</td><td>製品購入・外部サービス利用</td><td>社内または外部委託</td></tr>
+              <tr><td>課題の特徴</td><td>複雑で興味深い</td><td>既存の解決策がある</td><td>明確</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 具体例 -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">具体例</span><span class="kind">実例</span></div>
+        <p>実在の事業に当てはめた例と、判断を誤りやすい例。</p>
+
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">物流プラットフォーム</span><span class="kind">実例</span></div>
+          <p><strong>中核:</strong> 配送ルートの最適化、集荷から配達までのリアルタイム追跡　／　<strong>一般:</strong> 請求・会計処理、認証と認可　／　<strong>補完:</strong> 配送先住所の形式検証、配達完了の記録</p>
+        </div>
+
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">オンライン学習サービス</span><span class="kind">実例</span></div>
+          <p><strong>中核:</strong> 学習到達度に応じた出題の組み立て、つまずきの検知　／　<strong>一般:</strong> 動画配信、決済、認証と認可　／　<strong>補完:</strong> 受講証明書の発行、学習時間の集計</p>
+        </div>
+
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">粗い括りの細分化</span><span class="kind">実例</span><span class="src">図1-2</span></div>
+          <p>ひとまとまりに見える業務をそのまま1つの分類に当てはめるのは粗い。細分化して初めてカテゴリーが見える。</p>
+          <div class="fig">
+            <div class="meta">
+              <div><b>意図</b>ひとまとまりに見える業務を細分化すると、異なる分類が混在していることを示す</div>
+              <div><b>読み取り</b>物流プラットフォームの全業務領域の中で「配送サポート窓口」は一見すると一般に見える。しかし細分化すると、どの担当者に案件を割り振るかは中核、電話をかけて記録することは一般、シフト管理は補完となり、3つの分類が同居している。</div>
+            </div>
+<pre class="mermaid">
+flowchart LR
+  subgraph a["物流プラットフォームの全業務領域"]
+    W["倉庫"]
+    S["出荷"]
+    P["集荷"]
+    KS["配送サポート窓口（一般？）"]
+    Q["品質管理"]
+    H["人事"]
+  end
+  subgraph b["配送サポート窓口の細分化"]
+    B1["案件の割り振り ── 中核"]
+    B2["電話をかける・記録する ── 一般"]
+    B3["問い合わせ履歴の照会 ── 一般"]
+    B4["シフト管理 ── 補完"]
+  end
+  KS -.->|細分化| b
+</pre>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>細分化後</th><th>分類</th></tr></thead>
+                <tbody>
+                  <tr><td>案件の割り振り</td><td class="no"><strong>中核</strong></td></tr>
+                  <tr><td>電話をかける・記録する</td><td>一般</td></tr>
+                  <tr><td>問い合わせ履歴の照会</td><td>一般</td></tr>
+                  <tr><td>シフト管理</td><td>補完</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">業務領域の境界 = 強く関連するユースケースの集まり</span><span class="kind">実例</span><span class="src">図1-3</span></div>
+          <p>業務領域はユースケースの集まりとして定義できる。同じアクター・同じ外部システムとつながり、密接に関係するデータを操作するユースケース群がひとつの業務領域を形成する。</p>
+          <div class="fig">
+            <div class="meta">
+              <div><b>意図</b>業務領域の境界が、ユースケースの集まりとして見えることを示す</div>
+              <div><b>読み取り</b>荷主という同じアクターから伸び、配送業者の受付基盤という同じ外部システムにつながる5つのユースケース（集荷を頼む・積替を指示する・到着を見込む・引取をやめる・再配達を頼む）が、ひとつの業務領域「配送手配」を形成している。一方、料金を見積る・支払を確かめるは料金基盤側につながり、別の集まりになる。</div>
+            </div>
+<pre class="mermaid">
+flowchart LR
+  A["荷主"]
+  B1["配送業者の受付基盤"]
+  B2["料金の照会基盤"]
+  subgraph G["配送手配"]
+    U1["集荷を頼む"]
+    U2["積替を指示する"]
+    U3["到着を見込む"]
+    U4["引取をやめる"]
+    U5["再配達を頼む"]
+  end
+  A --> U1
+  A --> U2
+  A --> U3
+  A --> U4
+  A --> U5
+  U1 --> B1
+  U2 --> B1
+  U4 --> B1
+  U5 --> B1
+  U3 --> B2
+</pre>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>ユースケース</th><th>呼ぶ側</th><th>つながる外部システム</th></tr></thead>
+                <tbody>
+                  <tr><td>集荷を頼む</td><td>荷主</td><td>配送業者の受付基盤</td></tr>
+                  <tr><td>積替を指示する</td><td>荷主</td><td>配送業者の受付基盤</td></tr>
+                  <tr><td>引取をやめる</td><td>荷主</td><td>配送業者の受付基盤</td></tr>
+                  <tr><td>再配達を頼む</td><td>荷主</td><td>配送業者の受付基盤</td></tr>
+                  <tr><td>到着を見込む</td><td>荷主</td><td>料金の照会基盤</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="node depth2">
+          <div class="node-h"><span class="nm">細分化しすぎの例</span><span class="kind">実例</span><span class="src">図1-4</span></div>
+          <p>分割後のカテゴリーがすべて分割前と同じなら、その細分化は不要。</p>
+          <div class="fig">
+            <div class="meta">
+              <div><b>意図</b>設計判断を何も変えない細分化があることを示す</div>
+              <div><b>読み取り</b>一般に分類された社内の備品貸出システムを、在庫の照会・貸出の申請・返却の記録・期限の通知へ細分化しても、4つとも一般のままになる。分割の前後で分類が変わらないので、この細分化は設計判断を何も変えておらず不要。</div>
+            </div>
+<pre class="mermaid">
+flowchart LR
+  A["備品貸出システム ── 一般"]
+  B["在庫の照会 ── 一般"]
+  C["貸出の申請 ── 一般"]
+  D["返却の記録 ── 一般"]
+  E["期限の通知 ── 一般"]
+  A -->|細分化| B
+  A -->|細分化| C
+  A -->|細分化| D
+  A -->|細分化| E
+  G["すべて一般のまま → 設計判断を変えない → 不要な細分化"]
+  E -.-> G
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 細分化の焦点 -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">細分化の焦点</span><span class="kind">補足</span><span class="src">1.2.3.3</span></div>
+        <p>業務領域を探す時は<strong>ソフトウェアが関係しない業務機能を特定して除外する</strong>ことが役に立つ。ソフトウェアが関係しない業務を識別できれば、取り組んでいるソフトウェアシステムが対象とする業務領域に集中できる。</p>
+      </div>
+
+      <!-- 用語補足 -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">「コアドメイン」という別の呼び名</span><span class="kind">補足</span></div>
+        <p>文献によって「コアドメイン」と呼ぶものと「コアサブドメイン」と呼ぶものがある。<strong>この knowledge では「中核の業務領域」で統一する。</strong>理由は2つ——(1) 議論しているのはサブドメインであり、ドメイン全体との混乱を避けたい。(2) 分類は変化するため、「中核の業務領域が一般の業務領域に変わった」のほうが意味が明確になる。</p>
+      </div>
+
+      <!-- アンチパターン -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">アンチパターン</span><span class="kind">アンチパターン</span></div>
+        <div class="anti"><b>中核をパッケージに外注する</b><p>中核の業務領域のソフトウェア開発を外部委託すると、短期的には安く見えるが長期的には会社の存続に関わる問題を引き起こす。変更がやりにくく危険なコードベースになり、事業目標の達成を技術面で支援できなくなる。</p></div>
+        <div class="anti"><b>組織図でサブドメインを決める</b><p>部門名（「顧客サービス部」など）でサブドメインを決めると粗すぎる判断になる。業務の細部に重要な情報が隠れており、細分化してはじめて中核・補完・一般が見えてくる。</p></div>
+        <div class="anti"><b>細分化をやりすぎる</b><p>分割しても設計判断が変わらないなら、その分割は必要ない。「分割した後のカテゴリーがすべて分割前と同じ」なら意味がない細分化。</p></div>
+      </div>
+
+      <!-- 関連概念 -->
+      <div class="node depth1">
+        <div class="node-h"><span class="nm">関連概念</span><span class="kind">関連</span></div>
+        <div class="rel">
+          <span>business-domain — サブドメインを含む事業全体の領域</span>
+          <span>bounded-context — サブドメインをソフトウェアとして実装する境界</span>
+          <span>subdomain-evolution — カテゴリーは変化する（中核→一般など）</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 残っている判断</h2>
+  <ul class="plain">
+    <li><strong>ノードの種別（kind）を列挙で縛るか。</strong>上では 定義／分類／判断基準／実例／対比／補足／アンチパターン／関連 の8つを使いました。縛るとまた入らないものが出て、自由にすると機械で数えられなくなります</li>
+    <li><strong>深さの上限。</strong>実測は最大4段。上のプレビューは3段で足りています</li>
+    <li><strong>19本・4,750行を誰が変換するか。</strong>図42個・表・コード31個を含むので機械変換では済みません。<code>subdomain</code> 1本でこの分量です</li>
+  </ul>
+  <div class="box bad">
+    <h3>この形にしても、突き合わせが無ければまた落ちます</h3>
+    <p>今回の欠落の原因は器だけではありません。<strong>要約が元を覆えているかを確かめる工程が無かった</strong>ことも同じだけ効いています。器を直すのと合わせて、変換後に「書き起こし版の見出しが全部どこかのノードになっているか」を機械で見る必要があります。</p>
+  </div>
+</section>
+
+<footer>
+  図はすべて宣言（節点・関係・グループ）から描画したもの。原文の mermaid をそのまま貼ったものではない。<br>
+  プレビューは書き起こし版 subdomain.md 全222行・見出し16件を対象とし、省略していない。<br>
+  実例は著作権への配慮から教材用の架空ドメイン（物流プラットフォーム・オンライン学習サービス・社内の備品貸出）へ置き換えた。図が示す関係の構造は原文のまま保っている。<br>
+  コードブロックの実数は129個（図98・コード31）。以前「258個」と報告したのは ``` の行数を数えた誤り。
+</footer>
+
+</div>

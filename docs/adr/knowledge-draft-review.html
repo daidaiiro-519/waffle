@@ -1,0 +1,362 @@
+<title>knowledge の配り先と、DRAFT 5件の審査</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --warn:#8A6410; --warn-soft:#F5EDDA; --warn-line:#C9AE72;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --warn:#D6B36A; --warn-soft:#2A2418; --warn-line:#5C4E2C;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --warn:#D6B36A; --warn-soft:#2A2418; --warn-line:#5C4E2C;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:56rem;margin:0 auto;display:flex;flex-direction:column;gap:3rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.15rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:28rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+.pill{font-family:var(--mono);font-size:.64rem;padding:.15em .5em;border-radius:99px;white-space:nowrap}
+.pill.active{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok-line)}
+.pill.draft{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-line)}
+.pill.dep{background:var(--sunk);color:var(--faint);border:1px solid var(--line-strong)}
+.flow{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1.2rem}
+pre.mermaid{background:transparent;margin:0;text-align:center;overflow-x:auto}
+.card{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.card>h3{margin:0;padding:.85rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--serif);font-size:1.08rem;font-weight:600;display:flex;flex-wrap:wrap;gap:.5rem .8rem;align-items:baseline}
+.card>h3 .id{font-family:var(--mono);font-size:.66rem;color:var(--faint);font-weight:400}
+.card .body{padding:1.2rem 1.2rem 1.4rem;display:flex;flex-direction:column;gap:1rem}
+.fld{display:flex;flex-direction:column;gap:.4rem}
+.fld>b{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:var(--faint);font-weight:400}
+.fld p,.fld li{font-size:.9rem;line-height:1.8}
+.fld ul{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.4rem}
+.fld .ex{font-size:.88rem;line-height:1.85;color:var(--muted);background:var(--ground);
+  border-left:3px solid var(--line-strong);padding:.7rem .9rem;border-radius:0 4px 4px 0;white-space:pre-wrap}
+.anti{border-left:3px solid var(--bad);background:var(--bad-soft);padding:.6rem .85rem;border-radius:0 4px 4px 0}
+.anti b{display:block;font-size:.88rem;margin-bottom:.15rem}
+.anti span{font-size:.85rem;color:var(--muted)}
+.empty{font-size:.85rem;color:var(--faint);font-style:italic}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.warn{background:var(--warn-soft);border:1px solid var(--warn-line)}
+.box.warn h3{color:var(--warn);margin:0;font-family:var(--serif);font-size:1rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+ul.plain{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;max-width:44rem}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の棚卸しと審査</span>
+  <h1>配り先の仕組みと、DRAFT 5件の中身</h1>
+  <p class="standfirst"><code>agentRefs</code> と <code>skillRefs</code> は排他ではなく、<strong>両方を持つのが通例</strong>でした。まず配り方の全体像を示し、そのうえで採用待ちの5件を省略なしで並べます。</p>
+</header>
+
+<!-- ═══ Ⅰ 配り先 ═══ -->
+<section>
+  <h2>Ⅰ. 配り先の仕組み</h2>
+  <p class="narrow">knowledge は文書として1か所にあり、<strong>2つの宣言で配られます</strong>。どちらか一方という運用ではなく、ACTIVE のものは <code>agentRefs</code> を必ず持ち、そのうえで特定の advisor にも配るものが <code>skillRefs</code> を併記しています。</p>
+
+  <div class="flow">
+<pre class="mermaid">
+flowchart LR
+  D[".waffle/documents/knowledge/*.json"]
+  A["agentRefs: waffle"]
+  S["skillRefs: ddd-advisor など"]
+  O["Orchestrator<br/>SessionStart で注入"]
+  V["advisor の<br/>references/knowledge/ へ配置"]
+  X["どこにも配られない"]
+  D --> A --> O
+  D --> S --> V
+  D -->|status が DRAFT| X
+</pre>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>宣言</th><th>配り先</th><th>効き方</th></tr></thead>
+      <tbody>
+        <tr><td><code>agentRefs: ["waffle"]</code></td><td>Orchestrator</td><td>SessionStart のフックが、<strong>status が ACTIVE のものだけ</strong>を絞って注入する</td></tr>
+        <tr><td><code>skillRefs: [...]</code></td><td>その advisor / Skill</td><td>描画時に <code>references/knowledge/</code> へ配置され、SKILL.md の <code>knowledgeRefs</code> が読む先になる</td></tr>
+        <tr><td><code>status: DRAFT</code></td><td>—</td><td>採用待ち。注入されない</td></tr>
+        <tr><td><code>status: DEPRECATED</code></td><td>—</td><td>取り下げ済み。ただし<strong>描画側は状態を見ていない</strong>ため、配置されたファイルは残る（既知の穴）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="font-family:var(--serif);font-size:1.05rem;margin:.6rem 0 -.3rem">候補18件の現状</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>候補</th><th>状態</th><th>agentRefs</th><th>skillRefs</th></tr></thead>
+      <tbody>
+        <tr><td>artifact-fidelity-to-decision-stage</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>design-share</td></tr>
+        <tr><td>avoidable-friction-is-not-detection</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>tech-lead-advisor</td></tr>
+        <tr><td>comparison-principle-needs-retrieval-path</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>ux-advisor</td></tr>
+        <tr><td>copy-register-discipline</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>design-share</td></tr>
+        <tr><td>declaration-text-arbitrates-violation-claims</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>ddd-advisor, tech-lead-advisor</td></tr>
+        <tr><td>declared-constraints-require-self-check</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>design-share</td></tr>
+        <tr><td>investigate-before-explain</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>design-share</td></tr>
+        <tr><td>scoped-validation-does-not-propagate</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>design-share</td></tr>
+        <tr><td>one-binding-for-all-contract-levels</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>—</td></tr>
+        <tr><td>operation-contract-closes-invariants</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>—</td></tr>
+        <tr><td>policy-is-ssot-measurement-is-judged</td><td><span class="pill active">ACTIVE</span></td><td>waffle</td><td>—</td></tr>
+        <tr><td>post-generation-consistency-check</td><td><span class="pill dep">DEPRECATED</span></td><td>waffle</td><td>design-share</td></tr>
+        <tr><td>token-scope-revalidation</td><td><span class="pill dep">DEPRECATED</span></td><td>waffle</td><td>design-share</td></tr>
+        <tr><td><strong>aggregate-declaration-is-not-class-existence</strong></td><td><span class="pill draft">DRAFT</span></td><td>—</td><td>—</td></tr>
+        <tr><td><strong>edge-delivery-browser-trust-boundary</strong></td><td><span class="pill draft">DRAFT</span></td><td>—</td><td>—</td></tr>
+        <tr><td><strong>first-class-concept-vs-premature-generalization</strong></td><td><span class="pill draft">DRAFT</span></td><td>—</td><td>—</td></tr>
+        <tr><td><strong>metaphor-must-still-say-the-thing</strong></td><td><span class="pill draft">DRAFT</span></td><td>waffle</td><td>—</td></tr>
+        <tr><td><strong>usecase-does-not-restate-service</strong></td><td><span class="pill draft">DRAFT</span></td><td>—</td><td><strong>ddd-advisor</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box warn">
+    <h3>私が今日作った1件だけ、形が逆になっています</h3>
+    <p><code>usecase-does-not-restate-service</code> に <code>skillRefs: ["ddd-advisor"]</code> だけを付け、<code>agentRefs</code> を付けませんでした。他の DRAFT は配り先を未設定にしてあり、<strong>採用が決まってから付ける</strong>のが通例に見えます。採用時に <code>agentRefs: ["waffle"]</code> を付け、advisor へ配るかは別に判断するのが筋です。</p>
+    <p>おっしゃるとおり、<strong>Orchestrator が読むなら advisor へも配る意味は薄い</strong>かもしれません。既に ACTIVE の8件が両方を持っているので、そこも含めて見直す余地があります。</p>
+  </div>
+</section>
+
+<!-- ═══ Ⅱ DRAFT 5件 ═══ -->
+<section>
+  <h2>Ⅱ. DRAFT 5件の完全プレビュー</h2>
+  <p class="narrow">省略していません。空のブロックは、なぜ空かの理由まで含めて出しています。</p>
+
+  <!-- 1 -->
+  <div class="card">
+    <h3>集約の宣言と集約クラスの存在は別のこと<span class="id">aggregate-declaration-is-not-class-existence</span></h3>
+    <div class="body">
+      <div class="fld"><b>概要</b><p>集約は一貫性の境界であって、クラスであるとは定義されていない。クラス化は不変条件をカプセル化して複雑さを減らす手段であり、複雑さが無い領域では空振りする。集約は、厚いモデルを組まない領域ではトランザクション境界として現れる。</p></div>
+      <div class="fld"><b>この概念が答える判断</b><ul>
+        <li>spec が集約を宣言したとき、実装に集約ルートのクラスが存在しなければならないか</li>
+        <li>補完サブドメインで厚いドメインモデルを組まないとき、宣言した不変条件は何が守るのか</li>
+        <li>サブドメイン分類を、検査の適用条件として直接使ってよいか</li>
+        <li>宣言と実装の対応を機械的に確かめるとき、何を対象にすべきか</li>
+      </ul></div>
+      <div class="fld"><b>原則</b><ul>
+        <li>集約の定義は「1つのトランザクションで変更される一貫性の境界」であり、クラスであることは定義に含まれない。クラス化は不変条件をカプセル化するための手段である。</li>
+        <li>手段が有効なのは、カプセル化すべき複雑さがあるときに限られる。状態遷移も業務ルールの絡み合いも無い領域でクラスを要求すると、不必要な階層を増やすだけになる。</li>
+        <li>厚いモデルを組まない領域でも、集約の境界は消えない。クラスという器を失うだけで、境界はトランザクションの粒度として残る。守り手はクラスからトランザクション境界へ移る。</li>
+        <li>したがって「集約を宣言したのにクラスが無い」ことは、それ自体では欠陥ではない。欠陥は「宣言した不変条件を、クラスもトランザクション境界も守っていない」ときに生じる。</li>
+        <li>サブドメイン分類は、実装方法を決める一段上流の判断であり、実装形を直接決めない。分類と実装形の間には「業務ロジックの実装方法」という中間項があり、そこを飛ばすと取りこぼしが出る。</li>
+        <li>分類は設計時の判断基準であり、検査の分岐条件へ転用すると、分類を1語書き換えるだけで検査が静かに無効化される。転用するなら中間項を経由する。</li>
+      </ul></div>
+      <div class="fld"><b>分類</b><ul>
+        <li><strong>クラスとして現れる</strong> ── ドメインモデル／イベント履歴式。集約ルートがクラスとして実装され、状態変更経路が自分のメソッドに絞られる</li>
+        <li><strong>データ構造のクラスとして現れる</strong> ── アクティブレコード。データ構造はカプセル化されるが、不変条件のカプセル化までは要求されない</li>
+        <li><strong>トランザクション境界として現れる</strong> ── トランザクションスクリプト</li>
+      </ul></div>
+      <div class="fld"><b>判断基準</b>
+<pre class="mermaid">
+flowchart TD
+  q1{"この業務領域の実装方法は何か"}
+  q2{"宣言された不変条件は、単一のトランザクション境界に収まるか"}
+  a1["集約ルートのクラスの存在を確かめる"]
+  a2["データ構造のクラスの存在を確かめる。不変条件のカプセル化は求めない"]
+  a3["クラスを求めず、書き込みが単一のトランザクション境界に収まっているかを確かめる"]
+  a4["実装方法の選択そのものを疑う。厚いモデルへ移すべき兆候"]
+  q1 -->|ドメインモデル／イベント履歴式| a1
+  q1 -->|アクティブレコード| a2
+  q1 -->|トランザクションスクリプト| q2
+  q2 -->|収まる| a3
+  q2 -->|収まらない| a4
+</pre>
+      </div>
+      <div class="fld"><b>実例</b><div class="ex">文書を共有し、渡した相手からコメントを受け取る仕組みを考える。この業務領域は補完に分類され、設計ガイドには「厚いドメインモデルを組まず、薄い手続きとして実装する。守るべき規則は集約の不変条件として書き留めるが、そのために階層を増やさない」と書かれている。
+
+spec は共有アーティファクトという集約を宣言し、不変条件として「閲覧トークンを新しく発行したとき、それまでの閲覧トークンは常に使えなくなる」を持つ。実装には集約ルートのクラスが無く、関数が保管から読んだ値を加工する。
+
+ここで「クラスが無いから実装が仕様に追いついていない」と判定するのは誤りである。設計ガイドがクラスを組まないよう指示しており、実装はそれに従っている。
+
+本当の欠陥は別のところにあった。公開の手続きが、中身を1つの保管へ、閲覧トークンを別の保管へ、それぞれ書き込んでいた。宣言された不変条件は両方が揃うことに依存しており、片方だけ成功すると破れる。クラスの不在を咎める検査はこれを見逃し、要求すべきでないクラスの不在で赤を出していた。同時に厳しすぎて緩すぎる状態である。</div></div>
+      <div class="fld"><b>出典</b><p>ddd-advisor と tech-lead-advisor へ同一の論点を並列で諮った際に、両者の見解が割れた事例（2026-08-01）。tech-lead は「宣言側を直すべき」、ddd は「検査側を直すべき」とした。</p></div>
+      <div class="fld"><b>関連</b><p><code>business-logic-simple</code> / <code>domain-model</code> / <code>design-heuristics</code></p></div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="card">
+    <h3>配信の端で守るときのブラウザ側の信頼境界<span class="id">edge-delivery-browser-trust-boundary</span></h3>
+    <div class="body">
+      <div class="fld"><b>概要</b><p>配信網（CDN）の端で誰が見てよいかを判定し、持ち込まれた HTML を同じ配信元から配る構成では、守りの主語がサーバーではなくブラウザになる。ブラウザが何を同じ出どころ（オリジン）とみなすかが設計の土台になり、指定の掛け方ひとつで、守るつもりだった画面自身が壊れる。</p></div>
+      <div class="fld"><b>原則（12件のうち主要なもの）</b><ul>
+        <li>端で判定するとき、判定に使える材料は、あらかじめ計算して端の保管へ置いておけるものに限られる。端では網の外へ問い合わせられず、動かせるコードの大きさと時間にも上限があるため。</li>
+        <li>取り決めが2か所に別々に実装されると、両方が同じ誤解でずれたとき、どちらの検証も落ちない。取り決めを1つの表として外へ出し、両側の検証がその表を読む形にして初めて、ずれが検証で現れる。</li>
+        <li>隔離の指定（CSP の sandbox）は、それを受け取った文書自身に掛かる。囲う側が囲われる側を閉じ込める指定（iframe の sandbox 属性）とは向きが逆であり、混同すると閲覧画面自身を閉じ込める。</li>
+        <li>隔離された文書は不透明な出どころを持つ。自分自身への問い合わせすらオリジンをまたぐ扱いになり、保管領域への読み書きは例外になる。つまり、その画面の機能が静かに全滅する。</li>
+        <li>すべてを1つの出どころにまとめると、オリジン間の取り決め（CORS）は要らなくなる。要らないのは省略したからではなく、またぐものが無いからであり、この不在は構成が担っている性質そのものである。</li>
+        <li>コマンドラインからの確認は、隔離の指定・オリジン間の取り決め・手元の記録の送出条件のいずれも解釈しない。この構成でブラウザが担っている守りの半分は、その確認からは構造的に見えない。</li>
+      </ul></div>
+      <div class="fld"><b>判断基準</b>
+<pre class="mermaid">
+flowchart TD
+  q1{"事前に置ける材料だけで、誰が見てよいかを決められるか"}
+  q2{"その判定は、閲覧のたびに必ず通るか"}
+  q3{"配るものに、こちらが書いていないコードが混ざるか"}
+  q4{"こちらの画面と、持ち込まれたものが同じ経路の下に同居するか"}
+  a1["端で判定する。記録の形は表として外に出し、両側の検証がそれを読む"]
+  a2["裏側で判定する"]
+  a3["隔離の指定を掛ける。掛ける先は持ち込まれたものだけ"]
+  a4["経路の形ごとに応答の見出しを分ける"]
+  a5["隔離は要らない。出どころを1つに保つ"]
+  q1 -->|はい| q2
+  q1 -->|いいえ| a2
+  q2 -->|はい| a1
+  q2 -->|いいえ| a2
+  a1 --> q3
+  q3 -->|はい| q4
+  q3 -->|いいえ| a5
+  q4 -->|はい| a4
+  q4 -->|いいえ| a3
+</pre>
+      </div>
+      <div class="fld"><b>実例</b><div class="ex">社内の設計文書を、招かれた人だけが上げ、合言葉を渡された人が読める仕組みを考える。読む人には利用者登録を求めない。
+
+閲覧のたびに裏側を起こさずに済むよう、合言葉の照合は配信網の端で行う。端では外へ問い合わせられないので、照合できる形（ハッシュの先頭・期限・世代番号を並べた1行）をあらかじめ端の保管へ置く。この1行の形が、上げる側と端の取り決めになる。
+
+ここで最初の落とし穴が来る。取り決めが両方の実装に別々に書かれていると、片方が「保管にはハッシュが入っている」、もう片方が「合言葉がそのまま入っている」と思い込んだまま、両方の検証が緑で通る。実際に、正しい合言葉でも開けない状態が、全検証を通り抜けて本番でだけ現れた。
+
+次に、持ち込まれた HTML を配る。隔離の指定を配信全体へ掛けると、閲覧画面自身にも掛かる。閲覧画面は不透明な出どころになり、自分のコメント欄が自分の保管先へ書き込めなくなる。指定は経路の形で切り分け、持ち込まれたものにだけ掛ける。
+
+3つ目は、確認の仕方そのものにある。コマンドラインから叩くと、どちらの掛け方でも応答は返る——隔離の指定は解釈されないからだ。全部通ったという結果を「通しで動いた」と読むと、ブラウザでだけ壊れている状態を出荷することになる。</div></div>
+      <div class="fld"><b>出典</b><p>CDN 配信基盤で、招かれた者だけが公開しトークン保持者が閲覧する仕組みを実装・運用した際の実地の記録（2026-07〜08）。</p></div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="card">
+    <h3>第一級の概念として立てる要求と、早すぎる一般化を避ける規律の衝突<span class="id">first-class-concept-vs-premature-generalization</span></h3>
+    <div class="body">
+      <div class="fld"><b>概要</b><p>『振る舞いが異なるなら別概念として名前を持たせよ』という設計原則と、『実例1件から一般化するな』という規律は、同じ変更に対して逆の結論を出すことがある。両者の射程を分けて裁くための着眼点を扱う。</p></div>
+      <div class="fld"><b>原則</b><ul>
+        <li>『別概念として名前を持たせよ』は概念の同定に関する原則であり、その概念をどの構造で表すか（種別の値か、直交する属性か）までは決めない。</li>
+        <li>『実例1件から一般化するな』は、まだ形の分からない変種を先回りして吸収する汎用機構（ポリシーエンジン・DSL・設定駆動の分岐）を対象とした警告である。列挙値や属性を1つ増やす行為は、この警告の射程外である。</li>
+        <li>両者が衝突して見えるときは、提案されている変更が『名前を与える』側なのか『未知の変種を吸収する枠組みを作る』側なのかを判別すると、多くの場合いずれか一方の射程にしか入らない。</li>
+        <li>概念を種別の値として表すと、その種別に対応する内容の形を定義する義務が生じる。内容の形が既存の値と同一になる場合、それは種別ではなく直交する軸であるという徴候である。</li>
+      </ul></div>
+      <div class="fld"><b>分類</b><ul>
+        <li><strong>名前を与える変更</strong> ── 既に観測されている振る舞いの違いに、正式な識別子と構造上の居場所を与える。実例1件でも成立する</li>
+        <li><strong>枠組みを作る変更</strong> ── まだ観測されていない変種を吸収できるよう、汎用の記述手段を用意する。実例が複数必要</li>
+      </ul></div>
+      <div class="fld"><b>判断基準</b><p class="empty">空。理由が明記されている ── 「分岐の形はまだ1事例からしか得られておらず、判断の分岐点として構造化するには早い。採用審査で複数事例が揃った時点で構造化する」</p></div>
+      <div class="fld"><b>実例</b><div class="ex">ある文書基盤で、他プロジェクトへ移植するための雛形文書が実運用中の文書と同じ配置先を奪い合う事故が起きた。設計原則の側からは『雛形は責務の異なる別概念だから正式な名前を持たせよ』、規律の側からは『雛形は今1件しかないので一般化するな』という逆の助言が出た。
+
+判別してみると、前者は名前を与える変更を指し、後者が想定していたのは『配置先を任意に記述できる汎用ポリシー機構』であり、両者は別のものを対象にしていた。結果として、名前は与えるが汎用機構は作らない、という形に落ち着いた。
+
+さらに、その名前を種別の値として足すと雛形の内容の形が実運用文書と同一になることが分かり、種別ではなく直交する属性として表すべきだと判明した。</div></div>
+      <div class="fld"><b>注意（自己申告）</b><p>「実例が1件のみであり、この着眼点自体がまだ一般化に足るかは未検証。他の衝突事例で同じ判別が効くかを確認する必要がある」</p></div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card">
+    <h3>テーゼ層の比喩でも価値の言い切りは免除されない<span class="id">metaphor-must-still-say-the-thing</span></h3>
+    <div class="body">
+      <div class="fld"><b>概要</b><p>テーゼ・見出しレベルの比喩はレジスタとして許容されていても、読者がその一文単独で製品の価値・行為を理解できるかは別に検査すべきという、生成物コピーの敵対的検証観点。</p></div>
+      <div class="fld"><b>原則</b><ul>
+        <li>既存の <code>copy-register-discipline</code> は「比喩がテーゼ・見出し・図の視覚表現に留まっているか」というレジスタの軸で判定する。この概念は<strong>別軸</strong>であり、レジスタとして許容される見出し・テーゼ自身についても、読者が価値・行為を具体的に理解できるかを独立に検査する。</li>
+        <li>見出し・リード文が語感の良い比喩1つだけで構成されていると、書き手は『それらしく聞こえる』ことと『読者が製品の価値を理解できる』ことを混同しやすい。両者は独立した基準である。</li>
+        <li>検査は「その一文だけを読者が初見で読んで、何をする製品で、何が嬉しいのかを言えるか」を自問する形で行う。</li>
+        <li>比較・対比構造は具体性を担保する手段の1つだが必須ではない。対比が本質的な悩みを覆い隠す場合は、対比自体をやめて悩みと解決を直接言い切る一文の方が明快になりうる。</li>
+      </ul></div>
+      <div class="fld"><b>判断基準</b>
+<pre class="mermaid">
+flowchart TD
+  q1{"この一文だけを初見の読者が読んで、製品が何をするか・何が嬉しいかを言えるか"}
+  ok["具体的で問題無し"]
+  q2{"比喩を削って直接の行為・便益を言い切ると、対比構造やキャッチーさを失うが、価値は伝わるか"}
+  r1["比喩を捨て、行為・便益ベースの直接表現に置き換える"]
+  r2["構造は保ちつつ、比喩語だけを具体語に差し替える"]
+  q1 -->|言える| ok
+  q1 -->|言えない| q2
+  q2 -->|はい| r1
+  q2 -->|いいえ| r2
+</pre>
+      </div>
+      <div class="fld"><b>アンチパターン</b>
+        <div class="anti"><b>テーゼ免罪符</b><span>『比喩はテーゼ層だから許容される』というレジスタ上のルールを、テーゼの中身が具体的である保証だと誤読し、意味の通らない比喩見出しをレジスタ適合を理由に素通りさせてしまう。</span></div>
+        <div class="anti"><b>対比構造への逃避</b><span>本質的な悩み・便益を直接言い切る自信が無いとき、競合機能との対比構造を挟むことで具体性を担保した気になるが、対比自体が読者に不要な前提知識を要求し、かえって伝わりにくくなる場合がある。</span></div>
+      </div>
+      <div class="fld"><b>分類</b><p class="empty">空。理由が明記されている ── 「レジスタのような明確な分岐軸ではなく、テーゼ層の比喩全てに一律に適用する単一の検査観点であるため分類軸を持たない」</p></div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="card">
+    <h3>業務ユースケースの受け入れ基準は、業務サービスの写像を言い直さない<span class="id">usecase-does-not-restate-service ── 今日作成</span></h3>
+    <div class="body">
+      <div class="fld"><b>概要</b><p>業務ユースケースと業務サービスの両方に同じ主張が書かれているとき、その重複をどちらかの削除で解消しようとすると、片側にしか言えないことまで一緒に落ちる。境界は数ではなく「その主張は業務サービスに言えるか」で引く。</p></div>
+      <div class="fld"><b>原則</b><ul>
+        <li>業務ユースケースが主張すべきなのは、業務サービスには言えないことだけである。写像そのものは業務サービスが持ち、業務ユースケースは「どこから何を取るか」「解決できないときどうするか」「書き込みの結果」を持つ。</li>
+        <li>重複を見つけたときの正しい直し方は削除ではなく、境界の引き直しである。1つの文が両方の性質を含んでいることが多く、削ると片側にしか言えないことまで落ちる。</li>
+        <li>削除の可否は、1件ずつ「削ると誰も主張しなくなるものは何か」を問うて決める。重複という括りでまとめて落とすと、数は減るが主張が欠ける。</li>
+        <li>純粋な計算を業務サービスへ委譲した業務ユースケースでは、委譲した計算の意味論を業務ユースケース側で繰り返さない。</li>
+      </ul></div>
+      <div class="fld"><b>アンチパターン</b>
+        <div class="anti"><b>重複の件数を目的にした整理</b><span>「30→26にする」のように数の減少を成果として扱うと、1件ずつ何が失われるかを見ないまま落としてしまう。数は変わらなくても境界が正しく引ければ整理は成功している。</span></div>
+        <div class="anti"><b>委譲先の契約を呼び出し側で繰り返す</b><span>業務ユースケースが業務サービスの写像を言い直すと、写像の規則を変えるときに2箇所を直すことになり、片方だけ直る事故が起きる。</span></div>
+      </div>
+      <div class="fld"><b>実例</b><p class="empty"><strong>空です（理由の記載もありません）。</strong>他の4件は実例を持っているので、これは私の書き漏らしです。採用するなら、今日の6組の実測と「削ろうとした5件のうち3件は残すべきだった」という経緯を実例として書くべきです。</p></div>
+      <div class="fld"><b>関連</b><p class="empty">空。理由は「関連づける既存 knowledge を未特定のため（審査時に確認する）」</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 審査にあたって</h2>
+  <ul class="plain">
+    <li><strong>3件は他人の実地から来ています</strong>（集約の宣言・配信の端・第一級の概念）。私が今日書いたものではなく、過去のセッションで記録されたものです</li>
+    <li><strong><code>first-class-concept</code> は自分で「未検証」と書いています。</strong>実例1件で、判断基準も空。採用するなら「実例が揃うまで判断基準は空のまま」を明示的に許すことになります</li>
+    <li><strong><code>usecase-does-not-restate-service</code> は実例が空です。</strong>私の書き漏らしなので、採用するなら先に埋めます</li>
+    <li><strong>採用時の配り先。</strong>通例に従えば <code>agentRefs: ["waffle"]</code>。advisor へも配るかは、Orchestrator が読むなら重複になるので、必要なものだけに絞る余地があります</li>
+  </ul>
+  <div class="box ok">
+    <h3>採用が決まったら</h3>
+    <p><code>waffle scaffold fill</code> で status を ACTIVE へ、配り先を宣言し、<code>validate</code> → <code>render</code>。これは Orchestrator の通常操作の範囲です。却下・保留は DRAFT のまま残します。</p>
+  </div>
+</section>
+
+<footer>
+  18件の状態・配り先はすべて waffle query（find_all）で実測。<br>
+  DRAFT 5件は9ブロックすべてを読み出し、省略していない。空のブロックは理由の有無まで記載。<br>
+  DEPRECATED の描画物が残る件は既知の穴として別途記録済み。
+</footer>
+
+</div>

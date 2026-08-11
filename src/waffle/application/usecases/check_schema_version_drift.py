@@ -54,7 +54,7 @@ class CheckSchemaVersionDrift:
             return _err("INVALID_PATH", f"ディレクトリが見つかりません: {documents_root}")
 
         broken_references: list[dict] = []
-        newer_version_available: list[dict] = []
+        outdated_references: list[dict] = []
         missing_declared_fields: list[dict] = []
 
         for doc_path in doc_paths:
@@ -69,7 +69,7 @@ class CheckSchemaVersionDrift:
                 continue
             latest = latest_version(versions)
             if version_number(version) != version_number(latest):
-                newer_version_available.append({
+                outdated_references.append({
                     "document": doc_path,
                     "schemaRef": schema_ref,
                     "latest": f"{name}/{latest}",
@@ -83,8 +83,12 @@ class CheckSchemaVersionDrift:
                 if entry["required"] and not _path_exists(doc, entry["path"]):
                     missing_declared_fields.append({"document": doc_path, "path": entry["path"]})
 
+        # 一覧を並べるだけでは、呼び出し側が失敗として扱えない。追従できているかの
+        # 判定をここで下し、古いまま置くことに帰結を与える。
+        aligned = not (broken_references or outdated_references or missing_declared_fields)
         return Ok({
+            "aligned": aligned,
             "broken_references": broken_references,
-            "newer_version_available": newer_version_available,
+            "outdated_references": outdated_references,
             "missing_declared_fields": missing_declared_fields,
         })

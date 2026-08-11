@@ -1,0 +1,654 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "KnowledgeSchema/v5",
+  "title": "Knowledge Schema v2",
+  "description": "Document集約の一documentType（Knowledge）。1つの概念について、原則・判断基準・実例・アンチパターン・関連概念を記述する参照資料。独立集約ではなくDocument集約のインスタンスであり、create/fill/validate/render/queryは既存engineがそのまま扱う。kind discriminatorは持たない（形は常に1つ）。v2: principlesを1文字列から独立した主張ごとの配列に変更、provenanceをsource/caveatsに分割、classifications/decisionCriteria/antiPatterns/relatedConceptsにnoteフィールドを追加（itemsが空の場合に理由を明示する）、これら6ブロックをcontentの必須プロパティに昇格。",
+  "type": "object",
+  "required": [
+    "documentId",
+    "documentType",
+    "schemaRef",
+    "status",
+    "content"
+  ],
+  "x-source-target": ".waffle/documents/knowledge/{documentId}.json",
+  "x-render-target": {
+    "formats": [
+      "md"
+    ],
+    "path": ".waffle/knowledge/{status}/{documentId}.md",
+    "pathVars": {
+      "skillRefs": "doc.skillRefs",
+      "agentRefs": "doc.agentRefs",
+      "status": "doc.status"
+    }
+  },
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "x-prompt-write": "この概念を一意に識別するIDを kebab-case で付けてください。例: subdomain, bounded-context"
+    },
+    "documentType": {
+      "type": "string",
+      "const": "Knowledge"
+    },
+    "schemaRef": {
+      "type": "string",
+      "const": "KnowledgeSchema/v6"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "ACTIVE",
+        "DEPRECATED"
+      ],
+      "x-prompt-write": "作成中は DRAFT、参照可能になったら ACTIVE、廃止する場合は DEPRECATED を指定してください。"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-prompt-write": "この概念を分類するタグを namespace:value 形式で付けてください。例: [\"framework:ddd\", \"domain:order\"]"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "_index": {
+      "description": "waffle が x-prompt-query から自動生成する。AI は直接書かない。",
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "blockType",
+              "prompt"
+            ],
+            "properties": {
+              "blockType": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "content": {
+      "$ref": "#/$defs/KnowledgeContent"
+    },
+    "skillRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-prompt-write": "この概念を参照すべき専門家的な役割（advisor）の識別名を配列で指定してください。例: [\"ddd-advisor\", \"tech-lead-advisor\"]。複数の役割に同時に結び付けられます。特定の役割に紐づかない汎用的な概念の場合は省略・空配列でよい（その場合はどの役割の専門知識にも配布されず、一般の参照資料としてのみ扱われます）。"
+    },
+    "agentRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-prompt-write": "この概念を参照すべきOrchestrator（AgentSchema、agentKind: orchestrator）のdocumentIdを配列で指定してください。例: [\"waffle\"]。knowledgeKindがprocessの概念（advisorの専門ドメインではなく、生成物の検証・改善サイクルのような横断的な方法論）で使うことを想定する。特定のOrchestratorに紐づかない場合は省略・空配列でよい。"
+    },
+    "knowledgeKind": {
+      "type": "string",
+      "enum": [
+        "domain",
+        "process"
+      ],
+      "x-prompt-write": "この概念がadvisorの専門ドメインに属する知識（domain。例: DDD原則・テスト理論等）か、生成物の検証・改善サイクルのような、特定の専門ドメインに属さない横断的な方法論（process）かを指定してください。省略した場合はdomainとして扱われます。"
+    },
+    "documentRole": {
+      "type": "string",
+      "enum": [
+        "instance",
+        "template"
+      ],
+      "default": "instance",
+      "description": "この文書が実体（instance）か、他プロジェクトで実体化されるための雛形（template）かを表す。documentTypeと直交する軸で、配置先の解決キーに含まれる。",
+      "x-prompt-write": "この文書が、そのまま使われる実体（instance）か、他プロジェクトへ持っていって値を埋めるための雛形（template）かを選んでください。値がプレースホルダーのまま置かれ、このリポジトリでは配置先を持たない文書だけが template です。省略すると instance になります。",
+      "x-prompt-query": "この文書が実体か雛形かを読みます。template の文書は配置先を持たないため、成果物が配置されていなくても未設定ではありません。逆に instance で配置先が空なら、そのdocumentTypeの宣言が漏れている合図です。"
+    }
+  },
+  "$defs": {
+    "KnowledgeContent": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "nodes",
+        "provenance",
+        "relatedConcepts"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/TitleBlock"
+        },
+        "description": {
+          "$ref": "#/$defs/OverviewBlock"
+        },
+        "nodes": {
+          "$ref": "#/$defs/NodesBlock"
+        },
+        "provenance": {
+          "$ref": "#/$defs/ProvenanceBlock"
+        },
+        "relatedConcepts": {
+          "$ref": "#/$defs/RelatedConceptsBlock"
+        }
+      }
+    },
+    "TitleBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title"
+      ],
+      "x-render-order": 0,
+      "x-render-level": 1,
+      "x-prompt-query": "まず何を扱う文書かを掴むために読みます。説明部分が識別子の言い換えになっていたら、何を扱うかがまだ決まっていない合図です。",
+      "x-render": [],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Title"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "「業務語彙の説明：識別子」の形式で設定してください。説明部分はこの概念が何を記録するかを業務語彙で簡潔に表す句（識別子の値をそのまま繰り返さない）。識別子部分はこの文書自身の識別子の値をそのまま使う。"
+        }
+      }
+    },
+    "OverviewBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "questions",
+        "text"
+      ],
+      "x-render-order": 1,
+      "x-render-level": 2,
+      "x-prompt-query": "この知識が自分の判断に効くかを見極めるために、最初に読みます。ここで挙がっている問いが手元の問いと違うなら、別の知識を当たってください。",
+      "x-render": [
+        {
+          "heading": "この概念が答える判断",
+          "as": "list",
+          "from": "questions"
+        },
+        {
+          "as": "paragraph",
+          "from": "text"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Overview"
+        },
+        "title": {
+          "type": "string",
+          "const": "概要"
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "この概念を知ることで答えられるようになる、利用者の具体的な問いを列挙してください。「〜べきか」「〜はどう判断するか」の形で。"
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "この概念が何であるかを1〜2文で要約してください。"
+        }
+      }
+    },
+    "ProvenanceBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "source",
+        "caveats"
+      ],
+      "x-render-order": 7,
+      "x-render-level": 2,
+      "x-prompt-query": "この概念の内容がどの出典に基づくか（source）と、まだ確証が得られていない留保事項があれば（caveats）を持ちます。内容の信頼性の確認に使います。",
+      "x-render": [
+        {
+          "as": "paragraph",
+          "from": "source"
+        },
+        {
+          "as": "paragraph",
+          "heading": "留保事項",
+          "from": "caveats"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "Provenance"
+        },
+        "title": {
+          "type": "string",
+          "const": "出典・根拠の透明性"
+        },
+        "source": {
+          "type": "string",
+          "x-prompt-write": "内容の出典（著者名・書籍/論文名・年等）と、要約/再構成であり直接引用でないことを明記してください。"
+        },
+        "caveats": {
+          "type": "string",
+          "x-prompt-write": "調査・検証の過程でまだ確証が得られていない留保事項があれば書いてください（例: 特定の定式化が検証で却下された等）。無ければ空文字。"
+        }
+      }
+    },
+    "RelatedConceptsBlock": {
+      "type": "object",
+      "required": [
+        "blockType",
+        "title",
+        "items",
+        "emptyReason"
+      ],
+      "x-render-order": 8,
+      "x-render-level": 2,
+      "x-prompt-query": "関連する他の概念文書への参照を持ちます。概念間のつながりを辿るのに使います。関連が無い概念では参照一覧を空にし、その理由を別途書き添えます。",
+      "x-render": [
+        {
+          "as": "table",
+          "from": "items",
+          "columns": [
+            {
+              "field": "conceptId",
+              "header": "関連概念"
+            },
+            {
+              "field": "note",
+              "header": "関係"
+            }
+          ]
+        },
+        {
+          "as": "paragraph",
+          "from": "emptyReason"
+        }
+      ],
+      "properties": {
+        "blockType": {
+          "type": "string",
+          "const": "RelatedConcepts"
+        },
+        "title": {
+          "type": "string",
+          "const": "関連概念"
+        },
+        "items": {
+          "type": "array",
+          "x-prompt-write": "関連する概念の識別子と、どう関連するかを短く列挙してください。識別子は、その関連先の概念自身が識別子として使っている値と同じ文字列を使ってください。",
+          "items": {
+            "type": "object",
+            "required": [
+              "conceptId",
+              "note"
+            ],
+            "properties": {
+              "conceptId": {
+                "type": "string",
+                "x-prompt-write": "関連する概念を一意に指す識別子。その概念自身の識別子として使われている値と同じ文字列を使ってください（例: subdomain, bounded-context）。"
+              },
+              "note": {
+                "type": "string",
+                "x-prompt-write": "どう関連するかを1文で（例: この概念の前提となる基礎概念）"
+              }
+            }
+          }
+        },
+        "emptyReason": {
+          "type": "string",
+          "x-prompt-write": "itemsが空の場合、この概念に関連する他の概念が無い理由を書いてください。itemsに中身がある場合は空文字でよい。"
+        }
+      }
+    },
+    "Figure": {
+      "type": "object",
+      "properties": {
+        "intent": {
+          "type": "string",
+          "x-prompt-write": "この図が何を示すためのものかを1文で書いてください。",
+          "x-prompt-query": "この図が何を示すためのものかを読みます。"
+        },
+        "reading": {
+          "type": "string",
+          "x-prompt-write": "この図から何が言えるかを書いてください。図を描画できない読み手が、この文だけで意味を取れるように書きます。",
+          "x-prompt-query": "この図から何が言えるかを読みます。図を見なくても、この文だけで意味が取れるはずです。"
+        },
+        "direction": {
+          "type": "string",
+          "x-prompt-write": "並びの向きを LR（左から右）か TD（上から下）で書いてください。",
+          "x-prompt-query": "並びの向きを読みます。"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "x-prompt-write": "この囲みの名前を書いてください。",
+                "x-prompt-query": "囲みの名前を読みます。"
+              },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-prompt-write": "この囲みに入る節点を並べてください。",
+                "x-prompt-query": "囲みに入る節点を読みます。"
+              }
+            },
+            "required": [
+              "label",
+              "nodes"
+            ],
+            "additionalProperties": false
+          },
+          "x-prompt-write": "節点をまとめる囲みがあれば並べてください。無ければ空で。",
+          "x-prompt-query": "節点をまとめる囲みを読みます。"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-prompt-write": "囲みに属さない節点を並べてください。",
+          "x-prompt-query": "囲みに属さない節点を読みます。"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "x-prompt-write": "矢印の元の節点を書いてください。",
+                "x-prompt-query": "矢印の元を読みます。"
+              },
+              "to": {
+                "type": "string",
+                "x-prompt-write": "矢印の先の節点を書いてください。",
+                "x-prompt-query": "矢印の先を読みます。"
+              },
+              "label": {
+                "type": "string",
+                "x-prompt-write": "矢印に添える言葉があれば書いてください。",
+                "x-prompt-query": "矢印に添えられた言葉を読みます。"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          },
+          "x-prompt-write": "節点どうしのつながりを並べてください。",
+          "x-prompt-query": "節点どうしのつながりを読みます。この一覧だけで、図を描かずに関係が追えるはずです。"
+        }
+      },
+      "required": [
+        "intent",
+        "reading",
+        "edges"
+      ],
+      "additionalProperties": false,
+      "x-prompt-query": "節点と関係の宣言を読みます。図は単独では置けません——意図と読み取りが必ず添えられており、図を描画できなくても意味が取れます。"
+    },
+    "Verbatim": {
+      "type": "object",
+      "properties": {
+        "intent": {
+          "type": "string",
+          "x-prompt-write": "この原文が何を示すためのものかを1文で書いてください。",
+          "x-prompt-query": "この原文が何を示すためのものかを読みます。"
+        },
+        "reading": {
+          "type": "string",
+          "x-prompt-write": "この原文から何が言えるかを書いてください。原文を読み解かなくても、この文だけで要点が取れるように書きます。",
+          "x-prompt-query": "この原文から何が言えるかを読みます。"
+        },
+        "lang": {
+          "type": "string",
+          "x-prompt-write": "原文の種類を書いてください（csharp・sql・markdown・mermaid など）。",
+          "x-prompt-query": "原文の種類を読みます。"
+        },
+        "source": {
+          "type": "string",
+          "x-prompt-write": "原文をそのまま書いてください。構造へ変換しません（変換すると肝が消える種類のものだけがここに入ります）。",
+          "x-prompt-query": "原文を読みます。変換されていない、そのままのものです。"
+        }
+      },
+      "required": [
+        "intent",
+        "reading",
+        "lang",
+        "source"
+      ],
+      "additionalProperties": false,
+      "x-prompt-query": "規則性が無いため構造にできなかったものを読みます。表・コード・特殊な図がここに入ります。意図と読み取りが必ず添えられています。"
+    },
+    "ConceptNodeLeaf": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-prompt-write": "この概念の名前を書いてください。",
+          "x-prompt-query": "この概念の名前を読みます。"
+        },
+        "kind": {
+          "type": "string",
+          "x-prompt-write": "このノードが何を述べるものかを書いてください。推奨: 定義／分類／判断基準／実例／対比／補足／アンチパターン／関連。どれにも当てはまらないなら、当てはまる言葉を自分で書いてかまいません（列挙で縛ると、入らないものが黙って落ちるため）。",
+          "x-prompt-query": "このノードが何を述べるものかを読みます。推奨値以外が書かれている場合、それは器が受け止めきれていない種類が現れた合図かもしれません。"
+        },
+        "sourceRef": {
+          "type": "string",
+          "x-prompt-write": "出典の位置を書いてください（図1-3・1.2.3.3 など）。これが無いと、後から原本へ当たり直せません。",
+          "x-prompt-query": "出典の位置を読みます。原本へ当たり直すときの手がかりです。"
+        },
+        "summary": {
+          "type": "string",
+          "x-prompt-write": "この概念が述べることを文章で書いてください。図や原文があっても、この文だけで要点が取れるように書きます。",
+          "x-prompt-query": "この概念が述べることを読みます。"
+        },
+        "figure": {
+          "$ref": "#/$defs/Figure"
+        },
+        "verbatim": {
+          "$ref": "#/$defs/Verbatim"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "summary"
+      ],
+      "additionalProperties": false
+    },
+    "ConceptNodeChild": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-prompt-write": "この概念の名前を書いてください。",
+          "x-prompt-query": "この概念の名前を読みます。"
+        },
+        "kind": {
+          "type": "string",
+          "x-prompt-write": "このノードが何を述べるものかを書いてください。推奨: 定義／分類／判断基準／実例／対比／補足／アンチパターン／関連。どれにも当てはまらないなら、当てはまる言葉を自分で書いてかまいません（列挙で縛ると、入らないものが黙って落ちるため）。",
+          "x-prompt-query": "このノードが何を述べるものかを読みます。推奨値以外が書かれている場合、それは器が受け止めきれていない種類が現れた合図かもしれません。"
+        },
+        "sourceRef": {
+          "type": "string",
+          "x-prompt-write": "出典の位置を書いてください（図1-3・1.2.3.3 など）。これが無いと、後から原本へ当たり直せません。",
+          "x-prompt-query": "出典の位置を読みます。原本へ当たり直すときの手がかりです。"
+        },
+        "summary": {
+          "type": "string",
+          "x-prompt-write": "この概念が述べることを文章で書いてください。図や原文があっても、この文だけで要点が取れるように書きます。",
+          "x-prompt-query": "この概念が述べることを読みます。"
+        },
+        "figure": {
+          "$ref": "#/$defs/Figure"
+        },
+        "verbatim": {
+          "$ref": "#/$defs/Verbatim"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConceptNodeLeaf"
+          },
+          "x-prompt-write": "この概念の下にぶら下がる概念を並べてください。無ければ空で。",
+          "x-prompt-query": "この概念の下にぶら下がる概念を読みます。"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "summary"
+      ],
+      "additionalProperties": false
+    },
+    "ConceptNode": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-prompt-write": "この概念の名前を書いてください。",
+          "x-prompt-query": "この概念の名前を読みます。"
+        },
+        "kind": {
+          "type": "string",
+          "x-prompt-write": "このノードが何を述べるものかを書いてください。推奨: 定義／分類／判断基準／実例／対比／補足／アンチパターン／関連。どれにも当てはまらないなら、当てはまる言葉を自分で書いてかまいません（列挙で縛ると、入らないものが黙って落ちるため）。",
+          "x-prompt-query": "このノードが何を述べるものかを読みます。推奨値以外が書かれている場合、それは器が受け止めきれていない種類が現れた合図かもしれません。"
+        },
+        "sourceRef": {
+          "type": "string",
+          "x-prompt-write": "出典の位置を書いてください（図1-3・1.2.3.3 など）。これが無いと、後から原本へ当たり直せません。",
+          "x-prompt-query": "出典の位置を読みます。原本へ当たり直すときの手がかりです。"
+        },
+        "summary": {
+          "type": "string",
+          "x-prompt-write": "この概念が述べることを文章で書いてください。図や原文があっても、この文だけで要点が取れるように書きます。",
+          "x-prompt-query": "この概念が述べることを読みます。"
+        },
+        "figure": {
+          "$ref": "#/$defs/Figure"
+        },
+        "verbatim": {
+          "$ref": "#/$defs/Verbatim"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConceptNodeChild"
+          },
+          "x-prompt-write": "この概念の下にぶら下がる概念を並べてください。無ければ空で。",
+          "x-prompt-query": "この概念の下にぶら下がる概念を読みます。"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "summary"
+      ],
+      "additionalProperties": false
+    },
+    "NodesBlock": {
+      "type": "object",
+      "properties": {
+        "blockType": {
+          "const": "Nodes"
+        },
+        "title": {
+          "type": "string",
+          "x-prompt-write": "この knowledge の中身の見出しを書いてください。",
+          "x-prompt-query": "中身の見出しを読みます。"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ConceptNode"
+          },
+          "x-prompt-write": "この knowledge が扱う概念を並べてください。元にした資料の見出し1つに対して、ノード1つを対応させます（粒度を落とさないため）。",
+          "x-prompt-query": "この knowledge が扱う概念を読みます。元の資料の見出しと1対1で対応しているはずです——対応が取れないものがあれば、変換で粒度が落ちています。"
+        }
+      },
+      "required": [
+        "blockType",
+        "title",
+        "items"
+      ],
+      "additionalProperties": false,
+      "x-render": [
+        {
+          "as": "section",
+          "from": "items",
+          "titleFrom": "name",
+          "each": [
+            {
+              "as": "paragraph",
+              "from": "summary"
+            },
+            {
+              "as": "section",
+              "from": "children",
+              "titleFrom": "name",
+              "each": [
+                {
+                  "as": "paragraph",
+                  "from": "summary"
+                },
+                {
+                  "as": "section",
+                  "from": "children",
+                  "titleFrom": "name",
+                  "each": [
+                    {
+                      "as": "paragraph",
+                      "from": "summary"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "x-prompt-query": "概念の木を読みます。ノードは名前・種別・出典の位置・文章を必ず持ち、図や原文、そして子ノードを持つことがあります。"
+    }
+  },
+  "x-frontmatter": {
+    "id": "doc.documentId",
+    "type": "doc.documentType",
+    "title": "doc.content.title.title",
+    "description": "doc.content.description",
+    "tags": "doc.tags",
+    "schemaRef": "doc.schemaRef",
+    "updatedAt": "doc.updatedAt"
+  }
+}

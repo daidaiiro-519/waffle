@@ -4,7 +4,7 @@ from pathlib import Path
 
 from waffle.adapters.outbound.fs import FsDocumentRepository
 from waffle.application.usecases.check_schema_version_drift import CheckSchemaVersionDrift
-from waffle.shared.result import Ok
+from waffle.shared.result import Err, Ok
 
 from tests.fakes import FakeSchemaRepository
 
@@ -40,56 +40,63 @@ def _write(path: Path, doc: dict) -> None:
     path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
 
 
-def test_all_documents_reference_latest_version(tmp_path):
+def test_aligned_tree_reports_empty_lists_and_aligned_verdict(tmp_path):
     """
-    Scenario: 全Documentが最新版を参照しているとき差分なしと判定する
-    Given 全DocumentのschemaRefが、実在する同名Schemaの最新版を指しているspecツリー
-    When schema版ドリフト検査を実行する
-    Then broken_references・newer_version_available・missing_declared_fields全てが空配列で返る
+    Scenario: 追従できていれば全て空で、判定も追従済みになる
+    Given 全Documentが最新の版を指し、宣言済みの欄も揃っている置き場所
+    When 版の追従を調べる
+    Then 全ての一覧が空で、追従できているという判定が返る
     """
     _write(tmp_path / "doc-a.json", {"documentId": "doc-a", "schemaRef": "FooSchema/v2"})
 
     result = _engine({"FooSchema": ["v1", "v2"]}).run(str(tmp_path))
     assert isinstance(result, Ok), result
-    assert result.value == {"broken_references": [], "newer_version_available": [], "missing_declared_fields": []}
+    assert result.value == {
+        "aligned": True,
+        "broken_references": [],
+        "outdated_references": [],
+        "missing_declared_fields": [],
+    }
 
 
 def test_schema_ref_pointing_to_missing_version(tmp_path):
     """
-    Scenario: 実在しない版を指すschemaRefを検出する
-    Given 実在しない版をschemaRefに持つDocument
-    When schema版ドリフト検査を実行する
-    Then broken_referencesにその組が含まれる
+    Scenario: 実在しない版を指す参照を見つける
+    Given 実在しない版を指すDocument
+    When 版の追従を調べる
+    Then その組が指す先の無い参照として返り、追従できていないという判定が返る
     """
     _write(tmp_path / "doc-a.json", {"documentId": "doc-a", "schemaRef": "FooSchema/v9"})
 
     result = _engine({"FooSchema": ["v1", "v2"]}).run(str(tmp_path))
     assert isinstance(result, Ok), result
     assert result.value["broken_references"] == [{"document": str(tmp_path / "doc-a.json"), "schemaRef": "FooSchema/v9"}]
+    assert result.value["aligned"] is False
 
 
 def test_document_referencing_outdated_version(tmp_path):
     """
-    Scenario: 最新でない版を参照しているDocumentを検出する
-    Given 同名Schemaに新しい版が実在するが、旧い版をschemaRefに持つDocument
-    When schema版ドリフト検査を実行する
-    Then newer_version_availableにその組が含まれる
+    Scenario: 最新でない版を指す参照を見つける
+    Given 最新でない版を指すDocument
+    When 版の追従を調べる
+    Then その組が追いついていない参照として返り、追従できていないという判定が返る
     """
     _write(tmp_path / "doc-a.json", {"documentId": "doc-a", "schemaRef": "FooSchema/v1"})
 
     result = _engine({"FooSchema": ["v1", "v2"]}).run(str(tmp_path))
     assert isinstance(result, Ok), result
-    assert result.value["newer_version_available"] == [
+    assert result.value["outdated_references"] == [
         {"document": str(tmp_path / "doc-a.json"), "schemaRef": "FooSchema/v1", "latest": "FooSchema/v2"}
     ]
+    assert result.value["aligned"] is False
 
 
 def test_document_missing_declared_value_field(tmp_path):
     """
-    Scenario: Schemaが宣言する値フィールドをDocumentが持たないことを検出する
-    Given 参照先Schemaが宣言する値フィールドのキーを実データに持たないDocument
-    When schema版ドリフト検査を実行する
-    Then missing_declared_fieldsにその組が含まれる
+    Scenario: 宣言された欄を持たないDocumentを見つける
+    Given Schemaが宣言する必須の欄を持たないDocument
+    When 版の追従を調べる
+    Then その組が追従していない欄として返り、追従できていないという判定が返る
     """
     schema = {
         "properties": {
@@ -109,3 +116,16 @@ def test_document_missing_declared_value_field(tmp_path):
     assert result.value["missing_declared_fields"] == [
         {"document": str(tmp_path / "doc-a.json"), "path": "content.note"}
     ]
+    assert result.value["aligned"] is False
+
+
+def test_missing_documents_root_is_invalid_path(tmp_path):
+    """
+    Scenario: 走査の対象が無ければINVALID_PATH
+    Given 実在しない走査の対象
+    When 版の追従を調べる
+    Then INVALID_PATH エラーが返る
+    """
+    result = _engine({"FooSchema": ["v1"]}).run(str(tmp_path / "no-such-dir"))
+    assert isinstance(result, Err), result
+    assert result.details == ["INVALID_PATH"]

@@ -19,3 +19,6 @@
 - [名前と実体を一対一にする(2026-08-09)](project_block_key_must_equal_block_type.md) — 鍵(blockKey⇄blockType)と形(同じblockTypeが違う構造)の両方。schemaの読み書き手順つき
 - [design-shareの旧配信機能は復活させない](feedback_design_share_delivery_is_not_restored.md) — 「一時的に失われる」と書くと移植TODOとして読まれる。判断が済んでいる形で書く
 - [実例の件数で能力の要否を決めない](feedback_evidence_based_scope_is_not_for_capability_decisions.md) — 抽象化のタイミングの基準であって、作るか作らないかの判断には使えない。3度目の再発
+- [v10移設の状況とbc-artifact-shareの据え置き](project_v10_migration_status.md) — 操作保証を廃止、bc-waffleは41件が未追従(v8:31/v9:10、covers 229件)、artifact-shareは意図的にv8
+- [走っている作業の連鎖と現在地(2026-08-11)](project_inflight_work_2026_08_11.md) — 配列要素編集→v10→版ドリフト→41件移設→サブドメイン是正→knowledge欠落、で脱線中
+- [集約クラス検査の誤検知とトランザクション境界](project_aggregate_drift_and_transaction.md) — 中間項が機械可読でないのが原因、knowledge片付け後に着手

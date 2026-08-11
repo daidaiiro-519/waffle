@@ -99,3 +99,6 @@ knowledgeファイルの判断基準（決定木）を辿り、判定結果と�
 - `references/knowledge/architecture-test-strategy-by-layer.md`: レイヤー境界に基づくテスト戦略
 - `references/knowledge/architecture-tech-stack-selection-chain.md`: 技術方式が要求する技術要件と、製品選定（ADR）への橋渡し
 - `references/knowledge/architecture-evidence-based-scope.md`: 機能・抽象化の追加は実証された欠落・実例に基づいて行う（YAGNI／Thinnest Viable Platform）
+- `references/knowledge/knowledge-cand-aggregate-declaration-is-not-class-existence.md`: 採用済みの knowledge 候補
+- `references/knowledge/knowledge-cand-avoidable-friction-is-not-detection.md`: 採用済みの knowledge 候補
+- `references/knowledge/knowledge-cand-declaration-text-arbitrates-violation-claims.md`: 採用済みの knowledge 候補
