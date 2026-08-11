@@ -193,3 +193,96 @@ def test_table_prefers_bullet_over_join_when_both_given():
 
 
 
+
+
+# --- 描画部品の拡張（uc-render-document の acceptanceScenarios に対応） ---
+
+def test_nested_object_contents_are_rendered():
+    """
+    Scenario: 入れ子のオブジェクトの中身が描画される
+    Given 要素の中に図の宣言を持つブロック
+    When 描画する
+    Then 図の中身が成果物に現れる
+    """
+    parts = [{"as": "object", "from": "figure", "each": [{"as": "paragraph", "from": "intent"}]}]
+    out = render_parts(parts, {"figure": {"intent": "何を示すか"}}, 3)
+    assert "何を示すか" in out
+
+
+def test_absent_nested_object_renders_nothing():
+    """
+    Scenario: 入れ子の対象が無ければ何も描かれない
+    Given 図の宣言を持たない要素
+    When 描画する
+    Then その部分は成果物に現れない
+    """
+    parts = [{"as": "object", "from": "figure", "each": [{"as": "paragraph", "from": "intent"}]}]
+    assert render_parts(parts, {"summary": "図は無い"}, 3) == ""
+
+
+def test_figure_groups_are_drawn_as_enclosures():
+    """
+    Scenario: 囲みはひとまとまりとして描かれる
+    Given 5つの節点を1つの囲みに入れた図の宣言
+    When 描画する
+    Then 5つがひとまとまりとして描かれ、囲みの名前が添えられている
+    """
+    data = {
+        "groups": [{"label": "配送手配", "nodes": ["集荷", "積替", "追跡", "取消", "再配達"]}],
+        "nodes": ["荷主"],
+        "edges": [{"from": "荷主", "to": "集荷"}],
+    }
+    out = render_parts([{"as": "graph", "from": "edges", "groupsFrom": "groups",
+                         "nodesFrom": "nodes"}], data, 3)
+    assert "subgraph" in out and "配送手配" in out
+    for name in ("集荷", "積替", "追跡", "取消", "再配達"):
+        assert name in out
+
+
+def test_graph_nodes_accept_plain_names():
+    """
+    Scenario: 節点は名前だけで宣言できる
+    Given 名前だけで宣言された節点
+    When 描画する
+    Then その名前が表示される
+    """
+    out = render_parts([{"as": "graph", "from": "edges", "nodesFrom": "nodes"}],
+                       {"nodes": ["荷主"], "edges": []}, 3)
+    assert "荷主" in out
+
+
+def test_figure_reading_is_rendered_with_the_figure():
+    """
+    Scenario: 図には意図と読み取りが添えられる
+    Given 意図と読み取りを持つ図の宣言
+    When 描画する
+    Then 図とともに意図と読み取りが文章として現れる
+    """
+    parts = [{"as": "object", "from": "figure", "each": [
+        {"as": "paragraph", "from": "intent"},
+        {"as": "paragraph", "from": "reading"},
+        {"as": "graph", "from": "edges", "nodesFrom": "nodes"},
+    ]}]
+    data = {"figure": {"intent": "示すこと", "reading": "読み取れること",
+                       "nodes": ["甲"], "edges": []}}
+    out = render_parts(parts, data, 3)
+    assert "示すこと" in out and "読み取れること" in out and "甲" in out
+
+
+def test_verbatim_is_rendered_as_source():
+    """
+    Scenario: 原文は変換されずに描画される
+    Given 種類と原文を持つ宣言
+    When 描画する
+    Then 意図と読み取りが文章として現れ、原文が宣言された種類のコードブロックとして現れる
+    """
+    parts = [{"as": "object", "from": "verbatim", "each": [
+        {"as": "paragraph", "from": "intent"},
+        {"as": "paragraph", "from": "reading"},
+        {"as": "code", "from": "source", "langFrom": "lang"},
+    ]}]
+    data = {"verbatim": {"intent": "示すこと", "reading": "読み取れること",
+                         "lang": "sql", "source": "SELECT 1;"}}
+    out = render_parts(parts, data, 3)
+    assert "示すこと" in out and "読み取れること" in out
+    assert "```sql" in out and "SELECT 1;" in out

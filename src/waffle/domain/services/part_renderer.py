@@ -96,6 +96,25 @@ def render_part(part: dict, data: dict, level: int) -> str:
         MalformedContentError: 宣言が要求する形と値の形が合わない。
     """
     kind = part["as"]
+
+    if kind == "object":
+        # 入れ子のオブジェクトへ降りる。降りられないと、要素の中に持たせた図や原文が
+        # 成果物へ現れず、データには在るのに読み手へ届かない状態になる。
+        nested = data.get(part["from"]) if "from" in part else None
+        if not isinstance(nested, dict) or not nested:
+            return ""
+        return render_parts(part["each"], nested, level)
+
+    if kind == "graph":
+        # 節点は名前だけで宣言でき、囲みに属するものはまとめて描く。
+        # 何が1つの塊かは、図が示す内容そのものであることが多い。
+        return _graph(
+            data.get(part["from"]) if "from" in part else [],
+            data.get(part.get("nodesFrom", "")) or [],
+            data.get(part.get("groupsFrom", "")) or [],
+            part.get("direction") or data.get("direction") or "LR",
+        )
+
     # kvtable は from を取らず現在の data 自身を1行として描く
     src = data.get(part["from"]) if "from" in part else None
     if "from" in part and src and kind in _ARRAY_PART_KINDS and not isinstance(src, list):
@@ -132,7 +151,7 @@ def render_part(part: dict, data: dict, level: int) -> str:
     elif kind == "keyvalue":
         out.append(_keyvalue(part, data, src))
     elif kind == "code":
-        out.append(_code(src, part.get("lang")))
+        out.append(_code(src, data.get(part["langFrom"]) if part.get("langFrom") else part.get("lang")))
     elif kind == "sequence":
         out.append(_sequence(src, data.get(part.get("participantsFrom", "")) if part.get("participantsFrom") else None))
     elif kind == "statediagram":
@@ -327,6 +346,47 @@ def _flowchart(stages, transitions=None):
         lines.append(f"    {frm} {arrow} {to}")
     diagram = "\n".join(lines)
     return f"```mermaid\n{diagram}\n```"
+
+def _graph(edges, nodes=None, groups=None, direction="LR"):
+    """節点（名前だけ）・囲み・つながり → Mermaid flowchart。
+
+    _flowchart との違いは2つ。節点を {id,label} ではなく名前だけで書けること、
+    そして囲み（subgraph）を持てること。囲みは「何が1つの塊か」を表し、
+    それ自体が図の示す内容であることが多いため、落とすと図の意味が変わる。
+
+    Args:
+        edges: つながりの並び（{from, to, label?}）。
+        nodes: 囲みに属さない節点の名前の並び。
+        groups: 囲みの並び（{label, nodes}）。
+        direction: 並びの向き（LR / TD）。
+
+    Returns:
+        Mermaid の flowchart を含む Markdown 断片。
+
+    Raises:
+        なし。
+    """
+    lines = [f"flowchart {direction}"]
+    seen: dict[str, str] = {}
+
+    def token(name: str) -> str:
+        if name not in seen:
+            seen[name] = _seq_token(f"n{len(seen)}")
+        return seen[name]
+
+    for i, g in enumerate(groups or []):
+        lines.append(f"    subgraph g{i}[{_mmd_label(g.get('label', ''))}]")
+        for name in g.get("nodes", []):
+            lines.append(f"        {token(name)}[{_mmd_label(name)}]")
+        lines.append("    end")
+    for name in (nodes or []):
+        lines.append(f"    {token(name)}[{_mmd_label(name)}]")
+    for t in (edges or []):
+        frm, to = token(t.get("from", "")), token(t.get("to", ""))
+        label = t.get("label")
+        arrow = f"-->|{_mmd_label(label)}|" if label else "-->"
+        lines.append(f"    {frm} {arrow} {to}")
+    return "```mermaid\n" + "\n".join(lines) + "\n```"
 
 def _statediagram(transitions, pseudo_states=None):
     """状態遷移配列（from/to/command）→ Mermaid stateDiagram-v2。状態名の空白は _ に。

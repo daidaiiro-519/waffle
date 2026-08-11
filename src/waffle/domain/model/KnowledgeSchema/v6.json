@@ -615,6 +615,63 @@
               "from": "summary"
             },
             {
+              "as": "object",
+              "from": "figure",
+              "each": [
+                {
+                  "as": "paragraph",
+                  "from": "intent"
+                },
+                {
+                  "as": "paragraph",
+                  "from": "reading"
+                },
+                {
+                  "as": "graph",
+                  "from": "edges",
+                  "nodesFrom": "nodes",
+                  "groupsFrom": "groups"
+                },
+                {
+                  "as": "table",
+                  "from": "edges",
+                  "columns": [
+                    {
+                      "field": "from",
+                      "header": "から"
+                    },
+                    {
+                      "field": "to",
+                      "header": "へ"
+                    },
+                    {
+                      "field": "label",
+                      "header": "関係"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "as": "object",
+              "from": "verbatim",
+              "each": [
+                {
+                  "as": "paragraph",
+                  "from": "intent"
+                },
+                {
+                  "as": "paragraph",
+                  "from": "reading"
+                },
+                {
+                  "as": "code",
+                  "from": "source",
+                  "langFrom": "lang"
+                }
+              ]
+            },
+            {
               "as": "section",
               "from": "children",
               "titleFrom": "name",
@@ -624,6 +681,63 @@
                   "from": "summary"
                 },
                 {
+                  "as": "object",
+                  "from": "figure",
+                  "each": [
+                    {
+                      "as": "paragraph",
+                      "from": "intent"
+                    },
+                    {
+                      "as": "paragraph",
+                      "from": "reading"
+                    },
+                    {
+                      "as": "graph",
+                      "from": "edges",
+                      "nodesFrom": "nodes",
+                      "groupsFrom": "groups"
+                    },
+                    {
+                      "as": "table",
+                      "from": "edges",
+                      "columns": [
+                        {
+                          "field": "from",
+                          "header": "から"
+                        },
+                        {
+                          "field": "to",
+                          "header": "へ"
+                        },
+                        {
+                          "field": "label",
+                          "header": "関係"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "as": "object",
+                  "from": "verbatim",
+                  "each": [
+                    {
+                      "as": "paragraph",
+                      "from": "intent"
+                    },
+                    {
+                      "as": "paragraph",
+                      "from": "reading"
+                    },
+                    {
+                      "as": "code",
+                      "from": "source",
+                      "langFrom": "lang"
+                    }
+                  ]
+                },
+                {
                   "as": "section",
                   "from": "children",
                   "titleFrom": "name",
@@ -631,6 +745,63 @@
                     {
                       "as": "paragraph",
                       "from": "summary"
+                    },
+                    {
+                      "as": "object",
+                      "from": "figure",
+                      "each": [
+                        {
+                          "as": "paragraph",
+                          "from": "intent"
+                        },
+                        {
+                          "as": "paragraph",
+                          "from": "reading"
+                        },
+                        {
+                          "as": "graph",
+                          "from": "edges",
+                          "nodesFrom": "nodes",
+                          "groupsFrom": "groups"
+                        },
+                        {
+                          "as": "table",
+                          "from": "edges",
+                          "columns": [
+                            {
+                              "field": "from",
+                              "header": "から"
+                            },
+                            {
+                              "field": "to",
+                              "header": "へ"
+                            },
+                            {
+                              "field": "label",
+                              "header": "関係"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "as": "object",
+                      "from": "verbatim",
+                      "each": [
+                        {
+                          "as": "paragraph",
+                          "from": "intent"
+                        },
+                        {
+                          "as": "paragraph",
+                          "from": "reading"
+                        },
+                        {
+                          "as": "code",
+                          "from": "source",
+                          "langFrom": "lang"
+                        }
+                      ]
                     }
                   ]
                 }

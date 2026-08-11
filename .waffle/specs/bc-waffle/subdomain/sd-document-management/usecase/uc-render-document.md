@@ -4,7 +4,7 @@ type: "usecase"
 title: "Documentを人間可読な成果物へ描画する：RenderDocument"
 description: "検証済みの Document を schema の x-render に従って人間可読な成果物（SKILL.md / HTML）に描画し、配置先へ反映する。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v10"
 ---
 
 # Documentを人間可読な成果物へ描画する：RenderDocument
@@ -82,37 +82,43 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 対象 Document が与えられたとき、システムは x-render に従い成果物を生成する shall。
-- When deploy が有効なとき、システムは canonical と deploy 先の両方へ書き込む shall。
-- When deploy 先が discriminator ごとの配列として宣言されているとき、システムは対象 Document の discriminator 値に対応する配列だけへ書き込む shall。
-- When 対象documentTypeに対応するtoolMappingsのマッピングが、discriminatorの値ごとの入れ子（kindごとの{pathTemplate, mode}等の組）として宣言されているとき、システムは対象Documentのdiscriminator値に対応するマッピングだけを使ってdeploy先を解決する shall。
-- When schemaがx-render-target.pathVarsでcontentのドットパスを宣言しているとき、システムはそのcontent値をパステンプレートの変数として使う shall。
-- When pathVarsがdiscriminatorごとの宣言（kindごとの変数マップ）であるとき、システムは対象Documentのdiscriminator値に対応する変数マップだけを解決する shall。
-- When x-frontmatterがdiscriminatorごとの宣言（kindごとのフィールドマップ）であるとき、システムは対象Documentのdiscriminator値に対応するフィールドマップだけからfrontmatterを生成する shall。
-- When x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空であるとき、システムはそのフィールドをfrontmatterから省略する shall。
-- If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返し描画しない shall。
-- When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。
-- While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。
-- If list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取ったとき、システムはMALFORMED_CONTENTエラーを返し描画しない shall。
-- While pathVarsが参照するcontentのドットパスを対象Documentが持たないとき、システムはその変数を使うdeploy先だけをスキップし、canonicalへの書き込みは継続する shall。
-- When x-frontmatterが指すドットパスの解決値がtext・itemsのいずれかを持つブロック形状のdictであるとき、システムはtextがあればそれを使い、無ければitemsを半角スペース区切りで結合した文字列をfrontmatter値として使う shall。
-- If 対象schemaがx-render-target.pathを宣言していないとき、システムはNO_RENDER_TARGETエラーを返し描画しない shall（専用の成果物確定コマンドを使うべきschemaであることを示す）。
-- When x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、システムはそれぞれの配列を独立にfan-out展開し、両方に対応するdeploy先へ書き込む shall。
-- If 対象Documentの種別に対応する配置先が1つも解決できないとき、システムはcanonicalへのみ書き込み、配置を行わない shall。
-- If 解決した配置先が指す正本が他のDocumentの正本であるとき、システムはDEPLOY_TARGET_OWNED_BY_OTHERを返し、その配置先へ書き込まない shall。
-- When 解決した配置先のいずれかへ書き込まなかったとき、システムはその配置先と理由を結果に含める shall。
-- While 対象Documentが雛形であり、宣言が実体向けのものしか無いとき、システムは配置先を1つも解決せず、正本にのみ書き込む shall。
-- While 対象Documentが役割を宣言していないとき、システムはそれを実体として扱い、実体向けの宣言が示す配置先へ書き込む shall。
-
----
-
-## 操作保証
-
-- When 同じ Document を複数回 render したとき、システムは常に同一の成果物を生成する shall（決定的：入力が同じなら出力も同じ）。
-- When x-render が RenderMetaSchema の各部品種別（paragraph/list/table/keyvalue/code/section/kvtable/sequence/statediagram/architecture/flowchart）を宣言したとき、システムはその種別ごとの整形規則に従って決定的に描画する shall。
-- When ブロックのx-renderが宣言する部品が全て空データで描画結果が空になったとき、システムはそのブロックの見出しごと省略する shall（タイトルだけが残る空セクションを防ぐ）。
-- When ブロック定義がx-render-hiddenを宣言しているとき、システムはそのブロックを本文に一切描画しない shall（frontmatter等の値供給のみに使う非表示ブロックを表現できる）。
-- When レベル1（H1）の見出しブロックの直後に別のブロックが続くとき、システムはその間に区切り線（---）を挿入しない shall（多くのビューアがH1自体に下線を描画するため、直後の---は二重線に見えてしまう）。
+| 基準 |
+|---|
+| When 対象 Document が与えられたとき、システムは x-render に従い成果物を生成する shall。 |
+| When deploy が有効なとき、システムは canonical と deploy 先の両方へ書き込む shall。 |
+| When deploy 先が discriminator ごとの配列として宣言されているとき、システムは対象 Document の discriminator 値に対応する配列だけへ書き込む shall。 |
+| When 対象documentTypeに対応するtoolMappingsのマッピングが、discriminatorの値ごとの入れ子（kindごとの{pathTemplate, mode}等の組）として宣言されているとき、システムは対象Documentのdiscriminator値に対応するマッピングだけを使ってdeploy先を解決する shall。 |
+| When schemaがx-render-target.pathVarsでcontentのドットパスを宣言しているとき、システムはそのcontent値をパステンプレートの変数として使う shall。 |
+| When pathVarsがdiscriminatorごとの宣言（kindごとの変数マップ）であるとき、システムは対象Documentのdiscriminator値に対応する変数マップだけを解決する shall。 |
+| When x-frontmatterがdiscriminatorごとの宣言（kindごとのフィールドマップ）であるとき、システムは対象Documentのdiscriminator値に対応するフィールドマップだけからfrontmatterを生成する shall。 |
+| When x-frontmatterが指すドットパスがDocumentの実データに存在しない、または値が空であるとき、システムはそのフィールドをfrontmatterから省略する shall。 |
+| If schemaRef が無いとき、システムは MISSING_SCHEMA_REF を返し描画しない shall。 |
+| When table部品の列定義がbulletを宣言し、対象フィールドの値が配列であるとき、システムは各要素を改行区切り（<br>）の箇条書きとしてセル内に描画する shall。 |
+| While table部品の列定義がbulletとjoin/sepの両方を宣言しているとき、システムはbulletを優先し、join/sepによる連結は行わない shall。 |
+| If list/table/section/sequence/statediagram/architecture/flowchartのいずれかの部品が、対応するcontent値として配列以外の値を受け取ったとき、システムはMALFORMED_CONTENTエラーを返し描画しない shall。 |
+| While pathVarsが参照するcontentのドットパスを対象Documentが持たないとき、システムはその変数を使うdeploy先だけをスキップし、canonicalへの書き込みは継続する shall。 |
+| When x-frontmatterが指すドットパスの解決値がtext・itemsのいずれかを持つブロック形状のdictであるとき、システムはtextがあればそれを使い、無ければitemsを半角スペース区切りで結合した文字列をfrontmatter値として使う shall。 |
+| If 対象schemaがx-render-target.pathを宣言していないとき、システムはNO_RENDER_TARGETエラーを返し描画しない shall（専用の成果物確定コマンドを使うべきschemaであることを示す）。 |
+| When x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、システムはそれぞれの配列を独立にfan-out展開し、両方に対応するdeploy先へ書き込む shall。 |
+| If 対象Documentの種別に対応する配置先が1つも解決できないとき、システムはcanonicalへのみ書き込み、配置を行わない shall。 |
+| If 解決した配置先が指す正本が他のDocumentの正本であるとき、システムはDEPLOY_TARGET_OWNED_BY_OTHERを返し、その配置先へ書き込まない shall。 |
+| When 解決した配置先のいずれかへ書き込まなかったとき、システムはその配置先と理由を結果に含める shall。 |
+| While 対象Documentが雛形であり、宣言が実体向けのものしか無いとき、システムは配置先を1つも解決せず、正本にのみ書き込む shall。 |
+| While 対象Documentが役割を宣言していないとき、システムはそれを実体として扱い、実体向けの宣言が示す配置先へ書き込む shall。 |
+| When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
+| When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
+| When schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき、システムは INVALID_TRANSITION エラーを返す shall（宣言しないschema種別はstatusを問わない）。 |
+| When 同じ Document を複数回 render したとき、システムは常に同一の成果物を生成する shall（決定的：入力が同じなら出力も同じ）。 |
+| When x-render が RenderMetaSchema の各部品種別（paragraph/list/table/keyvalue/code/section/kvtable/sequence/statediagram/architecture/flowchart）を宣言したとき、システムはその種別ごとの整形規則に従って決定的に描画する shall。 |
+| When ブロックのx-renderが宣言する部品が全て空データで描画結果が空になったとき、システムはそのブロックの見出しごと省略する shall（タイトルだけが残る空セクションを防ぐ）。 |
+| When ブロック定義がx-render-hiddenを宣言しているとき、システムはそのブロックを本文に一切描画しない shall（frontmatter等の値供給のみに使う非表示ブロックを表現できる）。 |
+| When レベル1（H1）の見出しブロックの直後に別のブロックが続くとき、システムはその間に区切り線（---）を挿入しない shall（多くのビューアがH1自体に下線を描画するため、直後の---は二重線に見えてしまう）。 |
+| When 部品が入れ子のオブジェクトを指す宣言を持つとき、システムはその中へ降りて、宣言された部品の並びをそのオブジェクトの中身に対して描画する shall（降りられないと、要素の中に持たせた図や原文が成果物へ現れず、データには在るのに読み手へ届かない状態になる）。 |
+| While 入れ子のオブジェクトを指す宣言の対象が存在しないとき、システムはその部分を省略し、見出しだけを残さない shall。 |
+| When 図の宣言が囲みを持つとき、システムは囲みに属する節点をひとまとまりとして描き、囲みの名前を添える shall（何が1つの塊かは、図が示す内容そのものであることが多いため）。 |
+| When 図の節点が名前だけで宣言されているとき、システムはその名前を識別子と表示名の両方に使う shall。 |
+| When 図を描画するとき、システムは図に添えられた意図と読み取りを、図と一緒に描画する shall（図を描画できない読み手が、そこだけで意味を取れるようにするため）。 |
+| When 原文の宣言を描画するとき、システムは意図と読み取りを文章として描画し、原文を宣言された種類のコードブロックとしてそのまま描画する shall（原文を変換しない）。 |
 
 ---
 
@@ -521,9 +527,44 @@ Scenario: 解決できなかった配置先は理由とともに結果へ含め�
   Then その配置先と理由がskippedに現れ、canonicalへの書き込みは続く
 ```
 
----
+### 対象パスが存在しないときのときINVALID_PATH
 
-## 操作保証シナリオ
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー：対象パスが存在しないとき |
+
+```gherkin
+Scenario: 対象パスが存在しないときのときINVALID_PATH
+  Given 対象パスが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
+```
+
+### 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー：対象のschemaRefを解決できないとき |
+
+```gherkin
+Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
+  Given 対象のschemaRefを解決できないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_SCHEMA_REF エラーが返る
+```
+
+### schemaがrenderを状態遷移コマンドとして宣言しているのに、DocumeのときINVALID_TRANSITION
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー：schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさない |
+
+```gherkin
+Scenario: schemaがrenderを状態遷移コマンドとして宣言しているのに、DocumeのときINVALID_TRANSITION
+  Given schemaがrenderを状態遷移コマンドとして宣言しているのに、Documentのstatusがその前提を満たさないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_TRANSITION エラーが返る
+```
 
 ### 同じDocumentを2回renderしても同一の成果物になる
 
@@ -588,4 +629,82 @@ Scenario: H1見出し直後に区切り線を入れない
   Given x-render-level=1のTitleブロックの直後にx-render-level=2のブロックが続くDocument
   When render する
   Then H1見出しと最初のH2見出しの間に区切り線(---)が入らない
+```
+
+### 入れ子のオブジェクトの中身が描画される
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 入れ子への到達：要素の中に持たせた図や原文が成果物へ現れるか |
+
+```gherkin
+Scenario: 入れ子のオブジェクトの中身が描画される
+  Given 要素の中に図の宣言を持つブロック
+  When 描画する
+  Then 図の中身が成果物に現れる
+```
+
+### 入れ子の対象が無ければ何も描かれない
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 入れ子への到達：空の見出しを残さないか |
+
+```gherkin
+Scenario: 入れ子の対象が無ければ何も描かれない
+  Given 図の宣言を持たない要素
+  When 描画する
+  Then その部分は成果物に現れない
+```
+
+### 囲みはひとまとまりとして描かれる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 図の意味：何が1つの塊かが図に出るか |
+
+```gherkin
+Scenario: 囲みはひとまとまりとして描かれる
+  Given 5つの節点を1つの囲みに入れた図の宣言
+  When 描画する
+  Then 5つがひとまとまりとして描かれ、囲みの名前が添えられている
+```
+
+### 節点は名前だけで宣言できる
+
+| 分類 | 観点 |
+|---|---|
+| 境界値 | 宣言の簡潔さ：同じ文字列を2度書かせないか |
+
+```gherkin
+Scenario: 節点は名前だけで宣言できる
+  Given 名前だけで宣言された節点
+  When 描画する
+  Then その名前が表示される
+```
+
+### 図には意図と読み取りが添えられる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 図の到達性：図を描画できない読み手にも意味が届くか |
+
+```gherkin
+Scenario: 図には意図と読み取りが添えられる
+  Given 意図と読み取りを持つ図の宣言
+  When 描画する
+  Then 図とともに意図と読み取りが文章として現れる
+```
+
+### 原文は変換されずに描画される
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 原文の保存：構造化できないものを変えずに運べるか |
+
+```gherkin
+Scenario: 原文は変換されずに描画される
+  Given 種類と原文を持つ宣言
+  When 描画する
+  Then 意図と読み取りが文章として現れ、原文が宣言された種類のコードブロックとして現れる
 ```
