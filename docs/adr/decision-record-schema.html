@@ -1,0 +1,400 @@
+<title>ADR：決定を記録して承認を得る器を立てる</title>
+<style>
+  :root {
+    --paper:      #EDF0F3;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F7F9;
+    --ink:        #171B23;
+    --ink-soft:   #4B5563;
+    --ink-faint:  #79828F;
+    --rule:       #D3DAE2;
+    --rule-soft:  #E4E9EE;
+
+    --problem:    #7A4368;
+    --problem-bg: #F3E9F0;
+    --solution:   #16636B;
+    --solution-bg:#E2EFF0;
+    --warn:       #9A4A21;
+    --warn-bg:    #F7EAE2;
+    --dead:       #8A8F98;
+
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
+    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+      --rule:#2E3742; --rule-soft:#242C37;
+      --problem:#D19CC0; --problem-bg:#2C1F2A;
+      --solution:#6BC0C7; --solution-bg:#132A2C;
+      --warn:#E0A17A; --warn-bg:#2E211A;
+      --dead:#767E8A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --problem:#D19CC0; --problem-bg:#2C1F2A;
+    --solution:#6BC0C7; --solution-bg:#132A2C;
+    --warn:#E0A17A; --warn-bg:#2E211A;
+    --dead:#767E8A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.85;
+    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+  .col { max-width: 40rem; }
+
+  header { display: flex; flex-direction: column; gap: .9rem; }
+  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+
+  section { display: flex; flex-direction: column; gap: 1.4rem; }
+  h2 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
+    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem;
+  }
+  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
+  h2 .side { margin-left: auto; font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
+  p { margin: 0; }
+  .col > p + p { margin-top: .9rem; }
+  strong { font-weight: 700; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 3px; padding: .08em .34em; }
+
+  .verdict { display: grid; grid-template-columns: repeat(auto-fit,minmax(15rem,1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .verdict > div { background: var(--surface); padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .45rem; }
+  .verdict dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .verdict dd { margin: 0; font-size: .95rem; line-height: 1.7; }
+  .verdict .big { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
+
+  .ladder { display: flex; flex-direction: column; }
+  .rung { display: grid; grid-template-columns: 12.5rem 1fr; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; }
+  @media (max-width: 38rem) { .rung { grid-template-columns: 1fr; } .rung-name { border-right: none; border-bottom: 1px solid var(--rule-soft); } }
+  .rung-name { padding: 1.1rem 1.2rem; border-right: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: .3rem; justify-content: center; }
+  .rung-name b { font-family: var(--serif); font-size: 1.02rem; font-weight: 600; line-height: 1.45; }
+  .rung-name span { font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); letter-spacing: .04em; }
+  .rung-body { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 30rem) { .rung-body { grid-template-columns: 1fr; } .cell + .cell { border-left: none; border-top: 1px solid var(--rule-soft); } }
+  .cell { padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
+  .cell + .cell { border-left: 1px solid var(--rule-soft); }
+  .cell .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .cell .v { font-size: .95rem; line-height: 1.6; }
+  .cell .m { font-size: .8rem; color: var(--ink-soft); line-height: 1.6; }
+  .link { width: 2px; height: 1.6rem; background: var(--rule); position: relative; margin-left: 6.25rem; }
+  .link::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
+  .link span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  .aside-note { display: flex; gap: .85rem; align-items: flex-start; background: var(--surface-2); border-left: 3px solid var(--problem); padding: 1rem 1.15rem; border-radius: 0 2px 2px 0; font-size: .92rem; line-height: 1.75; color: var(--ink-soft); }
+  .aside-note.warn { border-left-color: var(--warn); }
+  .aside-note b { color: var(--ink); }
+
+  .spaces { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; }
+  @media (max-width: 40rem) { .spaces { grid-template-columns: 1fr; } .spaces .bridge { padding: 1.2rem 0; } }
+  .space { border: 1px solid var(--rule); border-radius: 2px; padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .75rem; background: var(--surface); }
+  .space.problem { border-top: 3px solid var(--problem); }
+  .space.solution { border-top: 3px solid var(--solution); }
+  .space-label { font-family: var(--mono); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; }
+  .space.problem .space-label { color: var(--problem); }
+  .space.solution .space-label { color: var(--solution); }
+  .space b { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
+  .space p { font-size: .88rem; color: var(--ink-soft); line-height: 1.7; }
+  .space ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .3rem; font-size: .84rem; color: var(--ink-soft); }
+  .space li::before { content: "· "; color: var(--ink-faint); }
+  .bridge { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: 0 1.1rem; }
+  .bridge .arrow { font-family: var(--mono); font-size: 1.1rem; color: var(--ink-faint); letter-spacing: -.1em; }
+  .bridge .cap { font-size: .74rem; font-family: var(--mono); color: var(--ink-faint); text-align: center; line-height: 1.5; }
+
+  /* four families */
+  .families { display: flex; flex-direction: column; }
+  .family { display: grid; grid-template-columns: 3rem 1fr; border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); }
+  .family-idx { background: var(--surface-2); border-right: 1px solid var(--rule-soft); display: flex; align-items: flex-start; justify-content: center; padding-top: 1.25rem; font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); }
+  .family-main { padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .8rem; }
+  .family-q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .family-main > b { font-family: var(--serif); font-size: 1.14rem; font-weight: 600; }
+  .family-main > p { font-size: .93rem; line-height: 1.75; color: var(--ink-soft); }
+  .must { display: flex; flex-direction: column; gap: .35rem; padding-top: .2rem; }
+  .must div { font-size: .87rem; line-height: 1.65; display: flex; gap: .55rem; }
+  .must div::before { content: "▸"; color: var(--ink-faint); flex: none; font-size: .7rem; transform: translateY(.35em); }
+  .must div.strike { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--rule); }
+  .must div.strike::before { content: "×"; text-decoration: none; }
+  .family-flow { height: 1.5rem; width: 2px; background: var(--rule); margin-left: 1.5rem; position: relative; }
+  .family-flow::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
+  .family-flow span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .73rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  /* gap table */
+  .gapwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; font-size: .9rem; }
+  th, td { text-align: left; padding: .85rem 1rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; line-height: 1.65; }
+  th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; background: var(--surface-2); }
+  tr:last-child td { border-bottom: none; }
+  td.name { font-weight: 700; white-space: nowrap; }
+  .pill { font-family: var(--mono); font-size: .68rem; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
+  .pill.ok { color: var(--solution); background: var(--solution-bg); }
+  .pill.part { color: var(--warn); background: var(--warn-bg); }
+  .pill.none { color: var(--warn); background: var(--warn-bg); font-weight: 700; }
+
+  .board { display: grid; grid-template-columns: repeat(auto-fit,minmax(17rem,1fr)); gap: 1.1rem; }
+  .panel { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .panel-head { padding: .8rem 1.1rem; border-bottom: 1px solid var(--rule-soft); background: var(--surface-2); display: flex; align-items: baseline; justify-content: space-between; gap: .8rem; }
+  .panel-head b { font-size: .92rem; }
+  .panel-head .count { font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .panel ul { margin: 0; padding: .9rem 1.1rem 1.1rem; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .panel li { display: flex; align-items: baseline; gap: .6rem; font-size: .88rem; line-height: 1.6; }
+  .dot { width: .5rem; height: .5rem; border-radius: 50%; flex: none; transform: translateY(-.1em); }
+  .dot.live { background: var(--solution); }
+  .dot.dead { background: var(--dead); }
+  .panel li code { background: transparent; border: none; padding: 0; font-size: .84em; }
+  .panel li .note { color: var(--ink-faint); font-size: .78rem; }
+
+  .trees { display: grid; grid-template-columns: repeat(auto-fit,minmax(20rem,1fr)); gap: 1.1rem; }
+  .tree { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .tree-head { padding: .75rem 1.1rem; border-bottom: 1px solid var(--rule-soft); display: flex; align-items: center; justify-content: space-between; gap: .8rem; background: var(--surface-2); }
+  .tree-head b { font-size: .9rem; font-weight: 700; }
+  .tag { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
+  .tag.bad { color: var(--warn); background: var(--warn-bg); }
+  .tag.good { color: var(--solution); background: var(--solution-bg); }
+  .tree pre { margin: 0; padding: 1.1rem 1.2rem 1.3rem; font-family: var(--mono); font-size: .8rem; line-height: 1.85; overflow-x: auto; color: var(--ink-soft); }
+  .tree pre .p { color: var(--problem); font-weight: 700; }
+  .tree pre .s { color: var(--solution); font-weight: 700; }
+  .tree pre .cmt { color: var(--ink-faint); }
+
+  .loop { display: flex; flex-wrap: wrap; }
+  .loop-step { flex: 1 1 8rem; border: 1px solid var(--rule); background: var(--surface); padding: .9rem 1rem; display: flex; flex-direction: column; gap: .25rem; border-radius: 2px; }
+  .loop-step + .loop-step { border-left: none; }
+  .loop-step b { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
+  .loop-step span { font-size: .76rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  .open { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .open > div { background: var(--surface); padding: 1.05rem 1.2rem; display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; }
+  @media (max-width: 34rem) { .open > div { grid-template-columns: 1fr; gap: .3rem; } }
+  .open .q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .open .a { font-size: .93rem; line-height: 1.75; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1.2rem; font-size: .82rem; color: var(--ink-faint); line-height: 1.8; }
+</style>
+<style>
+  .cap { color: var(--ink-soft); font-size: .94rem; margin: 0; max-width: 42rem; }
+  .fig { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); padding: 1.1rem .6rem; overflow-x: auto; }
+  pre.mermaid { background: transparent; border: none; margin: 0; padding: 0; text-align: center; overflow-x: auto; }
+  .figrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
+  .figcell { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .figlabel { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; padding: .6rem 1rem; border-bottom: 1px solid var(--rule-soft); }
+  .figlabel.bad { color: var(--warn); background: var(--warn-bg); }
+  .figlabel.good { color: var(--solution); background: var(--solution-bg); }
+  .tail { display: block; font-size: .78rem; color: var(--ink-faint); line-height: 1.6; margin-top: .3rem; }
+  table.cmp td.no  { color: var(--warn); }
+  table.cmp td.yes { color: var(--solution); }
+  table.cmp td.no .tail, table.cmp td.yes .tail { color: var(--ink-faint); }
+  table.dec tr.heavy td { background: var(--surface-2); }
+  table.dec tr.heavy .tail { color: var(--warn); font-weight: 700; letter-spacing: .08em; }
+  td.name { white-space: normal; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="meta">
+      <span>ADR</span>
+      <span class="st">状態：承認待ち</span>
+      <span>2026-08-11</span>
+    </div>
+    <h1>決定を記録して承認を得る器を立てる</h1>
+    <p class="lede">具体へ落とす手前には、必ず人間が承認する関門があります。その関門に器がありません。</p>
+  </header>
+
+  <section>
+    <h2><span class="num">01</span>決定</h2>
+    <p class="cap">読み方が1つに定まる形で書きます。<strong>解釈が分かれる決定は、決定していません。</strong></p>
+    <div class="fig" style="padding:1.4rem 1.6rem">
+      <p style="font-family:var(--serif);font-size:1.14rem;font-weight:600;margin:0">
+        具体へ落とす手前の2つの関門に、決定を記録して承認を得る器を立てる。
+      </p>
+    </div>
+    <p class="cap" style="margin-top:.4rem">理由は1つに絞りません。複数あってよく、いまは1つです。</p>
+    <div class="col">
+      <div class="aside-note">
+        <div><b>いま承認したという事実が、どこにも残らない。</b>判断はその場のやりとりで合意し、成果物は毎回その場で組み立てている。<b>何を根拠に、何を承認したのかを、後から辿る手段がない。</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>関門は2つある</h2>
+    <p class="cap">どちらも「抽象を具体へ落とす手前」にあり、同じ形をしています。違うのは、何を抽象化したかだけです。</p>
+    <div class="fig">
+<pre class="mermaid">
+flowchart LR
+  A["調べる"] --> G1{{"関門1"}}
+  G1 --> B["仕様を書く"]
+  B --> G2{{"関門2"}}
+  G2 --> C["作る"]
+</pre>
+    </div>
+    <div class="gapwrap">
+      <table class="cmp">
+        <thead>
+          <tr><th></th><th>関門1 ── 仕様へ落とす手前</th><th>関門2 ── 実装へ落とす手前</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name">何を抽象化するか</td>
+            <td>仕様の具体</td>
+            <td>実装の具体</td>
+          </tr>
+          <tr>
+            <td class="name">変更前後に書くこと</td>
+            <td>概念の関係がどう変わるか</td>
+            <td><strong>何ができるようになるか</strong></td>
+          </tr>
+          <tr>
+            <td class="name">承認して得られる状態</td>
+            <td>この形で仕様を書いてよい</td>
+            <td>この形で作ってよい</td>
+          </tr>
+          <tr>
+            <td class="name">承認後に人間が触るか</td>
+            <td colspan="2" style="text-align:center">触らない ── 規約の範囲で作られる限り</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>何が変わるか</h2>
+    <div class="figrow">
+      <div class="figcell">
+        <div class="figlabel bad">いま</div>
+        <div style="padding:1.1rem 1.2rem 1.2rem">
+          <ul style="margin:0;padding-left:1.2rem;font-size:.9rem;line-height:2;color:var(--ink-soft)">
+            <li>判断はやりとりの中で合意する</li>
+            <li>提示する形は毎回組み立てる</li>
+            <li>置き場所も名前も揃わない</li>
+            <li><strong style="color:var(--warn)">承認した事実が残らない</strong></li>
+            <li><strong style="color:var(--warn)">未承認のまま次へ進んでも気づけない</strong></li>
+          </ul>
+        </div>
+      </div>
+      <div class="figcell">
+        <div class="figlabel good">変更後</div>
+        <div style="padding:1.1rem 1.2rem 1.2rem">
+          <ul style="margin:0;padding-left:1.2rem;font-size:.9rem;line-height:2;color:var(--ink-soft)">
+            <li>2つの関門が同じ形で記録される</li>
+            <li>書くべき欄が決まっている</li>
+            <li>置き場所が宣言で決まる</li>
+            <li><strong style="color:var(--solution)">承認の状態が文書に残る</strong></li>
+            <li><strong style="color:var(--solution)">未承認のまま進む経路を塞げる</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="aside-note">
+        <div><b>できるようになること。</b>「この判断はいつ、何を根拠に承認されたか」を後から引ける。同じ判断を二度議論しない。<b>そして承認されていない判断の上に作られたものを、機械が見つけられる。</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>持たせるもの</h2>
+    <p class="cap">8つ。<strong>増やすと、承認に要る量を超えます</strong>——これは器そのものが避けるべき失敗です。</p>
+    <div class="gapwrap">
+      <table class="dec">
+        <thead>
+          <tr><th>欄</th><th>書くこと</th><th>この欄が無いと</th></tr>
+        </thead>
+        <tbody>
+          <tr class="heavy">
+            <td class="name">決定<span class="tail">中核</span></td>
+            <td>決めたこと。<strong>読み方が1つに定まる形で</strong>（「AかBか」「基本的には」「必要に応じて」を使わない）</td>
+            <td><strong>承認しても何も確定しない。</strong>解釈が分かれる決定は、決定していない</td>
+          </tr>
+          <tr>
+            <td class="name">理由</td>
+            <td>そう決めた理由。<strong>複数あってよい</strong></td>
+            <td>後から「なぜこれを選んだか」を辿れず、<strong>同じ判断を二度議論する</strong></td>
+          </tr>
+          <tr>
+            <td class="name">変更前と変更後</td>
+            <td>何が変わるか。関門の種別で意味が変わる</td>
+            <td>承認しても<strong>何が起きるか分からない</strong></td>
+          </tr>
+          <tr>
+            <td class="name">判断を分けた軸</td>
+            <td>軸ごとの対比。<strong>選ばなかった側が優る軸を含む</strong></td>
+            <td>全軸で一方が勝つ表になり、<strong>取引が明白な選択に見える</strong></td>
+          </tr>
+          <tr>
+            <td class="name">付随して決めたこと</td>
+            <td>論点・決定・根拠</td>
+            <td>中核の決定に、周辺の判断が混ざる</td>
+          </tr>
+          <tr>
+            <td class="name">答えないこと</td>
+            <td>範囲外・限界・未確認のまま残したこと</td>
+            <td>承認の範囲が確定せず、<strong>承認していないことまで承認済みに見える</strong></td>
+          </tr>
+          <tr>
+            <td class="name">承認</td>
+            <td>状態・誰が・いつ</td>
+            <td>決め手のとおり、<strong>承認した事実が残らない</strong></td>
+          </tr>
+          <tr>
+            <td class="name">関連</td>
+            <td>この決定が縛る対象の識別子</td>
+            <td>どの決定がどれを縛るか、<strong>機械が辿れない</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>立てないという案</h2>
+    <p class="cap">いまのまま、判断のたびに手で組み立て続ける案と並べます。</p>
+    <div class="gapwrap">
+      <table class="cmp">
+        <thead>
+          <tr><th>軸</th><th>手で組み立て続ける</th><th>器を立てる</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">承認の事実が残るか</td><td class="no">残らない</td><td class="yes">残る</td></tr>
+          <tr><td class="name">書くべき欄が決まるか</td><td class="no">毎回考える<span class="tail">決め手を絞る／負けている軸を書く、が抜ける</span></td><td class="yes">決まっている</td></tr>
+          <tr><td class="name">未承認のまま進むのを止められるか</td><td class="no">止められない</td><td class="yes">止められる</td></tr>
+          <tr><td class="name">作る手間</td><td class="yes">増えない</td><td class="no">種別が1つ増える</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span>この決定が答えないこと</h2>
+    <div class="gapwrap">
+      <table>
+        <thead><tr><th>論点</th><th>状態</th></tr></thead>
+        <tbody>
+          <tr><td class="name">承認を関門で強制するか</td><td>器は状態を持つ。<strong>止める仕組みを入れるかは別の判断</strong>（規約の書き換えを伴う）</td></tr>
+          <tr><td class="name">既存の判断の記録</td><td>遡って書き起こさない。<strong>今後の判断から使う</strong></td></tr>
+          <tr><td class="name">図をどう持つか</td><td>関係を図で示せると読みやすいが、<strong>欄として持つか本文に埋めるかは未決</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    具体へ落とす手前の関門に、決定を記録して承認を得る器を立てる判断。<br>
+    この文書自体を、立てた器で描き直せることが、器が足りている証拠になる。
+  </footer>
+
+</div>

@@ -1,0 +1,405 @@
+<title>業務領域を、区切られた文脈の外へ出す</title>
+<style>
+  :root {
+    --paper:      #EDF0F3;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F7F9;
+    --ink:        #171B23;
+    --ink-soft:   #4B5563;
+    --ink-faint:  #79828F;
+    --rule:       #D3DAE2;
+    --rule-soft:  #E4E9EE;
+
+    --problem:    #7A4368;
+    --problem-bg: #F3E9F0;
+    --solution:   #16636B;
+    --solution-bg:#E2EFF0;
+    --warn:       #9A4A21;
+    --warn-bg:    #F7EAE2;
+    --dead:       #8A8F98;
+
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
+    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+      --rule:#2E3742; --rule-soft:#242C37;
+      --problem:#D19CC0; --problem-bg:#2C1F2A;
+      --solution:#6BC0C7; --solution-bg:#132A2C;
+      --warn:#E0A17A; --warn-bg:#2E211A;
+      --dead:#767E8A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --problem:#D19CC0; --problem-bg:#2C1F2A;
+    --solution:#6BC0C7; --solution-bg:#132A2C;
+    --warn:#E0A17A; --warn-bg:#2E211A;
+    --dead:#767E8A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.85;
+    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+  .col { max-width: 40rem; }
+
+  header { display: flex; flex-direction: column; gap: .9rem; }
+  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+
+  section { display: flex; flex-direction: column; gap: 1.4rem; }
+  h2 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
+    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem;
+  }
+  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
+  h2 .side { margin-left: auto; font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
+  p { margin: 0; }
+  .col > p + p { margin-top: .9rem; }
+  strong { font-weight: 700; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 3px; padding: .08em .34em; }
+
+  .verdict { display: grid; grid-template-columns: repeat(auto-fit,minmax(15rem,1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .verdict > div { background: var(--surface); padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .45rem; }
+  .verdict dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .verdict dd { margin: 0; font-size: .95rem; line-height: 1.7; }
+  .verdict .big { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
+
+  .ladder { display: flex; flex-direction: column; }
+  .rung { display: grid; grid-template-columns: 12.5rem 1fr; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; }
+  @media (max-width: 38rem) { .rung { grid-template-columns: 1fr; } .rung-name { border-right: none; border-bottom: 1px solid var(--rule-soft); } }
+  .rung-name { padding: 1.1rem 1.2rem; border-right: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: .3rem; justify-content: center; }
+  .rung-name b { font-family: var(--serif); font-size: 1.02rem; font-weight: 600; line-height: 1.45; }
+  .rung-name span { font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); letter-spacing: .04em; }
+  .rung-body { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 30rem) { .rung-body { grid-template-columns: 1fr; } .cell + .cell { border-left: none; border-top: 1px solid var(--rule-soft); } }
+  .cell { padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
+  .cell + .cell { border-left: 1px solid var(--rule-soft); }
+  .cell .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .cell .v { font-size: .95rem; line-height: 1.6; }
+  .cell .m { font-size: .8rem; color: var(--ink-soft); line-height: 1.6; }
+  .link { width: 2px; height: 1.6rem; background: var(--rule); position: relative; margin-left: 6.25rem; }
+  .link::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
+  .link span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  .aside-note { display: flex; gap: .85rem; align-items: flex-start; background: var(--surface-2); border-left: 3px solid var(--problem); padding: 1rem 1.15rem; border-radius: 0 2px 2px 0; font-size: .92rem; line-height: 1.75; color: var(--ink-soft); }
+  .aside-note.warn { border-left-color: var(--warn); }
+  .aside-note b { color: var(--ink); }
+
+  .spaces { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; }
+  @media (max-width: 40rem) { .spaces { grid-template-columns: 1fr; } .spaces .bridge { padding: 1.2rem 0; } }
+  .space { border: 1px solid var(--rule); border-radius: 2px; padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .75rem; background: var(--surface); }
+  .space.problem { border-top: 3px solid var(--problem); }
+  .space.solution { border-top: 3px solid var(--solution); }
+  .space-label { font-family: var(--mono); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; }
+  .space.problem .space-label { color: var(--problem); }
+  .space.solution .space-label { color: var(--solution); }
+  .space b { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
+  .space p { font-size: .88rem; color: var(--ink-soft); line-height: 1.7; }
+  .space ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .3rem; font-size: .84rem; color: var(--ink-soft); }
+  .space li::before { content: "· "; color: var(--ink-faint); }
+  .bridge { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: 0 1.1rem; }
+  .bridge .arrow { font-family: var(--mono); font-size: 1.1rem; color: var(--ink-faint); letter-spacing: -.1em; }
+  .bridge .cap { font-size: .74rem; font-family: var(--mono); color: var(--ink-faint); text-align: center; line-height: 1.5; }
+
+  /* four families */
+  .families { display: flex; flex-direction: column; }
+  .family { display: grid; grid-template-columns: 3rem 1fr; border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); }
+  .family-idx { background: var(--surface-2); border-right: 1px solid var(--rule-soft); display: flex; align-items: flex-start; justify-content: center; padding-top: 1.25rem; font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); }
+  .family-main { padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .8rem; }
+  .family-q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .family-main > b { font-family: var(--serif); font-size: 1.14rem; font-weight: 600; }
+  .family-main > p { font-size: .93rem; line-height: 1.75; color: var(--ink-soft); }
+  .must { display: flex; flex-direction: column; gap: .35rem; padding-top: .2rem; }
+  .must div { font-size: .87rem; line-height: 1.65; display: flex; gap: .55rem; }
+  .must div::before { content: "▸"; color: var(--ink-faint); flex: none; font-size: .7rem; transform: translateY(.35em); }
+  .must div.strike { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--rule); }
+  .must div.strike::before { content: "×"; text-decoration: none; }
+  .family-flow { height: 1.5rem; width: 2px; background: var(--rule); margin-left: 1.5rem; position: relative; }
+  .family-flow::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
+  .family-flow span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .73rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  /* gap table */
+  .gapwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; font-size: .9rem; }
+  th, td { text-align: left; padding: .85rem 1rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; line-height: 1.65; }
+  th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; background: var(--surface-2); }
+  tr:last-child td { border-bottom: none; }
+  td.name { font-weight: 700; white-space: nowrap; }
+  .pill { font-family: var(--mono); font-size: .68rem; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
+  .pill.ok { color: var(--solution); background: var(--solution-bg); }
+  .pill.part { color: var(--warn); background: var(--warn-bg); }
+  .pill.none { color: var(--warn); background: var(--warn-bg); font-weight: 700; }
+
+  .board { display: grid; grid-template-columns: repeat(auto-fit,minmax(17rem,1fr)); gap: 1.1rem; }
+  .panel { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .panel-head { padding: .8rem 1.1rem; border-bottom: 1px solid var(--rule-soft); background: var(--surface-2); display: flex; align-items: baseline; justify-content: space-between; gap: .8rem; }
+  .panel-head b { font-size: .92rem; }
+  .panel-head .count { font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .panel ul { margin: 0; padding: .9rem 1.1rem 1.1rem; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .panel li { display: flex; align-items: baseline; gap: .6rem; font-size: .88rem; line-height: 1.6; }
+  .dot { width: .5rem; height: .5rem; border-radius: 50%; flex: none; transform: translateY(-.1em); }
+  .dot.live { background: var(--solution); }
+  .dot.dead { background: var(--dead); }
+  .panel li code { background: transparent; border: none; padding: 0; font-size: .84em; }
+  .panel li .note { color: var(--ink-faint); font-size: .78rem; }
+
+  .trees { display: grid; grid-template-columns: repeat(auto-fit,minmax(20rem,1fr)); gap: 1.1rem; }
+  .tree { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .tree-head { padding: .75rem 1.1rem; border-bottom: 1px solid var(--rule-soft); display: flex; align-items: center; justify-content: space-between; gap: .8rem; background: var(--surface-2); }
+  .tree-head b { font-size: .9rem; font-weight: 700; }
+  .tag { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
+  .tag.bad { color: var(--warn); background: var(--warn-bg); }
+  .tag.good { color: var(--solution); background: var(--solution-bg); }
+  .tree pre { margin: 0; padding: 1.1rem 1.2rem 1.3rem; font-family: var(--mono); font-size: .8rem; line-height: 1.85; overflow-x: auto; color: var(--ink-soft); }
+  .tree pre .p { color: var(--problem); font-weight: 700; }
+  .tree pre .s { color: var(--solution); font-weight: 700; }
+  .tree pre .cmt { color: var(--ink-faint); }
+
+  .loop { display: flex; flex-wrap: wrap; }
+  .loop-step { flex: 1 1 8rem; border: 1px solid var(--rule); background: var(--surface); padding: .9rem 1rem; display: flex; flex-direction: column; gap: .25rem; border-radius: 2px; }
+  .loop-step + .loop-step { border-left: none; }
+  .loop-step b { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
+  .loop-step span { font-size: .76rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  .open { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .open > div { background: var(--surface); padding: 1.05rem 1.2rem; display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; }
+  @media (max-width: 34rem) { .open > div { grid-template-columns: 1fr; gap: .3rem; } }
+  .open .q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .open .a { font-size: .93rem; line-height: 1.75; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1.2rem; font-size: .82rem; color: var(--ink-faint); line-height: 1.8; }
+</style><style>
+  .cap { color: var(--ink-soft); font-size: .93rem; margin: 0; max-width: 43rem; }
+  .sub { font-family: var(--sans); font-size: .88rem; font-weight: 700; letter-spacing:.03em;
+         color: var(--ink-soft); margin: .3rem 0 0; }
+  .fig { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); padding: 1.3rem 1.5rem; }
+  .fig .one { font-family: var(--serif); font-size: 1.12rem; font-weight: 600; margin: 0; line-height: 1.6; }
+  figure { margin:0; background:var(--surface); border:1px solid var(--rule);
+           border-radius:4px; padding:1.1rem 1rem .6rem; }
+  figure svg { width:100%; height:auto; display:block; }
+  figcaption { font-size:.82rem; color:var(--ink-faint); margin-top:.6rem; text-align:center; }
+  .t  { font:700 12.5px system-ui,sans-serif; }
+  .s  { font:10.5px system-ui,sans-serif; }
+  .mo { font:700 10.5px ui-monospace,Menlo,monospace; }
+
+  /* 端末の窓 */
+  .terms { display:grid; grid-template-columns:repeat(auto-fit,minmax(21rem,1fr)); gap:1rem; }
+  .term { border:1px solid var(--rule); border-radius:6px; overflow:hidden; background:#1b2027;
+          box-shadow:0 1px 2px rgba(0,0,0,.06); }
+  .term-bar { display:flex; align-items:center; gap:.4rem; padding:.5rem .75rem;
+              background:#2a313a; border-bottom:1px solid #383f49; }
+  .term-bar .dot { width:.62rem; height:.62rem; border-radius:50%; flex:none; }
+  .term-bar .d1{background:#ec6a5e} .term-bar .d2{background:#f4bf4f} .term-bar .d3{background:#61c554}
+  .term-bar .ttl { margin-left:.6rem; font-family:var(--mono); font-size:.68rem;
+                   letter-spacing:.08em; color:#9aa4b0; }
+  .term-bar .tag { margin-left:auto; font-family:var(--mono); font-size:.62rem;
+                   letter-spacing:.08em; padding:.12em .5em; border-radius:2px; }
+  .term-bar .tag.bad  { background:#4a2a22; color:#f0a48d; }
+  .term-bar .tag.good { background:#173430; color:#7fd4bd; }
+  .term-body { margin:0; padding:.95rem 1rem 1.1rem; font-family:var(--mono);
+               font-size:.755rem; line-height:1.95; color:#d6dbe2; overflow-x:auto;
+               white-space:pre; }
+  .term-body .pr { color:#7fd4bd; }
+  .term-body .cm { color:#7d8899; }
+  .term-body .an-bad  { color:#f0a48d; }
+  .term-body .an-good { color:#7fd4bd; }
+  .term-body .key { color:#9ec9e8; }
+
+  .tail { display:block; font-size:.78rem; color: var(--ink-faint); line-height:1.6; margin-top:.3rem; }
+  table.cmp td.no { color: var(--warn); } table.cmp td.yes { color: var(--solution); }
+  table.cmp td.no .tail, table.cmp td.yes .tail { color: var(--ink-faint); }
+  td.name { white-space: normal; }
+  h2 .blk { margin-left: auto; font-family: var(--mono); font-size: .62rem; letter-spacing: .1em;
+            text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
+  .gate { display:inline-block; font-family: var(--mono); font-size: .66rem; letter-spacing:.08em;
+          padding:.25em .7em; border-radius:2px; background: var(--solution-bg); color: var(--solution); }
+  .approve { border:2px solid var(--solution); border-radius:2px; background:var(--surface);
+             padding:1.1rem 1.3rem; display:flex; flex-direction:column; gap:.35rem; max-width:44rem; }
+  .approve .k { font-family:var(--mono); font-size:.66rem; letter-spacing:.12em;
+                text-transform:uppercase; color:var(--solution); }
+  .approve .v { font-family:var(--serif); font-size:1.06rem; font-weight:600; }
+  table.cmp td b { font-family: var(--mono); font-size: 1.02em; margin-right: .35em; }
+</style>
+
+
+<div class="wrap">
+
+  <header>
+    <div class="meta"><span>決定の記録</span><span class="st">状態：承認待ち</span><span>2026-08-11</span></div>
+    <h1>業務領域を、区切られた文脈の外へ出す</h1>
+    <p class="lede">業務領域の仕様文書の置き場所を決める。仕様を書き換える前の判断。</p>
+    <p><span class="gate">関門1 ── 仕様へ落とす手前</span></p>
+  </header>
+
+  <section>
+    <h2><span class="num">01</span>決定<span class="blk">block 01</span></h2>
+    <div class="fig"><p class="one">業務領域の仕様文書を、区切られた文脈の配下から出し、事業領域の配下へ置く。所属はディレクトリの位置ではなく、業務ユースケースが持つ参照が運ぶ。集約・業務ユースケース・業務サービスは区切られた文脈の配下に残す。</p></div>
+    <p class="cap">主文だけでは読み方が定まらない箇所を、同時に確定させる。</p>
+    <div class="gapwrap"><table>
+      <thead><tr><th>確定させること</th><th>決定</th><th>定めないと</th></tr></thead>
+      <tbody>
+        <tr><td class="name">業務領域の器</td><td>平らにせず、事業領域を2つ立てて配下に置く</td><td>分類の基準が消える（分類は事業領域を基準にした相対評価）</td></tr>
+        <tr><td class="name">参照の必須</td><td>必須にする</td><td>業務領域が分類ラベルだけの抜け殻になる</td></tr>
+        <tr><td class="name">多重度</td><td>単一値のまま。制限したと明記する</td><td>制限したことに気づかないまま制限が残る</td></tr>
+        <tr><td class="name">逆向きの一覧</td><td>畳む</td><td>二重宣言の食い違いが新しいドリフト種別になる</td></tr>
+        <tr><td class="name">インフラ仕様</td><td>動かさない</td><td>移動対象の集合が確定しない</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>理由<span class="blk">block 02</span></h2>
+    <div class="gapwrap"><table>
+      <thead><tr><th>理由</th><th>根拠</th><th>主張</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="name">関係は包含ではなく対応である</td>
+          <td>knowledge の見出しが「業務領域と区切られた文脈の<strong>対応</strong>」。本文は「一対一に対応させることが最善の場合もあるし、別の方針で分割することが役立つ場合もある」</td>
+          <td>ddd-advisor</td>
+        </tr>
+        <tr>
+          <td class="name">入れ子が固定観念を構造として強制している</td>
+          <td>「一つの業務領域に一つのモデル」を knowledge が名指しでアンチパターンとする。入れ子は親を1つしか与えないため、これを強制する</td>
+          <td>ddd-advisor</td>
+        </tr>
+        <tr>
+          <td class="name">決める人が違うものが連動している</td>
+          <td>業務領域は「事業方針によって決まる構造」、区切られた文脈は「技術者が制約条件に合わせて決定できる」もの。いまは後者を動かすと前者の文書が動く</td>
+          <td>ddd-advisor</td>
+        </tr>
+        <tr>
+          <td class="name">ユースケースの集まりが文脈の内側で割れている</td>
+          <td>bc-waffle の28件が7つの業務領域へ分散（実測）。knowledge は「同じデータを操作する集まりを複数の文脈へ分散させない」と定める</td>
+          <td>Orchestrator（実測）</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>変更前と変更後<span class="blk">block 03</span></h2>
+    <p class="cap">業務領域の親が、どこから、どこへ移るか。</p>
+    <figure>
+      <svg viewBox="0 0 810 262" role="img" aria-label="変更前は区切られた文脈が業務領域を含み、変更後は事業領域が含んで業務ユースケースが対応で指す">
+        <text class="mo" x="16"  y="18" fill="var(--warn)">変更前</text>
+        <text class="mo" x="410" y="18" fill="var(--solution)">変更後</text>
+        <line x1="382" y1="8" x2="382" y2="252" stroke="var(--rule)" stroke-dasharray="3 4"/>
+
+        <!-- 変更前 -->
+        <rect x="16" y="34" width="340" height="212" rx="6" fill="none" stroke="var(--warn)" stroke-dasharray="4 4" opacity=".55"/>
+        <rect x="112" y="50" width="150" height="40" rx="4" fill="var(--surface-2)" stroke="var(--rule-strong,#C3CAD2)"/>
+        <text class="t" x="187" y="75" text-anchor="middle" fill="var(--ink)">区切られた文脈</text>
+
+        <path d="M187 90 L187 112 L96 112 L96 130" stroke="var(--ink-faint)" fill="none" stroke-width="1.5"/>
+        <path d="M187 90 L187 112 L278 112 L278 130" stroke="var(--ink-faint)" fill="none" stroke-width="1.5"/>
+        <rect x="36" y="130" width="120" height="40" rx="4" fill="var(--warn-bg)" stroke="var(--warn)"/>
+        <text class="t" x="96" y="155" text-anchor="middle" fill="var(--warn)">業務領域</text>
+        <rect x="218" y="130" width="120" height="40" rx="4" fill="var(--surface-2)" stroke="var(--rule-strong,#C3CAD2)"/>
+        <text class="t" x="278" y="155" text-anchor="middle" fill="var(--ink)">集約</text>
+
+        <path d="M96 170 L96 196" stroke="var(--ink-faint)" fill="none" stroke-width="1.5"/>
+        <rect x="26" y="196" width="140" height="40" rx="4" fill="var(--surface-2)" stroke="var(--rule-strong,#C3CAD2)"/>
+        <text class="t" x="96" y="221" text-anchor="middle" fill="var(--ink)">業務ユースケース</text>
+        <text class="s" x="187" y="256" text-anchor="middle" fill="var(--warn)">親は1つしか持てない</text>
+
+        <!-- 変更後 -->
+        <rect x="404" y="34" width="150" height="212" rx="6" fill="none" stroke="var(--solution)" stroke-dasharray="4 4" opacity=".45"/>
+        <rect x="596" y="34" width="200" height="212" rx="6" fill="none" stroke="var(--solution)" stroke-dasharray="4 4" opacity=".45"/>
+        <text class="s" x="479" y="30" text-anchor="middle" fill="var(--solution)">問題空間</text>
+        <text class="s" x="696" y="30" text-anchor="middle" fill="var(--solution)">解決空間</text>
+
+        <rect x="414" y="50" width="130" height="40" rx="4" fill="var(--surface-2)" stroke="var(--rule-strong,#C3CAD2)"/>
+        <text class="t" x="479" y="75" text-anchor="middle" fill="var(--ink)">事業領域</text>
+        <path d="M479 90 L479 130" stroke="var(--ink-faint)" fill="none" stroke-width="1.5"/>
+        <rect x="414" y="130" width="130" height="40" rx="4" fill="var(--solution-bg)" stroke="var(--solution)"/>
+        <text class="t" x="479" y="155" text-anchor="middle" fill="var(--solution)">業務領域</text>
+
+        <rect x="631" y="50" width="130" height="40" rx="4" fill="var(--surface-2)" stroke="var(--rule-strong,#C3CAD2)"/>
+        <text class="t" x="696" y="75" text-anchor="middle" fill="var(--ink)">区切られた文脈</text>
+        <path d="M696 90 L696 112 L666 112 L666 130" stroke="var(--ink-faint)" fill="none" stroke-width="1.5"/>
+        <path d="M696 90 L696 112 L760 112 L760 130" stroke="var(--ink-faint)" fill="none" stroke-width="1.5"/>
+        <rect x="608" y="130" width="116" height="40" rx="4" fill="var(--surface-2)" stroke="var(--rule-strong,#C3CAD2)"/>
+        <text class="t" x="666" y="155" text-anchor="middle" fill="var(--ink)">業務ユースケース</text>
+        <rect x="736" y="130" width="48" height="40" rx="4" fill="var(--surface-2)" stroke="var(--rule-strong,#C3CAD2)"/>
+        <text class="t" x="760" y="155" text-anchor="middle" fill="var(--ink)">集約</text>
+
+        <path d="M608 150 L544 150" stroke="var(--solution)" fill="none" stroke-width="1.7" stroke-dasharray="5 4"/>
+        <polygon points="544,150 552,146 552,154" fill="var(--solution)"/>
+        <text class="s" x="576" y="142" text-anchor="middle" fill="var(--solution)">対応</text>
+        <text class="s" x="600" y="256" text-anchor="middle" fill="var(--solution)">親は事業領域。所属は参照が運ぶ</text>
+      </svg>
+      <figcaption>実線は包含（親子）、点線は対応。<strong>業務領域だけが、解決空間から問題空間へ移る。</strong></figcaption>
+    </figure>
+    <div class="gapwrap"><table>
+      <thead><tr><th></th><th>変更前</th><th>変更後</th></tr></thead>
+      <tbody>
+        <tr><td class="name">業務領域の所属を運ぶもの</td><td>ディレクトリの位置</td><td>業務ユースケースが持つ参照</td></tr>
+        <tr><td class="name">区切られた文脈を切り直したとき、業務領域の文書は</td><td>動く</td><td>動かない</td></tr>
+        <tr><td class="name">1つの文脈に属する業務ユースケースの置き場所</td><td>業務領域ごとに7つへ分散</td><td>文脈の直下1箇所</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>「業務領域の置き場所」を分けた軸<span class="blk">block 04</span></h2>
+    <p class="cap">業務領域の仕様文書を<strong>区切られた文脈の配下に置いたままにするか、外へ出すか</strong>。左の列は<strong>満たしたい条件</strong>で、満たすものに ○、満たさないものに ✗ を付けた。</p>
+    <div class="gapwrap"><table class="cmp">
+      <thead><tr><th>満たしたい条件</th><th>配下に置いたまま</th><th>外へ出す</th></tr></thead>
+      <tbody>
+        <tr><td class="name">1つの業務領域が、複数の区切られた文脈に属せる</td><td class="no"><b>✗</b> 1つだけ</td><td class="yes"><b>○</b> 制限なし</td></tr>
+        <tr><td class="name">業務領域の所属を、宣言だけで決められる</td><td class="no"><b>✗</b> 決められない<span class="tail">ディレクトリの位置が実質の宣言になっている</span></td><td class="yes"><b>○</b> 決められる</td></tr>
+        <tr><td class="name">区切られた文脈を切り直しても、業務領域の文書が動かない</td><td class="no"><b>✗</b> 動く</td><td class="yes"><b>○</b> 動かない</td></tr>
+        <tr><td class="name">同じデータを操作する業務ユースケースの集まりが割れない</td><td class="no"><b>✗</b> 割れている<span class="tail">bc-waffle の28件が7つへ</span></td><td class="yes"><b>○</b> 割れない</td></tr>
+        <tr><td class="name">この変更に手間がかからない</td><td class="yes"><b>○</b> かからない</td><td class="no"><b>✗</b> 文書70件・テスト62箇所</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>答えないこと<span class="blk">block 05</span></h2>
+    <div class="gapwrap"><table>
+      <thead><tr><th>論点</th><th>状態</th></tr></thead>
+      <tbody>
+        <tr><td class="name">7分割の是非</td><td>別論点。疑わしいのは3つという裁定は出ている</td></tr>
+        <tr><td class="name">事業領域の中身</td><td>器は立てる。分類の根拠などは移動後に埋める</td></tr>
+        <tr><td class="name">原本の確認</td><td>書き起こし版までの確認に留まる。該当ページを画像で見ていない</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span>承認<span class="blk">block 06</span></h2>
+    <div class="approve">
+      <span class="k">状態</span>
+      <span class="v">未承認</span>
+      <span style="font-size:.9rem;color:var(--ink-soft)">事業領域という種別を新しく立てるため、承認を待つ。</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">07</span>関連<span class="blk">block 07</span></h2>
+    <div class="gapwrap"><table>
+      <thead><tr><th>種類</th><th>対象</th></tr></thead>
+      <tbody>
+        <tr><td class="name">縛る仕様</td><td>DomainSpecSchema（置き場所の宣言）</td></tr>
+        <tr><td class="name">影響する文書</td><td>specs 配下のドメイン仕様 70件</td></tr>
+        <tr><td class="name">後続の決定</td><td>置き場所の宣言を、実装が読むようにする（関門2）</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+</div>
