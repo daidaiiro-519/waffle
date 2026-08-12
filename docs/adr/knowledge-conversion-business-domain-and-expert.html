@@ -1,0 +1,363 @@
+<title>business-domain / domain-expert の変換 ── 12・13本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.78rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 12・13本目</span>
+  <h1><code>business-domain</code> と <code>domain-expert</code> を書き起こし版から移す</h1>
+  <p class="standfirst">第Ⅰ部の土台にあたる2本です。<strong>どちらも書き起こし版が50行台</strong>と短く、<code>subdomain</code> と <code>ubiquitous-language</code> が前提にしている同じ層の話なので、1回でまとめて扱いました。旧要約版159行 → <strong>255行</strong>。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">18</span><span class="l">ノード（7＋11）</span></div>
+    <div class="stat ok"><span class="n">4</span><span class="l">図（旧版は0）</span></div>
+    <div class="stat"><span class="n">1</span><span class="l">原文（表）</span></div>
+    <div class="stat"><span class="n">255</span><span class="l">行（旧159 / 書起し108）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. この2本は、書き起こし版より旧要約版のほうが長い</h2>
+  <p class="narrow">これまでの11本とは逆です。書き起こし版が58行と50行しかないのに、旧要約版は79行と80行ありました。<strong>短い原典を、決まった型（原則・分類・判断基準・実例・アンチパターン）に流し込んだぶん長くなっていた</strong>ということです。</p>
+
+  <div class="box bad">
+    <h3>長さは増えても、図は0でした</h3>
+    <p><code>business-domain</code> の書き起こし版には<strong>事業領域の構造を示す図</strong>があります。旧版はこれを落として、原則の文章に置き換えていました。型に合う要素だけが残り、型に無いものは落ちる——これまでの11本と同じ壊れ方です。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. business-domain — 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>事業領域とは何か</td><td>あり</td><td>顧客に提供するサービスの大枠</td></tr>
+        <tr><td class="new">事業領域の構造</td><td><strong>×</strong></td><td><strong>図。中核・一般・補完への分解</strong></td></tr>
+        <tr><td class="new">会社と事業領域は1対1ではない</td><td>一部</td><td><strong>表＋事業領域ごとに独立して分析する</strong></td></tr>
+        <tr><td class="new">事業領域は変わる</td><td>×</td><td><strong>分析の対象は現在の事業領域であって、社名や沿革ではない</strong></td></tr>
+        <tr><td>事業領域か業務領域か</td><td>判断基準</td><td><strong>図</strong>＋規模では決まらないこと</td></tr>
+        <tr><td>アンチパターン</td><td>あり</td><td>そのまま維持</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ok">
+    <h3>注釈で足したもの</h3>
+    <p><strong>3本の矢印</strong> ── 業務領域が3つあるという意味ではない。分類が3種類あるという意味で、1つの分類の下に業務領域がいくつあってもよいし、ある分類に当てはまる業務領域が1つも無いこともある。</p>
+    <p><strong>「顧客に提供しているサービスの大枠か」</strong> ── 規模の大小では決まらない。小さな会社の事業領域が、大きな会社の1つの業務領域より小さいことは普通にある。</p>
+  </div>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / business-domain</span><span>ノード7 ・ 図2 ・ 原文1 ・ 121行</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">事業領域とは何か</span></div>
+<p>企業が事業活動を展開する領域。顧客に提供するサービスの大枠にあたり、複数の業務領域から構成される。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">事業領域の構造</span></div>
+<p>1つの事業領域の中身が、中核・一般・補完の3種類の業務領域に分かれる。</p>
+<p>事業領域が、複数の業務領域から成ることを示す</p>
+<p>事業領域は器で、その中身が3種類の業務領域に分かれる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;事業領域（事業の全体）&quot;]
+    n1[&quot;中核の業務領域&quot;]
+    n2[&quot;一般的な業務領域&quot;]
+    n3[&quot;補完の業務領域&quot;]
+    n0 --&gt; n1
+    n0 --&gt; n2
+    n0 --&gt; n3
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>3本の矢印</td><td>業務領域が3つあるという意味ではない。分類が3種類あるという意味で、1つの分類の下に業務領域がいくつあってもよいし、ある分類に当てはまる業務領域が1つも無いこともある。</td></tr>
+<tr><td>事業領域（事業の全体）</td><td>会社と1対1で対応するとは限らない。1つの会社が複数の事業領域を持つこともあり、その場合は事業領域ごとに別々に業務領域を分析する。</td></tr>
+<tr><td>この図全体</td><td>階層に見えるが、上下の関係は分解であって、指揮や依存の関係ではない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">会社と事業領域は1対1ではない</span></div>
+<p>1つの会社が複数の事業領域を持つことがある。その場合、事業領域ごとに独立して業務領域の分析を行う。まとめて1つとして扱うと、性質の違う活動が同じ器に入り、分類が定まらなくなる。</p>
+<p>会社の種類ごとに、事業領域がどう置かれるかを並べる</p>
+<p>1つの会社が複数の事業領域を持つ場合があり、そのときは事業領域ごとに分析を分ける。</p>
+<div class="tablewrap"><table><thead><tr><th>会社の例（架空）</th><th>事業領域</th></tr></thead><tbody>
+<tr><td>荷物を届ける会社</td><td>宅配のサービス</td></tr>
+<tr><td>喫茶店を営む会社</td><td>飲食のサービス</td></tr>
+<tr><td>通販と、計算資源の貸出を両方営む会社</td><td>通販／計算資源の貸出（2つ）</td></tr>
+<tr><td>移動の仲介と、料理の配達を両方営む会社</td><td>移動の仲介／料理の配達（2つ）</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">事業領域は変わる</span></div>
+<p>いま何を主力にしているかは、その会社の始まりとは限らない。たとえば印刷業として創業した会社が、紙の需要が減るのを受けて包装材の製造へ移り、いまは物流の梱包設計を主力にしている、というような移り変わりが起きる。分析の対象は現在の事業領域であって、社名や沿革ではない。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">事業領域か業務領域か</span></div>
+<p>顧客に提供しているサービスの大枠かどうかで見分ける。</p>
+<p>事業領域か業務領域かを、1つの問いで見分ける</p>
+<p>顧客に提供しているサービスの大枠かどうかだけで決まる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;顧客に提供しているサービスの大枠か&quot;]
+    n1[&quot;事業領域&quot;]
+    n2[&quot;業務領域&quot;]
+    n0 --&gt;|&quot;はい&quot;| n1
+    n0 --&gt;|&quot;いいえ（その中の個別の活動）&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>顧客に提供しているサービスの大枠か</td><td>規模の大小では決まらない。小さな会社の事業領域が、大きな会社の1つの業務領域より小さいことは普通にある。</td></tr>
+<tr><td>業務領域</td><td>この終点へ来たものは、さらに中核・一般・補完のどれかへ分類する段階に進む。見分けはここで終わりではない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>事業領域の扱いでよく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">事業領域と業務領域を混同する</span></div>
+<p>通販を営む会社にとって「通販」は事業領域であり、その中の「商品の推薦」「物流の管理」「決済」が業務領域である。粒度を取り違えると、設計の起点そのものが狂う。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. domain-expert — 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>業務エキスパートとは誰か</td><td>あり</td><td>要求を出す人、あるいは使う人</td></tr>
+        <tr><td class="new">役割 ×3</td><td>原則にまとめて</td><td><strong>代弁者／同じ言葉の源泉／なぜ必要かの対話相手</strong>に分解</td></tr>
+        <tr><td class="new">　同じ言葉の源泉である</td><td>一部</td><td><strong>同じ言葉は技術者が作るものではなく、この人たちから採るもの</strong></td></tr>
+        <tr><td>設計の専門家ではない</td><td>原則1行</td><td><strong>図。知っていることと知らないことの線引き</strong></td></tr>
+        <tr><td class="new">知識の範囲はばらばらでよい</td><td>×</td><td><strong>1人に全部揃っている必要は無い。違うからこそ全体が見える</strong></td></tr>
+        <tr><td>間に人を挟まない</td><td>アンチパターン</td><td><strong>図。挟む形と直接話す形の対比</strong>＋判断基準としても立てた</td></tr>
+        <tr><td class="new">アンチパターン：設計の判断を求める</td><td>×</td><td>答えられないか、業務の視点から離れた答えが返る</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box ok">
+    <h3>注釈で足したもの</h3>
+    <p><strong>挟む形（囲み）</strong> ── 間に立つ人が仕事をしていないという意味ではない。<strong>変換そのものが情報を落とすので、誰がやっても同じことが起きる。</strong></p>
+    <p><strong>業務エキスパートから「どう実装するか」</strong> ── この線があるのは、そこに期待してはいけないことを示すためである。<strong>知らないのは能力の不足ではなく、役割の範囲である。</strong></p>
+    <p><strong>直接話す矢印</strong> ── 片方向に描いてあるが、この関係は双方向である。技術者からの問いが、業務エキスパート自身も気づいていなかった曖昧さを明らかにすることがある。</p>
+  </div>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / domain-expert</span><span>ノード11 ・ 図2 ・ 134行</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">業務エキスパートとは誰か</span></div>
+<p>ソフトウェアが対象とする業務領域の活動に精通した人たち。業務領域の課題をはっきりさせ、業務についてのさまざまな知識を提供できる人たちであり、対象領域について信頼できる情報の出どころにあたる。ざっくり言えば、作ろうとしているソフトウェアについて要求を出す人たち、あるいはそのソフトウェアを使う人たちである。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">役割</span></div>
+<p>3つの役割を担う。</p>
+<div class="node d2"><div class="node-h"><span class="nm">業務活動の代弁者である</span></div>
+<p>要求を分析して整理する専門家ではない。業務領域の活動そのものを代弁する立場にいる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">同じ言葉の源泉である</span></div>
+<p>業務エキスパートの発想や考え方をそのまま表せる言葉が、同じ言葉になる。つまり同じ言葉は、技術者が作るものではなく、この人たちから採るものである。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">なぜそれが必要かを理解するための対話相手である</span></div>
+<p>ソフトウェア技術者が、業務ロジックや機能が必要な理由を正しく理解するために話す相手にあたる。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">設計の専門家ではない</span></div>
+<p>業務エキスパートはシステムを設計する専門家ではない。知っているのは業務活動がどうあるべきかであって、どう実装するかではない。ソフトウェア技術者が業務エキスパートになる必要は無いが、その考え方を理解し、業務エキスパートが使っている用語を自分たちも使えるようにすることが求められる。</p>
+<p>業務エキスパートが何を知っていて、何を知らないかを分ける</p>
+<p>業務活動がどうあるべきかを知っている。どう実装するかは知らないし、知らなくてよい。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;業務エキスパート&quot;]
+    n1[&quot;業務活動がどうあるべきか&quot;]
+    n2[&quot;どう実装するか&quot;]
+    n0 --&gt;|&quot;知っている&quot;| n1
+    n0 --&gt;|&quot;知らない（知らなくてよい）&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>業務エキスパートからどう実装するか</td><td>この線があるのは、そこに期待してはいけないことを示すためである。知らないのは能力の不足ではなく、役割の範囲である。</td></tr>
+<tr><td>業務活動がどうあるべきか</td><td>技術者の側は、この領域の専門家になる必要は無い。求められるのは、その考え方を理解し、業務エキスパートが使っている用語を自分たちも使えるようになることである。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">知識の範囲はばらばらでよい</span></div>
+<p>1人の中に全部が揃っている必要は無い。たとえば配送を担う会社なら、集荷の計画を立てる責任者、車両の手配を担当する人、実績を分析する人——この全員が業務エキスパートである。それぞれ知っている範囲は違っていてよく、むしろ違うからこそ、合わせて業務領域の全体が見えてくる。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">間に人を挟まない</span></div>
+<p>業務エキスパートから要求をまとめる人へ、仕様書へ、技術者へ、という伝達の経路では、変換のたびに情報が落ちる。業務エキスパートとソフトウェア技術者が同じ言葉で直接対話することで、これを解く。</p>
+<p>業務エキスパートと技術者のあいだに、人を挟むかどうかの違いを示す</p>
+<p>挟む形では変換のたびに意図が落ちる。直接話す形では、その変換が起きない。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    subgraph g0[&quot;挟む形&quot;]
+        n0[&quot;業務エキスパート&quot;]
+        n1[&quot;要求をまとめる人&quot;]
+        n2[&quot;要求の仕様書&quot;]
+        n3[&quot;ソフトウェア技術者&quot;]
+    end
+    subgraph g1[&quot;直接話す形&quot;]
+        n4[&quot;業務エキスパート（直接）&quot;]
+        n5[&quot;ソフトウェア技術者（直接）&quot;]
+    end
+    n0 --&gt; n1
+    n1 --&gt; n2
+    n2 --&gt; n3
+    n4 --&gt;|&quot;同じ言葉で直接話す&quot;| n5
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>挟む形</td><td>間に立つ人が仕事をしていないという意味ではない。変換そのものが情報を落とすので、誰がやっても同じことが起きる。</td></tr>
+<tr><td>業務エキスパート（直接）からソフトウェア技術者（直接）</td><td>矢印は片方向に描いてあるが、この関係は双方向である。技術者からの問いが、業務エキスパート自身も気づいていなかった曖昧さを明らかにすることがある。</td></tr>
+<tr><td>2つの囲み</td><td>上下は良し悪しではなく、間に人が入るかどうかの違いだけを表す。ただしこの概念が勧めるのは下の形である。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>業務エキスパートとの関わり方でよく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">伝達の経路で知識が劣化する</span></div>
+<p>業務エキスパートから要求分析の担当者へ、仕様書へ、開発者へ、という経路では変換のたびに情報が欠落する。直接、同じ言葉で対話する。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">業務エキスパートに設計の判断を求める</span></div>
+<p>知っているのは業務活動がどうあるべきかであって、どう実装するかではない。実装の判断を委ねると、答えられないか、業務の視点から離れた答えが返ってくる。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 置き換えたもの</h2>
+  <p class="narrow">この2本は<strong>実在の企業名がそのまま書かれていた</strong>ので、これまでとは種類の違う置き換えが要りました。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書き起こし版</th><th>置き換え先</th><th>保った構造</th></tr></thead>
+      <tbody>
+        <tr><td>実在企業4社と、その事業領域</td><td>架空の会社4種（荷物を届ける／喫茶を営む／通販と計算資源の貸出／移動の仲介と料理の配達）</td><td>1社が事業領域を1つ持つ場合と、2つ持つ場合の対比</td></tr>
+        <tr><td>実在企業の実際の沿革（製紙 → ゴム → 有線通信 → 無線通信設備）</td><td>架空の沿革（印刷 → 包装材 → 物流の梱包設計）</td><td>創業時とまったく違う事業へ移りうるという主張</td></tr>
+        <tr><td>広告代理店の3職種</td><td>配送を担う会社の3職種（集荷の計画・車両の手配・実績の分析）</td><td>知識の範囲が違う複数の人が、合わせて全体をなすこと</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>機械で確認しました</h3>
+    <p>実在の企業名4社と実例（広告代理店）を grep して<strong>0件</strong>。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅴ. 13本目までの推移</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
+      <tbody>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
+        <tr><td>ubiquitous-language</td><td>99</td><td>231</td><td>177</td></tr>
+        <tr><td>design-heuristics</td><td>120</td><td>310</td><td>203</td></tr>
+        <tr><td>architecture-patterns</td><td>104</td><td>349</td><td>268</td></tr>
+        <tr><td>event-sourced-domain-model</td><td>107</td><td>501</td><td>408</td></tr>
+        <tr><td>context-integration</td><td>105</td><td>352</td><td>250</td></tr>
+        <tr><td>communication</td><td>114</td><td>303</td><td>234</td></tr>
+        <tr><td><strong>business-domain</strong></td><td><strong>79</strong></td><td><strong>121</strong></td><td><strong>58</strong></td></tr>
+        <tr><td><strong>domain-expert</strong></td><td><strong>80</strong></td><td><strong>134</strong></td><td><strong>50</strong></td></tr>
+        <tr><td><strong>13本の合計</strong></td><td><strong>1,343</strong></td><td><strong>3,611</strong></td><td><strong>3,085</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow"><strong>13 / 19本。</strong>残り6本・約1,650行です。<strong>第Ⅰ部（土台）と設計編（第4〜10章）が揃いました。</strong>残るのは実践編（イベントストーミング・現場への導入）と、応用編（マイクロサービス・イベント駆動・データメッシュ）、そして締めの経験則です。</p>
+</section>
+
+<footer>
+  旧要約版159行・書き起こし版108行・変換後255行（描画結果の実測）。<br>
+  実在の企業名と、実在企業の実際の沿革は、すべて架空の会社へ置き換えた。示している構造は保っている。<br>
+  プレビューは描画物から機械で生成した（手で書き写すと取りこぼすため）。
+</footer>
+
+</div>

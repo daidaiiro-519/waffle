@@ -1,0 +1,1026 @@
+<title>Graphvizで描ける図・描けない図</title>
+<style>
+  :root {
+    --paper:      #EDF0F3;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F7F9;
+    --ink:        #171B23;
+    --ink-soft:   #4B5563;
+    --ink-faint:  #79828F;
+    --rule:       #D3DAE2;
+    --rule-soft:  #E4E9EE;
+
+    --data:       #7A4368;
+    --data-bg:    #F3E9F0;
+    --render:     #16636B;
+    --render-bg:  #E2EFF0;
+    --warn:       #9A4A21;
+    --warn-bg:    #F7EAE2;
+    --dead:       #8A8F98;
+
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
+    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+      --rule:#2E3742; --rule-soft:#242C37;
+      --data:#D19CC0; --data-bg:#2C1F2A;
+      --render:#6BC0C7; --render-bg:#132A2C;
+      --warn:#E0A17A; --warn-bg:#2E211A;
+      --dead:#767E8A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --data:#D19CC0; --data-bg:#2C1F2A;
+    --render:#6BC0C7; --render-bg:#132A2C;
+    --warn:#E0A17A; --warn-bg:#2E211A;
+    --dead:#767E8A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.85;
+    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+  .col { max-width: 40rem; }
+
+  header { display: flex; flex-direction: column; gap: .9rem; }
+  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+  p { margin: 0; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 2.2rem; margin-top: .6rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+  .stat { display: flex; flex-direction: column; gap: .1rem; }
+  .stat b { font-family: var(--mono); font-size: 1.5rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: .78rem; color: var(--ink-faint); }
+  .stat.alarm b { color: var(--warn); }
+
+  section { display: flex; flex-direction: column; gap: 1.4rem; }
+  h2 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
+    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem;
+  }
+  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
+  h3 { font-family: var(--sans); font-size: .95rem; font-weight: 600; margin: 0; color: var(--ink-soft); }
+
+  .callout { border-left: 3px solid var(--render); background: var(--surface); padding: 1.2rem 1.4rem; border-radius: 0 10px 10px 0; display: flex; flex-direction: column; gap: .6rem; }
+  .callout.alarm { border-left-color: var(--warn); background: var(--warn-bg); }
+  .callout .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .callout p { max-width: 44rem; }
+
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; min-width: 34rem; }
+  caption { text-align: left; font-size: .8rem; color: var(--ink-faint); padding-bottom: .5rem; }
+  th, td { text-align: left; vertical-align: top; padding: .62rem .8rem; border-bottom: 1px solid var(--rule-soft); line-height: 1.6; }
+  thead th { font-size: .72rem; letter-spacing: .06em; color: var(--ink-faint); font-weight: 600; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); padding: .1em .38em; border-radius: 4px; }
+
+  .mark { font-family: var(--mono); font-weight: 600; }
+  .mark.no  { color: var(--warn); }
+  .mark.yes { color: var(--render); }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: .7rem; }
+  figure svg { display: block; width: 100%; height: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; }
+  figcaption { font-size: .8rem; color: var(--ink-faint); }
+
+  pre { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 1.1rem 1.2rem; overflow-x: auto; font-family: var(--mono); font-size: .8rem; line-height: 1.7; }
+  pre .cm { color: var(--ink-faint); }
+  pre .bad { color: var(--warn); }
+
+  .t  { font:600 12.5px "Noto Sans JP", sans-serif; }
+  .s  { font:400 10.5px "Noto Sans JP", sans-serif; }
+  .mo { font:400 10.5px "Noto Sans JP", sans-serif; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1.4rem; font-size: .82rem; color: var(--ink-faint); display: flex; flex-direction: column; gap: .5rem; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    section, figure, table { break-inside: avoid; }
+  }
+
+  .gv { display: block; width: 100%; height: auto; max-width: 100%; }
+  .plate { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 1.2rem; overflow-x: auto; }
+  .plate.tight { padding: .8rem; }
+  .verdict { display: inline-flex; align-items: baseline; gap: .35rem; font-family: var(--mono); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
+  .verdict.ok  { color: var(--render); }
+  .verdict.ng  { color: var(--warn); }
+  .case { display: flex; flex-direction: column; gap: .8rem; }
+  .case > .head { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; }
+  .case h3 { font-size: 1rem; }
+  .case .why { font-size: .86rem; color: var(--ink-soft); max-width: 44rem; }
+  .grid { display: grid; gap: 2.4rem; }
+  @media (min-width: 60rem) { .grid.two { grid-template-columns: 1fr 1fr; } }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Reference — 実測</p>
+  <h1>Graphvizで描ける図・描けない図</h1>
+  <p class="lede">図はすべて、この調査のために実際に生成したもの。座標は一行も書いていない。何が美しく出て、何が破綻するかを、能力の軸ごとに当てて確かめた。</p>
+  <div class="stats">
+    <div class="stat"><b>8</b><span>できた能力</span></div>
+    <div class="stat alarm"><b>3</b><span>できなかったこと</span></div>
+    <div class="stat alarm"><b>2</b><span>繋ぐときの罠</span></div>
+  </div>
+</header>
+
+<section id="conclusion">
+  <h2><span class="num">00</span>どういう図なら美しく出るか</h2>
+  <div class="callout">
+    <span class="k">4つの条件</span>
+    <p>次の4つを満たす図は、手で座標を書いたものより整った結果になる。ひとつでも外れると、途端に扱いにくくなる。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <caption>表1 ── 美しく出るための条件と、外れたときに起きること</caption>
+      <thead><tr><th>条件</th><th>目安</th><th>外れると</th></tr></thead>
+      <tbody>
+        <tr><td>箱の数が多すぎない</td><td class="n">おおむね 15 以下</td><td>横に延々と伸びる（25個で 3436px）</td></tr>
+        <tr><td>関係が階層か、囲みで括れる</td><td class="n">木・DAG・入れ子</td><td>集合が重なる図は作れない</td></tr>
+        <tr><td>箱の中身が定型</td><td class="n">見出し＋補足＋状態</td><td>長文は折り返されず一行で伸びる</td></tr>
+        <tr><td>縦か横のどちらかに素直に伸びる</td><td class="n">—</td><td>紙に収める操作は縮小しかなく、文字が潰れる</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="can">
+  <h2><span class="num">01</span>できたこと</h2>
+  <div class="grid">
+  
+  <div class="case" id="c-card">
+    <div class="head">
+      <h3>箱の中に表を入れて、カードにする</h3>
+      <span class="verdict ok">○ できた</span>
+    </div>
+    <p class="why">HTMLラベルを使うと、見出し帯・本文・補足を別々の大きさと色で積める。角丸の枠に色付きの帯を載せた「カード」が、装飾を手で置かずに出る。<b>見た目の水準を決めているのはこの機能</b>で、これが無いと箱に一行書くだけの図にしかならない。</p>
+    <div class="plate"><svg
+ viewBox="0.00 0.00 448.00 99.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="a_html_card__graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 94.5)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-94.5 443.5,-94.5 443.5,4 -4,4"/>
+
+<g id="a_html_card__node1" class="node">
+<title>n1</title>
+<path fill="white" stroke="#c3cad2" d="M116.5,-90.5C116.5,-90.5 12,-90.5 12,-90.5 6,-90.5 0,-84.5 0,-78.5 0,-78.5 0,-12 0,-12 0,-6 6,0 12,0 12,0 116.5,0 116.5,0 122.5,0 128.5,-6 128.5,-12 128.5,-12 128.5,-78.5 128.5,-78.5 128.5,-84.5 122.5,-90.5 116.5,-90.5"/>
+<polygon fill="#79828f" stroke="none" points="8,-61 8,-86.5 120.5,-86.5 120.5,-61 8,-61"/>
+<text xml:space="preserve" text-anchor="start" x="14" y="-70" font-family="Noto Sans JP" font-size="9.00" fill="white">既存</text>
+<text xml:space="preserve" text-anchor="start" x="14" y="-39.25" font-family="Noto Sans JP" font-size="13.00" fill="#171b23">業務ユースケース</text>
+<text xml:space="preserve" text-anchor="start" x="14" y="-13" font-family="Noto Sans JP" font-size="9.00" fill="#79828f">uc&#45;render&#45;document</text>
+</g>
+
+<g id="a_html_card__node2" class="node">
+<title>n2</title>
+<path fill="white" stroke="#c3cad2" d="M281,-90.5C281,-90.5 196,-90.5 196,-90.5 190,-90.5 184,-84.5 184,-78.5 184,-78.5 184,-12 184,-12 184,-6 190,0 196,0 196,0 281,0 281,0 287,0 293,-6 293,-12 293,-12 293,-78.5 293,-78.5 293,-84.5 287,-90.5 281,-90.5"/>
+<polygon fill="#16636b" stroke="none" points="192,-61 192,-86.5 285,-86.5 285,-61 192,-61"/>
+<text xml:space="preserve" text-anchor="start" x="198" y="-70" font-family="Noto Sans JP" font-size="9.00" fill="white">新設</text>
+<text xml:space="preserve" text-anchor="start" x="198" y="-39.25" font-family="Noto Sans JP" font-size="13.00" fill="#171b23">業務サービス</text>
+<text xml:space="preserve" text-anchor="start" x="198" y="-13" font-family="Noto Sans JP" font-size="9.00" fill="#79828f">要素の同一性を扱う</text>
+</g>
+
+<g id="a_html_card__edge1" class="edge">
+<title>n1&#45;&gt;n2</title>
+<path fill="none" stroke="#79828f" d="M128.9,-45.25C143.12,-45.25 158.21,-45.25 172.48,-45.25"/>
+<polygon fill="#79828f" stroke="#79828f" points="172.21,-48.75 182.21,-45.25 172.21,-41.75 172.21,-48.75"/>
+<text xml:space="preserve" text-anchor="middle" x="156.25" y="-50.75" font-family="Noto Sans JP" font-size="10.00" fill="#4b5563">呼ぶ</text>
+</g>
+
+<g id="a_html_card__node3" class="node">
+<title>n3</title>
+<path fill="white" stroke="#c3cad2" d="M427.5,-90.5C427.5,-90.5 380,-90.5 380,-90.5 374,-90.5 368,-84.5 368,-78.5 368,-78.5 368,-12 368,-12 368,-6 374,0 380,0 380,0 427.5,0 427.5,0 433.5,0 439.5,-6 439.5,-12 439.5,-12 439.5,-78.5 439.5,-78.5 439.5,-84.5 433.5,-90.5 427.5,-90.5"/>
+<polygon fill="#9a4a21" stroke="none" points="376,-61 376,-86.5 431.5,-86.5 431.5,-61 376,-61"/>
+<text xml:space="preserve" text-anchor="start" x="382" y="-70" font-family="Noto Sans JP" font-size="9.00" fill="white">変更</text>
+<text xml:space="preserve" text-anchor="start" x="382" y="-39.25" font-family="Noto Sans JP" font-size="13.00" fill="#171b23">集約</text>
+<text xml:space="preserve" text-anchor="start" x="382" y="-13" font-family="Noto Sans JP" font-size="9.00" fill="#79828f">Document</text>
+</g>
+
+<g id="a_html_card__edge2" class="edge">
+<title>n2&#45;&gt;n3</title>
+<path fill="none" stroke="#79828f" d="M293.41,-45.25C313.81,-45.25 336.83,-45.25 356.47,-45.25"/>
+<polygon fill="#79828f" stroke="#79828f" points="356.39,-48.75 366.39,-45.25 356.39,-41.75 356.39,-48.75"/>
+<text xml:space="preserve" text-anchor="middle" x="330.5" y="-50.75" font-family="Noto Sans JP" font-size="10.00" fill="#4b5563">更新する</text>
+</g>
+</g>
+</svg></div>
+  </div>
+  
+  <div class="case" id="c-cluster">
+    <div class="head">
+      <h3>囲みを入れ子にし、その境界を跨いで線を引く</h3>
+      <span class="verdict ok">○ できた</span>
+    </div>
+    <p class="why">「変更後」の中に「問題空間」「解決空間」を入れ、さらに囲みを跨ぐ破線の矢印を通した。<b>矢印は箱を避けて回り込む。</b>手書きのSVGで最も破綻していた部分が、宣言だけで解ける。</p>
+    <div class="plate"><svg
+ viewBox="0.00 0.00 330.00 195.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="b_nested_cluster__graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 191)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-191 326,-191 326,4 -4,4"/>
+<g id="b_nested_cluster__clust1" class="cluster">
+<title>cluster_before</title>
+<polygon fill="white" stroke="#9a4a21" stroke-dasharray="5,2" points="0,-8 0,-156 70,-156 70,-8 0,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="35" y="-142.5" font-family="Noto Sans JP" font-size="10.00" fill="#9a4a21">変更前</text>
+</g>
+<g id="b_nested_cluster__clust2" class="cluster">
+<title>cluster_after</title>
+<polygon fill="white" stroke="#c3cad2" points="78,0 78,-187 322,-187 322,0 78,0"/>
+<text xml:space="preserve" text-anchor="middle" x="200" y="-173.5" font-family="Noto Sans JP" font-size="10.00" fill="#79828f">変更後</text>
+</g>
+<g id="b_nested_cluster__clust3" class="cluster">
+<title>cluster_problem</title>
+<polygon fill="white" stroke="#16636b" stroke-dasharray="5,2" points="86,-8 86,-156 166,-156 166,-8 86,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="126" y="-142.5" font-family="Noto Sans JP" font-size="10.00" fill="#16636b">問題空間</text>
+</g>
+<g id="b_nested_cluster__clust4" class="cluster">
+<title>cluster_solution</title>
+<polygon fill="white" stroke="#16636b" stroke-dasharray="5,2" points="188,-8 188,-156 314,-156 314,-8 188,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="251" y="-142.5" font-family="Noto Sans JP" font-size="10.00" fill="#16636b">解決空間</text>
+</g>
+
+<g id="b_nested_cluster__node1" class="node">
+<title>BC</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M50,-125C50,-125 20,-125 20,-125 14,-125 8,-119 8,-113 8,-113 8,-101 8,-101 8,-95 14,-89 20,-89 20,-89 50,-89 50,-89 56,-89 62,-95 62,-101 62,-101 62,-113 62,-113 62,-119 56,-125 50,-125"/>
+<text xml:space="preserve" text-anchor="middle" x="35" y="-104.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">BC</text>
+</g>
+
+<g id="b_nested_cluster__node2" class="node">
+<title>SD</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M50,-52C50,-52 20,-52 20,-52 14,-52 8,-46 8,-40 8,-40 8,-28 8,-28 8,-22 14,-16 20,-16 20,-16 50,-16 50,-16 56,-16 62,-22 62,-28 62,-28 62,-40 62,-40 62,-46 56,-52 50,-52"/>
+<text xml:space="preserve" text-anchor="middle" x="35" y="-31.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">SD</text>
+</g>
+
+<g id="b_nested_cluster__edge1" class="edge">
+<title>BC&#45;&gt;SD</title>
+<path fill="none" stroke="#79828f" d="M35,-88.81C35,-81.23 35,-72.1 35,-63.54"/>
+<polygon fill="#79828f" stroke="#79828f" points="38.5,-63.54 35,-53.54 31.5,-63.54 38.5,-63.54"/>
+</g>
+
+<g id="b_nested_cluster__node3" class="node">
+<title>事業領域</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M146,-125C146,-125 106,-125 106,-125 100,-125 94,-119 94,-113 94,-113 94,-101 94,-101 94,-95 100,-89 106,-89 106,-89 146,-89 146,-89 152,-89 158,-95 158,-101 158,-101 158,-113 158,-113 158,-119 152,-125 146,-125"/>
+<text xml:space="preserve" text-anchor="middle" x="126" y="-104.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">事業領域</text>
+</g>
+
+<g id="b_nested_cluster__node4" class="node">
+<title>業務領域</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M146,-52C146,-52 106,-52 106,-52 100,-52 94,-46 94,-40 94,-40 94,-28 94,-28 94,-22 100,-16 106,-16 106,-16 146,-16 146,-16 152,-16 158,-22 158,-28 158,-28 158,-40 158,-40 158,-46 152,-52 146,-52"/>
+<text xml:space="preserve" text-anchor="middle" x="126" y="-31.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">業務領域</text>
+</g>
+
+<g id="b_nested_cluster__edge2" class="edge">
+<title>事業領域&#45;&gt;業務領域</title>
+<path fill="none" stroke="#79828f" d="M126,-88.81C126,-81.23 126,-72.1 126,-63.54"/>
+<polygon fill="#79828f" stroke="#79828f" points="129.5,-63.54 126,-53.54 122.5,-63.54 129.5,-63.54"/>
+</g>
+
+<g id="b_nested_cluster__node5" class="node">
+<title>区切られた文脈</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M289,-125C289,-125 213,-125 213,-125 207,-125 201,-119 201,-113 201,-113 201,-101 201,-101 201,-95 207,-89 213,-89 213,-89 289,-89 289,-89 295,-89 301,-95 301,-101 301,-101 301,-113 301,-113 301,-119 295,-125 289,-125"/>
+<text xml:space="preserve" text-anchor="middle" x="251" y="-104.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">区切られた文脈</text>
+</g>
+
+<g id="b_nested_cluster__node6" class="node">
+<title>業務ユースケース</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M294.25,-52C294.25,-52 207.75,-52 207.75,-52 201.75,-52 195.75,-46 195.75,-40 195.75,-40 195.75,-28 195.75,-28 195.75,-22 201.75,-16 207.75,-16 207.75,-16 294.25,-16 294.25,-16 300.25,-16 306.25,-22 306.25,-28 306.25,-28 306.25,-40 306.25,-40 306.25,-46 300.25,-52 294.25,-52"/>
+<text xml:space="preserve" text-anchor="middle" x="251" y="-31.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">業務ユースケース</text>
+</g>
+
+<g id="b_nested_cluster__edge3" class="edge">
+<title>区切られた文脈&#45;&gt;業務ユースケース</title>
+<path fill="none" stroke="#79828f" d="M251,-88.81C251,-81.23 251,-72.1 251,-63.54"/>
+<polygon fill="#79828f" stroke="#79828f" points="254.5,-63.54 251,-53.54 247.5,-63.54 254.5,-63.54"/>
+</g>
+
+<g id="b_nested_cluster__edge4" class="edge">
+<title>業務ユースケース&#45;&gt;業務領域</title>
+<path fill="none" stroke="#16636b" stroke-dasharray="5,2" d="M195.64,-34C186.94,-34 178.04,-34 169.65,-34"/>
+<polygon fill="#16636b" stroke="#16636b" points="169.7,-30.5 159.7,-34 169.7,-37.5 169.7,-30.5"/>
+<text xml:space="preserve" text-anchor="middle" x="176.88" y="-42.5" font-family="Noto Sans JP" font-size="10.00" fill="#4b5563">対応</text>
+</g>
+</g>
+</svg></div>
+  </div>
+  
+  <div class="case" id="c-port">
+    <div class="head">
+      <h3>箱の中の特定の行から線を出す</h3>
+      <span class="verdict ok">○ できた</span>
+    </div>
+    <p class="why">レコード型の箱では、行ごとに識別子を付けて、そこを線の始点にできる。構造体のどのフィールドがどこへ繋がるか、という図が描ける。</p>
+    <div class="plate"><svg
+ viewBox="0.00 0.00 256.00 132.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="c2_port__graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 128)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-128 252.01,-128 252.01,4 -4,4"/>
+
+<g id="c2_port__node1" class="node">
+<title>rec</title>
+<polygon fill="white" stroke="#c3cad2" points="0,-18.5 0,-123.5 85.75,-123.5 85.75,-18.5 0,-18.5"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-108.1" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">Document</text>
+<polyline fill="none" stroke="#c3cad2" points="0,-97.5 85.75,-97.5"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-82.1" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">documentId</text>
+<polyline fill="none" stroke="#c3cad2" points="0,-71.5 85.75,-71.5"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-56.1" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">content</text>
+<polyline fill="none" stroke="#c3cad2" points="0,-45.5 85.75,-45.5"/>
+<text xml:space="preserve" text-anchor="middle" x="42.88" y="-30.1" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">status</text>
+</g>
+
+<g id="c2_port__node2" class="node">
+<title>sub</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M222.88,-90C222.88,-90 146.88,-90 146.88,-90 140.88,-90 134.88,-84 134.88,-78 134.88,-78 134.88,-66 134.88,-66 134.88,-60 140.88,-54 146.88,-54 146.88,-54 222.88,-54 222.88,-54 228.88,-54 234.88,-60 234.88,-66 234.88,-66 234.88,-78 234.88,-78 234.88,-84 228.88,-90 222.88,-90"/>
+<text xml:space="preserve" text-anchor="middle" x="184.88" y="-69.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">値オブジェクト</text>
+</g>
+
+<g id="c2_port__edge1" class="edge">
+<title>rec:f1&#45;&gt;sub</title>
+<path fill="none" stroke="#79828f" d="M85.75,-58C97.94,-58 110.89,-59.07 123.25,-60.62"/>
+<polygon fill="#79828f" stroke="#79828f" points="122.52,-64.05 132.9,-61.96 123.48,-57.12 122.52,-64.05"/>
+</g>
+
+<g id="c2_port__node3" class="node">
+<title>enum</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M236.01,-36C236.01,-36 133.75,-36 133.75,-36 127.75,-36 121.75,-30 121.75,-24 121.75,-24 121.75,-12 121.75,-12 121.75,-6 127.75,0 133.75,0 133.75,0 236.01,0 236.01,0 242.01,0 248.01,-6 248.01,-12 248.01,-12 248.01,-24 248.01,-24 248.01,-30 242.01,-36 236.01,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="184.88" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">DRAFT / VALIDATED</text>
+</g>
+
+<g id="c2_port__edge2" class="edge">
+<title>rec:f2&#45;&gt;enum</title>
+<path fill="none" stroke="#79828f" d="M85.75,-32C93.74,-32 102.05,-31.54 110.31,-30.79"/>
+<polygon fill="#79828f" stroke="#79828f" points="110.43,-34.29 120.01,-29.75 109.69,-27.33 110.43,-34.29"/>
+</g>
+</g>
+</svg></div>
+  </div>
+  
+  <div class="case" id="c-rank">
+    <div class="head">
+      <h3>横一列に揃え、逆流だけ別の線で示す</h3>
+      <span class="verdict ok">○ できた</span>
+    </div>
+    <p class="why">同じ段に置く指定と、「並びに影響させない線」の指定が別々にある。工程の並びと、そこへ戻る破線を、干渉させずに描ける。</p>
+    <div class="plate"><svg
+ viewBox="0.00 0.00 342.00 77.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="d_rank_same__graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 73)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-73 338,-73 338,4 -4,4"/>
+
+<g id="d_rank_same__node1" class="node">
+<title>調べる</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M42,-36C42,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 42,0 42,0 48,0 54,-6 54,-12 54,-12 54,-24 54,-24 54,-30 48,-36 42,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">調べる</text>
+</g>
+
+<g id="d_rank_same__node2" class="node">
+<title>決める</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M132,-36C132,-36 102,-36 102,-36 96,-36 90,-30 90,-24 90,-24 90,-12 90,-12 90,-6 96,0 102,0 102,0 132,0 132,0 138,0 144,-6 144,-12 144,-12 144,-24 144,-24 144,-30 138,-36 132,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="117" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">決める</text>
+</g>
+
+<g id="d_rank_same__edge1" class="edge">
+<title>調べる&#45;&gt;決める</title>
+<path fill="none" stroke="#79828f" d="M54.42,-18C62.4,-18 70.37,-18 78.35,-18"/>
+<polygon fill="#79828f" stroke="#79828f" points="78.11,-21.5 88.11,-18 78.11,-14.5 78.11,-21.5"/>
+</g>
+
+<g id="d_rank_same__node3" class="node">
+<title>引き継ぐ</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M232,-36C232,-36 192,-36 192,-36 186,-36 180,-30 180,-24 180,-24 180,-12 180,-12 180,-6 186,0 192,0 192,0 232,0 232,0 238,0 244,-6 244,-12 244,-12 244,-24 244,-24 244,-30 238,-36 232,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="212" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">引き継ぐ</text>
+</g>
+
+<g id="d_rank_same__edge2" class="edge">
+<title>決める&#45;&gt;引き継ぐ</title>
+<path fill="none" stroke="#79828f" d="M144.46,-18C152.32,-18 160.18,-18 168.04,-18"/>
+<polygon fill="#79828f" stroke="#79828f" points="168.04,-21.5 178.04,-18 168.04,-14.5 168.04,-21.5"/>
+</g>
+
+<g id="d_rank_same__node4" class="node">
+<title>作る</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M322,-36C322,-36 292,-36 292,-36 286,-36 280,-30 280,-24 280,-24 280,-12 280,-12 280,-6 286,0 292,0 292,0 322,0 322,0 328,0 334,-6 334,-12 334,-12 334,-24 334,-24 334,-30 328,-36 322,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="307" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">作る</text>
+</g>
+
+<g id="d_rank_same__edge3" class="edge">
+<title>引き継ぐ&#45;&gt;作る</title>
+<path fill="none" stroke="#79828f" d="M244.29,-18C252.28,-18 260.27,-18 268.26,-18"/>
+<polygon fill="#79828f" stroke="#79828f" points="268.05,-21.5 278.05,-18 268.05,-14.5 268.05,-21.5"/>
+</g>
+
+<g id="d_rank_same__edge4" class="edge">
+<title>作る&#45;&gt;調べる</title>
+<path fill="none" stroke="#9a4a21" stroke-dasharray="5,2" d="M279.59,-33.81C249.92,-49.07 200.95,-68.89 157.25,-61.75 125.12,-56.5 90.22,-44.41 64.64,-34.27"/>
+<polygon fill="#9a4a21" stroke="#9a4a21" points="66.27,-31.15 55.69,-30.63 63.64,-37.64 66.27,-31.15"/>
+<text xml:space="preserve" text-anchor="middle" x="167" y="-59.5" font-family="Noto Sans JP" font-size="10.00" fill="#4b5563">戻る</text>
+</g>
+</g>
+</svg></div>
+  </div>
+  
+  <div class="case" id="c-neato">
+    <div class="head">
+      <h3>階層でない、相互に参照し合う関係</h3>
+      <span class="verdict ok">○ できた</span>
+    </div>
+    <p class="why">上下関係の無い網の目は、力学配置に切り替えると解ける。同じ宣言のままエンジンだけを差し替えられる。</p>
+    <div class="plate"><svg
+ viewBox="0.00 0.00 250.00 152.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="e_neato__graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 148.46)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-148.46 246.12,-148.46 246.12,4 -4,4"/>
+
+<g id="e_neato__node1" class="node">
+<title>schema</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M57.23,-36C57.23,-36 21.73,-36 21.73,-36 15.73,-36 9.73,-30 9.73,-24 9.73,-24 9.73,-12 9.73,-12 9.73,-6 15.73,0 21.73,0 21.73,0 57.23,0 57.23,0 63.23,0 69.23,-6 69.23,-12 69.23,-12 69.23,-24 69.23,-24 69.23,-30 63.23,-36 57.23,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="39.48" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">schema</text>
+</g>
+
+<g id="e_neato__node2" class="node">
+<title>document</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M198.9,-144.46C198.9,-144.46 148.4,-144.46 148.4,-144.46 142.4,-144.46 136.4,-138.46 136.4,-132.46 136.4,-132.46 136.4,-120.46 136.4,-120.46 136.4,-114.46 142.4,-108.46 148.4,-108.46 148.4,-108.46 198.9,-108.46 198.9,-108.46 204.9,-108.46 210.9,-114.46 210.9,-120.46 210.9,-120.46 210.9,-132.46 210.9,-132.46 210.9,-138.46 204.9,-144.46 198.9,-144.46"/>
+<text xml:space="preserve" text-anchor="middle" x="173.65" y="-124.06" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">document</text>
+</g>
+
+<g id="e_neato__edge1" class="edge">
+<title>schema&#45;&gt;document</title>
+<path fill="none" stroke="#79828f" d="M62.24,-36.4C86.92,-56.34 126.07,-87.99 150.78,-107.97"/>
+</g>
+
+<g id="e_neato__node3" class="node">
+<title>renderer</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M155.06,-43.57C155.06,-43.57 114.3,-43.57 114.3,-43.57 108.3,-43.57 102.3,-37.57 102.3,-31.57 102.3,-31.57 102.3,-19.57 102.3,-19.57 102.3,-13.57 108.3,-7.57 114.3,-7.57 114.3,-7.57 155.06,-7.57 155.06,-7.57 161.06,-7.57 167.06,-13.57 167.06,-19.57 167.06,-19.57 167.06,-31.57 167.06,-31.57 167.06,-37.57 161.06,-43.57 155.06,-43.57"/>
+<text xml:space="preserve" text-anchor="middle" x="134.68" y="-23.17" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">renderer</text>
+</g>
+
+<g id="e_neato__edge2" class="edge">
+<title>document&#45;&gt;renderer</title>
+<path fill="none" stroke="#79828f" d="M166.69,-108.42C159.64,-90.17 148.8,-62.11 141.72,-43.79"/>
+</g>
+
+<g id="e_neato__node4" class="node">
+<title>validator</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M54.25,-138.49C54.25,-138.49 12,-138.49 12,-138.49 6,-138.49 0,-132.49 0,-126.49 0,-126.49 0,-114.49 0,-114.49 0,-108.49 6,-102.49 12,-102.49 12,-102.49 54.25,-102.49 54.25,-102.49 60.25,-102.49 66.25,-108.49 66.25,-114.49 66.25,-114.49 66.25,-126.49 66.25,-126.49 66.25,-132.49 60.25,-138.49 54.25,-138.49"/>
+<text xml:space="preserve" text-anchor="middle" x="33.13" y="-118.09" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">validator</text>
+</g>
+
+<g id="e_neato__edge4" class="edge">
+<title>document&#45;&gt;validator</title>
+<path fill="none" stroke="#79828f" d="M135.99,-124.86C114.37,-123.94 87.45,-122.79 66.57,-121.91"/>
+</g>
+
+<g id="e_neato__edge3" class="edge">
+<title>renderer&#45;&gt;schema</title>
+<path fill="none" stroke="#79828f" d="M101.92,-22.97C91.38,-22.13 79.76,-21.2 69.43,-20.38"/>
+</g>
+
+<g id="e_neato__node5" class="node">
+<title>viewer</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M230.12,-41.05C230.12,-41.05 200.12,-41.05 200.12,-41.05 194.12,-41.05 188.12,-35.05 188.12,-29.05 188.12,-29.05 188.12,-17.05 188.12,-17.05 188.12,-11.05 194.12,-5.05 200.12,-5.05 200.12,-5.05 230.12,-5.05 230.12,-5.05 236.12,-5.05 242.12,-11.05 242.12,-17.05 242.12,-17.05 242.12,-29.05 242.12,-29.05 242.12,-35.05 236.12,-41.05 230.12,-41.05"/>
+<text xml:space="preserve" text-anchor="middle" x="215.12" y="-20.65" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">viewer</text>
+</g>
+
+<g id="e_neato__edge6" class="edge">
+<title>renderer&#45;&gt;viewer</title>
+<path fill="none" stroke="#79828f" d="M167.4,-24.55C174.18,-24.33 181.26,-24.11 187.83,-23.91"/>
+</g>
+
+<g id="e_neato__edge5" class="edge">
+<title>validator&#45;&gt;schema</title>
+<path fill="none" stroke="#79828f" d="M34.26,-102.16C35.42,-83.51 37.2,-54.76 38.36,-36.16"/>
+</g>
+</g>
+</svg></div>
+  </div>
+  
+  <div class="case" id="c-fixed">
+    <div class="head">
+      <h3>座標を自分で決めて、その通りに置かせる</h3>
+      <span class="verdict ok">○ できた</span>
+    </div>
+    <p class="why">配置を機械に任せず、こちらで決めることもできる。<b>逃げ道として重要</b>で、どうしても納得のいく配置が出ないときにここへ降りられる。</p>
+    <div class="plate"><svg
+ viewBox="0.00 0.00 278.00 188.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="j_fixed_pos__graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 184)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-184 274,-184 274,4 -4,4"/>
+
+<g id="j_fixed_pos__node1" class="node">
+<title>左上</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M42,-180C42,-180 12,-180 12,-180 6,-180 0,-174 0,-168 0,-168 0,-156 0,-156 0,-150 6,-144 12,-144 12,-144 42,-144 42,-144 48,-144 54,-150 54,-156 54,-156 54,-168 54,-168 54,-174 48,-180 42,-180"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-159.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">左上</text>
+</g>
+
+<g id="j_fixed_pos__node3" class="node">
+<title>中央</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M150,-108C150,-108 120,-108 120,-108 114,-108 108,-102 108,-96 108,-96 108,-84 108,-84 108,-78 114,-72 120,-72 120,-72 150,-72 150,-72 156,-72 162,-78 162,-84 162,-84 162,-96 162,-96 162,-102 156,-108 150,-108"/>
+<text xml:space="preserve" text-anchor="middle" x="135" y="-87.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">中央</text>
+</g>
+
+<g id="j_fixed_pos__edge1" class="edge">
+<title>左上&#45;&gt;中央</title>
+<path fill="none" stroke="#79828f" d="M54.25,-143.83C67.68,-134.88 84.07,-123.96 98.56,-114.3"/>
+<polygon fill="#79828f" stroke="#79828f" points="100.12,-117.46 106.5,-109 96.24,-111.64 100.12,-117.46"/>
+</g>
+
+<g id="j_fixed_pos__node2" class="node">
+<title>右上</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M258,-180C258,-180 228,-180 228,-180 222,-180 216,-174 216,-168 216,-168 216,-156 216,-156 216,-150 222,-144 228,-144 228,-144 258,-144 258,-144 264,-144 270,-150 270,-156 270,-156 270,-168 270,-168 270,-174 264,-180 258,-180"/>
+<text xml:space="preserve" text-anchor="middle" x="243" y="-159.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">右上</text>
+</g>
+
+<g id="j_fixed_pos__edge2" class="edge">
+<title>右上&#45;&gt;中央</title>
+<path fill="none" stroke="#79828f" d="M215.75,-143.83C202.32,-134.88 185.93,-123.96 171.44,-114.3"/>
+<polygon fill="#79828f" stroke="#79828f" points="173.76,-111.64 163.5,-109 169.87,-117.46 173.76,-111.64"/>
+</g>
+
+<g id="j_fixed_pos__node4" class="node">
+<title>左下</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M42,-36C42,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 42,0 42,0 48,0 54,-6 54,-12 54,-12 54,-24 54,-24 54,-30 48,-36 42,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">左下</text>
+</g>
+
+<g id="j_fixed_pos__edge3" class="edge">
+<title>中央&#45;&gt;左下</title>
+<path fill="none" stroke="#79828f" d="M107.75,-71.83C94.32,-62.88 77.93,-51.96 63.44,-42.3"/>
+<polygon fill="#79828f" stroke="#79828f" points="65.77,-39.64 55.5,-37 61.88,-45.46 65.77,-39.64"/>
+</g>
+
+<g id="j_fixed_pos__node5" class="node">
+<title>右下</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M258,-36C258,-36 228,-36 228,-36 222,-36 216,-30 216,-24 216,-24 216,-12 216,-12 216,-6 222,0 228,0 228,0 258,0 258,0 264,0 270,-6 270,-12 270,-12 270,-24 270,-24 270,-30 264,-36 258,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="243" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">右下</text>
+</g>
+
+<g id="j_fixed_pos__edge4" class="edge">
+<title>中央&#45;&gt;右下</title>
+<path fill="none" stroke="#79828f" d="M162.25,-71.83C175.68,-62.88 192.07,-51.96 206.56,-42.3"/>
+<polygon fill="#79828f" stroke="#79828f" points="208.12,-45.46 214.5,-37 204.24,-39.64 208.12,-45.46"/>
+</g>
+</g>
+</svg></div>
+  </div>
+  </div>
+</section>
+
+<section id="cannot">
+  <h2><span class="num">02</span>できなかったこと</h2>
+  <div class="grid">
+  
+  <div class="case" id="x-overlap">
+    <div class="head">
+      <h3>重なる集合を描く</h3>
+      <span class="verdict ng">✗ できなかった</span>
+    </div>
+    <p class="why">ひとつの箱を2つの囲みに入れようとすると、<b>片方から黙って消える</b>。エラーも警告も出ない。集合の重なりを見せる図は、この道具では作れない。</p>
+    <div class="plate"><svg
+ viewBox="0.00 0.00 228.00 83.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="i_overlap__graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 79)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-79 224,-79 224,4 -4,4"/>
+<g id="i_overlap__clust1" class="cluster">
+<title>cluster_a</title>
+<polygon fill="white" stroke="#9a4a21" stroke-dasharray="5,2" points="0,0 0,-75 142,-75 142,0 0,0"/>
+<text xml:space="preserve" text-anchor="middle" x="71" y="-61.5" font-family="Noto Sans JP" font-size="10.00" fill="#9a4a21">集合A</text>
+</g>
+<g id="i_overlap__clust2" class="cluster">
+<title>cluster_b</title>
+<polygon fill="white" stroke="#16636b" stroke-dasharray="5,2" points="150,0 150,-75 220,-75 220,0 150,0"/>
+<text xml:space="preserve" text-anchor="middle" x="185" y="-61.5" font-family="Noto Sans JP" font-size="10.00" fill="#16636b">集合B</text>
+</g>
+
+<g id="i_overlap__node1" class="node">
+<title>共有</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M50,-44C50,-44 20,-44 20,-44 14,-44 8,-38 8,-32 8,-32 8,-20 8,-20 8,-14 14,-8 20,-8 20,-8 50,-8 50,-8 56,-8 62,-14 62,-20 62,-20 62,-32 62,-32 62,-38 56,-44 50,-44"/>
+<text xml:space="preserve" text-anchor="middle" x="35" y="-23.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">共有</text>
+</g>
+
+<g id="i_overlap__node2" class="node">
+<title>Aだけ</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M122,-44C122,-44 92,-44 92,-44 86,-44 80,-38 80,-32 80,-32 80,-20 80,-20 80,-14 86,-8 92,-8 92,-8 122,-8 122,-8 128,-8 134,-14 134,-20 134,-20 134,-32 134,-32 134,-38 128,-44 122,-44"/>
+<text xml:space="preserve" text-anchor="middle" x="107" y="-23.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">Aだけ</text>
+</g>
+
+<g id="i_overlap__node3" class="node">
+<title>Bだけ</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M200,-44C200,-44 170,-44 170,-44 164,-44 158,-38 158,-32 158,-32 158,-20 158,-20 158,-14 164,-8 170,-8 170,-8 200,-8 200,-8 206,-8 212,-14 212,-20 212,-20 212,-32 212,-32 212,-38 206,-44 200,-44"/>
+<text xml:space="preserve" text-anchor="middle" x="185" y="-23.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">Bだけ</text>
+</g>
+</g>
+</svg></div>
+  </div>
+  
+  <div class="case" id="x-wrap">
+    <div class="head">
+      <h3>長い文を自動で折り返す</h3>
+      <span class="verdict ng">✗ できなかった</span>
+    </div>
+    <p class="why">左が渡したまま、右が改行を自分で入れた場合。<b>折り返しの判断は一切しない。</b>箱の幅を揃えたければ、文の長さをこちらで管理することになる。</p>
+    <div class="plate"><svg
+ viewBox="0.00 0.00 467.00 142.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="h_wrap__graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 138)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-138 462.5,-138 462.5,4 -4,4"/>
+
+<g id="h_wrap__node1" class="node">
+<title>plain</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M446.5,-134C446.5,-134 12,-134 12,-134 6,-134 0,-128 0,-122 0,-122 0,-110 0,-110 0,-104 6,-98 12,-98 12,-98 446.5,-98 446.5,-98 452.5,-98 458.5,-104 458.5,-110 458.5,-110 458.5,-122 458.5,-122 458.5,-128 452.5,-134 446.5,-134"/>
+<text xml:space="preserve" text-anchor="middle" x="229.25" y="-113.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">宣言された置き場所を正本とし、実装側の決め打ちを消す。これは長い一文である</text>
+</g>
+
+<g id="h_wrap__node2" class="node">
+<title>br</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M315.25,-62C315.25,-62 143.25,-62 143.25,-62 137.25,-62 131.25,-56 131.25,-50 131.25,-50 131.25,-12 131.25,-12 131.25,-6 137.25,0 143.25,0 143.25,0 315.25,0 315.25,0 321.25,0 327.25,-6 327.25,-12 327.25,-12 327.25,-50 327.25,-50 327.25,-56 321.25,-62 315.25,-62"/>
+<text xml:space="preserve" text-anchor="middle" x="229.25" y="-46.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">宣言された置き場所を正本とし、</text>
+<text xml:space="preserve" text-anchor="middle" x="229.25" y="-28.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">実装側の決め打ちを消す。</text>
+<text xml:space="preserve" text-anchor="middle" x="229.25" y="-10.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">これは改行を自分で入れた場合</text>
+</g>
+
+<g id="h_wrap__edge1" class="edge">
+<title>plain&#45;&gt;br</title>
+<path fill="none" stroke="#79828f" d="M229.25,-97.8C229.25,-90.75 229.25,-82.25 229.25,-73.75"/>
+<polygon fill="#79828f" stroke="#79828f" points="232.75,-73.78 229.25,-63.78 225.75,-73.78 232.75,-73.78"/>
+</g>
+</g>
+</svg></div>
+  </div>
+  
+  <div class="case" id="x-scale">
+    <div class="head">
+      <h3>大きくなった図を紙の形へ畳む</h3>
+      <span class="verdict ng">✗ できなかった</span>
+    </div>
+    <p class="why">25個の箱を横 7 インチに収める指定をした結果。<b>畳むのではなく縮める</b>ので、文字が読めなくなる。折り返して段を作る機能は無い。</p>
+    <div class="plate tight"><svg
+ viewBox="0.00 0.00 504.00 33.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="k_scale_compressed__graph0" class="graph" transform="scale(0.309963 0.309963) rotate(0) translate(4 101)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-101 1622,-101 1622,4 -4,4"/>
+
+<g id="k_scale_compressed__node1" class="node">
+<title>層1</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M178,-97C178,-97 148,-97 148,-97 142,-97 136,-91 136,-85 136,-85 136,-73 136,-73 136,-67 142,-61 148,-61 148,-61 178,-61 178,-61 184,-61 190,-67 190,-73 190,-73 190,-85 190,-85 190,-91 184,-97 178,-97"/>
+<text xml:space="preserve" text-anchor="middle" x="163" y="-76.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">層1</text>
+</g>
+
+<g id="k_scale_compressed__node2" class="node">
+<title>要素01</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M42,-36C42,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 42,0 42,0 48,0 54,-6 54,-12 54,-12 54,-24 54,-24 54,-30 48,-36 42,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素01</text>
+</g>
+
+<g id="k_scale_compressed__edge1" class="edge">
+<title>層1&#45;&gt;要素01</title>
+<path fill="none" stroke="#79828f" d="M135.93,-67.48C117.5,-60.18 92.37,-49.98 64.69,-37.57"/>
+<polygon fill="#79828f" stroke="#79828f" points="66.31,-34.47 55.76,-33.53 63.43,-40.84 66.31,-34.47"/>
+</g>
+
+<g id="k_scale_compressed__node3" class="node">
+<title>要素02</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M110,-36C110,-36 80,-36 80,-36 74,-36 68,-30 68,-24 68,-24 68,-12 68,-12 68,-6 74,0 80,0 80,0 110,0 110,0 116,0 122,-6 122,-12 122,-12 122,-24 122,-24 122,-30 116,-36 110,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="95" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素02</text>
+</g>
+
+<g id="k_scale_compressed__edge2" class="edge">
+<title>層1&#45;&gt;要素02</title>
+<path fill="none" stroke="#79828f" d="M142.97,-60.62C136.93,-55.38 130.19,-49.53 123.71,-43.91"/>
+<polygon fill="#79828f" stroke="#79828f" points="126.12,-41.37 116.27,-37.45 121.53,-46.65 126.12,-41.37"/>
+</g>
+
+<g id="k_scale_compressed__node4" class="node">
+<title>要素03</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M178,-36C178,-36 148,-36 148,-36 142,-36 136,-30 136,-24 136,-24 136,-12 136,-12 136,-6 142,0 148,0 148,0 178,0 178,0 184,0 190,-6 190,-12 190,-12 190,-24 190,-24 190,-30 184,-36 178,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="163" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素03</text>
+</g>
+
+<g id="k_scale_compressed__edge3" class="edge">
+<title>層1&#45;&gt;要素03</title>
+<path fill="none" stroke="#79828f" d="M163,-60.62C163,-56.57 163,-52.16 163,-47.77"/>
+<polygon fill="#79828f" stroke="#79828f" points="166.5,-47.98 163,-37.98 159.5,-47.98 166.5,-47.98"/>
+</g>
+
+<g id="k_scale_compressed__node5" class="node">
+<title>要素04</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M246,-36C246,-36 216,-36 216,-36 210,-36 204,-30 204,-24 204,-24 204,-12 204,-12 204,-6 210,0 216,0 216,0 246,0 246,0 252,0 258,-6 258,-12 258,-12 258,-24 258,-24 258,-30 252,-36 246,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="231" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素04</text>
+</g>
+
+<g id="k_scale_compressed__edge4" class="edge">
+<title>層1&#45;&gt;要素04</title>
+<path fill="none" stroke="#79828f" d="M183.03,-60.62C189.07,-55.38 195.81,-49.53 202.29,-43.91"/>
+<polygon fill="#79828f" stroke="#79828f" points="204.47,-46.65 209.73,-37.45 199.88,-41.37 204.47,-46.65"/>
+</g>
+
+<g id="k_scale_compressed__node6" class="node">
+<title>要素05</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M314,-36C314,-36 284,-36 284,-36 278,-36 272,-30 272,-24 272,-24 272,-12 272,-12 272,-6 278,0 284,0 284,0 314,0 314,0 320,0 326,-6 326,-12 326,-12 326,-24 326,-24 326,-30 320,-36 314,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="299" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素05</text>
+</g>
+
+<g id="k_scale_compressed__edge5" class="edge">
+<title>層1&#45;&gt;要素05</title>
+<path fill="none" stroke="#79828f" d="M190.07,-67.48C208.5,-60.18 233.63,-49.98 261.31,-37.57"/>
+<polygon fill="#79828f" stroke="#79828f" points="262.58,-40.84 270.24,-33.53 259.69,-34.47 262.58,-40.84"/>
+</g>
+
+<g id="k_scale_compressed__node7" class="node">
+<title>層2</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M552,-97C552,-97 522,-97 522,-97 516,-97 510,-91 510,-85 510,-85 510,-73 510,-73 510,-67 516,-61 522,-61 522,-61 552,-61 552,-61 558,-61 564,-67 564,-73 564,-73 564,-85 564,-85 564,-91 558,-97 552,-97"/>
+<text xml:space="preserve" text-anchor="middle" x="537" y="-76.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">層2</text>
+</g>
+
+<g id="k_scale_compressed__node8" class="node">
+<title>要素06</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M382,-36C382,-36 352,-36 352,-36 346,-36 340,-30 340,-24 340,-24 340,-12 340,-12 340,-6 346,0 352,0 352,0 382,0 382,0 388,0 394,-6 394,-12 394,-12 394,-24 394,-24 394,-30 388,-36 382,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="367" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素06</text>
+</g>
+
+<g id="k_scale_compressed__edge6" class="edge">
+<title>層2&#45;&gt;要素06</title>
+<path fill="none" stroke="#79828f" d="M509.71,-70.99C484.15,-64.13 444.77,-52.78 404.74,-37.27"/>
+<polygon fill="#79828f" stroke="#79828f" points="406.28,-34.12 395.7,-33.68 403.7,-40.62 406.28,-34.12"/>
+</g>
+
+<g id="k_scale_compressed__node9" class="node">
+<title>要素07</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M450,-36C450,-36 420,-36 420,-36 414,-36 408,-30 408,-24 408,-24 408,-12 408,-12 408,-6 414,0 420,0 420,0 450,0 450,0 456,0 462,-6 462,-12 462,-12 462,-24 462,-24 462,-30 456,-36 450,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="435" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素07</text>
+</g>
+
+<g id="k_scale_compressed__edge7" class="edge">
+<title>層2&#45;&gt;要素07</title>
+<path fill="none" stroke="#79828f" d="M509.67,-62.19C498.12,-55.51 484.49,-47.63 472.06,-40.44"/>
+<polygon fill="#79828f" stroke="#79828f" points="474.13,-37.59 463.72,-35.61 470.62,-43.65 474.13,-37.59"/>
+</g>
+
+<g id="k_scale_compressed__node10" class="node">
+<title>要素08</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M518,-36C518,-36 488,-36 488,-36 482,-36 476,-30 476,-24 476,-24 476,-12 476,-12 476,-6 482,0 488,0 488,0 518,0 518,0 524,0 530,-6 530,-12 530,-12 530,-24 530,-24 530,-30 524,-36 518,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="503" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素08</text>
+</g>
+
+<g id="k_scale_compressed__edge8" class="edge">
+<title>層2&#45;&gt;要素08</title>
+<path fill="none" stroke="#79828f" d="M526.98,-60.62C524.38,-56.1 521.51,-51.12 518.69,-46.22"/>
+<polygon fill="#79828f" stroke="#79828f" points="521.85,-44.69 513.82,-37.77 515.78,-48.18 521.85,-44.69"/>
+</g>
+
+<g id="k_scale_compressed__node11" class="node">
+<title>要素09</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M586,-36C586,-36 556,-36 556,-36 550,-36 544,-30 544,-24 544,-24 544,-12 544,-12 544,-6 550,0 556,0 556,0 586,0 586,0 592,0 598,-6 598,-12 598,-12 598,-24 598,-24 598,-30 592,-36 586,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="571" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素09</text>
+</g>
+
+<g id="k_scale_compressed__edge9" class="edge">
+<title>層2&#45;&gt;要素09</title>
+<path fill="none" stroke="#79828f" d="M547.02,-60.62C549.62,-56.1 552.49,-51.12 555.31,-46.22"/>
+<polygon fill="#79828f" stroke="#79828f" points="558.22,-48.18 560.18,-37.77 552.15,-44.69 558.22,-48.18"/>
+</g>
+
+<g id="k_scale_compressed__node12" class="node">
+<title>要素10</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M654,-36C654,-36 624,-36 624,-36 618,-36 612,-30 612,-24 612,-24 612,-12 612,-12 612,-6 618,0 624,0 624,0 654,0 654,0 660,0 666,-6 666,-12 666,-12 666,-24 666,-24 666,-30 660,-36 654,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="639" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素10</text>
+</g>
+
+<g id="k_scale_compressed__edge10" class="edge">
+<title>層2&#45;&gt;要素10</title>
+<path fill="none" stroke="#79828f" d="M564.33,-62.19C575.88,-55.51 589.51,-47.63 601.94,-40.44"/>
+<polygon fill="#79828f" stroke="#79828f" points="603.38,-43.65 610.28,-35.61 599.87,-37.59 603.38,-43.65"/>
+</g>
+
+<g id="k_scale_compressed__node13" class="node">
+<title>要素11</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M722,-36C722,-36 692,-36 692,-36 686,-36 680,-30 680,-24 680,-24 680,-12 680,-12 680,-6 686,0 692,0 692,0 722,0 722,0 728,0 734,-6 734,-12 734,-12 734,-24 734,-24 734,-30 728,-36 722,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="707" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素11</text>
+</g>
+
+<g id="k_scale_compressed__edge11" class="edge">
+<title>層2&#45;&gt;要素11</title>
+<path fill="none" stroke="#79828f" d="M564.29,-70.99C589.85,-64.13 629.23,-52.78 669.26,-37.27"/>
+<polygon fill="#79828f" stroke="#79828f" points="670.3,-40.62 678.3,-33.68 667.72,-34.12 670.3,-40.62"/>
+</g>
+
+<g id="k_scale_compressed__node14" class="node">
+<title>層3</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M960,-97C960,-97 930,-97 930,-97 924,-97 918,-91 918,-85 918,-85 918,-73 918,-73 918,-67 924,-61 930,-61 930,-61 960,-61 960,-61 966,-61 972,-67 972,-73 972,-73 972,-85 972,-85 972,-91 966,-97 960,-97"/>
+<text xml:space="preserve" text-anchor="middle" x="945" y="-76.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">層3</text>
+</g>
+
+<g id="k_scale_compressed__node15" class="node">
+<title>要素12</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M790,-36C790,-36 760,-36 760,-36 754,-36 748,-30 748,-24 748,-24 748,-12 748,-12 748,-6 754,0 760,0 760,0 790,0 790,0 796,0 802,-6 802,-12 802,-12 802,-24 802,-24 802,-30 796,-36 790,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="775" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素12</text>
+</g>
+
+<g id="k_scale_compressed__edge12" class="edge">
+<title>層3&#45;&gt;要素12</title>
+<path fill="none" stroke="#79828f" d="M917.71,-70.99C892.15,-64.13 852.77,-52.78 812.74,-37.27"/>
+<polygon fill="#79828f" stroke="#79828f" points="814.28,-34.12 803.7,-33.68 811.7,-40.62 814.28,-34.12"/>
+</g>
+
+<g id="k_scale_compressed__node16" class="node">
+<title>要素13</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M858,-36C858,-36 828,-36 828,-36 822,-36 816,-30 816,-24 816,-24 816,-12 816,-12 816,-6 822,0 828,0 828,0 858,0 858,0 864,0 870,-6 870,-12 870,-12 870,-24 870,-24 870,-30 864,-36 858,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="843" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素13</text>
+</g>
+
+<g id="k_scale_compressed__edge13" class="edge">
+<title>層3&#45;&gt;要素13</title>
+<path fill="none" stroke="#79828f" d="M917.67,-62.19C906.12,-55.51 892.49,-47.63 880.06,-40.44"/>
+<polygon fill="#79828f" stroke="#79828f" points="882.13,-37.59 871.72,-35.61 878.62,-43.65 882.13,-37.59"/>
+</g>
+
+<g id="k_scale_compressed__node17" class="node">
+<title>要素14</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M926,-36C926,-36 896,-36 896,-36 890,-36 884,-30 884,-24 884,-24 884,-12 884,-12 884,-6 890,0 896,0 896,0 926,0 926,0 932,0 938,-6 938,-12 938,-12 938,-24 938,-24 938,-30 932,-36 926,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="911" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素14</text>
+</g>
+
+<g id="k_scale_compressed__edge14" class="edge">
+<title>層3&#45;&gt;要素14</title>
+<path fill="none" stroke="#79828f" d="M934.98,-60.62C932.38,-56.1 929.51,-51.12 926.69,-46.22"/>
+<polygon fill="#79828f" stroke="#79828f" points="929.85,-44.69 921.82,-37.77 923.78,-48.18 929.85,-44.69"/>
+</g>
+
+<g id="k_scale_compressed__node18" class="node">
+<title>要素15</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M994,-36C994,-36 964,-36 964,-36 958,-36 952,-30 952,-24 952,-24 952,-12 952,-12 952,-6 958,0 964,0 964,0 994,0 994,0 1000,0 1006,-6 1006,-12 1006,-12 1006,-24 1006,-24 1006,-30 1000,-36 994,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="979" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素15</text>
+</g>
+
+<g id="k_scale_compressed__edge15" class="edge">
+<title>層3&#45;&gt;要素15</title>
+<path fill="none" stroke="#79828f" d="M955.02,-60.62C957.62,-56.1 960.49,-51.12 963.31,-46.22"/>
+<polygon fill="#79828f" stroke="#79828f" points="966.22,-48.18 968.18,-37.77 960.15,-44.69 966.22,-48.18"/>
+</g>
+
+<g id="k_scale_compressed__node19" class="node">
+<title>要素16</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1062,-36C1062,-36 1032,-36 1032,-36 1026,-36 1020,-30 1020,-24 1020,-24 1020,-12 1020,-12 1020,-6 1026,0 1032,0 1032,0 1062,0 1062,0 1068,0 1074,-6 1074,-12 1074,-12 1074,-24 1074,-24 1074,-30 1068,-36 1062,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1047" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素16</text>
+</g>
+
+<g id="k_scale_compressed__edge16" class="edge">
+<title>層3&#45;&gt;要素16</title>
+<path fill="none" stroke="#79828f" d="M972.33,-62.19C983.88,-55.51 997.51,-47.63 1009.9,-40.44"/>
+<polygon fill="#79828f" stroke="#79828f" points="1011.37,-43.63 1018.29,-35.61 1007.87,-37.56 1011.37,-43.63"/>
+</g>
+
+<g id="k_scale_compressed__node20" class="node">
+<title>要素17</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1130,-36C1130,-36 1100,-36 1100,-36 1094,-36 1088,-30 1088,-24 1088,-24 1088,-12 1088,-12 1088,-6 1094,0 1100,0 1100,0 1130,0 1130,0 1136,0 1142,-6 1142,-12 1142,-12 1142,-24 1142,-24 1142,-30 1136,-36 1130,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1115" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素17</text>
+</g>
+
+<g id="k_scale_compressed__edge17" class="edge">
+<title>層3&#45;&gt;要素17</title>
+<path fill="none" stroke="#79828f" d="M972.29,-70.99C997.85,-64.13 1037.2,-52.78 1077.3,-37.27"/>
+<polygon fill="#79828f" stroke="#79828f" points="1078.3,-40.64 1086.29,-33.69 1075.71,-34.14 1078.3,-40.64"/>
+</g>
+
+<g id="k_scale_compressed__node21" class="node">
+<title>層4</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1368,-97C1368,-97 1338,-97 1338,-97 1332,-97 1326,-91 1326,-85 1326,-85 1326,-73 1326,-73 1326,-67 1332,-61 1338,-61 1338,-61 1368,-61 1368,-61 1374,-61 1380,-67 1380,-73 1380,-73 1380,-85 1380,-85 1380,-91 1374,-97 1368,-97"/>
+<text xml:space="preserve" text-anchor="middle" x="1353" y="-76.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">層4</text>
+</g>
+
+<g id="k_scale_compressed__node22" class="node">
+<title>要素18</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1198,-36C1198,-36 1168,-36 1168,-36 1162,-36 1156,-30 1156,-24 1156,-24 1156,-12 1156,-12 1156,-6 1162,0 1168,0 1168,0 1198,0 1198,0 1204,0 1210,-6 1210,-12 1210,-12 1210,-24 1210,-24 1210,-30 1204,-36 1198,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1183" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素18</text>
+</g>
+
+<g id="k_scale_compressed__edge18" class="edge">
+<title>層4&#45;&gt;要素18</title>
+<path fill="none" stroke="#79828f" d="M1325.7,-70.99C1300.1,-64.13 1260.8,-52.78 1220.7,-37.27"/>
+<polygon fill="#79828f" stroke="#79828f" points="1222.29,-34.14 1211.71,-33.69 1219.7,-40.64 1222.29,-34.14"/>
+</g>
+
+<g id="k_scale_compressed__node23" class="node">
+<title>要素19</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1266,-36C1266,-36 1236,-36 1236,-36 1230,-36 1224,-30 1224,-24 1224,-24 1224,-12 1224,-12 1224,-6 1230,0 1236,0 1236,0 1266,0 1266,0 1272,0 1278,-6 1278,-12 1278,-12 1278,-24 1278,-24 1278,-30 1272,-36 1266,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1251" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素19</text>
+</g>
+
+<g id="k_scale_compressed__edge19" class="edge">
+<title>層4&#45;&gt;要素19</title>
+<path fill="none" stroke="#79828f" d="M1325.7,-62.19C1314.1,-55.51 1300.5,-47.63 1288.1,-40.44"/>
+<polygon fill="#79828f" stroke="#79828f" points="1290.13,-37.56 1279.71,-35.61 1286.63,-43.63 1290.13,-37.56"/>
+</g>
+
+<g id="k_scale_compressed__node24" class="node">
+<title>要素20</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1334,-36C1334,-36 1304,-36 1304,-36 1298,-36 1292,-30 1292,-24 1292,-24 1292,-12 1292,-12 1292,-6 1298,0 1304,0 1304,0 1334,0 1334,0 1340,0 1346,-6 1346,-12 1346,-12 1346,-24 1346,-24 1346,-30 1340,-36 1334,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1319" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素20</text>
+</g>
+
+<g id="k_scale_compressed__edge20" class="edge">
+<title>層4&#45;&gt;要素20</title>
+<path fill="none" stroke="#79828f" d="M1343,-60.62C1340.4,-56.1 1337.5,-51.12 1334.7,-46.22"/>
+<polygon fill="#79828f" stroke="#79828f" points="1337.87,-44.71 1329.85,-37.77 1331.8,-48.19 1337.87,-44.71"/>
+</g>
+
+<g id="k_scale_compressed__node25" class="node">
+<title>要素21</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1402,-36C1402,-36 1372,-36 1372,-36 1366,-36 1360,-30 1360,-24 1360,-24 1360,-12 1360,-12 1360,-6 1366,0 1372,0 1372,0 1402,0 1402,0 1408,0 1414,-6 1414,-12 1414,-12 1414,-24 1414,-24 1414,-30 1408,-36 1402,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1387" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素21</text>
+</g>
+
+<g id="k_scale_compressed__edge21" class="edge">
+<title>層4&#45;&gt;要素21</title>
+<path fill="none" stroke="#79828f" d="M1363,-60.62C1365.6,-56.1 1368.5,-51.12 1371.3,-46.22"/>
+<polygon fill="#79828f" stroke="#79828f" points="1374.2,-48.19 1376.15,-37.77 1368.13,-44.71 1374.2,-48.19"/>
+</g>
+
+<g id="k_scale_compressed__node26" class="node">
+<title>要素22</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1470,-36C1470,-36 1440,-36 1440,-36 1434,-36 1428,-30 1428,-24 1428,-24 1428,-12 1428,-12 1428,-6 1434,0 1440,0 1440,0 1470,0 1470,0 1476,0 1482,-6 1482,-12 1482,-12 1482,-24 1482,-24 1482,-30 1476,-36 1470,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1455" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素22</text>
+</g>
+
+<g id="k_scale_compressed__edge22" class="edge">
+<title>層4&#45;&gt;要素22</title>
+<path fill="none" stroke="#79828f" d="M1380.3,-62.19C1391.9,-55.51 1405.5,-47.63 1417.9,-40.44"/>
+<polygon fill="#79828f" stroke="#79828f" points="1419.37,-43.63 1426.29,-35.61 1415.87,-37.56 1419.37,-43.63"/>
+</g>
+
+<g id="k_scale_compressed__node27" class="node">
+<title>要素23</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1538,-36C1538,-36 1508,-36 1508,-36 1502,-36 1496,-30 1496,-24 1496,-24 1496,-12 1496,-12 1496,-6 1502,0 1508,0 1508,0 1538,0 1538,0 1544,0 1550,-6 1550,-12 1550,-12 1550,-24 1550,-24 1550,-30 1544,-36 1538,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1523" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素23</text>
+</g>
+
+<g id="k_scale_compressed__edge23" class="edge">
+<title>層4&#45;&gt;要素23</title>
+<path fill="none" stroke="#79828f" d="M1380.3,-70.99C1405.9,-64.13 1445.2,-52.78 1485.3,-37.27"/>
+<polygon fill="#79828f" stroke="#79828f" points="1486.3,-40.64 1494.29,-33.69 1483.71,-34.14 1486.3,-40.64"/>
+</g>
+
+<g id="k_scale_compressed__node28" class="node">
+<title>層5</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1606,-97C1606,-97 1576,-97 1576,-97 1570,-97 1564,-91 1564,-85 1564,-85 1564,-73 1564,-73 1564,-67 1570,-61 1576,-61 1576,-61 1606,-61 1606,-61 1612,-61 1618,-67 1618,-73 1618,-73 1618,-85 1618,-85 1618,-91 1612,-97 1606,-97"/>
+<text xml:space="preserve" text-anchor="middle" x="1591" y="-76.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">層5</text>
+</g>
+
+<g id="k_scale_compressed__node29" class="node">
+<title>要素24</title>
+<path fill="#f5f7f9" stroke="#c3cad2" d="M1606,-36C1606,-36 1576,-36 1576,-36 1570,-36 1564,-30 1564,-24 1564,-24 1564,-12 1564,-12 1564,-6 1570,0 1576,0 1576,0 1606,0 1606,0 1612,0 1618,-6 1618,-12 1618,-12 1618,-24 1618,-24 1618,-30 1612,-36 1606,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="1591" y="-15.6" font-family="Noto Sans JP" font-size="12.00" fill="#171b23">要素24</text>
+</g>
+
+<g id="k_scale_compressed__edge24" class="edge">
+<title>層5&#45;&gt;要素24</title>
+<path fill="none" stroke="#79828f" d="M1591,-60.62C1591,-56.57 1591,-52.16 1591,-47.77"/>
+<polygon fill="#79828f" stroke="#79828f" points="1594.5,-47.98 1591,-37.98 1587.5,-47.98 1594.5,-47.98"/>
+</g>
+</g>
+</svg></div>
+  </div>
+  </div>
+</section>
+
+<section id="traps">
+  <h2><span class="num">03</span>繋ぐときに引っかかった罠</h2>
+  <div class="scroll">
+    <table>
+      <caption>表2 ── 実際に引っかかったもの</caption>
+      <thead><tr><th>何が起きたか</th><th>原因</th><th>対処</th></tr></thead>
+      <tbody>
+        <tr><td>描いたSVGを画像にできない</td><td>出力の幅と高さが <code>pt</code> 単位で、resvgが受け付けない</td><td>単位を落として <code>viewBox</code> に任せる一行</td></tr>
+        <tr><td>行を指す線が、新しい箱として増える</td><td><code>"箱:行"</code> という書き方はPython側の窓口を通らない</td><td><code>tailport</code> で行を指定する</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout alarm">
+    <span class="k">2つ目について</span>
+    <p>この罠には<b>実際に引っかかり、一度は「ポートは効かない」と誤って判定した</b>。線は引かれ、絵も出るので、出力を見ただけでは間違いに見えない。名前がそのまま箱になっているところまで見て初めて分かる。</p>
+  </div>
+</section>
+
+<section id="fit">
+  <h2><span class="num">04</span>ADRのfigureに当てはめると</h2>
+  <div class="scroll">
+    <table>
+      <caption>表3 ── ADRで必要になる図と、この道具の適合</caption>
+      <thead><tr><th>　</th><th>要る図</th><th>適合</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mark yes">○</span></td><td>関門1（構造の対比）</td><td>そのまま乗る</td><td>箱は10個前後、関係は階層、囲みで括れる。4条件を全て満たす</td></tr>
+        <tr><td><span class="mark yes">○</span></td><td>関門2（操作と返り値）</td><td>そもそも不要</td><td>縦に並べるだけで、レイアウトの計算が発生しない</td></tr>
+        <tr><td><span class="mark no">✗</span></td><td>集合の重なりを見せる図</td><td>乗らない</td><td>この調査の前段で私が作った図が、まさにこれに当たる</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="col">3行目は、<a href="https://claude.ai/code/artifact/9dc911bc-48c9-4075-92e5-2b1be9044d3f">前のアーティファクトの図1</a>のこと。入れ子の箱と、外に置いた破線の箱で描いたあの図は、この道具では作れない。<b>ADRの図を全部この道具へ寄せる、とは言えない</b>ということである。</p>
+</section>
+
+<footer>
+  <p>環境 ── <code>pygraphviz 2.0.1</code>。Graphviz本体を同梱したウィールで、systemへのインストールは無い（<code>dot</code> コマンドも、graphvizのシステムパッケージも存在しない）。取得は <code>uv run --no-project --with pygraphviz</code>。</p>
+  <p>掲載した図は全て、この調査のために生成した実物をそのまま埋め込んでいる。作図に使った宣言は最大30行程度で、座標は一行も書いていない。</p>
+</footer>
+
+</div>

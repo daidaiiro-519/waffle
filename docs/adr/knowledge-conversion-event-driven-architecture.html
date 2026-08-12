@@ -1,0 +1,492 @@
+<title>event-driven-architecture の変換 ── 17本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.78rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 17本目</span>
+  <h1><code>event-driven-architecture</code> を書き起こし版から移す</h1>
+  <p class="standfirst">旧要約版115行 → <strong>372行</strong>。<code>communication</code> の送信箱・サーガと、<code>microservices</code> の境界の話が合流します。<strong>3種類のイベントの使い分けが、旧版では分類3行に潰れていました。</strong></p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">28</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">5</span><span class="l">図（旧版は0）</span></div>
+    <div class="stat"><span class="n">7</span><span class="l">原文（表4・JSON2・JS1）</span></div>
+    <div class="stat"><span class="n">372</span><span class="l">行（旧115 / 書起し309）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. 同じ出来事を3通りに書き分ける例が落ちていました</h2>
+  <p class="narrow">この本の中心は<strong>「何をどれだけ載せるか」で3種類に分かれる</strong>ことです。書き起こし版はそれを、1つの出来事を3通りに書いたコードで見せています。旧版はコードを全部落としていたので、3つの違いが「最小限／すべて／業務の出来事」という語の並びだけになっていました。</p>
+
+  <div class="box ok">
+    <h3>3つの違いは、目的の違いです</h3>
+    <p>注釈で固定しました ── <strong>3つは技術の違いではなく、何のために出すかの違いである。</strong>知らせるだけのものは連係の複雑さを減らすため、状態を運ぶものはデータを非同期に複製するため、業務イベントは業務領域の活動をモデル化して説明するため。</p>
+  </div>
+
+  <div class="box bad">
+    <h3>密な結びつき3種の「起点が1つ」であることも落ちていました</h3>
+    <p>時間・機能・実装の3つの結びつきは、すべて<strong>業務イベントをそのまま外へ公開したこと</strong>から生じます。図にして注釈で名指ししました ── 個別に対処するより、<strong>この起点を絶つほうが根本的である。</strong></p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>イベント駆動型とは何か</td><td>概要</td><td>区切られた文脈の入口を設計する手段</td></tr>
+        <tr><td class="new">　イベントの履歴を保存する形とは別物である</td><td>アンチパターン</td><td><strong>表。範囲と役割が違う。独立して決められる</strong></td></tr>
+        <tr><td class="new">メッセージの種類</td><td>×</td><td><strong>図。イベントと指示、そのうち片方が3つに分かれる</strong></td></tr>
+        <tr><td class="new">　イベントと指示の違い</td><td>×</td><td><strong>指示は拒否できるが、イベントは取り消せない</strong></td></tr>
+        <tr><td class="new">　イベントのデータの形</td><td>×</td><td>原文。説明のための情報と内容そのもの</td></tr>
+        <tr><td>3種類のイベント</td><td>分類3行</td><td>子3つ（うち1つはさらに子3つ）</td></tr>
+        <tr><td class="new">　知らせるだけのイベント</td><td>1行</td><td><strong>原文＋好ましい2つの状況（守るべき情報・最新の状態）</strong></td></tr>
+        <tr><td class="new">　状態を運ぶイベント</td><td>1行</td><td><strong>発信側が止まっても動ける。形は2通り</strong></td></tr>
+        <tr><td class="new">　　知らせるだけとの違い／状態を運ぶとの違い</td><td>×</td><td><strong>目的が違う。集約の状態ではなく一生の途中の出来事</strong></td></tr>
+        <tr><td class="new">　　同じ出来事を3つの種類で書き分ける</td><td><strong>×</strong></td><td><strong>原文。この本の中心</strong></td></tr>
+        <tr><td class="new">3種類の密な結びつき</td><td>アンチパターンに2つ</td><td><strong>図＋子3つ。起点が1つであることが見える</strong></td></tr>
+        <tr><td class="new">結びつきをほどく</td><td><strong>×</strong></td><td><strong>図。改善前と改善後の対比</strong></td></tr>
+        <tr><td class="new">最悪の場合を前提に置く</td><td>×</td><td><strong>表。5つの事態と備え</strong></td></tr>
+        <tr><td class="new">外へ出すイベントと内側のイベントを使い分ける</td><td>×</td><td>外へ出す業務イベントを限定する</td></tr>
+        <tr><td class="new">求める一貫性の水準から選ぶ</td><td>判断基準に1つ</td><td><strong>表＋図</strong></td></tr>
+        <tr><td>どのイベントを使うか</td><td>判断基準</td><td><strong>図</strong></td></tr>
+        <tr><td>アンチパターン ×4</td><td>あり</td><td>そのまま維持</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 注釈の例</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>図</th><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead>
+      <tbody>
+        <tr><td>メッセージの種類</td><td>イベント／指示</td><td>決定的な違いは<strong>拒否できるかどうか。</strong>逆向きの処理をするには埋め合わせの指示しかない</td></tr>
+        <tr><td>メッセージの種類</td><td>業務イベント</td><td>他の2つと違い、<strong>外部の誰も興味を持たなくても役に立つ。</strong>そのまま外へ出すと実装の詳細が漏れる</td></tr>
+        <tr><td>密な結びつき</td><td>業務イベントをそのまま外へ公開する</td><td><strong>3つすべての起点がここにある。</strong>個別に対処するより起点を絶つほうが根本的</td></tr>
+        <tr><td>改善の前後</td><td>実績の集計から配送の計画</td><td><strong>改善前には無かった線。</strong>受け取ったときに取りに行く形にすると、遅延の仕組みが要らなくなる</td></tr>
+        <tr><td>イベントの選び方</td><td>発信側の実装の詳細を隠したいか</td><td>「はい」のとき<strong>共用サービスを経由させることが前提</strong>になっている。種類を選ぶだけでは詳細は隠れない</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 完全プレビュー</h2>
+  <p class="narrow">描画された372行を、<strong>省略なしで</strong>並べています。28ノードすべてです。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / event-driven-architecture</span><span>ノード28 ・ 図5 ・ 原文7</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">イベント駆動型とは何か</span></div>
+<p>部品どうしのあいだで、イベントのメッセージを非同期にやりとりする技術方式。区切られた文脈の入口を設計する手段として使う。</p>
+<div class="node d2"><div class="node-h"><span class="nm">イベントの履歴を保存する形とは別物である</span></div>
+<p>混同されやすいが、範囲も役割も違う。どちらを採るかは独立して決められる。</p>
+<p>イベント駆動型と、イベントの履歴を保存する形の違いを並べる</p>
+<p>同じ設計方法の別名ではない。範囲も役割も違うので、どちらを採るかは独立して決められる。</p>
+<div class="tablewrap"><table><thead><tr><th>概念</th><th>範囲</th><th>役割</th></tr></thead><tbody>
+<tr><td>イベント駆動型</td><td>部品どうしの通信の方式</td><td>境界を越えてメッセージを非同期でやりとりする</td></tr>
+<tr><td>イベントの履歴を保存する形</td><td>区切られた文脈の内部の実装方式</td><td>集約の状態の変化をイベントとして記録する</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">メッセージの種類</span></div>
+<p>メッセージはイベントと指示に分かれ、イベントはさらに3つに分かれる。どちらも非同期のメッセージとして送られる。</p>
+<p>メッセージが2つに分かれ、そのうち片方がさらに3つに分かれることを示す</p>
+<p>まずすでに起きたことか、これからやることかで分かれる。すでに起きたことのほうは、何をどれだけ載せるかで3つに分かれる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;メッセージ&quot;]
+    n1[&quot;イベント（過去の変化）&quot;]
+    n2[&quot;指示（これからの操作）&quot;]
+    n3[&quot;知らせるだけのイベント（最小限）&quot;]
+    n4[&quot;状態を運ぶイベント（変更のすべて）&quot;]
+    n5[&quot;業務イベント（業務領域の出来事）&quot;]
+    n0 --&gt; n1
+    n0 --&gt; n2
+    n1 --&gt; n3
+    n1 --&gt; n4
+    n1 --&gt; n5
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>イベント（過去の変化）／指示（これからの操作）</td><td>決定的な違いは、拒否できるかどうかである。指示は内容が不完全だったり規則に反していたりすれば拒否できるが、イベントは受け取った側が取り消せない。逆向きの処理をするには、埋め合わせの指示を出すしかない。</td></tr>
+<tr><td>3つのイベント</td><td>3つは技術の違いではなく、何のために出すかの違いである。知らせるだけのものは連係の複雑さを減らすため、状態を運ぶものはデータを非同期に複製するため、業務イベントは業務領域の活動をモデル化して説明するため。</td></tr>
+<tr><td>業務イベント（業務領域の出来事）</td><td>他の2つと違い、外部の誰も興味を持たなくても役に立つ。文脈の内側で使うものなので、そのまま外へ出すと実装の詳細が漏れる。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">イベントと指示の違い</span></div>
+<p>イベントはすでに起こった変化を表す。過去に起きた事実なので、受け取った側が取り消すことはできない。名前は過去形で書く。逆向きの処理をするには、埋め合わせの指示を出すしかない。指示はこれから実行すべき操作を表す。内容が不完全だったり業務の規則に反していたりすれば、拒否される可能性がある。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">イベントのデータの形</span></div>
+<p>何らかのメッセージの通信基盤を通して外へ送れるデータの記録である。説明のための情報と、内容そのものに分かれる。</p>
+<p>イベントのデータの形を示す</p>
+<p>説明のための情報と、内容そのものに分かれる。どの種類のイベントでも、この骨格は変わらない。</p>
+<div class="blk"><pre>
+{
+  &quot;type&quot;: &quot;delivery-confirmed&quot;,
+  &quot;event-id&quot;: &quot;14101928-4d79-4da6-9486-dbc4837bc612&quot;,
+  &quot;correlation-id&quot;: &quot;08011958-6066-4815-8dbe-dee6d9e5ebac&quot;,
+  &quot;delivery-id&quot;: &quot;05011927-a328-4860-a106-737b2929db4e&quot;,
+  &quot;timestamp&quot;: 1615718833,
+  &quot;payload&quot;: {
+    &quot;confirmed-by&quot;: &quot;17bc9223-bdd6-4382-954d-f1410fd286bd&quot;,
+    &quot;delivery-time&quot;: 1615701406
+  }
+}
+</pre></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">3種類のイベント</span></div>
+<p>何をどれだけ載せるかで3つに分かれる。選び方を誤ると密な結びつきを生む。</p>
+<div class="node d2"><div class="node-h"><span class="nm">知らせるだけのイベント</span></div>
+<p>他の部品が反応することを想定した、事業活動で起きた変化についての知らせ。内容は必要最小限で、発生を伝えることだけが目的である。受け取る側は、たどる先を使って詳しい情報を問い合わせる。この形が好ましい状況が2つある——守るべき情報がメッセージの経路に流れるのを防ぎたい場合（問い合わせの時点で追加の権限確認ができる）。そして、届いた時点の内容が最新とは限らないので、厳密に最新の状態が要る場合。複数の受け取り手が競合するときは、同じメッセージを複数が処理しないように制御することもできる。</p>
+<p>知らせるだけのイベントの形を示す</p>
+<p>内容そのものは載せず、たどる先だけを渡す。受け取った側は、必要になった時点で取りに行く。</p>
+<div class="blk"><pre>
+{
+  &quot;type&quot;: &quot;manifest-generated&quot;,
+  &quot;event-id&quot;: &quot;537ec7c2-d1a1-2005-8654-96aee1116b72&quot;,
+  &quot;shipment-id&quot;: &quot;05011927-a328-4860-a106-737b2929db4e&quot;,
+  &quot;timestamp&quot;: 1615726445,
+  &quot;payload&quot;: {
+    &quot;carrier-id&quot;: &quot;456123&quot;,
+    &quot;link&quot;: &quot;/manifests/456123/2026/01&quot;
+  }
+}
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">状態を運ぶイベント</span></div>
+<p>発信側の内部の状態の変化を、購読する側へ知らせるメッセージ。知らせるだけのものとは対照的に、変化を反映したすべてのデータを含む。受け取る側が手元に控えておけるので、発信側が止まっていても処理を続けられる。実質的に、データを非同期に複製する仕組みにあたる。複数の情報の出どころを扱う部品では、性能も上がる。形は2通り——変わったあとの状態のすべてを載せる形と、実際に更新された欄だけを載せる形（データの構造が大きい場合）。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">業務イベント</span></div>
+<p>業務領域で起きた重要な出来事を表しつつ、その出来事を説明するすべてのデータを含む。</p>
+<div class="node d3"><div class="node-h"><span class="nm">知らせるだけのイベントとの違い</span></div>
+<p>業務イベントは、その出来事を表すすべての情報を含むので、追加の問い合わせが要らない。目的も違う——知らせるだけのイベントは他の部品との連係の複雑さを減らすためで、業務イベントは業務領域の活動をモデル化して説明するためである。そのため業務イベントは、他の部品が興味を持たなくても役に立つ。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">状態を運ぶイベントとの違い</span></div>
+<p>状態を運ぶイベントは、発信側の状態を受け取る側で控えるのに十分な情報を提供する。業務イベントはそうした詳細を外へ出さない。表しているのは集約の状態ではなく、集約の一生の途中で起きた業務としての出来事である。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">同じ出来事を3つの種類で書き分ける</span></div>
+<p>何をどれだけ載せるかの違いが、同じ出来事で並べると見える。</p>
+<p>同じ1つの出来事を、3つの種類で書き分けた例を示す</p>
+<p>同じことを伝えるのに、何をどれだけ載せるかが違う。上は事実だけ、中は変わった値、下は業務としての出来事の要点である。</p>
+<div class="blk"><pre>
+// 知らせるだけ：手続きが済んだという事実だけ
+notification = {
+  &quot;type&quot;: &quot;配送先の変更が受理された&quot;,
+  &quot;shipment-id&quot;: &quot;01b9a761&quot;,
+  &quot;payload&quot;: { &quot;details&quot;: &quot;/01b9a761/address-change&quot; }
+};
+
+// 状態を運ぶ：変わった値そのもの
+stateTransfer = {
+  &quot;type&quot;: &quot;配送先が変わった&quot;,
+  &quot;shipment-id&quot;: &quot;01b9a761&quot;,
+  &quot;payload&quot;: { &quot;new-address&quot;: &quot;北山市中央3-1&quot; }
+};
+
+// 業務イベント：業務として何が起きたかの要点
+domainEvent = {
+  &quot;type&quot;: &quot;荷主が届け先を変更した&quot;,
+  &quot;shipment-id&quot;: &quot;01b9a761&quot;,
+  &quot;payload&quot;: { &quot;rerouted-after-dispatch&quot;: true }
+};
+</pre></div>
+</div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">どのイベントを選ぶかで結びつきが決まる</span></div>
+<p>イベントの設計が、部品どうしの連係の仕方と境界を決める。どの種類を選ぶかで、緩やかに結びつくか密に結びつくかが変わる。</p>
+<div class="node d2"><div class="node-h"><span class="nm">3種類の密な結びつき</span></div>
+<p>業務イベントをすべて公開してしまうと、購読する側が実装の詳細と密に結びつく。これが分散した大きな泥団子になる。</p>
+<p>3種類の密な結びつきが、それぞれ何に依存して起きるかを示す</p>
+<p>時間の順序、同じ機能の重複、データの形。どれも、業務イベントをそのまま外へ出したことから生じる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;業務イベントをそのまま外へ公開する&quot;]
+    n1[&quot;時間の結びつき&quot;]
+    n2[&quot;機能の結びつき&quot;]
+    n3[&quot;実装の結びつき&quot;]
+    n0 --&gt;|&quot;受け取る側が発信側の状態に依存する&quot;| n1
+    n0 --&gt;|&quot;同じイベントを購読し、同じ業務機能を実装する&quot;| n2
+    n0 --&gt;|&quot;イベントのデータの形が外へ出る&quot;| n3
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>業務イベントをそのまま外へ公開する</td><td>3つすべての起点がここにある。個別に対処するより、この起点を絶つほうが根本的である。</td></tr>
+<tr><td>時間の結びつき</td><td>「5分待てば先の処理が終わる」といった遅延の仕組みで対処されがちだが、通信の障害・高い負荷・サービスの停止で破綻する。</td></tr>
+<tr><td>機能の結びつき</td><td>双方向であることが厄介である。機能を変えるとき、両方の部品を同時に変えなければならない。</td></tr>
+</tbody></table></div>
+<div class="node d3"><div class="node-h"><span class="nm">時間の結びつき</span></div>
+<p>実行の順番に強く依存している状態。ある部品の処理が、別の部品より先に終わっていなければならない。対処として遅延を入れることが多いが、通信の障害・高い負荷・サービスの停止で破綻する。根本の原因は、状態を運ぶ形を業務イベントで代用し、受け取る側が発信側の状態に依存していることにある。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">機能の結びつき</span></div>
+<p>複数の部品が同じ業務機能を実装している状態。同じイベントを購読して同じ機能を実装しているので、双方向に結びつく。機能が変われば、両方を同時に変えなければならない。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">実装の結びつき</span></div>
+<p>ある部品の実装を変えると、購読している別の部品の変更を強いる状態。イベントのデータの形が変わると、投影の処理でエラーが起きる。新しい業務イベントが増えると、受け取る側の投影のモデルにも影響しうる。</p>
+</div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">結びつきをほどく</span></div>
+<p>実装の結びつきと機能の結びつきは、投影の処理を発信側に閉じ込めることでほどける——受け取る側が必要とするモデルを発信側が投影し、その結果を外向けの言葉に含める。こうすると連係のためのモデルが、発信側の内部の実装モデルから切り離される。発信するイベントは、状態を運ぶ形にする。時間の結びつきは、上流が知らせるだけのイベントを出し、下流がそれを受け取った時点で必要なデータを取りに行く形にすればほどける。遅延の仕組みが要らなくなる。</p>
+<p>密な結びつきを解いた前と後を対比する</p>
+<p>前は業務イベントが直接ばらまかれ、後ろでは共用サービスを挟んで状態を運ぶ形と知らせるだけの形に分けている。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    subgraph g0[&quot;改善前&quot;]
+        n0[&quot;顧客の管理（前）&quot;]
+        n1[&quot;受注の文脈（前）&quot;]
+        n2[&quot;配送の計画（前）&quot;]
+        n3[&quot;実績の集計（前）&quot;]
+    end
+    subgraph g1[&quot;改善後&quot;]
+        n4[&quot;顧客の管理（後）&quot;]
+        n5[&quot;共用サービス&quot;]
+        n6[&quot;受注の文脈（後）&quot;]
+        n7[&quot;配送の計画（後）&quot;]
+        n8[&quot;実績の集計（後）&quot;]
+    end
+    n0 --&gt;|&quot;業務イベント&quot;| n1
+    n0 --&gt;|&quot;業務イベント&quot;| n2
+    n2 --&gt;|&quot;状態を取りに行く（遅延で順序を保証）&quot;| n3
+    n4 --&gt; n5
+    n5 --&gt;|&quot;状態を運ぶイベント&quot;| n6
+    n5 --&gt;|&quot;状態を運ぶイベント&quot;| n7
+    n7 --&gt;|&quot;知らせるだけのイベント&quot;| n8
+    n8 --&gt;|&quot;受け取ったときに取りに行く&quot;| n7
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>共用サービス</td><td>ここが加わったことが改善の本体である。受け取る側が必要とするモデルを発信側が投影し、その結果を外向けの言葉に含める——連係のためのモデルが、発信側の内部の実装モデルから切り離される。</td></tr>
+<tr><td>実績の集計（後）から配送の計画（後）</td><td>改善前には無かった線である。知らせを受け取ったときに必要なデータを取りに行く形にすると、遅延で順序を保証する仕組みが要らなくなる。</td></tr>
+<tr><td>配送の計画（前）から実績の集計（前）</td><td>括弧の中が問題の核心である。遅延で順序を保証しようとしている時点で、時間の結びつきが起きている。</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">設計するときの経験則</span></div>
+<p>3つある。</p>
+<div class="node d2"><div class="node-h"><span class="nm">最悪の場合を前提に置く</span></div>
+<p>起きるかもしれない、ではなく起きるものとして設計する。</p>
+<p>起きることを前提に置く5つの事態と、その備えを並べる</p>
+<p>どれも「起きるかもしれない」ではなく「起きる」として設計する。</p>
+<div class="tablewrap"><table><thead><tr><th>前提に置くこと</th><th>備え</th></tr></thead><tbody>
+<tr><td>通信は必ず遅れる</td><td>順序に依存しない設計にする</td></tr>
+<tr><td>機器はもっとも都合の悪いときに壊れる</td><td>送信箱で確実に送り出す</td></tr>
+<tr><td>イベントは順番どおりに届かない</td><td>受け取る側で並べ直す</td></tr>
+<tr><td>イベントは重複する</td><td>受け取る側で重なりを取り除く</td></tr>
+<tr><td>障害は決まって休みの日に起きる</td><td>複数の文脈にまたがる流れは、サーガかプロセスマネージャーで扱う</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">外へ出すイベントと内側のイベントを使い分ける</span></div>
+<p>業務イベントを発行するとき、実装の詳細が外へ漏れないようにする。イベントは区切られた文脈の入口の欠かせない要素として扱う。共用サービスを実装するなら、イベントがその文脈の外向けの言葉を反映するようにする。業務イベントを他の区切られた文脈との通信にそのまま使うのは控え、外へ出す業務イベントを限定することを検討する。知らせるだけのイベントを使えば、入口をさらに小さくできる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">求める一貫性の水準から選ぶ</span></div>
+<p>最終的に揃えばよいのか、最新の書き込みを確実に読む必要があるのかで決まる。</p>
+<p>求める一貫性の水準で、使うイベントの種類が決まることを示す</p>
+<p>最終的に揃えばよいなら状態を運び、最新を確実に読む必要があるなら知らせるだけにして取りに行かせる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;どこまでの一貫性が要るか&quot;]
+    n1[&quot;状態を運ぶイベント&quot;]
+    n2[&quot;知らせるだけのイベント → 受け取る側が最新を問い合わせる&quot;]
+    n0 --&gt;|&quot;最終的に揃えばよい&quot;| n1
+    n0 --&gt;|&quot;最新の書き込みを確実に読む必要がある&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>状態を運ぶイベント</td><td>受け取る側が手元に控えておけるので、発信側が止まっていても処理を続けられる。そのぶん、控えは常に最新とは限らない。</td></tr>
+<tr><td>知らせるだけのイベント → 受け取る側が最新を問い合わせる</td><td>問い合わせが増えるという代償がある。そのかわり、守るべき情報がメッセージの経路に流れないという利点もあり、問い合わせの時点で追加の権限確認もできる。</td></tr>
+</tbody></table></div>
+<p>求める一貫性の水準ごとに、使うイベントの種類を並べる</p>
+<p>最新を確実に読む必要があるかどうかが分かれ目になる。</p>
+<div class="tablewrap"><table><thead><tr><th>求める一貫性</th><th>使う種類</th></tr></thead><tbody>
+<tr><td>最終的に揃えばよい</td><td>状態を運ぶイベント</td></tr>
+<tr><td>受け取る側で発信側の最新の書き込みを読む必要がある</td><td>知らせるだけのイベントを出し、受け取る側が最新を問い合わせる</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">どのイベントを使うか</span></div>
+<p>実装の詳細を隠すかどうかと、手元に控えるかどうかで決まる。</p>
+<p>どの種類のイベントを使うかを、順に問うて決める</p>
+<p>まず実装の詳細を隠すかどうかを問い、そのうえで手元に控えるか最新を読むかで分かれる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;発信側の実装の詳細を隠したいか&quot;]
+    n1[&quot;受け取る側が手元に控えて、止まっても動けるようにしたいか&quot;]
+    n2[&quot;業務イベントをそのまま公開する（危険を理解したうえで）&quot;]
+    n3[&quot;状態を運ぶイベント&quot;]
+    n4[&quot;知らせるだけのイベント&quot;]
+    n0 --&gt;|&quot;いいえ&quot;| n2
+    n0 --&gt;|&quot;はい&quot;| n1
+    n1 --&gt;|&quot;はい&quot;| n3
+    n1 --&gt;|&quot;いいえ&quot;| n4
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>業務イベントをそのまま公開する（危険を理解したうえで）</td><td>括弧書きが付いているのはこの終点だけである。禁止ではないが、購読する側が実装の詳細と密に結びつくことを承知したうえで選ぶ。</td></tr>
+<tr><td>発信側の実装の詳細を隠したいか</td><td>この問いに「はい」と答えるとき、共用サービスを経由させることが前提になっている。イベントの種類を選ぶだけでは、詳細は隠れない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>イベント駆動型の設計でよく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">業務イベントをそのまま文脈のあいだの通信に使う</span></div>
+<p>イベントの履歴を保存する形が生む業務イベントをすべて購読する側へ公開すると、実装と密に結びつく。外へ出すものを一部に限るか、状態を運ぶイベントや共用サービスを使う。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">遅延で時間の結びつきを解こうとする</span></div>
+<p>「5分待てば先の処理が終わる」という設計は、通信の障害・高い負荷・サービスの停止で破綻する。受け取った時点で問い合わせる設計に変える。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">種類を選ばず、すべてに業務イベントを使う</span></div>
+<p>業務イベントの目的は業務領域をモデル化することである。連係の複雑さを減らしたいなら知らせるだけのイベント、状態を非同期に複製したいなら状態を運ぶイベントを使う。種類の取り違えが、分散した大きな泥団子につながる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">イベントの履歴を保存する形と混同する</span></div>
+<p>イベント駆動型は部品どうしの通信の方式、イベントの履歴を保存する形は区切られた文脈の内部の実装方式である。どちらを採るかは独立して決められる。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅴ. 置き換えたもの</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書き起こし版</th><th>置き換え先</th><th>保った構造</th></tr></thead>
+      <tbody>
+        <tr><td>人の身分に関わる出来事を3通りに書き分けた例</td><td>配送先の変更を3通りに書き分けた例</td><td>事実だけ／変わった値／業務としての出来事の要点、という3つの違い</td></tr>
+        <tr><td>給与明細の発行を使った、知らせるだけのイベントの例</td><td>送り状の作成</td><td>内容そのものは載せず、たどる先だけを渡す形</td></tr>
+        <tr><td>広告関連の4つの文脈（改善の前後）</td><td>顧客の管理・受注・配送の計画・実績の集計</td><td>1つが直接ばらまく形と、共用サービスを挟んで2種類に分ける形の対比</td></tr>
+        <tr><td>「パラノイアだけが生き残る」という見出し</td><td>「最悪の場合を前提に置く」</td><td>5つの事態を「起きる」として設計する、という指針</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>機械で確認しました</h3>
+    <p>書籍固有の題材（人の身分に関わる出来事・給与明細・広告の文脈群・比喩的な見出し）を grep して<strong>0件</strong>。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅵ. 17本目までの推移</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
+      <tbody>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
+        <tr><td>ubiquitous-language</td><td>99</td><td>231</td><td>177</td></tr>
+        <tr><td>design-heuristics</td><td>120</td><td>310</td><td>203</td></tr>
+        <tr><td>architecture-patterns</td><td>104</td><td>349</td><td>268</td></tr>
+        <tr><td>event-sourced-domain-model</td><td>107</td><td>501</td><td>408</td></tr>
+        <tr><td>context-integration</td><td>105</td><td>352</td><td>250</td></tr>
+        <tr><td>communication</td><td>114</td><td>303</td><td>234</td></tr>
+        <tr><td>business-domain</td><td>79</td><td>121</td><td>58</td></tr>
+        <tr><td>domain-expert</td><td>80</td><td>134</td><td>50</td></tr>
+        <tr><td>event-storming</td><td>108</td><td>301</td><td>262</td></tr>
+        <tr><td>real-world-ddd</td><td>102</td><td>314</td><td>308</td></tr>
+        <tr><td>microservices</td><td>109</td><td>321</td><td>265</td></tr>
+        <tr><td><strong>event-driven-architecture</strong></td><td><strong>115</strong></td><td><strong>372</strong></td><td><strong>309</strong></td></tr>
+        <tr><td><strong>17本の合計</strong></td><td><strong>1,777</strong></td><td><strong>4,919</strong></td><td><strong>4,229</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow"><strong>17 / 19本。</strong>残り2本・約520行 ── データメッシュと、締めの経験則です。</p>
+</section>
+
+<footer>
+  旧要約版115行・書き起こし版309行・変換後372行（描画結果の実測）。<br>
+  実例は架空の業務へ、比喩的な見出しはその内容へ置き換えた。3種類の違いと、密な結びつきの起点は保っている。<br>
+  プレビューは描画物から機械で生成した（手で書き写すと取りこぼすため）。
+</footer>
+
+</div>

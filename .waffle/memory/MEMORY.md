@@ -23,3 +23,9 @@
 - [走っている作業の連鎖と現在地(2026-08-11)](project_inflight_work_2026_08_11.md) — 配列要素編集→v10→版ドリフト→41件移設→サブドメイン是正→knowledge欠落、で脱線中
 - [集約クラス検査の誤検知とトランザクション境界](project_aggregate_drift_and_transaction.md) — 中間項が機械可読でないのが原因、knowledge片付け後に着手
 - [変換のたびに書籍の実例を置き換える](feedback_replace_book_examples_in_conversion.md) — 構造は保ち題材だけ差し替え、grepで0件確認。1本目の訂正を規則にせず2度指摘された
+- [図の補足は要素を名指しした注釈の表](project_figure_notes_table.md) — figure.notes（どこの話か／図に載せきれないこと）。辺の一覧は書き写しで無価値
+- [選択が届かなかったら確認する](feedback_confirm_unregistered_selection.md) — 注記から自分の推し案を再構成して差し戻された。注記は選択の代わりではない
+- [knowledge 19本のv6変換が完了](project_knowledge_v6_conversion_done.md) — 1,997行→5,533行、図80。旧版は図が19本とも0だった
+- [事業領域／業務領域の語彙を保つ](project_business_domain_vocabulary_kept.md) — プロダクト寄せは業務エキスパートで破綻。業務794回は語幹であって1語ではない
+- [図は描いて画像を読み返してから出す](project_svg_visual_check_loop.md) — 手順はdesign-structured-html Skill、強制はrequire-svg-render-check Hook。resvg-py（systemインストール不要）、フォント未解決で文字が黙って消える罠あり
+- [図の関係は記号でなく言葉で表す](feedback_relations_in_words_not_symbols.md) — 凡例が要る記法は持ち込まない。言葉へ移すときの落とし穴3つ付き

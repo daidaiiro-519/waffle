@@ -1,0 +1,808 @@
+<title>図の部品と、Markdownで描ける17構文</title><style>
+  :root {
+    --paper:      #EDF0F3;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F7F9;
+    --ink:        #171B23;
+    --ink-soft:   #4B5563;
+    --ink-faint:  #79828F;
+    --rule:       #D3DAE2;
+    --rule-soft:  #E4E9EE;
+
+    --data:       #7A4368;
+    --data-bg:    #F3E9F0;
+    --render:     #16636B;
+    --render-bg:  #E2EFF0;
+    --warn:       #9A4A21;
+    --warn-bg:    #F7EAE2;
+    --dead:       #8A8F98;
+
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
+    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+      --rule:#2E3742; --rule-soft:#242C37;
+      --data:#D19CC0; --data-bg:#2C1F2A;
+      --render:#6BC0C7; --render-bg:#132A2C;
+      --warn:#E0A17A; --warn-bg:#2E211A;
+      --dead:#767E8A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --data:#D19CC0; --data-bg:#2C1F2A;
+    --render:#6BC0C7; --render-bg:#132A2C;
+    --warn:#E0A17A; --warn-bg:#2E211A;
+    --dead:#767E8A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.85;
+    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+  .col { max-width: 40rem; }
+
+  header { display: flex; flex-direction: column; gap: .9rem; }
+  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+  p { margin: 0; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 2.2rem; margin-top: .6rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+  .stat { display: flex; flex-direction: column; gap: .1rem; }
+  .stat b { font-family: var(--mono); font-size: 1.5rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: .78rem; color: var(--ink-faint); }
+  .stat.alarm b { color: var(--warn); }
+
+  section { display: flex; flex-direction: column; gap: 1.4rem; }
+  h2 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
+    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem;
+  }
+  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
+  h3 { font-family: var(--sans); font-size: .95rem; font-weight: 600; margin: 0; color: var(--ink-soft); }
+
+  .callout { border-left: 3px solid var(--render); background: var(--surface); padding: 1.2rem 1.4rem; border-radius: 0 10px 10px 0; display: flex; flex-direction: column; gap: .6rem; }
+  .callout.alarm { border-left-color: var(--warn); background: var(--warn-bg); }
+  .callout .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .callout p { max-width: 44rem; }
+
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; min-width: 34rem; }
+  caption { text-align: left; font-size: .8rem; color: var(--ink-faint); padding-bottom: .5rem; }
+  th, td { text-align: left; vertical-align: top; padding: .62rem .8rem; border-bottom: 1px solid var(--rule-soft); line-height: 1.6; }
+  thead th { font-size: .72rem; letter-spacing: .06em; color: var(--ink-faint); font-weight: 600; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); padding: .1em .38em; border-radius: 4px; }
+
+  .mark { font-family: var(--mono); font-weight: 600; }
+  .mark.no  { color: var(--warn); }
+  .mark.yes { color: var(--render); }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: .7rem; }
+  figure svg { display: block; width: 100%; height: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; }
+  figcaption { font-size: .8rem; color: var(--ink-faint); }
+
+  pre { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 1.1rem 1.2rem; overflow-x: auto; font-family: var(--mono); font-size: .8rem; line-height: 1.7; }
+  pre .cm { color: var(--ink-faint); }
+  pre .bad { color: var(--warn); }
+
+  .t  { font:600 12.5px "Noto Sans JP", sans-serif; }
+  .s  { font:400 10.5px "Noto Sans JP", sans-serif; }
+  .mo { font:400 10.5px "Noto Sans JP", sans-serif; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1.4rem; font-size: .82rem; color: var(--ink-faint); display: flex; flex-direction: column; gap: .5rem; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    section, figure, table { break-inside: avoid; }
+  }
+
+  .part { display:flex; flex-direction:column; gap:.9rem; }
+  .part .head { display:flex; align-items:baseline; gap:.7rem; flex-wrap:wrap; }
+  .part h3 { font-family:var(--mono); font-size:.95rem; font-weight:600; margin:0; }
+  .tag { font-family:var(--mono); font-size:.62rem; letter-spacing:.08em; text-transform:uppercase;
+         padding:.1rem .45rem; border-radius:4px; border:1px solid currentColor; }
+  .tag.has  { color:var(--render); }
+  .tag.none { color:var(--ink-faint); }
+  .tag.beta { color:var(--warn); }
+  .plate { background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+           padding:1rem; overflow-x:auto; }
+  .plate pre.mermaid { background:none; border:none; padding:0; margin:0; }
+  .grid { display:grid; gap:2.2rem; }
+  @media (min-width:66rem) { .grid.two { grid-template-columns:1fr 1fr; } }
+  details > summary { cursor:pointer; font-size:.76rem; color:var(--ink-faint); font-family:var(--mono); }
+  details pre { margin-top:.6rem; }
+
+  /* ── comparison 部品 ───────────────────────────── */
+  .fig { margin:0; display:flex; flex-direction:column; gap:.9rem; }
+  .fig figcaption { font-size:.78rem; color:var(--ink-faint); }
+  .fig__sides { display:flex; gap:1.8rem; align-items:stretch; flex-wrap:wrap; }
+  .panel { flex:1 1 20rem; display:flex; flex-direction:column; gap:.55rem; }
+  .panel--before { --tone:var(--warn);   --tone-bg:var(--warn-bg); }
+  .panel--after  { --tone:var(--render); --tone-bg:var(--render-bg); }
+  .panel__label { font-family:var(--mono); font-size:.68rem; letter-spacing:.1em; color:var(--tone); }
+  .panel__body { display:flex; gap:.8rem; align-items:stretch; flex:1; }
+  .panel__reading { font-size:.76rem; color:var(--ink-faint); margin:0; }
+
+  .frame { border:1.4px dashed var(--tone); border-radius:10px; padding:1.5rem 1.1rem 1.2rem;
+           position:relative; display:flex; justify-content:center; flex:1; }
+  .frame--transcript { border:none; padding:0; }
+  .frame__label { position:absolute; top:-.6rem; left:.9rem; padding:0 .4rem;
+                  background:var(--paper); font-size:.66rem; color:var(--tone); white-space:nowrap; }
+
+  .box { background:var(--surface-2); border:1px solid var(--rule); border-radius:6px;
+         padding:.45rem .85rem; font-size:.84rem; white-space:nowrap; }
+  .box--focus   { background:var(--tone-bg); border-color:var(--tone); color:var(--tone); font-weight:600; }
+  .box--added   { border-color:var(--render); color:var(--render); }
+  .box--removed { border-style:dashed; color:var(--ink-faint); text-decoration:line-through; }
+
+  /* 一覧の中身 ── 増減は印を併記する。色だけで意味を運ばない */
+  .listing { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.3rem; }
+  .item { font-size:.84rem; padding:.28rem .7rem .28rem 1.5rem; border-radius:5px;
+          background:var(--surface-2); border:1px solid var(--rule); position:relative; }
+  .item::before { position:absolute; left:.55rem; font-family:var(--mono); font-size:.7rem; color:var(--ink-faint); }
+  .item--unchanged::before { content:"・"; }
+  .item--added   { border-color:var(--render); color:var(--render); }
+  .item--added::before   { content:"＋"; color:var(--render); }
+  .item--removed { border-style:dashed; color:var(--ink-faint); }
+  .item--removed::before { content:"−"; }
+
+  .tree { display:flex; flex-direction:column; align-items:center; }
+  .kids { --gap:1rem; --stem:.75rem; display:flex; gap:var(--gap);
+          position:relative; margin-top:calc(var(--stem) * 2); }
+  .limb { position:relative; display:flex; flex-direction:column; align-items:center; }
+  .wire { position:absolute; background:var(--rule); }
+  .wire--stem { top:calc(var(--stem) * -2); left:50%; width:1px; height:var(--stem); }
+  .wire--drop { top:calc(var(--stem) * -1); left:50%; width:1px; height:var(--stem); }
+  /* 横の桁は、箱の幅を参照しない。隙間の半分と、自分の中心だけで書く */
+  .wire--bar  { top:calc(var(--stem) * -1); height:1px;
+                left:calc(var(--gap) / -2); right:calc(var(--gap) / -2); }
+  .limb:first-of-type .wire--bar { left:50%; }
+  .limb:last-of-type  .wire--bar { right:50%; }
+  .limb:only-of-type  .wire--bar { display:none; }
+
+  .link { align-self:center; display:flex; flex-direction:column; align-items:center;
+          gap:.15rem; color:var(--tone); font-size:.68rem; flex:none; }
+  .link__line { width:2.6rem; border-top:1.4px dashed currentColor; position:relative; }
+  .link__line::before { content:""; position:absolute; left:-1px; top:-4px;
+                        border:4px solid transparent; border-right-color:currentColor; }
+
+  /* ── session 部品 ─────────────────────────────── */
+  .scene { display:flex; flex-direction:column; gap:.6rem; }
+  .scene__label { font-size:.78rem; color:var(--ink-soft); margin:0; }
+  .scene__pair { display:grid; gap:1rem; }
+  @media (min-width:54rem) { .scene__pair { grid-template-columns:1fr 1fr; } }
+  .win { flex:1; border-radius:9px; overflow:hidden; border:1px solid #2A313C; background:#151A22; }
+  .win--before { --tone:#D98A62; } .win--after { --tone:#6BC0C7; }
+  .win__bar { display:flex; align-items:center; gap:.5rem; padding:.45rem .7rem; background:#1E242E; }
+  .win__dots { width:2.6rem; height:.6rem; flex:none;
+    background:radial-gradient(circle 4px at 4px 50%, #E06C60 98%, transparent 0),
+               radial-gradient(circle 4px at 17px 50%, #E0B341 98%, transparent 0),
+               radial-gradient(circle 4px at 30px 50%, #5FB37A 98%, transparent 0); }
+  .win__title { font-family:var(--mono); font-size:.68rem; color:#8B95A3; }
+  /* pre の共通指定（白い背景と枠）を打ち消す。打ち消さないと窓の中だけ紙色になる */
+  .win__body { margin:0; padding:.9rem 1rem; background:none; border:none; border-radius:0;
+               font-family:var(--mono); font-size:.7rem;
+               line-height:1.75; color:#C8D0DA; overflow-x:auto; }
+  .line { display:block; white-space:pre; }
+  .line--comment { color:#6E7885; }
+  .line--command { color:#E3E8EF; }
+  .line--output  { color:#9FB6C4; margin:.5rem 0; }
+  .line--note    { color:var(--tone); margin-top:.5rem; }
+</style>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Reference — 実物</p>
+  <h1>図の部品と、Markdownで描ける17構文</h1>
+  <p class="lede">図はすべて実際に描かせたもの。部品があるものは部品の出力を、無いものは構文の例をそのまま載せている。どれを部品にするかを決めるための判断材料。</p>
+  <div class="stats">
+    <div class="stat"><b>17</b><span>Markdownで描ける構文</span></div>
+    <div class="stat alarm"><b>4</b><span>うち部品があるもの</span></div>
+    <div class="stat"><b>3</b><span>比較の器に入れた中身</span></div>
+  </div>
+</header>
+
+<section id="naming">
+  <h2><span class="num">00</span>名前の見立て</h2>
+  <div class="scroll"><table>
+    <caption>表1 ── 現状の部品名と、変えるかどうか</caption>
+    <thead><tr><th>いまの名前</th><th>由来</th><th>見立て</th></tr></thead>
+    <tbody>
+      <tr><td><code>sequence</code></td><td>シーケンス図。分野の一般語</td><td>据え置き</td></tr>
+      <tr><td><code>flowchart</code></td><td>フローチャート。分野の一般語</td><td>据え置き（向きが選べない）</td></tr>
+      <tr><td><code>statediagram</code></td><td>Mermaidの構文名そのもの</td><td><b>states</b> へ</td></tr>
+      <tr><td><code>graph</code></td><td>Mermaidの<b>旧</b>構文名</td><td><b>変える</b></td></tr>
+      <tr><td><code>architecture</code></td><td>Mermaidの構文名。中身は区画と部品</td><td><b>変える。中身も要検討</b></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout alarm">
+    <span class="k">graph について</span>
+    <p>同梱の mermaid-guide が、禁止事項として <b>「<code>graph</code> 構文は使用しない ── <code>flowchart</code> に統一する」</b>と明記しています。部品名がその禁止語のままで、しかも実際の出力は <code>flowchart TB</code> です。<b>名前・出力・自分のガイドの三つが食い違っています。</b></p>
+  </div>
+</section>
+
+<section id="comparison">
+  <h2><span class="num">01</span>比較の図を、器と中身に分ける</h2>
+  <p class="col">前に出した比較の図は、<b>中身が木に固定されていました</b>。木でない比較には使えず、今回の話にしか当てはまりません。器の役目は「変更前と変更後を並べて、何が変わったかを見せる」ことだけのはずなので、中身は差し替えられるべきです。</p>
+  <div class="scroll"><table>
+    <caption>表2 ── 器が持つものと、中身が持つもの</caption>
+    <thead><tr><th>　</th><th>持つもの</th><th>知らないもの</th></tr></thead>
+    <tbody>
+      <tr><td><code>comparison</code>（器）</td><td>面・囲み・面をまたぐ対応・読みの一言</td><td><b>中身が何であるか</b></td></tr>
+      <tr><td><code>tree</code>（中身）</td><td>入れ子と、親子をつなぐ線</td><td>それが比較に使われるかどうか</td></tr>
+      <tr><td><code>transcript</code>（中身）</td><td>操作と、返ってきたもの</td><td>同上</td></tr>
+      <tr><td><code>listing</code>（中身）</td><td>並びと、増えた・減った</td><td>同上</td></tr>
+    </tbody>
+  </table></div>
+  <p class="col">下の3枚は<b>すべて同じ器</b>で、中身だけが違います。器のコードは1つです。</p>
+  <div class="part"><div class="head"><h3>comparison × tree</h3><span class="tag beta">提案・未実装</span></div>
+  <p class="col">入れ子の関係が変わることを見せる。</p><figure class="fig fig--comparison"><div class="fig__sides"><div class="panel panel--before"><span class="panel__label">変更前</span><div class="panel__body"><div class="frame frame--tree"><span class="frame__label">区切られた文脈の内側</span><div class="tree"><div class="box box--unchanged">区切られた文脈</div><div class="kids"><span class="wire wire--stem"></span><div class="limb"><span class="wire wire--drop"></span><span class="wire wire--bar"></span><div class="tree"><div class="box box--focus">業務領域</div><div class="kids"><span class="wire wire--stem"></span><div class="limb"><span class="wire wire--drop"></span><span class="wire wire--bar"></span><div class="tree"><div class="box box--unchanged">業務ユースケース</div></div></div></div></div></div><div class="limb"><span class="wire wire--drop"></span><span class="wire wire--bar"></span><div class="tree"><div class="box box--unchanged">集約</div></div></div></div></div></div></div><p class="panel__reading">親は1つしか持てない</p></div><div class="panel panel--after"><span class="panel__label">変更後</span><div class="panel__body"><div class="frame frame--tree"><span class="frame__label">問題空間</span><div class="tree"><div class="box box--unchanged">事業領域</div><div class="kids"><span class="wire wire--stem"></span><div class="limb"><span class="wire wire--drop"></span><span class="wire wire--bar"></span><div class="tree"><div class="box box--focus">業務領域</div></div></div></div></div></div><div class="link"><span class="link__label">対応</span><span class="link__line"></span></div><div class="frame frame--tree"><span class="frame__label">解決空間</span><div class="tree"><div class="box box--unchanged">区切られた文脈</div><div class="kids"><span class="wire wire--stem"></span><div class="limb"><span class="wire wire--drop"></span><span class="wire wire--bar"></span><div class="tree"><div class="box box--unchanged">業務ユースケース</div></div></div><div class="limb"><span class="wire wire--drop"></span><span class="wire wire--bar"></span><div class="tree"><div class="box box--unchanged">集約</div></div></div></div></div></div></div><p class="panel__reading">親は事業領域。所属は参照が運ぶ</p></div></div><figcaption>業務領域が、区切られた文脈の内側から外へ出る</figcaption></figure>  </div>
+  <div class="part"><div class="head"><h3>comparison × transcript</h3><span class="tag beta">提案・未実装</span></div>
+  <p class="col">同じ操作の返りが変わることを見せる。</p><figure class="fig fig--comparison"><div class="fig__sides"><div class="panel panel--before"><span class="panel__label">変更前</span><div class="panel__body"><div class="frame frame--transcript"><div class="win"><div class="win__bar"><span class="win__dots"></span><span class="win__title">terminal</span></div><pre class="win__body"><span class="line line--comment"># 宣言を新しい置き場所へ書き換えたあと</span><span class="line line--command">$ waffle check-spec-integrity --path …/bc-waffle.json</span><span class="line line--output">{&quot;declared_subdomains_missing_on_disk&quot;: [],
+ &quot;subdomain_ref_mismatches&quot;: []}</span><span class="line line--note">↑ 古い場所を見て「違反なし」。効いていないことに気づけない</span></pre></div></div></div></div><div class="panel panel--after"><span class="panel__label">変更後</span><div class="panel__body"><div class="frame frame--transcript"><div class="win"><div class="win__bar"><span class="win__dots"></span><span class="win__title">terminal</span></div><pre class="win__body"><span class="line line--comment"># 同じ操作</span><span class="line line--command">$ waffle check-spec-integrity --path …/bc-waffle.json</span><span class="line line--output">{&quot;declared_subdomains_missing_on_disk&quot;:
+   [&quot;sd-validation&quot;, …7件]}</span><span class="line line--note">↑ 宣言された場所を見て、そこに無いと言う</span></pre></div></div></div></div></div><figcaption>同じ操作の結果が、宣言の書き換えで変わる</figcaption></figure>  </div>
+  <div class="part"><div class="head"><h3>comparison × listing</h3><span class="tag beta">提案・未実装</span></div>
+  <p class="col">並びから何が落ち、何が増えたかを見せる。<b>増減は色ではなく印（＋ −）で示している。</b></p><figure class="fig fig--comparison"><div class="fig__sides"><div class="panel panel--before"><span class="panel__label">v9</span><div class="panel__body"><div class="frame frame--listing"><span class="frame__label">ブロック構成</span><ul class="listing"><li class="item item--unchanged">表題</li><li class="item item--unchanged">目的</li><li class="item item--removed">操作保証</li><li class="item item--removed">保証シナリオ</li><li class="item item--unchanged">受け入れ基準</li><li class="item item--unchanged">用語</li></ul></div></div></div><div class="panel panel--after"><span class="panel__label">v10</span><div class="panel__body"><div class="frame frame--listing"><span class="frame__label">ブロック構成</span><ul class="listing"><li class="item item--unchanged">表題</li><li class="item item--unchanged">目的</li><li class="item item--unchanged">受け入れ基準</li><li class="item item--added">シナリオ</li><li class="item item--unchanged">用語</li></ul></div></div></div></div><figcaption>仕様の器から、2つのブロックが落ちる</figcaption></figure>  </div>
+  <div class="callout">
+    <span class="k">役割の語彙も直した</span>
+    <p>前は <code>focus</code> / <code>moved</code> でした。<code>moved</code> は「置き場所が変わる」という今回の話に固有です。<b><code>unchanged</code> / <code>focus</code> / <code>added</code> / <code>removed</code> / <code>changed</code></b> へ変えました。差分の語彙なので、どの比較でも同じ意味を持ちます。</p>
+  </div>
+</section>
+
+<section id="existing">
+  <h2><span class="num">02</span>いまある部品の実物</h2>
+  <div class="grid">
+<div class="part"><div class="head"><h3>sequence</h3><span class="tag has">部品あり</span></div><p class="col">やり取りの順序。繰り返しと分岐を入れ子で持てる</p><details><summary>渡している構造化データ</summary><pre>{
+ &quot;participants&quot;: [
+  {
+   &quot;id&quot;: &quot;orchestrator&quot;,
+   &quot;kind&quot;: &quot;actor&quot;,
+   &quot;label&quot;: &quot;Orchestrator&quot;
+  },
+  {
+   &quot;id&quot;: &quot;waffle&quot;,
+   &quot;kind&quot;: &quot;participant&quot;,
+   &quot;label&quot;: &quot;Waffle&quot;
+  },
+  {
+   &quot;id&quot;: &quot;advisor&quot;,
+   &quot;kind&quot;: &quot;participant&quot;,
+   &quot;label&quot;: &quot;advisor&quot;
+  }
+ ],
+ &quot;steps&quot;: [
+  {
+   &quot;kind&quot;: &quot;command&quot;,
+   &quot;from&quot;: &quot;orchestrator&quot;,
+   &quot;to&quot;: &quot;waffle&quot;,
+   &quot;message&quot;: &quot;骨格を作る&quot;,
+   &quot;activate&quot;: true
+  },
+  {
+   &quot;kind&quot;: &quot;return&quot;,
+   &quot;from&quot;: &quot;waffle&quot;,
+   &quot;to&quot;: &quot;orchestrator&quot;,
+   &quot;message&quot;: &quot;埋める場所の一覧&quot;,
+   &quot;deactivate&quot;: true
+  },
+  {
+   &quot;kind&quot;: &quot;loop&quot;,
+   &quot;message&quot;: &quot;観点ごとに&quot;,
+   &quot;steps&quot;: [
+    {
+     &quot;kind&quot;: &quot;command&quot;,
+     &quot;from&quot;: &quot;orchestrator&quot;,
+     &quot;to&quot;: &quot;advisor&quot;,
+     &quot;message&quot;: &quot;敵対的に確かめる&quot;
+    },
+    {
+     &quot;kind&quot;: &quot;return&quot;,
+     &quot;from&quot;: &quot;advisor&quot;,
+     &quot;to&quot;: &quot;orchestrator&quot;,
+     &quot;message&quot;: &quot;反証、または支持&quot;
+    }
+   ]
+  },
+  {
+   &quot;kind&quot;: &quot;alt&quot;,
+   &quot;branches&quot;: [
+    {
+     &quot;label&quot;: &quot;全員が支持した&quot;,
+     &quot;steps&quot;: [
+      {
+       &quot;kind&quot;: &quot;command&quot;,
+       &quot;from&quot;: &quot;orchestrator&quot;,
+       &quot;to&quot;: &quot;waffle&quot;,
+       &quot;message&quot;: &quot;値を書き込む&quot;
+      }
+     ]
+    },
+    {
+     &quot;label&quot;: &quot;反証が出た&quot;,
+     &quot;steps&quot;: [
+      {
+       &quot;kind&quot;: &quot;event&quot;,
+       &quot;from&quot;: &quot;orchestrator&quot;,
+       &quot;message&quot;: &quot;差し戻して調べ直す&quot;
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}</pre></details><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+sequenceDiagram
+    actor orchestrator as Orchestrator
+    participant waffle as Waffle
+    participant advisor as advisor
+    orchestrator-&gt;&gt;+waffle: 骨格を作る
+    waffle--&gt;&gt;-orchestrator: 埋める場所の一覧
+    loop 観点ごとに
+        orchestrator-&gt;&gt;advisor: 敵対的に確かめる
+        advisor--&gt;&gt;orchestrator: 反証、または支持
+    end
+    alt 全員が支持した
+        orchestrator-&gt;&gt;waffle: 値を書き込む
+    else 反証が出た
+        Note over orchestrator: 差し戻して調べ直す
+    end</pre></div></div><div class="part"><div class="head"><h3>flowchart</h3><span class="tag has">部品あり</span></div><p class="col">工程の並びと分岐。向きは <code>LR</code> 固定</p><details><summary>渡している構造化データ</summary><pre>{
+ &quot;stages&quot;: [
+  {
+   &quot;id&quot;: &quot;investigate&quot;,
+   &quot;label&quot;: &quot;調べる&quot;
+  },
+  {
+   &quot;id&quot;: &quot;decide&quot;,
+   &quot;label&quot;: &quot;決める&quot;
+  },
+  {
+   &quot;id&quot;: &quot;handoff&quot;,
+   &quot;label&quot;: &quot;引き継ぐ&quot;
+  },
+  {
+   &quot;id&quot;: &quot;build&quot;,
+   &quot;label&quot;: &quot;作る&quot;
+  }
+ ],
+ &quot;transitions&quot;: [
+  {
+   &quot;from&quot;: &quot;investigate&quot;,
+   &quot;to&quot;: &quot;decide&quot;
+  },
+  {
+   &quot;from&quot;: &quot;decide&quot;,
+   &quot;to&quot;: &quot;handoff&quot;
+  },
+  {
+   &quot;from&quot;: &quot;handoff&quot;,
+   &quot;to&quot;: &quot;build&quot;
+  },
+  {
+   &quot;from&quot;: &quot;build&quot;,
+   &quot;to&quot;: &quot;investigate&quot;,
+   &quot;label&quot;: &quot;反証が出たら&quot;
+  }
+ ]
+}</pre></details><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+flowchart LR
+    investigate[&quot;調べる&quot;]
+    decide[&quot;決める&quot;]
+    handoff[&quot;引き継ぐ&quot;]
+    build[&quot;作る&quot;]
+    investigate --&gt; decide
+    decide --&gt; handoff
+    handoff --&gt; build
+    build --&gt;|&quot;反証が出たら&quot;| investigate</pre></div></div><div class="part"><div class="head"><h3>statediagram</h3><span class="tag has">部品あり</span></div><p class="col">状態と遷移</p><details><summary>渡している構造化データ</summary><pre>{
+ &quot;transitions&quot;: [
+  {
+   &quot;from&quot;: &quot;[*]&quot;,
+   &quot;to&quot;: &quot;DRAFT&quot;,
+   &quot;command&quot;: &quot;骨格を作る&quot;
+  },
+  {
+   &quot;from&quot;: &quot;DRAFT&quot;,
+   &quot;to&quot;: &quot;VALIDATED&quot;,
+   &quot;command&quot;: &quot;構造の整合を確かめる&quot;
+  },
+  {
+   &quot;from&quot;: &quot;VALIDATED&quot;,
+   &quot;to&quot;: &quot;ACTIVE&quot;,
+   &quot;command&quot;: &quot;成果物として確定する&quot;
+  },
+  {
+   &quot;from&quot;: &quot;ACTIVE&quot;,
+   &quot;to&quot;: &quot;DEPRECATED&quot;,
+   &quot;command&quot;: &quot;使うのをやめる&quot;
+  },
+  {
+   &quot;from&quot;: &quot;VALIDATED&quot;,
+   &quot;to&quot;: &quot;DRAFT&quot;,
+   &quot;command&quot;: &quot;不備が見つかった&quot;
+  }
+ ],
+ &quot;pseudo_states&quot;: []
+}</pre></details><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+stateDiagram-v2
+    [*] --&gt; DRAFT: 骨格を作る
+    DRAFT --&gt; VALIDATED: 構造の整合を確かめる
+    VALIDATED --&gt; ACTIVE: 成果物として確定する
+    ACTIVE --&gt; DEPRECATED: 使うのをやめる
+    VALIDATED --&gt; DRAFT: 不備が見つかった</pre></div></div><div class="part"><div class="head"><h3>graph</h3><span class="tag has">部品あり</span></div><p class="col">ものの間の関係。囲みで塊にできる</p><details><summary>渡している構造化データ</summary><pre>{
+ &quot;groups&quot;: [
+  {
+   &quot;label&quot;: &quot;問題空間&quot;,
+   &quot;nodes&quot;: [
+    &quot;事業領域&quot;,
+    &quot;業務領域&quot;
+   ]
+  },
+  {
+   &quot;label&quot;: &quot;解決空間&quot;,
+   &quot;nodes&quot;: [
+    &quot;区切られた文脈&quot;,
+    &quot;業務ユースケース&quot;,
+    &quot;集約&quot;
+   ]
+  }
+ ],
+ &quot;nodes&quot;: [],
+ &quot;direction&quot;: &quot;TB&quot;,
+ &quot;edges&quot;: [
+  {
+   &quot;from&quot;: &quot;事業領域&quot;,
+   &quot;to&quot;: &quot;業務領域&quot;,
+   &quot;label&quot;: &quot;含む&quot;
+  },
+  {
+   &quot;from&quot;: &quot;区切られた文脈&quot;,
+   &quot;to&quot;: &quot;業務ユースケース&quot;,
+   &quot;label&quot;: &quot;持つ&quot;
+  },
+  {
+   &quot;from&quot;: &quot;区切られた文脈&quot;,
+   &quot;to&quot;: &quot;集約&quot;,
+   &quot;label&quot;: &quot;持つ&quot;
+  },
+  {
+   &quot;from&quot;: &quot;業務ユースケース&quot;,
+   &quot;to&quot;: &quot;業務領域&quot;,
+   &quot;label&quot;: &quot;対応する&quot;
+  }
+ ]
+}</pre></details><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+flowchart TB
+    subgraph g0[&quot;問題空間&quot;]
+        n0[&quot;事業領域&quot;]
+        n1[&quot;業務領域&quot;]
+    end
+    subgraph g1[&quot;解決空間&quot;]
+        n2[&quot;区切られた文脈&quot;]
+        n3[&quot;業務ユースケース&quot;]
+        n4[&quot;集約&quot;]
+    end
+    n0 --&gt;|&quot;含む&quot;| n1
+    n2 --&gt;|&quot;持つ&quot;| n3
+    n2 --&gt;|&quot;持つ&quot;| n4
+    n3 --&gt;|&quot;対応する&quot;| n1</pre></div></div><div class="part"><div class="head"><h3>architecture</h3><span class="tag has">部品あり</span></div><p class="col">区画と、その中の部品。雲と server のアイコンが付く</p><details><summary>渡している構造化データ</summary><pre>{
+ &quot;zones&quot;: [
+  {
+   &quot;id&quot;: &quot;inbound&quot;,
+   &quot;label&quot;: &quot;受け口&quot;,
+   &quot;contains&quot;: [
+    {
+     &quot;id&quot;: &quot;cli&quot;,
+     &quot;label&quot;: &quot;CLI&quot;
+    },
+    {
+     &quot;id&quot;: &quot;mcp&quot;,
+     &quot;label&quot;: &quot;MCP&quot;
+    }
+   ]
+  },
+  {
+   &quot;id&quot;: &quot;app&quot;,
+   &quot;label&quot;: &quot;応用&quot;,
+   &quot;contains&quot;: [
+    {
+     &quot;id&quot;: &quot;uc&quot;,
+     &quot;label&quot;: &quot;ユースケース&quot;
+    }
+   ]
+  },
+  {
+   &quot;id&quot;: &quot;domain&quot;,
+   &quot;label&quot;: &quot;領域&quot;,
+   &quot;contains&quot;: [
+    {
+     &quot;id&quot;: &quot;svc&quot;,
+     &quot;label&quot;: &quot;業務サービス&quot;
+    },
+    {
+     &quot;id&quot;: &quot;model&quot;,
+     &quot;label&quot;: &quot;モデル&quot;
+    }
+   ]
+  }
+ ],
+ &quot;connections&quot;: [
+  {
+   &quot;from&quot;: &quot;cli&quot;,
+   &quot;to&quot;: &quot;uc&quot;
+  },
+  {
+   &quot;from&quot;: &quot;mcp&quot;,
+   &quot;to&quot;: &quot;uc&quot;
+  },
+  {
+   &quot;from&quot;: &quot;uc&quot;,
+   &quot;to&quot;: &quot;svc&quot;
+  },
+  {
+   &quot;from&quot;: &quot;svc&quot;,
+   &quot;to&quot;: &quot;model&quot;
+  }
+ ]
+}</pre></details><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+architecture-beta
+    group inbound(cloud)[&quot;受け口&quot;]
+    service cli(server)[CLI] in inbound
+    service mcp(server)[MCP] in inbound
+    group app(cloud)[&quot;応用&quot;]
+    service uc(server)[&quot;ユースケース&quot;] in app
+    group domain(cloud)[&quot;領域&quot;]
+    service svc(server)[&quot;業務サービス&quot;] in domain
+    service model(server)[&quot;モデル&quot;] in domain
+    cli:R --&gt; L:uc
+    mcp:R --&gt; L:uc
+    uc:R --&gt; L:svc
+    svc:R --&gt; L:model</pre></div></div>  </div>
+</section>
+
+<section id="theming">
+  <h2><span class="num">03</span>17種を自前で書く必要はない</h2>
+  <div class="callout">
+    <span class="k">確かめたこと</span>
+    <p>Mermaidは<b>配色・書体・線色をこちらで指定できます</b>。図の頭に指令を1行置くだけで、既定の薄紫が消えてこちらの配色になります。<b>このページの図はすべてその指定を当てたもの</b>で、Mermaidの既定の見た目ではありません。</p>
+    <p>つまり<b>HTMLのために17種を自前で書き直す必要はありません</b>。書くのは、Mermaidに存在しない図（変更前後の比較・一覧の差分）だけで済みます。</p>
+  </div>
+  <div class="scroll"><table>
+    <caption>表3 ── 図の出どころの使い分け</caption>
+    <thead><tr><th>図</th><th>どう出すか</th><th>自前で書くもの</th></tr></thead>
+    <tbody>
+      <tr><td>Mermaidにある17種</td><td>Mermaid ＋ 配色の指定</td><td><b>無し</b>（構造化データを構文へ写す部品だけ）</td></tr>
+      <tr><td><code>comparison</code> の器</td><td>HTMLを直接組む</td><td>器1つ</td></tr>
+      <tr><td><code>tree</code> / <code>transcript</code> / <code>listing</code></td><td>同上</td><td>中身3つ</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout alarm">
+    <span class="k">閲覧時にJSが要る</span>
+    <p>Mermaidは<b>見るときにJSが動く前提</b>です。このページや対応ビューアでは描かれますが、単体で配って回るHTMLに焼き込むなら、ライブラリを同梱するか、描画済みの図に置き換える必要があります。<b>ここは未決です。</b></p>
+  </div>
+</section>
+
+<section id="look">
+  <h2><span class="num">04</span>見た目をどこまで変えられるか</h2>
+  <p class="col">下の6枚は<b>すべて同じ構造化データ</b>です。データは一文字も変えていません。変えたのは描くときの指定だけで、<code>themeCSS</code> によって図の中へ任意のCSSを注入できます。</p>
+  <div class="grid">
+<div class="part"><div class="head"><h3>既定</h3></div><p class="col">Mermaidをそのまま使ったとき。薄紫の箱と、角の立った枠</p><div class="plate"><pre class="mermaid">flowchart LR
+    investigate[&quot;調べる&quot;]
+    decide[&quot;決める&quot;]
+    handoff[&quot;引き継ぐ&quot;]
+    build[&quot;作る&quot;]
+    investigate --&gt; decide
+    decide --&gt; handoff
+    handoff --&gt; build
+    build --&gt;|&quot;反証が出たら&quot;| investigate</pre></div></div><div class="part"><div class="head"><h3>角丸と影</h3></div><p class="col">角を丸め、影を落とし、線を細くし、字送りを広げた</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;primaryColor&quot;: &quot;#E2EFF0&quot;, &quot;primaryTextColor&quot;: &quot;#171B23&quot;, &quot;primaryBorderColor&quot;: &quot;#16636B&quot;, &quot;lineColor&quot;: &quot;#79828F&quot;, &quot;fontFamily&quot;: &quot;Noto Sans JP, sans-serif&quot;, &quot;fontSize&quot;: &quot;13px&quot;}, &quot;themeCSS&quot;: &quot;.node rect{rx:14px;ry:14px;stroke-width:1px;filter:drop-shadow(0 2px 6px rgba(23,27,35,.10))}.node .label{letter-spacing:.04em}.edgePath path{stroke-width:1.4px}.edgeLabel rect{rx:6px;ry:6px}&quot;}}%%
+flowchart LR
+    investigate[&quot;調べる&quot;]
+    decide[&quot;決める&quot;]
+    handoff[&quot;引き継ぐ&quot;]
+    build[&quot;作る&quot;]
+    investigate --&gt; decide
+    decide --&gt; handoff
+    handoff --&gt; build
+    build --&gt;|&quot;反証が出たら&quot;| investigate</pre></div></div><div class="part"><div class="head"><h3>塗り潰し</h3></div><p class="col">箱を塗り、文字を白抜きにし、線を破線にした</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;primaryColor&quot;: &quot;#E2EFF0&quot;, &quot;primaryTextColor&quot;: &quot;#171B23&quot;, &quot;primaryBorderColor&quot;: &quot;#16636B&quot;, &quot;lineColor&quot;: &quot;#79828F&quot;, &quot;fontFamily&quot;: &quot;Noto Sans JP, sans-serif&quot;, &quot;fontSize&quot;: &quot;13px&quot;}, &quot;themeCSS&quot;: &quot;.node rect{rx:0;ry:0;stroke-width:0;fill:#16636B}.node .label,.nodeLabel{color:#fff;fill:#fff;font-weight:600}.edgePath path{stroke-width:2px;stroke-dasharray:4 3}&quot;}}%%
+flowchart LR
+    investigate[&quot;調べる&quot;]
+    decide[&quot;決める&quot;]
+    handoff[&quot;引き継ぐ&quot;]
+    build[&quot;作る&quot;]
+    investigate --&gt; decide
+    decide --&gt; handoff
+    handoff --&gt; build
+    build --&gt;|&quot;反証が出たら&quot;| investigate</pre></div></div><div class="part"><div class="head"><h3>線画</h3></div><p class="col">塗りを外し、黒い細線だけにした</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;primaryColor&quot;: &quot;#E2EFF0&quot;, &quot;primaryTextColor&quot;: &quot;#171B23&quot;, &quot;primaryBorderColor&quot;: &quot;#16636B&quot;, &quot;lineColor&quot;: &quot;#79828F&quot;, &quot;fontFamily&quot;: &quot;Noto Sans JP, sans-serif&quot;, &quot;fontSize&quot;: &quot;13px&quot;}, &quot;themeCSS&quot;: &quot;.node rect{rx:2px;ry:2px;fill:transparent;stroke:#171B23;stroke-width:1.2px}.edgePath path{stroke:#171B23;stroke-width:1px}.marker{fill:#171B23;stroke:#171B23}&quot;}}%%
+flowchart LR
+    investigate[&quot;調べる&quot;]
+    decide[&quot;決める&quot;]
+    handoff[&quot;引き継ぐ&quot;]
+    build[&quot;作る&quot;]
+    investigate --&gt; decide
+    decide --&gt; handoff
+    handoff --&gt; build
+    build --&gt;|&quot;反証が出たら&quot;| investigate</pre></div></div><div class="part"><div class="head"><h3>手描き風</h3></div><p class="col"><code>look</code> の指定で、描画の質感そのものを替えた</p><div class="plate"><pre class="mermaid">%%{init: {&quot;look&quot;: &quot;handDrawn&quot;, &quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;primaryColor&quot;: &quot;#E2EFF0&quot;, &quot;primaryTextColor&quot;: &quot;#171B23&quot;, &quot;primaryBorderColor&quot;: &quot;#16636B&quot;, &quot;lineColor&quot;: &quot;#79828F&quot;, &quot;fontFamily&quot;: &quot;Noto Sans JP, sans-serif&quot;, &quot;fontSize&quot;: &quot;13px&quot;}}}%%
+flowchart LR
+    investigate[&quot;調べる&quot;]
+    decide[&quot;決める&quot;]
+    handoff[&quot;引き継ぐ&quot;]
+    build[&quot;作る&quot;]
+    investigate --&gt; decide
+    decide --&gt; handoff
+    handoff --&gt; build
+    build --&gt;|&quot;反証が出たら&quot;| investigate</pre></div></div><div class="part"><div class="head"><h3>間隔と曲線</h3></div><p class="col">箱の間隔を広げ、線を曲線にした</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;: &quot;base&quot;, &quot;themeVariables&quot;: {&quot;primaryColor&quot;: &quot;#E2EFF0&quot;, &quot;primaryTextColor&quot;: &quot;#171B23&quot;, &quot;primaryBorderColor&quot;: &quot;#16636B&quot;, &quot;lineColor&quot;: &quot;#79828F&quot;, &quot;fontFamily&quot;: &quot;Noto Sans JP, sans-serif&quot;, &quot;fontSize&quot;: &quot;13px&quot;}, &quot;themeCSS&quot;: &quot;.node rect{rx:14px;ry:14px;stroke-width:1px;filter:drop-shadow(0 2px 6px rgba(23,27,35,.10))}.node .label{letter-spacing:.04em}.edgePath path{stroke-width:1.4px}.edgeLabel rect{rx:6px;ry:6px}&quot;, &quot;flowchart&quot;: {&quot;curve&quot;: &quot;basis&quot;, &quot;nodeSpacing&quot;: 70, &quot;rankSpacing&quot;: 90, &quot;padding&quot;: 18}}}%%
+flowchart LR
+    investigate[&quot;調べる&quot;]
+    decide[&quot;決める&quot;]
+    handoff[&quot;引き継ぐ&quot;]
+    build[&quot;作る&quot;]
+    investigate --&gt; decide
+    decide --&gt; handoff
+    handoff --&gt; build
+    build --&gt;|&quot;反証が出たら&quot;| investigate</pre></div></div>  </div>
+  <div class="scroll"><table>
+    <caption>表4 ── 変えられるものと、変えられないもの</caption>
+    <thead><tr><th>　</th><th>何が</th><th>どうやって</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mark yes">○</span></td><td>塗り・線種・線の太さ・角の丸み・影</td><td><code>themeCSS</code></td></tr>
+      <tr><td><span class="mark yes">○</span></td><td>書体・字の大きさ・字送り・文字色</td><td><code>themeVariables</code> / <code>themeCSS</code></td></tr>
+      <tr><td><span class="mark yes">○</span></td><td>箱の間隔・線の曲がり方</td><td>構文ごとの設定</td></tr>
+      <tr><td><span class="mark yes">○</span></td><td>描画の質感そのもの</td><td><code>look</code></td></tr>
+      <tr><td><span class="mark no">✗</span></td><td><b>箱をどこに置くか</b></td><td>レイアウトが決める。指定できない</td></tr>
+      <tr><td><span class="mark no">✗</span></td><td>線のラベルの位置</td><td>線の中点に固定</td></tr>
+      <tr><td><span class="mark no">✗</span></td><td>長い文の折り返し</td><td>されない</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout">
+    <span class="k">この境界について</span>
+    <p>変えられないのは<b>配置だけ</b>です。そして配置こそが、手で書くと崩れる部分でした。<b>崩れる仕事は機械が持ち、見た目はこちらが決める</b>——という分かれ方になっています。</p>
+  </div>
+</section>
+
+<section id="all17">
+  <h2><span class="num">05</span>部品が無い13構文</h2>
+  <p class="col">下は部品を通していません。<b>構文の例として手で書いたもの</b>です。部品にするかどうかを決めるために、何が描けるかだけを見ます。</p>
+  <div class="grid">
+<div class="part"><div class="head"><h3>classDiagram</h3><span class="tag none">部品なし</span></div><p class="col">型と、その関連・多重度</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+classDiagram
+    class Document {
+      +documentId
+      +status
+      +validate()
+    }
+    class Block {
+      +blockType
+    }
+    Document &quot;1&quot; *-- &quot;多&quot; Block</pre></div></div><div class="part"><div class="head"><h3>erDiagram</h3><span class="tag none">部品なし</span></div><p class="col">実体と、その関連・多重度</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+erDiagram
+    DOCUMENT ||--o{ BLOCK : &quot;持つ&quot;
+    DOCUMENT }o--|| SCHEMA : &quot;従う&quot;</pre></div></div><div class="part"><div class="head"><h3>quadrantChart</h3><span class="tag none">部品なし</span></div><p class="col">2軸での位置づけ。<b>subdomainの分類で既に使用中（原文として埋まっている）</b></p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+quadrantChart
+    title 業務領域の分類
+    x-axis 差別化が小さい --&gt; 差別化が大きい
+    y-axis 複雑さが低い --&gt; 複雑さが高い
+    quadrant-1 中核
+    quadrant-2 見直す
+    quadrant-3 一般
+    quadrant-4 補完
+    文書の検証: [0.78, 0.72]
+    描画: [0.35, 0.55]
+    設定の読み込み: [0.2, 0.2]</pre></div></div><div class="part"><div class="head"><h3>mindmap</h3><span class="tag none">部品なし</span></div><p class="col">概念の木。<b>knowledgeのnodesがまさにこの形</b></p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+mindmap
+  root((区切られた文脈))
+    業務領域
+      中核
+      一般
+      補完
+    同じ言葉
+    集約</pre></div></div><div class="part"><div class="head"><h3>timeline</h3><span class="tag none">部品なし</span></div><p class="col">時間順の出来事</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+timeline
+    title 仕様の器の推移
+    v8 : 操作保証を持つ
+    v9 : 鍵の一意性を足す
+    v10 : 2ブロックを落とす</pre></div></div><div class="part"><div class="head"><h3>journey</h3><span class="tag none">部品なし</span></div><p class="col">体験の段階と、その手応え</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+journey
+    title 仕様を書く
+    section 調べる
+      既存を読む: 3: 書き手
+      advisorに聞く: 4: 書き手
+    section 決める
+      骨格を作る: 5: 書き手
+      値を埋める: 3: 書き手</pre></div></div><div class="part"><div class="head"><h3>gantt</h3><span class="tag none">部品なし</span></div><p class="col">作業と日程</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+gantt
+    title 工程
+    dateFormat YYYY-MM-DD
+    section 進行
+    調べる    :a1, 2026-08-01, 3d
+    決める    :a2, after a1, 2d
+    引き継ぐ  :a3, after a2, 1d
+    作る      :a4, after a3, 5d</pre></div></div><div class="part"><div class="head"><h3>pie</h3><span class="tag none">部品なし</span></div><p class="col">比率</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+pie title 部品の内訳
+    &quot;文章の部品&quot; : 10
+    &quot;図の部品&quot; : 5</pre></div></div><div class="part"><div class="head"><h3>gitGraph</h3><span class="tag none">部品なし</span></div><p class="col">枝分かれと合流</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+gitGraph
+    commit id: &quot;骨格&quot;
+    branch spec
+    commit id: &quot;基準を足す&quot;
+    commit id: &quot;検証を通す&quot;
+    checkout main
+    merge spec</pre></div></div><div class="part"><div class="head"><h3>requirementDiagram</h3><span class="tag none">部品なし</span></div><p class="col">要求と、それを満たすもの</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+requirementDiagram
+    requirement &quot;鍵の一意性&quot; {
+        id: &quot;REQ-001&quot;
+        text: &quot;同じ鍵を二度作らない&quot;
+        risk: high
+        verifymethod: test
+    }
+
+    element &quot;検証ユースケース&quot; {
+        type: &quot;usecase&quot;
+    }
+
+    &quot;検証ユースケース&quot; - satisfies -&gt; &quot;鍵の一意性&quot;</pre></div></div><div class="part"><div class="head"><h3>sankey-beta</h3><span class="tag beta">beta・部品なし</span></div><p class="col">流れの量。<b>日本語のラベルが構文解析に失敗する</b>ため、ここだけ英字にしている</p><div class="plate"><pre class="mermaid">sankey-beta
+
+Structured data,Markdown,15
+Structured data,HTML,4
+Markdown,Artifact,15
+HTML,Artifact,4</pre></div></div><div class="part"><div class="head"><h3>xychart-beta</h3><span class="tag beta">beta・部品なし</span></div><p class="col">折れ線・棒</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+xychart-beta
+    title &quot;版ごとの仕様の数&quot;
+    x-axis [v8, v9, v10]
+    y-axis &quot;件数&quot; 0 --&gt; 60
+    bar [56, 10, 4]</pre></div></div><div class="part"><div class="head"><h3>block-beta</h3><span class="tag beta">beta・部品なし</span></div><p class="col">汎用の箱組み</p><div class="plate"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+block-beta
+columns 3
+  a[&quot;受け口&quot;] b[&quot;応用&quot;] c[&quot;領域&quot;]
+  d[&quot;CLI / MCP&quot;] e[&quot;ユースケース&quot;] f[&quot;モデル&quot;]</pre></div></div>  </div>
+</section>
+
+<section id="coverage">
+  <h2><span class="num">06</span>被覆より先に効くこと</h2>
+  <div class="callout alarm">
+    <span class="k">原文の逃げ道</span>
+    <p>部品が無い図は、<b>原文の塊としてそのまま書けてしまいます</b>。実際 <code>quadrantChart</code> は subdomain の分類図として既に使われていますが、部品を通っていません。書けてしまう限り、構造化されず、検証もされず、HTML側へも展開できません。</p>
+    <p><b>「何種類そろえるか」より「原文の逃げ道を閉じるか」の方が先に効きます。</b>閉じると決めれば、実際に使う構文は全部そろえる必要が自動的に出てきます。逆に閉じないままそろえても、書き手は楽な原文へ流れます。</p>
+  </div>
+  <div class="scroll"><table>
+    <caption>表3 ── 進め方の案</caption>
+    <thead><tr><th>順</th><th>やること</th><th>そこで分かること</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td>実際に原文で書かれている図を数える</td><td>本当に要る構文が、予想でなく実測で決まる</td></tr>
+      <tr><td class="n">2</td><td>その分の部品を作る</td><td>—</td></tr>
+      <tr><td class="n">3</td><td>原文の逃げ道を閉じる</td><td>ここで初めて不足が違反として現れる</td></tr>
+      <tr><td class="n">4</td><td>残りをそろえる</td><td>3で出た不足だけ</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="notes">
+  <h2><span class="num">07</span>気づいたこと</h2>
+  <div class="callout alarm">
+    <span class="k">architecture</span>
+    <p>実装のコメントに、<b>グループ間の線は3グループ以上で構文解析に失敗する既知の不具合がある</b>と明記され、その回避として常に部品どうしを直接結ぶ形にしてあります。<b>区画どうしの関係を描けません。</b>加えて <code>architecture-beta</code> は beta です。名前より先に、残すかどうかから考える余地があります。</p>
+  </div>
+  <div class="callout">
+    <span class="k">flowchart と graph</span>
+    <p>同じ「箱と線」を出すのに、<code>graph</code> は向きを受け取れて <code>flowchart</code> は受け取れません。<b>渡せるものが揃っていません。</b>名前を揃えるなら、受け取るものも一緒に揃えるのが自然です。</p>
+  </div>
+</section>
+
+<footer>
+  <p>出典 ── <code>src/waffle/domain/services/part_renderer.py</code>（417行、15部品）、<code>.claude/skills/mermaid-guide/references/</code>（17構文）。</p>
+  <p>「部品あり」の図は部品へ直接データを渡した出力。「部品なし」の図は構文の例として手で書いたもの。比較の3枚は提案した部品の出力。</p>
+</footer>
+
+</div>

@@ -1,0 +1,441 @@
+<title>ADR：業務領域を、区切られた文脈の外へ出す</title>
+<style>
+  :root {
+    --paper:      #EDF0F3;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F7F9;
+    --ink:        #171B23;
+    --ink-soft:   #4B5563;
+    --ink-faint:  #79828F;
+    --rule:       #D3DAE2;
+    --rule-soft:  #E4E9EE;
+
+    --problem:    #7A4368;
+    --problem-bg: #F3E9F0;
+    --solution:   #16636B;
+    --solution-bg:#E2EFF0;
+    --warn:       #9A4A21;
+    --warn-bg:    #F7EAE2;
+    --dead:       #8A8F98;
+
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
+    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+      --rule:#2E3742; --rule-soft:#242C37;
+      --problem:#D19CC0; --problem-bg:#2C1F2A;
+      --solution:#6BC0C7; --solution-bg:#132A2C;
+      --warn:#E0A17A; --warn-bg:#2E211A;
+      --dead:#767E8A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --problem:#D19CC0; --problem-bg:#2C1F2A;
+    --solution:#6BC0C7; --solution-bg:#132A2C;
+    --warn:#E0A17A; --warn-bg:#2E211A;
+    --dead:#767E8A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.85;
+    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+  .col { max-width: 40rem; }
+
+  header { display: flex; flex-direction: column; gap: .9rem; }
+  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+
+  section { display: flex; flex-direction: column; gap: 1.4rem; }
+  h2 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
+    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem;
+  }
+  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
+  h2 .side { margin-left: auto; font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
+  p { margin: 0; }
+  .col > p + p { margin-top: .9rem; }
+  strong { font-weight: 700; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 3px; padding: .08em .34em; }
+
+  .verdict { display: grid; grid-template-columns: repeat(auto-fit,minmax(15rem,1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .verdict > div { background: var(--surface); padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .45rem; }
+  .verdict dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .verdict dd { margin: 0; font-size: .95rem; line-height: 1.7; }
+  .verdict .big { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
+
+  .ladder { display: flex; flex-direction: column; }
+  .rung { display: grid; grid-template-columns: 12.5rem 1fr; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; }
+  @media (max-width: 38rem) { .rung { grid-template-columns: 1fr; } .rung-name { border-right: none; border-bottom: 1px solid var(--rule-soft); } }
+  .rung-name { padding: 1.1rem 1.2rem; border-right: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: .3rem; justify-content: center; }
+  .rung-name b { font-family: var(--serif); font-size: 1.02rem; font-weight: 600; line-height: 1.45; }
+  .rung-name span { font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); letter-spacing: .04em; }
+  .rung-body { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 30rem) { .rung-body { grid-template-columns: 1fr; } .cell + .cell { border-left: none; border-top: 1px solid var(--rule-soft); } }
+  .cell { padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
+  .cell + .cell { border-left: 1px solid var(--rule-soft); }
+  .cell .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .cell .v { font-size: .95rem; line-height: 1.6; }
+  .cell .m { font-size: .8rem; color: var(--ink-soft); line-height: 1.6; }
+  .link { width: 2px; height: 1.6rem; background: var(--rule); position: relative; margin-left: 6.25rem; }
+  .link::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
+  .link span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  .aside-note { display: flex; gap: .85rem; align-items: flex-start; background: var(--surface-2); border-left: 3px solid var(--problem); padding: 1rem 1.15rem; border-radius: 0 2px 2px 0; font-size: .92rem; line-height: 1.75; color: var(--ink-soft); }
+  .aside-note.warn { border-left-color: var(--warn); }
+  .aside-note b { color: var(--ink); }
+
+  .spaces { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; }
+  @media (max-width: 40rem) { .spaces { grid-template-columns: 1fr; } .spaces .bridge { padding: 1.2rem 0; } }
+  .space { border: 1px solid var(--rule); border-radius: 2px; padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .75rem; background: var(--surface); }
+  .space.problem { border-top: 3px solid var(--problem); }
+  .space.solution { border-top: 3px solid var(--solution); }
+  .space-label { font-family: var(--mono); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; }
+  .space.problem .space-label { color: var(--problem); }
+  .space.solution .space-label { color: var(--solution); }
+  .space b { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
+  .space p { font-size: .88rem; color: var(--ink-soft); line-height: 1.7; }
+  .space ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .3rem; font-size: .84rem; color: var(--ink-soft); }
+  .space li::before { content: "· "; color: var(--ink-faint); }
+  .bridge { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: 0 1.1rem; }
+  .bridge .arrow { font-family: var(--mono); font-size: 1.1rem; color: var(--ink-faint); letter-spacing: -.1em; }
+  .bridge .cap { font-size: .74rem; font-family: var(--mono); color: var(--ink-faint); text-align: center; line-height: 1.5; }
+
+  /* four families */
+  .families { display: flex; flex-direction: column; }
+  .family { display: grid; grid-template-columns: 3rem 1fr; border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); }
+  .family-idx { background: var(--surface-2); border-right: 1px solid var(--rule-soft); display: flex; align-items: flex-start; justify-content: center; padding-top: 1.25rem; font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); }
+  .family-main { padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .8rem; }
+  .family-q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .family-main > b { font-family: var(--serif); font-size: 1.14rem; font-weight: 600; }
+  .family-main > p { font-size: .93rem; line-height: 1.75; color: var(--ink-soft); }
+  .must { display: flex; flex-direction: column; gap: .35rem; padding-top: .2rem; }
+  .must div { font-size: .87rem; line-height: 1.65; display: flex; gap: .55rem; }
+  .must div::before { content: "▸"; color: var(--ink-faint); flex: none; font-size: .7rem; transform: translateY(.35em); }
+  .must div.strike { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--rule); }
+  .must div.strike::before { content: "×"; text-decoration: none; }
+  .family-flow { height: 1.5rem; width: 2px; background: var(--rule); margin-left: 1.5rem; position: relative; }
+  .family-flow::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
+  .family-flow span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .73rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  /* gap table */
+  .gapwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; font-size: .9rem; }
+  th, td { text-align: left; padding: .85rem 1rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; line-height: 1.65; }
+  th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; background: var(--surface-2); }
+  tr:last-child td { border-bottom: none; }
+  td.name { font-weight: 700; white-space: nowrap; }
+  .pill { font-family: var(--mono); font-size: .68rem; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
+  .pill.ok { color: var(--solution); background: var(--solution-bg); }
+  .pill.part { color: var(--warn); background: var(--warn-bg); }
+  .pill.none { color: var(--warn); background: var(--warn-bg); font-weight: 700; }
+
+  .board { display: grid; grid-template-columns: repeat(auto-fit,minmax(17rem,1fr)); gap: 1.1rem; }
+  .panel { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .panel-head { padding: .8rem 1.1rem; border-bottom: 1px solid var(--rule-soft); background: var(--surface-2); display: flex; align-items: baseline; justify-content: space-between; gap: .8rem; }
+  .panel-head b { font-size: .92rem; }
+  .panel-head .count { font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .panel ul { margin: 0; padding: .9rem 1.1rem 1.1rem; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .panel li { display: flex; align-items: baseline; gap: .6rem; font-size: .88rem; line-height: 1.6; }
+  .dot { width: .5rem; height: .5rem; border-radius: 50%; flex: none; transform: translateY(-.1em); }
+  .dot.live { background: var(--solution); }
+  .dot.dead { background: var(--dead); }
+  .panel li code { background: transparent; border: none; padding: 0; font-size: .84em; }
+  .panel li .note { color: var(--ink-faint); font-size: .78rem; }
+
+  .trees { display: grid; grid-template-columns: repeat(auto-fit,minmax(20rem,1fr)); gap: 1.1rem; }
+  .tree { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .tree-head { padding: .75rem 1.1rem; border-bottom: 1px solid var(--rule-soft); display: flex; align-items: center; justify-content: space-between; gap: .8rem; background: var(--surface-2); }
+  .tree-head b { font-size: .9rem; font-weight: 700; }
+  .tag { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
+  .tag.bad { color: var(--warn); background: var(--warn-bg); }
+  .tag.good { color: var(--solution); background: var(--solution-bg); }
+  .tree pre { margin: 0; padding: 1.1rem 1.2rem 1.3rem; font-family: var(--mono); font-size: .8rem; line-height: 1.85; overflow-x: auto; color: var(--ink-soft); }
+  .tree pre .p { color: var(--problem); font-weight: 700; }
+  .tree pre .s { color: var(--solution); font-weight: 700; }
+  .tree pre .cmt { color: var(--ink-faint); }
+
+  .loop { display: flex; flex-wrap: wrap; }
+  .loop-step { flex: 1 1 8rem; border: 1px solid var(--rule); background: var(--surface); padding: .9rem 1rem; display: flex; flex-direction: column; gap: .25rem; border-radius: 2px; }
+  .loop-step + .loop-step { border-left: none; }
+  .loop-step b { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
+  .loop-step span { font-size: .76rem; color: var(--ink-faint); font-family: var(--mono); }
+
+  .open { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+  .open > div { background: var(--surface); padding: 1.05rem 1.2rem; display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; }
+  @media (max-width: 34rem) { .open > div { grid-template-columns: 1fr; gap: .3rem; } }
+  .open .q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .open .a { font-size: .93rem; line-height: 1.75; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1.2rem; font-size: .82rem; color: var(--ink-faint); line-height: 1.8; }
+</style>
+<style>
+  .cap { color: var(--ink-soft); font-size: .94rem; margin: 0; max-width: 42rem; }
+  .fig { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); padding: 1.1rem .6rem; overflow-x: auto; }
+  pre.mermaid { background: transparent; border: none; margin: 0; padding: 0; text-align: center; overflow-x: auto; }
+  .figrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+  .figcell { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+  .figlabel { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; padding: .6rem 1rem; border-bottom: 1px solid var(--rule-soft); }
+  .figlabel.bad { color: var(--warn); background: var(--warn-bg); }
+  .figlabel.good { color: var(--solution); background: var(--solution-bg); }
+  .figcell pre.mermaid { padding: 1.1rem .6rem .4rem; }
+  .figcap { font-size: .86rem; color: var(--ink-soft); padding: 0 1.1rem 1rem; margin: 0; }
+
+  .tail { display: block; font-size: .78rem; color: var(--ink-faint); line-height: 1.6; margin-top: .3rem; }
+  table.cmp td.no  { color: var(--warn); }
+  table.cmp td.yes { color: var(--solution); }
+  table.cmp td.no .tail, table.cmp td.yes .tail { color: var(--ink-faint); }
+  table.dec tr.heavy td { background: var(--surface-2); }
+  table.dec tr.heavy td.name { font-size: 1rem; }
+  table.dec tr.heavy .tail { color: var(--warn); font-weight: 700; letter-spacing: .08em; }
+  table.dec td:nth-child(2) { font-weight: 700; }
+  table.dec td:nth-child(2) .tail { font-weight: 400; }
+  table.risk tr.danger td { background: var(--warn-bg); }
+  td.name { white-space: normal; }
+
+  .appendix { opacity: .8; }
+  .appendix h2 { font-size: 1.1rem; border-bottom-color: var(--rule-soft); }
+  .appendix table { font-size: .85rem; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="meta">
+      <span>ADR</span>
+      <span class="st">状態：決定待ち</span>
+      <span>2026-08-11</span>
+    </div>
+    <h1>業務領域を、区切られた文脈の外へ出す</h1>
+    <p class="lede">2026-08-10 の決定を、作り直した knowledge で測り直しました。結論は同じです。</p>
+  </header>
+
+  <section>
+    <h2><span class="num">01</span>2つの平面がある</h2>
+    <p class="cap">決める人が違うものは、別の平面にある。両者は<strong>包含ではなく対応</strong>で結ばれる。</p>
+    <div class="fig">
+<pre class="mermaid">
+flowchart LR
+  subgraph P["問題空間 ── 事業が決める"]
+    direction TB
+    BD["事業領域"]
+    SD["業務領域<br/>（中核・一般・補完）"]
+    BD --> SD
+  end
+  subgraph S["解決空間 ── 技術者が決める"]
+    direction TB
+    BC["区切られた文脈"]
+    UC["業務ユースケース"]
+    AG["集約"]
+    BC --> UC
+    BC --> AG
+  end
+  UC -. 対応 .-> SD
+</pre>
+    </div>
+    <div class="figrow">
+      <div class="figcell">
+        <div class="figlabel bad">いまの構造</div>
+<pre class="mermaid">
+flowchart TB
+  BC2["区切られた文脈"]
+  SD2["業務領域"]
+  UC2["業務ユースケース"]
+  AG2["集約"]
+  BC2 --> SD2
+  BC2 --> AG2
+  SD2 --> UC2
+</pre>
+        <p class="figcap">問題空間が、解決空間の<strong>中</strong>にある</p>
+      </div>
+      <div class="figcell">
+        <div class="figlabel good">変更後</div>
+<pre class="mermaid">
+flowchart TB
+  BD3["事業領域"]
+  SD3["業務領域"]
+  BC3["区切られた文脈"]
+  UC3["業務ユースケース"]
+  AG3["集約"]
+  BD3 --> SD3
+  BC3 --> UC3
+  BC3 --> AG3
+  UC3 -. 対応 .-> SD3
+</pre>
+        <p class="figcap">業務領域が<strong>事業領域の下</strong>へ移る。他は動かない</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>入れ子と参照で、何が違うか</h2>
+    <p class="cap">この表が判断の全部です。</p>
+    <div class="gapwrap">
+      <table class="cmp">
+        <thead>
+          <tr><th>軸</th><th>入れ子（いま）</th><th>参照（変更後）</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name">業務領域が持てる親</td>
+            <td class="no">1つだけ</td>
+            <td class="yes">制限なし</td>
+          </tr>
+          <tr>
+            <td class="name">「1業務領域＝1モデル」</td>
+            <td class="no">構造が強制する<span class="tail">knowledge はこれをアンチパターンと名指し</span></td>
+            <td class="yes">選べる</td>
+          </tr>
+          <tr>
+            <td class="name">所属を運ぶもの</td>
+            <td class="no">ディレクトリの位置</td>
+            <td class="yes">宣言</td>
+          </tr>
+          <tr>
+            <td class="name">文脈を切り直すと</td>
+            <td class="no">業務領域の文書が動く<span class="tail">技術の判断が事業の文書を動かす</span></td>
+            <td class="yes">動かない</td>
+          </tr>
+          <tr>
+            <td class="name">同じ文脈のユースケース</td>
+            <td class="no">業務領域ごとに分散</td>
+            <td class="yes">1箇所に集まる<span class="tail">「集まりを割らない」制約がいまより強く守られる</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>決めたこと<span class="side">承認をいただきたい</span></h2>
+    <p class="cap">5件とも根拠は knowledge にあります。異議のあるものだけお戻しください。</p>
+    <div class="gapwrap">
+      <table class="dec">
+        <thead>
+          <tr><th>論点</th><th>決定</th><th>根拠</th></tr>
+        </thead>
+        <tbody>
+          <tr class="heavy">
+            <td class="name">業務領域の器<span class="tail">重い</span></td>
+            <td><strong>平らにしない。事業領域を2つ立て、その下に置く</strong><span class="tail">waffle ／ artifact-share</span></td>
+            <td>分類は事業領域を基準にした<strong>相対評価</strong>。器が混ざると意味が変わる。そして<strong>事業領域→業務領域だけは厳密な包含</strong>——文脈への包含とは別物</td>
+          </tr>
+          <tr>
+            <td class="name">参照の必須</td>
+            <td><strong>必須にする</strong></td>
+            <td>「業務領域の境界＝ユースケースの集まり」は<strong>定義そのもの</strong>。定義が任意宣言では成り立たない</td>
+          </tr>
+          <tr>
+            <td class="name">多重度</td>
+            <td><strong>単一値のまま。ただし「制限した」と明記する</strong></td>
+            <td>複数に関わる実例が<strong>0件</strong>。実例2件未満で広げない。ただし無自覚に固定しない</td>
+          </tr>
+          <tr>
+            <td class="name">逆向きの一覧</td>
+            <td><strong>畳む</strong></td>
+            <td>同じ対応の二重宣言。依存は<strong>変化しにくい側へ向かう</strong>ので、正しい向きはユースケース→業務領域の一方向</td>
+          </tr>
+          <tr>
+            <td class="name">インフラ仕様の扱い</td>
+            <td><strong>動かさない</strong></td>
+            <td>別の種別であり、今回変えるのはドメイン仕様の置き場所。<code>bc/</code> <code>subdomain/</code> の兄弟として残す</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col">
+      <div class="aside-note">
+        <div><b>1件だけ、新しい種別を立てます。</b>事業領域は現在どこにも宣言されていません。器を切るだけでは、宣言のないディレクトリがまた意味を運ぶことになります——いま直そうとしているのと同じ病です。<b>種別を増やす判断なので、ここは承認をいただきたい箇所です。</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>順序 ── 黙るものを先に鳴らす</h2>
+    <p class="cap">置き場所を決め打ちしている箇所が3つある。うち1つは<strong>壊れても鳴らない</strong>。</p>
+    <div class="fig">
+<pre class="mermaid">
+flowchart LR
+  Z["0 事業領域を宣言"] --> A["1 決め打ちを外す"] --> B["2 検査を直す"] --> C["3 版を切る"] --> D["4 動かす"]
+  D --> E["5 テストを追随"] --> F["6 描き直す"]
+  D -.->|"1 を飛ばすと"| X["引き継ぎのゲートが<br/>無言で外れる"]
+</pre>
+    </div>
+    <div class="gapwrap">
+      <table class="risk">
+        <thead>
+          <tr><th>移動で壊れるもの</th><th>壊れ方</th></tr>
+        </thead>
+        <tbody>
+          <tr class="danger">
+            <td class="name">引き継ぎのゲート</td>
+            <td><strong>黙る。</strong>仕様が 28件 → 0件 になり、「仕様が無いなら対象外」として通す。<strong>引き継ぎを経ずに実装できる状態が、合図なく成立する</strong></td>
+          </tr>
+          <tr>
+            <td class="name">書き込み時の検知</td>
+            <td>鳴る。ただし<strong>嘘をつく</strong>（規約側の宣言漏れとして報告される）</td>
+          </tr>
+          <tr>
+            <td class="name">依存の検査</td>
+            <td>鳴る（パスが見つからず停止）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col">
+      <div class="aside-note">
+        <div><b>工程1 は、移動をやめても残す価値があります。</b>置き場所の知識の写しを3箇所から消し、宣言を唯一の正にする修正だからです。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>この決定が答えないこと</h2>
+    <div class="gapwrap">
+      <table>
+        <thead><tr><th>論点</th><th>状態</th></tr></thead>
+        <tbody>
+          <tr><td class="name">7分割の是非</td><td>別論点。<strong>疑わしいのは3つ</strong>という裁定は出ている（1件しか持たず、分けても分類が変わらないもの）</td></tr>
+          <tr><td class="name">事業領域の中身</td><td>器は立てる（03）。分類の根拠など<strong>中身は移動後に埋める</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="appendix">
+    <h2><span class="num">付</span>実務の数字<span class="side">着手時に見る</span></h2>
+    <div class="gapwrap">
+      <table>
+        <thead><tr><th>項目</th><th>実測</th></tr></thead>
+        <tbody>
+          <tr><td class="name">動かす文書</td><td>70件（業務領域 9・ユースケース 49・1段の追加のみ 12）</td></tr>
+          <tr><td class="name">描き直す投影</td><td>69件</td></tr>
+          <tr><td class="name">直すテスト</td><td>11ファイル・62箇所</td></tr>
+          <tr><td class="name">版</td><td>v8:56 / v9:10 / v10:4 → <strong>v11 を切って全件移行</strong><span class="tail">既存版は書き換え不可。出荷済みバンドルに旧配置の文書が凍結されている</span></td></tr>
+          <tr><td class="name">新しく作る文書</td><td>事業領域 2件</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    2026-08-10 の ADR「仕様の段構造と、そこから導く再定義」04節の決定を、作り直した knowledge で測り直した記録。<br>
+    助言役2者は当初この移動に反対したが、それは私が目標形を渡さなかったためで、渡し直したところ両者とも判定を撤回した。<br>
+    件数はすべて実測（2026-08-11 時点）。
+  </footer>
+
+</div>

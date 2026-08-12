@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>ADR：業務領域を、区切られた文脈の外へ出す</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f8f7;
+      --surface: #ffffff;
+      --surface-muted: #edf4f2;
+      --text: #14211e;
+      --muted: #5d716a;
+      --line: #d5e2de;
+      --primary: #087861;
+      --primary-soft: #ddf3eb;
+      --secondary: #176da7;
+      --secondary-soft: #e4f1fb;
+      --success: #16845b;
+      --success-soft: #e0f4ea;
+      --caution: #b65b17;
+      --caution-soft: #fff0df;
+      --risk: #a53b42;
+      --risk-soft: #fdebed;
+      --violet: #7250b3;
+      --violet-soft: #f0eaff;
+      --radius: 18px;
+      --shadow: 0 10px 35px rgba(20, 55, 44, .08);
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #101513;
+      --surface: #18201d;
+      --surface-muted: #202c28;
+      --text: #e7eeeb;
+      --muted: #a6b7b0;
+      --line: #34433e;
+      --primary: #61d1ae;
+      --primary-soft: #173e33;
+      --secondary: #7fc8f5;
+      --secondary-soft: #173549;
+      --success: #65d19f;
+      --success-soft: #173a2d;
+      --caution: #f2ad70;
+      --caution-soft: #432c19;
+      --risk: #f08c94;
+      --risk-soft: #442327;
+      --violet: #c0a5f5;
+      --violet-soft: #302546;
+      --shadow: 0 12px 38px rgba(0, 0, 0, .24);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 78px; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+      line-height: 1.72;
+    }
+    a { color: inherit; }
+    button, select { font: inherit; }
+    :focus-visible { outline: 3px solid var(--secondary); outline-offset: 3px; }
+
+    .progress {
+      position: fixed;
+      inset: 0 auto auto 0;
+      z-index: 200;
+      width: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--violet));
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg);
+    }
+    .topbar-inner {
+      max-width: 1480px;
+      margin: auto;
+      padding: 10px 24px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .brand { font-size: .82rem; font-weight: 900; letter-spacing: .06em; }
+    .grow { flex: 1; }
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 7px 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .button:hover { border-color: var(--primary); }
+    .mobile-nav {
+      display: none;
+      max-width: 55vw;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 7px;
+    }
+
+    .layout {
+      max-width: 1480px;
+      margin: auto;
+      padding: 28px 24px 80px;
+      display: grid;
+      grid-template-columns: 255px minmax(0, 1fr);
+      gap: 32px;
+    }
+    .toc {
+      position: sticky;
+      top: 76px;
+      align-self: start;
+      max-height: calc(100vh - 92px);
+      overflow: auto;
+      padding: 8px;
+    }
+    .toc-title {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .toc a {
+      display: block;
+      padding: 7px 10px;
+      border-left: 2px solid var(--line);
+      color: var(--muted);
+      font-size: .84rem;
+      text-decoration: none;
+    }
+    .toc a:hover,
+    .toc a[aria-current="location"] {
+      border-left-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 800;
+    }
+    main { min-width: 0; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 42px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #073c32, #0b735d 52%, #1a6084);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      right: -110px;
+      top: -170px;
+      border: 1px solid rgba(255, 255, 255, .17);
+      border-radius: 50%;
+      box-shadow: 0 0 0 60px rgba(255, 255, 255, .04), 0 0 0 120px rgba(255, 255, 255, .025);
+      pointer-events: none;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: .74rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      opacity: .86;
+    }
+    .hero h1 {
+      max-width: 980px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1.12;
+      letter-spacing: -.04em;
+    }
+    .lead {
+      max-width: 940px;
+      margin: 18px 0 0;
+      font-size: clamp(1rem, 2vw, 1.22rem);
+      opacity: .94;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .chip {
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .1);
+      font-size: .8rem;
+      font-weight: 800;
+    }
+
+    section { margin-top: 52px; }
+    .kicker {
+      margin-bottom: 4px;
+      color: var(--primary);
+      font-size: .73rem;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: clamp(1.55rem, 3vw, 2.35rem);
+      line-height: 1.25;
+      letter-spacing: -.025em;
+    }
+    h3 { line-height: 1.35; }
+    .intro { max-width: 930px; color: var(--muted); }
+    .muted { color: var(--muted); }
+    .small { font-size: .83rem; }
+    .mono { font-family: var(--mono); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .stat {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+    }
+    .stat strong { display: block; color: var(--primary); font-size: 1.45rem; line-height: 1.1; }
+    .stat span { color: var(--muted); font-size: .78rem; }
+
+    .callout {
+      margin: 18px 0;
+      padding: 17px 19px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--primary);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    .callout strong { color: var(--primary); }
+    .callout.secondary { border-left-color: var(--secondary); }
+    .callout.secondary strong { color: var(--secondary); }
+    .callout.caution { border-left-color: var(--caution); }
+    .callout.caution strong { color: var(--caution); }
+    .callout.risk { border-left-color: var(--risk); }
+    .callout.risk strong { color: var(--risk); }
+
+    .grid { display: grid; gap: 15px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      padding: 21px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .card h3 { margin: 0 0 7px; font-size: 1.08rem; }
+    .card p:last-child { margin-bottom: 0; }
+    .tone-primary { border-top: 5px solid var(--primary); }
+    .tone-secondary { border-top: 5px solid var(--secondary); }
+    .tone-caution { border-top: 5px solid var(--caution); }
+    .tone-violet { border-top: 5px solid var(--violet); }
+    .pill {
+      display: inline-flex;
+      margin: 0 4px 5px 0;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--surface-muted);
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 900;
+    }
+    .pill.primary { background: var(--primary-soft); color: var(--primary); }
+    .pill.secondary { background: var(--secondary-soft); color: var(--secondary); }
+    .pill.caution { background: var(--caution-soft); color: var(--caution); }
+    .pill.risk { background: var(--risk-soft); color: var(--risk); }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+    caption { padding: 12px 14px; color: var(--muted); font-weight: 800; text-align: left; }
+    th, td { padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: var(--surface-muted); color: var(--muted); font-size: .76rem; letter-spacing: .02em; }
+    tr:last-child td { border-bottom: 0; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .flow-item {
+      position: relative;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    .flow-item:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -12px;
+      top: 42%;
+      z-index: 2;
+      color: var(--muted);
+      font-weight: 900;
+    }
+    .flow-code { color: var(--muted); font: 900 .75rem var(--mono); }
+    .flow-item b { display: block; margin: 5px 0; line-height: 1.3; }
+    .flow-item span { color: var(--muted); font-size: .76rem; }
+
+    .phase {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 16px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    .phase + .phase { margin-top: 12px; }
+    .phase-id {
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font: 900 .78rem/1.35 var(--mono);
+      text-align: center;
+    }
+    .phase h3 { margin: 0 0 5px; }
+
+    .schema { overflow: hidden; border-radius: 16px; background: #171c26; color: #edf3ff; }
+    .schema-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #222938; font-size: .78rem; font-weight: 850; }
+    .copy-button { margin-left: auto; border: 1px solid #59657d; border-radius: 8px; background: #2c3446; color: #fff; padding: 5px 9px; font-weight: 800; cursor: pointer; }
+    .schema pre { max-height: 560px; overflow: auto; margin: 0; padding: 17px; white-space: pre-wrap; word-break: break-word; font: 12px/1.62 var(--mono); }
+
+    details { padding: 11px 15px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }
+    details + details { margin-top: 8px; }
+    summary { cursor: pointer; font-weight: 850; }
+    footer { margin-top: 55px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #101513;
+        --surface: #18201d;
+        --surface-muted: #202c28;
+        --text: #e7eeeb;
+        --muted: #a6b7b0;
+        --line: #34433e;
+        --primary: #61d1ae;
+        --primary-soft: #173e33;
+        --secondary: #7fc8f5;
+        --secondary-soft: #173549;
+        --caution: #f2ad70;
+        --caution-soft: #432c19;
+        --risk: #f08c94;
+        --risk-soft: #442327;
+        --violet: #c0a5f5;
+        --violet-soft: #302546;
+      }
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc { display: none; }
+      .mobile-nav { display: block; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .flow { grid-template-columns: repeat(2, 1fr); }
+      .flow-item::after { display: none; }
+    }
+    @media (max-width: 700px) {
+      .topbar-inner { padding: 8px 12px; }
+      .brand { display: none; }
+      .layout { padding: 18px 13px 60px; }
+      .hero { padding: 28px 21px; border-radius: 21px; }
+      .grid.two, .grid.three, .stats, .flow { grid-template-columns: 1fr; }
+      .phase { grid-template-columns: 1fr; }
+      .phase-id { min-height: 48px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+    @media print {
+      .topbar, .toc, .progress, .copy-button { display: none !important; }
+      .layout { display: block; padding: 0; }
+      body { background: #fff; color: #111; }
+      .hero { box-shadow: none; }
+      .card, .phase, .table-wrap, details, .schema { break-inside: avoid; }
+      .schema { border: 1px solid #aaa; background: #fff; color: #111; }
+      .schema-head { background: #eee; }
+      .schema pre { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="reading-progress" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">ADR：業務領域を、区切られた文脈の外へ出す</div>
+      <label class="grow" for="mobile-nav">
+        <span hidden>セクションへ移動</span>
+        <select class="mobile-nav" id="mobile-nav" aria-label="セクションへ移動">
+          <option value="#overview">概要</option>
+          <option value="#key-points">要点</option>
+          <option value="#structure">構成</option>
+          <option value="#comparison">比較</option>
+          <option value="#process">手順</option>
+          <option value="#details">詳細</option>
+          <option value="#sources">出典</option>
+        </select>
+      </label>
+      <button class="button" id="theme-toggle" type="button" aria-label="表示テーマを切り替える">テーマ</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="ページ内目次">
+      <p class="toc-title">Contents</p>
+      <a href="#overview">概要</a>
+        <a href="#key-points">要点</a>
+        <a href="#structure">2つの平面</a>
+        <a href="#comparison">比較</a>
+        <a href="#decisions">決めたこと</a>
+        <a href="#risks">壊れるもの</a>
+        <a href="#process">順序</a>
+        <a href="#details">実務の数字</a>
+        <a href="#sources">根拠</a>
+    </nav>
+
+    <main>
+      <!-- Keep only components that serve the content. Replace all sample copy. -->
+      <section class="hero" id="overview">
+        <p class="eyebrow">ADR / 意思決定の記録 ・ 2026-08-11 ・ 状態：承認待ち</p>
+        <h1>ADR：業務領域を、区切られた文脈の外へ出す</h1>
+        <p class="lead">2026-08-10 の決定を、作り直した knowledge で測り直した記録。<strong>結論は変わらない。</strong>変わったのは進め方で、前提が1つ崩れ、黙って壊れる箇所が1つ見つかった。</p>
+      </section>
+
+      <section id="key-points">
+        <h2>最初に把握する要点</h2>
+        <p class="intro">この文書は、業務領域の仕様文書を区切られた文脈の配下から外へ出す判断を記録する。読了後、承認するか差し戻すかを決められる状態を目指す。</p>
+        <div class="stats" aria-label="主要指標">
+          <div class="stat"><strong>動かす</strong><span>業務領域の文書だけ</span></div>
+          <div class="stat"><strong>5件</strong><span>決定済みの論点</span></div>
+          <div class="stat"><strong>1件</strong><span>承認が要る判断</span></div>
+          <div class="stat"><strong>70件</strong><span>移動する文書</span></div>
+        </div>
+        <div class="callout">
+          <strong>中心結論。</strong> 動かす。いまの入れ子は「1つの業務領域に1つのモデル」という固定観念を構造として強制しており、これは knowledge がアンチパターンとして名指しする形である。
+        </div>
+        <div class="callout caution">
+          <strong>承認が要るのは1点。</strong> 事業領域という種別を新しく立てる判断。スキーマを増やすため、単独では進めない。残る4件は knowledge から一意に導かれる。
+        </div>
+      </section>
+
+      <section id="structure">
+        <h2>2つの平面がある</h2>
+        <p class="intro">決める人が違うものは別の平面にあり、包含ではなく対応で結ばれる。この節は、なぜ入れ子が誤りかの前提を定める。</p>
+        <div class="cards">
+          <article class="card tone-primary">
+            <span class="pill primary">問題空間</span>
+            <h3>事業領域 → 業務領域</h3>
+            <p><strong>誰が決めるか:</strong> 事業。競合との差別化から見つかる。</p>
+            <p><strong>関係:</strong> 厳密な包含。事業領域が器で、中身が中核・一般・補完に分かれる。</p>
+            <p class="small muted"><strong>出典:</strong> business-domain「事業領域の構造」</p>
+          </article>
+          <article class="card tone-secondary">
+            <span class="pill">解決空間</span>
+            <h3>区切られた文脈 → 集約・業務ユースケース</h3>
+            <p><strong>誰が決めるか:</strong> 技術者。制約に合わせて動かせる。</p>
+            <p><strong>関係:</strong> 厳密な包含。切り離して開発・変更・版を切る単位。</p>
+            <p class="small muted"><strong>出典:</strong> bounded-context「文脈の境界が決めるもの」</p>
+          </article>
+          <article class="card tone-caution">
+            <span class="pill caution">2つを結ぶもの</span>
+            <h3>業務領域 ↔ 区切られた文脈</h3>
+            <p><strong>関係:</strong> 包含ではない。<strong>対応</strong>。</p>
+            <p><strong>根拠:</strong> knowledge の見出しが「業務領域と区切られた文脈の<em>対応</em>」であり、「一対一に対応させることが最善の場合もあるし、別の方針で分割することが役立つ場合もある」と続く。</p>
+          </article>
+        </div>
+
+        <h3>いまの入れ子と、変更後の入れ子</h3>
+        <p class="intro">階層が変わる箇所だけを示す。太字が動くもの。</p>
+        <div class="cards">
+          <article class="card tone-caution">
+            <span class="pill caution">いま</span>
+            <h3>問題空間が解決空間の中にある</h3>
+            <ul>
+              <li>区切られた文脈
+                <ul>
+                  <li>集約</li>
+                  <li><strong>業務領域</strong>
+                    <ul><li>業務ユースケース</li></ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </article>
+          <article class="card tone-primary">
+            <span class="pill primary">変更後</span>
+            <h3>業務領域が事業領域の下へ移る</h3>
+            <ul>
+              <li><strong>事業領域</strong>
+                <ul><li><strong>業務領域</strong></li></ul>
+              </li>
+              <li>区切られた文脈
+                <ul>
+                  <li>集約</li>
+                  <li>業務ユースケース <span class="small muted">→ 業務領域を指す</span></li>
+                </ul>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="comparison">
+        <h2>入れ子と参照を、同じ軸で比較する</h2>
+        <p class="intro">この表が判断の本体である。所属をディレクトリで運ぶか、宣言で運ぶかの違いが、5つの軸に現れる。</p>
+        <div class="table-wrap">
+          <table>
+            <caption>所属の運び方による違い</caption>
+            <thead>
+              <tr>
+                <th scope="col">評価軸</th>
+                <th scope="col">入れ子（いま）</th>
+                <th scope="col">参照（変更後）</th>
+                <th scope="col">判断への影響</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">業務領域が持てる親</th>
+                <td>1つだけ</td>
+                <td>制限なし</td>
+                <td>多対多を表現できるか</td>
+              </tr>
+              <tr>
+                <th scope="row">「1業務領域＝1モデル」</th>
+                <td>構造が強制する</td>
+                <td>選べる</td>
+                <td>knowledge がアンチパターンと名指しする形を、構造が作っているか</td>
+              </tr>
+              <tr>
+                <th scope="row">所属を運ぶもの</th>
+                <td>ディレクトリの位置</td>
+                <td>宣言</td>
+                <td>宣言が唯一の正になるか</td>
+              </tr>
+              <tr>
+                <th scope="row">文脈を切り直したとき</th>
+                <td>業務領域の文書が動く</td>
+                <td>動かない</td>
+                <td>技術の判断が事業の文書を動かすか</td>
+              </tr>
+              <tr>
+                <th scope="row">同じ文脈のユースケース</th>
+                <td>業務領域ごとに分散</td>
+                <td>1箇所に集まる</td>
+                <td>「集まりを割らない」制約が守られるか</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <strong>変更後のほうが強く守るものがある。</strong> 「同じデータを操作するユースケースの集まりを、複数の文脈へ分散させない」という制約は、いま同一文脈の内側で割れている。変更後は文脈の直下1箇所へ集まる。
+        </div>
+      </section>
+
+      <section id="decisions">
+        <h2>決めたこと</h2>
+        <p class="intro">5件とも根拠は knowledge にある。異議のあるものだけ差し戻していただきたい。</p>
+        <div class="cards">
+          <article class="card tone-caution">
+            <span class="pill caution">承認が要る</span>
+            <h3>業務領域の器</h3>
+            <p><strong>判断:</strong> 平らにしない。事業領域を2つ立て、その下に置く（waffle ／ artifact-share）。</p>
+            <p><strong>条件:</strong> 事業領域という種別を新しく立てる。</p>
+            <p><strong>理由:</strong> 分類は事業領域を基準にした相対評価であり、器が混ざると意味が変わる。事業領域→業務領域だけは厳密な包含であり、文脈への包含とは別物。</p>
+            <p><strong>リスク:</strong> 器だけ切って宣言を立てないと、宣言のないディレクトリがまた意味を運ぶ。</p>
+          </article>
+          <article class="card tone-primary">
+            <span class="pill primary">決定</span>
+            <h3>参照の必須</h3>
+            <p><strong>判断:</strong> 業務ユースケースから業務領域への参照を必須にする。</p>
+            <p><strong>理由:</strong> 「業務領域の境界＝ユースケースの集まり」は定義そのもの。定義が任意宣言では成り立たない。</p>
+            <p><strong>リスク:</strong> 任意のままだと、業務領域が分類ラベルだけの抜け殻になる。</p>
+          </article>
+          <article class="card tone-primary">
+            <span class="pill primary">決定</span>
+            <h3>多重度</h3>
+            <p><strong>判断:</strong> 単一値のまま。ただし「制限した」と明記する。</p>
+            <p><strong>理由:</strong> 複数の業務領域に関わる実例が0件。実例2件未満では一般化しない。</p>
+            <p><strong>リスク:</strong> 明記しないと、制限したことに気づかないまま制限が残る。</p>
+          </article>
+          <article class="card tone-primary">
+            <span class="pill primary">決定</span>
+            <h3>逆向きの一覧</h3>
+            <p><strong>判断:</strong> 業務領域が持つユースケース一覧を畳む。</p>
+            <p><strong>理由:</strong> 同じ対応の二重宣言。依存は変化しにくい側へ向かうため、正しい向きはユースケース→業務領域の一方向。</p>
+            <p><strong>リスク:</strong> 残すと、二重宣言の食い違いが新しいドリフト種別になる。</p>
+          </article>
+          <article class="card tone-secondary">
+            <span class="pill">決定</span>
+            <h3>インフラ仕様の扱い</h3>
+            <p><strong>判断:</strong> 動かさない。</p>
+            <p><strong>理由:</strong> 別の種別であり、今回変えるのはドメイン仕様の置き場所。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="risks">
+        <h2>移動で壊れるもの</h2>
+        <p class="intro">置き場所を決め打ちしている箇所が3つある。壊れ方が3段階に分かれ、順序の制約はここから出る。</p>
+        <div class="callout caution">
+          <strong>1つは黙る。</strong> 実装の前に引き継ぎ文書を求めるフックが、仕様をパスの形で探している。移動すると 28件 → 0件 になり、「仕様が0件なら対象外」として通す。引き継ぎを経ずに実装できる状態が、合図なく成立する。
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption>壊れ方の3段階</caption>
+            <thead>
+              <tr>
+                <th scope="col">壊れ方</th>
+                <th scope="col">対象</th>
+                <th scope="col">観測できるか</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">黙る</th><td>引き継ぎのゲート</td><td>できない。無言で通過する</td></tr>
+              <tr><th scope="row">嘘をつく</th><td>書き込み時の検知</td><td>鳴るが、規約側の宣言漏れとして報告される</td></tr>
+              <tr><th scope="row">鳴る</th><td>依存の検査</td><td>できる。パスが見つからず停止する</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="process">
+        <h2>移行の順序</h2>
+        <p class="intro">順序の要点は1つ。黙る仕組みを、動かす前に鳴るようにする。</p>
+        <div class="flow" aria-label="移行の全体フロー">
+          <div class="flow-item"><span class="flow-code">STEP 00</span><b>事業領域を宣言</b><span>器を先に立てる</span></div>
+          <div class="flow-item"><span class="flow-code">STEP 01</span><b>決め打ちを外す</b><span>動かさない</span></div>
+          <div class="flow-item"><span class="flow-code">STEP 02</span><b>検査を直す</b><span>動かさない</span></div>
+          <div class="flow-item"><span class="flow-code">STEP 03</span><b>版を切る</b><span>動かさない</span></div>
+          <div class="flow-item"><span class="flow-code">STEP 04</span><b>動かす</b><span>1件ずつ</span></div>
+        </div>
+        <div class="phase">
+          <div class="phase-id">STEP<br>01</div>
+          <div>
+            <h3>決め打ちを外す（現在の配置のまま）</h3>
+            <p><strong>入力:</strong> 置き場所を決め打ちしている3箇所。</p>
+            <p><strong>操作:</strong> スキーマの宣言から置き場所を導く形へ直す。ファイルは動かさない。</p>
+            <p><strong>出力・完了条件:</strong> 5つの検査とフック2つの出力が、修正の前後で一致する。</p>
+            <p class="small muted"><strong>飛ばすと:</strong> 引き継ぎのゲートが無言で落ち、同時に別のフックが見当違いの警告を出し続ける。鳴っている方の原因を規約側に探しに行くことになる。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-id">STEP<br>04</div>
+          <div>
+            <h3>1件ずつ動かす</h3>
+            <p><strong>入力:</strong> 版を切り終えた状態。</p>
+            <p><strong>操作:</strong> 文書1件につき「版を上げる → 動かす → 描き直す」。文脈の中では区切られた文脈の文書を最後に。</p>
+            <p><strong>出力・完了条件:</strong> 版のずれを数える検査の残数が1ずつ減り、5つの検査が停止しない。</p>
+            <p class="small muted"><strong>順序を誤ると:</strong> 文脈の文書を先に動かすと、走査の範囲だけが新しい根へ切り替わり、中身が古い場所に残るため検査が一斉に止まる。</p>
+          </div>
+        </div>
+        <details>
+          <summary>残りの工程（02・03・05・06）を開く</summary>
+          <p><strong>02 検査を直す:</strong> 参照整合の検査を新しい形へ。現在の配置に対して、書き直し前と同じ所見を返すことを確認する。</p>
+          <p><strong>03 版を切る:</strong> 置き場所と描画先の両方を新しい版で宣言する。既存の版は書き換えられない（出荷済みのバンドルに旧配置の文書が凍結されている）。</p>
+          <p><strong>05 追随:</strong> テスト11ファイル62箇所、引き継ぎ文書2件、フックの仕様1件。</p>
+          <p><strong>06 描き直し:</strong> 投影69件を再描画し、バンドルを出し直す。</p>
+        </details>
+      </section>
+
+      <section id="details">
+        <h2>実務の数字</h2>
+        <p class="intro">判断のためではなく、着手時に見るもの。すべて 2026-08-11 時点の実測。</p>
+        <div class="table-wrap">
+          <table>
+            <caption>移行の規模</caption>
+            <thead>
+              <tr><th scope="col">項目</th><th scope="col">件数</th><th scope="col">内訳</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">動かす文書</th><td>70</td><td>業務領域 9 ／ 業務ユースケース 49 ／ 1段の追加のみ 12</td></tr>
+              <tr><th scope="row">描き直す投影</th><td>69</td><td>—</td></tr>
+              <tr><th scope="row">直すテスト</th><td>62箇所</td><td>11ファイル</td></tr>
+              <tr><th scope="row">新しく作る文書</th><td>2</td><td>事業領域</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption>仕様の版の分布</caption>
+            <thead>
+              <tr><th scope="col">版</th><th scope="col">件数</th><th scope="col">扱い</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">v8</th><td>56</td><td rowspan="3">新しい版を切って全件移行する</td></tr>
+              <tr><th scope="row">v9</th><td>10</td></tr>
+              <tr><th scope="row">v10</th><td>4</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <details>
+          <summary>既存の版を書き換えられない理由</summary>
+          <p>出荷済みのバンドル（693ファイル）に、旧配置のままの仕様文書が凍結されて同梱されている。既存の版の置き場所の宣言を書き換えると、同梱物が自分の道具で読めなくなる。新しい版を切ると、各文書が「自分はどちらの配置に居るか」を名乗るため、移行途中の混在が正常な状態として表現でき、版のずれを数える既存の検査がそのまま進捗計になる。</p>
+        </details>
+      </section>
+
+      <section id="sources">
+        <h2>根拠・確度・限界</h2>
+        <p class="intro">結論の支えを、直接確認したものと推論で導いたものに分ける。</p>
+        <div class="cards">
+          <article class="card tone-primary">
+            <span class="pill primary">直接確認</span>
+            <h3>bounded-context「業務領域と区切られた文脈の対応」</h3>
+            <p><strong>支持する内容:</strong> 両者の関係が包含ではなく対応であること。「一対一に対応させることが最善の場合もあるし、別の方針で分割することが役立つ場合もある」。</p>
+            <p class="small muted"><strong>識別情報:</strong> .waffle/knowledge/ACTIVE/bounded-context.md（2026-08-11 に書き起こし版から再構成）</p>
+          </article>
+          <article class="card tone-primary">
+            <span class="pill primary">直接確認</span>
+            <h3>business-domain「事業領域の構造」</h3>
+            <p><strong>支持する内容:</strong> 事業領域が器であり、中身が業務領域に分かれること。会社と1対1ではないこと。器を混ぜると分類が定まらなくなること。</p>
+          </article>
+          <article class="card tone-violet">
+            <span class="pill">推論</span>
+            <h3>実装の規定は仕様文書に及ばない</h3>
+            <p><strong>根拠:</strong> 「物理的には単一の境界、論理的には複数の業務領域の境界（名前空間・モジュール・パッケージで表現）」の一文は、直前が実装単位を扱っており、挙げられた3つはいずれも実装の成果物である。業務領域は実装側に対応物を持たない。</p>
+            <p><strong>検証課題:</strong> 原本の該当ページを画像で確認していない。走査したのは書き起こし版まで。</p>
+          </article>
+          <article class="card tone-caution">
+            <span class="pill caution">限界</span>
+            <h3>この決定が答えないこと</h3>
+            <p><strong>7分割の是非:</strong> 別論点として残る。疑わしいのは7つ全部ではなく3つ（ユースケースを1件しか持たず、分けても分類が変わらないもの）という裁定は出ている。</p>
+            <p><strong>事業領域の中身:</strong> 器は立てるが、分類の根拠などの中身は移動後に埋める。</p>
+          </article>
+        </div>
+        <div class="callout">
+          <strong>この記録の経緯。</strong> 助言役2者は当初この移動に反対した。それは目標形を渡さずに問うたためで、渡し直したところ両者とも判定を撤回した。件数はすべて実測。
+        </div>
+      </section>
+      </main>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const themeButton = document.getElementById('theme-toggle');
+      const progress = document.getElementById('reading-progress');
+      const mobileNav = document.getElementById('mobile-nav');
+      const tocLinks = [...document.querySelectorAll('.toc a')];
+      const sections = tocLinks.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+
+      try {
+        const saved = localStorage.getItem('structured-artifact-theme');
+        if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+      } catch (_) {}
+
+      themeButton?.addEventListener('click', () => {
+        const current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try { localStorage.setItem('structured-artifact-theme', next); } catch (_) {}
+      });
+
+      mobileNav?.addEventListener('change', event => {
+        const target = document.querySelector(event.target.value);
+        target?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      });
+
+      const updateProgress = () => {
+        const total = document.documentElement.scrollHeight - innerHeight;
+        const ratio = total > 0 ? Math.min(1, Math.max(0, scrollY / total)) : 0;
+        progress.style.width = `${ratio * 100}%`;
+      };
+      addEventListener('scroll', updateProgress, { passive: true });
+      addEventListener('resize', updateProgress);
+      updateProgress();
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (!visible) return;
+          tocLinks.forEach(link => {
+            const active = link.getAttribute('href') === `#${visible.target.id}`;
+            if (active) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          });
+          if (mobileNav) mobileNav.value = `#${visible.target.id}`;
+        }, { rootMargin: '-18% 0px -65% 0px', threshold: [0, .25, .6] });
+        sections.forEach(section => observer.observe(section));
+      }
+
+      document.querySelectorAll('[data-copy]').forEach(button => {
+        button.addEventListener('click', async () => {
+          const source = document.getElementById(button.dataset.copy);
+          if (!source) return;
+          const original = button.textContent;
+          try {
+            await navigator.clipboard.writeText(source.textContent);
+            button.textContent = 'コピー済み';
+          } catch (_) {
+            button.textContent = 'コピー失敗';
+          }
+          setTimeout(() => { button.textContent = original; }, 1400);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

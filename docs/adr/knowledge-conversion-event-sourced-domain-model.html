@@ -1,0 +1,603 @@
+<title>event-sourced-domain-model の変換 ── 9本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.78rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 9本目</span>
+  <h1><code>event-sourced-domain-model</code> を書き起こし版から移す</h1>
+  <p class="standfirst">旧要約版107行 → <strong>501行</strong>。<strong>4.7倍</strong>で、これまでで最大です。書き起こし版408行も上回りました。実装方法の系列（手続き → ドメインモデル → イベント履歴式）が、これで揃いました。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">36</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">5</span><span class="l">図（旧版は0）</span></div>
+    <div class="stat"><span class="n">9</span><span class="l">原文（C#7・JSON1・表1）</span></div>
+    <div class="stat"><span class="n">501</span><span class="l">行（旧107 / 書起し408）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. 旧版が落としていたもの</h2>
+  <p class="narrow">旧版の見出しは7つ。原則の箇条書きと分類だけで、<strong>この方式が実際にどう動くのかを示すものが1つもありませんでした。</strong></p>
+
+  <div class="box bad">
+    <h3>4つの手順が無い</h3>
+    <p>イベント履歴式の集約への操作は <strong>読み込む → 状態を作り直す → コマンドを実行してイベントを生む → 書き戻す</strong> の4手順を踏みます。旧版にはこの手順がありません。手順が無いと、従来のドメインモデルとの違い（2番目と4番目が加わること）も言えません。</p>
+  </div>
+
+  <div class="box bad">
+    <h3>「よくある質問」が丸ごと無い</h3>
+    <p>性能・規模・削除・代替手段の4節、計7ノードぶんが落ちていました。とくに<strong>「追記だけなのに削除を求められたらどうするか」</strong>は、この方式を採用してよいかの判断に直結します。</p>
+  </div>
+
+  <div class="box ok">
+    <h3>1つの履歴から3つの投影</h3>
+    <p>この本の中心は<strong>同じ履歴に別の変換を当てれば別の状態が得られる</strong>ことで、書き起こし版はそれをコード3本（最新状態・検索・分析）で見せています。旧版はコードを全部落としていたので、この主張が「後から新しい見方を足せる」という一文だけになっていました。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>イベント履歴式ドメインモデルとは</td><td>原則2行</td><td>違うのは何を保存するかの一点だけ</td></tr>
+        <tr><td class="new">　この呼び名を選ぶ理由</td><td>×</td><td>集約の一生の状態管理に限った適用だから</td></tr>
+        <tr><td>イベントの履歴を保存する</td><td>原則1行</td><td>子6つ</td></tr>
+        <tr><td class="new">　履歴の例</td><td>×</td><td><strong>原文。受付から支払完了まで7件</strong></td></tr>
+        <tr><td class="new">　投影</td><td>×</td><td><strong>コード。版番号が過去の再現を可能にする</strong></td></tr>
+        <tr><td class="new">　検索のための投影</td><td>×</td><td>コード。上書きせず足すだけで古い値も残る</td></tr>
+        <tr><td class="new">　分析のための投影</td><td>×</td><td>コード。あらかじめ数えておかなくてよい</td></tr>
+        <tr><td class="new">　真実を語る唯一の拠り所</td><td>用語のみ</td><td><strong>図。集約とイベントストアの往復</strong></td></tr>
+        <tr><td class="new">　イベントストア</td><td>×</td><td><strong>コード。追記専用・期待する版番号で競合を検出</strong></td></tr>
+        <tr><td class="new">集約への操作の手順</td><td><strong>×</strong></td><td><strong>図＋コード3本（アプリケーション層・集約・状態クラス）</strong></td></tr>
+        <tr><td>利点 ×4</td><td>原則に2つ</td><td>過去の再現・新しい見方・監査の記録・<strong>競合の判定を業務の視点で</strong></td></tr>
+        <tr><td>欠点 ×3</td><td>一部</td><td>学ぶ時間・モデルの変えにくさ・仕組みの複雑さ</td></tr>
+        <tr><td class="new">よくある質問</td><td><strong>×</strong></td><td><strong>子4つ（うち1つはさらに子3つ）</strong></td></tr>
+        <tr><td class="new">　イベントが増えると遅くならないか</td><td>×</td><td><strong>図。ただし1万を超える集約はほぼ無い。先に境界を見直す</strong></td></tr>
+        <tr><td class="new">　規模を大きくできるか</td><td>×</td><td>図。集約の識別子で区画を分けられる</td></tr>
+        <tr><td class="new">　追記だけなのに、削除を求められたら</td><td><strong>×</strong></td><td><strong>暗号化して、鍵のほうを消す</strong></td></tr>
+        <tr><td class="new">　他のやり方ではだめか</td><td>×</td><td>子3つ。ファイル・同時書き込み・自動複製</td></tr>
+        <tr><td class="new">4つの実装方法の対比</td><td>×</td><td>表。保存するものと対象領域</td></tr>
+        <tr><td>使うか</td><td>判断基準</td><td><strong>図。チームの経験だけ性質が違う分岐</strong></td></tr>
+        <tr><td>アンチパターン ×3</td><td>あり</td><td>そのまま維持</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 注釈の例</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>図</th><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead>
+      <tbody>
+        <tr><td>イベントストア</td><td>新しいイベントからイベントストア</td><td>他の線と同じ矢印に見えるが、<strong>この線だけが一方通行で取り消せない</strong></td></tr>
+        <tr><td>イベントストア</td><td>イベントストアから集約</td><td>読むのは履歴の全部。<strong>状態はどこにも保存されておらず、毎回この線の上で作り直される</strong></td></tr>
+        <tr><td>4つの手順</td><td>コマンドを実行し、業務イベントを生む</td><td><strong>状態を直接書き換えないのが核心。</strong>イベントを生み、その適用の結果として状態が変わる</td></tr>
+        <tr><td>控えの置き場</td><td>控えの置き場</td><td>真実の拠り所ではない。<strong>捨てても履歴から作り直せる</strong></td></tr>
+        <tr><td>使うか</td><td>チームに経験があるか</td><td>他と性質が違う。<strong>技術的な適合ではなく導入の是非を左右する条件</strong>。「いいえ」でも採用してよい</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 完全プレビュー</h2>
+  <p class="narrow">描画された501行を、<strong>省略なしで</strong>並べています。36ノードすべてです。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / event-sourced-domain-model</span><span>ノード36 ・ 図5 ・ 原文9</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">イベント履歴式ドメインモデルとは何か</span></div>
+<p>集約の状態を保存するのではなく、集約の状態が変化したことを業務イベントで表し、その履歴を保存する実装方法。ドメインモデルの部品（値オブジェクト・集約・業務イベント）はそのまま同じで、対象も複雑な業務ロジックと中核の業務領域で変わらない。違うのは、何を保存するかの一点である。</p>
+<div class="node d2"><div class="node-h"><span class="nm">この呼び名を選ぶ理由</span></div>
+<p>イベントの履歴を真実の拠り所にする考え方そのものは、集約の状態管理に限らずさまざまな状態管理へ使える。ここでの話は集約の一生の状態管理に限った適用なので、その範囲を示すためにこの呼び名を使う。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">イベントの履歴を保存する</span></div>
+<p>状態そのものを保存する代わりに、状態を変化させたイベントの履歴を保存する。履歴を順に適用すれば、任意の時点の状態を作り直せる。会計の記録に似ている——残高そのものを持たなくても、取引の記録があればいつでも算出できる。</p>
+<div class="node d2"><div class="node-h"><span class="nm">履歴の例</span></div>
+<p>1件の依頼について、受付から支払完了までのイベントが順に並ぶ。</p>
+<p>1件の集約について、イベントの履歴がどう並ぶかを示す</p>
+<p>1行が1つの出来事にあたる。並びを追うと、受け付けてから支払いが済むまでの経緯が読める。状態はどこにも書かれていない。</p>
+<div class="blk"><pre>
+{ &quot;request-id&quot;: 12, &quot;event-id&quot;: 0, &quot;event-type&quot;: &quot;受付&quot;, &quot;shipper&quot;: &quot;北山物流&quot;, &quot;phone&quot;: &quot;000-0000&quot;, &quot;at&quot;: &quot;2026-05-20T09:52:55Z&quot; }
+{ &quot;request-id&quot;: 12, &quot;event-id&quot;: 1, &quot;event-type&quot;: &quot;連絡&quot;, &quot;at&quot;: &quot;2026-05-20T12:32:08Z&quot; }
+{ &quot;request-id&quot;: 12, &quot;event-id&quot;: 2, &quot;event-type&quot;: &quot;再連絡の予定を置く&quot;, &quot;followup-on&quot;: &quot;2026-05-27T12:00:00Z&quot;, &quot;at&quot;: &quot;2026-05-20T12:32:08Z&quot; }
+{ &quot;request-id&quot;: 12, &quot;event-id&quot;: 3, &quot;event-type&quot;: &quot;連絡先の変更&quot;, &quot;shipper&quot;: &quot;北山物流&quot;, &quot;phone&quot;: &quot;000-1111&quot;, &quot;at&quot;: &quot;2026-05-20T12:40:11Z&quot; }
+{ &quot;request-id&quot;: 12, &quot;event-id&quot;: 4, &quot;event-type&quot;: &quot;連絡&quot;, &quot;at&quot;: &quot;2026-05-27T12:02:12Z&quot; }
+{ &quot;request-id&quot;: 12, &quot;event-id&quot;: 5, &quot;event-type&quot;: &quot;引受&quot;, &quot;payment-deadline&quot;: &quot;2026-05-30T12:02:12Z&quot;, &quot;at&quot;: &quot;2026-05-27T12:02:12Z&quot; }
+{ &quot;request-id&quot;: 12, &quot;event-id&quot;: 6, &quot;event-type&quot;: &quot;支払完了&quot;, &quot;status&quot;: &quot;成立&quot;, &quot;at&quot;: &quot;2026-05-27T12:38:44Z&quot; }
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">投影</span></div>
+<p>履歴の1つ1つに単純な変換を順に当てていくと、状態が組み上がる。版番号をイベントごとに増やしておくのがこの実装の要で、先頭からいくつぶんだけ適用するかを選べば、過去のどの時点の状態も取り出せる。</p>
+<p>履歴から最新の状態を作る投影を示す</p>
+<p>イベントの種類ごとに1つの適用手続きがある。版番号を毎回増やしているのが、過去の時点を再現できる根拠になる。</p>
+<div class="blk"><pre>
+public class RequestStateProjection
+{
+    public long RequestId { get; private set; }
+    public string Shipper { get; private set; }
+    public RequestStatus Status { get; private set; }
+    public int Version { get; private set; }
+
+    public void Apply(RequestInitialized @event)      // 受付
+    {
+        RequestId = @event.RequestId;
+        Status = RequestStatus.NEW;
+        Shipper = @event.Shipper;
+        Version = 0;
+    }
+    public void Apply(ContactDetailsChanged @event)   // 連絡先の変更
+    {
+        Shipper = @event.Shipper;
+        PhoneNumber = @event.PhoneNumber;
+        Version += 1;
+    }
+    public void Apply(PaymentConfirmed @event)        // 支払完了
+    {
+        Status = RequestStatus.SETTLED;
+        Version += 1;
+    }
+}
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">検索のための投影</span></div>
+<p>同じ履歴に別の変換を当てれば、変更前の値も残る投影が作れる。上書きせずに足していくだけで、古い連絡先も検索の対象にできる。</p>
+<p>同じ履歴から、変更前の値も残す投影を作れることを示す</p>
+<p>上書きせず足していく。最新状態の投影と違うのは、この一点だけである。</p>
+<div class="blk"><pre>
+public class RequestSearchProjection
+{
+    public HashSet&lt;string&gt; Shippers { get; private set; }
+    public HashSet&lt;PhoneNumber&gt; PhoneNumbers { get; private set; }
+
+    public void Apply(RequestInitialized @event)
+    {
+        Shippers = new HashSet&lt;string&gt;();
+        PhoneNumbers = new HashSet&lt;PhoneNumber&gt;();
+        Shippers.Add(@event.Shipper);
+        PhoneNumbers.Add(@event.PhoneNumber);
+    }
+    public void Apply(ContactDetailsChanged @event)
+    {
+        Shippers.Add(@event.Shipper);          // 上書きではなく追加
+        PhoneNumbers.Add(@event.PhoneNumber);
+    }
+}
+// 結果: PhoneNumbers: [&#x27;000-0000&#x27;, &#x27;000-1111&#x27;]
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">分析のための投影</span></div>
+<p>同じ履歴から、業務の分析に使う値も作れる。あらかじめ数えておかなくても、履歴を数え直せば得られる。</p>
+<p>同じ履歴から、数を数える投影も作れることを示す</p>
+<p>業務の分析に必要な値を、履歴を数え直すだけで得られる。あらかじめ数えておく必要は無い。</p>
+<div class="blk"><pre>
+public class RequestAnalysisProjection
+{
+    public int Followups { get; private set; }   // 再連絡の予定を置いた回数
+    public RequestStatus Status { get; private set; }
+
+    public void Apply(FollowupSet @event)
+    {
+        Status = RequestStatus.FOLLOWUP_SET;
+        Followups += 1;
+    }
+}
+// 結果: Followups: 1, Status: 成立
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">真実を語る唯一の拠り所</span></div>
+<p>この方式が成り立つ条件は1つ——状態の変化をすべてイベントとして表し、保存すること。保存されたイベントが真実を語る唯一の拠り所になる。イベントを保存するデータベースをイベントストアと呼ぶ。</p>
+<p>イベントストアと集約のあいだで、何が行き来するかを示す</p>
+<p>集約はイベントストアから履歴を読んで自分を組み立て、実行の結果として生まれたイベントを書き戻す。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;イベントストア&quot;]
+    n1[&quot;集約&quot;]
+    n2[&quot;新しいイベント&quot;]
+    n0 --&gt;|&quot;履歴を読んで状態を作り直す&quot;| n1
+    n1 --&gt;|&quot;コマンドを実行した結果&quot;| n2
+    n2 --&gt;|&quot;追記する&quot;| n0
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>新しいイベントからイベントストア</td><td>追記だけで、書き換えも削除も無い。図では他の線と同じ矢印に見えるが、この線だけが一方通行で取り消せない。</td></tr>
+<tr><td>イベントストアから集約</td><td>読み込むのは履歴の全部であって、保存された状態ではない。状態というものはどこにも保存されておらず、毎回この線の上で作り直される。</td></tr>
+<tr><td>集約</td><td>図では1つの箱だが、実体は集約のインスタンス1件ぶんである。イベントストアの中身は集約のインスタンスごとに分かれている。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">イベントストア</span></div>
+<p>追記だけを受け付ける。記録したイベントの書き換えも削除もできない（データの移行など特殊な場合を除く）。必要な機能は2つだけで、あるインスタンスのイベントをすべて取り出すことと、追記すること。追記のときに期待する版番号を渡すのは、競合を検出するためである——渡した版番号がイベントストア側の最新より古ければ、誰かが先に追記したということなので、書き込みを失敗させる。</p>
+<p>イベントストアに最低限必要な操作を示す</p>
+<p>取り出すことと、追記すること。この2つだけで足りる。</p>
+<div class="blk"><pre>
+interface IEventStore
+{
+    IEnumerable&lt;Event&gt; Fetch(Guid instanceId);
+    void Append(Guid instanceId, Event[] newEvents, int expectedVersion);
+}
+</pre></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">集約への操作の手順</span></div>
+<p>4つの手順を踏む。</p>
+<p>イベント履歴式の集約への操作が、4つの手順を踏むことを示す</p>
+<p>読み込む・作り直す・実行する・書き戻す。従来のドメインモデルと違うのは、2番目と4番目が加わっていることである。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;業務イベントの履歴を読み込む&quot;]
+    n1[&quot;ある時点の状態を作り直す&quot;]
+    n2[&quot;コマンドを実行し、業務イベントを生む&quot;]
+    n3[&quot;新しい業務イベントをイベントストアへ書き戻す&quot;]
+    n0 --&gt; n1
+    n1 --&gt; n2
+    n2 --&gt; n3
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>ある時点の状態を作り直す</td><td>この手順が従来のドメインモデルには無い。従来は保存された状態をそのまま読むだけだった。</td></tr>
+<tr><td>コマンドを実行し、業務イベントを生む</td><td>状態を直接書き換えないのがこの方式の核心である。従来は状態を変えて終わりだったが、ここではイベントを生み、そのイベントを適用した結果として状態が変わる。</td></tr>
+<tr><td>新しい業務イベントをイベントストアへ書き戻す</td><td>書き戻すのはイベントだけで、作り直した状態は保存しない。状態は毎回捨てられる。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">アプリケーション層</span></div>
+<p>4つの手順が、そのまま1つのメソッドの中に並ぶ。</p>
+<p>アプリケーション層が4つの手順をどう呼ぶかを示す</p>
+<p>読み込む・作り直す・実行する・書き戻す、が1つのメソッドの中に順に並ぶ。</p>
+<div class="blk"><pre>
+public class ShipmentAPI
+{
+    private IShipmentsRepository _repository;   // イベントストア
+
+    public void RequestPriority(ShipmentId id, PriorityReason reason)
+    {
+        var events = _repository.LoadEvents(id);            // 手順1
+        var shipment = new Shipment(events);                // 手順2（状態を作り直す）
+        var originalVersion = shipment.Version;
+        var cmd = new RequestPriority(reason);
+        shipment.Execute(cmd);                              // 手順3（コマンドを実行）
+        _repository.CommitChanges(shipment, originalVersion); // 手順4
+    }
+}
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">集約の実装</span></div>
+<p>従来のドメインモデルとの違いがここに出る。従来は状態を直接書き換えていたが、ここではイベントを作って渡し、その適用の結果として状態が変わる。</p>
+<p>イベント履歴式の集約が、状態をどう変えるかを示す</p>
+<p>コマンドの中で状態を直接書き換えていない。イベントを作って渡し、その適用の結果として状態が変わる。</p>
+<div class="blk"><pre>
+public class Shipment
+{
+    private List&lt;DomainEvent&gt; _domainEvents = new List&lt;DomainEvent&gt;();
+    private ShipmentState _state;
+
+    public Shipment(IEnumerable&lt;IDomainEvent&gt; events)
+    {
+        _state = new ShipmentState();
+        foreach (var e in events)
+        {
+            AppendEvent(e);        // 既存の全イベントを適用して状態を作り直す
+        }
+    }
+
+    private void AppendEvent(IDomainEvent @event)
+    {
+        _domainEvents.Append(@event);
+        ((dynamic)_state).Apply((dynamic)@event);
+    }
+
+    public void Execute(RequestPriority cmd)
+    {
+        if (!_state.IsPrioritized &amp;&amp; _state.RemainingTimePercentage &lt;= 0)
+        {
+            var prioritized = new ShipmentPrioritized(_id, cmd.Reason);
+            AppendEvent(prioritized);   // 状態を変えるのではなくイベントを生む
+        }
+    }
+}
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">状態を持つクラス</span></div>
+<p>イベントごとの適用手続きだけを持ち、業務ロジックは持たない。</p>
+<p>状態を持つクラスが、イベントごとの適用手続きだけを持つことを示す</p>
+<p>業務ロジックはここには無い。イベントを受けて値を書き換えるだけの、単純な変換に徹している。</p>
+<div class="blk"><pre>
+public class ShipmentState
+{
+    public ShipmentId Id { get; private set; }
+    public int Version { get; private set; }
+    public bool IsPrioritized { get; private set; }
+
+    public void Apply(ShipmentInitialized @event)   // 受付
+    {
+        Id = @event.Id;
+        Version = 0;
+        IsPrioritized = false;
+    }
+    public void Apply(ShipmentPrioritized @event)   // 優先扱いへ引き上げ
+    {
+        IsPrioritized = true;
+        Version += 1;
+    }
+}
+</pre></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">利点</span></div>
+<p>この方式が持つ4つの利点。</p>
+<div class="node d2"><div class="node-h"><span class="nm">過去のどの時点でも再現できる</span></div>
+<p>最新の状態を組み立てるのと同じやり方で、過去のあらゆる時点の状態を再現できる。使い道は、システムの使われ方の分析、システムが下した判定の検査、業務ロジックの改善、そして障害や不具合の調査——障害が起きた時点の集約の状態を、そのまま作り直せる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">後から新しい見方を足せる</span></div>
+<p>1つの履歴から、いくつでも別の状態を作れる。投影する変換を後からいつでも足せるので、すでに溜まっている履歴から、業務について新しい見方を得られる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">監査の記録になる</span></div>
+<p>業務イベントの履歴は、厳密な一貫性を持つ監査の記録そのものである。集約の状態を変えたすべての業務活動の正確な記録になる。事業領域によっては、この種の記録の保存が法令で義務づけられている。金銭や金融の取引を扱うシステムでとくに効く。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">競合の判定を業務の視点で行える</span></div>
+<p>従来の競合検出では、読み込んでから書き込むまでのあいだに誰かが同じデータを書き換えていれば、それだけで失敗させる。イベントの履歴があると、そのあいだに何が起きたかを正確に把握できるので、追記しようとしている操作が本当に衝突しているのか、それとも無関係で続けても安全かを、業務の視点で判定する仕組みを組み込める。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">欠点</span></div>
+<p>この方式が抱える3つの欠点。</p>
+<div class="node d2"><div class="node-h"><span class="nm">学ぶのに時間がかかる</span></div>
+<p>従来のデータの扱い方とまったく違うやり方なので、正しく実装するには訓練が要る。チームにこの方式の開発経験が無いなら、その時間を見込まなければならない。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">モデルを変えにくい</span></div>
+<p>厳密には、イベントは変わらないものとして扱う。一度決めたイベントのデータ構造を変える作業は、表の設計を変えるのに比べてはるかに難しい。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">仕組みが増える</span></div>
+<p>実装にはさまざまな仕組みが必要になり、システム全体の設計が複雑になる。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">よくある質問</span></div>
+<p>性能・規模・削除・代替手段について。</p>
+<div class="node d2"><div class="node-h"><span class="nm">イベントが増えると遅くならないか</span></div>
+<p>履歴から状態を作るにはそれなりの処理が要るので、履歴が大きくなるほど性能は落ちる。そこで途中結果を控えておく手がある——投影済みの状態を控えから取り、それより後に追記されたイベントだけを取って、メモリ上で重ねる。ただし使ってよい場面は限られる。多くのシステムでは1つの集約のイベントが1万を超えると性能に響くが、実際には百を超えるシステムがほとんど無い。控えを入れたくなったら、まず集約の境界の設計を見直すほうがよい。</p>
+<p>履歴が大きいときに、途中結果を控えておく形を示す</p>
+<p>投影済みの状態を控えておき、その後に足されたイベントだけを重ねる。控えは別のしくみが裏で作る。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;アプリケーション&quot;]
+    n1[&quot;控えの置き場&quot;]
+    n2[&quot;イベントストア&quot;]
+    n3[&quot;控えを作る別のしくみ&quot;]
+    n0 --&gt;|&quot;1. 投影済みの状態を取る&quot;| n1
+    n0 --&gt;|&quot;2. 控えより後のイベントだけ取る&quot;| n2
+    n3 --&gt;|&quot;履歴を読む&quot;| n2
+    n3 --&gt;|&quot;控えを作り直す&quot;| n1
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>控えの置き場</td><td>真実を語る拠り所ではない。捨てても履歴から作り直せるので、失われても業務上の損失は無い。</td></tr>
+<tr><td>控えを作る別のしくみ</td><td>アプリケーションと別に描いてあるのは、操作の裏で動くためである。利用者の操作を待たせない。</td></tr>
+<tr><td>この図全体</td><td>使ってよい場面は限られる。1つの集約のイベントが1万を超えると性能に響くが、百を超えるシステムはほとんど無い。控えを入れたくなったら、先に集約の境界の設計を見直すほうがよい。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">規模を大きくできるか</span></div>
+<p>できる。集約への操作はインスタンスごとに閉じているので、イベントストアを集約の識別子で分割できる。1つのインスタンスに属するイベントを必ず同じ区画へ書き込めばよい。</p>
+<p>イベントストアを、集約の識別子で分割できることを示す</p>
+<p>1つの集約に属するイベントは必ず同じ区画へ入る。区画をまたいだ操作が起きないので、そのまま増やせる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;アプリケーション&quot;]
+    n1[&quot;区画A&quot;]
+    n2[&quot;区画B&quot;]
+    n3[&quot;区画C&quot;]
+    n4[&quot;区画D&quot;]
+    n0 --&gt; n1
+    n0 --&gt; n2
+    n0 --&gt; n3
+    n0 --&gt; n4
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>区画A／区画B／区画C／区画D</td><td>分ける基準は集約の識別子である。1つの集約のイベントが複数の区画に散らないことが、この形が成り立つ条件になる。</td></tr>
+<tr><td>4本の矢印</td><td>どれか1つを選ぶのではなく、扱う集約に応じて行き先が決まる。集約への操作はインスタンスごとに閉じているので、区画をまたぐ操作は起きない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">追記だけなのに、削除を求められたら</span></div>
+<p>忘れられる中身、という形で解く。イベントに含まれる慎重に扱うべき情報をすべて暗号化し、その鍵をイベントストアとは別の置き場に、集約の識別子と対にして保存する。削除を求められたら鍵のほうを消す——イベントは残るが、守るべき情報は二度と読めなくなる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">他のやり方ではだめか</span></div>
+<p>近いことをする代替手段が3つあるが、どれも同じものにはならない。</p>
+<div class="node d3"><div class="node-h"><span class="nm">記録をファイルに書き出して監査の記録にする</span></div>
+<p>データベースへの書き込みとファイルへの書き込みは、全部成るか全部成らないかの扱いが別々になる。片方が失敗すると食い違ったまま残る。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">状態と履歴を、ひと塊の変更として同時に書き込む</span></div>
+<p>技術的には一貫性を保てる。しかしプログラムを変えるときに、保守する人が履歴側への反映を忘れる余地が残る。状態の側を真実の拠り所にすると、履歴側の扱いはどうしても雑になる。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">状態の表から履歴の表へ、自動で複製する</span></div>
+<p>書き忘れは起きない。しかしこれは値の変化を写しているだけで、業務の文脈——なぜその値が変わったのかという理由——が落ちる。理由が残っていないと、新しい投影を作れる見込みはほとんど無くなる。</p>
+</div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">4つの実装方法の対比</span></div>
+<p>何を保存するかと、対象となる業務領域で並べる。</p>
+<p>4つの実装方法を、何を保存するかと対象領域で対比する</p>
+<p>分かれ目は2つ。保存するのが最新状態か履歴か、そして業務ロジックが複雑かどうか。</p>
+<div class="tablewrap"><table><thead><tr><th>実装方法</th><th>保存するもの</th><th>業務ロジックの複雑さ</th><th>対象領域</th></tr></thead><tbody>
+<tr><td>手続きとして書く</td><td>最新の状態</td><td>単純</td><td>補完・一般</td></tr>
+<tr><td>1行のオブジェクトを介する</td><td>最新の状態</td><td>単純（データ構造が複雑）</td><td>補完・一般</td></tr>
+<tr><td>ドメインモデル</td><td>最新の状態</td><td>複雑</td><td>中核</td></tr>
+<tr><td>イベント履歴式ドメインモデル</td><td>イベントの履歴</td><td>複雑（時間軸の洞察が要る）</td><td>中核</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">イベント履歴式ドメインモデルを使うか</span></div>
+<p>中核であることを前提に、時間軸の必要とチームの経験で決める。</p>
+<p>イベント履歴式ドメインモデルを使うかどうかを、順に問うて決める</p>
+<p>中核であることが前提で、そのうえで時間軸の必要があるかを問う。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;業務ロジックは複雑か（中核か）&quot;]
+    n1[&quot;時間軸での分析・監査記録・過去の再現が要るか&quot;]
+    n2[&quot;チームに経験があるか&quot;]
+    n3[&quot;ドメインモデル以外を使う&quot;]
+    n4[&quot;ドメインモデルを使う&quot;]
+    n5[&quot;イベント履歴式ドメインモデルを検討する&quot;]
+    n6[&quot;学習にかかる時間を見込んで判断する&quot;]
+    n0 --&gt;|&quot;いいえ&quot;| n3
+    n0 --&gt;|&quot;はい&quot;| n1
+    n1 --&gt;|&quot;いいえ&quot;| n4
+    n1 --&gt;|&quot;はい&quot;| n5
+    n5 --&gt; n2
+    n2 --&gt;|&quot;いいえ&quot;| n6
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>チームに経験があるか</td><td>他の分岐と性質が違う。技術的な適合ではなく、導入の是非を左右する条件を問う。「いいえ」でも採用してよいが、そのぶんの時間を見込む必要がある。</td></tr>
+<tr><td>業務ロジックは複雑か（中核か）</td><td>この問いに「はい」であることが前提で、補完や一般の業務領域では以降の問いに進まない。</td></tr>
+<tr><td>時間軸での分析・監査記録・過去の再現が要るか</td><td>3つのうち1つでも当てはまれば「はい」になる。3つとも必要という意味ではない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>イベント履歴式ドメインモデルでよく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">補完・一般の業務領域に使う</span></div>
+<p>事業活動の視点で設計を判断する、という原則から外れる。使う正当な理由が無く、もっと単純なやり方で足りるなら、欠点（学ぶ時間・仕組みの複雑さ・モデルの変えにくさ）だけが重くのしかかる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">記録のファイルを監査の記録として使う</span></div>
+<p>データベースとファイルでは、全部成るか全部成らないかの扱いが別々なので、一貫性が保証されない。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">状態が変わった理由を記録しない</span></div>
+<p>自動の複製による履歴は値の変化だけを写し、業務の文脈が落ちる。理由が残っていないと、新しい投影を足せない。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅴ. 置き換えたもの</h2>
+  <p class="narrow">この本は書き起こし版の時点で実例が多く、これまでで最も置き換えが要りました。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書き起こし版</th><th>置き換え先</th><th>保った構造</th></tr></thead>
+      <tbody>
+        <tr><td>見込み客の履歴（実在しそうな人名・電話番号）</td><td>配送の依頼の履歴（法人名・伏せた番号）</td><td>受付 → 連絡 → 予定を置く → 連絡先の変更 → 連絡 → 引受 → 支払完了 の7件。<strong>連絡先が途中で変わる</strong>ことが検索の投影の要点なので、その位置は動かしていない</td></tr>
+        <tr><td>サポートのチケットとエスカレーション</td><td>配送の依頼と優先扱いへの引き上げ</td><td>コマンド実行時の条件（すでに引き上げ済みでないこと・残り時間が尽きていること）</td></tr>
+        <tr><td>特定の法令の名称</td><td>その法令が求める内容の説明</td><td>「追記しかできない置き場から、情報を消せるか」という問いの形</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>機械で確認しました</h3>
+    <p>書籍固有の語（見込み客・人名・電話番号・チケット・エスカレーション・法令名）を grep して<strong>0件</strong>。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅵ. 9本目までの推移</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
+      <tbody>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
+        <tr><td>ubiquitous-language</td><td>99</td><td>231</td><td>177</td></tr>
+        <tr><td>design-heuristics</td><td>120</td><td>310</td><td>203</td></tr>
+        <tr><td>architecture-patterns</td><td>104</td><td>349</td><td>268</td></tr>
+        <tr><td><strong>event-sourced-domain-model</strong></td><td><strong>107</strong></td><td><strong>501</strong></td><td><strong>408</strong></td></tr>
+        <tr><td><strong>9本の合計</strong></td><td><strong>965</strong></td><td><strong>2,701</strong></td><td><strong>2,493</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow"><strong>9 / 19本</strong>。残り10本・約2,200行です。<strong>業務ロジックの実装方法の系列（第5〜8章）と、設計の経験則（第10章）が揃いました。</strong></p>
+</section>
+
+<footer>
+  旧要約版107行・書き起こし版408行・変換後501行（描画結果の実測）。<br>
+  実例は架空の業務へ置き換え、人名は法人名に、法令の名称はその内容の説明に置き換えた。コードが示す構造は保っている。<br>
+  プレビューは描画物から機械で生成した（手で書き写すと取りこぼすため）。
+</footer>
+
+</div>

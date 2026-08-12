@@ -1,0 +1,303 @@
+<title>いまのSVGレンダラが描けること</title>
+<style>
+  :root {
+    --paper:      #EDF0F3;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F7F9;
+    --ink:        #171B23;
+    --ink-soft:   #4B5563;
+    --ink-faint:  #79828F;
+    --rule:       #D3DAE2;
+    --rule-soft:  #E4E9EE;
+
+    --data:       #7A4368;
+    --data-bg:    #F3E9F0;
+    --render:     #16636B;
+    --render-bg:  #E2EFF0;
+    --warn:       #9A4A21;
+    --warn-bg:    #F7EAE2;
+    --dead:       #8A8F98;
+
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
+    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+      --rule:#2E3742; --rule-soft:#242C37;
+      --data:#D19CC0; --data-bg:#2C1F2A;
+      --render:#6BC0C7; --render-bg:#132A2C;
+      --warn:#E0A17A; --warn-bg:#2E211A;
+      --dead:#767E8A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --data:#D19CC0; --data-bg:#2C1F2A;
+    --render:#6BC0C7; --render-bg:#132A2C;
+    --warn:#E0A17A; --warn-bg:#2E211A;
+    --dead:#767E8A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.85;
+    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+  .col { max-width: 40rem; }
+
+  header { display: flex; flex-direction: column; gap: .9rem; }
+  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
+  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+  p { margin: 0; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 2.2rem; margin-top: .6rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+  .stat { display: flex; flex-direction: column; gap: .1rem; }
+  .stat b { font-family: var(--mono); font-size: 1.5rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: .78rem; color: var(--ink-faint); }
+  .stat.alarm b { color: var(--warn); }
+
+  section { display: flex; flex-direction: column; gap: 1.4rem; }
+  h2 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
+    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem;
+  }
+  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
+  h3 { font-family: var(--sans); font-size: .95rem; font-weight: 600; margin: 0; color: var(--ink-soft); }
+
+  .callout { border-left: 3px solid var(--render); background: var(--surface); padding: 1.2rem 1.4rem; border-radius: 0 10px 10px 0; display: flex; flex-direction: column; gap: .6rem; }
+  .callout.alarm { border-left-color: var(--warn); background: var(--warn-bg); }
+  .callout .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .callout p { max-width: 44rem; }
+
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; min-width: 34rem; }
+  caption { text-align: left; font-size: .8rem; color: var(--ink-faint); padding-bottom: .5rem; }
+  th, td { text-align: left; vertical-align: top; padding: .62rem .8rem; border-bottom: 1px solid var(--rule-soft); line-height: 1.6; }
+  thead th { font-size: .72rem; letter-spacing: .06em; color: var(--ink-faint); font-weight: 600; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); padding: .1em .38em; border-radius: 4px; }
+
+  .mark { font-family: var(--mono); font-weight: 600; }
+  .mark.no  { color: var(--warn); }
+  .mark.yes { color: var(--render); }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: .7rem; }
+  figure svg { display: block; width: 100%; height: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; }
+  figcaption { font-size: .8rem; color: var(--ink-faint); }
+
+  pre { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 1.1rem 1.2rem; overflow-x: auto; font-family: var(--mono); font-size: .8rem; line-height: 1.7; }
+  pre .cm { color: var(--ink-faint); }
+  pre .bad { color: var(--warn); }
+
+  .t  { font:600 12.5px "Noto Sans JP", sans-serif; }
+  .s  { font:400 10.5px "Noto Sans JP", sans-serif; }
+  .mo { font:400 10.5px "Noto Sans JP", sans-serif; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1.4rem; font-size: .82rem; color: var(--ink-faint); display: flex; flex-direction: column; gap: .5rem; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    section, figure, table { break-inside: avoid; }
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Reference — 実測</p>
+  <h1>いまのSVGレンダラが描けること</h1>
+  <p class="lede">構造化データを受け取り、座標を計算してSVGを吐く仕組みは、すでにHandoffで動いている。ではその表現の上限はどこにあるのか。ADRの関門1の図の内容を実際に渡して測った。</p>
+  <div class="stats">
+    <div class="stat"><b>2 + 2</b><span>指定できる関係の種類 ＋ 状態の種類</span></div>
+    <div class="stat"><b>6</b><span>レイアウトを決めている定数</span></div>
+    <div class="stat alarm"><b>6</b><span>頼んでいないのに描かれた矢印</span></div>
+  </div>
+</header>
+
+<section id="conclusion">
+  <h2><span class="num">00</span>結論</h2>
+  <div class="callout alarm">
+    <span class="k">中心の問いへの答え</span>
+    <p><b>構造化データが指定できる範囲は、表現の範囲ではない。</b>データが言えることは、レンダラが描くことの<b>内側</b>にある。そしてレンダラはその外側へ、頼まれていない線を<b>描き足す</b>。さらに、ADRの関門1が要求する表現は、そのどちらの内側にも無い。</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 720 276" role="img" aria-label="データが言えることはレンダラが描くことの内側にあり、レンダラはさらに自動で矢印を描き足す。関門1が要求する面と囲みと折れ線は、そのどちらにも含まれない">
+      <rect x="40" y="44" width="330" height="196" rx="14" fill="var(--render-bg)" stroke="var(--render)" stroke-width="1.3"/>
+      <text class="s" x="205" y="66" text-anchor="middle" fill="var(--render)">レンダラが描くこと</text>
+
+      <rect x="62" y="82" width="286" height="136" rx="10" fill="var(--data-bg)" stroke="var(--data)" stroke-width="1.3"/>
+      <text class="t" x="205" y="132" text-anchor="middle" fill="var(--ink)">データが言えること</text>
+      <text class="s" x="205" y="156" text-anchor="middle" fill="var(--ink-soft)">層・箱・状態2値・関係2値</text>
+
+      <text class="s" x="205" y="232" text-anchor="middle" fill="var(--warn)">＋ 層をまたぐ矢印を自動で描き足す</text>
+
+      <rect x="420" y="44" width="270" height="196" rx="14" fill="var(--warn-bg)" stroke="var(--warn)" stroke-width="1.3" stroke-dasharray="5 4"/>
+      <text class="t" x="555" y="102" text-anchor="middle" fill="var(--warn)">関門1が要求するもの</text>
+      <text class="s" x="555" y="140" text-anchor="middle" fill="var(--ink-soft)">面（変更前と変更後）</text>
+      <text class="s" x="555" y="168" text-anchor="middle" fill="var(--ink-soft)">囲み（問題空間・解決空間）</text>
+      <text class="s" x="555" y="196" text-anchor="middle" fill="var(--ink-soft)">折れ線</text>
+
+      <text class="s" x="360" y="266" text-anchor="middle" fill="var(--ink-faint)">schemaに足しても、レイアウトの計算式が知らなければ描かれない</text>
+    </svg>
+    <figcaption>図1 ── 内側と外側の両方に、データの手が届いていない。右の破線は、いまどちらにも入っていないもの。</figcaption>
+  </figure>
+
+  <p class="col">仕組みそのものは <code>completion_image_layout.py</code>（90行）が座標を計算し、<code>handoff_html_template.py</code>（481行）がそれを <code>&lt;rect&gt;</code> と <code>&lt;path&gt;</code> に変換する、という2段である。人が座標を書く場所は無い。</p>
+</section>
+
+<section id="expressible">
+  <h2><span class="num">01</span>いま指定できること</h2>
+  <p class="col">構造化データ側の語彙は、実際にはこれだけだった。件数は出荷済みの引き継ぎ文書19本を数えたもの。</p>
+  <div class="scroll">
+    <table>
+      <caption>表1 ── completionImage が受け取る値と、実際に使われている頻度</caption>
+      <thead>
+        <tr><th>指定する対象</th><th>取れる値</th><th>実測</th><th>意味</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>層 <code>layer</code></td><td><code>label</code> ＋ <code>nodes[]</code></td><td class="n">—</td><td>上から順に積まれる。層の見出しが左端に出る</td></tr>
+        <tr><td>箱 <code>node</code></td><td><code>id</code> / <code>title</code> / <code>sub</code></td><td class="n">—</td><td>本文は2行まで。3行目を置く場所が無い</td></tr>
+        <tr><td>箱の状態 <code>status</code></td><td><code>existing</code> / <code>new</code></td><td class="n">133 / 112</td><td><code>new</code> だけが強調される。2値以外は表せない</td></tr>
+        <tr><td>関係 <code>kind</code></td><td><code>dependency</code> / <code>split</code></td><td class="n">大半 / 5文書</td><td><code>dependency</code> は矢印、<code>split</code> は矢印なしの線</td></tr>
+        <tr><td>関係の説明 <code>label</code></td><td>自由文</td><td class="n">—</td><td>線の中点に1行だけ置かれる</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="col">状態も関係も<b>2値</b>である。3つ目の状態（たとえば「削除される」）や3つ目の関係（たとえば「対応する」）を書く口は無い。</p>
+</section>
+
+<section id="fixed">
+  <h2><span class="num">02</span>いま指定できないこと</h2>
+  <p class="col">こちらはレイアウトの計算式が決めていて、データ側からは触れない。左の値はコード中の定数そのもの。</p>
+  <div class="scroll">
+    <table>
+      <caption>表2 ── レイアウトが固定していることと、そこから来る制約</caption>
+      <thead>
+        <tr><th>決まっていること</th><th>値</th><th>描けなくなるもの</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>層の並ぶ向き</td><td class="n">縦一列</td><td>変更前と変更後を左右に並べられない</td></tr>
+        <tr><td>箱の幅</td><td class="n">(700 − 96 − 隙間) ÷ 個数</td><td>等幅。要点の箱を大きくできない</td></tr>
+        <tr><td>箱の高さ</td><td class="n">50</td><td>文字数に応じて伸びない</td></tr>
+        <tr><td>囲みの枠</td><td class="n">無い</td><td>「問題空間」「解決空間」のような塊を示せない</td></tr>
+        <tr><td>線の形</td><td class="n">2点の直線</td><td>回り込めない。間の箱を突き抜ける</td></tr>
+        <tr><td>viewBoxの幅</td><td class="n">700 固定</td><td>横に長い図にできない</td></tr>
+        <tr><td>層をまたぐ矢印</td><td class="n">自動で導出</td><td><b>「描かない」を選べない</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="col">最後の行だけ性質が違う。ほかは「足りない」だが、これは「勝手に足される」である。</p>
+</section>
+
+<section id="measured">
+  <h2><span class="num">03</span>実際に渡して測った</h2>
+  <p class="col">ADRの関門1の図が言いたいことを、いまのデータ形式へ翻訳して <code>compute_layout</code> に渡した。囲みと左右2面は渡す口が無いので、層として積むしかない。</p>
+
+  <pre><span class="cm"># 問題空間に 事業領域・業務領域、解決空間に 区切られた文脈・業務ユースケース・集約
+# 引きたい関係は「業務ユースケース → 業務領域（対応）」の 1本だけ</span>
+
+viewBox: 700 x 184
+
+自動で引かれた包含の矢印:
+  <span class="bad">(事業領域 → 区切られた文脈)  (事業領域 → 業務ユースケース)  (事業領域 → 集約)
+  (業務領域 → 区切られた文脈)  (業務領域 → 業務ユースケース)  (業務領域 → 集約)</span>
+
+宣言した関係の矢印:
+  (業務ユースケース → 業務領域, dependency)</pre>
+
+  <div class="scroll">
+    <table>
+      <caption>表3 ── 頼んだものと、出てきたもの</caption>
+      <thead>
+        <tr><th>　</th><th>本数</th><th>中身</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>データで宣言した線</td><td class="n">1</td><td>業務ユースケース → 業務領域（対応）</td></tr>
+        <tr><td>実際に描かれた線</td><td class="n">7</td><td>上記1本 ＋ 自動導出6本</td></tr>
+        <tr><td><span class="mark no">✗</span> 事実と食い違うもの</td><td class="n">6</td><td>事業領域は集約を含まない。業務領域は区切られた文脈を含まない（向きが逆）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout alarm">
+    <span class="k">この6本が意味すること</span>
+    <p>レンダラが、<b>データが一度も言っていないことを図として主張した。</b>隣り合う層のノード数が 2 と 3 で一致しないため、全対全（2×3）のフォールバックが働いた結果である。<b>仕様どおりの挙動でバグではない</b>——ノード数が 1 対 n か n 対 n のときだけ意図した線になる、という前提で書かれている。</p>
+    <p>つまり<b>表現の上限は「描けるかどうか」だけでは測れない。</b>描かれてしまうものも上限のうちに入る。</p>
+  </div>
+</section>
+
+<section id="gap">
+  <h2><span class="num">04</span>関門1を描くのに足りないもの</h2>
+  <div class="scroll">
+    <table>
+      <caption>表4 ── 不足と、必要になる変更の位置</caption>
+      <thead>
+        <tr><th>足りないもの</th><th>いまの状態</th><th>手を入れる場所</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>左右2面</td><td>層を縦にしか積まない</td><td>座標計算に「面」を足し、面ごとに層を積む</td></tr>
+        <tr><td>囲み</td><td>ノードの集合を囲む宣言が無い</td><td>層とは別に、囲みの宣言と枠の描画を足す</td></tr>
+        <tr><td>折れ線</td><td>始点と終点の2点しか返さない</td><td>経路を返す形にし、間の箱を避ける</td></tr>
+        <tr><td><b>矢印を描かない自由</b></td><td>層が隣り合えば必ず引かれる</td><td>足す機能ではなく、<b>自動導出をやめる判断</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="col">上の3つは実装量の話だが、4つ目は設計の向きの話である。自動導出は「書かなくても図ができる」ための親切だが、その代償として「書かないことで否定する」ができなくなっている。</p>
+</section>
+
+<section id="order">
+  <h2><span class="num">05</span>では構造化データの範囲は何が決めるのか</h2>
+  <div class="callout">
+    <span class="k">測定から言えること</span>
+    <p>レイアウトの計算式が先にあり、<b>構造化データの形はそれに従って後から決まる。</b>schemaに <code>frames</code> を足しても、座標計算が囲みを知らなければ描かれない。逆に、座標計算が囲みを解けるようになれば、schemaに何を足すべきかは自動的に決まる。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <caption>表5 ── ADRのfigureを設計する順序</caption>
+      <thead>
+        <tr><th>　</th><th>先に決めるもの</th><th>そこから決まるもの</th><th>この順序を逆にすると</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="mark yes">○</span></td><td>レイアウトが解ける図の型</td><td>schemaの語彙</td><td>—</td></tr>
+        <tr><td><span class="mark no">✗</span></td><td>schemaの語彙</td><td>—</td><td>描かれないフィールドが溜まり、書いた側は描かれない理由に気づけない</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="limits">
+  <h2><span class="num">06</span>この測定が見ていないもの</h2>
+  <div class="scroll">
+    <table>
+      <caption>表6 ── 結論の適用範囲</caption>
+      <thead>
+        <tr><th>見ていないもの</th><th>なぜ結論に影響しないか／するか</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Knowledge の図（Mermaid経由）</td><td>別の経路で、上限もMermaid側が決める。ここで測った数値は当てはまらない</td></tr>
+        <tr><td>関門2（操作と返り値の並び）</td><td>座標計算を通らないため、この上限の外側にある。縦に並べるだけで描ける</td></tr>
+        <tr><td>原理的な不可能性</td><td>ここで「描けない」と書いたものは、いまの実装の話である。SVGとして不可能なものは一つも無い</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>出典 ── <code>src/waffle/domain/services/completion_image_layout.py</code>（90行）、<code>src/waffle/domain/services/handoff_html_template.py</code>（481行）、<code>.waffle/documents/handoff/</code> の19文書。</p>
+  <p>実測は <code>compute_layout</code> を直接呼び出して取得。数値はいずれも 2026-08-12 時点のもの。</p>
+</footer>
+
+</div>

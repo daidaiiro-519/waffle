@@ -90,7 +90,7 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
 <header>
   <span class="eyebrow">Waffle / knowledge の変換 5本目</span>
   <h1><code>evolving-design</code> を書き起こし版から移す</h1>
-  <p class="standfirst">旧要約版111行 → <strong>277行</strong>。<strong>保留中のサブドメイン再分類に直接効く節</strong>が戻りました——分類が6通りに変化すること、そして「補完のロジックが複雑になってきた」ことをどう読むか。</p>
+  <p class="standfirst">旧要約版111行 → <strong>271行</strong>。<strong>保留中のサブドメイン再分類に直接効く節</strong>が戻りました——分類が6通りに変化すること、そして「補完のロジックが複雑になってきた」ことをどう読むか。</p>
 </header>
 
 <section>
@@ -99,7 +99,7 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
     <div class="stat ok"><span class="n">+20</span><span class="l">旧要約版で落ちていた節</span></div>
     <div class="stat"><span class="n">3</span><span class="l">図</span></div>
     <div class="stat"><span class="n">3</span><span class="l">原文（C#1・JSON1・表1）</span></div>
-    <div class="stat"><span class="n">277</span><span class="l">行（旧111 / 書起し283）</span></div>
+    <div class="stat"><span class="n">271</span><span class="l">行（旧111 / 書起し283）</span></div>
   </div>
 </section>
 
@@ -153,45 +153,96 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
 </section>
 
 <section>
-  <h2>Ⅲ. 抜粋プレビュー</h2>
-  <p class="narrow">277行あるので、<strong>戻った中でも重い4つ</strong>を抜き出します。図とコードは実際の描画結果です。</p>
+  <h2>Ⅲ. 完全プレビュー</h2>
+  <p class="narrow">描画された277行を、<strong>省略なしで</strong>並べています。28ノードすべてです。</p>
 
   <div class="doc">
-    <div class="doc-head"><span>knowledge / evolving-design（抜粋）</span><span>全28ノード中4件</span></div>
+    <div class="doc-head"><span>knowledge / evolving-design</span><span>ノード28 ・ 図3 ・ 原文3</span></div>
     <div class="doc-body">
 
-      <div class="node"><div class="node-h"><span class="nm">事業活動の変化</span><span class="kind">定義</span><span class="src">11.1</span></div>
-        <p>業務領域のカテゴリー（中核・一般・補完）は固定されていない。企業の成長や外部環境によって変化する。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>業務領域のカテゴリーが固定ではなく、6通りに変化しうることを示す</div>
-            <div><b>読み取り</b>中核・一般・補完のあいだは、どの向きにも移りうる。他社が同等のものを出せば中核は一般へ、既製品に独自の強みを持ち込めれば一般は中核へ、収益への貢献が消えれば中核は補完へ移る。分類は一度決めたら固定ではない。</div>
-          </div>
-<pre class="mermaid">
+<div class="node"><div class="node-h"><span class="nm">設計を進化させるとは</span></div>
+<p>よい設計も変化を扱えなければ危険になる。考慮すべき変化は、事業活動の変化・設計の基本方針の再検討・組織の変更・業務知識の増減・システムの成長の5つ。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">事業活動の変化</span></div>
+<p>業務領域のカテゴリー（中核・一般・補完）は固定されていない。企業の成長や外部環境によって変化する。</p>
+<p>業務領域のカテゴリーが固定ではなく、6通りに変化しうることを示す</p>
+<p>中核・一般・補完のあいだは、どの向きにも移りうる。他社が同等のものを出せば中核は一般へ、既製品に独自の強みを持ち込めれば一般は中核へ、収益への貢献が消えれば中核は補完へ移る。分類は一度決めたら固定ではない。</p>
+<div class="blk"><pre class="mermaid">
 flowchart LR
-    n0["中核"]
-    n1["一般"]
-    n2["補完"]
-    n0 -->|"他社が同等のものを提供"| n1
-    n1 -->|"既製品に独自の強みを持ち込める"| n0
-    n0 -->|"収益への貢献が消えた"| n2
-    n2 -->|"最適化で収益が生まれた"| n0
-    n2 -->|"既製品が自社開発以上になった"| n1
-    n1 -->|"汎用仕様への適合コストが上回った"| n2
-</pre>
-        </div>
-        <div class="node d2"><div class="node-h"><span class="nm">補完 → 中核</span><span class="kind">判断基準</span><span class="src">11.1.4</span><span class="restored">戻した</span></div>
-          <p>補完的な業務ロジックの最適化から、費用の削減や新しい収益が生まれたとき。兆候は、補完の業務ロジックが複雑になってきたこと——<strong>定義上、補完のロジックは単純なはずである</strong>。時間がたって複雑になり、<strong>かつ収益も増えている</strong>なら中核化の兆候。収益が増えていないのに複雑になっているだけなら、それは<strong>不必要な複雑さ</strong>である。</p></div>
-      </div>
-
-      <div class="node"><div class="node-h"><span class="nm">1行のオブジェクト → ドメインモデルへ</span><span class="kind">判断基準</span><span class="src">11.3.2</span><span class="restored">戻した</span></div>
-        <p>データの不整合やロジックの重複が増えてきたとき。手順は4つ——不変として表せそうなデータ構造を値オブジェクトとして切り出し、値の書き込みを外から閉じ、状態を変えるロジックを内側へ移し、最後に一貫性を保証する最小の範囲を集約として定める。外部の集約は識別子で参照し、集約ごとに外へ公開する入口を1つに絞る。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>1行のオブジェクトからドメインモデルへ移す手順を、コードの変化で示す</div>
-            <div><b>読み取り</b>まず値の書き込みを外から閉じる。そこで出るコンパイルエラーが、外部から状態を変えていた箇所——つまり直す対象——の一覧になる。次にその変更のロジックをオブジェクトの内側へ移す。この時点で、そのオブジェクトは集約の候補になっている。</div>
-          </div>
-<pre>// 変更前: 値の書き込みが外へ開いている
+    n0[&quot;中核&quot;]
+    n1[&quot;一般&quot;]
+    n2[&quot;補完&quot;]
+    n0 --&gt;|&quot;他社が同等のものを提供&quot;| n1
+    n1 --&gt;|&quot;既製品に独自の強みを持ち込める&quot;| n0
+    n0 --&gt;|&quot;収益への貢献が消えた&quot;| n2
+    n2 --&gt;|&quot;最適化で収益が生まれた&quot;| n0
+    n2 --&gt;|&quot;既製品が自社開発以上になった&quot;| n1
+    n1 --&gt;|&quot;汎用仕様への適合コストが上回った&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>6本の矢印</td><td>起きうる向きを示すだけで、順序も頻度も表さない。中核から一般への移行が、その逆より起きやすいといったことは読み取れない。</td></tr>
+<tr><td>補完から中核</td><td>最適化によって収益が生まれた場合に限る。単に複雑になっただけでは移らない——それは不必要な複雑さであり、取り除く対象になる。</td></tr>
+<tr><td>中核／一般／補完</td><td>業務領域の分類であって、システムの成熟度ではない。どの向きへ移ることも、良し悪しを表さない。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">中核 → 一般</span></div>
+<p>競合他社が同等のサービスや機能を市場に提供するようになったとき。自前で持っていた強みが、買えるものになる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">一般 → 中核</span></div>
+<p>外部の既製品に、独自の競争優位を持ち込める機会を見つけたとき。既製品で足りていた領域に自社の強みを載せられると分かった場合が典型。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">補完 → 一般</span></div>
+<p>既製品や公開されている実装が、自社開発以上の機能を提供するようになったとき。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">補完 → 中核</span></div>
+<p>補完的な業務ロジックの最適化から、費用の削減や新しい収益が生まれたとき。兆候は、補完の業務ロジックが複雑になってきたこと——定義上、補完のロジックは単純なはずである。時間がたって複雑になり、かつ収益も増えているなら中核化の兆候。収益が増えていないのに複雑になっているだけなら、それは不必要な複雑さである。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">中核 → 補完</span></div>
+<p>その業務領域の複雑さに、適切な理由がなくなったとき（収益への貢献が消えた）。他の業務領域を支援する必要最小限のロジックだけを残し、収益を生まない複雑さを取り除く。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">一般 → 補完</span></div>
+<p>汎用のサービスの仕様に合わせるための連係の手間が、そこから得られる利点を上回るようになったとき。自前へ戻す。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">設計の基本方針を再検討する</span></div>
+<p>業務領域のカテゴリーが変わると、文脈どうしの連係の仕方と開発の進め方に影響する。</p>
+<p>カテゴリーの変化が、文脈どうしの連係の仕方をどう変えるかを対比する</p>
+<p>補完から中核へ移るときは、相手の都合に引きずられないよう自分のモデルを守る仕組みが要る。逆に中核から補完へ移るときは、守りを解いて独立させ、機能の重複を許してよくなる。</p>
+<div class="tablewrap"><table><thead><tr><th>変化</th><th>連係の仕方の変化</th></tr></thead><tbody>
+<tr><td>補完 → 中核</td><td>互いに独立 → 使う側と供給する側（変換をはさんで内部のモデルを守る）</td></tr>
+<tr><td>中核 → 補完</td><td>使う側と供給する側 → 互いに独立（機能の重複を許してよい）</td></tr>
+<tr><td>一般 → 中核</td><td>協力関係を強める必要がある</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">開発の進め方の再検討</span></div>
+<p>中核は、社内で業務エキスパートと緊密に協力して開発する（外部委託はしない）。補完は外部委託でき、新人の育成の機会としても使える。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">業務ロジックの実装方法を見直す</span></div>
+<p>見直すのは、既存の設計では目の前の事業のニーズにうまく対応できなくなったとき。変更がやっかいで危険になってきたときである。実装方法の変更を恐れてはいけない——事業がどう発展するかは誰も予測できないので、状況に応じた適切な設計をして、必要になった時点で進化させる。</p>
+<p>実装方法が、業務ロジックの増大に合わせて一方向に移っていくことを示す</p>
+<p>手続きとして書く形から始まり、データ構造が込み入れば1行のオブジェクトを介する形へ、不整合や重複が増えればドメインモデルへ、監査記録や分析が必要になればイベント履歴式へ移る。先回りして複雑な方へ行くのではなく、必要になった時点で移す。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;手続きとして書く&quot;]
+    n1[&quot;1行のオブジェクトを介する&quot;]
+    n2[&quot;ドメインモデル&quot;]
+    n3[&quot;イベント履歴式ドメインモデル&quot;]
+    n0 --&gt;|&quot;データ構造が込み入ってきた&quot;| n1
+    n1 --&gt;|&quot;不整合・ロジックの重複が増えた&quot;| n2
+    n2 --&gt;|&quot;監査記録・分析が必要になった&quot;| n3
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>3本の矢印が一方向であること</td><td>戻れないという意味ではなく、必要が生じたときだけ進むという意味である。先回りして右へ行かない。</td></tr>
+<tr><td>データ構造が込み入ってきた／不整合・ロジックの重複が増えた／監査記録・分析が必要になった</td><td>移る条件であって、移った結果ではない。条件が起きていないのに右へ進むと、複雑さだけが増える。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">手続き → 1行のオブジェクトを介する形へ</span></div>
+<p>手続きとして書いている中で、扱うデータの構造が込み入ってきたとき。込み入った部分を見つけ、そのデータ操作を1行を表すオブジェクトへ包み、データベースを直接操作するのをやめる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">1行のオブジェクト → ドメインモデルへ</span></div>
+<p>データの不整合やロジックの重複が増えてきたとき。手順は4つ——不変として表せそうなデータ構造を値オブジェクトとして切り出し、値の書き込みを外から閉じ、状態を変えるロジックを内側へ移し、最後に一貫性を保証する最小の範囲を集約として定める。外部の集約は識別子で参照し、集約ごとに外へ公開する入口を1つに絞る。</p>
+<p>1行のオブジェクトからドメインモデルへ移す手順を、コードの変化で示す</p>
+<p>まず値の書き込みを外から閉じる。そこで出るコンパイルエラーが、外部から状態を変えていた箇所——つまり直す対象——の一覧になる。次にその変更のロジックをオブジェクトの内側へ移す。この時点で、そのオブジェクトは集約の候補になっている。</p>
+<div class="blk"><pre>
+// 変更前: 値の書き込みが外へ開いている
 public class Shipment {
     public Guid Id { get; set; }
     public int Points { get; set; }
@@ -210,15 +261,81 @@ public class Shipment {
     public void ApplyBonus(int percentage) {
         this.Points *= 1 + percentage / 100.0;
     }
-}</pre>
-        </div>
-      </div>
+}
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">ドメインモデル → イベント履歴式へ</span></div>
+<p>集約のデータを直接変更する代わりに、集約の一生を表す一連の業務イベントを特定する。難点は、すでに存在している集約の履歴をどうするか——最新の状態しか持っていないものを、履歴の形へ移す方法が要る。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">失われた履歴をどう扱うか</span></div>
+<p>2つの方法がある。最新の状態から「こうだったはずだ」という筋書きを組み立てて近似的に復元する方法と、「移行した」という事実そのものを最初の記録にする方法。前者は完全には復元できず、後者は旧い仕組みの痕跡が残り続ける。</p>
+<p>過去の記録が失われたまま移行するときの、2つの書き方を対比する</p>
+<p>上は最新の状態から「こうだったはずだ」という筋書きを組み立てて記録する方法で、完全には復元できない（数えていなかったものは戻らない）。下は「移行した」という事実そのものを最初の記録にする方法で、失われたことが明示される代わりに、旧い仕組みの痕跡が残り続ける。</p>
+<div class="blk"><pre>
+// 近似的に復元する
+{&quot;event-type&quot;: &quot;新規作成&quot;, &quot;shipment-id&quot;: 12}
+{&quot;event-type&quot;: &quot;集荷済&quot;, &quot;timestamp&quot;: &quot;...&quot;}
+{&quot;event-type&quot;: &quot;配達完了&quot;, &quot;status&quot;: &quot;完了&quot;}
 
-      <div class="node"><div class="node-h"><span class="nm">業務知識と境界の経験則</span><span class="kind">判断基準</span><span class="src">11.5</span><span class="restored">戻した</span></div>
-        <p>業務知識が少ない段階では、<strong>広い範囲で文脈を区切る</strong>——まちがえても、論理的な境界を引き直すほうが物理的な境界を動かすより簡単だから。業務知識が増えたら、広い文脈を小さく分解できる。</p></div>
+// 移行そのものを記録する
+{&quot;event-type&quot;: &quot;移行&quot;, &quot;shipment-id&quot;: 12, &quot;status&quot;: &quot;完了&quot;}
+</pre></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">組織の変更</span></div>
+<p>組織が変わると、チーム間で意図がどう伝わるかが変わり、それが文脈どうしの連係の仕方に影響する。</p>
+<p>組織の変化が、文脈どうしの連係の仕方を押し下げることを示す</p>
+<p>チームが離れて意図が伝わりにくくなると、対等な協力から使う側と供給する側の関係へ移る。それも難しくなると、互いに独立し、機能の重複を許すほうが費用対効果で有利になることもある。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;対等な協力&quot;]
+    n1[&quot;使う側と供給する側&quot;]
+    n2[&quot;互いに独立&quot;]
+    n0 --&gt;|&quot;距離が離れ、意図が伝わりにくくなった&quot;| n1
+    n1 --&gt;|&quot;協力がうまくいかない&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>2本の矢印が一方向であること</td><td>押し下げる向きにしか描いていないのは、組織の距離が縮まったときに自動的に元へ戻るわけではないためである。戻すには意図的な作り直しが要る。</td></tr>
+<tr><td>互いに独立</td><td>失敗ではない。機能の重複を許すほうが費用対効果で有利になる場合の、正当な選択肢である。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">業務知識</span></div>
+<p>価値を生み出すソフトウェア設計には業務知識が不可欠である。そして業務の複雑さは最初は見えない——最初はすべて単純に見えるが、機能を追加するたびに例外的な条件が増え、規則や不変条件が見つかる。この新しい洞察が、それまで整理してきた秩序を壊し、モデルを作り直すことになる。</p>
+<div class="node d2"><div class="node-h"><span class="nm">業務知識と境界の経験則</span></div>
+<p>業務知識が少ない段階では、広い範囲で文脈を区切る——まちがえても、論理的な境界を引き直すほうが物理的な境界を動かすより簡単だから。業務知識が増えたら、広い文脈を小さく分解できる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">業務知識の劣化</span></div>
+<p>時間がたつと文書が更新されなくなり、初期の担当者が去り、その場しのぎで機能が追加される。業務知識は放っておくと劣化する。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">システムの成長</span></div>
+<p>システムが成長するのはソフトウェアが健全な証だが、設計を再検討せずに成長させると大きな塊になる。増大する複雑さのうち、過去の設計判断に起因する必要のない複雑さを特定して取り除き、事業活動が本来持つ複雑さのほうには、しかるべき手法で対処する。</p>
+<div class="node d2"><div class="node-h"><span class="nm">業務領域の見直し</span></div>
+<p>事業が成長すると業務領域の境界がぼやけてくる。経験則は、強く関係するユースケース——**同じデータ集合を操作するユースケースの集まり**——に注目して切れ目を見つけること。目指すのは純度の高い中核の業務領域を抽出することで、そうすれば事業戦略上もっとも重要な領域へ開発の力を集められる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">区切られた文脈の見直し</span></div>
+<p>開発の規模が大きくなると、文脈の焦点がぼやけてくる。合図は、文脈どうしでかなりの通信が発生していること——モデルが適切でないので、区切り方を見直す。「何にでも手を出して、どれもちゃんとできていない」モデルを作ってはいけない。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">集約の見直し</span></div>
+<p>集約はできるだけ小さく設計する。守るべき一貫性とは無関係なデータを集約へ足すと、必要のない複雑さが入る。業務機能を専用の集約へ抽出すると、元の集約が単純になるだけでなく、隠れていた別のモデル——新しい区切られた文脈——が見つかることも少なくない。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">成長への対応指針</span></div>
+<p>業務領域の機能を広げる必要が出たら、業務領域を小さい単位で識別することを検討する。「何にでも手を出して、どれもちゃんとできていない」文脈を作らない。集約はできるだけ小さく設計する。さまざまな境界を常に監視し、必要のない複雑さを取り除く。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>設計を進化させるときによく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">カテゴリーが変わっても設計を変えない</span></div>
+<p>中核から補完へ移ったのに社内開発を続けたり、補完から中核へ移ったのに手続きとしての実装を使い続けると、競争力と費用の最適化の機会を失う。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">業務知識が少ない段階で境界を細かく切る</span></div>
+<p>後から直す費用が高くつく。最初は広い範囲で区切り、業務知識が増えたら分割する。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">成長に合わせた境界の見直しをしない</span></div>
+<p>「何にでも手を出して、どれもちゃんとできていない」文脈や集約になる。成長のたびに設計判断を再検討する。</p>
+</div>
+</div>
 
-      <div class="node"><div class="node-h"><span class="nm">業務領域の見直し</span><span class="kind">判断基準</span><span class="src">11.6.1</span><span class="restored">戻した</span></div>
-        <p>事業が成長すると業務領域の境界がぼやけてくる。経験則は、強く関係するユースケース——<strong>同じデータ集合を操作するユースケースの集まり</strong>——に注目して切れ目を見つけること。目指すのは<strong>純度の高い中核の業務領域を抽出すること</strong>で、そうすれば事業戦略上もっとも重要な領域へ開発の力を集められる。</p></div>
 
     </div>
   </div>
@@ -251,11 +368,11 @@ public class Shipment {
     <table>
       <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
       <tbody>
-        <tr><td>subdomain</td><td>112</td><td>279</td><td>222</td></tr>
-        <tr><td>bounded-context</td><td>93</td><td>191</td><td>291</td></tr>
-        <tr><td>domain-model</td><td>112</td><td>382</td><td>431</td></tr>
-        <tr><td>business-logic-simple</td><td>107</td><td>209</td><td>210</td></tr>
-        <tr><td>evolving-design</td><td>111</td><td>277</td><td>283</td></tr>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
         <tr><td><strong>5本の合計</strong></td><td><strong>535</strong></td><td><strong>1,338</strong></td><td><strong>1,437</strong></td></tr>
       </tbody>
     </table>
@@ -264,7 +381,7 @@ public class Shipment {
 </section>
 
 <footer>
-  旧要約版111行・書き起こし版283行・変換後277行（描画結果の実測）。<br>
+  旧要約版111行・書き起こし版283行・変換後271行（描画結果の実測）。<br>
   実例とコードの題材は架空の業務へ置き換え、企業名・人名は落とした。変化の向きと原因の構造は保っている。<br>
   図はすべて宣言（節点・関係）から描画したもの。
 </footer>

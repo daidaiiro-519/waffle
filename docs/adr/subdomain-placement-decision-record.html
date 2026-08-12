@@ -1,0 +1,325 @@
+<title>業務領域の仕様文書を、区切られた文脈の配下から外へ出す — 設計決定記録</title>
+<meta name="id" content="adr-subdomain-placement-2026-08-11">
+<meta name="type" content="DecisionRecord">
+<meta name="title" content="業務領域の仕様文書を、区切られた文脈の配下から外へ出す">
+<meta name="description" content="入れ子は業務領域に親を1つしか与えず、knowledge がアンチパターンと呼ぶ「1業務領域＝1モデル」を構造として強制するため、所属を参照へ移す。">
+<meta name="tags" content="ddd,subdomain,bounded-context,spec-layout,migration">
+<style>
+  :root{
+    --ink:#1b2027;
+    --ink-soft:#5b6472;
+    --ink-faint:#64707c;
+    --paper:#f6f5f2;
+    --paper-raised:#ffffff;
+    --line:#dcd8d0;
+    --accent:#3d5a80;
+    --accent-soft:#e7edf4;
+    --decision-bg:#eef3ec;
+    --decision-border:#5c7a5f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+    --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+    --accent:#8fb0d6; --accent-soft:#232b34;
+    --decision-bg:#1e2a20; --decision-border:#5c7a5f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6e4df; --ink-soft:#a7aebb; --ink-faint:#838b98;
+      --paper:#181a1d; --paper-raised:#212327; --line:#33363b;
+      --accent:#8fb0d6; --accent-soft:#232b34;
+      --decision-bg:#1e2a20; --decision-border:#5c7a5f;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.7;}
+  .shell{max-width:1080px; margin:0 auto; padding:48px 24px 96px; display:grid; grid-template-columns:220px minmax(0,1fr); gap:56px;}
+  nav.toc{position:sticky; top:32px; align-self:start; font-size:13px;}
+  nav.toc .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 12px;}
+  nav.toc ol{list-style:none; margin:0; padding:0; border-left:2px solid var(--line);}
+  nav.toc li{margin:0;}
+  nav.toc a{display:block; padding:7px 0 7px 14px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:-2px;}
+  nav.toc a:hover, nav.toc a:focus-visible{color:var(--accent); border-left-color:var(--accent);}
+  nav.toc .num{font-family:var(--mono); color:var(--ink-faint); margin-right:6px;}
+
+  main{min-width:0;}
+  header.doc-head{border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:36px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .meta-pill{font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:4px; background:var(--paper-raised); border:1px solid var(--line); color:var(--ink-soft);}
+  .meta-pill.status{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  h1{font-family:var(--serif); font-size:clamp(24px,3.4vw,32px); font-weight:600; margin:0; text-wrap:balance;}
+  section{margin-bottom:44px; max-width:70ch;}
+  section h2{font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0 0 16px; display:flex; align-items:baseline; gap:8px;}
+  section h2 .num{font-family:var(--mono); color:var(--ink-faint); font-weight:400;}
+  section p{margin:0 0 14px; font-size:15px; color:var(--ink);}
+  section ul, section ol{margin:0 0 14px; padding-left:22px; font-size:15px;}
+  section li{margin-bottom:6px;}
+  section li::marker{color:var(--ink-faint);}
+
+  .decision-box{background:var(--decision-bg); border-left:3px solid var(--decision-border); border-radius:0 6px 6px 0; padding:18px 20px; margin:0 0 18px;}
+  .decision-box p{margin:0; font-size:15px; font-weight:500;}
+  .decision-box .label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--decision-border); margin:0 0 6px; display:block;}
+
+  .impact-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:8px;}
+  .impact-card{background:var(--paper-raised); border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
+  .impact-card .k{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin:0 0 6px;}
+  .impact-card .v{font-size:13.5px; margin:0;}
+
+  code{font-family:var(--mono); font-size:.9em; background:var(--accent-soft); padding:1px 5px; border-radius:3px;}
+
+  .todo-item{display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--line); font-size:14.5px;}
+  .todo-item:first-child{border-top:none;}
+  .todo-item .chk{width:15px; height:15px; border:1.5px solid var(--ink-faint); border-radius:3px; flex-shrink:0; margin-top:2px;}
+
+  @media (max-width:760px){.shell{grid-template-columns:1fr; gap:24px;} nav.toc{position:static;}}
+
+  /* at-a-glance layer */
+  .glance{display:flex; flex-direction:column; gap:16px; margin-bottom:36px;}
+  .glance-block{background:var(--paper-raised); border:1px solid var(--line); border-radius:10px; padding:20px 24px;}
+  .glance-block.next{background:var(--accent-soft); border-color:var(--accent);}
+  .glance-block.next .eyebrow{color:var(--accent);}
+  .glance .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 10px;}
+  .glance .verdict{font-family:var(--serif); font-size:17px; margin:0 0 20px; max-width:62ch;}
+  .core-pick{display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; padding:16px 20px; background:var(--decision-bg); border:1px solid var(--decision-border); border-radius:8px; margin-bottom:18px;}
+  .core-pick .chose{font-family:var(--serif); font-size:20px; font-weight:600; color:var(--ink);}
+  .core-pick .because{font-size:13.5px; color:var(--ink-soft);}
+  .core-pick .because b{color:var(--decision-border);}
+  .detail-divider{display:flex; align-items:center; gap:12px; margin:8px 0 32px; color:var(--ink-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;}
+  .detail-divider::before, .detail-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .flow{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px;}
+  .flow-box{flex:1; min-width:180px; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px;}
+  .flow-box.after{border-color:var(--decision-border); background:var(--decision-bg);}
+  .flow-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; color:var(--ink-faint); margin:0 0 6px;}
+  .flow-box.after .tag{color:var(--decision-border);}
+  .flow-box p{margin:0; font-size:13px; color:var(--ink);}
+  .flow-arrow{font-size:20px; color:var(--ink-faint); flex-shrink:0;}
+
+  .score-table-wrap{width:100%; overflow-x:auto;}
+  .score-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .score-table th, .score-table td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--line);}
+  .score-table thead th{color:var(--ink-faint); font-weight:600; font-size:11px;}
+  .score-table thead th.win-col{color:var(--decision-border);}
+  .score-table td.crit{color:var(--ink-soft);}
+  .score-table td.win-col{background:var(--decision-bg);}
+  .score-table tr.decisive{outline:2px solid var(--decision-border); outline-offset:-1px;}
+  .score-table tr.decisive td{background:var(--decision-bg); font-weight:600;}
+  .decisive-tag{display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.03em; background:var(--decision-border); color:var(--paper-raised); padding:2px 6px; border-radius:3px; margin-left:8px; vertical-align:middle;}
+  .dots{display:flex; gap:3px;}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--line);}
+  .dot.on{background:var(--accent);}
+  td.win-col .dot.on{background:var(--decision-border);}
+
+  .steps{display:flex; align-items:stretch; gap:12px; flex-wrap:wrap;}
+  .step-box{flex:1; min-width:150px; border-radius:8px; padding:12px 14px; border:1px solid var(--line); background:var(--paper);}
+  .step-box .tag{font-family:var(--mono); font-size:10px; text-transform:uppercase; margin:0 0 6px;}
+  .step-box.done{border-color:var(--decision-border);}
+  .step-box.done .tag{color:var(--decision-border);}
+  .step-box.todo .tag{color:var(--ink-faint);}
+  .step-box p{margin:0 0 4px; font-size:12.5px;}
+  .step-box p:last-child{margin-bottom:0;}
+  .badges{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;}
+  .badge{font-family:var(--mono); font-size:10px; background:var(--accent-soft); color:var(--accent); padding:2px 7px; border-radius:3px;}
+</style>
+
+
+<div class="shell">
+  <nav class="toc">
+    <p class="eyebrow">目次</p>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要</a></li>
+      <li><a href="#background"><span class="num">02</span>背景・課題</a></li>
+      <li><a href="#decision"><span class="num">03</span>決定事項・結論</a></li>
+      <li><a href="#alternatives"><span class="num">04</span>検討した代替案</a></li>
+      <li><a href="#impact"><span class="num">05</span>影響範囲</a></li>
+      <li><a href="#next"><span class="num">06</span>未解決・次のアクション</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <div class="meta-row">
+        <span class="meta-pill status">承認待ち</span>
+        <span class="meta-pill">種別：設計決定記録</span>
+        <span class="meta-pill">起票：2026-08-11</span>
+        <span class="meta-pill">起票者：Waffle Orchestrator</span>
+      </div>
+      <h1>業務領域の仕様文書を、区切られた文脈の配下から外へ出す</h1>
+    </header>
+
+    <div class="glance">
+      <div class="glance-block">
+        <p class="eyebrow">本質——何を選び、なぜか</p>
+        <div class="core-pick">
+          <span class="chose">参照へ移す</span>
+          <span class="because">本質的な理由は<b>入れ子が業務領域に親を1つしか与えられず、knowledge がアンチパターンと呼ぶ「1業務領域＝1モデル」を構造として強制してしまう</b>という一点。入れ子のままなら移行費用はゼロだが、費用と引き換えに保っているのは誤った制約である。</span>
+        </div>
+        <p class="verdict">業務領域の文書だけが事業領域の配下へ移り、集約・業務ユースケース・業務サービスは文脈の配下に残る。所属はディレクトリの位置ではなく宣言が運ぶようになり、文脈を切り直しても業務領域の文書が動かなくなる。</p>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow">何が変わるか</p>
+        <div class="flow">
+          <div class="flow-box">
+            <p class="tag">Before</p>
+            <p>区切られた文脈 ＞ <b>業務領域</b> ＞ 業務ユースケース。業務領域が持てる親は1つ。同じ文脈のユースケース28件が業務領域ごとに7つへ分散。</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box after">
+            <p class="tag">After</p>
+            <p>事業領域 ＞ <b>業務領域</b>／区切られた文脈 ＞ 業務ユースケース。対応は参照が運ぶ。同じ文脈のユースケース28件が1箇所に集まる。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="glance-block">
+        <p class="eyebrow" style="margin-bottom:10px;">代替案との比較（5観点、なぜこれが決め手か）</p>
+        <div class="score-table-wrap"><table class="score-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>入れ子のまま</th>
+            <th class="win-col">参照へ移す</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="decisive">
+            <td class="crit">業務領域が持てる親の数<span class="decisive-tag">決め手</span></td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+          </tr>
+          <tr>
+            <td class="crit">所属の宣言が唯一の正になるか</td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+          </tr>
+          <tr>
+            <td class="crit">文脈を切り直したときの耐性</td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+          </tr>
+          <tr>
+            <td class="crit">同じデータを操作するユースケースの集まりが割れないか</td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+          </tr>
+          <tr>
+            <td class="crit">移行にかかる手間の少なさ</td>
+            <td><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div></td>
+            <td class="win-col"><div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></td>
+          </tr>
+        </tbody>
+      </table></div>
+        <p style="font-size:12px; color:var(--ink-faint); margin:10px 0 0;">評価の根拠 — 親の数：ディレクトリは1ノードに1親しか与えられず、多対多は文書を重複させない限り表現できない／宣言の正：いまは所属がパスの位置に埋まっており、宣言と食い違っても検出できない／切り直しの耐性：文脈は技術者が動かせるが業務領域は事業が決めるもので、いまは前者を動かすと後者の文書が動く／集まりの分割：bc-waffle の28件が7つの業務領域へ分かれている／移行の手間：文書70件・投影69件・テスト62箇所の変更が必要で、入れ子のままなら0。</p>
+      </div>
+
+      <div class="glance-block next">
+        <p class="eyebrow">作業イメージ</p>
+        <div class="steps">
+          <div class="step-box done">
+            <p class="tag">測り直し済み</p>
+            <p>作り直した knowledge で助言役2者へ再検証。両者とも当初の反対を撤回。</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="step-box done">
+            <p class="tag">決定済み</p>
+            <p>付随する論点5件を決定（器・参照の必須・多重度・逆向きの一覧・インフラ仕様）。</p>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="step-box todo">
+            <p class="tag">未着手</p>
+            <p>置き場所を決め打ちしている3箇所を、現在の配置のまま宣言駆動へ直す。ファイルは動かさない。</p>
+            <p class="badges"><span class="badge">挙動不変</span><span class="badge">取り消し可能</span><span class="badge">src 3〜5本</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-divider">ここから先は詳細（上の本質を裏付ける根拠）</div>
+
+    <section id="overview">
+      <h2><span class="num">01</span>概要</h2>
+      <p>対象は仕様文書の置き場所のみ。ドメイン仕様の5種別（区切られた文脈・業務領域・業務ユースケース・集約・業務サービス）のうち、置き場所が変わるのは業務領域だけで、残る4種別は文脈の配下に留まる。</p>
+      <p>実装コード・テストの配置、業務領域の分類そのもの、7つに分けているという切り方の是非は、この決定の対象外。インフラ仕様も対象に含めない。</p>
+    </section>
+
+    <section id="background">
+      <h2><span class="num">02</span>背景・課題</h2>
+      <p>2026-08-10 にこの移動を決定したが、当時の判断は要約された knowledge の上で出されていた。その要約から、業務領域と区切られた文脈の関係を扱う記述が落ちていた。2026-08-11 に knowledge 19本を書き起こし版から作り直し（1,997行 → 5,533行）、決定を測り直す必要が生じた。</p>
+      <ul>
+        <li>いま bc-waffle の配下に業務領域が7つ、bc-artifact-share の配下に1つある。合わせて9件（実験の残骸1件を含む）。</li>
+        <li>置き場所はスキーマの宣言が持っているが、参照整合の検査がその宣言を読まず、文脈の文書からの相対位置を決め打ちしている。</li>
+        <li>仕様文書の版が3つに分かれている（v8:56 / v9:10 / v10:4）。置き場所の宣言は版が持つため、移動には版への手当てが要る。</li>
+      </ul>
+    </section>
+
+    <section id="decision">
+      <h2><span class="num">03</span>決定事項・結論</h2>
+      <div class="decision-box">
+        <span class="label">決定</span>
+        <p>業務領域の仕様文書を <code>specs/subdomain/</code> へ移し、事業領域を新しい種別として立ててその配下に置く。業務ユースケース・集約・業務サービスは <code>specs/bc/{文脈}/</code> の配下に残す。対応は業務ユースケースが持つ参照が一方向で運ぶ。</p>
+      </div>
+      <p>あわせて4件を決定した。<b>参照は必須にする</b>——「業務領域の境界はユースケースの集まりである」は定義そのものであり、定義が任意宣言では成り立たないため。<b>1つのユースケースが指す業務領域は単一値のままとし、制限したことを明記する</b>——複数に関わる実例が0件であり、実例2件未満では一般化しないため。<b>業務領域が持つユースケース一覧は畳む</b>——同じ対応が二重に宣言されており、依存は変化しにくい側へ向かうべきだから。<b>インフラ仕様は動かさない</b>——別の種別であり、今回変えるのはドメイン仕様の置き場所だから。</p>
+      <p>事業領域を立てる判断だけは、種別を新しく増やすため承認を要する。器をディレクトリだけ切って宣言を立てないと、宣言のないディレクトリがまた意味を運ぶことになり、いま解こうとしているのと同じ状態を作る。</p>
+    </section>
+
+    <section id="alternatives">
+      <h2><span class="num">04</span>検討した代替案</h2>
+      <p style="font-size:13px; color:var(--ink-faint); margin-bottom:16px;">結論の一覧は冒頭の比較表を参照。ここでは各評価の測定方法・前提条件を記す。</p>
+      <p><b>業務領域が持てる親の数の測定方法／判定基準</b>：ディレクトリ構造は1つのノードに親を1つしか与えない。1つの業務領域が複数の文脈にまたがる形は、文書を重複させない限り表現できない。knowledge は「一つの業務領域に複数の課題があれば、課題ごとに別のモデルを作ったほうがよい場合がある」と述べ、「一つの業務領域に一つのモデル」を固定観念としてアンチパターンに挙げている。実例はまだ発生していないため、判定は表現可能性で行った。</p>
+      <p><b>所属の宣言が唯一の正になるかの測定方法／判定基準</b>：現状は所属がパスの位置に埋まっており、区切られた文脈の文書が持つ構成要素の一覧と食い違っても検出されない。参照へ移すと、一覧と参照の両方が宣言となり、食い違いを機械が判定できる。</p>
+      <p><b>文脈を切り直したときの耐性の測定方法／判定基準</b>：knowledge は業務領域を「事業方針によって決まる構造」、区切られた文脈を「技術者がプロジェクトの目的と制約条件に合わせて決定できる」ものとして区別している。現状は後者を動かすと前者の文書が移動するため、決定者の異なる2つが連動している。</p>
+      <p><b>同じデータを操作するユースケースの集まりが割れないかの測定方法／判定基準</b>：knowledge は「同じデータに対して操作を行うユースケースの集まりを、複数の区切られた文脈へ分散させないこと」を制約として挙げる。実測では bc-waffle の28件が7つの業務領域ディレクトリへ分かれており、文脈の内側で集まりが割れている。移動後は文脈の直下1箇所に集まる。</p>
+      <p><b>移行にかかる手間の少なさの測定方法／判定基準</b>：実測で、移動する仕様文書70件（業務領域9・業務ユースケース49・階層が1段増えるだけのもの12）、描き直す投影69件、パスを直書きしているテスト11ファイル62箇所、置き場所を決め打ちしている実装3箇所。入れ子のまま据え置く案では、これらが0件。<b>この観点だけは入れ子のままが優る。</b></p>
+    </section>
+
+    <section id="impact">
+      <h2><span class="num">05</span>影響範囲</h2>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <p class="k">移動する仕様文書</p>
+          <p class="v">70件。業務領域9・業務ユースケース49・階層が1段増えるだけのもの12。</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">描き直す投影</p>
+          <p class="v">69件。旧い位置の投影は自動では消えないため、削除してから再描画する。</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">直すテスト</p>
+          <p class="v">11ファイル62箇所。パスを直書きしている箇所。</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">黙って壊れるもの</p>
+          <p class="v">引き継ぎのゲート1件。仕様が28件→0件になり、「仕様が無いなら対象外」として無言で通す。</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">誤った警告を出すもの</p>
+          <p class="v">書き込み時の検知1件。鳴るが、規約側の宣言漏れとして報告される。</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">停止するもの</p>
+          <p class="v">依存の検査。パスが見つからず止まる。観測できるため危険度は低い。</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">版への影響</p>
+          <p class="v">新しい版を切って全件移行する。既存の版は書き換えられない（出荷済みバンドルに旧配置の文書が凍結されている）。</p>
+        </div>
+        <div class="impact-card">
+          <p class="k">将来の再検討条件</p>
+          <p class="v">1つのユースケースが複数の業務領域に関わる実例が2件出たとき、多重度の制限を見直す。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2><span class="num">06</span>未解決・次のアクション</h2>
+      <div class="todo-item"><div class="chk"></div><p>事業領域という種別を新しく立てる判断について、承認を得る。スキーマを増やすため単独では進めない。</p></div>
+      <div class="todo-item"><div class="chk"></div><p>置き場所を決め打ちしている3箇所を、現在の配置のまま宣言駆動へ直す。移動を見送っても残す価値がある。</p></div>
+      <div class="todo-item"><div class="chk"></div><p>事業領域の文書の中身（分類の根拠等）は、器を立てたあと移動後に埋める。</p></div>
+      <div class="todo-item"><div class="chk"></div><p>7つに分けているという切り方の是非は別論点として残る。疑わしいのは3つ（ユースケースを1件しか持たず、分けても分類が変わらないもの）という裁定は出ている。</p></div>
+      <div class="todo-item"><div class="chk"></div><p>「実装単位の内部構造を扱う記述は、実装側に対応物を持たない仕様文書に及ばない」という読みは、原本の該当ページを画像で確認していない。書き起こし版までの確認に留まる。</p></div>
+    </section>
+  </main>
+</div>

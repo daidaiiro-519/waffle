@@ -63,6 +63,7 @@ td.new{color:var(--ok);font-weight:700}
 .doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
 .node{display:flex;flex-direction:column;gap:.55rem}
 .node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node.d3{padding-left:1rem;border-left:2px solid var(--line-strong);margin-left:.2rem}
 .node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
 .node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
 .node.d2 .node-h .nm{font-size:.96rem}
@@ -90,7 +91,7 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
 <header>
   <span class="eyebrow">Waffle / knowledge の変換 3本目</span>
   <h1><code>domain-model</code> を書き起こし版から移す</h1>
-  <p class="standfirst">残存率が最も低かった1本（25%）。旧要約版112行 → <strong>382行</strong>。集約・業務サービス・トランザクション境界の定義が、コードと図つきで戻りました。</p>
+  <p class="standfirst">残存率が最も低かった1本（25%）。旧要約版112行 → <strong>376行</strong>。集約・業務サービス・トランザクション境界の定義が、コードと図つきで戻りました。</p>
 </header>
 
 <section>
@@ -99,7 +100,7 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
     <div class="stat ok"><span class="n">+19</span><span class="l">旧要約版で落ちていた節</span></div>
     <div class="stat"><span class="n">3</span><span class="l">図</span></div>
     <div class="stat"><span class="n">10</span><span class="l">原文（C#7・SQL1・表2）</span></div>
-    <div class="stat"><span class="n">382</span><span class="l">行（旧112 / 書起し431）</span></div>
+    <div class="stat"><span class="n">376</span><span class="l">行（旧112 / 書起し431）</span></div>
   </div>
 </section>
 
@@ -143,65 +144,207 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
 </section>
 
 <section>
-  <h2>Ⅱ. 抜粋プレビュー</h2>
-  <p class="narrow">382行あるので、<strong>戻った中でも重い5つ</strong>を抜き出します。図とコードは実際の描画結果です。</p>
+  <h2>Ⅱ. 完全プレビュー</h2>
+  <p class="narrow">描画された382行を、<strong>省略なしで</strong>並べています。27ノードすべてです。</p>
 
   <div class="doc">
-    <div class="doc-head"><span>knowledge / domain-model（抜粋）</span><span>全27ノード中5件</span></div>
+    <div class="doc-head"><span>knowledge / domain-model</span><span>ノード27 ・ 図3 ・ 原文10</span></div>
     <div class="doc-body">
 
-      <div class="node"><div class="node-h"><span class="nm">並行処理管理</span><span class="kind">判断基準</span><span class="restored">戻した</span></div>
-        <p>一貫性の保証でもっとも重要な部分。複数の処理が同じ集約を変更するとき、先の更新を後の更新が上書きしないようにする。集約に版番号を持たせ、読んだときの版と一致する場合だけ書き込む。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>後から来た更新が、先に来た更新を黙って上書きしないようにする仕組みを示す</div>
-            <div><b>読み取り</b>集約は版番号を持ち、更新は「読んだときの版と今の版が同じなら書く」という条件で行う。一致しなければ例外を上げ、呼び出し元が読み直してやり直す。条件を書かずに更新すると、後から来たほうが黙って勝つ。</div>
-          </div>
-<pre>UPDATE shipments
+<div class="node"><div class="node-h"><span class="nm">ドメインモデルとは</span></div>
+<p>複雑な業務ロジックを実装するための設計手法。技術的な関心事から完全に切り離した素朴なオブジェクトとして実装し、ソースコードが同じ言葉を語り、業務エキスパートの捉え方をそのまま表現する。主要な部品は値オブジェクト・エンティティ・集約・業務サービスの4つ。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">値オブジェクト</span></div>
+<p>業務で扱う値を表現する部品。欄の値の組み合わせで識別し、明示的な識別子を持たない。不変として実装し、変更するときは新しいインスタンスを返す。等価判定は識別子ではなく値で行う。とくに重要なのは金額の表現で、基本データ型で扱うと丸めや端数の処理に危険な不具合が紛れ込みやすい。</p>
+<p>値オブジェクトが不変であり、変更時に新しいインスタンスを返すことを示す</p>
+<p>重さを表す値オブジェクトは、足し算をしても自分を書き換えず、計算した結果を持つ新しい値を返す。等価かどうかは識別子ではなく値そのもので決まる。</p>
+<div class="blk"><pre>
+public class Weight
+{
+    public readonly int Grams;
+
+    public Weight Add(Weight other)
+    {
+        return new Weight(grams: this.Grams + other.Grams);
+    }
+}
+</pre></div>
+<div class="node d2"><div class="node-h"><span class="nm">値オブジェクトをいつ使うか</span></div>
+<p>事業活動を表現する基本部品と考えるとよい。エンティティの属性として使い、状態区分や合言葉など、その領域に固有の概念がある場合も値オブジェクトで表現する。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">基本データ型から値オブジェクトへ</span></div>
+<p>個々の値を素の型で持つと、その値に関する規則が型の外へ散らばる。値オブジェクトにすると、規則がその値の内側に集まる。</p>
+<p>基本データ型への執着と、値オブジェクトで表した形を対比する</p>
+<p>上の書き方では、電話番号の桁の検査も重さの単位換算も、この型の外に散らばる。下の書き方では、それぞれの規則がその値の内側に集まる。</p>
+<div class="blk"><pre>
+// 基本データ型への執着
+public class Shipment {
+    public string ReceiverName;
+    public string PhoneNumber;
+    public double WeightKg;
+    public string PostalCode;
+}
+
+// 値オブジェクトで表現
+public class Shipment {
+    public ReceiverName Receiver;
+    public PhoneNumber  Phone;
+    public Weight       Weight;
+    public PostalCode   PostalCode;
+}
+</pre></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">エンティティ</span></div>
+<p>値オブジェクトとは対照的な部品。個々のインスタンスを特定するための識別子が必要で、不変ではなく状態が変化する。値オブジェクトはエンティティの状態を表現する手段になる。エンティティは単独で実装せず、必ず集約の実装の一部になる。識別子も値オブジェクトとして実装し、その個体が存在する限り変更しない。</p>
+<p>エンティティが識別子を持ち、状態が変化することを示す</p>
+<p>配送の依頼は識別子で個体を特定し、受取人の名前は後から変わりうる。識別子そのものも値オブジェクトとして実装する。</p>
+<div class="blk"><pre>
+class Shipment
+{
+    public readonly ShipmentId Id;      // 値オブジェクト
+    public ReceiverName Receiver { get; set; }  // 値オブジェクト
+}
+</pre></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">集約</span></div>
+<p>ドメインモデルの中心的な部品。エンティティの階層構造であり、データの一貫性を保証する境界である。集約はエンティティでもあるが、単なるエンティティと違って一貫性の保証を目標とする。</p>
+<div class="node d2"><div class="node-h"><span class="nm">一貫性を強制する</span></div>
+<p>集約は内部と外部の間に明確な境界を定義することで一貫性を強制する。状態を変更できるのは集約内部の業務ロジックだけで、外部には参照だけを許す。状態を変えるには集約が公開しているメソッドを実行する。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">コマンド</span></div>
+<p>集約が外部へ公開する状態変更メソッドをコマンドと呼ぶ。書き方は2つあり、普通の公開メソッドとして書く方法と、必要な情報をまとめたオブジェクトを渡す方法がある。</p>
+<p>集約の状態を変えるコマンドの2つの書き方を示す</p>
+<p>普通の公開メソッドとして書く方法と、必要な情報をひとつのオブジェクトにまとめて渡す方法がある。後者は、コマンドの種類が増えても入口をひとつに保てる。</p>
+<div class="blk"><pre>
+// 方法1: 通常の公開メソッド
+public void AddNote(UserId from, string body) { ... }
+
+// 方法2: パラメーターオブジェクト（推奨）
+public void Execute(AddNote cmd)
+{
+    var note = new Note(cmd.From, cmd.Body);
+    _notes.Append(note);
+}
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">並行処理管理</span></div>
+<p>一貫性の保証でもっとも重要な部分。複数の処理が同じ集約を変更するとき、先の更新を後の更新が上書きしないようにする。集約に版番号を持たせ、読んだときの版と一致する場合だけ書き込む。</p>
+<p>後から来た更新が、先に来た更新を黙って上書きしないようにする仕組みを示す</p>
+<p>集約は版番号を持ち、更新は「読んだときの版と今の版が同じなら書く」という条件で行う。一致しなければ例外を上げ、呼び出し元が読み直してやり直す。条件を書かずに更新すると、後から来たほうが黙って勝つ。</p>
+<div class="blk"><pre>
+UPDATE shipments
 SET status = @new_status,
     agg_version = agg_version + 1
-WHERE shipment_id = @id AND agg_version = @expected_version;</pre>
-        </div>
-      </div>
-
-      <div class="node"><div class="node-h"><span class="nm">トランザクションの境界</span><span class="kind">判断基準</span><span class="restored">戻した</span></div>
-        <p>1つの集約のインスタンスが1つのトランザクションの単位になる。集約内部のすべての状態は単一のトランザクションとして確定する。<strong>複数の集約にまたがるトランザクションを実行してはいけない</strong>——そうしたくなったなら、集約の境界がまちがっている。</p>
-      </div>
-
-      <div class="node"><div class="node-h"><span class="nm">集約のルート</span><span class="kind">定義</span><span class="src">図6-5</span><span class="restored">戻した</span></div>
-        <p>外部に公開するインターフェース役のエンティティは1つにする。それが集約のルート。内部の他のエンティティの状態を変えるコマンドも、必ずルートを経由して実行する。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>外部が触れるのは集約のルートだけであることを示す</div>
-            <div><b>読み取り</b>アプリケーション層はルートへコマンドを渡すだけで、内側のエンティティへ直接は触れない。内側の状態を変えるコマンドも、必ずルートを経由する。</div>
-          </div>
-<pre class="mermaid">
+WHERE shipment_id = @id AND agg_version = @expected_version;
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">トランザクションの境界</span></div>
+<p>1つの集約のインスタンスが1つのトランザクションの単位になる。集約内部のすべての状態は単一のトランザクションとして確定する。複数の集約にまたがるトランザクションを実行してはいけない——そうしたくなったなら、集約の境界がまちがっている。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">エンティティの階層構造</span></div>
+<p>集約は複数のエンティティと値オブジェクトの階層構造を持てる。業務ロジックがすべてを必要とする場合、その階層全体がひとつの集約になる。「集約」という名前は、関連するものをトランザクション境界の内部へ集めることに由来する。</p>
+<p>集約が、複数のエンティティと値オブジェクトの階層構造を持てることを示す</p>
+<p>配送の依頼の下に連絡記録があり、その下に添付がある。この階層全体がひとつの集約になる——業務ロジックがすべてを必要とする場合に限る。</p>
+<div class="blk"><pre class="mermaid">
 flowchart LR
-    subgraph g0["集約"]
-        n0["配送の依頼（ルート）"]
-        n1["連絡記録"]
-        n2["添付"]
+    subgraph g0[&quot;ひとつの集約&quot;]
+        n0[&quot;配送の依頼&quot;]
+        n1[&quot;連絡記録&quot;]
+        n2[&quot;添付&quot;]
     end
-    n3["アプリケーション層"]
-    n3 -->|"コマンド"| n0
-    n0 -->|"1対多"| n1
-    n1 -->|"1対多"| n2
-</pre>
-        </div>
-      </div>
-
-      <div class="node"><div class="node-h"><span class="nm">業務サービス ── 抜け道ではない</span><span class="kind">判断基準</span><span class="restored">戻した</span></div>
-        <p>1集約＝1トランザクションの原則は変わらない。業務サービスは複数の集約を参照する計算を書くのに役立つが、<strong>複数の集約を単一のトランザクションで変更するための抜け道ではない</strong>。</p>
-      </div>
-
-      <div class="node"><div class="node-h"><span class="nm">複雑さの扱い方</span><span class="kind">定義</span><span class="src">6.2.3</span><span class="restored">戻した</span></div>
-        <p>集約と値オブジェクトの背景にある考え方は、不変条件をカプセル化して複雑さを小さくすること。システムの複雑さは自由度——独立して変化できる状態の個数——で決まる。不変条件を加えると制約が増え、自由度が下がり、振る舞いを制御・予測するのが簡単になる。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>不変条件を入れると自由度が下がり、扱いが簡単になることを示す</div>
-            <div><b>読み取り</b>上の型は5つの欄がすべて独立に動くので、取りうる状態の組み合わせが多い。下の型は2つが決まれば残り3つが決まるので、独立に動く欄は2つ。一見すると下のほうが複雑に見えるが、振る舞いを予測するのは下のほうが簡単である。</div>
-          </div>
-<pre>// 自由度5（5つの欄がすべて独立して変化できる）
+    n0 --&gt;|&quot;1対多&quot;| n1
+    n1 --&gt;|&quot;1対多&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>ひとつの集約</td><td>階層構造があれば集約になる、ではない。業務ロジックが3つすべてを同時に必要とする場合に限って、この囲みが引ける。</td></tr>
+<tr><td>配送の依頼から連絡記録／連絡記録から添付（1対多）</td><td>データベースの表の関係ではなく、業務上の持ち物の関係を表す。表がどう分かれるかは、この図からは決まらない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">他の集約を参照する</span></div>
+<p>他の集約は識別子で参照し、オブジェクトそのものを内部に保持しない。境界の外側であることを明確に表し、集約ごとに固有のトランザクション境界を保つため。内部に持つかどうかは、結果整合性しか保証されない相手を業務ロジックが参照したときに不正な状態になる危険があるかで判断する。経験則として、集約はできるだけ小さく設計する。</p>
+<p>集約の内側に持つものと、識別子で外を指すものの違いを示す</p>
+<p>同じ集約の一部として一貫性を守るものだけを内側に持ち、それ以外は識別子で指す。識別子で指すことが、「これは境界の外側だ」という表明になる。</p>
+<div class="blk"><pre>
+public class Shipment
+{
+    private CustomerId      _customer;   // 識別子で参照（境界の外）
+    private List&lt;ProductId&gt; _products;   // 識別子で参照（境界の外）
+    private List&lt;Note&gt;      _notes;      // 集約の内側に保持
+}
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">集約のルート</span></div>
+<p>外部に公開するインターフェース役のエンティティは1つにする。それが集約のルート。内部の他のエンティティの状態を変えるコマンドも、必ずルートを経由して実行する。</p>
+<p>外部が触れるのは集約のルートだけであることを示す</p>
+<p>アプリケーション層はルートへコマンドを渡すだけで、内側のエンティティへ直接は触れない。内側の状態を変えるコマンドも、必ずルートを経由する。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    subgraph g0[&quot;集約&quot;]
+        n0[&quot;配送の依頼（ルート）&quot;]
+        n1[&quot;連絡記録&quot;]
+        n2[&quot;添付&quot;]
+    end
+    n3[&quot;アプリケーション層&quot;]
+    n3 --&gt;|&quot;コマンド&quot;| n0
+    n0 --&gt;|&quot;1対多&quot;| n1
+    n1 --&gt;|&quot;1対多&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>アプリケーション層から配送の依頼（ルート）</td><td>ルートを通るという制約そのものを表す。アプリケーション層から連絡記録へ向かう線が無いのは、描き忘れではなく禁じられているためである。</td></tr>
+<tr><td>配送の依頼（ルート）</td><td>階層の一番上という意味ではなく、外から呼べる唯一の入口という意味である。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">業務イベント</span></div>
+<p>事業活動の中で起きた重要な出来事を表現するメッセージ。名前は必ず過去形にする。集約が発行し、他の処理・集約・外部サービスが購読して業務ロジックを実行する。業務イベントは集約の公開インターフェースの一部であり、外部と連係するもう一つの方法である。</p>
+<p>集約が業務イベントを発行する形を示す</p>
+<p>条件を満たしたときだけ状態を変え、起きた出来事を過去形の名前で記録する。この記録を他の集約や外部の仕組みが購読して、続きの処理を行う。</p>
+<div class="blk"><pre>
+public void Execute(RequestPriorityDelivery cmd)
+{
+    if (!this.IsPriority &amp;&amp; this.RemainingTimePercentage &lt;= 0)
+    {
+        this.IsPriority = true;
+        _domainEvents.Append(new DeliveryPrioritized(_id, cmd.Reason));
+    }
+}
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">同じ言葉を厳密に反映する</span></div>
+<p>集約の名前、持つデータの名前、メソッドの名前、発信する業務イベントの名前——そのすべてを、区切られた文脈の同じ言葉によって命名する。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">業務サービス</span></div>
+<p>集約や値オブジェクトでは表現しにくい業務ロジック、または複数の集約にまたがる業務ロジックを記述するための部品。業務ロジックだけを記述し、自分自身の状態は持たない。多くの場合、さまざまな部品の呼び出しを統合して計算や分析を行う。</p>
+<p>業務サービスが、複数の集約から材料を集めて計算だけを行う形を示す</p>
+<p>自分自身の状態は持たず、方針と勤務予定という別々の集約から値を読み、締切を計算して返すだけ。どの集約の状態も変えない。</p>
+<div class="blk"><pre>
+public class ResponseDeadlineService
+{
+    public Deadline Calculate(
+        StaffId staffId, Priority priority, bool prioritized, DateTime startTime)
+    {
+        var policy = _policyRepository.GetFor(staffId);
+        var maxTime = policy.GetMaxResponseTimeFor(priority);
+        if (prioritized) maxTime = maxTime * policy.PriorityFactor;
+        var shifts = _shiftRepository.GetUpcoming(staffId, startTime);
+        return CalculateTargetTime(maxTime, shifts);
+    }
+}
+</pre></div>
+<div class="node d2"><div class="node-h"><span class="nm">マイクロサービスの「サービス」とは無関係</span></div>
+<p>業務サービスは、マイクロサービスやサービス指向アーキテクチャの「サービス」という用語とは無関係である。業務ロジックの置き場所として使う、状態を持たないオブジェクトを指す。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">抜け道ではない</span></div>
+<p>1集約=1トランザクションの原則は変わらない。業務サービスは複数の集約を参照する計算を書くのに役立つが、複数の集約を単一のトランザクションで変更するための抜け道ではない。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">複雑さの扱い方</span></div>
+<p>集約と値オブジェクトの背景にある考え方は、不変条件をカプセル化して複雑さを小さくすること。システムの複雑さは自由度——独立して変化できる状態の個数——で決まる。不変条件を加えると制約が増え、自由度が下がり、振る舞いを制御・予測するのが簡単になる。値オブジェクトは値に関する規則を境界の内側に集め、集約は状態を変えられる経路を自分のメソッドだけに絞る。</p>
+<p>不変条件を入れると自由度が下がり、扱いが簡単になることを示す</p>
+<p>上の型は5つの欄がすべて独立に動くので、取りうる状態の組み合わせが多い。下の型は2つが決まれば残り3つが決まるので、独立に動く欄は2つ。一見すると下のほうが複雑に見えるが、振る舞いを予測するのは下のほうが簡単である。</p>
+<div class="blk"><pre>
+// 自由度5（5つの欄がすべて独立して変化できる）
 public class A { public int V1, V2, V3, V4, V5; }
 
 // 自由度2（V1 と V4 だけが独立。残りはそこから決まる）
@@ -211,9 +354,65 @@ public class B {
     public int V2 { get; private set; }
     public int V3 { get; private set; }
     public int V5 { get; private set; }
-}</pre>
-        </div>
-      </div>
+}
+</pre></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">4つの部品の対比</span></div>
+<p>識別子の有無・状態が変わるか・何のための部品かで並べたもの。</p>
+<p>4つの部品を、識別子の有無・状態の変化・特徴で対比する</p>
+<p>識別子を持つのはエンティティと集約。状態が変わるのもその2つ。値オブジェクトと業務サービスはどちらも状態を持たないが、前者は値そのもの、後者は計算の置き場所である。</p>
+<div class="tablewrap"><table><thead><tr><th>部品</th><th>識別子</th><th>状態変化</th><th>特徴</th></tr></thead><tbody>
+<tr><td>値オブジェクト</td><td>なし</td><td>なし（不変）</td><td>欄の値の組み合わせで識別。変更時は新しいインスタンスを生成</td></tr>
+<tr><td>エンティティ</td><td>あり</td><td>あり</td><td>集約の一部として実装。単独では実装しない</td></tr>
+<tr><td>集約</td><td>あり（ルート）</td><td>あり</td><td>データの一貫性境界。1集約=1トランザクション</td></tr>
+<tr><td>業務サービス</td><td>なし</td><td>なし（状態を持たない）</td><td>複数の集約にまたがる計算ロジック</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">どの部品を使うか</span></div>
+<p>個体の識別が要るか、複数の集約にまたがる計算か、そもそも業務ロジックが複雑かで決まる。</p>
+<p>4つの部品のどれを使うかを、順に問うて決める</p>
+<p>個体を識別する必要があればエンティティ、無ければ値オブジェクト。複数の集約にまたがる計算なら業務サービス。そもそも業務ロジックが複雑でなければ、ドメインモデル自体を使わない。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;業務ロジックは複雑か&quot;]
+    n1[&quot;個体を識別する必要があるか&quot;]
+    n2[&quot;複数の集約にまたがる計算か&quot;]
+    n3[&quot;値オブジェクト&quot;]
+    n4[&quot;エンティティまたは集約&quot;]
+    n5[&quot;業務サービス&quot;]
+    n6[&quot;手続きとして書く（別の実装方法）&quot;]
+    n0 --&gt;|&quot;はい（中核）&quot;| n1
+    n0 --&gt;|&quot;いいえ&quot;| n6
+    n1 --&gt;|&quot;はい&quot;| n4
+    n1 --&gt;|&quot;いいえ&quot;| n2
+    n2 --&gt;|&quot;はい&quot;| n5
+    n2 --&gt;|&quot;いいえ&quot;| n3
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>業務ロジックは複雑かの「はい（中核）」</td><td>複雑さと中核であることを同じものとして扱っている。厳密には別の判断だが、この図では中核であることを複雑さの目安として使っている。</td></tr>
+<tr><td>エンティティまたは集約</td><td>2つを1つの終点にまとめてあるが、エンティティは単独では実装しない。実際にはここから必ず集約へ進む。</td></tr>
+<tr><td>手続きとして書く（別の実装方法）</td><td>この図の外へ出る終点である。ドメインモデルの部品を選ぶ話ではなくなる。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>ドメインモデルでよく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">基本データ型への執着</span></div>
+<p>金額・電話番号・連絡先などを素の文字列や数値で扱うと、関連する業務ロジックがあちこちに散らばる。値オブジェクトで表現して内側に集める。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">エンティティを単独で実装する</span></div>
+<p>エンティティは必ず集約の実装の一部になる。単独で実装すると、データの一貫性の境界が定義できない。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">複数の集約にまたがるトランザクション</span></div>
+<p>複数の集約を単一のトランザクションで確定しようとするのは、集約の境界がまちがっているサイン。集約を設計し直すか、結果整合性で対処する。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">集約を大きくしすぎる</span></div>
+<p>集約が大きくなると性能や規模の問題が起きやすくなる。できるだけ小さく設計し、強い一貫性が必要なデータだけを含める。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">業務イベントの名前に過去形を使わない</span></div>
+<p>業務イベントは実際に起きた出来事を表現するため、名前は必ず過去形にする。現在形や命令形は、イベントではなくコマンドを表す。</p>
+</div>
+</div>
+
 
     </div>
   </div>
@@ -251,7 +450,7 @@ public class B {
 </section>
 
 <footer>
-  旧要約版112行・書き起こし版431行・変換後382行（描画結果の実測）。<br>
+  旧要約版112行・書き起こし版431行・変換後376行（描画結果の実測）。<br>
   実例とコードの題材は架空の業務（配送の依頼）へ置き換え、コードが示す構造は保っている。<br>
   図はすべて宣言（節点・関係・囲み）から描画したもの。
 </footer>

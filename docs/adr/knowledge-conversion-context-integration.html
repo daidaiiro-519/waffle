@@ -1,0 +1,471 @@
+<title>context-integration の変換 ── 10本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.78rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 10本目</span>
+  <h1><code>context-integration</code> を書き起こし版から移す</h1>
+  <p class="standfirst">旧要約版105行 → <strong>352行</strong>。<code>bounded-context</code> が「文脈どうしをどうつなぐかは別の話」と委ねていた先です。<strong>図8つ</strong>で、これまでで最多になりました。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">31</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">8</span><span class="l">図（旧版は0）</span></div>
+    <div class="stat"><span class="n">1</span><span class="l">原文（表）</span></div>
+    <div class="stat"><span class="n">352</span><span class="l">行（旧105 / 書起し250）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. この本は、6つの方法の「置き場所」が意味を持ちます</h2>
+  <p class="narrow">6つの連係方法のうち、モデル変換装置と共用サービスは<strong>やることがほぼ同じ</strong>です。違うのは、誰が変換するかと、どちらの側に置くかの2点だけ。旧版はこれを文章で書いていたので、対称性が見えませんでした。</p>
+
+  <div class="box ok">
+    <h3>2つの図を裏返しに描く</h3>
+    <p>モデル変換装置は <strong>上流 → 装置 → 下流</strong>、共用サービスは <strong>下流 → 共用サービス → 上流</strong>。注釈で「ちょうど裏返しの位置にある。<strong>変換するのが供給する側か使う側か、置き場所が上流か下流か、この2点だけが両者の違い</strong>」と名指ししています。</p>
+  </div>
+
+  <div class="box bad">
+    <h3>旧版は「文脈の地図」を実例1件で済ませていました</h3>
+    <p>地図から何が読み取れるか（全体の設計・意図の伝わり方・組織上の課題）、最新に保つ方法、そして<strong>地図の限界</strong>——1本の線が1つの連係方法とは限らない——が丸ごと落ちていました。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>なぜ連係の取り決めが要るか</td><td>原則1行</td><td>モデルも言葉も違うから</td></tr>
+        <tr><td class="new">連係方法は3つのグループに分かれる</td><td>分類のみ</td><td><strong>図。分ける基準は技術ではなく協力の度合い</strong></td></tr>
+        <tr><td>良きパートナー</td><td>分類1行</td><td><strong>図</strong>＋成立条件・離れたチームでは難しい</td></tr>
+        <tr><td>モデルの共有</td><td>分類1行</td><td><strong>図</strong>＋子4つ</td></tr>
+        <tr><td class="new">　共有する範囲</td><td>アンチパターンに1つ</td><td>理想は契約と、境界を越えるデータの形だけ</td></tr>
+        <tr><td class="new">　どう実現するか</td><td><strong>×</strong></td><td><strong>同じ置き場／独立した部品。どちらでも結合の確認を自動で</strong></td></tr>
+        <tr><td class="new">　共有するかどうか</td><td>×</td><td><strong>重複の負担と調整の負担を比べる。中核ほど共有は高くつく</strong></td></tr>
+        <tr><td class="new">　これは例外的な方法である</td><td><strong>×</strong></td><td><strong>1文脈1チームの原則と矛盾する。使ってよい3状況</strong></td></tr>
+        <tr><td>使う側と供給する側の関係</td><td>原則1行</td><td><strong>図。力関係が生まれる構造</strong></td></tr>
+        <tr><td>従属する</td><td>分類1行</td><td>下流が選ぶ2つの理由つき</td></tr>
+        <tr><td>モデル変換装置</td><td>分類1行</td><td><strong>図</strong>＋使う3場面と効果</td></tr>
+        <tr><td>共用サービス</td><td>分類1行</td><td><strong>図</strong>＋子2つ</td></tr>
+        <tr><td class="new">　公開された言葉</td><td>×</td><td><strong>内部の同じ言葉に合わせる必要は無い。複数の版を並べられる</strong></td></tr>
+        <tr><td class="new">　モデル変換装置との違い</td><td>×</td><td><strong>誰が変換するか・どこに置くか、の2点だけ</strong></td></tr>
+        <tr><td>互いに独立</td><td>分類1行</td><td>子4つ</td></tr>
+        <tr><td class="new">　意思疎通が難しい／一般的な業務領域／モデルの違いが大きい</td><td>×</td><td>選ぶ理由が3つに分かれる</td></tr>
+        <tr><td>　中核どうしには使わない</td><td>アンチパターン</td><td>判断基準としても立てた</td></tr>
+        <tr><td class="new">文脈の地図</td><td>実例1件</td><td><strong>図</strong>＋子3つ</td></tr>
+        <tr><td class="new">　地図から見えるもの</td><td>×</td><td>全体の設計・意図の伝わり方・組織上の課題</td></tr>
+        <tr><td class="new">　最新の状態を保つには</td><td>×</td><td>全チーム共同。各チームが自分の連係を反映する責任</td></tr>
+        <tr><td class="new">　地図の限界</td><td><strong>×</strong></td><td><strong>1本の線が1つの方法とは限らない</strong></td></tr>
+        <tr><td class="new">6つの連係方法の対比</td><td>分類</td><td>表。決定権・協力の度合い・主な用途</td></tr>
+        <tr><td>どの連係方法を選ぶか</td><td>判断基準</td><td><strong>図</strong></td></tr>
+        <tr><td>アンチパターン ×4</td><td>あり</td><td>そのまま維持</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 注釈の例</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>図</th><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead>
+      <tbody>
+        <tr><td>3つのグループ</td><td>3つの囲み</td><td>協力の度合いが下がる並びだが、<strong>上ほど良いという意味ではない</strong></td></tr>
+        <tr><td>良きパートナー</td><td>2本の矢印</td><td>行き来があることではなく、<strong>どちらにも決定権があること</strong>を表す。他の方法ではこの2本のどちらかが消える</td></tr>
+        <tr><td>使う側と供給する側</td><td>上流から下流の矢印</td><td><strong>サービスが流れる向きであって、決定権の向きではない</strong></td></tr>
+        <tr><td>共用サービス</td><td>共用サービス</td><td>モデル変換装置と<strong>ちょうど裏返しの位置</strong>にある</td></tr>
+        <tr><td>文脈の地図</td><td>配送の文脈から出る2本</td><td>1つのチームが<strong>すべての相手に変換装置を作っている形</strong>が見えたら、相手側のモデルに問題があるという合図。<strong>個々の線ではなく線の集まり方に意味がある</strong></td></tr>
+        <tr><td>選び方</td><td>互いに独立</td><td>他の終点と違い<strong>条件つきの終点</strong>。中核どうしには選べない</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 完全プレビュー</h2>
+  <p class="narrow">描画された352行を、<strong>省略なしで</strong>並べています。31ノードすべてです。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / context-integration</span><span>ノード31 ・ 図8 ・ 原文1</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">なぜ連係の取り決めが要るか</span></div>
+<p>区切られた文脈は独立して育てられるが、完全に独立しているわけではない。システムとして働くには、文脈どうしをつなぐ必要がある。そのつなぎ目を契約と呼ぶ。契約が要るのは、区切られた文脈どうしではモデルも言葉も違うからである。取り決めを明文化し、互いの利害を調整しなければならない。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">連係方法は3つのグループに分かれる</span></div>
+<p>分ける基準は技術ではなく、担当するチームがどれだけ協力できるかである。</p>
+<p>6つの連係方法が、チームどうしの協力関係で3つに分かれることを示す</p>
+<p>分ける基準は技術ではなく、担当するチームがどれだけ協力できるかである。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    subgraph g0[&quot;緊密に協力できる&quot;]
+        n0[&quot;良きパートナー&quot;]
+        n1[&quot;モデルの共有&quot;]
+    end
+    subgraph g1[&quot;使う側と供給する側&quot;]
+        n2[&quot;従属する&quot;]
+        n3[&quot;モデル変換装置&quot;]
+        n4[&quot;共用サービス&quot;]
+    end
+    subgraph g2[&quot;互いに独立&quot;]
+        n5[&quot;互いに独立（連係しない）&quot;]
+    end
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>3つの囲み</td><td>上から下へ協力の度合いが下がる並びだが、上ほど良いという意味ではない。組織の形と業務領域の種類で、どこが適切かが決まる。</td></tr>
+<tr><td>使う側と供給する側</td><td>3つ入っているのは、この関係の中で決定権がどちらにあるかがさらに分かれるためである。従属するとモデル変換装置は上流に決定権があり、共用サービスは下流にある。</td></tr>
+<tr><td>互いに独立（連係しない）</td><td>囲みの中に1つしか無いのは、連係しないという選択に種類が無いためである。手を抜いた結果ではなく、正当な選択肢の1つとして並んでいる。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">緊密に協力できる場合</span></div>
+<p>どちらのチームにも決定権があり、連係の課題に一緒に取り組める場合。</p>
+<div class="node d2"><div class="node-h"><span class="nm">良きパートナー</span></div>
+<p>連係を臨機応変に実現する関係。APIを変えたチームが他のチームへ伝えると、他のチームは協力してその変更に応じる——騒ぎにも利害の衝突にもならない。この関係は双方向で、一方が連係の約束事を決めて押しつけることはしない。連係に関わる課題には、2つのチームが協力して取り組む。成り立つ条件は、2つのチームが協力に習熟していること、目標の達成に強い意欲があること、そして頻繁に足並みを揃えること。技術の側では、統合を頻繁に走らせることで連係の問題を早く小さく見つける。物理的に離れたチームどうしでは難しいことがある。</p>
+<p>良きパートナーの関係が、双方向であることを示す</p>
+<p>どちらか一方が連係の約束事を決めて押しつけることはしない。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;区切られた文脈1&quot;]
+    n1[&quot;区切られた文脈2&quot;]
+    n0 --&gt;|&quot;調整する&quot;| n1
+    n1 --&gt;|&quot;調整する&quot;| n0
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>2本の矢印</td><td>行き来があることではなく、どちらにも決定権があることを表す。他の連係方法では、この2本のどちらかが消える。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">モデルの共有</span></div>
+<p>複数の区切られた文脈が同じモデル（またはその一部）を実装する方法。共有する部分は、関係するすべての文脈の要求にもとづいて設計し、使うすべての文脈と整合していなければならない。ある文脈で加えた変更は、共有しているすべての文脈へ同じように適用する必要がある。</p>
+<p>モデルの共有で、共有部分がどちらにも属することを示す</p>
+<p>同じモデルを2つの文脈が実装する。片方で変えれば、もう片方にも同じ変更が要る。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;文脈1&quot;]
+    n1[&quot;共有するモデル&quot;]
+    n2[&quot;文脈2&quot;]
+    n0 --&gt;|&quot;実装する&quot;| n1
+    n2 --&gt;|&quot;実装する&quot;| n1
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>共有するモデル</td><td>図では1つの箱だが、置き場所は1つとは限らない。同じ置き場に置く形でも、独立した部品として切り出して両方が使う形でもよい。どちらの形でも、変えたらすべての文脈で結合の確認を自動で走らせる。</td></tr>
+<tr><td>2本の矢印</td><td>共有する範囲は、どちらの文脈にも実装が必須になる部分に限る。理想は、連係のための契約と、境界を越えて渡すデータの形だけである。広げるほど、この2本が密な結びつきになる。</td></tr>
+</tbody></table></div>
+<div class="node d3"><div class="node-h"><span class="nm">共有する範囲</span></div>
+<p>共有しているモデルへの変更は、すべての文脈へただちに影響する。密に結びつく。影響を小さくするため、共有する範囲はどちらの文脈にも実装が必須になる部分に限る。理想は、連係のための契約と、境界を越えて渡すデータの形だけである。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">どう実現するか</span></div>
+<p>同じ置き場に置いてそれぞれの文脈が同じソースコードを使う形でも、置き場が分かれているなら独立した部品として切り出して各文脈が使う形でもよい。どちらでも、共有モデルを変えたらすべての文脈で結合の確認を自動で走らせる。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">共有するかどうか</span></div>
+<p>コードを重複させる負担と、チーム間で調整する負担を比べる。重複の負担のほうが小さければ共有しない。調整の負担のほうが小さければ共有する。モデルが頻繁に変わる場所——中核の業務領域——ほど、共有の負担は高くつく。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">これは例外的な方法である</span></div>
+<p>1つの区切られた文脈は1つのチームが持つ、という原則と矛盾する。やむを得ず使う状況は3つ——チームが地理的に離れている、または組織の利害が衝突していて良きパートナーになれない場合。既存システムを段階的に置き換えている途中の、一時的な措置として。1つのチームが複数の区切られた文脈を持っていて、境界を明確にする手段として使う場合。</p>
+</div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">使う側と供給する側の関係</span></div>
+<p>片方が供給する側（上流）としてサービスを提供し、もう片方が使う側（下流）になる関係。自分たちの成功にとって相手の成功が必須ではないので、力関係が生まれる。</p>
+<p>使う側と供給する側の関係に、力関係が生まれることを示す</p>
+<p>供給する側の成功は使う側に必須だが、逆は必須ではない。この非対称が力関係を生む。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;上流（供給する側）&quot;]
+    n1[&quot;下流（使う側）&quot;]
+    n0 --&gt;|&quot;サービスを提供する&quot;| n1
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>上流（供給する側）から下流（使う側）</td><td>矢印はサービスが流れる向きであって、決定権の向きではない。決定権は上流にあることも下流にあることもあり、それによって選ぶ連係方法が変わる。</td></tr>
+<tr><td>上流（供給する側）</td><td>自分たちの成功に相手の成功が必須ではない、という位置にいる。これは怠慢ではなく関係の構造そのもので、良きパートナーとの違いはここにある。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">従属する</span></div>
+<p>上流に決定権があり、下流が上流のモデルをそのまま受け入れる関係。外部のサービスを使う場合や、組織の力の構造によって決まる。下流がこれを選ぶ理由は2つ——上流が示す契約が業界の標準であって安定している場合と、上流が提供する内容が下流の要求を十分に満たしている場合。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">モデル変換装置</span></div>
+<p>上流に決定権がある状況で、下流が上流のモデルをそのまま受け入れず、自分たちの要求に合わせて変換する仕組み。使う場面は3つ——下流が中核の業務領域を含む場合（供給側のモデルに引きずられると、中核の課題を表すモデルがゆがむ）。上流のモデルが非効率、あるいは使いにくい場合（込み入ったモデルに合わせると、自分たちのモデルも込み入る。変更がやっかいで危険な既存システムとの連係で起きやすい）。供給側の契約が頻繁に変わる場合（頻繁な変更から自分のモデルを守りたい）。効果は、自分の文脈に関係しない外部の概念を取り除けることと、その結果として自分たちの同じ言葉とモデルが単純で分かりやすくなること。</p>
+<p>モデル変換装置が、下流の側に置かれることを示す</p>
+<p>上流のモデルをそのまま受け取らず、下流に入る手前で自分たちの形へ変換する。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;上流&quot;]
+    n1[&quot;モデル変換装置&quot;]
+    n2[&quot;下流&quot;]
+    n0 --&gt;|&quot;上流のモデル&quot;| n1
+    n1 --&gt;|&quot;変換したモデル&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>モデル変換装置</td><td>下流のチームが作り、下流の側に置く。上流は、変換されていることを知らないままでよい。</td></tr>
+<tr><td>上流からモデル変換装置（上流のモデル）</td><td>上流のモデルが変わっても、影響がここで止まる。供給側の契約が頻繁に変わる場合に、この装置が効く理由がこれである。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">共用サービス</span></div>
+<p>使う側（下流）に決定権がある場合の連係方法。供給する側（上流）が使う側を守り、できるだけよいサービスを提供しようとする。外部へ出す入口を内部のモデルから切り離すので、外に見せるモデルと内部の実装を別々のときに変えられる。</p>
+<p>共用サービスが、上流の側に置かれることを示す</p>
+<p>上流が外向けの入口を用意し、内部のモデルとは切り離して保つ。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;下流&quot;]
+    n1[&quot;共用サービス（公開された言葉）&quot;]
+    n2[&quot;上流&quot;]
+    n0 --&gt;|&quot;呼び出す&quot;| n1
+    n1 --&gt; n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>共用サービス（公開された言葉）</td><td>モデル変換装置とちょうど裏返しの位置にある。変換するのが供給する側か使う側か、置き場所が上流か下流か、この2点だけが両者の違いである。</td></tr>
+<tr><td>共用サービス（公開された言葉）から上流</td><td>外向けの言葉は、上流が内部で使う同じ言葉に合わせる必要が無い。この線があることで、外に見せる形と内部の実装を別々のときに変えられる。</td></tr>
+<tr><td>下流から共用サービス（公開された言葉）</td><td>複数の版を同時に出しておける。使う側は自分の都合で新しい版へ移れる。</td></tr>
+</tbody></table></div>
+<div class="node d3"><div class="node-h"><span class="nm">公開された言葉</span></div>
+<p>共用サービスが提供する通信の取り決め。連係のために特化した言葉を定義し、使う側が使いやすい形で提供する。内部で使う同じ言葉に合わせる必要は無い。違う版を並べて提供しておけば、使う側は段階的に新しい版へ移れる。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">モデル変換装置との違い</span></div>
+<p>違うのは、誰が変換するかと、どこに置くかの2点だけである。共用サービスは供給する側（上流）が変換し、上流に置く。モデル変換装置は使う側（下流）が変換し、下流に置く。ある意味で、両者はちょうど裏返しの関係にある。</p>
+</div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">互いに独立</span></div>
+<p>連係を「しない」という選択肢。連係のために協力する労力より、同じ機能を重複して実装する労力のほうが小さい場合に選ぶ。</p>
+<div class="node d2"><div class="node-h"><span class="nm">意思疎通が難しい</span></div>
+<p>組織が大きい、部門間の利害が対立している、といった事情でチーム間の協力や合意形成に苦労する状況では、それぞれが独立して同じ機能を重複して開発したほうが費用対効果が高い。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">一般的な業務領域である</span></div>
+<p>対象が他社と同じような一般的な業務で、既存の解決手段を簡単に組み込める場合、文脈ごとにそれを取り入れるほうが費用対効果が高い。たとえば動作の記録を残す仕組みは、共通のサービスを用意するより、各文脈が個別に組み込むほうが簡単である。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">モデルの違いが大きい</span></div>
+<p>モデルの違いが大きく、従属ではどちらにも合わせられない場合。必要な機能を文脈ごとに重複して作るほうが、モデル変換装置を作るより負担が小さい場合。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">中核どうしには使わない</span></div>
+<p>中核の業務領域どうしをつなぐ場合、この選択肢は避ける。中核を重複して実装することは、中核をもっとも効率よく最適な方法で実装するという事業戦略にそむく。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">文脈の地図</span></div>
+<p>システム全体の区切られた文脈どうしの関係を、1枚に載せたもの。</p>
+<p>文脈の地図が、システム全体の連係の形を1枚に載せることを示す</p>
+<p>どの文脈がどの方法でつながっているかを並べると、組織の課題が形として見えてくる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;受注の文脈&quot;]
+    n1[&quot;在庫の文脈&quot;]
+    n2[&quot;請求の文脈&quot;]
+    n3[&quot;配送の文脈&quot;]
+    n4[&quot;記録の文脈&quot;]
+    n0 --&gt;|&quot;良きパートナー&quot;| n1
+    n0 --&gt;|&quot;共用サービス&quot;| n2
+    n3 --&gt;|&quot;モデル変換装置&quot;| n0
+    n3 --&gt;|&quot;モデル変換装置&quot;| n1
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>配送の文脈から受注の文脈／配送の文脈から在庫の文脈</td><td>1つのチームが関わるすべての相手にモデル変換装置を作っている、という形が見えたら、それは相手側のモデルに問題があるという合図として読む。個々の線ではなく、線の集まり方に意味がある。</td></tr>
+<tr><td>記録の文脈</td><td>どこともつながっていない。孤立している文脈が地図に現れたら、互いに独立の関係に囲まれているということで、それが妥当かを問い直す材料になる。</td></tr>
+<tr><td>この地図全体</td><td>1本の線が1つの連係方法を表しているが、実際にはそう単純にならない。1つの文脈が複数の業務領域を扱っていれば、相手ごとに複数の方法を同時に使うこともあり、業務領域が1つでも、その中の部品ごとに違う方法が要ることがある。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">地図から見えるもの</span></div>
+<p>3つある。全体の設計——システムの部品と、それぞれが実装するモデルの集まりの全体像。意図の伝わり方——どのチームが協力的な関係にあり、どのチームがモデル変換装置や互いに独立のようにあまり親密でないか。組織上の課題——ある上流チームと関係するすべての下流チームがモデル変換装置を作っているとしたらそれは何を意味するか、あるチームが互いに独立の関係に囲まれているとしたらそれは何を意味するか。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">最新の状態を保つには</span></div>
+<p>プロジェクトの開始時に作り、変更があれば描き直す。更新はすべてのチームが共同で進め、各チームは自分が他の文脈とどう連係しているかを地図に反映する責任を持つ。地図をコードとして管理できる道具もある。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">地図の限界</span></div>
+<p>1本の線が1つの連係方法を表す、とは限らない。区切られた文脈が複数の業務領域を扱っている場合、相手ごとに複数の連係方法を同時に使うことがある。業務領域が1つであっても、それを構成する部品のあいだで違う連係方法が要ることがある。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">6つの連係方法の対比</span></div>
+<p>決定権・協力の度合い・主な用途で並べる。</p>
+<p>6つの連係方法を、決定権・協力の度合い・主な用途で対比する</p>
+<p>決定権がどこにあるかで、選べる方法が絞られる。協力の度合いは組織の状態から決まる。</p>
+<div class="tablewrap"><table><thead><tr><th>連係方法</th><th>決定権</th><th>協力の度合い</th><th>主な用途</th></tr></thead><tbody>
+<tr><td>良きパートナー</td><td>双方</td><td>高い</td><td>共通の目標を持つ緊密な協力関係</td></tr>
+<tr><td>モデルの共有</td><td>双方</td><td>高い</td><td>どちらにも必須な最小限のモデルを共有する</td></tr>
+<tr><td>従属する</td><td>上流</td><td>低い</td><td>上流のモデルが業界の標準で、要求も満たす</td></tr>
+<tr><td>モデル変換装置</td><td>上流</td><td>低い</td><td>下流が中核・上流のモデルが使いにくい・頻繁な変更から守りたい</td></tr>
+<tr><td>共用サービス</td><td>下流</td><td>低い</td><td>使う側を守りたい・内部の実装を自由に変えたい</td></tr>
+<tr><td>互いに独立</td><td>不要</td><td>なし</td><td>協力する労力が重複の労力を上回る・一般的な業務領域</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">どの連係方法を選ぶか</span></div>
+<p>チームどうしの協力の可否と、決定権の所在で決まる。</p>
+<p>どの連係方法を選ぶかを、順に問うて決める</p>
+<p>最初にチームどうしが協力できるかを問い、できない場合に決定権の所在で分かれる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;チームどうしが緊密に協力できるか&quot;]
+    n1[&quot;どちらに決定権があるか&quot;]
+    n2[&quot;上流のモデルをそのまま受け入れられるか&quot;]
+    n3[&quot;協力する労力より重複して作る労力のほうが小さいか&quot;]
+    n4[&quot;良きパートナー／モデルの共有&quot;]
+    n5[&quot;共用サービス&quot;]
+    n6[&quot;従属する&quot;]
+    n7[&quot;モデル変換装置&quot;]
+    n8[&quot;互いに独立（中核には使わない）&quot;]
+    n0 --&gt;|&quot;はい&quot;| n4
+    n0 --&gt;|&quot;いいえ&quot;| n3
+    n3 --&gt;|&quot;はい&quot;| n8
+    n3 --&gt;|&quot;いいえ&quot;| n1
+    n1 --&gt;|&quot;下流&quot;| n5
+    n1 --&gt;|&quot;上流&quot;| n2
+    n2 --&gt;|&quot;はい（業界の標準で、要求も満たす）&quot;| n6
+    n2 --&gt;|&quot;いいえ（中核・使いにくい・頻繁に変わる）&quot;| n7
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>チームどうしが緊密に協力できるか</td><td>技術ではなく組織の状態を問う。地理的に離れている・利害が衝突している、といった事情がここで効く。</td></tr>
+<tr><td>互いに独立（中核には使わない）</td><td>他の終点と違い、条件つきの終点である。中核の業務領域どうしをつなぐ場合には選べない——中核を重複して作ることは、中核をもっとも効率よく実装するという事業戦略にそむく。</td></tr>
+<tr><td>良きパートナー／モデルの共有</td><td>2つを1つの終点にまとめてあるが、別の方法である。モデルの共有は、1つの文脈は1つのチームが持つという原則と矛盾するため、例外的に使う。</td></tr>
+<tr><td>上流のモデルをそのまま受け入れられるか</td><td>受け入れられるかどうかは、上流の品質だけでは決まらない。下流が中核の業務領域を含むなら、上流が良いモデルでも受け入れない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>連係方法の選び方でよく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">中核の業務領域に互いに独立を使う</span></div>
+<p>中核を重複して実装することは、もっとも効率よく最適な方法で実装するという事業戦略にそむく。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">中核の業務領域で従属するを使う</span></div>
+<p>下流が中核の業務領域を含む場合に従属すると、供給側のモデルに引きずられて、中核の課題を表すモデルがゆがむ。モデル変換装置を使う。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">モデルの共有範囲を広げすぎる</span></div>
+<p>共有するモデルへの変更はすべての文脈へただちに影響する。密に結びつく。共有部分は、連係のための契約と、境界を越えて渡すデータの形だけに限る。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">文脈の地図を作らない・更新しない</span></div>
+<p>作らないと、チーム間の連係方法の全体像が見えず、組織上の課題を見逃す。開始時に作り、継続的に最新の状態を保つ。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅴ. 置き換えたもの</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書き起こし版</th><th>置き換え先</th><th>保った構造</th></tr></thead>
+      <tbody>
+        <tr><td>実在の道具の名前（地図をコードとして管理する道具）</td><td>役割の説明</td><td>地図をコードとして管理できる、という事実</td></tr>
+        <tr><td>文脈の地図の図（書き起こし版に中身が無かった）</td><td>架空の業務で組み立て（受注・在庫・請求・配送・記録）</td><td>読み取る観点——同じ相手へ変換装置が集まる形、孤立した文脈——を再現できる配置にした</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>ここは補完であることを明記しました</h3>
+    <p>文脈の地図の例は<strong>書き起こし版に図の中身が残っていなかった</strong>ため、こちらで組み立てています。留保事項にその旨を書きました。読み取る観点は本文に書かれていたので、それが成り立つ配置を選んでいます。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅵ. 10本目までの推移</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
+      <tbody>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
+        <tr><td>ubiquitous-language</td><td>99</td><td>231</td><td>177</td></tr>
+        <tr><td>design-heuristics</td><td>120</td><td>310</td><td>203</td></tr>
+        <tr><td>architecture-patterns</td><td>104</td><td>349</td><td>268</td></tr>
+        <tr><td>event-sourced-domain-model</td><td>107</td><td>501</td><td>408</td></tr>
+        <tr><td><strong>context-integration</strong></td><td><strong>105</strong></td><td><strong>352</strong></td><td><strong>250</strong></td></tr>
+        <tr><td><strong>10本の合計</strong></td><td><strong>1,070</strong></td><td><strong>3,053</strong></td><td><strong>2,743</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow"><strong>10 / 19本で折り返しました。</strong>残り9本・約2,000行です。</p>
+</section>
+
+<footer>
+  旧要約版105行・書き起こし版250行・変換後352行（描画結果の実測）。<br>
+  実在の道具名は役割の説明へ置き換えた。文脈の地図の例は書き起こし版に中身が無いため補完し、留保事項に明記した。<br>
+  プレビューは描画物から機械で生成した（手で書き写すと取りこぼすため）。
+</footer>
+
+</div>

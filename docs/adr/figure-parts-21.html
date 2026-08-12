@@ -1,0 +1,230 @@
+<title>21種を同じ経路で通す</title><style>
+  :root{
+    --paper:#EDF0F3; --surface:#FFF; --surface-2:#F5F7F9;
+    --ink:#171B23; --ink-soft:#4B5563; --ink-faint:#79828F;
+    --rule:#C3CAD2; --rule-soft:#E4E9EE;
+    --warn:#9A4A21; --warn-bg:#F7EAE2;
+    --acc:#16636B;  --acc-bg:#E2EFF0;
+    --tone-0:#16636B; --tone-1:#9A4A21; --tone-2:#7A4368; --tone-3:#8A8F98;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --warn:#E0A17A; --warn-bg:#2E211A; --acc:#6BC0C7; --acc-bg:#132A2C;
+    --tone-0:#6BC0C7; --tone-1:#E0A17A; --tone-2:#D19CC0; --tone-3:#767E8A;
+  }}
+
+  /* ── 箱（どの型でも共通） ───────────────────── */
+  .b{background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;
+     padding:.42rem .8rem;font-size:.84rem;line-height:1.5;
+     display:flex;flex-direction:column;gap:.1rem;align-items:center;
+     justify-self:center;align-self:center;white-space:nowrap;}
+  .b__sub{font-size:.68rem;color:var(--ink-faint);}
+  .b__row{font-size:.72rem;color:var(--ink-soft);align-self:flex-start;}
+  .b:has(.b__row){align-items:flex-start;padding:.5rem .8rem;}
+  .b:has(.b__row) .b__name{align-self:center;font-weight:600;
+     border-bottom:1px solid var(--rule-soft);width:100%;text-align:center;padding-bottom:.3rem;margin-bottom:.25rem;}
+  .b--focus{background:var(--acc-bg);border-color:var(--acc);color:var(--acc);font-weight:600;}
+  .b--added{border-color:var(--acc);color:var(--acc);}
+  .b--removed{border-style:dashed;color:var(--ink-faint);text-decoration:line-through;}
+  .b--start{background:var(--ink);border-color:var(--ink);width:.7rem;height:.7rem;padding:0;border-radius:50%;}
+  .b--end{border-width:3px;border-style:double;width:.9rem;height:.9rem;padding:0;border-radius:50%;}
+
+  /* ── 点と線 ── 段と列だけで組む。pxは一つも無い ── */
+  .graph{display:grid;grid-template-columns:repeat(var(--cols),auto);
+         column-gap:1.1rem;justify-content:center;align-items:center;}
+  .graph > i.w{background:var(--rule);position:relative;}
+  /* 矢印の先 ── 向きは意味なので、線だけでは足りない */
+  .w--head-down{margin-bottom:9px;}
+  .w--head-down::after{content:"";position:absolute;bottom:-9.5px;left:50%;
+      transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--rule);}
+  .w--head-left{margin-left:10px;}
+  .w--head-left::after{content:"";position:absolute;left:-10.5px;top:50%;
+      transform:translateY(-50%);border:5px solid transparent;border-right-color:var(--rule);}
+  .w--back.w--head-left::after{border-right-color:var(--warn);}
+  .w--back.w--head-down::after{border-top-color:var(--warn);}
+  .w--v{width:1px;justify-self:center;align-self:stretch;min-height:1.6rem;}
+  .w--h{height:1px;align-self:center;justify-self:stretch;}
+  .w--back{background:var(--warn);opacity:.6;}
+  .w__label{font-size:.66rem;color:var(--ink-faint);justify-self:center;
+            background:var(--paper);padding:0 .3rem;z-index:2;white-space:nowrap;}
+  .w__label--start{align-self:start;} .w__label--end{align-self:end;}
+  /* 囲みは中身を包む。graph の align-items:center を受けると高さが潰れる */
+  .gp{border:1.2px dashed var(--acc);border-radius:9px;position:relative;z-index:0;
+      align-self:stretch;justify-self:stretch;margin:-.55rem -.7rem;}
+  .gp__label{position:absolute;top:-.55rem;left:.7rem;background:var(--paper);
+             padding:0 .3rem;font-size:.62rem;color:var(--acc);white-space:nowrap;}
+  .graph > .b{z-index:1;}
+
+  /* ── 対比 ─────────────────────────────── */
+  .cmp{display:flex;gap:1.8rem;align-items:stretch;flex-wrap:nowrap;}
+  .panel{flex:0 0 auto;display:flex;flex-direction:column;gap:.5rem;}
+  .panel--before{--tone:var(--warn);--tone-bg:var(--warn-bg);}
+  .panel--after{--tone:var(--acc);--tone-bg:var(--acc-bg);}
+  .panel__label{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;color:var(--tone);}
+  .panel__body{display:flex;gap:.7rem;align-items:stretch;flex:1;}
+  .panel__note{font-size:.74rem;color:var(--ink-faint);margin:0;}
+  .frame{border:1.3px dashed var(--tone);border-radius:10px;padding:1.4rem 1rem 1.1rem;
+         position:relative;display:flex;justify-content:center;flex:1;}
+  .frame--transcript{border:none;padding:0;}
+  .frame__label{position:absolute;top:-.58rem;left:.8rem;padding:0 .35rem;
+                background:var(--paper);font-size:.64rem;color:var(--tone);white-space:nowrap;}
+  .link{align-self:center;display:flex;flex-direction:column;align-items:center;gap:.1rem;
+        color:var(--tone);font-size:.66rem;flex:none;}
+  .link i{width:2.6rem;height:0;position:relative;display:block;}
+  .link i::before{content:"";position:absolute;left:0;top:-4.5px;
+                  border:4.5px solid transparent;border-right-color:currentColor;}
+  .link i::after{content:"";position:absolute;left:9px;right:0;top:0;
+                 border-top:1.3px dashed currentColor;}
+
+  /* ── 木 ─────────────────────────────── */
+  .tr{display:flex;flex-direction:column;align-items:center;}
+  .kids{--gap:1rem;--stem:.7rem;display:flex;gap:var(--gap);position:relative;
+        margin-top:calc(var(--stem)*2);}
+  .limb{position:relative;display:flex;flex-direction:column;align-items:center;}
+  .tw{position:absolute;background:var(--rule);}
+  .tw--stem{top:calc(var(--stem)*-2);left:50%;width:1px;height:var(--stem);}
+  .tw--drop{top:calc(var(--stem)*-1);left:50%;width:1px;height:var(--stem);}
+  .tw--bar{top:calc(var(--stem)*-1);height:1px;
+           left:calc(var(--gap)/-2);right:calc(var(--gap)/-2);}
+  .limb:first-of-type .tw--bar{left:50%;}
+  .limb:last-of-type .tw--bar{right:50%;}
+  .limb:only-of-type .tw--bar{display:none;}
+
+  /* ── 操作と返り値 ───────────────────────── */
+  .win{flex:1;border-radius:9px;overflow:hidden;border:1px solid #2A313C;background:#151A22;}
+  .win__bar{display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem;background:#1E242E;}
+  .win__bar span{font-family:var(--mono);font-size:.66rem;color:#8B95A3;}
+  .win__dots{width:2.4rem;height:.55rem;flex:none;display:block;
+    background:radial-gradient(circle 3.5px at 4px 50%,#E06C60 98%,transparent 0),
+               radial-gradient(circle 3.5px at 16px 50%,#E0B341 98%,transparent 0),
+               radial-gradient(circle 3.5px at 28px 50%,#5FB37A 98%,transparent 0);}
+  .win__body{margin:0;padding:.8rem .9rem;background:none;border:none;
+             font-family:var(--mono);font-size:.68rem;line-height:1.7;color:#C8D0DA;overflow-x:auto;}
+  .ln{display:block;white-space:pre;}
+  .ln--comment{color:#6E7885;} .ln--command{color:#E3E8EF;}
+  .ln--output{color:#9FB6C4;margin:.4rem 0;} .ln--note{color:#6BC0C7;margin-top:.4rem;}
+
+  /* ── 一覧の差分 ─────────────────────────── */
+  .ls{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.28rem;}
+  .it{font-size:.8rem;padding:.26rem .7rem .26rem 1.45rem;border-radius:5px;
+      background:var(--surface-2);border:1px solid var(--rule);position:relative;white-space:nowrap;}
+  .it::before{position:absolute;left:.5rem;font-family:var(--mono);font-size:.68rem;color:var(--ink-faint);}
+  .it--unchanged::before{content:"・";}
+  .it--added{border-color:var(--acc);color:var(--acc);} .it--added::before{content:"＋";color:var(--acc);}
+  .it--removed{border-style:dashed;color:var(--ink-faint);} .it--removed::before{content:"−";}
+
+  /* ── 帯 ─────────────────────────────── */
+  .lanes{display:flex;flex-direction:column;gap:.35rem;width:min(34rem,100%);}
+  .lane{display:flex;align-items:center;gap:.7rem;}
+  .lane__name{font-size:.74rem;color:var(--ink-soft);min-width:6rem;text-align:right;flex:none;}
+  .lane__track{flex:1;display:grid;grid-template-columns:repeat(var(--span),1fr);
+               gap:2px;background:var(--rule-soft);border-radius:5px;padding:2px;}
+  .bar{height:1.2rem;border-radius:3px;background:var(--tone-0);display:flex;align-items:center;
+       justify-content:center;font-size:.64rem;color:#fff;overflow:hidden;}
+  .bar--warn{background:var(--tone-1);} .bar--soft{background:var(--tone-3);}
+
+  /* ── 量 ─────────────────────────────── */
+  .am{display:flex;gap:1.6rem;align-items:center;flex-wrap:wrap;}
+  .am__ring{width:6.4rem;height:6.4rem;border-radius:50%;display:grid;place-items:center;flex:none;}
+  .am__ring span{width:4rem;height:4rem;border-radius:50%;background:var(--paper);
+                 display:grid;place-items:center;font-size:.76rem;font-weight:600;}
+  .am__list{display:flex;flex-direction:column;gap:.35rem;min-width:15rem;flex:1;}
+  .am__row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+           gap:.5rem;font-size:.74rem;}
+  .am__chip{width:.6rem;height:.6rem;border-radius:2px;display:block;}
+  .am__row b{font-variant-numeric:tabular-nums;font-weight:600;}
+  .am__bar{grid-column:1/-1;height:.32rem;border-radius:99px;display:block;}
+
+  /* ── 分類 ─────────────────────────────── */
+  .mx{display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;
+      gap:.5rem;align-items:center;}
+  .mx__y{writing-mode:vertical-rl;font-size:.68rem;color:var(--ink-faint);white-space:nowrap;}
+  .mx__x{grid-column:2;font-size:.68rem;color:var(--ink-faint);text-align:center;}
+  .mx__plot{position:relative;height:13rem;border-left:1px solid var(--rule);
+            border-bottom:1px solid var(--rule);background:
+            linear-gradient(to right,transparent 49.7%,var(--rule-soft) 49.7% 50.3%,transparent 50.3%),
+            linear-gradient(to top,transparent 49.7%,var(--rule-soft) 49.7% 50.3%,transparent 50.3%);}
+  .mx__q{position:absolute;font-size:.64rem;color:var(--ink-faint);}
+  .mx__q--0{right:.4rem;top:.3rem;} .mx__q--1{left:.4rem;top:.3rem;}
+  .mx__q--2{left:.4rem;bottom:.3rem;} .mx__q--3{right:.4rem;bottom:.3rem;}
+  .pt{position:absolute;transform:translate(-50%,50%);background:var(--surface);
+      border:1px solid var(--acc);color:var(--acc);border-radius:5px;
+      padding:.16rem .5rem;font-size:.68rem;white-space:nowrap;}
+
+  /* ── やり取り ───────────────────────────── */
+  .ex{display:grid;grid-template-columns:repeat(var(--who),1fr);
+      row-gap:.5rem;align-items:center;position:relative;}
+  .ex__who{justify-self:center;background:var(--surface-2);border:1px solid var(--rule);
+           border-radius:6px;padding:.35rem .8rem;font-size:.76rem;white-space:nowrap;z-index:1;}
+  .ex__life{justify-self:center;width:1px;background:var(--rule);align-self:stretch;}
+  .ex__msg{position:relative;display:flex;justify-content:center;padding-bottom:.35rem;
+           border-bottom:1.2px solid var(--ink-faint);}
+  .ex__msg span{font-size:.7rem;color:var(--ink-soft);background:var(--paper);padding:0 .4rem;}
+  .ex__msg--return{border-bottom-style:dashed;}
+  .ex__msg::after{content:"";position:absolute;right:-1px;bottom:-4px;
+                  border:4px solid transparent;border-left-color:var(--ink-faint);}
+  .ex__msg--rtl::after{right:auto;left:-1px;border-left-color:transparent;border-right-color:var(--ink-faint);}
+  .ex__note{justify-self:center;background:var(--warn-bg);border:1px solid var(--warn);
+            color:var(--warn);border-radius:5px;padding:.2rem .6rem;font-size:.68rem;}
+
+  /* ── 箱組み ───────────────────────────── */
+  .bks{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:.5rem;}
+  .bk{background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;
+      padding:.6rem .8rem;font-size:.78rem;text-align:center;}
+  .bk--focus{background:var(--acc-bg);border-color:var(--acc);color:var(--acc);}
+
+  *{box-sizing:border-box;}
+  body{margin:0;padding:2rem 1.4rem 5rem;background:var(--paper);color:var(--ink);
+       font-family:var(--sans);}
+  main{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:1.6rem;}
+  h1{font-size:1.5rem;margin:0;}
+  .lede{color:var(--ink-soft);font-size:.9rem;margin:0 0 .6rem;}
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+        padding:1rem 1.2rem 1.4rem;display:flex;flex-direction:column;gap:.8rem;}
+  .card header{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap;}
+  .card h2{font-family:var(--mono);font-size:.9rem;margin:0;}
+  .t{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;padding:.08rem .4rem;
+     border-radius:4px;border:1px solid currentColor;}
+  .t--mmd{color:var(--ink-faint);} .t--new{color:var(--acc);}
+  .what{font-size:.78rem;color:var(--ink-soft);}
+  .stage{background:var(--paper);border-radius:8px;padding:1.4rem 1rem;
+         display:flex;justify-content:center;overflow-x:auto;}
+  .fail{color:var(--warn);font-size:.8rem;}
+
+  .verdict{border-color:var(--acc);}
+  .verdict h3{font-size:.82rem;margin:.4rem 0 0;}
+  .vd{display:flex;gap:2rem;flex-wrap:wrap;}
+  .vd__row{display:flex;flex-direction:column;}
+  .vd__row b{font-family:var(--mono);font-size:1.5rem;line-height:1.1;}
+  .vd__row span{font-size:.76rem;color:var(--ink-faint);}
+  .verdict table{border-collapse:collapse;width:100%;font-size:.8rem;}
+  .verdict th,.verdict td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule-soft);}
+  .verdict th{font-size:.7rem;color:var(--ink-faint);}
+  .col{font-size:.8rem;color:var(--ink-soft);margin:0;line-height:1.75;}
+</style><main><h1>21種を同じ経路で通す</h1><p class="lede">意味の型 → 並びを決める口 → HTML。SVGは使わず、位置をpxで書いた箇所は一つもない。</p><section class="card"><header><h2>flowchart</h2><span class="t t--mmd">Mermaid</span><span class="what">順序と分岐</span></header><div class="stage"><div class="graph" style="--cols:2;--rows:8;"><div class="b b--plain" style="grid-row:1;grid-column:1;"><span class="b__name">調べる</span></div><div class="b b--plain" style="grid-row:3;grid-column:1;"><span class="b__name">決める</span></div><div class="b b--plain" style="grid-row:5;grid-column:1;"><span class="b__name">引き継ぐ</span></div><div class="b b--focus" style="grid-row:7;grid-column:1;"><span class="b__name">作る</span></div><i class="w w--v" style="grid-row:2;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:1;"></i><i class="w w--v" style="grid-row:4;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:4;grid-column:1;"></i><i class="w w--v" style="grid-row:6;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:6;grid-column:1;"></i><i class="w w--back w--h" style="grid-row:8;grid-column:1/3;"></i><i class="w w--back w--v" style="grid-row:1/9;grid-column:2;"></i><i class="w w--back w--h w--head-left" style="grid-row:1;grid-column:1/3;"></i><span class="w__label w__label--end" style="grid-row:8;grid-column:1/2;">反証が出たら</span></div></div></section><section class="card"><header><h2>state</h2><span class="t t--mmd">Mermaid</span><span class="what">状態と遷移</span></header><div class="stage"><div class="graph" style="--cols:2;--rows:10;"><div class="b b--start" style="grid-row:1;grid-column:1;"><span class="b__name"></span></div><div class="b b--plain" style="grid-row:3;grid-column:1;"><span class="b__name">DRAFT</span></div><div class="b b--plain" style="grid-row:5;grid-column:1;"><span class="b__name">VALIDATED</span></div><div class="b b--focus" style="grid-row:7;grid-column:1;"><span class="b__name">ACTIVE</span></div><div class="b b--end" style="grid-row:9;grid-column:1;"><span class="b__name"></span></div><i class="w w--v" style="grid-row:2;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:1;"></i><span class="w__label w__label--start" style="grid-row:2;grid-column:1/2;">骨格</span><i class="w w--v" style="grid-row:4;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:4;grid-column:1;"></i><span class="w__label w__label--end" style="grid-row:4;grid-column:1/2;">整合</span><i class="w w--v" style="grid-row:6;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:6;grid-column:1;"></i><span class="w__label w__label--start" style="grid-row:6;grid-column:1/2;">確定</span><i class="w w--v" style="grid-row:8;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:8;grid-column:1;"></i><span class="w__label w__label--end" style="grid-row:8;grid-column:1/2;">廃止</span><i class="w w--back w--h" style="grid-row:6;grid-column:1/3;"></i><i class="w w--back w--v" style="grid-row:3/7;grid-column:2;"></i><i class="w w--back w--h w--head-left" style="grid-row:3;grid-column:1/3;"></i><span class="w__label w__label--start" style="grid-row:6;grid-column:1/2;">不備</span></div></div></section><section class="card"><header><h2>class</h2><span class="t t--mmd">Mermaid</span><span class="what">型と関連</span></header><div class="stage"><div class="graph" style="--cols:1;--rows:6;"><div class="b b--plain" style="grid-row:1;grid-column:1;"><span class="b__name">Schema</span><span class="b__row">+ schemaRef</span><span class="b__row">+ version</span></div><div class="b b--focus" style="grid-row:3;grid-column:1;"><span class="b__name">Document</span><span class="b__row">+ documentId</span><span class="b__row">+ status</span><span class="b__row">+ validate()</span></div><div class="b b--plain" style="grid-row:5;grid-column:1;"><span class="b__name">Block</span><span class="b__row">+ blockType</span></div><i class="w w--v" style="grid-row:2;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:1;"></i><span class="w__label w__label--start" style="grid-row:2;grid-column:1/2;">従う</span><i class="w w--v" style="grid-row:4;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:4;grid-column:1;"></i><span class="w__label w__label--end" style="grid-row:4;grid-column:1/2;">1対多</span></div></div></section><section class="card"><header><h2>er</h2><span class="t t--mmd">Mermaid</span><span class="what">実体と関連</span></header><div class="stage"><div class="graph" style="--cols:2;--rows:4;"><div class="b b--focus" style="grid-row:1;grid-column:1;"><span class="b__name">DOCUMENT</span></div><div class="b b--plain" style="grid-row:3;grid-column:1;"><span class="b__name">BLOCK</span></div><div class="b b--plain" style="grid-row:3;grid-column:2;"><span class="b__name">SCHEMA</span></div><i class="w w--v" style="grid-row:2;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:1;"></i><span class="w__label w__label--start" style="grid-row:2;grid-column:1/2;">1対多</span><i class="w w--v" style="grid-row:2;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:2;"></i><i class="w w--h" style="grid-row:2;grid-column:1/3;"></i><span class="w__label w__label--end" style="grid-row:2;grid-column:1/3;">多対1</span></div></div></section><section class="card"><header><h2>architecture</h2><span class="t t--mmd">Mermaid</span><span class="what">区画と部品</span></header><div class="stage"><div class="graph" style="--cols:2;--rows:8;"><div class="gp" style="grid-row:1/2;grid-column:1/3;"><span class="gp__label">受け口</span></div><div class="gp" style="grid-row:5/8;grid-column:1/2;"><span class="gp__label">領域</span></div><div class="b b--plain" style="grid-row:1;grid-column:1;"><span class="b__name">CLI</span><span class="b__sub">受け口</span></div><div class="b b--plain" style="grid-row:1;grid-column:2;"><span class="b__name">MCP</span><span class="b__sub">受け口</span></div><div class="b b--focus" style="grid-row:3;grid-column:1;"><span class="b__name">ユースケース</span><span class="b__sub">応用</span></div><div class="b b--plain" style="grid-row:5;grid-column:1;"><span class="b__name">業務サービス</span><span class="b__sub">領域</span></div><div class="b b--plain" style="grid-row:7;grid-column:1;"><span class="b__name">モデル</span><span class="b__sub">領域</span></div><i class="w w--v" style="grid-row:2;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:1;"></i><i class="w w--v" style="grid-row:2;grid-column:2;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:1;"></i><i class="w w--h" style="grid-row:2;grid-column:1/3;"></i><i class="w w--v" style="grid-row:4;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:4;grid-column:1;"></i><i class="w w--v" style="grid-row:6;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:6;grid-column:1;"></i></div></div></section><section class="card"><header><h2>requirement</h2><span class="t t--mmd">Mermaid</span><span class="what">要求と充足</span></header><div class="stage"><div class="graph" style="--cols:2;--rows:4;"><div class="b b--focus" style="grid-row:3;grid-column:1;"><span class="b__name">鍵の一意性</span><span class="b__sub">risk: high</span></div><div class="b b--plain" style="grid-row:1;grid-column:1;"><span class="b__name">検証ユースケース</span><span class="b__sub">usecase</span></div><div class="b b--plain" style="grid-row:1;grid-column:2;"><span class="b__name">受け入れ試験</span><span class="b__sub">test</span></div><i class="w w--v" style="grid-row:2;grid-column:1;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:1;"></i><span class="w__label w__label--start" style="grid-row:2;grid-column:1/2;">満たす</span><i class="w w--v" style="grid-row:2;grid-column:2;"></i><i class="w w--v w--head-down" style="grid-row:2;grid-column:1;"></i><i class="w w--h" style="grid-row:2;grid-column:1/3;"></i><span class="w__label w__label--end" style="grid-row:2;grid-column:1/3;">確かめる</span></div></div></section><section class="card"><header><h2>mindmap</h2><span class="t t--mmd">Mermaid</span><span class="what">概念の展開</span></header><div class="stage"><div class="tr"><div class="b b--plain">区切られた文脈</div><div class="kids"><i class="tw tw--stem"></i><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--focus">業務領域</div><div class="kids"><i class="tw tw--stem"></i><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">中核</div></div></div><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">一般</div></div></div><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">補完</div></div></div></div></div></div><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">同じ言葉</div></div></div><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">集約</div></div></div></div></div></div></section><section class="card"><header><h2>sequence</h2><span class="t t--mmd">Mermaid</span><span class="what">やり取りの順序</span></header><div class="stage"><div class="ex" style="--who:3;"><div class="ex__who" style="grid-column:1;grid-row:1;">Orchestrator</div><div class="ex__who" style="grid-column:2;grid-row:1;">Waffle</div><div class="ex__who" style="grid-column:3;grid-row:1;">advisor</div><i class="ex__life" style="grid-column:1;grid-row:2/8;"></i><i class="ex__life" style="grid-column:2;grid-row:2/8;"></i><i class="ex__life" style="grid-column:3;grid-row:2/8;"></i><div class="ex__msg ex__msg--call " style="grid-row:2;grid-column:1/3;"><span>骨格を作る</span></div><div class="ex__msg ex__msg--return ex__msg--rtl" style="grid-row:3;grid-column:1/3;"><span>埋める場所の一覧</span></div><div class="ex__msg ex__msg--call " style="grid-row:4;grid-column:1/4;"><span>敵対的に確かめる</span></div><div class="ex__msg ex__msg--return ex__msg--rtl" style="grid-row:5;grid-column:1/4;"><span>反証、または支持</span></div><div class="ex__note" style="grid-row:6;grid-column:1/4;">反証が出たら、差し戻して調べ直す</div></div></div></section><section class="card"><header><h2>gantt</h2><span class="t t--mmd">Mermaid</span><span class="what">作業と日程</span></header><div class="stage"><div class="lanes"><div class="lane"><span class="lane__name">調べる</span><div class="lane__track" style="--span:12;"><i class="bar bar--plain" style="grid-column:1/4;"><span>3日</span></i></div></div><div class="lane"><span class="lane__name">決める</span><div class="lane__track" style="--span:12;"><i class="bar bar--plain" style="grid-column:4/6;"><span>2日</span></i></div></div><div class="lane"><span class="lane__name">引き継ぐ</span><div class="lane__track" style="--span:12;"><i class="bar bar--warn" style="grid-column:6/7;"><span>1日</span></i></div></div><div class="lane"><span class="lane__name">作る</span><div class="lane__track" style="--span:12;"><i class="bar bar--plain" style="grid-column:7/12;"><span>5日</span></i></div></div></div></div></section><section class="card"><header><h2>timeline</h2><span class="t t--mmd">Mermaid</span><span class="what">時間順の出来事</span></header><div class="stage"><div class="lanes"><div class="lane"><span class="lane__name">v8</span><div class="lane__track" style="--span:9;"><i class="bar bar--plain" style="grid-column:1/4;"><span>操作保証を持つ</span></i></div></div><div class="lane"><span class="lane__name">v9</span><div class="lane__track" style="--span:9;"><i class="bar bar--soft" style="grid-column:4/7;"><span>鍵の一意性</span></i></div></div><div class="lane"><span class="lane__name">v10</span><div class="lane__track" style="--span:9;"><i class="bar bar--plain" style="grid-column:7/10;"><span>2ブロックを落とす</span></i></div></div></div></div></section><section class="card"><header><h2>journey</h2><span class="t t--mmd">Mermaid</span><span class="what">体験の段階</span></header><div class="stage"><div class="lanes"><div class="lane"><span class="lane__name">既存を読む</span><div class="lane__track" style="--span:5;"><i class="bar bar--soft" style="grid-column:1/4;"><span>3</span></i></div></div><div class="lane"><span class="lane__name">advisorに聞く</span><div class="lane__track" style="--span:5;"><i class="bar bar--plain" style="grid-column:1/5;"><span>4</span></i></div></div><div class="lane"><span class="lane__name">骨格を作る</span><div class="lane__track" style="--span:5;"><i class="bar bar--plain" style="grid-column:1/6;"><span>5</span></i></div></div><div class="lane"><span class="lane__name">値を埋める</span><div class="lane__track" style="--span:5;"><i class="bar bar--warn" style="grid-column:1/4;"><span>3</span></i></div></div></div></div></section><section class="card"><header><h2>pie</h2><span class="t t--mmd">Mermaid</span><span class="what">比率</span></header><div class="stage"><div class="am"><div class="am__ring" style="background:conic-gradient(var(--tone-0) 0.00% 66.67%, var(--tone-1) 66.67% 100.00%)"><span>15部品</span></div><div class="am__list"><div class="am__row"><i class="am__chip" style="background:var(--tone-0)"></i><span>文章の部品</span><b>10</b><i class="am__bar" style="width:66.7%;background:var(--tone-0)"></i></div><div class="am__row"><i class="am__chip" style="background:var(--tone-1)"></i><span>図の部品</span><b>5</b><i class="am__bar" style="width:33.3%;background:var(--tone-1)"></i></div></div></div></div></section><section class="card"><header><h2>xychart</h2><span class="t t--mmd">Mermaid</span><span class="what">大小</span></header><div class="stage"><div class="am"><div class="am__list"><div class="am__row"><i class="am__chip" style="background:var(--tone-0)"></i><span>v8</span><b>56</b><i class="am__bar" style="width:80.0%;background:var(--tone-0)"></i></div><div class="am__row"><i class="am__chip" style="background:var(--tone-1)"></i><span>v9</span><b>10</b><i class="am__bar" style="width:14.3%;background:var(--tone-1)"></i></div><div class="am__row"><i class="am__chip" style="background:var(--tone-2)"></i><span>v10</span><b>4</b><i class="am__bar" style="width:5.7%;background:var(--tone-2)"></i></div></div></div></div></section><section class="card"><header><h2>sankey</h2><span class="t t--mmd">Mermaid</span><span class="what">流れの量</span></header><div class="stage"><div class="am"><div class="am__ring" style="background:conic-gradient(var(--tone-0) 0.00% 78.95%, var(--tone-1) 78.95% 100.00%)"><span>19本</span></div><div class="am__list"><div class="am__row"><i class="am__chip" style="background:var(--tone-0)"></i><span>構造化データ → Markdown</span><b>15</b><i class="am__bar" style="width:78.9%;background:var(--tone-0)"></i></div><div class="am__row"><i class="am__chip" style="background:var(--tone-1)"></i><span>構造化データ → HTML</span><b>4</b><i class="am__bar" style="width:21.1%;background:var(--tone-1)"></i></div></div></div></div></section><section class="card"><header><h2>quadrant</h2><span class="t t--mmd">Mermaid</span><span class="what">2軸での位置づけ</span></header><div class="stage"><div class="mx"><span class="mx__y">複雑さ 低 ← → 高</span><div class="mx__plot"><span class="mx__q mx__q--0">中核</span><span class="mx__q mx__q--1">見直す</span><span class="mx__q mx__q--2">一般</span><span class="mx__q mx__q--3">補完</span><span class="pt" style="left:78.0%;bottom:74.0%;">文書の検証</span><span class="pt" style="left:38.0%;bottom:55.0%;">描画</span><span class="pt" style="left:18.0%;bottom:18.0%;">設定の読み込み</span></div><span class="mx__x">差別化が小さい ← → 大きい</span></div></div></section><section class="card"><header><h2>gitGraph</h2><span class="t t--mmd">Mermaid</span><span class="what">枝分かれと合流</span></header><div class="stage"><div class="lanes"><div class="lane"><span class="lane__name">main</span><div class="lane__track" style="--span:8;"><i class="bar bar--plain" style="grid-column:1/3;"><span>骨格</span></i><i class="bar bar--plain" style="grid-column:7/9;"><span>合流</span></i></div></div><div class="lane"><span class="lane__name">spec</span><div class="lane__track" style="--span:8;"><i class="bar bar--soft" style="grid-column:3/7;"><span>基準を足す</span></i></div></div></div></div></section><section class="card"><header><h2>block</h2><span class="t t--mmd">Mermaid</span><span class="what">箱組み</span></header><div class="stage"><div class="bks" style="--cols:3;"><div class="bk bk--plain" style="grid-column:span 1;">受け口</div><div class="bk bk--focus" style="grid-column:span 1;">応用</div><div class="bk bk--plain" style="grid-column:span 1;">領域</div><div class="bk bk--plain" style="grid-column:span 1;">CLI / MCP</div><div class="bk bk--focus" style="grid-column:span 1;">ユースケース</div><div class="bk bk--plain" style="grid-column:span 1;">モデル</div></div></div></section><section class="card"><header><h2>comparison</h2><span class="t t--new">新規</span><span class="what">変更前と変更後の対比</span></header><div class="stage"><div class="cmp"><div class="panel panel--before"><span class="panel__label">変更前</span><div class="panel__body"><div class="frame frame--tree"><span class="frame__label">区切られた文脈の内側</span><div class="tr"><div class="b b--plain">区切られた文脈</div><div class="kids"><i class="tw tw--stem"></i><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--focus">業務領域</div><div class="kids"><i class="tw tw--stem"></i><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">業務ユースケース</div></div></div></div></div></div><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">集約</div></div></div></div></div></div></div><p class="panel__note">親は1つしか持てない</p></div><div class="panel panel--after"><span class="panel__label">変更後</span><div class="panel__body"><div class="frame frame--tree"><span class="frame__label">問題空間</span><div class="tr"><div class="b b--plain">事業領域</div><div class="kids"><i class="tw tw--stem"></i><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--focus">業務領域</div></div></div></div></div></div><div class="link"><span>対応</span><i></i></div><div class="frame frame--tree"><span class="frame__label">解決空間</span><div class="tr"><div class="b b--plain">区切られた文脈</div><div class="kids"><i class="tw tw--stem"></i><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">業務ユースケース</div></div></div><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">集約</div></div></div></div></div></div></div><p class="panel__note">親は事業領域。所属は参照が運ぶ</p></div></div></div></section><section class="card"><header><h2>transcript</h2><span class="t t--new">新規</span><span class="what">操作と、返ってきたもの</span></header><div class="stage"><div class="win"><div class="win__bar"><i class="win__dots"></i><span>terminal</span></div><pre class="win__body"><span class="ln ln--comment"># 宣言を書き換えたあと</span><span class="ln ln--command">$ waffle check-spec-integrity --path …/bc-waffle.json</span><span class="ln ln--output">{&quot;declared_subdomains_missing_on_disk&quot;:
+   [&quot;sd-validation&quot;, …7件]}</span><span class="ln ln--note">↑ 宣言された場所を見て、そこに無いと言う</span></pre></div></div></section><section class="card"><header><h2>listing</h2><span class="t t--new">新規</span><span class="what">並びと、増えた・減った</span></header><div class="stage"><ul class="ls"><li class="it it--unchanged">表題</li><li class="it it--unchanged">目的</li><li class="it it--removed">操作保証</li><li class="it it--removed">保証シナリオ</li><li class="it it--unchanged">受け入れ基準</li><li class="it it--added">シナリオ</li><li class="it it--unchanged">用語</li></ul></div></section><section class="card"><header><h2>tree</h2><span class="t t--new">新規</span><span class="what">入れ子（対比の中身としても使う）</span></header><div class="stage"><div class="tr"><div class="b b--plain">Document</div><div class="kids"><i class="tw tw--stem"></i><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--focus">content</div><div class="kids"><i class="tw tw--stem"></i><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">block</div></div></div><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">block</div></div></div></div></div></div><div class="limb"><i class="tw tw--drop"></i><i class="tw tw--bar"></i><div class="tr"><div class="b b--plain">meta</div></div></div></div></div></div></section>
+<section class="card verdict">
+  <header><h2>結果</h2><span class="what">21種を、同じ経路（意味の型 → 並びを決める口 → HTML）で通した</span></header>
+  <div class="vd">
+    <div class="vd__row"><b>17</b><span>そのまま成立した</span></div>
+    <div class="vd__row"><b>3</b><span>形を変えて成立させた</span></div>
+    <div class="vd__row"><b>1</b><span>再現とは呼べない</span></div>
+  </div>
+  <table>
+    <tr><th>構文</th><th>どうなったか</th></tr>
+    <tr><td><code>gitGraph</code></td><td>枝を車線として並べた。<b>合流の線は無い</b></td></tr>
+    <tr><td><code>journey</code></td><td>点数を帯の長さに置き換えた。折れ線とは別の見せ方</td></tr>
+    <tr><td><code>xychart</code></td><td>横棒に置き換えた。軸は無い</td></tr>
+    <tr><td><code>sankey</code></td><td><b>再現できていない。</b>比率の輪で代用しただけで、流れの図ではない</td></tr>
+  </table>
+  <h3>途中で直した崩れ（8件）</h3>
+  <p class="col">戻りの辺で段が逆転（<b>口そのものの欠陥</b>）／辺のラベルの重なり／囲みが線に潰れる／帯が縮む／縦書きの軸が上下逆／対比が折り返して並ばない／<b>矢印の先端が無い</b>／線が先端を突き抜ける。
+  <b>例外は最初から最後まで0件で、全部つくって見るまで分からなかった。</b></p>
+  <h3>残っている限界</h3>
+  <p class="col">辺の両端で意味が違うもの（ER図の「1対多／多対1」を線の両端に置く）は表せない。これは調整ではなく<b>語彙の不足</b>で、辺の宣言に足す必要がある。ノード数が増えたときの挙動も未検証（今回は最大5）。</p>
+</section>
+</main>

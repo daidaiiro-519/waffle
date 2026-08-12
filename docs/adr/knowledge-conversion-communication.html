@@ -1,0 +1,430 @@
+<title>communication の変換 ── 11本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.78rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 11本目</span>
+  <h1><code>communication</code> を書き起こし版から移す</h1>
+  <p class="standfirst">旧要約版114行 → <strong>303行</strong>。<code>context-integration</code> が「モデル変換装置の実装方法は次章」と委ね、<code>architecture-patterns</code> も末尾でここへ送っていた先です。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">25</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">5</span><span class="l">図（旧版は0）</span></div>
+    <div class="stat"><span class="n">3</span><span class="l">原文（表2・C#1）</span></div>
+    <div class="stat"><span class="n">303</span><span class="l">行（旧114 / 書起し234）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. 送信箱は「描かれていない線」が主張です</h2>
+  <p class="narrow">送信箱の図には <strong>アプリケーション → メッセージの通信基盤</strong> の線がありません。これは省略ではなく、<strong>そう書いてはいけないという規則そのもの</strong>です。図だけ見ると気づけないので、注釈で名指ししました。</p>
+
+  <div class="box ok">
+    <h3>注釈に書いたこと</h3>
+    <p><strong>アプリケーション</strong> ── メッセージの通信基盤へ直接つながる線が無い。描き忘れではなく、集約の内部から直接発行してはいけないという規則がある。</p>
+    <p><strong>アプリケーションからデータベース</strong> ── この1本がひと塊の変更になっていることが、この形が成り立つ唯一の条件である。状態だけ書けてイベントが書けない、という中途半端な結果が起きない。</p>
+    <p><strong>中継する役からメッセージの通信基盤</strong> ── 送ったあとに印をつけるまでのあいだに落ちると、同じイベントをもう一度送る。この形が保証するのは「少なくとも1回」までで、受け取る側は同じものが二度来ても平気なように作る必要がある。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>この概念が扱う範囲</td><td>概要</td><td>境界を越えたつなぎ方に限る、と明示</td></tr>
+        <tr><td>モデルの変換</td><td>原則1行</td><td>装置と共用サービスを区別せず扱う理由つき</td></tr>
+        <tr><td class="new">　状態を持たない変換：同期</td><td>×</td><td><strong>図。行きも返りも変換する</strong></td></tr>
+        <tr><td class="new">　状態を持たない変換：非同期</td><td>×</td><td><strong>図。内部のイベントと外向けのイベントを分ける位置</strong></td></tr>
+        <tr><td>　内部のモデルをそのまま外へ出さない</td><td>アンチパターン</td><td>判断基準としても立てた</td></tr>
+        <tr><td class="new">　状態を持つ変換</td><td><strong>×</strong></td><td><strong>子2つ。まとめる／複数の発生元を統合する</strong></td></tr>
+        <tr><td>送信箱</td><td>分類1行</td><td><strong>図</strong>＋子3つ。直接発行してはいけない2つの理由つき</td></tr>
+        <tr><td class="new">　どこへ書くか</td><td>×</td><td>表を持つDB／持たないDBで書き方が変わる</td></tr>
+        <tr><td class="new">　まだ送っていないイベントをどう読むか</td><td>×</td><td>繰り返し探す／変更の記録を追う</td></tr>
+        <tr><td class="new">　同じものが二度届く</td><td>×</td><td><strong>保証は「少なくとも1回」まで。受け手側の作りが要る</strong></td></tr>
+        <tr><td>サーガ</td><td>分類1行</td><td><strong>コード</strong>＋子2つ。「長く続く」は時間ではなく塊の数</td></tr>
+        <tr><td class="new">　一貫性の前提</td><td>×</td><td><strong>集約の内側は強く整合、外側は結果的に整合</strong></td></tr>
+        <tr><td>　境界の不備を補うために使わない</td><td>アンチパターン</td><td>判断基準としても立てた</td></tr>
+        <tr><td>プロセスマネージャー</td><td>分類1行</td><td><strong>図</strong>＋対比表</td></tr>
+        <tr><td class="new">　サーガとの違い</td><td>×</td><td><strong>表。複雑さ・起動・状態・枝分かれの4観点</strong></td></tr>
+        <tr><td class="new">5つの形の対比</td><td>×</td><td>表。後半2つの土台は送信箱</td></tr>
+        <tr><td>サーガかプロセスマネージャーか</td><td>判断基準</td><td><strong>図</strong></td></tr>
+        <tr><td>アンチパターン ×3</td><td>あり</td><td>そのまま維持</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 注釈の例</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>図</th><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead>
+      <tbody>
+        <tr><td>同期の変換</td><td>代理役</td><td><strong>どちら側に置くかはこの図では決まらない。</strong>上流が置けば共用サービス、下流が置けばモデル変換装置</td></tr>
+        <tr><td>非同期の変換</td><td>内部のイベント／外向けのイベント</td><td>2つを分ける線が要点。<strong>内部のモデルをそのまま外へ出すのはよくある誤った設計</strong></td></tr>
+        <tr><td>プロセスマネージャー</td><td>明示的に起動する</td><td><strong>サーガとの決定的な違いがこの1本。</strong>サーガは特定の出来事を見つけて勝手に動き出す</td></tr>
+        <tr><td>プロセスマネージャー</td><td>相手1／相手2／相手3</td><td>同時に指示を出すという意味ではない。<strong>どれへいつ指示を出すかを決めるのが仕事で、そこに業務ロジックが入る</strong></td></tr>
+        <tr><td>選び方</td><td>サーガ</td><td>選ぶ前にもう1つ確認がある。<strong>集約の境界の不備を補うために使おうとしていないか</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 完全プレビュー</h2>
+  <p class="narrow">描画された303行を、<strong>省略なしで</strong>並べています。25ノードすべてです。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / communication</span><span>ノード25 ・ 図5 ・ 原文3</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">この概念が扱う範囲</span></div>
+<p>個々の区切られた文脈の内部構造ではなく、境界を越えた部品どうしのつなぎ方を扱う。扱うのは3つ——区切られた文脈どうしの通信の仕方、集約の設計原則から生じる連係の制約への対処、そして複数の区切られた文脈にまたがる業務の流れの実現方法。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">モデルの変換</span></div>
+<p>区切られた文脈はモデルの境界なので、つなぐには変換が要ることがある。変換の処理はモデル変換装置でも共用サービスでも同じような実装になるため、ここでは両者を区別せずに扱う。</p>
+<div class="node d2"><div class="node-h"><span class="nm">状態を持たない変換</span></div>
+<p>1回のやりとりの中で完結する変換。代理役として実現する——通信を横取りして、送り手のモデルを受け手のモデルへ変換する。</p>
+<div class="node d3"><div class="node-h"><span class="nm">同期の場合</span></div>
+<p>区切られた文脈のコードの一部に変換の処理を埋め込む。外部との入口を担う一般的な仕組みを使えば、低い費用で実現できる。複数の区切られた文脈から使える独立した文脈として立てることもできる。</p>
+<p>同期のモデル変換が、行きと帰りの両方で働くことを示す</p>
+<p>代理役が呼び出しを横取りし、送り手のモデルを受け手のモデルへ変換する。返りも同じ経路を通る。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;文脈1&quot;]
+    n1[&quot;代理役&quot;]
+    n2[&quot;文脈2&quot;]
+    n0 --&gt;|&quot;呼び出し（モデルA）&quot;| n1
+    n1 --&gt;|&quot;変換した呼び出し（モデルB）&quot;| n2
+    n2 --&gt;|&quot;返り（モデルB）&quot;| n1
+    n1 --&gt;|&quot;変換した返り（モデルA）&quot;| n0
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>代理役</td><td>どちらの側に置くかはこの図では決まらない。上流が置けば共用サービス、下流が置けばモデル変換装置になるが、変換の処理そのものはどちらでも同じである。そのためこの章では両者を区別せずに扱う。</td></tr>
+<tr><td>4本の矢印</td><td>行きだけでなく返りも変換する。片方だけ変換すると、呼んだ側が自分の知らないモデルを受け取ることになる。</td></tr>
+<tr><td>代理役の中</td><td>状態を持たない。1回の呼び出しの中で完結するので、外部の入口を担う一般的な仕組みへそのまま載せられる。複数の文脈から使える独立した文脈として立てることもできる。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">非同期の場合</span></div>
+<p>メッセージの変換役を用意する。送り手が出したメッセージを中間の役が代わりに受け取り、変換してから本来の受け手へ渡す。この位置で、内部のイベントと外向けのイベントをはっきり分けられる。</p>
+<p>非同期のモデル変換が、内部のイベントを外向けの言葉へ変える位置を示す</p>
+<p>送り手が出したメッセージを中間の役が代わりに受け取り、変換してから本来の受け手へ渡す。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;送り手&quot;]
+    n1[&quot;内部のイベント&quot;]
+    n2[&quot;メッセージの変換役&quot;]
+    n3[&quot;外向けのイベント&quot;]
+    n4[&quot;受け手&quot;]
+    n0 --&gt; n1
+    n1 --&gt; n2
+    n2 --&gt; n3
+    n3 --&gt; n4
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>内部のイベント／外向けのイベント</td><td>2つを分ける線がこの図の要点である。内部のイベントは文脈の中だけで使い、外向けのイベントは他の文脈と通信するために使う。内部のモデルをそのまま外へ出すのは、よくある誤った設計である。</td></tr>
+<tr><td>メッセージの変換役</td><td>送り手も受け手も、この役がいることを知らないままでよい。横取りして差し替えるので、両端のコードは変わらない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">内部のモデルをそのまま外へ出さない</span></div>
+<p>内部のモデルのオブジェクトをそのまま外向けの言葉としてさらけ出すのは、ありがちな誤った設計である。業務イベントをそのまま送ってしまうのも同じ。内部だけで使うイベントと、他の文脈と通信するためのイベントを分ける。</p>
+</div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">状態を持つ変換</span></div>
+<p>複数のデータを集めて1つにまとめたり、さまざまな発生元からのデータを統合したりする場合。外部との入口を担う一般的な仕組みでは実現できず、保存する場所が要る。</p>
+<div class="node d3"><div class="node-h"><span class="nm">届いたデータを1つにまとめる</span></div>
+<p>複数の呼び出しをまとめて処理する、あるいは小さく分けて届いたメッセージを1つに統合する形。流れ続けるデータとして扱う仕組みでも、ためてから一括で処理する仕組みでも実現できる。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">複数の発生元のデータを統合する</span></div>
+<p>画面が複数のサービスからデータを集めて組み立てる状況が典型である。データを使う側の手前にモデル変換装置を置き、他の文脈から来るさまざまなデータを受け取って、1つのまとまりへ変換する。</p>
+</div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">集約どうしの連係</span></div>
+<p>集約が他の部品とつながるやり方として、業務イベントの発行がある。外部の部品はそれを購読して業務ロジックを動かす。</p>
+<div class="node d2"><div class="node-h"><span class="nm">送信箱</span></div>
+<p>集約の内部から業務イベントを直接発行してはいけない。理由は2つある——データベースへ書き込む前に外部へ発信してしまうと、受け取った側から見た状態とデータベースの状態が食い違う。そして書き込みに失敗したあとでも、発信は済んでしまっていて取り消せない。送信箱の形を使えば、業務イベントを確実に発行できる。</p>
+<p>送信箱が、状態とイベントを同じひと塊の変更として書き込む形を示す</p>
+<p>アプリケーションはメッセージを直接送らない。データベースへ一緒に書き、別の役が読み出して送る。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;アプリケーション&quot;]
+    n1[&quot;データベース&quot;]
+    n2[&quot;中継する役&quot;]
+    n3[&quot;メッセージの通信基盤&quot;]
+    n0 --&gt;|&quot;状態とイベントを、ひと塊の変更として書く&quot;| n1
+    n1 --&gt;|&quot;まだ送っていないイベントを読む&quot;| n2
+    n2 --&gt;|&quot;送る&quot;| n3
+    n2 --&gt;|&quot;送った印をつける&quot;| n1
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>アプリケーションからデータベース</td><td>この1本がひと塊の変更になっていることが、この形が成り立つ唯一の条件である。状態だけ書けてイベントが書けない、という中途半端な結果が起きない。</td></tr>
+<tr><td>アプリケーション</td><td>メッセージの通信基盤へ直接つながる線が無い。描き忘れではなく、集約の内部から直接発行してはいけないという規則がある。</td></tr>
+<tr><td>中継する役からメッセージの通信基盤</td><td>送ったあとに印をつけるまでのあいだに落ちると、同じイベントをもう一度送る。この形が保証するのは「少なくとも1回」までで、受け取る側は同じものが二度来ても平気なように作る必要がある。</td></tr>
+<tr><td>データベースから中継する役</td><td>読み方は2通りある。中継する役が繰り返し探しに行く形と、データベース側の変更の記録を追いかけて知る形。前者は探すための索引の設計が効いてくる。</td></tr>
+</tbody></table></div>
+<div class="node d3"><div class="node-h"><span class="nm">どこへ書くか</span></div>
+<p>表を持つデータベースなら、2つの表への書き込みをひと塊の変更にする（送信箱の表を作る）。そうでないデータベースなら、集約の記録そのものの中に発行すべき業務イベントを埋め込む。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">まだ送っていないイベントをどう読むか</span></div>
+<p>2通りある。中継する役が繰り返しデータベースを探しに行く形——この場合は探すための索引の設計が効いてくる。もう1つは、データベース側の変更の記録を追いかけて、記録の更新や追加を知る形。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">同じものが二度届く</span></div>
+<p>この形が保証するのは「少なくとも1回」までである。同じメッセージが二度送られる可能性があるので、受け取る側は、同じものが何度来ても結果が変わらないように作る。</p>
+</div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">サーガ</span></div>
+<p>複数の部品にまたがる、単純で一直線の業務の流れを実装する方法。長く続く業務の流れを指すが、「長く続く」は時間の長さではなく、多数のひと塊の変更から成るという意味である。関係する部品が発行する業務イベントを見つけ、それに続く指示を別の部品へ出す。途中で失敗したら、一貫性を保つために埋め合わせの動作を実行する。起動は暗黙で、特定のイベントを見つけたときに動き出す。</p>
+<p>サーガが、出来事を受けて次の指示を出すだけの形であることを示す</p>
+<p>3つの出来事それぞれに1つの処理が対応する。条件による枝分かれが1つも無い。拒否されたときの処理が、埋め合わせの動作にあたる。</p>
+<div class="blk"><pre>
+public class ShipmentDispatchSaga {
+    // 検知する3つの出来事
+    public void Process(ShipmentAccepted @event) {
+        var shipment = _repository.Load(@event.ShipmentId);
+        var manifest = shipment.GenerateManifest();
+        _carrierService.SubmitPickup(@event.ShipmentId, manifest);
+    }
+    public void Process(PickupConfirmed @event) {
+        var shipment = _repository.Load(@event.ShipmentId);
+        shipment.TrackPickupConfirmation(@event.ConfirmationId);
+        _repository.CommitChanges(shipment);
+    }
+    public void Process(PickupRejected @event) {
+        var shipment = _repository.Load(@event.ShipmentId);
+        shipment.TrackPickupRejection(@event.RejectionReason);  // 埋め合わせ
+        _repository.CommitChanges(shipment);
+    }
+}
+</pre></div>
+<div class="node d3"><div class="node-h"><span class="nm">一貫性の前提</span></div>
+<p>集約の境界の内側にあるデータは強く整合していると考えてよい。境界の外側にあるデータは、時間が経てば整合する。この違いが、サーガを使ってよい範囲を決める。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">境界の不備を補うために使わない</span></div>
+<p>集約の境界の設計が適切でないことを補うためにサーガを使ってはいけない。同じ集約に属するべき業務処理は、強く整合したデータを必要とするからである。サーガでつなぐと、その必要が満たされない。</p>
+</div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">プロセスマネージャー</span></div>
+<p>業務ロジックが中心となる、複雑な業務の流れを実装する方法。流れの状態を管理し、次に何をすべきかを決める中央の役にあたる。多くの場合、複数の集約の組み合わせとして実装する——状態を持つ集約でも、イベント履歴式の集約でもよい。</p>
+<p>プロセスマネージャーが、状態を持ちながら次の指示を出す形を示す</p>
+<p>明示的に起動され、自分の状態を保存しながら、複数の相手へ順に指示を出す。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;アプリケーション&quot;]
+    n1[&quot;プロセスマネージャー&quot;]
+    n2[&quot;状態の置き場&quot;]
+    n3[&quot;相手1&quot;]
+    n4[&quot;相手2&quot;]
+    n5[&quot;相手3&quot;]
+    n0 --&gt;|&quot;明示的に起動する&quot;| n1
+    n1 --&gt;|&quot;読み書きする&quot;| n2
+    n1 --&gt;|&quot;指示&quot;| n3
+    n1 --&gt;|&quot;指示&quot;| n4
+    n1 --&gt;|&quot;指示&quot;| n5
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>アプリケーションからプロセスマネージャー（明示的に起動する）</td><td>サーガとの決定的な違いがこの1本である。サーガは特定のイベントを見つけて勝手に動き出すが、こちらは誰かが始めると決めて起動する。特定の出来事と結びついていない。</td></tr>
+<tr><td>状態の置き場</td><td>サーガにはこれが無い。どこまで進んだかを覚えている必要があるかどうかが、2つを分ける実装上の違いになる。</td></tr>
+<tr><td>相手1／相手2／相手3</td><td>3つ並んでいるが、同時に指示を出すという意味ではない。どれへいつ指示を出すかを決めるのがプロセスマネージャーの仕事であり、そこに業務ロジックが入る。</td></tr>
+</tbody></table></div>
+<div class="node d3"><div class="node-h"><span class="nm">サーガとの違い</span></div>
+<p>4つの観点で分かれる。経験則として、サーガの実装で条件による枝分かれが要りはじめたら、それはおそらくプロセスマネージャーである。</p>
+<p>サーガとプロセスマネージャーの違いを4つの観点で並べる</p>
+<p>どれか1つでも右側に当てはまるなら、プロセスマネージャーとして作るほうがよい。</p>
+<div class="tablewrap"><table><thead><tr><th>観点</th><th>サーガ</th><th>プロセスマネージャー</th></tr></thead><tbody>
+<tr><td>複雑さ</td><td>単純・一直線</td><td>複雑（業務ロジックが中心）</td></tr>
+<tr><td>起動</td><td>特定の出来事を見つけて勝手に動き出す</td><td>明示的に起動する（特定の出来事と結びつかない）</td></tr>
+<tr><td>状態</td><td>持たない</td><td>必ず持ち、保存する</td></tr>
+<tr><td>枝分かれ</td><td>要らない</td><td>条件による枝分かれが要る</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">5つの形の対比</span></div>
+<p>つなぎ方が3つ、業務の流れの作り方が2つ。後者2つの土台になるのは、業務イベントへの非同期な応答と指示の発行の仕組み、つまり送信箱である。</p>
+<p>この章で扱う5つの形を、用途で並べる</p>
+<p>前半3つはつなぎ方、後半2つは複数の文脈にまたがる業務の流れの作り方である。</p>
+<div class="tablewrap"><table><thead><tr><th>形</th><th>用途</th></tr></thead><tbody>
+<tr><td>モデルの変換（状態なし）</td><td>区切られた文脈のあいだでモデルを変換する（同期は代理役／非同期はメッセージの変換役）</td></tr>
+<tr><td>モデルの変換（状態あり）</td><td>まとめる・統合するなど、覚えておく必要がある変換</td></tr>
+<tr><td>送信箱</td><td>集約の業務イベントを外部へ確実に発行する（少なくとも1回）</td></tr>
+<tr><td>サーガ</td><td>複数の部品にまたがる、単純で一直線の業務の流れ</td></tr>
+<tr><td>プロセスマネージャー</td><td>複雑な業務ロジックを持つ、長く続く業務の流れ</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">サーガかプロセスマネージャーか</span></div>
+<p>業務の流れに条件による枝分かれが要るかどうかで決まる。</p>
+<p>サーガとプロセスマネージャーのどちらかを、業務の流れの複雑さで決める</p>
+<p>分かれ目は1つ。流れの中で条件による枝分かれが要るかどうか。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;業務の流れに条件による枝分かれが要るか&quot;]
+    n1[&quot;プロセスマネージャー&quot;]
+    n2[&quot;サーガ&quot;]
+    n0 --&gt;|&quot;要る&quot;| n1
+    n0 --&gt;|&quot;要らない（出来事と指示が1対1）&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>業務の流れに条件による枝分かれが要るか</td><td>実装を書き始めてから気づくことが多い問いである。サーガとして書いていて条件分岐が要りはじめたら、それはおそらくプロセスマネージャーだ、というのが経験則になっている。</td></tr>
+<tr><td>サーガ</td><td>この終点を選ぶ前に、もう1つ確かめることがある——集約の境界の設計が適切でないことを補うために使おうとしていないか。そうであれば、サーガではなく集約の境界を直す。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>部品どうしをつなぐときによく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">集約の内部から業務イベントを直接発行する</span></div>
+<p>データベースへ書き込む前に発行すると、状態が食い違う。書き込みに失敗したあとでも発行済みになり、取り消せない。送信箱の形を使う。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">内部のモデルをそのまま外向けのイベントとして送る</span></div>
+<p>区切られた文脈の内部の実装が外へ漏れる。業務イベントを外向けの言葉へ変換してから送る。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">集約の境界の不備をサーガで補う</span></div>
+<p>本来1つの集約に閉じるべき処理をサーガでつなごうとする設計は失敗する。集約の境界を見直す。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅴ. 置き換えたもの</h2>
+  <p class="narrow">この本は書き起こし版に<strong>実在の製品名が12個</strong>並んでいました。これまでで最多です。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書き起こし版</th><th>置き換え先</th><th>保った内容</th></tr></thead>
+      <tbody>
+        <tr><td>外部との入口を担う製品 ×5</td><td>「外部との入口を担う一般的な仕組み」</td><td>低い費用で実現できること、独立した文脈として立てられること</td></tr>
+        <tr><td>データを流し続ける製品 ×2 / ためて処理する製品 ×3</td><td>「流れ続けるデータとして扱う仕組み／ためてから一括で処理する仕組み」</td><td>2通りのやり方があるという分岐</td></tr>
+        <tr><td>変更の記録を追う仕組みの製品 ×2</td><td>「データベース側の変更の記録を追いかける形」</td><td>繰り返し探す形との対比</td></tr>
+        <tr><td>広告キャンペーンの掲載（サーガのコード）</td><td>配送の集荷手配</td><td>3つの出来事に1対1で処理が対応し、<strong>条件による枝分かれが1つも無い</strong>という構造</td></tr>
+        <tr><td>画面向けの中継層を指す略語</td><td>「画面が複数のサービスからデータを集めて組み立てる状況」</td><td>典型例としての位置づけ</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>機械で確認しました</h3>
+    <p>実在の製品名12個と書籍の実例（広告キャンペーン）を grep して<strong>0件</strong>。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅵ. 11本目までの推移</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
+      <tbody>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
+        <tr><td>ubiquitous-language</td><td>99</td><td>231</td><td>177</td></tr>
+        <tr><td>design-heuristics</td><td>120</td><td>310</td><td>203</td></tr>
+        <tr><td>architecture-patterns</td><td>104</td><td>349</td><td>268</td></tr>
+        <tr><td>event-sourced-domain-model</td><td>107</td><td>501</td><td>408</td></tr>
+        <tr><td>context-integration</td><td>105</td><td>352</td><td>250</td></tr>
+        <tr><td><strong>communication</strong></td><td><strong>114</strong></td><td><strong>303</strong></td><td><strong>234</strong></td></tr>
+        <tr><td><strong>11本の合計</strong></td><td><strong>1,184</strong></td><td><strong>3,356</strong></td><td><strong>2,977</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow"><strong>11 / 19本。</strong>残り8本・約1,750行です。<strong>設計編（第4〜10章）がこれで揃いました。</strong></p>
+</section>
+
+<footer>
+  旧要約版114行・書き起こし版234行・変換後303行（描画結果の実測）。<br>
+  実在の製品名12個は役割の説明へ、実例は架空の業務へ置き換えた。図が示す位置関係と、描かれていない線の意味は保っている。<br>
+  プレビューは描画物から機械で生成した（手で書き写すと取りこぼすため）。
+</footer>
+
+</div>

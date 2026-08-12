@@ -1,0 +1,525 @@
+<title>Mermaidの17種を、Waffleで描く</title><style>
+  :root{
+    --paper:#EDF0F3; --surface:#FFF; --surface-2:#F5F7F9;
+    --ink:#171B23; --ink-soft:#4B5563; --ink-faint:#79828F;
+    --rule:#C3CAD2; --rule-soft:#E4E9EE;
+    --warn:#9A4A21; --warn-bg:#F7EAE2;
+    --acc:#16636B;  --acc-bg:#E2EFF0;
+    --tone-0:#16636B; --tone-1:#9A4A21; --tone-2:#7A4368; --tone-3:#8A8F98;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
+    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
+    --rule:#2E3742; --rule-soft:#242C37;
+    --warn:#E0A17A; --warn-bg:#2E211A; --acc:#6BC0C7; --acc-bg:#132A2C;
+    --tone-0:#6BC0C7; --tone-1:#E0A17A; --tone-2:#D19CC0; --tone-3:#767E8A;
+  }}
+
+  /* ── 箱（どの型でも共通） ───────────────────── */
+  .b{background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;
+     padding:.42rem .8rem;font-size:.84rem;line-height:1.5;
+     display:flex;flex-direction:column;gap:.1rem;align-items:center;
+     justify-self:center;align-self:center;white-space:nowrap;}
+  .b__sub{font-size:.68rem;color:var(--ink-faint);}
+  .b__row{font-size:.72rem;color:var(--ink-soft);align-self:flex-start;}
+  .b:has(.b__row){align-items:flex-start;padding:.5rem .8rem;}
+  .b:has(.b__row) .b__name{align-self:center;font-weight:600;
+     border-bottom:1px solid var(--rule-soft);width:100%;text-align:center;padding-bottom:.3rem;margin-bottom:.25rem;}
+  .b--focus{background:var(--acc-bg);border-color:var(--acc);color:var(--acc);font-weight:600;}
+  .b--added{border-color:var(--acc);color:var(--acc);}
+  .b--removed{border-style:dashed;color:var(--ink-faint);text-decoration:line-through;}
+  .b--start{background:var(--ink);border-color:var(--ink);width:.7rem;height:.7rem;padding:0;border-radius:50%;}
+  .b--end{border-width:3px;border-style:double;width:.9rem;height:.9rem;padding:0;border-radius:50%;}
+
+  /* ── 点と線 ── 段と列だけで組む。pxは一つも無い ── */
+  .graph{display:grid;grid-template-columns:repeat(var(--cols),auto);
+         column-gap:1.1rem;justify-content:center;align-items:center;}
+  .graph > i.w{background:var(--rule);position:relative;}
+  /* 矢印の先 ── 向きは意味なので、線だけでは足りない */
+  .w--head-down{margin-bottom:9px;}
+  .w--head-down::after{content:"";position:absolute;bottom:-9.5px;left:50%;
+      transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--rule);}
+  .w--head-left{margin-left:10px;}
+  .w--head-left::after{content:"";position:absolute;left:-10.5px;top:50%;
+      transform:translateY(-50%);border:5px solid transparent;border-right-color:var(--rule);}
+  .w--back.w--head-left::after{border-right-color:var(--warn);}
+  .w--back.w--head-down::after{border-top-color:var(--warn);}
+  .w--v{width:1px;justify-self:center;align-self:stretch;min-height:1.6rem;}
+  .w--h{height:1px;align-self:center;justify-self:stretch;}
+  .w--back{background:var(--warn);opacity:.6;}
+  .w__label{font-size:.66rem;color:var(--ink-faint);justify-self:center;
+            background:var(--paper);padding:0 .3rem;z-index:2;white-space:nowrap;}
+  .w__label--start{align-self:start;} .w__label--end{align-self:end;}
+  /* 囲みは中身を包む。graph の align-items:center を受けると高さが潰れる */
+  .gp{border:1.2px dashed var(--acc);border-radius:9px;position:relative;z-index:0;
+      align-self:stretch;justify-self:stretch;margin:-.55rem -.7rem;}
+  .gp__label{position:absolute;top:-.55rem;left:.7rem;background:var(--paper);
+             padding:0 .3rem;font-size:.62rem;color:var(--acc);white-space:nowrap;}
+  .graph > .b{z-index:1;}
+
+  /* ── 対比 ─────────────────────────────── */
+  .cmp{display:flex;gap:1.8rem;align-items:stretch;flex-wrap:nowrap;}
+  .panel{flex:0 0 auto;display:flex;flex-direction:column;gap:.5rem;}
+  .panel--before{--tone:var(--warn);--tone-bg:var(--warn-bg);}
+  .panel--after{--tone:var(--acc);--tone-bg:var(--acc-bg);}
+  .panel__label{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;color:var(--tone);}
+  .panel__body{display:flex;gap:.7rem;align-items:stretch;flex:1;}
+  .panel__note{font-size:.74rem;color:var(--ink-faint);margin:0;}
+  .frame{border:1.3px dashed var(--tone);border-radius:10px;padding:1.4rem 1rem 1.1rem;
+         position:relative;display:flex;justify-content:center;flex:1;}
+  .frame--transcript{border:none;padding:0;}
+  .frame__label{position:absolute;top:-.58rem;left:.8rem;padding:0 .35rem;
+                background:var(--paper);font-size:.64rem;color:var(--tone);white-space:nowrap;}
+  .link{align-self:center;display:flex;flex-direction:column;align-items:center;gap:.1rem;
+        color:var(--tone);font-size:.66rem;flex:none;}
+  .link i{width:2.6rem;height:0;position:relative;display:block;}
+  .link i::before{content:"";position:absolute;left:0;top:-4.5px;
+                  border:4.5px solid transparent;border-right-color:currentColor;}
+  .link i::after{content:"";position:absolute;left:9px;right:0;top:0;
+                 border-top:1.3px dashed currentColor;}
+
+  /* ── 木 ─────────────────────────────── */
+  .tr{display:flex;flex-direction:column;align-items:center;}
+  .kids{--gap:1rem;--stem:.7rem;display:flex;gap:var(--gap);position:relative;
+        margin-top:calc(var(--stem)*2);}
+  .limb{position:relative;display:flex;flex-direction:column;align-items:center;}
+  .tw{position:absolute;background:var(--rule);}
+  .tw--stem{top:calc(var(--stem)*-2);left:50%;width:1px;height:var(--stem);}
+  .tw--drop{top:calc(var(--stem)*-1);left:50%;width:1px;height:var(--stem);}
+  .tw--bar{top:calc(var(--stem)*-1);height:1px;
+           left:calc(var(--gap)/-2);right:calc(var(--gap)/-2);}
+  .limb:first-of-type .tw--bar{left:50%;}
+  .limb:last-of-type .tw--bar{right:50%;}
+  .limb:only-of-type .tw--bar{display:none;}
+
+  /* ── 操作と返り値 ───────────────────────── */
+  .win{flex:1;border-radius:9px;overflow:hidden;border:1px solid #2A313C;background:#151A22;}
+  .win__bar{display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem;background:#1E242E;}
+  .win__bar span{font-family:var(--mono);font-size:.66rem;color:#8B95A3;}
+  .win__dots{width:2.4rem;height:.55rem;flex:none;display:block;
+    background:radial-gradient(circle 3.5px at 4px 50%,#E06C60 98%,transparent 0),
+               radial-gradient(circle 3.5px at 16px 50%,#E0B341 98%,transparent 0),
+               radial-gradient(circle 3.5px at 28px 50%,#5FB37A 98%,transparent 0);}
+  .win__body{margin:0;padding:.8rem .9rem;background:none;border:none;
+             font-family:var(--mono);font-size:.68rem;line-height:1.7;color:#C8D0DA;overflow-x:auto;}
+  .ln{display:block;white-space:pre;}
+  .ln--comment{color:#6E7885;} .ln--command{color:#E3E8EF;}
+  .ln--output{color:#9FB6C4;margin:.4rem 0;} .ln--note{color:#6BC0C7;margin-top:.4rem;}
+
+  /* ── 一覧の差分 ─────────────────────────── */
+  .ls{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.28rem;}
+  .it{font-size:.8rem;padding:.26rem .7rem .26rem 1.45rem;border-radius:5px;
+      background:var(--surface-2);border:1px solid var(--rule);position:relative;white-space:nowrap;}
+  .it::before{position:absolute;left:.5rem;font-family:var(--mono);font-size:.68rem;color:var(--ink-faint);}
+  .it--unchanged::before{content:"・";}
+  .it--added{border-color:var(--acc);color:var(--acc);} .it--added::before{content:"＋";color:var(--acc);}
+  .it--removed{border-style:dashed;color:var(--ink-faint);} .it--removed::before{content:"−";}
+
+  /* ── 帯 ─────────────────────────────── */
+  .lanes{display:flex;flex-direction:column;gap:.35rem;width:min(34rem,100%);}
+  .lane{display:flex;align-items:center;gap:.7rem;}
+  .lane__name{font-size:.74rem;color:var(--ink-soft);min-width:6rem;text-align:right;flex:none;}
+  .lane__track{flex:1;display:grid;grid-template-columns:repeat(var(--span),1fr);
+               gap:2px;background:var(--rule-soft);border-radius:5px;padding:2px;}
+  .bar{height:1.2rem;border-radius:3px;background:var(--tone-0);display:flex;align-items:center;
+       justify-content:center;font-size:.64rem;color:#fff;overflow:hidden;}
+  .bar--warn{background:var(--tone-1);} .bar--soft{background:var(--tone-3);}
+
+  /* ── 量 ─────────────────────────────── */
+  .am{display:flex;gap:1.6rem;align-items:center;flex-wrap:wrap;}
+  .am__ring{width:6.4rem;height:6.4rem;border-radius:50%;display:grid;place-items:center;flex:none;}
+  .am__ring span{width:4rem;height:4rem;border-radius:50%;background:var(--paper);
+                 display:grid;place-items:center;font-size:.76rem;font-weight:600;}
+  .am__list{display:flex;flex-direction:column;gap:.35rem;min-width:15rem;flex:1;}
+  .am__row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+           gap:.5rem;font-size:.74rem;}
+  .am__chip{width:.6rem;height:.6rem;border-radius:2px;display:block;}
+  .am__row b{font-variant-numeric:tabular-nums;font-weight:600;}
+  .am__bar{grid-column:1/-1;height:.32rem;border-radius:99px;display:block;}
+
+  /* ── 分類 ─────────────────────────────── */
+  .mx{display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;
+      gap:.5rem;align-items:center;}
+  .mx__y{writing-mode:vertical-rl;font-size:.68rem;color:var(--ink-faint);white-space:nowrap;}
+  .mx__x{grid-column:2;font-size:.68rem;color:var(--ink-faint);text-align:center;}
+  .mx__plot{position:relative;height:13rem;border-left:1px solid var(--rule);
+            border-bottom:1px solid var(--rule);background:
+            linear-gradient(to right,transparent 49.7%,var(--rule-soft) 49.7% 50.3%,transparent 50.3%),
+            linear-gradient(to top,transparent 49.7%,var(--rule-soft) 49.7% 50.3%,transparent 50.3%);}
+  .mx__q{position:absolute;font-size:.64rem;color:var(--ink-faint);}
+  .mx__q--0{right:.4rem;top:.3rem;} .mx__q--1{left:.4rem;top:.3rem;}
+  .mx__q--2{left:.4rem;bottom:.3rem;} .mx__q--3{right:.4rem;bottom:.3rem;}
+  .pt{position:absolute;transform:translate(-50%,50%);background:var(--surface);
+      border:1px solid var(--acc);color:var(--acc);border-radius:5px;
+      padding:.16rem .5rem;font-size:.68rem;white-space:nowrap;}
+
+  /* ── やり取り ───────────────────────────── */
+  .ex{display:grid;grid-template-columns:repeat(var(--who),1fr);
+      row-gap:.5rem;align-items:center;position:relative;}
+  .ex__who{justify-self:center;background:var(--surface-2);border:1px solid var(--rule);
+           border-radius:6px;padding:.35rem .8rem;font-size:.76rem;white-space:nowrap;z-index:1;}
+  .ex__life{justify-self:center;width:1px;background:var(--rule);align-self:stretch;}
+  .ex__msg{position:relative;display:flex;justify-content:center;padding-bottom:.35rem;
+           border-bottom:1.2px solid var(--ink-faint);}
+  .ex__msg span{font-size:.7rem;color:var(--ink-soft);background:var(--paper);padding:0 .4rem;}
+  .ex__msg--return{border-bottom-style:dashed;}
+  .ex__msg::after{content:"";position:absolute;right:-1px;bottom:-4px;
+                  border:4px solid transparent;border-left-color:var(--ink-faint);}
+  .ex__msg--rtl::after{right:auto;left:-1px;border-left-color:transparent;border-right-color:var(--ink-faint);}
+  .ex__note{justify-self:center;background:var(--warn-bg);border:1px solid var(--warn);
+            color:var(--warn);border-radius:5px;padding:.2rem .6rem;font-size:.68rem;}
+
+  /* ── 箱組み ───────────────────────────── */
+  .bks{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:.5rem;}
+  .bk{background:var(--surface-2);border:1px solid var(--rule);border-radius:6px;
+      padding:.6rem .8rem;font-size:.78rem;text-align:center;}
+  .bk--focus{background:var(--acc-bg);border-color:var(--acc);color:var(--acc);}
+
+  :root{
+    --fig-line:var(--rule);
+    --fig-line-w:1.2px;
+    --fig-sym:var(--ink-faint);
+    --fig-sym-w:1.4px;
+    --fig-box-fill:var(--surface-2);
+    --fig-box-stroke:var(--rule);
+    --fig-box-radius:5px;
+    --fig-accent:var(--acc);
+    --fig-accent-bg:var(--acc-bg);
+    --fig-warn:var(--warn);
+    --fig-warn-bg:var(--warn-bg);
+    --fig-text:var(--ink);
+    --fig-text-soft:var(--ink-soft);
+    --fig-text-faint:var(--ink-faint);
+    --fig-font:var(--sans);
+    --fig-font-mono:var(--mono);
+    --fig-size-name:12px;
+    --fig-size-row:11px;
+    --fig-size-edge:10px;
+    --fig-size-small:9px;
+    --fig-group-stroke:var(--acc);
+    --fig-group-dash:5 4;
+    --fig-track:var(--rule-soft);
+    --fig-tone-0:var(--acc);
+    --fig-tone-1:var(--warn);
+    --fig-tone-2:var(--tone-2);
+    --fig-tone-3:var(--tone-3);
+    --fig-on-tone:#FFFFFF;
+  }
+
+  .wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
+  .wf-node rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
+  .wf-node text{fill:var(--fig-text);font-family:var(--fig-font);
+                font-size:var(--fig-size-name);text-anchor:middle}
+  .wf-node--focus rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+  .wf-node--focus text{fill:var(--fig-accent);font-weight:600}
+  .wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
+  .wf-arrow{fill:var(--fig-line)}
+  .wf-label-bg{fill:var(--fig-box-fill);stroke:none}
+  .wf-edge-label{fill:var(--fig-text-faint);font-family:var(--fig-font);
+                 font-size:var(--fig-size-edge);text-anchor:middle}
+  .wf-end-word{fill:var(--fig-text-soft);font-family:var(--fig-font);
+               font-size:var(--fig-size-small)}
+  .wf-group{fill:none;stroke:var(--fig-group-stroke);stroke-width:1.1;
+            stroke-dasharray:var(--fig-group-dash);opacity:.75}
+  .wf-group-label{fill:var(--fig-group-stroke);font-family:var(--fig-font);
+                  font-size:var(--fig-size-edge)}
+  .wf-node--start circle{fill:var(--fig-text);stroke:none}
+  .wf-node--end circle{fill:var(--fig-text);stroke:none}
+  .wf-node--end .wf-ring{fill:none;stroke:var(--fig-text);stroke-width:1.4}
+  .wf-sym path{stroke:var(--fig-sym);stroke-width:var(--fig-sym-w);fill:none}
+  .wf-sym .wf-fill{fill:var(--fig-sym)}
+  .wf-sym .wf-hollow{fill:var(--fig-box-fill);stroke:var(--fig-sym);stroke-width:var(--fig-sym-w)}
+  .wf-rule{stroke:var(--fig-box-stroke)}
+  .wf-node .wf-head{fill:var(--fig-text);font-family:var(--fig-font);
+                    font-size:var(--fig-size-name);font-weight:600;text-anchor:middle}
+  .wf-node .wf-row{fill:var(--fig-text-soft);font-family:var(--fig-font);
+                   font-size:var(--fig-size-row);text-anchor:start}
+
+  .c-fig{display:block;max-width:100%;height:auto}
+  .c-box{fill:var(--surface-2);stroke:var(--rule)}
+  .c-box--focus{fill:var(--acc-bg);stroke:var(--acc)}
+  .c-name{fill:var(--ink);font-family:var(--sans);font-size:12px}
+  .c-label{fill:var(--ink-soft);font-family:var(--sans);font-size:11px}
+  .c-num{fill:var(--ink);font-family:var(--mono);font-size:11px}
+  .c-life{stroke:var(--rule);stroke-dasharray:3 3}
+  .c-active{fill:var(--acc-bg);stroke:var(--acc);stroke-width:1}
+  .c-msg{stroke:var(--ink-faint);stroke-width:1.2}
+  .c-msg--return{stroke-dasharray:4 3}
+  .c-arrow{fill:var(--ink-faint)}
+  .c-msg-t{fill:var(--ink-soft);font-family:var(--sans);font-size:10px}
+  .c-note{fill:var(--warn-bg);stroke:var(--warn)}
+  .c-note-t{fill:var(--warn);font-family:var(--sans);font-size:10px}
+  .c-frame{fill:none;stroke:var(--acc);stroke-dasharray:4 3;opacity:.7}
+  .c-frame-tab{fill:var(--acc-bg);stroke:var(--acc)}
+  .c-divider{stroke:var(--acc);stroke-dasharray:4 3;opacity:.7}
+  .c-tab-t{fill:var(--acc);font-family:var(--mono);font-size:9px}
+  .c-track{fill:var(--rule-soft)}
+  .c-bar{fill:var(--acc)}
+  .c-bar--warn{fill:var(--warn)} .c-bar--soft{fill:var(--tone-3)}
+  .c-bar-t{fill:var(--fig-on-tone);font-family:var(--sans);font-size:10px}
+  .c-axis{stroke:var(--rule)} .c-grid{stroke:var(--rule-soft)}
+  .c-tick{stroke:var(--rule)}
+  .c-tick-t{fill:var(--ink-faint);font-family:var(--sans);font-size:10px}
+  .c-axis-t{fill:var(--ink-faint);font-family:var(--sans);font-size:10px}
+  .c-arc{fill:none;stroke-width:24}
+  .c-centre{fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600}
+  .c-chip{stroke:none}
+  .c-ribbon{opacity:.45;stroke:none}
+  .c-node{fill:var(--ink-faint)}
+  .c-quad{fill:var(--acc-bg);opacity:.4}
+  .c-quad-t{fill:var(--ink-faint);font-family:var(--sans);font-size:10px}
+  .c-dot{fill:var(--acc)}
+  .c-point-t{fill:var(--acc);font-family:var(--sans);font-size:10px}
+  .c-tone-0{stroke:var(--acc);fill:var(--acc)}
+  .c-tone-1{stroke:var(--warn);fill:var(--warn)}
+  .c-tone-2{stroke:var(--fig-tone-2);fill:var(--fig-tone-2)}
+  .c-tone-3{stroke:var(--tone-3);fill:var(--tone-3)}
+  .c-arc.c-tone-0,.c-arc.c-tone-1,.c-arc.c-tone-2,.c-arc.c-tone-3{fill:none}
+
+  *{box-sizing:border-box}
+  body{margin:0;padding:clamp(1.5rem,4vw,3rem) clamp(1rem,3vw,2rem) 5rem;
+       background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.8}
+  main{max-width:74rem;margin:0 auto;display:flex;flex-direction:column;gap:1.6rem}
+  header.top{display:flex;flex-direction:column;gap:.8rem;margin-bottom:.6rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;
+           text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-size:clamp(1.6rem,4vw,2.2rem);line-height:1.35;font-weight:600;margin:0}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:40rem}
+  .stats{display:flex;flex-wrap:wrap;gap:2rem;padding-top:1rem;border-top:1px solid var(--rule)}
+  .stat{display:flex;flex-direction:column}
+  .stat b{font-family:var(--mono);font-size:1.4rem;font-weight:600;line-height:1.2}
+  .stat span{font-size:.76rem;color:var(--ink-faint)}
+  .note{border-left:3px solid var(--acc);background:var(--surface);padding:1rem 1.2rem;
+        border-radius:0 10px 10px 0;display:flex;flex-direction:column;gap:.5rem}
+  .note.warn{border-left-color:var(--warn);background:var(--warn-bg)}
+  .note .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;
+           text-transform:uppercase;color:var(--ink-faint)}
+  .note p{margin:0;max-width:46rem;font-size:.88rem}
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+        padding:1rem 1.1rem 1.3rem;display:flex;flex-direction:column;gap:.8rem}
+  .card header{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap}
+  .card h2{font-family:var(--mono);font-size:.9rem;margin:0}
+  .fam{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;padding:.08rem .4rem;
+       border-radius:4px;border:1px solid currentColor}
+  .fam--graph{color:var(--acc)} .fam--chart{color:var(--warn)}
+  .what{font-size:.78rem;color:var(--ink-soft)}
+  .pair{display:grid;gap:1rem}
+  @media (min-width:62rem){.pair{grid-template-columns:1fr 1fr}}
+  .half{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+  .tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:var(--ink-faint)}
+  .tag.mine{color:var(--acc)}
+  .stage{background:var(--paper);border-radius:8px;padding:1rem .8rem;overflow-x:auto;
+         min-height:5rem;display:flex;align-items:center;justify-content:center}
+  .stage pre.mermaid{background:none;border:none;padding:0;margin:0}
+  .fail{color:var(--warn);font-size:.85rem}
+  table{border-collapse:collapse;width:100%;font-size:.86rem}
+  th,td{text-align:left;vertical-align:top;padding:.55rem .7rem;
+        border-bottom:1px solid var(--rule-soft);line-height:1.65}
+  thead th{font-size:.7rem;color:var(--ink-faint);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  code{font-family:var(--mono);font-size:.86em;background:var(--surface-2);
+       padding:.1em .38em;border-radius:4px}
+  footer{border-top:1px solid var(--rule);padding-top:1.2rem;font-size:.8rem;
+         color:var(--ink-faint);display:flex;flex-direction:column;gap:.4rem}
+</style><main><header class="top">
+  <p class="eyebrow">実現可能性の検証 — 完成イメージ</p>
+  <h1>Mermaidの17種を、Waffleで描く</h1>
+  <p class="lede">左がMermaid、右がWaffleの描画。どちらもこのページで実際に描かれたもので、画像の貼り付けではない。右はすべて自前のSVGで、見た目はこちらのCSSが決めている。</p>
+  <div class="stats">
+    <div class="stat"><b>17 / 17</b><span>描けた種類</span></div>
+    <div class="stat"><b>0</b><span>追加インストール</span></div>
+    <div class="stat"><b>0</b><span>閲覧時のJS（Waffle側）</span></div>
+  </div>
+</header>
+
+<div class="note">
+  <span class="k">この検証が答えていること</span>
+  <p><b>Mermaidと同じ見た目を作ることが目的ではない。</b>Mermaidが表せることは下限であって上限ではなく、SVGにCSSを当てられる以上そこは当然に届く、というのがこの検証の前提だった。確かめたのは<b>その前提が本当に成り立つか</b>である。</p>
+</div>
+
+<div class="note">
+  <span class="k">2つの描き方</span>
+  <p><b>点と線</b>（7種）は Graphviz に座標と経路を解かせ、<b>数値だけ</b>を受け取ってSVGを自前で組む。Graphvizの語彙（クラス名・DOT・SVG）は1つも越えてこない。<b>図表</b>（10種）はGraphvizを通さない。値から位置が一意に決まるので、算術だけで描ける。</p>
+</div>
+<section class="card"><header><h2>flowchart</h2><span class="fam fam--graph">点と線</span><span class="what">順序と分岐</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+flowchart LR
+    investigate[&quot;調べる&quot;]
+    decide[&quot;決める&quot;]
+    handoff[&quot;引き継ぐ&quot;]
+    build[&quot;作る&quot;]
+    investigate --&gt; decide
+    decide --&gt; handoff
+    handoff --&gt; build
+    build --&gt;|&quot;反証が出たら&quot;| investigate</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="wf-fig" viewBox="0 0 450 65" width="450" height="65" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><path class="wf-edge" d="M72.2,40.1 C85.4,36.3 100.7,32.0 114.7,28.1 L125.7,25.0" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M198.2,15.0 C211.2,15.0 226.3,15.0 240.6,15.0 L251.8,15.0" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M336.3,26.7 C349.9,30.5 365.1,34.8 378.7,38.6 L389.7,41.7" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M389.7,50.0 C323.7,50.0 163.1,50.0 83.4,50.0 L72.3,50.0" marker-end="url(#wf-arrow)"/><rect class="wf-label-bg" x="198.0" y="42.0" width="66.0" height="14" rx="3"/><text class="wf-edge-label" x="231.0" y="53.0">反証が出たら</text><g class="wf-node wf-node--plain"><rect x="0.0" y="35.0" width="72.0" height="30.0" rx="5"/><text x="36.0" y="54.0">調べる</text></g><g class="wf-node wf-node--plain"><rect x="126.0" y="0.0" width="72.0" height="30.0" rx="5"/><text x="162.0" y="19.0">決める</text></g><g class="wf-node wf-node--plain"><rect x="252.0" y="0.0" width="84.0" height="30.0" rx="5"/><text x="294.0" y="19.0">引き継ぐ</text></g><g class="wf-node wf-node--focus"><rect x="390.0" y="35.0" width="60.0" height="30.0" rx="5"/><text x="420.0" y="54.0">作る</text></g></svg></div></div></div></section><section class="card"><header><h2>state</h2><span class="fam fam--graph">点と線</span><span class="what">状態と遷移</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+stateDiagram-v2
+    [*] --&gt; DRAFT: 骨格を作る
+    DRAFT --&gt; VALIDATED: 構造の整合を確かめる
+    VALIDATED --&gt; ACTIVE: 成果物として確定する
+    ACTIVE --&gt; DEPRECATED: 使うのをやめる
+    VALIDATED --&gt; DRAFT: 不備が見つかった</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="wf-fig" viewBox="0 0 495 30" width="495" height="30" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><path class="wf-edge" d="M16.2,15.0 C25.3,15.0 42.0,15.0 58.4,15.0 L69.6,15.0" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M143.2,27.0 C156.0,28.3 170.8,28.7 185.1,28.4 L196.4,28.0" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M196.4,2.0 C182.7,1.3 167.8,1.3 154.2,2.1 L143.2,3.0" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M295.6,15.0 C309.3,15.0 324.2,15.0 337.8,15.0 L349.0,15.0" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M425.1,15.0 C439.4,15.0 455.1,15.0 466.9,15.0 L478.3,15.0" marker-end="url(#wf-arrow)"/><rect class="wf-label-bg" x="29.9" y="7.0" width="26.0" height="14" rx="3"/><text class="wf-edge-label" x="42.9" y="18.0">骨格</text><rect class="wf-label-bg" x="156.8" y="20.7" width="26.0" height="14" rx="3"/><text class="wf-edge-label" x="169.8" y="31.7">整合</text><rect class="wf-label-bg" x="156.8" y="-6.7" width="26.0" height="14" rx="3"/><text class="wf-edge-label" x="169.8" y="4.3">不備</text><rect class="wf-label-bg" x="309.3" y="7.0" width="26.0" height="14" rx="3"/><text class="wf-edge-label" x="322.3" y="18.0">確定</text><rect class="wf-label-bg" x="438.7" y="7.0" width="26.0" height="14" rx="3"/><text class="wf-edge-label" x="451.7" y="18.0">廃止</text><g class="wf-node wf-node--start"><circle cx="7.9" cy="15.0" r="7"/></g><g class="wf-node wf-node--plain"><rect x="69.8" y="0.0" width="73.0" height="30.0" rx="5"/><text x="106.3" y="19.0">DRAFT</text></g><g class="wf-node wf-node--plain"><rect x="196.9" y="0.0" width="98.3" height="30.0" rx="5"/><text x="246.0" y="19.0">VALIDATED</text></g><g class="wf-node wf-node--focus"><rect x="349.1" y="0.0" width="75.6" height="30.0" rx="5"/><text x="386.9" y="19.0">ACTIVE</text></g><g class="wf-node wf-node--end"><circle cx="486.6" cy="15.0" r="7"/><circle class="wf-ring" cx="486.6" cy="15.0" r="11"/></g></svg></div></div></div></section><section class="card"><header><h2>class</h2><span class="fam fam--graph">点と線</span><span class="what">型と関連</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+classDiagram
+    class Document {
+      +documentId
+      +status
+      +validate()
+    }
+    class Block {
+      +blockType
+    }
+    Document &quot;1&quot; *-- &quot;多&quot; Block</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="wf-fig" viewBox="0 0 108 306" width="108" height="306" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><path class="wf-edge" d="M53.7,66.5 C53.7,79.2 53.7,94.2 53.7,108.4 L53.7,119.6" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M53.7,202.3 C53.7,216.0 53.7,231.3 53.7,244.6 L53.7,255.7" marker-end="url(#wf-arrow)"/><rect class="wf-label-bg" x="40.7" y="85.0" width="26.0" height="14" rx="3"/><text class="wf-edge-label" x="53.7" y="96.0">従う</text><rect class="wf-label-bg" x="-12.0" y="221.0" width="131.6" height="14" rx="3"/><text class="wf-edge-label" x="53.7" y="232.0">部品として持つ（0個以上）</text><g class="wf-node wf-node--plain"><rect x="3.2" y="-0.0" width="101.2" height="66.0" rx="5"/><line class="wf-rule" x1="3.2" y1="24.0" x2="104.3" y2="24.0"/><text class="wf-head" x="53.7" y="17.0">Schema</text><text class="wf-row" x="15.2" y="37.0">+ schemaRef</text><text class="wf-row" x="15.2" y="53.0">+ version</text></g><g class="wf-node wf-node--focus"><rect x="-0.0" y="120.0" width="107.5" height="82.0" rx="5"/><line class="wf-rule" x1="-0.0" y1="144.0" x2="107.5" y2="144.0"/><text class="wf-head" x="53.7" y="137.0">Document</text><text class="wf-row" x="12.0" y="157.0">+ documentId</text><text class="wf-row" x="12.0" y="173.0">+ status</text><text class="wf-row" x="12.0" y="189.0">+ validate()</text></g><g class="wf-node wf-node--plain"><rect x="4.7" y="256.0" width="98.1" height="50.0" rx="5"/><line class="wf-rule" x1="4.7" y1="280.0" x2="102.8" y2="280.0"/><text class="wf-head" x="53.7" y="273.0">Block</text><text class="wf-row" x="16.7" y="293.0">+ blockType</text></g></svg></div></div></div></section><section class="card"><header><h2>er</h2><span class="fam fam--graph">点と線</span><span class="what">実体と関連</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+erDiagram
+    DOCUMENT ||--o{ BLOCK : &quot;持つ&quot;
+    DOCUMENT }o--|| SCHEMA : &quot;従う&quot;</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="wf-fig" viewBox="0 0 265 276" width="265" height="276" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><path class="wf-edge" d="M114.2,84.2 C102.0,112.7 85.6,150.6 72.4,181.1 L67.9,191.6" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M150.0,84.2 C162.4,112.7 179.0,150.6 192.3,181.1 L196.9,191.6" marker-end="url(#wf-arrow)"/><rect class="wf-label-bg" x="50.3" y="129.9" width="81.5" height="14" rx="3"/><text class="wf-edge-label" x="91.1" y="140.9">持つ（0個以上）</text><rect class="wf-label-bg" x="132.7" y="129.9" width="81.5" height="14" rx="3"/><text class="wf-edge-label" x="173.4" y="140.9">従う（必ず1つ）</text><g class="wf-node wf-node--focus"><rect x="80.9" y="-0.0" width="102.2" height="84.0" rx="5"/><text x="132.0" y="46.0">DOCUMENT</text></g><g class="wf-node wf-node--plain"><rect x="0.0" y="192.0" width="100.0" height="84.0" rx="5"/><text x="50.0" y="238.0">BLOCK</text></g><g class="wf-node wf-node--plain"><rect x="165.0" y="192.0" width="100.0" height="84.0" rx="5"/><text x="215.0" y="238.0">SCHEMA</text></g></svg></div></div></div></section><section class="card"><header><h2>architecture</h2><span class="fam fam--graph">点と線</span><span class="what">区画と部品</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+architecture-beta
+    group inbound(cloud)[&quot;受け口&quot;]
+    service cli(server)[CLI] in inbound
+    service mcp(server)[MCP] in inbound
+    group app(cloud)[&quot;応用&quot;]
+    service uc(server)[&quot;ユースケース&quot;] in app
+    group domain(cloud)[&quot;領域&quot;]
+    service svc(server)[&quot;業務サービス&quot;] in domain
+    service model(server)[&quot;モデル&quot;] in domain
+    cli:R --&gt; L:uc
+    mcp:R --&gt; L:uc
+    uc:R --&gt; L:svc
+    svc:R --&gt; L:model</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="wf-fig" viewBox="0 0 204 345" width="204" height="345" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="wf-group" x="22.0" y="8.0" width="174.0" height="77.0" rx="8"/><text class="wf-group-label" x="32.0" y="21.0">受け口</text><rect class="wf-group" x="8.0" y="176.1" width="132.0" height="161.1" rx="8"/><text class="wf-group-label" x="18.0" y="189.1">領域</text><path class="wf-edge" d="M63.3,73.3 C65.1,84.9 67.7,101.5 69.9,115.4 L71.7,126.6" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M140.1,73.3 C127.9,85.8 109.9,104.2 95.8,118.7 L88.0,126.6" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M74.0,241.4 C74.0,252.9 74.0,269.5 74.0,283.4 L74.0,294.7" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M74.0,157.3 C74.0,168.9 74.0,185.5 74.0,199.4 L74.0,210.7" marker-end="url(#wf-arrow)"/><g class="wf-node wf-node--plain"><rect x="34.1" y="43.0" width="53.7" height="30.0" rx="5"/><text x="61.0" y="62.0">CLI</text></g><g class="wf-node wf-node--plain"><rect x="123.5" y="43.0" width="61.0" height="30.0" rx="5"/><text x="154.0" y="62.0">MCP</text></g><g class="wf-node wf-node--plain"><rect x="20.0" y="211.0" width="108.0" height="30.0" rx="5"/><text x="74.0" y="230.1">業務サービス</text></g><g class="wf-node wf-node--plain"><rect x="38.0" y="295.1" width="72.0" height="30.0" rx="5"/><text x="74.0" y="314.1">モデル</text></g><g class="wf-node wf-node--focus"><rect x="20.0" y="127.0" width="108.0" height="30.0" rx="5"/><text x="74.0" y="146.0">ユースケース</text></g></svg></div></div></div></section><section class="card"><header><h2>requirement</h2><span class="fam fam--graph">点と線</span><span class="what">要求と充足</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+requirementDiagram
+    requirement &quot;鍵の一意性&quot; {
+        id: &quot;REQ-001&quot;
+        text: &quot;同じ鍵を二度作らない&quot;
+        risk: high
+        verifymethod: test
+    }
+
+    element &quot;検証ユースケース&quot; {
+        type: &quot;usecase&quot;
+    }
+
+    &quot;検証ユースケース&quot; - satisfies -&gt; &quot;鍵の一意性&quot;</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="wf-fig" viewBox="0 0 276 114" width="276" height="114" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><path class="wf-edge" d="M79.6,30.3 C91.5,42.8 109.0,61.2 122.7,75.7 L130.3,83.6" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M208.4,30.3 C196.5,42.8 179.0,61.2 165.3,75.7 L157.7,83.6" marker-end="url(#wf-arrow)"/><rect class="wf-label-bg" x="86.9" y="49.0" width="36.0" height="14" rx="3"/><text class="wf-edge-label" x="104.9" y="60.0">満たす</text><rect class="wf-label-bg" x="160.0" y="49.0" width="46.0" height="14" rx="3"/><text class="wf-edge-label" x="183.0" y="60.0">確かめる</text><g class="wf-node wf-node--focus"><rect x="96.0" y="84.0" width="96.0" height="30.0" rx="5"/><text x="144.0" y="103.0">鍵の一意性</text></g><g class="wf-node wf-node--plain"><rect x="0.0" y="0.0" width="132.0" height="30.0" rx="5"/><text x="66.0" y="19.0">検証ユースケース</text></g><g class="wf-node wf-node--plain"><rect x="168.0" y="0.0" width="108.0" height="30.0" rx="5"/><text x="222.0" y="19.0">受け入れ試験</text></g></svg></div></div></div></section><section class="card"><header><h2>mindmap</h2><span class="fam fam--graph">点と線</span><span class="what">概念の展開</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+mindmap
+  root((扱う業務))
+    業務領域
+      中核
+      一般
+      補完
+    区切られた文脈
+      同じ言葉
+      集約
+</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="wf-fig" viewBox="0 0 468 198" width="468" height="198" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><path class="wf-edge" d="M216.0,30.3 C205.6,42.6 190.6,60.5 178.5,74.8 L171.1,83.6" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M245.8,30.3 C261.6,43.0 285.0,61.9 303.1,76.5 L312.1,83.6" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M136.2,114.5 C115.7,127.6 85.2,146.9 62.2,161.6 L52.5,167.7" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M153.2,114.3 C148.5,126.1 141.6,143.2 136.0,157.2 L131.8,167.7" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M170.0,114.3 C179.4,126.6 193.2,144.5 204.2,158.9 L210.9,167.7" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M330.0,114.3 C330.0,125.9 330.0,142.5 330.0,156.4 L330.0,167.7" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M349.1,114.5 C365.9,127.3 390.8,146.2 410.0,160.8 L419.1,167.7" marker-end="url(#wf-arrow)"/><g class="wf-node wf-node--plain"><rect x="186.0" y="-0.0" width="84.0" height="30.0" rx="5"/><text x="228.0" y="19.0">扱う業務</text></g><g class="wf-node wf-node--focus"><rect x="117.0" y="84.0" width="84.0" height="30.0" rx="5"/><text x="159.0" y="103.0">業務領域</text></g><g class="wf-node wf-node--plain"><rect x="0.0" y="168.0" width="60.0" height="30.0" rx="5"/><text x="30.0" y="187.1">中核</text></g><g class="wf-node wf-node--plain"><rect x="96.0" y="168.0" width="60.0" height="30.0" rx="5"/><text x="126.0" y="187.1">一般</text></g><g class="wf-node wf-node--plain"><rect x="192.0" y="168.0" width="60.0" height="30.0" rx="5"/><text x="222.0" y="187.1">補完</text></g><g class="wf-node wf-node--plain"><rect x="270.0" y="84.0" width="120.0" height="30.0" rx="5"/><text x="330.0" y="103.0">区切られた文脈</text></g><g class="wf-node wf-node--plain"><rect x="288.0" y="168.0" width="84.0" height="30.0" rx="5"/><text x="330.0" y="187.1">同じ言葉</text></g><g class="wf-node wf-node--plain"><rect x="408.0" y="168.0" width="60.0" height="30.0" rx="5"/><text x="438.0" y="187.1">集約</text></g></svg></div></div></div></section><section class="card"><header><h2>sequence</h2><span class="fam fam--chart">図表</span><span class="what">やり取りの順序</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+sequenceDiagram
+    actor orchestrator as Orchestrator
+    participant waffle as Waffle
+    participant advisor as advisor
+    orchestrator-&gt;&gt;+waffle: 骨格を作る
+    waffle--&gt;&gt;-orchestrator: 埋める場所の一覧
+    loop 観点ごとに
+        orchestrator-&gt;&gt;advisor: 敵対的に確かめる
+        advisor--&gt;&gt;orchestrator: 反証、または支持
+    end
+    alt 全員が支持した
+        orchestrator-&gt;&gt;waffle: 値を書き込む
+    else 反証が出た
+        Note over orchestrator: 差し戻して調べ直す
+    end</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 542 498" width="542" height="498" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="c-frame" x="24" y="276.0" width="494.0" height="180.0" rx="4"/><rect class="c-frame-tab" x="24" y="276.0" width="52" height="16"/><text class="c-tab-t" x="50.0" y="288.0" text-anchor="middle">alt</text><rect class="c-frame" x="24" y="150.0" width="494.0" height="104.0" rx="4"/><rect class="c-frame-tab" x="24" y="150.0" width="52" height="16"/><text class="c-tab-t" x="50.0" y="162.0" text-anchor="middle">loop</text><rect class="c-box" x="39.0" y="16" width="124" height="26" rx="5"/><text class="c-name" x="101.0" y="33.0" text-anchor="middle">Orchestrator</text><line class="c-life" x1="101.0" y1="42" x2="101.0" y2="482.0"/><rect class="c-box" x="209.0" y="16" width="124" height="26" rx="5"/><text class="c-name" x="271.0" y="33.0" text-anchor="middle">Waffle</text><line class="c-life" x1="271.0" y1="42" x2="271.0" y2="482.0"/><rect class="c-box" x="379.0" y="16" width="124" height="26" rx="5"/><text class="c-name" x="441.0" y="33.0" text-anchor="middle">advisor</text><line class="c-life" x1="441.0" y1="42" x2="441.0" y2="482.0"/><rect class="c-active" x="266.0" y="80.0" width="10" height="58.0" rx="2"/><rect class="c-active" x="436.0" y="206.0" width="10" height="58.0" rx="2"/><line class="c-msg" x1="101.0" y1="88.0" x2="271.0" y2="88.0" marker-end="url(#c-head)"/><text class="c-msg-t" x="186.0" y="82.0" text-anchor="middle">骨格を作る</text><line class="c-msg c-msg--return" x1="271.0" y1="130.0" x2="101.0" y2="130.0" marker-end="url(#c-head)"/><text class="c-msg-t" x="186.0" y="124.0" text-anchor="middle">埋める場所の一覧</text><line class="c-msg" x1="101.0" y1="214.0" x2="441.0" y2="214.0" marker-end="url(#c-head)"/><text class="c-msg-t" x="271.0" y="208.0" text-anchor="middle">敵対的に確かめる</text><line class="c-msg c-msg--return" x1="441.0" y1="256.0" x2="101.0" y2="256.0" marker-end="url(#c-head)"/><text class="c-msg-t" x="271.0" y="250.0" text-anchor="middle">反証、または支持</text><line class="c-msg" x1="101.0" y1="340.0" x2="271.0" y2="340.0" marker-end="url(#c-head)"/><text class="c-msg-t" x="186.0" y="334.0" text-anchor="middle">値を書き込む</text><line class="c-divider" x1="24" y1="366.0" x2="518.0" y2="366.0"/><text class="c-tab-t" x="50.0" y="378.0" text-anchor="start">反証が出た</text><rect class="c-note" x="31.0" y="409.0" width="480.0" height="24" rx="4"/><text class="c-note-t" x="271.0" y="426.0" text-anchor="middle">差し戻して調べ直す</text></svg></div></div></div></section><section class="card"><header><h2>gantt</h2><span class="fam fam--chart">図表</span><span class="what">作業と日程</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+gantt
+    title 工程
+    dateFormat YYYY-MM-DD
+    section 進行
+    調べる    :a1, 2026-08-01, 3d
+    決める    :a2, after a1, 2d
+    引き継ぐ  :a3, after a2, 1d
+    作る      :a4, after a3, 5d</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 602 174" width="602" height="174" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><text class="c-label" x="116.0" y="35.0" text-anchor="end">調べる</text><rect class="c-track" x="126" y="22.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--plain" x="126.0" y="22.0" width="115.0" height="18" rx="3"/><text class="c-bar-t" x="183.5" y="35.0" text-anchor="middle">3日</text><text class="c-label" x="116.0" y="65.0" text-anchor="end">決める</text><rect class="c-track" x="126" y="52.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--plain" x="241.0" y="52.0" width="76.7" height="18" rx="3"/><text class="c-bar-t" x="279.3" y="65.0" text-anchor="middle">2日</text><text class="c-label" x="116.0" y="95.0" text-anchor="end">引き継ぐ</text><rect class="c-track" x="126" y="82.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--warn" x="317.7" y="82.0" width="38.3" height="18" rx="3"/><text class="c-bar-t" x="336.8" y="95.0" text-anchor="middle">1日</text><text class="c-label" x="116.0" y="125.0" text-anchor="end">作る</text><rect class="c-track" x="126" y="112.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--plain" x="356.0" y="112.0" width="191.7" height="18" rx="3"/><text class="c-bar-t" x="451.8" y="125.0" text-anchor="middle">5日</text><line class="c-axis" x1="126" y1="140.0" x2="586" y2="140.0"/><line class="c-tick" x1="126.0" y1="140.0" x2="126.0" y2="144.0"/><text class="c-tick-t" x="126.0" y="155.0" text-anchor="middle">8/01</text><line class="c-tick" x1="241.0" y1="140.0" x2="241.0" y2="144.0"/><text class="c-tick-t" x="241.0" y="155.0" text-anchor="middle">8/04</text><line class="c-tick" x1="356.0" y1="140.0" x2="356.0" y2="144.0"/><text class="c-tick-t" x="356.0" y="155.0" text-anchor="middle">8/07</text><line class="c-tick" x1="471.0" y1="140.0" x2="471.0" y2="144.0"/><text class="c-tick-t" x="471.0" y="155.0" text-anchor="middle">8/10</text><line class="c-tick" x1="586.0" y1="140.0" x2="586.0" y2="144.0"/><text class="c-tick-t" x="586.0" y="155.0" text-anchor="middle">8/12</text></svg></div></div></div></section><section class="card"><header><h2>timeline</h2><span class="fam fam--chart">図表</span><span class="what">時間順の出来事</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+timeline
+    title 仕様の器の推移
+    v8 : 操作保証を持つ
+    v9 : 鍵の一意性を足す
+    v10 : 2ブロックを落とす</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 602 144" width="602" height="144" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><text class="c-label" x="116.0" y="35.0" text-anchor="end">v8</text><rect class="c-track" x="126" y="22.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--plain" x="126.0" y="22.0" width="153.3" height="18" rx="3"/><text class="c-bar-t" x="202.7" y="35.0" text-anchor="middle">操作保証を持つ</text><text class="c-label" x="116.0" y="65.0" text-anchor="end">v9</text><rect class="c-track" x="126" y="52.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--soft" x="279.3" y="52.0" width="153.3" height="18" rx="3"/><text class="c-bar-t" x="356.0" y="65.0" text-anchor="middle">鍵の一意性</text><text class="c-label" x="116.0" y="95.0" text-anchor="end">v10</text><rect class="c-track" x="126" y="82.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--plain" x="432.7" y="82.0" width="153.3" height="18" rx="3"/><text class="c-bar-t" x="509.3" y="95.0" text-anchor="middle">2ブロックを落とす</text><line class="c-axis" x1="126" y1="110.0" x2="586" y2="110.0"/><line class="c-tick" x1="126.0" y1="110.0" x2="126.0" y2="114.0"/><text class="c-tick-t" x="126.0" y="125.0" text-anchor="middle">過去</text><line class="c-tick" x1="356.0" y1="110.0" x2="356.0" y2="114.0"/><text class="c-tick-t" x="356.0" y="125.0" text-anchor="middle"></text><line class="c-tick" x1="586.0" y1="110.0" x2="586.0" y2="114.0"/><text class="c-tick-t" x="586.0" y="125.0" text-anchor="middle">現在</text></svg></div></div></div></section><section class="card"><header><h2>journey</h2><span class="fam fam--chart">図表</span><span class="what">体験の段階</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+journey
+    title 仕様を書く
+    section 調べる
+      既存を読む: 3: 書き手
+      advisorに聞く: 4: 書き手
+    section 決める
+      骨格を作る: 5: 書き手
+      値を埋める: 3: 書き手</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 602 174" width="602" height="174" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><text class="c-label" x="116.0" y="35.0" text-anchor="end">既存を読む</text><rect class="c-track" x="126" y="22.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--soft" x="126.0" y="22.0" width="276.0" height="18" rx="3"/><text class="c-bar-t" x="264.0" y="35.0" text-anchor="middle">3</text><text class="c-label" x="116.0" y="65.0" text-anchor="end">advisorに聞く</text><rect class="c-track" x="126" y="52.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--plain" x="126.0" y="52.0" width="368.0" height="18" rx="3"/><text class="c-bar-t" x="310.0" y="65.0" text-anchor="middle">4</text><text class="c-label" x="116.0" y="95.0" text-anchor="end">骨格を作る</text><rect class="c-track" x="126" y="82.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--plain" x="126.0" y="82.0" width="460.0" height="18" rx="3"/><text class="c-bar-t" x="356.0" y="95.0" text-anchor="middle">5</text><text class="c-label" x="116.0" y="125.0" text-anchor="end">値を埋める</text><rect class="c-track" x="126" y="112.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--warn" x="126.0" y="112.0" width="276.0" height="18" rx="3"/><text class="c-bar-t" x="264.0" y="125.0" text-anchor="middle">3</text><line class="c-axis" x1="126" y1="140.0" x2="586" y2="140.0"/><line class="c-tick" x1="126.0" y1="140.0" x2="126.0" y2="144.0"/><text class="c-tick-t" x="126.0" y="155.0" text-anchor="middle">1</text><line class="c-tick" x1="356.0" y1="140.0" x2="356.0" y2="144.0"/><text class="c-tick-t" x="356.0" y="155.0" text-anchor="middle">3</text><line class="c-tick" x1="586.0" y1="140.0" x2="586.0" y2="144.0"/><text class="c-tick-t" x="586.0" y="155.0" text-anchor="middle">5</text></svg></div></div></div></section><section class="card"><header><h2>gitGraph</h2><span class="fam fam--chart">図表</span><span class="what">枝分かれと合流</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+gitGraph
+    commit id: &quot;骨格&quot;
+    branch spec
+    commit id: &quot;基準を足す&quot;
+    commit id: &quot;検証を通す&quot;
+    checkout main
+    merge spec</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 602 92" width="602" height="92" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><text class="c-label" x="116.0" y="35.0" text-anchor="end">main</text><rect class="c-track" x="126" y="22.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--plain" x="126.0" y="22.0" width="115.0" height="18" rx="3"/><text class="c-bar-t" x="183.5" y="35.0" text-anchor="middle">骨格</text><rect class="c-bar c-bar--plain" x="471.0" y="22.0" width="115.0" height="18" rx="3"/><text class="c-bar-t" x="528.5" y="35.0" text-anchor="middle">合流</text><text class="c-label" x="116.0" y="65.0" text-anchor="end">spec</text><rect class="c-track" x="126" y="52.0" width="460" height="18" rx="4"/><rect class="c-bar c-bar--soft" x="241.0" y="52.0" width="230.0" height="18" rx="3"/><text class="c-bar-t" x="356.0" y="65.0" text-anchor="middle">基準を足す</text></svg></div></div></div></section><section class="card"><header><h2>pie</h2><span class="fam fam--chart">図表</span><span class="what">比率</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+pie title 部品の内訳
+    &quot;文章の部品&quot; : 10
+    &quot;図の部品&quot; : 5</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 412 172" width="412" height="172" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><path class="c-arc c-tone-0" d="M86.0,34.0 A52.0,52.0 0 1,1 41.0,112.0"/><path class="c-arc c-tone-1" d="M41.0,112.0 A52.0,52.0 0 0,1 86.0,34.0"/><text class="c-centre" x="86.0" y="91.0" text-anchor="middle">15部品</text><rect class="c-chip c-tone-0" x="174" y="29.0" width="10" height="10" rx="2"/><text class="c-label" x="192.0" y="38.0" text-anchor="start">文章の部品</text><text class="c-num" x="396.0" y="38.0" text-anchor="end">10</text><rect class="c-chip c-tone-1" x="174" y="55.0" width="10" height="10" rx="2"/><text class="c-label" x="192.0" y="64.0" text-anchor="start">図の部品</text><text class="c-num" x="396.0" y="64.0" text-anchor="end">5</text></svg></div></div></div></section><section class="card"><header><h2>xychart</h2><span class="fam fam--chart">図表</span><span class="what">大小</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+xychart-beta
+    title &quot;版ごとの仕様の数&quot;
+    x-axis [v8, v9, v10]
+    y-axis &quot;件数&quot; 0 --&gt; 60
+    bar [56, 10, 4]</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 340 212" width="340" height="212" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><line class="c-axis" x1="60" y1="16" x2="60" y2="166"/><line class="c-axis" x1="60" y1="166" x2="324" y2="166"/><line class="c-grid" x1="60" y1="166.0" x2="324" y2="166.0"/><text class="c-tick-t" x="52.0" y="170.0" text-anchor="end">0</text><line class="c-grid" x1="60" y1="128.5" x2="324" y2="128.5"/><text class="c-tick-t" x="52.0" y="132.5" text-anchor="end">14</text><line class="c-grid" x1="60" y1="91.0" x2="324" y2="91.0"/><text class="c-tick-t" x="52.0" y="95.0" text-anchor="end">28</text><line class="c-grid" x1="60" y1="53.5" x2="324" y2="53.5"/><text class="c-tick-t" x="52.0" y="57.5" text-anchor="end">42</text><line class="c-grid" x1="60" y1="16.0" x2="324" y2="16.0"/><text class="c-tick-t" x="52.0" y="20.0" text-anchor="end">56</text><rect class="c-bar c-tone-0" x="74.0" y="16.0" width="62" height="150.0" rx="3"/><text class="c-num" x="105.0" y="10.0" text-anchor="middle">56</text><text class="c-tick-t" x="105.0" y="183.0" text-anchor="middle">v8</text><rect class="c-bar c-tone-1" x="162.0" y="139.2" width="62" height="26.8" rx="3"/><text class="c-num" x="193.0" y="133.2" text-anchor="middle">10</text><text class="c-tick-t" x="193.0" y="183.0" text-anchor="middle">v9</text><rect class="c-bar c-tone-2" x="250.0" y="155.3" width="62" height="10.7" rx="3"/><text class="c-num" x="281.0" y="149.3" text-anchor="middle">4</text><text class="c-tick-t" x="281.0" y="183.0" text-anchor="middle">v10</text></svg></div></div></div></section><section class="card"><header><h2>sankey</h2><span class="fam fam--chart">図表</span><span class="what">流れの量</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">sankey-beta
+
+Structured data,Markdown,15
+Structured data,HTML,4
+Markdown,Artifact,15
+HTML,Artifact,4</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 560 222" width="560" height="222" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><path class="c-ribbon c-tone-0" d="M124,16.0 C280.0,16.0 280.0,16.0 448,16.0 L448,166.0 C280.0,166.0 280.0,166.0 124,166.0 Z"/><path class="c-ribbon c-tone-1" d="M124,166.0 C280.0,166.0 280.0,174.0 448,174.0 L448,214.0 C280.0,214.0 280.0,206.0 124,206.0 Z"/><rect class="c-node" x="112" y="206.0" width="12" height="0.0"/><text class="c-label" x="104.0" y="210.0" text-anchor="end">構造化データ</text><rect class="c-node" x="436" y="166.0" width="12" height="0.0"/><text class="c-label" x="456.0" y="170.0" text-anchor="start">Markdown</text><rect class="c-node" x="436" y="214.0" width="12" height="0.0"/><text class="c-label" x="456.0" y="218.0" text-anchor="start">HTML</text></svg></div></div></div></section><section class="card"><header><h2>quadrant</h2><span class="fam fam--chart">図表</span><span class="what">2軸での位置づけ</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+quadrantChart
+    title 業務領域の分類
+    x-axis 差別化が小さい --&gt; 差別化が大きい
+    y-axis 複雑さが低い --&gt; 複雑さが高い
+    quadrant-1 中核
+    quadrant-2 見直す
+    quadrant-3 一般
+    quadrant-4 補完
+    文書の検証: [0.78, 0.72]
+    描画: [0.35, 0.55]
+    設定の読み込み: [0.2, 0.2]</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 460 330" width="460" height="330" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="c-quad" x="270.0" y="26" width="166.0" height="130.0"/><line class="c-axis" x1="104" y1="26" x2="104" y2="286"/><line class="c-axis" x1="104" y1="286" x2="436" y2="286"/><line class="c-grid" x1="270.0" y1="26" x2="270.0" y2="286"/><line class="c-grid" x1="104" y1="156.0" x2="436" y2="156.0"/><text class="c-quad-t" x="282.0" y="42.0" text-anchor="start">中核</text><text class="c-quad-t" x="116.0" y="42.0" text-anchor="start">見直す</text><text class="c-quad-t" x="116.0" y="276.0" text-anchor="start">一般</text><text class="c-quad-t" x="282.0" y="276.0" text-anchor="start">補完</text><circle class="c-dot" cx="363.0" cy="93.6" r="4"/><text class="c-point-t" x="363.0" y="83.6" text-anchor="middle">文書の検証</text><circle class="c-dot" cx="230.2" cy="143.0" r="4"/><text class="c-point-t" x="230.2" y="133.0" text-anchor="middle">描画</text><circle class="c-dot" cx="163.8" cy="239.2" r="4"/><text class="c-point-t" x="163.8" y="229.2" text-anchor="middle">設定の読み込み</text><text class="c-axis-t" x="270.0" y="318.0" text-anchor="middle">差別化が小さい ← → 大きい</text><text class="c-axis-t" transform="translate(22,156.0) rotate(-90)" text-anchor="middle">複雑さ 低 ← → 高</text></svg></div></div></div></section><section class="card"><header><h2>block</h2><span class="fam fam--chart">図表</span><span class="what">箱組み</span></header><div class="pair"><div class="half"><span class="tag">Mermaid</span><div class="stage"><pre class="mermaid">%%{init: {&quot;theme&quot;:&quot;base&quot;,&quot;themeVariables&quot;:{&quot;primaryColor&quot;:&quot;#E2EFF0&quot;,&quot;primaryTextColor&quot;:&quot;#171B23&quot;,&quot;primaryBorderColor&quot;:&quot;#16636B&quot;,&quot;lineColor&quot;:&quot;#79828F&quot;,&quot;noteBkgColor&quot;:&quot;#F7EAE2&quot;,&quot;noteBorderColor&quot;:&quot;#9A4A21&quot;,&quot;edgeLabelBackground&quot;:&quot;#EDF0F3&quot;,&quot;fontFamily&quot;:&quot;Noto Sans JP, sans-serif&quot;,&quot;fontSize&quot;:&quot;13px&quot;}}}%%
+block-beta
+columns 3
+  a[&quot;受け口&quot;] b[&quot;応用&quot;] c[&quot;領域&quot;]
+  d[&quot;CLI / MCP&quot;] e[&quot;ユースケース&quot;] f[&quot;モデル&quot;]</pre></div></div><div class="half"><span class="tag mine">Waffle</span><div class="stage"><svg class="c-fig" viewBox="0 0 506 136" width="506" height="136" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="c-box c-box--plain" x="16" y="16" width="150" height="46" rx="6"/><text class="c-name" x="91.0" y="44.0" text-anchor="middle">受け口</text><rect class="c-box c-box--focus" x="178" y="16" width="150" height="46" rx="6"/><text class="c-name" x="253.0" y="44.0" text-anchor="middle">応用</text><rect class="c-box c-box--plain" x="340" y="16" width="150" height="46" rx="6"/><text class="c-name" x="415.0" y="44.0" text-anchor="middle">領域</text><rect class="c-box c-box--plain" x="16" y="74" width="150" height="46" rx="6"/><text class="c-name" x="91.0" y="102.0" text-anchor="middle">CLI / MCP</text><rect class="c-box c-box--focus" x="178" y="74" width="150" height="46" rx="6"/><text class="c-name" x="253.0" y="102.0" text-anchor="middle">ユースケース</text><rect class="c-box c-box--plain" x="340" y="74" width="150" height="46" rx="6"/><text class="c-name" x="415.0" y="102.0" text-anchor="middle">モデル</text></svg></div></div></div></section>
+<section class="card">
+  <header><h2>この検証で分かった性質</h2><span class="what">正直に</span></header>
+  <div class="note warn">
+    <span class="k">難しかったのは何か</span>
+    <p>難しかったのは<b>アルゴリズムではなく細部の数</b>だった。方式が成立するかは早い段階で分かったが、そこから読める図にするまでに崩れを十数件直している。しかも<b>同じ種類の失敗が繰り返し出た</b>——CSSの重なり順、寸法の見積もり、単に描き忘れ。</p>
+    <p><b>方式の限界には一度も当たっていない。</b>残っているのは作り込みの量であり、上限はMermaidではない。</p>
+    <p>「つながっていない」は目で見ても見落とし続けた。いまは<b>記号の先端と線の端の距離</b>と<b>線の最後の一区間の向き</b>を座標で照合する検査を置き、記号を7pxずらすと落ちることを確かめてある。目視の代わりではなく、目視が効かない種類の欠陥のために置いている。</p>
+    <p>ただし直し方には限界があった。<b>目分量で形を調整している間は、何度直しても近づかない。</b>実体と関連の図は3回「直した」と言って3回とも足りておらず、抜け出せたのはMermaidを手元で描かせて<b>marker の寸法と実体の大きさを実測し、数値で合わせてから</b>である。見比べて直すのではなく、測って合わせる。</p>
+  </div>
+  <table>
+    <thead><tr><th>直したもの</th><th>原因の種類</th></tr></thead>
+    <tbody>
+      <tr><td>箱から文字がはみ出す</td><td>寸法を見積もりで決めていた。書体の字幅表から実測するようにした</td></tr>
+      <tr><td>区画の文字が中央に寄る</td><td>CSSの重なり順（<code>.wf-node text</code> が <code>.wf-row</code> に勝っていた）</td></tr>
+      <tr><td>辺の両端の記号が出ない</td><td>マーカー任せをやめ、経路の向きから自分で描くようにした</td></tr>
+      <tr><td>ラベル同士が近い</td><td>間隔の設定を渡していなかった</td></tr>
+      <tr><td>実行中の帯が無い</td><td>単に未実装だった</td></tr>
+      <tr><td>開始・終了が空の箱になる</td><td>役割ごとの形を持っていなかった</td></tr>
+      <tr><td>関連の記号が箱へ食い込む</td><td>経路の向きのまま置いていた。着いた辺の外向きで置き直し、縁と平行に付くようにした</td></tr>
+      <tr><td>多重度が1つの記号しか無い</td><td>多重度は「0か1か多か」と「必須か任意か」の合成。片方しか描いていなかった</td></tr>
+      <tr><td>「多」を3本の足で描いていた</td><td>形の取り違え。Mermaidは先の尖った輪で描く。目分量をやめ、Mermaidを手元で描かせて marker の寸法を読み、6種すべてを実測に合わせた</td></tr>
+      <tr><td>実体が小さすぎて記号に負ける</td><td>箱を文字の幅に詰めていた。実体は84pxの高さを持つ（Mermaidの実測値）。記号が大きい図では箱に最小の大きさを与える</td></tr>
+      <tr><td>記号と線がつながっていない</td><td>記号は辺と平行、線は斜めに入る。別々の向きを向いていた。線の最後の一区間を辺の法線へ差し替え、継ぎ目は曲線で滑らかにした</td></tr>
+      <tr><td>型の図にER記法の輪が出る</td><td>記法の取り違え。型と関連の多重度は記号ではなく文字で書く</td></tr>
+      <tr><td>記号に凡例が要る</td><td>そもそも記号をやめた。カラス足も菱形も、覚えていない人には読めない。線の形をひねる必要も無くなり、経路が自然になった</td></tr>
+      <tr><td>同じ図で片方だけ曲がる</td><td>Graphvizに辺の名前を渡していた。渡すと文字の箱を避けて経路がずれる（実測: 片方12px、もう片方0px。名前を外すと両方0px）。名前の位置はこちらで決めているので、渡すのをやめた</td></tr>
+      <tr><td>そのとき辺の名前が全部消えた</td><td>名前の読み出し先を変え忘れた。線はきれいなままなので絵では気づけない。<b>入力で名前を付けた辺が絵に出ているか</b>を突き合わせる検査を足したところ、10件以上を検出した</td></tr>
+      <tr><td>辺の名前が日本語になっていない</td><td>記号を語順のまま文字へ置き換え、読み返していなかった（「0か1つが1つに従う」）。数の向きも取り違えていた。矢印の向きに読んで文になる書き方へ直した</td></tr>
+      <tr><td>言葉に置き換えたら文字が増えた</td><td>記号2つを言葉2つにしたので、1本の線に3つの文字が付いた。前より読みにくい。<b>1本につき1つ</b>に畳んだ（「1つが0個以上を持つ」）。図の上の文字は6つから2つになった</td></tr>
+      <tr><td>概念の図が、決めたことと食い違う</td><td>描画ではなく中身の誤り。業務領域を区切られた文脈の子として描いていた。外へ出すというのがこのADRの決定そのもので、図がそれを裏切っていた</td></tr>
+      <tr><td>注記が枠の線と重なる</td><td>注記を1行ぶんの高さで数えていた。注記の行だけ厚くし、囲む枠を下へ伸ばした</td></tr>
+      <tr><td>流れ図が縦にしかならない</td><td>向きを入力で受け取っていなかった</td></tr>
+      <tr><td>見た目の数値がCSSに直書き</td><td>色・太さ・書体を名前付きの値へ出し、図のCSSから直値を無くした（残り0件）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  <p>点と線 ── <code>pygraphviz</code>（macOS / Linux / Windows すべてにバイナリ同梱ウィールが配布されており、システムへのインストールは不要）に座標を解かせ、矩形・経路・囲みの数値だけを受け取ってSVGを組み立てている。</p>
+  <p>図表 ── 外部の道具を使わない。軸・帯・割合・格子は値から位置が決まるため、その場の算術で描いている。</p>
+  <p>Markdown成果物は従来どおりMermaidのまま。この方式はHTMLで出すときにだけ使う。</p>
+  <p>見た目は<code>--fig-*</code>という名前付きの値だけで決まる。図を描くコードは色や太さを持たず、名前を参照する。明暗の切り替えは値の側で起きるため、図のコードは触らない。</p>
+</footer>
+</main>

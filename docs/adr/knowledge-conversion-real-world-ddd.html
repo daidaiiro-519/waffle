@@ -1,0 +1,443 @@
+<title>real-world-ddd の変換 ── 15本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.78rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 15本目</span>
+  <h1><code>real-world-ddd</code> を書き起こし版から移す</h1>
+  <p class="standfirst">旧要約版102行 → <strong>314行</strong>。すでに動いているシステムへどう持ち込むか、という実践編です。<strong>この本には「やらないこと」が多く書かれていて、そこが落ちていました。</strong></p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">26</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">5</span><span class="l">図（旧版は0）</span></div>
+    <div class="stat"><span class="n">4</span><span class="l">原文（表）</span></div>
+    <div class="stat"><span class="n">314</span><span class="l">行（旧102 / 書起し308）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. 「描いていない経路」が3つあります</h2>
+  <p class="narrow">この本は<strong>やってはいけないこと</strong>を、選択肢として並べずに排除する形で書いています。図にすると、その排除が「線が無い」という形で現れるので、注釈で名指ししました。</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>図</th><th>描いていないもの</th><th>なぜ</th></tr></thead>
+      <tbody>
+        <tr><td>改善の進め方</td><td>「全体を一から書き直す」という第3の選択肢</td><td>描き忘れではなく、<strong>ほとんど成功せず、経営の側の支持も得られない</strong>ため</td></tr>
+        <tr><td>実装方法の移行</td><td>手続きから直接イベント履歴式へ飛ぶ経路</td><td><strong>誤ったトランザクション境界をそのまま持ち込む</strong>ことになる</td></tr>
+        <tr><td>外から包んで置き換える</td><td>データベースをどちらが持つか</td><td>移行のあいだは<strong>「1文脈1データベース」の原則を一時的に曲げて共有してよい</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>全部やるか、やらないかではない</td><td>原則2行</td><td><strong>すでに稼働しているシステムでこそ効く</strong>、という位置づけ</td></tr>
+        <tr><td>最初にやる2つのこと</td><td>判断基準に手順</td><td><strong>図</strong>＋子2つ。コードから始めない理由つき</td></tr>
+        <tr><td class="new">　事業活動を理解する</td><td>×</td><td><strong>4つの問い＋組織図が手がかりになる</strong></td></tr>
+        <tr><td class="new">　　中核の業務領域を見つける</td><td>×</td><td><strong>ありがたくない経験則 ── 大きな泥団子がある場所</strong></td></tr>
+        <tr><td class="new">　　一般／補完の業務領域を見つける</td><td>×</td><td>既製品で置き換わるか／粗削りでも問題にならないか</td></tr>
+        <tr><td class="new">　既存システムの構造を調べる</td><td>×</td><td><strong>注目するのは、それぞれの部分の一生の違い</strong></td></tr>
+        <tr><td class="new">　　設計の基本方針を評価する</td><td>×</td><td><strong>表。文脈の地図から探す5つの不適切な関係</strong></td></tr>
+        <tr><td>大きな絵を描いて、小さく始める</td><td>原則1行</td><td><strong>図＋子2つ。まず論理的な境界を業務領域に対応させる</strong></td></tr>
+        <tr><td class="new">　論理の境界を物理の境界へ変えるとき</td><td>×</td><td><strong>表。連係の問題ごとの変更先</strong></td></tr>
+        <tr><td class="new">　実装方法の不一致を見つける</td><td>×</td><td>中核に手続き・1行のオブジェクトを使っているのが最悪</td></tr>
+        <tr><td>同じ言葉を育てる</td><td>×</td><td><strong>図</strong>＋必要条件は業務知識と適切なモデルの2つ</td></tr>
+        <tr><td class="new">　外から包んで置き換える</td><td>×</td><td><strong>図。4つの手順＋入口は移行後に取り除く</strong></td></tr>
+        <tr><td class="new">　段階的に直す</td><td>×</td><td><strong>図。始めどころは値オブジェクトの候補</strong></td></tr>
+        <tr><td class="new">　　守りの仕組みを置く</td><td>×</td><td>モデル変換装置と共用サービスで上下から守る</td></tr>
+        <tr><td class="new">道具として位置づける</td><td><strong>×</strong></td><td><strong>子4つ。「売り込む」より道具の1つとして</strong></td></tr>
+        <tr><td class="new">　同じ言葉から始める</td><td>×</td><td><strong>もっとも重要なのはソースコードを同じ言葉で書くこと</strong></td></tr>
+        <tr><td class="new">　権威ではなく理由で説得する</td><td><strong>×</strong></td><td><strong>表。6つの問いと、それぞれの理由</strong></td></tr>
+        <tr><td class="new">　イベント履歴式の利点は業務エキスパートに響く</td><td>×</td><td>気に入って同僚へ勧めてくれるようになる</td></tr>
+        <tr><td>アンチパターン ×4</td><td>あり</td><td>そのまま維持</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 注釈の例</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>図</th><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead>
+      <tbody>
+        <tr><td>最初の5段</td><td>1. 事業活動と事業方針を調べる</td><td><strong>コードから始めないのが要点。</strong>先にコードを読むと、いま入り組んでいる場所が重要な場所に見えてしまう</td></tr>
+        <tr><td>モジュールの組み替え</td><td>技術の視点で割った形</td><td>この形が誤りだと言っているのではない。<strong>業務領域の境界と対応していないと、1つの業務の変更がすべての箱にまたがる</strong></td></tr>
+        <tr><td>実装方法の移行</td><td>状態を持つ集約</td><td><strong>ここを飛ばしてはいけない。</strong>いったんここで止まり、集約の境界を確かめる</td></tr>
+        <tr><td>外から包んで置き換える</td><td>既存のシステム（大）／（小）</td><td>大きさが変わるのは機能が移るため。<strong>既存の側では急を要する修正を除いて修正も拡張も止める。止めないと新しい側が追いつけない</strong></td></tr>
+        <tr><td>改善の進め方</td><td>2つの終点</td><td>どちらを選んでも、<strong>その前に業務知識と適切なモデルが要る。</strong>無いまま着手すると同じ形が再生産される</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 完全プレビュー</h2>
+  <p class="narrow">描画された314行を、<strong>省略なしで</strong>並べています。26ノードすべてです。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / real-world-ddd</span><span>ノード26 ・ 図5 ・ 原文4</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">全部やるか、やらないかではない</span></div>
+<p>ドメイン駆動設計の適用は二者択一ではない。すべての技法を習得して実践することはおそらく不可能だが、すべてを取り入れなくても価値は生まれる。そもそも「ソフトウェアの設計判断を事業活動で駆動すること」がドメイン駆動設計であって、集約や値オブジェクトを実装することがそれではない。最も効果を発揮するのは、すでに稼働しているソフトウェアに取り組んだ場合である——事業への貢献が実証されていて、積み重なった負債と膨れ上がった設計の乱雑さを刷新する必要があるシステムこそ、取り組む価値がもっとも高い。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">最初にやる2つのこと</span></div>
+<p>事業活動を理解することと、システムの構造がいまどうなっているかを理解すること。この順序を逆にしない。</p>
+<p>既存システムへ取り入れるときの、最初の5つの段を示す</p>
+<p>事業を調べ、いまの構造を地図にし、問題を見つけ、どこから手をつけるかを決めてから動く。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;1. 事業活動と事業方針を調べる（業務領域を分類する）&quot;]
+    n1[&quot;2. 既存システムの構造を調べ、文脈の地図にする&quot;]
+    n2[&quot;3. 不適切な関係を見つける&quot;]
+    n3[&quot;4. 重点的に解決する課題を決める&quot;]
+    n4[&quot;5. 少しずつ段階的に進める&quot;]
+    n0 --&gt; n1
+    n1 --&gt; n2
+    n2 --&gt; n3
+    n3 --&gt; n4
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>1. 事業活動と事業方針を調べる（業務領域を分類する）</td><td>コードから始めないのがこの並びの要点である。先にコードを読むと、いま入り組んでいる場所が重要な場所に見えてしまう。</td></tr>
+<tr><td>5. 少しずつ段階的に進める</td><td>大きな絵を描いて、小さく始める。4までで全体像を持ったうえで着手するので、小さく始めることと行き当たりばったりは別のことになる。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">事業活動を理解する</span></div>
+<p>自社の事業とは何かを、4つの問いで特定する——事業活動を展開している領域はどこか、顧客は誰か、顧客に提供しているサービスや価値は何か、競合している企業や製品は何か。よい手がかりは自社の組織図で、存続し発展していくためにそれぞれの部門がどう協力しているかを分析する。</p>
+<div class="node d3"><div class="node-h"><span class="nm">中核の業務領域を見つける</span></div>
+<p>競合とどうやって差別化しているかを探すと明らかになる——競合が持っていない独自のノウハウ（自社で作った手順や、権利として守られているもの）があるか。技術とは別の領域での優位性（優秀な人を採用する力、独創的な設計を生み出す力など）があるか。もう1つ、ありがたくない強力な経験則がある——大きな泥団子がある場所。システムでもっとも入り組んだ設計になっている場所は、中核の業務領域である可能性が高い。この部分の全面的な書き換えは大きな事業上の危険を伴い、既製品や外部サービスへの置き換えもできない。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">一般的な業務領域を見つける</span></div>
+<p>既製品・外部サービス・公開されているソフトウェアを探す。競合も同じものを使える業務領域で、他社が同じものを導入しても自社の不利益にならない。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">補完の業務領域を見つける</span></div>
+<p>既製品や外部サービスに置き換えられないが、競争優位を直接生み出すこともない部品を探す。ソースコードが粗削りのままでも大きな問題にならない部分にあたる——変更の機会が少なく、技術者が関心を持つこともほとんどない。すべてを洗い出す必要は無く、いま取り組んでいるシステムにもっとも関係するものに絞る。</p>
+</div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">既存システムの構造を調べる</span></div>
+<p>業務領域が分かったら、いまのシステムがどんな解決方法を選び、どんな設計判断をしてきたかを調べる。注目するのは、それぞれの部分の一生の違いである——1つの置き場にまとめられた巨大なコードでも、他と切り離して直し・広げ・確かめ・配置できそうな部分が無いかを確かめる。</p>
+<div class="node d3"><div class="node-h"><span class="nm">実装方法を確認する</span></div>
+<p>部品ごとに、どんな業務領域が含まれているか、業務ロジックの実装方法に何を選んでいるか、技術方式に何を選んでいるかを見る。そのうえで問う——いまの実装方法は、解く課題の複雑さと合っているか。設計を洗練させるべき場所は無いか。手を抜いたり既製のものを使ったりできそうな業務領域があるか。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">設計の基本方針を評価する</span></div>
+<p>全体を俯瞰して得た知識で、既存の部品を区切られた文脈のように扱い、いまの構造を文脈の地図として描く。連係方法の分類を使って、部品どうしのつながり方を特定して追いかける。そのうえで、5つの不適切な関係が無いかを確かめる。</p>
+<p>文脈の地図から探す、5つの不適切な関係を並べる</p>
+<p>どれも、境界の引き方かチームの持ち方に問題があることの現れである。</p>
+<div class="tablewrap"><table><thead><tr><th>見つけるもの</th><th>何を意味するか</th></tr></thead><tbody>
+<tr><td>同じ部品に複数のチームが関わっている</td><td>1つの文脈は1つのチームが持つ、という原則が崩れている</td></tr>
+<tr><td>中核の業務領域の実装が重複している</td><td>中核をもっとも効率よく実装するという事業戦略にそむいている</td></tr>
+<tr><td>中核の業務領域の開発を外部に依存している</td><td>競争力の源を自分たちで持てていない</td></tr>
+<tr><td>連係がうまくいかず、摩擦が起きている</td><td>想定した協力関係が実際には成り立っていない</td></tr>
+<tr><td>外部サービスや既存システムに引きずられた、ぎこちないモデルになっている</td><td>モデル変換装置を置くべきところに置いていない</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">大きな絵を描いて、小さく始める</span></div>
+<p>システム全体を一から書き直してすべてをきれいにする、という試みが成功することはほとんどない。経営の側がそうした技術視点の再構築を支持することも、まずありえない。安全なやり方は、大きな絵を描いたうえで小さく始め、どこを重点的に改善するかを戦略的に判断することである。まずは論理的な境界——名前の空間・モジュール・パッケージ——を業務領域の境界に対応させるところから始める。本格的な区切られた文脈（物理的な境界）である必要は無い。</p>
+<p>モジュールの区切り方を、技術の視点から業務の視点へ組み替えることを示す</p>
+<p>同じコードを、層ごとに割る形から業務領域ごとに割る形へ並べ替える。境界の位置が変わるだけで、業務ロジックそのものは変えない。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    subgraph g0[&quot;技術の視点で割った形&quot;]
+        n0[&quot;配送.アプリケーション&quot;]
+        n1[&quot;配送.インフラ&quot;]
+        n2[&quot;配送.モデル&quot;]
+        n3[&quot;配送.画面&quot;]
+        n4[&quot;配送.サービス&quot;]
+    end
+    subgraph g1[&quot;業務の視点で割った形&quot;]
+        n5[&quot;配送.荷姿のカタログ&quot;]
+        n6[&quot;配送.集荷の受付&quot;]
+        n7[&quot;配送.経路の最適化&quot;]
+        n8[&quot;配送.配達の実施&quot;]
+    end
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>技術の視点で割った形</td><td>この形が誤りだと言っているのではない。層で割ること自体は正しいが、業務領域の境界と対応していないと、1つの業務の変更がすべての箱にまたがることになる。</td></tr>
+<tr><td>業務の視点で割った形</td><td>箱の数が減っているのは偶然で、増えることもある。数ではなく、1つの業務領域の変更が1つの箱に収まるかどうかが要点である。</td></tr>
+<tr><td>この組み替え全体</td><td>本格的な区切られた文脈（物理的な境界）である必要は無い。名前の空間やモジュールといった論理的な境界を、業務領域の境界に対応させるだけでよい。業務ロジックを変えないので、比較的安全に行える。ただし、動的な読み込みや型名の文字列による参照を壊さないよう注意する。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">論理の境界を物理の境界へ変えるとき</span></div>
+<p>大きな価値を生む場所を探す手がかりが2つある——1つのコードベースを複数のチームが変更しているなら、チームごとに区切られた文脈を定義し、それぞれの開発の一生を切り離す。競合するモデルが別々の部品に使われているなら、そのモデルをそれぞれ別の区切られた文脈へ移す。最低限必要な境界が定まったら、文脈どうしの関係と連係方法を調べる。</p>
+<p>連係の問題ごとに、どの方法へ変えるかを並べる</p>
+<p>どれも、いまの関係が実際の協力の度合いと合っていないときの直し方である。</p>
+<div class="tablewrap"><table><thead><tr><th>問題</th><th>変更先</th></tr></thead><tbody>
+<tr><td>良きパートナーを想定して設計したのに、協力関係が維持できていない</td><td>使う側と供給する側の関係へ（従属する・モデル変換装置・共用サービス）</td></tr>
+<tr><td>既存システムのモデルが下流の部品に悪い影響を与えている</td><td>モデル変換装置を足して、区切られた文脈を守る</td></tr>
+<tr><td>部品の実装を変えると、多くの利用者に影響する</td><td>共用サービスを作る（外へ公開する形と内部のモデルを切り離す）</td></tr>
+<tr><td>複数のチームが共通の機能に取り組んで摩擦が起きている（中核でない場合）</td><td>互いに独立して開発する</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">実装方法の不一致を見つける</span></div>
+<p>実装の水準でもっとも重要なのは、事業上の価値と実装方法の食い違いがひどい箇所を見つけることである。もっとも問題なのは、中核の業務領域の複雑な業務ロジックを手続きや1行のオブジェクトで実装している場合。中核は変わり続けるので、設計がまずいと変更がきわめてやっかいで危険になる。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">同じ言葉を育てる</span></div>
+<p>既存システムの設計改善を成功させる必要条件は、業務知識と適切なモデルの2つである。業務知識を得る近道はイベントストーミングで、失われた業務知識を取り戻す最良の道具にあたる。業務知識とモデルが手に入ったら、改善の進め方を選ぶ。</p>
+<p>既存システムをどう改善するかを、範囲の広さで決める</p>
+<p>コードベース全体が問題なら包んで置き換え、特定の箇所なら段階的に直す。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;コードベース全体が問題で、段階的な置き換えが要るか&quot;]
+    n1[&quot;外から包んで置き換える&quot;]
+    n2[&quot;段階的に直す&quot;]
+    n0 --&gt;|&quot;はい&quot;| n1
+    n0 --&gt;|&quot;いいえ（特定のモジュール・実装方法の改善）&quot;| n2
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>コードベース全体が問題で、段階的な置き換えが要るか</td><td>「全体を一から書き直す」という第3の選択肢は、この図に描いていない。描き忘れではなく、ほとんど成功せず、経営の側の支持も得られないためである。</td></tr>
+<tr><td>外から包んで置き換える／段階的に直す</td><td>どちらを選んでも、その前に業務知識と適切なモデルが要る。この2つが無いまま着手すると、置き換えても直しても同じ形が再生産される。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">外から包んで置き換える</span></div>
+<p>既存のシステムを外から包み、少しずつ機能を移していく形。手順は4つ——新しい要求を実装するための区切られた文脈を、包む側として足す。既存の側は、急を要する修正を除いて機能の修正と拡張を止める。既存のすべての機能を新しい側へ移す。最後に、既存のコードベースは役目を終える。</p>
+<p>既存のシステムを、外から包んで少しずつ置き換えていく形を示す</p>
+<p>入口を1つ用意して振り分け、新しい側を育てながら古い側を細らせる。最後に入口ごと取り除く。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    subgraph g0[&quot;移行の初期&quot;]
+        n0[&quot;利用者（初期）&quot;]
+        n1[&quot;振り分けの入口（初期）&quot;]
+        n2[&quot;既存のシステム（大）&quot;]
+        n3[&quot;新しいシステム（小）&quot;]
+    end
+    subgraph g1[&quot;移行の終盤&quot;]
+        n4[&quot;利用者（終盤）&quot;]
+        n5[&quot;振り分けの入口（終盤）&quot;]
+        n6[&quot;既存のシステム（小）&quot;]
+        n7[&quot;新しいシステム（大）&quot;]
+    end
+    subgraph g2[&quot;移行の完了&quot;]
+        n8[&quot;利用者（完了）&quot;]
+        n9[&quot;新しいシステム（完了）&quot;]
+    end
+    n0 --&gt; n1
+    n1 --&gt; n2
+    n1 --&gt; n3
+    n4 --&gt; n5
+    n5 --&gt; n6
+    n5 --&gt; n7
+    n8 --&gt; n9
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>振り分けの入口（初期）</td><td>外へ公開する窓口として働く薄い層で、要求を既存の側か新しい側かへ振り分ける。移行が終わったら取り除く。恒久的な部品ではない。</td></tr>
+<tr><td>既存のシステム（大）／既存のシステム（小）</td><td>大きさが変わっているのは、機能が移っていくためである。既存の側では、急を要する修正を除いて機能の修正も拡張も止める。止めないと、新しい側が追いつけない。</td></tr>
+<tr><td>移行の完了</td><td>入口が消えている。これが移行の終わりの目印になる。</td></tr>
+<tr><td>この図に描いていないこと</td><td>データベースをどちらが持つかは描いていない。この移行のあいだは「1つの区切られた文脈に1つのデータベース」の原則を一時的に曲げ、両者で共有してよい——連係を複雑にしないためである。移行後は新しい側が専有する。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">段階的に直す</span></div>
+<p>全面的に書き換えるより、小さな変更を積み重ねるほうが安全である。始めどころは値オブジェクトの候補を見つけるところ——状態が変わらないオブジェクトを導入するだけでも、複雑さはかなり減る。そこから対象の業務ロジックを集め、ひと塊の変更の境界を詳しく調べる——技術の視点ではなく業務の視点で。業務の視点でその必要性を徹底的に分析して、はじめて集約の境界を設計できる。</p>
+<p>実装方法を移していく順序と、飛ばしてはいけない段を示す</p>
+<p>左から順に移る。手続きから直接イベント履歴式へ飛ぶ経路は、意図的に描いていない。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;手続きとして書く&quot;]
+    n1[&quot;1行のオブジェクトを介する&quot;]
+    n2[&quot;状態を持つ集約&quot;]
+    n3[&quot;イベント履歴式の集約&quot;]
+    n0 --&gt; n1
+    n1 --&gt; n2
+    n2 --&gt;|&quot;集約の境界を見つけることに時間を使ってから&quot;| n3
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>状態を持つ集約</td><td>ここを飛ばしてはいけない。手続きや1行のオブジェクトから直接イベント履歴式へ移ると、誤ったトランザクション境界をそのまま持ち込むことになる。いったんここで止まり、集約の境界を確かめる。</td></tr>
+<tr><td>状態を持つ集約からイベント履歴式の集約</td><td>この矢印には時間がかかる、という意味が込められている。移ること自体より、その前に集約の境界を見つけることに時間を使う。</td></tr>
+<tr><td>この並び全体</td><td>全面的に書き換えるのではなく、小さな変更を積み重ねる。始めどころは値オブジェクトの候補を見つけるところで、状態が変わらないオブジェクトを導入するだけでも複雑さはかなり減る。</td></tr>
+</tbody></table></div>
+<div class="node d3"><div class="node-h"><span class="nm">守りの仕組みを置く</span></div>
+<p>既存システムを直すときは、モデル変換装置で新しいコードを古いモデルから守り、共用サービスを作って外向けの言葉を提供する。こうしておくと、上流の変更が下流に及ばない。</p>
+</div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">道具として位置づける</span></div>
+<p>「売り込む」という考え方より、技術者が使う道具の1つとして位置づけるほうがよい。組織の戦略として取り入れる必要は無い。大切なのは事業活動の要求にもとづいた設計判断であって、すべての道具を使うことではない。実装の水準の設計のやり方が個別の状況で役に立たないなら、それでよい。</p>
+<div class="node d2"><div class="node-h"><span class="nm">同じ言葉から始める</span></div>
+<p>事業活動について関係者が口にする言葉をしっかり聞き取る。技術者だけに通じる言い回しを避け、業務として意味が通る言葉を使う。使い方が一貫しない用語を見つけたら、質問して理由を探る——複数のモデルが混ざっている合図である。業務エキスパートとできるだけたくさん会話する。正式な会議だけでなく、給湯室や休憩の時間も機会になる。そしてもっとも重要なのは、ソースコードを同じ言葉で書くことである。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">区切られた文脈の背景にある原則にこだわる</span></div>
+<p>3つの問いに答えられるようにしておく。あらゆるユースケースを1つのモデルで表すより、課題ごとに複数のモデルを作るのはなぜか——「何でもできる」は実際には何の役にも立たないから。1つの区切られた文脈の中に複数のモデルを作らないのはなぜか——異なるモデルが混ざると頭にかかる負荷が増え、ソフトウェアが不必要に複雑になるから。同じコードベースを複数のチームで開発するのがよくないのはなぜか——チーム間の関係がぎくしゃくし、仕事が進まなくなるから。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">権威ではなく理由で説得する</span></div>
+<p>「本にそう書いてあるから」という説得は機能しない。それぞれの設計判断について、論理的な理由を説明する。</p>
+<p>設計の決まりごとを、権威ではなく理由で説明する言い方を並べる</p>
+<p>左の問いに右の理由で答える。「本にそう書いてあるから」は説得にならない。</p>
+<div class="tablewrap"><table><thead><tr><th>問い</th><th>理由</th></tr></thead><tbody>
+<tr><td>トランザクション境界を明確にするのはなぜか</td><td>データの一貫性を保つため</td></tr>
+<tr><td>2つ以上の集約を同時に変更してはいけないのはなぜか</td><td>一貫性を保つ境界を正しく定義できていることを保証するため</td></tr>
+<tr><td>集約の内部の状態を外から直接変えてはいけないのはなぜか</td><td>関係する業務ロジックを1か所に集め、重複させないため</td></tr>
+<tr><td>集約の処理の一部をデータベース側へ移してはいけないのはなぜか</td><td>記述を重複させないため。物理的にも論理的にも離れた場所に同じ処理があると、実装に差が生まれ、データの食い違いの原因になる</td></tr>
+<tr><td>集約をできるだけ小さく保つのはなぜか</td><td>ひと塊の変更の単位を大きくすると、集約が不必要に複雑になり、性能も落ちるため</td></tr>
+<tr><td>監査の記録に記録のファイルを使ってはいけないのはなぜか</td><td>長い目で見ると、ファイルではデータの一貫性を保証できないため</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">イベント履歴式の利点は業務エキスパートに響く</span></div>
+<p>業務エキスパートとの会話で、状態を保存する形と履歴を保存する形の2種類があることを伝え、それぞれの利点を説明する。とくに時間軸に沿ったモデルの利点を説明するとよい。たいていの場合、業務エキスパートはそこから得られる洞察の深さを気に入り、同僚へ積極的に勧めてくれるようになる。業務エキスパートと話すときは、同じ言葉を使うことを絶対に忘れない。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>現場へ持ち込むときによく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">全部やるか、やらないかで考える</span></div>
+<p>すべての技法を使うことがドメイン駆動設計であり、一部だけ使うのは違う、というとらえ方は誤りである。適切な道具を選んで使う。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">全面的に書き直す</span></div>
+<p>システム全体を一から書き直す試みが成功することはほとんどない。経営の側の支持も得られない。期待できる事業上の価値より、失敗の危険が上回る。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">1行のオブジェクトから直接イベント履歴式へ移る</span></div>
+<p>誤ったトランザクション境界を持ち込む危険がある。いったん状態を持つ集約へ移り、境界を確立してからイベント履歴式へ移る。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">権威に訴えて導入しようとする</span></div>
+<p>「本にそう書いてあるから」という説得のしかたは機能しない。それぞれの設計判断の論理的な理由を説明する。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅴ. 置き換えたもの</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書き起こし版</th><th>置き換え先</th><th>保った構造</th></tr></thead>
+      <tbody>
+        <tr><td>広告の業務領域を使ったモジュール構成（前後10個の名前）</td><td>配送の業務領域（前5個・後4個）</td><td>技術の視点で割った形から業務の視点で割った形への組み替え。<strong>箱の数が変わることも含めて</strong></td></tr>
+        <tr><td>植物の生態にちなんだ移行方式の呼び名</td><td>「外から包んで置き換える」</td><td>包んで育て、最後に宿主が役目を終えるという移行の形</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>呼び名を説明に言い換えました</h3>
+    <p>比喩に由来する呼び名は、<strong>その方式が何をするかの説明</strong>に置き換えています。呼び名を知らない読み手にも、何をする方式かがそのまま伝わります。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅵ. 15本目までの推移</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
+      <tbody>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
+        <tr><td>ubiquitous-language</td><td>99</td><td>231</td><td>177</td></tr>
+        <tr><td>design-heuristics</td><td>120</td><td>310</td><td>203</td></tr>
+        <tr><td>architecture-patterns</td><td>104</td><td>349</td><td>268</td></tr>
+        <tr><td>event-sourced-domain-model</td><td>107</td><td>501</td><td>408</td></tr>
+        <tr><td>context-integration</td><td>105</td><td>352</td><td>250</td></tr>
+        <tr><td>communication</td><td>114</td><td>303</td><td>234</td></tr>
+        <tr><td>business-domain</td><td>79</td><td>121</td><td>58</td></tr>
+        <tr><td>domain-expert</td><td>80</td><td>134</td><td>50</td></tr>
+        <tr><td>event-storming</td><td>108</td><td>301</td><td>262</td></tr>
+        <tr><td><strong>real-world-ddd</strong></td><td><strong>102</strong></td><td><strong>314</strong></td><td><strong>308</strong></td></tr>
+        <tr><td><strong>15本の合計</strong></td><td><strong>1,553</strong></td><td><strong>4,226</strong></td><td><strong>3,655</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow"><strong>15 / 19本。</strong>残り4本・約1,100行 ── マイクロサービス、イベント駆動、データメッシュ、締めの経験則です。<strong>本編（第Ⅰ〜Ⅲ部）が揃い、残るのは応用編と締めだけになりました。</strong></p>
+</section>
+
+<footer>
+  旧要約版102行・書き起こし版308行・変換後314行（描画結果の実測）。<br>
+  モジュール構成の例は架空の業務へ、比喩に由来する呼び名はその方式が何をするかの説明へ置き換えた。<br>
+  プレビューは描画物から機械で生成した（手で書き写すと取りこぼすため）。
+</footer>
+
+</div>

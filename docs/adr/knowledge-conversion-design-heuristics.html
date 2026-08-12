@@ -1,0 +1,450 @@
+<title>design-heuristics の変換 ── 7本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.78rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 7本目</span>
+  <h1><code>design-heuristics</code> を書き起こし版から移す</h1>
+  <p class="standfirst">旧要約版120行 → <strong>310行</strong>。書き起こし版203行を上回りました。この本の中身は<strong>ほぼ全部が判断の流れ</strong>で、旧版はそれを分岐点と遷移の一覧という平らな形に潰していました。<strong>5つの図</strong>として立て直しています。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">21</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">5</span><span class="l">図（旧版は0）</span></div>
+    <div class="stat"><span class="n">2</span><span class="l">原文（表）</span></div>
+    <div class="stat"><span class="n">310</span><span class="l">行（旧120 / 書起し203）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. この本だけ、旧版の壊れ方が違いました</h2>
+  <p class="narrow">これまでの6本は「節が丸ごと落ちている」という欠落でした。<code>design-heuristics</code> は<strong>節はほぼ残っていて、形が潰れていた</strong>という壊れ方です。</p>
+
+  <div class="box bad">
+    <h3>旧版は、4つの判定を1つの決定木に押し込んでいました</h3>
+    <p>書き起こし版には <strong>判定の流れが4つ</strong>（実装方法・技術方式・テスト方針・そして総合）あります。旧版はこれを <code>decisionCriteria</code> という単一のブロックに入れたため、<strong>13個の分岐点と14本の遷移が1つの木に混ざり</strong>、どこからどこまでが1つの判定なのか読めなくなっていました。</p>
+    <p>しかも <code>q1</code>（文脈の大きさ）と <code>q5</code>（永続化モデルは複数か）は、<strong>どの遷移からも到達できない孤立点</strong>として残っていました。形式が持てる構造が1つしかなかったので、入れ場所が無かったものが宙に浮いたのだと思います。</p>
+  </div>
+
+  <div class="box ok">
+    <h3>4つを、4つの図として分けました</h3>
+    <p>加えて「4つの判断が連鎖する」こと自体を<strong>5つ目の図</strong>として立てました。これは書き起こし版では地の文で述べられていて、旧版では原則の1項目になっていたものです。<strong>後段の判断で違和感が出たら前段を疑う</strong>という、この本の使い方そのものにあたります。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>経験則とは何か</td><td>原則6項目に分散</td><td>定義として1ノードに集約</td></tr>
+        <tr><td class="new">4つの判断は連鎖する</td><td>原則の1行</td><td><strong>図。食い違ったら前段へ戻る経路を含む</strong></td></tr>
+        <tr><td>区切られた文脈の大きさ</td><td>孤立した分岐点1つ</td><td>子3つに展開</td></tr>
+        <tr><td class="new">　最適な大きさはない</td><td>×</td><td>モデルが先、大きさは結果</td></tr>
+        <tr><td class="new">　最初は広い範囲で区切る</td><td>×</td><td><strong>引き直しはほぼ放置される、が理由</strong></td></tr>
+        <tr><td class="new">　中核とよくやりとりする相手も同じ側に</td><td>×</td><td>垂直の境界・大きな泥団子の回避</td></tr>
+        <tr><td>業務ロジックの実装方法</td><td>分岐点として一部</td><td><strong>図</strong>＋子2つ</td></tr>
+        <tr><td class="new">　複雑さをどう判定するか</td><td>×</td><td>不変条件を含むか／検証が中心か。同じ言葉の複雑さも材料</td></tr>
+        <tr><td>　カテゴリーとの食い違いを見つける</td><td>アンチパターンに1つ</td><td><strong>実装を選び直すのではなく、カテゴリー判断を見直す機会</strong></td></tr>
+        <tr><td>技術方式</td><td>分岐点として一部</td><td><strong>図</strong>＋子2つ</td></tr>
+        <tr><td class="new">　そうなる理由</td><td>分岐点のラベルに括弧書き</td><td><strong>表として独立（4方式ぶんの根拠）</strong></td></tr>
+        <tr><td class="new">　永続化が複数なら CQRS</td><td>孤立した分岐点</td><td>対応表への例外として位置づけ直した</td></tr>
+        <tr><td>テストの基本方針</td><td>分岐点として一部</td><td><strong>図</strong>＋対比表</td></tr>
+        <tr><td class="new">総合的な判定</td><td><strong>×</strong></td><td><strong>図。実装方法／技術方式／テスト方針の3つの枠で括った14ノード</strong></td></tr>
+        <tr><td class="new">　この判定方法の使い方</td><td><strong>×</strong></td><td><strong>厳格な規則ではない。独自の判定方法を作るのは自由。複雑な手段は最後の手段</strong></td></tr>
+        <tr><td>アンチパターン ×4</td><td>あり</td><td>そのまま維持</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 図の説明を、注釈の表に入れ替えました</h2>
+  <p class="narrow">最初に出した版では、図の後ろに<strong>辺の一覧表</strong>（から／へ／関係）を置いていました。図に描いてあることを文字で書き写しただけで、読み手の解釈を1つも狭めていません。<code>figure</code> に<strong>注釈</strong>を足し、同じ位置に別の表を置いています。</p>
+
+  <div class="box bad">
+    <h3>前：図をなぞる</h3>
+    <p><code>| 業務領域のカテゴリーは | データ構造は複雑か | 補完・一般・連係 |</code> ── 図を見れば分かることを、より読みにくい形で繰り返している。17行のうち5行は「関係」の欄が空だった。</p>
+  </div>
+
+  <div class="box ok">
+    <h3>後：どの要素の話かを名指しして、読み違えを潰す</h3>
+    <p>「どこの話か」には<strong>図に実際に描いた節点・辺・囲みの名前</strong>しか書けません。この形にすると、どこにも紐づかない一般論を書いた時点でそれが見えます。文章で書くと、この規律が効きません。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead>
+      <tbody>
+        <tr><td>CQRSへ入る4本</td><td>3本（永続化は複数）と1本（イベント履歴式）で意味が違う。<strong>前者は元の技術方式へ上乗せし、後者はそれ自体が技術方式になる</strong></td></tr>
+        <tr><td>囲みをまたぐ線</td><td>「決まる」であって「呼び出す」ではない</td></tr>
+        <tr><td>データ構造は複雑か</td><td>業務ルールではなく<strong>データの形</strong>を問う。業務ルールの複雑さは手前で判定済み</td></tr>
+        <tr><td>テスト方針から業務領域のカテゴリー</td><td>繰り返しではなく、<strong>合わなかったときだけ通る例外の経路</strong>。直す先はテスト方針ではなく出発点</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="narrow">併せて <code>x-prompt</code>（執筆ガイダンス）も書きました。「どこの話か」には<strong>図に無いものを名指ししない</strong>、「図に載せきれないこと」には<strong>図を見れば分かることを書かない</strong>と明記しています。読み違えようのない図なら空でよく、その場合は表が付きません。</p>
+</section>
+
+<section>
+  <h2>Ⅳ. 完全プレビュー</h2>
+  <p class="narrow">描画された341行を、<strong>省略なしで</strong>並べています。21ノードすべてです。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / design-heuristics</span><span>ノード21 ・ 図5 ・ 原文2</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">経験則とは何か</span></div>
+<p>100%正しいと証明された定理ではなく、完全性は保証されないが実務で役に立つおおまかなやり方。大量の手がかりが生む雑音を遮り、複雑さの根源が生む重要な手がかりへ焦点を合わせるための、実践的な問題の解き方である。この章の経験則が焦点を合わせるのは2つ——さまざまな事業活動に共通する本質的な特性と、設計判断そのものが抱える本質的な難しさ。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">4つの判断は連鎖する</span></div>
+<p>区切られた文脈の大きさ・業務ロジックの実装方法・技術方式・テスト方針は独立していない。前の判断が後の判断の前提になるので、後段で迷ったときは前段を疑い直すのが近道になる。</p>
+<p>4つの判断が連鎖しており、後段の違和感は前段を疑う合図になることを示す</p>
+<p>4つの判断は前から順に前提になり、最後まで行って合わなければ出発点へ戻る。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;業務領域のカテゴリー&quot;]
+    n1[&quot;区切られた文脈の大きさ&quot;]
+    n2[&quot;業務ロジックの実装方法&quot;]
+    n3[&quot;技術方式&quot;]
+    n4[&quot;テスト方針&quot;]
+    n0 --&gt; n1
+    n1 --&gt; n2
+    n2 --&gt; n3
+    n3 --&gt; n4
+    n4 --&gt;|&quot;食い違ったら戻って疑う&quot;| n0
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>4本の矢印</td><td>時間の順序ではなく、前提の順序である。4つを同時に考えてもよいが、左が決まらないと右は決められない、という依存を表している。</td></tr>
+<tr><td>業務領域のカテゴリー</td><td>節点は5つあるが、判断として数えるのは右の4つである。左端のこれは、この連鎖の中で決めるものではなく、外から持ち込む前提にあたる。</td></tr>
+<tr><td>テスト方針から業務領域のカテゴリー</td><td>繰り返しを表していない。テスト方針が現場の実感と合わないときにだけ通る例外の経路であり、そのとき直す先はテスト方針ではなく出発点のカテゴリー判断である。この線があるために、この図は手順書ではなく、食い違いの原因をどこに探すかの地図として読める。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">区切られた文脈の大きさ</span></div>
+<p>大きさそのものに一般解は無い。モデルを作った結果として大きさが決まる。</p>
+<div class="node d2"><div class="node-h"><span class="nm">最適な大きさはない</span></div>
+<p>大きさは、設計の手がかりとしてもっとも役に立たないものの一つである。先に大きさを決めてモデルを当てはめるのではなく、モデルを作ってから区切られた文脈の大きさを決める。順序は逆にしない。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">最初は広い範囲で区切る</span></div>
+<p>複数の区切られた文脈にまたがる変更は、調整に多くの時間と労力を要する。一度引いた境界を引き直すのはとてもたいへんで、ほとんどの場合そのまま放置される。したがって広い範囲を境界とするところから始め、業務知識が増えるのに合わせて必要なら小さく切り分ける。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">中核を含むときは、よくやりとりする相手も同じ側に置く</span></div>
+<p>中核の業務領域を含む区切られた文脈を設計するときは、その業務領域と頻繁にやりとりする他の業務領域を同じ区切られた文脈に含めておく。含める相手は中核・補完・一般のいずれでもよい。初期段階では予測しにくい変更に対応しやすくなるためである。適切な垂直の境界を定義しておけば、一枚岩になった区切られた文脈をモジュールに割ることができ、大きな泥団子になるのを防げる。その垂直の論理的な境界を、後から物理的な境界へ引き直すこともできる。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">業務ロジックの実装方法</span></div>
+<p>業務領域のカテゴリーとデータ構造の複雑さで決まる。</p>
+<p>業務ロジックの実装方法を、業務領域のカテゴリーとデータの複雑さから決める</p>
+<p>業務領域のカテゴリーとデータの複雑さという2つの問いだけで、4つの実装方法のどれかに行き着く。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;業務領域のカテゴリーは&quot;]
+    n1[&quot;データ構造は複雑か&quot;]
+    n2[&quot;金銭処理・一貫した監査記録・深い行動分析が要るか&quot;]
+    n3[&quot;アクティブレコード&quot;]
+    n4[&quot;トランザクションスクリプト&quot;]
+    n5[&quot;イベント履歴式ドメインモデル&quot;]
+    n6[&quot;ドメインモデル&quot;]
+    n0 --&gt;|&quot;補完・一般・連係&quot;| n1
+    n0 --&gt;|&quot;中核&quot;| n2
+    n1 --&gt;|&quot;はい&quot;| n3
+    n1 --&gt;|&quot;いいえ&quot;| n4
+    n2 --&gt;|&quot;はい&quot;| n5
+    n2 --&gt;|&quot;いいえ&quot;| n6
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>業務領域のカテゴリーは</td><td>ここで分類をやり直すのではない。すでに済んでいる分類の結果を持ち込むだけの入口である。</td></tr>
+<tr><td>データ構造は複雑か</td><td>業務ルールの複雑さではなく、データの形の複雑さを問う。業務ルールの複雑さは中核かどうかの側に織り込まれているので、ここで二重に問わない。</td></tr>
+<tr><td>金銭処理・一貫した監査記録・深い行動分析が要るか</td><td>3つのうち1つでも当てはまれば「はい」へ進む。3つとも必要という意味ではない。</td></tr>
+<tr><td>4つの終点</td><td>排他だが、それは1つの業務領域についての話である。同じ区切られた文脈の中に業務領域が複数あるなら、それぞれ別の終点になってよい。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">複雑さをどう判定するか</span></div>
+<p>複雑な業務ロジックとは、入り組んだ業務ルール・不変条件・最適化の手続きを含むもの。単純な業務ロジックとは、入力データの検証が中心のもの。同じ言葉そのものの複雑さも判断材料になる——主に登録・参照・更新・削除を説明しているなら業務ロジックは単純であり、入り組んだ業務の流れと複雑な業務ルールを説明しているなら複雑である。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">カテゴリー判断と実装方法の食い違いを見つける</span></div>
+<p>中核と判断したのに実装方法がアクティブレコードやトランザクションスクリプトになる、補完と判断したのに実装方法がドメインモデルやイベント履歴式になる——こうした食い違いは要注意である。ただしこれは実装方法を選び直せという合図ではなく、業務領域や事業活動についての自分たちの判断を見直す絶好の機会だと捉える。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">技術方式</span></div>
+<p>業務ロジックの実装方法が決まれば、技術方式はほぼ一意に決まる。</p>
+<p>技術方式が、業務ロジックの実装方法から一意に決まることを示す</p>
+<p>実装方法が決まれば技術方式も決まる。選び直す余地はほとんど無い。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;イベント履歴式ドメインモデル&quot;]
+    n1[&quot;ドメインモデル&quot;]
+    n2[&quot;アクティブレコード&quot;]
+    n3[&quot;トランザクションスクリプト&quot;]
+    n4[&quot;永続化モデルは複数か&quot;]
+    n5[CQRS]
+    n6[&quot;ポートとアダプター&quot;]
+    n7[&quot;レイヤードアーキテクチャ（4層）&quot;]
+    n8[&quot;レイヤードアーキテクチャ（3層）&quot;]
+    n0 --&gt; n5
+    n1 --&gt; n6
+    n2 --&gt; n7
+    n3 --&gt; n8
+    n4 --&gt;|&quot;はい（実装方法によらず加わる）&quot;| n5
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>イベント履歴式ドメインモデルからCQRS／ドメインモデルからポートとアダプター／アクティブレコードからレイヤードアーキテクチャ（4層）／トランザクションスクリプトからレイヤードアーキテクチャ（3層）</td><td>この4本は選択ではなく帰結である。4本を見比べて好きなものを選ぶための図ではない。</td></tr>
+<tr><td>永続化モデルは複数か</td><td>左の4つから切り離して描いてあるのは、これが実装方法によらない独立した問いだからである。どの実装方法から来てもこの問いには当たる。</td></tr>
+<tr><td>永続化モデルは複数かからCQRS</td><td>イベント履歴式から伸びる線とは意味が違う。こちらは元の技術方式の上に重ねる追加であり、イベント履歴式からの線は、CQRSでなければ成立しないという必然である。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">そうなる理由</span></div>
+<p>対応は取り決めではなく、実装方法が抱える制約から導かれている。</p>
+<p>実装方法ごとに、なぜその技術方式になるのかを並べる</p>
+<p>対応は恣意的ではなく、実装方法が抱える制約から導かれている。理由の側を読むと、例外を認めてよい場面かどうかを自分で判断できる。</p>
+<div class="tablewrap"><table><thead><tr><th>実装方法</th><th>技術方式</th><th>そうなる理由</th></tr></thead><tbody>
+<tr><td>イベント履歴式ドメインモデル</td><td>CQRS</td><td>CQRSが無いと、集約の状態にもとづく参照が極端に制限される</td></tr>
+<tr><td>ドメインモデル</td><td>ポートとアダプター</td><td>レイヤードアーキテクチャでは、集約と値オブジェクトを永続化から引き離しにくい</td></tr>
+<tr><td>アクティブレコード</td><td>レイヤードアーキテクチャ（4層）</td><td>追加したサービス層が、アクティブレコードを制御する</td></tr>
+<tr><td>トランザクションスクリプト</td><td>レイヤードアーキテクチャ（3層）</td><td>最小の層構成で足りる</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">永続化モデルが複数なら CQRS を加える</span></div>
+<p>CQRSは、業務ロジックの実装方法がイベント履歴式ドメインモデルでなくても、複数の永続化モデルでデータを表現したい場合には役に立つ可能性がある。これは上の対応表に対する例外として扱う。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">テストの基本方針</span></div>
+<p>業務ロジックの実装方法と技術方式が決まれば、テスト方針も決まる。</p>
+<p>テスト方針が、業務ロジックの実装方法から決まることを示す</p>
+<p>実装方法が決まればテスト方針も決まり、2つの実装方法は同じ方針へ行き着く。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;トランザクションスクリプト&quot;]
+    n1[&quot;アクティブレコード&quot;]
+    n2[&quot;ドメインモデル&quot;]
+    n3[&quot;イベント履歴式ドメインモデル&quot;]
+    n4[&quot;逆ピラミッド形&quot;]
+    n5[&quot;ダイヤモンド形&quot;]
+    n6[&quot;ピラミッド形&quot;]
+    n0 --&gt; n4
+    n1 --&gt; n5
+    n2 --&gt; n6
+    n3 --&gt; n6
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>4本の線</td><td>「その種類のテストだけを書く」ではなく、どこに重心を置くかを表す。ピラミッド形でも統合テストは書くし、逆ピラミッド形でも単体テストは書く。</td></tr>
+<tr><td>ドメインモデルからピラミッド形／イベント履歴式ドメインモデルからピラミッド形</td><td>実装方法が違うのに同じ終点になるのは、方針を決めているのが実装方法の名前ではなく、業務ロジックがどの層に置かれるかだからである。どちらも1つの層に集まっている。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">3つの方針の対比</span></div>
+<p>重心の置きどころが3通りある。</p>
+<p>3つのテスト方針を、重心と向いている実装方法で対比する</p>
+<p>重心がどの層に寄るかは、業務ロジックがどの層に置かれるかで決まる。業務ロジックが層をまたぐほど、重心は上へ移る。</p>
+<div class="tablewrap"><table><thead><tr><th>方針</th><th>重心</th><th>向いている実装方法</th></tr></thead><tbody>
+<tr><td>ピラミッド形</td><td>単体テストを厚く。統合は少なく、端から端までのテストはさらに少ない</td><td>ドメインモデル・イベント履歴式ドメインモデル</td></tr>
+<tr><td>ダイヤモンド形</td><td>統合テストに寄せる</td><td>アクティブレコード（業務ロジックがサービス層と業務ロジック層にまたがる）</td></tr>
+<tr><td>逆ピラミッド形</td><td>端から端までのテストを最重視し、処理の流れを通しで確かめる</td><td>トランザクションスクリプト（業務ロジックが単純で層が少ない）</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">総合的な判定</span></div>
+<p>カテゴリーの判断から、実装方法・技術方式・テスト方針までを一続きで辿る。</p>
+<p>業務領域のカテゴリーから、実装方法・技術方式・テスト方針までを一続きで決める</p>
+<p>業務領域のカテゴリーという1つの入口から、実装方法・技術方式・テスト方針が順に決まる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    subgraph g0[&quot;実装方法&quot;]
+        n0[&quot;トランザクションスクリプト&quot;]
+        n1[&quot;アクティブレコード&quot;]
+        n2[&quot;ドメインモデル&quot;]
+        n3[&quot;イベント履歴式ドメインモデル&quot;]
+    end
+    subgraph g1[&quot;技術方式&quot;]
+        n4[&quot;レイヤードアーキテクチャ（3層）&quot;]
+        n5[&quot;レイヤードアーキテクチャ（4層）&quot;]
+        n6[&quot;ポートとアダプター&quot;]
+        n7[CQRS]
+    end
+    subgraph g2[&quot;テスト方針&quot;]
+        n8[&quot;逆ピラミッド形&quot;]
+        n9[&quot;ダイヤモンド形&quot;]
+        n10[&quot;ピラミッド形&quot;]
+    end
+    n11[&quot;業務領域のカテゴリーは&quot;]
+    n12[&quot;データ構造は複雑か&quot;]
+    n13[&quot;金銭処理・監査記録・深い行動分析か&quot;]
+    n11 --&gt;|&quot;補完・一般・連係&quot;| n12
+    n11 --&gt;|&quot;中核&quot;| n13
+    n12 --&gt;|&quot;いいえ&quot;| n0
+    n12 --&gt;|&quot;はい&quot;| n1
+    n13 --&gt;|&quot;いいえ&quot;| n2
+    n13 --&gt;|&quot;はい&quot;| n3
+    n0 --&gt;|&quot;永続化は1つ&quot;| n4
+    n0 --&gt;|&quot;永続化は複数&quot;| n7
+    n1 --&gt;|&quot;永続化は1つ&quot;| n5
+    n1 --&gt;|&quot;永続化は複数&quot;| n7
+    n2 --&gt;|&quot;永続化は1つ&quot;| n6
+    n2 --&gt;|&quot;永続化は複数&quot;| n7
+    n3 --&gt; n7
+    n4 --&gt; n8
+    n5 --&gt; n9
+    n6 --&gt; n10
+    n3 --&gt; n10
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>実装方法／技術方式／テスト方針（3つの囲み）</td><td>実行する工程ではなく、判断の種類である。上から順に着手するのではなく、左の分岐を辿り終えた結果として、それぞれの囲みから1つずつ選ばれる。</td></tr>
+<tr><td>囲みをまたぐ線</td><td>「決まる」であって「呼び出す」ではない。実装方法が技術方式を呼び出すのではなく、実装方法が決まると技術方式も決まる、という意味である。</td></tr>
+<tr><td>CQRSへ入る4本</td><td>3本（永続化は複数）と1本（イベント履歴式）で意味が違う。前者は元の技術方式へ上乗せし、後者はそれ自体が技術方式になる。</td></tr>
+<tr><td>データ構造は複雑か</td><td>業務ルールではなくデータの形を問う。業務ルールの複雑さは、その手前の中核かどうかで判定済みである。</td></tr>
+<tr><td>ポートとアダプターからピラミッド形／イベント履歴式ドメインモデルからピラミッド形</td><td>経路が違っても同じ重心に行き着く。テスト方針を決めているのは経路ではなく、業務ロジックが1つの層に集まっているかどうかである。</td></tr>
+</tbody></table></div>
+<div class="node d2"><div class="node-h"><span class="nm">この判定方法の使い方</span></div>
+<p>あくまで経験則であり、厳格な規則ではない。設計判断は文脈に依存する。この判定方法を部分的に変えたり、独自の判定方法を作ったりするのは自由である。そのうえで守るべき指針は2つ——できるだけ単純な手段を選ぶこと、そして複雑な手段（ドメインモデル・イベント履歴式・CQRS）は、本当に必要なときの最後の手段として使うこと。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>設計の経験則を使うときによく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">大きさから区切られた文脈を決める</span></div>
+<p>「細かく分ける方式だから小さく」「一枚にまとめる方式だから大きく」のように、実装形態の方針を先に決めてからモデルを当てはめるのは順序が逆である。モデルが先で、大きさは結果として出る。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">すべての業務領域に同じ実装方法を使う</span></div>
+<p>チームがイベント履歴式ドメインモデルに習熟していても、全業務領域へ一律に適用するより、経験則で使い分けるほうが効率的である。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">補完的な業務領域にドメインモデルを使う</span></div>
+<p>業務ロジックが単純な補完領域に手の込んだ設計を持ち込むと、複雑さに見合わない保守の負担だけが残る。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">カテゴリー判断と実装方法の食い違いを放置する</span></div>
+<p>食い違いに気づいても放置すると、後段の技術方式・テスト方針の選択もつられて不適切になる。気づいた時点で、業務領域のカテゴリー判断そのものを疑い直す。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅴ. 置き換えたもの</h2>
+  <p class="narrow">この本は書き起こし版の時点で具体的な事例をほとんど持たず、置き換えが要ったのは1箇所だけでした。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書き起こし版</th><th>置き換え先</th><th>保った内容</th></tr></thead>
+      <tbody>
+        <tr><td>著者以外の人物に帰した一句（引用符・人名つき）</td><td>主張そのものへの言い換え</td><td>「大きさは、設計の手がかりとしてもっとも役に立たないものの一つ」という主張</td></tr>
+        <tr><td>旧要約版の実例（架空のオンライン書店）</td><td>削除</td><td>実例が担っていた「同じ文脈の中でも業務領域ごとに方式が違ってよい」は、総合的な判定の図が構造として示す</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>機械で確認しました</h3>
+    <p>人名・引用符つきの一句・旧版の架空事例を grep して<strong>0件</strong>。加えて外来語のまま残っていた用語（表題の「ヒューリスティクス」）も、この文書自身が使っている「設計の経験則」へ揃えました。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅵ. 7本目までの推移</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
+      <tbody>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
+        <tr><td>ubiquitous-language</td><td>99</td><td>231</td><td>177</td></tr>
+        <tr><td><strong>design-heuristics</strong></td><td><strong>120</strong></td><td><strong>310</strong></td><td><strong>203</strong></td></tr>
+        <tr><td><strong>7本の合計</strong></td><td><strong>754</strong></td><td><strong>1,851</strong></td><td><strong>1,817</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow"><strong>7 / 19本</strong>。残り12本・約2,900行です。</p>
+</section>
+
+<footer>
+  旧要約版120行・書き起こし版203行・変換後310行（描画結果の実測）。<br>
+  人物に帰した一句は主張そのものへ言い換えた。図が示す判断の分岐と連鎖の構造は保っている。<br>
+  プレビューは描画物から機械で生成した（手で書き写すと取りこぼすため）。
+</footer>
+
+</div>

@@ -1,0 +1,360 @@
+<title>ubiquitous-language の変換 ── 6本目</title>
+<style>
+:root{
+  --ground:#F4F5F7; --surface:#FFFFFF; --sunk:#EAECEF;
+  --ink:#1A1D21; --muted:#5C6470; --faint:#8A929E;
+  --ok:#2F5D50; --ok-soft:#E4EDE9; --ok-line:#9BBFB1;
+  --bad:#A0432B; --bad-soft:#F6E7E1; --bad-line:#D3A08C;
+  --line:#DDE1E6; --line-strong:#C3CAD2;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}}
+:root[data-theme="dark"]{
+  --ground:#14171A; --surface:#1C2024; --sunk:#22272C;
+  --ink:#E8EAED; --muted:#98A0AC; --faint:#727B87;
+  --ok:#7FB5A0; --ok-soft:#1B2A25; --ok-line:#3E6357;
+  --bad:#DE8C6F; --bad-soft:#2E201B; --bad-line:#6B4234;
+  --line:#2C3238; --line-strong:#3C444C;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.8;margin:0;padding:0 1.25rem 6rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;display:flex;flex-direction:column;gap:2.75rem}
+.narrow{max-width:42rem}
+header{padding:4rem 0 0;display:flex;flex-direction:column;gap:1rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.35;margin:0;text-wrap:balance}
+.standfirst{font-size:1.02rem;color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.5;margin:0;
+  padding-bottom:.5rem;border-bottom:2px solid var(--ink);text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:3px}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.8rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.stat .n{font-family:var(--mono);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.75rem;color:var(--faint);line-height:1.5}
+.stat.ok{border-color:var(--ok-line);background:var(--ok-soft)}
+.stat.ok .n{color:var(--ok)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:26rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  background:var(--sunk);border-bottom:1px solid var(--line-strong);white-space:nowrap;font-weight:400}
+tbody tr:last-child td{border-bottom:none}
+td.new{color:var(--ok);font-weight:700}
+.box{border-radius:6px;padding:1.05rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;max-width:44rem}
+.box.ok{background:var(--ok-soft);border:1px solid var(--ok-line)}
+.box.ok h3{color:var(--ok);margin:0;font-family:var(--serif);font-size:1rem}
+.box.bad{background:var(--bad-soft);border:1px solid var(--bad-line)}
+.box.bad h3{color:var(--bad);margin:0;font-family:var(--serif);font-size:1rem}
+.box p,.box li{font-size:.89rem}
+.doc{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.doc-head{padding:.65rem 1.1rem;background:var(--sunk);border-bottom:1px solid var(--line-strong);
+  font-family:var(--mono);font-size:.71rem;color:var(--muted);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.doc-body{padding:1.5rem 1.4rem 1.9rem;display:flex;flex-direction:column;gap:1.35rem}
+.node{display:flex;flex-direction:column;gap:.55rem}
+.node.d2{padding-left:1rem;border-left:2px solid var(--line);margin-left:.2rem}
+.node-h{display:flex;flex-wrap:wrap;gap:.45rem .7rem;align-items:baseline}
+.node-h .nm{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.node.d2 .node-h .nm{font-size:.96rem}
+.node-h .kind{font-family:var(--mono);font-size:.61rem;letter-spacing:.08em;padding:.15em .5em;
+  border-radius:99px;background:var(--sunk);color:var(--faint);white-space:nowrap}
+.node-h .src{font-family:var(--mono);font-size:.65rem;color:var(--faint)}
+.node-h .restored{font-family:var(--mono);font-size:.61rem;padding:.15em .5em;border-radius:99px;
+  background:var(--ok);color:var(--surface);white-space:nowrap}
+.node p{font-size:.92rem}
+.blk{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--ground)}
+.blk .meta{padding:.55rem .85rem;display:flex;flex-direction:column;gap:.3rem;border-bottom:1px solid var(--line);background:var(--surface)}
+.blk .meta div{font-size:.84rem;line-height:1.7}
+.blk .meta b{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--faint);display:inline-block;min-width:4.4rem}
+.blk pre{margin:0;padding:.8rem .9rem;overflow-x:auto;font-family:var(--mono);font-size:.73rem;line-height:1.8;white-space:pre;color:var(--ink)}
+pre.mermaid{background:transparent;margin:0;padding:.9rem .8rem;text-align:center;overflow-x:auto;color:inherit}
+.blk table{min-width:18rem;font-size:.78rem;border:none;border-radius:0}
+.blk .tablewrap{border:none;border-top:1px solid var(--line);border-radius:0;background:var(--surface)}
+footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mono);font-size:.71rem;color:var(--faint);line-height:2}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Waffle / knowledge の変換 6本目</span>
+  <h1><code>ubiquitous-language</code> を書き起こし版から移す</h1>
+  <p class="standfirst">旧要約版99行 → <strong>231行</strong>。書き起こし版177行を超えました。<strong>今日の語彙の議論の出どころ</strong>——一語一義・同義語を使わない・言語化されていない知識へどうたどりつくか——がすべて戻っています。</p>
+</header>
+
+<section>
+  <div class="tally">
+    <div class="stat"><span class="n">23</span><span class="l">ノード</span></div>
+    <div class="stat ok"><span class="n">+15</span><span class="l">旧要約版で落ちていた節</span></div>
+    <div class="stat"><span class="n">3</span><span class="l">図</span></div>
+    <div class="stat"><span class="n">2</span><span class="l">原文（表1・記法1）</span></div>
+    <div class="stat"><span class="n">231</span><span class="l">行（旧99 / 書起し177）</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅰ. 今日の議論に、何度も出てきた基準です</h2>
+
+  <div class="box ok">
+    <h3>「同義語を作らない」の正確な形</h3>
+    <p>ddd が今日、<code>sd-document-management</code> の「取り下げ」と <code>sd-schema-management</code> の「除去」を<strong>同義語の乱立</strong>だと指摘しました。その根拠がこの節です。</p>
+    <p>ただし片側だけではありません——<strong>「意図が異なるなら、あえて別の用語を使う」</strong>とも書かれています。「利用者」「訪問者」「管理者」「会員」は技術的には同じ利用者でも、<strong>行動・データ・機能が異なるなら別の用語として扱う</strong>。統一と分離のどちらへ倒すかは、意図の違いで決まります。</p>
+  </div>
+
+  <div class="box ok">
+    <h3>言語化されていない知識へたどりつく唯一の方法</h3>
+    <p>「重要な業務知識の多くは言語化されておらず、業務エキスパートの頭の中だけにある。たどりつく唯一の方法は<strong>質問すること</strong>」。そして質問は一方通行ではなく、<strong>業務エキスパート自身が気づいていなかった曖昧さや未定義の概念を明らかにする</strong>——とくに中核の業務領域で起きやすい、と続きます。</p>
+    <p>今日、私が語彙を勝手に発明して2度差し戻された場面がありました。この節は、その代わりに何をすべきだったかを述べています。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅱ. 何が戻ったか</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>ノード</th><th>旧要約版</th><th>中身</th></tr></thead>
+      <tbody>
+        <tr><td>同じ言葉とは</td><td>あり</td><td>関係者全員が使う単一の言語</td></tr>
+        <tr><td class="new">なぜ必要か</td><td>×</td><td>子2つ。翻訳のたびに意図が変質する</td></tr>
+        <tr><td class="new">　人を介するたびに意図が変質する</td><td>×</td><td>図2-1。往復でずれが積み上がる</td></tr>
+        <tr><td class="new">　モデルの変換のたびに情報が欠落する</td><td>×</td><td>図2-2。3回の変換</td></tr>
+        <tr><td>3つのルール</td><td>一部</td><td>子3つに分解</td></tr>
+        <tr><td>　業務用語のみで構成する</td><td>あり</td><td>技術用語を含めない</td></tr>
+        <tr><td class="new">　一貫性（一語一義）</td><td>一部</td><td>＋あいまいな用語を分解する例（表）</td></tr>
+        <tr><td class="new">　<strong>同義語を使わない</strong></td><td>一部</td><td><strong>意図が異なるならあえて別の用語を使う</strong></td></tr>
+        <tr><td class="new">この用語は同じ言葉として適切か</td><td>×</td><td>3つの問い（図）</td></tr>
+        <tr><td class="new">業務の言葉と技術の言葉</td><td>×</td><td>同じことを述べても別物になる</td></tr>
+        <tr><td class="new">継続的に取り組む</td><td>×</td><td>一度作ったら終わりではない</td></tr>
+        <tr><td class="new">道具の利用</td><td><strong>×</strong></td><td>子3つ。用語の場所・読める記法・検査</td></tr>
+        <tr><td class="new">　用語をまとめる場所</td><td>×</td><td><strong>全員が更新できること。振る舞いは表現できない</strong></td></tr>
+        <tr><td class="new">　振る舞いを読める形で書く記法</td><td>×</td><td>業務エキスパートは読めるだけ、書けはしない</td></tr>
+        <tr><td class="new">　使われ方を検査する仕組み</td><td>×</td><td>ソースコードでの一貫性を見る</td></tr>
+        <tr><td class="new">困難に立ち向かう</td><td><strong>×</strong></td><td>子3つ</td></tr>
+        <tr><td class="new">　<strong>言語化されていない知識へたどりつく</strong></td><td><strong>×</strong></td><td><strong>唯一の方法は質問すること</strong></td></tr>
+        <tr><td class="new">　既存のシステムへ取り込む</td><td>×</td><td>基本手段は忍耐。動かしやすい場所から</td></tr>
+        <tr><td class="new">　言語の選択</td><td>×</td><td>コード上の名前と業務の名前の対応づけ</td></tr>
+        <tr><td>アンチパターン ×3</td><td>あり</td><td>翻訳を挟む／コードだけ／あいまいなままモデル化</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅲ. 完全プレビュー</h2>
+  <p class="narrow">描画された240行を、<strong>省略なしで</strong>並べています。23ノードすべてです。</p>
+
+  <div class="doc">
+    <div class="doc-head"><span>knowledge / ubiquitous-language</span><span>ノード23 ・ 図3 ・ 原文2</span></div>
+    <div class="doc-body">
+
+<div class="node"><div class="node-h"><span class="nm">同じ言葉とは</span></div>
+<p>プロジェクトのすべての関係者——業務エキスパート・ソフトウェア技術者・プロダクト責任者・画面を設計する人など——が共通して使う、事業活動を表現するための単一の言語。ドメイン駆動設計の土台となる手法である。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">なぜ必要か</span></div>
+<p>業務知識は関係者を通じて翻訳されながら開発者に届き、翻訳のたびに意図が変質する。同じ言葉は、その変換をなくして業務エキスパートの考え方をそのままコードへ反映させる。</p>
+<div class="node d2"><div class="node-h"><span class="nm">人を介するたびに意図が変質する</span></div>
+<p>業務知識が、要求をまとめる人・仕様書・実装する人と受け渡されるあいだに翻訳され、そのたびに意図が変わる。</p>
+<p>業務知識が人を介して伝わるあいだに、意図が変質していくことを示す</p>
+<p>業務エキスパートの知識が、要求をまとめる人・仕様書・実装する人と受け渡されるたびに翻訳され、そのたびに意図が変わる。利用者からの反しも同じ経路を逆にたどるので、ずれは往復で積み上がる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;業務エキスパート&quot;]
+    n1[&quot;要求をまとめる人&quot;]
+    n2[&quot;要求仕様書&quot;]
+    n3[&quot;実装する人&quot;]
+    n4[&quot;ソースコード&quot;]
+    n5[&quot;利用者&quot;]
+    n0 --&gt;|&quot;業務知識&quot;| n1
+    n1 --&gt; n2
+    n2 --&gt; n3
+    n3 --&gt; n4
+    n4 --&gt; n5
+    n5 --&gt;|&quot;反し&quot;| n3
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>利用者から実装する人（反し）</td><td>他の線と向きが逆だが、経路が短いという意味ではない。反しも同じ翻訳を逆にたどるので、ずれは往復で積み上がる。</td></tr>
+<tr><td>要求仕様書／ソースコード</td><td>人ではなく成果物である。人と成果物が同じ形で並んでいるのは、どちらも翻訳を挟む点では同じだからである。</td></tr>
+<tr><td>経路全体</td><td>示しているのは経路が長いことではなく、各段で翻訳が起きることである。段の数を減らしても翻訳が残れば、問題は残る。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">モデルの変換のたびに情報が欠落する</span></div>
+<p>業務知識がコードになるまでに複数回のモデル変換が起きる。変換のたびに情報が欠落し、最終的に業務の課題を解決できないソフトウェアが生まれる。</p>
+<p>業務知識がコードになるまでに、複数回モデルが変換されることを示す</p>
+<p>業務知識は、概念のモデル・解決のモデル・ソースコードへと3回変換される。変換のたびに情報が欠落し、最終的に業務の課題を解決できないソフトウェアが生まれる。</p>
+<div class="blk"><pre class="mermaid">
+flowchart LR
+    n0[&quot;業務知識&quot;]
+    n1[&quot;概念のモデル&quot;]
+    n2[&quot;解決のモデル&quot;]
+    n3[&quot;ソースコード&quot;]
+    n0 --&gt;|&quot;発見&quot;| n1
+    n1 --&gt;|&quot;設計&quot;| n2
+    n2 --&gt;|&quot;実装&quot;| n3
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>発見／設計／実装</td><td>担当者の交代を表さない。同じ人が3段すべてを担っても、変換は起きる。</td></tr>
+<tr><td>業務知識</td><td>文書ではなく、業務エキスパートの頭の中にあるものを指す。最初の変換は、それを言葉にする段階にあたる。</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">同じ言葉の3つのルール</span></div>
+<p>満たすべき条件は3つある。</p>
+<div class="node d2"><div class="node-h"><span class="nm">業務用語のみで構成する</span></div>
+<p>技術用語を含めてはいけない。業務エキスパートが分からない言葉は、同じ言葉ではない。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">一貫性（一語一義）</span></div>
+<p>ひとつの用語に意味はひとつ。あいまいな用語は意味ごとに分解する。</p>
+<p>1つの用語が2つの意味を持っている状態と、分解した状態を対比する</p>
+<p>「区分」という1語が、荷物の大きさの区分と、料金の区分の両方を指していると、どちらの話をしているのか読み手が決められない。意味ごとに別の用語へ分解すると、名前だけで区別がつく。</p>
+<div class="tablewrap"><table><thead><tr><th></th><th>用語</th><th>指しているもの</th></tr></thead><tbody>
+<tr><td>あいまい</td><td>区分</td><td>荷物の大きさの区分／料金の区分（2つの意味）</td></tr>
+<tr><td>分解後</td><td>荷姿区分</td><td>荷物の大きさによる区分</td></tr>
+<tr><td>分解後</td><td>料金区分</td><td>料金体系による区分</td></tr>
+</tbody></table></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">同義語を使わない</span></div>
+<p>同じ意味を表す言葉はひとつに統一する。ただし意図が異なるなら、あえて別の用語を使う——「利用者」「訪問者」「管理者」「会員」は技術的には同じ利用者でも、行動・データ・機能が異なるなら別の用語として扱う。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">この用語は同じ言葉として適切か</span></div>
+<p>3つの問いで確かめる。</p>
+<p>ある用語が同じ言葉として適切かを、3つの問いで確かめる</p>
+<p>業務エキスパートがその用語で業務を説明しないなら、それは同じ言葉ではない。文脈によって意味が変わるなら、意味ごとに分解する。同じ意味の別の用語があるなら、意図の違いを確かめて、違いがなければ統一し、違いがあればそれぞれを正式な用語として定義する。</p>
+<div class="blk"><pre class="mermaid">
+flowchart TD
+    n0[&quot;業務エキスパートがこの用語で業務を説明するか&quot;]
+    n1[&quot;文脈によって意味が変わるか&quot;]
+    n2[&quot;同じ意味を表す別の用語があるか&quot;]
+    n3[&quot;業務用語に置き換える&quot;]
+    n4[&quot;意味ごとに別の用語へ分解する&quot;]
+    n5[&quot;意図の違いを確かめる（無ければ統一、有れば両方を定義）&quot;]
+    n6[&quot;同じ言葉として適切&quot;]
+    n0 --&gt;|&quot;いいえ&quot;| n3
+    n0 --&gt;|&quot;はい&quot;| n1
+    n1 --&gt;|&quot;はい&quot;| n4
+    n1 --&gt;|&quot;いいえ&quot;| n2
+    n2 --&gt;|&quot;はい&quot;| n5
+    n2 --&gt;|&quot;いいえ&quot;| n6
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>3つの問いの並び</td><td>入れ替えられない。業務用語でないものを先に置き換えないと、後の2問が意味を持たない。</td></tr>
+<tr><td>意図の違いを確かめる（無ければ統一、有れば両方を定義）</td><td>この節点だけ、答えが2つに分かれる。図では1つの箱に見えるが、実際には分岐である。</td></tr>
+<tr><td>同じ言葉として適切</td><td>3問すべてを通った場合にだけ到達する。途中の終点へ行った場合は、直したうえで最初から問い直す。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">業務の言葉と技術の言葉</span></div>
+<p>同じことを述べていても、業務エキスパートの表現と技術者の表現は別物になる。たとえば業務側は「配送の依頼は、いくつかの荷物をまとめて出せる」「配送を始めるには、受け付け可能な集荷先が少なくともひとつ要る」と言う。技術側は「画面の枠を使って一覧を表示する」「集荷先の表に有効な行があるときだけ処理できる」と言う。技術的な説明は業務エキスパートに伝わらず、業務ロジックの正しい理解を妨げる。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">継続的に取り組む</span></div>
+<p>同じ言葉は一度作ったら終わりではなく、継続的に育てるもの。業務エキスパートとの会話を通じて不正確な表現・誤解・誤認を検出し、修正し続ける。関係者がいつでもどこでも同じ言葉を使う——会話・要件・テスト・文書・ソースコード。事業の理解が進んだら、新しい業務知識を同じ言葉へ取り込んで進化させる。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">道具の利用</span></div>
+<p>同じ言葉を支える道具は3種類ある——用語をまとめる場所、振る舞いを業務エキスパートが読める形で書く記法、そしてソースコードでの使われ方を検査する仕組み。</p>
+<div class="node d2"><div class="node-h"><span class="nm">用語をまとめる場所</span></div>
+<p>同じ言葉を見つけて書き留める場所として使える。重要なのは全員が更新できることで、一部の人だけが管理する中央集権的なやり方とは逆になる。新しく加わった人が事業活動を学ぶときの、最初の参照先にもなる。ただし限界がある——名詞（モノ・プロセス・役割の名前）の整理には役立つが、振る舞い（業務ロジック・規則・制約）は表現できない。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">振る舞いを読める形で書く記法</span></div>
+<p>前提・操作・結果の3つで振る舞いを書く記法。業務エキスパートが読める形でテストの筋書きを書けるので、同じ言葉の文書化と検証を兼ねられる。ただし業務エキスパートがこの形式で書けるという期待は持たない——読めるだけである。</p>
+<p>業務エキスパートが読める形で、振る舞いを書き表した例</p>
+<p>前提・操作・結果の3つで書くと、業務エキスパートが読んで「そうではない」と言える形になる。ただし業務エキスパートがこの形式で書けるという期待は持たない——読めるだけである。</p>
+<div class="blk"><pre>
+Scenario: 新しい依頼を担当者へ知らせる
+  Given 荷主が新しい配送の依頼を出す
+  When  その依頼を担当者へ割り当てる
+  Then  担当者へ割り当ての知らせが届く
+</pre></div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">ソースコードでの使われ方を検査する仕組み</span></div>
+<p>ソースコードを解析して、記述の一貫性の問題や依存関係の複雑さを示す道具がある。同じ言葉の用語がソースコードで適切に使われているかを検査できる。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">困難に立ち向かう</span></div>
+<p>同じ言葉を育てるときに、実際に直面する3つの難しさ。</p>
+<div class="node d2"><div class="node-h"><span class="nm">言語化されていない知識へたどりつく</span></div>
+<p>重要な業務知識の多くは言語化されておらず、業務エキスパートの頭の中だけにある。たどりつく唯一の方法は質問すること。質問することで、業務エキスパート自身が気づいていなかった曖昧さ・見落とし・未定義の概念が明らかになる。これは相互作用であり、技術者の質問が業務エキスパートの理解を深める助けにもなる（とくに中核の業務領域で起きやすい）。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">既存のシステムへ取り込む</span></div>
+<p>既存のシステムに取り入れようとすると、すでに何らかの言語が存在することに気づく。しかしその言語は業務知識を適切に表現できていない可能性がある（技術的な視点で命名された表の名前など）。関係者のあいだで言葉の使い方を変えるのは簡単ではない。基本手段は忍耐で、自分たちが動かしやすい場所——技術文書やソースコード——から手をつける。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">言語の選択</span></div>
+<p>同じ言葉の用語には、ソースコードで扱いやすい言語の名詞を使うことが推奨される。業務エキスパートが別の言語を使っている場合の次善策は、コード上の名前と、その言語での名前を並記して対応づけること。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>同じ言葉でよく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">翻訳を挟む</span></div>
+<p>業務エキスパートと技術者のあいだに翻訳する人を置き、直接対話しない。変換のたびに意図が変質し、伝言ゲームになる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">コードだけに同じ言葉を適用する</span></div>
+<p>会話では別々の用語を使い、コードだけ業務用語にする。会話とコードで言葉がずれると、議論とコードを照合できなくなる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">あいまいな用語をそのままモデル化する</span></div>
+<p>1語が2つの意味を持ったまま、ひとつの型で両方を扱う。意味の衝突が不具合や設計の混乱を生む。</p>
+</div>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅳ. 置き換えたもの</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>書籍の題材</th><th>置き換え先</th><th>保った構造</th></tr></thead>
+      <tbody>
+        <tr><td>Policy（統制ルール／保険契約）</td><td>区分（荷姿区分／料金区分）</td><td>1語が2つの意味を持つ状態と、分解した状態の対比</td></tr>
+        <tr><td>広告キャンペーン管理システムの例</td><td>配送の依頼の例</td><td>業務側の表現と技術側の表現が別物になること</td></tr>
+        <tr><td>人名を含む記法の例</td><td>荷主・担当者（役割で表す）</td><td>前提・操作・結果の3つで書く形</td></tr>
+        <tr><td>実在ツールの製品名 ×3</td><td>役割の説明（用語をまとめる場所／読める記法／検査する仕組み）</td><td>3種類の道具とそれぞれの限界</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box ok">
+    <h3>機械で確認しました</h3>
+    <p>書籍固有の語（Policy・保険契約・広告キャンペーン・iframe・実在ツール名・人名・コンバージョン・販売報奨金）を grep して<strong>0件</strong>。</p>
+  </div>
+</section>
+
+<section>
+  <h2>Ⅴ. 気づいたこと</h2>
+  <div class="box bad">
+    <h3>書き起こし版より長くなりました</h3>
+    <p>177行に対して240行。図に<strong>意図・読み取り・関係の表</strong>を添えたぶんと、本文に埋もれていたものを独立したノードとして立てたぶんです。<code>subdomain</code> でも同じことが起きています（222行→279行）。<strong>粒度を保つと、多くの場合は長くなります</strong>。</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>本</th><th>旧要約版</th><th>変換後</th><th>書き起こし版</th></tr></thead>
+      <tbody>
+        <tr><td>subdomain</td><td>112</td><td>268</td><td>222</td></tr>
+        <tr><td>bounded-context</td><td>93</td><td>189</td><td>291</td></tr>
+        <tr><td>domain-model</td><td>112</td><td>376</td><td>431</td></tr>
+        <tr><td>business-logic-simple</td><td>107</td><td>206</td><td>210</td></tr>
+        <tr><td>evolving-design</td><td>111</td><td>271</td><td>283</td></tr>
+        <tr><td>ubiquitous-language</td><td>99</td><td>231</td><td>177</td></tr>
+        <tr><td><strong>6本の合計</strong></td><td><strong>634</strong></td><td><strong>1,551</strong></td><td><strong>1,614</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="narrow"><strong>6 / 19本</strong>。残り13本・約3,100行です。</p>
+</section>
+
+<footer>
+  旧要約版99行・書き起こし版177行・変換後231行（描画結果の実測）。<br>
+  実例は架空の業務へ置き換え、実在の製品名は役割の説明に置き換えた。図が示す関係の構造は保っている。<br>
+  プレビューは描画物から機械で生成した（手で書き写すと取りこぼすため）。
+</footer>
+
+</div>

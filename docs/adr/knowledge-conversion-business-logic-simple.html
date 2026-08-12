@@ -92,7 +92,7 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
 <header>
   <span class="eyebrow">Waffle / knowledge の変換 4本目</span>
   <h1><code>business-logic-simple</code> を書き起こし版から移す</h1>
-  <p class="standfirst">旧要約版107行 → <strong>209行</strong>。書き起こし版210行に対してほぼ等倍です。<strong>保留中の集約クラス検査で必要な中間項</strong>——「手続きとして書く／1行のオブジェクトを介する／ドメインモデル」の定義と選び分け——がここに揃いました。</p>
+  <p class="standfirst">旧要約版107行 → <strong>206行</strong>。書き起こし版210行に対してほぼ等倍です。<strong>保留中の集約クラス検査で必要な中間項</strong>——「手続きとして書く／1行のオブジェクトを介する／ドメインモデル」の定義と選び分け——がここに揃いました。</p>
 </header>
 
 <section>
@@ -101,7 +101,7 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
     <div class="stat ok"><span class="n">+11</span><span class="l">旧要約版で落ちていた節</span></div>
     <div class="stat"><span class="n">1</span><span class="l">図</span></div>
     <div class="stat"><span class="n">4</span><span class="l">原文（C#3・表1）</span></div>
-    <div class="stat"><span class="n">209</span><span class="l">行（旧107 / 書起し210）</span></div>
+    <div class="stat"><span class="n">206</span><span class="l">行（旧107 / 書起し210）</span></div>
   </div>
 </section>
 
@@ -145,64 +145,59 @@ footer{border-top:1px solid var(--line);padding-top:1.2rem;font-family:var(--mon
     <div class="doc-head"><span>knowledge / business-logic-simple</span><span>ノード20 ・ 図1 ・ 原文4</span></div>
     <div class="doc-body">
 
-      <div class="node"><div class="node-h"><span class="nm">この実装方法が扱う範囲</span><span class="kind">定義</span></div>
-        <p>業務ロジックはソフトウェアでもっとも重要な部分だが、業務領域のカテゴリーが異なれば戦略的な重要性と複雑さが異なる。ここで扱うのは、業務ロジックがかなり単純な場合に適した2つの実装方法である。</p></div>
-
-      <div class="node"><div class="node-h"><span class="nm">トランザクションスクリプト</span><span class="kind">定義</span><span class="src">5.1</span></div>
-        <p>外部からの要求を処理する手順の中に、業務ロジックを埋め込む実装方法。システムが公開するインターフェースは、利用者が実行できる業務処理の集まりと見なせる。データ操作の手続きを、順次処理のスクリプトとして書く。処理手続きが満たすべき唯一の要件はトランザクション管理で、完全に成功するか完全に失敗するかのどちらかで終わる。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>手続きを順に並べただけの実装がどう見えるかを示す</div>
-            <div><b>読み取り</b>取り出す・変換する・書き出す・完了を記録する、という手順が上から順に並ぶ。抽象化は最小限で、読めば何が起きるか分かる。この形が満たすべき唯一の要件は、全部成るか全部成らないかで終わること。</div>
-          </div>
-<pre>DB.StartTransaction();
+<div class="node"><div class="node-h"><span class="nm">この実装方法が扱う範囲</span></div>
+<p>業務ロジックはソフトウェアでもっとも重要な部分だが、業務領域のカテゴリーが異なれば戦略的な重要性と複雑さが異なる。ここで扱うのは、業務ロジックがかなり単純な場合に適した2つの実装方法である。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">トランザクションスクリプト</span></div>
+<p>外部からの要求を処理する手順の中に、業務ロジックを埋め込む実装方法。システムが公開するインターフェースは、利用者が実行できる業務処理の集まりと見なせる。データ操作の手続きを、順次処理のスクリプトとして書く。処理手続きが満たすべき唯一の要件はトランザクション管理で、完全に成功するか完全に失敗するかのどちらかで終わる。</p>
+<p>手続きを順に並べただけの実装がどう見えるかを示す</p>
+<p>取り出す・変換する・書き出す・完了を記録する、という手順が上から順に並ぶ。抽象化は最小限で、読めば何が起きるか分かる。この形が満たすべき唯一の要件は、全部成るか全部成らないかで終わること。</p>
+<div class="blk"><pre>
+DB.StartTransaction();
 var job = DB.LoadNextJob();
 var csv = LoadFile(job.Source);
 var records = ConvertCsvToRecords(csv);
 WriteFile(job.Destination, records.ToString());
 DB.MarkJobAsCompleted(job);
-DB.Commit();</pre>
-        </div>
-
-        <div class="node d2"><div class="node-h"><span class="nm">トランザクション管理の落とし穴</span><span class="kind">アンチパターン</span><span class="src">5.1.2</span><span class="restored">戻した</span></div>
-          <p>見た目は単純だが、トランザクション管理の誤った実装が多くの問題の原因になる。</p>
-          <div class="blk">
-            <div class="meta">
-              <div><b>意図</b>複数の更新をひとつのトランザクションにまとめない形と、まとめた形を対比する</div>
-              <div><b>読み取り</b>上の書き方では、1つ目が成功して2つ目が失敗したとき、配送の状態だけが進んで記録が残らない。下の書き方なら、どちらも成るか、どちらも成らないかになる。</div>
-            </div>
-<pre>// 2つの操作がバラバラのトランザクション
-_db.Execute("UPDATE Shipments SET status=@p1 WHERE shipment_id=@p2", s, id);
-_db.Execute("INSERT INTO StatusLog(shipment_id, status) VALUES(@p1, @p2)", id, s);
+DB.Commit();
+</pre></div>
+<div class="node d2"><div class="node-h"><span class="nm">トランザクション管理の落とし穴</span></div>
+<p>見た目は単純だが、トランザクション管理の誤った実装が多くの問題の原因になる。</p>
+<p>複数の更新をひとつのトランザクションにまとめない形と、まとめた形を対比する</p>
+<p>上の書き方では、1つ目が成功して2つ目が失敗したとき、配送の状態だけが進んで記録が残らない。下の書き方なら、どちらも成るか、どちらも成らないかになる。</p>
+<div class="blk"><pre>
+// 2つの操作がバラバラのトランザクション
+_db.Execute(&quot;UPDATE Shipments SET status=@p1 WHERE shipment_id=@p2&quot;, s, id);
+_db.Execute(&quot;INSERT INTO StatusLog(shipment_id, status) VALUES(@p1, @p2)&quot;, id, s);
 
 // ひとつのトランザクションとして管理
 _db.StartTransaction();
 try {
-    _db.Execute("UPDATE Shipments ...");
-    _db.Execute("INSERT INTO StatusLog ...");
+    _db.Execute(&quot;UPDATE Shipments ...&quot;);
+    _db.Execute(&quot;INSERT INTO StatusLog ...&quot;);
     _db.Commit();
-} catch { _db.Rollback(); throw; }</pre>
-          </div>
-          <div class="node d3"><div class="node-h"><span class="nm">トランザクション管理の欠落</span><span class="kind">アンチパターン</span></div>
-            <p>複数の更新処理をひとつのトランザクションとして管理しないと、処理の途中で障害が発生したときにデータの不整合が起きる。</p></div>
-          <div class="node d3"><div class="node-h"><span class="nm">分散トランザクション</span><span class="kind">アンチパターン</span></div>
-            <p>複数のデータベースにまたがる操作や、書き込みと外部への送出を組み合わせた操作は分散トランザクションになる。仕組みが複雑で規模を広げにくく、失敗も起きやすい。多くの場合、分散トランザクションは使わない。</p></div>
-          <div class="node d3"><div class="node-h"><span class="nm">暗黙的な分散トランザクション</span><span class="kind">アンチパターン</span></div>
-            <p>一見すると単一のデータベースへの単純な操作に見えても、呼び出し元へ結果を返すこと自体が含まれるため、実質的に分散トランザクションになる。呼び出し元が結果を受け取れずにやり直すと、更新が二重に効く。対処のひとつは、同じ操作を繰り返しても結果が変わらないようにすること。</p></div>
-        </div>
-
-        <div class="node d2"><div class="node-h"><span class="nm">トランザクションスクリプトをいつ使うか</span><span class="kind">判断基準</span><span class="src">5.1.3</span><span class="restored">戻した</span></div>
-          <p>向いているのは、手続き的なデータ操作だけという単純な問題領域、データの抽出と変換と書き出し、補完的な業務領域、一般的な業務領域に導入した外部サービスとの連係、そして区切られた文脈をつなぐモデル変換の一部。<strong>中核の業務領域には使ってはいけない</strong>——複雑な業務ロジックに対応できない。よい点は単純さで、抽象化は最小限、実行時の負荷も小さく、読めば分かる。欠点は、業務ロジックが複雑になるとあちこちのスクリプトで同じロジックを重複して書くことになり、一貫性が保てなくなること。</p></div>
-      </div>
-
-      <div class="node"><div class="node-h"><span class="nm">アクティブレコード</span><span class="kind">定義</span><span class="src">5.2</span></div>
-        <p>データベースの1行を表すオブジェクトを介して業務ロジックを書く実装方法。そのオブジェクトはデータベース操作をカプセル化し、データに関連する業務ロジックを持つ。トランザクションスクリプトとの違いは、複雑なデータ構造（1対多・多対多）を扱えること。名前は「データ構造を表すオブジェクト自身が能動的にデータを操作すること」に由来する。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>アクティブレコードを使っても、業務ロジックは手続きとして書かれることを示す</div>
-            <div><b>読み取り</b>手続きがデータベースを直接触るのではなく、1行を表すオブジェクトを作って値を入れ、保存を呼ぶ。全部成るか全部成らないかの管理は、依然として手続きの側にある。</div>
-          </div>
-<pre>public class RegisterShipment {
+} catch { _db.Rollback(); throw; }
+</pre></div>
+<div class="node d3"><div class="node-h"><span class="nm">トランザクション管理の欠落</span></div>
+<p>複数の更新処理をひとつのトランザクションとして管理しないと、処理の途中で障害が発生したときにデータの不整合が起きる。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">分散トランザクション</span></div>
+<p>複数のデータベースにまたがる操作や、書き込みと外部への送出を組み合わせた操作は分散トランザクションになる。仕組みが複雑で規模を広げにくく、失敗も起きやすい。多くの場合、分散トランザクションは使わない。</p>
+</div>
+<div class="node d3"><div class="node-h"><span class="nm">暗黙的な分散トランザクション</span></div>
+<p>一見すると単一のデータベースへの単純な操作に見えても、呼び出し元へ結果を返すこと自体が含まれるため、実質的に分散トランザクションになる。呼び出し元が結果を受け取れずにやり直すと、更新が二重に効く。対処のひとつは、同じ操作を繰り返しても結果が変わらないようにすること。</p>
+</div>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">トランザクションスクリプトをいつ使うか</span></div>
+<p>向いているのは、手続き的なデータ操作だけという単純な問題領域、データの抽出と変換と書き出し、補完的な業務領域、一般的な業務領域に導入した外部サービスとの連係、そして区切られた文脈をつなぐモデル変換の一部。中核の業務領域には使ってはいけない——複雑な業務ロジックに対応できない。よい点は単純さで、抽象化は最小限、実行時の負荷も小さく、読めば分かる。欠点は、業務ロジックが複雑になるとあちこちのスクリプトで同じロジックを重複して書くことになり、一貫性が保てなくなること。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アクティブレコード</span></div>
+<p>データベースの1行を表すオブジェクトを介して業務ロジックを書く実装方法。そのオブジェクトはデータベース操作をカプセル化し、データに関連する業務ロジックを持つ。トランザクションスクリプトとの違いは、複雑なデータ構造（1対多・多対多）を扱えること。名前は「データ構造を表すオブジェクト自身が能動的にデータを操作すること」に由来する。</p>
+<p>アクティブレコードを使っても、業務ロジックは手続きとして書かれることを示す</p>
+<p>手続きがデータベースを直接触るのではなく、1行を表すオブジェクトを作って値を入れ、保存を呼ぶ。全部成るか全部成らないかの管理は、依然として手続きの側にある。</p>
+<div class="blk"><pre>
+public class RegisterShipment {
     public void Execute(ShipmentDetails details) {
         _db.StartTransaction();
         try {
@@ -213,72 +208,71 @@ try {
             _db.Commit();
         } catch { _db.Rollback(); throw; }
     }
-}</pre>
-        </div>
-        <div class="node d2"><div class="node-h"><span class="nm">業務ロジックは依然として手続きとして書く</span><span class="kind">補足</span><span class="restored">戻した</span></div>
-          <p>アクティブレコードを使う場合も、業務ロジックはトランザクションスクリプトとして書く。ただし手続きがデータベースを直接操作するのではなく、1行を表すオブジェクトを操作する。典型的な使い方は、データ構造と振る舞いの分離である——オブジェクトが値の出し入れを公開し、外部の手続きがその値を変更する。</p></div>
-        <div class="node d2"><div class="node-h"><span class="nm">アクティブレコードをいつ使うか</span><span class="kind">判断基準</span><span class="src">5.2.2</span><span class="restored">戻した</span></div>
-          <p>本質的にはトランザクションスクリプトであり、主な目的はデータベース操作の最適化。補完的な業務領域、一般的な業務領域向けの外部サービスとの連係、区切られた文脈どうしを連係するモデルの変換に使う。</p></div>
-        <div class="node d2"><div class="node-h"><span class="nm">貧血ドメインモデルという批判について</span><span class="kind">補足</span><span class="restored">戻した</span></div>
-          <p>アクティブレコードは「貧血ドメインモデル」と呼ばれるアンチパターンとして知られているが、設計手法として否定的に扱うのは避けたい。業務ロジックが単純な場合にこれを使うことに問題はない。むしろ業務ロジックが単純な場合、手の込んだ設計で実装するほうが不必要な複雑さを持ち込む。</p></div>
-        <div class="node d2"><div class="node-h"><span class="nm">設計パターンであって、枠組みの名前ではない</span><span class="kind">補足</span><span class="restored">戻した</span></div>
-          <p>ここで説明しているのは設計パターンであり、同じ名前を持つ特定の枠組みの機能ではない。設計パターンが先にあり、その実装のひとつとして後から枠組みが生まれた。</p></div>
-      </div>
-
-      <div class="node"><div class="node-h"><span class="nm">2つの実装方法の対比</span><span class="kind">対比</span><span class="restored">戻した</span></div>
-        <p>扱えるデータ構造と、向き不向きで並べたもの。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>2つの実装方法を、扱えるデータ構造と向き不向きで対比する</div>
-            <div><b>読み取り</b>違いはデータ構造の複雑さだけで、業務ロジックはどちらも手続きとして書く。どちらも中核の業務領域には向かない。</div>
-          </div>
-          <div class="tablewrap"><table>
-            <thead><tr><th>観点</th><th>手続きとして書く</th><th>1行のオブジェクトを介して書く</th></tr></thead>
-            <tbody>
-              <tr><td>データ構造</td><td>平ら</td><td>複雑（1対多・多対多）</td></tr>
-              <tr><td>データベースの操作</td><td>直接</td><td>オブジェクト経由</td></tr>
-              <tr><td>業務ロジックの記述</td><td>手続きの中</td><td>手続きの中（オブジェクトを操作）</td></tr>
-              <tr><td>向いている領域</td><td>補完・連係・データの移し替え</td><td>補完・外部との連係・モデルの変換</td></tr>
-              <tr><td>向いていない領域</td><td>中核</td><td>中核</td></tr>
-            </tbody>
-          </table></div>
-        </div>
-      </div>
-
-      <div class="node"><div class="node-h"><span class="nm">現実的に考える</span><span class="kind">判断基準</span><span class="src">5.3</span><span class="restored">戻した</span></div>
-        <p>業務データは重要で、コードを書くときにデータの一貫性を保証しなければならない。しかし現実的な選択が必要な場合もある。大量のデータを扱うとき、一貫性に対して柔軟な立場を選ぶこともある——百万件のうち1件の誤りを検出したとき、業務全体を止めるべきかどうかは事業による。どんな状況にも適用できる汎用の規則はない。特殊なケースを切り捨てることによるリスクと事業への影響を評価して判断する。</p></div>
-
-      <div class="node"><div class="node-h"><span class="nm">どの実装方法を選ぶか</span><span class="kind">判断基準</span><span class="restored">戻した</span></div>
-        <p>業務ロジックの複雑さと、データ構造の複雑さで決まる。中核の業務領域なら、どちらも使わずドメインモデルを使う。</p>
-        <div class="blk">
-          <div class="meta">
-            <div><b>意図</b>3つの実装方法のどれを選ぶかを、順に問うて決める</div>
-            <div><b>読み取り</b>まず業務ロジックが複雑かを問い、複雑ならこの2つは使わずドメインモデルへ行く。複雑でなければ、扱うデータ構造が平らか複雑かで、手続きとして書くか、1行のオブジェクトを介するかが決まる。</div>
-          </div>
-<pre class="mermaid">
+}
+</pre></div>
+<div class="node d2"><div class="node-h"><span class="nm">業務ロジックは依然として手続きとして書く</span></div>
+<p>アクティブレコードを使う場合も、業務ロジックはトランザクションスクリプトとして書く。ただし手続きがデータベースを直接操作するのではなく、1行を表すオブジェクトを操作する。典型的な使い方は、データ構造と振る舞いの分離である——オブジェクトが値の出し入れを公開し、外部の手続きがその値を変更する。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">アクティブレコードをいつ使うか</span></div>
+<p>本質的にはトランザクションスクリプトであり、主な目的はデータベース操作の最適化。補完的な業務領域、一般的な業務領域向けの外部サービスとの連係、区切られた文脈どうしを連係するモデルの変換に使う。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">貧血ドメインモデルという批判について</span></div>
+<p>アクティブレコードは「貧血ドメインモデル」と呼ばれるアンチパターンとして知られているが、設計手法として否定的に扱うのは避けたい。業務ロジックが単純な場合にこれを使うことに問題はない。むしろ業務ロジックが単純な場合、手の込んだ設計で実装するほうが不必要な複雑さを持ち込む。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">設計パターンであって、枠組みの名前ではない</span></div>
+<p>ここで説明しているのは設計パターンであり、同じ名前を持つ特定の枠組みの機能ではない。設計パターンが先にあり、その実装のひとつとして後から枠組みが生まれた。</p>
+</div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">2つの実装方法の対比</span></div>
+<p>扱えるデータ構造と、向き不向きで並べたもの。</p>
+<p>2つの実装方法を、扱えるデータ構造と向き不向きで対比する</p>
+<p>違いはデータ構造の複雑さだけで、業務ロジックはどちらも手続きとして書く。どちらも中核の業務領域には向かない。</p>
+<div class="tablewrap"><table><thead><tr><th>観点</th><th>手続きとして書く</th><th>1行のオブジェクトを介して書く</th></tr></thead><tbody>
+<tr><td>データ構造</td><td>平ら</td><td>複雑（1対多・多対多）</td></tr>
+<tr><td>データベースの操作</td><td>直接</td><td>オブジェクト経由</td></tr>
+<tr><td>業務ロジックの記述</td><td>手続きの中</td><td>手続きの中（オブジェクトを操作）</td></tr>
+<tr><td>向いている領域</td><td>補完・連係・データの移し替え</td><td>補完・外部との連係・モデルの変換</td></tr>
+<tr><td>向いていない領域</td><td>中核</td><td>中核</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">現実的に考える</span></div>
+<p>業務データは重要で、コードを書くときにデータの一貫性を保証しなければならない。しかし現実的な選択が必要な場合もある。大量のデータを扱うとき、一貫性に対して柔軟な立場を選ぶこともある——百万件のうち1件の誤りを検出したとき、業務全体を止めるべきかどうかは事業による。どんな状況にも適用できる汎用の規則はない。特殊なケースを切り捨てることによるリスクと事業への影響を評価して判断する。</p>
+</div>
+<div class="node"><div class="node-h"><span class="nm">どの実装方法を選ぶか</span></div>
+<p>業務ロジックの複雑さと、データ構造の複雑さで決まる。中核の業務領域なら、どちらも使わずドメインモデルを使う。</p>
+<p>3つの実装方法のどれを選ぶかを、順に問うて決める</p>
+<p>まず業務ロジックが複雑かを問い、複雑ならこの2つは使わずドメインモデルへ行く。複雑でなければ、扱うデータ構造が平らか複雑かで、手続きとして書くか、1行のオブジェクトを介するかが決まる。</p>
+<div class="blk"><pre class="mermaid">
 flowchart TD
-    n0["業務ロジックは複雑か"]
-    n1["データ構造は複雑か（1対多・多対多）"]
-    n2["ドメインモデルを使う"]
-    n3["1行のオブジェクトを介して書く"]
-    n4["手続きとして書く"]
-    n0 -->|"はい（中核）"| n2
-    n0 -->|"いいえ"| n1
-    n1 -->|"はい"| n3
-    n1 -->|"いいえ"| n4
-</pre>
-        </div>
-      </div>
+    n0[&quot;業務ロジックは複雑か（状態遷移・業務ルール・不変条件が絡み合う）&quot;]
+    n1[&quot;データ構造は複雑か（1対多・多対多）&quot;]
+    n2[&quot;ドメインモデルを使う&quot;]
+    n3[&quot;1行のオブジェクトを介して書く&quot;]
+    n4[&quot;手続きとして書く&quot;]
+    n0 --&gt;|&quot;はい（中核）&quot;| n2
+    n0 --&gt;|&quot;いいえ&quot;| n1
+    n1 --&gt;|&quot;はい&quot;| n3
+    n1 --&gt;|&quot;いいえ&quot;| n4
+</pre></div>
+<div class="tablewrap"><table><thead><tr><th>どこの話か</th><th>図に載せきれないこと</th></tr></thead><tbody>
+<tr><td>業務ロジックは複雑か（状態遷移・業務ルール・不変条件が絡み合う）</td><td>括弧の3つが絡み合っているかを見る。どれか1つがあるだけでは複雑とは言わない。</td></tr>
+<tr><td>データ構造は複雑か（1対多・多対多）</td><td>表やクラスの数ではなく、1対多・多対多の関係があるかを見る。</td></tr>
+<tr><td>ドメインモデルを使う</td><td>この図の外へ出る終点である。ここから先は、この概念が扱う範囲ではない。</td></tr>
+</tbody></table></div>
+</div>
+<div class="node"><div class="node-h"><span class="nm">アンチパターン</span></div>
+<p>単純な実装方法でよく起きる誤り。</p>
+<div class="node d2"><div class="node-h"><span class="nm">中核の業務領域に手続きとしての実装を使う</span></div>
+<p>業務ロジックが複雑になると、あちこちのスクリプトで同じロジックを重複して書くことになる。一貫性が保てなくなり、変更がやっかいで危険な塊になる。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">トランザクション管理を省略する</span></div>
+<p>複数の更新処理をひとつのトランザクションで管理しないと、処理途中の障害でデータの不整合が発生する。トランザクション管理は、この実装方法の名前の由来であり必須である。</p>
+</div>
+<div class="node d2"><div class="node-h"><span class="nm">分散トランザクションを使う</span></div>
+<p>複数のデータベースや外部の基盤にまたがる操作を分散トランザクションで管理しようとすると、複雑になり規模を広げにくく、失敗も起きやすい。別の仕組みを検討する。</p>
+</div>
+</div>
 
-      <div class="node"><div class="node-h"><span class="nm">アンチパターン</span><span class="kind">アンチパターン</span></div>
-        <p>単純な実装方法でよく起きる誤り。</p>
-        <div class="node d2"><div class="node-h"><span class="nm">中核の業務領域に手続きとしての実装を使う</span><span class="kind">アンチパターン</span></div>
-          <p>業務ロジックが複雑になると、あちこちのスクリプトで同じロジックを重複して書くことになる。一貫性が保てなくなり、変更がやっかいで危険な塊になる。</p></div>
-        <div class="node d2"><div class="node-h"><span class="nm">トランザクション管理を省略する</span><span class="kind">アンチパターン</span></div>
-          <p>複数の更新処理をひとつのトランザクションで管理しないと、処理途中の障害でデータの不整合が発生する。トランザクション管理は、この実装方法の名前の由来であり必須である。</p></div>
-        <div class="node d2"><div class="node-h"><span class="nm">分散トランザクションを使う</span><span class="kind">アンチパターン</span></div>
-          <p>複数のデータベースや外部の基盤にまたがる操作を分散トランザクションで管理しようとすると、複雑になり規模を広げにくく、失敗も起きやすい。別の仕組みを検討する。</p></div>
-      </div>
 
     </div>
   </div>
@@ -315,7 +309,7 @@ flowchart TD
 </section>
 
 <footer>
-  旧要約版107行・書き起こし版210行・変換後209行（描画結果の実測）。<br>
+  旧要約版107行・書き起こし版210行・変換後206行（描画結果の実測）。<br>
   コードの題材は架空の業務（配送の依頼）へ置き換え、コードが示す構造は保っている。<br>
   図は宣言（節点・関係）から描画したもの。
 </footer>
