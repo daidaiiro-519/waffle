@@ -1,0 +1,162 @@
+<title>語彙の作り直しは、まだ決められない</title>
+<style>
+  :root{
+    --paper:#F7F8F9; --surface:#FFFFFF; --surface-2:#EEF1F3;
+    --ink:#1B1F23; --ink-soft:#3E464E; --ink-faint:#79828F;
+    --rule:#D8DDE2; --rule-soft:#E7EBEE;
+    --acc:#16636B; --acc-bg:#E4F0F0;
+    --warn:#9A4A21; --warn-bg:#F7EAE2;
+    --sans:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    --mono:"SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0F1215; --surface:#171B1F; --surface-2:#1E242A;
+      --ink:#E7EBEE; --ink-soft:#B4BDC5; --ink-faint:#8A939C;
+      --rule:#2C343B; --rule-soft:#232A30;
+      --acc:#6BC0C7; --acc-bg:#12292B; --warn:#E0A17A; --warn-bg:#2C1D14;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0F1215; --surface:#171B1F; --surface-2:#1E242A;
+    --ink:#E7EBEE; --ink-soft:#B4BDC5; --ink-faint:#8A939C;
+    --rule:#2C343B; --rule-soft:#232A30;
+    --acc:#6BC0C7; --acc-bg:#12292B; --warn:#E0A17A; --warn-bg:#2C1D14;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:clamp(1.5rem,4vw,3rem) clamp(1rem,3vw,2rem) 5rem;
+       background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.85}
+  main{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:1.6rem}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;
+           text-transform:uppercase;color:var(--ink-faint);margin:0}
+  h1{font-size:clamp(1.5rem,4vw,2.05rem);line-height:1.35;font-weight:600;margin:.5rem 0 0;
+     text-wrap:balance}
+  .lede{color:var(--ink-soft);margin:.7rem 0 0;max-width:44rem}
+  h2{font-size:1.05rem;margin:1.5rem 0 -.3rem;font-weight:600}
+  h3{font-size:.93rem;margin:1rem 0 -.4rem;font-weight:600;color:var(--ink-soft)}
+  .note{border-left:3px solid var(--acc);background:var(--surface);padding:1rem 1.2rem;
+        border-radius:0 10px 10px 0;display:flex;flex-direction:column;gap:.5rem}
+  .note.warn{border-left-color:var(--warn);background:var(--warn-bg)}
+  .note .k{font-family:var(--mono);font-size:.63rem;letter-spacing:.12em;
+           text-transform:uppercase;color:var(--ink-faint)}
+  .note p{margin:0;max-width:46rem;font-size:.92rem}
+  .wrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:34rem}
+  th,td{text-align:left;vertical-align:top;padding:.55rem .7rem;
+        border-bottom:1px solid var(--rule-soft);line-height:1.65}
+  thead th{font-size:.7rem;color:var(--ink-faint);border-bottom:1px solid var(--rule);
+           font-weight:500;letter-spacing:.04em}
+  tbody tr:last-child td{border-bottom:none}
+  td.n{font-family:var(--mono);text-align:center;white-space:nowrap}
+  code{font-family:var(--mono);font-size:.86em;background:var(--surface-2);
+       padding:.1em .38em;border-radius:4px}
+  .who{font-family:var(--mono);font-size:.7rem;color:var(--acc);border:1px solid var(--acc);
+       border-radius:4px;padding:.05rem .4rem;white-space:nowrap}
+  ul{margin:.3rem 0;padding-left:1.2rem} li{margin:.25rem 0}
+  footer{border-top:1px solid var(--rule);padding-top:1.2rem;margin-top:1rem;
+         font-size:.82rem;color:var(--ink-faint);display:flex;flex-direction:column;gap:.5rem}
+</style>
+
+<main>
+
+<header>
+  <p class="eyebrow">敵対的検証の統合 — ddd / tech-lead</p>
+  <h1>語彙の作り直しは、まだ決められない</h1>
+  <p class="lede">2人が別々の経路をたどって、同じ結論に着きました。<b>Mermaid由来の語彙が問題であることは支持される。ただし今日8つの束を確定させるのは誤りである。</b>理由は互いに独立しています。</p>
+</header>
+
+<div class="note warn">
+  <span class="k">先に — 私が渡した前提に誤りがありました</span>
+  <p>私は「HTMLは自前SVGで描く」を<b>実測済みの事実</b>として両者に渡しました。誤りです。自前SVGは私の作業場のプロトタイプにあるだけで、<code>src/waffle</code> には存在しません。確かめた結果：図のSVGを生成する箇所は0件、graphvizへの依存も0件、実際のHTMLビューアは<b>CDNからMermaidを読み込んでブラウザに描かせています</b>。</p>
+  <p>この誤りは結論を変えます。描画先は今日ひとつしかなく、「2つの下流が要求する形から語彙を決める」という私の筋書きは、まだ足場がありません。</p>
+</div>
+
+<h2>各意見</h2>
+
+<h3><span class="who">ddd</span> 診断の順序が間違っている</h3>
+<p><code>ubiquitous-language</code> の「この用語は同じ言葉として適切か」は3つの問いからなり、<b>並びを入れ替えられない</b>と明記されています。第1問「業務エキスパートがこの用語で業務を説明するか」が「いいえ」で終端したら、第2問（一語一義）と第3問（同義語）は意味を持たない。</p>
+<div class="wrap">
+<table>
+  <thead><tr><th>私の診断</th><th>判定</th><th>理由</th></tr></thead>
+  <tbody>
+    <tr><td>A: 「従属する」＋アンチパターン「中核の業務領域で従属するを使う」</td><td class="n">条件付き</td><td>成立するが、条件は「語彙の側が中核であること」。宣言済みの <code>core</code> をそのまま根拠にはできない</td></tr>
+    <tr><td>B: 一語一義の違反</td><td class="n">早すぎる</td><td>第2問。第1問で終端している。いま分解しても<b>技術用語が6語に増えるだけ</b></td></tr>
+    <tr><td>C: 同義語の禁止の違反</td><td class="n">弱い</td><td>第3問。<code>graph</code> は使用0枚で衝突は起きていない。ただし<b>死語が残っていること自体が診断Aの物証</b></td></tr>
+    <tr><td>D: 技術の言葉でモデルを名付けている</td><td class="n"><b>支持</b></td><td>4つで唯一、無条件に成立。<b>Dが主診断で、B・CはDの症状</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3><span class="who">ddd</span> 描画全体が中核だとは証明されていない</h3>
+<p><code>sd-document-management</code> は <code>classification: "core"</code> を宣言しています。ただし描画をここへ統合した理由は「複数種のMermaid図生成まで複雑化しており、単純なCRUD/ETLではなくなっている」——<b>複雑さ</b>です。<code>subdomain</code> の比較表は中核と一般をどちらも「複雑」に置き、分かれるのは競争優位の有無だと明言している。複雑さは補完の否定にはなるが、中核の肯定にはならない。</p>
+<p>ただし<b>診断Aは生き残ります</b>。分けて問い直すと、図が何を主張するかを決める語彙の側は「既製品に無い」ので中核、特定の描画先へ字面を出す仕組みは「既製品がある」ので一般〜補完。つまり実測が示しているのは<b>「中核でない領域の語彙が、中核の領域の語彙を侵食している」</b>形です。</p>
+
+<h3><span class="who">ddd</span> いちばん痛い指摘 — 束の導き方そのもの</h3>
+<div class="note">
+  <p>8つの束は、既存の125枚を機械分類して得たものです。しかしその125枚は、<b>いずれも置き換えたい当の語彙の下で描かれた成果物</b>です。過去の描画物のクラスタリングから語彙を導くことは、<b>捨てたい語彙の痕跡から語彙を再生産する手続き</b>にあたる。</p>
+  <p><code>domain-expert</code> は「同じ言葉は技術者が作るものではなく、この人たちから採るものである」、<code>ubiquitous-language</code> は「たどりつく唯一の方法は質問すること」と述べています。束の妥当性は分布ではなく、<b>その主張の区別が実在するかを当事者が答えられるか</b>で確かめるべきです。</p>
+</div>
+
+<h3><span class="who">tech-lead</span> 違反は名前ではなく置き場所にある</h3>
+<p><code>part_renderer.py</code>（417行）は <code>domain/services/</code> にあり、そこで Mermaid 構文を組み立てています。部品名を主張の名前へ変えても、この場所は変わりません。</p>
+<div class="note warn">
+  <p><b>むしろ悪化しうる。</b>いまは部品名がMermaid由来だから、domain層にMermaid依存があることが名前から見えます。名前を中立化すると<b>依存は見えなくなるが消えはしない</b>。「語彙の締め出し」を名前で達成したつもりになり、構造上の違反だけが残る——これが最悪の結末です。</p>
+</div>
+<p>あわせて <code>document_viewer_html_template.py</code> は domain 層から CDN の <code>mermaid@11</code> を直接読み込んでいます。<code>part_renderer.py</code> だけ動かすと、Mermaid依存が domain に半分残ります。</p>
+
+<h3><span class="who">tech-lead</span> 粒度は「8つに増やす」ではない公算が高い</h3>
+<p>判定の基準は「入力データの形が違うなら種別の値、同じなら属性」。<b>flowchart 125枚が6種の主張を担っているという事実は、同じデータの形のまま6つの主張が言えていることを意味します。</b>形が同じなら属性側に倒れる。8つ全部を部品名にする案は、この基準では成立しない見込みです。</p>
+<p>「属性にすると名前が意味を失う」という懸念は、属性を<b>必須</b>にすれば消えます。書き手は器の名前と主張の名前の2語を名乗る義務を負い、判断は残る。</p>
+
+<h3><span class="who">tech-lead</span> <code>direction</code> は置き換えではなく削除の候補</h3>
+<p>19文書79箇所は結果であって原因ではありません。原因は <code>part_renderer.py:115</code> の既定値 <code>"LR"</code> が domain のコードに埋まっていること。自前語彙へ置き換えると、翻訳表を永久に保守することになり、レイアウトの関心事が入口の構造化データに居座る構造は変わりません。<b>79箇所は削除候補として数え直し</b>、削除できない箇所が残ったら、それが属性として残す実例になります。</p>
+
+<h2>統合見解</h2>
+<p>2人は<b>対立していません</b>。違う経路で同じ「まだ決めるな」に着いています。</p>
+<div class="wrap">
+<table>
+  <thead><tr><th>論点</th><th>ddd</th><th>tech-lead</th><th>一致</th></tr></thead>
+  <tbody>
+    <tr><td>Mermaid由来の語彙は問題か</td><td>問題（診断D）</td><td>問題（アダプター側でポートを定義するアンチパターン）</td><td class="n">○</td></tr>
+    <tr><td>いま8束を確定させてよいか</td><td>だめ（分布でなく当事者に問え）</td><td>だめ（消費者1件からの一般化）</td><td class="n">○</td></tr>
+    <tr><td><code>direction</code></td><td>—</td><td>削除方向</td><td class="n">—</td></tr>
+    <tr><td>先にやるべきこと</td><td>分類の根拠の立て直し／文脈の地図への記載</td><td>描画を domain の外へ出す（語彙は触らない）</td><td class="n">両立</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>合意事項</h2>
+<ul>
+  <li><b>主診断はD</b>（技術の言葉でモデルを名付けている）。B・Cはその症状として整理し直す。第1問を解く前に第2問・第3問を適用しても、規則が意味を持たない</li>
+  <li><b>互換層は置かない。</b>旧名を残すことは「Mermaid語彙がまだ受理される」を意味し、この作り直しの唯一の目的を無効化する。一括で切れる理由は、部品名が <code>x-render</code> にしか無く、documentは再描画すれば追随するため</li>
+  <li><b>部品名の置換で schema 版を上げない。</b><code>direction</code> 削除のときだけ上げる。両者を同じコミットに混ぜない（混ぜると版が上がった理由が復元できなくなる）</li>
+  <li><b><code>bc-waffle</code> のシナリオから「Mermaid構文になる」を消さない。</b>Markdown出力がMermaidである限り、「境界で正しいMermaidに変換される」は検証すべき基準そのもの。名前だけ直す</li>
+</ul>
+
+<h2>次のアクション</h2>
+<div class="wrap">
+<table>
+  <thead><tr><th class="n">順</th><th>やること</th><th>いま着手してよいか</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td><code>part_renderer.py</code> と <code>document_viewer_html_template.py</code> を <code>adapters/outbound</code> へ移す。<b>語彙は一切触らない純粋な移動</b></td><td>よい。可逆で、他の未了作業と競合しない</td></tr>
+    <tr><td class="n">2</td><td>自前SVGの描画器を <code>src</code> へ取り込み、同じポートの2つ目のアダプターにする</td><td>よい。ここまでが足場作り</td></tr>
+    <tr><td class="n">3</td><td>2つのアダプターが<b>実際に要求した形</b>から語彙を決める。束ごとに入力の形を並べ、部品名か属性かを判定する</td><td class="n">段2の完了待ち</td></tr>
+    <tr><td class="n">4</td><td>束の妥当性を、分布ではなく<b>当事者への質問</b>で確かめる（「区別しないと何が読み違えられるか」）</td><td>いつでも。ただし答えるのは私ではない</td></tr>
+    <tr><td class="n">5</td><td>125枚のうち<b>束の境界にまたがる図が何枚あるか</b>を数える（未実測）。多ければ束の切り方自体が誤りの徴候</td><td>よい</td></tr>
+    <tr><td class="n">6</td><td><code>sd-document-management</code> の分類の根拠を、複雑さではなく競争優位で立て直す</td><td>よい</td></tr>
+    <tr><td class="n">7</td><td>文脈の地図に Mermaid との関係を1本の線として載せる（いま地図に無い＝アンチパターン該当）</td><td>よい</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note">
+  <span class="k">検知について</span>
+  <p>「Mermaid語彙が再び紛れ込むこと」を検知する専用の検査は、<b>作るべきではない</b>という判定でした。既存の <code>check-layer-drift</code> は import の依存を見るもので、文字列生成である Mermaid 構文は捉えません。ただし新規に禁止語彙の検査を作るのは対症療法で、<b>境界が無いことを名前の検査で代替している</b>ことになる。段1が終われば「そのファイルの外にMermaidの語が出た」は探すだけで見え、専用の検査を保守する必要がなくなります。</p>
+</div>
+
+<footer>
+  <p>1点だけ ddd の記述を補正します。<code>sd-document-management</code> の根拠は複雑さ<b>だけ</b>ではなく、subdomain 全体としては競争優位（「AIに構造を推論させず、システムが構造を持つ」）で論じられています。複雑さで論じられているのは<b>描画をここへ統合した部分</b>です。指摘の中身は変わりませんが、根拠の所在は違います。</p>
+  <p>実測で確かめたもの — <code>src/waffle</code> 配下の図SVG生成 0件 / graphviz依存 0件 / <code>document_viewer_html_template.py:108</code> のCDN参照 / <code>part_renderer.py</code> の置き場所と417行 / <code>direction</code> 既定値 <code>"LR"</code>（115行目）</p>
+</footer>
+
+</main>

@@ -1,0 +1,280 @@
+<title>図の語彙を、実際に描かれたものから起こす</title>
+<style>
+  :root{
+    --paper:#F7F8F9; --surface:#FFFFFF; --surface-2:#EEF1F3;
+    --ink:#1B1F23; --ink-soft:#3E464E; --ink-faint:#79828F;
+    --rule:#D8DDE2; --rule-soft:#E7EBEE;
+    --acc:#16636B; --acc-bg:#E4F0F0;
+    --warn:#9A4A21; --warn-bg:#F7EAE2;
+    --sans:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    --mono:"SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0F1215; --surface:#171B1F; --surface-2:#1E242A;
+      --ink:#E7EBEE; --ink-soft:#B4BDC5; --ink-faint:#8A939C;
+      --rule:#2C343B; --rule-soft:#232A30;
+      --acc:#6BC0C7; --acc-bg:#12292B;
+      --warn:#E0A17A; --warn-bg:#2C1D14;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0F1215; --surface:#171B1F; --surface-2:#1E242A;
+    --ink:#E7EBEE; --ink-soft:#B4BDC5; --ink-faint:#8A939C;
+    --rule:#2C343B; --rule-soft:#232A30;
+    --acc:#6BC0C7; --acc-bg:#12292B;
+    --warn:#E0A17A; --warn-bg:#2C1D14;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:clamp(1.5rem,4vw,3rem) clamp(1rem,3vw,2rem) 5rem;
+       background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.85}
+  main{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:1.7rem}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;
+           text-transform:uppercase;color:var(--ink-faint);margin:0}
+  h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.35;font-weight:600;margin:.5rem 0 0;
+     text-wrap:balance}
+  .lede{color:var(--ink-soft);margin:.7rem 0 0;max-width:44rem}
+  .stats{display:flex;flex-wrap:wrap;gap:2.2rem;padding-top:1.1rem;margin-top:1.2rem;
+         border-top:1px solid var(--rule)}
+  .stat{display:flex;flex-direction:column}
+  .stat b{font-family:var(--mono);font-size:1.5rem;font-weight:600;line-height:1.2;
+          font-variant-numeric:tabular-nums}
+  .stat span{font-size:.74rem;color:var(--ink-faint);line-height:1.5}
+  .note{border-left:3px solid var(--acc);background:var(--surface);padding:1rem 1.2rem;
+        border-radius:0 10px 10px 0;display:flex;flex-direction:column;gap:.5rem}
+  .note.warn{border-left-color:var(--warn);background:var(--warn-bg)}
+  .note .k{font-family:var(--mono);font-size:.63rem;letter-spacing:.12em;
+           text-transform:uppercase;color:var(--ink-faint)}
+  .note p{margin:0;max-width:46rem;font-size:.92rem}
+  h2{font-size:1.05rem;margin:1.4rem 0 -.4rem;font-weight:600}
+  .wrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:34rem}
+  th,td{text-align:left;vertical-align:top;padding:.55rem .7rem;
+        border-bottom:1px solid var(--rule-soft);line-height:1.65}
+  thead th{font-size:.7rem;color:var(--ink-faint);border-bottom:1px solid var(--rule);
+           font-weight:500;letter-spacing:.04em}
+  tbody tr:last-child td{border-bottom:none}
+  td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .dim{color:var(--ink-faint)}
+  code{font-family:var(--mono);font-size:.86em;background:var(--surface-2);
+       padding:.1em .38em;border-radius:4px}
+  .cluster{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+           padding:1rem 1.15rem 1.2rem;display:flex;flex-direction:column;gap:.65rem}
+  .cluster header{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap}
+  .tag{font-family:var(--mono);font-size:.72rem;color:var(--acc);
+       border:1px solid var(--acc);border-radius:4px;padding:.05rem .45rem}
+  .claim{font-weight:600;font-size:.97rem}
+  .count{font-family:var(--mono);font-size:.78rem;color:var(--ink-faint);
+         font-variant-numeric:tabular-nums;margin-left:auto}
+  .ex{font-size:.83rem;color:var(--ink-soft);margin:0;padding-left:1.1rem}
+  .ex li{margin:.15rem 0}
+  .slot{display:flex;align-items:center;gap:.6rem;padding-top:.55rem;
+        border-top:1px dashed var(--rule);font-size:.82rem;color:var(--ink-faint)}
+  .slot .blank{flex:1;border-bottom:1px solid var(--rule);height:1.2rem}
+  .now{font-family:var(--mono);font-size:.78rem;color:var(--ink-faint)}
+  footer{border-top:1px solid var(--rule);padding-top:1.2rem;margin-top:1rem;
+         font-size:.82rem;color:var(--ink-faint);display:flex;flex-direction:column;gap:.5rem}
+</style>
+
+<main>
+
+<header>
+  <p class="eyebrow">語彙の一次案 — 名前は伏せてあります</p>
+  <h1>図の語彙を、実際に描かれたものから起こす</h1>
+  <p class="lede">いま schema が持っている部品の名前は、<b>何を主張する図か</b>ではなく<b>どう描くか</b>を指しています。実際に描かれた180枚を数え、主張の種類で束ね直しました。束に名前は付けていません。</p>
+  <div class="stats">
+    <div class="stat"><b>18</b><span>宣言されている部品</span></div>
+    <div class="stat"><b>5</b><span>実際に使われている描き方</span></div>
+    <div class="stat"><b>180</b><span>実際に描かれた図</span></div>
+    <div class="stat"><b>125</b><span>うち <code>flowchart</code> 1つが担う枚数</span></div>
+  </div>
+</header>
+
+<div class="note">
+  <span class="k">いま起きていること</span>
+  <p><code>flowchart</code> は Mermaid の構文名で、「順序」も「分岐」も「所属」も「分類」もこの1語で描けます。だから125枚が同じ名前の下に積まれ、<b>その図が何を主張しているかは、どこにも記録されていません</b>。読み手も機械も、絵の形から推測するしかない。</p>
+</div>
+
+<h2>宣言されている部品と、実際に使われたもの</h2>
+<div class="wrap">
+<table>
+  <thead><tr><th>部品の名前</th><th>これは何を指しているか</th><th class="n">使われた図</th></tr></thead>
+  <tbody>
+    <tr><td><code>flowchart</code></td><td>Mermaid の構文名</td><td class="n">125</td></tr>
+    <tr><td><code>sequence</code></td><td>Mermaid の構文名</td><td class="n">49</td></tr>
+    <tr><td><code>statediagram</code></td><td>Mermaid の構文名</td><td class="n">4</td></tr>
+    <tr><td><code>architecture</code></td><td>Mermaid の構文名</td><td class="n">1</td></tr>
+    <tr><td><code>graph</code></td><td class="dim">意味を持たない語。何の図にも当てはまる</td><td class="n">0</td></tr>
+    <tr><td><code>event</code> / <code>loop</code> / <code>alt</code> / <code>return</code> / <code>divider</code></td><td class="dim">sequence の内側の要素。図の種類ではない</td><td class="n">—</td></tr>
+    <tr><td><code>table</code> / <code>list</code> / <code>section</code> / <code>paragraph</code> / <code>code</code> / <code>object</code> / <code>keyvalue</code> / <code>kvtable</code></td><td class="dim">図ではなく文章の部品</td><td class="n">—</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>主張の種類で束ね直したもの</h2>
+
+<section class="cluster">
+  <header><span class="tag">束 1</span>
+    <span class="claim">条件に応じて、どれを選ぶか</span>
+    <span class="count">62枚</span></header>
+  <p class="ex">問いの節点から、答えごとに分かれた行き先へ向かう。ほぼすべてが「判断基準」という見出しの下にある。</p>
+  <ul class="ex">
+    <li>accessibility-baseline / 判断基準 — 3点を満たしているか → 満たすまで完成としない／次の判断へ進む</li>
+    <li>design-heuristics / 業務ロジックの実装方法 — 領域の分類・データ構造の複雑さ → 4つの実装方法</li>
+  </ul>
+  <p class="now">いまの名前: <code>flowchart</code></p>
+  <div class="slot">名前<div class="blank"></div></div>
+</section>
+
+<section class="cluster">
+  <header><span class="tag">束 2</span>
+    <span class="claim">誰と誰が、どの順にやり取りするか</span>
+    <span class="count">49枚</span></header>
+  <p class="ex">登場人物が並び、その間を要求と応答が往復する。すべて仕様書の「基本フロー」。</p>
+  <ul class="ex">
+    <li>uc-assign-to-project / 基本フロー</li>
+    <li>uc-control-project-access / 基本フロー</li>
+  </ul>
+  <p class="now">いまの名前: <code>sequence</code></p>
+  <div class="slot">名前<div class="blank"></div></div>
+</section>
+
+<section class="cluster">
+  <header><span class="tag">束 3</span>
+    <span class="claim">何が何に向かっているか（依存・呼び出し・変換）</span>
+    <span class="count">30枚</span></header>
+  <p class="ex">節点の間に向きのある関係があり、その関係に名前が付いている。時間の前後ではない。</p>
+  <ul class="ex">
+    <li>ubiquitous-language / モデルの変換のたびに情報が欠落する — 業務知識 →発見→ 概念のモデル → 解決のモデル → コード</li>
+    <li>context-integration / 共用サービス — 下流 →呼び出す→ 共用サービス → 上流</li>
+  </ul>
+  <p class="now">いまの名前: <code>flowchart</code></p>
+  <div class="slot">名前<div class="blank"></div></div>
+</section>
+
+<section class="cluster">
+  <header><span class="tag">束 4</span>
+    <span class="claim">どれがどの区画に属するか</span>
+    <span class="count">21枚</span></header>
+  <p class="ex">囲みがあり、その中に要素が入る。囲みそのものが主張の一部。</p>
+  <ul class="ex">
+    <li>bounded-context / なぜ必要か — 受注の文脈の「注文」と倉庫の文脈の「注文」は別物</li>
+    <li>data-mesh / 分析のためのデータを集める3つの方式 — 3つの形とその構成要素</li>
+  </ul>
+  <p class="now">いまの名前: <code>flowchart</code>（囲み付き） / <code>architecture</code></p>
+  <div class="slot">名前<div class="blank"></div></div>
+</section>
+
+<section class="cluster">
+  <header><span class="tag">束 5</span>
+    <span class="claim">一列に並ぶ（順に起きるのか、積み重なっているのか）</span>
+    <span class="count">7枚</span></header>
+  <p class="ex"><b>ここは束として怪しい。</b>絵は同じ「一直線に矢印」だが、主張が2種類混ざっている。時間の順序と、層の重なりは別のものだが、いまの記録では区別が付かない。</p>
+  <ul class="ex">
+    <li>event-sourced-domain-model / 集約への操作の手順 — 読み込む → 作り直す → 実行する → 書き戻す（<b>時間の順</b>）</li>
+    <li>architecture-patterns / レイヤードアーキテクチャ — プレゼンテーション層 → 業務ロジック層 → データアクセス層（<b>重なりと依存の向き</b>）</li>
+  </ul>
+  <p class="now">いまの名前: <code>flowchart</code></p>
+  <div class="slot">名前<div class="blank"></div></div>
+</section>
+
+<section class="cluster">
+  <header><span class="tag">束 6</span>
+    <span class="claim">これはどう分類されるか</span>
+    <span class="count">6枚</span></header>
+  <p class="ex">1つの親から子へ枝分かれし、子は互いに排他。関係に名前は付かない。</p>
+  <ul class="ex">
+    <li>event-driven-architecture / メッセージの種類 — メッセージ → イベント／指示 → さらに3種</li>
+    <li>business-domain / 事業領域の構造 — 事業領域 → 中核／一般／補完</li>
+  </ul>
+  <p class="now">いまの名前: <code>flowchart</code></p>
+  <div class="slot">名前<div class="blank"></div></div>
+</section>
+
+<section class="cluster">
+  <header><span class="tag">束 7</span>
+    <span class="claim">どんな状態を取り、何によって移るか</span>
+    <span class="count">4枚</span></header>
+  <p class="ex">集約のライフサイクルだけに使われている。始まりと終わりが明示される点が他と違う。</p>
+  <ul class="ex">
+    <li>agg-project / ライフサイクル</li>
+    <li>agg-shared-artifact / ライフサイクル</li>
+  </ul>
+  <p class="now">いまの名前: <code>statediagram</code></p>
+  <div class="slot">名前<div class="blank"></div></div>
+</section>
+
+<section class="cluster">
+  <header><span class="tag">束 8</span>
+    <span class="claim">2つの軸の上で、どこに位置するか</span>
+    <span class="count">1枚</span></header>
+  <p class="ex">1枚しかない。束として立てるべきか、他へ畳むかは決めていない。</p>
+  <ul class="ex">
+    <li>subdomain / 分類マトリクス — 差別化の大きさ × 複雑さ</li>
+  </ul>
+  <p class="now">いまの名前: <code>quadrantChart</code>（部品として宣言されていない）</p>
+  <div class="slot">名前<div class="blank"></div></div>
+</section>
+
+<h2>前に決めていたことと、突き合わせる</h2>
+
+<div class="note warn">
+  <span class="k">先に書いておく</span>
+  <p>この束分けを作るとき、私は<b>前回すでに出していた名前の見立てを見落として</b>、白紙から始めました。以下はその見立てを戻し、今回の実測で支持されるか覆るかを突き合わせたものです。</p>
+</div>
+
+<div class="wrap">
+<table>
+  <thead><tr><th>前回の見立て</th><th>今回の実測</th><th>判定</th></tr></thead>
+  <tbody>
+    <tr><td><code>sequence</code> は据え置き（分野の一般語）</td><td>49枚。すべて仕様書の「基本フロー」で、主張は1種類</td><td>支持</td></tr>
+    <tr><td><code>flowchart</code> は据え置き（分野の一般語）</td><td>125枚が少なくとも6つの違う主張を担っている</td><td><b>覆る</b>。分野の一般語であることと、意味が1つに定まっていることは別だった</td></tr>
+    <tr><td><code>statediagram</code> → <code>states</code></td><td>4枚。すべて集約のライフサイクル</td><td>支持</td></tr>
+    <tr><td><code>graph</code> は変える</td><td>使用0枚。同梱の mermaid-guide が「<code>graph</code> は使用しない」と明記している語</td><td>支持（強く）</td></tr>
+    <tr><td><code>architecture</code> は変える。中身も要検討</td><td>1枚。囲みによる所属の主張で、<b>束4と同じもの</b></td><td>支持。束4へ畳める見込み</td></tr>
+    <tr><td><b>器と中身を分ける</b>（<code>comparison</code> が器、<code>tree</code>／<code>transcript</code>／<code>listing</code> が中身）</td><td>4つとも<b>未実装・使用0枚</b>。提案のまま止まっている</td><td>保留。ただし下記のとおり軸が違う</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note">
+  <span class="k">2つの軸がある</span>
+  <p>上の8つの束は「<b>1枚の図が何を主張しているか</b>」で分けたものです。前回の「器と中身」はそれとは別で、「<b>図の中に図を入れられるか</b>」という組み立ての話でした。<code>comparison</code> は変更前と変更後の2面を持つ器で、各面の中身は木でも記録でも並びでもよい——という提案です。</p>
+  <p>この2つは直交します。語彙は<b>主張の種類</b>と<b>入れ子にできる器</b>の二階建てになる可能性が高く、今回の束分けだけでは片方しか覆えていません。器の側は実例が0なので、今回の実測では何も言えません。</p>
+</div>
+
+<h2>この分類の確からしさ</h2>
+
+<div class="note warn">
+  <span class="k">正直に</span>
+  <p>束分けは機械で行いました。無作為に12枚を取り出して手で確かめたところ、<b>3枚が誤り</b>でした（約25%）。たとえば「チームと文脈の対応」を<i>関係の向き</i>に入れましたが、実際は<i>所属</i>です。</p>
+  <p>誤る理由ははっきりしています。<b>document に「何を主張しているか」が記録されていないから</b>です。記録されているのは描き方だけなので、絵の形から推測するしかない。私が推測を外すということは、読み手も外すということです。これは分類作業の精度の話ではなく、<b>語彙を変える理由そのもの</b>です。</p>
+  <p>したがって、上の枚数は<b>目安</b>として読んでください。束の存在と、その主張が互いに別物であることは、実例で確かめてあります。</p>
+</div>
+
+<h2>決まっていること / 決めてほしいこと</h2>
+<div class="wrap">
+<table>
+  <thead><tr><th>論点</th><th>状態</th></tr></thead>
+  <tbody>
+    <tr><td>関係は記号ではなく言葉で表す（凡例が要る記法を持ち込まない）</td><td>決定済み</td></tr>
+    <tr><td>Markdown は Mermaid、HTML は自前の描画。入り口の構造化データは1つ</td><td>決定済み</td></tr>
+    <tr><td>Mermaid が表せることは下限であって上限ではない</td><td>決定済み</td></tr>
+    <tr><td><code>graph</code> を捨てる（使用0枚・自分のガイドが禁止語）</td><td>前回決定、今回の実測が支持</td></tr>
+    <tr><td><code>statediagram</code> → <code>states</code></td><td>前回決定、今回の実測が支持</td></tr>
+    <tr><td><b>8つの束それぞれの名前</b></td><td class="dim">未定 — 伏せてあります</td></tr>
+    <tr><td><b><code>flowchart</code> を据え置くか</b>（前回は据え置き。今回の実測は覆している）</td><td class="dim">要再判断</td></tr>
+    <tr><td><b>器と中身（<code>comparison</code> ほか）を、この語彙に組み込むか</b></td><td class="dim">未定 — 実例0のため実測では判断材料が出ない</td></tr>
+    <tr><td><b>束5を1つとするか、2つに割るか</b>（時間の順序／層の重なり）</td><td class="dim">未定</td></tr>
+    <tr><td><b>束8（1枚）を束として立てるか</b></td><td class="dim">未定</td></tr>
+    <tr><td>文章の部品（表・箇条書き・節）を、図の語彙と同じ枠で扱うか</td><td class="dim">未定</td></tr>
+  </tbody>
+</table>
+</div>
+
+<footer>
+  <p>数えた対象 — <code>.waffle/knowledge/ACTIVE</code>（19本）と <code>.waffle/specs</code> の成果物に実際に描かれた図。schema の宣言ではなく、描かれた結果を数えている。</p>
+  <p>名前を伏せているのは、私が付けると Mermaid の構文名に引きずられるためです。束の中身は実例で示してあります。</p>
+</footer>
+
+</main>

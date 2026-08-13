@@ -29,3 +29,5 @@
 - [事業領域／業務領域の語彙を保つ](project_business_domain_vocabulary_kept.md) — プロダクト寄せは業務エキスパートで破綻。業務794回は語幹であって1語ではない
 - [図は描いて画像を読み返してから出す](project_svg_visual_check_loop.md) — 手順はdesign-structured-html Skill、強制はrequire-svg-render-check Hook。resvg-py（systemインストール不要）、フォント未解決で文字が黙って消える罠あり
 - [図の関係は記号でなく言葉で表す](feedback_relations_in_words_not_symbols.md) — 凡例が要る記法は持ち込まない。言葉へ移すときの落とし穴3つ付き
+- [図の語彙は3段（主張→比較の方法→描き方）](project_figure_vocabulary_three_tiers.md) — 2段目は既存の確立した枠組みから採る。いまは3段目の名前しか無い
+- [図は本文の幅からはみ出さない](feedback_figure_stays_inside_body_width.md) — 大きくするなら面を縦に積む。はみ出しは視認性を落とす
