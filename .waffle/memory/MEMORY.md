@@ -15,6 +15,8 @@
 
 - [仕様と実装の抽象境界の結論(2026-08-09)](project_ddd_abstraction_boundary_conclusions.md) — この作業の前回の到達点。原則／Waffleの設計判断／未採用の提案／取り下げの四分割
 - [抽象は情報の削減ではない](feedback_abstraction_is_not_reduction.md) — 要素は残し、共通概念で束ねる。具体を復元するのに要る特徴を落とさない
+- [knowledgeが空けている場所を先に見つける](feedback_find_the_gap_knowledge_left_open.md) — 既にある部分を決め直さない。留保事項は「どこが決定に開かれているか」の目印
+- [抽象の記録に具体の識別子を並べない](feedback_no_concrete_identifiers_in_abstraction_records.md) — 主語は測り方・範囲・関係に保つ。実例は折りたたみの裏付けへ
 - [仕様の語彙にパターン名を入れない](feedback_no_pattern_names_in_spec_vocabulary.md) — port/Primary/Secondaryは様式の語彙。使えるのは規約から下だけ
 - [x-promptは根幹であって付随物ではない](feedback_x_prompt_is_the_core_not_metadata.md) — writeとqueryが同じ欄で矛盾しうる。構造変更時は必ず対で見直す
 - [schemaの指示でknowledgeを広げない](feedback_schema_prompts_must_not_widen_knowledge.md) — 導出の向きはknowledge→x-prompt。ただし広いと断じる前に定義を全文読む
