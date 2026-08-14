@@ -1,0 +1,143 @@
+<title>knowledge は、自分を読む相手を知らない</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>knowledge は、自分を読む相手を知らない</h1><p class="lede">いま knowledge は「私は誰に読まれるか」を持ち、読む側も「私は何を読むか」を持っている。同じ対応が2か所にあり、<b>実際に3つの advisor で食い違っている</b>。この記録は、宣言を読む側の一方向へ寄せる。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">Waffle は、knowledge に読む相手を持たせない。<b>読む側（advisor と Orchestrator）だけが、自分が読む knowledge を宣言する。</b>配置先は、その宣言から導く。</p><div class="key"><span class="lbl">決め手</span><span class="txt">同じ対応が2か所にあり、<b>5つの advisor のうち3つで食い違っていた</b>。2件の knowledge が、宣言していない advisor へ配られている。実体は knowledge 側の宣言に従っており、読む側の宣言は実効を持っていない。</span></div></div></section><section><h2><span class="num">02</span>変更前と変更後</h2><p class="lead">この決定が変えるのは、<b>誰が対応を宣言するか</b>である。knowledge の中身は変えない。</p><div class="scroll"><table><thead><tr><th></th><th>変更前 ── 両方向に宣言がある</th><th>変更後 ── 読む側だけが宣言する</th></tr></thead><tbody><tr class="keyrow"><td class="cond">対応を宣言する場所</td><td>knowledge 側と読む側の<b>2か所</b></td><td><b>読む側の1か所</b></td></tr><tr class=""><td class="cond">実際に配る根拠</td><td>knowledge 側の宣言</td><td><b>読む側の宣言</b></td></tr><tr class=""><td class="cond">2つの宣言の食い違い</td><td>5つの advisor のうち3つでずれている</td><td><b>宣言が1つなので、ずれる先が無い</b></td></tr><tr class=""><td class="cond">読む側を1つ増やすとき</td><td>knowledge を1件ずつ書き換える</td><td><b>増やした側が宣言する。</b>knowledge は動かない</td></tr><tr class=""><td class="cond">別のプロジェクトへ持ち出すとき</td><td>このプロジェクトの advisor 名が付いたまま出る</td><td><b>knowledge は消費者を知らないので、そのまま出せる</b></td></tr></tbody></table></div></section><section><h2><span class="num">03</span>理由</h2><p class="lead">同じ対応が2か所にあり、3つの advisor で食い違っていた。<b>読む側の宣言は表示だけで、実効を持っていない。</b></p><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt">宣言が<b>両方向にある</b>。knowledge の側が「私は誰に読まれるか」を持ち、読む側も「私は何を読むか」を持っている</span></div><div class="joint">その2つを突き合わせた</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">5つの advisor のうち<b>3つで食い違っていた</b>。中身を1件ずつ照合すると、食い違いは<b>一方向</b>で、2件の knowledge が3つの advisor へ配られているのにその advisor 自身は宣言していない状態だった。配られている実体は knowledge 側の宣言に従っている</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">読む側の宣言は<b>表示だけで、実効を持っていない</b>。同じ対応が2か所にあり、どちらが正かを決める根拠がない</span></div><div class="joint">ここで置いた前提</div><div class="step premise"><span class="lbl">確かめていない</span><span class="txt">knowledge は、それを読む advisor の構成より変わりにくい</span></div><div class="joint">拠り所に当てると</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">依存は変わりにくい側へ向ける。<b>knowledge が読む側の名前を持つのは、逆向きである</b></span></div><div class="joint">合わせると</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">読む側だけが宣言し、knowledge は自分を読む相手を知らない形にする</span></div><div class="joint">ただし</div><div class="step counter"><span class="lbl">反証</span><span class="txt">配置先を決めるとき、読む側を<b>全部走査する</b>ことになる。測ると7つの消費者で1436ミリ秒で、1件引く206ミリ秒の<b>7倍</b>かかる。消費者が増えるほど伸び、走査の範囲を取り違えると配り漏れる</span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（5件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class=""><td class="cond">宣言が両方向にある</td><td><span class="kindtag unv">実測</span></td><td>knowledge 側の欄と、読む側の欄をそれぞれ数えた</td><td>—</td></tr><tr class="keyrow"><td class="cond">3つで食い違う</td><td><span class="kindtag unv">実測</span></td><td>5つの advisor について両側を1件ずつ照合した。差は <code>architecture-evidence-based-scope</code>（3つの advisor で）と <code>comparison-principle-needs-retrieval-path</code>（1つで）の2件</td><td>advisor 側が宣言を足して一致させたとき</td></tr><tr class=""><td class="cond">走査は1件引くより7倍遅い</td><td><span class="kindtag unv">実測</span></td><td>7つの消費者を走査すると1436ミリ秒、knowledge 側を1回引くと206ミリ秒</td><td>消費者が大幅に増えて、描画のたびに待たされるようになったとき</td></tr><tr class=""><td class="cond">knowledge のほうが変わりにくい</td><td><span class="kindtag lim">確かめていない</span></td><td>—</td><td>advisor の構成より先に knowledge が入れ替わったとき</td></tr><tr class=""><td class="cond">依存は変わりにくい側へ向ける</td><td><span class="kindtag unv">knowledge</span></td><td><code>architecture-dependency-direction</code> ── 「依存とは A が B を知っているという関係」「安定性は、頻繁に変わるものとめったに変わらないものを分離することで保たれる」</td><td>この knowledge が扱うのはコードの層であり、文書どうしの参照を同じ依存とみなす段は Waffle の判断である</td></tr></tbody></table></div><p class="foldnote">拠り所の使い方 ── <code>architecture-dependency-direction</code> から引いたのは<b>判断の形</b>（依存は変わりにくい側へ向ける）だけである。この knowledge が挙げる例と分類はすべてコードの層で、<b>文書どうしの参照を同じ依存として扱ってよいかまでは定めていない</b>。その一段は Waffle の判断として置いている。</p></details></section><section><h2><span class="num">04</span>判断を分けた軸</h2><p class="lead">採る案は4つの条件のうち3つを満たす。落とすのは1つで、<b>配置先を決めるのに読む側を全部走査することになる</b>。</p><div class="scroll"><table>
+<thead><tr><th>案</th>
+<th class="keycol">同じ対応が1か所にしかない<br><span class="sub">決め手</span></th>
+<th>knowledge を消費者ごと持ち出さずに済む</th><th>読む側を増やすとき knowledge を触らない</th>
+<th>配置先を1件引くだけで決められる</th></tr></thead>
+<tbody>
+<tr class="pickrow"><td class="cond">読む側だけが宣言する<br><span class="sub">採る</span></td>
+<td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td></tr>
+<tr><td class="cond">knowledge 側だけが宣言する</td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+<tr><td class="cond">両方が宣言する<br><span class="sub">いまのまま</span></td>
+<td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+</tbody></table></div><details class="fold"><summary>条件の内訳を開く ── なぜその条件が要るか、なぜ × なのか（4件）</summary><div class="scroll"><table><thead><tr><th>条件（全文）</th><th>なぜこの条件が要るか</th><th>× の理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond">同じ対応が1か所にしかない<span class="keytag">決め手</span></td><td>対応が2か所にあると食い違う。実際に3つの advisor で食い違っており、どちらが正かをいま決められない</td><td><b>両方が宣言する</b> 2か所にある</td></tr><tr class=""><td class="cond">knowledge を消費者ごと持ち出さずに済む</td><td>knowledge は確立された概念を持つ。別のプロジェクトへ持ち出すとき、このプロジェクトの advisor の名前が付いたまま出ていく</td><td><b>knowledge 側だけ</b>／<b>両方</b> どちらも knowledge が消費者の名前を持つ</td></tr><tr class=""><td class="cond">読む側を増やすとき knowledge を触らない</td><td>advisor を1つ増やすたびに knowledge を1件ずつ書き換えるなら、増やす手間が knowledge の件数に比例する</td><td><b>knowledge 側だけ</b>／<b>両方</b> どちらも knowledge を書き換えることになる</td></tr><tr class=""><td class="cond">配置先を1件引くだけで決められる</td><td>描画のとき、その knowledge をどこへ置くかを決める必要がある</td><td><b>読む側だけが宣言する（採る）</b> 読む側を全部走査して、誰が参照しているかを集めることになる</td></tr></tbody></table></div></details></section><section><h2><span class="num">05</span>付随して決めたこと</h2><p class="lead">宣言を一方向にすると、いま宣言から引いていた3つの経路を引き直す必要が出る。</p><div class="scroll"><table><thead><tr><th>論点</th><th>決定</th></tr></thead><tbody><tr class="keyrow"><td class="cond">配置先をどう決めるか</td><td>読む側の宣言を走査して集める。<b>走査の範囲を明示する</b></td></tr><tr class=""><td class="cond">セッション開始時の注入元</td><td>Orchestrator が宣言したものから引く。knowledge の側からは引かない</td></tr><tr class=""><td class="cond">残っている単数形の欄</td><td>1件だけ古い単数形が残っている。この移行で落とす</td></tr></tbody></table></div><details class="fold"><summary>それぞれの根拠を開く（3件）</summary><div class="scroll"><table><thead><tr><th>論点</th><th>根拠</th></tr></thead><tbody><tr class="keyrow"><td class="cond">配置先をどう決めるか</td><td>走査で集める形にすると、<b>どこを走査するかを書かない限り、その規則は実行時に参照先を持たない</b>。取得経路を明示しない比較の規則は、言明として存在するだけになる</td></tr><tr class=""><td class="cond">セッション開始時の注入元</td><td>いまの注入は knowledge 側の宣言を filter している。向きを変えるなら、この経路も同時に変えないと、廃止したはずの宣言が実効を持ち続ける</td></tr><tr class=""><td class="cond">残っている単数形の欄</td><td>複数形へ移行した際の取り残し。廃止する欄なので、移行のついでに落とす。残すと、どちらの欄を読むかが分かれる</td></tr></tbody></table></div></details></section><section><h2><span class="num">06</span>答えないこと</h2><p class="lead">宣言の書き方と、既存の書き換えは、この決定では扱わない。</p><div class="scroll"><table><thead><tr><th>項目</th><th>種別</th><th>行き先</th></tr></thead><tbody><tr class=""><td class="cond">Orchestrator が宣言する欄の形</td><td><span class="kindtag out">範囲外</span></td><td>実装に着手する段で決める</td></tr><tr class=""><td class="cond">既存の knowledge をいつ書き換えるか</td><td><span class="kindtag out">範囲外</span></td><td>移行の段取りは別に決める</td></tr><tr class="keyrow"><td class="cond">消費者が増え続けたときの走査の速さ</td><td><span class="kindtag lim">限界</span></td><td><b>行き先を持たない。</b>いまは1436ミリ秒で足りている。描画のたびに待たされると分かった時点で、この決定を改める</td></tr></tbody></table></div></section><section><h2><span class="num">07</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">未承認</span></div></section><section><h2><span class="num">08</span>関連</h2><p class="lead">この決定は、knowledge を書き直す前に要る。</p><details class="fold"><summary>縛る対象と、前後の決定を開く（4件）</summary><div class="scroll"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr class="keyrow"><td class="cond">縛る対象</td><td>knowledge が持てる欄と、配置・注入の経路</td></tr><tr class=""><td class="cond">引く knowledge</td><td><code>architecture-dependency-direction</code> ── 判断の形だけを引く。文書どうしの参照へ当てる段は Waffle の判断</td></tr><tr class=""><td class="cond">この決定を使う予定</td><td>仕様と実装の抽象境界の knowledge を、新しい語彙で起こし直す。先に向きを決めないと、廃止する形で新規を書くことになる</td></tr><tr class=""><td class="cond">先立つ決定</td><td>規約は層ではなく、実装を導くもう一つの入力とする（承認済み）</td></tr></tbody></table></div></details></section></div>
