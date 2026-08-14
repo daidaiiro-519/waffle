@@ -1,0 +1,284 @@
+<title>理由は論証の連鎖として書く</title>
+<style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Architecture Decision Record</p>
+  <h1>理由は論証の連鎖として書く</h1>
+  <p class="lede">決定記録の8欄のうち「理由」の中身の構造を定める。この記録自身も、その構造で書いている。</p>
+</header>
+
+<section>
+  <h2><span class="num">01</span>決定</h2>
+  <div class="decision">
+    <p class="main">理由は、段を並べた論証の連鎖として書く。段の種別は「測った／確かめていない／言えること・結論／反証」の4つ。崩れる条件は、測った段と確かめていない段にだけ1行添える。</p>
+    <div class="key">
+      <span class="lbl">決め手</span>
+      <span class="txt">理由を平らな文章で書くと、<b>書き手自身が観測と推論と解釈の区別を失う</b>。段に分けたときだけ、それが表に出る。</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02</span>変更前と変更後</h2>
+  <p class="fignote">同じ理由を、いまの書き方と決定後の書き方で並べる。文字が主役なので図ではなく組版で示す。</p>
+  <div class="cmp">
+    <div class="pane">
+      <span class="pane-label b">変更前 ── 構造の定めが無い</span>
+      <div class="box"><p class="blob">仕様の文書で規約を名指ししているのは3件だけで、いずれも規約そのものを扱うユースケースだった。実装の置き場所や命名は規約の宣言から導出されている。したがって規約を仕様の上の層に置くと依存の向きを偽ることになる。今後も仕様の執筆に規約が要る場面は現れないだろう。</p></div>
+      <p class="fignote">観測（3件）・解釈（だから例外）・推論（したがって）・未検証の前提（現れないだろう）が、同じ見え方で並ぶ。どれを疑えばよいかが読み手に分からない。</p>
+    </div>
+    <div class="pane">
+      <span class="pane-label a">変更後 ── 段と種別を持つ</span>
+      <div class="box">
+        <div class="chain">
+          <div class="step evidence"><span class="lbl">測った</span><span class="txt">仕様62件のうち、規約を名指しは3件</span></div>
+          <div class="joint">だから</div>
+          <div class="step conclude"><span class="lbl">言えること</span><span class="txt">仕様の執筆は規約に依存していない</span></div>
+          <div class="joint">ここで置いた前提</div>
+          <div class="step premise"><span class="lbl">確かめていない</span><span class="txt">今後も規約が要る場面は現れない</span></div>
+          <div class="joint">ただし</div>
+          <div class="step counter"><span class="lbl">反証</span><span class="txt">「規約を扱うユースケースだから例外」は解釈であって観測ではない</span></div>
+        </div>
+      </div>
+      <p class="fignote">色と見出しで種別が分かれ、接続語が推論の位置を示す。疑う場所が一目で決まる。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">03</span>理由</h2>
+  <div class="chain">
+    <div class="step evidence">
+      <span class="lbl">測った</span>
+      <span class="txt">同じ内容（規約は層ではないという決定の理由）を4つの構造で書き分けたところ、連鎖で書いた版だけが、末尾で「『規約を扱うユースケースだから例外』は測った事実ではなく私の解釈だ」と書き手に自認させた。他の3案では出なかった。</span>
+      <span class="src">出所: 本日作成した4案の比較。同一内容・同一の書き手</span>
+      <span class="weak"><b>崩れるとき</b> ── 別の題材で同じ差が出なかったとき。確かめたのは1件のみ</span>
+    </div>
+    <div class="joint">だから</div>
+    <div class="step conclude">
+      <span class="lbl">言えること</span>
+      <span class="txt">平らな文章では、観測と推論と解釈が同じ見え方で並ぶ。段に分けると、書き手が自分の飛躍に気づく</span>
+    </div>
+    <div class="backing">拠り所 ── knowledge「抽象的な主張は具体で裏付けられていること／主張と根拠の距離を縮める」</div>
+    <div class="joint">一方で</div>
+    <div class="step evidence">
+      <span class="lbl">測った</span>
+      <span class="txt">決定記録には「理由」の欄が定められているが、その中の構造は定められていない</span>
+      <span class="src">出所: 決定記録の8欄の定義</span>
+      <span class="weak"><b>崩れるとき</b> ── 構造が別の場所に定められていたと判明したとき</span>
+    </div>
+    <div class="joint">ここで置いた前提</div>
+    <div class="step premise">
+      <span class="lbl">確かめていない</span>
+      <span class="txt">段に分けることが自認を引き起こすのは、題材によらない仕組みである</span>
+      <span class="weak"><b>崩れるとき</b> ── 自認が今回の題材に固有だったとき</span>
+    </div>
+    <div class="joint">合わせると</div>
+    <div class="step conclude">
+      <span class="lbl">結論</span>
+      <span class="txt">理由は連鎖として書く。段の種別を「測った／確かめていない」で割るのは、この製品で繰り返された失敗——測っていないことを測ったように書く——に対する特化である</span>
+    </div>
+    <div class="backing">拠り所 ── 論証の一般的な枠組み（主張・根拠・論拠・裏付け・限定・反駁）。裏付けは knowledge が持ち、限定は「答えないこと」が持つため、この2つは段に置かない</div>
+    <div class="joint">ただし</div>
+    <div class="step counter">
+      <span class="lbl">反証</span>
+      <span class="txt">段に分けると縦に伸びる。長い文書が読み返されない例は、この製品で現に起きている——受け入れ基準49件を持つ仕様は、全件を読み返した者がいない</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">04</span>判断を分けた軸</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>軸</th><th>連鎖（採る）</th><th>行ごとの表</th><th>4枠固定</th><th>賛否を対称に置く</th></tr></thead>
+      <tbody>
+        <tr><td class="name">推論の段が見えるか</td><td>見える</td><td>平らになる</td><td>平らになる</td><td>平らになる</td></tr>
+        <tr><td class="name">確かめていない前提の置き場</td><td>段として置ける</td><td>種別の列で示す</td><td>専用の枠</td><td>無い</td></tr>
+        <tr><td class="name">短さ</td><td>いちばん長い</td><td><span class="win">最も短い</span></td><td>中間</td><td>中間</td></tr>
+        <tr><td class="name">理由が増えたとき</td><td>縦に伸び続ける</td><td><span class="win">行が増えるだけ</span></td><td>枠の中が伸びる</td><td>両側が伸びる</td></tr>
+        <tr><td class="name">弁護に見えにくさ</td><td>末尾の反証で担保</td><td>行ごとに担保</td><td>専用の枠で担保</td><td><span class="win">対等に置くので最も強い</span></td></tr>
+        <tr><td class="name">既存の欄との重複</td><td>無い</td><td>無い</td><td>無い</td><td>判断を分けた軸と重なる</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <p>赤い印は、<b>採らなかった案が優る軸</b>。短さと増えたときの伸び方では行ごとの表が勝ち、弁護に見えにくさでは賛否を対称に置く案が勝つ。</p>
+    <p><b>それでも連鎖を採る理由。</b>短さで負ける代わりに、推論の段が見える。この製品で繰り返した失敗は「短く書けなかったこと」ではなく「観測でないものを観測として書いたこと」であり、そこに効く軸を優先した。賛否の対称は効果を認めるが、既存の「判断を分けた軸」の欄と役割が重なり、同じことを2箇所が主張してずれる形になる。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">05</span>付随して決めたこと</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>論点</th><th>決定</th><th>根拠</th></tr></thead>
+      <tbody>
+        <tr><td class="name">崩れる条件を付ける段</td><td>測った段と確かめていない段だけ</td><td>結論が崩れる条件は「上のどれかが崩れたとき」で決まっており、書くと繰り返しになる</td></tr>
+        <tr><td class="name">連鎖の終点</td><td>1つだけ。途中の段は結論ではなく踏み台</td><td>終点が複数あると、どれが決定を支えたのか読み手が選べない</td></tr>
+        <tr><td class="name">反証が無いとき</td><td>空欄にせず「探したが見つからない」と書く</td><td>探さなかったのか、探して無かったのかが区別できなくなる</td></tr>
+        <tr><td class="name">段の種別の示し方</td><td>左の色と短い見出しだけ。説明文を足さない</td><td>種別の説明が段より長くなると、本文が読まれなくなる</td></tr>
+        <tr><td class="name">拠り所の置き方</td><td>推論の段に、knowledge の識別子を1行で添えられる</td><td>指摘を受けたとき knowledge から導き直すには、どの knowledge から導いたかが要る</td></tr>
+        <tr><td class="name">限定（「おそらく」等）</td><td>段に置かない</td><td>決定の欄が言い切りを求めている。範囲の限定は「答えないこと」が持つ</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">06</span>答えないこと</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>項目</th><th>種別</th><th>行き先</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="name">理由以外の7欄の、中の構造</td>
+          <td><span class="kindtag out">範囲外</span></td>
+          <td>この決定は理由の欄だけを扱う。他の欄の中を定める必要が生じた時点で、欄ごとに別の決定を起こす</td>
+        </tr>
+        <tr>
+          <td class="name">長さが読み返されなさに繋がるか</td>
+          <td><span class="kindtag lim">限界</span></td>
+          <td><b>行き先を持たない。</b>読み返されたかを観測する手段がなく、作れる見込みも無い。長さの上限は設けず、実地で長すぎると分かった時点でこの決定を改める</td>
+        </tr>
+        <tr>
+          <td class="name">拠り所が指す knowledge が実在するか</td>
+          <td><span class="kindtag unv">未確認</span></td>
+          <td>knowledge から記入指示への突き合わせを扱う決定で、同じ機構に載せて確かめる</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">07</span>承認</h2>
+  <div class="approve">
+    <span class="k">状態</span><span class="v">未承認</span>
+    <span class="m">この形が承認されてから、残る3つの決定をこの形で書く。</span>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">08</span>関連</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>種類</th><th>対象</th></tr></thead>
+      <tbody>
+        <tr><td class="name">縛る対象</td><td>決定記録の「理由」の欄。以後のすべての決定記録がこの構造に従う</td></tr>
+        <tr><td class="name">先立つ決定</td><td>規約は層ではなく、実装を導くもう一つの入力とする（この記録の理由に、その決定の材料を使っている）</td></tr>
+        <tr><td class="name">この決定を使う予定</td><td>仕様と規約の分け目を裁く基準／仕様は実装の綴りを持たない／knowledge から記入指示への突き合わせ</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div>

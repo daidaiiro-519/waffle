@@ -63,16 +63,16 @@
   }
 
   .wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
-  .wf-node rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
+  .wf-node > rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
   .wf-name{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
            font-size:12px;text-anchor:middle}
-  .wf-node--focus rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+  .wf-node--focus > rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
   .wf-node--focus .wf-name{fill:var(--fig-accent);font-weight:600}
-  .wf-node--removed rect,
-  .wf-node--muted rect{fill:none;stroke:var(--fig-text-faint);stroke-dasharray:4 3}
+  .wf-node--removed > rect,
+  .wf-node--muted > rect{fill:none;stroke:var(--fig-text-faint);stroke-dasharray:4 3}
   .wf-node--removed .wf-name,
   .wf-node--muted .wf-name{fill:var(--fig-text-faint)}
-  .wf-node--added rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+  .wf-node--added > rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
   .wf-node--added .wf-name{fill:var(--fig-accent);font-weight:600}
   .wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
   .wf-arrow{fill:var(--fig-line)}
@@ -244,6 +244,25 @@
   },
   {
    "name": "advisor"
+  },
+  {
+   "name": "繰り返し",
+   "span": [
+    2,
+    2
+   ],
+   "figure": {
+    "asserts": "包含",
+    "reading": "この範囲を繰り返す",
+    "items": [
+     {
+      "name": "敵対的に確かめる"
+     },
+     {
+      "name": "反証、または支持"
+     }
+    ]
+   }
   }
  ],
  "links": [
@@ -269,18 +288,7 @@
    "name": "反証、または支持",
    "ends": "return"
   }
- ],
- "frame": {
-  "groups": [
-   {
-    "name": "繰り返し",
-    "span": [
-     2,
-     2
-    ]
-   }
-  ]
- }
+ ]
 }</pre></div></section><section class="card"><header><h3>対応</h3><span class="fam">関係</span><span class="note">どれとどれが対応するか。面をまたぐ／格子で交わる</span></header><div class="pair"><div class="stage"><svg class="f-fig" viewBox="0 0 446 206" width="446" height="206" style="width:100%;max-width:803px;height:auto" role="img"><text class="f-t" x="93.0" y="40.0" font-family="Noto Sans JP" font-size="10" font-weight="400" fill="#79828F" text-anchor="middle">仕様の要素</text><text class="f-t" x="233.0" y="40.0" font-family="Noto Sans JP" font-size="10" font-weight="400" fill="#79828F" text-anchor="middle"></text><text class="f-t" x="363.0" y="40.0" font-family="Noto Sans JP" font-size="10" font-weight="400" fill="#79828F" text-anchor="middle">実装で確かめるもの</text><line class="f-line" x1="18.0" y1="52.0" x2="428.0" y2="52.0" stroke="#E4E9EE" stroke-width="1"/><text class="f-t" x="24.0" y="74.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">受け入れ基準</text><text class="f-t" x="304.0" y="74.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">保証シナリオ</text><line class="f-line" x1="18.0" y1="86.0" x2="428.0" y2="86.0" stroke="#E4E9EE" stroke-width="1"/><text class="f-t" x="24.0" y="108.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">業務ユースケース</text><text class="f-t" x="304.0" y="108.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">操作の契約</text><line class="f-line" x1="18.0" y1="120.0" x2="428.0" y2="120.0" stroke="#E4E9EE" stroke-width="1"/><text class="f-t" x="24.0" y="142.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">集約</text><text class="f-t" x="304.0" y="142.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">不変条件</text><line class="f-line" x1="18.0" y1="154.0" x2="428.0" y2="154.0" stroke="#E4E9EE" stroke-width="1"/><text class="f-t" x="24.0" y="176.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">業務サービス</text><text class="f-t" x="304.0" y="176.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">結果整合</text></svg></div><pre>{
  "asserts": "対応",
  "items": [
@@ -754,7 +762,7 @@
    }
   ]
  }
-}</pre></div></section><section class="card"><header><h3>やり取りの順序</h3><span class="note">書けた</span></header><div class="pair"><div class="stage"><svg class="f-fig" viewBox="0 0 564 338" width="564" height="338" style="width:100%;max-width:1015px;height:auto" role="img"><rect x="24" y="156.0" width="516.0" height="84.0" rx="4" fill="none" stroke="#16636B" stroke-width="1" stroke-dasharray="5 4"/><rect x="32" y="161.0" width="54" height="16" rx="3" fill="#E2EFF0"/><text class="f-t" x="59.0" y="173.0" font-family="Noto Sans JP" font-size="10" font-weight="400" fill="#16636B" text-anchor="middle">繰り返し</text><rect class="f-box f-box--plain" x="40.0" y="18.0" width="132.0" height="28.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text class="f-t" x="106.0" y="36.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="middle">Orchestrator</text><line class="f-line" x1="106.0" y1="46.0" x2="106.0" y2="320.0" stroke="#C3CAD2" stroke-width="1" stroke-dasharray="3 4"/><rect class="f-box f-box--plain" x="216.0" y="18.0" width="132.0" height="28.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text class="f-t" x="282.0" y="36.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="middle">Waffle</text><line class="f-line" x1="282.0" y1="46.0" x2="282.0" y2="320.0" stroke="#C3CAD2" stroke-width="1" stroke-dasharray="3 4"/><rect class="f-box f-box--plain" x="392.0" y="18.0" width="132.0" height="28.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text class="f-t" x="458.0" y="36.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="middle">advisor</text><line class="f-line" x1="458.0" y1="46.0" x2="458.0" y2="320.0" stroke="#C3CAD2" stroke-width="1" stroke-dasharray="3 4"/><line class="f-line" x1="106.0" y1="90.0" x2="282.0" y2="90.0" stroke="#4B5563" stroke-width="1.2"/><polygon points="282.0,90.0 274.0,86.0 274.0,94.0" fill="#4B5563"/><text class="f-t" x="194.0" y="83.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">骨格を作る</text><line class="f-line" x1="282.0" y1="136.0" x2="106.0" y2="136.0" stroke="#4B5563" stroke-width="1.2" stroke-dasharray="5 4"/><polygon points="106.0,136.0 114.0,132.0 114.0,140.0" fill="#4B5563"/><text class="f-t" x="194.0" y="129.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">埋める場所の一覧</text><line class="f-line" x1="106.0" y1="182.0" x2="458.0" y2="182.0" stroke="#4B5563" stroke-width="1.2"/><polygon points="458.0,182.0 450.0,178.0 450.0,186.0" fill="#4B5563"/><text class="f-t" x="282.0" y="175.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">敵対的に確かめる</text><line class="f-line" x1="458.0" y1="228.0" x2="106.0" y2="228.0" stroke="#4B5563" stroke-width="1.2" stroke-dasharray="5 4"/><polygon points="106.0,228.0 114.0,224.0 114.0,232.0" fill="#4B5563"/><text class="f-t" x="282.0" y="221.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">反証、または支持</text><line class="f-line" x1="106.0" y1="274.0" x2="282.0" y2="274.0" stroke="#4B5563" stroke-width="1.2"/><polygon points="282.0,274.0 274.0,270.0 274.0,278.0" fill="#4B5563"/><text class="f-t" x="194.0" y="267.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">値を書き込む</text></svg></div><pre>{
+}</pre></div></section><section class="card"><header><h3>やり取りの順序</h3><span class="note">書けた</span></header><div class="pair"><div class="stage"><p style="color:#9A4A21;font-size:.85rem">やり取り: frame に 'groups' は書けない</p></div><pre>{
  "asserts": "やり取り",
  "items": [
   {
