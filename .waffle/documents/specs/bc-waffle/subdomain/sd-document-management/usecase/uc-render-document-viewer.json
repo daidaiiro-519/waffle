@@ -1,7 +1,7 @@
 {
   "documentId": "uc-render-document-viewer",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -85,10 +85,22 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 検証済みのDocumentが与えられたとき、システムはそのcanonical MDをCSS付きの自己完結HTMLへ変換し、指定した出力先へ書き込む shall。",
-        "When frontmatter（tags/documentType/schemaRef/updatedAt等）を持つDocumentが与えられたとき、システムはそれらをHTMLヘッダに表示する shall。",
-        "When MD本文にmermaidコードフェンスが含まれるとき、システムはそれを<pre class=\"mermaid\">要素として出力しブラウザ側でのレンダリングに委ねる shall。",
-        "システムはHTML描画の過程でDocument集約自身の状態を変更してはならない must not。"
+        {
+          "id": "renders-canonical-md-to-standalone-html",
+          "text": "When 検証済みのDocumentが与えられたとき、システムはそのcanonical MDをCSS付きの自己完結HTMLへ変換し、指定した出力先へ書き込む shall。"
+        },
+        {
+          "id": "shows-frontmatter-in-header",
+          "text": "When frontmatter（tags/documentType/schemaRef/updatedAt等）を持つDocumentが与えられたとき、システムはそれらをHTMLヘッダに表示する shall。"
+        },
+        {
+          "id": "mermaid-fence-delegated-to-browser",
+          "text": "When MD本文にmermaidのコードフェンスが含まれるとき、システムはそれを<pre class=\"mermaid\">要素として出力しブラウザ側でのレンダリングに委ねる shall（Markdownの成果物では図はmermaidとして出るため、図もこの経路で届く）。"
+        },
+        {
+          "id": "rendering-does-not-mutate-the-document",
+          "text": "システムはHTML描画の過程でDocument集約自身の状態を変更してはならない must not。"
+        }
       ]
     },
     "errors": {
@@ -113,14 +125,21 @@
           "category": "正常系",
           "viewpoint": "canonical MDが正しくCSS付きHTMLへ変換され、frontmatterがヘッダに反映されることを確認する",
           "gherkin": "Scenario: 検証済みDocumentをHTMLへ描画する\n  Given 検証済み（VALIDATED以降）のDocument\n  When RenderDocumentViewerを実行する\n  Then CSS付きの自己完結HTMLファイルが生成され、tags等のfrontmatterがヘッダに表示される",
-          "covers": "受け入れ基準: canonical MDのHTML変換、frontmatterのヘッダ表示"
+          "covers": "受け入れ基準: canonical MDのHTML変換、frontmatterのヘッダ表示",
+          "satisfies": [
+            "renders-canonical-md-to-standalone-html",
+            "shows-frontmatter-in-header"
+          ]
         },
         {
           "name": "mermaidコードフェンスをpre要素として出力する",
           "category": "正常系",
-          "viewpoint": "MD本文中のmermaid記法が、Waffle自身で図をレンダリングせずそのままブラウザ側へ委譲する形で出力されることを確認する",
-          "gherkin": "Scenario: mermaidコードフェンスをpre要素として出力する\n  Given 基本フローにmermaidのsequenceDiagramを含むDocument\n  When RenderDocumentViewerを実行する\n  Then <pre class=\"mermaid\">要素としてmermaid記法がそのまま出力される",
-          "covers": "受け入れ基準: mermaidコードフェンスのpre要素化"
+          "viewpoint": "MD本文中のmermaidが、Waffle自身で図に組み立て直されず、そのままブラウザ側へ委譲されることを確認する",
+          "gherkin": "Scenario: mermaidコードフェンスをpre要素として出力する\n  Given mermaidのコードフェンスを含むcanonical MD\n  When RenderDocumentViewerを実行する\n  Then <pre class=\"mermaid\">要素としてそのまま出力される",
+          "covers": "受け入れ基準: mermaidコードフェンスのpre要素化",
+          "satisfies": [
+            "mermaid-fence-delegated-to-browser"
+          ]
         },
         {
           "name": "RenderDocument自体が失敗する場合はRENDER_FAILEDを返す",
@@ -134,7 +153,10 @@
           "category": "正常系",
           "viewpoint": "読み取り専用の投影として、RenderDocumentのstatus遷移・deploy処理を一切トリガーしないことを確認する",
           "gherkin": "Scenario: HTML描画はDocument集約自身の状態を変更しない\n  Given 検証済みのDocument\n  When RenderDocumentViewerを実行する\n  Then 対象Documentのstatus・canonical MD・deploy先はいずれも変更されない",
-          "covers": "事後条件: Document集約自身の状態・内容は変更しない"
+          "covers": "事後条件: Document集約自身の状態・内容は変更しない",
+          "satisfies": [
+            "rendering-does-not-mutate-the-document"
+          ]
         },
         {
           "name": "content.descriptionがOKF frontmatterのdescriptionとしてヘッダに出る",

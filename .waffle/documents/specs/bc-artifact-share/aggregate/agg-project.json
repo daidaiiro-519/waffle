@@ -1,7 +1,7 @@
 {
   "documentId": "agg-project",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v10",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "content": {
@@ -222,6 +222,7 @@
       "title": "不変条件",
       "items": [
         {
+          "id": "membership-requires-explicit-action",
           "rule": "所属は、人が明示的に加える操作をしたときにだけ常に成立する",
           "enforcement": "guard",
           "rationale": [
@@ -229,6 +230,7 @@
           ]
         },
         {
+          "id": "project-token-opens-only-its-members",
           "rule": "この単位の閲覧トークンで開けるのは、常にこの単位に入っている共有アーティファクトだけである",
           "enforcement": "guard",
           "rationale": [
@@ -236,6 +238,7 @@
           ]
         },
         {
+          "id": "project-stores-token-fingerprint-only",
           "rule": "プロジェクトは、閲覧トークンそのものの値を常に保持せず、指紋だけを持つ",
           "enforcement": "schema",
           "rationale": [
@@ -243,6 +246,7 @@
           ]
         },
         {
+          "id": "revoking-one-token-keeps-others",
           "rule": "閲覧トークンを1本無効にしても、他の閲覧トークンは常に使えたままになる",
           "enforcement": "guard",
           "rationale": [
@@ -250,6 +254,7 @@
           ]
         },
         {
+          "id": "at-most-five-active-tokens",
           "rule": "同時に有効な閲覧トークンは、常に5本を超えない。有効とは、無効にされておらず、かつ期限を過ぎていないことをいう",
           "enforcement": "guard",
           "rationale": [
@@ -258,6 +263,7 @@
           ]
         },
         {
+          "id": "active-token-names-are-unique",
           "rule": "1つのプロジェクトの中で、有効な閲覧トークンの名前は常に重ならない",
           "enforcement": "guard",
           "rationale": [
@@ -265,6 +271,7 @@
           ]
         },
         {
+          "id": "project-tokens-may-have-no-expiry",
           "rule": "プロジェクトの閲覧トークンには期限を設けないことを常に許す",
           "enforcement": "schema",
           "rationale": [
@@ -273,6 +280,7 @@
           ]
         },
         {
+          "id": "removing-member-keeps-the-artifact",
           "rule": "この単位から共有アーティファクトを外しても、その共有アーティファクト自体は常に失われない",
           "enforcement": "guard",
           "rationale": [
@@ -280,6 +288,7 @@
           ]
         },
         {
+          "id": "unpublishing-project-keeps-member-tokens",
           "rule": "この単位の公開を止めても、入っている共有アーティファクトは常にそれぞれの閲覧トークンで開ける",
           "enforcement": "guard",
           "rationale": [
@@ -287,6 +296,7 @@
           ]
         },
         {
+          "id": "project-has-exactly-one-owner",
           "rule": "プロジェクトには、常にちょうど1人の持ち主がいる",
           "enforcement": "schema",
           "rationale": [
@@ -295,6 +305,7 @@
           ]
         },
         {
+          "id": "sharing-kind-is-fixed-after-creation",
           "rule": "共有の別は、作ったあと常に変わらない",
           "enforcement": "guard",
           "rationale": [

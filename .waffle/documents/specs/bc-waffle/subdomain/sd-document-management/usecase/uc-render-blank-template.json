@@ -1,7 +1,7 @@
 {
   "documentId": "uc-render-blank-template",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -106,19 +106,58 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When schemaRefが実在するとき、システムはそのschemaのcontent構造をプレースホルダー化したMarkdownを返す shall。",
-        "When フィールドがx-prompt-writeを宣言しているとき、システムはそのフィールドの値を「{{x-prompt-write本文}}」という形式のプレースホルダー文字列に置き換える shall。",
-        "When フィールドがenumを持つとき、システムはプレースホルダー文字列に選択肢を併記する shall。",
-        "When 配列フィールドが構造化された要素（オブジェクト）を持つとき、システムは要素1件分のプレースホルダーオブジェクトを含む配列として描画する shall。",
-        "When 描画が成功したとき、システムはschemaRef・discriminatorから導出したパスへMarkdown本文をファイルとして書き出す shall。",
-        "When 書き出し先に既にファイルが存在するとき、システムはその内容を新しい描画結果で上書きする shall。",
-        "If schemaRefが実在しないとき、システムはINVALID_SCHEMA_REFエラーを返す shall。",
-        "If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。",
-        "If schemaのcontentがdiscriminatorで分岐し、指定されたdiscriminator値が候補enumに存在しないとき、システムはINVALID_DISCRIMINATORエラーを返す shall。",
-        "While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。",
-        "When schemaがx-frontmatterを宣言しているとき、システムはx-frontmatterが指す各フィールドのx-prompt-write本文をプレースホルダー化したYAML frontmatterを、本文の先頭に付ける shall。",
-        "If schemaがx-frontmatterを宣言していないとき、システムはfrontmatterブロックを出力しない shall。",
-        "While 同じschemaRef・discriminatorで繰り返し呼び出すとき、システムは常に同じプレースホルダーMarkdownを返す shall（べき等性）。"
+        {
+          "id": "renders-placeholders-from-the-schema",
+          "text": "When schemaRefが実在するとき、システムはそのschemaのcontent構造をプレースホルダー化したMarkdownを返す shall。"
+        },
+        {
+          "id": "write-instruction-becomes-the-placeholder",
+          "text": "When フィールドがx-prompt-writeを宣言しているとき、システムはそのフィールドの値を「{{x-prompt-write本文}}」という形式のプレースホルダー文字列に置き換える shall。"
+        },
+        {
+          "id": "enum-choices-are-listed-in-the-placeholder",
+          "text": "When フィールドがenumを持つとき、システムはプレースホルダー文字列に選択肢を併記する shall。"
+        },
+        {
+          "id": "structured-array-renders-one-element",
+          "text": "When 配列フィールドが構造化された要素（オブジェクト）を持つとき、システムは要素1件分のプレースホルダーオブジェクトを含む配列として描画する shall。"
+        },
+        {
+          "id": "writes-the-markdown-to-a-derived-path",
+          "text": "When 描画が成功したとき、システムはschemaRef・discriminatorから導出したパスへMarkdown本文をファイルとして書き出す shall。"
+        },
+        {
+          "id": "existing-file-is-overwritten",
+          "text": "When 書き出し先に既にファイルが存在するとき、システムはその内容を新しい描画結果で上書きする shall。"
+        },
+        {
+          "id": "invalid-schema-ref",
+          "text": "If schemaRefが実在しないとき、システムはINVALID_SCHEMA_REFエラーを返す shall。"
+        },
+        {
+          "id": "missing-discriminator",
+          "text": "If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。"
+        },
+        {
+          "id": "invalid-discriminator",
+          "text": "If schemaのcontentがdiscriminatorで分岐し、指定されたdiscriminator値が候補enumに存在しないとき、システムはINVALID_DISCRIMINATORエラーを返す shall。"
+        },
+        {
+          "id": "no-document-is-written",
+          "text": "While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。"
+        },
+        {
+          "id": "frontmatter-placeholders-come-from-x-frontmatter",
+          "text": "When schemaがx-frontmatterを宣言しているとき、システムはx-frontmatterが指す各フィールドのx-prompt-write本文をプレースホルダー化したYAML frontmatterを、本文の先頭に付ける shall。"
+        },
+        {
+          "id": "no-frontmatter-block-without-the-declaration",
+          "text": "If schemaがx-frontmatterを宣言していないとき、システムはfrontmatterブロックを出力しない shall。"
+        },
+        {
+          "id": "repeated-calls-return-the-same-markdown",
+          "text": "While 同じschemaRef・discriminatorで繰り返し呼び出すとき、システムは常に同じプレースホルダーMarkdownを返す shall（べき等性）。"
+        }
       ]
     },
     "errors": {
@@ -250,17 +289,6 @@
           "covers": "操作保証からの移設"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

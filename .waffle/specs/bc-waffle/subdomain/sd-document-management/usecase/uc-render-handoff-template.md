@@ -3,7 +3,7 @@ id: "uc-render-handoff-template"
 type: "usecase"
 title: "Handoff document.jsonを固定HTMLテンプレートへ描画する：RenderHandoffTemplate"
 description: "Handoff document.jsonの内容を、確定済みの固定HTMLテンプレート（完成イメージ・レビュー状況・詳細タブ）へ描画し、人間が読める成果物として書き出す"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # Handoff document.jsonを固定HTMLテンプレートへ描画する：RenderHandoffTemplate
@@ -68,12 +68,14 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- If 対象DocumentのschemaRefがHandoffSchemaでないとき、システムはエラーを返し描画しない shall。
-- If completionImageブロックが無いとき、システムはMISSING_COMPLETION_IMAGEエラーを返し描画しない shall。
-- When designViewpoints/implementationViewpointsが与えられたとき、システムはadvisor名＋件数のペアをレビュー状況セクションに出力する shall。
-- When 対象HandoffとcompletionImageが与えられたとき、システムは固定テンプレートへ値を差し込んだHTMLを.waffle/handoff/{documentId}.htmlへ書き込む shall。
-- When 対象Handoffが与えられたとき、システムはdocument-graph Skillの契約に沿ったid/type/title/description/tagsをHTMLのheadに<meta>タグとして出力する shall。
-- When reviewStatus（requiredAdvisors/findings/completionImageConfirmedBy）が与えられたとき、システムはその値をそのまま表示し、実装に進めてよいかどうかの判定を新たに算出しない shall。
+| 基準 |
+|---|
+| If 対象DocumentのschemaRefがHandoffSchemaでないとき、システムはエラーを返し描画しない shall。 |
+| If completionImageブロックが無いとき、システムはMISSING_COMPLETION_IMAGEエラーを返し描画しない shall。 |
+| When designViewpoints/implementationViewpointsが与えられたとき、システムはadvisor名＋件数のペアをレビュー状況セクションに出力する shall。 |
+| When 対象HandoffとcompletionImageが与えられたとき、システムは固定テンプレートへ値を差し込んだHTMLを.waffle/handoff/{documentId}.htmlへ書き込む shall。 |
+| When 対象Handoffが与えられたとき、システムはdocument-graph Skillの契約に沿ったid/type/title/description/tagsをHTMLのheadに<meta>タグとして出力する shall。 |
+| When reviewStatus（requiredAdvisors/findings/completionImageConfirmedBy）が与えられたとき、システムはその値をそのまま表示し、実装に進めてよいかどうかの判定を新たに算出しない shall。 |
 
 ---
 

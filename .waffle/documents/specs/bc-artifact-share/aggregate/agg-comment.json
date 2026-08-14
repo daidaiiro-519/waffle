@@ -1,7 +1,7 @@
 {
   "documentId": "agg-comment",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v10",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "content": {
@@ -128,6 +128,7 @@
       "title": "不変条件",
       "items": [
         {
+          "id": "comment-is-immutable-after-posting",
           "rule": "コメントの内容と判定は、投稿された後に常に変わらない",
           "enforcement": "guard",
           "rationale": [
@@ -136,6 +137,7 @@
           ]
         },
         {
+          "id": "comment-body-is-text",
           "rule": "コメントの本文は、常に文字として扱われる",
           "enforcement": "guard",
           "rationale": [
@@ -143,6 +145,7 @@
           ]
         },
         {
+          "id": "reply-target-is-same-artifact",
           "rule": "返信先として指せるのは、常に同じ共有アーティファクトに付いたコメントだけである",
           "enforcement": "guard",
           "rationale": [
@@ -150,6 +153,7 @@
           ]
         },
         {
+          "id": "comments-survive-content-replacement",
           "rule": "共有アーティファクトの中身が差し替えられても、それまでのコメントは常に残る",
           "enforcement": "guard",
           "rationale": [

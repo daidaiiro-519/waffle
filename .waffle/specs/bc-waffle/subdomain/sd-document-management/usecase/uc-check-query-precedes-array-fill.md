@@ -3,7 +3,7 @@ id: "uc-check-query-precedes-array-fill"
 type: "usecase"
 title: "uc-check-query-precedes-array-fill"
 description: "配列フィールドを含むdocument.jsonの書き込み（scaffold fill）は、既存の配列要素をqueryで確認せず上書きすると内容を消失させる事故が起きる。この操作順序制約（クエリ先行）を機械的に検証する。"
-schemaRef: "DomainSpecSchema/v9"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # uc-check-query-precedes-array-fill
@@ -69,13 +69,6 @@ sequenceDiagram
 | While 配列の値を含まない書き込みのとき、システムは先行して読まれたかに関わらず許可判定を返す shall。 |
 | When 拒否判定の理由を返すとき、システムは丸ごとの置き換えだけを手順として示さず、鍵を宣言した配列では要素操作を使うことも併せて示す shall（鍵を宣言した配列では丸ごとの置き換えが engine 側で拒まれるため、この判定より手前で拒否しながら engine が禁じた手順を勧めると、進む道が無くなる）。 |
 | While 書き込みが要素操作として与えられたとき、システムは配列の値を含む書き込みとして扱わず、許可判定を返す shall（要素操作は既存の要素を読まずに済ませるための経路であり、先行して読ませることはその目的と正面から反するため）。 |
-
----
-
-## 操作保証
-
-| 保証 |
-|---|
 | When 同一の入力を渡したとき、システムは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返す shall。 |
 
 ---
@@ -149,10 +142,6 @@ Scenario: 要素操作は先行して読むことを求められない
   When 判定する
   Then 許可判定が返る
 ```
-
----
-
-## 操作保証シナリオ
 
 ### 直接呼び出しとCLI呼び出しで同じ判定結果になる
 

@@ -3,7 +3,7 @@ id: "uc-check-path-is-projection"
 type: "usecase"
 title: "uc-check-path-is-projection"
 description: "document.jsonから機械的に生成された投影（render出力、例: SKILL.md・CLAUDE.md）を、原本を経由せず直接編集してしまう事故を防ぐため、対象ファイルの実体パスが投影であるかを機械的に判定する。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # uc-check-path-is-projection
@@ -60,15 +60,12 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 対象パスの実体がSkillのcanonicalPathTemplateに一致するとき、CheckPathIsProjectionはisProjection=trueと該当するdocumentIdを返さなければならない（shall）
-- When 対象パスの実体がAgentのcanonicalPathTemplateに一致するとき、CheckPathIsProjectionはisProjection=trueと該当するdocumentIdを返さなければならない（shall）
-- When 対象パスの実体がどのcanonicalPathTemplateにも一致しないとき、CheckPathIsProjectionはisProjection=falseを返さなければならない（shall）
-
----
-
-## 操作保証
-
-- When 同一の実体パスを渡したとき、CheckPathIsProjectionは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返さなければならない（shall）
+| 基準 |
+|---|
+| When 対象パスの実体がSkillのcanonicalPathTemplateに一致するとき、CheckPathIsProjectionはisProjection=trueと該当するdocumentIdを返さなければならない（shall） |
+| When 対象パスの実体がAgentのcanonicalPathTemplateに一致するとき、CheckPathIsProjectionはisProjection=trueと該当するdocumentIdを返さなければならない（shall） |
+| When 対象パスの実体がどのcanonicalPathTemplateにも一致しないとき、CheckPathIsProjectionはisProjection=falseを返さなければならない（shall） |
+| When 同一の実体パスを渡したとき、CheckPathIsProjectionは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返さなければならない（shall） |
 
 ---
 
@@ -125,10 +122,6 @@ Given 実体パスが"docs/README.md"である
 When CheckPathIsProjectionを実行する
 Then isProjection=falseが返る
 ```
-
----
-
-## 操作保証シナリオ
 
 ### 直接呼び出しとCLI呼び出しで同じ判定結果になる
 

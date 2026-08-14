@@ -3,7 +3,7 @@ id: "uc-init-coding-preset"
 type: "usecase"
 title: "CodingSchemaプリセットから4documentを一括生成する：uc-init-coding-preset"
 description: "CodingSchemaのプリセット（種データ）から、プロダクト固有のtech-stack/architecture/coding-standard/test-standard4documentを一括生成するusecase。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # CodingSchemaプリセットから4documentを一括生成する：uc-init-coding-preset
@@ -64,17 +64,15 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- 1回の呼び出しでtech-stack/architecture/coding-standard/test-standardの4documentが生成される
-- 生成されたdocumentのtitleは「プリセットの説明句：documentId」の形式になる
-- 既に存在するdocumentは上書きせずskipする（冪等）
-- 存在しないプリセット名を指定するとPRESET_NOT_FOUNDエラーになる
-- When プリセットからプロダクト固有の規約を作るとき、システムはその規約のschemaの最新の版を指す shall（作る側に版を書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、作られた規約が最初から検証を通らなくなる）。
-
----
-
-## 操作保証
-
-- When 同じpresetName・productNameでinitを複数回実行したとき、既に生成済みのdocumentはシステムによって変更されない shall（冪等性）。
+| 基準 |
+|---|
+| 1回の呼び出しでtech-stack/architecture/coding-standard/test-standardの4documentが生成される |
+| 生成されたdocumentのtitleは「プリセットの説明句：documentId」の形式になる |
+| 既に存在するdocumentは上書きせずskipする（冪等） |
+| 存在しないプリセット名を指定するとPRESET_NOT_FOUNDエラーになる |
+| When プリセットからプロダクト固有の規約を作るとき、システムはその規約のschemaの最新の版を指す shall（作る側に版を書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、作られた規約が最初から検証を通らなくなる）。 |
+| When 存在しないpresetNameが指定されたとき、システムはPRESET_NOT_FOUNDエラーを返す shall。 |
+| When 同じpresetName・productNameでinitを複数回実行したとき、既に生成済みのdocumentはシステムによって変更されない shall（冪等性）。 |
 
 ---
 
@@ -128,9 +126,18 @@ Scenario: プリセットから作る規約は最新の版を指す
   Then 作られた規約はそのschemaの最新の版を指す
 ```
 
----
+### 存在しないpresetNameが指定されたときのときPRESET_NOT_FOUND
 
-## 操作保証シナリオ
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー：存在しないpresetNameが指定されたとき |
+
+```gherkin
+Scenario: 存在しないpresetNameが指定されたときのときPRESET_NOT_FOUND
+  Given 存在しないpresetNameが指定されたとき状況
+  When 本ユースケースを実行する
+  Then PRESET_NOT_FOUND エラーが返る
+```
 
 ### 既に生成済みのdocumentは再initで変更されない
 

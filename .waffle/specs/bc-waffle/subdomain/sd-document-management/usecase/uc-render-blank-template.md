@@ -3,7 +3,7 @@ id: "uc-render-blank-template"
 type: "usecase"
 title: "スキーマが宣言する値の記入指示をプレースホルダーとして描画する：RenderBlankTemplate"
 description: "schemaRef（と必要ならdiscriminator）から、値を一切埋めていない状態のcontent構造を、各フィールドの記入指示（x-prompt-write）をプレースホルダーとして埋め込んだMarkdownとして描画する。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # スキーマが宣言する値の記入指示をプレースホルダーとして描画する：RenderBlankTemplate
@@ -78,24 +78,21 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When schemaRefが実在するとき、システムはそのschemaのcontent構造をプレースホルダー化したMarkdownを返す shall。
-- When フィールドがx-prompt-writeを宣言しているとき、システムはそのフィールドの値を「{{x-prompt-write本文}}」という形式のプレースホルダー文字列に置き換える shall。
-- When フィールドがenumを持つとき、システムはプレースホルダー文字列に選択肢を併記する shall。
-- When 配列フィールドが構造化された要素（オブジェクト）を持つとき、システムは要素1件分のプレースホルダーオブジェクトを含む配列として描画する shall。
-- When 描画が成功したとき、システムはschemaRef・discriminatorから導出したパスへMarkdown本文をファイルとして書き出す shall。
-- When 書き出し先に既にファイルが存在するとき、システムはその内容を新しい描画結果で上書きする shall。
-- If schemaRefが実在しないとき、システムはINVALID_SCHEMA_REFエラーを返す shall。
-- If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。
-- If schemaのcontentがdiscriminatorで分岐し、指定されたdiscriminator値が候補enumに存在しないとき、システムはINVALID_DISCRIMINATORエラーを返す shall。
-- While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。
-- When schemaがx-frontmatterを宣言しているとき、システムはx-frontmatterが指す各フィールドのx-prompt-write本文をプレースホルダー化したYAML frontmatterを、本文の先頭に付ける shall。
-- If schemaがx-frontmatterを宣言していないとき、システムはfrontmatterブロックを出力しない shall。
-
----
-
-## 操作保証
-
-- While 同じschemaRef・discriminatorで繰り返し呼び出すとき、システムは常に同じプレースホルダーMarkdownを返す shall（べき等性）。
+| 基準 |
+|---|
+| When schemaRefが実在するとき、システムはそのschemaのcontent構造をプレースホルダー化したMarkdownを返す shall。 |
+| When フィールドがx-prompt-writeを宣言しているとき、システムはそのフィールドの値を「{{x-prompt-write本文}}」という形式のプレースホルダー文字列に置き換える shall。 |
+| When フィールドがenumを持つとき、システムはプレースホルダー文字列に選択肢を併記する shall。 |
+| When 配列フィールドが構造化された要素（オブジェクト）を持つとき、システムは要素1件分のプレースホルダーオブジェクトを含む配列として描画する shall。 |
+| When 描画が成功したとき、システムはschemaRef・discriminatorから導出したパスへMarkdown本文をファイルとして書き出す shall。 |
+| When 書き出し先に既にファイルが存在するとき、システムはその内容を新しい描画結果で上書きする shall。 |
+| If schemaRefが実在しないとき、システムはINVALID_SCHEMA_REFエラーを返す shall。 |
+| If schemaのcontentがdiscriminatorで分岐し、discriminatorが指定されていないとき、システムはMISSING_DISCRIMINATORエラーを返す shall。 |
+| If schemaのcontentがdiscriminatorで分岐し、指定されたdiscriminator値が候補enumに存在しないとき、システムはINVALID_DISCRIMINATORエラーを返す shall。 |
+| While 対象schemaの全ての記入対象フィールドについてプレースホルダー化が完了しているとき、システムはdocument.jsonへの書き込みを一切行わない shall。 |
+| When schemaがx-frontmatterを宣言しているとき、システムはx-frontmatterが指す各フィールドのx-prompt-write本文をプレースホルダー化したYAML frontmatterを、本文の先頭に付ける shall。 |
+| If schemaがx-frontmatterを宣言していないとき、システムはfrontmatterブロックを出力しない shall。 |
+| While 同じschemaRef・discriminatorで繰り返し呼び出すとき、システムは常に同じプレースホルダーMarkdownを返す shall（べき等性）。 |
 
 ---
 
@@ -255,10 +252,6 @@ When 実行する
 Then document.jsonは書き換えられない
 And 描画結果のMarkdownを書き出すだけである
 ```
-
----
-
-## 操作保証シナリオ
 
 ### 同じ入力なら同じ結果を返す
 

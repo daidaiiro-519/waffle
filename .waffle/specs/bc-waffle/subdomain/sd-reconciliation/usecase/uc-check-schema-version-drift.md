@@ -4,7 +4,7 @@ type: "usecase"
 title: "DocumentとSchema版の対応関係を検証する：CheckSchemaVersionDrift"
 description: "Document の schema 参照を、実在する Schema の版と突き合わせ、指す先の無い参照・最新でない参照・追従していない欄を機械的に検出する。 最新でない参照は情報ではなく違反として上げる。古いまま置くことに帰結が無いと、版はいつまでも追いつかない。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v10"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # DocumentとSchema版の対応関係を検証する：CheckSchemaVersionDrift

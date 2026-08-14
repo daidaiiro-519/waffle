@@ -4,7 +4,7 @@ type: "usecase"
 title: "Documentがschemaに適合するか検証する：ValidateDocument"
 description: "Document の content が schema に適合するかを検証し、適合可否と違反詳細を返す（副作用なし）。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v9"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # Documentがschemaに適合するか検証する：ValidateDocument
@@ -80,15 +80,17 @@ sequenceDiagram
 | If Document が終端の状態にあるとき、システムは INVALID_TRANSITION を返し、状態を変えない shall。 |
 | If 鍵を宣言した配列の中に、同じ鍵を持つ要素が2つ以上あるとき、システムは不適合として、その配列と重複した鍵を違反詳細に含めて返す shall。 |
 | If 鍵を宣言した配列が、参照関係の宣言を持たないとき、システムは不適合としてその配列を違反詳細に含めて返す shall（どこからも指されないことが正しいなら、指されない旨を宣言させるため。宣言の欠けを『指されていない』と読むと、取り下げの規律が黙って効かなくなる）。 |
+| When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
+| When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
-## 操作保証
+## エラー
 
-| 保証 |
-|---|
-| When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
-| When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
+| コード | 条件 |
+|---|---|
+| `INVALID_PATH` | - 対象パスが存在しないとき |
+| `INVALID_SCHEMA_REF` | - 対象のschemaRefを解決できないとき |
 
 ---
 
@@ -237,32 +239,28 @@ Scenario: 指されないことを宣言した配列は適合する
   Then 適合と判定される
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないパスはINVALID_PATH
+### 対象パスが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | 解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる |
+| 異常系 | エラー：対象パスが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないパスはINVALID_PATH
-  Given 実在しない対象パス
-  When 本usecaseを実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象パスが存在しないときのときINVALID_PATH
+  Given 対象パスが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```
 
-### 解決できないschemaRefはINVALID_SCHEMA_REF
+### 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | 解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる |
+| 異常系 | エラー：対象のschemaRefを解決できないとき |
 
 ```gherkin
-Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
-  Given 解決できないschemaRef
-  When 本usecaseを実行する
-  Then INVALID_SCHEMA_REFエラーが返る
+Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
+  Given 対象のschemaRefを解決できないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_SCHEMA_REF エラーが返る
 ```

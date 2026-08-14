@@ -4,7 +4,7 @@ type: "aggregate"
 title: "Schema定義の型と不変条件を守る集約：Schema"
 description: "Document の型定義（Schema）の不変条件を表す集約。Document が機械生成・検証・描画できることを保証する バージョンが変わった際の既存Documentの追従はAIが個別に判断して直す（機械的な自動移行の機構はこの集約の対象外・過剰実装と判断し撤去済み） 対象は「Document の schemaRef が指しうる型」に限定する: DomainSpecSchema・PresentationSpecSchema・CodingSchema・SkillSchema・KnowledgeSchema・AgentSchema・TemplateSchema。RenderMetaSchema は Document 型定義ではなく派生構造（x-render 部品）を検証する別概念であり、この集約の対象外"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # Schema定義の型と不変条件を守る集約：Schema
@@ -38,6 +38,8 @@ Document の型定義（構造・描画・記入/読取指示）の一貫性単�
 | **schemaId**（識別子） | SchemaId |
 | version | Version |
 | kindProfiles | KindProfile[] |
+| discriminatorKey | DiscriminatorKey |
+| figureDeclarations | FigureDeclaration[] |
 
 ---
 
@@ -74,21 +76,49 @@ Document の型定義（構造・描画・記入/読取指示）の一貫性単�
 | name | string |
 | requiredBlocks | string[] |
 
+### DiscriminatorKey
+
+| 表す値 | 振る舞い |
+|---|---|
+| Schema が種別を判別するのに使う欄の名前 | 不変。名前そのもので識別する。どの欄がそれかを決める規則をこの値の内側に持つ——最上位の分岐が判別に使っている欄の名前がそれであり、最上位に分岐が無ければ、束ねられた要素の中で最初に見つかった分岐が使っている欄の名前を使う。分岐をひとつも持たない Schema には、この値が存在しない。 |
+
+| 属性 | 型 |
+|---|---|
+| name | string |
+
+### FigureDeclaration
+
+| 表す値 | 振る舞い |
+|---|---|
+| 図の宣言 ── その図が何を主張し、何を置くか | 主張・読み方・置くもの・つなぐもの・読む枠・要素への注の組。すべて等しければ等価。描き方（向き・大きさ・並び順・配置）は持たない——それらは描画側が決める。置くものは自分と同じ形の子を持て、置くものは図を1つ持てる。 |
+
+| 属性 | 型 |
+|---|---|
+| asserts | string |
+| reading | string |
+| items | array |
+| links | array |
+| frame | object |
+| notes | array |
+
 ---
 
 ## 不変条件
 
-| ルール | 守り方 | 根拠 |
-|---|---|---|
-| 値フィールドは常に oneOf / anyOf を持たない | schema | - scaffold が骨格を機械生成できるようにする |
-| content の各ブロックは additionalProperties を常に閉じる（固定 properties のみ） | schema | - 未知フィールドの混入を防ぎ構造を決定的にする |
-| 再帰は常に有界である（無限ネストを許さない） | schema | - 機械走査が停止することを保証する |
-| 各ブロックの x-render は常に RenderMetaSchema の閉じた語彙にのみ従う | schema | - 描画がロジックを持たず決定的であることを保つ |
-| status の enum は常に遷移順に並び、先頭が初期状態である | schema | - scaffold が初期状態を enum 先頭から一意に決められる |
-| 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない） | guard | - 既存 Document が破損しないよう版の進化を安全にする |
-| 各 kind の KindProfile は同一版内で不変であり、他 kind のブロックを持たない（discriminator として機能する） | schema | - kind ごとの content 構造の一貫性を保証し、scaffold/validate が kind から構造を一意に決定できるようにする |
-| Schema集約が対象とするのは Document の schemaRef が指しうる型のみ（派生構造を検証する schema は対象外） | schema | - 一貫性境界を「schemaRef の解決先」に閉じ、無関係な検証用 schema を集約に含めない |
-| Schemaファイル自体の物理的な整形は、常に一意に定まる形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する | schema | - 整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする<br>- 複数の書式が混在すると、機械編集のたびにどの書式に合わせるべきかが曖昧になり、フォーマット破壊のリスクが生まれる |
+| ルール | 根拠 |
+|---|---|
+| 値フィールドは常に oneOf / anyOf を持たない | scaffold が骨格を機械生成できるようにする |
+| content の各ブロックは additionalProperties を常に閉じる（固定 properties のみ） | 未知フィールドの混入を防ぎ構造を決定的にする |
+| 再帰は常に有界である（無限ネストを許さない） | 機械走査が停止することを保証する / 図の宣言では、図の中に図を置く入れ子がこれにあたる（3段以内）。一方で置くものの子がつくる木の深さは制限しない——階層や包含が表せる木の深さに上限を設けると、表せるはずのものが表せなくなる。 |
+| 各ブロックの x-render は常に RenderMetaSchema の閉じた語彙にのみ従う | 描画がロジックを持たず決定的であることを保つ |
+| status の enum は常に遷移順に並び、先頭が初期状態である | scaffold が初期状態を enum 先頭から一意に決められる |
+| 一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない） | 既存 Document が破損しないよう版の進化を安全にする |
+| 各 kind の KindProfile は同一版内で不変であり、他 kind のブロックを持たない（discriminator として機能する） | kind ごとの content 構造の一貫性を保証し、scaffold/validate が kind から構造を一意に決定できるようにする |
+| Schema集約が対象とするのは Document の schemaRef が指しうる型のみ（派生構造を検証する schema は対象外） | 一貫性境界を「schemaRef の解決先」に閉じ、無関係な検証用 schema を集約に含めない |
+| Schemaファイル自体の物理的な整形は、常に一意に定まる形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する | 整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする / 複数の書式が混在すると、機械編集のたびにどの書式に合わせるべきかが曖昧になり、フォーマット破壊のリスクが生まれる |
+| 図の宣言の主張は、定められた語彙のいずれか1つである | 主張が語彙の外に出られると、描き方を選ぶ根拠が宣言の中に無くなり、書き手が描き方を指定し始める / 語彙を1つに絞ることで、1つの図が2つのことを主張する状態を防ぐ |
+| 図の宣言が持てる欄は、主張ごとに必須と禁止が定まる | どの欄を書くかを書き手の裁量にすると、同じ主張が図ごとに違う形で書かれ、描画側が形を判別できなくなる / 禁止を明示することで、主張と噛み合わない欄（例：階層につなぐもの）を描く前に落とせる |
+| 図の宣言は描き方の指定を持たない。向き・大きさ・並び順・配置はいずれも宣言の欄に現れない | 描き方を宣言に書けるようにすると、同じ主張が書き手ごとに違う見え方になり、図が比較できなくなる / 描き方は主張と中身から一意に決まる。決まるものを書かせるのは、食い違いの入り口を作ることにほかならない |
 
 ---
 

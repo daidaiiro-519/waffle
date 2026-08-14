@@ -1,3 +1,12 @@
+---
+id: "sd-validation"
+type: "subdomain"
+title: "Documentのschema適合判定を担うサブドメイン：sd-validation"
+description: "Document の content が schema に適合するかを判定する業務領域。適合検証は確立された既製の仕組みで賄える一般的な関心事。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v11"
+---
+
 # Documentのschema適合判定を担うサブドメイン：sd-validation
 
 ## 名前

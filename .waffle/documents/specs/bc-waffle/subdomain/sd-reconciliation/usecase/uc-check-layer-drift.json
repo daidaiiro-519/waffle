@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-layer-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -98,20 +98,62 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 基準となる規約が指定されたとき、層の突き合わせは その規約が宣言する層・置き場所・依存してよい先だけを基準として使う shall",
-        "When 実装が、依存してよい先に含まれない層を使っているとき、層の突き合わせは その実装と相手の層を違反として報告する shall",
-        "When 実装が、自分と同じ層だけを使っているとき、層の突き合わせは 違反を報告しない shall",
-        "When 実装が、規約の受け持つ範囲の外にある部品を使っているとき、層の突き合わせは 違反を報告しない shall",
-        "When 実装が合成ルートとして宣言された場所にあるとき、層の突き合わせは その実装を依存の規則から除外する shall",
-        "When 実装がどの層の置き場所にも入らないとき、層の突き合わせは その実装を宣言漏れとして報告する shall",
-        "When 宣言された置き場所が存在しないとき、層の突き合わせは その層を未実装として報告し、他の層の確認を続ける shall",
-        "If ある層の置き場所が別の層の置き場所を含んでいるならば、層の突き合わせは 実装を確かめる前に宣言の誤りとして報告する shall",
-        "If 基準となる規約が指定されていない、または見つからないならば、層の突き合わせは 確認を行わず拒否する shall",
-        "When ファイルが何も宣言していない（中身が無い）とき、層の突き合わせは そのファイルを層の割り当ての対象にしない shall",
-        "When 実装どうしが互いを辿って元へ戻る依存を持つとき、層の突き合わせは それを1つの循環として報告する shall",
-        "When 同じ循環が複数の始点から辿れるとき、層の突き合わせは それを1件だけ報告する shall",
-        "When 指定された規約が見つからないとき、システムは ARCHITECTURE_REF_NOT_FOUND エラーを返す shall（規約を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 指定された規約が層の置き場所を決めるのに足りる宣言を持たないとき、システムは ARCHITECTURE_REF_UNRESOLVED エラーを返す shall（同上）。"
+        {
+          "id": "architecture-declaration-is-the-only-basis",
+          "text": "When 基準となる規約が指定されたとき、層の突き合わせは その規約が宣言する層・置き場所・依存してよい先だけを基準として使う shall"
+        },
+        {
+          "id": "dependency-outside-the-allowed-layers-is-reported",
+          "text": "When 実装が、依存してよい先に含まれない層を使っているとき、層の突き合わせは その実装と相手の層を違反として報告する shall"
+        },
+        {
+          "id": "same-layer-dependency-is-not-reported",
+          "text": "When 実装が、自分と同じ層だけを使っているとき、層の突き合わせは 違反を報告しない shall"
+        },
+        {
+          "id": "out-of-scope-parts-are-not-reported",
+          "text": "When 実装が、規約の受け持つ範囲の外にある部品を使っているとき、層の突き合わせは 違反を報告しない shall"
+        },
+        {
+          "id": "composition-root-is-exempt",
+          "text": "When 実装が合成ルートとして宣言された場所にあるとき、層の突き合わせは その実装を依存の規則から除外する shall"
+        },
+        {
+          "id": "unplaced-implementation-is-reported",
+          "text": "When 実装がどの層の置き場所にも入らないとき、層の突き合わせは その実装を宣言漏れとして報告する shall"
+        },
+        {
+          "id": "declared-but-absent-layer-is-reported",
+          "text": "When 宣言された置き場所が存在しないとき、層の突き合わせは その層を未実装として報告し、他の層の確認を続ける shall"
+        },
+        {
+          "id": "nested-layer-placements-are-a-declaration-error",
+          "text": "If ある層の置き場所が別の層の置き場所を含んでいるならば、層の突き合わせは 実装を確かめる前に宣言の誤りとして報告する shall"
+        },
+        {
+          "id": "missing-architecture-ref-is-rejected",
+          "text": "If 基準となる規約が指定されていない、または見つからないならば、層の突き合わせは 確認を行わず拒否する shall"
+        },
+        {
+          "id": "empty-file-is-not-assigned-a-layer",
+          "text": "When ファイルが何も宣言していない（中身が無い）とき、層の突き合わせは そのファイルを層の割り当ての対象にしない shall"
+        },
+        {
+          "id": "dependency-cycles-are-reported",
+          "text": "When 実装どうしが互いを辿って元へ戻る依存を持つとき、層の突き合わせは それを1つの循環として報告する shall"
+        },
+        {
+          "id": "the-same-cycle-is-reported-once",
+          "text": "When 同じ循環が複数の始点から辿れるとき、層の突き合わせは それを1件だけ報告する shall"
+        },
+        {
+          "id": "architecture-ref-not-found",
+          "text": "When 指定された規約が見つからないとき、システムは ARCHITECTURE_REF_NOT_FOUND エラーを返す shall（規約を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        },
+        {
+          "id": "architecture-ref-unresolved",
+          "text": "When 指定された規約が層の置き場所を決めるのに足りる宣言を持たないとき、システムは ARCHITECTURE_REF_UNRESOLVED エラーを返す shall（同上）。"
+        }
       ]
     },
     "errors": {
@@ -263,17 +305,6 @@
           "covers": "エラー: ARCHITECTURE_REF_UNRESOLVED"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

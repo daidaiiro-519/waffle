@@ -4,7 +4,7 @@ type: "usecase"
 title: "ソースコードからdocstringを構造化抽出する：ScanSourceCode"
 description: "AI がソースコード本体を直接読まずに、DocstringSchema の kind に従って docstring を構造化抽出したインデックスビューを取得する。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # ソースコードからdocstringを構造化抽出する：ScanSourceCode
@@ -72,20 +72,17 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 対象パスと kind が与えられたとき、システムは各公開要素を {path, kind, elementKind, name, hasDocstring, signatureParams, summary, body, args, returns, raises, attributes} の構造で返す shall。
-- When 要素が function/method であるとき、システムは実シグネチャの引数名を signatureParams に含める shall（docstring の記載有無によらない）。
-- When 要素が module/class であるとき、システムは signatureParams を空配列で返す shall。
-- When 要素が class であるとき、システムは公開属性の説明（Attributes 相当のセクション）を attributes に含める shall。class 以外は attributes を空配列で返す shall。
-- When 要素に docstring が無いとき、システムは summary/body/args/returns/raises/attributes を空値（空文字・空配列）で返し、走査全体は失敗させない shall。
-- While 対象言語に対応する DocstringSchema の kind が無いとき、システムは UNSUPPORTED_KIND エラーを返す shall。
-- When ソースコードの本体（docstring 以外の行）を返す必要がないとき、システムは本体を読み込んだ上でも構造化データ以外を出力に含めない shall。
-- When 対象パスがディレクトリのとき、システムはその配下を再帰的に走査する shall（直下だけを見ると、階層を持つコードベースでは走査結果がほぼ空になり、「docstringが無い」を一件も報告できなくなる）。
-
----
-
-## 操作保証
-
-- When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| 基準 |
+|---|
+| When 対象パスと kind が与えられたとき、システムは各公開要素を {path, kind, elementKind, name, hasDocstring, signatureParams, summary, body, args, returns, raises, attributes} の構造で返す shall。 |
+| When 要素が function/method であるとき、システムは実シグネチャの引数名を signatureParams に含める shall（docstring の記載有無によらない）。 |
+| When 要素が module/class であるとき、システムは signatureParams を空配列で返す shall。 |
+| When 要素が class であるとき、システムは公開属性の説明（Attributes 相当のセクション）を attributes に含める shall。class 以外は attributes を空配列で返す shall。 |
+| When 要素に docstring が無いとき、システムは summary/body/args/returns/raises/attributes を空値（空文字・空配列）で返し、走査全体は失敗させない shall。 |
+| While 対象言語に対応する DocstringSchema の kind が無いとき、システムは UNSUPPORTED_KIND エラーを返す shall。 |
+| When ソースコードの本体（docstring 以外の行）を返す必要がないとき、システムは本体を読み込んだ上でも構造化データ以外を出力に含めない shall。 |
+| When 対象パスがディレクトリのとき、システムはその配下を再帰的に走査する shall（直下だけを見ると、階層を持つコードベースでは走査結果がほぼ空になり、「docstringが無い」を一件も報告できなくなる）。 |
+| When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
@@ -95,6 +92,7 @@ sequenceDiagram
 |---|---|
 | `UNSUPPORTED_KIND` | - 対象言語に対応する DocstringSchema の kind が無い |
 | `INVALID_SOURCE` | - 対象ファイルが構文解析できない（言語のパーサでエラー） |
+| `INVALID_PATH` | - 対象パスが存在しないとき |
 
 ---
 
@@ -152,19 +150,15 @@ Scenario: 階層を持つ対象は下まで走査する
   Then 下位のディレクトリにある要素が結果に含まれる
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないパスはINVALID_PATH
+### 対象パスが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | 解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる |
+| 異常系 | エラー：対象パスが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないパスはINVALID_PATH
-  Given 実在しない対象パス
-  When 本usecaseを実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象パスが存在しないときのときINVALID_PATH
+  Given 対象パスが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```

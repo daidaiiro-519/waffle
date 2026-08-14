@@ -3,7 +3,7 @@ id: "sd-schema-management"
 type: "subdomain"
 title: "Schema定義ファイル自体の作成・部分編集を担うサブドメイン：sd-schema-management"
 description: "AIに構造を推論させず、システムが決定的にSchema定義ファイル自体を作成・部分編集（ブロック追加・リネーム等）する業務領域。Documentの値ではなくDocumentの型定義そのものを対象とする点でsd-document-managementと責務が異なる（agg-document/agg-schemaが既に別集約であるのと同型の区別）。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # Schema定義ファイル自体の作成・部分編集を担うサブドメイン：sd-schema-management

@@ -4,7 +4,7 @@ type: "usecase"
 title: "Documentの骨格生成と値の書き込み：ScaffoldDocument"
 description: "schema から Document の骨格を機械生成し（create）、AI が生成した値を宣言済みフィールドにのみ機械的に書き込む（fill）。AI は構造を触らない。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v9"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # Documentの骨格生成と値の書き込み：ScaffoldDocument
@@ -95,7 +95,7 @@ sequenceDiagram
 | While 削除対象のフィールドが既に存在しないとき、clear_fieldは無変更で成功する shall。 |
 | If clear_fieldの削除対象が必須フィールドであるとき、システムはREQUIRED_FIELDエラーを返し削除を拒否する shall。 |
 | When migrate_schemaでdocumentPath・schemaRef（移行先）が与えられたとき、システムはDocumentのschemaRefをその値へ書き換える shall。 |
-| While Documentのschemaが既に目的のschemaRefであるとき、migrate_schemaは無変更で成功する shall。 |
+| While Documentのschemaが既に目的のschemaRefであり、かつその版が宣言しないブロックを持たないとき、migrate_schemaは無変更で成功する shall（宣言外のブロックが残っている場合は、版が同じでも取り除く——素通しにすると、版だけ書き換わって宣言外のブロックが残ったDocumentが、二度目の運搬でも直らないまま固定される）。 |
 | If migrate_schemaの移行先schemaRefが解決できないとき、システムはINVALID_SCHEMA_REFエラーを返し書き換えを拒否する shall。 |
 | When createで版を含まないschemaRefが与えられたとき、システムはその名前の最新の版へ解決して骨格を生成する shall（指示や手順に版を書かせないため。書かれた版はschemaが上がった瞬間から古い版を指す）。 |
 | If createで最新でない版のschemaRefが明示されたとき、システムはOUTDATED_SCHEMA_REFエラーを返し骨格を生成しない shall（最新以外の版で新しいdocumentを作る用途を持たないため）。 |
@@ -116,16 +116,15 @@ sequenceDiagram
 | If 同じ配列に順序の宣言と鍵の宣言が両方あるとき、システムは ELEMENT_OPS_NOT_APPLICABLE を返し、宣言そのものが誤っていることを示す shall（どちらが優先かを実装が黙って決めないため）。 |
 | When 記入対象の道と執筆ガイダンスを返すとき、システムは配列については鍵の宣言・参照関係の宣言・順序の宣言も併せて返す shall（書き手に渡る指示に現れない宣言は、書き手にとって存在しないため）。 |
 | When 要素操作がすべて受け付けられたとき、システムは書き換えた配列を Document へ保存し、その配列の道を written に記録する shall。 |
-
----
-
-## 操作保証
-
-| 保証 |
-|---|
+| When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
+| When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 | When 同じ documentId で create を複数回実行したとき、システムの生成する構造（schema由来の骨格の形）は常にべき等である shall。 |
 | While document.json が既に存在するとき、create を再実行しても、fill で書き込まれた既存の values は保持され、破壊されない shall（values 自体の再現性はシステムの管轄外・呼び出し側の責務）。 |
 | When 要素操作が与えられたとき、システムは常に Document 全体を対象として読み書きし、要素だけを切り離して指させない shall。 |
+| When 移行先の版が宣言しないブロックをDocumentが持ち、そのブロックが空であるとき、システムはそのブロックを取り除いてから版を書き換える shall（残したまま版だけ書き換えると、どの操作からも触れず消せないブロックが残り、Documentは以後どの版でも適合しなくなる）。ここでいう空とは、ブロックの器を除いた残りに値が無いことをいう——器とはそのブロックが何であるかを示す名前と見出しであり、書き手が入れた内容ではない。 |
+| If 移行先の版が宣言しないブロックをDocumentが持ち、そのブロックの器を除いた残りに値があるとき、システムはMIGRATION_WOULD_DISCARD_CONTENTエラーを返し、版を書き換えない shall（黙って捨てると、どこにも移していない内容が消える。運び先を決めるのは呼び出し側の仕事であり、この操作が代わりに決めてよいことではない）。 |
+| When 版の書き換えにあたってブロックを取り除いたとき、システムは取り除いたブロックの名前を結果に含める shall（何が消えたかが結果に出ないと、消えたこと自体が後から確かめられない）。 |
+| If 版の書き換えを拒否したとき、システムはDocumentを一切変更しない shall（途中まで書き換えた状態で止まると、宣言した版と中身が食い違ったDocumentが残る）。 |
 
 ---
 
@@ -143,6 +142,7 @@ sequenceDiagram
 | `WHOLESALE_REPLACE_NOT_ALLOWED` | - 鍵を宣言した配列に対して、values で配列全体が与えられた |
 | `ELEMENT_OPS_NOT_APPLICABLE` | - 順序そのものが意味を持つと宣言された配列に対して、要素操作が与えられた<br>- 同じ配列に順序の宣言と鍵の宣言が両方あるとき（宣言そのものの誤りであり、鍵を見に行く前にこれを返す） |
 | `INVALID_PATH` | - 対象パスが存在しないとき |
+| `MIGRATION_WOULD_DISCARD_CONTENT` | - 移行先の版が宣言しないブロックに、中身が残っている |
 
 ---
 
@@ -674,9 +674,31 @@ Scenario: 受け付けられた要素操作は Document に残る
   Then 再び読み込んでもその要素が残っており、written にその配列の道が記録されている
 ```
 
----
+### 対象パスが存在しないときのときINVALID_PATH
 
-## 操作保証シナリオ
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー：対象パスが存在しないとき |
+
+```gherkin
+Scenario: 対象パスが存在しないときのときINVALID_PATH
+  Given 対象パスが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
+```
+
+### 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー：対象のschemaRefを解決できないとき |
+
+```gherkin
+Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
+  Given 対象のschemaRefを解決できないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_SCHEMA_REF エラーが返る
+```
 
 ### 同じdocumentIdでのcreateは骨格の形を変えない
 
@@ -715,4 +737,69 @@ Scenario: 要素操作でも読み書きの対象は Document 全体である
   Given 鍵を宣言した配列を持つ Document
   When 要素を1件 add_element する
   Then 読み書きの対象は Document 全体であり、配列や要素だけを指す経路は外部へ現れない
+```
+
+### 移行先が持たない空のブロックは取り除かれる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 運搬の完了：運んだ先で適合する状態になっているか |
+
+```gherkin
+Scenario: 移行先が持たない空のブロックは取り除かれる
+  Given 移行先の版が宣言しないブロックを空で持つDocument
+  When 移行先の版へ運ぶ
+  Then そのブロックが取り除かれ、Documentは移行先の版に適合する
+```
+
+### 中身の残るブロックを捨てる運搬は拒否される
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 内容の保全：運び先の決まっていない内容が消えていないか |
+
+```gherkin
+Scenario: 中身の残るブロックを捨てる運搬は拒否される
+  Given 移行先の版が宣言しないブロックに中身を持つDocument
+  When 移行先の版へ運ぶ
+  Then MIGRATION_WOULD_DISCARD_CONTENT が返り、Documentは元のままである
+```
+
+### 取り除いたブロックの名前が結果に出る
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 運搬の可視性：何が消えたかを後から確かめられるか |
+
+```gherkin
+Scenario: 取り除いたブロックの名前が結果に出る
+  Given 移行先の版が宣言しない空のブロックを持つDocument
+  When 移行先の版へ運ぶ
+  Then 結果に取り除いたブロックの名前が含まれる
+```
+
+### 拒否したときDocumentは元のままである
+
+| 分類 | 観点 |
+|---|---|
+| 異常系 | 全か無か：途中まで書き換えた状態が残っていないか |
+
+```gherkin
+Scenario: 拒否したときDocumentは元のままである
+  Given 移行先の版が宣言しないブロックに中身を持つDocument
+  When 移行先の版へ運ぶ
+  Then 宣言している版も中身も、運ぶ前と一字一句同じである
+```
+
+### 同じ版でも宣言外のブロックは取り除かれる
+
+| 分類 | 観点 |
+|---|---|
+| 正常系 | 収束：二度目の運搬で直るか |
+
+```gherkin
+Scenario: 同じ版でも宣言外のブロックは取り除かれる
+  Given 既に移行先の版を宣言しながら、その版が宣言しない空のブロックを持つDocument
+  When 同じ版へもう一度運ぶ
+  Then そのブロックが取り除かれ、Documentは移行先の版に適合する
 ```

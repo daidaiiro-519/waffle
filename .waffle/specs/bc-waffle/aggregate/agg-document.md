@@ -4,7 +4,7 @@ type: "aggregate"
 title: "Document（document.json）の一貫性とライフサイクルを守る集約：agg-document"
 description: "Document(document.json)の一貫性とライフサイクルを表す集約。Spec家族系（DomainSpecSchema/PresentationSpecSchema）は生成→検証→描画→置換の「処理パイプライン」（lifecycle）を持つ。CodingSchema/SkillSchema系はDRAFT/ACTIVE/DEPRECATEDという分類ラベルを持つが、遷移を強制するcommand・guardは存在しない。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # Document（document.json）の一貫性とライフサイクルを守る集約：agg-document
@@ -116,15 +116,15 @@ Document
 
 ## 不変条件
 
-| ルール | 守り方 | 根拠 |
-|---|---|---|
-| Spec家族（DomainSpecSchema/PresentationSpecSchema）のstatusはCREATED→VALIDATED→RENDERED→SUPERSEDEDの順にのみ進み、逆行・飛ばしをしない | guard | - 成果物の状態の一貫性を保つ |
-| schemaRefは常に存在する | schema | - 型が無ければ検証も描画もできない |
-| contentがschemaに適合しない限りVALIDATEDへ進めない | guard | - 不正な成果物を後段（render/deploy）に流さない |
-| schemaがrenderを状態遷移コマンドとして宣言する場合、VALIDATED以降でなければrenderできない（宣言しないschema種別はstatusを問わない） | guard | - 未検証の成果物がdeploy先（CLAUDE.md/SKILL.md等の生きているファイル）へ反映されることを防ぐ |
-| SUPERSEDEDは終端であり、以後どのコマンドも受け付けない | guard | - 置換後の変更を防ぐ |
-| Documentのパス解決は、いかなるoperation・commandからも常にプロジェクトルート内に閉じ込められる（パストラバーサルを許さない） | guard | - ファイルアクセスというデータアクセス層の技術的関心事だが、Document集約が扱う全ての操作に横断的に適用される不変条件であり、特定usecaseの業務シナリオではなく集約の不変条件として一箇所で保証する |
-| schemaRefを持たないDocumentを対象にした、schema解決を要する操作は、いかなるoperation・commandからも常にMISSING_SCHEMA_REFとして拒否される | guard | - 「schemaRefは常に存在する」は理想状態の不変条件だが、scaffold直後の未検証Document等、実際には欠けている状態が生じうる<br>- render/validateが個別に対応していた（重複）この防御的振る舞いを集約の不変条件として一箇所で保証する |
+| ルール | 根拠 |
+|---|---|
+| Spec家族（DomainSpecSchema/PresentationSpecSchema）のstatusはCREATED→VALIDATED→RENDERED→SUPERSEDEDの順にのみ進み、逆行・飛ばしをしない | 成果物の状態の一貫性を保つ |
+| schemaRefは常に存在する | 型が無ければ検証も描画もできない |
+| contentがschemaに適合しない限りVALIDATEDへ進めない | 不正な成果物を後段（render/deploy）に流さない |
+| schemaがrenderを状態遷移コマンドとして宣言する場合、VALIDATED以降でなければrenderできない（宣言しないschema種別はstatusを問わない） | 未検証の成果物がdeploy先（CLAUDE.md/SKILL.md等の生きているファイル）へ反映されることを防ぐ |
+| SUPERSEDEDは終端であり、以後どのコマンドも受け付けない | 置換後の変更を防ぐ |
+| Documentのパス解決は、いかなるoperation・commandからも常にプロジェクトルート内に閉じ込められる（パストラバーサルを許さない） | ファイルアクセスというデータアクセス層の技術的関心事だが、Document集約が扱う全ての操作に横断的に適用される不変条件であり、特定usecaseの業務シナリオではなく集約の不変条件として一箇所で保証する |
+| schemaRefを持たないDocumentを対象にした、schema解決を要する操作は、いかなるoperation・commandからも常にMISSING_SCHEMA_REFとして拒否される | 「schemaRefは常に存在する」は理想状態の不変条件だが、scaffold直後の未検証Document等、実際には欠けている状態が生じうる / render/validateが個別に対応していた（重複）この防御的振る舞いを集約の不変条件として一箇所で保証する |
 
 ---
 

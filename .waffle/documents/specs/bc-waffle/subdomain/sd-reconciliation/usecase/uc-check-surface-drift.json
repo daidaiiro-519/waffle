@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-surface-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -82,18 +82,54 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 宣言された入力が、その操作を差し出す口のどこにも見つからないとき、システムはその組を missing_input に含める shall。",
-        "If 口が受け取る入力が、対応するユースケースのどこにも宣言されていないとき、システムはその組を undeclared_input に含める shall。",
-        "While 名前を突き合わせるとき、システムは区切りと大文字小文字の違いを無視して同じ名前とみなす shall（同じ入力が口ごとに違う綴りで現れるため。どの綴りが正しいかはこの操作の関心ではない）。",
-        "While ある操作を複数の口が差し出しているとき、システムは口ごとに突き合わせ、どの口の話かを報告に含める shall（片方の口だけが宣言と食い違う場合があるため）。",
-        "While 入力を1つも宣言していないユースケースがあるとき、システムはそのユースケースを突き合わせの対象から外す shall（宣言が無ければ突き合わせようがない）。",
-        "While 全ての口が宣言どおりの入力を見せているとき、システムは3つの一覧を空配列で返す shall。",
-        "If 対象の置き場所または規約への参照が解決できないとき、システムはINVALID_PATH エラーを返す shall。",
-        "When 宣言された入力の説明と、口が利用者へ見せている説明が一致しないとき、システムはその組を description_mismatch に含める shall（説明は宣言が正本で、口はその写しを見せている。写しがずれても気づけないと、宣言を置いた意味が無い）。",
-        "While 口が入力の説明を1つも見せていないとき、システムはその入力をdescription_mismatch に含める shall（宣言された説明が利用者へ届いていない状態であり、一致しているとは言えない）。",
-        "While 宣言された入力が口に見つからないとき、システムは説明の一致を問わない shall（名前が見つからないことは既に報告済みで、同じ食い違いを2つの器で二重に数えない）。",
-        "When 受け口の食い違いを調べたとき、システムは対象の仕様も口も書き換えない shall。",
-        "While 同じ仕様と同じ口に対して繰り返し調べたとき、システムは常に同じ一覧を返す shall。"
+        {
+          "id": "missing-input-is-reported",
+          "text": "When 宣言された入力が、その操作を差し出す口のどこにも見つからないとき、システムはその組を missing_input に含める shall。"
+        },
+        {
+          "id": "undeclared-input-is-reported",
+          "text": "If 口が受け取る入力が、対応するユースケースのどこにも宣言されていないとき、システムはその組を undeclared_input に含める shall。"
+        },
+        {
+          "id": "names-match-ignoring-separators-and-case",
+          "text": "While 名前を突き合わせるとき、システムは区切りと大文字小文字の違いを無視して同じ名前とみなす shall（同じ入力が口ごとに違う綴りで現れるため。どの綴りが正しいかはこの操作の関心ではない）。"
+        },
+        {
+          "id": "each-surface-is-checked-separately",
+          "text": "While ある操作を複数の口が差し出しているとき、システムは口ごとに突き合わせ、どの口の話かを報告に含める shall（片方の口だけが宣言と食い違う場合があるため）。"
+        },
+        {
+          "id": "usecases-without-declared-inputs-are-skipped",
+          "text": "While 入力を1つも宣言していないユースケースがあるとき、システムはそのユースケースを突き合わせの対象から外す shall（宣言が無ければ突き合わせようがない）。"
+        },
+        {
+          "id": "aligned-surfaces-report-nothing",
+          "text": "While 全ての口が宣言どおりの入力を見せているとき、システムは3つの一覧を空配列で返す shall。"
+        },
+        {
+          "id": "invalid-path",
+          "text": "If 対象の置き場所または規約への参照が解決できないとき、システムはINVALID_PATH エラーを返す shall。"
+        },
+        {
+          "id": "description-mismatch-is-reported",
+          "text": "When 宣言された入力の説明と、口が利用者へ見せている説明が一致しないとき、システムはその組を description_mismatch に含める shall（説明は宣言が正本で、口はその写しを見せている。写しがずれても気づけないと、宣言を置いた意味が無い）。"
+        },
+        {
+          "id": "surface-without-any-description-is-reported",
+          "text": "While 口が入力の説明を1つも見せていないとき、システムはその入力をdescription_mismatch に含める shall（宣言された説明が利用者へ届いていない状態であり、一致しているとは言えない）。"
+        },
+        {
+          "id": "missing-input-does-not-also-report-description",
+          "text": "While 宣言された入力が口に見つからないとき、システムは説明の一致を問わない shall（名前が見つからないことは既に報告済みで、同じ食い違いを2つの器で二重に数えない）。"
+        },
+        {
+          "id": "checking-does-not-modify-anything",
+          "text": "When 受け口の食い違いを調べたとき、システムは対象の仕様も口も書き換えない shall。"
+        },
+        {
+          "id": "repeated-checks-return-the-same-lists",
+          "text": "While 同じ仕様と同じ口に対して繰り返し調べたとき、システムは常に同じ一覧を返す shall。"
+        }
       ]
     },
     "errors": {
@@ -190,17 +226,6 @@
           "covers": "操作保証からの移設"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

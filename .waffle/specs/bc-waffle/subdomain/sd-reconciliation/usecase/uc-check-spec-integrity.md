@@ -4,7 +4,7 @@ type: "usecase"
 title: "スペック内部の参照整合性を検証する：CheckSpecIntegrity"
 description: "bounded-context が宣言する members(subdomain/usecase) と、ディスク上に実在する subdomain/usecase ドキュメントの参照整合性を検証する。加えて、各集約内部の値オブジェクトの使用整合性・Document集約とその実インスタンスとの整合性・usecase間の相互参照(subdomainRef/aggregateRef)の整合性も検証する。宣言と実態がずれている箇所（宙に浮いた参照・未宣言の実体・不整合な相互参照）を機械的に検出する。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # スペック内部の参照整合性を検証する：CheckSpecIntegrity
@@ -77,25 +77,30 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When bc.jsonが宣言するsubdomain名がディスク上に実在しないとき、システムはdeclared_subdomains_missing_on_diskにその名前を含める shall。
-- When ディスク上に実在するsubdomainがbc.jsonに未宣言のとき、システムはsubdomains_on_disk_not_declared_in_bcにその名前を含める shall。
-- When bc.jsonが宣言するusecaseがどのsubdomainのmembersにも属さないとき、システムはusecases_orphaned_no_subdomainにその名前を含める shall。
-- When いずれかのsubdomainのmembersが宣言するusecaseがbc.jsonに未宣言のとき、システムはusecases_in_subdomain_not_declared_in_bcにその名前を含める shall。
-- When subdomainが宣言するusecaseの実ファイルがディスクに無いとき、システムはusecase_files_missing_on_diskにその名前を含める shall。
-- When 実ファイルはあるがどのsubdomainのmembersにも宣言されていないusecaseがあるとき、システムはusecase_files_orphaned_on_diskにその名前を含める shall。
-- While 6方向全てで宣言と実態が一致しているとき、システムは全フィールドを空配列で返す shall。
-- If bc.json自体が存在しないとき、システムはINVALID_PATHエラーを返す shall。
-- When 集約が宣言するvalueObjectのうち、どのentity属性の型としても参照されていないものがあるとき、システムはそのvalueObject名をorphaned_value_objectsに含める shall。
-- When 実在するdocument.jsonが持つトップレベルフィールドが、Document集約のentity属性に宣言されていないとき、システムはそのフィールド名をundeclared_document_fieldsに含める shall。
-- When usecaseのsubdomainRefと参照先subdomainのmembers宣言が食い違うとき、システムはその組をsubdomain_ref_mismatchesに含める shall。
-- When usecaseがsubdomainRefを宣言していないが、いずれかのsubdomainのmembersに自分自身が含まれているとき、システムはその組（subdomainRefはnull）をsubdomain_ref_mismatchesに含める shall。
-- When usecaseのaggregateRefが指す集約が実在しないとき、システムはその組をmissing_aggregate_refsに含める shall。
+| 基準 |
+|---|
+| When bc.jsonが宣言するsubdomain名がディスク上に実在しないとき、システムはdeclared_subdomains_missing_on_diskにその名前を含める shall。 |
+| When ディスク上に実在するsubdomainがbc.jsonに未宣言のとき、システムはsubdomains_on_disk_not_declared_in_bcにその名前を含める shall。 |
+| When bc.jsonが宣言するusecaseがどのsubdomainのmembersにも属さないとき、システムはusecases_orphaned_no_subdomainにその名前を含める shall。 |
+| When いずれかのsubdomainのmembersが宣言するusecaseがbc.jsonに未宣言のとき、システムはusecases_in_subdomain_not_declared_in_bcにその名前を含める shall。 |
+| When subdomainが宣言するusecaseの実ファイルがディスクに無いとき、システムはusecase_files_missing_on_diskにその名前を含める shall。 |
+| When 実ファイルはあるがどのsubdomainのmembersにも宣言されていないusecaseがあるとき、システムはusecase_files_orphaned_on_diskにその名前を含める shall。 |
+| While 6方向全てで宣言と実態が一致しているとき、システムは全フィールドを空配列で返す shall。 |
+| If bc.json自体が存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| When 集約が宣言するvalueObjectのうち、どのentity属性の型としても参照されていないものがあるとき、システムはそのvalueObject名をorphaned_value_objectsに含める shall。 |
+| When 実在するdocument.jsonが持つトップレベルフィールドが、Document集約のentity属性に宣言されていないとき、システムはそのフィールド名をundeclared_document_fieldsに含める shall。 |
+| When usecaseのsubdomainRefと参照先subdomainのmembers宣言が食い違うとき、システムはその組をsubdomain_ref_mismatchesに含める shall。 |
+| When usecaseがsubdomainRefを宣言していないが、いずれかのsubdomainのmembersに自分自身が含まれているとき、システムはその組（subdomainRefはnull）をsubdomain_ref_mismatchesに含める shall。 |
+| When usecaseのaggregateRefが指す集約が実在しないとき、システムはその組をmissing_aggregate_refsに含める shall。 |
+| When 対象のbc.jsonが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
-## 操作保証
+## エラー
 
-- When 対象のbc.jsonが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| コード | 条件 |
+|---|---|
+| `INVALID_PATH` | - 対象のbc.jsonが存在しないとき |
 
 ---
 
@@ -270,18 +275,15 @@ Scenario: 複数entityの属性が全て未宣言判定に使われる
   Then そのフィールドはundeclared_document_fieldsに含まれない（entities[0]だけでなく全entityの属性が見られる）
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないbc.jsonはINVALID_PATH
+### 対象のbc.jsonが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | エラー：走査起点の不在 |
+| 異常系 | エラー：対象のbc.jsonが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないbc.jsonはINVALID_PATH
-  When 存在しないbc.jsonのパスで参照整合性検査を実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象のbc.jsonが存在しないときのときINVALID_PATH
+  Given 対象のbc.jsonが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```

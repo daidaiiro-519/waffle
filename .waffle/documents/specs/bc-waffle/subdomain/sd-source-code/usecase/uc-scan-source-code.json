@@ -1,7 +1,7 @@
 {
   "documentId": "uc-scan-source-code",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-source-code",
@@ -78,15 +78,42 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 対象パスと kind が与えられたとき、システムは各公開要素を {path, kind, elementKind, name, hasDocstring, signatureParams, summary, body, args, returns, raises, attributes} の構造で返す shall。",
-        "When 要素が function/method であるとき、システムは実シグネチャの引数名を signatureParams に含める shall（docstring の記載有無によらない）。",
-        "When 要素が module/class であるとき、システムは signatureParams を空配列で返す shall。",
-        "When 要素が class であるとき、システムは公開属性の説明（Attributes 相当のセクション）を attributes に含める shall。class 以外は attributes を空配列で返す shall。",
-        "When 要素に docstring が無いとき、システムは summary/body/args/returns/raises/attributes を空値（空文字・空配列）で返し、走査全体は失敗させない shall。",
-        "While 対象言語に対応する DocstringSchema の kind が無いとき、システムは UNSUPPORTED_KIND エラーを返す shall。",
-        "When ソースコードの本体（docstring 以外の行）を返す必要がないとき、システムは本体を読み込んだ上でも構造化データ以外を出力に含めない shall。",
-        "When 対象パスがディレクトリのとき、システムはその配下を再帰的に走査する shall（直下だけを見ると、階層を持つコードベースでは走査結果がほぼ空になり、「docstringが無い」を一件も報告できなくなる）。",
-        "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        {
+          "id": "returns-structured-elements",
+          "text": "When 対象パスと kind が与えられたとき、システムは各公開要素を {path, kind, elementKind, name, hasDocstring, signatureParams, summary, body, args, returns, raises, attributes} の構造で返す shall。"
+        },
+        {
+          "id": "function-signature-params-are-real",
+          "text": "When 要素が function/method であるとき、システムは実シグネチャの引数名を signatureParams に含める shall（docstring の記載有無によらない）。"
+        },
+        {
+          "id": "module-and-class-have-no-params",
+          "text": "When 要素が module/class であるとき、システムは signatureParams を空配列で返す shall。"
+        },
+        {
+          "id": "class-attributes-are-included",
+          "text": "When 要素が class であるとき、システムは公開属性の説明（Attributes 相当のセクション）を attributes に含める shall。class 以外は attributes を空配列で返す shall。"
+        },
+        {
+          "id": "elements-without-docstring-return-empty-values",
+          "text": "When 要素に docstring が無いとき、システムは summary/body/args/returns/raises/attributes を空値（空文字・空配列）で返し、走査全体は失敗させない shall。"
+        },
+        {
+          "id": "unsupported-kind-is-rejected",
+          "text": "While 対象言語に対応する DocstringSchema の kind が無いとき、システムは UNSUPPORTED_KIND エラーを返す shall。"
+        },
+        {
+          "id": "source-body-is-not-emitted",
+          "text": "When ソースコードの本体（docstring 以外の行）を返す必要がないとき、システムは本体を読み込んだ上でも構造化データ以外を出力に含めない shall。"
+        },
+        {
+          "id": "directories-are-scanned-recursively",
+          "text": "When 対象パスがディレクトリのとき、システムはその配下を再帰的に走査する shall（直下だけを見ると、階層を持つコードベースでは走査結果がほぼ空になり、「docstringが無い」を一件も報告できなくなる）。"
+        },
+        {
+          "id": "path-not-found",
+          "text": "When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        }
       ]
     },
     "errors": {
@@ -154,17 +181,6 @@
           "covers": "エラー: INVALID_PATH"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "usecase": {
       "operationName": "ScanSourceCode",

@@ -4,7 +4,7 @@ type: "usecase"
 title: "docstringの規約適合を検証する：LintDocstring"
 description: "ソースコードの docstring が規約どおりの構造か（必須セクションの有無・引数名と実シグネチャの整合）を、kind ごとに確立された既存 lint ツールを呼び出して判定する。自前の照合ロジックは持たない。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # docstringの規約適合を検証する：LintDocstring
@@ -78,24 +78,21 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 対象の規約が与えられたとき、システムはそのdocstringブロックが宣言するsyntaxKindとタグ3欄を読み、対応する既存lintツールの構文へ写して起動し、その出力を正規化して返す shall（どの構文で判定するかを決める権限は規約にあり、この操作は宣言を読んで道具の能力へ写すだけにする）。
-- If 規約から写した流儀に対応するadapterが未実装のとき、システムはUNSUPPORTED_KINDエラーを返す shall（規約が宣言する構文自体は写せているが、その流儀を扱うadapterが無い。将来adapterを追加した際は、godoc/rustdocはdocstringの有無のみを判定しARGS_MISMATCH相当は判定しない設計とする）。
-- When 既存lintツールが「引数の記載漏れ・余分な記載」を報告したとき、システムはこれをcode=ARGS_MISMATCHとして正規化する shall。
-- When 要素のhasDocstringがfalseのとき、システムはcode=MISSING_DOC_COMMENTの違反として報告する shall。
-- When 公開関数が引数を持つのにArgsセクションを欠いているとき、システムはcode=MISSING_ARGS_SECTIONの違反として報告する shall。
-- When 公開関数が戻り値を持つのにReturnsセクションを欠いているとき、システムはcode=MISSING_RETURNS_SECTIONの違反として報告する shall。
-- When 公開関数が例外を送出するのにRaisesセクションを欠いているとき、システムはcode=MISSING_RAISES_SECTIONの違反として報告する shall。
-- While 非公開要素であるとき、システムはMISSING_ARGS_SECTION/MISSING_RETURNS_SECTION/MISSING_RAISES_SECTIONの判定対象から除外する shall。
-- While 全要素が適合しているとき、システムは空配列を返す（正常系）shall。
-- If 写した流儀に対応するadapterが未実装のとき、システムはUNSUPPORTED_KINDエラーを返す shall。
-- If 写した流儀に対応する既存lintツールが実行環境に存在しないとき、システムはTOOL_NOT_AVAILABLEエラーを返す shall。
-- If 規約が宣言する構文へ既存lintツールが追随できないとき、システムはUNSUPPORTED_SYNTAXエラーを返す shall（引数の誤りを表すUNSUPPORTED_KINDとは別に扱う。前者は呼び出しの誤り、後者は宣言と道具の能力の隔たりであり、同じ器に入れると宣言できるが効かない欄が黙って残る）。
-
----
-
-## 操作保証
-
-- When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| 基準 |
+|---|
+| When 対象の規約が与えられたとき、システムはそのdocstringブロックが宣言するsyntaxKindとタグ3欄を読み、対応する既存lintツールの構文へ写して起動し、その出力を正規化して返す shall（どの構文で判定するかを決める権限は規約にあり、この操作は宣言を読んで道具の能力へ写すだけにする）。 |
+| If 規約から写した流儀に対応するadapterが未実装のとき、システムはUNSUPPORTED_KINDエラーを返す shall（規約が宣言する構文自体は写せているが、その流儀を扱うadapterが無い。将来adapterを追加した際は、godoc/rustdocはdocstringの有無のみを判定しARGS_MISMATCH相当は判定しない設計とする）。 |
+| When 既存lintツールが「引数の記載漏れ・余分な記載」を報告したとき、システムはこれをcode=ARGS_MISMATCHとして正規化する shall。 |
+| When 要素のhasDocstringがfalseのとき、システムはcode=MISSING_DOC_COMMENTの違反として報告する shall。 |
+| When 公開関数が引数を持つのにArgsセクションを欠いているとき、システムはcode=MISSING_ARGS_SECTIONの違反として報告する shall。 |
+| When 公開関数が戻り値を持つのにReturnsセクションを欠いているとき、システムはcode=MISSING_RETURNS_SECTIONの違反として報告する shall。 |
+| When 公開関数が例外を送出するのにRaisesセクションを欠いているとき、システムはcode=MISSING_RAISES_SECTIONの違反として報告する shall。 |
+| While 非公開要素であるとき、システムはMISSING_ARGS_SECTION/MISSING_RETURNS_SECTION/MISSING_RAISES_SECTIONの判定対象から除外する shall。 |
+| While 全要素が適合しているとき、システムは空配列を返す（正常系）shall。 |
+| If 写した流儀に対応するadapterが未実装のとき、システムはUNSUPPORTED_KINDエラーを返す shall。 |
+| If 写した流儀に対応する既存lintツールが実行環境に存在しないとき、システムはTOOL_NOT_AVAILABLEエラーを返す shall。 |
+| If 規約が宣言する構文へ既存lintツールが追随できないとき、システムはUNSUPPORTED_SYNTAXエラーを返す shall（引数の誤りを表すUNSUPPORTED_KINDとは別に扱う。前者は呼び出しの誤り、後者は宣言と道具の能力の隔たりであり、同じ器に入れると宣言できるが効かない欄が黙って残る）。 |
+| When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
@@ -106,6 +103,7 @@ sequenceDiagram
 | `UNSUPPORTED_KIND` | - 規約から写した流儀に対応するadapterが未実装である |
 | `TOOL_NOT_AVAILABLE` | - 写した流儀に対応する既存lintツールが実行環境に存在しない |
 | `UNSUPPORTED_SYNTAX` | - 規約が宣言するdocstringの構文へ、対応する既存lintツールが追随できない |
+| `INVALID_PATH` | - 対象パスが存在しないとき |
 
 ---
 
@@ -255,19 +253,15 @@ Scenario: 宣言に道具が追随できないことを黙って通さない
   And 呼び出しの誤りを表すUNSUPPORTED_KINDとは区別されている
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないパスはINVALID_PATH
+### 対象パスが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | 解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる |
+| 異常系 | エラー：対象パスが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないパスはINVALID_PATH
-  Given 実在しない対象パス
-  When 本usecaseを実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象パスが存在しないときのときINVALID_PATH
+  Given 対象パスが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```

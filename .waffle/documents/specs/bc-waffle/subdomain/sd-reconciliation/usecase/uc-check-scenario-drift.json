@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-scenario-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "subdomainRef": "sd-reconciliation",
@@ -105,27 +105,90 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When specが宣言するシナリオの宣言行に対応するテストがテストファイルに無いとき、システムはそのシナリオ名をmissing_in_testsに含める shall。",
-        "When テストが宣言行を持たない、またはその宣言行がどのシナリオにも対応しないとき、システムはそのテストの名前をorphaned_in_testsに含める shall。",
-        "When シナリオの宣言行とテストの宣言行が一致するとき、システムはそのシナリオ名とテスト名の対をmatchedに含める shall。",
-        "When 宣言行は一致するが、テストの文書コメントが対応するシナリオのgherkinを含んでいないとき、システムはそのシナリオ名をgherkin_mismatchesに含める shall。",
-        "When 同一の宣言行を持つテストが2件以上あるとき、システムはその宣言行をduplicate_declarationsに含め、いずれか一方へ暗黙に割り当てない shall。",
-        "When specのシナリオのgherkin先頭にある宣言行が、そのシナリオの名前と一致しないとき、システムはそのシナリオ名をspec_declaration_mismatchesに含める shall。",
-        "While missing_in_tests・orphaned_in_tests・gherkin_mismatches・duplicate_declarations・spec_declaration_mismatchesの全てが空のとき、システムはシナリオとテストの対応が保たれていると判定する shall。",
-        "When spec documentの置き場所とテストの配置ルートが与えられたとき、システムは配下の全specを走査し、シナリオを宣言する各ブロックについて、配置の規約が定めるテストファイルの有無を確かめる shall。",
-        "When 走査したシナリオブロックに対応するテストファイルが存在しないとき、システムはその文書の識別子・ブロック種別・期待した配置・シナリオ件数をmissing_test_fileに含める shall（宣言はあるが突き合わせる相手が居ないことを、対応が取れていることと区別する）。",
-        "When 走査したシナリオブロックに対応するテストファイルが存在するとき、システムはその組について1組の検査と同じ判定を行い、文書の識別子を添えてresultsに含める shall。",
-        "If 1組だけ検査する指定と全体を検査する指定の両方が与えられた、またはどちらも与えられなかったとき、システムはMISSING_PARAMエラーを返す shall。",
-        "If 対象のspec.jsonまたはテストファイルが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
-        "If テストファイルが構文解析できないとき、システムはINVALID_SOURCEエラーを返す shall。",
-        "If テストファイルの言語が文書コメントの取り出しに対応していないとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。",
-        "While テストの置かれた場所が、規約が宣言したいずれかの配置に当てはまるとき、システムはその配置に対応づくシナリオ種別だけを対象に突き合わせを行う shall。",
-        "While テストの置かれた場所が、規約が宣言したどの配置にも当てはまらないとき、システムは宣言されている全てのシナリオ種別を対象に突き合わせを行う shall（絞り込めないときに黙って一部だけを見る形にしない）。",
-        "While 規約の配置の宣言に、対象のシナリオ種別まで指定した行があるとき、システムはその行を、種別を指定していない行より優先する shall。",
-        "When 対象のspec.jsonまたはテストファイルが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 名前を組み立てる宣言が規約に無いとき、システムは MISSING_DECLARATION エラーを返す shall（欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通る）。",
-        "When 全体を検査するとき、システムはテストファイルの名前を、規約が宣言した由来・落とす接頭辞・表記・前置・中置・末尾だけから組み立てる shall（名前の綴りの規則を検査の側に持たない）。",
-        "When あるシナリオ種別に対応する置き場所が規約に宣言されていないとき、システムはその種別を missing_placement に含める shall（黙って対象から外すと、宣言の欠落と検査に通ったことが同じ見た目になる）。"
+        {
+          "id": "missing-in-tests",
+          "text": "When specが宣言するシナリオの宣言行に対応するテストがテストファイルに無いとき、システムはそのシナリオ名をmissing_in_testsに含める shall。"
+        },
+        {
+          "id": "orphaned-in-tests",
+          "text": "When テストが宣言行を持たない、またはその宣言行がどのシナリオにも対応しないとき、システムはそのテストの名前をorphaned_in_testsに含める shall。"
+        },
+        {
+          "id": "matched-pairs-are-reported",
+          "text": "When シナリオの宣言行とテストの宣言行が一致するとき、システムはそのシナリオ名とテスト名の対をmatchedに含める shall。"
+        },
+        {
+          "id": "gherkin-mismatch-is-reported",
+          "text": "When 宣言行は一致するが、テストの文書コメントが対応するシナリオのgherkinを含んでいないとき、システムはそのシナリオ名をgherkin_mismatchesに含める shall。"
+        },
+        {
+          "id": "duplicate-declarations-are-reported",
+          "text": "When 同一の宣言行を持つテストが2件以上あるとき、システムはその宣言行をduplicate_declarationsに含め、いずれか一方へ暗黙に割り当てない shall。"
+        },
+        {
+          "id": "spec-declaration-mismatch-is-reported",
+          "text": "When specのシナリオのgherkin先頭にある宣言行が、そのシナリオの名前と一致しないとき、システムはそのシナリオ名をspec_declaration_mismatchesに含める shall。"
+        },
+        {
+          "id": "aligned-scenarios-report-nothing",
+          "text": "While missing_in_tests・orphaned_in_tests・gherkin_mismatches・duplicate_declarations・spec_declaration_mismatchesの全てが空のとき、システムはシナリオとテストの対応が保たれていると判定する shall。"
+        },
+        {
+          "id": "whole-tree-scan-covers-every-scenario-block",
+          "text": "When spec documentの置き場所とテストの配置ルートが与えられたとき、システムは配下の全specを走査し、シナリオを宣言する各ブロックについて、配置の規約が定めるテストファイルの有無を確かめる shall。"
+        },
+        {
+          "id": "missing-test-file-is-reported",
+          "text": "When 走査したシナリオブロックに対応するテストファイルが存在しないとき、システムはその文書の識別子・ブロック種別・期待した配置・シナリオ件数をmissing_test_fileに含める shall（宣言はあるが突き合わせる相手が居ないことを、対応が取れていることと区別する）。"
+        },
+        {
+          "id": "existing-test-file-is-checked-like-a-single-pair",
+          "text": "When 走査したシナリオブロックに対応するテストファイルが存在するとき、システムはその組について1組の検査と同じ判定を行い、文書の識別子を添えてresultsに含める shall。"
+        },
+        {
+          "id": "exactly-one-of-single-or-whole-must-be-given",
+          "text": "If 1組だけ検査する指定と全体を検査する指定の両方が与えられた、またはどちらも与えられなかったとき、システムはMISSING_PARAMエラーを返す shall。"
+        },
+        {
+          "id": "invalid-path",
+          "text": "If 対象のspec.jsonまたはテストファイルが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+        },
+        {
+          "id": "unparsable-test-file-is-rejected",
+          "text": "If テストファイルが構文解析できないとき、システムはINVALID_SOURCEエラーを返す shall。"
+        },
+        {
+          "id": "unsupported-language",
+          "text": "If テストファイルの言語が文書コメントの取り出しに対応していないとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。"
+        },
+        {
+          "id": "placement-narrows-the-scenario-kinds",
+          "text": "While テストの置かれた場所が、規約が宣言したいずれかの配置に当てはまるとき、システムはその配置に対応づくシナリオ種別だけを対象に突き合わせを行う shall。"
+        },
+        {
+          "id": "unplaced-tests-check-every-scenario-kind",
+          "text": "While テストの置かれた場所が、規約が宣言したどの配置にも当てはまらないとき、システムは宣言されている全てのシナリオ種別を対象に突き合わせを行う shall（絞り込めないときに黙って一部だけを見る形にしない）。"
+        },
+        {
+          "id": "kind-specific-placement-wins",
+          "text": "While 規約の配置の宣言に、対象のシナリオ種別まで指定した行があるとき、システムはその行を、種別を指定していない行より優先する shall。"
+        },
+        {
+          "id": "invalid-path-resolution-contract",
+          "text": "When 対象のspec.jsonまたはテストファイルが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        },
+        {
+          "id": "missing-declaration-is-rejected",
+          "text": "When 名前を組み立てる宣言が規約に無いとき、システムは MISSING_DECLARATION エラーを返す shall（欠けた宣言を空とみなして続けると、規約の書き損じが正しい名前として通る）。"
+        },
+        {
+          "id": "test-file-name-is-built-only-from-the-declaration",
+          "text": "When 全体を検査するとき、システムはテストファイルの名前を、規約が宣言した由来・落とす接頭辞・表記・前置・中置・末尾だけから組み立てる shall（名前の綴りの規則を検査の側に持たない）。"
+        },
+        {
+          "id": "missing-placement-is-reported",
+          "text": "When あるシナリオ種別に対応する置き場所が規約に宣言されていないとき、システムはその種別を missing_placement に含める shall（黙って対象から外すと、宣言の欠落と検査に通ったことが同じ見た目になる）。"
+        }
       ]
     },
     "errors": {
@@ -170,17 +233,6 @@
           ]
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "acceptanceScenarios": {
       "blockType": "AcceptanceScenarios",

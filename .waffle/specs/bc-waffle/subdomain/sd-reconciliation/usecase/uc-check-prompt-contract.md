@@ -3,7 +3,7 @@ id: "uc-check-prompt-contract"
 type: "usecase"
 title: "スキーマの指示の置かれ方を確かめる：uc-check-prompt-contract"
 description: "スキーマが定める2つの指示——引いた人向けの x-prompt-query と、値を書き込むときに読む x-prompt-write——が、然るべき場所に然るべき名前で置かれているかを確かめる操作。 指示の中身が良いかどうかは判定しない。置かれ方だけを見る。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # スキーマの指示の置かれ方を確かめる：uc-check-prompt-contract
@@ -74,18 +74,15 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 確認を求めたとき、システムは blockType を持つ定義のうち読み方の指示が無いものを返す shall。
-- When 確認を求めたとき、システムは値を書き込む欄のうち書き方の指示が無いものを返す shall。
-- When 確認を求めたとき、システムは x-prompt-query と x-prompt-write 以外のx-prompt- で始まるキーを返す shall（契約が認める名前はこの2つだけ）。
-- When 記入対象がどこかを決めるとき、システムは雛形を組み立てる既存の走査をそのまま使う shall（数え方をこの操作の側で作り直さない）。
-- While 確認を行う間、システムは指示の中身が指示として適切かを判定しない shall。
-
----
-
-## 操作保証
-
-- When 同じ確認を複数回実行したとき、システムの生成する結果は常にべき等である shall。
-- While 確認を行う間、システムはスキーマを一切書き換えない shall。
+| 基準 |
+|---|
+| When 確認を求めたとき、システムは blockType を持つ定義のうち読み方の指示が無いものを返す shall。 |
+| When 確認を求めたとき、システムは値を書き込む欄のうち書き方の指示が無いものを返す shall。 |
+| When 確認を求めたとき、システムは x-prompt-query と x-prompt-write 以外のx-prompt- で始まるキーを返す shall（契約が認める名前はこの2つだけ）。 |
+| When 記入対象がどこかを決めるとき、システムは雛形を組み立てる既存の走査をそのまま使う shall（数え方をこの操作の側で作り直さない）。 |
+| While 確認を行う間、システムは指示の中身が指示として適切かを判定しない shall。 |
+| When 同じ確認を複数回実行したとき、システムの生成する結果は常にべき等である shall。 |
+| While 確認を行う間、システムはスキーマを一切書き換えない shall。 |
 
 ---
 
@@ -216,10 +213,6 @@ Scenario: 契約が守られていれば何も返らない
   When 確認を求める
   Then どの一覧も空である
 ```
-
----
-
-## 操作保証シナリオ
 
 ### 何度確かめても結果が変わらない
 

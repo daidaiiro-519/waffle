@@ -3,7 +3,7 @@ id: "uc-check-usecase-class-drift"
 type: "usecase"
 title: "操作名と実装クラス名の一致を検証する：CheckUsecaseClassDrift"
 description: "usecase specが宣言する操作名(operationName)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。宣言と実装クラスの対応関係という、他のどのreconcile usecaseも見ていない盲点を検出する。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # 操作名と実装クラス名の一致を検証する：CheckUsecaseClassDrift
@@ -75,23 +75,20 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When usecase specのoperationNameから導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。
-- When 実装ファイルは実在するが、operationNameと一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。
-- While 全usecaseの操作名と実装クラスが一致しているとき、システムはmissing_implementation_file・missing_implementation_in_scope・class_name_mismatchの3つ全てを空配列で返す shall。
-- If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。
-- If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。
-- While languageが指定されないとき、システムはpythonとして扱う shall。
-- When 概念ごとの探索範囲を決めるとき、システムはarchitectureのlayout.granularityがその概念にperFileを宣言していればファイル単位、宣言していなければconceptPlacementが与える配置ディレクトリ単位とする shall（配置を決める権限はarchitectureにあり、この操作は宣言を読むだけで独自の規則を持たない）。
-- When 操作がディレクトリ単位で探すと宣言されていて、操作名と一致するクラス定義がその配置ディレクトリのどこにも見つからないとき、システムはその組をmissing_implementation_in_scopeに含める shall（探した範囲を伝えるため、1つの道を指すexpectedPathではなくsearchedRootを持たせる）。
-- While 操作がファイル単位で探すと宣言されているとき、システムは操作名から導出したファイルパスの不在のみをmissing_implementation_fileに含め、ディレクトリ単位の報告を行わない shall（2つの探し方の結果を同じ器に入れると、受け手が同じキーから読むべき意味を決められなくなるため）。
-- While granularityがその概念にperFileを宣言していないとき、システムは検査を中断せず、ディレクトリ単位の探索を続ける shall（宣言が無いことは引数の誤りではなく、そのプロジェクトがまだ決めていないという事実であり、報告して先へ進む）。
-- When 規約がユースケースの配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。
-
----
-
-## 操作保証
-
-- When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| 基準 |
+|---|
+| When usecase specのoperationNameから導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。 |
+| When 実装ファイルは実在するが、operationNameと一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。 |
+| While 全usecaseの操作名と実装クラスが一致しているとき、システムはmissing_implementation_file・missing_implementation_in_scope・class_name_mismatchの3つ全てを空配列で返す shall。 |
+| If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。 |
+| While languageが指定されないとき、システムはpythonとして扱う shall。 |
+| When 概念ごとの探索範囲を決めるとき、システムはarchitectureのlayout.granularityがその概念にperFileを宣言していればファイル単位、宣言していなければconceptPlacementが与える配置ディレクトリ単位とする shall（配置を決める権限はarchitectureにあり、この操作は宣言を読むだけで独自の規則を持たない）。 |
+| When 操作がディレクトリ単位で探すと宣言されていて、操作名と一致するクラス定義がその配置ディレクトリのどこにも見つからないとき、システムはその組をmissing_implementation_in_scopeに含める shall（探した範囲を伝えるため、1つの道を指すexpectedPathではなくsearchedRootを持たせる）。 |
+| While 操作がファイル単位で探すと宣言されているとき、システムは操作名から導出したファイルパスの不在のみをmissing_implementation_fileに含め、ディレクトリ単位の報告を行わない shall（2つの探し方の結果を同じ器に入れると、受け手が同じキーから読むべき意味を決められなくなるため）。 |
+| While granularityがその概念にperFileを宣言していないとき、システムは検査を中断せず、ディレクトリ単位の探索を続ける shall（宣言が無いことは引数の誤りではなく、そのプロジェクトがまだ決めていないという事実であり、報告して先へ進む）。 |
+| When 規約がユースケースの配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。 |
+| When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
@@ -203,18 +200,15 @@ Scenario: 宣言に無い実装ファイルを孤立として検出する
   Then orphaned_implementation_file にそのファイルが含まれる
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないdocuments_rootはINVALID_PATH
+### 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | エラー：走査起点の不在 |
+| 異常系 | エラー：対象のdocuments_rootまたはsrc_rootが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないdocuments_rootはINVALID_PATH
-  When 存在しないdocuments_rootでクラス名ドリフト検査を実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH
+  Given 対象のdocuments_rootまたはsrc_rootが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```

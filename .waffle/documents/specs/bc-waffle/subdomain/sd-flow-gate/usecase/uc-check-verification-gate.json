@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-verification-gate",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -87,18 +87,54 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When specのacceptanceScenariosに対応するテストが1件以上未実装（missing_in_tests）のとき、システムはstatus blocked を返す shall。",
-        "When 実装済みテストのうちspecに存在しないもの（orphaned_in_tests）、Gherkinと内容が一致しないもの（gherkin_mismatches）、同じ宣言行を複数のテストが名乗っているもの（duplicate_declarations）、spec自身の宣言行が名前と食い違うもの（spec_declaration_mismatches）が1件以上あるとき、システムはstatus needs_human を返す shall（意図的な追加か更新漏れかを機械的に判別できないため）。",
-        "When spec⇄テストの対応関係に差分が無いが、対応するテストの実行結果に1件以上failedが含まれるとき、システムはstatus blocked を返す shall。ここでの突き合わせは、照合結果が持つ対のテスト名側と実行結果のfailedを交差させて行う shall（シナリオ名と交差させると、両者が別の語彙であるため常に空集合になり、全テストが落ちていてもreadyを返す）。",
-        "When 実行結果のfailedに、照合結果のどの対のテスト名とも一致しない識別子だけが含まれるとき、システムはreadyを返さず、識別子の不整合をreasonsに含めて needs_human を返す shall（交差が空であることを、落ちたテストが無いことと同一視しない）。",
-        "When spec⇄テストの対応関係に差分が無く、対応する全テストがpassedであるとき、システムはstatus ready を返す shall。",
-        "While 複数の条件に同時に該当するとき、システムはblocked/needs_human/readyの優先順位（missing_in_tests最優先、次にorphaned/mismatch/duplicate/spec_declaration_mismatch、次にfailed、最後にready）で単一のstatusを決定する shall。",
-        "When statusを返すとき、システムはその根拠をreasonsに含める shall。reasonsにはシナリオ名を用いる shall（人間が読む面はspecの語彙で表す）。",
-        "If specPathが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
-        "If testFilePathが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
-        "If testResultsPathが存在しない、またはJSONとして解釈できないとき、システムはINVALID_TEST_RESULTSエラーを返す shall。",
-        "While 同一の入力で複数回実行しても、システムは同じstatusを返す shall（副作用の無い読み取り専用操作）。",
-        "When 判定を行うとき、システムはテスト自体を実行しない shall（既に生成済みのtestResultsPathを読むのみ。実行はOrchestrator側の責務）。"
+        {
+          "id": "missing-tests-block",
+          "text": "When specのacceptanceScenariosに対応するテストが1件以上未実装（missing_in_tests）のとき、システムはstatus blocked を返す shall。"
+        },
+        {
+          "id": "mismatched-pairs-need-a-human",
+          "text": "When 実装済みテストのうちspecに存在しないもの（orphaned_in_tests）、Gherkinと内容が一致しないもの（gherkin_mismatches）、同じ宣言行を複数のテストが名乗っているもの（duplicate_declarations）、spec自身の宣言行が名前と食い違うもの（spec_declaration_mismatches）が1件以上あるとき、システムはstatus needs_human を返す shall（意図的な追加か更新漏れかを機械的に判別できないため）。"
+        },
+        {
+          "id": "failed-tests-block",
+          "text": "When spec⇄テストの対応関係に差分が無いが、対応するテストの実行結果に1件以上failedが含まれるとき、システムはstatus blocked を返す shall。ここでの突き合わせは、照合結果が持つ対のテスト名側と実行結果のfailedを交差させて行う shall（シナリオ名と交差させると、両者が別の語彙であるため常に空集合になり、全テストが落ちていてもreadyを返す）。"
+        },
+        {
+          "id": "unknown-failed-identifiers-need-a-human",
+          "text": "When 実行結果のfailedに、照合結果のどの対のテスト名とも一致しない識別子だけが含まれるとき、システムはreadyを返さず、識別子の不整合をreasonsに含めて needs_human を返す shall（交差が空であることを、落ちたテストが無いことと同一視しない）。"
+        },
+        {
+          "id": "aligned-and-passing-is-ready",
+          "text": "When spec⇄テストの対応関係に差分が無く、対応する全テストがpassedであるとき、システムはstatus ready を返す shall。"
+        },
+        {
+          "id": "status-priority-is-fixed",
+          "text": "While 複数の条件に同時に該当するとき、システムはblocked/needs_human/readyの優先順位（missing_in_tests最優先、次にorphaned/mismatch/duplicate/spec_declaration_mismatch、次にfailed、最後にready）で単一のstatusを決定する shall。"
+        },
+        {
+          "id": "reasons-use-scenario-names",
+          "text": "When statusを返すとき、システムはその根拠をreasonsに含める shall。reasonsにはシナリオ名を用いる shall（人間が読む面はspecの語彙で表す）。"
+        },
+        {
+          "id": "invalid-spec-path",
+          "text": "If specPathが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+        },
+        {
+          "id": "invalid-test-file-path",
+          "text": "If testFilePathが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+        },
+        {
+          "id": "invalid-test-results",
+          "text": "If testResultsPathが存在しない、またはJSONとして解釈できないとき、システムはINVALID_TEST_RESULTSエラーを返す shall。"
+        },
+        {
+          "id": "repeated-runs-return-the-same-status",
+          "text": "While 同一の入力で複数回実行しても、システムは同じstatusを返す shall（副作用の無い読み取り専用操作）。"
+        },
+        {
+          "id": "tests-are-not-executed",
+          "text": "When 判定を行うとき、システムはテスト自体を実行しない shall（既に生成済みのtestResultsPathを読むのみ。実行はOrchestrator側の責務）。"
+        }
       ]
     },
     "errors": {
@@ -209,17 +245,6 @@
           "covers": "操作保証からの移設"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

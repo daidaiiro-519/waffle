@@ -1,7 +1,7 @@
 {
   "documentId": "uc-export-skill-bundle",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -91,15 +91,42 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 書き出し先が与えられたとき、システムは仕上がっているSkillだけを選び、その一式を書き出す shall。",
-        "When 別の場所を指し示す形で置かれているものがあるとき、システムは指し示しをやめて中身そのものを書き出す shall。",
-        "When 受け取る側が自分で用意すべきものが一式の中にあるとき、システムはそれを書き出さない shall。",
-        "If 書き出した一式に指し示す先の無いものが残ったとき、システムはBROKEN_REFERENCE_IN_BUNDLEを返し、その書き出しを成功として扱わない shall。",
-        "When 仕上がっていないSkillを一式から外したとき、システムはその識別子と外した理由を結果に含める shall。",
-        "If 書き出しの対象になるSkillが1つも無いとき、システムはEMPTY_BUNDLEを返し書き出さない shall。",
-        "While 書き出しを繰り返すとき、システムは元の一式を一切変えない shall。",
-        "While 同じ内容に対して書き出しを繰り返すとき、システムは常に同じ一式を書き出す shall（べき等性）。",
-        "While 書き出しを行うとき、システムは元の一式を一切変えない shall（読み取りのみ）。"
+        {
+          "id": "only-finished-skills-are-exported",
+          "text": "When 書き出し先が与えられたとき、システムは仕上がっているSkillだけを選び、その一式を書き出す shall。"
+        },
+        {
+          "id": "pointers-are-replaced-by-their-content",
+          "text": "When 別の場所を指し示す形で置かれているものがあるとき、システムは指し示しをやめて中身そのものを書き出す shall。"
+        },
+        {
+          "id": "receiver-owned-parts-are-not-exported",
+          "text": "When 受け取る側が自分で用意すべきものが一式の中にあるとき、システムはそれを書き出さない shall。"
+        },
+        {
+          "id": "broken-reference-in-bundle",
+          "text": "If 書き出した一式に指し示す先の無いものが残ったとき、システムはBROKEN_REFERENCE_IN_BUNDLEを返し、その書き出しを成功として扱わない shall。"
+        },
+        {
+          "id": "excluded-skills-are-reported-with-a-reason",
+          "text": "When 仕上がっていないSkillを一式から外したとき、システムはその識別子と外した理由を結果に含める shall。"
+        },
+        {
+          "id": "empty-bundle",
+          "text": "If 書き出しの対象になるSkillが1つも無いとき、システムはEMPTY_BUNDLEを返し書き出さない shall。"
+        },
+        {
+          "id": "the-source-set-is-not-modified",
+          "text": "While 書き出しを繰り返すとき、システムは元の一式を一切変えない shall。"
+        },
+        {
+          "id": "repeated-exports-produce-the-same-bundle",
+          "text": "While 同じ内容に対して書き出しを繰り返すとき、システムは常に同じ一式を書き出す shall（べき等性）。"
+        },
+        {
+          "id": "export-is-read-only",
+          "text": "While 書き出しを行うとき、システムは元の一式を一切変えない shall（読み取りのみ）。"
+        }
       ]
     },
     "errors": {
@@ -175,17 +202,6 @@
           "covers": "操作保証からの移設"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

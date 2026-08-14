@@ -3,7 +3,7 @@ id: "uc-query-document-collection"
 type: "usecase"
 title: "複数Documentを横断してパターン検索・属性絞り込みする：QueryDocumentCollection"
 description: "AIが単一Document内では完結しない要求（複数Documentにまたがるパターン検索・属性による絞り込み）を、ディレクトリ単位で一括して満たす。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # 複数Documentを横断してパターン検索・属性絞り込みする：QueryDocumentCollection
@@ -87,20 +87,17 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When operationとディレクトリが与えられ、対象がschemaRefを持つDocumentの集合であるとき、システムは結果を{ prompt, value }形式で返す shall。
-- When operationにgrep_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentのcontentを走査し、patternに一致した値をpath単位で収集してvalueに返す shall。
-- When operationにfilter_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentのうちkeyの値がvalueと一致するものだけを絞り込み、そのpathとmeta（fields指定時はfieldsの値のみ）をvalueに返す shall。
-- When operationにindex_scan_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentについて、index_scan相当のblockTypeとpromptの索引、およびそのDocument自身のtagsを集約し、Document単位でvalueに返す shall。
-- While 一致するDocumentが無いとき、システムは正常系として空のvalueを返す shall。
-- If operationが未知のとき、システムはINVALID_OPERATIONエラーを返す shall。
-- If 対象ディレクトリが存在しないとき、システムはINVALID_PATHエラーを返す shall。
-- If grep_documentsの正規表現patternが不正なとき、システムはINVALID_PATTERNエラーを返す shall。
-
----
-
-## 操作保証
-
-- While 同一条件で複数回実行しても、システムは同じ結果を返す shall（副作用の無い読み取り専用操作であり、永続インデックスを持たないため常に対象ディレクトリの現在状態を反映する）。
+| 基準 |
+|---|
+| When operationとディレクトリが与えられ、対象がschemaRefを持つDocumentの集合であるとき、システムは結果を{ prompt, value }形式で返す shall。 |
+| When operationにgrep_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentのcontentを走査し、patternに一致した値をpath単位で収集してvalueに返す shall。 |
+| When operationにfilter_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentのうちkeyの値がvalueと一致するものだけを絞り込み、そのpathとmeta（fields指定時はfieldsの値のみ）をvalueに返す shall。 |
+| When operationにindex_scan_documentsを指定したとき、システムは対象ディレクトリ配下の各Documentについて、index_scan相当のblockTypeとpromptの索引、およびそのDocument自身のtagsを集約し、Document単位でvalueに返す shall。 |
+| While 一致するDocumentが無いとき、システムは正常系として空のvalueを返す shall。 |
+| If operationが未知のとき、システムはINVALID_OPERATIONエラーを返す shall。 |
+| If 対象ディレクトリが存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| If grep_documentsの正規表現patternが不正なとき、システムはINVALID_PATTERNエラーを返す shall。 |
+| While 同一条件で複数回実行しても、システムは同じ結果を返す shall（副作用の無い読み取り専用操作であり、永続インデックスを持たないため常に対象ディレクトリの現在状態を反映する）。 |
 
 ---
 
@@ -207,10 +204,6 @@ Scenario: 不正な正規表現はエラーを返す
   When 不正な正規表現で grep_documents を実行する
   Then INVALID_PATTERN エラーが返る
 ```
-
----
-
-## 操作保証シナリオ
 
 ### 同一条件での再実行はべき等である
 

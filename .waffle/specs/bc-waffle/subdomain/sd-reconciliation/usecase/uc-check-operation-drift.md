@@ -3,7 +3,7 @@ id: "uc-check-operation-drift"
 type: "usecase"
 title: "operation名と実装のoperation分岐の一致を検証する：CheckOperationDrift"
 description: "usecase specのacceptanceScenariosが宣言するoperation名と、対応する実装が実際に持つoperation分岐の文字列が一致しているかを機械的に検証する。複数の操作をoperation引数で分岐するusecase（QueryDocument等）の操作名が、specの自由記述にしか現れず実装から乖離しても誰も気づけない、という盲点を検出する。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # operation名と実装のoperation分岐の一致を検証する：CheckOperationDrift
@@ -72,17 +72,14 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When usecase specが宣言するoperation名が実装のoperation分岐に存在しないとき、システムはその組をoperations_missing_in_implに含める shall。
-- When 実装のoperation分岐にはあるがusecase specのどのシナリオにも宣言されていない操作があるとき、システムはその組をoperations_undocumented_in_specに含める shall。
-- While acceptanceScenariosにoperationフィールドを1件も宣言していないusecaseであるとき、システムはそのusecaseを突き合わせの対象にしない shall。
-- While 宣言と実装のoperationが完全に一致しているとき、システムはoperations_missing_in_impl・operations_undocumented_in_spec両方を空配列で返す shall。
-- If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。
-
----
-
-## 操作保証
-
-- When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| 基準 |
+|---|
+| When usecase specが宣言するoperation名が実装のoperation分岐に存在しないとき、システムはその組をoperations_missing_in_implに含める shall。 |
+| When 実装のoperation分岐にはあるがusecase specのどのシナリオにも宣言されていない操作があるとき、システムはその組をoperations_undocumented_in_specに含める shall。 |
+| While acceptanceScenariosにoperationフィールドを1件も宣言していないusecaseであるとき、システムはそのusecaseを突き合わせの対象にしない shall。 |
+| While 宣言と実装のoperationが完全に一致しているとき、システムはoperations_missing_in_impl・operations_undocumented_in_spec両方を空配列で返す shall。 |
+| If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
@@ -148,18 +145,15 @@ Scenario: operationを1件も宣言していないusecaseは対象外
   Then そのusecaseは突き合わせの対象にならず、差分にも現れない
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないdocuments_rootはINVALID_PATH
+### 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | エラー：走査起点の不在 |
+| 異常系 | エラー：対象のdocuments_rootまたはsrc_rootが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないdocuments_rootはINVALID_PATH
-  When 存在しないdocuments_rootでoperationドリフト検査を実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH
+  Given 対象のdocuments_rootまたはsrc_rootが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```

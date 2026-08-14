@@ -1,7 +1,7 @@
 {
   "documentId": "uc-update-coding-preset",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -84,18 +84,54 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 戻す部分が指定されたとき、プリセットの更新は その部分だけをプリセットへ反映する shall",
-        "When 戻す部分が指定されなかったとき、プリセットの更新は 反映を行わず拒否する shall",
-        "If 指定された部分をプリセットが持たないならば、プリセットの更新は 反映を行わず拒否する shall",
-        "If 指定された部分をプロダクトの規約が持たないならば、プリセットの更新は 反映を行わず拒否する shall",
-        "When 指定された部分の内容がプリセットとプロダクトで既に一致しているとき、プリセットの更新は プリセットを書き換えず、変更が無かったことを示す shall",
-        "While 反映を行う間、プリセットの更新は プロダクトの規約を変更しない shall",
-        "When 反映が行われたとき、プリセットの更新は 反映した部分ごとに反映前と反映後の内容を返す shall",
-        "When 確認だけが求められたとき、プリセットの更新は 変わる内容を返し、プリセットを書き換えない shall",
-        "When 戻す部分としてブロックの中の欄が指定されたとき、プリセットの更新は そのブロックの他の欄を変えずに、指定された欄だけを反映する shall",
-        "If 指定された欄をプリセットまたはプロダクトの規約が持たないならば、プリセットの更新は 反映を行わず拒否する shall",
-        "When 指定されたプリセットが存在しないとき、システムは PRESET_NOT_FOUND エラーを返す shall（プリセットを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。",
-        "When 出どころとして指定された規約が存在しないとき、システムは INVALID_PATH エラーを返す shall（同上）。"
+        {
+          "id": "only-the-named-part-is-applied",
+          "text": "When 戻す部分が指定されたとき、プリセットの更新は その部分だけをプリセットへ反映する shall"
+        },
+        {
+          "id": "missing-part-selection-is-rejected",
+          "text": "When 戻す部分が指定されなかったとき、プリセットの更新は 反映を行わず拒否する shall"
+        },
+        {
+          "id": "part-absent-from-the-preset-is-rejected",
+          "text": "If 指定された部分をプリセットが持たないならば、プリセットの更新は 反映を行わず拒否する shall"
+        },
+        {
+          "id": "part-absent-from-the-product-is-rejected",
+          "text": "If 指定された部分をプロダクトの規約が持たないならば、プリセットの更新は 反映を行わず拒否する shall"
+        },
+        {
+          "id": "identical-part-reports-no-change",
+          "text": "When 指定された部分の内容がプリセットとプロダクトで既に一致しているとき、プリセットの更新は プリセットを書き換えず、変更が無かったことを示す shall"
+        },
+        {
+          "id": "the-product-standard-is-not-modified",
+          "text": "While 反映を行う間、プリセットの更新は プロダクトの規約を変更しない shall"
+        },
+        {
+          "id": "before-and-after-are-returned",
+          "text": "When 反映が行われたとき、プリセットの更新は 反映した部分ごとに反映前と反映後の内容を返す shall"
+        },
+        {
+          "id": "dry-run-returns-the-diff-without-writing",
+          "text": "When 確認だけが求められたとき、プリセットの更新は 変わる内容を返し、プリセットを書き換えない shall"
+        },
+        {
+          "id": "a-field-inside-a-block-can-be-applied-alone",
+          "text": "When 戻す部分としてブロックの中の欄が指定されたとき、プリセットの更新は そのブロックの他の欄を変えずに、指定された欄だけを反映する shall"
+        },
+        {
+          "id": "field-absent-on-either-side-is-rejected",
+          "text": "If 指定された欄をプリセットまたはプロダクトの規約が持たないならば、プリセットの更新は 反映を行わず拒否する shall"
+        },
+        {
+          "id": "preset-not-found",
+          "text": "When 指定されたプリセットが存在しないとき、システムは PRESET_NOT_FOUND エラーを返す shall（プリセットを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        },
+        {
+          "id": "invalid-path",
+          "text": "When 出どころとして指定された規約が存在しないとき、システムは INVALID_PATH エラーを返す shall（同上）。"
+        }
       ]
     },
     "errors": {
@@ -221,17 +257,6 @@
           "covers": "エラー: INVALID_PATH"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

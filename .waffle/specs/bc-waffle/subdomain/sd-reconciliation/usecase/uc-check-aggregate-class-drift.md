@@ -3,7 +3,7 @@ id: "uc-check-aggregate-class-drift"
 type: "usecase"
 title: "集約ルート名と実装クラス名の一致を検証する：CheckAggregateClassDrift"
 description: "aggregate specが宣言する集約ルート名(aggregateRoot.name)と、対応する実装クラスが実際に持つクラス名が一致しているかを機械的に検証する。check-usecase-class-driftと同型の検知を集約にも適用し、集約の構造がJSON Schemaのみで表現されドリフトを検知できない盲点を埋める。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # 集約ルート名と実装クラス名の一致を検証する：CheckAggregateClassDrift
@@ -80,28 +80,25 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- While 配置ディレクトリ単位で探すとき、システムはそのディレクトリの直下だけを見て、下位のディレクトリへは降りない shall（conceptPlacementが指すのは1つのディレクトリであり、降りると宣言されていない区画まで拾うため）。
-- When 概念ごとの探索範囲を決めるとき、システムはarchitectureのlayout.granularityがその概念にperFileを宣言していればファイル単位、宣言していなければconceptPlacementが与える配置ディレクトリ単位とする shall（配置を決める権限はarchitectureにあり、この操作は宣言を読むだけで独自の規則を持たない）。
-- When aggregate specの集約ルート名から導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。
-- When 実装ファイルは実在するが、集約ルート名と一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。
-- When クラス名は一致するが、Entitiesが宣言する属性集合と実装クラスのフィールド集合が一致しないとき、システムはその組をattribute_mismatchに含める shall。
-- When ValueObjectsが宣言する値オブジェクト名に対応するクラス定義が、その概念に宣言された探索範囲のどこにも見つからないとき、システムはその組をmissing_value_objectに含める shall。
-- When 値オブジェクトのクラス定義は見つかるが、ValueObjects宣言のattributes(宣言されている場合)と実装クラスのフィールド集合が一致しないとき、システムはその組をvalue_object_attribute_mismatchに含める shall。
-- While 値オブジェクトのValueObjects宣言がattributesを持たないとき、システムはその値オブジェクトをvalue_object_attribute_mismatchの対象外とする shall。
-- While 全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクト・値オブジェクトの属性集合が一致しているとき、システムは6フィールド全てを空配列で返す shall。
-- If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。
-- If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。
-- While languageが指定されないとき、システムはpythonとして扱う shall。
-- When 集約がディレクトリ単位で探すと宣言されていて、集約ルート名と一致するクラス定義がその配置ディレクトリのどこにも見つからないとき、システムはその組をmissing_implementation_in_scopeに含める shall（探した範囲を伝えるため、1つの道を指すexpectedPathではなくsearchedRootを持たせる）。
-- While 集約がファイル単位で探すと宣言されているとき、システムは集約ルート名から導出したファイルパスの不在のみをmissing_implementation_fileに含め、ディレクトリ単位の報告を行わない shall（2つの探し方の結果を同じ器に入れると、受け手が同じキーから読むべき意味を決められなくなるため）。
-- While granularityがその概念にperFileを宣言していないとき、システムは検査を中断せず、ディレクトリ単位の探索を続ける shall（宣言が無いことは引数の誤りではなく、そのプロジェクトがまだ決めていないという事実であり、報告して先へ進む）。
-- When 規約が集約の配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。
-
----
-
-## 操作保証
-
-- When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| 基準 |
+|---|
+| While 配置ディレクトリ単位で探すとき、システムはそのディレクトリの直下だけを見て、下位のディレクトリへは降りない shall（conceptPlacementが指すのは1つのディレクトリであり、降りると宣言されていない区画まで拾うため）。 |
+| When 概念ごとの探索範囲を決めるとき、システムはarchitectureのlayout.granularityがその概念にperFileを宣言していればファイル単位、宣言していなければconceptPlacementが与える配置ディレクトリ単位とする shall（配置を決める権限はarchitectureにあり、この操作は宣言を読むだけで独自の規則を持たない）。 |
+| When aggregate specの集約ルート名から導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。 |
+| When 実装ファイルは実在するが、集約ルート名と一致するクラス定義がそのファイル内に見つからないとき、システムはその組をclass_name_mismatchに含める shall。 |
+| When クラス名は一致するが、Entitiesが宣言する属性集合と実装クラスのフィールド集合が一致しないとき、システムはその組をattribute_mismatchに含める shall。 |
+| When ValueObjectsが宣言する値オブジェクト名に対応するクラス定義が、その概念に宣言された探索範囲のどこにも見つからないとき、システムはその組をmissing_value_objectに含める shall。 |
+| When 値オブジェクトのクラス定義は見つかるが、ValueObjects宣言のattributes(宣言されている場合)と実装クラスのフィールド集合が一致しないとき、システムはその組をvalue_object_attribute_mismatchに含める shall。 |
+| While 値オブジェクトのValueObjects宣言がattributesを持たないとき、システムはその値オブジェクトをvalue_object_attribute_mismatchの対象外とする shall。 |
+| While 全aggregateの集約ルート名・実装クラス・属性集合・値オブジェクト・値オブジェクトの属性集合が一致しているとき、システムは6フィールド全てを空配列で返す shall。 |
+| If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| If languageがサポート対象外のとき、システムはUNSUPPORTED_LANGUAGEエラーを返す shall。 |
+| While languageが指定されないとき、システムはpythonとして扱う shall。 |
+| When 集約がディレクトリ単位で探すと宣言されていて、集約ルート名と一致するクラス定義がその配置ディレクトリのどこにも見つからないとき、システムはその組をmissing_implementation_in_scopeに含める shall（探した範囲を伝えるため、1つの道を指すexpectedPathではなくsearchedRootを持たせる）。 |
+| While 集約がファイル単位で探すと宣言されているとき、システムは集約ルート名から導出したファイルパスの不在のみをmissing_implementation_fileに含め、ディレクトリ単位の報告を行わない shall（2つの探し方の結果を同じ器に入れると、受け手が同じキーから読むべき意味を決められなくなるため）。 |
+| While granularityがその概念にperFileを宣言していないとき、システムは検査を中断せず、ディレクトリ単位の探索を続ける shall（宣言が無いことは引数の誤りではなく、そのプロジェクトがまだ決めていないという事実であり、報告して先へ進む）。 |
+| When 規約が集約の配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。 |
+| When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
@@ -293,18 +290,15 @@ Scenario: 宣言に無い実装ファイルを孤立として検出する
   Then orphaned_implementation_file にそのファイルが含まれる
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないdocuments_rootはINVALID_PATH
+### 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | エラー：走査起点の不在 |
+| 異常系 | エラー：対象のdocuments_rootまたはsrc_rootが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないdocuments_rootはINVALID_PATH
-  When 存在しないdocuments_rootでクラス名ドリフト検査を実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH
+  Given 対象のdocuments_rootまたはsrc_rootが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```

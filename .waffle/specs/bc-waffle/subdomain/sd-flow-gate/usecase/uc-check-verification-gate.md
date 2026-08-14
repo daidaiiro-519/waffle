@@ -3,7 +3,7 @@ id: "uc-check-verification-gate"
 type: "usecase"
 title: "実装完了→検証フェーズへ進んでよいかを機械的に判定する：CheckVerificationGate"
 description: "対象usecase specのacceptanceScenariosと実装済みテストの対応関係、および渡されたテスト実行結果から、検証フェーズへ進んでよいか（ready/blocked/needs_human）を判定する。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # 実装完了→検証フェーズへ進んでよいかを機械的に判定する：CheckVerificationGate
@@ -76,23 +76,20 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When specのacceptanceScenariosに対応するテストが1件以上未実装（missing_in_tests）のとき、システムはstatus blocked を返す shall。
-- When 実装済みテストのうちspecに存在しないもの（orphaned_in_tests）、Gherkinと内容が一致しないもの（gherkin_mismatches）、同じ宣言行を複数のテストが名乗っているもの（duplicate_declarations）、spec自身の宣言行が名前と食い違うもの（spec_declaration_mismatches）が1件以上あるとき、システムはstatus needs_human を返す shall（意図的な追加か更新漏れかを機械的に判別できないため）。
-- When spec⇄テストの対応関係に差分が無いが、対応するテストの実行結果に1件以上failedが含まれるとき、システムはstatus blocked を返す shall。ここでの突き合わせは、照合結果が持つ対のテスト名側と実行結果のfailedを交差させて行う shall（シナリオ名と交差させると、両者が別の語彙であるため常に空集合になり、全テストが落ちていてもreadyを返す）。
-- When 実行結果のfailedに、照合結果のどの対のテスト名とも一致しない識別子だけが含まれるとき、システムはreadyを返さず、識別子の不整合をreasonsに含めて needs_human を返す shall（交差が空であることを、落ちたテストが無いことと同一視しない）。
-- When spec⇄テストの対応関係に差分が無く、対応する全テストがpassedであるとき、システムはstatus ready を返す shall。
-- While 複数の条件に同時に該当するとき、システムはblocked/needs_human/readyの優先順位（missing_in_tests最優先、次にorphaned/mismatch/duplicate/spec_declaration_mismatch、次にfailed、最後にready）で単一のstatusを決定する shall。
-- When statusを返すとき、システムはその根拠をreasonsに含める shall。reasonsにはシナリオ名を用いる shall（人間が読む面はspecの語彙で表す）。
-- If specPathが存在しないとき、システムはINVALID_PATHエラーを返す shall。
-- If testFilePathが存在しないとき、システムはINVALID_PATHエラーを返す shall。
-- If testResultsPathが存在しない、またはJSONとして解釈できないとき、システムはINVALID_TEST_RESULTSエラーを返す shall。
-
----
-
-## 操作保証
-
-- While 同一の入力で複数回実行しても、システムは同じstatusを返す shall（副作用の無い読み取り専用操作）。
-- When 判定を行うとき、システムはテスト自体を実行しない shall（既に生成済みのtestResultsPathを読むのみ。実行はOrchestrator側の責務）。
+| 基準 |
+|---|
+| When specのacceptanceScenariosに対応するテストが1件以上未実装（missing_in_tests）のとき、システムはstatus blocked を返す shall。 |
+| When 実装済みテストのうちspecに存在しないもの（orphaned_in_tests）、Gherkinと内容が一致しないもの（gherkin_mismatches）、同じ宣言行を複数のテストが名乗っているもの（duplicate_declarations）、spec自身の宣言行が名前と食い違うもの（spec_declaration_mismatches）が1件以上あるとき、システムはstatus needs_human を返す shall（意図的な追加か更新漏れかを機械的に判別できないため）。 |
+| When spec⇄テストの対応関係に差分が無いが、対応するテストの実行結果に1件以上failedが含まれるとき、システムはstatus blocked を返す shall。ここでの突き合わせは、照合結果が持つ対のテスト名側と実行結果のfailedを交差させて行う shall（シナリオ名と交差させると、両者が別の語彙であるため常に空集合になり、全テストが落ちていてもreadyを返す）。 |
+| When 実行結果のfailedに、照合結果のどの対のテスト名とも一致しない識別子だけが含まれるとき、システムはreadyを返さず、識別子の不整合をreasonsに含めて needs_human を返す shall（交差が空であることを、落ちたテストが無いことと同一視しない）。 |
+| When spec⇄テストの対応関係に差分が無く、対応する全テストがpassedであるとき、システムはstatus ready を返す shall。 |
+| While 複数の条件に同時に該当するとき、システムはblocked/needs_human/readyの優先順位（missing_in_tests最優先、次にorphaned/mismatch/duplicate/spec_declaration_mismatch、次にfailed、最後にready）で単一のstatusを決定する shall。 |
+| When statusを返すとき、システムはその根拠をreasonsに含める shall。reasonsにはシナリオ名を用いる shall（人間が読む面はspecの語彙で表す）。 |
+| If specPathが存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| If testFilePathが存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| If testResultsPathが存在しない、またはJSONとして解釈できないとき、システムはINVALID_TEST_RESULTSエラーを返す shall。 |
+| While 同一の入力で複数回実行しても、システムは同じstatusを返す shall（副作用の無い読み取り専用操作）。 |
+| When 判定を行うとき、システムはテスト自体を実行しない shall（既に生成済みのtestResultsPathを読むのみ。実行はOrchestrator側の責務）。 |
 
 ---
 
@@ -251,10 +248,6 @@ Scenario: 同じ宣言行を複数のテストが名乗っているときneeds_h
   When 検証ゲートの判定を実行する
   Then status needs_human が返る
 ```
-
----
-
-## 操作保証シナリオ
 
 ### 同一入力での再実行はべき等である
 

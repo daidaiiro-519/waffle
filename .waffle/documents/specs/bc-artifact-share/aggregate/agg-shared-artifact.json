@@ -1,7 +1,7 @@
 {
   "documentId": "agg-shared-artifact",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v10",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "content": {
@@ -253,6 +253,7 @@
       "title": "不変条件",
       "items": [
         {
+          "id": "published-content-is-not-partially-edited",
           "rule": "公開された共有アーティファクトの中身は、公開後に部分的に書き換えられることが常に無い",
           "enforcement": "guard",
           "rationale": [
@@ -262,6 +263,7 @@
           ]
         },
         {
+          "id": "artifact-stores-token-fingerprint-only",
           "rule": "共有アーティファクトは、閲覧トークンそのものの値を常に保持せず、指紋だけを持つ",
           "enforcement": "schema",
           "rationale": [
@@ -270,6 +272,7 @@
           ]
         },
         {
+          "id": "token-is-shown-once",
           "rule": "閲覧トークンは、発行された瞬間に一度だけ示され、以後は常に見返せない",
           "enforcement": "guard",
           "rationale": [
@@ -278,6 +281,7 @@
           ]
         },
         {
+          "id": "token-expiry-is-bounded-to-one-month",
           "rule": "閲覧トークンの期限は常に有限で、発行した時点から最長、1ヶ月を超えない",
           "enforcement": "guard",
           "rationale": [
@@ -287,6 +291,7 @@
           ]
         },
         {
+          "id": "expired-token-cannot-open",
           "rule": "期限を過ぎた閲覧トークンでは常に開けない",
           "enforcement": "guard",
           "rationale": [
@@ -294,6 +299,7 @@
           ]
         },
         {
+          "id": "expired-token-leaves-no-record",
           "rule": "期限を過ぎた閲覧トークンの記録は、常に残らない",
           "enforcement": "guard",
           "rationale": [
@@ -302,6 +308,7 @@
           ]
         },
         {
+          "id": "revoked-token-cannot-open-others-keep-working",
           "rule": "無効にした閲覧トークンでは常に開けず、無効にしても他の閲覧トークンは常に使えたままになる",
           "enforcement": "guard",
           "rationale": [
@@ -310,6 +317,7 @@
           ]
         },
         {
+          "id": "at-most-five-active-tokens",
           "rule": "同時に有効な閲覧トークンは、常に5本を超えない。有効とは、無効にされておらず、かつ期限を過ぎていないことをいう",
           "enforcement": "guard",
           "rationale": [
@@ -319,6 +327,7 @@
           ]
         },
         {
+          "id": "active-token-names-are-unique",
           "rule": "1つの共有アーティファクトの中で、有効な閲覧トークンの名前は常に重ならない",
           "enforcement": "guard",
           "rationale": [
@@ -326,6 +335,7 @@
           ]
         },
         {
+          "id": "at-most-three-projects",
           "rule": "1つの共有アーティファクトが同時に入れるプロジェクトは、常に3件を超えない",
           "enforcement": "guard",
           "rationale": [
@@ -334,6 +344,7 @@
           ]
         },
         {
+          "id": "zero-active-tokens-is-allowed",
           "rule": "有効な閲覧トークンが1本も無い状態を常に許す",
           "enforcement": "schema",
           "rationale": [
@@ -342,6 +353,7 @@
           ]
         },
         {
+          "id": "unpublished-artifact-opens-with-no-token",
           "rule": "公開を止めている間は、どの閲覧トークンでも常に開けない",
           "enforcement": "guard",
           "rationale": [
@@ -350,6 +362,7 @@
           ]
         },
         {
+          "id": "id-is-stable-until-withdrawal",
           "rule": "IDは、公開してから取り消すまで常に変わらない",
           "enforcement": "schema",
           "rationale": [
@@ -357,6 +370,7 @@
           ]
         },
         {
+          "id": "content-labels-do-not-affect-access",
           "rule": "中身に書かれた分類の目印が、誰が開けるかを変えることは常に無い",
           "enforcement": "guard",
           "rationale": [
@@ -365,6 +379,7 @@
           ]
         },
         {
+          "id": "comments-survive-content-replacement",
           "rule": "中身を差し替えたとき、それまでに集まったコメントは常に失われない",
           "enforcement": "guard",
           "rationale": [
@@ -372,6 +387,7 @@
           ]
         },
         {
+          "id": "artifact-has-exactly-one-publisher",
           "rule": "共有アーティファクトには、常にちょうど1人の投稿者がいる",
           "enforcement": "schema",
           "rationale": [
@@ -380,6 +396,7 @@
           ]
         },
         {
+          "id": "transfer-preserves-everything-else",
           "rule": "投稿者を移しても、共有URL・閲覧トークン・中身・コメント・公開状態は常に変わらない",
           "enforcement": "guard",
           "rationale": [

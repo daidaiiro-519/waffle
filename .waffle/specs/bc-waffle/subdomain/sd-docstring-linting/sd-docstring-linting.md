@@ -1,3 +1,12 @@
+---
+id: "sd-docstring-linting"
+type: "subdomain"
+title: "docstringの規約適合検証を担うサブドメイン：sd-docstring-linting"
+description: "ソースコードの docstring が規約通りの構造か（必須セクションの有無・引数名と実シグネチャの整合）を、kind ごとに確立された既存 lint ツールへ判定を委ねて確認する業務領域。"
+tags: ["context:waffle"]
+schemaRef: "DomainSpecSchema/v11"
+---
+
 # docstringの規約適合検証を担うサブドメイン：sd-docstring-linting
 
 ## 名前

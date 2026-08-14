@@ -1,7 +1,7 @@
 {
   "documentId": "agg-document",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "tags": [
@@ -212,6 +212,7 @@
       "title": "不変条件",
       "items": [
         {
+          "id": "status-advances-in-order",
           "rule": "Spec家族（DomainSpecSchema/PresentationSpecSchema）のstatusはCREATED→VALIDATED→RENDERED→SUPERSEDEDの順にのみ進み、逆行・飛ばしをしない",
           "enforcement": "guard",
           "rationale": [
@@ -219,6 +220,7 @@
           ]
         },
         {
+          "id": "schema-ref-always-present",
           "rule": "schemaRefは常に存在する",
           "enforcement": "schema",
           "rationale": [
@@ -226,6 +228,7 @@
           ]
         },
         {
+          "id": "no-validated-without-conformance",
           "rule": "contentがschemaに適合しない限りVALIDATEDへ進めない",
           "enforcement": "guard",
           "rationale": [
@@ -233,6 +236,7 @@
           ]
         },
         {
+          "id": "render-requires-validated-when-declared",
           "rule": "schemaがrenderを状態遷移コマンドとして宣言する場合、VALIDATED以降でなければrenderできない（宣言しないschema種別はstatusを問わない）",
           "enforcement": "guard",
           "rationale": [
@@ -240,6 +244,7 @@
           ]
         },
         {
+          "id": "superseded-is-terminal",
           "rule": "SUPERSEDEDは終端であり、以後どのコマンドも受け付けない",
           "enforcement": "guard",
           "rationale": [
@@ -247,6 +252,7 @@
           ]
         },
         {
+          "id": "paths-stay-inside-project-root",
           "rule": "Documentのパス解決は、いかなるoperation・commandからも常にプロジェクトルート内に閉じ込められる（パストラバーサルを許さない）",
           "enforcement": "guard",
           "rationale": [
@@ -254,6 +260,7 @@
           ]
         },
         {
+          "id": "schema-resolution-requires-schema-ref",
           "rule": "schemaRefを持たないDocumentを対象にした、schema解決を要する操作は、いかなるoperation・commandからも常にMISSING_SCHEMA_REFとして拒否される",
           "enforcement": "guard",
           "rationale": [

@@ -4,7 +4,7 @@ type: "usecase"
 title: "受け入れ基準にシナリオが付いているかを確かめる：uc-check-criteria-coverage"
 description: "仕様文書の中で、受け入れ基準と、それを満たすと宣言されたシナリオを突き合わせ、結び付いていない側を両方向で報告する。 報告するのは結び付きの有無だけで、シナリオが実際にその基準を確かめているかは判定しない。"
 tags: ["framework:waffle", "topic:traceability"]
-schemaRef: "DomainSpecSchema/v9"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # 受け入れ基準にシナリオが付いているかを確かめる：uc-check-criteria-coverage
@@ -86,13 +86,6 @@ sequenceDiagram
 | When シナリオが満たす基準の欄そのものを持たないとき、システムはそのシナリオを uncovered_by_omission に含める shall。 |
 | While すべての受け入れ基準がいずれかのシナリオから指されているとき、システムは unreferenced を空配列で返す shall。 |
 | While 走査範囲が指定されたとき、システムは配下のすべての仕様文書を対象にする shall。 |
-
----
-
-## 操作保証
-
-| 保証 |
-|---|
 | When 対象のパスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
@@ -187,19 +180,15 @@ Scenario: 走査範囲を指定すると配下をまとめて確かめる
   Then 2件とも unreferenced に現れる
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないパスは受け付けない
+### 対象のパスが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | 解決プロセスの契約：対象を取得できないときの扱い |
+| 異常系 | エラー：対象のパスが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないパスは受け付けない
-  Given 存在しないパス
-  When 受け入れ基準にシナリオが付いているかを確かめる
+Scenario: 対象のパスが存在しないときのときINVALID_PATH
+  Given 対象のパスが存在しないとき状況
+  When 本ユースケースを実行する
   Then INVALID_PATH エラーが返る
 ```

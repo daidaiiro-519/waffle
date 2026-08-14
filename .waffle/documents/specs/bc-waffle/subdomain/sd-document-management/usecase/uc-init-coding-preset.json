@@ -1,7 +1,7 @@
 {
   "documentId": "uc-init-coding-preset",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -76,13 +76,34 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "1回の呼び出しでtech-stack/architecture/coding-standard/test-standardの4documentが生成される",
-        "生成されたdocumentのtitleは「プリセットの説明句：documentId」の形式になる",
-        "既に存在するdocumentは上書きせずskipする（冪等）",
-        "存在しないプリセット名を指定するとPRESET_NOT_FOUNDエラーになる",
-        "When プリセットからプロダクト固有の規約を作るとき、システムはその規約のschemaの最新の版を指す shall（作る側に版を書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、作られた規約が最初から検証を通らなくなる）。",
-        "When 存在しないpresetNameが指定されたとき、システムはPRESET_NOT_FOUNDエラーを返す shall。",
-        "When 同じpresetName・productNameでinitを複数回実行したとき、既に生成済みのdocumentはシステムによって変更されない shall（冪等性）。"
+        {
+          "id": "four-documents-are-generated-in-one-call",
+          "text": "1回の呼び出しでtech-stack/architecture/coding-standard/test-standardの4documentが生成される"
+        },
+        {
+          "id": "generated-title-follows-the-naming-form",
+          "text": "生成されたdocumentのtitleは「プリセットの説明句：documentId」の形式になる"
+        },
+        {
+          "id": "existing-documents-are-skipped",
+          "text": "既に存在するdocumentは上書きせずskipする（冪等）"
+        },
+        {
+          "id": "unknown-preset-name-is-rejected",
+          "text": "存在しないプリセット名を指定するとPRESET_NOT_FOUNDエラーになる"
+        },
+        {
+          "id": "generated-documents-point-at-the-latest-schema",
+          "text": "When プリセットからプロダクト固有の規約を作るとき、システムはその規約のschemaの最新の版を指す shall（作る側に版を書き留めると、schemaが1つ上がった瞬間から古い版を指し続け、作られた規約が最初から検証を通らなくなる）。"
+        },
+        {
+          "id": "preset-not-found",
+          "text": "When 存在しないpresetNameが指定されたとき、システムはPRESET_NOT_FOUNDエラーを返す shall。"
+        },
+        {
+          "id": "repeated-init-changes-nothing",
+          "text": "When 同じpresetName・productNameでinitを複数回実行したとき、既に生成済みのdocumentはシステムによって変更されない shall（冪等性）。"
+        }
       ]
     },
     "errors": {
@@ -144,17 +165,6 @@
           "covers": "操作保証からの移設"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

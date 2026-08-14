@@ -4,7 +4,7 @@ type: "usecase"
 title: "Documentから必要な意味単位だけを取得する：QueryDocument"
 description: "AI がファイルを直接読まずに、Document の必要な意味単位（ブロック・フィールド・条件一致・全階層）だけを取得する。"
 tags: ["context:waffle"]
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # Documentから必要な意味単位だけを取得する：QueryDocument
@@ -92,32 +92,29 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When operationと対象パスが与えられ、対象がschemaRefを持つDocumentであるとき、システムは結果を{ prompt, value }形式で返す shall。
-- When ブロック/配列を取得したとき、promptに対象ブロックの読み方の指針（x-prompt-query由来）を含める shall。
-- When get_meta/scan/index_scan/find_allを実行したとき、promptにその操作の性質に基づく固定の読み方の指針を含める shall（schemaから動的に導出できない場合もpromptを省略しない）。
-- When 対象ブロックがx-prompt-interpretを宣言しているとき、システムはpromptとは別にcautionフィールドへ値の解釈指針を含める shall。
-- While 対象ブロックがx-prompt-interpretを宣言していないとき、システムはcautionキー自体を省略する shall（必要なデータだけを返す）。
-- If operationが未知のとき、システムはINVALID_OPERATIONエラーを返す shall。
-- If 対象パスが存在しないとき、システムはINVALID_PATHエラーを返す shall。
-- If 指定したblockKeyが存在しないとき、システムはNOT_FOUNDエラーを返す shall。
-- If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: "raw", content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: <固定文言>, value: <生テキスト> }を返す）。
-- When operationにresolve_refを指定したとき、システムは対象Documentのfieldの値をdocumentId、対象Document自身が持つ他の参照フィールドをテンプレート変数として、targetSchemaRef（discriminatorを持つschemaの場合はtargetDiscriminatorで対象種別を指定する）のx-source-targetテンプレートに埋め込み、参照先Documentのpathを算出してvalueに返す shall（参照先Documentの中身は取得しない）。
-- If resolve_refでテンプレート変数を解決できないとき、システムはMISSING_TEMPLATE_VARエラーを返す shall。
-- When operationにquery_pathをblockKey指定で実行したとき、システムはdoc["content"][blockKey]を起点にJMESPath式pathを評価し、{ documentId, prompt, value }形式で返す shall（promptは_block_prompt()と同じ仕組みでblockKeyから導出する）。
-- When operationにquery_pathをblockKey省略で実行したとき、システムはdoc["content"]配下の全blockKeyに同じ相対式pathを評価し、{ documentId, results: [{ blockKey, prompt, value }, ...] }形式で返す shall。
-- While operationにquery_pathをblockKey省略で実行し、あるblockKeyの評価結果valueが空であるとき、システムはそのblockKeyをresultsから省略する shall（ヒットしなかったブロックについて沈黙する）。
-- When query_pathのpath式内でregex_match(text, pattern)を使用したとき、システムはjmespath.functions.Functionsを継承したカスタム関数として、既存のfilter_pattern相当の正規表現マッチングを行う shall。
-- If query_pathのpathがJMESPathとして構文エラーであるとき、システムはjmespathの生例外をそのまま返さず、Waffle独自のエラーコード・メッセージへ変換して返す shall。
-- While query_pathを実行するとき、pathは常に1ブロックの内側を起点とした相対式として評価される shall（doc全体や複数blockTypeを跨ぐ横断検索が必要な場合は既存のfind_allを使う）。
-- While operationにquery_pathをblockKey省略で実行し、あるblockKeyに対するpathの評価がJMESPathの評価時型エラー（式の形が対象ブロックの構造に合わない）になったとき、システムはそのblockKeyを結果から静かにスキップし、クエリ全体を失敗させない shall（構文エラーとは区別する。全blockKeyがスキップされresultsが空配列になるのも正常系とする）。
-- If operationにquery_pathをblockKey指定で実行し、pathの評価がJMESPathの評価時型エラーになったとき、システムはINVALID_JMESPATH_EXPRESSIONエラーを返す shall（ユーザーが明示指定した単一ブロックに式が合わなかったことをそのまま伝える）。
-
----
-
-## 操作保証
-
-- When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
-- When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| 基準 |
+|---|
+| When operationと対象パスが与えられ、対象がschemaRefを持つDocumentであるとき、システムは結果を{ prompt, value }形式で返す shall。 |
+| When ブロック/配列を取得したとき、promptに対象ブロックの読み方の指針（x-prompt-query由来）を含める shall。 |
+| When get_meta/scan/index_scan/find_allを実行したとき、promptにその操作の性質に基づく固定の読み方の指針を含める shall（schemaから動的に導出できない場合もpromptを省略しない）。 |
+| When 対象ブロックがx-prompt-interpretを宣言しているとき、システムはpromptとは別にcautionフィールドへ値の解釈指針を含める shall。 |
+| While 対象ブロックがx-prompt-interpretを宣言していないとき、システムはcautionキー自体を省略する shall（必要なデータだけを返す）。 |
+| If operationが未知のとき、システムはINVALID_OPERATIONエラーを返す shall。 |
+| If 対象パスが存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| If 指定したblockKeyが存在しないとき、システムはNOT_FOUNDエラーを返す shall。 |
+| If 対象がscan以外のoperationでschemaRefを持たないとき、システムは{ prompt, value }とは別形状の{ type: "raw", content }を返す shall（scan operationはschemaRefの有無によらず常に{ prompt: <固定文言>, value: <生テキスト> }を返す）。 |
+| When operationにresolve_refを指定したとき、システムは対象Documentのfieldの値をdocumentId、対象Document自身が持つ他の参照フィールドをテンプレート変数として、targetSchemaRef（discriminatorを持つschemaの場合はtargetDiscriminatorで対象種別を指定する）のx-source-targetテンプレートに埋め込み、参照先Documentのpathを算出してvalueに返す shall（参照先Documentの中身は取得しない）。 |
+| If resolve_refでテンプレート変数を解決できないとき、システムはMISSING_TEMPLATE_VARエラーを返す shall。 |
+| When operationにquery_pathをblockKey指定で実行したとき、システムはdoc["content"][blockKey]を起点にJMESPath式pathを評価し、{ documentId, prompt, value }形式で返す shall（promptは_block_prompt()と同じ仕組みでblockKeyから導出する）。 |
+| When operationにquery_pathをblockKey省略で実行したとき、システムはdoc["content"]配下の全blockKeyに同じ相対式pathを評価し、{ documentId, results: [{ blockKey, prompt, value }, ...] }形式で返す shall。 |
+| While operationにquery_pathをblockKey省略で実行し、あるblockKeyの評価結果valueが空であるとき、システムはそのblockKeyをresultsから省略する shall（ヒットしなかったブロックについて沈黙する）。 |
+| When query_pathのpath式内でregex_match(text, pattern)を使用したとき、システムはjmespath.functions.Functionsを継承したカスタム関数として、既存のfilter_pattern相当の正規表現マッチングを行う shall。 |
+| If query_pathのpathがJMESPathとして構文エラーであるとき、システムはjmespathの生例外をそのまま返さず、Waffle独自のエラーコード・メッセージへ変換して返す shall。 |
+| While query_pathを実行するとき、pathは常に1ブロックの内側を起点とした相対式として評価される shall（doc全体や複数blockTypeを跨ぐ横断検索が必要な場合は既存のfind_allを使う）。 |
+| While operationにquery_pathをblockKey省略で実行し、あるblockKeyに対するpathの評価がJMESPathの評価時型エラー（式の形が対象ブロックの構造に合わない）になったとき、システムはそのblockKeyを結果から静かにスキップし、クエリ全体を失敗させない shall（構文エラーとは区別する。全blockKeyがスキップされresultsが空配列になるのも正常系とする）。 |
+| If operationにquery_pathをblockKey指定で実行し、pathの評価がJMESPathの評価時型エラーになったとき、システムはINVALID_JMESPATH_EXPRESSIONエラーを返す shall（ユーザーが明示指定した単一ブロックに式が合わなかったことをそのまま伝える）。 |
+| When 対象パスが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
+| When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
@@ -130,6 +127,8 @@ sequenceDiagram
 | `NOT_FOUND` | - 指定した blockKey に一致するブロックが存在しない |
 | `INVALID_JMESPATH_EXPRESSION` | - query_path の expression が構文エラー、またはblockKey指定時に評価時型エラーになった |
 | `MISSING_TEMPLATE_VAR` | - resolve_ref でテンプレート変数（contextRef等）を解決できない |
+| `INVALID_PATH` | - 対象パスが存在しないとき |
+| `INVALID_SCHEMA_REF` | - 対象のschemaRefを解決できないとき |
 
 ---
 
@@ -342,32 +341,28 @@ Scenario: query_pathでblockKey指定時、式の評価時型エラーはエラ�
   Then エラーコード INVALID_JMESPATH_EXPRESSION が返る
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないパスはINVALID_PATH
+### 対象パスが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | 解決契約：対象パスが実在しないとき、パスの解決に失敗しINVALID_PATHになる |
+| 異常系 | エラー：対象パスが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないパスはINVALID_PATH
-  Given 実在しない対象パス
-  When 本usecaseを実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象パスが存在しないときのときINVALID_PATH
+  Given 対象パスが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```
 
-### 解決できないschemaRefはINVALID_SCHEMA_REF
+### 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | 解決契約：schemaRefを解決できないとき、schemaの解決に失敗しINVALID_SCHEMA_REFになる |
+| 異常系 | エラー：対象のschemaRefを解決できないとき |
 
 ```gherkin
-Scenario: 解決できないschemaRefはINVALID_SCHEMA_REF
-  Given 解決できないschemaRef
-  When 本usecaseを実行する
-  Then INVALID_SCHEMA_REFエラーが返る
+Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
+  Given 対象のschemaRefを解決できないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_SCHEMA_REF エラーが返る
 ```

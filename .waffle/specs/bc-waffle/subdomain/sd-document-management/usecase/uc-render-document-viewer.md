@@ -3,7 +3,7 @@ id: "uc-render-document-viewer"
 type: "usecase"
 title: "MD正本をCSS付きHTMLで閲覧できる汎用viewerへ描画する：RenderDocumentViewer"
 description: "対象Documentのcanonical MD（RenderDocumentの出力）を、CSSの効いた自己完結HTMLへ変換し、読み取り専用の投影として書き出す"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # MD正本をCSS付きHTMLで閲覧できる汎用viewerへ描画する：RenderDocumentViewer
@@ -73,10 +73,12 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 検証済みのDocumentが与えられたとき、システムはそのcanonical MDをCSS付きの自己完結HTMLへ変換し、指定した出力先へ書き込む shall。
-- When frontmatter（tags/documentType/schemaRef/updatedAt等）を持つDocumentが与えられたとき、システムはそれらをHTMLヘッダに表示する shall。
-- When MD本文にmermaidコードフェンスが含まれるとき、システムはそれを<pre class="mermaid">要素として出力しブラウザ側でのレンダリングに委ねる shall。
-- システムはHTML描画の過程でDocument集約自身の状態を変更してはならない must not。
+| 基準 |
+|---|
+| When 検証済みのDocumentが与えられたとき、システムはそのcanonical MDをCSS付きの自己完結HTMLへ変換し、指定した出力先へ書き込む shall。 |
+| When frontmatter（tags/documentType/schemaRef/updatedAt等）を持つDocumentが与えられたとき、システムはそれらをHTMLヘッダに表示する shall。 |
+| When MD本文にmermaidのコードフェンスが含まれるとき、システムはそれを<pre class="mermaid">要素として出力しブラウザ側でのレンダリングに委ねる shall（Markdownの成果物では図はmermaidとして出るため、図もこの経路で届く）。 |
+| システムはHTML描画の過程でDocument集約自身の状態を変更してはならない must not。 |
 
 ---
 
@@ -107,13 +109,13 @@ Scenario: 検証済みDocumentをHTMLへ描画する
 
 | 分類 | 観点 |
 |---|---|
-| 正常系 | MD本文中のmermaid記法が、Waffle自身で図をレンダリングせずそのままブラウザ側へ委譲する形で出力されることを確認する |
+| 正常系 | MD本文中のmermaidが、Waffle自身で図に組み立て直されず、そのままブラウザ側へ委譲されることを確認する |
 
 ```gherkin
 Scenario: mermaidコードフェンスをpre要素として出力する
-  Given 基本フローにmermaidのsequenceDiagramを含むDocument
+  Given mermaidのコードフェンスを含むcanonical MD
   When RenderDocumentViewerを実行する
-  Then <pre class="mermaid">要素としてmermaid記法がそのまま出力される
+  Then <pre class="mermaid">要素としてそのまま出力される
 ```
 
 ### RenderDocument自体が失敗する場合はRENDER_FAILEDを返す

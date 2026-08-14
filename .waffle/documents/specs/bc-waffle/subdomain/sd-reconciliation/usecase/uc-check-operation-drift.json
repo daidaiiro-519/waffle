@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-operation-drift",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -80,12 +80,30 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When usecase specが宣言するoperation名が実装のoperation分岐に存在しないとき、システムはその組をoperations_missing_in_implに含める shall。",
-        "When 実装のoperation分岐にはあるがusecase specのどのシナリオにも宣言されていない操作があるとき、システムはその組をoperations_undocumented_in_specに含める shall。",
-        "While acceptanceScenariosにoperationフィールドを1件も宣言していないusecaseであるとき、システムはそのusecaseを突き合わせの対象にしない shall。",
-        "While 宣言と実装のoperationが完全に一致しているとき、システムはoperations_missing_in_impl・operations_undocumented_in_spec両方を空配列で返す shall。",
-        "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。",
-        "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        {
+          "id": "operations-missing-in-impl",
+          "text": "When usecase specが宣言するoperation名が実装のoperation分岐に存在しないとき、システムはその組をoperations_missing_in_implに含める shall。"
+        },
+        {
+          "id": "operations-undocumented-in-spec",
+          "text": "When 実装のoperation分岐にはあるがusecase specのどのシナリオにも宣言されていない操作があるとき、システムはその組をoperations_undocumented_in_specに含める shall。"
+        },
+        {
+          "id": "usecases-without-declared-operations-are-skipped",
+          "text": "While acceptanceScenariosにoperationフィールドを1件も宣言していないusecaseであるとき、システムはそのusecaseを突き合わせの対象にしない shall。"
+        },
+        {
+          "id": "aligned-operations-report-nothing",
+          "text": "While 宣言と実装のoperationが完全に一致しているとき、システムはoperations_missing_in_impl・operations_undocumented_in_spec両方を空配列で返す shall。"
+        },
+        {
+          "id": "invalid-root-path",
+          "text": "If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。"
+        },
+        {
+          "id": "invalid-path",
+          "text": "When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。"
+        }
       ]
     },
     "errors": {
@@ -141,17 +159,6 @@
           "covers": "エラー: INVALID_PATH"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

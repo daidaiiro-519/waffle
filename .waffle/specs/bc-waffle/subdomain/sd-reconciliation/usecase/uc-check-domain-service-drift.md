@@ -3,7 +3,7 @@ id: "uc-check-domain-service-drift"
 type: "usecase"
 title: "業務サービス名と実装ファイルの対応を検証する：CheckDomainServiceDrift"
 description: "bounded-context specが宣言する業務サービスのgroup（実装ファイル単位）が、実際に対応するファイルとして実在するかを機械的に検証する。1業務サービス＝1ファイルという規約を強制せず、複数サービスが同じgroupを共有し同じファイルに同居することを許容した上で、宣言と実装の対応関係のドリフトを検出する。"
-schemaRef: "DomainSpecSchema/v8"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # 業務サービス名と実装ファイルの対応を検証する：CheckDomainServiceDrift
@@ -73,17 +73,14 @@ sequenceDiagram
 
 ## 受け入れ基準
 
-- When 業務サービスのgroupから導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。
-- While 全業務サービスのgroupと実装ファイルが一致しているとき、システムはmissing_implementation_fileを空配列で返す shall。
-- While 複数の業務サービスが同じgroupを共有しているとき、システムは対応するファイルの存在確認を1回にまとめる shall（重複報告しない）。
-- If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。
-- When 規約が業務サービスの配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。
-
----
-
-## 操作保証
-
-- When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。
+| 基準 |
+|---|
+| When 業務サービスのgroupから導出したファイルパスが実在しないとき、システムはその組をmissing_implementation_fileに含める shall。 |
+| While 全業務サービスのgroupと実装ファイルが一致しているとき、システムはmissing_implementation_fileを空配列で返す shall。 |
+| While 複数の業務サービスが同じgroupを共有しているとき、システムは対応するファイルの存在確認を1回にまとめる shall（重複報告しない）。 |
+| If 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムはINVALID_PATHエラーを返す shall。 |
+| When 規約が業務サービスの配置として宣言した場所に、どの仕様からも名指しされていない実装ファイルが在るとき、システムはそのファイルをorphaned_implementation_file に含める shall。 |
+| When 対象のdocuments_rootまたはsrc_rootが存在しないとき、システムは INVALID_PATH エラーを返す shall（対象を特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 
 ---
 
@@ -150,18 +147,15 @@ Scenario: 宣言に無い実装ファイルを孤立として検出する
   Then orphaned_implementation_file にそのファイルが含まれる
 ```
 
----
-
-## 操作保証シナリオ
-
-### 存在しないdocuments_rootはINVALID_PATH
+### 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH
 
 | 分類 | 観点 |
 |---|---|
-| 異常系 | エラー：走査起点の不在 |
+| 異常系 | エラー：対象のdocuments_rootまたはsrc_rootが存在しないとき |
 
 ```gherkin
-Scenario: 存在しないdocuments_rootはINVALID_PATH
-  When 存在しないdocuments_rootでドリフト検査を実行する
-  Then INVALID_PATHエラーが返る
+Scenario: 対象のdocuments_rootまたはsrc_rootが存在しないときのときINVALID_PATH
+  Given 対象のdocuments_rootまたはsrc_rootが存在しないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_PATH エラーが返る
 ```

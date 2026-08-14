@@ -1,7 +1,7 @@
 {
   "documentId": "agg-schema",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "aggregate",
   "status": "VALIDATED",
   "tags": [
@@ -41,6 +41,14 @@
             {
               "name": "kindProfiles",
               "type": "KindProfile[]"
+            },
+            {
+              "name": "discriminatorKey",
+              "type": "DiscriminatorKey"
+            },
+            {
+              "name": "figureDeclarations",
+              "type": "FigureDeclaration[]"
             }
           ]
         }
@@ -86,6 +94,48 @@
               "type": "string[]"
             }
           ]
+        },
+        {
+          "name": "DiscriminatorKey",
+          "represents": "Schema が種別を判別するのに使う欄の名前",
+          "behavior": "不変。名前そのもので識別する。どの欄がそれかを決める規則をこの値の内側に持つ——最上位の分岐が判別に使っている欄の名前がそれであり、最上位に分岐が無ければ、束ねられた要素の中で最初に見つかった分岐が使っている欄の名前を使う。分岐をひとつも持たない Schema には、この値が存在しない。",
+          "attributes": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "FigureDeclaration",
+          "represents": "図の宣言 ── その図が何を主張し、何を置くか",
+          "behavior": "主張・読み方・置くもの・つなぐもの・読む枠・要素への注の組。すべて等しければ等価。描き方（向き・大きさ・並び順・配置）は持たない——それらは描画側が決める。置くものは自分と同じ形の子を持て、置くものは図を1つ持てる。",
+          "attributes": [
+            {
+              "name": "asserts",
+              "type": "string"
+            },
+            {
+              "name": "reading",
+              "type": "string"
+            },
+            {
+              "name": "items",
+              "type": "array"
+            },
+            {
+              "name": "links",
+              "type": "array"
+            },
+            {
+              "name": "frame",
+              "type": "object"
+            },
+            {
+              "name": "notes",
+              "type": "array"
+            }
+          ]
         }
       ]
     },
@@ -94,6 +144,7 @@
       "title": "不変条件",
       "items": [
         {
+          "id": "value-fields-have-no-oneof-anyof",
           "rule": "値フィールドは常に oneOf / anyOf を持たない",
           "enforcement": "schema",
           "rationale": [
@@ -101,6 +152,7 @@
           ]
         },
         {
+          "id": "blocks-close-additional-properties",
           "rule": "content の各ブロックは additionalProperties を常に閉じる（固定 properties のみ）",
           "enforcement": "schema",
           "rationale": [
@@ -108,13 +160,16 @@
           ]
         },
         {
+          "id": "recursion-is-bounded",
           "rule": "再帰は常に有界である（無限ネストを許さない）",
           "enforcement": "schema",
           "rationale": [
-            "機械走査が停止することを保証する"
+            "機械走査が停止することを保証する",
+            "図の宣言では、図の中に図を置く入れ子がこれにあたる（3段以内）。一方で置くものの子がつくる木の深さは制限しない——階層や包含が表せる木の深さに上限を設けると、表せるはずのものが表せなくなる。"
           ]
         },
         {
+          "id": "x-render-follows-closed-vocabulary",
           "rule": "各ブロックの x-render は常に RenderMetaSchema の閉じた語彙にのみ従う",
           "enforcement": "schema",
           "rationale": [
@@ -122,6 +177,7 @@
           ]
         },
         {
+          "id": "status-enum-in-transition-order",
           "rule": "status の enum は常に遷移順に並び、先頭が初期状態である",
           "enforcement": "schema",
           "rationale": [
@@ -129,6 +185,7 @@
           ]
         },
         {
+          "id": "published-version-is-immutable",
           "rule": "一度作った版は、遡って構造を変えない（その版に適合している既存のDocumentを壊さない）",
           "enforcement": "guard",
           "rationale": [
@@ -136,6 +193,7 @@
           ]
         },
         {
+          "id": "kind-profile-is-fixed-within-a-version",
           "rule": "各 kind の KindProfile は同一版内で不変であり、他 kind のブロックを持たない（discriminator として機能する）",
           "enforcement": "schema",
           "rationale": [
@@ -143,6 +201,7 @@
           ]
         },
         {
+          "id": "schema-scope-is-document-schema-ref-targets",
           "rule": "Schema集約が対象とするのは Document の schemaRef が指しうる型のみ（派生構造を検証する schema は対象外）",
           "enforcement": "schema",
           "rationale": [
@@ -150,11 +209,39 @@
           ]
         },
         {
+          "id": "schema-file-formatting-is-canonical",
           "rule": "Schemaファイル自体の物理的な整形は、常に一意に定まる形（2段の字下げ・非ASCII文字はそのまま・末尾に改行）と完全一致する",
           "enforcement": "schema",
           "rationale": [
             "整形ルールを一意に固定することで、部分編集・ブロック追加・リネーム等の機械的な差分適用が、既存の無関係な箇所を一切変更せずに行えるようにする",
             "複数の書式が混在すると、機械編集のたびにどの書式に合わせるべきかが曖昧になり、フォーマット破壊のリスクが生まれる"
+          ]
+        },
+        {
+          "id": "figure-claim-is-one-of-the-vocabulary",
+          "rule": "図の宣言の主張は、定められた語彙のいずれか1つである",
+          "enforcement": "schema",
+          "rationale": [
+            "主張が語彙の外に出られると、描き方を選ぶ根拠が宣言の中に無くなり、書き手が描き方を指定し始める",
+            "語彙を1つに絞ることで、1つの図が2つのことを主張する状態を防ぐ"
+          ]
+        },
+        {
+          "id": "figure-slots-determined-by-claim",
+          "rule": "図の宣言が持てる欄は、主張ごとに必須と禁止が定まる",
+          "enforcement": "schema",
+          "rationale": [
+            "どの欄を書くかを書き手の裁量にすると、同じ主張が図ごとに違う形で書かれ、描画側が形を判別できなくなる",
+            "禁止を明示することで、主張と噛み合わない欄（例：階層につなぐもの）を描く前に落とせる"
+          ]
+        },
+        {
+          "id": "figure-declaration-has-no-drawing-hints",
+          "rule": "図の宣言は描き方の指定を持たない。向き・大きさ・並び順・配置はいずれも宣言の欄に現れない",
+          "enforcement": "schema",
+          "rationale": [
+            "描き方を宣言に書けるようにすると、同じ主張が書き手ごとに違う見え方になり、図が比較できなくなる",
+            "描き方は主張と中身から一意に決まる。決まるものを書かせるのは、食い違いの入り口を作ることにほかならない"
           ]
         }
       ]

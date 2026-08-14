@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-prompt-contract",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v8",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -86,13 +86,34 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 確認を求めたとき、システムは blockType を持つ定義のうち読み方の指示が無いものを返す shall。",
-        "When 確認を求めたとき、システムは値を書き込む欄のうち書き方の指示が無いものを返す shall。",
-        "When 確認を求めたとき、システムは x-prompt-query と x-prompt-write 以外のx-prompt- で始まるキーを返す shall（契約が認める名前はこの2つだけ）。",
-        "When 記入対象がどこかを決めるとき、システムは雛形を組み立てる既存の走査をそのまま使う shall（数え方をこの操作の側で作り直さない）。",
-        "While 確認を行う間、システムは指示の中身が指示として適切かを判定しない shall。",
-        "When 同じ確認を複数回実行したとき、システムの生成する結果は常にべき等である shall。",
-        "While 確認を行う間、システムはスキーマを一切書き換えない shall。"
+        {
+          "id": "blocks-without-a-read-instruction-are-returned",
+          "text": "When 確認を求めたとき、システムは blockType を持つ定義のうち読み方の指示が無いものを返す shall。"
+        },
+        {
+          "id": "fields-without-a-write-instruction-are-returned",
+          "text": "When 確認を求めたとき、システムは値を書き込む欄のうち書き方の指示が無いものを返す shall。"
+        },
+        {
+          "id": "unknown-prompt-keys-are-returned",
+          "text": "When 確認を求めたとき、システムは x-prompt-query と x-prompt-write 以外のx-prompt- で始まるキーを返す shall（契約が認める名前はこの2つだけ）。"
+        },
+        {
+          "id": "targets-come-from-the-existing-skeleton-walk",
+          "text": "When 記入対象がどこかを決めるとき、システムは雛形を組み立てる既存の走査をそのまま使う shall（数え方をこの操作の側で作り直さない）。"
+        },
+        {
+          "id": "instruction-quality-is-not-judged",
+          "text": "While 確認を行う間、システムは指示の中身が指示として適切かを判定しない shall。"
+        },
+        {
+          "id": "repeated-checks-are-idempotent",
+          "text": "When 同じ確認を複数回実行したとき、システムの生成する結果は常にべき等である shall。"
+        },
+        {
+          "id": "checking-does-not-modify-the-schema",
+          "text": "While 確認を行う間、システムはスキーマを一切書き換えない shall。"
+        }
       ]
     },
     "errors": {
@@ -190,17 +211,6 @@
           "covers": "操作保証からの移設"
         }
       ]
-    },
-    "operationGuarantees": {
-      "blockType": "OperationGuarantees",
-      "title": "操作保証",
-      "items": []
-    },
-    "guaranteeScenarios": {
-      "blockType": "GuaranteeScenarios",
-      "title": "操作保証シナリオ",
-      "background": "",
-      "scenarios": []
     },
     "operationIndex": {
       "blockType": "OperationIndex",

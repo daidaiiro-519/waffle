@@ -3,7 +3,7 @@ id: "uc-patch-schema"
 type: "usecase"
 title: "Schema定義ファイルを安全に部分編集する：PatchSchema"
 description: "既存のSchema定義ファイルに対し、新規ブロック追加（add_block）・識別子リネーム（rename_block）・既存ブロックの1フィールド書き換え（set_field）という構造化操作を、対象外の箇所を一切変更せず（最小diff）、後方互換チェック・JSON Schema構文検証を通過した場合のみ適用する。AIはブロック定義・識別子名・書き換える値だけを与え、schemaファイル内の他の記述には一切触れない。"
-schemaRef: "DomainSpecSchema/v9"
+schemaRef: "DomainSpecSchema/v11"
 ---
 
 # Schema定義ファイルを安全に部分編集する：PatchSchema
@@ -143,13 +143,7 @@ sequenceDiagram
 | While remove_kind_branch が種別を取り除くとき、システムはその種別を指す既存Documentが壊れることを、この操作の結果として認める shall。実際にそのようなDocumentが残っていないかの確認は、schema版のドリフトを見る側の責務であり、この操作は行わない（Schemaを編集する操作にDocumentの走査を持ち込まないため）。 |
 | If remove_kind_branch の対象のルート直下の分岐が if/then/else 形式であるとき、システムは UNSUPPORTED_ROOT_DISPATCH_SHAPE を返し取り除かない shall（片方を取り除くと残った else が全ての種別を受けてしまい、構造が壊れるため。先に add_kind_branch で allOf 形式へ正規化することを求める）。 |
 | While remove_kind_branch のあと分岐が1つだけ残るとき、システムは allOf 形式のまま残す shall（if/then/else 形式へ戻すと、次の取り消しが上の基準で塞がるため）。 |
-
----
-
-## 操作保証
-
-| 保証 |
-|---|
+| When 対象のschemaRefを解決できないとき、システムは INVALID_SCHEMA_REF エラーを返す shall（schemaを特定し取得する解決プロセス自体の契約であり、複数のusecaseに共通する）。 |
 | While 対象外の箇所が既に整形契約に従っているとき、書き込み後もその箇所は一切変更されない shall（最小diff）。 |
 
 ---
@@ -759,9 +753,18 @@ Scenario: 分岐が1つだけ残っても allOf 形式のまま残る
   Then 残った1つは allOf 形式のまま置かれている
 ```
 
----
+### 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
 
-## 操作保証シナリオ
+| 分類 | 観点 |
+|---|---|
+| 異常系 | エラー：対象のschemaRefを解決できないとき |
+
+```gherkin
+Scenario: 対象のschemaRefを解決できないときのときINVALID_SCHEMA_REF
+  Given 対象のschemaRefを解決できないとき状況
+  When 本ユースケースを実行する
+  Then INVALID_SCHEMA_REF エラーが返る
+```
 
 ### 整形契約に従う既存箇所は書き込み後も不変である
 

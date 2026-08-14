@@ -1,7 +1,7 @@
 {
   "documentId": "uc-check-path-is-projection",
   "documentType": "DomainSpec",
-  "schemaRef": "DomainSpecSchema/v10",
+  "schemaRef": "DomainSpecSchema/v11",
   "specKind": "usecase",
   "status": "VALIDATED",
   "content": {
@@ -68,10 +68,22 @@
       "blockType": "AcceptanceCriteria",
       "title": "受け入れ基準",
       "items": [
-        "When 対象パスの実体がSkillのcanonicalPathTemplateに一致するとき、CheckPathIsProjectionはisProjection=trueと該当するdocumentIdを返さなければならない（shall）",
-        "When 対象パスの実体がAgentのcanonicalPathTemplateに一致するとき、CheckPathIsProjectionはisProjection=trueと該当するdocumentIdを返さなければならない（shall）",
-        "When 対象パスの実体がどのcanonicalPathTemplateにも一致しないとき、CheckPathIsProjectionはisProjection=falseを返さなければならない（shall）",
-        "When 同一の実体パスを渡したとき、CheckPathIsProjectionは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返さなければならない（shall）"
+        {
+          "id": "skill-canonical-path-is-a-projection",
+          "text": "When 対象パスの実体がSkillのcanonicalPathTemplateに一致するとき、CheckPathIsProjectionはisProjection=trueと該当するdocumentIdを返さなければならない（shall）"
+        },
+        {
+          "id": "agent-canonical-path-is-a-projection",
+          "text": "When 対象パスの実体がAgentのcanonicalPathTemplateに一致するとき、CheckPathIsProjectionはisProjection=trueと該当するdocumentIdを返さなければならない（shall）"
+        },
+        {
+          "id": "unmatched-path-is-not-a-projection",
+          "text": "When 対象パスの実体がどのcanonicalPathTemplateにも一致しないとき、CheckPathIsProjectionはisProjection=falseを返さなければならない（shall）"
+        },
+        {
+          "id": "the-verdict-is-the-same-through-every-entry-point",
+          "text": "When 同一の実体パスを渡したとき、CheckPathIsProjectionは呼び出し経路（直接呼び出し／CLI）によらず同一の判定結果を返さなければならない（shall）"
+        }
       ]
     },
     "errors": {
