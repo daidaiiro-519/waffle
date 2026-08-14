@@ -25,6 +25,6 @@
 ## 決定の記録の形
 
 - [ADRは1決定。粒度と決定の抽象化](feedback_adr_granularity_and_decision_abstraction.md) — 自分の理由・軸・答えないことを要するなら独立。数が増えすぎないよう決定自体を上げる
-- [どの欄も結論の一文で始める](feedback_every_column_leads_with_its_conclusion.md) — 連鎖の末尾に結論があることは一文の代わりにならない。規則は全件へ当てて抜けを数える
+- [どの欄も結論の一文で始める](feedback_every_column_leads_with_its_conclusion.md) — 面や列の見出しも同じ（変更前 ── …）。連鎖の末尾に結論があることは一文の代わりにならない
 - [理由は連鎖で書き、前提に崩れる条件を添える](feedback_reason_is_a_chain_with_weak_points.md) — 測った／確かめていないを分け、末尾に反証。空なら「探したが見つからない」と書く
 - [補助の情報は読み手が要る時点で前後を決める](feedback_information_before_or_after_by_reading_need.md) — 読むために要るなら前、疑うときに要るなら後ろ。中身の形では決めない
