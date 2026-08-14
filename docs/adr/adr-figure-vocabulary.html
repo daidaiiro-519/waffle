@@ -130,9 +130,7 @@
   .keycol,.keyrow td{background:#2A2216;color:#D9B674}
   .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
 
-    font-family: var(--sans); font-size: 16px; line-height: 1.85;
-    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
-               font-size:.755rem; line-height:1.95; color:#d6dbe2; overflow-x:auto;
+:root{
     --fig-line:#C3CAD2;
     --fig-line-w:1.2px;
     --fig-sym:#79828F;
@@ -161,49 +159,54 @@
     --fig-tone-2:#7A4368;
     --fig-tone-3:#8A8F98;
     --fig-on-tone:#FFFFFF;
-  .wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
-  .wf-node rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
-  .wf-name{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+  }
+.wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
+.wf-node rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
+.wf-name{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
            font-size:12px;text-anchor:middle}
-  .wf-node--focus rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
-  .wf-node--focus .wf-name{fill:var(--fig-accent);font-weight:600}
-  .wf-node--removed rect,
+.wf-node--focus rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+.wf-node--focus .wf-name{fill:var(--fig-accent);font-weight:600}
+.wf-node--removed rect,
   .wf-node--muted rect{fill:none;stroke:var(--fig-text-faint);stroke-dasharray:4 3}
-  .wf-node--removed .wf-name,
+.wf-node--removed .wf-name,
   .wf-node--muted .wf-name{fill:var(--fig-text-faint)}
-  .wf-node--added rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
-  .wf-node--added .wf-name{fill:var(--fig-accent);font-weight:600}
-  .wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
-  .wf-arrow{fill:var(--fig-line)}
-  .wf-label-bg{fill:var(--fig-box-fill);stroke:none}
-  .wf-edge-label{fill:var(--fig-text-faint);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+.wf-node--added rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+.wf-node--added .wf-name{fill:var(--fig-accent);font-weight:600}
+.wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
+.wf-arrow{fill:var(--fig-line)}
+.wf-label-bg{fill:var(--fig-box-fill);stroke:none}
+.wf-edge-label{fill:var(--fig-text-faint);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                  font-size:10px;text-anchor:middle}
-  .wf-end-word{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+.wf-end-word{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                font-size:9px}
-  .wf-group{fill:none;stroke:var(--fig-group-stroke);stroke-width:1.1;
+.wf-group{fill:none;stroke:var(--fig-group-stroke);stroke-width:1.1;
             stroke-dasharray:var(--fig-group-dash);opacity:.75}
-  .wf-group-label{fill:var(--fig-group-stroke);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+.wf-group-label{fill:var(--fig-group-stroke);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                   font-size:10px}
-  .wf-node--start circle{fill:var(--fig-text);stroke:none}
-  .wf-node--end circle{fill:var(--fig-text);stroke:none}
-  .wf-node--end .wf-ring{fill:none;stroke:var(--fig-text);stroke-width:1.4}
-  .wf-sym path{stroke:var(--fig-sym);stroke-width:var(--fig-sym-w);fill:none}
-  .wf-sym .wf-fill{fill:var(--fig-sym)}
-  .wf-sym .wf-hollow{fill:var(--fig-box-fill);stroke:var(--fig-sym);stroke-width:var(--fig-sym-w)}
-  .wf-rule{stroke:var(--fig-box-stroke)}
-  .wf-node .wf-head{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+.wf-node--start circle{fill:var(--fig-text);stroke:none}
+.wf-node--end circle{fill:var(--fig-text);stroke:none}
+.wf-node--end .wf-ring{fill:none;stroke:var(--fig-text);stroke-width:1.4}
+.wf-sym path{stroke:var(--fig-sym);stroke-width:var(--fig-sym-w);fill:none}
+.wf-sym .wf-fill{fill:var(--fig-sym)}
+.wf-sym .wf-hollow{fill:var(--fig-box-fill);stroke:var(--fig-sym);stroke-width:var(--fig-sym-w)}
+.wf-rule{stroke:var(--fig-box-stroke)}
+.wf-node .wf-head{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                     font-size:12px;font-weight:600;text-anchor:middle}
-  .wf-node .wf-row{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+.wf-node .wf-row{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                    font-size:11px;text-anchor:start}
 .stack{display:flex;flex-direction:column;gap:1.4rem}
-.stack .box{display:flex;justify-content:center;overflow-x:auto}
-.stack .box svg{max-width:100%;height:auto}</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>図の語彙を、描き方の名前から主張の名前へ移す</h1><p class="lede">図の部品は、どう描くかで名付けられていた。その結果、<b>図が何を主張しているかは document のどこにも残らない</b>。この記録は、名前の軸を主張へ移す。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">図の部品名を、描き方の名前から<b>何を主張するか</b>へ置き換える。書ける形は固定し、どの欄を書けるかは主張が決める。描き方は主張から従属して決まる。</p><div class="key"><span class="lbl">決め手</span><span class="txt">いまの名前では<b>主張が document に残らない</b>。残らないものは、読み手が推測するしかない。実測では12枚中3枚で推測が外れた。</span></div></div></section><section><h2><span class="num">02</span>変更前と変更後</h2><p class="lead">document に残るものが変わる。<b>描き方だけが残る状態から、主張が残る状態へ。</b></p><div class="stack">
-<div class="pane"><span class="pane-label b">変更前 ── 1つの名前が6種類の主張を担う</span>
+.stack .box{display:block;overflow-x:auto}
+.stack .box svg{display:block;height:auto;margin:0 auto}
+.stack .pane:nth-child(1) .box svg{min-width:560px}
+.stack .pane:nth-child(2) .box svg{min-width:339px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fig-box-fill:#20252D;--fig-box-stroke:#3A424D;--fig-line:#4E5763;--fig-text:#E5E9EF;--fig-text-soft:#A8B1BD;--fig-text-faint:#7A8492;--fig-accent:#7DC4A6;--fig-accent-bg:#152A22;--fig-group-stroke:#7DC4A6;--fig-sym:#A8B1BD;--fig-track:#2C333C}}
+:root[data-theme="dark"]{--fig-box-fill:#20252D;--fig-box-stroke:#3A424D;--fig-line:#4E5763;--fig-text:#E5E9EF;--fig-text-soft:#A8B1BD;--fig-text-faint:#7A8492;--fig-accent:#7DC4A6;--fig-accent-bg:#152A22;--fig-group-stroke:#7DC4A6;--fig-sym:#A8B1BD;--fig-track:#2C333C}</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>図の語彙を、描き方の名前から主張の名前へ移す</h1><p class="lede">図の部品は、どう描くかで名付けられていた。その結果、<b>図が何を主張しているかは document のどこにも残らない</b>。この記録は、名前の軸を主張へ移す。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">図の部品名を、描き方の名前から<b>何を主張するか</b>へ置き換える。書ける形は固定し、どの欄を書けるかは主張が決める。描き方は主張から従属して決まる。</p><div class="key"><span class="lbl">決め手</span><span class="txt">いまの名前では<b>主張が document に残らない</b>。残らないものは、読み手が推測するしかない。実測では12枚中3枚で推測が外れた。</span></div></div></section><section><h2><span class="num">02</span>変更前と変更後</h2><p class="lead">document に残るものが変わる。<b>描き方だけが残る状態から、主張が残る状態へ。</b></p><div class="stack">
+<div class="pane"><span class="pane-label b">変更前 ── 1つの名前が5種類の主張を担う</span>
 <div class="box"><svg class="wf-fig" viewBox="-10 -10 604 120" width="604" height="120" style="width:100.0%;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M307.0,26.5 C260.2,37.4 186.1,54.7 131.3,67.4 L120.3,70.0" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M321.7,30.4 C300.6,40.5 272.4,53.9 249.4,64.8 L239.3,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M352.0,30.4 C352.0,38.6 352.0,48.9 352.0,58.4 L352.0,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M376.0,30.4 C392.2,40.2 413.7,53.2 431.6,63.9 L441.1,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M394.9,30.4 C429.8,42.2 478.7,58.7 513.1,70.3 L523.7,73.8" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--muted"><rect fill="none" stroke="#79828F" stroke-dasharray="4 3" x="307.2" y="0.0" width="89.6" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#79828F" x="352.0" y="19.0">flowchart</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="0.0" y="70.0" width="120.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="60.0" y="89.0">条件による選択</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="149.0" y="70.0" width="120.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="209.0" y="89.0">向きのある関係</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="298.0" y="70.0" width="108.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="352.0" y="89.0">区画への所属</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="435.0" y="70.0" width="60.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="465.0" y="89.0">順序</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="524.0" y="70.0" width="60.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="554.0" y="89.0">分類</text></g></svg></div></div>
 <div class="pane"><span class="pane-label a">変更後 ── 主張が名前になる</span>
 <div class="box"><svg class="wf-fig" viewBox="-10 -10 366 120" width="366" height="120" style="width:60.6%;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M75.3,30.4 C84.9,39.5 97.6,51.5 108.5,61.8 L116.8,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M187.9,30.4 C178.4,39.5 166.0,51.5 155.2,61.8 L147.1,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M316.0,30.4 C316.0,38.6 316.0,48.9 316.0,58.4 L316.0,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="0.0" y="0.0" width="120.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="60.0" y="19.0">条件による選択</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="149.0" y="0.0" width="108.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="203.0" y="19.0">区画への所属</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="286.0" y="0.0" width="60.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="316.0" y="19.0">割合</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="87.2" y="70.0" width="89.6" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="132.0" y="89.0">flowchart</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="289.3" y="70.0" width="53.4" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="316.0" y="89.0">pie</text></g></svg></div></div></div>
 <p class="fignote">この2枚は、<b>決めようとしている記法そのもの</b>で描いている。
-外側の主張は「対応」、左の面は「階層」、右の面は「つながり」の宣言。面ごとに違う主張を入れられる。</p></section><section><h2><span class="num">03</span>理由</h2><p class="lead">1つの名前が6種類の主張を担っており、主張そのものはどこにも残っていない。名前を上流の構文から借りていることが原因で、<b>改名だけでは依存は消えない</b>。</p><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt">1つの名前が6種類の主張を担っている。描かれた図180枚のうち125枚が同じ名前で、内訳は条件による選択62・向きのある関係30・区画への所属21・順序7・分類6</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">document に残るのは描き方だけで、<b>主張は残らない</b>。読み手は図を見て推測するしかない</span></div><div class="joint">その推測を確かめた</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">125枚を機械で主張ごとに分け、無作為12枚を手で確かめたところ<b>3枚が誤り</b>だった</span></div><div class="joint">一方で</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">名前が上流の構文名のまま置かれている。使用0枚の名前が部品名に残り、同梱の指針自身が「その構文は使用しない」と定めている</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">中核の領域が、上流のモデルに従属している。処方はモデル変換装置を置くこと</span></div><div class="joint">合わせると</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">図の部品名の軸を、描き方から<b>何を主張するか</b>へ移す</span></div><div class="joint">ただし</div><div class="step counter"><span class="lbl">反証</span><span class="txt">名前を変えるだけでは依存は消えない。描画の実装が業務の層に置かれ、そこで上流の構文を組み立てている。改名すると、依存が名前から見えなくなるだけになる</span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（5件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class="keyrow"><td class="cond">1つの名前が6種類を担う</td><td><span class="kindtag unv">実測</span></td><td>図180枚の全数分類（Orchestrator）</td><td>分類の付け方を変えると6種類に割れなくなったとき</td></tr><tr class=""><td class="cond">推測は外れる</td><td><span class="kindtag unv">実測</span></td><td>125枚から無作為12枚を抽出し手で照合</td><td>抽出をやり直して誤りが出なかったとき。確かめたのは12枚のみ</td></tr><tr class=""><td class="cond">名前が上流の構文名のまま</td><td><span class="kindtag unv">実測</span></td><td>部品名の一覧と、同梱の指針の記述</td><td>上流がその構文を再び使い始めたとき</td></tr><tr class=""><td class="cond">中核が上流のモデルに従属している</td><td><span class="kindtag unv">knowledge</span></td><td><code>context-integration</code> のアンチパターン／<code>ubiquitous-language</code>（ddd-advisor 経由）</td><td>この領域が中核でないと判定されたとき</td></tr><tr class=""><td class="cond">依存は名前から見えなくなるだけ</td><td><span class="kindtag unv">実測</span></td><td>描画の実装の置き場所（tech-lead-advisor 経由）</td><td>置き場所が先に直されたとき</td></tr></tbody></table></div></details></section><section><h2><span class="num">04</span>判断を分けた軸</h2><p class="lead">採る案は3つの条件を満たし、移す手間を落とす。既にある180枚が対象になる。</p><div class="scroll"><table>
+外側の主張は「対応」、左の面は「階層」、右の面は「つながり」の宣言。面ごとに違う主張を入れられる。</p></section><section><h2><span class="num">03</span>理由</h2><p class="lead">1つの名前が5種類の主張を担っており、主張そのものはどこにも残っていない。名前を上流の構文から借りていることが原因で、<b>改名だけでは依存は消えない</b>。</p><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt">1つの名前が5種類の主張を担っている。描かれた図180枚のうち125枚が同じ名前で、内訳は条件による選択62・向きのある関係30・区画への所属21・順序7・分類6</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">document に残るのは描き方だけで、<b>主張は残らない</b>。読み手は図を見て推測するしかない</span></div><div class="joint">その推測を確かめた</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">125枚を機械で主張ごとに分け、無作為12枚を手で確かめたところ<b>3枚が誤り</b>だった</span></div><div class="joint">一方で</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">名前が上流の構文名のまま置かれている。使用0枚の名前が部品名に残り、同梱の指針自身が「その構文は使用しない」と定めている</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">中核の領域が、上流のモデルに従属している。処方はモデル変換装置を置くこと</span></div><div class="joint">合わせると</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">図の部品名の軸を、描き方から<b>何を主張するか</b>へ移す</span></div><div class="joint">ただし</div><div class="step counter"><span class="lbl">反証</span><span class="txt">名前を変えるだけでは依存は消えない。描画の実装が業務の層に置かれ、そこで上流の構文を組み立てている。改名すると、依存が名前から見えなくなるだけになる</span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（5件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class="keyrow"><td class="cond">1つの名前が5種類を担う</td><td><span class="kindtag unv">実測</span></td><td>図180枚の全数分類（Orchestrator）</td><td>内訳の合計が126で、125と1件ずれている。数え直していない</td></tr><tr class=""><td class="cond">推測は外れる</td><td><span class="kindtag unv">実測</span></td><td>125枚から無作為12枚を抽出し手で照合</td><td>抽出をやり直して誤りが出なかったとき。確かめたのは12枚のみ</td></tr><tr class=""><td class="cond">名前が上流の構文名のまま</td><td><span class="kindtag unv">実測</span></td><td>部品名の一覧と、同梱の指針の記述</td><td>上流がその構文を再び使い始めたとき</td></tr><tr class=""><td class="cond">中核が上流のモデルに従属している</td><td><span class="kindtag unv">knowledge</span></td><td><code>context-integration</code> のアンチパターン／<code>ubiquitous-language</code>（ddd-advisor 経由）</td><td>この領域が中核でないと判定されたとき</td></tr><tr class=""><td class="cond">依存は名前から見えなくなるだけ</td><td><span class="kindtag unv">実測</span></td><td>描画の実装の置き場所（tech-lead-advisor 経由）</td><td>置き場所が先に直されたとき</td></tr></tbody></table></div></details></section><section><h2><span class="num">04</span>判断を分けた軸</h2><p class="lead">採る案は3つの条件を満たし、移す手間を落とす。既にある180枚が対象になる。</p><div class="scroll"><table>
 <thead><tr><th>案</th>
 <th class="keycol">その図が何を主張しているかが document に残る<br><span class="sub">決め手</span></th>
 <th>上流の構文が変わっても影響しない</th><th>書き手が描き方を選ばずに済む</th><th>移す手間がかからない</th></tr></thead>

@@ -8,6 +8,7 @@
 
 - [選択肢を並べて「どうしますか」と聞かない](feedback_lead_with_position_before_asking.md) — 見解・推奨・理由・衝突を先に出し、問いは自分の案への可否確認の形にする
 - [確認せず手が動く方へ進む癖](skip-confirmation-before-acting.md) — 工程の次段階・schemaのx-prompt・実物を、記憶で判断せず必ず開いて確かめる
+- [検査の合否だけで「確認した」と言わない](feedback_look_at_the_render_not_only_the_checks.md) — 描画は画像にして目で見る。検査は意味の壊れ・図と本文の食い違いを見ない
 - [規約は1ブロックだけ読んで判断しない](feedback_read_all_standards_not_one_block.md) — 定義の本文・判断の木・表を全部当たってから断じる。同じ形の誤りを繰り返している
 - [実例の件数で能力の要否を決めない](feedback_evidence_based_scope_is_not_for_capability_decisions.md) — 抽象化のタイミングの基準であって、構造の妥当性の検査には使えない
 
