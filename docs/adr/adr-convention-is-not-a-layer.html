@@ -1,277 +1,168 @@
 <title>規約は層ではなく、実装を導くもう一つの入力とする</title><style>
-  :root {
-    --paper:      #EDF0F3;
-    --surface:    #FFFFFF;
-    --surface-2:  #F5F7F9;
-    --ink:        #171B23;
-    --ink-soft:   #4B5563;
-    --ink-faint:  #79828F;
-    --rule:       #D3DAE2;
-    --rule-soft:  #E4E9EE;
-
-    --problem:    #7A4368;
-    --problem-bg: #F3E9F0;
-    --solution:   #16636B;
-    --solution-bg:#E2EFF0;
-    --warn:       #9A4A21;
-    --warn-bg:    #F7EAE2;
-    --dead:       #8A8F98;
-
-    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
-    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
-    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
-      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
-      --rule:#2E3742; --rule-soft:#242C37;
-      --problem:#D19CC0; --problem-bg:#2C1F2A;
-      --solution:#6BC0C7; --solution-bg:#132A2C;
-      --warn:#E0A17A; --warn-bg:#2E211A;
-      --dead:#767E8A;
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
     }
   }
-  :root[data-theme="dark"] {
-    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
-    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
-    --rule:#2E3742; --rule-soft:#242C37;
-    --problem:#D19CC0; --problem-bg:#2C1F2A;
-    --solution:#6BC0C7; --solution-bg:#132A2C;
-    --warn:#E0A17A; --warn-bg:#2E211A;
-    --dead:#767E8A;
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
   }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
 
-  * { box-sizing: border-box; }
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
 
-  body {
-    background: var(--paper); color: var(--ink);
-    font-family: var(--sans); font-size: 16px; line-height: 1.85;
-    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
-    -webkit-font-smoothing: antialiased;
-  }
-  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
-  .col { max-width: 40rem; }
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
 
-  header { display: flex; flex-direction: column; gap: .9rem; }
-  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
-  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
-  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
 
-  section { display: flex; flex-direction: column; gap: 1.4rem; }
-  h2 {
-    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
-    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
-    display: flex; align-items: baseline; gap: .8rem;
-  }
-  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
-  h2 .side { margin-left: auto; font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
-  p { margin: 0; }
-  .col > p + p { margin-top: .9rem; }
-  strong { font-weight: 700; }
-  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 3px; padding: .08em .34em; }
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
 
-  .verdict { display: grid; grid-template-columns: repeat(auto-fit,minmax(15rem,1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
-  .verdict > div { background: var(--surface); padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .45rem; }
-  .verdict dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
-  .verdict dd { margin: 0; font-size: .95rem; line-height: 1.7; }
-  .verdict .big { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
 
-  .ladder { display: flex; flex-direction: column; }
-  .rung { display: grid; grid-template-columns: 12.5rem 1fr; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; }
-  @media (max-width: 38rem) { .rung { grid-template-columns: 1fr; } .rung-name { border-right: none; border-bottom: 1px solid var(--rule-soft); } }
-  .rung-name { padding: 1.1rem 1.2rem; border-right: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: .3rem; justify-content: center; }
-  .rung-name b { font-family: var(--serif); font-size: 1.02rem; font-weight: 600; line-height: 1.45; }
-  .rung-name span { font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); letter-spacing: .04em; }
-  .rung-body { display: grid; grid-template-columns: 1fr 1fr; }
-  @media (max-width: 30rem) { .rung-body { grid-template-columns: 1fr; } .cell + .cell { border-left: none; border-top: 1px solid var(--rule-soft); } }
-  .cell { padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
-  .cell + .cell { border-left: 1px solid var(--rule-soft); }
-  .cell .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
-  .cell .v { font-size: .95rem; line-height: 1.6; }
-  .cell .m { font-size: .8rem; color: var(--ink-soft); line-height: 1.6; }
-  .link { width: 2px; height: 1.6rem; background: var(--rule); position: relative; margin-left: 6.25rem; }
-  .link::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
-  .link span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); }
+.wf-node > rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
 
-  .aside-note { display: flex; gap: .85rem; align-items: flex-start; background: var(--surface-2); border-left: 3px solid var(--problem); padding: 1rem 1.15rem; border-radius: 0 2px 2px 0; font-size: .92rem; line-height: 1.75; color: var(--ink-soft); }
-  .aside-note.warn { border-left-color: var(--warn); }
-  .aside-note b { color: var(--ink); }
-
-  .spaces { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; }
-  @media (max-width: 40rem) { .spaces { grid-template-columns: 1fr; } .spaces .bridge { padding: 1.2rem 0; } }
-  .space { border: 1px solid var(--rule); border-radius: 2px; padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .75rem; background: var(--surface); }
-  .space.problem { border-top: 3px solid var(--problem); }
-  .space.solution { border-top: 3px solid var(--solution); }
-  .space-label { font-family: var(--mono); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; }
-  .space.problem .space-label { color: var(--problem); }
-  .space.solution .space-label { color: var(--solution); }
-  .space b { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
-  .space p { font-size: .88rem; color: var(--ink-soft); line-height: 1.7; }
-  .space ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .3rem; font-size: .84rem; color: var(--ink-soft); }
-  .space li::before { content: "· "; color: var(--ink-faint); }
-  .bridge { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: 0 1.1rem; }
-  .bridge .arrow { font-family: var(--mono); font-size: 1.1rem; color: var(--ink-faint); letter-spacing: -.1em; }
-  .bridge .cap { font-size: .74rem; font-family: var(--mono); color: var(--ink-faint); text-align: center; line-height: 1.5; }
-
-  /* four families */
-  .families { display: flex; flex-direction: column; }
-  .family { display: grid; grid-template-columns: 3rem 1fr; border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); }
-  .family-idx { background: var(--surface-2); border-right: 1px solid var(--rule-soft); display: flex; align-items: flex-start; justify-content: center; padding-top: 1.25rem; font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); }
-  .family-main { padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .8rem; }
-  .family-q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
-  .family-main > b { font-family: var(--serif); font-size: 1.14rem; font-weight: 600; }
-  .family-main > p { font-size: .93rem; line-height: 1.75; color: var(--ink-soft); }
-  .must { display: flex; flex-direction: column; gap: .35rem; padding-top: .2rem; }
-  .must div { font-size: .87rem; line-height: 1.65; display: flex; gap: .55rem; }
-  .must div::before { content: "▸"; color: var(--ink-faint); flex: none; font-size: .7rem; transform: translateY(.35em); }
-  .must div.strike { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--rule); }
-  .must div.strike::before { content: "×"; text-decoration: none; }
-  .family-flow { height: 1.5rem; width: 2px; background: var(--rule); margin-left: 1.5rem; position: relative; }
-  .family-flow::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
-  .family-flow span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .73rem; color: var(--ink-faint); font-family: var(--mono); }
-
-  /* gap table */
-  .gapwrap { overflow-x: auto; }
-  table { border-collapse: collapse; width: 100%; min-width: 34rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; font-size: .9rem; }
-  th, td { text-align: left; padding: .85rem 1rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; line-height: 1.65; }
-  th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; background: var(--surface-2); }
-  tr:last-child td { border-bottom: none; }
-  td.name { font-weight: 700; white-space: nowrap; }
-  .pill { font-family: var(--mono); font-size: .68rem; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
-  .pill.ok { color: var(--solution); background: var(--solution-bg); }
-  .pill.part { color: var(--warn); background: var(--warn-bg); }
-  .pill.none { color: var(--warn); background: var(--warn-bg); font-weight: 700; }
-
-  .board { display: grid; grid-template-columns: repeat(auto-fit,minmax(17rem,1fr)); gap: 1.1rem; }
-  .panel { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
-  .panel-head { padding: .8rem 1.1rem; border-bottom: 1px solid var(--rule-soft); background: var(--surface-2); display: flex; align-items: baseline; justify-content: space-between; gap: .8rem; }
-  .panel-head b { font-size: .92rem; }
-  .panel-head .count { font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
-  .panel ul { margin: 0; padding: .9rem 1.1rem 1.1rem; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
-  .panel li { display: flex; align-items: baseline; gap: .6rem; font-size: .88rem; line-height: 1.6; }
-  .dot { width: .5rem; height: .5rem; border-radius: 50%; flex: none; transform: translateY(-.1em); }
-  .dot.live { background: var(--solution); }
-  .dot.dead { background: var(--dead); }
-  .panel li code { background: transparent; border: none; padding: 0; font-size: .84em; }
-  .panel li .note { color: var(--ink-faint); font-size: .78rem; }
-
-  .trees { display: grid; grid-template-columns: repeat(auto-fit,minmax(20rem,1fr)); gap: 1.1rem; }
-  .tree { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
-  .tree-head { padding: .75rem 1.1rem; border-bottom: 1px solid var(--rule-soft); display: flex; align-items: center; justify-content: space-between; gap: .8rem; background: var(--surface-2); }
-  .tree-head b { font-size: .9rem; font-weight: 700; }
-  .tag { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
-  .tag.bad { color: var(--warn); background: var(--warn-bg); }
-  .tag.good { color: var(--solution); background: var(--solution-bg); }
-  .tree pre { margin: 0; padding: 1.1rem 1.2rem 1.3rem; font-family: var(--mono); font-size: .8rem; line-height: 1.85; overflow-x: auto; color: var(--ink-soft); }
-  .tree pre .p { color: var(--problem); font-weight: 700; }
-  .tree pre .s { color: var(--solution); font-weight: 700; }
-  .tree pre .cmt { color: var(--ink-faint); }
-
-  .loop { display: flex; flex-wrap: wrap; }
-  .loop-step { flex: 1 1 8rem; border: 1px solid var(--rule); background: var(--surface); padding: .9rem 1rem; display: flex; flex-direction: column; gap: .25rem; border-radius: 2px; }
-  .loop-step + .loop-step { border-left: none; }
-  .loop-step b { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
-  .loop-step span { font-size: .76rem; color: var(--ink-faint); font-family: var(--mono); }
-
-  .open { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
-  .open > div { background: var(--surface); padding: 1.05rem 1.2rem; display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; }
-  @media (max-width: 34rem) { .open > div { grid-template-columns: 1fr; gap: .3rem; } }
-  .open .q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
-  .open .a { font-size: .93rem; line-height: 1.75; }
-
-  footer { border-top: 1px solid var(--rule); padding-top: 1.2rem; font-size: .82rem; color: var(--ink-faint); line-height: 1.8; }
-
-
-  .cap { color: var(--ink-soft); font-size: .93rem; margin: 0; max-width: 43rem; }
-  .sub { font-family: var(--sans); font-size: .88rem; font-weight: 700; letter-spacing:.03em;
-         color: var(--ink-soft); margin: .3rem 0 0; }
-  .fig { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); padding: 1.3rem 1.5rem; }
-  .fig .one { font-family: var(--serif); font-size: 1.12rem; font-weight: 600; margin: 0; line-height: 1.6; }
-  figure { margin:0; background:var(--surface); border:1px solid var(--rule);
-           border-radius:4px; padding:1.1rem 1rem .6rem; }
-  figure svg { width:100%; height:auto; display:block; }
-  figcaption { font-size:.82rem; color:var(--ink-faint); margin-top:.6rem; text-align:center; }
-  .t  { font:700 12.5px system-ui,sans-serif; }
-  .s  { font:10.5px system-ui,sans-serif; }
-  .mo { font:700 10.5px ui-monospace,Menlo,monospace; }
-
-  /* 端末の窓 */
-  .terms { display:grid; grid-template-columns:repeat(auto-fit,minmax(21rem,1fr)); gap:1rem; }
-  .term { border:1px solid var(--rule); border-radius:6px; overflow:hidden; background:#1b2027;
-          box-shadow:0 1px 2px rgba(0,0,0,.06); }
-  .term-bar { display:flex; align-items:center; gap:.4rem; padding:.5rem .75rem;
-              background:#2a313a; border-bottom:1px solid #383f49; }
-  .term-bar .dot { width:.62rem; height:.62rem; border-radius:50%; flex:none; }
-  .term-bar .d1{background:#ec6a5e} .term-bar .d2{background:#f4bf4f} .term-bar .d3{background:#61c554}
-  .term-bar .ttl { margin-left:.6rem; font-family:var(--mono); font-size:.68rem;
-                   letter-spacing:.08em; color:#9aa4b0; }
-  .term-bar .tag { margin-left:auto; font-family:var(--mono); font-size:.62rem;
-                   letter-spacing:.08em; padding:.12em .5em; border-radius:2px; }
-  .term-bar .tag.bad  { background:#4a2a22; color:#f0a48d; }
-  .term-bar .tag.good { background:#173430; color:#7fd4bd; }
-  .term-body { margin:0; padding:.95rem 1rem 1.1rem; font-family:var(--mono);
-               font-size:.755rem; line-height:1.95; color:#d6dbe2; overflow-x:auto;
-               white-space:pre; }
-  .term-body .pr { color:#7fd4bd; }
-  .term-body .cm { color:#7d8899; }
-  .term-body .an-bad  { color:#f0a48d; }
-  .term-body .an-good { color:#7fd4bd; }
-  .term-body .key { color:#9ec9e8; }
-
-  .tail { display:block; font-size:.78rem; color: var(--ink-faint); line-height:1.6; margin-top:.3rem; }
-  table.cmp td.no { color: var(--warn); } table.cmp td.yes { color: var(--solution); }
-  table.cmp td.no .tail, table.cmp td.yes .tail { color: var(--ink-faint); }
-  td.name { white-space: normal; }
-  h2 .blk { margin-left: auto; font-family: var(--mono); font-size: .62rem; letter-spacing: .1em;
-            text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
-  .gate { display:inline-block; font-family: var(--mono); font-size: .66rem; letter-spacing:.08em;
-          padding:.25em .7em; border-radius:2px; background: var(--solution-bg); color: var(--solution); }
-  .approve { border:2px solid var(--solution); border-radius:2px; background:var(--surface);
-             padding:1.1rem 1.3rem; display:flex; flex-direction:column; gap:.35rem; max-width:44rem; }
-  .approve .k { font-family:var(--mono); font-size:.66rem; letter-spacing:.12em;
-                text-transform:uppercase; color:var(--solution); }
-  .approve .v { font-family:var(--serif); font-size:1.06rem; font-weight:600; }
-  table.cmp td b { font-family: var(--mono); font-size: 1.02em; margin-right: .35em; }
-
-
-  .wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
-  .wf-node > rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
-  .wf-name{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+.wf-name{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
            font-size:12px;text-anchor:middle}
-  .wf-node--focus > rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
-  .wf-node--focus .wf-name{fill:var(--fig-accent);font-weight:600}
-  .wf-node--removed > rect,
+
+.wf-node--focus > rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+
+.wf-node--focus .wf-name{fill:var(--fig-accent);font-weight:600}
+
+.wf-node--removed > rect,
   .wf-node--muted > rect{fill:none;stroke:var(--fig-text-faint);stroke-dasharray:4 3}
-  .wf-node--removed .wf-name,
+
+.wf-node--removed .wf-name,
   .wf-node--muted .wf-name{fill:var(--fig-text-faint)}
-  .wf-node--added > rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
-  .wf-node--added .wf-name{fill:var(--fig-accent);font-weight:600}
-  .wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
-  .wf-arrow{fill:var(--fig-line)}
-  .wf-label-bg{fill:var(--fig-box-fill);stroke:none}
-  .wf-edge-label{fill:var(--fig-text-faint);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+
+.wf-node--added > rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+
+.wf-node--added .wf-name{fill:var(--fig-accent);font-weight:600}
+
+.wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
+
+.wf-arrow{fill:var(--fig-line)}
+
+.wf-label-bg{fill:var(--fig-box-fill);stroke:none}
+
+.wf-edge-label{fill:var(--fig-text-faint);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                  font-size:10px;text-anchor:middle}
-  .wf-end-word{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+
+.wf-end-word{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                font-size:9px}
-  .wf-group{fill:none;stroke:var(--fig-group-stroke);stroke-width:1.1;
+
+.wf-group{fill:none;stroke:var(--fig-group-stroke);stroke-width:1.1;
             stroke-dasharray:var(--fig-group-dash);opacity:.75}
-  .wf-group-label{fill:var(--fig-group-stroke);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+
+.wf-group-label{fill:var(--fig-group-stroke);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                   font-size:10px}
-  .wf-node--start circle{fill:var(--fig-text);stroke:none}
-  .wf-node--end circle{fill:var(--fig-text);stroke:none}
-  .wf-node--end .wf-ring{fill:none;stroke:var(--fig-text);stroke-width:1.4}
-  .wf-sym path{stroke:var(--fig-sym);stroke-width:var(--fig-sym-w);fill:none}
-  .wf-sym .wf-fill{fill:var(--fig-sym)}
-  .wf-sym .wf-hollow{fill:var(--fig-box-fill);stroke:var(--fig-sym);stroke-width:var(--fig-sym-w)}
-  .wf-rule{stroke:var(--fig-box-stroke)}
-  .wf-node .wf-head{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+
+.wf-node--start circle{fill:var(--fig-text);stroke:none}
+
+.wf-node--end circle{fill:var(--fig-text);stroke:none}
+
+.wf-node--end .wf-ring{fill:none;stroke:var(--fig-text);stroke-width:1.4}
+
+.wf-sym path{stroke:var(--fig-sym);stroke-width:var(--fig-sym-w);fill:none}
+
+.wf-sym .wf-fill{fill:var(--fig-sym)}
+
+.wf-sym .wf-hollow{fill:var(--fig-box-fill);stroke:var(--fig-sym);stroke-width:var(--fig-sym-w)}
+
+.wf-rule{stroke:var(--fig-box-stroke)}
+
+.wf-node .wf-head{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                     font-size:12px;font-weight:600;text-anchor:middle}
-  .wf-node .wf-row{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+
+.wf-node .wf-row{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                    font-size:11px;text-anchor:start}
 
-
-  :root{
+:root{
     --fig-line:#C3CAD2;
     --fig-line-w:1.2px;
     --fig-sym:#79828F;
@@ -302,4 +193,40 @@
     --fig-on-tone:#FFFFFF;
   }
 
-.cmp{display:flex;flex-direction:column;gap:1.6rem}.pane{display:flex;flex-direction:column;gap:.55rem}.pane-label{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}.pane-label.before{color:var(--warn)}.pane-label.after{color:var(--solution)}.pane .wf-fig{display:block;max-width:100%;height:auto}.two{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}@media(max-width:40rem){.two{grid-template-columns:1fr}}</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>規約は層ではなく、実装を導くもう一つの入力とする</h1><p class="lede">仕様・規約・実装の関係を、一直線の積み重ねから、knowledge だけを共通の出発点とする2つの経路へ改める。</p></header><section><h2><span class="num">01</span>決定</h2><div class="fig"><p class="one">規約は仕様の上でも下でもない。仕様と規約は同じ格で、<b>knowledge だけを共通の出発点とし、実装とテストで合流する2つの経路</b>である。</p></div><p class="cap">主文だけでは読み方が定まらない箇所を、同時に確定させる。</p><div class="gapwrap"><table><thead><tr><th>確定させること</th><th>決定</th><th>定めないと</th></tr></thead><tbody><tr><td class="name">仕様を書くとき規約を読むか</td><td>読まない。読むのは schema の記入指示と knowledge だけ</td><td>仕様に「この製品ではこう綴る」が流れ込み、実装の綴りが仕様へ回り込む</td></tr><tr><td class="name">実装を導く入力</td><td>仕様と規約の<b>両方</b>。どちらか一方では具体が決まらない</td><td>仕様だけで実装が決まる形になり、仕様が実装の転記になる</td></tr><tr><td class="name">schema と仕様の間に規約を置くか</td><td>置かない。その位置に相当するのは、もう一方の経路の CodingSchema</td><td>対称性のために層が増え、「仕様の綴り方」という名で実装の綴りが入る口ができる</td></tr><tr><td class="name">どこまでを文書にするか</td><td>上は knowledge（共通の出発点）、下は実装とテスト（2つが合流する先）</td><td>抽象の段は上にも下にも無限に作れるので、どこまでを文書にするかが決まらない</td></tr></tbody></table></div></section><section><h2><span class="num">02</span>理由</h2><div class="two"><div class="space problem"><span class="space-label">実測</span><b>規約は仕様を書くときに読まれていない</b><p>仕様の文書で規約を名指ししているのは3件だけで、いずれも規約そのものを扱うユースケース（<code>check-usecase-class-drift</code> 等が <code>architectureRef</code> を入力に取る）。仕様の執筆が規約に依存している箇所は1つも無い。</p></div><div class="space solution"><span class="space-label">帰結</span><b>層に置くと嘘になる</b><p>規約を仕様の上の層とすると「仕様は規約から導かれる」と読めるが、実際の依存はそうなっていない。規約が効くのは実装を導く辺だけであり、そこでのみ仕様と合流する。</p></div></div><div class="gapwrap"><table><thead><tr><th>読み取れる事実</th><th>出所</th></tr></thead><tbody><tr><td class="name">規約は <code>CodingSchema/v7</code> に従う文書で、仕様と同じ格</td><td>architecture / coding-standard / test-standard の3件を実測</td></tr><tr><td class="name">実装の置き場所・命名・単位・依存は、すべて規約の宣言から導出されている</td><td>6つのドリフト検知が <code>architectureRef</code> を起点に動く</td></tr><tr><td class="name">仕様は「何ができるか」しか持たない</td><td>受け入れ基準・シナリオ・エラー契約。綴りは持たない設計</td></tr></tbody></table></div></section><section><h2><span class="num">03</span>変更前と変更後</h2><p class="cap">何が何から導かれるか。</p><div class="cmp"><div class="pane"><span class="pane-label before">変更前</span><svg class="wf-fig" viewBox="-10 -10 162 330" width="162" height="330" style="width:100%;max-width:292px;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M71.1,30.4 C71.1,38.6 71.1,48.9 71.1,58.4 L71.1,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M71.1,100.5 C71.1,108.6 71.1,119.0 71.1,128.4 L71.1,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M71.1,170.5 C71.1,178.6 71.1,189.0 71.1,198.4 L71.1,209.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M71.1,240.5 C71.1,248.6 71.1,259.0 71.1,268.5 L71.1,279.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="22.2" y="-0.0" width="97.8" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="71.1" y="19.0">knowledge</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="-0.0" y="70.0" width="142.2" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="71.1" y="89.0">schema の記入指示</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="41.1" y="140.0" width="60.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="71.1" y="159.1">規約</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="41.1" y="210.1" width="60.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="71.1" y="229.1">仕様</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="14.4" y="280.1" width="113.4" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="71.1" y="299.1">実装 ／ テスト</text></g></svg><p class="fignote">規約が仕様の上に居る。仕様は規約から導かれる、と読める</p></div><div class="pane"><span class="pane-label after">変更後</span><svg class="wf-fig" viewBox="-10 -10 460 260" width="460" height="260" style="width:100%;max-width:827px;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M197.4,30.4 C181.1,40.1 159.5,53.0 141.5,63.8 L131.7,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M245.7,30.4 C262.0,40.1 283.6,53.0 301.6,63.8 L311.4,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M108.2,100.5 C108.6,108.6 109.0,119.0 109.4,128.4 L109.9,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M133.9,170.5 C149.5,180.1 170.3,193.0 187.6,203.7 L197.3,209.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M334.7,100.5 C334.2,108.6 333.6,119.0 333.1,128.4 L332.4,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M308.0,170.5 C292.3,180.1 271.3,193.0 253.9,203.7 L244.1,209.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="172.7" y="0.0" width="97.8" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="221.6" y="19.0">knowledge</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="0.0" y="70.0" width="215.1" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="107.6" y="89.0">DomainSpecSchema の記入指示</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="32.6" y="140.1" width="156.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="110.6" y="159.1">仕様（何ができるか）</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="163.9" y="210.1" width="113.4" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="220.6" y="229.1">実装 ／ テスト</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="243.8" y="70.0" width="183.5" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="335.6" y="89.0">CodingSchema の記入指示</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="223.6" y="140.1" width="216.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="331.6" y="159.1">規約（どう綴り、どこに置くか）</text></g></svg><p class="fignote">knowledge だけが共通で、そこから2つに分かれ、実装とテストで合流する</p></div></div></section><section><h2><span class="num">04</span>この決定が動かすもの</h2><div class="gapwrap"><table><thead><tr><th>対象</th><th>どう変わるか</th></tr></thead><tbody><tr><td class="name">要件の一覧</td><td>「5つの層・4本のつながり」という整理を、「2つの経路・6本のつながり」へ書き換える</td></tr><tr><td class="name">網の穴の位置</td><td>検知が無いのは、knowledge から記入指示へ向かう2本だけに特定される</td></tr><tr><td class="name">規約の改訂の影響範囲</td><td>規約を変えても仕様は変わらない。変わるのは実装とテストの導出結果だけ</td></tr></tbody></table></div></section><section><h2><span class="num">05</span>答えないこと</h2><div class="gapwrap"><table><thead><tr><th>論点</th><th>いまは決めない理由</th></tr></thead><tbody><tr><td class="name">knowledge から記入指示への2本を、どう突き合わせるか</td><td>別の決定として起こす。この決定は形だけを定める</td></tr><tr><td class="name">仕様と規約の分け目を裁く基準</td><td>別の決定として起こす。形が決まらないと、どちらへ落とすかを論じられない</td></tr><tr><td class="name">実装の綴りをどこから導くか</td><td>別の決定として起こす（<code>operationName</code> の扱いを含む）</td></tr></tbody></table></div></section><section><h2><span class="num">06</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">未承認</span><span style="font-size:.9rem;color:var(--ink-soft)">この形に合意が取れてから、残る3つの決定を起こす。</span></div></section></div>
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.cmp.stack{grid-template-columns:1fr}
+.pane .box{display:flex;justify-content:center}
+.pane svg{display:block;max-width:100%;height:auto}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --k:1} .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674}
+  .pickrow td{background:#172430}}
+</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>規約は層ではなく、実装を導くもう一つの入力とする</h1><p class="lede">Waffle では、何ができるかを仕様が、実装がどう在るべきかを規約が宣言し、その2つから実装とテストを導く。この決定は、<b>その仕様と規約が互いにどういう関係にあるか</b>を定める。以前は一直線に積んでいた。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">規約は仕様の層ではない。仕様と規約は同じ格で、knowledge だけを共通の出発点とし、実装とテストで合流する2つの経路である。</p><div class="key"><span class="lbl">決め手</span><span class="txt">仕様の執筆は規約を読んでいない。上に積むと<b>「仕様は規約から導かれる」と読め、実際の依存と食い違う</b>。</span></div></div></section><section><h2><span class="num">02</span>変更前と変更後</h2><p class="lead">規約が仕様の上から外れ、実装とテストの手前で合流する位置へ動く。</p><details class="fold"><summary>変更点を表で見る（4件）</summary><div class="scroll"><table><thead><tr><th>何が</th><th>変更前</th><th>変更後</th></tr></thead><tbody><tr class=""><td class="cond">規約の位置</td><td>仕様の上</td><td>仕様と同じ格。別の経路</td></tr><tr class=""><td class="cond">仕様を書くとき読むもの</td><td>Schema の指示と、その上の規約</td><td>Schema の指示と knowledge だけ</td></tr><tr class=""><td class="cond">実装を導く入力</td><td>仕様だけ（規約は仕様を通して効く）</td><td>仕様と規約の両方</td></tr><tr class=""><td class="cond">Schema の数</td><td>1つ</td><td>DomainSpecSchema と CodingSchema の2つ</td></tr></tbody></table></div></details><p class="fignote">図の中で仕様と規約に添えた括弧書きは、ユビキタス言語の定義の言い直しになっている。読むときはそこを定義とみなさない。描画を作り直すときに外す。</p><div class="cmp stack"><div class="pane"><span class="pane-label b">変更前</span><div class="box"><svg class="wf-fig" viewBox="-10 -10 162 330" width="162" height="330" style="width:100%;max-width:292px;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M71.1,30.4 C71.1,38.6 71.1,48.9 71.1,58.4 L71.1,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M71.1,100.5 C71.1,108.6 71.1,119.0 71.1,128.4 L71.1,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M71.1,170.5 C71.1,178.6 71.1,189.0 71.1,198.4 L71.1,209.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M71.1,240.5 C71.1,248.6 71.1,259.0 71.1,268.5 L71.1,279.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="22.2" y="-0.0" width="97.8" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="71.1" y="19.0">knowledge</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="-0.0" y="70.0" width="142.2" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="71.1" y="89.0">schema の記入指示</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="41.1" y="140.0" width="60.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="71.1" y="159.1">規約</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="41.1" y="210.1" width="60.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="71.1" y="229.1">仕様</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="14.4" y="280.1" width="113.4" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="71.1" y="299.1">実装 ／ テスト</text></g></svg></div></div><div class="pane"><span class="pane-label a">変更後</span><div class="box"><svg class="wf-fig" viewBox="-10 -10 460 260" width="460" height="260" style="width:100%;max-width:827px;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M197.4,30.4 C181.1,40.1 159.5,53.0 141.5,63.8 L131.7,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M245.7,30.4 C262.0,40.1 283.6,53.0 301.6,63.8 L311.4,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M108.2,100.5 C108.6,108.6 109.0,119.0 109.4,128.4 L109.9,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M133.9,170.5 C149.5,180.1 170.3,193.0 187.6,203.7 L197.3,209.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M334.7,100.5 C334.2,108.6 333.6,119.0 333.1,128.4 L332.4,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M308.0,170.5 C292.3,180.1 271.3,193.0 253.9,203.7 L244.1,209.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="172.7" y="0.0" width="97.8" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="221.6" y="19.0">knowledge</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="0.0" y="70.0" width="215.1" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="107.6" y="89.0">DomainSpecSchema の記入指示</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="32.6" y="140.1" width="156.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="110.6" y="159.1">仕様（何ができるか）</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="163.9" y="210.1" width="113.4" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="220.6" y="229.1">実装 ／ テスト</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="243.8" y="70.0" width="183.5" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="335.6" y="89.0">CodingSchema の記入指示</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="223.6" y="140.1" width="216.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="331.6" y="159.1">規約（どう綴り、どこに置くか）</text></g></svg></div></div></div></section><section><h2><span class="num">03</span>理由</h2><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt">仕様の文書のうち、規約を名指ししているのは3件だけ。いずれも規約そのものを入力に取るユースケースだった</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">仕様の執筆は規約に依存していない</span></div><div class="joint">一方で</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">実装とテストの置き場所・命名・単位・依存は、すべて規約の宣言から導出されている</span></div><div class="joint">ここで置いた前提</div><div class="step premise"><span class="lbl">確かめていない</span><span class="txt">今後も、仕様の執筆に規約が要る場面は現れない</span></div><div class="joint">合わせると</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">規約が効くのは実装とテストを導くところだけ。上下に積むと依存の向きを偽ることになる</span></div><div class="joint">ただし</div><div class="step counter"><span class="lbl">反証</span><span class="txt">「規約を扱うユースケースだから例外」は私が付けた解釈であって、観測ではない</span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（4件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class=""><td class="cond">仕様のうち規約を名指しは3件</td><td><span class="kindtag unv">実測</span></td><td>仕様の走査と、各文書の入力欄の確認</td><td>規約を入力に取らない仕様が、規約を参照し始めたとき</td></tr><tr class=""><td class="cond">置き場所・命名は規約から導出される</td><td><span class="kindtag unv">実測</span></td><td>ドリフト検知が規約の識別子を起点に動く</td><td>導出せず、対応を保存する検知が増えたとき</td></tr><tr class=""><td class="cond">今後も規約は要らない</td><td><span class="kindtag lim">確かめていない</span></td><td>—</td><td>製品ごとに仕様の書き方を変える必要が出たとき</td></tr><tr class="keyrow"><td class="cond">規約が効くのは実装を導くところだけ</td><td><span class="kindtag out">Waffle の設計判断</span></td><td><b>knowledge に該当なし</b></td><td>—</td></tr></tbody></table></div><p class="foldnote">最後の段に knowledge の裏付けが無い理由 ── 近い knowledge に <code>architecture-dependency-direction</code> があるが、あれが扱うのは<b>コードの依存</b>（import・参照・依存性逆転）であって、文書どうしの依存ではない。<b>原則と矛盾しないことと、原則から導かれることは別</b>なので、引かない。</p></details></section><section><h2><span class="num">04</span>判断を分けた軸</h2><p class="lead">採る案は、依存の向きを偽らないという条件を満たす唯一の案。読みやすさ2つを落として、それを取った。</p><div class="scroll"><table>
+<thead><tr><th>案</th>
+<th class="keycol">向きを偽らない<br><span class="sub">決め手</span></th>
+<th>層を増やさない</th><th>仕様が動かない</th><th>1本の線で読める</th><th>読み順が通る</th></tr></thead>
+<tbody>
+<tr class="pickrow"><td class="cond">2つの経路にする<br><span class="sub">採る</span></td>
+<td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td></tr>
+<tr><td class="cond">仕様の上に積む</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+<tr><td class="cond">仕様と実装の間に挟む</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+</tbody></table></div><details class="fold"><summary>条件の内訳を開く ── なぜその条件が要るか、なぜ × なのか（5件）</summary><div class="scroll"><table><thead><tr><th>条件（全文）</th><th>なぜこの条件が要るか</th><th>× の理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond">依存の向きを偽らない<span class="keytag">決め手</span></td><td>宣言された関係と実際の依存が食い違うと、どちらが正かを人が決めない限り検知できない。食い違ったまま誰も気づかない状態が現に起きている</td><td><b>代案</b> 仕様が規約から導かれると読め、実際の依存と逆になる</td></tr><tr class=""><td class="cond">層を増やさない</td><td>層が増えるほど、何をどこへ置くかの判断が毎回増える。対称性のために層を作ると、実装の綴りが仕様へ入る口ができる</td><td><b>代案</b> 層を1つ足す</td></tr><tr class=""><td class="cond">規約を変えても仕様が動かない</td><td>製品ごとの綴りの違いが仕様へ波及すると、仕様が製品固有になり、他へ持ち出せなくなる</td><td><b>代案</b> 規約が仕様の上または途中にあるので、改訂が波及すると読める</td></tr><tr class=""><td class="cond">図が1本の線で読める</td><td>関係を人へ説明するとき、分岐があるほど読み手の負担が増える</td><td><b>採る案</b> 分岐と合流があり、2本を追う必要がある</td></tr><tr class=""><td class="cond">上から下へ読み順が通る</td><td>上から順に追うだけで関係が分かる形なら、説明が要らない</td><td><b>採る案</b> 2本を並行に読む必要がある</td></tr></tbody></table></div></details></section><section><h2><span class="num">05</span>付随して決めたこと</h2><p class="lead">対称性のために層を作らない、が4件を貫く。</p><div class="scroll"><table><thead><tr><th>論点</th><th>決定</th></tr></thead><tbody><tr class=""><td class="cond">Schema と仕様の間に規約を置くか</td><td>置かない。その位置に相当するのは CodingSchema</td></tr><tr class=""><td class="cond">仕様を書くとき規約を読むか</td><td>読まない。読むのは Schema が持つ記入と読取の指示と、knowledge だけ</td></tr><tr class=""><td class="cond">実装を導く入力</td><td>仕様と規約の両方。どちらか一方では具体が決まらない</td></tr><tr class=""><td class="cond">どこまでを文書にするか</td><td>上は knowledge、下は実装とテスト</td></tr></tbody></table></div><details class="fold"><summary>それぞれの根拠を開く（4件）</summary><div class="scroll"><table><thead><tr><th>論点</th><th>根拠</th></tr></thead><tbody><tr class=""><td class="cond">schema と仕様の間</td><td>対称性のために層を作ると、そこが実装の在り方を仕様へ持ち込む口になる</td></tr><tr class=""><td class="cond">規約を読むか</td><td>読ませると、規約が定めていること（置き場所・依存の向き・検証の置き方）が仕様へ流れ込む</td></tr><tr class=""><td class="cond">実装を導く入力</td><td>仕様だけで実装が決まる形にすると、仕様が実装の転記になる</td></tr><tr class=""><td class="cond">どこまでを文書にするか</td><td>抽象の段は上にも下にも無限に作れるので、どこで切るかを決めないと際限がなくなる</td></tr></tbody></table></div></details></section><section><h2><span class="num">06</span>答えないこと</h2><p class="lead">分け目と綴りは別の決定へ。将来のことは行き先を持たない。</p><div class="scroll"><table><thead><tr><th>項目</th><th>種別</th><th>行き先</th></tr></thead><tbody><tr class=""><td class="cond">どの特徴を仕様へ置き、どれを規約へ置くか</td><td><span class="kindtag out">範囲外</span></td><td>分け目を裁く基準を定める別の決定</td></tr><tr class=""><td class="cond">実装の綴りをどこから導くか</td><td><span class="kindtag out">範囲外</span></td><td>綴りの導出元を扱う別の決定</td></tr><tr class=""><td class="cond">knowledge から記入指示への突き合わせ</td><td><span class="kindtag unv">未確認</span></td><td>機構を作る別の決定</td></tr><tr class=""><td class="cond">仕様の執筆に規約が要る場面が今後現れないか</td><td><span class="kindtag lim">限界</span></td><td><b>持たない。</b>現れた時点でこの決定を改める</td></tr></tbody></table></div></section><section><h2><span class="num">07</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">承認済み</span><span class="k">誰が</span><span class="m">daidaiiro</span><span class="k">いつ</span><span class="m">2026-08-14</span></div></section><section><h2><span class="num">08</span>関連</h2><p class="lead">以後の決定は、この関係の上で置き場所を論じる。</p><details class="fold"><summary>縛る対象と、前後の決定を開く（3件）</summary><div class="scroll"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr class=""><td class="cond">縛る対象</td><td>仕様・規約・実装の関係</td></tr><tr class=""><td class="cond">先立つ決定</td><td>理由は論証の連鎖として書く</td></tr><tr class=""><td class="cond">使う予定</td><td>分け目を裁く基準／仕様は実装の綴りを持たない／knowledge から記入指示への突き合わせ</td></tr></tbody></table></div></details></section></div>
