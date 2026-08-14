@@ -1,5 +1,4 @@
-<title>理由は論証の連鎖として書く</title>
-<style>
+<title>理由は論証の連鎖として書く</title><style>
   :root{
     --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
     --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
@@ -105,182 +104,49 @@
   .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
   .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
   .approve .m{font-size:.9rem;color:var(--ink-soft)}
-</style>
 
-<div class="wrap">
 
-<header>
-  <p class="eyebrow">Architecture Decision Record</p>
-  <h1>理由は論証の連鎖として書く</h1>
-  <p class="lede">決定記録の8欄のうち「理由」の中身の構造を定める。この記録自身も、その構造で書いている。</p>
-</header>
-
-<section>
-  <h2><span class="num">01</span>決定</h2>
-  <div class="decision">
-    <p class="main">理由は、段を並べた論証の連鎖として書く。段の種別は「測った／確かめていない／言えること・結論／反証」の4つ。崩れる条件は、測った段と確かめていない段にだけ1行添える。</p>
-    <div class="key">
-      <span class="lbl">決め手</span>
-      <span class="txt">理由を平らな文章で書くと、<b>書き手自身が観測と推論と解釈の区別を失う</b>。段に分けたときだけ、それが表に出る。</span>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2><span class="num">02</span>変更前と変更後</h2>
-  <p class="fignote">同じ理由を、いまの書き方と決定後の書き方で並べる。文字が主役なので図ではなく組版で示す。</p>
-  <div class="cmp">
-    <div class="pane">
-      <span class="pane-label b">変更前 ── 構造の定めが無い</span>
-      <div class="box"><p class="blob">仕様の文書で規約を名指ししているのは3件だけで、いずれも規約そのものを扱うユースケースだった。実装の置き場所や命名は規約の宣言から導出されている。したがって規約を仕様の上の層に置くと依存の向きを偽ることになる。今後も仕様の執筆に規約が要る場面は現れないだろう。</p></div>
-      <p class="fignote">観測（3件）・解釈（だから例外）・推論（したがって）・未検証の前提（現れないだろう）が、同じ見え方で並ぶ。どれを疑えばよいかが読み手に分からない。</p>
-    </div>
-    <div class="pane">
-      <span class="pane-label a">変更後 ── 段と種別を持つ</span>
-      <div class="box">
-        <div class="chain">
-          <div class="step evidence"><span class="lbl">測った</span><span class="txt">仕様62件のうち、規約を名指しは3件</span></div>
-          <div class="joint">だから</div>
-          <div class="step conclude"><span class="lbl">言えること</span><span class="txt">仕様の執筆は規約に依存していない</span></div>
-          <div class="joint">ここで置いた前提</div>
-          <div class="step premise"><span class="lbl">確かめていない</span><span class="txt">今後も規約が要る場面は現れない</span></div>
-          <div class="joint">ただし</div>
-          <div class="step counter"><span class="lbl">反証</span><span class="txt">「規約を扱うユースケースだから例外」は解釈であって観測ではない</span></div>
-        </div>
-      </div>
-      <p class="fignote">色と見出しで種別が分かれ、接続語が推論の位置を示す。疑う場所が一目で決まる。</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2><span class="num">03</span>理由</h2>
-  <div class="chain">
-    <div class="step evidence">
-      <span class="lbl">測った</span>
-      <span class="txt">同じ内容（規約は層ではないという決定の理由）を4つの構造で書き分けたところ、連鎖で書いた版だけが、末尾で「『規約を扱うユースケースだから例外』は測った事実ではなく私の解釈だ」と書き手に自認させた。他の3案では出なかった。</span>
-      <span class="src">出所: 本日作成した4案の比較。同一内容・同一の書き手</span>
-      <span class="weak"><b>崩れるとき</b> ── 別の題材で同じ差が出なかったとき。確かめたのは1件のみ</span>
-    </div>
-    <div class="joint">だから</div>
-    <div class="step conclude">
-      <span class="lbl">言えること</span>
-      <span class="txt">平らな文章では、観測と推論と解釈が同じ見え方で並ぶ。段に分けると、書き手が自分の飛躍に気づく</span>
-    </div>
-    <div class="backing">拠り所 ── knowledge「抽象的な主張は具体で裏付けられていること／主張と根拠の距離を縮める」</div>
-    <div class="joint">一方で</div>
-    <div class="step evidence">
-      <span class="lbl">測った</span>
-      <span class="txt">決定記録には「理由」の欄が定められているが、その中の構造は定められていない</span>
-      <span class="src">出所: 決定記録の8欄の定義</span>
-      <span class="weak"><b>崩れるとき</b> ── 構造が別の場所に定められていたと判明したとき</span>
-    </div>
-    <div class="joint">ここで置いた前提</div>
-    <div class="step premise">
-      <span class="lbl">確かめていない</span>
-      <span class="txt">段に分けることが自認を引き起こすのは、題材によらない仕組みである</span>
-      <span class="weak"><b>崩れるとき</b> ── 自認が今回の題材に固有だったとき</span>
-    </div>
-    <div class="joint">合わせると</div>
-    <div class="step conclude">
-      <span class="lbl">結論</span>
-      <span class="txt">理由は連鎖として書く。段の種別を「測った／確かめていない」で割るのは、この製品で繰り返された失敗——測っていないことを測ったように書く——に対する特化である</span>
-    </div>
-    <div class="backing">拠り所 ── 論証の一般的な枠組み（主張・根拠・論拠・裏付け・限定・反駁）。裏付けは knowledge が持ち、限定は「答えないこと」が持つため、この2つは段に置かない</div>
-    <div class="joint">ただし</div>
-    <div class="step counter">
-      <span class="lbl">反証</span>
-      <span class="txt">段に分けると縦に伸びる。長い文書が読み返されない例は、この製品で現に起きている——受け入れ基準49件を持つ仕様は、全件を読み返した者がいない</span>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2><span class="num">04</span>判断を分けた軸</h2>
-  <div class="scroll">
-    <table>
-      <thead><tr><th>軸</th><th>連鎖（採る）</th><th>行ごとの表</th><th>4枠固定</th><th>賛否を対称に置く</th></tr></thead>
-      <tbody>
-        <tr><td class="name">推論の段が見えるか</td><td>見える</td><td>平らになる</td><td>平らになる</td><td>平らになる</td></tr>
-        <tr><td class="name">確かめていない前提の置き場</td><td>段として置ける</td><td>種別の列で示す</td><td>専用の枠</td><td>無い</td></tr>
-        <tr><td class="name">短さ</td><td>いちばん長い</td><td><span class="win">最も短い</span></td><td>中間</td><td>中間</td></tr>
-        <tr><td class="name">理由が増えたとき</td><td>縦に伸び続ける</td><td><span class="win">行が増えるだけ</span></td><td>枠の中が伸びる</td><td>両側が伸びる</td></tr>
-        <tr><td class="name">弁護に見えにくさ</td><td>末尾の反証で担保</td><td>行ごとに担保</td><td>専用の枠で担保</td><td><span class="win">対等に置くので最も強い</span></td></tr>
-        <tr><td class="name">既存の欄との重複</td><td>無い</td><td>無い</td><td>無い</td><td>判断を分けた軸と重なる</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="col">
-    <p>赤い印は、<b>採らなかった案が優る軸</b>。短さと増えたときの伸び方では行ごとの表が勝ち、弁護に見えにくさでは賛否を対称に置く案が勝つ。</p>
-    <p><b>それでも連鎖を採る理由。</b>短さで負ける代わりに、推論の段が見える。この製品で繰り返した失敗は「短く書けなかったこと」ではなく「観測でないものを観測として書いたこと」であり、そこに効く軸を優先した。賛否の対称は効果を認めるが、既存の「判断を分けた軸」の欄と役割が重なり、同じことを2箇所が主張してずれる形になる。</p>
-  </div>
-</section>
-
-<section>
-  <h2><span class="num">05</span>付随して決めたこと</h2>
-  <div class="scroll">
-    <table>
-      <thead><tr><th>論点</th><th>決定</th><th>根拠</th></tr></thead>
-      <tbody>
-        <tr><td class="name">崩れる条件を付ける段</td><td>測った段と確かめていない段だけ</td><td>結論が崩れる条件は「上のどれかが崩れたとき」で決まっており、書くと繰り返しになる</td></tr>
-        <tr><td class="name">連鎖の終点</td><td>1つだけ。途中の段は結論ではなく踏み台</td><td>終点が複数あると、どれが決定を支えたのか読み手が選べない</td></tr>
-        <tr><td class="name">反証が無いとき</td><td>空欄にせず「探したが見つからない」と書く</td><td>探さなかったのか、探して無かったのかが区別できなくなる</td></tr>
-        <tr><td class="name">段の種別の示し方</td><td>左の色と短い見出しだけ。説明文を足さない</td><td>種別の説明が段より長くなると、本文が読まれなくなる</td></tr>
-        <tr><td class="name">拠り所の置き方</td><td>推論の段に、knowledge の識別子を1行で添えられる</td><td>指摘を受けたとき knowledge から導き直すには、どの knowledge から導いたかが要る</td></tr>
-        <tr><td class="name">限定（「おそらく」等）</td><td>段に置かない</td><td>決定の欄が言い切りを求めている。範囲の限定は「答えないこと」が持つ</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section>
-  <h2><span class="num">06</span>答えないこと</h2>
-  <div class="scroll">
-    <table>
-      <thead><tr><th>項目</th><th>種別</th><th>行き先</th></tr></thead>
-      <tbody>
-        <tr>
-          <td class="name">理由以外の7欄の、中の構造</td>
-          <td><span class="kindtag out">範囲外</span></td>
-          <td>この決定は理由の欄だけを扱う。他の欄の中を定める必要が生じた時点で、欄ごとに別の決定を起こす</td>
-        </tr>
-        <tr>
-          <td class="name">長さが読み返されなさに繋がるか</td>
-          <td><span class="kindtag lim">限界</span></td>
-          <td><b>行き先を持たない。</b>読み返されたかを観測する手段がなく、作れる見込みも無い。長さの上限は設けず、実地で長すぎると分かった時点でこの決定を改める</td>
-        </tr>
-        <tr>
-          <td class="name">拠り所が指す knowledge が実在するか</td>
-          <td><span class="kindtag unv">未確認</span></td>
-          <td>knowledge から記入指示への突き合わせを扱う決定で、同じ機構に載せて確かめる</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section>
-  <h2><span class="num">07</span>承認</h2>
-  <div class="approve">
-    <span class="k">状態</span><span class="v">承認済み</span>
-    <span class="k">誰が</span><span class="m">daidaiiro</span>
-    <span class="k">いつ</span><span class="m">2026-08-14</span>
-  </div>
-  <p class="fignote">以後の決定記録はこの形で書く。既にある2件（規約は層ではない／図の宣言を主張を軸にした形へ）は、古い形式で出したものなので、この形へ書き換えたうえで改めて承認を受ける。</p>
-</section>
-
-<section>
-  <h2><span class="num">08</span>関連</h2>
-  <div class="scroll">
-    <table>
-      <thead><tr><th>種類</th><th>対象</th></tr></thead>
-      <tbody>
-        <tr><td class="name">縛る対象</td><td>決定記録の「理由」の欄。以後のすべての決定記録がこの構造に従う</td></tr>
-        <tr><td class="name">先立つ決定</td><td>規約は層ではなく、実装を導くもう一つの入力とする（この記録の理由に、その決定の材料を使っている）</td></tr>
-        <tr><td class="name">この決定を使う予定</td><td>仕様と規約の分け目を裁く基準／仕様は実装の綴りを持たない／knowledge から記入指示への突き合わせ</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-</div>
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>理由は論証の連鎖として書く</h1><p class="lede">決定記録には理由の欄が定められているが、その中をどう書くかは定められていなかった。この記録は、理由の欄の<b>中の構造</b>だけを定める。他の7欄には触れない。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">理由は、段を並べた<b>論証の連鎖</b>として書く。段の種別は「測った／確かめていない／言えること・結論／反証」の4つ。崩れる条件は、測った段と確かめていない段にだけ1行添える。</p><div class="key"><span class="lbl">決め手</span><span class="txt">理由を平らな文章で書くと、<b>書き手自身が観測と推論と解釈の区別を失う</b>。段に分けたときだけ、それが表に出る。</span></div></div></section><section><h2><span class="num">02</span>変更前と変更後</h2><p class="lead">同じ理由が、平らな文章では4種類の主張として区別できず、段に分けると<b>疑う場所を名指しできる</b>。文字が主役なので図ではなく組版で示す。</p><div class="cmp">
+<div class="pane"><span class="pane-label b">変更前 ── 構造の定めが無い</span>
+<div class="box"><p class="blob">仕様の文書で規約を名指ししているのは3件だけで、いずれも規約そのものを扱うユースケースだった。
+実装の置き場所や命名は規約の宣言から導出されている。したがって規約を仕様の上の層に置くと依存の向きを偽ることになる。
+今後も仕様の執筆に規約が要る場面は現れないだろう。</p></div>
+<p class="fignote">観測（3件）・解釈（だから例外）・推論（したがって）・確かめていない前提（現れないだろう）が、
+<b>同じ見え方で並ぶ</b>。どれを疑えばよいかが読み手に分からない。</p></div>
+<div class="pane"><span class="pane-label a">変更後 ── 段と種別を持つ</span>
+<div class="box"><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt">仕様62件のうち、規約を名指しは3件</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">仕様の執筆は規約に依存していない</span></div><div class="joint">ここで置いた前提</div><div class="step premise"><span class="lbl">確かめていない</span><span class="txt">今後も規約が要る場面は現れない</span></div><div class="joint">ただし</div><div class="step counter"><span class="lbl">反証</span><span class="txt">「規約を扱うユースケースだから例外」は解釈であって観測ではない</span></div></div></div>
+<p class="fignote">同じ内容だが、<b>疑う先が段として名指しできる</b>。
+反証の段は、書き手が自分の解釈を観測として書いていたことに気づいて生まれた。</p></div></div></section><section><h2><span class="num">03</span>理由</h2><p class="lead">同じ内容を4つの構造で書き分けたとき、連鎖で書いた版<b>だけ</b>が書き手に自分の飛躍を自認させた。落とすのは短さだけである。</p><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt">同じ内容を4つの構造で書き分けたところ、連鎖で書いた版<b>だけ</b>が、末尾で「『規約を扱うユースケースだから例外』は測った事実ではなく私の解釈だ」と書き手に自認させた。他の3案では出なかった</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">平らな文章では、観測と推論と解釈が同じ見え方で並ぶ。段に分けると、書き手が自分の飛躍に気づく</span></div><div class="joint">一方で</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">決定記録には理由の欄が定められているが、<b>その中の構造は定められていない</b></span></div><div class="joint">ここで置いた前提</div><div class="step premise"><span class="lbl">確かめていない</span><span class="txt">段に分けることが自認を引き起こすのは、題材によらない仕組みである</span></div><div class="joint">合わせると</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">理由は連鎖として書く。段の種別を「測った／確かめていない」で割るのは、この製品で繰り返された失敗——測っていないことを測ったように書く——に対する特化である</span></div><div class="joint">ただし</div><div class="step counter"><span class="lbl">反証</span><span class="txt">段に分けると縦に伸びる。長い文書が読み返されない例は、この製品で現に起きている——受け入れ基準49件を持つ仕様は、全件を読み返した者がいない</span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（4件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class="keyrow"><td class="cond">連鎖の版だけが自認を引き起こした</td><td><span class="kindtag unv">実測</span></td><td>同日に作成した4案の比較。同一内容・同一の書き手</td><td>別の題材で同じ差が出なかったとき。確かめたのは1件のみ</td></tr><tr class=""><td class="cond">理由の欄の中の構造は定められていない</td><td><span class="kindtag unv">実測</span></td><td>決定記録の8欄の定義</td><td>構造が別の場所に定められていたと判明したとき</td></tr><tr class=""><td class="cond">自認は題材によらない</td><td><span class="kindtag lim">確かめていない</span></td><td>—</td><td>自認が今回の題材に固有だったとき</td></tr><tr class=""><td class="cond">段の種別を測った／確かめていないで割る</td><td><span class="kindtag out">Waffle の設計判断</span></td><td><b>knowledge に該当なし</b></td><td>—</td></tr></tbody></table></div><p class="foldnote">論証の一般的な枠組み（主張・根拠・論拠・裏付け・限定・反駁）のうち、<b>裏付けは knowledge が持ち、限定は「答えないこと」が持つ</b>ため、この2つは段に置かない。推論の段には、拠り所として knowledge の識別子を1行で添えられる。</p></details></section><section><h2><span class="num">04</span>判断を分けた軸</h2><p class="lead">採る案は3つの条件を満たし、短さを落とす。4案のうちいちばん長い。</p><div class="scroll"><table>
+<thead><tr><th>案</th>
+<th class="keycol">推論の段が見える<br><span class="sub">決め手</span></th>
+<th>確かめていない前提を、段として置ける</th><th>既存の欄と重ならない</th><th>短く収まる</th></tr></thead>
+<tbody>
+<tr class="pickrow"><td class="cond">連鎖<br><span class="sub">採る</span></td>
+<td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td></tr>
+<tr><td class="cond">行ごとの表</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+<tr><td class="cond">4つの枠を固定する</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+<tr><td class="cond">賛否を対称に置く</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+</tbody></table></div><details class="fold"><summary>条件の内訳を開く ── なぜその条件が要るか、なぜ × なのか（4件）</summary><div class="scroll"><table><thead><tr><th>条件（全文）</th><th>なぜこの条件が要るか</th><th>× の理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond">推論の段が見える<span class="keytag">決め手</span></td><td>この欄が担うのは、読み手がどこを疑えばよいかを選べるようにすること。段が見えないと、観測も推論も解釈も同じ見え方で並ぶ</td><td><b>他の3案すべて</b> 内容は分けられるが、推論そのものの順序は平らになる</td></tr><tr class=""><td class="cond">確かめていない前提を、段として置ける</td><td>前提は本文の途中に置くと読み飛ばされる。ひとつの段として立てば飛ばせない</td><td><b>行ごとの表</b> 種別の列で示すだけで、段にはならない<br><b>賛否を対称に置く</b> 置き場が無い</td></tr><tr class=""><td class="cond">既存の欄と重ならない</td><td>同じ内容が2つの欄に載ると、読み手はどちらが正かを判断させられる</td><td><b>賛否を対称に置く</b> 判断を分けた軸の欄と重なる</td></tr><tr class=""><td class="cond">短く収まる</td><td>長い文書が読み返されない例は、この製品で現に起きている</td><td><b>連鎖（採る）</b> 4案のうちいちばん長い。段の数だけ縦に伸び続ける</td></tr></tbody></table></div><p class="foldnote">落とした案から拾ったもの ── <b>賛否を対称に置く案は、弁護に見えにくさで最も強い</b>（賛成と反対を同じ大きさで置くため）。その強みは、連鎖の末尾に反証の段を必ず置くことで部分的に引き取っている。</p></details></section><section><h2><span class="num">05</span>付随して決めたこと</h2><p class="lead">連鎖を実際に書くときに迷う6点。いずれも<b>読み手が疑う場所を選べるか</b>で決めた。</p><div class="scroll"><table><thead><tr><th>論点</th><th>決定</th></tr></thead><tbody><tr class=""><td class="cond">崩れる条件を付ける段</td><td>測った段と確かめていない段だけ</td></tr><tr class=""><td class="cond">連鎖の終点</td><td>1つだけ。途中の段は結論ではなく踏み台</td></tr><tr class="keyrow"><td class="cond">反証が無いとき</td><td>空欄にせず「探したが見つからない」と書く</td></tr><tr class=""><td class="cond">段の種別の示し方</td><td>左の色と短い見出しだけ。説明文を足さない</td></tr><tr class=""><td class="cond">拠り所の置き方</td><td>推論の段に、knowledge の識別子を1行で添えられる</td></tr><tr class=""><td class="cond">「おそらく」等の限定</td><td>段に置かない</td></tr></tbody></table></div><details class="fold"><summary>それぞれの根拠を開く（6件）</summary><div class="scroll"><table><thead><tr><th>論点</th><th>根拠</th></tr></thead><tbody><tr class=""><td class="cond">崩れる条件を付ける段</td><td>結論が崩れる条件は「上のどれかが崩れたとき」で決まっており、書くと繰り返しになる</td></tr><tr class=""><td class="cond">連鎖の終点</td><td>終点が複数あると、どれが決定を支えたのか読み手が選べない</td></tr><tr class="keyrow"><td class="cond">反証が無いとき</td><td>探さなかったのか、探して無かったのかが区別できなくなる</td></tr><tr class=""><td class="cond">段の種別の示し方</td><td>種別の説明が段より長くなると、本文が読まれなくなる</td></tr><tr class=""><td class="cond">拠り所の置き方</td><td>指摘を受けたとき knowledge から導き直すには、どの knowledge から導いたかが要る</td></tr><tr class=""><td class="cond">「おそらく」等の限定</td><td>決定の欄が言い切りを求めている。範囲の限定は「答えないこと」が持つ</td></tr></tbody></table></div></details></section><section><h2><span class="num">06</span>答えないこと</h2><p class="lead">他の欄の中の構造と、長さが読み返されなさに繋がるかは扱わない。</p><div class="scroll"><table><thead><tr><th>項目</th><th>種別</th><th>行き先</th></tr></thead><tbody><tr class=""><td class="cond">理由以外の7欄の、中の構造</td><td><span class="kindtag out">範囲外</span></td><td>この決定は理由の欄だけを扱う。他の欄の中を定める必要が生じた時点で、欄ごとに別の決定を起こす</td></tr><tr class=""><td class="cond">長さが読み返されなさに繋がるか</td><td><span class="kindtag lim">限界</span></td><td><b>行き先を持たない。</b>読み返されたかを観測する手段がなく、作れる見込みも無い。長さの上限は設けず、実地で長すぎると分かった時点でこの決定を改める</td></tr><tr class=""><td class="cond">拠り所が指す knowledge が実在するか</td><td><span class="kindtag unv">未確認</span></td><td>knowledge から記入指示への突き合わせを扱う決定で、同じ機構に載せて確かめる</td></tr></tbody></table></div></section><section><h2><span class="num">07</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">承認済み</span><span class="k">誰が</span><span class="m">daidaiiro</span><span class="k">いつ</span><span class="m">2026-08-14</span><span class="m">以後の決定記録はこの形で書く。この記録自身も、決めた形へ書き直したうえで置いている。</span></div></section><section><h2><span class="num">08</span>関連</h2><p class="lead">この構造は、決定記録の理由の欄だけを縛る。</p><details class="fold"><summary>縛る対象と、前後の決定を開く（4件）</summary><div class="scroll"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr class=""><td class="cond">縛る対象</td><td>決定記録の理由の欄。以後のすべての決定記録がこの構造に従う</td></tr><tr class=""><td class="cond">先立つ決定</td><td>規約は層ではなく、実装を導くもう一つの入力とする（この記録の理由に、その決定の材料を使っている）</td></tr><tr class=""><td class="cond">この決定を使う予定</td><td>仕様は実装の綴りを持たない／knowledge から記入指示への突き合わせ</td></tr><tr class=""><td class="cond">この決定を既に使ったもの</td><td>仕様の下限を、具体が一意に導けるかで測る（承認済み）</td></tr></tbody></table></div></details></section></div>
