@@ -1,0 +1,235 @@
+"""引き継ぎ書を、スキーマ定義の変更を主として書き直す。
+
+主は、再定義した契約の形へスキーマを変え、既存のWaffleの仕様と実装を
+その契約で成立させること。検査はそのあと、Hooksで使うために要る。
+"""
+from __future__ import annotations
+
+import json
+import subprocess
+
+CWD = "/home/daidaiiro/workspace/waffle"
+H = ".waffle/documents/handoff/handoff-criteria-scenario-link.json"
+
+
+def fill(v):
+    r = subprocess.run(["uv", "run", "waffle", "scaffold", "--operation", "fill",
+                        "--path", H, "--values", json.dumps(v, ensure_ascii=False)],
+                       capture_output=True, text=True, cwd=CWD)
+    print((r.stdout or r.stderr).strip()[:200])
+
+
+values = {
+    "content.title.title":
+        "再定義した契約の形へ、スキーマと既存の仕様を移す：handoff-criteria-scenario-link",
+
+    "content.specRef.specRef": "agg-schema",
+
+    "content.description.text":
+        "受け入れ条件と振る舞いの筋書きを対として宣言できる形へ DomainSpecSchema を変え、"
+        "既存の Waffle の仕様53文書と実装を、その契約で成立させるための引き継ぎ。"
+        "対象は業務ユースケース・集約・業務サービスの3種で、"
+        "この契約を機械が読む検査（uc-check-criteria-coverage）は、これが済んだあとの段になる。",
+
+    # ---- 設計観点：ADRからの導出（2つのADRに書かれていること）
+    "content.designViewpoints.items": [
+        {"advisor": "ddd-advisor",
+         "viewpoint": "対応が多対多になるのは定義からの帰結である",
+         "consideration":
+             "受け入れ条件は「主張」で切り、振る舞いの筋書きは「流れ」で切る。"
+             "切り口が違う2つの分割の間の対応は一般に多対多になる。"
+             "既存文書にそう書かれているからではなく、定義からそうなる。"},
+
+        {"advisor": "ddd-advisor",
+         "viewpoint": "1つの筋書きを1つの主張に絞らない",
+         "consideration":
+             "同じ流れに対して Then を分けて別の筋書きにすると、Given と When が複製される。"
+             "文言の照合は筋書き単位なので、複製された前提には検知が付かない。"
+             "「どの主張が破れたか特定しにくい」は理由にならず、特定は実行時に得られる。"
+             "移行の途中で条件を1対1へ揃え直したくなっても、この理由に立ち返ること。"},
+
+        {"advisor": "tech-lead-advisor",
+         "viewpoint": "参照を採り、入れ子を採らない",
+         "consideration":
+             "入れ子は、1つの流れが複数の主張を満たす側を表せない。"
+             "その流れをどれか1つの主張の下にしか置けず、残りは筋書きを持たない主張に見える。"
+             "参照が壊れうることは検査で判定できるが、入れ子が表せないことは検査では埋められない。"},
+
+        {"advisor": "ddd-advisor",
+         "viewpoint": "1つの条件は1つの主張である",
+         "consideration":
+             "1つの受け入れ条件に主張が2つ入っているとき"
+             "（「目印を控え、かつ投稿者に尋ねない」等）、それは条件が2つある状態なので2つに分ける。"
+             "分けずに識別子を振ると、1つの識別子が2つの契約を指す状態が固定される。"
+             "分ける作業は移行のときに行い、機械が主張の数を確かめられるかは未決のまま置く。"},
+
+        {"advisor": "ddd-advisor",
+         "viewpoint": "3つの担い手を、構造としても対等にする",
+         "consideration":
+             "業務ユースケース・集約・業務サービスは、どれも受け入れ条件と振る舞いの筋書きを持ち、"
+             "どれも実装の成果物を持つ。つなぎ方が同じである以上、宣言のされ方も同じでなければならない。"
+             "したがって業務サービスも独自の文書を持つ。"
+             "いま文脈の文書の中の一項目になっているのは旧方式の形であって、"
+             "扱いだけを特例にする根拠は無い。"},
+
+        {"advisor": "ddd-advisor",
+         "viewpoint": "既定の多重度を、受け入れ条件と不変条件で分ける",
+         "consideration":
+             "受け入れ条件はトリガを持つため1対1が既定になる。"
+             "不変条件は「常に」であり、1つの筋書きが示せるのは反例の起きない一断面にすぎないため、"
+             "1対多が既定になる。同じ既定を当てると集約側がほぼ全件逸脱扱いになる。"},
+
+        {"advisor": "tech-lead-advisor",
+         "viewpoint": "識別子が満たすべきことは2つだけ",
+         "consideration":
+             "並べ替えで指す先が変わらないこと、文言の修正で壊れないこと。"
+             "連番は前者に、本文から導く名前は後者に反する。"
+             "どちらも満たすのは、位置にも本文にも依存しない手書きの符号である。"},
+
+        {"advisor": "ddd-advisor",
+         "viewpoint": "0件禁止の趣旨は、不要物の排除ではなく条件の欠けの発見である",
+         "consideration":
+             "どの条件も指さない筋書きが弾かれたとき、取るべき行動は筋書きを消すことではなく"
+             "条件を書き足すこと。この趣旨を書き手向けの指示に明記しないと、規則が逆向きに働く。"},
+
+        {"advisor": "ddd-advisor",
+         "viewpoint": "筋書きを持てない条件を、欠けとして数えない",
+         "consideration":
+             "情報の不在を主張する規則（保持しない・残らない・追記しかできない・保持期限を超えない）は、"
+             "観測するための操作を作った時点で規則そのものが壊れるため、筋書きを持てない。"
+             "そのまま数えると欠けとして永久に鳴り続け、本物の欠けがその中に埋もれる。"
+             "担保の手段が振る舞いではないことを条件の側が名乗れるようにする。"},
+    ],
+
+    # ---- 実装観点：スキーマ変更と移行の機構
+    "content.implementationViewpoints.items": [
+        {"advisor": "tech-lead-advisor",
+         "viewpoint": "版を新しく作る以外の選択肢が無い",
+         "consideration":
+             "スキーマの集約が「一度作った版は、遡って構造を変えない」と宣言している。"
+             "v9 を作り、文書を1件ずつ移す。版を上げても既存文書は自動では追随しない。"},
+
+        {"advisor": "tech-lead-advisor",
+         "viewpoint": "移行は文書単位で進める",
+         "consideration":
+             "識別子を必須にした瞬間、移行が済むまで全文書が検証不適合になる。"
+             "スキーマ上は任意とし、1文書ずつ移して確かめる。"
+             "廃止する対応欄は最後に消す——先に消すと、対応を書くときの下書きを失う。"},
+
+        {"advisor": "tech-lead-advisor",
+         "viewpoint": "条件と筋書きの対の表を1箇所に持つ",
+         "consideration":
+             "どの条件ブロックがどの筋書きブロックと対をなすかの表は、"
+             "既存の筋書き照合が持つ列挙を拡張して1箇所に置く。"
+             "3つの担い手を対等にすれば、この表はブロック対ブロックのまま保たれる。"
+             "同じ知識を2箇所に持つと、対を増やしたとき片方だけが古くなる。"},
+
+        {"advisor": "tech-lead-advisor",
+         "viewpoint": "既存の照合には干渉しないが、描画は影響を受ける",
+         "consideration":
+             "筋書きと実装の照合が読むのは名前と本文の2欄だけなので、欄を増やしても変化しない。"
+             "一方、受け入れ条件が構造になるため、描画の宣言を箇条書きから表へ変える必要がある。"
+             "描画の語彙は閉じているので、その範囲で表現できるかを最初の1文書で確かめる。"},
+
+        {"advisor": "tech-lead-advisor",
+         "viewpoint": "書き手向けの指示を、新しい欄にも置く",
+         "consideration":
+             "指示の置かれ方には契約があり、それを確かめる検査が既にある。"
+             "新しい欄に指示を置かないまま版を上げると、その検査が落ちる。"},
+
+        {"advisor": "tech-lead-advisor",
+         "viewpoint": "対の充足と、筋書きの転写の到達を別々に測る",
+         "consideration":
+             "条件に筋書きが付いていることと、その筋書きが実装へ届いていることは別である。"
+             "後者は既存の照合が測っている。片方だけを見て「担保できている」と読まない。"},
+    ],
+
+    "content.constraints.items": [
+        "既存の仕様文書の実測は、方針を決める根拠ではなく、方針に照らして判定される対象である。"
+        "基準は再定義した宣言の形の側にあり、実測が示すのは「どこが基準から外れているか」でしかない。"
+        "実測に合わせて宣言の形を決め直してはならない。",
+
+        "スキーマの集約が宣言する3つの不変条件が、この変更を縛る——"
+        "一度作った版は遡って構造を変えない／各ブロックの描画は閉じた語彙にのみ従う／"
+        "各ブロックは追加の項目を閉じる。新しい欄は後から緩められない。",
+
+        "移行は実装ではなく仕様の修正作業である。"
+        "識別子を振り、主張が2つ入っている条件を分け、"
+        "どの筋書きがどの条件を満たすかの対応を書くまでを含む。"
+        "廃止する欄に残る約88%の記入が、対応を書くときの下書きになる。"
+        "人の判断を仰ぐのは、分けるかどうか・対応をどう取るかが決定になる場面に限る。",
+
+        "この契約が担保するのは「対応が書かれていること」までで、「その対応が正しいこと」は担保しない。"
+        "指すことは主張であって、検証ではない。"
+        "したがって後段の検査の位置づけは、品質のゲートではなく、読むべき箇所の当たり付けとする。",
+
+        "識別子は読んでも正しく見えるため、無関係な対応を書かれても気づけない。"
+        "この点は廃止する自由文の欄より悪化する。"
+        "対応の妥当性は読み手の責務であることを、書き手向けの指示に残す。",
+    ],
+
+    "content.completionImage.layers": [
+        {"label": "宣言（スキーマ）",
+         "description": "受け入れ条件が識別子を持つ構造になり、振る舞いの筋書きが満たす条件の識別子を並べる。"
+                        "業務サービスは独自の文書種別になる。",
+         "nodes": [
+             {"id": "sc", "title": "条件と筋書きの対", "sub": "DomainSpecSchema/v9", "status": "new"},
+             {"id": "ds", "title": "業務サービスの文書", "sub": "新しい種別", "status": "new"},
+         ]},
+        {"label": "仕様（既存文書）",
+         "description": "3種の担い手の文書を、新しい版へ移す。識別子を振り、条件を分け、対応を書く。",
+         "nodes": [
+             {"id": "uc", "title": "業務ユースケース", "sub": "48文書", "status": "existing"},
+             {"id": "agg", "title": "集約", "sub": "5文書", "status": "existing"},
+             {"id": "dsv", "title": "業務サービス", "sub": "文脈の項目から文書へ", "status": "new"},
+         ]},
+        {"label": "実装",
+         "description": "筋書きと実装の照合は既に動いており、この変更では触らない。"
+                        "描画と空欄の雛形は、新しい版に合わせて作り直す。",
+         "nodes": [
+             {"id": "tr", "title": "筋書きの転写と照合", "sub": "既存・変更なし", "status": "existing"},
+             {"id": "rd", "title": "描画と空欄の雛形", "sub": "新しい版へ追随", "status": "new"},
+         ]},
+        {"label": "後段",
+         "description": "契約が形になったあと、それを機械が読む検査を作る。Hooks から呼ぶのはこの段。",
+         "nodes": [
+             {"id": "ck", "title": "条件に筋書きが付いているかの確認",
+              "sub": "uc-check-criteria-coverage", "status": "new"},
+         ]},
+    ],
+    "content.completionImage.relationships": [
+        {"from": "ck", "to": "sc", "kind": "dependency", "label": "宣言が形になってから作る"},
+        {"from": "dsv", "to": "ds", "kind": "dependency", "label": "新しい種別として移す"},
+    ],
+
+    "content.usageExamples.items": [
+        "受け入れ条件は {識別子, 本文} の並びになり、筋書きは満たす条件の識別子を並べる",
+        "業務サービスは <文脈>/domain-service/ds-*.json として独立し、条件と筋書きを文書レベルに持つ",
+        "後段の検査：条件に筋書きが付いていないもの・実在しない参照・識別子の重複・"
+        "どの条件も指さない筋書き・対応の欄そのものが未記入のものを返す",
+    ],
+
+    "content.expectedScope.items": [
+        {"path": "src/waffle/domain/model/DomainSpecSchema/v9.json",
+         "reason": "受け入れ条件・操作保証・不変条件に識別子を足し、筋書きに満たす条件の並びを持たせる"},
+        {"path": "src/waffle/domain/model/DomainSpecSchema/v9.json（業務サービス）",
+         "reason": "業務サービスを独自の文書種別にする。文脈の文書が持っていた項目と筋書きを移す"},
+        {"path": "src/waffle/domain/model/DomainSpecSchema/v9.json（書き手向けの指示・描画）",
+         "reason": "新しい欄の指示を置き、条件の描画を箇条書きから表へ変える"},
+        {"path": ".waffle/documents/specs/",
+         "reason": "53文書の移行。識別子の付与・条件の分割・対応の記入。文書単位で進める"},
+        {"path": ".waffle/documents/specs/<文脈>/domain-service/",
+         "reason": "業務サービスの文書の置き場所。所属の一覧にも種別として載せる"},
+        {"path": ".waffle/templates/blank/DomainSpecSchema/v9/",
+         "reason": "空欄の雛形を作り直す。版を上げても自動では追随しない"},
+        {"path": "src/waffle/domain/services/scenario_drift.py",
+         "reason": "条件ブロックと筋書きブロックの対の表を、ここへ拡張して1箇所に持つ"},
+        {"path": "src/waffle/application/usecases/check_criteria_coverage.py",
+         "reason": "後段。契約が形になってから作る"},
+    ],
+}
+fill(values)
+
+r = subprocess.run(["uv", "run", "waffle", "validate", "--path", H],
+                   capture_output=True, text=True, cwd=CWD)
+print((r.stdout or r.stderr).strip()[:200])

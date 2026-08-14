@@ -1,0 +1,29 @@
+import json, subprocess
+CWD="/home/daidaiiro/workspace/waffle"
+H=".waffle/documents/handoff/handoff-criteria-scenario-link.json"
+findings=[
+ {"advisor":"ddd-advisor","refBlock":"designViewpoints","refIndex":3,
+  "resolutionStatus":"open",
+  "note":"主張が2つ入っている条件を機械が見つけられるかは未決。"
+         "受け入れ条件はEARS形式のものとそうでないものが混在しており、文末表現の数え上げは全件には効かない。"
+         "当面は移行のとき1件ずつ読んで分ける。分けるかどうかが決定になる場面だけ、人へ確認する。"},
+ {"advisor":"ddd-advisor","refBlock":"designViewpoints","refIndex":8,
+  "resolutionStatus":"open",
+  "note":"筋書きを持てない条件を、条件の側がどう名乗るかは未決。"
+         "既存の『守り方』の欄を使うか、新しい欄を設けるかを、スキーマを作るときに決める。"},
+ {"advisor":"tech-lead-advisor","refBlock":"implementationViewpoints","refIndex":3,
+  "resolutionStatus":"open",
+  "note":"条件の描画を箇条書きから表へ変えるとき、描画の閉じた語彙で表現しきれるかが未確認。"
+         "移行の最初の1文書を描画して確かめてから、残りへ進む。"},
+ {"advisor":"tech-lead-advisor","refBlock":"implementationViewpoints","refIndex":2,
+  "resolutionStatus":"resolved",
+  "note":"3つの担い手を対等にしたことで、対の表はブロック対ブロックのまま保たれる。"
+         "業務サービスの非対称から派生していた未解決2件は、この決定で消えた。"},
+ {"advisor":"tech-lead-advisor","refBlock":"implementationViewpoints","refIndex":1,
+  "resolutionStatus":"resolved",
+  "note":"移行中は識別子を任意とし、文書単位で移す。廃止する欄は最後に消す。"},
+]
+r=subprocess.run(["uv","run","waffle","scaffold","--operation","fill","--path",H,
+                  "--values",json.dumps({"content.reviewStatus.findings":findings},ensure_ascii=False)],
+                 capture_output=True,text=True,cwd=CWD)
+print((r.stdout or r.stderr).strip()[:160])
