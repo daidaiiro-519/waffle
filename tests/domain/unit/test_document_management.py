@@ -286,3 +286,35 @@ def test_verbatim_is_rendered_as_source():
     out = render_parts(parts, data, 3)
     assert "示すこと" in out and "読み取れること" in out
     assert "```sql" in out and "SELECT 1;" in out
+
+
+def test_verbatim_in_output_format_is_not_fenced():
+    """
+    Scenario: 出力形式そのものの原文は囲わずに置かれる
+    Given 種類が描画の出力形式そのものである原文の宣言
+    When 描画する
+    Then 原文はコードブロックに囲われず、そのまま置かれる
+    """
+    table = "| 用語 | 意味 |\n|---|---|\n| 区分 | 荷姿と料金の2つ |"
+    out = render_parts([{"as": "code", "from": "source", "langFrom": "lang"}],
+                       {"lang": "markdown", "source": table}, 3)
+    assert out.strip() == table
+    assert "```" not in out
+
+
+def test_grouped_node_is_not_redeclared_outside_its_enclosure():
+    """
+    Scenario: 囲みに属する節点は、囲みの外へ二重に宣言されない
+    Given 囲みに属する節点が、節点の一覧にも書かれている図の宣言
+    When 描画する
+    Then その節点の宣言は囲みの中に1つだけ現れる
+    """
+    out = render_parts(
+        [{"as": "graph", "from": "edges", "nodesFrom": "nodes", "groupsFrom": "groups"}],
+        {"groups": [{"label": "実装方法", "nodes": ["集約"]}],
+         "nodes": ["集約", "業務サービス"],
+         "edges": [{"from": "集約", "to": "業務サービス"}]},
+        3)
+    assert out.count('["集約"]') == 1
+    assert 'subgraph g0["実装方法"]' in out
+    assert '["業務サービス"]' in out

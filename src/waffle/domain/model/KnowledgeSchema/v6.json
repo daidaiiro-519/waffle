@@ -334,7 +334,7 @@
         },
         "reading": {
           "type": "string",
-          "x-prompt-write": "この図から何が言えるかを書いてください。図を描画できない読み手が、この文だけで意味を取れるように書きます。",
+          "x-prompt-write": "この図全体として何が言えるかを1〜2文で書いてください。個々の節点・辺・囲みについて読み違えを防ぐ注意書きは、ここではなく「注釈」へ書きます。",
           "x-prompt-query": "この図から何が言えるかを読みます。図を見なくても、この文だけで意味が取れるはずです。"
         },
         "direction": {
@@ -407,6 +407,27 @@
           },
           "x-prompt-write": "節点どうしのつながりを並べてください。",
           "x-prompt-query": "節点どうしのつながりを読みます。この一覧だけで、図を描かずに関係が追えるはずです。"
+        },
+        "notes": {
+          "type": "array",
+          "x-prompt-write": "図を見た読み手が、書き手と違う読み方をしかねない箇所を挙げてください。各行の「どこの話か」には、図に実際に描いた節点・辺・囲みの名前をそのまま書きます（図に無いものを名指ししない）。「図に載せきれないこと」には、その要素について図の見た目からは決められないことを書きます——分岐なら何を基準に分かれるのか、同じ形の矢印でも意味が違うならその違い、囲みなら中どうしが何を共有し外と何が違うのか、合流なら別々の経路が同じ先へ行くのはなぜか。図を見れば分かることは書かないでください（「AからBへ線がある」等の書き写しは、読み手の解釈を1つも狭めません）。読み違えようのない図なら、空のままで構いません。",
+          "items": {
+            "type": "object",
+            "required": [
+              "anchor",
+              "note"
+            ],
+            "properties": {
+              "anchor": {
+                "type": "string",
+                "x-prompt-write": "図に描いた節点・辺・囲みの名前。辺は「AからB」の形で書く。"
+              },
+              "note": {
+                "type": "string",
+                "x-prompt-write": "その要素について、図の見た目からは決められないこと。"
+              }
+            }
+          }
         }
       },
       "required": [
@@ -634,19 +655,15 @@
                 },
                 {
                   "as": "table",
-                  "from": "edges",
+                  "from": "notes",
                   "columns": [
                     {
-                      "field": "from",
-                      "header": "から"
+                      "field": "anchor",
+                      "header": "どこの話か"
                     },
                     {
-                      "field": "to",
-                      "header": "へ"
-                    },
-                    {
-                      "field": "label",
-                      "header": "関係"
+                      "field": "note",
+                      "header": "図に載せきれないこと"
                     }
                   ]
                 }
@@ -700,19 +717,15 @@
                     },
                     {
                       "as": "table",
-                      "from": "edges",
+                      "from": "notes",
                       "columns": [
                         {
-                          "field": "from",
-                          "header": "から"
+                          "field": "anchor",
+                          "header": "どこの話か"
                         },
                         {
-                          "field": "to",
-                          "header": "へ"
-                        },
-                        {
-                          "field": "label",
-                          "header": "関係"
+                          "field": "note",
+                          "header": "図に載せきれないこと"
                         }
                       ]
                     }
@@ -766,19 +779,15 @@
                         },
                         {
                           "as": "table",
-                          "from": "edges",
+                          "from": "notes",
                           "columns": [
                             {
-                              "field": "from",
-                              "header": "から"
+                              "field": "anchor",
+                              "header": "どこの話か"
                             },
                             {
-                              "field": "to",
-                              "header": "へ"
-                            },
-                            {
-                              "field": "label",
-                              "header": "関係"
+                              "field": "note",
+                              "header": "図に載せきれないこと"
                             }
                           ]
                         }

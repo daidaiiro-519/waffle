@@ -269,11 +269,63 @@ class ScaffoldDocument:
         if isinstance(schema_result, Err):
             return schema_result
 
-        if doc.get("schemaRef") == schema_ref:
-            return Ok({"documentPath": document_path, "schemaRef": schema_ref, "changed": False})
+        # 落とす判断は、版が同じかどうかより先に行う。同じ版なら素通しにすると、
+        # 版だけ書き換えて宣言外のブロックが残ったdocumentが、二度目の運搬でも
+        # 直らないまま固定される（実際にそういうdocumentを作ってしまった）
+        dropped = _blocks_the_schema_does_not_declare(doc, schema_result.value)
+        holding = [name for name in dropped if _block_holds_content(doc["content"][name])]
+        if holding:
+            return _err(
+                "MIGRATION_WOULD_DISCARD_CONTENT",
+                f"{schema_ref} が宣言しないブロックに中身が残っています: {', '.join(holding)}。"
+                f"運び先を決めてから運んでください（この操作は内容を捨てません）",
+            )
+
+        if not dropped and doc.get("schemaRef") == schema_ref:
+            return Ok({"documentPath": document_path, "schemaRef": schema_ref,
+                       "changed": False, "removed": []})
+
+        for name in dropped:
+            del doc["content"][name]
         doc["schemaRef"] = schema_ref
         self._documents.save(document_path, doc)
-        return Ok({"documentPath": document_path, "schemaRef": schema_ref, "changed": True})
+        return Ok({"documentPath": document_path, "schemaRef": schema_ref,
+                   "changed": True, "removed": dropped})
+
+def _blocks_the_schema_does_not_declare(doc: dict, schema: dict) -> list[str]:
+    """documentが持つブロックのうち、そのschemaが宣言していないものの名前を返す。
+
+    宣言していないブロックを残したまま版だけ書き換えると、以後どの操作からも
+    触れず消せないブロックが残り、documentはどの版にも適合しなくなる。
+
+    宣言は種別ごとに分かれるので、documentが名乗る種別の枝まで解決してから見る。
+    トップレベルの宣言だけを見ると、種別ごとに足されるブロックを「宣言外」と
+    取り違えるか、あるいは1つも宣言が無いと読んで何も落とさないことになる。
+    """
+    disc_key = _discriminator_key(schema)
+    discriminator = {disc_key: doc.get(disc_key)} if disc_key else {}
+    declared = _content_def(schema, discriminator).get("properties", {})
+    if not declared:
+        return []          # contentの中身を宣言しないschemaでは、落とす判断ができない
+    return [name for name in doc.get("content", {}) if name not in declared]
+
+
+# ブロックの器 ── そのブロックが何であるかを示すもので、書き手が入れた内容ではない
+_BLOCK_VESSEL = ("blockType", "title")
+
+
+def _block_holds_content(block) -> bool:
+    """ブロックの器を除いた残りに値があるか。"""
+    if not isinstance(block, dict):
+        return bool(block)
+    return any(_has_value(v) for k, v in block.items() if k not in _BLOCK_VESSEL)
+
+
+def _has_value(value) -> bool:
+    if isinstance(value, (dict, list, str)):
+        return len(value) > 0
+    return value is not None
+
 
 # --- schema 走査ヘルパ（純ロジック・機械的） ---
 

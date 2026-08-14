@@ -254,8 +254,14 @@ def _keyvalue(part, data, src):
         return f"`{v}`" if vc else str(v)
     return "\n".join(f"- {lab(k)}: {val(v)}" for k, v in pairs)
 
+_OUTPUT_FORMATS = {"markdown", "md"}
+
 def _code(text, lang):
     items = text if isinstance(text, list) else [text]
+    if (lang or "").lower() in _OUTPUT_FORMATS:
+        # 描画の出力形式そのものは囲わない。囲うと、表が表として読めなくなるなど
+        # 原文が意図した見え方を失う。
+        return "\n\n".join(str(t) for t in items)
     return "\n\n".join(f"```{lang or ''}\n{t}\n```" for t in items)
 
 def _seq_token(name: str) -> str:
@@ -380,6 +386,10 @@ def _graph(edges, nodes=None, groups=None, direction="LR"):
             lines.append(f"        {token(name)}[{_mmd_label(name)}]")
         lines.append("    end")
     for name in (nodes or []):
+        # 囲みの中で宣言済みの節点は、ここで書き直さない。
+        # 書き直すと Mermaid が囲みの外へ出してしまい、囲みが示す塊が崩れる。
+        if name in seen:
+            continue
         lines.append(f"    {token(name)}[{_mmd_label(name)}]")
     for t in (edges or []):
         frm, to = token(t.get("from", "")), token(t.get("to", ""))

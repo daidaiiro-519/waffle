@@ -1,0 +1,43 @@
+{
+  "documentId": "refuse-write-into-outdated-schema",
+  "documentType": "Hook",
+  "schemaRef": "HookSchema/v1",
+  "hookKind": "usecase-delegate",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "refuse-write-into-outdated-schema"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "最新でない版を指すDocumentへの書き込みを、書き込む前に止める。古い版には最新版で廃止されたブロックが残っており、そこへ書くと、消える予定の場所へ内容を足すことになる。実際に、最新版が既に切られ運搬手段も存在していたにもかかわらず、古い版のDocumentへ足し続け、しかもその版では廃止済みのブロックへ書くという事故が起きた。"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "いつ働くか",
+      "text": "Bash経由で、Documentへ書き込む操作（値の書き込み・schemaの改訂）が実行される直前。運搬そのものは対象にしない"
+    },
+    "usecaseRef": {
+      "blockType": "UsecaseRef",
+      "title": "委譲先usecase",
+      "text": "check-schema-version-drift"
+    },
+    "scriptRef": {
+      "blockType": "ScriptRef",
+      "title": "スクリプト実体",
+      "text": ".waffle/hooks/refuse-write-into-outdated-schema.py"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "新しい判定ロジックをここに持ち込まない。「その版が古いか」を決めるのは委譲先のusecaseであって、このスクリプトではない。ここが担うのはBashコマンド文字列から対象パスを取り出すことだけ",
+        "運搬（migrate_schema）自体は止めない。止めると、古い版から抜け出す手段が塞がれる",
+        "コマンドをパースできない、または委譲先を動かせないときは許可へ倒す。書き込みを止めるのは、古いと確かめられたときだけにする",
+        "拒否理由には、運搬のコマンドをそのまま実行できる形で含める。止めるだけで次の一手を示さないと、迂回する方法を探すことに帰結する"
+      ]
+    }
+  }
+}

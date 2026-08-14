@@ -1,0 +1,1 @@
+../../.waffle/hooks/refuse-write-into-outdated-schema.py

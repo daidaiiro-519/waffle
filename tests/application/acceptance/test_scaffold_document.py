@@ -302,7 +302,8 @@ def test_create_writes_reference_parameters_into_the_document():
     result = _engine().run(
         "create",
         {
-            "schemaRef": "DomainSpecSchema/v10",
+            # 版は書かない。書くと、版が上がるたびにこのテストが古い版を名指しして落ちる
+            "schemaRef": "DomainSpecSchema",
             "documentId": "test-acceptance-scaffold-subdomain-ref",
             "discriminator": {"specKind": "usecase"},
             "contextRef": "bc-waffle",
@@ -670,3 +671,134 @@ def test_clearing_an_optional_field_inside_a_required_block_succeeds():
     doc = FsDocumentRepository().load(path)
     assert "norms" not in doc["content"]["scenarioBinding"]
     assert "scenarioBinding" in doc["content"]
+
+
+# --- 移行先の版が宣言しないブロックの扱い ---
+
+def _legacy_block_schema() -> dict:
+    """v1 だけが持ち、v2 が落としたブロックを表す schema。"""
+    schema = _migrate_fixture_schema()
+    schema["properties"]["content"]["properties"]["legacy"] = {
+        "type": "object",
+        "required": ["blockType", "title"],
+        "properties": {
+            "blockType": {"const": "Legacy"},
+            "title": {"type": "string"},
+            "items": {"type": "array", "items": {"type": "string"}},
+        },
+    }
+    return schema
+
+
+def _write_fixtures_where_v2_dropped_a_block() -> None:
+    _MIGRATE_FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
+    _MIGRATE_FIXTURE_V1.write_text(
+        json.dumps(_legacy_block_schema(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    _MIGRATE_FIXTURE_V2.write_text(
+        json.dumps(_migrate_fixture_schema(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def _write_document_with_legacy(items: list[str]) -> None:
+    FsDocumentRepository().save(_MIGRATE_DOC_PATH, {
+        "documentId": "test-migrate-doc",
+        "documentType": "TestMigrate",
+        "schemaRef": "TestMigrateSchemaFixture/v1",
+        "content": {
+            "title": {"blockType": "Title", "title": "テスト用文書"},
+            "legacy": {"blockType": "Legacy", "title": "旧ブロック", "items": items},
+        },
+    })
+
+
+def test_migrate_drops_an_empty_block_the_target_version_does_not_declare():
+    """
+    Scenario: 移行先が持たない空のブロックは取り除かれる
+    Given 移行先の版が宣言しないブロックを空で持つDocument
+    When 移行先の版へ運ぶ
+    Then そのブロックが取り除かれ、Documentは移行先の版に適合する
+    """
+    _write_fixtures_where_v2_dropped_a_block()
+    _write_document_with_legacy(items=[])
+
+    result = _engine().run("migrate_schema", {
+        "documentPath": _MIGRATE_DOC_PATH, "schemaRef": "TestMigrateSchemaFixture/v2"})
+    assert isinstance(result, Ok), result
+
+    doc = FsDocumentRepository().load(_MIGRATE_DOC_PATH)
+    assert "legacy" not in doc["content"]
+    assert doc["schemaRef"] == "TestMigrateSchemaFixture/v2"
+
+    validated = ValidateDocument(
+        FsDocumentRepository(), PackageSchemaRepository(), JsonSchemaValidator()
+    ).run(_MIGRATE_DOC_PATH)
+    assert isinstance(validated, Ok), getattr(validated, "details", validated)
+
+
+def test_migrate_refuses_when_a_dropped_block_still_holds_content():
+    """
+    Scenario: 中身の残るブロックを捨てる運搬は拒否される
+    Given 移行先の版が宣言しないブロックに中身を持つDocument
+    When 移行先の版へ運ぶ
+    Then MIGRATION_WOULD_DISCARD_CONTENT が返り、Documentは元のままである
+    """
+    _write_fixtures_where_v2_dropped_a_block()
+    _write_document_with_legacy(items=["まだどこにも移していない内容"])
+
+    result = _engine().run("migrate_schema", {
+        "documentPath": _MIGRATE_DOC_PATH, "schemaRef": "TestMigrateSchemaFixture/v2"})
+    assert isinstance(result, Err), result
+    assert result.details[0] == "MIGRATION_WOULD_DISCARD_CONTENT", result.details
+
+
+def test_migrate_reports_what_it_removed():
+    """
+    Scenario: 取り除いたブロックの名前が結果に出る
+    Given 移行先の版が宣言しない空のブロックを持つDocument
+    When 移行先の版へ運ぶ
+    Then 結果に取り除いたブロックの名前が含まれる
+    """
+    _write_fixtures_where_v2_dropped_a_block()
+    _write_document_with_legacy(items=[])
+
+    result = _engine().run("migrate_schema", {
+        "documentPath": _MIGRATE_DOC_PATH, "schemaRef": "TestMigrateSchemaFixture/v2"})
+    assert isinstance(result, Ok), result
+    assert result.value["removed"] == ["legacy"], result.value
+
+
+def test_migrate_leaves_the_document_untouched_on_refusal():
+    """
+    Scenario: 拒否したときDocumentは元のままである
+    Given 移行先の版が宣言しないブロックに中身を持つDocument
+    When 移行先の版へ運ぶ
+    Then 宣言している版も中身も、運ぶ前と一字一句同じである
+    """
+    _write_fixtures_where_v2_dropped_a_block()
+    _write_document_with_legacy(items=["まだどこにも移していない内容"])
+    before = json.dumps(FsDocumentRepository().load(_MIGRATE_DOC_PATH), ensure_ascii=False, sort_keys=True)
+
+    _engine().run("migrate_schema", {
+        "documentPath": _MIGRATE_DOC_PATH, "schemaRef": "TestMigrateSchemaFixture/v2"})
+
+    after = json.dumps(FsDocumentRepository().load(_MIGRATE_DOC_PATH), ensure_ascii=False, sort_keys=True)
+    assert after == before
+
+
+def test_migrate_drops_an_undeclared_block_even_when_the_version_is_already_the_target():
+    """
+    Scenario: 同じ版でも宣言外のブロックは取り除かれる
+    Given 既に移行先の版を宣言しながら、その版が宣言しない空のブロックを持つDocument
+    When 同じ版へもう一度運ぶ
+    Then そのブロックが取り除かれ、Documentは移行先の版に適合する
+    """
+    _write_fixtures_where_v2_dropped_a_block()
+    _write_document_with_legacy(items=[])
+    doc = FsDocumentRepository().load(_MIGRATE_DOC_PATH)
+    doc["schemaRef"] = "TestMigrateSchemaFixture/v2"      # 版だけ書き換わった状態
+    FsDocumentRepository().save(_MIGRATE_DOC_PATH, doc)
+
+    result = _engine().run("migrate_schema", {
+        "documentPath": _MIGRATE_DOC_PATH, "schemaRef": "TestMigrateSchemaFixture/v2"})
+    assert isinstance(result, Ok), result
+    assert result.value["removed"] == ["legacy"], result.value
+    assert "legacy" not in FsDocumentRepository().load(_MIGRATE_DOC_PATH)["content"]

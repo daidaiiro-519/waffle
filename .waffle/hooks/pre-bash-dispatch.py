@@ -44,6 +44,12 @@ def main() -> None:
         )
         reason = require_query_before_array_fill.check(payload)
 
+    if reason is None:
+        refuse_write_into_outdated_schema = _load(
+            "refuse-write-into-outdated-schema.py", "_refuse_write_into_outdated_schema"
+        )
+        reason = refuse_write_into_outdated_schema.check(payload)
+
     if reason:
         print(json.dumps({
             "hookSpecificOutput": {
