@@ -1,0 +1,349 @@
+{
+  "documentId": "uc-deploy-artifact",
+  "documentType": "DomainSpec",
+  "schemaRef": "DomainSpecSchema/v11",
+  "specKind": "usecase",
+  "status": "VALIDATED",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "描かれた成果物を、各ツールが認識できる場所へ配置する：uc-deploy-artifact"
+    },
+    "usecase": {
+      "blockType": "Usecase",
+      "title": "名前",
+      "operationName": ""
+    },
+    "actorIntent": {
+      "blockType": "ActorIntent",
+      "title": "主アクターと意図",
+      "actor": "成果物を読む側（Skill・Agent・外部のツール）",
+      "intent": "自分の場所を見るだけで最新の内容を読みたい。正本の在りかを知らなくても読めるようにしたい。"
+    },
+    "usecaseRationale": {
+      "blockType": "UsecaseRationale",
+      "title": "存在意義",
+      "items": [
+        "描くことと配ることは、独立して失敗し、片方だけやり直され、必要な許可も異なる。配置は配置先の所有権を確かめるが、描画は確かめない。1つの操作に持たせると、描き直さないと配置し直せなくなる。"
+      ]
+    },
+    "mainFlow": {
+      "blockType": "MainFlow",
+      "title": "基本フロー",
+      "participants": [
+        {
+          "id": "Orchestrator",
+          "kind": "actor"
+        },
+        {
+          "id": "Document",
+          "kind": "participant"
+        },
+        {
+          "id": "配置先",
+          "kind": "participant"
+        }
+      ],
+      "steps": [
+        {
+          "from": "Orchestrator",
+          "to": "Document",
+          "message": "配置する",
+          "kind": "command"
+        },
+        {
+          "from": "Document",
+          "to": "Document",
+          "message": "schema の宣言から配置先を解決する",
+          "kind": "self"
+        },
+        {
+          "from": "Document",
+          "to": "Document",
+          "message": "配置先が他の Document の正本でないことを確かめる",
+          "kind": "self"
+        },
+        {
+          "from": "Document",
+          "to": "配置先",
+          "message": "正本の内容が読める状態を作る",
+          "kind": "command"
+        },
+        {
+          "from": "Document",
+          "to": "",
+          "message": "ArtifactDeployed",
+          "kind": "event"
+        },
+        {
+          "from": "Document",
+          "to": "Orchestrator",
+          "message": "置いた先と、置かなかった先とその理由を返す",
+          "kind": "return"
+        }
+      ]
+    },
+    "postconditions": {
+      "blockType": "Postconditions",
+      "title": "事後条件",
+      "items": [
+        "解決できた配置先すべてで、正本と同じ内容が読める",
+        "置かなかった配置先がある場合、その配置先と理由が結果に含まれる",
+        "正本そのものは変更されない",
+        "配置先の宣言が複数種類の配列値を同時に持つ場合、それぞれの配列は独立に展開され、両方に対応する配置先へ置かれる",
+        "1つの配置先は、ちょうど1つの Document に所有される。他の Document の正本を指す配置先へは置かない",
+        "配置先の解決には、文書が実体か雛形かも鍵に含まれる。雛形は他の場所で値を埋めて使われるものなので、この場に配置先を持たない"
+      ]
+    },
+    "acceptanceCriteria": {
+      "blockType": "AcceptanceCriteria",
+      "title": "受け入れ基準",
+      "items": [
+        {
+          "id": "places-into-every-resolved-target",
+          "text": "When 配置を求められたとき、システムは 解決した配置先すべてへ置く shall。"
+        },
+        {
+          "id": "deploy-per-discriminator",
+          "text": "When 配置先が discriminator ごとの配列として宣言されているとき、システムは対象 Document の discriminator 値に対応する配列だけへ書き込む shall。"
+        },
+        {
+          "id": "tool-mappings-nested",
+          "text": "When 対象documentTypeに対応するtoolMappingsのマッピングが、discriminatorの値ごとの入れ子（kindごとの{pathTemplate, mode}等の組）として宣言されているとき、システムは対象Documentのdiscriminator値に対応するマッピングだけを使って配置先を解決する shall。"
+        },
+        {
+          "id": "path-vars-from-content",
+          "text": "When schemaがx-render-target.pathVarsでcontentのドットパスを宣言しているとき、システムはそのcontent値をパステンプレートの変数として使う shall。"
+        },
+        {
+          "id": "path-vars-per-discriminator",
+          "text": "When pathVarsがdiscriminatorごとの宣言（kindごとの変数マップ）であるとき、システムは対象Documentのdiscriminator値に対応する変数マップだけを解決する shall。"
+        },
+        {
+          "id": "skips-only-the-unresolvable-target",
+          "text": "While pathVarsが参照するcontentのドットパスを対象Documentが持たないとき、システムはその変数を使う配置先だけをスキップし、他の配置先への配置は続ける shall。"
+        },
+        {
+          "id": "fan-out-multiple-array-path-vars",
+          "text": "When x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、システムはそれぞれの配列を独立にfan-out展開し、両方に対応する配置先へ書き込む shall。"
+        },
+        {
+          "id": "no-target-means-nothing-placed",
+          "text": "If 対象Documentの種別に対応する配置先が1つも解決できないとき、システムはどこにも置かず、解決できなかったことを結果に含める shall（正本は描く側が既に書いている。配置先を持たないことは、配置を省略した結果ではなく、その種別が配置先を定義していないことの帰結である）。"
+        },
+        {
+          "id": "deploy-target-owned-by-other",
+          "text": "If 解決した配置先が指す正本が他のDocumentの正本であるとき、システムはDEPLOY_TARGET_OWNED_BY_OTHERを返し、その配置先へ書き込まない shall。"
+        },
+        {
+          "id": "reports-skipped-targets",
+          "text": "When 解決した配置先のいずれかへ書き込まなかったとき、システムはその配置先と理由を結果に含める shall。"
+        },
+        {
+          "id": "template-has-no-entity-target",
+          "text": "While 対象Documentが雛形であり、宣言が実体向けのものしか無いとき、システムは配置先を1つも解決せず、正本にのみ書き込む shall。"
+        },
+        {
+          "id": "absent-role-is-entity",
+          "text": "While 対象Documentが役割を宣言していないとき、システムはそれを実体として扱い、実体向けの宣言が示す配置先へ書き込む shall。"
+        }
+      ]
+    },
+    "errors": {
+      "blockType": "Errors",
+      "title": "エラー",
+      "items": []
+    },
+    "acceptanceScenarios": {
+      "blockType": "AcceptanceScenarios",
+      "title": "受け入れシナリオ",
+      "background": "対象 Document の成果物が、正本の場所に描かれている",
+      "scenarios": [
+        {
+          "name": "配置すると、解決した配置先すべてに置かれる",
+          "category": "正常系",
+          "viewpoint": "受け入れ基準：配置を求められたとき 解決した配置先すべてへ置く",
+          "gherkin": "Scenario: 配置すると、解決した配置先すべてに置かれる\n  Given 配置先を持つ Document\n  When 配置する\n  Then 解決した配置先すべてに成果物が置かれる",
+          "satisfies": [
+            "places-into-every-resolved-target"
+          ]
+        },
+        {
+          "name": "frontmatterはx_frontmatterのドットパスを解決して生成する",
+          "category": "正常系",
+          "viewpoint": "frontmatter：schemaのx-frontmatter宣言(フィールド→ドットパス)を解決してYAML frontmatterを生成する",
+          "gherkin": "Scenario: frontmatterはx_frontmatterのドットパスを解決して生成する\n  Given x-frontmatterを宣言するSchemaのDocument\n  When 配置する\n  Then 出力冒頭にname/description等を含むYAML frontmatterが生成される",
+          "satisfies": [
+            "path-vars-from-content"
+          ]
+        },
+        {
+          "name": "discriminatorごとに異なる配置先へ書き分ける",
+          "category": "正常系",
+          "viewpoint": "受け入れ基準：配置先がdiscriminatorごとの配列で宣言されているとき対応する配列だけへ書く",
+          "gherkin": "Scenario: discriminatorごとに異なる配置先へ書き分ける\n  Given 配置先がdiscriminatorの値ごとに異なる配列として宣言されたschemaのDocument\n  When 配置する\n  Then そのDocumentのdiscriminator値に対応する配列の配置先だけに書かれる",
+          "satisfies": [
+            "deploy-per-discriminator"
+          ]
+        },
+        {
+          "name": "toolMappingsがdiscriminatorごとに入れ子で宣言されているときは対応するマッピングだけを使う",
+          "category": "正常系",
+          "viewpoint": "受け入れ基準：toolMappingsが対象documentType内でdiscriminatorの値ごとに異なるマッピング（kindごとの{pathTemplate, mode}の組）として宣言されているとき、対象Documentのdiscriminator値に対応するマッピングだけから配置先を解決する",
+          "gherkin": "Scenario: toolMappingsがdiscriminatorごとに入れ子で宣言されているときは対応するマッピングだけを使う\n  Given .waffle/config.jsonのtoolMappingsが対象documentTypeについてdiscriminatorの値ごとの入れ子マッピングを持つDocument\n  When 配置する\n  Then そのDocumentのdiscriminator値に対応するマッピングの配置先だけに書かれる",
+          "satisfies": [
+            "tool-mappings-nested"
+          ]
+        },
+        {
+          "name": "pathVarsで宣言したcontent値をパステンプレートの変数として使う",
+          "category": "正常系",
+          "viewpoint": "受け入れ基準：x-render-target.pathVarsが宣言するcontentドットパスの値がパステンプレートに反映される",
+          "gherkin": "Scenario: pathVarsで宣言したcontent値をパステンプレートの変数として使う\n  Given x-render-target.pathVarsでcontentのドットパスを宣言したschemaのDocument\n  When 配置する\n  Then そのcontent値がパステンプレートの変数として解決され、対応するパスに書かれる",
+          "satisfies": [
+            "path-vars-from-content"
+          ]
+        },
+        {
+          "name": "discriminatorごとに異なるpathVarsを解決する",
+          "category": "正常系",
+          "viewpoint": "受け入れ基準：discriminatorの分岐によって参照できるcontentドットパスが変わるため、pathVars自体もdiscriminatorごとに宣言できる",
+          "gherkin": "Scenario: discriminatorごとに異なるpathVarsを解決する\n  Given discriminatorの値ごとに異なるpathVars宣言（kindごとの変数マップ）を持つschemaのDocument\n  When 配置する\n  Then そのDocumentのdiscriminator値に対応する変数マップだけが解決され、パステンプレートに反映される",
+          "satisfies": [
+            "path-vars-per-discriminator"
+          ]
+        },
+        {
+          "name": "変数が解決できない配置先だけを飛ばし、他へは置く",
+          "category": "境界値",
+          "viewpoint": "描画：pathVarsが参照するcontentのフィールドを持たないDocumentでも、そのpathVarを使わない正本への書き込みは妨げず、解決できない配置先だけをスキップする",
+          "gherkin": "Scenario: 変数が解決できない配置先だけを飛ばし、他へは置く\n  Given x-render-target.pathVarsが参照するcontentのドットパスを持たないDocument\n  When 配置する\n  Then 他の配置先へは置かれ、解決できない配置先はクラッシュせずスキップされる",
+          "satisfies": [
+            "skips-only-the-unresolvable-target"
+          ]
+        },
+        {
+          "name": "配列のpathVarはtoolMappings経由の配置先へfan-outする",
+          "category": "正常系",
+          "viewpoint": "配置: x-render-target.pathVarsで宣言した値が配列（例: 複数advisorへのskillRefs）のとき、.waffle/config.jsonのtoolMappings経由の配置先は要素ごとに1つずつ生成される",
+          "gherkin": "Scenario: 配列のpathVarはtoolMappings経由の配置先へfan-outする\n  Given x-render-target.pathVarsで宣言した値が配列であるDocumentと、その変数を参照するtoolMappingsのpathTemplate\n  When 配置する\n  Then 配列の要素ごとに1つずつsymlinkの配置先が作られる",
+          "satisfies": [
+            "fan-out-multiple-array-path-vars"
+          ]
+        },
+        {
+          "name": "複数種類の配列pathVarが同時にfan-out展開される",
+          "category": "正常系",
+          "viewpoint": "配置: x-render-target.pathVarsが複数種類の配列値（例: skillRefsとagentRefs）を同時に宣言しているとき、それぞれ独立にfan-out展開され両方の配置先へ書かれる",
+          "gherkin": "Scenario: 複数種類の配列pathVarが同時にfan-out展開される\n  Given x-render-target.pathVarsで2種類の配列値（skillRefsとagentRefs）を宣言したschemaのDocumentと、それぞれを参照するtoolMappingsのpathTemplate\n  When 配置する\n  Then skillRefsの各要素とagentRefsの各要素それぞれに対応する配置先が全て作られる",
+          "satisfies": [
+            "fan-out-multiple-array-path-vars"
+          ]
+        },
+        {
+          "name": "Agentのtool対応づけが入れ子でも、種別ごとに別々の配置先へ解決される",
+          "category": "正常系",
+          "viewpoint": "計算整合: 対応づけをフラットから入れ子へ移しても、既存documentの配置先が変わらないこと",
+          "gherkin": "Scenario: Agentのtool対応づけが入れ子でも、種別ごとに別々の配置先へ解決される\nGiven toolMappingsのAgentが、agentKindごとの入れ子マッピング（orchestrator/subagent）を持つDocument\nWhen agentKind=orchestratorとagentKind=subagentのそれぞれを配置する\nThen orchestratorとsubagentは、それぞれ別々の配置先へ解決される",
+          "satisfies": [
+            "tool-mappings-nested"
+          ]
+        },
+        {
+          "name": "入れ子の対応づけに無い discriminator の値は配置されない",
+          "category": "異常系",
+          "viewpoint": "境界: 対応づけに無い値が、他の値の配置先を誤って共有しないこと",
+          "gherkin": "Scenario: 入れ子の対応づけに無い discriminator の値は配置されない\nGiven documentType向けのtoolMappingsが入れ子だが、対象Documentのdiscriminator値に対応するキーを持たない\nWhen 配置する\nThen そのtoolの配置先には何も書かれない",
+          "satisfies": [
+            "tool-mappings-nested"
+          ]
+        },
+        {
+          "name": "雛形は配置先が解決できないため配置されない",
+          "category": "境界値",
+          "viewpoint": "境界: 役割によって配置先の引き方が変わる。雛形は配置先を持たないことが正しい姿",
+          "gherkin": "Scenario: 雛形は配置先が解決できないため配置されない\n  Given documentRoleがtemplateのDocumentと、instanceの宣言だけを持つtoolMappings\n  When 配置する\n  Then どこにも置かれず、配置先は1つも返らない",
+          "satisfies": [
+            "template-has-no-entity-target"
+          ]
+        },
+        {
+          "name": "実体は宣言どおりの配置先へ配置される",
+          "category": "正常系",
+          "viewpoint": "計算整合: 役割を宣言しない文書は実体として扱う（既定が効いていることの確認）",
+          "gherkin": "Scenario: 実体は宣言どおりの配置先へ配置される\n  Given documentRoleを宣言しないDocument（既定でinstance）\n  When 配置する\n  Then instanceの宣言が示す配置先へ書かれる",
+          "satisfies": [
+            "absent-role-is-entity"
+          ]
+        },
+        {
+          "name": "他のDocumentが所有する配置先は上書きしない",
+          "category": "異常系",
+          "viewpoint": "エラー: 1つの配置先は1つの文書にのみ所有される。先客の成果物を失わせない",
+          "gherkin": "Scenario: 他のDocumentが所有する配置先は上書きしない\n  Given 配置先が既に別Documentの正本を指しているとき\n  When 配置する\n  Then DEPLOY_TARGET_OWNED_BY_OTHERが返り、その配置先は書き換えられない",
+          "satisfies": [
+            "deploy-target-owned-by-other"
+          ]
+        },
+        {
+          "name": "解決できなかった配置先は理由とともに結果へ含める",
+          "category": "境界値",
+          "viewpoint": "境界: 解決できない配置先を黙って落とさず、理由とともに結果へ出す",
+          "gherkin": "Scenario: 解決できなかった配置先は理由とともに結果へ含める\n  Given pathTemplateが参照する変数をDocumentが持たないとき\n  When 配置する\n  Then その配置先と理由がskippedに現れ、他の配置先への配置は続く",
+          "satisfies": [
+            "reports-skipped-targets"
+          ]
+        },
+        {
+          "name": "配置先を1つも持たない種別は、どこにも置かれない",
+          "category": "正常系",
+          "viewpoint": "受け入れ基準：配置先が1つも解決できないとき、どこにも置かず理由を返す",
+          "gherkin": "Scenario: 配置先を1つも持たない種別は、どこにも置かれない\n  Given 配置先を1つも宣言していない種別の Document\n  When 配置する\n  Then どこにも置かれない\n  And 配置先が解決できなかったことが結果に含まれる",
+          "satisfies": [
+            "no-target-means-nothing-placed"
+          ]
+        }
+      ]
+    },
+    "operationIndex": {
+      "blockType": "OperationIndex",
+      "title": "操作一覧",
+      "items": []
+    },
+    "externalActors": {
+      "blockType": "ExternalActors",
+      "title": "関与する外部",
+      "items": []
+    },
+    "preconditions": {
+      "blockType": "Preconditions",
+      "title": "事前条件",
+      "items": [
+        "対象 Document の成果物が、正本の場所に描かれていること"
+      ]
+    },
+    "description": {
+      "blockType": "Summary",
+      "title": "概要",
+      "items": [
+        "正本として描かれた成果物を、それを読む側が認識できる場所へ置く。置き方は複製と指し示しの2つがあり、指し示しなら正本の更新がそのまま届く。"
+      ]
+    },
+    "inputs": {
+      "blockType": "Inputs",
+      "title": "入力",
+      "items": [
+        {
+          "name": "対象 Document のパス",
+          "description": "配置する成果物を持つ Document を指す"
+        },
+        {
+          "name": "schema",
+          "description": "配置先の宣言を持つ"
+        }
+      ]
+    }
+  },
+  "tags": [],
+  "subdomainRef": "sd-document-management"
+}
