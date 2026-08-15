@@ -1,6 +1,6 @@
 ---
 name: waffle-own-knowledge-stage
-description: Waffle 自身の knowledge を立てる作業の現在地。決まったこと・次にやること
+description: 仕様と実装の抽象境界を再定義する作業の現在地。いまは Schema を説明する仕様が無いという発見の前
 metadata:
   node_type: memory
   type: project
@@ -8,47 +8,74 @@ metadata:
 
 ## いまどこにいるか（2026-08-15）
 
-**knowledge 1本を書き終え、ACTIVE にした**（`spec-implementation-abstraction`、KnowledgeSchema/v6）。
-**次は配る側の実装。**
+**Schema を説明する仕様が無い**ことが分かった地点。次は `agg-schema` が何を持ち、何を持てていないかの整理から。
 
-承認済みの決定は **8本**。この作業の起点は「仕様と実装の抽象と具体の境界を、knowledge のもとで正しく再定義する」である。
+承認済みの決定は **9本**（`docs/adr/adr-*.html`）。
 
-advisor には Waffle 独自の概念を入れない。advisor は確立された概念（ドメイン駆動設計など）から答えるからこそ、Waffle の判断から独立した検証になる。**Waffle 独自の概念は Orchestrator が持つ。**
+## 済んだこと
 
-## knowledge に書いたこと
+| | |
+|---|---|
+| knowledge 1本 | `spec-implementation-abstraction`（KnowledgeSchema/v6、**ACTIVE**） |
+| 決定 | 描くことと配ることを分ける（承認済み） |
+| 仕様の分割 | `uc-render-document` 49→37件／**`uc-deploy-document`** 12件（両方 VALIDATED） |
 
-> **抽象は簡略化ではないし、情報の削減でもない。特徴を抽出して共通概念として表現するのが抽象。**
-> **抽象は、一段下ろしたときに元の具体へ戻る高さまでしか上げてはいけない。**
+分割のとき、またぐシナリオは0件だった。移した15件のシナリオが全部 `render する` の語彙だったので、配置の語彙へ言い換えた。識別子も3つ改名した。
+`uc-deploy-artifact` と名付けたが、**アーティファクトはユビキタス言語に無い**（定義済みは「成果物 ── Document を描画して得られる、読み手向けの出力」）。`uc-deploy-document` へ改名した。
 
-- **高さは具体からの距離で測る。一段とは、そこから具体が一意に定まる距離**（比喩を消さず、隣に定義を置いた）
-- 犬の段：**動物**（上げすぎ）→ **耳がある・四足歩行・鼻が利く・しっぽがある**（正しい高さ）→ **犬** → **犬種**（規約が持つ）
-- 上げすぎと `a.b` を `a` に潰すことは**同じ失敗**。症状だけが違う（別の具体が混ざる／一つの操作が能力を持ちすぎる）
-- 段は1本のピラミッドではない。**事業の側**（事業領域→業務領域）と**モデルの側**（区切られた文脈→ドメインモデルの部品と業務ユースケース→実装）があり、**包含ではなく対応**。業務領域の境界は強く関連するユースケースの集まりとして決まる
-- **Waffle 独自なのは要素を足したことではない。**ドメイン駆動設計が与える要素を仕様として書くとき、どの高さまで抽象化すれば具体へ**意味的整合**を保ったまま落とせるかを定めた点
-- 抽象化の対象は**要素そのものではなく、その要素について仕様が何をどう書くか**
-- 正しい高さは**「何が成り立つか」で書く**。「どう作るか」で書かない（2度指摘された私の癖）
+## 今回の発見 ── Schema を説明する仕様が無い
 
-## 次にやること（順に）
+schema が持つ Waffle 独自の宣言と、仕様での言及回数：
 
-1. **配る側の実装** ── 描くことと配ることを分ける決定に沿って、配るユースケースを起こす。`skillRefs`/`agentRefs` を knowledge から外し、読む側（advisor の `knowledgeRefs`、Orchestrator の新しい欄）だけが宣言する形へ。SessionStart の注入元も同時に変える
-2. **Orchestrator の Ref へ登録** ── AgentSchema に読む knowledge を宣言する欄が無いので足す。`spec-implementation-abstraction` はここへ載る
-3. 旧 knowledge を DEPRECATED にし、**承認済み ADR 2本の裏付け参照を差し替える**（仕様の下限／仕様は実装の型名を持たない が `spec-describes-behavior-not-implementation` を引いている）
-4. **図の描画** ── `recovered/figures/` の `grammar.py`・`figure_schema.py`・`draw.py` を読み、承認済みの決定（16の主張・3つの欄・18の名前）と突き合わせる。`pygraphviz` と `dot` を入れて動かし、`docs/adr/` に残る50枚を再現できるかで復元の完全性を測る。そのうえで `src/` へ載せる
-5. 記法を **uc-render-document の仕様へ書く**（16の主張それぞれの必須の欄・禁止の欄）
-6. RenderMetaSchema の新版を切り、既存の図の宣言8件を新しい形に照らして判定する
-7. **knowledge から記入指示（x-prompt）への突き合わせ** ── 5本の辺のうち、いま検知の仕組みが無い唯一のもの
-8. **サブドメインの切り直し** ── 補完が中核に混ざる、差別化原理と名前が合わない、という指摘。ADR を確立してから、と決めていた
+| 宣言 | schema 内 | 仕様での言及 |
+|---|---|---|
+| `x-prompt-write` | **623** | 19 |
+| `x-prompt-query` | 216 | 7 |
+| `x-render` | 157 | 74 |
+| **`x-render-order`** | **156** | **0** |
+| `x-render-level` | 152 | **2** |
+| `x-render-target` | 10 | 26 |
+
+言及があるものも「描画のユースケースが x-render を読む」という**使う側からの言及**で、**Schema 自身が何を宣言できるかを定義した仕様が無い**。`agg-schema` が持つのは構造の不変条件12件だけで、`x-render-target`・`pathVars`・`deploy` は**0回**。
+
+結果：schema を直しても仕様は何も言わない。転写する受け入れ基準が無いのでテストが書けない。突き合わせる宣言が無いのでドリフト検知も効かない。**`x-render-order` を誰かが消しても何も落ちない。**
+
+構造の正しさは JSON Schema 自身が保証している。埋まっていないのは **Waffle が `x-` で足した部分だけ**。しかも最も使われている `x-prompt-write` が、最も説明されていない。
+
+## 直近で訂正したこと
+
+- **正本の場所は規約ではなく仕様。**「置き場所は規約」を当てたのは誤り。承認済みの分け目で測ると、成果物の場所は読み手が探す場所そのもので、利用者にとって何が起きるかが変わる
+- **既存へ肉付けしない。**`agg-schema` に不変条件を1件足す案を出したが、足りないのではなく形が古い前提のままだった → [[correct-toward-the-right-form-not-the-existing-one]]
+
+## 未決（`x-render-target` について）
+
+測ると `path` は9件中8件が種別と識別子から導出でき、Knowledge だけが `{status}` を挟む例外。`AgentSchema` と `TemplateSchema` は discriminator ごとに書き分けているのに値が同一。
+ただし**この評価は、Schema を説明する仕様が無いまま行っている**。仕様を起こしてから、仕様の言葉で問い直す。
+
+正本の経路に `status` を入れていることが、今日「置き去りの成果物4件」を生んだ（削除済み）。経路から外すかは未決。
+
+## この先やること（順に）
+
+1. **`agg-schema` の整理** ← いまここ。何を持ち、何を持てていないか
+2. Schema を説明する仕様を起こす（`x-` の宣言それぞれの意味と保証）
+3. その仕様の言葉で `x-render-target` を問い直し、直す
+4. `uc-deploy-document` を TDD で実装し、`render` から配置を外す
+5. `AgentSchema` に Orchestrator が読む knowledge を宣言する欄を足す／`KnowledgeSchema` から `skillRefs`・`agentRefs` を外す
+6. `spec-implementation-abstraction` を Orchestrator の Ref へ登録して配る
+7. **図の描画** ── `recovered/figures/` の `grammar.py`・`figure_schema.py`・`draw.py` を読み、決定と突き合わせる。`pygraphviz` と `dot` を入れて50枚を再現できるかで復元の完全性を測り、`src/` へ載せる
+8. 記法を仕様へ／RenderMetaSchema の新版／既存の図の宣言8件の判定
+9. knowledge から記入指示への突き合わせ
+10. サブドメインの切り直し
 
 ## knowledge へ戻すべきもの
 
 **境界の実在性を測る3つの問い**（独立して失敗するか・再利用されるか・許可が別か）。
-「描くことと配ることを分ける」の判定に使ったが、いまの knowledge は「潰すと境界が消える」までしか持たない。同じ判断は繰り返されるので、knowledge が持つべきである。
+「描くことと配ることを分ける」の判定に使ったが、いまの knowledge は「潰すと境界が消える」までしか持たない。
 
 ## 材料の在りか
 
-- 承認済み ADR 8本：`docs/adr/adr-*.html`／索引 https://claude.ai/code/artifact/227e331a-b637-473e-b635-78ad8422d635
-- 復元した実装268本：`recovered/`（figures 69・scripts 199）。**一時的な置き場なので、精査して `src/` へ移し空にする**
+- 索引 https://claude.ai/code/artifact/227e331a-b637-473e-b635-78ad8422d635
+- 復元した実装268本：`recovered/`（**一時的な置き場。精査して `src/` へ移し空にする**）
 - 会話の記録から発言を辿る方法：[[lost-work-lives-in-the-transcript]]
-- 前段の到達点：[[ddd-abstraction-boundary-conclusions]]
 
-**How to apply:** 再開するときは「次にやること」の1から入る。4以降は互いに依存していて分離できない（記法の仕様が無いと実装を判定できず、実装が無いと図を描けない）。
+**How to apply:** 再開は1から。schema をどう直すかを考え始めたら、**それを説明する仕様があるかを先に問う**。無いまま直すと、テストもドリフト検知も効かないまま構造だけが変わる。
