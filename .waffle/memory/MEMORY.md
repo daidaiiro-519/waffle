@@ -11,6 +11,7 @@
 - [消えたと判断する前に会話の記録を探す](feedback_lost_work_lives_in_the_transcript.md) — Writeの中身がそのまま残っている。git と作業領域だけ見て断じない
 - [検査の合否だけで「確認した」と言わない](feedback_look_at_the_render_not_only_the_checks.md) — 描画は画像にして目で見る。検査は意味の壊れ・図と本文の食い違いを見ない
 - [規約は1ブロックだけ読んで判断しない](feedback_read_all_standards_not_one_block.md) — 定義の本文・判断の木・表を全部当たってから断じる。同じ形の誤りを繰り返している
+- [既存へ肉付けせず、あるべき形へ直す](feedback_correct_toward_the_right_form_not_the_existing_one.md) — 前提が変わった構造に規則を足さない。AIで直す手間は安くなった
 - [実例の件数で能力の要否を決めない](feedback_evidence_based_scope_is_not_for_capability_decisions.md) — 抽象化のタイミングの基準であって、構造の妥当性の検査には使えない
 
 ## 主題（仕様と実装の抽象境界）
