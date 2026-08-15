@@ -58,8 +58,8 @@ schema が持つ Waffle 独自の宣言と、仕様での言及回数：
 ## この先やること（順に）
 
 1. ~~`agg-schema` の整理~~ **済**。ドメインモデルの4部品のうち仕様として書けるのは2つだけで、参照7つのうち `schemaRef` だけが相手の値を写して持っていた（承認済みの決定へ）
-1b. **仕様の種別に値オブジェクトとエンティティを足す** ← いまここ
-2. Schema を説明する仕様を起こす（`x-` の宣言それぞれの意味と保証）
+1b. **Schema を説明する仕様を起こす** ← いまここ。`specKind` に値オブジェクトとエンティティを足すのは、その仕様の実装にあたる
+2. `DomainSpecSchema` の新版を切り、`specKind` を増やす（1b の実装）
 3. その仕様の言葉で `x-render-target` を問い直し、直す
 4. `uc-deploy-document` を TDD で実装し、`render` から配置を外す
 5. `AgentSchema` に Orchestrator が読む knowledge を宣言する欄を足す／`KnowledgeSchema` から `skillRefs`・`agentRefs` を外す
