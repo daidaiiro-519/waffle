@@ -6,7 +6,10 @@ metadata:
   type: project
 ---
 
-## いまどこにいるか（2026-08-15）
+## いまどこにいるか（2026-08-15 更新）
+
+**knowledge 1本は書き終え、ACTIVE にした。**次は配る側の実装。
+承認済み ADR は9本。うち「描くことと配ることを分ける」がこの先の前提になる。
 
 **Waffle 自身の knowledge を1本立てる段。**主題は「仕様と実装の抽象と具体」で、中心は**境界の引き方**。
 決定の記録（ADR）は7本が承認済みで、形も固まった。それらは**この knowledge から導かれるもの**として並べ直す（逆ではない）。
@@ -41,7 +44,8 @@ Waffle 独自の概念は **Orchestrator が持つ**（`agentRefs` に `waffle` 
 
 ## この段が終わったらやること（順に）
 
-1. knowledge 1本を **KnowledgeSchema v6** で書き起こす
+0. ~~knowledge 1本を KnowledgeSchema v6 で書き起こす~~ **済（`spec-implementation-abstraction`、ACTIVE）**
+0. ~~描くことと配ることを分ける決定~~ **済（承認済み）**
 2. 旧 knowledge を DEPRECATED にし、**承認済み ADR 2本の裏付け参照を新しいものへ差し替える**（仕様の下限／仕様は実装の型名を持たない が `spec-describes-behavior-not-implementation` を引いている）
 3. 参照の向きの実装 ── 読む側だけが宣言する形へ。SessionStart の注入元も同時に変える（変えないと、廃止した宣言が実効を持ち続ける）
 4. **図の描画** ── `recovered/figures/` の `grammar.py`・`figure_schema.py`・`draw.py` を読み、承認済みの決定（16の主張・3つの欄・18の名前）と突き合わせる。`pygraphviz` と `dot` を入れて動かし、`docs/adr/` に残る50枚を再現できるかで復元の完全性を測る。そのうえで `src/` へ載せる
