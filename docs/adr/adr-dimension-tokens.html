@@ -1,0 +1,105 @@
+<title>寸法をトークンへ移す</title><style>
+:root{--paper:#EFF1F4;--surface:#FFF;--surface-2:#F6F8FA;--ink:#16191F;--ink-soft:#545C69;
+--ink-faint:#7C8593;--rule:#D5DAE1;--rule-soft:#E6EAEF;--bad:#8C2F39;--bad-bg:#F5E7E8;
+--good:#25604A;--good-bg:#E2EFE9;
+--serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+--sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+--mono:ui-monospace,"SF Mono",Menlo,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;--ink-soft:#A8B1BD;
+--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;--bad:#DB9AA1;--bad-bg:#2C1B1D;
+--good:#7DC4A6;--good-bg:#152A22}}
+:root[data-theme="dark"]{--paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;
+--ink-soft:#A8B1BD;--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;--bad:#DB9AA1;
+--bad-bg:#2C1B1D;--good:#7DC4A6;--good-bg:#152A22}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;
+line-height:1.75;margin:0;padding:clamp(1.5rem,4vw,3rem) clamp(1rem,3vw,2rem) 5rem}
+.wrap{max-width:66rem;margin:0 auto;display:flex;flex-direction:column;gap:2.2rem}
+header{display:flex;flex-direction:column;gap:.5rem}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+h1{font-family:var(--serif);font-size:clamp(1.5rem,3.5vw,2rem);line-height:1.4;font-weight:600;margin:0}
+.lede{color:var(--ink-soft);font-size:.96rem;margin:0;max-width:42rem}
+h2{font-family:var(--serif);font-size:1.15rem;font-weight:600;margin:0;padding-bottom:.5rem;
+border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.6rem}
+h2 .n{font-family:var(--mono);font-size:.66rem;color:var(--ink-faint);letter-spacing:.1em}
+section{display:flex;flex-direction:column;gap:.9rem}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:48rem){.cmp{grid-template-columns:1fr}}
+.side{border:1px solid var(--rule);border-radius:3px;background:var(--surface);
+display:flex;flex-direction:column;overflow:hidden}
+.side.b{border-top:3px solid var(--bad)} .side.a{border-top:3px solid var(--good)}
+.side .h{padding:.6rem .9rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em}
+.side.b .h{color:var(--bad);background:var(--bad-bg)}
+.side.a .h{color:var(--good);background:var(--good-bg)}
+.side .c{padding:.9rem;display:flex;align-items:flex-start;justify-content:center;overflow-x:auto;background:var(--surface-2)}
+.side .c svg{max-width:100%;height:auto}
+.side .n{padding:.55rem .9rem;font-size:.82rem;color:var(--ink-soft);border-top:1px solid var(--rule-soft)}
+.side .n b{color:var(--ink)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:32rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+thead th{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+font-weight:600;background:var(--surface-2);border-bottom:1px solid var(--rule)}
+tbody tr:last-child td{border-bottom:none}
+td.k{font-weight:700;white-space:nowrap}
+.no{color:var(--bad);font-weight:700} .yes{color:var(--good);font-weight:700}
+.cut{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;
+background:var(--surface);padding:.85rem 1.05rem;font-size:.92rem;line-height:1.75}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);
+border:1px solid var(--rule-soft);border-radius:3px;padding:.06em .32em}
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">ADR ── 描画エンジン</p>
+<h1>寸法をトークンへ移す</h1>
+<p class="lede">コードに残っていた絶対値のpxをトークンへ移す。<b>直ったのは矢じり1つ</b>で、残りは次の決定への地ならし。左右とも実際に描いたもの。</p>
+</header>
+
+<section>
+<h2><span class="n">01</span>書体を2.5倍にしたとき</h2>
+<div class="cmp">
+<div class="side b"><div class="h">変更前</div><div class="c"><svg class="wf-fig" viewBox="0 0 332 922" width="332" height="922" role="img"><g transform="translate(80.0,-0.0)"><rect x="-80.0" y="280.0" width="320.0" height="390.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><rect x="-72.0" y="257.5" width="133.0" height="37.5" fill="#F5F7F9"/><text x="-5.5" y="285.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="25.0" fill="#16636B">領域の内側</text><path d="M80.0,80.0 L80.0,315.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="80.0,315.0 77.6,308.4 82.4,308.4" fill="#C3CAD2"/><rect x="51.0" y="172.5" width="58.0" height="40.0" fill="#F5F7F9"/><text x="80.0" y="205.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="25.0" fill="#79828F">呼ぶ</text><path d="M80.0,395.0 L80.0,555.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="80.0,555.0 77.6,548.4 82.4,548.4" fill="#C3CAD2"/><path d="M80.0,635.0 L80.0,830.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="80.0,830.0 77.6,823.4 82.4,823.4" fill="#C3CAD2"/><g transform="translate(0.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="160.0" height="80.0" rx="12.5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="80.0" y="50.8" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="30.0" font-weight="400" fill="#171B23">受け口</text></g></g><g transform="translate(-45.0,315.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="250.0" height="80.0" rx="12.5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="125.0" y="50.8" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="30.0" font-weight="400" fill="#171B23">ユースケース</text></g></g><g transform="translate(-45.0,555.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="250.0" height="80.0" rx="12.5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="125.0" y="50.8" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="30.0" font-weight="400" fill="#171B23">業務サービス</text></g></g><g transform="translate(0.0,830.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="160.0" height="80.0" rx="12.5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="80.0" y="50.8" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="30.0" font-weight="400" fill="#171B23">モデル</text></g></g></g></svg></div><div class="n">箱と文字は大きくなったが、<b>矢じりだけ小さいまま</b>。<code>head_len = 7</code>が絶対値で、何にも比例していなかった</div></div>
+<div class="side a"><div class="h">変更後</div><div class="c"><svg class="wf-fig" viewBox="0 0 341 931" width="341" height="931" role="img"><g transform="translate(80.0,-0.0)"><rect x="-80.0" y="280.0" width="320.0" height="390.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><rect x="-60.0" y="257.5" width="145.0" height="37.5" fill="#F5F7F9"/><text x="12.5" y="285.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="25.0" fill="#16636B">領域の内側</text><path d="M80.0,80.0 L80.0,315.0" fill="none" stroke="#C3CAD2" stroke-width="1.7312398870886563"/><polygon points="80.0,315.0 76.4,305.2 83.6,305.2" fill="#C3CAD2"/><rect x="45.0" y="172.5" width="70.0" height="40.0" fill="#F5F7F9"/><text x="80.0" y="205.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="25.0" fill="#79828F">呼ぶ</text><path d="M80.0,395.0 L80.0,555.0" fill="none" stroke="#C3CAD2" stroke-width="1.7312398870886563"/><polygon points="80.0,555.0 76.4,545.2 83.6,545.2" fill="#C3CAD2"/><path d="M80.0,635.0 L80.0,830.0" fill="none" stroke="#C3CAD2" stroke-width="1.7312398870886563"/><polygon points="80.0,830.0 76.4,820.2 83.6,820.2" fill="#C3CAD2"/><g transform="translate(0.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="160.0" height="80.0" rx="12.5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.7312398870886563"/><text x="80.0" y="50.8" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="30.0" font-weight="400" fill="#171B23">受け口</text></g></g><g transform="translate(-45.0,315.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="250.0" height="80.0" rx="12.5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.7312398870886563"/><text x="125.0" y="50.8" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="30.0" font-weight="400" fill="#171B23">ユースケース</text></g></g><g transform="translate(-45.0,555.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="250.0" height="80.0" rx="12.5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.7312398870886563"/><text x="125.0" y="50.8" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="30.0" font-weight="400" fill="#171B23">業務サービス</text></g></g><g transform="translate(0.0,830.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="160.0" height="80.0" rx="12.5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.7312398870886563"/><text x="80.0" y="50.8" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="30.0" font-weight="400" fill="#171B23">モデル</text></g></g></g></svg></div><div class="n">矢じりが<b>線幅に比例</b>して大きくなる。線幅は倍率^0.4で弱く追随し、最小1pxでクランプする</div></div>
+</div>
+</section>
+
+<section>
+<h2><span class="n">02</span>実際に変わった量</h2>
+<div class="cut">見た目の印象ではなく、寸法を測って比べる。<b>この変更で本当に変わったのは1つだけ</b>だった。</div>
+<div class="scroll"><table><thead><tr><th>測ったもの</th><th>変更前</th><th>変更後</th><th></th></tr></thead><tbody>
+<tr><td class="k">矢じりの長さ（等倍）</td><td>7.0</td><td>7.2</td><td>変わらない（正しい）</td></tr>
+<tr><td class="k">矢じりの長さ（2.5倍）</td><td class="no">7.0 のまま</td><td class="yes">10.4</td><td><b>これが直った</b></td></tr>
+<tr><td class="k">画布（間隔だけ詰めたとき）</td><td>140×270</td><td>135×266</td><td>5pxだけ。ほぼ変わらない</td></tr>
+</tbody></table></div>
+<div class="cut"><b>「書体はそのままで間隔だけ詰める」は、変更前からできていた。</b>間隔のトークンは元々独立していたので、この変更で得た能力ではない。変わったのは画布の余白が間隔に追随するようになった分（5px）だけで、<b>能力の差ではなく程度の差</b>である。<br><br>
+矢じりが<b>倍率どおり2.5倍にならず1.5倍に留まる</b>のは意図した挙動。矢じりは線の終端なので線幅に比例させ、線幅は倍率に弱く（^0.4）追随させて、細線が太線に化けるのを防いでいる。</div>
+</section>
+
+<section>
+<h2><span class="n">03</span>合否は、テストではなく静的な検査で言う</h2>
+<div class="cut">「テストが通った」は根拠にしない。<b>コアを触らずに済むかは、依存の形で決まる</b>ので、数えられる条件にする。</div>
+<div class="scroll"><table><thead><tr><th>条件</th><th>変更前</th><th>変更後</th></tr></thead><tbody>
+<tr><td class="k">コアが持つ寸法の数値（係数を含む）</td><td class="no">12件</td><td class="yes">6件</td></tr>
+<tr><td class="k">コアが参照する部品の種類名</td><td class="no">3件（box / frame / edge）</td><td class="no">3件（未着手）</td></tr>
+<tr><td class="k">部品を1つ足すのに要するコアの変更行数</td><td class="no">未測定</td><td class="no">未測定</td></tr>
+</tbody></table></div>
+<div class="cut">残る6件は寸法ではなく、<b>経路上の候補位置の割合</b>（0.5・0.35…）と平方根。性質が違うので別に扱う。<br>
+<b>下2行は手つかず。</b>この変更だけでは「コアを触らなくてよい」とは言えない。</div>
+</section>
+
+<section>
+<h2><span class="n">04</span>この決定が含まないもの</h2>
+<div class="scroll"><table><thead><tr><th>切り出した先</th><th>なぜ分けたか</th></tr></thead><tbody>
+<tr><td class="k">尺度の体系（型・空間・線・形の4族＋全体倍率）</td><td>絶対値pxを消すことと、尺度を作り直すことは<b>別の決定</b>。1つの案に束ねると、片方の理由でもう片方が正当化される</td></tr>
+<tr><td class="k">部品を名前で解決する仕組み</td><td>コアが<code>box</code>/<code>frame</code>/<code>edge</code>を直に呼んでいる。ここが残る限り、部品を足すとコアが変わる</td></tr>
+<tr><td class="k">配置戦略の差し替え</td><td>層状配置をコアに固定している。別の配置（力学配置等）が要るとアルゴリズムごと差し替えになる</td></tr>
+<tr><td class="k">辺が箱のどこに接続するか</td><td>いまの契約は幅と高さしか申告しない。接続点を持たないので、コアが箱の形を推測している</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="n">05</span>承認</h2>
+<div class="cut"><b>未承認。</b>2者の敵対的検証を経て、当初案（書体を唯一の基点にする）は破棄し、この範囲まで縮めた。</div>
+</section>
+</div>

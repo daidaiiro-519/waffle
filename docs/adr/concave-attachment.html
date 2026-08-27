@@ -1,0 +1,243 @@
+<title>湾のある形に、辺はどこへ着くか</title>
+<style>
+:root{--paper:#EFF1F4;--surface:#FFFFFF;--surface-2:#F6F8FA;--ink:#16191F;--ink-soft:#545C69;
+ --ink-faint:#7C8593;--rule:#D5DAE1;--rule-soft:#E6EAEF;
+ --now:#8C2F39;--now-bg:#F5E7E8;--next:#25604A;--next-bg:#E2EFE9;--key:#7A5A22;--key-bg:#F3EDE0;
+ --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+ --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+ --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;--ink-soft:#A8B1BD;
+ --ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+ --now:#DB9AA1;--now-bg:#2C1B1D;--next:#7DC4A6;--next-bg:#152A22;--key:#D3B27A;--key-bg:#2A2318;}}
+:root[data-theme="dark"]{--paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;
+ --ink-soft:#A8B1BD;--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+ --now:#DB9AA1;--now-bg:#2C1B1D;--next:#7DC4A6;--next-bg:#152A22;--key:#D3B27A;--key-bg:#2A2318;}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+ margin:0;padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,2rem) 5rem}
+.wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:2.8rem}
+.col{max-width:40rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:0}
+h1{font-family:var(--serif);font-size:clamp(1.5rem,3.6vw,2.05rem);line-height:1.4;font-weight:600;margin:.6rem 0 0;text-wrap:balance}
+.lede{color:var(--ink-soft);font-size:1rem;margin:.7rem 0 0;max-width:40rem}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-size:1.28rem;font-weight:600;margin:0;padding-bottom:.6rem;
+ border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+p{margin:0}
+.col>p+p{margin-top:.85rem}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+pre{margin:0;padding:.85rem 1rem;font-family:var(--mono);font-size:.78rem;line-height:1.8;
+ background:var(--surface-2);border:1px solid var(--rule);border-radius:3px;overflow-x:auto;color:var(--ink-soft)}
+pre b{color:var(--now)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:46rem){.pair{grid-template-columns:1fr}}
+.panel{border:1px solid var(--rule);border-top:3px solid var(--rule);border-radius:2px;background:var(--surface);
+ padding:1rem 1.1rem 1.15rem;display:flex;flex-direction:column;gap:.7rem}
+.panel.now{border-top-color:var(--now)} .panel.next{border-top-color:var(--next)}
+.panel .lbl{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+.panel.now .lbl{color:var(--now)} .panel.next .lbl{color:var(--next)}
+.panel .t{font-family:var(--serif);font-size:1.02rem;font-weight:600}
+.panel p{font-size:.88rem;color:var(--ink-soft);line-height:1.75}
+.stage{background:#F6F8FA;border:1px solid #E6EAEF;border-radius:4px;padding:.9rem;
+ overflow-x:auto;display:flex;justify-content:center}
+.stage svg{max-width:100%;height:auto}
+
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:34rem}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.6}
+thead th{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+ font-weight:600;background:var(--surface-2);border-bottom:1px solid var(--rule)}
+tbody tr:last-child td{border-bottom:none}
+td.name{font-weight:700}
+.ok{color:var(--next);font-weight:700} .ng{color:var(--now);font-weight:700} .un{color:var(--ink-faint)}
+.approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+ padding:1rem 1.2rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+.approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+.approve .m{font-size:.9rem;color:var(--ink-soft)}
+figcaption{font-size:.82rem;color:var(--ink-faint);line-height:1.7}
+
+.stage.big svg{width:min(100%,300px)}
+.gain{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:46rem){.gain{grid-template-columns:1fr}}
+.stage.big svg{width:min(100%,300px)}
+.gain{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:46rem){.gain{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem}
+.chip{border:1px solid var(--rule);border-radius:2px;background:var(--surface);
+ padding:.35rem .6rem;font-size:.82rem;display:flex;gap:.45rem;align-items:baseline}
+.chip b{font-family:var(--mono);font-size:.78rem}
+.chip.part{border-left:3px solid var(--next)}
+.chip.fig{border-left:3px solid var(--now)}
+.chip span{color:var(--ink-faint)}
+.stage.big svg{width:min(100%,320px)}
+a{color:var(--next);text-decoration-color:color-mix(in srgb,var(--next) 45%,transparent);text-underline-offset:.15em}
+a:hover{text-decoration-color:var(--next)}
+
+.stage.wide svg{width:min(100%,460px)}
+.stage.tall svg{width:auto;max-height:210px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media(max-width:52rem){.three{grid-template-columns:1fr}}
+.card{border:1px solid var(--rule);border-top:3px solid var(--rule);border-radius:2px;
+ background:var(--surface);padding:.9rem;display:flex;flex-direction:column;gap:.55rem}
+.card.a{border-top-color:var(--now)} .card.b{border-top-color:var(--next)}
+.card.c{border-top-color:var(--key)}
+.card h3{font-family:var(--serif);font-size:.98rem;margin:0;font-weight:600}
+.card p{font-size:.82rem;color:var(--ink-soft);line-height:1.7}
+.card .stage{padding:.5rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:46rem){.two{grid-template-columns:1fr}}
+.opt{border:1px solid var(--rule);border-top:3px solid var(--rule);border-radius:2px;
+ background:var(--surface);padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.6rem}
+.opt.keep{border-top-color:var(--next)} .opt.alt{border-top-color:var(--now)}
+.opt h3{font-family:var(--serif);font-size:1rem;margin:0;font-weight:600}
+.opt ul{margin:0;padding-left:1.1rem;font-size:.88rem;color:var(--ink-soft);line-height:1.8}
+.opt .tag,.card .tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+.opt.keep .tag{color:var(--next)} .opt.alt .tag{color:var(--now)}
+.card.a .tag{color:var(--now)} .card.b .tag{color:var(--next)} .card.c .tag{color:var(--key)}
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">svg_engine ── 未決の論点</p>
+<h1>湾のある形に、辺はどこへ着くか</h1>
+<p class="lede">辺の着き先を「描いたインクのうち、狙った側にいちばん近い点」に変えたことで、22 通りの置き方すべてで辺がインクに着くようになった。<b>ただ 1 つだけ、規則としては正しいのに絵として引っかかる場合が残っている</b> ── 形が深く凹んでいて、その凹んだ側から辺が入るとき。<b>それを調べる過程で、「群の囲みを指す辺が宣言できない」という別の穴も出た</b>（04〜06）。</p>
+</header>
+
+<section>
+<h2><span class="num">01</span>その1件</h2>
+<div class="stage wide"><svg class="wf-fig" viewBox="0 0 183 80" width="183" height="80" role="img"><g transform="translate(6.0,6.0)"><path d="M60.6,34.0 L144.9,35.5" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="144.9,35.5 138.1,37.8 138.2,32.9" fill="#C3CAD2"/><g class="wf-node" transform="translate(0.0,18.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">親</text></g></g><g class="wf-node" transform="translate(124.0,0.0)"><g><path d="M0.0,65.4 L0.0,65.4 L4.0,63.4 L7.7,61.0 L11.0,58.0 L14.0,54.7 L16.4,51.0 L18.4,47.0 L19.8,42.8 L20.7,38.4 L21.0,34.0 L20.7,29.6 L19.8,25.2 L18.4,21.0 L16.4,17.0 L14.0,13.3 L11.0,10.0 L7.7,7.0 L4.0,4.6 L0.0,2.6 L0.0,2.6 L4.2,1.2 L8.6,0.3 L13.0,0.0 L17.4,0.3 L21.8,1.2 L26.0,2.6 L30.0,4.6 L33.7,7.0 L37.0,10.0 L40.0,13.3 L42.4,17.0 L44.4,21.0 L45.8,25.2 L46.7,29.6 L47.0,34.0 L46.7,38.4 L45.8,42.8 L44.4,47.0 L42.4,51.0 L40.0,54.7 L37.0,58.0 L33.7,61.0 L30.0,63.4 L26.0,65.4 L21.8,66.8 L17.4,67.7 L13.0,68.0 L8.6,67.7 L4.2,66.8 Z" fill="#16636B" fill-rule="evenodd"/></g></g></g></svg></div>
+<p class="col"><b>矢印は空の湾を横切って、湾の奥（内側の弧）で止まる。</b>角（つの）は矢じりより左へ張り出しているので、<b>矢じりが形の中に入り込んで見える</b>。インクには触れているので、幾何検査は 0 件と報告する。</p>
+</section>
+
+<section>
+<h2><span class="num">02</span>他の向きは引っかからない</h2>
+<div class="stage tall"><svg class="wf-fig" viewBox="0 0 72 176" width="72" height="176" role="img"><g transform="translate(6.0,6.0)"><path d="M30.0,32.6 L29.7,97.7" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="29.7,97.7 27.3,90.9 32.2,90.9" fill="#C3CAD2"/><g class="wf-node" transform="translate(0.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">親</text></g></g><g class="wf-node" transform="translate(6.5,96.0)"><g><path d="M0.0,65.4 L0.0,65.4 L4.0,63.4 L7.7,61.0 L11.0,58.0 L14.0,54.7 L16.4,51.0 L18.4,47.0 L19.8,42.8 L20.7,38.4 L21.0,34.0 L20.7,29.6 L19.8,25.2 L18.4,21.0 L16.4,17.0 L14.0,13.3 L11.0,10.0 L7.7,7.0 L4.0,4.6 L0.0,2.6 L0.0,2.6 L4.2,1.2 L8.6,0.3 L13.0,0.0 L17.4,0.3 L21.8,1.2 L26.0,2.6 L30.0,4.6 L33.7,7.0 L37.0,10.0 L40.0,13.3 L42.4,17.0 L44.4,21.0 L45.8,25.2 L46.7,29.6 L47.0,34.0 L46.7,38.4 L45.8,42.8 L44.4,47.0 L42.4,51.0 L40.0,54.7 L37.0,58.0 L33.7,61.0 L30.0,63.4 L26.0,65.4 L21.8,66.8 L17.4,67.7 L13.0,68.0 L8.6,67.7 L4.2,66.8 Z" fill="#16636B" fill-rule="evenodd"/></g></g></g></svg></div>
+<div class="scroll"><table>
+<thead><tr><th>入る向き</th><th>着き先</th><th>外接矩形の縁からの距離</th><th>インクとの隔たり</th></tr></thead>
+<tbody><tr><td class="name">右（凸側）から</td><td>x=47.0 y=34.0</td><td class="ok">0.0</td><td class="ok">0</td></tr><tr><td class="name">上から</td><td>x=23.2 y=1.7</td><td class="ok">1.7</td><td class="ok">0</td></tr><tr><td class="name">下から</td><td>x=23.2 y=66.3</td><td class="ok">1.7</td><td class="ok">0</td></tr><tr><td class="name">左（凹んだ側）から</td><td>x=20.9 y=35.5</td><td class="ng">21.0</td><td class="ok">0</td></tr></tbody></table></div>
+<p class="col">凸側・上・下は、外接矩形の縁のすぐそば（2 以内）に着く。<b>凹んだ側だけが 21 も内側へ入る。</b>形そのものがそうなっているためで、実測すると次のとおり。</p>
+<div class="scroll"><table>
+<thead><tr><th>高さの帯</th><th>インクの左端</th><th>インクの右端</th></tr></thead>
+<tbody><tr><td class="name">y 0〜8</td><td>0.0</td><td>33.7</td></tr><tr><td class="name">y 8〜16</td><td>8.8</td><td>41.6</td></tr><tr><td class="name">y 16〜24</td><td>16.4</td><td>45.3</td></tr><tr><td class="name">y 24〜32</td><td>19.8</td><td>46.8</td></tr><tr><td class="name">y 32〜40</td><td>20.4</td><td>47.0</td></tr><tr><td class="name">y 40〜48</td><td>18.4</td><td>46.1</td></tr><tr><td class="name">y 48〜56</td><td>13.0</td><td>43.7</td></tr><tr><td class="name">y 56〜64</td><td>4.0</td><td>38.0</td></tr><tr><td class="name">y 64〜72</td><td>0.0</td><td>28.7</td></tr></tbody></table></div>
+<p class="col">上下の端では左端が 0（角が外接矩形に接する）だが、真ん中では 20.4 まで退がる。<b>この差が湾の深さ</b>で、辺はそこへ着く。</p>
+</section>
+
+<section>
+<h2><span class="num">03</span>枠を付けると、どうなるか</h2>
+<p class="col">枠の付け方で答えが変わる。<b>部品自身が枠を描けば、枠はその部品のインクなので辺は枠に着く</b> ── 湾の問題がそのまま消える。<b>群の囲みは節点ではない</b>ので、辺は囲みを跨いで中の節点まで行き、湾の奥に着く。</p>
+<div class="three">
+<div class="card a"><span class="tag">枠なし</span><h3>湾の奥に着く</h3>
+<div class="stage"><svg class="wf-fig" viewBox="0 0 183 80" width="183" height="80" role="img"><g transform="translate(6.0,6.0)"><path d="M60.6,34.0 L144.9,35.5" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="144.9,35.5 138.1,37.8 138.2,32.9" fill="#C3CAD2"/><g class="wf-node" transform="translate(0.0,18.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">親</text></g></g><g class="wf-node" transform="translate(124.0,0.0)"><g><path d="M0.0,65.4 L0.0,65.4 L4.0,63.4 L7.7,61.0 L11.0,58.0 L14.0,54.7 L16.4,51.0 L18.4,47.0 L19.8,42.8 L20.7,38.4 L21.0,34.0 L20.7,29.6 L19.8,25.2 L18.4,21.0 L16.4,17.0 L14.0,13.3 L11.0,10.0 L7.7,7.0 L4.0,4.6 L0.0,2.6 L0.0,2.6 L4.2,1.2 L8.6,0.3 L13.0,0.0 L17.4,0.3 L21.8,1.2 L26.0,2.6 L30.0,4.6 L33.7,7.0 L37.0,10.0 L40.0,13.3 L42.4,17.0 L44.4,21.0 L45.8,25.2 L46.7,29.6 L47.0,34.0 L46.7,38.4 L45.8,42.8 L44.4,47.0 L42.4,51.0 L40.0,54.7 L37.0,58.0 L33.7,61.0 L30.0,63.4 L26.0,65.4 L21.8,66.8 L17.4,67.7 L13.0,68.0 L8.6,67.7 L4.2,66.8 Z" fill="#16636B" fill-rule="evenodd"/></g></g></g></svg></div>
+<p>真ん中の高さのインク左端 <b>x=20.8</b>。線が空の湾を横切る。</p></div>
+<div class="card b"><span class="tag">部品に枠</span><h3>枠の辺に着く</h3>
+<div class="stage"><svg class="wf-fig" viewBox="0 0 211 108" width="211" height="108" role="img"><g transform="translate(6.0,6.0)"><path d="M60.6,48.0 L123.4,48.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="123.4,48.0 116.6,50.5 116.6,45.5" fill="#C3CAD2"/><g class="wf-node" transform="translate(0.0,32.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">親</text></g></g><g class="wf-node" transform="translate(124.0,0.0)"><g><rect x="0" y="0" width="75.0" height="96.0" rx="5" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><g transform="translate(14.0,14.0)"><g><path d="M0.0,65.4 L0.0,65.4 L4.0,63.4 L7.7,61.0 L11.0,58.0 L14.0,54.7 L16.4,51.0 L18.4,47.0 L19.8,42.8 L20.7,38.4 L21.0,34.0 L20.7,29.6 L19.8,25.2 L18.4,21.0 L16.4,17.0 L14.0,13.3 L11.0,10.0 L7.7,7.0 L4.0,4.6 L0.0,2.6 L0.0,2.6 L4.2,1.2 L8.6,0.3 L13.0,0.0 L17.4,0.3 L21.8,1.2 L26.0,2.6 L30.0,4.6 L33.7,7.0 L37.0,10.0 L40.0,13.3 L42.4,17.0 L44.4,21.0 L45.8,25.2 L46.7,29.6 L47.0,34.0 L46.7,38.4 L45.8,42.8 L44.4,47.0 L42.4,51.0 L40.0,54.7 L37.0,58.0 L33.7,61.0 L30.0,63.4 L26.0,65.4 L21.8,66.8 L17.4,67.7 L13.0,68.0 L8.6,67.7 L4.2,66.8 Z" fill="#16636B" fill-rule="evenodd"/></g></g></g></g></g></svg></div>
+<p>真ん中の高さのインク左端 <b>x=-0.6</b>。枠がインクなので、そこで止まる。<b>特別扱いは要らない。</b></p></div>
+<div class="card c"><span class="tag">群の囲み</span><h3>囲みを跨いで湾の奥へ</h3>
+<div class="stage"><svg class="wf-fig" viewBox="0 0 211 124" width="211" height="124" role="img"><g transform="translate(6.0,6.0)"><rect x="124.0" y="16.0" width="75.0" height="96.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><path d="M60.6,56.0 L158.9,65.5" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="158.9,65.5 151.9,67.3 152.4,62.4" fill="#C3CAD2"/><rect x="132.0" y="7.0" width="28.0" height="15.0" fill="#F5F7F9"/><text x="146.0" y="18.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#16636B">囲み</text><g class="wf-node" transform="translate(0.0,40.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">親</text></g></g><g class="wf-node" transform="translate(138.0,30.0)"><g><path d="M0.0,65.4 L0.0,65.4 L4.0,63.4 L7.7,61.0 L11.0,58.0 L14.0,54.7 L16.4,51.0 L18.4,47.0 L19.8,42.8 L20.7,38.4 L21.0,34.0 L20.7,29.6 L19.8,25.2 L18.4,21.0 L16.4,17.0 L14.0,13.3 L11.0,10.0 L7.7,7.0 L4.0,4.6 L0.0,2.6 L0.0,2.6 L4.2,1.2 L8.6,0.3 L13.0,0.0 L17.4,0.3 L21.8,1.2 L26.0,2.6 L30.0,4.6 L33.7,7.0 L37.0,10.0 L40.0,13.3 L42.4,17.0 L44.4,21.0 L45.8,25.2 L46.7,29.6 L47.0,34.0 L46.7,38.4 L45.8,42.8 L44.4,47.0 L42.4,51.0 L40.0,54.7 L37.0,58.0 L33.7,61.0 L30.0,63.4 L26.0,65.4 L21.8,66.8 L17.4,67.7 L13.0,68.0 L8.6,67.7 L4.2,66.8 Z" fill="#16636B" fill-rule="evenodd"/></g></g></g></svg></div>
+<p>囲みは節点ではないので着き先にならない。<b>「囲めば着く」とは期待できない。</b></p></div>
+</div>
+<div class="scroll"><table>
+<thead><tr><th>枠の付け方</th><th>着き先</th><th>湾を横切るか</th><th>幾何検査</th></tr></thead>
+<tbody>
+<tr><td class="name">枠なし</td><td>内側の弧</td><td class="ng">横切る</td><td>0件</td></tr>
+<tr class="keyrow"><td class="name">部品に枠を付けた</td><td class="ok">枠の左辺</td><td class="ok">横切らない</td><td>0件</td></tr>
+<tr><td class="name">群の囲みで囲った</td><td>内側の弧（変わらず）</td><td class="ng">横切る（囲みも跨ぐ）</td><td>0件</td></tr>
+</tbody></table></div>
+<p class="col">3 通りとも検査は 0 件。つまり<b>枠を付けるかどうかは、崩れの回避ではなく表現の選択</b>になる ── 湾を見せたいなら枠なし、辺をきれいに止めたいなら部品に枠。</p>
+</section>
+
+<section>
+<h2><span class="num">04</span>囲みとは何か ── 概念と、それを保証する手段</h2>
+<p class="col"><b>囲みは「この塊はひとまとまりである」という宣言</b>で、後から線を引くだけの飾りではない。<code>nesting.py</code> の冒頭が、宣言から手段までを 1 本で書いている。</p>
+<div class="scroll"><table>
+<thead><tr><th>層</th><th>中身</th></tr></thead>
+<tbody>
+<tr class="keyrow"><td class="name">概念</td><td>囲みは、その塊に意味を持たせるためのもの</td></tr>
+<tr><td class="name">満たすべき性質</td><td>「囲みが意味を成すには<b>群の要素だけが、群の矩形の内側に居る</b>ことが要る」</td></tr>
+<tr><td class="name">そのためのアルゴリズム</td><td>「それを構造として保証するには、<b>群を先に配置して 1 つの大きさへ畳み、親はそれを 1 個として置くしかない</b>」── 段をまたぐ群の外接矩形が、間の非メンバーを飲み込んだ実測が出発点</td></tr>
+</tbody></table></div>
+<p class="col"><b>配置の束ねは、概念と対等な第二の仕事ではなく、概念を守るための手段。</b>実際、群を足すと節点の位置が動く ── 飾りなら 1 ピクセルも動かないはず。</p>
+<div class="scroll"><table>
+<thead><tr><th></th><th>親</th><th>子1</th><th>子2</th></tr></thead>
+<tbody>
+<tr><td class="name">群なし</td><td>42, 0</td><td>0, 96</td><td>84, 96</td></tr>
+<tr><td class="name">群あり</td><td>56, 0</td><td>14, 126</td><td>98, 126</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">05</span>それでも囲みは、辺の相手にならない</h2>
+<p class="col">04 の位置づけでも、<b>辺は囲みの箱ではなく実際の節点へ着く</b>。理由は、いずれも「<b>黙って</b>意味が変わる」ことにある。</p>
+<div class="scroll"><table>
+<thead><tr><th>理由</th><th>着けたらどうなるか</th></tr></thead>
+<tbody>
+<tr><td class="name">囲みを足しただけで、既存の辺の意味が書き換わる</td><td>A→B と宣言した辺が、B を囲った瞬間に A→塊 になる。宣言を一切変えていないのに絵の意味が変わり、囲みを外すと戻る</td></tr>
+<tr><td class="name">どれを指していたのかが失われる</td><td>3 つ入った塊に着いた矢印は、3 つのどれとも読める</td></tr>
+<tr><td class="name">囲みの縁は、意味のある形ではない</td><td>群は段をまたげる。その箱の縁は配置の副産物なので、配置が変わるたびに着き先が動く</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">06</span>穴 ── 塊は宣言の登場人物なのに、指せない</h2>
+<p class="col"><b>囲みが塊の宣言なら、その塊は宣言の中の一人前の登場人物。</b>「この一群へ渡す」「この一群から出る」と言いたい図は当然ありうる。ところが<b>いまは、それを宣言する手段が無い</b>。</p>
+<div class="scroll"><table>
+<thead><tr><th>確かめたこと</th><th>結果</th></tr></thead>
+<tbody>
+<tr><td class="name">群を辺の相手に書けるか</td><td class="ng">書けない。群は <code>{label, members}</code> だけを持ち、<b>id が無い</b>。存在しない節点として <code>KeyError</code> になる</td></tr>
+<tr><td class="name">回避策はあるか</td><td class="un">塊を代表する節点を1つ足して、そこへ着ける。<b>ただし絵に無い節点が増える</b></td></tr>
+</tbody></table></div>
+<p class="col"><b>05 の 3 つの理由は、この穴を塞げない理由にはならない。</b>3 つとも「黙って意味が変わる」ことへの理由で、<b>明示的に「この塊を指す」と書いた場合</b>には当てはまらない。方向としては ──</p>
+<div class="scroll"><table>
+<thead><tr><th>足すこと</th><th>変えないこと</th></tr></thead>
+<tbody>
+<tr><td class="name">群に id を持たせ、辺がその id を名指しできるようにする</td><td class="ok">節点を指す辺は、いままでどおり節点のインクへ着く。囲みを足しても外しても、既存の辺は一切変わらない</td></tr>
+<tr><td class="name">群を名指した辺だけが、囲みの縁へ着く</td><td class="ok">囲みの縁が配置の副産物であることは変わらないが、<b>そう書いた人はそれを承知で書いている</b></td></tr>
+</tbody></table></div>
+<p class="col"><b>ここでも実例待ち。</b>「塊を指したい」図がまだ 1 枚も無い。出てきたときに、上の形で設計する。</p>
+</section>
+
+<section>
+<h2><span class="num">07</span>三つの道</h2>
+<div class="two">
+<div class="opt keep"><span class="tag">現状 ── 推奨</span>
+<h3>インクに着く（そのまま）</h3>
+<ul>
+<li>必ず実体に触れる。<b>何も無いところを指すことが原理的に起きない</b></li>
+<li>今日追加した検査（<code>check_attachment</code>）がそのまま守れる</li>
+<li>形ごとの例外を持たない ── 部品を足しても規則は増えない</li>
+<li><b>ただし線が空の湾を横切る</b></li>
+</ul>
+</div>
+<div class="opt alt"><span class="tag">対案</span>
+<h3>シルエットに着く</h3>
+<ul>
+<li>読み手が「ここが形の縁」と思う所（角どうしを結ぶ線）で止まる</li>
+<li><b>矢じりは空白の上になる</b> ── 今日 6 件潰した崩れを、意図的に呼び戻すことになる</li>
+<li>機械では正しさを測れない。「空白でよい空白」と「よくない空白」を区別する基準が無い</li>
+</ul>
+</div>
+</div>
+<div class="opt keep" style="margin-top:1.1rem"><span class="tag">三つ目 ── 03 で判明</span>
+<h3>湾を見せたくない場面では、部品に枠を付ける</h3>
+<ul>
+<li><b>規則も申告項目も一切増やさない。</b>枠はただのインクとして扱われる</li>
+<li>使う側が図ごとに選べる ── 湾を見せたいときは枠なしのまま</li>
+<li>枠が要らないのに枠が出る、という副作用も無い</li>
+</ul>
+</div>
+</section>
+
+<section>
+<h2><span class="num">08</span>もし対案（シルエット）を採るなら</h2>
+<p class="col">直す場所は<b>着き先の規則ではなく部品の側</b>にする ── 「この形は湾を持つので、辺はここで止めてほしい」を部品が申告する。規則を形ごとに分岐させると、部品を足すたびに規則が増える。</p>
+<p class="col"><b>ただし、いま作るのは待ちたい。</b>湾を持つ形は三日月 1 件しか無い。1 件のために申告項目を増やすと、「輪郭を申告させる」をやめたばかりの方向へ戻る。<b>2 件目が出てから設計する</b> ── しかも 03 の三つ目の道があるので、2 件目が出ても対案が要るとは限らない。</p>
+</section>
+
+<section>
+<h2><span class="num">09</span>状態</h2>
+<div class="approve"><span class="k">状態</span><span class="v">承認済み</span>
+<span class="m"><b>立場を承認した</b>（実装は変更しない）。<br><b>湾の着き先</b>：現状（インクに着く）のまま。部品に枠を付ければ回避できることが分かったので、対案の必要度は下がった。<br><b>群を指す辺</b>：宣言する手段が無いことを確認。実例が出たら 06 の形で設計する。どちらも実装は変更しない。</span></div>
+</section>
+</div>

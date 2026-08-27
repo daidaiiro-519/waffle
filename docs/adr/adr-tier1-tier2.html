@@ -1,0 +1,149 @@
+<title>段1 が部品を提供し、段2 が8つを宣言する</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.fig{margin:0;display:flex;flex-direction:column;gap:.6rem}
+.fig .scroll{padding:1.1rem 1rem}
+figcaption{font-size:.83rem;color:var(--ink-faint);line-height:1.7}
+figcaption b{color:var(--ink-soft)}
+</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>段1 が部品を提供し、段2 が8つを宣言する</h1><p class="lede">2つの型が、同じ「深さ有界の木」を別々の名前で自前に組んでいた。種別の鍵は<b>6つあって、どれも同じ概念</b>である。<b>覆うのではなく、落とす。</b></p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">Waffle は、<b>段1 が、このスキーマが表現できる部品を全て提供する</b>。段2 は、その部品だけを使って<b>8つを宣言する</b>。部品ひとつひとつに、成果物のどこへ落ちるかが1つ対応する ── これが型を起こす規則になる。</p><div class="key"><span class="lbl">決め手</span><span class="txt"><b>段2 が自前で部品を組んでいたら、それは段1 の欠落である。</b>部品だけで組めることが、欠落が無いことの確かめ方になる。いまは図と木が段2 で自前に組まれている。</span></div></div></section><section><h2><span class="num">02</span>段1 が提供する部品</h2><p class="lead"><b>実物にある無駄は賄わない。</b>覆うことは目的ではない。</p><div class="scroll"><table><thead><tr><th>群</th><th>部品</th><th>落ちる先</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>表紙</b></td><td>識別子／型と版／種別／状態／役どころ／時刻／ラベル</td><td>固定の欄と必須</td></tr><tr class="keyrow"><td class="cond"><b>構造の文法</b></td><td>値／まとまり／<b>並び</b>／入れ子／選び／名前で共有 ── <b>6つ</b></td><td><code>type</code>／<code>properties</code>／<code>items</code>／展開／<code>allOf</code>+<code>if</code>/<code>then</code>／<code>$defs</code>+<code>$ref</code></td></tr><tr class=""><td class="cond"><b>修飾</b></td><td>必須／決め打ち／選択肢／最小の個数／閉じる／<b>既定値</b> ── 6つ</td><td><code>required</code>／<code>const</code>／<code>enum</code>／<code>minItems</code>／<code>additionalProperties</code>／<code>default</code></td></tr><tr class="keyrow"><td class="cond"><b>標準の組み立て</b></td><td><b>図・木</b></td><td>段1 が名前付きで持つ</td></tr><tr class=""><td class="cond"><b>意味の語</b></td><td>記入の指針／読み方</td><td>欄とブロックに付く</td></tr><tr class=""><td class="cond"><b>描き方の語</b></td><td>描き方／成果物の宛先 ── <b>6語から2語へ</b></td><td>ブロックと型の根に付く</td></tr></tbody></table></div></section><section><h2><span class="num">03</span>段2 が宣言する8つ</h2><p class="lead">すべて段1 の部品で組める。<b>段2 は組み合わせるだけで、部品を作らない。</b></p><div class="scroll"><table><thead><tr><th>段2 が宣言すること</th><th>段1 のどの部品で組むか</th></tr></thead><tbody><tr class=""><td class="cond"><b>1</b> 型の名前と版</td><td>値</td></tr><tr class="keyrow"><td class="cond"><b>2</b> 種別 ── どの欄が種別で、どんな枝があるか</td><td>選び＋選択肢</td></tr><tr class="keyrow"><td class="cond"><b>3</b> ブロックの定義 ── 名前・中身の形・必須か</td><td>まとまり／並び／入れ子＋修飾</td></tr><tr class="keyrow"><td class="cond"><b>4</b> 枝ごとの必須ブロック</td><td>選び</td></tr><tr class=""><td class="cond"><b>5</b> 共有する組み立て</td><td>名前で共有</td></tr><tr class=""><td class="cond"><b>6</b> 各所の指針</td><td>意味の語</td></tr><tr class=""><td class="cond"><b>7</b> 描き方</td><td>描き方の語</td></tr><tr class=""><td class="cond"><b>8</b> 成果物の宛先</td><td>宛先の語</td></tr></tbody></table></div><details class="fold"><summary>段2 が持たないもの（3件）</summary><div class="scroll"><table><thead><tr><th>持たないもの</th><th>なぜ</th></tr></thead><tbody><tr class=""><td class="cond">図と木の形</td><td><b>段1 の標準の組み立て。</b>型ごとに違ってはいけない</td></tr><tr class=""><td class="cond">表紙の宣言</td><td><b>段1。</b>どの型でも同じ</td></tr><tr class=""><td class="cond">索引</td><td><b>保存しない。</b>取り出すときに組み立てる</td></tr></tbody></table></div></details></section><section><h2><span class="num">04</span>実物にある無駄で、賄わないもの</h2><p class="lead"><b>無駄を賄えば、後方互換を残すのと同じことになる。</b>同じ概念に型ごとの名前が付いている箇所を落とす。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 580 220" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><text x="14" y="18" font-size="11" fill="var(--against)">変更前 ── 型ごとに、同じ概念へ自分の名前を付ける</text><rect x="14" y="30" width="140" height="40" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="1"/><text x="84.0" y="55.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">specKind</text><rect x="164" y="30" width="140" height="40" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="1"/><text x="234.0" y="55.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">codingKind</text><rect x="314" y="30" width="140" height="40" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="1"/><text x="384.0" y="55.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">skillKind ほか3つ</text><rect x="14" y="80" width="440" height="36" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="1"/><text x="234.0" y="103.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">UsecaseContent ／ AggregateContent ／ …34個</text><text x="14" y="148" font-size="11" fill="var(--infer)">変更後 ── 段1 が概念を1つ提供し、段2 は枝を並べるだけ</text><rect x="14" y="160" width="180" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="2"/><text x="104.0" y="179.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">種別</text><text x="104.0" y="197.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">段1 の部品ひとつ</text><line x1="194" y1="182" x2="262" y2="182" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="262" y="160" width="290" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="407.0" y="179.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">枝ごとの必須ブロックの一覧</text><text x="407.0" y="197.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">名前つきの入れ物は要らない</text></svg></div><figcaption><b>同じ概念に、型ごとの名前が付いていた。</b>鍵と説明で直したのと同じ形である。覆うのではなく、落とす。</figcaption></figure><div class="scroll"><table><thead><tr><th>実物にある無駄</th><th>実測</th><th>賄わない理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>種別の鍵が6つある</b></td><td><code>specKind</code>／<code>codingKind</code>／<code>skillKind</code>／<code>agentKind</code>／<code>templateKind</code>／<code>hookKind</code></td><td><b>どれも同じ概念。</b>型ごとに自分の名前を付けているだけで、1つでよい</td></tr><tr class="keyrow"><td class="cond"><b>枝ごとに名前つきの中身がある</b></td><td><code>UsecaseContent</code> ほか<b>34個</b></td><td>枝が言うべきなのは「この枝ではこれらのブロックが要る」だけ。<b>名前つきの入れ物は要らない</b></td></tr><tr class=""><td class="cond"><code>pattern</code> を制限として数えていた</td><td>1件</td><td><b>正規表現としては一度も使われていない。</b>偶然そういう名前の欄だった</td></tr></tbody></table></div></section><section><h2><span class="num">05</span>理由</h2><p class="lead">段2 が自前で部品を組んでいる箇所がある。<b>同じ概念に、型ごとの名前が付いている。</b></p><div class="chain"><div class="step premise"><span class="lbl">前提</span><span class="txt"><b>段1 はこのスキーマが表現できる部品を全て提供し、段2 はそれを組み合わせて表現する。</b>数えなくても判定でき、型が1本増えても答えが変わらない</span></div><div class="joint">この基準を当てると</div><div class="step evidence"><span class="lbl">測った</span><span class="txt"><b>段2 が自前で部品を組んでいる箇所がある。</b><code>KnowledgeSchema</code> の図と概念の木、<code>SkillSchema</code> の手順の親子 ── <b>2つの型が、同じ「深さ有界の木」を別々の名前で組んでいた</b></span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>図と木は、段1 が名前付きで持つべき既製品である。</b>文法だけでも組めるが、意味がどの型でも同じでなければ困る</span></div><div class="joint">同じ形の無駄を探すと</div><div class="step evidence"><span class="lbl">測った</span><span class="txt"><b>種別の鍵が6つある。</b>どれも「ある欄の値で必須ブロックの集合が変わる」という同じ概念に、型ごとの名前を付けているだけである</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>覆うのではなく、落とす。</b>実物にある無駄を賄うのは、後方互換を残すのと同じことになる</span></div><div class="joint">落とし方も見た</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">型は4つで99.5%、制限は5つ、<b>分岐は1形しかない</b>。<code>pattern</code> は正規表現としては一度も使われていない</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">段1 が部品を提供し、段2 は8つを宣言する。<b>部品ひとつに行き先が1つ対応するので、型を起こす規則が書ける</b></span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（4件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class="keyrow"><td class="cond">2つの型が同じ木を別々に組んでいた</td><td><span class="kindtag unv">実測</span></td><td><code>KnowledgeSchema</code> の概念の木と <code>SkillSchema</code> の手順の親子</td><td>—</td></tr><tr class="keyrow"><td class="cond">種別の鍵が6つ</td><td><span class="kindtag unv">実測</span></td><td>最新版10本の分岐を数えた。枝は計31本</td><td>—</td></tr><tr class=""><td class="cond">型4つ・制限5つ・分岐1形</td><td><span class="kindtag unv">実測</span></td><td>最新版10本の構造の語を数えた</td><td><b>いまの型が表せない構造を、段2 が必要としたとき</b></td></tr><tr class=""><td class="cond">部品と組み合わせの線引き</td><td><span class="kindtag lim">利用者の整理</span></td><td>「段1 は表現できる部品を全て提供し、段2 が組み合わせて表現する」</td><td>—</td></tr></tbody></table></div></details></section><section><h2><span class="num">06</span>判断を分けた軸</h2><p class="lead">採る案は4つの条件のうち3つを満たす。落とすのは1つで、<b>型10本を書き直す</b>。</p><div class="scroll"><table>
+<thead><tr><th>案</th>
+<th class="keycol">段2 が部品だけで組める<br><span class="sub">決め手</span></th>
+<th>同じ概念に名前が1つ</th><th>落とし方が一意に決まる</th><th>いまの型を書き換えずに済む</th></tr></thead>
+<tbody>
+<tr class="pickrow"><td class="cond">段1 が部品を提供し、段2 が8つを宣言する<br><span class="sub">採る</span></td>
+<td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td></tr>
+<tr><td class="cond">いまの形を語彙として認める</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+<tr><td class="cond">JSON Schema をそのまま宣言に使い続ける</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+</tbody></table></div><details class="fold"><summary>条件の内訳を開く（4件）</summary><div class="scroll"><table><thead><tr><th>条件（全文）</th><th>なぜこの条件が要るか</th><th>× の理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond">段2 が部品だけで組める<span class="keytag">決め手</span></td><td><b>段2 が自前で部品を作っていたら、それは段1 の欠落である。</b>部品で足りれば、欠落が無いと言える</td><td><b>いまの形を認める</b> 図と木が段2 で自前に組まれたまま残る<br><b>JSON Schema のまま</b> 同じ</td></tr><tr class=""><td class="cond">同じ概念に名前が1つ</td><td>名前が複数あると、書き手はどれかを選ぶ。選ばせている以上それは概念ではない</td><td><b>いまの形を認める</b> 種別の鍵が6つ残る<br><b>JSON Schema のまま</b> 同じ</td></tr><tr class=""><td class="cond">落とし方が一意に決まる</td><td>部品ひとつに行き先が1つ対応しないと、型を起こす規則が書けない</td><td><b>いまの形を認める</b> 同じ概念に複数の書き方が残るので、規則が分岐する</td></tr><tr class=""><td class="cond">いまの型を書き換えずに済む</td><td>書き換える範囲が広いほど、途中で止まったときに新旧が混ざる</td><td><b>採る案</b> 型10本を書き直す</td></tr></tbody></table></div></details></section><section><h2><span class="num">07</span>付随して決めたこと</h2><p class="lead">部品を確定させると、いくつかの語の行き先が決まる。4点を同時に決めた。</p><div class="scroll"><table><thead><tr><th>論点</th><th>決定</th></tr></thead><tbody><tr class="keyrow"><td class="cond">種別の鍵</td><td><b>1つにする。</b>型ごとの名前をやめる</td></tr><tr class="keyrow"><td class="cond">枝ごとの中身</td><td><b>名前つきの入れ物をやめる。</b>枝は必須ブロックの一覧だけを持つ</td></tr><tr class=""><td class="cond">描き方の語</td><td><b>6語から2語へ。</b>ブロックに付く1つと、型の根に付く1つ</td></tr><tr class=""><td class="cond">入れ子の表し方</td><td><b><code>$ref</code> の再帰を使わず、深さのぶんだけ展開する。</b>「再帰は常に有界である」を構造そのもので満たす</td></tr></tbody></table></div><details class="fold"><summary>それぞれの根拠を開く（4件）</summary><div class="scroll"><table><thead><tr><th>論点</th><th>根拠</th></tr></thead><tbody><tr class="keyrow"><td class="cond">種別の鍵</td><td>6つとも「ある欄の値で必須ブロックの集合が変わる」という同じ形。<b>名前が複数あると書き手が選ぶことになり、選ばせている以上それは概念ではない</b></td></tr><tr class="keyrow"><td class="cond">枝ごとの中身</td><td>枝が言うべきなのは「この枝ではこれらのブロックが要る」だけ。<b>34個の名前つきの入れ物は、その言い方の副産物</b></td></tr><tr class=""><td class="cond">描き方の語</td><td>6語が<b>2つの高さ</b>に分かれると測れた ── ブロックに付く4語と、型の根に付く2語。高さが違うものはまとめられないが、同じ高さのものはまとまる</td></tr><tr class=""><td class="cond">入れ子の表し方</td><td>既にある不変条件が「再帰は常に有界である」と定めている。<b>展開すれば、守るまでもなく成り立つ</b></td></tr></tbody></table></div></details></section><section><h2><span class="num">08</span>答えないこと</h2><p class="lead">3つ残る。<b>いずれも仕様を書くときか、移すときに決める。</b></p><div class="scroll"><table><thead><tr><th>項目</th><th>何が決まっていないか</th><th>いつ決めるか</th></tr></thead><tbody><tr class=""><td class="cond">各語の名前</td><td>「描き方」「成果物の宛先」「種別」は仮</td><td><b>仕様を書くとき</b></td></tr><tr class="keyrow"><td class="cond"><b>読む必要の度合い</b></td><td><b>部品として持たない。</b>索引は部品の鍵と説明から導けるので、項目ごとに申告させる必要が無い ── <b>宣言させるものを増やすと、宣言し忘れが黙って落ちる</b></td><td><b>決着（2026-08-16）</b></td></tr><tr class="keyrow"><td class="cond">いまの型をどう書き換えるか</td><td>対象と順序、その間の互換</td><td><b>移す計画</b></td></tr></tbody></table></div></section><section><h2><span class="num">09</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">承認済み</span><span class="m">2026-08-16</span></div></section><section><h2><span class="num">10</span>関連</h2><p class="lead">この決定は、Schema のコマンドと Document 側を決めるための土台になる。</p><details class="fold"><summary>縛る対象と、前後の決定を開く（5件）</summary><div class="scroll"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr class="keyrow"><td class="cond">縛る対象</td><td>段1 が提供する部品と、段2 が宣言する8つ</td></tr><tr class="keyrow"><td class="cond">先立つ決定</td><td>部品に鍵と説明を持たせ、索引を取り出すときに組み立てる（未承認）── <b>並びの部品の性質が、そこで決まっている</b></td></tr><tr class=""><td class="cond">先立つ決定</td><td>Schema を仕様から実装し、型は Document として置く（承認済み）</td></tr><tr class=""><td class="cond">先立つ決定</td><td>語彙を意味の名前だけにし、構造の部品と共通の欄を主張から分ける（承認済み）</td></tr><tr class="keyrow"><td class="cond">この決定を使う予定</td><td><b>Schema のコマンドを2つに直す</b>（骨格を作る／型を起こす）／Document 側／移す計画</td></tr></tbody></table></div></details></section></div>

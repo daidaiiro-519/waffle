@@ -1,0 +1,140 @@
+<title>Document は何を持ち、どう呼ばれるか</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.fig{margin:0;display:flex;flex-direction:column;gap:.6rem}
+.fig .scroll{padding:1.1rem 1rem}
+figcaption{font-size:.83rem;color:var(--ink-faint);line-height:1.7}
+figcaption b{color:var(--ink-soft)}
+</style><div class="wrap"><header><p class="eyebrow">完成イメージ</p><h1>Document は何を持ち、どう呼ばれるか</h1><p class="lede">持ち物・操作の中身・型の解決のされ方・<b>型の操作との併用が要るかどうか</b>を、ひととおり並べる。</p></header><section><h2><span class="num">01</span>Document が持つもの</h2><p class="lead"><b>導けないものだけ。</b>値埋めの対象は content ただひとつである。</p><div class="scroll"><table><thead><tr><th>欄</th><th>中身</th><th>誰が入れるか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>識別子</b></td><td>この文書を一意に指す</td><td>骨格を作るときに与える</td></tr><tr class=""><td class="cond"><b>型と版</b></td><td><code>DomainSpecSchema/v11</code> のような参照</td><td>同上</td></tr><tr class=""><td class="cond"><b>種別</b></td><td>どの枝か</td><td>同上</td></tr><tr class=""><td class="cond"><b>役どころ</b></td><td>実体か雛形か</td><td>書き手（既定は実体）</td></tr><tr class="keyrow"><td class="cond"><b>使ってよいか</b></td><td>下書き／有効／非推奨</td><td><b>人が決める。導けない唯一のもの</b></td></tr><tr class=""><td class="cond"><b>時刻</b></td><td>作られた時／直された時</td><td>機械</td></tr><tr class=""><td class="cond"><b>ラベル</b></td><td>文書に付ける印</td><td>書き手</td></tr><tr class="keyrow"><td class="cond"><b>content</b></td><td><b>型を知らない木。</b>値は外から渡される</td><td><b>書き手。ここだけが値埋めの対象</b></td></tr></tbody></table></div></section><section><h2><span class="num">02</span>型はどう解決されるか</h2><p class="lead"><b>解決するのはユースケース。</b>Document は参照を持つが、自分では取りに行かない。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 800 180" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><rect x="14" y="58" width="150" height="50" rx="3" fill="var(--surface)" stroke="var(--assume)" stroke-width="2"/><text x="89.0" y="80.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">ユースケース</text><text x="89.0" y="98.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">調整だけを担う</text><line x1="164" y1="72" x2="300" y2="44" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="232" y="30" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">① schemaRef を解決する</text><rect x="300" y="20" width="170" height="48" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/><text x="385.0" y="49.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">型（段2）</text><line x1="164" y1="96" x2="300" y2="128" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="232" y="160" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">② 解決した型を引数で渡す</text><rect x="300" y="104" width="170" height="50" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="2"/><text x="385.0" y="126.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">Document</text><text x="385.0" y="144.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">参照は持つが解決しない</text><line x1="470" y1="129" x2="606" y2="129" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="538" y="160" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">③ 判定する／描く</text><rect x="606" y="104" width="180" height="50" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/><text x="696.0" y="126.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">成果物</text><text x="696.0" y="144.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">適合の可否／描いたもの</text></svg></div><figcaption><b>解決するのはユースケース。</b>Document は <code>schemaRef</code> を持つが、自分では取りに行かない ── 解決した相手を引数で受け取る。</figcaption></figure></section><section><h2><span class="num">03</span>操作の一覧</h2><p class="lead"><b>どれも、それ自身では完結する。</b>型が要る操作は、解決済みの型を引数で受け取る。</p><div class="scroll"><table><thead><tr><th>操作</th><th>誰の</th><th>入力</th><th>返す／変える</th><th>型が要るか</th><th>完結するか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>骨格を作る</b></td><td><b>型（段2）</b></td><td>識別子・種別</td><td>器と書き方の指針</td><td><b>型そのもの</b></td><td><b>完結する</b></td></tr><tr class="keyrow"><td class="cond"><b>値を埋める</b></td><td>Document</td><td>道・値</td><td>content を書き換える</td><td><b>要らない</b></td><td><b>完結する</b></td></tr><tr class=""><td class="cond"><b>値を取り出す</b></td><td>Document</td><td>道</td><td>その道の値</td><td><b>要らない</b></td><td><b>完結する</b></td></tr><tr class="keyrow"><td class="cond"><b>逸脱していないか判定する</b></td><td>Document</td><td><b>解決済みの型</b></td><td>適合しているかどうか</td><td><b>要る</b></td><td><b>完結する</b></td></tr><tr class="keyrow"><td class="cond"><b>描く</b></td><td>Document</td><td><b>解決済みの型</b></td><td>成果物</td><td><b>要る</b></td><td><b>完結する</b></td></tr><tr class=""><td class="cond"><b>終端化する</b></td><td>Document</td><td>後続の版</td><td>使ってよいかを非推奨へ</td><td><b>要らない</b></td><td><b>完結する</b></td></tr><tr class=""><td class="cond"><b>読み方の指針を返す</b></td><td><b>型（段2）</b></td><td>ブロックの鍵</td><td>そのブロックの読み方</td><td><b>型そのもの</b></td><td><b>完結する</b></td></tr></tbody></table></div><details class="fold"><summary>「完結する」とはどういう意味か</summary><p class="blob">その操作の中で、<b>ほかの集約のコマンドを呼ばない</b>という意味である。型が要る操作も、<b>型は引数として渡ってくる</b>だけで、Document が型を取りに行くことはない。</p><p class="foldnote">承認済みの規律 ── <b>集約は参照は持つが、自分では解決しない。解決した相手を引数で受け取る。</b></p></details></section><section><h2><span class="num">04</span>操作を組み合わせるとき</h2><p class="lead"><b>併用が要るのは、両方の持ち物が混ざるときだけ</b>である。</p><div class="scroll"><table><thead><tr><th>やりたいこと</th><th>どう組み合わせるか</th><th>併用が要るか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>索引を取り出す</b></td><td>型へ<b>読み方の指針</b>を、Document へ<b>中身</b>を求め、<b>ユースケースが束ねる</b></td><td><b>要る。</b>両方の持ち物が混ざる</td></tr><tr class="keyrow"><td class="cond"><b>描く</b></td><td>ユースケースが型を解決 → <b>Document が判定</b> → <b>Document が描く</b></td><td><b>要らない。</b>型は引数として渡るだけ</td></tr><tr class=""><td class="cond">新しい文書を起こす</td><td>ユースケースが型を解決 → <b>型が骨格を作る</b> → 書き手が値を決める → <b>Document が値を埋める</b></td><td><b>要らない。</b>順に呼ぶだけ</td></tr><tr class=""><td class="cond">逸脱を確かめる</td><td>ユースケースが型を解決 → <b>Document が判定</b></td><td><b>要らない</b></td></tr></tbody></table></div><details class="fold"><summary>索引だけが併用を要る理由を開く</summary><p class="blob">索引は<b>ブロックの読み方（型の持ち物）</b>と<b>そこに何がどれだけあるか（文書の持ち物）</b>を組にして返す。<b>片方だけでは役に立たない</b> ── 読み方だけではどの文書でも同じになり、中身だけでは何のために読むブロックか分からない。</p><p class="foldnote">束ねるのはユースケースの仕事である。<b>調整だけを担う</b>という位置づけに、そのまま収まる。</p></details></section><section><h2><span class="num">05</span>呼ぶ順と、その前後</h2><p class="lead"><b>「検証前に描かせない」は、描くの事前条件として現れる。</b>状態の遷移ではない。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 810 182" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><rect x="14" y="20" width="150" height="46" rx="3" fill="var(--surface)" stroke="var(--assume)" stroke-width="1"/><text x="89.0" y="48.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">ユースケース</text><line x1="164" y1="43" x2="300" y2="43" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="232" y="34" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">① 型を解決する</text><rect x="300" y="20" width="170" height="46" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="385.0" y="48.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">型（段2）</text><line x1="470" y1="43" x2="606" y2="43" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="538" y="34" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">② 骨格を作る</text><rect x="606" y="20" width="190" height="46" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="2"/><text x="701.0" y="40.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">器と書き方の指針</text><text x="701.0" y="58.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">新しい Document</text><rect x="14" y="116" width="150" height="46" rx="3" fill="var(--surface)" stroke="var(--assume)" stroke-width="1"/><text x="89.0" y="144.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">書き手</text><line x1="164" y1="139" x2="300" y2="139" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="232" y="130" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">③ 値を決める</text><rect x="300" y="116" width="170" height="46" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="385.0" y="144.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">Document</text><line x1="470" y1="139" x2="606" y2="139" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="538" y="130" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">④ 値を埋める</text><rect x="606" y="116" width="190" height="46" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/><text x="701.0" y="136.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">道の先へ置く</text><text x="701.0" y="154.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">型は要らない</text></svg></div><figcaption><b>骨格を作るのは型のコマンド、値を埋めるのは Document のコマンド。</b>作られる側がまだ無いので、器は型が作る。</figcaption></figure><div class="scroll"><table><thead><tr><th>操作</th><th>事前に成り立っていること</th><th>終わったとき成り立っていること</th></tr></thead><tbody><tr class=""><td class="cond">骨格を作る</td><td>型が在り、識別子と種別が与えられている</td><td>器が型の形どおりに起き、書き方の指針が添う</td></tr><tr class=""><td class="cond">値を埋める</td><td>道が与えられている</td><td>その道の先に値が置かれている</td></tr><tr class=""><td class="cond">値を取り出す</td><td>道が与えられている</td><td>その道の先の値が返る</td></tr><tr class="keyrow"><td class="cond"><b>描く</b></td><td><b>型が引数で渡され、逸脱していない</b></td><td>決まった場所に成果物が在る</td></tr><tr class=""><td class="cond">終端化する</td><td>後続の版が在る</td><td>使ってよいかが非推奨になっている</td></tr></tbody></table></div></section><section><h2><span class="num">06</span>この一覧で決まらないこと</h2><p class="lead">3つ残る。<b>いずれも仕様か、移す計画で決める。</b></p><div class="scroll"><table><thead><tr><th>項目</th><th>何が決まっていないか</th></tr></thead><tbody><tr class=""><td class="cond">各欄と操作の名前</td><td>仮に置いたもの。仕様で確定する</td></tr><tr class=""><td class="cond">「使ってよいか」の語</td><td>下書き／有効／非推奨 で足りるか</td></tr><tr class="keyrow"><td class="cond">終端化するときの扱い</td><td><b>後続の版が要るか</b>、非推奨にするだけでよいか。工程の状態を落としたので、終端という言い方自体が要るかも含めて決める</td></tr></tbody></table></div></section></div>

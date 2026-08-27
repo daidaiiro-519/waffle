@@ -1,0 +1,144 @@
+<title>描く手についての決定と実測</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+a{color:var(--fact)}
+a:hover{text-decoration:none}
+/* 種別と状態の欄は折り返さない。行が少ないと最後の欄に幅を取られ、
+   「決定」が縦に割れる（実測で確認した）。ただし4列の表だけに効かせる ──
+   2列・3列の表では2列目が本文なので、折り返さないと右へはみ出す（実測） */
+td:nth-child(2):nth-last-child(3),th:nth-child(2):nth-last-child(3),
+td:nth-child(3):nth-last-child(2),th:nth-child(3):nth-last-child(2){white-space:nowrap}
+td:first-child:nth-last-child(4){min-width:11rem}
+</style><div class="wrap"><header><p class="eyebrow">索引 ── svg_engine</p><h1>描く手についての決定と実測</h1><p class="lede">svg_engine は <b>design-svg Skill の事業領域</b>で、Waffle は利用側。だから Waffle 本体の索引には載せず、ここへ分ける。<b>題と状態は各頁から読んでいる</b>ので、頁を直せばここも変わる。</p></header><section><h2><span class="num">01</span>描いたものを、どう確かめるか</h2><p class="lead"><b>崩れを見つける手立て。</b>ここが弱いと、ほかの決定が正しく効いているかを測れない。</p><div class="scroll"><table><thead><tr><th>成果物</th><th>種別</th><th>状態</th><th>何を決めたか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b><a href="https://claude.ai/code/artifact/346d2397-11a3-4b94-83b3-6339391a6418">描いたものを、出す前に見る</a></b></td><td>決定</td><td><span class="kindtag unv">承認済み（2026-08-22）</span></td><td>検査は固定の目録にかけるのではなく、実際に描いて出すものに付いて回る。機械が見られるところは機械が見て、機械が永久に見られないところは人が全件見る。第1版で決めた層2の中身は実測の結果採れなかったので、そこも訂正する。</td></tr></tbody></table></div></section><section><h2><span class="num">02</span>何が場所を占め、辺はどこへ着くか</h2><p class="lead"><b>置いたものどうしの関係。</b>占有領域と接続点は、同じ「実際に描いたもの」から決まる。</p><div class="scroll"><table><thead><tr><th>成果物</th><th>種別</th><th>状態</th><th>何を決めたか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b><a href="https://claude.ai/code/artifact/3eaab855-5edf-4c24-bac5-795a01d47e8a">占有領域をひとつにする</a></b></td><td>決定</td><td><span class="kindtag unv">承認済み（2026-08-23）</span></td><td>描かれるものは全部、自分が占める領域を申告する。動かせるものが先に譲り、線は曲げない。実装して、同じ図の変更前と変更後を測った。</td></tr><tr class="keyrow"><td class="cond"><b><a href="https://claude.ai/code/artifact/acbc62ab-1046-4360-b162-f43db02fe444">湾のある形に、辺はどこへ着くか</a></b></td><td>決定</td><td><span class="kindtag unv">承認済み</span></td><td>辺の着き先を「描いたインクのうち、狙った側にいちばん近い点」に変えたことで、22 通りの置き方すべてで辺がインクに着くようになった。ただ 1 つだけ、規則としては正しいのに絵として引っかかる場合が残っている ── 形が…</td></tr></tbody></table></div></section><section><h2><span class="num">03</span>台帳の中身をどう分けるか</h2><p class="lead"><b>部品と図の契約。</b>図が部品のふりをすると、節点として置いたときに壊れる。</p><div class="scroll"><table><thead><tr><th>成果物</th><th>種別</th><th>状態</th><th>何を決めたか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b><a href="https://claude.ai/code/artifact/7c490796-4276-4bc3-aa66-e8185e466481">部品と図を分ける</a></b></td><td>決定</td><td><span class="kindtag unv">承認済み（2026-08-23）</span></td><td>1つの台帳に、形を描く部品と1つで1枚になる図が同居している。図が部品のふりをすると節点として置いたときに壊れ、図が図の機能を自前で持つと直しても他へ伝わらない。円グラフを実際に割って測った結果を根拠に、両者を別の契約…</td></tr></tbody></table></div></section><section><h2><span class="num">04</span>実測</h2><p class="lead"><b>決定の裏づけ。</b>決定の側から辿れるが、数字そのものを見たいときはここから。</p><div class="scroll"><table><thead><tr><th>成果物</th><th>種別</th><th>状態</th><th>何を決めたか</th></tr></thead><tbody><tr class=""><td class="cond"><a href="https://claude.ai/code/artifact/8069bf12-c76a-45d9-8b8d-f79e7b8f46a9">置き方の総当たり</a></td><td>実測</td><td><span class="kindtag lim">—</span></td><td>台帳の 11 種を、直接 節点に置く／titled で包んで置くの 2 通りで全部描いた。宣言も節点の名前「対象」も固定し、差し替えているのは対象の種別だけ。最初にこれを描いたとき、幾何検査は 22 通りすべて 0 件…</td></tr></tbody></table></div></section><section><h2><span class="num">05</span>いまの実装</h2><p class="lead"><b>決定が実物へどう落ちているか。</b>決定を読まなくても、いまの姿だけ知りたいとき。</p><div class="scroll"><table><thead><tr><th>何を</th><th>どうなっているか</th></tr></thead><tbody><tr class=""><td class="cond">辺の着き先</td><td>描いたインクのうち、狙った側にいちばん近い点。輪郭という中間物を持たない</td></tr><tr class=""><td class="cond">部品が申告すること</td><td>大きさと、置く前に描くか置いた後に描くか（<code>placement</code>）と、名前を自分で描いたか。<b>輪郭は申告しない。</b>申告した大きさはインクを含む（詰まっていることは課さない）</td></tr><tr class=""><td class="cond">段の間隔</td><td>その間を通る辺の札が収まる幅から導く。札には逃げ場がある</td></tr><tr class=""><td class="cond">名前を描くのは誰か</td><td>部品が申告する。描いたなら包む側は描かない</td></tr><tr class=""><td class="cond">文字の欄の幅</td><td>中身から決める1つの関数（<code>text.column_width</code>）。固定トークンは持たない</td></tr><tr class=""><td class="cond">半角文字の幅の比</td><td>0.65 ── Chromium で実測した最大。場所の取り置きなので平均でなく最大</td></tr><tr class=""><td class="cond">幾何検査</td><td><code>check</code>／<code>check_shapes</code>／<code>check_attachment</code> の3つ</td></tr><tr class=""><td class="cond">試験</td><td>175本。うち検査自身を壊して鳴らす試験と、台帳の全部品を通す契約の試験を含む</td></tr><tr class=""><td class="cond">総当たり</td><td>11種×2通り＝22通り、崩れ0件</td></tr></tbody></table></div></section><section><h2><span class="num">06</span>開いたままのもの</h2><p class="lead"><b>閉じていない論点。</b>実装は変えていない。</p><div class="scroll"><table><thead><tr><th>論点</th><th>状態</th><th>次に何があれば決まるか</th></tr></thead><tbody><tr class=""><td class="cond">湾の凹んだ側の着き先</td><td>承認済み（現状維持）</td><td>インクに着く。見え方が問題になるか、湾を持つ形が2件目に出たら再検討</td></tr><tr class=""><td class="cond">群を指す辺</td><td>宣言できない</td><td>群に id が無い。「塊を指したい」図が出たら、群に id を足して名指しできるようにする</td></tr><tr class=""><td class="cond">生の数値</td><td>44箇所</td><td>多くは SVG の書式（コマンドの引数の数）と多項式の係数。可変にすべきものは潰した</td></tr></tbody></table></div><details class="fold"><summary>この索引の作り方</summary><p class="foldnote">組み立ては <code>docs/adr/build/build_svg_engine_index.py</code>。<b>この頁を直接編集しない</b> ── 次に生成したときに消える。05 と 06 だけは頁から読めないので、組み立て側に書いてある。</p></details></section></div>

@@ -1,0 +1,199 @@
+<title>仕様と実装を、どこで結ぶか</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;align-items:stretch}
+@media(max-width:60rem){.tri{grid-template-columns:1fr}}
+.lane{border:1px solid var(--rule);border-radius:2px;background:var(--surface);
+      padding:.9rem;display:flex;flex-direction:column;gap:.6rem;min-width:0}
+.lane-h{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+        color:var(--ink-faint)}
+.lane-n{font-size:.82rem;line-height:1.7;color:var(--ink-soft);margin:0}
+.lane-n b{color:var(--ink)}
+.lane .gk{font-size:.72rem;line-height:1.7}
+.gk{margin:0;font-family:var(--mono);font-size:.78rem;line-height:1.8;background:var(--surface-2);
+    border:1px solid var(--rule-soft);border-radius:2px;padding:.7rem .8rem;overflow-x:auto;
+    white-space:pre;color:var(--ink)}
+.grid4{display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:center}
+@media(max-width:52rem){.grid4{grid-template-columns:1fr}.garw,.gvert{display:none}}
+.gbox{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.7rem .85rem}
+.gk2{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+.gv{font-family:var(--serif);font-size:1rem;font-weight:600;margin-top:.1rem}
+.gn{font-size:.8rem;line-height:1.65;color:var(--ink-soft);margin-top:.15rem}
+.gn b{color:var(--ink)}
+.garw,.gvert{text-align:center;font-family:var(--mono);font-size:.68rem;color:var(--ink-faint);line-height:1.5}
+</style><div class="wrap"><header><p class="eyebrow">段2 の仕様 ── 材料</p><h1>仕様と実装を、どこで結ぶか</h1><p class="lede">基準とシナリオは<b>振る舞い</b>しか運ばない。TDD で緑になっても、宣言した単位が実装に在る保証にはならない。<b>結び目をもう1本足す</b>ための設計である。いまの検査や実装の形は根拠にしていない ── <b>あるべき形だけから組んでいる</b>。</p></header><section><h2><span class="num">01</span>乖離は3つの形しかない</h2><p class="lead">仕様と実装がずれるとき、起きていることは<b>この3つのどれか</b>である。</p><div class="scroll"><table><thead><tr><th>乖離の形</th><th>何が起きているか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>在るはずのものが無い</b></td><td>宣言した単位を、実装の誰も実現していない。<b>仕様には在るが、動くものが無い</b></td></tr><tr class="keyrow"><td class="cond"><b>無いはずのものが在る</b></td><td>どの宣言も指していない実装が生えている。<b>誰も仕様として合意していない振る舞いが動いている</b></td></tr><tr class=""><td class="cond"><b>在るが、言ったとおりに振る舞わない</b></td><td>宣言した基準を満たさない。<b>形はあるが、中身が違う</b></td></tr></tbody></table></div></section><section><h2><span class="num">02</span>結び目は2本で足りる</h2><p class="lead"><b>名乗りが存在を、転記が振る舞いを担う。</b>名乗りは1本で両方向に数えられる。</p><div class="scroll"><table><thead><tr><th>乖離の形</th><th>何で捕まえるか</th><th>誰が誰を指すか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">在るはずのものが無い</td><td><b>名乗り</b></td><td>実装 → 仕様の識別子</td></tr><tr class="keyrow"><td class="cond">無いはずのものが在る</td><td><b>同じ名乗りを、逆向きに数える</b></td><td>実装 → 仕様の識別子</td></tr><tr class=""><td class="cond">言ったとおりに振る舞わない</td><td><b>転記</b></td><td>テスト → シナリオ（一字一句）</td></tr></tbody></table></div><p class="fignote"><b>2本で足りる。</b>名乗りが存在を、転記が振る舞いを担う。名乗りは1本で<b>両方向</b>に数えられるので、「無い」と「余っている」に別々の仕組みを持たなくてよい。</p></section><section><h2><span class="num">03</span>3点が閉じる</h2><p class="lead">名乗りは実装の自己申告である。<b>三角形が閉じて初めて、裏が取れる。</b></p><div class="grid4"><div class="gbox"><div class="gk2">仕様</div><div class="gv">単位</div><div class="gn">集約・エンティティ・値オブジェクト・業務サービス・業務ユースケース</div></div><div class="garw">── 宣言 ──▶</div><div class="gbox"><div class="gk2">仕様</div><div class="gv">シナリオ</div><div class="gn">Given / When / Then。<b>どの単位の振る舞いかを指す</b></div></div><div class="gvert">▲<br><span>名乗り</span></div><div></div><div class="gvert">│<br><span>転記</span><br>▼</div><div class="gbox"><div class="gk2">実装</div><div class="gv">クラス／関数／手続き</div><div class="gn"><b>どの宣言の実現かを名乗る</b></div></div><div class="garw">◀── 呼ぶ ──</div><div class="gbox"><div class="gk2">テスト</div><div class="gv">docstring</div><div class="gn">シナリオを一字一句で載せる</div></div></div><p class="fignote"><b>3点が閉じると、自己申告の裏が取れる。</b>名乗りは実装が自分で書くものなので、それだけでは嘘をつける。だが「<b>シナリオ S を載せたテストが呼ぶ実装は、S が指す単位を名乗っているはず</b>」が成り立たなければ、名乗りかシナリオのどちらかが嘘である。4辺目（テストが呼ぶ先を辿る）は<b>呼び出しの走査</b>が要るので、費用を別に測る。<b>3辺だけでも、存在と振る舞いは当たる。</b></p></section><section><h2><span class="num">04</span>実物で見る ── 1件を3か所で</h2><p class="lead">同じ1件が、仕様・テスト・実装の3か所に現れる。<b>指し先はすべて仕様の識別子</b>である。</p><div class="tri"><div class="lane"><div class="lane-h">仕様 ── document.json</div><pre class="gk">agg-document
+  公開する操作
+    逸脱していないか判定する
+      受け入れ基準
+        schemaRef を持たない文書を渡したとき、判定せず拒否する
+      シナリオ
+        Scenario: schemaRef を持たない文書は判定できない
+        Given  schemaRef を持たない文書
+        When   逸脱していないか判定する
+        Then   拒否され、判定は行われない
+        振る舞う単位: agg-document#逸脱していないか判定する</pre><p class="lane-n">宣言の正本。<b>シナリオが、どの単位の振る舞いかを指す</b>（足すのはここだけ）</p></div><div class="lane"><div class="lane-h">テスト ── docstring</div><pre class="gk">def test_rejects_document_without_schema_ref():
+    """
+    Scenario: schemaRef を持たない文書は判定できない
+    Given  schemaRef を持たない文書
+    When   逸脱していないか判定する
+    Then   拒否され、判定は行われない
+    """</pre><p class="lane-n">シナリオを一字一句で載せる。<b>ずれれば照合が落ちる</b></p></div><div class="lane"><div class="lane-h">実装 ── docstring</div><pre class="gk">class Document:
+    """構造化された成果物。
+
+    実現する宣言: ent-document
+    """
+
+    def validate(self, schema):
+        """schema に適合するかを判定する。
+
+        実現する宣言:
+          agg-document#逸脱していないか判定する
+        """</pre><p class="lane-n"><b>どの宣言の実現かを名乗る。</b>書き方（<code>実現する宣言:</code>）は規約が決める</p></div></div></section><section><h2><span class="num">05</span>形を問わない</h2><p class="lead">同じ宣言を、<b>クラスで実現しても手続きで実現しても、検査は同じように当たる</b>。だから仕様は実装の厚みを知らなくてよい。</p><div class="tri" style="grid-template-columns:1fr 1fr"><div class="lane"><div class="lane-h">厚い実装 ── クラスで実現する</div><pre class="gk">class Document:
+    """構造化された成果物。
+
+    実現する宣言: ent-document
+    """
+
+    def validate(self, schema):
+        """schema に適合するかを判定する。
+
+        実現する宣言:
+          agg-document#逸脱していないか判定する
+        """</pre><p class="lane-n">集約もエンティティもクラスとして現れる</p></div><div class="lane"><div class="lane-h">薄い実装 ── 手続きで実現する</div><pre class="gk">def validate_document(doc, schema):
+    """schema に適合するかを判定する。
+
+    実現する宣言:
+      agg-document#逸脱していないか判定する
+    """</pre><p class="lane-n"><b>クラスは無い。</b>それでも名乗れる</p></div></div><details class="fold"><summary>なぜ形を問わないのかを開く</summary><div style="padding:.9rem"><div class="chain"><div class="step evidence"><span class="lbl">出典</span><span class="txt">knowledge がアンチパターンとして名指ししている ── 「<b>集約の宣言をクラスの存在と同一視する</b>」。欠陥は「宣言した不変条件を、<b>クラスもトランザクション境界も守っていない</b>」ときに生じる</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>クラスが在るかは、仕様の関心事ではない。</b>実装がどんな形で実現するかは、規約と実装の判断である</span></div><div class="joint">では何を担保したいのか</div><div class="step evidence"><span class="lbl">出典</span><span class="txt">書き起こしはこう言う ── 「<b>ソースコードが同じ言葉を語り</b>、業務エキスパートの捉え方をそのまま表現する」。欲しいのは<b>言葉が実装まで届いていること</b>であって、クラスがあることではない</span></div><div class="joint">問いを置き換えると</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">検査するのは「<b>宣言した単位が、実装のどこかで名乗られているか</b>」。クラスでも関数でも手続きでもよい。<b>形を問わないので、実装がどう作られるかを先に知る必要が無い</b></span></div><div class="joint">その帰結</div><div class="step conclude"><span class="lbl">結論</span><span class="txt"><b>仕様は、実装の厚みも様式も持たなくてよい。</b>それを持ちたくなるのは、実装の形を当てにいっているときだけである</span></div></div></div></details></section><section><h2><span class="num">06</span>仕様に足すのは1つだけ</h2><p class="lead">残りは規約の管轄である。<b>仕様は実装について一言も述べない。</b></p><div class="scroll"><table><thead><tr><th>何を</th><th>どこへ</th><th>仕様の高さを越えないか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>シナリオが「どの単位の振る舞いか」を指す</b></td><td><b>Domain の型</b></td><td><span class="mk ok"><span class="sym">○</span></span> 指すのは<b>仕様自身の識別子</b>。実装の語彙は1つも出てこない</td></tr><tr class=""><td class="cond">実装が、どの宣言の実現かを名乗る</td><td>規約（実装の書き方）</td><td><span class="mk ok"><span class="sym">○</span></span> <b>仕様への追加は無い。</b>名乗るのは実装の側</td></tr><tr class=""><td class="cond">名乗りの書き方（どの語で、どこに書くか）</td><td>規約</td><td><span class="mk ok"><span class="sym">○</span></span> 仕様がここを決めると、実装の語彙が入る</td></tr></tbody></table></div><p class="fignote"><b>仕様に足すのは1つだけである。</b>しかも足すのは<b>シナリオが単位を指す</b>という参照であって、実装について何かを述べる欄ではない。これが無いと、シナリオが「どの単位の振る舞いを確かめているのか」が分からず、三角形の1辺が引けない。</p></section><section><h2><span class="num">07</span>閉じないもの</h2><p class="lead"><b>3つ残る。残ることを明示して、赤にしない。</b>閉じないものを閉じたことにするのが、いちばん危ない。</p><div class="scroll"><table><thead><tr><th>閉じないもの</th><th>なぜ閉じないか</th><th>どう扱うか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>「試していない」と「合っている」が見分けられない</b></td><td>テストが緑でも、中身が空かもしれない。<b>宣言の形では届かない</b> ── 網羅率や変異テストの領域である</td><td><b>型に足さない。</b>別の道具の仕事だと明示する</td></tr><tr class=""><td class="cond">宣言した「常に満たすこと」を、実装が本当に守っているか</td><td>変える操作のシナリオが覆うが、言えるのは<b>「覆うシナリオが在るか」まで</b>。「トランザクション境界に収まっているか」を静的解析だけで判定できる範囲は限られる ── knowledge が留保として明記している</td><td><b>判定できない部分は対象外だと明示し、赤にしない</b></td></tr><tr class=""><td class="cond">名乗りが嘘 ── 違う宣言を指している</td><td>名乗りは自己申告である</td><td><b>三角形の4辺目（テストが呼ぶ先）で裏が取れる。</b>費用を別に測る</td></tr></tbody></table></div></section><section><h2><span class="num">08</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">未承認</span></div></section><section><h2><span class="num">09</span>この頁で決めないこと</h2><p class="lead">2点。<b>どちらもここで決めると、境界を越える</b>。</p><div class="scroll"><table><thead><tr><th>項目</th><th>なぜここで決めないか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">名乗りの<b>書き方</b>（どの語で、どこに書くか）</td><td><b>規約の管轄</b>である。仕様がここを決めると、また実装の語彙が入る</td></tr><tr class=""><td class="cond">テストが呼ぶ先まで辿るかどうか</td><td>三角形の4辺目は<b>呼び出しの走査</b>が要る。<b>3辺だけでも存在と振る舞いは当たる</b>ので、先に3辺を固める</td></tr></tbody></table></div></section></div>

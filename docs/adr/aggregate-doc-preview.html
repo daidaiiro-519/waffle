@@ -1,0 +1,159 @@
+<title>集約の文書は、こうなる</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.sub-h{font-family:var(--serif);font-size:1rem;font-weight:600;margin:.5rem 0 -.3rem;color:var(--ink-soft)}
+.doc{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:1.1rem 1.2rem;
+     display:flex;flex-direction:column;gap:.8rem}
+.doc .scroll{background:var(--surface-2)}
+.idline{display:flex;flex-wrap:wrap;gap:1.2rem;font-family:var(--mono);font-size:.7rem;
+        color:var(--ink-faint);padding-bottom:.6rem;border-bottom:1px solid var(--rule-soft)}
+.dt{font-family:var(--serif);font-size:1.15rem;font-weight:600}
+.dp{font-size:.9rem;line-height:1.8;color:var(--ink-soft)}
+.dp b{color:var(--ink)}
+.dh{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-faint);margin-top:.3rem}
+.dl{margin:0;padding-left:1.2rem;font-size:.9rem;line-height:1.85;color:var(--ink-soft)}
+.dl b{color:var(--ink)}
+.gk{margin:0;font-family:var(--mono);font-size:.8rem;line-height:1.8;background:var(--surface-2);
+    border:1px solid var(--rule-soft);border-radius:2px;padding:.7rem .9rem;overflow-x:auto}
+.cov{font-size:.84rem;color:var(--ink-soft);padding-left:.8rem;border-left:2px solid var(--infer)}
+.kv{display:flex;gap:.8rem;align-items:baseline;flex-wrap:wrap}
+.kv .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+       color:var(--ink-faint);flex:none;min-width:5rem}
+.kv .v{font-size:.95rem;line-height:1.75}
+</style><div class="wrap"><header><p class="eyebrow">完成イメージ</p><h1>集約の文書は、こうなる</h1><p class="lede">エンティティと値オブジェクトは、<b>ルートかどうかによらず全部が別の文書</b>になる。集約の文書に残るのは<b>境界</b>である ── どれが内側でどれがルートか、境界をまたぐ不変条件、公開する操作。受け入れ基準とシナリオは<b>操作1つ1つ</b>に付く。実例は、いま実在する <code>agg-document</code> を使う。<b>この頁は bc-waffle だけを見ている。</b></p></header><section><h2><span class="num">01</span>いま何が入っていて、何が変わるか</h2><p class="lead">変わるのは<b>5ブロック</b>である。定義を抱えていた2つが鍵になり、状態と遷移が消え、不変条件が振り分けられ、コマンドの欄が「公開する操作」になって受け入れ基準とシナリオを持つ。</p><div class="scroll"><table><thead><tr><th>ブロック</th><th>いま入っているもの</th><th>変更後</th></tr></thead><tbody><tr class=""><td class="cond">題</td><td>文書：agg-document</td><td><b>変えない</b></td></tr><tr class=""><td class="cond">概要</td><td>1文</td><td><b>変えない</b></td></tr><tr class="keyrow"><td class="cond">集約のルート</td><td>名前 <code>Document</code> と、外へ出す相手 <code>Schema</code> の2つだけ</td><td><b>境界の内側</b>（どれがルートか）と<b>境界の外</b>へ分かれる</td></tr><tr class="keyrow"><td class="cond">エンティティ</td><td><b>1件（Document、<code>isRoot: true</code>）。定義そのものが入っている</b> ── 属性23件がここに並ぶ</td><td><b>鍵1つ。</b>定義は <code>ent-document</code> という別の文書へ出る。<b>ルートも例外にしない</b></td></tr><tr class="keyrow"><td class="cond">値オブジェクト</td><td><b>5件</b>（DocumentId／DocumentType／DiscriminatorValue／SchemaRef／Status）。属性と振る舞いの定義もここ</td><td><b>鍵5つ。</b>定義はそれぞれ別の文書へ出る</td></tr><tr class="keyrow"><td class="cond">常に満たすこと</td><td>7件。すべて集約が持つ</td><td><b>3件になる。</b>1件がエンティティへ移り、状態に依存する3件が消えるか畳まれる（06）</td></tr><tr class="keyrow"><td class="cond">状態と遷移</td><td>状態4・遷移5</td><td><b>持たない。</b>段1 が「導けるものは持たない」と決めており、適合したか・描いたかは文書と型と成果物から導ける</td></tr><tr class="keyrow"><td class="cond">コマンド</td><td>4件。<b>受け入れ基準もシナリオも持たない</b></td><td><b>欄の名前が「公開する操作」になる。</b>4件のうち集約を<b>変える</b>ものは1件だけで、受け入れ基準とシナリオは4件すべてが持つ</td></tr><tr class=""><td class="cond">出す出来事</td><td>4件</td><td><b>変えない</b></td></tr><tr class="keyrow"><td class="cond">不変条件のシナリオ</td><td><b>6件。集約の側に付き</b>、<code>covers</code> で不変条件を指す</td><td><b>コマンドの側へ移す。</b>指し先は不変条件のまま</td></tr></tbody></table></div><details class="fold"><summary>測り方を開く</summary><p class="foldnote"><code>.waffle/documents/specs/bc-waffle/aggregate/agg-document.json</code> をブロックごとに数えた ── エンティティ<b>1件</b>（<code>isRoot: true</code>、属性23件）、値オブジェクト5件、不変条件7件、状態4・遷移5、コマンド4件、出す出来事4件、不変条件のシナリオ6件。<b>コマンドが持つ欄は名前・説明・要る状態・後の状態・入力・出す出来事の6つで、受け入れ基準もシナリオも無い。</b></p></details></section><section><h2><span class="num">02</span>3つの文書が、それぞれ何を持つか</h2><p class="lead"><b>ルートも例外にしない。</b>エンティティは、ルートかどうかで文書の形が変わらない。ルートであることを言うのは<b>集約の側</b>である。</p><div class="scroll"><table><thead><tr><th></th><th>集約の文書</th><th>エンティティの文書</th><th>値オブジェクトの文書</th></tr></thead><tbody><tr class="keyrow"><td class="cond">同一性・属性</td><td><b>持たない</b></td><td><b>持つ</b></td><td>持つ</td></tr><tr class="keyrow"><td class="cond">境界の内側の一覧（どれがルートか）</td><td><b>持つ</b></td><td>持たない</td><td>持たない</td></tr><tr class=""><td class="cond">境界の外への参照</td><td><b>持つ</b></td><td>持たない</td><td>持たない</td></tr><tr class=""><td class="cond">常に満たすこと</td><td>境界をまたぐもの</td><td>その型だけで閉じるもの</td><td>その値だけで閉じるもの</td></tr><tr class="keyrow"><td class="cond">公開する操作（受け入れ基準・シナリオ付き）</td><td><b>持つ</b></td><td><b>持たない</b></td><td>持たない</td></tr><tr class=""><td class="cond">常に満たすことを覆う義務</td><td><b>変える操作にだけ掛かる</b></td><td>—</td><td>—</td></tr><tr class=""><td class="cond">出す出来事</td><td><b>持つ</b></td><td>持たない</td><td>持たない</td></tr></tbody></table></div><details class="fold"><summary>前の版で、ルートを集約に畳んでいた件を開く</summary><p class="foldnote">この完成イメージの2版目では、「集約はエンティティでもある」を根拠に<b>ルートを別の文書にしない</b>と書いていた。これは誤りである。実装の形についての言明を、文書を何本立てるかという書き方の判断へ持ち込んでいた。<b>置き換えられた決定で犯した混同（文書の参照と実装の参照を1つの言葉で言う）の、ちょうど裏返しである。</b>未承認の決定「集約は、自分の境界の内側を持つ」の本文は、当初から「ルートのエンティティ1つ、内側のエンティティ、内側の値オブジェクト」を一覧に並べており、決定の側は正しかった。</p></details><details class="fold"><summary>なぜそうするかを開く</summary><div style="padding:.9rem"><div class="chain"><div class="step premise"><span class="lbl">拠り所</span><span class="txt">承認済みの筋は「<b>文書のあいだの参照と、実装のオブジェクト参照は別物</b>」である。何を別の文書にするかは<b>書き方</b>の話で、実装が何を実体で持つかは<b>実装の形</b>の話である</span></div><div class="joint">これを当てると</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">「集約はエンティティでもある」は<b>実装の形</b>についての言明であり、<b>文書を何本立てるかを決めない</b>。ルートを別の文書にしても、実装では集約がそれである ── この2つは両立する</span></div><div class="joint">では書き方は何で決めるか</div><div class="step evidence"><span class="lbl">理由</span><span class="txt">エンティティが<b>ルートかどうかで文書の形が変わらない</b>ほうが、規則が1つ少なくて済む。境界を引き直したとき ── ルートが内側になる、集約が分かれる ── <b>動かすのは集約の一覧だけ</b>で、属性23件を文書間で移し替えずに済む</span></div><div class="joint">コマンドはどちらへ置くか</div><div class="step evidence"><span class="lbl">出典</span><span class="txt">書き起こしは「<b>集約が</b>外部へ公開する状態変更メソッドをコマンドと呼ぶ」と、コマンドを集約に帰している。実装ではルートのエンティティのメソッドだが、それは実装の形の話である</span></div><div class="joint">加えて</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">コマンドのシナリオは <code>覆う不変条件</code> で不変条件を指す。境界をまたぐ不変条件は集約が持つので、<b>コマンドも集約に置けば、指す先と指す元が同じ文書で閉じる</b></span></div><div class="joint">ただし</div><div class="step counter"><span class="lbl">代償</span><span class="txt">集約の文書だけを読んでも<b>属性が見えない</b>。1本辿ることになる。これは値オブジェクトを外へ出したときに受け入れたのと同じ代償である</span></div></div></div></details></section><section><h2><span class="num">03</span>描いた結果 ── 集約の文書</h2><p class="lead">属性は消えるのではなく、<b>エンティティの文書へ出て鍵で指される</b>。集約の文書を読めば、境界がどこまでかが1か所で分かる。</p><div class="doc"><div class="idline"><span>id <b>agg-document</b></span><span>種別 <b>aggregate</b></span><span>文脈 <b>bc-waffle</b></span></div><div class="dt">文書の集約：agg-document</div><div class="dp">schema に照らして検証・描画される、構造化された成果物の一貫性単位。</div><div class="dh">境界の内側</div><div class="scroll"><table><thead><tr><th>役</th><th>単位</th><th>指す文書</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>ルート</b></td><td>エンティティ</td><td><code>ent-document</code></td></tr><tr class=""><td class="cond">内側</td><td>値オブジェクト</td><td><code>vo-document-id</code></td></tr><tr class=""><td class="cond">内側</td><td>値オブジェクト</td><td><code>vo-document-type</code></td></tr><tr class=""><td class="cond">内側</td><td>値オブジェクト</td><td><code>vo-discriminator-value</code></td></tr><tr class=""><td class="cond">内側</td><td>値オブジェクト</td><td><code>vo-schema-ref</code></td></tr><tr class=""><td class="cond">内側</td><td>値オブジェクト</td><td><code>vo-status</code></td></tr><tr class=""><td class="cond">内側</td><td>エンティティ</td><td><b>0件</b> ── この集約は階層を持たない</td></tr></tbody></table></div><div class="dh">境界の外</div><div class="scroll"><table><thead><tr><th>相手</th><th>指し方</th></tr></thead><tbody><tr class=""><td class="cond"><code>agg-schema</code></td><td><b>識別子で指す。</b>実体は持たない</td></tr></tbody></table></div><div class="dh">常に満たすこと（境界をまたぐもの・3件）</div><div class="scroll"><table><thead><tr><th>規則</th><th>担保</th></tr></thead><tbody><tr class=""><td class="cond">適合していない文書からは、成果物を描き出せない</td><td>検査</td></tr><tr class=""><td class="cond">パス解決は、どの操作からも常にプロジェクトルート内に閉じる</td><td>検査</td></tr><tr class=""><td class="cond">schemaRef を持たない文書への schema 解決は、どの操作からも拒否される</td><td>検査</td></tr></tbody></table></div><div class="dh">公開する操作</div><div class="scroll"><table><thead><tr><th>公開する操作</th><th>この集約を変えるか</th><th>常に満たすことを覆う義務</th><th>受け入れ基準</th><th>シナリオ</th></tr></thead><tbody><tr class="keyrow"><td class="cond">値を埋める</td><td><b>変える</b></td><td><b>ある</b></td><td>3件</td><td>3件</td></tr><tr class=""><td class="cond">値を取り出す</td><td>変えない</td><td>無い</td><td>2件</td><td>2件</td></tr><tr class=""><td class="cond">逸脱していないか判定する</td><td>変えない</td><td>無い</td><td>3件</td><td>3件</td></tr><tr class=""><td class="cond">描く</td><td>変えない<br><span class='sub'>成果物は書き出す</span></td><td>無い</td><td>2件</td><td>2件</td></tr></tbody></table></div><div class="dh">出す出来事</div><div class="dp"><code>DocumentValidated</code>／<code>DocumentRendered</code>／<code>DocumentDeployed</code>／<code>DocumentSuperseded</code></div></div></section><section><h2><span class="num">04</span>描いた結果 ── エンティティの文書</h2><p class="lead">属性23件はここへ来る。不変条件は<b>この型だけで閉じるもの</b>だけを持ち、残る6件は集約に置いたままにする。</p><div class="doc"><div class="idline"><span>id <b>ent-document</b></span><span>種別 <b>entity</b></span><span>文脈 <b>bc-waffle</b></span></div><div class="dt">文書：ent-document</div><div class="dp">schema に照らして検証・描画される、構造化された成果物。content が入れ替わり状態が進んでも、同じ文書である。</div><div class="dh">同一性 ── 何で同じものと判断するか</div><div class="dp"><code>documentId</code>。文書が在るあいだ変わらない。</div><div class="dh">属性（23件）</div><div class="scroll"><table><thead><tr><th>属性</th><th>型</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>documentId</code> <span class='keytag'>同一性</span></td><td><code>vo-document-id</code></td></tr><tr class=""><td class="cond"><code>documentType</code></td><td><code>vo-document-type</code></td></tr><tr class=""><td class="cond"><code>schemaRef</code></td><td><code>vo-schema-ref</code></td></tr><tr class=""><td class="cond"><code>status</code></td><td><code>vo-status</code></td></tr><tr class=""><td class="cond"><code>content</code></td><td>構造化データ（schema 準拠）</td></tr><tr class=""><td class="cond"><span class='sub'>ほか18件</span></td><td><span class='sub'>—</span></td></tr></tbody></table></div><div class="dh">常に満たすこと（この型だけで閉じるもの）</div><div class="scroll"><table><thead><tr><th>規則</th><th>担保</th></tr></thead><tbody><tr class="keyrow"><td class="cond">schemaRef は常に存在する</td><td>型</td></tr><tr class=""><td class="cond">documentId は、文書が在るあいだ変わらない</td><td>型</td></tr></tbody></table></div><div class="cov">どの集約に属するかは、ここには書かない ── <b><code>agg-document</code> の一覧が、これをルートとして指している</b></div></div></section><section><h2><span class="num">05</span>操作1件を開くと</h2><p class="lead"><b>集約を変えない操作も、受け入れ基準とシナリオを持つ。</b>変えないことで外れるのは<b>常に満たすことを覆う義務だけ</b>である。</p><div class="doc"><div class="kv"><span class="k">操作</span><span class="v">逸脱していないか判定する</span></div><div class="kv"><span class="k">変えるか</span><span class="v"><b>変えない</b> ── 呼んだあとも文書は同じである</span></div><div class="kv"><span class="k">説明</span><span class="v">content が schema に適合するかを判定する。content は書き換えない</span></div><div class="dh">受け入れ基準</div><ul class="dl"><li>適合しない content を渡したとき、<b>適合しない箇所が返る</b></li><li><code>schemaRef</code> を持たない文書を渡したとき、<b>判定せず拒否する</b></li><li>判定の前後で content は変わらない</li></ul><div class="dh">シナリオ</div><pre class="gk">Scenario: schemaRef を持たない文書は判定できない
+  Given  schemaRef を持たない文書
+  When   逸脱していないか判定する
+  Then   拒否され、判定は行われない</pre><div class="cov">この操作は集約を変えないので、覆う不変条件を持たない ── <b>正しさは、この受け入れ基準とシナリオだけが担保する</b></div></div><h3 class="sub-h">担保のされ方</h3><div class="scroll"><table><thead><tr><th>何を</th><th>仕様のどこが言うか</th><th>実装でどう守るか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>変える操作</b>の正しさ</td><td>受け入れ基準＋シナリオ</td><td>シナリオを実装のテストへ<b>転記して照合する</b></td></tr><tr class="keyrow"><td class="cond"><b>変えない操作</b>の正しさ</td><td><b>同じ。</b>受け入れ基準＋シナリオ</td><td><b>同じ</b></td></tr><tr class=""><td class="cond">集約が常に満たすこと</td><td>常に満たすこと</td><td><b>変える操作のシナリオが覆う</b>（全体の主張を、変える操作1件ずつへ配る）</td></tr><tr class=""><td class="cond">エンティティ・値オブジェクトが常に満たすこと</td><td>常に満たすこと</td><td><b>型で書けないようにする。</b>転記では守れない</td></tr></tbody></table></div></section><section><h2><span class="num">06</span>受け入れ基準とシナリオは、どこに付くか</h2><p class="lead"><b>集約そのものには付かない。</b>付くのは呼び出せる操作の側である。不変条件を覆うのは<b>集約を変える操作</b>のシナリオである。</p><div class="scroll"><table><thead><tr><th>何を</th><th>どこに付くか</th><th>形</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>受け入れ基準</b></td><td><b>集約が公開する操作</b>（変える・変えないを問わない）／業務ユースケース／業務サービス ── <b>呼び出せる操作の側</b>である</td><td>「〜のとき、〜となる」</td></tr><tr class="keyrow"><td class="cond"><b>シナリオ</b></td><td>同じ3つ。基準1つにつき少なくとも1つ</td><td>Given / When / Then</td></tr><tr class=""><td class="cond"><b>不変条件</b></td><td><b>集約</b>（境界をまたぐもの）と<b>エンティティ・値オブジェクト</b>（その型だけで閉じるもの）</td><td>「常に〜である」</td></tr><tr class=""><td class="cond">集約そのものの受け入れ基準</td><td><b>持たない</b></td><td>—</td></tr><tr class=""><td class="cond">エンティティ・値オブジェクトの受け入れ基準</td><td><b>持たない。</b>不変条件だけを持つ</td><td>—</td></tr></tbody></table></div><details class="fold"><summary>なぜそうなるかを開く</summary><div style="padding:.9rem"><div class="chain"><div class="step premise"><span class="lbl">前提</span><span class="txt">受け入れ基準と振る舞いは、要素そのものにではなく、<b>要素が公開する呼び出せる操作</b>に付く。持つのは業務ユースケース・業務サービス・集約のコマンドの3つである</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">集約は呼び出せる操作を<b>公開する操作として持つ</b>ので、受け入れ基準とシナリオは操作1つ1つに付く。<b>集約そのものには付かない</b></span></div><div class="joint">では不変条件はどうなるか</div><div class="step premise"><span class="lbl">前提</span><span class="txt">不変条件は「<b>あらゆる操作列のあとで成り立つ</b>」という全称の主張であり、個別の基準を集めても表せない</span></div><div class="joint">ただし</div><div class="step evidence"><span class="lbl">出典</span><span class="txt">書き起こしは「状態を変更できるのは集約内部の業務ロジックだけ」「内部の他のエンティティの状態を変えるコマンドも、必ずルートを経由して実行する」と定める</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">状態を変える経路が<b>宣言済みのコマンドだけに閉じている</b>なら、「あらゆる操作列」は有限のコマンド集合に閉じる。全称は<b>各コマンドの個別命題へ分配できる</b></span></div><div class="joint">ここで効くのが操作の分けかたである</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>集約を変えない操作は、常に満たすことを破りようがない</b>。だから覆う義務が掛かるのは<b>変える操作だけ</b>である。外へ書き出すかどうかではなく、<b>この集約が変わるか</b>が境目になる ── <code>描く</code> は成果物を書き出すが、文書は変わらないので義務が無い</span></div><div class="joint">結果として</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">常に満たすことは<b>集約とエンティティが持ったまま</b>。それを覆うシナリオは<b>変える操作の側</b>に置き、<code>覆う不変条件</code> で指す。指し先は文書をまたいでよい</span></div><div class="joint">ただし</div><div class="step counter"><span class="lbl">代償</span><span class="txt">書く量は<b>変える操作の数 × 常に満たすことの数</b>で効く。文書の集約は操作4件・3件だが、<b>変えるものは1件だけなので 1 × 3 に収まる</b>。階層を持つ集約では変える操作が増え、この掛け算が大きくなる ── <b>大きすぎることが、集約が大きすぎる合図になる</b></span></div></div></div></details></section><section><h2><span class="num">07</span>文書の表面に、技術の語を出さない</h2><p class="lead">同じものが3つの名前で呼ばれている件と、<b>技術の語が表に出ている件</b>を、まとめて直す。</p><div class="scroll"><table><thead><tr><th>いまの欄の名前</th><th>付く場所</th><th>変更後</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>invariantScenarios</code></td><td>集約</td><td><b>シナリオ</b>（操作の中）</td></tr><tr class="keyrow"><td class="cond"><code>acceptanceScenarios</code></td><td>ユースケース／業務サービス</td><td><b>シナリオ</b></td></tr><tr class=""><td class="cond"><code>acceptanceCriteria</code></td><td>ユースケース／業務サービス</td><td><b>受け入れ基準</b></td></tr><tr class=""><td class="cond">（操作には無い）</td><td>—</td><td><b>受け入れ基準・シナリオを持たせる</b></td></tr><tr class="keyrow"><td class="cond"><code>commands</code></td><td>集約</td><td><b>公開する操作</b>。変えるかどうかは「<b>この集約を変えるか</b>」の欄が示す</td></tr></tbody></table></div><details class="fold"><summary>「コマンド」を表に出さない理由を開く</summary><p class="foldnote">「コマンド」を表に出さない理由 ── 書き起こしは<b>「技術的な説明は業務エキスパートに伝わらず、業務ロジックの正しい理解を妨げる」</b>と述べる。コマンド・エンティティ・値オブジェクト・集約は<b>設計する人どうしの言葉</b>であって、事業活動を表す言葉ではない。いっぽう<b>「この操作を呼ぶと、この文書は変わるのか」は業務の人が即答できる</b>。<b>伝わらないのは名前だけで、区別そのものではない。</b>だから区別は残し、名前を業務の言葉にする。「変えるものを、ドメイン駆動設計ではコマンドと呼ぶ」は<b>書く指針の中だけ</b>に置き、文書の表面には出さない。これは <code>create</code>／<code>validate</code>／<code>render</code> を「値を埋める／逸脱していないか判定する／描く」へ変えた判断、および図の関係を記号でなく言葉で書くと決めた判断と同じ形である。</p></details></section><section><h2><span class="num">08</span>この文脈で、何本の文書が増えるか</h2><p class="lead">bc-waffle の集約2本から、<b>エンティティ2本と値オブジェクト10本</b>が出る。どちらの集約も<b>階層を持たない</b>ので、内側のエンティティは1本も出ない。不変条件19件を「その型ひとつを見れば足りるか」で通すと、<b>4件が動いた</b> ── <code>agg-document</code> から1件がエンティティへ、<code>agg-schema</code> から3件が図の宣言の値オブジェクトへ。</p><div class="scroll"><table><thead><tr><th>集約</th><th>ルートのエンティティ</th><th>内側のエンティティ</th><th>値オブジェクト</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>agg-document</code></td><td><code>ent-document</code></td><td><b>0件</b></td><td>5件</td></tr><tr class="keyrow"><td class="cond"><code>agg-schema</code></td><td><code>ent-schema</code></td><td><b>0件</b></td><td>5件</td></tr><tr class=""><td class="cond"><b>合計</b></td><td><b>2本</b></td><td><b>0本</b></td><td><b>10本</b></td></tr></tbody></table></div><details class="fold"><summary>測り方を開く</summary><p class="foldnote">bc-waffle の集約2本の <code>entities</code> を <code>isRoot</code> で数えた ── どちらもルート1件のみで、内側のエンティティは0件。値オブジェクトは <code>agg-document</code> が5件（DocumentId／DocumentType／DiscriminatorValue／SchemaRef／Status）、<code>agg-schema</code> が5件（SchemaId／Version／KindProfile／DiscriminatorKey／FigureDeclaration）。<b>集約の名前は2本ともルートの名前と一致していた。</b></p></details></section><section><h2><span class="num">09</span>まだ決めていないこと</h2><p class="lead">残るのは3点。<b>新しい判断が要るのは1点だけ</b>で、残る2点は直す先が決まっている。</p><div class="scroll"><table><thead><tr><th>項目</th><th>いまの状態</th><th>行き先</th></tr></thead><tbody><tr class="keyrow"><td class="cond">変える操作に、変える相手を書かせるか</td><td><b>唯一、新しい判断が要るもの。</b>bc-waffle の集約はどちらも階層を持たないので実物が答えを持たず、書き起こしも「ルートを経由する」としか言わない</td><td><b>書けるようにする</b>ことを推す。書けないと階層を持つ集約を表せず、使わない文脈では空のままで害が無い</td></tr><tr class=""><td class="cond">受け入れ基準を持つのは「集約のコマンド」という knowledge の一節</td><td>コマンドを状態変更に絞ったので、<b>変えない操作の受け入れ基準が宙に浮く</b></td><td><code>operation-contract-closes-invariants</code> の当該節を「集約が公開する操作」へ直す</td></tr><tr class=""><td class="cond"><code>agg-document</code> の操作が古い</td><td><b>いまは create／validate／render／supersede</b> のまま。承認済みの4つ（値を埋める／値を取り出す／逸脱していないか判定する／描く）と食い違っている</td><td>移す作業で直す。この完成イメージでは承認済みの4つで描いている</td></tr></tbody></table></div></section></div>

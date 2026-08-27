@@ -1,0 +1,1019 @@
+<title>語彙ごとの描画イメージ</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+/* 図は色も書体も要素の属性として持っている。ここで当てると二重定義になるので、置き場所だけを整える */
+.figbox{background:#FFFFFF;border:1px solid var(--rule-soft);border-radius:3px;
+        padding:.6rem .7rem;margin:0 .95rem .9rem;overflow-x:auto}
+.figbox svg{max-width:100%;height:auto;display:block}
+.figbox.err{color:var(--against);font-size:.8rem;font-family:var(--mono)}
+.figbox.miss{background:var(--assume-bg);border-color:var(--assume);color:var(--assume);
+             font-size:.84rem;line-height:1.75}
+.figbox.miss b{color:var(--assume)}
+
+.cards{display:flex;flex-direction:column;gap:1.1rem}
+.pc{border:1px solid var(--rule);border-radius:3px;background:var(--surface);overflow:hidden}
+.pch{display:flex;flex-wrap:wrap;align-items:baseline;gap:.6rem;padding:.7rem .95rem;
+     background:var(--surface-2);border-bottom:1px solid var(--rule)}
+.pn0{font-size:.85rem;background:none;border:none;padding:0;color:var(--ink-faint)}
+.arrow{color:var(--ink-faint);font-size:.8rem}
+.mean{font-size:.98rem;font-family:var(--serif)}
+.psays{font-size:.82rem;color:var(--ink-faint)}
+.gtag{margin-left:auto;font-family:var(--mono);font-size:.66rem;padding:.1em .5em;border-radius:2px;white-space:nowrap}
+.g-infer{color:var(--infer);background:var(--infer-bg)}
+.g-against{color:var(--against);background:var(--against-bg)}
+.g-assume{color:var(--assume);background:var(--assume-bg)}
+.g-faint{color:var(--ink-faint);background:var(--surface-2)}
+.grid3{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1fr) minmax(0,1.1fr)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+@media(max-width:60rem){.grid3,.grid2{grid-template-columns:minmax(0,1fr)}}
+.grid3>*+*,.grid2>*+*{border-left:1px solid var(--rule-soft)}
+@media(max-width:60rem){.grid3>*+*,.grid2>*+*{border-left:none;border-top:1px solid var(--rule-soft)}}
+.pn{display:flex;flex-direction:column;min-width:0}
+.pl{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-faint);padding:.6rem .95rem .3rem}
+.pn .scroll{border:none;border-radius:0;background:none;flex:1}
+.pn pre{margin:0;padding:0 .95rem .85rem;font-family:var(--mono);font-size:.74rem;
+        line-height:1.7;white-space:pre;color:var(--ink-soft)}
+.prev{padding:.15rem .95rem .9rem;font-size:.86rem;line-height:1.8}
+.prev>*+*{margin-top:.55rem}
+.mdh{font-family:var(--serif);font-size:.95rem;font-weight:600;margin:0}
+.mdp{margin:0}
+.mdul,.mdol{margin:0;padding-left:1.15rem}
+.mdcode{margin:0;padding:.5rem .7rem;background:var(--surface-2);border:1px solid var(--rule-soft);
+        border-radius:3px;font-family:var(--mono);font-size:.75rem;overflow-x:auto;white-space:pre}
+.mdtblwrap{overflow-x:auto}
+.mdtbl{border-collapse:collapse;font-size:.8rem;min-width:0;width:100%}
+.mdtbl th,.mdtbl td{border:1px solid var(--rule-soft);padding:.3rem .5rem;text-align:left}
+.mdtbl th{background:var(--surface-2);font-weight:600}
+.mdhr{border:none;border-top:1px solid var(--rule);margin:.4rem 0}
+.figbox.err{color:var(--against);font-size:.8rem;font-family:var(--mono)}
+.figbox.miss{background:var(--assume-bg);border-color:var(--assume);color:var(--assume);
+             font-size:.84rem;line-height:1.75}
+.figbox.miss b{color:var(--assume)}
+.figout svg{max-width:100%;height:auto}
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;
+      border-left:3px solid var(--ink);padding-left:.85rem}
+</style><div class="wrap"><header><p class="eyebrow">語彙ごとの描画イメージ</p><h1>意味の名前で書いたとき、何がどう出るか</h1><p class="lede">文字の部品は<b>宣言・Markdown・プレビュー</b>の3列、図は<b>宣言と描いた SVG</b>の2列で並べる。Markdown はその場で描いたもの、プレビューはその Markdown をそのまま見た目にしたもの、図は以前に実際に描かれたものである。</p></header><section><h2><span class="num">01</span>文字の部品 ── いまの名前と、意味の名前</h2><p class="lead">9つのうち<b>意味として残るのは4つ</b>。2つは同じ意味の重複、2つは器・経路、1つは落とす。</p><div class="scroll"><table><thead><tr><th>いまの名前</th><th>意味の名前</th><th>群</th></tr></thead><tbody><tr class=""><td class="cond"><code>paragraph</code></td><td>文</td><td>意味</td></tr><tr class=""><td class="cond"><code>list</code></td><td>並び<span class='sub'>（要素の形から導ける）</span></td><td>意味</td></tr><tr class=""><td class="cond"><code>table</code></td><td>表</td><td>意味</td></tr><tr class=""><td class="cond"><code>code</code></td><td>字面</td><td>意味</td></tr><tr class="keyrow"><td class="cond"><code>kvtable</code> と <code>keyvalue</code></td><td><b>名前と値の組</b>（1つに畳む）</td><td>重複</td></tr><tr class=""><td class="cond"><code>section</code></td><td>繰り返して入れ子で描く</td><td>器</td></tr><tr class=""><td class="cond"><code>object</code></td><td>降りる</td><td>経路</td></tr><tr class=""><td class="cond"><code>divider</code></td><td>—</td><td>落とす</td></tr></tbody></table></div></section><section><h2><span class="num">02</span>文字の部品 ── 宣言・Markdown・プレビュー</h2><p class="lead">同じ宣言から、Markdown とその見た目を並べる。</p><div class="cards"><article class="pc"><header class="pch"><code class="pn0">paragraph</code><span class="arrow">→</span><b class="mean">文</b><span class="psays">ひとかたまりの文</span><span class="gtag g-infer">意味</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;paragraph&quot;,
+ &quot;from&quot;: &quot;text&quot;
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">骨格の形を知っているのは Schema だけである。</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><p class="mdp">骨格の形を知っているのは Schema だけである。</p></div></div></div></article><article class="pc"><header class="pch"><code class="pn0">list</code><span class="arrow">→</span><b class="mean">並び</b><span class="psays">順不同に並べる</span><span class="gtag g-infer">意味</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;list&quot;,
+ &quot;from&quot;: &quot;items&quot;,
+ &quot;heading&quot;: &quot;守ること&quot;
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">## 守ること
+
+- 参照は持つが、自分では解決しない
+- 解決した相手を引数で受け取る</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><h3 class="mdh">守ること</h3><ul class='mdul'><li>参照は持つが、自分では解決しない</li><li>解決した相手を引数で受け取る</li></ul></div></div></div></article><article class="pc"><header class="pch"><code class="pn0">table</code><span class="arrow">→</span><b class="mean">表</b><span class="psays">同じ欄を持つものを並べて比べる</span><span class="gtag g-infer">意味</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;table&quot;,
+ &quot;from&quot;: &quot;items&quot;,
+ &quot;heading&quot;: &quot;語彙&quot;,
+ &quot;columns&quot;: [
+  {
+   &quot;field&quot;: &quot;word&quot;,
+   &quot;header&quot;: &quot;語&quot;
+  },
+  {
+   &quot;field&quot;: &quot;says&quot;,
+   &quot;header&quot;: &quot;述べること&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">## 語彙
+
+| 語 | 述べること |
+|---|---|
+| x-render-order | 描く順序 |
+| x-render-level | 見出しの深さ |</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><h3 class="mdh">語彙</h3><div class="mdtblwrap"><table class="mdtbl"><thead><tr><th>語</th><th>述べること</th></tr></thead><tbody><tr><td>x-render-order</td><td>描く順序</td></tr><tr><td>x-render-level</td><td>見出しの深さ</td></tr></tbody></table></div></div></div></div></article><article class="pc"><header class="pch"><code class="pn0">kvtable</code><span class="arrow">→</span><b class="mean">名前と値の組</b><span class="psays">1つのものの、名前と値</span><span class="gtag g-against">重複</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;kvtable&quot;,
+ &quot;columns&quot;: [
+  {
+   &quot;field&quot;: &quot;name&quot;,
+   &quot;header&quot;: &quot;名前&quot;
+  },
+  {
+   &quot;field&quot;: &quot;kind&quot;,
+   &quot;header&quot;: &quot;種別&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">| 名前 | 種別 |
+|---|---|
+| Schema | エンティティ |</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><div class="mdtblwrap"><table class="mdtbl"><thead><tr><th>名前</th><th>種別</th></tr></thead><tbody><tr><td>Schema</td><td>エンティティ</td></tr></tbody></table></div></div></div></div></article><article class="pc"><header class="pch"><code class="pn0">keyvalue</code><span class="arrow">→</span><b class="mean">名前と値の組</b><span class="psays">1つのものの、名前と値</span><span class="gtag g-against">重複</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;keyvalue&quot;,
+ &quot;heading&quot;: &quot;取り決め&quot;,
+ &quot;pairs&quot;: [
+  {
+   &quot;label&quot;: &quot;持ち主&quot;,
+   &quot;from&quot;: &quot;owner&quot;
+  },
+  {
+   &quot;label&quot;: &quot;引数&quot;,
+   &quot;from&quot;: &quot;arg&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">## 取り決め
+
+- **持ち主**: Document
+- **引数**: schema</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><h3 class="mdh">取り決め</h3><ul class='mdul'><li><strong>持ち主</strong>: Document</li><li><strong>引数</strong>: schema</li></ul></div></div></div></article><article class="pc"><header class="pch"><code class="pn0">code</code><span class="arrow">→</span><b class="mean">字面</b><span class="psays">そのまま見せる</span><span class="gtag g-infer">意味</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;code&quot;,
+ &quot;from&quot;: &quot;snippet&quot;,
+ &quot;lang&quot;: &quot;python&quot;,
+ &quot;heading&quot;: &quot;呼び方&quot;
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">## 呼び方
+
+```python
+document.適合を判定する(schema)
+```</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><h3 class="mdh">呼び方</h3><pre class="mdcode" data-lang=python><code>document.適合を判定する(schema)</code></pre></div></div></div></article><article class="pc"><header class="pch"><code class="pn0">section</code><span class="arrow">→</span><b class="mean">繰り返して入れ子で描く</b><span class="psays">器 ── 自分では描かない</span><span class="gtag g-assume">器</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;section&quot;,
+ &quot;from&quot;: &quot;cases&quot;,
+ &quot;titleFrom&quot;: &quot;name&quot;,
+ &quot;itemLabel&quot;: &quot;筋書き&quot;,
+ &quot;each&quot;: [
+  {
+   &quot;as&quot;: &quot;paragraph&quot;,
+   &quot;from&quot;: &quot;given&quot;
+  },
+  {
+   &quot;as&quot;: &quot;list&quot;,
+   &quot;from&quot;: &quot;steps&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">## 筋書き 1: 版を切る
+
+既存の Document がある。
+
+- 新しい版を足す
+- 既存が壊れないか確かめる</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><h3 class="mdh">筋書き 1: 版を切る</h3><p class="mdp">既存の Document がある。</p><ul class='mdul'><li>新しい版を足す</li><li>既存が壊れないか確かめる</li></ul></div></div></div></article><article class="pc"><header class="pch"><code class="pn0">object</code><span class="arrow">→</span><b class="mean">降りる</b><span class="psays">経路 ── 自分では描かない</span><span class="gtag g-assume">器</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;object&quot;,
+ &quot;from&quot;: &quot;detail&quot;,
+ &quot;each&quot;: [
+  {
+   &quot;as&quot;: &quot;paragraph&quot;,
+   &quot;from&quot;: &quot;note&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">入れ子の中へ降りて描く。</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><p class="mdp">入れ子の中へ降りて描く。</p></div></div></div></article><article class="pc"><header class="pch"><code class="pn0">divider</code><span class="arrow">→</span><b class="mean">（落とす）</b><span class="psays">区切り線は意味を持たない</span><span class="gtag g-faint">落とす</span></header><div class="grid3"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;as&quot;: &quot;divider&quot;
+}</pre></div></div><div class="pn "><span class="pl">描いた Markdown</span><div class="scroll"><pre class="code">---</pre></div></div><div class="pn "><span class="pl">プレビュー</span><div class="prev"><hr class="mdhr"></div></div></div></article></div></section><section><h2><span class="num">03</span>図 ── 16の主張</h2><p class="lead">欄は <code>items</code>・<code>links</code>・<code>frame</code> の3つだけ。<b>どれを書けるかは主張が決め、描き方はそこから決まる。書き手は描き方を選ばない。</b></p><div class="cards"><article class="pc"><header class="pch"><b class="mean">つながり</b><span class="psays">Schema が Document の骨格を作り、Document は成果物へ描かれる。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;つながり&quot;,
+ &quot;reading&quot;: &quot;Schema が Document の骨格を作り、Document は成果物へ描かれる。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;Schema&quot;
+  },
+  {
+   &quot;name&quot;: &quot;Document&quot;,
+   &quot;role&quot;: &quot;focus&quot;
+  },
+  {
+   &quot;name&quot;: &quot;成果物&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;Schema&quot;,
+   &quot;to&quot;: &quot;Document&quot;,
+   &quot;name&quot;: &quot;骨格を作る&quot;,
+   &quot;ends&quot;: &quot;head:arrow&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Document&quot;,
+   &quot;to&quot;: &quot;成果物&quot;,
+   &quot;name&quot;: &quot;描く&quot;,
+   &quot;ends&quot;: &quot;head:arrow&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="wf-fig" viewBox="0 0 99 203" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M41.1,31.1 C41.1,43.1 41.1,60.3 41.1,74.6 L41.1,85.7" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><text class="wf-edge-label" x="70.0" y="61.5" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10" text-anchor="middle">骨格を作る</text><path class="wf-edge" d="M41.1,117.1 C41.1,129.0 41.1,146.2 41.1,160.5 L41.1,171.7" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><text class="wf-edge-label" x="55.4" y="147.4" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10" text-anchor="middle">描く</text><g class="wf-node wf-node--plain"><rect x="6.7" y="-0.0" width="68.8" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="41.1" y="19.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">Schema</text></g><g class="wf-node wf-node--focus"><rect x="0.0" y="86.0" width="82.3" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="41.1" y="105.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle" font-weight="600">Document</text></g><g class="wf-node wf-node--plain"><rect x="11.6" y="171.9" width="59.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="41.1" y="191.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">成果物</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">階層</b><span class="psays">語彙は器・意味・共通の欄に分かれ、意味はさらに文字と図に分かれる。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;階層&quot;,
+ &quot;reading&quot;: &quot;語彙は器・意味・共通の欄に分かれ、意味はさらに文字と図に分かれる。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;描く語彙&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;name&quot;: &quot;器・経路&quot;,
+     &quot;children&quot;: [
+      {
+       &quot;name&quot;: &quot;入れ子&quot;
+      },
+      {
+       &quot;name&quot;: &quot;降りる&quot;
+      },
+      {
+       &quot;name&quot;: &quot;突き合わせる&quot;
+      }
+     ]
+    },
+    {
+     &quot;name&quot;: &quot;意味&quot;,
+     &quot;role&quot;: &quot;focus&quot;,
+     &quot;children&quot;: [
+      {
+       &quot;name&quot;: &quot;文字4&quot;
+      },
+      {
+       &quot;name&quot;: &quot;図8&quot;
+      }
+     ]
+    },
+    {
+     &quot;name&quot;: &quot;共通の欄&quot;,
+     &quot;children&quot;: [
+      {
+       &quot;name&quot;: &quot;どこから取るか&quot;
+      },
+      {
+       &quot;name&quot;: &quot;見出し&quot;
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="wf-fig" viewBox="0 0 638 173" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M318.8,29.4 C288.4,40.5 244.4,56.4 211.2,68.5 L200.4,72.4" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M354.5,31.4 C354.5,39.6 354.5,49.9 354.5,59.3 L354.5,70.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M386.2,31.4 C407.4,41.5 435.6,54.8 458.7,65.7 L468.9,70.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M135.2,102.4 C115.8,112.3 90.0,125.5 68.8,136.4 L58.8,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M153.4,102.4 C147.0,111.2 138.6,122.4 131.2,132.4 L124.6,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M175.6,102.4 C182.1,111.2 190.4,122.4 197.8,132.4 L204.5,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M346.1,102.4 C341.2,110.9 335.1,121.7 329.6,131.5 L324.0,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M363.2,102.4 C368.2,111.0 374.6,122.0 380.2,131.8 L385.9,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M500.5,102.4 C500.5,110.5 500.5,120.8 500.5,130.2 L500.5,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M524.0,102.4 C539.1,112.1 559.0,124.8 575.7,135.5 L585.1,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect x="319.0" y="-0.0" width="71.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="354.5" y="19.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">描く語彙</text></g><g class="wf-node wf-node--plain"><rect x="129.0" y="71.0" width="71.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="164.5" y="90.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">器・経路</text></g><g class="wf-node wf-node--plain"><rect x="0.0" y="141.9" width="59.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="29.5" y="161.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">入れ子</text></g><g class="wf-node wf-node--plain"><rect x="84.0" y="141.9" width="59.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="113.5" y="161.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">降りる</text></g><g class="wf-node wf-node--plain"><rect x="168.0" y="141.9" width="95.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="215.5" y="161.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">突き合わせる</text></g><g class="wf-node wf-node--focus"><rect x="327.5" y="71.0" width="54.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="354.5" y="90.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle" font-weight="600">意味</text></g><g class="wf-node wf-node--plain"><rect x="288.5" y="141.9" width="54.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="315.5" y="161.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">文字4</text></g><g class="wf-node wf-node--plain"><rect x="367.5" y="141.9" width="54.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="394.5" y="161.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">図8</text></g><g class="wf-node wf-node--plain"><rect x="465.0" y="71.0" width="71.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="500.5" y="90.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">共通の欄</text></g><g class="wf-node wf-node--plain"><rect x="447.0" y="141.9" width="107.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="500.5" y="161.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">どこから取るか</text></g><g class="wf-node wf-node--plain"><rect x="579.0" y="141.9" width="59.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="608.5" y="161.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">見出し</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">包含</b><span class="psays">段1 は Waffle の実装に属し、段2・段3 は Document に属する。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;包含&quot;,
+ &quot;reading&quot;: &quot;段1 は Waffle の実装に属し、段2・段3 は Document に属する。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;Waffle の実装&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;name&quot;: &quot;Schema&quot;
+    }
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;Document&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;name&quot;: &quot;型&quot;
+    },
+    {
+     &quot;name&quot;: &quot;実体&quot;
+    }
+   ]
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="wf-fig" viewBox="0 0 273 94" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><rect class="wf-group" x="8.0" y="8.0" width="92.0" height="78.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity=".75" /><text class="wf-group-label" x="18.0" y="21.0" fill="#16636B" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">Waffle の実装</text><rect class="wf-group" x="108.0" y="8.0" width="157.0" height="78.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity=".75" /><text class="wf-group-label" x="118.0" y="21.0" fill="#16636B" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">Document</text><g class="wf-node wf-node--plain"><rect x="19.6" y="43.0" width="68.8" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="54.0" y="62.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">Schema</text></g><g class="wf-node wf-node--plain"><rect x="120.0" y="43.0" width="54.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="147.0" y="62.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">型</text></g><g class="wf-node wf-node--plain"><rect x="199.0" y="43.0" width="54.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="226.0" y="62.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">実体</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">順序</b><span class="psays">仕様を書き、実装し、型を書き、その型で仕様自身を検査する。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;順序&quot;,
+ &quot;reading&quot;: &quot;仕様を書き、実装し、型を書き、その型で仕様自身を検査する。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;仕様を書く&quot;,
+   &quot;role&quot;: &quot;start&quot;
+  },
+  {
+   &quot;name&quot;: &quot;実装する&quot;
+  },
+  {
+   &quot;name&quot;: &quot;型を書く&quot;
+  },
+  {
+   &quot;name&quot;: &quot;仕様を検査する&quot;,
+   &quot;role&quot;: &quot;end&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="wf-fig" viewBox="0 0 452 31" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M83.4,15.5 C92.5,15.5 102.2,15.5 111.5,15.5 L122.9,15.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M194.4,15.5 C203.3,15.5 213.1,15.5 222.5,15.5 L233.8,15.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M305.3,15.5 C314.1,15.5 323.8,15.5 333.5,15.5 L344.8,15.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--start"><rect x="0.0" y="0.0" width="83.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="41.5" y="19.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">仕様を書く</text></g><g class="wf-node wf-node--plain"><rect x="123.0" y="0.0" width="71.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="158.6" y="19.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">実装する</text></g><g class="wf-node wf-node--plain"><rect x="234.1" y="0.0" width="71.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="269.6" y="19.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">型を書く</text></g><g class="wf-node wf-node--end"><rect x="345.1" y="0.0" width="107.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="398.6" y="19.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">仕様を検査する</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">循環</b><span class="psays">生成し、測り、直し、知識へ戻す。戻ったところからまた始まる。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;循環&quot;,
+ &quot;reading&quot;: &quot;生成し、測り、直し、知識へ戻す。戻ったところからまた始まる。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;生成する&quot;
+  },
+  {
+   &quot;name&quot;: &quot;測る&quot;
+  },
+  {
+   &quot;name&quot;: &quot;直す&quot;
+  },
+  {
+   &quot;name&quot;: &quot;知識へ戻す&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="wf-fig" viewBox="0 0 101 244" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M52.1,31.4 C48.2,39.8 43.2,50.6 38.7,60.2 L33.9,70.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M27.0,102.4 C27.0,110.5 27.0,120.8 27.0,130.2 L27.0,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M33.9,173.4 C37.8,181.8 42.8,192.5 47.3,202.1 L52.1,212.4" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M61.8,212.6 C63.7,201.7 66.0,186.4 67.0,172.9 C70.3,127.7 70.3,116.1 67.0,71.0 C66.3,61.7 65.0,51.5 63.6,42.6 L61.8,31.2" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect x="23.5" y="-0.0" width="71.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="59.0" y="19.5" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">生成する</text></g><g class="wf-node wf-node--plain"><rect x="0.0" y="71.0" width="54.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="27.0" y="90.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">測る</text></g><g class="wf-node wf-node--plain"><rect x="0.0" y="141.9" width="54.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="27.0" y="161.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">直す</text></g><g class="wf-node wf-node--plain"><rect x="17.5" y="212.9" width="83.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="59.0" y="232.4" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" text-anchor="middle">知識へ戻す</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">やり取り</b><span class="psays">Orchestrator が Waffle と advisor の間を往復する。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;やり取り&quot;,
+ &quot;reading&quot;: &quot;Orchestrator が Waffle と advisor の間を往復する。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;Orchestrator&quot;
+  },
+  {
+   &quot;name&quot;: &quot;Waffle&quot;
+  },
+  {
+   &quot;name&quot;: &quot;advisor&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;Orchestrator&quot;,
+   &quot;to&quot;: &quot;Waffle&quot;,
+   &quot;name&quot;: &quot;骨格を作る&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Waffle&quot;,
+   &quot;to&quot;: &quot;Orchestrator&quot;,
+   &quot;name&quot;: &quot;書き方の指針&quot;,
+   &quot;ends&quot;: &quot;return&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Orchestrator&quot;,
+   &quot;to&quot;: &quot;advisor&quot;,
+   &quot;name&quot;: &quot;敵対的に確かめる&quot;
+  },
+  {
+   &quot;from&quot;: &quot;advisor&quot;,
+   &quot;to&quot;: &quot;Orchestrator&quot;,
+   &quot;name&quot;: &quot;反証、または支持&quot;,
+   &quot;ends&quot;: &quot;return&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 542 272" width="542" height="272" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><rect class="c-box" x="39.0" y="16" width="124" height="26" rx="5" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="101.0" y="33.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">Orchestrator</text><line class="c-life" x1="101.0" y1="42" x2="101.0" y2="256.0" stroke="#C3CAD2" stroke-dasharray="3 3" /><rect class="c-box" x="209.0" y="16" width="124" height="26" rx="5" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="271.0" y="33.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">Waffle</text><line class="c-life" x1="271.0" y1="42" x2="271.0" y2="256.0" stroke="#C3CAD2" stroke-dasharray="3 3" /><rect class="c-box" x="379.0" y="16" width="124" height="26" rx="5" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="441.0" y="33.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">advisor</text><line class="c-life" x1="441.0" y1="42" x2="441.0" y2="256.0" stroke="#C3CAD2" stroke-dasharray="3 3" /><line class="c-msg" x1="101.0" y1="88.0" x2="271.0" y2="88.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" /><text class="c-msg-t" x="186.0" y="82.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">骨格を作る</text><line class="c-msg c-msg--return" x1="271.0" y1="130.0" x2="101.0" y2="130.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" stroke-dasharray="4 3" /><text class="c-msg-t" x="186.0" y="124.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">書き方の指針</text><line class="c-msg" x1="101.0" y1="172.0" x2="441.0" y2="172.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" /><text class="c-msg-t" x="271.0" y="166.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">敵対的に確かめる</text><line class="c-msg c-msg--return" x1="441.0" y1="214.0" x2="101.0" y2="214.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" stroke-dasharray="4 3" /><text class="c-msg-t" x="271.0" y="208.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">反証、または支持</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">対応</b><span class="psays">いまの名前と、意味の名前が対応する。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;対応&quot;,
+ &quot;reading&quot;: &quot;いまの名前と、意味の名前が対応する。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;paragraph&quot;
+  },
+  {
+   &quot;name&quot;: &quot;文&quot;
+  },
+  {
+   &quot;name&quot;: &quot;kvtable / keyvalue&quot;
+  },
+  {
+   &quot;name&quot;: &quot;名前と値の組&quot;
+  },
+  {
+   &quot;name&quot;: &quot;flowchart ほか5種&quot;
+  },
+  {
+   &quot;name&quot;: &quot;主張8種&quot;
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;いまの名前&quot;
+   },
+   {
+    &quot;unit&quot;: &quot;意味の名前&quot;
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 344 194" width="344" height="194" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><rect class="c-box c-box--plain" x="16" y="16" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="91.0" y="44.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">paragraph</text><rect class="c-box c-box--plain" x="178" y="16" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="253.0" y="44.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">文</text><rect class="c-box c-box--plain" x="16" y="74" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="91.0" y="102.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">kvtable / keyvalue</text><rect class="c-box c-box--plain" x="178" y="74" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="253.0" y="102.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">名前と値の組</text><rect class="c-box c-box--plain" x="16" y="132" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="91.0" y="160.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">flowchart ほか5種</text><rect class="c-box c-box--plain" x="178" y="132" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="253.0" y="160.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">主張8種</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">全体と部分</b><span class="psays">16の主張は、名前が要る10と欄から導ける6に分かれる。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;全体と部分&quot;,
+ &quot;reading&quot;: &quot;16の主張は、名前が要る10と欄から導ける6に分かれる。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;名前が要る&quot;,
+   &quot;value&quot;: 10
+  },
+  {
+   &quot;name&quot;: &quot;欄から導ける&quot;,
+   &quot;value&quot;: 6
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 412 172" width="412" height="172" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><path class="c-arc c-tone-0" d="M86.0,34.0 A52.0,52.0 0 1,1 49.2,122.8" fill="none" stroke-width="24" stroke="#16636B" /><path class="c-arc c-tone-1" d="M49.2,122.8 A52.0,52.0 0 0,1 86.0,34.0" fill="none" stroke-width="24" stroke="#9A4A21" /><text class="c-centre" x="86.0" y="91.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" font-weight="600">16</text><rect class="c-chip c-tone-0" x="174" y="29.0" width="10" height="10" rx="2" stroke="none" fill="#16636B" /><text class="c-label" x="192.0" y="38.0" text-anchor="start" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="11">名前が要る</text><text class="c-num" x="396.0" y="38.0" text-anchor="end" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">10</text><rect class="c-chip c-tone-1" x="174" y="55.0" width="10" height="10" rx="2" stroke="none" fill="#9A4A21" /><text class="c-label" x="192.0" y="64.0" text-anchor="start" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="11">欄から導ける</text><text class="c-num" x="396.0" y="64.0" text-anchor="end" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">6</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">量の大小</b><span class="psays">最も使われている宣言が、最も説明されていない。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;量の大小&quot;,
+ &quot;reading&quot;: &quot;最も使われている宣言が、最も説明されていない。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;x-prompt-write&quot;,
+   &quot;value&quot;: 623
+  },
+  {
+   &quot;name&quot;: &quot;x-prompt-query&quot;,
+   &quot;value&quot;: 216
+  },
+  {
+   &quot;name&quot;: &quot;x-render&quot;,
+   &quot;value&quot;: 157
+  },
+  {
+   &quot;name&quot;: &quot;x-render-order&quot;,
+   &quot;value&quot;: 156
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;schema での使用回数&quot;
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 428 212" width="428" height="212" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><line class="c-axis" x1="60" y1="16" x2="60" y2="166" stroke="#C3CAD2" /><line class="c-axis" x1="60" y1="166" x2="412" y2="166" stroke="#C3CAD2" /><line class="c-grid" x1="60" y1="166.0" x2="412" y2="166.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="170.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">0</text><line class="c-grid" x1="60" y1="128.5" x2="412" y2="128.5" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="132.5" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">156</text><line class="c-grid" x1="60" y1="91.0" x2="412" y2="91.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="95.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">312</text><line class="c-grid" x1="60" y1="53.5" x2="412" y2="53.5" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="57.5" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">467</text><line class="c-grid" x1="60" y1="16.0" x2="412" y2="16.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="20.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">623</text><rect class="c-bar c-tone-0" x="74.0" y="16.0" width="62" height="150.0" rx="3" fill="#16636B" stroke="#16636B" /><text class="c-num" x="105.0" y="10.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">623</text><text class="c-tick-t" x="105.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">x-prompt-write</text><rect class="c-bar c-tone-1" x="162.0" y="114.0" width="62" height="52.0" rx="3" fill="#16636B" stroke="#9A4A21" /><text class="c-num" x="193.0" y="108.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">216</text><text class="c-tick-t" x="193.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">x-prompt-query</text><rect class="c-bar c-tone-2" x="250.0" y="128.2" width="62" height="37.8" rx="3" fill="#16636B" stroke="#7A4368" /><text class="c-num" x="281.0" y="122.2" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">157</text><text class="c-tick-t" x="281.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">x-render</text><rect class="c-bar c-tone-3" x="338.0" y="128.4" width="62" height="37.6" rx="3" fill="#16636B" stroke="#8A8F98" /><text class="c-num" x="369.0" y="122.4" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">156</text><text class="c-tick-t" x="369.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">x-render-order</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">順位</b><span class="psays">描画部品の使われ方には大きな偏りがある。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;順位&quot;,
+ &quot;reading&quot;: &quot;描画部品の使われ方には大きな偏りがある。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;paragraph&quot;,
+   &quot;value&quot;: 79
+  },
+  {
+   &quot;name&quot;: &quot;table&quot;,
+   &quot;value&quot;: 68
+  },
+  {
+   &quot;name&quot;: &quot;list&quot;,
+   &quot;value&quot;: 26
+  },
+  {
+   &quot;name&quot;: &quot;section&quot;,
+   &quot;value&quot;: 22
+  },
+  {
+   &quot;name&quot;: &quot;keyvalue&quot;,
+   &quot;value&quot;: 20
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 516 212" width="516" height="212" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><line class="c-axis" x1="60" y1="16" x2="60" y2="166" stroke="#C3CAD2" /><line class="c-axis" x1="60" y1="166" x2="500" y2="166" stroke="#C3CAD2" /><line class="c-grid" x1="60" y1="166.0" x2="500" y2="166.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="170.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">0</text><line class="c-grid" x1="60" y1="128.5" x2="500" y2="128.5" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="132.5" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">20</text><line class="c-grid" x1="60" y1="91.0" x2="500" y2="91.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="95.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">40</text><line class="c-grid" x1="60" y1="53.5" x2="500" y2="53.5" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="57.5" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">59</text><line class="c-grid" x1="60" y1="16.0" x2="500" y2="16.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="20.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">79</text><rect class="c-bar c-tone-0" x="74.0" y="16.0" width="62" height="150.0" rx="3" fill="#16636B" stroke="#16636B" /><text class="c-num" x="105.0" y="10.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">79</text><text class="c-tick-t" x="105.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">paragraph</text><rect class="c-bar c-tone-1" x="162.0" y="36.9" width="62" height="129.1" rx="3" fill="#16636B" stroke="#9A4A21" /><text class="c-num" x="193.0" y="30.9" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">68</text><text class="c-tick-t" x="193.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">table</text><rect class="c-bar c-tone-2" x="250.0" y="116.6" width="62" height="49.4" rx="3" fill="#16636B" stroke="#7A4368" /><text class="c-num" x="281.0" y="110.6" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">26</text><text class="c-tick-t" x="281.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">list</text><rect class="c-bar c-tone-3" x="338.0" y="124.2" width="62" height="41.8" rx="3" fill="#16636B" stroke="#8A8F98" /><text class="c-num" x="369.0" y="118.2" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">22</text><text class="c-tick-t" x="369.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">section</text><rect class="c-bar c-tone-0" x="426.0" y="128.0" width="62" height="38.0" rx="3" fill="#16636B" stroke="#16636B" /><text class="c-num" x="457.0" y="122.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">20</text><text class="c-tick-t" x="457.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">keyvalue</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">時間変化</b><span class="psays">決定は日をまたいで積み上がった。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;時間変化&quot;,
+ &quot;reading&quot;: &quot;決定は日をまたいで積み上がった。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;図の語彙&quot;,
+   &quot;span&quot;: [
+    0,
+    2
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;決定の形&quot;,
+   &quot;span&quot;: [
+    2,
+    4
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;抽象の境界&quot;,
+   &quot;span&quot;: [
+    4,
+    6
+   ]
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;日&quot;
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 602 144" width="602" height="144" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><text class="c-label" x="116.0" y="35.0" text-anchor="end" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="11">図の語彙</text><rect class="c-track" x="126" y="22.0" width="460" height="18" rx="4" fill="#E4E9EE" /><rect class="c-bar c-bar--plain" x="126.0" y="22.0" width="153.3" height="18" rx="3" fill="#16636B" /><text class="c-label" x="116.0" y="65.0" text-anchor="end" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="11">決定の形</text><rect class="c-track" x="126" y="52.0" width="460" height="18" rx="4" fill="#E4E9EE" /><rect class="c-bar c-bar--plain" x="279.3" y="52.0" width="153.3" height="18" rx="3" fill="#16636B" /><text class="c-label" x="116.0" y="95.0" text-anchor="end" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="11">抽象の境界</text><rect class="c-track" x="126" y="82.0" width="460" height="18" rx="4" fill="#E4E9EE" /><rect class="c-bar c-bar--plain" x="432.7" y="82.0" width="153.3" height="18" rx="3" fill="#16636B" /><line class="c-axis" x1="126" y1="110.0" x2="586" y2="110.0" stroke="#C3CAD2" /><line class="c-tick" x1="126.0" y1="110.0" x2="126.0" y2="114.0" stroke="#C3CAD2" /><text class="c-tick-t" x="126.0" y="125.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">0</text><line class="c-tick" x1="241.0" y1="110.0" x2="241.0" y2="114.0" stroke="#C3CAD2" /><text class="c-tick-t" x="241.0" y="125.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">1.5</text><line class="c-tick" x1="356.0" y1="110.0" x2="356.0" y2="114.0" stroke="#C3CAD2" /><text class="c-tick-t" x="356.0" y="125.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">3</text><line class="c-tick" x1="471.0" y1="110.0" x2="471.0" y2="114.0" stroke="#C3CAD2" /><text class="c-tick-t" x="471.0" y="125.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">4.5</text><line class="c-tick" x1="586.0" y1="110.0" x2="586.0" y2="114.0" stroke="#C3CAD2" /><text class="c-tick-t" x="586.0" y="125.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">6 日</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">分布</b><span class="psays">宣言の使用回数は、少数に集中している。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;分布&quot;,
+ &quot;reading&quot;: &quot;宣言の使用回数は、少数に集中している。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;1-9&quot;,
+   &quot;value&quot;: 4
+  },
+  {
+   &quot;name&quot;: &quot;10-99&quot;,
+   &quot;value&quot;: 3
+  },
+  {
+   &quot;name&quot;: &quot;100-199&quot;,
+   &quot;value&quot;: 3
+  },
+  {
+   &quot;name&quot;: &quot;200-&quot;,
+   &quot;value&quot;: 2
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;bins&quot;: &quot;使用回数&quot;,
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;宣言の数&quot;
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 428 212" width="428" height="212" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><line class="c-axis" x1="60" y1="16" x2="60" y2="166" stroke="#C3CAD2" /><line class="c-axis" x1="60" y1="166" x2="412" y2="166" stroke="#C3CAD2" /><line class="c-grid" x1="60" y1="166.0" x2="412" y2="166.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="170.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">0</text><line class="c-grid" x1="60" y1="128.5" x2="412" y2="128.5" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="132.5" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">1</text><line class="c-grid" x1="60" y1="91.0" x2="412" y2="91.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="95.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">2</text><line class="c-grid" x1="60" y1="53.5" x2="412" y2="53.5" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="57.5" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">3</text><line class="c-grid" x1="60" y1="16.0" x2="412" y2="16.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="20.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">4</text><rect class="c-bar c-tone-0" x="74.0" y="16.0" width="62" height="150.0" rx="3" fill="#16636B" stroke="#16636B" /><text class="c-num" x="105.0" y="10.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">4</text><text class="c-tick-t" x="105.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">1-9</text><rect class="c-bar c-tone-1" x="162.0" y="53.5" width="62" height="112.5" rx="3" fill="#16636B" stroke="#9A4A21" /><text class="c-num" x="193.0" y="47.5" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">3</text><text class="c-tick-t" x="193.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">10-99</text><rect class="c-bar c-tone-2" x="250.0" y="53.5" width="62" height="112.5" rx="3" fill="#16636B" stroke="#7A4368" /><text class="c-num" x="281.0" y="47.5" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">3</text><text class="c-tick-t" x="281.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">100-199</text><rect class="c-bar c-tone-3" x="338.0" y="91.0" width="62" height="75.0" rx="3" fill="#16636B" stroke="#8A8F98" /><text class="c-num" x="369.0" y="85.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">2</text><text class="c-tick-t" x="369.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">200-</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">偏差</b><span class="psays">仕様の言及回数は、使用回数から大きく下振れしている。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;偏差&quot;,
+ &quot;reading&quot;: &quot;仕様の言及回数は、使用回数から大きく下振れしている。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;x-prompt-write&quot;,
+   &quot;value&quot;: 19
+  },
+  {
+   &quot;name&quot;: &quot;x-render&quot;,
+   &quot;value&quot;: 74
+  },
+  {
+   &quot;name&quot;: &quot;x-render-level&quot;,
+   &quot;value&quot;: 2
+  },
+  {
+   &quot;name&quot;: &quot;x-render-order&quot;,
+   &quot;value&quot;: 0
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;baseline&quot;: 24,
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;平均からの差&quot;
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 428 212" width="428" height="212" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><line class="c-axis" x1="60" y1="16" x2="60" y2="166" stroke="#C3CAD2" /><line class="c-axis" x1="60" y1="166" x2="412" y2="166" stroke="#C3CAD2" /><line class="c-grid" x1="60" y1="166.0" x2="412" y2="166.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="170.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">0</text><line class="c-grid" x1="60" y1="128.5" x2="412" y2="128.5" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="132.5" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">12</text><line class="c-grid" x1="60" y1="91.0" x2="412" y2="91.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="95.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">25</text><line class="c-grid" x1="60" y1="53.5" x2="412" y2="53.5" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="57.5" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">38</text><line class="c-grid" x1="60" y1="16.0" x2="412" y2="16.0" stroke="#E4E9EE" /><text class="c-tick-t" x="52.0" y="20.0" text-anchor="end" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">50</text><rect class="c-bar c-tone-0" x="74.0" y="181.0" width="62" height="-15.0" rx="3" fill="#16636B" stroke="#16636B" /><text class="c-num" x="105.0" y="175.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">-5</text><text class="c-tick-t" x="105.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">x-prompt-write</text><rect class="c-bar c-tone-1" x="162.0" y="16.0" width="62" height="150.0" rx="3" fill="#16636B" stroke="#9A4A21" /><text class="c-num" x="193.0" y="10.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">50</text><text class="c-tick-t" x="193.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">x-render</text><rect class="c-bar c-tone-2" x="250.0" y="232.0" width="62" height="-66.0" rx="3" fill="#16636B" stroke="#7A4368" /><text class="c-num" x="281.0" y="226.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">-22</text><text class="c-tick-t" x="281.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">x-render-level</text><rect class="c-bar c-tone-3" x="338.0" y="238.0" width="62" height="-72.0" rx="3" fill="#16636B" stroke="#8A8F98" /><text class="c-num" x="369.0" y="232.0" text-anchor="middle" fill="#171B23" font-family="SF Mono, Menlo, monospace" font-size="11">-24</text><text class="c-tick-t" x="369.0" y="183.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">x-render-order</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">相関</b><span class="psays">使われている宣言ほど説明されている、とは言えない。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;相関&quot;,
+ &quot;reading&quot;: &quot;使われている宣言ほど説明されている、とは言えない。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;write&quot;,
+   &quot;at&quot;: [
+    623,
+    19
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;render&quot;,
+   &quot;at&quot;: [
+    157,
+    74
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;level&quot;,
+   &quot;at&quot;: [
+    152,
+    2
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;order&quot;,
+   &quot;at&quot;: [
+    156,
+    0
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;target&quot;,
+   &quot;at&quot;: [
+    10,
+    26
+   ]
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;schema での使用&quot;
+   },
+   {
+    &quot;unit&quot;: &quot;仕様での言及&quot;
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 460 330" width="460" height="330" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><rect class="c-quad" x="270.0" y="26" width="166.0" height="130.0" fill="#E2EFF0" opacity=".4" /><line class="c-axis" x1="104" y1="26" x2="104" y2="286" stroke="#C3CAD2" /><line class="c-axis" x1="104" y1="286" x2="436" y2="286" stroke="#C3CAD2" /><line class="c-grid" x1="270.0" y1="26" x2="270.0" y2="286" stroke="#E4E9EE" /><line class="c-grid" x1="104" y1="156.0" x2="436" y2="156.0" stroke="#E4E9EE" /><circle class="c-dot" cx="436.0" cy="219.2" r="4" fill="#16636B" /><text class="c-point-t" x="436.0" y="209.2" text-anchor="middle" fill="#16636B" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">write</text><circle class="c-dot" cx="187.7" cy="26.0" r="4" fill="#16636B" /><text class="c-point-t" x="187.7" y="16.0" text-anchor="middle" fill="#16636B" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">render</text><circle class="c-dot" cx="185.0" cy="279.0" r="4" fill="#16636B" /><text class="c-point-t" x="185.0" y="269.0" text-anchor="middle" fill="#16636B" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">level</text><circle class="c-dot" cx="187.1" cy="286.0" r="4" fill="#16636B" /><text class="c-point-t" x="187.1" y="276.0" text-anchor="middle" fill="#16636B" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">order</text><circle class="c-dot" cx="109.3" cy="194.6" r="4" fill="#16636B" /><text class="c-point-t" x="109.3" y="184.6" text-anchor="middle" fill="#16636B" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">target</text><text class="c-axis-t" x="270.0" y="318.0" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">schema での使用</text><text class="c-axis-t" transform="translate(22,156.0) rotate(-90)" text-anchor="middle" fill="#79828F" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">仕様での言及</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">流量</b><span class="psays">描画部品の多くは、文字の側へ流れている。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;流量&quot;,
+ &quot;reading&quot;: &quot;描画部品の多くは、文字の側へ流れている。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;宣言&quot;
+  },
+  {
+   &quot;name&quot;: &quot;文字の部品&quot;
+  },
+  {
+   &quot;name&quot;: &quot;図の部品&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;宣言&quot;,
+   &quot;to&quot;: &quot;文字の部品&quot;,
+   &quot;weight&quot;: 239
+  },
+  {
+   &quot;from&quot;: &quot;宣言&quot;,
+   &quot;to&quot;: &quot;図の部品&quot;,
+   &quot;weight&quot;: 8
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 560 222" width="560" height="222" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><path class="c-ribbon c-tone-0" d="M124,16.0 C280.0,16.0 280.0,16.0 448,16.0 L448,199.8 C280.0,199.8 280.0,199.8 124,199.8 Z" opacity=".45" stroke="none" fill="#16636B" /><path class="c-ribbon c-tone-1" d="M124,199.8 C280.0,199.8 280.0,207.8 448,207.8 L448,214.0 C280.0,214.0 280.0,206.0 124,206.0 Z" opacity=".45" stroke="none" fill="#9A4A21" /><rect class="c-node" x="112" y="206.0" width="12" height="0.0" fill="#79828F" /><text class="c-label" x="104.0" y="210.0" text-anchor="end" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="11">宣言</text><rect class="c-node" x="436" y="199.8" width="12" height="0.0" fill="#79828F" /><text class="c-label" x="456.0" y="203.8" text-anchor="start" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="11">文字の部品</text><rect class="c-node" x="436" y="214.0" width="12" height="0.0" fill="#79828F" /><text class="c-label" x="456.0" y="218.0" text-anchor="start" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="11">図の部品</text></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">空間</b><span class="psays">段は外側から内側へ並ぶ。位置が段の深さを表す。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;空間&quot;,
+ &quot;reading&quot;: &quot;段は外側から内側へ並ぶ。位置が段の深さを表す。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;段1 実装&quot;
+  },
+  {
+   &quot;name&quot;: &quot;段2 型&quot;
+  },
+  {
+   &quot;name&quot;: &quot;段3 実体&quot;
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;ground&quot;: &quot;段の深さ&quot;
+ }
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 182 194" width="182" height="194" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><rect class="c-box c-box--plain" x="16" y="16" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="91.0" y="44.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">段1 実装</text><rect class="c-box c-box--plain" x="16" y="74" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="91.0" y="102.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">段2 型</text><rect class="c-box c-box--plain" x="16" y="132" width="150" height="46" rx="6" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="91.0" y="160.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">段3 実体</text></svg></div></div></div></article></div></section><section><h2><span class="num">04</span>難しい実物で試したもの</h2><p class="lead">組み合わせが要る4件。<b>入れ子・囲み・突き合わせ</b>がここに出る。この4件だけは<b>以前の頁に残っていた図</b>で、いまの変換では描いていない。</p><div class="cards"><article class="pc"><header class="pch"><b class="mean">判断基準（62枚ある型）</b><span class="psays"></span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;つながり&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;業務領域の分類は&quot;
+  },
+  {
+   &quot;name&quot;: &quot;データ構造は複雑か&quot;
+  },
+  {
+   &quot;name&quot;: &quot;金銭処理・監査記録が要るか&quot;
+  },
+  {
+   &quot;name&quot;: &quot;アクティブレコード&quot;
+  },
+  {
+   &quot;name&quot;: &quot;トランザクションスクリプト&quot;
+  },
+  {
+   &quot;name&quot;: &quot;イベント履歴式ドメインモデル&quot;
+  },
+  {
+   &quot;name&quot;: &quot;ドメインモデル&quot;,
+   &quot;role&quot;: &quot;focus&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;業務領域の分類は&quot;,
+   &quot;to&quot;: &quot;データ構造は複雑か&quot;,
+   &quot;name&quot;: &quot;補完・一般&quot;,
+   &quot;ends&quot;: &quot;head:arrow&quot;
+  },
+  {
+   &quot;from&quot;: &quot;業務領域の分類は&quot;,
+   &quot;to&quot;: &quot;金銭処理・監査記録が要るか&quot;,
+   &quot;name&quot;: &quot;中核&quot;,
+   &quot;ends&quot;: &quot;head:arrow&quot;
+  },
+  {
+   &quot;from&quot;: &quot;データ構造は複雑か&quot;,
+   &quot;to&quot;: &quot;アクティブレコード&quot;,
+   &quot;name&quot;: &quot;複雑&quot;,
+   &quot;ends&quot;: &quot;head:arrow&quot;
+  },
+  {
+   &quot;from&quot;: &quot;データ構造は複雑か&quot;,
+   &quot;to&quot;: &quot;トランザクションスクリプト&quot;,
+   &quot;name&quot;: &quot;単純&quot;,
+   &quot;ends&quot;: &quot;head:arrow&quot;
+  },
+  {
+   &quot;from&quot;: &quot;金銭処理・監査記録が要るか&quot;,
+   &quot;to&quot;: &quot;イベント履歴式ドメインモデル&quot;,
+   &quot;name&quot;: &quot;要る&quot;,
+   &quot;ends&quot;: &quot;head:arrow&quot;
+  },
+  {
+   &quot;from&quot;: &quot;金銭処理・監査記録が要るか&quot;,
+   &quot;to&quot;: &quot;ドメインモデル&quot;,
+   &quot;name&quot;: &quot;要らない&quot;,
+   &quot;ends&quot;: &quot;head:arrow&quot;
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">以前の頁に残っていた図</span><div class="figbox"><svg class="wf-fig" viewBox="-10 -10 767 190" width="767" height="190" style="width:100%;max-width:1381px;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M358.0,30.4 C341.9,40.2 320.3,53.2 302.4,63.9 L292.9,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)" /><path class="wf-edge" d="M406.2,30.4 C422.4,40.1 444.1,53.0 462.0,63.8 L471.9,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)" /><path class="wf-edge" d="M227.2,100.5 C197.2,110.8 156.5,124.9 124.3,136.0 L113.7,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)" /><path class="wf-edge" d="M269.0,100.5 C269.0,108.6 269.0,119.0 269.0,128.4 L269.0,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)" /><path class="wf-edge" d="M496.0,100.5 C496.0,108.6 496.0,119.0 496.0,128.4 L496.0,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)" /><path class="wf-edge" d="M536.5,100.5 C565.5,110.8 604.8,124.8 635.9,135.9 L646.5,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)" /><rect class="wf-label-bg" fill="#F5F7F9" x="297.5" y="42.0" width="56.0" height="14" rx="3" stroke="none" /><text class="wf-edge-label" text-anchor="middle" fill="#79828F" x="325.5" y="53.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">補完・一般</text><rect class="wf-label-bg" fill="#F5F7F9" x="426.0" y="42.0" width="26.0" height="14" rx="3" stroke="none" /><text class="wf-edge-label" text-anchor="middle" fill="#79828F" x="439.0" y="53.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">中核</text><rect class="wf-label-bg" fill="#F5F7F9" x="157.5" y="112.1" width="26.0" height="14" rx="3" stroke="none" /><text class="wf-edge-label" text-anchor="middle" fill="#79828F" x="170.5" y="123.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">複雑</text><rect class="wf-label-bg" fill="#F5F7F9" x="256.0" y="112.1" width="26.0" height="14" rx="3" stroke="none" /><text class="wf-edge-label" text-anchor="middle" fill="#79828F" x="269.0" y="123.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">単純</text><rect class="wf-label-bg" fill="#F5F7F9" x="483.0" y="112.1" width="26.0" height="14" rx="3" stroke="none" /><text class="wf-edge-label" text-anchor="middle" fill="#79828F" x="496.0" y="123.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">要る</text><rect class="wf-label-bg" fill="#F5F7F9" x="568.5" y="112.1" width="46.0" height="14" rx="3" stroke="none" /><text class="wf-edge-label" text-anchor="middle" fill="#79828F" x="591.5" y="123.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">要らない</text><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="316.0" y="-0.0" width="132.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="382.0" y="19.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">業務領域の分類は</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="197.0" y="70.0" width="144.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="269.0" y="89.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">データ構造は複雑か</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="400.0" y="70.0" width="192.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="496.0" y="89.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">金銭処理・監査記録が要るか</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="0.0" y="140.0" width="144.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="72.0" y="159.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">アクティブレコード</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="173.0" y="140.0" width="192.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="269.0" y="159.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">トランザクションスクリプト</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="394.0" y="140.0" width="204.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="496.0" y="159.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">イベント履歴式ドメインモデル</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="627.0" y="140.0" width="120.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#16636B" x="687.0" y="159.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12" font-weight="600">ドメインモデル</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">変更前と変更後（ADRのblock 03）</b><span class="psays"></span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;対応&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;親は1つしか持てない&quot;,
+   &quot;figure&quot;: {
+    &quot;asserts&quot;: &quot;階層&quot;,
+    &quot;items&quot;: [
+     {
+      &quot;name&quot;: &quot;区切られた文脈&quot;,
+      &quot;children&quot;: [
+       {
+        &quot;name&quot;: &quot;業務領域&quot;,
+        &quot;role&quot;: &quot;muted&quot;,
+        &quot;children&quot;: [
+         {
+          &quot;name&quot;: &quot;中核&quot;
+         },
+         {
+          &quot;name&quot;: &quot;一般&quot;
+         },
+         {
+          &quot;name&quot;: &quot;補完&quot;
+         }
+        ]
+       },
+       {
+        &quot;name&quot;: &quot;集約&quot;
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   &quot;name&quot;: &quot;対応は参照が運ぶ&quot;,
+   &quot;figure&quot;: {
+    &quot;asserts&quot;: &quot;階層&quot;,
+    &quot;items&quot;: [
+     {
+      &quot;name&quot;: &quot;事業領域&quot;,
+      &quot;children&quot;: [
+       {
+        &quot;name&quot;: &quot;業務領域&quot;,
+        &quot;role&quot;: &quot;focus&quot;,
+        &quot;children&quot;: [
+         {
+          &quot;name&quot;: &quot;中核&quot;
+         },
+         {
+          &quot;name&quot;: &quot;一般&quot;
+         },
+         {
+          &quot;name&quot;: &quot;補完&quot;
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;変更前&quot;
+   },
+   {
+    &quot;unit&quot;: &quot;変更後&quot;
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">以前の頁に残っていた図</span><div class="figbox"><svg class="wf-fig" viewBox="-10 -10 270 190" width="270" height="190" style="width:100.0%;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M158.4,30.4 C151.9,39.2 143.6,50.5 136.2,60.6 L129.6,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M179.8,30.4 C186.4,39.2 194.9,50.5 202.4,60.6 L209.2,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M100.1,100.5 C87.8,109.8 71.6,122.2 57.9,132.7 L48.8,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M119.0,100.5 C119.0,108.6 119.0,119.0 119.0,128.4 L119.0,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M137.9,100.5 C150.1,109.8 166.3,122.2 180.1,132.7 L189.1,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="109.0" y="-0.0" width="120.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="169.0" y="19.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">区切られた文脈</text></g><g class="wf-node wf-node--muted"><rect fill="none" stroke="#79828F" stroke-dasharray="4 3" x="77.0" y="70.0" width="84.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#79828F" x="119.0" y="89.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">業務領域</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="0.0" y="140.0" width="60.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="30.0" y="159.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">中核</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="89.0" y="140.0" width="60.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="119.0" y="159.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">一般</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="178.0" y="140.0" width="60.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="208.0" y="159.1" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">補完</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="190.0" y="70.0" width="60.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="220.0" y="89.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">集約</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><b class="mean">やり取りの順序</b><span class="psays">やり取り: frame に &#x27;groups&#x27; は書けない</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;やり取り&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;Orchestrator&quot;
+  },
+  {
+   &quot;name&quot;: &quot;Waffle&quot;
+  },
+  {
+   &quot;name&quot;: &quot;advisor&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;Orchestrator&quot;,
+   &quot;to&quot;: &quot;Waffle&quot;,
+   &quot;name&quot;: &quot;骨格を作る&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Waffle&quot;,
+   &quot;to&quot;: &quot;Orchestrator&quot;,
+   &quot;name&quot;: &quot;埋める場所の一覧&quot;,
+   &quot;ends&quot;: &quot;return&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Orchestrator&quot;,
+   &quot;to&quot;: &quot;advisor&quot;,
+   &quot;name&quot;: &quot;敵対的に確かめる&quot;
+  },
+  {
+   &quot;from&quot;: &quot;advisor&quot;,
+   &quot;to&quot;: &quot;Orchestrator&quot;,
+   &quot;name&quot;: &quot;反証、または支持&quot;,
+   &quot;ends&quot;: &quot;return&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Orchestrator&quot;,
+   &quot;to&quot;: &quot;Waffle&quot;,
+   &quot;name&quot;: &quot;値を書き込む&quot;
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;groups&quot;: [
+   {
+    &quot;name&quot;: &quot;繰り返し&quot;,
+    &quot;span&quot;: [
+     2,
+     2
+    ]
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">図</span><div class="figbox miss">当時はこの図が無い。<b>描けなかったのではなく、囲みを宣言する欄が無くて宣言が書けなかった。</b>欄を認めれば描けることは、次の節で確かめている。</div></div></div></article><article class="pc"><header class="pch"><b class="mean">区画の中の区画</b><span class="psays"></span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;包含&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;受け口&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;name&quot;: &quot;CLI&quot;
+    },
+    {
+     &quot;name&quot;: &quot;MCP&quot;
+    }
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;領域&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;name&quot;: &quot;業務サービス&quot;
+    },
+    {
+     &quot;name&quot;: &quot;集約&quot;,
+     &quot;children&quot;: [
+      {
+       &quot;name&quot;: &quot;モデル&quot;
+      },
+      {
+       &quot;name&quot;: &quot;値&quot;
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}</pre></div></div><div class="pn "><span class="pl">以前の頁に残っていた図</span><div class="figbox"><svg class="wf-fig" viewBox="-10 -10 533 160" width="533" height="160" style="width:100%;max-width:959px;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><rect class="wf-group" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75" x="8.0" y="43.0" width="167.0" height="77.0" rx="8" /><text class="wf-group-label" text-anchor="start" fill="#16636B" x="18.0" y="56.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">受け口</text><rect class="wf-group" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75" x="183.0" y="8.0" width="322.0" height="124.0" rx="8" /><text class="wf-group-label" text-anchor="start" fill="#16636B" x="193.0" y="21.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">領域</text><rect class="wf-group" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75" x="195.0" y="43.0" width="173.0" height="77.0" rx="8" /><text class="wf-group-label" text-anchor="start" fill="#16636B" x="205.0" y="56.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">集約</text><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="20.1" y="78.0" width="53.7" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="47.0" y="97.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">CLI</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="102.5" y="78.0" width="61.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="133.0" y="97.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">MCP</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="385.0" y="78.0" width="108.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="439.0" y="97.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">業務サービス</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="207.0" y="78.0" width="72.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="243.0" y="97.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">モデル</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="308.0" y="78.0" width="48.0" height="30.0" rx="5" stroke-width="1" /><text class="wf-name" text-anchor="middle" fill="#171B23" x="332.0" y="97.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">値</text></g></svg></div></div></div></article></div></section><section><h2><span class="num">05</span>書けなかった宣言を、書いて描く</h2><p class="lead">前の節の「やり取りの順序」に図が無いのは、描けなかったからではない。<b>囲みを宣言する欄（<code>frame.groups</code>）が schema に無く、宣言そのものが書けなかった</b>。当時の注記が「やり取り: frame に 'groups' は書けない」と、そのまま残っている。欄を認めれば描ける、というのを実際に確かめた。</p><div class="cards"><article class="pc"><header class="pch"><b class="mean">やり取り（囲みつき）</b><span class="psays">Orchestrator が Waffle と advisor の間を往復し、途中が繰り返される。</span></header><div class="grid2"><div class="pn "><span class="pl">宣言</span><div class="scroll"><pre class="code">{
+ &quot;asserts&quot;: &quot;やり取り&quot;,
+ &quot;reading&quot;: &quot;Orchestrator が Waffle と advisor の間を往復し、途中が繰り返される。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;Orchestrator&quot;
+  },
+  {
+   &quot;name&quot;: &quot;Waffle&quot;
+  },
+  {
+   &quot;name&quot;: &quot;advisor&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;Orchestrator&quot;,
+   &quot;to&quot;: &quot;Waffle&quot;,
+   &quot;name&quot;: &quot;骨格を作る&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Waffle&quot;,
+   &quot;to&quot;: &quot;Orchestrator&quot;,
+   &quot;name&quot;: &quot;埋める場所の一覧&quot;,
+   &quot;ends&quot;: &quot;return&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Orchestrator&quot;,
+   &quot;to&quot;: &quot;advisor&quot;,
+   &quot;name&quot;: &quot;敵対的に確かめる&quot;
+  },
+  {
+   &quot;from&quot;: &quot;advisor&quot;,
+   &quot;to&quot;: &quot;Orchestrator&quot;,
+   &quot;name&quot;: &quot;反証、または支持&quot;,
+   &quot;ends&quot;: &quot;return&quot;
+  },
+  {
+   &quot;from&quot;: &quot;Orchestrator&quot;,
+   &quot;to&quot;: &quot;Waffle&quot;,
+   &quot;name&quot;: &quot;値を書き込む&quot;
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;groups&quot;: [
+   {
+    &quot;name&quot;: &quot;繰り返し&quot;,
+    &quot;span&quot;: [
+     2,
+     2
+    ]
+   }
+  ]
+ }
+}</pre></div></div><div class="pn "><span class="pl">描いた図 ── その場で、この宣言から</span><div class="figbox"><svg class="c-fig" viewBox="0 0 542 356" width="542" height="356" role="img"><defs><marker id="c-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="c-arrow" d="M0,0 L10,5 L0,10 z" fill="#79828F" /></marker></defs><rect class="c-frame" x="24" y="150.0" width="494.0" height="136.0" rx="4" fill="none" stroke="#16636B" stroke-dasharray="4 3" opacity=".7" /><rect class="c-frame-tab" x="24" y="150.0" width="52" height="16" fill="#E2EFF0" stroke="#16636B" /><text class="c-tab-t" x="50.0" y="162.0" text-anchor="middle" fill="#16636B" font-family="SF Mono, Menlo, monospace" font-size="9">繰り返し</text><rect class="c-box" x="39.0" y="16" width="124" height="26" rx="5" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="101.0" y="33.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">Orchestrator</text><line class="c-life" x1="101.0" y1="42" x2="101.0" y2="340.0" stroke="#C3CAD2" stroke-dasharray="3 3" /><rect class="c-box" x="209.0" y="16" width="124" height="26" rx="5" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="271.0" y="33.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">Waffle</text><line class="c-life" x1="271.0" y1="42" x2="271.0" y2="340.0" stroke="#C3CAD2" stroke-dasharray="3 3" /><rect class="c-box" x="379.0" y="16" width="124" height="26" rx="5" fill="#F5F7F9" stroke="#C3CAD2" /><text class="c-name" x="441.0" y="33.0" text-anchor="middle" fill="#171B23" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12">advisor</text><line class="c-life" x1="441.0" y1="42" x2="441.0" y2="340.0" stroke="#C3CAD2" stroke-dasharray="3 3" /><line class="c-msg" x1="101.0" y1="88.0" x2="271.0" y2="88.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" /><text class="c-msg-t" x="186.0" y="82.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">骨格を作る</text><line class="c-msg c-msg--return" x1="271.0" y1="130.0" x2="101.0" y2="130.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" stroke-dasharray="4 3" /><text class="c-msg-t" x="186.0" y="124.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">埋める場所の一覧</text><line class="c-msg" x1="101.0" y1="214.0" x2="441.0" y2="214.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" /><text class="c-msg-t" x="271.0" y="208.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">敵対的に確かめる</text><line class="c-msg c-msg--return" x1="441.0" y1="256.0" x2="101.0" y2="256.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" stroke-dasharray="4 3" /><text class="c-msg-t" x="271.0" y="250.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">反証、または支持</text><line class="c-msg" x1="101.0" y1="298.0" x2="271.0" y2="298.0" marker-end="url(#c-head)" stroke="#79828F" stroke-width="1.2" /><text class="c-msg-t" x="186.0" y="292.0" text-anchor="middle" fill="#4B5563" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10">値を書き込む</text></svg></div></div></div></article></div></section><section><h2><span class="num">06</span>描いてみて分かったこと</h2><p class="lead">16すべてを、主張の宣言から<b>その場で描いた</b>。そのうえで機械の検査に掛け、<b>3件の欠陥</b>が出た。いずれも描く手の側にある。</p><div class="scroll"><table><thead><tr><th>主張</th><th>何が起きたか</th><th>何の不足か</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>偏差</b></td><td><b>負の値が描かれない。</b>基準からの差が正の1本だけ棒になり、負の3本は消え、目盛りの文字だけが枠の外へ出た</td><td><b>描く手の不足。</b>いま割り当てている棒の手は、0を下端として扱う。偏差は基準を中間に置く手が要る</td></tr><tr class="keyrow"><td class="cond"><b>やり取り（囲みつき）</b></td><td><b>囲みの下端が、次の行の文字を6px かすめる。</b>囲む範囲を1行増やしても減らしても、境目がどこかの行の文字に当たる</td><td><b>描く手の不足。</b>囲み自身が1行を占めるのに、枠の上下の余白がその分を見込んでいない</td></tr><tr class=""><td class="cond">順序</td><td>最後の箱が枠の右端に接している</td><td><b>余白の不足。</b>読めなくはないが、枠の取り方が中身に追いついていない</td></tr></tbody></table></div><h3 class="sub-h">変換のために足したもの</h3><div class="scroll"><table><thead><tr><th>主張</th><th>どの手へ渡したか</th><th>宣言のどこを写したか</th></tr></thead><tbody><tr class=""><td class="cond">つながり／階層／包含／順序</td><td>そのまま（主張を軸にした手）</td><td>—</td></tr><tr class="keyrow"><td class="cond">循環</td><td>つながりの手</td><td><b>最後から最初への結びを足して、環にした</b></td></tr><tr class="keyrow"><td class="cond">やり取り</td><td>やり取りの手</td><td>結びを往復の並びへ。<code>ends: return</code> を戻りとして写した</td></tr><tr class=""><td class="cond">対応</td><td>箱組みの手</td><td>要素を2列に並べた</td></tr><tr class=""><td class="cond">全体と部分／量の大小／順位／分布</td><td>割合・棒の手</td><td><code>items[].value</code> をそのまま。順位は降順に並べ替えた</td></tr><tr class=""><td class="cond">時間変化</td><td>帯の手</td><td><code>items[].span</code> を区間へ。<b>軸は目盛りの並びを作って渡した</b></td></tr><tr class=""><td class="cond">偏差</td><td>棒の手</td><td><code>frame.baseline</code> を引いた差を値にした（負が描けない）</td></tr><tr class=""><td class="cond">相関</td><td>2軸の手</td><td><code>items[].at</code> を最大値で正規化した</td></tr><tr class=""><td class="cond">流量</td><td>流れの手</td><td><code>links[].weight</code> を太さにした</td></tr><tr class=""><td class="cond">空間</td><td>箱組みの手</td><td>1列に並べた</td></tr></tbody></table></div></section><section><h2><span class="num">07</span>この一覧から見えること</h2><p class="lead">承認済みの決定で足りないと判定した4つが、実物でも確かめられる。</p><div class="scroll"><table><thead><tr><th>足りないもの</th><th>この一覧のどこに出るか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">突き合わせる器</td><td><b>変更前と変更後</b>が <code>対応</code> で書かれている。格子の主張と器を兼ねている</td></tr><tr class="keyrow"><td class="cond">読む必要の度合い</td><td><b>文字の部品に一つも無い。</b>この一覧の折り畳みも、宣言からではなく HTML を手で書いている</td></tr><tr class=""><td class="cond"><code>frame.groups</code></td><td><b>やり取りの順序</b>に「frame に 'groups' は書けない」という注記が残り、図が描かれていない</td></tr><tr class=""><td class="cond">差分の語彙</td><td><b>変更前と変更後</b>で <code>muted</code>・<code>focus</code> を流用している。落とした・足した・変えた が無い</td></tr></tbody></table></div></section></div>

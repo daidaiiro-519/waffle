@@ -1,0 +1,32 @@
+<title>ずれた一枚</title><style>*{box-sizing:border-box}
+:root{--paper:#EFF1F4;--ink:#16191F;--ink-soft:#545C69;--ink-faint:#7C8593;
+      --line:#C9CFD8;--calm:#3E5C74;--calm-bg:#DDE6EE;--warn:#A32B38;--warn-bg:#F6DCDE;
+      --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+      --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+      --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E1116;--ink:#EDF1F6;--ink-soft:#A9B2BE;--ink-faint:#78828F;
+  --line:#2A313A;--calm:#8FB6D8;--calm-bg:#18242F;--warn:#E58A94;--warn-bg:#2E1A1D}}
+:root[data-theme="dark"]{
+  --paper:#0E1116;--ink:#EDF1F6;--ink-soft:#A9B2BE;--ink-faint:#78828F;
+  --line:#2A313A;--calm:#8FB6D8;--calm-bg:#18242F;--warn:#E58A94;--warn-bg:#2E1A1D}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+     display:flex;justify-content:center;padding:clamp(2rem,6vw,5rem) 1.25rem}
+.sheet{width:min(58rem,100%);display:flex;flex-direction:column;gap:2.6rem}
+.mark{font-family:var(--mono);font-size:.72rem;letter-spacing:.42em;color:var(--ink-faint)}
+.one{display:block;width:100%;height:auto;overflow:visible}
+.s-axis{stroke:var(--line);stroke-width:1.4;stroke-dasharray:3 7}
+.s-t{stroke-width:1.4}
+.s-t.ok{fill:var(--calm-bg);stroke:var(--calm)}
+.s-t.off{fill:var(--warn-bg);stroke:var(--warn);stroke-width:2.2}
+.s-l,.s-r{stroke:none}
+.s-l.ok{fill:var(--calm);fill-opacity:.20} .s-r.ok{fill:var(--calm);fill-opacity:.34}
+.s-l.off{fill:var(--warn);fill-opacity:.26} .s-r.off{fill:var(--warn);fill-opacity:.42}
+.s-gap{stroke:var(--warn);stroke-width:2.4}
+.s-gapdot{fill:var(--warn)}
+.say{font-family:var(--serif);font-size:clamp(1.4rem,3.4vw,2.05rem);font-weight:600;
+     line-height:1.62;margin:0;text-wrap:balance}
+.say em{font-style:normal;color:var(--warn)}
+.tail{font-family:var(--sans);font-size:.95rem;line-height:1.9;color:var(--ink-soft);margin:0}
+</style><div class="sheet"><p class="mark">WAFFLE</p><svg class="one" viewBox="0 0 900 660" role="img" aria-label="抽象から具体へ、小さい板から大きい板へと7枚が中心の軸に沿って積み上がっている。そのうち下から2枚目だけが軸から横へずれて赤く示され、ずれた距離が線で結ばれている。"><line x1="450" y1="86" x2="450" y2="546" class="s-axis"/><polygon points="380,114 450,128 450,136 380,122" class="s-l ok"/><polygon points="450,128 520,114 520,122 450,136" class="s-r ok"/><polygon points="450,100 520,114 450,128 380,114" class="s-t ok"/><polygon points="355,164 450,180 450,189 355,173" class="s-l ok"/><polygon points="450,180 545,164 545,173 450,189" class="s-r ok"/><polygon points="450,148 545,164 450,180 355,164" class="s-t ok"/><polygon points="330,218 450,236 450,246 330,228" class="s-l ok"/><polygon points="450,236 570,218 570,228 450,246" class="s-r ok"/><polygon points="450,200 570,218 450,236 330,218" class="s-t ok"/><polygon points="305,276 450,296 450,307 305,287" class="s-l ok"/><polygon points="450,296 595,276 595,287 450,307" class="s-r ok"/><polygon points="450,256 595,276 450,296 305,276" class="s-t ok"/><polygon points="280,338 450,360 450,372 280,350" class="s-l ok"/><polygon points="450,360 620,338 620,350 450,372" class="s-r ok"/><polygon points="450,316 620,338 450,360 280,338" class="s-t ok"/><polygon points="317,406 512,430 512,443 317,419" class="s-l off"/><polygon points="512,430 707,406 707,419 512,443" class="s-r off"/><polygon points="512,382 707,406 512,430 317,406" class="s-t off"/><polygon points="230,478 450,504 450,518 230,492" class="s-l ok"/><polygon points="450,504 670,478 670,492 450,518" class="s-r ok"/><polygon points="450,452 670,478 450,504 230,478" class="s-t ok"/><line x1="450" y1="406" x2="512" y2="406" class="s-gap"/><circle cx="450" cy="406" r="4" class="s-gapdot"/><circle cx="512" cy="406" r="4" class="s-gapdot"/></svg><p class="say">揃っているものの中に、<em>揃っていないもの</em>があれば、<br>説明されなくても分かる。</p><p class="tail">決めたことと、作ったもの。その一枚がずれたとき、Waffle は人が探しにいく前にそこを指す。</p></div>

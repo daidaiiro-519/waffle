@@ -1,331 +1,148 @@
-<title>図の宣言を、Document の内側の値として置く</title>
-<style>
-  :root {
-    --paper:      #EDF0F3;
-    --surface:    #FFFFFF;
-    --surface-2:  #F5F7F9;
-    --ink:        #171B23;
-    --ink-soft:   #4B5563;
-    --ink-faint:  #79828F;
-    --rule:       #D3DAE2;
-    --rule-soft:  #E4E9EE;
-
-    --problem:    #7A4368;
-    --problem-bg: #F3E9F0;
-    --solution:   #16636B;
-    --solution-bg:#E2EFF0;
-    --warn:       #9A4A21;
-    --warn-bg:    #F7EAE2;
-    --dead:       #8A8F98;
-
-    --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
-    --sans:  "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui, sans-serif;
-    --mono:  ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+<title>図の宣言を、Document の内側の値として置く</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
-      --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
-      --rule:#2E3742; --rule-soft:#242C37;
-      --problem:#D19CC0; --problem-bg:#2C1F2A;
-      --solution:#6BC0C7; --solution-bg:#132A2C;
-      --warn:#E0A17A; --warn-bg:#2E211A;
-      --dead:#767E8A;
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
     }
   }
-  :root[data-theme="dark"] {
-    --paper:#10131A; --surface:#191E27; --surface-2:#1F2631;
-    --ink:#E3E8EF; --ink-soft:#A9B3C0; --ink-faint:#7B8694;
-    --rule:#2E3742; --rule-soft:#242C37;
-    --problem:#D19CC0; --problem-bg:#2C1F2A;
-    --solution:#6BC0C7; --solution-bg:#132A2C;
-    --warn:#E0A17A; --warn-bg:#2E211A;
-    --dead:#767E8A;
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
   }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
 
-  * { box-sizing: border-box; }
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
 
-  body {
-    background: var(--paper); color: var(--ink);
-    font-family: var(--sans); font-size: 16px; line-height: 1.85;
-    margin: 0; padding: clamp(2rem,5vw,4.5rem) clamp(1rem,4vw,2rem) 6rem;
-    -webkit-font-smoothing: antialiased;
-  }
-  .wrap { max-width: 62rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
-  .col { max-width: 40rem; }
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
 
-  header { display: flex; flex-direction: column; gap: .9rem; }
-  .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
-  h1 { font-family: var(--serif); font-size: clamp(1.75rem,4.2vw,2.6rem); line-height: 1.35; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
-  .lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0; max-width: 38rem; }
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
 
-  section { display: flex; flex-direction: column; gap: 1.4rem; }
-  h2 {
-    font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 0;
-    padding-bottom: .7rem; border-bottom: 1px solid var(--rule);
-    display: flex; align-items: baseline; gap: .8rem;
-  }
-  h2 .num { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); letter-spacing: .1em; flex: none; }
-  h2 .side { margin-left: auto; font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
-  p { margin: 0; }
-  .col > p + p { margin-top: .9rem; }
-  strong { font-weight: 700; }
-  code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 3px; padding: .08em .34em; }
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
 
-  .verdict { display: grid; grid-template-columns: repeat(auto-fit,minmax(15rem,1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
-  .verdict > div { background: var(--surface); padding: 1.15rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .45rem; }
-  .verdict dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
-  .verdict dd { margin: 0; font-size: .95rem; line-height: 1.7; }
-  .verdict .big { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
-
-  .ladder { display: flex; flex-direction: column; }
-  .rung { display: grid; grid-template-columns: 12.5rem 1fr; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; }
-  @media (max-width: 38rem) { .rung { grid-template-columns: 1fr; } .rung-name { border-right: none; border-bottom: 1px solid var(--rule-soft); } }
-  .rung-name { padding: 1.1rem 1.2rem; border-right: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: .3rem; justify-content: center; }
-  .rung-name b { font-family: var(--serif); font-size: 1.02rem; font-weight: 600; line-height: 1.45; }
-  .rung-name span { font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); letter-spacing: .04em; }
-  .rung-body { display: grid; grid-template-columns: 1fr 1fr; }
-  @media (max-width: 30rem) { .rung-body { grid-template-columns: 1fr; } .cell + .cell { border-left: none; border-top: 1px solid var(--rule-soft); } }
-  .cell { padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .4rem; }
-  .cell + .cell { border-left: 1px solid var(--rule-soft); }
-  .cell .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
-  .cell .v { font-size: .95rem; line-height: 1.6; }
-  .cell .m { font-size: .8rem; color: var(--ink-soft); line-height: 1.6; }
-  .link { width: 2px; height: 1.6rem; background: var(--rule); position: relative; margin-left: 6.25rem; }
-  .link::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
-  .link span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .74rem; color: var(--ink-faint); font-family: var(--mono); }
-
-  .aside-note { display: flex; gap: .85rem; align-items: flex-start; background: var(--surface-2); border-left: 3px solid var(--problem); padding: 1rem 1.15rem; border-radius: 0 2px 2px 0; font-size: .92rem; line-height: 1.75; color: var(--ink-soft); }
-  .aside-note.warn { border-left-color: var(--warn); }
-  .aside-note b { color: var(--ink); }
-
-  .spaces { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; }
-  @media (max-width: 40rem) { .spaces { grid-template-columns: 1fr; } .spaces .bridge { padding: 1.2rem 0; } }
-  .space { border: 1px solid var(--rule); border-radius: 2px; padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .75rem; background: var(--surface); }
-  .space.problem { border-top: 3px solid var(--problem); }
-  .space.solution { border-top: 3px solid var(--solution); }
-  .space-label { font-family: var(--mono); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; }
-  .space.problem .space-label { color: var(--problem); }
-  .space.solution .space-label { color: var(--solution); }
-  .space b { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
-  .space p { font-size: .88rem; color: var(--ink-soft); line-height: 1.7; }
-  .space ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .3rem; font-size: .84rem; color: var(--ink-soft); }
-  .space li::before { content: "· "; color: var(--ink-faint); }
-  .bridge { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: 0 1.1rem; }
-  .bridge .arrow { font-family: var(--mono); font-size: 1.1rem; color: var(--ink-faint); letter-spacing: -.1em; }
-  .bridge .cap { font-size: .74rem; font-family: var(--mono); color: var(--ink-faint); text-align: center; line-height: 1.5; }
-
-  /* four families */
-  .families { display: flex; flex-direction: column; }
-  .family { display: grid; grid-template-columns: 3rem 1fr; border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); }
-  .family-idx { background: var(--surface-2); border-right: 1px solid var(--rule-soft); display: flex; align-items: flex-start; justify-content: center; padding-top: 1.25rem; font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); }
-  .family-main { padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .8rem; }
-  .family-q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
-  .family-main > b { font-family: var(--serif); font-size: 1.14rem; font-weight: 600; }
-  .family-main > p { font-size: .93rem; line-height: 1.75; color: var(--ink-soft); }
-  .must { display: flex; flex-direction: column; gap: .35rem; padding-top: .2rem; }
-  .must div { font-size: .87rem; line-height: 1.65; display: flex; gap: .55rem; }
-  .must div::before { content: "▸"; color: var(--ink-faint); flex: none; font-size: .7rem; transform: translateY(.35em); }
-  .must div.strike { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--rule); }
-  .must div.strike::before { content: "×"; text-decoration: none; }
-  .family-flow { height: 1.5rem; width: 2px; background: var(--rule); margin-left: 1.5rem; position: relative; }
-  .family-flow::after { content: ""; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--rule); }
-  .family-flow span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: .73rem; color: var(--ink-faint); font-family: var(--mono); }
-
-  /* gap table */
-  .gapwrap { overflow-x: auto; }
-  table { border-collapse: collapse; width: 100%; min-width: 34rem; background: var(--surface); border: 1px solid var(--rule); border-radius: 2px; font-size: .9rem; }
-  th, td { text-align: left; padding: .85rem 1rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; line-height: 1.65; }
-  th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; background: var(--surface-2); }
-  tr:last-child td { border-bottom: none; }
-  td.name { font-weight: 700; white-space: nowrap; }
-  .pill { font-family: var(--mono); font-size: .68rem; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
-  .pill.ok { color: var(--solution); background: var(--solution-bg); }
-  .pill.part { color: var(--warn); background: var(--warn-bg); }
-  .pill.none { color: var(--warn); background: var(--warn-bg); font-weight: 700; }
-
-  .board { display: grid; grid-template-columns: repeat(auto-fit,minmax(17rem,1fr)); gap: 1.1rem; }
-  .panel { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
-  .panel-head { padding: .8rem 1.1rem; border-bottom: 1px solid var(--rule-soft); background: var(--surface-2); display: flex; align-items: baseline; justify-content: space-between; gap: .8rem; }
-  .panel-head b { font-size: .92rem; }
-  .panel-head .count { font-family: var(--mono); font-size: .78rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
-  .panel ul { margin: 0; padding: .9rem 1.1rem 1.1rem; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
-  .panel li { display: flex; align-items: baseline; gap: .6rem; font-size: .88rem; line-height: 1.6; }
-  .dot { width: .5rem; height: .5rem; border-radius: 50%; flex: none; transform: translateY(-.1em); }
-  .dot.live { background: var(--solution); }
-  .dot.dead { background: var(--dead); }
-  .panel li code { background: transparent; border: none; padding: 0; font-size: .84em; }
-  .panel li .note { color: var(--ink-faint); font-size: .78rem; }
-
-  .trees { display: grid; grid-template-columns: repeat(auto-fit,minmax(20rem,1fr)); gap: 1.1rem; }
-  .tree { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
-  .tree-head { padding: .75rem 1.1rem; border-bottom: 1px solid var(--rule-soft); display: flex; align-items: center; justify-content: space-between; gap: .8rem; background: var(--surface-2); }
-  .tree-head b { font-size: .9rem; font-weight: 700; }
-  .tag { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; padding: .18em .55em; border-radius: 2px; white-space: nowrap; }
-  .tag.bad { color: var(--warn); background: var(--warn-bg); }
-  .tag.good { color: var(--solution); background: var(--solution-bg); }
-  .tree pre { margin: 0; padding: 1.1rem 1.2rem 1.3rem; font-family: var(--mono); font-size: .8rem; line-height: 1.85; overflow-x: auto; color: var(--ink-soft); }
-  .tree pre .p { color: var(--problem); font-weight: 700; }
-  .tree pre .s { color: var(--solution); font-weight: 700; }
-  .tree pre .cmt { color: var(--ink-faint); }
-
-  .loop { display: flex; flex-wrap: wrap; }
-  .loop-step { flex: 1 1 8rem; border: 1px solid var(--rule); background: var(--surface); padding: .9rem 1rem; display: flex; flex-direction: column; gap: .25rem; border-radius: 2px; }
-  .loop-step + .loop-step { border-left: none; }
-  .loop-step b { font-family: var(--serif); font-size: 1rem; font-weight: 600; }
-  .loop-step span { font-size: .76rem; color: var(--ink-faint); font-family: var(--mono); }
-
-  .open { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
-  .open > div { background: var(--surface); padding: 1.05rem 1.2rem; display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; align-items: baseline; }
-  @media (max-width: 34rem) { .open > div { grid-template-columns: 1fr; gap: .3rem; } }
-  .open .q { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
-  .open .a { font-size: .93rem; line-height: 1.75; }
-
-  footer { border-top: 1px solid var(--rule); padding-top: 1.2rem; font-size: .82rem; color: var(--ink-faint); line-height: 1.8; }
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
 
 
-  .cap { color: var(--ink-soft); font-size: .93rem; margin: 0; max-width: 43rem; }
-  .sub { font-family: var(--sans); font-size: .88rem; font-weight: 700; letter-spacing:.03em;
-         color: var(--ink-soft); margin: .3rem 0 0; }
-  .fig { border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); padding: 1.3rem 1.5rem; }
-  .fig .one { font-family: var(--serif); font-size: 1.12rem; font-weight: 600; margin: 0; line-height: 1.6; }
-  figure { margin:0; background:var(--surface); border:1px solid var(--rule);
-           border-radius:4px; padding:1.1rem 1rem .6rem; }
-  figure svg { width:100%; height:auto; display:block; }
-  figcaption { font-size:.82rem; color:var(--ink-faint); margin-top:.6rem; text-align:center; }
-  .t  { font:700 12.5px system-ui,sans-serif; }
-  .s  { font:10.5px system-ui,sans-serif; }
-  .mo { font:700 10.5px ui-monospace,Menlo,monospace; }
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
 
-  /* 端末の窓 */
-  .terms { display:grid; grid-template-columns:repeat(auto-fit,minmax(21rem,1fr)); gap:1rem; }
-  .term { border:1px solid var(--rule); border-radius:6px; overflow:hidden; background:#1b2027;
-          box-shadow:0 1px 2px rgba(0,0,0,.06); }
-  .term-bar { display:flex; align-items:center; gap:.4rem; padding:.5rem .75rem;
-              background:#2a313a; border-bottom:1px solid #383f49; }
-  .term-bar .dot { width:.62rem; height:.62rem; border-radius:50%; flex:none; }
-  .term-bar .d1{background:#ec6a5e} .term-bar .d2{background:#f4bf4f} .term-bar .d3{background:#61c554}
-  .term-bar .ttl { margin-left:.6rem; font-family:var(--mono); font-size:.68rem;
-                   letter-spacing:.08em; color:#9aa4b0; }
-  .term-bar .tag { margin-left:auto; font-family:var(--mono); font-size:.62rem;
-                   letter-spacing:.08em; padding:.12em .5em; border-radius:2px; }
-  .term-bar .tag.bad  { background:#4a2a22; color:#f0a48d; }
-  .term-bar .tag.good { background:#173430; color:#7fd4bd; }
-  .term-body { margin:0; padding:.95rem 1rem 1.1rem; font-family:var(--mono);
-               font-size:.755rem; line-height:1.95; color:#d6dbe2; overflow-x:auto;
-               white-space:pre; }
-  .term-body .pr { color:#7fd4bd; }
-  .term-body .cm { color:#7d8899; }
-  .term-body .an-bad  { color:#f0a48d; }
-  .term-body .an-good { color:#7fd4bd; }
-  .term-body .key { color:#9ec9e8; }
-
-  .tail { display:block; font-size:.78rem; color: var(--ink-faint); line-height:1.6; margin-top:.3rem; }
-  table.cmp td.no { color: var(--warn); } table.cmp td.yes { color: var(--solution); }
-  table.cmp td.no .tail, table.cmp td.yes .tail { color: var(--ink-faint); }
-  td.name { white-space: normal; }
-  h2 .blk { margin-left: auto; font-family: var(--mono); font-size: .62rem; letter-spacing: .1em;
-            text-transform: uppercase; color: var(--ink-faint); font-weight: 400; }
-  .gate { display:inline-block; font-family: var(--mono); font-size: .66rem; letter-spacing:.08em;
-          padding:.25em .7em; border-radius:2px; background: var(--solution-bg); color: var(--solution); }
-  .approve { border:2px solid var(--solution); border-radius:2px; background:var(--surface);
-             padding:1.1rem 1.3rem; display:flex; flex-direction:column; gap:.35rem; max-width:44rem; }
-  .approve .k { font-family:var(--mono); font-size:.66rem; letter-spacing:.12em;
-                text-transform:uppercase; color:var(--solution); }
-  .approve .v { font-family:var(--serif); font-size:1.06rem; font-weight:600; }
-  table.cmp td b { font-family: var(--mono); font-size: 1.02em; margin-right: .35em; }
-
-  :root{
-    --fig-line:#C3CAD2;
-    --fig-line-w:1.2px;
-    --fig-sym:#79828F;
-    --fig-sym-w:1.4px;
-    --fig-box-fill:#F5F7F9;
-    --fig-box-stroke:#C3CAD2;
-    --fig-box-radius:5px;
-    --fig-accent:#16636B;
-    --fig-accent-bg:#E2EFF0;
-    --fig-warn:#9A4A21;
-    --fig-warn-bg:#F7EAE2;
-    --fig-text:#171B23;
-    --fig-text-soft:#4B5563;
-    --fig-text-faint:#79828F;
-    --fig-font:var(--sans);
-    --fig-font-mono:var(--mono);
-    --fig-size-name:12px;
-    --fig-size-row:11px;
-    --fig-size-edge:10px;
-    --fig-size-small:9px;
-    --fig-group-stroke:#16636B;
-    --fig-group-dash:5 4;
-    --fig-track:#E4E9EE;
-    --fig-tone-0:#16636B;
-    --fig-tone-1:#9A4A21;
-    --fig-tone-2:#7A4368;
-    --fig-tone-3:#8A8F98;
-    --fig-on-tone:#FFFFFF;
-  }
-
-  .wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
-  .wf-node rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
-  .wf-name{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
-           font-size:12px;text-anchor:middle}
-  .wf-node--focus rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
-  .wf-node--focus .wf-name{fill:var(--fig-accent);font-weight:600}
-  .wf-node--removed rect,
-  .wf-node--muted rect{fill:none;stroke:var(--fig-text-faint);stroke-dasharray:4 3}
-  .wf-node--removed .wf-name,
-  .wf-node--muted .wf-name{fill:var(--fig-text-faint)}
-  .wf-node--added rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
-  .wf-node--added .wf-name{fill:var(--fig-accent);font-weight:600}
-  .wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
-  .wf-arrow{fill:var(--fig-line)}
-  .wf-label-bg{fill:var(--fig-box-fill);stroke:none}
-  .wf-edge-label{fill:var(--fig-text-faint);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
-                 font-size:10px;text-anchor:middle}
-  .wf-end-word{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
-               font-size:9px}
-  .wf-group{fill:none;stroke:var(--fig-group-stroke);stroke-width:1.1;
-            stroke-dasharray:var(--fig-group-dash);opacity:.75}
-  .wf-group-label{fill:var(--fig-group-stroke);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
-                  font-size:10px}
-  .wf-node--start circle{fill:var(--fig-text);stroke:none}
-  .wf-node--end circle{fill:var(--fig-text);stroke:none}
-  .wf-node--end .wf-ring{fill:none;stroke:var(--fig-text);stroke-width:1.4}
-  .wf-sym path{stroke:var(--fig-sym);stroke-width:var(--fig-sym-w);fill:none}
-  .wf-sym .wf-fill{fill:var(--fig-sym)}
-  .wf-sym .wf-hollow{fill:var(--fig-box-fill);stroke:var(--fig-sym);stroke-width:var(--fig-sym-w)}
-  .wf-rule{stroke:var(--fig-box-stroke)}
-  .wf-node .wf-head{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
-                    font-size:12px;font-weight:600;text-anchor:middle}
-  .wf-node .wf-row{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
-                   font-size:11px;text-anchor:start}
-
-  .f-fig{display:block;max-width:100%;height:auto}
-  figure{margin:0}
-  figure .f-cmp{flex-direction:column;gap:1.8rem}
-  .fignote{font-size:.8rem;color:var(--ink-faint);margin:.9rem 0 0}
-</style>
-<div class="wrap">
-
-  <header>
-    <p class="eyebrow">Any Decision Record — 関門1（仕様への橋渡し）</p>
-    <h1>図の宣言を、Document の内側の値として置く</h1>
-    <p class="lede">承認済みのADR「図の語彙を、描き方から主張へ移す」を仕様に落とすにあたり、この記法をどのDDD要素として、どこに置くかを決めます。前のADRは覆っていません。</p>
-  </header>
-
-  <section><h2><span class="num">01</span>決定</h2><div class="fig"><p class="one">図の宣言は、Document の集約の内側にある再帰する値オブジェクトとして置く。16の主張はその属性であり、種別ではない。欄の必須・禁止を守るのは schema ひとつとする。</p></div><p class="cap">主文だけでは読み方が定まらない箇所を、同時に確定させる。</p><div class="gapwrap"><table><thead><tr><th>確定させること</th><th>決定</th><th>定めないと</th></tr></thead><tbody><tr><td class="name">守り手</td><td>schema ひとつ。不変条件には「常に主張が定める組と一致する」の1行だけを書き、守り手を名指しする</td><td>16主張×3欄の対応表が不変条件にも写り、正本が2箇所になる</td></tr><tr><td class="name">主張の表し方</td><td>属性。1つの形＋主張をキーにした制約プロファイル</td><td>16個の形に分かれ、置くものの定義が16回複製されて同期の義務が残る</td></tr><tr><td class="name">新設する文書</td><td>2件だけ。16語と出典を置く knowledge と、宣言の形を検査するユースケース</td><td>実装だけあって仕様が無い検査（現に1件ある）が増える</td></tr><tr><td class="name">実装を動かす順</td><td>語彙が先。描画の実装を層の外へ移すのは最後</td><td>2つ目の描画先が無いまま口の形を決め、1つの実装の都合を写す</td></tr><tr><td class="name">ADRの射程</td><td>中核のモデルに置くのは「主張が欄を決める」まで。「主張が描き方を決める」は外</td><td>描き方という技術の都合が、業務の言葉のモデルに混ざる</td></tr></tbody></table></div></section>
-
-  <section><h2><span class="num">02</span>理由</h2><div class="gapwrap"><table><thead><tr><th>理由</th><th>根拠</th><th>主張</th></tr></thead><tbody><tr><td class="name">図の宣言は一貫性の境界にならない</td><td>図の宣言だけを Document と別のトランザクションで確定させる場面が無い。集約は「1つのインスタンスが1つのトランザクションの単位」</td><td>ddd-advisor</td></tr><tr><td class="name">識別子で指せないものは集約ではない</td><td>集約どうしは識別子で参照し合う。図の宣言は documentId のように外から名指しできない</td><td>ddd-advisor</td></tr><tr><td class="name">16は種別の条件を満たさない</td><td>種別が問うのは<b>ブロック集合が入れ替わるか</b>で、必須・任意の割り当ての差ではない。ここで変わるのは後者だけ</td><td>ddd-advisor</td></tr><tr><td class="name">schema が守る規則も不変条件として宣言する形が既にある</td><td><code>agg-schema</code> の不変条件9件のうち<b>8件が守り手 schema</b>。ここだけ例外にすると「不変条件」が2つの意味を持つ（実測で確認）</td><td>ddd-advisor / Orchestrator（実測）</td></tr><tr><td class="name">移行の対象は document ではない</td><td>部品名は schema の <code>x-render</code> にしか無く、document は data しか持たない。値として持つ document は<b>6枚</b>。180枚は再描画して差分ゼロを確かめる対象</td><td>tech-lead-advisor</td></tr><tr><td class="name">2つ目の描画先が repo に無い</td><td>自前SVGの描画器は作業場（<code>/tmp</code>）にあり git 管理外。口を1実装から決めることになる</td><td>tech-lead-advisor</td></tr></tbody></table></div></section>
-
-  <section><h2><span class="num">03</span>変更前と変更後</h2><p class="cap">図の宣言が、どこに住むか。</p><figure><div class="f-cmp" style="display:flex;gap:1.4rem;align-items:stretch"><div class="f-pane" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:.4rem"><span style="font-size:.7rem;letter-spacing:.08em;color:#9A4A21">私が想定していた形</span><div style="border:1.3px dashed #9A4A21;border-radius:10px;padding:1rem;flex:1;display:flex;justify-content:center;align-items:center;overflow-x:auto"><svg class="wf-fig" viewBox="-10 -10 450 120" width="450" height="120" style="width:100.0%;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M188.7,30.4 C165.7,40.5 134.7,54.1 109.7,65.1 L99.4,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M221.6,30.4 C221.6,38.6 221.6,48.9 221.6,58.4 L221.6,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M253.0,30.4 C274.9,40.5 304.3,54.0 328.1,65.0 L338.3,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="161.6" y="0.0" width="120.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="221.6" y="19.0">区切られた文脈</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="-0.0" y="70.0" width="133.2" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="66.6" y="89.0">Document の集約</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="162.5" y="70.0" width="118.2" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="221.6" y="89.0">schema の集約</text></g><g class="wf-node wf-node--muted"><rect fill="none" stroke="#79828F" stroke-dasharray="4 3" x="309.6" y="70.0" width="120.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#79828F" x="369.6" y="89.0">図の宣言の集約</text></g></svg></div><span style="font-size:.72rem;color:#79828F">図の宣言を独立した集約として立てる</span></div><div class="f-pane" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:.4rem"><span style="font-size:.7rem;letter-spacing:.08em;color:#16636B">決定</span><div style="border:1.3px dashed #16636B;border-radius:10px;padding:1rem;flex:1;display:flex;justify-content:center;align-items:center;overflow-x:auto"><svg class="wf-fig" viewBox="-10 -10 419 190" width="419" height="190" style="width:93.1%;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M190.0,30.4 C190.0,38.5 190.0,48.9 190.0,58.4 L190.0,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M156.1,100.5 C131.1,111.1 97.2,125.5 70.8,136.7 L60.4,141.1" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M177.5,100.5 C169.7,109.4 159.6,121.0 150.8,131.2 L143.5,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M202.7,100.5 C210.6,109.4 220.9,121.0 229.8,131.2 L237.3,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M226.7,100.5 C252.8,110.7 288.1,124.6 316.2,135.7 L326.6,139.8" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="123.4" y="-0.0" width="133.2" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="190.0" y="19.0">Document の集約</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="148.0" y="70.0" width="84.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="190.0" y="89.0">図の宣言</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="0.0" y="140.0" width="60.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="30.0" y="159.1">主張</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="89.0" y="140.0" width="84.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="131.0" y="159.1">置くもの</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="202.0" y="140.0" width="96.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="250.0" y="159.1">つなぐもの</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="327.0" y="140.0" width="72.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="363.0" y="159.1">読む枠</text></g></svg></div><span style="font-size:.72rem;color:#79828F">Document の内側の値として置く</span></div></div><figcaption class="fignote">この図は、前のADRで決めた記法で描いています（外側の主張は「対応」、面の中身は「階層」の宣言）。</figcaption></figure></section>
-
-  <section><h2><span class="num">04</span>「置き場所」を分けた軸</h2><p class="cap">左の列は満たしたい条件で、満たすものに ○、満たさないものに ✗ を付けた。</p><div class="gapwrap"><table><thead><tr><th>満たしたい条件</th><th>独立した集約</th><th>Document の内側の値</th></tr></thead><tbody><tr><td class="name">1つのトランザクションの単位になる</td><td>✗ ならない</td><td>○ Document の保存に収まる</td></tr><tr><td class="name">外から識別子で指せる</td><td>✗ 指せない</td><td>○ 指す必要が無い</td></tr><tr><td class="name">規則が値の内側に集まる</td><td>✗ 外へ散る</td><td>○ 集まる</td></tr><tr><td class="name">将来ひとりで版管理される要求に応えられる</td><td>○ 応えられる</td><td>✗ そのとき集約へ移す</td></tr></tbody></table></div></section>
-
-  <section><h2><span class="num">05</span>答えないこと</h2><div class="gapwrap"><table><thead><tr><th>論点</th><th>状態</th></tr></thead><tbody><tr><td class="name">入れ子の深さの上限</td><td>実測では現行の最大は1段。上限2が提案されている。数の確定は schema の版を切る側</td></tr><tr><td class="name"><code>direction</code> を消したとき、向きを指定していた箇所をどう扱うか</td><td>79箇所のうち縦を指定していた件数を数えてから決める</td></tr><tr><td class="name">文章の部品13種を同じ仕様に混ぜるか</td><td>変更理由が違うので分ける。ただし宣言の形の検査は18名全体にかかる</td></tr><tr><td class="name">層の宣言に1行足すか</td><td>「外へ出す形式を組み立てる処理は adapter に置く」。実装を動かす前に決める</td></tr></tbody></table></div></section>
-
-  <section><h2><span class="num">06</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">未承認</span><span style="font-size:.9rem;color:var(--ink-soft)">前のADRは覆っていない。置き場所と順番だけを決めるため、承認を待つ。</span></div></section>
-
-  <section><h2><span class="num">07</span>関連</h2><div class="gapwrap"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr><td class="name">新設する文書</td><td>16語と出典を置く knowledge ／ 宣言の形を検査するユースケース</td></tr><tr><td class="name">変更する文書</td><td><code>agg-document</code>（値と不変条件）／<code>bc-waffle</code>（同じ言葉・シナリオ名10件）／<code>uc-render-document</code>（部品名の列挙）／層の宣言</td></tr><tr><td class="name">変更不要と判定したもの</td><td><code>agg-schema</code>（既存の2つの不変条件が文言のまま新しい語彙を射程に収める）／<code>uc-validate-document</code></td></tr><tr><td class="name">先行する決定</td><td>図の語彙を、描き方から主張へ移す（承認済み）</td></tr><tr><td class="name">この決定が正した私の誤り</td><td>180枚が移行対象という理解／描画部品に死語4つがあるという報告（実測は18種すべて実装あり）／数え漏らす測定</td></tr></tbody></table></div></section>
-
-</div>
+.fig{margin:0;display:flex;flex-direction:column;gap:.6rem}
+.fig .scroll{padding:1.1rem 1rem}
+figcaption{font-size:.83rem;color:var(--ink-faint);line-height:1.7}
+figcaption b{color:var(--ink-soft)}
+</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>図の宣言を、Document の内側の値として置く</h1><p class="lede">図の宣言だけを別に確定させる場面が無く、外から識別子で指すこともできない。<b>集約の条件を満たしていない。</b>16の主張も、ブロックの集合を入れ替えないので種別ではない。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">Waffle は、<b>図の宣言を、Document の集約の内側にある再帰する値として置く</b>。16の主張はその属性であり、種別ではない。欄の必須・禁止を守るのは schema ひとつとする。</p><div class="key"><span class="lbl">決め手</span><span class="txt"><b>集約どうしは識別子で参照し合う。指せないものは集約ではない。</b>図の宣言は <code>documentId</code> のように外から名指しできず、文書の中の位置でしか指せない。</span></div></div></section><section><h2><span class="num">02</span>変更前と変更後</h2><p class="lead">変わるのは<b>図の宣言がどこに住むか</b>である。記法そのものは、先立つ決定のまま変えない。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 560 296" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><text x="14" y="18" font-size="11" fill="var(--against)">変更前 ── 図の宣言を独立した集約として立てる</text><rect x="14" y="30" width="180" height="72" rx="4" fill="none" stroke="var(--against)" stroke-width="1" stroke-dasharray="4 3"/><rect x="30" y="48" width="148" height="42" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="1"/><text x="104.0" y="74.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Document の集約</text><rect x="216" y="30" width="180" height="72" rx="4" fill="none" stroke="var(--against)" stroke-width="1" stroke-dasharray="4 3"/><rect x="232" y="48" width="148" height="42" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="2"/><text x="306.0" y="74.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">図の宣言の集約</text><line x1="194" y1="69" x2="230" y2="69" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="410" y="74" font-size="10.5" fill="var(--against)">識別子で指せない</text><text x="14" y="140" font-size="11" fill="var(--infer)">変更後 ── Document の内側の、再帰する値として置く</text><rect x="14" y="152" width="382" height="128" rx="4" fill="none" stroke="var(--infer)" stroke-width="1" stroke-dasharray="4 3"/><text x="24" y="170" font-size="10.5" fill="var(--infer)">Document の集約</text><rect x="34" y="180" width="342" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="2"/><text x="205.0" y="199.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">図の宣言</text><text x="205.0" y="217.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">主張・読み方・置くもの・つなぐもの・読む枠</text><rect x="34" y="232" width="342" height="36" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="205.0" y="255.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">置くものは、自分と同じ形の子と、図を1つ持てる</text><line x1="205" y1="224" x2="205" y2="230" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/></svg></div><figcaption><b>図の宣言だけを別に確定させる場面が無く、外から識別子で指すこともできない。</b>集約の条件を満たさないので、Document の内側の値として置く。</figcaption></figure></section><section><h2><span class="num">03</span>理由</h2><p class="lead">集約の条件を2つとも満たしていない。<b>主張は種別ではなく属性であり、守り手は schema ひとつに揃う。</b></p><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt"><b>図の宣言だけを、Document と別に確定させる場面が無い。</b>図を直すことは、その文書を直すことである</span></div><div class="joint">さらに</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">図の宣言は <code>documentId</code> のように<b>外から名指しできない</b>。文書の中の位置でしか指せない</span></div><div class="joint">拠り所に当てると</div><div class="step premise"><span class="lbl">前提</span><span class="txt">集約は、ひとつのインスタンスがひとつの確定の単位であり、集約どうしは識別子で参照し合う</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>図の宣言は集約ではない。</b>Document の内側の値である</span></div><div class="joint">主張の側も見た</div><div class="step evidence"><span class="lbl">測った</span><span class="txt"><b>16の主張は、種別の条件を満たさない。</b>種別が問うのはブロックの集合が入れ替わるかどうかで、ここで変わるのは必須と禁止の割り当てだけである</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">主張は<b>属性であって、種別ではない</b>。置くものの定義を主張ごとに複製せず、ひとつの形に主張をキーにした制約を掛ける</span></div><div class="joint">守り手も見た</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">既にある集約の不変条件12件のうち<b>11件は守り手が schema</b> である</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">欄の必須・禁止を守るのも schema ひとつにする。<b>ここだけ例外にすると、不変条件という言葉が2つの意味を持つ</b>。<b>守り手が schema</b> とは、規則が schema に書かれ、<b>その schema を引数に取って Document が判定する</b>という意味である ── schema が自分で判定しに行くのではない</span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（5件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class="keyrow"><td class="cond">別に確定させる場面が無い</td><td><span class="kindtag unv">実測</span></td><td>図を持つ文書を数え、図だけを変える操作があるかを見た</td><td><b>図だけを別に版管理する要求が出たとき</b></td></tr><tr class="keyrow"><td class="cond">外から名指しできない</td><td><span class="kindtag unv">実測</span></td><td>図の宣言に識別子の欄が無いこと</td><td>図に識別子を持たせたくなったとき</td></tr><tr class=""><td class="cond">集約は識別子で参照し合う</td><td><span class="kindtag lim">確立された型</span></td><td>ドメイン駆動設計の集約</td><td>—</td></tr><tr class=""><td class="cond">16は種別の条件を満たさない</td><td><span class="kindtag unv">実測</span></td><td>主張ごとに変わるのは必須・禁止の割り当てだけで、ブロックの集合は同じ</td><td>—</td></tr><tr class=""><td class="cond">不変条件の守り手は schema が多数</td><td><span class="kindtag unv">実測</span></td><td>既存の集約の不変条件12件の守り手の内訳</td><td>—</td></tr></tbody></table></div></details></section><section><h2><span class="num">04</span>判断を分けた軸</h2><p class="lead">採る案は4つの条件のうち3つを満たす。落とすのは1つで、<b>そのとき集約へ移せばよい</b>——移す向きが易しいほうを選ぶ。</p><div class="scroll"><table>
+<thead><tr><th>案</th>
+<th class="keycol">外から識別子で指せる<br><span class="sub">決め手</span></th>
+<th>ひとつのトランザクションの単位になる</th>
+<th>規則が値の内側に集まる</th>
+<th>将来ひとりで版が付く要求に応えられる</th></tr></thead>
+<tbody>
+<tr class="pickrow"><td class="cond">Document の内側の値として置く<br><span class="sub">採る</span></td>
+<td><span class="mk ok"><span class="sym">○</span></span><br><span class="sub">指す必要が無い</span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td>
+<td><span class="mk ng"><span class="sym">×</span></span><br><span class="sub">そのとき集約へ移す</span></td></tr>
+<tr><td class="cond">独立した集約として立てる</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+</tbody></table></div><details class="fold"><summary>条件の内訳を開く ── なぜその条件が要るか、なぜ × なのか（4件）</summary><div class="scroll"><table><thead><tr><th>条件（全文）</th><th>なぜこの条件が要るか</th><th>× の理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond">外から識別子で指せる<span class="keytag">決め手</span></td><td>集約どうしは識別子で参照し合う。指せないものは集約ではない</td><td><b>独立した集約</b> 図の宣言は <code>documentId</code> のように外から名指しできない。文書の中の位置でしか指せない</td></tr><tr class=""><td class="cond">ひとつのトランザクションの単位になる</td><td>集約は、ひとつのインスタンスがひとつの確定の単位である</td><td><b>独立した集約</b> 図の宣言だけを Document と別に確定させる場面が無い</td></tr><tr class=""><td class="cond">規則が値の内側に集まる</td><td>散ると、どこを見れば規則が分かるかが定まらない</td><td><b>独立した集約</b> 主張ごとの必須・禁止が、Document 側と図側の 2箇所へ散る</td></tr><tr class=""><td class="cond">将来ひとりで版が付く要求に応えられる</td><td>図だけを別に版管理したくなる可能性がある</td><td><b>Document の内側の値（採る）</b> いまは応えられない。<b>そのとき集約へ移せばよい</b>——移す向きは、集約から値へ落とすより易しい</td></tr></tbody></table></div></details></section><section><h2><span class="num">05</span>付随して決めたこと</h2><p class="lead">置き場所が決まると、守り手と表し方、そして動かす順が決まる。5点を同時に決めた。</p><div class="scroll"><table><thead><tr><th>論点</th><th>決定</th></tr></thead><tbody><tr class="keyrow"><td class="cond">欄の必須・禁止を誰が守るか</td><td><b>schema ひとつ。</b>不変条件には「常に主張が定める組と一致する」の1行だけを書き、守り手を名指しする。<b>判定するのは、その schema を引数に取る Document</b> である</td></tr><tr class="keyrow"><td class="cond"><b>宣言は何を持たないか</b></td><td><b>描いた結果を持たない。</b>座標も配置も持たず、主張と中身だけを置く ── <b>導いた値を文書に持たない</b>（承認済みの決定）が、図にもそのまま当たる</td></tr><tr class="keyrow"><td class="cond">主張をどう表すか</td><td><b>属性。</b>ひとつの形に、主張をキーにした制約を掛ける。置くものの定義を16回複製しない</td></tr><tr class=""><td class="cond">新しく作る文書</td><td><b>2件だけ。</b>16語と出典を置く knowledge と、宣言の形を検査する業務ユースケース</td></tr><tr class=""><td class="cond">実装を動かす順</td><td><b>語彙が先。</b>描画の実装を層の外へ移すのは最後</td></tr></tbody></table></div><details class="fold"><summary>それぞれの根拠を開く（5件）</summary><div class="scroll"><table><thead><tr><th>論点</th><th>根拠</th></tr></thead><tbody><tr class="keyrow"><td class="cond">宣言は何を持たないか</td><td>座標を宣言に持つと、<b>図を直すたびに古くなる</b>。座標は解かせて数値だけ受け取ると既に決めているので、<b>新しい制約ではなく、上位の決定に接続するだけ</b>である</td></tr><tr class="keyrow"><td class="cond">欄の必須・禁止を誰が守るか</td><td>16の主張と3つの欄の対応表を不変条件にも書くと、<b>正本が2箇所になる</b>。既にある不変条件12件のうち11件は守り手が schema なので、ここだけ例外にすると「不変条件」という言葉が2つの意味を持つ</td></tr><tr class="keyrow"><td class="cond">主張をどう表すか</td><td>種別にすると16個の形に分かれ、<b>置くものの定義が16回複製されて</b>同期の義務が残る</td></tr><tr class=""><td class="cond">新しく作る文書</td><td><b>実装だけあって仕様が無い検査</b>を増やさないため。現に1件ある</td></tr><tr class=""><td class="cond">実装を動かす順</td><td>2つ目の描き先が無いまま口の形を決めると、<b>ひとつの実装の都合を写す</b>ことになる</td></tr></tbody></table></div></details></section><section><h2><span class="num">06</span>答えないこと</h2><p class="lead">3つ残る。<b>いずれも数か向きを測ってから決める</b>ので、この決定では扱わない。</p><div class="scroll"><table><thead><tr><th>項目</th><th>何が決まっていないか</th><th>いつ決めるか</th><th>どこで決まるか</th></tr></thead><tbody><tr class=""><td class="cond">入れ子の深さの上限</td><td>いくつまで許すか。実装は深さ3まで展開している</td><td><b>schema の版を切るとき</b></td><td>実装</td></tr><tr class=""><td class="cond">向きの指定を消したときの扱い</td><td>向きを指定していた箇所をどうするか</td><td><b>縦を指定していた件数を数えてから</b></td><td>移す計画</td></tr><tr class=""><td class="cond">層の宣言に1行足すか</td><td>「外へ出す形式を組み立てる処理をどこに置くか」</td><td><b>実装を動かす前</b></td><td>規約の文書</td></tr></tbody></table></div><details class="fold"><summary>この書き直しで落とした論点が1つある</summary><p class="blob">前の版には「<b>文章の部品13種を同じ仕様に混ぜるか</b> ── 変更理由が違うので分ける」という論点があった。</p><p class="blob">その後に承認した「語彙を意味の名前だけにし、構造の部品と共通の欄を主張から分ける」が、<b>文字も図もひとつの語彙として扱う</b>と定めている。この論点は、そちらで解かれているので落とした。</p></details></section><section><h2><span class="num">07</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">承認済み</span><span class="m">2026-08-16 Document の決定との噛み合わせを補ったうえで承認</span></div></section><section><h2><span class="num">08</span>関連</h2><p class="lead">この決定は、Schema の仕様を書くときの入力になる。</p><details class="fold"><summary>縛る対象と、前後の決定を開く（7件）</summary><div class="scroll"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr class="keyrow"><td class="cond">縛る対象</td><td>図の宣言がどの要素として、どこに住むか</td></tr><tr class=""><td class="cond">先立つ決定</td><td>図の語彙を、描き方の名前から主張の名前へ移す（承認済み）</td></tr><tr class=""><td class="cond">先立つ決定</td><td>図の宣言を、主張を軸にした形へ置き換える（承認済み）</td></tr><tr class="keyrow"><td class="cond">先立つ決定</td><td>語彙を意味の名前だけにし、構造の部品と共通の欄を主張から分ける（承認済み）── <b>文字と図をひとつの語彙として扱うことが、ここで決まっている</b></td></tr><tr class="keyrow"><td class="cond">先立つ決定</td><td><b><a href="https://claude.ai/code/artifact/2362b93b-a1a8-4111-8b58-eff36eb61594">Document は、導けないものだけを持つ</a></b>（承認済み）── <b>content を「型を知らない木」と定めている</b>。図の宣言が木の中の値であることは、そこから出る。<b>導いた値を文書に持たない</b>も、ここで決まっている</td></tr><tr class="keyrow"><td class="cond">書き直す文書</td><td><b>Schema の仕様</b>（新規。図の宣言の形はここに置く）／<b>Document の仕様</b>（図の値はここに住む）</td></tr><tr class=""><td class="cond">この決定が正した私の誤り</td><td>180枚が移行の対象という理解／描画部品に読まれない語が4つあるという報告</td></tr></tbody></table></div></details></section></div>

@@ -1,0 +1,152 @@
+<title>語彙を意味の名前だけにし、構造の部品と共通の欄を主張から分ける</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.fig{margin:0;display:flex;flex-direction:column;gap:.6rem}
+.fig .scroll{padding:1.1rem 1rem}
+figcaption{font-size:.83rem;color:var(--ink-faint);line-height:1.7}
+figcaption b{color:var(--ink-soft)}
+.sub-h{font-family:var(--serif);font-size:1rem;font-weight:600;margin:.5rem 0 -.3rem;color:var(--ink-soft)}
+</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>語彙を意味の名前だけにし、構造の部品と共通の欄を主張から分ける</h1><p class="lede"><code>kvtable</code> と <code>keyvalue</code> は、どちらも「1つのものの、名前と値の組」を描く。違うのは表にするか箇条にするかだけである。<b>書き手に描き方を選ばせている。</b>図についてだけ直したものが、文字の側に残っている。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">Waffle は、<b>描く語彙を意味の名前だけにする</b>。構造の部品と共通の欄は、意味の部品から分けて置く。描き方は宣言から外し、意味と描き先から決まるようにする。</p><div class="key"><span class="lbl">決め手</span><span class="txt"><b>同じ意味に名前が2つあるなら、それは描き方である。</b>書き手が選んでいる以上、選ばれているのは意味ではない。<code>kvtable</code> と <code>keyvalue</code>、<code>graph</code> と <code>flowchart</code> が、どちらもその形になっている。</span></div></div></section><section><h2><span class="num">02</span>変更前と変更後</h2><p class="lead">変わるのは<b>誰が描き方を決めるか</b>である。書き手は意味だけを書く。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 790 262" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><text x="12" y="20" font-size="11.5" fill="var(--against)">変更前 ── 書き手が描き方を選ぶので、同じ意味に名前が2つできる</text><rect x="12" y="32" width="206" height="54" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="2"/><text x="115.0" y="56.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">書き手</text><text x="115.0" y="75.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">描き方を選ぶ</text><line x1="218" y1="59" x2="300" y2="59" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="300" y="32" width="232" height="54" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="1"/><text x="416.0" y="56.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">kvtable / keyvalue</text><text x="416.0" y="75.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">同じ意味、違う描き方</text><line x1="532" y1="59" x2="614" y2="59" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="614" y="32" width="160" height="54" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/><text x="694.0" y="64.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">Markdown</text><text x="12" y="140" font-size="11.5" fill="var(--infer)">変更後 ── 書き手は意味を書き、描き方は描き先ごとに決まる</text><rect x="12" y="152" width="206" height="54" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="2"/><text x="115.0" y="176.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">書き手</text><text x="115.0" y="195.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">意味を書く</text><line x1="218" y1="179" x2="300" y2="179" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="300" y="152" width="232" height="54" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="416.0" y="176.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">名前と値の組</text><text x="416.0" y="195.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">意味の名前ひとつ</text><line x1="532" y1="166" x2="614" y2="138" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="560" y="124" text-anchor="middle" font-size="11" fill="var(--ink-faint)">Markdown なら箇条</text><line x1="532" y1="192" x2="614" y2="220" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="556" y="238" text-anchor="middle" font-size="11" fill="var(--ink-faint)">HTML なら表</text><rect x="614" y="112" width="160" height="52" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/><text x="694.0" y="143.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">箇条として描く</text><rect x="614" y="196" width="160" height="52" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/><text x="694.0" y="227.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">表として描く</text></svg></div><figcaption><b>同じ意味に名前が2つあるのは、書き手に描き方を選ばせているからである。</b>意味をひとつにすれば、描き分けは描き先ごとに決まる。</figcaption></figure><h3 class="sub-h">語彙で見る</h3><div class="scroll"><table><thead><tr><th>群</th><th>変更前</th><th>変更後</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>構造の部品</b><br><span class='sub'>中身を描かず、並べ方だけを決める</span></td><td><code>section</code> / <code>object</code> が、意味の部品と同じ並びにある</td><td><b>分ける。</b>見出しを付けて繰り返す（<code>section</code>）／入れ子の中を描く（<code>object</code>）／<b>変更前と変更後を並べる（足す）</b></td></tr><tr class="keyrow"><td class="cond"><b>意味の部品</b><br><span class='sub'>文字</span></td><td><code>paragraph</code> / <code>list</code> / <code>table</code> / <code>kvtable</code> / <code>keyvalue</code> / <code>code</code></td><td><b>4つ。</b>文（<code>paragraph</code>）／並び（<code>list</code>）／表（<code>table</code>）／コード（<code>code</code>）。<b><code>kvtable</code> と <code>keyvalue</code> は1つにまとめる</b>（名前と値の組）</td></tr><tr class=""><td class="cond"><b>意味の部品</b><br><span class='sub'>図</span></td><td>描き方の名前16（<code>flowchart</code> ほか5種は Mermaid 由来）</td><td><b>16の主張から1つ選んで書く</b>（関係7・量9）。<b>一部は囲み（<code>frame</code>）と線（<code>links</code>）の設定から導ける</b>ので、名前として残すかは仕様で決める</td></tr><tr class=""><td class="cond"><b>共通の欄</b></td><td><code>from</code> / <code>heading</code> / <code>emptyText</code> が部品ごとの欄と混ざる</td><td><b>分ける。</b>値の取り出し元（<code>from</code>）／見出し（<code>heading</code>）／空のときの文言（<code>emptyText</code>）。<b>~~読む必要の度合い~~</b> は<b>のちに持たないと決着</b></td></tr><tr class=""><td class="cond"><b>落とすもの</b></td><td><code>divider</code>（使用0）</td><td><b>落とす。</b>区切り線は意味を持たない</td></tr></tbody></table></div><h3 class="sub-h">分けると、足りていないものが見える</h3><figure class="fig"><div class="scroll"><svg viewBox="0 0 850 228" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><rect x="16" y="28" width="250" height="186" rx="4" fill="none" stroke="var(--assume)" stroke-width="1" stroke-dasharray="4 3"/><text x="24" y="22" font-size="11" fill="var(--assume)">構造の部品 ── 自分では何も描かない</text><rect x="34" y="46" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--assume)" stroke-width="1"/><text x="141.0" y="66.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">見出しを付けて繰り返す</text><text x="141.0" y="85.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">section</text><rect x="34" y="104" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--assume)" stroke-width="1"/><text x="141.0" y="124.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">入れ子の中を描く</text><text x="141.0" y="143.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">object</text><rect x="34" y="162" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--assume)" stroke-width="2"/><text x="141.0" y="182.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">変更前と変更後を並べる</text><text x="141.0" y="201.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">足りていない</text><rect x="300" y="28" width="250" height="186" rx="4" fill="none" stroke="var(--infer)" stroke-width="1" stroke-dasharray="4 3"/><text x="308" y="22" font-size="11" fill="var(--infer)">意味 ── 何を述べるか</text><rect x="318" y="46" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="425.0" y="74.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">文 / 並び / 表 / コード</text><rect x="318" y="104" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="425.0" y="132.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">名前と値の組</text><rect x="318" y="162" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="425.0" y="190.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">図の主張 16種</text><rect x="584" y="28" width="250" height="186" rx="4" fill="none" stroke="var(--fact)" stroke-width="1" stroke-dasharray="4 3"/><text x="592" y="22" font-size="11" fill="var(--fact)">共通の欄 ── どの部品にも付く</text><rect x="602" y="46" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--fact)" stroke-width="1"/><text x="709.0" y="66.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">値の取り出し元</text><text x="709.0" y="85.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">from</text><rect x="602" y="104" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--fact)" stroke-width="1"/><text x="709.0" y="132.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">見出し / 空のときの文言</text><rect x="602" y="162" width="214" height="46" rx="3" fill="var(--surface)" stroke="var(--fact)" stroke-width="1"/><text x="709.0" y="182.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">読む必要の度合い</text><text x="709.0" y="201.0" text-anchor="middle" font-size="11" fill="var(--ink-faint)">のちに落とした</text></svg></div><figcaption>いまは3つが同じ並びに置かれている。<b>分けると、足りていないものが見える</b>——この時点では2つ見えた。<b>うち読む必要の度合いは、のちに持たないと決着した</b>——索引は部品の鍵と説明から導けるため。残るのは<b>変更前と変更後を並べる部品の1つ</b>。</figcaption></figure><div class="scroll"><table><thead><tr><th>足りないもの</th><th>何を述べる語か</th><th>いま何が起きているか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">変更前と変更後を並べる部品</td><td>変更前と変更後を並べ、何が変わったかを見せる</td><td><b><code>対応</code> が肩代わりしている。</b>表の交差を述べる主張と、並べる部品を兼ねている</td></tr><tr class=""><td class="cond">~~読む必要の度合い~~</td><td>本筋か、裏付けか、内訳か</td><td><b>のちに持たないと決着した。</b>索引は部品の鍵と説明から導けるので、項目ごとに申告させる必要が無い</td></tr><tr class=""><td class="cond">囲み（<code>frame.groups</code>）</td><td>並びや点と線の一部に、名前つきの囲みを掛ける</td><td>実例で使われ、<b>「書けない」という注記が残っている</b></td></tr><tr class=""><td class="cond">差分の語彙</td><td>変わっていない／注目／足した／落とした／変えた</td><td>決定で定めたのに、<code>role</code> は <code>plain</code>/<code>focus</code>/<code>muted</code>/<code>start</code>/<code>end</code> のまま</td></tr></tbody></table></div></section><section><h2><span class="num">03</span>理由</h2><p class="lead">文字の側も図の側も、書き手に描き方を選ばせている。<b>構造の部品と共通の欄が、意味の部品と同じ並びに置かれている。</b></p><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt"><code>kvtable</code> と <code>keyvalue</code> は、<b>どちらも「1つのものの、名前と値の組」を描いている</b>。違うのは表にするか箇条にするかだけである</span></div><div class="joint">図の側も同じだった</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">図の5種（<code>flowchart</code>・<code>sequence</code>・<code>statediagram</code>・<code>architecture</code>・<code>graph</code>）は Mermaid 由来の描き方の名前で、<b>描き方ごとに違う欄が生えている</b></span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>文字の側も図の側も、書き手に描き方を選ばせている。</b>図についてだけ主張の名前へ移す決定を済ませたが、同じことが文字の側に残っている</span></div><div class="joint">並びを見ると</div><div class="step evidence"><span class="lbl">測った</span><span class="txt"><code>section</code> と <code>object</code> は<b>自分では何も描かない</b>。<code>object</code> は入れ子の中を描くだけである。また <code>from</code>・<code>heading</code>・<code>emptyText</code> は<b>どの部品にも付く</b></span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">構造の部品と、共通の欄と、意味の部品が<b>同じ並びに置かれている</b></span></div><div class="joint">分けて数え直すと</div><div class="step evidence"><span class="lbl">測った</span><span class="txt"><b>2つ足りない。</b>変更前と変更後を並べる部品（いまは <code>対応</code> が肩代わり）と、読む必要の度合い。<b>後者はのちに持たないと決着した</b>ので、いま足りないのは<b>その部品の1つ</b>である</span></div><div class="joint">合わせると</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">語彙を意味の名前だけにし、構造の部品と共通の欄を主張から分ける。描き方は宣言から外し、意味と描き先から決まるようにする</span></div><div class="joint">なお</div><div class="step premise"><span class="lbl">前提</span><span class="txt"><b>Markdown で描けることが語彙の下限になる。</b>HTML の方が豊かに描けるが、それは同じ意味をより良く描けるということであって、HTML でしか言えない意味があるということではない</span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（5件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>kvtable</code> と <code>keyvalue</code> が同じ意味</td><td><span class="kindtag unv">実測</span></td><td>描く実装の分岐を読んだ。一方は表の1行、他方は箇条として同じ組を描く</td><td>—</td></tr><tr class=""><td class="cond">図の5種が描き方の名前</td><td><span class="kindtag unv">実測</span></td><td>属性が <code>transitionsFrom</code>・<code>participantsFrom</code>・<code>nodesFrom</code>・<code>connectionsFrom</code> と描き方ごとに違う</td><td>—</td></tr><tr class=""><td class="cond">構造の部品が何も描かない</td><td><span class="kindtag unv">実測</span></td><td><code>object</code> は入れ子の中を描くだけ、<code>section</code> は見出しを立てて <code>each</code> を描く</td><td>—</td></tr><tr class=""><td class="cond">2つ足りない</td><td><span class="kindtag unv">実測</span></td><td>変更前後の図が <code>対応</code> で書かれている実例と、この決定の折りたたみが宣言から出ていないこと</td><td>—</td></tr><tr class=""><td class="cond">Markdown が下限になる</td><td><span class="kindtag out">Waffle の設計判断</span></td><td><b>knowledge に該当なし</b></td><td><b>HTML でしか言えない意味が1つでも出てきたとき</b></td></tr></tbody></table></div><p class="foldnote">最後の段だけ裏付けが実測でない理由 ── これは測って分かることではなく、どこを下限に置くかという選び方である。崩れるときも書いてある。</p></details></section><section><h2><span class="num">04</span>判断を分けた軸</h2><p class="lead">採る案は4つの条件のうち3つを満たす。落とすのは1つで、<b>いまの schema を書き換えることになる</b>。</p><div class="scroll"><table>
+<thead><tr><th>案</th>
+<th class="keycol">同じ意味に名前がひとつ<br><span class="sub">決め手</span></th>
+<th>Markdown で描けることが下限になる</th>
+<th>足りない語が見える</th>
+<th>いまの schema を書き換えずに済む</th></tr></thead>
+<tbody>
+<tr class="pickrow"><td class="cond">意味の名前だけにし、構造の部品と共通の欄を分ける<br><span class="sub">採る</span></td>
+<td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td></tr>
+<tr><td class="cond">いまのまま置く</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+<tr><td class="cond">重複した名前だけをまとめる</td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td></tr>
+</tbody></table></div><details class="fold"><summary>条件の内訳を開く ── なぜその条件が要るか、なぜ × なのか（4件）</summary><div class="scroll"><table><thead><tr><th>条件（全文）</th><th>なぜこの条件が要るか</th><th>× の理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond">同じ意味に名前がひとつ<span class="keytag">決め手</span></td><td>名前が2つあると、書き手はどちらかを選ぶことになる。選ばせている以上それは描き方であって、意味ではない</td><td><b>いまのまま</b> <code>kvtable</code> と <code>keyvalue</code> は同じ <code>_table</code> 相当の意味を持ちながら、表と箇条という2つの描き方で分かれている</td></tr><tr class=""><td class="cond">Markdown で描けることが下限になる</td><td>描き先が増えても語彙が変わらないようにするには、最も表現力の低い描き先で描けることが要る</td><td><b>いまのまま</b>／<b>名前だけまとめる</b> ── どちらも <code>x-frontmatter</code> のような Markdown 専用の語が残る</td></tr><tr class=""><td class="cond">足りない語が見える</td><td>構造・意味・共通の欄が同じ並びにあると、どの群に何が足りないかを問えない</td><td><b>いまのまま</b>／<b>名前だけまとめる</b> ── 群が分かれないので、変更前と変更後を並べる部品と読む必要の度合いが欠けていることが現れない</td></tr><tr class=""><td class="cond">いまの schema を書き換えずに済む</td><td>書き換える範囲が広いほど、途中で止まったときに新旧が混ざる</td><td><b>採る案</b>／<b>名前だけまとめる</b> ── どちらも書き換える</td></tr></tbody></table></div></details></section><section><h2><span class="num">05</span>付随して決めたこと</h2><p class="lead">語彙を意味へ寄せると、いくつかの名前の行き先が決まる。3点を同時に決めた。</p><div class="scroll"><table><thead><tr><th>論点</th><th>決定</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>対応</code> の2つの顔</td><td><b>表の縦横が交わる主張だけに戻す。</b>変更前と変更後を並べる役目は、別の部品として立てる</td></tr><tr class=""><td class="cond"><code>divider</code></td><td><b>落とす。</b>使用0で、区切り線は意味を持たない</td></tr><tr class=""><td class="cond">描き先ごとの表現力の差</td><td><b>描き手が吸収する。</b>「裏付け」は HTML では折りたたんで、Markdown では小見出しで描く</td></tr></tbody></table></div><details class="fold"><summary>それぞれの根拠を開く（3件）</summary><div class="scroll"><table><thead><tr><th>論点</th><th>根拠</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>対応</code> の2つの顔</td><td>実例では、<b>表の縦横が交わる主張</b>（仕様の要素 × 実装で確かめるもの）と、<b>図を2つ並べる部品</b>（変更前 × 変更後）の両方に使われている。<b><b>その部品の名前が無いので肩代わりしている</b></b></td></tr><tr class=""><td class="cond"><code>divider</code></td><td>最新版の schema で使用0。描く実装には分岐があるが、宣言する相手がいない。<b>区切り線は描き方であって意味ではない</b></td></tr><tr class="keyrow"><td class="cond">描き先ごとの表現力の差</td><td>折りたたみは意味ではなく描き方である。意味は「裏付け」「内訳」「根拠」で、この決定の折りたたみの見出しがそれを言っている。<b>HTML が豊かなのは同じ意味をより良く描けるということ</b>であり、HTML でしか言えない意味があるということではない</td></tr></tbody></table></div></details></section><section><h2><span class="num">06</span>答えないこと</h2><p class="lead">名前と欄の形は仕様で決める。この決定は<b>群の分け方と、描き方を宣言から外すこと</b>だけを定める。</p><div class="scroll"><table><thead><tr><th>項目</th><th>何が決まっていないか</th><th>いつ決めるか</th><th>どこで決まるか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">各語の名前</td><td>文／並び／表／コード／名前と値の組 は仮に置いたもの</td><td><b>仕様を書くとき</b></td><td><b>仕様そのもの。</b>決定にはしない</td></tr><tr class="keyrow"><td class="cond"><b>読む必要の度合いの段階</b></td><td><b>持たないことに決着した。</b>索引は部品の鍵と説明から導ける</td><td><b>決着（2026-08-16）</b></td><td>段1 の仕様</td></tr><tr class=""><td class="cond">導けるものを名前として残すか</td><td>囲みと線の設定から導ける主張を、名前として残すか消すか。<b>何個が導けるかも、そこで数える</b></td><td><b>仕様を書くとき</b></td><td>同上。導けることと、読み手に見せることは別</td></tr><tr class=""><td class="cond">移す順序</td><td>いまの schema と既存の Document をどう移すか</td><td><b>仕様の合意後、実装の前</b></td><td>移す計画</td></tr></tbody></table></div></section><section><h2><span class="num">07</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">承認済み</span><span class="m">2026-08-15</span></div></section><section><h2><span class="num">08</span>関連</h2><p class="lead">この決定は、図についての2つの決定を文字の側へ広げるものである。</p><details class="fold"><summary>縛る対象と、前後の決定を開く（5件）</summary><div class="scroll"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr class="keyrow"><td class="cond">縛る対象</td><td>描く語彙の名前と、その群分け</td></tr><tr class=""><td class="cond">先立つ決定</td><td>図の語彙を、描き方の名前から主張の名前へ移す（承認済み）</td></tr><tr class=""><td class="cond">先立つ決定</td><td>図の宣言を、主張を軸にした形へ置き換える（承認済み）</td></tr><tr class=""><td class="cond">先立つ決定</td><td>Schema を仕様から実装し、型は Document として置く（承認済み）── この語彙は段1 が持つ</td></tr><tr class=""><td class="cond">この決定を使う予定</td><td>語彙の再定義を仕様として書く。各語の名前・書ける場所・描き先ごとの落とし方を並べる</td></tr></tbody></table></div></details></section></div>

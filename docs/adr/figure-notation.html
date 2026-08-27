@@ -63,16 +63,16 @@
   }
 
   .wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
-  .wf-node > rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
+  .wf-node rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
   .wf-name{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
            font-size:12px;text-anchor:middle}
-  .wf-node--focus > rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+  .wf-node--focus rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
   .wf-node--focus .wf-name{fill:var(--fig-accent);font-weight:600}
-  .wf-node--removed > rect,
-  .wf-node--muted > rect{fill:none;stroke:var(--fig-text-faint);stroke-dasharray:4 3}
+  .wf-node--removed rect,
+  .wf-node--muted rect{fill:none;stroke:var(--fig-text-faint);stroke-dasharray:4 3}
   .wf-node--removed .wf-name,
   .wf-node--muted .wf-name{fill:var(--fig-text-faint)}
-  .wf-node--added > rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+  .wf-node--added rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
   .wf-node--added .wf-name{fill:var(--fig-accent);font-weight:600}
   .wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
   .wf-arrow{fill:var(--fig-line)}
@@ -96,7 +96,7 @@
                     font-size:12px;font-weight:600;text-anchor:middle}
   .wf-node .wf-row{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
                    font-size:11px;text-anchor:start}
-</style><main><header><p class="eyebrow">図解の記法 — 決められたルールの範囲内で組む</p><h1>欄は3つ、書ける名前は16、主張は15</h1><p class="lede">左が描いたもの、右が書いたもの。主張ごとに入力の形を変えていません。<b>どの欄を書けるかは主張が決め、描き方はそこから従属して決まります</b>。書き手は描き方を選びません。</p></header><h2>関係を主張するもの</h2><section class="card"><header><h3>つながり</h3><span class="fam">関係</span><span class="note">誰と誰が結ばれているか。位置に意味は無い</span></header><div class="pair"><div class="stage"><svg class="wf-fig" viewBox="-10 -10 163 260" width="163" height="260" style="width:100%;max-width:294px;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M36.0,30.4 C41.4,39.0 48.4,50.1 54.6,60.0 L60.8,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M103.7,30.4 C98.3,39.0 91.3,50.1 85.1,60.0 L79.0,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M69.9,100.5 C69.9,108.6 69.9,119.0 69.9,128.4 L69.9,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M69.9,170.5 C69.9,178.6 69.9,189.0 69.9,198.4 L69.9,209.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><rect class="wf-label-bg" fill="#F5F7F9" x="56.9" y="112.1" width="26.0" height="14" rx="3"/><text class="wf-edge-label" text-anchor="middle" fill="#79828F" x="69.9" y="123.1">呼ぶ</text><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="0.0" y="0.0" width="53.7" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="26.9" y="19.0">CLI</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="82.4" y="0.0" width="61.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="112.9" y="19.0">MCP</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="15.9" y="70.0" width="108.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="69.9" y="89.0">ユースケース</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="15.9" y="140.1" width="108.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="69.9" y="159.1">業務サービス</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="33.9" y="210.1" width="72.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="69.9" y="229.1">モデル</text></g></svg></div><pre>{
+</style><main><header><p class="eyebrow">図解の記法 — 決められたルールの範囲内で組む</p><h1>欄は3つ、書ける名前は16、主張は16</h1><p class="lede">左が描いたもの、右が書いたもの。主張ごとに入力の形を変えていません。<b>どの欄を書けるかは主張が決め、描き方はそこから従属して決まります</b>。書き手は描き方を選びません。</p></header><h2>関係を主張するもの</h2><section class="card"><header><h3>つながり</h3><span class="fam">関係</span><span class="note">誰と誰が結ばれているか。位置に意味は無い</span></header><div class="pair"><div class="stage"><svg class="wf-fig" viewBox="-10 -10 163 260" width="163" height="260" style="width:100%;max-width:294px;height:auto" role="img"><defs><marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2"/></marker></defs><path class="wf-edge" d="M36.0,30.4 C41.4,39.0 48.4,50.1 54.6,60.0 L60.8,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M103.7,30.4 C98.3,39.0 91.3,50.1 85.1,60.0 L79.0,69.6" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M69.9,100.5 C69.9,108.6 69.9,119.0 69.9,128.4 L69.9,139.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><path class="wf-edge" d="M69.9,170.5 C69.9,178.6 69.9,189.0 69.9,198.4 L69.9,209.7" fill="none" stroke="#C3CAD2" stroke-width="1.2" marker-end="url(#wf-arrow)"/><rect class="wf-label-bg" fill="#F5F7F9" x="56.9" y="112.1" width="26.0" height="14" rx="3"/><text class="wf-edge-label" text-anchor="middle" fill="#79828F" x="69.9" y="123.1">呼ぶ</text><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="0.0" y="0.0" width="53.7" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="26.9" y="19.0">CLI</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="82.4" y="0.0" width="61.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="112.9" y="19.0">MCP</text></g><g class="wf-node wf-node--focus"><rect fill="#E2EFF0" stroke="#16636B" x="15.9" y="70.0" width="108.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#16636B" x="69.9" y="89.0">ユースケース</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="15.9" y="140.1" width="108.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="69.9" y="159.1">業務サービス</text></g><g class="wf-node wf-node--plain"><rect fill="#F5F7F9" stroke="#C3CAD2" x="33.9" y="210.1" width="72.0" height="30.0" rx="5"/><text class="wf-name" text-anchor="middle" fill="#171B23" x="69.9" y="229.1">モデル</text></g></svg></div><pre>{
  "asserts": "つながり",
  "items": [
   {
@@ -244,25 +244,6 @@
   },
   {
    "name": "advisor"
-  },
-  {
-   "name": "繰り返し",
-   "span": [
-    2,
-    2
-   ],
-   "figure": {
-    "asserts": "包含",
-    "reading": "この範囲を繰り返す",
-    "items": [
-     {
-      "name": "敵対的に確かめる"
-     },
-     {
-      "name": "反証、または支持"
-     }
-    ]
-   }
   }
  ],
  "links": [
@@ -288,7 +269,18 @@
    "name": "反証、または支持",
    "ends": "return"
   }
- ]
+ ],
+ "frame": {
+  "groups": [
+   {
+    "name": "繰り返し",
+    "span": [
+     2,
+     2
+    ]
+   }
+  ]
+ }
 }</pre></div></section><section class="card"><header><h3>対応</h3><span class="fam">関係</span><span class="note">どれとどれが対応するか。面をまたぐ／格子で交わる</span></header><div class="pair"><div class="stage"><svg class="f-fig" viewBox="0 0 446 206" width="446" height="206" style="width:100%;max-width:803px;height:auto" role="img"><text class="f-t" x="93.0" y="40.0" font-family="Noto Sans JP" font-size="10" font-weight="400" fill="#79828F" text-anchor="middle">仕様の要素</text><text class="f-t" x="233.0" y="40.0" font-family="Noto Sans JP" font-size="10" font-weight="400" fill="#79828F" text-anchor="middle"></text><text class="f-t" x="363.0" y="40.0" font-family="Noto Sans JP" font-size="10" font-weight="400" fill="#79828F" text-anchor="middle">実装で確かめるもの</text><line class="f-line" x1="18.0" y1="52.0" x2="428.0" y2="52.0" stroke="#E4E9EE" stroke-width="1"/><text class="f-t" x="24.0" y="74.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">受け入れ基準</text><text class="f-t" x="304.0" y="74.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">保証シナリオ</text><line class="f-line" x1="18.0" y1="86.0" x2="428.0" y2="86.0" stroke="#E4E9EE" stroke-width="1"/><text class="f-t" x="24.0" y="108.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">業務ユースケース</text><text class="f-t" x="304.0" y="108.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">操作の契約</text><line class="f-line" x1="18.0" y1="120.0" x2="428.0" y2="120.0" stroke="#E4E9EE" stroke-width="1"/><text class="f-t" x="24.0" y="142.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">集約</text><text class="f-t" x="304.0" y="142.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">不変条件</text><line class="f-line" x1="18.0" y1="154.0" x2="428.0" y2="154.0" stroke="#E4E9EE" stroke-width="1"/><text class="f-t" x="24.0" y="176.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">業務サービス</text><text class="f-t" x="304.0" y="176.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="start">結果整合</text></svg></div><pre>{
  "asserts": "対応",
  "items": [
@@ -762,7 +754,7 @@
    }
   ]
  }
-}</pre></div></section><section class="card"><header><h3>やり取りの順序</h3><span class="note">書けた</span></header><div class="pair"><div class="stage"><p style="color:#9A4A21;font-size:.85rem">やり取り: frame に 'groups' は書けない</p></div><pre>{
+}</pre></div></section><section class="card"><header><h3>やり取りの順序</h3><span class="note">書けた</span></header><div class="pair"><div class="stage"><svg class="f-fig" viewBox="0 0 564 338" width="564" height="338" style="width:100%;max-width:1015px;height:auto" role="img"><rect x="24" y="156.0" width="516.0" height="84.0" rx="4" fill="none" stroke="#16636B" stroke-width="1" stroke-dasharray="5 4"/><rect x="32" y="161.0" width="54" height="16" rx="3" fill="#E2EFF0"/><text class="f-t" x="59.0" y="173.0" font-family="Noto Sans JP" font-size="10" font-weight="400" fill="#16636B" text-anchor="middle">繰り返し</text><rect class="f-box f-box--plain" x="40.0" y="18.0" width="132.0" height="28.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text class="f-t" x="106.0" y="36.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="middle">Orchestrator</text><line class="f-line" x1="106.0" y1="46.0" x2="106.0" y2="320.0" stroke="#C3CAD2" stroke-width="1" stroke-dasharray="3 4"/><rect class="f-box f-box--plain" x="216.0" y="18.0" width="132.0" height="28.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text class="f-t" x="282.0" y="36.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="middle">Waffle</text><line class="f-line" x1="282.0" y1="46.0" x2="282.0" y2="320.0" stroke="#C3CAD2" stroke-width="1" stroke-dasharray="3 4"/><rect class="f-box f-box--plain" x="392.0" y="18.0" width="132.0" height="28.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text class="f-t" x="458.0" y="36.0" font-family="Noto Sans JP" font-size="12" font-weight="400" fill="#171B23" text-anchor="middle">advisor</text><line class="f-line" x1="458.0" y1="46.0" x2="458.0" y2="320.0" stroke="#C3CAD2" stroke-width="1" stroke-dasharray="3 4"/><line class="f-line" x1="106.0" y1="90.0" x2="282.0" y2="90.0" stroke="#4B5563" stroke-width="1.2"/><polygon points="282.0,90.0 274.0,86.0 274.0,94.0" fill="#4B5563"/><text class="f-t" x="194.0" y="83.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">骨格を作る</text><line class="f-line" x1="282.0" y1="136.0" x2="106.0" y2="136.0" stroke="#4B5563" stroke-width="1.2" stroke-dasharray="5 4"/><polygon points="106.0,136.0 114.0,132.0 114.0,140.0" fill="#4B5563"/><text class="f-t" x="194.0" y="129.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">埋める場所の一覧</text><line class="f-line" x1="106.0" y1="182.0" x2="458.0" y2="182.0" stroke="#4B5563" stroke-width="1.2"/><polygon points="458.0,182.0 450.0,178.0 450.0,186.0" fill="#4B5563"/><text class="f-t" x="282.0" y="175.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">敵対的に確かめる</text><line class="f-line" x1="458.0" y1="228.0" x2="106.0" y2="228.0" stroke="#4B5563" stroke-width="1.2" stroke-dasharray="5 4"/><polygon points="106.0,228.0 114.0,224.0 114.0,232.0" fill="#4B5563"/><text class="f-t" x="282.0" y="221.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">反証、または支持</text><line class="f-line" x1="106.0" y1="274.0" x2="282.0" y2="274.0" stroke="#4B5563" stroke-width="1.2"/><polygon points="282.0,274.0 274.0,270.0 274.0,278.0" fill="#4B5563"/><text class="f-t" x="194.0" y="267.0" font-family="Noto Sans JP" font-size="11" font-weight="400" fill="#79828F" text-anchor="middle">値を書き込む</text></svg></div><pre>{
  "asserts": "やり取り",
  "items": [
   {
@@ -849,4 +841,49 @@
    ]
   }
  ]
+}</pre></div></section><h2>まとまりの中で分かれる</h2><p class="lede" style="margin:0 0 .4rem">まとまりは範囲を囲むだけでなく、<b>枝に分かれる</b>ことがあります。まとまりの名前に分かれ目を書き、枝の名前に条件を書きます。読み手に覚える語は増えません。</p><section class="card"><header><h3>分かれ</h3><span class="fam">まとまり</span><span class="note">どれか1つだけが起きる。まとまりが <code>span</code> の代わりに <code>cases</code> を持つ。枝は名前（条件）と範囲を持つ</span></header><div class="pair"><div class="stage"><svg class="wf-fig" viewBox="0 0 700 372" width="700" height="372" style="width:100%;max-width:900px;height:auto" role="img" aria-label="分かれを含むやり取りの図">
+<defs><marker id="wf-seq-arrow" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 z" fill="#4B5563"/></marker></defs>
+<g font-family="Noto Sans JP" font-size="12" fill="#171B23">
+<rect x="24" y="8" width="118" height="30" rx="2" fill="#F5F7F9" stroke="#D3DAE2"/><text x="83" y="28" text-anchor="middle">呼ぶ側</text>
+<rect x="278" y="8" width="118" height="30" rx="2" fill="#F5F7F9" stroke="#D3DAE2"/><text x="337" y="28" text-anchor="middle">文書</text>
+<rect x="532" y="8" width="118" height="30" rx="2" fill="#F5F7F9" stroke="#D3DAE2"/><text x="591" y="28" text-anchor="middle">型</text>
+<g stroke="#D3DAE2" stroke-dasharray="3 4"><line x1="83" y1="38" x2="83" y2="356"/><line x1="337" y1="38" x2="337" y2="356"/><line x1="591" y1="38" x2="591" y2="356"/></g>
+<g stroke="#4B5563" marker-end="url(#wf-seq-arrow)"><line x1="83" y1="66" x2="333" y2="66"/><line x1="337" y1="98" x2="587" y2="98"/></g>
+<text x="208" y="60" text-anchor="middle" font-size="11" fill="#4B5563">逸脱していないか判定する</text>
+<text x="462" y="92" text-anchor="middle" font-size="11" fill="#4B5563">読み方の指針を引く</text>
+<rect x="40" y="120" width="600" height="222" rx="2" fill="none" stroke="#16636B"/>
+<rect x="40" y="120" width="176" height="24" fill="#E2EFF0" stroke="#16636B"/>
+<text x="52" y="137" font-size="11" fill="#16636B">判定の結果で分かれる</text>
+<text x="52" y="174" font-size="12" font-weight="600">適合しているとき</text>
+<g stroke="#4B5563" marker-end="url(#wf-seq-arrow)" stroke-dasharray="4 3"><line x1="333" y1="206" x2="87" y2="206"/></g>
+<text x="210" y="200" text-anchor="middle" font-size="11" fill="#4B5563">適合を返す</text>
+<line x1="40" y1="230" x2="640" y2="230" stroke="#16636B" stroke-dasharray="5 4"/>
+<text x="52" y="258" font-size="12" font-weight="600">適合していないとき</text>
+<g stroke="#4B5563" marker-end="url(#wf-seq-arrow)" stroke-dasharray="4 3"><line x1="333" y1="290" x2="87" y2="290"/></g>
+<text x="210" y="284" text-anchor="middle" font-size="11" fill="#4B5563">適合しない箇所を返す</text>
+<text x="210" y="314" text-anchor="middle" font-size="11" fill="#79828F">（文書は書き換わらない）</text>
+</g></svg></div><pre>{
+ "asserts": "やり取り",
+ "items": [
+  {"name": "呼ぶ側"},
+  {"name": "文書"},
+  {"name": "型"}
+ ],
+ "links": [
+  {"from": "呼ぶ側", "to": "文書", "name": "逸脱していないか判定する"},
+  {"from": "文書", "to": "型", "name": "読み方の指針を引く"},
+  {"from": "文書", "to": "呼ぶ側", "name": "適合を返す", "ends": "return"},
+  {"from": "文書", "to": "呼ぶ側", "name": "適合しない箇所を返す", "ends": "return"}
+ ],
+ "frame": {
+  "groups": [
+   {
+    "name": "判定の結果で分かれる",
+    "cases": [
+     {"name": "適合しているとき", "span": [3, 3]},
+     {"name": "適合していないとき", "span": [4, 4]}
+    ]
+   }
+  ]
+ }
 }</pre></div></section></main>

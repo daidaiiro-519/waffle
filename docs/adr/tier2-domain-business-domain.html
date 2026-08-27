@@ -1,0 +1,275 @@
+<title>事業領域 ── 完成イメージ</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  /* 既定のリンク色は暗い紙面でほとんど読めない。字の色と同じ体系から取る */
+  a{color:var(--fact);text-underline-offset:.2em}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.h1en{display:block;font-family:var(--mono);font-size:.9rem;font-weight:400;
+      color:var(--ink-faint);margin-top:.35rem}
+.foot{font-size:.82rem;line-height:1.75;color:var(--ink-faint);
+      border-top:1px solid var(--rule);padding-top:1rem}
+
+.rdoc{border:1px solid var(--rule);border-radius:3px;background:var(--surface);overflow:hidden}
+.rh{background:var(--surface-2);border-bottom:1px solid var(--rule);
+    padding:1.6rem 1.5rem 1.3rem;display:flex;flex-direction:column;gap:.5rem}
+.rchips{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+.foot-chips{margin-top:.5rem}
+.chip{font-family:var(--mono);font-size:.7rem;line-height:1;padding:.4em .65em;border-radius:2px;
+      border:1px solid var(--rule);color:var(--ink-faint);background:var(--surface)}
+.chip.kind{border-color:var(--infer);color:var(--infer);background:var(--infer-bg);
+           font-family:var(--sans);font-weight:600}
+.chip.id{color:var(--ink-soft)}
+.chip.ref{font-weight:600;color:var(--ink-soft)}
+.chip.lbl{border:none;background:none;padding-left:0;font-family:var(--sans);font-size:.76rem}
+.rt{font-family:var(--serif);font-size:clamp(1.35rem,3.2vw,1.7rem);font-weight:600;
+    margin:.15rem 0 0;line-height:1.4}
+.ren{font-family:var(--mono);font-size:.86rem;color:var(--ink-faint);margin:0}
+.rlede{font-size:.98rem;line-height:1.85;color:var(--ink-soft);margin:.5rem 0 0;max-width:34rem}
+.actor{margin:.6rem 0 0;padding-left:.95rem;border-left:3px solid var(--infer)}
+.ac-who{font-family:var(--serif);font-size:1.02rem;font-weight:600;margin:0}
+.ac-want{font-size:.91rem;line-height:1.8;color:var(--ink-soft);margin:.15rem 0 0}
+
+.zn{padding:0 1.5rem;margin-top:1.7rem;display:flex;flex-direction:column;gap:.9rem}
+.zn:last-child{padding-bottom:1.6rem}
+.zn-h{display:flex;align-items:center;gap:.8rem;margin:0;font-family:var(--serif);
+      font-size:1.02rem;font-weight:600;color:var(--ink);flex-wrap:wrap}
+.zn-h>span:first-child{flex:none}
+.zn-h::after{content:"";flex:1;height:1px;background:var(--rule);order:9}
+.cnt{font-family:var(--mono);font-size:.68rem;font-weight:400;color:var(--ink-faint);
+     border:1px solid var(--rule);border-radius:2px;padding:.3em .55em;flex:none}
+
+/* 入口と出口を、横に並べて対にする */
+.io{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:start}
+.io-c{border:1px solid var(--rule-soft);border-radius:2px;background:var(--surface-2);
+      padding:.85rem .95rem;min-width:0}
+.io-h{font-size:.78rem;color:var(--ink-faint);margin:0 0 .45rem}
+.io-r{display:flex;flex-wrap:wrap;gap:.15rem .7rem;align-items:baseline;font-size:.92rem}
+.io-a{align-self:center;color:var(--ink-faint);font-size:1.1rem}
+@media(max-width:46rem){.io{grid-template-columns:1fr}.io-a{display:none}}
+
+.pr{display:flex;flex-wrap:wrap;gap:.15rem .8rem;align-items:baseline;font-size:.9rem;line-height:1.8}
+.pr-k{flex:none}
+.pr-v{color:var(--ink-soft);min-width:0}
+
+.figwrap{border:1px solid var(--rule-soft);border-radius:2px;background:#FFF;padding:.9rem .6rem}
+.wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
+
+.crit .scroll{border-color:var(--infer)}
+.crit thead th{background:var(--infer-bg);color:var(--infer)}
+.gk{margin:0;font-family:var(--mono);font-size:.76rem;line-height:1.8;background:var(--surface-2);
+    border:1px solid var(--rule-soft);border-radius:2px;padding:.75rem .85rem;overflow-x:auto;
+    white-space:pre;color:var(--ink)}
+.errs{border-top:1px solid var(--rule-soft);padding-top:.85rem}
+.errs-h{font-size:.78rem;color:var(--ink-faint);margin:0 0 .35rem}
+.post{margin:0;padding-left:1.1rem;font-size:.92rem;line-height:1.85;color:var(--ink-soft)}
+.zn .sub{font-size:.82rem;line-height:1.7}
+
+@media(max-width:46rem){
+  .rh{padding:1.3rem 1.1rem 1.1rem}
+  .zn{padding:0 1.1rem;margin-top:1.5rem}
+}
+.znote{font-size:.85rem;line-height:1.8;color:var(--ink-soft);padding-left:.85rem;
+       border-left:2px solid var(--rule)}
+.znote b{color:var(--ink)}
+.big{font-family:var(--serif);font-size:1.25rem;font-weight:600}
+.wrap.narrow{max-width:48rem;gap:1.6rem}
+.ph{gap:.5rem}
+.ph .lede{font-size:.95rem}
+.samename{font-family:var(--mono);font-size:.62rem;font-weight:400;color:var(--ink-faint);
+          letter-spacing:.02em;margin-left:.5rem;vertical-align:middle}
+.f-lane{font-family:var(--sans);font-size:12px;fill:var(--ink-faint)}
+.f-on{fill:var(--infer);font-weight:700}
+.f-box{fill:var(--surface-2);stroke:var(--rule);stroke-width:1}
+.f-hi{fill:var(--infer-bg);stroke:var(--infer)}
+.f-t{font-family:var(--sans);font-size:14px;fill:var(--ink);text-anchor:middle}
+.f-tb{font-weight:700;fill:var(--infer)}
+.f-ln{stroke:var(--ink-faint);stroke-width:1.2}
+.f-ar{fill:var(--ink-faint)}
+.figwrap{background:var(--surface);overflow-x:auto}
+/* 図は縮めすぎると読めなくなる。紙面が狭いときは縮めず、枠の中で横へ送る */
+@media(max-width:36rem){.wf-fig{min-width:32rem}}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(11.5rem,1fr));
+       gap:.6rem;align-items:stretch}
+.uc{border:1px solid var(--rule);border-radius:3px;background:var(--surface);
+    overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.uc-k{font-family:var(--mono);font-size:.58rem;letter-spacing:.03em;color:var(--ink-faint);
+      display:block;margin-bottom:.12rem}
+/* 帯の高さを揃える。1行の札と2行の札が混ざると、本文の開始位置がずれて読み進めにくい */
+.uc-h{background:var(--surface-2);border-bottom:1px solid var(--rule-soft);
+      padding:.5rem .75rem;min-height:4.7rem;display:flex;flex-direction:column;justify-content:flex-start}
+.uc-hv{display:block;font-size:.88rem;font-weight:700;line-height:1.5;color:var(--ink);
+       word-break:auto-phrase;overflow-wrap:anywhere}
+.uc-b{padding:.65rem .75rem;flex:1 1 auto}
+.uc-bv{display:block;font-size:.85rem;line-height:1.75;color:var(--ink-soft);
+       word-break:auto-phrase;overflow-wrap:anywhere}
+@media(max-width:34rem){
+  .cards{grid-template-columns:1fr}
+  .uc-h{min-height:0}
+}
+.uc-id{font-family:var(--mono);font-size:.57rem;letter-spacing:.02em;color:var(--ink-faint);
+       padding:.32rem .75rem;border-top:1px solid var(--rule-soft);background:var(--surface-2);
+       margin-top:auto;overflow-wrap:anywhere}
+.uc.ret{border-style:dashed;background:none}
+.uc.ret .uc-h{background:none;border-bottom-style:dashed}
+.uc.ret .uc-hv{font-weight:600;color:var(--ink-soft)}
+.uc.ret .uc-id{background:none}
+.uc-ret{padding:.55rem .75rem;border-top:1px dashed var(--rule)}
+.past{padding:.85rem .95rem;border-top:1px solid var(--rule-soft)}
+.past-t{font-size:.92rem;line-height:1.7;color:var(--ink-soft);
+        text-decoration:line-through;text-decoration-color:var(--ink-faint)}
+.past-w{margin-top:.5rem;font-size:.85rem;line-height:1.75;color:var(--ink-soft)}
+.past-w b{color:var(--ink)}
+.concl-k code{font-family:var(--mono);font-size:.95em;background:none;border:none;padding:0;color:var(--infer)}
+.concl{border-left:3px solid var(--infer);background:var(--infer-bg);
+        padding:.8rem 1rem;border-radius:0 2px 2px 0}
+.concl-k{font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:var(--infer);
+         display:block;margin-bottom:.2rem}
+.concl-v{display:block;font-size:.95rem;line-height:1.75;font-weight:700;color:var(--ink)}
+.estate b{color:var(--ink-soft)}
+.estate{border:1px dashed var(--rule);border-radius:3px;padding:1.1rem .9rem;
+        color:var(--ink-faint);font-size:.9rem}
+</style><div class="wrap narrow"><header class="ph"><p class="eyebrow">完成イメージ ── Domain の型 1 / 8</p><h1>事業領域<span class="h1en">Business Domain</span></h1><p class="lede"><b>欄は決まっていて、増えない。増えるのは札の枚数だけ。</b><br>イベントストーミングで、付箋の種類は決まっていて、壁に貼られる枚数だけが増えるのと同じ形にした。1つの欄の札はどれも同じ形なので、1枚を読めば次の1枚も読める。8種別のうち、ここだけは業務を知っている人が育てる ── 技術の言葉は1つも使っていない。</p></header><div class="rdoc"><div class="rh"><div class="rchips"><span class="chip kind">事業領域</span><span class="chip id">bd-waffle</span></div><h3 class="rt">Waffle<span class="samename">（英語表記も同じ）</span></h3></div><section class="zn"><h4 class="zn-h"><span>なぜこの事業があるのか</span><span class="cnt">1つだけ書く欄</span></h4><ul class="post"><li>決めたことと、作ったものの食い違いは、いまは人が探している</li><li>読み合わせても漏れる。漏れに気づくのは、たいてい動かしたあと</li><li><b>この探す仕事を、人から機械へ移すために在る</b></li></ul><details class="fold"><summary>以前の書きぶり 1 件</summary><div class="past"><p class="past-t">決めたことを書く手間を減らすために在る</p><p class="past-w"><span class="uc-k">2026-08-21 に書き換えた</span>手間を減らす道具は他にもある。この事業が引き受けているのは、書いたあとに<b>守られているかを言うこと</b>だった。</p></div></details></section><section class="zn"><h4 class="zn-h"><span>届けている価値</span><span class="cnt">札 3 枚</span></h4><div class="cards"><div class="uc"><div class="uc-h"><span class="uc-k">誰に</span><span class="uc-hv">決めたことを書く人</span></div><div class="uc-b"><span class="uc-k">何を</span><span class="uc-bv">書いたことが守られているかを、自分で確かめずに済む</span></div><div class="uc-id">val-spec-writer</div></div><div class="uc"><div class="uc-h"><span class="uc-k">誰に</span><span class="uc-hv">それを受け取って作る人</span></div><div class="uc-b"><span class="uc-k">何を</span><span class="uc-bv">何を作れば正しいかが、読み違えようのない形で渡る</span></div><div class="uc-id">val-builder</div></div><div class="uc"><div class="uc-h"><span class="uc-k">誰に</span><span class="uc-hv">その仕事を任されている AI</span></div><div class="uc-b"><span class="uc-k">何を</span><span class="uc-bv">判断のよりどころが、毎回おなじ場所にある</span></div><div class="uc-id">val-delegated-ai</div></div></div><details class="fold"><summary>取り下げた札 1 枚</summary><div class="cards"><div class="uc ret"><div class="uc-h"><span class="uc-k">誰に</span><span class="uc-hv">文書を書かない読み手（経営・監査）</span></div><div class="uc-b"><span class="uc-k">何を</span><span class="uc-bv">いま何が守られているかが、一覧で分かる</span></div><div class="uc-ret"><span class="uc-k">取り下げ 2026-08-21</span><span class="uc-bv">見せ方は引き受けないと決めた。やらないこと <code>out-viewer-facing-display</code> へ移した。</span></div><div class="uc-id">val-non-writing-reader</div></div></div></details></section><section class="zn"><h4 class="zn-h"><span>競っている相手</span><span class="cnt">札 3 枚 ＋ まとめ 1 つ</span></h4><div class="cards"><div class="uc"><div class="uc-h"><span class="uc-k">相手</span><span class="uc-hv">文書を書くための道具</span></div><div class="uc-b"><span class="uc-k">その相手で足りていること</span><span class="uc-bv">書きやすく、読みやすい文書ができる</span></div><div class="uc-id">riv-writing-tools</div></div><div class="uc"><div class="uc-h"><span class="uc-k">相手</span><span class="uc-hv">決めたことを、形式として持たせる仕組み</span></div><div class="uc-b"><span class="uc-k">その相手で足りていること</span><span class="uc-bv">形が整っているかは、自動で分かる</span></div><div class="uc-id">riv-schema-tools</div></div><div class="uc"><div class="uc-h"><span class="uc-k">相手</span><span class="uc-hv">人が読み合わせるやり方</span></div><div class="uc-b"><span class="uc-k">その相手で足りていること</span><span class="uc-bv">気づいた人が、その場で直せる</span></div><div class="uc-id">riv-review-by-people</div></div></div><div class="concl"><span class="concl-k">どの相手も埋めていないこと　<code>gap-machine-tells</code></span><span class="concl-v">決めたことが実際に守られているかを、人が探しにいかずに済ませること。</span></div><div class="figwrap"><svg class="wf-fig" viewBox="0 0 690 236" role="img" aria-label="上に挙げた相手では、決めたことと作ったものの食い違いを人が探しにいく。この事業では、その食い違いを機械が言い切る。">
+<text x="8" y="26" class="f-lane">上に挙げた相手</text>
+<rect rx="2" x="8" y="36" width="148" height="56" class="f-box"/><text x="82" y="69" class="f-t" text-anchor="middle">決めたこと</text>
+<line x1="160" y1="64" x2="186" y2="64" class="f-ln"/><polygon points="186,60 194,64 186,68" class="f-ar"/>
+<rect rx="2" x="196" y="36" width="148" height="56" class="f-box"/><text x="270" y="69" class="f-t" text-anchor="middle">作ったもの</text>
+<line x1="348" y1="64" x2="374" y2="64" class="f-ln"/><polygon points="374,60 382,64 374,68" class="f-ar"/>
+<rect rx="2" x="384" y="36" width="298" height="56" class="f-box"/><text x="533" y="69" class="f-t" text-anchor="middle">食い違いは、人が探しにいく</text>
+<text x="8" y="148" class="f-lane f-on">この事業</text>
+<rect rx="2" x="8" y="158" width="148" height="56" class="f-box"/><text x="82" y="191" class="f-t" text-anchor="middle">決めたこと</text>
+<line x1="160" y1="186" x2="186" y2="186" class="f-ln"/><polygon points="186,182 194,186 186,190" class="f-ar"/>
+<rect rx="2" x="196" y="158" width="148" height="56" class="f-box"/><text x="270" y="191" class="f-t" text-anchor="middle">作ったもの</text>
+<line x1="348" y1="186" x2="374" y2="186" class="f-ln"/><polygon points="374,182 382,186 374,190" class="f-ar"/>
+<rect rx="2" x="384" y="158" width="298" height="56" class="f-box f-hi"/><text x="533" y="191" class="f-t f-tb" text-anchor="middle">食い違いは、機械が言い切る</text>
+</svg></div></section><section class="zn"><h4 class="zn-h"><span>やらないこと</span><span class="cnt">札 1 枚</span></h4><div class="cards"><div class="uc"><div class="uc-h"><span class="uc-k">やらないこと</span><span class="uc-hv">決まっていることを、読み手向けに見せること</span></div><div class="uc-b"><span class="uc-k">なぜやらないのか</span><span class="uc-bv">見せ方まで引き受けると、<b>守られているかを言い切る</b>という仕事から力が逸れる。取り下げた <code>val-non-writing-reader</code> は、ここへ移した。</span></div><div class="uc-id">out-viewer-facing-display</div></div></div></section></div><p class="foot"><b>これは、型を起こしたあとに描かれる姿を手で描いたものである。</b>描画の機能はまだ無い。欄の定義（必須か・何を書くか）と、いまとの差・そう決めた理由は<a href="https://claude.ai/code/artifact/e0e51605-4fd9-4212-ace1-28fa5bf1075d">Domain の型</a>が持つ。</p></div>

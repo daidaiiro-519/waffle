@@ -1,0 +1,165 @@
+<title>占有領域をひとつにする</title>
+<style>
+:root{--paper:#EFF1F4;--surface:#FFFFFF;--surface-2:#F6F8FA;--ink:#16191F;--ink-soft:#545C69;
+ --ink-faint:#7C8593;--rule:#D5DAE1;--rule-soft:#E6EAEF;
+ --now:#8C2F39;--now-bg:#F5E7E8;--next:#25604A;--next-bg:#E2EFE9;--key:#7A5A22;--key-bg:#F3EDE0;
+ --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+ --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+ --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;--ink-soft:#A8B1BD;
+ --ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+ --now:#DB9AA1;--now-bg:#2C1B1D;--next:#7DC4A6;--next-bg:#152A22;--key:#D3B27A;--key-bg:#2A2318;}}
+:root[data-theme="dark"]{--paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;
+ --ink-soft:#A8B1BD;--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+ --now:#DB9AA1;--now-bg:#2C1B1D;--next:#7DC4A6;--next-bg:#152A22;--key:#D3B27A;--key-bg:#2A2318;}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+ margin:0;padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,2rem) 5rem}
+.wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:2.8rem}
+.col{max-width:40rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:0}
+h1{font-family:var(--serif);font-size:clamp(1.5rem,3.6vw,2.05rem);line-height:1.4;font-weight:600;margin:.6rem 0 0;text-wrap:balance}
+.lede{color:var(--ink-soft);font-size:1rem;margin:.7rem 0 0;max-width:40rem}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-size:1.28rem;font-weight:600;margin:0;padding-bottom:.6rem;
+ border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+p{margin:0}
+.col>p+p{margin-top:.85rem}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+pre{margin:0;padding:.85rem 1rem;font-family:var(--mono);font-size:.78rem;line-height:1.8;
+ background:var(--surface-2);border:1px solid var(--rule);border-radius:3px;overflow-x:auto;color:var(--ink-soft)}
+pre b{color:var(--now)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:46rem){.pair{grid-template-columns:1fr}}
+.panel{border:1px solid var(--rule);border-top:3px solid var(--rule);border-radius:2px;background:var(--surface);
+ padding:1rem 1.1rem 1.15rem;display:flex;flex-direction:column;gap:.7rem}
+.panel.now{border-top-color:var(--now)} .panel.next{border-top-color:var(--next)}
+.panel .lbl{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+.panel.now .lbl{color:var(--now)} .panel.next .lbl{color:var(--next)}
+.panel .t{font-family:var(--serif);font-size:1.02rem;font-weight:600}
+.panel p{font-size:.88rem;color:var(--ink-soft);line-height:1.75}
+.stage{background:#F6F8FA;border:1px solid #E6EAEF;border-radius:4px;padding:.9rem;
+ overflow-x:auto;display:flex;justify-content:center}
+.stage svg{max-width:100%;height:auto}
+
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:34rem}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.6}
+thead th{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+ font-weight:600;background:var(--surface-2);border-bottom:1px solid var(--rule)}
+tbody tr:last-child td{border-bottom:none}
+td.name{font-weight:700}
+.ok{color:var(--next);font-weight:700} .ng{color:var(--now);font-weight:700} .un{color:var(--ink-faint)}
+.approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+ padding:1rem 1.2rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+.approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+.approve .m{font-size:.9rem;color:var(--ink-soft)}
+figcaption{font-size:.82rem;color:var(--ink-faint);line-height:1.7}
+
+.stage.big svg{width:min(100%,300px)}
+.gain{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:46rem){.gain{grid-template-columns:1fr}}
+.stage.big svg{width:min(100%,300px)}
+.gain{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:46rem){.gain{grid-template-columns:1fr}}</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">svg_engine ── ADR</p>
+<h1>占有領域をひとつにする</h1>
+<p class="lede">描かれるものは全部、自分が占める領域を申告する。<b>動かせるものが先に譲り、線は曲げない。</b>実装して、同じ図の変更前と変更後を測った。</p>
+</header>
+
+<section>
+<h2><span class="num">01</span>この決定を入れた結果</h2>
+<div class="stage big" style="max-width:20rem"><svg class="wf-fig" viewBox="0 0 124 280" width="124" height="280" role="img"><g transform="translate(30.0,6.0)"><rect x="0.0" y="112.0" width="88.0" height="156.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><path d="M44.0,32.6 L44.0,125.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="44.0,125.4 41.5,118.6 46.5,118.6" fill="#C3CAD2"/><path d="M44.0,158.6 L44.0,221.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="44.0,221.4 41.5,214.6 46.5,214.6" fill="#C3CAD2"/><path d="M13.4,238.0 Q-10.0,238.0 -10.0,229.7 Q-10.0,221.4 -10.0,127.0 Q-10.0,32.6 -10.0,24.3 Q-10.0,16.0 1.7,16.0 L13.4,16.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="13.4,16.0 6.6,18.5 6.6,13.5" fill="#C3CAD2"/><rect x="-24.0" y="61.0" width="28.0" height="16.0" fill="#F5F7F9"/><text x="-10.0" y="74.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#79828F">戻る</text><rect x="8.0" y="103.0" width="48.0" height="15.0" fill="#F5F7F9"/><text x="32.0" y="114.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#16636B">輪の一部</text><g class="wf-node" transform="translate(14.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">A</text></g></g><g class="wf-node" transform="translate(14.0,126.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">B</text></g></g><g class="wf-node" transform="translate(14.0,222.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">C</text></g></g></g></svg></div>
+<p class="col">「輪の一部」は<b>帯が線を断って読める</b>。A→B は<b>まっすぐのまま</b>。戻り線は<b>囲みの外</b>を通る。線は辺の中央を狙って出入りするので、<b>矢じりは箱の外</b>にあり、角の近くへ着かない。<b>この図は、いまの実装で描いたもの。</b></p>
+<p class="col"><b>変更前の絵は載せない。</b>あれは直す前の実装が出した崩れで、<b>いまのコードでは同じ絵を作れない</b> ── 載せれば「古い実装の出力」を運び続けることになる。何が起きていたかは、下の実測で残す。</p>
+<div class="scroll"><table>
+<thead><tr><th>測ったもの</th><th>変更前</th><th>変更後</th></tr></thead>
+<tbody>
+<tr><td class="name">「輪の一部」が線に貫かれて読めない</td><td class="ng">読めない</td><td class="ok">読める（帯が線を断つ）</td></tr>
+<tr><td class="name">辺の札 × 囲みの枠線</td><td class="ng">破れている（1種の図）</td><td class="ok">0 種</td></tr>
+<tr><td class="name">A→B の経路</td><td>まっすぐ</td><td class="ok">まっすぐ（維持）</td></tr>
+<tr><td class="name">A へ入る矢じり</td><td class="ng">半分が箱の内側（y=29.5）</td><td class="ok">箱の外・辺の中央</td></tr>
+<tr><td class="name">戻り線と枠線の並走</td><td class="ng">9.2px で約150px 並走</td><td class="ok">囲みの外を通る</td></tr>
+<tr><td class="name">80通りの幾何検査</td><td>崩れ 0 件</td><td class="ok">崩れ 0 件（維持）</td></tr>
+<tr><td class="name">単体テスト</td><td>162 件</td><td class="ok">162 件（維持）</td></tr>
+</tbody></table></div>
+<p class="col"><b>一度、線を曲げる形で直して失敗した。</b>札を障害物として経路へ渡したところ、A→B が右へ大きく膨らみ、戻り線と10px差で並走した ── この図でいちばん素直な関係が読めなくなった。<b>絵を見て気づいた</b>（座標を見ても、崩れの数は0のままだった）。</p>
+<section>
+<h2><span class="num">02</span>何を変えたか</h2>
+<div class="pair">
+<div class="panel now"><span class="lbl">変更前</span><span class="t">障害物は、節点の箱だけ</span>
+<div class="stage"><svg viewBox="0 0 266 228" width="266" height="228" role="img" style="max-width:100%;height:auto"><defs><pattern id="h125803494606432" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#8C2F39" stroke-width="1.4" opacity="0.35"/></pattern><marker id="arh125803494606432" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9AA3AE"/></marker></defs><rect x="14" y="86" width="238" height="128" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4"/><rect x="24" y="70" width="96" height="16" fill="#F6F8FA"/><text x="30" y="82" font-family="Noto Sans JP, sans-serif" font-size="10.5" fill="#16636B">囲みのラベル</text><rect x="78" y="16" width="110" height="30" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="133.0" y="35" text-anchor="middle" font-family="Noto Sans JP, sans-serif" font-size="11.5" fill="#171B23">節点</text><rect x="78" y="16" width="110" height="30" rx="5" fill="url(#h125803494606432)" stroke="#8C2F39" stroke-width="1" stroke-dasharray="3 2"/><rect x="70" y="150" width="126" height="30" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="133.0" y="169" text-anchor="middle" font-family="Noto Sans JP, sans-serif" font-size="11.5" fill="#171B23">節点</text><rect x="70" y="150" width="126" height="30" rx="5" fill="url(#h125803494606432)" stroke="#8C2F39" stroke-width="1" stroke-dasharray="3 2"/><path d="M133,46 L133,150" fill="none" stroke="#C3CAD2" stroke-width="1.3" marker-end="url(#arh125803494606432)"/><rect x="106" y="90" width="56" height="16" fill="#F5F7F9"/><text x="134" y="102" text-anchor="middle" font-family="Noto Sans JP, sans-serif" font-size="10.5" fill="#79828F">辺のラベル</text></svg></div>
+<p>網掛けが、経路と検査が「在る」と認識しているもの。囲みの札も辺の札も枠線も、<b>描かれているのに存在しない</b>。だから線はそこを平気で通る。</p></div>
+<div class="panel next"><span class="lbl">変更後</span><span class="t">描かれるものは、全部が領域を申告する</span>
+<div class="stage"><svg viewBox="0 0 266 228" width="266" height="228" role="img" style="max-width:100%;height:auto"><defs><pattern id="h125803494606432" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#8C2F39" stroke-width="1.4" opacity="0.35"/></pattern><marker id="arh125803494606432" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9AA3AE"/></marker></defs><rect x="14" y="86" width="238" height="128" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4"/><rect x="14" y="86" width="238" height="128" rx="8" fill="none" stroke="url(#h125803494606432)" stroke-width="9"/><rect x="24" y="70" width="96" height="16" fill="#F6F8FA"/><text x="30" y="82" font-family="Noto Sans JP, sans-serif" font-size="10.5" fill="#16636B">囲みのラベル</text><rect x="24" y="70" width="96" height="16" rx="2" fill="url(#h125803494606432)" stroke="#8C2F39" stroke-width="1" stroke-dasharray="3 2"/><rect x="78" y="16" width="110" height="30" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="133.0" y="35" text-anchor="middle" font-family="Noto Sans JP, sans-serif" font-size="11.5" fill="#171B23">節点</text><rect x="78" y="16" width="110" height="30" rx="5" fill="url(#h125803494606432)" stroke="#8C2F39" stroke-width="1" stroke-dasharray="3 2"/><rect x="70" y="150" width="126" height="30" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="133.0" y="169" text-anchor="middle" font-family="Noto Sans JP, sans-serif" font-size="11.5" fill="#171B23">節点</text><rect x="70" y="150" width="126" height="30" rx="5" fill="url(#h125803494606432)" stroke="#8C2F39" stroke-width="1" stroke-dasharray="3 2"/><path d="M133,46 L133,150" fill="none" stroke="#C3CAD2" stroke-width="1.3" marker-end="url(#arh125803494606432)"/><rect x="106" y="90" width="56" height="16" fill="#F5F7F9"/><text x="134" y="102" text-anchor="middle" font-family="Noto Sans JP, sans-serif" font-size="10.5" fill="#79828F">辺のラベル</text><rect x="106" y="90" width="56" height="16" rx="2" fill="url(#h125803494606432)" stroke="#8C2F39" stroke-width="1" stroke-dasharray="3 2"/></svg></div>
+<p>節点は自分の箱を、札は帯を、囲みは枠線を申告する。<b>線は動かせないものだけをよけ、札のほうが線を避けて置かれる。</b>種類を増やしても、集める場所は1つのまま。</p></div>
+</div>
+<pre>変更前 ── compose.py
+    <b># 端の2つ以外の箱は障害物。ぶつかるなら脇を回る。</b>
+    obstacles = [(coords[n][0], coords[n][1], ...) for n in coords if n not in (a, b)]
+    # 札は経路が決まる前に置かれ、線とは突き合わせていない
+
+変更後
+    # 1. 動かせないもの（節点）だけを障害物にして、線を引く
+    obstacles = [... 節点 ...]
+    # 2. 動かせるもの（札）が、引かれた線を避けて場所を選ぶ
+    label_x = 線に当たらない最初の位置          # 囲みの札
+    place_edge_labels(..., occupied=札 + 枠線)  # 辺の札
+    # 3. 避けられなければ、札を線より後に描く（帯が線を断って読める）
+    body = 枠線 + 辺 + 札 + 節点</pre>
+</section>
+
+
+<section>
+<h2><span class="num">03</span>占有領域は「動かせるか」を持つ</h2>
+<div class="scroll"><table>
+<thead><tr><th>種類</th><th>性質</th><th>ぶつかったらどうするか</th></tr></thead>
+<tbody>
+<tr><td class="name">節点</td><td>配置が決めた場所にある。動かせない</td><td>線のほうが脇を回る</td></tr>
+<tr class="keyrow"><td class="name">囲みの札・辺の札</td><td>どこへ置いてもよい。<b>動かせる</b></td><td><b>札が場所を変える。</b>変えられる場所が無ければ、帯を持っているので<b>線の上に載る</b>（線を断って読める）</td></tr>
+<tr><td class="name">囲みの枠線</td><td>枠の位置は配置が決める。動かせない</td><td>辺が<b>跨ぐ</b>のは正常。ただし<b>縁に沿って並走はしない</b>（迂回の位置を囲みの外へ出す）。札はここを避ける</td></tr>
+</tbody></table></div>
+<p class="col">動かせるものと動かせないものを区別しないと、<b>札を守るために線が犠牲になる</b>。線は関係そのものを運ぶので、譲るのは常に札の側でよい。<br>もう1つ順序の規律が要る ── <b>接続点は、迂回で経路が変わった「後」に決め直す</b>。曲げる前の向きで決めたままだと、横から来た線が底辺の中点へ刺さり、矢じりが箱へめり込む（実測で y=29.5、箱の内側）。<br>そして接続点は、<b>相手の方向へそのまま引くのではなく、出す辺だけを相手の位置で決め、その辺の中央を狙う</b>。方向へそのまま引くと角の近くへ着いて不自然になり、同じ節点へ集まる線もばらける。辺の中央を狙うと規則的になり、判定も1つ減る。（狙った先そのものではなく、そこにいちばん近い実際のインクへ着ける ── これは後の決定で足した。輪郭という中間物を経由すると、頂点を結んだ弦がインクの隙間をまたぐため）</p>
+</section>
+
+<section>
+<h2><span class="num">04</span>これで何ができるようになるか</h2>
+<div class="gain">
+<div class="panel next"><span class="lbl">できるようになる</span><span class="t">文字を描く部品を、安全に足せる</span>
+<p>凡例・注釈・見出し・バッジ ── これまでは足すたびに、<b>辺が貫くのに誰も気づかない</b>状態が増えていた。これからは部品が領域と「動かせるか」を申告するだけでよい。</p></div>
+<div class="panel next"><span class="lbl">できるようになる</span><span class="t">量の図を、関係の図の節点として置ける</span>
+<p>階層の中に円グラフ、対応の中に散布図。<b>この決定の時点では円グラフ1つで破綻していた</b>（矢印が空中に着き、名前が消えた）。その後、辺の着き先を<b>描いたインクから選ぶ</b>形にして解決した ── 11種×2通りの総当たりで崩れ0件。</p></div>
+</div>
+<div class="scroll"><table>
+<thead><tr><th>これは解けない</th><th>なぜ</th></tr></thead>
+<tbody>
+<tr><td class="name">絵が読みやすくなるわけではない</td><td>詰まり・縦横比・配色は占有の問題ではない。目で見るしかない</td></tr>
+<tr><td class="name">札が線の上に載るのを避けきる</td><td>枠が札より少しだけ広い場合、どこへ置いても線に当たる。そのときは載せる ── 帯があるので読める</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">05</span>残り</h2>
+<div class="scroll"><table>
+<thead><tr><th>手順</th><th>中身</th><th>いま</th></tr></thead>
+<tbody>
+<tr><td class="name">1</td><td>占有領域を集める場所を1つ作る</td><td class="ok">済み</td></tr>
+<tr><td class="name">2</td><td>動かせるものが先に譲る（札が線を避けて置かれ、避けられなければ上に載る）</td><td class="ok">済み</td></tr>
+<tr><td class="name">2b</td><td>接続点は経路が確定した後に決め直し、<b>辺の中央</b>から出す</td><td class="ok">済み</td></tr>
+<tr><td class="name">3</td><td><s>箱を満たしていない部品に輪郭を申告させる（円グラフ等）</s><br><b>やらないと決めた。</b>輪郭を申告させる代わりに、辺の着き先を<b>描いたインクから選ぶ</b>形にした ── 申告する形と実際に描いた形はずれるため（11種のうち輪郭を申告していたのは3種だけだった）</td><td class="ok">取り下げ</td></tr>
+<tr><td class="name">4</td><td>検査に「辺が文字を貫く」を足す。<b>ただし上に帯が載っている場合は崩れとしない</b></td><td class="ng">未</td></tr>
+</tbody></table></div>
+<p class="col">1・2・2b は実装して上の結果を出した。<b>4を入れるまでは、線が文字を<b>貫く</b>ことを見張るものが私の目しかない。辺の<b>終端</b>が何にも着いていないことだけは、後から足した検査（<code>check_attachment</code>）が見る。</b></p>
+</section>
+
+<section>
+<h2><span class="num">06</span>承認</h2>
+<div class="approve"><span class="k">状態</span><span class="v">承認済み（2026-08-23）</span>
+<span class="m">1・2・2b は実装済み・実測済み。3 は取り下げ（別の手で解けた）。<b>次にやること</b> ── 手順4：検査に「辺が文字を貫く」を足す（帯が上に載っている場合は崩れとしない）。</span></div>
+</section>
+</div>

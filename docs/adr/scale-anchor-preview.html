@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>尺度基点の検証</title>
+<style>
+  :root {
+    --bg: #ffffff; --panel: #f6f7f9; --ink: #16191d; --muted: #5b626b;
+    --line: #c9ced6; --stroke: #2b3138; --fill: #ffffff; --accent: #b3261e;
+    --ok: #1f6f3f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171a; --panel: #1c2024; --ink: #e9ecef; --muted: #a3abb4;
+      --line: #444c55; --stroke: #d5dae0; --fill: #14171a; --accent: #f2938c;
+      --ok: #78c893;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171a; --panel: #1c2024; --ink: #e9ecef; --muted: #a3abb4;
+    --line: #444c55; --stroke: #d5dae0; --fill: #14171a; --accent: #f2938c;
+    --ok: #78c893;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2rem 1.25rem 4rem;
+    background: var(--bg); color: var(--ink);
+    font-family: system-ui, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    line-height: 1.7;
+  }
+  main { max-width: 68rem; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.05rem; margin: 2.5rem 0 .5rem; }
+  p.lead { color: var(--muted); margin: 0 0 2rem; }
+  .row { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 1rem; margin-bottom: 1.25rem; }
+  .row > header { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: baseline; margin-bottom: .75rem; }
+  .row h3 { margin: 0; font-size: 1rem; }
+  .row .note { color: var(--muted); font-size: .85rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; align-items: start; }
+  .cell { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: .5rem; overflow-x: auto; }
+  .cell .cap { font-size: .8rem; color: var(--muted); margin-bottom: .25rem; }
+  .cell svg { display: block; }
+  .flag { color: var(--accent); font-weight: 600; }
+  .good { color: var(--ok); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; font-size: .85rem; margin-top: .75rem; }
+  th, td { border: 1px solid var(--line); padding: .35rem .5rem; text-align: left; }
+  th { background: var(--panel); }
+  .wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>尺度基点の検証：単一基点 対 複数基点</h1>
+  <p class="lead">同じ図を 0.5倍 / 1倍 / 2.5倍 で描く。上段は「全寸法を font.size に比例させる」案、下段は「型・空間・線・形を独立の基点に分ける」案。<strong>明るい紙面と暗い紙面の両方で見ること</strong>（細線の消え方が変わる）。</p>
+
+  <div class="row" id="row-single">
+    <header>
+      <h3>A. 単一基点（すべて font.size × 係数）</h3>
+      <span class="note">基準 1倍：font 14 / 細線 1.0 / 実線 1.5 / 角丸 6 / 矢じり幅 6 / 内側余白 10 / 画布余白 16</span>
+    </header>
+    <div class="grid"></div>
+  </div>
+
+  <div class="row" id="row-multi">
+    <header>
+      <h3>B. 複数基点（型／空間／線／形をそれぞれ独立に、下限・上限つき）</h3>
+      <span class="note">線は量子化して最小 1px を死守、角丸は段階値＋高さの半分でクランプ、矢じりは線幅の倍数、空間は圧縮した倍率</span>
+    </header>
+    <div class="grid"></div>
+  </div>
+
+  <h2>この図で見えること</h2>
+  <div class="wrap">
+  <table>
+    <tr><th>量</th><th>0.5倍で起きること（A案）</th><th>2.5倍で起きること（A案）</th></tr>
+    <tr><td>細線（囲み）</td><td class="flag">0.5px。デバイス画素を割り、暗い紙面では地に溶けて消える</td><td>2.5px。「細線」が「強調線」の重みになり、線の太さが担っていた意味の区別が壊れる</td></tr>
+    <tr><td>角丸</td><td>3px。ほぼ直角に戻り、箱の形の識別性が落ちる</td><td class="flag">15px。文字で高さが決まる箱では効くが、<strong>データで大きさが決まる要素</strong>（値の小さい棒・細い扇形）では短辺の半分を超えてクランプされ、値の違いでない形の違いが生まれる</td></tr>
+    <tr><td>矢じり</td><td>幅3px。線幅0.75pxに対しては相対的に妥当だが、絶対値として視認限界</td><td class="flag">幅15px・長さ22.5px。線の終端ではなく独立した塊として読める</td></tr>
+    <tr><td>画布余白</td><td>8px。図が枠に貼りつく</td><td>40px。役割は「分ける」ことなのに、分かれた後も増え続ける</td></tr>
+    <tr><td>データで決まる寸法<br>（棒の長さ・扇の半径）</td><td colspan="2" class="flag">そもそも font.size に比例しない。書体を2.5倍にすると装飾寸法だけが膨らみ、図の中でデータが占める面積の割合が下がる（グラフ部品を持つ以上、単一基点は原理的に貫徹できない）</td></tr>
+  </table>
+  </div>
+</main>
+
+<script>
+const TEXT_A = "設計判断 API v2";
+const TEXT_B = "配布 v2";
+
+// --- 1倍での基準値 ---
+const BASE = { font: 14, hair: 1.0, solid: 1.5, radius: 6, arrowW: 6, arrowL: 9, padIn: 10, padCanvas: 16, gap: 48 };
+
+function tokensSingle(s) {
+  // すべて font.size に線形比例（= 全量に同じ s を掛けるのと等価）
+  return {
+    font: BASE.font * s, hair: BASE.hair * s, solid: BASE.solid * s,
+    radius: BASE.radius * s, arrowW: BASE.arrowW * s, arrowL: BASE.arrowL * s,
+    padIn: BASE.padIn * s, padCanvas: BASE.padCanvas * s, gap: BASE.gap * s
+  };
+}
+
+function tokensMulti(s) {
+  // 型：そのまま比例
+  const font = BASE.font * s;
+  // 空間：圧縮した倍率（小さすぎで潰れず、大きすぎで間延びしない）
+  const sp = Math.pow(s, 0.6);
+  // 線：量子化＋最小 1px を死守
+  const q = v => Math.max(1, Math.round(v * 2) / 2);
+  const hair = q(BASE.hair * Math.pow(s, 0.4));
+  const solid = q(BASE.solid * Math.pow(s, 0.4));
+  // 形：段階値（none/s/m/l）から選ぶ。あとで高さの半分でクランプする
+  const radius = s < 0.75 ? 4 : (s < 1.75 ? 6 : 10);
+  return {
+    font, hair, solid, radius,
+    arrowW: solid * 4, arrowL: solid * 6,   // 矢じりは線幅の倍数
+    padIn: BASE.padIn * sp, padCanvas: BASE.padCanvas * sp, gap: BASE.gap * sp
+  };
+}
+
+function measure(text, font) {
+  // 全角は1em、半角は約0.55emとして概算する（混植の当たりを取るため）
+  let w = 0;
+  for (const ch of text) w += /[\x20-\x7E]/.test(ch) ? 0.55 : 1.0;
+  return w * font;
+}
+
+function drawBox(t, x, y, label) {
+  const tw = measure(label, t.font);
+  const w = tw + t.padIn * 2;
+  const h = t.font * 1.5 + t.padIn * 2;
+  const r = Math.min(t.radius, w / 2, h / 2); // 形は幾何でクランプせざるを得ない
+  const box = `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${r.toFixed(1)}"
+      fill="var(--fill)" stroke="var(--stroke)" stroke-width="${t.solid.toFixed(2)}"/>`;
+  const txt = `<text x="${(x + w / 2).toFixed(1)}" y="${(y + h / 2).toFixed(1)}" fill="var(--ink)"
+      font-size="${t.font.toFixed(1)}" text-anchor="middle" dominant-baseline="central"
+      font-family="system-ui, sans-serif">${label}</text>`;
+  return { svg: box + txt, w, h };
+}
+
+function render(t, id) {
+  const a = drawBox(t, 0, 0, TEXT_A);
+  const b = drawBox(t, 0, 0, TEXT_B);
+  const x0 = t.padCanvas, y0 = t.padCanvas;
+  const bx = x0 + a.w + t.gap;
+  const cy = y0 + a.h / 2;
+  const totalW = bx + b.w + t.padCanvas;
+  const totalH = y0 + a.h + t.padCanvas + t.padIn * 2;
+
+  const A = drawBox(t, x0, y0, TEXT_A).svg;
+  const B = drawBox(t, bx, y0, TEXT_B).svg;
+
+  // 辺と矢じり（矢じりの根元まで線を引き、先端を箱の縁に合わせる）
+  const lineStart = x0 + a.w;
+  const lineEnd = bx;
+  const shaftEnd = lineEnd - t.arrowL;
+  const head = `<path d="M ${shaftEnd.toFixed(1)} ${(cy - t.arrowW / 2).toFixed(1)}
+      L ${lineEnd.toFixed(1)} ${cy.toFixed(1)}
+      L ${shaftEnd.toFixed(1)} ${(cy + t.arrowW / 2).toFixed(1)} Z" fill="var(--stroke)"/>`;
+  const shaft = `<line x1="${lineStart.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${Math.max(lineStart, shaftEnd).toFixed(1)}" y2="${cy.toFixed(1)}"
+      stroke="var(--stroke)" stroke-width="${t.solid.toFixed(2)}"/>`;
+
+  // 細線の囲み（グルーピング枠）
+  const frame = `<rect x="${(x0 / 2).toFixed(1)}" y="${(y0 / 2).toFixed(1)}"
+      width="${(totalW - x0).toFixed(1)}" height="${(totalH - y0).toFixed(1)}"
+      rx="${Math.min(t.radius, 12).toFixed(1)}" fill="none" stroke="var(--line)"
+      stroke-width="${t.hair.toFixed(2)}" stroke-dasharray="${(t.hair * 4).toFixed(1)} ${(t.hair * 3).toFixed(1)}"/>`;
+
+  return `<svg viewBox="0 0 ${totalW.toFixed(0)} ${totalH.toFixed(0)}" width="${Math.min(totalW, 620).toFixed(0)}" role="img"
+      aria-label="尺度 ${id} の図">${frame}${A}${shaft}${head}${B}</svg>`;
+}
+
+const SCALES = [0.5, 1.0, 2.5];
+function fill(rowId, fn) {
+  const grid = document.querySelector(rowId + " .grid");
+  grid.innerHTML = SCALES.map(s => {
+    const t = fn(s);
+    return `<div class="cell">
+      <div class="cap">${s}倍 — font ${t.font.toFixed(1)} / 細線 ${t.hair.toFixed(2)} / 角丸 ${t.radius.toFixed(1)} / 矢じり幅 ${t.arrowW.toFixed(1)}</div>
+      ${render(t, s)}
+    </div>`;
+  }).join("");
+}
+fill("#row-single", tokensSingle);
+fill("#row-multi", tokensMulti);
+</script>
+</body>
+</html>

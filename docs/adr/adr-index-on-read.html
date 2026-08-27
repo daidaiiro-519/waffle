@@ -1,0 +1,211 @@
+<title>索引を保存せず、取り出すときに毎回組み立てる</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.withdrawn{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;color:var(--against);
+           background:var(--against-bg);padding:.3em .7em;border-radius:2px;align-self:flex-start}
+
+.fig{margin:0;display:flex;flex-direction:column;gap:.6rem}
+.fig .scroll{padding:1.1rem 1rem}
+figcaption{font-size:.83rem;color:var(--ink-faint);line-height:1.7}
+figcaption b{color:var(--ink-soft)}
+.sub-h{font-family:var(--serif);font-size:1rem;font-weight:600;margin:.5rem 0 -.3rem;color:var(--ink-soft)}
+.cmp2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:52rem){.cmp2{grid-template-columns:1fr}}
+.cmp2 .pn{display:flex;flex-direction:column;gap:.4rem;min-width:0}
+.cmp2 .pl{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em}
+.cmp2 .pl.b{color:var(--against)} .cmp2 .pl.a{color:var(--infer)}
+.cmp2 pre{margin:0;padding:.8rem .95rem;font-family:var(--mono);font-size:.72rem;
+          line-height:1.75;white-space:pre;color:var(--ink-soft)}
+</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>索引を保存せず、取り出すときに毎回組み立てる</h1><p class="withdrawn">取り下げ ── 後の決定に吸収された</p><p class="lede">別々の文書の索引を比べたら、共通する12ブロックとも<b>1文字も違わなかった</b>。いまの索引は型の読み方の指針の写しで、<b>その文書について何も語っていない</b>。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main">Waffle は、<b>索引を文書に保存せず、取り出すときに毎回組み立てる</b>。組み立てる材料は<b>型と文書の両方</b>で、「このブロックは何のために読むものか」と「そこに何がどれだけあるか」を返す。</p><div class="key"><span class="lbl">決め手</span><span class="txt">索引の目的は、<b>どの鍵を引けば求めている情報が引けそうかが分かること</b>である。いまの索引は型の読み方しか持たないので、<b>その文書のどこに何があるかが分からない</b>。</span></div></div></section><section><h2><span class="num">02</span>変更前と変更後</h2><p class="lead">変わるのは<b>索引がどこから作られ、どこに住むか</b>である。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 646 288" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><text x="14" y="18" font-size="11" fill="var(--against)">変更前 ── 型の指針を写して、文書の中に保存する</text><rect x="14" y="30" width="168" height="44" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="1"/><text x="98.0" y="57.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">型の読み方の指針</text><line x1="182" y1="52" x2="246" y2="52" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><text x="214" y="44" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">写す</text><rect x="246" y="30" width="168" height="44" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="2"/><text x="330.0" y="49.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">文書の中の索引</text><text x="330.0" y="67.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">保存される</text><line x1="414" y1="52" x2="478" y2="52" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="478" y="30" width="150" height="44" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/><text x="553.0" y="57.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">読み手</text><text x="14" y="104" font-size="10.5" fill="var(--against)">同じ型の文書は、索引が全部同じ。文書について何も語らない</text><text x="14" y="150" font-size="11" fill="var(--infer)">変更後 ── 保存せず、取り出すときに両方から組み立てる</text><rect x="14" y="162" width="168" height="40" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="98.0" y="187.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">型の読み方の指針</text><rect x="14" y="210" width="168" height="40" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="98.0" y="235.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">文書の中身</text><line x1="182" y1="182" x2="240" y2="204" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><line x1="182" y1="230" x2="240" y2="208" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="246" y="184" width="168" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="2"/><text x="330.0" y="203.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">索引</text><text x="330.0" y="221.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">その場で作る</text><line x1="414" y1="206" x2="478" y2="206" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="478" y="184" width="150" height="44" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/><text x="553.0" y="211.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">読み手</text><text x="14" y="272" font-size="10.5" fill="var(--infer)">保存しないので古くならない。文書ごとに違う</text></svg></div><figcaption><b>いまの索引は、型の指針を写して保存している。</b>だから同じ型の文書はすべて同じ索引を持ち、その文書について何も語らない。</figcaption></figure><h3 class="sub-h">実際の索引 ── 同じ文書、同じ4ブロック</h3><div class="cmp2"><div class="pn"><span class="pl b">変更前 ── 型の指針だけ</span><div class="scroll"><pre>{
+ &quot;title&quot;: {
+  &quot;blockType&quot;: &quot;Title&quot;,
+  &quot;prompt&quot;: &quot;まず何を扱う文書かを掴むために読みます。説明部分が識別子の言い換えになっていたら、この文書が何を扱うかがまだ決まっていない合図です。&quot;
+ },
+ &quot;actorIntent&quot;: {
+  &quot;blockType&quot;: &quot;ActorIntent&quot;,
+  &quot;prompt&quot;: &quot;誰が何のためにこの操作を求めるかを読みます。以降の受け入れ基準は、この意図が満たされたかどうかで測ります。意図と基準が噛み合っていなければ、どちらかが古いままです。&quot;
+ },
+ &quot;usecaseRationale&quot;: {
+  &quot;blockType&quot;: &quot;UsecaseRationale&quot;,
+  &quot;prompt&quot;: &quot;なぜこの操作が要るかを読みます。仕組み（どう動くか）が書かれていたら、それは概要か事後条件の内容が紛れ込んでいます。無かったら何が起きるかが読み取れるはずです。&quot;
+ },
+ &quot;acceptanceCriteria&quot;: {
+  &quot;blockType&quot;: &quot;AcceptanceCriteria&quot;,
+  &quot;prompt&quot;: &quot;合否の基準を読みます。各項目は独立したEARS文であり、項目どうしに AND/OR のような関係はありません（それぞれ単独で真である契約）。shall は推奨ではなく必須の制約として読みます。各基準に対応する受け入れシナリオがあるかを確かめてください——筋書きの無い基準は、誰も検証していません。&quot;
+ }
+}</pre></div></div><div class="pn"><span class="pl a">変更後 ── 型と文書の両方</span><div class="scroll"><pre>{
+ &quot;title&quot;: {
+  &quot;読む目的&quot;: &quot;まず何を扱う文書かを掴むために読みます。説明部分が識別子の言い換えになっていたら、この文書が何を扱うかがまだ決まっていない合図です。&quot;,
+  &quot;見出し&quot;: &quot;Documentを人間可読な成果物へ描画する：RenderDocument&quot;,
+  &quot;形&quot;: &quot;組&quot;,
+  &quot;欄&quot;: []
+ },
+ &quot;actorIntent&quot;: {
+  &quot;読む目的&quot;: &quot;誰が何のためにこの操作を求めるかを読みます。以降の受け入れ基準は、この意図が満たされたかどうかで測ります。意図と基準が噛み合っていなければ、どちらかが古いままです。&quot;,
+  &quot;見出し&quot;: &quot;主アクターと意図&quot;,
+  &quot;形&quot;: &quot;組&quot;,
+  &quot;欄&quot;: [
+   &quot;actor&quot;,
+   &quot;intent&quot;
+  ]
+ },
+ &quot;usecaseRationale&quot;: {
+  &quot;読む目的&quot;: &quot;なぜこの操作が要るかを読みます。仕組み（どう動くか）が書かれていたら、それは概要か事後条件の内容が紛れ込んでいます。無かったら何が起きるかが読み取れるはずです。&quot;,
+  &quot;見出し&quot;: &quot;存在意義&quot;,
+  &quot;形&quot;: &quot;並び&quot;,
+  &quot;件数&quot;: 1
+ },
+ &quot;acceptanceCriteria&quot;: {
+  &quot;読む目的&quot;: &quot;合否の基準を読みます。各項目は独立したEARS文であり、項目どうしに AND/OR のような関係はありません（それぞれ単…&quot;,
+  &quot;見出し&quot;: &quot;受け入れ基準&quot;,
+  &quot;形&quot;: &quot;並び&quot;,
+  &quot;件数&quot;: 37,
+  &quot;識別子&quot;: [
+   &quot;renders-per-x-render&quot;,
+   &quot;frontmatter-per-discriminator&quot;,
+   &quot;frontmatter-omits-absent&quot;,
+   &quot;missing-schema-ref&quot;,
+   &quot;table-bullet-column&quot;,
+   &quot;bullet-wins-over-join&quot;,
+   &quot;…ほか31件&quot;
+  ]
+ }
+}</pre></div></div></div><p class="blob">変更前は<b>どの文書でも同じ</b>。変更後は<b>「受け入れ基準が37件あり、識別子はこれ」</b>まで分かるので、引く先を決められる。</p></section><section><h2><span class="num">03</span>索引が返すもの</h2><p class="lead">7つの欄。<b>読む目的は型から、形・量・識別子は文書から</b>組み立てる。</p><div class="scroll"><table><thead><tr><th>欄</th><th>例</th><th>何に効くか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>鍵</b></td><td><code>acceptanceCriteria</code></td><td><b>引くために要る</b></td></tr><tr class="keyrow"><td class="cond"><b>読む目的</b></td><td>「何を満たせば正しいかを読みます」</td><td><b>求めている情報がここにありそうか</b>（型から）</td></tr><tr class=""><td class="cond">見出し</td><td>受け入れ基準</td><td>同上</td></tr><tr class=""><td class="cond">形</td><td>並び／文／組</td><td>要素を選べるか、丸ごとか</td></tr><tr class=""><td class="cond">量</td><td>37件／1,240字</td><td>全部引くか、絞るか</td></tr><tr class="keyrow"><td class="cond"><b>識別子</b></td><td>並びなら、要素の名前を<b>全部</b></td><td><b>どの要素を引くかを決められる</b>（文書から）</td></tr><tr class=""><td class="cond">欄の名前</td><td>組なら、持っている欄</td><td>同上</td></tr></tbody></table></div><h3 class="sub-h">大きさ</h3><div class="scroll"><table><thead><tr><th></th><th>全文</th><th>索引</th><th>割合</th></tr></thead><tbody><tr class=""><td class="cond"><code>uc-render-document</code></td><td>24,414字</td><td>3,116字</td><td><b>12%</b></td></tr><tr class=""><td class="cond"><code>spec-implementation-abstraction</code></td><td>6,368字</td><td>848字</td><td><b>13%</b></td></tr></tbody></table></div><p class="blob">識別子を<b>全部</b>載せても、全文の12〜13%に収まる。先頭だけにすると8%になるが、<b>どれを引けばよいかが分からなくなる</b>ので、索引の役目を果たさない。</p></section><section><h2><span class="num">04</span>判断を分けた軸</h2><p class="lead">採る案は4つの条件のうち3つを満たす。落とすのは1つで、<b>取り出すたびに文書を1本読む</b>。</p><div class="scroll"><table>
+<thead><tr><th>案</th>
+<th class="keycol">どの鍵を引けばよいかが分かる<br><span class="sub">決め手</span></th>
+<th>常に最新である</th><th>導いた値を文書に持たない</th><th>取り出しが速い</th></tr></thead>
+<tbody>
+<tr class="pickrow"><td class="cond">保存せず、取り出すときに毎回組み立てる<br><span class="sub">採る</span></td>
+<td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span><br><span class="sub">1本読む</span></td></tr>
+<tr><td class="cond">いまのまま置く</td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+<tr><td class="cond">文書の中身から作って、保存する</td><td><span class="mk ok"><span class="sym">○</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ng"><span class="sym">×</span></span></td><td><span class="mk ok"><span class="sym">○</span></span></td></tr>
+</tbody></table></div><details class="fold"><summary>条件の内訳を開く ── なぜその条件が要るか、なぜ × なのか（4件）</summary><div class="scroll"><table><thead><tr><th>条件（全文）</th><th>なぜこの条件が要るか</th><th>× の理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond">どの鍵を引けばよいかが分かる<span class="keytag">決め手</span></td><td>索引の目的そのもの。全文を読まずに当たりを付け、必要な鍵だけ引くため</td><td><b>いまのまま</b> 型の読み方しか持たないので、<b>その文書のどこに何があるかが分からない</b></td></tr><tr class=""><td class="cond">常に最新である</td><td>保存した値は、元が変わると古くなる。古い索引は、間違った鍵へ導く</td><td><b>いまのまま</b>／<b>作って保存する</b> ── どちらも写しなので古くなりうる</td></tr><tr class=""><td class="cond">導いた値を文書に持たない</td><td>承認済みの決定が「型の情報を実体へ写さない」と定めている。文書から導いた値も、持てば同じ問題を抱える</td><td><b>いまのまま</b>／<b>作って保存する</b> ── どちらも文書に持つ</td></tr><tr class=""><td class="cond">取り出しが速い</td><td>毎回作るなら、その文書を読む</td><td><b>毎回組み立てる（採る）</b> ── 1本読む。<b>ただし平均11KB・最大53KB で、AI が読む量は変わらない</b></td></tr></tbody></table></div></details></section><section><h2><span class="num">05</span>理由</h2><p class="lead">索引がその文書について何も語っていない。<b>目的に照らすと、型と文書の両方が要る。</b></p><div class="chain"><div class="step evidence"><span class="lbl">測った</span><span class="txt">別々の文書（<code>uc-render-document</code> と <code>uc-check-scenario-drift</code>）の索引を比べたら、<b>共通する12ブロックとも中身が1文字も違わなかった</b></span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt">いまの索引は<b>その文書について何も語っていない</b>。中身は読み方の指針の写しで、同じ型ならすべて同じになる</span></div><div class="joint">目的に照らすと</div><div class="step premise"><span class="lbl">前提</span><span class="txt">索引の目的は、<b>どの鍵を引けば求めている情報が引けそうかが分かること</b>である。全文を読まずに当たりを付け、必要な鍵だけ引く</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>2つが要る。</b>「このブロックは何のために読むものか」（型から）と、「そこに何がどれだけあるか」（文書から）。<b>いまは前者しか持っていない</b></span></div><div class="joint">持ち方も見た</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">索引は <code>x-prompt-query</code> から作られて、実体（document.json）に保存されている。承認済みの決定は「<b>型の情報を実体へ写さない</b>」と定めている</span></div><div class="joint">作る手間を測ると</div><div class="step evidence"><span class="lbl">測った</span><span class="txt">文書は<b>253本・合計2.8MB・平均11KB・最大53KB</b>。毎回作っても<b>払うのはファイルの読み込みだけ</b>で、AI が読む量は変わらない</span></div><div class="joint">合わせると</div><div class="step conclude"><span class="lbl">結論</span><span class="txt">索引は保存しない。取り出すときに、型と文書の両方から毎回組み立てる</span></div></div><details class="fold"><summary>段の裏付けと、崩れるときを開く（5件）</summary><div class="scroll"><table><thead><tr><th>段</th><th>裏付けの種別</th><th>参照先</th><th>崩れるとき</th></tr></thead><tbody><tr class="keyrow"><td class="cond">12ブロックとも同一</td><td><span class="kindtag unv">実測</span></td><td>2つの文書の索引を取り出して突き合わせた</td><td>—</td></tr><tr class="keyrow"><td class="cond">索引の目的</td><td><span class="kindtag lim">利用者の言葉</span></td><td>「どの鍵で引けば求めている情報が引けそうかが分かるとよい」</td><td>—</td></tr><tr class=""><td class="cond">型の情報を実体へ写さない</td><td><span class="kindtag unv">承認済みの決定</span></td><td>Schema を仕様から実装し、型は Document として置く</td><td>—</td></tr><tr class=""><td class="cond">文書の大きさ</td><td><span class="kindtag unv">実測</span></td><td>253本・2.8MB・平均11KB・最大53KB</td><td><b>文書が桁違いに大きくなったとき</b></td></tr><tr class=""><td class="cond">AI が読む量は変わらない</td><td><span class="kindtag out">Waffle の設計</span></td><td>Waffle が読んで索引だけを返す</td><td>—</td></tr></tbody></table></div></details></section><section><h2><span class="num">06</span>付随して決めたこと</h2><p class="lead">保存をやめると、いくつかの位置づけが決まる。3点を同時に決めた。</p><div class="scroll"><table><thead><tr><th>論点</th><th>決定</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>_index</code> という欄</td><td><b>schema から落とす。</b>保存しないので、宣言する必要がない</td></tr><tr class="keyrow"><td class="cond">段1 の部品としての索引</td><td><b>文書の骨は増えない。</b>索引は保存される値ではなく、<b>値を取り出すことの一形態</b></td></tr><tr class=""><td class="cond">文のブロックに冒頭を載せるか</td><td><b>載せない。</b>冒頭のn文字は要約ではないので当たりの役に立つとは限らず、n を決めるという論点が増える。見出しで足りないなら、見出しのほうを直す</td></tr></tbody></table></div><details class="fold"><summary>それぞれの根拠を開く（3件）</summary><div class="scroll"><table><thead><tr><th>論点</th><th>根拠</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>_index</code> という欄</td><td>いまは <code>readOnly</code> で「waffle が自動生成する。AI は直接書かない」と説明が付いている。<b>書き手が書かない欄を、書き手のための型に宣言している</b></td></tr><tr class="keyrow"><td class="cond">段1 の部品としての索引</td><td>保存するなら文書の骨に項目が1つ増える。保存しないなら増えない。<b>索引は取り出し方であって、文書が持つものではない</b></td></tr><tr class=""><td class="cond">文のブロックに冒頭を載せるか</td><td>冒頭は書き出しであって要約ではない。<b>載せても当たりが正確になるとは限らない</b>のに、n という決めどころが増える</td></tr></tbody></table></div></details></section><section><h2><span class="num">07</span>答えないこと</h2><p class="lead">2つ残る。<b>どちらも、この決定が成り立たなくなったときに考える</b>ものである。</p><div class="scroll"><table><thead><tr><th>項目</th><th>何が決まっていないか</th><th>いつ決めるか</th></tr></thead><tbody><tr class=""><td class="cond">取り出しが遅くなったときの手当て</td><td>写しを持つか、別の場所へ置くか</td><td><b>実際に遅いと分かったとき。</b>いまは平均11KB で問題にならない</td></tr><tr class=""><td class="cond">索引を横断して引けるようにするか</td><td>複数の文書の索引をまとめて見る道</td><td><b>横断の取り出しを見直すとき</b></td></tr></tbody></table></div></section><section><h2><span class="num">08</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">取り下げ</span><span class="m">2026-08-16</span></div><p class="blob"><b>この決定は「部品に鍵と説明を持たせ、索引を取り出すときに組み立てる」に吸収された（承認済み）。</b>そちらは索引の2段だけでなく、<b>鍵と説明を部品が持つという規律</b>まで含んでおり、より広い。同じことを2本が定めていると、どちらが最新か分からなくなる。</p></section><section><h2><span class="num">09</span>関連</h2><p class="lead">この決定は、段1 の部品を確定させるための入力になる。</p><details class="fold"><summary>縛る対象と、前後の決定を開く（4件）</summary><div class="scroll"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr class="keyrow"><td class="cond">縛る対象</td><td>索引の作り方と住みか</td></tr><tr class="keyrow"><td class="cond">先立つ決定</td><td>Schema を仕様から実装し、型は Document として置く（承認済み）── <b>型の情報を実体へ写さない、がここで決まっている</b></td></tr><tr class=""><td class="cond">書き直す文書</td><td><code>uc-query-document</code>（索引の取り出し）／型11本（<code>_index</code> を落とす）</td></tr><tr class=""><td class="cond">この決定を使う予定</td><td>段1 の部品を確定させる。<b>索引が保存されないので、文書の骨は増えない</b></td></tr></tbody></table></div></details></section></div>

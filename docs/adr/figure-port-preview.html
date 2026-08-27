@@ -1,0 +1,292 @@
+<title>宣言が絵になるまで</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;}}
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.8;
+       margin:0;padding:clamp(1.5rem,4vw,3rem) clamp(1rem,3vw,2rem) 5rem}
+  .wrap{max-width:66rem;margin:0 auto;display:flex;flex-direction:column;gap:2.5rem}
+  header{display:flex;flex-direction:column;gap:.6rem}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.5rem,3.5vw,2rem);line-height:1.4;font-weight:600;margin:0}
+  .lede{color:var(--ink-soft);font-size:.98rem;margin:0;max-width:40rem}
+  h2{font-family:var(--serif);font-size:1.15rem;font-weight:600;margin:0 0 .2rem;
+     padding-bottom:.5rem;border-bottom:1px solid var(--rule)}
+
+  .stages{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:.7rem;align-items:stretch}
+  @media(max-width:62rem){.stages{grid-template-columns:1fr}.arrow{transform:rotate(90deg);padding:.4rem 0}}
+  .stage{border:1px solid var(--rule);border-radius:3px;background:var(--surface);
+         display:flex;flex-direction:column;overflow:hidden;min-width:0}
+  .stage.a{border-top:3px solid var(--fact)}
+  .stage.b{border-top:3px solid var(--assume)}
+  .stage.c{border-top:3px solid var(--infer)}
+  .stage .head{padding:.7rem .9rem .5rem;display:flex;flex-direction:column;gap:.12rem}
+  .stage .where{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .stage .title{font-size:.9rem;font-weight:700}
+  .stage .vocab{font-family:var(--mono);font-size:.66rem;color:var(--ink-faint);padding:0 .9rem .55rem}
+  .stage pre{margin:0;padding:.7rem .9rem;font-family:var(--mono);font-size:.7rem;line-height:1.6;
+             background:var(--surface-2);border-top:1px solid var(--rule-soft);overflow-x:auto;
+             color:var(--ink-soft);flex:1}
+  .stage .canvas{padding:.8rem;background:var(--surface-2);border-top:1px solid var(--rule-soft);
+                 flex:1;display:flex;align-items:center;justify-content:center;overflow-x:auto}
+  .stage .canvas svg{max-width:100%;height:auto}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--ink-faint);
+         font-family:var(--mono);font-size:1.2rem}
+
+  .cut{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+       padding:.9rem 1.1rem;font-size:.93rem;line-height:1.75}
+  .cut b{font-weight:700}
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:34rem}
+  th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.6}
+  thead th{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+           font-weight:600;background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700;white-space:nowrap}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);
+       border:1px solid var(--rule-soft);border-radius:3px;padding:.06em .32em}
+  .no{color:#8C2F39} .yes{color:var(--infer)}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .no{color:#DB9AA1}}
+  :root[data-theme="dark"] .no{color:#DB9AA1}
+  .foot{font-size:.83rem;color:var(--ink-faint);line-height:1.7}
+  .fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface);margin-top:.7rem}
+  .fold>summary{cursor:pointer;padding:.6rem .9rem;font-size:.84rem;color:var(--ink-soft);
+                list-style:none;display:flex;align-items:center;gap:.45rem}
+  .fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.75rem}
+  .fold[open]>summary::before{content:"▾"}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+  .foldnote{font-size:.83rem;line-height:1.75;color:var(--ink-soft);padding:.75rem .9rem;
+            border-top:1px solid var(--rule-soft)}
+  .foldnote b{color:var(--ink)}
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:.95rem 1.15rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.7rem}
+  .approve .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.02rem;font-weight:600}
+  .approve .m{font-size:.87rem;color:var(--ink-soft)}
+</style>
+<div class="wrap">
+
+<header>
+<p class="eyebrow">完成イメージ ── 図の描画</p>
+<h1>宣言が絵になるまで</h1>
+<p class="lede">左の宣言を入れると、右の絵が出る。<b>この3つは実際に動かして出したもの</b>で、絵は本物の描画エンジンが描いている。</p>
+</header>
+
+<section>
+<div class="stages">
+
+<div class="stage a">
+<div class="head"><span class="where">ドメイン層</span><span class="title">図の宣言</span></div>
+<div class="vocab">主張 / 読み方 / 置くもの / つなぐもの</div>
+<pre>{
+  &quot;asserts&quot;: &quot;つながり&quot;,
+  &quot;reading&quot;: &quot;受け口はユースケースを呼び、ユースケースが業務サービスを介してモデルへ届く。&quot;,
+  &quot;items&quot;: [
+    {
+      &quot;key&quot;: &quot;cli&quot;,
+      &quot;name&quot;: &quot;CLI&quot;
+    },
+    {
+      &quot;key&quot;: &quot;mcp&quot;,
+      &quot;name&quot;: &quot;MCP&quot;
+    },
+    {
+      &quot;key&quot;: &quot;usecase&quot;,
+      &quot;name&quot;: &quot;ユースケース&quot;,
+      &quot;role&quot;: &quot;focus&quot;
+    },
+    {
+      &quot;key&quot;: &quot;service&quot;,
+      &quot;name&quot;: &quot;業務サービス&quot;
+    },
+    {
+      &quot;key&quot;: &quot;model&quot;,
+      &quot;name&quot;: &quot;モデル&quot;
+    }
+  ],
+  &quot;links&quot;: [
+    {
+      &quot;from&quot;: &quot;cli&quot;,
+      &quot;to&quot;: &quot;usecase&quot;
+    },
+    {
+      &quot;from&quot;: &quot;mcp&quot;,
+      &quot;to&quot;: &quot;usecase&quot;
+    },
+    {
+      &quot;from&quot;: &quot;usecase&quot;,
+      &quot;to&quot;: &quot;service&quot;,
+      &quot;name&quot;: &quot;呼ぶ&quot;
+    },
+    {
+      &quot;from&quot;: &quot;service&quot;,
+      &quot;to&quot;: &quot;model&quot;
+    }
+  ]
+}</pre>
+</div>
+
+<div class="arrow">→</div>
+
+<div class="stage b">
+<div class="head"><span class="where">アダプタの内側</span><span class="title">写した結果</span></div>
+<div class="vocab">nodes / edges / groups</div>
+<pre>{
+  &quot;nodes&quot;: [
+    {
+      &quot;id&quot;: &quot;cli&quot;,
+      &quot;label&quot;: &quot;CLI&quot;
+    },
+    {
+      &quot;id&quot;: &quot;mcp&quot;,
+      &quot;label&quot;: &quot;MCP&quot;
+    },
+    {
+      &quot;id&quot;: &quot;usecase&quot;,
+      &quot;label&quot;: &quot;ユースケース&quot;,
+      &quot;role&quot;: &quot;focus&quot;
+    },
+    {
+      &quot;id&quot;: &quot;service&quot;,
+      &quot;label&quot;: &quot;業務サービス&quot;
+    },
+    {
+      &quot;id&quot;: &quot;model&quot;,
+      &quot;label&quot;: &quot;モデル&quot;
+    }
+  ],
+  &quot;edges&quot;: [
+    {
+      &quot;from&quot;: &quot;cli&quot;,
+      &quot;to&quot;: &quot;usecase&quot;
+    },
+    {
+      &quot;from&quot;: &quot;mcp&quot;,
+      &quot;to&quot;: &quot;usecase&quot;
+    },
+    {
+      &quot;from&quot;: &quot;usecase&quot;,
+      &quot;to&quot;: &quot;service&quot;,
+      &quot;label&quot;: &quot;呼ぶ&quot;
+    },
+    {
+      &quot;from&quot;: &quot;service&quot;,
+      &quot;to&quot;: &quot;model&quot;
+    }
+  ]
+}</pre>
+</div>
+
+<div class="arrow">→</div>
+
+<div class="stage c">
+<div class="head"><span class="where">描画エンジン</span><span class="title">描かれた絵</span></div>
+<div class="vocab">SVG（外部への要求 0件）</div>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 324 332" width="324" height="332" role="img"><path d="M198.0,32.0 L198.0,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="198.0,96.0 195.6,89.4 200.4,89.4" fill="#C3CAD2"/><path d="M282.0,32.0 L198.0,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="198.0,96.0 201.8,90.1 204.7,93.9" fill="#C3CAD2"/><path d="M198.0,128.0 L198.0,192.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="198.0,192.0 195.6,185.4 200.4,185.4" fill="#C3CAD2"/><rect x="184.0" y="150.0" width="28.0" height="16.0" fill="#F5F7F9"/><text x="198.0" y="163.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#79828F">呼ぶ</text><path d="M198.0,224.0 L198.0,288.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="198.0,288.0 195.6,281.4 200.4,281.4" fill="#C3CAD2"/><g transform="translate(168.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">CLI</text></g></g><g transform="translate(252.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">MCP</text></g></g><g transform="translate(148.0,96.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="100.0" height="32.0" rx="5" fill="#E2EFF0" stroke="#16636B" stroke-width="1.6"/><text x="50.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#16636B">ユースケース</text></g></g><g transform="translate(148.0,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="100.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="50.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">業務サービス</text></g></g><g transform="translate(166.0,288.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="64.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="32.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">モデル</text></g></g></svg></div>
+</div>
+
+</div>
+</section>
+
+<section>
+<h2>この絵が示していること</h2>
+<div class="cut">主張・読み方という言葉は、<b>2段目から先に一度も出てこない。</b>逆に nodes・edges という言葉は、<b>1段目に一度も出てこない。</b>この境目がアダプタで、変換はそこでしか起きない。</div>
+</section>
+
+<section>
+<h2>だから、どこに何を置くか</h2>
+<div class="scroll"><table><thead><tr><th>層</th><th>持つもの</th><th>知らないこと</th></tr></thead><tbody>
+<tr><td class="name">ドメイン</td><td>図の宣言そのもの。等しさと整合を型が守る</td><td>何で描かれるか</td></tr>
+<tr><td class="name">ポート</td><td>「宣言を渡すと、絵が返る」</td><td>エンジンの名前・入力の形・テーマ</td></tr>
+<tr><td class="name">ユースケース</td><td>取り出す→頼む→渡す、の調整だけ</td><td>どんな見た目になるか</td></tr>
+<tr><td class="name">アダプタ</td><td><b>変換のすべて。</b>テーマもここで注入する</td><td>—（唯一、両方の語彙を知る）</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2>ポートが正しいかの見分け方</h2>
+<div class="cut"><b>シグネチャを読んで、どのエンジンを使っているか推測できたら失敗。</b><br>
+<span class="no">✗</span> <code>render(nodes, edges, theme)</code> ── エンジンの入力の形が漏れている<br>
+<span class="yes">✓</span> <code>draw(figure) -&gt; 描かれた結果</code> ── 宣言の語彙だけで書けている</div>
+<details class="fold"><summary>何を見て決め、何を見て決めないか</summary>
+<div class="scroll"><table><thead><tr><th></th><th>対象</th></tr></thead><tbody>
+<tr><td class="name"><span class="yes">見てよい</span></td><td>宣言の欄／ユースケースが要る出力（描かれた成果物と、描けなかったときの扱い）／組み立て時に描くという性質</td></tr>
+<tr><td class="name"><span class="no">見ない</span></td><td>エンジンの入力の形・トークンの名前や型・テーマの形・生成オプション・エンジンの版</td></tr>
+</tbody></table></div>
+<p class="foldnote"><b>ポートは1本、1つの目的に保つ。</b>トークンの検査・テーマの解決・成果物の書き出しを、このポートへ同居させない。アダプタをどれ使うかの配線は、最も外側の1箇所に集める。</p>
+</details>
+</section>
+
+<section>
+<h2>宣言が持ってはいけない欄</h2>
+<div class="cut">仕様が「<b>描き方は持たない ── それらは描画側が決める</b>」と定めている。<br>
+<span class="no">✗</span> 向き・大きさ・並び順・配置・色・書体<br>
+<span class="yes">✓</span> 何を主張するか・どう読むか・何を置くか・何をつなぐか<br>
+<span class="foot">この「無いこと」自体を、ドメイン層の試験にする。</span></div>
+</section>
+
+<section>
+<h2>移す対象</h2>
+<div class="scroll"><table><thead><tr><th>いま在るもの</th><th>移した後</th></tr></thead><tbody>
+<tr><td class="name">描き方の名前で呼ぶ図の種別（5種）</td><td>主張の語彙へ。移し終えたら描き方の名前を落とす</td></tr>
+<tr><td class="name">閲覧時に外部のJSを読む経路（3箇所）</td><td>すべて同じポートの背後へ。<b>この数が0になったら移行完了</b></td></tr>
+<tr><td class="name">見た目の設定が実装に散っているもの</td><td>正本を1つに。図のテーマを新しい複製にしない</td></tr>
+<tr><td class="name">描画エンジンそのもの</td><td><b>design-svg の持ち物として、そのSkillと共に配る。</b>ホストは利用する側。制約は1つ ── ドメインとユースケースが、エンジン無しで試験できること</td></tr>
+</tbody></table></div>
+<details class="fold"><summary>移行のあいだ、2つの語彙が同居してよいか</summary>
+<p class="foldnote">よい。ただし<b>3つを先に決めてから</b>始める。(1) <b>終わりの目印</b> ── 描き方の名前を語彙から落とす時点を、始める前に決める。(2) <b>古い側に足さない</b> ── 新しい表現力を足すと、新しい側が追いつけない。(3) <b>完了は「入口が消えること」</b> ── 「両方使える状態」を完成形と呼ばない。</p>
+</details>
+</section>
+
+<section>
+<h2>試験をどこに置くか</h2>
+<div class="scroll"><table><thead><tr><th>層</th><th>確かめること</th></tr></thead><tbody>
+<tr><td class="name">ドメイン</td><td>6つの欄がすべて一致すれば等価。つなぐものの両端が置くものに在る。<b>加えて、向き・大きさ・並び順・配置が型に現れないこと</b></td></tr>
+<tr><td class="name">ユースケース</td><td>ポートを偽物に差し替え、取り出す→頼む→渡すの流れ。<b>外部ホストへ要求を出さないこと</b></td></tr>
+<tr><td class="name">アダプタ</td><td>本物のエンジンに対して。<b>決定性</b>（同じ入力は常に同じ出力）と、描けなかったときの扱い。<b>描かれた中身の比較は、ここに閉じ込める</b></td></tr>
+<tr><td class="name">通し</td><td>配線を含めて図が焼き込まれること。1〜2本だけ</td></tr>
+</tbody></table></div>
+<details class="fold"><summary>偽物が堕落するのを防ぐ</summary>
+<p class="foldnote">図の描画では、偽物が「それらしい文字列を返すだけ」になりやすく、決定性や失敗時の扱いが本物とずれたまま気づけない。<b>この2つは、本物と偽物の両方へ当てる共有の試験にする。</b></p>
+</details>
+</section>
+
+<section>
+<h2>引き継いでいる前提</h2>
+<div class="scroll"><table><thead><tr><th>これは</th><th>どこで決まっているか</th></tr></thead><tbody>
+<tr><td class="name">16の主張という語彙</td><td><b>design-svg。</b>この決定は借りて使うだけで、増やしも減らしもしない</td></tr>
+<tr><td class="name">主張それぞれを、どの部品でどう組むか</td><td><b>design-svg の記法。</b>アダプタはその通りに写す</td></tr>
+<tr><td class="name">部品と、既定のテーマ</td><td><b>design-svg。</b>ホストは上書きできるが、既定は借りる</td></tr>
+<tr><td class="name">図を組み立て時に焼き込むこと</td><td><b>「配る成果物を、外部ホストから切り離す」。</b>及ぶ範囲は描かれた成果物のみで、文章の成果物は従来どおり</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2>承認</h2>
+<div class="approve"><span class="k">状態</span><span class="v">未承認</span><span class="m">既存の実装を根拠に用いず、仕様の文言と採用済みknowledgeだけから導いている</span></div>
+</section>
+
+</div>

@@ -1,0 +1,53 @@
+<title>重ねられるか、名前は残るか</title>
+<style>
+:root{--paper:#EFF1F4;--surface:#FFFFFF;--surface-2:#F6F8FA;--ink:#16191F;--ink-soft:#545C69;
+ --ink-faint:#7C8593;--rule:#D5DAE1;--rule-soft:#E6EAEF;--good:#25604A;--good-bg:#E2EFE9;
+ --bad:#8C2F39;--bad-bg:#F5E7E8;
+ --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+ --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+ --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;--ink-soft:#A8B1BD;
+ --ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;--good:#7DC4A6;--good-bg:#152A22;
+ --bad:#DB9AA1;--bad-bg:#2C1B1D;}}
+:root[data-theme="dark"]{--paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;
+ --ink-soft:#A8B1BD;--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;--good:#7DC4A6;
+ --good-bg:#152A22;--bad:#DB9AA1;--bad-bg:#2C1B1D;}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;
+ line-height:1.85;margin:0;padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,2rem) 5rem}
+.wrap{max-width:58rem;margin:0 auto;display:flex;flex-direction:column;gap:2.4rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+ color:var(--ink-faint);margin:0}
+h1{font-family:var(--serif);font-size:clamp(1.5rem,3.6vw,2rem);line-height:1.4;font-weight:600;
+ margin:.6rem 0 0;text-wrap:balance}
+.lede{color:var(--ink-soft);font-size:1rem;margin:.7rem 0 0;max-width:40rem}
+.card{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;
+ background:var(--surface);padding:1.1rem 1.2rem 1.3rem;display:flex;flex-direction:column;gap:.85rem}
+.card.good{border-left-color:var(--good)}
+.card.bad{border-left-color:var(--bad)}
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.6rem}
+.num{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;color:var(--ink-faint)}
+.name{font-family:var(--serif);font-size:1.06rem;font-weight:600}
+.tag{font-family:var(--mono);font-size:.66rem;padding:.14em .55em;border-radius:2px;white-space:nowrap}
+.card.good .tag{color:var(--good);background:var(--good-bg)}
+.card.bad .tag{color:var(--bad);background:var(--bad-bg)}
+.card .tag{color:var(--ink-faint);background:var(--surface-2)}
+/* 図は色を属性として焼き込んである（明色のテーマで焼いた）。台紙を明暗に
+   追随させると、暗色のとき図の中の文字が地に沈んで読めなくなる。だから
+   台紙だけはトークンを使わず、明暗どちらでも明るい地に固定する。 */
+.stage{background:#F6F8FA;border:1px solid #E6EAEF;border-radius:4px;
+ padding:1.1rem;overflow-x:auto;display:flex;justify-content:center}
+.stage svg{max-width:100%;height:auto}
+.note{font-size:.9rem;color:var(--ink-soft);line-height:1.75}
+.card.bad .note b{color:var(--bad)}
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">段1 ── 図の仕様・未決着2点</p>
+<h1>重ねられるか、名前は残るか</h1>
+<p class="lede">開いていた2点を、実際に描画エンジンへ通して確かめた。<b>どちらも採れる</b>。
+ただし①は、描いてみて初めて分かった不備を直してから成立した ── 幾何検査は不備があるあいだも「崩れ0件」と出し続けていた。</p>
+</header>
+<div class="card good"><div class="head"><span class="num">①</span><span class="name">階層 × 入れ子の図</span><span class="tag">採れる（条件つき）</span></div><div class="stage"><svg class="wf-fig" viewBox="0 0 441 300" width="441" height="300" role="img"><g transform="translate(6.0,6.0)"><path d="M321.5,32.0 L257.0,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="257.0,96.0 260.1,89.5 263.5,93.0" fill="#C3CAD2"/><path d="M339.8,32.0 L387.2,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="387.2,96.0 381.2,92.0 385.1,89.1" fill="#C3CAD2"/><g transform="translate(284.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="88.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="44.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">文書の部品</text></g></g><g transform="translate(169.0,96.0)"><g><text x="88.0" y="3.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="600" fill="#171B23">内訳</text><g transform="translate(0.0,16.0)"><g><path d="M88.0,36.0 A52.0,52.0 0 1,1 36.8,97.0" fill="none" stroke="#16636B" stroke-width="24"/><path d="M36.8,97.0 A52.0,52.0 0 0,1 88.0,36.0" fill="none" stroke="#9A4A21" stroke-width="24"/><text x="88.0" y="93.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#171B23">18</text></g></g></g></g><g transform="translate(369.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">検査</text></g></g></g></svg></div><p class="note">階層の節点として「全体と部分」を置いた図。<b>コアは一切変えていない</b> ── 節点がどの部品で描かれるかは宣言（テーマの上書き）から引くので、部品を差し替えるだけで済む。ただし最初に描いたときは<b>節点の名前「内訳」が消え、矢印が空白を指した</b>。円グラフは単独で使う前提で作られていて、渡された名前を描かず、凡例のぶん箱だけが横に広かったため。<b>部品の契約に1つ足して直した</b> ── 節点として使う部品は名前を描くこと。すべての部品に名前を描く責務を負わせるのではなく、包んで名前を載せる部品を1つ足す形にした。</p></div><div class="card good"><div class="head"><span class="num">②(a)</span><span class="name">つながり に囲みを重ねる ── 1枚として</span><span class="tag">採れる</span></div><div class="stage"><svg class="wf-fig" viewBox="0 0 140 280" width="140" height="280" role="img"><g transform="translate(40.0,6.0)"><rect x="-34.0" y="112.0" width="128.0" height="156.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><rect x="-26.0" y="103.0" width="88.0" height="15.0" fill="#F5F7F9"/><text x="18.0" y="114.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#16636B">ここは領域の内側</text><path d="M30.0,32.0 L30.0,126.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="30.0,126.0 27.5,119.2 32.5,119.2" fill="#C3CAD2"/><path d="M30.0,158.0 L30.0,222.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="30.0,222.0 27.5,215.2 32.5,215.2" fill="#C3CAD2"/><g transform="translate(0.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">CLI</text></g></g><g transform="translate(-20.0,126.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="100.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="50.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">ユースケース</text></g></g><g transform="translate(-2.0,222.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="64.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="32.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">モデル</text></g></g></g></svg></div><p class="note">CLIは囲みの外、ユースケースとモデルが内側。1枚の図として矛盾なく描ける。</p></div><div class="card plain"><div class="head"><span class="num">②(b)-1</span><span class="name">つながり だけ</span><span class="tag">重ねる前提の1枚目</span></div><div class="stage"><svg class="wf-fig" viewBox="0 0 92 236" width="92" height="236" role="img"><g transform="translate(6.0,6.0)"><path d="M30.0,32.0 L30.0,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="30.0,96.0 27.5,89.2 32.5,89.2" fill="#C3CAD2"/><path d="M30.0,128.0 L30.0,192.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="30.0,192.0 27.5,185.2 32.5,185.2" fill="#C3CAD2"/><g transform="translate(0.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">CLI</text></g></g><g transform="translate(-20.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="100.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="50.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">ユースケース</text></g></g><g transform="translate(-2.0,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="64.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="32.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">モデル</text></g></g></g></svg></div><p class="note">ユースケース (0.0, 113.7) ／ モデル (18.0, 209.7) ── 縦に並ぶ。</p></div><div class="card plain"><div class="head"><span class="num">②(b)-2</span><span class="name">包含 だけ</span><span class="tag">重ねる前提の2枚目</span></div><div class="stage"><svg class="wf-fig" viewBox="0 0 228 88" width="228" height="88" role="img"><g transform="translate(6.0,6.0)"><rect x="0.0" y="16.0" width="216.0" height="60.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><rect x="8.0" y="7.0" width="88.0" height="15.0" fill="#F5F7F9"/><text x="52.0" y="18.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#16636B">ここは領域の内側</text><g transform="translate(14.0,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="100.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="50.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">ユースケース</text></g></g><g transform="translate(138.0,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="64.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="32.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">モデル</text></g></g></g></svg></div><p class="note">ユースケース (34.0, 47.7) ／ モデル (158.0, 47.7) ── 横に並ぶ。<b>同じ節点が縦と横に分かれ、ずれは最大 (140, 162)。</b>この2枚は重ねられない ── 位置を揃えるには両者が同じ配置を共有するしかなく、それは1枚の図であることと同義である。</p></div>
+</div>

@@ -1,0 +1,393 @@
+<title>事業領域が持つ欄</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  /* 既定のリンク色は暗い紙面でほとんど読めない。字の色と同じ体系から取る */
+  a{color:var(--fact);text-underline-offset:.2em}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.h1en{display:block;font-family:var(--mono);font-size:.9rem;font-weight:400;
+      color:var(--ink-faint);margin-top:.35rem}
+.foot{font-size:.82rem;line-height:1.75;color:var(--ink-faint);
+      border-top:1px solid var(--rule);padding-top:1rem}
+
+.rdoc{border:1px solid var(--rule);border-radius:3px;background:var(--surface);overflow:hidden}
+.rh{background:var(--surface-2);border-bottom:1px solid var(--rule);
+    padding:1.6rem 1.5rem 1.3rem;display:flex;flex-direction:column;gap:.5rem}
+.rchips{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+.foot-chips{margin-top:.5rem}
+.chip{font-family:var(--mono);font-size:.7rem;line-height:1;padding:.4em .65em;border-radius:2px;
+      border:1px solid var(--rule);color:var(--ink-faint);background:var(--surface)}
+.chip.kind{border-color:var(--infer);color:var(--infer);background:var(--infer-bg);
+           font-family:var(--sans);font-weight:600}
+.chip.id{color:var(--ink-soft)}
+.chip.ref{font-weight:600;color:var(--ink-soft)}
+.chip.lbl{border:none;background:none;padding-left:0;font-family:var(--sans);font-size:.76rem}
+.rt{font-family:var(--serif);font-size:clamp(1.35rem,3.2vw,1.7rem);font-weight:600;
+    margin:.15rem 0 0;line-height:1.4}
+.ren{font-family:var(--mono);font-size:.86rem;color:var(--ink-faint);margin:0}
+.rlede{font-size:.98rem;line-height:1.85;color:var(--ink-soft);margin:.5rem 0 0;max-width:34rem}
+.actor{margin:.6rem 0 0;padding-left:.95rem;border-left:3px solid var(--infer)}
+.ac-who{font-family:var(--serif);font-size:1.02rem;font-weight:600;margin:0}
+.ac-want{font-size:.91rem;line-height:1.8;color:var(--ink-soft);margin:.15rem 0 0}
+
+.zn{padding:0 1.5rem;margin-top:1.7rem;display:flex;flex-direction:column;gap:.9rem}
+.zn:last-child{padding-bottom:1.6rem}
+.zn-h{display:flex;align-items:center;gap:.8rem;margin:0;font-family:var(--serif);
+      font-size:1.02rem;font-weight:600;color:var(--ink);flex-wrap:wrap}
+.zn-h>span:first-child{flex:none}
+.zn-h::after{content:"";flex:1;height:1px;background:var(--rule);order:9}
+.cnt{font-family:var(--mono);font-size:.68rem;font-weight:400;color:var(--ink-faint);
+     border:1px solid var(--rule);border-radius:2px;padding:.3em .55em;flex:none}
+
+/* 入口と出口を、横に並べて対にする */
+.io{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:start}
+.io-c{border:1px solid var(--rule-soft);border-radius:2px;background:var(--surface-2);
+      padding:.85rem .95rem;min-width:0}
+.io-h{font-size:.78rem;color:var(--ink-faint);margin:0 0 .45rem}
+.io-r{display:flex;flex-wrap:wrap;gap:.15rem .7rem;align-items:baseline;font-size:.92rem}
+.io-a{align-self:center;color:var(--ink-faint);font-size:1.1rem}
+@media(max-width:46rem){.io{grid-template-columns:1fr}.io-a{display:none}}
+
+.pr{display:flex;flex-wrap:wrap;gap:.15rem .8rem;align-items:baseline;font-size:.9rem;line-height:1.8}
+.pr-k{flex:none}
+.pr-v{color:var(--ink-soft);min-width:0}
+
+.figwrap{border:1px solid var(--rule-soft);border-radius:2px;background:#FFF;padding:.9rem .6rem}
+.wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
+
+.crit .scroll{border-color:var(--infer)}
+.crit thead th{background:var(--infer-bg);color:var(--infer)}
+.gk{margin:0;font-family:var(--mono);font-size:.76rem;line-height:1.8;background:var(--surface-2);
+    border:1px solid var(--rule-soft);border-radius:2px;padding:.75rem .85rem;overflow-x:auto;
+    white-space:pre;color:var(--ink)}
+.errs{border-top:1px solid var(--rule-soft);padding-top:.85rem}
+.errs-h{font-size:.78rem;color:var(--ink-faint);margin:0 0 .35rem}
+.post{margin:0;padding-left:1.1rem;font-size:.92rem;line-height:1.85;color:var(--ink-soft)}
+.zn .sub{font-size:.82rem;line-height:1.7}
+
+@media(max-width:46rem){
+  .rh{padding:1.3rem 1.1rem 1.1rem}
+  .zn{padding:0 1.1rem;margin-top:1.5rem}
+}
+.znote{font-size:.85rem;line-height:1.8;color:var(--ink-soft);padding-left:.85rem;
+       border-left:2px solid var(--rule)}
+.znote b{color:var(--ink)}
+.big{font-family:var(--serif);font-size:1.25rem;font-weight:600}
+.wrap.narrow{max-width:48rem;gap:1.6rem}
+.ph{gap:.5rem}
+.ph .lede{font-size:.95rem}
+.samename{font-family:var(--mono);font-size:.62rem;font-weight:400;color:var(--ink-faint);
+          letter-spacing:.02em;margin-left:.5rem;vertical-align:middle}
+.f-lane{font-family:var(--sans);font-size:12px;fill:var(--ink-faint)}
+.f-on{fill:var(--infer);font-weight:700}
+.f-box{fill:var(--surface-2);stroke:var(--rule);stroke-width:1}
+.f-hi{fill:var(--infer-bg);stroke:var(--infer)}
+.f-t{font-family:var(--sans);font-size:14px;fill:var(--ink);text-anchor:middle}
+.f-tb{font-weight:700;fill:var(--infer)}
+.f-ln{stroke:var(--ink-faint);stroke-width:1.2}
+.f-ar{fill:var(--ink-faint)}
+.figwrap{background:var(--surface);overflow-x:auto}
+/* 図は縮めすぎると読めなくなる。紙面が狭いときは縮めず、枠の中で横へ送る */
+@media(max-width:36rem){.wf-fig{min-width:32rem}}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(11.5rem,1fr));
+       gap:.6rem;align-items:stretch}
+.uc{border:1px solid var(--rule);border-radius:3px;background:var(--surface);
+    overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.uc-k{font-family:var(--mono);font-size:.58rem;letter-spacing:.03em;color:var(--ink-faint);
+      display:block;margin-bottom:.12rem}
+/* 帯の高さを揃える。1行の札と2行の札が混ざると、本文の開始位置がずれて読み進めにくい */
+.uc-h{background:var(--surface-2);border-bottom:1px solid var(--rule-soft);
+      padding:.5rem .75rem;min-height:4.7rem;display:flex;flex-direction:column;justify-content:flex-start}
+.uc-hv{display:block;font-size:.88rem;font-weight:700;line-height:1.5;color:var(--ink);
+       word-break:auto-phrase;overflow-wrap:anywhere}
+.uc-b{padding:.65rem .75rem;flex:1 1 auto}
+.uc-bv{display:block;font-size:.85rem;line-height:1.75;color:var(--ink-soft);
+       word-break:auto-phrase;overflow-wrap:anywhere}
+@media(max-width:34rem){
+  .cards{grid-template-columns:1fr}
+  .uc-h{min-height:0}
+}
+.uc-id{font-family:var(--mono);font-size:.57rem;letter-spacing:.02em;color:var(--ink-faint);
+       padding:.32rem .75rem;border-top:1px solid var(--rule-soft);background:var(--surface-2);
+       margin-top:auto;overflow-wrap:anywhere}
+.uc.ret{border-style:dashed;background:none}
+.uc.ret .uc-h{background:none;border-bottom-style:dashed}
+.uc.ret .uc-hv{font-weight:600;color:var(--ink-soft)}
+.uc.ret .uc-id{background:none}
+.uc-ret{padding:.55rem .75rem;border-top:1px dashed var(--rule)}
+.past{padding:.85rem .95rem;border-top:1px solid var(--rule-soft)}
+.past-t{font-size:.92rem;line-height:1.7;color:var(--ink-soft);
+        text-decoration:line-through;text-decoration-color:var(--ink-faint)}
+.past-w{margin-top:.5rem;font-size:.85rem;line-height:1.75;color:var(--ink-soft)}
+.past-w b{color:var(--ink)}
+.concl-k code{font-family:var(--mono);font-size:.95em;background:none;border:none;padding:0;color:var(--infer)}
+.exl2{font-size:.88rem;line-height:1.7;color:var(--ink-soft)}
+.exbad,.exgood{margin-top:.7rem;font-size:.92rem;line-height:1.75;padding:.6rem .75rem;border-radius:2px}
+.exbad{background:var(--against-bg);border-left:3px solid var(--against)}
+.exgood{background:var(--infer-bg);border-left:3px solid var(--infer)}
+.exv{margin-top:.6rem;font-size:.9rem;padding-top:.55rem;border-top:1px solid var(--rule-soft)}
+.exv.bad{color:var(--against)} .exv.good{color:var(--infer)}
+.pane-label{line-height:1.6}
+.exh{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:1.6rem 0 0}
+.exn{margin:.2rem 0 0}
+.exs{margin:1.3rem 0 0;font-size:.95rem;line-height:1.75}
+.concl.bad{border-left-color:var(--against);background:var(--against-bg)}
+.concl.bad .concl-k{color:var(--against)}
+.exd{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+.exg{margin-top:.45rem;font-size:.92rem;line-height:1.75;padding-left:.75rem;
+     border-left:3px solid var(--infer)}
+.exl{margin-top:.7rem;font-size:.85rem;line-height:1.7;color:var(--ink-soft);
+     padding-top:.6rem;border-top:1px solid var(--rule-soft)}
+.concl{border-left:3px solid var(--infer);background:var(--infer-bg);
+        padding:.8rem 1rem;border-radius:0 2px 2px 0}
+.concl-k{font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:var(--infer);
+         display:block;margin-bottom:.2rem}
+.concl-v{display:block;font-size:.95rem;line-height:1.75;font-weight:700;color:var(--ink)}
+.estate b{color:var(--ink-soft)}
+.estate{border:1px dashed var(--rule);border-radius:3px;padding:1.1rem .9rem;
+        color:var(--ink-faint);font-size:.9rem}
+</style><div class="wrap narrow">
+<header class="ph">
+<p class="eyebrow">Architecture Decision Record</p>
+<h1>事業領域が持つ欄</h1>
+<p class="lede"><b>未承認。</b>完成イメージは
+<a href="https://claude.ai/code/artifact/0471e3e5-f19e-4507-9385-b6fb862e9525">事業領域 ── 完成イメージ</a>にある。
+このページは、その形をなぜそうしたかだけを持つ。</p>
+</header>
+
+<section><h2><span class="num">01</span>決定</h2>
+<p class="lead">事業領域の文書は<b>4つの欄</b>を持つ。欄は増やさない。増えるのは欄の中の札の枚数だけ。</p>
+<div class="scroll"><table class="wide"><thead><tr>
+<th>欄</th><th>中身の形</th><th>いくつ書けるか</th><th>必須か</th></tr></thead><tbody>
+<tr><td class="name">なぜこの事業があるのか</td><td>文</td><td>1つ</td><td>必須</td></tr>
+<tr><td class="name">届けている価値</td><td>札：誰に ／ 何を</td><td>何枚でも</td><td>必須</td></tr>
+<tr class="keyrow"><td class="name">競っている相手</td><td>札：相手 ／ その相手で足りていること</td><td>何枚でも</td><td><b>必須</b></td></tr>
+<tr class="keyrow"><td class="name">└ どの相手も埋めていないこと</td><td>文</td><td><b>1つだけ</b></td><td><b>必須</b></td></tr>
+<tr><td class="name">やらないこと</td><td>札：やらないこと ／ なぜ</td><td>何枚でも</td><td>必須（0枚でよい）</td></tr>
+</tbody></table></div>
+<div class="znote"><b>「競っている相手」を必須にするのは、下位が壊れるからである。</b>
+業務領域は中核・一般・補完のどれかを決めるとき「差別化を生むか」を問う。
+その差別化の中身は、この欄の「どの相手も埋めていないこと」を見て決める。
+任意にすると、業務領域の分類が根拠を失う。</div>
+</section>
+
+<section><h2><span class="num">02</span>どこから借りたか</h2>
+<p class="lead">DDDだけでは足りないので、外から借りている。<b>借りた先を名指しする。</b></p>
+<div class="scroll"><table class="wide"><thead><tr>
+<th>借りたもの</th><th>借りた先</th><th>元の呼び名</th></tr></thead><tbody>
+<tr><td class="name">誰に ／ 何を</td><td>DDD</td><td>顧客に提供するサービスの大枠<span class="sub">（business-domain.md の定義そのもの）</span></td></tr>
+<tr><td class="name">なぜこの事業があるのか</td><td>インセプションデッキ</td><td>我々はなぜここにいるのか</td></tr>
+<tr><td class="name">競っている相手</td><td>DDD ／ インセプションデッキ</td><td>事業活動を理解する4問の4問目 ／ エレベーターピッチ後半</td></tr>
+<tr><td class="name">やらないこと</td><td>インセプションデッキ</td><td>やらないことリスト</td></tr>
+<tr class="pickrow"><td class="name">札が増える仕組み</td><td>イベントストーミング</td><td>付箋の種類は固定、貼られる枚数だけが増える</td></tr>
+</tbody></table></div>
+
+<details class="fold"><summary>借りなかったもの ── 5件</summary>
+<div class="scroll"><table class="wide"><thead><tr><th>借りなかったもの</th><th>なぜ</th></tr></thead><tbody>
+<tr><td class="name">ご近所さんを探せ</td><td>外部システム・関係者は区切られた文脈が持つ。重複する</td></tr>
+<tr><td class="name">トレードオフ／チーム／期間</td><td>プロジェクトの話であって、事業の話ではない</td></tr>
+<tr><td class="name">パッケージデザイン</td><td>「届けている価値」とほぼ同じことを言う</td></tr>
+<tr><td class="name">時系列に並べ替える<span class="sub">（イベントストーミング）</span></td><td>事業領域の札に順序は要らない。並べ替えても意味が変わらない</td></tr>
+<tr class="keyrow"><td class="name">出し切る<span class="sub">（イベントストーミング1段目）</span></td><td><b>提供価値が30枚ある事業は、方向を示していない。</b>出し切る規範は持ち込まない</td></tr>
+</tbody></table></div></details>
+</section>
+
+<section><h2><span class="num">03</span>「どの相手も埋めていないこと」を1文に限る</h2>
+<p class="lead"><b>1つだけ書く欄である。</b>2つ書きたくなったら、その事実をそのまま見せる ──<b>それが何の合図かを決めるのは、事業を営む人である。</b></p>
+<div class="chain">
+<div class="step evidence"><span class="lbl">出典</span><span class="txt">まとめて1つとして扱うと、性質の違う活動が同じ器に入り、<b>分類が定まらなくなる</b></span><span class="src">business-domain.md</span></div>
+<div class="joint">↓ ここでの「分類」は、業務領域が中核・一般・補完のどれかを決めることを指す</div>
+<div class="step premise"><span class="lbl">いまの作り</span><span class="txt">業務領域はその判定を「差別化を生むか」で行い、差別化の中身はこの1文を見て決める</span></div>
+<div class="joint">↓</div>
+<div class="step conclude"><span class="lbl">文書が言えること</span><span class="txt">1文で全部の業務領域を判定できていない、という<b>事実だけ</b>を言える</span></div><div class="joint">↓ そこから先は、文書の管轄ではない</div><div class="step counter"><span class="lbl">文書が言えないこと</span><span class="txt">その事実が何を意味するかには、少なくとも3通りの読み方がある ──<b>まだ1文にまとまる言い方を見つけていない</b>／<b>本当に事業が2つある</b>／<b>片方は差別化ではなかった</b>。どれなのかは、<b>事業を営む人にしか分からない</b></span></div>
+</div>
+
+<h3 class="exh">例 ── 同じ2つの活動が、事業によって分かれたり分かれなかったりする</h3>
+<p class="exn">扱う活動はどちらも同じ。<b>「通販」と「計算資源の貸出」という名前では決まらない。</b>
+決めるのは、埋めていないことが<b>何文要るか</b>だけである。</p>
+
+<div class="cmp">
+<div class="pane"><span class="pane-label b">会社A ── 通販と計算資源の貸出を、別々の客へ別々に売っている</span>
+<div class="box">
+<p class="exl2"><span class="uc-k">競っている相手</span>他の通販事業者／他の計算資源の貸出事業者</p>
+<p class="exbad"><span class="uc-k">どの相手も埋めていないこと</span>
+1. 頼んだ翌日に届くことを、品揃えを減らさずに成り立たせること。<br>
+2. 使った分だけ払える計算資源を、自前で持つより安く出すこと。</p>
+<p class="exv bad"><b>2文要る</b></p></div></div>
+
+<div class="pane"><span class="pane-label a">会社B ── 出店者へ、売り場とそれを動かす計算資源をまとめて渡している</span>
+<div class="box">
+<p class="exl2"><span class="uc-k">競っている相手</span>他の出店基盤／出店者が自前で組むやり方</p>
+<p class="exgood"><span class="uc-k">どの相手も埋めていないこと</span>
+出店者が、在庫も計算資源も自分で抱えずに売れること。</p>
+<p class="exv good"><b>1文で足りる</b></p></div></div>
+</div>
+
+<p class="exs"><b>同じ4つの業務領域を、それぞれの文で判定してみる。</b></p>
+<div class="scroll"><table class="wide"><thead><tr>
+<th>業務領域</th><th>会社A</th><th>会社B</th></tr></thead><tbody>
+<tr><td class="name">配送ルートの最適化</td><td>1の文で判定できる</td><td>判定できる</td></tr>
+<tr><td class="name">在庫の引当</td><td>1の文で判定できる</td><td>判定できる</td></tr>
+<tr><td class="name">計算資源の割当</td><td><b>1の文とは無関係</b>／2の文で判定</td><td>判定できる</td></tr>
+<tr><td class="name">利用量の計測と課金</td><td><b>1の文とは無関係</b>／2の文で判定</td><td>判定できる</td></tr>
+<tr class="pickrow"><td class="name">文書が見せること</td><td><b>1文に収まっていない</b></td><td><b>1文で収まっている</b></td></tr>
+</tbody></table></div>
+
+<div class="znote"><b>会社Bでは、計算資源の割当も「売れること」に効いている。</b>だから1文で届く。会社Aでは届かない ── 計算資源の客と通販の客が別だからである。<b>活動の名前では何も決まらない。</b></div><div class="concl bad"><span class="concl-k">この例が示していないこと</span><span class="concl-v">会社Aが事業を2つに分けるべきかどうか。それはこの文書には書いていないし、書けない。</span></div>
+<div class="znote"><b>枚数の上限は決めない。</b>「提供価値は5枚まで」のような数字は、なぜ5なのかを説明できない。
+説明できない基準は守られず、破られても指摘できない。分けるかどうかは<b>下位の判断が定まるかで測る</b>。</div>
+</section>
+
+<section><h2><span class="num">03b</span>文書が決めないこと</h2><p class="lead">どこまでが1つの事業かは、<b>この文書が決めることではない。</b></p><div class="scroll"><table class="wide"><thead><tr><th>問い</th><th>誰が答えるか</th></tr></thead><tbody><tr><td class="name">この文書は、定めた形に適合しているか<span class="sub">（欄が埋まっているか・1文に収まっているか）</span></td><td><b>文書の形</b>が答える。機械が言える</td></tr><tr class="keyrow"><td class="name">この事業は1つか、2つか</td><td><b>事業を営む人</b>が答える。文書は材料を出すだけ</td></tr><tr><td class="name">その形の定めが正しいか</td><td>knowledge が裁く<span class="sub">（この ADR がその記録にあたる）</span></td></tr></tbody></table></div><div class="znote">この線を引かないと、2つのうちどちらかに倒れる ──<b>形に合っていれば正しいことになる</b>か、<b>形がいくらでも押し通せる</b>かである。<span class="sub">（knowledge-cand-declaration-text-arbitrates-violation-claims）</span></div></section><section><h2><span class="num">04</span>札の作り</h2>
+<div class="scroll"><table class="wide"><thead><tr><th>持たせるもの</th><th>なぜ</th></tr></thead><tbody>
+<tr><td class="name">識別子<span class="sub">（例 <code>val-spec-writer</code>）</span></td>
+<td><b>欄を増やさずに拡張する唯一の道。</b>指せないものは、下位から結べない</td></tr>
+<tr><td class="name">取り下げの記録<span class="sub">（いつ・なぜ）</span></td>
+<td>事業領域は変わる。札を消すと<b>なぜ変えたかが消える</b>。方向を保つ文書が、方向の変更を失う</td></tr>
+<tr><td class="name">日付は取り下げた札にだけ</td>
+<td>全部の札に日付を振ると常時ノイズになる。いつ決めたかは、変わったときにだけ要る</td></tr>
+</tbody></table></div>
+<div class="znote"><b>下向きの一覧は持たない。</b>業務領域の側が「属する事業領域」を持っているので、
+どこにも属さない業務領域は子の側から検出できる。
+<span class="sub">（集約が内側の一覧を持つのは、どの一覧にも現れないものを検出するためであり、ここではその目的が子の側で果たされている）</span></div>
+</section>
+
+<section><h2><span class="num">05</span>まだ決めていないこと</h2>
+<div class="scroll"><table><thead><tr><th>論点</th><th>状態</th></tr></thead><tbody>
+<tr><td class="name">完成イメージの「やらないこと」1枚を残すか、0枚へ戻すか</td><td><span class="kindtag lim">未決</span> 説明用に作った例であり、実際の事業判断ではない</td></tr>
+<tr><td class="name">識別子を英語のままにするか</td><td><span class="kindtag lim">未決</span> この文書は技術語ゼロで作ったが、識別子だけ英語。他文書は英語（<code>bd-waffle</code>）</td></tr>
+</tbody></table></div>
+</section>
+
+<p class="foot">この決定は<b>事業領域だけ</b>を対象とする。業務領域・区切られた文脈にも同じ形が要るかは、まだ確かめていない。</p>
+</div>

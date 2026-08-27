@@ -1,0 +1,440 @@
+<title>部品ごとの描画結果</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+:root{--fig-line:#C3CAD2;
+    --fig-line-w:1.2px;
+    --fig-sym:#79828F;
+    --fig-sym-w:1.4px;
+    --fig-box-fill:#F5F7F9;
+    --fig-box-stroke:#C3CAD2;
+    --fig-box-radius:5px;
+    --fig-accent:#16636B;
+    --fig-accent-bg:#E2EFF0;
+    --fig-warn:#9A4A21;
+    --fig-warn-bg:#F7EAE2;
+    --fig-text:#171B23;
+    --fig-text-soft:#4B5563;
+    --fig-text-faint:#79828F;
+    --fig-font:var(--sans);
+    --fig-font-mono:var(--mono);
+    --fig-size-name:12px;
+    --fig-size-row:11px;
+    --fig-size-edge:10px;
+    --fig-size-small:9px;
+    --fig-group-stroke:#16636B;
+    --fig-group-dash:5 4;
+    --fig-track:#E4E9EE;
+    --fig-tone-0:#16636B;
+    --fig-tone-1:#9A4A21;
+    --fig-tone-2:#7A4368;
+    --fig-tone-3:#8A8F98;
+    --fig-on-tone:#FFFFFF}
+.wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
+.wf-node rect{fill:var(--fig-box-fill);stroke:var(--fig-box-stroke);stroke-width:1}
+.wf-name{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+           font-size:12px;text-anchor:middle}
+.wf-node--focus rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+.wf-node--focus .wf-name{fill:var(--fig-accent);font-weight:600}
+.wf-node--removed rect,
+  .wf-node--muted rect{fill:none;stroke:var(--fig-text-faint);stroke-dasharray:4 3}
+.wf-node--removed .wf-name,
+  .wf-node--muted .wf-name{fill:var(--fig-text-faint)}
+.wf-node--added rect{fill:var(--fig-accent-bg);stroke:var(--fig-accent);stroke-width:1.4}
+.wf-node--added .wf-name{fill:var(--fig-accent);font-weight:600}
+.wf-edge{fill:none;stroke:var(--fig-line);stroke-width:var(--fig-line-w)}
+.wf-arrow{fill:var(--fig-line)}
+.wf-label-bg{fill:var(--fig-box-fill);stroke:none}
+.wf-edge-label{fill:var(--fig-text-faint);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+                 font-size:10px;text-anchor:middle}
+.wf-end-word{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+               font-size:9px}
+.wf-group{fill:none;stroke:var(--fig-group-stroke);stroke-width:1.1;
+            stroke-dasharray:var(--fig-group-dash);opacity:.75}
+.wf-group-label{fill:var(--fig-group-stroke);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+                  font-size:10px}
+.wf-node--start circle{fill:var(--fig-text);stroke:none}
+.wf-node--end circle{fill:var(--fig-text);stroke:none}
+.wf-node--end .wf-ring{fill:none;stroke:var(--fig-text);stroke-width:1.4}
+.wf-sym path{stroke:var(--fig-sym);stroke-width:var(--fig-sym-w);fill:none}
+.wf-sym .wf-fill{fill:var(--fig-sym)}
+.wf-sym .wf-hollow{fill:var(--fig-box-fill);stroke:var(--fig-sym);stroke-width:var(--fig-sym-w)}
+.wf-rule{stroke:var(--fig-box-stroke)}
+.wf-node .wf-head{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+                    font-size:12px;font-weight:600;text-anchor:middle}
+.wf-node .wf-row{fill:var(--fig-text-soft);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+                   font-size:11px;text-anchor:start}
+:root:not([data-theme="light"]){--fig-box-fill:#20252D;--fig-box-stroke:#3A424D;--fig-line:#4E5763;--fig-text:#E5E9EF;--fig-text-soft:#A8B1BD;--fig-text-faint:#7A8492;--fig-accent:#7DC4A6;--fig-accent-bg:#152A22;--fig-group-stroke:#7DC4A6;--fig-sym:#A8B1BD;--fig-track:#2C333C}
+:root[data-theme="dark"]{--fig-box-fill:#20252D;--fig-box-stroke:#3A424D;--fig-line:#4E5763;--fig-text:#E5E9EF;--fig-text-soft:#A8B1BD;--fig-text-faint:#7A8492;--fig-accent:#7DC4A6;--fig-accent-bg:#152A22;--fig-group-stroke:#7DC4A6;--fig-sym:#A8B1BD;--fig-track:#2C333C}
+.wf-node text{fill:var(--fig-text);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;font-size:12px;text-anchor:middle}
+.cards{display:flex;flex-direction:column;gap:1.1rem}
+.pc{border:1px solid var(--rule);border-radius:3px;background:var(--surface);overflow:hidden}
+.pch{display:flex;flex-wrap:wrap;align-items:baseline;gap:.7rem;padding:.7rem .95rem;
+     background:var(--surface-2);border-bottom:1px solid var(--rule)}
+.pn{font-size:.92rem;font-weight:700;background:none;border:none;padding:0;color:var(--ink)}
+.psays{font-size:.83rem;color:var(--ink-faint)}
+.pcg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:0}
+@media(max-width:52rem){.pcg{grid-template-columns:minmax(0,1fr)}}
+.pcg>*+*{border-left:1px solid var(--rule-soft)}
+@media(max-width:52rem){.pcg>*+*{border-left:none;border-top:1px solid var(--rule-soft)}}
+.declwrap{display:flex;flex-direction:column;min-width:0}
+.dlbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--ink-faint);padding:.6rem .95rem .35rem}
+.declwrap .scroll{border:none;border-radius:0;background:none;flex:1}
+.declwrap pre{margin:0;padding:0 .95rem .85rem;font-family:var(--mono);font-size:.76rem;
+              line-height:1.7;white-space:pre;color:var(--ink-soft)}
+.out pre{color:var(--ink)}
+.figout{padding:.4rem .95rem .9rem;border:none;background:none}
+.figout svg{max-width:100%;height:auto}
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;
+      border-left:3px solid var(--ink);padding-left:.85rem}
+</style><div class="wrap"><header><p class="eyebrow">部品ごとの描画結果</p><h1>いま描ける14種と、図がこれからどうなるか</h1><p class="lede">すべて<b>その場で実際に描いた結果</b>である。文字が主役の9種はいまの実装、図の5種はいまの実装（Mermaid）と新しい宣言で描いたもの（SVG）を並べる。</p></header><section><h2><span class="num">01</span>全体の見取り</h2><p class="lead">描ける部品は<b>14種</b>。うち図の5種は、承認済みの決定で<b>主張の名前へ置き換わる</b>。</p><div class="scroll"><table><thead><tr><th>群</th><th>部品</th><th>schema での使用</th><th>これから</th></tr></thead><tbody><tr class=""><td class="cond">文字が主役</td><td><code>paragraph</code> 79 / <code>table</code> 68 / <code>list</code> 26 / <code>section</code> 22 / <code>keyvalue</code> 20 / <code>code</code> 11 / <code>kvtable</code> 7 / <code>object</code> 6</td><td>計239回</td><td><b>そのまま。</b>段1 の語彙として定義する</td></tr><tr class=""><td class="cond">未使用</td><td><code>divider</code></td><td><b>0回</b></td><td>落とすかを決める</td></tr><tr class="keyrow"><td class="cond">図</td><td><code>graph</code> 3 / <code>sequence</code> 2 / <code>statediagram</code> 1 / <code>architecture</code> 1 / <code>flowchart</code> 1</td><td>計8回</td><td><b>廃止。</b>16の主張（関係7・量9）へ置き換わる</td></tr></tbody></table></div><details class="fold"><summary>いま図の5種が抱えている問題を開く</summary><p class="blob"><b>描き方ごとに欄が生えている。</b><code>flowchart</code> は <code>transitionsFrom</code>、<code>sequence</code> は <code>participantsFrom</code>、<code>graph</code> は <code>nodesFrom</code> と <code>groupsFrom</code>、<code>architecture</code> は <code>connectionsFrom</code>——同じ「点と線」を描くのに、名前も欄も別々である。</p><p class="blob">新しい宣言では、書ける欄は <code>items</code>・<code>links</code>・<code>frame</code> の3つだけ。<b>どれを書けるかは主張が決める</b>ので、描き方ごとの欄は消える。</p></details></section><section><h2><span class="num">02</span>文字が主役の部品（いまの実装）</h2><p class="lead">9種。宣言と、その宣言で実際に描いた Markdown を並べる。</p><div class="cards"><article class="pc" id="part-paragraph"><header class="pch"><code class="pn">paragraph</code><span class="psays">ひとかたまりの文</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;paragraph&quot;,
+ &quot;from&quot;: &quot;text&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>骨格の形を知っているのは Schema だけである。</pre></div></div></div></article><article class="pc" id="part-list"><header class="pch"><code class="pn">list</code><span class="psays">並びに順位のない箇条</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;list&quot;,
+ &quot;from&quot;: &quot;items&quot;,
+ &quot;heading&quot;: &quot;守ること&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>## 守ること
+
+- 参照は持つが、自分では解決しない
+- 解決した相手を引数で受け取る</pre></div></div></div></article><article class="pc" id="part-table"><header class="pch"><code class="pn">table</code><span class="psays">配列を行にした表</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;table&quot;,
+ &quot;from&quot;: &quot;items&quot;,
+ &quot;heading&quot;: &quot;語彙&quot;,
+ &quot;columns&quot;: [
+  {
+   &quot;field&quot;: &quot;word&quot;,
+   &quot;header&quot;: &quot;語&quot;
+  },
+  {
+   &quot;field&quot;: &quot;says&quot;,
+   &quot;header&quot;: &quot;述べること&quot;
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>## 語彙
+
+| 語 | 述べること |
+|---|---|
+| x-render-order | 描く順序 |
+| x-render-level | 見出しの深さ |</pre></div></div></div></article><article class="pc" id="part-kvtable"><header class="pch"><code class="pn">kvtable</code><span class="psays">いま居る場所そのものを1行にした表</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;kvtable&quot;,
+ &quot;columns&quot;: [
+  {
+   &quot;field&quot;: &quot;name&quot;,
+   &quot;header&quot;: &quot;名前&quot;
+  },
+  {
+   &quot;field&quot;: &quot;kind&quot;,
+   &quot;header&quot;: &quot;種別&quot;
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>| 名前 | 種別 |
+|---|---|
+| Schema | エンティティ |</pre></div></div></div></article><article class="pc" id="part-keyvalue"><header class="pch"><code class="pn">keyvalue</code><span class="psays">名前と値の組</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;keyvalue&quot;,
+ &quot;heading&quot;: &quot;取り決め&quot;,
+ &quot;pairs&quot;: [
+  {
+   &quot;label&quot;: &quot;持ち主&quot;,
+   &quot;from&quot;: &quot;owner&quot;
+  },
+  {
+   &quot;label&quot;: &quot;引数&quot;,
+   &quot;from&quot;: &quot;arg&quot;
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>## 取り決め
+
+- **持ち主**: Document
+- **引数**: schema</pre></div></div></div></article><article class="pc" id="part-code"><header class="pch"><code class="pn">code</code><span class="psays">そのまま見せる字面</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;code&quot;,
+ &quot;from&quot;: &quot;snippet&quot;,
+ &quot;lang&quot;: &quot;python&quot;,
+ &quot;heading&quot;: &quot;呼び方&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>## 呼び方
+
+```python
+document.適合を判定する(schema)
+```</pre></div></div></div></article><article class="pc" id="part-section"><header class="pch"><code class="pn">section</code><span class="psays">配列の要素ごとに見出しを立てて入れ子で描く</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;section&quot;,
+ &quot;from&quot;: &quot;cases&quot;,
+ &quot;titleFrom&quot;: &quot;name&quot;,
+ &quot;itemLabel&quot;: &quot;筋書き&quot;,
+ &quot;each&quot;: [
+  {
+   &quot;as&quot;: &quot;paragraph&quot;,
+   &quot;from&quot;: &quot;given&quot;
+  },
+  {
+   &quot;as&quot;: &quot;list&quot;,
+   &quot;from&quot;: &quot;steps&quot;
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>## 筋書き 1: 版を切る
+
+既存の Document がある。
+
+- 新しい版を足す
+- 既存が壊れないか確かめる</pre></div></div></div></article><article class="pc" id="part-object"><header class="pch"><code class="pn">object</code><span class="psays">入れ子の中へ降りる</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;object&quot;,
+ &quot;from&quot;: &quot;detail&quot;,
+ &quot;each&quot;: [
+  {
+   &quot;as&quot;: &quot;paragraph&quot;,
+   &quot;from&quot;: &quot;note&quot;
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>入れ子の中へ降りて描く。</pre></div></div></div></article><article class="pc" id="part-divider"><header class="pch"><code class="pn">divider</code><span class="psays">区切り線（schema では未使用）</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;divider&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>---</pre></div></div></div></article></div></section><section><h2><span class="num">03</span>図 ── いまの形（Mermaid）</h2><p class="lead">5種。<b>描き方の名前を書き手が選び、名前ごとに違う欄を持つ。</b></p><div class="cards"><article class="pc" id="part-graph"><header class="pch"><code class="pn">graph</code><span class="psays">点と線</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;graph&quot;,
+ &quot;from&quot;: &quot;links&quot;,
+ &quot;nodesFrom&quot;: &quot;nodes&quot;,
+ &quot;groupsFrom&quot;: &quot;groups&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>```mermaid
+flowchart LR
+    n0[Schema]
+    n1[Document]
+    n0 --&gt;|&quot;骨格を作る&quot;| n1
+```</pre></div></div></div></article><article class="pc" id="part-sequence"><header class="pch"><code class="pn">sequence</code><span class="psays">やり取りの順</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;sequence&quot;,
+ &quot;from&quot;: &quot;messages&quot;,
+ &quot;participantsFrom&quot;: &quot;actors&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>```mermaid
+sequenceDiagram
+    actor user as 利用者
+    participant waffle as Waffle
+    user-&gt;&gt;waffle: 骨格を作る
+    waffle-&gt;&gt;user: 骨格と書き方の指針
+```</pre></div></div></div></article><article class="pc" id="part-statediagram"><header class="pch"><code class="pn">statediagram</code><span class="psays">状態の移り</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;statediagram&quot;,
+ &quot;from&quot;: &quot;transitions&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>```mermaid
+stateDiagram-v2
+    CREATED --&gt; VALIDATED: 適合を判定する
+    VALIDATED --&gt; RENDERED: 描く
+```</pre></div></div></div></article><article class="pc" id="part-architecture"><header class="pch"><code class="pn">architecture</code><span class="psays">囲みと中身</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;architecture&quot;,
+ &quot;from&quot;: &quot;zones&quot;,
+ &quot;connectionsFrom&quot;: &quot;connections&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>```mermaid
+architecture-beta
+    group tier1(cloud)[&quot;段1&quot;]
+    service schema(server)[Schema] in tier1
+    group tier2(cloud)[&quot;段2&quot;]
+    service dss(server)[DomainSpecSchema] in tier2
+    schema:R --&gt; L:dss
+```</pre></div></div></div></article><article class="pc" id="part-flowchart"><header class="pch"><code class="pn">flowchart</code><span class="psays">流れ</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言</span><div class="scroll decl"><pre>{
+ &quot;as&quot;: &quot;flowchart&quot;,
+ &quot;from&quot;: &quot;nodes&quot;,
+ &quot;transitionsFrom&quot;: &quot;transitions&quot;
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（Markdown）</span><div class="scroll out"><pre>```mermaid
+flowchart LR
+    a[&quot;宣言&quot;]
+    b[&quot;成果物&quot;]
+    a --&gt;|&quot;描く&quot;| b
+```</pre></div></div></div></article></div></section><section><h2><span class="num">04</span>図 ── これからの形（主張が軸）</h2><p class="lead">同じ内容を、<b>主張の名前で宣言し直したもの</b>。欄は <code>items</code>・<code>links</code>・<code>frame</code> の3つだけで、どれを書けるかは主張が決める。描いた SVG は、復元した実装をその場で動かして得たもの。</p><div class="cards"><article class="pc"><header class="pch"><code class="pn">つながり</code><span class="psays">Schema が Document の骨格を作る。</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言（主張が軸）</span><div class="scroll decl"><pre>{
+ &quot;asserts&quot;: &quot;つながり&quot;,
+ &quot;reading&quot;: &quot;Schema が Document の骨格を作る。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;Schema&quot;
+  },
+  {
+   &quot;name&quot;: &quot;Document&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;Schema&quot;,
+   &quot;to&quot;: &quot;Document&quot;,
+   &quot;name&quot;: &quot;骨格を作る&quot;
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（SVG・その場で描いたもの）</span><div class="scroll figout"><svg class="wf-fig" viewBox="0 0 99 117" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M41.1,31.1 C41.1,43.1 41.1,60.3 41.1,74.6 L41.1,85.7" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><text class="wf-edge-label" x="70.0" y="61.5" fill="#79828F" text-anchor="middle">骨格を作る</text><g class="wf-node wf-node--plain"><rect x="6.7" y="0.0" width="68.8" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="41.1" y="19.5" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">Schema</text></g><g class="wf-node wf-node--plain"><rect x="0.0" y="86.0" width="82.3" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="41.1" y="105.4" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">Document</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><code class="pn">階層</code><span class="psays">段1 の下に段2 が、その下に段3 がある。</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言（主張が軸）</span><div class="scroll decl"><pre>{
+ &quot;asserts&quot;: &quot;階層&quot;,
+ &quot;reading&quot;: &quot;段1 の下に段2 が、その下に段3 がある。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;段1 Schema の実装&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;name&quot;: &quot;段2 型（Document）&quot;,
+     &quot;children&quot;: [
+      {
+       &quot;name&quot;: &quot;段3 実体（Document）&quot;
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（SVG・その場で描いたもの）</span><div class="scroll figout"><svg class="wf-fig" viewBox="0 0 152 173" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M76.0,31.4 C76.0,39.6 76.0,49.9 76.0,59.3 L76.0,70.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M76.0,102.4 C76.0,110.5 76.0,120.8 76.0,130.2 L76.0,141.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--plain"><rect x="11.2" y="-0.0" width="129.5" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="76.0" y="19.5" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">段1 Schema の実装</text></g><g class="wf-node wf-node--plain"><rect x="6.0" y="71.0" width="140.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="76.0" y="90.4" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">段2 型（Document）</text></g><g class="wf-node wf-node--plain"><rect x="-0.0" y="141.9" width="152.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="76.0" y="161.4" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">段3 実体（Document）</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><code class="pn">包含</code><span class="psays">Waffle の実装が段1 を含み、Document が段2・段3 を含む。</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言（主張が軸）</span><div class="scroll decl"><pre>{
+ &quot;asserts&quot;: &quot;包含&quot;,
+ &quot;reading&quot;: &quot;Waffle の実装が段1 を含み、Document が段2・段3 を含む。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;Waffle の実装&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;name&quot;: &quot;Schema&quot;
+    }
+   ]
+  },
+  {
+   &quot;name&quot;: &quot;Document&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;name&quot;: &quot;DomainSpecSchema&quot;
+    },
+    {
+     &quot;name&quot;: &quot;uc-render-document&quot;
+    }
+   ]
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（SVG・その場で描いたもの）</span><div class="scroll figout"><svg class="wf-fig" viewBox="0 0 447 94" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><rect class="wf-group" x="8.0" y="8.0" width="92.0" height="78.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity=".75" /><text class="wf-group-label" x="18.0" y="21.0" fill="#16636B">Waffle の実装</text><rect class="wf-group" x="108.0" y="8.0" width="331.0" height="78.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity=".75" /><text class="wf-group-label" x="118.0" y="21.0" fill="#16636B">Document</text><g class="wf-node wf-node--plain"><rect x="19.6" y="43.0" width="68.8" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="54.0" y="62.5" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">Schema</text></g><g class="wf-node wf-node--plain"><rect x="119.6" y="43.0" width="140.8" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="190.0" y="62.5" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">DomainSpecSchema</text></g><g class="wf-node wf-node--plain"><rect x="285.2" y="43.0" width="141.5" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="356.0" y="62.5" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">uc-render-document</text></g></svg></div></div></div></article><article class="pc"><header class="pch"><code class="pn">順序</code><span class="psays">仕様を書き、描き、検査する。</span></header><div class="pcg"><div class="declwrap"><span class="dlbl">宣言（主張が軸）</span><div class="scroll decl"><pre>{
+ &quot;asserts&quot;: &quot;順序&quot;,
+ &quot;reading&quot;: &quot;仕様を書き、描き、検査する。&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;name&quot;: &quot;仕様を書く&quot;,
+   &quot;role&quot;: &quot;start&quot;
+  },
+  {
+   &quot;name&quot;: &quot;描く&quot;
+  },
+  {
+   &quot;name&quot;: &quot;検査する&quot;,
+   &quot;role&quot;: &quot;end&quot;
+  }
+ ]
+}</pre></div></div><div class="declwrap"><span class="dlbl">描いた結果（SVG・その場で描いたもの）</span><div class="scroll figout"><svg class="wf-fig" viewBox="0 0 288 31" role="img"><defs><marker id="wf-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="wf-arrow" d="M0,0 L10,5 L0,10 z" fill="#C3CAD2" /></marker></defs><path class="wf-edge" d="M83.4,15.5 C92.5,15.5 102.2,15.5 111.2,15.5 L122.6,15.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><path class="wf-edge" d="M177.4,15.5 C186.0,15.5 195.7,15.5 205.2,15.5 L216.6,15.5" marker-end="url(#wf-head)" fill="none" stroke="#C3CAD2" stroke-width="1.2" /><g class="wf-node wf-node--start"><rect x="0.0" y="0.0" width="83.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="41.5" y="19.5" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">仕様を書く</text></g><g class="wf-node wf-node--plain"><rect x="123.0" y="0.0" width="54.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="150.0" y="19.5" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">描く</text></g><g class="wf-node wf-node--end"><rect x="217.0" y="0.0" width="71.0" height="31.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1" /><text x="252.6" y="19.5" fill="#171B23" font-size="12" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" text-anchor="middle">検査する</text></g></svg></div></div></div></article></div><details class="fold"><summary>描いてみて分かったこと ── 2件</summary><p class="blob"><b>渡す例で、描き分けが見えたり見えなかったりする。</b>ここで「階層」に渡したのは枝分かれのない一本道なので、「順序」と同じ絵に見える。枝分かれのある例を渡すと、木として描かれて明確に違う。<b>描き分けを確かめるには、その主張が他と分かれる形の例を渡さなければならない。</b></p><p class="blob"><b>図が単体では正しく描けなかった。</b>出てくる SVG は <code>class</code> だけを持ち、色をページの CSS に頼っている。復元した実装の冒頭には「色と書体は要素の属性として持たせる。図だけを取り出しても正しく描け、機械で確かめられるようにするため」と書いてあるので、<b>書いてある意図と実物が食い違っている</b>。この一覧では属性を補って自己完結させた。</p></details><details class="fold"><summary>16の主張のうち、ここで見せているのは4つ</summary><p class="blob">関係7（<b>つながり・階層・包含・順序</b>・循環・やり取り・対応）と量9（全体と部分・量の大小・順位・時間変化・分布・偏差・相関・流量・空間）で計16。復元した実装に描く手が揃っているのは、いまのところ太字の4つである。</p><p class="foldnote">残り12は <code>recovered/figures/</code> に材料はあるが、<code>src/</code> へ載せる作業がまだ済んでいない。</p></details></section><section><h2><span class="num">05</span>この一覧で決まらないこと</h2><p class="lead">見た上で語彙を決め直す。ここでは並べただけである。</p><div class="scroll"><table><thead><tr><th>項目</th><th>何を決めるか</th></tr></thead><tbody><tr class=""><td class="cond">文字が主役の9種の名前</td><td>いまの名前をそのまま段1 の語彙にするか、言い換えるか</td></tr><tr class=""><td class="cond"><code>divider</code></td><td>使用0。落とすか残すか</td></tr><tr class=""><td class="cond"><code>kvtable</code> と <code>keyvalue</code></td><td>どちらも名前と値の組を描く。分ける理由があるか</td></tr><tr class=""><td class="cond">残り12の主張</td><td>描く手を <code>src/</code> へ載せる順序</td></tr><tr class="keyrow"><td class="cond">確かめ方の例</td><td>主張ごとに、他と分かれる形の例を用意する。一本道の「階層」では確かめられない</td></tr><tr class="keyrow"><td class="cond">図の自己完結</td><td>色を属性として持たせるか、CSS に頼るか。復元した実装は意図と食い違っている</td></tr></tbody></table></div></section></div>

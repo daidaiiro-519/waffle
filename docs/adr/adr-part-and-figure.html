@@ -1,0 +1,176 @@
+<title>部品と図を分ける</title>
+<style>
+:root{--paper:#EFF1F4;--surface:#FFFFFF;--surface-2:#F6F8FA;--ink:#16191F;--ink-soft:#545C69;
+ --ink-faint:#7C8593;--rule:#D5DAE1;--rule-soft:#E6EAEF;
+ --now:#8C2F39;--now-bg:#F5E7E8;--next:#25604A;--next-bg:#E2EFE9;--key:#7A5A22;--key-bg:#F3EDE0;
+ --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+ --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+ --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;--ink-soft:#A8B1BD;
+ --ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+ --now:#DB9AA1;--now-bg:#2C1B1D;--next:#7DC4A6;--next-bg:#152A22;--key:#D3B27A;--key-bg:#2A2318;}}
+:root[data-theme="dark"]{--paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;
+ --ink-soft:#A8B1BD;--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+ --now:#DB9AA1;--now-bg:#2C1B1D;--next:#7DC4A6;--next-bg:#152A22;--key:#D3B27A;--key-bg:#2A2318;}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+ margin:0;padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,2rem) 5rem}
+.wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:2.8rem}
+.col{max-width:40rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:0}
+h1{font-family:var(--serif);font-size:clamp(1.5rem,3.6vw,2.05rem);line-height:1.4;font-weight:600;margin:.6rem 0 0;text-wrap:balance}
+.lede{color:var(--ink-soft);font-size:1rem;margin:.7rem 0 0;max-width:40rem}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-size:1.28rem;font-weight:600;margin:0;padding-bottom:.6rem;
+ border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+p{margin:0}
+.col>p+p{margin-top:.85rem}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+pre{margin:0;padding:.85rem 1rem;font-family:var(--mono);font-size:.78rem;line-height:1.8;
+ background:var(--surface-2);border:1px solid var(--rule);border-radius:3px;overflow-x:auto;color:var(--ink-soft)}
+pre b{color:var(--now)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:46rem){.pair{grid-template-columns:1fr}}
+.panel{border:1px solid var(--rule);border-top:3px solid var(--rule);border-radius:2px;background:var(--surface);
+ padding:1rem 1.1rem 1.15rem;display:flex;flex-direction:column;gap:.7rem}
+.panel.now{border-top-color:var(--now)} .panel.next{border-top-color:var(--next)}
+.panel .lbl{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+.panel.now .lbl{color:var(--now)} .panel.next .lbl{color:var(--next)}
+.panel .t{font-family:var(--serif);font-size:1.02rem;font-weight:600}
+.panel p{font-size:.88rem;color:var(--ink-soft);line-height:1.75}
+.stage{background:#F6F8FA;border:1px solid #E6EAEF;border-radius:4px;padding:.9rem;
+ overflow-x:auto;display:flex;justify-content:center}
+.stage svg{max-width:100%;height:auto}
+
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:34rem}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.6}
+thead th{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+ font-weight:600;background:var(--surface-2);border-bottom:1px solid var(--rule)}
+tbody tr:last-child td{border-bottom:none}
+td.name{font-weight:700}
+.ok{color:var(--next);font-weight:700} .ng{color:var(--now);font-weight:700} .un{color:var(--ink-faint)}
+.approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+ padding:1rem 1.2rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+.approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+.approve .m{font-size:.9rem;color:var(--ink-soft)}
+figcaption{font-size:.82rem;color:var(--ink-faint);line-height:1.7}
+
+.stage.big svg{width:min(100%,300px)}
+.gain{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:46rem){.gain{grid-template-columns:1fr}}
+.stage.big svg{width:min(100%,300px)}
+.gain{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:46rem){.gain{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem}
+.chip{border:1px solid var(--rule);border-radius:2px;background:var(--surface);
+ padding:.35rem .6rem;font-size:.82rem;display:flex;gap:.45rem;align-items:baseline}
+.chip b{font-family:var(--mono);font-size:.78rem}
+.chip.part{border-left:3px solid var(--next)}
+.chip.fig{border-left:3px solid var(--now)}
+.chip span{color:var(--ink-faint)}
+.stage.big svg{width:min(100%,320px)}
+a{color:var(--next);text-decoration-color:color-mix(in srgb,var(--next) 45%,transparent);text-underline-offset:.15em}
+a:hover{text-decoration-color:var(--next)}
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">svg_engine ── ADR</p>
+<h1>部品と図を分ける</h1>
+<p class="lede">1つの台帳に、<b>形を描く部品</b>と<b>1つで1枚になる図</b>が同居している。図が部品のふりをすると節点として置いたときに壊れ、図が図の機能を自前で持つと直しても他へ伝わらない。<b>円グラフを実際に割って測った</b>結果を根拠に、両者を別の契約として分ける。</p>
+</header>
+
+<section>
+<h2><span class="num">01</span>実物 ── 円グラフを節点として置く</h2>
+<div class="pair">
+<div class="panel now">
+<span class="lbl">変更前</span><span class="t">図を部品として置いた</span>
+<div class="stage big"><svg class="wf-fig" viewBox="0 0 328 272" width="328" height="272" role="img"><g transform="translate(6.0,6.0)"><path d="M201.0,32.6 L103.6,120.2" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="103.6,120.2 107.0,113.8 110.3,117.5" fill="#C3CAD2"/><path d="M201.0,32.6 L286.0,95.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="286.0,95.4 279.1,93.4 282.0,89.4" fill="#C3CAD2"/><g class="wf-node" transform="translate(157.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="88.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="44.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">文書の部品</text></g></g><g class="wf-node" transform="translate(0.0,96.0)"><g><g transform="translate(18,18.0)"><g><path d="M64.0,12.0 A52.0,52.0 0 1,1 12.8,73.0" fill="none" stroke="#16636B" stroke-width="24"/><path d="M12.8,73.0 A52.0,52.0 0 0,1 64.0,12.0" fill="none" stroke="#9A4A21" stroke-width="24"/><text x="64.0" y="68.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#171B23">18</text></g></g><rect x="156.0" y="26.0" width="10" height="10" rx="2" fill="#16636B"/><text x="171.0" y="34.6" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">文書</text><text x="214.0" y="34.6" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">13</text><rect x="156.0" y="52.0" width="10" height="10" rx="2" fill="#9A4A21"/><text x="171.0" y="60.6" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">図</text><text x="214.0" y="60.6" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">5</text></g></g><g class="wf-node" transform="translate(256.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">検査</text></g></g></g></svg></div>
+<p><b>節点の名前「割合」が消える。</b>図は自分の名前を描く責務を持たないため。<b>当時の幾何検査は0件と報告した。</b><br>
+（この絵を描いたときは、矢印も凡例側の空白を指していた。着き先の決め方を「描いたインクから選ぶ」に直したので、いまは輪に着く ── <b>名前が消えることだけは、この直しでは消えない。</b>）</p>
+</div>
+<div class="panel next">
+<span class="lbl">変更後</span><span class="t">部品（donut）を名前つきで置いた</span>
+<div class="stage big"><svg class="wf-fig" viewBox="0 0 224 252" width="224" height="252" role="img"><g transform="translate(6.0,6.0)"><path d="M123.0,32.6 L62.0,99.3" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="62.0,99.3 64.7,92.6 68.4,96.0" fill="#C3CAD2"/><path d="M123.0,32.6 L182.0,95.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="182.0,95.4 175.6,92.2 179.2,88.8" fill="#C3CAD2"/><g class="wf-node" transform="translate(79.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="88.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="44.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">文書の部品</text></g></g><g class="wf-node" transform="translate(0.0,96.0)"><g><rect x="46.0" y="3.3" width="36.0" height="9.4" fill="#F5F7F9"/><text x="64.0" y="10.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="600" fill="#171B23">割合</text><g transform="translate(0.0,16.0)"><g><path d="M64.0,12.0 A52.0,52.0 0 1,1 12.8,73.0" fill="none" stroke="#16636B" stroke-width="24"/><path d="M12.8,73.0 A52.0,52.0 0 0,1 64.0,12.0" fill="none" stroke="#9A4A21" stroke-width="24"/><text x="64.0" y="68.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#171B23">18</text></g></g></g></g><g class="wf-node" transform="translate(152.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">検査</text></g></g></g></svg></div>
+<p><b>名前が残り、矢印が名前へ届く。</b>部品は形だけを描き、凡例を持たない。名前は「包む部品」が添える。<code>legend: False</code> のような逃げ道は要らなくなった。</p>
+</div>
+</div>
+<div class="scroll"><table>
+<thead><tr><th>測ったこと</th><th>変更前</th><th>変更後</th></tr></thead>
+<tbody>
+<tr class="keyrow"><td class="name">辺が着く位置（包まずに直接置いたとき）</td><td class="ng">外接矩形の縁（角）</td><td class="ok">輪の外周ちょうど</td></tr>
+<tr><td class="name">節点の名前</td><td class="ng">消える</td><td class="ok">残る</td></tr>
+<tr><td class="name">凡例を切る逃げ道（<code>legend: False</code>）</td><td class="ng">要る</td><td class="ok">不要</td></tr>
+<tr><td class="name">行数</td><td>54（図1つ）</td><td>101（部品56＋図45）</td></tr>
+</tbody></table></div>
+<p class="col"><b>行数は増えた。</b>削減が目的ではない ── 分けたことで、部品が1つのインクの塊になり、図が形の計算を持たなくなった。</p>
+<p class="col"><b>凡例は失われる。</b>部品は形だけを描くので、どの弧がどの項目かは分からなくなる。内訳そのものを読ませたいなら、節点にせず<b>図として1枚に使う</b> ── それが部品と図を分けるということでもある。</p>
+<div class="stage big" style="max-width:22rem"><svg class="wf-fig" viewBox="0 0 224 236" width="224" height="236" role="img"><g transform="translate(6.0,6.0)"><path d="M123.0,32.6 L64.0,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="64.0,96.0 66.8,89.4 70.4,92.7" fill="#C3CAD2"/><path d="M123.0,32.6 L182.0,95.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="182.0,95.4 175.6,92.2 179.2,88.8" fill="#C3CAD2"/><g class="wf-node" transform="translate(79.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="88.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="44.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">文書の部品</text></g></g><g class="wf-node" transform="translate(0.0,96.0)"><g><path d="M64.0,12.0 A52.0,52.0 0 1,1 12.8,73.0" fill="none" stroke="#16636B" stroke-width="24"/><path d="M12.8,73.0 A52.0,52.0 0 0,1 64.0,12.0" fill="none" stroke="#9A4A21" stroke-width="24"/><text x="64.0" y="68.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#171B23">18</text></g></g><g class="wf-node" transform="translate(152.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">検査</text></g></g></g></svg></div>
+<p class="col" style="font-size:.85rem;color:var(--ink-faint)">包まずに直接置いた場合。辺は輪の外周に着く。名前は付かない。</p>
+</section>
+
+<section>
+<h2><span class="num">02</span>この図を作る途中で出た、2つの崩れ</h2>
+<p class="col">上の「変更後」を描くだけで、包む部品（<code>titled</code>）の側に崩れが2つ出た。<b>どちらも幾何検査は0件と報告した。</b></p>
+<div class="scroll"><table>
+<thead><tr><th>崩れ</th><th>原因</th><th>直し方</th></tr></thead>
+<tbody>
+<tr><td class="name">矢じりが名前の字面に重なった</td><td>名前は節点の一部なので動かせず、辺は曲げない。終端と名前が同じ場所を取り合う</td><td class="ok">名前を<b>不透明な帯</b>の上に載せる（囲みの札と同じ扱い）。帯は字面ぴったりに取る ── 節点の幅いっぱいに広げたら、矢印が板に飲み込まれて消えた（実測）</td></tr>
+<tr><td class="name">名前の字面が、申告した大きさの外（y=−3.6）へ出ていた</td><td>ベースラインの位置をトークンの比だけで決めていた。<b>帯を描いて初めて見えた</b></td><td class="ok">行送りと書体の比から毎回導く。字面は必ず内側に収まる</td></tr>
+</tbody></table></div>
+<p class="col">2件目は、部品の最も基本的な契約（<b>申告した大きさがインクを含む</b>）の違反が、透明だったために誰にも見えていなかったもの。<b>不透明にすることが検査になった。</b></p>
+<p class="col"><b>この2件は入口だった。</b>11種を2通りずつ総当たりで描いたところ、幾何検査が0件と報告したまま6種で辺が空白を指していた。原因は「部品が輪郭を申告する」という仕組みそのもので、申告していたのは11種中3種だけだった。<a href="https://claude.ai/code/artifact/8069bf12-c76a-45d9-8b8d-f79e7b8f46a9">総当たりの実測</a>を参照。</p>
+</section>
+
+<section>
+<h2><span class="num">03</span>どちらに属するか</h2>
+<p class="col"><b>部品</b> ── 置かれる前に自分の原点で形を描き、大きさを申告する。名前を描くかどうかも申告する（描くなら包む側は描かない）。輪郭は申告しない ── 辺の着き先は、描いたインクから選ばれる。配置も他の要素も知らない。</p>
+<p class="col" style="font-size:.85rem;color:var(--ink-faint)">辺・囲みの枠・囲みの札は、この2つのどちらでもない ── <b>置いた後に</b>絶対座標で描くので、申告する大きさは器ではない（<code>placement="absolute"</code>）。だから上の契約も課さない。</p>
+<div class="chips"><span class="chip part"><b>box</b>四角い節点</span><span class="chip part"><b>hex</b>六角形の節点</span><span class="chip part"><b>dot</b>点</span><span class="chip part"><b>donut</b>割合の輪</span><span class="chip part"><b>path</b>自由曲線</span><span class="chip part"><b>boolean</b>形の和・積・差</span><span class="chip part"><b>icon</b>小さな記号</span><span class="chip part"><b>gradient_rect</b>帯</span><span class="chip part"><b>titled</b>名前を添えて包む</span><span class="chip part"><b>title</b>見出し</span><span class="chip part"><b>divider</b>区切り</span></div>
+<p class="col" style="margin-top:1.1rem"><b>図</b> ── 宣言と部品を組み合わせて1枚にする。共有の仕組み（ラベルの配置・占有領域・矢じり・トークン）を<b>使う義務を負う</b>。</p>
+<div class="chips"><span class="chip fig"><b>pie</b>輪＋凡例</span><span class="chip fig"><b>bars</b>縦棒</span><span class="chip fig"><b>ranking</b>順位</span><span class="chip fig"><b>lanes</b>時間の帯</span><span class="chip fig"><b>scatter</b>散布</span><span class="chip fig"><b>flow</b>流量</span><span class="chip fig"><b>spatial</b>空間</span><span class="chip fig"><b>table</b>表</span><span class="chip fig"><b>exchange</b>やり取り</span></div>
+</section>
+
+<section>
+<h2><span class="num">04</span>なぜ分けるか ── 同じ失敗が4回起きた</h2>
+<div class="scroll"><table>
+<thead><tr><th>起きたこと</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td class="name">円グラフを節点に置くと名前が消え、矢印が空中に着いた</td><td><b>図を部品として置いた</b>から。図は1つの輪郭を持てない</td></tr>
+<tr><td class="name">散布図のラベルが重なった（12点で15件）</td><td>図が<b>ラベル配置を自前で持ち</b>、他のラベルを見ていなかった</td></tr>
+<tr><td class="name">やり取りの矢じりがテーマに従わなかった</td><td>図が<b>矢じりを自前で描いていた</b></td></tr>
+<tr><td class="name">生の数値112箇所のうち58箇所がこの9個の中</td><td>図が<b>自前の座標系</b>を持ち、寸法を直書きしていた</td></tr>
+</tbody></table></div>
+<p class="col">4件とも「図が図レベルの機能を作り直している」ことが原因で、<b>幾何検査ではどれも見つからなかった</b>。分けて契約を別にすれば、どちらの側の話かが最初から決まる。</p>
+</section>
+
+<section>
+<h2><span class="num">05</span>残り8個をどうするか</h2>
+<div class="scroll"><table>
+<thead><tr><th>問い</th><th>決定</th></tr></thead>
+<tbody>
+<tr class="keyrow"><td class="name">8個も部品へ割るか</td><td><b>割らない。</b>図のままにして、<b>共有の仕組みを使う義務</b>だけを負わせる。部品として切り出すのは、<b>節点として置きたい必要が実証されたとき</b>だけ（円グラフはそれが実証されたので割った）</td></tr>
+<tr><td class="name">義務の中身</td><td>ラベルは <code>place_avoiding</code>／矢じりは <code>arrow_head</code>／囲みは <code>frame</code>＋<code>frame_label</code>／寸法はトークン。自前で書いたら、それは部品の切り出しが要るという合図</td></tr>
+<tr><td class="name">部品と図をどう見分けさせるか</td><td><b>1つのインクの塊かどうかで決まる。</b>塊なら部品、複数の塊の集まりなら図。円は塊、棒グラフは塊ではない。<br>（輪郭は部品に申告させない。描いたインクから導く ── 申告させると、申告した形と描いた形がずれる）</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">06</span>答えないこと</h2>
+<div class="scroll"><table>
+<thead><tr><th>問い</th><th>ここで答えない理由</th></tr></thead>
+<tbody>
+<tr><td class="name">輪郭の集合演算（和・積・差）を、辺の着き先にも使うか</td><td><b>要らなくなった。</b>包んだ姿は帯と中身が同じインクなので、インクから選ぶだけで上からは帯へ、横からは中身の縁へ着く。凹んだ形のために閉じた輪郭を作る必要が無い</td></tr>
+<tr><td class="name">台帳を2つに分けるか、1つのまま印を付けるか</td><td>まだ8個が図のままなので、分ける必要が出ていない。必要になってから決める</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">07</span>承認</h2>
+<div class="approve"><span class="k">状態</span><span class="v">承認済み（2026-08-23）</span>
+<span class="m">円グラフの分割は実装済み・実測済み。<b>次にやること</b> ── 残り8個へ「共有の仕組みを使う義務」を当て、自前で書いている箇所（ラベル配置・矢じり・寸法）を共有の仕組みへ寄せる。</span></div>
+</section>
+</div>

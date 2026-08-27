@@ -1,0 +1,140 @@
+<title>8つの型を段2 として立て、179本を移す</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.fig{margin:0;display:flex;flex-direction:column;gap:.6rem}
+.fig .scroll{padding:1.1rem 1rem}
+figcaption{font-size:.83rem;color:var(--ink-faint);line-height:1.7}
+figcaption b{color:var(--ink-soft)}
+</style><div class="wrap"><header><p class="eyebrow">移す計画</p><h1>8つの型を段2 として立て、179本を移す</h1><p class="lede">今回立てるのは <b>domain・knowledge・skill・hook・coding・template・agent・ADR</b> の8つ。書き換えが起きるのは<b>4段のうち1段だけ</b>で、互換は<b>版の併存</b>で保つ ── ただし<b>段1 だけは範囲を絞れない</b>。</p></header><section><h2><span class="num">01</span>何を書き換えるか</h2><p class="lead"><b>253本のうち、今回移すのは179本</b>である。</p><div class="scroll"><table><thead><tr><th>区分</th><th>本数</th><th>扱い</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>今回の範囲</b></td><td><b>179</b></td><td><code>DomainSpec</code> 44／<code>Knowledge</code> 78／<code>Skill</code> 20／<code>Hook</code> 15／<code>Coding</code> 13／<code>Template</code> 6／<code>Agent</code> 3</td></tr><tr class="keyrow"><td class="cond"><b>今回の範囲外</b></td><td><b>11</b></td><td><code>Platform</code> のみ。<b>廃止して考え直す</b>ので、古い形のまま残る</td></tr><tr class=""><td class="cond">触らない（<code>bc-artifact-share</code>）</td><td>26</td><td>そのまま</td></tr><tr class=""><td class="cond">廃止（Handoff）</td><td>37</td><td>落とす</td></tr><tr class="keyrow"><td class="cond"><b>合計</b></td><td><b>253</b></td><td>—</td></tr></tbody></table></div><details class="fold"><summary>範囲の外に置いた3つ</summary><p class="blob"><b><code>bc-artifact-share</code> の26本</b>は触らないと決めてある。<b>Handoff の37本</b>は ADR へ置き換え済みで、移す先が無い。<b>ほか11本</b>は、型そのものを考え直すと決めたものである。</p><p class="foldnote">この3つは理由が違う。<b>触らない・落とす・後回しにする</b>は、閉じ方も違う ── 節07を見よ。</p></details></section><section><h2><span class="num">02</span>立てる8つ</h2><p class="lead"><b>7つは移すもの、ADR だけは作るもの</b>である。</p><div class="scroll"><table><thead><tr><th>型</th><th>文書</th><th>いまの版</th><th>この移行で変わるもの</th><th>難しさ</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>DomainSpecSchema</code></td><td><b>44</b></td><td>v11／v10／v8 が併存</td><td><b>工程の状態を落とす</b>／種別の鍵／枝ごとの中身</td><td><b>大。旧版を落とし切れない</b></td></tr><tr class="keyrow"><td class="cond"><code>KnowledgeSchema</code></td><td><b>78</b></td><td><b>v5 が57本、v6 が21本</b></td><td>部品での組み直し</td><td><b>大。前の移行が終わっていない</b></td></tr><tr class=""><td class="cond"><code>SkillSchema</code></td><td>20</td><td>v2</td><td>部品での組み直し</td><td>中</td></tr><tr class=""><td class="cond"><code>HookSchema</code></td><td>15</td><td>v1</td><td>部品での組み直し</td><td>小</td></tr><tr class=""><td class="cond"><code>CodingSchema</code></td><td>13</td><td>v7</td><td>部品での組み直し</td><td>中</td></tr><tr class="keyrow"><td class="cond"><code>TemplateSchema</code></td><td><b>6</b></td><td>v2</td><td>部品での組み直し。<b>ただし実際に使われているテンプレートは17本で、型を持つのは6本だけ</b></td><td><b>中。6本のままか17本へ広げるかを、先に決める</b></td></tr><tr class=""><td class="cond"><code>AgentSchema</code></td><td>3</td><td>v3</td><td>部品での組み直し</td><td>小</td></tr><tr class="keyrow"><td class="cond"><b>ADR</b></td><td><b>0</b></td><td><b>型が無い</b></td><td><b>新しく起こす。</b>いま21枚が文書の外にあり、手で書いた組み立てで描かれている</td><td><b>中。移すのではなく作る</b></td></tr></tbody></table></div></section><section><h2><span class="num">03</span>順序</h2><p class="lead"><b>4段。書き換えが起きるのは第3段だけ</b>である。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 810 168" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><rect x="14" y="48" width="182" height="52" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="105.0" y="71.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">1 段1 を起こす</text><text x="105.0" y="89.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">部品を用意する</text><text x="105.0" y="120" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">文書に触れない</text><line x1="196" y1="74" x2="214" y2="74" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="214" y="48" width="182" height="52" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="305.0" y="71.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">2 型を版として起こす</text><text x="305.0" y="89.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">8つを組み直す</text><text x="305.0" y="120" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">文書に触れない</text><line x1="396" y1="74" x2="414" y2="74" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="414" y="48" width="182" height="52" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="2"/><text x="505.0" y="71.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">3 文書を型ごとに移す</text><text x="505.0" y="89.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">1つ閉じてから次へ</text><text x="505.0" y="120" text-anchor="middle" font-size="10.5" fill="var(--against)">文書に触れる</text><line x1="596" y1="74" x2="614" y2="74" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="614" y="48" width="182" height="52" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="705.0" y="71.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">4 旧い版を落とす</text><text x="705.0" y="89.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">閉じ切った型から</text><text x="705.0" y="120" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">文書に触れない</text><text x="14" y="26" text-anchor="start" font-size="11" fill="var(--ink-soft)">部品が無ければ型は組めず、型が無ければ文書は移せない</text><text x="14" y="152" text-anchor="start" font-size="10.5" fill="var(--against)">書き換えが起きるのは第3段だけ。ここだけが、途中で止まると新旧が混ざる</text></svg></div><figcaption><b>順序は、承認済みの「段1が部品を提供し、段2が組み立てる」から出る。</b>文書に触れるのは第3段だけである。</figcaption></figure><div class="step premise"><span class="lbl">前提</span><span class="txt">承認済みの決定が<b>「段1が部品を提供し、段2が組み立てる」</b>と定めている</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>部品が無ければ型は組めない。</b>段1 が型に先立つ</span></div><div class="joint">文書の側も見た</div><div class="step premise"><span class="lbl">前提</span><span class="txt">文書は自分の型を <code>schemaRef</code> で指し、その型に照らして判定される</span></div><div class="joint">だから</div><div class="step conclude"><span class="lbl">言えること</span><span class="txt"><b>型が無ければ文書は移せない。</b>型が文書に先立つ</span></div><div class="joint">落とす側は</div><div class="step conclude"><span class="lbl">結論</span><span class="txt"><b>旧い版は、その型の文書が全部移り終えてから落とす。</b>先に落とすと、移していない文書が判定できなくなる</span></div><div class="joint">裏づけを取った</div><div class="step evidence"><span class="lbl">測った</span><span class="txt"><code>DomainSpecSchema</code> は <b>v8・v10・v11 が同時に生きている</b>。<b>版の併存は、新しく持ち込む仕組みではない</b></span></div></section><section><h2><span class="num">04</span>段1 だけは範囲を絞れない</h2><p class="lead"><b>型は5つに絞れる。段1 は絞れない。</b></p><figure class="fig"><div class="scroll"><svg viewBox="0 0 700 212" role="img" style="min-width:44rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)"/></marker></defs><text x="14" y="20" text-anchor="start" font-size="11" fill="var(--infer)">型は8つに絞れる ── 第2段・第3段は、範囲の内側で閉じる</text><rect x="14" y="34" width="150" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="2"/><text x="89.0" y="53.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">段2（8つ）</text><text x="89.0" y="71.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">組み直す</text><line x1="164" y1="56" x2="236" y2="56" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="236" y="34" width="150" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="311.0" y="53.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">その文書 179本</text><text x="311.0" y="71.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">移す</text><text x="14" y="116" text-anchor="start" font-size="11" fill="var(--against)">段1 は絞れない ── 全型の共通契約</text><rect x="14" y="130" width="150" height="44" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="2"/><text x="89.0" y="149.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">段1</text><text x="89.0" y="167.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">全型の共通契約</text><line x1="164" y1="140" x2="236" y2="124" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="236" y="102" width="150" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1"/><text x="311.0" y="129.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">範囲内 179本</text><line x1="164" y1="162" x2="236" y2="178" stroke="var(--ink-faint)" stroke-width="1.4" marker-end="url(#ah)"/><rect x="236" y="156" width="150" height="44" rx="3" fill="var(--surface)" stroke="var(--against)" stroke-width="2"/><text x="311.0" y="175.0" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">範囲外 37本</text><text x="311.0" y="193.0" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">古い形のまま</text><text x="400" y="182" text-anchor="start" font-size="10.5" fill="var(--against)">読めなくなると、ここが壊れる</text></svg></div><figcaption><b>型は8つに絞れるが、段1 は絞れない。</b>範囲外の37本は<b>古い型のまま</b>残るので、<b>段1 はそれを読んで判定・描画できなければならない</b>。ただし<b>古い宣言を起こせる必要は無い</b> ── 旧い型は既に型として在り、起こす相手がいない。</figcaption></figure><details class="fold"><summary>なぜ段1 だけ違うのか</summary><p class="blob">段2 は<b>型ごとに独立している</b>ので、5つだけ組み直しても残りは古い型のまま成り立つ。<b>段1 は全型の共通契約</b>なので、入れ替えると<b>範囲外の37本が読めなくなる</b>。</p><p class="foldnote">したがって第1段の条件は「新しい部品を用意する」だけでは足りない。<b>旧い型を読んで判定・描画できたままにする</b>ことが要る。ただし<b>旧い宣言を起こせる必要は無い</b> ── 旧い型は既に型として在るので、起こす相手がいない（段1 の仕様 節07）。</p><p class="foldnote">これは後方互換を賄うことではなく、<b>範囲を絞ると決めたことの代償</b>である。</p></details></section><section><h2><span class="num">05</span>状態は、実質ひとつの値しか取っていない</h2><p class="lead"><b>工程の4つの値のうち、実際に使われているのは2つだけ</b>である。</p><div class="scroll"><table><thead><tr><th>いまの値</th><th>本数</th><th>持っている型</th><th>移した後</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>VALIDATED</b>（工程）</td><td><b>69</b></td><td><code>DomainSpecSchema</code> のみ</td><td><b>成熟の値へ</b>。うち範囲内は <b>44本</b></td></tr><tr class=""><td class="cond">CREATED（工程）</td><td>1</td><td>同上</td><td>範囲外（<code>bc-artifact-share</code>）</td></tr><tr class="keyrow"><td class="cond"><b>RENDERED</b>（工程）</td><td><b>0</b></td><td>宣言だけある</td><td><b>使われていない</b></td></tr><tr class="keyrow"><td class="cond"><b>SUPERSEDED</b>（工程）</td><td><b>0</b></td><td>宣言だけある</td><td><b>使われていない</b></td></tr><tr class=""><td class="cond">ACTIVE / DRAFT / DEPRECATED（成熟）</td><td>135</td><td><code>Knowledge</code>・<code>Skill</code>・<code>Hook</code>・<code>Coding</code>・<code>Template</code>・<code>Agent</code> の6つ</td><td><b>そのまま</b></td></tr></tbody></table></div><details class="fold"><summary>この測定が計画を軽くする</summary><p class="blob"><b><code>RENDERED</code> と <code>SUPERSEDED</code> は1本も無い。</b><code>CREATED</code> も1本だけで、それは範囲外にある。</p><p class="foldnote">つまり範囲内の44本は<b>すべて <code>VALIDATED</code> 一色</b>である。<b>値ごとの対応表を作る必要が無く、落ちる情報も無い。</b></p></details></section><section><h2><span class="num">06</span>危ないところ</h2><p class="lead"><b>6つ。うち2つは範囲の決め方から生まれた</b>。</p><div class="scroll"><table><thead><tr><th>危ないところ</th><th>なぜ</th><th>どうするか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>段1 だけは範囲を絞れない</b></td><td><b>全型の共通契約</b>なので、範囲外の <code>Platform</code> 11本と触らない26本にも当たる</td><td><b>段1 が旧い型を読んで判定・描画できること</b>を第1段の条件に入れる。<b>起こせる必要は無い</b></td></tr><tr class="keyrow"><td class="cond"><b><code>TemplateSchema</code> の範囲が決まっていない</b></td><td><b>17本のうち6本しか型を持たない。</b>無いほうに <code>template-judgment-platform</code>・<code>template-judgment-ux</code> が含まれ、<b>それは廃止して考え直すと決めた2領域である</b></td><td><b>先に6本か17本かを決める。</b>17本なら、その2本は後回しにできる</td></tr><tr class="keyrow"><td class="cond"><b><code>KnowledgeSchema</code> の前の移行が終わっていない</b></td><td><b>v5 に57本、v6 に21本</b>。今回の移行と、v5→v6 の未完の移行が重なる</td><td><b>先に v6 へ揃えてから、この移行に入れる</b></td></tr><tr class="keyrow"><td class="cond"><b><code>DomainSpecSchema</code> の旧版は落とせない</b></td><td>v10 と v8 を指す26本が <code>bc-artifact-share</code> にあり、<b>触らないと決めてある</b></td><td><b>開いたままにする。</b>閉じたことにしない</td></tr><tr class=""><td class="cond">ADR は移すものが無い</td><td>文書が0本で、<b>21枚は文書の外</b>にある。描いているのは手で書いた組み立てで、<b>型からの描画ではない</b></td><td><b>作ってから、既にある21枚を入れる</b></td></tr><tr class=""><td class="cond">第3段の途中で止まると新旧が混ざる</td><td>書き換えが起きるのはここだけ</td><td><b>型ひとつを閉じ切ってから次へ。</b>複数を同時に開かない</td></tr></tbody></table></div></section><section><h2><span class="num">07</span>終わったと言える条件</h2><p class="lead"><b>全体を閉じ切ることはできない。</b>今回閉じるのは8つの型だけである。</p><div class="scroll"><table><thead><tr><th>単位</th><th>終わったと言える条件</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>型ひとつ</b></td><td>その型を指す文書が<b>全部</b>新しい版になり、<b>旧い版が落ちた</b>とき</td></tr><tr class="keyrow"><td class="cond"><b>今回</b></td><td><b>8つの型が段2 として立ち、179本が移り終えたとき</b></td></tr><tr class=""><td class="cond">全体</td><td><b>言えない。</b>範囲外の11本と、触らない26本が古い形のまま残る</td></tr></tbody></table></div></section><section><h2><span class="num">08</span>今回でない型</h2><p class="lead"><b>2つだけ。どちらも廃止して考え直す。</b></p><div class="scroll"><table><thead><tr><th>型</th><th>なぜ今回でないか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>PlatformSpec</code>（11本）</td><td><b>廃止して考え直す</b>と決めた。土台は DDD ではなく、<b>操作の契約が運べないほうの半分</b>に置ける見込みがある</td></tr><tr class="keyrow"><td class="cond"><code>PresentationSpecSchema</code>（0本）</td><td><b>同上。</b><b>domain に従属する</b>ので、domain より先には安定しない</td></tr></tbody></table></div></section><section><h2><span class="num">09</span>答えないこと</h2><p class="lead">4つ残る。<b>いずれも先の段で決まる。</b></p><div class="scroll"><table><thead><tr><th>項目</th><th>何が決まっていないか</th><th>いつ決まるか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>ADR の型が何を宣言するか</b></td><td><b>21枚から起こすのか、決めてから当てるのか。</b>いまの21枚は形が揃っていない（承認の節が無いものが2枚ある）</td><td><b>第2段の入口</b></td></tr><tr class="keyrow"><td class="cond"><b>図の仕様</b></td><td><b>型ではないので、8つのどれにも入らない。</b>図は<b>段1 が持つ部品</b>なので、<code>$defs.Figure</code> を書き出すのは段1 自身である</td><td><b>第1段の中。</b>段1 の実装より前</td></tr><tr class=""><td class="cond">各語の名前</td><td>この計画では仮のまま</td><td>仕様を書くとき</td></tr><tr class=""><td class="cond">範囲外の11本をいつ移すか</td><td>次の回か、さらに先か</td><td>この移行が閉じたあと</td></tr></tbody></table></div></section><section><h2><span class="num">10</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">承認済み</span><span class="m">2026-08-17 承認。段1 の条件を実際に要るものへ合わせたうえで</span><span class="m">2026-08-16 範囲を8つの型に広げて書き直し</span></div></section></div>

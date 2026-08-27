@@ -1,0 +1,139 @@
+<title>Domain の型</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.figbox{border:1px solid var(--rule);border-radius:2px;background:#FFF;padding:1rem}
+.wf-fig{display:block;max-width:100%;height:auto;overflow:visible}
+.sub-h{font-family:var(--serif);font-size:1rem;font-weight:600;margin:.5rem 0 -.3rem;color:var(--ink-soft)}
+</style><div class="wrap"><header><p class="eyebrow">段2 の仕様 ── 1つめ</p><h1>Domain の型</h1><p class="lede">段1 が用意した部品で、Domain を1本の型として宣言する。種別は<b>8つ</b>、文書は<b>44本から57本</b>になる。増えるのは、集約の内側から出てくる<b>エンティティ2本と値オブジェクト10本</b>と、業務領域を受けとめる<b>事業領域1本</b>である。<b>この頁は bc-waffle だけを見ている。</b></p></header><section><h2><span class="num">01</span>型の名前と版</h2><p class="lead">既存へ肉付けせず、新しい名前で立てる。移し終えるまでは併存する。</p><div class="scroll"><table><thead><tr><th></th><th>いま</th><th>これから</th></tr></thead><tbody><tr class="keyrow"><td class="cond">型の名前</td><td><code>DomainSpecSchema</code></td><td><code>DomainSchema</code></td></tr><tr class=""><td class="cond">版</td><td><code>v11</code></td><td><code>v1</code></td></tr><tr class=""><td class="cond">どちらが正か</td><td>—</td><td><b>新しいほうだけ。</b>v11 は移し終えるまで併存し、その後たたむ</td></tr></tbody></table></div></section><section><h2><span class="num">02</span>種別</h2><p class="lead"><b>描かれる成果物の単位</b>で切る。それ以外の切り方はしない。</p><div class="scroll"><table><thead><tr><th>種別</th><th>いま何本</th><th>変更後</th><th>1本が何を言うか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">事業領域</td><td><b>0</b></td><td><b>1</b></td><td><b>業務領域を分類するときの基準になる、事業のまとまり</b></td></tr><tr class=""><td class="cond">業務領域</td><td>7</td><td>7</td><td>事業活動の1単位。中核・一般・補完の分類と、その根拠</td></tr><tr class=""><td class="cond">区切られた文脈</td><td>1</td><td>1</td><td>この文脈で言葉が一貫する範囲</td></tr><tr class="keyrow"><td class="cond">集約</td><td>2</td><td>2</td><td><b>一貫性の境界。</b>1つのトランザクションで一緒に変わる範囲</td></tr><tr class="keyrow"><td class="cond">エンティティ</td><td><b>0</b></td><td><b>2</b></td><td><b>同一性を持ち、状態が変わるもの</b></td></tr><tr class="keyrow"><td class="cond">値オブジェクト</td><td><b>0</b></td><td><b>10</b></td><td><b>値で等しさが決まり、変わらないもの</b></td></tr><tr class=""><td class="cond">業務ユースケース</td><td>30</td><td>30</td><td>外から呼ばれる、業務としてひとまとまりの用事</td></tr><tr class=""><td class="cond">業務サービス</td><td>4</td><td>4</td><td>どの集約にも属さない、集約をまたぐ判断</td></tr><tr class=""><td class="cond"><b>合計</b></td><td><b>44</b></td><td><b>57</b></td><td>—</td></tr></tbody></table></div><details class="fold"><summary>なぜこの8つかを開く</summary><p class="foldnote">種別は<b>1本の文書として描かれるかどうか</b>だけで決める。ドメイン駆動設計が同じ格で置いている4部品（値オブジェクト・エンティティ・集約・業務サービス）に、事業領域・業務領域・区切られた文脈・業務ユースケースを足した形である。<b>エンティティと値オブジェクトが新設</b>なのは、いままで集約の内側にしか置けなかったためで、そのせいで文書どうしの参照が相手の値を写して持っていた。<b>事業領域が新設</b>なのは、業務領域を文脈の外へ出したときに置き場所だけが宙に浮くのを避けるためである ── 器を切るだけでは、宣言の無い置き場所がまた意味を運ぶ。<b>状態や工程を種別にはしない</b> ── 導けるものだからである。</p></details></section><section><h2><span class="num">03</span>共有する組み立て</h2><p class="lead">同じものを種別ごとに別の名前で持たない。<b>6つを共有する。</b>シナリオの<b>確かめる単位</b>は、仕様と実装の乖離を捕まえるために足す（<a href="https://claude.ai/code/artifact/1ebe3dff-e9dd-4967-b736-ca725fd59f59">結び目の設計</a>／<a href="https://claude.ai/code/artifact/fc3626b7-6755-4848-810a-a2c7799dd3bf">ずれたとき何が赤くなるか</a>）。</p><div class="scroll"><table><thead><tr><th>組み立て</th><th>持つもの</th><th>どの種別が使うか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">受け入れ基準</td><td>鍵／「〜のとき、〜となる」の1文</td><td>集約が公開する操作・業務ユースケース・業務サービス</td></tr><tr class="keyrow"><td class="cond">シナリオ</td><td>名前／分類（正常・異常）／観点／本文（Given・When・Then）／<b>確かめる単位</b>／覆う「常に満たすこと」（任意）</td><td>同上</td></tr><tr class=""><td class="cond">属性</td><td>名前／型（値オブジェクトを指す鍵）／任意か</td><td>エンティティ・値オブジェクト</td></tr><tr class=""><td class="cond">常に満たすこと</td><td>鍵／規則（「常に〜である」）／担保（型・検査）／なぜそう決めたか</td><td>集約・エンティティ・値オブジェクト</td></tr><tr class=""><td class="cond">文書への参照</td><td>鍵1つだけ。相手の値を写さない</td><td>集約・業務サービス・業務ユースケース</td></tr><tr class=""><td class="cond">図の宣言</td><td>主張1つ／items／links／frame。図の中に図を入れられる</td><td><b>全種別</b>（段1 が持つ。Domain 固有ではない）</td></tr></tbody></table></div><details class="fold"><summary>いま3つの名前で呼ばれているものを開く</summary><div class="scroll"><table><thead><tr><th>いまの名前</th><th>付く場所</th><th>これから</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><code>invariantScenarios</code></td><td>集約</td><td><b>シナリオ</b></td></tr><tr class="keyrow"><td class="cond"><code>acceptanceScenarios</code></td><td>ユースケース／業務サービス</td><td><b>シナリオ</b></td></tr><tr class=""><td class="cond"><code>acceptanceCriteria</code></td><td>ユースケース／業務サービス</td><td><b>受け入れ基準</b></td></tr><tr class=""><td class="cond">（公開する操作には無い）</td><td>—</td><td><b>両方を持たせる</b></td></tr></tbody></table></div></details></section><section><h2><span class="num">04</span>ブロックの定義</h2><p class="lead">種別ごとに、書くブロックを並べる。<b>題と概要は全種別が持つ。</b></p><div class="scroll"><table><thead><tr><th>種別</th><th>数</th><th>ブロック</th></tr></thead><tbody><tr class=""><td class="cond"><b>事業領域</b></td><td><b>4</b></td><td>題／概要／名前の英語表記／この事業が顧客へ提供しているもの</td></tr><tr class=""><td class="cond"><b>業務領域</b></td><td><b>7</b></td><td>題／概要／名前の英語表記／この業務領域が属する事業領域／分類／そう分類した根拠／使う既製品</td></tr><tr class=""><td class="cond"><b>区切られた文脈</b></td><td><b>4</b></td><td>題／概要／名前の英語表記／この文脈で通じる言葉</td></tr><tr class="keyrow"><td class="cond"><b>集約</b></td><td><b>8</b></td><td>題／概要／名前の英語表記／この集約の境界の内側／この集約が識別子で指す、外の集約／この集約が常に満たすこと／この集約が外へ公開する操作／この集約が出す出来事</td></tr><tr class="keyrow"><td class="cond"><b>エンティティ</b></td><td><b>6</b></td><td>題／概要／名前の英語表記／同じものと見なす根拠／この文書が持つ属性／この型だけで常に満たすこと</td></tr><tr class="keyrow"><td class="cond"><b>値オブジェクト</b></td><td><b>7</b></td><td>題／概要／名前の英語表記／この値が表すもの／この値が持つ属性／この値の振る舞い／この値だけで常に満たすこと</td></tr><tr class=""><td class="cond"><b>業務ユースケース</b></td><td><b>11</b></td><td>題／概要／名前の英語表記／このユースケースが属する業務領域／誰が何をしたいか／このユースケースが受け取る入力／基本の流れ／このユースケースの受け入れ基準／基準を確かめるシナリオ／失敗の仕方／終わったときに成り立つこと</td></tr><tr class=""><td class="cond"><b>業務サービス</b></td><td><b>8</b></td><td>題／概要／名前の英語表記／この計算が集約の内側に置けない理由／この計算が触れる集約／受け取るものと、返すもの／この計算の受け入れ基準／基準を確かめるシナリオ</td></tr></tbody></table></div><details class="fold"><summary>題から識別子を落とす理由を開く</summary><p class="foldnote">いまの題は「<b>Document の一貫性を守る集約：agg-document</b>」のように<b>説明と識別子を「：」でつないだ形</b>である。識別子は表紙の <code>documentId</code> が持っているので、題に繰り返すのは<b>導けるものを保存する</b>ことになる ── 段1 が「導けるものは持たない」と決めた、そのものである。あわせて、<code>boundedContext</code>／<code>subdomain</code>／<code>usecase</code> という<b>名前だけを持つブロックが3つ</b>あったが、題を業務の言葉の名前にすれば要らなくなる。<b>3種別からブロックが1つずつ消える。</b></p></details></section><section><h2><span class="num">05</span>枝ごとの必須ブロック</h2><p class="lead">必須と任意を分け、<b>宣言に無いブロックは書けないように閉じる</b>。</p><div class="scroll"><table><thead><tr><th></th><th>必須</th><th>任意</th></tr></thead><tbody><tr class="keyrow"><td class="cond">全種別</td><td>題／概要／<b>名前の英語表記</b></td><td>—</td></tr><tr class="keyrow"><td class="cond">事業領域</td><td><b>この事業が顧客へ提供しているもの</b></td><td>—</td></tr><tr class="keyrow"><td class="cond">業務領域</td><td><b>属する事業領域</b>／分類／<b>そう分類した根拠</b></td><td>使う既製品</td></tr><tr class=""><td class="cond">区切られた文脈</td><td>この文脈で通じる言葉</td><td>—</td></tr><tr class=""><td class="cond">集約</td><td>境界の内側／常に満たすこと／外へ公開する操作</td><td>識別子で指す外の集約／出す出来事／操作ごとの<b>変える内側のエンティティ</b></td></tr><tr class=""><td class="cond">エンティティ</td><td>同じものと見なす根拠／持つ属性</td><td>この型だけで常に満たすこと</td></tr><tr class=""><td class="cond">値オブジェクト</td><td>表すもの／持つ属性／振る舞い</td><td>この値だけで常に満たすこと</td></tr><tr class="keyrow"><td class="cond">業務ユースケース</td><td><b>属する業務領域</b>／誰が何をしたいか／基本の流れ／終わったときに成り立つこと／受け入れ基準／<b>基準を確かめるシナリオ</b></td><td>受け取る入力／失敗の仕方</td></tr><tr class=""><td class="cond">業務サービス</td><td>集約の内側に置けない理由／受け取るものと返すもの／受け入れ基準／シナリオ</td><td>触れる集約</td></tr></tbody></table></div></section><section><h2><span class="num">06</span>各所の指針</h2><p class="lead">書き手が迷う場所にだけ置く。<b>迷わない場所には置かない。</b></p><div class="scroll"><table><thead><tr><th>どこに置く指針か</th><th>何を書くか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">すべての種別：名前の英語表記</td><td>その語を<b>英語でどう言うか</b>だけを書く。<b>実装の型名でもファイル名でもない</b> ── 綴りの流儀は規約が導く。集約とそのルートのエンティティは<b>同じ英語表記になる</b>（名前は1つだから）</td></tr><tr class="keyrow"><td class="cond">事業領域：この事業が顧客へ提供しているもの</td><td><b>誰に、何を</b>提供しているかを書く。これが<b>業務領域の分類の基準</b>になる ── 中核・一般・補完は「差別化を生むか」で決まるが、<b>何に対する差別化かはこの事業領域が決める</b>。書くのは<b>いまの事業</b>であって、社名でも沿革でもない</td></tr><tr class="keyrow"><td class="cond">業務領域：そう分類した根拠</td><td><b>この事業が提供しているものに照らして</b>、差別化を生むかを書く。<b>どれだけ作り込むかは書かない</b> ── それは技術者の判断で、規約が持つ</td></tr><tr class="keyrow"><td class="cond">業務領域：境界は、ユースケースの集まりである</td><td><b>境界は一覧として持たない。導く。</b>その業務領域を指しているユースケースを数えれば出る。書き起こしは「業務領域の境界＝強く関連するユースケースの集まり。<b>同じアクター・同じ外部システムとつながり、密接に関係するデータを操作する</b>ユースケース群がひとつの業務領域を形成する」と定める。だから<b>集まりが空のものは業務領域ではない</b></td></tr><tr class=""><td class="cond">業務ユースケース：属する業務領域</td><td><b>必ず1つ書く。</b>書かないと、その用事は<b>どの業務活動にも紐づかず</b>、投資判断（中核・一般・補完）の対象から漏れる。<b>どの集約にも属さないエンティティと同じ形</b>である</td></tr><tr class="keyrow"><td class="cond">集約：この集約の境界の内側</td><td>ここへ入れてよいのは、<b>1つのトランザクションで一緒に変わらなければならないもの</b>だけ。別々に変えてよいなら、それは別の集約であり、境界の外として鍵で指す。<b>集約はできるだけ小さく</b></td></tr><tr class="keyrow"><td class="cond">集約：この集約が外へ公開する操作</td><td>操作ごとに<b>この集約を変えるか</b>を書く。変えるものには、<b>常に満たすことを覆うシナリオ</b>が要る。変えないものには要らない ── 破りようがないため。<span class='sub'>（変えるものを、ドメイン駆動設計ではコマンドと呼ぶ）</span></td></tr><tr class=""><td class="cond">集約：変える内側のエンティティ</td><td>階層を持つ集約でだけ書く。<b>必須にしない</b> ── どの内側のエンティティが変わるかを知らなくても、シナリオが結果を言っているので<b>実装は一意に導ける</b>。つまり<b>仕様の下限より上</b>の情報である</td></tr><tr class=""><td class="cond">エンティティ：同じものと見なす根拠</td><td><b>何が変わっても同じものだと言える根拠</b>を書く。どの集約に属するかは<b>書かない</b> ── 集約の側の一覧が指す</td></tr><tr class=""><td class="cond">値オブジェクト：この値の振る舞い</td><td><b>変わらないこと</b>と、<b>値が等しければ等しいこと</b>を書く。変わるものは値ではなくエンティティである</td></tr><tr class="keyrow"><td class="cond">シナリオ：確かめる単位</td><td>そのシナリオが<b>どの単位の振る舞いを確かめているか</b>を、<b>仕様の識別子で指す</b>。実装がどんな形（クラス・関数・手続き）で実現するかは書かない ── 形は規約と実装の判断である。<b>これが、仕様と実装を結ぶ三角形の1辺になる</b></td></tr><tr class=""><td class="cond">一覧を持つ側か、属する側が宣言するか</td><td>その集まりが<b>閉じていて、閉じていること自体が主張</b>なら、持つ側が一覧を持つ（集約の境界の内側）。<b>増え続ける集まり</b>なら、属する側が宣言する（業務ユースケース→業務領域、業務領域→事業領域）。<b>両側に書かない</b></td></tr><tr class=""><td class="cond">常に満たすこと（置き場所）</td><td>その規則を確かめるのに<b>その型ひとつを見れば足りる</b>なら、その型が持つ。他を見る必要があるなら集約が持つ</td></tr><tr class=""><td class="cond">業務ユースケース：基本の流れ</td><td>誰と誰の間で、どの順に何が行き来したかを書く。<b>「やり取り」の主張</b>で宣言する ── 順序・戻り・繰り返し・分かれはその中に入る</td></tr><tr class=""><td class="cond">図：どの主張を選ぶか</td><td><b>16の主張の定義文をそのまま置く。</b>書き手は主張を選ぶだけで、<b>描き方は選ばない</b></td></tr></tbody></table></div></section><section><h2><span class="num">07</span>描き方</h2><p class="lead"><b>HTML</b>。読み手のツールが形式を決めていない型なので、初めて選べる。</p><div class="scroll"><table><thead><tr><th></th><th>決めたこと</th><th>理由</th></tr></thead><tbody><tr class="keyrow"><td class="cond">形式</td><td><b>HTML</b></td><td><b>人には畳み、AI には全部見せられる。</b>畳んだ中身はファイルには最初から在るので、AI は畳まれているかを意識しない。人だけが選んで開く</td></tr><tr class=""><td class="cond">図</td><td>16の主張。図の中に図を入れられる</td><td>描き方は主張から従属して決まる。書き手は選ばない</td></tr><tr class=""><td class="cond">畳むもの</td><td>根拠・裏付け・全件の一覧</td><td>読み手が判断するのに要らないものを、既定で外へ出す</td></tr><tr class=""><td class="cond">畳まないもの</td><td>題・概要・決めたこと・受け入れ基準</td><td>これを畳むと、開かないと何も分からない頁になる</td></tr></tbody></table></div><details class="fold"><summary>Markdown を採らない理由を開く</summary><p class="foldnote">Skill・Knowledge・Agent が Markdown なのは<b>読みやすさで選んだのではなく</b>、<code>SKILL.md</code> のように<b>ツールがそのファイル名でしか読まないから</b>である。Domain にはそれが無いので、初めて選べる。Markdown の側に残る利点は「git の差分が読める」だけだが、<b>正本は document.json で、成果物は毎回描き直される投影</b>なので、その差分を読む必要が無い ── 段1 の「導けるものは持たない」と同じ筋である。また突き合わせの機械が読むのは document.json であって成果物ではないので、<b>形式は判定に一切効かない</b>。成果物は人が読むためだけのものである。</p></details></section><section><h2><span class="num">08</span>成果物の宛先</h2><p class="lead"><b>業務領域と業務ユースケースが、文脈の配下から出る。</b>あわせてエンティティと値オブジェクトの置き場所を足す。</p><div class="scroll"><table><thead><tr><th>種別</th><th>置き場所</th></tr></thead><tbody><tr class="keyrow"><td class="cond">事業領域</td><td><code>.waffle/specs/business-domain/&lt;名&gt;.html</code></td></tr><tr class="keyrow"><td class="cond">業務領域</td><td><code>.waffle/specs/subdomain/&lt;名&gt;.html</code> <b>── 文脈の配下ではない</b></td></tr><tr class=""><td class="cond">区切られた文脈</td><td><code>.waffle/specs/&lt;文脈&gt;/&lt;文脈&gt;.html</code></td></tr><tr class=""><td class="cond">集約</td><td><code>.waffle/specs/&lt;文脈&gt;/aggregate/&lt;名&gt;.html</code></td></tr><tr class=""><td class="cond">エンティティ</td><td><code>.waffle/specs/&lt;文脈&gt;/entity/&lt;名&gt;.html</code></td></tr><tr class=""><td class="cond">値オブジェクト</td><td><code>.waffle/specs/&lt;文脈&gt;/value-object/&lt;名&gt;.html</code></td></tr><tr class="keyrow"><td class="cond">業務ユースケース</td><td><code>.waffle/specs/&lt;文脈&gt;/usecase/&lt;名&gt;.html</code> <b>── 業務領域の配下ではない。文脈の下に集まる</b></td></tr><tr class=""><td class="cond">業務サービス</td><td><code>.waffle/specs/&lt;文脈&gt;/domain-service/&lt;名&gt;.html</code></td></tr></tbody></table></div></section><section><h2><span class="num">09</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">未承認</span></div></section><section><h2><span class="num">10</span>閉じた論点</h2><p class="lead">4点を、<b>承認済みの決定と原理から閉じた</b>。実物の件数は根拠にしていない。</p><div class="scroll"><table><thead><tr><th>論点</th><th>決めたこと</th><th>何から導いたか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">業務領域の <code>実装の指針</code></td><td><b>落とす。規約へ寄せる</b></td><td>中身は「一般ゆえ既存ツールを薄く呼び出すだけ…」で、<b>実装をどう作るかの話</b>だった。「差別化を生むか」は事業が決め、「ならどれだけ作り込むか」は技術者が決める ── <b>決める人が違うので別の文書にある</b></td></tr><tr class="keyrow"><td class="cond">名前の英語表記</td><td><b>全種別が持つ</b></td><td>規約が<b>綴りの流儀</b>（大文字小文字・接尾辞・置き場所）を導くための元になる。英訳は機械的に導けないので、宣言が持つ。<b>実装の型名は書かない</b>ので、承認済みの「仕様は実装の型名を持たない」は保たれる</td></tr><tr class=""><td class="cond">操作に、変える内側のエンティティを書かせるか</td><td><b>書ける。必須にしない</b></td><td><b>仕様の下限は、具体が一意に導けるかで測る</b>（承認済み）── シナリオが結果を言うので実装は導ける。つまり下限より上。それでも型が表せないと、階層を持つ集約を書けなくなる</td></tr><tr class="keyrow"><td class="cond">エンティティ・値オブジェクトの置き場所</td><td><b>文脈の直下</b></td><td><b>所属はディレクトリではなく宣言が運ぶ</b>＋<b>集約が境界の内側の一覧を持つ</b>。集約の下へ置くとディレクトリが所属を運び、<b>値オブジェクトが複数の集約から使われたときに1親制約が出る</b> ── 業務領域で直したのと同じ病</td></tr><tr class="keyrow"><td class="cond">業務ユースケースの <code>operationIndex</code></td><td><b>落とす</b></td><td>1つのユースケースが複数の操作へ分岐するのは<b>受け口の形</b>であって、業務の用事の数ではない。<b>受け口の都合が仕様に漏れていた</b>。1つの用事＝1本。まとめ方は規約の管轄</td></tr><tr class=""><td class="cond"><code>DomainSchema/v1</code> という名前</td><td><b><code>Spec</code> を落とす</b></td><td>型の名前で「これは仕様である」という分類を表すと、<b>分類が変わったときに名前を変える</b>ことになる。分類は名前ではなく欄が言う。8つ全部が <code>〜Schema</code> で揃う</td></tr></tbody></table></div></section><section><h2><span class="num">11</span>まだ決めていないこと</h2><p class="lead"><b>1点だけ。</b>判断をもらうしかないものである。</p><div class="scroll"><table><thead><tr><th>論点</th><th>いまの状態</th><th>要る判断</th></tr></thead><tbody><tr class="keyrow"><td class="cond">業務領域と業務ユースケースの置き場所</td><td><b>承認待ちの記録「業務領域を、区切られた文脈の外へ出す」（2026-08-11）</b>を引き継いだ。knowledge 19本を書き起こしから作り直して測り直し、助言役2者が当初の反対を撤回している</td><td><b>この型を承認すると、その記録も一緒に承認したことになる。</b>切り離したいなら言ってほしい</td></tr></tbody></table></div></section></div>

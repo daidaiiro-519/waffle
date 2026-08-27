@@ -1,0 +1,197 @@
+<title>ずれたとき、何が赤くなるか</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.slots{display:flex;flex-wrap:wrap;gap:.4rem}
+.slot{display:inline-flex;align-items:center;gap:.35rem;font-size:.74rem;line-height:1;
+      padding:.32em .6em;border-radius:2px;border:1px solid var(--rule);background:var(--surface-2);
+      color:var(--ink-soft)}
+.slot .m{font-size:.85rem;line-height:1}
+.slot.on{border-color:#1B6B4A;color:#1B6B4A;background:var(--infer-bg)}
+.slot.off{border-color:var(--rule);color:var(--ink-faint)}
+.slot.bad{border-color:#9A3B44;color:#9A3B44;background:var(--against-bg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .slot.on{border-color:#79C5A0;color:#79C5A0}
+  .slot.bad{border-color:#DE9AA1;color:#DE9AA1}}}
+:root[data-theme="dark"] .slot.on{border-color:#79C5A0;color:#79C5A0}
+:root[data-theme="dark"] .slot.bad{border-color:#DE9AA1;color:#DE9AA1}
+.scene{border:1px solid var(--rule);border-radius:2px;background:var(--surface);
+       padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.7rem}
+.scene + .scene{margin-top:1rem}
+.sc-h{display:flex;align-items:baseline;gap:.7rem}
+.sc-n{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em}
+.sc-t{font-family:var(--serif);font-size:1.08rem;font-weight:600}
+.sc-w{font-size:.9rem;line-height:1.8;color:var(--ink-soft);margin:0}
+.sc-w b{color:var(--ink)}
+.sc-note{font-size:.83rem;line-height:1.75;color:var(--ink-soft);margin:0;
+         padding-left:.8rem;border-left:2px solid var(--rule)}
+.sc-note b{color:var(--ink)}
+.term{margin:0;font-family:var(--mono);font-size:.76rem;line-height:1.85;
+      background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:2px;
+      padding:.8rem .9rem;overflow-x:auto;white-space:pre;color:var(--ink-soft)}
+.term .p{color:var(--ink-faint)}
+.term .g{color:#1B6B4A;font-weight:600}
+.term .r{color:#9A3B44;font-weight:600}
+.term .y{color:#7A4E12;font-weight:600}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .term .g{color:#79C5A0} .term .r{color:#DE9AA1} .term .y{color:#D9B674}}}
+:root[data-theme="dark"] .term .g{color:#79C5A0}
+:root[data-theme="dark"] .term .r{color:#DE9AA1}
+:root[data-theme="dark"] .term .y{color:#D9B674}
+</style><div class="wrap"><header><p class="eyebrow">完成イメージ</p><h1>ずれたとき、何が赤くなるか</h1><p class="lede">同じ1件を、<b>6通りにずらしてみる</b>。それぞれで検査が何を言うかを、そのまま並べた。最後の1つは<b>何も言わない</b> ── 閉じないものが何かを、実際に見るためである。</p></header><section><h2><span class="num">01</span>3つの結び目</h2><p class="lead">この頁を通して、<b>この3つが在るか無いか</b>だけを見る。</p><div class="scroll"><table><thead><tr><th>結び目</th><th>誰が誰を指すか</th><th>仕様に足すものはあるか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>宣言</b></td><td>シナリオ → 単位</td><td><b>ある。これ1つだけ。</b>指し先は仕様自身の識別子</td></tr><tr class=""><td class="cond"><b>転記</b></td><td>テスト → シナリオ（一字一句）</td><td>無い</td></tr><tr class="keyrow"><td class="cond"><b>名乗り</b></td><td>実装 → 宣言の識別子</td><td><b>無い。</b>名乗るのは実装の側で、書き方は規約が決める</td></tr></tbody></table></div><p class="fignote">以降の場面では、3つの状態を <span class="slot on"><span class="m">●</span>ある</span><span class="slot bad"><span class="m">✕</span>壊れている</span> で示す。</p></section><section><h2><span class="num">02</span>6つの場面</h2><p class="lead">実例は「文書が schema に適合するかを判定する」1件。<b>これを6通りにずらす。</b></p><div class="scene"><div class="sc-h"><span class="sc-n">00</span><span class="sc-t">そろっている</span></div><p class="sc-w">宣言・転記・名乗りの3つが揃っている。</p><div class="slots"><span class="slot on"><span class="m">●</span>宣言 ── シナリオが単位を指す</span><span class="slot on"><span class="m">●</span>転記 ── テストがシナリオを載せる</span><span class="slot on"><span class="m">●</span>名乗り ── 実装が宣言を指す</span></div><pre class="term"><span class="p">$</span> waffle 乖離を見る
+
+  <span class="g">乖離はありません</span>
+  宣言 57 / 名乗られている 57 / 名乗りの余り 0
+  シナリオ 214 / テストに写っている 214</pre></div><div class="scene"><div class="sc-h"><span class="sc-n">01</span><span class="sc-t">実装を書き忘れた</span></div><p class="sc-w">宣言もシナリオもテストも書いたが、<b>実装が無い</b>。テストは落ちる ── ただしテストが落ちるのは<b>その1件を試したとき</b>だけである。宣言だけ足してテストを後回しにすると、テストすら落ちない。</p><div class="slots"><span class="slot on"><span class="m">●</span>宣言 ── シナリオが単位を指す</span><span class="slot on"><span class="m">●</span>転記 ── テストがシナリオを載せる</span><span class="slot bad"><span class="m">✕</span>名乗り ── 実装が宣言を指す</span></div><pre class="term"><span class="p">$</span> waffle 乖離を見る
+
+  <span class="r">✕ 宣言にあって、実装に無い</span>  1件
+      agg-document#逸脱していないか判定する
+      この宣言を名乗る実装がありません</pre><p class="sc-note"><b>テストを1本も書いていなくても捕まる。</b>宣言と実装だけを突き合わせている</p></div><div class="scene"><div class="sc-h"><span class="sc-n">02</span><span class="sc-t">名乗っていない実装が生えた</span></div><p class="sc-w">誰かが便利だからと関数を足した。<b>どの宣言も指していない。</b></p><div class="slots"><span class="slot on"><span class="m">●</span>宣言 ── シナリオが単位を指す</span><span class="slot on"><span class="m">●</span>転記 ── テストがシナリオを載せる</span><span class="slot bad"><span class="m">✕</span>名乗り ── 実装が宣言を指す</span></div><pre class="term"><span class="p">$</span> waffle 乖離を見る
+
+  <span class="r">✕ どの宣言も指していない実装があります</span>  1件
+      document.py :: normalize_schema_ref
+      仕様として合意されていない振る舞いです</pre><p class="sc-note"><b>同じ名乗りを逆向きに数えるだけ。</b>新しい仕組みは要らない</p></div><div class="scene"><div class="sc-h"><span class="sc-n">03</span><span class="sc-t">仕様を直して、テストを直し忘れた</span></div><p class="sc-w">シナリオの Then を「拒否され、判定は行われない」へ書き換えた。<b>テストの docstring は古いまま。</b></p><div class="slots"><span class="slot on"><span class="m">●</span>宣言 ── シナリオが単位を指す</span><span class="slot bad"><span class="m">✕</span>転記 ── テストがシナリオを載せる</span><span class="slot on"><span class="m">●</span>名乗り ── 実装が宣言を指す</span></div><pre class="term"><span class="p">$</span> waffle 乖離を見る
+
+  <span class="r">✕ シナリオがテストに写っていません</span>  1件
+      Scenario: schemaRef を持たない文書は判定できない
+      仕様   Then  拒否され、判定は行われない
+      テスト Then  <span class="r">エラーになる</span></pre><p class="sc-note"><b>テストは緑のまま通る。</b>それでも捕まる ── 一字一句で照合しているため</p></div><div class="scene"><div class="sc-h"><span class="sc-n">04</span><span class="sc-t">名乗りが嘘だった</span></div><p class="sc-w">実装は名乗っているが、<b>指している宣言が違う</b>。コピーして作ったときに起きやすい。</p><div class="slots"><span class="slot on"><span class="m">●</span>宣言 ── シナリオが単位を指す</span><span class="slot on"><span class="m">●</span>転記 ── テストがシナリオを載せる</span><span class="slot on"><span class="m">●</span>名乗り ── 実装が宣言を指す</span></div><pre class="term"><span class="p">$</span> waffle 乖離を見る
+
+  <span class="y">△ 名乗りとシナリオが食い違います</span>  1件
+      test_rejects_document_without_schema_ref が呼ぶ実装は
+        <span class="y">agg-schema#新しい版を切る</span> を名乗っています
+      しかし載せたシナリオが指す単位は
+        <span class="y">agg-document#逸脱していないか判定する</span> です</pre><p class="sc-note"><b>3辺だけでは当たらない。</b>テストが呼ぶ先まで辿る4辺目が要る ── だから △ にしてある</p></div><div class="scene"><div class="sc-h"><span class="sc-n">05</span><span class="sc-t">テストの中身が空だった</span></div><p class="sc-w">docstring にはシナリオが一字一句写っている。実装も名乗っている。<b>ただしテストの本体が何も確かめていない。</b></p><div class="slots"><span class="slot on"><span class="m">●</span>宣言 ── シナリオが単位を指す</span><span class="slot on"><span class="m">●</span>転記 ── テストがシナリオを載せる</span><span class="slot on"><span class="m">●</span>名乗り ── 実装が宣言を指す</span></div><pre class="term"><span class="p">$</span> waffle 乖離を見る
+
+  <span class="g">乖離はありません</span></pre><p class="sc-note"><b>これは閉じない。</b>宣言の形では届かない ── 「試していない」と「合っている」は、宣言からは同じに見える。<b>網羅率や変異テストの仕事だと明示して、ここでは赤にしない</b></p></div></section><section><h2><span class="num">03</span>まとめ</h2><p class="lead"><b>3辺で4つ捕まる。</b>4辺目で5つ目、6つ目は閉じない。</p><div class="scroll"><table><thead><tr><th>ずれ方</th><th>何が赤くなるか</th><th>要る辺</th></tr></thead><tbody><tr class="keyrow"><td class="cond">実装を書き忘れた</td><td><b>宣言にあって、実装に無い</b></td><td>名乗り</td></tr><tr class="keyrow"><td class="cond">名乗っていない実装が生えた</td><td><b>どの宣言も指していない実装があります</b></td><td>名乗り（逆向き）</td></tr><tr class=""><td class="cond">仕様を直して、テストを直し忘れた</td><td><b>シナリオがテストに写っていません</b></td><td>転記</td></tr><tr class=""><td class="cond">テストを直して、仕様を直し忘れた</td><td>同上（照合は向きを持たない）</td><td>転記</td></tr><tr class=""><td class="cond">名乗りが嘘だった</td><td><b>名乗りとシナリオが食い違います</b></td><td><b>4辺目</b>（テストが呼ぶ先）</td></tr><tr class=""><td class="cond">テストの中身が空だった</td><td><b>何も出ない</b></td><td><b>閉じない</b></td></tr></tbody></table></div></section><section><h2><span class="num">04</span>読み方</h2><p class="lead">この頁で見せたかったのは<b>2つ</b>である。</p><div class="scroll"><table><thead><tr><th></th><th>何を見てほしいか</th></tr></thead><tbody><tr class="keyrow"><td class="cond"><b>テストが緑でも赤が出る</b></td><td>場面 03 がそれである。テストは通るのに、仕様と写しがずれていれば捕まる。<b>テストの合否とは別の線で見ている</b></td></tr><tr class="keyrow"><td class="cond"><b>テストが1本も無くても赤が出る</b></td><td>場面 01 がそれである。宣言と名乗りだけを突き合わせるので、<b>実装に着手していないことがそのまま出る</b></td></tr><tr class=""><td class="cond">逆に、閉じないもの</td><td>場面 05。<b>3つの結び目がすべて在っても、中身が空なら何も言えない。</b>ここを閉じたことにしないのが、いちばん大事だと考えている</td></tr></tbody></table></div></section></div>

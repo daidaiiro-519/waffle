@@ -1,0 +1,692 @@
+<title>16の主張、宣言から絵まで</title><style>
+  :root{--paper:#EFF1F4;--surface:#FFFFFF;--surface-2:#F6F8FA;
+    --ink:#16191F;--ink-soft:#545C69;--ink-faint:#7C8593;--rule:#D5DAE1;--rule-soft:#E6EAEF;
+    --fact:#1F4E79;--fact-bg:#E6EDF4;--infer:#25604A;--infer-bg:#E2EFE9;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --paper:#111419;--surface:#1A1E25;--surface-2:#20252D;
+    --ink:#E5E9EF;--ink-soft:#A8B1BD;--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+    --fact:#8FB6D8;--fact-bg:#182530;--infer:#7DC4A6;--infer-bg:#152A22}}
+  :root[data-theme="dark"]{--paper:#111419;--surface:#1A1E25;--surface-2:#20252D;
+    --ink:#E5E9EF;--ink-soft:#A8B1BD;--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+    --fact:#8FB6D8;--fact-bg:#182530;--infer:#7DC4A6;--infer-bg:#152A22}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;
+       line-height:1.75;margin:0;padding:clamp(1.5rem,4vw,3rem) clamp(1rem,3vw,2rem) 5rem}
+  .wrap{max-width:70rem;margin:0 auto;display:flex;flex-direction:column;gap:1.1rem}
+  header{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;
+           text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.5rem,3.5vw,2rem);line-height:1.4;
+     font-weight:600;margin:0}
+  .lede{color:var(--ink-soft);font-size:.96rem;margin:0;max-width:42rem}
+  .claim{border:1px solid var(--rule);border-radius:3px;background:var(--surface);overflow:hidden}
+  .chead{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap;padding:.75rem .95rem .6rem}
+  .chead h3{margin:0;font-size:1rem;font-weight:700}
+  .fam{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;padding:.15em .5em;
+       border-radius:2px;flex:none}
+  .fam.rel{color:var(--fact);background:var(--fact-bg)}
+  .fam.qty{color:var(--infer);background:var(--infer-bg)}
+  .reading{font-size:.83rem;color:var(--ink-faint);flex:1;min-width:12rem}
+  .pair{display:grid;grid-template-columns:minmax(0,19rem) minmax(0,1fr);
+        border-top:1px solid var(--rule-soft)}
+  @media(max-width:52rem){.pair{grid-template-columns:1fr}}
+  .pair pre{margin:0;padding:.7rem .9rem;font-family:var(--mono);font-size:.66rem;
+            line-height:1.55;background:var(--surface-2);overflow:auto;max-height:19rem;
+            color:var(--ink-soft);border-right:1px solid var(--rule-soft)}
+  @media(max-width:52rem){.pair pre{border-right:none;border-bottom:1px solid var(--rule-soft)}}
+  .canvas{padding:.9rem;display:flex;align-items:center;justify-content:center;overflow-x:auto}
+  .canvas svg{max-width:100%;height:auto}
+  .note{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;
+        background:var(--surface);padding:.85rem 1.05rem;font-size:.9rem;line-height:1.75}
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">完成イメージ ── 図の描画</p>
+<h1>16の主張、宣言から絵まで</h1>
+<p class="lede">左が宣言（ホストの語彙）、右がその結果。<b>16すべて、実際に変換器を通して描いたもの。</b></p>
+</header>
+<div class="note">どの宣言にも <code>nodes</code>／<code>edges</code> は出てこない。どの絵にも <code>asserts</code> は出てこない。<b>その間にあるのが変換器で、主張ごとにどの部品で組むかを解決している。</b></div>
+<section class="claim">
+<div class="chead"><span class="fam rel">関係</span><h3>つながり</h3>
+<span class="reading">受け口はユースケースを呼び、モデルへ届く。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;つながり&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;cli&quot;,
+   &quot;name&quot;: &quot;CLI&quot;
+  },
+  {
+   &quot;key&quot;: &quot;mcp&quot;,
+   &quot;name&quot;: &quot;MCP&quot;
+  },
+  {
+   &quot;key&quot;: &quot;uc&quot;,
+   &quot;name&quot;: &quot;ユースケース&quot;,
+   &quot;role&quot;: &quot;focus&quot;
+  },
+  {
+   &quot;key&quot;: &quot;svc&quot;,
+   &quot;name&quot;: &quot;業務サービス&quot;
+  },
+  {
+   &quot;key&quot;: &quot;mdl&quot;,
+   &quot;name&quot;: &quot;モデル&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;cli&quot;,
+   &quot;to&quot;: &quot;uc&quot;
+  },
+  {
+   &quot;from&quot;: &quot;mcp&quot;,
+   &quot;to&quot;: &quot;uc&quot;
+  },
+  {
+   &quot;from&quot;: &quot;uc&quot;,
+   &quot;to&quot;: &quot;svc&quot;,
+   &quot;name&quot;: &quot;呼ぶ&quot;
+  },
+  {
+   &quot;from&quot;: &quot;svc&quot;,
+   &quot;to&quot;: &quot;mdl&quot;
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 324 332" width="324" height="332" role="img"><g transform="translate(6.0,6.0)"><path d="M198.0,32.0 L198.0,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="198.0,96.0 195.5,89.2 200.5,89.2" fill="#C3CAD2"/><path d="M268.0,32.0 L212.0,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="212.0,96.0 214.6,89.3 218.3,92.5" fill="#C3CAD2"/><path d="M198.0,128.0 L198.0,192.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="198.0,192.0 195.5,185.2 200.5,185.2" fill="#C3CAD2"/><rect x="184.0" y="150.0" width="28.0" height="16.0" fill="#F5F7F9"/><text x="198.0" y="163.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#79828F">呼ぶ</text><path d="M198.0,224.0 L198.0,288.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="198.0,288.0 195.5,281.2 200.5,281.2" fill="#C3CAD2"/><g transform="translate(168.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">CLI</text></g></g><g transform="translate(252.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">MCP</text></g></g><g transform="translate(148.0,96.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="100.0" height="32.0" rx="5" fill="#E2EFF0" stroke="#16636B" stroke-width="1.6"/><text x="50.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#16636B">ユースケース</text></g></g><g transform="translate(148.0,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="100.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="50.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">業務サービス</text></g></g><g transform="translate(166.0,288.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="64.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="32.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">モデル</text></g></g></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam rel">関係</span><h3>階層</h3>
+<span class="reading">語彙は器・意味・共通の欄に分かれる。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;階層&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;v&quot;,
+   &quot;name&quot;: &quot;描く語彙&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;key&quot;: &quot;k&quot;,
+     &quot;name&quot;: &quot;器・経路&quot;
+    },
+    {
+     &quot;key&quot;: &quot;m&quot;,
+     &quot;name&quot;: &quot;意味&quot;,
+     &quot;role&quot;: &quot;focus&quot;,
+     &quot;children&quot;: [
+      {
+       &quot;key&quot;: &quot;t&quot;,
+       &quot;name&quot;: &quot;文字4&quot;
+      },
+      {
+       &quot;key&quot;: &quot;f&quot;,
+       &quot;name&quot;: &quot;図8&quot;
+      }
+     ]
+    },
+    {
+     &quot;key&quot;: &quot;c&quot;,
+     &quot;name&quot;: &quot;共通の欄&quot;
+    }
+   ]
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 674 236" width="674" height="236" role="img"><g transform="translate(6.0,6.0)"><path d="M498.0,32.0 L418.0,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><path d="M520.3,32.0 L529.7,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><path d="M525.0,128.0 L497.0,192.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><path d="M539.0,128.0 L567.0,192.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><path d="M535.7,32.0 L606.3,96.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><g transform="translate(480.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="76.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">描く語彙</text></g></g><g transform="translate(360.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="76.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">器・経路</text></g></g><g transform="translate(502.0,96.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#E2EFF0" stroke="#16636B" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#16636B">意味</text></g></g><g transform="translate(460.0,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">文字4</text></g></g><g transform="translate(544.0,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">図8</text></g></g><g transform="translate(586.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="76.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">共通の欄</text></g></g></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam rel">関係</span><h3>包含</h3>
+<span class="reading">段1は実装に属し、段2・段3は文書に属する。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;包含&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;impl&quot;,
+   &quot;name&quot;: &quot;実装&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;key&quot;: &quot;s&quot;,
+     &quot;name&quot;: &quot;Schema&quot;
+    }
+   ]
+  },
+  {
+   &quot;key&quot;: &quot;doc&quot;,
+   &quot;name&quot;: &quot;文書&quot;,
+   &quot;children&quot;: [
+    {
+     &quot;key&quot;: &quot;ty&quot;,
+     &quot;name&quot;: &quot;型&quot;
+    },
+    {
+     &quot;key&quot;: &quot;en&quot;,
+     &quot;name&quot;: &quot;実体&quot;
+    }
+   ]
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 306 88" width="306" height="88" role="img"><g transform="translate(6.0,6.0)"><rect x="0.0" y="16.0" width="97.8" height="60.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><rect x="8.0" y="7.0" width="28.0" height="15.0" fill="#F5F7F9"/><text x="22.0" y="18.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#16636B">実装</text><rect x="121.8" y="16.0" width="172.0" height="60.0" rx="8" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><rect x="129.8" y="7.0" width="28.0" height="15.0" fill="#F5F7F9"/><text x="143.8" y="18.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#16636B">文書</text><g transform="translate(14.0,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="69.8" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="34.9" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">Schema</text></g></g><g transform="translate(135.8,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">型</text></g></g><g transform="translate(219.8,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">実体</text></g></g></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam rel">関係</span><h3>順序</h3>
+<span class="reading">調べ、決め、引き継ぎ、作る。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;順序&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;調べる&quot;
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;決める&quot;
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;引き継ぐ&quot;
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;作る&quot;,
+   &quot;role&quot;: &quot;focus&quot;
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 468 44" width="468" height="44" role="img"><g transform="translate(6.0,6.0)"><path d="M64.0,16.0 L128.0,16.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="128.0,16.0 121.2,18.5 121.2,13.5" fill="#C3CAD2"/><path d="M192.0,16.0 L256.0,16.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="256.0,16.0 249.2,18.5 249.2,13.5" fill="#C3CAD2"/><path d="M332.0,16.0 L396.0,16.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="396.0,16.0 389.2,18.5 389.2,13.5" fill="#C3CAD2"/><g transform="translate(0.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="64.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="32.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">調べる</text></g></g><g transform="translate(128.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="64.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="32.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">決める</text></g></g><g transform="translate(256.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="76.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">引き継ぐ</text></g></g><g transform="translate(396.0,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#E2EFF0" stroke="#16636B" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#16636B">作る</text></g></g></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam rel">関係</span><h3>循環</h3>
+<span class="reading">生成し、測り、直し、知識へ戻る。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;循環&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;生成&quot;
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;測定&quot;
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;修正&quot;
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;知識へ還元&quot;
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 301 259" width="301" height="259" role="img"><g transform="translate(6.0,6.0)"><path d="M167.5,32.0 L243.0,107.5" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="243.0,107.5 236.4,104.4 239.9,101.0" fill="#C3CAD2"/><path d="M243.0,139.5 L167.5,215.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="167.5,215.0 170.5,208.4 174.0,211.9" fill="#C3CAD2"/><path d="M135.5,215.0 L60.0,139.5" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="60.0,139.5 66.5,142.5 63.0,146.0" fill="#C3CAD2"/><path d="M60.0,107.5 L135.5,32.0" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="135.5,32.0 132.4,38.5 129.0,35.0" fill="#C3CAD2"/><g transform="translate(121.5,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">生成</text></g></g><g transform="translate(229.0,107.5)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">測定</text></g></g><g transform="translate(121.5,215.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">修正</text></g></g><g transform="translate(0.0,107.5)"><g class="svg-box" role="plain"><rect x="0" y="0" width="88.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="44.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">知識へ還元</text></g></g></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam rel">関係</span><h3>やり取り</h3>
+<span class="reading">判定の結果で応答が分かれる。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;やり取り&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;呼ぶ側&quot;
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;文書&quot;
+  },
+  {
+   &quot;key&quot;: &quot;t&quot;,
+   &quot;name&quot;: &quot;型&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;c&quot;,
+   &quot;to&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;判定する&quot;
+  },
+  {
+   &quot;from&quot;: &quot;d&quot;,
+   &quot;to&quot;: &quot;t&quot;,
+   &quot;name&quot;: &quot;指針を引く&quot;
+  },
+  {
+   &quot;from&quot;: &quot;d&quot;,
+   &quot;to&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;適合を返す&quot;,
+   &quot;kind&quot;: &quot;return&quot;
+  },
+  {
+   &quot;from&quot;: &quot;d&quot;,
+   &quot;to&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;不適合を返す&quot;,
+   &quot;kind&quot;: &quot;return&quot;
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;groups&quot;: [
+   {
+    &quot;label&quot;: &quot;結果で分かれる&quot;,
+    &quot;cases&quot;: [
+     {
+      &quot;name&quot;: &quot;適合しているとき&quot;,
+      &quot;span&quot;: [
+       2,
+       2
+      ]
+     },
+     {
+      &quot;name&quot;: &quot;適合していないとき&quot;,
+      &quot;span&quot;: [
+       3,
+       3
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 490 287" width="490" height="287" role="img"><g><rect x="18" y="132.0" width="450.0" height="133.6" rx="3" fill="none" stroke="#16636B"/><rect x="18" y="132.0" width="73.0" height="15.0" fill="#E2EFF0"/><text x="24.0" y="142.9" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="9" fill="#16636B">結果で分かれる</text><text x="28" y="157.0" font-weight="600" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">適合しているとき</text><line x1="18" y1="206.0" x2="468" y2="206.0" stroke="#16636B" stroke-dasharray="5 4"/><text x="28" y="225.0" font-weight="600" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">適合していないとき</text><line x1="93.0" y1="46.0" x2="93.0" y2="274.0" stroke="#C3CAD2" stroke-dasharray="3 4"/><line x1="243.0" y1="46.0" x2="243.0" y2="274.0" stroke="#C3CAD2" stroke-dasharray="3 4"/><line x1="393.0" y1="46.0" x2="393.0" y2="274.0" stroke="#C3CAD2" stroke-dasharray="3 4"/><rect x="31.0" y="18" width="124" height="28" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text x="93.0" y="35.9" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">呼ぶ側</text><rect x="181.0" y="18" width="124" height="28" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text x="243.0" y="35.9" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">文書</text><rect x="331.0" y="18" width="124" height="28" rx="5" fill="#F5F7F9" stroke="#C3CAD2"/><text x="393.0" y="35.9" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">型</text><line x1="93.0" y1="78.0" x2="243.0" y2="78.0" stroke="#79828F" stroke-width="1.2"/><polygon points="243.0,78.0 237.0,74.0 237.0,82.0" fill="#79828F"/><text x="168.0" y="70.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#4B5563">判定する</text><line x1="243.0" y1="118.0" x2="393.0" y2="118.0" stroke="#79828F" stroke-width="1.2"/><polygon points="393.0,118.0 387.0,114.0 387.0,122.0" fill="#79828F"/><text x="318.0" y="110.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#4B5563">指針を引く</text><line x1="243.0" y1="186.0" x2="93.0" y2="186.0" stroke="#79828F" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="93.0,186.0 99.0,182.0 99.0,190.0" fill="#79828F"/><text x="168.0" y="178.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#4B5563">適合を返す</text><line x1="243.0" y1="254.0" x2="93.0" y2="254.0" stroke="#79828F" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="93.0,254.0 99.0,250.0 99.0,258.0" fill="#79828F"/><text x="168.0" y="246.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#4B5563">不適合を返す</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam rel">関係</span><h3>対応</h3>
+<span class="reading">仕様の要素と、実装で確かめるものが対応する。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;対応&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a1&quot;,
+   &quot;name&quot;: &quot;受け入れ基準&quot;
+  },
+  {
+   &quot;key&quot;: &quot;b1&quot;,
+   &quot;name&quot;: &quot;保証シナリオ&quot;
+  },
+  {
+   &quot;key&quot;: &quot;a2&quot;,
+   &quot;name&quot;: &quot;業務ユースケース&quot;
+  },
+  {
+   &quot;key&quot;: &quot;b2&quot;,
+   &quot;name&quot;: &quot;操作の契約&quot;
+  },
+  {
+   &quot;key&quot;: &quot;a3&quot;,
+   &quot;name&quot;: &quot;集約&quot;
+  },
+  {
+   &quot;key&quot;: &quot;b3&quot;,
+   &quot;name&quot;: &quot;不変条件&quot;
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;仕様の要素&quot;
+   },
+   {
+    &quot;unit&quot;: &quot;実装で確かめるもの&quot;
+   }
+  ]
+ }
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 246 124" width="246" height="124" role="img"><g><rect x="0" y="0" width="242.0" height="30.0" fill="#E2EFF0"/><text x="14.0" y="18.6" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="600" fill="#16636B">仕様の要素</text><text x="138.0" y="18.6" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="600" fill="#16636B">実装で確かめるもの</text><line x1="0" y1="30.0" x2="242.0" y2="30.0" stroke="#E4E9EE"/><text x="14.0" y="49.3" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">受け入れ基準</text><text x="138.0" y="49.3" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">保証シナリオ</text><line x1="0" y1="60.0" x2="242.0" y2="60.0" stroke="#E4E9EE"/><text x="14.0" y="79.3" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">業務ユースケース</text><text x="138.0" y="79.3" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">操作の契約</text><line x1="0" y1="90.0" x2="242.0" y2="90.0" stroke="#E4E9EE"/><text x="14.0" y="109.3" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">集約</text><text x="138.0" y="109.3" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" fill="#171B23">不変条件</text><rect x="0.5" y="0.5" width="241.0" height="119.0" fill="none" stroke="#C3CAD2"/></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>全体と部分</h3>
+<span class="reading">16の主張は関係7と量9に分かれる。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;全体と部分&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;r&quot;,
+   &quot;name&quot;: &quot;関係&quot;,
+   &quot;value&quot;: 7
+  },
+  {
+   &quot;key&quot;: &quot;q&quot;,
+   &quot;name&quot;: &quot;量&quot;,
+   &quot;value&quot;: 9
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 400 180" width="400" height="180" role="img"><g><path d="M88.0,36.0 A52.0,52.0 0 0,1 107.9,136.0" fill="none" stroke="#16636B" stroke-width="24"/><path d="M107.9,136.0 A52.0,52.0 0 1,1 88.0,36.0" fill="none" stroke="#9A4A21" stroke-width="24"/><text x="88.0" y="93.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="600" fill="#171B23">16</text><rect x="170" y="27.2" width="10" height="10" rx="2" fill="#16636B"/><text x="188.0" y="36.2" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">関係</text><text x="378.0" y="36.2" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">7</text><rect x="170" y="53.2" width="10" height="10" rx="2" fill="#9A4A21"/><text x="188.0" y="62.2" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">量</text><text x="378.0" y="62.2" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">9</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>量の大小</h3>
+<span class="reading">最も使われている宣言が、最も説明されていない。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;量の大小&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;x-prompt-write&quot;,
+   &quot;value&quot;: 623
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;x-prompt-query&quot;,
+   &quot;value&quot;: 216
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;x-render&quot;,
+   &quot;value&quot;: 157
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;使用回数&quot;
+   }
+  ]
+ }
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 348 253" width="348" height="253" role="img"><g><line x1="62" y1="47.2" x2="62" y2="197.2" stroke="#C3CAD2"/><line x1="62" y1="197.2" x2="326" y2="197.2" stroke="#C3CAD2"/><text x="62.0" y="28.0" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">使用回数</text><rect x="75.0" y="47.2" width="62" height="150.0" rx="3" fill="#16636B"/><text x="106.0" y="41.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">623</text><text x="106.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">x-prompt-write</text><rect x="163.0" y="145.2" width="62" height="52.0" rx="3" fill="#9A4A21"/><text x="194.0" y="139.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">216</text><text x="194.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">x-prompt-query</text><rect x="251.0" y="159.4" width="62" height="37.8" rx="3" fill="#7A4368"/><text x="282.0" y="153.4" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">157</text><text x="282.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">x-render</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>順位</h3>
+<span class="reading">描画部品の使われ方には偏りがある。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;順位&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;条件による選択&quot;,
+   &quot;value&quot;: 62
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;やり取りの順序&quot;,
+   &quot;value&quot;: 49
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;向きのある関係&quot;,
+   &quot;value&quot;: 30
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;一列に並ぶ&quot;,
+   &quot;value&quot;: 7
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 574 160" width="574" height="160" role="img"><g><text x="38.4" y="37.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">1</text><text x="202.0" y="37.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">条件による選択</text><rect x="212" y="25.9" width="300" height="14.1" rx="3" fill="#E4E9EE"/><rect x="212" y="25.9" width="300.0" height="14.1" rx="3" fill="#16636B"/><text x="526.0" y="37.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">62</text><text x="38.4" y="67.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">2</text><text x="202.0" y="67.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">やり取りの順序</text><rect x="212" y="56.0" width="300" height="14.1" rx="3" fill="#E4E9EE"/><rect x="212" y="56.0" width="237.1" height="14.1" rx="3" fill="#16636B"/><text x="526.0" y="67.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">49</text><text x="38.4" y="97.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">3</text><text x="202.0" y="97.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">向きのある関係</text><rect x="212" y="86.0" width="300" height="14.1" rx="3" fill="#E4E9EE"/><rect x="212" y="86.0" width="145.2" height="14.1" rx="3" fill="#16636B"/><text x="526.0" y="97.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">30</text><text x="38.4" y="127.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">4</text><text x="202.0" y="127.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">一列に並ぶ</text><rect x="212" y="116.0" width="300" height="14.1" rx="3" fill="#E4E9EE"/><rect x="212" y="116.0" width="33.9" height="14.1" rx="3" fill="#16636B"/><text x="526.0" y="127.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">7</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>時間変化</h3>
+<span class="reading">決定は日をまたいで積み上がった。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;時間変化&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;調べる&quot;,
+   &quot;span&quot;: [
+    0,
+    3
+   ]
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;決める&quot;,
+   &quot;span&quot;: [
+    3,
+    2
+   ]
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;引き継ぐ&quot;,
+   &quot;span&quot;: [
+    5,
+    1
+   ]
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;作る&quot;,
+   &quot;span&quot;: [
+    6,
+    5
+   ]
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;日&quot;
+   }
+  ]
+ }
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 530 182" width="530" height="182" role="img"><g><text x="118.0" y="36.9" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">調べる</text><rect x="128" y="24.0" width="380" height="18.0" rx="4" fill="#E4E9EE"/><rect x="128.0" y="24.0" width="103.6" height="18.0" rx="3" fill="#16636B"/><text x="118.0" y="66.9" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">決める</text><rect x="128" y="54.0" width="380" height="18.0" rx="4" fill="#E4E9EE"/><rect x="231.6" y="54.0" width="69.1" height="18.0" rx="3" fill="#16636B"/><text x="118.0" y="96.9" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">引き継ぐ</text><rect x="128" y="84.0" width="380" height="18.0" rx="4" fill="#E4E9EE"/><rect x="300.7" y="84.0" width="34.5" height="18.0" rx="3" fill="#16636B"/><text x="118.0" y="126.9" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">作る</text><rect x="128" y="114.0" width="380" height="18.0" rx="4" fill="#E4E9EE"/><rect x="335.3" y="114.0" width="172.7" height="18.0" rx="3" fill="#16636B"/><line x1="128" y1="142.4" x2="508" y2="142.4" stroke="#C3CAD2"/><text x="128.0" y="157.8" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">日</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>分布</h3>
+<span class="reading">節点の数は5〜8に集中している。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;分布&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;2-4&quot;,
+   &quot;value&quot;: 38
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;5-8&quot;,
+   &quot;value&quot;: 64
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;9-12&quot;,
+   &quot;value&quot;: 15
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;13-16&quot;,
+   &quot;value&quot;: 8
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;図の枚数&quot;
+   }
+  ]
+ }
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 436 253" width="436" height="253" role="img"><g><line x1="62" y1="47.2" x2="62" y2="197.2" stroke="#C3CAD2"/><line x1="62" y1="197.2" x2="414" y2="197.2" stroke="#C3CAD2"/><text x="62.0" y="28.0" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">図の枚数</text><rect x="75.0" y="108.1" width="62" height="89.1" rx="3" fill="#16636B"/><text x="106.0" y="102.1" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">38</text><text x="106.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">2-4</text><rect x="163.0" y="47.2" width="62" height="150.0" rx="3" fill="#9A4A21"/><text x="194.0" y="41.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">64</text><text x="194.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">5-8</text><rect x="251.0" y="162.0" width="62" height="35.2" rx="3" fill="#7A4368"/><text x="282.0" y="156.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">15</text><text x="282.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">9-12</text><rect x="339.0" y="178.4" width="62" height="18.8" rx="3" fill="#8A8F98"/><text x="370.0" y="172.4" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">8</text><text x="370.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">13-16</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>偏差</h3>
+<span class="reading">言及回数は、平均から大きく下振れしている。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;偏差&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;x-prompt-write&quot;,
+   &quot;value&quot;: 19
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;x-render&quot;,
+   &quot;value&quot;: 74
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;x-render-level&quot;,
+   &quot;value&quot;: 2
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;x-render-order&quot;,
+   &quot;value&quot;: 0
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;baseline&quot;: 24,
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;平均からの差&quot;
+   }
+  ]
+ }
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 436 253" width="436" height="253" role="img"><g><line x1="62" y1="47.2" x2="62" y2="197.2" stroke="#C3CAD2"/><line x1="62" y1="122.2" x2="414" y2="122.2" stroke="#C3CAD2"/><text x="62.0" y="28.0" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">平均からの差</text><rect x="75.0" y="122.2" width="62" height="7.5" rx="3" fill="#16636B"/><text x="106.0" y="143.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">19</text><text x="106.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">x-prompt-write</text><rect x="163.0" y="47.2" width="62" height="75.0" rx="3" fill="#9A4A21"/><text x="194.0" y="41.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">74</text><text x="194.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">x-render</text><rect x="251.0" y="122.2" width="62" height="33.0" rx="3" fill="#7A4368"/><text x="282.0" y="169.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">2</text><text x="282.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">x-render-level</text><rect x="339.0" y="122.2" width="62" height="36.0" rx="3" fill="#8A8F98"/><text x="370.0" y="172.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#171B23">0</text><text x="370.0" y="214.2" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">x-render-order</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>相関</h3>
+<span class="reading">使われている宣言ほど説明されている、とは言えない。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;相関&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;文書の検証&quot;,
+   &quot;at&quot;: [
+    8,
+    7
+   ]
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;描画&quot;,
+   &quot;at&quot;: [
+    5,
+    6
+   ]
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;設定の読み込み&quot;,
+   &quot;at&quot;: [
+    2,
+    2
+   ]
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;配置の検査&quot;,
+   &quot;at&quot;: [
+    7,
+    3
+   ]
+  }
+ ],
+ &quot;frame&quot;: {
+  &quot;axes&quot;: [
+   {
+    &quot;unit&quot;: &quot;差別化の大きさ&quot;
+   },
+   {
+    &quot;unit&quot;: &quot;複雑さ&quot;
+   }
+  ]
+ }
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 424 304" width="424" height="304" role="img"><g><line x1="90" y1="30" x2="90" y2="260" stroke="#C3CAD2"/><line x1="90" y1="260" x2="330" y2="260" stroke="#C3CAD2"/><circle cx="330.0" cy="30.0" r="4.5" fill="#16636B"/><text x="321.9" y="48.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">文書の検証</text><circle cx="240.0" cy="62.9" r="4.5" fill="#16636B"/><text x="240.0" y="53.9" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">描画</text><circle cx="150.0" cy="194.3" r="4.5" fill="#16636B"/><text x="150.0" y="185.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">設定の読み込み</text><circle cx="300.0" cy="161.4" r="4.5" fill="#16636B"/><text x="291.9" y="152.4" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">配置の検査</text><text x="210.0" y="290.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">差別化の大きさ</text><text x="18" y="145.0" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" fill="#79828F" text-anchor="middle" transform="rotate(-90 18 145.0)">複雑さ</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>流量</h3>
+<span class="reading">描画部品の多くは、文字の側へ流れている。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;流量&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;s&quot;,
+   &quot;name&quot;: &quot;構造化データ&quot;
+  },
+  {
+   &quot;key&quot;: &quot;m&quot;,
+   &quot;name&quot;: &quot;Markdown&quot;
+  },
+  {
+   &quot;key&quot;: &quot;h&quot;,
+   &quot;name&quot;: &quot;HTML&quot;
+  }
+ ],
+ &quot;links&quot;: [
+  {
+   &quot;from&quot;: &quot;s&quot;,
+   &quot;to&quot;: &quot;m&quot;,
+   &quot;weight&quot;: 7
+  },
+  {
+   &quot;from&quot;: &quot;s&quot;,
+   &quot;to&quot;: &quot;h&quot;,
+   &quot;weight&quot;: 3
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 524 214" width="524" height="214" role="img"><g><path d="M120,18.0 C260.0,18.0 260.0,18.0 412,18.0 L412,139.8 C260.0,139.8 260.0,139.8 120,139.8 Z" fill="#16636B" opacity="0.45"/><path d="M120,139.8 C260.0,139.8 260.0,147.8 412,147.8 L412,200.0 C260.0,200.0 260.0,192.0 120,192.0 Z" fill="#9A4A21" opacity="0.45"/><rect x="108" y="192.0" width="12" height="0.0" fill="#79828F"/><text x="100.0" y="196.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">構造化データ</text><rect x="400" y="139.8" width="12" height="0.0" fill="#79828F"/><text x="420.0" y="143.8" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">Markdown</text><rect x="400" y="200.0" width="12" height="0.0" fill="#79828F"/><text x="420.0" y="204.0" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#4B5563">HTML</text></g></svg></div>
+</div>
+</section>
+<section class="claim">
+<div class="chead"><span class="fam qty">量</span><h3>空間</h3>
+<span class="reading">段は外側から内側へ並ぶ。位置が深さを表す。</span></div>
+<div class="pair">
+<pre>{
+ &quot;asserts&quot;: &quot;空間&quot;,
+ &quot;items&quot;: [
+  {
+   &quot;key&quot;: &quot;a&quot;,
+   &quot;name&quot;: &quot;受け口&quot;
+  },
+  {
+   &quot;key&quot;: &quot;b&quot;,
+   &quot;name&quot;: &quot;ユースケース&quot;
+  },
+  {
+   &quot;key&quot;: &quot;c&quot;,
+   &quot;name&quot;: &quot;業務サービス&quot;,
+   &quot;role&quot;: &quot;focus&quot;
+  },
+  {
+   &quot;key&quot;: &quot;d&quot;,
+   &quot;name&quot;: &quot;モデル&quot;
+  }
+ ]
+}</pre>
+<div class="canvas"><svg class="wf-fig" viewBox="0 0 316 202" width="316" height="202" role="img"><g><rect x="0" y="0" width="312" height="42" rx="6" fill="#F5F7F9" stroke="#C3CAD2"/><text x="20.0" y="26.0" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">受け口</text><text x="298.0" y="25.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">0</text><rect x="0" y="52" width="312" height="42" rx="6" fill="#F5F7F9" stroke="#C3CAD2"/><text x="20.0" y="78.0" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">ユースケース</text><text x="298.0" y="77.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">1</text><rect x="0" y="104" width="312" height="42" rx="6" fill="#E2EFF0" stroke="#16636B"/><text x="20.0" y="130.0" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#16636B">業務サービス</text><text x="298.0" y="129.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">2</text><rect x="0" y="156" width="312" height="42" rx="6" fill="#F5F7F9" stroke="#C3CAD2"/><text x="20.0" y="182.0" text-anchor="start" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">モデル</text><text x="298.0" y="181.0" text-anchor="end" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10" font-weight="400" fill="#79828F">3</text></g></svg></div>
+</div>
+</section>
+</div>

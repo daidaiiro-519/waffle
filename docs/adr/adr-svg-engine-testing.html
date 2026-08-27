@@ -1,0 +1,254 @@
+<title>描いたものを、出す前に見る</title>
+<style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:62rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+  .lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:36rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .keyrow td{background:#F5EDDF}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){.keyrow td{background:#2A2216}}}
+  :root[data-theme="dark"] .keyrow td{background:#2A2216}
+
+  .layers{display:flex;flex-direction:column}
+  .layer{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:1.1rem 1.2rem 1.25rem;display:flex;flex-direction:column;gap:.6rem}
+  .layer.a{border-left-color:var(--fact)}
+  .layer.b{border-left-color:var(--infer)}
+  .layer .lbl{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+  .layer.a .lbl{color:var(--fact)} .layer.b .lbl{color:var(--infer)}
+  .layer .main{font-family:var(--serif);font-size:1.08rem;font-weight:600}
+  .layer p{font-size:.92rem;color:var(--ink-soft);line-height:1.75}
+  .arrow-between{height:1.4rem;width:2px;background:var(--rule);margin-left:1.5rem;position:relative}
+  .arrow-between::after{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+                        border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--rule)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+  .fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  .fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+                list-style:none;display:flex;align-items:center;gap:.5rem}
+  .fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+  .fold[open]>summary::before{content:"▾"}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+  .foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+  .foldnote b{color:var(--ink)}
+</style>
+<style>
+  .flow{display:flex;flex-direction:column;gap:0}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--fact);border-radius:2px;background:var(--surface);
+        padding:.95rem 1.1rem 1.05rem;display:flex;gap:.9rem;align-items:flex-start}
+  .step.human{border-left-color:var(--against)}
+  .step .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;color:var(--ink-faint);flex:none;padding-top:.35rem;width:2.2rem}
+  .step .b{display:flex;flex-direction:column;gap:.35rem}
+  .step .t{font-family:var(--serif);font-size:1.02rem;font-weight:600}
+  .step p{font-size:.9rem;color:var(--ink-soft);line-height:1.75}
+  .step .cost{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .report{font-family:var(--mono);font-size:.82rem;line-height:1.9;background:var(--surface-2);
+          border:1px solid var(--rule);border-radius:2px;padding:.9rem 1.1rem;white-space:pre-wrap;overflow-x:auto}
+  .report b{color:var(--against)}
+  .yes{color:var(--infer);font-weight:700}
+  .no{color:var(--against);font-weight:700}
+  .mid{color:var(--assume);font-weight:700}
+  td.verdict{white-space:nowrap}
+  .callout{border:1px solid var(--rule);border-left:3px solid var(--against);border-radius:2px;
+           background:var(--against-bg);padding:.9rem 1.1rem;font-size:.92rem;line-height:1.75}
+</style>
+
+<div class="wrap">
+
+<header>
+<p class="eyebrow">svg_engine ── ADR（第2版）</p>
+<h1>描いたものを、出す前に見る</h1>
+<p class="lede">検査は固定の目録にかけるのではなく、<b>実際に描いて出すものに付いて回る</b>。機械が見られるところは機械が見て、機械が永久に見られないところは人が全件見る。第1版で決めた層2の中身は実測の結果採れなかったので、そこも訂正する。</p>
+</header>
+
+<section>
+<h2><span class="num">01</span>決定 ── 3層に分ける</h2>
+<div class="layers">
+<div class="layer a">
+<span class="lbl">層1 ── 値の単体テスト</span>
+<span class="main">レンダリングを経由しない、純粋関数のテスト</span>
+<p>段の割り当て・交差数・座標整列・輪の並び順・ブーリアン演算・カスケード解決とトークン範囲検査。入力から数値・座標・真偽値が出るだけなので、SVG文字列を1文字も作らずに確かめられる。</p>
+</div>
+<div class="arrow-between"></div>
+<div class="layer b">
+<span class="lbl">層2 ── 回帰テスト</span>
+<span class="main">エンジンを直したときだけ走らせる、固定の80通り</span>
+<p>16主張×4倍率＋組み合わせ4種×4倍率。組み上がったSVGを文字列として解析し、文字の重なり・画布外・箱どうしの重なり・辺が箱を突っ切る・囲みの交差・囲みの線の食い込みを見る。<b>これは成果物の検査ではない。</b>部品がテーマを共有しているので、片方を直すと別が壊れることを捕まえるためのもの。</p>
+</div>
+<div class="arrow-between"></div>
+<div class="layer b" style="border-left-color:var(--against)">
+<span class="lbl" style="color:var(--against)">層3 ── 出すものに付いて回る検査</span>
+<span class="main">描いた1枚ごとに、機械が読み、人が見る</span>
+<p>本ADRの主題。対象は「そのとき描いたもの」だけで、固定の目録ではない。<b>出すものと検査した対象が必ず一致する</b>ことが要件。</p>
+</div>
+</div>
+<p class="col">第1版は層1と層2の2層だったが、層2を「成果物の検査」と「回帰テスト」の2つの役割に兼務させていた。兼務させると、回帰テストが緑であることを根拠に、別に描いた成果物を見ずに出せてしまう（実際にそうなった）。役割で割って3層にする。</p>
+</section>
+
+<section>
+<h2><span class="num">02</span>層3の手順</h2>
+<div class="flow">
+<div class="step"><span class="n">段1</span><div class="b"><span class="t">描いたSVGを、そのままPNGにする</span>
+<p>resvgに通す。書体が1つも見つからない環境では<b>失敗させる</b>（読み飛ばさない）。黙って緑になる検査は、この一連の作業でずっと直してきた失敗そのもの。</p>
+<span class="cost">実測 7ms / 枚</span></div></div>
+<div class="arrow-between"></div>
+<div class="step"><span class="n">段2</span><div class="b"><span class="t">機械が読む</span>
+<p>ラスタライズが例外なく通ること／インクが存在すること（書体が解決せず全消えしていないか、resvgが黙って捨てていないか）／<code>text_width</code>の見積もりが実測を下回っていないこと。</p>
+<span class="cost">実測 5〜6ms / 枚（小さい画像）</span></div></div>
+<div class="arrow-between"></div>
+<div class="step human"><span class="n">段3</span><div class="b"><span class="t">人が、1枚残らず見る</span>
+<p>機械が永久に見られないものを見る ── 矢印の向き、輪が閉じて読めるか、詰まっていないか、読みにくくないか。一部だけ見て残りを推測しない。</p>
+<span class="cost">自動化しない</span></div></div>
+<div class="arrow-between"></div>
+<div class="step human"><span class="n">段4</span><div class="b"><span class="t">報告に、見た枚数を書く</span>
+<p>ハーネスが生成したPNGの一覧を出すので、見た枚数がそれに満たなければ数字が合わず、省いたことがその場で見える。</p></div></div>
+</div>
+<div class="report">生成: 16 枚
+  figure-01.png … figure-16.png
+
+機械の検査 ── 16/16 通過
+見た枚数   ── <b>16/16</b>
+
+→ ここが 16/16 でない限り「できた」と書かない。
+   見ていない枚数がある場合は、その枚数を明記して出す。</div>
+</section>
+
+<section>
+<h2><span class="num">03</span>なぜ人が要るのか ── 実際に出た不備で測る</h2>
+<div class="scroll"><table>
+<thead><tr><th>この作業で実際に出た不備</th><th>文字列を解析</th><th>画素を機械が読む</th><th>人が見る</th></tr></thead>
+<tbody>
+<tr><td class="name">clipPathの中身をresvgが無視し、枠の中身が全消え</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+<tr><td class="name">ブーリアン差の穴が開かない（輪郭の数は正しく2）</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+<tr><td class="name">書体が解決せず、文字が一切描かれない</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+<tr class="keyrow"><td class="name"><code>text_width</code>の見積もりが実測より21.6%狭い</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td></tr>
+<tr><td class="name">囲みが重なる／六角形が画布の左上に貼り付く</td><td><span class="mid">△</span> 後から検査を足して<span class="yes">✓</span></td><td class="yes">✓</td><td class="yes">✓</td></tr>
+<tr class="keyrow"><td class="name">「やり取り」の矢印が全部逆</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+<tr class="keyrow"><td class="name">「循環」が輪でなく鎖になっていた</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+<tr class="keyrow"><td class="name">並び順が乱れ、輪がもつれた星になっていた</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+</tbody></table></div>
+<div class="callout">下3行は、どれだけ機械検査を厚くしても永久に捕まらない。絵が「意味を伝えているか」だからである。そして下3行はいずれも、文字列を解析する検査が<b>「80通り、崩れ0件」と出している最中に</b>起きていた。だから層3の段3は省略できる工程ではなく、層3そのものの目的にあたる。</div>
+</section>
+
+<section>
+<h2><span class="num">04</span>測った費用</h2>
+<div class="scroll"><table>
+<thead><tr><th>操作</th><th>実測</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td class="name">層1＋層2（依存なし、162件）</td><td>0.1 秒</td><td>毎回かけられる</td></tr>
+<tr><td class="name">80通りをPNG化</td><td>0.6 秒</td><td>1枚あたり 7ms</td></tr>
+<tr><td class="name">PNG復号 ── 小さい画像（文字1本・部品1つ）</td><td>5〜6 ms</td><td>較正はここだけで足りる</td></tr>
+<tr class="keyrow"><td class="name">PNG復号 ── 図まるごと（812×974）</td><td>204 ms</td><td>ここが唯一遅い。<b>図全体は復号しない</b></td></tr>
+</tbody></table></div>
+<p class="col">第1版は「層2は遅い（1件ごとにラスタライズが要る）」と書いたが、実測は逆だった。遅いのはラスタライズではなく、Pillowを使わずPythonで書いたPNG復号のほうで、しかも画像の面積に比例する。だから<b>図全体は復号せず、復号するのは較正用の小さい画像だけ</b>にする。</p>
+</section>
+
+<section>
+<h2><span class="num">05</span>第1版の訂正</h2>
+<div class="scroll"><table>
+<thead><tr><th>第1版で書いたこと</th><th>実測してどうだったか</th></tr></thead>
+<tbody>
+<tr class="keyrow"><td class="name"><code>render_svg_check.py</code>の既存ロジックをpytestのassertとして自動化する</td><td><b>採れない。</b>この幾何検査はSVGに<code>&lt;g transform=…&gt;</code>が1つでもあると全部素通りする作りで、svg_engineの出力は常にtransformで節点を配置する。節点3つを完全に重ねて渡しても「崩れ無し」と報告した（同じ入力で、svg_engine側の検査は文字の重なりを3件検出）</td></tr>
+<tr><td class="name">層2は「実例1〜5を見つけた実績がある安価な機械チェック」</td><td><b>誤り。</b>あの5件を見つけたのはPNGを目で見たからで、この幾何検査ではない</td></tr>
+<tr><td class="name">層2の実行に<code>resvg-py</code>／<code>fonttools</code>が要る</td><td>層2（回帰テスト）には<b>不要</b>。組み上がったSVG文字列を解析するだけで済む。この2つが要るのは層3のみ</td></tr>
+<tr><td class="name">層2は遅い</td><td>逆。0.6秒（04節）</td></tr>
+<tr><td class="name">画素単位のスナップショット比較は採らない</td><td><b>維持する。</b>基準画像の管理・環境差の調整という別の運用費を持ち込むため</td></tr>
+<tr><td class="name">置き場所は<code>recovered/svg_engine/tests/</code></td><td><b>維持する。</b>ただし検査ロジック自体は<code>tests/</code>ではなく<code>svg_engine/verify.py</code>（エンジン本体）へ置く ── アセット追加の契約が「この検査を通ること」を求めている以上、検査は例に置く道具ではなくエンジンの持ち物である</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">06</span>検査自身を検査する</h2>
+<p class="col">崩れを機械で見つける検査は、この作業中に2度、静かに壊れた。祖先の変換を積まずに生の座標を読んで36件の誤検知を出したこと。折れ線の端点しか見ておらず、わざと箱を貫かせた線を素通りさせたこと。<b>どちらも「崩れ0件」という表示は出ていた。</b></p>
+<p class="col">よって、検査を書いたら必ず「既知の壊れた形を渡して鳴るか」「正しい形で黙るか」の両方を確かめる試験を、検査と同じだけ持つ。誤検知する検査は無いより悪い ── 狼少年になって本物を見逃す。</p>
+</section>
+
+<section>
+<h2><span class="num">07</span>較正で判明したずれの扱い</h2>
+<p class="col">層3の段2で <code>text_width</code> の見積もりを実測と突き合わせたところ、<code>AWM</code> を32pxで描いた場合に見積もり55.7に対し実測71で、<b>21.6%狭く</b>見積もっていた。狭く見積もると、実際は重なっているのに検査が気づかない側へ倒れる。しかも80通りのラベルは大文字で、倍率は2.5倍まで上げている ── 最も外れる領域で検査を回していたことになる。</p>
+<div class="scroll"><table>
+<thead><tr><th>直し方</th><th>採るか</th><th>理由</th></tr></thead>
+<tbody>
+<tr class="keyrow"><td class="name">欧文比率を、平均でなく実測の最大値から取り直す（書体から1度測ってトークンへ記録）</td><td class="verdict"><b>採る</b></td><td>見積もりが常に広めになり、下振れが構造的に消える。値は書体から測った実測であって、勘で置いた数ではない</td></tr>
+<tr><td class="name">見積もりはそのままで、assertに「下回ってよい幅」を持たせる</td><td class="verdict">採らない</td><td>勘で置いた閾値を1つ増やすことになる。この作業を通じて排してきたもの</td></tr>
+</tbody></table></div>
+<p class="col">代償として、欧文が多い図は箱がわずかに広くなる。読みやすさが下がる変更ではないので受け入れる。</p>
+</section>
+
+<section>
+<h2><span class="num">08</span>答えないこと</h2>
+<div class="scroll"><table>
+<thead><tr><th>問い</th><th>ここで答えない理由</th></tr></thead>
+<tbody>
+<tr><td class="name">Waffle本体との橋渡し（変換器）の設計</td><td>別のADR。ここはテストの設計だけを決める</td></tr>
+<tr><td class="name"><code>svg_engine</code>を<code>src/waffle/</code>へ引っ越すか</td><td>橋渡しの形が決まってから判断する。先に決めると、まだ存在しないものの形に合わせて置き場所を決めることになる</td></tr>
+<tr><td class="name">層3をhookとして常時かけるか</td><td>他のschema再定義が一段落してから着手する、と既に合意している</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">09</span>承認</h2>
+<div class="approve">
+<span class="k">状態</span><span class="v">承認済み（2026-08-22）</span>
+<span class="m">第1版（2層）を差し替えた。次は層3のハーネスと07節の較正を実装する。</span>
+</div>
+</section>
+
+</div>
