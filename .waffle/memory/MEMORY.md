@@ -6,6 +6,7 @@
 
 ## 進め方
 
+- [main で直接コミットする](feedback_commit_on_main_directly.md) — 使うのは1人。ブランチは切らない。ただし1回のコミットに全部を丸めない
 - [選択肢を並べて「どうしますか」と聞かない](feedback_lead_with_position_before_asking.md) — 見解・推奨・理由・衝突を先に出し、問いは自分の案への可否確認の形にする
 - [確認せず手が動く方へ進む癖](skip-confirmation-before-acting.md) — 工程の次段階・schemaのx-prompt・実物を、記憶で判断せず必ず開いて確かめる
 - [消えたと判断する前に会話の記録を探す](feedback_lost_work_lives_in_the_transcript.md) — Writeの中身がそのまま残っている。git と作業領域だけ見て断じない
