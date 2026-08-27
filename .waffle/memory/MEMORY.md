@@ -9,10 +9,12 @@
 - [選択肢を並べて「どうしますか」と聞かない](feedback_lead_with_position_before_asking.md) — 見解・推奨・理由・衝突を先に出し、問いは自分の案への可否確認の形にする
 - [確認せず手が動く方へ進む癖](skip-confirmation-before-acting.md) — 工程の次段階・schemaのx-prompt・実物を、記憶で判断せず必ず開いて確かめる
 - [消えたと判断する前に会話の記録を探す](feedback_lost_work_lives_in_the_transcript.md) — Writeの中身がそのまま残っている。git と作業領域だけ見て断じない
-- [検査の合否だけで「確認した」と言わない](feedback_look_at_the_render_not_only_the_checks.md) — 描画は画像にして目で見る。検査は意味の壊れ・図と本文の食い違いを見ない
+- [検査の合否だけで「確認した」と言わない](feedback_look_at_the_render_not_only_the_checks.md) — **生成した図そのもの**を画像にして目で見る（ページ全体は毎回撮らない。2026-08-28に範囲を絞り、強制フックは止めた）。検査は意味の壊れ・矢印の向き・図と本文の食い違いを見ない
+- [HTMLページを画像にする手段＝playwright](project_playwright_page_screenshot.md) — tools/shoot.py。`LD_LIBRARY_PATH=$HOME/.cache/waffle-shoot-libs` が必須（libasound欠け）
 - [規約は1ブロックだけ読んで判断しない](feedback_read_all_standards_not_one_block.md) — 定義の本文・判断の木・表を全部当たってから断じる。同じ形の誤りを繰り返している
 - [schema を変えるのは実装である](feedback_schema_change_is_implementation.md) — 決定→仕様→実装。仕様を飛ばすと説明の無い構造が増える
 - [既存へ肉付けせず、あるべき形へ直す](feedback_correct_toward_the_right_form_not_the_existing_one.md) — 前提が変わった構造に規則を足さない。AIで直す手間は安くなった
+- [再定義では既存を根拠にしない](feedback_redefinition_does_not_reason_from_the_existing.md) — 実測は数えるためであって、あるべき形を決める根拠にはしない。2026-08-18に3回差し戻された
 - [実例の件数で能力の要否を決めない](feedback_evidence_based_scope_is_not_for_capability_decisions.md) — 抽象化のタイミングの基準であって、構造の妥当性の検査には使えない
 
 ## 主題（仕様と実装の抽象境界）
@@ -26,6 +28,12 @@
 - [仕様の語彙にパターン名を入れない](feedback_no_pattern_names_in_spec_vocabulary.md) — port/Primary/Secondaryは様式の語彙。使えるのは規約から下だけ
 - [x-promptは根幹であって付随物ではない](feedback_x_prompt_is_the_core_not_metadata.md) — writeとqueryが同じ欄で矛盾しうる。構造変更時は必ず対で見直す
 - [schemaの指示でknowledgeを広げない](feedback_schema_prompts_must_not_widen_knowledge.md) — 導出の向きはknowledge→x-prompt。ただし広いと断じる前に定義を全文読む
+
+## 主題（svg_engine PoC ── design-svg Skillの事業領域）
+
+- [svg_engineはdesign-svgの事業領域、Waffleは利用側](project_svg_engine_visual_check_hook_pending.md) — 16の主張という記法も含めてdesign-svgが所有。Waffleは変換器越しに使う想定（今回は無し）。design-svgのSKILL.mdの除外規定が現状と矛盾したまま残っている。描画機械チェックのhook化・所有権整理は他のschema再定義が一段落してから
+- [辺の着き先を、インクから選ぶ形へ作り替えた(2026-08-23)](project_svg_engine_attachment_redesign.md) — 索引 a37fc94b。輪郭の申告をやめ、検査に `check_attachment` を足した。**決定4本すべて承認済み。**開いたまま2件（湾の凹んだ側＝現状維持／群を指す辺＝宣言手段が無い）
+- [Waffle変換器＋段1/段2再開のTODO棚卸し(2026-08-22)](project_svg_stage12_todo_artifact.md) — アーティファクトへのポインタ。作業再開時にまずここを開く
 
 ## 決定の記録の形
 

@@ -1,0 +1,18 @@
+---
+name: project_svg_stage12_todo_artifact
+description: Waffle変換器と段1/段2再開のTODOをまとめたartifact(2026-08-22)。中身のポインタ
+metadata:
+  node_type: memory
+  type: project
+---
+
+「やることの棚卸し」というTODOアーティファクトを作成した（2026-08-22）: https://claude.ai/code/artifact/ddfd3466-94ff-4b28-a362-e4bd083c45b4
+
+2部構成:
+
+1. **今すぐ ── Waffle側の変換器**（design-svgとWaffleの語彙をつなぐアダプタ。[[project_svg_engine_visual_check_hook_pending]]でsvg_engineをdesign-svgの事業領域と決めた続き）の決めごと4点: 置き場所（`domain/services/`配下が候補）／16の主張→design-svg部品の対応表（段1の必須・禁止表の未決着2点と同時に決まる想定）／テーマ(トークン)をWaffle側でどう指定するか／変換器自体のテスト方針
+2. **後で ── SVG関連が片づいたら再開する、段1・段2**のTODO: 段1「図の16の主張ごとの必須・禁止」の未決着2点（要判断。[[project_svg_engine_visual_check_hook_pending]]の対応表とも関連）／段1「値の型の種類」／段1「起こす機能の置き場所」／段1「説明の書き方の下限」／段2「Domain の型」の承認判断（要判断、業務領域を区切られた文脈の外へ出す承認待ち記録も込みになる）／ADR「配る成果物を、外部ホストから切り離す」の承認判断（要判断、既存の受け入れ基準`uc-render-document-viewer`の3番目と衝突中）
+
+**Why:** ユーザーから明示的に「メモリにこのtodoのアーティファクト記録を残してください」と依頼された。svg_engine/design-svg関連の作業に区切りがついた後、何が宙に浮いているかを次のセッションでもすぐ辿れるようにするため。
+
+**How to apply:** 次にこのリポジトリで作業を再開するとき、まずこのアーティファクトURLを開いて現状の棚卸しを確認すること。個々の項目を進めたら、アーティファクトの該当チェック項目とこのメモリの両方を更新する（アーティファクトだけ直して、このメモリの要約を古いまま放置しない）。
