@@ -1,0 +1,149 @@
+<title>16の主張ごとの必須・禁止</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+  .lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:44rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.name{font-weight:700}
+  .keyrow td{background:#F5EDDF}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){.keyrow td{background:#2A2216}}}
+  :root[data-theme="dark"] .keyrow td{background:#2A2216}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.fam-rel{color:var(--fact);background:var(--fact-bg)}
+  .kindtag.fam-qty{color:var(--infer);background:var(--infer-bg)}
+  .req{color:var(--infer);font-weight:600}
+  .forb{color:var(--against)}
+  .opt{color:var(--ink-faint)}
+  .fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  .fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+                list-style:none;display:flex;align-items:center;gap:.5rem}
+  .fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+  .fold[open]>summary::before{content:"▾"}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+  .foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+  .foldnote b{color:var(--ink)}
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+</style><div class="wrap">
+
+<header>
+<p class="eyebrow">段1 の中 ── 図の仕様</p>
+<h1>16の主張ごとの必須・禁止</h1>
+<p class="lede">段1「すべての型に共通する契約」の節09で保留していた4項目のうち1つ。<b>図は段1が持つ部品であり、実装より前に要る。</b>実物4件（判断基準・ADRのblock 03・やり取りの順序・区画の中の区画）を実際に描いて作った<code>図解の記法</code>の16の主張から、書ける欄と書けない欄を逆算した。</p>
+</header>
+
+<section>
+<h2>この表の読み方</h2>
+<p class="lead"><b>置くもの（items）は全主張が持つ。</b>変わるのは、items の中の欄と、つなぐもの（links）・読む枠（frame）の要否だけである。</p>
+<div class="col">
+<p>段1の「標準の組み立て」節が、図は5つのもの ── 主張／読み方／置くもの／つなぐもの／読む枠 を持つと定めている。主張と読み方、置くものの<code>name</code>はどの主張でも必須。それ以外は主張ごとに分かれる。<span class="req">緑字</span>は必須、<span class="forb">赤字</span>は禁止、<span class="opt">灰字</span>は任意であることを示す。</p>
+</div>
+</section>
+
+<section>
+<h2>関係を主張するもの（7）</h2>
+<div class="scroll"><table><thead><tr><th>主張</th><th>置くもの（items）の欄</th><th>つなぐもの（links）</th><th>読む枠（frame）</th></tr></thead><tbody>
+<tr class="keyrow"><td class="name">つながり</td><td><span class="opt">role（任意）</span></td><td><span class="req">必須</span> ── from・to／name・ends は任意</td><td><span class="forb">禁止</span></td></tr>
+<tr><td class="name">階層</td><td><span class="opt">role（任意）</span>／<span class="req">children（自分と同じ形の子）</span></td><td><span class="forb">禁止</span> ── 結びは入れ子が運ぶ</td><td><span class="forb">禁止</span></td></tr>
+<tr class="keyrow"><td class="name">包含</td><td><span class="req">children（自分と同じ形の子）</span></td><td><span class="forb">禁止</span> ── 区画どうしを結びたければ、それは「つながり」の主張</td><td><span class="forb">禁止</span></td></tr>
+<tr><td class="name">順序</td><td><span class="opt">role（任意）</span></td><td><span class="forb">禁止</span> ── 順序は items の並びそのもの</td><td><span class="forb">禁止</span></td></tr>
+<tr class="keyrow"><td class="name">循環</td><td>—</td><td><span class="forb">禁止</span> ── 並びが閉じることは主張名が言う</td><td><span class="forb">禁止</span></td></tr>
+<tr><td class="name">やり取り</td><td>—</td><td><span class="req">必須</span> ── from・to・name／ends は任意</td><td><span class="opt">任意（groups）</span> ── 繰り返し・分かれを畳むときだけ</td></tr>
+<tr class="keyrow"><td class="name">対応</td><td><span class="req">at（座標）または figure（自分と同じ形の子図）のいずれか一方</span></td><td><span class="forb">禁止</span></td><td><span class="req">必須 ── axes を2本</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2>量を主張するもの（9）</h2>
+<div class="scroll"><table><thead><tr><th>主張</th><th>置くもの（items）の欄</th><th>つなぐもの（links）</th><th>読む枠（frame）</th></tr></thead><tbody>
+<tr class="keyrow"><td class="name">全体と部分</td><td><span class="req">value</span></td><td><span class="forb">禁止</span></td><td><span class="forb">禁止</span> ── 値の合計が全体なので軸は要らない</td></tr>
+<tr><td class="name">量の大小</td><td><span class="req">value</span></td><td><span class="forb">禁止</span></td><td><span class="req">必須 ── axes を2本</span></td></tr>
+<tr class="keyrow"><td class="name">順位</td><td><span class="req">value（並び順が主張、値は添え物）</span></td><td><span class="forb">禁止</span></td><td><span class="forb">禁止</span></td></tr>
+<tr><td class="name">時間変化</td><td><span class="req">span（開始・幅）</span>／<span class="opt">role（任意）</span></td><td><span class="forb">禁止</span></td><td><span class="req">必須 ── axes を1本</span></td></tr>
+<tr class="keyrow"><td class="name">分布</td><td><span class="req">value（度数）</span></td><td><span class="forb">禁止</span></td><td><span class="req">必須 ── bins と axes を1本</span></td></tr>
+<tr><td class="name">偏差</td><td><span class="req">value（符号あり）</span></td><td><span class="forb">禁止</span></td><td><span class="req">必須 ── baseline と axes を1本</span></td></tr>
+<tr class="keyrow"><td class="name">相関</td><td><span class="req">at（座標）</span></td><td><span class="forb">禁止</span></td><td><span class="req">必須 ── axes を2本</span></td></tr>
+<tr><td class="name">流量</td><td>—</td><td><span class="req">必須 ── from・to・weight</span></td><td><span class="forb">禁止</span></td></tr>
+<tr class="keyrow"><td class="name">空間</td><td><span class="req">at（座標）</span>／<span class="opt">role（任意）</span></td><td><span class="forb">禁止</span></td><td><span class="req">必須 ── ground と axes を1本</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2>浮かんだ論点</h2>
+<p class="lead">実物で試したとき、2点だけ表の外側で確かめる必要が出た。<b>どちらも新しい主張ではない。</b></p>
+<div class="scroll"><table><thead><tr><th>論点</th><th>決めたこと</th><th>なぜ17番目の主張にしないか</th></tr></thead><tbody>
+<tr class="keyrow"><td class="cond">やり取りの「分かれ」</td><td><b>やり取りの frame.groups が持つ、既存の欄</b>。<code>span</code>（繰り返し）の代わりに<code>cases</code>（名前と範囲の枝）を持てる</td><td>置くもの・つなぐものの形はやり取りと変わらない。変わるのは読む枠の畳み方だけなので、17番目を立てず「やり取り」の frame の書き方として吸収する</td></tr>
+<tr><td class="cond">対応の入れ子</td><td><code>at</code> の代わりに、要素が <b>自分と同じ形の図（figure）を持てる</b></td><td>階層・包含の <code>children</code> と同じ「自分と同じ形の子を持てる」という段1の入れ子の文法そのもの。対応がその文法を図の中で使っているだけで、新しい概念ではない</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2>宣言に無いものは、描く側が作る</h2>
+<p class="lead"><b>この表は「宣言に何が書けるか」だけを定める。</b>描く側が要るものを、宣言が持たないことがある。</p>
+<div class="scroll"><table><thead><tr><th>主張</th><th>宣言が持たないもの</th><th>誰がどう埋めるか</th></tr></thead><tbody>
+<tr class="keyrow"><td class="name">循環</td><td><b>辺</b> ── つなぐものが禁止なので、宣言には結びが1本も無い</td><td><b>変換器</b>が items の並びから輪の辺を作る（i→i+1、最後→最初）。描く側の環状配置は<b>並び順を辺からたどって決める</b>作りなので、辺が無いと輪の順序を決められない</td></tr>
+<tr><td class="name">順序</td><td>辺 ── 同上（順序は items の並びそのもの）</td><td>並びをそのまま段の順に写す。輪にしないので辺は作らない</td></tr>
+</tbody></table></div>
+<p class="col">ここを書かずに済ませると、<b>変換器が主張ごとに思いつきで埋める</b>ことになる。宣言が持たないと決めた以上、誰が埋めるかは仕様の側で言う。</p>
+</section>
+
+<section>
+<h2>承認</h2>
+<div class="approve"><span class="k">状態</span><span class="v">承認済み（2026-08-28）</span><span class="m">段1（承認済み）の節09が指す先。これで段1の残る宿題は3つ（値の型の種類／起こす機能の置き場所／説明の書き方の下限）</span></div>
+</section>
+
+</div>
