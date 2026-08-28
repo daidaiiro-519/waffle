@@ -10,7 +10,7 @@
 - [選択肢を並べて「どうしますか」と聞かない](feedback_lead_with_position_before_asking.md) — 見解・推奨・理由・衝突を先に出し、問いは自分の案への可否確認の形にする
 - [確認せず手が動く方へ進む癖](skip-confirmation-before-acting.md) — 工程の次段階・schemaのx-prompt・実物を、記憶で判断せず必ず開いて確かめる
 - [消えたと判断する前に会話の記録を探す](feedback_lost_work_lives_in_the_transcript.md) — Writeの中身がそのまま残っている。git と作業領域だけ見て断じない
-- [検査の合否だけで「確認した」と言わない](feedback_look_at_the_render_not_only_the_checks.md) — **生成した図そのもの**を画像にして目で見る（ページ全体は毎回撮らない。2026-08-28に範囲を絞り、強制フックは止めた）。検査は意味の壊れ・矢印の向き・図と本文の食い違いを見ない
+- [検査の合否だけで「確認した」と言わない](feedback_look_at_the_render_not_only_the_checks.md) — **いま触った図だけ**を1枚見る。回帰の目視・ページ全体の撮影・明暗2通りは要らない（実測：458回の読み返しで666kトークン。生成そのものは0）。機械の検査は維持する
 - [HTMLページを画像にする手段＝playwright](project_playwright_page_screenshot.md) — tools/shoot.py。`LD_LIBRARY_PATH=$HOME/.cache/waffle-shoot-libs` が必須（libasound欠け）
 - [規約は1ブロックだけ読んで判断しない](feedback_read_all_standards_not_one_block.md) — 定義の本文・判断の木・表を全部当たってから断じる。同じ形の誤りを繰り返している
 - [schema を変えるのは実装である](feedback_schema_change_is_implementation.md) — 決定→仕様→実装。仕様を飛ばすと説明の無い構造が増える
