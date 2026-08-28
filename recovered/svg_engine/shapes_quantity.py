@@ -139,6 +139,13 @@ def pie(props: dict, style: dict) -> ComponentResult:
 def bars(props: dict, style: dict) -> ComponentResult:
     """縦棒。`baseline`を与えると、そこからの正負の差として伸びる(偏差)。
     無指定なら0から積む(量の大小・分布)。
+
+    props: bars（[{"name","value"},...]）／baseline（任意）／
+           axis_label（値の軸が何を表すか、任意）／
+           item_axis_label（**項目の軸**が何を表すか、任意）
+
+    軸を2本持てるのは、「量の大小」が読む枠に軸を2本要求するため。1本しか
+    持てなかったときは項目の軸が落ちていた ── 仕様が必須と定めた欄を落とさない。
     """
     items = props["bars"]
     baseline = props.get("baseline", 0)
@@ -174,7 +181,15 @@ def bars(props: dict, style: dict) -> ComponentResult:
     label_band = plot_top - pad
     gap = style["chart.gap"]
     w = pad * 2 + left_margin + len(items) * slot
-    h = plot_top + ph + bottom_margin + pad
+    # 負に伸びる棒は、値の札を作図領域の下へ出す。名前の行は全部の棒で同じ高さに
+    # あって動かせないので、札の帯を先に確保してから名前を置く（上の軸ラベルで
+    # 使っている考え方の裏返し）。確保しないと、下まで伸びた棒の値が名前へ重なる
+    # ── 16の主張を通したときに「偏差」だけが落ちた。
+    value_band = (gap / 2 + fs_small * (style["font.cap-ratio"] + style["font.descender-ratio"])
+                  if min(values) < 0 else 0.0)
+    item_axis_band = (fs_small * style["size.label-line-h"]
+                      if props.get("item_axis_label") else 0.0)
+    h = plot_top + ph + value_band + item_axis_band + bottom_margin + pad
     x0 = pad + left_margin
     zero_y = plot_top + ph / 2 if min(values) < 0 else plot_top + ph
     top = max(abs(v) for v in values) or 1
@@ -196,8 +211,16 @@ def bars(props: dict, style: dict) -> ComponentResult:
         num_y = (by - gap / 2 if v >= 0
                  else by + bh + gap / 2 + fs_small * style["font.cap-ratio"])
         body.append(_t(bx + bw / 2, num_y, it["value"], style, "color.ink", size=fs_small))
-        body.append(_t(bx + bw / 2, plot_top + ph + gap + fs_small * style["font.cap-ratio"],
+        body.append(_t(bx + bw / 2,
+                       plot_top + ph + value_band + gap + fs_small * style["font.cap-ratio"],
                        it["name"], style, "color.ink-faint"))
+    if props.get("item_axis_label"):
+        # 項目の軸の名前は、項目名の行のさらに下。名前の行と重ならないよう、
+        # 行の高さぶん下げる（決め打ちを置かず、書体から導く）
+        name_row = plot_top + ph + value_band + gap + fs_small * style["font.cap-ratio"]
+        body.append(_t(x0 + (w - pad - x0) / 2,
+                       name_row + fs_small * style["size.label-line-h"],
+                       props["item_axis_label"], style, "color.ink-faint"))
     return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
@@ -408,35 +431,72 @@ def flow(props: dict, style: dict) -> ComponentResult:
 
 @component("spatial")
 def spatial(props: dict, style: dict) -> ComponentResult:
-    """items を、宣言の並び順のまま縦(または指定列数)に積む。位置そのものが主張。
+    """items を置く。位置そのものが主張。
+
+    props: items（[{"name", "at": [x, y] または "depth", "role"}, ...]）／
+           cols（at を使わないときの列数）／
+           ground（この空間が何の上にあるか、任意）／
+           axis_label（縦が何を表すか、任意）
+
+    **at があれば座標で置く。** 無ければ宣言の並び順のまま積む（従来の形）。
+    座標と地を受け取れるのは、「空間」が読む枠に地と軸を要求するため ── 深さと
+    列数しか取れなかったときは、座標も地も落ちて単なる並びになっていた。
 
     箱の幅は、列ごとに最長のラベルへ合わせる(固定幅にすると、実測で長い
     ラベルがはみ出す不具合が出た)。
     """
     items = props["items"]
-    cols = props.get("cols", 1)
+    xs = sorted({it["at"][0] for it in items if it.get("at") is not None})
+    ys = sorted({it["at"][1] for it in items if it.get("at") is not None})
+    by_at = bool(xs)
+    cols = len(xs) if by_at else props.get("cols", 1)
     ch = style["chart.spatial-row-h"]
     gap = style["chart.spatial-gap"]
     pad_x = style["chart.spatial-pad-x"]
     fs = style["font.size"]
     fs_small = style["font.size-small"]
-    rows = math.ceil(len(items) / cols)
+    rows = len(ys) if by_at else math.ceil(len(items) / cols)
     # 名前の右には、深さの数字が右寄せで入る。その欄も中身から決める
     # （決め打ちの余白だと、長い名前が数字とぶつかる ── 実測で踏んだ）。
     depth_w = column_width([it["depth"] for it in items if it.get("depth") is not None],
                            fs_small, gap * 2)
+    def cell(i, it):
+        """その要素が何列目・何行目に来るか。"""
+        if by_at:
+            return xs.index(it["at"][0]), ys.index(it["at"][1])
+        return i % cols, i // cols
+
     col_w = [0.0] * cols
     for i, it in enumerate(items):
-        c = i % cols
+        c, _ = cell(i, it)
         col_w[c] = max(col_w[c], text_width(it["name"], fs) + pad_x * 2 + depth_w)
     col_x = [sum(col_w[:c]) + gap * c for c in range(cols)]
-    w = sum(col_w) + gap * (cols - 1)
-    h = rows * ch + (rows - 1) * gap
+    grid_w = sum(col_w) + gap * (cols - 1)
+    grid_h = rows * ch + (rows - 1) * gap
+    # 地と軸の名前は、置いたものの外側に帯を取る。厚みは書体から導く。
+    band = fs_small * style["size.label-line-h"]
+    left = band if props.get("axis_label") else 0.0
+    topb = band if props.get("ground") else 0.0
+    w = grid_w + left
+    h = grid_h + topb
     body = []
+    if props.get("ground"):
+        # 地 ── 置いたものが何の上にあるか。背に敷き、名前を左上へ置く
+        body.append(f'<rect x="{left:.1f}" y="{topb:.1f}" width="{grid_w:.1f}" '
+                    f'height="{grid_h:.1f}" rx="4" fill="{style["chart.grid"]}" opacity="0.35"/>')
+        body.append(_t(left, band / 2 + fs_small * style["font.baseline-ratio"],
+                       props["ground"], style, "color.ink-faint", "start", size=fs_small))
+    if props.get("axis_label"):
+        cy = topb + grid_h / 2
+        ax = band / 2 + fs_small * style["font.baseline-ratio"] - fs_small
+        body.append(f'<text x="{ax:.1f}" y="{cy:.1f}" text-anchor="middle" '
+                    f'transform="rotate(-90 {ax:.1f} {cy:.1f})" '
+                    f'font-family="{style["font.family"]}" font-size="{fs_small}" '
+                    f'fill="{style["color.ink-faint"]}">{_esc(str(props["axis_label"]))}</text>')
     for i, it in enumerate(items):
-        c = i % cols
-        x = col_x[c]
-        y = (i // cols) * (ch + gap)
+        c, r = cell(i, it)
+        x = left + col_x[c]
+        y = topb + r * (ch + gap)
         cw = col_w[c]
         focus = it.get("role") == "focus"
         fill = style["color.accent-bg"] if focus else style["color.box-fill"]

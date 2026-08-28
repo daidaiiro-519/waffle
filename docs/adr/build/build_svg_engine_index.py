@@ -46,6 +46,8 @@ STATE = [
  ("幾何検査", "<code>check</code>／<code>check_shapes</code>／<code>check_attachment</code> の3つ"),
  ("試験", "175本。うち検査自身を壊して鳴らす試験と、台帳の全部品を通す契約の試験を含む"),
  ("総当たり", "11種×2通り＝22通り、崩れ0件"),
+ ("16の主張", "Waffle の宣言から16通りすべてを描ける。<b>宣言に書いた文字が1つ残らず絵に出る</b>ことまで機械で見る"
+  " ── <a href=\"https://claude.ai/code/artifact/e104fa31-4eb7-47aa-b417-147c1b6f3e61\">対応表</a>"),
 ]
 
 OPEN = [

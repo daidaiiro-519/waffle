@@ -21,10 +21,15 @@ from .text import text_width
 def table(props: dict, style: dict) -> ComponentResult:
     """見出し行つきの表。
 
-    props: headers（[str, ...]）／rows（[[str, ...], ...]。各行はheadersと同じ列数）
+    props: headers（[str, ...]）／rows（[[str, ...], ...]。各行はheadersと同じ列数）／
+           axes（[縦が何を表すか, 横が何を表すか]。任意）
+
+    軸の名前を持てるのは、この表が「対応」の主張を運ぶため ── 縦横が何を表すかが
+    絵に出ないと、交点に何が来るかを読めない。仕様が必須と定めた欄を落とさない。
     """
     headers = props["headers"]
     rows = props["rows"]
+    axes = props.get("axes") or []
     fs = style["font.size"]
     fs_small = style["font.size-small"]
     pad_x = style["chart.table-pad-x"]
@@ -38,11 +43,18 @@ def table(props: dict, style: dict) -> ComponentResult:
         col_w.append(widest + pad_x * 2)
 
     col_x = [sum(col_w[:c]) for c in range(len(headers))]
-    w = sum(col_w)
-    h = row_h * (len(rows) + 1)
+    grid_w = sum(col_w)
+    # 軸の名前は表の外側に置く。縦の名前は左へ回し、横の名前は上へ載せる。
+    # 帯の厚みは書体から導く（決め打ちを置かない）。
+    band = fs_small * style["size.label-line-h"] if axes else 0.0
+    left = band if len(axes) > 0 else 0.0
+    top = band if len(axes) > 1 else 0.0
+    w = grid_w + left
+    h = row_h * (len(rows) + 1) + top
 
-    body = [f'<rect x="0" y="0" width="{w:.1f}" height="{row_h:.1f}" '
-           f'fill="{style["color.accent-bg"]}"/>']
+    body = [f'<g transform="translate({left:.1f},{top:.1f})">'
+            f'<rect x="0" y="0" width="{grid_w:.1f}" height="{row_h:.1f}" '
+            f'fill="{style["color.accent-bg"]}"/>']
     for c, head in enumerate(headers):
         body.append(f'<text x="{col_x[c] + pad_x:.1f}" y="{row_h / 2 + fs_small * style["font.baseline-ratio"]:.1f}" '
                     f'font-family="{style["font.family"]}" font-size="{fs_small}" '
@@ -56,6 +68,20 @@ def table(props: dict, style: dict) -> ComponentResult:
             body.append(f'<text x="{col_x[c] + pad_x:.1f}" y="{y + row_h / 2 + fs * style["font.baseline-ratio"]:.1f}" '
                         f'font-family="{style["font.family"]}" font-size="{fs}" '
                         f'fill="{style["color.ink"]}">{_e(str(cell))}</text>')
-    body.append(f'<rect x="0.5" y="0.5" width="{w - 1:.1f}" height="{h - 1:.1f}" '
-               f'fill="none" stroke="{style["color.box-stroke"]}"/>')
+    grid_h = row_h * (len(rows) + 1)
+    body.append(f'<rect x="0.5" y="0.5" width="{grid_w - 1:.1f}" height="{grid_h - 1:.1f}" '
+               f'fill="none" stroke="{style["color.box-stroke"]}"/></g>')
+    base = fs_small * style["font.baseline-ratio"]
+    if len(axes) > 1:
+        # 横が何を表すか ── 表の上、いちばん左の列に揃える
+        body.append(f'<text x="{left:.1f}" y="{band / 2 + base:.1f}" '
+                    f'font-family="{style["font.family"]}" font-size="{fs_small}" '
+                    f'fill="{style["color.ink-faint"]}">{_e(str(axes[1]))}</text>')
+    if len(axes) > 0:
+        # 縦が何を表すか ── 表の左、90度回して縦書きにする
+        cy = top + grid_h / 2
+        body.append(f'<text x="{band / 2 + base - fs_small:.1f}" y="{cy:.1f}" text-anchor="middle" '
+                    f'transform="rotate(-90 {band / 2 + base - fs_small:.1f} {cy:.1f})" '
+                    f'font-family="{style["font.family"]}" font-size="{fs_small}" '
+                    f'fill="{style["color.ink-faint"]}">{_e(str(axes[0]))}</text>')
     return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
