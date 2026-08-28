@@ -1,0 +1,207 @@
+<title>図を、部品として置けるようにする</title>
+<style>
+:root{--paper:#EFF1F4;--surface:#FFFFFF;--surface-2:#F6F8FA;--ink:#16191F;--ink-soft:#545C69;
+ --ink-faint:#7C8593;--rule:#D5DAE1;--rule-soft:#E6EAEF;
+ --now:#8C2F39;--now-bg:#F5E7E8;--next:#25604A;--next-bg:#E2EFE9;--key:#7A5A22;--key-bg:#F3EDE0;
+ --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+ --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+ --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;--ink-soft:#A8B1BD;
+ --ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+ --now:#DB9AA1;--now-bg:#2C1B1D;--next:#7DC4A6;--next-bg:#152A22;--key:#D3B27A;--key-bg:#2A2318;}}
+:root[data-theme="dark"]{--paper:#111419;--surface:#1A1E25;--surface-2:#20252D;--ink:#E5E9EF;
+ --ink-soft:#A8B1BD;--ink-faint:#7A8492;--rule:#2C333C;--rule-soft:#232931;
+ --now:#DB9AA1;--now-bg:#2C1B1D;--next:#7DC4A6;--next-bg:#152A22;--key:#D3B27A;--key-bg:#2A2318;}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+ margin:0;padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,2rem) 5rem}
+.wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:2.8rem}
+.col{max-width:40rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:0}
+h1{font-family:var(--serif);font-size:clamp(1.5rem,3.6vw,2.05rem);line-height:1.4;font-weight:600;margin:.6rem 0 0;text-wrap:balance}
+.lede{color:var(--ink-soft);font-size:1rem;margin:.7rem 0 0;max-width:40rem}
+section{display:flex;flex-direction:column;gap:1.1rem}
+h2{font-family:var(--serif);font-size:1.28rem;font-weight:600;margin:0;padding-bottom:.6rem;
+ border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+p{margin:0}
+.col>p+p{margin-top:.85rem}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+pre{margin:0;padding:.85rem 1rem;font-family:var(--mono);font-size:.78rem;line-height:1.8;
+ background:var(--surface-2);border:1px solid var(--rule);border-radius:3px;overflow-x:auto;color:var(--ink-soft)}
+pre b{color:var(--now)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:46rem){.pair{grid-template-columns:1fr}}
+.panel{border:1px solid var(--rule);border-top:3px solid var(--rule);border-radius:2px;background:var(--surface);
+ padding:1rem 1.1rem 1.15rem;display:flex;flex-direction:column;gap:.7rem}
+.panel.now{border-top-color:var(--now)} .panel.next{border-top-color:var(--next)}
+.panel .lbl{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+.panel.now .lbl{color:var(--now)} .panel.next .lbl{color:var(--next)}
+.panel .t{font-family:var(--serif);font-size:1.02rem;font-weight:600}
+.panel p{font-size:.88rem;color:var(--ink-soft);line-height:1.75}
+.stage{background:#F6F8FA;border:1px solid #E6EAEF;border-radius:4px;padding:.9rem;
+ overflow-x:auto;display:flex;justify-content:center}
+.stage svg{max-width:100%;height:auto}
+
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:34rem}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.6}
+thead th{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+ font-weight:600;background:var(--surface-2);border-bottom:1px solid var(--rule)}
+tbody tr:last-child td{border-bottom:none}
+td.name{font-weight:700}
+.ok{color:var(--next);font-weight:700} .ng{color:var(--now);font-weight:700} .un{color:var(--ink-faint)}
+.approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+ padding:1rem 1.2rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+.approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+.approve .m{font-size:.9rem;color:var(--ink-soft)}
+figcaption{font-size:.82rem;color:var(--ink-faint);line-height:1.7}
+
+.stage.big svg{width:min(100%,300px)}
+.gain{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:46rem){.gain{grid-template-columns:1fr}}
+.stage.big svg{width:min(100%,300px)}
+.gain{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:46rem){.gain{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem}
+.chip{border:1px solid var(--rule);border-radius:2px;background:var(--surface);
+ padding:.35rem .6rem;font-size:.82rem;display:flex;gap:.45rem;align-items:baseline}
+.chip b{font-family:var(--mono);font-size:.78rem}
+.chip.part{border-left:3px solid var(--next)}
+.chip.fig{border-left:3px solid var(--now)}
+.chip span{color:var(--ink-faint)}
+.stage.big svg{width:min(100%,320px)}
+a{color:var(--next);text-decoration-color:color-mix(in srgb,var(--next) 45%,transparent);text-underline-offset:.15em}
+a:hover{text-decoration-color:var(--next)}
+
+.layers{display:flex;flex-direction:column;gap:0}
+.ly{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;
+ background:var(--surface);padding:.75rem 1rem;display:flex;flex-direction:column;gap:.2rem}
+.ly .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+.ly.c{border-left-color:var(--key)} .ly.p{border-left-color:var(--next)} .ly.a{border-left-color:#1F4E79}
+.ly.c .k{color:var(--key)} .ly.p .k{color:var(--next)} .ly.a .k{color:#1F4E79}
+.join{margin-left:1.4rem;padding:.3rem 0 .3rem .8rem;border-left:2px solid var(--rule);
+ font-family:var(--mono);font-size:.7rem;color:var(--ink-faint)}
+.stage.mid svg{width:min(100%,260px)}
+table{min-width:40rem}</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">svg_engine ── ADR</p>
+<h1>図を、部品として置けるようにする</h1>
+<p class="lede">図の仕様は「対応」の要素が<b>自分と同じ形の子図を持てる</b>と定めている。ところが描く側は、
+組み立てと器づけが1つの関数に入っていて、<b>必ずルートタグを返す</b> ── だから図を他の図の中へ置けない。
+器づけを外すだけで置けるようになることを、測って確かめた。</p>
+</header>
+
+<section>
+<h2><span class="num">01</span>何が塞がっているか</h2>
+<div class="scroll"><table>
+<thead><tr><th>確かめたこと</th><th>いまどうなっているか</th></tr></thead>
+<tbody>
+<tr class="keyrow"><td class="name">図を「断片」として作れるか</td>
+<td class="ng"><b>作れない。</b>組み立てと <code>&lt;svg&gt;</code> の器づけが1つの関数に入っている</td></tr>
+<tr><td class="name">配置戦略を差し替える継ぎ目</td><td class="ok">ある。層状・環状・放射の木が同じ契約で入れ替わる</td></tr>
+<tr><td class="name">戦略へ座標を渡せるか</td>
+<td class="ng">渡せない。戦略が受け取るのは<b>大きさと辺だけ</b>で、格子のどこかを知る道が無い</td></tr>
+<tr><td class="name">入れ子を要求している宣言</td>
+<td>対応の <code>figure</code>。階層・包含の <code>children</code> は<b>要素</b>の入れ子で、平らにして辺へ写せている</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">02</span>決めること ── 3層</h2>
+<div class="layers">
+<div class="ly c"><span class="k">概念</span><span>図は、その要素として<b>図を持てる</b></span></div>
+<div class="join">何が成り立てばそう言えるか</div>
+<div class="ly p"><span class="k">満たすべき性質</span>
+<span>子図の中で守られている性質（辺がインクに着く・文字が重ならない）が、<b>入れ子にしても壊れない</b>。
+親は子図の<b>実際の大きさ</b>を知って場所を取る</span></div>
+<div class="join">それを保証する唯一の手</div>
+<div class="ly a"><span class="k">アルゴリズム</span>
+<span>子図を<b>先に描いて（中身・幅・高さ）にし、親はそれを大きさの分かった1つとして置く</b></span></div>
+</div>
+<p class="col"><b>この「中身・幅・高さ」は、部品の契約そのものである。</b>
+つまり必要なのは新しい仕組みではなく、<b>図が部品になれること</b>だけ。</p>
+</section>
+
+<section>
+<h2><span class="num">03</span>測ったこと ── 図はすでに部品の条件を満たしている</h2>
+<div class="pair">
+<div class="panel next"><span class="lbl">実測</span><span class="t">申告した大きさから、インクは出ていない</span>
+<div class="stage mid"><svg class="wf-fig" viewBox="0 0 172 140" width="172" height="140" role="img"><g transform="translate(6.0,6.0)"><path d="M84.0,32.6 L38.0,95.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="38.0,95.4 40.0,88.5 44.0,91.4" fill="#C3CAD2"/><path d="M84.0,32.6 L130.0,95.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="130.0,95.4 124.0,91.4 128.0,88.5" fill="#C3CAD2"/><g class="wf-node" transform="translate(46.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="76.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">事業領域</text></g></g><g class="wf-node" transform="translate(0.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="76.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">業務領域</text></g></g><g class="wf-node" transform="translate(100.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="60.0" height="32.0" rx="5" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12" font-weight="400" fill="#171B23">文脈</text></g></g></g></svg></div>
+<p>15枚すべてで、インクが <code>viewBox</code> から出た量は <b>0.0</b>。
+器づけの直前に、囲みのはみ出し・迂回した辺・札まで含めて外形を出し、原点を寄せているため。
+<b>部品に課している契約（申告した大きさがインクを含む）を、図は既に満たしている。</b></p>
+</div>
+<div class="panel now"><span class="lbl">いまの形</span><span class="t">器づけは、末尾の34行だけ</span>
+<pre>def render_figure(...):
+    …組み立て（宣言 → body）… <b>257行</b>
+
+    # ここから器づけ <b>34行</b>
+    外形を出す（囲み・迂回・札を含む）
+    原点を寄せる
+    return f'&lt;svg viewBox=…&gt;{inner}&lt;/svg&gt;'</pre>
+<p><b>外形を出す部分は、器づけではなく「申告する大きさ」の計算である。</b>
+つまり分けたときに捨てるものが無く、<code>&lt;svg&gt;</code> を被せる3行だけが上に残る。</p>
+</div>
+</div>
+</section>
+
+<section>
+<h2><span class="num">04</span>決定</h2>
+<div class="scroll"><table>
+<thead><tr><th>決めること</th><th>決定</th></tr></thead>
+<tbody>
+<tr class="keyrow"><td class="name">図を部品として作れるようにする</td>
+<td><b>組み立てと器づけを分ける。</b>組み立ては（中身・幅・高さ）を返し、器づけはそれに
+<code>&lt;svg&gt;</code> を被せるだけにする。<b>いまの呼び出しは変わらない</b></td></tr>
+<tr class="keyrow"><td class="name">子図をどこへ置くか</td>
+<td>親の要素が<b>子図の宣言</b>を持てるようにし、合成が<b>再帰</b>して大きさの分かった1つにする。
+描き上がったものを外から渡す形にはしない ── <b>props は構造だけ</b>という契約を破らないため</td></tr>
+<tr><td class="name">対応（格子）の配置</td>
+<td><b>格子の配置戦略を1つ足す。</b>座標を戦略へ渡す道を作る ── いまの戦略は大きさと辺しか受け取らない</td></tr>
+<tr><td class="name">入れ子の深さ</td>
+<td><b>上限を持つ。</b>段1 が「入れ子は深さに上限を置く」と定めているので、それに従う。値は型が宣言する</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">05</span>やってみて分かったこと</h2>
+<div class="scroll"><table>
+<thead><tr><th>決めたこと</th><th>実際にどうなったか</th></tr></thead>
+<tbody>
+<tr class="keyrow"><td class="name">組み立てと器づけを分ける</td>
+<td class="ok"><b>器づけは3行になった。</b>外形を出す部分は「申告する大きさ」の計算だったので、
+そのまま組み立ての側に残った。呼び出しは1つも変えていない</td></tr>
+<tr class="keyrow"><td class="name">座標を戦略へ渡す道</td>
+<td class="ok"><b>契約を広げずに済んだ。</b>差し替えの継ぎ目（<code>layout=</code>）へ、座標を束ねた戦略を
+渡せばよい ── <code>partial(layout_grid, at=…)</code>。予想より軽かった</td></tr>
+<tr><td class="name">格子の並び</td>
+<td class="ok">整列に頼ると<b>見出しが中ほどへ紛れ込む</b>ので、列と行の並びを外から渡せるようにした</td></tr>
+<tr><td class="name">セルが名前と子図の両方を持つ</td>
+<td class="ok">名前が落ちていた。<b>「名前の節点＋子図の節点」をもう一段の子図として包んで</b>解いた
+── 足した仕組みを、そのまま使えた</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">06</span>答えないこと</h2>
+<div class="scroll"><table>
+<thead><tr><th>問い</th><th>ここで答えない理由</th></tr></thead>
+<tbody>
+<tr><td class="name">階層・包含の <code>children</code> も入れ子の図にするか</td>
+<td>あちらは<b>要素</b>の入れ子で、平らにして辺へ写せている。壊れていないものを変えない</td></tr>
+<tr><td class="name">格子のセルの大きさをどう揃えるか</td>
+<td>子図の大きさはまちまちになる。行・列で揃えるか、いちばん大きいものに合わせるかは、
+<b>実際に不揃いな子図を並べてから決める</b></td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2><span class="num">07</span>承認</h2>
+<div class="approve"><span class="k">状態</span><span class="v">承認済み（2026-08-29）</span>
+<span class="m"><b>実装済み・実測済み。</b>組み立てと器づけを分け（器づけは3行）、節点が子図の宣言を持てるようにし、格子の配置戦略を足した。深さの上限はトークンで持つ。184試験通過。<b>対応の入れ子が、宣言の文字を1つも落とさずに描けるようになった。</b></span></div>
+</section>
+</div>

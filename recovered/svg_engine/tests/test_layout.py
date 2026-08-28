@@ -258,3 +258,86 @@ class Test札の逃げ場:
 
     def test_縦向きでも重ならない(self):
         assert self._faults("何が成り立てばその概念かを言う", "TB") == []
+
+
+class Test図の中に図:
+    """図を部品として置く ── 決定「図を、部品として置けるようにする」の裏づけ。
+
+    子図の中で守られている性質が入れ子にしても壊れないこと、親が子図の実際の
+    大きさを知って場所を取ることを確かめる。
+    """
+
+    CHILD = {"nodes": [{"id": "x", "label": "子1"}, {"id": "y", "label": "子2"}],
+             "edges": [{"from": "x", "to": "y"}]}
+
+    def _faults(self, svg):
+        from svg_engine.verify import check, check_attachment, check_shapes
+        return check(svg) + check_shapes(svg) + check_attachment(svg)
+
+    def test_組み立ては器を被せない(self):
+        """図が部品として使えるのは、器づけと分かれているから。"""
+        from svg_engine.compose import figure_fragment
+        r = figure_fragment([{"id": "a", "label": "A"}])
+        assert "<svg" not in r.svg
+        assert r.width > 0 and r.height > 0
+
+    def test_申告した大きさがインクを含む(self):
+        """部品に課している契約を、図も満たす。"""
+        from svg_engine.compose import figure_fragment
+        from svg_engine.geometry import sample_ink
+        r = figure_fragment([{"id": "a", "label": "A"}, {"id": "b", "label": "B"}],
+                            [{"from": "a", "to": "b", "label": "渡す"}])
+        pts = [p for p, _ in sample_ink(r.svg, max(min(r.width, r.height), 1) / 32)]
+        assert pts
+        assert min(x for x, _ in pts) >= -1 and min(y for _, y in pts) >= -1
+        assert max(x for x, _ in pts) <= r.width + 1
+        assert max(y for _, y in pts) <= r.height + 1
+
+    def test_子図を節点として置ける(self):
+        from svg_engine.compose import render_figure
+        svg = render_figure([{"id": "a", "label": "親"}, {"id": "b", "figure": self.CHILD}],
+                            [{"from": "a", "to": "b"}])
+        assert self._faults(svg) == []
+        assert "子1" in svg and "子2" in svg
+
+    def test_深さに上限がある(self):
+        """段1 が「入れ子は深さに上限を置く」と定めている。"""
+        import pytest
+        from svg_engine.compose import render_figure
+        from svg_engine.tokens import DEFAULT_THEME
+        deep = {"nodes": [{"id": "leaf", "label": "葉"}]}
+        for _ in range(int(DEFAULT_THEME["size.figure-depth-limit"]) + 1):
+            deep = {"nodes": [{"id": "n", "figure": deep}]}
+        with pytest.raises(ValueError, match="深すぎる"):
+            render_figure([{"id": "a", "figure": deep}])
+
+
+class Test格子配置:
+    """座標のとおりに置く4つ目の戦略。"""
+
+    def test_座標のとおりに並ぶ(self):
+        from functools import partial
+        from svg_engine.compose import render_figure
+        from svg_engine.grid import layout_grid
+        from svg_engine.verify import check, check_attachment, check_shapes
+        at = {"a": ("左", "上"), "b": ("右", "上"), "c": ("右", "下")}
+        nodes = [{"id": k, "label": k} for k in at]
+        svg = render_figure(nodes, [], layout=partial(layout_grid, at=at))
+        assert check(svg) + check_shapes(svg) + check_attachment(svg) == []
+
+    def test_並びを渡せる(self):
+        """見出しを端へ置くために、列と行の並びを外から決められる。"""
+        from functools import partial
+        from svg_engine.grid import layout_grid
+        at = {"h": ("見出し", "上"), "a": ("左", "上")}
+        sizes = {"h": (40.0, 20.0), "a": (40.0, 20.0)}
+        left = layout_grid(sizes, [], 10, 10, at=at, cols=["見出し", "左"], rows=["上"])
+        right = layout_grid(sizes, [], 10, 10, at=at, cols=["左", "見出し"], rows=["上"])
+        assert left.positions["h"][0] < left.positions["a"][0]
+        assert right.positions["h"][0] > right.positions["a"][0]
+
+    def test_座標の無い節点は拒む(self):
+        import pytest
+        from svg_engine.grid import layout_grid
+        with pytest.raises(KeyError):
+            layout_grid({"a": (10.0, 10.0)}, [], 10, 10, at={})

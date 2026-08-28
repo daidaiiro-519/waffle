@@ -79,6 +79,8 @@ DEFAULT_THEME: dict[str, str | int | float] = {
     # 輪郭をインクから導くときの細かさ。向きをいくつに分けるか。刻み幅も
     # 曲線の分割数も、部品の大きさとこの値から導かれる。
     "size.outline-facets": 32,
+    # 図の入れ子の深さの上限。段1 が「入れ子は深さに上限を置く」と定めている。
+    "size.figure-depth-limit": 3,
     "size.dot-radius": 5,
     "size.label-band-h": 16,          # 辺の札の帯の高さ
     "size.decor-title-w": 640,        # 装飾の見出しの既定の幅
@@ -181,6 +183,7 @@ TOKEN_RANGES: dict[str, tuple[float, float]] = {
     "font.size": (8.0, 40.0),
     "font.size-small": (6.0, 32.0),
     "size.outline-facets": (8, 256),
+    "size.figure-depth-limit": (1, 8),
     "chart.pad": (4.0, 60.0),
     "chart.pie-radius": (16.0, 200.0),
     "chart.pie-donut-thickness": (4.0, 60.0),

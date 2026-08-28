@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 from .geometry import densify, ink_surface, nearest, segment_hits_rect
 from .labels import place_edge_labels
 from .text import text_width as _text_width
-from .registry import render_component
+from .registry import ComponentResult, render_component
 from .style import resolve_style
 from .nesting import layout_nested
 from .sugiyama import layout_graph
@@ -203,12 +203,45 @@ def _detour_aim(pos, size, routed, direction: str):
     return (aim[0], aim[1])
 
 
-def render_figure(nodes: list[dict], edges: list[dict] | None = None,
+def _nested(decl: dict, theme: dict, depth: int) -> ComponentResult:
+    """節点の中身として置く子図を組み立てる。
+
+    深さに上限を置くのは、段1 が入れ子の文法にそう定めているため。上限が
+    無いと、自分を指す宣言で終わらなくなる。
+
+    Args:
+        decl: 子図の宣言（nodes / edges / groups / direction を持つ）。
+        theme: 親と同じテーマ。子図だけ別の見た目にはしない。
+        depth: いまの深さ。
+
+    Returns:
+        ComponentResult。部品と同じ契約なので、親は他の部品と区別せず置ける。
+
+    Raises:
+        ValueError: 深さが上限を超えたとき。
+    """
+    limit = int(theme["size.figure-depth-limit"])
+    if depth >= limit:
+        raise ValueError(f"図の入れ子が深すぎる（上限 {limit}）")
+    return figure_fragment(decl.get("nodes", []), decl.get("edges"), decl.get("groups"),
+                           decl.get("direction", "TB"), theme, _depth=depth + 1)
+
+
+def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
                    groups: list[dict] | None = None, direction: str = "TB",
                    theme: dict | None = None,
                    layout: "Callable[..., LayoutResult] | None" = None,
-                   nested_layout: "Callable[..., tuple] | None" = None) -> str:
-    """節点・辺・囲みの宣言から、1枚の完結したSVGを返す。
+                   nested_layout: "Callable[..., tuple] | None" = None,
+                   _depth: int = 0) -> ComponentResult:
+    """節点・辺・囲みの宣言から、**部品として置ける断片**を組み立てる。
+
+    ルートタグを被せない。返すのは中身と、それを囲む大きさ ── つまり部品と
+    同じ契約である。だから図を他の図の中へ置ける。器を被せた1枚が欲しいときは
+    render_figure() を呼ぶ。
+
+    大きさは、囲みのはみ出し・迂回した辺・その上に乗る札まで含めて外形を出し、
+    原点を左上へ寄せてから決める。実測：15通りの図すべてで、インクがこの
+    大きさから出た量は 0.0 だった。
 
     Args:
         nodes: [{"id": str, "label": str, "role": str(任意), "style": dict(任意)}, ...]
@@ -232,13 +265,21 @@ def render_figure(nodes: list[dict], edges: list[dict] | None = None,
     edges = edges or []
     groups = groups or []
     theme = theme or DEFAULT_THEME
+    depth = _depth
     layout = layout or layout_graph
     nested_layout = nested_layout or layout_nested
 
     rendered = {}
     for n in nodes:
         style = resolve_style(n.get("role", "plain"), n.get("style"), theme)
-        rendered[n["id"]] = render_component(style["parts.node"], n, style)
+        if n.get("figure"):
+            # 節点の中身が図。子図を先に組み立てて、大きさの分かった1つにする
+            # ── 返るのは部品と同じ（中身・幅・高さ）なので、以降は他の部品と
+            # 区別せず扱える。描き上がったものを外から渡す形にはしない
+            # （props は構造だけ、という契約を破らないため）。
+            rendered[n["id"]] = _nested(n["figure"], theme, depth)
+        else:
+            rendered[n["id"]] = render_component(style["parts.node"], n, style)
 
     sizes = {nid: (r.width, r.height) for nid, r in rendered.items()}
     # 辺の着き先は部品に申告させず、部品が描いたインクそのものから選ぶ。
@@ -490,8 +531,32 @@ def render_figure(nodes: list[dict], edges: list[dict] | None = None,
     dx, dy = half - min_x, half - min_y
     inner = (f'<g transform="translate({dx:.1f},{dy:.1f})">{"".join(body)}</g>'
              if (dx or dy) else "".join(body))
-    return (f'<svg class="wf-fig" viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
-            f'height="{h:.0f}" role="img">{inner}</svg>')
+    return ComponentResult(svg=inner, width=w, height=h)
+
+
+def render_figure(nodes: list[dict], edges: list[dict] | None = None,
+                  groups: list[dict] | None = None, direction: str = "TB",
+                  theme: dict | None = None,
+                  layout: "Callable[..., LayoutResult] | None" = None,
+                  nested_layout: "Callable[..., tuple] | None" = None) -> str:
+    """図を1枚の完結したSVGとして描く。組み立ては figure_fragment() が行う。
+
+    ここがするのは器を被せることだけ。分けてあるのは、図を他の図の中へ
+    置けるようにするため ── 器を被せた時点で、それはもう部品ではない。
+
+    Args:
+        nodes / edges / groups / direction / theme / layout / nested_layout:
+            figure_fragment() と同じ。
+
+    Returns:
+        `<svg>...</svg>` 文字列。
+
+    Raises:
+        KeyError: 宣言が存在しない節点idを指したとき。
+    """
+    r = figure_fragment(nodes, edges, groups, direction, theme, layout, nested_layout)
+    return (f'<svg class="wf-fig" viewBox="0 0 {r.width:.0f} {r.height:.0f}" '
+            f'width="{r.width:.0f}" height="{r.height:.0f}" role="img">{r.svg}</svg>')
 
 
 def render_chart(kind: str, props: dict, role: str = "plain",
