@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from .geometry import rects_overlap
 from .text import text_width
+from .tokens import Style
 
 # 置き場所を試す刻みの上限。刻みは経路の長さから決まるが、極端に短い経路では
 # 刻みが細かくなりすぎて回り続けるので、そこで打ち切る（見た目には効かない）。
@@ -100,7 +101,7 @@ def place_avoiding(items: list[dict],
     return out
 
 
-def place_edge_labels(edges: list[dict], style: dict,
+def place_edge_labels(edges: list[dict], style: Style,
                       occupied: list[tuple[float, float, float, float]] | None = None
                       ) -> dict[int, tuple[float, float]]:
     """ラベルを持つ辺それぞれについて、重ならない置き場所を1つ返す。
@@ -118,11 +119,11 @@ def place_edge_labels(edges: list[dict], style: dict,
     Raises:
         なし。全候補が重なっても、最後の候補をそのまま採用する（最善努力）。
     """
-    fs = style["font.size-small"]
+    fs = style.num("font.size-small")
     items = []
     for e in edges:
-        w = text_width(e["label"], fs) + style["size.label-pad-x"]
-        h = fs * style["size.label-line-h"]
+        w = text_width(e["label"], fs) + style.num("size.label-pad-x")
+        h = fs * style.num("size.label-line-h")
         seg = sum(((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2) ** 0.5
                   for a, b in zip(e["points"], e["points"][1:]))
         # 辺のラベルの候補は「経路上の点」。真ん中から外へ交互に。

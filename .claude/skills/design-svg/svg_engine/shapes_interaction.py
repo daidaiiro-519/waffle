@@ -18,13 +18,14 @@ import math
 
 from html import escape as _e
 
+from .tokens import Style
 from .registry import ComponentResult, component
 from .shapes import arrow_head
 from .text import column_width, text_width
 
 
 @component("exchange")
-def exchange(props: dict, style: dict) -> ComponentResult:
+def exchange(props: dict, style: Style) -> ComponentResult:
     """参加者の縦のライフラインと、段ごとのメッセージ。
 
     props:
@@ -39,17 +40,17 @@ def exchange(props: dict, style: dict) -> ComponentResult:
     steps = props["steps"]
     groups = props.get("groups", [])
 
-    pad = style["chart.pad"]
-    colw = style["chart.exchange-col-w"]
-    head_h = style["chart.exchange-head-h"]
-    row_h = style["chart.exchange-row-h"]
-    case_head_h = style["chart.exchange-case-head-h"]
+    pad = style.num("chart.pad")
+    colw = style.num("chart.exchange-col-w")
+    head_h = style.num("chart.exchange-head-h")
+    row_h = style.num("chart.exchange-row-h")
+    case_head_h = style.num("chart.exchange-case-head-h")
     # 参加者の箱の幅は、入る名前から決める（決め打ちだと長い名前がはみ出す）
-    box_h = style["chart.exchange-box-h"]
-    arrow_len = style["chart.exchange-arrow-len"]
-    fs = style["font.size"]
-    fs_small = style["font.size-small"]
-    box_w = column_width(who, fs, style["chart.gap"] * 2)
+    box_h = style.num("chart.exchange-box-h")
+    arrow_len = style.num("chart.exchange-arrow-len")
+    fs = style.num("font.size")
+    fs_small = style.num("font.size-small")
+    box_w = column_width(who, fs, style.num("chart.gap") * 2)
     w = pad * 2 + colw * len(who)
 
     # ── 段ごとの縦位置を、分かれの見出し行ぶんも織り込んで先に確定させる ──
@@ -81,10 +82,10 @@ def exchange(props: dict, style: dict) -> ComponentResult:
     body = []
 
     # ── 囲み(groups) ── ライフラインより手前、メッセージより奥に描く ──
-    tab_h = style["chart.exchange-tab-h"]
-    base = style["font.baseline-ratio"]
-    cap = style["font.cap-ratio"]
-    gap = style["chart.gap"]
+    tab_h = style.num("chart.exchange-tab-h")
+    base = style.num("font.baseline-ratio")
+    cap = style.num("font.cap-ratio")
+    gap = style.num("chart.gap")
     for g in groups:
         cases = g.get("cases")
         spans = [c["span"] for c in cases] if cases else [g["span"]]
@@ -93,37 +94,37 @@ def exchange(props: dict, style: dict) -> ComponentResult:
         top = (header_top[s][0][0] - tab_h / 2) if s in header_top else (row_top[s] - tab_h)
         bottom = row_top[e] + row_h - gap
         body.append(f'<rect x="{pad}" y="{top:.1f}" width="{w - pad * 2:.1f}" '
-                    f'height="{bottom - top:.1f}" rx="{style["size.radius-small"]}" fill="none" '
-                    f'stroke="{style["color.accent"]}"/>')
+                    f'height="{bottom - top:.1f}" rx="{style.num("size.radius-small")}" fill="none" '
+                    f'stroke="{style.text("color.accent")}"/>')
         tab_w = min(text_width(g["label"], fs_small - 1) + fs_small, w - pad * 2)
         body.append(f'<rect x="{pad}" y="{top:.1f}" width="{tab_w:.1f}" height="{tab_h:.1f}" '
-                    f'fill="{style["color.accent-bg"]}"/>')
+                    f'fill="{style.text("color.accent-bg")}"/>')
         body.append(f'<text x="{pad + gap / 2}" y="{top + tab_h / 2 + fs_small * base:.1f}" '
-                    f'font-family="{style["font.family"]}" '
-                    f'font-size="{fs_small - 1}" fill="{style["color.accent"]}">'
+                    f'font-family="{style.text("font.family")}" '
+                    f'font-size="{fs_small - 1}" fill="{style.text("color.accent")}">'
                     f'{_e(g["label"])}</text>')
         if cases:
             for i, c in enumerate(cases):
                 head_y = next(y for y, n in header_top[c["span"][0]] if n == c["name"])
                 if i > 0:
                     body.append(f'<line x1="{pad}" y1="{head_y:.1f}" x2="{w - pad}" y2="{head_y:.1f}" '
-                                f'stroke="{style["color.accent"]}" stroke-dasharray="5 4"/>')
+                                f'stroke="{style.text("color.accent")}" stroke-dasharray="5 4"/>')
                 body.append(f'<text x="{pad + fs_small}" y="{head_y + case_head_h / 2 + fs_small * base:.1f}" '
-                            f'font-weight="{style["font.weight-medium"]}" font-family="{style["font.family"]}" '
-                            f'font-size="{fs}" fill="{style["color.ink"]}">{_e(c["name"])}</text>')
+                            f'font-weight="{style.text("font.weight-medium")}" font-family="{style.text("font.family")}" '
+                            f'font-size="{fs}" fill="{style.text("color.ink")}">{_e(c["name"])}</text>')
 
     # ── 参加者の箱とライフライン ── メッセージの下敷きになるので、後に描く ──
     for i, name in enumerate(who):
         cx = x_of(i)
         body.append(f'<line x1="{cx:.1f}" y1="{pad + box_h:.1f}" x2="{cx:.1f}" y2="{h - pad / 2:.1f}" '
-                    f'stroke="{style["color.box-stroke"]}" stroke-dasharray="3 4"/>')
+                    f'stroke="{style.text("color.box-stroke")}" stroke-dasharray="3 4"/>')
     for i, name in enumerate(who):
         cx = x_of(i)
-        body.append(f'<rect x="{cx - box_w / 2:.1f}" y="{pad}" width="{box_w}" height="{box_h}" rx="{style["size.radius"]}" '
-                    f'fill="{style["color.box-fill"]}" stroke="{style["color.box-stroke"]}"/>')
+        body.append(f'<rect x="{cx - box_w / 2:.1f}" y="{pad}" width="{box_w}" height="{box_h}" rx="{style.num("size.radius")}" '
+                    f'fill="{style.text("color.box-fill")}" stroke="{style.text("color.box-stroke")}"/>')
         body.append(f'<text x="{cx:.1f}" y="{pad + box_h / 2 + fs_small * base:.1f}" text-anchor="middle" '
-                    f'font-family="{style["font.family"]}" font-size="{fs}" '
-                    f'fill="{style["color.ink"]}">{_e(name)}</text>')
+                    f'font-family="{style.text("font.family")}" font-size="{fs}" '
+                    f'fill="{style.text("color.ink")}">{_e(name)}</text>')
 
     # ── メッセージ ── 一番手前。
     for r, s in enumerate(steps):
@@ -133,7 +134,7 @@ def exchange(props: dict, style: dict) -> ComponentResult:
         dashed = s.get("kind") == "return"
         dash_attr = ' stroke-dasharray="4 3"' if dashed else ""
         body.append(f'<line x1="{xa:.1f}" y1="{y:.1f}" x2="{xb:.1f}" y2="{y:.1f}" '
-                    f'stroke="{style["color.ink-faint"]}" stroke-width="{style["size.stroke-width"]}"'
+                    f'stroke="{style.text("color.ink-faint")}" stroke-width="{style.num("size.stroke-width")}"'
                     f'{dash_attr}/>')
         # 矢じりの底辺は、先端より「来た方」へ置く。進む方へ置くと三角が逆を向く
         # （実測で全部の矢印が逆向きになっていた）。
@@ -141,11 +142,11 @@ def exchange(props: dict, style: dict) -> ComponentResult:
         # 矢じりは辺の部品と同じ作り方をする。ここで自前の三角形を描くと、
         # テーマで矢じりを大きくしてもこの図だけ変わらない（実測で確認）。
         body.append(arrow_head((xb, y), math.pi if back > 0 else 0.0, style,
-                               style["color.ink-faint"]))
+                               style.text("color.ink-faint")))
         if s.get("label"):
             mx = (xa + xb) / 2
             body.append(f'<text x="{mx:.1f}" y="{y - gap / 2:.1f}" text-anchor="middle" '
-                        f'font-family="{style["font.family"]}" font-size="{fs_small}" '
-                        f'fill="{style["color.ink-soft"]}">{_e(s["label"])}</text>')
+                        f'font-family="{style.text("font.family")}" font-size="{fs_small}" '
+                        f'fill="{style.text("color.ink-soft")}">{_e(s["label"])}</text>')
 
     return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)

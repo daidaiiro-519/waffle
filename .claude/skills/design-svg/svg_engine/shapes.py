@@ -15,6 +15,7 @@ from __future__ import annotations
 import math
 from html import escape as _e
 
+from .tokens import Style
 from .registry import ComponentResult, component
 from .text import text_width as _text_width
 
@@ -22,7 +23,7 @@ from .text import text_width as _text_width
 # ── 節点系 ──────────────────────────────────────────────
 
 
-def arrow_head(tip: tuple[float, float], angle: float, style: dict,
+def arrow_head(tip: tuple[float, float], angle: float, style: Style,
                color: str | None = None) -> str:
     """矢じりを1つ描く。向きは角度で受け取る。
 
@@ -43,42 +44,42 @@ def arrow_head(tip: tuple[float, float], angle: float, style: dict,
         なし。
     """
     x2, y2 = tip
-    head_w = max(style["size.stroke-width"] * style["size.arrowhead-w-ratio"],
-                 style["size.arrowhead-min"])
-    head_len = head_w * style["size.arrowhead-len-ratio"]
-    spread = math.radians(style["size.arrowhead-angle"])
+    head_w = max(style.num("size.stroke-width") * style.num("size.arrowhead-w-ratio"),
+                 style.num("size.arrowhead-min"))
+    head_len = head_w * style.num("size.arrowhead-len-ratio")
+    spread = math.radians(style.num("size.arrowhead-angle"))
     hx1 = x2 - head_len * math.cos(angle - spread)
     hy1 = y2 - head_len * math.sin(angle - spread)
     hx2 = x2 - head_len * math.cos(angle + spread)
     hy2 = y2 - head_len * math.sin(angle + spread)
-    fill = color or style.get("color.line", style["color.ink-faint"])
+    fill = color or style.text("color.line", style.text("color.ink-faint"))
     return (f'<polygon points="{x2:.1f},{y2:.1f} {hx1:.1f},{hy1:.1f} '
             f'{hx2:.1f},{hy2:.1f}" fill="{fill}"/>')
 
 
 @component("box")
-def box(props: dict, style: dict) -> ComponentResult:
+def box(props: dict, style: Style) -> ComponentResult:
     """名前を1つ持つ、角丸の矩形。つながり・階層・包含などの節点に使う。"""
     label = str(props.get("label", ""))
-    font_size = style["font.size"]
-    pad_x = style["size.box-pad-x"]
-    w = max(style["size.box-min-w"],
-            _text_width(label, font_size, style["font.latin-width-ratio"]) + pad_x * 2)
-    h = style["size.box-h"]
-    radius = style["size.box-radius"]
-    fill = style["color.box-fill"]
-    stroke = style["color.box-stroke"]
-    sw = style["size.stroke-width"]
-    dash = style.get("stroke-dasharray")
+    font_size = style.num("font.size")
+    pad_x = style.num("size.box-pad-x")
+    w = max(style.num("size.box-min-w"),
+            _text_width(label, font_size, style.num("font.latin-width-ratio")) + pad_x * 2)
+    h = style.num("size.box-h")
+    radius = style.num("size.box-radius")
+    fill = style.text("color.box-fill")
+    stroke = style.text("color.box-stroke")
+    sw = style.num("size.stroke-width")
+    dash = style.opt_text("stroke-dasharray")
     dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
-    text_color = style.get("color.text", style["color.ink"])
-    weight = style.get("font.weight", "400")
+    text_color = style.text("color.text", style.text("color.ink"))
+    weight = style.text("font.weight", "400")
     svg = (
         f'<g class="svg-box" role="{_e(str(props.get("role", "plain")))}">'
         f'<rect x="0" y="0" width="{w:.1f}" height="{h:.1f}" rx="{radius}" '
         f'fill="{fill}" stroke="{stroke}" stroke-width="{sw}"{dash_attr}/>'
-        f'<text x="{w / 2:.1f}" y="{h / 2 + font_size * style["font.baseline-ratio"]:.1f}" '
-        f'text-anchor="middle" font-family="{style["font.family"]}" '
+        f'<text x="{w / 2:.1f}" y="{h / 2 + font_size * style.num("font.baseline-ratio"):.1f}" '
+        f'text-anchor="middle" font-family="{style.text("font.family")}" '
         f'font-size="{font_size}" font-weight="{weight}" fill="{text_color}">'
         f'{_e(label)}</text></g>'
     )
@@ -86,10 +87,10 @@ def box(props: dict, style: dict) -> ComponentResult:
 
 
 @component("dot")
-def dot(props: dict, style: dict) -> ComponentResult:
+def dot(props: dict, style: Style) -> ComponentResult:
     """始点・終点の印などに使う、塗りつぶした小さな円。"""
-    r = props.get("radius", style["size.dot-radius"])
-    fill = style.get("color.text", style["color.ink"])
+    r = props.get("radius", style.num("size.dot-radius"))
+    fill = style.text("color.text", style.text("color.ink"))
     svg = f'<circle cx="{r:.1f}" cy="{r:.1f}" r="{r:.1f}" fill="{fill}"/>'
     return ComponentResult(svg=svg, width=r * 2, height=r * 2)
 
@@ -117,7 +118,7 @@ def _smooth_path(points: list[tuple[float, float]]) -> str:
 
 
 @component("edge")
-def edge(props: dict, style: dict) -> ComponentResult:
+def edge(props: dict, style: Style) -> ComponentResult:
     """複数の点を通って結ばれる線。矢じり・ラベル・破線を持てる。
 
     props: points（絶対座標の(x,y)の並び。2点なら直線、3点以上なら
@@ -129,8 +130,8 @@ def edge(props: dict, style: dict) -> ComponentResult:
     points: list[tuple[float, float]] = props["points"]
     x1, y1 = points[0]
     x2, y2 = points[-1]
-    color = style.get("color.line", style["color.ink-faint"])
-    sw = style["size.stroke-width"]
+    color = style.text("color.line", style.text("color.ink-faint"))
+    sw = style.num("size.stroke-width")
     dash = ' stroke-dasharray="4 3"' if props.get("dashed") else ""
     path_d = _smooth_path(points)
     marker = ""
@@ -152,15 +153,15 @@ def edge(props: dict, style: dict) -> ComponentResult:
             mi = len(points) // 2
             mx, my = points[mi] if len(points) % 2 else (
                 (points[mi - 1][0] + points[mi][0]) / 2, (points[mi - 1][1] + points[mi][1]) / 2)
-        fs = style["font.size-small"]
+        fs = style.num("font.size-small")
         text_w = _text_width(props["label"], fs,
-                             style["font.latin-width-ratio"]) + style["size.label-pad-x"]
+                             style.num("font.latin-width-ratio")) + style.num("size.label-pad-x")
         label_svg = (
             f'<rect x="{mx - text_w / 2:.1f}" y="{my - fs:.1f}" width="{text_w:.1f}" '
-            f'height="{style["size.label-band-h"]:.1f}" fill="{style["color.box-fill"]}"/>'
-            f'<text x="{mx:.1f}" y="{my + fs * style["font.baseline-ratio"]:.1f}" text-anchor="middle" '
-            f'font-family="{style["font.family"]}" font-size="{fs}" '
-            f'fill="{style["color.ink-faint"]}">{_e(props["label"])}</text>'
+            f'height="{style.num("size.label-band-h"):.1f}" fill="{style.text("color.box-fill")}"/>'
+            f'<text x="{mx:.1f}" y="{my + fs * style.num("font.baseline-ratio"):.1f}" text-anchor="middle" '
+            f'font-family="{style.text("font.family")}" font-size="{fs}" '
+            f'fill="{style.text("color.ink-faint")}">{_e(props["label"])}</text>'
         )
     svg = f'<path d="{path_d}" fill="none" stroke="{color}" stroke-width="{sw}"{dash}/>{marker}{label_svg}'
     xs = [p[0] for p in points]
@@ -170,7 +171,7 @@ def edge(props: dict, style: dict) -> ComponentResult:
 
 
 @component("frame_label")
-def frame_label(props: dict, style: dict) -> ComponentResult:
+def frame_label(props: dict, style: Style) -> ComponentResult:
     """囲みの札だけを描く。枠線とは別の層に置くための部品。
 
     札は不透明な帯を持つので、線の上に載れば線を断って読める。避けられる
@@ -188,23 +189,23 @@ def frame_label(props: dict, style: dict) -> ComponentResult:
     Raises:
         なし。
     """
-    fs = style["font.size-small"]
-    pad_x = style["size.label-pad-x"]
-    text_w = _text_width(props["label"], fs, style["font.latin-width-ratio"]) + pad_x
-    rise = fs * style["size.frame-label-rise"]
-    card_h = fs * style["size.frame-label-h"]
-    base = fs * style["size.frame-label-baseline"]
+    fs = style.num("font.size-small")
+    pad_x = style.num("size.label-pad-x")
+    text_w = _text_width(props["label"], fs, style.num("font.latin-width-ratio")) + pad_x
+    rise = fs * style.num("size.frame-label-rise")
+    card_h = fs * style.num("size.frame-label-h")
+    base = fs * style.num("size.frame-label-baseline")
     x, y = props["x"], props["y"]
     svg = (f'<rect x="{x:.1f}" y="{y - rise:.1f}" width="{text_w:.1f}" '
-           f'height="{card_h:.1f}" fill="{style["color.box-fill"]}"/>'
+           f'height="{card_h:.1f}" fill="{style.text("color.box-fill")}"/>'
            f'<text x="{x + text_w / 2:.1f}" y="{y - rise + base:.1f}" '
-           f'text-anchor="middle" font-family="{style["font.family"]}" font-size="{fs}" '
-           f'fill="{style["color.accent"]}">{_e(props["label"])}</text>')
+           f'text-anchor="middle" font-family="{style.text("font.family")}" font-size="{fs}" '
+           f'fill="{style.text("color.accent")}">{_e(props["label"])}</text>')
     return ComponentResult(svg=svg, width=text_w, height=card_h, placement="absolute")
 
 
 @component("frame")
-def frame(props: dict, style: dict) -> ComponentResult:
+def frame(props: dict, style: Style) -> ComponentResult:
     """区画を示す破線の囲み。包含や『ここは領域の内側』のような注記に使う。
 
     札は描かない ── 札は線より後に描く必要があり、置き場所も線を避けて決まる
@@ -223,9 +224,9 @@ def frame(props: dict, style: dict) -> ComponentResult:
         なし。
     """
     x, y, w, h = props["x"], props["y"], props["width"], props["height"]
-    svg = (f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{style["size.radius-large"]}" '
-           f'fill="none" stroke="{style["color.accent"]}" stroke-width="{style["size.stroke-width-thin"]}" '
-           f'stroke-dasharray="5 4" opacity="{style["opacity.soft"]}"/>')
+    svg = (f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{style.num("size.radius-large")}" '
+           f'fill="none" stroke="{style.text("color.accent")}" stroke-width="{style.num("size.stroke-width-thin")}" '
+           f'stroke-dasharray="5 4" opacity="{style.num("opacity.soft")}"/>')
     return ComponentResult(svg=svg, width=w, height=h, placement="absolute")
 
 

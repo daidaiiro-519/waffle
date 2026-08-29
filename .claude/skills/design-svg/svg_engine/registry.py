@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from .tokens import Style
+
 
 @dataclass(frozen=True)
 class ComponentResult:
@@ -54,7 +56,7 @@ class ComponentResult:
     """
 
 
-ComponentFn = Callable[[dict, dict], ComponentResult]
+ComponentFn = Callable[[dict, Style], ComponentResult]
 
 _REGISTRY: dict[str, ComponentFn] = {}
 
@@ -73,7 +75,7 @@ def component(kind: str):
     return deco
 
 
-def render_component(kind: str, props: dict, style: dict) -> ComponentResult:
+def render_component(kind: str, props: dict, style: Style) -> ComponentResult:
     """種別名から部品を引いて描く。
 
     Args:

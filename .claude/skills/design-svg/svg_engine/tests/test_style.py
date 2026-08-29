@@ -12,22 +12,22 @@ from svg_engine.tokens import DEFAULT_THEME, TOKEN_RANGES
 class TestCascade:
     def test_何も指定しなければテーマの値が出る(self):
         s = resolve_style()
-        assert s["font.size"] == DEFAULT_THEME["font.size"]
+        assert s.num("font.size") == DEFAULT_THEME["font.size"]
 
     def test_役割はテーマより強い(self):
         assert resolve_style("focus") != resolve_style("plain")
 
     def test_その場の上書きは役割より強い(self):
         s = resolve_style("focus", {"size.stroke-width": 3.0})
-        assert s["size.stroke-width"] == 3.0
+        assert s.num("size.stroke-width") == 3.0
 
     def test_差し替えたテーマが土台になる(self):
         theme = dict(DEFAULT_THEME, **{"font.size": 20.0})
-        assert resolve_style(theme=theme)["font.size"] == 20.0
+        assert resolve_style(theme=theme).num("font.size") == 20.0
 
     def test_トークン名を指す値は指し先までたどる(self):
         s = resolve_style(overrides={"color.ink": "color.accent"})
-        assert s["color.ink"] == DEFAULT_THEME["color.accent"]
+        assert s.text("color.ink") == DEFAULT_THEME["color.accent"]
 
 
 class Test役割はテーマが持つ:
@@ -37,8 +37,8 @@ class Test役割はテーマが持つ:
         theme = dict(DEFAULT_THEME, **{"role.危険.color.box-fill": "#FBE9E7",
                                        "role.危険.color.box-stroke": "color.warn"})
         s = resolve_style("危険", None, theme)
-        assert s["color.box-fill"] == "#FBE9E7"
-        assert s["color.box-stroke"] == DEFAULT_THEME["color.warn"]
+        assert s.text("color.box-fill") == "#FBE9E7"
+        assert s.text("color.box-stroke") == DEFAULT_THEME["color.warn"]
 
     def test_テーマが知らない役割は描く前に例外になる(self):
         # 黙って既定で描くと綴り違いに気づけない。範囲外のトークン値を
@@ -51,7 +51,7 @@ class Test役割はテーマが持つ:
         resolve_style("plain", None, dict(DEFAULT_THEME))
 
     def test_役割の定義そのものは解決結果へ漏れない(self):
-        assert not [k for k in resolve_style("focus") if k.startswith("role.")]
+        assert not [k for k in resolve_style("focus").values if k.startswith("role.")]
 
 
 class Test綴り違いは描く前に落ちる:
@@ -66,7 +66,7 @@ class Test綴り違いは描く前に落ちる:
         assert "size.box-hight" in str(e.value)
 
     def test_ある名前での上書きは通る(self):
-        assert resolve_style(overrides={"size.box-h": 40})["size.box-h"] == 40
+        assert resolve_style(overrides={"size.box-h": 40}).num("size.box-h") == 40
 
     def test_鍵の欠けたテーマは描く前に落ちる(self):
         # 欠けたまま描き始めると、その鍵を引く部品に当たった時点で
@@ -87,7 +87,7 @@ class TestRanges:
     @pytest.mark.parametrize("key", sorted(TOKEN_RANGES))
     def test_範囲の中の値は通る(self, key):
         lo, hi = TOKEN_RANGES[key]
-        assert resolve_style(overrides={key: (lo + hi) / 2})[key] == (lo + hi) / 2
+        assert resolve_style(overrides={key: (lo + hi) / 2}).num(key) == (lo + hi) / 2
 
     def test_既定のテーマ自身が範囲を守っている(self):
         resolve_style()

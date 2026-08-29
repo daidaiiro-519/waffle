@@ -176,7 +176,7 @@ class TestComponentContract:
                 continue
             x0, y0, x1, y1 = box
             # 線の太さの半分ぶんは、縁に乗るのが正常
-            m = style["size.stroke-width"]
+            m = style.num("size.stroke-width")
             if x0 < -m or y0 < -m or x1 > r.width + m or y1 > r.height + m:
                 out.append(f"{kind}: 申告 {r.width:.0f}x{r.height:.0f} / "
                            f"インク {x0:.1f},{y0:.1f}〜{x1:.1f},{y1:.1f}")
@@ -188,4 +188,4 @@ class TestComponentContract:
         r = ComponentResult(svg='<rect x="-9" y="0" width="20" height="10"/>',
                             width=20, height=10)
         x0, y0, x1, y1 = self._ink_box(r)
-        assert x0 < -style["size.stroke-width"]
+        assert x0 < -style.num("size.stroke-width")

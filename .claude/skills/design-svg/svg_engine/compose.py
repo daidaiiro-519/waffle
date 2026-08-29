@@ -129,9 +129,9 @@ def _self_loop(pos, size, gap: float, style):
     """
     x, y = pos
     w, h = size
-    attach = num(style, "size.self-loop-attach")
-    bulge = num(style, "size.self-loop-bulge")
-    lift = num(style, "size.self-loop-lift")
+    attach = style.num("size.self-loop-attach")
+    bulge = style.num("size.self-loop-bulge")
+    lift = style.num("size.self-loop-lift")
     r = min(w, h) / 2 + gap
     cx, cy = x + w, y + h / 2
     top, bottom = y + h * attach, y + h * (1 - attach)
@@ -244,13 +244,13 @@ def _nested(decl: dict, theme: dict, depth: int, label: str | None = None) -> Co
     # 囲みと名札は群のために既にある部品を使う。同じ「塊に名前を付ける」ことを
     # 2つの方法で描くと、テーマを差し替えたときに見た目が揃わなくなる。
     style = resolve_style("plain", None, theme)
-    pad = style["font.size-small"] * style["size.frame-pad-ratio"]
-    label_h = style["font.size-small"] * style["size.label-line-h"]
+    pad = style.num("font.size-small") * style.num("size.frame-pad-ratio")
+    label_h = style.num("font.size-small") * style.num("size.label-line-h")
     w, h = inner.width + pad * 2, inner.height + pad * 2
-    frame = render_component(style["parts.group"], {
+    frame = render_component(style.text("parts.group"), {
         "x": 0, "y": label_h, "width": w, "height": h, "label": None}, style)
     tag = render_component("frame_label", {
-        "x": style["size.label-pad-x"], "y": label_h, "label": label}, style)
+        "x": style.num("size.label-pad-x"), "y": label_h, "label": label}, style)
     return ComponentResult(
         svg=(f'{frame.svg}<g transform="translate({pad:.1f},{label_h + pad:.1f})">'
              f'{inner.svg}</g>{tag.svg}'),
@@ -309,7 +309,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
             # （props は構造だけ、という契約を破らないため）。
             rendered[n["id"]] = _nested(n["figure"], theme, depth, n.get("label"))
         else:
-            rendered[n["id"]] = render_component(style["parts.node"], n, style)
+            rendered[n["id"]] = render_component(style.text("parts.node"), n, style)
 
     sizes = {nid: (r.width, r.height) for nid, r in rendered.items()}
     # 辺の着き先は部品に申告させず、部品が描いたインクそのものから選ぶ。
@@ -324,8 +324,8 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
 
     # 囲みの余白とラベルの高さは、書体のトークンから導く。図ごとの決め打ちを置かない。
     frame_style = resolve_style("plain", None, theme)
-    frame_pad = frame_style["font.size-small"] * frame_style["size.frame-pad-ratio"]
-    label_h = frame_style["font.size-small"] * frame_style["size.label-line-h"]
+    frame_pad = frame_style.num("font.size-small") * frame_style.num("size.frame-pad-ratio")
+    label_h = frame_style.num("font.size-small") * frame_style.num("size.label-line-h")
 
     # 段の間隔は、その間を通る辺の札が収まるだけ空ける。札は動かせるが、
     # 逃げ場が段の間隔しかないので、札がその間隔より長いと逃げ切れず、
@@ -334,7 +334,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
     # 誰も見ていなかった。ここで逃げ場の側を保証する。
     gap_rank = num(theme, "size.gap-rank")
     if edges:
-        fs = num(resolve_style("plain", None, theme), "font.size-small")
+        fs = resolve_style("plain", None, theme).num("font.size-small")
         pad = num(theme, "size.label-pad-x")
         need = max((_text_width(str(e["label"]), fs) + pad for e in edges if e.get("label")),
                    default=0.0)
@@ -380,7 +380,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
         if a == b:
             # 自分へ戻る辺は、配置の解いた経路（同じ点が2つ）では表せない
             edge_points[idx] = _self_loop(coords[a], sizes[a],
-                                          num(edge_style, "size.gap-order") / 2,
+                                          edge_style.num("size.gap-order") / 2,
                                           edge_style)
             continue
         pts = list(edge_paths[idx])
@@ -400,7 +400,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
         obstacles = [(coords[n][0], coords[n][1],
                       coords[n][0] + sizes[n][0], coords[n][1] + sizes[n][1])
                      for n in coords if n not in (a, b)]
-        routed = _avoid(pts, obstacles, direction, edge_style["size.stroke-width"] * 2,
+        routed = _avoid(pts, obstacles, direction, edge_style.num("size.stroke-width") * 2,
                         keep_out=frame_bounds)
         # 迂回で入り方が変わったら、接続点も決め直す。曲げる前の向きで決めた
         # ままだと、横から来た線が底辺の中点へ刺さり、矢じりが箱へめり込む。
@@ -456,21 +456,21 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
     top_labels: list[str] = []
     frame_label_areas: list[tuple[float, float, float, float]] = []
     # 線の太さより粗く刻むと、線を跳び越して「当たっていない」と誤判定する。
-    probe = max(frame_style["size.stroke-width"], 0.5)
+    probe = max(frame_style.num("size.stroke-width"), 0.5)
     all_points = [pt for pts in edge_points.values() for pt in densify(pts, probe)]
     for i, g in enumerate(groups):
         b = group_boxes[f"__g{i}"]
         has_label = bool(g.get("label"))
-        pad_x = frame_style["size.label-pad-x"]
+        pad_x = frame_style.num("size.label-pad-x")
         label_x = b.x + pad_x
         if has_label:
-            lw = (_text_width(g["label"], frame_style["font.size-small"],
-                              frame_style["font.latin-width-ratio"]) + pad_x)
+            lw = (_text_width(g["label"], frame_style.num("font.size-small"),
+                              frame_style.num("font.latin-width-ratio")) + pad_x)
             # 札の縦位置は、部品が実際に描く位置と同じ式から出す。ここを
             # ずらすと、当たり判定が実物と別の場所を見ることになる。
-            fs = frame_style["font.size-small"]
-            top = b.y + label_h - fs * frame_style["size.frame-label-rise"]
-            bottom = top + fs * frame_style["size.frame-label-h"]
+            fs = frame_style.num("font.size-small")
+            top = b.y + label_h - fs * frame_style.num("size.frame-label-rise")
+            bottom = top + fs * frame_style.num("size.frame-label-h")
             # 置き場所を試す刻みも、避ける相手（線）の太さに合わせる。
             step = probe
             n_steps = max(int((b.width - lw - pad_x * 2) / step), 0)
@@ -480,7 +480,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
                     label_x = cx
                     break
             frame_label_areas.append((label_x, top, label_x + lw, bottom))
-        r = render_component(frame_style["parts.group"], {
+        r = render_component(frame_style.text("parts.group"), {
             "x": b.x, "y": b.y + (label_h if has_label else 0),
             "width": b.width, "height": b.height - (label_h if has_label else 0),
             "label": None,
@@ -504,7 +504,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
                    coords[n][0] + sizes[n][0], coords[n][1] + sizes[n][1])
                   for n in coords]
     # 囲みの枠線が占める領域（線の太さぶんの細い帯4本）。札は枠線を隠してはいけない。
-    sw = frame_style["size.stroke-width"] * 2
+    sw = frame_style.num("size.stroke-width") * 2
     frame_line_areas: list[tuple[float, float, float, float]] = []
     for x0, y0, x1, y1 in frame_bounds:
         frame_line_areas += [(x0 - sw, y0 - sw, x1 + sw, y0 + sw),
@@ -516,7 +516,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
                 if labelled else {})
 
     for idx, e in enumerate(edges):
-        r = render_component(edge_style["parts.edge"], {
+        r = render_component(edge_style.text("parts.edge"), {
             "points": edge_points[idx], "label": e.get("label"),
             "label_at": label_at.get(idx),
             "dashed": e.get("dashed", False), "arrow": e.get("arrow", "head"),
@@ -535,11 +535,11 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
 
     # 画布は、節点だけでなく囲みのはみ出しも含めて取る。左と上へはみ出す場合は
     # 原点をずらし、全体を右下へ寄せてから枠を決める。
-    pad = frame_style["size.canvas-pad"]
+    pad = frame_style.num("size.canvas-pad")
     # 辺は迂回で節点の外側へ回るし、ラベルの札はその上に乗る。節点と囲みだけを
     # 見て画布を決めると、それらが切れる（実測で見つかった不具合）。
-    fs_small = edge_style["font.size-small"]
-    lab_h = fs_small * edge_style["size.label-line-h"]
+    fs_small = edge_style.num("font.size-small")
+    lab_h = fs_small * edge_style.num("size.label-line-h")
     edge_bounds: list[tuple[float, float, float, float]] = []
     for idx, e in enumerate(edges):
         xs = [p[0] for p in edge_points[idx]]
@@ -548,8 +548,8 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
         if e.get("label"):
             cx, cy = label_at.get(idx, (sum(xs) / len(xs), sum(ys) / len(ys)))
             lw = (_text_width(e["label"], fs_small,
-                              edge_style["font.latin-width-ratio"])
-                  + edge_style["size.label-pad-x"])
+                              edge_style.num("font.latin-width-ratio"))
+                  + edge_style.num("size.label-pad-x"))
             edge_bounds.append((cx - lw / 2, cy - lab_h, cx + lw / 2, cy + lab_h / 2))
     min_x = min([0.0] + [b[0] for b in frame_bounds] + [b[0] for b in edge_bounds])
     min_y = min([0.0] + [b[1] for b in frame_bounds] + [b[1] for b in edge_bounds])
@@ -609,7 +609,7 @@ def render_chart(kind: str, props: dict, role: str = "plain",
     """
     style = resolve_style(role, style_overrides, theme or DEFAULT_THEME)
     r = render_component(kind, props, style)
-    pad = style["size.canvas-pad-tight"]
+    pad = style.num("size.canvas-pad-tight")
     w, h = r.width + pad, r.height + pad
     return (f'<svg class="wf-fig" viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" '
             f'height="{h:.0f}" role="img">{r.svg}</svg>')

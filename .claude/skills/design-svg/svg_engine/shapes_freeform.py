@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 
 from .boolean import boolean_op
+from .tokens import Style
 from .registry import ComponentResult, component
 
 _NUM = re.compile(r"-?\d+(?:\.\d+)?")
@@ -83,7 +84,7 @@ def normalize_path(d: str) -> tuple[str, float, float]:
 
 
 @component("path")
-def path(props: dict, style: dict) -> ComponentResult:
+def path(props: dict, style: Style) -> ComponentResult:
     """任意のパスデータをそのまま描く。
 
     props: d（SVGのpath data文字列。M/L/C/Q/Z等、そのまま渡す）／
@@ -95,16 +96,16 @@ def path(props: dict, style: dict) -> ComponentResult:
     小文字・円弧のA等)を含むdを渡すと、座標を誤って壊さないよう例外にする。
     """
     filled = props.get("filled", True)
-    fill = style.get("color.shape-fill", style["color.accent"]) if filled else "none"
-    stroke = style.get("color.shape-stroke", style["color.accent"])
-    sw = style["size.stroke-width"]
+    fill = style.text("color.shape-fill", style.text("color.accent")) if filled else "none"
+    stroke = style.text("color.shape-stroke", style.text("color.accent"))
+    sw = style.num("size.stroke-width")
     d, w, h = normalize_path(props["d"])
     svg = f'<path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>'
     return ComponentResult(svg=svg, width=w, height=h)
 
 
 @component("boolean")
-def boolean(props: dict, style: dict) -> ComponentResult:
+def boolean(props: dict, style: Style) -> ComponentResult:
     """多角形どうしの和・積・差(Illustratorの型抜きに相当)。
 
     props: shapes（多角形(点の並び)を2つ以上。boolean.circle_polygon/
@@ -115,7 +116,7 @@ def boolean(props: dict, style: dict) -> ComponentResult:
     輪郭ごとに<path>を分けると内側が穴にならず塗り重なるので分けない。
     """
     polygons = boolean_op(props["shapes"], props["op"])
-    fill = style.get("color.shape-fill", style["color.accent"])
+    fill = style.text("color.shape-fill", style.text("color.accent"))
 
     # 節点系の契約(自分の原点(0,0)基準で描く)を守るため、入力の座標系が
     # どこにあっても、結果の外接矩形の左上を(0,0)へ揃え直してから描く。

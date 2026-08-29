@@ -11,6 +11,9 @@ resolve_style() がテーマ差し替え・インライン上書きのたびに�
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Any
+
 # 既定テーマ。figure-notation.html / figure-composition.html で使われてきた
 # 配色を踏襲しつつ、ここでは「トークン」として名前を持たせる。
 # トークンの値。色・書体名・部品名は文字列、寸法は数、系列の色は文字列の並び。
@@ -261,3 +264,64 @@ def num(theme: dict, key: str) -> float:
     if isinstance(v, bool) or not isinstance(v, (int, float)):
         raise TypeError(f"トークン '{key}' は数のはずだが {type(v).__name__} が入っている: {v!r}")
     return float(v)
+
+
+@dataclass(frozen=True)
+class Style:
+    """解決済みの見た目 ── 鍵ごとに型が決まっているので、取り出すときに型を選ぶ。
+
+    辞書のまま渡していた頃は、値が「文字列か数か文字列の並び」のどれかという
+    ことしか型に書けず、数として使う場所で静的検査が通らなかった。取り出し方に
+    型を持たせると、鍵と型の対応が呼ぶ側のコードに現れる。
+
+    鍵で引く以外の使い方（反復・複製・展開）は持たせない。解決済みの見た目は
+    「引いて使うもの」であって、組み替えるものではない ── 組み替えたいなら
+    resolve_style() をもう一度呼ぶ。
+    """
+
+    values: dict[str, Any]
+
+    def num(self, key: str) -> float:
+        """数を返す鍵から取り出す。
+
+        Raises:
+            KeyError: その鍵が無いとき。
+            TypeError: その鍵の値が数でないとき。
+        """
+        v = self.values[key]
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            raise TypeError(f"トークン '{key}' は数のはずだが {type(v).__name__}: {v!r}")
+        return float(v)
+
+    def text(self, key: str, default: str | None = None) -> str:
+        """文字列を返す鍵から取り出す。既定値を渡すと、鍵が無いときにそれを返す。
+
+        Raises:
+            KeyError: その鍵が無く、既定値も渡されていないとき。
+            TypeError: その鍵の値が文字列でないとき。
+        """
+        if key not in self.values:
+            if default is None:
+                raise KeyError(f"トークン '{key}' がテーマに無い")
+            return default
+        v = self.values[key]
+        if not isinstance(v, str):
+            raise TypeError(f"トークン '{key}' は文字列のはずだが {type(v).__name__}: {v!r}")
+        return v
+
+    def opt_text(self, key: str) -> str | None:
+        """あれば文字列、無ければ None。破線の刻みのように、無いことが既定の鍵に使う。"""
+        v = self.values.get(key)
+        return v if isinstance(v, str) else None
+
+    def tones(self, key: str) -> list[str]:
+        """文字列の並びを返す鍵から取り出す（系列の色など）。
+
+        Raises:
+            KeyError: その鍵が無いとき。
+            TypeError: その鍵の値が文字列の並びでないとき。
+        """
+        v = self.values[key]
+        if not isinstance(v, list):
+            raise TypeError(f"トークン '{key}' は並びのはずだが {type(v).__name__}: {v!r}")
+        return list(v)

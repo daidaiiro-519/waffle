@@ -15,12 +15,13 @@ from __future__ import annotations
 
 import html
 
+from .tokens import Style
 from .registry import ComponentResult, component, render_component
 from .text import text_width
 
 
 @component("titled")
-def titled(props: dict, style: dict) -> ComponentResult:
+def titled(props: dict, style: Style) -> ComponentResult:
     """別の部品を、名前の帯つきで描く。
 
     props: label（載せる名前）／of（包む部品の種別名）／
@@ -43,9 +44,9 @@ def titled(props: dict, style: dict) -> ComponentResult:
     if not label or inner.labels_itself:
         return inner
 
-    size = style["font.size-small"]
-    lead = size * style["size.label-line-h"]
-    pad_x = style["size.label-pad-x"]
+    size = style.num("font.size-small")
+    lead = size * style.num("size.label-line-h")
+    pad_x = style.num("size.label-pad-x")
     # 帯の幅は、名前が収まる幅と中身の幅の大きいほう。名前がはみ出さない。
     w = max(inner.width, text_width(label, size) + pad_x * 2)
     h = inner.height + lead
@@ -61,17 +62,17 @@ def titled(props: dict, style: dict) -> ComponentResult:
     # 大きさの外へインクが出ており、帯を描いて初めて見えた。ここでは lead と
     # 書体の比から毎回導くので、字面は必ず lead の内側に収まる。
     band_w = text_width(label, size) + pad_x * 2
-    band_h = size * (style["font.cap-ratio"] + style["font.descender-ratio"])
+    band_h = size * (style.num("font.cap-ratio") + style.num("font.descender-ratio"))
     band_top = (lead - band_h) / 2
-    base = band_top + size * style["font.cap-ratio"]
+    base = band_top + size * style.num("font.cap-ratio")
     svg = (
         f'<g>'
         f'<rect x="{(w - band_w) / 2:.1f}" y="{band_top:.1f}" '
         f'width="{band_w:.1f}" height="{band_h:.1f}" '
-        f'fill="{style["color.box-fill"]}"/>'
+        f'fill="{style.text("color.box-fill")}"/>'
         f'<text x="{w / 2:.1f}" y="{base:.1f}" '
-        f'text-anchor="middle" font-family="{style["font.family"]}" '
-        f'font-size="{size}" font-weight="{style["font.weight-medium"]}" fill="{style["color.ink"]}">'
+        f'text-anchor="middle" font-family="{style.text("font.family")}" '
+        f'font-size="{size}" font-weight="{style.text("font.weight-medium")}" fill="{style.text("color.ink")}">'
         f'{html.escape(label)}</text>'
         f'<g transform="translate({dx:.1f},{lead:.1f})">{inner.svg}</g>'
         f'</g>'

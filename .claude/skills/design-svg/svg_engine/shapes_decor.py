@@ -13,18 +13,19 @@ from .ids import stable_id
 
 # 波の1周期を4つに割る ── 上り・頂点・下り・谷という波の形そのもの。
 _WAVE_QUARTER = 4
+from .tokens import Style
 from .registry import ComponentResult, component
 
 
 @component("gradient_rect")
-def gradient_rect(props: dict, style: dict) -> ComponentResult:
+def gradient_rect(props: dict, style: Style) -> ComponentResult:
     """グラデーションで塗った矩形。背景や強調帯に使う。
 
     props: width, height／stops（[(割合0-1, 色), ...]。既定はテーマの
     accentから薄い方へ）／direction（"h"|"v"|"radial"、既定"v"）／radius（角丸、既定0）
     """
     w, h = props["width"], props["height"]
-    stops = props.get("stops") or [(0.0, style["color.accent"]), (1.0, style["color.accent-bg"])]
+    stops = props.get("stops") or [(0.0, style.text("color.accent")), (1.0, style.text("color.accent-bg"))]
     direction = props.get("direction", "v")
     radius = props.get("radius", 0)
     gid = stable_id("grad", stops, direction, radius, w, h)
@@ -40,54 +41,54 @@ def gradient_rect(props: dict, style: dict) -> ComponentResult:
 
 
 @component("title")
-def title(props: dict, style: dict) -> ComponentResult:
+def title(props: dict, style: Style) -> ComponentResult:
     """大きな見出しの活字。本文の書体(font.family)とは別の、表題用の書体を使う。
 
     props: text／subtitle（任意）／align（"start"|"middle"、既定"start"）
     """
     text = props["text"]
-    size = style["font.size-display"]
-    family = style.get("font.family-display", style["font.family"])
-    color = style.get("color.title", style["color.ink"])
+    size = style.num("font.size-display")
+    family = style.text("font.family-display", style.text("font.family"))
+    color = style.text("color.title", style.text("color.ink"))
     align = props.get("align", "start")
-    w = props.get("width", style["size.decor-title-w"])
+    w = props.get("width", style.num("size.decor-title-w"))
     anchor_x = w / 2 if align == "middle" else 0
     body = [f'<text x="{anchor_x}" y="{size:.0f}" text-anchor="{align}" '
-           f'font-family="{family}" font-size="{size:.0f}" font-weight="{style["font.weight-bold"]}" '
+           f'font-family="{family}" font-size="{size:.0f}" font-weight="{style.text("font.weight-bold")}" '
            f'letter-spacing="0.01em" fill="{color}">{_e(text)}</text>']
-    h = size + size * style["font.baseline-ratio"]
+    h = size + size * style.num("font.baseline-ratio")
     if props.get("subtitle"):
-        sub_size = style["font.size"]
-        lead = style["chart.gap"]
+        sub_size = style.num("font.size")
+        lead = style.num("chart.gap")
         body.append(f'<text x="{anchor_x}" y="{size + sub_size + lead:.0f}" text-anchor="{align}" '
-                    f'font-family="{style["font.family"]}" font-size="{sub_size}" '
-                    f'fill="{style["color.ink-soft"]}">{_e(props["subtitle"])}</text>')
-        h += sub_size + lead + sub_size * style["font.baseline-ratio"]
+                    f'font-family="{style.text("font.family")}" font-size="{sub_size}" '
+                    f'fill="{style.text("color.ink-soft")}">{_e(props["subtitle"])}</text>')
+        h += sub_size + lead + sub_size * style.num("font.baseline-ratio")
 
     return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
 @component("divider")
-def divider(props: dict, style: dict) -> ComponentResult:
+def divider(props: dict, style: Style) -> ComponentResult:
     """区切り。飾りの波線／既定は直線。
 
     props: width／kind（"line"|"wave"、既定"line"）
     """
     w = props["width"]
-    color = style.get("color.title", style["color.accent"])
+    color = style.text("color.title", style.text("color.accent"))
     if props.get("kind") == "wave":
-        amp = style["size.divider-amp"]
-        period = style["size.divider-period"]
+        amp = style.num("size.divider-amp")
+        period = style.num("size.divider-period")
         pts = []
         x = 0.0
         while x <= w:
             pts.append((x, amp * math.sin(x / period * math.pi)))
             x += period / _WAVE_QUARTER
         d = "M" + " L".join(f"{x:.1f},{y + amp:.1f}" for x, y in pts)
-        svg = f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{style["size.rule-width"]}"/>'
+        svg = f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{style.num("size.rule-width")}"/>'
         h = amp * 2 + 2
     else:
-        svg = f'<line x1="0" y1="1" x2="{w:.1f}" y2="1" stroke="{color}" stroke-width="{style["size.rule-width"]}"/>'
+        svg = f'<line x1="0" y1="1" x2="{w:.1f}" y2="1" stroke="{color}" stroke-width="{style.num("size.rule-width")}"/>'
         h = 2
     return ComponentResult(svg=svg, width=w, height=h)
 
@@ -102,21 +103,21 @@ _ICON_PATHS = {
 
 
 @component("icon")
-def icon(props: dict, style: dict) -> ComponentResult:
+def icon(props: dict, style: Style) -> ComponentResult:
     """小さな飾りの記号。凝った画像ではなく、線1本ぶんの意匠。
 
     props: name（"spark"|"check"|"ring"|"arrow-up"）／size（既定24）
     """
     name = props.get("name", "spark")
-    size = props.get("size", style["size.decor-icon"])
-    color = style.get("color.title", style["color.accent"])
-    scale = size / style["size.decor-icon"]
+    size = props.get("size", style.num("size.decor-icon"))
+    color = style.text("color.title", style.text("color.accent"))
+    scale = size / style.num("size.decor-icon")
     if name == "ring":
-        body = f'<circle cx="12" cy="12" r="9" fill="none" stroke="{color}" stroke-width="{style["size.stroke-width-icon"]}"/>'
+        body = f'<circle cx="12" cy="12" r="9" fill="none" stroke="{color}" stroke-width="{style.num("size.stroke-width-icon")}"/>'
     elif name == "spark":
         body = f'<path d="{_ICON_PATHS["spark"]}" fill="{color}"/>'
     else:
         body = (f'<path d="{_ICON_PATHS[name]}" fill="none" stroke="{color}" '
-               f'stroke-width="{style["size.stroke-width-icon"]}" stroke-linecap="round" stroke-linejoin="round"/>')
+               f'stroke-width="{style.num("size.stroke-width-icon")}" stroke-linecap="round" stroke-linejoin="round"/>')
     svg = f'<g transform="scale({scale:.3f})">{body}</g>'
     return ComponentResult(svg=svg, width=size, height=size)
