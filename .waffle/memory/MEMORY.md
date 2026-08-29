@@ -34,6 +34,7 @@
 
 - [svg_engineはdesign-svgの事業領域、Waffleは利用側](project_svg_engine_visual_check_hook_pending.md) — 16の主張という記法も含めてdesign-svgが所有。Waffleは変換器越しに使う想定（今回は無し）。design-svgのSKILL.mdの除外規定が現状と矛盾したまま残っている。描画機械チェックのhook化・所有権整理は他のschema再定義が一段落してから
 - [辺の着き先を、インクから選ぶ形へ作り替えた(2026-08-23)](project_svg_engine_attachment_redesign.md) — 索引 a37fc94b。輪郭の申告をやめ、検査に `check_attachment` を足した。**決定4本すべて承認済み。**開いたまま2件（湾の凹んだ側＝現状維持／群を指す辺＝宣言手段が無い）
+- [描画エンジンの規律を決めた(2026-08-29)](project_svg_engine_architecture_discipline.md) — **ヘキサゴナル/クリーンアーキ/オニオンは採らない**（中心も外周も空。advisor2体と独立に一致）。厳格な層状＋パイプとフィルタ＋関数核の3規約と、構造で縛れない分の件数の天井。**承認済み・実装は未着手**（順序: 静的検査器 → 規約1と3 → 規約2 → 天井）
 - [Waffle変換器＋段1/段2再開のTODO棚卸し(2026-08-22)](project_svg_stage12_todo_artifact.md) — アーティファクトへのポインタ。作業再開時にまずここを開く
 
 ## 決定の記録の形
