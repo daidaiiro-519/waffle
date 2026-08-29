@@ -65,7 +65,7 @@ def table(props: dict, style: dict) -> ComponentResult:
     for c, head in enumerate(headers):
         body.append(f'<text x="{col_x[c] + pad_x:.1f}" y="{row_h / 2 + fs_small * style["font.baseline-ratio"]:.1f}" '
                     f'font-family="{style["font.family"]}" font-size="{fs_small}" '
-                    f'font-weight="600" fill="{style["color.accent"]}">{_e(str(head))}</text>')
+                    f'font-weight="{style["font.weight-medium"]}" fill="{style["color.accent"]}">{_e(str(head))}</text>')
 
     for r_idx, row in enumerate(rows):
         y = row_h * (r_idx + 1)

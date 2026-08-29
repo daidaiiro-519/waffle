@@ -223,9 +223,9 @@ def frame(props: dict, style: dict) -> ComponentResult:
         なし。
     """
     x, y, w, h = props["x"], props["y"], props["width"], props["height"]
-    svg = (f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="8" '
-           f'fill="none" stroke="{style["color.accent"]}" stroke-width="1.1" '
-           f'stroke-dasharray="5 4" opacity="0.75"/>')
+    svg = (f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{style["size.radius-large"]}" '
+           f'fill="none" stroke="{style["color.accent"]}" stroke-width="{style["size.stroke-width-thin"]}" '
+           f'stroke-dasharray="5 4" opacity="{style["opacity.soft"]}"/>')
     return ComponentResult(svg=svg, width=w, height=h, placement="absolute")
 
 

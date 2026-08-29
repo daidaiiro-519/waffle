@@ -93,7 +93,7 @@ def exchange(props: dict, style: dict) -> ComponentResult:
         top = (header_top[s][0][0] - tab_h / 2) if s in header_top else (row_top[s] - tab_h)
         bottom = row_top[e] + row_h - gap
         body.append(f'<rect x="{pad}" y="{top:.1f}" width="{w - pad * 2:.1f}" '
-                    f'height="{bottom - top:.1f}" rx="3" fill="none" '
+                    f'height="{bottom - top:.1f}" rx="{style["size.radius-small"]}" fill="none" '
                     f'stroke="{style["color.accent"]}"/>')
         tab_w = min(text_width(g["label"], fs_small - 1) + fs_small, w - pad * 2)
         body.append(f'<rect x="{pad}" y="{top:.1f}" width="{tab_w:.1f}" height="{tab_h:.1f}" '
@@ -109,7 +109,7 @@ def exchange(props: dict, style: dict) -> ComponentResult:
                     body.append(f'<line x1="{pad}" y1="{head_y:.1f}" x2="{w - pad}" y2="{head_y:.1f}" '
                                 f'stroke="{style["color.accent"]}" stroke-dasharray="5 4"/>')
                 body.append(f'<text x="{pad + fs_small}" y="{head_y + case_head_h / 2 + fs_small * base:.1f}" '
-                            f'font-weight="600" font-family="{style["font.family"]}" '
+                            f'font-weight="{style["font.weight-medium"]}" font-family="{style["font.family"]}" '
                             f'font-size="{fs}" fill="{style["color.ink"]}">{_e(c["name"])}</text>')
 
     # ── 参加者の箱とライフライン ── メッセージの下敷きになるので、後に描く ──
@@ -119,7 +119,7 @@ def exchange(props: dict, style: dict) -> ComponentResult:
                     f'stroke="{style["color.box-stroke"]}" stroke-dasharray="3 4"/>')
     for i, name in enumerate(who):
         cx = x_of(i)
-        body.append(f'<rect x="{cx - box_w / 2:.1f}" y="{pad}" width="{box_w}" height="{box_h}" rx="5" '
+        body.append(f'<rect x="{cx - box_w / 2:.1f}" y="{pad}" width="{box_w}" height="{box_h}" rx="{style["size.radius"]}" '
                     f'fill="{style["color.box-fill"]}" stroke="{style["color.box-stroke"]}"/>')
         body.append(f'<text x="{cx:.1f}" y="{pad + box_h / 2 + fs_small * base:.1f}" text-anchor="middle" '
                     f'font-family="{style["font.family"]}" font-size="{fs}" '

@@ -71,7 +71,7 @@ def titled(props: dict, style: dict) -> ComponentResult:
         f'fill="{style["color.box-fill"]}"/>'
         f'<text x="{w / 2:.1f}" y="{base:.1f}" '
         f'text-anchor="middle" font-family="{style["font.family"]}" '
-        f'font-size="{size}" font-weight="600" fill="{style["color.ink"]}">'
+        f'font-size="{size}" font-weight="{style["font.weight-medium"]}" fill="{style["color.ink"]}">'
         f'{html.escape(label)}</text>'
         f'<g transform="translate({dx:.1f},{lead:.1f})">{inner.svg}</g>'
         f'</g>'

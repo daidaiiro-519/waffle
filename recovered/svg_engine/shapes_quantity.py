@@ -127,7 +127,7 @@ def pie(props: dict, style: dict) -> ComponentResult:
         y = pad + row_h * i + (row_h + fs_small * cap) / 2
         sw = fs_small
         body.append(f'<rect x="{lx}" y="{y - sw * cap - (sw - sw * cap) / 2:.1f}" '
-                    f'width="{sw}" height="{sw}" rx="2" fill="{_tone(style, i)}"/>')
+                    f'width="{sw}" height="{sw}" rx="{style["size.radius-small"]}" fill="{_tone(style, i)}"/>')
         body.append(_t(lx + sw + gap / 2, y, s["name"], style, "color.ink-soft", anchor="start"))
         body.append(_t(w - pad, y, s["value"], style, "color.ink", anchor="end"))
     return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
@@ -206,7 +206,7 @@ def bars(props: dict, style: dict) -> ComponentResult:
         bx = x0 + i * slot + (slot - bw) / 2
         bh = abs(v) * scale
         by = zero_y - bh if v >= 0 else zero_y
-        body.append(f'<rect x="{bx:.1f}" y="{by:.1f}" width="{bw}" height="{bh:.1f}" rx="3" '
+        body.append(f'<rect x="{bx:.1f}" y="{by:.1f}" width="{bw}" height="{bh:.1f}" rx="{style["size.radius-small"]}" '
                     f'fill="{_tone(style, i)}"/>')
         num_y = (by - gap / 2 if v >= 0
                  else by + bh + gap / 2 + fs_small * style["font.cap-ratio"])
@@ -257,10 +257,10 @@ def ranking(props: dict, style: dict) -> ComponentResult:
         track_x = pad + left_margin + name_w + gap
         track_y = y + (row_h - track_h) / 2
         body.append(f'<rect x="{track_x}" y="{track_y:.1f}" width="{bar_w}" height="{track_h:.1f}" '
-                    f'rx="3" fill="{style["chart.grid"]}"/>')
+                    f'rx="{style["size.radius-small"]}" fill="{style["chart.grid"]}"/>')
         fill_w = bar_w * it["value"] / top
         body.append(f'<rect x="{track_x}" y="{track_y:.1f}" width="{fill_w:.1f}" '
-                    f'height="{track_h:.1f}" rx="3" fill="{_tone(style, 0)}"/>')
+                    f'height="{track_h:.1f}" rx="{style["size.radius-small"]}" fill="{_tone(style, 0)}"/>')
         body.append(_t(track_x + bar_w + value_w - gap, y + row_h / 2 + fs_small * base,
                        it["value"], style, "color.ink", "end"))
     return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
@@ -291,12 +291,12 @@ def lanes(props: dict, style: dict) -> ComponentResult:
         body.append(_t(pad + lw - gap, y + rh / 2 + fs_small * base, r["name"], style,
                        "color.ink-soft", "end"))
         body.append(f'<rect x="{pad + lw}" y="{y + inset:.1f}" width="{tw}" '
-                    f'height="{rh - inset * 2:.1f}" rx="4" fill="{style["chart.grid"]}"/>')
+                    f'height="{rh - inset * 2:.1f}" rx="{style["size.radius-small"]}" fill="{style["chart.grid"]}"/>')
         for j, bar in enumerate(r["bars"]):
             bx = pad + lw + tw * bar["from"] / span
             bwid = tw * (bar["to"] - bar["from"]) / span
             body.append(f'<rect x="{bx:.1f}" y="{y + inset:.1f}" width="{bwid:.1f}" '
-                        f'height="{rh - inset * 2:.1f}" rx="3" fill="{_tone(style, j)}"/>')
+                        f'height="{rh - inset * 2:.1f}" rx="{style["size.radius-small"]}" fill="{_tone(style, j)}"/>')
             if bar.get("label"):
                 body.append(_t(bx + bwid / 2, y + rh / 2 + fs_small * base, bar["label"],
                                style, "color.ink", size=fs_small))
@@ -483,7 +483,7 @@ def spatial(props: dict, style: dict) -> ComponentResult:
     if props.get("ground"):
         # 地 ── 置いたものが何の上にあるか。背に敷き、名前を左上へ置く
         body.append(f'<rect x="{left:.1f}" y="{topb:.1f}" width="{grid_w:.1f}" '
-                    f'height="{grid_h:.1f}" rx="4" fill="{style["chart.grid"]}" opacity="0.35"/>')
+                    f'height="{grid_h:.1f}" rx="{style["size.radius-small"]}" fill="{style["chart.grid"]}" opacity="{style["opacity.faint"]}"/>')
         body.append(_t(left, band / 2 + fs_small * style["font.baseline-ratio"],
                        props["ground"], style, "color.ink-faint", "start", size=fs_small))
     if props.get("axis_label"):
@@ -501,7 +501,7 @@ def spatial(props: dict, style: dict) -> ComponentResult:
         focus = it.get("role") == "focus"
         fill = style["color.accent-bg"] if focus else style["color.box-fill"]
         stroke = style["color.accent"] if focus else style["color.box-stroke"]
-        body.append(f'<rect x="{x}" y="{y}" width="{cw}" height="{ch}" rx="6" '
+        body.append(f'<rect x="{x}" y="{y}" width="{cw}" height="{ch}" rx="{style["size.radius"]}" '
                     f'fill="{fill}" stroke="{stroke}"/>')
         body.append(_t(x + pad_x, y + ch / 2 + fs * style["font.baseline-ratio"], it["name"], style,
                        "color.accent" if focus else "color.ink", "start", size=fs))

@@ -52,7 +52,7 @@ def title(props: dict, style: dict) -> ComponentResult:
     w = props.get("width", style["size.decor-title-w"])
     anchor_x = w / 2 if align == "middle" else 0
     body = [f'<text x="{anchor_x}" y="{size:.0f}" text-anchor="{align}" '
-           f'font-family="{family}" font-size="{size:.0f}" font-weight="700" '
+           f'font-family="{family}" font-size="{size:.0f}" font-weight="{style["font.weight-bold"]}" '
            f'letter-spacing="0.01em" fill="{color}">{_e(text)}</text>']
     h = size + size * style["font.baseline-ratio"]
     if props.get("subtitle"):
@@ -83,10 +83,10 @@ def divider(props: dict, style: dict) -> ComponentResult:
             pts.append((x, amp * math.sin(x / period * math.pi)))
             x += period / 4
         d = "M" + " L".join(f"{x:.1f},{y + amp:.1f}" for x, y in pts)
-        svg = f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2"/>'
+        svg = f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{style["size.rule-width"]}"/>'
         h = amp * 2 + 2
     else:
-        svg = f'<line x1="0" y1="1" x2="{w:.1f}" y2="1" stroke="{color}" stroke-width="2"/>'
+        svg = f'<line x1="0" y1="1" x2="{w:.1f}" y2="1" stroke="{color}" stroke-width="{style["size.rule-width"]}"/>'
         h = 2
     return ComponentResult(svg=svg, width=w, height=h)
 
@@ -111,11 +111,11 @@ def icon(props: dict, style: dict) -> ComponentResult:
     color = style.get("color.title", style["color.accent"])
     scale = size / style["size.decor-icon"]
     if name == "ring":
-        body = f'<circle cx="12" cy="12" r="9" fill="none" stroke="{color}" stroke-width="2.4"/>'
+        body = f'<circle cx="12" cy="12" r="9" fill="none" stroke="{color}" stroke-width="{style["size.stroke-width-icon"]}"/>'
     elif name == "spark":
         body = f'<path d="{_ICON_PATHS["spark"]}" fill="{color}"/>'
     else:
         body = (f'<path d="{_ICON_PATHS[name]}" fill="none" stroke="{color}" '
-               f'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>')
+               f'stroke-width="{style["size.stroke-width-icon"]}" stroke-linecap="round" stroke-linejoin="round"/>')
     svg = f'<g transform="scale({scale:.3f})">{body}</g>'
     return ComponentResult(svg=svg, width=size, height=size)
