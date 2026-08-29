@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from svg_engine.registry import known_kinds, render_component
-from svg_engine.style import TokenRangeError, resolve_style
+from svg_engine.style import TokenRangeError, UnknownRoleError, resolve_style
 from svg_engine.tokens import DEFAULT_THEME, TOKEN_RANGES
 
 
@@ -27,6 +27,30 @@ class TestCascade:
     def test_トークン名を指す値は指し先までたどる(self):
         s = resolve_style(overrides={"color.ink": "color.accent"})
         assert s["color.ink"] == DEFAULT_THEME["color.accent"]
+
+
+class Test役割はテーマが持つ:
+    """役割はCSSのクラスに相当する。数を増やすのにエンジンを触らせない。"""
+
+    def test_テーマへ足すだけで新しい役割が増える(self):
+        theme = dict(DEFAULT_THEME, **{"role.危険.color.box-fill": "#FBE9E7",
+                                       "role.危険.color.box-stroke": "color.warn"})
+        s = resolve_style("危険", None, theme)
+        assert s["color.box-fill"] == "#FBE9E7"
+        assert s["color.box-stroke"] == DEFAULT_THEME["color.warn"]
+
+    def test_テーマが知らない役割は描く前に例外になる(self):
+        # 黙って既定で描くと綴り違いに気づけない。範囲外のトークン値を
+        # その場で弾いているのと同じ扱いにする。
+        with pytest.raises(UnknownRoleError) as e:
+            resolve_style("知らない役割")
+        assert "focus" in str(e.value)  # 使える役割を挙げて返す
+
+    def test_何も上書きしない役割は常に通る(self):
+        resolve_style("plain", None, {"font.size": 12})
+
+    def test_役割の定義そのものは解決結果へ漏れない(self):
+        assert not [k for k in resolve_style("focus") if k.startswith("role.")]
 
 
 class TestRanges:

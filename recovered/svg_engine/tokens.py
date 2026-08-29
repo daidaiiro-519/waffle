@@ -30,7 +30,7 @@ DEFAULT_THEME: dict[str, str | int | float] = {
     "size.box-min-w": 60,
     "size.box-h": 32,
     "size.box-pad-x": 14,
-    "size.box-radius": 5,
+    "size.box-radius": "size.radius",  # 尺度を指す。同じ概念に数を2つ置かない
     "size.gap-rank": 64,
     "size.gap-order": 24,
     "size.stroke-width": 1.2,
@@ -153,31 +153,60 @@ DEFAULT_THEME: dict[str, str | int | float] = {
     "chart.exchange-case-head-h": 28,
     "chart.exchange-box-h": 28,
     "chart.exchange-arrow-len": 6,
+
+    # 尺度 ── 部品ごとに数を持たせず、段階に名前を付けて選ばせる。
+    # 個別に名前を付けると「直書きの数」が「トークンという名の直書きの数」に
+    # 変わるだけで、テーマを差し替えても全体の調子が揃わない。段階にしておけば、
+    # 3つ動かすだけで図全体の角の丸みや線の重さが一斉に変わる。
+    "size.radius-small": 3,     # 小さい要素（棒・升目）
+    "size.radius": 5,           # 既定（箱）
+    "size.radius-large": 8,     # 大きい容器（囲み）
+    "size.stroke-width-thin": 1.1,   # 補助の線（囲みの破線）
+    "size.rule-width": 2,            # 装飾の罫・下線
+    "size.stroke-width-icon": 2.4,   # アイコンの線（24×24の座標系で描く）
+    "font.weight-normal": "400",
+    "font.weight-medium": "600",
+    "font.weight-bold": "700",
+    "opacity.soft": 0.75,       # 控えめに置く要素（囲み）
+    "opacity.faint": 0.35,      # 背景へ沈める要素（図表の格子）
+
+    # 役割(role) ── CSSの`.focus{...}`に相当する、トークンのひとまとまりの上書き。
+    # `role.<役割名>.<トークン名>` という平らな名前で、他のトークンと同じ袋に置く。
+    #
+    # 別の入れ物に分けない。分けると、見た目を差し替える経路がトークンと役割で
+    # 2本になり、テーマを渡しても役割だけは差し替えられない、という非対称が
+    # 生まれる（実際そうなっていた）。同じ袋なら、テーマを1つ渡すだけで
+    # 「どんな役割があるか」ごと入れ替わる。
+    #
+    # 新しい役割は、ここへ行を足すだけで増える。エンジンには触れない。
+    "role.focus.color.box-fill": "color.accent-bg",   # 値がトークン名でもよい
+    "role.focus.color.box-stroke": "color.accent",
+    "role.focus.color.text": "color.accent",
+    "role.focus.size.stroke-width": "size.stroke-width-focus",
+    "role.focus.font.weight": "font.weight-medium",
+
+    "role.muted.color.box-fill": "none",
+    "role.muted.color.box-stroke": "color.ink-faint",
+    "role.muted.color.text": "color.ink-faint",
+    "role.muted.stroke-dasharray": "4 3",
 }
 
-# 役割(role)ごとの上書き ── CSSの`.box.focus{...}`に相当するクラス的な規則。
-# ここに無い role は既定(plain)のまま。
-ROLE_OVERRIDES: dict[str, dict[str, str | int | float]] = {
-    "focus": {
-        "color.box-fill": "color.accent-bg",   # トークン参照。resolve側で解決する
-        "color.box-stroke": "color.accent",
-        "color.text": "color.accent",
-        "size.stroke-width": "size.stroke-width-focus",
-        "font.weight": "600",
-    },
-    "muted": {
-        "color.box-fill": "none",
-        "color.box-stroke": "color.ink-faint",
-        "color.text": "color.ink-faint",
-        "stroke-dasharray": "4 3",
-    },
-}
+ROLE_PREFIX = "role."
+PLAIN = "plain"  # 何も上書きしない役割。常に有効
 
 # 値に妥当な範囲があるトークンだけ、ここへ (最小, 最大) を持たせる。
 # 無いトークンは無制限（色・文字列トークンや、崩れても致命的でない値）。
 TOKEN_RANGES: dict[str, tuple[float, float]] = {
     "size.stroke-width": (0.4, 6.0),
     "size.stroke-width-focus": (0.4, 8.0),
+    "size.stroke-width-thin": (0.2, 4.0),
+    "size.rule-width": (0.4, 8.0),
+    "size.stroke-width-icon": (0.4, 8.0),
+    "size.radius-small": (0.0, 20.0),
+    "size.radius": (0.0, 30.0),
+    "size.radius-large": (0.0, 60.0),
+    "opacity.soft": (0.0, 1.0),
+    "opacity.faint": (0.0, 1.0),
     "size.box-radius": (0.0, 30.0),
     "size.box-h": (16.0, 80.0),
     "font.size": (8.0, 40.0),
