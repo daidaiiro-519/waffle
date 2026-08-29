@@ -6,7 +6,7 @@ metadata:
   type: project
 ---
 
-2026-08-29、`recovered/svg_engine/`（自前SVG描画エンジン、24モジュール）のアーキテクチャ規律を承認した。
+2026-08-29、`.claude/skills/design-svg/svg_engine/`（自前SVG描画エンジン、24モジュール）のアーキテクチャ規律を承認した。
 ADR: `docs/adr/adr-contract-tests.html`（承認済み）／commit `b02ade1`。
 
 **1. ヘキサゴナル・クリーンアーキ・オニオンのいずれも採らない。**

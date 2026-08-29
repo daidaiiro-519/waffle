@@ -1,6 +1,6 @@
 import sys, pathlib, re
 S="/home/daidaiiro/workspace/waffle/docs/adr/build"
-sys.path.insert(0,S); sys.path.insert(0,"/home/daidaiiro/workspace/waffle/recovered")
+sys.path.insert(0,S); sys.path.insert(0,"/home/daidaiiro/workspace/waffle/.claude/skills/design-svg")
 from _common import CSS, sec, fold, tbl, extra
 from svg_engine.compose import render_figure
 from svg_engine.tokens import DEFAULT_THEME
@@ -177,7 +177,7 @@ body="".join([
         "<b>層を敷かないと決めたので、規律を別の形で持つ必要が生じた</b>"]),
       ("",["同時に決まったこと","静的検査器を1つ導入する（規約2の前提）"]),
       ("",["後続の判断","Waffle語彙をエンジンから追い出す（<code>convert()</code> の移動）── 天井が下がる形で効く"]),
-      ("",["縛る対象","<code>recovered/svg_engine/</code> 配下の全モジュールと試験"]),
+      ("",["縛る対象","<code>.claude/skills/design-svg/svg_engine/</code> 配下の全モジュールと試験"]),
     ]))),
 ])
 

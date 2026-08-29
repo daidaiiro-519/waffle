@@ -27,7 +27,7 @@ schemaRef: "KnowledgeSchema/v6"
 
 ## 出典・根拠の透明性
 
-Waffle 自身の実装セッション（2026-08-29）で、recovered/svg_engine/ の構造を敵対的にレビューし、規律を決めた過程からの抽出。層構成を採らない判定は、2つの助言役へ独立に依頼した結果と一致している。外部文献の要約ではない。
+Waffle 自身の実装セッション（2026-08-29）で、.claude/skills/design-svg/svg_engine/ の構造を敵対的にレビューし、規律を決めた過程からの抽出。層構成を採らない判定は、2つの助言役へ独立に依頼した結果と一致している。外部文献の要約ではない。 **実物の置き場所は `.claude/skills/design-svg/svg_engine/`。**層の構成はディレクトリ直下のモジュール群、公開する目録は `catalog.py`、生成物の検査は `verify.py`、値の直書きを探す検査は `lint_values.py` にある。決定の全文は `docs/adr/adr-contract-tests.html`。
 
 ### 留保事項
 

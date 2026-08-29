@@ -10,15 +10,8 @@ from __future__ import annotations
 
 from typing import Callable  # noqa: F401
 
-import pathlib
-import sys
-
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-
-from svg_engine import DEFAULT_THEME, render_figure  # noqa: E402
-
-from all_claims import CLAIMS, convert  # noqa: E402
+from svg_engine import DEFAULT_THEME, render_figure
+from svg_engine.examples.all_claims import CLAIMS, convert
 
 
 def scaled(k: float) -> dict:
