@@ -142,6 +142,48 @@ class Test規約_語彙:
         assert not bad, "呼ぶ側の語彙が残っている: " + " / ".join(bad)
 
 
+class Test規約2_段は飛ばせない:
+    """選んだ戦略が、途中の経路で黙って捨てられないこと。
+
+    かつては捨てられていた ── 群を渡すと、呼び出し側が選んだ配置戦略が例外も
+    警告も無しに無視され、常に層状配置で描かれていた。「4つの戦略が同じ契約で
+    差し替えられる」という主張の反例が、その1経路にあった。
+
+    型で「ありえない組み合わせを作れなくする」のが規約2だが、この件は組み合わせ
+    自体は正しく、届いていないことが問題だった。だから届くことを縛る。
+    """
+
+    def test_群があっても選んだ戦略が使われる(self):
+        from svg_engine.compose import figure_fragment
+        from svg_engine.sugiyama import layout_graph
+
+        called = []
+
+        def spy(*args, **kwargs):
+            called.append(True)
+            return layout_graph(*args, **kwargs)
+
+        figure_fragment(
+            [{"id": "a", "label": "甲"}, {"id": "b", "label": "乙"}],
+            [{"from": "a", "to": "b"}],
+            groups=[{"label": "束", "members": ["a", "b"]}],
+            layout=spy)
+        assert called, "群を渡すと、選んだ戦略が使われずに捨てられている"
+
+    def test_群が無いときも同じ戦略が使われる(self):
+        from svg_engine.compose import figure_fragment
+        from svg_engine.sugiyama import layout_graph
+
+        called = []
+
+        def spy(*args, **kwargs):
+            called.append(True)
+            return layout_graph(*args, **kwargs)
+
+        figure_fragment([{"id": "a", "label": "甲"}], [], layout=spy)
+        assert called
+
+
 class Test部品の契約:
     def test_部品はSVGのルートを返さない(self):
         # ルートを持つと、他の部品と合成したとき二重の svg / viewBox が生まれる

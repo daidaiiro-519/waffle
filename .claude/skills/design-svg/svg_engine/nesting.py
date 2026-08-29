@@ -10,9 +10,14 @@
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 from dataclasses import dataclass, field
 
-from .layout_contract import UnsupportedByStrategy
+from .layout_contract import LayoutResult, UnsupportedByStrategy  # noqa: F401
 from .sugiyama import layout_graph
 
 
@@ -93,7 +98,8 @@ def layout_nested(node_sizes: dict[str, tuple[float, float]],
                    edges: list[tuple[str, str]],
                    groups: list[dict],
                    gap_rank: float, gap_order: float,
-                   direction: str, frame_pad: float, label_h: float
+                   direction: str, frame_pad: float, label_h: float,
+                   layout: "Callable[..., LayoutResult] | None" = None,
                    ) -> tuple[dict[str, Box], dict[str, Box],
                               dict[int, list[tuple[float, float]]], float, float]:
     """群を再帰的に解き、節点と群それぞれの絶対座標を返す。
@@ -106,6 +112,11 @@ def layout_nested(node_sizes: dict[str, tuple[float, float]],
         direction: "TB" または "LR"。
         frame_pad: 群の枠が中身の外側へ取る余白。
         label_h: 群のラベルが枠の上に要る高さ。
+        layout: 各段で座標を解く戦略。省略時は層状配置。
+            受け取って使うのは、呼び出し側が戦略を選んだのに群があるという
+            だけで黙って層状に描かれる、ということが起きないようにするため
+            （以前はこの引数が無く、群を渡した経路では選ばれた戦略が例外も
+            警告も無しに捨てられていた）。
 
     Returns:
         (節点idごとのBox, 群のキーごとのBox, 辺の番号ごとの経路, 全体の幅, 全体の高さ)。
@@ -168,7 +179,7 @@ def layout_nested(node_sizes: dict[str, tuple[float, float]],
         if not sizes:
             solved[c.key] = (0.0, 0.0, {})
             return (0.0, 0.0)
-        res = layout_graph(sizes, pairs, gap_rank, gap_order, direction)
+        res = (layout or layout_graph)(sizes, pairs, gap_rank, gap_order, direction)
         solved[c.key] = (res.width, res.height, dict(res.positions))
         # 経路は、その段の layout_graph が仮節点を通して解いたものを使う。
         # 始点と終点だけの直線に置き換えると、多段をまたぐ辺が間の箱を突き抜ける。

@@ -341,7 +341,8 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
         # こうしないと、段をまたぐ群の外接矩形が間の非メンバーを飲み込む。
         node_boxes, group_boxes, nested_paths, total_w, total_h = nested_layout(
             sizes, edge_pairs, groups, gap_rank,
-            num(theme, "size.gap-order"), direction, frame_pad, label_h)
+            num(theme, "size.gap-order"), direction, frame_pad, label_h,
+            layout=layout)
         coords = {nid: (b.x, b.y) for nid, b in node_boxes.items()}
         # 経路が解けなかった辺（群の内側で完結する等）だけ、両端を直結する
         edge_paths = {i: nested_paths.get(
