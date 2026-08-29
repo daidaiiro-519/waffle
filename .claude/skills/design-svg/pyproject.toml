@@ -31,6 +31,12 @@ svg-engine-catalog = "svg_engine.catalog:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.sdist]
+# パッケージの根は Skill 直下なので、references/ の下にあるナレッジへの
+# シンボリックリンク（実体は .waffle/ の外）まで拾ってしまう。配るのは
+# エンジンだけ。
+include = ["svg_engine", "README.md", "pyproject.toml"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["svg_engine"]
 # 試験と例は配らない。Skill へ同梱するときはディレクトリごと持っていくので、
