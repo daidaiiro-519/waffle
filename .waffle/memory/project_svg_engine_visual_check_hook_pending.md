@@ -20,4 +20,12 @@ uv run --no-project --with pytest python3 -m pytest .claude/skills/design-svg/sv
 
 **Why:** ユーザーから「これはいずれ正式なhooksとして作成しようと思っている。他のschema再定義（段1/段2のDomainSchema等）が終わったら、ちゃんとした実装として仕上げたい」という申し送りの後、「16の主張自体をdesign-svgに持たせ、Waffleは変換器越しに利用する側にする」という事業領域の訂正が入った。優先順位として、進行中のDomainSchema再定義（[[project_waffle_own_knowledge_stage]]系の一連の作業）を先に片づけてから着手する意図は変わらない。
 
+**2026-08-30 時点の進捗（4件のうち2件が済み）**
+
+- (1) 移設 ── **済**。`.claude/skills/design-svg/svg_engine/` へ移した（パッケージ化も同時）
+- (2) SKILL.md の書き換え ── **済**。実装に合わせて全面的に書き直した。参照していた5件は
+  履歴上も一度も存在せず、手順に従うと5回とも空振りする状態だった。Waffleの契約は入れない
+- (3) hook 登録 ── **未**
+- (4) Waffle側の変換器 ── **未**。ただし塞いでいたものは外れた（目録の公開・対応表の更新）
+
 **How to apply:** 他のschema再定義作業が一段落したタイミングで、次をまとめて片づける対象として扱う。(1) `.claude/skills/design-svg/svg_engine/`の実体をdesign-svg Skill配下（例: `.claude/skills/design-svg/`配下）へ移す判断、(2) design-svgのSKILL.mdの除外規定を、今回の位置づけと矛盾しない形に書き換える、(3) 上記pytestを毎回自動でかかるhookとして登録する（テスト自体は書けているので、残っているのは登録だけ）、(4) Waffle側に変換器（インターフェース）を作るかどうかの判断。まだ未移設・hook未登録のままだからといって「テスト整備・所有権整理が漏れている」と誤って報告しない — これは合意済みの先送りであり、抜けではない。
