@@ -8,8 +8,15 @@
 3. 交差の最小化 ── 中央値法と転置法を、上り下り交互に何度も反復し、
    交差の数が一番少なかった並びを採用する
 4. 座標の整列 ── 親の位置へ寄せる中央値ヒューリスティックを、下り・上り
-   両方向で繰り返し平均する（Brandes-Köpf法の簡略版。本家ほど厳密ではないが、
-   反復するたびに収束するので正しさを目で確かめやすい）
+   両方向で繰り返し平均する。1回ごとの詰め直しは近似ではなく厳密で、
+   並びを保ったまま望んだ位置との差の総和を最小にする配置を等調回帰で解く。
+   最後に、辺で繋がっていない塊どうしを詰める（目的から決まらない自由度は、
+   詰める方に倒す）
+
+本家 Graphviz `dot` と同じ図で突き合わせた結果（tests/bench_layout.py）:
+交差は同数まで詰められた。辺の長さは1.3〜1.9倍まだ長い ── 段の割り当てが
+最長経路法で、本家の network-simplex のように総延長を最小化していないため。
+面積と縦横比はほぼ一致する。
 
 どの段も、宣言（nodes/edges）を型として持つだけで、Waffle固有の語彙は知らない。
 """
@@ -195,8 +202,34 @@ def _order_within_ranks(expanded: ExpandedGraph,
         outgoing[a].append(b)
         incoming[b].append(a)
 
+    # 初期の並びは、宣言順ではなく辺をたどった順にする。
+    #
+    # 中央値法は初期の並びから山を下るだけなので、始まりが悪いと途中の谷で
+    # 止まる。宣言順から始めると、互いに繋がっていない塊どうしが交互に
+    # 並んだままになり、塊が互いを横切り続ける（実測：2つの塊に分かれる図で
+    # 28交差。塊を分けて並べれば、塊の中だけで済んで10交差になる）。
+    # 辺をたどれば、繋がっているものが自然に隣り合う。
+    #
+    # たどり始める節点は宣言順に選ぶ。宣言の順は読み手が意図した順であり、
+    # 交差が同じなら尊重する。
+    seen: set[str] = set()
+    walked: list[str] = []
+    for start in expanded.all_nodes:
+        if start in seen:
+            continue
+        seen.add(start)
+        queue = [start]
+        while queue:
+            n = queue.pop(0)
+            walked.append(n)
+            for m in outgoing[n] + incoming[n]:
+                if m not in seen:
+                    seen.add(m)
+                    queue.append(m)
+    rank_of_walk = {n: i for i, n in enumerate(walked)}
     order: dict[str, int] = {}
     for r in sorted(by_rank):
+        by_rank[r].sort(key=lambda n: rank_of_walk[n])
         for i, n in enumerate(by_rank[r]):
             order[n] = i
 
@@ -316,6 +349,93 @@ def _crossing_total(expanded: ExpandedGraph, by_rank: dict[int, list[str]],
     return total
 
 
+def _median(vals: list[float]) -> float:
+    """並びの真ん中。偶数個なら中2つの平均 ── どちらへも同じだけ動けるように。"""
+    s = sorted(vals)
+    m = len(s) // 2
+    return s[m] if len(s) % 2 else (s[m - 1] + s[m]) / 2
+
+
+
+def _pack_components(expanded: "ExpandedGraph", by_rank: dict[int, list[str]],
+                     cross: dict[str, float], size_of, gap_order: float,
+                     direction: str) -> None:
+    """繋がっていない塊どうしを、隣り合うまで詰める。
+
+    塊と塊の間は、どの辺も跨いでいない。辺の長さを目的にする限り、塊の相対
+    位置は目的から決まらない ── どこへ置いても目的の値は変わらない。決まらない
+    ものを反復に委ねると、寄せる力が無いまま離れていく（実測：繋がっていない
+    2つの塊を持つ図で、節点を1つ足すと幅が570から1290へ広がった）。
+
+    決まらないなら詰める、と決める。塊の中の配置は一切動かさないので、
+    反復が解いた結果は保たれる。
+
+    どの段でも塊が途切れず、かつ塊どうしの前後関係が段をまたいで一致している
+    ときだけ詰める。そうでない段があるなら、詰めると段の並びが壊れる。
+    """
+    seen: set[str] = set()
+    comp: dict[str, int] = {}
+    adj: dict[str, list[str]] = {n: [] for n in expanded.all_nodes}
+    for a, b in expanded.unit_edges:
+        adj[a].append(b)
+        adj[b].append(a)
+    for start in expanded.all_nodes:
+        if start in seen:
+            continue
+        cid = len(set(comp.values()))
+        seen.add(start)
+        queue = [start]
+        while queue:
+            n = queue.pop(0)
+            comp[n] = cid
+            for m in adj[n]:
+                if m not in seen:
+                    seen.add(m)
+                    queue.append(m)
+    if len(set(comp.values())) < 2:
+        return
+
+    sequences = []
+    for r in by_rank:
+        row = sorted(by_rank[r], key=lambda n: cross[n])
+        seq = [comp[row[0]]]
+        for n in row[1:]:
+            if comp[n] != seq[-1]:
+                if comp[n] in seq:
+                    return  # 塊が段の中で途切れている
+                seq.append(comp[n])
+        sequences.append(seq)
+    order_seen: dict[int, int] = {}
+    for seq in sequences:
+        for i, c in enumerate(seq):
+            if c in order_seen and order_seen[c] != i and len(seq) == len(sequences[0]):
+                return  # 塊どうしの前後関係が段によって違う
+        for i, c in enumerate(seq):
+            order_seen.setdefault(c, i)
+
+    span = lambda n: size_of(n)[0 if direction == "TB" else 1]
+    extents = {}
+    for n, c in comp.items():
+        lo, hi = cross[n] - span(n) / 2, cross[n] + span(n) / 2
+        prev = extents.get(c)
+        extents[c] = (min(lo, prev[0]), max(hi, prev[1])) if prev else (lo, hi)
+
+    cursor = None
+    for c in sorted(extents, key=lambda c: extents[c][0]):
+        lo, hi = extents[c]
+        if cursor is None:
+            cursor = hi + gap_order
+            continue
+        shift = cursor - lo
+        if shift < 0:
+            for n, cc in comp.items():
+                if cc == c:
+                    cross[n] += shift
+            lo, hi = lo + shift, hi + shift
+        cursor = hi + gap_order
+
+
+
 # ── 5. 座標の整列 ── 上下の中央値へ寄せる反復平均（簡略版） ──────────
 
 def _assign_coordinates(expanded: ExpandedGraph, order: dict[str, int],
@@ -362,25 +482,42 @@ def _assign_coordinates(expanded: ExpandedGraph, order: dict[str, int],
         incoming[b].append(a)
 
     def resolve_overlaps(row):
-        """段の中の重なりを解く。解いたあと、段全体を元の重心へ戻す。
+        """段の並びを保ったまま、望んだ位置に最も近い座標へ詰める。
 
-        右へ押すだけだと左端が固定され、同じ位置を望む要素どうしが右へ
-        偏る ── 2つの親が1つの子を指すとき、子の真上に来るのは左の親だけで、
-        対の中心は右へずれる（実測：親が246と330、子が246）。押した量の
-        平均だけ段ごと戻せば、望んだ位置の重心と一致する。ずらす量は
-        押した結果から出るので、決め打ちの数は要らない。
+        望んだ位置（上下の隣の中央値）は隣との最小間隔を知らないので、
+        そのままでは重なる。ここで直すのだが、右へ押すだけでは足りない
+        ── 押す力しか無いと、一度開いた隙間が二度と閉じない（実測：
+        交差の多い図に節点を1つ足しただけで、段の中に1380pxの空白が残り、
+        幅が570から1974へ膨らんだ）。
+
+        開くのと閉じるのを、1つの規則で同時に扱う。並び順を保ったまま
+        Σ|座標 − 望んだ位置| を最小にする配置は、隣接の違反を塊へ併合して
+        いく等調回帰（PAVA）で厳密に解ける。塊の座標は、その塊が望んだ
+        位置の中央値。決め打ちの数も、押した量を平均して戻す補正も要らない
+        ── 左右どちらへも同じだけ動けるので、偏り自体が起きない。
         """
-        wanted = [cross[n] for n in row]
+        if not row:
+            return
+        span = [size_of(n)[0 if direction == "TB" else 1] for n in row]
+        # 最小間隔を座標から抜いておくと、制約は「並びが逆転しない」だけになる
+        base = [0.0]
         for i in range(1, len(row)):
-            prev, cur = row[i - 1], row[i]
-            min_gap = size_of(prev)[0 if direction == "TB" else 1] / 2 + \
-                      size_of(cur)[0 if direction == "TB" else 1] / 2 + gap_between(prev, cur)
-            if cross[cur] - cross[prev] < min_gap:
-                cross[cur] = cross[prev] + min_gap
-        if row:
-            shift = (sum(wanted) - sum(cross[n] for n in row)) / len(row)
-            for n in row:
-                cross[n] += shift
+            base.append(base[-1] + span[i - 1] / 2 + span[i] / 2
+                        + gap_between(row[i - 1], row[i]))
+        stack: list[tuple[float, list[float]]] = []
+        for i, n in enumerate(row):
+            block = [cross[n] - base[i]]
+            centre = block[0]
+            while stack and stack[-1][0] >= centre:
+                prev_centre, prev_block = stack.pop()
+                block = prev_block + block
+                centre = _median(block)
+            stack.append((centre, block))
+        i = 0
+        for centre, block in stack:
+            for _ in block:
+                cross[row[i]] = centre + base[i]
+                i += 1
 
     ranks_sorted = sorted(by_rank)
     # 回数は決め打ちにしない。1回の往復で動いた最大の量が、描いても見えない
@@ -401,6 +538,11 @@ def _assign_coordinates(expanded: ExpandedGraph, order: dict[str, int],
                     cross[n] = sum(cross[p] for p in ns) / len(ns)
             # 位置で並べ替え直すと、順序の段で解いた群の隣接が壊れる。
             # 群があるときは塊ごと動かし、塊の中だけを並べ替える。
+            #
+            # 並べ替えを丸ごとやめて順序の段の並びを固定する案を測ったが、
+            # 交差は減らず（28のまま）、サイクルを含む図で1→2に増え、
+            # 枝の多い木の継ぎ足しの揺れが30→120pxへ悪化した。
+            # 交差の差の出所はここではない。
             if groups:
                 units: list[tuple[int, list[str]]] = []
                 for n in row:
@@ -416,6 +558,8 @@ def _assign_coordinates(expanded: ExpandedGraph, order: dict[str, int],
                 row.sort(key=lambda n: cross[n])
             resolve_overlaps(row)
         moved = max((abs(cross[k] - snapshot[k]) for k in cross), default=0.0)
+
+    _pack_components(expanded, by_rank, cross, size_of, gap_order, direction)
 
     main = {}
     cursor = 0.0
