@@ -1,0 +1,140 @@
+<title>変換器は仕様の側が持ち、描く側は目録だけを公開する</title><style>
+  :root{
+    --paper:#EFF1F4; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#16191F; --ink-soft:#545C69; --ink-faint:#7C8593;
+    --rule:#D5DAE1; --rule-soft:#E6EAEF;
+    --fact:#1F4E79; --fact-bg:#E6EDF4;
+    --assume:#7A5A22; --assume-bg:#F3EDE0;
+    --infer:#25604A; --infer-bg:#E2EFE9;
+    --against:#8C2F39; --against-bg:#F5E7E8;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+      --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+      --rule:#2C333C; --rule-soft:#232931;
+      --fact:#8FB6D8; --fact-bg:#182530;
+      --assume:#D3B27A; --assume-bg:#2A2318;
+      --infer:#7DC4A6; --infer-bg:#152A22;
+      --against:#DB9AA1; --against-bg:#2C1B1D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111419; --surface:#1A1E25; --surface-2:#20252D;
+    --ink:#E5E9EF; --ink-soft:#A8B1BD; --ink-faint:#7A8492;
+    --rule:#2C333C; --rule-soft:#232931;
+    --fact:#8FB6D8; --fact-bg:#182530;
+    --assume:#D3B27A; --assume-bg:#2A2318;
+    --infer:#7DC4A6; --infer-bg:#152A22;
+    --against:#DB9AA1; --against-bg:#2C1B1D;
+  }
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;
+       margin:0;padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem) 6rem;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:60rem;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem}
+  .col{max-width:40rem}
+  header{display:flex;flex-direction:column;gap:.8rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  h1{font-family:var(--serif);font-size:clamp(1.6rem,3.8vw,2.2rem);line-height:1.4;font-weight:600;margin:0;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-size:1rem;margin:0;max-width:38rem}
+  section{display:flex;flex-direction:column;gap:1.1rem}
+  h2{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;padding-bottom:.6rem;
+     border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.75rem}
+  h2 .num{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;flex:none}
+  p{margin:0}
+  .col>p+p{margin-top:.85rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:3px;padding:.08em .34em}
+
+  .decision{border:1px solid var(--rule);border-left:3px solid var(--ink);border-radius:2px;background:var(--surface);
+            padding:1.15rem 1.3rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+  .decision .main{font-family:var(--serif);font-size:1.12rem;font-weight:600;line-height:1.7}
+  .decision .key{display:flex;flex-direction:column;gap:.2rem;padding-top:.7rem;border-top:1px solid var(--rule-soft)}
+  .decision .key .lbl{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .decision .key .txt{font-size:.95rem;line-height:1.75;color:var(--ink-soft)}
+  .decision .key .txt b{color:var(--ink)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+  @media(max-width:44rem){.cmp{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .pane-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase}
+  .pane-label.b{color:var(--against)} .pane-label.a{color:var(--infer)}
+  /* 箱は残りの高さを分け合う。親の高さを丸ごと取ると、下の注記が押し出されて次の節へ重なる */
+  .box{border:1px solid var(--rule);border-radius:2px;background:var(--surface);padding:.9rem 1rem;flex:1 1 auto}
+  .blob{font-size:.86rem;line-height:1.9;color:var(--ink-soft)}
+  .fignote{font-size:.8rem;color:var(--ink-faint);line-height:1.65}
+
+  .chain{display:flex;flex-direction:column}
+  .step{border:1px solid var(--rule);border-left:3px solid var(--rule);border-radius:2px;background:var(--surface);
+        padding:.72rem .95rem;display:flex;flex-direction:column;gap:.25rem}
+  .step.evidence{border-left-color:var(--fact)}
+  .step.premise{border-left-color:var(--assume)}
+  .step.conclude{border-left-color:var(--infer)}
+  .step.counter{border-left-color:var(--against)}
+  .step .lbl{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .step.evidence .lbl{color:var(--fact)} .step.premise .lbl{color:var(--assume)}
+  .step.conclude .lbl{color:var(--infer)} .step.counter .lbl{color:var(--against)}
+  .step .txt{font-size:.92rem;line-height:1.72}
+  .step .src{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint)}
+  .weak{font-size:.78rem;color:var(--ink-faint);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--rule-soft);margin-top:.1rem}
+  .weak b{color:var(--ink-soft);font-weight:600}
+  .joint{margin-left:1.5rem;padding:.28rem 0 .28rem .85rem;border-left:2px solid var(--rule);
+         font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+  .backing{margin-left:1.5rem;padding:.1rem 0 .3rem .85rem;border-left:2px solid var(--rule);
+           font-family:var(--mono);font-size:.71rem;color:var(--ink-faint)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem}
+  table.wide{min-width:38rem}
+  th,td{text-align:left;padding:.58rem .8rem;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.65}
+  thead th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;
+           background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  @media(max-width:46rem){table{font-size:.84rem} th,td{padding:.5rem .62rem}}
+  td.name{font-weight:700}
+  .win{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap;
+        color:var(--against);background:var(--against-bg)}
+  .kindtag{font-family:var(--mono);font-size:.68rem;padding:.08em .45em;border-radius:2px;white-space:nowrap}
+  .kindtag.out{color:var(--ink-faint);background:var(--surface-2)}
+  .kindtag.lim{color:var(--assume);background:var(--assume-bg)}
+  .kindtag.unv{color:var(--fact);background:var(--fact-bg)}
+
+  .approve{border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:2px;background:var(--surface);
+           padding:1rem 1.2rem 1.1rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.75rem}
+  .approve .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .approve .v{font-family:var(--serif);font-size:1.05rem;font-weight:600}
+  .approve .m{font-size:.9rem;color:var(--ink-soft)}
+
+
+.lead{font-family:var(--serif);font-size:1.02rem;font-weight:600;line-height:1.65;border-left:3px solid var(--ink);padding-left:.85rem}
+.mk{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.mk .sym{font-size:1.05rem;line-height:1;font-weight:700}
+.mk.ok .sym{color:#1B6B4A} .mk.ng .sym{color:#9A3B44}
+.keycol{background:#F5EDDF;color:#7A4E12}
+.keyrow td{background:#F5EDDF}
+.keytag{font-family:var(--mono);font-size:.63rem;color:#7A4E12;background:var(--surface);
+        border:1px solid #7A4E12;border-radius:2px;padding:.06em .4em;margin-left:.5rem;white-space:nowrap}
+.pickrow td{background:#E9F0F6}
+.sub{font-weight:400;font-size:.82rem;color:var(--ink-faint)}
+.fold{border:1px solid var(--rule);border-radius:2px;background:var(--surface)}
+.fold>summary{cursor:pointer;padding:.7rem .95rem;font-size:.86rem;color:var(--ink-soft);
+              list-style:none;display:flex;align-items:center;gap:.5rem}
+.fold>summary::before{content:"▸";color:var(--ink-faint);font-size:.8rem}
+.fold[open]>summary::before{content:"▾"}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .scroll{border:none;border-top:1px solid var(--rule);border-radius:0}
+.foldnote{font-size:.84rem;line-height:1.75;color:var(--ink-soft);padding:.8rem .95rem;border-top:1px solid var(--rule-soft)}
+.foldnote b{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  .mk.ok .sym{color:#79C5A0} .mk.ng .sym{color:#DE9AA1}
+  .keycol,.keyrow td{background:#2A2216;color:#D9B674}
+  .keytag{color:#D9B674;border-color:#D9B674} .pickrow td{background:#172430}}}
+
+.fig{margin:0;display:flex;flex-direction:column;gap:.6rem}
+.fig .scroll{padding:1.2rem 1rem}
+figcaption{font-size:.83rem;color:var(--ink-faint);line-height:1.7}
+figcaption b{color:var(--ink-soft)}
+</style><div class="wrap"><header><p class="eyebrow">Architecture Decision Record</p><h1>変換器は仕様の側が持ち、描く側は目録だけを公開する</h1><p class="lede">描く側の実装は完成し、目録も公開された。残っているのは、仕様の語彙からその目録へ橋を架けることである。<b>いまその橋は描く側の中にあり、網羅の試験もそこから仕様の語彙を借りている。</b>橋を仕様の側へ移し、描く側には一般名詞だけを残す。</p></header><section><h2><span class="num">01</span>決定</h2><div class="decision"><p class="main"><b>言い分から部品への対応表と、それを実行する変換器は、仕様を持つ側が所有する。</b>描く側が公開するのは目録だけで、<b>何を表せるかは知らない</b>。</p><div class="key"><span class="lbl">判定の基準</span><span class="txt">仕様に言い分を1つ足したとき、<b>描く側のファイルを1つでも触るなら境界が漏れている</b>。この基準で、いま触ることになる4ファイルを引っ越しの対象とする。</span></div><div class="key"><span class="lbl">同時に決めること</span><span class="txt">対応表は<b>部品名までではなく、渡す値まで</b>書く。目録が必須・任意を機械で答えられるようになったので、承認したらそのまま変換器が書ける粒度にする。</span></div></div></section><section><h2><span class="num">02</span>表は2枚あり、持ち主が違う</h2><p class="lead">目録は「何を受け取れるか」、対応表は「何を表すか」。同じ表に見えるが、変わる速度が違う。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 640 196" role="img" style="min-width:40rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><rect x="12" y="30" width="250" height="150" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.3"/><text x="137" y="52" text-anchor="middle" font-size="11" font-weight="500" fill="var(--ink-faint)">呼ぶ側（仕様を持つ側）</text><rect x="30" y="66" width="214" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1.3"/><text x="137" y="86" text-anchor="middle" font-size="12" font-weight="600" fill="var(--infer)">対応表</text><text x="137" y="101" text-anchor="middle" font-size="9.5" font-weight="400" fill="var(--ink-faint)">言い分 → どの部品でどう組むか</text><rect x="30" y="122" width="214" height="44" rx="3" fill="var(--surface)" stroke="var(--infer)" stroke-width="1.3"/><text x="137" y="142" text-anchor="middle" font-size="12" font-weight="600" fill="var(--infer)">変換器</text><text x="137" y="157" text-anchor="middle" font-size="9.5" font-weight="400" fill="var(--ink-faint)">宣言を、節点・辺・囲みへ直す</text><rect x="378" y="30" width="250" height="150" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.3"/><text x="503" y="52" text-anchor="middle" font-size="11" font-weight="500" fill="var(--ink-faint)">design-svg（描く側）</text><rect x="396" y="66" width="214" height="44" rx="3" fill="var(--surface)" stroke="var(--fact)" stroke-width="1.3"/><text x="503" y="86" text-anchor="middle" font-size="12" font-weight="600" fill="var(--fact)">目録</text><text x="503" y="101" text-anchor="middle" font-size="9.5" font-weight="400" fill="var(--ink-faint)">何を受け取れるか（実装から導く）</text><rect x="396" y="122" width="214" height="44" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.3"/><text x="503" y="142" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">エンジン</text><text x="503" y="157" text-anchor="middle" font-size="9.5" font-weight="400" fill="var(--ink-faint)">部品・トークン・配置戦略</text><line x1="262" y1="88" x2="376" y2="88" stroke="var(--ink-faint)" stroke-width="1.3"/><polygon points="368,88 360,84.5 360,91.5" fill="var(--ink-faint)"/><text x="319" y="80" text-anchor="middle" font-size="9.5" font-weight="400" fill="var(--ink-faint)">見る</text><line x1="262" y1="144" x2="376" y2="144" stroke="var(--ink-faint)" stroke-width="1.3"/><polygon points="368,144 360,140.5 360,147.5" fill="var(--ink-faint)"/><text x="319" y="136" text-anchor="middle" font-size="9.5" font-weight="400" fill="var(--ink-faint)">呼ぶ</text></svg></div><figcaption><b>表は2枚あり、持ち主が違う。</b>目録は「何を受け取れるか」だけを答え、対応表は「何を表すか」を決める。混ぜると、変化の少ない描く側が、変化の多い仕様側と同じ速度で動かされる。</figcaption></figure><div class="scroll"><table><thead><tr><th>表</th><th>答えること</th><th>持ち主</th><th>変わるとき</th></tr></thead><tbody><tr class="keyrow"><td class="cond">目録</td><td>どの部品があり、何を読み、どんなトークンで見た目が決まるか</td><td>描く側</td><td>部品を足したとき（実装から導かれるので、書き忘れが起きない）</td></tr><tr class="keyrow"><td class="cond">対応表</td><td>どの言い分を、どの部品でどう組むか</td><td>仕様の側</td><td>言い分が増減したとき・組み方を変えたとき</td></tr></tbody></table></div></section><section><h2><span class="num">03</span>引っ越すもの</h2><p class="lead">判定の基準（言い分を1つ足したときに触るか）で選ぶと、4つになる。</p><figure class="fig"><div class="scroll"><svg viewBox="0 0 536 93" role="img" style="min-width:30rem;width:100%;height:auto;display:block" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif"><g transform="translate(6.0,10.8)"><rect x="152.0" y="16.0" width="372.0" height="60.0" rx="8.0" fill="none" stroke="var(--against)" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><path d="M44.0,21.4 Q44.0,-4.8 66.3,-4.8 Q88.6,-4.8 196.9,-4.8 Q305.2,-4.8 321.6,-4.8 Q338.0,-4.8 338.0,12.2 L338.0,29.2" fill="none" stroke="var(--ink-faint)" stroke-width="1.2"/><polygon points="338.0,29.2 335.5,22.4 340.5,22.4" fill="var(--ink-faint)"/><path d="M370.8,46.0 L433.4,46.0" fill="none" stroke="var(--ink-faint)" stroke-width="1.2"/><polygon points="433.4,46.0 426.6,48.5 426.6,43.5" fill="var(--ink-faint)"/><path d="M242.8,46.0 L305.2,46.0" fill="none" stroke="var(--ink-faint)" stroke-width="1.2"/><polygon points="305.2,46.0 298.4,48.5 298.4,43.5" fill="var(--ink-faint)"/><rect x="160.0" y="7.0" width="205.5" height="15.0" fill="var(--surface)"/><text x="262.8" y="18.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="10.0" fill="var(--against)">いま ── design-svg の中に入っている</text><g class="wf-node" transform="translate(0.0,22.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="88.0" height="32.0" rx="5.0" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.2"/><text x="44.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12.0" font-weight="400" fill="var(--ink)">仕様の宣言</text></g></g><g class="wf-node" transform="translate(306.0,30.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="64.0" height="32.0" rx="5.0" fill="var(--surface)" stroke="var(--against)" stroke-width="1.6"/><text x="32.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12.0" font-weight="600" fill="var(--against)">変換器</text></g></g><g class="wf-node" transform="translate(166.0,30.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="76.0" height="32.0" rx="5.0" fill="var(--surface)" stroke="var(--against)" stroke-width="1.6"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12.0" font-weight="600" fill="var(--against)">網羅の表</text></g></g><g class="wf-node" transform="translate(434.0,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="76.0" height="32.0" rx="5.0" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.2"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, Yu Gothic, sans-serif" font-size="12.0" font-weight="400" fill="var(--ink)">エンジン</text></g></g></g></svg></div><figcaption><b>いま、変換器と網羅の表が描く側の中にある。</b>色を付けた2つが引っ越す対象。この図はこのエンジン自身が描いている。</figcaption></figure><div class="scroll"><table><thead><tr><th>対象</th><th>いまどこにあるか</th><th>なぜ引っ越すか</th></tr></thead><tbody><tr class="keyrow"><td class="cond">変換器 <code>convert()</code></td><td>描く側の例の中</td><td><b>腐敗防止層は下流が持ち、下流に置くもの</b>。いまは上流の内部にある</td></tr><tr class="keyrow"><td class="cond">網羅の表（言い分×倍率）</td><td>描く側の例の中</td><td><b>描く側の「崩れていない」の定義が、仕様の語彙で書かれている</b>。言い分が1つ増えると試験の一覧が動く</td></tr><tr class=""><td class="cond">網羅の試験</td><td>描く側の試験の中</td><td>上の表を読んでいる。試験の識別子が仕様の語彙になっている</td></tr><tr class=""><td class="cond">言い分の宣言たち</td><td>描く側の例の中</td><td>仕様側のデータであって、描く側の例ではない</td></tr></tbody></table></div><details class="fold"><summary>描く側に残すものを開く</summary><p>描く側の試験には、<b>描き方の言葉で名づけた回帰の表</b>を別に用意する（格子の配置・輪の配置・長いラベル・入れ子の群・多段をまたぐ辺…）。網羅の必要性は描く側のものだが、<b>網羅の数え方は仕様側のもの</b>である。いまは1つの表が両方を担っているので、そこで分ける。</p></details></section><section><h2><span class="num">04</span>「対応」だけが2通りに分かれる</h2><p class="lead">他の言い分は1つの部品へ落ちるが、これだけは成果物の形が2つある。</p><div class="scroll"><table><thead><tr><th>条件</th><th>何になるか</th><th>なぜ</th></tr></thead><tbody><tr class="keyrow"><td class="cond">交点が図を持たない</td><td><b>成果物の書式そのもの</b>（Markdown・HTMLの表）</td><td>縦横の対応を読ませるのに、絵である必要が無い。書式の表のほうが読みやすく、検索も引用もできる</td></tr><tr class="keyrow"><td class="cond">交点が図を持つ</td><td><b>格子の配置＋入れ子</b></td><td>交点の中身が図なら、書式の表には入らない。画像として表現したいときだけ、絵にする</td></tr></tbody></table></div><details class="fold"><summary>いまの実装との食い違いを開く</summary><p>いまの変換器は<b>常にSVGの表を作る</b>。上の分岐は後から決まったもので、試作にしか実装されていない（その試作は版に入れていない）。引っ越しのときに、この分岐を含めて書き直す。</p></details></section><section><h2><span class="num">05</span>対応表の粒度</h2><p class="lead">部品名までしか書かないと、書く段でもう一度調べ直すことになる。</p><p>目録が、部品ごとの<b>必須の鍵と任意の鍵</b>を機械で答えられるようになった。だから対応表は「どの部品を使うか」ではなく、<b>「どの部品に、どの値を、どこから取って渡すか」</b>まで書く。渡す値の名前と要否は目録から引くので、対応表が持つのは<b>仕様の欄から部品の鍵への割り当て</b>だけになる。</p><p>こうすると、部品の入力が変わったときに<b>目録と対応表の突き合わせで機械的に検出できる</b>── 対応表が目録に無い鍵を指していたら落とす、という形にできる。</p></section><section><h2><span class="num">06</span>答えないこと</h2><p>この決定は<b>持ち主と粒度だけを決める</b>。どの言い分をどの部品へ割り当てるかという中身は、対応表そのものが持つ（既にある案を、上の粒度へ更新して別途承認する）。</p><p>変換器を仕様側のどの層へ置くか（ポートの位置・アダプタの置き場所）も、この決定の外にある。仕様側の構成に従う。</p></section><section><h2><span class="num">07</span>承認</h2><div class="approve"><span class="k">状態</span><span class="v">承認済み</span><span class="m">2026-08-30</span></div></section><section><h2><span class="num">08</span>関連</h2><p class="lead">この決定は、描く側の規律を決めた判断と対になる。</p><details class="fold"><summary>前後の決定を開く（4件）</summary><div class="scroll"><table><thead><tr><th>種類</th><th>対象</th></tr></thead><tbody><tr class="keyrow"><td class="cond">先立つ判断</td><td>描く側にヘキサゴナル層構成を敷かず、3規約と試験で縛る（承認済み） ── <b>その規約の1つが「呼ぶ側の語彙を持たない」で、この決定はその続き</b></td></tr><tr class=""><td class="cond">先立つ事実</td><td>目録の公開（実装から導かれるので、部品を直せば目録も直る）</td></tr><tr class=""><td class="cond">後続の作業</td><td>対応表を、渡す値まで書いた粒度へ更新して承認する</td></tr><tr class=""><td class="cond">縛る対象</td><td>変換器・網羅の表・網羅の試験・言い分の宣言たち（4件）</td></tr></tbody></table></div></details></section></div>
