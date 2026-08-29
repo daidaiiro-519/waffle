@@ -1,8 +1,13 @@
-"""量を主張する部品 ── 全体と部分・量の大小・順位・時間変化・分布・偏差・
-相関・流量・空間の9主張を表す。どれも値から座標が一意に決まるので、
-sugiyama.py のような配置解決は要らない（その場の算術で完結する）。
+"""量を描く部品 ── 値から座標が一意に決まる図。
 
-`recovered/figures/svg_chart.py` の実測済みの計算を踏襲しつつ、この
+内訳・大小・並び順・区間・分布・基準からのずれ・2軸上の点・流れる量・位置を、
+それぞれ1つの形で描く。どれも値さえ決まれば座標が決まるので、sugiyama.py の
+ような配置解決は要らない（その場の算術で完結する）。
+
+どの図がどんな言い分を運ぶかは、ここでは決めない。それは呼ぶ側が決めることで、
+この部品が知っているのは「どんな値を受け取り、どんな形を描くか」だけである。
+
+かつて別の場所にあった実測済みの計算を踏襲しつつ、この
 パッケージの流儀（構造はprops、見た目はstyle、部品は台帳へ登録）へ
 書き直した。色・書体・寸法はすべて style（tokens.py のトークン）から引き、
 直書きしない ── 直書きすると、テーマを差し替えても寸法だけ変わらず取り残される
@@ -184,7 +189,7 @@ def bars(props: dict, style: dict) -> ComponentResult:
     # 負に伸びる棒は、値の札を作図領域の下へ出す。名前の行は全部の棒で同じ高さに
     # あって動かせないので、札の帯を先に確保してから名前を置く（上の軸ラベルで
     # 使っている考え方の裏返し）。確保しないと、下まで伸びた棒の値が名前へ重なる
-    # ── 16の主張を通したときに「偏差」だけが落ちた。
+    # ── 基準からのずれを描いたときだけ、値の札の置き場所が無くなって落ちた。
     value_band = (gap / 2 + fs_small * (style["font.cap-ratio"] + style["font.descender-ratio"])
                   if min(values) < 0 else 0.0)
     item_axis_band = (fs_small * style["size.label-line-h"]
@@ -224,7 +229,7 @@ def bars(props: dict, style: dict) -> ComponentResult:
     return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
-# ── 順位（横並びの順位リスト。並び順が主張、値は添え物） ──────────────
+# ── 並び順（横並びの一覧。読ませたいのは順番で、値は添え物） ──────────────
 
 @component("ranking")
 def ranking(props: dict, style: dict) -> ComponentResult:
@@ -432,7 +437,7 @@ def flow(props: dict, style: dict) -> ComponentResult:
 
 @component("spatial")
 def spatial(props: dict, style: dict) -> ComponentResult:
-    """items を置く。位置そのものが主張。
+    """items を置く。読ませたいのは位置そのもの。
 
     props: items（[{"name", "at": [x, y] または "depth", "role"}, ...]）／
            cols（at を使わないときの列数）／

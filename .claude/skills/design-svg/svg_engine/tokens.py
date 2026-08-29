@@ -93,7 +93,7 @@ DEFAULT_THEME: dict[str, TokenValue] = {
     "size.divider-amp": 3,            # 区切り線の波の高さ
     "size.divider-period": 18,        # 同・波の周期
 
-    # 量の主張（円・棒・散布図など）が使う色の並び。系列や区分が増えたら
+    # 量を描く部品（円・棒・散布図など）が使う色の並び。系列や区分が増えたら
     # 順に使う。件数が上限を超えたら呼び出し側が同じ色を繰り返す。
     "chart.tones": ["#16636B", "#9A4A21", "#7A4368", "#8A8F98"],
     "chart.grid": "#E4E9EE",
