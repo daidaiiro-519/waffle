@@ -21,7 +21,7 @@ dependencies = []
 
 [project.optional-dependencies]
 # 利用側には要らない。試験と物差しを走らせるときだけ。
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "mypy>=1.8"]
 
 [project.scripts]
 # 目録をJSONで吐く。利用側はこれだけを見れば変換器を書ける。
@@ -39,3 +39,14 @@ exclude = ["svg_engine/tests", "svg_engine/examples"]
 
 [tool.pytest.ini_options]
 testpaths = ["svg_engine/tests"]
+
+[tool.mypy]
+# 静的検査は通ることを要件にする。天井を置いて漸減させる形は採らない
+# ── 46件から始めて全部潰した。増やさないための設定をここに固定する。
+python_version = "3.9"
+files = ["svg_engine"]
+# 注釈の無い関数の中身も見る。既定では素通りするので、注釈を書いた関数だけが
+# 守られ、書いていない関数が検査の外に残る。
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true

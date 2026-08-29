@@ -86,18 +86,16 @@ def _break_cycles(nodes: list[str], edges: list[tuple[str, str]]) -> list[tuple[
     # 上のループは「u→v」を辿るたびに1本ずつoutへ積むが、同じ(u,v)を後退辺
     # 判定のときと通常時とで二重に積まないよう、辺の集合から作り直す。
     result = []
-    seen = set()
-    rank_edges = {}
+    seen: set = set()
+    rank_edges: dict[tuple[str, str], bool] = {}
     for a, b, rev in out:
         rank_edges[(a, b) if not rev else (b, a)] = rev
     for a, b in edges:
         if a not in adj or b not in adj:
             continue
         key = (a, b)
-        rev = rank_edges.get(key)
-        if rev is None:
-            # DFSで辿らなかった辺（多重辺等）は非後退として扱う
-            rev = False
+        # DFSで辿らなかった辺（多重辺等）は非後退として扱う
+        rev = rank_edges.get(key, False)
         result.append((a, b, rev))
     return result
 
@@ -203,16 +201,19 @@ def _network_simplex(comp_nodes: list[str],
         reached, tree = _tight_tree(comp_nodes, edges, rank, root)
         if len(reached) == len(comp_nodes):
             break
-        best, best_slack = None, None
+        # 添字とたるみは必ず一緒に決まる。別々の変数に置くと「片方が None なら
+        # もう片方も None」という不変条件が型から見えなくなる。
+        best: tuple[int, int] | None = None
         for i, (a, b) in enumerate(edges):
             if (a in reached) == (b in reached):
                 continue
             slack = rank[b] - rank[a] - 1
-            if best_slack is None or slack < best_slack:
-                best, best_slack = i, slack
+            if best is None or slack < best[1]:
+                best = (i, slack)
         if best is None:
             break  # 繋がっていない ── 呼び出し側が塊ごとに分けている前提
-        a, _b = edges[best]
+        best_edge, best_slack = best
+        a, _b = edges[best_edge]
         shift = best_slack if a in reached else -best_slack
         for n in reached:
             rank[n] += shift
@@ -232,16 +233,17 @@ def _network_simplex(comp_nodes: list[str],
             break
         i, side = leaving
         # 切り口を逆向きに跨ぐ辺のうち、いちばんたるみの小さいものを入れる
-        entering, best_slack = None, None
+        # ここも添字とたるみが一緒に決まる ── 1つにまとめる
+        entering: tuple[int, int] | None = None
         for j, (a, b) in enumerate(edges):
             if j in tree or a in side or b not in side:
                 continue
             slack = rank[b] - rank[a] - 1
-            if best_slack is None or slack < best_slack:
-                entering, best_slack = j, slack
+            if entering is None or slack < entering[1]:
+                entering = (j, slack)
         if entering is None:
             break
-        tree = (tree - {i}) | {entering}
+        tree = (tree - {i}) | {entering[0]}
         rank = _ranks_from_tree(comp_nodes, edges, tree, root)
 
     low = min(rank.values())
@@ -573,7 +575,7 @@ def _pack_components(expanded: "ExpandedGraph", by_rank: dict[int, list[str]],
             order_seen.setdefault(c, i)
 
     span = lambda n: size_of(n)[0 if direction == "TB" else 1]
-    extents = {}
+    extents: dict[int, tuple[float, float]] = {}
     for n, c in comp.items():
         lo, hi = cross[n] - span(n) / 2, cross[n] + span(n) / 2
         prev = extents.get(c)

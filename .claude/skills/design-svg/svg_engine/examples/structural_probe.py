@@ -14,6 +14,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 
 from svg_engine import DEFAULT_THEME, render_figure  # noqa: E402
+from svg_engine.tokens import num  # noqa: E402
 
 OUT = pathlib.Path(__file__).resolve().parent / "out"
 OUT.mkdir(exist_ok=True)
@@ -30,7 +31,7 @@ def scaled(k: float) -> dict:
     t = dict(DEFAULT_THEME)
     for key in ("font.size", "font.size-small", "size.box-h", "size.box-min-w",
                 "size.box-pad-x", "size.gap-rank", "size.gap-order", "size.box-radius"):
-        t[key] = DEFAULT_THEME[key] * k
+        t[key] = num(DEFAULT_THEME, key) * k
     return t
 
 
@@ -43,7 +44,7 @@ for k, name in [(0.75, "0.75倍"), (1.0, "等倍"), (2.5, "2.5倍")]:
     cases.append((f"① 書体と間隔 {name}", svg))
 
 # ② 位相の際どい形
-TOPO = {
+TOPO: dict[str, dict[str, list]] = {
     "非連結（辺が無い塊が2つ）": dict(
         nodes=[{"id": c, "label": c.upper()} for c in "abcd"],
         edges=[{"from": "a", "to": "b"}, {"from": "c", "to": "d"}], groups=[]),

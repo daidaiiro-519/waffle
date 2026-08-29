@@ -77,7 +77,8 @@ def _build_tree(node_ids: list[str], groups: list[dict]) -> _Container:
     root = _Container(key="__root", label=None)
 
     for k, _ in indexed:
-        (containers[parent[k]] if parent[k] else root).children.append(containers[k])
+        up = parent[k]
+        (containers[up] if up else root).children.append(containers[k])
 
     # 節点は、それを含む最も内側の群へ配る。どの群にも属さないものは最上位へ。
     for nid in node_ids:
@@ -163,7 +164,7 @@ def layout_nested(node_sizes: dict[str, tuple[float, float]],
         for ch in c.children:
             for nid in _descendant_nodes(ch):
                 owner[nid] = ch.key
-        pairs = []
+        pairs: list = []
         local_of: dict[int, int] = {}   # 元の辺の番号 → この段での辺の番号
         for idx, (a, b) in enumerate(edges):
             ra, rb = owner.get(a), owner.get(b)

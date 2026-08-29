@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import Callable  # noqa: F401
 
+import functools
+
 from svg_engine import DEFAULT_THEME, render_figure
 from svg_engine.examples.all_claims import CLAIMS, convert
 
@@ -33,7 +35,7 @@ def scaled(k: float) -> dict:
 SCALES = [0.8, 1.0, 1.6, 2.5]
 
 # 組み合わせ ── 単体では出ない崩れを狙う
-COMBOS = {
+COMBOS: dict[str, dict[str, list]] = {
     "群の入れ子": dict(nodes=[{"id": c, "label": c.upper()} for c in "abcd"],
                        edges=[{"from": "a", "to": "b"}, {"from": "c", "to": "d"}],
                        groups=[{"label": "外", "members": ["a", "b", "c", "d"]},
@@ -66,17 +68,16 @@ def cases() -> list[tuple[str, str, "Callable[[], str]"]]:
     Returns:
         (倍率の名前, 図の名前, 呼ぶとSVGを返す関数) の並び。
     """
-    out = []
+    out: list[tuple[str, str, "Callable[[], str]"]] = []
     for k in SCALES:
         theme = scaled(k)
         for d in CLAIMS:
-            out.append((f"{k}倍", d["asserts"],
-                        lambda d=d, t=theme: convert(d, t)))
+            out.append((f"{k}倍", str(d["asserts"]),
+                        functools.partial(convert, d, theme)))
         for name, kw in COMBOS.items():
             out.append((f"{k}倍", name,
-                        lambda kw=kw, t=theme: render_figure(
-                            kw["nodes"], kw["edges"], groups=kw["groups"],
-                            direction="TB", theme=t)))
+                        functools.partial(render_figure, kw["nodes"], kw["edges"],
+                                          groups=kw["groups"], direction="TB", theme=theme)))
     return out
 
 

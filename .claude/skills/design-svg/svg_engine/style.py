@@ -12,6 +12,8 @@
 """
 from __future__ import annotations
 
+from typing import Any
+
 from .tokens import DEFAULT_THEME, PLAIN, ROLE_PREFIX, TOKEN_RANGES
 
 
@@ -48,7 +50,7 @@ def _check_ranges(resolved: dict) -> None:
 
 
 def resolve_style(role: str = "plain", overrides: dict | None = None,
-                   theme: dict | None = None) -> dict:
+                   theme: dict | None = None) -> dict[str, Any]:
     """role とインライン上書きから、実際に使う値の辞書を組み立てる。
 
     Args:
@@ -58,7 +60,11 @@ def resolve_style(role: str = "plain", overrides: dict | None = None,
         theme: 差し替えるテーマ。省略時は DEFAULT_THEME。
 
     Returns:
-        トークン名 → 解決済みの値、の辞書。
+        トークン名 → 解決済みの値、の辞書。値の型は鍵ごとに決まっている
+        （色は文字列、寸法は数、系列の色は文字列の並び）が、鍵が122個ある
+        ことと、その場の上書きが何でも入れられることから、型では書き分け
+        ない。使う側はどの鍵が何を返すかを知っている ── ここを型で縛るのは
+        規約2（段ごとに型が変わる）の仕事で、そのとき Style 型に置き換わる。
 
     Raises:
         TokenRangeError: 範囲を持つトークンに、範囲外の値が渡されたとき。

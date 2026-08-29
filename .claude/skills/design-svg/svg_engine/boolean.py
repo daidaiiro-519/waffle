@@ -19,8 +19,10 @@ class _V:
 
     def __init__(self, x: float, y: float, intersect: bool = False, alpha: float = 0.0):
         self.x, self.y = x, y
-        self.next: "_V | None" = None
-        self.prev: "_V | None" = None
+        # 頂点は常に環の中にいる。最初は自分ひとりの環で、_build が繋ぎ直す
+        # ── None を許すと、繋ぐ前に触れる経路が型の上で残ってしまう。
+        self.next: "_V" = self
+        self.prev: "_V" = self
         self.intersect = intersect
         self.entry = True
         self.neighbor: "_V | None" = None
@@ -108,6 +110,8 @@ def _trace(start_candidates: list[_V], want_entry_first: bool) -> list[list[Poin
                 poly.append((current.x, current.y))
                 current = current.next if forward else current.prev
             current.visited = True
+            # 交点の頂点は必ず相方を持つ（_clip が対で結ぶ）
+            assert current.neighbor is not None
             current = current.neighbor
             if current is start or current is None:
                 break

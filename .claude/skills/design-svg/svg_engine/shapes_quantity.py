@@ -389,7 +389,8 @@ def flow(props: dict, style: dict) -> ComponentResult:
     base = style["font.baseline-ratio"]
     fs_small = style["font.size-small"]
     xl, xr = pad + margin, w - pad - margin
-    lefts, rights = {}, {}
+    lefts: dict[str, float] = {}
+    rights: dict[str, float] = {}
     for l in links:
         lefts.setdefault(l["from"], 0)
         lefts[l["from"]] += l["value"]

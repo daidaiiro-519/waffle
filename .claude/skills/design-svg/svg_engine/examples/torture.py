@@ -16,7 +16,7 @@ OUT.mkdir(exist_ok=True)
 
 nodes = [{"id": n, "label": n} for n in
          ["A", "B", "C", "D", "E", "F", "G", "H"]]
-edges = [
+edges: list[dict] = [
     {"from": "A", "to": "B"},
     {"from": "A", "to": "C"},
     {"from": "B", "to": "D"},

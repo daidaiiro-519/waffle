@@ -13,7 +13,12 @@ from __future__ import annotations
 
 # 既定テーマ。figure-notation.html / figure-composition.html で使われてきた
 # 配色を踏襲しつつ、ここでは「トークン」として名前を持たせる。
-DEFAULT_THEME: dict[str, str | int | float] = {
+# トークンの値。色・書体名・部品名は文字列、寸法は数、系列の色は文字列の並び。
+# 鍵ごとに型が決まっているが、鍵は122個あるので型では書き分けない ── 使う側は
+# どの鍵が何を返すかを知っている（規約2で段の型を入れるときに、ここも型で縛る）。
+TokenValue = str | int | float | list[str]
+
+DEFAULT_THEME: dict[str, TokenValue] = {
     # 色 ── 役割(role)ごとの塗り・線
     "color.ink": "#171B23",
     "color.ink-soft": "#4B5563",
@@ -222,3 +227,28 @@ TOKEN_RANGES: dict[str, tuple[float, float]] = {
     "chart.lane-row-h": (16.0, 80.0),
     "chart.scatter-point-r": (2.0, 14.0),
 }
+
+
+def num(theme: dict, key: str) -> float:
+    """数を返す鍵から、数として取り出す。
+
+    トークンの値は鍵ごとに型が決まっているが、鍵が122個あるので型では書き分け
+    ていない。数として使う場所でこれを通すと、静的検査が通るだけでなく、
+    差し替えたテーマが数のはずの鍵へ文字列を入れていた場合に、描いて崩れる前に
+    その場で落ちる。
+
+    Args:
+        theme: テーマ、または解決済みのスタイル。
+        key: トークン名。
+
+    Returns:
+        数。
+
+    Raises:
+        KeyError: その鍵がテーマに無いとき。
+        TypeError: その鍵の値が数でないとき。
+    """
+    v = theme[key]
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise TypeError(f"トークン '{key}' は数のはずだが {type(v).__name__} が入っている: {v!r}")
+    return float(v)

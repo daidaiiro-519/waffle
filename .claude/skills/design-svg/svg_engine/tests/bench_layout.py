@@ -18,9 +18,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "recovered"))
+# 自分の親（Skill 直下）を通す ── パッケージとして入れずに直接走らせるため
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from svg_engine.sugiyama import layout_graph  # noqa: E402
+from svg_engine.sugiyama import LayoutResult, layout_graph  # noqa: E402
 
 NODE = (90.0, 40.0)
 GAP_RANK, GAP_ORDER = 60.0, 30.0
@@ -130,7 +131,10 @@ def run_dot(src: str) -> dict | None:
                              text=True, check=True).stdout
     except (FileNotFoundError, subprocess.CalledProcessError):
         return None
-    positions, paths, ends, w, h = {}, {}, [], 0.0, 0.0
+    positions: dict[str, tuple[float, float]] = {}
+    paths: dict[int, list[tuple[float, float]]] = {}
+    ends: list[tuple[str, str]] = []
+    w = h = 0.0
     for line in out.splitlines():
         f = line.split()
         if f[0] == "graph":
@@ -215,10 +219,7 @@ def main():
 
         got = run_dot(to_dot("g", nodes, edges))
         if got:
-            class R: pass
-            r = R()
-            r.edge_paths, r.width, r.height = got["edge_paths"], got["width"], got["height"]
-            theirs = measure(r)
+            theirs = measure(LayoutResult({}, got["edge_paths"], got["width"], got["height"]))
             print("{:<16}{:<8}{:>6}{:>10}{:>8}{:>8}".format(
                 "", "本家", theirs["交差"], theirs["辺の長さ"], theirs["面積"], theirs["縦横比"]))
         else:

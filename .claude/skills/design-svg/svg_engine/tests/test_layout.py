@@ -321,9 +321,9 @@ class Test図の中に図:
         """段1 が「入れ子は深さに上限を置く」と定めている。"""
         import pytest
         from svg_engine.compose import render_figure
-        from svg_engine.tokens import DEFAULT_THEME
-        deep = {"nodes": [{"id": "leaf", "label": "葉"}]}
-        for _ in range(int(DEFAULT_THEME["size.figure-depth-limit"]) + 1):
+        from svg_engine.tokens import DEFAULT_THEME, num
+        deep: dict = {"nodes": [{"id": "leaf", "label": "葉"}]}
+        for _ in range(int(num(DEFAULT_THEME, "size.figure-depth-limit")) + 1):
             deep = {"nodes": [{"id": "n", "figure": deep}]}
         with pytest.raises(ValueError, match="深すぎる"):
             render_figure([{"id": "a", "figure": deep}])

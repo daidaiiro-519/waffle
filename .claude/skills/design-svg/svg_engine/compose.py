@@ -50,7 +50,7 @@ from .registry import ComponentResult, render_component
 from .style import resolve_style
 from .nesting import layout_nested
 from .sugiyama import layout_graph
-from .tokens import DEFAULT_THEME
+from .tokens import DEFAULT_THEME, num
 
 
 def _centre(pos: tuple[float, float], size: tuple[float, float]) -> tuple[float, float]:
@@ -310,7 +310,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
     # いたのは3種だけで、残りは外接矩形で代用され、インクが矩形の一部にしか
     # 無い部品では辺が空白へ着いていた）。導出が1本なら、部品を足しても
     # 着き先の決め方が増えない。
-    fineness = int(theme["size.outline-facets"])
+    fineness = int(num(theme, "size.outline-facets"))
     inks = {nid: ink_surface(r.svg, r.width, r.height, fineness)
             for nid, r in rendered.items()}
     edge_pairs = [(e["from"], e["to"]) for e in edges]
@@ -325,24 +325,24 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
     # 節点の名前に重なる（実測：3節点の鎖で4件。札を短くすると0件）。
     # 「札どうしが重ならない」だけを性質にしていたので、逃げ場が足りるかを
     # 誰も見ていなかった。ここで逃げ場の側を保証する。
-    gap_rank = theme["size.gap-rank"]
+    gap_rank = num(theme, "size.gap-rank")
     if edges:
-        fs = resolve_style("plain", None, theme)["font.size-small"]
-        pad = theme["size.label-pad-x"]
+        fs = num(resolve_style("plain", None, theme), "font.size-small")
+        pad = num(theme, "size.label-pad-x")
         need = max((_text_width(str(e["label"]), fs) + pad for e in edges if e.get("label")),
                    default=0.0)
         if direction == "LR":
-            gap_rank = max(gap_rank, need + theme["size.gap-order"])
+            gap_rank = max(gap_rank, need + num(theme, "size.gap-order"))
         else:
             # 縦に進む辺では、札は帯の高さぶんしか段を占めない
-            gap_rank = max(gap_rank, theme["size.label-band-h"] + theme["size.gap-order"])
+            gap_rank = max(gap_rank, num(theme, "size.label-band-h") + num(theme, "size.gap-order"))
 
     if groups:
         # 群があるときは、群を先に解いて1つの大きさへ畳み、親はそれを1個として置く。
         # こうしないと、段をまたぐ群の外接矩形が間の非メンバーを飲み込む。
         node_boxes, group_boxes, nested_paths, total_w, total_h = nested_layout(
             sizes, edge_pairs, groups, gap_rank,
-            theme["size.gap-order"], direction, frame_pad, label_h)
+            num(theme, "size.gap-order"), direction, frame_pad, label_h)
         coords = {nid: (b.x, b.y) for nid, b in node_boxes.items()}
         # 経路が解けなかった辺（群の内側で完結する等）だけ、両端を直結する
         edge_paths = {i: nested_paths.get(
@@ -350,13 +350,13 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
             for i, (a, b) in enumerate(edge_pairs)}
     else:
         result = layout(sizes, edge_pairs, gap_rank,
-                              theme["size.gap-order"], direction)
+                              num(theme, "size.gap-order"), direction)
         coords = result.positions
         group_boxes = {}
         total_w, total_h = result.width, result.height
         edge_paths = result.edge_paths
 
-    body = []
+    body: list[str] = []
     # 囲みは節点の外側へはみ出す（余白ぶんと、枠の上に乗るラベルぶん）。
     # 画布の大きさを節点だけから決めると、この分が切れる。
     frame_bounds = [(group_boxes[f"__g{i}"].x, group_boxes[f"__g{i}"].y,
@@ -414,7 +414,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
             # 節点どうしを離す量と同じにする ── 車線は仮の節点の列なので、
             # 節点と同じ間隔で並ぶのが筋。線幅ぶんだけでは、端の節点の縁を
             # なぞって迂回に見えない（実測 4.8px）。
-            clear = theme["size.gap-order"]
+            clear = num(theme, "size.gap-order")
             for aim, node in ((aim_a, a), (aim_b, b)):
                 if aim is None:
                     continue

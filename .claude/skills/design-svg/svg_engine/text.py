@@ -8,9 +8,12 @@ from __future__ import annotations
 
 from .tokens import DEFAULT_THEME
 
+# テーマから引いた既定値。鍵が数を返すことは呼ぶ側が知っている。
+_LATIN_RATIO = float(DEFAULT_THEME["font.latin-width-ratio"])  # type: ignore[arg-type]
+
 
 def text_width(s: str, size: float,
-               latin_ratio: float = DEFAULT_THEME["font.latin-width-ratio"]) -> float:
+               latin_ratio: float = _LATIN_RATIO) -> float:
     """CJKは全角、それ以外は半角相当として幅を見積もる。
 
     既定値はテーマから引く。同じ数を2箇所に書くと、片方だけ直したときに
@@ -20,7 +23,7 @@ def text_width(s: str, size: float,
 
 
 def column_width(texts, size: float, pad: float,
-                 latin_ratio: float = DEFAULT_THEME["font.latin-width-ratio"]) -> float:
+                 latin_ratio: float = _LATIN_RATIO) -> float:
     """文字が並ぶ欄の幅を、実際に入る文字から決める。
 
     欄の幅を決め打ちにすると、中身が短いときは無駄な空白が空き（円グラフの

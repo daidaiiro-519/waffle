@@ -26,15 +26,15 @@ import re
 
 from .geometry import densify as _densify_shared, sample_path as _sample_path_shared
 from .text import text_width
-from .tokens import DEFAULT_THEME
+from .tokens import DEFAULT_THEME, num
 
 # 字面の高さと下ばね。書体の性質であって検査の判断ではないので、描く側と
 # 同じ出どころ（トークン）から引く ── 別々に持つと、片方だけ直したときに
 # 検査が古い値で測り続ける。
 # 幾何の計算（刻み・重なり判定）は、あえて共有しない。描く側と同じコードで
 # 測ると、その計算の誤りを検査が永久に見つけられなくなるため。
-CAP = DEFAULT_THEME["font.cap-ratio"]
-DESC = DEFAULT_THEME["font.descender-ratio"]
+CAP = num(DEFAULT_THEME, "font.cap-ratio")
+DESC = num(DEFAULT_THEME, "font.descender-ratio")
 _TRANSLATE = re.compile(r"translate\(\s*(-?[\d.]+)\s*[, ]\s*(-?[\d.]+)\s*\)")
 _SCALE = re.compile(r"scale\(\s*(-?[\d.]+)\s*\)")
 
@@ -142,7 +142,7 @@ def _shapes(svg: str):
 # 大きな図ほど粗くなり、細かい崩れを跳び越す。分けの細かさは、描く側が輪郭を
 # 何向きで表すかと同じ尺度に合わせる（別の尺度を持つと、描く側が細かくした
 # ときに検査だけが粗いまま残る）。
-_FINENESS = int(DEFAULT_THEME["size.outline-facets"])
+_FINENESS = int(num(DEFAULT_THEME, "size.outline-facets"))
 
 
 def _step_for(points) -> float:

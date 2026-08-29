@@ -171,7 +171,7 @@ def forwards_of(kind: str) -> str | None:
             return target.value
         if (isinstance(target, ast.Subscript) and isinstance(target.value, ast.Name)
                 and target.value.id == "props" and isinstance(target.slice, ast.Constant)):
-            return f"props:{target.slice.value}"
+            return "props:" + str(target.slice.value)
     return None
 
 

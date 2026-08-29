@@ -15,7 +15,7 @@ from svg_engine import render_figure  # noqa: E402
 OUT = pathlib.Path(__file__).resolve().parent / "out"
 OUT.mkdir(exist_ok=True)
 
-CASES = {}
+CASES: dict[str, dict[str, list]] = {}
 
 # ① 3群を横に並べる（2群でしか試していなかった）
 CASES["3群を横に"] = dict(

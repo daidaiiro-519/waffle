@@ -135,7 +135,7 @@ def _pairs(items):
 
 
 # ── 16の宣言（ホストの語彙で書いたもの） ────────────────────────────
-CLAIMS = [
+CLAIMS: list[dict] = [
  {"asserts": "つながり", "reading": "受け口はユースケースを呼び、モデルへ届く。",
   "items": [{"key": "cli", "name": "CLI"}, {"key": "mcp", "name": "MCP"},
             {"key": "uc", "name": "ユースケース", "role": "focus"},
@@ -234,9 +234,9 @@ CLAIMS = [
 # import されるので、ここで描いてしまうと、部品1つの例外が import ごと
 # 巻き込み、テストが1件も走らないまま収集で落ちる（実際にそうなった）。
 if __name__ == "__main__":
-    results = [{"declaration": d, "svg": convert(d)} for d in CLAIMS]
+    results: list[dict] = [{"declaration": d, "svg": convert(d)} for d in CLAIMS]
     (OUT / "all_claims.json").write_text(
         json.dumps(results, ensure_ascii=False), encoding="utf-8")
     print(f"通した主張: {len(results)}件")
     for r in results:
-        print(" ", r["declaration"]["asserts"])
+        print(" ", dict(r["declaration"])["asserts"])
