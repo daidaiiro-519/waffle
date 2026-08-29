@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .layout_contract import UnsupportedByStrategy
 from .sugiyama import layout_graph
 
 
@@ -31,15 +32,6 @@ class _Container:
     label: str | None
     node_ids: list[str] = field(default_factory=list)
     children: list["_Container"] = field(default_factory=list)
-
-
-class UnsupportedByStrategy(ValueError):
-    """この配置のやり方では描けない、と配置側が申告する。
-
-    入力が誤っているのではなく、この戦略の能力の外にあるという意味。
-    別の描き方（網掛けや色で重なりを表す等）なら描けるので、
-    コアの入力検査として拒むのではなく、戦略の側から申告する。
-    """
 
 
 def _build_tree(node_ids: list[str], groups: list[dict]) -> _Container:

@@ -1,0 +1,131 @@
+"""規約 ── 宣言した規律を、実物が守っているか。
+
+規律を文章にだけ書くと、破れても何も起きない。実際このエンジンでは、
+docstring で3箇所に宣言した契約が11ファイルで破れていた。だから宣言した規約は
+すべてここで照合する ── 破った瞬間に落ちる。
+
+「何を禁じるか」を書けるものだけを置く。書けないものは規約ではなく好みなので
+置かない。
+"""
+from __future__ import annotations
+
+import ast
+import pathlib
+
+import pytest
+
+from svg_engine.registry import known_kinds, render_component
+from svg_engine.style import resolve_style
+from svg_engine.catalog import EXAMPLES
+
+_ENGINE = pathlib.Path(__file__).resolve().parents[1]
+
+# 責務の層。数字が小さいほど土台に近い。
+# 依存の深さ（import の連鎖）とは別物である ── 深さは「呼ぶ順序」と「型をどこから
+# 借りたか」を映すだけで、責務の層とは偶然おおむね揃っているにすぎない。だから
+# 責務の側をここに明示し、揃い続けることを機械で確かめる。
+LAYER: dict[str, int] = {
+    # 0 語彙・台帳 ── 誰の都合も知らない。名前・数・形・登録簿
+    "tokens": 0, "text": 0, "geometry": 0, "boolean": 0,
+    "registry": 0, "lint_values": 0, "layout_contract": 0, "ids": 0,
+    # 1 方針・配置 ── 値の解決と、座標の解き方
+    "style": 1, "sugiyama": 1, "radial": 1, "tree": 1, "grid": 1,
+    "nesting": 1, "labels": 1,
+    # 2 部品 ── 1つの形を描く
+    "shapes": 2, "shapes_decor": 2, "shapes_freeform": 2, "shapes_hex": 2,
+    "shapes_interaction": 2, "shapes_quantity": 2, "shapes_table": 2, "shapes_titled": 2,
+    # 3 合成 ── 全部を知ってよい唯一の場所
+    "compose": 3, "canvas": 3, "catalog": 3,
+}
+
+# 層の数直線に載らないもの。生成物を外から検査する直交した軸で、
+# 深さの順に並べた時点で位置づけを誤る。
+ORTHOGONAL = {"verify"}
+
+
+def _modules() -> dict[str, ast.Module]:
+    out = {}
+    for p in sorted(_ENGINE.glob("*.py")):
+        if p.stem != "__init__":
+            out[p.stem] = ast.parse(p.read_text(encoding="utf-8"))
+    return out
+
+
+def _imports(tree: ast.Module) -> set[str]:
+    out = set()
+    for n in ast.walk(tree):
+        if isinstance(n, ast.ImportFrom) and n.level == 1 and n.module:
+            out.add(n.module)
+    return out
+
+
+class Test規約1_層:
+    """下から上を呼ばない。層を飛ばさない。"""
+
+    def test_全てのモジュールが層に割り当てられている(self):
+        # 割り当て漏れがあると、そのモジュールだけ検査の外に出る
+        known = set(LAYER) | ORTHOGONAL | {"__main__"}
+        assert set(_modules()) <= known, f"層の割り当てが無い: {sorted(set(_modules()) - known)}"
+
+    def test_下から上を呼ばない(self):
+        bad = []
+        for name, tree in _modules().items():
+            if name not in LAYER:
+                continue
+            for dep in _imports(tree):
+                if dep in LAYER and LAYER[dep] > LAYER[name]:
+                    bad.append(f"{name}(層{LAYER[name]}) → {dep}(層{LAYER[dep]})")
+        assert not bad, "下から上への呼び出し: " + " / ".join(bad)
+
+    def test_土台は誰も呼ばない(self):
+        # 層0が層1以上を呼ぶと、土台が方針を知ることになる
+        for name, tree in _modules().items():
+            if LAYER.get(name) != 0:
+                continue
+            up = {d for d in _imports(tree) if LAYER.get(d, 0) > 0}
+            assert not up, f"{name}(層0) が上を呼んでいる: {sorted(up)}"
+
+    def test_依存に循環が無い(self):
+        trees = _modules()
+        dep = {n: {d for d in _imports(t) if d in trees} for n, t in trees.items()}
+        settled: set[str] = set()
+        for _ in range(len(dep) + 1):
+            settled |= {n for n, d in dep.items() if d <= settled}
+        assert settled == set(dep), f"循環に含まれる: {sorted(set(dep) - settled)}"
+
+
+class Test規約3_契約の所有者:
+    """契約は中立が所有し、実装が所有しない。"""
+
+    def test_配置戦略が共有する契約を実装が持たない(self):
+        # 以前は層状配置が戻り値の型を持ち、他の3戦略と合成が借りていた。
+        # 実装の1つが所有すると、その実装を差し替える判断が借り手を巻き込む。
+        owners = {n for n, t in _modules().items()
+                  for node in ast.walk(t)
+                  if isinstance(node, ast.ClassDef)
+                  and node.name in ("LayoutResult", "UnsupportedByStrategy")}
+        assert owners == {"layout_contract"}, f"契約を持っているのは {sorted(owners)}"
+
+    def test_戦略は互いを知らない(self):
+        strategies = {"sugiyama", "radial", "tree", "grid"}
+        for name in strategies:
+            others = _imports(_modules()[name]) & (strategies - {name})
+            assert not others, f"{name} が他の戦略を呼んでいる: {sorted(others)}"
+
+
+class Test部品の契約:
+    def test_部品はSVGのルートを返さない(self):
+        # ルートを持つと、他の部品と合成したとき二重の svg / viewBox が生まれる
+        style = resolve_style()
+        for kind in known_kinds():
+            r = render_component(kind, EXAMPLES[kind], style)
+            assert "<svg" not in r.svg, f"{kind} がルートタグを返している"
+
+    @pytest.mark.parametrize("kind", known_kinds())
+    def test_部品は決定的(self, kind):
+        # 同じ入力から常に同じ出力。乱数も時刻も使わない
+        style = resolve_style()
+        first = render_component(kind, EXAMPLES[kind], style)
+        second = render_component(kind, EXAMPLES[kind], style)
+        assert first.svg == second.svg
+        assert (first.width, first.height) == (second.width, second.height)

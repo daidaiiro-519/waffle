@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 
 from .geometry import shift_to_origin
-from .sugiyama import LayoutResult
+from .layout_contract import LayoutResult
 
 
 def _pick_root(ids: list[str], edges: list[tuple[str, str]]) -> str:

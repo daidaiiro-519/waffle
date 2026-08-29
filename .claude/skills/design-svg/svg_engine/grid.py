@@ -13,7 +13,7 @@ layout_graph と同じ契約（LayoutResult を返す）なので、呼び出し
 from __future__ import annotations
 
 from .geometry import shift_to_origin
-from .sugiyama import LayoutResult
+from .layout_contract import LayoutResult
 
 
 def layout_grid(node_sizes: dict[str, tuple[float, float]],

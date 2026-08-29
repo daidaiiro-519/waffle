@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from .sugiyama import LayoutResult
+    from .layout_contract import LayoutResult
 
 from .geometry import densify, ink_surface, nearest, segment_hits_rect
 from .labels import place_edge_labels

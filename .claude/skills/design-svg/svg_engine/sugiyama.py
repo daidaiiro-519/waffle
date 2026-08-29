@@ -31,14 +31,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .geometry import shift_to_origin
-
-
-@dataclass
-class LayoutResult:
-    positions: dict[str, tuple[float, float]]   # 実節点id → (x, y) 左上
-    edge_paths: dict[int, list[tuple[float, float]]]  # 辺の通し番号 → 通る点の並び
-    width: float
-    height: float
+from .layout_contract import LayoutResult
 
 
 # ── 1. サイクルの分断 ──────────────────────────────────────

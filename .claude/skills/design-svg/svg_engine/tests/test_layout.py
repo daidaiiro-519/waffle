@@ -5,7 +5,8 @@ import math
 
 import pytest
 
-from svg_engine.nesting import UnsupportedByStrategy, layout_nested
+from svg_engine.layout_contract import UnsupportedByStrategy
+from svg_engine.nesting import layout_nested
 from svg_engine.radial import layout_radial
 from svg_engine.sugiyama import _assign_ranks, layout_graph
 from svg_engine.tree import layout_tree

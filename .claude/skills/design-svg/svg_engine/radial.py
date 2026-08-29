@@ -20,8 +20,7 @@ from __future__ import annotations
 import math
 
 from .geometry import segment_hits_rect, shift_to_origin
-from .nesting import UnsupportedByStrategy
-from .sugiyama import LayoutResult
+from .layout_contract import LayoutResult, UnsupportedByStrategy
 
 
 def _ring_order(ids: list[str], edges: list[tuple[str, str]]) -> list[str]:

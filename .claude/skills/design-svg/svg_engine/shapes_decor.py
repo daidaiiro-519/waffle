@@ -6,13 +6,11 @@ box/edge/pie等とは別の層として独立させる。混ぜても崩れな�
 """
 from __future__ import annotations
 
-import itertools
 import math
 from html import escape as _e
 
+from .ids import stable_id
 from .registry import ComponentResult, component
-
-_grad_id = itertools.count()
 
 
 @component("gradient_rect")
@@ -26,7 +24,7 @@ def gradient_rect(props: dict, style: dict) -> ComponentResult:
     stops = props.get("stops") or [(0.0, style["color.accent"]), (1.0, style["color.accent-bg"])]
     direction = props.get("direction", "v")
     radius = props.get("radius", 0)
-    gid = f"grad{next(_grad_id)}"
+    gid = stable_id("grad", stops, direction, radius, w, h)
     stop_svg = "".join(f'<stop offset="{o * 100:.0f}%" stop-color="{c}"/>' for o, c in stops)
     if direction == "radial":
         defs = f'<radialGradient id="{gid}" cx="50%" cy="50%" r="75%">{stop_svg}</radialGradient>'

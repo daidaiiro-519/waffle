@@ -12,13 +12,11 @@
 """
 from __future__ import annotations
 
-import itertools
 
+from .ids import stable_id
 from .registry import render_component
 from .style import resolve_style
 from .tokens import DEFAULT_THEME
-
-_clip_id = itertools.count()
 
 
 def _transform_of(layer: dict) -> str:
@@ -51,7 +49,8 @@ def _render_layer(layer: dict, theme: dict) -> str:
         # 無視する。位置合わせの変形は、内側の<g>ではなく<clipPath>要素
         # 自身のtransform属性へ置く。だからclip側にはbox/pie等の内部で
         # <g>を持つ部品ではなく、裸の図形を返す部品(dot/path等)だけを使う。
-        cid = f"clip{next(_clip_id)}"
+        cid = stable_id("clip", clip.get("kind"), clip.get("props"),
+                         clip.get("role"), clip.get("style"), _transform_of(clip))
         clip_style = resolve_style(clip.get("role", "plain"), clip.get("style"), theme)
         clip_r = render_component(clip["kind"], clip["props"], clip_style)
         clip_transform = _transform_of(clip)
