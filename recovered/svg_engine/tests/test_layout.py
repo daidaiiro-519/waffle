@@ -7,7 +7,7 @@ import pytest
 
 from svg_engine.nesting import UnsupportedByStrategy, layout_nested
 from svg_engine.radial import layout_radial
-from svg_engine.sugiyama import layout_graph
+from svg_engine.sugiyama import _assign_ranks, layout_graph
 from svg_engine.tree import layout_tree
 
 SIZE = (80.0, 40.0)
@@ -41,6 +41,23 @@ class TestRank:
         r = layout_graph(_sizes("a", "b"), [("a", "b")], 40, 30, direction="LR")
         assert r.positions["a"][0] < r.positions["b"][0]
         assert r.positions["a"][1] == pytest.approx(r.positions["b"][1])
+
+
+    def test_段は辺の長さの総和が最小になるように決まる(self):
+        # 長さの違う3本の道が1点へ合流する。段が構造から一意に決まらないので、
+        # どこへ置くかに自由がある。短い道を上端へ寄せると辺が伸びる。
+        edges = [("長1", "長2"), ("長2", "長3"), ("長3", "長4"), ("長4", "合"),
+                 ("短1", "短2"), ("短2", "合"),
+                 ("中1", "中2"), ("中2", "中3"), ("中3", "合")]
+        rank = _assign_ranks(["長1", "長2", "長3", "長4", "短1", "短2",
+                              "中1", "中2", "中3", "合"], edges)
+        # どの辺も1段以上またぐので、総和は辺の本数を下回れない。等号＝最適。
+        assert sum(rank[b] - rank[a] for a, b in edges) == len(edges)
+
+    def test_繋がっていない塊はそれぞれ独立に段が決まる(self):
+        rank = _assign_ranks(["a", "b", "x", "y"], [("a", "b"), ("x", "y")])
+        assert rank["a"] == rank["x"] == 0
+        assert rank["b"] == rank["y"] == 1
 
 
 class TestCycle:

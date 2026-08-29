@@ -12,11 +12,17 @@
    並びを保ったまま望んだ位置との差の総和を最小にする配置を等調回帰で解く。
    最後に、辺で繋がっていない塊どうしを詰める（目的から決まらない自由度は、
    詰める方に倒す）
+5. 段の割り当て ── 本家と同じ網状単体法で、辺の長さの総和を最小にする
 
 本家 Graphviz `dot` と同じ図で突き合わせた結果（tests/bench_layout.py）:
-交差は同数まで詰められた。辺の長さは1.3〜1.9倍まだ長い ── 段の割り当てが
-最長経路法で、本家の network-simplex のように総延長を最小化していないため。
-面積と縦横比はほぼ一致する。
+交差・辺の長さ・面積・縦横比のいずれもほぼ互角で、交差の多い図と段が決まらない
+図は完全に一致する。多段をまたぐ図は自前のほうが短い。残る差は、交差の数が
+2案件で1本多いこと。
+
+比べるときは、本家が節点の縁から縁へ、自前が中心から中心へ辺を返すことに注意
+する。揃えずに測ると、辺1本につき節点の高さのぶんだけ自前が長く出る（実測：
+木の36辺で1440px、これだけで縦の差のほぼ全部を説明してしまう）。物差しの側で
+両端を中心へ揃えてある。
 
 どの段も、宣言（nodes/edges）を型として持つだけで、Waffle固有の語彙は知らない。
 """
@@ -96,27 +102,180 @@ def _break_cycles(nodes: list[str], edges: list[tuple[str, str]]) -> list[tuple[
     return result
 
 
-# ── 2. 段の割り当て（縦の伸びを長すぎず短すぎずに寄せる軽い調整つき） ──────
+# ── 2. 段の割り当て ── 辺の長さの総和を最小にする（網状単体法） ────────
 
-def _assign_ranks(nodes: list[str], dag_edges: list[tuple[str, str]]) -> dict[str, int]:
+def _longest_path_ranks(nodes: list[str], edges: list[tuple[str, str]]) -> dict[str, int]:
+    """どの辺も1段以上またぐ、いちばん素朴な割り当て。単体法の出発点にする。"""
     rank = {n: 0 for n in nodes}
     for _ in range(len(nodes) + 1):
         changed = False
-        for a, b in dag_edges:
+        for a, b in edges:
             if rank[b] < rank[a] + 1:
                 rank[b] = rank[a] + 1
                 changed = True
         if not changed:
             break
-    # 引き締め ── 出て行く辺を持たない節点は、それ以上下げても誰も困らない
-    # ので、最も近い子の1つ上まで引き上げて縦の間延びを削る。
-    children = {n: [] for n in nodes}
+    return rank
+
+
+def _tight_tree(nodes, edges, rank, root):
+    """ちょうど1段だけまたぐ辺（たるみ0）だけを辿って広がれるだけ広げる。
+
+    Returns: (届いた節点の集合, 使った辺の添字の集合)
+    """
+    reached, used = {root}, set()
+    grew = True
+    while grew:
+        grew = False
+        for i, (a, b) in enumerate(edges):
+            if i in used or rank[b] - rank[a] != 1:
+                continue
+            if (a in reached) != (b in reached):
+                reached.add(a)
+                reached.add(b)
+                used.add(i)
+                grew = True
+    return reached, used
+
+
+def _ranks_from_tree(comp_nodes, edges, tree, root):
+    """木の辺がすべてちょうど1段になるように、段を振り直す。"""
+    adj: dict[str, list[tuple[str, int]]] = {n: [] for n in comp_nodes}
+    for i in tree:
+        a, b = edges[i]
+        adj[a].append((b, 1))
+        adj[b].append((a, -1))
+    rank = {root: 0}
+    stack = [root]
+    while stack:
+        n = stack.pop()
+        for m, step in adj[n]:
+            if m not in rank:
+                rank[m] = rank[n] + step
+                stack.append(m)
+    return rank
+
+
+def _tail_side(comp_nodes, edges, tree, leaving):
+    """木から1本抜いたとき、その辺の根元側に残る節点の集合。"""
+    adj: dict[str, list[str]] = {n: [] for n in comp_nodes}
+    for i in tree:
+        if i == leaving:
+            continue
+        a, b = edges[i]
+        adj[a].append(b)
+        adj[b].append(a)
+    start = edges[leaving][0]
+    side, stack = {start}, [start]
+    while stack:
+        n = stack.pop()
+        for m in adj[n]:
+            if m not in side:
+                side.add(m)
+                stack.append(m)
+    return side
+
+
+def _network_simplex(comp_nodes: list[str],
+                     edges: list[tuple[str, str]]) -> dict[str, int]:
+    """辺の長さの総和が最小になる段の割り当てを解く。
+
+    最長経路法は「どの辺も1段以上またぐ」を満たすだけで、長さは気にしない。
+    その結果、下げても誰も困らない節点が下がったままになり、辺が伸びる。
+    以前はここに「出て行く辺を持たない節点を子の1つ上まで引き上げる」という
+    後始末を足していたが、それは1手先しか見ないので、間に節点が挟まると効かない。
+
+    最小化そのものを解く。制約（どの辺も1段以上）を張った線形計画の双対は、
+    たるみ0の辺だけで作った全域木の上を渡り歩く問題になる。木の辺を1本抜くと
+    グラフが2つに割れ、その切り口を跨ぐ辺の重みの差（切り値）が負なら、その辺を
+    別の辺と入れ替えると総延長が減る。負が無くなったら最適。
+
+    段数（縦の長さ）は増えない ── 制約は最長経路法と同じで、その中で最短を選ぶだけ。
+    """
+    if not comp_nodes:
+        return {}
+    rank = _longest_path_ranks(comp_nodes, edges)
+    root = comp_nodes[0]
+
+    # たるみ0の辺だけでは全体に届かないうちは、いちばんたるみの小さい辺の分だけ
+    # 木ごと動かして、その辺をたるみ0にする。届くまで繰り返す。
+    while True:
+        reached, tree = _tight_tree(comp_nodes, edges, rank, root)
+        if len(reached) == len(comp_nodes):
+            break
+        best, best_slack = None, None
+        for i, (a, b) in enumerate(edges):
+            if (a in reached) == (b in reached):
+                continue
+            slack = rank[b] - rank[a] - 1
+            if best_slack is None or slack < best_slack:
+                best, best_slack = i, slack
+        if best is None:
+            break  # 繋がっていない ── 呼び出し側が塊ごとに分けている前提
+        a, _b = edges[best]
+        shift = best_slack if a in reached else -best_slack
+        for n in reached:
+            rank[n] += shift
+
+    limit = 4 * len(edges) + 16   # 入れ替えの空回りへの保険
+    for _ in range(limit):
+        leaving = None
+        for i in tree:
+            side = _tail_side(comp_nodes, edges, tree, i)
+            cut = sum(1 if (a in side) != (b in side) and a in side else
+                      -1 if (a in side) != (b in side) else 0
+                      for a, b in edges)
+            if cut < 0:
+                leaving = (i, side)
+                break
+        if leaving is None:
+            break
+        i, side = leaving
+        # 切り口を逆向きに跨ぐ辺のうち、いちばんたるみの小さいものを入れる
+        entering, best_slack = None, None
+        for j, (a, b) in enumerate(edges):
+            if j in tree or a in side or b not in side:
+                continue
+            slack = rank[b] - rank[a] - 1
+            if best_slack is None or slack < best_slack:
+                entering, best_slack = j, slack
+        if entering is None:
+            break
+        tree = (tree - {i}) | {entering}
+        rank = _ranks_from_tree(comp_nodes, edges, tree, root)
+
+    low = min(rank.values())
+    return {n: rank[n] - low for n in comp_nodes}
+
+
+def _assign_ranks(nodes: list[str], dag_edges: list[tuple[str, str]]) -> dict[str, int]:
+    """段を割り当てる。繋がっていない塊は、それぞれ独立に解く。
+
+    網状単体法は全域木を張るので、繋がっていない塊が混ざったままだと木を張れない。
+    塊は互いの段を制約しないので、分けて解いて構わない。
+    """
+    adj: dict[str, list[str]] = {n: [] for n in nodes}
     for a, b in dag_edges:
-        children[a].append(b)
-    for n in reversed(nodes):
-        if children[n]:
-            rank[n] = min(rank[n], min(rank[c] for c in children[n]) - 1)
-        rank[n] = max(rank[n], 0)
+        adj[a].append(b)
+        adj[b].append(a)
+    seen: set[str] = set()
+    rank: dict[str, int] = {}
+    for start in nodes:
+        if start in seen:
+            continue
+        group, stack = [], [start]
+        seen.add(start)
+        while stack:
+            n = stack.pop()
+            group.append(n)
+            for m in adj[n]:
+                if m not in seen:
+                    seen.add(m)
+                    stack.append(m)
+        members = set(group)
+        rank.update(_network_simplex(
+            [n for n in nodes if n in members],
+            [(a, b) for a, b in dag_edges if a in members]))
     return rank
 
 
