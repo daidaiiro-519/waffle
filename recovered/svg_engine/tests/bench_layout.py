@@ -204,8 +204,6 @@ CASES = {"枝の多い木": tree(), "多段をまたぐ辺": skipping(),
 
 
 def main():
-    out = Path(__file__).parent / "dot"
-    out.mkdir(exist_ok=True)
     header = ("案件", "手", "交差", "辺の長さ", "面積", "縦横比")
     print("{:<16}{:<8}{:>6}{:>10}{:>8}{:>8}".format(*header))
     print("-" * 56)
@@ -215,9 +213,7 @@ def main():
         print("{:<16}{:<8}{:>6}{:>10}{:>8}{:>8}".format(
             name, "自前", mine["交差"], mine["辺の長さ"], mine["面積"], mine["縦横比"]))
 
-        src = to_dot("g", nodes, edges)
-        (out / f"{name}.dot").write_text(src, encoding="utf-8")
-        got = run_dot(src)
+        got = run_dot(to_dot("g", nodes, edges))
         if got:
             class R: pass
             r = R()
