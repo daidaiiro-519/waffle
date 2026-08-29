@@ -140,7 +140,7 @@ def _self_loop(pos, size, gap: float, style):
             (x + w, bottom)]
 
 
-def _cardinal(pos, size, ink, toward):
+def _cardinal(pos, size, ink, toward, flow=None):
     """相手が居る側を上下左右のどれかに決め、その側のインクへ着ける。
 
     相手の方向へそのまま引くと、輪郭の角の近くへ着いて不自然に見える
@@ -169,7 +169,23 @@ def _cardinal(pos, size, ink, toward):
     dx, dy = toward[0] - cx, toward[1] - cy
     if dx == 0 and dy == 0:
         return (cx, cy)
-    # 縦横のどちらの隔たりが大きいかで、出す辺を決める
+    # 段が進む向きで離れているなら、その向きの辺から出す。
+    #
+    # 箱の形だけで決めると、横長の箱では斜めが浅くなり、真下にある相手まで
+    # 「横にある」と判定される。すると辺が箱の列の中へ入り、間の箱を避けて
+    # 長く迂回する（実測：枝10本の木で、根から両端の枝への辺が列の上を
+    # 横切って引かれた）。段の進む向きは、その図で構造が伸びている向きなので、
+    # そちら側から出入りするほうが読み手の期待と合う。
+    #
+    # 「離れている」は閾値ではなく、この箱自身の半分で測る ── 相手が箱の
+    # 内側に収まる高さにいるなら、それは横に並んでいるということである。
+    if flow is not None:
+        d_flow = dy if flow == 1 else dx
+        if abs(d_flow) > size[flow] / 2:
+            aim = ((cx, pos[1] + (size[1] if dy >= 0 else 0.0)) if flow == 1
+                   else (pos[0] + (size[0] if dx >= 0 else 0.0), cy))
+            here = nearest(ink, (aim[0] - pos[0], aim[1] - pos[1]))
+            return (pos[0] + here[0], pos[1] + here[1])
     if abs(dx) * size[1] >= abs(dy) * size[0]:
         aim = (pos[0] + (size[0] if dx >= 0 else 0.0), cy)
     else:
@@ -296,6 +312,9 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
     groups = groups or []
     theme = theme or DEFAULT_THEME
     depth = _depth
+    # 段が進む向き。層状のときだけ辺の出入りに効かせるので、既定値で埋める前に見る
+    # ── 埋めた後だと、戦略を選ばなかったことが分からなくなる。
+    flow = (1 if direction == "TB" else 0) if layout is None else None
     layout = layout or layout_graph
     nested_layout = nested_layout or layout_nested
 
@@ -392,8 +411,8 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
         # 接続点は、相手へ向かう向きと自分の輪郭の交点。輪郭は描いたインクから
         # 導いてあるので、箱でも輪でも波でも同じ扱いでよい。
         ia, ib = inks[a], inks[b]
-        pts[0] = _cardinal(coords[a], sizes[a], ia, nxt)
-        pts[-1] = _cardinal(coords[b], sizes[b], ib, prv)
+        pts[0] = _cardinal(coords[a], sizes[a], ia, nxt, flow)
+        pts[-1] = _cardinal(coords[b], sizes[b], ib, prv, flow)
         # 端の2つ以外が占めている領域のうち、動かせないもの（節点）だけが
         # 障害物。札は動かせるので、線を曲げさせず札のほうを後で避けさせる
         # （札を守るために線を曲げると、まっすぐでよい関係まで大回りする）。
@@ -411,8 +430,8 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
             # 図によって出る辺が変わる（実測：循環は左辺、多段またぎは底辺）。
             aim_a = _detour_aim(coords[a], sizes[a], routed, direction)
             aim_b = _detour_aim(coords[b], sizes[b], routed, direction)
-            routed[0] = _cardinal(coords[a], sizes[a], ia, aim_a or routed[1])
-            routed[-1] = _cardinal(coords[b], sizes[b], ib, aim_b or routed[-2])
+            routed[0] = _cardinal(coords[a], sizes[a], ia, aim_a or routed[1], flow)
+            routed[-1] = _cardinal(coords[b], sizes[b], ib, aim_b or routed[-2], flow)
             # 横の辺から出入りするなら、まず横へ抜けてから曲がる。辺から出て
             # すぐ真下へ折れると、出た向きと進む向きが食い違い、矢じりも
             # 辺と直交しない（実測：右辺から出て矢じりが下を向いた）。
