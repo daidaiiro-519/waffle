@@ -1,1 +1,0 @@
-../../../../../.waffle/knowledge/ACTIVE/asset-authoring-contract-for-component-svg-engines.md
