@@ -203,7 +203,7 @@ def _detour_aim(pos, size, routed, direction: str):
     return (aim[0], aim[1])
 
 
-def _nested(decl: dict, theme: dict, depth: int) -> ComponentResult:
+def _nested(decl: dict, theme: dict, depth: int, label: str | None = None) -> ComponentResult:
     """節点の中身として置く子図を組み立てる。
 
     深さに上限を置くのは、段1 が入れ子の文法にそう定めているため。上限が
@@ -213,6 +213,7 @@ def _nested(decl: dict, theme: dict, depth: int) -> ComponentResult:
         decl: 子図の宣言（nodes / edges / groups / direction を持つ）。
         theme: 親と同じテーマ。子図だけ別の見た目にはしない。
         depth: いまの深さ。
+        label: 入れ子に付ける名前。あれば囲んで名札を付ける。
 
     Returns:
         ComponentResult。部品と同じ契約なので、親は他の部品と区別せず置ける。
@@ -223,8 +224,30 @@ def _nested(decl: dict, theme: dict, depth: int) -> ComponentResult:
     limit = int(theme["size.figure-depth-limit"])
     if depth >= limit:
         raise ValueError(f"図の入れ子が深すぎる（上限 {limit}）")
-    return figure_fragment(decl.get("nodes", []), decl.get("edges"), decl.get("groups"),
-                           decl.get("direction", "TB"), theme, _depth=depth + 1)
+    inner = figure_fragment(decl.get("nodes", []), decl.get("edges"), decl.get("groups"),
+                            decl.get("direction", "TB"), theme, _depth=depth + 1)
+    if not label:
+        return inner
+
+    # 名前を持つ入れ子は、囲んで名札を付ける。付けないと、子の節点が親と同じ
+    # 平面に並んでいるようにしか見えず、入れ子であることが絵から読めない
+    # （実測：名前を落としたまま描くと、親→子図の辺が子の先頭の節点を
+    # 指しているようにしか見えなかった）。
+    #
+    # 囲みと名札は群のために既にある部品を使う。同じ「塊に名前を付ける」ことを
+    # 2つの方法で描くと、テーマを差し替えたときに見た目が揃わなくなる。
+    style = resolve_style("plain", None, theme)
+    pad = style["font.size-small"] * style["size.frame-pad-ratio"]
+    label_h = style["font.size-small"] * style["size.label-line-h"]
+    w, h = inner.width + pad * 2, inner.height + pad * 2
+    frame = render_component(style["parts.group"], {
+        "x": 0, "y": label_h, "width": w, "height": h, "label": None}, style)
+    tag = render_component("frame_label", {
+        "x": style["size.label-pad-x"], "y": label_h, "label": label}, style)
+    return ComponentResult(
+        svg=(f'{frame.svg}<g transform="translate({pad:.1f},{label_h + pad:.1f})">'
+             f'{inner.svg}</g>{tag.svg}'),
+        width=w, height=h + label_h, labels_itself=True)
 
 
 def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
@@ -277,7 +300,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
             # ── 返るのは部品と同じ（中身・幅・高さ）なので、以降は他の部品と
             # 区別せず扱える。描き上がったものを外から渡す形にはしない
             # （props は構造だけ、という契約を破らないため）。
-            rendered[n["id"]] = _nested(n["figure"], theme, depth)
+            rendered[n["id"]] = _nested(n["figure"], theme, depth, n.get("label"))
         else:
             rendered[n["id"]] = render_component(style["parts.node"], n, style)
 
