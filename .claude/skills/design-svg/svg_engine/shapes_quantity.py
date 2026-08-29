@@ -20,7 +20,7 @@ from html import escape as _esc
 
 from .labels import place_avoiding
 from .tokens import Style
-from .registry import ComponentResult, component, render_component
+from .registry import Absolute, OwnOrigin, component, render_component, render_node
 from .text import column_width, text_width
 
 
@@ -39,7 +39,7 @@ def _t(x, y, s, style: Style, cls_color: str, anchor="middle", size=None, weight
 # ── 全体と部分（円/ドーナツ） ────────────────────────────────
 
 @component("donut")
-def donut(props: dict, style: Style) -> ComponentResult:
+def donut(props: dict, style: Style) -> OwnOrigin:
     """割合の輪だけを描く部品。凡例も余白も持たない。
 
     これは「部品」であって「図」ではない ── 自分の原点で形を描き、大きさと
@@ -86,11 +86,11 @@ def donut(props: dict, style: Style) -> ComponentResult:
         fs = style.num("font.size")
         body.append(_t(cx, cy + fs * style.num("font.baseline-ratio"), props["centre"],
                        style, "color.ink", weight="600", size=fs))
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=size, height=size)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=size, height=size)
 
 
 @component("pie")
-def pie(props: dict, style: Style) -> ComponentResult:
+def pie(props: dict, style: Style) -> OwnOrigin:
     """輪と凡例を並べた図。輪そのものは donut 部品が描く。
 
     ここは「図」── 部品を組み合わせ、共有の仕組み（文字の縦揃え・隙間の
@@ -108,7 +108,7 @@ def pie(props: dict, style: Style) -> ComponentResult:
     Raises:
         なし。
     """
-    ring = render_component("donut", props, style)
+    ring = render_node("donut", props, style)
     if not props.get("legend", True):
         return ring
 
@@ -136,13 +136,13 @@ def pie(props: dict, style: Style) -> ComponentResult:
                     f'width="{sw}" height="{sw}" rx="{style.num("size.radius-small")}" fill="{_tone(style, i)}"/>')
         body.append(_t(lx + sw + gap / 2, y, s["name"], style, "color.ink-soft", anchor="start"))
         body.append(_t(w - pad, y, s["value"], style, "color.ink", anchor="end"))
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
 # ── 量の大小・分布・偏差（縦棒。基準線があれば正負に伸びる） ───────────
 
 @component("bars")
-def bars(props: dict, style: Style) -> ComponentResult:
+def bars(props: dict, style: Style) -> OwnOrigin:
     """縦棒。`baseline`を与えると、そこからの正負の差として伸びる(偏差)。
     無指定なら0から積む(量の大小・分布)。
 
@@ -227,13 +227,13 @@ def bars(props: dict, style: Style) -> ComponentResult:
         body.append(_t(x0 + (w - pad - x0) / 2,
                        name_row + fs_small * style.num("size.label-line-h"),
                        props["item_axis_label"], style, "color.ink-faint"))
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
 # ── 並び順（横並びの一覧。読ませたいのは順番で、値は添え物） ──────────────
 
 @component("ranking")
-def ranking(props: dict, style: Style) -> ComponentResult:
+def ranking(props: dict, style: Style) -> OwnOrigin:
     """items の並び順をそのまま順位とする、横棒の一覧。"""
     items = props["items"]
     top = max(it["value"] for it in items) or 1
@@ -269,13 +269,13 @@ def ranking(props: dict, style: Style) -> ComponentResult:
                     f'height="{track_h:.1f}" rx="{style.num("size.radius-small")}" fill="{_tone(style, 0)}"/>')
         body.append(_t(track_x + bar_w + value_w - gap, y + row_h / 2 + fs_small * base,
                        it["value"], style, "color.ink", "end"))
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
 # ── 時間変化（帯） ───────────────────────────────────────────
 
 @component("lanes")
-def lanes(props: dict, style: Style) -> ComponentResult:
+def lanes(props: dict, style: Style) -> OwnOrigin:
     """行ごとの区間を、帯として並べる。列(時間軸)は共有する。"""
     rows = props["rows"]
     # 区間の上限は宣言が持つ。無ければ実際の最大値から決める（既定値を置かない）。
@@ -312,13 +312,13 @@ def lanes(props: dict, style: Style) -> ComponentResult:
                     f'stroke="{style.text("chart.axis")}"/>')
         body.append(_t(pad + lw, ay + gap / 2 + fs_small, props["axis_label"], style,
                        "color.ink-faint", "start"))
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
 # ── 相関（2軸の散布図） ────────────────────────────────────────
 
 @component("scatter")
-def scatter(props: dict, style: Style) -> ComponentResult:
+def scatter(props: dict, style: Style) -> OwnOrigin:
     """2つの軸上の座標として点を置く。点が端に寄っても、ラベルが枠の外へ
     はみ出さないよう、点の位置に応じて寄せる向きを変える(実測で見つかった不具合)。
     """
@@ -375,13 +375,13 @@ def scatter(props: dict, style: Style) -> ComponentResult:
                     f'font-size="{fs}" fill="{style.text("color.ink-faint")}" text-anchor="middle" '
                     f'transform="rotate(-90 {label_x} {(y0 + y1) / 2:.1f})">'
                     f'{_esc(props["y_label"])}</text>')
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
 # ── 流量（帯グラフ／サンキー風） ────────────────────────────────
 
 @component("flow")
-def flow(props: dict, style: Style) -> ComponentResult:
+def flow(props: dict, style: Style) -> OwnOrigin:
     """左右2列の間を、太さが値を表すリボンで結ぶ。"""
     links = props["links"]
     total = sum(l["value"] for l in links) or 1
@@ -394,7 +394,6 @@ def flow(props: dict, style: Style) -> ComponentResult:
     gap = style.num("chart.gap")
     base = style.num("font.baseline-ratio")
     fs_small = style.num("font.size-small")
-    xl, xr = pad + margin, w - pad - margin
     lefts: dict[str, float] = {}
     rights: dict[str, float] = {}
     for l in links:
@@ -402,7 +401,23 @@ def flow(props: dict, style: Style) -> ComponentResult:
         lefts[l["from"]] += l["value"]
         rights.setdefault(l["to"], 0)
         rights[l["to"]] += l["value"]
-    span_h = h - pad * 2
+    # 左右の余白は、実際に入る名前から決める。トークンの値は下限として使う
+    # ── 固定の余白のままだと、長い名前が画布の外へ出る（実測：右の名前が
+    # はみ出して「画布の外」と鳴った）。
+    span = w - (pad + margin) * 2          # 図そのものが占める横幅は変えない
+    margin_l = max(margin, max((text_width(str(k), fs_small) for k in lefts), default=0.0) + gap)
+    margin_r = max(margin, max((text_width(str(k), fs_small) for k in rights), default=0.0) + gap)
+    w = pad + margin_l + span + margin_r + pad
+    xl, xr = pad + margin_l, pad + margin_l + span
+    # 節点どうしの隙間は、値に比例する高さとは別に要る。引かずに配ると、
+    # 隙間の分だけ最後の節点が下へ押し出され、その名前が画布の外へ出る
+    # （実測：画布の高さ210に対し、最後の名前の下端が213.8だった）。
+    # 節点どうしの隙間は、値に比例する高さとは別に要る。引かずに配ると、
+    # 隙間の分だけ最後の節点が下へ押し出され、その名前が画布の外へ出る
+    # （実測：画布の高さ210に対し、最後の名前の下端が213.8だった）。
+    # 左右で配分を変えるとリボンの太さが両端で食い違うので、節点の多いほうに
+    # 合わせて1つの配分にする ── 少ないほうは下に余りが出るだけで済む。
+    span_h = h - pad * 2 - node_gap * max(len(lefts) - 1, len(rights) - 1, 0)
     pos_l, pos_r, cy = {}, {}, float(pad)
     for k, v in lefts.items():
         pos_l[k] = [cy, cy + span_h * v / total]
@@ -431,13 +446,13 @@ def flow(props: dict, style: Style) -> ComponentResult:
         body.append(f'<rect x="{xr - bw}" y="{y0:.1f}" width="{bw}" height="{y1 - y0:.1f}" '
                     f'fill="{style.text("color.ink-faint")}"/>')
         body.append(_t(xr + gap, (y0 + y1) / 2 + fs_small * base, k, style, "color.ink-soft", "start"))
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
 # ── 空間（位置が意味を運ぶ、並べた区画） ────────────────────────────
 
 @component("spatial")
-def spatial(props: dict, style: Style) -> ComponentResult:
+def spatial(props: dict, style: Style) -> OwnOrigin:
     """items を置く。読ませたいのは位置そのもの。
 
     props: items（[{"name", "at": [x, y] または "depth", "role"}, ...]）／
@@ -515,4 +530,4 @@ def spatial(props: dict, style: Style) -> ComponentResult:
         if it.get("depth") is not None:
             body.append(_t(x + cw - gap, y + ch / 2 + fs_small * style.num("font.baseline-ratio"),
                            it["depth"], style, "color.ink-faint", "end", size=fs_small))
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)

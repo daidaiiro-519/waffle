@@ -8,12 +8,12 @@ from __future__ import annotations
 from html import escape as _e
 
 from .tokens import Style
-from .registry import ComponentResult, component
+from .registry import Absolute, OwnOrigin, component
 from .text import text_width as _text_width
 
 
 @component("hex")
-def hexagon(props: dict, style: Style) -> ComponentResult:
+def hexagon(props: dict, style: Style) -> OwnOrigin:
     """名前を1つ持つ六角形。box と同じ契約（構造だけ受け取り、見た目はstyleから）。"""
     label = str(props.get("label", ""))
     fs = style.num("font.size")
@@ -29,4 +29,4 @@ def hexagon(props: dict, style: Style) -> ComponentResult:
            f'<text x="{w / 2:.1f}" y="{h / 2 + fs * style.num("font.baseline-ratio"):.1f}" '
            f'text-anchor="middle" font-family="{style.text("font.family")}" font-size="{fs}" '
            f'fill="{style.text("color.text", style.text("color.ink"))}">{_e(label)}</text></g>')
-    return ComponentResult(svg=svg, width=w, height=h, labels_itself=True)
+    return OwnOrigin(svg=svg, width=w, height=h, labels_itself=True)

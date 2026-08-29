@@ -201,6 +201,40 @@ class Test規約_値の出どころ:
             f"{f[0]}:{f[1]} {f[3][:40]}" for f in found[:8])
 
 
+class Test規約2_置き方は型:
+    """描く時点が「置く前」か「置いた後」かを、フラグではなく型で持つ。
+
+    かつては placement という文字列の申告だった。文字列だと3つ目の値を書けて
+    しまい、型の上では「どちらか分からないもの」を節点として扱うことになる。
+    2つの型に分ければ、取り違えが構造として起きない。
+    """
+
+    def test_置き方は2つの型しかない(self):
+        from svg_engine.registry import Absolute, Fragment, OwnOrigin
+        assert {c.__name__ for c in Fragment.__subclasses__()} == {"OwnOrigin", "Absolute"}
+
+    def test_絶対座標の部品は節点として置けない(self):
+        from svg_engine.registry import render_node
+        from svg_engine.style import resolve_style
+        from svg_engine.catalog import EXAMPLES
+        with pytest.raises(TypeError) as e:
+            render_node("edge", EXAMPLES["edge"], resolve_style())
+        assert "edge" in str(e.value)
+
+    def test_自分の原点で描く部品は節点として置ける(self):
+        from svg_engine.registry import OwnOrigin, render_node
+        from svg_engine.style import resolve_style
+        from svg_engine.catalog import EXAMPLES
+        assert isinstance(render_node("box", EXAMPLES["box"], resolve_style()), OwnOrigin)
+
+    def test_申告した大きさにインクが収まるのは自分の原点の側だけ(self):
+        # 絶対座標の断片は、大きさが器ではなく広がりの記録でしかないので、
+        # この性質を課しても意味が無い。型が「どちらに課すか」を持つ。
+        from svg_engine.registry import Absolute, OwnOrigin
+        assert "インクが収まって" in (OwnOrigin.__doc__ or "")
+        assert "課さない" in (Absolute.__doc__ or "")
+
+
 class Test部品の契約:
     def test_部品はSVGのルートを返さない(self):
         # ルートを持つと、他の部品と合成したとき二重の svg / viewBox が生まれる

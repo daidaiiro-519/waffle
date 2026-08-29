@@ -16,12 +16,12 @@ from __future__ import annotations
 import html
 
 from .tokens import Style
-from .registry import ComponentResult, component, render_component
+from .registry import Absolute, OwnOrigin, component, render_component, render_node
 from .text import text_width
 
 
 @component("titled")
-def titled(props: dict, style: Style) -> ComponentResult:
+def titled(props: dict, style: Style) -> OwnOrigin:
     """別の部品を、名前の帯つきで描く。
 
     props: label（載せる名前）／of（包む部品の種別名）／
@@ -37,7 +37,7 @@ def titled(props: dict, style: Style) -> ComponentResult:
     Raises:
         KeyError: of が台帳に無い種別名のとき。
     """
-    inner = render_component(props["of"], props, style)
+    inner = render_node(props["of"], props, style)
     label = props.get("label", "")
     # 名前を描く役目は1箇所にしか置けない。中身が自分で描いたなら、包む側は
     # 描かない ── 両方が描くと同じ名前が二重に出る（box・hex で実測）。
@@ -81,4 +81,4 @@ def titled(props: dict, style: Style) -> ComponentResult:
     # 済む ── 帯と中身を合わせた形は凹むが、中心から見た向きごとに外側を
     # 取る導出はそのまま通る。かつて中身の輪郭を引き継いだときは、帯のぶん
     # ずれた位置に辺が着き、矢じりが中身に隠れた（実測）。
-    return ComponentResult(svg=svg, width=w, height=h, labels_itself=True)
+    return OwnOrigin(svg=svg, width=w, height=h, labels_itself=True)

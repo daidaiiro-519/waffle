@@ -21,12 +21,12 @@ from __future__ import annotations
 from html import escape as _e
 
 from .tokens import Style
-from .registry import ComponentResult, component
+from .registry import Absolute, OwnOrigin, component
 from .text import text_width
 
 
 @component("table")
-def table(props: dict, style: Style) -> ComponentResult:
+def table(props: dict, style: Style) -> OwnOrigin:
     """見出し行つきの表。
 
     props: headers（[str, ...]）／rows（[[str, ...], ...]。各行はheadersと同じ列数）／
@@ -92,4 +92,4 @@ def table(props: dict, style: Style) -> ComponentResult:
                     f'transform="rotate(-90 {band / 2 + base - fs_small:.1f} {cy:.1f})" '
                     f'font-family="{style.text("font.family")}" font-size="{fs_small}" '
                     f'fill="{style.text("color.ink-faint")}">{_e(str(axes[0]))}</text>')
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)

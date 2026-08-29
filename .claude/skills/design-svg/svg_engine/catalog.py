@@ -23,7 +23,7 @@ import json
 import textwrap
 
 from .boolean import circle_polygon
-from .registry import known_kinds, render_component, _REGISTRY
+from .registry import OwnOrigin, known_kinds, render_component, _REGISTRY
 from .style import resolve_style
 from .tokens import DEFAULT_THEME, PLAIN, ROLE_PREFIX, TOKEN_RANGES
 
@@ -161,7 +161,8 @@ def forwards_of(kind: str) -> str | None:
     tree = ast.parse(textwrap.dedent(inspect.getsource(_REGISTRY[kind])))
     for node in ast.walk(tree):
         if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-                and node.func.id == "render_component" and len(node.args) >= 2):
+                and node.func.id in ("render_component", "render_node")
+                and len(node.args) >= 2):
             continue
         # 第2引数が props そのものでなければ、組み直して渡している＝素通しではない
         if not (isinstance(node.args[1], ast.Name) and node.args[1].id == "props"):
@@ -205,7 +206,8 @@ def parts() -> dict[str, dict]:
         if example is not None:
             r = render_component(kind, example, resolve_style())
             entry["example"] = {k: v for k, v in example.items()}
-            entry["placement"] = r.placement
+            entry["placement"] = ("own-origin" if isinstance(r, OwnOrigin)
+                                  else "absolute")
             entry["labels_itself"] = r.labels_itself
             entry["example_size"] = [round(r.width, 1), round(r.height, 1)]
         out[kind] = entry

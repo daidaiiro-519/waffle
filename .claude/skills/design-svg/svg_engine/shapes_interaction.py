@@ -19,13 +19,13 @@ import math
 from html import escape as _e
 
 from .tokens import Style
-from .registry import ComponentResult, component
+from .registry import Absolute, OwnOrigin, component
 from .shapes import arrow_head
 from .text import column_width, text_width
 
 
 @component("exchange")
-def exchange(props: dict, style: Style) -> ComponentResult:
+def exchange(props: dict, style: Style) -> OwnOrigin:
     """参加者の縦のライフラインと、段ごとのメッセージ。
 
     props:
@@ -149,4 +149,4 @@ def exchange(props: dict, style: Style) -> ComponentResult:
                         f'font-family="{style.text("font.family")}" font-size="{fs_small}" '
                         f'fill="{style.text("color.ink-soft")}">{_e(s["label"])}</text>')
 
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)

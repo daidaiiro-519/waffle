@@ -14,11 +14,11 @@ from .ids import stable_id
 # 波の1周期を4つに割る ── 上り・頂点・下り・谷という波の形そのもの。
 _WAVE_QUARTER = 4
 from .tokens import Style
-from .registry import ComponentResult, component
+from .registry import Absolute, OwnOrigin, component
 
 
 @component("gradient_rect")
-def gradient_rect(props: dict, style: Style) -> ComponentResult:
+def gradient_rect(props: dict, style: Style) -> OwnOrigin:
     """グラデーションで塗った矩形。背景や強調帯に使う。
 
     props: width, height／stops（[(割合0-1, 色), ...]。既定はテーマの
@@ -37,11 +37,11 @@ def gradient_rect(props: dict, style: Style) -> ComponentResult:
         defs = f'<linearGradient id="{gid}" x1="0%" y1="0%" x2="{x2}" y2="{y2}">{stop_svg}</linearGradient>'
     svg = (f'<defs>{defs}</defs>'
           f'<rect x="0" y="0" width="{w:.1f}" height="{h:.1f}" rx="{radius}" fill="url(#{gid})"/>')
-    return ComponentResult(svg=svg, width=w, height=h)
+    return OwnOrigin(svg=svg, width=w, height=h)
 
 
 @component("title")
-def title(props: dict, style: Style) -> ComponentResult:
+def title(props: dict, style: Style) -> OwnOrigin:
     """大きな見出しの活字。本文の書体(font.family)とは別の、表題用の書体を使う。
 
     props: text／subtitle（任意）／align（"start"|"middle"、既定"start"）
@@ -65,11 +65,11 @@ def title(props: dict, style: Style) -> ComponentResult:
                     f'fill="{style.text("color.ink-soft")}">{_e(props["subtitle"])}</text>')
         h += sub_size + lead + sub_size * style.num("font.baseline-ratio")
 
-    return ComponentResult(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(body)}</g>', width=w, height=h)
 
 
 @component("divider")
-def divider(props: dict, style: Style) -> ComponentResult:
+def divider(props: dict, style: Style) -> OwnOrigin:
     """区切り。飾りの波線／既定は直線。
 
     props: width／kind（"line"|"wave"、既定"line"）
@@ -90,7 +90,7 @@ def divider(props: dict, style: Style) -> ComponentResult:
     else:
         svg = f'<line x1="0" y1="1" x2="{w:.1f}" y2="1" stroke="{color}" stroke-width="{style.num("size.rule-width")}"/>'
         h = 2
-    return ComponentResult(svg=svg, width=w, height=h)
+    return OwnOrigin(svg=svg, width=w, height=h)
 
 
 _ICON_PATHS = {
@@ -103,7 +103,7 @@ _ICON_PATHS = {
 
 
 @component("icon")
-def icon(props: dict, style: Style) -> ComponentResult:
+def icon(props: dict, style: Style) -> OwnOrigin:
     """小さな飾りの記号。凝った画像ではなく、線1本ぶんの意匠。
 
     props: name（"spark"|"check"|"ring"|"arrow-up"）／size（既定24）
@@ -120,4 +120,4 @@ def icon(props: dict, style: Style) -> ComponentResult:
         body = (f'<path d="{_ICON_PATHS[name]}" fill="none" stroke="{color}" '
                f'stroke-width="{style.num("size.stroke-width-icon")}" stroke-linecap="round" stroke-linejoin="round"/>')
     svg = f'<g transform="scale({scale:.3f})">{body}</g>'
-    return ComponentResult(svg=svg, width=size, height=size)
+    return OwnOrigin(svg=svg, width=size, height=size)

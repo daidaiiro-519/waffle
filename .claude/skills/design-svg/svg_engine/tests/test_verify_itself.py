@@ -160,16 +160,16 @@ class TestComponentContract:
 
     def test_台帳の全部品に入力が用意されている(self, sample_props):
         """入力が無い部品は契約の試験を素通りする。素通りを試験で落とす。"""
-        from svg_engine.registry import known_kinds
+        from svg_engine.registry import OwnOrigin, known_kinds
         missing = [k for k in known_kinds() if k not in sample_props]
         assert missing == [], f"conftest の sample_props に足りない: {missing}"
 
     def test_インクが申告した大きさの中に収まる(self, sample_props, style):
-        from svg_engine.registry import render_component
+        from svg_engine.registry import OwnOrigin, render_component
         out = []
         for kind, props in sample_props.items():
             r = render_component(kind, props, style)
-            if r.placement != "own-origin":
+            if not isinstance(r, OwnOrigin):
                 continue
             box = self._ink_box(r)
             if box is None:            # 文字だけの部品はこの測り方では見えない
@@ -184,8 +184,8 @@ class TestComponentContract:
 
     def test_わざと外へ出せば鳴る(self, style):
         """この検査自身が効いていることを確かめる。"""
-        from svg_engine.registry import ComponentResult
-        r = ComponentResult(svg='<rect x="-9" y="0" width="20" height="10"/>',
+        from svg_engine.registry import OwnOrigin
+        r = OwnOrigin(svg='<rect x="-9" y="0" width="20" height="10"/>',
                             width=20, height=10)
         x0, y0, x1, y1 = self._ink_box(r)
         assert x0 < -style.num("size.stroke-width")

@@ -14,7 +14,7 @@ import re
 
 from .boolean import boolean_op
 from .tokens import Style
-from .registry import ComponentResult, component
+from .registry import Absolute, OwnOrigin, component
 
 _NUM = re.compile(r"-?\d+(?:\.\d+)?")
 _TOKEN = re.compile(r"([MLCQZ])([^MLCQZ]*)")
@@ -84,7 +84,7 @@ def normalize_path(d: str) -> tuple[str, float, float]:
 
 
 @component("path")
-def path(props: dict, style: Style) -> ComponentResult:
+def path(props: dict, style: Style) -> OwnOrigin:
     """任意のパスデータをそのまま描く。
 
     props: d（SVGのpath data文字列。M/L/C/Q/Z等、そのまま渡す）／
@@ -101,11 +101,11 @@ def path(props: dict, style: Style) -> ComponentResult:
     sw = style.num("size.stroke-width")
     d, w, h = normalize_path(props["d"])
     svg = f'<path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>'
-    return ComponentResult(svg=svg, width=w, height=h)
+    return OwnOrigin(svg=svg, width=w, height=h)
 
 
 @component("boolean")
-def boolean(props: dict, style: Style) -> ComponentResult:
+def boolean(props: dict, style: Style) -> OwnOrigin:
     """多角形どうしの和・積・差(Illustratorの型抜きに相当)。
 
     props: shapes（多角形(点の並び)を2つ以上。boolean.circle_polygon/
@@ -136,4 +136,4 @@ def boolean(props: dict, style: Style) -> ComponentResult:
     ys = [p[1] - y0 for p in all_pts]
     w = max(xs) if xs else 0.0
     h = max(ys) if ys else 0.0
-    return ComponentResult(svg=f'<g>{"".join(parts)}</g>', width=w, height=h)
+    return OwnOrigin(svg=f'<g>{"".join(parts)}</g>', width=w, height=h)

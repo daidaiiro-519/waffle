@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 from .geometry import densify, ink_surface, nearest, segment_hits_rect
 from .labels import place_edge_labels
 from .text import text_width as _text_width
-from .registry import ComponentResult, render_component
+from .registry import Absolute, OwnOrigin, render_component, render_node
 from .style import resolve_style
 from .nesting import layout_nested
 from .sugiyama import layout_graph
@@ -210,7 +210,7 @@ def _detour_aim(pos, size, routed, direction: str):
     return (aim[0], aim[1])
 
 
-def _nested(decl: dict, theme: dict, depth: int, label: str | None = None) -> ComponentResult:
+def _nested(decl: dict, theme: dict, depth: int, label: str | None = None) -> OwnOrigin:
     """節点の中身として置く子図を組み立てる。
 
     深さに上限を置くのは、段1 が入れ子の文法にそう定めているため。上限が
@@ -251,7 +251,7 @@ def _nested(decl: dict, theme: dict, depth: int, label: str | None = None) -> Co
         "x": 0, "y": label_h, "width": w, "height": h, "label": None}, style)
     tag = render_component("frame_label", {
         "x": style.num("size.label-pad-x"), "y": label_h, "label": label}, style)
-    return ComponentResult(
+    return OwnOrigin(
         svg=(f'{frame.svg}<g transform="translate({pad:.1f},{label_h + pad:.1f})">'
              f'{inner.svg}</g>{tag.svg}'),
         width=w, height=h + label_h, labels_itself=True)
@@ -262,7 +262,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
                    theme: dict | None = None,
                    layout: "Callable[..., LayoutResult] | None" = None,
                    nested_layout: "Callable[..., tuple] | None" = None,
-                   _depth: int = 0) -> ComponentResult:
+                   _depth: int = 0) -> OwnOrigin:
     """節点・辺・囲みの宣言から、**部品として置ける断片**を組み立てる。
 
     ルートタグを被せない。返すのは中身と、それを囲む大きさ ── つまり部品と
@@ -309,7 +309,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
             # （props は構造だけ、という契約を破らないため）。
             rendered[n["id"]] = _nested(n["figure"], theme, depth, n.get("label"))
         else:
-            rendered[n["id"]] = render_component(style.text("parts.node"), n, style)
+            rendered[n["id"]] = render_node(style.text("parts.node"), n, style)
 
     sizes = {nid: (r.width, r.height) for nid, r in rendered.items()}
     # 辺の着き先は部品に申告させず、部品が描いたインクそのものから選ぶ。
@@ -563,7 +563,7 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
     dx, dy = half - min_x, half - min_y
     inner = (f'<g transform="translate({dx:.1f},{dy:.1f})">{"".join(body)}</g>'
              if (dx or dy) else "".join(body))
-    return ComponentResult(svg=inner, width=w, height=h)
+    return OwnOrigin(svg=inner, width=w, height=h)
 
 
 def render_figure(nodes: list[dict], edges: list[dict] | None = None,

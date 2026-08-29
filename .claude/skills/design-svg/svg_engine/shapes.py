@@ -16,7 +16,7 @@ import math
 from html import escape as _e
 
 from .tokens import Style
-from .registry import ComponentResult, component
+from .registry import Absolute, OwnOrigin, component
 from .text import text_width as _text_width
 
 
@@ -58,7 +58,7 @@ def arrow_head(tip: tuple[float, float], angle: float, style: Style,
 
 
 @component("box")
-def box(props: dict, style: Style) -> ComponentResult:
+def box(props: dict, style: Style) -> OwnOrigin:
     """名前を1つ持つ、角丸の矩形。つながり・階層・包含などの節点に使う。"""
     label = str(props.get("label", ""))
     font_size = style.num("font.size")
@@ -83,16 +83,16 @@ def box(props: dict, style: Style) -> ComponentResult:
         f'font-size="{font_size}" font-weight="{weight}" fill="{text_color}">'
         f'{_e(label)}</text></g>'
     )
-    return ComponentResult(svg=svg, width=w, height=h, labels_itself=True)
+    return OwnOrigin(svg=svg, width=w, height=h, labels_itself=True)
 
 
 @component("dot")
-def dot(props: dict, style: Style) -> ComponentResult:
+def dot(props: dict, style: Style) -> OwnOrigin:
     """始点・終点の印などに使う、塗りつぶした小さな円。"""
     r = props.get("radius", style.num("size.dot-radius"))
     fill = style.text("color.text", style.text("color.ink"))
     svg = f'<circle cx="{r:.1f}" cy="{r:.1f}" r="{r:.1f}" fill="{fill}"/>'
-    return ComponentResult(svg=svg, width=r * 2, height=r * 2)
+    return OwnOrigin(svg=svg, width=r * 2, height=r * 2)
 
 
 # ── 関係系（絶対座標を受け取って描く） ──────────────────────
@@ -118,7 +118,7 @@ def _smooth_path(points: list[tuple[float, float]]) -> str:
 
 
 @component("edge")
-def edge(props: dict, style: Style) -> ComponentResult:
+def edge(props: dict, style: Style) -> Absolute:
     """複数の点を通って結ばれる線。矢じり・ラベル・破線を持てる。
 
     props: points（絶対座標の(x,y)の並び。2点なら直線、3点以上なら
@@ -166,12 +166,11 @@ def edge(props: dict, style: Style) -> ComponentResult:
     svg = f'<path d="{path_d}" fill="none" stroke="{color}" stroke-width="{sw}"{dash}/>{marker}{label_svg}'
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
-    return ComponentResult(svg=svg, width=max(xs) - min(xs), height=max(ys) - min(ys),
-                           placement="absolute")
+    return Absolute(svg=svg, width=max(xs) - min(xs), height=max(ys) - min(ys))
 
 
 @component("frame_label")
-def frame_label(props: dict, style: Style) -> ComponentResult:
+def frame_label(props: dict, style: Style) -> Absolute:
     """囲みの札だけを描く。枠線とは別の層に置くための部品。
 
     札は不透明な帯を持つので、線の上に載れば線を断って読める。避けられる
@@ -201,11 +200,11 @@ def frame_label(props: dict, style: Style) -> ComponentResult:
            f'<text x="{x + text_w / 2:.1f}" y="{y - rise + base:.1f}" '
            f'text-anchor="middle" font-family="{style.text("font.family")}" font-size="{fs}" '
            f'fill="{style.text("color.accent")}">{_e(props["label"])}</text>')
-    return ComponentResult(svg=svg, width=text_w, height=card_h, placement="absolute")
+    return Absolute(svg=svg, width=text_w, height=card_h)
 
 
 @component("frame")
-def frame(props: dict, style: Style) -> ComponentResult:
+def frame(props: dict, style: Style) -> Absolute:
     """区画を示す破線の囲み。包含や『ここは領域の内側』のような注記に使う。
 
     札は描かない ── 札は線より後に描く必要があり、置き場所も線を避けて決まる
@@ -227,6 +226,6 @@ def frame(props: dict, style: Style) -> ComponentResult:
     svg = (f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{style.num("size.radius-large")}" '
            f'fill="none" stroke="{style.text("color.accent")}" stroke-width="{style.num("size.stroke-width-thin")}" '
            f'stroke-dasharray="5 4" opacity="{style.num("opacity.soft")}"/>')
-    return ComponentResult(svg=svg, width=w, height=h, placement="absolute")
+    return Absolute(svg=svg, width=w, height=h)
 
 
