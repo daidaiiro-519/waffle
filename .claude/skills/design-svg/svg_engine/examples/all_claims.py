@@ -91,9 +91,16 @@ def convert(d: dict, theme: dict | None = None) -> str:
     if a == "全体と部分":
         return render_chart("pie", {"slices": vals,
                                     "centre": str(sum(v["value"] for v in vals))}, theme=theme)
-    if a in ("量の大小", "分布"):
+    if a == "量の大小":
+        # 軸は2本。1本目が値、2本目が品目そのものを表す
         return render_chart("bars", {"bars": vals,
-                                     "axis_label": _unit(frame, 0)}, theme=theme)
+                                     "axis_label": _unit(frame, 0),
+                                     "item_axis_label": _unit(frame, 1)}, theme=theme)
+    if a == "分布":
+        # 品目の軸は bins が名づける ── 何を区切っているか。値は度数
+        return render_chart("bars", {"bars": vals,
+                                     "axis_label": _unit(frame, 0),
+                                     "item_axis_label": frame.get("bins")}, theme=theme)
     if a == "偏差":
         return render_chart("bars", {"bars": vals, "baseline": frame.get("baseline", 0),
                                      "axis_label": _unit(frame, 0)}, theme=theme)
@@ -186,7 +193,7 @@ CLAIMS: list[dict] = [
   "items": [{"key": "a", "name": "x-prompt-write", "value": 623},
             {"key": "b", "name": "x-prompt-query", "value": 216},
             {"key": "c", "name": "x-render", "value": 157}],
-  "frame": {"axes": [{"unit": "使用回数"}]}},
+  "frame": {"axes": [{"unit": "使用回数"}, {"unit": "宣言の種別"}]}},
 
  {"asserts": "順位", "reading": "描画部品の使われ方には偏りがある。",
   "items": [{"key": "a", "name": "条件による選択", "value": 62},
@@ -204,7 +211,7 @@ CLAIMS: list[dict] = [
  {"asserts": "分布", "reading": "節点の数は5〜8に集中している。",
   "items": [{"key": "a", "name": "2-4", "value": 38}, {"key": "b", "name": "5-8", "value": 64},
             {"key": "c", "name": "9-12", "value": 15}, {"key": "d", "name": "13-16", "value": 8}],
-  "frame": {"axes": [{"unit": "図の枚数"}]}},
+  "frame": {"bins": "節点の数", "axes": [{"unit": "図の枚数"}]}},
 
  {"asserts": "偏差", "reading": "言及回数は、平均から大きく下振れしている。",
   "items": [{"key": "a", "name": "x-prompt-write", "value": 19},
