@@ -117,15 +117,20 @@ def to_dot(name, nodes, edges) -> str:
 def run_dot(src: str) -> dict | None:
     """dot に解かせて、同じ物差しで測れる形へ読み替える。
 
-    -Tplain は「node 名 x y 幅 高さ …」「edge a b 点数 x y x y …」を吐く。
+    -Tplain は「node 名 x y 幅 高さ …」「edge 尾 頭 点数 x y x y …」を吐く。
     単位はインチなので、宣言に使った px へ戻す。
+
+    本家は節点の縁から縁へ、自前は中心から中心へ辺を返す。そのまま長さを
+    比べると、辺1本につき節点の高さのぶんだけ自前が長く出てしまう（実測：
+    木の36辺で1440px、これだけで縦の差のほぼ全部）。両端を節点の中心へ
+    置き換えて、同じ土俵に載せる。
     """
     try:
         out = subprocess.run(["dot", "-Tplain"], input=src, capture_output=True,
                              text=True, check=True).stdout
     except (FileNotFoundError, subprocess.CalledProcessError):
         return None
-    positions, paths, w, h = {}, {}, 0.0, 0.0
+    positions, paths, ends, w, h = {}, {}, [], 0.0, 0.0
     for line in out.splitlines():
         f = line.split()
         if f[0] == "graph":
@@ -135,7 +140,11 @@ def run_dot(src: str) -> dict | None:
         elif f[0] == "edge":
             n = int(f[3])
             pts = [(float(f[4 + 2 * i]) * 72, float(f[5 + 2 * i]) * 72) for i in range(n)]
+            ends.append((f[1].strip('"'), f[2].strip('"')))
             paths[len(paths)] = pts
+    for k, (tail, head) in enumerate(ends):
+        if tail in positions and head in positions:
+            paths[k] = [positions[tail]] + paths[k][1:-1] + [positions[head]]
     return {"positions": positions, "edge_paths": paths, "width": w, "height": h}
 
 
@@ -175,8 +184,23 @@ def cyclic():
     return nodes, edges
 
 
+def uneven():
+    """段が構造から決まらない図 ── 長さの違う道が1点へ合流する。
+
+    他の4案件はどれも段が一意に決まってしまい、段の割り当ての出来を測れない。
+    ここでは短い道の起点をどこへ置くかに自由があり、上端へ置くと辺が伸びる。
+    """
+    edges = [("長1", "長2"), ("長2", "長3"), ("長3", "長4"), ("長4", "合流"),
+             ("短1", "短2"), ("短2", "合流"),
+             ("中1", "中2"), ("中2", "中3"), ("中3", "合流"),
+             ("合流", "出口")]
+    nodes = ["長1", "長2", "長3", "長4", "短1", "短2", "中1", "中2", "中3", "合流", "出口"]
+    return nodes, edges
+
+
 CASES = {"枝の多い木": tree(), "多段をまたぐ辺": skipping(),
-         "交差の多いグラフ": tangled(), "サイクルを含む": cyclic()}
+         "交差の多いグラフ": tangled(), "サイクルを含む": cyclic(),
+         "段が決まらない図": uneven()}
 
 
 def main():
