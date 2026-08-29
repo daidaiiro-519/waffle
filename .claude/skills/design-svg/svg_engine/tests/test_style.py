@@ -4,7 +4,8 @@ from __future__ import annotations
 import pytest
 
 from svg_engine.registry import known_kinds, render_component
-from svg_engine.style import TokenRangeError, UnknownRoleError, resolve_style
+from svg_engine.style import (IncompleteThemeError, TokenRangeError,
+                              UnknownRoleError, UnknownTokenError, resolve_style)
 from svg_engine.tokens import DEFAULT_THEME, TOKEN_RANGES
 
 
@@ -47,10 +48,31 @@ class Test役割はテーマが持つ:
         assert "focus" in str(e.value)  # 使える役割を挙げて返す
 
     def test_何も上書きしない役割は常に通る(self):
-        resolve_style("plain", None, {"font.size": 12})
+        resolve_style("plain", None, dict(DEFAULT_THEME))
 
     def test_役割の定義そのものは解決結果へ漏れない(self):
         assert not [k for k in resolve_style("focus") if k.startswith("role.")]
+
+
+class Test綴り違いは描く前に落ちる:
+    """未知の役割は例外にするのに、未知のトークン名は素通りしていた。
+
+    範囲外の値をその場で弾いているのだから、名前の間違いだけ通すのは筋が通らない。
+    """
+
+    def test_テーマに無い名前で上書きしたら落ちる(self):
+        with pytest.raises(UnknownTokenError) as e:
+            resolve_style(overrides={"size.box-hight": 40})   # height の綴り違い
+        assert "size.box-hight" in str(e.value)
+
+    def test_ある名前での上書きは通る(self):
+        assert resolve_style(overrides={"size.box-h": 40})["size.box-h"] == 40
+
+    def test_鍵の欠けたテーマは描く前に落ちる(self):
+        # 欠けたまま描き始めると、その鍵を引く部品に当たった時点で
+        # 組みかけのSVGを捨てることになる
+        with pytest.raises(IncompleteThemeError):
+            resolve_style(theme={"font.size": 12})
 
 
 class TestRanges:

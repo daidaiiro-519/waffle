@@ -21,6 +21,24 @@ class TokenRangeError(ValueError):
     """範囲付きトークンに、範囲外の値が渡されたときに送出する。"""
 
 
+class UnknownTokenError(ValueError):
+    """テーマが知らないトークン名を、その場の上書きで渡されたときに送出する。
+
+    その場の上書きは、既にある値を差し替えるためのものである。テーマに無い名前を
+    書けるようにすると、綴り違いが黙って捨てられる（範囲外の値はその場で例外に
+    しているのに、名前の間違いだけ素通りしていた）。新しいトークンを増やすときは
+    テーマへ足す ── その場の上書きから増やさない。
+    """
+
+
+class IncompleteThemeError(ValueError):
+    """テーマが、既定のテーマにある鍵を欠いているときに送出する。
+
+    テーマは差し替えであって作り直しではない。欠けたまま描き始めると、
+    その鍵を引く部品に当たった時点で組みかけのSVGを捨てることになる。
+    """
+
+
 class UnknownRoleError(ValueError):
     """テーマが知らない役割を渡されたときに送出する。
 
@@ -69,8 +87,16 @@ def resolve_style(role: str = "plain", overrides: dict | None = None,
     Raises:
         TokenRangeError: 範囲を持つトークンに、範囲外の値が渡されたとき。
         UnknownRoleError: テーマが知らない役割を渡されたとき。
+        UnknownTokenError: その場の上書きが、テーマに無い名前を指したとき。
+        IncompleteThemeError: テーマが既定のテーマの鍵を欠いているとき。
     """
     theme = theme or DEFAULT_THEME
+    missing = set(DEFAULT_THEME) - set(theme)
+    if missing:
+        raise IncompleteThemeError(
+            f"テーマに足りない鍵がある: {sorted(missing)[:5]}"
+            f"{'…' if len(missing) > 5 else ''}（全{len(missing)}件）。"
+            f"テーマは差し替えであって作り直しではないので、既定のテーマを土台にする")
     prefix = f"{ROLE_PREFIX}{role}."
     role_over = {k[len(prefix):]: v for k, v in theme.items() if k.startswith(prefix)}
     if role != PLAIN and not role_over:
@@ -82,6 +108,11 @@ def resolve_style(role: str = "plain", overrides: dict | None = None,
     merged = {k: v for k, v in theme.items() if not k.startswith(ROLE_PREFIX)}
     merged.update(role_over)
     if overrides:
+        unknown = set(overrides) - set(merged)
+        if unknown:
+            raise UnknownTokenError(
+                f"テーマが知らないトークン名が上書きに渡された: {sorted(unknown)}。"
+                f"新しいトークンはテーマへ足す ── その場の上書きから増やさない")
         merged.update(overrides)
     resolved = {k: _deref(v, theme) for k, v in merged.items()}
     _check_ranges(resolved)
