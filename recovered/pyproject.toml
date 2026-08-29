@@ -1,0 +1,41 @@
+# 宣言からSVGを組み立てる描画エンジンのパッケージ設定。
+#
+# 依存は空である。これは方針ではなく実測で、標準ライブラリ以外の import が
+# 1件も無い（配置アルゴリズムも図形の重なりも自前で解いている）。おかげで
+# 2通りの配り方が同じ形で成り立つ ──
+#
+#   1. Skill へ同梱する ── ディレクトリを置くだけ。インストール操作が要らない
+#   2. 依存物として参照する ── pip で入れても、芋づるで入るものが1つも無い
+#
+# 依存を持たないぶん、そのバグは全部こちらが持つ。同等だと言えるための物差しは
+# svg_engine/tests/bench_layout.py が持つ（同じ図を Graphviz dot にも解かせて測る）。
+[project]
+name = "svg-engine"
+version = "0.1.0"
+description = "宣言（節点・辺・囲み）からSVGを組み立てる、外部依存を持たない描画エンジン"
+readme = "README.md"
+# 3.9 が下限。3.8 では tuple[...] を実行時に評価する箇所で落ちることを確かめてある
+# （推測ではなく、3.8/3.9/3.10/3.11 で実際に走らせて境目を見た）。
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+# 利用側には要らない。試験と物差しを走らせるときだけ。
+dev = ["pytest>=7"]
+
+[project.scripts]
+# 目録をJSONで吐く。利用側はこれだけを見れば変換器を書ける。
+svg-engine-catalog = "svg_engine.catalog:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["svg_engine"]
+# 試験と例は配らない。Skill へ同梱するときはディレクトリごと持っていくので、
+# そちらでは読める ── 配布物に入れないだけで、消すわけではない。
+exclude = ["svg_engine/tests", "svg_engine/examples"]
+
+[tool.pytest.ini_options]
+testpaths = ["svg_engine/tests"]

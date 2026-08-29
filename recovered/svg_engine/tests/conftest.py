@@ -8,7 +8,6 @@ import sys
 
 _ENGINE = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ENGINE.parent))       # recovered/ ── svg_engine を import する
-sys.path.insert(0, str(_ENGINE / "examples"))  # 例の図の表を import する
 
 
 import pytest

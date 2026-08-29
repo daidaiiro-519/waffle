@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from matrix_cases import cases
+from svg_engine.examples.matrix_cases import cases
 from svg_engine.verify import check, check_attachment, check_shapes
 
 CASES = cases()

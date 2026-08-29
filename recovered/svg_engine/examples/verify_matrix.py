@@ -12,7 +12,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from svg_engine.verify import check, check_shapes  # noqa: E402,F401
-from matrix_cases import build_all  # noqa: E402
+from svg_engine.examples.matrix_cases import build_all  # noqa: E402
 
 rows = [(scale, name, check(svg) + check_shapes(svg)) for scale, name, svg in build_all()]
 fail = sum(1 for _, _, f in rows if f)
