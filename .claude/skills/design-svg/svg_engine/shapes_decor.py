@@ -10,6 +10,9 @@ import math
 from html import escape as _e
 
 from .ids import stable_id
+
+# 波の1周期を4つに割る ── 上り・頂点・下り・谷という波の形そのもの。
+_WAVE_QUARTER = 4
 from .registry import ComponentResult, component
 
 
@@ -79,7 +82,7 @@ def divider(props: dict, style: dict) -> ComponentResult:
         x = 0.0
         while x <= w:
             pts.append((x, amp * math.sin(x / period * math.pi)))
-            x += period / 4
+            x += period / _WAVE_QUARTER
         d = "M" + " L".join(f"{x:.1f},{y + amp:.1f}" for x, y in pts)
         svg = f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{style["size.rule-width"]}"/>'
         h = amp * 2 + 2

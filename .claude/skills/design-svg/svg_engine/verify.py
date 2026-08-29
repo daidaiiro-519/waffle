@@ -26,6 +26,11 @@ import re
 
 from .geometry import densify as _densify_shared, sample_path as _sample_path_shared
 from .text import text_width
+from .geometry import MIN_POLYGON, SAMPLE_DIVISOR
+
+# 曲線を刻まず、命令の区切りの点だけを拾わせるための刻み幅。実際の座標より
+# 十分大きければ何でもよく、大きさそのものに意味は無い。
+_VERTICES_ONLY = 1e9
 from .tokens import DEFAULT_THEME, num
 
 # 字面の高さと下ばね。書体の性質であって検査の判断ではないので、描く側と
@@ -157,7 +162,7 @@ def _step_for(points) -> float:
 
 def _sample_path(d: str):
     """path を点列にする。刻み幅はその path 自身の広がりから決める。"""
-    rough = _sample_path_shared(d, 1e9)      # まず頂点だけ拾って広がりを知る
+    rough = _sample_path_shared(d, _VERTICES_ONLY)   # まず頂点だけ拾って広がりを知る
     return _sample_path_shared(d, _step_for(rough))
 
 
@@ -191,7 +196,7 @@ def check_shapes(svg: str) -> list[str]:
             if a[0] < b[2] and a[2] > b[0] and a[1] < b[3] and a[3] > b[1]:
                 faults.append("箱どうしが重なる")
     if boxes:
-        step = min(min(b[2] - b[0], b[3] - b[1]) for b in boxes) / 4
+        step = min(min(b[2] - b[0], b[3] - b[1]) for b in boxes) / SAMPLE_DIVISOR
         step = max(step, 0.5)
         for pts, sw in paths:
             if len(pts) < 2:
@@ -312,7 +317,7 @@ def _node_ink(root, fineness: int):
                 cx, cy, r = (float(el.get("cx", 0)), float(el.get("cy", 0)),
                              float(el.get("r", 0)))
                 import math
-                n = max(3, int(2 * math.pi * fineness))
+                n = max(MIN_POLYGON, int(2 * math.pi * fineness))
                 local = [(cx + r * math.cos(2 * math.pi * k / n),
                           cy + r * math.sin(2 * math.pi * k / n)) for k in range(n)]
             elif tag.endswith("text"):

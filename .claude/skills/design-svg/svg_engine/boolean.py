@@ -13,6 +13,9 @@ from __future__ import annotations
 
 Point = tuple[float, float]
 
+# 円を多角形で近似するときの既定の分割数。呼ぶ側が細かさを持っているなら渡す。
+_CIRCLE_FACETS = 48
+
 
 class _V:
     __slots__ = ("x", "y", "next", "prev", "intersect", "entry", "neighbor", "alpha", "visited")
@@ -245,7 +248,7 @@ def boolean_op(shapes: list[list[Point]], op: str) -> list[list[Point]]:
     return acc
 
 
-def circle_polygon(cx: float, cy: float, r: float, n: int = 48) -> list[Point]:
+def circle_polygon(cx: float, cy: float, r: float, n: int = _CIRCLE_FACETS) -> list[Point]:
     import math
     return [(cx + r * math.cos(2 * math.pi * i / n), cy + r * math.sin(2 * math.pi * i / n))
             for i in range(n)]

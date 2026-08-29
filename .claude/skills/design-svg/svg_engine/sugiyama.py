@@ -33,6 +33,12 @@ from dataclasses import dataclass, field
 from .geometry import shift_to_origin
 from .layout_contract import LayoutResult
 
+# 入れ替えの空回りへの保険。切り値が負の辺を入れ替えるたびに解は改善するので
+# 本来は止まるが、浮動小数の丸めで振動した場合に備えて上限を置く。辺の数に
+# 比例させ、小さなグラフでも回数が確保されるよう下駄を履かせる。
+_SWAP_LIMIT_PER_EDGE = 4
+_SWAP_LIMIT_BASE = 16
+
 
 # ── 1. サイクルの分断 ──────────────────────────────────────
 
@@ -211,7 +217,7 @@ def _network_simplex(comp_nodes: list[str],
         for n in reached:
             rank[n] += shift
 
-    limit = 4 * len(edges) + 16   # 入れ替えの空回りへの保険
+    limit = _SWAP_LIMIT_PER_EDGE * len(edges) + _SWAP_LIMIT_BASE
     for _ in range(limit):
         leaving = None
         for i in tree:

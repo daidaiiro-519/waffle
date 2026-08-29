@@ -184,6 +184,23 @@ class Test規約2_段は飛ばせない:
         assert called
 
 
+class Test規約_値の出どころ:
+    """コードに現れる数値は、設計上の選択かデータから決まる量のどちらかである。
+
+    3種目 ── 勘で置いた閾値 ── は存在してはいけない。残すと、図ごとにその数字を
+    調整することになり、汎用性が失われる。
+
+    この検査は実装されていたのに、どこからも呼ばれず45件が放置されていた。
+    書いてあるだけの規約は守られない、という今日いちばん高くついた教訓の実物である。
+    """
+
+    def test_勘で置いた数値が残っていない(self):
+        from svg_engine.lint_values import findings
+        found = findings()
+        assert not found, "値の出どころが不明な数値: " + " / ".join(
+            f"{f[0]}:{f[1]} {f[3][:40]}" for f in found[:8])
+
+
 class Test部品の契約:
     def test_部品はSVGのルートを返さない(self):
         # ルートを持つと、他の部品と合成したとき二重の svg / viewBox が生まれる

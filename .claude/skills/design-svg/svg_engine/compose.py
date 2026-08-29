@@ -117,19 +117,27 @@ def _push_out(v: float, s0: float, s1: float, keep_out, margin: float, axis: int
     return v
 
 
-def _self_loop(pos, size, gap: float):
+def _self_loop(pos, size, gap: float, style):
     """自分から自分へ戻る辺の経路。節点の脇へ小さな輪を作る。
 
     普通の辺として扱うと始点と終点が同じ位置になり、線も矢じりも
     向きを持てない。輪の大きさは節点の大きさから決める。
+
+    形を決める3つの比はトークンから引く ── 節点の高さと輪の半径に対する比なので、
+    大きさが変わっても形が保たれる。直書きすると、テーマを差し替えても輪だけが
+    取り残される。
     """
     x, y = pos
     w, h = size
+    attach = num(style, "size.self-loop-attach")
+    bulge = num(style, "size.self-loop-bulge")
+    lift = num(style, "size.self-loop-lift")
     r = min(w, h) / 2 + gap
     cx, cy = x + w, y + h / 2
-    return [(x + w, y + h * 0.3), (cx + r, y + h * 0.3 - r * 0.4),
-            (cx + r * 1.2, cy), (cx + r, y + h * 0.7 + r * 0.4),
-            (x + w, y + h * 0.7)]
+    top, bottom = y + h * attach, y + h * (1 - attach)
+    return [(x + w, top), (cx + r, top - r * lift),
+            (cx + r * bulge, cy), (cx + r, bottom + r * lift),
+            (x + w, bottom)]
 
 
 def _cardinal(pos, size, ink, toward):
@@ -372,7 +380,8 @@ def figure_fragment(nodes: list[dict], edges: list[dict] | None = None,
         if a == b:
             # 自分へ戻る辺は、配置の解いた経路（同じ点が2つ）では表せない
             edge_points[idx] = _self_loop(coords[a], sizes[a],
-                                          edge_style["size.gap-order"] / 2)
+                                          num(edge_style, "size.gap-order") / 2,
+                                          edge_style)
             continue
         pts = list(edge_paths[idx])
         axis = 1 if direction == "TB" else 0

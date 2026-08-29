@@ -13,6 +13,10 @@ from __future__ import annotations
 from .geometry import rects_overlap
 from .text import text_width
 
+# 置き場所を試す刻みの上限。刻みは経路の長さから決まるが、極端に短い経路では
+# 刻みが細かくなりすぎて回り続けるので、そこで打ち切る（見た目には効かない）。
+_MAX_STEPS = 20
+
 def _candidates(path_len: float, label_w: float) -> list[float]:
     """置き場所の候補を、経路の長さとラベルの幅から決める。
 
@@ -36,7 +40,7 @@ def _candidates(path_len: float, label_w: float) -> list[float]:
             if lo <= f <= hi:
                 out.append(f)
         k += 1
-        if k > 20:
+        if k > _MAX_STEPS:
             break
     return out
 

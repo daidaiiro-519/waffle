@@ -11,6 +11,9 @@ from .tokens import DEFAULT_THEME
 # テーマから引いた既定値。鍵が数を返すことは呼ぶ側が知っている。
 _LATIN_RATIO = float(DEFAULT_THEME["font.latin-width-ratio"])  # type: ignore[arg-type]
 
+# CJKの文字が始まる符号位置（Unicodeが決めている境目。選んだ値ではない）。
+_CJK_START = 0x2E80
+
 
 def text_width(s: str, size: float,
                latin_ratio: float = _LATIN_RATIO) -> float:
@@ -19,7 +22,7 @@ def text_width(s: str, size: float,
     既定値はテーマから引く。同じ数を2箇所に書くと、片方だけ直したときに
     見積りがずれる（実際に 0.58 が2箇所にあり、全角大文字を10%見誤っていた）。
     """
-    return sum(size if ord(c) > 0x2E80 else size * latin_ratio for c in str(s))
+    return sum(size if ord(c) > _CJK_START else size * latin_ratio for c in str(s))
 
 
 def column_width(texts, size: float, pad: float,

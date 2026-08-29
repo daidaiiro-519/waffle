@@ -12,6 +12,14 @@
 from __future__ import annotations
 
 Point = tuple[float, float]
+
+# 標本の粗さ ── 最も小さい辺を何等分するか。跳び越して見逃さないだけの細かさで、
+# かつ点が増えすぎない値として 4 を採る。検査側（verify.py）も同じ粗さを使う
+# ── 描く側と検査側で粗さが違うと、片方だけが見つける崩れができる。
+SAMPLE_DIVISOR = 4
+
+# 多角形として閉じるのに要る最小の頂点数。
+MIN_POLYGON = 3
 Rect = tuple[float, float, float, float]
 
 
@@ -68,7 +76,7 @@ def segment_hits_rect(p0: Point, p1: Point, rect: Rect, margin: float) -> bool:
     y1 -= margin
     if x1 <= x0 or y1 <= y0:
         return False
-    step = min(x1 - x0, y1 - y0) / 4
+    step = min(x1 - x0, y1 - y0) / SAMPLE_DIVISOR
     for x, y in densify([p0, p1], max(step, 1e-9)):
         if x0 < x < x1 and y0 < y < y1:
             return True
@@ -358,7 +366,7 @@ def sample_ink(fragment: str, step: float) -> list[tuple[Point, float]]:
             rx = num(el, "r") or num(el, "rx")
             ry = num(el, "r") or num(el, "ry")
             # 刻み幅に見合う数へ分ける。最低でも三角形にはする。
-            n = max(3, int(2 * math.pi * max(rx, ry) / max(step, 1e-9)) + 1)
+            n = max(MIN_POLYGON, int(2 * math.pi * max(rx, ry) / max(step, 1e-9)) + 1)
             local = [(cx + rx * math.cos(2 * math.pi * k / n),
                       cy + ry * math.sin(2 * math.pi * k / n)) for k in range(n + 1)]
         halo = 0.0

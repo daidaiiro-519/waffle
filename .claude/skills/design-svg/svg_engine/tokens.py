@@ -159,6 +159,12 @@ DEFAULT_THEME: dict[str, TokenValue] = {
     "chart.exchange-box-h": 28,
     "chart.exchange-arrow-len": 6,
 
+    # 自分へ戻る辺が作る輪の形。節点の高さと輪の半径に対する比で持つので、
+    # 大きさが変わっても形が保たれる。
+    "size.self-loop-attach": 0.3,   # 節点のどの高さから出入りするか（上端からの比）
+    "size.self-loop-bulge": 1.2,    # 輪がいちばん外へ張り出す量（半径の何倍か）
+    "size.self-loop-lift": 0.4,     # 出入り口の脇で、上下へどれだけ持ち上げるか
+
     # 尺度 ── 部品ごとに数を持たせず、段階に名前を付けて選ばせる。
     # 個別に名前を付けると「直書きの数」が「トークンという名の直書きの数」に
     # 変わるだけで、テーマを差し替えても全体の調子が揃わない。段階にしておけば、
@@ -207,6 +213,9 @@ TOKEN_RANGES: dict[str, tuple[float, float]] = {
     "size.stroke-width-thin": (0.2, 4.0),
     "size.rule-width": (0.4, 8.0),
     "size.stroke-width-icon": (0.4, 8.0),
+    "size.self-loop-attach": (0.05, 0.45),
+    "size.self-loop-bulge": (1.0, 3.0),
+    "size.self-loop-lift": (0.0, 1.5),
     "size.radius-small": (0.0, 20.0),
     "size.radius": (0.0, 30.0),
     "size.radius-large": (0.0, 60.0),
