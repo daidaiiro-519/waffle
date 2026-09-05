@@ -34,8 +34,8 @@ PROJTBL = ('<svg viewBox="0 0 780 250" role="img" aria-label="abstract が既定
  '<text x="20" y="48" font-size="10.5" fill="var(--muted)">型を足したら、ここに1行足す（既定だけ）</text>'
  + heads + rows +
  '<line x1="310" y1="20" x2="310" y2="238" stroke="var(--rule)" stroke-width="1"/>'
- '<text x="330" y="30" font-size="12" font-weight="700" fill="var(--add)">人が書くのは、ここだけ　── 差分</text>'
- '<text x="330" y="48" font-size="10.5" fill="var(--muted)">既定でよければ、何も書かない</text>'
+ '<text x="330" y="30" font-size="12" font-weight="700" fill="var(--add)">人が書くのは、ここだけ　── 既定と違うマスの上書き</text>'
+ '<text x="330" y="48" font-size="10.5" fill="var(--muted)">1マスに書くのは「その型を、その出力先でどう出すか」1つ</text>'
  + overheads + over +
  '<text x="330" y="228" font-size="10.5" fill="var(--del)">■ 既定も差分も無い欄は、描画時に落ちる（穴が見える）</text>'
  '</svg>',
