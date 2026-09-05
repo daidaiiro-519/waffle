@@ -17,6 +17,16 @@ updated: 2026-09-05
 
 **層をパッケージで表し、依存の向きは import で守る。抽象は使う側のパッケージが定める。**
 
+## 構成要素
+
+| 要素 | 責務 | 知ってよいもの | 知ってはならないもの |
+|---|---|---|---|
+| `internal/model` パッケージ | 業務モデル | 標準ライブラリ | 他のパッケージ、外部モジュール |
+| `internal/app` パッケージ | 業務操作と出力ポートの宣言 | `internal/model` | `internal/adapter` |
+| `internal/adapter/inbound` | 入力アダプタ | `internal/app`、外部モジュール | `internal/model` の内部 |
+| `internal/adapter/outbound` | 出力ポートの実装 | `internal/app`、外部モジュール | `internal/app` の内部 |
+| `cmd/<名前>` | 結線と起動 | すべて | ─ |
+
 ## 表し方の対応
 
 | アーキテクチャ側の要素 | Go の仕組み | 補足 |
@@ -46,7 +56,7 @@ updated: 2026-09-05
 | 結線 | 実装の選択は `cmd` だけで行う |
 | 検査 | 依存の向きを検査する道具を CI で走らせる（`go list -deps` の突き合わせでもよい） |
 
-## 図
+## 依存関係図
 
 ```mermaid
 flowchart TB

@@ -2,7 +2,7 @@
 
   python3 check.py
 
-見るのは4つ。欄の欠け ・ 出典の空 ・ 置き場所の食い違い ・ 重なり。
+見るのは5つ。欄の欠け ・ 雛形との食い違い ・ 出典の空 ・ 置き場所の食い違い ・ 重なり。
 **判断はしない。**食い違いを出すだけで、どちらを直すかは人が決める。
 """
 from __future__ import annotations
@@ -15,6 +15,15 @@ from _common import load_all, local_source, rule_ids, source_rows
 REQUIRED_FRONT = ["id", "layer", "category", "declares", "updated"]
 REQUIRED_SECTIONS = ["概要", "適用範囲外", "委譲する判断", "出典"]
 UNFILLED = re.compile(r"《[^》]*》")
+HEADING = re.compile(r"^## (.+)$", re.M)
+
+
+def template_sections(root, kind: str) -> list[str]:
+    """種類に対応する雛形の節を返す。雛形が無ければ空を返す。"""
+    path = root / "templates" / f"{kind}.md"
+    if not path.exists():
+        return []
+    return HEADING.findall(path.read_text(encoding="utf-8"))
 
 
 def main() -> int:
@@ -33,6 +42,15 @@ def main() -> int:
         for name in REQUIRED_SECTIONS:
             if name not in s.sections:
                 problems.append(f"{where}: 「{name}」の節が無い")
+
+        # 雛形は、その種類の規約が必ず持つ節を定める。足す分は規約の自由にする
+        root = s.path.parents[2]
+        wanted = template_sections(root, s.path.stem)
+        if not wanted:
+            problems.append(f"{where}: 種類 {s.path.stem} の雛形が無い")
+        for name in wanted:
+            if name not in s.sections:
+                problems.append(f"{where}: 雛形にある「{name}」の節が無い")
 
         # ディレクトリに現れない軸は、同じ層の規約が provides で与えているものだけ許す
         provided = {}

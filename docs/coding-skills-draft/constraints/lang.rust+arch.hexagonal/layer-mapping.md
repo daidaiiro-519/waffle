@@ -27,6 +27,17 @@ updated: 2026-09-05
 | `adapter::inbound` | 入力アダプタ | `application`、外部クレート | `model` の非公開要素 |
 | `adapter::outbound` | 出力ポートの実装 | `application::ports`、外部クレート | `application` の内部 |
 
+## 表し方の対応
+
+| 要素 | Rust の仕組み | 補足 |
+|---|---|---|
+| 内側 | `model` ・ `application` モジュール | 外部クレートを取り込まない |
+| 出力ポート | `trait` の宣言 | 業務の語彙で名付ける |
+| 出力ポートの実装 | `impl Trait for` | `adapter::outbound` に置く |
+| 外側 | `adapter` モジュール | 外部クレートを使ってよい唯一の場所 |
+| 依存の向き | 可視性（`pub(crate)`）とモジュールの階層 | 宣言に無い参照は、そもそも書けない |
+| 反転の結線 | `main.rs` での注入 | 内側は具体型を知らない |
+
 ## 依存の許可
 
 | 参照元 ＼ 参照先 | `model` | `application` | `application::ports` | `adapter` |

@@ -1,4 +1,4 @@
-<title>CodingSkills（候補・第7版）</title>
+<title>CodingSkills（候補・第8版）</title>
 <style>
 :root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
 --move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
@@ -84,8 +84,8 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 </script>
 
 <div class="wrap">
-<h1>CodingSkills（候補・第7版）</h1>
-<p class="lede"><b>規約37本と、原典41本の照合まで済ませた。</b>出典には落とした日と URL が入り、<code>scripts/check.py</code> が「その原文を落としているか」「照合する文字列が原文に在るか」を検証する ── <b>その検査が17件を捕まえた</b>（記憶で書いた文字列が原文に無かった）。いまは食い違い0件。</p>
+<h1>CodingSkills（候補・第8版）</h1>
+<p class="lede"><b>雛形15本と規約37本の節を、機械で突き合わせた。</b>雛形を後から書いたせいで<b>29か所ずれていた</b> ── 節名の揺れ（「図」と「依存関係図」）、雛形にしか無い節、古い雛形の残骸（用途の規約が Rust のディレクトリ構成を持っていた）。雛形を規約の実態へ揃え、規約側の欠けを書き足し、<code>scripts/check.py</code> に「雛形の節をすべて持つか」の検査を足した。いまは食い違い0件。</p>
 
 <div id="bar"><b>変更 0 件</b>
 <button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
@@ -298,6 +298,9 @@ write_to_disk(&amp;guard)?;</pre>
 <pre class="code">pub fn parse(input: &amp;[u8]) -&gt; Result&lt;Record, ParseError&gt; { /* 入出力を持たない */ }</pre>
 <p><strong>違反例</strong></p>
 <pre class="code">pub async fn parse(input: tokio::fs::File) -&gt; Result&lt;Record, ParseError&gt; { /* … */ }</pre>
+<h2>共有の扱い</h2>
+<div class="wrap"><table><tr><th>共有するもの</th><th>扱い方</th><th>使う仕組み</th><th>選ぶ条件</th></tr><tr><td>読むだけの値</td><td>複製して渡すか、参照を借りる</td><td><code>Clone</code> ／ <code>&amp;T</code></td><td>小さい値、または生存期間が明らかなとき</td></tr><tr><td>読むだけの値（生存期間が跨る）</td><td>所有を共有する</td><td><code>Arc&lt;T&gt;</code></td><td>複数のスレッドが同じ値を読むとき</td></tr><tr><td>書き換える値</td><td>所有を移して1か所に閉じる</td><td>移動 ／ チャネル</td><td>書き換える主体を1つにできるとき</td></tr><tr><td>書き換える値（閉じられない）</td><td>排他で守る</td><td><code>Arc&lt;Mutex&lt;T&gt;&gt;</code></td><td>複数のスレッドが同じ値を書くとき</td></tr><tr><td>処理の結果</td><td>値を送る</td><td>チャネル</td><td>生産と消費を分けるとき</td></tr></table></div>
+<p><strong>共有して守るより、所有を移して共有しないほうを先に採る。</strong><br>排他は正しく書けるが、取る順序を誤ると止まる。移動とチャネルにはその失敗が無い。</p>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>非同期の実行環境を採るかどうか</td><td>用途</td></tr><tr><td>並行度の上限</td><td>用途</td></tr></table></div>
 <h2>委譲する判断</h2>
@@ -309,6 +312,11 @@ write_to_disk(&amp;guard)?;</pre>
 <h1>Rust における失敗の運び方</h1>
 <h2>概要</h2>
 <p><strong>回復可能な失敗を値として運び、回復不能な失敗だけをパニックに任せる。</strong></p>
+<h2>失敗の区分</h2>
+<div class="wrap"><table><tr><th>区分</th><th>意味</th><th>表し方</th><th>呼び出し元の扱い</th></tr><tr><td>回復できる失敗</td><td>入力や外部の状態が想定の範囲で崩れた</td><td><code>Result::Err</code></td><td>受け取って分岐する</td></tr><tr><td>回復できない失敗</td><td>前提そのものが壊れている（不変条件の破れ）</td><td><code>panic!</code></td><td>受け取らない。プロセスが終わる</td></tr><tr><td>想定していない状態</td><td>実装の誤り</td><td><code>unreachable!</code> ／ <code>debug_assert!</code></td><td>開発時に落として気づく</td></tr></table></div>
+<p><strong>外から与えられたものの不備は、回復できる失敗である。</strong><br>入力の検査に <code>panic!</code> を使うと、呼び出し元は分岐する手段を失う。</p>
+<h2>失敗の型</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>型の作り方</td><td>失敗の種類ごとに列挙の枝を作り、枝ごとに必要な値を持たせる</td></tr><tr><td>表示</td><td><code>Display</code> を実装し、何が起きたかを一文で述べる。原因の値を含める</td></tr><tr><td>連鎖</td><td>元の失敗を <code>source</code> として保つ。握りつぶさない</td></tr><tr><td>変換</td><td>境界を越えるところで、自分の層の型へ写す</td></tr><tr><td>公開</td><td>公開する関数の失敗の型は、公開の一部として扱う。枝を消すのは壊れる変更である</td></tr></table></div>
 <h2>規則一覧</h2>
 <div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>RS-ERR-01</td><td>回復可能な失敗は <code>Result</code> で返し、<code>panic!</code> で流さない</td><td>必須</td><td>静的解析</td><td>公開関数すべて</td></tr><tr><td>RS-ERR-02</td><td>失敗型は、呼び出し側が分岐できる列挙にする</td><td>必須</td><td>レビュー</td><td>公開関数の失敗型</td></tr><tr><td>RS-ERR-03</td><td><code>Result</code> を捨てない。捨てる場合は理由を残す</td><td>必須</td><td>静的解析</td><td>全体</td></tr><tr><td>RS-ERR-04</td><td>失敗型は <code>std::error::Error</code> を実装する</td><td>必須</td><td>静的解析</td><td>公開する失敗型</td></tr></table></div>
 <h2>規則の詳細</h2>
@@ -402,6 +410,10 @@ pub fn parse_request(raw: &amp;str) -&gt; Result&lt;HookRequest, ParseError&gt; 
 pub struct JsonHookCodec;        // 外部と接する要素</pre>
 <p><strong>違反例</strong></p>
 <pre class="code">pub struct JsonHookRequest;      // 業務の型に技術が入っている</pre>
+<h2>整形ツールに委ねる範囲</h2>
+<div class="wrap"><table><tr><th>項目</th><th>誰が決めるか</th></tr><tr><td>字下げ・改行・空白・要素の並べ替え</td><td><code>rustfmt</code>。人が議論しない</td></tr><tr><td>設定の変更</td><td>しない。既定のまま使う</td></tr><tr><td>除外</td><td>生成したコードのみ。手で書いたものは除外しない</td></tr><tr><td>検査の位置づけ</td><td>整形されていないことを、変更を取り込む前に落とす</td></tr></table></div>
+<h2>命名</h2>
+<div class="wrap"><table><tr><th>対象</th><th>形</th><th>例</th></tr><tr><td>型・トレイト・列挙の枝</td><td>語頭を大文字にして繋ぐ</td><td><code>PortNumber</code></td></tr><tr><td>関数・変数・モジュール</td><td>小文字と下線で繋ぐ</td><td><code>read_port</code></td></tr><tr><td>定数・静的変数</td><td>大文字と下線で繋ぐ</td><td><code>MAX_PORT</code></td></tr><tr><td>変換する関数</td><td>費用と所有で語頭を分ける</td><td><code>as_</code> は借用、<code>to_</code> は複製、<code>into_</code> は所有を移す</td></tr><tr><td>真偽を返す関数</td><td>述語の文にする</td><td><code>is_empty</code></td></tr></table></div>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>層ごとの命名の当て方</td><td>言語 × アーキテクチャ</td></tr><tr><td>公開範囲をどこまで広げるか</td><td>言語 × アーキテクチャ</td></tr></table></div>
 <h2>委譲する判断</h2>
@@ -422,6 +434,8 @@ pub struct JsonHookCodec;        // 外部と接する要素</pre>
 <div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>前提</td><td>単体テストは対象と同じファイルの <code>#[cfg(test)] mod tests</code> に、結合テストは <code>tests/</code> に置く</td></tr><tr><td>入力</td><td>なし</td></tr><tr><td>期待する結果</td><td>走ったテスト数が、書いたテスト数と一致する</td></tr><tr><td>検証の単位</td><td>単体・結合</td></tr><tr><td>実行コマンド</td><td><code>cargo test --all-targets</code></td></tr><tr><td>失敗の切り分け</td><td>走らないテストが在れば、置き場所が標準から外れている</td></tr></table></div>
 <h3>RS-TST-02　テストは実行順に依存せず、単独でも走る</h3>
 <div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>前提</td><td>可変な共有状態（グローバル変数・固定パスの一時ファイル）を持たない</td></tr><tr><td>入力</td><td>なし</td></tr><tr><td>期待する結果</td><td>並列でも単独でも、同じ結果になる</td></tr><tr><td>検証の単位</td><td>単体</td></tr><tr><td>実行コマンド</td><td><code>cargo test</code> と <code>cargo test -- --test-threads=1</code> の両方</td></tr><tr><td>失敗の切り分け</td><td>片方だけ落ちるなら、共有状態が残っている</td></tr></table></div>
+<h2>走らせ方</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>実行コマンド</td><td><code>cargo test --all-targets</code> ／ 文書の例は <code>cargo test --doc</code></td></tr><tr><td>検出のされ方</td><td><code>#[test]</code> を付けた関数が走る。<code>tests/</code> の各ファイルは1つの実行単位になる</td></tr><tr><td>並列</td><td>既定でスレッド並列。順序に依存するテストは書かず、<code>--test-threads=1</code> は切り分けにだけ使う</td></tr><tr><td>絞り込み</td><td>名前の一部を渡して絞る。<code>--ignored</code> で普段外しているものだけを走らせる</td></tr><tr><td>失敗の表示</td><td>期待と実際の両方を出す。<code>--nocapture</code> で標準出力も見る</td></tr></table></div>
 <h2>テストの書き方</h2>
 <div class="wrap"><table><tr><th>項目</th><th>規則</th></tr><tr><td>名前</td><td>振る舞いを述べる文にする。実装の名前を含めない</td></tr><tr><td>構成</td><td>前提・実行・確認の3段に分ける</td></tr><tr><td>表明</td><td>失敗時に、期待と実際の両方が出る形で書く</td></tr></table></div>
 <p><strong>適合例</strong></p>
@@ -505,6 +519,9 @@ fn test_read_port_2() {
 }</pre>
 <p><strong>違反例</strong></p>
 <pre class="code">var total int // 複数の goroutine から書く</pre>
+<h2>共有の扱い</h2>
+<div class="wrap"><table><tr><th>共有するもの</th><th>扱い方</th><th>使う仕組み</th><th>選ぶ条件</th></tr><tr><td>処理の結果</td><td>値を送る</td><td>チャネル</td><td>生産と消費を分けるとき</td></tr><tr><td>所有権の受け渡し</td><td>値を送り、送った側は触らない</td><td>チャネル</td><td>書き換える主体を移せるとき</td></tr><tr><td>読むだけの値</td><td>複製して渡す</td><td>値のコピー</td><td>小さい構造体のとき</td></tr><tr><td>書き換える値（移せない）</td><td>排他で守る</td><td><code>sync.Mutex</code></td><td>複数の goroutine が同じ値を書くとき</td></tr><tr><td>一度だけの初期化</td><td>1回に固定する</td><td><code>sync.Once</code></td><td>遅延して作る値があるとき</td></tr><tr><td>中断の合図</td><td>文脈を渡す</td><td><code>context.Context</code></td><td>呼び出しの打ち切りを伝えるとき</td></tr></table></div>
+<p><strong>共有して守るより、送って共有しないほうを先に採る。</strong><br>排他は正しく書けるが、守り忘れた1か所を検査が指すのは実行時であり、しかも再現しない。</p>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>並行度の上限</td><td>用途</td></tr><tr><td>取り消しの伝え方（期限の値）</td><td>用途</td></tr></table></div>
 <h2>委譲する判断</h2>
@@ -516,6 +533,11 @@ fn test_read_port_2() {
 <h1>Go における失敗の運び方</h1>
 <h2>概要</h2>
 <p><strong>失敗は値として返し、文脈を足しながら呼び出し元へ渡す。</strong></p>
+<h2>失敗の区分</h2>
+<div class="wrap"><table><tr><th>区分</th><th>意味</th><th>表し方</th><th>呼び出し元の扱い</th></tr><tr><td>回復できる失敗</td><td>入力や外部の状態が想定の範囲で崩れた</td><td><code>error</code> を返す</td><td>受け取って分岐する</td></tr><tr><td>回復できない失敗</td><td>前提そのものが壊れている</td><td><code>panic</code></td><td>受け取らない。プロセスが終わる</td></tr><tr><td>呼び出しの打ち切り</td><td>呼び出し元が中断した</td><td><code>context</code> の失敗を返す</td><td>打ち切りとして区別する</td></tr></table></div>
+<p><strong>外から与えられたものの不備は、回復できる失敗である。</strong><br><code>panic</code> で伝えると、呼び出し元は分岐する手段を失う。</p>
+<h2>失敗の型</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>型の作り方</td><td>判別したい失敗は、番兵の値か独自の型で表す。文字列で判別しない</td></tr><tr><td>表示</td><td>小文字で始め、句点で終えない。呼び出し元が前に文脈を足せる形にする</td></tr><tr><td>連鎖</td><td><code>%w</code> で包み、元の失敗を保つ</td></tr><tr><td>判別</td><td>呼び出し元は <code>errors.Is</code> ／ <code>errors.As</code> で判別する</td></tr><tr><td>公開</td><td>公開する番兵と型は、公開の一部として扱う。消すのは壊れる変更である</td></tr></table></div>
 <h2>規則一覧</h2>
 <div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>GO-ERR-01</td><td>失敗は戻り値の最後の <code>error</code> で返し、<code>panic</code> で流さない</td><td>必須</td><td>静的解析</td><td>全体</td></tr><tr><td>GO-ERR-02</td><td>失敗を包むときは <code>%w</code> を使い、原因を辿れるようにする</td><td>必須</td><td>静的解析</td><td>包む箇所</td></tr><tr><td>GO-ERR-03</td><td>呼び出し元が分岐する失敗は、番兵値か独自型にする</td><td>必須</td><td>レビュー</td><td>公開する関数</td></tr><tr><td>GO-ERR-04</td><td>失敗を捨てない。捨てる場合は理由をコメントで残す</td><td>必須</td><td>静的解析</td><td>全体</td></tr><tr><td>GO-ERR-05</td><td>失敗の文面は小文字で始め、句点で終えない</td><td>必須</td><td>静的解析</td><td>全体</td></tr></table></div>
 <h2>規則の詳細</h2>
@@ -583,6 +605,10 @@ if errors.Is(err, ErrNotFound) { /* … */ }</pre>
 <pre class="code">func Load(path string) (*Config, error)</pre>
 <p><strong>違反例</strong></p>
 <pre class="code">func Load(loader ConfigLoader) (ConfigProvider, error)</pre>
+<h2>整形ツールに委ねる範囲</h2>
+<div class="wrap"><table><tr><th>項目</th><th>誰が決めるか</th></tr><tr><td>字下げ・改行・空白・取り込みの並び</td><td><code>gofmt</code>。人が議論しない</td></tr><tr><td>設定の変更</td><td>できない。設定を持たないことが利点である</td></tr><tr><td>除外</td><td>生成したコードのみ</td></tr><tr><td>検査の位置づけ</td><td>整形されていないことを、変更を取り込む前に落とす</td></tr></table></div>
+<h2>命名</h2>
+<div class="wrap"><table><tr><th>対象</th><th>形</th><th>例</th></tr><tr><td>公開する識別子</td><td>語頭を大文字で繋ぐ</td><td><code>ReadPort</code></td></tr><tr><td>公開しない識別子</td><td>語頭を小文字で繋ぐ</td><td><code>readPort</code></td></tr><tr><td>頭字語</td><td>大小をそろえる</td><td><code>URL</code> ／ <code>url</code>。<code>Url</code> としない</td></tr><tr><td>受け手</td><td>1〜2文字にし、型ごとに統一する</td><td><code>func (p Port) ...</code></td></tr><tr><td>パッケージ</td><td>小文字1語。利用側の呼び出しと重ねて読む</td><td><code>port.Read</code> であって <code>port.PortRead</code> ではない</td></tr><tr><td>番兵の失敗</td><td><code>Err</code> で始める</td><td><code>ErrOutOfRange</code></td></tr></table></div>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>層ごとの命名の当て方</td><td>言語 × アーキテクチャ</td></tr><tr><td>パッケージの分け方</td><td>言語 × アーキテクチャ</td></tr></table></div>
 <h2>委譲する判断</h2>
@@ -596,9 +622,16 @@ if errors.Is(err, ErrNotFound) { /* … */ }</pre>
 <p><strong>標準のテスト機構だけで走らせ、表で入力と期待を並べる。</strong></p>
 <h2>保証する振る舞い</h2>
 <div class="wrap"><table><tr><th>ID</th><th>振る舞い</th><th>検証の単位</th><th>前提条件</th><th>失敗したときの現れ方</th></tr><tr><td>GO-TST-01</td><td>すべてのテストが <code>go test ./...</code> 1つで走る</td><td>単体・結合</td><td><code>_test.go</code> が標準の位置に在る</td><td>走らないテストが残る</td></tr><tr><td>GO-TST-02</td><td>テストは実行順に依存せず、並列でも同じ結果になる</td><td>単体</td><td>共有状態を持たない</td><td><code>-race</code> や並列実行で落ちる</td></tr></table></div>
+<h2>保証しない振る舞い</h2>
+<div class="wrap"><table><tr><th>何を</th><th>保証しない理由</th><th>代わりに何で担保するか</th></tr><tr><td>外部サービスとの結合</td><td>言語の仕組みでは決まらない</td><td>用途の保証規約</td></tr><tr><td>網羅率の下限</td><td>数値の下限は振る舞いを保証しない</td><td>レビュー</td></tr></table></div>
+<h2>振る舞いの詳細</h2>
+<h3>GO-TST-01　すべてのテストが <code>go test ./...</code> 1つで走る</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>前提</td><td>テストは対象と同じディレクトリの <code>_test.go</code> に置く</td></tr><tr><td>入力</td><td>なし</td></tr><tr><td>期待する結果</td><td>走ったパッケージ数が、テストを持つパッケージ数と一致する</td></tr><tr><td>検証の単位</td><td>単体・結合</td></tr><tr><td>実行コマンド</td><td><code>go test ./...</code></td></tr><tr><td>失敗の切り分け</td><td>走らないテストが在れば、置き場所か関数の名前が標準から外れている</td></tr></table></div>
+<h3>GO-TST-02　テストは実行順に依存せず、並列でも同じ結果になる</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>前提</td><td>可変な共有状態（パッケージ変数・固定パスの一時ファイル）を持たない</td></tr><tr><td>入力</td><td>なし</td></tr><tr><td>期待する結果</td><td>競合の検出を有効にしても、同じ結果になる</td></tr><tr><td>検証の単位</td><td>単体</td></tr><tr><td>実行コマンド</td><td><code>go test -race ./...</code></td></tr><tr><td>失敗の切り分け</td><td>検出が指す2か所のうち、後から書いた側が共有を持ち込んでいる</td></tr></table></div>
 <h2>走らせ方</h2>
 <div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>実行コマンド</td><td><code>go test ./...</code> ／ 競合の検出は <code>go test -race ./...</code></td></tr><tr><td>検出のされ方</td><td><code>_test.go</code> の <code>TestXxx(t *testing.T)</code> が走る</td></tr><tr><td>並列</td><td>パッケージ間は既定で並列。パッケージ内は <code>t.Parallel()</code> を書いたものだけ</td></tr><tr><td>失敗の表示</td><td>期待と実際の両方を出す</td></tr></table></div>
-<h2>書き方</h2>
+<h2>テストの書き方</h2>
 <div class="wrap"><table><tr><th>項目</th><th>規則</th></tr><tr><td>名前</td><td>振る舞いを述べる。<code>TestReadPort_範囲外は受け付けない</code> のように、対象と振る舞いを分けて書く</td></tr><tr><td>構成</td><td>入力と期待を表にし、<code>t.Run</code> で1件ずつ回す</td></tr><tr><td>表明</td><td>差分が読める形で出す。等価の比較は <code>cmp.Diff</code> を使ってよい</td></tr><tr><td>後始末</td><td><code>t.Cleanup</code> に登録し、失敗した経路でも戻す</td></tr></table></div>
 <p><strong>適合例</strong></p>
 <pre class="code">func TestReadPort(t *testing.T) {
@@ -629,6 +662,8 @@ if errors.Is(err, ErrNotFound) { /* … */ }</pre>
 		t.Fail()
 	}
 }</pre>
+<h2>テストの構成</h2>
+<div class="wrap"><table><tr><th>種類</th><th>対象</th><th>置き場所</th><th>実行の速さ</th></tr><tr><td>単体</td><td>1つの関数・型の振る舞い</td><td>対象と同じパッケージの <code>_test.go</code></td><td>1件あたり数ミリ秒</td></tr><tr><td>結合</td><td>公開する境界の振る舞い</td><td>外部パッケージ（<code>package xxx_test</code>）の <code>_test.go</code></td><td>1件あたり数十ミリ秒</td></tr></table></div>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>層ごとにどこへ置くか</td><td>言語 × アーキテクチャ</td></tr><tr><td>何を保証するか</td><td>用途</td></tr></table></div>
 <h2>委譲する判断</h2>
@@ -680,14 +715,10 @@ if errors.Is(err, ErrNotFound) { /* … */ }</pre>
 <p><strong>宣言は内側、実装は外側に置く。</strong><br>この分離が反転であり、破線の矢印がその実装を表す。</p>
 <h2>境界を越えるデータ</h2>
 <div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>内側 → 出力ポート</td><td>業務モデルの型</td><td>変換しない</td></tr><tr><td>出力ポート → 外部技術</td><td>技術固有の形式</td><td>出力アダプタ</td></tr></table></div>
-<h2>ディレクトリ構成</h2>
-<pre class="code">src/
-  application/ports/   出力ポートの宣言（内側）
-  adapter/outbound/    出力ポートの実装（外側）</pre>
 <h2>違反したとき</h2>
 <div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>内側が外部技術の型を引数に取る</td><td>依存検査で落ちる</td><td>業務モデルの型へ置き換え、変換を外側へ移す</td></tr><tr><td>出力ポートが技術の語彙で宣言されている</td><td>レビューで気づく</td><td>業務の語彙へ言い換える</td></tr><tr><td>反転が無いまま、内側が外側を直接呼ぶ</td><td>依存検査で落ちる</td><td>出力ポートを立てる</td></tr></table></div>
 <h2>適用範囲外</h2>
-<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>依存の向きを何で守るか（可視性・モジュール）</td><td>言語 × アーキテクチャ</td></tr><tr><td>反転を実行時にどう結ぶか</td><td>言語 × アーキテクチャ</td></tr></table></div>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>依存の向きを何で守るか（可視性・モジュール）</td><td>言語 × アーキテクチャ</td></tr><tr><td>ディレクトリ構成</td><td>言語 × アーキテクチャ</td></tr><tr><td>反転を実行時にどう結ぶか</td><td>言語 × アーキテクチャ</td></tr></table></div>
 <h2>委譲する判断</h2>
 <div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>出力ポートの粒度（1機能ごとか、まとめるか）</td><td>用途</td><td>外部との契約の数で決まる</td></tr></table></div>
 <h2>出典</h2>
@@ -787,10 +818,6 @@ if errors.Is(err, ErrNotFound) { /* … */ }</pre>
 <p><strong>反転が要らないのは、中心が外側へ何も求めないためである。</strong><br>中心が外部の機能を必要とする構成では、この形は使えない。</p>
 <h2>境界を越えるデータ</h2>
 <div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>外部 → 写し手</td><td>接続先の生の形式</td><td>写し手</td></tr><tr><td>写し手 → 中心の処理</td><td>データ契約の型</td><td>変換しない</td></tr></table></div>
-<h2>ディレクトリ構成</h2>
-<pre class="code">crates/contract/   依存を持たない
-crates/core/       contract にだけ依存する
-adapters/&lt;接続先&gt;/ contract にだけ依存する</pre>
 <h2>違反したとき</h2>
 <div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>中心の処理が外部の機能を呼ぶ</td><td>依存の検査で落ちる</td><td>呼び出しを実行の口へ上げるか、構成をヘキサゴナルへ替える</td></tr><tr><td>写し手どうしが依存する</td><td>依存の検査で落ちる</td><td>共有部分を写し手の共通置き場へ出す</td></tr></table></div>
 <h2>適用範囲外</h2>
@@ -879,6 +906,8 @@ adapters/
 <p><strong>層をモジュールで表し、依存の向きを可視性で守る。</strong></p>
 <h2>構成要素</h2>
 <div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td><code>model</code> モジュール</td><td>業務モデル</td><td>標準ライブラリ</td><td>他のモジュール、外部クレート</td></tr><tr><td><code>application</code> モジュール</td><td>業務操作と出力ポートの宣言</td><td><code>model</code></td><td><code>adapter</code></td></tr><tr><td><code>application::ports</code></td><td>出力ポートをトレイトで宣言する</td><td><code>model</code></td><td>実装クレート</td></tr><tr><td><code>adapter::inbound</code></td><td>入力アダプタ</td><td><code>application</code>、外部クレート</td><td><code>model</code> の非公開要素</td></tr><tr><td><code>adapter::outbound</code></td><td>出力ポートの実装</td><td><code>application::ports</code>、外部クレート</td><td><code>application</code> の内部</td></tr></table></div>
+<h2>表し方の対応</h2>
+<div class="wrap"><table><tr><th>要素</th><th>Rust の仕組み</th><th>補足</th></tr><tr><td>内側</td><td><code>model</code> ・ <code>application</code> モジュール</td><td>外部クレートを取り込まない</td></tr><tr><td>出力ポート</td><td><code>trait</code> の宣言</td><td>業務の語彙で名付ける</td></tr><tr><td>出力ポートの実装</td><td><code>impl Trait for</code></td><td><code>adapter::outbound</code> に置く</td></tr><tr><td>外側</td><td><code>adapter</code> モジュール</td><td>外部クレートを使ってよい唯一の場所</td></tr><tr><td>依存の向き</td><td>可視性（<code>pub(crate)</code>）とモジュールの階層</td><td>宣言に無い参照は、そもそも書けない</td></tr><tr><td>反転の結線</td><td><code>main.rs</code> での注入</td><td>内側は具体型を知らない</td></tr></table></div>
 <h2>依存の許可</h2>
 <div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th><code>model</code></th><th><code>application</code></th><th><code>application::ports</code></th><th><code>adapter</code></th></tr><tr><td><code>model</code></td><td>─</td><td>不可</td><td>不可</td><td>不可</td></tr><tr><td><code>application</code></td><td>可</td><td>─</td><td>可</td><td>不可</td></tr><tr><td><code>application::ports</code></td><td>可</td><td>不可</td><td>─</td><td>不可</td></tr><tr><td><code>adapter</code></td><td>可</td><td>可</td><td>可（実装する）</td><td>─</td></tr></table></div>
 <h2>依存関係図</h2>
@@ -936,6 +965,10 @@ adapters/
 <h1>Rust とヘキサゴナル構成におけるテストの置き場所</h1>
 <h2>概要</h2>
 <p><strong>内側は同じファイルの中で、外側は境界の外から確かめる。</strong></p>
+<h2>置き場所の対応</h2>
+<div class="wrap"><table><tr><th>層</th><th>置き場所</th><th>何を確かめるか</th><th>呼び方</th></tr><tr><td><code>model</code></td><td>対象と同じファイルの <code>mod tests</code></td><td>業務モデルの不変条件</td><td>非公開の要素を直接呼ぶ</td></tr><tr><td><code>application</code></td><td>対象と同じファイルの <code>mod tests</code></td><td>業務操作の振る舞い</td><td>出力ポートの偽物を差し込んで呼ぶ</td></tr><tr><td><code>application::ports</code></td><td>置かない</td><td>─</td><td>宣言だけなので、確かめる振る舞いが無い</td></tr><tr><td><code>adapter::inbound</code></td><td><code>tests/</code></td><td>外部の形式から業務操作へ渡るまで</td><td>公開する境界から呼ぶ</td></tr><tr><td><code>adapter::outbound</code></td><td><code>tests/</code></td><td>出力ポートの実装が契約どおりに振る舞うか</td><td>公開する境界から呼ぶ</td></tr></table></div>
+<h2>偽物の置き場所</h2>
+<div class="wrap"><table><tr><th>偽物</th><th>置き場所</th><th>作り方</th><th>置いてはならない場所</th></tr><tr><td>出力ポートの偽物</td><td><code>application::ports</code> の隣（<code>#[cfg(test)]</code> の中）</td><td>ポートのトレイトを実装した最小の型</td><td><code>adapter</code>。外側の実装とテストの偽物が混ざる</td></tr><tr><td>入力の見本</td><td><code>tests/fixtures/</code></td><td>実物の形式そのまま</td><td>内側。内側が外部の形式を知ることになる</td></tr><tr><td>外部技術の偽物</td><td>置かない</td><td>─</td><td>出力ポートの偽物で足りる。技術の偽物を作ると技術に追従し続けることになる</td></tr></table></div>
 <h2>規則一覧</h2>
 <div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>RH-TP-01</td><td><code>model</code> と <code>application</code> のテストは、対象と同じファイルの <code>mod tests</code> に置く</td><td>必須</td><td>レビュー</td><td>内側</td></tr><tr><td>RH-TP-02</td><td><code>adapter</code> のテストは <code>tests/</code> に置き、公開する境界から呼ぶ</td><td>必須</td><td>レビュー</td><td>外側</td></tr><tr><td>RH-TP-03</td><td>出力ポートの偽物は <code>application::ports</code> の隣に置き、<code>adapter</code> へ置かない</td><td>必須</td><td>レビュー</td><td>内側のテスト</td></tr></table></div>
 <h2>規則の詳細</h2>
@@ -1024,6 +1057,8 @@ crates/
 adapters/
   common/             写し手が共有する助け
   &lt;接続先&gt;/           contract にだけ依存する</pre>
+<h2>依存の向きを守る手段</h2>
+<div class="wrap"><table><tr><th>手段</th><th>内容</th></tr><tr><td>依存の宣言</td><td><code>Cargo.toml</code> に書いた crate しか参照できない。宣言そのものが検査になる</td></tr><tr><td>依存の確認</td><td><code>cargo tree</code> で、<code>core</code> から adapter へ辺が伸びていないことを見る</td></tr><tr><td>可視性</td><td>各 crate が公開するのは、<code>normalize</code> と契約の型だけにとどめる</td></tr><tr><td>束ねの静的な振り分け</td><td>列挙で分岐し、<code>dyn</code> を使わない。接続先を足し忘れると、網羅の検査が落ちる</td></tr></table></div>
 <h2>違反したとき</h2>
 <div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td><code>core</code> が adapter に依存する</td><td><code>cargo tree</code> と <code>Cargo.toml</code> で見える</td><td>分岐を写し手へ移す</td></tr><tr><td><code>contract</code> が接続先の型を持つ</td><td>同上</td><td>型を生成し直し、写し手で変換する</td></tr><tr><td>束ねが <code>dyn</code> で振り分ける</td><td>レビューで気づく</td><td>列挙による静的な振り分けへ替える</td></tr></table></div>
 <h2>適用範囲外</h2>
@@ -1037,6 +1072,10 @@ adapters/
 <h1>crate ごとのテストの置き場所</h1>
 <h2>概要</h2>
 <p><strong>テストは、その crate の中に置く。crate の境界が、そのままテストの境界になる。</strong></p>
+<h2>置き場所の対応</h2>
+<div class="wrap"><table><tr><th>crate</th><th>置き場所</th><th>何を確かめるか</th><th>呼び方</th></tr><tr><td><code>contract</code></td><td>同じファイルの <code>mod tests</code> ／ <code>tests/</code></td><td>生成した型が schema と一致すること</td><td>生成した型を直接使う</td></tr><tr><td><code>core</code></td><td>同じファイルの <code>mod tests</code></td><td>データ契約の上の処理</td><td>契約の型を組み立てて渡す</td></tr><tr><td><code>adapters/&lt;接続先&gt;</code></td><td>同じファイルの <code>mod tests</code> ／ <code>tests/</code></td><td>生の入力が契約の型へ正しく写ること</td><td><code>normalize</code> を実物の入力で呼ぶ</td></tr><tr><td><code>bundle</code></td><td><code>bundle/tests/</code></td><td>接続先の振り分けが漏れなく効くこと</td><td>公開 API だけを呼ぶ</td></tr><tr><td><code>cli</code></td><td><code>tests/</code></td><td>入口から出口までの一続き</td><td>実行ファイルを起動して呼ぶ</td></tr></table></div>
+<h2>偽物の置き場所</h2>
+<div class="wrap"><table><tr><th>偽物</th><th>置き場所</th><th>作り方</th><th>置いてはならない場所</th></tr><tr><td>実物の入力</td><td><code>adapters/&lt;接続先&gt;/tests/fixtures/</code></td><td>接続先が実際に出した記録をそのまま置く</td><td>共有の置き場。接続先どうしが結び付く</td></tr><tr><td>契約の型の見本</td><td><code>contract</code> crate の <code>#[cfg(test)]</code></td><td>生成した型を組み立てる補助</td><td><code>core</code>。組み立て方が処理側に散る</td></tr><tr><td>外部技術の偽物</td><td>置かない</td><td>─</td><td>写し手は関数なので、実物の入力を渡せば足りる</td></tr></table></div>
 <h2>規則一覧</h2>
 <div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>RD-TP-01</td><td>各 crate の単体テストは、対象と同じファイルの <code>mod tests</code> に置く</td><td>必須</td><td>レビュー</td><td>すべての crate</td></tr><tr><td>RD-TP-02</td><td>写し手の実物入力は <code>adapters/&lt;接続先&gt;/tests/fixtures/</code> に置き、他の crate から読まない</td><td>必須</td><td>レビュー</td><td>写し手</td></tr><tr><td>RD-TP-03</td><td>束ねの結合テストは <code>bundle/tests/</code> に置き、公開 API だけを呼ぶ</td><td>必須</td><td>レビュー</td><td>束ね</td></tr><tr><td>RD-TP-04</td><td>生成した型と schema の一致は、<code>contract</code> crate の結合テストで確かめる</td><td>必須</td><td>静的解析</td><td>データ契約</td></tr></table></div>
 <h2>規則の詳細</h2>
@@ -1080,13 +1119,15 @@ fn 生成した型は schema と一致する() {
 <h1>Go における層の表し方</h1>
 <h2>概要</h2>
 <p><strong>層をパッケージで表し、依存の向きは import で守る。抽象は使う側のパッケージが定める。</strong></p>
+<h2>構成要素</h2>
+<div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td><code>internal/model</code> パッケージ</td><td>業務モデル</td><td>標準ライブラリ</td><td>他のパッケージ、外部モジュール</td></tr><tr><td><code>internal/app</code> パッケージ</td><td>業務操作と出力ポートの宣言</td><td><code>internal/model</code></td><td><code>internal/adapter</code></td></tr><tr><td><code>internal/adapter/inbound</code></td><td>入力アダプタ</td><td><code>internal/app</code>、外部モジュール</td><td><code>internal/model</code> の内部</td></tr><tr><td><code>internal/adapter/outbound</code></td><td>出力ポートの実装</td><td><code>internal/app</code>、外部モジュール</td><td><code>internal/app</code> の内部</td></tr><tr><td><code>cmd/&lt;名前&gt;</code></td><td>結線と起動</td><td>すべて</td><td>─</td></tr></table></div>
 <h2>表し方の対応</h2>
 <div class="wrap"><table><tr><th>アーキテクチャ側の要素</th><th>Go の仕組み</th><th>補足</th></tr><tr><td>業務モデル</td><td><code>internal/model</code> パッケージ</td><td>他のパッケージを import しない</td></tr><tr><td>業務操作</td><td><code>internal/app</code> パッケージ</td><td>出力ポートを <strong>自分の側で</strong> interface として定める</td></tr><tr><td>出力ポート</td><td><code>internal/app</code> の中の interface</td><td>実装側には置かない</td></tr><tr><td>入力アダプタ</td><td><code>internal/adapter/inbound/&lt;技術&gt;</code></td><td>外部技術を import してよい</td></tr><tr><td>出力アダプタ</td><td><code>internal/adapter/outbound/&lt;技術&gt;</code></td><td>interface を満たす具体型を置く</td></tr><tr><td>結線</td><td><code>cmd/&lt;名前&gt;/main.go</code></td><td>実装を選び、業務操作へ渡す</td></tr></table></div>
 <h2>依存の許可</h2>
 <div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th><code>model</code></th><th><code>app</code></th><th><code>adapter</code></th><th><code>cmd</code></th></tr><tr><td><code>model</code></td><td>─</td><td>不可</td><td>不可</td><td>不可</td></tr><tr><td><code>app</code></td><td>可</td><td>─</td><td>不可</td><td>不可</td></tr><tr><td><code>adapter</code></td><td>可</td><td>可</td><td>─</td><td>不可</td></tr><tr><td><code>cmd</code></td><td>可</td><td>可</td><td>可</td><td>─</td></tr></table></div>
 <h2>依存の向きを守る手段</h2>
 <div class="wrap"><table><tr><th>手段</th><th>内容</th></tr><tr><td><code>internal/</code></td><td>外部モジュールから参照できなくする</td></tr><tr><td>import の向き</td><td><code>app</code> は <code>adapter</code> を import しない。<strong>interface は使う側（<code>app</code>）が持つ</strong></td></tr><tr><td>結線</td><td>実装の選択は <code>cmd</code> だけで行う</td></tr><tr><td>検査</td><td>依存の向きを検査する道具を CI で走らせる（<code>go list -deps</code> の突き合わせでもよい）</td></tr></table></div>
-<h2>図</h2>
+<h2>依存関係図</h2>
 <pre class="mermaid">flowchart TB
     subgraph internal[internal]
         direction TB
@@ -1128,6 +1169,10 @@ internal/
 <h1>Go とヘキサゴナル構成におけるテストの置き場所</h1>
 <h2>概要</h2>
 <p><strong>内側は同じパッケージで、外側は公開する境界から確かめる。</strong></p>
+<h2>置き場所の対応</h2>
+<div class="wrap"><table><tr><th>層</th><th>置き場所</th><th>何を確かめるか</th><th>呼び方</th></tr><tr><td><code>internal/model</code></td><td>同じパッケージの <code>_test.go</code></td><td>業務モデルの不変条件</td><td>非公開の識別子を直接呼ぶ</td></tr><tr><td><code>internal/app</code></td><td>同じパッケージの <code>_test.go</code></td><td>業務操作の振る舞い</td><td>出力ポートの偽物を差し込んで呼ぶ</td></tr><tr><td>出力ポート（interface）</td><td>置かない</td><td>─</td><td>宣言だけなので、確かめる振る舞いが無い</td></tr><tr><td><code>internal/adapter/inbound</code></td><td>外部パッケージの <code>_test.go</code></td><td>外部の形式から業務操作へ渡るまで</td><td>公開する識別子だけを呼ぶ</td></tr><tr><td><code>internal/adapter/outbound</code></td><td>外部パッケージの <code>_test.go</code></td><td>出力ポートの実装が契約どおりに振る舞うか</td><td>公開する識別子だけを呼ぶ</td></tr></table></div>
+<h2>偽物の置き場所</h2>
+<div class="wrap"><table><tr><th>偽物</th><th>置き場所</th><th>作り方</th><th>置いてはならない場所</th></tr><tr><td>出力ポートの偽物</td><td><code>internal/app</code> の <code>_test.go</code></td><td>interface を満たす最小の構造体</td><td><code>adapter</code>。外側の実装とテストの偽物が混ざる</td></tr><tr><td>入力の見本</td><td><code>testdata/</code></td><td>実物の形式そのまま</td><td>内側。内側が外部の形式を知ることになる</td></tr><tr><td>外部サービスの偽物</td><td>使わない</td><td>─</td><td>出力ポートの偽物で足りる</td></tr></table></div>
 <h2>規則一覧</h2>
 <div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>GH-TP-01</td><td><code>model</code> と <code>app</code> のテストは、同じパッケージ（<code>package model</code>）に置く</td><td>必須</td><td>レビュー</td><td>内側</td></tr><tr><td>GH-TP-02</td><td><code>adapter</code> のテストは外部パッケージ（<code>package xxx_test</code>）に置き、公開する識別子だけを呼ぶ</td><td>必須</td><td>レビュー</td><td>外側</td></tr><tr><td>GH-TP-03</td><td>出力ポートの偽物は <code>app</code> の中に置き、<code>adapter</code> へ置かない</td><td>必須</td><td>レビュー</td><td>内側のテスト</td></tr><tr><td>GH-TP-04</td><td>外部サービスを要するテストには、<code>testing.Short</code> で外せる印を付ける</td><td>必須</td><td>静的解析</td><td>外側</td></tr></table></div>
 <h2>規則の詳細</h2>
@@ -1193,9 +1238,7 @@ package http_test</pre>
 <p><strong>呼び出し元が渡すものと、こちらが返すものを、標準入出力の上で定める。</strong></p>
 <h2>構成要素</h2>
 <div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td>要求</td><td>呼び出し元が標準入力へ渡す内容</td><td>呼び出し元の仕様</td><td>こちらの内部構造</td></tr><tr><td>応答</td><td>こちらが標準出力へ返す内容</td><td>呼び出し元の仕様</td><td>─</td></tr><tr><td>終了状態</td><td>処理の成否を、終了コードで伝える</td><td>呼び出し元の仕様</td><td>─</td></tr><tr><td>診断出力</td><td>人が読む記録を標準エラーへ出す</td><td>─</td><td>応答の形式</td></tr></table></div>
-<h2>依存の許可</h2>
-<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th>要求</th><th>応答</th><th>終了状態</th><th>診断出力</th></tr><tr><td>入力アダプタ</td><td>可</td><td>可</td><td>可</td><td>可</td></tr><tr><td>業務操作</td><td>不可</td><td>不可</td><td>不可</td><td>不可</td></tr></table></div>
-<h2>依存関係図</h2>
+<h2>やり取りの流れ</h2>
 <pre class="mermaid">sequenceDiagram
     participant C as 呼び出し元
     participant H as Hook（入力アダプタ）
@@ -1211,12 +1254,12 @@ package http_test</pre>
 <div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>呼び出し元 → Hook</td><td>1行の JSON</td><td>入力アダプタ</td></tr><tr><td>Hook → 業務操作</td><td>業務操作が定める入力の型</td><td>入力アダプタ</td></tr><tr><td>Hook → 呼び出し元</td><td>1行の JSON、終了コード</td><td>入力アダプタ</td></tr></table></div>
 <h2>契約の内容</h2>
 <div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>入力</td><td>標準入力から1行の JSON を読む。改行で終端する</td></tr><tr><td>出力</td><td>標準出力へ1行の JSON を書く。それ以外を出さない</td></tr><tr><td>終了コード</td><td>成功は <code>0</code>、要求の不備は <code>1</code>、内部の失敗は <code>2</code></td></tr><tr><td>診断</td><td>人が読む内容は標準エラーへ出す。標準出力へ混ぜない</td></tr><tr><td>上限</td><td>要求の大きさは 1 MiB を超えない</td></tr></table></div>
-<h2>ディレクトリ構成</h2>
-<pre class="code">src/adapter/inbound/stdio.rs   標準入出力の読み書きと、形式の検査</pre>
+<h2>版と互換</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>版の示し方</td><td>応答に版の欄を持たせ、呼び出し元が解釈できる欄だけを読む</td></tr><tr><td>欄を足すとき</td><td>既定値を持たせて足す。呼び出し元が知らない欄は無視される前提で書く</td></tr><tr><td>欄を消すとき</td><td>消さない。使わなくなった欄は、値を空にして残す</td></tr><tr><td>壊れる変更</td><td>終了コードの意味を変えること。変えるなら、呼び出し元の設定と同時に入れ替える</td></tr></table></div>
 <h2>違反したとき</h2>
 <div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>標準出力へ診断を混ぜる</td><td>呼び出し元が応答を解釈できない</td><td>診断を標準エラーへ移す</td></tr><tr><td>失敗時に終了コード <code>0</code> を返す</td><td>呼び出し元が失敗に気づかない</td><td>終了コードの対応表に従う</td></tr></table></div>
 <h2>適用範囲外</h2>
-<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>業務の処理内容</td><td>業務モデル・業務操作</td></tr><tr><td>JSON の直列化に使うライブラリ</td><td>この用途のツール規約</td></tr></table></div>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>業務の処理内容</td><td>業務モデル・業務操作</td></tr><tr><td>JSON の直列化に使うライブラリ</td><td>この用途のツール規約</td></tr><tr><td>標準入出力を読み書きする場所（ファイル構成）</td><td>言語 × アーキテクチャ</td></tr></table></div>
 <h2>委譲する判断</h2>
 <div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>応答に含める欄</td><td>実装</td><td>業務操作の結果によって変わる</td></tr></table></div>
 <h2>出典</h2>
@@ -1228,9 +1271,7 @@ package http_test</pre>
 <p><strong>呼び出しごとに起動し、応答を返して終了する。状態を次の呼び出しへ持ち越さない。</strong></p>
 <h2>構成要素</h2>
 <div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td>起動処理</td><td>設定を読み、依存を結ぶ</td><td>環境変数、設定ファイル</td><td>業務の判断</td></tr><tr><td>処理</td><td>要求を1件処理する</td><td>業務操作</td><td>前回の呼び出しの結果</td></tr><tr><td>終了処理</td><td>出力を書き切り、終了コードを返す</td><td>─</td><td>─</td></tr></table></div>
-<h2>依存の許可</h2>
-<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th>起動処理</th><th>処理</th><th>終了処理</th></tr><tr><td><code>main</code></td><td>可</td><td>可</td><td>可</td></tr><tr><td>業務操作</td><td>不可</td><td>─</td><td>不可</td></tr></table></div>
-<h2>依存関係図</h2>
+<h2>状態の移り</h2>
 <pre class="mermaid">stateDiagram-v2
     [*] --&gt; 起動: プロセス開始
     起動 --&gt; 読み取り: 設定と依存を結ぶ
@@ -1246,12 +1287,12 @@ package http_test</pre>
 <div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>環境 → 起動処理</td><td>環境変数と設定ファイル</td><td>起動処理</td></tr><tr><td>処理 → 終了処理</td><td>応答と終了コード</td><td>処理</td></tr></table></div>
 <h2>起動と終了の定め</h2>
 <div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>起動時間</td><td>100 ms 以内に応答を書き始める</td></tr><tr><td>常駐</td><td>しない。呼び出しごとに終了する</td></tr><tr><td>状態</td><td>プロセスの外へ書かない。一時ファイルを残さない</td></tr><tr><td>設定</td><td>起動時に1度だけ読む。処理の途中で読み直さない</td></tr><tr><td>中断</td><td>中断の合図を受けたら、書きかけの出力を捨てて終了コード <code>2</code> で終わる</td></tr></table></div>
-<h2>ディレクトリ構成</h2>
-<pre class="code">src/main.rs   起動・結線・終了コードの決定</pre>
+<h2>資源</h2>
+<div class="wrap"><table><tr><th>資源</th><th>確保する場所</th><th>手放す場所</th><th>手放し損ねたときの現れ方</th></tr><tr><td>標準入出力</td><td>起動処理</td><td>プロセスの終了</td><td>出力が書き切られず、呼び出し元が空を読む</td></tr><tr><td>一時ファイル</td><td>使わない</td><td>─</td><td>残っていれば、次の呼び出しが前回の状態を読む</td></tr><tr><td>外部への接続</td><td>処理の中で1件ごと</td><td>同じ処理の中</td><td>呼び出しのたびに接続が積み上がる</td></tr><tr><td>子プロセス</td><td>使わない</td><td>─</td><td>親が終わっても残り、呼び出し元が待たされる</td></tr></table></div>
 <h2>違反したとき</h2>
 <div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>一時ファイルが残る</td><td>次の呼び出しが前回の状態を読む</td><td>書き込みをやめるか、終了時に消す</td></tr><tr><td>起動が遅い</td><td>呼び出し元が待たされる</td><td>起動時の読み込みを減らす</td></tr></table></div>
 <h2>適用範囲外</h2>
-<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>業務の処理内容</td><td>業務操作</td></tr><tr><td>失敗の型</td><td>言語</td></tr></table></div>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>業務の処理内容</td><td>業務操作</td></tr><tr><td>失敗の型</td><td>言語</td></tr><tr><td>起動処理を置くファイル</td><td>言語 × アーキテクチャ</td></tr></table></div>
 <h2>委譲する判断</h2>
 <div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>設定の読み取り先</td><td>実装</td><td>配布の形で変わる</td></tr></table></div>
 <h2>出典</h2>
@@ -1264,9 +1305,9 @@ package http_test</pre>
 <h2>採用するアーキテクチャ</h2>
 <div class="wrap"><table><tr><th>軸</th><th>値</th><th>採用理由</th></tr><tr><td>アーキテクチャ</td><td><code>data-port</code></td><td>中心が外部の機能を必要とせず、写して検めて出すだけで閉じる。反転が要らない</td></tr><tr><td>実行環境</td><td><code>per-invocation</code></td><td>呼び出しごとに1件を処理して終わる</td></tr></table></div>
 <p><strong>別の用途が <code>hexagonal</code> を採ってもよい。</strong><br>軸は値を複数持ち、どれを採るかはこの規約が指定する。</p>
-<h2>採用するツール</h2>
+<h2>採用する依存</h2>
 <div class="wrap"><table><tr><th>用途</th><th>ツール</th><th>バージョン指定</th><th>採用理由</th><th>代替候補</th></tr><tr><td>JSON の解釈と生成</td><td><code>serde</code> ＋ <code>serde_json</code></td><td><code>1</code></td><td>契約が JSON で、型と対応づけられる</td><td>手書きの解析</td></tr><tr><td>診断の出力</td><td><code>tracing</code> ＋ <code>tracing-subscriber</code></td><td><code>0.3</code></td><td>標準エラーへの出力先を差し替えられる</td><td><code>eprintln!</code></td></tr><tr><td>失敗型の実装</td><td><code>thiserror</code></td><td><code>1</code></td><td>言語の規約（RS-ERR-04）を満たす</td><td>手書き</td></tr></table></div>
-<h2>採用しないツール</h2>
+<h2>採用しない依存</h2>
 <div class="wrap"><table><tr><th>ツール</th><th>採用しない理由</th></tr><tr><td>非同期の実行環境（<code>tokio</code> 等）</td><td>呼び出しごとに1件を処理するだけで、並行の必要がない。起動の費用だけが増える</td></tr><tr><td>HTTP クライアント</td><td>契約が標準入出力であり、外部への通信を持たない</td></tr><tr><td>設定用のフレームワーク</td><td>読む設定が少なく、環境変数で足りる</td></tr></table></div>
 <h2>バージョンの固定</h2>
 <div class="wrap"><table><tr><th>対象</th><th>固定の方法</th><th>固定するファイル</th></tr><tr><td>依存</td><td>ロックファイルを追跡する</td><td><code>Cargo.lock</code></td></tr><tr><td>実行ファイル</td><td>版を埋め込み、応答に含める</td><td><code>Cargo.toml</code></td></tr></table></div>
