@@ -1,0 +1,312 @@
+<title>CodingSkills の規約の段</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap"><style>
+:root{ --paper:#FBFAF7; --ink:#191C1F; --muted:#6C7076; --rule:#E3DFD7; --panel:#F4F1EA;
+  --panelrule:#DAD4C8; --key:#2F4858; --add:#A6543A; --out:#8A8479;
+  --mark:#F7E2BC; --markh:#F0CE92; --pop:#FDF6E9; --popline:#D9B77E;
+  --soft:#8FA3AE; --del:#8A8479; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036; --panel:#1D2024;
+  --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738;
+  --soft:#5D6B75; --del:#7E838B; } }
+:root[data-theme="dark"]{ --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036;
+  --panel:#1D2024; --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738;
+  --soft:#5D6B75; --del:#7E838B; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:15.5px;line-height:1.85;
+  font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:53rem;margin:0 auto;padding:0 1.5rem 5rem}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:1.6rem 0 .5rem}
+h1{font-family:"Noto Serif JP",serif;font-weight:700;font-size:clamp(23px,3.4vw,31px);
+  line-height:1.35;margin:0;padding-bottom:.6rem;border-bottom:2px solid var(--key);text-wrap:balance}
+h2{font-family:"Noto Serif JP",serif;font-weight:600;font-size:1.2rem;margin:2.6rem 0 1rem;
+  padding-bottom:.4rem;border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.6rem}
+h2 .sn{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted);font-weight:400}
+p{margin:0 0 1rem}
+.note{background:var(--panel);border:1px solid var(--panelrule);border-left:3px solid var(--key);
+  border-radius:.3rem;padding:.9rem 1.1rem;margin:1.2rem 0 0;font-size:.9rem}
+.lead{font-size:.92rem;margin-bottom:.7rem}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin:0}
+th,td{text-align:left;vertical-align:top;padding:.6rem .7rem;border-bottom:1px solid var(--rule)}
+th{font-weight:700;font-size:.72rem;letter-spacing:.05em;color:var(--muted);
+  border-bottom:1.5px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{width:1.9rem;padding-right:0}
+.n{font-family:ui-monospace,monospace;font-size:11px;color:var(--key);border:1px solid var(--key);
+  border-radius:2px;padding:0 5px;line-height:1.7;display:inline-block}
+.n.out{color:var(--out);border-color:var(--out)}
+table.out td{color:var(--muted)}
+table.out b{color:var(--out);text-decoration:line-through}
+.cost{color:var(--muted)}
+.st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
+  border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
+table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
+.pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
+  border-radius:2px;padding:0 .35em}
+ul.found{margin:0;padding-left:1.1rem;font-size:.92rem}
+ul.found li{margin-bottom:.5rem}
+figure{margin:0 0 1.2rem}
+figure+figure{margin-top:1.6rem;padding-top:1.4rem;border-top:1px dashed var(--rule)}
+figure svg{display:block;width:100%;height:auto;color:var(--ink);
+  border:1px solid var(--rule);border-radius:.35rem;background:var(--panel)}
+figcaption{font-size:.83rem;line-height:1.75;color:var(--muted);margin-top:.5rem}
+.you{border:1px dashed var(--key);border-radius:.3rem;padding:.9rem 1.1rem;color:var(--muted);
+  font-size:.9rem;background:color-mix(in srgb,var(--key) 5%,var(--paper))}
+.next{border:1px dashed var(--panelrule);border-radius:.3rem;padding:.9rem 1.1rem;
+  color:var(--muted);font-size:.9rem}
+
+mark.chg{background:var(--mark);color:var(--ink);border-radius:.15em;cursor:pointer;
+  box-shadow:-.2em 0 0 var(--mark),.2em 0 0 var(--mark);border-bottom:2px solid var(--add)}
+mark.chg:hover,mark.chg:focus{background:var(--markh);
+  box-shadow:-.2em 0 0 var(--markh),.2em 0 0 var(--markh);outline:none}
+mark.chg:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+mark.chg::after{content:"▸";font-size:.72em;color:var(--add);margin-left:.3em;font-weight:700}
+mark.chg[aria-expanded="true"]::after{content:"▾"}
+mark.chg.del{background:none;box-shadow:none;color:var(--out);border-bottom:1px dashed var(--out)}
+mark.chg.del b{text-decoration:line-through}
+
+.pop[hidden]{display:none}
+.pop{display:block;background:var(--pop);border:1px solid var(--popline);
+  border-left:3px solid var(--add);border-radius:.3rem;padding:.7rem .9rem;margin:.6rem 0 .2rem;
+  font-size:.82rem;line-height:1.75;white-space:normal;font-weight:400}
+.pop b{display:block;font-size:.66rem;letter-spacing:.14em;color:var(--add);margin-bottom:.3rem}
+.pop .why{display:block;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--popline)}
+.pop .why b{color:var(--key)}
+
+.hd{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:.8rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;z-index:9}
+.hd .t{font-family:"Noto Serif JP",serif;font-weight:700;font-size:1rem;flex:1;min-width:12rem}
+.hd .t small{display:block;font-family:"Noto Sans JP",sans-serif;font-weight:400;
+  font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.hd button{font:inherit;font-size:.82rem;font-weight:700;padding:.35rem .9rem;border-radius:.3rem;
+  cursor:pointer;background:var(--panel);color:var(--ink);border:1px solid var(--panelrule)}
+.hd button:hover{background:var(--markh)}
+.hd button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+
+/* 論点のタブ。ブレストは論点が互いの前提になるので、1枚に束ねる */
+.tabs{position:sticky;top:3.4rem;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:.45rem 1.5rem;display:flex;gap:.4rem;overflow-x:auto;z-index:8;scrollbar-width:thin}
+.tabs button{font:inherit;font-size:.82rem;padding:.35rem .8rem;border-radius:.3rem;cursor:pointer;
+  background:none;color:var(--muted);border:1px solid transparent;white-space:nowrap;
+  display:flex;align-items:center;gap:.4rem}
+.tabs button:hover{background:var(--panel);color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);
+  border-color:var(--panelrule);font-weight:700}
+.tabs button[aria-selected="true"] .tn{color:var(--key)}
+.tabs .tn{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted)}
+.tabs button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+.st.done{color:var(--key);border-color:var(--key)}
+.st.open{color:var(--add);border-color:var(--add)}
+section[role="tabpanel"][hidden]{display:none}
+</style><div class="hd"><div class="t">CodingSkills ── 規約に従って書くSkill<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div><button id="all" type="button">すべて開く</button></div><div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-t="p0">現在地</button><button role="tab" aria-selected="false" data-t="p1"><span class="tn">1</span>段の切り方<span class="st open">未</span></button><button role="tab" aria-selected="false" data-t="p2"><span class="tn">2</span>上書き<span class="st open">未</span></button><button role="tab" aria-selected="false" data-t="p3"><span class="tn">3</span>索引の鍵<span class="st open">未</span></button><button role="tab" aria-selected="false" data-t="p4"><span class="tn">4</span>振る舞いの宣言<span class="st open">未</span></button><button role="tab" aria-selected="false" data-t="p5"><span class="tn">5</span>規約を起こす手順<span class="st open">未</span></button></div><main><section id="p0" role="tabpanel"><p class="eyebrow">現在地</p><h1>CodingSkills ── 規約に従って書くSkill</h1><div class="note"><b>これは正本ではない。ブレストの記録である。</b>5つの論点はすべて開いている。段1・段2（schema の再定義）が決まったら、この形をそちらへ寄せる ── いまは<b>Waffle を前提にしない形</b>で組む。</div><h2><span class="sn">1</span>論点の現在地</h2><div class="scroll"><table class=""><tr><th>#</th><th>論点</th><th>状態</th><th>いまの答え</th></tr><tr><td><span class="n">1</span></td><td>規約の段を、どこで切るか</td><td><span class="st open">未</span></td><td>推しは A（4段）。ただし段2は薄く保つ</td></tr><tr><td><span class="n">2</span></td><td>下層は、上層の規約を上書きできるか</td><td><span class="st open">未</span></td><td>推しは A（できない）</td></tr><tr><td><span class="n">3</span></td><td>何を渡せば、規約一式が決まるか</td><td><span class="st open">未</span></td><td>推しは A（〈目的, 言語〉）</td></tr><tr><td><span class="n">4</span></td><td>期待する振る舞いを、どこへ置くか</td><td><span class="st open">未</span></td><td>推しは B（テストが宣言そのもの）</td></tr><tr><td><span class="n">5</span></td><td>規約そのものを作る手順を、どこへ置くか</td><td><span class="st open">未</span></td><td>推しは B（references に1本）</td></tr></table></div><h2><span class="sn">2</span>何を作ろうとしているか</h2><p class='lead'>目的と対象に応じて<b>必要な規約を作り</b>、その規約に従って書くSkillである。規約そのものは <code>references/</code> に置き、SKILL.md は<b>索引して従う手順</b>だけを持つ。<b>Waffle が無い環境でも動く</b> ── Waffle の有無を判定する処理は持たない。</p><div class="scroll"><table class=""><tr><th>規約の種別</th><th>何についての決まりか</th></tr><tr><td>テスト</td><td>何を、どの単位で、どう確かめるか</td></tr><tr><td>コーディング</td><td>命名・書式・エラーの運び方・文書コメント</td></tr><tr><td>アーキテクチャ</td><td>層の名前と、依存の向き</td></tr><tr><td>技術スタック</td><td>使う道具と、その版</td></tr></table></div><p class='lead'>最初に使う先は、別リポジトリの OSS ── <b>Go でバックエンドAPI、Rust で Hook と MCP</b>。そこで効果を測ってから、段1・段2 が決まった時点で正式な形へ直す。</p></section><section id="p1" role="tabpanel" hidden><p class="eyebrow">論点 1</p><h1>規約の段を、どこで切るか</h1><div class="note">不変なのは<b>「その言語における、そのアーキテクチャの書き方」</b>であって、言語単体でもアーキテクチャ単体でもない。こちらの既存規約でも、命名規約が <code>appliesTo</code> で<b>アーキテクチャが宣言した層名を指している</b> ── 層名を知らずに命名規約は書けない。</div><h2><span class="sn">1</span>案の違いを、図で</h2><figure><svg viewBox="0 0 780 290" role="img" aria-label="目的別だけで並べると言語とアーキの規約が目的の数だけ複製されるが、段に分けると言語規約は1つで済む">
+<text x="8" y="18" font-size="12" font-weight="700" fill="var(--add)">目的別だけで並べる</text>
+<text x="8" y="36" font-size="10.5" fill="var(--muted)">目的 3 × 言語 2 ＝ 同じ Go の規約が 3 か所に写る</text>
+<rect x="8" y="48" width="112" height="112" fill="none" stroke="var(--rule)"/>
+<text x="64" y="66" text-anchor="middle" font-size="10.5" fill="var(--muted)">backend-api</text>
+<rect x="18" y="76" width="92" height="24" fill="none" stroke="var(--add)" stroke-width="1.5"/><text x="64" y="92" text-anchor="middle" font-size="10" fill="var(--add)">Go の書き方</text>
+<rect x="18" y="106" width="92" height="24" fill="none" stroke="var(--add)" stroke-width="1.5"/><text x="64" y="122" text-anchor="middle" font-size="10" fill="var(--add)">層と依存</text>
+<rect x="18" y="134" width="92" height="20" fill="none" stroke="var(--rule)"/><text x="64" y="148" text-anchor="middle" font-size="10" fill="var(--muted)">API 固有</text>
+<rect x="130" y="48" width="112" height="112" fill="none" stroke="var(--rule)"/>
+<text x="186" y="66" text-anchor="middle" font-size="10.5" fill="var(--muted)">hook</text>
+<rect x="140" y="76" width="92" height="24" fill="none" stroke="var(--add)" stroke-width="1.5"/><text x="186" y="92" text-anchor="middle" font-size="10" fill="var(--add)">Rust の書き方</text>
+<rect x="140" y="106" width="92" height="24" fill="none" stroke="var(--add)" stroke-width="1.5"/><text x="186" y="122" text-anchor="middle" font-size="10" fill="var(--add)">層と依存</text>
+<rect x="140" y="134" width="92" height="20" fill="none" stroke="var(--rule)"/><text x="186" y="148" text-anchor="middle" font-size="10" fill="var(--muted)">Hook 固有</text>
+<rect x="252" y="48" width="112" height="112" fill="none" stroke="var(--rule)"/>
+<text x="308" y="66" text-anchor="middle" font-size="10.5" fill="var(--muted)">mcp-server</text>
+<rect x="262" y="76" width="92" height="24" fill="none" stroke="var(--add)" stroke-width="1.5"/><text x="308" y="92" text-anchor="middle" font-size="10" fill="var(--add)">Rust の書き方</text>
+<rect x="262" y="106" width="92" height="24" fill="none" stroke="var(--add)" stroke-width="1.5"/><text x="308" y="122" text-anchor="middle" font-size="10" fill="var(--add)">層と依存</text>
+<rect x="262" y="134" width="92" height="20" fill="none" stroke="var(--rule)"/><text x="308" y="148" text-anchor="middle" font-size="10" fill="var(--muted)">MCP 固有</text>
+<text x="8" y="192" font-size="11.5" fill="var(--add)">同じことを書いた箇所が 6 つ。直すときは 6 か所を当たる</text>
+<text x="8" y="212" font-size="11.5" font-weight="700" fill="var(--add)">そして、写した先で少しずつ違う書き方になる</text>
+
+<line x1="390" y1="8" x2="390" y2="282" stroke="var(--rule)"/>
+
+<text x="412" y="18" font-size="12" font-weight="700" fill="var(--key)">段に分ける</text>
+<text x="412" y="36" font-size="10.5" fill="var(--muted)">Go の規約は 1 つ。目的は空けた場所だけを埋める</text>
+<rect x="412" y="48" width="150" height="26" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="487" y="66" text-anchor="middle" font-size="10.5" fill="var(--key)">1　Go の書き方</text>
+<rect x="572" y="48" width="150" height="26" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="647" y="66" text-anchor="middle" font-size="10.5" fill="var(--key)">1　Rust の書き方</text>
+<rect x="412" y="84" width="310" height="26" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="567" y="102" text-anchor="middle" font-size="10.5" fill="var(--key)">2　層と依存の向き（言語を知らない）</text>
+<rect x="412" y="120" width="150" height="26" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="487" y="138" text-anchor="middle" font-size="10.5" fill="var(--key)">3　Go × 層の表し方</text>
+<rect x="572" y="120" width="150" height="26" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="647" y="138" text-anchor="middle" font-size="10.5" fill="var(--key)">3　Rust × 層の表し方</text>
+<rect x="412" y="156" width="98" height="24" fill="none" stroke="var(--add)" stroke-width="1.6"/><text x="461" y="172" text-anchor="middle" font-size="10" fill="var(--add)">4　API</text>
+<rect x="518" y="156" width="98" height="24" fill="none" stroke="var(--add)" stroke-width="1.6"/><text x="567" y="172" text-anchor="middle" font-size="10" fill="var(--add)">4　Hook</text>
+<rect x="624" y="156" width="98" height="24" fill="none" stroke="var(--add)" stroke-width="1.6"/><text x="673" y="172" text-anchor="middle" font-size="10" fill="var(--add)">4　MCP</text>
+<text x="412" y="212" font-size="11.5" font-weight="700" fill="var(--key)">同じことを書いた箇所は 0。直す場所は必ず 1 か所である</text>
+</svg><figcaption><b>目的別だけで並べると、同じことを書いた箇所が目的の数だけ増える。</b>写した先で少しずつ違う書き方になる ── これが破綻の中身である。</figcaption></figure><figure><svg viewBox="0 0 780 300" role="img" aria-label="段はフォルダ、規約種別はファイル。段と種別は別の軸であり、掛け合わせたマス目のうち埋まるのは一部だけである">
+<text x="150" y="20" font-size="11" fill="var(--muted)">段 ＝ どこまでが不変か（フォルダ）</text>
+<text x="470" y="20" font-size="11" fill="var(--muted)">規約種別 ＝ 何についての決まりか（ファイル）</text>
+<line x1="150" y1="34" x2="150" y2="290" stroke="var(--rule)"/>
+<text x="320" y="52" text-anchor="middle" font-size="10.5" fill="var(--muted)">コーディング</text>
+<text x="430" y="52" text-anchor="middle" font-size="10.5" fill="var(--muted)">テスト</text>
+<text x="540" y="52" text-anchor="middle" font-size="10.5" fill="var(--muted)">アーキテクチャ</text>
+<text x="660" y="52" text-anchor="middle" font-size="10.5" fill="var(--muted)">技術スタック</text>
+<line x1="270" y1="60" x2="770" y2="60" stroke="var(--rule)"/>
+
+<text x="10" y="86" font-size="11.5" font-weight="700" fill="var(--key)">1　言語</text>
+<text x="10" y="102" font-size="10" fill="var(--muted)">Go ／ Rust</text>
+<rect x="272" y="70" width="96" height="34" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="320" y="92" text-anchor="middle" font-size="11" fill="var(--key)">●</text>
+<rect x="382" y="70" width="96" height="34" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="430" y="92" text-anchor="middle" font-size="11" fill="var(--key)">●</text>
+<rect x="492" y="70" width="96" height="34" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+<rect x="602" y="70" width="116" height="34" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="660" y="92" text-anchor="middle" font-size="11" fill="var(--key)">●</text>
+
+<text x="10" y="136" font-size="11.5" font-weight="700" fill="var(--key)">2　アーキテクチャ</text>
+<text x="10" y="152" font-size="10" fill="var(--muted)">層と依存の向きだけ</text>
+<rect x="272" y="120" width="96" height="34" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+<rect x="382" y="120" width="96" height="34" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+<rect x="492" y="120" width="96" height="34" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="540" y="142" text-anchor="middle" font-size="11" fill="var(--key)">●</text>
+<rect x="602" y="120" width="116" height="34" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+
+<text x="10" y="186" font-size="11.5" font-weight="700" fill="var(--key)">3　言語 × アーキ</text>
+<text x="10" y="202" font-size="10" fill="var(--muted)">層を何で表すか</text>
+<rect x="272" y="170" width="96" height="34" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="320" y="192" text-anchor="middle" font-size="11" fill="var(--key)">●</text>
+<rect x="382" y="170" width="96" height="34" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+<rect x="492" y="170" width="96" height="34" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="540" y="192" text-anchor="middle" font-size="11" fill="var(--key)">●</text>
+<rect x="602" y="170" width="116" height="34" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+
+<text x="10" y="236" font-size="11.5" font-weight="700" fill="var(--add)">4　目的</text>
+<text x="10" y="252" font-size="10" fill="var(--muted)">API ／ Hook ／ MCP</text>
+<rect x="272" y="220" width="96" height="34" fill="none" stroke="var(--rule)" stroke-dasharray="4 3"/>
+<rect x="382" y="220" width="96" height="34" fill="none" stroke="var(--add)" stroke-width="1.7"/><text x="430" y="242" text-anchor="middle" font-size="11" fill="var(--add)">●</text>
+<rect x="492" y="220" width="96" height="34" fill="none" stroke="var(--add)" stroke-width="1.7"/><text x="540" y="242" text-anchor="middle" font-size="11" fill="var(--add)">●</text>
+<rect x="602" y="220" width="116" height="34" fill="none" stroke="var(--add)" stroke-width="1.7"/><text x="660" y="242" text-anchor="middle" font-size="11" fill="var(--add)">●</text>
+
+<text x="10" y="288" font-size="10.5" fill="var(--muted)">●＝その段が持つ　　破線＝持たない</text>
+<text x="272" y="288" font-size="10.5" fill="var(--muted)">段と種別は別の軸である。掛け合わせても、埋まるのは一部だけになる</text>
+</svg><figcaption><b>段はフォルダ、規約種別はファイルになる。</b>2つは別の軸なので、掛け合わせても埋まるのは一部だけである。</figcaption></figure><h2><span class="sn">2</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><b>4段（言語／アーキ／言語×アーキ／目的）</b></td><td>言語だけで決まること・層と依存の向き・層の表し方・目的固有を、それぞれ別の段に置く</td><td><span class="cost">段が4つある。新しい言語を足すと、段1 と段3 の2か所に触ることになる</span></td></tr><tr><td><span class="n ">B</span></td><td><b>3段（言語／言語×アーキ／目的）</b></td><td>言語を知らないアーキテクチャ規約を持たない。層と依存の向きは、言語×アーキの段が言う</td><td><span class="cost">依存の向きという<b>言語に依らない決まりが、言語の数だけ複製される</b>。Go と Rust で書き方がずれても、突き合わせる先が無い</span></td></tr><tr><td><span class="n ">C</span></td><td><b>2段（言語×アーキ／目的）</b></td><td>言語とアーキを常に束ねて持つ。段は具体と目的の2つだけ</td><td><span class="cost">Go だけで決まること（error の運び方・書式）が、<b>アーキテクチャの数だけ複製される</b>。段の数は減るが、写しは増える</span></td></tr></table></div><h2><span class="sn">3</span>落とした案と、その理由</h2><div class="scroll"><table class="out"><tr><th></th><th>案</th><th>落とした理由</th></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="言語とアーキの規約が目的ごとに乱立する。これは避けたい形そのもの"><b>目的だけの1段</b></mark></td><td>言語とアーキの規約が目的ごとに乱立する。これは避けたい形そのもの</td></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="種別は「何についての決まりか」の軸で、段は「どこまでが不変か」の軸である。別の軸を段に使うと、1つの規約が2か所に分かれる"><b>規約種別を段にする（テスト規約の下に言語…）</b></mark></td><td>種別は「何についての決まりか」の軸で、段は「どこまでが不変か」の軸である。別の軸を段に使うと、1つの規約が2か所に分かれる</td></tr></table></div><h2><span class="sn">4</span>反証で分かったこと</h2><ul class='found'><li><b>段と規約種別は直交する。</b>段がフォルダ、種別がファイルになり、全部のマスが埋まるわけではない</li><li><b>目的は最下段＝具体に近い境界に置く。</b>上層が担保していれば、目的の段は「その目的でしか決まらないこと」だけを持つ</li></ul><h2><span class="sn">5</span>私の推しと、その連鎖</h2><p class="lead">推す案は <b class="pickn">A</b> である。</p><div class="scroll"><table class="chain"><tr><th>段</th><th>中身</th></tr><tr><td><span class="st">測った</span></td><td>既存の <code>coding-standard-typescript-hexagonal</code> は、命名の <code>appliesTo</code> で architecture が宣言した層名を指している</td></tr><tr><td><span class="st">だから</span></td><td>コーディング規約とアーキテクチャ規約は、片方だけでは書けない ── 束ねる段が要る</td></tr><tr><td><span class="st">一方で</span></td><td>全部を束ねると、言語だけで決まることが組み合わせの数だけ写る</td></tr><tr><td><span class="st">結論</span></td><td><b>A ── 4段に切る。</b>ただし<b>段2 は「層の名前と依存の向き」だけに絞り、薄く保つ</b></td></tr><tr><td><span class="st">引き受ける</span></td><td>新しい言語を足すとき、段1 と段3 の2か所を書く</td></tr><tr><td><span class="st">確かめていない</span></td><td>段2 が本当に言語を知らずに書けるかは、Go と Rust の2本を書くまで分からない</td></tr></table></div><h2><span class="sn">6</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">7</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section><section id="p2" role="tabpanel" hidden><p class="eyebrow">論点 2</p><h1>下層は、上層の規約を上書きできるか</h1><div class="note">「規約の内容は各層で担保し、目的は境界に置く」を、規則として1本にすると、ここが問われる。</div><h2><span class="sn">1</span>案の違いを、図で</h2><figure><svg viewBox="0 0 780 250" role="img" aria-label="下層が上層を上書きできる世界では例外が積もり、上書きできない世界では上層を直す動きが起きる">
+<defs><marker id="o1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker>
+<marker id="o2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--key)"/></marker></defs>
+<text x="8" y="18" font-size="12" font-weight="700" fill="var(--add)">上書きできる</text>
+<rect x="8" y="32" width="330" height="30" fill="none" stroke="currentColor" stroke-width="1.4"/>
+<text x="173" y="52" text-anchor="middle" font-size="11.5" fill="currentColor">上層の規約</text>
+<rect x="8" y="92" width="100" height="42" fill="none" stroke="var(--add)" stroke-width="1.5"/>
+<text x="58" y="112" text-anchor="middle" font-size="10.5" fill="var(--add)">目的 A</text><text x="58" y="127" text-anchor="middle" font-size="10" fill="var(--muted)">例外 2件</text>
+<rect x="122" y="92" width="100" height="42" fill="none" stroke="var(--add)" stroke-width="1.5"/>
+<text x="172" y="112" text-anchor="middle" font-size="10.5" fill="var(--add)">目的 B</text><text x="172" y="127" text-anchor="middle" font-size="10" fill="var(--muted)">例外 5件</text>
+<rect x="236" y="92" width="102" height="42" fill="none" stroke="var(--add)" stroke-width="1.5"/>
+<text x="287" y="112" text-anchor="middle" font-size="10.5" fill="var(--add)">目的 C</text><text x="287" y="127" text-anchor="middle" font-size="10" fill="var(--muted)">例外 3件</text>
+<line x1="58" y1="88" x2="58" y2="66" stroke="var(--add)" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#o1)"/>
+<line x1="172" y1="88" x2="172" y2="66" stroke="var(--add)" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#o1)"/>
+<line x1="287" y1="88" x2="287" y2="66" stroke="var(--add)" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#o1)"/>
+<text x="8" y="166" font-size="11.5" fill="var(--add)">上層は動かず、例外だけが積もる。</text>
+<text x="8" y="186" font-size="11.5" font-weight="700" fill="var(--add)">読む人は、上層と例外の両方を突き合わせることになる</text>
+<text x="8" y="212" font-size="11" fill="var(--muted)">10件の例外は、10通りの書き方である</text>
+
+<line x1="390" y1="8" x2="390" y2="240" stroke="var(--rule)"/>
+
+<text x="412" y="18" font-size="12" font-weight="700" fill="var(--key)">上書きできない</text>
+<rect x="412" y="32" width="330" height="30" fill="none" stroke="var(--key)" stroke-width="1.8"/>
+<text x="577" y="52" text-anchor="middle" font-size="11.5" fill="var(--key)">上層の規約　＜ここが直る＞</text>
+<rect x="412" y="92" width="100" height="42" fill="none" stroke="var(--rule)"/>
+<text x="462" y="112" text-anchor="middle" font-size="10.5" fill="var(--muted)">目的 A</text><text x="462" y="127" text-anchor="middle" font-size="10" fill="var(--muted)">空けた場所だけ</text>
+<rect x="526" y="92" width="100" height="42" fill="none" stroke="var(--rule)"/>
+<text x="576" y="112" text-anchor="middle" font-size="10.5" fill="var(--muted)">目的 B</text><text x="576" y="127" text-anchor="middle" font-size="10" fill="var(--muted)">空けた場所だけ</text>
+<rect x="640" y="92" width="102" height="42" fill="none" stroke="var(--rule)"/>
+<text x="691" y="112" text-anchor="middle" font-size="10.5" fill="var(--muted)">目的 C</text><text x="691" y="127" text-anchor="middle" font-size="10" fill="var(--muted)">空けた場所だけ</text>
+<path d="M576 88 L576 76 L577 66" fill="none" stroke="var(--key)" stroke-width="1.8" marker-end="url(#o2)"/>
+<text x="590" y="82" font-size="10.5" fill="var(--key)">上書きが要る＝上層が広すぎた合図</text>
+<text x="412" y="166" font-size="11.5" fill="var(--key)">例外は積もらず、上層が直る。</text>
+<text x="412" y="186" font-size="11.5" font-weight="700" fill="var(--key)">直した結果は、他の目的にも同時に効く</text>
+<text x="412" y="212" font-size="11" fill="var(--muted)">代償：直す範囲が広い。1目的の都合で全体が動く</text>
+</svg><figcaption><b>差は、例外が積もるか、上層が動くかである。</b>上書きを許すと上層は動かず、読む人が上層と例外を突き合わせることになる。</figcaption></figure><h2><span class="sn">2</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><b>下層は上層を上書きできない</b></td><td>下層が持てるのは、上層が空けた場所だけ。上書きが要るなら、上層を直す</td><td><span class="cost">1つの目的の都合で、上層が動く。直す範囲が広くなる</span></td></tr><tr><td><span class="n ">B</span></td><td><b>宣言すれば上書きできる</b></td><td>例外として明示すれば、下層が上層を上書きしてよい</td><td><span class="cost">例外が積もる。<b>10件の例外は、10通りの書き方である</b>。上層はいつまでも直らない</span></td></tr></table></div><h2><span class="sn">3</span>落とした案と、その理由</h2><div class="scroll"><table class="out"><tr><th></th><th>案</th><th>落とした理由</th></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="写した先で少しずつ違う書き方になる。目的別に並べたときと同じ破綻に戻る"><b>断りなく上書きできる</b></mark></td><td>写した先で少しずつ違う書き方になる。目的別に並べたときと同じ破綻に戻る</td></tr></table></div><h2><span class="sn">4</span>反証で分かったこと</h2><ul class='found'><li><b>上書きが要ると分かった時点が、上層を直す合図である。</b>例外の要求は、下層の問題ではなく上層が広すぎたことの現れとして扱える</li></ul><h2><span class="sn">5</span>私の推しと、その連鎖</h2><p class="lead">推す案は <b class="pickn">A</b> である。</p><div class="scroll"><table class="chain"><tr><th>段</th><th>中身</th></tr><tr><td><span class="st">だから</span></td><td>上書きを許すと、規約の正本が上層と例外の2か所になる</td></tr><tr><td><span class="st">結論</span></td><td><b>A ── 下層は上書きできない。</b>上書きが要るなら上層を直し、その結果は他の目的にも同時に効く</td></tr><tr><td><span class="st">引き受ける</span></td><td>1つの目的の都合で上層が動く。動かす前に、他の目的にも当てはまるかを確かめる</td></tr></table></div><h2><span class="sn">6</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">7</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section><section id="p3" role="tabpanel" hidden><p class="eyebrow">論点 3</p><h1>何を渡せば、規約一式が決まるか</h1><h2><span class="sn">1</span>案の違いを、図で</h2><figure><svg viewBox="0 0 780 230" role="img" aria-label="入力の目的と言語から、段1から段4までの規約を索引して読む道筋">
+<defs><marker id="x1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--key)"/></marker></defs>
+<rect x="8" y="70" width="132" height="58" fill="none" stroke="var(--add)" stroke-width="1.8"/>
+<text x="74" y="92" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--add)">入力</text>
+<text x="74" y="110" text-anchor="middle" font-size="10.5" fill="var(--muted)">目的 ＝ hook</text>
+<text x="74" y="124" text-anchor="middle" font-size="10.5" fill="var(--muted)">言語 ＝ Rust</text>
+<line x1="140" y1="99" x2="176" y2="99" stroke="var(--key)" stroke-width="1.6" marker-end="url(#x1)"/>
+<rect x="182" y="70" width="128" height="58" fill="none" stroke="var(--key)" stroke-width="1.5"/>
+<text x="246" y="92" text-anchor="middle" font-size="11" fill="var(--key)">4　目的の規約</text>
+<text x="246" y="110" text-anchor="middle" font-size="10" fill="var(--muted)">アーキを指定する</text>
+<text x="246" y="124" text-anchor="middle" font-size="10" fill="var(--key)">→ hexagonal</text>
+<line x1="310" y1="99" x2="346" y2="99" stroke="var(--key)" stroke-width="1.6" marker-end="url(#x1)"/>
+<rect x="352" y="70" width="128" height="58" fill="none" stroke="var(--key)" stroke-width="1.5"/>
+<text x="416" y="92" text-anchor="middle" font-size="11" fill="var(--key)">3　言語 × アーキ</text>
+<text x="416" y="112" text-anchor="middle" font-size="10" fill="var(--muted)">rust-hexagonal</text>
+<line x1="480" y1="99" x2="516" y2="99" stroke="var(--key)" stroke-width="1.6" marker-end="url(#x1)"/>
+<rect x="522" y="56" width="122" height="38" fill="none" stroke="var(--key)" stroke-width="1.5"/>
+<text x="583" y="80" text-anchor="middle" font-size="11" fill="var(--key)">2　アーキ</text>
+<rect x="522" y="104" width="122" height="38" fill="none" stroke="var(--key)" stroke-width="1.5"/>
+<text x="583" y="128" text-anchor="middle" font-size="11" fill="var(--key)">1　言語（Rust）</text>
+<line x1="644" y1="99" x2="682" y2="99" stroke="var(--key)" stroke-width="1.6" marker-end="url(#x1)"/>
+<rect x="688" y="70" width="84" height="58" fill="none" stroke="var(--key)" stroke-width="1.8"/>
+<text x="730" y="94" text-anchor="middle" font-size="11" font-weight="700" fill="var(--key)">規約一式</text>
+<text x="730" y="112" text-anchor="middle" font-size="10" fill="var(--muted)">4種別ぶん</text>
+<line x1="8" y1="164" x2="772" y2="164" stroke="var(--rule)"/>
+<text x="8" y="186" font-size="11.5" fill="var(--muted)">索引の鍵は<tspan font-weight="700" fill="var(--add)">〈目的, 言語〉の2つ</tspan>で足りる。アーキテクチャは目的が指定するので、呼ぶ側は知らなくてよい。</text>
+<text x="8" y="208" font-size="11.5" fill="var(--muted)">読むのは段4→1 の順で辿るが、<tspan font-weight="700" fill="var(--key)">衝突したときに勝つのは上層である</tspan>。</text>
+</svg><figcaption><b>目的がアーキテクチャを指定するので、呼ぶ側は知らなくてよい。</b>読むのは段4→1 の順だが、衝突したときに勝つのは上層である。</figcaption></figure><h2><span class="sn">2</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><b>〈目的, 言語〉の2つ</b></td><td>アーキテクチャは目的の規約が指定する</td><td><span class="cost">1つの目的に2通りのアーキテクチャを当てたくなったとき、目的を分けることになる</span></td></tr><tr><td><span class="n ">B</span></td><td><b>〈目的, 言語, アーキテクチャ〉の3つ</b></td><td>呼ぶ側がアーキテクチャも渡す</td><td><span class="cost">呼ぶ側が知らないことを聞かれる。<b>目的とアーキの組み合わせの正しさを、誰も裁かない</b></span></td></tr><tr><td><span class="n ">C</span></td><td><b>〈目的〉の1つ</b></td><td>目的が言語まで決める（バックエンドAPI＝Go 等）</td><td><span class="cost">同じ目的を別の言語で書けなくなる。言語の乗り換えが、目的の作り直しになる</span></td></tr></table></div><h2><span class="sn">3</span>反証で分かったこと</h2><ul class='found'><li><b>索引の鍵の数は、誰が何を知っているかで決まる。</b>呼ぶ側が知らないものを鍵にすると、判断が呼ぶ側へ漏れる</li></ul><h2><span class="sn">4</span>私の推しと、その連鎖</h2><p class="lead">推す案は <b class="pickn">A</b> である。</p><div class="scroll"><table class="chain"><tr><th>段</th><th>中身</th></tr><tr><td><span class="st">だから</span></td><td>目的（Hook を作る）は分かっていても、その目的にどのアーキテクチャが合うかは、規約の側が持つ知識である</td></tr><tr><td><span class="st">結論</span></td><td><b>A ── 鍵は〈目的, 言語〉の2つ。</b>アーキテクチャは目的の規約が指定する</td></tr><tr><td><span class="st">引き受ける</span></td><td>1つの目的に複数のアーキテクチャを当てたくなったら、目的を分ける</td></tr></table></div><h2><span class="sn">5</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">6</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section><section id="p4" role="tabpanel" hidden><p class="eyebrow">論点 4</p><h1>期待する振る舞いを、どこへ置くか</h1><div class="note">実装から書くと、書けるのは<b>実装の範囲内の振る舞いだけ</b>になる。ここで問うのは、その宣言を成果物として別に残すかどうかである。</div><h2><span class="sn">1</span>案の違いを、図で</h2><figure><svg viewBox="0 0 780 250" role="img" aria-label="実装を読んでから書いたテストは実装の範囲内の振る舞いしか覆えず、振る舞いから書いたテストは実装の外の不足も捉える">
+<text x="8" y="18" font-size="12" font-weight="700" fill="var(--add)">実装を読んでから、テストを書く</text>
+<circle cx="140" cy="120" r="66" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<text x="140" y="42" text-anchor="middle" font-size="11" fill="var(--muted)">実装がしていること</text>
+<circle cx="140" cy="120" r="46" fill="none" stroke="var(--add)" stroke-width="1.8" stroke-dasharray="5 4"/>
+<text x="140" y="118" text-anchor="middle" font-size="11" font-weight="700" fill="var(--add)">テストが見る範囲</text>
+<text x="140" y="136" text-anchor="middle" font-size="10" fill="var(--muted)">実装の内側に収まる</text>
+<text x="8" y="212" font-size="11.5" fill="var(--add)">期待する振る舞いは、どこにも書かれていない。</text>
+<text x="8" y="232" font-size="11.5" font-weight="700" fill="var(--add)">実装が間違っていても、テストは通る</text>
+
+<line x1="390" y1="8" x2="390" y2="240" stroke="var(--rule)"/>
+
+<text x="412" y="18" font-size="12" font-weight="700" fill="var(--key)">振る舞いを先に宣言してから、テストを書く</text>
+<circle cx="560" cy="120" r="66" fill="none" stroke="var(--key)" stroke-width="1.8"/>
+<text x="560" y="42" text-anchor="middle" font-size="11" fill="var(--key)">期待する振る舞い</text>
+<circle cx="600" cy="130" r="46" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<text x="640" y="196" text-anchor="middle" font-size="10.5" fill="var(--muted)">実装がしていること</text>
+<path d="M508 96 A 66 66 0 0 0 520 152" fill="none" stroke="var(--add)" stroke-width="2.4"/>
+<text x="432" y="120" font-size="10.5" font-weight="700" fill="var(--add)">ここが不足</text>
+<text x="432" y="136" font-size="10" fill="var(--muted)">失敗するテストになる</text>
+<text x="412" y="212" font-size="11.5" fill="var(--key)">宣言が先にあるので、実装の外側を指せる。</text>
+<text x="412" y="232" font-size="11.5" font-weight="700" fill="var(--key)">テストが落ちることで、不足が観測できる</text>
+</svg><figcaption><b>実装を読んでから書いたテストは、実装の外側を指せない。</b>宣言が先にあると、不足が失敗するテストとして観測できる。</figcaption></figure><h2><span class="sn">2</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><b>振る舞いの表を、成果物として別に残す</b></td><td>受け入れ基準の一覧を書き、そこからテストへ落とす</td><td><span class="cost">表とテストの二重管理になる。ずれたとき、どちらが正かを決める規則がまた要る</span></td></tr><tr><td><span class="n ">B</span></td><td><b>テストそのものを宣言にする</b></td><td>テスト名を振る舞いを述べる文にし、実装の名前を含めない。テストが唯一の宣言になる</td><td><span class="cost">宣言と実装が同じ言語・同じ場所にあるので、実装を見ながら書いてしまう誘惑が消えない ── <b>禁止で止めるしかない</b></span></td></tr></table></div><h2><span class="sn">3</span>落とした案と、その理由</h2><div class="scroll"><table class="out"><tr><th></th><th>案</th><th>落とした理由</th></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="Waffle のような文書の器を前提にすることになる。Waffle が無い環境でも動く、という前提に反する"><b>仕様文書側に置く</b></mark></td><td>Waffle のような文書の器を前提にすることになる。Waffle が無い環境でも動く、という前提に反する</td></tr></table></div><h2><span class="sn">4</span>反証で分かったこと</h2><ul class='found'><li><b>どちらを選んでも、禁止が1本要る ── 実装を読んでからテストを書かない。</b>これは置き場所では担保できない</li><li>テストの粒度が振る舞いか実装かは、<b>テスト名が実装の名前を含むかどうか</b>で機械的に見える</li></ul><h2><span class="sn">5</span>私の推しと、その連鎖</h2><p class="lead">推す案は <b class="pickn">B</b> である。</p><div class="scroll"><table class="chain"><tr><th>段</th><th>中身</th></tr><tr><td><span class="st">だから</span></td><td>宣言を2か所に持つと、ずれたときの裁定規則がまた要る</td></tr><tr><td><span class="st">結論</span></td><td><b>B ── テストが宣言そのものである。</b>テスト名は振る舞いを述べる文にし、実装の名前を含めない</td></tr><tr><td><span class="st">引き受ける</span></td><td>禁止を1本置く ── 実装を読んでからテストを書かない。段1 のテスト規約に、テスト名の形と併せて書く</td></tr><tr><td><span class="st">反証</span></td><td>既にあるコードへ後から手を入れるときは、実装を読まずには書けない。その場合をどう扱うかは、まだ決めていない</td></tr></table></div><h2><span class="sn">6</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">7</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section><section id="p5" role="tabpanel" hidden><p class="eyebrow">論点 5</p><h1>規約そのものを作る手順を、どこへ置くか</h1><div class="note">このSkillは「規約を作る」と「規約に従って書く」の両方を担う。<b>2つは読む順が逆である</b> ── 作る側は上から下へ、使う側は索引して下から上へ辿る。</div><h2><span class="sn">1</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><b>SKILL.md 本体に、両方の手順を書く</b></td><td>1本の手順書に、作る手順と従う手順を並べる</td><td><span class="cost">毎回どちらの手順かを判断してから読むことになる。<b>本体が2つの目的を持つ</b></span></td></tr><tr><td><span class="n ">B</span></td><td><b>SKILL.md は「索引して従う」に絞り、作る手順は references に1本置く</b></td><td>規約の書き方も、規約の一種として references に置く</td><td><span class="cost">規約を新しく起こす人が、SKILL.md を読んでも手順に辿り着かない ── 参照で繋ぐ必要がある</span></td></tr><tr><td><span class="n ">C</span></td><td><b>別のSkillに分ける</b></td><td>規約を起こすSkillと、規約に従って書くSkillを分ける</td><td><span class="cost">規約の形を変えたとき、2つのSkillを同時に直すことになる。<b>形の正本が2か所になる</b></span></td></tr></table></div><h2><span class="sn">2</span>私の推しと、その連鎖</h2><p class="lead">推す案は <b class="pickn">B</b> である。</p><div class="scroll"><table class="chain"><tr><th>段</th><th>中身</th></tr><tr><td><span class="st">だから</span></td><td>使う側の手順は毎回踏まれ、作る側の手順は規約を増やすときだけ踏まれる。踏む頻度が2桁違う</td></tr><tr><td><span class="st">結論</span></td><td><b>B ── SKILL.md は索引と実装の手順に絞り、規約の書き方は references に置く</b></td></tr><tr><td><span class="st">引き受ける</span></td><td>SKILL.md から、規約を起こす手順への参照を1行置く</td></tr></table></div><h2><span class="sn">3</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">4</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section></main>
+<script>
+(function(){
+  const marks = [...document.querySelectorAll('mark.chg')];
+  document.getElementById('n').textContent = marks.length;
+  function panel(m){
+    const p = document.createElement('div');
+    p.className = 'pop'; p.hidden = true;
+    p.innerHTML = '<b>変更前</b>' + m.dataset.b +
+                  '<span class="why"><b>なぜ変えたか</b>' + m.dataset.w + '</span>';
+    (m.closest('td') || m.parentNode).appendChild(p);
+    return p;
+  }
+  marks.forEach(m => {
+    const p = panel(m);
+    const toggle = () => {
+      const open = p.hidden;
+      p.hidden = !open;
+      m.setAttribute('aria-expanded', String(open));
+    };
+    m.addEventListener('click', toggle);
+    m.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+  });
+  const tabs = [...document.querySelectorAll('.tabs button')];
+  function show(id){
+    tabs.forEach(b => {
+      const on = b.dataset.t === id;
+      b.setAttribute('aria-selected', String(on));
+      document.getElementById(b.dataset.t).hidden = !on;
+    });
+    history.replaceState(null, '', '#' + id);
+    window.scrollTo({top: 0});
+  }
+  tabs.forEach((b, i) => {
+    b.addEventListener('click', () => show(b.dataset.t));
+    b.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { e.preventDefault(); const t = tabs[(i + d + tabs.length) % tabs.length];
+               t.focus(); show(t.dataset.t); }
+    });
+  });
+  if (tabs.length && document.getElementById(location.hash.slice(1))) show(location.hash.slice(1));
+
+  const all = document.getElementById('all');
+  all.addEventListener('click', () => {
+    const open = all.textContent === 'すべて開く';
+    document.querySelectorAll('.pop').forEach(p => p.hidden = !open);
+    marks.forEach(m => m.setAttribute('aria-expanded', String(open)));
+    all.textContent = open ? 'すべて閉じる' : 'すべて開く';
+  });
+})();
+</script>
