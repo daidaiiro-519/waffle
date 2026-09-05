@@ -4,6 +4,9 @@ layer: purpose.hook
 axes:
   - axis: purpose
     value: hook
+provides:
+  architecture: data-port
+  runtime: per-invocation
 category: tech-stack
 declares: 実行時に使うツールと依存
 updated: 2026-09-05

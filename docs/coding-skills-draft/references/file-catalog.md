@@ -27,26 +27,30 @@
 
 ## いま在る規約
 
+**一覧は生成物として `constraints/INDEX.md` にある**（`python3 scripts/index.py` で作り直す）。
+
 | 層 | 規約 |
 |---|---|
-| `lang.rust` | `style.md` ・ `failure.md` ・ `test-mechanism.md` ・ `toolchain.md` |
+| `lang.rust` | `style.md` ・ `failure.md` ・ `concurrency.md` ・ `test-mechanism.md` ・ `toolchain.md` |
+| `lang.go` | 同じ5種 |
 | `arch.hexagonal` | `layers.md` ・ `dependency.md` ・ `test-boundaries.md` |
-| `arch.data-port` | `layers.md` ・ `dependency.md` |
+| `arch.data-port` | 同じ3種 |
 | `lang.rust+arch.hexagonal` | `layer-mapping.md` ・ `test-placement.md` |
-| `lang.rust+arch.data-port` | `layer-mapping.md` |
+| `lang.rust+arch.data-port` | 同じ2種 |
+| `lang.go+arch.hexagonal` | 同じ2種 |
 | `purpose.hook` | `contract.md` ・ `lifecycle.md` ・ `acceptance.md` ・ `test-strategy.md` ・ `stack.md` |
+| `purpose.backend-api` | 同じ5種 |
+| `purpose.mcp-server` | 同じ5種 |
 
-## まだ書いていない規約
+## まだ埋まっていないもの
 
-| 層 | 書いていない規約 | 書く条件 |
+| 何が | どこ | 埋める条件 |
 |---|---|---|
-| `lang.go` | 5種すべて | Go を使うと決めたとき |
-| `lang.rust` | `concurrency.md` | 並行の扱いが要ると分かったとき |
-| `arch.data-port` | `test-boundaries.md` | この構成でテストの単位を決めるとき |
-| `lang.rust+arch.data-port` | `test-placement.md` | 同上 |
-| `lang.go+arch.hexagonal` | 2種 | Go とヘキサゴナルを組み合わせるとき |
-| `purpose.backend-api` | 5種すべて | バックエンドAPI を作るとき |
-| `purpose.mcp-server` | 5種すべて | MCP サーバーを作るとき |
+| 出典の版・取得日と、照合する文字列 | **全37本** | 原文を落として照合したとき |
+| 手順の仕様そのもの | `purpose.mcp-server` の3本 | **仕様の原文を取得したとき**（いまは未取得と明記してある） |
+| `lang.go+arch.data-port` | ── | Go でその構成を採ると決めたとき |
+
+**`python3 scripts/check.py` が、埋まっていない箇所を数える。**
 
 **空のマスは作らない。**
 その層で決まらないことの規約は、置かない ── 言語の層に `layers.md` は無い。
@@ -63,4 +67,8 @@
 | `references/test-perspectives.md` | テスト観点の一覧 | 用途の規約を起こすとき |
 | `references/file-catalog.md` | この一覧 | どの雛形を写すか迷ったとき |
 | `references/authoring.md` | 規約を起こす手順 | 規約を起こすとき |
-| `scripts/README.md` | 機械が回すもの | 集める・検証する・索引を出すとき |
+| `scripts/README.md` | 機械が回すものの説明 | 集める・検証する・索引を出すとき |
+| `scripts/collect.py` | 軸の値から規約を集める | 書く手順の Step 2 |
+| `scripts/check.py` | 規約の形を検証する | 規約を足したとき |
+| `scripts/index.py` | 索引を作り直す | 規約を足したとき |
+| `constraints/INDEX.md` | 索引（**生成物。手で書き換えない**） | どの規約が在るかを見るとき |
