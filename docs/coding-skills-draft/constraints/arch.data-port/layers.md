@@ -116,5 +116,5 @@ adapters/
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 文献 | Gary Bernhardt "Boundaries"（中心を純粋に保つ考え方）<br><small>https://sans-io.readthedocs.io/</small> | 2026-09-05 取得 | `sans-io` |
-| 文献 | sans-IO の設計（入出力を外へ出す）<br><small>https://sans-io.readthedocs.io/</small> | 2026-09-05 取得 | `sans-io` |
+| 文献 | Gary Bernhardt "Boundaries"（中心を純粋に保つ考え方）<br>https://sans-io.readthedocs.io/ | 2026-09-05 取得 | `sans-io` |
+| 文献 | sans-IO の設計（入出力を外へ出す）<br>https://sans-io.readthedocs.io/ | 2026-09-05 取得 | `sans-io` |

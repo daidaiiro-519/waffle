@@ -81,5 +81,5 @@ updated: 2026-09-05
 
 | 依存 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| `net/http` | 規格 | Go 標準ライブラリ<br><small>https://pkg.go.dev/net/http</small> | 2026-09-05 取得 | `net/http` |
-| `net/http` | 規格 | Go 標準ライブラリ<br><small>https://pkg.go.dev/net/http</small> | 2026-09-05 取得 | `net/http` |
+| `net/http` | 規格 | Go 標準ライブラリ<br>https://pkg.go.dev/net/http | 2026-09-05 取得 | `net/http` |
+| `net/http` | 規格 | Go 標準ライブラリ<br>https://pkg.go.dev/net/http | 2026-09-05 取得 | `net/http` |

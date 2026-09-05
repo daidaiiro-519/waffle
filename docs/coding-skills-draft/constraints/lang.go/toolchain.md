@@ -80,6 +80,6 @@ updated: 2026-09-05
 
 | ツール | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| `gofmt` | 規格 | `gofmt` の説明<br><small>https://pkg.go.dev/cmd/gofmt</small> | 2026-09-05 取得 | `gofmt` |
-| `go vet` | 規格 | `go vet` の説明<br><small>https://pkg.go.dev/cmd/vet</small> | 2026-09-05 取得 | `vet` |
-| `go mod` | 規格 | Go Modules Reference<br><small>https://go.dev/ref/mod</small> | 2026-09-05 取得 | `go.sum` |
+| `gofmt` | 規格 | `gofmt` の説明<br>https://pkg.go.dev/cmd/gofmt | 2026-09-05 取得 | `gofmt` |
+| `go vet` | 規格 | `go vet` の説明<br>https://pkg.go.dev/cmd/vet | 2026-09-05 取得 | `vet` |
+| `go mod` | 規格 | Go Modules Reference<br>https://go.dev/ref/mod | 2026-09-05 取得 | `go.sum` |

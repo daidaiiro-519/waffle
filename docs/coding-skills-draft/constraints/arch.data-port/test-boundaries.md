@@ -70,5 +70,5 @@ updated: 2026-09-05
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| DP-TB-03 | 規格 | JSON Schema の仕様（形の正）<br><small>https://json-schema.org/specification</small> | 2026-09-05 取得 | `JSON Schema` |
-| DP-TB-04 | 文献 | Martin Fowler "Contract Test"<br><small>https://martinfowler.com/bliki/ContractTest.html</small> | 2026-09-05 取得 | `contract test` |
+| DP-TB-03 | 規格 | JSON Schema の仕様（形の正）<br>https://json-schema.org/specification | 2026-09-05 取得 | `JSON Schema` |
+| DP-TB-04 | 文献 | Martin Fowler "Contract Test"<br>https://martinfowler.com/bliki/ContractTest.html | 2026-09-05 取得 | `contract test` |

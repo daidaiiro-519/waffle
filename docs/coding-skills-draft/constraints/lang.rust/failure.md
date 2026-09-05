@@ -151,7 +151,7 @@ pub struct LoadConfigError(String);
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| RS-ERR-01 | 文献 | The Rust Programming Language ch.9 Error Handling<br><small>https://doc.rust-lang.org/book/ch09-00-error-handling.html</small> | 2026-09-05 取得 | `recoverable` |
-| RS-ERR-02 | 文献 | Rust API Guidelines C-GOOD-ERR<br><small>https://rust-lang.github.io/api-guidelines/interoperability.html</small> | 2026-09-05 取得 | `error types` |
-| RS-ERR-03 | 規格 | Rust std `#[must_use]`<br><small>https://doc.rust-lang.org/std/result/index.html</small> | 2026-09-05 取得 | `must_use` |
-| RS-ERR-04 | 文献 | Rust API Guidelines（相互運用・失敗型）<br><small>https://rust-lang.github.io/api-guidelines/interoperability.html</small> | 2026-09-05 取得 | `std::error::Error` |
+| RS-ERR-01 | 文献 | The Rust Programming Language ch.9 Error Handling<br>https://doc.rust-lang.org/book/ch09-00-error-handling.html | 2026-09-05 取得 | `recoverable` |
+| RS-ERR-02 | 文献 | Rust API Guidelines C-GOOD-ERR<br>https://rust-lang.github.io/api-guidelines/interoperability.html | 2026-09-05 取得 | `error types` |
+| RS-ERR-03 | 規格 | Rust std `#[must_use]`<br>https://doc.rust-lang.org/std/result/index.html | 2026-09-05 取得 | `must_use` |
+| RS-ERR-04 | 文献 | Rust API Guidelines（相互運用・失敗型）<br>https://rust-lang.github.io/api-guidelines/interoperability.html | 2026-09-05 取得 | `std::error::Error` |

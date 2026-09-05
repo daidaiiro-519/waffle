@@ -90,5 +90,5 @@ updated: 2026-09-05
 
 | ツール | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| `serde_json` | 文献 | serde_json の公式ドキュメント<br><small>https://docs.rs/serde_json/latest/serde_json/</small> | 2026-09-05 取得 | `from_str` |
-| `tracing` | 文献 | tracing の公式ドキュメント<br><small>https://docs.rs/tracing/latest/tracing/</small> | 2026-09-05 取得 | `subscriber` |
+| `serde_json` | 文献 | serde_json の公式ドキュメント<br>https://docs.rs/serde_json/latest/serde_json/ | 2026-09-05 取得 | `from_str` |
+| `tracing` | 文献 | tracing の公式ドキュメント<br>https://docs.rs/tracing/latest/tracing/ | 2026-09-05 取得 | `subscriber` |

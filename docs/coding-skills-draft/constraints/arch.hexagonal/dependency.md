@@ -88,4 +88,4 @@ src/
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 文献 | Robert C. Martin "The Dependency Inversion Principle"<br><small>https://alistair.cockburn.us/hexagonal-architecture/</small> | 2026-09-05 取得 | `Ports and Adapters` |
+| 文献 | Robert C. Martin "The Dependency Inversion Principle"<br>https://alistair.cockburn.us/hexagonal-architecture/ | 2026-09-05 取得 | `Ports and Adapters` |

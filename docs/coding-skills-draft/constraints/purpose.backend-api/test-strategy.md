@@ -76,4 +76,4 @@ updated: 2026-09-05
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| ─ | 文献 | Mike Cohn "Succeeding with Agile"（配分）<br><small>https://martinfowler.com/articles/practical-test-pyramid.html</small> | 2026-09-05 取得 | `test pyramid` |
+| ─ | 文献 | Mike Cohn "Succeeding with Agile"（配分）<br>https://martinfowler.com/articles/practical-test-pyramid.html | 2026-09-05 取得 | `test pyramid` |

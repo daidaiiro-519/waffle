@@ -112,7 +112,7 @@ var total int // 複数の goroutine から書く
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| GO-CON-01 | 文献 | Go Blog "Concurrency Patterns"（終わり方）<br><small>https://go.dev/blog/pipelines</small> | 2026-09-05 取得 | `pipeline` |
-| GO-CON-02 | 規格 | Go 標準ライブラリ `context`<br><small>https://pkg.go.dev/context</small> | 2026-09-05 取得 | `context.Context` |
-| GO-CON-03 | 規格 | Go の競合検出器<br><small>https://go.dev/doc/articles/race_detector</small> | 2026-09-05 取得 | `-race` |
-| GO-CON-04 | 規格 | `context` の説明（構造体に保持しない）<br><small>https://pkg.go.dev/context</small> | 2026-09-05 取得 | `Do not store Contexts` |
+| GO-CON-01 | 文献 | Go Blog "Concurrency Patterns"（終わり方）<br>https://go.dev/blog/pipelines | 2026-09-05 取得 | `pipeline` |
+| GO-CON-02 | 規格 | Go 標準ライブラリ `context`<br>https://pkg.go.dev/context | 2026-09-05 取得 | `context.Context` |
+| GO-CON-03 | 規格 | Go の競合検出器<br>https://go.dev/doc/articles/race_detector | 2026-09-05 取得 | `-race` |
+| GO-CON-04 | 規格 | `context` の説明（構造体に保持しない）<br>https://pkg.go.dev/context | 2026-09-05 取得 | `Do not store Contexts` |

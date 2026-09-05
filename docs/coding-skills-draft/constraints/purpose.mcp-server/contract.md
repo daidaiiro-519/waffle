@@ -84,5 +84,5 @@ sequenceDiagram
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | Model Context Protocol の仕様<br><small>https://modelcontextprotocol.io/specification/2025-06-18</small> | 2026-09-05 取得 | `capabilities` |
-| 規格 | JSON-RPC 2.0<br><small>https://www.jsonrpc.org/specification</small> | 2026-09-05 取得 | `jsonrpc` |
+| 規格 | Model Context Protocol の仕様<br>https://modelcontextprotocol.io/specification/2025-06-18 | 2026-09-05 取得 | `capabilities` |
+| 規格 | JSON-RPC 2.0<br>https://www.jsonrpc.org/specification | 2026-09-05 取得 | `jsonrpc` |

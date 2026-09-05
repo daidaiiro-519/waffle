@@ -114,5 +114,5 @@ internal/
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | Go Modules Reference（`internal` の可視性）<br><small>https://go.dev/ref/mod</small> | 2026-09-05 取得 | `internal` |
-| 文献 | Go Code Review Comments（インターフェースは使う側が定める）<br><small>https://go.dev/wiki/CodeReviewComments</small> | 2026-09-05 取得 | `interfaces` |
+| 規格 | Go Modules Reference（`internal` の可視性）<br>https://go.dev/ref/mod | 2026-09-05 取得 | `internal` |
+| 文献 | Go Code Review Comments（インターフェースは使う側が定める）<br>https://go.dev/wiki/CodeReviewComments | 2026-09-05 取得 | `interfaces` |

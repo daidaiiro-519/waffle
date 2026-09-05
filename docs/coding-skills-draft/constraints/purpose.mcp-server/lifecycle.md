@@ -73,4 +73,4 @@ stateDiagram-v2
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | Model Context Protocol の仕様（生存期間）<br><small>https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle</small> | 2026-09-05 取得 | `capability negotiation` |
+| 規格 | Model Context Protocol の仕様（生存期間）<br>https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle | 2026-09-05 取得 | `capability negotiation` |

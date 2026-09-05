@@ -82,6 +82,6 @@ updated: 2026-09-05
 
 | 依存 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| `serde_json` | 文献 | serde_json の公式ドキュメント<br><small>https://docs.rs/serde_json/latest/serde_json/</small> | 2026-09-05 取得 | `from_str` |
-| 手順 | 規格 | Model Context Protocol の仕様<br><small>https://modelcontextprotocol.io/specification/2025-06-18</small> | 2026-09-05 取得 | `capabilities` |
-| `rmcp` | 文献 | rmcp の公式ドキュメント<br><small>https://docs.rs/rmcp/latest/rmcp/</small> | 2026-09-05 取得 | `ServerHandler` |
+| `serde_json` | 文献 | serde_json の公式ドキュメント<br>https://docs.rs/serde_json/latest/serde_json/ | 2026-09-05 取得 | `from_str` |
+| 手順 | 規格 | Model Context Protocol の仕様<br>https://modelcontextprotocol.io/specification/2025-06-18 | 2026-09-05 取得 | `capabilities` |
+| `rmcp` | 文献 | rmcp の公式ドキュメント<br>https://docs.rs/rmcp/latest/rmcp/ | 2026-09-05 取得 | `ServerHandler` |

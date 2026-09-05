@@ -104,5 +104,5 @@ fn test_read_port_2() {
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| RS-TST-01 | 規格 | Cargo Book / Tests<br><small>https://doc.rust-lang.org/cargo/guide/tests.html</small> | 2026-09-05 取得 | `cargo test` |
-| RS-TST-02 | 規格 | libtest の並列実行<br><small>https://doc.rust-lang.org/book/ch11-03-test-organization.html</small> | 2026-09-05 取得 | `unit tests` |
+| RS-TST-01 | 規格 | Cargo Book / Tests<br>https://doc.rust-lang.org/cargo/guide/tests.html | 2026-09-05 取得 | `cargo test` |
+| RS-TST-02 | 規格 | libtest の並列実行<br>https://doc.rust-lang.org/book/ch11-03-test-organization.html | 2026-09-05 取得 | `unit tests` |

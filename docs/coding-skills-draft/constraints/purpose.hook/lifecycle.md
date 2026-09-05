@@ -95,4 +95,4 @@ src/main.rs   起動・結線・終了コードの決定
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | 呼び出し元の Hook 仕様（実行のされ方）<br><small>https://docs.claude.com/en/docs/claude-code/hooks</small> | 2026-09-05 取得 | `exit code` |
+| 規格 | 呼び出し元の Hook 仕様（実行のされ方）<br>https://docs.claude.com/en/docs/claude-code/hooks | 2026-09-05 取得 | `exit code` |

@@ -55,5 +55,5 @@
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 文献 | ISTQB Foundation Level Syllabus（テスト技法の分類）<br><small>https://martinfowler.com/articles/practical-test-pyramid.html</small> | 2026-09-05 取得 | `test techniques` |
-| 文献 | Mike Cohn "Succeeding with Agile"（配分）<br><small>https://martinfowler.com/articles/practical-test-pyramid.html</small> | 2026-09-05 取得 | `test automation pyramid` |
+| 文献 | ISTQB Foundation Level Syllabus（テスト技法の分類）<br>https://martinfowler.com/articles/practical-test-pyramid.html | 2026-09-05 取得 | `test techniques` |
+| 文献 | Mike Cohn "Succeeding with Agile"（配分）<br>https://martinfowler.com/articles/practical-test-pyramid.html | 2026-09-05 取得 | `test automation pyramid` |
