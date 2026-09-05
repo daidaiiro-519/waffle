@@ -13,25 +13,30 @@ updated: 2026-09-05
 
 ## 概要
 
-**回復できる失敗を値で運び、回復できない失敗だけを巻き戻しに任せる。**
+**回復可能な失敗を値として運び、回復不能な失敗だけをパニックに任せる。**
 
-## 規則
+## 規則一覧
 
-| 印 | 規則 | 水準 | 検証 |
-|---|---|---|---|
-| RS-ERR-01 | 回復できる失敗は `Result` で返し、`panic!` で流さない | 必須 | 機械 |
-| RS-ERR-02 | 失敗の型は、呼び出し側が分岐できる列挙にする | 必須 | 人 |
-| RS-ERR-03 | 失敗を握りつぶさない。捨てるなら、捨てる理由を書く | 必須 | 機械 |
+| ID | 規則 | 水準 | 検証方法 | 適用範囲 |
+|---|---|---|---|---|
+| RS-ERR-01 | 回復可能な失敗は `Result` で返し、`panic!` で流さない | 必須 | 静的解析 | 公開関数すべて |
+| RS-ERR-02 | 失敗型は、呼び出し側が分岐できる列挙にする | 必須 | レビュー | 公開関数の失敗型 |
+| RS-ERR-03 | `Result` を捨てない。捨てる場合は理由を残す | 必須 | 静的解析 | 全体 |
+| RS-ERR-04 | 失敗型は `std::error::Error` を実装する | 必須 | 静的解析 | 公開する失敗型 |
 
-## 規則ごとの詳細
+## 規則の詳細
 
-### RS-ERR-01　回復できる失敗は `Result` で返し、`panic!` で流さない
+### RS-ERR-01　回復可能な失敗は `Result` で返し、`panic!` で流さない
 
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
-| 検証 | `cargo clippy -- -D clippy::unwrap_used -D clippy::expect_used` |
-| 例外 | テストの中と、不変条件が破れた場合（回復できない失敗） |
+| 根拠 | 呼び出し側が回復の可否を選べなくなり、失敗が制御の外へ出る |
+| 検証方法 | `cargo clippy -- -D clippy::unwrap_used -D clippy::expect_used` |
+| 例外 | テストコード。および不変条件が破れた場合（回復不能） |
+| 既存コードへの適用 | 改修時に是正 |
+
+**適合例**
 
 ```rust
 fn read_port(raw: &str) -> Result<u16, ParsePortError> {
@@ -39,67 +44,114 @@ fn read_port(raw: &str) -> Result<u16, ParsePortError> {
 }
 ```
 
+**違反例**
+
 ```rust
 fn read_port(raw: &str) -> u16 {
     raw.parse::<u16>().unwrap()
 }
 ```
 
-### RS-ERR-02　失敗の型は、呼び出し側が分岐できる列挙にする
+### RS-ERR-02　失敗型は、呼び出し側が分岐できる列挙にする
 
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
-| 検証 | 失敗の型が `String` や `Box<dyn Error>` になっていないかを見る |
-| 例外 | 無い |
+| 根拠 | 文字列の失敗は分岐に使えず、呼び出し側は文面の一致で判定するしかなくなる |
+| 検証方法 | 公開関数の失敗型が `String` ・ `Box<dyn Error>` になっていないかを見る |
+| 例外 | 実行ファイルの最上位（`main`）は集約した失敗型でよい |
+| 既存コードへの適用 | 改修時に是正 |
+
+**適合例**
 
 ```rust
+#[derive(Debug, thiserror::Error)]
 pub enum ParsePortError {
-    Invalid(std::num::ParseIntError),
+    #[error("port is not a number: {0}")]
+    Invalid(#[from] std::num::ParseIntError),
+    #[error("port out of range: {got}")]
     OutOfRange { got: u32 },
 }
 ```
+
+**違反例**
 
 ```rust
 pub fn read_port(raw: &str) -> Result<u16, String> { /* … */ }
 ```
 
-### RS-ERR-03　失敗を握りつぶさない。捨てるなら、捨てる理由を書く
+### RS-ERR-03　`Result` を捨てない。捨てる場合は理由を残す
 
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
-| 検証 | `cargo clippy -- -D unused_must_use` |
-| 例外 | 無い |
+| 根拠 | 捨てた失敗は観測できず、原因の切り分けができなくなる |
+| 検証方法 | `cargo clippy -- -D unused_must_use` |
+| 例外 | なし |
+| 既存コードへの適用 | 一括是正 |
+
+**適合例**
 
 ```rust
-if let Err(e) = flush() {
-    // 書き出しの失敗は、次の起動で回復する
-    tracing::warn!(error = %e, "flush failed");
+if let Err(error) = flush() {
+    tracing::warn!(%error, "flush failed; retrying on next start");
 }
 ```
+
+**違反例**
 
 ```rust
 let _ = flush();
 ```
 
-## 対象外
+### RS-ERR-04　失敗型は `std::error::Error` を実装する
+
+| 項目 | 内容 |
+|---|---|
+| 水準 | 必須 |
+| 根拠 | 実装がないと、呼び出し側で連鎖（`source`）を辿れない |
+| 検証方法 | `cargo clippy -- -D clippy::missing_errors_doc` と、公開型の実装確認 |
+| 例外 | 内部専用の失敗型 |
+| 既存コードへの適用 | 改修時に是正 |
+
+**適合例**
+
+```rust
+#[derive(Debug, thiserror::Error)]
+#[error("failed to load config from {path}")]
+pub struct LoadConfigError {
+    path: String,
+    #[source]
+    cause: std::io::Error,
+}
+```
+
+**違反例**
+
+```rust
+#[derive(Debug)]
+pub struct LoadConfigError(String);
+```
+
+## 適用範囲外
 
 | 何を | どの層が決めるか |
 |---|---|
-| どの失敗を利用者へ見せるか | 用途 |
-| 失敗をどの層で受けるか | アーキテクチャ |
+| どの失敗を利用者へ提示するか | 用途 |
+| 失敗をどの層で受け止めるか | アーキテクチャ |
+| 失敗の記録先 | 用途 |
 
-## 下位へ委ねる判断
+## 委譲する判断
 
-| 委ねる判断 | 委ねる先 | 委ねる理由 |
+| 委譲する判断 | 委譲先 | 委譲する理由 |
 |---|---|---|
-| 失敗の列挙をどこまで細かく分けるか | 用途 | 分岐の必要は、外との契約で決まる |
+| 失敗の列挙をどこまで細分するか | 用途 | 分岐の必要は、外部との契約で決まる |
 
 ## 出典
 
-| 印 | 種類 | 原典 | 照合する文字列 |
-|---|---|---|---|
-| RS-ERR-01 | 原典 | The Rust Programming Language, ch.9 Error Handling（落とした日：《YYYY-MM-DD》） | `recoverable` |
-| RS-ERR-02 | 原典 | Rust API Guidelines, C-GOOD-ERR（落とした日：《YYYY-MM-DD》） | `error types` |
-| RS-ERR-03 | 原典 | Rust std, `#[must_use]` の説明（落とした日：《YYYY-MM-DD》） | `must_use` |
+| ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+|---|---|---|---|---|
+| RS-ERR-01 | 文献 | The Rust Programming Language ch.9 Error Handling | 《版・取得日》 | `recoverable` |
+| RS-ERR-02 | 文献 | Rust API Guidelines C-GOOD-ERR | 《版・取得日》 | `error types` |
+| RS-ERR-03 | 規格 | Rust std `#[must_use]` | 《版・取得日》 | `must_use` |
+| RS-ERR-04 | 文献 | Rust API Guidelines C-GOOD-ERR | 《版・取得日》 | `std::error::Error` |
