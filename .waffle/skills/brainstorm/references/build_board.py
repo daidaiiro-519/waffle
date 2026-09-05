@@ -27,6 +27,7 @@
 from __future__ import annotations
 
 import html as _h
+import re
 from dataclasses import dataclass, field
 
 LETTERS = "ABCDEFGH"
@@ -116,11 +117,11 @@ def _sections(t: Topic) -> str:
                          "── 1つしか残らないなら、それは選択ではない。"
                          "まだ案を出していない論点は、案を空にして置く")
     secs, n = [], 0
-    if t.figures:
+    figs = "".join(f'<figure>{svg}<figcaption>{cap}</figcaption></figure>'
+                   for svg, cap in t.figures)
+    if t.figures and not t.pick:
         n += 1
-        secs.append(_sec(n, "案の違いを、図で" if t.kept else "図で見る", "".join(
-            f'<figure>{svg}<figcaption>{cap}</figcaption></figure>'
-            for svg, cap in t.figures)))
+        secs.append(_sec(n, "図で見る", figs))
     if t.kept:
         n += 1
         rows = []
@@ -149,10 +150,30 @@ def _sections(t: Topic) -> str:
     if t.pick:
         n += 1
         letter, chain = t.pick
-        rows = [[f'<span class="st">{_h.escape(s)}</span>', txt] for s, txt in chain]
-        secs.append(_sec(n, "私の推しと、その連鎖",
-                         f'<p class="lead">推す案は <b class="pickn">{_h.escape(letter)}</b> である。</p>'
-                         + _table(["段", "中身"], rows, "chain")))
+        # 記号はバッジが持つので、本文の「A ── 」は落とす
+        conc = [re.sub(r'^(<b>)?[A-H]\s*──\s*', r'\1', txt)
+                for st, txt in chain if st == "結論"]
+        why = [(st, txt) for st, txt in chain if st in ("測った", "確かめていない",
+                                                       "だから", "一方で", "合わせると")]
+        cost = [txt for st, txt in chain if st == "引き受ける"]
+        weak = [(st, txt) for st, txt in chain if st in ("反証", "崩れる条件")]
+        body = (f'<div class="concl"><span class="n big">{_h.escape(letter)}</span>'
+                f'<div>{"".join(f"<p>{c}</p>" for c in conc)}</div></div>')
+        if why:
+            body += ('<h3>なぜそう言えるか</h3>'
+                     + _table(["段", "中身"],
+                              [[f'<span class="st">{_h.escape(st)}</span>', txt]
+                               for st, txt in why], "chain"))
+        if figs:
+            body += f'<h3>図で見る</h3>{figs}'
+        if cost:
+            body += ('<h3>引き受けること</h3><ul class="found">'
+                     + "".join(f"<li>{c}</li>" for c in cost) + "</ul>")
+        if weak:
+            body += ('<h3>まだ崩れうるところ</h3><ul class="found">'
+                     + "".join(f"<li><span class='st'>{_h.escape(st)}</span>　{txt}</li>"
+                               for st, txt in weak) + "</ul>")
+        secs.append(_sec(n, "私の推し", body))
     for title, body in t.extras:
         n += 1
         secs.append(_sec(n, title, body))
@@ -341,6 +362,12 @@ table.out b{color:var(--out);text-decoration:line-through}
 table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
 .pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
   border-radius:2px;padding:0 .35em}
+.concl{display:flex;gap:.9rem;align-items:flex-start;background:color-mix(in srgb,var(--key) 6%,var(--paper));
+  border:1px solid var(--panelrule);border-left:3px solid var(--key);border-radius:.3rem;padding:1rem 1.1rem;margin:0 0 1.4rem}
+.concl p{margin:0;font-size:1.02rem;line-height:1.75;font-weight:700}
+.concl p+p{margin-top:.5rem;font-weight:400;font-size:.92rem;color:var(--muted)}
+.n.big{font-size:1rem;padding:.15em .6em;border-width:2px;flex:none}
+h3{font-size:.95rem;font-weight:700;margin:1.8rem 0 .6rem;color:var(--muted)}
 ul.found{margin:0;padding-left:1.1rem;font-size:.92rem}
 ul.found li{margin-bottom:.5rem}
 figure{margin:0 0 1.2rem}
