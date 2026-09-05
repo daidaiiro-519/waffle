@@ -105,7 +105,10 @@ class Topic:
     tables: list[Table] = field(default_factory=list)
     dropped: list[tuple[str, str]] = field(default_factory=list)
     found: list[str] = field(default_factory=list)
-    pick: tuple[str, list[tuple[str, str]]] | None = None
+    pick: tuple[str, str] | None = None
+    grounds: list[tuple[str, str, str]] = field(default_factory=list)
+    costs: list[str] = field(default_factory=list)
+    weaknesses: list[str] = field(default_factory=list)
     decision: list[tuple[str, str]] = field(default_factory=list)
     extras: list[tuple[str, str]] = field(default_factory=list)
 
@@ -149,44 +152,29 @@ def _sections(t: Topic) -> str:
                          "<ul class='found'>" + "".join(f"<li>{f}</li>" for f in t.found) + "</ul>"))
     if t.pick:
         n += 1
-        letter, chain = t.pick
-        # 記号はバッジが持つので、本文の「A ── 」は落とす
-        conc = [re.sub(r'^(<b>)?[A-H]\s*──\s*', r'\1', txt)
-                for st, txt in chain if st == "結論"]
-        why = [(st, txt) for st, txt in chain if st in ("測った", "確かめていない", "定義から",
-                                                       "だから", "一方で", "合わせると")]
-        cost = [txt for st, txt in chain if st == "引き受ける"]
-        weak = [(st, txt) for st, txt in chain if st in ("反証", "崩れる条件")]
+        letter, conclusion = t.pick
+        for part, claim, src in t.grounds:
+            if not src.strip():
+                raise ValueError(f"論点{t.no}: 根拠に出どころが無い ── 「{claim[:20]}…」。"
+                                 "どこから導いたか（実測・原典・既に決めたこと）を書く")
+            if not part.strip():
+                raise ValueError(f"論点{t.no}: 根拠が結論のどこを支えるか書かれていない "
+                                 f"── 「{claim[:20]}…」")
         body = (f'<div class="concl"><span class="n big">{_h.escape(letter)}</span>'
-                f'<div>{"".join(f"<p>{c}</p>" for c in conc)}</div></div>')
-        if why:
-            if not any(st in ("測った", "確かめていない", "定義から") for st, _ in why):
-                raise ValueError(f"論点{t.no}: 根拠に前提が無い。「だから」「一方で」は"
-                                 "前の段から次へ渡す接続であって、それ自体は事実ではない ── "
-                                 "「測った」「定義から」「確かめていない」のどれかを最低1つ置く")
-            # 何をもとにして、そこから何が言えるかを、1行に対で並べる。
-            # 種別の名前は読み手に見せない ── 列の見出しがそれを言う。
-            rows, held = [], []
-            for st, txt in why:
-                if st in ("測った", "定義から", "確かめていない"):
-                    held.append(txt + ("　<small>（確かめていない）</small>"
-                                       if st == "確かめていない" else ""))
-                else:
-                    rows.append(["<br>".join(held) if held else "", txt])
-                    held = []
-            if held:
-                rows.append(["<br>".join(held), ""])
+                f'<div><p>{conclusion}</p></div></div>')
+        if t.grounds:
             body += ('<h3>なぜそう言えるか</h3>'
-                     + _table(["もとにしたこと", "そこから言えること"], rows, "why"))
+                     + _table(["結論のどこを支えるか", "もとにしたこと", "その出どころ"],
+                              [[f'<b>{p}</b>', c, f'<small>{src}</small>']
+                               for p, c, src in t.grounds], "why"))
         if figs:
             body += f'<h3>図で見る</h3>{figs}'
-        if cost:
+        if t.costs:
             body += ('<h3>引き受けること</h3><ul class="found">'
-                     + "".join(f"<li>{c}</li>" for c in cost) + "</ul>")
-        if weak:
+                     + "".join(f"<li>{c}</li>" for c in t.costs) + "</ul>")
+        if t.weaknesses:
             body += ('<h3>まだ崩れうるところ</h3><ul class="found">'
-                     + "".join(f"<li><span class='st'>{_h.escape(st)}</span>　{txt}</li>"
-                               for st, txt in weak) + "</ul>")
+                     + "".join(f"<li>{w}</li>" for w in t.weaknesses) + "</ul>")
         secs.append(_sec(n, "私の推し", body))
     for title, body in t.extras:
         n += 1
@@ -237,104 +225,6 @@ def deck(theme: str, topics: list[Topic], intro: str | None = None,
     return f'{head}<main>{"".join(panels)}</main>{SCRIPT}'
 
 
-def board(theme: str, no: int, total: int, question: str,
-          kept: list[Option], dropped: list[tuple[str, str]] | None = None,
-          found: list[str] | None = None,
-          pick: tuple[str, list[tuple[str, str]]] | None = None,
-          figures: list[tuple[str, str]] | None = None,
-          tables: list[Table] | None = None,
-          note: str | None = None) -> str:
-    """論点1つを1枚に組む。
-
-    Args:
-        theme: このブレスト全体のテーマ。
-        no / total: いま何番目の論点か。
-        question: 論点そのもの。
-        kept: 反証を通過した案。2つ以上あること ── 1つしか残らないなら、
-            それは論点の立て方が誤っている。表の1行として並ぶ。
-        dropped: (落とした案の名前, 落とした理由) の並び。黙って消さない。
-        found: 反証で分かったことを、1つずつ短く。散文にしない。
-        pick: (推す案の記号, 理由の連鎖)。連鎖は (その文が何であるか, 一文) の並び。
-            「測った」は出所のある観測、「定義から」は語の定義や既に合意した決定から
-            従うこと、「確かめていない」は検証していない前提、
-            「だから」「一方で」「合わせると」は前の段から次へ渡す接続、
-            「結論」は推す案、「引き受ける」は代償、「反証」は既に観測されている
-            不利な事実である。**接続だけを並べない** ── 前提が無い推論になるので、
-            「測った」「定義から」「確かめていない」のどれかを最低1つ置く。
-        figures: (SVG, 図の読み方) の並び。案の違いは、まず図で見せる。
-        tables: 案ごとの帰結の表。列は呼び出し側が決める。
-        note: 盤面の冒頭に置く、いまの状態の1〜2文。
-
-    Returns:
-        1枚ぶんのHTML。
-
-    Raises:
-        ValueError: 残った案が2つ未満のとき。
-    """
-    if len(kept) < 2:
-        raise ValueError("反証を通過した案が2つ未満。論点の立て方を見直す "
-                         "── 1つしか残らないなら、それは選択ではない")
-    secs, n = [], 0
-
-    if figures:
-        n += 1
-        secs.append(_sec(n, "案の違いを、図で", "".join(
-            f'<figure>{svg}<figcaption>{cap}</figcaption></figure>'
-            for svg, cap in figures)))
-
-    n += 1
-    rows = []
-    for i, o in enumerate(kept):
-        name = f"<b>{o.name}</b>"
-        if o.before and o.why:
-            name = _mark(name, o.before, o.why)
-        rows.append([_key(LETTERS[i]), name, o.gist, f'<span class="cost">{o.cost}</span>'])
-    secs.append(_sec(n, "反証を通過した案", _table(["", "案", "中身", "代償"], rows, "opts")))
-
-    for t in tables or []:
-        n += 1
-        lead = f'<p class="lead">{t.lead}</p>' if t.lead else ""
-        rows = [[_key(k)] + list(v) for k, v in t.rows.items()]
-        secs.append(_sec(n, t.caption, lead + _table([""] + t.columns, rows)))
-
-    if dropped:
-        n += 1
-        rows = [[_key("×", "out"),
-                 _mark(f"<b>{d}</b>", "この案は残っていた", w, deleted=True), w]
-                for d, w in dropped]
-        secs.append(_sec(n, "落とした案と、その理由",
-                         _table(["", "案", "落とした理由"], rows, "out")))
-
-    if found:
-        n += 1
-        secs.append(_sec(n, "反証で分かったこと",
-                         "<ul class='found'>" + "".join(f"<li>{f}</li>" for f in found) + "</ul>"))
-
-    if pick:
-        n += 1
-        letter, chain = pick
-        rows = [[f'<span class="st">{_h.escape(s)}</span>', t] for s, t in chain]
-        secs.append(_sec(n, "私の推しと、その連鎖",
-                         f'<p class="lead">推す案は <b class="pickn">{_h.escape(letter)}</b> である。</p>'
-                         + _table(["段", "中身"], rows, "chain")))
-
-    n += 1
-    secs.append(_sec(n, "あなたの見解",
-                     '<div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div>'))
-    n += 1
-    secs.append(_sec(n, "決まり",
-                     '<div class="next">選ばれた案が合意になり、次の論点へ</div>'))
-
-    head = (f'<div class="hd"><div class="t">{_h.escape(theme)}'
-            f'<small>色の付いた箇所を押すと、変更前と理由が開きます'
-            f'（<span id="n">0</span>か所）</small></div>'
-            f'<button id="all" type="button">すべて開く</button></div>')
-    top = (f'<p class="eyebrow">論点 {no} / {total}</p>'
-           f'<h1>{_h.escape(question)}</h1>'
-           + (f'<div class="note">{note}</div>' if note else ""))
-    return f'{head}<main>{top}{"".join(secs)}</main>{SCRIPT}'
-
-
 CSS = """
 :root{ --paper:#FBFAF7; --ink:#191C1F; --muted:#6C7076; --rule:#E3DFD7; --panel:#F4F1EA;
   --panelrule:#DAD4C8; --key:#2F4858; --add:#A6543A; --out:#8A8479;
@@ -378,8 +268,10 @@ table.out b{color:var(--out);text-decoration:line-through}
 .st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
   border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
 table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
-table.why th:first-child,table.why td:first-child{width:44%;padding-right:1rem}
-table.why small{color:var(--muted);font-size:.85em}
+table.why th:first-child,table.why td:first-child{width:24%;padding-right:.8rem}
+table.why th:last-child,table.why td:last-child{width:28%}
+table.why small{color:var(--muted);font-size:.9em;line-height:1.7;display:block}
+table.why b{font-weight:700}
 .pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
   border-radius:2px;padding:0 .35em}
 .concl{display:flex;gap:.9rem;align-items:flex-start;background:color-mix(in srgb,var(--key) 6%,var(--paper));
