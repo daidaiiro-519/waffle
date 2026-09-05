@@ -56,15 +56,23 @@ B = pre("""<b>concrete schema（案B）</b>
     "誰が":     "人" }
 ]""", "var(--key)")
 
-BOOK = pre("""<b>abstract schema が持つ名簿</b>
+BOOK = pre("""<b>abstract schema が持つもの ── 全ての型に共通の検査だけ</b>
 "x-checks": {
-  "reference-resolves": { "入力": "この文書",              "返す": "届かない参照の印" },
-  "scenario-drift":     { "入力": "この文書 ＋ ソースの木", "返す": "対応の無いシナリオの印" },
-  "text-in-original":   { "入力": "この文書 ＋ 落とした原文", "返す": "原文に無い文字列" },
-  "human-review":       { "走らせない",                   "返す": "未検として数える" }
+  "reference-resolves": { "入力": "この文書",  "返す": "届かない参照の印" },
+  "version-drift":      { "入力": "この文書 ＋ schema", "返す": "ずれている版" },
+  "human-review":       { "走らせない",        "返す": "未検として数える" }
 }
 
-<span style="opacity:.7">// concrete が書けるのは、この名簿に在る名前だけである</span>""", "currentColor")
+<span style="opacity:.7">// どの型にも要るものだけ。型が増えても、ここは増えない</span>""", "currentColor")
+
+BOOK2 = pre("""<b>SpecSchema（concrete）が自分で宣言する検査</b>
+"x-checks": {
+  "scenario-drift": { "入力": "この文書 ＋ ソースの木",
+                      "返す": "対応の無いシナリオの印" }
+}
+
+<span style="opacity:.7">// spec 系の型にしか要らない。だから abstract には置かない。
+// CodingSchema なら text-in-original を、ここで宣言する</span>""", "var(--add)")
 
 BOUT = pre("""<b>走らせた結果（案B）</b>
 規則 4 件を検査した
@@ -75,7 +83,10 @@ BOUT = pre("""<b>走らせた結果（案B）</b>
 
 CONCRETE = (WANT + TBL
  + '<h3>案A ── 述語だけを持つ</h3>' + A + AOUT
- + '<h3>案B ── 述語 ＋ 検めることの名前を持つ</h3>' + B + BOOK + BOUT
+ + '<h3>案B ── 述語 ＋ 検めることの名前を持つ</h3>' + B + BOOK + BOOK2 + BOUT
  + '<p class="lead">差は最後の1行に出る。<b>案Bは「まだ検めていない12件」を出力できるが、案Aはそれを数えられない</b>'
    ' ── その規則が一覧に無いからである。'
-   '<b>検査の中身が外にあることは、どちらも変わらない。</b>違うのは、外にあるものを規則から名前で指せるかどうかである。</p>')
+   '<b>検査の中身が外にあることは、どちらも変わらない。</b>違うのは、外にあるものを規則から名前で指せるかどうかである。</p>'
+ '<p class="lead"><b>名簿は2段である。</b><code>scenario-drift</code> は spec 系の型にしか無いので、'
+ 'abstract ではなく <b>SpecSchema 自身が宣言する</b> ── abstract へ置くと、型が増えるたびに名前が積もり、'
+ '案A（コマンドで持つ）を落とした理由と同じことが起きる。</p>')
