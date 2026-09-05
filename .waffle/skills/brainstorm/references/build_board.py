@@ -32,6 +32,10 @@ from dataclasses import dataclass, field
 
 LETTERS = "ABCDEFGH"
 
+# 出どころの種類。読み手が札だけで意味を取れる言葉にする
+KINDS = {"実測": "k-fact", "原典": "k-src", "決まり": "k-rule",
+         "前提": "k-given", "未確認": "k-open"}
+
 
 @dataclass
 class Option:
@@ -106,7 +110,7 @@ class Topic:
     dropped: list[tuple[str, str]] = field(default_factory=list)
     found: list[str] = field(default_factory=list)
     pick: tuple[str, str] | None = None
-    grounds: list[tuple[str, str, str]] = field(default_factory=list)
+    grounds: list[tuple[str, str, str, str]] = field(default_factory=list)
     costs: list[str] = field(default_factory=list)
     weaknesses: list[str] = field(default_factory=list)
     decision: list[tuple[str, str]] = field(default_factory=list)
@@ -153,20 +157,22 @@ def _sections(t: Topic) -> str:
     if t.pick:
         n += 1
         letter, conclusion = t.pick
-        for part, claim, src in t.grounds:
-            if not src.strip():
-                raise ValueError(f"論点{t.no}: 根拠に出どころが無い ── 「{claim[:20]}…」。"
-                                 "どこから導いたか（実測・原典・既に決めたこと）を書く")
-            if not part.strip():
-                raise ValueError(f"論点{t.no}: 根拠が結論のどこを支えるか書かれていない "
+        for part, claim, kind, src in t.grounds:
+            if kind not in KINDS:
+                raise ValueError(f"論点{t.no}: 出どころの種類が「{kind}」になっている。"
+                                 f"使えるのは {'／'.join(KINDS)} である")
+            if not src.strip() or not part.strip():
+                raise ValueError(f"論点{t.no}: 根拠に、支える先か出どころが無い "
                                  f"── 「{claim[:20]}…」")
         body = (f'<div class="concl"><span class="n big">{_h.escape(letter)}</span>'
                 f'<div><p>{conclusion}</p></div></div>')
         if t.grounds:
             body += ('<h3>なぜそう言えるか</h3>'
                      + _table(["結論のどこを支えるか", "もとにしたこと", "その出どころ"],
-                              [[f'<b>{p}</b>', c, f'<small>{src}</small>']
-                               for p, c, src in t.grounds], "why"))
+                              [[f'<span class="part">{p}</span>', c,
+                                f'<span class="kind {KINDS[k]}">{_h.escape(k)}</span>'
+                                f'<small>{src}</small>']
+                               for p, c, k, src in t.grounds], "why"))
         if figs:
             body += f'<h3>図で見る</h3>{figs}'
         if t.costs:
@@ -268,10 +274,24 @@ table.out b{color:var(--out);text-decoration:line-through}
 .st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
   border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
 table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
-table.why th:first-child,table.why td:first-child{width:24%;padding-right:.8rem}
-table.why th:last-child,table.why td:last-child{width:28%}
-table.why small{color:var(--muted);font-size:.9em;line-height:1.7;display:block}
-table.why b{font-weight:700}
+table.why{border-collapse:separate;border-spacing:0}
+table.why th{padding-bottom:.4rem}
+table.why th:first-child,table.why td:first-child{width:23%;padding-right:.8rem}
+table.why th:last-child,table.why td:last-child{width:27%}
+table.why td{border-bottom:none;padding:.65rem .7rem;background:var(--surface,transparent)}
+table.why tr:nth-child(even) td{background:color-mix(in srgb,var(--key) 3.5%,var(--paper))}
+table.why tr:not(:first-child) td:first-child{border-left:2px solid var(--key)}
+.part{display:inline-block;font-size:.8rem;font-weight:700;line-height:1.6;color:var(--key);
+  background:color-mix(in srgb,var(--key) 11%,var(--paper));border-radius:.25rem;padding:.12em .55em}
+.kind{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.06em;line-height:1.6;
+  border-radius:.2rem;padding:.05em .45em;margin-bottom:.25rem}
+.kind.k-fact{color:var(--paper);background:var(--key)}
+.kind.k-src{color:var(--key);background:color-mix(in srgb,var(--key) 16%,var(--paper));
+  border:1px solid var(--key)}
+.kind.k-rule{color:var(--muted);background:color-mix(in srgb,var(--muted) 14%,var(--paper))}
+.kind.k-given{color:var(--muted);border:1px dashed var(--panelrule)}
+.kind.k-open{color:var(--paper);background:var(--add)}
+table.why small{color:var(--muted);font-size:.88em;line-height:1.7;display:block}
 .pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
   border-radius:2px;padding:0 .35em}
 .concl{display:flex;gap:.9rem;align-items:flex-start;background:color-mix(in srgb,var(--key) 6%,var(--paper));
