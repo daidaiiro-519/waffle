@@ -1,0 +1,471 @@
+<title>CodingSkills の雛形（候補）</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
+--move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;--chipbg:#2b281f;
+--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}}
+:root[data-theme="dark"]{--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;
+--chipbg:#2b281f;--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);margin:0;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;line-height:1.85}
+.wrap{max-width:56rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+h1{font-size:1.5rem;margin:0 0 .3rem;letter-spacing:.02em}
+.lede{font-size:1.06rem;border-left:4px solid var(--key);padding:.55rem 0 .55rem .9rem;
+margin:1rem 0 2rem;background:var(--panel)}
+h2{font-size:1.12rem;margin:2.4rem 0 .8rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h3{font-size:1rem;margin:1.6rem 0 .5rem;color:var(--key)}
+table{border-collapse:collapse;width:100%;margin:.9rem 0;font-size:.93rem}
+th,td{border:1px solid var(--line);padding:.42rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--chipbg);font-weight:700}
+code{background:var(--chipbg);padding:.08rem .3rem;border-radius:.2rem;font-size:.88em}
+pre{background:var(--chipbg);padding:.7rem .9rem;border-radius:.3rem;overflow-x:auto;font-size:.84rem}
+.scroll{overflow-x:auto}
+.gone{color:var(--gone)}
+#bar{position:sticky;top:0;z-index:9;background:var(--panel);border-bottom:2px solid var(--move);
+padding:.5rem .9rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;font-size:.9rem;
+margin:0 -1.2rem 1rem}
+#bar button{font:inherit;padding:.2rem .7rem;border-radius:.25rem;border:1px solid var(--move);
+background:transparent;color:var(--move);cursor:pointer}
+#bar button:hover{background:var(--move);color:var(--paper)}
+#tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 0;border-bottom:2px solid var(--line)}
+.tab{font:inherit;font-size:.93rem;padding:.45rem .95rem;border:1px solid var(--line);
+border-bottom:0;border-radius:.3rem .3rem 0 0;background:var(--panel);color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:700;
+box-shadow:0 2px 0 0 var(--paper)}
+.tab .n{font-size:.78rem;color:var(--move);margin-left:.35rem;font-weight:700}
+.pane{border:1px solid var(--line);border-top:0;background:var(--paper)}
+.pane.md{padding:1.2rem 1.4rem}
+.pane.md h1{font-size:1.25rem;margin-top:0}
+.pane.html{padding:0}
+.pane.html iframe{display:block;width:100%;border:0;background:var(--paper)}
+.lane{font-size:.8rem;color:var(--muted);padding:.35rem .9rem;border-bottom:1px dashed var(--line);
+background:var(--panel);display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.lane .how{margin-left:auto;font-style:italic}
+.idx{border-bottom:1px solid var(--line);background:var(--panel);padding:0 .9rem .5rem}
+.idx summary{cursor:pointer;font-size:.88rem;padding:.45rem 0;font-weight:700;color:var(--move)}
+.idx ol{margin:0 0 .3rem;padding-left:1.4rem;font-size:.88rem}
+.idx li{margin:.35rem 0}
+.idx button.go{font:inherit;font-size:.82rem;padding:.05rem .5rem;margin-left:.4rem;
+border:1px solid var(--move);border-radius:.2rem;background:transparent;color:var(--move);cursor:pointer}
+.idx button.go:hover{background:var(--move);color:var(--paper)}
+.idx .b{color:var(--muted);font-size:.84rem}
+</style>
+<style id="markcss-live">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</style>
+<script type="text/plain" id="markcss">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</script>
+
+<div class="wrap">
+<h1>CodingSkills の雛形（候補）</h1>
+<p class="lede"><b>schema に落とす前の、Markdown の雛形である。</b>作るファイルを9本そろえた ── 書く手順（SKILL.md）、読ませるもの（references 4本）、写して埋めるもの（templates 2本）、正本の実例1本、機械が回すものの役割表。<b>まだ確定ではない。</b></p>
+
+<div id="bar"><b>変更 0 件</b>
+<button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="a">references／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="src">references／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">references／層ごとの文書<span class="n">0</span></button><button class="tab" role="tab" data-t="hw">references／制約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="ts">templates／制約の束<span class="n">0</span></button><button class="tab" role="tab" data-t="tc">templates／制約<span class="n">0</span></button><button class="tab" role="tab" data-t="ex">実例／lang.rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
+<section class="pane md" data-k="s" hidden><div class="doc"><hr>
+<p>name: coding-skills<br>description: 目的と言語を受け取り、その場面に効く制約を集めて、それに従ってコードを書くときに使う。制約が足りないときは、書く前に制約を起こす手順へ回す。「Goでバックエンドを書く」「RustでHookを書く」「この規約に沿って実装して」と言われたときに使う。</p>
+<hr>
+<h2>目的</h2>
+<p><strong>その場面に効く制約だけを集め、制約に従って書く。</strong><br>制約は選択肢を減らす言明であり、<strong>どの制約にも、それが真であり続ける範囲がある</strong>。<br>範囲は軸（言語・アーキテクチャ・用途・実行環境）の組み合わせで決まる。</p>
+<p><strong>このSkillは制約を作らない。</strong><br>足りないと分かったら、書く手を止めて <code>references/制約の起こし方.md</code> へ回す。</p>
+<hr>
+<h2>役割</h2>
+<p>- 入力の軸の値から、合致する制約を集める<br>- 集めた制約が、同じ対象について食い違っていないかを見る<br>- 実行できる制約はテストへ、それ以外は書き方の拘束として実装へ渡す<br>- 足りない制約に気づいたら、書く前に作る手順へ回す</p>
+<hr>
+<h2>処理対象と成果物</h2>
+<h3>処理対象</h3>
+<p><strong>これから書くコードと、その場面を表す軸の値である。</strong></p>
+<h3>成果物</h3>
+<p><strong>制約を満たすコードと、そのテストである。</strong><br>集めた制約のうち、どれを満たし、どれが足りなかったかを添える。</p>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>言語</td><td>明示されなければ、対象リポジトリの構成から判定せず、利用者に聞く</td></tr><tr><td>用途</td><td>明示されなければ聞く。バックエンドAPI／Hook／MCPサーバー／フロントエンド等</td></tr><tr><td>アーキテクチャ</td><td>受け取らない。用途の制約が指定する</td></tr><tr><td>実行環境</td><td>明示されなければ、用途の制約が既定を持つ。常駐するか、都度起動されるか</td></tr></table></div>
+<hr>
+<h2>実行手順</h2>
+<h3>Step 1: 軸の値を確かめる</h3>
+<p><strong>書く前に、どの場面に居るかを決める。</strong><br>言語と用途が決まれば、アーキテクチャと実行環境は制約の側が指定する。</p>
+<h3>Step 2: 制約を集める</h3>
+<pre class="code">python3 scripts/collect.py --lang &lt;言語&gt; --purpose &lt;用途&gt;</pre>
+<p><strong>返るのは制約の一覧である。</strong><br>軸が一致したものだけが入る。<br><strong>0件の欄があれば、そう表示される</strong> ── 「無い」ことが見える。</p>
+<h3>Step 3: 食い違いを見る</h3>
+<p><strong>同じ対象について2つの制約があれば、そこで止める。</strong><br>片方が穴（各自が決める）を宣言していれば、食い違いではない。</p>
+<h3>Step 4: 足りなければ、作る手順へ回す</h3>
+<div class="wrap"><table><tr><th>状態</th><th>次にすること</th></tr><tr><td>必要な制約が揃っている</td><td>Step 5 へ進む</td></tr><tr><td><strong>足りない</strong></td><td><strong>書かない。</strong></td></tr></table></div>
+<p><code>references/制約の起こし方.md</code> へ回り、承認を経てから Step 2 へ戻る |</p>
+<p><strong>その場で制約を作らない。</strong><br>承認を経ていない制約は正本に入らず、次に同じ場面が来ても再現しない。</p>
+<h3>Step 5: 振る舞いを先に置く</h3>
+<p><strong>制約は実装より先に在る。</strong><br>実行できる制約をテストへ落とし、失敗させてから実装する。<br><strong>実装を読んでからテストを書かない</strong> ── 実装の範囲内の振る舞いしか書けなくなる。</p>
+<h3>Step 6: 書いて、制約と照らす</h3>
+<p><strong>書いたあと、集めた制約を1件ずつ当てる。</strong><br>機械で検められる制約は、制約が持つ命令を走らせる。</p>
+<hr>
+<h2>出力形式</h2>
+<p><strong>書いたコードとテストに加えて、次を報告する。</strong></p>
+<div class="wrap"><table><tr><th>報告する内容</th><th>書き方</th></tr><tr><td>使った軸の値</td><td>言語・用途・アーキテクチャ・実行環境を並べる</td></tr><tr><td>集まった制約</td><td>件数と、印の一覧</td></tr><tr><td>満たした制約</td><td>印と、満たした箇所</td></tr><tr><td><strong>足りなかった制約</strong></td><td><strong>何が決まっていなかったかを書く。</strong></td></tr></table></div>
+<p>推測で埋めたなら、そう書く |</p>
+<div class="wrap"><table></table></div>
+<hr>
+<h2>ガードレール</h2>
+<p>- <strong>その場で制約を作らない。</strong><br>足りないと分かったら、作る手順へ回す<br>- <strong>実装を読んでからテストを書かない。</strong><br>制約が先に在る<br>- <strong>軸の値を推測しない。</strong><br>分からなければ聞く<br>- <strong>集めた制約を要約しない。</strong><br>言明はそのまま当てる<br>- <strong>プロジェクト固有の決めごとを制約として扱わない。</strong><br>出典を持たないものは制約ではない<br>- <strong>穴（各自が決める）の外を特殊化しない。</strong><br>必要なら、上の層の制約を直す</p>
+<hr>
+<h2>参照</h2>
+<p>- <code>references/制約の起こし方.md</code>: 制約を新しく起こす手順（原典を落とす → 書く → 承認）<br>- <code>references/軸.md</code>: 軸の定義と、軸を足すときの判定<br>- <code>references/出典.md</code>: 何を出典として認めるか<br>- <code>references/層ごとの文書.md</code>: どの層に、どの文書を置くか<br>- <code>templates/制約の束.md</code>: 層1つぶんの文書の雛形<br>- <code>templates/制約.md</code>: 制約1件の雛形</p></div></section><section class="pane md" data-k="a" hidden><div class="doc"><h1>軸 ── 何が変わると、制約が変わるか</h1>
+<h2>概要</h2>
+<p><strong>軸とは、変えられるもののことである。</strong><br>制約は、依存する軸の値が一致した場面でだけ効く。</p>
+<h2>軸と認める条件</h2>
+<p><strong>一方を固定しても、もう一方が動くなら、それは別の軸である。</strong><br>独立かどうかは概念の性質なので、<strong>実例の件数では決めない</strong>。</p>
+<h2>いまの軸</h2>
+<div class="wrap"><table><tr><th>軸</th><th>値の例</th><th>何が決まるか</th></tr><tr><td>言語</td><td><code>go</code> ／ <code>rust</code></td><td>綴りと書式、失敗の運び方、並行の単位、テストが走る仕組み、標準の道具</td></tr><tr><td>アーキテクチャ</td><td><code>hexagonal</code></td><td>層の名前、依存の向き、層ごとの責務</td></tr><tr><td>用途</td><td><code>backend-api</code> ／ <code>hook</code> ／ <code>mcp-server</code> ／ <code>frontend</code></td><td>外との契約、起動と終了、保証する振る舞い、採るアーキテクチャ、採る道具</td></tr><tr><td>実行環境</td><td><code>resident</code> ／ <code>per-invocation</code></td><td>状態の持ち方、終了の仕方、起動のたびに払う費用</td></tr></table></div>
+<h2>軸を足すとき</h2>
+<div class="wrap"><table><tr><th>手順</th><th>内容</th></tr><tr><td>1</td><td>いまの軸のどれかを固定しても、その候補が動くかを確かめる</td></tr><tr><td>2</td><td>動くなら軸に上げる。動かないなら、既存の軸の値として表す</td></tr><tr><td>3</td><td><strong>既にある制約の宣言を見直す。</strong></td></tr></table></div>
+<p>足した軸に依存していた制約が、広すぎる宣言のまま残る |</p>
+<h2>層</h2>
+<p><strong>層とは、その制約が依存する軸の集合である。</strong><br>層は宣言から導出されるので、<strong>あらかじめ並べない</strong>。</p>
+<div class="wrap"><table><tr><th>層</th><th>依存する軸</th></tr><tr><td><code>lang.rust</code></td><td>言語</td></tr><tr><td><code>arch.hexagonal</code></td><td>アーキテクチャ</td></tr><tr><td><code>lang.rust+arch.hexagonal</code></td><td>言語、アーキテクチャ</td></tr><tr><td><code>purpose.hook</code></td><td>用途</td></tr></table></div>
+<h2>上書き</h2>
+<p><strong>下層は上層を上書きできない。</strong><br>上書きが要ると分かったら、それは<strong>その制約の軸の宣言が足りなかった</strong>ことの現れである。<br>値を変えず、依存する軸を直す。</p>
+<p><strong>例外は、上層が穴を宣言している場合だけである。</strong><br>穴の外は特殊化できない。</p></div></section><section class="pane md" data-k="src" hidden><div class="doc"><h1>出典 ── 制約は、何を根拠に書けるか</h1>
+<h2>概要</h2>
+<p><strong>出典を書けない制約は、制約として置けない。</strong><br>「誰かがそう決めた」しか言えないものは、他のプロジェクトへ持って行けない。</p>
+<h2>認める出典</h2>
+<div class="wrap"><table><tr><th>種類</th><th>何を指すか</th><th>添えるもの</th></tr><tr><td>規格</td><td>言語仕様、RFC、プロトコルの仕様</td><td>版と、原文で照合する文字列</td></tr><tr><td>原典</td><td>公式ガイド、公式リファレンス、確立した文献</td><td>落とした日と、原文で照合する文字列</td></tr><tr><td>実測</td><td>自分で数えた記録</td><td>測った対象、件数、測った日</td></tr></table></div>
+<h2>認めない出典</h2>
+<div class="wrap"><table><tr><th>種類</th><th>なぜ認めないか</th></tr><tr><td>このプロジェクトの決めごと</td><td>場面が変われば成り立たない。**</td></tr></table></div>
+<p>入れた時点で、どの場面でも同じ答えを返すという前提が壊れる** |</p>
+<div class="wrap"><table><tr><th>要約されたもの</th><th>言い換えた時点で、原典とは別のものになる</th></tr><tr><td>出典を持たない経験則</td><td>正しいかもしれないが、確かめる先が無い</td></tr></table></div>
+<h2>照合の仕方</h2>
+<div class="wrap"><table><tr><th>手順</th><th>内容</th></tr><tr><td>1</td><td>原文を落とし、落とした日と <code>sha256</code> を残す</td></tr><tr><td>2</td><td>制約が使う識別子を、<strong>原文の文字列でそのまま照合する</strong></td></tr><tr><td>3</td><td>照合できなかった識別子は、原典の名前として書かない</td></tr></table></div>
+<p><strong>URL だけでは足りない。</strong><br>指す先に届いているかを、誰も確かめられないためである。</p>
+<h2>版が変わったとき</h2>
+<p><strong>「公式」であることは、正しさを保証しない。</strong><br>版が上がったら、照合する文字列がまだ原文に在るかを確かめる。<br>無ければ、その制約は出典を失っている。</p></div></section><section class="pane md" data-k="ld" hidden><div class="doc"><h1>層ごとの文書 ── どの層に、何を置くか</h1>
+<h2>概要</h2>
+<p><strong>層ごとに、決められることが違う。</strong><br>だから置く文書も層ごとに違い、<strong>同じ4種別をすべての層へ並べない</strong>。</p>
+<h2>決められること／決められないこと</h2>
+<div class="wrap"><table><tr><th>層</th><th>決められる</th><th>決められない</th></tr><tr><td>言語</td><td>綴りと書式、失敗の運び方、並行の単位、テストが走る仕組み、標準の道具</td><td>どんな層があるか（アーキテクチャが決める）／何を保証するか（用途が決める）</td></tr><tr><td>アーキテクチャ</td><td>層の名前、依存の向き、層ごとの責務</td><td>それを何で表すか（言語が決める）</td></tr><tr><td>言語 × アーキテクチャ</td><td>層を何で表すか、向きを何で守るか、テストの置き場所</td><td>何を保証するか（用途が決める）</td></tr><tr><td>用途</td><td>外との契約、起動と終了、保証する振る舞い、採るアーキテクチャ、採る道具</td><td>── ここが可変で、上の3層が空けた穴を埋める</td></tr></table></div>
+<h2>置く文書</h2>
+<div class="wrap"><table><tr><th>層</th><th>文書</th><th>その文書が決めること</th></tr><tr><td><code>lang.&lt;言語&gt;</code></td><td><code>style.md</code></td><td>綴りと書式</td></tr><tr><td></td><td><code>failure.md</code></td><td>失敗の運び方</td></tr><tr><td></td><td><code>test-mechanism.md</code></td><td>テストが走る仕組みと、書き方</td></tr><tr><td></td><td><code>toolchain.md</code></td><td>標準の道具と、その版</td></tr><tr><td><code>arch.&lt;様式&gt;</code></td><td><code>layers.md</code></td><td>層の名前と、層ごとの責務</td></tr><tr><td></td><td><code>dependency.md</code></td><td>依存の向き</td></tr><tr><td><code>lang.&lt;言語&gt;+arch.&lt;様式&gt;</code></td><td><code>layer-mapping.md</code></td><td>層を何で表し、向きを何で守るか</td></tr><tr><td></td><td><code>test-placement.md</code></td><td>テストをどこに置くか</td></tr><tr><td><code>purpose.&lt;用途&gt;</code></td><td><code>contract.md</code></td><td>外との契約</td></tr><tr><td></td><td><code>lifecycle.md</code></td><td>起動と終了</td></tr><tr><td></td><td><code>acceptance.md</code></td><td>何を保証するか</td></tr><tr><td></td><td><code>stack.md</code></td><td>採るアーキテクチャと道具</td></tr></table></div>
+<h2>種別</h2>
+<p><strong>種別（コーディング／テスト／アーキテクチャ／技術スタック）は、置き場所ではなく欄である。</strong><br>横断で引くための分類なので、制約1件ごとに宣言する。</p>
+<div class="wrap"><table><tr><th>引きたいこと</th><th>どう引くか</th></tr><tr><td>この場面に効く制約を全部</td><td>軸の値で集める</td></tr><tr><td>テストに関わる制約を全部</td><td>種別の欄で絞る</td></tr></table></div>
+<h2>空のマス</h2>
+<p><strong>その層で決まらないことの文書は、作らない。</strong><br>言語の層に「層と依存の向き」は無いので、<code>lang.go/dependency.md</code> は置かない。</p></div></section><section class="pane md" data-k="hw" hidden><div class="doc"><h1>制約の起こし方 ── 作る手順</h1>
+<h2>概要</h2>
+<p><strong>制約は、書く手順の中では作らない。</strong><br>足りないと分かったら、この手順へ回る。承認を経たものだけが正本に入る。</p>
+<h2>手順</h2>
+<h3>Step 1: 原典を落とす</h3>
+<p><strong>要約を経由しない。</strong><br>原文を落とし、落とした日と <code>sha256</code> を残す。</p>
+<div class="wrap"><table><tr><th>対象</th><th>どう落とすか</th></tr><tr><td>言語仕様・公式ガイド</td><td>原文を取得して保存する。<code>.md</code> が返るなら、それが原文である</td></tr><tr><td>規格</td><td>版を明示して保存する</td></tr><tr><td>実測</td><td>測った対象・件数・測った日を、そのまま記録する</td></tr></table></div>
+<p><strong>原典が見つからないなら、そこで止める。</strong><br>出典を持たない制約は置けない。</p>
+<h3>Step 2: 言明を一文にする</h3>
+<p><strong>検査できる最小の言明にする。</strong><br>理由も例外も混ぜない。</p>
+<div class="wrap"><table><tr><th>悪い</th><th>なぜ悪いか</th><th>良い</th></tr><tr><td>エラーは値で返す。例外は呼び出し側が見落とすため</td><td>言明と理由が1文に入っている</td><td>エラーは値で返し、例外で流さない</td></tr><tr><td>命名は分かりやすくする</td><td>検査できない</td><td>型名は名詞句にし、動詞で始めない</td></tr></table></div>
+<p><strong>1文に2つの命題が入るなら、それは2件である。</strong></p>
+<h3>Step 3: 依存する軸を決める</h3>
+<p><strong>その言明が、どの軸を固定したときに真であり続けるかを問う。</strong></p>
+<div class="wrap"><table><tr><th>問い</th><th>判定</th></tr><tr><td>言語を変えても真か</td><td>真なら、言語には依存しない</td></tr><tr><td>アーキテクチャを変えても真か</td><td>真なら、アーキテクチャには依存しない</td></tr><tr><td>用途を変えても真か</td><td>真なら、用途には依存しない</td></tr></table></div>
+<p><strong>依存する軸の集合が、そのまま置き場所（層）になる。</strong></p>
+<h3>Step 4: 欄を埋める</h3>
+<p><code>templates/制約.md</code> を写して埋める。<br><strong>埋まらない欄が残るなら、まだ制約になっていない。</strong></p>
+<h3>Step 5: 検め方を決める</h3>
+<div class="wrap"><table><tr><th>誰が検めるか</th><th>書くこと</th></tr><tr><td>機械</td><td>走らせる命令を、そのまま書く</td></tr><tr><td>人</td><td>何を見るかを書く。「気をつける」とは書かない</td></tr></table></div>
+<h3>Step 6: 人の承認を得る</h3>
+<p><strong>承認を経てから、正本へ置く。</strong><br>承認されていない制約は、集める側から見えない。</p>
+<h3>Step 7: 索引を作り直す</h3>
+<pre class="code">python3 scripts/index.py</pre>
+<p><strong>索引は導出物である。</strong><br>手で書かない。</p>
+<h2>穴を宣言するとき</h2>
+<p><strong>決めないことも、決定である。</strong><br>「ここは各自が決める」と書けば、下の層がそこだけを埋められる。</p>
+<div class="wrap"><table><tr><th>書き方</th><th>意味</th></tr><tr><td>穴か＝閉じている</td><td>下の層は、これを特殊化できない</td></tr><tr><td>穴か＝ここは各自が決める</td><td>下の層が、この1点だけを埋めてよい</td></tr></table></div>
+<p><strong>穴を宣言しないまま、下の層が特殊化を求めてきたら、軸の宣言を疑う。</strong></p></div></section><section class="pane md" data-k="ts" hidden><div class="doc"><hr>
+<p>id: 《この文書の識別子。フォルダ名とファイル名から作る》<br>layer: 《軸の組み合わせ。フォルダ名と同じ。例: lang.rust》<br>axes:<br>  - axis: 《軸の名前。language / architecture / purpose / runtime のいずれか》<br>    value: 《値》<br>declares: 《この文書が決めること。ファイル名と同じ意味を、日本語で》<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《この文書が決めること》</h1>
+<h2>概要</h2>
+<p><strong>《何を決める文書かを一文で》</strong><br>《この文書の制約は、上の axes が一致する場面でだけ効く。》</p>
+<h2>決めないこと</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どこが決めるか</th></tr><tr><td>《この層では決まらないこと》</td><td>《それを決める層》</td></tr></table></div>
+<h2>制約</h2>
+<h3>《印》　《言明を一文で》</h3>
+<div class="wrap"><table><tr><th>欄</th><th>値</th></tr><tr><td>依存する軸</td><td>《軸》＝《値》</td></tr><tr><td>種別</td><td>《選ぶ》</td></tr><tr><td>穴か</td><td>《選ぶ》</td></tr></table></div>
+<h4>出どころ</h4>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>原文で照合する文字列</th></tr><tr><td>《選ぶ》</td><td>《原典》</td><td><code>《文字列》</code></td></tr></table></div>
+<h4>検め方</h4>
+<div class="wrap"><table><tr><th>誰が</th><th>どうやって</th></tr><tr><td>《選ぶ》</td><td>《命令、または見るところ》</td></tr></table></div>
+<h4>守った例</h4>
+<pre class="code">《例》</pre>
+<h4>破った例</h4>
+<pre class="code">《例》</pre>
+<h2>この文書が空けた穴</h2>
+<div class="wrap"><table><tr><th>穴</th><th>誰が埋めるか</th></tr><tr><td>《各自が決めると宣言したこと》</td><td>《埋める層。例: 用途》</td></tr></table></div></div></section><section class="pane md" data-k="tc" hidden><div class="doc"><h3>《印》　《言明を一文で。理由も例外も混ぜない》</h3>
+<div class="wrap"><table><tr><th>欄</th><th>値</th></tr><tr><td>依存する軸</td><td>《軸の名前》＝《値》／《軸の名前》＝《値》</td></tr><tr><td>種別</td><td>《コーディング／テスト／アーキテクチャ／技術スタック から選ぶ》</td></tr><tr><td>穴か</td><td>《閉じている／ここは各自が決める から選ぶ》</td></tr></table></div>
+<h4>出どころ</h4>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>原文で照合する文字列</th></tr><tr><td>《実測／原典／規格 から選ぶ》</td><td>《落とした原文の位置。版と日付を添える》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div>
+<h4>検め方</h4>
+<div class="wrap"><table><tr><th>誰が</th><th>どうやって</th></tr><tr><td>《機械／人 から選ぶ》</td><td>《走らせる命令、または見るところ》</td></tr></table></div>
+<h4>守った例</h4>
+<pre class="code">《最小の例。ほかの制約の話を混ぜない》</pre>
+<h4>破った例</h4>
+<pre class="code">《この制約だけを破っている最小の例》</pre>
+<h4>図</h4>
+<pre class="mermaid">《Mermaid の宣言。図も構造として持つ》</pre>
+<h4>補足</h4>
+<p>- 《1項目に1つの意味。散文にしない》<br>- 《言明に入らなかった条件があれば、ここへ》</p></div></section><section class="pane md" data-k="ex" hidden><div class="doc"><hr>
+<p>id: lang.rust.failure<br>layer: lang.rust<br>axes:<br>  - axis: language<br>    value: rust<br>declares: 失敗の運び方<br>updated: 2026-09-05</p>
+<hr>
+<h1>Rust における失敗の運び方</h1>
+<h2>概要</h2>
+<p><strong>回復できる失敗を値で運び、回復できない失敗だけを巻き戻しに任せる。</strong><br>この文書の制約は、言語が Rust である場面すべてで効く。</p>
+<h2>決めないこと</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どこが決めるか</th></tr><tr><td>どの失敗を利用者へ見せるか</td><td>用途</td></tr><tr><td>失敗をどの層で受けるか</td><td>アーキテクチャ</td></tr></table></div>
+<h2>制約</h2>
+<h3>RS-ERR-01　回復できる失敗は <code>Result</code> で返し、<code>panic!</code> で流さない</h3>
+<div class="wrap"><table><tr><th>欄</th><th>値</th></tr><tr><td>依存する軸</td><td>言語＝rust</td></tr><tr><td>種別</td><td>コーディング</td></tr><tr><td>穴か</td><td>閉じている</td></tr></table></div>
+<h4>出どころ</h4>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>原文で照合する文字列</th></tr><tr><td>原典</td><td>The Rust Programming Language, ch.9「Error Handling」（落とした日：《YYYY-MM-DD》）</td><td><code>recoverable</code></td></tr></table></div>
+<h4>検め方</h4>
+<div class="wrap"><table><tr><th>誰が</th><th>どうやって</th></tr><tr><td>機械</td><td><code>cargo clippy -- -D clippy::unwrap_used -D clippy::expect_used</code></td></tr></table></div>
+<h4>守った例</h4>
+<pre class="code">fn read_port(raw: &amp;str) -&gt; Result&lt;u16, ParsePortError&gt; {
+    raw.parse::&lt;u16&gt;().map_err(ParsePortError::Invalid)
+}</pre>
+<h4>破った例</h4>
+<pre class="code">fn read_port(raw: &amp;str) -&gt; u16 {
+    raw.parse::&lt;u16&gt;().unwrap()
+}</pre>
+<h4>補足</h4>
+<p>- テストの中の <code>unwrap</code> は、この制約の対象外である<br>- 回復できない失敗（不変条件の破れ）は <code>panic!</code> でよい</p>
+<h3>RS-ERR-02　失敗の型は、呼び出し側が分岐できる列挙にする</h3>
+<div class="wrap"><table><tr><th>欄</th><th>値</th></tr><tr><td>依存する軸</td><td>言語＝rust</td></tr><tr><td>種別</td><td>コーディング</td></tr><tr><td>穴か</td><td>ここは各自が決める（列挙の粒度は用途が決める）</td></tr></table></div>
+<h4>出どころ</h4>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>原文で照合する文字列</th></tr><tr><td>原典</td><td>Rust API Guidelines「Error types are meaningful and well-behaved」（落とした日：《YYYY-MM-DD》）</td><td><code>error types</code></td></tr></table></div>
+<h4>検め方</h4>
+<div class="wrap"><table><tr><th>誰が</th><th>どうやって</th></tr><tr><td>人</td><td>失敗の型が <code>String</code> や <code>Box&lt;dyn Error&gt;</code> になっていないかを見る</td></tr></table></div>
+<h4>守った例</h4>
+<pre class="code">pub enum ParsePortError {
+    Invalid(std::num::ParseIntError),
+    OutOfRange { got: u32 },
+}</pre>
+<h4>破った例</h4>
+<pre class="code">pub fn read_port(raw: &amp;str) -&gt; Result&lt;u16, String&gt; { /* … */ }</pre>
+<h4>図</h4>
+<pre class="mermaid">flowchart LR
+    call[呼び出し側] --&gt;|分岐できる| enum[失敗の列挙]
+    call -.-&gt;|分岐できない| text[文字列の失敗]</pre>
+<h2>この文書が空けた穴</h2>
+<div class="wrap"><table><tr><th>穴</th><th>誰が埋めるか</th></tr><tr><td>失敗の列挙をどこまで細かく分けるか</td><td>用途</td></tr></table></div></div></section><section class="pane md" data-k="sc" hidden><div class="doc"><h1>scripts ── 機械が回すもの</h1>
+<h2>概要</h2>
+<p><strong>集める・検める・索引を出すの3つを、機械が行う。</strong><br>同じ問いに同じ範囲が返らないと、そのあとの推論の入力が毎回変わるためである。</p>
+<h2>置くもの</h2>
+<div class="wrap"><table><tr><th>命令</th><th>何をするか</th><th>返すもの</th></tr><tr><td><code>collect.py --lang &lt;言語&gt; --purpose &lt;用途&gt;</code></td><td>軸の値が一致する制約を集める</td><td>制約の一覧。0件の層も、0件として出す</td></tr><tr><td><code>check.py</code></td><td>制約の形を検める</td><td>欄の欠け、出典の空、フォルダ名と宣言した軸の食い違い</td></tr><tr><td><code>index.py</code></td><td>人が読む索引を作り直す</td><td>層ごとの一覧（生成物。手で書き換えない）</td></tr></table></div>
+<h2>検めること</h2>
+<div class="wrap"><table><tr><th>検査</th><th>落ちる条件</th></tr><tr><td>欄の欠け</td><td>言明・依存する軸・出どころ・検め方のどれかが空</td></tr><tr><td>出典</td><td>原文で照合する文字列が空、または原文に無い</td></tr><tr><td>置き場所</td><td>フォルダ名と、宣言した軸が食い違う</td></tr><tr><td>重なり</td><td>同じ対象について2つの制約があり、どちらも穴を宣言していない</td></tr></table></div>
+<h2>生成物</h2>
+<p><strong>索引は生成物である。</strong><br><code>INDEX.md</code> を手で書き換えない。<br>書き換えても、次の生成で消える。</p></div></section>
+</div>
+<script>
+(function(){
+  var MARKCSS = document.getElementById("markcss").textContent;
+
+  /* 印を1つ、押せるようにする。iframe の中でも Shadow の中でも同じ手が効く */
+  function wire(root, doc){
+    root.querySelectorAll("mark.chg[data-w]").forEach(function(m){
+      var p = doc.createElement("div");
+      p.className = "pop"; p.hidden = true;
+      var b1 = doc.createElement("b"); b1.textContent = "変更前";
+      var pre = doc.createElement("pre"); pre.textContent = m.dataset.b;
+      var b2 = doc.createElement("b"); b2.textContent = "なぜ";
+      var w = doc.createElement("div"); w.textContent = m.dataset.w;
+      p.appendChild(b1); p.appendChild(pre); p.appendChild(b2); p.appendChild(w);
+      var host = m.closest("td") || m.closest("li") || m.parentNode;
+      if (host.nextSibling) host.parentNode.insertBefore(p, host.nextSibling);
+      else host.parentNode.appendChild(p);
+      function tg(){
+        var opening = p.hidden;
+        p.hidden = !opening;
+        m.setAttribute("aria-expanded", opening ? "true" : "false");
+        resizeAll();
+      }
+      m.addEventListener("click", tg);
+      m.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tg(); }
+      });
+    });
+  }
+
+  var frames = [];
+  function resizeAll(){
+    frames.forEach(function(f){
+      try {
+        var d = f.contentDocument;
+        if (d && d.body) f.style.height = (d.documentElement.scrollHeight + 8) + "px";
+      } catch(e){}
+    });
+  }
+
+  /* HTML の面を立てる。iframe が空のままなら Shadow DOM へ落とす */
+  document.querySelectorAll(".pane.html").forEach(function(pane){
+    var tpl = pane.querySelector("template");
+    var src = tpl.innerHTML;
+    var fr = document.createElement("iframe");
+    fr.setAttribute("title", pane.dataset.tab || "");
+    fr.srcdoc = '<!doctype html><meta charset="utf-8">'
+              + '<style>' + MARKCSS + '</style>' + src;
+    pane.appendChild(fr);
+    frames.push(fr);
+    var done = false;
+    fr.addEventListener("load", function(){
+      var d = fr.contentDocument;
+      if (!d || !d.body || !d.body.firstChild) return;
+      done = true;
+      wire(d, d);
+      resizeAll();
+      /* 中の高さは、字が載ってから決まる。変わるたびに測り直す */
+      if (window.ResizeObserver) {
+        new ResizeObserver(resizeAll).observe(d.documentElement);
+      }
+      /* 中のタブを押しても測り直す。中の作りに依らず効く */
+      d.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+      [80, 300, 900].forEach(function(t){ setTimeout(resizeAll, t); });
+      pane.querySelector(".how").textContent = "iframe で置いた";
+    });
+    setTimeout(function(){
+      if (done) return;
+      /* 載ったのに load を取り逃していないかを、もう一度見る */
+      try {
+        var d2 = fr.contentDocument;
+        if (d2 && d2.body && d2.body.firstChild) {
+          done = true; wire(d2, d2); resizeAll();
+          if (window.ResizeObserver) new ResizeObserver(resizeAll).observe(d2.documentElement);
+          d2.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+          pane.querySelector(".how").textContent = "iframe で置いた";
+          return;
+        }
+      } catch(e){}
+      /* 届かなかった。Shadow DOM へ落とす */
+      fr.remove();
+      frames = frames.filter(function(x){ return x !== fr; });
+      var holder = document.createElement("div");
+      pane.appendChild(holder);
+      var sh = holder.attachShadow({mode:"open"});
+      var st = document.createElement("style");
+      st.textContent = MARKCSS + "\n" + (tpl.dataset.shadowcss || "");
+      sh.appendChild(st);
+      var box = document.createElement("div");
+      box.innerHTML = src;
+      sh.appendChild(box);
+      wire(sh, document);
+      pane.querySelector(".how").textContent = "Shadow DOM で置いた";
+    }, 2500);
+  });
+
+  /* 印を、見える状態にする。
+
+     **内側のタブの作り方を、こちらは知らない。**
+     設計ノートは <input type="radio"> と :checked ~ #panel で切り替えていた。
+     JS で切り替える作りもある。**どちらでも効くように、
+     切り替えを1つずつ当てて、印が出たところで止める。** */
+  function reveal(m){
+    if (m.offsetParent) return true;
+    var n = m;
+    while (n && n.nodeType === 1) { if (n.hidden) n.hidden = false; n = n.parentNode; }
+    /* **印が住んでいる根から探す。**
+       Shadow の中の印に対して document を探すと、切り替えが1つも見つからない */
+    var scope = m.getRootNode ? m.getRootNode() : m.ownerDocument;
+    for (var e = m.parentNode; e && e.nodeType === 1; e = e.parentNode) {
+      if (e.tagName === "DETAILS") e.open = true;
+    }
+    if (m.offsetParent) return true;
+    var ins = scope.querySelectorAll('input[type="radio"],input[type="checkbox"]');
+    for (var i = 0; i < ins.length; i++) {
+      var was = ins[i].checked;
+      ins[i].checked = true;
+      if (m.offsetParent) return true;
+      ins[i].checked = was;
+    }
+    return !!m.offsetParent;
+  }
+
+  /* 一覧の「その場所へ」。印を開いて、そこまで運ぶ */
+  document.querySelectorAll(".idx button.go").forEach(function(b){
+    b.onclick = function(){
+      var pane = b.closest(".pane");
+      var i = +b.dataset.i;
+      var fr = pane.querySelector("iframe");
+      var root = fr ? fr.contentDocument : null;
+      if (!root) {
+        var h = Array.prototype.find.call(pane.querySelectorAll("div"),
+          function(x){ return x.shadowRoot; });
+        root = h ? h.shadowRoot : pane;
+      }
+      var m = root.querySelectorAll("mark.chg")[i];
+      if (!m) return;
+      var shown = reveal(m);
+      if (m.getAttribute("aria-expanded") !== "true") m.click();
+      b.textContent = shown ? "その場所へ" : "隠れたまま";
+      setTimeout(function(){
+        var y = 0, e = m;
+        while (e && e.offsetParent) { y += e.offsetTop; e = e.offsetParent; }
+        if (fr) window.scrollTo({top: fr.getBoundingClientRect().top + window.scrollY + y - 60,
+                                 behavior: "smooth"});
+        else m.scrollIntoView({block: "center", behavior: "smooth"});
+      }, 60);
+    };
+  });
+
+  /* マークダウンの面 */
+  document.querySelectorAll(".pane.md").forEach(function(p){ wire(p, document); });
+
+  function allPops(){
+    var out = Array.prototype.slice.call(document.querySelectorAll(".pop"));
+    frames.forEach(function(f){
+      try { out = out.concat(Array.prototype.slice.call(f.contentDocument.querySelectorAll(".pop"))); }
+      catch(e){}
+    });
+    document.querySelectorAll(".pane.html div").forEach(function(h){
+      if (h.shadowRoot) out = out.concat(Array.prototype.slice.call(h.shadowRoot.querySelectorAll(".pop")));
+    });
+    return out;
+  }
+  document.getElementById("oa").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = false; }); resizeAll(); };
+  document.getElementById("ca").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = true; }); resizeAll(); };
+
+  var tabs = document.querySelectorAll(".tab");
+  function sel(k){
+    tabs.forEach(function(t){ t.setAttribute("aria-selected", t.dataset.t === k ? "true" : "false"); });
+    document.querySelectorAll(".pane").forEach(function(p){ p.hidden = (p.dataset.k !== k); });
+    resizeAll();
+  }
+  tabs.forEach(function(t){ t.onclick = function(){ sel(t.dataset.t); }; });
+  if (tabs.length) sel(tabs[0].dataset.t);
+  window.addEventListener("resize", resizeAll);
+})();
+</script>
