@@ -1,4 +1,4 @@
-<title>CodingSkills の雛形と規約（候補・第4版）</title>
+<title>CodingSkills の雛形と規約（候補・第5版）</title>
 <style>
 :root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
 --move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
@@ -84,12 +84,12 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 </script>
 
 <div class="wrap">
-<h1>CodingSkills の雛形と規約（候補・第4版）</h1>
-<p class="lede"><b>テストに関わる3本を足した。</b>確かめる単位の境界（アーキテクチャ）・重心と計画（用途）・観点の一覧（参照）。<b>カバレッジの下限は置かない</b> ── 数値は振る舞いを保証しないので、未到達の一覧を確かめ漏れの発見にだけ使う。</p>
+<h1>CodingSkills の雛形と規約（候補・第5版）</h1>
+<p class="lede"><b>アーキテクチャ軸は値を複数持つ。</b><code>hexagonal</code> と <code>data-port</code> を並べて置き、<b>どちらを採るかは用途の規約が指定する</b>。data-port は、中心にデータの形を置き、呼び出しの約束（trait）を持たない構成である ── 中心が外部の機能を必要としないので、反転が要らない。</p>
 
 <div id="bar"><b>変更 0 件</b>
 <button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
-<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="g">参照／語彙<span class="n">0</span></button><button class="tab" role="tab" data-t="a">参照／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="so">参照／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">参照／層ごとの規約<span class="n">0</span></button><button class="tab" role="tab" data-t="tp">参照／テスト観点<span class="n">0</span></button><button class="tab" role="tab" data-t="au">参照／規約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="t1">雛形／構造<span class="n">0</span></button><button class="tab" role="tab" data-t="t2">雛形／規則<span class="n">0</span></button><button class="tab" role="tab" data-t="t3">雛形／ツール<span class="n">0</span></button><button class="tab" role="tab" data-t="t4">雛形／保証<span class="n">0</span></button><button class="tab" role="tab" data-t="r1">rust／style<span class="n">0</span></button><button class="tab" role="tab" data-t="r2">rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="r3">rust／test-mechanism<span class="n">0</span></button><button class="tab" role="tab" data-t="r4">rust／toolchain<span class="n">0</span></button><button class="tab" role="tab" data-t="h1">hexagonal／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="h2">hexagonal／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="h3">hexagonal／test-boundaries<span class="n">0</span></button><button class="tab" role="tab" data-t="b1">rust×hexagonal／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="b2">rust×hexagonal／test-placement<span class="n">0</span></button><button class="tab" role="tab" data-t="k1">hook／contract<span class="n">0</span></button><button class="tab" role="tab" data-t="k2">hook／lifecycle<span class="n">0</span></button><button class="tab" role="tab" data-t="k3">hook／acceptance<span class="n">0</span></button><button class="tab" role="tab" data-t="k5">hook／test-strategy<span class="n">0</span></button><button class="tab" role="tab" data-t="k4">hook／stack<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="g">参照／語彙<span class="n">0</span></button><button class="tab" role="tab" data-t="a">参照／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="so">参照／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">参照／層ごとの規約<span class="n">0</span></button><button class="tab" role="tab" data-t="tp">参照／テスト観点<span class="n">0</span></button><button class="tab" role="tab" data-t="au">参照／規約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="t1">雛形／構造<span class="n">0</span></button><button class="tab" role="tab" data-t="t2">雛形／規則<span class="n">0</span></button><button class="tab" role="tab" data-t="t3">雛形／ツール<span class="n">0</span></button><button class="tab" role="tab" data-t="t4">雛形／保証<span class="n">0</span></button><button class="tab" role="tab" data-t="r1">rust／style<span class="n">0</span></button><button class="tab" role="tab" data-t="r2">rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="r3">rust／test-mechanism<span class="n">0</span></button><button class="tab" role="tab" data-t="r4">rust／toolchain<span class="n">0</span></button><button class="tab" role="tab" data-t="h1">hexagonal／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="h2">hexagonal／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="h3">hexagonal／test-boundaries<span class="n">0</span></button><button class="tab" role="tab" data-t="d1">data-port／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="d2">data-port／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="b1">rust×hexagonal／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="b2">rust×hexagonal／test-placement<span class="n">0</span></button><button class="tab" role="tab" data-t="b3">rust×data-port／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="k1">hook／contract<span class="n">0</span></button><button class="tab" role="tab" data-t="k2">hook／lifecycle<span class="n">0</span></button><button class="tab" role="tab" data-t="k3">hook／acceptance<span class="n">0</span></button><button class="tab" role="tab" data-t="k5">hook／test-strategy<span class="n">0</span></button><button class="tab" role="tab" data-t="k4">hook／stack<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
 <section class="pane md" data-k="s" hidden><div class="doc"><hr>
 <p>name: coding-skills<br>description: 目的と言語を受け取り、その場面に効く規約を集めて、それに従ってコードを書くときに使う。規約が足りないときは、書く前に規約を起こす手順へ回す。「Goでバックエンドを書く」「RustでHookを書く」「この規約に沿って実装して」と言われたときに使う。</p>
 <hr>
@@ -149,12 +149,16 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <h2>軸と認める条件</h2>
 <p><strong>一方を固定しても、もう一方が動くなら、それは別の軸である。</strong><br>独立かどうかは概念の性質なので、<strong>実例の件数では決めない</strong>。</p>
 <h2>いまの軸</h2>
-<div class="wrap"><table><tr><th>軸</th><th>値の例</th><th>何が決まるか</th></tr><tr><td>言語</td><td><code>go</code> ／ <code>rust</code></td><td>綴りと書式、失敗の運び方、並行の単位、テストが走る仕組み、標準の道具</td></tr><tr><td>アーキテクチャ</td><td><code>hexagonal</code></td><td>層の名前、依存の向き、層ごとの責務</td></tr><tr><td>用途</td><td><code>backend-api</code> ／ <code>hook</code> ／ <code>mcp-server</code> ／ <code>frontend</code></td><td>外との契約、起動と終了、保証する振る舞い、採るアーキテクチャ、採る道具</td></tr><tr><td>実行環境</td><td><code>resident</code> ／ <code>per-invocation</code></td><td>状態の持ち方、終了の仕方、起動のたびに払う費用</td></tr></table></div>
+<div class="wrap"><table><tr><th>軸</th><th>値の例</th><th>何が決まるか</th></tr><tr><td>言語</td><td><code>go</code> ／ <code>rust</code></td><td>綴りと書式、失敗の運び方、並行の単位、テストが走る仕組み、標準の道具</td></tr><tr><td>アーキテクチャ</td><td><code>hexagonal</code> ／ <code>data-port</code></td><td>層の名前、依存の向き、層ごとの責務</td></tr><tr><td>用途</td><td><code>backend-api</code> ／ <code>hook</code> ／ <code>mcp-server</code> ／ <code>frontend</code></td><td>外との契約、起動と終了、保証する振る舞い、採るアーキテクチャ、採る道具</td></tr><tr><td>実行環境</td><td><code>resident</code> ／ <code>per-invocation</code></td><td>状態の持ち方、終了の仕方、起動のたびに払う費用</td></tr></table></div>
+<h2>値を足すとき</h2>
+<p><strong>値を足しても、既にある規約は変わらない。</strong><br>新しいアーキテクチャを採るときは、その値の層を作り、規約を書く。</p>
+<div class="wrap"><table><tr><th>手順</th><th>内容</th></tr><tr><td>1</td><td>その値でしか成り立たない規約を書く（<code>arch.&lt;値&gt;/</code>）</td></tr><tr><td>2</td><td>言語との組が要るなら、束ねの層を作る（<code>lang.&lt;言語&gt;+arch.&lt;値&gt;/</code>）</td></tr><tr><td>3</td><td>用途の規約で、どの値を採るかを宣言する</td></tr></table></div>
 <h2>軸を足すとき</h2>
 <div class="wrap"><table><tr><th>手順</th><th>内容</th></tr><tr><td>1</td><td>いまの軸のどれかを固定しても、その候補が動くかを確かめる</td></tr><tr><td>2</td><td>動くなら軸に上げる。動かないなら、既存の軸の値として表す</td></tr><tr><td>3</td><td><strong>既にある規約の宣言を見直す</strong> ── 足した軸に依存していた規則が、広すぎる宣言のまま残る</td></tr></table></div>
 <h2>層</h2>
 <p><strong>層とは、その規約が依存する軸の集合である。</strong><br>層は宣言から導出されるので、<strong>あらかじめ並べない</strong>。</p>
-<div class="wrap"><table><tr><th>層</th><th>依存する軸</th></tr><tr><td><code>lang.rust</code></td><td>言語</td></tr><tr><td><code>arch.hexagonal</code></td><td>アーキテクチャ</td></tr><tr><td><code>lang.rust+arch.hexagonal</code></td><td>言語、アーキテクチャ</td></tr><tr><td><code>purpose.hook</code></td><td>用途</td></tr></table></div>
+<div class="wrap"><table><tr><th>層</th><th>依存する軸</th></tr><tr><td><code>lang.rust</code></td><td>言語</td></tr><tr><td><code>arch.hexagonal</code></td><td>アーキテクチャ</td></tr><tr><td><code>arch.data-port</code></td><td>アーキテクチャ</td></tr><tr><td><code>lang.rust+arch.hexagonal</code></td><td>言語、アーキテクチャ</td></tr><tr><td><code>lang.rust+arch.data-port</code></td><td>言語、アーキテクチャ</td></tr><tr><td><code>purpose.hook</code></td><td>用途</td></tr></table></div>
+<p><strong>1つの軸は、値を複数持つ。</strong><br><code>hexagonal</code> と <code>data-port</code> は並び、どちらを採るかは用途の規約が指定する。</p>
 <h2>上書き</h2>
 <p><strong>下層は上層を上書きできない。</strong><br>上書きが要ると分かったら、それは<strong>その規約の軸の宣言が足りなかった</strong>ことの現れである。<br>値を変えず、依存する軸を直す。</p>
 <p><strong>例外は、上層が穴を宣言している場合だけである。</strong><br>穴の外は特殊化できない。</p></div></section><section class="pane md" data-k="so" hidden><div class="doc"><h1>出典 ── 規則は、何を根拠に書けるか</h1>
@@ -174,7 +178,7 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <h2>決められること／決められないこと</h2>
 <div class="wrap"><table><tr><th>層</th><th>決められる</th><th>決められない</th></tr><tr><td>言語</td><td>綴りと書式、失敗の運び方、並行の単位、テストが走る仕組み、標準の道具</td><td>どんな層があるか（アーキテクチャが決める）／何を保証するか（用途が決める）</td></tr><tr><td>アーキテクチャ</td><td>層の名前、依存の向き、層ごとの責務</td><td>それを何で表すか（言語が決める）</td></tr><tr><td>言語 × アーキテクチャ</td><td>層を何で表すか、向きを何で守るか、テストの置き場所</td><td>何を保証するか（用途が決める）</td></tr><tr><td>用途</td><td>外との契約、起動と終了、保証する振る舞い、採るアーキテクチャ、採る道具</td><td>── ここが可変で、上の3層が空けた穴を埋める</td></tr></table></div>
 <h2>置く規約</h2>
-<div class="wrap"><table><tr><th>層</th><th>規約</th><th>その規約が決めること</th></tr><tr><td><code>lang.&lt;言語&gt;</code></td><td><code>style.md</code></td><td>綴りと書式</td></tr><tr><td></td><td><code>failure.md</code></td><td>失敗の運び方</td></tr><tr><td></td><td><code>test-mechanism.md</code></td><td>テストが走る仕組みと、書き方</td></tr><tr><td></td><td><code>toolchain.md</code></td><td>標準の道具と、その版</td></tr><tr><td><code>arch.&lt;様式&gt;</code></td><td><code>layers.md</code></td><td>層の名前と、層ごとの責務</td></tr><tr><td></td><td><code>dependency.md</code></td><td>依存の向き</td></tr><tr><td></td><td><code>test-boundaries.md</code></td><td>確かめる単位の境界（何を単体とし、何を結合とするか）</td></tr><tr><td><code>lang.&lt;言語&gt;+arch.&lt;様式&gt;</code></td><td><code>layer-mapping.md</code></td><td>層を何で表し、向きを何で守るか</td></tr><tr><td></td><td><code>test-placement.md</code></td><td>テストをどこに置くか</td></tr><tr><td><code>purpose.&lt;用途&gt;</code></td><td><code>contract.md</code></td><td>外との契約</td></tr><tr><td></td><td><code>lifecycle.md</code></td><td>起動と終了</td></tr><tr><td></td><td><code>acceptance.md</code></td><td>何を保証するか</td></tr><tr><td></td><td><code>test-strategy.md</code></td><td>テストの重心と計画、採る観点、カバレッジの扱い</td></tr><tr><td></td><td><code>stack.md</code></td><td>採るアーキテクチャとツール</td></tr></table></div>
+<div class="wrap"><table><tr><th>層</th><th>規約</th><th>その規約が決めること</th></tr><tr><td><code>lang.&lt;言語&gt;</code></td><td><code>style.md</code></td><td>綴りと書式</td></tr><tr><td></td><td><code>failure.md</code></td><td>失敗の運び方</td></tr><tr><td></td><td><code>test-mechanism.md</code></td><td>テストが走る仕組みと、書き方</td></tr><tr><td></td><td><code>toolchain.md</code></td><td>標準の道具と、その版</td></tr><tr><td><code>arch.&lt;値&gt;</code></td><td><code>layers.md</code></td><td>層の名前と、層ごとの責務</td></tr><tr><td></td><td><code>dependency.md</code></td><td>依存の向き</td></tr><tr><td></td><td><code>test-boundaries.md</code></td><td>確かめる単位の境界（何を単体とし、何を結合とするか）</td></tr><tr><td><code>lang.&lt;言語&gt;+arch.&lt;値&gt;</code></td><td><code>layer-mapping.md</code></td><td>層を何で表し、向きを何で守るか</td></tr><tr><td></td><td><code>test-placement.md</code></td><td>テストをどこに置くか</td></tr><tr><td><code>purpose.&lt;用途&gt;</code></td><td><code>contract.md</code></td><td>外との契約</td></tr><tr><td></td><td><code>lifecycle.md</code></td><td>起動と終了</td></tr><tr><td></td><td><code>acceptance.md</code></td><td>何を保証するか</td></tr><tr><td></td><td><code>test-strategy.md</code></td><td>テストの重心と計画、採る観点、カバレッジの扱い</td></tr><tr><td></td><td><code>stack.md</code></td><td>採るアーキテクチャとツール</td></tr></table></div>
 <h2>種別</h2>
 <p><strong>種別は、規約の型である。</strong><br>どの雛形を写すかが、種別で決まる。</p>
 <div class="wrap"><table><tr><th>種別</th><th>雛形</th><th>中身の形</th><th>当たる規約</th></tr><tr><td>構造</td><td><code>templates/structure.md</code></td><td>表と Mermaid で宣言する</td><td><code>layers.md</code> <code>dependency.md</code> <code>layer-mapping.md</code> <code>contract.md</code> <code>lifecycle.md</code></td></tr><tr><td>規則</td><td><code>templates/rules.md</code></td><td>守るべき言明の並び。適合例と違反例を添える</td><td><code>style.md</code> <code>failure.md</code> <code>test-placement.md</code></td></tr><tr><td>ツール</td><td><code>templates/toolchain.md</code></td><td>ツールと版の表。実行コマンド</td><td><code>toolchain.md</code> <code>stack.md</code></td></tr><tr><td>保証</td><td><code>templates/assurance.md</code></td><td>保証する振る舞いと、確かめる単位</td><td><code>test-mechanism.md</code> <code>test-boundaries.md</code> <code>acceptance.md</code> <code>test-strategy.md</code></td></tr></table></div>
@@ -579,7 +583,93 @@ fn test_read_port_2() {
 <h2>委譲する判断</h2>
 <div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>端から端までのテストを持つかどうか</td><td>用途</td><td>外部との接続の有無で決まる</td></tr><tr><td>偽物を手で書くか、道具で作るか</td><td>言語</td><td>言語の仕組みで変わる</td></tr></table></div>
 <h2>出典</h2>
-<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>HX-TB-03</td><td>文献</td><td>Martin Fowler &quot;Contract Test&quot;</td><td>《版・取得日》</td><td><code>contract test</code></td></tr><tr><td>HX-TB-01</td><td>文献</td><td>Alistair Cockburn &quot;Hexagonal Architecture&quot;</td><td>《版・取得日》</td><td><code>ports and adapters</code></td></tr></table></div></div></section><section class="pane md" data-k="b1" hidden><div class="doc"><hr>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>HX-TB-03</td><td>文献</td><td>Martin Fowler &quot;Contract Test&quot;</td><td>《版・取得日》</td><td><code>contract test</code></td></tr><tr><td>HX-TB-01</td><td>文献</td><td>Alistair Cockburn &quot;Hexagonal Architecture&quot;</td><td>《版・取得日》</td><td><code>ports and adapters</code></td></tr></table></div></div></section><section class="pane md" data-k="d1" hidden><div class="doc"><hr>
+<p>id: arch.data-port.layers<br>layer: arch.data-port<br>axes:<br>  - axis: architecture<br>    value: data-port<br>category: architecture<br>declares: 層と、層ごとの責務<br>updated: 2026-09-05</p>
+<hr>
+<h1>データ契約を中心に置く構成の層</h1>
+<h2>概要</h2>
+<p><strong>中心に置くのはデータの形であり、呼び出しの約束（trait）ではない。</strong><br>外側は、外部の形式を中心のデータへ写す関数として書く。</p>
+<h2>構成要素</h2>
+<div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td>データ契約</td><td>共通の形を定める。形の正は schema が持ち、型はそこから生成する</td><td>言語の標準機能</td><td>他のすべての要素、外部技術、接続先</td></tr><tr><td>中心の処理</td><td>データ契約の上で、写す・検める・導く・畳むを行う</td><td>データ契約</td><td>外側の要素、外部技術</td></tr><tr><td>写し手</td><td>接続先ごとの生の入力を、データ契約の形へ写す</td><td>データ契約、その接続先の技術</td><td>中心の処理、他の写し手</td></tr><tr><td>束ね</td><td>写し手を1か所に集め、静的に振り分ける</td><td>データ契約、写し手</td><td>中心の処理の内部</td></tr><tr><td>実行の口</td><td>命令列を受け、中心の処理と束ねを呼ぶ</td><td>すべて</td><td>─</td></tr></table></div>
+<h2>依存の許可</h2>
+<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th>データ契約</th><th>中心の処理</th><th>写し手</th><th>束ね</th><th>実行の口</th></tr><tr><td>データ契約</td><td>─</td><td>不可</td><td>不可</td><td>不可</td><td>不可</td></tr><tr><td>中心の処理</td><td>可</td><td>─</td><td>不可</td><td>不可</td><td>不可</td></tr><tr><td>写し手</td><td>可</td><td>不可</td><td>─</td><td>不可</td><td>不可</td></tr><tr><td>束ね</td><td>可</td><td>不可</td><td>可</td><td>─</td><td>不可</td></tr><tr><td>実行の口</td><td>可</td><td>可</td><td>不可</td><td>可</td><td>─</td></tr></table></div>
+<h2>依存関係図</h2>
+<pre class="mermaid">flowchart TB
+    subgraph center[中心]
+        contract[[データ契約&lt;br/&gt;schema が正、型は生成]]
+        core[中心の処理&lt;br/&gt;写す・検める・導く]
+        core --&gt; contract
+    end
+    subgraph edge[外側]
+        a1[写し手 A]
+        a2[写し手 B]
+        bundle[束ね&lt;br/&gt;静的に振り分ける]
+    end
+    cli[実行の口]
+
+    a1 --&gt; contract
+    a2 --&gt; contract
+    bundle --&gt; a1
+    bundle --&gt; a2
+    cli --&gt; core
+    cli --&gt; bundle
+
+    classDef c fill:#eef4f3,stroke:#2f6f5e;
+    classDef o fill:#f7f1ea,stroke:#9a5b2c;
+    class contract,core c
+    class a1,a2,bundle o</pre>
+<p><strong>矢印はすべてデータ契約へ向かう。</strong><br>写し手どうしは互いを知らず、中心の処理も写し手を知らない。<br><strong>接続先を足しても、データ契約と中心の処理は変わらない。</strong></p>
+<h2>境界を越えるデータ</h2>
+<div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>外部 → 写し手</td><td>接続先の生の形式</td><td>写し手</td></tr><tr><td>写し手 → 中心の処理</td><td>データ契約の型</td><td>写し手</td></tr><tr><td>中心の処理 → 実行の口</td><td>データ契約の型</td><td>変換しない</td></tr></table></div>
+<h2>ディレクトリ構成</h2>
+<pre class="code">crates/
+  contract/     データ契約。schema と、そこから生成した型。依存を持たない
+  core/         中心の処理。contract にだけ依存する
+  bundle/       写し手を束ねる。contract と写し手に依存する
+  cli/          実行の口
+adapters/
+  &lt;接続先&gt;/     写し手。contract にだけ依存する</pre>
+<h2>違反したとき</h2>
+<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>写し手が中心の処理を呼ぶ</td><td>依存の検査で落ちる</td><td>写す責務だけを残し、判断を中心へ移す</td></tr><tr><td>中心の処理が接続先を分岐する</td><td>接続先を足すたびに中心が変わる</td><td>分岐を写し手へ移し、中心はデータ契約だけを見る</td></tr><tr><td>データ契約が外部の型を持つ</td><td>依存の検査で落ちる</td><td>型を生成し直し、外部の型を写し手で変換する</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>要素を言語のどの仕組みで表すか</td><td>言語 × アーキテクチャ</td></tr><tr><td>どの接続先を持つか</td><td>用途</td></tr><tr><td>生成の道具</td><td>言語</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>束ねを静的に振り分けるか、実行時に選ぶか</td><td>言語 × アーキテクチャ</td><td>言語の仕組みで変わる</td></tr><tr><td>データ契約に必須の欄を置くか</td><td>用途</td><td>接続先ごとに埋まらない欄が出る</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>文献</td><td>Gary Bernhardt &quot;Boundaries&quot;（中心を純粋に保つ考え方）</td><td>《版・取得日》</td><td><code>functional core, imperative shell</code></td></tr><tr><td>文献</td><td>sans-IO の設計（入出力を外へ出す）</td><td>《版・取得日》</td><td><code>sans-io</code></td></tr></table></div></div></section><section class="pane md" data-k="d2" hidden><div class="doc"><hr>
+<p>id: arch.data-port.dependency<br>layer: arch.data-port<br>axes:<br>  - axis: architecture<br>    value: data-port<br>category: architecture<br>declares: 依存の向き<br>updated: 2026-09-05</p>
+<hr>
+<h1>データ契約への一方向の依存</h1>
+<h2>概要</h2>
+<p><strong>依存はすべてデータ契約へ向かい、反転を持たない。</strong><br>中心が外側を必要としないので、呼び出しの約束を宣言する必要がない。</p>
+<h2>構成要素</h2>
+<div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td>データ契約</td><td>形の定義だけを持つ</td><td>言語の標準機能</td><td>すべての要素</td></tr><tr><td>中心の処理</td><td>データ契約の上で完結する処理</td><td>データ契約</td><td>外側、外部技術</td></tr><tr><td>写し手</td><td>外部の形式をデータ契約へ写す</td><td>データ契約、外部技術</td><td>中心の処理、他の写し手</td></tr></table></div>
+<h2>依存の許可</h2>
+<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th>データ契約</th><th>中心の処理</th><th>写し手</th></tr><tr><td>データ契約</td><td>─</td><td>不可</td><td>不可</td></tr><tr><td>中心の処理</td><td>可</td><td>─</td><td>不可</td></tr><tr><td>写し手</td><td>可</td><td>不可</td><td>─</td></tr></table></div>
+<h2>依存関係図</h2>
+<pre class="mermaid">flowchart LR
+    core[中心の処理] --&gt; contract[[データ契約]]
+    a1[写し手 A] --&gt; contract
+    a2[写し手 B] --&gt; contract
+    a1 -.-&gt;|知らない| core
+    a2 -.-&gt;|知らない| core
+
+    linkStyle 3,4 stroke-dasharray:4 3,stroke:#b0b0b0;</pre>
+<p><strong>反転が要らないのは、中心が外側へ何も求めないためである。</strong><br>中心が外部の機能を必要とする構成では、この形は使えない。</p>
+<h2>境界を越えるデータ</h2>
+<div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>外部 → 写し手</td><td>接続先の生の形式</td><td>写し手</td></tr><tr><td>写し手 → 中心の処理</td><td>データ契約の型</td><td>変換しない</td></tr></table></div>
+<h2>ディレクトリ構成</h2>
+<pre class="code">crates/contract/   依存を持たない
+crates/core/       contract にだけ依存する
+adapters/&lt;接続先&gt;/ contract にだけ依存する</pre>
+<h2>違反したとき</h2>
+<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>中心の処理が外部の機能を呼ぶ</td><td>依存の検査で落ちる</td><td>呼び出しを実行の口へ上げるか、構成をヘキサゴナルへ替える</td></tr><tr><td>写し手どうしが依存する</td><td>依存の検査で落ちる</td><td>共有部分を写し手の共通置き場へ出す</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>依存の向きを何で守るか</td><td>言語 × アーキテクチャ</td></tr><tr><td>接続先の数</td><td>用途</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>写し手の共通置き場をどこに作るか</td><td>言語 × アーキテクチャ</td><td>言語の仕組みで変わる</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>文献</td><td>sans-IO の設計（入出力を外へ出す）</td><td>《版・取得日》</td><td><code>sans-io</code></td></tr></table></div></div></section><section class="pane md" data-k="b1" hidden><div class="doc"><hr>
 <p>id: lang.rust+arch.hexagonal.layer-mapping<br>layer: lang.rust+arch.hexagonal<br>axes:<br>  - axis: language<br>    value: rust<br>  - axis: architecture<br>    value: hexagonal<br>category: architecture<br>declares: 層を Rust の仕組みで表す形<br>updated: 2026-09-05</p>
 <hr>
 <h1>Rust における層の表し方</h1>
@@ -685,7 +775,61 @@ pub struct InMemoryHookStore { /* … */ }</pre>
 <h2>委譲する判断</h2>
 <div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>端から端までのテストを持つか</td><td>用途</td><td>外部との接続の有無で決まる</td></tr></table></div>
 <h2>出典</h2>
-<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>RH-TP-01</td><td>規格</td><td>Rust Book ch.11 Test Organization</td><td>《版・取得日》</td><td><code>unit tests</code></td></tr><tr><td>RH-TP-02</td><td>規格</td><td>Rust Book ch.11 Test Organization</td><td>《版・取得日》</td><td><code>integration tests</code></td></tr></table></div></div></section><section class="pane md" data-k="k1" hidden><div class="doc"><hr>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>RH-TP-01</td><td>規格</td><td>Rust Book ch.11 Test Organization</td><td>《版・取得日》</td><td><code>unit tests</code></td></tr><tr><td>RH-TP-02</td><td>規格</td><td>Rust Book ch.11 Test Organization</td><td>《版・取得日》</td><td><code>integration tests</code></td></tr></table></div></div></section><section class="pane md" data-k="b3" hidden><div class="doc"><hr>
+<p>id: lang.rust+arch.data-port.layer-mapping<br>layer: lang.rust+arch.data-port<br>axes:<br>  - axis: language<br>    value: rust<br>  - axis: architecture<br>    value: data-port<br>category: architecture<br>declares: 要素を Rust の仕組みで表す形<br>updated: 2026-09-05</p>
+<hr>
+<h1>Rust における要素の表し方（データ契約の構成）</h1>
+<h2>概要</h2>
+<p><strong>要素を crate で分け、依存の向きを <code>Cargo.toml</code> で守る。</strong><br>モジュールの可視性ではなく、crate の依存宣言そのものが検査になる。</p>
+<h2>構成要素</h2>
+<div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td><code>contract</code> crate</td><td>schema と、そこから生成した型を持つ</td><td>標準ライブラリ、直列化の基盤</td><td>他の crate、接続先の技術</td></tr><tr><td><code>core</code> crate</td><td>データ契約の上の処理</td><td><code>contract</code></td><td><code>adapters/*</code>、<code>bundle</code></td></tr><tr><td><code>adapters/&lt;接続先&gt;</code> crate</td><td>生の入力を <code>contract</code> の型へ写す関数を公開する</td><td><code>contract</code>、その接続先の技術</td><td><code>core</code>、他の adapter</td></tr><tr><td><code>bundle</code> crate</td><td>adapter を <code>pub use</code> で集め、静的に振り分ける</td><td><code>contract</code>、<code>adapters/*</code></td><td><code>core</code> の内部</td></tr><tr><td><code>cli</code> crate</td><td>実行の口。バイナリを持つ</td><td>すべて</td><td>─</td></tr></table></div>
+<h2>依存の許可</h2>
+<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th><code>contract</code></th><th><code>core</code></th><th><code>adapters/*</code></th><th><code>bundle</code></th></tr><tr><td><code>contract</code></td><td>─</td><td>不可</td><td>不可</td><td>不可</td></tr><tr><td><code>core</code></td><td>可</td><td>─</td><td>不可</td><td>不可</td></tr><tr><td><code>adapters/*</code></td><td>可</td><td>不可</td><td>─</td><td>不可</td></tr><tr><td><code>bundle</code></td><td>可</td><td>不可</td><td>可</td><td>─</td></tr><tr><td><code>cli</code></td><td>可</td><td>可</td><td>不可</td><td>可</td></tr></table></div>
+<h2>依存関係図</h2>
+<pre class="mermaid">flowchart TB
+    subgraph ws[cargo workspace]
+        direction TB
+        contract[[&quot;contract crate&lt;br/&gt;schema ＋ 生成した型&quot;]]
+        core[core crate]
+        a1[adapters/claude_code]
+        a2[adapters/codex]
+        bundle[bundle crate&lt;br/&gt;pub use で束ねる]
+        cli[cli crate&lt;br/&gt;bin]
+        core --&gt; contract
+        a1 --&gt; contract
+        a2 --&gt; contract
+        bundle --&gt; a1
+        bundle --&gt; a2
+        cli --&gt; core
+        cli --&gt; bundle
+    end
+
+    classDef c fill:#eef4f3,stroke:#2f6f5e;
+    classDef o fill:#f7f1ea,stroke:#9a5b2c;
+    class contract,core c
+    class a1,a2,bundle,cli o</pre>
+<h2>表し方の対応</h2>
+<div class="wrap"><table><tr><th>要素</th><th>Rust の仕組み</th><th>補足</th></tr><tr><td>データ契約</td><td>crate ＋ 生成した型</td><td>schema から型を作り、手で書かない</td></tr><tr><td>中心の処理</td><td>crate 内の関数</td><td>trait を置かない</td></tr><tr><td>写し手</td><td>crate が公開する関数</td><td><code>pub fn normalize(raw) -&gt; Result&lt;T&gt;</code> の形にそろえる</td></tr><tr><td>束ね</td><td><code>pub use</code> と列挙による静的な振り分け</td><td><code>dyn</code> を使わない</td></tr><tr><td>依存の向き</td><td><code>Cargo.toml</code> の依存宣言</td><td>宣言に無い依存は、そもそも書けない</td></tr></table></div>
+<h2>境界を越えるデータ</h2>
+<div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>外部 → <code>adapters/*</code></td><td>接続先の生の形式（JSON など）</td><td><code>adapters/*</code></td></tr><tr><td><code>adapters/*</code> → <code>core</code></td><td><code>contract</code> の型</td><td>変換しない</td></tr></table></div>
+<h2>ディレクトリ構成</h2>
+<pre class="code">Cargo.toml            [workspace] members = [&quot;crates/*&quot;, &quot;adapters/*&quot;]
+crates/
+  contract/           依存を持たない
+  core/               contract にだけ依存する
+  bundle/             contract と adapters/* に依存する
+  cli/                bin を持つ
+adapters/
+  common/             写し手が共有する助け
+  &lt;接続先&gt;/           contract にだけ依存する</pre>
+<h2>違反したとき</h2>
+<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td><code>core</code> が adapter に依存する</td><td><code>cargo tree</code> と <code>Cargo.toml</code> で見える</td><td>分岐を写し手へ移す</td></tr><tr><td><code>contract</code> が接続先の型を持つ</td><td>同上</td><td>型を生成し直し、写し手で変換する</td></tr><tr><td>束ねが <code>dyn</code> で振り分ける</td><td>レビューで気づく</td><td>列挙による静的な振り分けへ替える</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>どの接続先を持つか</td><td>用途</td></tr><tr><td>型を生成する道具</td><td>言語</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>crate を publish するか、workspace 内に留めるか</td><td>用途</td><td>配布の形で決まる</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>規格</td><td>Cargo Book / Workspaces</td><td>《版・取得日》</td><td><code>[workspace]</code></td></tr><tr><td>規格</td><td>Cargo Book / Dependency resolution</td><td>《版・取得日》</td><td><code>dependencies</code></td></tr></table></div></div></section><section class="pane md" data-k="k1" hidden><div class="doc"><hr>
 <p>id: purpose.hook.contract<br>layer: purpose.hook<br>axes:<br>  - axis: purpose<br>    value: hook<br>category: architecture<br>declares: 呼び出し元との契約<br>updated: 2026-09-05</p>
 <hr>
 <h1>Hook の契約</h1>
@@ -806,6 +950,9 @@ pub struct InMemoryHookStore { /* … */ }</pre>
 <h1>Hook の実行時の依存</h1>
 <h2>概要</h2>
 <p><strong>起動のたびに払う費用を小さく保つため、実行時の依存を最小にする。</strong></p>
+<h2>採用するアーキテクチャ</h2>
+<div class="wrap"><table><tr><th>軸</th><th>値</th><th>採用理由</th></tr><tr><td>アーキテクチャ</td><td><code>data-port</code></td><td>中心が外部の機能を必要とせず、写して検めて出すだけで閉じる。反転が要らない</td></tr><tr><td>実行環境</td><td><code>per-invocation</code></td><td>呼び出しごとに1件を処理して終わる</td></tr></table></div>
+<p><strong>別の用途が <code>hexagonal</code> を採ってもよい。</strong><br>軸は値を複数持ち、どれを採るかはこの規約が指定する。</p>
 <h2>採用するツール</h2>
 <div class="wrap"><table><tr><th>用途</th><th>ツール</th><th>バージョン指定</th><th>採用理由</th><th>代替候補</th></tr><tr><td>JSON の解釈と生成</td><td><code>serde</code> ＋ <code>serde_json</code></td><td><code>1</code></td><td>契約が JSON で、型と対応づけられる</td><td>手書きの解析</td></tr><tr><td>診断の出力</td><td><code>tracing</code> ＋ <code>tracing-subscriber</code></td><td><code>0.3</code></td><td>標準エラーへの出力先を差し替えられる</td><td><code>eprintln!</code></td></tr><tr><td>失敗型の実装</td><td><code>thiserror</code></td><td><code>1</code></td><td>言語の規約（RS-ERR-04）を満たす</td><td>手書き</td></tr></table></div>
 <h2>採用しないツール</h2>

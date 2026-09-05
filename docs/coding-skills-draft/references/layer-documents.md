@@ -22,10 +22,10 @@
 | | `failure.md` | 失敗の運び方 |
 | | `test-mechanism.md` | テストが走る仕組みと、書き方 |
 | | `toolchain.md` | 標準の道具と、その版 |
-| `arch.<様式>` | `layers.md` | 層の名前と、層ごとの責務 |
+| `arch.<値>` | `layers.md` | 層の名前と、層ごとの責務 |
 | | `dependency.md` | 依存の向き |
 | | `test-boundaries.md` | 確かめる単位の境界（何を単体とし、何を結合とするか） |
-| `lang.<言語>+arch.<様式>` | `layer-mapping.md` | 層を何で表し、向きを何で守るか |
+| `lang.<言語>+arch.<値>` | `layer-mapping.md` | 層を何で表し、向きを何で守るか |
 | | `test-placement.md` | テストをどこに置くか |
 | `purpose.<用途>` | `contract.md` | 外との契約 |
 | | `lifecycle.md` | 起動と終了 |
