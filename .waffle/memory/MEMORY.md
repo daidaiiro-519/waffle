@@ -8,13 +8,17 @@
 
 ## 走っている作業
 
+- **社内AI人材育成ワークショップ** ── [開催条件と目的](project-ai-workshop.md)。企画案と部長向けスライド14枚・PDF・発表原稿を作成済み。開催条件の具体化と受講者向け教材はこれから。資料は `docs/workshops/ai-workshop/`。
+
 - **schema 観の三層（段1・段2 の再定義）** ── 盤面 `docs/adr/brainstorm-schema-conception-board.html`。
   論点1・2・5・3 が決着し、**再開点は論点6（規則を、コマンドで持つか宣言で持つか）**。
   論点7（書く単位と承認する単位のずれ）は論点6 のあと。
-- **CodingSkills（規約に従って書く汎用Skill）** ── 盤面 `docs/adr/brainstorm-coding-skills.html`
-  （Artifact: `https://claude.ai/code/artifact/f59a20eb-4dfa-45d3-bdbf-21d8abbe060c`）。
-  **8論点すべて決着（2026-09-05）。次は、制約1件が持つ欄の設計。**
-  Waffle を前提にしない形で組み、段1・段2 が決まったらそちらへ寄せる。
+- **CodingSkills（規約に従って書く汎用Skill）** ── `.waffle/skills/coding-skills/`（第1版・2026-09-05）。
+  盤面 `docs/adr/brainstorm-coding-skills.html`、面 `docs/adr/coding-skills-templates.html`
+  （Artifact: `https://claude.ai/code/artifact/24732a71-b357-41a1-8f53-fbb87417f92d`）。
+  **雛形15本・規約37本・原典41本。形の検査はすべて通っている。**
+  **残る未知は「集めた規約だけで実際に書けるか」1つで、別リポジトリでの効果測定で測る。**
+  段1・段2 が決まったら schema の形へ寄せる。
 
 ## 承認待ち
 
