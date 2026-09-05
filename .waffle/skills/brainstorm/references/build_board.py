@@ -65,6 +65,7 @@ class Table:
     columns: list[str]
     rows: dict[str, list[str]]
     lead: str | None = None
+    plain: bool = False  # 行の見出しが案の記号でないとき（層の名前など）は True
 
 
 def _mark(text: str, before: str, why: str, deleted: bool = False) -> str:
@@ -141,8 +142,11 @@ def _sections(t: Topic) -> str:
     for tb in t.tables:
         n += 1
         lead = f'<p class="lead">{tb.lead}</p>' if tb.lead else ""
-        rows = [[_key(k)] + list(v) for k, v in tb.rows.items()]
-        secs.append(_sec(n, tb.caption, lead + _table([""] + tb.columns, rows)))
+        rows = [[(f'<b>{k}</b>' if tb.plain else _key(k))] + list(v)
+                for k, v in tb.rows.items()]
+        secs.append(_sec(n, tb.caption,
+                         lead + _table([""] + tb.columns, rows,
+                                       "plainkey" if tb.plain else "")))
     if t.dropped:
         n += 1
         rows = [[_key("×", "out"),
@@ -276,6 +280,8 @@ table.out b{color:var(--out);text-decoration:line-through}
 table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
 table.why{border-collapse:separate;border-spacing:0}
 table.why th{padding-bottom:.4rem}
+table.plainkey th:first-child,table.plainkey td:first-child{width:9rem;padding-right:.9rem;
+  white-space:normal;color:var(--key)}
 table.why th:first-child,table.why td:first-child{width:23%;padding-right:.8rem}
 table.why th:last-child,table.why td:last-child{width:27%}
 table.why td{border-bottom:none;padding:.65rem .7rem;background:var(--surface,transparent)}
