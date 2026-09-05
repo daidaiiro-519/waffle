@@ -22,7 +22,7 @@
 
 - [いまの現在地：Waffle 自身の knowledge を立てる段](project_waffle_own_knowledge_stage.md) — **ここから再開する。**「段1・段2 でやること」の節に、未決・未承認・順番を1か所へ集約（2026-08-29）
 
-- [schema観の三層と、単位は読み手に従属すること(2026-09-05)](project_schema_conception_reader_dependent_units.md) — abstract/concrete/文書エンティティのメタ三層。人＝文書単位／AI＝節単位。**再開点は論点3（節に別の同一性が要るか）**
+- [schema観の三層と、単位は読み手に従属すること(2026-09-05)](project_schema_conception_reader_dependent_units.md) — abstract/concrete/文書エンティティのメタ三層。人＝文書単位／AI＝節単位。論点3は**節に不変の印を持たせる**で決着（2026-09-05）。**再開点は論点6（規則の置き場所）**
 - [仕様と実装の抽象境界の結論(2026-08-09)](project_ddd_abstraction_boundary_conclusions.md) — この作業の前回の到達点。原則／Waffleの設計判断／未採用の提案／取り下げの四分割
 - [抽象は情報の削減ではない](feedback_abstraction_is_not_reduction.md) — 要素は残し、共通概念で束ねる。具体を復元するのに要る特徴を落とさない
 - [knowledgeが空けている場所を先に見つける](feedback_find_the_gap_knowledge_left_open.md) — 既にある部分を決め直さない。留保事項は「どこが決定に開かれているか」の目印
