@@ -1,93 +1,103 @@
-<title>節の同一性</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Shippori+Mincho+B1:wght@600&display=swap"><style>
-:root{ --ground:#F6F8F7; --surface:#FFFFFF; --ink:#171B23; --muted:#69737E;
-       --accent:#16636B; --rule:#DFE5E4; --soft:#F1F5F4; --warn:#9A4A21; --out:#98A0A8;
-       --mark:#F7E2BC; --markh:#F0CE92; --pop:#FDF6E9; --popline:#D9B77E; }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --ground:#11161A; --surface:#191F24; --ink:#E7ECF0; --muted:#8C979F;
-  --accent:#7FD1D9; --rule:#2A3239; --soft:#1E252B; --warn:#D9A382; --out:#6B747C;
+<title>節の同一性</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap"><style>
+:root{ --paper:#FBFAF7; --ink:#191C1F; --muted:#6C7076; --rule:#E3DFD7; --panel:#F4F1EA;
+  --panelrule:#DAD4C8; --key:#2F4858; --add:#A6543A; --out:#8A8479;
+  --mark:#F7E2BC; --markh:#F0CE92; --pop:#FDF6E9; --popline:#D9B77E; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036; --panel:#1D2024;
+  --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
   --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738; } }
-:root[data-theme="dark"]{ --ground:#11161A; --surface:#191F24; --ink:#E7ECF0; --muted:#8C979F;
-  --accent:#7FD1D9; --rule:#2A3239; --soft:#1E252B; --warn:#D9A382; --out:#6B747C;
+:root[data-theme="dark"]{ --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036;
+  --panel:#1D2024; --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
   --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738; }
 *{box-sizing:border-box}
-body{margin:0;background:var(--ground);color:var(--ink);font-size:15px;line-height:1.85;
+body{margin:0;background:var(--paper);color:var(--ink);font-size:15.5px;line-height:1.85;
   font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-.wrap{max-width:52rem;margin:0 auto;padding:28px 24px 80px}
-.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:0 0 10px}
-h1{font-family:"Shippori Mincho B1",serif;font-weight:600;font-size:clamp(24px,3.6vw,34px);
-  line-height:1.35;margin:0;text-wrap:balance}
-.spec{margin-top:34px;padding:22px;background:var(--soft);border:1px solid var(--rule);
-  border-radius:4px;display:flex;flex-direction:column;gap:12px}
-.blk{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
-  border-left:3px solid var(--rule);padding:12px 15px}
-.blk.you{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
-.blk.mine{border-left-color:var(--muted)}
-.blk.found{border-left-color:var(--warn)}
-.blk.out{border-left-color:var(--out)}
-.blk.done{border-left-color:var(--accent)}
-.blk-h{font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
-.blk-b{font-size:13.5px;line-height:1.8}
-.opt{display:flex;gap:10px;padding:7px 0;align-items:baseline}
-.opt+.opt{border-top:1px dashed var(--rule)}
-.opt .n{font-family:ui-monospace,monospace;font-size:11px;color:var(--accent);
-  border:1px solid var(--accent);border-radius:2px;padding:0 5px;flex:none;line-height:1.7}
-.opt.out .n{color:var(--out);border-color:var(--out)}
-.opt.out b{color:var(--out);text-decoration:line-through}
-.opt .t{font-size:13px;line-height:1.75}
-.opt .cost{display:block;color:var(--muted);font-size:12px;margin-top:3px}
-figure{margin:10px 0 0}
-figure+figure{margin-top:18px;padding-top:16px;border-top:1px dashed var(--rule)}
-figure svg{display:block;width:100%;height:auto;color:var(--ink)}
-figcaption{font-size:12px;line-height:1.75;color:var(--muted);margin-top:6px}
-.ph{color:var(--muted);border-bottom:1px dashed var(--rule);padding-bottom:1px}
+main{max-width:53rem;margin:0 auto;padding:0 1.5rem 5rem}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:1.6rem 0 .5rem}
+h1{font-family:"Noto Serif JP",serif;font-weight:700;font-size:clamp(23px,3.4vw,31px);
+  line-height:1.35;margin:0;padding-bottom:.6rem;border-bottom:2px solid var(--key);text-wrap:balance}
+h2{font-family:"Noto Serif JP",serif;font-weight:600;font-size:1.2rem;margin:2.6rem 0 1rem;
+  padding-bottom:.4rem;border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.6rem}
+h2 .sn{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted);font-weight:400}
+p{margin:0 0 1rem}
+.note{background:var(--panel);border:1px solid var(--panelrule);border-left:3px solid var(--key);
+  border-radius:.3rem;padding:.9rem 1.1rem;margin:1.2rem 0 0;font-size:.9rem}
+.lead{font-size:.92rem;margin-bottom:.7rem}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin:0}
+th,td{text-align:left;vertical-align:top;padding:.6rem .7rem;border-bottom:1px solid var(--rule)}
+th{font-weight:700;font-size:.72rem;letter-spacing:.05em;color:var(--muted);
+  border-bottom:1.5px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{width:1.9rem;padding-right:0}
+.n{font-family:ui-monospace,monospace;font-size:11px;color:var(--key);border:1px solid var(--key);
+  border-radius:2px;padding:0 5px;line-height:1.7;display:inline-block}
+.n.out{color:var(--out);border-color:var(--out)}
+table.out td{color:var(--muted)}
+table.out b{color:var(--out);text-decoration:line-through}
+.cost{color:var(--muted)}
+.st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
+  border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
+table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
+.pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
+  border-radius:2px;padding:0 .35em}
+ul.found{margin:0;padding-left:1.1rem;font-size:.92rem}
+ul.found li{margin-bottom:.5rem}
+figure{margin:0 0 1.2rem}
+figure+figure{margin-top:1.6rem;padding-top:1.4rem;border-top:1px dashed var(--rule)}
+figure svg{display:block;width:100%;height:auto;color:var(--ink);
+  border:1px solid var(--rule);border-radius:.35rem;background:var(--panel)}
+figcaption{font-size:.83rem;line-height:1.75;color:var(--muted);margin-top:.5rem}
+.you{border:1px dashed var(--key);border-radius:.3rem;padding:.9rem 1.1rem;color:var(--muted);
+  font-size:.9rem;background:color-mix(in srgb,var(--key) 5%,var(--paper))}
+.done{border:1px dashed var(--panelrule);border-radius:.3rem;padding:.9rem 1.1rem;
+  color:var(--muted);font-size:.9rem}
 
-/* 変わった箇所の印。押すと開く */
 mark.chg{background:var(--mark);color:var(--ink);border-radius:.15em;cursor:pointer;
-  box-shadow:-.2em 0 0 var(--mark),.2em 0 0 var(--mark);border-bottom:2px solid var(--warn)}
+  box-shadow:-.2em 0 0 var(--mark),.2em 0 0 var(--mark);border-bottom:2px solid var(--add)}
 mark.chg:hover,mark.chg:focus{background:var(--markh);
   box-shadow:-.2em 0 0 var(--markh),.2em 0 0 var(--markh);outline:none}
-mark.chg:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
-mark.chg::after{content:"▸";font-size:.72em;color:var(--warn);margin-left:.3em;font-weight:700}
+mark.chg:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+mark.chg::after{content:"▸";font-size:.72em;color:var(--add);margin-left:.3em;font-weight:700}
 mark.chg[aria-expanded="true"]::after{content:"▾"}
 mark.chg.del{background:none;box-shadow:none;color:var(--out);border-bottom:1px dashed var(--out)}
 mark.chg.del b{text-decoration:line-through}
 
 .pop[hidden]{display:none}
 .pop{display:block;background:var(--pop);border:1px solid var(--popline);
-  border-left:3px solid var(--warn);border-radius:.3rem;padding:.7rem .9rem;margin:.6rem 0 .2rem;
-  font-size:12.5px;line-height:1.75;white-space:normal}
-.pop b{display:block;font-size:10.5px;letter-spacing:.14em;color:var(--warn);margin-bottom:.3rem}
+  border-left:3px solid var(--add);border-radius:.3rem;padding:.7rem .9rem;margin:.6rem 0 .2rem;
+  font-size:.82rem;line-height:1.75;white-space:normal;font-weight:400}
+.pop b{display:block;font-size:.66rem;letter-spacing:.14em;color:var(--add);margin-bottom:.3rem}
 .pop .why{display:block;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--popline)}
-.pop .why b{color:var(--accent)}
+.pop .why b{color:var(--key)}
 
-.hd{position:sticky;top:0;background:var(--ground);border-bottom:1px solid var(--rule);
-  padding:.8rem 24px;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;z-index:9}
-.hd .t{font-family:"Shippori Mincho B1",serif;font-weight:600;font-size:15px;flex:1;min-width:12rem}
+.hd{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:.8rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;z-index:9}
+.hd .t{font-family:"Noto Serif JP",serif;font-weight:700;font-size:1rem;flex:1;min-width:12rem}
 .hd .t small{display:block;font-family:"Noto Sans JP",sans-serif;font-weight:400;
-  font-size:12px;color:var(--muted);margin-top:.1rem}
-.hd button{font:inherit;font-size:12.5px;font-weight:500;padding:.3rem .85rem;border-radius:.3rem;
-  cursor:pointer;background:var(--surface);color:var(--ink);border:1px solid var(--rule)}
+  font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.hd button{font:inherit;font-size:.82rem;font-weight:700;padding:.35rem .9rem;border-radius:.3rem;
+  cursor:pointer;background:var(--panel);color:var(--ink);border:1px solid var(--panelrule)}
 .hd button:hover{background:var(--markh)}
-.hd button:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
-</style><div class="hd"><div class="t">schema 観の三層 ── 論点3<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div><button id="all" type="button">すべて開く</button></div><div class="wrap"><h1>AI が引く節に、人が読む文書とは別の同一性が要るか</h1><div class="spec"><div class="blk "><div class="blk-h">論点 3 / 6</div><div class="blk-b"><b>AI が引く節に、人が読む文書とは別の同一性が要るか</b></div></div><div class="blk "><div class="blk-h">反証を通過した案</div><div class="blk-b"><div class="opt"><span class="n">A</span><span class="t"><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="同一性は名前か、変わらない印か（節と文書を区別せずに問うていた）" data-w="論点2 が「取得と参照は節単位」で決着したことで、指される側が節に定まった。名前と印の比較ではなく、節が文書とは別の同一性を持つかどうかが問いになった"><b>節に、変わらない印を持たせる</b></mark>　節が生まれたときに機械が印を発番し、参照と突き合わせの鍵をそこへ移す。人が読む射影では印を出さない<span class="cost">代償：節を手で書き足せなくなる（印を採番できるのは道具だけ）。印そのものの重複・散逸を検査する責務が増え、印は意味を運ばないので、人が印だけ見ても何のことか分からない</span></span></div><div class="opt"><span class="n">B</span><span class="t"><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="改名を移行操作の宣言で運ぶ（独立の案として立てていた）" data-w="位置を鍵にする案と中身が同じだった。位置を鍵にする限り、位置が変わったことを別途宣言する以外に追跡手段が無い。2案ではなく、1案の必然の帰結である"><b>位置を同一性とし、動かすときは移行の操作として宣言する</b></mark>　〈文書の識別子＋構造上のアドレス〉を鍵にする。改名・移動・親の付け替えは、閉じた操作集合の宣言として書き、突き合わせはその宣言を経由する<span class="cost">代償：宣言の書き忘れが観測できない。書き忘れた改名は「消えて増えた」に見え、しかも忘れたこと自体が不在として現れないので、誰も誤りだと言えない</span></span></div><div class="opt"><span class="n">C</span><span class="t"><b>節には同一性を与えず、参照の側に解決状態を持たせる</b>　指す先が在るか・実装を指すか・外部か・検めないか、を参照が申告する。同一性を足す代わりに、届かないことを観測できるようにする<span class="cost">代償：「移った」と「消えた」を区別できない。不在は分かるが、直し方は毎回人が決めることになる。構造化の利得（無いことが分かる）は取れるが、突き合わせの自動化は取れない</span></span></div></div></div><div class="blk "><div class="blk-h">案の違いを、図で</div><div class="blk-b"><figure><svg viewBox="0 0 780 320" role="img" aria-label="3案それぞれで、参照が節を指すときの鍵が何になり、節の名前や位置が変わったときに結びがどうなるか">
+.hd button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+</style><div class="hd"><div class="t">schema 観の三層 ── 論点3<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div><button id="all" type="button">すべて開く</button></div><main><p class="eyebrow">論点 3 / 6</p><h1>AI が引く節に、人が読む文書とは別の同一性が要るか</h1><div class="note">論点2（単位は読み手に従属する）の決着で、<b>問いが変わった</b> ── 「名前か印か」ではなく、節が文書とは別の同一性を持つかどうかになった。この論点が決まると、論点6（規則の置き場所）の前提も動く。</div><h2><span class="sn">1</span>案の違いを、図で</h2><figure><svg viewBox="0 0 780 320" role="img" aria-label="3案それぞれで、参照が節を指すときの鍵が何になり、節の名前や位置が変わったときに結びがどうなるか">
 <defs>
- <marker id="i1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>
- <marker id="i2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--warn)"/></marker>
+ <marker id="i1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--key)"/></marker>
+ <marker id="i2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker>
  <marker id="i3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--out)"/></marker>
 </defs>
 <text x="8" y="16" font-size="11" fill="var(--muted)">A　節に、変わらない印</text>
 <rect x="8" y="30" width="228" height="38" fill="none" stroke="currentColor" stroke-width="1.3"/>
 <text x="122" y="54" text-anchor="middle" font-size="12" fill="currentColor">指す側の節（参照）</text>
-<line x1="122" y1="68" x2="122" y2="108" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#i1)"/>
-<text x="132" y="92" font-size="11.5" font-weight="700" fill="var(--accent)">SC-01J7Q4K</text>
-<rect x="8" y="114" width="228" height="52" fill="none" stroke="var(--accent)" stroke-width="1.9"/>
-<text x="122" y="134" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--accent)">SC-01J7Q4K</text>
+<line x1="122" y1="68" x2="122" y2="108" stroke="var(--key)" stroke-width="1.8" marker-end="url(#i1)"/>
+<text x="132" y="92" font-size="11.5" font-weight="700" fill="var(--key)">SC-01J7Q4K</text>
+<rect x="8" y="114" width="228" height="52" fill="none" stroke="var(--key)" stroke-width="1.9"/>
+<text x="122" y="134" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--key)">SC-01J7Q4K</text>
 <text x="122" y="152" text-anchor="middle" font-size="11" fill="var(--muted)">「予約を確定する」</text>
 <text x="8" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
-<rect x="8" y="206" width="228" height="46" fill="none" stroke="var(--accent)" stroke-width="1.9"/>
-<text x="122" y="225" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--accent)">SC-01J7Q4K</text>
-<text x="122" y="242" text-anchor="middle" font-size="11" fill="var(--warn)">「予約を確定できる」</text>
-<text x="8" y="278" font-size="12" font-weight="700" fill="var(--accent)">結びは残る（moved 1）</text>
+<rect x="8" y="206" width="228" height="46" fill="none" stroke="var(--key)" stroke-width="1.9"/>
+<text x="122" y="225" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--key)">SC-01J7Q4K</text>
+<text x="122" y="242" text-anchor="middle" font-size="11" fill="var(--add)">「予約を確定できる」</text>
+<text x="8" y="278" font-size="12" font-weight="700" fill="var(--key)">結びは残る（moved 1）</text>
 <text x="8" y="298" font-size="11" fill="var(--muted)">名前は表示になる。印を採番</text>
 <text x="8" y="314" font-size="11" fill="var(--muted)">できるのは道具だけになる</text>
 
@@ -102,11 +112,11 @@ mark.chg.del b{text-decoration:line-through}
 <text x="390" y="134" text-anchor="middle" font-size="11.5" fill="currentColor">doc-7 / §2 / 3番目</text>
 <text x="390" y="152" text-anchor="middle" font-size="11" fill="var(--muted)">「予約を確定する」</text>
 <text x="276" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
-<rect x="276" y="206" width="228" height="46" fill="none" stroke="var(--warn)" stroke-width="1.9"/>
-<text x="390" y="225" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--warn)">doc-7 / §4 / 1番目</text>
+<rect x="276" y="206" width="228" height="46" fill="none" stroke="var(--add)" stroke-width="1.9"/>
+<text x="390" y="225" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--add)">doc-7 / §4 / 1番目</text>
 <text x="390" y="242" text-anchor="middle" font-size="11" fill="var(--muted)">位置が変わった</text>
-<line x1="390" y1="252" x2="390" y2="262" stroke="var(--warn)" stroke-width="1.6" marker-end="url(#i2)"/>
-<text x="276" y="278" font-size="12" font-weight="700" fill="var(--warn)">宣言が在れば残り、無ければ切れる</text>
+<line x1="390" y1="252" x2="390" y2="262" stroke="var(--add)" stroke-width="1.6" marker-end="url(#i2)"/>
+<text x="276" y="278" font-size="12" font-weight="700" fill="var(--add)">宣言が在れば残り、無ければ切れる</text>
 <text x="276" y="298" font-size="11" fill="var(--muted)">そして「書き忘れた」ことは、</text>
 <text x="276" y="314" font-size="11" fill="var(--muted)">どこにも現れない</text>
 
@@ -122,36 +132,36 @@ mark.chg.del b{text-decoration:line-through}
 <text x="658" y="140" text-anchor="middle" font-size="11.5" fill="currentColor">「予約を確定する」</text>
 <text x="544" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
 <rect x="544" y="206" width="228" height="46" fill="none" stroke="var(--out)" stroke-width="1.6" stroke-dasharray="5 4"/>
-<text x="658" y="232" text-anchor="middle" font-size="11.5" fill="var(--warn)">届かない</text>
+<text x="658" y="232" text-anchor="middle" font-size="11.5" fill="var(--add)">届かない</text>
 <text x="544" y="278" font-size="12" font-weight="700" fill="var(--out)">届かないことは分かる</text>
 <text x="544" y="298" font-size="11" fill="var(--muted)">「移った」のか「消えた」のかは</text>
 <text x="544" y="314" font-size="11" fill="var(--muted)">分からない。人が毎回決める</text>
-</svg><figcaption><b>3案の差は、参照が何を鍵にするかである。</b>名前や位置が動いたとき、A は結びが残り、B は宣言が在るときだけ残り、C は届かないことだけが分かる。<b>C だけは、指される側に何も足さない</b> ── だから A と重ねて採れる。</figcaption></figure><figure><svg viewBox="0 0 780 300" role="img" aria-label="3案それぞれで、段1と段2のどちらに何が増えるか。案Aは段1だけが増え、案Bは両方が増え、案Cは段1が1つ増える">
+</svg><figcaption><b>3案の差は、参照が何を鍵にするかである。</b>同じ「名前を直す／別の親へ移す」を3案に通した。</figcaption></figure><figure><svg viewBox="0 0 780 300" role="img" aria-label="3案それぞれで、段1と段2のどちらに何が増えるか。案Aは段1だけが増え、案Bは両方が増え、案Cは段1が1つ増える">
 <text x="150" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--muted)">段1　全型が継ぐ契約</text>
 <text x="530" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--muted)">段2　8つの型</text>
 <line x1="8" y1="26" x2="772" y2="26" stroke="var(--rule)"/>
 
-<text x="8" y="58" font-size="12" font-weight="700" fill="var(--accent)">A</text>
-<rect x="28" y="38" width="244" height="62" fill="none" stroke="var(--accent)" stroke-width="1.9"/>
-<text x="40" y="56" font-size="11" fill="var(--accent)">・節が印を持つ／採番と不変</text>
-<text x="40" y="74" font-size="11" fill="var(--accent)">・参照は印を指す</text>
-<text x="40" y="92" font-size="11" fill="var(--accent)">・人が読む射影では印を落とす</text>
+<text x="8" y="58" font-size="12" font-weight="700" fill="var(--key)">A</text>
+<rect x="28" y="38" width="244" height="62" fill="none" stroke="var(--key)" stroke-width="1.9"/>
+<text x="40" y="56" font-size="11" fill="var(--key)">・節が印を持つ／採番と不変</text>
+<text x="40" y="74" font-size="11" fill="var(--key)">・参照は印を指す</text>
+<text x="40" y="92" font-size="11" fill="var(--key)">・人が読む射影では印を落とす</text>
 <rect x="408" y="38" width="244" height="62" fill="none" stroke="var(--rule)" stroke-width="1.4"/>
 <text x="530" y="66" text-anchor="middle" font-size="12" font-weight="700" fill="var(--muted)">増えない</text>
 <text x="530" y="86" text-anchor="middle" font-size="10.5" fill="var(--muted)">既にある document への後付けの発番だけ</text>
-<text x="668" y="74" font-size="11" fill="var(--accent)">← いま動いている段</text>
+<text x="668" y="74" font-size="11" fill="var(--key)">← いま動いている段</text>
 
-<text x="8" y="150" font-size="12" font-weight="700" fill="var(--warn)">B</text>
-<rect x="28" y="118" width="244" height="70" fill="none" stroke="var(--warn)" stroke-width="1.9"/>
-<text x="40" y="138" font-size="11" fill="var(--warn)">・移行の操作を動詞として固定</text>
-<text x="40" y="156" font-size="11" fill="var(--warn)">　（改名・移動・親の付け替え・型変更）</text>
-<text x="40" y="178" font-size="11" font-weight="700" fill="var(--warn)">型が増えるほど、ここが太る</text>
-<rect x="408" y="118" width="244" height="70" fill="none" stroke="var(--warn)" stroke-width="1.9"/>
-<text x="420" y="140" font-size="11" fill="var(--warn)">・各型が、自分の位置の安定を守る</text>
-<text x="420" y="162" font-size="11" fill="var(--warn)">・アドレスが動くたび、それを指す</text>
-<text x="420" y="180" font-size="11" fill="var(--warn)">　参照が全部書き換わる</text>
-<text x="286" y="158" font-size="10.5" fill="var(--warn)">論点6を</text>
-<text x="286" y="174" font-size="10.5" fill="var(--warn)">案A側へ寄せる</text>
+<text x="8" y="150" font-size="12" font-weight="700" fill="var(--add)">B</text>
+<rect x="28" y="118" width="244" height="70" fill="none" stroke="var(--add)" stroke-width="1.9"/>
+<text x="40" y="138" font-size="11" fill="var(--add)">・移行の操作を動詞として固定</text>
+<text x="40" y="156" font-size="11" fill="var(--add)">　（改名・移動・親の付け替え・型変更）</text>
+<text x="40" y="178" font-size="11" font-weight="700" fill="var(--add)">型が増えるほど、ここが太る</text>
+<rect x="408" y="118" width="244" height="70" fill="none" stroke="var(--add)" stroke-width="1.9"/>
+<text x="420" y="140" font-size="11" fill="var(--add)">・各型が、自分の位置の安定を守る</text>
+<text x="420" y="162" font-size="11" fill="var(--add)">・アドレスが動くたび、それを指す</text>
+<text x="420" y="180" font-size="11" fill="var(--add)">　参照が全部書き換わる</text>
+<text x="286" y="158" font-size="10.5" fill="var(--add)">論点6を</text>
+<text x="286" y="174" font-size="10.5" fill="var(--add)">案A側へ寄せる</text>
 
 <text x="8" y="238" font-size="12" font-weight="700" fill="var(--out)">C</text>
 <rect x="28" y="212" width="244" height="56" fill="none" stroke="var(--out)" stroke-width="1.6"/>
@@ -163,7 +173,7 @@ mark.chg.del b{text-decoration:line-through}
 
 <line x1="8" y1="284" x2="772" y2="284" stroke="var(--rule)"/>
 <text x="8" y="298" font-size="11" fill="var(--muted)">いま再定義しているのは段2 である。段2 に何も置かない案は A だけで、C は A と重ねて採れる。</text>
-</svg><figcaption><b>同じ問いが、どちらの段に荷を置くかの選択でもある。</b>A は段1 だけが増え、段2 は増えない。B は両方が増え、しかも段1 は型が増えるたびに太る。C は段1 に語彙が1つ増え、段2 は申告の欄を持つ。</figcaption></figure></div></div><div class="blk out"><div class="blk-h">落とした案と、その理由</div><div class="blk-b"><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="中身を1文字直すと別物になる。名前も中身も変わって同じであり続けるのがエンティティなので、同一性の定義そのものと衝突する"><b>中身のハッシュを鍵にする</b></mark></b><span class="cost">中身を1文字直すと別物になる。名前も中身も変わって同じであり続けるのがエンティティなので、同一性の定義そのものと衝突する</span></span></div><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="指す側は後から現れる。必要になった時点で発番すると、その時点より前の突き合わせが切れる ── 印の値打ちは、指される前から在ることに尽きる"><b>外から指される節にだけ印を与える</b></mark></b><span class="cost">指す側は後から現れる。必要になった時点で発番すると、その時点より前の突き合わせが切れる ── 印の値打ちは、指される前から在ることに尽きる</span></span></div><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="人が読む単位に機械の鍵が現れる。形式は読み手の認知に従属するという論点2の決着に反し、しかも手書きの印は重複する"><b>人が手で印を書く</b></mark></b><span class="cost">人が読む単位に機械の鍵が現れる。形式は読み手の認知に従属するという論点2の決着に反し、しかも手書きの印は重複する</span></span></div></div></div><div class="blk found"><div class="blk-h">反証で分かったこと</div><div class="blk-b">問いが「要るか」から「同一性を、宣言で持つか位置から導くか」へ変わった。「要らない」に当たるのは案Cだけで、AとBは持ち方の違いである。あわせて、同一性は<b>文書の外から指せること</b>と不可分だと分かった ── JSON Schema に足りない6つのうち「同一性」と「実体どうしの参照」は、同じ1つの穴の両側である。<b>そして C は、A とも両立する</b> ── 排他なのは「指される側に同一性を置くか」だけで、「指す側が解決状態を申告するか」は、どの案を採っても別に決められる</div></div><div class="blk mine"><div class="blk-h">私の推し</div><div class="blk-b"><b>A</b>　参照が実体と実体を結ぶ以上、指される側は実体でなければならない。位置を鍵にすると、参照の妥当性が構造の安定性に依存する ── いま最も動くのが構造である（段1・段2 を再定義中）。実測でも、節を別の親へ移したとき、名前を鍵にした差分は「消えて増えた」と言い、印を鍵にすると「移った」と言って件数が前後で1件も変わらなかった。ただし A を採るなら、人が読む射影で印を落とすことと、印を採番する道具を通さずに節を書けなくすることを、同時に引き受ける</div></div><div class="blk you"><div class="blk-h">あなた</div><div class="blk-b"><span class="ph">記号を選ぶ（どれでもなければ、そう言う）</span></div></div><div class="blk done"><div class="blk-h">決まり</div><div class="blk-b"><span class="ph">選ばれた案が合意になり、次の論点へ</span></div></div></div></div>
+</svg><figcaption><b>同じ問いが、どちらの段に荷を置くかの選択でもある。</b>段2 に何も置かない案は A だけである。</figcaption></figure><h2><span class="sn">2</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="同一性は名前か、変わらない印か（節と文書を区別せずに問うていた）" data-w="論点2 が「取得と参照は節単位」で決着したことで、指される側が節に定まった。名前と印の比較ではなく、節が文書とは別の同一性を持つかどうかが問いになった"><b>節に、変わらない印を持たせる</b></mark></td><td>機械が発番する印を鍵にする。人が読む射影では出さない</td><td><span class="cost">節を手で書き足せない。印の重複と散逸を検査する責務が増える。印は意味を運ばない</span></td></tr><tr><td><span class="n ">B</span></td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="改名を移行操作の宣言で運ぶ（独立の案として立てていた）" data-w="位置を鍵にする案と中身が同じだった。位置を鍵にする限り、位置が変わったことを別途宣言する以外に追跡手段が無い。2案ではなく、1案の必然の帰結である"><b>位置を同一性とし、動かすときは宣言する</b></mark></td><td>〈文書の識別子＋アドレス〉を鍵にし、改名・移動は移行の操作として書く</td><td><span class="cost">宣言の書き忘れが観測できない。忘れたこと自体が、不在として現れない</span></td></tr><tr><td><span class="n ">C</span></td><td><b>参照の側に、解決状態を持たせる</b></td><td>鍵は名前のまま。指す先へ届いたかを、参照が申告する</td><td><span class="cost">「移った」と「消えた」を区別できない。直し方は毎回、人が決める</span></td></tr></table></div><h2><span class="sn">3</span>この選択が、段1と段2に置くもの</h2><p class="lead">いま再定義しているのは<b>段2</b> である。</p><div class="scroll"><table class=""><tr><th></th><th>段1　全型が継ぐ契約</th><th>段2　8つの型</th></tr><tr><td><span class="n ">A</span></td><td>印を持つ／採番と不変／参照は印を指す／射影で落とす　<b>＝3つ増える</b></td><td><b>増えない。</b>既にある document への後付けの発番だけ</td></tr><tr><td><span class="n ">B</span></td><td>移行の操作を動詞として固定。<b>型が増えるほど太る</b></td><td>各型が位置の安定を守る。アドレスが動くと、指す参照が全部書き換わる</td></tr><tr><td><span class="n ">C</span></td><td>参照の語彙に、型と解決状態。<b>同一性は増えない</b></td><td>各型が、参照の欄で状態を申告する</td></tr></table></div><h2><span class="sn">4</span>落とした案と、その理由</h2><div class="scroll"><table class="out"><tr><th></th><th>案</th><th>落とした理由</th></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="中身を1文字直すと別物になる。エンティティの定義と衝突する"><b>中身のハッシュを鍵にする</b></mark></td><td>中身を1文字直すと別物になる。エンティティの定義と衝突する</td></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="指す側は後から現れる。後で発番すると、それより前の突き合わせが切れる"><b>外から指される節にだけ印を与える</b></mark></td><td>指す側は後から現れる。後で発番すると、それより前の突き合わせが切れる</td></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="人が読む単位に機械の鍵が現れる。しかも手書きの印は重複する"><b>人が手で印を書く</b></mark></td><td>人が読む単位に機械の鍵が現れる。しかも手書きの印は重複する</td></tr></table></div><h2><span class="sn">5</span>反証で分かったこと</h2><ul class='found'><li>問いが「要るか」から<b>「宣言で持つか、位置から導くか」</b>へ変わった</li><li>「要らない」に当たるのは <b>C だけ</b>である。A と B は持ち方の違いにすぎない</li><li><b>C は A と両立する。</b>排他なのは「指される側に同一性を置くか」だけで、「指す側が届いたかを申告するか」は別に決められる</li><li>JSON Schema に足りない6つのうち、<b>「同一性」と「実体どうしの参照」は同じ1つの穴の両側</b>である</li></ul><h2><span class="sn">6</span>私の推しと、その連鎖</h2><p class="lead">推す案は <b class="pickn">A</b> である。</p><div class="scroll"><table class="chain"><tr><th>段</th><th>中身</th></tr><tr><td><span class="st">測った</span></td><td>節を別の親へ移すと、名前を鍵にした差分は <code>removed 1 / added 1</code>、印を鍵にすると <code>moved 1</code>（原型での実測）</td></tr><tr><td><span class="st">測った</span></td><td>AI生成仕様 628本で、参照の <b>33%</b> が指す先に届いていない</td></tr><tr><td><span class="st">だから</span></td><td>参照が実体と実体を結ぶ以上、指される側は実体でなければならない</td></tr><tr><td><span class="st">一方で</span></td><td>位置を鍵にすると、参照の妥当性が構造の安定性に依存する ── いま最も動くのが構造である</td></tr><tr><td><span class="st">結論</span></td><td><b>A ── 節に、変わらない印を持たせる。</b>段2 に荷を置かない案は、これだけである</td></tr><tr><td><span class="st">引き受ける</span></td><td>人が読む射影で印を落とす。印を採番する道具を通さずには、節を書けなくする</td></tr><tr><td><span class="st">反証</span></td><td>印は意味を運ばない。人が印だけを見ても、それが何のことかは分からない</td></tr></table></div><h2><span class="sn">7</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">8</span>決まり</h2><div class="done">選ばれた案が合意になり、次の論点へ</div></main>
 <script>
 (function(){
   const marks = [...document.querySelectorAll('mark.chg')];
@@ -173,7 +183,7 @@ mark.chg.del b{text-decoration:line-through}
     p.className = 'pop'; p.hidden = true;
     p.innerHTML = '<b>変更前</b>' + m.dataset.b +
                   '<span class="why"><b>なぜ変えたか</b>' + m.dataset.w + '</span>';
-    m.closest('.opt, .blk-b').appendChild(p);
+    (m.closest('td') || m.parentNode).appendChild(p);
     return p;
   }
   marks.forEach(m => {
