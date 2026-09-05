@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>{{TITLE}}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f8f7;
+      --surface: #ffffff;
+      --surface-muted: #edf4f2;
+      --text: #14211e;
+      --muted: #5d716a;
+      --line: #d5e2de;
+      --primary: #087861;
+      --primary-soft: #ddf3eb;
+      --secondary: #176da7;
+      --secondary-soft: #e4f1fb;
+      --success: #16845b;
+      --success-soft: #e0f4ea;
+      --caution: #b65b17;
+      --caution-soft: #fff0df;
+      --risk: #a53b42;
+      --risk-soft: #fdebed;
+      --violet: #7250b3;
+      --violet-soft: #f0eaff;
+      --radius: 18px;
+      --shadow: 0 10px 35px rgba(20, 55, 44, .08);
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #101513;
+      --surface: #18201d;
+      --surface-muted: #202c28;
+      --text: #e7eeeb;
+      --muted: #a6b7b0;
+      --line: #34433e;
+      --primary: #61d1ae;
+      --primary-soft: #173e33;
+      --secondary: #7fc8f5;
+      --secondary-soft: #173549;
+      --success: #65d19f;
+      --success-soft: #173a2d;
+      --caution: #f2ad70;
+      --caution-soft: #432c19;
+      --risk: #f08c94;
+      --risk-soft: #442327;
+      --violet: #c0a5f5;
+      --violet-soft: #302546;
+      --shadow: 0 12px 38px rgba(0, 0, 0, .24);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 78px; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+      line-height: 1.72;
+    }
+    a { color: inherit; }
+    button, select { font: inherit; }
+    :focus-visible { outline: 3px solid var(--secondary); outline-offset: 3px; }
+
+    .progress {
+      position: fixed;
+      inset: 0 auto auto 0;
+      z-index: 200;
+      width: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--violet));
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg);
+    }
+    .topbar-inner {
+      max-width: 1480px;
+      margin: auto;
+      padding: 10px 24px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .brand { font-size: .82rem; font-weight: 900; letter-spacing: .06em; }
+    .grow { flex: 1; }
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 7px 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .button:hover { border-color: var(--primary); }
+    .mobile-nav {
+      display: none;
+      max-width: 55vw;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 7px;
+    }
+
+    .layout {
+      max-width: 1480px;
+      margin: auto;
+      padding: 28px 24px 80px;
+      display: grid;
+      grid-template-columns: 255px minmax(0, 1fr);
+      gap: 32px;
+    }
+    .toc {
+      position: sticky;
+      top: 76px;
+      align-self: start;
+      max-height: calc(100vh - 92px);
+      overflow: auto;
+      padding: 8px;
+    }
+    .toc-title {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .toc a {
+      display: block;
+      padding: 7px 10px;
+      border-left: 2px solid var(--line);
+      color: var(--muted);
+      font-size: .84rem;
+      text-decoration: none;
+    }
+    .toc a:hover,
+    .toc a[aria-current="location"] {
+      border-left-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 800;
+    }
+    main { min-width: 0; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 42px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #073c32, #0b735d 52%, #1a6084);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      right: -110px;
+      top: -170px;
+      border: 1px solid rgba(255, 255, 255, .17);
+      border-radius: 50%;
+      box-shadow: 0 0 0 60px rgba(255, 255, 255, .04), 0 0 0 120px rgba(255, 255, 255, .025);
+      pointer-events: none;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: .74rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      opacity: .86;
+    }
+    .hero h1 {
+      max-width: 980px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1.12;
+      letter-spacing: -.04em;
+    }
+    .lead {
+      max-width: 940px;
+      margin: 18px 0 0;
+      font-size: clamp(1rem, 2vw, 1.22rem);
+      opacity: .94;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .chip {
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .1);
+      font-size: .8rem;
+      font-weight: 800;
+    }
+
+    section { margin-top: 52px; }
+    .kicker {
+      margin-bottom: 4px;
+      color: var(--primary);
+      font-size: .73rem;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: clamp(1.55rem, 3vw, 2.35rem);
+      line-height: 1.25;
+      letter-spacing: -.025em;
+    }
+    h3 { line-height: 1.35; }
+    .intro { max-width: 930px; color: var(--muted); }
+    .muted { color: var(--muted); }
+    .small { font-size: .83rem; }
+    .mono { font-family: var(--mono); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .stat {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+    }
+    .stat strong { display: block; color: var(--primary); font-size: 1.45rem; line-height: 1.1; }
+    .stat span { color: var(--muted); font-size: .78rem; }
+
+    .callout {
+      margin: 18px 0;
+      padding: 17px 19px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--primary);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    .callout strong { color: var(--primary); }
+    .callout.secondary { border-left-color: var(--secondary); }
+    .callout.secondary strong { color: var(--secondary); }
+    .callout.caution { border-left-color: var(--caution); }
+    .callout.caution strong { color: var(--caution); }
+    .callout.risk { border-left-color: var(--risk); }
+    .callout.risk strong { color: var(--risk); }
+
+    .grid { display: grid; gap: 15px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      padding: 21px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .card h3 { margin: 0 0 7px; font-size: 1.08rem; }
+    .card p:last-child { margin-bottom: 0; }
+    .tone-primary { border-top: 5px solid var(--primary); }
+    .tone-secondary { border-top: 5px solid var(--secondary); }
+    .tone-caution { border-top: 5px solid var(--caution); }
+    .tone-violet { border-top: 5px solid var(--violet); }
+    .pill {
+      display: inline-flex;
+      margin: 0 4px 5px 0;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--surface-muted);
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 900;
+    }
+    .pill.primary { background: var(--primary-soft); color: var(--primary); }
+    .pill.secondary { background: var(--secondary-soft); color: var(--secondary); }
+    .pill.caution { background: var(--caution-soft); color: var(--caution); }
+    .pill.risk { background: var(--risk-soft); color: var(--risk); }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+    caption { padding: 12px 14px; color: var(--muted); font-weight: 800; text-align: left; }
+    th, td { padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: var(--surface-muted); color: var(--muted); font-size: .76rem; letter-spacing: .02em; }
+    tr:last-child td { border-bottom: 0; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .flow-item {
+      position: relative;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    .flow-item:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -12px;
+      top: 42%;
+      z-index: 2;
+      color: var(--muted);
+      font-weight: 900;
+    }
+    .flow-code { color: var(--muted); font: 900 .75rem var(--mono); }
+    .flow-item b { display: block; margin: 5px 0; line-height: 1.3; }
+    .flow-item span { color: var(--muted); font-size: .76rem; }
+
+    .phase {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 16px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    .phase + .phase { margin-top: 12px; }
+    .phase-id {
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font: 900 .78rem/1.35 var(--mono);
+      text-align: center;
+    }
+    .phase h3 { margin: 0 0 5px; }
+
+    .schema { overflow: hidden; border-radius: 16px; background: #171c26; color: #edf3ff; }
+    .schema-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #222938; font-size: .78rem; font-weight: 850; }
+    .copy-button { margin-left: auto; border: 1px solid #59657d; border-radius: 8px; background: #2c3446; color: #fff; padding: 5px 9px; font-weight: 800; cursor: pointer; }
+    .schema pre { max-height: 560px; overflow: auto; margin: 0; padding: 17px; white-space: pre-wrap; word-break: break-word; font: 12px/1.62 var(--mono); }
+
+    details { padding: 11px 15px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }
+    details + details { margin-top: 8px; }
+    summary { cursor: pointer; font-weight: 850; }
+    footer { margin-top: 55px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #101513;
+        --surface: #18201d;
+        --surface-muted: #202c28;
+        --text: #e7eeeb;
+        --muted: #a6b7b0;
+        --line: #34433e;
+        --primary: #61d1ae;
+        --primary-soft: #173e33;
+        --secondary: #7fc8f5;
+        --secondary-soft: #173549;
+        --caution: #f2ad70;
+        --caution-soft: #432c19;
+        --risk: #f08c94;
+        --risk-soft: #442327;
+        --violet: #c0a5f5;
+        --violet-soft: #302546;
+      }
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc { display: none; }
+      .mobile-nav { display: block; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .flow { grid-template-columns: repeat(2, 1fr); }
+      .flow-item::after { display: none; }
+    }
+    @media (max-width: 700px) {
+      .topbar-inner { padding: 8px 12px; }
+      .brand { display: none; }
+      .layout { padding: 18px 13px 60px; }
+      .hero { padding: 28px 21px; border-radius: 21px; }
+      .grid.two, .grid.three, .stats, .flow { grid-template-columns: 1fr; }
+      .phase { grid-template-columns: 1fr; }
+      .phase-id { min-height: 48px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+    @media print {
+      .topbar, .toc, .progress, .copy-button { display: none !important; }
+      .layout { display: block; padding: 0; }
+      body { background: #fff; color: #111; }
+      .hero { box-shadow: none; }
+      .card, .phase, .table-wrap, details, .schema { break-inside: avoid; }
+      .schema { border: 1px solid #aaa; background: #fff; color: #111; }
+      .schema-head { background: #eee; }
+      .schema pre { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="reading-progress" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">{{TITLE}}</div>
+      <label class="grow" for="mobile-nav">
+        <span hidden>セクションへ移動</span>
+        <select class="mobile-nav" id="mobile-nav" aria-label="セクションへ移動">
+          <option value="#overview">概要</option>
+          <option value="#key-points">要点</option>
+          <option value="#structure">構成</option>
+          <option value="#comparison">比較</option>
+          <option value="#process">手順</option>
+          <option value="#details">詳細</option>
+          <option value="#sources">出典</option>
+        </select>
+      </label>
+      <button class="button" id="theme-toggle" type="button" aria-label="表示テーマを切り替える">テーマ</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="ページ内目次">
+      <p class="toc-title">Contents</p>
+      <a href="#overview">概要</a>
+      <a href="#key-points">要点</a>
+      <a href="#structure">構成</a>
+      <a href="#comparison">比較</a>
+      <a href="#process">手順</a>
+      <a href="#details">詳細</a>
+      <a href="#sources">出典</a>
+    </nav>
+
+    <main>
+      <!-- Keep only components that serve the content. Replace all sample copy. -->
+      <section class="hero" id="overview">
+        <p class="eyebrow">{{EYEBROW}}</p>
+        <h1>{{TITLE}}</h1>
+        <p class="lead">{{SUMMARY}}</p>
+        <div class="chips" aria-label="文書属性">
+          <span class="chip">更新 {{UPDATED}}</span>
+          <span class="chip">単体HTML</span>
+          <span class="chip">人間・AI可読</span>
+        </div>
+      </section>
+
+      <section id="key-points">
+        <div class="kicker">01 · Orientation</div>
+        <h2>最初に把握する要点</h2>
+        <p class="intro">この節には、全文を読む前に必要な結論、状態、規模だけを置きます。数字は意味のある場合だけ残してください。</p>
+        <div class="stats" aria-label="主要指標">
+          <div class="stat"><strong>01</strong><span>中心となる問い</span></div>
+          <div class="stat"><strong>02</strong><span>重要な比較軸</span></div>
+          <div class="stat"><strong>03</strong><span>主要なフェーズ</span></div>
+          <div class="stat"><strong>04</strong><span>次に行う判断</span></div>
+        </div>
+        <div class="callout">
+          <strong>中心結論。</strong> 読者が最初に持ち帰るべき一文を置き、その条件や適用範囲を続けます。
+        </div>
+        <div class="callout caution">
+          <strong>重要な注意。</strong> 結論を誤用しないための境界や未確定事項を明示します。
+        </div>
+      </section>
+
+      <section id="structure">
+        <div class="kicker">02 · Building blocks</div>
+        <h2>同じ粒度の情報を並べる</h2>
+        <p class="intro">独立して比較・探索する概念だけをカードにします。カード種別が同じなら、内部ラベルの順序も揃えます。</p>
+        <div class="grid three">
+          <article class="card tone-primary">
+            <span class="pill primary">概念</span>
+            <h3>構成要素A</h3>
+            <p><strong>役割:</strong> この要素が何を担うか。</p>
+            <p><strong>関係:</strong> 他の要素とどう接続するか。</p>
+          </article>
+          <article class="card tone-secondary">
+            <span class="pill secondary">根拠</span>
+            <h3>構成要素B</h3>
+            <p><strong>主張:</strong> 何が分かっているか。</p>
+            <p><strong>限界:</strong> どこまで適用できるか。</p>
+          </article>
+          <article class="card tone-caution">
+            <span class="pill caution">判断</span>
+            <h3>構成要素C</h3>
+            <p><strong>条件:</strong> いつ選択するか。</p>
+            <p><strong>リスク:</strong> 何を確認すべきか。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="comparison">
+        <div class="kicker">03 · Exact comparison</div>
+        <h2>同じ評価軸で比較する</h2>
+        <p class="intro">正確な照合が必要な内容は、離れたカードではなく一つの表へまとめます。</p>
+        <div class="table-wrap">
+          <table>
+            <caption>比較対象と評価軸の対応</caption>
+            <thead>
+              <tr>
+                <th scope="col">評価軸</th>
+                <th scope="col">選択肢A</th>
+                <th scope="col">選択肢B</th>
+                <th scope="col">判断への影響</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">目的</th><td>対象Aの目的</td><td>対象Bの目的</td><td>何を優先するか</td></tr>
+              <tr><th scope="row">強み</th><td>条件付きの強み</td><td>条件付きの強み</td><td>適用条件を確認</td></tr>
+              <tr><th scope="row">限界</th><td>対象Aの限界</td><td>対象Bの限界</td><td>許容できない条件を確認</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="process">
+        <div class="kicker">04 · Sequence</div>
+        <h2>成果物までの順序を外部化する</h2>
+        <p class="intro">フローは順序が理解に必要な場合だけ使います。各段階の入力・操作・出力を明記します。</p>
+        <div class="flow" aria-label="処理の全体フロー">
+          <div class="flow-item"><span class="flow-code">STEP 01</span><b>入力を確認</b><span>目的、読者、正本を固定</span></div>
+          <div class="flow-item"><span class="flow-code">STEP 02</span><b>意味を分類</b><span>主張、根拠、関係を分離</span></div>
+          <div class="flow-item"><span class="flow-code">STEP 03</span><b>表現を選択</b><span>表、カード、フローを適合</span></div>
+          <div class="flow-item"><span class="flow-code">STEP 04</span><b>検証する</b><span>構造、表示、参照を確認</span></div>
+        </div>
+        <div class="phase">
+          <div class="phase-id">PHASE<br>DETAIL</div>
+          <div>
+            <h3>フェーズ詳細の例</h3>
+            <p><strong>入力:</strong> この段階で必要なもの。</p>
+            <p><strong>操作:</strong> 実行すること。</p>
+            <p><strong>出力・完了条件:</strong> 次へ進むために確認するもの。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="details">
+        <div class="kicker">05 · Supporting detail</div>
+        <h2>主線を壊さず詳細を残す</h2>
+        <p class="intro">コードや長い補足は後段に置きます。ただし、重大な警告や結論の条件は折りたたみません。</p>
+        <div class="schema">
+          <div class="schema-head">
+            <span>example.json</span>
+            <button class="copy-button" type="button" data-copy="example-code">コピー</button>
+          </div>
+          <pre><code id="example-code">{
+  "purpose": "情報の目的",
+  "claim": "中心となる主張",
+  "evidence": ["根拠ID"],
+  "limitations": ["適用上の限界"]
+}</code></pre>
+        </div>
+        <details>
+          <summary>補足情報を開く</summary>
+          <p>主線の理解に必須ではない説明、追加例、検討履歴などを置きます。</p>
+        </details>
+      </section>
+
+      <section id="sources">
+        <div class="kicker">06 · Evidence</div>
+        <h2>出典・確度・限界を区別する</h2>
+        <p class="intro">出典がある主張、観察事実、推論、仮説を同じ確度で表現しません。</p>
+        <div class="grid two">
+          <article class="card tone-primary">
+            <span class="pill primary">直接確認</span>
+            <h3>出典名または資料名</h3>
+            <p><strong>支持する内容:</strong> この出典が何を裏付けるか。</p>
+            <p class="small muted"><strong>識別情報:</strong> 著者、年、URL、文書IDなど。</p>
+          </article>
+          <article class="card tone-violet">
+            <span class="pill">推論</span>
+            <h3>統合して導いた見解</h3>
+            <p><strong>根拠:</strong> どの観察や出典から導いたか。</p>
+            <p><strong>検証課題:</strong> まだ確認できていないこと。</p>
+          </article>
+        </div>
+      </section>
+
+      <footer>
+        <p>{{TITLE}} · Updated {{UPDATED}}</p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const themeButton = document.getElementById('theme-toggle');
+      const progress = document.getElementById('reading-progress');
+      const mobileNav = document.getElementById('mobile-nav');
+      const tocLinks = [...document.querySelectorAll('.toc a')];
+      const sections = tocLinks.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+
+      try {
+        const saved = localStorage.getItem('structured-artifact-theme');
+        if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+      } catch (_) {}
+
+      themeButton?.addEventListener('click', () => {
+        const current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try { localStorage.setItem('structured-artifact-theme', next); } catch (_) {}
+      });
+
+      mobileNav?.addEventListener('change', event => {
+        const target = document.querySelector(event.target.value);
+        target?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      });
+
+      const updateProgress = () => {
+        const total = document.documentElement.scrollHeight - innerHeight;
+        const ratio = total > 0 ? Math.min(1, Math.max(0, scrollY / total)) : 0;
+        progress.style.width = `${ratio * 100}%`;
+      };
+      addEventListener('scroll', updateProgress, { passive: true });
+      addEventListener('resize', updateProgress);
+      updateProgress();
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (!visible) return;
+          tocLinks.forEach(link => {
+            const active = link.getAttribute('href') === `#${visible.target.id}`;
+            if (active) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          });
+          if (mobileNav) mobileNav.value = `#${visible.target.id}`;
+        }, { rootMargin: '-18% 0px -65% 0px', threshold: [0, .25, .6] });
+        sections.forEach(section => observer.observe(section));
+      }
+
+      document.querySelectorAll('[data-copy]').forEach(button => {
+        button.addEventListener('click', async () => {
+          const source = document.getElementById(button.dataset.copy);
+          if (!source) return;
+          const original = button.textContent;
+          try {
+            await navigator.clipboard.writeText(source.textContent);
+            button.textContent = 'コピー済み';
+          } catch (_) {
+            button.textContent = 'コピー失敗';
+          }
+          setTimeout(() => { button.textContent = original; }, 1400);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
