@@ -153,17 +153,20 @@ def _sections(t: Topic) -> str:
         # 記号はバッジが持つので、本文の「A ── 」は落とす
         conc = [re.sub(r'^(<b>)?[A-H]\s*──\s*', r'\1', txt)
                 for st, txt in chain if st == "結論"]
-        why = [(st, txt) for st, txt in chain if st in ("測った", "確かめていない",
+        why = [(st, txt) for st, txt in chain if st in ("測った", "確かめていない", "定義から",
                                                        "だから", "一方で", "合わせると")]
         cost = [txt for st, txt in chain if st == "引き受ける"]
         weak = [(st, txt) for st, txt in chain if st in ("反証", "崩れる条件")]
         body = (f'<div class="concl"><span class="n big">{_h.escape(letter)}</span>'
                 f'<div>{"".join(f"<p>{c}</p>" for c in conc)}</div></div>')
         if why:
-            body += ('<h3>なぜそう言えるか</h3>'
-                     + _table(["段", "中身"],
-                              [[f'<span class="st">{_h.escape(st)}</span>', txt]
-                               for st, txt in why], "chain"))
+            if not any(st in ("測った", "確かめていない", "定義から") for st, _ in why):
+                raise ValueError(f"論点{t.no}: 根拠に前提が無い。「だから」「一方で」は"
+                                 "前の段から次へ渡す接続であって、それ自体は事実ではない ── "
+                                 "「測った」「定義から」「確かめていない」のどれかを最低1つ置く")
+            body += ('<h3>なぜそう言えるか</h3><dl class="why">'
+                     + "".join(f'<dt><span class="st">{_h.escape(st)}</span></dt><dd>{txt}</dd>'
+                               for st, txt in why) + '</dl>')
         if figs:
             body += f'<h3>図で見る</h3>{figs}'
         if cost:
@@ -240,9 +243,13 @@ def board(theme: str, no: int, total: int, question: str,
             それは論点の立て方が誤っている。表の1行として並ぶ。
         dropped: (落とした案の名前, 落とした理由) の並び。黙って消さない。
         found: 反証で分かったことを、1つずつ短く。散文にしない。
-        pick: (推す案の記号, 理由の連鎖)。連鎖は (段の種別, 一文) の並びで、
-            段の種別は「測った」「確かめていない」「だから」「一方で」
-            「結論」「引き受ける」「反証」から選ぶ。
+        pick: (推す案の記号, 理由の連鎖)。連鎖は (その文が何であるか, 一文) の並び。
+            「測った」は出所のある観測、「定義から」は語の定義や既に合意した決定から
+            従うこと、「確かめていない」は検証していない前提、
+            「だから」「一方で」「合わせると」は前の段から次へ渡す接続、
+            「結論」は推す案、「引き受ける」は代償、「反証」は既に観測されている
+            不利な事実である。**接続だけを並べない** ── 前提が無い推論になるので、
+            「測った」「定義から」「確かめていない」のどれかを最低1つ置く。
         figures: (SVG, 図の読み方) の並び。案の違いは、まず図で見せる。
         tables: 案ごとの帰結の表。列は呼び出し側が決める。
         note: 盤面の冒頭に置く、いまの状態の1〜2文。
@@ -360,6 +367,9 @@ table.out b{color:var(--out);text-decoration:line-through}
 .st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
   border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
 table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
+dl.why{margin:0;display:grid;grid-template-columns:6.5rem 1fr;gap:.55rem .8rem;font-size:.9rem}
+dl.why dt{margin:0}
+dl.why dd{margin:0;line-height:1.8}
 .pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
   border-radius:2px;padding:0 .35em}
 .concl{display:flex;gap:.9rem;align-items:flex-start;background:color-mix(in srgb,var(--key) 6%,var(--paper));
