@@ -35,14 +35,15 @@ updated: 2026-09-05
 | メッセージの解釈と生成 | `serde` ＋ `serde_json` | `1` | 契約が JSON で、型と対応づけられる | 手書きの解析 |
 | 失敗型の実装 | `thiserror` | `1` | 言語の規約を満たす | 手書き |
 | 診断の出力 | `tracing` ＋ `tracing-subscriber` | `0.3` | 標準エラーへの出力先を差し替えられる | `eprintln!` |
-| 手順の実装 | **未定** | ─ | **仕様の原文は取得した（2026-09-05）。既存の実装を採るか自前で書くかは、提供する能力が決まってから選ぶ** | ─ |
+| 手順の実装 | `rmcp` | `0.x`（版を固定する） | **手順は仕様が定めており、写して持つ価値が無い。**公式の Rust 実装が在り、`ServerHandler` を満たす形で能力を出せる | 自前で書く（仕様の変化に自分で追随することになる） |
 
 ## 採用しない依存
 
 | 依存 | 採用しない理由 |
 |---|---|
 | HTTP クライアント | 経路が標準入出力であり、外部への通信を持たない |
-| 大きな非同期の実行環境 | 同時に処理する必要が確かめられていない。必要が観測されてから入れる |
+| 大きな非同期の実行環境 | `rmcp` が要求する範囲でだけ使う。それを超えて広げない |
+| 手順の自前実装 | 仕様の版が上がるたびに、こちらが追随することになる。**手順は差別化する場所ではない** |
 
 ## バージョンの固定
 
@@ -83,3 +84,4 @@ updated: 2026-09-05
 |---|---|---|---|---|
 | `serde_json` | 文献 | serde_json の公式ドキュメント<br><small>https://docs.rs/serde_json/latest/serde_json/</small> | 2026-09-05 取得 | `from_str` |
 | 手順 | 規格 | Model Context Protocol の仕様<br><small>https://modelcontextprotocol.io/specification/2025-06-18</small> | 2026-09-05 取得 | `capabilities` |
+| `rmcp` | 文献 | rmcp の公式ドキュメント<br><small>https://docs.rs/rmcp/latest/rmcp/</small> | 2026-09-05 取得 | `ServerHandler` |
