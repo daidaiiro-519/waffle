@@ -17,6 +17,8 @@ def inline(t):
     return t.replace('&lt;br&gt;', '<br>').replace('&lt;br/&gt;', '<br>')
 
 def render(md):
+    # HTML のコメントは、描画すると文字として出る。落とす
+    md = re.sub(r'<!--.*?-->', '', md, flags=re.S)
     out, L, i = [], md.split('\n'), 0
     while i < len(L):
         l = L[i]

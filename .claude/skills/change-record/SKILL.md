@@ -143,6 +143,19 @@ description: 文書・コード・設計を変更する前に必ず使うスキ�
 雛形は `references/change-view.html` にある。
 マークダウンからの描画は `references/render.py` を使う。
 
+**変更した文書が2つ以上あるなら、`references/tabs.py` で1枚にまとめる。**
+**タブの中身は拡張子で決まる。**マークダウンは描画した見た目、HTML はそのままの見た目で置く。
+
+```
+python3 references/tabs.py <spec.json> <出力.html>
+```
+
+**HTML は `iframe` に流し込む。**そのままの見た目で見せるには、CSS を隔てるしかない。
+親に混ぜると、両方の指定が打ち消し合う。届かなければ Shadow DOM へ落ちる。
+
+**印が、その文書の内側のタブに隠れることがある。**
+実際に4件とも隠れた。面の頭に変更の一覧を置き、押すとその印まで運ぶ。
+
 ### Step 5: 変更箇所に印を付ける
 
 **変更後の本文のなかで、変わった箇所を `<mark>` で囲む。**
@@ -234,4 +247,5 @@ description: 文書・コード・設計を変更する前に必ず使うスキ�
 
 - `references/change-view.html`: 変更提示ページの雛形。CSS と開閉のスクリプトを含む
 - `references/render.py`: マークダウンをHTMLへ描画し、変更箇所に印を付ける
+- `references/tabs.py`: 文書が複数のとき、タブ1枚にまとめる。HTML はそのままの見た目で置く
 - `references/adr.md`: 設計判断をこの形で残すときの当て方
