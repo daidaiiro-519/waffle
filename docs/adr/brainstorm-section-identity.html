@@ -35,6 +35,10 @@ h1{font-family:"Shippori Mincho B1",serif;font-weight:600;font-size:clamp(24px,3
 .opt.out b{color:var(--out);text-decoration:line-through}
 .opt .t{font-size:13px;line-height:1.75}
 .opt .cost{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+figure{margin:10px 0 0}
+figure+figure{margin-top:18px;padding-top:16px;border-top:1px dashed var(--rule)}
+figure svg{display:block;width:100%;height:auto;color:var(--ink)}
+figcaption{font-size:12px;line-height:1.75;color:var(--muted);margin-top:6px}
 .ph{color:var(--muted);border-bottom:1px dashed var(--rule);padding-bottom:1px}
 
 /* 変わった箇所の印。押すと開く */
@@ -65,7 +69,101 @@ mark.chg.del b{text-decoration:line-through}
   cursor:pointer;background:var(--surface);color:var(--ink);border:1px solid var(--rule)}
 .hd button:hover{background:var(--markh)}
 .hd button:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
-</style><div class="hd"><div class="t">schema 観の三層 ── 論点3<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div><button id="all" type="button">すべて開く</button></div><div class="wrap"><h1>AI が引く節に、人が読む文書とは別の同一性が要るか</h1><div class="spec"><div class="blk "><div class="blk-h">論点 3 / 6</div><div class="blk-b"><b>AI が引く節に、人が読む文書とは別の同一性が要るか</b></div></div><div class="blk "><div class="blk-h">反証を通過した案</div><div class="blk-b"><div class="opt"><span class="n">A</span><span class="t"><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="同一性は名前か、変わらない印か（節と文書を区別せずに問うていた）" data-w="論点2 が「取得と参照は節単位」で決着したことで、指される側が節に定まった。名前と印の比較ではなく、節が文書とは別の同一性を持つかどうかが問いになった"><b>節に、変わらない印を持たせる</b></mark>　節が生まれたときに機械が印を発番し、参照と突き合わせの鍵をそこへ移す。人が読む射影では印を出さない<span class="cost">代償：節を手で書き足せなくなる（印を採番できるのは道具だけ）。印そのものの重複・散逸を検査する責務が増え、印は意味を運ばないので、人が印だけ見ても何のことか分からない</span></span></div><div class="opt"><span class="n">B</span><span class="t"><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="改名を移行操作の宣言で運ぶ（独立の案として立てていた）" data-w="位置を鍵にする案と中身が同じだった。位置を鍵にする限り、位置が変わったことを別途宣言する以外に追跡手段が無い。2案ではなく、1案の必然の帰結である"><b>位置を同一性とし、動かすときは移行の操作として宣言する</b></mark>　〈文書の識別子＋構造上のアドレス〉を鍵にする。改名・移動・親の付け替えは、閉じた操作集合の宣言として書き、突き合わせはその宣言を経由する<span class="cost">代償：宣言の書き忘れが観測できない。書き忘れた改名は「消えて増えた」に見え、しかも忘れたこと自体が不在として現れないので、誰も誤りだと言えない</span></span></div><div class="opt"><span class="n">C</span><span class="t"><b>節には同一性を与えず、参照の側に解決状態を持たせる</b>　指す先が在るか・実装を指すか・外部か・検めないか、を参照が申告する。同一性を足す代わりに、届かないことを観測できるようにする<span class="cost">代償：「移った」と「消えた」を区別できない。不在は分かるが、直し方は毎回人が決めることになる。構造化の利得（無いことが分かる）は取れるが、突き合わせの自動化は取れない</span></span></div></div></div><div class="blk out"><div class="blk-h">落とした案と、その理由</div><div class="blk-b"><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="中身を1文字直すと別物になる。名前も中身も変わって同じであり続けるのがエンティティなので、同一性の定義そのものと衝突する"><b>中身のハッシュを鍵にする</b></mark></b><span class="cost">中身を1文字直すと別物になる。名前も中身も変わって同じであり続けるのがエンティティなので、同一性の定義そのものと衝突する</span></span></div><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="指す側は後から現れる。必要になった時点で発番すると、その時点より前の突き合わせが切れる ── 印の値打ちは、指される前から在ることに尽きる"><b>外から指される節にだけ印を与える</b></mark></b><span class="cost">指す側は後から現れる。必要になった時点で発番すると、その時点より前の突き合わせが切れる ── 印の値打ちは、指される前から在ることに尽きる</span></span></div><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="人が読む単位に機械の鍵が現れる。形式は読み手の認知に従属するという論点2の決着に反し、しかも手書きの印は重複する"><b>人が手で印を書く</b></mark></b><span class="cost">人が読む単位に機械の鍵が現れる。形式は読み手の認知に従属するという論点2の決着に反し、しかも手書きの印は重複する</span></span></div></div></div><div class="blk found"><div class="blk-h">反証で分かったこと</div><div class="blk-b">問いが「要るか」から「同一性を、宣言で持つか位置から導くか」へ変わった。「要らない」に当たるのは案Cだけで、AとBは持ち方の違いである。あわせて、同一性は<b>文書の外から指せること</b>と不可分だと分かった ── JSON Schema に足りない6つのうち「同一性」と「実体どうしの参照」は、同じ1つの穴の両側である。<b>そして C は、A とも両立する</b> ── 排他なのは「指される側に同一性を置くか」だけで、「指す側が解決状態を申告するか」は、どの案を採っても別に決められる</div></div><div class="blk mine"><div class="blk-h">私の推し</div><div class="blk-b"><b>A</b>　参照が実体と実体を結ぶ以上、指される側は実体でなければならない。位置を鍵にすると、参照の妥当性が構造の安定性に依存する ── いま最も動くのが構造である（段1・段2 を再定義中）。実測でも、節を別の親へ移したとき、名前を鍵にした差分は「消えて増えた」と言い、印を鍵にすると「移った」と言って件数が前後で1件も変わらなかった。ただし A を採るなら、人が読む射影で印を落とすことと、印を採番する道具を通さずに節を書けなくすることを、同時に引き受ける</div></div><div class="blk found"><div class="blk-h">この選択が、段1と段2に置くもの</div><div class="blk-b"><div class="opt"><span class="n">A</span><span class="t"><b>段1 ── 節が印を持つことを、全型が継ぐ型契約に置く。採番・不変・重複の禁止と、参照が印を指す形も段1が言う。人が読む射影で印を落とす規則も、段1に1つ増える</b><span class="cost">段2 ── 8つの型は何も足さない（印は段1から降りてくる）。残るのは、既にある document への後付けの発番だけである</span></span></div><div class="opt"><span class="n">B</span><span class="t"><b>段1 ── 移行の操作集合（改名・移動・親の付け替え・型変更）を動詞として固定する。<b>論点6を案Aの側へ寄せる</b> ── 型が増えるほど abstract が太る</b><span class="cost">段2 ── 各型が、自分の位置の安定を自分で守る。段2の再定義でアドレスが動くたび、それを指していた参照が全部書き換わる</span></span></div><div class="opt"><span class="n">C</span><span class="t"><b>段1 ── 参照という語彙に、型と解決状態（実体を指す／実装を指す／外部／検めない）を持たせる。同一性は1つも増えない</b><span class="cost">段2 ── 各型は、参照を持つ欄で状態を申告する。「移った」と「消えた」の区別は付かないまま、人の判断として残る</span></span></div></div></div><div class="blk you"><div class="blk-h">あなた</div><div class="blk-b"><span class="ph">記号を選ぶ（どれでもなければ、そう言う）</span></div></div><div class="blk done"><div class="blk-h">決まり</div><div class="blk-b"><span class="ph">選ばれた案が合意になり、次の論点へ</span></div></div></div></div>
+</style><div class="hd"><div class="t">schema 観の三層 ── 論点3<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div><button id="all" type="button">すべて開く</button></div><div class="wrap"><h1>AI が引く節に、人が読む文書とは別の同一性が要るか</h1><div class="spec"><div class="blk "><div class="blk-h">論点 3 / 6</div><div class="blk-b"><b>AI が引く節に、人が読む文書とは別の同一性が要るか</b></div></div><div class="blk "><div class="blk-h">反証を通過した案</div><div class="blk-b"><div class="opt"><span class="n">A</span><span class="t"><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="同一性は名前か、変わらない印か（節と文書を区別せずに問うていた）" data-w="論点2 が「取得と参照は節単位」で決着したことで、指される側が節に定まった。名前と印の比較ではなく、節が文書とは別の同一性を持つかどうかが問いになった"><b>節に、変わらない印を持たせる</b></mark>　節が生まれたときに機械が印を発番し、参照と突き合わせの鍵をそこへ移す。人が読む射影では印を出さない<span class="cost">代償：節を手で書き足せなくなる（印を採番できるのは道具だけ）。印そのものの重複・散逸を検査する責務が増え、印は意味を運ばないので、人が印だけ見ても何のことか分からない</span></span></div><div class="opt"><span class="n">B</span><span class="t"><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="改名を移行操作の宣言で運ぶ（独立の案として立てていた）" data-w="位置を鍵にする案と中身が同じだった。位置を鍵にする限り、位置が変わったことを別途宣言する以外に追跡手段が無い。2案ではなく、1案の必然の帰結である"><b>位置を同一性とし、動かすときは移行の操作として宣言する</b></mark>　〈文書の識別子＋構造上のアドレス〉を鍵にする。改名・移動・親の付け替えは、閉じた操作集合の宣言として書き、突き合わせはその宣言を経由する<span class="cost">代償：宣言の書き忘れが観測できない。書き忘れた改名は「消えて増えた」に見え、しかも忘れたこと自体が不在として現れないので、誰も誤りだと言えない</span></span></div><div class="opt"><span class="n">C</span><span class="t"><b>節には同一性を与えず、参照の側に解決状態を持たせる</b>　指す先が在るか・実装を指すか・外部か・検めないか、を参照が申告する。同一性を足す代わりに、届かないことを観測できるようにする<span class="cost">代償：「移った」と「消えた」を区別できない。不在は分かるが、直し方は毎回人が決めることになる。構造化の利得（無いことが分かる）は取れるが、突き合わせの自動化は取れない</span></span></div></div></div><div class="blk "><div class="blk-h">案の違いを、図で</div><div class="blk-b"><figure><svg viewBox="0 0 780 320" role="img" aria-label="3案それぞれで、参照が節を指すときの鍵が何になり、節の名前や位置が変わったときに結びがどうなるか">
+<defs>
+ <marker id="i1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>
+ <marker id="i2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--warn)"/></marker>
+ <marker id="i3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--out)"/></marker>
+</defs>
+<text x="8" y="16" font-size="11" fill="var(--muted)">A　節に、変わらない印</text>
+<rect x="8" y="30" width="228" height="38" fill="none" stroke="currentColor" stroke-width="1.3"/>
+<text x="122" y="54" text-anchor="middle" font-size="12" fill="currentColor">指す側の節（参照）</text>
+<line x1="122" y1="68" x2="122" y2="108" stroke="var(--accent)" stroke-width="1.8" marker-end="url(#i1)"/>
+<text x="132" y="92" font-size="11.5" font-weight="700" fill="var(--accent)">SC-01J7Q4K</text>
+<rect x="8" y="114" width="228" height="52" fill="none" stroke="var(--accent)" stroke-width="1.9"/>
+<text x="122" y="134" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--accent)">SC-01J7Q4K</text>
+<text x="122" y="152" text-anchor="middle" font-size="11" fill="var(--muted)">「予約を確定する」</text>
+<text x="8" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
+<rect x="8" y="206" width="228" height="46" fill="none" stroke="var(--accent)" stroke-width="1.9"/>
+<text x="122" y="225" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--accent)">SC-01J7Q4K</text>
+<text x="122" y="242" text-anchor="middle" font-size="11" fill="var(--warn)">「予約を確定できる」</text>
+<text x="8" y="278" font-size="12" font-weight="700" fill="var(--accent)">結びは残る（moved 1）</text>
+<text x="8" y="298" font-size="11" fill="var(--muted)">名前は表示になる。印を採番</text>
+<text x="8" y="314" font-size="11" fill="var(--muted)">できるのは道具だけになる</text>
+
+<line x1="256" y1="8" x2="256" y2="314" stroke="var(--rule)" stroke-width="1"/>
+
+<text x="276" y="16" font-size="11" fill="var(--muted)">B　位置＋移行の宣言</text>
+<rect x="276" y="30" width="228" height="38" fill="none" stroke="currentColor" stroke-width="1.3"/>
+<text x="390" y="54" text-anchor="middle" font-size="12" fill="currentColor">指す側の節（参照）</text>
+<line x1="390" y1="68" x2="390" y2="108" stroke="currentColor" stroke-width="1.6" marker-end="url(#i1)"/>
+<text x="400" y="92" font-size="11.5" font-weight="700" fill="currentColor">doc-7 / §2 / 3番目</text>
+<rect x="276" y="114" width="228" height="52" fill="none" stroke="currentColor" stroke-width="1.6"/>
+<text x="390" y="134" text-anchor="middle" font-size="11.5" fill="currentColor">doc-7 / §2 / 3番目</text>
+<text x="390" y="152" text-anchor="middle" font-size="11" fill="var(--muted)">「予約を確定する」</text>
+<text x="276" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
+<rect x="276" y="206" width="228" height="46" fill="none" stroke="var(--warn)" stroke-width="1.9"/>
+<text x="390" y="225" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--warn)">doc-7 / §4 / 1番目</text>
+<text x="390" y="242" text-anchor="middle" font-size="11" fill="var(--muted)">位置が変わった</text>
+<line x1="390" y1="252" x2="390" y2="262" stroke="var(--warn)" stroke-width="1.6" marker-end="url(#i2)"/>
+<text x="276" y="278" font-size="12" font-weight="700" fill="var(--warn)">宣言が在れば残り、無ければ切れる</text>
+<text x="276" y="298" font-size="11" fill="var(--muted)">そして「書き忘れた」ことは、</text>
+<text x="276" y="314" font-size="11" fill="var(--muted)">どこにも現れない</text>
+
+<line x1="524" y1="8" x2="524" y2="314" stroke="var(--rule)" stroke-width="1"/>
+
+<text x="544" y="16" font-size="11" fill="var(--muted)">C　参照の側に、解決状態</text>
+<rect x="544" y="30" width="228" height="38" fill="none" stroke="var(--out)" stroke-width="1.6"/>
+<text x="658" y="48" text-anchor="middle" font-size="12" fill="currentColor">指す側の節（参照）</text>
+<text x="658" y="63" text-anchor="middle" font-size="10.5" fill="var(--out)">状態：届いた／届かない／外部／検めない</text>
+<line x1="658" y1="68" x2="658" y2="108" stroke="var(--out)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#i3)"/>
+<text x="668" y="92" font-size="11.5" fill="var(--out)">鍵は名前のまま</text>
+<rect x="544" y="114" width="228" height="52" fill="none" stroke="currentColor" stroke-width="1.6"/>
+<text x="658" y="140" text-anchor="middle" font-size="11.5" fill="currentColor">「予約を確定する」</text>
+<text x="544" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
+<rect x="544" y="206" width="228" height="46" fill="none" stroke="var(--out)" stroke-width="1.6" stroke-dasharray="5 4"/>
+<text x="658" y="232" text-anchor="middle" font-size="11.5" fill="var(--warn)">届かない</text>
+<text x="544" y="278" font-size="12" font-weight="700" fill="var(--out)">届かないことは分かる</text>
+<text x="544" y="298" font-size="11" fill="var(--muted)">「移った」のか「消えた」のかは</text>
+<text x="544" y="314" font-size="11" fill="var(--muted)">分からない。人が毎回決める</text>
+</svg><figcaption><b>3案の差は、参照が何を鍵にするかである。</b>名前や位置が動いたとき、A は結びが残り、B は宣言が在るときだけ残り、C は届かないことだけが分かる。<b>C だけは、指される側に何も足さない</b> ── だから A と重ねて採れる。</figcaption></figure><figure><svg viewBox="0 0 780 300" role="img" aria-label="3案それぞれで、段1と段2のどちらに何が増えるか。案Aは段1だけが増え、案Bは両方が増え、案Cは段1が1つ増える">
+<text x="150" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--muted)">段1　全型が継ぐ契約</text>
+<text x="530" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--muted)">段2　8つの型</text>
+<line x1="8" y1="26" x2="772" y2="26" stroke="var(--rule)"/>
+
+<text x="8" y="58" font-size="12" font-weight="700" fill="var(--accent)">A</text>
+<rect x="28" y="38" width="244" height="62" fill="none" stroke="var(--accent)" stroke-width="1.9"/>
+<text x="40" y="56" font-size="11" fill="var(--accent)">・節が印を持つ／採番と不変</text>
+<text x="40" y="74" font-size="11" fill="var(--accent)">・参照は印を指す</text>
+<text x="40" y="92" font-size="11" fill="var(--accent)">・人が読む射影では印を落とす</text>
+<rect x="408" y="38" width="244" height="62" fill="none" stroke="var(--rule)" stroke-width="1.4"/>
+<text x="530" y="66" text-anchor="middle" font-size="12" font-weight="700" fill="var(--muted)">増えない</text>
+<text x="530" y="86" text-anchor="middle" font-size="10.5" fill="var(--muted)">既にある document への後付けの発番だけ</text>
+<text x="668" y="74" font-size="11" fill="var(--accent)">← いま動いている段</text>
+
+<text x="8" y="150" font-size="12" font-weight="700" fill="var(--warn)">B</text>
+<rect x="28" y="118" width="244" height="70" fill="none" stroke="var(--warn)" stroke-width="1.9"/>
+<text x="40" y="138" font-size="11" fill="var(--warn)">・移行の操作を動詞として固定</text>
+<text x="40" y="156" font-size="11" fill="var(--warn)">　（改名・移動・親の付け替え・型変更）</text>
+<text x="40" y="178" font-size="11" font-weight="700" fill="var(--warn)">型が増えるほど、ここが太る</text>
+<rect x="408" y="118" width="244" height="70" fill="none" stroke="var(--warn)" stroke-width="1.9"/>
+<text x="420" y="140" font-size="11" fill="var(--warn)">・各型が、自分の位置の安定を守る</text>
+<text x="420" y="162" font-size="11" fill="var(--warn)">・アドレスが動くたび、それを指す</text>
+<text x="420" y="180" font-size="11" fill="var(--warn)">　参照が全部書き換わる</text>
+<text x="286" y="158" font-size="10.5" fill="var(--warn)">論点6を</text>
+<text x="286" y="174" font-size="10.5" fill="var(--warn)">案A側へ寄せる</text>
+
+<text x="8" y="238" font-size="12" font-weight="700" fill="var(--out)">C</text>
+<rect x="28" y="212" width="244" height="56" fill="none" stroke="var(--out)" stroke-width="1.6"/>
+<text x="40" y="236" font-size="11" fill="var(--out)">・参照の語彙に、型と解決状態</text>
+<text x="40" y="256" font-size="11" font-weight="700" fill="var(--out)">同一性は1つも増えない</text>
+<rect x="408" y="212" width="244" height="56" fill="none" stroke="var(--out)" stroke-width="1.6"/>
+<text x="420" y="236" font-size="11" fill="var(--out)">・各型が、参照の欄で状態を申告</text>
+<text x="420" y="256" font-size="11" fill="var(--out)">・区別は付かないまま、人へ残る</text>
+
+<line x1="8" y1="284" x2="772" y2="284" stroke="var(--rule)"/>
+<text x="8" y="298" font-size="11" fill="var(--muted)">いま再定義しているのは段2 である。段2 に何も置かない案は A だけで、C は A と重ねて採れる。</text>
+</svg><figcaption><b>同じ問いが、どちらの段に荷を置くかの選択でもある。</b>A は段1 だけが増え、段2 は増えない。B は両方が増え、しかも段1 は型が増えるたびに太る。C は段1 に語彙が1つ増え、段2 は申告の欄を持つ。</figcaption></figure></div></div><div class="blk out"><div class="blk-h">落とした案と、その理由</div><div class="blk-b"><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="中身を1文字直すと別物になる。名前も中身も変わって同じであり続けるのがエンティティなので、同一性の定義そのものと衝突する"><b>中身のハッシュを鍵にする</b></mark></b><span class="cost">中身を1文字直すと別物になる。名前も中身も変わって同じであり続けるのがエンティティなので、同一性の定義そのものと衝突する</span></span></div><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="指す側は後から現れる。必要になった時点で発番すると、その時点より前の突き合わせが切れる ── 印の値打ちは、指される前から在ることに尽きる"><b>外から指される節にだけ印を与える</b></mark></b><span class="cost">指す側は後から現れる。必要になった時点で発番すると、その時点より前の突き合わせが切れる ── 印の値打ちは、指される前から在ることに尽きる</span></span></div><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="人が読む単位に機械の鍵が現れる。形式は読み手の認知に従属するという論点2の決着に反し、しかも手書きの印は重複する"><b>人が手で印を書く</b></mark></b><span class="cost">人が読む単位に機械の鍵が現れる。形式は読み手の認知に従属するという論点2の決着に反し、しかも手書きの印は重複する</span></span></div></div></div><div class="blk found"><div class="blk-h">反証で分かったこと</div><div class="blk-b">問いが「要るか」から「同一性を、宣言で持つか位置から導くか」へ変わった。「要らない」に当たるのは案Cだけで、AとBは持ち方の違いである。あわせて、同一性は<b>文書の外から指せること</b>と不可分だと分かった ── JSON Schema に足りない6つのうち「同一性」と「実体どうしの参照」は、同じ1つの穴の両側である。<b>そして C は、A とも両立する</b> ── 排他なのは「指される側に同一性を置くか」だけで、「指す側が解決状態を申告するか」は、どの案を採っても別に決められる</div></div><div class="blk mine"><div class="blk-h">私の推し</div><div class="blk-b"><b>A</b>　参照が実体と実体を結ぶ以上、指される側は実体でなければならない。位置を鍵にすると、参照の妥当性が構造の安定性に依存する ── いま最も動くのが構造である（段1・段2 を再定義中）。実測でも、節を別の親へ移したとき、名前を鍵にした差分は「消えて増えた」と言い、印を鍵にすると「移った」と言って件数が前後で1件も変わらなかった。ただし A を採るなら、人が読む射影で印を落とすことと、印を採番する道具を通さずに節を書けなくすることを、同時に引き受ける</div></div><div class="blk you"><div class="blk-h">あなた</div><div class="blk-b"><span class="ph">記号を選ぶ（どれでもなければ、そう言う）</span></div></div><div class="blk done"><div class="blk-h">決まり</div><div class="blk-b"><span class="ph">選ばれた案が合意になり、次の論点へ</span></div></div></div></div>
 <script>
 (function(){
   const marks = [...document.querySelectorAll('mark.chg')];

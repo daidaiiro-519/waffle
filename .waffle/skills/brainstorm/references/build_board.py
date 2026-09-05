@@ -65,7 +65,8 @@ def _opt(letter: str, name: str, gist: str, cost: str, out: bool = False,
 
 def board(theme: str, no: int, total: int, question: str,
           kept: list[Option], dropped: list[tuple[str, str]] | None = None,
-          found: str | None = None, pick: tuple[str, str] | None = None) -> str:
+          found: str | None = None, pick: tuple[str, str] | None = None,
+          figures: list[tuple[str, str]] | None = None) -> str:
     """論点1つを1枚に組む。
 
     Args:
@@ -77,6 +78,8 @@ def board(theme: str, no: int, total: int, question: str,
         dropped: (落とした案の名前, 落とした理由) の並び。黙って消さない。
         found: 反証で軸そのものが変わったなら、その内容。無ければ省く。
         pick: (推す案の記号, その根拠)。
+        figures: (SVG, 図の読み方) の並び。案の違いを目で見て取れるようにする
+            ── 文字だけで案を説明すると、読み手が像を補完し、そこで解釈がぶれる。
 
     Returns:
         1枚ぶんのHTML。
@@ -91,6 +94,10 @@ def board(theme: str, no: int, total: int, question: str,
     parts.append(_blk("反証を通過した案", "".join(
         _opt(LETTERS[i], o.name, o.gist, o.cost, before=o.before, why=o.why)
         for i, o in enumerate(kept))))
+    if figures:
+        parts.append(_blk("案の違いを、図で", "".join(
+            f'<figure>{svg}<figcaption>{cap}</figcaption></figure>'
+            for svg, cap in figures)))
     if dropped:
         parts.append(_blk("落とした案と、その理由", "".join(
             _opt("×", _mark(f"<b>{n}</b>", "この案は残っていた", why, deleted=True), "", why,
@@ -147,6 +154,10 @@ h1{font-family:"Shippori Mincho B1",serif;font-weight:600;font-size:clamp(24px,3
 .opt.out b{color:var(--out);text-decoration:line-through}
 .opt .t{font-size:13px;line-height:1.75}
 .opt .cost{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+figure{margin:10px 0 0}
+figure+figure{margin-top:18px;padding-top:16px;border-top:1px dashed var(--rule)}
+figure svg{display:block;width:100%;height:auto;color:var(--ink)}
+figcaption{font-size:12px;line-height:1.75;color:var(--muted);margin-top:6px}
 .ph{color:var(--muted);border-bottom:1px dashed var(--rule);padding-bottom:1px}
 
 /* 変わった箇所の印。押すと開く */
