@@ -1,4 +1,4 @@
-<title>CodingSkills の雛形と規約（候補・第3版）</title>
+<title>CodingSkills の雛形と規約（候補・第4版）</title>
 <style>
 :root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
 --move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
@@ -84,20 +84,20 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 </script>
 
 <div class="wrap">
-<h1>CodingSkills の雛形と規約（候補・第3版）</h1>
-<p class="lede"><b>雛形4本と、それを埋めた規約12本である。</b>Rust と Hook の組で、層をまたいで実際に書いた ── 言語（style／failure／test-mechanism／toolchain）、アーキテクチャ（layers／dependency）、言語×アーキテクチャ（layer-mapping／test-placement）、用途（contract／lifecycle／acceptance／stack）。<b>ファイル名は英語、中身は日本語。</b>語も直した ── 採用するツール／実行コマンド／適用範囲外／委譲する判断。</p>
+<h1>CodingSkills の雛形と規約（候補・第4版）</h1>
+<p class="lede"><b>テストに関わる3本を足した。</b>確かめる単位の境界（アーキテクチャ）・重心と計画（用途）・観点の一覧（参照）。<b>カバレッジの下限は置かない</b> ── 数値は振る舞いを保証しないので、未到達の一覧を確かめ漏れの発見にだけ使う。</p>
 
 <div id="bar"><b>変更 0 件</b>
 <button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
-<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="g">参照／語彙<span class="n">0</span></button><button class="tab" role="tab" data-t="a">参照／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="so">参照／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">参照／層ごとの規約<span class="n">0</span></button><button class="tab" role="tab" data-t="au">参照／規約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="t1">雛形／構造<span class="n">0</span></button><button class="tab" role="tab" data-t="t2">雛形／規則<span class="n">0</span></button><button class="tab" role="tab" data-t="t3">雛形／ツール<span class="n">0</span></button><button class="tab" role="tab" data-t="t4">雛形／保証<span class="n">0</span></button><button class="tab" role="tab" data-t="r1">rust／style<span class="n">0</span></button><button class="tab" role="tab" data-t="r2">rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="r3">rust／test-mechanism<span class="n">0</span></button><button class="tab" role="tab" data-t="r4">rust／toolchain<span class="n">0</span></button><button class="tab" role="tab" data-t="h1">hexagonal／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="h2">hexagonal／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="b1">rust×hexagonal／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="b2">rust×hexagonal／test-placement<span class="n">0</span></button><button class="tab" role="tab" data-t="k1">hook／contract<span class="n">0</span></button><button class="tab" role="tab" data-t="k2">hook／lifecycle<span class="n">0</span></button><button class="tab" role="tab" data-t="k3">hook／acceptance<span class="n">0</span></button><button class="tab" role="tab" data-t="k4">hook／stack<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="g">参照／語彙<span class="n">0</span></button><button class="tab" role="tab" data-t="a">参照／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="so">参照／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">参照／層ごとの規約<span class="n">0</span></button><button class="tab" role="tab" data-t="tp">参照／テスト観点<span class="n">0</span></button><button class="tab" role="tab" data-t="au">参照／規約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="t1">雛形／構造<span class="n">0</span></button><button class="tab" role="tab" data-t="t2">雛形／規則<span class="n">0</span></button><button class="tab" role="tab" data-t="t3">雛形／ツール<span class="n">0</span></button><button class="tab" role="tab" data-t="t4">雛形／保証<span class="n">0</span></button><button class="tab" role="tab" data-t="r1">rust／style<span class="n">0</span></button><button class="tab" role="tab" data-t="r2">rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="r3">rust／test-mechanism<span class="n">0</span></button><button class="tab" role="tab" data-t="r4">rust／toolchain<span class="n">0</span></button><button class="tab" role="tab" data-t="h1">hexagonal／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="h2">hexagonal／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="h3">hexagonal／test-boundaries<span class="n">0</span></button><button class="tab" role="tab" data-t="b1">rust×hexagonal／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="b2">rust×hexagonal／test-placement<span class="n">0</span></button><button class="tab" role="tab" data-t="k1">hook／contract<span class="n">0</span></button><button class="tab" role="tab" data-t="k2">hook／lifecycle<span class="n">0</span></button><button class="tab" role="tab" data-t="k3">hook／acceptance<span class="n">0</span></button><button class="tab" role="tab" data-t="k5">hook／test-strategy<span class="n">0</span></button><button class="tab" role="tab" data-t="k4">hook／stack<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
 <section class="pane md" data-k="s" hidden><div class="doc"><hr>
 <p>name: coding-skills<br>description: 目的と言語を受け取り、その場面に効く規約を集めて、それに従ってコードを書くときに使う。規約が足りないときは、書く前に規約を起こす手順へ回す。「Goでバックエンドを書く」「RustでHookを書く」「この規約に沿って実装して」と言われたときに使う。</p>
 <hr>
 <h2>目的</h2>
 <p><strong>その場面に効く規約だけを集め、それに従って書く。</strong><br>規約が持つ規則は選択肢を減らす言明であり、<strong>どの規則にも、それが真であり続ける範囲がある</strong>。<br>範囲は軸（言語・アーキテクチャ・用途・実行環境）の組み合わせで決まる。</p>
-<p><strong>このSkillは、書きながら規約を作らない。</strong><br>足りないと分かったら、書く手を止めて <code>references/規約の起こし方.md</code> へ回る。<br><strong>新しい言語・アーキテクチャ・用途が来たら、そこで規約を新しく起こす</strong> ── ただし作る手順を通り、人の承認を経てからである。</p>
-<div class="wrap"><table><tr><th>語</th><th>何を指すか</th></tr><tr><td>規約</td><td>1本の文書。ファイル1つ。<strong>種別ごとに構造が違う</strong>（構造／規則／道具／保証）</td></tr><tr><td>規則</td><td>守るべき言明1件。規則の規約と保証の規約だけが持つ</td></tr></table></div>
-<p><strong>語の一覧は <code>references/語彙.md</code> にある。</strong></p>
+<p><strong>このSkillは、書きながら規約を作らない。</strong><br>足りないと分かったら、書く手を止めて <code>references/authoring.md</code> へ回る。<br><strong>新しい言語・アーキテクチャ・用途が来たら、そこで規約を新しく起こす</strong> ── ただし作る手順を通り、人の承認を経てからである。</p>
+<div class="wrap"><table><tr><th>語</th><th>何を指すか</th></tr><tr><td>規約</td><td>1本の文書。ファイル1つ<strong> ── 種別ごとに構造が違う</strong>（構造／規則／道具／保証）</td></tr><tr><td>規則</td><td>守るべき言明1件。規則の規約と保証の規約だけが持つ</td></tr></table></div>
+<p><strong>語の一覧は <code>references/glossary.md</code> にある。</strong></p>
 <hr>
 <h2>役割</h2>
 <p>- 入力の軸の値から、合致する規約を集める<br>- 集めた規約が、同じ対象について食い違っていないかを見る<br>- 検証できる規則はテストへ、それ以外は書き方の拘束として実装へ渡す<br>- 足りない規約に気づいたら、書く前に作る手順へ回す</p>
@@ -120,7 +120,7 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <h3>Step 3: 食い違いを見る</h3>
 <p><strong>同じ対象について2つの規則があれば、そこで止める。</strong><br>片方が「下位へ委ねる判断」と宣言していれば、食い違いではない。</p>
 <h3>Step 4: 足りなければ、作る手順へ回す</h3>
-<div class="wrap"><table><tr><th>状態</th><th>次にすること</th></tr><tr><td>必要な規約が揃っている</td><td>Step 5 へ進む</td></tr><tr><td><strong>足りない</strong></td><td><strong>書かずに止める</strong> ── <code>references/規約の起こし方.md</code> へ回り、承認を経てから Step 2 へ戻る</td></tr></table></div>
+<div class="wrap"><table><tr><th>状態</th><th>次にすること</th></tr><tr><td>必要な規約が揃っている</td><td>Step 5 へ進む</td></tr><tr><td><strong>足りない</strong></td><td><strong>書かずに止める</strong> ── <code>references/authoring.md</code> へ回り、承認を経てから Step 2 へ戻る</td></tr></table></div>
 <p><strong>書きながら規則を足さない。</strong><br>承認を経ていない規則は正本に入らず、次に同じ場面が来ても再現しない。<br><strong>足りないのが規則1件でも、規約1本まるごとでも、作る手順の入り方は変わらない。</strong></p>
 <h3>Step 5: 振る舞いを先に置く</h3>
 <p><strong>規則は実装より先に在る。</strong><br>検証できる規則をテストへ落とし、失敗させてから実装する。<br><strong>実装を読んでからテストを書かない</strong> ── 実装の範囲内の振る舞いしか書けなくなる。</p>
@@ -135,11 +135,11 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <p>- <strong>書きながら規則を足さない。</strong><br>足りないと分かったら、作る手順へ回す<br>- <strong>実装を読んでからテストを書かない。</strong><br>規則が先に在る<br>- <strong>軸の値を推測しない。</strong><br>分からなければ聞く<br>- <strong>集めた規則を要約しない</strong> ── 言明はそのまま当てる<br>- <strong>プロジェクト固有の決めごとを規則として扱わない</strong> ──<br>出典を持たないものは規則ではない<br>- <strong>穴（各自が決める）の外を特殊化しない。</strong><br>必要なら、上の層の規約を直す</p>
 <hr>
 <h2>参照</h2>
-<p>- <code>references/規約の起こし方.md</code>: 規約を新しく起こす手順（原典を落とす → 書く → 承認）<br>- <code>references/軸.md</code>: 軸の定義と、軸を足すときの判定<br>- <code>references/出典.md</code>: 何を出典として認めるか<br>- <code>references/層ごとの文書.md</code>: どの層に、どの文書を置くか<br>- <code>references/語彙.md</code>: この Skill が使う語<br>- <code>templates/構造の規約.md</code>: 層や依存を宣言する規約の雛形<br>- <code>templates/規則の規約.md</code>: 守るべき言明を並べる規約の雛形<br>- <code>templates/道具の規約.md</code>: 道具と版を定める規約の雛形<br>- <code>templates/保証の規約.md</code>: 保証する振る舞いを定める規約の雛形</p></div></section><section class="pane md" data-k="g" hidden><div class="doc"><h1>語彙 ── この Skill が使う語</h1>
+<p>- <code>references/authoring.md</code>: 規約を新しく起こす手順（原典を落とす → 書く → 承認）<br>- <code>references/axes.md</code>: 軸の定義と、軸を足すときの判定<br>- <code>references/sources.md</code>: 何を出典として認めるか<br>- <code>references/layer-documents.md</code>: どの層に、どの規約を置くか<br>- <code>references/test-perspectives.md</code>: テスト観点の一覧（採るかどうかは用途の規約が決める）<br>- <code>references/glossary.md</code>: この Skill が使う語<br>- <code>templates/structure.md</code>: 層や依存を宣言する規約の雛形<br>- <code>templates/rules.md</code>: 守るべき言明を並べる規約の雛形<br>- <code>templates/toolchain.md</code>: ツールと版を定める規約の雛形<br>- <code>templates/assurance.md</code>: 保証する振る舞いを定める規約の雛形</p></div></section><section class="pane md" data-k="g" hidden><div class="doc"><h1>語彙 ── この Skill が使う語</h1>
 <h2>概要</h2>
 <p><strong>同じ意味に2つの語を当てず、違う意味に同じ語を当てない。</strong><br>迷ったら、この表に戻る。</p>
 <h2>語</h2>
-<div class="wrap"><table><tr><th>語</th><th>何を指すか</th><th>例</th></tr><tr><td><strong>規約</strong></td><td>1本の文書。ファイル1つ。<strong>種別ごとに構造が違う</strong></td><td><code>constraints/lang.rust/failure.md</code></td></tr><tr><td><strong>規則</strong></td><td>守るべき言明1件。規則の規約と保証の規約だけが持つ</td><td>「回復できる失敗は <code>Result</code> で返す」</td></tr><tr><td><strong>宣言</strong></td><td>構造や道具を並べた表と図。規則ではない</td><td>層の一覧、依存の可否、道具と版</td></tr><tr><td><strong>軸</strong></td><td>変えられるもの。言語・アーキテクチャ・用途・実行環境</td><td>言語＝<code>rust</code></td></tr><tr><td><strong>種別</strong></td><td>規約の型。構造／規則／道具／保証の4つ</td><td><code>failure.md</code> は規則</td></tr><tr><td><strong>層</strong></td><td>その規約が依存する軸の集合。宣言から導出される</td><td><code>lang.rust+arch.hexagonal</code></td></tr><tr><td><strong>下位へ委ねる判断</strong></td><td>上位が決めず、下位が決めてよいと宣言した1点</td><td>失敗の列挙の粒度</td></tr><tr><td><strong>正本</strong></td><td>承認を経た規約が置かれる場所</td><td><code>constraints/</code> の下</td></tr><tr><td><strong>集める</strong></td><td>軸の値が一致した規約を、正本から取り出すこと</td><td><code>scripts/collect.py</code></td></tr></table></div>
+<div class="wrap"><table><tr><th>語</th><th>何を指すか</th><th>例</th></tr><tr><td><strong>規約</strong></td><td>1本の文書。ファイル1つ<strong> ── 種別ごとに構造が違う</strong></td><td><code>constraints/lang.rust/failure.md</code></td></tr><tr><td><strong>規則</strong></td><td>守るべき言明1件。規則の規約と保証の規約だけが持つ</td><td>「回復できる失敗は <code>Result</code> で返す」</td></tr><tr><td><strong>宣言</strong></td><td>構造や道具を並べた表と図。規則ではない</td><td>層の一覧、依存の可否、道具と版</td></tr><tr><td><strong>軸</strong></td><td>変えられるもの。言語・アーキテクチャ・用途・実行環境</td><td>言語＝<code>rust</code></td></tr><tr><td><strong>種別</strong></td><td>規約の型。構造／規則／道具／保証の4つ</td><td><code>failure.md</code> は規則</td></tr><tr><td><strong>層</strong></td><td>その規約が依存する軸の集合。宣言から導出される</td><td><code>lang.rust+arch.hexagonal</code></td></tr><tr><td><strong>下位へ委ねる判断</strong></td><td>上位が決めず、下位が決めてよいと宣言した1点</td><td>失敗の列挙の粒度</td></tr><tr><td><strong>正本</strong></td><td>承認を経た規約が置かれる場所</td><td><code>constraints/</code> の下</td></tr><tr><td><strong>集める</strong></td><td>軸の値が一致した規約を、正本から取り出すこと</td><td><code>scripts/collect.py</code></td></tr></table></div>
 <h2>使わない語</h2>
 <div class="wrap"><table><tr><th>使わない語</th><th>代わりに</th><th>なぜ</th></tr><tr><td>ルール</td><td>規則／規約</td><td>1件を指すのか文書を指すのかが決まらない</td></tr><tr><td>ガイドライン</td><td>規則</td><td>守らなくてよいものに見える。守らなくてよいなら、規則として置かない</td></tr><tr><td>ベストプラクティス</td><td>規則 ＋ 出典</td><td>出典を持たない言明は、この Skill では置けない</td></tr></table></div>
 <h2>数え方</h2>
@@ -163,7 +163,7 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <h2>認める出典</h2>
 <div class="wrap"><table><tr><th>種類</th><th>何を指すか</th><th>添えるもの</th></tr><tr><td>規格</td><td>言語仕様、RFC、プロトコルの仕様</td><td>版と、原文で照合する文字列</td></tr><tr><td>原典</td><td>公式ガイド、公式リファレンス、確立した文献</td><td>落とした日と、原文で照合する文字列</td></tr><tr><td>実測</td><td>自分で数えた記録</td><td>測った対象、件数、測った日</td></tr></table></div>
 <h2>認めない出典</h2>
-<div class="wrap"><table><tr><th>種類</th><th>なぜ認めないか</th></tr><tr><td>このプロジェクトの決めごと</td><td>場面が変われば成り立たない。<strong>入れた時点で、どの場面でも同じ答えを返すという前提が壊れる</strong></td></tr><tr><td>要約されたもの</td><td>言い換えた時点で、原典とは別のものになる</td></tr><tr><td>出典を持たない経験則</td><td>正しいかもしれないが、確かめる先が無い</td></tr></table></div>
+<div class="wrap"><table><tr><th>種類</th><th>なぜ認めないか</th></tr><tr><td>このプロジェクトの決めごと</td><td>場面が変われば成り立たない<strong> ── 入れた時点で、どの場面でも同じ答えを返すという前提が壊れる</strong></td></tr><tr><td>要約されたもの</td><td>言い換えた時点で、原典とは別のものになる</td></tr><tr><td>出典を持たない経験則</td><td>正しいかもしれないが、確かめる先が無い</td></tr></table></div>
 <h2>照合の仕方</h2>
 <div class="wrap"><table><tr><th>手順</th><th>内容</th></tr><tr><td>1</td><td>原文を落とし、落とした日と <code>sha256</code> を残す</td></tr><tr><td>2</td><td>規則が使う識別子を、<strong>原文の文字列でそのまま照合する</strong></td></tr><tr><td>3</td><td>照合できなかった識別子は、原典の名前として書かない</td></tr></table></div>
 <p><strong>URL だけでは足りない。</strong><br>指す先に届いているかを、誰も確かめられないためである。</p>
@@ -174,14 +174,28 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <h2>決められること／決められないこと</h2>
 <div class="wrap"><table><tr><th>層</th><th>決められる</th><th>決められない</th></tr><tr><td>言語</td><td>綴りと書式、失敗の運び方、並行の単位、テストが走る仕組み、標準の道具</td><td>どんな層があるか（アーキテクチャが決める）／何を保証するか（用途が決める）</td></tr><tr><td>アーキテクチャ</td><td>層の名前、依存の向き、層ごとの責務</td><td>それを何で表すか（言語が決める）</td></tr><tr><td>言語 × アーキテクチャ</td><td>層を何で表すか、向きを何で守るか、テストの置き場所</td><td>何を保証するか（用途が決める）</td></tr><tr><td>用途</td><td>外との契約、起動と終了、保証する振る舞い、採るアーキテクチャ、採る道具</td><td>── ここが可変で、上の3層が空けた穴を埋める</td></tr></table></div>
 <h2>置く規約</h2>
-<div class="wrap"><table><tr><th>層</th><th>規約</th><th>その規約が決めること</th></tr><tr><td><code>lang.&lt;言語&gt;</code></td><td><code>style.md</code></td><td>綴りと書式</td></tr><tr><td></td><td><code>failure.md</code></td><td>失敗の運び方</td></tr><tr><td></td><td><code>test-mechanism.md</code></td><td>テストが走る仕組みと、書き方</td></tr><tr><td></td><td><code>toolchain.md</code></td><td>標準の道具と、その版</td></tr><tr><td><code>arch.&lt;様式&gt;</code></td><td><code>layers.md</code></td><td>層の名前と、層ごとの責務</td></tr><tr><td></td><td><code>dependency.md</code></td><td>依存の向き</td></tr><tr><td><code>lang.&lt;言語&gt;+arch.&lt;様式&gt;</code></td><td><code>layer-mapping.md</code></td><td>層を何で表し、向きを何で守るか</td></tr><tr><td></td><td><code>test-placement.md</code></td><td>テストをどこに置くか</td></tr><tr><td><code>purpose.&lt;用途&gt;</code></td><td><code>contract.md</code></td><td>外との契約</td></tr><tr><td></td><td><code>lifecycle.md</code></td><td>起動と終了</td></tr><tr><td></td><td><code>acceptance.md</code></td><td>何を保証するか</td></tr><tr><td></td><td><code>stack.md</code></td><td>採るアーキテクチャと道具</td></tr></table></div>
+<div class="wrap"><table><tr><th>層</th><th>規約</th><th>その規約が決めること</th></tr><tr><td><code>lang.&lt;言語&gt;</code></td><td><code>style.md</code></td><td>綴りと書式</td></tr><tr><td></td><td><code>failure.md</code></td><td>失敗の運び方</td></tr><tr><td></td><td><code>test-mechanism.md</code></td><td>テストが走る仕組みと、書き方</td></tr><tr><td></td><td><code>toolchain.md</code></td><td>標準の道具と、その版</td></tr><tr><td><code>arch.&lt;様式&gt;</code></td><td><code>layers.md</code></td><td>層の名前と、層ごとの責務</td></tr><tr><td></td><td><code>dependency.md</code></td><td>依存の向き</td></tr><tr><td></td><td><code>test-boundaries.md</code></td><td>確かめる単位の境界（何を単体とし、何を結合とするか）</td></tr><tr><td><code>lang.&lt;言語&gt;+arch.&lt;様式&gt;</code></td><td><code>layer-mapping.md</code></td><td>層を何で表し、向きを何で守るか</td></tr><tr><td></td><td><code>test-placement.md</code></td><td>テストをどこに置くか</td></tr><tr><td><code>purpose.&lt;用途&gt;</code></td><td><code>contract.md</code></td><td>外との契約</td></tr><tr><td></td><td><code>lifecycle.md</code></td><td>起動と終了</td></tr><tr><td></td><td><code>acceptance.md</code></td><td>何を保証するか</td></tr><tr><td></td><td><code>test-strategy.md</code></td><td>テストの重心と計画、採る観点、カバレッジの扱い</td></tr><tr><td></td><td><code>stack.md</code></td><td>採るアーキテクチャとツール</td></tr></table></div>
 <h2>種別</h2>
 <p><strong>種別は、規約の型である。</strong><br>どの雛形を写すかが、種別で決まる。</p>
-<div class="wrap"><table><tr><th>種別</th><th>雛形</th><th>中身の形</th><th>当たる規約</th></tr><tr><td>構造</td><td><code>templates/構造の規約.md</code></td><td>表と Mermaid で宣言する</td><td><code>layers.md</code> <code>dependency.md</code> <code>layer-mapping.md</code> <code>contract.md</code> <code>lifecycle.md</code></td></tr><tr><td>規則</td><td><code>templates/規則の規約.md</code></td><td>守るべき言明の並び。適合例と違反例を添える</td><td><code>style.md</code> <code>failure.md</code> <code>test-placement.md</code></td></tr><tr><td>道具</td><td><code>templates/道具の規約.md</code></td><td>道具と版の表。走らせる命令</td><td><code>toolchain.md</code> <code>stack.md</code></td></tr><tr><td>保証</td><td><code>templates/保証の規約.md</code></td><td>保証する振る舞いと、確かめる単位</td><td><code>test-mechanism.md</code> <code>acceptance.md</code></td></tr></table></div>
+<div class="wrap"><table><tr><th>種別</th><th>雛形</th><th>中身の形</th><th>当たる規約</th></tr><tr><td>構造</td><td><code>templates/structure.md</code></td><td>表と Mermaid で宣言する</td><td><code>layers.md</code> <code>dependency.md</code> <code>layer-mapping.md</code> <code>contract.md</code> <code>lifecycle.md</code></td></tr><tr><td>規則</td><td><code>templates/rules.md</code></td><td>守るべき言明の並び。適合例と違反例を添える</td><td><code>style.md</code> <code>failure.md</code> <code>test-placement.md</code></td></tr><tr><td>ツール</td><td><code>templates/toolchain.md</code></td><td>ツールと版の表。実行コマンド</td><td><code>toolchain.md</code> <code>stack.md</code></td></tr><tr><td>保証</td><td><code>templates/assurance.md</code></td><td>保証する振る舞いと、確かめる単位</td><td><code>test-mechanism.md</code> <code>test-boundaries.md</code> <code>acceptance.md</code> <code>test-strategy.md</code></td></tr></table></div>
 <p><strong>構造と道具は宣言であって、規則ではない。</strong><br>層の構成やフォルダの並びを、守るべき言明の羅列では表せない。</p>
 <div class="wrap"><table><tr><th>引きたいこと</th><th>どう引くか</th></tr><tr><td>この場面に効く規約を全部</td><td>軸の値で集める</td></tr><tr><td>構造の宣言だけ</td><td>種別で絞る</td></tr></table></div>
 <h2>空のマス</h2>
-<p><strong>その層で決まらないことの規約は、作らない。</strong><br>言語の層に「層と依存の向き」は無いので、<code>lang.go/dependency.md</code> は置かない。</p></div></section><section class="pane md" data-k="au" hidden><div class="doc"><h1>規約の起こし方 ── 作る手順</h1>
+<p><strong>その層で決まらないことの規約は、作らない。</strong><br>言語の層に「層と依存の向き」は無いので、<code>lang.go/dependency.md</code> は置かない。</p></div></section><section class="pane md" data-k="tp" hidden><div class="doc"><h1>テスト観点 ── 何を確かめるかの一覧</h1>
+<h2>概要</h2>
+<p><strong>観点は、規約ではなく技法である。</strong><br>言語にも用途にも依らないので、ここに一覧を置き、<strong>採るかどうかは用途の規約が宣言する</strong>。</p>
+<h2>観点</h2>
+<div class="wrap"><table><tr><th>観点</th><th>何を確かめるか</th><th>効く場面</th></tr><tr><td>正常系</td><td>期待された入力で、期待された結果になる</td><td>すべて</td></tr><tr><td>境界値</td><td>上限・下限・その前後で振る舞いが変わらない</td><td>上限が契約に在るとき</td></tr><tr><td>異常系</td><td>壊れた入力・欠けた入力を、失敗として扱う</td><td>外部から入力を受けるとき</td></tr><tr><td>冪等性</td><td>同じ入力を2度与えても、結果が同じになる</td><td>再試行される可能性があるとき</td></tr><tr><td>順序非依存</td><td>実行の順を変えても結果が変わらない</td><td>並列に走るとき</td></tr><tr><td>並行性</td><td>同時に走らせても、状態が壊れない</td><td>常駐して複数を受けるとき</td></tr><tr><td>障害注入</td><td>外部が失敗したとき、こちらが壊れない</td><td>外部へ依存するとき</td></tr><tr><td>資源の解放</td><td>失敗した経路でも、資源が返る</td><td>ファイル・接続を持つとき</td></tr><tr><td>後方互換</td><td>前の版の入力を、いまの版が受け付ける</td><td>契約を公開しているとき</td></tr><tr><td>性質テスト</td><td>入力を機械的に広げても、性質が保たれる</td><td>入力の形が広いとき</td></tr></table></div>
+<h2>採り方</h2>
+<div class="wrap"><table><tr><th>手順</th><th>内容</th></tr><tr><td>1</td><td>用途の契約を読み、そこに現れる制限（上限・順序・再試行）を書き出す</td></tr><tr><td>2</td><td>制限に対応する観点だけを採る</td></tr><tr><td>3</td><td>採らない観点は、<strong>採らない理由を書く</strong></td></tr></table></div>
+<p><strong>全部を採らない。</strong><br>採る理由が書けない観点は、確かめる対象が無い。</p>
+<h2>観点と単位の対応</h2>
+<div class="wrap"><table><tr><th>観点</th><th>確かめる単位</th></tr><tr><td>正常系・境界値・異常系</td><td>単体</td></tr><tr><td>冪等性・後方互換</td><td>端から端まで</td></tr><tr><td>順序非依存・資源の解放</td><td>単体・結合</td></tr><tr><td>並行性・障害注入</td><td>結合</td></tr><tr><td>性質テスト</td><td>単体</td></tr></table></div>
+<h2>カバレッジ</h2>
+<p><strong>下限を規約にしない。</strong><br>数値は「どれだけ実行されたか」であって、「何を確かめたか」ではない。</p>
+<div class="wrap"><table><tr><th>使い方</th><th>内容</th></tr><tr><td>使う</td><td>未到達の行を一覧し、確かめ漏れを探す</td></tr><tr><td>使わない</td><td>下限を通過の条件にする</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>文献</td><td>ISTQB Foundation Level Syllabus（テスト技法の分類）</td><td>《版・取得日》</td><td><code>test techniques</code></td></tr><tr><td>文献</td><td>Mike Cohn &quot;Succeeding with Agile&quot;（配分）</td><td>《版・取得日》</td><td><code>test automation pyramid</code></td></tr></table></div></div></section><section class="pane md" data-k="au" hidden><div class="doc"><h1>規約の起こし方 ── 作る手順</h1>
 <h2>概要</h2>
 <p><strong>規約は、書く手順の中では作らない。</strong><br>足りないと分かったら、この手順へ回る。承認を経たものだけが正本に入る。</p>
 <h2>手順</h2>
@@ -494,7 +508,7 @@ fn test_read_port_2() {
     classDef o fill:#f7f1ea,stroke:#9a5b2c;
     class app,model,port c
     class inbound,outbound o</pre>
-<p><strong>矢印の向きが依存の向きである。</strong><br>実線は参照、破線は実装を表す。<strong>出力アダプタから出力ポートへの矢印だけが逆向きに見えるのは、依存が反転しているためである。</strong></p>
+<p><strong>矢印の向きが依存の向きである。</strong><br>実線は参照、破線は実装を表す。<strong><br>出力アダプタから出力ポートへの矢印だけが逆向きに見えるのは、依存が反転しているためである。</strong></p>
 <h2>境界を越えるデータ</h2>
 <div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>呼び出し元 → 入力アダプタ</td><td>外部の形式（JSON など）</td><td>入力アダプタ</td></tr><tr><td>入力アダプタ → 業務操作</td><td>業務操作が定める入力の型</td><td>入力アダプタ</td></tr><tr><td>業務操作 → 出力ポート</td><td>業務モデルの型</td><td>変換しない</td></tr><tr><td>出力ポート → 出力アダプタ</td><td>業務モデルの型</td><td>出力アダプタ</td></tr></table></div>
 <h2>ディレクトリ構成</h2>
@@ -545,7 +559,27 @@ fn test_read_port_2() {
 <h2>委譲する判断</h2>
 <div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>出力ポートの粒度（1機能ごとか、まとめるか）</td><td>用途</td><td>外部との契約の数で決まる</td></tr></table></div>
 <h2>出典</h2>
-<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>文献</td><td>Robert C. Martin &quot;The Dependency Inversion Principle&quot;</td><td>《版・取得日》</td><td><code>depend upon abstractions</code></td></tr></table></div></div></section><section class="pane md" data-k="b1" hidden><div class="doc"><hr>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>文献</td><td>Robert C. Martin &quot;The Dependency Inversion Principle&quot;</td><td>《版・取得日》</td><td><code>depend upon abstractions</code></td></tr></table></div></div></section><section class="pane md" data-k="h3" hidden><div class="doc"><hr>
+<p>id: arch.hexagonal.test-boundaries<br>layer: arch.hexagonal<br>axes:<br>  - axis: architecture<br>    value: hexagonal<br>category: test<br>declares: 確かめる単位の境界<br>updated: 2026-09-05</p>
+<hr>
+<h1>確かめる単位の境界</h1>
+<h2>概要</h2>
+<p><strong>層があるから、確かめる単位が決まる。</strong><br>何を単体とし、何を結合とするかは、層の境界がそのまま答えになる。</p>
+<h2>保証する振る舞い</h2>
+<div class="wrap"><table><tr><th>ID</th><th>振る舞い</th><th>検証の単位</th><th>前提条件</th><th>失敗したときの現れ方</th></tr><tr><td>HX-TB-01</td><td>業務モデルの規則は、外部を用意せずに確かめられる</td><td>単体</td><td>業務モデルが外部技術を知らない</td><td>テストに外部の準備が要る</td></tr><tr><td>HX-TB-02</td><td>業務操作は、出力ポートの偽物だけで確かめられる</td><td>単体</td><td>出力ポートが宣言されている</td><td>テストに実装アダプタが要る</td></tr><tr><td>HX-TB-03</td><td>出力アダプタは、出力ポートの契約を満たす</td><td>結合</td><td>実装が1つ以上ある</td><td>差し替えると振る舞いが変わる</td></tr><tr><td>HX-TB-04</td><td>入力アダプタは、外部の形式を業務操作の入力へ写す</td><td>結合</td><td>入力の型が定まっている</td><td>形式の変換で欠落が出る</td></tr></table></div>
+<h2>保証しない振る舞い</h2>
+<div class="wrap"><table><tr><th>何を</th><th>保証しない理由</th><th>代わりに何で担保するか</th></tr><tr><td>外部サービスの実際の応答</td><td>この層では外部が何かを知らない</td><td>用途の保証規約</td></tr><tr><td>性能</td><td>層の構造からは決まらない</td><td>用途の保証規約</td></tr></table></div>
+<h2>単位の対応</h2>
+<div class="wrap"><table><tr><th>確かめる単位</th><th>対象</th><th>用意するもの</th><th>用意しないもの</th></tr><tr><td>単体</td><td>業務モデル</td><td>なし</td><td>出力ポートの偽物も要らない</td></tr><tr><td>単体</td><td>業務操作</td><td>出力ポートの偽物</td><td>実装アダプタ、外部技術</td></tr><tr><td>結合（契約）</td><td>出力アダプタ</td><td>実装1つと、外部技術の代役</td><td>業務操作</td></tr><tr><td>結合（境界）</td><td>入力アダプタ</td><td>業務操作の偽物</td><td>外部技術</td></tr><tr><td>端から端まで</td><td>全体</td><td>実行できる形の全体</td><td>─</td></tr></table></div>
+<h2>契約のテスト</h2>
+<p><strong>出力ポートに実装が2つ以上あるなら、同じ試験を両方へ当てる。</strong><br>片方だけが満たす契約は、契約ではなく実装の都合である。</p>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>対象</td><td>出力ポートの実装すべて</td></tr><tr><td>方法</td><td>同じ試験の集合を、実装ごとに走らせる</td></tr><tr><td>落ちる条件</td><td>実装によって結果が変わる</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>テストが走る仕組み</td><td>言語</td></tr><tr><td>テストの置き場所</td><td>言語 × アーキテクチャ</td></tr><tr><td>どの単位にどれだけ厚みを置くか</td><td>用途</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>端から端までのテストを持つかどうか</td><td>用途</td><td>外部との接続の有無で決まる</td></tr><tr><td>偽物を手で書くか、道具で作るか</td><td>言語</td><td>言語の仕組みで変わる</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>HX-TB-03</td><td>文献</td><td>Martin Fowler &quot;Contract Test&quot;</td><td>《版・取得日》</td><td><code>contract test</code></td></tr><tr><td>HX-TB-01</td><td>文献</td><td>Alistair Cockburn &quot;Hexagonal Architecture&quot;</td><td>《版・取得日》</td><td><code>ports and adapters</code></td></tr></table></div></div></section><section class="pane md" data-k="b1" hidden><div class="doc"><hr>
 <p>id: lang.rust+arch.hexagonal.layer-mapping<br>layer: lang.rust+arch.hexagonal<br>axes:<br>  - axis: language<br>    value: rust<br>  - axis: architecture<br>    value: hexagonal<br>category: architecture<br>declares: 層を Rust の仕組みで表す形<br>updated: 2026-09-05</p>
 <hr>
 <h1>Rust における層の表し方</h1>
@@ -743,7 +777,30 @@ pub struct InMemoryHookStore { /* … */ }</pre>
 <h2>委譲する判断</h2>
 <div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>性質テストで入力を広げるか</td><td>実装</td><td>要求の形の幅で決まる</td></tr></table></div>
 <h2>出典</h2>
-<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>HK-AC-01</td><td>規格</td><td>呼び出し元の Hook 仕様（応答の形式）</td><td>《版・取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr><tr><td>HK-AC-04</td><td>規格</td><td>同（要求の上限）</td><td>《版・取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="k4" hidden><div class="doc"><hr>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>HK-AC-01</td><td>規格</td><td>呼び出し元の Hook 仕様（応答の形式）</td><td>《版・取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr><tr><td>HK-AC-04</td><td>規格</td><td>同（要求の上限）</td><td>《版・取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="k5" hidden><div class="doc"><hr>
+<p>id: purpose.hook.test-strategy<br>layer: purpose.hook<br>axes:<br>  - axis: purpose<br>    value: hook<br>  - axis: runtime<br>    value: per-invocation<br>category: test<br>declares: テストの重心と計画<br>updated: 2026-09-05</p>
+<hr>
+<h1>Hook のテストの重心と計画</h1>
+<h2>概要</h2>
+<p><strong>外から観測できるのは標準入出力と終了コードだけなので、端から端までを厚く持つ。</strong></p>
+<h2>保証する振る舞い</h2>
+<div class="wrap"><table><tr><th>ID</th><th>振る舞い</th><th>検証の単位</th><th>前提条件</th><th>失敗したときの現れ方</th></tr><tr><td>HK-TS-01</td><td>重心の配分どおりにテストが在る</td><td>─</td><td>単位ごとに件数を数えられる</td><td>端から端までが薄いまま公開される</td></tr><tr><td>HK-TS-02</td><td>すべてのテストが、変更のたびに走る</td><td>─</td><td>実行が1つの命令で済む</td><td>走らないテストが残る</td></tr></table></div>
+<h2>重心</h2>
+<div class="wrap"><table><tr><th>確かめる単位</th><th>重心</th><th>根拠</th></tr><tr><td>単体</td><td>高</td><td>業務モデルと業務操作は、外部を用意せずに確かめられる</td></tr><tr><td>結合</td><td>中</td><td>入力アダプタの形式変換と、出力アダプタの契約を確かめる</td></tr><tr><td>端から端まで</td><td><strong>高</strong></td><td>呼び出し元から観測できるのは、標準入出力と終了コードだけである</td></tr><tr><td>性能</td><td>低</td><td>起動時間だけを見る。それ以外の要求が無い</td></tr></table></div>
+<p><strong>端から端までを高くするのは、この用途では外部との接触面が狭いためである。</strong><br>接触面が広い用途（バックエンドAPI）では、同じ配分にならない。</p>
+<h2>採るテスト観点</h2>
+<div class="wrap"><table><tr><th>観点</th><th>採否</th><th>理由</th></tr><tr><td>境界値</td><td>採る</td><td>要求の上限（1 MiB）が契約に在る</td></tr><tr><td>異常系</td><td>採る</td><td>壊れた要求の扱いが契約に在る</td></tr><tr><td>冪等性</td><td>採る</td><td>同じ要求に同じ応答を返すことを保証している</td></tr><tr><td>並行性</td><td>採らない</td><td>呼び出しごとに1件だけを処理する</td></tr><tr><td>障害注入</td><td>採らない</td><td>外部への通信を持たない</td></tr><tr><td>性質テスト</td><td>保留</td><td>要求の形の幅を見てから決める</td></tr></table></div>
+<p><strong>観点の一覧は <code>references/test-perspectives.md</code> にある。</strong></p>
+<h2>テストの計画</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>実行のタイミング</td><td>コミット前（ローカル）と、変更の取り込み時（CI）</td></tr><tr><td>通過の条件</td><td>すべてのテストが緑であること</td></tr><tr><td>実行の上限</td><td>全体で30秒以内。超えたら、遅いテストを結合から単体へ落とす</td></tr><tr><td>対象外</td><td>負荷試験。要求は1件ずつで、同時実行が無い</td></tr></table></div>
+<h2>カバレッジの扱い</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>下限</td><td><strong>置かない</strong> ── 数値は振る舞いを保証しない</td></tr><tr><td>使い方</td><td><strong>未到達の行の一覧</strong>を、確かめ漏れの発見に使う</td></tr><tr><td>実行</td><td>変更の取り込み時に測り、増減だけを見る</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>確かめる単位の境界</td><td>アーキテクチャ</td></tr><tr><td>テストが走る仕組み</td><td>言語</td></tr><tr><td>テストの置き場所</td><td>言語 × アーキテクチャ</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>性質テストを採るか</td><td>実装</td><td>要求の形の幅で決まる</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>HK-TS-01</td><td>文献</td><td>Mike Cohn &quot;Succeeding with Agile&quot;（テストの配分）</td><td>《版・取得日》</td><td><code>test automation pyramid</code></td></tr></table></div></div></section><section class="pane md" data-k="k4" hidden><div class="doc"><hr>
 <p>id: purpose.hook.stack<br>layer: purpose.hook<br>axes:<br>  - axis: purpose<br>    value: hook<br>category: tech-stack<br>declares: 実行時に使うツールと依存<br>updated: 2026-09-05</p>
 <hr>
 <h1>Hook の実行時の依存</h1>

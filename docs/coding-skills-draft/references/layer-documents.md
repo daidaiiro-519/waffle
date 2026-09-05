@@ -24,12 +24,14 @@
 | | `toolchain.md` | 標準の道具と、その版 |
 | `arch.<様式>` | `layers.md` | 層の名前と、層ごとの責務 |
 | | `dependency.md` | 依存の向き |
+| | `test-boundaries.md` | 確かめる単位の境界（何を単体とし、何を結合とするか） |
 | `lang.<言語>+arch.<様式>` | `layer-mapping.md` | 層を何で表し、向きを何で守るか |
 | | `test-placement.md` | テストをどこに置くか |
 | `purpose.<用途>` | `contract.md` | 外との契約 |
 | | `lifecycle.md` | 起動と終了 |
 | | `acceptance.md` | 何を保証するか |
-| | `stack.md` | 採るアーキテクチャと道具 |
+| | `test-strategy.md` | テストの重心と計画、採る観点、カバレッジの扱い |
+| | `stack.md` | 採るアーキテクチャとツール |
 
 ## 種別
 
@@ -38,10 +40,10 @@
 
 | 種別 | 雛形 | 中身の形 | 当たる規約 |
 |---|---|---|---|
-| 構造 | `templates/構造の規約.md` | 表と Mermaid で宣言する | `layers.md` `dependency.md` `layer-mapping.md` `contract.md` `lifecycle.md` |
-| 規則 | `templates/規則の規約.md` | 守るべき言明の並び。適合例と違反例を添える | `style.md` `failure.md` `test-placement.md` |
-| 道具 | `templates/道具の規約.md` | 道具と版の表。走らせる命令 | `toolchain.md` `stack.md` |
-| 保証 | `templates/保証の規約.md` | 保証する振る舞いと、確かめる単位 | `test-mechanism.md` `acceptance.md` |
+| 構造 | `templates/structure.md` | 表と Mermaid で宣言する | `layers.md` `dependency.md` `layer-mapping.md` `contract.md` `lifecycle.md` |
+| 規則 | `templates/rules.md` | 守るべき言明の並び。適合例と違反例を添える | `style.md` `failure.md` `test-placement.md` |
+| ツール | `templates/toolchain.md` | ツールと版の表。実行コマンド | `toolchain.md` `stack.md` |
+| 保証 | `templates/assurance.md` | 保証する振る舞いと、確かめる単位 | `test-mechanism.md` `test-boundaries.md` `acceptance.md` `test-strategy.md` |
 
 **構造と道具は宣言であって、規則ではない。**
 層の構成やフォルダの並びを、守るべき言明の羅列では表せない。

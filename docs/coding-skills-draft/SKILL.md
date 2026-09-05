@@ -10,15 +10,15 @@ description: 目的と言語を受け取り、その場面に効く規約を集�
 範囲は軸（言語・アーキテクチャ・用途・実行環境）の組み合わせで決まる。
 
 **このSkillは、書きながら規約を作らない。**
-足りないと分かったら、書く手を止めて `references/規約の起こし方.md` へ回る。
+足りないと分かったら、書く手を止めて `references/authoring.md` へ回る。
 **新しい言語・アーキテクチャ・用途が来たら、そこで規約を新しく起こす** ── ただし作る手順を通り、人の承認を経てからである。
 
 | 語 | 何を指すか |
 |---|---|
-| 規約 | 1本の文書。ファイル1つ。**種別ごとに構造が違う**（構造／規則／道具／保証） |
+| 規約 | 1本の文書。ファイル1つ** ── 種別ごとに構造が違う**（構造／規則／道具／保証） |
 | 規則 | 守るべき言明1件。規則の規約と保証の規約だけが持つ |
 
-**語の一覧は `references/語彙.md` にある。**
+**語の一覧は `references/glossary.md` にある。**
 
 ---
 
@@ -82,7 +82,7 @@ python3 scripts/collect.py --lang <言語> --purpose <用途>
 | 状態 | 次にすること |
 |---|---|
 | 必要な規約が揃っている | Step 5 へ進む |
-| **足りない** | **書かずに止める** ── `references/規約の起こし方.md` へ回り、承認を経てから Step 2 へ戻る |
+| **足りない** | **書かずに止める** ── `references/authoring.md` へ回り、承認を経てから Step 2 へ戻る |
 
 **書きながら規則を足さない。**
 承認を経ていない規則は正本に入らず、次に同じ場面が来ても再現しない。
@@ -133,12 +133,13 @@ python3 scripts/collect.py --lang <言語> --purpose <用途>
 
 ## 参照
 
-- `references/規約の起こし方.md`: 規約を新しく起こす手順（原典を落とす → 書く → 承認）
-- `references/軸.md`: 軸の定義と、軸を足すときの判定
-- `references/出典.md`: 何を出典として認めるか
-- `references/層ごとの文書.md`: どの層に、どの文書を置くか
-- `references/語彙.md`: この Skill が使う語
-- `templates/構造の規約.md`: 層や依存を宣言する規約の雛形
-- `templates/規則の規約.md`: 守るべき言明を並べる規約の雛形
-- `templates/道具の規約.md`: 道具と版を定める規約の雛形
-- `templates/保証の規約.md`: 保証する振る舞いを定める規約の雛形
+- `references/authoring.md`: 規約を新しく起こす手順（原典を落とす → 書く → 承認）
+- `references/axes.md`: 軸の定義と、軸を足すときの判定
+- `references/sources.md`: 何を出典として認めるか
+- `references/layer-documents.md`: どの層に、どの規約を置くか
+- `references/test-perspectives.md`: テスト観点の一覧（採るかどうかは用途の規約が決める）
+- `references/glossary.md`: この Skill が使う語
+- `templates/structure.md`: 層や依存を宣言する規約の雛形
+- `templates/rules.md`: 守るべき言明を並べる規約の雛形
+- `templates/toolchain.md`: ツールと版を定める規約の雛形
+- `templates/assurance.md`: 保証する振る舞いを定める規約の雛形
