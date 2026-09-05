@@ -11,8 +11,9 @@
 - **schema 観の三層（段1・段2 の再定義）** ── 盤面 `docs/adr/brainstorm-schema-conception-board.html`。
   論点1・2・5・3 が決着し、**再開点は論点6（規則を、コマンドで持つか宣言で持つか）**。
   論点7（書く単位と承認する単位のずれ）は論点6 のあと。
-- **CodingSkills（規約に従って書く汎用Skill）** ── 盤面 `docs/adr/brainstorm-coding-skills.html`。
-  規約を「制約と、その作用域」として捉え直した6論点が、すべて開いている。
+- **CodingSkills（規約に従って書く汎用Skill）** ── 盤面 `docs/adr/brainstorm-coding-skills.html`
+  （Artifact: `https://claude.ai/code/artifact/f59a20eb-4dfa-45d3-bdbf-21d8abbe060c`）。
+  **8論点すべて決着（2026-09-05）。次は、制約1件が持つ欄の設計。**
   Waffle を前提にしない形で組み、段1・段2 が決まったらそちらへ寄せる。
 
 ## 承認待ち
