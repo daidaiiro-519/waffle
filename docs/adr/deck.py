@@ -8,6 +8,7 @@ from linefig import LINE
 from concrete import CONCRETE
 from projfig import PROJ
 from projtbl import PROJTBL, GROUPPROJ
+from difffig import DIFF
 
 t1 = Topic(1, "三層", "schema は厚い一枚か、薄い核＋複数の契約か", "決着",
   answer="どちらでもなく、<b>メタレベルの三層</b>",
@@ -236,7 +237,7 @@ t8 = Topic(8, "表現の型と射影", "表現の型と、出力の形をどう�
        "開いているのは<b>その先</b>で、同じ節を人には表で、AI には節の列で出したいときに、"
        "型を増やすのか、出し方を分けるのかである。"
        "<b>JSON Schema に足りないもの6つのうち「射影」が、ここに当たる。</b>",
-  figures=[PROJ, PROJTBL, GROUPPROJ],
+  figures=[PROJ, DIFF, PROJTBL, GROUPPROJ],
   tables=[Table("同じ「表」の節を、どこへどう出すか",
     ["Markdown（人 ・ Skill ・ Agent）", "HTML（人）", "射影なし（AI が直に読む）"],
     {"A　型＝形": ["罫線の表", "<b>罫線の表（変えたければ型を増やす）</b>", "<b>構造にも形が混ざる</b>（型が形を決めているため）"],
