@@ -164,9 +164,13 @@ def _sections(t: Topic) -> str:
                 raise ValueError(f"論点{t.no}: 根拠に前提が無い。「だから」「一方で」は"
                                  "前の段から次へ渡す接続であって、それ自体は事実ではない ── "
                                  "「測った」「定義から」「確かめていない」のどれかを最低1つ置く")
-            body += ('<h3>なぜそう言えるか</h3><dl class="why">'
-                     + "".join(f'<dt><span class="st">{_h.escape(st)}</span></dt><dd>{txt}</dd>'
-                               for st, txt in why) + '</dl>')
+            # 種別は書き手の規律であって、読み手に覚えさせる記号ではない。
+            # 接続だけを、ふつうの日本語として文の頭へ置く。
+            lead = {"だから": "だから、", "一方で": "一方で、", "合わせると": "合わせると、",
+                    "確かめていない": "確かめていないが、"}
+            body += ('<h3>なぜそう言えるか</h3><ol class="why">'
+                     + "".join(f'<li>{lead.get(st, "")}{txt}</li>' for st, txt in why)
+                     + '</ol>')
         if figs:
             body += f'<h3>図で見る</h3>{figs}'
         if cost:
@@ -367,9 +371,8 @@ table.out b{color:var(--out);text-decoration:line-through}
 .st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
   border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
 table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
-dl.why{margin:0;display:grid;grid-template-columns:6.5rem 1fr;gap:.55rem .8rem;font-size:.9rem}
-dl.why dt{margin:0}
-dl.why dd{margin:0;line-height:1.8}
+ol.why{margin:0;padding-left:1.4rem;font-size:.92rem}
+ol.why li{margin-bottom:.55rem;line-height:1.85}
 .pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
   border-radius:2px;padding:0 .35em}
 .concl{display:flex;gap:.9rem;align-items:flex-start;background:color-mix(in srgb,var(--key) 6%,var(--paper));
