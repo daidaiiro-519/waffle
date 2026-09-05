@@ -4,6 +4,7 @@ layer: lang.rust
 axes:
   - axis: language
     value: rust
+category: coding
 declares: 失敗の運び方
 updated: 2026-09-05
 ---
@@ -13,38 +14,24 @@ updated: 2026-09-05
 ## 概要
 
 **回復できる失敗を値で運び、回復できない失敗だけを巻き戻しに任せる。**
-この規約が持つ制約は、言語が Rust である場面すべてで効く。
 
-## この規約が決めないこと
+## 規則
 
-| 何を | どこが決めるか |
-|---|---|
-| どの失敗を利用者へ見せるか | 用途 |
-| 失敗をどの層で受けるか | アーキテクチャ |
+| 印 | 規則 | 水準 | 検証 |
+|---|---|---|---|
+| RS-ERR-01 | 回復できる失敗は `Result` で返し、`panic!` で流さない | 必須 | 機械 |
+| RS-ERR-02 | 失敗の型は、呼び出し側が分岐できる列挙にする | 必須 | 人 |
+| RS-ERR-03 | 失敗を握りつぶさない。捨てるなら、捨てる理由を書く | 必須 | 機械 |
 
-## 制約
+## 規則ごとの詳細
 
 ### RS-ERR-01　回復できる失敗は `Result` で返し、`panic!` で流さない
 
-| 欄 | 値 |
+| 項目 | 内容 |
 |---|---|
-| 依存する軸 | 言語＝rust |
-| 種別 | コーディング |
-| 穴か | 閉じている |
-
-#### 出どころ
-
-| 種類 | 原典 | 原文で照合する文字列 |
-|---|---|---|
-| 原典 | The Rust Programming Language, ch.9「Error Handling」（落とした日：《YYYY-MM-DD》） | `recoverable` |
-
-#### 検め方
-
-| 誰が | どうやって |
-|---|---|
-| 機械 | `cargo clippy -- -D clippy::unwrap_used -D clippy::expect_used` |
-
-#### 守った例
+| 水準 | 必須 |
+| 検証 | `cargo clippy -- -D clippy::unwrap_used -D clippy::expect_used` |
+| 例外 | テストの中と、不変条件が破れた場合（回復できない失敗） |
 
 ```rust
 fn read_port(raw: &str) -> Result<u16, ParsePortError> {
@@ -52,40 +39,19 @@ fn read_port(raw: &str) -> Result<u16, ParsePortError> {
 }
 ```
 
-#### 破った例
-
 ```rust
 fn read_port(raw: &str) -> u16 {
     raw.parse::<u16>().unwrap()
 }
 ```
 
-#### 補足
-
-- テストの中の `unwrap` は、この制約の対象外である
-- 回復できない失敗（不変条件の破れ）は `panic!` でよい
-
 ### RS-ERR-02　失敗の型は、呼び出し側が分岐できる列挙にする
 
-| 欄 | 値 |
+| 項目 | 内容 |
 |---|---|
-| 依存する軸 | 言語＝rust |
-| 種別 | コーディング |
-| 穴か | ここは各自が決める（列挙の粒度は用途が決める） |
-
-#### 出どころ
-
-| 種類 | 原典 | 原文で照合する文字列 |
-|---|---|---|
-| 原典 | Rust API Guidelines「Error types are meaningful and well-behaved」（落とした日：《YYYY-MM-DD》） | `error types` |
-
-#### 検め方
-
-| 誰が | どうやって |
-|---|---|
-| 人 | 失敗の型が `String` や `Box<dyn Error>` になっていないかを見る |
-
-#### 守った例
+| 水準 | 必須 |
+| 検証 | 失敗の型が `String` や `Box<dyn Error>` になっていないかを見る |
+| 例外 | 無い |
 
 ```rust
 pub enum ParsePortError {
@@ -94,22 +60,46 @@ pub enum ParsePortError {
 }
 ```
 
-#### 破った例
-
 ```rust
 pub fn read_port(raw: &str) -> Result<u16, String> { /* … */ }
 ```
 
-#### 図
+### RS-ERR-03　失敗を握りつぶさない。捨てるなら、捨てる理由を書く
 
-```mermaid
-flowchart LR
-    call[呼び出し側] -->|分岐できる| enum[失敗の列挙]
-    call -.->|分岐できない| text[文字列の失敗]
+| 項目 | 内容 |
+|---|---|
+| 水準 | 必須 |
+| 検証 | `cargo clippy -- -D unused_must_use` |
+| 例外 | 無い |
+
+```rust
+if let Err(e) = flush() {
+    // 書き出しの失敗は、次の起動で回復する
+    tracing::warn!(error = %e, "flush failed");
+}
 ```
 
-## この規約が空けた穴
+```rust
+let _ = flush();
+```
 
-| 穴 | 誰が埋めるか |
+## 対象外
+
+| 何を | どの層が決めるか |
 |---|---|
-| 失敗の列挙をどこまで細かく分けるか | 用途 |
+| どの失敗を利用者へ見せるか | 用途 |
+| 失敗をどの層で受けるか | アーキテクチャ |
+
+## 下位へ委ねる判断
+
+| 委ねる判断 | 委ねる先 | 委ねる理由 |
+|---|---|---|
+| 失敗の列挙をどこまで細かく分けるか | 用途 | 分岐の必要は、外との契約で決まる |
+
+## 出典
+
+| 印 | 種類 | 原典 | 照合する文字列 |
+|---|---|---|---|
+| RS-ERR-01 | 原典 | The Rust Programming Language, ch.9 Error Handling（落とした日：《YYYY-MM-DD》） | `recoverable` |
+| RS-ERR-02 | 原典 | Rust API Guidelines, C-GOOD-ERR（落とした日：《YYYY-MM-DD》） | `error types` |
+| RS-ERR-03 | 原典 | Rust std, `#[must_use]` の説明（落とした日：《YYYY-MM-DD》） | `must_use` |

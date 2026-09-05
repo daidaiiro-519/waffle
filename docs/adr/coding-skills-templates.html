@@ -1,4 +1,4 @@
-<title>CodingSkills の雛形（候補）</title>
+<title>CodingSkills の雛形（候補・第2版）</title>
 <style>
 :root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
 --move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
@@ -84,19 +84,21 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 </script>
 
 <div class="wrap">
-<h1>CodingSkills の雛形（候補）</h1>
-<p class="lede"><b>schema に落とす前の、Markdown の雛形である。</b>語を2つ使い分ける ── <b>制約</b>は1件の言明、<b>規約</b>は同じ層の制約をまとめた1本の文書（ファイル1つ）。書きながら制約は足さないが、<b>新しい言語や用途が来たら、作る手順で規約を起こす</b>。<b>まだ確定ではない。</b></p>
+<h1>CodingSkills の雛形（候補・第2版）</h1>
+<p class="lede"><b>規約は、種別ごとに構造が違う。</b>構造（表と図で宣言する）／規則（守るべき言明の並び）／道具（道具と版の表）／保証（何をどの単位で確かめるか）の4つの雛形を持つ。<b>層の構成やフォルダの並びは、守るべき言明の羅列では表せない。</b>実例は規則と構造の2本を置いた。</p>
 
 <div id="bar"><b>変更 0 件</b>
 <button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
-<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="v">references／語彙<span class="n">0</span></button><button class="tab" role="tab" data-t="a">references／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="src">references／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">references／層ごとの規約<span class="n">0</span></button><button class="tab" role="tab" data-t="hw">references／制約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="ts">templates／規約<span class="n">0</span></button><button class="tab" role="tab" data-t="tc">templates／制約<span class="n">0</span></button><button class="tab" role="tab" data-t="ex">実例／lang.rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="v">references／語彙<span class="n">0</span></button><button class="tab" role="tab" data-t="a">references／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="src">references／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">references／層ごとの規約<span class="n">0</span></button><button class="tab" role="tab" data-t="hw">references／規約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="t1">雛形／構造<span class="n">0</span></button><button class="tab" role="tab" data-t="t2">雛形／規則<span class="n">0</span></button><button class="tab" role="tab" data-t="t3">雛形／道具<span class="n">0</span></button><button class="tab" role="tab" data-t="t4">雛形／保証<span class="n">0</span></button><button class="tab" role="tab" data-t="e1">実例／規則　lang.rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="e2">実例／構造　arch.hexagonal／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
 <section class="pane md" data-k="s" hidden><div class="doc"><hr>
 <p>name: coding-skills<br>description: 目的と言語を受け取り、その場面に効く制約を集めて、それに従ってコードを書くときに使う。制約が足りないときは、書く前に制約を起こす手順へ回す。「Goでバックエンドを書く」「RustでHookを書く」「この規約に沿って実装して」と言われたときに使う。</p>
 <hr>
 <h2>目的</h2>
 <p><strong>その場面に効く制約だけを集め、制約に従って書く。</strong><br>制約は選択肢を減らす言明であり、<strong>どの制約にも、それが真であり続ける範囲がある</strong>。<br>範囲は軸（言語・アーキテクチャ・用途・実行環境）の組み合わせで決まる。</p>
 <p><strong>このSkillは、書きながら制約を作らない。</strong><br>足りないと分かったら、書く手を止めて <code>references/制約の起こし方.md</code> へ回る。<br><strong>新しい言語・アーキテクチャ・用途が来たら、そこで規約を新しく起こす</strong> ── ただし作る手順を通り、人の承認を経てからである。</p>
-<div class="wrap"><table><tr><th>語</th><th>何を指すか</th></tr><tr><td>制約</td><td>1件の言明。検査できる最小の単位</td></tr><tr><td>規約</td><td>同じ層の制約をまとめた1本の文書。ファイル1つ</td></tr></table></div>
+<div class="wrap"><table><tr><th>語</th><th>何を指すか</th></tr><tr><td>規約</td><td>1本の文書。ファイル1つ。**</td></tr></table></div>
+<p>種別ごとに構造が違う**（構造／規則／道具／保証） |</p>
+<div class="wrap"><table></table></div>
 <p><strong>語の一覧は <code>references/語彙.md</code> にある。</strong></p>
 <hr>
 <h2>役割</h2>
@@ -138,15 +140,17 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <p>- <strong>書きながら制約を足さない。</strong><br>足りないと分かったら、作る手順へ回す<br>- <strong>実装を読んでからテストを書かない。</strong><br>制約が先に在る<br>- <strong>軸の値を推測しない。</strong><br>分からなければ聞く<br>- <strong>集めた制約を要約しない。</strong><br>言明はそのまま当てる<br>- <strong>プロジェクト固有の決めごとを制約として扱わない。</strong><br>出典を持たないものは制約ではない<br>- <strong>穴（各自が決める）の外を特殊化しない。</strong><br>必要なら、上の層の制約を直す</p>
 <hr>
 <h2>参照</h2>
-<p>- <code>references/制約の起こし方.md</code>: 制約を新しく起こす手順（原典を落とす → 書く → 承認）<br>- <code>references/軸.md</code>: 軸の定義と、軸を足すときの判定<br>- <code>references/出典.md</code>: 何を出典として認めるか<br>- <code>references/層ごとの文書.md</code>: どの層に、どの文書を置くか<br>- <code>references/語彙.md</code>: この Skill が使う語<br>- <code>templates/規約.md</code>: 規約1本（層1つぶんの文書）の雛形<br>- <code>templates/制約.md</code>: 制約1件の雛形</p></div></section><section class="pane md" data-k="v" hidden><div class="doc"><h1>語彙 ── この Skill が使う語</h1>
+<p>- <code>references/制約の起こし方.md</code>: 制約を新しく起こす手順（原典を落とす → 書く → 承認）<br>- <code>references/軸.md</code>: 軸の定義と、軸を足すときの判定<br>- <code>references/出典.md</code>: 何を出典として認めるか<br>- <code>references/層ごとの文書.md</code>: どの層に、どの文書を置くか<br>- <code>references/語彙.md</code>: この Skill が使う語<br>- <code>templates/構造の規約.md</code>: 層や依存を宣言する規約の雛形<br>- <code>templates/規則の規約.md</code>: 守るべき言明を並べる規約の雛形<br>- <code>templates/道具の規約.md</code>: 道具と版を定める規約の雛形<br>- <code>templates/保証の規約.md</code>: 保証する振る舞いを定める規約の雛形</p></div></section><section class="pane md" data-k="v" hidden><div class="doc"><h1>語彙 ── この Skill が使う語</h1>
 <h2>概要</h2>
 <p><strong>同じ意味に2つの語を当てず、違う意味に同じ語を当てない。</strong><br>迷ったら、この表に戻る。</p>
 <h2>語</h2>
-<div class="wrap"><table><tr><th>語</th><th>何を指すか</th><th>例</th></tr><tr><td><strong>制約</strong></td><td>1件の言明。検査できる最小の単位</td><td>「回復できる失敗は <code>Result</code> で返し、<code>panic!</code> で流さない」</td></tr><tr><td><strong>規約</strong></td><td>同じ層の制約をまとめた1本の文書。ファイル1つ</td><td><code>constraints/lang.rust/failure.md</code></td></tr><tr><td><strong>軸</strong></td><td>変えられるもの。言語・アーキテクチャ・用途・実行環境</td><td>言語＝<code>rust</code></td></tr><tr><td><strong>層</strong></td><td>その制約が依存する軸の集合。宣言から導出される</td><td><code>lang.rust+arch.hexagonal</code></td></tr><tr><td><strong>穴</strong></td><td>抽象側が「ここは各自が決める」と宣言した1点</td><td>失敗の列挙の粒度</td></tr><tr><td><strong>正本</strong></td><td>承認を経た規約が置かれる場所</td><td><code>constraints/</code> の下</td></tr><tr><td><strong>集める</strong></td><td>軸の値が一致した制約を、正本から取り出すこと</td><td><code>scripts/collect.py</code></td></tr></table></div>
+<div class="wrap"><table><tr><th>語</th><th>何を指すか</th><th>例</th></tr><tr><td><strong>規約</strong></td><td>1本の文書。ファイル1つ。**</td></tr></table></div>
+<p>種別ごとに構造が違う** | <code>constraints/lang.rust/failure.md</code> |</p>
+<div class="wrap"><table><tr><th><strong>規則</strong></th><th>守るべき言明1件。規則の規約と保証の規約だけが持つ</th><th>「回復できる失敗は <code>Result</code> で返す」</th></tr><tr><td><strong>宣言</strong></td><td>構造や道具を並べた表と図。規則ではない</td><td>層の一覧、依存の可否、道具と版</td></tr><tr><td><strong>軸</strong></td><td>変えられるもの。言語・アーキテクチャ・用途・実行環境</td><td>言語＝<code>rust</code></td></tr><tr><td><strong>種別</strong></td><td>規約の型。構造／規則／道具／保証の4つ</td><td><code>failure.md</code> は規則</td></tr><tr><td><strong>層</strong></td><td>その制約が依存する軸の集合。宣言から導出される</td><td><code>lang.rust+arch.hexagonal</code></td></tr><tr><td><strong>下位へ委ねる判断</strong></td><td>上位が決めず、下位が決めてよいと宣言した1点</td><td>失敗の列挙の粒度</td></tr><tr><td><strong>正本</strong></td><td>承認を経た規約が置かれる場所</td><td><code>constraints/</code> の下</td></tr><tr><td><strong>集める</strong></td><td>軸の値が一致した規約を、正本から取り出すこと</td><td><code>scripts/collect.py</code></td></tr></table></div>
 <h2>使わない語</h2>
-<div class="wrap"><table><tr><th>使わない語</th><th>代わりに</th><th>なぜ</th></tr><tr><td>ルール</td><td>制約／規約</td><td>1件を指すのか文書を指すのかが決まらない</td></tr><tr><td>ガイドライン</td><td>制約</td><td>守らなくてよいものに見える。守らなくてよいなら、制約として置かない</td></tr><tr><td>ベストプラクティス</td><td>制約 ＋ 出典</td><td>出典を持たない言明は、この Skill では置けない</td></tr></table></div>
+<div class="wrap"><table><tr><th>使わない語</th><th>代わりに</th><th>なぜ</th></tr><tr><td>ルール</td><td>規則／規約</td><td>1件を指すのか文書を指すのかが決まらない</td></tr><tr><td>ガイドライン</td><td>規則</td><td>守らなくてよいものに見える。守らなくてよいなら、規則として置かない</td></tr><tr><td>ベストプラクティス</td><td>規則 ＋ 出典</td><td>出典を持たない言明は、この Skill では置けない</td></tr></table></div>
 <h2>数え方</h2>
-<div class="wrap"><table><tr><th>数えるもの</th><th>単位</th></tr><tr><td>制約</td><td>件</td></tr><tr><td>規約</td><td>本</td></tr><tr><td>層</td><td>── 数えない。軸の組み合わせが現れた数だけ在る</td></tr></table></div></div></section><section class="pane md" data-k="a" hidden><div class="doc"><h1>軸 ── 何が変わると、制約が変わるか</h1>
+<div class="wrap"><table><tr><th>数えるもの</th><th>単位</th></tr><tr><td>規則</td><td>件</td></tr><tr><td>規約</td><td>本</td></tr><tr><td>層</td><td>── 数えない。軸の組み合わせが現れた数だけ在る</td></tr></table></div></div></section><section class="pane md" data-k="a" hidden><div class="doc"><h1>軸 ── 何が変わると、制約が変わるか</h1>
 <h2>概要</h2>
 <p><strong>軸とは、変えられるもののことである。</strong><br>制約は、依存する軸の値が一致した場面でだけ効く。</p>
 <h2>軸と認める条件</h2>
@@ -182,8 +186,10 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <h2>置く規約</h2>
 <div class="wrap"><table><tr><th>層</th><th>規約</th><th>その規約が決めること</th></tr><tr><td><code>lang.&lt;言語&gt;</code></td><td><code>style.md</code></td><td>綴りと書式</td></tr><tr><td></td><td><code>failure.md</code></td><td>失敗の運び方</td></tr><tr><td></td><td><code>test-mechanism.md</code></td><td>テストが走る仕組みと、書き方</td></tr><tr><td></td><td><code>toolchain.md</code></td><td>標準の道具と、その版</td></tr><tr><td><code>arch.&lt;様式&gt;</code></td><td><code>layers.md</code></td><td>層の名前と、層ごとの責務</td></tr><tr><td></td><td><code>dependency.md</code></td><td>依存の向き</td></tr><tr><td><code>lang.&lt;言語&gt;+arch.&lt;様式&gt;</code></td><td><code>layer-mapping.md</code></td><td>層を何で表し、向きを何で守るか</td></tr><tr><td></td><td><code>test-placement.md</code></td><td>テストをどこに置くか</td></tr><tr><td><code>purpose.&lt;用途&gt;</code></td><td><code>contract.md</code></td><td>外との契約</td></tr><tr><td></td><td><code>lifecycle.md</code></td><td>起動と終了</td></tr><tr><td></td><td><code>acceptance.md</code></td><td>何を保証するか</td></tr><tr><td></td><td><code>stack.md</code></td><td>採るアーキテクチャと道具</td></tr></table></div>
 <h2>種別</h2>
-<p><strong>種別（コーディング／テスト／アーキテクチャ／技術スタック）は、置き場所ではなく欄である。</strong><br>横断で引くための分類なので、制約1件ごとに宣言する。</p>
-<div class="wrap"><table><tr><th>引きたいこと</th><th>どう引くか</th></tr><tr><td>この場面に効く制約を全部</td><td>軸の値で集める</td></tr><tr><td>テストに関わる制約を全部</td><td>種別の欄で絞る</td></tr></table></div>
+<p><strong>種別は、規約の型である。</strong><br>どの雛形を写すかが、種別で決まる。</p>
+<div class="wrap"><table><tr><th>種別</th><th>雛形</th><th>中身の形</th><th>当たる規約</th></tr><tr><td>構造</td><td><code>templates/構造の規約.md</code></td><td>表と Mermaid で宣言する</td><td><code>layers.md</code> <code>dependency.md</code> <code>layer-mapping.md</code> <code>contract.md</code> <code>lifecycle.md</code></td></tr><tr><td>規則</td><td><code>templates/規則の規約.md</code></td><td>守るべき言明の並び。適合例と違反例を添える</td><td><code>style.md</code> <code>failure.md</code> <code>test-placement.md</code></td></tr><tr><td>道具</td><td><code>templates/道具の規約.md</code></td><td>道具と版の表。走らせる命令</td><td><code>toolchain.md</code> <code>stack.md</code></td></tr><tr><td>保証</td><td><code>templates/保証の規約.md</code></td><td>保証する振る舞いと、確かめる単位</td><td><code>test-mechanism.md</code> <code>acceptance.md</code></td></tr></table></div>
+<p><strong>構造と道具は宣言であって、規則ではない。</strong><br>層の構成やフォルダの並びを、守るべき言明の羅列では表せない。</p>
+<div class="wrap"><table><tr><th>引きたいこと</th><th>どう引くか</th></tr><tr><td>この場面に効く規約を全部</td><td>軸の値で集める</td></tr><tr><td>構造の宣言だけ</td><td>種別で絞る</td></tr></table></div>
 <h2>空のマス</h2>
 <p><strong>その層で決まらないことの規約は、作らない。</strong><br>言語の層に「層と依存の向き」は無いので、<code>lang.go/dependency.md</code> は置かない。</p></div></section><section class="pane md" data-k="hw" hidden><div class="doc"><h1>制約の起こし方 ── 作る手順</h1>
 <h2>概要</h2>
@@ -213,83 +219,134 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <h2>穴を宣言するとき</h2>
 <p><strong>決めないことも、決定である。</strong><br>「ここは各自が決める」と書けば、下の層がそこだけを埋められる。</p>
 <div class="wrap"><table><tr><th>書き方</th><th>意味</th></tr><tr><td>穴か＝閉じている</td><td>下の層は、これを特殊化できない</td></tr><tr><td>穴か＝ここは各自が決める</td><td>下の層が、この1点だけを埋めてよい</td></tr></table></div>
-<p><strong>穴を宣言しないまま、下の層が特殊化を求めてきたら、軸の宣言を疑う。</strong></p></div></section><section class="pane md" data-k="ts" hidden><div class="doc"><hr>
-<p>id: 《この規約の識別子。フォルダ名とファイル名から作る》<br>layer: 《軸の組み合わせ。フォルダ名と同じ。例: lang.rust》<br>axes:<br>  - axis: 《軸の名前。language / architecture / purpose / runtime のいずれか》<br>    value: 《値》<br>declares: 《この規約が決めること。ファイル名と同じ意味を、日本語で》<br>updated: 《YYYY-MM-DD》</p>
+<p><strong>穴を宣言しないまま、下の層が特殊化を求めてきたら、軸の宣言を疑う。</strong></p></div></section><section class="pane md" data-k="t1" hidden><div class="doc"><hr>
+<p>id: 《識別子。フォルダ名とファイル名から作る》<br>layer: 《軸の組み合わせ。フォルダ名と同じ》<br>axes:<br>  - axis: 《language / architecture / purpose / runtime》<br>    value: 《値》<br>category: architecture<br>declares: 《この規約が宣言する構造の名前》<br>updated: 《YYYY-MM-DD》</p>
 <hr>
-<h1>《この規約が決めること》</h1>
+<h1>《宣言する構造の名前》</h1>
 <h2>概要</h2>
-<p><strong>《何を決める規約かを一文で》</strong><br>《この規約が持つ制約は、上の axes が一致する場面でだけ効く。》</p>
-<h2>この規約が決めないこと</h2>
-<div class="wrap"><table><tr><th>何を</th><th>どこが決めるか</th></tr><tr><td>《この層では決まらないこと》</td><td>《それを決める層》</td></tr></table></div>
-<h2>制約</h2>
-<h3>《印》　《言明を一文で》</h3>
-<div class="wrap"><table><tr><th>欄</th><th>値</th></tr><tr><td>依存する軸</td><td>《軸》＝《値》</td></tr><tr><td>種別</td><td>《選ぶ》</td></tr><tr><td>穴か</td><td>《選ぶ》</td></tr></table></div>
-<h4>出どころ</h4>
-<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>原文で照合する文字列</th></tr><tr><td>《選ぶ》</td><td>《原典》</td><td><code>《文字列》</code></td></tr></table></div>
-<h4>検め方</h4>
-<div class="wrap"><table><tr><th>誰が</th><th>どうやって</th></tr><tr><td>《選ぶ》</td><td>《命令、または見るところ》</td></tr></table></div>
-<h4>守った例</h4>
-<pre class="code">《例》</pre>
-<h4>破った例</h4>
-<pre class="code">《例》</pre>
-<h2>この規約が空けた穴</h2>
-<div class="wrap"><table><tr><th>穴</th><th>誰が埋めるか</th></tr><tr><td>《各自が決めると宣言したこと》</td><td>《埋める層。例: 用途》</td></tr></table></div></div></section><section class="pane md" data-k="tc" hidden><div class="doc"><h3>《印》　《言明を一文で。理由も例外も混ぜない》</h3>
-<div class="wrap"><table><tr><th>欄</th><th>値</th></tr><tr><td>依存する軸</td><td>《軸の名前》＝《値》／《軸の名前》＝《値》</td></tr><tr><td>種別</td><td>《コーディング／テスト／アーキテクチャ／技術スタック から選ぶ》</td></tr><tr><td>穴か</td><td>《閉じている／ここは各自が決める から選ぶ》</td></tr></table></div>
-<h4>出どころ</h4>
-<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>原文で照合する文字列</th></tr><tr><td>《実測／原典／規格 から選ぶ》</td><td>《落とした原文の位置。版と日付を添える》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div>
-<h4>検め方</h4>
-<div class="wrap"><table><tr><th>誰が</th><th>どうやって</th></tr><tr><td>《機械／人 から選ぶ》</td><td>《走らせる命令、または見るところ》</td></tr></table></div>
-<h4>守った例</h4>
-<pre class="code">《最小の例。ほかの制約の話を混ぜない》</pre>
-<h4>破った例</h4>
-<pre class="code">《この制約だけを破っている最小の例》</pre>
-<h4>図</h4>
-<pre class="mermaid">《Mermaid の宣言。図も構造として持つ》</pre>
-<h4>補足</h4>
-<p>- 《1項目に1つの意味。散文にしない》<br>- 《言明に入らなかった条件があれば、ここへ》</p></div></section><section class="pane md" data-k="ex" hidden><div class="doc"><hr>
-<p>id: lang.rust.failure<br>layer: lang.rust<br>axes:<br>  - axis: language<br>    value: rust<br>declares: 失敗の運び方<br>updated: 2026-09-05</p>
+<p><strong>《何を宣言する規約かを一文で》</strong></p>
+<h2>構成要素</h2>
+<div class="wrap"><table><tr><th>要素</th><th>責務</th><th>置き場所</th></tr><tr><td>《層・部品の名前》</td><td>《その要素だけが持つ責務》</td><td>《フォルダまたはモジュール》</td></tr></table></div>
+<h2>関係</h2>
+<pre class="mermaid">《要素どうしの関係。依存の向きは矢印で示す》</pre>
+<h2>許される依存</h2>
+<div class="wrap"><table><tr><th>参照元</th><th>参照先</th><th>可否</th></tr><tr><td>《要素》</td><td>《要素》</td><td>《可／不可》</td></tr></table></div>
+<h2>対象外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>下位へ委ねる判断</h2>
+<div class="wrap"><table><tr><th>委ねる判断</th><th>委ねる先</th><th>委ねる理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>照合する文字列</th></tr><tr><td>《規格／原典／実測》</td><td>《原典と版、落とした日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t2" hidden><div class="doc"><hr>
+<p>id: 《識別子》<br>layer: 《軸の組み合わせ》<br>axes:<br>  - axis: 《軸》<br>    value: 《値》<br>category: 《coding / test のいずれか》<br>declares: 《この規約が定める規則の主題》<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《規則の主題》</h1>
+<h2>概要</h2>
+<p><strong>《何を定める規約かを一文で》</strong></p>
+<h2>規則</h2>
+<div class="wrap"><table><tr><th>印</th><th>規則</th><th>水準</th><th>検証</th></tr><tr><td>《RS-XXX-01》</td><td>《一文。理由も例外も混ぜない》</td><td>《必須／禁止／推奨》</td><td>《機械／人》</td></tr></table></div>
+<h2>規則ごとの詳細</h2>
+<h3>《印》　《規則を一文で》</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>《必須／禁止／推奨》</td></tr><tr><td>検証</td><td>《走らせる命令、または見るところ》</td></tr><tr><td>例外</td><td>《規則が効かない場面。無ければ「無い」と書く》</td></tr></table></div>
+<pre class="code">《適合例。ほかの規則の話を混ぜない》</pre>
+<pre class="code">《違反例。この規則だけを破っている》</pre>
+<h2>対象外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>下位へ委ねる判断</h2>
+<div class="wrap"><table><tr><th>委ねる判断</th><th>委ねる先</th><th>委ねる理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>印</th><th>種類</th><th>原典</th><th>照合する文字列</th></tr><tr><td>《RS-XXX-01》</td><td>《規格／原典／実測》</td><td>《原典と版、落とした日》</td><td><code>《文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t3" hidden><div class="doc"><hr>
+<p>id: 《識別子》<br>layer: 《軸の組み合わせ》<br>axes:<br>  - axis: 《軸》<br>    value: 《値》<br>category: tech-stack<br>declares: 《この規約が定める道具の範囲》<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《道具の範囲》</h1>
+<h2>概要</h2>
+<p><strong>《何を採り、何を採らないかを一文で》</strong></p>
+<h2>採る道具</h2>
+<div class="wrap"><table><tr><th>用途</th><th>道具</th><th>版</th><th>採る理由</th></tr><tr><td>《何のための道具か》</td><td>《道具の名前》</td><td>《版の指定》</td><td>《この道具でなければならない理由》</td></tr></table></div>
+<h2>採らない道具</h2>
+<div class="wrap"><table><tr><th>道具</th><th>採らない理由</th></tr><tr><td>《候補に挙がるが採らない道具》</td><td>《理由》</td></tr></table></div>
+<h2>走らせる命令</h2>
+<div class="wrap"><table><tr><th>目的</th><th>命令</th></tr><tr><td>《整形／検査／テスト／ビルド》</td><td><code>《命令》</code></td></tr></table></div>
+<h2>対象外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>下位へ委ねる判断</h2>
+<div class="wrap"><table><tr><th>委ねる判断</th><th>委ねる先</th><th>委ねる理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>道具</th><th>種類</th><th>原典</th><th>照合する文字列</th></tr><tr><td>《道具の名前》</td><td>《規格／原典》</td><td>《公式の版一覧など、落とした日つき》</td><td><code>《文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t4" hidden><div class="doc"><hr>
+<p>id: 《識別子》<br>layer: 《軸の組み合わせ》<br>axes:<br>  - axis: 《軸》<br>    value: 《値》<br>category: test<br>declares: 《この規約が定める保証の範囲》<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《保証の範囲》</h1>
+<h2>概要</h2>
+<p><strong>《何を保証し、何を保証しないかを一文で》</strong></p>
+<h2>保証すること</h2>
+<div class="wrap"><table><tr><th>印</th><th>保証する振る舞い</th><th>確かめる単位</th><th>落ちる条件</th></tr><tr><td>《AC-XXX-01》</td><td>《外から見える振る舞いを一文で》</td><td>《単体／結合／端から端まで》</td><td>《満たさないと、どのテストが落ちるか》</td></tr></table></div>
+<h2>保証しないこと</h2>
+<div class="wrap"><table><tr><th>何を</th><th>なぜ保証しないか</th></tr><tr><td>《保証の外に置くこと》</td><td>《理由》</td></tr></table></div>
+<h2>保証ごとの詳細</h2>
+<h3>《印》　《保証する振る舞いを一文で》</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>前提</td><td>《その振る舞いが成り立つ前提》</td></tr><tr><td>入力</td><td>《与えるもの》</td></tr><tr><td>期待する結果</td><td>《観測できる形で書く》</td></tr><tr><td>検証</td><td><code>《走らせる命令》</code></td></tr></table></div>
+<h2>対象外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>下位へ委ねる判断</h2>
+<div class="wrap"><table><tr><th>委ねる判断</th><th>委ねる先</th><th>委ねる理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>印</th><th>種類</th><th>原典</th><th>照合する文字列</th></tr><tr><td>《AC-XXX-01》</td><td>《規格／原典／実測》</td><td>《原典と版、落とした日》</td><td><code>《文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="e1" hidden><div class="doc"><hr>
+<p>id: lang.rust.failure<br>layer: lang.rust<br>axes:<br>  - axis: language<br>    value: rust<br>category: coding<br>declares: 失敗の運び方<br>updated: 2026-09-05</p>
 <hr>
 <h1>Rust における失敗の運び方</h1>
 <h2>概要</h2>
-<p><strong>回復できる失敗を値で運び、回復できない失敗だけを巻き戻しに任せる。</strong><br>この規約が持つ制約は、言語が Rust である場面すべてで効く。</p>
-<h2>この規約が決めないこと</h2>
-<div class="wrap"><table><tr><th>何を</th><th>どこが決めるか</th></tr><tr><td>どの失敗を利用者へ見せるか</td><td>用途</td></tr><tr><td>失敗をどの層で受けるか</td><td>アーキテクチャ</td></tr></table></div>
-<h2>制約</h2>
+<p><strong>回復できる失敗を値で運び、回復できない失敗だけを巻き戻しに任せる。</strong></p>
+<h2>規則</h2>
+<div class="wrap"><table><tr><th>印</th><th>規則</th><th>水準</th><th>検証</th></tr><tr><td>RS-ERR-01</td><td>回復できる失敗は <code>Result</code> で返し、<code>panic!</code> で流さない</td><td>必須</td><td>機械</td></tr><tr><td>RS-ERR-02</td><td>失敗の型は、呼び出し側が分岐できる列挙にする</td><td>必須</td><td>人</td></tr><tr><td>RS-ERR-03</td><td>失敗を握りつぶさない。捨てるなら、捨てる理由を書く</td><td>必須</td><td>機械</td></tr></table></div>
+<h2>規則ごとの詳細</h2>
 <h3>RS-ERR-01　回復できる失敗は <code>Result</code> で返し、<code>panic!</code> で流さない</h3>
-<div class="wrap"><table><tr><th>欄</th><th>値</th></tr><tr><td>依存する軸</td><td>言語＝rust</td></tr><tr><td>種別</td><td>コーディング</td></tr><tr><td>穴か</td><td>閉じている</td></tr></table></div>
-<h4>出どころ</h4>
-<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>原文で照合する文字列</th></tr><tr><td>原典</td><td>The Rust Programming Language, ch.9「Error Handling」（落とした日：《YYYY-MM-DD》）</td><td><code>recoverable</code></td></tr></table></div>
-<h4>検め方</h4>
-<div class="wrap"><table><tr><th>誰が</th><th>どうやって</th></tr><tr><td>機械</td><td><code>cargo clippy -- -D clippy::unwrap_used -D clippy::expect_used</code></td></tr></table></div>
-<h4>守った例</h4>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>必須</td></tr><tr><td>検証</td><td><code>cargo clippy -- -D clippy::unwrap_used -D clippy::expect_used</code></td></tr><tr><td>例外</td><td>テストの中と、不変条件が破れた場合（回復できない失敗）</td></tr></table></div>
 <pre class="code">fn read_port(raw: &amp;str) -&gt; Result&lt;u16, ParsePortError&gt; {
     raw.parse::&lt;u16&gt;().map_err(ParsePortError::Invalid)
 }</pre>
-<h4>破った例</h4>
 <pre class="code">fn read_port(raw: &amp;str) -&gt; u16 {
     raw.parse::&lt;u16&gt;().unwrap()
 }</pre>
-<h4>補足</h4>
-<p>- テストの中の <code>unwrap</code> は、この制約の対象外である<br>- 回復できない失敗（不変条件の破れ）は <code>panic!</code> でよい</p>
 <h3>RS-ERR-02　失敗の型は、呼び出し側が分岐できる列挙にする</h3>
-<div class="wrap"><table><tr><th>欄</th><th>値</th></tr><tr><td>依存する軸</td><td>言語＝rust</td></tr><tr><td>種別</td><td>コーディング</td></tr><tr><td>穴か</td><td>ここは各自が決める（列挙の粒度は用途が決める）</td></tr></table></div>
-<h4>出どころ</h4>
-<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>原文で照合する文字列</th></tr><tr><td>原典</td><td>Rust API Guidelines「Error types are meaningful and well-behaved」（落とした日：《YYYY-MM-DD》）</td><td><code>error types</code></td></tr></table></div>
-<h4>検め方</h4>
-<div class="wrap"><table><tr><th>誰が</th><th>どうやって</th></tr><tr><td>人</td><td>失敗の型が <code>String</code> や <code>Box&lt;dyn Error&gt;</code> になっていないかを見る</td></tr></table></div>
-<h4>守った例</h4>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>必須</td></tr><tr><td>検証</td><td>失敗の型が <code>String</code> や <code>Box&lt;dyn Error&gt;</code> になっていないかを見る</td></tr><tr><td>例外</td><td>無い</td></tr></table></div>
 <pre class="code">pub enum ParsePortError {
     Invalid(std::num::ParseIntError),
     OutOfRange { got: u32 },
 }</pre>
-<h4>破った例</h4>
 <pre class="code">pub fn read_port(raw: &amp;str) -&gt; Result&lt;u16, String&gt; { /* … */ }</pre>
-<h4>図</h4>
+<h3>RS-ERR-03　失敗を握りつぶさない。捨てるなら、捨てる理由を書く</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>必須</td></tr><tr><td>検証</td><td><code>cargo clippy -- -D unused_must_use</code></td></tr><tr><td>例外</td><td>無い</td></tr></table></div>
+<pre class="code">if let Err(e) = flush() {
+    // 書き出しの失敗は、次の起動で回復する
+    tracing::warn!(error = %e, &quot;flush failed&quot;);
+}</pre>
+<pre class="code">let _ = flush();</pre>
+<h2>対象外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>どの失敗を利用者へ見せるか</td><td>用途</td></tr><tr><td>失敗をどの層で受けるか</td><td>アーキテクチャ</td></tr></table></div>
+<h2>下位へ委ねる判断</h2>
+<div class="wrap"><table><tr><th>委ねる判断</th><th>委ねる先</th><th>委ねる理由</th></tr><tr><td>失敗の列挙をどこまで細かく分けるか</td><td>用途</td><td>分岐の必要は、外との契約で決まる</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>印</th><th>種類</th><th>原典</th><th>照合する文字列</th></tr><tr><td>RS-ERR-01</td><td>原典</td><td>The Rust Programming Language, ch.9 Error Handling（落とした日：《YYYY-MM-DD》）</td><td><code>recoverable</code></td></tr><tr><td>RS-ERR-02</td><td>原典</td><td>Rust API Guidelines, C-GOOD-ERR（落とした日：《YYYY-MM-DD》）</td><td><code>error types</code></td></tr><tr><td>RS-ERR-03</td><td>原典</td><td>Rust std, <code>#[must_use]</code> の説明（落とした日：《YYYY-MM-DD》）</td><td><code>must_use</code></td></tr></table></div></div></section><section class="pane md" data-k="e2" hidden><div class="doc"><hr>
+<p>id: arch.hexagonal.layers<br>layer: arch.hexagonal<br>axes:<br>  - axis: architecture<br>    value: hexagonal<br>category: architecture<br>declares: 層と、層ごとの責務<br>updated: 2026-09-05</p>
+<hr>
+<h1>ヘキサゴナル構成の層</h1>
+<h2>概要</h2>
+<p><strong>業務の判断を中心に置き、外の世界との出入りを外周に置く。</strong></p>
+<h2>構成要素</h2>
+<div class="wrap"><table><tr><th>要素</th><th>責務</th><th>置き場所</th></tr><tr><td>domain</td><td>業務の語彙と規則を持つ。外の世界を知らない</td><td><code>domain/</code></td></tr><tr><td>application</td><td>業務の操作を組み立て、境界を跨ぐ入れ物を定める</td><td><code>application/</code></td></tr><tr><td>adapter（入口）</td><td>外からの呼び出しを、業務の操作へ渡す</td><td><code>adapter/inbound/</code></td></tr><tr><td>adapter（出口）</td><td>業務が要る外の機能を、技術で満たす</td><td><code>adapter/outbound/</code></td></tr></table></div>
+<h2>関係</h2>
 <pre class="mermaid">flowchart LR
-    call[呼び出し側] --&gt;|分岐できる| enum[失敗の列挙]
-    call -.-&gt;|分岐できない| text[文字列の失敗]</pre>
-<h2>この規約が空けた穴</h2>
-<div class="wrap"><table><tr><th>穴</th><th>誰が埋めるか</th></tr><tr><td>失敗の列挙をどこまで細かく分けるか</td><td>用途</td></tr></table></div></div></section><section class="pane md" data-k="sc" hidden><div class="doc"><h1>scripts ── 機械が回すもの</h1>
+    inbound[adapter 入口] --&gt; app[application]
+    app --&gt; domain[domain]
+    app --&gt; port{{出口の約束}}
+    outbound[adapter 出口] -.実装.-&gt; port</pre>
+<h2>許される依存</h2>
+<div class="wrap"><table><tr><th>参照元</th><th>参照先</th><th>可否</th></tr><tr><td>domain</td><td>いずれの層</td><td>不可</td></tr><tr><td>application</td><td>domain</td><td>可</td></tr><tr><td>application</td><td>adapter</td><td>不可</td></tr><tr><td>adapter</td><td>application</td><td>可</td></tr></table></div>
+<h2>対象外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>層を何で表すか（package／module／crate）</td><td>言語 × アーキテクチャ</td></tr><tr><td>どの層を実際に持つか</td><td>用途</td></tr></table></div>
+<h2>下位へ委ねる判断</h2>
+<div class="wrap"><table><tr><th>委ねる判断</th><th>委ねる先</th><th>委ねる理由</th></tr><tr><td>出口の約束をどこに置くか</td><td>言語 × アーキテクチャ</td><td>置ける場所は言語の仕組みで変わる</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>照合する文字列</th></tr><tr><td>原典</td><td>Alistair Cockburn「Hexagonal Architecture」（落とした日：《YYYY-MM-DD》）</td><td><code>ports and adapters</code></td></tr></table></div></div></section><section class="pane md" data-k="sc" hidden><div class="doc"><h1>scripts ── 機械が回すもの</h1>
 <h2>概要</h2>
 <p><strong>集める・検める・索引を出すの3つを、機械が行う。</strong><br>同じ問いに同じ範囲が返らないと、そのあとの推論の入力が毎回変わるためである。</p>
 <h2>置くもの</h2>
