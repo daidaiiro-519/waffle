@@ -16,7 +16,6 @@
 - [schema を変えるのは実装である](feedback_schema_change_is_implementation.md) — 決定→仕様→実装。仕様を飛ばすと説明の無い構造が増える
 - [既存へ肉付けせず、あるべき形へ直す](feedback_correct_toward_the_right_form_not_the_existing_one.md) — 前提が変わった構造に規則を足さない。AIで直す手間は安くなった
 - [再定義では既存を根拠にしない](feedback_redefinition_does_not_reason_from_the_existing.md) — 実測は数えるためであって、あるべき形を決める根拠にはしない。2026-08-18に3回差し戻された
-- [実例の件数で能力の要否を決めない](feedback_evidence_based_scope_is_not_for_capability_decisions.md) — 抽象化のタイミングの基準であって、構造の妥当性・概念どうしの関係には使えない。**4度目(2026-09-05)は、引いた knowledge 自身の除外規定を読まずに見出しだけ当てた**
 
 ## 主題（仕様と実装の抽象境界）
 
