@@ -5,6 +5,7 @@ from build_board import Topic, Option, Table, deck, write, _table
 from figs import FIG1, FIG2
 from recfigs import REC
 from linefig import LINE
+from concrete import CONCRETE
 
 t1 = Topic(1, "三層", "schema は厚い一枚か、薄い核＋複数の契約か", "決着",
   answer="どちらでもなく、<b>メタレベルの三層</b>",
@@ -159,6 +160,7 @@ t6 = Topic(6, "規則の置き場所", "規則を、どこまで宣言で持つ�
    ("名簿を abstract に置くこと", "abstract は全ての型が継ぐ契約であり、型が増えても動詞は増やさない", "決まり", "論点1・論点5 の決まり"),
    ("任意の命令を書かせないこと", "宣言が任意コードの実行口になると、schema が何を保証するか言えなくなる", "前提", "落とした案Dの構造からの帰結"),
   ],
+  extras=[("具体で見る ── 同じ4つの規則を、案Aと案Bで書く", CONCRETE)],
   costs=["宣言だけでは、その検査が何を見るかは分からない ── 名簿を引く手間が要る",
          "検査を足すには abstract 側の名簿を触る。型を足すより重い操作になる"],
   weaknesses=["名簿が太ると、abstract は「動詞は増えないが名前は増える」形で太る。<b>動詞と名前の違いが、太り方の違いとして本当に効くかは確かめていない</b>",
