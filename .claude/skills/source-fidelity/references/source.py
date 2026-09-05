@@ -25,7 +25,7 @@ import subprocess
 import sys
 import time
 
-DEFAULT_DIR = "docs/sources"
+DEFAULT_DIR = "07-appendix/sources"
 UA = "Mozilla/5.0"
 
 
