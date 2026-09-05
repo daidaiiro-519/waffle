@@ -16,7 +16,7 @@ PROJ = ('<svg viewBox="0 0 780 300" role="img" aria-label="1つの表の節が�
  '<text x="480" y="24" font-size="11.5" fill="var(--muted)">出力先ごとの形（読み手は、出力先に従属する）</text>'
  '<rect x="480" y="38" width="280" height="56" fill="none" stroke="currentColor" stroke-width="1.4"/>'
  '<text x="496" y="60" font-size="11.5" font-weight="700" fill="currentColor">Markdown</text>'
- '<text x="496" y="80" font-size="10.5" fill="var(--muted)">罫線の表として出す　── 人 ・ Skill ・ Agent が読む</text>'
+ '<text x="496" y="78" font-size="10" fill="var(--muted)">罫線の表として出す</text>''<text x="496" y="90" font-size="9" fill="var(--muted)">人 ・ Skill ・ Agent が読む</text>'
  '<rect x="480" y="122" width="280" height="56" fill="none" stroke="currentColor" stroke-width="1.4"/>'
  '<text x="496" y="144" font-size="11.5" font-weight="700" fill="currentColor">HTML</text>'
  '<text x="496" y="164" font-size="10.5" fill="var(--muted)">札の並び、あるいは図として出す　── 人が読む</text>'

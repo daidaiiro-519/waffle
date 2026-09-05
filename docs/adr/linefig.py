@@ -37,7 +37,7 @@ LINE = ('<svg viewBox="0 0 780 320" role="img" aria-label="宣言に収まる述
  '<text x="436" y="228" font-size="11" fill="var(--muted)">参照が解決する　／　版がそろう　／　人が見る</text>'
  '<rect x="420" y="250" width="340" height="54" fill="none" stroke="var(--add)" stroke-width="1.8"/>'
  '<text x="590" y="270" text-anchor="middle" font-size="12" font-weight="700" fill="var(--add)">concrete　その型だけの検査</text>'
- '<text x="436" y="292" font-size="11" fill="var(--muted)">scenario-drift（spec）　／　text-in-original（規約）</text>'
+ '<text x="436" y="288" font-size="10" fill="var(--muted)">scenario-drift（spec 系の型）</text>''<text x="436" y="300" font-size="10" fill="var(--muted)">text-in-original（規約の型）</text>'
  '<line x1="320" y1="213" x2="414" y2="213" stroke="var(--add)" stroke-width="1.6" marker-end="url(#lf1)"/>'
  '<line x1="320" y1="277" x2="414" y2="277" stroke="var(--add)" stroke-width="1.6" marker-end="url(#lf1)"/>'
  '<text x="367" y="245" text-anchor="middle" font-size="11" font-weight="700" fill="var(--add)">名前で指す</text>'
