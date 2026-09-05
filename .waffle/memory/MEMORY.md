@@ -8,11 +8,12 @@
 
 ## 走っている作業
 
-- **社内AI人材育成ワークショップ** ── [開催条件と目的](project-ai-workshop.md)。企画案と部長向けスライド14枚・PDF・発表原稿を作成済み。開催条件の具体化と受講者向け教材はこれから。資料は `docs/workshops/ai-workshop/`。
+- **社内AI人材育成ワークショップ** ── [開催条件と目的](project-ai-workshop.md)。部長向け資料をレビュー中。表紙を加えた15枚で、冒頭に抽象と具体の往復を置く。開催条件の具体化と受講者向け教材はこれから。資料は `docs/workshops/ai-workshop/`。
 
-- **schema 観の三層（段1・段2 の再定義）** ── 盤面 `docs/adr/brainstorm-schema-conception-board.html`。
-  論点1・2・5・3 が決着し、**再開点は論点6（規則を、コマンドで持つか宣言で持つか）**。
-  論点7（書く単位と承認する単位のずれ）は論点6 のあと。
+- **schema 観の三層（段1・段2 の再定義）** ── 盤面 `docs/adr/brainstorm-schema-conception-board.html`
+  （Artifact: `https://claude.ai/code/artifact/b85a142f-d6b5-4964-844c-0f7c64383882`）。
+  論点1・2・5・3・**6** が決着（2026-09-06）。**再開点は論点8（表現の型と、出力の形をどう分けるか）**。
+  論点7（書く単位と承認する単位のずれ）はそのあと。8 と 7 は互いの前提になっていない。
 - **CodingSkills（規約に従って書く汎用Skill）** ── `.waffle/skills/coding-skills/`（第1版・2026-09-05）。
   盤面 `docs/adr/brainstorm-coding-skills.html`、面 `docs/adr/coding-skills-templates.html`
   （Artifact: `https://claude.ai/code/artifact/24732a71-b357-41a1-8f53-fbb87417f92d`）。
