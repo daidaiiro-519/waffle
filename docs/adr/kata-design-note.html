@@ -1,0 +1,1030 @@
+<title>Kata 設計ノート</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+ --paper:#F7F8FA; --ink:#16191F; --muted:#5F6A78; --rule:#DCE1E8;
+ --panel:#EDF0F5; --panelrule:#D2D9E2; --code:#EEF1F6; --surf:#FFFFFF;
+ --key:#2B4C7E; --keep:#2C6A5C; --open:#7A5A18; --drop:#8C382B;
+ --chipbg:#E4E9F1; --grid:#C8D0DB;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --paper:#12151A; --ink:#E4E7EC; --muted:#909AA7; --rule:#262C35;
+ --panel:#1A1E25; --panelrule:#2E3540; --code:#171B22; --surf:#161A21;
+ --key:#84A9DA; --keep:#6FB79F; --open:#C9A44F; --drop:#DC8B76;
+ --chipbg:#1F2530; --grid:#39414D;
+}}
+:root[data-theme="dark"]{
+ --paper:#12151A; --ink:#E4E7EC; --muted:#909AA7; --rule:#262C35;
+ --panel:#1A1E25; --panelrule:#2E3540; --code:#171B22; --surf:#161A21;
+ --key:#84A9DA; --keep:#6FB79F; --open:#C9A44F; --drop:#DC8B76;
+ --chipbg:#1F2530; --grid:#39414D;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+ font-family:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif;
+ font-size:15px;line-height:1.8;-webkit-font-smoothing:antialiased}
+main{max-width:62rem;margin:0 auto;padding:3rem 1.5rem 5rem;
+ display:flex;flex-direction:column;gap:1.8rem}
+h1,h2,h3,h4{font-family:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+ text-wrap:balance;margin:0}
+h1{font-size:1.95rem;font-weight:700;line-height:1.4;letter-spacing:.01em}
+h3{font-size:1.02rem;font-weight:700;line-height:1.55}
+h4{font-size:.86rem;font-weight:700;line-height:1.6;color:var(--muted);
+ font-family:"IBM Plex Mono",ui-monospace,monospace;letter-spacing:.1em}
+p{margin:0}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.68rem;
+ letter-spacing:.18em;color:var(--key);font-weight:600}
+header{display:flex;flex-direction:column;gap:.7rem}
+.lead{font-size:1.04rem;line-height:1.78;padding:1rem 1.25rem;background:var(--panel);
+ border:1px solid var(--panelrule);border-left:3px solid var(--key)}
+.sub{color:var(--muted);font-size:.9rem}
+
+/* tabs */
+[role="tablist"]{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--rule);
+ position:sticky;top:0;background:var(--paper);z-index:5;padding-top:.2rem}
+[role="tab"]{appearance:none;background:none;border:none;cursor:pointer;
+ font-family:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+ font-size:.9rem;font-weight:700;color:var(--muted);padding:.6rem .95rem;
+ border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
+ display:flex;align-items:baseline;gap:.45rem}
+[role="tab"] .tn{font-family:"IBM Plex Mono",ui-monospace,monospace;
+ font-size:.63rem;letter-spacing:.1em;opacity:.75}
+[role="tab"]:hover{color:var(--ink)}
+[role="tab"][aria-selected="true"]{color:var(--key);border-bottom-color:var(--key)}
+[role="tab"]:focus-visible{outline:2px solid var(--key);outline-offset:-2px}
+[role="tabpanel"]{display:flex;flex-direction:column;gap:1.6rem;padding-top:.6rem}
+[role="tabpanel"]:focus-visible{outline:none}
+
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:30rem}
+th{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.63rem;
+ letter-spacing:.12em;color:var(--muted);font-weight:600;text-align:left;
+ padding:0 .85rem .45rem 0;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:.55rem .85rem .55rem 0;border-bottom:1px solid var(--rule);
+ vertical-align:top;line-height:1.65}
+tr:last-child td{border-bottom:none}
+td.num,th.num{font-family:"IBM Plex Mono",ui-monospace,monospace;
+ font-variant-numeric:tabular-nums;text-align:right;padding-right:1.2rem;white-space:nowrap}
+td.q{font-weight:500;white-space:nowrap}
+td.id{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.78rem;
+ color:var(--key);font-weight:600;white-space:nowrap}
+td.ok{color:var(--keep);font-weight:600;white-space:nowrap}
+.mono,code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.85em}
+pre{margin:0;background:var(--code);border:1px solid var(--rule);
+ padding:.9rem 1rem;overflow-x:auto;font-family:"IBM Plex Mono",ui-monospace,monospace;
+ font-size:.77rem;line-height:1.72;color:var(--ink)}
+pre b{color:var(--key);font-weight:600}
+pre i{font-style:normal;color:var(--muted)}
+pre .a{color:var(--keep)} pre .r{color:var(--drop)}
+.tag{display:inline-block;font-family:"IBM Plex Mono",ui-monospace,monospace;
+ font-size:.62rem;letter-spacing:.09em;font-weight:600;padding:.12rem .48rem;
+ background:var(--chipbg);color:var(--key);white-space:nowrap}
+.tag.o{color:var(--open)} .tag.d{color:var(--drop)} .tag.k{color:var(--keep)}
+.note{font-size:.84rem;color:var(--muted);line-height:1.7}
+.rail{border-left:2px solid var(--key);padding-left:1rem;
+ display:flex;flex-direction:column;gap:.4rem;font-size:.93rem}
+.rail.warn{border-left-color:var(--open)}
+figure{margin:0;display:flex;flex-direction:column;gap:.55rem}
+svg{display:block;width:100%;height:auto}
+.cap{font-size:.8rem;color:var(--muted)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:1.4rem;align-items:start}
+.hero{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--rule);
+ border-bottom:1px solid var(--rule)}
+.hero div{flex:1 1 11rem;padding:.9rem 1.2rem .9rem 0}
+.hero .hv{font-family:"IBM Plex Mono",ui-monospace,monospace;
+ font-variant-numeric:tabular-nums;font-size:1.55rem;font-weight:600;
+ color:var(--key);line-height:1.2;display:block}
+.hero .hv.k{color:var(--keep)}
+.hero .hl{font-size:.8rem;color:var(--muted);display:block;margin-top:.15rem}
+.bar rect,.bar path{transition:opacity .12s}
+.bar:hover path{opacity:.78}
+details{border-top:1px solid var(--rule);padding-top:.85rem;margin-top:.4rem}
+summary{cursor:pointer;font-weight:700;font-size:.93rem;
+ font-family:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif}
+summary:focus-visible{outline:2px solid var(--key);outline-offset:3px}
+details[open] summary{margin-bottom:.85rem}
+footer{border-top:1px solid var(--rule);padding-top:1rem;font-size:.8rem;
+ color:var(--muted);line-height:1.7}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<main>
+<header>
+  <p class="eyebrow">仮称 KATA ／ 卒制の後に作るもの ／ 設計ノート 第1版</p>
+  <h1>Kata 設計ノート</h1>
+  <p class="lead">スキーマが構造を決め、AIは中身だけを埋め、文書は実体JSONからの一方向の射影として出る。<b>作るのは新しいスキーマ言語でもDBでもなく、JSON Schema の上に アドレス・射影・宣言されたアクセスパターン を載せた層である。</b></p>
+  <div class="hero">
+    <div><span class="hv">7</span><span class="hl">中核層の原語</span></div>
+    <div><span class="hv">2 / 3</span><span class="hl">動いたプロファイル ／ 予定</span></div>
+    <div><span class="hv k">0.1%</span><span class="hl">1操作が触るトークン</span></div>
+    <div><span class="hv">17.6<span style="font-size:.9rem"> ms</span></span><span class="hl">11,500ノードの索引構築</span></div>
+    <div><span class="hv">16 / 11</span><span class="hl">機能要件 ／ 非機能要件</span></div>
+    <div><span class="hv k">3 / 3</span><span class="hl">原型で見つけて、直した欠陥</span></div>
+    <div><span class="hv" style="color:var(--open)">33%</span><span class="hl">実仕様628本で、参照が解決しない割合</span></div>
+  </div>
+</header>
+
+<div role="tablist" aria-label="設計ノートの節">
+  <button role="tab" id="t1" aria-controls="p1" aria-selected="true"><span class="tn">DIFF</span>変更前と変更後</button>
+  <button role="tab" id="t2" aria-controls="p2" aria-selected="false"><span class="tn">01</span>設計とアーキテクチャ</button>
+  <button role="tab" id="t3" aria-controls="p3" aria-selected="false"><span class="tn">02</span>アルゴリズム</button>
+  <button role="tab" id="t4" aria-controls="p4" aria-selected="false"><span class="tn">03</span>完成イメージ</button>
+  <button role="tab" id="t5" aria-controls="p5" aria-selected="false"><span class="tn">04</span>動作シミュレーション</button>
+  <button role="tab" id="t6" aria-controls="p6" aria-selected="false"><span class="tn">05</span>機能要件</button>
+  <button role="tab" id="t7" aria-controls="p7" aria-selected="false"><span class="tn">06</span>非機能要件</button>
+  <button role="tab" id="t8" aria-controls="p8" aria-selected="false"><span class="tn">07</span>検証結果</button>
+</div>
+
+<!-- ========== DIFF ========== -->
+<div role="tabpanel" id="p1" aria-labelledby="t1" tabindex="-1">
+  <p class="note">このタブは<b>製品としての主張</b>だけを置く。設計中に自分の案が変わった記録は「07 検証結果」にある。</p>
+  <figure>
+    <svg viewBox="0 0 760 232" role="img" aria-label="テンプレートを渡すやり方では構造と中身の両方が推論に載る。Kataでは構造はスキーマが決め、推論は中身だけに閉じる">
+      <text x="8" y="16" font-family="'IBM Plex Mono',monospace" font-size="10.5" letter-spacing="1.4" fill="var(--drop)">変更前 ── テンプレートを渡す</text>
+      <rect x="8" y="28" width="150" height="40" fill="none" stroke="var(--grid)"/>
+      <text x="83" y="53" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="13" fill="var(--ink)">テンプレート</text>
+      <line x1="158" y1="48" x2="196" y2="48" stroke="var(--grid)" stroke-width="1.5"/><path d="M196 48 L187 44.5 L187 51.5 Z" fill="var(--grid)"/>
+      <rect x="200" y="20" width="188" height="56" fill="none" stroke="var(--drop)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="294" y="42" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" fill="var(--drop)">構造の推論</text>
+      <text x="294" y="62" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" fill="var(--drop)">中身の推論</text>
+      <line x1="388" y1="48" x2="426" y2="48" stroke="var(--grid)" stroke-width="1.5"/><path d="M426 48 L417 44.5 L417 51.5 Z" fill="var(--grid)"/>
+      <rect x="430" y="28" width="170" height="40" fill="none" stroke="var(--drop)"/>
+      <text x="515" y="53" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="13" fill="var(--drop)">形式が回ごとに揺れる</text>
+      <text x="616" y="53" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--muted)">冪等にならない</text>
+
+      <line x1="8" y1="104" x2="752" y2="104" stroke="var(--rule)"/>
+
+      <text x="8" y="136" font-family="'IBM Plex Mono',monospace" font-size="10.5" letter-spacing="1.4" fill="var(--keep)">変更後 ── Kata</text>
+      <rect x="8" y="148" width="150" height="40" fill="none" stroke="var(--key)" stroke-width="1.5"/>
+      <text x="83" y="173" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="13" font-weight="700" fill="var(--key)">スキーマ</text>
+      <line x1="158" y1="168" x2="196" y2="168" stroke="var(--keep)" stroke-width="1.5"/><path d="M196 168 L187 164.5 L187 171.5 Z" fill="var(--keep)"/>
+      <rect x="200" y="140" width="188" height="26" fill="none" stroke="var(--keep)" stroke-width="1.2"/>
+      <text x="294" y="158" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" fill="var(--keep)">構造 ── 機械が組む</text>
+      <rect x="200" y="172" width="188" height="26" fill="none" stroke="var(--drop)" stroke-width="1.2" stroke-dasharray="4 3"/>
+      <text x="294" y="190" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" fill="var(--drop)">中身 ── AIが埋める</text>
+      <line x1="388" y1="168" x2="426" y2="168" stroke="var(--keep)" stroke-width="1.5"/><path d="M426 168 L417 164.5 L417 171.5 Z" fill="var(--keep)"/>
+      <rect x="430" y="148" width="170" height="40" fill="none" stroke="var(--keep)" stroke-width="1.5"/>
+      <text x="515" y="173" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="13" font-weight="700" fill="var(--keep)">構造は必ず同じ</text>
+      <text x="616" y="173" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--muted)">揺れるのは中身だけ</text>
+      <text x="294" y="220" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" letter-spacing="1" fill="var(--muted)">推論の届く範囲が半分になる</text>
+    </svg>
+    <figcaption class="cap">推論に載るものが「構造＋中身」から「中身だけ」に減る。これが設計の全体である。</figcaption>
+  </figure>
+
+  <h3>従来の進め方との差分</h3>
+  <div class="wrap"><table>
+    <thead><tr><th>観点</th><th>テンプレートを渡すやり方</th><th>Kata</th><th>効く場所</th></tr></thead>
+    <tbody>
+      <tr><td class="q">AIが推論するもの</td><td>構造 ＋ 中身</td><td><b>中身だけ</b></td><td class="id">AD-2 / F-10</td></tr>
+      <tr><td class="q">同じ入力への出力</td><td>形式が回ごとに揺れる</td><td>構造は必ず同じ</td><td class="id">F-01</td></tr>
+      <tr><td class="q">文書の生成</td><td>AIが文書を書く</td><td>機械が射影する</td><td class="id">AD-3 / F-06</td></tr>
+      <tr><td class="q">検索の単位</td><td>文書</td><td>集約・不変条件・シナリオ</td><td class="id">F-08</td></tr>
+      <tr><td class="q">実装との対応づけ</td><td>AIの解釈に委ねられる</td><td>アドレスが鍵。両向きに引ける</td><td class="id">F-14</td></tr>
+      <tr><td class="q">差分</td><td>文章の差分</td><td>構造の差分（集合演算）</td><td class="id">F-13</td></tr>
+      <tr><td class="q">人が見る場所</td><td>文書全体</td><td>ADR と MD差分だけ</td><td class="id">F-12</td></tr>
+      <tr><td class="q">1操作のトークン</td><td>文書を丸ごと載せる</td><td>全体の 0.1%</td><td class="id">N-04</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ========== 01 ========== -->
+<div role="tabpanel" id="p2" aria-labelledby="t2" tabindex="-1" hidden>
+  <figure>
+    <svg viewBox="0 0 760 196" role="img" aria-label="スキーマが構造を決め、AIが中身を埋め、射影が文書を出す。冪等でないのは中身だけである">
+      <rect x="8" y="58" width="180" height="52" fill="none" stroke="var(--key)" stroke-width="1.5"/>
+      <text x="98" y="80" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="14.5" font-weight="700" fill="var(--key)">スキーマ</text>
+      <text x="98" y="99" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">JSON Schema / 版で固定</text>
+      <rect x="278" y="40" width="204" height="88" fill="var(--panel)" stroke="var(--panelrule)"/>
+      <text x="380" y="32" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" font-weight="700" fill="var(--ink)">実体の JSON（インスタンス）</text>
+      <rect x="290" y="52" width="180" height="32" fill="none" stroke="var(--keep)" stroke-width="1.2"/>
+      <text x="380" y="73" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" fill="var(--keep)">構造 ── 冪等</text>
+      <rect x="290" y="90" width="180" height="32" fill="none" stroke="var(--drop)" stroke-width="1.2" stroke-dasharray="4 3"/>
+      <text x="380" y="111" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" fill="var(--drop)">中身 ── 冪等でない</text>
+      <rect x="572" y="58" width="180" height="52" fill="none" stroke="var(--keep)" stroke-width="1.5"/>
+      <text x="662" y="80" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="14.5" font-weight="700" fill="var(--keep)">MD ／ HTML</text>
+      <text x="662" y="99" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">射影。純関数</text>
+      <line x1="188" y1="68" x2="272" y2="68" stroke="var(--keep)" stroke-width="1.5"/><path d="M272 68 L263 64.5 L263 71.5 Z" fill="var(--keep)"/>
+      <text x="230" y="58" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="11" fill="var(--keep)">機械が組む</text>
+      <path d="M230 152 L230 112" stroke="var(--drop)" stroke-width="1.5" fill="none"/>
+      <path d="M272 106 L230 106 L230 112" fill="none" stroke="var(--drop)" stroke-width="1.5"/>
+      <path d="M272 106 L263 102.5 L263 109.5 Z" fill="var(--drop)"/>
+      <text x="230" y="170" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--drop)">AI が埋める</text>
+      <text x="230" y="188" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">推論はここだけ</text>
+      <line x1="482" y1="84" x2="566" y2="84" stroke="var(--keep)" stroke-width="1.5"/><path d="M566 84 L557 80.5 L557 87.5 Z" fill="var(--keep)"/>
+      <text x="524" y="74" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="11" fill="var(--keep)">変換契約</text>
+    </svg>
+    <figcaption class="cap">3段の冪等。スキーマで縛るとは、推論の届く範囲を「中身の欄」だけに閉じ込めることである。</figcaption>
+  </figure>
+
+  <div class="two">
+    <figure>
+      <h4>層</h4>
+      <svg viewBox="0 0 480 190" role="img" aria-label="プロファイル層・中核層・土台の3層">
+        <rect x="4" y="4" width="472" height="54" fill="var(--panel)" stroke="var(--key)" stroke-width="1.5"/>
+        <text x="18" y="24" font-family="'IBM Plex Mono',monospace" font-size="10" letter-spacing="1.4" fill="var(--key)">PROFILE ── 意味を持つ</text>
+        <text x="18" y="46" font-family="'Noto Sans JP',sans-serif" font-size="13" fill="var(--ink)">ddd　／　adr　／　research</text>
+        <rect x="4" y="68" width="472" height="76" fill="none" stroke="var(--grid)" stroke-width="1.5"/>
+        <text x="18" y="88" font-family="'IBM Plex Mono',monospace" font-size="10" letter-spacing="1.4" fill="var(--muted)">CORE ── 意味を1つも持たない</text>
+        <text x="18" y="110" font-family="'IBM Plex Mono',monospace" font-size="11.5" fill="var(--ink)">Node  Address  Containment  Shape</text>
+        <text x="18" y="130" font-family="'IBM Plex Mono',monospace" font-size="11.5" fill="var(--ink)">Projection  AccessPattern  <tspan fill="var(--open)">Reference</tspan></text>
+        <rect x="4" y="154" width="472" height="32" fill="none" stroke="var(--grid)" stroke-dasharray="4 3"/>
+        <text x="18" y="174" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--muted)">BASE　JSON Schema ／ ファイル ／ Git</text>
+      </svg>
+    </figure>
+    <figure>
+      <h4>データの流れ</h4>
+      <svg viewBox="0 0 480 190" role="img" aria-label="スキーマとアダプタから生成し、実体JSONを正本として索引・射影・ADR・突き合わせが導かれる">
+        <rect x="4" y="10" width="128" height="34" fill="none" stroke="var(--key)" stroke-width="1.5"/>
+        <text x="68" y="32" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" fill="var(--key)">schema/</text>
+        <rect x="4" y="56" width="128" height="34" fill="none" stroke="var(--grid)"/>
+        <text x="68" y="78" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" fill="var(--muted)">adapters/</text>
+        <rect x="176" y="30" width="128" height="46" fill="var(--panel)" stroke="var(--key)" stroke-width="2"/>
+        <text x="240" y="50" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" font-weight="600" fill="var(--key)">instance/</text>
+        <text x="240" y="67" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="10.5" fill="var(--muted)">正本</text>
+        <path d="M132 30 L170 48" stroke="var(--grid)" stroke-width="1.3" fill="none"/>
+        <path d="M132 76 L170 58" stroke="var(--grid)" stroke-width="1.3" fill="none"/>
+        <text x="152" y="18" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="10" fill="var(--muted)">生成</text>
+        <rect x="348" y="4" width="128" height="30" fill="none" stroke="var(--keep)"/>
+        <text x="412" y="24" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--keep)">render/  MD·HTML</text>
+        <rect x="348" y="42" width="128" height="30" fill="none" stroke="var(--grid)"/>
+        <text x="412" y="62" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--muted)">索引（非永続）</text>
+        <rect x="348" y="80" width="128" height="30" fill="none" stroke="var(--open)"/>
+        <text x="412" y="100" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--open)">decisions/  ADR</text>
+        <rect x="348" y="118" width="128" height="30" fill="none" stroke="var(--grid)"/>
+        <text x="412" y="138" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--muted)">verify  ⇄ src/</text>
+        <path d="M304 46 L342 19" stroke="var(--keep)" stroke-width="1.3" fill="none"/>
+        <path d="M304 53 L342 57" stroke="var(--grid)" stroke-width="1.3" fill="none"/>
+        <path d="M304 60 L342 95" stroke="var(--open)" stroke-width="1.3" fill="none"/>
+        <path d="M304 66 L342 133" stroke="var(--grid)" stroke-width="1.3" fill="none"/>
+        <text x="240" y="176" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="11" fill="var(--muted)">右の4つはすべて導出物である。正本は instance/ 1つ</text>
+      </svg>
+    </figure>
+  </div>
+
+  <h3>構成物</h3>
+  <div class="wrap"><table>
+    <thead><tr><th>もの</th><th>役</th><th>Git</th><th>人が直すか</th></tr></thead>
+    <tbody>
+      <tr><td class="q"><span class="mono">schema/v3/</span></td><td>正本のスキーマ。プロファイルごと。版でフォルダを固定</td><td class="q">追跡する</td><td>直す（設計行為）</td></tr>
+      <tr><td class="q"><span class="mono">instance/</span></td><td><b>正本の実体JSON</b></td><td class="q">追跡する</td><td>既定は道具経由。手でも直せる</td></tr>
+      <tr><td class="q"><span class="mono">render/</span></td><td>射影後の MD ／ HTML。契約の版を刻む</td><td class="q">追跡する</td><td><b>直さない。</b>差分を読むためだけにある</td></tr>
+      <tr><td class="q"><span class="mono">decisions/</span></td><td>構造を変えた操作から出る ADR</td><td class="q">追跡する</td><td>人が承認する</td></tr>
+      <tr><td class="q">索引</td><td>起動時に張る。前方一致と kind 逆引き</td><td class="q">追跡しない</td><td>ない（導出物）</td></tr>
+      <tr><td class="q"><span class="mono">adapters/</span></td><td>渡す形を導く。<span class="mono">x-</span> を description へ畳む</td><td class="q">追跡する</td><td>接続先が増えたら足す</td></tr>
+      <tr><td class="q">MCP サーバ</td><td>アクセスパターン1つ＝ツール1つ</td><td class="q">追跡する</td><td>パターンを足すときだけ</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>設計判断</h3>
+  <div class="wrap"><table>
+    <thead><tr><th>ID</th><th>決めたこと</th><th>根拠</th><th>捨てたもの</th></tr></thead>
+    <tbody>
+      <tr><td class="id">AD-1</td><td>正本はファイル、索引は導出</td><td>仕様はPRで読まれる。11,500ノードを17.6msで読み切る</td><td>DBを正本にする設計</td></tr>
+      <tr><td class="id">AD-2</td><td>スキーマ言語は JSON Schema のまま</td><td>構造化出力が JSON Schema を要求する</td><td>独自DSL、CUE、JTD</td></tr>
+      <tr><td class="id">AD-3</td><td>射影は一方向・純関数</td><td>往復にすると文書側の編集が正本になり、アドレスが壊れる</td><td>MD往復（Markdoc方式）</td></tr>
+      <tr><td class="id">AD-4</td><td><b>クエリの語彙を、文書スキーマから生成する。</b>条件・並べ替えは持ってよい</td><td>危ないのは条件式ではなく、<b>欄の名前をAIの記憶から出させること</b>。enum で縛れば構造化出力が保証する</td><td>文字列のクエリ言語（SQL ／ JSONPath ／ 検索式）の露出</td></tr>
+      <tr><td class="id">AD-5</td><td>中核層は意味を持たない</td><td>具体する高さはDDDが既に決めている。決め直させない</td><td>DDD専用の道具にすること</td></tr>
+      <tr><td class="id">AD-6</td><td>圧縮形式を作らない</td><td>構造を全部消しても上限34%。構造化出力を失う代償に合わない</td><td>独自のトークン節約形式</td></tr>
+      <tr><td class="id">AD-7</td><td><b>鍵を2本にする。</b>位置の <span class="mono">addr</span> と、不変の <span class="mono">uid</span></td><td>原型で確認。<span class="mono">move</span> と改名で位置が動き、<span class="mono">@spec</span> が迷子になる</td><td>1本の鍵で4役をまかなう案</td></tr>
+      <tr><td class="id">AD-8</td><td><b>Reference を7つ目の原語にする</b></td><td>想定質問10件中3件が、横のつながりが無くて答えられなかった</td><td>木だけで表現する案</td></tr>
+      <tr><td class="id">AD-10</td><td><b>Reference は型と解決状態を持つ</b>（<span class="mono">spec</span> ／ <span class="mono">impl</span> ／ <span class="mono">external</span>）</td><td>実仕様628本の実測。参照の主体は実装ファイルで、<b>33%が解決しない</b></td><td>参照を node の uid だけに限る案</td></tr>
+      <tr><td class="id">AD-9</td><td>実装対応の対象 kind を、プロファイルが宣言する（<span class="mono">traced</span>）</td><td>原型で全ノードを対象にしたら、未実装が14件出た。文脈やエンティティは実装と1対1でない</td><td>全ノードを突き合わせる案</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ========== 02 ========== -->
+<div role="tabpanel" id="p3" aria-labelledby="t3" tabindex="-1" hidden>
+  <h3>8本の一覧</h3>
+  <div class="wrap"><table>
+    <thead><tr><th>ID</th><th>名</th><th>入力 → 出力</th><th class="num">計算量</th><th>効かせる要件</th></tr></thead>
+    <tbody>
+      <tr><td class="id">A-1</td><td class="q">アドレス採番</td><td>親アドレス ＋ kind → 新アドレス</td><td class="num">O(k)</td><td class="id">F-04</td></tr>
+      <tr><td class="id">A-2</td><td class="q">正規化</td><td>実体JSON ＋ スキーマ → 正規形</td><td class="num">O(n)</td><td class="id">F-05</td></tr>
+      <tr><td class="id">A-3</td><td class="q">射影</td><td>正規形 ＋ 変換契約 → MD ／ HTML</td><td class="num">O(n)</td><td class="id">F-06 / F-07</td></tr>
+      <tr><td class="id">A-4</td><td class="q">部分木の取得</td><td>アドレスの前方一致 → 子孫</td><td class="num">O(log n + k)</td><td class="id">F-08</td></tr>
+      <tr><td class="id">A-5</td><td class="q">構造の差分</td><td>2版 → added / removed / moved / changed</td><td class="num">O(n)</td><td class="id">F-13</td></tr>
+      <tr><td class="id">A-6</td><td class="q">突き合わせ</td><td>実体 ＋ <span class="mono">src/</span> → 未実装 ／ 仕様外</td><td class="num">O(n + m)</td><td class="id">F-14</td></tr>
+      <tr><td class="id">A-7</td><td class="q">渡す形の導出</td><td>正本スキーマ ＋ 接続先 → サブセット</td><td class="num">O(n)</td><td class="id">F-15</td></tr>
+      <tr><td class="id">A-8</td><td class="q"><b>版の移行</b></td><td>旧版の実体 ＋ 移行計画 → 新版の実体 ＋ 穴</td><td class="num">O(n·ops)</td><td class="id">F-20 / F-21 / N-11</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="two">
+    <figure>
+      <h4>A-1　アドレスの構造</h4>
+      <svg viewBox="0 0 480 132" role="img" aria-label="アドレスはkindとidの対を連ねた文字列で、表示名を含まない">
+        <text x="12" y="42" font-family="'IBM Plex Mono',monospace" font-size="15" fill="var(--key)" font-weight="600">CTX#予約</text>
+        <text x="112" y="42" font-family="'IBM Plex Mono',monospace" font-size="15" fill="var(--muted)">#</text>
+        <text x="128" y="42" font-family="'IBM Plex Mono',monospace" font-size="15" fill="var(--key)" font-weight="600">AGG#予約</text>
+        <text x="228" y="42" font-family="'IBM Plex Mono',monospace" font-size="15" fill="var(--muted)">#</text>
+        <text x="244" y="42" font-family="'IBM Plex Mono',monospace" font-size="15" fill="var(--key)" font-weight="600">INV#01</text>
+        <path d="M12 52 L12 60 L108 60 L108 52" fill="none" stroke="var(--grid)"/>
+        <path d="M128 52 L128 60 L224 60 L224 52" fill="none" stroke="var(--grid)"/>
+        <path d="M244 52 L244 60 L316 60 L316 52" fill="none" stroke="var(--grid)"/>
+        <text x="60" y="76" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">kind:id</text>
+        <text x="176" y="76" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">kind:id</text>
+        <text x="280" y="76" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">kind:id</text>
+        <text x="330" y="42" font-family="'IBM Plex Mono',monospace" font-size="13" fill="var(--muted)">＋</text>
+        <text x="352" y="42" font-family="'IBM Plex Mono',monospace" font-size="15" fill="var(--open)" font-weight="600">uid INV-01J7Q4K</text>
+        <text x="12" y="102" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--key)">addr ＝ 位置。move と改名で動く。読むため・目次・射影に使う</text>
+        <text x="12" y="122" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--open)">uid ＝ 一生変わらない。@spec と参照と差分の同定に使う（AD-7）</text>
+      </svg>
+    </figure>
+    <div>
+      <h4>A-2　正規化の規則</h4>
+      <div class="wrap"><table>
+        <thead><tr><th>対象</th><th>規則</th></tr></thead>
+        <tbody>
+          <tr><td class="q">鍵順</td><td>スキーマの <span class="mono">properties</span> 宣言順（辞書順ではない）</td></tr>
+          <tr><td class="q">不在</td><td>キーを置かない。<span class="mono">null</span> ・ <span class="mono">""</span> と区別する</td></tr>
+          <tr><td class="q">文字</td><td>Unicode NFC</td></tr>
+          <tr><td class="q">数値</td><td>指数表記にしない。末尾の0を落とす</td></tr>
+          <tr><td class="q">配列</td><td>順序は意味である。並べ替えない</td></tr>
+          <tr><td class="q">出力</td><td>LF、末尾改行1つ、インデント2</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note" style="margin-top:.6rem"><b>不変条件</b> <span class="mono">canonical(canonical(x)) == canonical(x)</span><br><b>検査</b> <span class="mono">render(canonical(x))</span> のバイト列が2回とも一致すること</p>
+    </div>
+  </div>
+
+  <div class="two">
+    <figure><h4>A-3　射影</h4><pre>render(node, contract):
+  tmpl = contract.templates[node.kind]  <i>kindごとに1つ</i>
+  body = tmpl(node.fields)              <i>純関数</i>
+  for child in <b>containment_order</b>(node):
+      body += render(child, contract)   <i>走査順を推論しない</i>
+  return body
+
+<i>出力の先頭に契約の版を刻む</i>
+&lt;!-- kata: profile=ddd@3 contract=md@2 --&gt;</pre></figure>
+    <figure><h4>A-4　部分木の取得</h4><pre>keys = sorted(all_addresses)   <i>起動時に1回</i>
+
+subtree(prefix):
+  i = bisect_left(keys, prefix)
+  while keys[i].startswith(prefix):
+      yield keys[i]; i += 1
+
+<i>O(log n + k)　実測 0.002 ms / query（n=11,500）</i></pre></figure>
+  </div>
+
+  <div class="two">
+    <figure><h4>A-5　構造の差分 ── 集合演算になる</h4><pre>A, B = addresses(a), addresses(b)
+
+<span class="a">added</span>   = B - A
+<span class="r">removed</span> = A - B
+changed = { k ∈ A∩B |
+            hash(canonical(a[k])) ≠ hash(canonical(b[k])) }
+<b>moved</b>   = { (f,t) | f ∈ removed, t ∈ added,
+              <b>uid(f) == uid(t)</b> }        <i>AD-7</i>
+<i>moved に入った対は added / removed から外す</i>
+
+<i>O(n)。編集距離を計算しない</i>
+<b>added / removed / moved → 構造 → ADR が出る</b>
+<b>changed              → 中身 → MD差分で読む</b></pre></figure>
+    <figure><h4>A-6　突き合わせ ── 同じ鍵で両向き</h4><pre>S = { <b>uid</b>(n) | n ∈ instance,
+        kind(n) ∈ <b>profile.traced</b> }     <i>AD-9</i>
+I = { m[1] for f in src
+        for m in finditer(
+          r"@spec\s+<b>([A-Z]+-[0-9A-F]+)</b>", f) }  <i>欠陥1</i>
+
+<span class="r">未実装</span> = S - I   <i>仕様にあって実装に無い</i>
+<span class="r">仕様外</span> = I - S   <i>実装にあって仕様が述べていない</i>
+
+<i>uid で当てるので move しても迷子にならない</i></pre></figure>
+  </div>
+
+  <figure><h4>A-7　渡す形の導出（正本は削らない）</h4>
+  <div class="wrap"><table>
+    <thead><tr><th>操作</th><th>正本</th><th>Claude へ渡す形</th><th>Codex へ渡す形</th></tr></thead>
+    <tbody>
+      <tr><td class="q"><span class="mono">$schema</span></td><td>持つ</td><td class="ok">落とす</td><td class="ok">落とす</td></tr>
+      <tr><td class="q"><span class="mono">x-prompt-read/write</span></td><td>持つ</td><td>description へ畳む</td><td>description へ畳む</td></tr>
+      <tr><td class="q"><span class="mono">minItems / maxItems</span></td><td>持つ</td><td>残す</td><td>落として検査だけで見る</td></tr>
+      <tr><td class="q"><span class="mono">minLength / pattern</span></td><td>持つ</td><td>残す</td><td>落として検査だけで見る</td></tr>
+      <tr><td class="q"><span class="mono">const</span></td><td>持つ</td><td>そのまま</td><td><span class="mono">type</span> を添える</td></tr>
+    </tbody>
+  </table></div>
+  <figcaption class="cap">検査には常に完全版を使う。削った側で検めない。</figcaption>
+  </figure>
+
+  <h3>A-8　版の移行 ── ここでも推論させない</h3>
+  <div class="two">
+    <figure><h4>手順</h4><pre>migrate(instance, plan):
+  <b>assert</b> instance.schema == plan.from   <i>版が違えば拒む</i>
+  for op in plan.ops:                  <i>宣言順。決定的</i>
+      apply(op, instance)
+  instance.schema = plan.to
+  <b>holes</b> = 既定値の無い add_field の当たり先
+  return instance, holes
+
+<i>holes だけが、AIに埋めさせる欄である</i>
+<i>= 3段の冪等図の「中身」に、そのまま重なる</i></pre></figure>
+    <div>
+      <h4>閉じた操作集合</h4>
+      <div class="wrap"><table>
+        <thead><tr><th>操作</th><th>推論</th><th>uid</th><th>addr</th></tr></thead>
+        <tbody>
+          <tr><td class="q"><span class="mono">rename_field</span></td><td class="ok">要らない</td><td class="ok">不変</td><td class="ok">不変</td></tr>
+          <tr><td class="q"><span class="mono">drop_field</span></td><td class="ok">要らない</td><td class="ok">不変</td><td class="ok">不変</td></tr>
+          <tr><td class="q"><span class="mono">retype_field</span></td><td class="ok">要らない</td><td class="ok">不変</td><td class="ok">不変</td></tr>
+          <tr><td class="q"><span class="mono">allow_child</span></td><td class="ok">要らない</td><td class="ok">不変</td><td class="ok">不変</td></tr>
+          <tr><td class="q"><span class="mono">rename_kind</span></td><td class="ok">要らない</td><td class="ok">不変</td><td style="color:var(--open)">変わる</td></tr>
+          <tr><td class="q"><span class="mono">add_field</span>（既定値あり）</td><td class="ok">要らない</td><td class="ok">不変</td><td class="ok">不変</td></tr>
+          <tr><td class="q"><b><span class="mono">add_field</span>（既定値なし）</b></td><td style="color:var(--drop)"><b>穴になる</b></td><td class="ok">不変</td><td class="ok">不変</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note" style="margin-top:.55rem"><b>移行でも uid は動かない。</b>だから <span class="mono">@spec</span> は版をまたいで生き残る。これが AD-7 で鍵を2本にしたことの、二つ目の見返りである。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 03 ========== -->
+<div role="tabpanel" id="p4" aria-labelledby="t4" tabindex="-1" hidden>
+  <div class="two">
+    <figure><h4>置き場</h4><pre>myproduct/
+├ .kata/
+│ ├ schema/ddd@3/
+│ │ ├ core.json       <i>6原語</i>
+│ │ ├ profile.json    <i>DDDの語彙</i>
+│ │ └ contract/md@2/  <i>変換契約</i>
+│ └ adapters/
+├ <b>instance/</b>
+│ └ CTX#予約/
+│   └ AGG#予約.json   <i>← 正本</i>
+├ <b>render/</b>
+│ └ CTX#予約/
+│   └ AGG#予約.md     <i>← 導出。編集禁止</i>
+└ decisions/
+  └ ADR-0007.md       <i>← 構造を変えた記録</i></pre></figure>
+    <figure><h4>実体JSON（抜粋）</h4><pre>{
+  "kind": "aggregate",
+  "id": "予約",
+  <b>"uid": "AGG-3F7A",</b>
+  "root": "Reservation",
+  "children": [
+    { "kind": "invariant", "id": "01",
+      <b>"uid": "INV-0004",</b>
+      "statement": "同一の設備について、
+        確定した予約の区間は重ならない" },
+    { "kind": "scenario", "id": "02",
+      <b>"uid": "SC-0009",</b>
+      <b>"refs": ["INV-0004"],</b>      <i>AD-8</i>
+      "given": "…", "when": "…", "then": "…" }
+  ]
+}
+
+<i>鍵順はスキーマの宣言順。uid は一生不変</i></pre></figure>
+  </div>
+
+  <div class="two">
+    <figure><h4>射影されたMD（導出物）</h4><pre>&lt;!-- kata: profile=ddd@3 contract=md@2 --&gt;
+## 集約: 予約 <i>{#AGG:予約}</i>
+
+ルート: `Reservation`
+
+### 不変条件
+
+- **INV-01** 同一の設備について、
+  確定した予約の区間は重ならない
+- **INV-02** 取消された予約は、
+  再び確定へ遷移しない</pre></figure>
+    <figure><h4>構造差分の出力</h4><pre><b>$ kata diff HEAD~1 HEAD</b>
+
+<span class="a">+ 構造</span>  …#AGG#予約#INV#04
+<span class="r">- 構造</span>  …#AGG#予約#UC#03#SC#02
+  中身  …#AGG#予約#INV#02
+
+<b>構造の変更が2件。ADR-0007 を下書きしました。</b>
+<b>未実装: INV#04 の @spec が src/ にありません。</b></pre></figure>
+  </div>
+
+  <h3>MCP のツール ── 宣言したアクセスパターンの全部</h3>
+  <div class="wrap"><table>
+    <thead><tr><th>ツール</th><th>役</th><th>種別</th><th>後で起きること</th></tr></thead>
+    <tbody>
+      <tr><td class="q"><span class="mono">list_children(addr)</span></td><td>階層を1段たどる</td><td><span class="tag">読み</span></td><td>—</td></tr>
+      <tr><td class="q"><span class="mono">get_node(addr)</span></td><td>1ノードを読む</td><td><span class="tag">読み</span></td><td>—</td></tr>
+      <tr><td class="q"><span class="mono">get_subtree(addr, depth)</span></td><td>部分木を読む</td><td><span class="tag">読み</span></td><td>—</td></tr>
+      <tr><td class="q"><span class="mono">find_by_kind(kind, under)</span></td><td>kind で横断する</td><td><span class="tag">読み</span></td><td>—</td></tr>
+      <tr><td class="q"><span class="mono">find_spec_for_impl(path)</span></td><td>実装から仕様を引く</td><td><span class="tag">読み</span></td><td>—</td></tr>
+      <tr><td class="q"><span class="mono">refs_to(uid)</span></td><td><b>この節を指しているものを引く</b></td><td><span class="tag">読み</span></td><td>AD-8。横のつながり</td></tr>
+      <tr><td class="q"><span class="mono">search(text, under)</span></td><td><b>語で当たりを探す</b></td><td><span class="tag">読み</span></td><td>アドレスの一覧を返す</td></tr>
+      <tr><td class="q"><span class="mono">find(kind, where, order_by)</span></td><td><b>条件で探す。AND ／ 範囲 ／ 並べ替え</b></td><td><span class="tag">読み</span></td><td>AD-4。<span class="mono">kind</span> ・ <span class="mono">field</span> ・ <span class="mono">op</span> は enum。<b>スキーマから生成する</b></td></tr>
+      <tr><td class="q"><span class="mono">missing_child(kind, child)</span></td><td><b>欠落を判定する</b></td><td><span class="tag">読み</span></td><td>「シナリオを持たないユースケースは」</td></tr>
+      <tr><td class="q"><span class="mono">count_by(field, kind)</span></td><td><b>集計する</b></td><td><span class="tag">読み</span></td><td>「アクターごとに何件か」</td></tr>
+      <tr><td class="q"><span class="mono">update_content(addr, f)</span></td><td>中身を直す</td><td><span class="tag k">中身</span></td><td>Shape で検証。射影が走る</td></tr>
+      <tr><td class="q"><span class="mono">add_node(parent, kind)</span></td><td>ノードを足す</td><td><span class="tag o">構造</span></td><td>Containment で検証。<b>ADR が出る</b></td></tr>
+      <tr><td class="q"><span class="mono">move_node(from, to)</span></td><td>ノードを移す</td><td><span class="tag o">構造</span></td><td>Containment で検証。<b>ADR が出る</b></td></tr>
+      <tr><td class="q"><span class="mono">delete_node(addr)</span></td><td>ノードを消す</td><td><span class="tag o">構造</span></td><td><span class="mono">refs_to</span> が空でなければ拒む。<b>ADR が出る</b></td></tr>
+      <tr><td class="q"><span class="mono">diff(rev_a, rev_b)</span></td><td>2版を比べる</td><td><span class="tag">読み</span></td><td>構造と中身に分けて返す</td></tr>
+      <tr><td class="q"><span class="mono">verify()</span></td><td>実装と突き合わせる</td><td><span class="tag">読み</span></td><td>両向きの欠落を返す</td></tr>
+    </tbody>
+  </table></div>
+  <div class="rail"><p><b>書き込みは4つしかなく、うち3つは構造である。</b>構造を触ったら必ず ADR が出るので、人の介入点が操作の種類で決まる。</p></div>
+</div>
+
+<!-- ========== 04 ========== -->
+<div role="tabpanel" id="p5" aria-labelledby="t5" tabindex="-1" hidden>
+  <p class="note">前提 ── 製品仕様の規模は <b>11,500ノード ／ 1.84MB ／ 762,000トークン</b>（実測）。ここに「取消後は再確定できない、という不変条件を足したい」と言う。</p>
+
+  <div class="wrap"><table>
+    <thead><tr><th class="num">段</th><th>すること</th><th>呼ぶもの</th><th>検めるもの</th><th class="num">tokens</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td class="q">場所を探す</td><td><span class="mono">list_children</span> を3回<br><span class="note">文脈50 → 集約10 → 不変条件6</span></td><td>—</td><td class="num">365</td></tr>
+      <tr><td class="num">2</td><td class="q">重複しないか読む</td><td><span class="mono">get_subtree(…#AGG#予約, 1)</span></td><td>—</td><td class="num">396</td></tr>
+      <tr><td class="num">3</td><td class="q"><b>構造を足す</b></td><td><span class="mono">add_node(parent, "invariant")</span></td><td><b>Containment</b><br><span class="note">aggregate は invariant を含めてよい → 採番 INV#04。<b>AIは番号を決めない</b></span></td><td class="num">—</td></tr>
+      <tr><td class="num">4</td><td class="q"><b>中身を埋める</b></td><td><span class="mono">update_content(…#INV#04, {…})</span></td><td><b>Shape</b><br><span class="note">statement: string, minLength 10。<b>構造には触れていない</b></span></td><td class="num">—</td></tr>
+      <tr><td class="num">5</td><td class="q">射影する</td><td>正規化 → <span class="mono">render/</span></td><td>契約の版<br><span class="note">他の行は1バイトも動かない</span></td><td class="num">—</td></tr>
+      <tr><td class="num">6</td><td class="q"><b>人が見る</b></td><td>ADR-0007 ＋ MD差分2行</td><td>人の承認<br><span class="note">1.84MBの仕様書は開かない</span></td><td class="num">—</td></tr>
+      <tr><td class="num">7</td><td class="q">突き合わせる</td><td><span class="mono">verify()</span></td><td><span class="mono">@spec …#INV#04</span> が <span class="mono">src/</span> に無い → <b>未実装1件</b></td><td class="num">—</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="hero">
+    <div><span class="hv">762,000</span><span class="hl">仕様全体のトークン</span></div>
+    <div><span class="hv">171,499</span><span class="hl">全アドレスの目次だけ（22.5%）</span></div>
+    <div><span class="hv k">761</span><span class="hl">1操作が触るトークン</span></div>
+    <div><span class="hv k">0.1%</span><span class="hl">全体に対する割合</span></div>
+  </div>
+  <p class="note">全アドレスの目次は渡せない。だから探索は<b>階層をたどらせる</b>しかなく、<span class="mono">list_children</span> が要件になる（F-08）。</p>
+
+  <figure>
+    <h4>比較 ── 圧縮形式で削れるのは、ここまでである</h4>
+    <svg viewBox="0 0 640 196" role="img" aria-labelledby="ct cd">
+      <title id="ct">同じ仕様片を4形式で書いたときのトークン数</title>
+      <desc id="cd">JSON 634、Markdown 593、YAML 586、TOON風 522、構造を一切送らない床は416トークン</desc>
+      <line x1="150" y1="10" x2="150" y2="166" stroke="var(--grid)" stroke-width="1"/>
+      <line x1="417.4" y1="10" x2="417.4" y2="166" stroke="var(--keep)" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="417.4" y="182" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--keep)">床 416 ＝ 構造を一切送らない</text>
+
+      <g class="bar"><title>JSON 634 tokens（基準）</title>
+        <path d="M150 18 H553.6 Q557.6 18 557.6 22 V32 Q557.6 36 553.6 36 H150 Z" fill="var(--key)"/></g>
+      <text x="144" y="31" text-anchor="end" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--ink)">JSON</text>
+      <text x="566" y="31" font-family="'IBM Plex Mono',monospace" font-size="11.5" font-variant-numeric="tabular-nums" fill="var(--ink)">634</text>
+
+      <g class="bar"><title>Markdown 593 tokens（JSON比 93.5%）</title>
+        <path d="M150 48 H527.2 Q531.2 48 531.2 52 V62 Q531.2 66 527.2 66 H150 Z" fill="var(--key)" opacity=".82"/></g>
+      <text x="144" y="61" text-anchor="end" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--ink)">Markdown</text>
+      <text x="540" y="61" font-family="'IBM Plex Mono',monospace" font-size="11.5" font-variant-numeric="tabular-nums" fill="var(--muted)">593</text>
+
+      <g class="bar"><title>YAML 586 tokens（JSON比 92.4%）</title>
+        <path d="M150 78 H522.7 Q526.7 78 526.7 82 V92 Q526.7 96 522.7 96 H150 Z" fill="var(--key)" opacity=".82"/></g>
+      <text x="144" y="91" text-anchor="end" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--ink)">YAML</text>
+      <text x="536" y="91" font-family="'IBM Plex Mono',monospace" font-size="11.5" font-variant-numeric="tabular-nums" fill="var(--muted)">586</text>
+
+      <g class="bar"><title>TOON風 522 tokens（JSON比 82.3%。削減は18%）</title>
+        <path d="M150 108 H481.6 Q485.6 108 485.6 112 V122 Q485.6 126 481.6 126 H150 Z" fill="var(--key)" opacity=".82"/></g>
+      <text x="144" y="121" text-anchor="end" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--ink)">TOON風</text>
+      <text x="495" y="121" font-family="'IBM Plex Mono',monospace" font-size="11.5" font-variant-numeric="tabular-nums" fill="var(--muted)">522</text>
+
+      <g class="bar"><title>中身の文字列だけ 416 tokens。どの形式もこれより下へは行けない</title>
+        <path d="M150 138 H413.4 Q417.4 138 417.4 142 V152 Q417.4 156 413.4 156 H150 Z" fill="var(--keep)"/></g>
+      <text x="144" y="151" text-anchor="end" font-family="'Noto Sans JP',sans-serif" font-size="12" fill="var(--keep)">中身だけ</text>
+      <text x="427" y="151" font-family="'IBM Plex Mono',monospace" font-size="11.5" font-variant-numeric="tabular-nums" font-weight="600" fill="var(--keep)">416</text>
+    </svg>
+    <figcaption class="cap">同じDDD仕様片を4通りに書いた実測（<span class="mono">tiktoken cl100k_base</span>。Claude のトークナイザではなく代理）。日本語では中身が支配的で、構造を全部消しても削減は34%が上限になる。</figcaption>
+  </figure>
+
+  <div class="rail">
+    <p>圧縮形式で取れるのは <b>18%</b>。アドレスで部分木を絞ると <b>99.9%</b>。</p>
+    <p><b>桁が3つ違う。</b>これが AD-6（圧縮形式を作らない）の根拠である。</p>
+  </div>
+</div>
+
+<!-- ========== 05 ========== -->
+<div role="tabpanel" id="p6" aria-labelledby="t6" tabindex="-1" hidden>
+  <div class="wrap"><table>
+    <thead><tr><th>ID</th><th>群</th><th>要件</th><th>確かめ方</th></tr></thead>
+    <tbody>
+      <tr><td class="id">F-01</td><td class="q">生成</td><td>スキーマから、中身が空のインスタンス骨格を生成できる</td><td>同じスキーマから2回生成し、バイト列が一致する</td></tr>
+      <tr><td class="id">F-02</td><td class="q">検証</td><td>インスタンスを、正本の完全なスキーマで検証できる</td><td>意図的に壊した10件が、すべて落ちる</td></tr>
+      <tr><td class="id">F-03</td><td class="q">検証</td><td>Containment を検証できる</td><td>許されない親子を作ると落ちる</td></tr>
+      <tr><td class="id">F-04</td><td class="q">アドレス</td><td>全ノードにアドレスが振られ、名前を変えても動かない</td><td>表示名を変更し、アドレス集合が不変であること</td></tr>
+      <tr><td class="id">F-05</td><td class="q">冪等</td><td>正規化が冪等である</td><td><span class="mono">canonical(canonical(x)) == canonical(x)</span></td></tr>
+      <tr><td class="id">F-06</td><td class="q">冪等</td><td>射影が冪等である（MD ／ HTML の両方）</td><td>同じ実体JSONを100回射影し、バイト列が全部一致する</td></tr>
+      <tr><td class="id">F-07</td><td class="q">冪等</td><td>射影の出力に、プロファイルと契約の版が刻まれる</td><td>契約の版を上げると、出力の版表記が変わる</td></tr>
+      <tr><td class="id">F-08</td><td class="q">検索</td><td>階層を1段ずつたどれる／前方一致で部分木を取得できる</td><td>任意のアドレスで、子が過不足なく返る</td></tr>
+      <tr><td class="id">F-09</td><td class="q">検索</td><td>kind と、実装パスから逆引きできる</td><td>2経路が、全走査と同じ結果を返す</td></tr>
+      <tr><td class="id">F-10</td><td class="q">編集</td><td>中身の編集は、構造を変えられない</td><td><span class="mono">update_content</span> の後、アドレス集合が不変であること</td></tr>
+      <tr><td class="id">F-11</td><td class="q">編集</td><td>構造の編集は、閉じた3操作だけである</td><td><span class="mono">add / move / delete</span> 以外の経路が無いこと</td></tr>
+      <tr><td class="id">F-12</td><td class="q">編集</td><td>構造の編集が起きたら、ADR が1件下書きされる</td><td>構造操作の回数と ADR の件数が一致する</td></tr>
+      <tr><td class="id">F-13</td><td class="q">差分</td><td>2版の差分を、構造と中身に分けて出せる</td><td>added ／ removed ／ moved ／ changed の4分類</td></tr>
+      <tr><td class="id">F-14</td><td class="q">対応</td><td>仕様と実装を、同じ鍵で両向きに突き合わせられる</td><td>片側だけにあるものが、両方向とも出る</td></tr>
+      <tr><td class="id">F-15</td><td class="q">連携</td><td>正本から、接続先ごとの「渡す形」を導ける</td><td>Claude ／ Codex の2経路で、構造化出力が受理される</td></tr>
+      <tr><td class="id">F-17</td><td class="q">参照</td><td>ある節を指しているものを、逆に引ける</td><td><b>確認。</b>指されている節の <span class="mono">delete</span> が拒まれた</td></tr>
+      <tr><td class="id">F-22</td><td class="q">検索</td><td>欠落と集計を、宣言の中で答えられる</td><td><b>確認。</b>「ユースケースを持たない集約」が1件検出された</td></tr>
+      <tr><td class="id">F-23</td><td class="q">射影</td><td>HTML へも射影でき、DOM の入れ子が構造と一致する</td><td><b>確認。</b>タグの開閉が対応し、100回射影でバイト一致</td></tr>
+      <tr><td class="id">F-24</td><td class="q">アドレス</td><td><span class="mono">uid</span> から位置と名前へ戻せる</td><td><b>確認。</b><span class="mono">resolve(INV-0004)</span> がアドレスと文言を返す</td></tr>
+      <tr><td class="id">F-18</td><td class="q">検索</td><td>語で当たりを探せる</td><td>語を含む節が、アドレスで過不足なく返る</td></tr>
+      <tr><td class="id">F-19</td><td class="q">参照</td><td>解決しない参照を、検査で落とせる</td><td><b>確認。</b>存在しない uid とパスの2件が報告され、外部参照は検めない扱いになった</td></tr>
+      <tr><td class="id">F-20</td><td class="q">移行</td><td>版の移行は、宣言した閉じた操作だけで行われる</td><td><b>確認。</b>0件だった <span class="mono">retype_field</span> が警告に出た</td></tr>
+      <tr><td class="id">F-21</td><td class="q">移行</td><td>移行しても <span class="mono">uid</span> と <span class="mono">@spec</span> が生き残る</td><td>移行の前後で、突き合わせの結果が変わらない</td></tr>
+      <tr><td class="id">F-16</td><td class="q">汎用</td><td>プロファイルを差し替えても、中核層のコードが変わらない</td><td><b>2件で確認。</b><span class="mono">ddd</span> と <span class="mono">research</span> が同じ <span class="mono">core.py</span> で動いた。<b>ただし契約をコードからデータへ移す改修が要った</b></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ========== 06 ========== -->
+<div role="tabpanel" id="p7" aria-labelledby="t7" tabindex="-1" hidden>
+  <div class="wrap"><table>
+    <thead><tr><th>ID</th><th>要件</th><th class="num">目標</th><th class="num">実測</th><th>根拠</th></tr></thead>
+    <tbody>
+      <tr><td class="id">N-01</td><td>索引の構築（10,000ノード規模）</td><td class="num">&lt; 50 ms</td><td class="num ok">17.6 ms</td><td>毎回張り直しても足りる</td></tr>
+      <tr><td class="id">N-02</td><td>部分木の取得</td><td class="num">&lt; 1 ms</td><td class="num ok">0.002 ms</td><td>O(log n + k)</td></tr>
+      <tr><td class="id">N-03</td><td>常駐メモリ（同上）</td><td class="num">&lt; 50 MB</td><td class="num ok">5.7 MB</td><td>peak 実測</td></tr>
+      <tr><td class="id">N-04</td><td>1操作でAIに渡すトークン</td><td class="num">&lt; 1%</td><td class="num ok">0.1%</td><td>761 / 762,000</td></tr>
+      <tr><td class="id">N-05</td><td>決定性 ── 同じ入力に同じバイト列</td><td class="num">100%</td><td class="num">—</td><td>射影に乱数・時刻・辞書順依存を入れない</td></tr>
+      <tr><td class="id">N-06</td><td>判定に外部の有償APIを使わない</td><td class="num">0 件</td><td class="num">—</td><td>従量課金しない。道具は材料を出すまでを担当する</td></tr>
+      <tr><td class="id">N-07</td><td>オフラインで完結する（生成を除く）</td><td class="num">必須</td><td class="num">—</td><td>検証・射影・差分・突き合わせに通信を要しない</td></tr>
+      <tr><td class="id">N-08</td><td>Git で差分が読める</td><td class="num">必須</td><td class="num">—</td><td>正本はテキスト。射影後のMDも追跡する</td></tr>
+      <tr><td class="id">N-09</td><td>日本語の文書で成立する</td><td class="num">必須</td><td class="num">—</td><td>アドレスに日本語のidを許す。NFC正規化を入れる</td></tr>
+      <tr><td class="id">N-10</td><td>依存を増やさない</td><td class="num">標準＋1</td><td class="num">—</td><td><span class="mono">jsonschema</span> のみ。処理系が増えると版の比較が難しくなる</td></tr>
+      <tr><td class="id">N-11</td><td>スキーマの版が上がったとき、旧版と混ぜない</td><td class="num">必須</td><td class="num ok">確認</td><td>版が違う実体の移行は <span class="mono">AssertionError</span> で落ちる。旧契約で新版を射影すると <span class="mono">KeyError</span> で落ちる</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ========== 07 ========== -->
+<div role="tabpanel" id="p8" aria-labelledby="t8" tabindex="-1" hidden>
+  <p class="note"><b>設計を、原型で当てた。</b><span class="mono">kata.py</span> 123行 ＋ スキーマ15行 ＋ 実体32行。DDDプロファイルで「予約」文脈（集約2・エンティティ2・不変条件5・ユースケース2・シナリオ4、計16ノード）を書き、A-1〜A-6 を実際に回した。</p>
+
+  <h3>回した結果</h3>
+  <div class="wrap"><table>
+    <thead><tr><th>要件</th><th>試したこと</th><th>結果</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td class="id">F-05</td><td><span class="mono">canonical(canonical(x)) == canonical(x)</span></td><td>一致</td><td class="ok">通った</td></tr>
+      <tr><td class="id">F-05</td><td><b>鍵順を逆にし、濁点をNFD分解し、<span class="mono">null</span> の欄を足した別表現</b>から正規化</td><td>同じ正規形が出た</td><td class="ok">通った</td></tr>
+      <tr><td class="id">F-06</td><td>同じ実体を100回射影</td><td>バイト列が全部一致</td><td class="ok">通った</td></tr>
+      <tr><td class="id">F-06</td><td>上の別表現から射影</td><td>同じMDが出た</td><td class="ok">通った</td></tr>
+      <tr><td class="id">F-08</td><td>階層をたどる／前方一致／kind逆引き</td><td>16ノードで過不足なし</td><td class="ok">通った</td></tr>
+      <tr><td class="id">F-13</td><td>不変条件を1件足し、1件の文言を変え、シナリオを1件消す</td><td><span class="mono">added 1 / changed 1 / removed 1</span> に正しく分かれた</td><td class="ok">通った</td></tr>
+      <tr><td class="id">F-14</td><td><span class="mono">src/</span> の <span class="mono">@spec</span> と突き合わせ</td><td><b>最初は壊れた。</b>下の欠陥1・2</td><td><span class="tag d">落ちた</span></td></tr>
+      <tr><td class="id">F-11</td><td><span class="mono">move</span> を実行してアドレスの変化を見る</td><td><b>壊れた。</b>下の欠陥3</td><td><span class="tag d">落ちた</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>見つかった欠陥</h3>
+  <div class="wrap"><table>
+    <thead><tr><th class="num">#</th><th>欠陥</th><th>何が起きたか</th><th>どう直したか</th><th>いま</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td class="q">A-6 の正規表現が広すぎた</td><td><span class="mono">@spec\s+(\S+)</span> がドックストリングの閉じ <span class="mono">"""</span> まで飲み、アドレスが <span class="mono">…#INV#99"""</span> になった</td><td>文字クラスを <span class="mono">[A-Z]+-[0-9A-F]+</span> に限定。<b>02タブの擬似コードも直した</b></td><td class="ok">直して再試験</td></tr>
+      <tr><td class="num">2</td><td class="q">突き合わせの対象 kind を宣言していなかった</td><td>全ノードを対象にしたため、未実装が <b>14件</b>。文脈やエンティティは実装と1対1でない</td><td><span class="mono">traced</span> をプロファイルに宣言 → <b>AD-9</b></td><td class="ok">直して再試験</td></tr>
+      <tr><td class="num">3</td><td class="q"><span class="mono">move</span> と改名でアドレスが動く</td><td>不変条件を別の集約へ移すと <span class="mono">removed 1 / added 1</span> になり、<b>同じものが消えて増えたように見える。</b><span class="mono">src/</span> の <span class="mono">@spec</span> は旧アドレスのまま迷子になる</td><td>鍵を2本にし、<span class="mono">@spec</span> と差分の同定を <span class="mono">uid</span> に移した → <b>AD-7</b></td><td class="ok">直して再試験</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>対処したあとの再試験</h3>
+  <p class="note"><span class="mono">uid</span>（AD-7）と <span class="mono">refs</span>（AD-8）と <span class="mono">traced</span>（AD-9）を原型に実装し、落ちた3件をもう一度回した。</p>
+  <div class="wrap"><table>
+    <thead><tr><th>試したこと</th><th>対処前</th><th>対処後</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td class="q">不変条件を別の集約へ <span class="mono">move</span> する</td><td><span class="mono">added 1 / removed 1</span><br><span class="note">消えて増えたように見える</span></td><td><span class="mono">moved 1</span><br><span class="note">added も removed も 0 件</span></td><td class="ok">直った</td></tr>
+      <tr><td class="q"><span class="mono">move</span> の後に突き合わせる</td><td><span class="mono">@spec</span> が旧アドレスを指して迷子</td><td>未実装 <b>7件</b>・仕様外 <b>1件</b>。<b>move 前と1件も変わらない</b></td><td class="ok">直った</td></tr>
+      <tr><td class="q">ドックストリングから <span class="mono">@spec</span> を拾う</td><td><span class="mono">INV-9999"""</span> と閉じ引用符を飲む</td><td><span class="mono">INV-9999</span>。仕様外は<b>意図した1件だけ</b></td><td class="ok">直った</td></tr>
+      <tr><td class="q">突き合わせの対象</td><td>全ノード → 未実装 <b>14件</b></td><td><span class="mono">traced</span> の3 kind → <b>11件</b>、実装済みを引いて <b>7件</b></td><td class="ok">直った</td></tr>
+      <tr><td class="q"><span class="mono">uid</span> と <span class="mono">refs</span> を足した後の射影</td><td>—</td><td>100回射影してバイト列が一致</td><td class="ok">壊れていない</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="two">
+    <figure><h4>AD-8 を入れて、答えられなかった問いを当て直した</h4><pre><b>問8「INV-01 はどのユースケースで効くか」</b>
+refs_to(INV-0004)
+  → CTX#予約#AGG#予約#UC#01
+    CTX#予約#AGG#予約#UC#01#SC#02
+
+<b>削除の安全確認</b>
+can_delete(INV#01) → <span class="r">False</span>  <i>2件から指されている</i>
+can_delete(INV#02) → <span class="a">True</span>
+
+<b>問10「取消を含む箇所」</b>
+search("取消") → 7件</pre></figure>
+    <figure><h4>欠陥3 ── 対処前の出力</h4><pre><b>$ move …#AGG#予約#INV#03 → …#AGG#設備</b>
+
+<span class="r">removed</span>: CTX#予約#AGG#<b>予約</b>#INV#03
+<span class="a">added</span>  : CTX#予約#AGG#<b>設備</b>#INV#03
+
+<i>同じ不変条件である。だが差分は「消えて増えた」と言う</i>
+<i>src/ の @spec は旧アドレスを指したまま残る</i>
+
+<b>対処後</b>
+<b>moved</b>: (…#AGG#予約#INV#03 → …#AGG#設備#INV#03)</pre></figure>
+  </div>
+
+  <div class="two">
+    <figure><h4>AD-7 ── 鍵を2本にする</h4>
+      <div class="wrap"><table>
+        <thead><tr><th>鍵</th><th>例</th><th>変わるか</th><th>役</th></tr></thead>
+        <tbody>
+          <tr><td class="q"><span class="mono">addr</span></td><td class="mono">CTX#予約#AGG#予約#INV#03</td><td class="q">変わる</td><td>人が読む・目次・射影・部分木</td></tr>
+          <tr><td class="q"><span class="mono">uid</span></td><td class="mono">INV-01J7Q4K…</td><td class="ok">一生変わらない</td><td><span class="mono">@spec</span>・参照・差分の同定</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note" style="margin-top:.55rem"><b>代償</b> ── 「1本の鍵が4役」は成り立たなくなる。<b>位置は読むため、識別子は指すため</b>に分かれる。<span class="mono">resolve(uid)</span> で位置へ戻せるようにする。</p>
+    </figure>
+  </div>
+
+  <h3>実データで当てた ── 628本の実仕様</h3>
+  <p class="note">10問は私の想像である。そこで <span class="mono">02-dataset</span> の<b>実物</b>で当て直した。29リポジトリから採った AI生成仕様 <b>628本</b>、そこから抽出したアンカー <b>1,205件</b>。</p>
+  <div class="wrap"><table>
+    <thead><tr><th>測ったこと</th><th class="num">実測</th><th>設計に効くこと</th></tr></thead>
+    <tbody>
+      <tr><td class="q">参照を出している仕様の割合</td><td class="num">315 / 628 ＝ <b>50%</b></td><td><b>AD-8 は当たっていた。</b>半分の仕様が、すでに他を指している。木だけでは表せない</td></tr>
+      <tr><td class="q">1本あたりの参照数</td><td class="num">中央値 2 ／ 最大 35</td><td>ごく一部の仕様が、大量の参照を集める</td></tr>
+      <tr><td class="q">参照の書かれ方</td><td class="num">INLINE_CODE <b>89%</b><br>LINK_TARGET 11%</td><td>ほとんどが<b>バッククォートで囲んだ裸のパス</b>である。型が無く、機械が当てられない</td></tr>
+      <tr><td class="q"><b>参照が解決しない割合</b></td><td class="num" style="color:var(--open)"><b>401 / 1,205 ＝ 33%</b></td><td>未解決 13.7% ／ 外部 18.3% ／ 曖昧 1.3%。<b>3件に1件が、指した先に届いていない</b></td></tr>
+      <tr><td class="q">参照先の種類</td><td class="num">拡張子なし 317<br>.go 288 ／ .md 145 ／ .ts 41</td><td><b>参照の主体は実装ファイルである。</b>仕様→仕様より、仕様→実装のほうが多い</td></tr>
+      <tr><td class="q">見出しの深さ</td><td class="num">h4 <b>9,873</b> ／ h5 <b>12</b></td><td>実仕様は h4 で止まる。<b>「深い木で射影が破綻する」懸念は、実データでは起きない</b></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="rail warn">
+    <p><b>AD-8 は正しかったが、形が違った。</b>私は <span class="mono">refs</span> を「節の uid を指すもの」として実装した。実データでは、参照の主体は<b>実装ファイルへのパス</b>である。</p>
+    <p>そこで Reference に<b>型と解決状態</b>を持たせる（<b>AD-10</b>）。<span class="mono">spec</span>（uid）／ <span class="mono">impl</span>（パス）／ <span class="mono">external</span>（URL）。</p>
+    <p><b>そして 33% が効く。</b>いまの仕様は3件に1件の参照が届いていない。Reference を型にすれば、これは <span class="mono">verify</span> で落とせる欠陥になる（<b>F-19</b>）。<b>散文のままでは、壊れていることすら分からない。</b></p>
+  </div>
+
+  <h3>条件つきの問い合わせは、宣言方式を壊すか</h3>
+  <p class="note">「AND ／ OR ／ 範囲 ／ 並べ替え が要るなら AD-4 は崩れる」と一度書いた。<b>これは言い過ぎだった。</b>原型で <span class="mono">find</span> を実装して確かめた。</p>
+  <div class="two">
+    <figure><h4>やり方の違い</h4>
+      <div class="wrap"><table>
+        <thead><tr><th>渡し方</th><th>AIがすること</th><th>AD-4</th></tr></thead>
+        <tbody>
+          <tr><td class="q">文字列のクエリ言語<br><span class="note">SQL ／ JSONPath ／ 検索式</span></td><td><b>欄の名前を記憶から出す</b><br><span class="note">構造の推論が検索側に戻る</span></td><td style="color:var(--drop)"><b>崩れる</b></td></tr>
+          <tr><td class="q">スキーマから生成した<br>パラメータ（enum）</td><td><b>候補から選ぶ</b><br><span class="note">構造化出力が、外れた名前を出させない</span></td><td class="ok"><b>生き残る</b></td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <figure><h4>生成したツールのパラメータ</h4><pre><b>find</b>(kind, where[], order_by, under)
+
+kind  : <i>enum</i> aggregate context entity
+        invariant scenario usecase
+field : <i>enum</i> actor attributes given identity
+        name post pre purpose refs root
+        statement then when
+op    : <i>enum</i> contains eq ne gt lt
+
+<b>250 tokens</b>  ← AIに常時渡す量
+仕様全体 762,000 に対して <b>0.033%</b>
+
+<i>候補は文書スキーマから機械的に出る</i>
+<i>AIは1つも名前を思い出さない</i></pre></figure>
+  </div>
+  <div class="rail">
+    <p><b>危ないのは条件式ではなく、語彙の出どころだった。</b>AND も範囲も並べ替えも、原型でそのまま動いた。</p>
+    <p><b>残る危険は、条件では書けない形の問いである。</b>「シナリオを1つも持たない集約は」のような<b>欠落の判定</b>と、「未実装は担当ごとに何件か」のような<b>集計</b>。どちらも述語を1つ足せば宣言の中に収まるが、まだ実装していない。</p>
+  </div>
+
+  <h3>アクセスパターンは足りたか</h3>
+  <p class="note"><b>参考。</b>仕様に投げそうな問いを<b>私の側で</b>10件立てて当てたもの。<b>実務の問いではないので、上の実データほどの重みは無い。</b>実務の問いでの当て直しは未了（下の未確認）。</p>
+  <div class="wrap"><table>
+    <thead><tr><th class="num">#</th><th>問い</th><th>答えるもの</th><th>可否</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>この集約の仕様を全部見せて</td><td class="mono">get_subtree</td><td class="ok">○</td></tr>
+      <tr><td class="num">2</td><td>この実装ファイルは、どの仕様に対応しているか</td><td class="mono">find_spec_for_impl</td><td class="ok">○</td></tr>
+      <tr><td class="num">3</td><td>先週から何が変わったか</td><td class="mono">diff</td><td class="ok">○</td></tr>
+      <tr><td class="num">4</td><td>まだ実装されていない仕様は</td><td class="mono">verify</td><td class="ok">○</td></tr>
+      <tr><td class="num">5</td><td>不変条件を全部並べて</td><td class="mono">find_by_kind</td><td class="ok">○</td></tr>
+      <tr><td class="num">6</td><td>状態遷移が定義されていない集約はあるか</td><td class="mono">find_by_kind</td><td>△ 欠落の判定を足せば</td></tr>
+      <tr><td class="num">7</td><td>なぜこの決定をしたのか</td><td class="mono">decisions/</td><td>△ ADRとノードの紐付けが無い</td></tr>
+      <tr><td class="num">8</td><td>この不変条件は、どのユースケースで効くか</td><td class="mono">refs_to</td><td class="ok">○ <span class="note">当初✗</span></td></tr>
+      <tr><td class="num">9</td><td>この不変条件を変えたら、どのシナリオが落ちるか</td><td class="mono">refs_to</td><td class="ok">○ <span class="note">当初✗</span></td></tr>
+      <tr><td class="num">10</td><td>「取消」という語が出てくる箇所を全部</td><td class="mono">search</td><td class="ok">○ <span class="note">当初✗</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="rail warn">
+    <p><b>最初は5件が○、2件が△、3件が✗だった。</b>設計を変える閾値に置いた「✗が3件を超えたら」の、ちょうど境目である。</p>
+    <p><b>落ち方に意味があった。</b>8と9は同じ原因で、<b>木には親子しか無く、横のつながりが表せない</b>。10は全文検索が宣言に無いだけだった。</p>
+    <p><b>足りないのは「任意のクエリ」ではなく、参照だった。</b>そこで <span class="mono">Reference</span> を7つ目の原語に足し（<b>AD-8</b>）、<span class="mono">search</span> を1つ足した。<b>実装して当て直すと 8件○・2件△・0件✗ になった。</b>宣言方式そのものは生きている。</p>
+  </div>
+
+  <h3>設計だけだった3件を、実装して確かめた</h3>
+  <div class="two">
+    <figure><h4>AD-10 ── 参照に型と解決状態を持たせた</h4><pre>  ○ spec     INV-0004
+  ○ impl     src/reservation.py
+  <span class="r">✗ impl     src/notify.py</span>          <i>存在しない</i>
+  — external https://example.com/rfc  <i>検めない</i>
+  <span class="r">✗ spec     INV-XXXX</span>              <i>存在しない uid</i>
+  ○ spec     INV-0006
+
+<b>解決しない参照 2件 → verify で落ちる（F-19）</b>
+
+<i>実仕様628本では、これが 33% 起きていた</i></pre></figure>
+    <figure><h4>欠落と集計の述語を足した</h4><pre><b>missing_child(aggregate, usecase)</b>
+  → CTX#予約#AGG#<b>設備</b>
+  <i>設備集約に、業務ユースケースが1つも無い</i>
+  <i>← 条件式では書けなかった形の問い</i>
+
+<b>count_by(kind)</b>
+  invariant 5 / scenario 4 / aggregate 2
+  entity 2 / usecase 2 / context 1
+
+<b>count_by(actor, kind=usecase)</b>
+  利用者 2</pre></figure>
+  </div>
+  <div class="wrap"><table>
+    <thead><tr><th>設計だけだったもの</th><th>実装して分かったこと</th><th>いま</th></tr></thead>
+    <tbody>
+      <tr><td class="q">AD-10 参照の型と解決状態</td><td>3型（<span class="mono">spec</span> ／ <span class="mono">impl</span> ／ <span class="mono">external</span>）で足りた。外部は「検めない」を第3の状態として持つ必要がある</td><td class="ok">動いた</td></tr>
+      <tr><td class="q">F-20 当たらない移行操作の警告</td><td>移行の記録を文字列でなく構造で持てば、警告は自然に出る</td><td class="ok">動いた</td></tr>
+      <tr><td class="q">欠落と集計の述語</td><td><b>実際に仕様の欠陥を1件見つけた。</b>設備集約にユースケースが無い</td><td class="ok">動いた</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>2つ目のプロファイルを書いた ── F-16 の反証</h3>
+  <p class="note">中核層が本当に意味を持たないなら、DDD 以外でも動くはずである。<b>この研究のリポジトリそのもの</b>を <span class="mono">research</span> プロファイルで書いて、<b>同じ <span class="mono">core.py</span> 166行</b>に通した。</p>
+  <div class="wrap"><table>
+    <thead><tr><th>プロファイル</th><th>kind</th><th>ノード</th><th>射影</th><th>冪等</th><th>見出し</th></tr></thead>
+    <tbody>
+      <tr><td class="q"><span class="mono">ddd</span></td><td>context / aggregate / entity / invariant / usecase / scenario</td><td class="num">16</td><td class="num">94行</td><td class="ok">一致</td><td class="num">h2:1 h3:2 h4:8</td></tr>
+      <tr><td class="q"><span class="mono">research</span></td><td>study / chapter / claim / evidence / open / term</td><td class="num">16</td><td class="num">79行</td><td class="ok">一致</td><td class="num">h2:1 h3:4 h4:6</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="rail warn">
+    <p><b>「1行も変えずに」ではなかった。</b>2つ目を書き始めた時点で、契約のコードに DDD の kind 名が直に入っていた。<b>「中核層は意味を持たない」は、そこまで嘘だった。</b></p>
+    <p>直し方は1つで、<b>変換契約を Python からデータ（JSON）へ移した。</b>テンプレートは欄名の差し込みだけを持つ。これで中核層から DDD が消えた。<b>2つ目を書かなければ、気づかないままだった。</b></p>
+  </div>
+
+  <div class="two">
+    <figure><h4>research プロファイルで、このリポジトリを射影した</h4><pre>&lt;!-- @ ST#01#CH#02 uid=CH-0002 --&gt;
+### 02 母集団　`置いた`
+
+出すもの: 625件・4区分
+正本: `02-dataset/02-dataset.md`
+
+#### この章が言うこと
+
+- **02/CL-01** アンカーの解決状態で、
+  母集団を4区分できる
+  範囲: 629リポジトリの AI生成仕様に限る
+  - 根拠 `…/anchors.jsonl` 本文照合: 実データ
+    「1,205件のうち RESOLVED_ROOT 714 …」</pre></figure>
+    <figure><h4>同じ道具が、この研究について言ったこと</h4><pre><b>missing_child(chapter, claim)</b>
+  → CH#04  CH#05
+  <i>主張が1つも書かれていない章</i>
+
+<b>missing_child(chapter, open)</b>
+  → CH#02
+  <i>未決が1つも無い章</i>
+
+<b>count_by(status, kind=chapter)</b>
+  置いた 1 / 設計は決まった 1
+  本文は旧版 1 / 本文が無い 1
+
+<b>参照の解決（実リポジトリに当てた）</b>
+  ○ 02-dataset/02-dataset.md
+  ○ 03-instrument/
+  <span class="r">✗ 05-controlled-design/05-controlled-design.md</span></pre></figure>
+  </div>
+  <p class="note">条件つきの問い合わせも、そのまま動いた。<span class="mono">find(kind=chapter, status ne "置いた")</span> → 3章。<span class="mono">resolve("OP-0011")</span> → <span class="mono">ST#01#CH#03#OP#02</span>「1,250プロセスを、並列で回せるか」。<b>ツールのパラメータ enum も、プロファイルから自動で入れ替わった。</b></p>
+
+  <h3>版の移行を回した</h3>
+  <p class="note"><span class="mono">ddd@1 → ddd@2</span> の移行計画を書いて当てた。<b>欄の改名1・既定値つき追加1・既定値なし追加1・型の変更1</b>の4操作。</p>
+  <div class="wrap"><table>
+    <thead><tr><th>確かめたこと</th><th>結果</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td class="q"><span class="mono">uid</span> が保存されるか</td><td>16件すべて保存された</td><td class="ok">通った</td></tr>
+      <tr><td class="q"><span class="mono">addr</span> が保存されるか</td><td>保存された（<span class="mono">rename_kind</span> を使わなかったため）</td><td class="ok">通った</td></tr>
+      <tr><td class="q"><b>移行の前後で突き合わせが変わらないか</b></td><td>移行前 未実装7／仕様外1 → <b>移行後 未実装7／仕様外1。</b><span class="mono">@spec</span> は1文字も書き換えていない</td><td class="ok">通った</td></tr>
+      <tr><td class="q">推論が要る箇所が、穴として出るか</td><td><span class="mono">severity</span> の未記入 <b>5件</b>が、指示文つきで列挙された</td><td class="ok">通った</td></tr>
+      <tr><td class="q">同じ移行を2回当てたら</td><td><span class="mono">版が違う: ddd@2 != ddd@1</span> で拒まれた</td><td class="ok">落ちた（正しい）</td></tr>
+      <tr><td class="q"><b>旧契約 <span class="mono">md@1</span> で新版を射影したら</b></td><td><span class="mono">KeyError: 'statement'</span></td><td class="ok"><b>落ちた（正しい）</b></td></tr>
+      <tr><td class="q">1件も当たらなかった操作</td><td><span class="mono">retype_field</span> が0件（すでに配列だった）。<b>いまは黙って通る</b></td><td><span class="tag o">要対処 → F-20</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="rail">
+    <p><b>移行の後も突き合わせの件数が1件も動かなかった</b>ことが、この設計の要である。<span class="mono">addr</span> ではなく <span class="mono">uid</span> を <span class="mono">@spec</span> に使ったので、<b>スキーマを作り替えても実装側のコメントを触らなくてよい。</b></p>
+    <p><b>旧契約で新版を射影したら落ちた</b>のも、意図どおりである。黙って違うMDを出すほうが危ない。契約とスキーマは、版で一緒に上がる。</p>
+  </div>
+
+  <h3>設計中に、自分の案が変わったところ</h3>
+  <p class="note">外へ出すときは落としてよい記録である。<b>何を間違えて、何で気づいたか</b>を残してある。</p>
+  <div class="wrap"><table>
+    <thead><tr><th>箇所</th><th>変更前</th><th>変更後</th><th>なぜ変えたか</th></tr></thead>
+    <tbody>
+      <tr><td class="q">冪等の起点</td><td>プロンプト → 実体JSON → 文書</td><td><b>スキーマ → 実体JSON → 文書</b></td><td>実体JSONはスキーマのインスタンスである。手前はプロンプトではない</td></tr>
+      <tr><td class="q">冪等の境界</td><td>1本（JSONのところ）</td><td><b>実体JSONが構造と中身に割れ、冪等でないのは中身だけ</b></td><td>構造の冪等（F-01）と射影の冪等（F-06）は別の要件になる</td></tr>
+      <tr><td class="q">検索の入口</td><td>全アドレスの目次を渡す</td><td><b>階層をたどらせる</b></td><td>実測。目次だけで171,499トークンあり、渡せない</td></tr>
+      <tr><td class="q">編集の操作</td><td>AIがJSONを直す（1種類）</td><td><b>中身の編集と構造の編集を分ける</b></td><td>構造を足す操作が自由だと、構造の推論が編集側に戻る</td></tr>
+      <tr><td class="q">DDDの位置</td><td>型そのもの</td><td><b>プロファイルの1つ</b></td><td>ただし意味を1つも持たない汎用層は、JSON Schema の作り直しである</td></tr>
+      <tr><td class="q">保存先</td><td>DB（DynamoDB の感覚）</td><td><b>ファイル。索引は起動時に導出</b></td><td>実測。11,500ノードを17.6msで読み切る。規律だけ採る</td></tr>
+    </tbody>
+  </table></div>
+
+
+  <h3>所見3件を直して、契約を2つにした</h3>
+  <div class="two">
+    <figure><h4>md@2 ── 直した後</h4><pre>&lt;!-- @ CTX#予約#AGG#予約 uid=AGG-3F7A --&gt;
+### 集約: 予約            <i>所見1 アドレスは注釈へ</i>
+
+#### 不変条件
+
+- **<b>予約/</b>INV-01** 同一の設備について…
+                          <i>所見2 親を添えて重複を解いた</i>
+
+**シナリオ**              <i>所見3 h5 をやめて太字に</i>
+
+- **SC-01**
+  前提 仮予約が1件ある</pre>
+    <figcaption class="cap">見出しの深さは h2:1 ／ h3:2 ／ h4:6。<b>h5 が無くなった。</b></figcaption></figure>
+    <figure><h4>html@1 ── 入れ子にした</h4><pre>&lt;section class="kata-context"
+   data-addr="CTX#予約" data-uid="CTX-8QK2"&gt;
+  &lt;section class="kata-aggregate"
+     data-addr="…#AGG#予約"&gt;
+    &lt;div class="kata-entity" …&gt;
+    &lt;h4&gt;不変条件&lt;/h4&gt;
+    &lt;div class="kata-invariant"
+       data-addr="…#INV#01" data-uid="INV-0004"&gt;
+
+<i>最初は平らに出ていた。それだと</i>
+<i>「アドレス＝DOMパス」が成り立たない</i></pre>
+    <figcaption class="cap">開閉の対応と、100回射影のバイト一致を確認した。</figcaption></figure>
+  </div>
+
+  <h3><span class="mono">resolve(uid)</span> ── 実装を読む人が、たどれるようにした</h3>
+  <pre>@spec <b>INV-0004</b>   →  CTX#予約#AGG#予約#INV#01  「同一の設備について、確定した予約の区間は重ならない」
+@spec <b>UC-0007</b>    →  CTX#予約#AGG#予約#UC#01    「予約を確定する」
+
+<i>uid は不透明でよい。人がたどる経路は、道具が持てばよい</i></pre>
+
+  <h3>射影されたMDは、読むに耐えたか</h3>
+  <p><b>耐えた。</b>82行のMDが出て、これだけで仕様レビューが成立する形になっている。<b>ただし3つ直すところがある。</b></p>
+  <div class="two">
+    <figure><h4>実際の出力（抜粋）</h4><pre>### 集約: 予約 `{#AGG:予約}`   <i>← 所見1</i>
+
+ルート: `Reservation`
+
+#### 不変条件
+
+- **INV-01** 同一の設備について、
+  確定した予約の区間は重ならない   <i>← 所見2</i>
+- **INV-02** 取消された予約は、
+  再び確定へ遷移しない
+
+##### シナリオ                    <i>← 所見3</i>
+
+- **SC-01**
+  前提 仮予約が1件ある
+  もし 利用者が確定を要求する
+  ならば 状態が確定になる</pre></figure>
+    <div>
+      <h4>所見</h4>
+      <div class="wrap"><table>
+        <thead><tr><th class="num">#</th><th>見えたこと</th><th>いま</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>アドレスの <span class="mono">{#AGG:予約}</span> が見出しに素で出る。GitHub はこれを文字として描く</td><td class="ok">直した（md@2）</td></tr>
+          <tr><td class="num">2</td><td><b><span class="mono">INV-01</span> が集約ごとに重複する。</b>「予約のINV-01」と「設備のINV-01」が同じ表示になる</td><td class="ok">直した（md@2）</td></tr>
+          <tr><td class="num">3</td><td>シナリオで見出しが <span class="mono">h5</span> に達する。あと1階層で <span class="mono">h6</span> を超える</td><td class="ok">直した（md@2）</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note" style="margin-top:.55rem"><b>射影後のMDは、実体JSONの82%のトークンだった</b>（1,215 / 1,475）。<b>MDは軽い表現ではない。</b>AIに渡すならJSONのままでよく、MDは人が読むためだけにある。</p>
+    </div>
+  </div>
+</div>
+
+<details>
+  <summary>確かめていないこと ── ここが壊れると設計が変わる</summary>
+  <div class="wrap"><table>
+    <thead><tr><th>確かめていないこと</th><th>なぜ効くか</th><th>どう確かめるか</th></tr></thead>
+    <tbody>
+      <tr><td class="q"><b>意味的整合を、この道具は持っていない</b></td><td>A-6 が見ているのは「<span class="mono">@spec</span> が在るか」だけ、つまり<b>構造的整合</b>である。<b>振る舞いが仕様どおりかは、1つも見ていない。</b>Waffle は境界を二本で貫くと言っており、こちらは片方しか無い</td><td>受け入れ基準とシナリオを、そのままテストへ落とす経路を設計する。ガーキンと <span class="mono">uid</span> を結ぶ</td></tr>
+      <tr><td class="q"><b>実務の問いで、想定10件と同じ結果になるか</b></td><td>07で当てたのは<b>私が立てた10件</b>である。実務の問いの分布は違いうる</td><td>実際に仕様へ投げた問いを10個出して、07の表に当て直す</td></tr>
+      <tr><td class="q">中身の推論が、欄に収まるか</td><td>「この欄では言い切れない」が頻発すると、自由記述欄が増えて構造が空洞化する</td><td>実案件の仕様を1本このスキーマへ写し、欄に入らなかった記述を数える</td></tr>
+      <tr><td class="q">3つ目のプロファイル（<span class="mono">adr</span>）</td><td><span class="mono">ddd</span> と <span class="mono">research</span> の2つは同じ中核層で動いた。<b>2つでは、たまたま似ていただけの可能性が残る</b></td><td>決定そのものを表す <span class="mono">adr</span> プロファイルを書く。木が浅く、参照が主になる形なので、いまと形が違う</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+<footer>
+  仮称 Kata ／ 設計ノート第1版。数値はすべて本セッションでの実測であり、原典からの引用ではない（<span class="mono">tiktoken cl100k_base</span> は Claude のトークナイザではなく代理である）。実装は卒業制作の後に置く ── 答えを持ったまま測ると、その答えが出るように測ってしまうためである。
+</footer>
+</main>
+
+<script>
+(function(){
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  var panels = tabs.map(function(t){ return document.getElementById(t.getAttribute('aria-controls')); });
+  function select(i, focus){
+    tabs.forEach(function(t, j){
+      t.setAttribute('aria-selected', j === i ? 'true' : 'false');
+      t.tabIndex = j === i ? 0 : -1;
+      panels[j].hidden = j !== i;
+    });
+    if (focus) tabs[i].focus();
+  }
+  tabs.forEach(function(t, i){
+    t.tabIndex = i === 0 ? 0 : -1;
+    t.addEventListener('click', function(){ select(i, false); });
+    t.addEventListener('keydown', function(e){
+      var n = null;
+      if (e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+      else if (e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home') n = 0;
+      else if (e.key === 'End') n = tabs.length - 1;
+      if (n !== null){ e.preventDefault(); select(n, true); }
+    });
+  });
+})();
+</script>

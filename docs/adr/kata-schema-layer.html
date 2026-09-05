@@ -1,0 +1,227 @@
+<title>文書のスキーマ層</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+ --paper:#F7F8FA; --ink:#16191F; --muted:#5F6A78; --rule:#DCE1E8;
+ --panel:#EDF0F5; --panelrule:#D2D9E2;
+ --key:#2B4C7E; --keep:#2C6A5C; --open:#7A5A18; --drop:#8C382B;
+ --chipbg:#E4E9F1; --grid:#C8D0DB;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --paper:#12151A; --ink:#E4E7EC; --muted:#909AA7; --rule:#262C35;
+ --panel:#1A1E25; --panelrule:#2E3540;
+ --key:#84A9DA; --keep:#6FB79F; --open:#C9A44F; --drop:#DC8B76;
+ --chipbg:#1F2530; --grid:#39414D;
+}}
+:root[data-theme="dark"]{
+ --paper:#12151A; --ink:#E4E7EC; --muted:#909AA7; --rule:#262C35;
+ --panel:#1A1E25; --panelrule:#2E3540;
+ --key:#84A9DA; --keep:#6FB79F; --open:#C9A44F; --drop:#DC8B76;
+ --chipbg:#1F2530; --grid:#39414D;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+ font-family:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif;
+ font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased}
+main{max-width:58rem;margin:0 auto;padding:3.5rem 1.5rem 6rem;
+ display:flex;flex-direction:column;gap:3.5rem}
+h1,h2,h3{font-family:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+ text-wrap:balance;margin:0}
+h1{font-size:1.9rem;font-weight:700;line-height:1.45;letter-spacing:.01em}
+h2{font-size:1.15rem;font-weight:700;line-height:1.5}
+h3{font-size:.98rem;font-weight:700;line-height:1.6;color:var(--ink)}
+p{margin:0}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.68rem;
+ letter-spacing:.18em;color:var(--key);font-weight:600}
+header{display:flex;flex-direction:column;gap:.7rem}
+.lead{font-size:1.06rem;line-height:1.8;padding:1.1rem 1.3rem;background:var(--panel);
+ border:1px solid var(--panelrule);border-left:3px solid var(--key)}
+.lead b{font-weight:700}
+.sub{color:var(--muted);font-size:.94rem}
+section{display:flex;flex-direction:column;gap:1.1rem}
+.snum{display:flex;align-items:baseline;gap:.85rem;
+ border-bottom:1px solid var(--rule);padding-bottom:.6rem}
+.snum .n{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;
+ letter-spacing:.14em;color:var(--muted);font-weight:600}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:34rem}
+th{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.66rem;
+ letter-spacing:.13em;color:var(--muted);font-weight:600;text-align:left;
+ padding:0 .9rem .5rem 0;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:.62rem .9rem .62rem 0;border-bottom:1px solid var(--rule);
+ vertical-align:top;line-height:1.7}
+tr:last-child td{border-bottom:none}
+td.num{font-family:"IBM Plex Mono",ui-monospace,monospace;
+ font-variant-numeric:tabular-nums;text-align:right;padding-right:1.4rem;white-space:nowrap}
+th.num{text-align:right;padding-right:1.4rem}
+td.q{color:var(--ink);font-weight:500;white-space:nowrap}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.84em}
+.tag{display:inline-block;font-family:"IBM Plex Mono",ui-monospace,monospace;
+ font-size:.64rem;letter-spacing:.1em;font-weight:600;padding:.14rem .5rem;
+ background:var(--chipbg);color:var(--key);white-space:nowrap}
+.tag.open{color:var(--open)}
+.tag.drop{color:var(--drop)}
+.floor{color:var(--key);font-weight:700}
+.note{font-size:.86rem;color:var(--muted);line-height:1.75}
+.rail{border-left:2px solid var(--key);padding-left:1.1rem;
+ display:flex;flex-direction:column;gap:.45rem}
+.rail.warn{border-left-color:var(--open)}
+figure{margin:0;display:flex;flex-direction:column;gap:.6rem}
+svg{display:block;width:100%;height:auto}
+.cap{font-size:.82rem;color:var(--muted)}
+.six{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));
+ gap:0;border-top:1px solid var(--rule)}
+.six div{border-bottom:1px solid var(--rule);padding:.75rem 1.1rem .75rem 0}
+.six .k{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.78rem;
+ font-weight:600;color:var(--key);display:block;margin-bottom:.1rem}
+.six .d{font-size:.86rem;color:var(--muted);line-height:1.65;display:block}
+details{border-top:1px solid var(--rule);padding-top:.9rem}
+summary{cursor:pointer;font-weight:700;font-size:.95rem;
+ font-family:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif}
+summary:focus-visible{outline:2px solid var(--key);outline-offset:3px}
+details[open] summary{margin-bottom:.9rem}
+footer{border-top:1px solid var(--rule);padding-top:1.1rem;font-size:.82rem;
+ color:var(--muted);line-height:1.75}
+</style>
+
+<main>
+<header>
+  <p class="eyebrow">卒制の後 ／ 設計メモ</p>
+  <h1>文書のスキーマ層</h1>
+  <p class="lead">作るのは新しいスキーマ言語でも、DBでもない。<b>JSON Schema の上に、アドレスと射影と、宣言されたアクセスパターンを載せた層</b>である。</p>
+  <p class="sub">「AI生成仕様の情報構造と実装対応」デッキのおまけ4枚を、道具の設計として詰めたもの。合意は8件、未決は2件。</p>
+</header>
+
+<section>
+  <div class="snum"><span class="n">01</span><h2>決めたこと</h2></div>
+  <div class="wrap"><table>
+    <thead><tr><th>論点</th><th>決めたこと</th><th>効く理由</th></tr></thead>
+    <tbody>
+      <tr><td class="q">軽量な新形式</td><td><span class="tag drop">採らない</span></td><td>上限18%。構造化出力を失う。削るのは渡す部分木のほう</td></tr>
+      <tr><td class="q">新しいスキーマ言語</td><td><span class="tag drop">採らない</span></td><td>正本は完全な JSON Schema 1つ。足りないのは言語ではなく周りの規約</td></tr>
+      <tr><td class="q">MD・HTML互換</td><td><span class="tag">一方向の射影</span></td><td>往復にすると文書が正本になり、構造まで推論に戻る</td></tr>
+      <tr><td class="q">検索性</td><td><span class="tag">宣言したアクセスパターン</span></td><td>取得の単位を集約・不変条件・シナリオに揃える</td></tr>
+      <tr><td class="q">DB</td><td><span class="tag drop">要らない</span></td><td>11,500ノードを17.6msで読み切る。規律だけ DynamoDB から採る</td></tr>
+      <tr><td class="q">DDD</td><td><span class="tag">プロファイルの1つ</span></td><td>汎用層は仕組みだけを持ち、意味を1つも持たない</td></tr>
+      <tr><td class="q">正本の置き場</td><td><span class="tag">ファイル。索引は導出</span></td><td>仕様はPRで読まれる。DBを正本にすると差分レビューが死ぬ</td></tr>
+      <tr><td class="q">人が直す場所</td><td><span class="tag">AIがJSONを直す</span></td><td>場所を推論させない。中身の編集と構造の編集を分ける</td></tr>
+      <tr><td class="q">いつ作るか</td><td><span class="tag open">卒制の後</span></td><td>答えを持ったまま測ると、その答えが出るように測ってしまう</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <div class="snum"><span class="n">02</span><h2>測ったこと</h2></div>
+
+  <h3>軽量化の上限は34%、現実には18%である</h3>
+  <p>同じDDD仕様片（境界づけられた文脈・集約・属性4・不変条件3・ユースケース1・シナリオ2、日本語）を4通りに書いた。</p>
+  <div class="wrap"><table>
+    <thead><tr><th>形式</th><th class="num">tokens</th><th class="num">bytes</th><th class="num">JSON比</th><th>備考</th></tr></thead>
+    <tbody>
+      <tr><td class="q">JSON</td><td class="num">634</td><td class="num">1,665</td><td class="num">100.0%</td><td>基準</td></tr>
+      <tr><td class="q">Markdown</td><td class="num">593</td><td class="num">1,332</td><td class="num">93.5%</td><td>表＋箇条書き</td></tr>
+      <tr><td class="q">YAML</td><td class="num">586</td><td class="num">1,445</td><td class="num">92.4%</td><td>flow記法を多用</td></tr>
+      <tr><td class="q">TOON風</td><td class="num">522</td><td class="num">1,249</td><td class="num">82.3%</td><td>表形式。キーは1回だけ</td></tr>
+      <tr><td class="q">中身の文字列だけ</td><td class="num floor">416</td><td class="num">960</td><td class="num floor">65.6%</td><td>構造を一切送らない場合の床</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">計測は <span class="mono">tiktoken</span> の <span class="mono">cl100k_base</span>。Claude のトークナイザではなく、代理である。</p>
+  <div class="rail">
+    <p><b>構造を完全に消しても、削れるのは34%が上限である。</b>圧縮形式で取れるのはその半分にとどまる。日本語では中身が支配的だからである。</p>
+    <p>一方、アドレスで部分木を絞れば <span class="mono">634 → 数十</span> になる。同じ「トークン効率」でも、効き方が一桁違う。</p>
+  </div>
+
+  <h3>DBが要る規模ではない</h3>
+  <p>文脈50 × 集約10 ×（不変条件6 ＋ ユースケース4 × シナリオ3）＝ <b>11,500ノード / JSON 1.84MB</b>。相当大きな製品仕様である。</p>
+  <div class="wrap"><table>
+    <thead><tr><th>操作</th><th class="num">dict ＋ 二分探索</th><th class="num">SQLite (:memory:)</th></tr></thead>
+    <tbody>
+      <tr><td class="q">全部読んで索引を張る</td><td class="num">17.6 ms<br><span class="note">peak 5.7 MB</span></td><td class="num">7.7 ms</td></tr>
+      <tr><td class="q">部分木の取得（prefix）</td><td class="num">0.002 ms</td><td class="num">0.004 ms</td></tr>
+      <tr><td class="q">kind横断の全走査（GSI相当）</td><td class="num">0.3 ms</td><td class="num">—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">プロセス起動のたびに全部を読み直しても 17.6ms である。DynamoDB が解いている問題は「単一プロセスのメモリに載らない量」と「多テナントの同時書き込み」で、仕様書はどちらにも当たらない。永続化が要るのは、埋め込みベクトルを持つときだけである。</p>
+</section>
+
+<section>
+  <div class="snum"><span class="n">03</span><h2>層の形</h2></div>
+
+  <h3>汎用層は6つの原語で足りる</h3>
+  <p>JSON Schema に足りないのは <span class="mono">Shape</span> 以外の5つで、それはスキーマ言語ではなく、その周りの規約とランタイムである。</p>
+  <div class="six">
+    <div><span class="k">Node</span><span class="d">kind と id を持つ、アドレス可能な節</span></div>
+    <div><span class="k">Address</span><span class="d">階層鍵。<span class="mono">CTX#予約#AGG#予約#INV#01</span></span></div>
+    <div><span class="k">Containment</span><span class="d">どの kind がどの kind を含めるか</span></div>
+    <div><span class="k">Shape</span><span class="d">kind ごとの中身の型。JSON Schema の <span class="mono">$defs</span> をそのまま使う</span></div>
+    <div><span class="k">Projection</span><span class="d">kind → MD / HTML の純関数</span></div>
+    <div><span class="k">AccessPattern</span><span class="d">名前の付いた、アドレスと kind 上の問い合わせ</span></div>
+  </div>
+  <p>意味はプロファイルが持つ。<span class="mono">ddd</span>（仕様）、<span class="mono">adr</span>（決定）、<span class="mono">research</span>（章・正本・語彙・未決）。<b>3つ目は、この研究のリポジトリ自身がすでにその形をしている。</b></p>
+  <div class="rail warn">
+    <p><b>汎用層に意見が無いなら、それは JSON Schema を作り直しただけである。</b>価値はプロファイルの側にある。だからプロファイルは複数要る。</p>
+  </div>
+
+  <h3>1本の鍵が、4つの役を持つ</h3>
+  <div class="wrap"><table>
+    <thead><tr><th>使い道</th><th>姿</th></tr></thead>
+    <tbody>
+      <tr><td class="q">ソートキー</td><td class="mono">AGG#予約#INV#01</td></tr>
+      <tr><td class="q">Markdown の見出しパス</td><td>## 集約: 予約 › ### 不変条件 › INV-01</td></tr>
+      <tr><td class="q">HTML の DOM パス</td><td class="mono">&lt;ddd-aggregate id=予約&gt;&lt;ddd-invariant id=INV-01&gt;</td></tr>
+      <tr><td class="q">実装との突き合わせ</td><td class="mono">@spec AGG#予約#INV#01</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">射影を一方向にしたから、これが成立する。往復可能にしていたら、文書側の編集で鍵が壊れる。</p>
+
+  <h3>冪等の境界は、JSONにある</h3>
+  <figure>
+    <svg viewBox="0 0 720 150" role="img" aria-label="プロンプトからJSONまでは冪等でなく、JSONからMD・HTMLまでは冪等である">
+      <rect x="8" y="46" width="196" height="46" fill="none" stroke="var(--grid)" stroke-width="1"/>
+      <text x="106" y="74" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="15" fill="var(--ink)">プロンプト</text>
+      <rect x="262" y="46" width="196" height="46" fill="var(--panel)" stroke="var(--key)" stroke-width="1.5"/>
+      <text x="360" y="74" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="15" font-weight="700" fill="var(--key)">実体の JSON</text>
+      <rect x="516" y="46" width="196" height="46" fill="none" stroke="var(--grid)" stroke-width="1"/>
+      <text x="614" y="74" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="15" fill="var(--ink)">MD ／ HTML</text>
+      <line x1="204" y1="69" x2="256" y2="69" stroke="var(--grid)" stroke-width="1.5"/>
+      <path d="M256 69 L246 65 L246 73 Z" fill="var(--grid)"/>
+      <line x1="458" y1="69" x2="510" y2="69" stroke="var(--key)" stroke-width="1.5"/>
+      <path d="M510 69 L500 65 L500 73 Z" fill="var(--key)"/>
+      <text x="230" y="34" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" letter-spacing="1" fill="var(--drop)">推論</text>
+      <text x="484" y="34" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" letter-spacing="1" fill="var(--keep)">純関数</text>
+      <text x="230" y="122" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" fill="var(--drop)">冪等にならない</text>
+      <text x="484" y="122" text-anchor="middle" font-family="'Noto Sans JP',sans-serif" font-size="12.5" fill="var(--keep)">冪等になる</text>
+      <line x1="360" y1="8" x2="360" y2="40" stroke="var(--key)" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="360" y1="98" x2="360" y2="134" stroke="var(--key)" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="360" y="146" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" letter-spacing="1.5" fill="var(--key)">境界</text>
+    </svg>
+    <figcaption class="cap">スキーマで縛るとは、冪等の境界を JSON まで引き下げることである。</figcaption>
+  </figure>
+  <p>ただし JSON → MD の冪等は、ただでは手に入らない。3つ要る。</p>
+  <div class="wrap"><table>
+    <thead><tr><th>要るもの</th><th>破れ方</th><th>どうするか</th></tr></thead>
+    <tbody>
+      <tr><td class="q">正本の正規形</td><td>鍵順・空白・数値表記が揺れると、意味が同じでも出力が変わる</td><td>鍵順はスキーマの宣言順に固定する。整形はレンダラの前で1回だけ</td></tr>
+      <tr><td class="q">不在と空の区別</td><td><span class="mono">null</span> ・ <span class="mono">""</span> ・ キーが無い、の3つが同じに見える</td><td>required で決め、不在は不在のまま射影する</td></tr>
+      <tr><td class="q">変換契約の版</td><td>テンプレートを直せば、同じ JSON から違う MD が出る</td><td>契約も版で固定し、出力に版を刻む</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">ここまでやると、射影後の MD をコミットして、その差分をレビューできる。JSON の差分は人が読めないが、MD の差分は読める。そして射影が冪等なので、両者は1対1で対応する。</p>
+</section>
+
+<details>
+  <summary>未決の2件と、次に読むもの</summary>
+  <div class="wrap"><table>
+    <thead><tr><th>未決</th><th>なぜ決まらないか</th></tr></thead>
+    <tbody>
+      <tr><td class="q">アクセスパターンを列挙し切れるか</td><td>宣言方式は、宣言していない問いに答えられない。DynamoDB が現場で嫌われる理由もそこにある。<b>まず10個書き出して、答えられない問いを数える。</b></td></tr>
+      <tr><td class="q">構造そのものを変えたいとき</td><td>「不変条件を1件増やす」「集約を分割する」は中身の編集ではない。閉じた操作集合（<span class="mono">add</span>・<span class="mono">move</span>・<span class="mono">delete</span>）にして Containment で検める。<b>ここで ADR が1件出る。</b></td></tr>
+    </tbody>
+  </table></div>
+  <p class="note" style="margin-top:1rem">実装の前に台帳を作る先行事例 ── Markdoc（Stripe。Markdown ＋ スキーマ ＋ AST。ただし文書が正本で向きが逆）、JSON-LD ／ Schema.org、DITA、Astro Content Collections、TOON。「本文照合できていないものは根拠に使わない」を、ここにも当てる。</p>
+</details>
+
+<footer>
+  ブレインストーミング記録 ／ 論点8本・合意9件・未決2件。数値は本セッションで実測したもので、原典からの引用ではない。
+</footer>
+</main>
