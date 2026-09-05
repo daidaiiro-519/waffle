@@ -135,7 +135,7 @@ python3 … verify <原文> compact_summary --near "PostCompact input" --within 
 |---|---|
 | **名前は合っているが、説明が違う** | 原文の該当箇所を読む。要約しない |
 | **原文に在るのに、こちらが拾っていない** | Step 5 で逆側から当てる |
-| 数値・件数の誤り | 記録の書き方の規約（`.waffle/memory/MEMORY.md`）の「数値は原典の文字列で確認する」 |
+| 数値・件数の誤り | `writing-guard` の「数値は原典の文字列で確認する」 |
 | 版が古い | 落とした日を残し、**同じ URL でも中身が変わる**前提で扱う |
 
 **「0件だから正しい」ではない。「書いた名前は実在する」だけである。**
@@ -197,5 +197,5 @@ Step 3 は「こちらが書いたものが原文に在るか」を見る。
 ## 参照
 
 - `references/source.py`: 原文を落とし、識別子を文字列で照合する
-- `.waffle/memory/MEMORY.md` の「決定の記録の形」: 書き方の規約。**数値も原典の文字列で確認する**
+- `.claude/skills/writing-guard/SKILL.md`: 書き方の規約。**数値も原典の文字列で確認する**
 - `.claude/skills/change-record/SKILL.md`: 正本へ当てる前に見せる形

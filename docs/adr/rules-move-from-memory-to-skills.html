@@ -1,0 +1,273 @@
+<title>規約の置き場所を、メモリからSkillへ移す</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap">
+<style>
+:root{--paper:#FBFAF7;--ink:#191C1F;--muted:#6C7076;--rule:#E3DFD7;--panel:#F4F1EA;--panelrule:#DAD4C8;
+ --key:#2F4858;--add:#A6543A;--del:#8A8479;--mark:#F7E2BC;--markh:#F0CE92;--markink:#191C1F;--pop:#FDF6E9;--popline:#D9B77E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#15171A;--ink:#E8E5DF;--muted:#9AA0A8;--rule:#2C3036;
+ --panel:#1D2024;--panelrule:#333940;--key:#8FB4C8;--add:#E0A184;--del:#7E838B;--mark:#4A3826;--markh:#5F4830;--markink:#F2EDE5;--pop:#241D14;--popline:#6E5738}}
+:root[data-theme="dark"]{--paper:#15171A;--ink:#E8E5DF;--muted:#9AA0A8;--rule:#2C3036;
+ --panel:#1D2024;--panelrule:#333940;--key:#8FB4C8;--add:#E0A184;--del:#7E838B;--mark:#4A3826;--markh:#5F4830;--markink:#F2EDE5;--pop:#241D14;--popline:#6E5738}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans JP",system-ui,sans-serif;font-size:15.5px;line-height:1.85;-webkit-font-smoothing:antialiased}
+main{max-width:53rem;margin:0 auto;padding:0 1.5rem 6rem}
+h1{font-family:"Noto Serif JP",serif;font-weight:700;font-size:1.85rem;line-height:1.35;margin:3.4rem 0 1.2rem;padding-bottom:.6rem;border-bottom:2px solid var(--key)}
+h2{font-family:"Noto Serif JP",serif;font-weight:600;font-size:1.26rem;margin:2.6rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--rule)}
+h3{font-size:1.01rem;font-weight:700;margin:1.9rem 0 .6rem}
+h4{font-size:.94rem;font-weight:700;margin:1.4rem 0 .5rem;color:var(--muted)}
+p{margin:0 0 1rem}hr{border:none;border-top:1px solid var(--rule);margin:2.1rem 0}
+code{font-family:ui-monospace,monospace;font-size:.88em;background:var(--panel);padding:.1em .35em;border-radius:.2em}
+pre{background:var(--panel);border:1px solid var(--panelrule);border-radius:.4rem;padding:.9rem 1.1rem;overflow-x:auto;font-size:.79rem;line-height:1.7;margin:0 0 1.1rem;font-family:ui-monospace,monospace}
+pre code{background:none;padding:0}
+blockquote{margin:0 0 1.1rem;padding:.5rem 0 .5rem 1rem;border-left:3px solid var(--key)}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin:0 0 1.1rem}
+th,td{text-align:left;vertical-align:top;padding:.5rem .7rem;border-bottom:1px solid var(--rule)}
+th{font-weight:700;font-size:.75rem;letter-spacing:.05em;color:var(--muted);border-bottom:1.5px solid var(--rule)}
+.wrap{overflow-x:auto}
+
+/* 変更箇所 */
+mark.chg{background:var(--mark);color:var(--markink);border-radius:.15em;cursor:pointer;
+ box-shadow:-.2em 0 0 var(--mark),.2em 0 0 var(--mark);border-bottom:2px solid var(--add);transition:background .12s}
+@media(prefers-reduced-motion:reduce){mark.chg{transition:none}}
+mark.chg:hover,mark.chg:focus{background:var(--markh);box-shadow:-.2em 0 0 var(--markh),.2em 0 0 var(--markh);outline:none}
+mark.chg:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+mark.chg::after{content:"▸";font-size:.72em;color:var(--add);margin-left:.3em;font-weight:700}
+mark.chg[aria-expanded="true"]::after{content:"▾"}
+/* 削除した箇所に置く印 */
+mark.chg.del{background:none;box-shadow:none;color:var(--del);font-size:.86rem;border-bottom:1px dashed var(--del)}
+
+/* 開くパネル。[hidden] を必ず添える。無いと閉じない */
+.pop[hidden]{display:none}
+.pop{display:block;background:var(--pop);border:1px solid var(--popline);border-left:3px solid var(--add);
+ border-radius:.3rem;padding:.75rem .95rem;margin:.6rem 0;font-size:.85rem;line-height:1.75;color:var(--ink);font-weight:400}
+.pop b{display:block;font-size:.66rem;letter-spacing:.14em;color:var(--add);margin-bottom:.35rem}
+.pop .why{display:block;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--popline)}
+.pop .why b{color:var(--key)}
+
+.hd{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);padding:.85rem 0;margin-bottom:1.6rem;z-index:9;
+ display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.hd .t{font-family:"Noto Serif JP",serif;font-weight:700;font-size:1.02rem;flex:1;min-width:12rem}
+.hd .t small{display:block;font-family:"Noto Sans JP",sans-serif;font-weight:400;font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.hd button{font:inherit;font-size:.82rem;font-weight:700;padding:.35rem .9rem;border-radius:.3rem;cursor:pointer;
+ background:var(--panel);color:var(--ink);border:1px solid var(--panelrule)}
+.hd button:hover{background:var(--markh)}
+.hd button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+.note{background:var(--panel);border:1px solid var(--panelrule);border-left:3px solid var(--key);border-radius:.3rem;padding:1rem 1.2rem;margin:0 0 1.8rem;font-size:.92rem}
+.note ol{margin:.6rem 0 0;padding-left:1.3rem}.note li{margin-bottom:.25rem}
+</style>
+
+<main>
+<div class="hd">
+  <div class="t">規約の置き場所を、メモリからSkillへ移す<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div>
+  <button id="all" type="button">すべて開く</button>
+</div>
+
+<div class="note">規約の置き場所を直す。書き方の規約5本を <code>.waffle/memory/</code> から change-record と writing-guard へ移し、置き場所を分ける基準だけをメモリに残す。<b>正本にはまだ当てていない。</b>下の全文と、6か所の印（押すと変更前と理由が開く）を見て、当ててよいかを決めてください。</div>
+
+<!-- ここから下に、変更後の全文を描画して置く。
+     変わった箇所は次の形で囲む。data-b は変更前の原文、data-w はなぜ変えたか。
+
+     <mark class="chg" tabindex="0" role="button" aria-expanded="false"
+           data-b="変更前の原文" data-w="なぜ変えたか">変更後の本文</mark>
+
+     削除した箇所は、消えた位置に印だけを置く。
+
+     <p><mark class="chg del" tabindex="0" role="button" aria-expanded="false"
+              data-b="消した内容" data-w="なぜ消したか">この表から7行目を削除した</mark></p>
+-->
+<h1>1　change-record ／ references/adr.md（変更後の全文）</h1><h1>設計判断を、この形で残す</h1>
+<p><strong>ADR は変更の記録である。</strong>決めたことだけを書けば、差分ツールと同じものになる。<br><strong>決める前がどうだったかと、なぜ変えたかが要る。</strong></p>
+<hr>
+<h2>対応させる</h2>
+<div class="wrap"><table><tr><th>ADR の項目</th><th>このSkillでどこに置くか</th></tr><tr><td>決定</td><td><strong>本文</strong>。変更後の姿をそのまま置く</td></tr><tr><td>背景</td><td><strong><code>data-b</code></strong>。決める前がどうだったか</td></tr><tr><td>理由</td><td><strong><code>data-w</code></strong>。何と食い違っていて、何に揃えたか</td></tr><tr><td>結果</td><td>本文の続き。決めたことで何が変わるか</td></tr></table></div>
+<p><strong>選択肢と、採らなかった理由は別に置く。</strong><br><code>data-w</code> に詰め込むと、押したときに読めない量になる。</p>
+<hr>
+<h2><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="この節は無かった。決定記録の欄の書き方は adr.md ではなく、.waffle/memory/feedback_every_column_leads_with_its_conclusion.md が持っていた" data-w="メモリは状況・訂正・進行中の決定を運ぶ器で、恒久的な規約はこのSkillが持つ。置き場所を誤っていたので、規約の側へ移した">どの欄も、結論の一文で始める</mark></h2>
+<p><strong>欄の中身を読む前に、その欄が何を言っているかが分かるようにする。</strong><br>対象外は、それ自体が一文である欄だけである（決定・承認）。</p>
+<p><strong>この規則は、欄の中の面や列の見出しにも及ぶ。</strong></p>
+<blockquote><strong>変更前 ── 1つの名前が5種類の主張を担う</strong><br><strong>変更後 ── 主張が名前になる</strong></blockquote>
+<p>「変更前」「変更後」とだけ書くと、その面が何を示しているかは、中を見るまで決まらない。<br>見出しを読んだ時点で対比が済めば、図と表は確かめるために見るものになる。</p>
+<p><strong>結論が末尾にあることは、先頭の一文の代わりにならない。</strong></p>
+<hr>
+<h2><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="この節は無かった。data-w に何を書くかは「何と食い違っていて、何に揃えたか」だけで、段の種別も反証の扱いも定めていなかった" data-w="data-w が理由の置き場所である以上、理由の形はこのSkillが決めるべきものだった。メモリ側 feedback_reason_is_a_chain_with_weak_points から移す">理由は、連鎖で書く</mark></h2>
+<p><strong><code>data-w</code> に置く理由は、論証の連鎖として書く。</strong><br>段の種別は左の色で示し、文字を増やさない。</p>
+<div class="wrap"><table><tr><th>段</th><th>中身</th></tr><tr><td>測った</td><td>出所つきの観測。再測定できる</td></tr><tr><td>確かめていない</td><td>判断の土台にしたが、検証していない前提。測り直せず、採るか捨てるかしかない</td></tr><tr><td>だから ／ 一方で ／ 合わせると</td><td>推論の接続。飛躍をここで見せる</td></tr><tr><td>結論</td><td>連鎖の終点。<strong>1つだけ</strong>。途中の段は結論ではなく踏み台である</td></tr><tr><td>反証</td><td><strong>既に観測されている</strong>不利な事実。無ければ「探したが見つからない」と書く</td></tr></table></div>
+<p><strong>崩れる条件は、測った段と確かめていない段にだけ1行で添える。</strong><br>結論には付けない ── 「上のどれかが崩れたとき」で自明なので、書くと繰り返しになる。</p>
+<p><strong>「これから崩れうる」と「もう崩れかけている」は別である。</strong><br>崩れる条件だけを書くと反証不能な断定になり、反証だけを書くと弁護になる。両方を置く。</p>
+<hr>
+<h2>1件の粒度</h2>
+<p><strong>決定1つにつき、印1つである。</strong><br>文書のどこが変わったかを、決定ごとに指せるようにする。</p>
+<pre class="code">決定       条件2 に ADR を置く
+本文       04 §2 の表の ADR の行
+data-b     条件1 にも ADR を置いていた
+data-w     条件1 に ADR があると、情報構造の支えが無い状態を作れない</pre>
+<h3><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="「決定1つにつき、印1つである」とだけ書いてあり、何を1つの決定と数えるかの基準が無かった" data-w="粒度の基準が無いと、印の数は書き手の感覚で決まる。分け目の基準と、数が増える圧力への対応（決定を1段上げる）を、feedback_adr_granularity_and_decision_abstraction から移した">独立させるか、付随に置くか</mark></h3>
+<p><strong>その決定が、自分の理由・自分の判断を分けた軸・自分の答えないことを必要とするなら、独立させる。</strong><br>中核の決定の説明範囲で説明しきれるなら、「付随して決めたこと」へ置く。</p>
+<p><strong>反対側の圧力がある ── 記録の数が増えること自体が、読み手の負荷である。</strong></p>
+<div class="wrap"><table><tr><th>起こす前に問う</th><th>Yes のとき</th><th>No のとき</th></tr><tr><td>この決定は、自分の理由・軸・答えないことを要するか</td><td>独立した記録として起こす</td><td>付随して決めたことへ置く</td></tr><tr><td>同じ理由と同じ軸を持つ決定が、他にもありそうか</td><td>それらを覆う高さまで決定を上げる</td><td>その高さのまま起こす</td></tr></table></div>
+<p><strong>決定を上げると、同型の決定が1本で覆える。</strong><br>個別に起こすと、同じ理由と同じ軸の記録が3本並ぶ。</p>
+<hr>
+<h2>書けないとき</h2>
+<p><strong>理由が書けない決定は、まだ決まっていない。</strong><br><strong>保留として、そう書く。</strong><br>決めたことにして理由を後から作ると、次に読む人が判断を追えなくなる。</p>
+<hr><h1>2　writing-guard ／ references/writing-checklist.md（変更後の全文）</h1><p>&lt;!-- writing-guard: exempt --&gt;</p>
+<h1>5観点の判定の仕方</h1>
+<p><strong><code>SKILL.md</code> Step 3 の各観点について、どう判定し、どう直すかを書く。</strong></p>
+<hr>
+<h2>観点1: 読み手の窓を超えていないか</h2>
+<h3>判定</h3>
+<div class="wrap"><table><tr><th>見るところ</th><th>超えている兆し</th></tr><tr><td>文書全体</td><td>見出しの並びを読み終える前に、何の文書か分からなくなる</td></tr><tr><td>1つの節</td><td>見出しが、その節の中身を言い切れていない</td></tr><tr><td>1つの表</td><td>列が5つを超え、どの列を見ればよいか決まらない</td></tr></table></div>
+<h3>直し方</h3>
+<p><strong>「決めたこと」と「どうやったか」と「なぜそう判断したか」で分ける。</strong></p>
+<pre class="code">決めたこと      読み手が最初に要る。本体に置く
+どうやったか    疑ったときに開く。別ファイルへ出す
+なぜそう判断    後から問われたときに開く。別ファイルへ出す</pre>
+<p><strong>分けたら、本体から参照を張る。</strong>参照先の見出しは、探し物の名前と揃える。</p>
+<h3>失敗の例</h3>
+<p><strong>「除外はしない」という見出しの節へ、「外す条件」を探しに行かせる。</strong><br>見出しが「無い」と言っているので、読み手は開かない。</p>
+<h3>論証が循環していないか</h3>
+<p><strong>前の節が、後の節で決まることを使っていると、論証が循環する。</strong></p>
+<pre class="code">悪い   §3「625件から148件を単純無作為に引くと…」
+       → 148件は §5 の配分で決まる数である。§3 の時点では存在しない
+
+良い   §3「625件から一部を単純無作為に引くと…」
+       → 論証に件数は要らない</pre>
+<p><strong>章の冒頭で結論を先に置くのは、依存ではない。</strong><br><strong>論証の途中で使うと循環になる。</strong></p>
+<div class="wrap"><table><tr><th>場所</th><th>後の節の値を出してよいか</th></tr><tr><td>章の冒頭の要約 ／ 流れの図</td><td><strong>よい。</strong>地図であり、論証ではない</td></tr><tr><td>節の本文</td><td><strong>その値を決める節より後でだけ使う</strong></td></tr></table></div>
+<h3>抽象から具体へ降りているか</h3>
+<p><strong>具体から書き始めると、なぜそれを選んだのかが言い残される。</strong></p>
+<pre class="code">悪い   ## なぜ参照パスで層を作るか
+       → いきなり具体。そもそもなぜ層に分けるのかが無い
+
+良い   ## なぜ層に分けるか
+       ### 単純無作為では、少数派が標本に入る保証がない   ← 抽象
+       ### 層の軸が満たすべき条件                        ← 抽象
+       ### 参照パスがその条件を満たす                     ← 具体</pre>
+<p><strong>見出しを読んで、抽象から具体へ降りているかを見る。</strong></p>
+<hr>
+<h2>観点2: 同じことを2か所に書いていないか</h2>
+<h3>判定</h3>
+<div class="wrap"><table><tr><th>種類</th><th>見つけ方</th></tr><tr><td>同一の文</td><td>文書内の全文を句点で切り、同じものが2つ無いかを数える</td></tr><tr><td>言い換えた重複</td><td>同じ主張が、違う言葉で2か所に無いかを読む</td></tr><tr><td>相互参照の空回り</td><td>A が B を指し、B に A と同じ文がある</td></tr></table></div>
+<h3>直し方</h3>
+<p><strong>片方を正本にし、もう片方は参照だけにする。</strong><br><strong>どちらを正本にするかは、読み手が最初に開く側で決める。</strong></p>
+<h3>失敗の例</h3>
+<p><strong>§3 が「詳しくは §5」と書き、§5 に §3 と同じ文がある。</strong><br>読み手は往復して、同じものを2回読む。</p>
+<hr>
+<h2>観点3: 語が揺れていないか</h2>
+<h3>判定</h3>
+<p><strong>4種類の揺れがある。</strong></p>
+<div class="wrap"><table><tr><th>揺れ</th><th>中身</th><th>例</th></tr><tr><td><strong>同義の分裂</strong></td><td>同じ意味に2つの語を当てている</td><td>「性質」と「特徴」を同じ意味で使う</td></tr><tr><td><strong>同語の多義</strong></td><td>違う意味に同じ語を当てている</td><td>「被覆」を、枠が母集団を覆う意味と、標本に現れる確率の意味で使う</td></tr><tr><td><strong>普通名詞の占有</strong></td><td>普通の日本語を役割の名前に取る</td><td>「読み手」を役割として定義し、同じ文書で普通の名詞としても使う</td></tr><tr><td><strong>借用</strong></td><td><strong>別の分野の語を、断らずに当てている</strong></td><td>「当たり判定」を、何を欠陥に数えるかの意味で使う</td></tr></table></div>
+<h3>直し方</h3>
+<p><strong>語の一覧を文書の冒頭か、別の文書に置く。</strong></p>
+<pre class="code">使う語   何を指すか   使わない語</pre>
+<p><strong>役割の名前は、普通の文で使わない語から選ぶ。</strong><br><strong>標準的な意味を持つ専門用語は、その意味でだけ使う。</strong>別の意味なら別の語にする。</p>
+<p><strong>借りた語は、指す先を動作で書き直す。</strong><br><strong>あえて例えるなら「たとえるなら」と断る。</strong>断らずに技術の語の位置へ置かない<br>（<code>knowledge/technical-writing-for-research-documents.md</code> 概念9）。</p>
+<h3>失敗の例</h3>
+<p><strong>統計で「被覆確率」は、信頼区間が真の値を含む確率を指す。</strong><br>それを「特徴が標本に現れる確率」の意味で使うと、同じ文書のなかで衝突する。</p>
+<hr>
+<h2>観点4: 情報が散っていないか</h2>
+<h3>判定</h3>
+<div class="wrap"><table><tr><th>見るところ</th><th>散っている兆し</th></tr><tr><td>表と本文</td><td>表の列に無い項目を、本文が論じている</td></tr><tr><td>数値と出所</td><td>数値を出した節と、出所を書いた節が離れている</td></tr><tr><td>定義と使用</td><td>語を定義した節と、その語を使う節のあいだに、無関係な節が挟まっている</td></tr><tr><td>同じ対象</td><td>1つの対象についての記述が、3か所以上に分かれている</td></tr></table></div>
+<h3>直し方</h3>
+<p><strong>同じものについての記述を、1か所へ寄せる。</strong><br>寄せられないときは、寄せられない理由を書く。</p>
+<h3><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="この節は無かった。観点4は「散っているか」を見るだけで、添える情報を前後どちらへ置くかの基準を持っていなかった" data-w="散りを直す段で必ず問われるのに、判定が書き手ごとに変わっていた。feedback_information_before_or_after_by_reading_need から移す">添える情報を、前に置くか後ろに置くか</mark></h3>
+<p><strong>主部を読むために要る情報は前、主部を読んだうえで疑ったときに要る情報は後ろに置く。</strong><br>判定は「これが無いと主部を正しく読めないか」を問うだけでよい。</p>
+<div class="wrap"><table><tr><th>添える情報</th><th>判定</th><th>置き場所</th></tr><tr><td>図を変更として読むのに要る、変更点の一覧</td><td>読むために要る</td><td>図の前（折りたたむ）</td></tr><tr><td>図の中の表記についての注意</td><td>読むために要る</td><td>図の前</td></tr><tr><td>条件ごとの根拠。なぜ × なのか</td><td>疑うときに要る</td><td>○×の表の後ろ</td></tr><tr><td>段の出所。その段が崩れる条件</td><td>疑うときに要る</td><td>連鎖の後ろ</td></tr></table></div>
+<p><strong>中身の形では決めない。</strong>折りたたみか本文か、表か散文かは、置き場所を決めたあとで選ぶ。</p>
+<h3>失敗の例</h3>
+<p><strong>表の列が <code>Purpose</code> の有無だけなのに、本文が「Requirement を1つ以上持つ割合」を論じる。</strong><br>読み手は、その数字を表から確かめられない。</p>
+<hr>
+<h2>観点5: 日本語として読めるか</h2>
+<h3>判定</h3>
+<p><strong>禁止として当てない。</strong>日本語は主語を省くのが普通で、体言止めも見出しや表では自然である。<br><strong>復元できるかどうかで見る。</strong></p>
+<div class="wrap"><table><tr><th>見るもの</th><th>判定</th></tr><tr><td><strong>主語</strong></td><td>その文の主語が何かを、文だけを読んで言えるか</td></tr><tr><td><strong>述語</strong></td><td>説明の文が体言で終わって、動作の主が消えていないか</td></tr><tr><td><strong>目的語</strong></td><td>省いた「何を」を、文脈から一意に復元できるか</td></tr><tr><td><strong>1文1義</strong></td><td>1文が2つ以上の命題を運んでいないか</td></tr><tr><td><strong>名詞の連結</strong></td><td>初めて見る語を4つ以上つなげていないか</td></tr><tr><td><strong>指示語</strong></td><td>指す先が離れていないか。候補が複数ないか</td></tr><tr><td><strong>接続</strong></td><td>「〜が、」で意味の違う2文をつないでいないか</td></tr></table></div>
+<div class="wrap"><table><tr><th>自然な場所</th><th>例</th></tr><tr><td><strong>体言止め</strong></td><td>表のセル ／ 見出し ／ 箇条書き</td></tr><tr><td><strong>主語の省略</strong></td><td>直前の文と主語が同じとき ／ その文書のなかで主語が一つに定まるとき</td></tr><tr><td><strong>倒置</strong></td><td>主語と述語が近いとき。強調の技法である</td></tr></table></div>
+<h4>3つに分解して確かめる</h4>
+<p><strong>見出しと導入文は、必ず分解する。</strong><br>主語・目的語・述語のどれかが出てこなければ、その文は書き直す。</p>
+<pre class="code">本研究は ／ 仕様の性質を ／ 使う          主語・目的語・述語がある
+判定者は ／ 11項目すべてを ／ 当てる      主語・目的語・述語がある
+
+先行研究が示した性質を、11項目そのまま使う   使うのは誰か
+項目は落とさず、増やさない                 落とさないのは誰か</pre>
+<p><strong>省いてよいのは2つの場合である。</strong></p>
+<pre class="code">直前の文と主語が同じ                判定者は … 当てる。そして … 記録する
+その文書のなかで主語が一つに定まる  自分の研究の話だと分かる文書で
+                                    「本研究は」を繰り返さない</pre>
+<p><strong>分解して主語が復元できないときだけ、書き足す。</strong></p>
+<h4><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="観点5には「3つに分解して確かめる」があり、主語が復元できるかは見ていたが、復元できないときに何で補うかは書いていなかった" data-w="検査は欠けを見つけるところで止まり、直す側の手が決まっていなかった。feedback_state_who_does_what_to_what の対応表を、直し方として移す">補う相手を、先に決める</mark></h4>
+<p><strong>文を短くするために、主語と目的語を落とさない。</strong><br>読み手は、語彙の難しさより先に、文法の欠けで詰まる。</p>
+<div class="wrap"><table><tr><th>省いた形</th><th>欠けているもの</th><th>補った形</th></tr><tr><td>仕様だけを読んで、具体が2通り以上に成り立つなら、特徴が足りない</td><td>誰が読むのか。何の具体か</td><td><strong>読み手が</strong>仕様だけを読んで<strong>実装の</strong>具体を組み立てたとき、<strong>その仕様は</strong>特徴が足りていない</td></tr><tr><td>読み手で測る限り、一律にはできない</td><td>何を測るのか。誰ができないのか</td><td>読み手<strong>の理解で下限を</strong>測る限り、<strong>この道具は</strong>一律の基準を置けない</td></tr><tr><td>対称性のために層を作らない、が4件を貫く</td><td>主語が節の途中で入れ替わる</td><td><strong>4件を貫くのは、</strong>見た目の対称性のために層を作らないという判断である</td></tr><tr><td>表記・移行・範囲の広げ方は、この決定では扱わない</td><td>体言止めの列挙で、述語が遠い</td><td><strong>この決定は、</strong>語の表記・既存の図の移行・扱う範囲の広げ方<strong>を扱わない</strong></td></tr></table></div>
+<p><strong>補う主語は、その文書の登場人物から選ぶ。</strong><br>書き手・読み手・扱っている対象・その決定のどれかである。</p>
+<h3>直し方</h3>
+<div class="wrap"><table><tr><th>悪い</th><th>なぜ悪いか</th><th>良い</th></tr><tr><td><strong>判定の仕方。</strong>その語が何を指すかを見る</td><td>体言止めで、次の文との関係が決まらない</td><td><strong>次の問いで判定する。</strong>その語が何を指すかを見る</td></tr><tr><td>前提は破れる。破れるのは、仕様の情報構造が原因で、AIが読んだ仕様と生成した実装が食い違い、実践者がその食い違いに触れないまま承認するからである</td><td>1文に主語が3つ移り、3つの命題が入っている</td><td><strong>仕様が実装を説明できなくなる原因は、2つある。</strong>1つは〜である。もう1つは〜である</td></tr><tr><td>仕様の必須説明範囲から外している</td><td>名詞を4つ連ねている</td><td>仕様が必ず説明すべきものから外している</td></tr><tr><td>小さい層を全数にすることを悉皆層と呼び、層化抽出の標準的な扱いである</td><td>「呼び」で繋いだまま、主語が「こと」から「扱い」へ移る</td><td><strong>小さい層を全数に近づける層を、悉皆層と呼ぶ。</strong>これは層化抽出の標準的な扱いである</td></tr><tr><td>なぜ「はず」と言えるのか</td><td>語尾を鉤括弧で括って、名詞のように使っている。何を指すかが決まらない</td><td>そう言える根拠</td></tr><tr><td>この「はず」の検定である</td><td>同上</td><td>この予想が成り立つかを確かめる</td></tr></table></div>
+<hr>
+<h2>検査の順序</h2>
+<p><strong>観点1から順に当てる。順序には理由がある。</strong></p>
+<pre class="mermaid">flowchart TD
+    a[&quot;観点1 構造&lt;br/&gt;分けるかどうかを決める&quot;]
+    b[&quot;観点2 重複&lt;br/&gt;分けた結果、重複が見える&quot;]
+    c[&quot;観点3 語&lt;br/&gt;重複を消すと、語の揺れが見える&quot;]
+    d[&quot;観点4 散在&lt;br/&gt;語が揃うと、散在が見える&quot;]
+    e[&quot;観点5 文&lt;br/&gt;最後に1文ずつ直す&quot;]
+    a --&gt; b --&gt; c --&gt; d --&gt; e</pre>
+<p><strong>観点5から始めない。</strong><br><strong>文を磨いても、構造が悪ければ読めないままである。</strong></p>
+<p><strong>そして、直したあとにもう一度観点1から当てる。</strong><br>節を分けると参照が切れ、語を変えると別の箇所と揃わなくなる。</p>
+<hr><h1>3　メモリ側の変更</h1>
+<p><strong><code>.waffle/memory/</code> から、規約を運んでいた5本を外す。</strong><br>中身は消えない。上の2つのSkillへ移した後の、置き場所の整理である。</p>
+<div class="wrap"><table><tr><th>外す記録</th><th>移した先</th></tr><tr><td><code>feedback_every_column_leads_with_its_conclusion</code></td><td><code>change-record</code> ── どの欄も、結論の一文で始める</td></tr><tr><td><code>feedback_reason_is_a_chain_with_weak_points</code></td><td><code>change-record</code> ── 理由は、連鎖で書く</td></tr><tr><td><code>feedback_adr_granularity_and_decision_abstraction</code></td><td><code>change-record</code> ── 独立させるか、付随に置くか</td></tr><tr><td><code>feedback_information_before_or_after_by_reading_need</code></td><td><code>writing-guard</code> ── 添える情報を、前に置くか後ろに置くか</td></tr><tr><td><code>feedback_state_who_does_what_to_what</code></td><td><code>writing-guard</code> ── 補う相手を、先に決める</td></tr></table></div>
+<p><strong><code>MEMORY.md</code> の「決定の記録の形」の節ごと外す。</strong><br>節に残るものが無くなるため、行だけを消して見出しを残さない。</p>
+<hr>
+<h2>代わりに、1本を立てる</h2>
+<p><strong><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="この訂正を記録する予定は無かった。5本を移して終わりにしようとしていた" data-w="移すだけでは、次に同じ判断が来たときに、また規約をメモリへ置く。置き場所を分ける基準そのものを残す">規約をどこへ置くかという判断そのものは、メモリに残す</mark>。</strong><br>これは書き方の規約ではなく、置き場所を誤った訂正である。</p>
+<pre class="code">name: feedback_rules_live_in_skills_not_memory
+description: 恒久的な規約と抽象概念はSkillが持ち、メモリは状況・訂正・進行中の決定を運ぶ
+
+恒久的な規約と抽象概念は、Skill が持つ。メモリが持つのは、状況・訂正・
+進行中の決定である。**書き方の規約をメモリへ置くと、規約の正本が2つになる。**
+
+Why: 書き方の規約5本を .waffle/memory/ の「決定の記録の形」節で管理していた。
+ユーザーの指摘は「writing-guard も .waffle/memory/MEMORY.md で管理するのは
+本来正しくない。メモリの使い方を間違っている」。さらに、その置き場所の誤りを、
+writing-guard を持ち込まない根拠に使った ── 「MEMORY.md が同じ役をしている」。
+**誤った置き場所が、正しい器を退ける理由として働いた。**
+
+How to apply: 記録しようとしているものが、次に同じ状況が来たときも変わらず
+当てはまる規約なら、対応する Skill の references へ置く。その作業・その訂正・
+その時点の状況に紐づくものだけをメモリへ置く。判断に迷ったら「これは誰が
+読んでも同じように使えるか」を問う ── 使えるなら Skill である。</pre>
+
+</main>
+
+<script>
+(function(){
+  var marks=[].slice.call(document.querySelectorAll('mark.chg'));
+  function panel(m){
+    var p=m.nextElementSibling;
+    if(p&&p.classList&&p.classList.contains('pop'))return p;
+    p=document.createElement('span');p.className='pop';
+    var b=document.createElement('b');b.textContent='変更前';p.appendChild(b);
+    p.appendChild(document.createTextNode(m.getAttribute('data-b')||''));
+    var w=m.getAttribute('data-w');
+    if(w){var d=document.createElement('span');d.className='why';
+      var wb=document.createElement('b');wb.textContent='なぜ';d.appendChild(wb);
+      d.appendChild(document.createTextNode(w));p.appendChild(d);}
+    m.parentNode.insertBefore(p,m.nextSibling);p.hidden=true;return p;
+  }
+  function toggle(m,force){
+    var p=panel(m),open=(force===undefined)?p.hidden:force;
+    p.hidden=!open;m.setAttribute('aria-expanded',open?'true':'false');
+  }
+  marks.forEach(function(m){
+    m.addEventListener('click',function(){toggle(m);});
+    m.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle(m);}
+    });
+  });
+  var btn=document.getElementById('all'),open=false;
+  btn.addEventListener('click',function(){
+    open=!open;marks.forEach(function(m){toggle(m,open);});
+    btn.textContent=open?'すべて閉じる':'すべて開く';
+  });
+  document.getElementById('n').textContent=marks.length;
+})();
+</script>
