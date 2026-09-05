@@ -83,6 +83,125 @@ def _key(letter: str, tone: str = "") -> str:
     return f'<span class="n {tone}">{letter}</span>'
 
 
+@dataclass
+class Topic:
+    """1つの論点。deck() に並べると、タブ1枚になる。
+
+    ブレストは複数の論点が絡むので、決着した論点も同じ1枚に置く ── 別々の
+    ページに散らすと、後の論点が前の決着を前提にしていることが見えなくなる。
+
+    status は「未」「新規」「決着」のいずれか。決着した論点は kept を持たず、
+    decision（決定・理由・次にすること）と、必要なら extras（節の見出しと中身）だけを持つ。
+    """
+    no: int
+    label: str
+    question: str
+    status: str = "未"
+    answer: str = ""
+    note: str | None = None
+    figures: list[tuple[str, str]] = field(default_factory=list)
+    kept: list[Option] = field(default_factory=list)
+    tables: list[Table] = field(default_factory=list)
+    dropped: list[tuple[str, str]] = field(default_factory=list)
+    found: list[str] = field(default_factory=list)
+    pick: tuple[str, list[tuple[str, str]]] | None = None
+    decision: list[tuple[str, str]] = field(default_factory=list)
+    extras: list[tuple[str, str]] = field(default_factory=list)
+
+
+def _sections(t: Topic) -> str:
+    """論点1つぶんの節を、番号を振って組む。"""
+    if len(t.kept) == 1:
+        raise ValueError(f"論点{t.no}: 反証を通過した案が1つしかない。論点の立て方を見直す "
+                         "── 1つしか残らないなら、それは選択ではない。"
+                         "まだ案を出していない論点は、案を空にして置く")
+    secs, n = [], 0
+    if t.figures:
+        n += 1
+        secs.append(_sec(n, "案の違いを、図で" if t.kept else "図で見る", "".join(
+            f'<figure>{svg}<figcaption>{cap}</figcaption></figure>'
+            for svg, cap in t.figures)))
+    if t.kept:
+        n += 1
+        rows = []
+        for i, o in enumerate(t.kept):
+            name = f"<b>{o.name}</b>"
+            if o.before and o.why:
+                name = _mark(name, o.before, o.why)
+            rows.append([_key(LETTERS[i]), name, o.gist, f'<span class="cost">{o.cost}</span>'])
+        secs.append(_sec(n, "反証を通過した案", _table(["", "案", "中身", "代償"], rows, "opts")))
+    for tb in t.tables:
+        n += 1
+        lead = f'<p class="lead">{tb.lead}</p>' if tb.lead else ""
+        rows = [[_key(k)] + list(v) for k, v in tb.rows.items()]
+        secs.append(_sec(n, tb.caption, lead + _table([""] + tb.columns, rows)))
+    if t.dropped:
+        n += 1
+        rows = [[_key("×", "out"),
+                 _mark(f"<b>{d}</b>", "この案は残っていた", w, deleted=True), w]
+                for d, w in t.dropped]
+        secs.append(_sec(n, "落とした案と、その理由",
+                         _table(["", "案", "落とした理由"], rows, "out")))
+    if t.found:
+        n += 1
+        secs.append(_sec(n, "反証で分かったこと",
+                         "<ul class='found'>" + "".join(f"<li>{f}</li>" for f in t.found) + "</ul>"))
+    if t.pick:
+        n += 1
+        letter, chain = t.pick
+        rows = [[f'<span class="st">{_h.escape(s)}</span>', txt] for s, txt in chain]
+        secs.append(_sec(n, "私の推しと、その連鎖",
+                         f'<p class="lead">推す案は <b class="pickn">{_h.escape(letter)}</b> である。</p>'
+                         + _table(["段", "中身"], rows, "chain")))
+    for title, body in t.extras:
+        n += 1
+        secs.append(_sec(n, title, body))
+    if t.decision:
+        n += 1
+        secs.append(_sec(n, "決まり", _table(["", ""], [
+            [f'<span class="st done">{_h.escape(k)}</span>', v] for k, v in t.decision], "chain")))
+    else:
+        n += 1
+        secs.append(_sec(n, "あなたの見解",
+                         '<div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div>'))
+        n += 1
+        secs.append(_sec(n, "決まり",
+                         '<div class="next">選ばれた案が合意になり、次の論点へ</div>'))
+    head = (f'<p class="eyebrow">論点 {t.no}</p><h1>{_h.escape(t.question)}</h1>'
+            + (f'<div class="note">{t.note}</div>' if t.note else ""))
+    return head + "".join(secs)
+
+
+def deck(theme: str, topics: list[Topic], intro: str | None = None,
+         extras: list[tuple[str, str]] | None = None) -> str:
+    """複数の論点を、タブで1枚にまとめる。
+
+    先頭のタブは「現在地」── どの論点が決着し、どれが開いているかの一覧である。
+    ブレストは論点が互いに前提になるので、別ページへ散らさない。
+    """
+    rows = [[f'<span class="n">{t.no}</span>', _h.escape(t.question),
+             f'<span class="st {"done" if t.status == "決着" else "open"}">{_h.escape(t.status)}</span>',
+             t.answer] for t in topics]
+    now = (f'<p class="eyebrow">現在地</p><h1>{_h.escape(theme)}</h1>'
+           + (f'<div class="note">{intro}</div>' if intro else "")
+           + _sec(1, "論点の現在地", _table(["#", "論点", "状態", "いまの答え"], rows))
+           + "".join(_sec(i, ti, bo) for i, (ti, bo) in enumerate(extras or [], start=2)))
+    tabs = ['<button role="tab" aria-selected="true" data-t="p0">現在地</button>']
+    panels = [f'<section id="p0" role="tabpanel">{now}</section>']
+    for i, t in enumerate(topics, start=1):
+        cls = "done" if t.status == "決着" else "open"
+        tabs.append(f'<button role="tab" aria-selected="false" data-t="p{i}">'
+                    f'<span class="tn">{t.no}</span>{_h.escape(t.label)}'
+                    f'<span class="st {cls}">{_h.escape(t.status)}</span></button>')
+        panels.append(f'<section id="p{i}" role="tabpanel" hidden>{_sections(t)}</section>')
+    head = (f'<div class="hd"><div class="t">{_h.escape(theme)}'
+            f'<small>色の付いた箇所を押すと、変更前と理由が開きます'
+            f'（<span id="n">0</span>か所）</small></div>'
+            f'<button id="all" type="button">すべて開く</button></div>'
+            f'<div class="tabs" role="tablist">{"".join(tabs)}</div>')
+    return f'{head}<main>{"".join(panels)}</main>{SCRIPT}'
+
+
 def board(theme: str, no: int, total: int, question: str,
           kept: list[Option], dropped: list[tuple[str, str]] | None = None,
           found: list[str] | None = None,
@@ -165,7 +284,7 @@ def board(theme: str, no: int, total: int, question: str,
                      '<div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div>'))
     n += 1
     secs.append(_sec(n, "決まり",
-                     '<div class="done">選ばれた案が合意になり、次の論点へ</div>'))
+                     '<div class="next">選ばれた案が合意になり、次の論点へ</div>'))
 
     head = (f'<div class="hd"><div class="t">{_h.escape(theme)}'
             f'<small>色の付いた箇所を押すと、変更前と理由が開きます'
@@ -180,14 +299,17 @@ def board(theme: str, no: int, total: int, question: str,
 CSS = """
 :root{ --paper:#FBFAF7; --ink:#191C1F; --muted:#6C7076; --rule:#E3DFD7; --panel:#F4F1EA;
   --panelrule:#DAD4C8; --key:#2F4858; --add:#A6543A; --out:#8A8479;
-  --mark:#F7E2BC; --markh:#F0CE92; --pop:#FDF6E9; --popline:#D9B77E; }
+  --mark:#F7E2BC; --markh:#F0CE92; --pop:#FDF6E9; --popline:#D9B77E;
+  --soft:#8FA3AE; --del:#8A8479; }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
   --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036; --panel:#1D2024;
   --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
-  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738; } }
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738;
+  --soft:#5D6B75; --del:#7E838B; } }
 :root[data-theme="dark"]{ --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036;
   --panel:#1D2024; --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
-  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738; }
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738;
+  --soft:#5D6B75; --del:#7E838B; }
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-size:15.5px;line-height:1.85;
   font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -228,7 +350,7 @@ figure svg{display:block;width:100%;height:auto;color:var(--ink);
 figcaption{font-size:.83rem;line-height:1.75;color:var(--muted);margin-top:.5rem}
 .you{border:1px dashed var(--key);border-radius:.3rem;padding:.9rem 1.1rem;color:var(--muted);
   font-size:.9rem;background:color-mix(in srgb,var(--key) 5%,var(--paper))}
-.done{border:1px dashed var(--panelrule);border-radius:.3rem;padding:.9rem 1.1rem;
+.next{border:1px dashed var(--panelrule);border-radius:.3rem;padding:.9rem 1.1rem;
   color:var(--muted);font-size:.9rem}
 
 mark.chg{background:var(--mark);color:var(--ink);border-radius:.15em;cursor:pointer;
@@ -258,6 +380,22 @@ mark.chg.del b{text-decoration:line-through}
   cursor:pointer;background:var(--panel);color:var(--ink);border:1px solid var(--panelrule)}
 .hd button:hover{background:var(--markh)}
 .hd button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+
+/* 論点のタブ。ブレストは論点が互いの前提になるので、1枚に束ねる */
+.tabs{position:sticky;top:3.4rem;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:.45rem 1.5rem;display:flex;gap:.4rem;overflow-x:auto;z-index:8;scrollbar-width:thin}
+.tabs button{font:inherit;font-size:.82rem;padding:.35rem .8rem;border-radius:.3rem;cursor:pointer;
+  background:none;color:var(--muted);border:1px solid transparent;white-space:nowrap;
+  display:flex;align-items:center;gap:.4rem}
+.tabs button:hover{background:var(--panel);color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);
+  border-color:var(--panelrule);font-weight:700}
+.tabs button[aria-selected="true"] .tn{color:var(--key)}
+.tabs .tn{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted)}
+.tabs button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+.st.done{color:var(--key);border-color:var(--key)}
+.st.open{color:var(--add);border-color:var(--add)}
+section[role="tabpanel"][hidden]{display:none}
 """
 
 SCRIPT = """
@@ -285,6 +423,26 @@ SCRIPT = """
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
     });
   });
+  const tabs = [...document.querySelectorAll('.tabs button')];
+  function show(id){
+    tabs.forEach(b => {
+      const on = b.dataset.t === id;
+      b.setAttribute('aria-selected', String(on));
+      document.getElementById(b.dataset.t).hidden = !on;
+    });
+    history.replaceState(null, '', '#' + id);
+    window.scrollTo({top: 0});
+  }
+  tabs.forEach((b, i) => {
+    b.addEventListener('click', () => show(b.dataset.t));
+    b.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { e.preventDefault(); const t = tabs[(i + d + tabs.length) % tabs.length];
+               t.focus(); show(t.dataset.t); }
+    });
+  });
+  if (tabs.length && document.getElementById(location.hash.slice(1))) show(location.hash.slice(1));
+
   const all = document.getElementById('all');
   all.addEventListener('click', () => {
     const open = all.textContent === 'すべて開く';

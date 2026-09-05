@@ -1,0 +1,443 @@
+<title>schema 観の三層</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap"><style>
+:root{ --paper:#FBFAF7; --ink:#191C1F; --muted:#6C7076; --rule:#E3DFD7; --panel:#F4F1EA;
+  --panelrule:#DAD4C8; --key:#2F4858; --add:#A6543A; --out:#8A8479;
+  --mark:#F7E2BC; --markh:#F0CE92; --pop:#FDF6E9; --popline:#D9B77E;
+  --soft:#8FA3AE; --del:#8A8479; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036; --panel:#1D2024;
+  --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738;
+  --soft:#5D6B75; --del:#7E838B; } }
+:root[data-theme="dark"]{ --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036;
+  --panel:#1D2024; --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738;
+  --soft:#5D6B75; --del:#7E838B; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:15.5px;line-height:1.85;
+  font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:53rem;margin:0 auto;padding:0 1.5rem 5rem}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:1.6rem 0 .5rem}
+h1{font-family:"Noto Serif JP",serif;font-weight:700;font-size:clamp(23px,3.4vw,31px);
+  line-height:1.35;margin:0;padding-bottom:.6rem;border-bottom:2px solid var(--key);text-wrap:balance}
+h2{font-family:"Noto Serif JP",serif;font-weight:600;font-size:1.2rem;margin:2.6rem 0 1rem;
+  padding-bottom:.4rem;border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.6rem}
+h2 .sn{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted);font-weight:400}
+p{margin:0 0 1rem}
+.note{background:var(--panel);border:1px solid var(--panelrule);border-left:3px solid var(--key);
+  border-radius:.3rem;padding:.9rem 1.1rem;margin:1.2rem 0 0;font-size:.9rem}
+.lead{font-size:.92rem;margin-bottom:.7rem}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin:0}
+th,td{text-align:left;vertical-align:top;padding:.6rem .7rem;border-bottom:1px solid var(--rule)}
+th{font-weight:700;font-size:.72rem;letter-spacing:.05em;color:var(--muted);
+  border-bottom:1.5px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{width:1.9rem;padding-right:0}
+.n{font-family:ui-monospace,monospace;font-size:11px;color:var(--key);border:1px solid var(--key);
+  border-radius:2px;padding:0 5px;line-height:1.7;display:inline-block}
+.n.out{color:var(--out);border-color:var(--out)}
+table.out td{color:var(--muted)}
+table.out b{color:var(--out);text-decoration:line-through}
+.cost{color:var(--muted)}
+.st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
+  border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
+table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
+.pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
+  border-radius:2px;padding:0 .35em}
+ul.found{margin:0;padding-left:1.1rem;font-size:.92rem}
+ul.found li{margin-bottom:.5rem}
+figure{margin:0 0 1.2rem}
+figure+figure{margin-top:1.6rem;padding-top:1.4rem;border-top:1px dashed var(--rule)}
+figure svg{display:block;width:100%;height:auto;color:var(--ink);
+  border:1px solid var(--rule);border-radius:.35rem;background:var(--panel)}
+figcaption{font-size:.83rem;line-height:1.75;color:var(--muted);margin-top:.5rem}
+.you{border:1px dashed var(--key);border-radius:.3rem;padding:.9rem 1.1rem;color:var(--muted);
+  font-size:.9rem;background:color-mix(in srgb,var(--key) 5%,var(--paper))}
+.next{border:1px dashed var(--panelrule);border-radius:.3rem;padding:.9rem 1.1rem;
+  color:var(--muted);font-size:.9rem}
+
+mark.chg{background:var(--mark);color:var(--ink);border-radius:.15em;cursor:pointer;
+  box-shadow:-.2em 0 0 var(--mark),.2em 0 0 var(--mark);border-bottom:2px solid var(--add)}
+mark.chg:hover,mark.chg:focus{background:var(--markh);
+  box-shadow:-.2em 0 0 var(--markh),.2em 0 0 var(--markh);outline:none}
+mark.chg:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+mark.chg::after{content:"▸";font-size:.72em;color:var(--add);margin-left:.3em;font-weight:700}
+mark.chg[aria-expanded="true"]::after{content:"▾"}
+mark.chg.del{background:none;box-shadow:none;color:var(--out);border-bottom:1px dashed var(--out)}
+mark.chg.del b{text-decoration:line-through}
+
+.pop[hidden]{display:none}
+.pop{display:block;background:var(--pop);border:1px solid var(--popline);
+  border-left:3px solid var(--add);border-radius:.3rem;padding:.7rem .9rem;margin:.6rem 0 .2rem;
+  font-size:.82rem;line-height:1.75;white-space:normal;font-weight:400}
+.pop b{display:block;font-size:.66rem;letter-spacing:.14em;color:var(--add);margin-bottom:.3rem}
+.pop .why{display:block;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--popline)}
+.pop .why b{color:var(--key)}
+
+.hd{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:.8rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;z-index:9}
+.hd .t{font-family:"Noto Serif JP",serif;font-weight:700;font-size:1rem;flex:1;min-width:12rem}
+.hd .t small{display:block;font-family:"Noto Sans JP",sans-serif;font-weight:400;
+  font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.hd button{font:inherit;font-size:.82rem;font-weight:700;padding:.35rem .9rem;border-radius:.3rem;
+  cursor:pointer;background:var(--panel);color:var(--ink);border:1px solid var(--panelrule)}
+.hd button:hover{background:var(--markh)}
+.hd button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+
+/* 論点のタブ。ブレストは論点が互いの前提になるので、1枚に束ねる */
+.tabs{position:sticky;top:3.4rem;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:.45rem 1.5rem;display:flex;gap:.4rem;overflow-x:auto;z-index:8;scrollbar-width:thin}
+.tabs button{font:inherit;font-size:.82rem;padding:.35rem .8rem;border-radius:.3rem;cursor:pointer;
+  background:none;color:var(--muted);border:1px solid transparent;white-space:nowrap;
+  display:flex;align-items:center;gap:.4rem}
+.tabs button:hover{background:var(--panel);color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);
+  border-color:var(--panelrule);font-weight:700}
+.tabs button[aria-selected="true"] .tn{color:var(--key)}
+.tabs .tn{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted)}
+.tabs button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+.st.done{color:var(--key);border-color:var(--key)}
+.st.open{color:var(--add);border-color:var(--add)}
+section[role="tabpanel"][hidden]{display:none}
+</style><div class="hd"><div class="t">schema 観の三層<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div><button id="all" type="button">すべて開く</button></div><div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-t="p0">現在地</button><button role="tab" aria-selected="false" data-t="p1"><span class="tn">1</span>三層<span class="st done">決着</span></button><button role="tab" aria-selected="false" data-t="p2"><span class="tn">2</span>単位<span class="st done">決着</span></button><button role="tab" aria-selected="false" data-t="p3"><span class="tn">5</span>型の増え方<span class="st done">決着</span></button><button role="tab" aria-selected="false" data-t="p4"><span class="tn">3</span>同一性<span class="st open">未</span></button><button role="tab" aria-selected="false" data-t="p5"><span class="tn">6</span>規則の置き場所<span class="st open">新規</span></button><button role="tab" aria-selected="false" data-t="p6"><span class="tn">7</span>書く単位と承認の単位<span class="st open">新規</span></button></div><main><section id="p0" role="tabpanel"><p class="eyebrow">現在地</p><h1>schema 観の三層</h1><div class="note">論点5つのうち<b>3つが決着し、1つ新しく出た。</b>決着した論点も同じ1枚に置く ── 後の論点が前の決着を前提にしているためである（論点5 は論点6 に、論点6 は論点3 に依存する）。<b>これは正本ではない。ブレストの記録である。</b></div><h2><span class="sn">1</span>論点の現在地</h2><div class="scroll"><table class=""><tr><th>#</th><th>論点</th><th>状態</th><th>いまの答え</th></tr><tr><td><span class="n">1</span></td><td>schema は厚い一枚か、薄い核＋複数の契約か</td><td><span class="st done">決着</span></td><td>どちらでもなく、<b>メタレベルの三層</b></td></tr><tr><td><span class="n">2</span></td><td>世界の単位は、文書か1つのグラフか</td><td><span class="st done">決着</span></td><td><b>単位は読み手に従属する。</b>人＝文書／AI＝節</td></tr><tr><td><span class="n">5</span></td><td>型は縦に増えるか、横に増えるか</td><td><span class="st done">決着</span></td><td><b>横。</b>動詞は abstract が固定する</td></tr><tr><td><span class="n">3</span></td><td>AI が引く節に、人が読む文書とは別の同一性が要るか</td><td><span class="st open">未</span></td><td>3案が残っている（下）。推しは A</td></tr><tr><td><span class="n">6</span></td><td>規則を、コマンドで持つか宣言で持つか</td><td><span class="st open">新規</span></td><td>推しは B（宣言）。<b>線が引けていない</b></td></tr><tr><td><span class="n">7</span></td><td>どこまで書いたら、人に見せるか</td><td><span class="st open">新規</span></td><td>論点3・6 が決まってから扱う</td></tr></table></div><h2><span class="sn">2</span>JSON Schema に足りないもの（6つ）</h2><div class="scroll"><table class=""><tr><th>足りないもの</th><th>JSON Schema が持つもの</th><th>なぜ足りないか</th></tr><tr><td>同一性</td><td>型の判定</td><td>「この節が<b>何であるか</b>」は言えるが「<b>どの個体か</b>」を持たない</td></tr><tr><td>書き方の指示</td><td><code>description</code></td><td><code>x-</code> に載せるしかない。そして構造化出力は <code>x-</code> を拒む（実測）</td></tr><tr><td>操作</td><td>検証だけ</td><td>引き方・書き方のコマンドが無い</td></tr><tr><td>射影</td><td>──</td><td>出力先・出力形の概念が無い</td></tr><tr><td><b>実体どうしの参照</b></td><td><code>$ref</code></td><td><b><code>$ref</code> は型の再利用であって、インスタンス間の参照ではない</b></td></tr><tr><td>版と移行</td><td><code>$id</code></td><td>版は言えるが、実体を移す意味論が無い</td></tr></table></div><figure><svg viewBox="0 0 780 200" role="img" aria-label="JSON Schema の $ref は型どうしを結ぶもので、文書エンティティどうしを結ぶ参照は別物である">
+ <defs><marker id="r1b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+ <marker id="r1b2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker></defs>
+ <text x="20" y="26" font-size="11.5" font-weight="700" fill="var(--muted)">JSON Schema が持つもの</text>
+ <rect x="20" y="44" width="130" height="42" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="85" y="70" text-anchor="middle" font-size="12.5" fill="currentColor">型 A</text>
+ <rect x="215" y="44" width="130" height="42" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="280" y="70" text-anchor="middle" font-size="12.5" fill="currentColor">型 B</text>
+ <line x1="150" y1="65" x2="209" y2="65" stroke="currentColor" stroke-width="1.4" marker-end="url(#r1b1)"/>
+ <text x="179" y="56" text-anchor="middle" font-size="11" fill="currentColor">$ref</text>
+ <text x="20" y="120" font-size="11.5" fill="var(--muted)">型の再利用。</text>
+ <text x="20" y="140" font-size="11.5" fill="var(--muted)">「B と同じ形をここでも使う」</text>
+ <text x="20" y="172" font-size="11.5" fill="var(--muted)">実体は1つも出てこない</text>
+
+ <line x1="390" y1="14" x2="390" y2="186" stroke="var(--rule)" stroke-width="1"/>
+
+ <text x="415" y="26" font-size="11.5" font-weight="700" fill="var(--add)">スキーマ駆動が要るもの</text>
+ <rect x="415" y="44" width="140" height="42" fill="none" stroke="var(--add)" stroke-width="1.8"/>
+ <text x="485" y="63" text-anchor="middle" font-size="12" fill="var(--add)">文書 X の節</text>
+ <text x="485" y="79" text-anchor="middle" font-size="10.5" fill="var(--muted)">実体</text>
+ <rect x="615" y="44" width="140" height="42" fill="none" stroke="var(--add)" stroke-width="1.8"/>
+ <text x="685" y="63" text-anchor="middle" font-size="12" fill="var(--add)">文書 Y の節</text>
+ <text x="685" y="79" text-anchor="middle" font-size="10.5" fill="var(--muted)">実体</text>
+ <line x1="555" y1="65" x2="609" y2="65" stroke="var(--add)" stroke-width="1.8" marker-end="url(#r1b2)"/>
+ <text x="582" y="56" text-anchor="middle" font-size="11" fill="var(--add)">指す</text>
+ <text x="415" y="120" font-size="11.5" fill="var(--add)">個体どうしの結び。</text>
+ <text x="415" y="140" font-size="11.5" fill="var(--muted)">「この不変条件は、あのユースケースで効く」</text>
+ <text x="415" y="172" font-size="11.5" fill="var(--muted)">JSON Schema には、これを言う語が無い</text>
+</svg><figcaption>左は型と型を結ぶ。右は実体と実体を結ぶ。<b>名前が似ているだけで、別の概念である。</b>実仕様628本の実測では、この右側にあたる参照の33%が指す先に届いていなかった。</figcaption></figure></section><section id="p1" role="tabpanel" hidden><p class="eyebrow">論点 1</p><h1>schema は厚い一枚か、薄い核＋複数の契約か</h1><div class="note">厚い／薄いは同じ階層での責務の配分の話で、実際に起きているのは<b>階層が1つ増えること</b>である。厚さを比べても、この構造は出てこない。</div><h2><span class="sn">1</span>図で見る</h2><figure><svg viewBox="0 0 780 300" role="img" aria-label="abstract schema が concrete schema を縛り、concrete schema が文書エンティティを縛る三層。各段で推論に載るものが変わる">
+ <defs><marker id="r0a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+ <marker id="r0a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker></defs>
+
+ <text x="16" y="42" font-size="11.5" fill="var(--muted)">段1</text>
+ <rect x="60" y="18" width="330" height="52" fill="none" stroke="currentColor" stroke-width="1.6"/>
+ <text x="225" y="42" text-anchor="middle" font-size="14.5" font-weight="700" fill="currentColor">abstract schema</text>
+ <text x="225" y="60" text-anchor="middle" font-size="11" fill="var(--muted)">型契約 ＋ クエリ ＋ コマンド</text>
+
+ <text x="16" y="152" font-size="11.5" fill="var(--muted)">段2</text>
+ <rect x="60" y="128" width="330" height="52" fill="none" stroke="var(--add)" stroke-width="2"/>
+ <text x="225" y="152" text-anchor="middle" font-size="14.5" font-weight="700" fill="var(--add)">concrete schema</text>
+ <text x="225" y="170" text-anchor="middle" font-size="11" fill="var(--muted)">domain ／ coding ／ knowledge …</text>
+
+ <text x="16" y="262" font-size="11.5" fill="var(--muted)">実体</text>
+ <rect x="60" y="238" width="330" height="52" fill="none" stroke="currentColor" stroke-width="1.6"/>
+ <text x="225" y="262" text-anchor="middle" font-size="14.5" font-weight="700" fill="currentColor">文書エンティティ</text>
+ <text x="225" y="280" text-anchor="middle" font-size="11" fill="var(--muted)">document</text>
+
+ <line x1="225" y1="70" x2="225" y2="122" stroke="currentColor" stroke-width="1.6" marker-end="url(#r0a1)"/>
+ <text x="238" y="100" font-size="11.5" fill="currentColor">検証し、構造を決める</text>
+ <line x1="225" y1="180" x2="225" y2="232" stroke="currentColor" stroke-width="1.6" marker-end="url(#r0a1)"/>
+ <text x="238" y="210" font-size="11.5" fill="currentColor">検証し、構造を決める</text>
+
+ <line x1="430" y1="18" x2="430" y2="290" stroke="var(--rule)" stroke-width="1"/>
+ <text x="446" y="34" font-size="11" fill="var(--muted)">推論に載るもの</text>
+
+ <line x1="446" y1="128" x2="446" y2="180" stroke="var(--add)" stroke-width="1.4"/>
+ <text x="458" y="148" font-size="12.5" font-weight="700" fill="var(--add)">欄の設計だけ</text>
+ <text x="458" y="166" font-size="11" fill="var(--muted)">構造は abstract が決めている</text>
+
+ <line x1="446" y1="238" x2="446" y2="290" stroke="var(--add)" stroke-width="1.4"/>
+ <text x="458" y="258" font-size="12.5" font-weight="700" fill="var(--add)">値だけ</text>
+ <text x="458" y="276" font-size="11" fill="var(--muted)">構造は concrete が決めている</text>
+
+ <text x="446" y="100" font-size="11" fill="var(--muted)">──</text>
+</svg><figcaption><b>concrete schema は、abstract schema のインスタンスであり、同時に文書の型でもある。</b>この二重の役が三層の核心で、JSON Schema 自身が meta-schema を持つのと同じ形である。</figcaption></figure><h2><span class="sn">2</span>「値だけを推論させる」は再帰する</h2><div class="scroll"><table class=""><tr><th>何を書くとき</th><th>構造を縛るもの</th><th>推論に載るもの</th></tr><tr><td>文書エンティティ</td><td>concrete schema</td><td>値だけ</td></tr><tr><td><b>concrete schema</b></td><td><b>abstract schema</b></td><td><b>欄の設計だけ</b></td></tr></table></div><p class='lead'><b>concrete schema を書く行為そのものが、構造の推論である。</b>domain schema を新しく起こすとき、いま人とAIが「どんな欄が要るか」を推論している。それを縛るのが abstract schema であり、<b>これが段1の存在理由になる</b> ── 共通部分をくくり出したのではなく、同じ原理をもう1段上に当てている。</p><h2><span class="sn">3</span>決まり</h2><div class="scroll"><table class="chain"><tr><th></th><th></th></tr><tr><td><span class="st done">決定</span></td><td>schema は、abstract／concrete／文書エンティティの三層で捉える</td></tr><tr><td><span class="st done">理由</span></td><td>concrete schema は abstract schema のインスタンスであり、同時に文書の型でもある。この二重の役が核心で、JSON Schema 自身が meta-schema を持つのと同じ形である</td></tr><tr><td><span class="st done">効くこと</span></td><td>段1 は「共通部分」ではなく「もう1段上の同じ原理」として定義される</td></tr></table></div></section><section id="p2" role="tabpanel" hidden><p class="eyebrow">論点 2</p><h1>世界の単位は、文書か1つのグラフか</h1><div class="note">偽の二択だった ── <b>「単位」という語が4つの別物を指していた</b>（人が読む単位／検証と状態の単位／取得と参照の単位／保存の単位）。</div><h2><span class="sn">1</span>図で見る</h2><figure><svg viewBox="0 0 780 220" role="img" aria-label="文書に境界がある世界では境界をまたぐ操作が別物になり、境界の無い世界では同じ操作で済む"><defs><marker id="r3d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs><defs><marker id="r3d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker></defs>
+ <text x="20" y="24" font-size="12" font-weight="700" fill="var(--muted)">文書の集まり</text>
+ <rect x="20" y="40" width="100" height="96" rx="4" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <circle cx="52" cy="70" r="6" fill="none" stroke="var(--soft)"/><circle cx="88" cy="70" r="6" fill="none" stroke="var(--soft)"/>
+ <circle cx="52" cy="106" r="6" fill="none" stroke="var(--soft)"/><circle cx="88" cy="106" r="6" fill="none" stroke="var(--soft)"/>
+ <rect x="136" y="40" width="100" height="96" rx="4" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <circle cx="168" cy="70" r="6" fill="none" stroke="var(--soft)"/><circle cx="204" cy="70" r="6" fill="none" stroke="var(--soft)"/>
+ <circle cx="168" cy="106" r="6" fill="none" stroke="var(--soft)"/>
+ <rect x="252" y="40" width="100" height="96" rx="4" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <circle cx="284" cy="70" r="6" fill="none" stroke="var(--soft)"/><circle cx="320" cy="106" r="6" fill="none" stroke="var(--soft)"/>
+ <path d="M88 70 C 150 6, 240 6, 284 66" fill="none" stroke="var(--add)" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#r3d2)"/>
+ <text x="186" y="160" text-anchor="middle" font-size="11.5" fill="var(--add)">境界をまたぐと、別の操作になる</text>
+ <text x="186" y="182" text-anchor="middle" font-size="11" fill="var(--muted)">単一document用と横断用で、動詞が分かれる</text>
+ <text x="186" y="206" text-anchor="middle" font-size="11" fill="var(--muted)">文書は、人が読み書きする単位である</text>
+
+ <line x1="390" y1="14" x2="390" y2="212" stroke="var(--rule)" stroke-width="1"/>
+
+ <text x="415" y="24" font-size="12" font-weight="700" fill="var(--muted)">境界の無い1つの木</text>
+ <circle cx="585" cy="52" r="7" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <line x1="585" y1="59" x2="490" y2="83" stroke="var(--soft)"/><line x1="585" y1="59" x2="585" y2="83" stroke="var(--soft)"/><line x1="585" y1="59" x2="690" y2="83" stroke="var(--soft)"/>
+ <circle cx="490" cy="90" r="6" fill="none" stroke="var(--soft)"/><circle cx="585" cy="90" r="6" fill="none" stroke="var(--soft)"/><circle cx="690" cy="90" r="6" fill="none" stroke="var(--soft)"/>
+ <line x1="490" y1="96" x2="455" y2="118" stroke="var(--soft)"/><line x1="490" y1="96" x2="525" y2="118" stroke="var(--soft)"/>
+ <line x1="690" y1="96" x2="660" y2="118" stroke="var(--soft)"/><line x1="690" y1="96" x2="720" y2="118" stroke="var(--soft)"/>
+ <circle cx="455" cy="125" r="6" fill="none" stroke="var(--soft)"/><circle cx="525" cy="125" r="6" fill="none" stroke="var(--soft)"/>
+ <circle cx="660" cy="125" r="6" fill="none" stroke="var(--soft)"/><circle cx="720" cy="125" r="6" fill="none" stroke="var(--soft)"/>
+ <path d="M455 125 C 500 168, 660 168, 715 131" fill="none" stroke="var(--key)" stroke-width="1.8" marker-end="url(#r3d1)"/>
+ <text x="585" y="182" text-anchor="middle" font-size="11.5" fill="var(--key)">どこへ渡っても、同じ操作</text>
+ <text x="585" y="206" text-anchor="middle" font-size="11" fill="var(--muted)">前方一致1つ。ただし人の読む単位が消える</text>
+</svg><figcaption>問いは「どちらが便利か」ではない。<b>人が読み書きする単位と、機械が引く単位を、一致させるかどうか</b>である。一致させれば人にやさしく、機械の動詞が二重になる。切り離せば機械は単純になり、人が「1本の文書」を取り戻す仕組みが別に要る。</figcaption></figure><figure><svg viewBox="0 0 780 216" role="img" aria-label="人間は形式に認知を依存するので単位は文書になり、AIは形式に依存しないので単位は節になる"><defs><marker id="r4f1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker><marker id="r4f2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker></defs>
+ <text x="20" y="26" font-size="11" fill="var(--muted)">読み手</text>
+ <text x="196" y="26" font-size="11" fill="var(--muted)">認知の条件</text>
+ <text x="470" y="26" font-size="11" fill="var(--muted)">だから形式は</text>
+ <text x="640" y="26" font-size="11" fill="var(--muted)">だから単位は</text>
+ <line x1="20" y1="34" x2="760" y2="34" stroke="var(--rule)"/>
+
+ <rect x="20" y="52" width="150" height="46" fill="none" stroke="currentColor" stroke-width="1.5"/>
+ <text x="95" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor">人間</text>
+ <text x="196" y="70" font-size="11.5" fill="currentColor">ビジュアライズされて</text>
+ <text x="196" y="88" font-size="11.5" fill="currentColor">いないと認知できない</text>
+ <line x1="420" y1="75" x2="462" y2="75" stroke="currentColor" stroke-width="1.4" marker-end="url(#r4f1)"/>
+ <text x="470" y="80" font-size="12.5" fill="currentColor">MD ／ HTML</text>
+ <line x1="592" y1="75" x2="632" y2="75" stroke="currentColor" stroke-width="1.4" marker-end="url(#r4f1)"/>
+ <text x="640" y="80" font-size="13" font-weight="700" fill="currentColor">文書</text>
+
+ <rect x="20" y="130" width="150" height="60" fill="none" stroke="var(--add)" stroke-width="1.8"/>
+ <text x="95" y="165" text-anchor="middle" font-size="14" font-weight="700" fill="var(--add)">AI</text>
+ <text x="196" y="150" font-size="11.5" fill="var(--add)">形式を気にしない。</text>
+ <text x="196" y="168" font-size="11.5" fill="var(--add)">構造の明示と読み方が</text>
+ <text x="196" y="186" font-size="11.5" fill="var(--add)">与えられて初めて従う</text>
+ <line x1="420" y1="160" x2="462" y2="160" stroke="var(--add)" stroke-width="1.6" marker-end="url(#r4f2)"/>
+ <text x="470" y="165" font-size="12.5" fill="var(--add)">何でもよい</text>
+ <line x1="592" y1="160" x2="632" y2="160" stroke="var(--add)" stroke-width="1.6" marker-end="url(#r4f2)"/>
+ <text x="640" y="165" font-size="13" font-weight="700" fill="var(--add)">節</text>
+</svg><figcaption>形式は読み手の認知に従属し、単位は形式に従属する。<b>検証と状態を読むのは人間なので、そこは文書単位のままでよい。取得と参照を行うのは AI なので、そこが節単位になる。</b>二択ではなく、従属で決まる。</figcaption></figure><h2><span class="sn">2</span>足したい条件が2つある</h2><p><b>① 構造が意味的空間になるのは、命名が守られているときだけである。</b>構造は型を保証するが、意味は保証しない。<code>invariants[]</code> に不変条件でないものが書かれても検証は通る。だから書き方の指示とセットで初めて成り立つ。帰結として<b>意味は検証できない</b> ── 最後に人の承認が残る理由がここで説明できる。</p><p><b>② 構造化の利得は「無いことが分かる」ことである。</b>grep は「見つからなかった」と「無い」を区別できない。構造で引けば「その欄が空である」と言い切れる。</p><h2><span class="sn">3</span>代償</h2><p><b>文書をまたぐ規則の置き場所が無くなる。</b>「この仕様が指しているユースケースは実在するか」は、どの1つの文書のスキーマでも検証できない ── 範囲が文書を超えているためである。<b>これが論点6の入口になる。</b></p><h2><span class="sn">4</span>決まり</h2><div class="scroll"><table class="chain"><tr><th></th><th></th></tr><tr><td><span class="st done">決定</span></td><td>人間が読む検証・状態・承認は文書単位、AI が行う取得・参照は節単位に置く</td></tr><tr><td><span class="st done">理由</span></td><td>形式は読み手の認知に従属し、単位は形式に従属する。人間はビジュアライズされていないと認知できず、AI は形式を問わない</td></tr><tr><td><span class="st done">次</span></td><td>論点3 へ進む。ただし問いが変わった ── 「名前か印か」ではなく「節に別の同一性が要るか」になる</td></tr></table></div></section><section id="p3" role="tabpanel" hidden><p class="eyebrow">論点 5</p><h1>型は縦に増えるか、横に増えるか</h1><div class="note">三層に置き直した時点で、この論点は自動的に閉じた。<b>ただし論点6を前提にしている</b> ── 規則をコマンドで持つなら、結局は縦に増える。</div><h2><span class="sn">1</span>決まり</h2><div class="scroll"><table class="chain"><tr><th></th><th></th></tr><tr><td><span class="st done">決定</span></td><td>型は横に増える。動詞は abstract schema が固定する</td></tr><tr><td><span class="st done">崩れる条件</span></td><td>論点6 が案A（規則をコマンドで持つ）に倒れた場合。そのときは型を足すたびに動詞が増え、縦に増えることになる</td></tr></table></div></section><section id="p4" role="tabpanel" hidden><p class="eyebrow">論点 3</p><h1>AI が引く節に、人が読む文書とは別の同一性が要るか</h1><div class="note">論点2 の決着で<b>問いが変わった</b> ── 「名前か印か」ではなく、節が文書とは別の同一性を持つかどうかになった。この論点が決まると、論点6 の前提も動く。</div><h2><span class="sn">1</span>案の違いを、図で</h2><figure><svg viewBox="0 0 780 320" role="img" aria-label="3案それぞれで、参照が節を指すときの鍵が何になり、節の名前や位置が変わったときに結びがどうなるか">
+<defs>
+ <marker id="i1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--key)"/></marker>
+ <marker id="i2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker>
+ <marker id="i3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--out)"/></marker>
+</defs>
+<text x="8" y="16" font-size="11" fill="var(--muted)">A　節に、変わらない印</text>
+<rect x="8" y="30" width="228" height="38" fill="none" stroke="currentColor" stroke-width="1.3"/>
+<text x="122" y="54" text-anchor="middle" font-size="12" fill="currentColor">指す側の節（参照）</text>
+<line x1="122" y1="68" x2="122" y2="108" stroke="var(--key)" stroke-width="1.8" marker-end="url(#i1)"/>
+<text x="132" y="92" font-size="11.5" font-weight="700" fill="var(--key)">SC-01J7Q4K</text>
+<rect x="8" y="114" width="228" height="52" fill="none" stroke="var(--key)" stroke-width="1.9"/>
+<text x="122" y="134" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--key)">SC-01J7Q4K</text>
+<text x="122" y="152" text-anchor="middle" font-size="11" fill="var(--muted)">「予約を確定する」</text>
+<text x="8" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
+<rect x="8" y="206" width="228" height="46" fill="none" stroke="var(--key)" stroke-width="1.9"/>
+<text x="122" y="225" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--key)">SC-01J7Q4K</text>
+<text x="122" y="242" text-anchor="middle" font-size="11" fill="var(--add)">「予約を確定できる」</text>
+<text x="8" y="278" font-size="12" font-weight="700" fill="var(--key)">結びは残る（moved 1）</text>
+<text x="8" y="298" font-size="11" fill="var(--muted)">名前は表示になる。印を採番</text>
+<text x="8" y="314" font-size="11" fill="var(--muted)">できるのは道具だけになる</text>
+
+<line x1="256" y1="8" x2="256" y2="314" stroke="var(--rule)" stroke-width="1"/>
+
+<text x="276" y="16" font-size="11" fill="var(--muted)">B　位置＋移行の宣言</text>
+<rect x="276" y="30" width="228" height="38" fill="none" stroke="currentColor" stroke-width="1.3"/>
+<text x="390" y="54" text-anchor="middle" font-size="12" fill="currentColor">指す側の節（参照）</text>
+<line x1="390" y1="68" x2="390" y2="108" stroke="currentColor" stroke-width="1.6" marker-end="url(#i1)"/>
+<text x="400" y="92" font-size="11.5" font-weight="700" fill="currentColor">doc-7 / §2 / 3番目</text>
+<rect x="276" y="114" width="228" height="52" fill="none" stroke="currentColor" stroke-width="1.6"/>
+<text x="390" y="134" text-anchor="middle" font-size="11.5" fill="currentColor">doc-7 / §2 / 3番目</text>
+<text x="390" y="152" text-anchor="middle" font-size="11" fill="var(--muted)">「予約を確定する」</text>
+<text x="276" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
+<rect x="276" y="206" width="228" height="46" fill="none" stroke="var(--add)" stroke-width="1.9"/>
+<text x="390" y="225" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--add)">doc-7 / §4 / 1番目</text>
+<text x="390" y="242" text-anchor="middle" font-size="11" fill="var(--muted)">位置が変わった</text>
+<line x1="390" y1="252" x2="390" y2="262" stroke="var(--add)" stroke-width="1.6" marker-end="url(#i2)"/>
+<text x="276" y="278" font-size="12" font-weight="700" fill="var(--add)">宣言が在れば残り、無ければ切れる</text>
+<text x="276" y="298" font-size="11" fill="var(--muted)">そして「書き忘れた」ことは、</text>
+<text x="276" y="314" font-size="11" fill="var(--muted)">どこにも現れない</text>
+
+<line x1="524" y1="8" x2="524" y2="314" stroke="var(--rule)" stroke-width="1"/>
+
+<text x="544" y="16" font-size="11" fill="var(--muted)">C　参照の側に、解決状態</text>
+<rect x="544" y="30" width="228" height="38" fill="none" stroke="var(--out)" stroke-width="1.6"/>
+<text x="658" y="48" text-anchor="middle" font-size="12" fill="currentColor">指す側の節（参照）</text>
+<text x="658" y="63" text-anchor="middle" font-size="10.5" fill="var(--out)">状態：届いた／届かない／外部／検めない</text>
+<line x1="658" y1="68" x2="658" y2="108" stroke="var(--out)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#i3)"/>
+<text x="668" y="92" font-size="11.5" fill="var(--out)">鍵は名前のまま</text>
+<rect x="544" y="114" width="228" height="52" fill="none" stroke="currentColor" stroke-width="1.6"/>
+<text x="658" y="140" text-anchor="middle" font-size="11.5" fill="currentColor">「予約を確定する」</text>
+<text x="544" y="196" font-size="11" fill="var(--muted)">名前を直す ／ 別の親へ移す</text>
+<rect x="544" y="206" width="228" height="46" fill="none" stroke="var(--out)" stroke-width="1.6" stroke-dasharray="5 4"/>
+<text x="658" y="232" text-anchor="middle" font-size="11.5" fill="var(--add)">届かない</text>
+<text x="544" y="278" font-size="12" font-weight="700" fill="var(--out)">届かないことは分かる</text>
+<text x="544" y="298" font-size="11" fill="var(--muted)">「移った」のか「消えた」のかは</text>
+<text x="544" y="314" font-size="11" fill="var(--muted)">分からない。人が毎回決める</text>
+</svg><figcaption><b>3案の差は、参照が何を鍵にするかである。</b>同じ「名前を直す／別の親へ移す」を3案に通した。</figcaption></figure><figure><svg viewBox="0 0 780 300" role="img" aria-label="3案それぞれで、段1と段2のどちらに何が増えるか。案Aは段1だけが増え、案Bは両方が増え、案Cは段1が1つ増える">
+<text x="150" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--muted)">段1　全型が継ぐ契約</text>
+<text x="530" y="18" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--muted)">段2　8つの型</text>
+<line x1="8" y1="26" x2="772" y2="26" stroke="var(--rule)"/>
+
+<text x="8" y="58" font-size="12" font-weight="700" fill="var(--key)">A</text>
+<rect x="28" y="38" width="244" height="62" fill="none" stroke="var(--key)" stroke-width="1.9"/>
+<text x="40" y="56" font-size="11" fill="var(--key)">・節が印を持つ／採番と不変</text>
+<text x="40" y="74" font-size="11" fill="var(--key)">・参照は印を指す</text>
+<text x="40" y="92" font-size="11" fill="var(--key)">・人が読む射影では印を落とす</text>
+<rect x="408" y="38" width="244" height="62" fill="none" stroke="var(--rule)" stroke-width="1.4"/>
+<text x="530" y="66" text-anchor="middle" font-size="12" font-weight="700" fill="var(--muted)">増えない</text>
+<text x="530" y="86" text-anchor="middle" font-size="10.5" fill="var(--muted)">既にある document への後付けの発番だけ</text>
+<text x="668" y="74" font-size="11" fill="var(--key)">← いま動いている段</text>
+
+<text x="8" y="150" font-size="12" font-weight="700" fill="var(--add)">B</text>
+<rect x="28" y="118" width="244" height="70" fill="none" stroke="var(--add)" stroke-width="1.9"/>
+<text x="40" y="138" font-size="11" fill="var(--add)">・移行の操作を動詞として固定</text>
+<text x="40" y="156" font-size="11" fill="var(--add)">　（改名・移動・親の付け替え・型変更）</text>
+<text x="40" y="178" font-size="11" font-weight="700" fill="var(--add)">型が増えるほど、ここが太る</text>
+<rect x="408" y="118" width="244" height="70" fill="none" stroke="var(--add)" stroke-width="1.9"/>
+<text x="420" y="140" font-size="11" fill="var(--add)">・各型が、自分の位置の安定を守る</text>
+<text x="420" y="162" font-size="11" fill="var(--add)">・アドレスが動くたび、それを指す</text>
+<text x="420" y="180" font-size="11" fill="var(--add)">　参照が全部書き換わる</text>
+<text x="286" y="158" font-size="10.5" fill="var(--add)">論点6を</text>
+<text x="286" y="174" font-size="10.5" fill="var(--add)">案A側へ寄せる</text>
+
+<text x="8" y="238" font-size="12" font-weight="700" fill="var(--out)">C</text>
+<rect x="28" y="212" width="244" height="56" fill="none" stroke="var(--out)" stroke-width="1.6"/>
+<text x="40" y="236" font-size="11" fill="var(--out)">・参照の語彙に、型と解決状態</text>
+<text x="40" y="256" font-size="11" font-weight="700" fill="var(--out)">同一性は1つも増えない</text>
+<rect x="408" y="212" width="244" height="56" fill="none" stroke="var(--out)" stroke-width="1.6"/>
+<text x="420" y="236" font-size="11" fill="var(--out)">・各型が、参照の欄で状態を申告</text>
+<text x="420" y="256" font-size="11" fill="var(--out)">・区別は付かないまま、人へ残る</text>
+
+<line x1="8" y1="284" x2="772" y2="284" stroke="var(--rule)"/>
+<text x="8" y="298" font-size="11" fill="var(--muted)">いま再定義しているのは段2 である。段2 に何も置かない案は A だけで、C は A と重ねて採れる。</text>
+</svg><figcaption><b>同じ問いが、どちらの段に荷を置くかの選択でもある。</b>段2 に何も置かない案は A だけである。</figcaption></figure><figure><svg viewBox="0 0 780 210" role="img" aria-label="名前を鍵にすると改名で結びが切れ、変わらない印を鍵にすると改名しても結びが残る"><defs><marker id="r6e1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+ <text x="20" y="24" font-size="12" font-weight="700" fill="var(--muted)">名前を鍵にする</text>
+ <rect x="20" y="38" width="150" height="40" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="95" y="55" text-anchor="middle" font-size="11" fill="var(--muted)">仕様</text>
+ <text x="95" y="70" text-anchor="middle" font-size="11" fill="currentColor">「予約を確定する」</text>
+ <rect x="215" y="38" width="150" height="40" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="290" y="55" text-anchor="middle" font-size="11" fill="var(--muted)">テスト</text>
+ <text x="290" y="70" text-anchor="middle" font-size="11" fill="currentColor">「予約を確定する」</text>
+ <line x1="170" y1="58" x2="209" y2="58" stroke="currentColor" stroke-width="1.6" marker-end="url(#r6e1)"/>
+
+ <text x="20" y="112" font-size="11" fill="var(--add)">名前を直すと</text>
+ <rect x="20" y="124" width="150" height="40" fill="none" stroke="var(--add)" stroke-width="1.6"/>
+ <text x="95" y="149" text-anchor="middle" font-size="11" fill="var(--add)">「予約を確定できる」</text>
+ <rect x="215" y="124" width="150" height="40" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="290" y="149" text-anchor="middle" font-size="11" fill="currentColor">「予約を確定する」</text>
+ <line x1="170" y1="144" x2="209" y2="144" stroke="var(--add)" stroke-width="1.6" stroke-dasharray="4 4"/>
+ <text x="189" y="136" text-anchor="middle" font-size="15" font-weight="700" fill="var(--add)">×</text>
+ <text x="20" y="192" font-size="11.5" fill="var(--add)">中身は同じなのに、ずれたと言われる</text>
+
+ <line x1="390" y1="14" x2="390" y2="202" stroke="var(--rule)" stroke-width="1"/>
+
+ <text x="415" y="24" font-size="12" font-weight="700" fill="var(--muted)">変わらない印を鍵にする</text>
+ <rect x="415" y="38" width="150" height="40" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="490" y="55" text-anchor="middle" font-size="11" fill="var(--key)">SC-01J7Q4K</text>
+ <text x="490" y="70" text-anchor="middle" font-size="10.5" fill="var(--muted)">「予約を確定する」</text>
+ <rect x="610" y="38" width="150" height="40" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="685" y="55" text-anchor="middle" font-size="11" fill="var(--key)">SC-01J7Q4K</text>
+ <text x="685" y="70" text-anchor="middle" font-size="10.5" fill="var(--muted)">テスト側の名乗り</text>
+ <line x1="565" y1="58" x2="604" y2="58" stroke="var(--key)" stroke-width="1.6" marker-end="url(#r6e1)"/>
+
+ <text x="415" y="112" font-size="11" fill="var(--muted)">名前を直しても</text>
+ <rect x="415" y="124" width="150" height="40" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="490" y="141" text-anchor="middle" font-size="11" fill="var(--key)">SC-01J7Q4K</text>
+ <text x="490" y="156" text-anchor="middle" font-size="10.5" fill="var(--add)">「予約を確定できる」</text>
+ <rect x="610" y="124" width="150" height="40" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="685" y="141" text-anchor="middle" font-size="11" fill="var(--key)">SC-01J7Q4K</text>
+ <text x="685" y="156" text-anchor="middle" font-size="10.5" fill="var(--muted)">触っていない</text>
+ <line x1="565" y1="144" x2="604" y2="144" stroke="var(--key)" stroke-width="1.6" marker-end="url(#r6e1)"/>
+ <text x="415" y="192" font-size="11.5" fill="var(--key)">結びは残る。名前はただの表示になる</text>
+</svg><figcaption>名前を鍵にすると、<b>2方向に間違える</b>。名前を直しただけで「ずれた」と言われ（偽陽性）、中身を入れ替えても名前が同じなら気づかれない（偽陰性）。<b>名前を変えても同じものであり続けるなら、それはエンティティである</b>——というのは、Waffle が型にしている原則そのものである。</figcaption></figure><h2><span class="sn">2</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="同一性は名前か、変わらない印か（節と文書を区別せずに問うていた）" data-w="論点2 が「取得と参照は節単位」で決着したことで、指される側が節に定まった。名前と印の比較ではなく、節が文書とは別の同一性を持つかどうかが問いになった"><b>節に、変わらない印を持たせる</b></mark></td><td>機械が発番する印を鍵にする。人が読む射影では出さない</td><td><span class="cost">節を手で書き足せない。印の重複と散逸を検査する責務が増える。印は意味を運ばない</span></td></tr><tr><td><span class="n ">B</span></td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="改名を移行操作の宣言で運ぶ（独立の案として立てていた）" data-w="位置を鍵にする案と中身が同じだった。位置を鍵にする限り、位置が変わったことを別途宣言する以外に追跡手段が無い。2案ではなく、1案の必然の帰結である"><b>位置を同一性とし、動かすときは宣言する</b></mark></td><td>〈文書の識別子＋アドレス〉を鍵にし、改名・移動は移行の操作として書く</td><td><span class="cost">宣言の書き忘れが観測できない。忘れたこと自体が、不在として現れない</span></td></tr><tr><td><span class="n ">C</span></td><td><b>参照の側に、解決状態を持たせる</b></td><td>鍵は名前のまま。指す先へ届いたかを、参照が申告する</td><td><span class="cost">「移った」と「消えた」を区別できない。直し方は毎回、人が決める</span></td></tr></table></div><h2><span class="sn">3</span>この選択が、段1と段2に置くもの</h2><p class="lead">いま再定義しているのは<b>段2</b> である。</p><div class="scroll"><table class=""><tr><th></th><th>段1　全型が継ぐ契約</th><th>段2　8つの型</th></tr><tr><td><span class="n ">A</span></td><td>印を持つ／採番と不変／参照は印を指す／射影で落とす　<b>＝3つ増える</b></td><td><b>増えない。</b>既にある document への後付けの発番だけ</td></tr><tr><td><span class="n ">B</span></td><td>移行の操作を動詞として固定。<b>型が増えるほど太る</b></td><td>各型が位置の安定を守る。アドレスが動くと、指す参照が全部書き換わる</td></tr><tr><td><span class="n ">C</span></td><td>参照の語彙に、型と解決状態。<b>同一性は増えない</b></td><td>各型が、参照の欄で状態を申告する</td></tr></table></div><h2><span class="sn">4</span>落とした案と、その理由</h2><div class="scroll"><table class="out"><tr><th></th><th>案</th><th>落とした理由</th></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="中身を1文字直すと別物になる。エンティティの定義と衝突する"><b>中身のハッシュを鍵にする</b></mark></td><td>中身を1文字直すと別物になる。エンティティの定義と衝突する</td></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="指す側は後から現れる。後で発番すると、それより前の突き合わせが切れる"><b>外から指される節にだけ印を与える</b></mark></td><td>指す側は後から現れる。後で発番すると、それより前の突き合わせが切れる</td></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="人が読む単位に機械の鍵が現れる。しかも手書きの印は重複する"><b>人が手で印を書く</b></mark></td><td>人が読む単位に機械の鍵が現れる。しかも手書きの印は重複する</td></tr></table></div><h2><span class="sn">5</span>反証で分かったこと</h2><ul class='found'><li>問いが「要るか」から<b>「宣言で持つか、位置から導くか」</b>へ変わった</li><li>「要らない」に当たるのは <b>C だけ</b>である。A と B は持ち方の違いにすぎない</li><li><b>C は A と両立する。</b>排他なのは「指される側に同一性を置くか」だけで、「指す側が届いたかを申告するか」は別に決められる</li><li>JSON Schema に足りない6つのうち、<b>「同一性」と「実体どうしの参照」は同じ1つの穴の両側</b>である</li></ul><h2><span class="sn">6</span>私の推しと、その連鎖</h2><p class="lead">推す案は <b class="pickn">A</b> である。</p><div class="scroll"><table class="chain"><tr><th>段</th><th>中身</th></tr><tr><td><span class="st">測った</span></td><td>節を別の親へ移すと、名前を鍵にした差分は <code>removed 1 / added 1</code>、印を鍵にすると <code>moved 1</code>（原型での実測）</td></tr><tr><td><span class="st">測った</span></td><td>AI生成仕様 628本で、参照の <b>33%</b> が指す先に届いていない</td></tr><tr><td><span class="st">だから</span></td><td>参照が実体と実体を結ぶ以上、指される側は実体でなければならない</td></tr><tr><td><span class="st">一方で</span></td><td>位置を鍵にすると、参照の妥当性が構造の安定性に依存する ── いま最も動くのが構造である</td></tr><tr><td><span class="st">結論</span></td><td><b>A ── 節に、変わらない印を持たせる。</b>段2 に荷を置かない案は、これだけである</td></tr><tr><td><span class="st">引き受ける</span></td><td>人が読む射影で印を落とす。印を採番する道具を通さずには、節を書けなくする</td></tr><tr><td><span class="st">反証</span></td><td>印は意味を運ばない。人が印だけを見ても、それが何のことかは分からない</td></tr></table></div><h2><span class="sn">7</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">8</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section><section id="p5" role="tabpanel" hidden><p class="eyebrow">論点 6</p><h1>規則を、コマンドで持つか宣言で持つか</h1><div class="note">abstract schema がクエリとコマンドを固定すると、<b>concrete 固有の規則の行き場が問題になる</b>。論点2 の代償（文書をまたぐ規則の置き場所が無くなる）が、ここへ落ちてくる。</div><h2><span class="sn">1</span>案の違いを、図で</h2><figure><svg viewBox="0 0 780 260" role="img" aria-label="concrete schema が1つ増えたとき、案Aでは abstract のコマンドが増え、案Bでは concrete の中に規則が増えるだけで abstract は変わらない"><defs><marker id="r2c1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs><defs><marker id="r2c2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker></defs>
+ <text x="20" y="24" font-size="12" font-weight="700" fill="var(--del)">案A　規則をコマンドで持つ</text>
+ <rect x="20" y="38" width="330" height="46" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="185" y="58" text-anchor="middle" font-size="12" fill="currentColor">abstract schema</text>
+ <text x="185" y="75" text-anchor="middle" font-size="11" fill="var(--add)" font-weight="700">動詞 6 ＋ 新しい動詞</text>
+ <rect x="20" y="150" width="98" height="40" fill="none" stroke="var(--soft)" stroke-width="1.2"/>
+ <text x="69" y="175" text-anchor="middle" font-size="11.5" fill="var(--muted)">domain</text>
+ <rect x="136" y="150" width="98" height="40" fill="none" stroke="var(--soft)" stroke-width="1.2"/>
+ <text x="185" y="175" text-anchor="middle" font-size="11.5" fill="var(--muted)">coding</text>
+ <rect x="252" y="150" width="98" height="40" fill="none" stroke="var(--add)" stroke-width="1.8"/>
+ <text x="301" y="175" text-anchor="middle" font-size="11.5" fill="var(--add)" font-weight="700">新しい型</text>
+ <line x1="301" y1="150" x2="301" y2="90" stroke="var(--add)" stroke-width="1.8" marker-end="url(#r2c2)"/>
+ <text x="313" y="122" font-size="11" fill="var(--add)">動詞を足しに行く</text>
+ <text x="20" y="222" font-size="11.5" fill="var(--muted)">型が増えるたびに、abstract が太る。</text>
+ <text x="20" y="242" font-size="11.5" fill="var(--muted)">固定した意味が薄れていく</text>
+
+ <line x1="390" y1="14" x2="390" y2="250" stroke="var(--rule)" stroke-width="1"/>
+
+ <text x="415" y="24" font-size="12" font-weight="700" fill="var(--key)">案B　規則を宣言で持つ</text>
+ <rect x="415" y="38" width="340" height="46" fill="none" stroke="currentColor" stroke-width="1.4"/>
+ <text x="585" y="58" text-anchor="middle" font-size="12" fill="currentColor">abstract schema</text>
+ <text x="585" y="75" text-anchor="middle" font-size="11" fill="var(--key)" font-weight="700">動詞 6 ＋ 規則の書き方</text>
+ <rect x="415" y="150" width="103" height="40" fill="none" stroke="var(--soft)" stroke-width="1.2"/>
+ <text x="466" y="168" text-anchor="middle" font-size="11.5" fill="var(--muted)">domain</text>
+ <text x="466" y="183" text-anchor="middle" font-size="10" fill="var(--muted)">＋ 規則</text>
+ <rect x="533" y="150" width="103" height="40" fill="none" stroke="var(--soft)" stroke-width="1.2"/>
+ <text x="584" y="168" text-anchor="middle" font-size="11.5" fill="var(--muted)">coding</text>
+ <text x="584" y="183" text-anchor="middle" font-size="10" fill="var(--muted)">＋ 規則</text>
+ <rect x="651" y="150" width="104" height="40" fill="none" stroke="var(--add)" stroke-width="1.8"/>
+ <text x="703" y="168" text-anchor="middle" font-size="11.5" fill="var(--add)" font-weight="700">新しい型</text>
+ <text x="703" y="183" text-anchor="middle" font-size="10" fill="var(--add)">＋ 規則</text>
+ <line x1="703" y1="150" x2="703" y2="90" stroke="var(--soft)" stroke-width="1.2" stroke-dasharray="4 3"/>
+ <text x="713" y="122" font-size="11" fill="var(--muted)">従うだけ</text>
+ <text x="415" y="222" font-size="11.5" fill="var(--key)">abstract は変わらない。</text>
+ <text x="415" y="242" font-size="11.5" fill="var(--muted)">ただし「何が違反か」を書く語彙が要る</text>
+</svg><figcaption>差は矢印1本である。<b>案Aでは新しい型が abstract へ動詞を足しに行き、案Bでは従うだけで済む。</b>案Bを採るなら、abstract schema は操作だけでなく「何が違反かを書くための語彙」も持たなければ閉じない。</figcaption></figure><h2><span class="sn">2</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><b>規則をコマンドで持つ</b></td><td>新しい型は、abstract schema へ動詞を足しに行く</td><td><span class="cost">型が増えるたび abstract が太り、固定した意味が薄れる。論点5の決着（横に増える）も崩れる</span></td></tr><tr><td><span class="n ">B</span></td><td><b>規則を宣言で持つ</b></td><td>concrete schema が規則を宣言し、abstract はそれに従う</td><td><span class="cost">abstract に「何が違反かを書く語彙」が要る。そして<b>宣言で書けない規則は書けない</b></span></td></tr></table></div><h2><span class="sn">3</span>反証で分かったこと</h2><ul class='found'><li><b>この論点の実体は、線をどこに引くかである</b> ── 宣言で書ける規則と、走査・構文解析・依存グラフの循環検出のような<b>能力を要する検査</b>の境界</li><li>論点3 が A（節に印）に決まると、宣言が指せる先が実体になる。<b>論点3 の決着が、この線の引き方を変える</b></li></ul><h2><span class="sn">4</span>私の推しと、その連鎖</h2><p class="lead">推す案は <b class="pickn">B</b> である。</p><div class="scroll"><table class="chain"><tr><th>段</th><th>中身</th></tr><tr><td><span class="st">だから</span></td><td>案Aでは新しい型が abstract へ動詞を足しに行き、案Bでは従うだけで済む。差は矢印1本である</td></tr><tr><td><span class="st">結論</span></td><td><b>B ── 規則を宣言で持つ。</b>abstract は操作だけでなく「何が違反かを書く語彙」も持つ</td></tr><tr><td><span class="st">引き受ける</span></td><td>宣言で書けない規則は書けない。能力を要する検査は、宣言に収まらない</td></tr><tr><td><span class="st">確かめていない</span></td><td>その線がどこに引かれるかは、まだ 測っていない ── 論点3 が決まってから引く</td></tr></table></div><h2><span class="sn">5</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">6</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section><section id="p6" role="tabpanel" hidden><p class="eyebrow">論点 7</p><h1>どこまで書いたら、人に見せるか</h1><div class="note">論点2 の決着から落ちてきた問いである。<b>AI は読み手であると同時に書き手でもある。</b></div><h2><span class="sn">1</span>ずれの中身</h2><div class="scroll"><table class=""><tr><th></th><th>単位</th><th>なぜ</th></tr><tr><td>書く</td><td><b>節</b></td><td>AI が欄を埋める</td></tr><tr><td>承認する</td><td><b>文書</b></td><td>人が1本として読む</td></tr></table></div><p class='lead'>「どこまで書いたら人に見せるか」は、節が何個埋まったかでは決まらず、<b>文書が閉じたときに決まる</b>。このずれが、Human On The Loop の境界そのものである。</p><h2><span class="sn">2</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">3</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section></main>
+<script>
+(function(){
+  const marks = [...document.querySelectorAll('mark.chg')];
+  document.getElementById('n').textContent = marks.length;
+  function panel(m){
+    const p = document.createElement('div');
+    p.className = 'pop'; p.hidden = true;
+    p.innerHTML = '<b>変更前</b>' + m.dataset.b +
+                  '<span class="why"><b>なぜ変えたか</b>' + m.dataset.w + '</span>';
+    (m.closest('td') || m.parentNode).appendChild(p);
+    return p;
+  }
+  marks.forEach(m => {
+    const p = panel(m);
+    const toggle = () => {
+      const open = p.hidden;
+      p.hidden = !open;
+      m.setAttribute('aria-expanded', String(open));
+    };
+    m.addEventListener('click', toggle);
+    m.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+  });
+  const tabs = [...document.querySelectorAll('.tabs button')];
+  function show(id){
+    tabs.forEach(b => {
+      const on = b.dataset.t === id;
+      b.setAttribute('aria-selected', String(on));
+      document.getElementById(b.dataset.t).hidden = !on;
+    });
+    history.replaceState(null, '', '#' + id);
+    window.scrollTo({top: 0});
+  }
+  tabs.forEach((b, i) => {
+    b.addEventListener('click', () => show(b.dataset.t));
+    b.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { e.preventDefault(); const t = tabs[(i + d + tabs.length) % tabs.length];
+               t.focus(); show(t.dataset.t); }
+    });
+  });
+  if (tabs.length && document.getElementById(location.hash.slice(1))) show(location.hash.slice(1));
+
+  const all = document.getElementById('all');
+  all.addEventListener('click', () => {
+    const open = all.textContent === 'すべて開く';
+    document.querySelectorAll('.pop').forEach(p => p.hidden = !open);
+    marks.forEach(m => m.setAttribute('aria-expanded', String(open)));
+    all.textContent = open ? 'すべて閉じる' : 'すべて開く';
+  });
+})();
+</script>
