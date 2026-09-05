@@ -118,7 +118,7 @@ if err.Error() == "order not found" { /* … */ }
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| GO-ERR-01 | 文献 | Effective Go（エラーの扱い） | 《版・取得日》 | `errors` |
-| GO-ERR-02 | 規格 | Go 標準ライブラリ `fmt.Errorf` の `%w` | 《版・取得日》 | `%w` |
-| GO-ERR-03 | 規格 | Go 標準ライブラリ `errors.Is` ・ `errors.As` | 《版・取得日》 | `errors.Is` |
-| GO-ERR-05 | 文献 | Go Code Review Comments（Error Strings） | 《版・取得日》 | `error strings` |
+| GO-ERR-01 | 文献 | Effective Go（エラーの扱い）<br><small>https://go.dev/doc/effective_go</small> | 2026-09-05 取得 | `errors` |
+| GO-ERR-02 | 規格 | Go 標準ライブラリ `fmt.Errorf` の `%w`<br><small>https://pkg.go.dev/fmt</small> | 2026-09-05 取得 | `%w` |
+| GO-ERR-03 | 規格 | Go 標準ライブラリ `errors.Is` ・ `errors.As`<br><small>https://pkg.go.dev/errors</small> | 2026-09-05 取得 | `errors.Is` |
+| GO-ERR-05 | 文献 | Go Code Review Comments（Error Strings）<br><small>https://go.dev/wiki/CodeReviewComments</small> | 2026-09-05 取得 | `Error Strings` |

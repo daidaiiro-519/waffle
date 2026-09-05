@@ -15,7 +15,6 @@ updated: 2026-09-05
 
 **手順どおりのやり取りと、申告した能力の一致を保証する。**
 
-> **この規約は、原文の照合がまだ済んでいない。**
 
 ## 保証する振る舞い
 
@@ -72,4 +71,4 @@ updated: 2026-09-05
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| MC-AC-01 | 規格 | Model Context Protocol の仕様（初期化） | **《未取得》** | **《未照合》** |
+| MC-AC-01 | 規格 | Model Context Protocol の仕様（初期化）<br><small>https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle</small> | 2026-09-05 取得 | `initialize` |

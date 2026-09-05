@@ -95,4 +95,4 @@ src/adapter/inbound/stdio.rs   標準入出力の読み書きと、形式の検�
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | 呼び出し元の Hook 仕様 | 《版・取得日》 | `《原文にそのまま在る文字列》` |
+| 規格 | 呼び出し元の Hook 仕様<br><small>https://docs.claude.com/en/docs/claude-code/hooks</small> | 2026-09-05 取得 | `stdout` |

@@ -84,4 +84,4 @@ updated: 2026-09-05
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| HK-TS-01 | 文献 | Mike Cohn "Succeeding with Agile"（テストの配分） | 《版・取得日》 | `test automation pyramid` |
+| HK-TS-01 | 文献 | テストの配分<br><small>https://martinfowler.com/articles/practical-test-pyramid.html</small> | 2026-09-05 取得 | `test pyramid` |

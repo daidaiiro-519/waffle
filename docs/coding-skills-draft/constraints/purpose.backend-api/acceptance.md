@@ -82,5 +82,5 @@ updated: 2026-09-05
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| BA-AC-01 | 規格 | HTTP セマンティクス（RFC 9110） | 《版・取得日》 | `status code` |
-| BA-AC-03 | 規格 | 冪等な要求の扱い（RFC 9110） | 《版・取得日》 | `idempotent` |
+| BA-AC-01 | 規格 | HTTP セマンティクス（RFC 9110）<br><small>https://www.rfc-editor.org/rfc/rfc9110.txt</small> | 2026-09-05 取得 | `status code` |
+| BA-AC-03 | 規格 | 冪等な要求の扱い（RFC 9110）<br><small>https://www.rfc-editor.org/rfc/rfc9110.txt</small> | 2026-09-05 取得 | `idempotent` |

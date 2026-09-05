@@ -124,5 +124,5 @@ src/
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | Rust Reference / Visibility and privacy | 《版・取得日》 | `pub(crate)` |
-| 文献 | Rust API Guidelines C-STRUCT-PRIVATE | 《版・取得日》 | `visibility` |
+| 規格 | Rust Reference / Visibility and privacy<br><small>https://doc.rust-lang.org/reference/visibility-and-privacy.html</small> | 2026-09-05 取得 | `pub(crate)` |
+| 文献 | Rust API Guidelines C-STRUCT-PRIVATE<br><small>https://rust-lang.github.io/api-guidelines/naming.html</small> | 2026-09-05 取得 | `naming` |

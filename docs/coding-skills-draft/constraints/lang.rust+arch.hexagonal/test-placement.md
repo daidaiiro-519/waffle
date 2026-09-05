@@ -125,5 +125,5 @@ pub struct InMemoryHookStore { /* … */ }
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| RH-TP-01 | 規格 | Rust Book ch.11 Test Organization | 《版・取得日》 | `unit tests` |
-| RH-TP-02 | 規格 | Rust Book ch.11 Test Organization | 《版・取得日》 | `integration tests` |
+| RH-TP-01 | 規格 | Rust Book ch.11 Test Organization<br><small>https://doc.rust-lang.org/book/ch11-03-test-organization.html</small> | 2026-09-05 取得 | `unit tests` |
+| RH-TP-02 | 規格 | Rust Book ch.11 Test Organization<br><small>https://doc.rust-lang.org/book/ch11-03-test-organization.html</small> | 2026-09-05 取得 | `integration tests` |

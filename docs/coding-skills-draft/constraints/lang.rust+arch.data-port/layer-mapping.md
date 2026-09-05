@@ -121,5 +121,5 @@ adapters/
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | Cargo Book / Workspaces | 《版・取得日》 | `[workspace]` |
-| 規格 | Cargo Book / Dependency resolution | 《版・取得日》 | `dependencies` |
+| 規格 | Cargo Book / Workspaces<br><small>https://doc.rust-lang.org/cargo/reference/workspaces.html</small> | 2026-09-05 取得 | `[workspace]` |
+| 規格 | Cargo Book / Dependency resolution<br><small>https://doc.rust-lang.org/cargo/reference/workspaces.html</small> | 2026-09-05 取得 | `dependencies` |

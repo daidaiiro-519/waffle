@@ -15,8 +15,6 @@ updated: 2026-09-05
 
 **呼び出し元と、決められた手順で能力をやり取りし、その形は仕様が定める。**
 
-> **この規約は、原文の照合がまだ済んでいない。**
-> 各行の「照合する文字列」を埋めるまで、正本として使わない。
 
 ## 契約の内容
 
@@ -86,5 +84,5 @@ sequenceDiagram
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | Model Context Protocol の仕様 | **《未取得》** | **《未照合》** |
-| 規格 | JSON-RPC 2.0 | **《未取得》** | **《未照合》** |
+| 規格 | Model Context Protocol の仕様<br><small>https://modelcontextprotocol.io/specification/2025-06-18</small> | 2026-09-05 取得 | `capabilities` |
+| 規格 | JSON-RPC 2.0<br><small>https://www.jsonrpc.org/specification</small> | 2026-09-05 取得 | `jsonrpc` |

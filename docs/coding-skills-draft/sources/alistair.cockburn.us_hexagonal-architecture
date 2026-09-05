@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script type="text/javascript">
+			</script>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>hexagonal-architecture</title>
+	<base href="https://alistair.cockburn.us/" />
+	<link rel="canonical" href="https://alistair.cockburn.us/hexagonal-architecture" />	
+	
+						<meta name="viewport" content="width=device-width, initial-scale=1" />
+					<meta name="description" content="hexagonal-architecture" />
+			<meta name="keywords" content="hexagonal-architecture" />
+			
+	<!-- Facebook Open Graph -->
+		<meta property="og:title" content="hexagonal-architecture" />
+			<meta property="og:description" content="hexagonal-architecture" />
+			<meta property="og:image" content="" />
+			<meta property="og:type" content="article" />
+			<meta property="og:url" content="https://alistair.cockburn.us/hexagonal-architecture" />
+		<!-- Facebook Open Graph end -->
+
+		<meta name="generator" content="Website Builder" />
+			<script src="js/common-bundle.js?ts=20250418195753" type="text/javascript"></script>
+	<script src="js/a195fd4ba765006a850b08dc18a9c7c8-bundle.js?ts=20250418195753" type="text/javascript"></script>
+	<link href="css/common-bundle.css?ts=20250418195753" rel="stylesheet" type="text/css" />
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i&amp;subset=cyrillic,cyrillic-ext,greek,greek-ext,latin,latin-ext,vietnamese" rel="stylesheet" type="text/css" />
+	<link href="css/a195fd4ba765006a850b08dc18a9c7c8-bundle.css?ts=20250418195753" rel="stylesheet" type="text/css" id="wb-page-stylesheet" />
+	<link rel="icon" type="image/png" href="gallery/favicons/favicon.png">
+	<script type="text/javascript">
+	window.useTrailingSlashes = false;
+	window.disableRightClick = false;
+	window.currLang = 'en';
+</script>
+		
+	<!--[if lt IE 9]>
+	<script src="js/html5shiv.min.js"></script>
+	<![endif]-->
+
+		<script type="text/javascript">
+		$(function () {
+});    </script>
+</head>
+
+
+<body class="site site-lang-en " ><div id="wb_root" class="root wb-layout-vertical"><div class="wb_sbg"></div><div id="wb_header_a195fd4ba765006a850b08dc18a9c7c8" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-vertical"><div id="a195fd4ba8fb001677eebdedad7f41ca" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-horizontal"><div id="a195fd4ba8fb01f4e8cb5c823b00d3b9" class="wb_element wb_element_picture" data-plugin="Picture" title="AC logo white on beige"><div class="wb_picture_wrap"><div class="wb-picture-wrapper"><a href="https://alistair.cockburn.us/"><img loading="lazy" alt="AC logo white on beige" src="gallery_gen/9b674c792fcbee9088a6a1575406808f_200x256_fit.png?ts=1744995474"></a></div></div></div><div id="a195fd4ba8fd0185d0eb4a455d5a7056" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-vertical"><div id="a195fd4ba8fc006ee4933287d46e7a80" class="wb_element wb_text_element" data-plugin="TextArea" style=" line-height: normal;"><h4 class="wb-stl-custom1" data-dnid="10114">Alistair Cockburn (pronounced Cōburn)<br>
+The Original site</h4>
+</div></div></div><div id="a195fd4ba8fd0641f2687c276b4d28f4" class="wb_element wb_element_picture" data-plugin="Picture" title=""><div class="wb_picture_wrap"><div class="wb-picture-wrapper"><img loading="lazy" alt="" src="gallery_gen/5ae358af130339b8bb225ed6ad6f1fc0_fit.png?ts=1744995474"></div></div></div></div></div><div id="a195fd4ba8fd0274b208641af90a15e9" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-horizontal"><div id="a195fd4ba8fc01bcc11c610d8109966c" class="wb_element wb-menu wb-prevent-layout-click wb-menu-mobile" data-plugin="Menu"><a class="btn btn-default btn-collapser"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><ul class="hmenu" dir="ltr"><li><a href="https://alistaircockburn.com" target="_blank">Alistair Cockburn Consulting site</a></li><li><a href="https://alistair.cockburn.us" target="_blank">The Original Hexagonal Architecture paper</a></li></ul><div class="clearfix"></div></div></div></div></div></div><div id="wb_main_a195fd4ba765006a850b08dc18a9c7c8" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-vertical"><div id="a195fd4ba8fc027491d2258c7d03c99b" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-vertical"><div id="a195fd4ba8fc05c14272b6c02cb8dd80" class="wb_element wb_text_element" data-plugin="TextArea" style=" line-height: normal;"><h1 class="wb-stl-heading1" style="text-align: center;">Hexagonal architecture the original 2005 article</h1>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>
+</div></div></div><div id="a19649d25a3b0004473b5f6f305fdca5" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-vertical"><div id="a19649d25a4300a81096671c5e752467" class="wb_element" data-plugin="CustomHtml"><div style="width: 100%; height: 100%;"><div data-replaced-tag="html" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882" xmlns:m="http://schemas.microsoft.com/office/2004/12/omml" xmlns="http://www.w3.org/TR/REC-html40">
+
+<div data-replaced-tag="head">
+
+
+
+
+
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]-->
+<title>Hexagonal (Ports &amp; Adapters) Architecture Explained</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Alistair Cockburn</o:Author>
+  <o:LastAuthor>alistair cockburn</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>1</o:TotalTime>
+  <o:Created>2025-04-18T15:09:00Z</o:Created>
+  <o:LastSaved>2025-04-18T15:09:00Z</o:LastSaved>
+  <o:Pages>12</o:Pages>
+  <o:Words>4326</o:Words>
+  <o:Characters>24662</o:Characters>
+  <o:Company>Humans and Technology</o:Company>
+  <o:Bytes>558</o:Bytes>
+  <o:Lines>205</o:Lines>
+  <o:Paragraphs>57</o:Paragraphs>
+  <o:CharactersWithSpaces>28931</o:CharactersWithSpaces>
+  <o:Version>16.00</o:Version>
+ </o:DocumentProperties>
+ <o:CustomDocumentProperties>
+  <o:Generator dt:dt="string">Microsoft Word 97</o:Generator>
+ </o:CustomDocumentProperties>
+ <o:OfficeDocumentSettings>
+  <o:AllowPNG/>
+ </o:OfficeDocumentSettings>
+</xml><![endif]-->
+
+<!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:TrackMoves>false</w:TrackMoves>
+  <w:TrackFormatting/>
+  <w:DoNotHyphenateCaps/>
+  <w:DrawingGridHorizontalSpacing>0 pt</w:DrawingGridHorizontalSpacing>
+  <w:DrawingGridVerticalSpacing>0 pt</w:DrawingGridVerticalSpacing>
+  <w:DisplayHorizontalDrawingGridEvery>0</w:DisplayHorizontalDrawingGridEvery>
+  <w:DisplayVerticalDrawingGridEvery>0</w:DisplayVerticalDrawingGridEvery>
+  <w:UseMarginsForDrawingGridOrigin/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:DoNotPromoteQF/>
+  <w:LidThemeOther>EN-US</w:LidThemeOther>
+  <w:LidThemeAsian>X-NONE</w:LidThemeAsian>
+  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
+  <w:DrawingGridHorizontalOrigin>0 pt</w:DrawingGridHorizontalOrigin>
+  <w:DrawingGridVerticalOrigin>0 pt</w:DrawingGridVerticalOrigin>
+  <w:DoNotShadeFormData/>
+  <w:Compatibility>
+   <w:DoNotUseHTMLParagraphAutoSpacing/>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+   <w:DontGrowAutofit/>
+   <w:SplitPgBreakAndParaMark/>
+   <w:EnableOpenTypeKerning/>
+   <w:DontFlipMirrorIndents/>
+   <w:OverrideTableStyleHps/>
+  </w:Compatibility>
+  <m:mathPr>
+   <m:mathFont m:val="Cambria Math"/>
+   <m:brkBin m:val="before"/>
+   <m:brkBinSub m:val="&#45;-"/>
+   <m:smallFrac m:val="off"/>
+   <m:dispDef/>
+   <m:lMargin m:val="0"/>
+   <m:rMargin m:val="0"/>
+   <m:defJc m:val="centerGroup"/>
+   <m:wrapIndent m:val="1440"/>
+   <m:intLim m:val="subSup"/>
+   <m:naryLim m:val="undOvr"/>
+  </m:mathPr></w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" DefUnhideWhenUsed="false"
+  DefSemiHidden="false" DefQFormat="false" DefPriority="99"
+  LatentStyleCount="376">
+  <w:LsdException Locked="false" Priority="0" QFormat="true" Name="Normal"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 1"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 2"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 3"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 4"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 5"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 6"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 7"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 8"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 9"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 1"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 2"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 3"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 4"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 5"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 6"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 7"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 8"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footnote text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="header"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footer"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index heading"/>
+  <w:LsdException Locked="false" Priority="35" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="caption"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="table of figures"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="envelope address"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="envelope return"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footnote reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="line number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="page number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="endnote reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="endnote text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="table of authorities"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="macro"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="toa heading"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 5"/>
+  <w:LsdException Locked="false" Priority="10" QFormat="true" Name="Title"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Closing"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Signature"/>
+  <w:LsdException Locked="false" Priority="0" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Default Paragraph Font"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Message Header"/>
+  <w:LsdException Locked="false" Priority="11" QFormat="true" Name="Subtitle"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Salutation"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Date"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text First Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text First Indent 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Note Heading"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Block Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Hyperlink"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="FollowedHyperlink"/>
+  <w:LsdException Locked="false" Priority="22" QFormat="true" Name="Strong"/>
+  <w:LsdException Locked="false" Priority="20" QFormat="true" Name="Emphasis"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Document Map"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Plain Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="E-mail Signature"/>
+  <w:LsdException Locked="false" Priority="0" SemiHidden="true"
+   UnhideWhenUsed="true" Name="HTML Top of Form"/>
+  <w:LsdException Locked="false" Priority="0" SemiHidden="true"
+   UnhideWhenUsed="true" Name="HTML Bottom of Form"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal (Web)"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Acronym"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Address"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Cite"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Code"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Definition"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Keyboard"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Preformatted"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Sample"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Typewriter"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Variable"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal Table"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation subject"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="No List"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Contemporary"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Elegant"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Professional"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Subtle 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Subtle 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Balloon Text"/>
+  <w:LsdException Locked="false" Priority="39" Name="Table Grid"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Theme"/>
+  <w:LsdException Locked="false" SemiHidden="true" Name="Placeholder Text"/>
+  <w:LsdException Locked="false" Priority="1" QFormat="true" Name="No Spacing"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 1"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" Name="Revision"/>
+  <w:LsdException Locked="false" Priority="34" QFormat="true"
+   Name="List Paragraph"/>
+  <w:LsdException Locked="false" Priority="29" QFormat="true" Name="Quote"/>
+  <w:LsdException Locked="false" Priority="30" QFormat="true"
+   Name="Intense Quote"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 1"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 1"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 2"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 2"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 2"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 3"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 3"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 3"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 4"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 4"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 4"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 5"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 5"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 5"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 6"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 6"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 6"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="19" QFormat="true"
+   Name="Subtle Emphasis"/>
+  <w:LsdException Locked="false" Priority="21" QFormat="true"
+   Name="Intense Emphasis"/>
+  <w:LsdException Locked="false" Priority="31" QFormat="true"
+   Name="Subtle Reference"/>
+  <w:LsdException Locked="false" Priority="32" QFormat="true"
+   Name="Intense Reference"/>
+  <w:LsdException Locked="false" Priority="33" QFormat="true" Name="Book Title"/>
+  <w:LsdException Locked="false" Priority="37" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Bibliography"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="TOC Heading"/>
+  <w:LsdException Locked="false" Priority="41" Name="Plain Table 1"/>
+  <w:LsdException Locked="false" Priority="42" Name="Plain Table 2"/>
+  <w:LsdException Locked="false" Priority="43" Name="Plain Table 3"/>
+  <w:LsdException Locked="false" Priority="44" Name="Plain Table 4"/>
+  <w:LsdException Locked="false" Priority="45" Name="Plain Table 5"/>
+  <w:LsdException Locked="false" Priority="40" Name="Grid Table Light"/>
+  <w:LsdException Locked="false" Priority="46" Name="Grid Table 1 Light"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark"/>
+  <w:LsdException Locked="false" Priority="51" Name="Grid Table 6 Colorful"/>
+  <w:LsdException Locked="false" Priority="52" Name="Grid Table 7 Colorful"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 1"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 1"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 1"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 2"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 2"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 2"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 3"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 3"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 3"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 4"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 4"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 5"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 5"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 5"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 6"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 6"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 6"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="46" Name="List Table 1 Light"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark"/>
+  <w:LsdException Locked="false" Priority="51" Name="List Table 6 Colorful"/>
+  <w:LsdException Locked="false" Priority="52" Name="List Table 7 Colorful"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 1"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 1"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 1"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 2"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 2"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 2"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 3"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 3"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 3"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 4"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 4"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 5"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 5"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 5"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 6"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 6"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 6"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Mention"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Smart Hyperlink"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Hashtag"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Unresolved Mention"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Smart Link"/>
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-pitch:variable;
+	mso-font-signature:-536870145 1107305727 0 0 415 0;}
+@font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:-520081665 -1073717157 41 0 66047 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.MsoHeader, li.MsoHeader, div.MsoHeader
+	{mso-style-noshow:yes;
+	mso-style-unhide:no;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.MsoFooter, li.MsoFooter, div.MsoFooter
+	{mso-style-noshow:yes;
+	mso-style-unhide:no;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.MsoListBullet, li.MsoListBullet, div.MsoListBullet
+	{mso-style-update:auto;
+	mso-style-noshow:yes;
+	mso-style-unhide:no;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:.25in;
+	text-indent:-.25in;
+	mso-pagination:none;
+	mso-list:l5 level1 lfo5;
+	tab-stops:list .25in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.MsoList2, li.MsoList2, div.MsoList2
+	{mso-style-noshow:yes;
+	mso-style-unhide:no;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:.5in;
+	text-indent:-.25in;
+	mso-pagination:none;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.MsoListBullet2, li.MsoListBullet2, div.MsoListBullet2
+	{mso-style-update:auto;
+	mso-style-noshow:yes;
+	mso-style-unhide:no;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:.5in;
+	text-indent:-.25in;
+	mso-pagination:none;
+	mso-list:l4 level1 lfo4;
+	tab-stops:list .5in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.MsoListNumber2, li.MsoListNumber2, div.MsoListNumber2
+	{mso-style-noshow:yes;
+	mso-style-unhide:no;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:.5in;
+	text-indent:-.25in;
+	mso-pagination:none;
+	mso-list:l1 level1 lfo7;
+	tab-stops:list .5in;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.MsoTitle, li.MsoTitle, div.MsoTitle
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	text-align:center;
+	mso-pagination:none;
+	mso-outline-level:1;
+	font-size:16.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Arial",sans-serif;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	mso-font-kerning:14.0pt;
+	layout-grid-mode:line;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+a:link, span.MsoHyperlink
+	{mso-style-noshow:yes;
+	mso-style-unhide:no;
+	color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-noshow:yes;
+	mso-style-unhide:no;
+	color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+strong
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-bidi-font-weight:normal;}
+em
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-bidi-font-style:normal;}
+p.MsoDocumentMap, li.MsoDocumentMap, div.MsoDocumentMap
+	{mso-style-noshow:yes;
+	mso-style-unhide:no;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	background:navy;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Tahoma",sans-serif;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.MsoPlainText, li.MsoPlainText, div.MsoPlainText
+	{mso-style-noshow:yes;
+	mso-style-unhide:no;
+	margin:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.DefinitionTerm, li.DefinitionTerm, div.DefinitionTerm
+	{mso-style-name:"Definition Term";
+	mso-style-unhide:no;
+	mso-style-next:"Definition List";
+	margin:0in;
+	mso-pagination:none;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+p.DefinitionList, li.DefinitionList, div.DefinitionList
+	{mso-style-name:"Definition List";
+	mso-style-unhide:no;
+	mso-style-next:"Definition Term";
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.25in;
+	mso-pagination:none;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+span.Definition
+	{mso-style-name:Definition;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+p.H1, li.H1, div.H1
+	{mso-style-name:H1;
+	mso-style-unhide:no;
+	mso-style-next:Normal;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:24.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	mso-font-kerning:18.0pt;
+	layout-grid-mode:line;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.H2, li.H2, div.H2
+	{mso-style-name:H2;
+	mso-style-unhide:no;
+	mso-style-next:Normal;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:18.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.H3, li.H3, div.H3
+	{mso-style-name:H3;
+	mso-style-unhide:no;
+	mso-style-next:Normal;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	font-size:14.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.H4, li.H4, div.H4
+	{mso-style-name:H4;
+	mso-style-unhide:no;
+	mso-style-next:Normal;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	page-break-after:avoid;
+	mso-outline-level:5;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.H5, li.H5, div.H5
+	{mso-style-name:H5;
+	mso-style-unhide:no;
+	mso-style-next:Normal;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	page-break-after:avoid;
+	mso-outline-level:6;
+	font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.H6, li.H6, div.H6
+	{mso-style-name:H6;
+	mso-style-unhide:no;
+	mso-style-next:Normal;
+	margin-top:5.0pt;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	mso-pagination:none;
+	page-break-after:avoid;
+	mso-outline-level:7;
+	font-size:8.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.Address, li.Address, div.Address
+	{mso-style-name:Address;
+	mso-style-unhide:no;
+	mso-style-next:Normal;
+	margin:0in;
+	mso-pagination:none;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+p.Blockquote, li.Blockquote, div.Blockquote
+	{mso-style-name:Blockquote;
+	mso-style-unhide:no;
+	margin-top:5.0pt;
+	margin-right:.25in;
+	margin-bottom:5.0pt;
+	margin-left:.25in;
+	mso-pagination:none;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+span.CITE
+	{mso-style-name:CITE;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+span.CODE
+	{mso-style-name:CODE;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	mso-ansi-font-size:10.0pt;
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-hansi-font-family:"Courier New";}
+span.Keyboard
+	{mso-style-name:Keyboard;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	mso-ansi-font-size:10.0pt;
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-hansi-font-family:"Courier New";
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.Preformatted, li.Preformatted, div.Preformatted
+	{mso-style-name:Preformatted;
+	mso-style-unhide:no;
+	margin:0in;
+	mso-pagination:none;
+	tab-stops:0in 47.95pt 95.9pt 143.85pt 191.8pt 239.75pt 287.7pt 335.65pt 383.6pt 431.55pt 479.5pt;
+	font-size:10.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	layout-grid-mode:line;}
+span.Sample
+	{mso-style-name:Sample;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-hansi-font-family:"Courier New";}
+span.Typewriter
+	{mso-style-name:Typewriter;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	mso-ansi-font-size:10.0pt;
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-hansi-font-family:"Courier New";}
+span.Variable
+	{mso-style-name:Variable;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+span.HTMLMarkup
+	{mso-style-name:"HTML Markup";
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	color:red;
+	display:none;
+	mso-hide:all;}
+span.Comment
+	{mso-style-name:Comment;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	display:none;
+	mso-hide:all;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	mso-default-props:yes;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	mso-font-kerning:0pt;
+	mso-ligatures:none;}
+ /* Page Definitions */
+ @page
+	{mso-page-border-surround-header:no;
+	mso-page-border-surround-footer:no;
+	
+	}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:.6in .6in .6in .6in;
+	mso-header-margin:.6in;
+	mso-footer-margin:.6in;
+	
+	mso-paper-source:0;}
+div.WordSection1
+	{page:WordSection1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:-130;
+	mso-list-type:simple;
+	mso-list-template-ids:1945269244;}
+@list l0:level1
+	{mso-level-tab-stop:.75in;
+	mso-level-number-position:left;
+	margin-left:.75in;
+	text-indent:-.25in;}
+@list l1
+	{mso-list-id:-129;
+	mso-list-type:simple;
+	mso-list-template-ids:1471423708;}
+@list l1:level1
+	{mso-level-style-link:"List Number 2";
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2
+	{mso-list-id:-127;
+	mso-list-type:simple;
+	mso-list-template-ids:1651266432;}
+@list l2:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:;
+	mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	margin-left:1.0in;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l3
+	{mso-list-id:-126;
+	mso-list-type:simple;
+	mso-list-template-ids:-542587558;}
+@list l3:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:;
+	mso-level-tab-stop:.75in;
+	mso-level-number-position:left;
+	margin-left:.75in;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l4
+	{mso-list-id:-125;
+	mso-list-type:simple;
+	mso-list-template-ids:-1205168114;}
+@list l4:level1
+	{mso-level-number-format:bullet;
+	mso-level-style-link:"List Bullet 2";
+	mso-level-text:;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l5
+	{mso-list-id:-119;
+	mso-list-type:simple;
+	mso-list-template-ids:958156272;}
+@list l5:level1
+	{mso-level-number-format:bullet;
+	mso-level-style-link:"List Bullet";
+	mso-level-text:;
+	mso-level-tab-stop:.25in;
+	mso-level-number-position:left;
+	margin-left:.25in;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l6
+	{mso-list-id:-2;
+	mso-list-type:simple;
+	mso-list-template-ids:-1;}
+@list l6:level1
+	{mso-level-start-at:0;
+	mso-level-text:*;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:0in;
+	text-indent:0in;}
+@list l7
+	{mso-list-id:1;
+	mso-list-template-ids:0;}
+@list l7:level1
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l7:level2
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l7:level3
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l7:level4
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l7:level5
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l7:level6
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l7:level7
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l7:level8
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l7:level9
+	{mso-level-start-at:0;
+	mso-level-text:"";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level1 lfo1
+	{mso-level-number-format:bullet;
+	mso-level-numbering:continue;
+	mso-level-text:;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:.25in;
+	mso-level-legacy-space:0in;
+	text-indent:-.25in;
+	font-family:Symbol;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman",serif;}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="1026"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</div>
+
+<div data-replaced-tag="body" lang="EN-US" link="blue" vlink="purple" style="tab-interval:.5in;word-wrap:
+break-word">
+
+<div class="WordSection1">
+
+<p class="MsoTitle">The Hexagonal (Ports &amp; Adapters) Architecture </p>
+
+<p class="MsoNormal" align="center" style="text-align:center">HaT Technical Report
+2005.02 
+<br>
+Date: 2005-09-04 (v 0.9 to be updated after reader comments)</p>
+
+
+<p class="MsoNormal" align="center" style="text-align:center">Alistair Cockburn,
+acockburn@aol.com</p>
+
+<p class="MsoNormal"><i style="mso-bidi-font-style:normal">Create your
+application to work without either a UI or a database so you can run automated
+regression-tests against the application, work when the database becomes
+unavailable, and link applications together without any user involvement. <o:p></o:p></i></p>
+
+<p class="H2">The Pattern: Ports and Adapters (<i style="mso-bidi-font-style:
+normal">Object Structural</i>)</p>
+
+<p class="H3">Alternative name: <i style="mso-bidi-font-style:normal">Hexagonal
+Architecture<o:p></o:p></i></p>
+
+<p class="H3">Intent</p>
+
+<p class="MsoNormal">Allow an application to equally be driven by users,
+programs, automated test or batch scripts, and to be developed and tested in
+isolation from its eventual run-time devices and databases. </p>
+
+<p class="MsoNormal">As events arrive from the outside world at a port, a
+technology-specific adapter converts it into a usable procedure call or message
+and passes it to the application. The application is blissfully ignorant of the
+nature of the input device. When the application has something to send out, it
+sends it out through a port to an adapter, which creates the appropriate
+signals needed by the receiving technology (human or automated). The
+application has a semantically sound interaction with the adapters on all sides
+of it, without actually knowing the nature of the things on the other side of
+the adapters. </p>
+
+<p class="MsoNormal" align="center" style="text-align:center"><span style="layout-grid-mode:both;mso-no-proof:yes"><!--[if gte vml 1]><v:shapetype
+ id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
+ path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+ <v:stroke joinstyle="miter"/>
+ <v:formulas>
+  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+  <v:f eqn="sum @0 1 0"/>
+  <v:f eqn="sum 0 0 @1"/>
+  <v:f eqn="prod @2 1 2"/>
+  <v:f eqn="prod @3 21600 pixelWidth"/>
+  <v:f eqn="prod @3 21600 pixelHeight"/>
+  <v:f eqn="sum @0 0 1"/>
+  <v:f eqn="prod @6 1 2"/>
+  <v:f eqn="prod @7 21600 pixelWidth"/>
+  <v:f eqn="sum @8 21600 0"/>
+  <v:f eqn="prod @7 21600 pixelHeight"/>
+  <v:f eqn="sum @10 21600 0"/>
+ </v:formulas>
+ <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+ <o:lock v:ext="edit" aspectratio="t"/>
+</v:shapetype><v:shape id="Picture_x0020_4" o:spid="_x0000_i1028" type="#_x0000_t75"
+ style='width:276pt;height:153pt;visibility:visible;mso-wrap-style:square'>
+ 
+ <o:lock v:ext="edit" aspectratio="f"/>
+</v:shape><![endif]-->&lt;![if !vml]&gt;<img width="276" height="153" src="hexFig1.png" v:shapes="Picture_x0020_4">&lt;![endif]&gt;</span><br>
+Figure 1</p>
+
+<p class="H3">Motivation</p>
+
+<p class="MsoNormal">One of the great bugaboos of software applications over the
+years has been infiltration of business logic into the user interface code. The
+problem this causes is threefold: First, the system can't neatly be tested with
+automated test suites because part of the logic needing to be tested is
+dependent on oft-changing visual details such as field size and button
+placement; For the exact same reason, it becomes impossible to shift from a
+human-driven use of the system to a batch-run system; For still the same reason,
+it becomes difficult or impossible to allow the program to be driven by another
+program when that becomes attractive. </p>
+
+<p class="MsoNormal">The attempted solution, repeated in many organizations, is
+to create a new layer in the architecture, with the promise that this time,
+really and truly, no business logic will be put into the new layer. However,
+having no mechanism to detect when a violation of that promise occurs, the
+organization finds a few years later that the new layer is cluttered with
+business logic and the old problem has reappeared.</p>
+
+<p class="MsoNormal">Imagine now that <i style="mso-bidi-font-style:normal">every</i>
+piece of functionality the application offers were available through an API
+(application programmed interface) or function call. In this situation, the
+test or QA department can run automated test scripts against the application to
+detect when any new coding breaks a previously working function. The business
+experts can create automated test cases, before the GUI details are finalized,
+that tells the programmers when they have done their work correctly (and these
+tests become the ones run by the test department). The application can be
+deployed in <i style="mso-bidi-font-style:normal">headless</i> mode, so only
+the API is available, and other programs can make use of its functionality --
+this simplifies the overall design of complex application suites and also
+permits business-to-business service applications to use each other without
+human intervention over the web. Finally, the automated function regression
+tests detect any violation of the promise to keep business logic out of the
+presentation layer. The organization can detect, and then correct, the logic
+leak.</p>
+
+<p class="MsoNormal">An interesting similar problem exists on what is normally
+considered "the other side" of the application, where the application
+logic gets tied to an external database or other service. When the database
+server goes down or undergoes significant rework or replacement, the
+programmers can't work because their work is tied to the presence of the
+database. This causes delay costs and often bad feelings between the people. </p>
+
+<p class="MsoNormal">It is not obvious that the two problems are related, but
+there is a symmetry between them that shows up in the nature of the solution.</p>
+
+<p class="H3">Nature of the Solution</p>
+
+<p class="MsoNormal">Both the user-side and the server-side problems actually are
+caused by the same error in design and programming -- the entanglement between
+the business logic and the interaction with external entities. The asymmetry to
+exploit is not that between <i style="mso-bidi-font-style:normal">left</i> and <i style="mso-bidi-font-style:normal">right</i> sides of the application but
+between <i style="mso-bidi-font-style:normal">inside</i> and <i style="mso-bidi-font-style:normal">outside</i> of the application. The rule to
+obey is that code pertaining to the <i style="mso-bidi-font-style:normal">inside</i>
+part should not leak into the <i style="mso-bidi-font-style:normal">outside</i>
+part.</p>
+
+<p class="MsoNormal">Removing any left-right or up-down asymmetry for a moment,
+we see that the application communicates over <i style="mso-bidi-font-style:
+normal">ports</i> to external agencies. The word "port" is supposed
+to evoke thoughts of <i style="mso-bidi-font-style:normal">ports</i> in an
+operating system, where any device that adheres to the protocols of a port can
+be plugged into it; and <i style="mso-bidi-font-style:normal">ports</i> on
+electronics gadgets, where again, any device that fits the mechanical and
+electrical protocols can be plugged in. The protocol for a port is given by the
+purpose of the conversation between the two devices. The protocol takes the
+form of an application program interface (API). </p>
+
+<p class="MsoNormal">For each external device there is an <i style="mso-bidi-font-style:
+normal">adapter</i> that converts the API definition to the signals needed by
+that device and vice versa. A graphical user interface or GUI is an example of
+an adapter that maps the movements of a person to the API of the port. Other
+adapters that fit the same port are automated test harnesses such as FIT or
+Fitnesse, batch drivers, and any code needed for communication between
+applications across the enterprise or net. </p>
+
+<p class="MsoNormal">On another side of the application, the application
+communicates with an external entity to get data. The protocol is typically a
+database protocol. From the application's perspective, if the database is moved
+from a SQL database to a flat file or any other kind of database, the
+conversation across the API should not change. Additional adapters for the same
+port thus include an SQL adapter, a flat file adapter, and most importantly, an
+adapter to a "mock" database, one that sits in memory and doesn't
+depend on the presence of the real database at all. </p>
+
+<p class="MsoNormal">Many applications have only two ports: the user-side dialog
+and the database-side dialog. This gives them an asymmetric appearance, which
+makes it seem natural to build the application in a one-dimensional, three-,
+four-, or five-layer stacked architecture. </p>
+
+<p class="MsoNormal">There are two problems with these drawings. First and worst,
+people tend not to take the "lines" in the layered drawing seriously.
+They let the application logic leak across the layer boundaries, causing the
+problems mentioned above. Secondly, there may be more than two ports to the
+application, so that the architecture does not fit into the one-dimensional
+layer drawing.</p>
+
+<p class="MsoNormal">The hexagonal, or ports and adapters, architecture solves
+these problems by noting the symmetry in the situation: there is an application
+on the inside communicating over some number of ports with things on the
+outside. The items outside the application can be dealt with symmetrically.</p>
+
+<p class="MsoNormal">The hexagon is intended to visually highlight </p>
+
+<p class="MsoList2">(a) the inside-outside asymmetry and the similar nature of
+ports, to get away from the one-dimensional layered picture and all that
+evokes, and </p>
+
+<p class="MsoList2">(b) the presence of a defined number of different ports -
+two, three, or four (four is most I have encountered to date). </p>
+
+<p class="MsoNormal">The hexagon is not a hexagon because the number six is
+important, but rather to allow the people doing the drawing to have room to
+insert ports and adapters as they need, not being constrained by a
+one-dimensional layered drawing. The term <i style="mso-bidi-font-style:normal">hexagonal
+architecture</i> comes from this visual effect.</p>
+
+<p class="MsoNormal">The term "port and adapters" picks up the <i style="mso-bidi-font-style:normal">purposes</i> of the parts of the drawing. A
+port identifies a purposeful conversation. There will typically be multiple
+adapters for any one port, for various technologies that may plug into that
+port. Typically, these might include a phone answering machine, a human voice,
+a touch-tone phone, a graphical human interface, a test harness, a batch
+driver, an http interface, a direct program-to-program interface, a mock
+(in-memory) database, a real database (perhaps different databases for
+development, test, and real use).</p>
+
+<p class="MsoNormal">In the Application Notes, the left-right asymmetry will be
+brought up again. However, the primary purpose of this pattern is to focus on
+the inside-outside asymmetry, pretending briefly that all external items are
+identical from the perspective of the application.</p>
+
+<p class="H3">Structure </p>
+
+<p class="MsoNormal" align="center" style="text-align:center"><span style="layout-grid-mode:both;mso-no-proof:yes"><!--[if gte vml 1]><v:shape
+ id="Picture_x0020_3" o:spid="_x0000_i1027" type="#_x0000_t75" style='width:306pt;
+ height:212pt;visibility:visible;mso-wrap-style:square'>
+ 
+ <o:lock v:ext="edit" aspectratio="f"/>
+</v:shape><![endif]-->&lt;![if !vml]&gt;<img width="306" height="212" src="hexFig2.png" v:shapes="Picture_x0020_3">&lt;![endif]&gt;</span><br>
+Figure 2</p>
+
+<p class="MsoNormal">Figure 2 shows an application having two active ports and
+several adapters for each port. The two ports are the application-controlling
+side and the data-retrieval side. This drawing shows that the application can
+be equally driven by an automated, system-level regression test suite, by a
+human user, by a remote http application, or by another local application. On
+the data side, the application can be configured to run decoupled from external
+databases using an in-memory oracle, or <i style="mso-bidi-font-style:normal">mock</i>,
+database replacement; or it can run against the test- or run-time database. The
+functional specification of the application, perhaps in use cases, is made
+against the inner hexagon's interface and not against any one of the external
+technologies that might be used.</p>
+
+<p class="MsoNormal" align="center" style="text-align:center"><span style="layout-grid-mode:both;mso-no-proof:yes"><!--[if gte vml 1]><v:shape
+ id="Picture_x0020_2" o:spid="_x0000_i1026" type="#_x0000_t75" style='width:204pt;
+ height:191pt;visibility:visible;mso-wrap-style:square'>
+ 
+ <o:lock v:ext="edit" aspectratio="f"/>
+</v:shape><![endif]-->&lt;![if !vml]&gt;<img width="204" height="191" src="hexFig3.png" v:shapes="Picture_x0020_2">&lt;![endif]&gt;</span><br>
+Figure 3</p>
+
+<p class="MsoNormal">Figure 3 shows the same application mapped to a three-layer
+architectural drawing. To simplify the drawing only two adapters are shown for
+each port. This drawing is intended to show how multiple adapters fit in the
+top and bottom layers, and the sequence in which the various adapters are used
+during system development. The numbered arrows show the order in which a team
+might develop and use the application: </p>
+
+<p class="MsoListNumber2" style="mso-list:l1 level1 lfo7">&lt;![if !supportLists]&gt;<span style="mso-list:Ignore">1.<span style='font:7.0pt "Times New Roman"'>    
+</span></span>&lt;![endif]&gt;With a FIT test harness driving the application and
+using the mock (in-memory) database substituting for the real database; </p>
+
+<p class="MsoListNumber2" style="mso-list:l1 level1 lfo7">&lt;![if !supportLists]&gt;<span style="mso-list:Ignore">2.<span style='font:7.0pt "Times New Roman"'>    
+</span></span>&lt;![endif]&gt;Adding a GUI to the application, still running off the
+mock database; </p>
+
+<p class="MsoListNumber2" style="mso-list:l1 level1 lfo7">&lt;![if !supportLists]&gt;<span style="mso-list:Ignore">3.<span style='font:7.0pt "Times New Roman"'>    
+</span></span>&lt;![endif]&gt;In integration testing, with automated test scripts
+(e.g., from Cruise Control) driving the application against a real database
+containing test data; </p>
+
+<p class="MsoListNumber2" style="mso-list:l1 level1 lfo7">&lt;![if !supportLists]&gt;<span style="mso-list:Ignore">4.<span style='font:7.0pt "Times New Roman"'>    
+</span></span>&lt;![endif]&gt;In real use, with a person using the application to
+access a live database.</p>
+
+<p class="H3">Sample Code</p>
+
+<p class="MsoNormal">The simplest application that demonstrates the ports &amp;
+adapters fortunately comes with the FIT documentation. It is a simple discount
+computing application:</p>
+
+<p class="MsoPlainText"><o:p> </o:p></p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="374" valign="top" style="width:280.85pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoPlainText"><o:p> </o:p></p>
+  <p class="MsoPlainText"><span style="mso-spacerun:yes"> 
+  </span>discount(amount) = amount * rate(amount);</p>
+  <p class="MsoPlainText"><o:p> </o:p></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoPlainText"><o:p> </o:p></p>
+
+<p class="MsoNormal">In our adaptation, the amount will come from the user and
+the rate will come from a database, so there will be two ports. We implement
+them in stages: </p>
+
+<p class="MsoListBullet2" style="mso-list:l4 level1 lfo4">&lt;![if !supportLists]&gt;<span style="font-family:Symbol;mso-fareast-font-family:Symbol;mso-bidi-font-family:
+Symbol"><span style="mso-list:Ignore">·<span style='font:7.0pt "Times New Roman"'>     
+</span></span></span>&lt;![endif]&gt;With tests but with a constant rate instead of a
+mock database, </p>
+
+<p class="MsoListBullet2" style="mso-list:l4 level1 lfo4">&lt;![if !supportLists]&gt;<span style="font-family:Symbol;mso-fareast-font-family:Symbol;mso-bidi-font-family:
+Symbol"><span style="mso-list:Ignore">·<span style='font:7.0pt "Times New Roman"'>     
+</span></span></span>&lt;![endif]&gt;then with the GUI, </p>
+
+<p class="MsoListBullet2" style="mso-list:l4 level1 lfo4">&lt;![if !supportLists]&gt;<span style="font-family:Symbol;mso-fareast-font-family:Symbol;mso-bidi-font-family:
+Symbol"><span style="mso-list:Ignore">·<span style='font:7.0pt "Times New Roman"'>     
+</span></span></span>&lt;![endif]&gt;then with a mock database that can be swapped
+out for a real database.</p>
+
+<p class="MsoNormal">Thanks to Gyan Sharma at IHC for providing the code for this
+example.</p>
+
+<p class="H4">Stage 1: FIT + App + constant-as-mock-database</p>
+
+<p class="MsoNormal">First we create the test cases as an HTML table (see the FIT
+documentation for this):</p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr>
+  <td width="174" valign="top" style="width:130.8pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal">TestDiscounter</p>
+  </td>
+  <td width="87" valign="top" style="width:65.5pt;border:solid windowtext 1.0pt;
+  border-left:none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal"><o:p> </o:p></p>
+  </td>
+ </tr>
+ <tr>
+  <td width="174" valign="top" style="width:130.8pt;border:solid windowtext 1.0pt;
+  border-top:none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal">amount</p>
+  </td>
+  <td width="87" valign="top" style="width:65.5pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal">discount()</p>
+  </td>
+ </tr>
+ <tr>
+  <td width="174" valign="top" style="width:130.8pt;border:solid windowtext 1.0pt;
+  border-top:none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal">100</p>
+  </td>
+  <td width="87" valign="top" style="width:65.5pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal">5</p>
+  </td>
+ </tr>
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="174" valign="top" style="width:130.8pt;border:solid windowtext 1.0pt;
+  border-top:none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal">200</p>
+  </td>
+  <td width="87" valign="top" style="width:65.5pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal">10</p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoNormal">Note that the column names will become class and function
+names in our program. FIT contains ways to get rid of this
+"programmerese", but for this article it is easier just to leave them
+in. </p>
+
+<p class="MsoNormal">Knowing what the test data will be, we create the user-side
+adapter, the ColumnFixture that comes with FIT as shipped:</p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="427" valign="top" style="width:320.35pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoPlainText">import fit.ColumnFixture;</p>
+  <p class="MsoPlainText">public class TestDiscounter extends ColumnFixture </p>
+  <p class="MsoPlainText">{</p>
+  <p class="MsoPlainText"><span style="mso-spacerun:yes">   </span>private
+  Discounter app = new Discounter();</p>
+  <p class="MsoPlainText"><span style="mso-spacerun:yes">   </span>public double
+  amount;</p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'><span style="mso-spacerun:yes">  
+  </span>public double discount() {<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'><span style="mso-spacerun:yes">     
+  </span>return app.discount(amount);<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'><span style="mso-spacerun:yes">  
+  </span>}<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>}<o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoPlainText"><o:p> </o:p></p>
+
+<p class="MsoNormal">That's actually all there is to the adapter. So far, the
+tests run from the command line (see the FIT book for the path you'll need). We
+used this one:</p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="604" valign="top" style="width:453.15pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>set
+  FIT_HOME=/FIT/FitLibraryForFit15Feb2005<br>
+  java<span style="mso-spacerun:yes">   </span><br>
+  <span style="mso-tab-count:1">      </span>-cp
+  %FIT_HOME%/lib/javaFit1.1b.jar;%FIT_HOME%/dist/fitLibraryForFit.jar;
+  src;bin<span style="mso-spacerun:yes">   </span><br>
+  <span style="mso-tab-count:1">      </span>fit.FileRunner<span style="mso-spacerun:yes">   </span>test/Discounter.html<span style="mso-spacerun:yes">   </span>TestDiscount_Output.html<o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoNormal">FIT produces an output file with colors showing us what
+passed (or failed, in case we made a typo somewhere along the way).</p>
+
+<p class="MsoNormal">At this point the code is ready to check in, hook into
+Cruise Control or your automated build machine, and include in the
+build-and-test suite.</p>
+
+<p class="H4">Stage 2: UI + App + constant-as-mock-database</p>
+
+<p class="MsoNormal">I'm going to let you create your own UI and have it drive
+the Discounter application, since the code is a bit long to include here. Some
+of the key lines in the code are these: </p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="604" valign="top" style="width:453.15pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>...<br>
+  Discounter app = new Discounter();<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>public void
+  actionPerformed(ActionEvent event) {<br>
+  <span style="mso-spacerun:yes">   </span>...String amountStr =
+  text1.getText();<br>
+  <span style="mso-spacerun:yes">   </span>double amount =
+  Double.parseDouble(amountStr);<br>
+  <span style="mso-spacerun:yes">   </span>discount = app.discount(amount));<br>
+  <span style="mso-spacerun:yes">   </span>text3.setText( "" +
+  discount );<br>
+  <span style="mso-spacerun:yes">   </span>...<o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoNormal">At this point the application can be both demoed and
+regression tested. The user-side adapters are both running. </p>
+
+<p class="H4">Stage 3: (FIT or UI) + App + mock database</p>
+
+<p class="MsoNormal">To create a replaceable adapter for the database side, we
+create an <i style="mso-bidi-font-style:normal">interface</i> to a repository,
+a <i style="mso-bidi-font-style:normal">RepositoryFactory</i> that will produce
+either the mock database or the real service object, and the in-memory mock for
+the database.</p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="427" valign="top" style="width:320.35pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>public interface RateRepository {<br>
+  <span style="mso-spacerun:yes">   </span>double getRate(double amount);<br>
+  }<o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoNormal"><o:p> </o:p></p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="499" valign="top" style="width:5.2in;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>public class RepositoryFactory {<br>
+  <span style="mso-spacerun:yes">   </span>public RepositoryFactory() {
+  super(); }<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'><span style="mso-spacerun:yes">  
+  </span>public static RateRepository getMockRateRepository() {<br>
+  <span style="mso-spacerun:yes">      </span>return new MockRateRepository();<br>
+  <span style="mso-spacerun:yes">   </span>}<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>}<o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoNormal"><o:p> </o:p></p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="516" valign="top" style="width:386.95pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>public class MockRateRepository
+  implements RateRepository {<br>
+  <span style="mso-spacerun:yes">   </span>public double getRate(double amount)
+  {<br>
+  <span style="mso-spacerun:yes">      </span>if(amount &lt;= 100) return 0.01;<br>
+  <span style="mso-spacerun:yes">      </span>if(amount &lt;= 1000) return
+  0.02;<br>
+  <span style="mso-spacerun:yes">      </span>return 0.05;<br>
+  <span style="mso-spacerun:yes">   </span>}<br>
+  }<o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoPlainText"><o:p> </o:p></p>
+
+<p class="MsoNormal">To hook this adapter into the Discounter application, we
+need to update the application itself to accept a repository adapter to use,
+and the have the (FIT or UI) user-side adapter pass the repository to use (real
+or mock) into the constructor of the application itself. Here is the updated
+application and a FIT adapter that passes in a mock repository (the FIT adapter
+code to choose whether to pass in the mock or real repository's adapter is
+longer without adding much new information, so I omit that version here).</p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="469" valign="top" style="width:351.45pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>import repository.RepositoryFactory;<br>
+  import repository.RateRepository;<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>public class Discounter {<br>
+  <span style="mso-spacerun:yes">   </span>private RateRepository
+  rateRepository;<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'><span style="mso-spacerun:yes">  
+  </span>public Discounter(RateRepository r) {<br>
+  <span style="mso-spacerun:yes">      </span>super();<br>
+  <span style="mso-spacerun:yes">      </span>rateRepository = r;<br>
+  <span style="mso-spacerun:yes">   </span>}<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'><span style="mso-spacerun:yes">  
+  </span>public double discount(double amount) {<br>
+  <span style="mso-spacerun:yes">      </span>double rate =
+  rateRepository.getRate( amount ); <br>
+  <span style="mso-spacerun:yes">      </span>return amount * rate;<br>
+  <span style="mso-spacerun:yes">      </span>}<br>
+  }<o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoNormal"><o:p> </o:p></p>
+
+<div align="center">
+
+<table class="MsoNormalTable" border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-padding-alt:0in 5.4pt 0in 5.4pt;
+ mso-border-insideh:.5pt solid windowtext;mso-border-insidev:.5pt solid windowtext">
+ <tr style="mso-yfti-lastrow:yes">
+  <td width="544" valign="top" style="width:407.85pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt">
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>import app.Discounter;<br>
+  import fit.ColumnFixture;<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'>public class TestDiscounter extends
+  ColumnFixture {<br>
+  <span style="mso-spacerun:yes">   </span>private Discounter app = <br>
+  <span style="mso-spacerun:yes">      </span>new
+  Discounter(RepositoryFactory.getMockRateRepository());<br>
+  <span style="mso-spacerun:yes">   </span>public double amount;<o:p></o:p></span></p>
+  <p class="MsoNormal"><span style='font-size:10.0pt;font-family:"Courier New";
+  mso-bidi-font-family:"Times New Roman"'><span style="mso-spacerun:yes">  
+  </span>public double discount() {<br>
+  <span style="mso-spacerun:yes">      </span>return app.discount( amount );<br>
+  <span style="mso-spacerun:yes">   </span>}<br>
+  }<o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class="MsoNormal">That concludes implementation<span style="mso-spacerun:yes">  </span>of the simplest version of the hexagonal
+architecture.</p>
+
+<p class="H3">Application Notes</p>
+
+<p class="H4">The Left-Right Asymmetry</p>
+
+<p class="MsoNormal">The ports and adapters pattern is deliberately written
+pretending that all ports are fundamentally similar. That pretense is useful at
+the architectural level. In implementation, ports and adapters show up in two
+flavors, which I'll call <i style="mso-bidi-font-style:normal">primary</i> and <i style="mso-bidi-font-style:normal">secondary</i>, for soon-to-be-obvious
+reasons. They could be also called <i style="mso-bidi-font-style:normal">driving</i>
+adapters and <i style="mso-bidi-font-style:normal">driven</i> adapters.</p>
+
+<p class="MsoNormal">The alert reader will have noticed that in all the examples
+given, FIT fixtures are used on the left-side ports and mocks on the right. In
+the three-layer architecture, FIT sits in the top layer and the mock sits in
+the bottom layer. </p>
+
+<p class="MsoNormal">This is related to the idea from use cases of "primary
+actors" and "secondary actors". A <i style="mso-bidi-font-style:
+normal">primary actor</i> is an actor that drives the application (takes it out
+of quiescent state to perform one of its advertised functions). A <i style="mso-bidi-font-style:normal">secondary actor</i> is one that the
+application drives, either to get answers from or to merely notify. The
+distinction between <i style="mso-bidi-font-style:normal">primary </i>and<i style="mso-bidi-font-style:normal"> secondary </i>lies in who triggers or is in
+charge of the conversation.</p>
+
+<p class="MsoNormal">The natural test adapter to substitute for a <i style="mso-bidi-font-style:normal">primary</i> actor is FIT, since that
+framework is designed to read a script and drive the application. The natural
+test adapter to substitute for a <i style="mso-bidi-font-style:normal">secondary</i>
+actor such as a database is a mock, since that is designed to answer queries or
+record events from the application. </p>
+
+<p class="MsoNormal">These observations lead us to follow the system's use case
+context diagram and draw the <i style="mso-bidi-font-style:normal">primary
+ports </i>and<i style="mso-bidi-font-style:normal"> primary adapters</i> on the
+left side (or top) of the hexagon, and the <i style="mso-bidi-font-style:normal">secondary
+ports</i> and <i style="mso-bidi-font-style:normal">secondary adapters</i> on
+the right (or bottom) side of the hexagon. </p>
+
+<p class="MsoNormal">The relationship between primary and secondary
+ports/adapters and their respective implementation in FIT and mocks is useful
+to keep in mind, but it should be used as a consequence of using the ports and
+adapters architecture, not to short-circuit it. The ultimate benefit of a ports
+and adapters implementation is the ability to run the application in a fully
+isolated mode.</p>
+
+<p class="H4">Use Cases And The Application Boundary</p>
+
+<p class="MsoNormal">It is useful to use the hexagonal architecture pattern to
+reinforce the preferred way of writing use cases. </p>
+
+<p class="MsoNormal">A common mistake is to write use cases to contain intimate
+knowledge of the technology sitting outside each port. These use cases have
+earned a justifiably bad name in the industry for being long, hard-to-read,
+boring, brittle, and expensive to maintain.</p>
+
+<p class="MsoNormal">Understanding the ports and adapters architecture, we can
+see that the use cases should generally be written at the application boundary
+(the inner hexagon), to specify the functions and events supported by the
+application, regardless of external technology. These use cases are shorter,
+easier to read, less expensive to maintain, and more stable over time. </p>
+
+<p class="H4">How Many Ports?</p>
+
+<p class="MsoNormal">What exactly a port is and isn't is largely a matter of
+taste. At the one extreme, every use case could be given its own port,
+producing hundreds of ports for many applications. Alternatively, one could
+imagine merging all primary ports and all secondary ports so there are only two
+ports, a left side and a right side. </p>
+
+<p class="MsoNormal">Neither extreme appears optimal. </p>
+
+<p class="MsoNormal">The weather system described in the Known Uses has four
+natural ports: the weather feed, the administrator, the notified subscribers,
+the subscriber database. A coffee machine controller has four natural ports:
+the user, the database containing the recipes and prices, the dispensers, and
+the coin box. A hospital medication system might have three: one for the nurse,
+one for the prescription database, and one for the computer-controller
+medication dispensers.</p>
+
+<p class="MsoNormal">It doesn't appear that there is any particular damage in
+choosing the "wrong" number of ports, so that remains a matter of
+intuition. My selection tends to favor a small number, two, three or four
+ports, as described above and in the Known Uses.</p>
+
+<p class="H3">Known Uses</p>
+
+<p class="MsoNormal" align="center" style="text-align:center"><span style="layout-grid-mode:both;mso-no-proof:yes"><!--[if gte vml 1]><v:shape
+ id="Picture_x0020_1" o:spid="_x0000_i1025" type="#_x0000_t75" style='width:339pt;
+ height:220pt;visibility:visible;mso-wrap-style:square'>
+
+ <o:lock v:ext="edit" aspectratio="f"/>
+</v:shape><![endif]-->&lt;![if !vml]&gt;<img width="339" height="220" src="hexFig4.png" v:shapes="Picture_x0020_1">&lt;![endif]&gt;</span><br>
+Figure 4</p>
+
+<p class="MsoNormal">Figure 4 shows an application with four ports and several
+adapters at each port. This was derived from an application that listened for
+alerts from the national weather service about earthquakes, tornadoes, fires
+and floods, and notified people on their telephones or telephone answering
+machines. At the time we discussed this system, the system's interfaces were
+identified and discussed by <i style="mso-bidi-font-style:normal">technology,
+linked to purpose</i>. There was an interface for trigger-data arriving over a
+wire feed, one for notification data to be sent to answering machines, an
+administrative interface implemented in a GUI, and a database interface to get
+their subscriber data. </p>
+
+<p class="MsoNormal">The people were struggling because they needed to add an
+http interface from the weather service, an email interface to their
+subscribers, and they had to find a way to bundle and unbundle their growing
+application suite for different customer purchasing preferences. They feared
+they were staring at a maintenance and testing nightmare as they had to
+implement, test and maintain separate versions for all combinations and
+permutations.</p>
+
+<p class="MsoNormal">Their shift in design was to architect the system's
+interfaces <i style="mso-bidi-font-style:normal">by purpose</i> rather than by
+technology, and to have the technologies be substitutable (on all sides) by
+adapters. They immediately picked up the ability to include the http feed and
+the email notification (the new adapters are shown in the drawing with dashed
+lines). By making each application executable in headless mode through APIs,
+they could add an app-to-add adapter and unbundle the application suite,
+connecting the sub-applications on demand. Finally, by making each application
+executable completely in isolation, with test and mock adapters in place, they
+gained the ability to regression test their applications with stand-alone
+automated test scripts.</p>
+
+<p class="H4"><span style="mso-spacerun:yes"> </span>Mac, Windows, Google,
+Flickr, Web 2.0</p>
+
+<p class="MsoNormal">In the early 1990s, MacIntosh applications such as word
+processor applications were required to have API-drivable interfaces, so that
+applications and user-written scripts could access all the functions of the
+applications. Windows desktop applications have evolved the same ability (I
+don't have the historical knowledge to say which came first, nor is that
+relevant to the point).</p>
+
+<p class="MsoNormal">The current (2005) trend in web applications is to publish
+an API and let other web applications access those APIs directly. Thus, it is
+possible to publish local crime data over a Google map, or create web
+applications that include Flickr's photo archiving and annotating abilities.</p>
+
+<p class="MsoNormal">All of these examples are about making the <i style="mso-bidi-font-style:normal">primary </i>ports' APIs visible. We see no
+information here about the secondary ports.</p>
+
+<p class="H4">Stored Outputs</p>
+
+<p class="MsoNormal">This example written by Willem Bogaerts on the C2 wiki: </p>
+
+<p class="MsoNormal">"I encountered something similar, but mainly because my
+application layer had a strong tendency to become a telephone switchboard that
+managed things it should not do. My application generated output, showed it to
+the user and then had some possibility to store it as well. My main problem was
+that you did not need to store it always. So my application generated output,
+had to buffer it and present it to the user. Then, when the user decided that
+he wanted to store the output, the application retrieved the buffer and stored
+it for real. </p>
+
+<p class="MsoNormal">I did not like this at all. Then I came up with a solution:
+Have a presentation control with storage facilities. Now the application no
+longer channels the output in different directions, but it simply outputs it to
+the presentation control. It's the presentation control that buffers the answer
+and gives the user the possibility to store it. </p>
+
+<p class="MsoNormal">The traditional layered architecture stresses "UI"
+and "storage" to be different. The Ports and Adapters Architecture
+can reduce output to being simply "output" again. "</p>
+
+<p class="H4">Anonymous example from the C2-wiki</p>
+
+<p class="MsoNormal">"In one project I worked on, we used the SystemMetaphor
+of a component stereo system. Each component has defined interfaces, each of
+which has a specific purpose. We can then connect components together in almost
+unlimited ways using simple cables and adapters."<span style="layout-grid-mode:
+both;mso-no-proof:yes"> <o:p></o:p></span></p>
+
+<p class="H4">Distributed, Large-Team Development</p>
+
+<p class="MsoNormal">This one is still in trial use and so does not properly
+count as a use of the pattern. However, it is interesting to consider.</p>
+
+<p class="MsoNormal">Teams in different locations all build to the Hexagonal
+architecture, using FIT and mocks so the applications or components can be
+tested in standalone mode. The CruiseControl build runs every half hour and
+runs all the applications using the FIT+mock combination. As application
+subsystem and databases get completed, the mocks are replaced with test
+databases.</p>
+
+<p class="H4">Separating Development of UI and Application Logic </p>
+
+<p class="MsoNormal">This one is still in early trial use and so does not count
+as a use of the pattern. However, it is interesting to consider.</p>
+
+<p class="MsoNormal">The UI design is unstable, as they haven't decided on a
+driving technology or a metaphor yet. The back-end services architecture hasn't
+been decided, and in fact will probably change several times over the next six
+months. Nonetheless, the project has officially started and time is ticking by.
+</p>
+
+<p class="MsoNormal">The application team creates FIT tests and mocks to isolate
+their application, and creates testable, demonstrable functionality to show
+their users. When the UI and back-end services decisions finally get met, it
+"should be straightforward" to add those elements the
+application.<span style="mso-spacerun:yes">  </span>Stay tuned to learn how
+this works out (or try it yourself and write me to let me know).</p>
+
+<p class="H3">Related Patterns</p>
+
+<p class="H4">Adapter</p>
+
+<p class="MsoNormal">The <i style="mso-bidi-font-style:normal">Design Patterns</i>
+book contains a description of the generic <i style="mso-bidi-font-style:normal">Adapter</i>
+pattern: "Convert the interface of a class into another interace clients
+expect." The ports-and-adapters pattern is a particular use of the <i style="mso-bidi-font-style:normal">Adapter</i> pattern.</p>
+
+<p class="H4">Model-View-Controller </p>
+
+<p class="MsoNormal">The MVC pattern was implemented as early as 1974 in the
+Smalltalk project. It has been given, over the early, many variations, such as
+Model-Interactor and Model-View-Presenter. Each of these implements the idea of
+ports-and-adapters on the primary ports, not the secondary ports.</p>
+
+<p class="H4">Mock Objects and Loopback</p>
+
+<p class="MsoNormal">"A mock object is a "double agent" used to
+test the behaviour of other objects. First, a mock object acts as a faux
+implementation of an interface or class that mimics the external behaviour of a
+true implementation. Second, a mock object observes how other objects interact
+with its methods and compares actual behaviour with preset expectations. When a
+discrepancy occurs, a mock object can interrupt the test and report the
+anomaly. If the discrepancy cannot be noted during the test, a verification
+method called by the tester ensures that all expectations have been met or
+failures reported." -- From http://MockObjects.com</p>
+
+<p class="MsoNormal">Fully miplemented according to the mock-object agenda, mock
+objects are used throughout an application, not just at the external interface
+The primary thrust of the mock object movement is conformance to specified
+protocol at the individual class and object level. I borrow their word
+"mock" as the best short description of an in-memory substitute for
+an external secondary actor.</p>
+
+<p class="MsoNormal">The Loopback pattern is an explicit pattern for creating an
+internal replacement for an external device. </p>
+
+<p class="H4">Pedestals </p>
+
+<p class="MsoNormal">In "Patterns for Generating a Layered
+Architecture", Barry Rubel describes a pattern about creating an axis of
+symmetry in control software that is very similar to ports and adapters. The <i style="mso-bidi-font-style:normal">Pedestal</i> pattern calls for implementing
+an object representing each hardware device within the system, and linking
+those objects together in a control layer. The <i style="mso-bidi-font-style:
+normal">Pedestal</i> pattern can be used to describe either side of the
+hexagonal architecture, but does not yet stress the similarity across adapters.
+Also, being written for a mechanical control environment, it is not so easy to
+see how to apply the pattern to IT applications.</p>
+
+<p class="H4">Checks</p>
+
+<p class="MsoNormal">Ward Cunningham's pattern language for detecting and
+handling user input errors, is good for error handling across the inner hexagon
+boundaries.</p>
+
+<p class="H4">Dependency Inversion (Dependency Injection) and SPRING </p>
+
+<p class="MsoNormal">Bob Martin's Dependency Inversion Principle (also called
+Dependency Injection by Martin Fowler) states that "High-level modules
+should not depend on low-level modules. Both should depend on
+abstractions.<span style="mso-spacerun:yes">  </span>Abstractions should not
+depend on details. Details should depend on abstractions." The <i style="mso-bidi-font-style:normal">Dependency Injection </i>pattern by Martin
+Fowler gives some implementations. These show how to create swappable secondary
+actor adapters. The code can be typed in directly, as done in the sample code
+in the article, or using configuration files and having the SPRING framework
+generate the equivalent code.</p>
+
+<p class="H3">Acknowledgements</p>
+
+<p class="MsoNormal">Thanks to Gyan Sharma at Intermountain Health Care for
+providing the sample code used here. Thanks to Rebecca Wirfs-Brock for her book
+<i style="mso-bidi-font-style:normal">Object Design</i>, which when read
+together with the <i style="mso-bidi-font-style:normal">Adapter</i> pattern
+from the <i style="mso-bidi-font-style:normal">Design Patterns</i> book, helped
+me to understand what the hexagon was about. Thanks also to the people on
+Ward's wiki, who provided comments about this pattern over the years (e.g.,
+particularly Kevin Rutherfold's <a href="http://silkandspinach.net/blog/2004/07/hexagonal_soup.html">http://silkandspinach.net/blog/2004/07/hexagonal_soup.html</a>).</p>
+
+<p class="H3">References and Related Reading</p>
+
+<p class="MsoNormal">FIT, A Framework for Integrating Testing: Cunningham, W.,
+online at http://fit.c2.com, and Mugridge, R. and Cunningham, W., <i style="mso-bidi-font-style:normal">Fit for Developing Software</i>,
+Prentice-Hall PTR, 2005.</p>
+
+<p class="MsoNormal">The <i style="mso-bidi-font-style:normal">Adapter</i>
+pattern: in Gamma, E., Helm, R., Johnson, R., Vlissides, J.,<span style="mso-spacerun:yes">  </span><i style="mso-bidi-font-style:normal">Design
+Patterns</i>, Addison-Wesley, 1995, pp. 139-150.</p>
+
+<p class="MsoNormal">The <i style="mso-bidi-font-style:normal">Pedestal</i>
+pattern: in Rubel, B., "Patterns for Generating a Layered
+Architecture", in Coplien, J., Schmidt, D., <i style="mso-bidi-font-style:
+normal">PatternLanguages of Program Design</i>, Addison-Wesley, 1995, pp.
+119-150.</p>
+
+<p class="MsoNormal">The <i style="mso-bidi-font-style:normal">Checks</i>
+pattern: by Cunningham, W., online at <a href="http://c2.com/ppr/checks.html">http://c2.com/ppr/checks.html</a></p>
+
+<p class="MsoNormal">The <i style="mso-bidi-font-style:normal">Dependency
+Inversion Principle</i>: Martin, R., in <i style="mso-bidi-font-style:normal">Agile
+Software Development Principles Patterns and Practices</i>, Prentice Hall,
+2003, Chapter 11: "The Dependency-Inversion Principle", and online at
+http://www.objectmentor.com/resources/articles/dip.pdf</p>
+
+<p class="MsoNormal"><span style="mso-spacerun:yes"> </span>The <i style="mso-bidi-font-style:normal">Dependency Injection</i> pattern: Fowler,
+M., online at http://www.martinfowler.com/articles/injection.html</p>
+
+<p class="MsoNormal">The <i style="mso-bidi-font-style:normal">Mock Object</i>
+pattern: Freeman, S. online at http://MockObjects.com</p>
+
+<p class="MsoNormal">The <i style="mso-bidi-font-style:normal">Loopback</i>
+pattern: Cockburn, A., online at http://c2.com/cgi/wiki?LoopBack</p>
+
+<p class="MsoNormal"><i style="mso-bidi-font-style:normal">Use cases:</i>
+Cockburn, A., <i style="mso-bidi-font-style:normal">Writing Effective Use Cases</i>,
+Addison-Wesley, 2001, and Cockburn, A., "Structuring Use Cases with
+Goals", online at
+http://alistair.cockburn.us/crystal/articles/sucwg/structuringucswithgoals.htm</p>
+
+<p class="MsoNormal"><o:p> </o:p></p>
+
+</div>
+
+</div>
+
+</div>
+</div></div></div></div><div id="a195fd4ba8fd04afda2177cd2b12a0c8" class="wb_element" data-plugin="CustomHtml"><div style="width: 100%; height: 100%;"><a data-popup-processed="true" href="https://www.hitwebcounter.com" target="_blank">
+    
+    
+    <img alt="web counter" border="0" src="https://hitwebcounter.com/counter/counter.php?page=8088808&amp;style=0021&amp;nbdigits=4&amp;type=page&amp;initCount=0" title="Free Counter">
+    
+</a>
+</div></div></div></div><div id="wb_footer_a195fd4ba765006a850b08dc18a9c7c8" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-vertical"><div id="a195fd4ba8fc075f8b1be1db75a75d70" class="wb_element wb-layout-element" data-plugin="LayoutElement"><div class="wb_content wb-layout-vertical"><div id="a195fd4ba8fc08827ec71e70785a6d37" class="wb_element wb_text_element" data-plugin="TextArea" style=" line-height: normal;"><p class="wb-stl-custom5" data-dnid="10099"> <br>
+Copyright ©Alistair Cockburn 2022 All Rights Reserved</p></div></div></div><div id="wb_footer_c" class="wb_element" data-plugin="WB_Footer" style="text-align: center; width: 100%;"><div class="wb_footer"></div><script type="text/javascript">
+			$(function() {
+				var footer = $(".wb_footer");
+				var html = (footer.html() + "").replace(/^\s+|\s+$/g, "");
+				if (!html) {
+					footer.parent().remove();
+					footer = $("#footer, #footer .wb_cont_inner");
+					footer.css({height: ""});
+				}
+			});
+			</script></div></div></div></div></body>
+</html>

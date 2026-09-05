@@ -87,4 +87,4 @@ adapters/<接続先>/ contract にだけ依存する
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 文献 | sans-IO の設計（入出力を外へ出す） | 《版・取得日》 | `sans-io` |
+| 文献 | sans-IO の設計（入出力を外へ出す）<br><small>https://sans-io.readthedocs.io/</small> | 2026-09-05 取得 | `sans-io` |

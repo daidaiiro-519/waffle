@@ -93,12 +93,54 @@ def load_all() -> list[Spec]:
     """constraints/ 配下の規約を、すべて読む。"""
     specs = []
     for path in sorted(CONSTRAINTS.rglob("*.md")):
+        if path.name == "INDEX.md":   # 生成物は規約ではない
+            continue
         text = path.read_text(encoding="utf-8")
         front, axes, provides, body = _parse_front(text)
         sections = re.findall(r"^## (.+)$", body, re.M)
         specs.append(Spec(path=path, front=front, axes=axes, provides=provides,
                           sections=sections, body=body))
     return specs
+
+
+SOURCES = ROOT / "sources"
+
+
+def source_rows(spec: Spec) -> list[tuple[str, str]]:
+    """出典の表から、(URL, 照合する文字列) の対を取り出す。"""
+    if "## 出典" not in spec.body:
+        return []
+    tail = spec.body.split("## 出典", 1)[1]
+    rows = []
+    for line in tail.splitlines():
+        if not line.startswith("|") or "---" in line:
+            continue
+        url = re.search(r"<small>(https?://[^<]+)</small>", line)
+        needle = re.findall(r"`([^`]+)`", line)
+        if url and needle:
+            rows.append((url.group(1), needle[-1]))
+    return rows
+
+
+def _slug(url: str) -> str:
+    """落とした原文のファイル名。source-fidelity の付け方に合わせる。"""
+    s = re.sub(r"^https?://", "", url)
+    s = re.sub(r"[^A-Za-z0-9._-]+", "_", s).strip("_")
+    return s[:120]
+
+
+def local_source(url: str) -> pathlib.Path | None:
+    """落とした原文のうち、その URL のものを返す。
+
+    HTML の頁は本体だけが残り、Markdown を返す頁は `<URL>.md` で残る。
+    どちらの置き方でも見つけられるようにする。
+    """
+    for name in (_slug(url), _slug(url + ".md"), _slug(url.rstrip("/")),
+                 _slug(url.rstrip("/") + ".md")):
+        path = SOURCES / name
+        if path.exists() and path.stat().st_size > 0:
+            return path
+    return None
 
 
 def rule_ids(spec: Spec) -> list[str]:

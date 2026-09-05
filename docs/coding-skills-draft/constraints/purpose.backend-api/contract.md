@@ -94,5 +94,5 @@ sequenceDiagram
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | HTTP セマンティクス（RFC 9110） | 《版・取得日》 | `status code` |
-| 規格 | 失敗の応答形式（RFC 9457） | 《版・取得日》 | `problem details` |
+| 規格 | HTTP セマンティクス（RFC 9110）<br><small>https://www.rfc-editor.org/rfc/rfc9110.txt</small> | 2026-09-05 取得 | `status code` |
+| 規格 | 失敗の応答形式（RFC 9457）<br><small>https://www.rfc-editor.org/rfc/rfc9457.txt</small> | 2026-09-05 取得 | `problem details` |

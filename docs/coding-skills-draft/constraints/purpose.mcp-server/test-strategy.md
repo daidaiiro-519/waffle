@@ -72,4 +72,4 @@ updated: 2026-09-05
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| ─ | 規格 | Model Context Protocol の仕様（やり取りの順序） | **《未取得》** | **《未照合》** |
+| ─ | 規格 | Model Context Protocol の仕様（やり取りの順序）<br><small>https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle</small> | 2026-09-05 取得 | `initialize` |

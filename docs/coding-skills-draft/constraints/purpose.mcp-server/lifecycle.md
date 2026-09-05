@@ -17,7 +17,6 @@ updated: 2026-09-05
 
 **接続のあいだ常駐し、呼び出し元が閉じたら終わる。**
 
-> **この規約は、原文の照合がまだ済んでいない。**
 
 ## 状態の移り
 
@@ -74,4 +73,4 @@ stateDiagram-v2
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | Model Context Protocol の仕様（生存期間） | **《未取得》** | **《未照合》** |
+| 規格 | Model Context Protocol の仕様（生存期間）<br><small>https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle</small> | 2026-09-05 取得 | `capability negotiation` |

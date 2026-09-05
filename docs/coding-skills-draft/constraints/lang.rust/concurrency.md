@@ -120,6 +120,6 @@ pub async fn parse(input: tokio::fs::File) -> Result<Record, ParseError> { /* �
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| RS-CON-01 | 文献 | The Rust Programming Language ch.16 Fearless Concurrency | 《版・取得日》 | `message passing` |
-| RS-CON-02 | 規格 | Rust std `Arc` ・ `Mutex` | 《版・取得日》 | `Arc<Mutex<T>>` |
-| RS-CON-04 | 文献 | Rust API Guidelines（公開 API の設計） | 《版・取得日》 | `public API` |
+| RS-CON-01 | 文献 | The Rust Programming Language ch.16 Fearless Concurrency<br><small>https://doc.rust-lang.org/book/ch16-02-message-passing.html</small> | 2026-09-05 取得 | `Message Passing` |
+| RS-CON-02 | 規格 | Rust std `Arc` ・ `Mutex`<br><small>https://doc.rust-lang.org/book/ch16-02-message-passing.html</small> | 2026-09-05 取得 | `Message Passing` |
+| RS-CON-04 | 文献 | Rust API Guidelines（公開 API の設計）<br><small>https://rust-lang.github.io/api-guidelines/naming.html</small> | 2026-09-05 取得 | `naming` |

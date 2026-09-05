@@ -94,5 +94,5 @@ func TestReadPort2(t *testing.T) {
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| GO-TST-01 | 規格 | Go 標準ライブラリ `testing` | 《版・取得日》 | `func TestXxx` |
-| GO-TST-02 | 規格 | `t.Parallel` の説明 | 《版・取得日》 | `Parallel` |
+| GO-TST-01 | 規格 | Go 標準ライブラリ `testing`<br><small>https://pkg.go.dev/testing</small> | 2026-09-05 取得 | `func TestXxx` |
+| GO-TST-02 | 規格 | `testing` パッケージ（並列）<br><small>https://pkg.go.dev/testing</small> | 2026-09-05 取得 | `Parallel` |

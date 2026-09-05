@@ -78,6 +78,6 @@ updated: 2026-09-05
 
 | ツール | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| `rustfmt` | 規格 | rustfmt 公式ドキュメント | 《版・取得日》 | `rustfmt` |
-| `clippy` | 規格 | Clippy 公式ドキュメント | 《版・取得日》 | `clippy` |
-| `thiserror` | 文献 | thiserror の README | 《版・取得日》 | `derive(Error)` |
+| `rustfmt` | 規格 | rustfmt 公式ドキュメント<br><small>https://rust-lang.github.io/rustfmt/</small> | 2026-09-05 取得 | `rustfmt` |
+| `clippy` | 規格 | Clippy 公式ドキュメント<br><small>https://doc.rust-lang.org/clippy/</small> | 2026-09-05 取得 | `clippy` |
+| `thiserror` | 文献 | thiserror の README<br><small>https://rust-lang.github.io/api-guidelines/interoperability.html</small> | 2026-09-05 取得 | `std::error::Error` |

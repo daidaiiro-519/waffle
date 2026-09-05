@@ -117,4 +117,4 @@ src/
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 文献 | Alistair Cockburn "Hexagonal Architecture" | 《版・取得日》 | `ports and adapters` |
+| 文献 | Alistair Cockburn "Hexagonal Architecture"<br><small>https://alistair.cockburn.us/hexagonal-architecture/</small> | 2026-09-05 取得 | `ports and adapters` |

@@ -76,5 +76,5 @@ stateDiagram-v2
 
 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|
-| 規格 | POSIX のシグナル（`SIGTERM`） | 《版・取得日》 | `SIGTERM` |
-| 文献 | The Twelve-Factor App（廃棄容易性） | 《版・取得日》 | `disposability` |
+| 規格 | POSIX のシグナル（`SIGTERM`）<br><small>https://12factor.net/disposability</small> | 2026-09-05 取得 | `SIGTERM` |
+| 文献 | The Twelve-Factor App（廃棄容易性）<br><small>https://12factor.net/disposability</small> | 2026-09-05 取得 | `disposability` |

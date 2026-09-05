@@ -140,7 +140,7 @@ pub struct JsonHookRequest;      // 業務の型に技術が入っている
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| RS-STY-01 | 規格 | rustfmt 既定設定 | 《版・取得日》 | `default` |
-| RS-STY-02 | 規格 | Rust Reference / Naming conventions（RFC 430） | 《版・取得日》 | `UpperCamelCase` |
-| RS-STY-03 | 規格 | rustc lint `missing_docs` | 《版・取得日》 | `missing_docs` |
-| RS-STY-04 | 文献 | Rust API Guidelines C-WORD-ORDER | 《版・取得日》 | `naming` |
+| RS-STY-01 | 規格 | rustfmt 既定設定<br><small>https://rust-lang.github.io/rustfmt/</small> | 2026-09-05 取得 | `rustfmt` |
+| RS-STY-02 | 規格 | Rust Reference / Naming conventions（RFC 430）<br><small>https://rust-lang.github.io/rfcs/0430-finalizing-naming-conventions.html</small> | 2026-09-05 取得 | `UpperCamelCase` |
+| RS-STY-03 | 規格 | rustc lint `missing_docs`<br><small>https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html</small> | 2026-09-05 取得 | `missing_docs` |
+| RS-STY-04 | 文献 | Rust API Guidelines（命名）<br><small>https://rust-lang.github.io/api-guidelines/naming.html</small> | 2026-09-05 取得 | `naming` |

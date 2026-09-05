@@ -81,5 +81,5 @@ updated: 2026-09-05
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| HK-AC-01 | 規格 | 呼び出し元の Hook 仕様（応答の形式） | 《版・取得日》 | `《原文にそのまま在る文字列》` |
-| HK-AC-04 | 規格 | 同（要求の上限） | 《版・取得日》 | `《原文にそのまま在る文字列》` |
+| HK-AC-01 | 規格 | 呼び出し元の Hook 仕様（応答の形式）<br><small>https://docs.claude.com/en/docs/claude-code/hooks</small> | 2026-09-05 取得 | `hookSpecificOutput` |
+| HK-AC-04 | 規格 | 同（要求の上限）<br><small>https://docs.claude.com/en/docs/claude-code/hooks</small> | 2026-09-05 取得 | `stdout` |

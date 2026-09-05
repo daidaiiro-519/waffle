@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 import sys
 
-from _common import load_all, rule_ids
+from _common import load_all, local_source, rule_ids, source_rows
 
 REQUIRED_FRONT = ["id", "layer", "category", "declares", "updated"]
 REQUIRED_SECTIONS = ["概要", "適用範囲外", "委譲する判断", "出典"]
@@ -34,10 +34,22 @@ def main() -> int:
             if name not in s.sections:
                 problems.append(f"{where}: 「{name}」の節が無い")
 
-        if s.axes and s.dir_axes and s.axes != s.dir_axes:
+        # ディレクトリに現れない軸は、同じ層の規約が provides で与えているものだけ許す
+        provided = {}
+        for other in specs:
+            if other.layer == s.layer:
+                provided.update(other.provides)
+        for axis, value in s.axes.items():
+            if s.dir_axes.get(axis) == value:
+                continue
+            if provided.get(axis) == value:
+                continue
             problems.append(
-                f"{where}: 置き場所と宣言した軸が食い違う "
-                f"（ディレクトリ {s.dir_axes} ／ 前置き {s.axes}）")
+                f"{where}: 軸 {axis}＝{value} が、置き場所にも provides にも無い")
+        for axis, value in s.dir_axes.items():
+            if s.axes.get(axis) != value:
+                problems.append(
+                    f"{where}: 置き場所の軸 {axis}＝{value} が、前置きに無い")
 
         unfilled = UNFILLED.findall(s.body)
         if unfilled:
@@ -49,6 +61,17 @@ def main() -> int:
             tail = s.body.split("## 出典", 1)[1]
             if "未照合" in tail or "未取得" in tail:
                 problems.append(f"{where}: 出典が原文と照合されていない")
+            # 出典の URL に、照合する文字列が本当に在るか
+            for url, needle in source_rows(s):
+                body = local_source(url)
+                if body is None:
+                    problems.append(f"{where}: 出典の原文を落としていない（{url}）")
+                    continue
+                text = body.read_text(encoding="utf-8", errors="replace")
+                if needle not in text:
+                    problems.append(
+                        f"{where}: 照合する文字列 `{needle}` が、"
+                        f"その原文に無い（{url}）")
 
     # 同じ層で、同じ ID が2度使われていないか
     seen: dict[tuple[str, str], str] = {}

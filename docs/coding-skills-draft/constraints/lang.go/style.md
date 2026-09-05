@@ -116,7 +116,7 @@ func Load(loader ConfigLoader) (ConfigProvider, error)
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| GO-STY-01 | 規格 | Go の `gofmt` | 《版・取得日》 | `gofmt` |
-| GO-STY-02 | 規格 | Go 仕様 Exported identifiers | 《版・取得日》 | `exported` |
-| GO-STY-03 | 文献 | Effective Go（パッケージ名） | 《版・取得日》 | `package names` |
-| GO-STY-05 | 文献 | Go Code Review Comments（インターフェースの置き場所） | 《版・取得日》 | `interfaces` |
+| GO-STY-01 | 規格 | `gofmt` の説明<br><small>https://pkg.go.dev/cmd/gofmt</small> | 2026-09-05 取得 | `gofmt` |
+| GO-STY-02 | 規格 | Go 仕様 Exported identifiers<br><small>https://go.dev/ref/spec</small> | 2026-09-05 取得 | `exported` |
+| GO-STY-03 | 文献 | Effective Go（パッケージ名）<br><small>https://go.dev/doc/effective_go</small> | 2026-09-05 取得 | `Package names` |
+| GO-STY-05 | 文献 | Go Code Review Comments（インターフェースの置き場所）<br><small>https://go.dev/wiki/CodeReviewComments</small> | 2026-09-05 取得 | `interfaces` |

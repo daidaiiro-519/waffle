@@ -35,7 +35,7 @@ updated: 2026-09-05
 | メッセージの解釈と生成 | `serde` ＋ `serde_json` | `1` | 契約が JSON で、型と対応づけられる | 手書きの解析 |
 | 失敗型の実装 | `thiserror` | `1` | 言語の規約を満たす | 手書き |
 | 診断の出力 | `tracing` ＋ `tracing-subscriber` | `0.3` | 標準エラーへの出力先を差し替えられる | `eprintln!` |
-| 手順の実装 | 《仕様を読んでから決める》 | 《版》 | **未定。既存の実装を採るか、自前で書くかを、仕様の原文を読んでから決める** | ─ |
+| 手順の実装 | **未定** | ─ | **仕様の原文は取得した（2026-09-05）。既存の実装を採るか自前で書くかは、提供する能力が決まってから選ぶ** | ─ |
 
 ## 採用しない依存
 
@@ -81,5 +81,5 @@ updated: 2026-09-05
 
 | 依存 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| `serde_json` | 文献 | serde_json の公式ドキュメント | 《版・取得日》 | `from_str` |
-| 手順 | 規格 | Model Context Protocol の仕様 | **《未取得》** | **《未照合》** |
+| `serde_json` | 文献 | serde_json の公式ドキュメント<br><small>https://docs.rs/serde_json/latest/serde_json/</small> | 2026-09-05 取得 | `from_str` |
+| 手順 | 規格 | Model Context Protocol の仕様<br><small>https://modelcontextprotocol.io/specification/2025-06-18</small> | 2026-09-05 取得 | `capabilities` |

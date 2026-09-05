@@ -120,5 +120,5 @@ func TestOrderRepository(t *testing.T) { /* 常に外部へ接続する */ }
 
 | ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
 |---|---|---|---|---|
-| GH-TP-01 | 規格 | Go 標準 `testing`（内部テストと外部テスト） | 《版・取得日》 | `package foo_test` |
-| GH-TP-04 | 規格 | Go 標準 `testing.Short` | 《版・取得日》 | `testing.Short` |
+| GH-TP-01 | 規格 | Go 標準 `testing`（内部テストと外部テスト）<br><small>https://pkg.go.dev/testing</small> | 2026-09-05 取得 | `Short` |
+| GH-TP-04 | 規格 | Go 標準 `testing.Short`<br><small>https://pkg.go.dev/testing</small> | 2026-09-05 取得 | `testing.Short` |
