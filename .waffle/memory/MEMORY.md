@@ -12,8 +12,8 @@
 
 - **schema 観の三層（段1・段2 の再定義）** ── 盤面 `docs/adr/brainstorm-schema-conception-board.html`
   （Artifact: `https://claude.ai/code/artifact/b85a142f-d6b5-4964-844c-0f7c64383882`）。
-  論点1・2・5・3・**6** が決着（2026-09-06）。**再開点は論点8（表現の型と、出力の形をどう分けるか）**。
-  論点7（書く単位と承認する単位のずれ）はそのあと。8 と 7 は互いの前提になっていない。
+  論点1・2・5・3・6・8 が決着（2026-09-06）。**残るは論点7（書く単位と承認の単位のずれ）1つだけ**。
+  論点8 で「型は意味・形は射影／既定＋差分／組は並べ方だけ」まで決まっている。
 - **CodingSkills（規約に従って書く汎用Skill）** ── `.waffle/skills/coding-skills/`（第1版・2026-09-05）。
   盤面 `docs/adr/brainstorm-coding-skills.html`、面 `docs/adr/coding-skills-templates.html`
   （Artifact: `https://claude.ai/code/artifact/24732a71-b357-41a1-8f53-fbb87417f92d`）。
