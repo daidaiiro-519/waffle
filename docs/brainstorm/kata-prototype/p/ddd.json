@@ -1,0 +1,9 @@
+{"profile":"ddd","traced":["invariant","usecase","scenario"],
+ "groups":{"invariant":"不変条件","scenario":"シナリオ"},
+ "kinds":{
+  "context":  {"code":"CTX","fields":["name","purpose","refs"],"children":["aggregate"]},
+  "aggregate":{"code":"AGG","fields":["name","root","purpose","refs"],"children":["entity","invariant","usecase"]},
+  "entity":   {"code":"ENT","fields":["name","identity","attributes","refs"],"children":[]},
+  "invariant":{"code":"INV","fields":["statement","refs"],"children":[]},
+  "usecase":  {"code":"UC","fields":["name","actor","pre","post","refs"],"children":["scenario"]},
+  "scenario": {"code":"SC","fields":["given","when","then","refs"],"children":[]}}}

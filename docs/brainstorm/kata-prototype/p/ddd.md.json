@@ -1,0 +1,10 @@
+{"name":"md@3","heading_max":4,"head":"<!-- kata: profile=ddd@1 contract=md@3 -->\n\n",
+ "anchor":"<!-- @ {addr} uid={uid} -->\n","group":"\n{{h}} {label}\n",
+ "kinds":{
+  "context":  {"tpl":"{{h}} 境界づけられた文脈: {name}\n\n{purpose}\n"},
+  "aggregate":{"tpl":"{{h}} 集約: {name}\n\nルート: `{root}`\n\n{purpose}\n"},
+  "entity":   {"tpl":"{{h}} エンティティ: {name}\n\n識別子: {identity}\n\n",
+               "table":{"field":"attributes","cols":[["属性","name"],["型","type"],["備考","note"]]}},
+  "invariant":{"tpl":"- **{{parent}}/INV-{id}** {statement}\n"},
+  "usecase":  {"tpl":"{{h}} 業務ユースケース: {{parent}}/UC-{id} {name}\n\n- アクター: {actor}\n- 事前条件: {pre| / }\n- 事後条件: {post| / }\n"},
+  "scenario": {"tpl":"- **SC-{id}**  \n  前提 {given}  \n  もし {when}  \n  ならば {then}\n"}}}

@@ -1,0 +1,9 @@
+{"profile":"research","traced":["claim","open"],
+ "groups":{"claim":"この章が言うこと","open":"決まっていないこと","term":"この章が決めた語"},
+ "kinds":{
+  "study":  {"code":"ST","fields":["name","question","refs"],"children":["chapter"]},
+  "chapter":{"code":"CH","fields":["name","output","canon","status","refs"],"children":["claim","open","term"]},
+  "claim":  {"code":"CL","fields":["statement","scope","refs"],"children":["evidence"]},
+  "evidence":{"code":"EV","fields":["source","quote","verified","refs"],"children":[]},
+  "open":   {"code":"OP","fields":["question","blocks","refs"],"children":[]},
+  "term":   {"code":"TM","fields":["name","means","avoid","refs"],"children":[]}}}

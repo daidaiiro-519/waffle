@@ -1,0 +1,25 @@
+boundedContext: 予約
+aggregate:
+  name: 予約
+  root: Reservation
+  entities:
+    - name: 予約
+      identity: 予約番号
+      attributes:
+        - {name: 予約番号, type: 値オブジェクト, note: 発行後は変わらない}
+        - {name: 利用者, type: 参照, note: 利用者集約の識別子だけを持つ}
+        - {name: 区間, type: 値オブジェクト, note: 開始と終了の対。開始は終了より前である}
+        - {name: 状態, type: 列挙, note: 仮予約・確定・取消のいずれかである}
+  invariants:
+    - {id: INV-01, statement: 同一の設備について、確定した予約の区間は重ならない}
+    - {id: INV-02, statement: 取消された予約は、再び確定へ遷移しない}
+    - {id: INV-03, statement: 仮予約は、作成から15分で自動的に取消される}
+  useCases:
+    - id: UC-01
+      name: 予約を確定する
+      actor: 利用者
+      pre: [対象の予約が仮予約である, 区間が他の確定予約と重ならない]
+      post: [予約の状態が確定になる, 確定の通知が利用者へ送られる]
+      scenarios:
+        - {id: SC-01, given: 仮予約が1件ある, when: 利用者が確定を要求する, then: 状態が確定になる}
+        - {id: SC-02, given: 同じ区間に確定予約がある, when: 利用者が確定を要求する, then: 要求は拒まれ、状態は仮予約のままである}

@@ -1,0 +1,24 @@
+{"kind":"study","id":"01","uid":"ST-0001","name":"AI生成仕様の情報構造と実装対応",
+ "question":["仕様の情報構造は実装対応に効くか","対応が崩れる形はあるか","止める仕組みは何か"],
+ "children":[
+ {"kind":"chapter","id":"02","uid":"CH-0002","name":"母集団","output":"625件・4区分","canon":"02-dataset/02-dataset.md","status":"置いた",
+  "children":[
+   {"kind":"claim","id":"01","uid":"CL-0003","statement":"アンカーの解決状態で、母集団を4区分できる","scope":"629リポジトリの AI生成仕様に限る",
+    "children":[{"kind":"evidence","id":"01","uid":"EV-0004","source":"02-dataset/output/anchors.jsonl","verified":"実データ",
+                 "quote":"1,205件のうち RESOLVED_ROOT 714 ／ EXTERNAL 220 ／ UNRESOLVED 165 ／ RESOLVED_TAIL 90 ／ AMBIGUOUS 16"}]},
+   {"kind":"term","id":"01","uid":"TM-0005","name":"アンカー","means":"仕様本文に書かれた、実装を指す文字列","avoid":"参照 ／ リンク"},
+   {"kind":"term","id":"02","uid":"TM-0006","name":"解決","means":"アンカーが指す先に届いたかどうか。区分4つの元になる","avoid":"参照の状態"}]},
+ {"kind":"chapter","id":"03","uid":"CH-0007","name":"測る道具","output":"記録の設計と実行環境","canon":"03-instrument/","status":"設計は決まった",
+  "children":[
+   {"kind":"claim","id":"01","uid":"CL-0008","statement":"記録者は1単位1プロセスで立て、区分と機械判定を見せない","scope":"観測と測定の両方",
+    "children":[{"kind":"evidence","id":"01","uid":"EV-0009","source":"03-instrument/03-5-environment.md","verified":"本文照合",
+                 "quote":"ws-obs/ と ws-meas/ で立てる。メモリの索引と CLAUDE.md を読み込ませない"}]},
+   {"kind":"open","id":"01","uid":"OP-0010","question":"素のツールが既定で返す量","blocks":"N4。合わせる先が分からない"},
+   {"kind":"open","id":"02","uid":"OP-0011","question":"1,250プロセスを、並列で回せるか","blocks":"N1。1つずつしか起動していない"},
+   {"kind":"open","id":"03","uid":"OP-0012","question":"同じ事柄について結論が割れた単位が、何件あるか","blocks":"0件なら、割れたときの扱いを考える必要が無い"}]},
+ {"kind":"chapter","id":"04","uid":"CH-0013","name":"観察研究","output":"実行と結果と考察","canon":"04-observational-study/04-observational-study.md","status":"本文は旧版",
+  "children":[
+   {"kind":"open","id":"01","uid":"OP-0014","question":"実測がまだ","blocks":"本文が書けない"}]},
+ {"kind":"chapter","id":"05","uid":"CH-0015","name":"統制実験へ渡すもの","output":"実現可能性","canon":"05-controlled-design/","status":"本文が無い",
+  "children":[
+   {"kind":"open","id":"01","uid":"OP-0016","question":"何を変えるかの候補が決まっていない","blocks":"ハーネスが組めない"}]}]}

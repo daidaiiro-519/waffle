@@ -1,0 +1,37 @@
+<!-- kata: profile=ddd@1 contract=html@1 -->
+<section class="kata-context" data-addr="CTX#予約" data-uid="CTX-8QK2"><h2>境界づけられた文脈: 予約</h2><p>設備の利用枠を、利用者が押さえて確定するまでを扱う</p>
+<section class="kata-aggregate" data-addr="CTX#予約#AGG#予約" data-uid="AGG-3F7A"><h3>集約: 予約</h3><p>ルート: <code>Reservation</code></p><p>1件の予約の一生を、仮予約から確定または取消まで持つ</p>
+<div class="kata-entity" data-addr="CTX#予約#AGG#予約#ENT#01" data-uid="ENT-0003"><h4>エンティティ: 予約</h4><p>識別子: 予約番号</p><table><thead><tr><th>属性</th><th>型</th><th>備考</th></tr></thead><tbody><tr><td>予約番号</td><td>値オブジェクト</td><td>発行後は変わらない</td></tr><tr><td>利用者</td><td>参照</td><td>利用者集約の識別子だけを持つ</td></tr><tr><td>区間</td><td>値オブジェクト</td><td>開始と終了の対。開始は終了より前である</td></tr><tr><td>状態</td><td>列挙</td><td>仮予約・確定・取消のいずれかである</td></tr></tbody></table>
+</div>
+<h4>不変条件</h4>
+<div class="kata-invariant" data-addr="CTX#予約#AGG#予約#INV#01" data-uid="INV-0004"><p><b>予約/INV-01</b> 同一の設備について、確定した予約の区間は重ならない</p>
+</div>
+<div class="kata-invariant" data-addr="CTX#予約#AGG#予約#INV#02" data-uid="INV-0005"><p><b>予約/INV-02</b> 取消された予約は、再び確定へ遷移しない</p>
+</div>
+<div class="kata-invariant" data-addr="CTX#予約#AGG#予約#INV#03" data-uid="INV-0006"><p><b>予約/INV-03</b> 仮予約は、作成から15分で自動的に取消される</p>
+</div>
+<div class="kata-usecase" data-addr="CTX#予約#AGG#予約#UC#01" data-uid="UC-0007"><h4>業務ユースケース: 予約/UC-01 予約を確定する</h4><ul><li>アクター: 利用者</li><li>事前条件: 対象の予約が仮予約である / 区間が他の確定予約と重ならない</li><li>事後条件: 予約の状態が確定になる / 確定の通知が利用者へ送られる</li></ul>
+<h5>シナリオ</h5>
+<div class="kata-scenario" data-addr="CTX#予約#AGG#予約#UC#01#SC#01" data-uid="SC-0008"><p><b>SC-01</b><br>前提 仮予約が1件ある<br>もし 利用者が確定を要求する<br>ならば 状態が確定になる</p>
+</div>
+<div class="kata-scenario" data-addr="CTX#予約#AGG#予約#UC#01#SC#02" data-uid="SC-0009"><p><b>SC-02</b><br>前提 同じ区間に確定予約がある<br>もし 利用者が確定を要求する<br>ならば 要求は拒まれ、状態は仮予約のままである</p>
+</div>
+<div class="kata-scenario" data-addr="CTX#予約#AGG#予約#UC#01#SC#03" data-uid="SC-000A"><p><b>SC-03</b><br>前提 仮予約から15分が過ぎている<br>もし 利用者が確定を要求する<br>ならば 要求は拒まれ、状態は取消である</p>
+</div>
+</div>
+<div class="kata-usecase" data-addr="CTX#予約#AGG#予約#UC#02" data-uid="UC-000B"><h4>業務ユースケース: 予約/UC-02 予約を取り消す</h4><ul><li>アクター: 利用者</li><li>事前条件: 対象の予約が仮予約または確定である</li><li>事後条件: 予約の状態が取消になる / 押さえていた区間が解放される</li></ul>
+<h5>シナリオ</h5>
+<div class="kata-scenario" data-addr="CTX#予約#AGG#予約#UC#02#SC#01" data-uid="SC-000C"><p><b>SC-01</b><br>前提 確定した予約がある<br>もし 利用者が取消を要求する<br>ならば 状態が取消になり、区間が解放される</p>
+</div>
+</div>
+</section>
+<section class="kata-aggregate" data-addr="CTX#予約#AGG#設備" data-uid="AGG-9C1D"><h3>集約: 設備</h3><p>ルート: <code>Facility</code></p><p>予約の対象となる設備と、その利用可能な時間帯を持つ</p>
+<div class="kata-entity" data-addr="CTX#予約#AGG#設備#ENT#01" data-uid="ENT-000E"><h4>エンティティ: 設備</h4><p>識別子: 設備コード</p><table><thead><tr><th>属性</th><th>型</th><th>備考</th></tr></thead><tbody><tr><td>設備コード</td><td>値オブジェクト</td><td>運用中は変わらない</td></tr><tr><td>利用可能時間帯</td><td>値オブジェクト の集合</td><td>曜日ごとの開始と終了の対</td></tr></tbody></table>
+</div>
+<h4>不変条件</h4>
+<div class="kata-invariant" data-addr="CTX#予約#AGG#設備#INV#01" data-uid="INV-000F"><p><b>設備/INV-01</b> 利用可能時間帯の外側に、予約の区間を置くことはできない</p>
+</div>
+<div class="kata-invariant" data-addr="CTX#予約#AGG#設備#INV#02" data-uid="INV-0010"><p><b>設備/INV-02</b> 稼働を止めた設備に対して、新しい仮予約は作れない</p>
+</div>
+</section>
+</section>

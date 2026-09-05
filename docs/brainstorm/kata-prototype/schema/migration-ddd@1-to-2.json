@@ -1,0 +1,9 @@
+{
+ "from":"ddd@1","to":"ddd@2",
+ "ops":[
+  {"op":"rename_field","kind":"invariant","from":"statement","to":"rule"},
+  {"op":"add_field","kind":"aggregate","field":"owner","default":"未定"},
+  {"op":"add_field","kind":"invariant","field":"severity","prompt":"この不変条件が破れたときの深刻さを、致命／重大／軽微 のいずれかで書く"},
+  {"op":"retype_field","kind":"usecase","field":"pre","to":"array","sep":"／"}
+ ]
+}

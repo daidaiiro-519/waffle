@@ -1,0 +1,12 @@
+{
+ "profile":"ddd","version":2,
+ "traced":["invariant","usecase","scenario"],
+ "kinds":{
+  "context":  {"code":"CTX","fields":["name","purpose","refs"],"children":["aggregate"]},
+  "aggregate":{"code":"AGG","fields":["name","root","purpose","owner","refs"],"children":["entity","invariant","usecase"]},
+  "entity":   {"code":"ENT","fields":["name","identity","attributes","refs"],"children":[]},
+  "invariant":{"code":"INV","fields":["rule","severity","refs"],"children":[]},
+  "usecase":  {"code":"UC","fields":["name","actor","pre","post","refs"],"children":["scenario"]},
+  "scenario": {"code":"SC","fields":["given","when","then","refs"],"children":[]}
+ }
+}
