@@ -38,12 +38,16 @@
 **種別は、規約の型である。**
 どの雛形を写すかが、種別で決まる。
 
-| 種別 | 雛形 | 中身の形 | 当たる規約 |
-|---|---|---|---|
-| 構造 | `templates/structure.md` | 表と Mermaid で宣言する | `layers.md` `dependency.md` `layer-mapping.md` `contract.md` `lifecycle.md` |
-| 規則 | `templates/rules.md` | 守るべき言明の並び。適合例と違反例を添える | `style.md` `failure.md` `test-placement.md` |
-| ツール | `templates/toolchain.md` | ツールと版の表。実行コマンド | `toolchain.md` `stack.md` |
-| 保証 | `templates/assurance.md` | 保証する振る舞いと、確かめる単位 | `test-mechanism.md` `test-boundaries.md` `acceptance.md` `test-strategy.md` |
+| 種別 | 中身の形 | 当たる規約 |
+|---|---|---|
+| アーキテクチャ | 表と Mermaid で宣言する | `layers.md` `dependency.md` `layer-mapping.md` `contract.md` `lifecycle.md` |
+| コーディング | 守るべき言明の並び。適合例と違反例を添える | `style.md` `failure.md` `concurrency.md` |
+| テスト | 保証する振る舞い、確かめる単位、置き場所、重心 | `test-mechanism.md` `test-boundaries.md` `test-placement.md` `acceptance.md` `test-strategy.md` |
+| 技術スタック | ツールと版の表。実行コマンド | `toolchain.md` `stack.md` |
+
+**雛形は種別ごとではなく、規約の種類ごとに1つある。**
+種類が違えば必要な欄が違うので、`layers.md` と `dependency.md` は別の雛形になる。
+対応は `references/file-catalog.md` に置く。
 
 **構造と道具は宣言であって、規則ではない。**
 層の構成やフォルダの並びを、守るべき言明の羅列では表せない。

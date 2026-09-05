@@ -139,7 +139,5 @@ python3 scripts/collect.py --lang <言語> --purpose <用途>
 - `references/layer-documents.md`: どの層に、どの規約を置くか
 - `references/test-perspectives.md`: テスト観点の一覧（採るかどうかは用途の規約が決める）
 - `references/glossary.md`: この Skill が使う語
-- `templates/structure.md`: 層や依存を宣言する規約の雛形
-- `templates/rules.md`: 守るべき言明を並べる規約の雛形
-- `templates/toolchain.md`: ツールと版を定める規約の雛形
-- `templates/assurance.md`: 保証する振る舞いを定める規約の雛形
+- `references/file-catalog.md`: 雛形と規約の一覧（**規約の種類1つに、雛形1つ**）
+- `templates/`: 規約の種類ごとの雛形15本

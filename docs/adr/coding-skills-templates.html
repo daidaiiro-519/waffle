@@ -1,4 +1,4 @@
-<title>CodingSkills の雛形と規約（候補・第5版）</title>
+<title>CodingSkills の雛形と規約（候補・第6版）</title>
 <style>
 :root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
 --move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
@@ -84,12 +84,12 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 </script>
 
 <div class="wrap">
-<h1>CodingSkills の雛形と規約（候補・第5版）</h1>
-<p class="lede"><b>アーキテクチャ軸は値を複数持つ。</b><code>hexagonal</code> と <code>data-port</code> を並べて置き、<b>どちらを採るかは用途の規約が指定する</b>。data-port は、中心にデータの形を置き、呼び出しの約束（trait）を持たない構成である ── 中心が外部の機能を必要としないので、反転が要らない。</p>
+<h1>CodingSkills の雛形と規約（候補・第6版）</h1>
+<p class="lede"><b>規約の種類1つに、雛形1つを対応させた。</b>雛形は15本 ── style／failure／concurrency／test-mechanism／toolchain／layers／dependency／test-boundaries／layer-mapping／test-placement／contract／lifecycle／acceptance／test-strategy／stack。<b>対応は「参照／ファイル一覧」にある。</b>種別（コーディング・テスト・アーキテクチャ・技術スタック）は前置きの欄に残り、横断で引くときに使う。</p>
 
 <div id="bar"><b>変更 0 件</b>
 <button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
-<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="g">参照／語彙<span class="n">0</span></button><button class="tab" role="tab" data-t="a">参照／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="so">参照／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">参照／層ごとの規約<span class="n">0</span></button><button class="tab" role="tab" data-t="tp">参照／テスト観点<span class="n">0</span></button><button class="tab" role="tab" data-t="au">参照／規約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="t1">雛形／構造<span class="n">0</span></button><button class="tab" role="tab" data-t="t2">雛形／規則<span class="n">0</span></button><button class="tab" role="tab" data-t="t3">雛形／ツール<span class="n">0</span></button><button class="tab" role="tab" data-t="t4">雛形／保証<span class="n">0</span></button><button class="tab" role="tab" data-t="r1">rust／style<span class="n">0</span></button><button class="tab" role="tab" data-t="r2">rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="r3">rust／test-mechanism<span class="n">0</span></button><button class="tab" role="tab" data-t="r4">rust／toolchain<span class="n">0</span></button><button class="tab" role="tab" data-t="h1">hexagonal／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="h2">hexagonal／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="h3">hexagonal／test-boundaries<span class="n">0</span></button><button class="tab" role="tab" data-t="d1">data-port／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="d2">data-port／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="b1">rust×hexagonal／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="b2">rust×hexagonal／test-placement<span class="n">0</span></button><button class="tab" role="tab" data-t="b3">rust×data-port／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="k1">hook／contract<span class="n">0</span></button><button class="tab" role="tab" data-t="k2">hook／lifecycle<span class="n">0</span></button><button class="tab" role="tab" data-t="k3">hook／acceptance<span class="n">0</span></button><button class="tab" role="tab" data-t="k5">hook／test-strategy<span class="n">0</span></button><button class="tab" role="tab" data-t="k4">hook／stack<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md<span class="n">0</span></button><button class="tab" role="tab" data-t="fc">参照／ファイル一覧<span class="n">0</span></button><button class="tab" role="tab" data-t="g">参照／語彙<span class="n">0</span></button><button class="tab" role="tab" data-t="a">参照／軸<span class="n">0</span></button><button class="tab" role="tab" data-t="so">参照／出典<span class="n">0</span></button><button class="tab" role="tab" data-t="ld">参照／層ごとの規約<span class="n">0</span></button><button class="tab" role="tab" data-t="tp">参照／テスト観点<span class="n">0</span></button><button class="tab" role="tab" data-t="au">参照／規約の起こし方<span class="n">0</span></button><button class="tab" role="tab" data-t="t0">雛形／style<span class="n">0</span></button><button class="tab" role="tab" data-t="t1">雛形／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="t2">雛形／concurrency<span class="n">0</span></button><button class="tab" role="tab" data-t="t3">雛形／test-mechanism<span class="n">0</span></button><button class="tab" role="tab" data-t="t4">雛形／toolchain<span class="n">0</span></button><button class="tab" role="tab" data-t="t5">雛形／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="t6">雛形／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="t7">雛形／test-boundaries<span class="n">0</span></button><button class="tab" role="tab" data-t="t8">雛形／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="t9">雛形／test-placement<span class="n">0</span></button><button class="tab" role="tab" data-t="t10">雛形／contract<span class="n">0</span></button><button class="tab" role="tab" data-t="t11">雛形／lifecycle<span class="n">0</span></button><button class="tab" role="tab" data-t="t12">雛形／acceptance<span class="n">0</span></button><button class="tab" role="tab" data-t="t13">雛形／test-strategy<span class="n">0</span></button><button class="tab" role="tab" data-t="t14">雛形／stack<span class="n">0</span></button><button class="tab" role="tab" data-t="r1">rust／style<span class="n">0</span></button><button class="tab" role="tab" data-t="r2">rust／failure<span class="n">0</span></button><button class="tab" role="tab" data-t="r3">rust／test-mechanism<span class="n">0</span></button><button class="tab" role="tab" data-t="r4">rust／toolchain<span class="n">0</span></button><button class="tab" role="tab" data-t="h1">hexagonal／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="h2">hexagonal／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="h3">hexagonal／test-boundaries<span class="n">0</span></button><button class="tab" role="tab" data-t="d1">data-port／layers<span class="n">0</span></button><button class="tab" role="tab" data-t="d2">data-port／dependency<span class="n">0</span></button><button class="tab" role="tab" data-t="b1">rust×hexagonal／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="b2">rust×hexagonal／test-placement<span class="n">0</span></button><button class="tab" role="tab" data-t="b3">rust×data-port／layer-mapping<span class="n">0</span></button><button class="tab" role="tab" data-t="k1">hook／contract<span class="n">0</span></button><button class="tab" role="tab" data-t="k2">hook／lifecycle<span class="n">0</span></button><button class="tab" role="tab" data-t="k3">hook／acceptance<span class="n">0</span></button><button class="tab" role="tab" data-t="k5">hook／test-strategy<span class="n">0</span></button><button class="tab" role="tab" data-t="k4">hook／stack<span class="n">0</span></button><button class="tab" role="tab" data-t="sc">scripts／README<span class="n">0</span></button></div>
 <section class="pane md" data-k="s" hidden><div class="doc"><hr>
 <p>name: coding-skills<br>description: 目的と言語を受け取り、その場面に効く規約を集めて、それに従ってコードを書くときに使う。規約が足りないときは、書く前に規約を起こす手順へ回す。「Goでバックエンドを書く」「RustでHookを書く」「この規約に沿って実装して」と言われたときに使う。</p>
 <hr>
@@ -135,7 +135,18 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <p>- <strong>書きながら規則を足さない。</strong><br>足りないと分かったら、作る手順へ回す<br>- <strong>実装を読んでからテストを書かない。</strong><br>規則が先に在る<br>- <strong>軸の値を推測しない。</strong><br>分からなければ聞く<br>- <strong>集めた規則を要約しない</strong> ── 言明はそのまま当てる<br>- <strong>プロジェクト固有の決めごとを規則として扱わない</strong> ──<br>出典を持たないものは規則ではない<br>- <strong>穴（各自が決める）の外を特殊化しない。</strong><br>必要なら、上の層の規約を直す</p>
 <hr>
 <h2>参照</h2>
-<p>- <code>references/authoring.md</code>: 規約を新しく起こす手順（原典を落とす → 書く → 承認）<br>- <code>references/axes.md</code>: 軸の定義と、軸を足すときの判定<br>- <code>references/sources.md</code>: 何を出典として認めるか<br>- <code>references/layer-documents.md</code>: どの層に、どの規約を置くか<br>- <code>references/test-perspectives.md</code>: テスト観点の一覧（採るかどうかは用途の規約が決める）<br>- <code>references/glossary.md</code>: この Skill が使う語<br>- <code>templates/structure.md</code>: 層や依存を宣言する規約の雛形<br>- <code>templates/rules.md</code>: 守るべき言明を並べる規約の雛形<br>- <code>templates/toolchain.md</code>: ツールと版を定める規約の雛形<br>- <code>templates/assurance.md</code>: 保証する振る舞いを定める規約の雛形</p></div></section><section class="pane md" data-k="g" hidden><div class="doc"><h1>語彙 ── この Skill が使う語</h1>
+<p>- <code>references/authoring.md</code>: 規約を新しく起こす手順（原典を落とす → 書く → 承認）<br>- <code>references/axes.md</code>: 軸の定義と、軸を足すときの判定<br>- <code>references/sources.md</code>: 何を出典として認めるか<br>- <code>references/layer-documents.md</code>: どの層に、どの規約を置くか<br>- <code>references/test-perspectives.md</code>: テスト観点の一覧（採るかどうかは用途の規約が決める）<br>- <code>references/glossary.md</code>: この Skill が使う語<br>- <code>references/file-catalog.md</code>: 雛形と規約の一覧（<strong>規約の種類1つに、雛形1つ</strong>）<br>- <code>templates/</code>: 規約の種類ごとの雛形15本</p></div></section><section class="pane md" data-k="fc" hidden><div class="doc"><h1>ファイル一覧 ── 雛形と、そこから作られる規約</h1>
+<h2>概要</h2>
+<p><strong>規約の種類1つに、雛形1つが対応する。</strong><br>どの層に置くかは、その規約が依存する軸で決まる。</p>
+<h2>雛形と規約の種類</h2>
+<div class="wrap"><table><tr><th>雛形</th><th>作られる規約</th><th>何を宣言するか</th><th>種別</th><th>置かれる層</th></tr><tr><td><code>templates/style.md</code></td><td><code>style.md</code></td><td>綴りと書式の規則</td><td>コーディング</td><td>言語</td></tr><tr><td><code>templates/failure.md</code></td><td><code>failure.md</code></td><td>失敗の運び方の規則</td><td>コーディング</td><td>言語</td></tr><tr><td><code>templates/concurrency.md</code></td><td><code>concurrency.md</code></td><td>並行の単位と、共有の扱い</td><td>コーディング</td><td>言語</td></tr><tr><td><code>templates/test-mechanism.md</code></td><td><code>test-mechanism.md</code></td><td>テストが走る仕組みと書き方</td><td>テスト</td><td>言語</td></tr><tr><td><code>templates/toolchain.md</code></td><td><code>toolchain.md</code></td><td>言語の標準ツールと版</td><td>技術スタック</td><td>言語</td></tr><tr><td><code>templates/layers.md</code></td><td><code>layers.md</code></td><td>構成要素と、要素ごとの責務</td><td>アーキテクチャ</td><td>アーキテクチャ</td></tr><tr><td><code>templates/dependency.md</code></td><td><code>dependency.md</code></td><td>依存の向きと、反転の有無</td><td>アーキテクチャ</td><td>アーキテクチャ</td></tr><tr><td><code>templates/test-boundaries.md</code></td><td><code>test-boundaries.md</code></td><td>確かめる単位の境界</td><td>テスト</td><td>アーキテクチャ</td></tr><tr><td><code>templates/layer-mapping.md</code></td><td><code>layer-mapping.md</code></td><td>要素を言語の仕組みで表す形</td><td>アーキテクチャ</td><td>言語 × アーキテクチャ</td></tr><tr><td><code>templates/test-placement.md</code></td><td><code>test-placement.md</code></td><td>テストの置き場所の規則</td><td>テスト</td><td>言語 × アーキテクチャ</td></tr><tr><td><code>templates/contract.md</code></td><td><code>contract.md</code></td><td>外部との契約</td><td>アーキテクチャ</td><td>用途</td></tr><tr><td><code>templates/lifecycle.md</code></td><td><code>lifecycle.md</code></td><td>起動と終了</td><td>アーキテクチャ</td><td>用途</td></tr><tr><td><code>templates/acceptance.md</code></td><td><code>acceptance.md</code></td><td>保証する振る舞い</td><td>テスト</td><td>用途</td></tr><tr><td><code>templates/test-strategy.md</code></td><td><code>test-strategy.md</code></td><td>テストの重心・計画・観点の採否</td><td>テスト</td><td>用途</td></tr><tr><td><code>templates/stack.md</code></td><td><code>stack.md</code></td><td>採用するアーキテクチャ・実行環境・実行時の依存</td><td>技術スタック</td><td>用途</td></tr></table></div>
+<h2>いま在る規約</h2>
+<div class="wrap"><table><tr><th>層</th><th>規約</th></tr><tr><td><code>lang.rust</code></td><td><code>style.md</code> ・ <code>failure.md</code> ・ <code>test-mechanism.md</code> ・ <code>toolchain.md</code></td></tr><tr><td><code>arch.hexagonal</code></td><td><code>layers.md</code> ・ <code>dependency.md</code> ・ <code>test-boundaries.md</code></td></tr><tr><td><code>arch.data-port</code></td><td><code>layers.md</code> ・ <code>dependency.md</code></td></tr><tr><td><code>lang.rust+arch.hexagonal</code></td><td><code>layer-mapping.md</code> ・ <code>test-placement.md</code></td></tr><tr><td><code>lang.rust+arch.data-port</code></td><td><code>layer-mapping.md</code></td></tr><tr><td><code>purpose.hook</code></td><td><code>contract.md</code> ・ <code>lifecycle.md</code> ・ <code>acceptance.md</code> ・ <code>test-strategy.md</code> ・ <code>stack.md</code></td></tr></table></div>
+<h2>まだ書いていない規約</h2>
+<div class="wrap"><table><tr><th>層</th><th>書いていない規約</th><th>書く条件</th></tr><tr><td><code>lang.go</code></td><td>5種すべて</td><td>Go を使うと決めたとき</td></tr><tr><td><code>lang.rust</code></td><td><code>concurrency.md</code></td><td>並行の扱いが要ると分かったとき</td></tr><tr><td><code>arch.data-port</code></td><td><code>test-boundaries.md</code></td><td>この構成でテストの単位を決めるとき</td></tr><tr><td><code>lang.rust+arch.data-port</code></td><td><code>test-placement.md</code></td><td>同上</td></tr><tr><td><code>lang.go+arch.hexagonal</code></td><td>2種</td><td>Go とヘキサゴナルを組み合わせるとき</td></tr><tr><td><code>purpose.backend-api</code></td><td>5種すべて</td><td>バックエンドAPI を作るとき</td></tr><tr><td><code>purpose.mcp-server</code></td><td>5種すべて</td><td>MCP サーバーを作るとき</td></tr></table></div>
+<p><strong>空のマスは作らない。</strong><br>その層で決まらないことの規約は、置かない ── 言語の層に <code>layers.md</code> は無い。</p>
+<h2>参照するもの</h2>
+<div class="wrap"><table><tr><th>ファイル</th><th>何のためか</th><th>誰が読むか</th></tr><tr><td><code>SKILL.md</code></td><td>書く手順</td><td>毎回</td></tr><tr><td><code>references/glossary.md</code></td><td>語の定義</td><td>迷ったとき</td></tr><tr><td><code>references/axes.md</code></td><td>軸の定義と、値・軸を足す手順</td><td>規約を起こすとき</td></tr><tr><td><code>references/sources.md</code></td><td>認める出典と、照合の仕方</td><td>規約を起こすとき</td></tr><tr><td><code>references/layer-documents.md</code></td><td>層ごとに決められること</td><td>規約を起こすとき</td></tr><tr><td><code>references/test-perspectives.md</code></td><td>テスト観点の一覧</td><td>用途の規約を起こすとき</td></tr><tr><td><code>references/file-catalog.md</code></td><td>この一覧</td><td>どの雛形を写すか迷ったとき</td></tr><tr><td><code>references/authoring.md</code></td><td>規約を起こす手順</td><td>規約を起こすとき</td></tr><tr><td><code>scripts/README.md</code></td><td>機械が回すもの</td><td>集める・検証する・索引を出すとき</td></tr></table></div></div></section><section class="pane md" data-k="g" hidden><div class="doc"><h1>語彙 ── この Skill が使う語</h1>
 <h2>概要</h2>
 <p><strong>同じ意味に2つの語を当てず、違う意味に同じ語を当てない。</strong><br>迷ったら、この表に戻る。</p>
 <h2>語</h2>
@@ -181,7 +192,8 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <div class="wrap"><table><tr><th>層</th><th>規約</th><th>その規約が決めること</th></tr><tr><td><code>lang.&lt;言語&gt;</code></td><td><code>style.md</code></td><td>綴りと書式</td></tr><tr><td></td><td><code>failure.md</code></td><td>失敗の運び方</td></tr><tr><td></td><td><code>test-mechanism.md</code></td><td>テストが走る仕組みと、書き方</td></tr><tr><td></td><td><code>toolchain.md</code></td><td>標準の道具と、その版</td></tr><tr><td><code>arch.&lt;値&gt;</code></td><td><code>layers.md</code></td><td>層の名前と、層ごとの責務</td></tr><tr><td></td><td><code>dependency.md</code></td><td>依存の向き</td></tr><tr><td></td><td><code>test-boundaries.md</code></td><td>確かめる単位の境界（何を単体とし、何を結合とするか）</td></tr><tr><td><code>lang.&lt;言語&gt;+arch.&lt;値&gt;</code></td><td><code>layer-mapping.md</code></td><td>層を何で表し、向きを何で守るか</td></tr><tr><td></td><td><code>test-placement.md</code></td><td>テストをどこに置くか</td></tr><tr><td><code>purpose.&lt;用途&gt;</code></td><td><code>contract.md</code></td><td>外との契約</td></tr><tr><td></td><td><code>lifecycle.md</code></td><td>起動と終了</td></tr><tr><td></td><td><code>acceptance.md</code></td><td>何を保証するか</td></tr><tr><td></td><td><code>test-strategy.md</code></td><td>テストの重心と計画、採る観点、カバレッジの扱い</td></tr><tr><td></td><td><code>stack.md</code></td><td>採るアーキテクチャとツール</td></tr></table></div>
 <h2>種別</h2>
 <p><strong>種別は、規約の型である。</strong><br>どの雛形を写すかが、種別で決まる。</p>
-<div class="wrap"><table><tr><th>種別</th><th>雛形</th><th>中身の形</th><th>当たる規約</th></tr><tr><td>構造</td><td><code>templates/structure.md</code></td><td>表と Mermaid で宣言する</td><td><code>layers.md</code> <code>dependency.md</code> <code>layer-mapping.md</code> <code>contract.md</code> <code>lifecycle.md</code></td></tr><tr><td>規則</td><td><code>templates/rules.md</code></td><td>守るべき言明の並び。適合例と違反例を添える</td><td><code>style.md</code> <code>failure.md</code> <code>test-placement.md</code></td></tr><tr><td>ツール</td><td><code>templates/toolchain.md</code></td><td>ツールと版の表。実行コマンド</td><td><code>toolchain.md</code> <code>stack.md</code></td></tr><tr><td>保証</td><td><code>templates/assurance.md</code></td><td>保証する振る舞いと、確かめる単位</td><td><code>test-mechanism.md</code> <code>test-boundaries.md</code> <code>acceptance.md</code> <code>test-strategy.md</code></td></tr></table></div>
+<div class="wrap"><table><tr><th>種別</th><th>中身の形</th><th>当たる規約</th></tr><tr><td>アーキテクチャ</td><td>表と Mermaid で宣言する</td><td><code>layers.md</code> <code>dependency.md</code> <code>layer-mapping.md</code> <code>contract.md</code> <code>lifecycle.md</code></td></tr><tr><td>コーディング</td><td>守るべき言明の並び。適合例と違反例を添える</td><td><code>style.md</code> <code>failure.md</code> <code>concurrency.md</code></td></tr><tr><td>テスト</td><td>保証する振る舞い、確かめる単位、置き場所、重心</td><td><code>test-mechanism.md</code> <code>test-boundaries.md</code> <code>test-placement.md</code> <code>acceptance.md</code> <code>test-strategy.md</code></td></tr><tr><td>技術スタック</td><td>ツールと版の表。実行コマンド</td><td><code>toolchain.md</code> <code>stack.md</code></td></tr></table></div>
+<p><strong>雛形は種別ごとではなく、規約の種類ごとに1つある。</strong><br>種類が違えば必要な欄が違うので、<code>layers.md</code> と <code>dependency.md</code> は別の雛形になる。<br>対応は <code>references/file-catalog.md</code> に置く。</p>
 <p><strong>構造と道具は宣言であって、規則ではない。</strong><br>層の構成やフォルダの並びを、守るべき言明の羅列では表せない。</p>
 <div class="wrap"><table><tr><th>引きたいこと</th><th>どう引くか</th></tr><tr><td>この場面に効く規約を全部</td><td>軸の値で集める</td></tr><tr><td>構造の宣言だけ</td><td>種別で絞る</td></tr></table></div>
 <h2>空のマス</h2>
@@ -227,93 +239,328 @@ color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;bo
 <h2>下位へ委ねる判断を宣言するとき</h2>
 <p><strong>決めないことも、決定である。</strong><br>「ここは各自が決める」と書けば、下の層がそこだけを埋められる。</p>
 <div class="wrap"><table><tr><th>書き方</th><th>意味</th></tr><tr><td>委ねない</td><td>下の層は、これを特殊化できない</td></tr><tr><td>下位へ委ねる</td><td>下の層が、この1点だけを埋めてよい</td></tr></table></div>
-<p><strong>委ねると宣言しないまま、下の層が特殊化を求めてきたら、軸の宣言を疑う。</strong></p></div></section><section class="pane md" data-k="t1" hidden><div class="doc"><hr>
-<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: 《language / architecture / purpose / runtime》<br>    value: 《値》<br>category: architecture<br>declares: 《宣言する構造の名前》<br>updated: 《YYYY-MM-DD》</p>
+<p><strong>委ねると宣言しないまま、下の層が特殊化を求めてきたら、軸の宣言を疑う。</strong></p></div></section><section class="pane md" data-k="t0" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: language<br>    value: 《値》<br>category: coding<br>declares: 綴りと書式<br>updated: 《YYYY-MM-DD》</p>
 <hr>
-<h1>《宣言する構造の名前》</h1>
+<h1>《《言語》における綴りと書式》</h1>
 <h2>概要</h2>
-<p><strong>《何を宣言する規約かを一文で》</strong></p>
-<h2>構成要素</h2>
-<div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td>《要素名》</td><td>《その要素だけが負う責務》</td><td>《依存してよい要素・技術》</td><td>《依存が禁じられる要素・技術》</td></tr></table></div>
-<h2>依存の許可</h2>
-<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th>《要素A》</th><th>《要素B》</th><th>《要素C》</th></tr><tr><td>《要素A》</td><td>─</td><td>《可／不可》</td><td>《可／不可》</td></tr><tr><td>《要素B》</td><td>《可／不可》</td><td>─</td><td>《可／不可》</td></tr></table></div>
-<h2>依存関係図</h2>
-<pre class="mermaid">《要素と依存の向き。依存が反転する箇所は、実装の矢印を破線で示す》</pre>
-<h2>境界を越えるデータ</h2>
-<div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>《どの要素から、どの要素へ》</td><td>《型の種類。業務の型／入出力の型》</td><td>《変換の責務を負う要素》</td></tr></table></div>
-<h2>ディレクトリ構成</h2>
-<pre class="code">《この構造が要求するディレクトリの並び。要素との対応が分かる形で書く》</pre>
-<h2>違反したとき</h2>
-<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>《起こりうる違反》</td><td>《どこで気づくか。検査／レビュー》</td><td>《どちらを動かすか》</td></tr></table></div>
+<p><strong>《何を定める規約かを一文で》</strong></p>
+<h2>規則一覧</h2>
+<div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>《《LANG》-STY-01》</td><td>《一文。理由も例外も混ぜない》</td><td>《必須／禁止／推奨》</td><td>《静的解析／レビュー／テスト》</td><td>《全体／特定の要素》</td></tr></table></div>
+<h2>規則の詳細</h2>
+<h3>《《LANG》-STY-01》　《規則を一文で》</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>《必須／禁止／推奨》</td></tr><tr><td>根拠</td><td>《なぜこの規則が要るか。一文》</td></tr><tr><td>検証方法</td><td><code>《コマンド》</code> または 《レビューで見る箇所》</td></tr><tr><td>例外</td><td>《適用されない条件。無ければ「なし」》</td></tr><tr><td>既存コードへの適用</td><td>《新規のみ／改修時に是正／一括是正》</td></tr></table></div>
+<p><strong>適合例</strong></p>
+<pre class="code">《この規則を満たす最小の例》</pre>
+<p><strong>違反例</strong></p>
+<pre class="code">《この規則だけを破っている最小の例》</pre>
+<h2>整形ツールに委ねる範囲</h2>
+<div class="wrap"><table><tr><th>項目</th><th>委ねる／人が決める</th></tr><tr><td>行の折り返し・字下げ・空行</td><td>《委ねる／人が決める》</td></tr><tr><td>並び順（import・要素）</td><td>《委ねる／人が決める》</td></tr><tr><td>命名</td><td>人が決める（ツールは綴りの形しか見ない）</td></tr></table></div>
+<h2>命名</h2>
+<div class="wrap"><table><tr><th>対象</th><th>表記</th><th>例</th></tr><tr><td>《型／関数／変数／定数》</td><td>《表記の規則》</td><td>《例》</td></tr></table></div>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
 <h2>委譲する判断</h2>
 <div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
 <h2>出典</h2>
-<div class="wrap"><table><tr><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t2" hidden><div class="doc"><hr>
-<p>id: 《識別子》<br>layer: 《軸の組み合わせ》<br>axes:<br>  - axis: 《軸》<br>    value: 《値》<br>category: 《coding / test》<br>declares: 《規則の主題》<br>updated: 《YYYY-MM-DD》</p>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《《LANG》-STY-01》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t1" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: language<br>    value: 《値》<br>category: coding<br>declares: 失敗の運び方<br>updated: 《YYYY-MM-DD》</p>
 <hr>
-<h1>《規則の主題》</h1>
+<h1>《《言語》における失敗の運び方》</h1>
 <h2>概要</h2>
 <p><strong>《何を定める規約かを一文で》</strong></p>
 <h2>規則一覧</h2>
-<div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>《PREFIX-01》</td><td>《一文。理由も例外も混ぜない》</td><td>《必須／禁止／推奨》</td><td>《静的解析／レビュー／テスト》</td><td>《全体／特定の要素》</td></tr></table></div>
+<div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>《《LANG》-ERR-01》</td><td>《一文。理由も例外も混ぜない》</td><td>《必須／禁止／推奨》</td><td>《静的解析／レビュー／テスト》</td><td>《全体／特定の要素》</td></tr></table></div>
 <h2>規則の詳細</h2>
-<h3>《PREFIX-01》　《規則を一文で》</h3>
-<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>《必須／禁止／推奨》</td></tr><tr><td>根拠</td><td>《なぜこの規則が要るか。一文》</td></tr><tr><td>検証方法</td><td><code>《コマンド》</code> または 《レビューで見る箇所》</td></tr><tr><td>例外</td><td>《規則が適用されない条件。無ければ「なし」》</td></tr><tr><td>既存コードへの適用</td><td>《新規のみ／改修時に是正／一括是正》</td></tr></table></div>
+<h3>《《LANG》-ERR-01》　《規則を一文で》</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>《必須／禁止／推奨》</td></tr><tr><td>根拠</td><td>《なぜこの規則が要るか。一文》</td></tr><tr><td>検証方法</td><td><code>《コマンド》</code> または 《レビューで見る箇所》</td></tr><tr><td>例外</td><td>《適用されない条件。無ければ「なし」》</td></tr><tr><td>既存コードへの適用</td><td>《新規のみ／改修時に是正／一括是正》</td></tr></table></div>
 <p><strong>適合例</strong></p>
 <pre class="code">《この規則を満たす最小の例》</pre>
 <p><strong>違反例</strong></p>
 <pre class="code">《この規則だけを破っている最小の例》</pre>
+<h2>失敗の区分</h2>
+<div class="wrap"><table><tr><th>区分</th><th>運び方</th><th>例</th></tr><tr><td>回復できる</td><td>《値で返す／例外で流す》</td><td>《例》</td></tr><tr><td>回復できない</td><td>《止める／巻き戻す》</td><td>《例》</td></tr></table></div>
+<h2>失敗の型</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>公開する失敗の型</td><td>《分岐できる形かどうか》</td></tr><tr><td>連鎖</td><td>《原因を保つ仕組み》</td></tr><tr><td>記録</td><td>《どこに残すか。用途が決めるなら、そう書く》</td></tr></table></div>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
 <h2>委譲する判断</h2>
-<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《理由》</td></tr></table></div>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
 <h2>出典</h2>
-<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《PREFIX-01》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t3" hidden><div class="doc"><hr>
-<p>id: 《識別子》<br>layer: 《軸の組み合わせ》<br>axes:<br>  - axis: 《軸》<br>    value: 《値》<br>category: tech-stack<br>declares: 《この規約が定めるツールの範囲》<br>updated: 《YYYY-MM-DD》</p>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《《LANG》-ERR-01》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t2" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: language<br>    value: 《値》<br>category: coding<br>declares: 並行の単位と、共有の扱い<br>updated: 《YYYY-MM-DD》</p>
 <hr>
-<h1>《ツールの範囲》</h1>
+<h1>《《言語》における並行の扱い》</h1>
+<h2>概要</h2>
+<p><strong>《何を定める規約かを一文で》</strong></p>
+<h2>規則一覧</h2>
+<div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>《《LANG》-CON-01》</td><td>《一文。理由も例外も混ぜない》</td><td>《必須／禁止／推奨》</td><td>《静的解析／レビュー／テスト》</td><td>《全体／特定の要素》</td></tr></table></div>
+<h2>規則の詳細</h2>
+<h3>《《LANG》-CON-01》　《規則を一文で》</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>《必須／禁止／推奨》</td></tr><tr><td>根拠</td><td>《なぜこの規則が要るか。一文》</td></tr><tr><td>検証方法</td><td><code>《コマンド》</code> または 《レビューで見る箇所》</td></tr><tr><td>例外</td><td>《適用されない条件。無ければ「なし」》</td></tr><tr><td>既存コードへの適用</td><td>《新規のみ／改修時に是正／一括是正》</td></tr></table></div>
+<p><strong>適合例</strong></p>
+<pre class="code">《この規則を満たす最小の例》</pre>
+<p><strong>違反例</strong></p>
+<pre class="code">《この規則だけを破っている最小の例》</pre>
+<h2>並行の単位</h2>
+<div class="wrap"><table><tr><th>単位</th><th>何を表すか</th><th>いつ使うか</th></tr><tr><td>《スレッド／タスク／プロセス》</td><td>《粒度》</td><td>《使う場面》</td></tr></table></div>
+<h2>共有の扱い</h2>
+<div class="wrap"><table><tr><th>共有するもの</th><th>守り方</th><th>禁じる形</th></tr><tr><td>《可変な状態》</td><td>《所有・ロック・チャネル》</td><td>《避ける形》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《《LANG》-CON-01》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t3" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: language<br>    value: 《値》<br>category: test<br>declares: テストが走る仕組みと書き方<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《言語》におけるテストの仕組み</h1>
+<h2>概要</h2>
+<p><strong>《テストをどう走らせ、どう書くかを一文で》</strong></p>
+<h2>保証する振る舞い</h2>
+<div class="wrap"><table><tr><th>ID</th><th>振る舞い</th><th>検証の単位</th><th>前提条件</th><th>失敗したときの現れ方</th></tr><tr><td>《ID》</td><td>《走らせ方について保証すること》</td><td>《単体／結合》</td><td>《前提》</td><td>《どう気づくか》</td></tr></table></div>
+<h2>走らせ方</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>実行コマンド</td><td><code>《コマンド》</code></td></tr><tr><td>検出のされ方</td><td>《どこに書けばテストとして走るか》</td></tr><tr><td>並列</td><td>《既定で並列か。順序に依存しない書き方》</td></tr><tr><td>失敗の表示</td><td>《期待と実際が両方出る形》</td></tr></table></div>
+<h2>書き方</h2>
+<div class="wrap"><table><tr><th>項目</th><th>規則</th></tr><tr><td>名前</td><td>《振る舞いを述べる文にする。実装の名前を含めない》</td></tr><tr><td>構成</td><td>《前提・実行・確認の3段》</td></tr><tr><td>表明</td><td>《失敗時に差分が出る形》</td></tr></table></div>
+<p><strong>適合例</strong></p>
+<pre class="code">《振る舞いを名前で述べているテスト》</pre>
+<p><strong>違反例</strong></p>
+<pre class="code">《番号や実装名で名づけたテスト》</pre>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t4" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: language<br>    value: 《値》<br>category: tech-stack<br>declares: 言語の標準ツールと版<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《言語》のツールチェーン</h1>
 <h2>概要</h2>
 <p><strong>《何を採用し、何を採用しないかを一文で》</strong></p>
 <h2>採用するツール</h2>
-<div class="wrap"><table><tr><th>用途</th><th>ツール</th><th>バージョン指定</th><th>採用理由</th><th>代替候補</th></tr><tr><td>《整形／静的解析／テスト／ビルド／依存管理》</td><td>《名前》</td><td>《範囲と固定の方法》</td><td>《この用途をこれで満たす理由》</td><td>《比較した候補》</td></tr></table></div>
+<div class="wrap"><table><tr><th>用途</th><th>ツール</th><th>バージョン指定</th><th>採用理由</th><th>代替候補</th></tr><tr><td>《整形／静的解析／テスト／ビルド／依存管理》</td><td>《名前》</td><td>《範囲と固定の方法》</td><td>《満たす要件》</td><td>《比較した候補》</td></tr></table></div>
 <h2>採用しないツール</h2>
-<div class="wrap"><table><tr><th>ツール</th><th>採用しない理由</th></tr><tr><td>《候補に挙がるが採用しないもの》</td><td>《理由。好みではなく、満たせない要件で書く》</td></tr></table></div>
+<div class="wrap"><table><tr><th>ツール</th><th>採用しない理由</th></tr><tr><td>《候補》</td><td>《満たせない要件で書く。好みでは書かない》</td></tr></table></div>
 <h2>バージョンの固定</h2>
-<div class="wrap"><table><tr><th>対象</th><th>固定の方法</th><th>固定するファイル</th></tr><tr><td>《ツール／依存》</td><td>《ロックファイル／バージョンファイル／イメージ》</td><td>《ファイル名》</td></tr></table></div>
+<div class="wrap"><table><tr><th>対象</th><th>固定の方法</th><th>固定するファイル</th></tr><tr><td>《ツールチェーン／依存》</td><td>《方法》</td><td>《ファイル名》</td></tr></table></div>
 <h2>実行コマンド</h2>
-<div class="wrap"><table><tr><th>目的</th><th>コマンド</th><th>実行する場面</th></tr><tr><td>《整形／静的解析／テスト／ビルド》</td><td><code>《コマンド》</code></td><td>《ローカル／CI／コミット前》</td></tr></table></div>
+<div class="wrap"><table><tr><th>目的</th><th>コマンド</th><th>実行する場面</th></tr><tr><td>《整形／静的解析／テスト》</td><td><code>《コマンド》</code></td><td>《ローカル／CI》</td></tr></table></div>
 <h2>更新の方針</h2>
-<div class="wrap"><table><tr><th>対象</th><th>更新の頻度</th><th>判断者</th></tr><tr><td>《言語のバージョン／依存》</td><td>《いつ上げるか》</td><td>《誰が決めるか》</td></tr></table></div>
-<h2>ライセンス</h2>
-<div class="wrap"><table><tr><th>依存</th><th>ライセンス</th><th>可否</th></tr><tr><td>《依存の名前》</td><td>《ライセンス》</td><td>《可／要確認》</td></tr></table></div>
+<div class="wrap"><table><tr><th>対象</th><th>更新の頻度</th><th>判断者</th></tr><tr><td>《ツールチェーン／依存》</td><td>《いつ上げるか》</td><td>《誰が決めるか》</td></tr></table></div>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
 <h2>委譲する判断</h2>
-<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《理由》</td></tr></table></div>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
 <h2>出典</h2>
-<div class="wrap"><table><tr><th>ツール</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《名前》</td><td>《規格／文献》</td><td>《公式ドキュメント・URL》</td><td>《版と取得日》</td><td><code>《文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t4" hidden><div class="doc"><hr>
-<p>id: 《識別子》<br>layer: 《軸の組み合わせ》<br>axes:<br>  - axis: 《軸》<br>    value: 《値》<br>category: test<br>declares: 《保証の範囲》<br>updated: 《YYYY-MM-DD》</p>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t5" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: architecture<br>    value: 《値》<br>category: architecture<br>declares: 構成要素と、要素ごとの責務<br>updated: 《YYYY-MM-DD》</p>
 <hr>
-<h1>《保証の範囲》</h1>
+<h1>《アーキテクチャの名前》の構成</h1>
 <h2>概要</h2>
-<p><strong>《何を保証し、何を保証しないかを一文で》</strong></p>
-<h2>保証する振る舞い</h2>
-<div class="wrap"><table><tr><th>ID</th><th>振る舞い</th><th>検証の単位</th><th>前提条件</th><th>失敗したときの現れ方</th></tr><tr><td>《PREFIX-01》</td><td>《外から観測できる形で一文》</td><td>《単体／結合／端から端まで》</td><td>《成り立つ前提》</td><td>《どのテストが、どう落ちるか》</td></tr></table></div>
-<h2>保証しない振る舞い</h2>
-<div class="wrap"><table><tr><th>何を</th><th>保証しない理由</th><th>代わりに何で担保するか</th></tr><tr><td>《保証の外に置くこと》</td><td>《理由》</td><td>《レビュー／運用／別の層》</td></tr></table></div>
-<h2>振る舞いの詳細</h2>
-<h3>《PREFIX-01》　《振る舞いを一文で》</h3>
-<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>前提</td><td>《この振る舞いが成り立つ前提》</td></tr><tr><td>入力</td><td>《与えるもの》</td></tr><tr><td>期待する結果</td><td>《観測できる形で書く》</td></tr><tr><td>検証の単位</td><td>《単体／結合／端から端まで》</td></tr><tr><td>実行コマンド</td><td><code>《コマンド》</code></td></tr><tr><td>失敗の切り分け</td><td>《落ちたとき、どこを疑うか》</td></tr></table></div>
-<h2>テストの構成</h2>
-<div class="wrap"><table><tr><th>種類</th><th>対象</th><th>置き場所</th><th>実行の速さ</th></tr><tr><td>《単体／結合／端から端まで》</td><td>《何を確かめるか》</td><td>《ディレクトリ》</td><td>《目安》</td></tr></table></div>
+<p><strong>《何を中心に置き、何を外へ寄せるかを一文で》</strong></p>
+<h2>構成要素</h2>
+<div class="wrap"><table><tr><th>要素</th><th>責務</th><th>知ってよいもの</th><th>知ってはならないもの</th></tr><tr><td>《要素名》</td><td>《その要素だけが負う責務》</td><td>《依存してよいもの》</td><td>《依存が禁じられるもの》</td></tr></table></div>
+<h2>依存の許可</h2>
+<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th>《要素A》</th><th>《要素B》</th></tr><tr><td>《要素A》</td><td>─</td><td>《可／不可》</td></tr><tr><td>《要素B》</td><td>《可／不可》</td><td>─</td></tr></table></div>
+<h2>関係</h2>
+<pre class="mermaid">《要素と依存の向き。中心と外側を分けて描く》</pre>
+<h2>境界を越えるデータ</h2>
+<div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>《どの要素から、どの要素へ》</td><td>《型の種類》</td><td>《変換の責務を負う要素》</td></tr></table></div>
+<h2>ディレクトリ構成</h2>
+<pre class="code">《要素との対応が分かる並び》</pre>
+<h2>違反したとき</h2>
+<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>《起こりうる違反》</td><td>《どこで気づくか》</td><td>《どちらを動かすか》</td></tr></table></div>
 <h2>適用範囲外</h2>
 <div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
 <h2>委譲する判断</h2>
-<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《理由》</td></tr></table></div>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
 <h2>出典</h2>
-<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《PREFIX-01》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="r1" hidden><div class="doc"><hr>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t6" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: architecture<br>    value: 《値》<br>category: architecture<br>declares: 依存の向きと、反転の有無<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《アーキテクチャの名前》における依存の向き</h1>
+<h2>概要</h2>
+<p><strong>《依存がどちらへ向き、反転を持つかどうかを一文で》</strong></p>
+<h2>依存の許可</h2>
+<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th>《内側》</th><th>《外側》</th><th>《宣言》</th></tr><tr><td>《内側》</td><td>可</td><td>《可／不可》</td><td>《可／不可》</td></tr><tr><td>《外側》</td><td>《可／不可》</td><td>可</td><td>《可／不可（実装する）》</td></tr></table></div>
+<h2>反転</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>反転を持つか</td><td>《持つ／持たない》</td></tr><tr><td>持つ場合、宣言の置き場所</td><td>《どこに宣言し、どこで実装するか》</td></tr><tr><td>持たない場合、その理由</td><td>《中心が外部を必要としない理由》</td></tr></table></div>
+<h2>図</h2>
+<pre class="mermaid">《依存の向き。反転がある場合は、実装の矢印を破線で示す》</pre>
+<h2>違反したとき</h2>
+<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>《起こりうる違反》</td><td>《検査／レビュー》</td><td>《構成そのものを替える判断も書く》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t7" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: architecture<br>    value: 《値》<br>category: test<br>declares: 確かめる単位の境界<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《アーキテクチャの名前》における確かめる単位</h1>
+<h2>概要</h2>
+<p><strong>《層の境界が、どう確かめる単位になるかを一文で》</strong></p>
+<h2>保証する振る舞い</h2>
+<div class="wrap"><table><tr><th>ID</th><th>振る舞い</th><th>検証の単位</th><th>前提条件</th><th>失敗したときの現れ方</th></tr><tr><td>《ID》</td><td>《この構成なら成り立つこと》</td><td>《単体／結合》</td><td>《前提》</td><td>《どう気づくか》</td></tr></table></div>
+<h2>単位の対応</h2>
+<div class="wrap"><table><tr><th>確かめる単位</th><th>対象</th><th>用意するもの</th><th>用意しないもの</th></tr><tr><td>単体</td><td>《要素》</td><td>《偽物・準備》</td><td>《用意しないもの》</td></tr><tr><td>結合</td><td>《境界》</td><td>《準備》</td><td>《用意しないもの》</td></tr><tr><td>端から端まで</td><td>《全体》</td><td>《準備》</td><td>─</td></tr></table></div>
+<h2>契約のテスト</h2>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>対象</td><td>《同じ約束を満たす実装が複数ある箇所》</td></tr><tr><td>方法</td><td>《同じ試験を実装ごとに走らせる》</td></tr><tr><td>落ちる条件</td><td>《実装によって結果が変わる》</td></tr></table></div>
+<h2>保証しない振る舞い</h2>
+<div class="wrap"><table><tr><th>何を</th><th>保証しない理由</th><th>代わりに何で担保するか</th></tr><tr><td>《保証の外》</td><td>《理由》</td><td>《別の層／レビュー》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t8" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: language<br>    value: 《値》<br>  - axis: architecture<br>    value: 《値》<br>category: architecture<br>declares: 要素を言語の仕組みで表す形<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《言語》における《アーキテクチャ》の表し方</h1>
+<h2>概要</h2>
+<p><strong>《要素を何で表し、依存の向きを何で守るかを一文で》</strong></p>
+<h2>表し方の対応</h2>
+<div class="wrap"><table><tr><th>要素</th><th>言語の仕組み</th><th>補足</th></tr><tr><td>《アーキテクチャ側の要素》</td><td>《モジュール／crate／パッケージ／型》</td><td>《注意点》</td></tr></table></div>
+<h2>依存の許可</h2>
+<div class="wrap"><table><tr><th>参照元 ＼ 参照先</th><th>《要素A》</th><th>《要素B》</th></tr><tr><td>《要素A》</td><td>─</td><td>《可／不可》</td></tr></table></div>
+<h2>依存の向きを守る手段</h2>
+<div class="wrap"><table><tr><th>手段</th><th>内容</th></tr><tr><td>《可視性／依存宣言／結線／検査》</td><td>《具体的な方法》</td></tr></table></div>
+<h2>図</h2>
+<pre class="mermaid">《言語の単位（モジュール・crate）で描いた依存図》</pre>
+<h2>ディレクトリ構成</h2>
+<pre class="code">《実際の並び。言語の慣習に合わせる》</pre>
+<h2>違反したとき</h2>
+<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>《起こりうる違反》</td><td>《どの検査で出るか》</td><td>《直し方》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t9" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: language<br>    value: 《値》<br>  - axis: architecture<br>    value: 《値》<br>category: test<br>declares: テストの置き場所<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《《言語》と《アーキテクチャ》におけるテストの置き場所》</h1>
+<h2>概要</h2>
+<p><strong>《何を定める規約かを一文で》</strong></p>
+<h2>規則一覧</h2>
+<div class="wrap"><table><tr><th>ID</th><th>規則</th><th>水準</th><th>検証方法</th><th>適用範囲</th></tr><tr><td>《《LANG》《ARCH》-TP-01》</td><td>《一文。理由も例外も混ぜない》</td><td>《必須／禁止／推奨》</td><td>《静的解析／レビュー／テスト》</td><td>《全体／特定の要素》</td></tr></table></div>
+<h2>規則の詳細</h2>
+<h3>《《LANG》《ARCH》-TP-01》　《規則を一文で》</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>水準</td><td>《必須／禁止／推奨》</td></tr><tr><td>根拠</td><td>《なぜこの規則が要るか。一文》</td></tr><tr><td>検証方法</td><td><code>《コマンド》</code> または 《レビューで見る箇所》</td></tr><tr><td>例外</td><td>《適用されない条件。無ければ「なし」》</td></tr><tr><td>既存コードへの適用</td><td>《新規のみ／改修時に是正／一括是正》</td></tr></table></div>
+<p><strong>適合例</strong></p>
+<pre class="code">《この規則を満たす最小の例》</pre>
+<p><strong>違反例</strong></p>
+<pre class="code">《この規則だけを破っている最小の例》</pre>
+<h2>置き場所の対応</h2>
+<div class="wrap"><table><tr><th>対象</th><th>置き場所</th><th>呼び出す範囲</th></tr><tr><td>《要素》</td><td>《ディレクトリ／同じファイル》</td><td>《公開部分だけ／内部も可》</td></tr></table></div>
+<h2>偽物の置き場所</h2>
+<div class="wrap"><table><tr><th>偽物</th><th>置き場所</th><th>理由</th></tr><tr><td>《何の偽物か》</td><td>《どこへ置くか》</td><td>《その場所である理由》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>ID</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《《LANG》《ARCH》-TP-01》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t10" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: purpose<br>    value: 《値》<br>category: architecture<br>declares: 外部との契約<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《用途》の契約</h1>
+<h2>概要</h2>
+<p><strong>《呼び出し元と何をやり取りするかを一文で》</strong></p>
+<h2>契約の内容</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>入力</td><td>《受け取る形式と経路》</td></tr><tr><td>出力</td><td>《返す形式と経路》</td></tr><tr><td>成否の伝え方</td><td>《終了コード／状態コード／応答の欄》</td></tr><tr><td>診断</td><td>《人が読む記録の出し先》</td></tr><tr><td>上限</td><td>《大きさ・件数・時間の上限》</td></tr></table></div>
+<h2>やり取りの流れ</h2>
+<pre class="mermaid">《呼び出し元とのやり取り。系列図で書く》</pre>
+<h2>境界を越えるデータ</h2>
+<div class="wrap"><table><tr><th>境界</th><th>渡す形</th><th>変換する場所</th></tr><tr><td>《外部 → こちら》</td><td>《形式》</td><td>《変換する要素》</td></tr></table></div>
+<h2>版と互換</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>版の示し方</td><td>《どこに版を載せるか》</td></tr><tr><td>互換を保つ範囲</td><td>《受け付け続ける入力》</td></tr><tr><td>壊す変更の扱い</td><td>《どう知らせ、いつ切るか》</td></tr></table></div>
+<h2>違反したとき</h2>
+<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>《契約の破り方》</td><td>《呼び出し元での見え方》</td><td>《直し方》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t11" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: purpose<br>    value: 《値》<br>  - axis: runtime<br>    value: 《値》<br>category: architecture<br>declares: 起動と終了<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《用途》の起動と終了</h1>
+<h2>概要</h2>
+<p><strong>《いつ起動し、いつ終わり、何を持ち越さないかを一文で》</strong></p>
+<h2>状態の移り</h2>
+<pre class="mermaid">《起動から終了までの状態遷移図》</pre>
+<h2>起動と終了の定め</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>起動の契機</td><td>《呼び出しごと／常駐》</td></tr><tr><td>起動の上限</td><td>《時間の目安》</td></tr><tr><td>設定の読み取り</td><td>《いつ、何回読むか》</td></tr><tr><td>状態の持ち越し</td><td>《残すもの／残さないもの》</td></tr><tr><td>終了の条件</td><td>《正常・異常それぞれ》</td></tr><tr><td>中断されたとき</td><td>《書きかけをどうするか》</td></tr></table></div>
+<h2>資源</h2>
+<div class="wrap"><table><tr><th>資源</th><th>確保する場所</th><th>解放する場所</th></tr><tr><td>《ファイル・接続・一時領域》</td><td>《どこで取るか》</td><td>《どこで返すか》</td></tr></table></div>
+<h2>違反したとき</h2>
+<div class="wrap"><table><tr><th>違反</th><th>現れ方</th><th>直し方</th></tr><tr><td>《起こりうる違反》</td><td>《どこで気づくか》</td><td>《直し方》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t12" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: purpose<br>    value: 《値》<br>category: test<br>declares: 保証する振る舞い<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《用途》が保証する振る舞い</h1>
+<h2>概要</h2>
+<p><strong>《外から見て何を保証し、何を保証しないかを一文で》</strong></p>
+<h2>保証する振る舞い</h2>
+<div class="wrap"><table><tr><th>ID</th><th>振る舞い</th><th>検証の単位</th><th>前提条件</th><th>失敗したときの現れ方</th></tr><tr><td>《ID》</td><td>《外から観測できる形で一文》</td><td>《単体／結合／端から端まで》</td><td>《前提》</td><td>《どのテストがどう落ちるか》</td></tr></table></div>
+<h2>保証しない振る舞い</h2>
+<div class="wrap"><table><tr><th>何を</th><th>保証しない理由</th><th>代わりに何で担保するか</th></tr><tr><td>《保証の外》</td><td>《理由》</td><td>《レビュー／運用／別の層》</td></tr></table></div>
+<h2>振る舞いの詳細</h2>
+<h3>《ID》　《振る舞いを一文で》</h3>
+<div class="wrap"><table><tr><th>項目</th><th>内容</th></tr><tr><td>前提</td><td>《成り立つ前提》</td></tr><tr><td>入力</td><td>《与えるもの》</td></tr><tr><td>期待する結果</td><td>《観測できる形》</td></tr><tr><td>実行コマンド</td><td><code>《コマンド》</code></td></tr><tr><td>失敗の切り分け</td><td>《落ちたとき、どこを疑うか》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t13" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: purpose<br>    value: 《値》<br>category: test<br>declares: テストの重心・計画・観点の採否<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《用途》のテストの重心と計画</h1>
+<h2>概要</h2>
+<p><strong>《どこに厚みを置くかと、その理由を一文で》</strong></p>
+<h2>重心</h2>
+<div class="wrap"><table><tr><th>確かめる単位</th><th>重心</th><th>根拠</th></tr><tr><td>単体</td><td>《高／中／低》</td><td>《その配分にする理由》</td></tr><tr><td>結合</td><td>《高／中／低》</td><td>《理由》</td></tr><tr><td>端から端まで</td><td>《高／中／低》</td><td>《理由》</td></tr></table></div>
+<h2>採るテスト観点</h2>
+<div class="wrap"><table><tr><th>観点</th><th>採否</th><th>理由</th></tr><tr><td>《<code>references/test-perspectives.md</code> の観点》</td><td>《採る／採らない／保留》</td><td>《契約のどの制限に対応するか》</td></tr></table></div>
+<p><strong>採らない観点にも理由を書く。</strong><br>書けないなら、その観点は判断していない。</p>
+<h2>テストの計画</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>実行のタイミング</td><td>《ローカル／CI》</td></tr><tr><td>通過の条件</td><td>《何が緑なら通すか》</td></tr><tr><td>実行の上限</td><td>《時間。超えたときの下げ方》</td></tr><tr><td>対象外</td><td>《行わない試験と、その理由》</td></tr></table></div>
+<h2>カバレッジの扱い</h2>
+<div class="wrap"><table><tr><th>項目</th><th>定め</th></tr><tr><td>下限</td><td><strong>置かない</strong>（数値は振る舞いを保証しない）</td></tr><tr><td>使い方</td><td>《未到達の一覧を、確かめ漏れの発見に使う》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="t14" hidden><div class="doc"><hr>
+<p>id: 《識別子。ディレクトリ名とファイル名から作る》<br>layer: 《軸の組み合わせ。ディレクトリ名と同じ》<br>axes:<br>  - axis: purpose<br>    value: 《値》<br>category: tech-stack<br>declares: 採用するアーキテクチャ・実行環境・実行時の依存<br>updated: 《YYYY-MM-DD》</p>
+<hr>
+<h1>《用途》の技術構成</h1>
+<h2>概要</h2>
+<p><strong>《何を採用し、何を採用しないかを一文で》</strong></p>
+<h2>採用するアーキテクチャ</h2>
+<div class="wrap"><table><tr><th>軸</th><th>値</th><th>採用理由</th></tr><tr><td>アーキテクチャ</td><td>《値》</td><td>《この用途でその構成を採る理由》</td></tr><tr><td>実行環境</td><td>《値》</td><td>《理由》</td></tr></table></div>
+<h2>採用する依存</h2>
+<div class="wrap"><table><tr><th>用途</th><th>依存</th><th>バージョン指定</th><th>採用理由</th><th>代替候補</th></tr><tr><td>《何のためか》</td><td>《名前》</td><td>《範囲》</td><td>《満たす要件》</td><td>《比較した候補》</td></tr></table></div>
+<h2>採用しない依存</h2>
+<div class="wrap"><table><tr><th>依存</th><th>採用しない理由</th></tr><tr><td>《候補》</td><td>《満たせない要件で書く》</td></tr></table></div>
+<h2>実行コマンド</h2>
+<div class="wrap"><table><tr><th>目的</th><th>コマンド</th><th>実行する場面</th></tr><tr><td>《ビルド／配布／計測》</td><td><code>《コマンド》</code></td><td>《場面》</td></tr></table></div>
+<h2>ライセンス</h2>
+<div class="wrap"><table><tr><th>依存</th><th>ライセンス</th><th>可否</th></tr><tr><td>《名前》</td><td>《ライセンス》</td><td>《可／要確認》</td></tr></table></div>
+<h2>適用範囲外</h2>
+<div class="wrap"><table><tr><th>何を</th><th>どの層が決めるか</th></tr><tr><td>《この規約では決まらないこと》</td><td>《決める層》</td></tr></table></div>
+<h2>委譲する判断</h2>
+<div class="wrap"><table><tr><th>委譲する判断</th><th>委譲先</th><th>委譲する理由</th></tr><tr><td>《下位が決めてよい1点》</td><td>《層》</td><td>《ここで決められない理由》</td></tr></table></div>
+<h2>出典</h2>
+<div class="wrap"><table><tr><th>対象</th><th>種類</th><th>原典</th><th>版・取得日</th><th>照合する文字列</th></tr><tr><td>《ID または要素名》</td><td>《規格／文献／実測》</td><td>《書名・URL・節》</td><td>《版と取得日》</td><td><code>《原文にそのまま在る文字列》</code></td></tr></table></div></div></section><section class="pane md" data-k="r1" hidden><div class="doc"><hr>
 <p>id: lang.rust.style<br>layer: lang.rust<br>axes:<br>  - axis: language<br>    value: rust<br>category: coding<br>declares: 綴りと書式<br>updated: 2026-09-05</p>
 <hr>
 <h1>Rust における綴りと書式</h1>
