@@ -1,0 +1,101 @@
+<title>節の同一性</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Shippori+Mincho+B1:wght@600&display=swap"><style>
+:root{ --ground:#F6F8F7; --surface:#FFFFFF; --ink:#171B23; --muted:#69737E;
+       --accent:#16636B; --rule:#DFE5E4; --soft:#F1F5F4; --warn:#9A4A21; --out:#98A0A8;
+       --mark:#F7E2BC; --markh:#F0CE92; --pop:#FDF6E9; --popline:#D9B77E; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --ground:#11161A; --surface:#191F24; --ink:#E7ECF0; --muted:#8C979F;
+  --accent:#7FD1D9; --rule:#2A3239; --soft:#1E252B; --warn:#D9A382; --out:#6B747C;
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738; } }
+:root[data-theme="dark"]{ --ground:#11161A; --surface:#191F24; --ink:#E7ECF0; --muted:#8C979F;
+  --accent:#7FD1D9; --rule:#2A3239; --soft:#1E252B; --warn:#D9A382; --out:#6B747C;
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-size:15px;line-height:1.85;
+  font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:52rem;margin:0 auto;padding:28px 24px 80px}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:0 0 10px}
+h1{font-family:"Shippori Mincho B1",serif;font-weight:600;font-size:clamp(24px,3.6vw,34px);
+  line-height:1.35;margin:0;text-wrap:balance}
+.spec{margin-top:34px;padding:22px;background:var(--soft);border:1px solid var(--rule);
+  border-radius:4px;display:flex;flex-direction:column;gap:12px}
+.blk{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  border-left:3px solid var(--rule);padding:12px 15px}
+.blk.you{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.blk.mine{border-left-color:var(--muted)}
+.blk.found{border-left-color:var(--warn)}
+.blk.out{border-left-color:var(--out)}
+.blk.done{border-left-color:var(--accent)}
+.blk-h{font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.blk-b{font-size:13.5px;line-height:1.8}
+.opt{display:flex;gap:10px;padding:7px 0;align-items:baseline}
+.opt+.opt{border-top:1px dashed var(--rule)}
+.opt .n{font-family:ui-monospace,monospace;font-size:11px;color:var(--accent);
+  border:1px solid var(--accent);border-radius:2px;padding:0 5px;flex:none;line-height:1.7}
+.opt.out .n{color:var(--out);border-color:var(--out)}
+.opt.out b{color:var(--out);text-decoration:line-through}
+.opt .t{font-size:13px;line-height:1.75}
+.opt .cost{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.ph{color:var(--muted);border-bottom:1px dashed var(--rule);padding-bottom:1px}
+
+/* 変わった箇所の印。押すと開く */
+mark.chg{background:var(--mark);color:var(--ink);border-radius:.15em;cursor:pointer;
+  box-shadow:-.2em 0 0 var(--mark),.2em 0 0 var(--mark);border-bottom:2px solid var(--warn)}
+mark.chg:hover,mark.chg:focus{background:var(--markh);
+  box-shadow:-.2em 0 0 var(--markh),.2em 0 0 var(--markh);outline:none}
+mark.chg:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+mark.chg::after{content:"▸";font-size:.72em;color:var(--warn);margin-left:.3em;font-weight:700}
+mark.chg[aria-expanded="true"]::after{content:"▾"}
+mark.chg.del{background:none;box-shadow:none;color:var(--out);border-bottom:1px dashed var(--out)}
+mark.chg.del b{text-decoration:line-through}
+
+.pop[hidden]{display:none}
+.pop{display:block;background:var(--pop);border:1px solid var(--popline);
+  border-left:3px solid var(--warn);border-radius:.3rem;padding:.7rem .9rem;margin:.6rem 0 .2rem;
+  font-size:12.5px;line-height:1.75;white-space:normal}
+.pop b{display:block;font-size:10.5px;letter-spacing:.14em;color:var(--warn);margin-bottom:.3rem}
+.pop .why{display:block;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--popline)}
+.pop .why b{color:var(--accent)}
+
+.hd{position:sticky;top:0;background:var(--ground);border-bottom:1px solid var(--rule);
+  padding:.8rem 24px;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;z-index:9}
+.hd .t{font-family:"Shippori Mincho B1",serif;font-weight:600;font-size:15px;flex:1;min-width:12rem}
+.hd .t small{display:block;font-family:"Noto Sans JP",sans-serif;font-weight:400;
+  font-size:12px;color:var(--muted);margin-top:.1rem}
+.hd button{font:inherit;font-size:12.5px;font-weight:500;padding:.3rem .85rem;border-radius:.3rem;
+  cursor:pointer;background:var(--surface);color:var(--ink);border:1px solid var(--rule)}
+.hd button:hover{background:var(--markh)}
+.hd button:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+</style><div class="hd"><div class="t">schema 観の三層 ── 論点3<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div><button id="all" type="button">すべて開く</button></div><div class="wrap"><h1>AI が引く節に、人が読む文書とは別の同一性が要るか</h1><div class="spec"><div class="blk "><div class="blk-h">論点 3 / 6</div><div class="blk-b"><b>AI が引く節に、人が読む文書とは別の同一性が要るか</b></div></div><div class="blk "><div class="blk-h">反証を通過した案</div><div class="blk-b"><div class="opt"><span class="n">A</span><span class="t"><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="同一性は名前か、変わらない印か（節と文書を区別せずに問うていた）" data-w="論点2 が「取得と参照は節単位」で決着したことで、指される側が節に定まった。名前と印の比較ではなく、節が文書とは別の同一性を持つかどうかが問いになった"><b>節に、変わらない印を持たせる</b></mark>　節が生まれたときに機械が印を発番し、参照と突き合わせの鍵をそこへ移す。人が読む射影では印を出さない<span class="cost">代償：節を手で書き足せなくなる（印を採番できるのは道具だけ）。印そのものの重複・散逸を検査する責務が増え、印は意味を運ばないので、人が印だけ見ても何のことか分からない</span></span></div><div class="opt"><span class="n">B</span><span class="t"><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="改名を移行操作の宣言で運ぶ（独立の案として立てていた）" data-w="位置を鍵にする案と中身が同じだった。位置を鍵にする限り、位置が変わったことを別途宣言する以外に追跡手段が無い。2案ではなく、1案の必然の帰結である"><b>位置を同一性とし、動かすときは移行の操作として宣言する</b></mark>　〈文書の識別子＋構造上のアドレス〉を鍵にする。改名・移動・親の付け替えは、閉じた操作集合の宣言として書き、突き合わせはその宣言を経由する<span class="cost">代償：宣言の書き忘れが観測できない。書き忘れた改名は「消えて増えた」に見え、しかも忘れたこと自体が不在として現れないので、誰も誤りだと言えない</span></span></div><div class="opt"><span class="n">C</span><span class="t"><b>節には同一性を与えず、参照の側に解決状態を持たせる</b>　指す先が在るか・実装を指すか・外部か・検めないか、を参照が申告する。同一性を足す代わりに、届かないことを観測できるようにする<span class="cost">代償：「移った」と「消えた」を区別できない。不在は分かるが、直し方は毎回人が決めることになる。構造化の利得（無いことが分かる）は取れるが、突き合わせの自動化は取れない</span></span></div></div></div><div class="blk out"><div class="blk-h">落とした案と、その理由</div><div class="blk-b"><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="中身を1文字直すと別物になる。名前も中身も変わって同じであり続けるのがエンティティなので、同一性の定義そのものと衝突する"><b>中身のハッシュを鍵にする</b></mark></b><span class="cost">中身を1文字直すと別物になる。名前も中身も変わって同じであり続けるのがエンティティなので、同一性の定義そのものと衝突する</span></span></div><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="指す側は後から現れる。必要になった時点で発番すると、その時点より前の突き合わせが切れる ── 印の値打ちは、指される前から在ることに尽きる"><b>外から指される節にだけ印を与える</b></mark></b><span class="cost">指す側は後から現れる。必要になった時点で発番すると、その時点より前の突き合わせが切れる ── 印の値打ちは、指される前から在ることに尽きる</span></span></div><div class="opt out"><span class="n">×</span><span class="t"><b><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="人が読む単位に機械の鍵が現れる。形式は読み手の認知に従属するという論点2の決着に反し、しかも手書きの印は重複する"><b>人が手で印を書く</b></mark></b><span class="cost">人が読む単位に機械の鍵が現れる。形式は読み手の認知に従属するという論点2の決着に反し、しかも手書きの印は重複する</span></span></div></div></div><div class="blk found"><div class="blk-h">反証で分かったこと</div><div class="blk-b">問いが「要るか」から「同一性を、宣言で持つか位置から導くか」へ変わった。「要らない」に当たるのは案Cだけで、AとBは持ち方の違いである。あわせて、同一性は<b>文書の外から指せること</b>と不可分だと分かった ── JSON Schema に足りない6つのうち「同一性」と「実体どうしの参照」は、同じ1つの穴の両側である。<b>そして C は、A とも両立する</b> ── 排他なのは「指される側に同一性を置くか」だけで、「指す側が解決状態を申告するか」は、どの案を採っても別に決められる</div></div><div class="blk mine"><div class="blk-h">私の推し</div><div class="blk-b"><b>A</b>　参照が実体と実体を結ぶ以上、指される側は実体でなければならない。位置を鍵にすると、参照の妥当性が構造の安定性に依存する ── いま最も動くのが構造である（段1・段2 を再定義中）。実測でも、節を別の親へ移したとき、名前を鍵にした差分は「消えて増えた」と言い、印を鍵にすると「移った」と言って件数が前後で1件も変わらなかった。ただし A を採るなら、人が読む射影で印を落とすことと、印を採番する道具を通さずに節を書けなくすることを、同時に引き受ける</div></div><div class="blk found"><div class="blk-h">この選択が、段1と段2に置くもの</div><div class="blk-b"><div class="opt"><span class="n">A</span><span class="t"><b>段1 ── 節が印を持つことを、全型が継ぐ型契約に置く。採番・不変・重複の禁止と、参照が印を指す形も段1が言う。人が読む射影で印を落とす規則も、段1に1つ増える</b><span class="cost">段2 ── 8つの型は何も足さない（印は段1から降りてくる）。残るのは、既にある document への後付けの発番だけである</span></span></div><div class="opt"><span class="n">B</span><span class="t"><b>段1 ── 移行の操作集合（改名・移動・親の付け替え・型変更）を動詞として固定する。<b>論点6を案Aの側へ寄せる</b> ── 型が増えるほど abstract が太る</b><span class="cost">段2 ── 各型が、自分の位置の安定を自分で守る。段2の再定義でアドレスが動くたび、それを指していた参照が全部書き換わる</span></span></div><div class="opt"><span class="n">C</span><span class="t"><b>段1 ── 参照という語彙に、型と解決状態（実体を指す／実装を指す／外部／検めない）を持たせる。同一性は1つも増えない</b><span class="cost">段2 ── 各型は、参照を持つ欄で状態を申告する。「移った」と「消えた」の区別は付かないまま、人の判断として残る</span></span></div></div></div><div class="blk you"><div class="blk-h">あなた</div><div class="blk-b"><span class="ph">記号を選ぶ（どれでもなければ、そう言う）</span></div></div><div class="blk done"><div class="blk-h">決まり</div><div class="blk-b"><span class="ph">選ばれた案が合意になり、次の論点へ</span></div></div></div></div>
+<script>
+(function(){
+  const marks = [...document.querySelectorAll('mark.chg')];
+  document.getElementById('n').textContent = marks.length;
+  function panel(m){
+    const p = document.createElement('div');
+    p.className = 'pop'; p.hidden = true;
+    p.innerHTML = '<b>変更前</b>' + m.dataset.b +
+                  '<span class="why"><b>なぜ変えたか</b>' + m.dataset.w + '</span>';
+    m.closest('.opt, .blk-b').appendChild(p);
+    return p;
+  }
+  marks.forEach(m => {
+    const p = panel(m);
+    const toggle = () => {
+      const open = p.hidden;
+      p.hidden = !open;
+      m.setAttribute('aria-expanded', String(open));
+    };
+    m.addEventListener('click', toggle);
+    m.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+  });
+  const all = document.getElementById('all');
+  all.addEventListener('click', () => {
+    const open = all.textContent === 'すべて開く';
+    document.querySelectorAll('.pop').forEach(p => p.hidden = !open);
+    marks.forEach(m => m.setAttribute('aria-expanded', String(open)));
+    all.textContent = open ? 'すべて閉じる' : 'すべて開く';
+  });
+})();
+</script>
