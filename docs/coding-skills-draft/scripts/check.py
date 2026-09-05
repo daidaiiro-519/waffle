@@ -10,7 +10,8 @@ from __future__ import annotations
 import re
 import sys
 
-from _common import load_all, local_source, rule_ids, source_rows
+from _common import (KINDS_BY_SHAPE, catalog_shapes, load_all, local_source,
+                     rule_ids, shape_of, source_rows)
 
 REQUIRED_FRONT = ["id", "layer", "category", "declares", "updated"]
 REQUIRED_SECTIONS = ["概要", "適用範囲外", "委譲する判断", "出典"]
@@ -29,6 +30,27 @@ def template_sections(root, kind: str) -> list[str]:
 def main() -> int:
     specs = load_all()
     problems: list[str] = []
+
+    # 層ごとに必要な種類は file-catalog.md が正。_common.py の表はその写しである
+    catalog = catalog_shapes()
+    copied = {k: shape for shape, kinds in KINDS_BY_SHAPE.items() for k in kinds}
+    for kind in sorted(set(catalog) | set(copied)):
+        if catalog.get(kind) != copied.get(kind):
+            problems.append(
+                f"file-catalog.md と _common.py で、{kind} の置かれる層が違う"
+                f"（一覧: {catalog.get(kind) or '無し'} ／ 写し: {copied.get(kind) or '無し'}）")
+
+    # 層に、その形が必ず持つ種類が揃っているか
+    layers = {s.layer for s in specs}
+    for layer in sorted(layers):
+        shape = shape_of(layer)
+        if not shape:
+            problems.append(f"{layer}/: 層の名前から形を決められない")
+            continue
+        have = {s.kind for s in specs if s.layer == layer}
+        for kind in KINDS_BY_SHAPE[shape]:
+            if kind not in have:
+                problems.append(f"{layer}/: {kind}.md が無い（{shape}の層が必ず持つ種類）")
 
     for s in specs:
         where = s.path.relative_to(s.path.parents[2])

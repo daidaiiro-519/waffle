@@ -12,6 +12,39 @@ from dataclasses import dataclass, field
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CONSTRAINTS = ROOT / "constraints"
 
+# 層の形ごとに、そこへ必ず置く規約の種類
+# **file-catalog.md の表が正であり、この表はその写しである。**
+# 食い違えば check.py が落とす（写しをそのまま信じない）
+KINDS_BY_SHAPE = {
+    "言語": ["style", "failure", "concurrency", "test-mechanism", "toolchain"],
+    "アーキテクチャ": ["layers", "dependency", "test-boundaries"],
+    "言語 × アーキテクチャ": ["layer-mapping", "test-placement"],
+    "用途": ["contract", "lifecycle", "acceptance", "test-strategy", "stack"],
+}
+
+
+def shape_of(layer: str) -> str:
+    """層の名前から、その形（言語／アーキテクチャ／…）を返す。"""
+    if "+" in layer:
+        return "言語 × アーキテクチャ"
+    head = layer.split(".", 1)[0]
+    return {"lang": "言語", "arch": "アーキテクチャ",
+            "purpose": "用途"}.get(head, "")
+
+
+def catalog_shapes() -> dict:
+    """file-catalog.md の表から、種類 → 置かれる層の形 を読む。"""
+    path = ROOT / "references" / "file-catalog.md"
+    out = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) != 5 or not cells[0].startswith("`templates/"):
+            continue
+        kind = cells[0].removeprefix("`templates/").removesuffix(".md`")
+        out[kind] = cells[4]
+    return out
+
+
 # 軸の名前と、ディレクトリ名での接頭辞
 AXIS_PREFIX = {"lang": "language", "arch": "architecture",
                "purpose": "purpose", "runtime": "runtime"}

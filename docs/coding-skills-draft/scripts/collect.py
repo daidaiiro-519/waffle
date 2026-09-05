@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from _common import load_all, rule_ids
+from _common import KINDS_BY_SHAPE, load_all, rule_ids, shape_of
 
 
 def matches(spec_axes: dict, given: dict) -> bool:
@@ -69,8 +69,7 @@ def main() -> int:
             tail = f"　規則 {len(ids)} 件" if ids else ""
             print(f"    {s.kind}.md　{s.front.get('declares','')}{tail}")
 
-    # 合致しうるのに、まだ書かれていない層を出す
-    known = {s.layer for s in specs}
+    # この場面で埋まっているべき層と、その中で欠けている種類を出す
     wanted = []
     if args.lang:
         wanted.append(f"lang.{args.lang}")
@@ -81,11 +80,22 @@ def main() -> int:
         wanted.append(f"lang.{args.lang}+arch.{arch}")
     if args.purpose:
         wanted.append(f"purpose.{args.purpose}")
-    missing = [w for w in wanted if w not in known]
-    print(f"\n規約が0件の層 {len(missing)} 件")
-    for m in missing:
-        print(f"  {m}/　── 書かれていない")
 
+    lacks: list[str] = []
+    for layer in wanted:
+        have = {s.kind for s in hit if s.layer == layer}
+        for kind in KINDS_BY_SHAPE[shape_of(layer)]:
+            if kind not in have:
+                lacks.append(f"{layer}/{kind}.md")
+
+    print(f"\n足りない規約 {len(lacks)} 本")
+    for m in lacks:
+        print(f"  {m}　── 書かれていない")
+
+    if lacks:
+        print("\n書かずに止まること。references/authoring.md へ回り、"
+              "承認を経てから集め直す")
+        return 1
     if not hit:
         print("\n合致する規約が無い。書く前に、作る手順へ回ること")
         return 1
