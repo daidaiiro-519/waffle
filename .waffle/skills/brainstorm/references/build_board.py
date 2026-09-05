@@ -164,18 +164,20 @@ def _sections(t: Topic) -> str:
                 raise ValueError(f"論点{t.no}: 根拠に前提が無い。「だから」「一方で」は"
                                  "前の段から次へ渡す接続であって、それ自体は事実ではない ── "
                                  "「測った」「定義から」「確かめていない」のどれかを最低1つ置く")
-            # 種別は読み手に覚えさせず、見出しの言葉で示す
-            base = [(st, txt) for st, txt in why
-                    if st in ("測った", "定義から", "確かめていない")]
-            step = [(st, txt) for st, txt in why
-                    if st in ("だから", "一方で", "合わせると")]
-            body += "<h3>もとにしたこと</h3><ul class='why'>" + "".join(
-                f'<li>{txt}{"　<small>（確かめていない）</small>" if st == "確かめていない" else ""}</li>'
-                for st, txt in base) + "</ul>"
-            if step:
-                body += ("<h3>そこから言えること</h3><ul class='why'>"
-                         + "".join(f'<li>{"一方で、" if st == "一方で" else ""}{txt}</li>'
-                                   for st, txt in step) + "</ul>")
+            # 何をもとにして、そこから何が言えるかを、1行に対で並べる。
+            # 種別の名前は読み手に見せない ── 列の見出しがそれを言う。
+            rows, held = [], []
+            for st, txt in why:
+                if st in ("測った", "定義から", "確かめていない"):
+                    held.append(txt + ("　<small>（確かめていない）</small>"
+                                       if st == "確かめていない" else ""))
+                else:
+                    rows.append(["<br>".join(held) if held else "", txt])
+                    held = []
+            if held:
+                rows.append(["<br>".join(held), ""])
+            body += ('<h3>なぜそう言えるか</h3>'
+                     + _table(["もとにしたこと", "そこから言えること"], rows, "why"))
         if figs:
             body += f'<h3>図で見る</h3>{figs}'
         if cost:
@@ -376,9 +378,8 @@ table.out b{color:var(--out);text-decoration:line-through}
 .st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
   border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
 table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
-ul.why{margin:0;padding-left:1.1rem;font-size:.92rem}
-ul.why li{margin-bottom:.45rem;line-height:1.8}
-ul.why small{color:var(--muted);font-size:.8em}
+table.why th:first-child,table.why td:first-child{width:44%;padding-right:1rem}
+table.why small{color:var(--muted);font-size:.85em}
 .pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
   border-radius:2px;padding:0 .35em}
 .concl{display:flex;gap:.9rem;align-items:flex-start;background:color-mix(in srgb,var(--key) 6%,var(--paper));
