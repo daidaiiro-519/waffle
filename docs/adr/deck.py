@@ -967,22 +967,36 @@ t15 = Topic(15, "Spec の種類", "spec を、どの単位で型にするか", "
 <tr><td><b>業務</b></td><td>Evans『Domain-Driven Design』── canonical<br>Fowler「Bounded Context」https://martinfowler.com/bliki/BoundedContext.html</td>
 <td><code>Bounded Context</code> ・ <code>Ubiquitous Language</code> ・ <code>context map</code>（Fowler 側で照合）<br>
 <b>Evans の本と DDD Reference（PDF）は、字の対応表が無く本文を照合できていない</b></td></tr>
-<tr><td><b>接点</b></td><td>Robinson「Consumer-Driven Contracts」https://martinfowler.com/articles/consumerDrivenContracts.html<br>
-Cockburn「Hexagonal Architecture」</td>
-<td><code>Consumer-Driven Contracts</code> ・ <code>provider</code> ・ <code>consumer</code><br><code>Ports and Adapters</code>（CodingSkills の出典で照合済み）</td></tr>
+<tr><td><b>接点</b></td><td>Fowler「PresentationDomainDataLayering」https://martinfowler.com/bliki/PresentationDomainDataLayering.html<br>
+Cockburn「Hexagonal Architecture（Ports and Adapters）」<br>
+Robinson「Consumer-Driven Contracts」</td>
+<td><code>Multiple presentations could be separate pages in a web app, having a web app plus mobile native apps, an API for scripting purposes, or even an old fashioned command line interface</code><br>
+<code>Allow an application to equally be driven by users, programs, automated test or batch scripts</code><br>
+<code>Consumer-Driven Contracts</code> ・ <code>provider</code> ・ <code>consumer</code></td></tr>
 <tr><td><b>基盤</b></td><td>Bottcher「What I Talk About When I Talk About Platforms」https://martinfowler.com/articles/talk-about-platforms.html<br>
 CNCF Platforms White Paper　／　Google SRE Book</td>
 <td><code>self-service APIs, tools, services, knowledge and support which are arranged as a compelling internal product</code><br>
 <code>platform engineering</code> ・ <code>Capabilities of platforms</code><br><code>service level indicators (SLIs), objectives (SLOs)</code></td></tr></table>
 <p class="lead"><b>基盤には、確立した呼称がある</b> ── <b>Platform Engineering</b>。
 そして「満たすべき要件」を書く言語も在る（<b>SLI ・ SLO</b>）── 論点15 の「基盤の層は要件を書く」と、そのまま噛み合う。</p>
-<p class="lead"><b>接点には、これ1つという呼称が見つからない。</b>照合できた近いものは2つで、
-どちらも<b>接点の一部</b>しか覆わない ── Consumer-Driven Contracts は<b>機械どうしの約束</b>を、
-Ports and Adapters は<b>境界の置き方</b>を扱う。<b>人向けの接点（画面）を同じ語で括る原典は、まだ当てていない。</b></p>
+<p class="lead"><b>接点の原典は DDD ではない。</b>DDD は業務が主題で、接点は「ドメインの外へ出す」としか言わない ──
+<b>接点そのものを扱うのは、別の2つである。</b></p>
+<table><tr><th>原典</th><th>それが言っていること</th><th>接点のどこを覆うか</th></tr>
+<tr><td>Fowler　presentation ／ domain ／ data の層分け</td>
+<td><b>同じ業務の上に、複数の presentation を載せられる</b> ── web の画面、モバイルの native、
+スクリプト用の API、<b>昔ながらのコマンドラインまで</b></td><td><b>接点が複数あることそのもの</b></td></tr>
+<tr><td>Cockburn　Ports and Adapters</td>
+<td><b>人 ・ プログラム ・ 自動テスト ・ バッチのどれからも、等しく駆動できるようにする</b></td>
+<td><b>接点を差し替えられること</b>（UI も API も CLI も同格）</td></tr>
+<tr><td>Robinson　Consumer-Driven Contracts</td><td>提供側と利用側のあいだの約束を、利用側から定める</td>
+<td>機械どうしの接点の<b>約束の確かめ方</b></td></tr></table>
+<p class="lead"><b>あなたの言う接点は、Fowler の言う presentation そのものである</b> ──
+UI ・ API ・ CLI ・ MCP は、<b>同じ業務の上に載る別の presentation</b>。
+そして Ports and Adapters が、それらを<b>同格に扱ってよい</b>根拠になる。</p>
 <table><tr><th>まだ照合していないもの</th><th>なぜ挙げるか</th></tr>
 <tr><td>DDD の境界の関係パターン（Open-host Service ・ Published Language ・ Anticorruption Layer）</td>
 <td><b>DDD 自身が接点の語彙を持っている</b>可能性が高い ── ただし PDF から文字列を取り出せず、<b>照合できていない</b></td></tr>
-<tr><td>人向けの接点を扱う分野（Interaction Design ・ API design）</td><td>呼称として通っているが、<b>原文を落としていない</b></td></tr></table>""")],
+<tr><td>人向けの接点の設計論（Interaction Design ・ HCI）</td><td>画面という接点<b>の中身をどう設計するか</b>は、上の3つが扱っていない ── 原文を落としていない</td></tr></table>""")],
   kept=[
    Option("系ごとに型を並べる（業務 ・ 画面 ・ 基盤 …）",
           "「何についての spec か」で型を分け、系が増えたら型を足す",
