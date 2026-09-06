@@ -110,7 +110,7 @@ def c_view(r, kinds):
             "言明": r["row"].get("規則") or r["row"].get("振る舞い", ""),
             "出どころ": f'{r["src"].get("種類","")}　{re.sub(r"<br>.*", "", r["src"].get("原典",""))}'
                         f'　{r["src"].get("照合する文字列","")}',
-            "検め方": r["detail"].get("検証方法") or r["detail"].get("実行コマンド")
+            "検証方法": r["detail"].get("検証方法") or r["detail"].get("実行コマンド")
                       or r["row"].get("検証方法", "")}
     drop = ("検証方法", "実行コマンド", "規則", "振る舞い")
     extra = {k: v for k, v in r["detail"].items() if k not in drop and v}
