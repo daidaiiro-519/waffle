@@ -3,6 +3,7 @@ sys.path.insert(0, '/home/daidaiiro/workspace/waffle/.claude/skills/brainstorm/r
 from build_board import Topic, Option, Table, deck, write, _table
 from contractfig import CONTRACT
 from algofig import GUARD, READ
+from srcfig import FALL_B, ONE_B
 
 KNOW = ".waffle/documents/knowledge/knowledge-cand-avoidable-friction-is-not-detection"
 
@@ -272,6 +273,78 @@ t16 = Topic(16, "導出される値", "手で書いた数を、どう扱うか",
   ])
 
 
+
+t17 = Topic(17, "出典の書き方", "照合する文字列を、どう選ぶか", "決着",
+  answer="<b>規則1件に原典1本。考えを名づけている箇所から取る</b>",
+  note="照合する文字列は「原典が変わったときに鳴る」ための印である"
+       "（<code>sources.md</code>「版が上がったら、照合する文字列がまだ原文に在るかを確かめる」）。"
+       "ところが<b>100件のうち65件は、他の原文にも当たっていて鳴らない</b> ── "
+       "<code>errors</code> は実原文63本のうち37本に当たる。",
+  figures=[ONE_B, FALL_B],
+  found=[
+    "<b>当たった数は測定として外していた。</b>1か所しか当たらないのに他の原文にも当たるものが9件"
+    "（<code>internal</code> は自1か所、他25本）、逆に多くても特定できているものが15件"
+    "（<code>hookSpecificOutput</code> は自58か所、他0本）",
+    "<b>ゆるい65件のうち51件は、概念でも識別子でもない</b> ── "
+    "<code>errors</code> ・ <code>naming</code> ・ <code>interfaces</code> という"
+    "「そこに出てくる普通の単語」だった。<b>粒度が細かすぎるのではなく、照合になっていない</b>",
+    "<b>原典が考えを名づけていれば、その名前がそのまま照合する文字列になる</b> ── "
+    "sans-IO の <code>Simplicity, Testability, and Correctness</code> は節の見出しで、実原文63本のうち1本。"
+    "名づけていない原典（Effective Go）は、考えを定義している一文を取る",
+    "<b>「原典が2本欲しい」実例が出た</b> ── <code>GO-ERR-01</code>「戻り値の <code>error</code> で返し、"
+    "<code>panic</code> で流さない」は命題が2つで、Effective Go の <b>Errors 節</b>と <b>Panic 節</b>が"
+    "別々に支えている。<b>2本目を足すのではなく、規則を2件に割る</b>",
+    "<b>落としてある103本のうち40本は同じ頁の二重取得だった</b> ── "
+    "はじめの測定はそれを別の原文として数えていた（69件 → 65件へ訂正）",
+  ],
+  pick=("C",
+    "<b>「依拠する考え」の列も節も足さない。</b>"
+    "原典の言葉で名づける限り、考えの名前がそのまま照合する文字列になる。"
+    "1つの規則が原典を1本しか持たないなら、考えを別に持つ理由も無い。"),
+  grounds=[
+    ("印が鳴るためにあること", "版が上がったら、照合する文字列がまだ原文に在るかを確かめる。"
+     "無ければ、その規則は出典を失っている",
+     "決まり", "references/sources.md 版が変わったとき"),
+    ("いまの印が鳴らないこと", "100件中65件が、出典に指定していない別の原文にも当たる。"
+     "<code>errors</code> は実原文63本のうち37本",
+     "実測", "python3 scripts/check.py --needles（2026-09-06）"),
+    ("当たった数では測れないこと", "1か所でも他に当たるもの9件、多くても特定できているもの15件",
+     "実測", "同上"),
+    ("原典が考えを名づけていること",
+     "sans-IO は考えに節の見出しを与えている ── <code>Simplicity, Testability, and Correctness</code>",
+     "原典", "sans-io.readthedocs.io/how-to-sans-io.html（2026-09-06 取得）"),
+    ("2本欲しくなったら規則を割ること",
+     "Effective Go は <code>By convention, errors have type</code>（Errors 節）と "
+     "<code>usual way to report an error to a caller is to return an</code>（Panic 節）で"
+     "別々の命題を述べている。どちらも実原文63本のうち1本",
+     "原典", "go.dev/doc/effective_go（2026-09-05 取得）"),
+  ],
+  costs=[
+    "<b>65件の指し直し。</b>原文はすべて手元に在るので、落とし直しは要らない",
+    "<b>長い一文をそのまま取らない</b> ── 落とした原文は行が折り返されているので、"
+    "文をまたぐ範囲は 0 本に当たる。1行に収まる範囲を取る",
+    "<code>sources.md</code> の「無ければ、その規則は出典を失っている」を書き直す ── "
+    "落ちたのは指し先であって、規則ではない",
+  ],
+  weaknesses=[
+    "<b>「その箇所が規則を支えているか」は、機械には決められない。</b>"
+    "測れるのは「その原文を特定できているか」までである",
+    "<b>原典を取り直す運用が、まだ無い。</b>取得日は100件すべてに在るが、"
+    "古いものを出す・取り直す・差分を見る仕組みは無い ── "
+    "<b>これが無ければ、印は一度も鳴らない</b>",
+    "<b>考えを単位として切り出すかは未決。</b><code>contract test</code> の考えは "
+    "<code>arch.data-port</code> でも <code>arch.hexagonal</code> でも成り立ち、置ける層が無い",
+  ],
+  decision=[
+    ("決定", "<b>規則1件に、原典1本。</b>照合する文字列は、"
+             "<b>原典がその考えを名づけている箇所から取る</b>。一般語を取らない"),
+    ("理由", "2本要るなら、どちらも言い切っていない ── 支えているのは2つを突き合わせた"
+             "こちらの解釈であり、それは認めない出典に当たる"),
+    ("効くこと", "照合が落ちても、規則が出典を失ったとは限らない。"
+                 "落ちたのは指し先で、考えが生きていれば指し直す"),
+  ])
+
+
 PREV = _table(["#", "論点"],
   [[str(i + 1), q] for i, q in enumerate([
     "層を並べるか、制約が依存する軸を宣言するか",
@@ -288,13 +361,27 @@ PREV = _table(["#", "論点"],
     "制約1件を、Markdown でどう書くか",
   ])])
 
-html = deck("CodingSkills は何を確かめるか", [t13, t14, t15, t16],
-  intro="<b>論点13〜16。CodingSkills のブレストの続きである（2026-09-06）。</b>""論点13 が決着し、そこから3つが新しく立った ── <b>決めただけでは守られない</b>ためである。"
+html = deck("CodingSkills は何を確かめるか", [t13, t17, t14, t15, t16],
+  intro="<b>論点13〜17。CodingSkills のブレストの続きである（2026-09-06）。</b>"
+        "論点13 と 17 が決着し、3つが開いている ── <b>決めただけでは守られない</b>ためである。"
         "論点1〜12 は <code>docs/adr/brainstorm-coding-skills.html</code> に在る ── "
         "あちらは生成元のスクリプトを持たない古い形式なので、同じ1枚へ畳めていない。"
-        "<b>畳めていないこと自体が、この論点の対象である</b>（成果物の保守）。"
+        "<b>畳めていないこと自体が、論点13 の対象である</b>（成果物の保守）。"
         "<b>これは正本ではない。ブレストの記録である。</b>",
-  extras=[("これまでの論点（別の盤面に在る）",
+  extras=[("関連する成果物",
+    "<p class='lead'>いま在るものを並べる。"
+    "<b>成果物のスナップショットは、そこに載っている決定の出どころを持たない</b> ── "
+    "出どころはこの盤面にある。</p>" + _table(["成果物", "何が在るか", "この盤面との関係"],
+    [["<code>docs/adr/needles.html</code>", "出典100件を「その原文を特定できているか」で測った結果",
+      "論点17 の実測"],
+     ["<code>docs/adr/source-rule.html</code>", "出典の書き方3原則と、実データの実例2件",
+      "論点17 の決定"],
+     ["CodingSkills 第1版の全文（Artifact <code>24732a71</code>）",
+      "SKILL.md ・ 参照文書 ・ 雛形15本 ・ 規約37本のダンプ",
+      "<b>決定そのものは載っていない。</b>論点1〜12 の結果として在る"],
+     ["<code>docs/adr/brainstorm-coding-skills.html</code>", "論点1〜12",
+      "<b>生成元のスクリプトを持たない</b>ので、この1枚へ畳めていない"]])),
+    ("これまでの論点（別の盤面に在る）",
     "<p class='lead'>結論はこの盤面へ写していない ── 写すと、写した側が正になってしまう。"
     "原本は <code>docs/adr/brainstorm-coding-skills.html</code> である。</p>" + PREV)])
 write(html, "docs/adr/brainstorm-coding-skills-contracts.html",
