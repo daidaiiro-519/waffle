@@ -15,9 +15,9 @@
   **8論点すべて決着（2026-09-06）。** 三層／単位は読み手に従属／型は横に増える／節に印／
   規則は述語＋検査の名前（名簿は2段）／型は意味・形は射影（既定＋差分）／
   文書は承認済みといまの2状態で承認したら畳む／承認は意思決定の境目でだけ。
-  **論点10〜13 を追加（未決）**── 書き方の指示（x- と description）／schema の版と移行／
-  決定と変更の記録（ADR）／引く仕様（JMESPath のままか、意味の述語か）。
-  この4つは spec へ落とすときに必ず当たるので、先に決める。
+  **論点10 も決着（x- に構造で保存し、渡すときに description へ合成。指示は how/forbidden/example
+  と read/related の欄に分ける。鍵は schema の欄名。再定義の一部として一度で変える）。**
+  **残るは論点11（版と移行）・12（決定と変更の記録）・13（引く仕様）の3つ。**
 - **CodingSkills（規約に従って書く汎用Skill）** ── `.waffle/skills/coding-skills/`（第1版・2026-09-05）。
   盤面 `docs/adr/brainstorm-coding-skills.html`、面 `docs/adr/coding-skills-templates.html`
   （Artifact: `https://claude.ai/code/artifact/24732a71-b357-41a1-8f53-fbb87417f92d`）。
