@@ -20,12 +20,12 @@ COMPOSE = ('<svg viewBox="0 0 780 440" role="img" aria-label="保存された sc
  '<text x="390" y="78" font-size="9" fill="var(--add)">これは：<tspan fill="currentColor">シナリオの題</tspan></text>'
  '<text x="390" y="92" font-size="9" fill="var(--add)">書き方：<tspan fill="currentColor">振る舞いを述べる一文にする</tspan></text>'
  '<text x="390" y="106" font-size="9" fill="var(--add)">禁じ手：<tspan fill="currentColor">実装の名前を含めない</tspan>　例：<tspan fill="currentColor">予約を確定できる</tspan></text>'
- '<text x="370" y="140" font-size="9.5" font-weight="700" fill="var(--key)">○ JSON 文字列</text>'
+ '<text x="370" y="140" font-size="9.5" font-weight="700" fill="var(--key)">○ JSON 文字列　── 鍵は schema の欄名そのもの</text>'
  '<rect x="370" y="146" width="390" height="66" fill="none" stroke="var(--key)" stroke-width="1.5"/>'
- '<text x="380" y="162" font-size="9" fill="var(--muted)">"description": "{\\"これは\\": \\"シナリオの題\\",</text>'
- '<text x="392" y="178" font-size="9" fill="var(--muted)">\\"書き方\\": \\"振る舞いを述べる一文にする\\",</text>'
- '<text x="392" y="194" font-size="9" fill="var(--muted)">\\"禁じ手\\": \\"実装の名前を含めない\\", \\"例\\": \\"予約を確定できる\\"}"</text>'
- '<text x="370" y="228" font-size="9" fill="var(--muted)">中身は同じ。<tspan fill="var(--key)">切り出しは JSON が確実</tspan>で、<tspan fill="var(--del)">引用符のぶんだけ かさむ</tspan></text>'
+ '<text x="380" y="162" font-size="9" fill="var(--muted)">"description": "{\\"description\\": \\"シナリオの題\\",</text>'
+ '<text x="392" y="180" font-size="9" fill="var(--muted)">\\"x-prompt-write\\": \\"振る舞いを述べる一文。</text>'
+ '<text x="404" y="196" font-size="9" fill="var(--muted)">実装名を含めない\\"}"</text>'
+ '<text x="370" y="228" font-size="9" fill="var(--muted)">中身は同じ。<tspan fill="var(--key)">鍵を新しく作らないので、ずれる余地が無い</tspan>。<tspan fill="var(--del)">引用符のぶんだけ かさむ</tspan></text>'
  '<line x1="20" y1="244" x2="760" y2="244" stroke="var(--rule)" stroke-width="1"/>'
  '<text x="20" y="266" font-size="11" font-weight="700" fill="var(--del)">×　つないで散文にした場合</text>'
  '<rect x="20" y="276" width="350" height="74" fill="none" stroke="var(--del)" stroke-width="1.4"/>'
@@ -49,4 +49,4 @@ COMPOSE = ('<svg viewBox="0 0 780 440" role="img" aria-label="保存された sc
  '<b>どちらも中身は同じで、切り出しやすさと かさ が違うだけである。</b>'
  '散文だけが、区切りを持たないので後から確かめられない。'
  'そして書くときと読むときでは、載せる行が違う。'
- '<b>図の「これは」「書き方」「禁じ手」「例」は表示名であって、識別子ではない。</b>識別子は abstract が固定し、表示名は射影が決める ── 文書の言語が変われば、出る言葉も変わる。')
+ '<b>ラベル行の「これは」「書き方」は表示名で、JSON の鍵は schema の欄名そのものである。</b><b>合成のために新しい語彙を作らない</b> ── 鍵を新しく決めると、その綴りがずれた瞬間に切り出しが黙って空を返す。')
