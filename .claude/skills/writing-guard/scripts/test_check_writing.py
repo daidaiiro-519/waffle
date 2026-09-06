@@ -208,6 +208,21 @@ class 検査そのものの規律(unittest.TestCase):
     def test_検査を列挙できる(self):
         self.assertGreaterEqual(len(cw.all_checks()), 7)
 
+    def test_すべての検査がレーンを持つ(self):
+        for c in cw.all_checks():
+            self.assertIn(c.lane, cw.LANES, f"{c.name} のレーンが不正")
+
+    def test_見つけたものにレーンが入る(self):
+        f = cw.inspect(doc("本文である。**壊れた強調。**続き\n"))
+        self.assertEqual(f[0].lane, "構造")
+
+    def test_レーンごとに数えられる(self):
+        lanes = {c.lane for c in cw.all_checks()}
+        self.assertIn("構造", lanes)
+        self.assertIn("文調", lanes)
+        self.assertIn("語彙", lanes)
+        self.assertIn("論", lanes)
+
 
 class 検査から外す印(unittest.TestCase):
     def test_印のある文書は検査しない(self):

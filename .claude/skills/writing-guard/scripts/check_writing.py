@@ -35,6 +35,8 @@ from typing import Callable
 
 # ── 単位の種別 ──────────────────────────────────────────────
 KINDS = frozenset({"本文", "見出し", "箇条書き", "表のセル", "引用", "コード"})
+# 見るレーン。SKILL.md の4つと揃える
+LANES = ("論", "構造", "文調", "語彙")
 # 描画されるもの。コード以外のすべて
 RENDERED = KINDS - {"コード"}
 # 文として読むもの。名詞句が自然な単位を除く
@@ -55,6 +57,7 @@ class Unit:
 @dataclass
 class Finding:
     check: str
+    lane: str
     concept: str
     level: str    # 指摘 ／ 確認
     line: int
@@ -68,6 +71,7 @@ class Check:
     kinds が None のものは、文書全体を受け取る検査である。
     """
     name: str
+    lane: str
     concept: str
     level: str
     fn: Callable
@@ -259,7 +263,7 @@ def _duplicate_sentence(units: list[Unit]) -> list[Finding]:
             if len(s) >= DUP_MIN_CHARS:
                 seen[s] += 1
                 where.setdefault(s, u.line)
-    return [Finding("同じ文が2か所にある", "概念1", "確認", where[s], f"{c}か所：{s[:34]}")
+    return [Finding("同じ文が2か所にある", "論", "概念1", "確認", where[s], f"{c}か所：{s[:34]}")
             for s, c in seen.items() if c > 1]
 
 
@@ -272,34 +276,34 @@ def _joined(units: list[Unit]) -> str:
 
 def _synonym(units: list[Unit]) -> list[Finding]:
     body = _joined(units)
-    return [Finding("語の揺れ", "語彙2", "指摘", 0, f"「{a}」と「{b}」が同じ文書にある")
+    return [Finding("語の揺れ", "語彙", "語彙2", "指摘", 0, f"「{a}」と「{b}」が同じ文書にある")
             for a, b in SYNONYM_PAIRS if a in body and b in body]
 
 
 def _figure_word(units: list[Unit]) -> list[Finding]:
     body = _joined(units)
-    return [Finding("別の分野から借りた語", "概念9", "確認", 0, f"「{w}」がある")
+    return [Finding("別の分野から借りた語", "語彙", "概念9", "確認", 0, f"「{w}」がある")
             for w in FIGURES if w in body]
 
 
 # ── 検査の名簿 ──────────────────────────────────────────────
 CHECKS: list[Check] = [
-    Check("強調が描画されない", "概念8", "指摘", _emphasis_broken, RENDERED,
+    Check("強調が描画されない", "構造", "概念8", "指摘", _emphasis_broken, RENDERED,
           "閉じの ** が約物の直後にあると、閉じ記号として認められない"),
-    Check("強調が句点から始まる", "概念8", "指摘", _emphasis_punct_start, RENDERED,
+    Check("強調が句点から始まる", "構造", "概念8", "指摘", _emphasis_punct_start, RENDERED,
           "開きの ** の直後が約物だと、その約物まで太字になる"),
-    Check("ASCII で図を描いている", "概念2", "指摘", _box_drawing, KINDS,
+    Check("ASCII で図を描いている", "構造", "概念2", "指摘", _box_drawing, KINDS,
           "囲いの中でも外でも見る。図は mermaid か SVG で書く"),
-    Check("体言止め", "概念5", "確認", _nominal_ending, PROSE,
+    Check("体言止め", "文調", "概念5", "確認", _nominal_ending, PROSE,
           "見出し・表のセル・箇条書きでは名詞句が自然なので、当てない"),
-    Check("名詞を連ねている", "概念5", "確認", _noun_chain, RENDERED,
+    Check("名詞を連ねている", "文調", "概念5", "確認", _noun_chain, RENDERED,
           "読みにくさは、置かれた場所で変わらない"),
-    Check("1文が長い", "概念6", "確認", _long_sentence, PROSE,
+    Check("1文が長い", "文調", "概念6", "確認", _long_sentence, PROSE,
           "散文の1文を測る。見出し・表のセル・箇条書きは、圧縮された項目なので測らない"),
-    Check("同じ文が2か所にある", "概念1", "確認", _duplicate_sentence, None,
+    Check("同じ文が2か所にある", "論", "概念1", "確認", _duplicate_sentence, None,
           "本文・箇条書き・引用だけを数える"),
-    Check("語の揺れ", "語彙2", "指摘", _synonym, None, "--synonyms で対を与える"),
-    Check("別の分野から借りた語", "概念9", "確認", _figure_word, None, "--figures で一覧を与える"),
+    Check("語の揺れ", "語彙", "語彙2", "指摘", _synonym, None, "--synonyms で対を与える"),
+    Check("別の分野から借りた語", "語彙", "概念9", "確認", _figure_word, None, "--figures で一覧を与える"),
 ]
 
 
@@ -322,7 +326,7 @@ def inspect(path: str | Path) -> list[Finding]:
             if u.kind not in c.kinds:
                 continue
             for ex in c.fn(u):
-                out += [Finding(c.name, c.concept, c.level, u.line, ex)]
+                out += [Finding(c.name, c.lane, c.concept, c.level, u.line, ex)]
     # 同じ検査・同じ行・同じ抜粋は1件にする（表のセルで同じ行を何度も見るため）
     seen, uniq = set(), []
     for f in out:
@@ -353,12 +357,17 @@ def load_synonyms(p: Path) -> list[tuple[str, str]]:
 
 
 def print_checks() -> int:
-    print(f"{'検査':22}{'概念':6}{'出方':5}{'当てる単位'}")
-    for c in CHECKS:
-        kinds = "文書全体" if c.kinds is None else " ・ ".join(sorted(c.kinds))
-        print(f"{c.name:22}{c.concept:6}{c.level:5}{kinds}")
-        if c.note:
-            print(f"{'':33}{c.note}")
+    """検査を、レーンごとに並べる。**レーンに1つも検査が無いことも見える。**"""
+    for lane in LANES:
+        rows = [c for c in CHECKS if c.lane == lane]
+        print(f"── {lane}のレーン　{len(rows)} 件")
+        if not rows:
+            print("     機械の検査は無い。読んで判定する")
+        for c in rows:
+            kinds = "文書全体" if c.kinds is None else " ・ ".join(sorted(c.kinds))
+            print(f"  {c.name:22}{c.concept:6}{c.level:5}{kinds}")
+            if c.note:
+                print(f"{'':35}{c.note}")
     return 0
 
 
@@ -392,7 +401,7 @@ def main(argv: list[str]) -> int:
     issues, notes = [], []
     for a in args:
         for f in inspect(a):
-            row = f"{Path(a).name}:{f.line} [{f.concept}] {f.check}：{f.excerpt}"
+            row = f"{Path(a).name}:{f.line} [{f.lane}／{f.concept}] {f.check}：{f.excerpt}"
             (issues if f.level == "指摘" else notes).append(row)
     for x in issues:
         print("指摘  " + x)
