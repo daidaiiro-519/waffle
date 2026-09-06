@@ -1,0 +1,180 @@
+<title>CodingSkills は何を確かめるか</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap"><style>
+:root{ --paper:#FBFAF7; --ink:#191C1F; --muted:#6C7076; --rule:#E3DFD7; --panel:#F4F1EA;
+  --panelrule:#DAD4C8; --key:#2F4858; --add:#A6543A; --out:#8A8479;
+  --mark:#F7E2BC; --markh:#F0CE92; --pop:#FDF6E9; --popline:#D9B77E;
+  --soft:#8FA3AE; --del:#8A8479; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036; --panel:#1D2024;
+  --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738;
+  --soft:#5D6B75; --del:#7E838B; } }
+:root[data-theme="dark"]{ --paper:#15171A; --ink:#E8E5DF; --muted:#9AA0A8; --rule:#2C3036;
+  --panel:#1D2024; --panelrule:#333940; --key:#8FB4C8; --add:#E0A184; --out:#7E838B;
+  --mark:#4A3826; --markh:#5F4830; --pop:#241D14; --popline:#6E5738;
+  --soft:#5D6B75; --del:#7E838B; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:15.5px;line-height:1.85;
+  font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:53rem;margin:0 auto;padding:0 1.5rem 5rem}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:1.6rem 0 .5rem}
+h1{font-family:"Noto Serif JP",serif;font-weight:700;font-size:clamp(23px,3.4vw,31px);
+  line-height:1.35;margin:0;padding-bottom:.6rem;border-bottom:2px solid var(--key);text-wrap:balance}
+h2{font-family:"Noto Serif JP",serif;font-weight:600;font-size:1.2rem;margin:2.6rem 0 1rem;
+  padding-bottom:.4rem;border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:.6rem}
+h2 .sn{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted);font-weight:400}
+p{margin:0 0 1rem}
+.note{background:var(--panel);border:1px solid var(--panelrule);border-left:3px solid var(--key);
+  border-radius:.3rem;padding:.9rem 1.1rem;margin:1.2rem 0 0;font-size:.9rem}
+.lead{font-size:.92rem;margin-bottom:.7rem}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem;margin:0}
+th,td{text-align:left;vertical-align:top;padding:.6rem .7rem;border-bottom:1px solid var(--rule)}
+th{font-weight:700;font-size:.72rem;letter-spacing:.05em;color:var(--muted);
+  border-bottom:1.5px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{width:1.9rem;padding-right:0}
+.n{font-family:ui-monospace,monospace;font-size:11px;color:var(--key);border:1px solid var(--key);
+  border-radius:2px;padding:0 5px;line-height:1.7;display:inline-block}
+.n.out{color:var(--out);border-color:var(--out)}
+table.out td{color:var(--muted)}
+table.out b{color:var(--out);text-decoration:line-through}
+.cost{color:var(--muted)}
+.st{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--add);border:1px solid var(--add);
+  border-radius:2px;padding:.05em .45em;white-space:nowrap;display:inline-block}
+table.chain th:first-child,table.chain td:first-child{width:6.5rem;padding-right:.6rem}
+table.why{border-collapse:separate;border-spacing:0}
+table.why th{padding-bottom:.4rem}
+table.plainkey th:first-child,table.plainkey td:first-child{width:9rem;padding-right:.9rem;
+  white-space:normal;color:var(--key)}
+table.why th:first-child,table.why td:first-child{width:23%;padding-right:.8rem}
+table.why th:last-child,table.why td:last-child{width:27%}
+table.why td{border-bottom:none;padding:.65rem .7rem;background:var(--surface,transparent)}
+table.why tr:nth-child(even) td{background:color-mix(in srgb,var(--key) 3.5%,var(--paper))}
+table.why tr:not(:first-child) td:first-child{border-left:2px solid var(--key)}
+.part{display:inline-block;font-size:.8rem;font-weight:700;line-height:1.6;color:var(--key);
+  background:color-mix(in srgb,var(--key) 11%,var(--paper));border-radius:.25rem;padding:.12em .55em}
+.kind{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.06em;line-height:1.6;
+  border-radius:.2rem;padding:.05em .45em;margin-bottom:.25rem}
+.kind.k-fact{color:var(--paper);background:var(--key)}
+.kind.k-src{color:var(--key);background:color-mix(in srgb,var(--key) 16%,var(--paper));
+  border:1px solid var(--key)}
+.kind.k-rule{color:var(--muted);background:color-mix(in srgb,var(--muted) 14%,var(--paper))}
+.kind.k-given{color:var(--muted);border:1px dashed var(--panelrule)}
+.kind.k-open{color:var(--paper);background:var(--add)}
+table.why small{color:var(--muted);font-size:.88em;line-height:1.7;display:block}
+.pickn{font-family:ui-monospace,monospace;color:var(--key);border:1px solid var(--key);
+  border-radius:2px;padding:0 .35em}
+.concl{display:flex;gap:.9rem;align-items:flex-start;background:color-mix(in srgb,var(--key) 6%,var(--paper));
+  border:1px solid var(--panelrule);border-left:3px solid var(--key);border-radius:.3rem;padding:1rem 1.1rem;margin:0 0 1.4rem}
+.concl p{margin:0;font-size:1.02rem;line-height:1.75;font-weight:700}
+.concl p+p{margin-top:.5rem;font-weight:400;font-size:.92rem;color:var(--muted)}
+.n.big{font-size:1rem;padding:.15em .6em;border-width:2px;flex:none}
+h3{font-size:.95rem;font-weight:700;margin:1.8rem 0 .6rem;color:var(--muted)}
+ul.found{margin:0;padding-left:1.1rem;font-size:.92rem}
+ul.found li{margin-bottom:.5rem}
+figure{margin:0 0 1.2rem}
+figure+figure{margin-top:1.6rem;padding-top:1.4rem;border-top:1px dashed var(--rule)}
+figure svg{display:block;width:100%;height:auto;color:var(--ink);
+  border:1px solid var(--rule);border-radius:.35rem;background:var(--panel)}
+figcaption{font-size:.83rem;line-height:1.75;color:var(--muted);margin-top:.5rem}
+.you{border:1px dashed var(--key);border-radius:.3rem;padding:.9rem 1.1rem;color:var(--muted);
+  font-size:.9rem;background:color-mix(in srgb,var(--key) 5%,var(--paper))}
+.next{border:1px dashed var(--panelrule);border-radius:.3rem;padding:.9rem 1.1rem;
+  color:var(--muted);font-size:.9rem}
+
+mark.chg{background:var(--mark);color:var(--ink);border-radius:.15em;cursor:pointer;
+  box-shadow:-.2em 0 0 var(--mark),.2em 0 0 var(--mark);border-bottom:2px solid var(--add)}
+mark.chg:hover,mark.chg:focus{background:var(--markh);
+  box-shadow:-.2em 0 0 var(--markh),.2em 0 0 var(--markh);outline:none}
+mark.chg:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+mark.chg::after{content:"▸";font-size:.72em;color:var(--add);margin-left:.3em;font-weight:700}
+mark.chg[aria-expanded="true"]::after{content:"▾"}
+mark.chg.del{background:none;box-shadow:none;color:var(--out);border-bottom:1px dashed var(--out)}
+mark.chg.del b{text-decoration:line-through}
+
+.pop[hidden]{display:none}
+.pop{display:block;background:var(--pop);border:1px solid var(--popline);
+  border-left:3px solid var(--add);border-radius:.3rem;padding:.7rem .9rem;margin:.6rem 0 .2rem;
+  font-size:.82rem;line-height:1.75;white-space:normal;font-weight:400}
+.pop b{display:block;font-size:.66rem;letter-spacing:.14em;color:var(--add);margin-bottom:.3rem}
+.pop .why{display:block;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--popline)}
+.pop .why b{color:var(--key)}
+
+.hd{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:.8rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;z-index:9}
+.hd .t{font-family:"Noto Serif JP",serif;font-weight:700;font-size:1rem;flex:1;min-width:12rem}
+.hd .t small{display:block;font-family:"Noto Sans JP",sans-serif;font-weight:400;
+  font-size:.78rem;color:var(--muted);margin-top:.1rem}
+.hd button{font:inherit;font-size:.82rem;font-weight:700;padding:.35rem .9rem;border-radius:.3rem;
+  cursor:pointer;background:var(--panel);color:var(--ink);border:1px solid var(--panelrule)}
+.hd button:hover{background:var(--markh)}
+.hd button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+
+/* 論点のタブ。ブレストは論点が互いの前提になるので、1枚に束ねる */
+.tabs{position:sticky;top:3.4rem;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:.45rem 1.5rem;display:flex;gap:.4rem;overflow-x:auto;z-index:8;scrollbar-width:thin}
+.tabs button{font:inherit;font-size:.82rem;padding:.35rem .8rem;border-radius:.3rem;cursor:pointer;
+  background:none;color:var(--muted);border:1px solid transparent;white-space:nowrap;
+  display:flex;align-items:center;gap:.4rem}
+.tabs button:hover{background:var(--panel);color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);
+  border-color:var(--panelrule);font-weight:700}
+.tabs button[aria-selected="true"] .tn{color:var(--key)}
+.tabs .tn{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted)}
+.tabs button:focus-visible{outline:2px solid var(--add);outline-offset:2px}
+.st.done{color:var(--key);border-color:var(--key)}
+.st.open{color:var(--add);border-color:var(--add)}
+section[role="tabpanel"][hidden]{display:none}
+</style><div class="hd"><div class="t">CodingSkills は何を確かめるか<small>色の付いた箇所を押すと、変更前と理由が開きます（<span id="n">0</span>か所）</small></div><button id="all" type="button">すべて開く</button></div><div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-t="p0">現在地</button><button role="tab" aria-selected="false" data-t="p1"><span class="tn">13</span>検査の対象と根拠<span class="st open">新規</span></button></div><main><section id="p0" role="tabpanel"><p class="eyebrow">現在地</p><h1>CodingSkills は何を確かめるか</h1><div class="note"><b>論点13。CodingSkills のブレストの続きである（2026-09-06）。</b>論点1〜12 は <code>docs/adr/brainstorm-coding-skills.html</code> に在る ── あちらは生成元のスクリプトを持たない古い形式なので、同じ1枚へ畳めていない。<b>畳めていないこと自体が、この論点の対象である</b>（成果物の保守）。<b>これは正本ではない。ブレストの記録である。</b></div><h2><span class="sn">1</span>論点の現在地</h2><div class="scroll"><table class=""><tr><th>#</th><th>論点</th><th>状態</th><th>いまの答え</th></tr><tr><td><span class="n">13</span></td><td>check.py は何を確かめるのか</td><td><span class="st open">新規</span></td><td></td></tr></table></div><h2><span class="sn">2</span>これまでの論点（別の盤面に在る）</h2><p class='lead'>結論はこの盤面へ写していない ── 写すと、写した側が正になってしまう。原本は <code>docs/adr/brainstorm-coding-skills.html</code> である。</p><div class="scroll"><table class=""><tr><th>#</th><th>論点</th></tr><tr><td>1</td><td>層を並べるか、制約が依存する軸を宣言するか</td></tr><tr><td>2</td><td>何をもって、軸と認めるか</td></tr><tr><td>3</td><td>抽象側が決めないことを、どう宣言するか</td></tr><tr><td>4</td><td>制約1件を、何で数えるか</td></tr><tr><td>5</td><td>制約と実装の、どちらが先に在るか</td></tr><tr><td>6</td><td>CodingSkill は、何をして何をしないか</td></tr><tr><td>7</td><td>このSkillは、何と何を担うか</td></tr><tr><td>8</td><td>制約は、何を根拠に書けるか</td></tr><tr><td>9</td><td>このSkillは、何を持つか</td></tr><tr><td>10</td><td>層と種別を、どう構造で表すか</td></tr><tr><td>11</td><td>どの制約が在るかを、どう見えるようにするか</td></tr><tr><td>12</td><td>制約1件を、Markdown でどう書くか</td></tr></table></div></section><section id="p1" role="tabpanel" hidden><p class="eyebrow">論点 13</p><h1>check.py は何を確かめるのか</h1><div class="note"><b>問いが2つに割れた。</b>「何を対象にするか」と「検査の根拠をどこに置くか」は別の問いで、片方だけ決めても、もう片方が空くと同じ腐り方をする ── 対象だけ決めれば根拠の無い検査が入り、根拠だけ決めれば原典にまで契約が伸びる。</div><h2><span class="sn">1</span>反証を通過した案</h2><div class="scroll"><table class="opts"><tr><th></th><th>案</th><th>中身</th><th>代償</th></tr><tr><td><span class="n ">A</span></td><td><b>対象だけを決める</b></td><td>保守するもの（constraints ／ references ／ templates）に限る。検査の中身はその都度決める</td><td><span class="cost">根拠が空くので、宣言の無い検査がまた入る</span></td></tr><tr><td><span class="n ">B</span></td><td><b>根拠だけを決める</b></td><td>検査は、宣言との照合だけで真偽が決まるものに限る。対象は限らない</td><td><span class="cost">原典にも契約を課しうる ── 変えないものに契約を付けると SSOT が壊れる</span></td></tr><tr><td><span class="n ">C</span></td><td><b>対象と根拠を、両方決める</b></td><td>対象は保守するものに限り、内容は宣言との照合で真偽が決まるものに限る</td><td><span class="cost">宣言の無い性質は、検査の前に宣言を足す工程が要る</span></td></tr></table></div><h2><span class="sn">2</span>いま在る歪み3つが、どうなるか</h2><div class="scroll"><table class=""><tr><th></th><th>宣言の無い検査（ID の重なり）</th><th>自分で作った写しを守る検査</th><th>機械で裁けない宣言</th></tr><tr><td><span class="n ">A</span></td><td>残る</td><td>残る</td><td>残る</td></tr><tr><td><span class="n ">B</span></td><td>宣言を先に足す</td><td>写しを消す</td><td>分けて書く</td></tr><tr><td><span class="n ">C</span></td><td>宣言を先に足す</td><td>写しを消す</td><td>分けて書く</td></tr></table></div><h2><span class="sn">3</span>対象の扱いが、どう決まるか</h2><div class="scroll"><table class=""><tr><th></th><th>scripts</th><th>sources</th><th>SKILL.md ／ README.md</th></tr><tr><td><span class="n ">A</span></td><td>テストが見る</td><td>対象外</td><td><b>決まらない</b></td></tr><tr><td><span class="n ">B</span></td><td><b>check.py が見うる</b></td><td><b>契約を課しうる</b></td><td>見うる</td></tr><tr><td><span class="n ">C</span></td><td>テストが見る</td><td>対象外</td><td>保守するので対象</td></tr></table></div><h2><span class="sn">4</span>落とした案と、その理由</h2><div class="scroll"><table class="out"><tr><th></th><th>案</th><th>落とした理由</th></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="何が困るかはその都度なので、判定が人へ戻る ── 規約が腐る経路そのものである"><b>壊れると困るものを、全部検査する</b></mark></td><td>何が困るかはその都度なので、判定が人へ戻る ── 規約が腐る経路そのものである</td></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="振る舞いを持つものは、文言の照合では裁けない。テストの仕事である"><b>scripts も check.py が見る</b></mark></td><td>振る舞いを持つものは、文言の照合では裁けない。テストの仕事である</td></tr><tr><td><span class="n out">×</span></td><td><mark class="chg del" tabindex="0" role="button" aria-expanded="false" data-b="この案は残っていた" data-w="版の追随は constraints 側の出典行の契約である。原典に契約を課すと、原典が保守対象になる"><b>sources にも契約を課す（版が変わっていないか等）</b></mark></td><td>版の追随は constraints 側の出典行の契約である。原典に契約を課すと、原典が保守対象になる</td></tr></table></div><h2><span class="sn">5</span>反証で分かったこと</h2><ul class='found'><li><b>問いが2つに割れた</b> ── 「何を対象にするか」と「検査の根拠をどこに置くか」。はじめは1つの問いのつもりで案を作っていた</li><li><b>いまの検査10件のうち、2件が宣言から導かれていない</b> ── ID の重なり（規約のどこにも一意だと書かれていない）と、<code>KINDS_BY_SHAPE</code> の写しのずれ（自分で写しを作ってから、その写しを守っている）</li><li><b>雛形と実物で、出典の表の1列目がずれている</b>（雛形は「対象」、実物は「ID」）。いまの検査は節の見出ししか比べないので、これが見えない</li><li><b>検査する側も同じ穴を持っていた</b> ── <code>figcheck.py</code> は図がタプルでないと1件も検査せず、それでも「食い違いは無い」と出す。今回この盤面の図で実際に素通りした</li></ul><h2><span class="sn">6</span>私の推し</h2><div class="concl"><span class="n big">C</span><div><p><b>対象と根拠を、両方決める。</b>対象は「保守し続けるもの」に限り、検査の内容は「宣言との照合だけで真偽が決まるもの」に限る。検査を足すときは、<b>どの文書のどの宣言を守るのかを先に書く</b> ── 宣言が無いなら、検査ではなく宣言を先に足す。</p></div></div><h3>なぜそう言えるか</h3><div class="scroll"><table class="why"><tr><th>結論のどこを支えるか</th><th>もとにしたこと</th><th>その出どころ</th></tr><tr><td><span class="part">対象を保守するものに限ること</span></td><td>原典は SSOT なので保守しない。不要になれば消すだけである</td><td><span class="kind k-rule">決まり</span><small>利用者の判断（2026-09-06）</small></td></tr><tr><td><span class="part">検査の内容を宣言から導くこと</span></td><td>出典を持たない言明は規則ではない</td><td><span class="kind k-rule">決まり</span><small>SKILL.md ガードレール ／ references/sources.md</small></td></tr><tr><td><span class="part">宣言の無い検査が実在すること</span></td><td>「一意」「重複」で全文検索して0件。ID の重なりの検査だけが先に在る</td><td><span class="kind k-fact">実測</span><small>constraints/ ・ references/ ・ SKILL.md の全文検索（2026-09-06）</small></td></tr><tr><td><span class="part">独自の解釈が原典と衝突しうること</span></td><td>RH-TP-03「偽物を adapter へ置かない」は、Cockburn の <code>an adapter to a &quot;mock&quot; database</code> と逆だった</td><td><span class="kind k-src">原典</span><small>alistair.cockburn.us/hexagonal-architecture/（2026-09-06 取得）</small></td></tr><tr><td><span class="part">その場しのぎの対応を退けること</span></td><td>エラーや不備を塞ぐ対応は、規約と knowledge から導く。その場で思いついた対応は、困りごとを消すだけで原因を残す</td><td><span class="kind k-rule">決まり</span><small>.waffle/documents/knowledge/knowledge-cand-avoidable-friction-is-not-detection</small></td></tr></table></div><h3>図で見る</h3><figure><svg viewBox="0 0 830 275" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#8b93a1"/></marker></defs><rect x="20" y="45" width="450" height="150" rx="6" fill="#f6f7f9" stroke="#c3c8d0" stroke-width="1" stroke-dasharray="5 4"/><rect x="490" y="45" width="150" height="150" rx="6" fill="#f6f7f9" stroke="#c3c8d0" stroke-width="1" stroke-dasharray="5 4"/><rect x="660" y="45" width="150" height="150" rx="6" fill="#f6f7f9" stroke="#c3c8d0" stroke-width="1" stroke-dasharray="5 4"/><text x="245" y="68" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">保守する ── 文言で照合できる</text><text x="565" y="68" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">振る舞いを持つ</text><text x="735" y="68" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">原典 ── SSOT</text><rect x="35" y="95" width="130" height="50" rx="6" fill="#fff" stroke="#8b93a1" stroke-width="1.4"/><rect x="180" y="95" width="130" height="50" rx="6" fill="#fff" stroke="#8b93a1" stroke-width="1.4"/><rect x="325" y="95" width="130" height="50" rx="6" fill="#fff" stroke="#8b93a1" stroke-width="1.4"/><rect x="505" y="95" width="120" height="50" rx="6" fill="#fff" stroke="#8b93a1" stroke-width="1.4"/><rect x="675" y="95" width="120" height="50" rx="6" fill="#fff" stroke="#8b93a1" stroke-width="1.4"/><text x="100" y="118" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">constraints</text><text x="100" y="136" font-size="11" font-weight="400" fill="#5a6472" text-anchor="middle" font-family="system-ui,sans-serif">規約の実物</text><text x="245" y="118" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">references</text><text x="245" y="136" font-size="11" font-weight="400" fill="#5a6472" text-anchor="middle" font-family="system-ui,sans-serif">定義と手順</text><text x="390" y="118" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">templates</text><text x="390" y="136" font-size="11" font-weight="400" fill="#5a6472" text-anchor="middle" font-family="system-ui,sans-serif">実物の型</text><text x="565" y="118" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">scripts</text><text x="565" y="136" font-size="11" font-weight="400" fill="#5a6472" text-anchor="middle" font-family="system-ui,sans-serif">機械</text><text x="735" y="118" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">sources</text><text x="735" y="136" font-size="11" font-weight="400" fill="#5a6472" text-anchor="middle" font-family="system-ui,sans-serif">原文</text><line x1="245" y1="200" x2="245" y2="222" stroke="#8b93a1" stroke-width="1.4" marker-end="url(#ah)"/><line x1="565" y1="200" x2="565" y2="222" stroke="#8b93a1" stroke-width="1.4" marker-end="url(#ah)"/><line x1="735" y1="200" x2="735" y2="222" stroke="#8b93a1" stroke-width="1.4" marker-end="url(#ah)"/><text x="245" y="240" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">check.py が見る</text><text x="565" y="240" font-size="13" font-weight="600" fill="#1c2530" text-anchor="middle" font-family="system-ui,sans-serif">テストが見る</text><text x="735" y="240" font-size="13" font-weight="600" fill="#8b93a1" text-anchor="middle" font-family="system-ui,sans-serif">契約を持たない</text></svg><figcaption>保守するものだけが契約を持つ。原典は契約を持たない ── 変えないためである</figcaption></figure><h3>引き受けること</h3><ul class="found"><li>宣言の無い性質は、検査より先に<b>宣言を足す工程</b>が要る。1件目は「同じ層で ID は一意である」</li><li><code>KINDS_BY_SHAPE</code> の写しを消し、<code>file-catalog.md</code> を直接読むように書き換える</li><li>機械で裁けない宣言（同じ層の2本が反対のことを言う等）は、<b>裁けないと明記して人へ渡す</b></li><li><code>scripts/</code> のテストを書く ── <b>いま1本も無い</b></li></ul><h3>まだ崩れうるところ</h3><ul class="found"><li><b>SKILL.md と README.md の契約を、まだ決めていない</b>。保守対象だが、何を確かめるかが空いている</li><li><b>references に書いた「数」をどう扱うかが未決。</b>手で書いていて、今日だけで2回書き直した ── 索引と同じく生成物にできるはずだが、決めていない</li><li><b>sources に、参照されない原文が溜まる。</b>101本のうち出典が指すのは47本で、404 の頁も混じっている。削除の判断を誰がいつ行うかは決めていない</li></ul><h2><span class="sn">7</span>あなたの見解</h2><div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div><h2><span class="sn">8</span>決まり</h2><div class="next">選ばれた案が合意になり、次の論点へ</div></section></main>
+<script>
+(function(){
+  const marks = [...document.querySelectorAll('mark.chg')];
+  document.getElementById('n').textContent = marks.length;
+  function panel(m){
+    const p = document.createElement('div');
+    p.className = 'pop'; p.hidden = true;
+    p.innerHTML = '<b>変更前</b>' + m.dataset.b +
+                  '<span class="why"><b>なぜ変えたか</b>' + m.dataset.w + '</span>';
+    (m.closest('td') || m.parentNode).appendChild(p);
+    return p;
+  }
+  marks.forEach(m => {
+    const p = panel(m);
+    const toggle = () => {
+      const open = p.hidden;
+      p.hidden = !open;
+      m.setAttribute('aria-expanded', String(open));
+    };
+    m.addEventListener('click', toggle);
+    m.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+  });
+  const tabs = [...document.querySelectorAll('.tabs button')];
+  function show(id){
+    tabs.forEach(b => {
+      const on = b.dataset.t === id;
+      b.setAttribute('aria-selected', String(on));
+      document.getElementById(b.dataset.t).hidden = !on;
+    });
+    history.replaceState(null, '', '#' + id);
+    window.scrollTo({top: 0});
+  }
+  tabs.forEach((b, i) => {
+    b.addEventListener('click', () => show(b.dataset.t));
+    b.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { e.preventDefault(); const t = tabs[(i + d + tabs.length) % tabs.length];
+               t.focus(); show(t.dataset.t); }
+    });
+  });
+  if (tabs.length && document.getElementById(location.hash.slice(1))) show(location.hash.slice(1));
+
+  const all = document.getElementById('all');
+  all.addEventListener('click', () => {
+    const open = all.textContent === 'すべて開く';
+    document.querySelectorAll('.pop').forEach(p => p.hidden = !open);
+    marks.forEach(m => m.setAttribute('aria-expanded', String(open)));
+    all.textContent = open ? 'すべて閉じる' : 'すべて開く';
+  });
+})();
+</script>

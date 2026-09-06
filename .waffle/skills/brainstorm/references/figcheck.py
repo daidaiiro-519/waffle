@@ -4,6 +4,8 @@
 
 **目で見つける前に、機械で落とす。**実際に、矢印が箱を貫き、
 注記が2つ重なって別の文になっている図を出してしまった。
+
+見るのは3つ。文字の重なり ・ 枠からのはみ出し ・ 線が箱を貫くこと。
 """
 import importlib
 import re
@@ -26,12 +28,28 @@ def check(name, fig):
            for (y2, a2, b2, t2) in items[i + 1:]
            if abs(y - y2) < 10 and a < b2 - 2 and a2 < b - 2]
     over = [t for (y, a, b, t) in items if b > vb[0] + 2 or y > vb[1]]
-    print(f"{name}: 文字 {len(items)} 件 ／ 重なり {len(bad)} 件 ／ はみ出し {len(over)} 件")
+
+    # 線が箱を貫いていないか（縦横の線だけを見る）
+    rects = [tuple(map(float, m)) for m in
+             re.findall(r'<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"', svg)]
+    pierced = []
+    for m in re.finditer(r'<line x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)"', svg):
+        x1, y1, x2, y2 = map(float, m.groups())
+        for rx, ry, rw, rh in rects:
+            if x1 == x2 and rx < x1 < rx + rw and min(y1, y2) < ry and ry + rh < max(y1, y2):
+                pierced.append(f"縦線 x={x1} が箱（y {ry}〜{ry + rh}）を貫いている")
+            if y1 == y2 and ry < y1 < ry + rh and min(x1, x2) < rx and rx + rw < max(x1, x2):
+                pierced.append(f"横線 y={y1} が箱（x {rx}〜{rx + rw}）を貫いている")
+
+    print(f"{name}: 文字 {len(items)} 件 ／ 重なり {len(bad)} 件 ／ はみ出し {len(over)} 件"
+          f" ／ 貫通 {len(pierced)} 件")
+    for p in pierced:
+        print(f"   {p}")
     for y, t, t2 in bad:
         print(f"   重なり y={y}: 「{t[:26]}」 × 「{t2[:26]}」")
     for t in over:
         print(f"   はみ出し: 「{t[:40]}」")
-    return len(bad) + len(over)
+    return len(bad) + len(over) + len(pierced)
 
 
 def main() -> int:
