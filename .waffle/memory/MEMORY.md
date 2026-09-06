@@ -31,6 +31,7 @@
   正本へはまだ当てていない。
 - **`spec-correspondence` から移した3つのSkill**（change-record・writing-guard・source-fidelity）は、
   **こちらで育てて原本へ反映する**と決まった（2026-09-06）。
-  `source-fidelity` は 2.0.0 まで進めて両リポジトリへ当てた（**まだコミットしていない**）──
-  主張と引用の照合（Step 4）・外を指す参照の除去・当て方の作り直し（`--as` 3種）・振る舞いテスト33件。
-  `tabs.py` の遅れも取り込み済み。**スクリプトは3つとも `scripts/` へ移した**（`references/` は文書とデータだけ）。
+  `source-fidelity` と `change-record` は両リポジトリへ当ててコミット済み。
+  **`writing-guard` は waffle から消し、`doc-writing-skills` へ置き換えた**（2026-09-06）──
+  5つの原典から10概念を抜き出し、規則と判定へ降ろした。ゲートは2つ（機械が決めるもの・書き手が言うもの）。
+  **`spec-correspondence` 側の `writing-guard` は残している**——統制実験の道具として20以上の文書が参照しているため。
