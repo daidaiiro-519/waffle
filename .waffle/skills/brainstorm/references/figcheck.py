@@ -5,7 +5,7 @@
 **目で見つける前に、機械で落とす。**実際に、矢印が箱を貫き、
 注記が2つ重なって別の文になっている図を出してしまった。
 
-見るのは3つ。文字の重なり ・ 枠からのはみ出し ・ 線が箱を貫くこと。
+見るのは4つ。文字の重なり ・ 枠からのはみ出し ・ 線が箱を貫くこと ・ 空白で字下げを作っていること。
 """
 import importlib
 import re
@@ -41,15 +41,21 @@ def check(name, fig):
             if y1 == y2 and ry < y1 < ry + rh and min(x1, x2) < rx and rx + rw < max(x1, x2):
                 pierced.append(f"横線 y={y1} が箱（x {rx}〜{rx + rw}）を貫いている")
 
+    # 空白で字下げを作っていないか（SVG は行頭の空白を落とすので、階層が潰れる）
+    indented = [t for t in re.findall(r'<text[^>]*>(.*?)</text>', svg)
+                if re.match(r'^(?:\s|&#160;|\u3000){2,}\S', re.sub(r'<[^>]+>', '', t))]
+
     print(f"{name}: 文字 {len(items)} 件 ／ 重なり {len(bad)} 件 ／ はみ出し {len(over)} 件"
-          f" ／ 貫通 {len(pierced)} 件")
+          f" ／ 貫通 {len(pierced)} 件 ／ 空白の字下げ {len(indented)} 件")
+    for t in indented[:6]:
+        print(f"   空白で字下げしている: 「{re.sub(r'<[^>]+>', '', t)[:30]}」 ── x の値で表す")
     for p in pierced:
         print(f"   {p}")
     for y, t, t2 in bad:
         print(f"   重なり y={y}: 「{t[:26]}」 × 「{t2[:26]}」")
     for t in over:
         print(f"   はみ出し: 「{t[:40]}」")
-    return len(bad) + len(over) + len(pierced)
+    return len(bad) + len(over) + len(pierced) + len(indented)
 
 
 def main() -> int:
