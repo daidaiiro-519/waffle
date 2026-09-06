@@ -16,10 +16,10 @@
   規則は述語＋検査の名前（名簿は2段）／型は意味・形は射影（既定＋差分）／2状態で承認したら畳む／
   承認は意思決定の境目でだけ／指示は x- に構造で持ち渡すとき合成／版は Waffle の版に従い破壊は認める／
   変更の記録は abstract の契約・ADR は concrete（3種）／引くのは述語で読み方を必ず添える。
-  **論点14〜16 を追加（未決）**── 型を立てる基準／Spec の種類／Coding の種類。
-  **段2 に何を置くかを決めていなかった。**とくに Coding は、CodingSchema が種別で切り
-  CodingSkills が層で切っていて、**切り方が90度ずれている**（論点16）。
-  spec へ落とすのは、この3つを決めてから。
+  **論点16 決着（2026-09-06）**── CodingSchema の種は CodingSkills の雛形の単位15にし、
+  **古い4種（architecture/coding-standard/tech-stack/test-standard）は捨てる**。層は軸から導出、
+  種別は欄。既存の coding 系 document 12本は再定義の一部として作り直す。
+  **残るは論点14（型を立てる基準）・15（Spec の種類）。**spec へ落とすのはそのあと。
 
 
 ## 承認待ち
@@ -27,5 +27,7 @@
 - **書き方の規約を、メモリから Skill へ移す提案** ── `docs/adr/rules-move-from-memory-to-skills.html`。
   正本へはまだ当てていない。
 - **`spec-correspondence` から移した3つのSkill**（change-record・writing-guard・source-fidelity）は、
-  原本と同一のまま置いてある。**こちらで育てるのか、原本に追随するのかは未決。**
-  `change-record/references/tabs.py` は複製後に原本へ現れたもので、まだ取り込んでいない。
+  **こちらで育てて原本へ反映する**と決まった（2026-09-06）。
+  `source-fidelity` は 2.0.0 まで進めて両リポジトリへ当てた（**まだコミットしていない**）──
+  主張と引用の照合（Step 4）・外を指す参照の除去・当て方の作り直し（`--as` 3種）・振る舞いテスト33件。
+  `tabs.py` の遅れも取り込み済み。**スクリプトは3つとも `scripts/` へ移した**（`references/` は文書とデータだけ）。
