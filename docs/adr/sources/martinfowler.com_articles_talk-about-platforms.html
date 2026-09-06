@@ -1,0 +1,808 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head><meta charset="UTF-8">
+<title>What I Talk About When I Talk About Platforms</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" /><script defer src="https://cloud.umami.is/script.js" data-website-id="eb12527f-b713-4afa-905a-8a50f8a7f157"></script>
+<meta content = 'summary_large_image' name = 'twitter:card'></meta>
+
+<meta content = '16665197' name = 'twitter:site:id'></meta>
+
+<meta content = '@martinfowler' name = 'twitter:site'></meta>
+
+<meta content = 'What I Talk About When I Talk About Platforms' property = 'og:title'></meta>
+
+<meta content = 'https://martinfowler.com/articles/talk-about-platforms.html' property = 'og:url'></meta>
+
+<meta content = 'These days everyone is building a &#39;platform&#39; to speed up delivery of digital products. But what makes an effective digital platform?' property = 'og:description'></meta>
+
+<meta content = 'https://martinfowler.com/articles/talk-about-platforms/meta.png' property = 'og:image'></meta>
+
+<meta content = 'martinfowler.com' property = 'og:site_name'></meta>
+
+<meta content = 'article' property = 'og:type'></meta>
+
+<meta content = '2018-03-05' property = 'og:article:modified_time'></meta>
+
+<meta content = 'width=device-width, initial-scale=1' name = 'viewport'></meta>
+
+<link href = '/article.css' rel = 'stylesheet' type = 'text/css'></link>
+</head>
+
+<body><header id = 'banner' style = 'background-image: url("/banner.png"); background-repeat: no-repeat'>
+
+<div class = 'name-logo'><a href = 'https://martinfowler.com'><img src = '/mf-name-white.png'></img></a></div>
+  <div class = 'search'>
+    <!-- SiteSearch Google -->
+    <form method='GET' action="https://www.google.com/search">
+      <input type='hidden' name='ie' value='UTF-8'/>
+      <input type='hidden' name='oe' value='UTF-8'/>
+      <input class = 'field' type='text' 
+             name='q' size='15' maxlength='255' value=""/>
+      <button class = 'button' type='submit' 
+             name='btnG' value=" " title = "Search"/>
+      <input type='hidden' name='domains' value="martinfowler.com"/>
+      <input type='hidden' name='sitesearch' value=""/> 
+      <input
+          type='hidden' name='sitesearch' value="martinfowler.com"/>
+    </form>
+  </div>
+
+<div class = 'menu-button navmenu-button'><a class = 'icon icon-bars' href = '#navmenu-bottom'></a></div>
+
+<nav class = 'top-menu'>
+<ul>
+<li><a class = '' href = 'https://refactoring.com'>Refactoring</a></li>
+
+<li><a class = '' href = '/agile.html'>Agile</a></li>
+
+<li><a class = '' href = '/architecture'>Architecture</a></li>
+
+<li><a class = '' href = '/aboutMe.html'>About</a></li>
+
+<li><a class = 'tw' href = 'https://www.thoughtworks.com/engineering'>Thoughtworks</a></li>
+
+<li><a class = 'icon icon-rss' href = '/feed.atom' title = 'feed'></a></li>
+
+<li><a class = 'icon icon-twitter' href = 'https://www.twitter.com/martinfowler' title = 'Twitter stream'></a></li>
+
+<li class = 'icon'><a href = 'https://toot.thoughtworks.com/@mfowler' title = 'Mastodon stream'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21.2595 13.9898C20.9852 15.4006 18.8033 16.9446 16.2974 17.2439C14.9907 17.3998 13.7041 17.5431 12.3321 17.4802C10.0885 17.3774 8.31809 16.9446 8.31809 16.9446C8.31809 17.163 8.33156 17.371 8.3585 17.5655C8.65019 19.7797 10.5541 19.9124 12.3576 19.9742C14.1779 20.0365 15.7987 19.5254 15.7987 19.5254L15.8735 21.1711C15.8735 21.1711 14.6003 21.8548 12.3321 21.9805C11.0814 22.0493 9.52849 21.9491 7.71973 21.4703C3.79684 20.432 3.12219 16.2504 3.01896 12.0074C2.98749 10.7477 3.00689 9.55981 3.00689 8.56632C3.00689 4.22771 5.84955 2.95599 5.84955 2.95599C7.2829 2.29772 9.74238 2.0209 12.2993 2H12.3621C14.919 2.0209 17.3801 2.29772 18.8133 2.95599C18.8133 2.95599 21.6559 4.22771 21.6559 8.56632C21.6559 8.56632 21.6916 11.7674 21.2595 13.9898ZM18.3029 8.9029C18.3029 7.82924 18.0295 6.97604 17.4805 6.34482C16.9142 5.71359 16.1726 5.39001 15.2522 5.39001C14.187 5.39001 13.3805 5.79937 12.8473 6.61819L12.3288 7.48723L11.8104 6.61819C11.2771 5.79937 10.4706 5.39001 9.40554 5.39001C8.485 5.39001 7.74344 5.71359 7.17719 6.34482C6.62807 6.97604 6.3547 7.82924 6.3547 8.9029V14.1562H8.43597V9.05731C8.43597 7.98246 8.88822 7.4369 9.79281 7.4369C10.793 7.4369 11.2944 8.08408 11.2944 9.36376V12.1547H13.3634V9.36376C13.3634 8.08408 13.8646 7.4369 14.8648 7.4369C15.7694 7.4369 16.2216 7.98246 16.2216 9.05731V14.1562H18.3029V8.9029Z"></path></svg>
+</a></li>
+
+<li class = 'icon'><a href = 'https://www.linkedin.com/in/martin-fowler-com/' title = 'LinkedIn'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4.00098 3H20.001C20.5533 3 21.001 3.44772 21.001 4V20C21.001 20.5523 20.5533 21 20.001 21H4.00098C3.44869 21 3.00098 20.5523 3.00098 20V4C3.00098 3.44772 3.44869 3 4.00098 3ZM5.00098 5V19H19.001V5H5.00098ZM7.50098 9C6.67255 9 6.00098 8.32843 6.00098 7.5C6.00098 6.67157 6.67255 6 7.50098 6C8.3294 6 9.00098 6.67157 9.00098 7.5C9.00098 8.32843 8.3294 9 7.50098 9ZM6.50098 10H8.50098V17.5H6.50098V10ZM12.001 10.4295C12.5854 9.86534 13.2665 9.5 14.001 9.5C16.072 9.5 17.501 11.1789 17.501 13.25V17.5H15.501V13.25C15.501 12.2835 14.7175 11.5 13.751 11.5C12.7845 11.5 12.001 12.2835 12.001 13.25V17.5H10.001V10H12.001V10.4295Z"></path></svg>
+</a></li>
+
+<li class = 'icon'><a href = 'https://bsky.app/profile/martinfowler.com' title = 'BlueSky'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 11.3884C11.0942 9.62673 8.62833 6.34423 6.335 4.7259C4.13833 3.17506 3.30083 3.4434 2.75167 3.69256C2.11583 3.9784 2 4.95506 2 5.52839C2 6.10339 2.315 10.2367 2.52 10.9276C3.19917 13.2076 5.61417 13.9776 7.83917 13.7309C4.57917 14.2142 1.68333 15.4017 5.48083 19.6292C9.65833 23.9542 11.2058 18.7017 12 16.0392C12.7942 18.7017 13.7083 23.7651 18.4442 19.6292C22 16.0392 19.4208 14.2142 16.1608 13.7309C18.3858 13.9784 20.8008 13.2076 21.48 10.9276C21.685 10.2376 22 6.10256 22 5.52923C22 4.95423 21.8842 3.97839 21.2483 3.6909C20.6992 3.44256 19.8617 3.17423 17.665 4.72423C15.3717 6.34506 12.9058 9.62756 12 11.3884Z"></path></svg></a></li>
+</ul>
+</nav>
+</header>
+<nav id = 'top-navmenu'>
+<nav class = 'navmenu'>
+<div class = 'nav-head'>  <div class = 'search'>
+    <!-- SiteSearch Google -->
+    <form method='GET' action="https://www.google.com/search">
+      <input type='hidden' name='ie' value='UTF-8'/>
+      <input type='hidden' name='oe' value='UTF-8'/>
+      <input class = 'field' type='text' 
+             name='q' size='15' maxlength='255' value=""/>
+      <button class = 'button' type='submit' 
+             name='btnG' value=" " title = "Search"/>
+      <input type='hidden' name='domains' value="martinfowler.com"/>
+      <input type='hidden' name='sitesearch' value=""/> 
+      <input
+          type='hidden' name='sitesearch' value="martinfowler.com"/>
+    </form>
+  </div>
+
+<div class = 'closediv'>
+<span class = 'close' title = 'close'></span>
+</div>
+</div>
+
+<div class = 'nav-body'>
+<div class = 'topics'>
+<h2>Topics</h2>
+
+<p><a href = '/architecture'>Architecture</a></p>
+
+<p><a href = 'https://refactoring.com'>Refactoring</a></p>
+
+<p><a href = '/agile.html'>Agile</a></p>
+
+<p><a href = '/delivery.html'>Delivery</a></p>
+
+<p><a href = '/microservices'>Microservices</a></p>
+
+<p><a href = '/data'>Data</a></p>
+
+<p><a href = '/testing'>Testing</a></p>
+
+<p><a href = '/dsl.html'>DSL</a></p>
+</div>
+
+<div class = 'about'>
+<h2>about me</h2>
+
+<p><a href = '/aboutMe.html'>About</a></p>
+
+<p><a href = '/books'>Books</a></p>
+
+<p><a href = '/faq.html'>FAQ</a></p>
+</div>
+
+<div class = 'content'>
+<h2>content</h2>
+
+<p><a href = '/videos.html'>Videos</a></p>
+
+<p><a href = '/tags'>Content Index</a></p>
+
+<p><a href = '/fragments'>Fragments</a></p>
+
+<p><a href = '/boardgames'>Board Games</a></p>
+
+<p><a href = '/photos'>Photography</a></p>
+</div>
+
+<div class = 'tw'>
+<h2>Thoughtworks</h2>
+
+<p><a href = 'https://thoughtworks.com'>Home</a></p>
+
+<p><a href = 'https://thoughtworks.com/insights'>Insights</a></p>
+
+<p><a href = 'https://thoughtworks.com/careers'>Careers</a></p>
+
+<p><a href = 'https://thoughtworks.com/radar'>Radar</a></p>
+
+<p><a href = 'https://www.thoughtworks.com/engineering'>Engineering</a></p>
+</div>
+
+<div class = 'feeds'>
+<h2>follow</h2>
+
+<p><a href = '/feed.atom'>RSS</a></p>
+
+<p><a href = 'https://toot.thoughtworks.com/@mfowler'>Mastodon</a></p>
+
+<p><a href = 'https://www.linkedin.com/in/martin-fowler-com/'>LinkedIn</a></p>
+
+<p><a href = 'https://bsky.app/profile/martinfowler.com'>Bluesky</a></p>
+
+<p><a href = 'https://www.twitter.com/martinfowler'>X</a></p>
+
+<p><a href = 'https://boardgamegeek.com/blog/13064/martins-7th-decade'>BGG</a></p>
+</div>
+</div>
+</nav>
+</nav>
+
+<nav id = 'toc-dropdown'>
+<button class = 'dropdown-button'>
+<h2>Table of Contents</h2>
+</button>
+
+<div class = 'hidden' id = 'dropdownLinks'>
+<ul>
+<li><a href = '#top'>Top</a></li>
+
+<li><a href = '#WhatIsAplatformAnyway'>What is a 'Platform' anyway?</a></li>
+
+<li><a href = '#FirstAnUn-platform'>First, an un-platform</a></li>
+
+<li><a href = '#TheImpactOfx201cbacklogCouplingx201d'>The impact of &#x201C;backlog coupling&#x201D;</a></li>
+
+<li><a href = '#TheHalf-arsedSuperficialPrivateCloud'>The 
+half-arsed
+ superficial private cloud</a></li>
+
+<li><a href = '#AutonomySpeedsTimeToMarketIncreasesInnovation'>Autonomy speeds time to market, increases innovation</a></li>
+
+<li><a href = '#TechnologyDiversificationIncreasesDrag'>Technology diversification increases drag</a></li>
+
+<li><a href = '#PlatformAsAnInternalProduct'>Platform as an internal product</a></li>
+
+<li><a href = '#WaitAMinutex2026Isnx2019tThisAx2018devopsTeamx2019'>Wait a minute&#x2026; isn&#x2019;t this a &#x2018;DevOps Team&#x2019;?</a></li>
+
+<li><a href = '#WhereDoIStart'>Where do I start?</a></li>
+</ul>
+</div>
+</nav>
+
+<main>
+<h1>What I Talk About When I Talk About Platforms</h1>
+
+<p class = 'subtitle'>Why an effective digital platform can help you scale delivery, what
+    it should have in it, and how to get started building one.</p>
+
+<section class = 'frontMatter'>
+<p class = 'abstract'><i>
+    These days everyone is building a 'platform' to speed up delivery of
+    digital products at scale.  But what makes an effective digital platform? Some
+    organisations stumble when they attempt to build on top of their existing
+    shared services without first addressing their organisational structure and
+    operation model.
+  </i></p>
+
+<p class = 'date'>05 March 2018</p>
+
+<hr style = 'clear: both'></hr>
+
+<div class = 'front-grid'>
+<div class = 'author-list'>
+<div class = 'author'>
+<div class = 'photo'><a href = 'https://twitter.com/evanbottcher'><img alt = 'Photo of Evan Bottcher' src = 'talk-about-platforms/evan.jpg' width = '80'></img></a></div>
+
+<address class = 'name'><a href = 'https://twitter.com/evanbottcher' rel = 'author'>Evan Bottcher</a></address>
+
+<div class = 'bio'>
+<p>Evan is an experienced technical leader with more than two decades of
+        experience building and integrating systems, providing clients with
+        advice on technology strategy, enterprise architecture and software
+        delivery practices.</p>
+</div>
+</div>
+</div>
+
+<div class = 'tags'>
+<p class = 'tag-link'><a href = /tags/platforms.html>platforms</a></p>
+</div>
+
+<div class = 'contents'>
+<h2>Contents</h2>
+
+<ul>
+<li><a href = '#WhatIsAplatformAnyway'>What is a 'Platform' anyway?</a></li>
+
+<li><a href = '#FirstAnUn-platform'>First, an un-platform</a></li>
+
+<li><a href = '#TheImpactOfx201cbacklogCouplingx201d'>The impact of &#x201C;backlog coupling&#x201D;</a></li>
+
+<li><a href = '#TheHalf-arsedSuperficialPrivateCloud'>The 
+half-arsed
+ superficial private cloud</a></li>
+
+<li><a href = '#AutonomySpeedsTimeToMarketIncreasesInnovation'>Autonomy speeds time to market, increases innovation</a></li>
+
+<li><a href = '#TechnologyDiversificationIncreasesDrag'>Technology diversification increases drag</a></li>
+
+<li><a href = '#PlatformAsAnInternalProduct'>Platform as an internal product</a></li>
+
+<li><a href = '#WaitAMinutex2026Isnx2019tThisAx2018devopsTeamx2019'>Wait a minute&#x2026; isn&#x2019;t this a &#x2018;DevOps Team&#x2019;?</a></li>
+
+<li><a href = '#WhereDoIStart'>Where do I start?</a></li>
+</ul>
+</div>
+</div>
+<hr></hr></section>
+
+<div class = 'paperBody shallow'>
+<p>(with apologies to <a href="https://www.amazon.com/gp/product/0385681917/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0385681917&linkCode=as2&tag=martinfowlerc-20">Haruki Murakami</a>.)</p>
+
+<section id = 'WhatIsAplatformAnyway'>
+<h2>What is a 'Platform' anyway?</h2>
+
+<p>Words are hard, it seems. &#x2018;Platform&#x2019; is just about the most ambiguous term we
+      could use for an approach that is super-important for increasing delivery speed and
+      efficiency at scale. Hence the title of this article, here is what I&#x2019;ve been talking
+      about most recently.</p>
+
+<p>Definitions for software and hardware platforms abound, generally describing an
+      operating environment upon which applications can execute and which provides
+      reusable capabilities such as file systems and security. </p>
+
+<p>Zooming out, at an organisational level a &#x2018;digital platform&#x2019; has similar
+      characteristics - an operating environment which teams can build upon to deliver
+      product features to customers more quickly, supported by reusable capabilities.</p>
+
+<p>A <b>digital platform</b> is a foundation of self-service APIs, tools, services,
+      knowledge and support which are arranged as a compelling internal product.
+      Autonomous delivery teams can make use of the platform to deliver product features
+      at a higher pace, with reduced co-ordination.</p>
+
+<p>At Thoughtworks we have a developed a model with <a href = 'https://www.thoughtworks.com/what-we-do/enterprise-modernization-platforms-cloud/digital-platform-strategy'>five key pillars of platform
+      capability</a>. These capabilities include delivery infrastructure, APIs and
+      architectural remediation, self-service data, experimental infrastructure, and
+      customer touchpoint technologies. We&#x2019;ve learned through global experience that these
+      are the most important shared capabilities to invest in to unlock the ability to
+      become a digital company.</p>
+
+<p>This article is focused on platform capabilities we&#x2019;d classify as Delivery
+      Infrastructure - including cloud hosting and devops tooling, although the same
+      defining characteristics apply to other platform capabilities.</p>
+</section>
+
+<section id = 'FirstAnUn-platform'>
+<h2>First, an un-platform</h2>
+
+<p>A couple of years ago I was engaged to do some consulting at a large Australian
+      financial services organisation. Let&#x2019;s call them BigCo. My first goal upon arrival
+      on-site was to understand what was happening in the application infrastructure,
+      hosting and operations area. To get a real understanding of where the challenges
+      were at, we decided to follow a real change through the system of work and see how
+      things were done.</p>
+
+<p>Despite a big investment in cloud and automation, BigCo retained a traditional
+      arrangement of teams in the infrastructure and operations area. Teams were divided
+      along technical competencies. We followed a few typical changes, and they each
+      involved a number of these teams. If there is a change to the application server
+      configuration, this is owned by the &#x2018;middleware&#x2019; team. The middleware team don&#x2019;t
+      have access to the underlying operating system configuration however, that is the
+      responsibility of the &#x2018;midrange&#x2019; team. Database changes must be done by the DBA
+      team. Networking changes must go through a networks team. Load balancer changes must
+      be done by a managed service provider, while firewall changes are done by a
+      different provider. There was also a separate automation team, who owned some
+      automation capability - mostly limited to orchestration. There was of course
+      separate enterprise monitoring, security, change and release management teams.</p>
+
+<div class = 'figure ' id = 'silos.png'><img src = 'talk-about-platforms/silos.png'></img>
+<p class = 'photoCaption'>Figure 1: Separate highly specialised infra and operations teams</p>
+</div>
+
+<p>Each of these BigCo teams were under their own management structure, with
+      independent ways of working. Each team was managing towards a high degree of
+      efficiency in their own technical domain, centralising specialisation, outsourcing
+      non-differentiating capabilities, applying governance, and reducing costs. However
+      no-one at BigCo was measured on effectiveness of end-to-end delivery of features to
+      customers.</p>
+
+<p>Small changes involving infrastructure took anything from several weeks to
+      multiple months, with a huge impact to responsiveness to the customer. This has a
+      big impact, but that&#x2019;s not all. We notice that when change is hard and slow, then
+      any failures in the change process cause further delays. This drives a behaviour in
+      engineers and managers to reduce to a minimum the number of changes made as much as
+      possible, only making the absolutely essential changes to applications and
+      infrastructure.</p>
+
+<div class = 'figure ' id = 'silos-impact.png'><img src = 'talk-about-platforms/silos-impact.png'></img>
+<p class = 'photoCaption'>Figure 2: Changes required by application delivery teams would
+        take weeks or months</p>
+</div>
+
+<p>At BigCo this had clearly led to a gradual decline in the internal quality of
+      applications and infrastructure - with lots of little inconsistencies in
+      environments and configuration settings everywhere. The teams had stopped making the
+      small improvements and refactorings that would maintain or improve quality and
+      consistency. This is self-reinforcing in practice: as quality impacts
+      predictability and therefore increases risk of change, so teams become more cautious
+      and it becomes harder to make improvements.</p>
+
+<p>So in summary: dealing with infrastructure and hosting at BigCo was slow and
+      difficult.</p>
+</section>
+
+<section id = 'TheImpactOfx201cbacklogCouplingx201d'>
+<h2>The impact of &#x201C;backlog coupling&#x201D;</h2>
+
+<p>The low hanging fruit for agile software delivery has always been in the digital
+      channels, with small autonomous teams working closely with business leaders
+      identifying customer need and building features that meet those needs. However the
+      faster and more responsive a digital product team becomes, the more amplified the
+      external constraints applied to it become.</p>
+
+<p>Digital teams are generally constrained in three main areas: slow-moving core
+      transactional systems of record, access to high-quality data and analytics, and
+      shared infrastructure and operations.</p>
+
+<p>I use the term &#x2018;backlog coupling&#x2019;, where backlog is a planning tool often used
+      by agile delivery teams. </p>
+
+<div class = 'figure ' id = 'backlog-coupling.png'><img src = 'talk-about-platforms/backlog-coupling.png'></img>
+<p class = 'photoCaption'>Figure 3: Backlog coupling happens when changes have dependencies
+        across the backlogs (work queues) of multiple teams</p>
+</div>
+
+<p>It&#x2019;s a simple concept - if a large number of items in the backlog of a digital
+      product team require a corresponding backlog item to be raised in another team, then
+      productivity and responsiveness suffer enormously. Backlogs get chained across the
+      organisation, each being prioritised according to a different system. Tasks acquire
+      big red &#x2018;blocked&#x2019; stickers on kanbans, stakeholders get angry, the shared service
+      providers react as best they can - usually responding to the loudest voice.</p>
+
+<p>How bad is backlog coupling? At an Australian telecommunications company, my
+      colleagues did a study of hundreds of pieces of work or tasks passing through a
+      delivery centre. Some tasks could be completed by a single team without dependency,
+      specifically without scheduling work by members of another team. The tasks that had
+      to wait for another team were 10-12x slower in elapsed time. So dependencies have a
+      real significant impact.</p>
+
+<p>This hurts us in many ways: it hurts in pure throughput and responsiveness to
+      customer need, and drives us towards more long-term planning to more efficiently
+      manage dependencies. It also damages a team&#x2019;s own accountability for outcomes, and
+      for many teams I&#x2019;ve observed this is a motivation-killer. Teams can find it easy to
+      shift blame and stop seeking their own continuous improvement.</p>
+
+<p>It&#x2019;s not much fun to be in one of the heavily overloaded teams servicing many
+      noisy internal customers either.</p>
+
+<p>The recent tradition of &#x2018;scaling agile&#x2019; tries to solve this in one way - by
+      introducing planning ceremonies that attempt to align priorities across multiple
+      teams. This explicitly trades off an increase in alignment for overall reduced
+      autonomy, responsiveness and ability to respond to change. This cannot be the only
+      way.</p>
+
+<p>So clearly a characteristic of a good platform must be that it reduces the amount
+      of backlog coupling. The platform must provide services that do not require tickets
+      to be raised and work to be assigned. <i>Self-service</i> is a key defining characteristic
+      for a good platform.</p>
+
+<p>The platform should provide a team with self-service access. Specifically it
+      should allow for self-service <i>provisioning</i>, self-service <i>configuration</i>, and
+      self-service <i>management and operation</i> of the platform capabilities and assets.</p>
+</section>
+
+<section id = 'TheHalf-arsedSuperficialPrivateCloud'>
+<h2>The 
+<strike>half-arsed</strike>
+ superficial private cloud</h2>
+
+<p>BigCo recognised the need for self-service, but struggled to envision how to
+      achieve this with a large infrastructure and operations organisation entrenched in
+      legacy infrastructure and thinking. There was already an investment in centralised
+      automation tooling, so the first effort was to create a self-service capability for
+      application delivery teams to self-provision infrastructure.</p>
+
+<p>A self-service tool was built to allow delivery teams to requisition compute
+      instances according to a very fixed template. The virtual machine instances
+      provisioned were fixed in configuration and securely locked down to ensure control
+      of the fleet could remain with the central midrange team. In order to do something
+      useful with the instance - for example install packages, connect it to a network,
+      attach storage, provision a load balancer, configure monitoring tools, or anything
+      else - the delivery team would need to raise tickets.</p>
+
+<div class = 'figure ' id = 'superficial-private-cloud.png'><img src = 'talk-about-platforms/superficial-private-cloud.png'></img>
+<p class = 'photoCaption'>Figure 4: BigCo built a rudimentary self-service
+       API without altering the fundamentals of how applications and infrastructure was run.
+       The result did not significantly change the pace of delivery.</p>
+</div>
+
+<p>You could argue this was just the first iteration, and that was true - however
+      the intent was clear. The BigCo infrastructure and operations group was not ready at
+      that time to break down its own organisational silos, and shift significant
+      responsibility (and therefore access) to delivery teams. And even if the intent was
+      good, the sheer amount of effort required to incrementally build that API to the
+      required richness was not viable.</p>
+
+<p>We call this type of approach a &#x2018;superficial private cloud&#x2019; - re-labelling
+      existing virtualisation platforms for use by delivery teams in a very constrained
+      way, with no real intent to reduce the amount of centralised control. </p>
+
+<p>Meanwhile at BigCo in a parallel effort a delivery team had unlocked the ability
+      to directly use Amazon Web Services (AWS) for production systems. Once the precedent
+      was in place, delivery teams joined a stampede to use AWS.</p>
+
+<p>AWS is a compelling platform for direct consumption by delivery teams: it is
+      completely self-service, and has clear boundaries of responsibility. &#x201C;You build it,
+      you run it&#x201D; becomes the mantra, where Amazon builds and runs the platform up to the
+      API and makes sure it is highly available, and your application delivery team
+      builds, configures, and runs applications that sit on top.</p>
+
+<p>Is that the end of the story?</p>
+</section>
+
+<section id = 'AutonomySpeedsTimeToMarketIncreasesInnovation'>
+<h2>Autonomy speeds time to market, increases innovation</h2>
+
+<p>Most organisations I meet have a default setting of &#x201C;build for re-use&#x201D;:
+      centralisation of capabilities driven by a combination of risk-aversion and cost
+      reduction. </p>
+
+<div class = 'figure ' id = 'autonomy-vs-centralised.png'><img src = 'talk-about-platforms/autonomy-vs-centralised.png'></img>
+<p class = 'photoCaption'>Figure 5: Most organisations default to
+       centrally mandating technology choices to gain cost efficiency</p>
+</div>
+
+<p>In the last few years I was fortunate enough to be part of a tech leadership team
+      at a major Australian (and global) technology company with a huge online presence,
+      let&#x2019;s call them WebBiz. With multiple hundreds of engineers, they&#x2019;re big enough to
+      face many of the same kind of challenges as BigCo, with a not-insignificant legacy
+      in infrastructure and applications and data - but WebBiz is just small enough to see
+      rapid change and improvement.</p>
+
+<p>While I was at WebBiz, we made a start on a multi-year migration from deploying
+      most applications on a virtualisation platform in a leased data centre to a new
+      default deployment target of AWS. We also shifted responsibility for both build and
+      run of applications and (most) infrastructure out to product teams, in the most
+      complete transition from traditional central ops to devops I&#x2019;ve witnessed. I believe
+      it&#x2019;s actually not that hard to start a small organisation with a &#x201C;you build it, you
+      run it&#x201D; mindset, but making the transition takes courage and continuity of vision.
+      WebBiz have done very well in that regard.</p>
+
+<p>As part of the migration, product teams at WebBiz were given complete autonomy
+      over how they configured and ran every part of their stack. The approach was named
+      &#x2018;Team Managed Infrastructure&#x2019; - although there were some defaults established early
+      on, each team would make it&#x2019;s own decisions on every part of the stack with almost
+      no central mandates.</p>
+
+<p>WebBiz had successfully reversed the typical default bias for organisations:
+      favouring technology diversification and invention. This drove up the level of staff
+      engagement, with engineers getting experience deeper in the stack of technology,
+      drove invention, quickly established a level of responsibility for what was
+      deployed, and eliminated the bulk of team dependencies. It also attracted engineers
+      to work at WebBiz who are interested in both taking on responsibility for what they
+      run, who respond well to autonomy, and who are interested in solving difficult
+      business and technical problems.</p>
+</section>
+
+<section id = 'TechnologyDiversificationIncreasesDrag'>
+<h2>Technology diversification increases drag</h2>
+
+<p>However, for all the benefits there is a definite cost to shifting to full
+      autonomy. By adopting AWS as a platform, WebBiz has removed the backlog coupling to
+      the centralised infrastructure team. However every team at WebBiz is now forced to
+      make a series of decisions around every aspect of building and operating their
+      infrastructure. </p>
+<a href = 'https://raw.githubusercontent.com/cncf/landscape/master/landscape/CloudNativeLandscape_latest.png' target = '_blank'>
+<div class = 'figure ' id = 'cncf.png'><img src = 'talk-about-platforms/cncf.png'></img>
+<p class = 'photoCaption'>Figure 6: Cloud Native Landscape (source: <a href = 'https://www.cncf.io/'>www.cncf.io</a>)</p>
+</div>
+</a>
+<p>Above is a recent version of the <a href = 'https://github.com/cncf/landscape'>Cloud Native Landscape</a>: an attempt to capture
+      some common open source and product offerings grouped by areas of concern in
+      building a cloud native architecture. It&#x2019;s a crowded map, and it&#x2019;s only the most
+      well established offerings. For each of these areas and more, a team must evaluate
+      options and choose an offering that is a good fit to their needs, then learn how to
+      integrate and operate that offering.</p>
+
+<p>In addition to the maintenance drag of duplicated infrastructure, there is an
+      ongoing overhead for each team to continually research and evaluate their
+      infrastructure choices There&#x2019;s also a friction created which works against the
+      transfer of skills and even staff between teams which are running distinctly
+      different stacks.</p>
+
+<p>WebBiz is now beginning to establish a more-clearly defined delivery
+      infrastructure platform - a compelling set of defaults that product teams can
+      consume to reduce the amount of drag and increase their productivity.</p>
+
+<p>But do they risk losing the benefits that autonomy has brought?</p>
+</section>
+
+<section id = 'PlatformAsAnInternalProduct'>
+<h2>Platform as an internal product</h2>
+
+<p>It is a real struggle to find the right balance between autonomous
+      diversification and mandated consolidation, and that is even more difficult to
+      predict up front. A key ingredient for success in finding this balance is that
+      platforms must be compelling to use, they cannot stand on a mandate alone. Your
+      existing shared infrastructure function has a monopoly and delivery teams have no
+      viable alternative. A little competition is a necessary ingredient to drive the
+      product thinking ensuring that every platform feature adds value instead of creating
+      constraints and coupling.</p>
+
+<div class = 'soundbite'>
+<p>A key ingredient for success in finding this balance is that
+      platforms must be compelling to use</p>
+</div>
+
+<p>What makes a platform compelling? Here are a few ideas:</p>
+
+<ul>
+<li>The platform is self-service for the overwhelming majority of use cases.</li>
+
+<li>The platform is composable, containing discrete services that can be used independently.</li>
+
+<li>The platform does not force an inflexible way of working upon the delivery team.</li>
+
+<li>The platform is quick and cheap to start using, with an easy on-ramp (e.g. Quick start guides, documentation, code samples)</li>
+
+<li>The platform has a rich internal user community for sharing</li>
+
+<li>The platform is secure and compliant by default</li>
+
+<li>The platform is up to date</li>
+</ul>
+
+<p>Ultimately the delivery infrastructure platform is compelling when it is easier
+      to consume the platform capability than building and maintaining your own thing.
+      Netflix describes their centralised tooling as &#x2018;the paved road&#x2019; - teams do not have
+      to make use of the tooling but are responsible for all the costs of maintaining
+      their own alternatives.</p>
+
+<p>A platform should also be more than just software and APIs - it is documentation,
+      and consulting, and support and evangelism, and templates and guidelines.</p>
+</section>
+
+<section id = 'WaitAMinutex2026Isnx2019tThisAx2018devopsTeamx2019'>
+<h2>Wait a minute&#x2026; isn&#x2019;t this a &#x2018;DevOps Team&#x2019;?</h2>
+
+<p>Done badly? Yes it might be.</p>
+
+<blockquote>
+<p>We totally lost the whole “DevOps” isn't a role/team/tools” battle didn't we? We
+        keep losing these battles. Maybe a new strategy next time?</p>
+
+<p class = 'quote-attribution'>-- <a href = 'https://twitter.com/pcalcado/status/902932230347124736'>Phil Calçado</a></p>
+</blockquote>
+
+<p>(I&#x2019;m not ready to admit defeat just yet on DevOps: so just in case you aren't
+      sure, if you have a team called &#x2018;DevOps&#x2019; then that word doesn&#x2019;t mean what you think
+      it means.)</p>
+
+<p>You may choose to build a team to build and operate a delivery infrastructure
+      platform - I think in most cases that&#x2019;s going to be the best way to get started. If
+      so, you should be very clear on the scope of responsibilities for the platform team
+      vs its customers - which I&#x2019;ll call application teams for clarity.</p>
+
+<p>Application teams build, deploy, monitor, and are on call for the application
+      components and application infrastructure that they provision and deploy on the
+      platform. Platform teams build, deploy, monitor, and are on call for the platform
+      components and underlying platform infrastructure.</p>
+
+<p>The platform team ideally doesn&#x2019;t even know what applications are running on the
+      platform, they are only responsible for the availability of the platform services
+      themselves.</p>
+
+<p>In this way both application teams and platform teams have responsibility for
+      build and run of their own products. &#x2018;You build it, you run it&#x2019; still applies.</p>
+</section>
+
+<section id = 'WhereDoIStart'>
+<h2>Where do I start?</h2>
+
+<p>There are some prerequisites for success in establishing a delivery platform.
+      Firstly you will probably already be on your journey to <a href = '/articles/products-over-projects.html'>move away from &#x2018;project&#x2019;</a> as
+      the primary mechanism for funding and staffing delivery of technology. Platform is a
+      product, and needs a long-lived and stable product team tasked with both build and
+      run.</p>
+
+<p>Secondly you must be willing to shift some or all of the run responsibility for
+      applications into the application teams and away from centralised operations and
+      support. The platform provides tools and services to allow application teams to take
+      responsibility for what they build, this won&#x2019;t happen while support is
+      centralised.</p>
+
+<p>Thirdly you must be willing to trade off strict consistency of implementation
+      against the freedom and responsibilities that you&#x2019;re handing to the autonomous
+      application teams.</p>
+
+<p>Now some gotchas. </p>
+
+<ul>
+<li>Your platform is not only infrastructure and tools and APIs that you can
+        install. To be effective you must answer how your delivery teams will quickly adopt
+        the new capabilities, what choices will they make independently vs using sensible
+        defaults, and how you will maintain the capabilities ongoing. This will require some
+        internal consulting skills and training and evangelism. </li>
+
+<li>You do not know what platform capabilities you need, so start small
+        based on genuine proven needs. Harvest already proven solutions from application
+        teams, and try joint-ventures to create and test capabilities with the teams that
+        will use them.</li>
+
+<li>Be very careful not to just apply the platform label to the limited
+        virtualised hosting and locked-down centrally-managed tooling that you already
+        have.</li>
+</ul>
+</section>
+
+<hr class = 'bodySep'></hr>
+</div>
+
+<div class = 'appendix'>
+<details id = 'SignificantRevisions'>
+<summary>Significant Revisions</summary>
+
+<p><i>05 March 2018: </i>Published</p>
+</details>
+</div>
+</main>
+
+<nav id = 'bottom-navmenu'>
+<nav class = 'navmenu'>
+<div class = 'nav-head'>  <div class = 'search'>
+    <!-- SiteSearch Google -->
+    <form method='GET' action="https://www.google.com/search">
+      <input type='hidden' name='ie' value='UTF-8'/>
+      <input type='hidden' name='oe' value='UTF-8'/>
+      <input class = 'field' type='text' 
+             name='q' size='15' maxlength='255' value=""/>
+      <button class = 'button' type='submit' 
+             name='btnG' value=" " title = "Search"/>
+      <input type='hidden' name='domains' value="martinfowler.com"/>
+      <input type='hidden' name='sitesearch' value=""/> 
+      <input
+          type='hidden' name='sitesearch' value="martinfowler.com"/>
+    </form>
+  </div>
+
+<div class = 'closediv'>
+<span class = 'close' title = 'close'></span>
+</div>
+</div>
+
+<div class = 'nav-body'>
+<div class = 'topics'>
+<h2>Topics</h2>
+
+<p><a href = '/architecture'>Architecture</a></p>
+
+<p><a href = 'https://refactoring.com'>Refactoring</a></p>
+
+<p><a href = '/agile.html'>Agile</a></p>
+
+<p><a href = '/delivery.html'>Delivery</a></p>
+
+<p><a href = '/microservices'>Microservices</a></p>
+
+<p><a href = '/data'>Data</a></p>
+
+<p><a href = '/testing'>Testing</a></p>
+
+<p><a href = '/dsl.html'>DSL</a></p>
+</div>
+
+<div class = 'about'>
+<h2>about me</h2>
+
+<p><a href = '/aboutMe.html'>About</a></p>
+
+<p><a href = '/books'>Books</a></p>
+
+<p><a href = '/faq.html'>FAQ</a></p>
+</div>
+
+<div class = 'content'>
+<h2>content</h2>
+
+<p><a href = '/videos.html'>Videos</a></p>
+
+<p><a href = '/tags'>Content Index</a></p>
+
+<p><a href = '/fragments'>Fragments</a></p>
+
+<p><a href = '/boardgames'>Board Games</a></p>
+
+<p><a href = '/photos'>Photography</a></p>
+</div>
+
+<div class = 'tw'>
+<h2>Thoughtworks</h2>
+
+<p><a href = 'https://thoughtworks.com'>Home</a></p>
+
+<p><a href = 'https://thoughtworks.com/insights'>Insights</a></p>
+
+<p><a href = 'https://thoughtworks.com/careers'>Careers</a></p>
+
+<p><a href = 'https://thoughtworks.com/radar'>Radar</a></p>
+
+<p><a href = 'https://www.thoughtworks.com/engineering'>Engineering</a></p>
+</div>
+
+<div class = 'feeds'>
+<h2>follow</h2>
+
+<p><a href = '/feed.atom'>RSS</a></p>
+
+<p><a href = 'https://toot.thoughtworks.com/@mfowler'>Mastodon</a></p>
+
+<p><a href = 'https://www.linkedin.com/in/martin-fowler-com/'>LinkedIn</a></p>
+
+<p><a href = 'https://bsky.app/profile/martinfowler.com'>Bluesky</a></p>
+
+<p><a href = 'https://www.twitter.com/martinfowler'>X</a></p>
+
+<p><a href = 'https://boardgamegeek.com/blog/13064/martins-7th-decade'>BGG</a></p>
+</div>
+</div>
+</nav>
+</nav>
+<footer id='page-footer'>
+<div class='tw-logo'>
+<a href='https://www.thoughtworks.com/engineering'>
+<img src='/thoughtworks_white.png'>
+</a>
+</div>
+<div class='menu-button'>
+<div class='icon-bars navmenu-button'></div>
+</div>
+<div class='copyright'>
+<p>© Martin Fowler | <a href="/aboutMe.html#disclosures">Disclosures</a></p>
+</div>
+</footer>
+
+<script src = '/jquery-1.11.3.min.js' type = 'text/javascript'></script>
+
+<script src = '/mfcom.js' type = 'text/javascript'></script>
+</body>
+</html>

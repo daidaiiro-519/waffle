@@ -961,6 +961,28 @@ t15 = Topic(15, "Spec の種類", "spec を、どの単位で型にするか", "
     {"A": ["<b>型が1つ増える</b>", "<b>置き場所が無い</b>（どちらかへ押し込む）", "spec と Coding で別の形（2通り）"],
      "B": ["<b>軸の値が1つ増える</b>", "<b>掛けた層に書く</b>", "<b>1通り（Coding と同じ形）</b>"],
      "C": ["規約側の用途が増える", "規約に書く", "1通り（ただし約束が規約に混ざる）"]})],
+  extras=[("軸ごとの原典（2026-09-06 に落として照合）", """<p class="lead"><b>3つの軸それぞれに、支える原典があるか</b>を確かめた。
+落とした原文から<b>文字列で照合できたものだけ</b>を「照合済み」とし、できなかったものはそう書く。</p>
+<table><tr><th>軸</th><th>原典</th><th>照合した文字列</th></tr>
+<tr><td><b>業務</b></td><td>Evans『Domain-Driven Design』── canonical<br>Fowler「Bounded Context」https://martinfowler.com/bliki/BoundedContext.html</td>
+<td><code>Bounded Context</code> ・ <code>Ubiquitous Language</code> ・ <code>context map</code>（Fowler 側で照合）<br>
+<b>Evans の本と DDD Reference（PDF）は、字の対応表が無く本文を照合できていない</b></td></tr>
+<tr><td><b>接点</b></td><td>Robinson「Consumer-Driven Contracts」https://martinfowler.com/articles/consumerDrivenContracts.html<br>
+Cockburn「Hexagonal Architecture」</td>
+<td><code>Consumer-Driven Contracts</code> ・ <code>provider</code> ・ <code>consumer</code><br><code>Ports and Adapters</code>（CodingSkills の出典で照合済み）</td></tr>
+<tr><td><b>基盤</b></td><td>Bottcher「What I Talk About When I Talk About Platforms」https://martinfowler.com/articles/talk-about-platforms.html<br>
+CNCF Platforms White Paper　／　Google SRE Book</td>
+<td><code>self-service APIs, tools, services, knowledge and support which are arranged as a compelling internal product</code><br>
+<code>platform engineering</code> ・ <code>Capabilities of platforms</code><br><code>service level indicators (SLIs), objectives (SLOs)</code></td></tr></table>
+<p class="lead"><b>基盤には、確立した呼称がある</b> ── <b>Platform Engineering</b>。
+そして「満たすべき要件」を書く言語も在る（<b>SLI ・ SLO</b>）── 論点15 の「基盤の層は要件を書く」と、そのまま噛み合う。</p>
+<p class="lead"><b>接点には、これ1つという呼称が見つからない。</b>照合できた近いものは2つで、
+どちらも<b>接点の一部</b>しか覆わない ── Consumer-Driven Contracts は<b>機械どうしの約束</b>を、
+Ports and Adapters は<b>境界の置き方</b>を扱う。<b>人向けの接点（画面）を同じ語で括る原典は、まだ当てていない。</b></p>
+<table><tr><th>まだ照合していないもの</th><th>なぜ挙げるか</th></tr>
+<tr><td>DDD の境界の関係パターン（Open-host Service ・ Published Language ・ Anticorruption Layer）</td>
+<td><b>DDD 自身が接点の語彙を持っている</b>可能性が高い ── ただし PDF から文字列を取り出せず、<b>照合できていない</b></td></tr>
+<tr><td>人向けの接点を扱う分野（Interaction Design ・ API design）</td><td>呼称として通っているが、<b>原文を落としていない</b></td></tr></table>""")],
   kept=[
    Option("系ごとに型を並べる（業務 ・ 画面 ・ 基盤 …）",
           "「何についての spec か」で型を分け、系が増えたら型を足す",
@@ -1018,7 +1040,8 @@ t15 = Topic(15, "Spec の種類", "spec を、どの単位で型にするか", "
   costs=["<b>「業務の spec」という単独の型が無くなる</b> ── 引くときは軸で指すことになる（論点13）",
          "<b>軸の値をどこまで認めるかの判断が要る</b>（接点に AI を値として立てるか、など）",
          "既存の spec を、この形へ移すことになる ── 再定義の一部として受け入れる（論点11）"],
-  weaknesses=["<b>業務 × 接点 × 基盤 の層が要るかは分からない</b> ── 3つ掛かる言明が出たら、そのとき足す",
+  weaknesses=["<b>接点の軸を支える呼称が、1つに定まっていない</b> ── 照合できたのは機械どうしの約束と境界の置き方だけで、人向けの接点を同じ語で括る原典を当てていない",
+              "<b>業務 × 接点 × 基盤 の層が要るかは分からない</b> ── 3つ掛かる言明が出たら、そのとき足す",
               "<b>基盤の軸が、本当に spec 側かは詰めていない</b> ── 要件は spec、採用は規約、という線は引けるが、当ててはいない",
               "<b>接点の値をどう列挙するかは決めていない</b> ── 人 ／ 別のシステム ／ AI で足りるのか、もっと細かいのか",
               "<b>層ごとに置く種の一覧は、まだ書いていない</b> ── Coding では15本を書き切ったが、spec では未着手である"])
