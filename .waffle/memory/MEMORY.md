@@ -19,7 +19,10 @@
   **論点16 決着（2026-09-06）**── CodingSchema の種は CodingSkills の雛形の単位15にし、
   **古い4種（architecture/coding-standard/tech-stack/test-standard）は捨てる**。層は軸から導出、
   種別は欄。既存の coding 系 document 12本は再定義の一部として作り直す。
-  **残るは論点14（型を立てる基準）・15（Spec の種類）。**spec へ落とすのはそのあと。
+  **論点15 も決着**── spec の軸は 業務（主題）・接点・基盤で、層はどれも業務を含む
+  （業務／業務×接点／業務×基盤）。業務を含まない層は spec ではなく規約。UI/API/CLI/MCP は接点の値。
+  原典は 業務＝ddd-advisor の knowledge、接点＝Fowler の層分け＋Cockburn、基盤＝Platform Engineering と SLI/SLO。
+  **残るは論点14（型を立てる基準）だけ。**
 
 
 ## 承認待ち
