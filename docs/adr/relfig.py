@@ -10,7 +10,7 @@ def _b(x, y, w, h, label, stroke, sw=1.4, sub=None, size=9.5):
 
 K, A, M, C = "var(--key)", "var(--add)", "var(--muted)", "currentColor"
 
-REL = ('<svg viewBox="0 0 780 300" role="img" aria-label="業務領域と区切られた文脈の対応は、1対1にも、1対多にも、多対1にもなる">'
+REL = ('<svg viewBox="0 0 780 335" role="img" aria-label="業務領域と区切られた文脈の対応は、1対1にも、1対多にも、多対1にもなる">'
  '<text x="20" y="20" font-size="10" fill="var(--muted)">業務領域　── 事業方針で決まる構造（見つけるもの）</text>'
  '<text x="20" y="36" font-size="10" fill="var(--add)">区切られた文脈　── 設計判断（技術者が決めるもの）</text>'
  '<line x1="20" y1="46" x2="760" y2="46" stroke="var(--rule)"/>'
@@ -44,15 +44,13 @@ REL = ('<svg viewBox="0 0 780 300" role="img" aria-label="業務領域と区切�
  'だから、業務領域は文脈の入れ子にできない</text>'
  + '<text x="20" y="280" font-size="9" fill="var(--muted)">'
  '②も③も起こるので、どちらを外側にしても、もう一方が入らない場合が出る</text>'
- '<rect x="440" y="228" width="320" height="56" rx="3" fill="none" stroke="var(--add)" stroke-width="1.5"/>'
- '<text x="452" y="248" font-size="9.5" font-weight="700" fill="var(--add)">Waffle 自身は ③ である</text>'
- '<text x="452" y="266" font-size="8.5" fill="var(--muted)">業務領域 7本 に対して、区切られた文脈は 1本</text>'
- '<text x="452" y="280" font-size="8.5" fill="var(--muted)">（過去の検討 tier2-domain.html が数えたもの）</text>'
+ '<text x="20" y="302" font-size="9" fill="var(--add)" font-weight="700">どれを採るかは決め打ちしない ── 文脈の数は「言葉が一貫する範囲」で決まる（設計判断）</text>'
+ '<text x="20" y="320" font-size="8.5" fill="var(--muted)">いまの Waffle は 文脈1本に業務領域7本 と数えられているが、それは いまの姿 であって、あるべき姿ではない</text>'
  '</svg>',
  '<b>業務領域は事業方針で決まる構造、区切られた文脈は設計判断である。</b>'
  '対応は1対1に限らず、<b>1つの領域に複数の文脈</b>（課題ごとに別のモデル）も、'
  '<b>1つの文脈に複数の領域</b>（小さなシステムを単一の文脈で開発）も起こる ── '
  'だから<b>どちらを外側にしても入らない場合が出る</b>。'
  '③のとき、領域の境界は名前空間やモジュールとして<b>実装の側に現れる</b>。'
- '<b>そして Waffle 自身が ③ である</b> ── 業務領域7本に対して、区切られた文脈は1本。'
- 'だから「入れ子にできない」は机上の話ではなく、<b>いま自分がそうなっている</b>。')
+ '<b>どれを採るかは決め打ちしない</b> ── 文脈の数は「同じ言葉が一貫する範囲」で決まる設計判断であり、<b>数えた結果はいまの姿であって、あるべき姿ではない。</b>'
+ 'だからフォルダの形は、<b>どの対応が来ても壊れないもの</b>を選ぶ。')

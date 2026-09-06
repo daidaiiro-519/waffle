@@ -5,7 +5,7 @@
 **目で見つける前に、機械で落とす。**実際に、矢印が箱を貫き、
 注記が2つ重なって別の文になっている図を出してしまった。
 
-見るのは4つ。文字の重なり ・ 枠からのはみ出し ・ 線が箱を貫くこと ・ 空白で字下げを作っていること。
+見るのは5つ。文字の重なり ・ 枠からのはみ出し ・ 線が箱を貫くこと ・ 空白で字下げ ・ 箱が文字を覆うこと。
 """
 import importlib
 import re
@@ -19,8 +19,14 @@ def check(name, fig):
         x, y, attr = float(m.group(1)), float(m.group(2)), m.group(3)
         txt = re.sub(r"<[^>]+>", "", m.group(4))
         size = float(re.search(r'font-size="([\d.]+)"', attr).group(1)) if "font-size" in attr else 10
-        w = len(txt) * size * 0.85           # 日本語は全角なので、字数 × 字送りで見る
-        x0 = x - w / 2 if "middle" in attr else x
+        # 全角は1文字ぶん、英数字と記号は約0.55文字ぶんで数える
+        w = size * sum(1.0 if ord(c) > 0x2E80 else 0.55 for c in txt)
+        if "middle" in attr:
+            x0 = x - w / 2
+        elif 'text-anchor="end"' in attr:
+            x0 = x - w
+        else:
+            x0 = x
         items.append((y, x0, x0 + w, txt))
     vb = [float(v) for v in re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', svg).groups()]
     items.sort()
@@ -45,8 +51,25 @@ def check(name, fig):
     indented = [t for t in re.findall(r'<text[^>]*>(.*?)</text>', svg)
                 if re.match(r'^(?:\s|&#160;|\u3000){2,}\S', re.sub(r'<[^>]+>', '', t))]
 
+    # 箱の枠線が、文字を横切っていないか（中に収まっているラベルは当たらない）
+    covered = []
+    for m in re.finditer(r'<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"', svg):
+        rx, ry, rw, rh = map(float, m.groups())
+        edges = [("縦", rx, ry, ry + rh), ("縦", rx + rw, ry, ry + rh)]
+        hedges = [("横", ry, rx, rx + rw), ("横", ry + rh, rx, rx + rw)]
+        for _, ex, y1, y2 in edges:
+            for (ty, a0, b0, t) in items:
+                if a0 + 2 < ex < b0 - 2 and y1 < ty - 3 and ty + 3 < y2:
+                    covered.append(f"箱の縦の枠（x={ex}）が「{t[:22]}」を横切っている")
+        for _, ey, x1, x2 in hedges:
+            for (ty, a0, b0, t) in items:
+                if x1 < a0 and b0 < x2 and ty - 8 < ey < ty + 3:
+                    covered.append(f"箱の横の枠（y={ey}）が「{t[:22]}」を横切っている")
+
     print(f"{name}: 文字 {len(items)} 件 ／ 重なり {len(bad)} 件 ／ はみ出し {len(over)} 件"
-          f" ／ 貫通 {len(pierced)} 件 ／ 空白の字下げ {len(indented)} 件")
+          f" ／ 貫通 {len(pierced)} 件 ／ 空白の字下げ {len(indented)} 件 ／ 覆い {len(covered)} 件")
+    for c in covered[:6]:
+        print(f"   {c}")
     for t in indented[:6]:
         print(f"   空白で字下げしている: 「{re.sub(r'<[^>]+>', '', t)[:30]}」 ── x の値で表す")
     for p in pierced:
@@ -55,7 +78,7 @@ def check(name, fig):
         print(f"   重なり y={y}: 「{t[:26]}」 × 「{t2[:26]}」")
     for t in over:
         print(f"   はみ出し: 「{t[:40]}」")
-    return len(bad) + len(over) + len(pierced) + len(indented)
+    return len(bad) + len(over) + len(pierced) + len(indented) + len(covered)
 
 
 def main() -> int:

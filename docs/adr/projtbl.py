@@ -6,7 +6,7 @@ def _cell(x, y, w, h, txt, stroke="var(--soft)", fill="none", tone="var(--muted)
 TYPES = ["表", "文", "図＋読み方", "並び"]
 OUTS = ["Markdown", "HTML", "射影なし"]
 DEF = [["罫線の表", "罫線の表", "─"], ["段落", "段落", "─"], ["画像＋一文", "画像＋一文", "─"], ["箇条書き", "箇条書き", "─"]]
-OVER = {(0, 1): "札の並び", (2, 1): "図＋説明を並べる"}
+OVER = {(0, 1): "札の並び", (2, 1): "図と説明"}
 
 rows = ""
 for i, t in enumerate(TYPES):

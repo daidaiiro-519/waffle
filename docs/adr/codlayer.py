@@ -1,8 +1,8 @@
 def _band(y, h, name, axes, kinds, cannot, tone="var(--key)"):
-    return (f'<rect x="130" y="{y}" width="420" height="{h}" fill="none" stroke="{tone}" stroke-width="1.5"/>'
+    return (f'<rect x="148" y="{y}" width="402" height="{h}" fill="none" stroke="{tone}" stroke-width="1.5"/>'
             f'<text x="20" y="{y+20}" font-size="10.5" font-weight="700" fill="{tone}">{name}</text>'
             f'<text x="20" y="{y+36}" font-size="8.5" fill="var(--muted)">軸： {axes}</text>'
-            + "".join(f'<text x="144" y="{y+20+i*16}" font-size="9" fill="currentColor">{k}</text>'
+            + "".join(f'<text x="160" y="{y+20+i*16}" font-size="9" fill="currentColor">{k}</text>'
                       for i, k in enumerate(kinds))
             + f'<text x="566" y="{y+20}" font-size="8.5" fill="var(--muted)">決められない：</text>'
             + "".join(f'<text x="566" y="{y+34+i*14}" font-size="8.5" fill="var(--muted)">{c}</text>'
@@ -12,7 +12,7 @@ CODLAYER = ('<svg viewBox="0 0 780 420" role="img" aria-label="CodingSchema の�
  '<defs><marker id="cl1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
  '<path d="M0 0 L10 5 L0 10 z" fill="var(--add)"/></marker></defs>'
  '<text x="20" y="22" font-size="10" font-weight="700" fill="var(--muted)">層</text>'
- '<text x="144" y="22" font-size="9" fill="var(--muted)">その層に置く種（＝雛形1つ）</text>'
+ '<text x="160" y="22" font-size="9" fill="var(--muted)">その層に置く種（＝雛形1つ）</text>'
  '<text x="566" y="22" font-size="9" fill="var(--muted)">その層では決まらないこと</text>'
  + _band(32, 96, "言語", "言語",
          ["style　　　　綴りと書式", "failure　　　失敗の運び方", "concurrency　並行と共有",
@@ -28,7 +28,7 @@ CODLAYER = ('<svg viewBox="0 0 780 420" role="img" aria-label="CodingSchema の�
          ["contract　　　外部との契約", "lifecycle　　　起動と終了", "acceptance　　保証する振る舞い",
           "test-strategy　テストの重心", "stack　　　　採用する依存"],
          ["── ここが可変で、", "上の3層が空けた穴を埋める"], "var(--add)")
- + '<path d="M120 326 C 66 326, 66 168, 118 168" fill="none" stroke="var(--add)" stroke-width="1.5" marker-end="url(#cl1)"/>'
+ + '<path d="M138 326 C 84 326, 84 168, 136 168" fill="none" stroke="var(--add)" stroke-width="1.5" marker-end="url(#cl1)"/>'
  '<text x="14" y="196" font-size="8.5" fill="var(--add)">用途が、採る</text>'
  '<text x="14" y="208" font-size="8.5" fill="var(--add)">アーキを指定</text>'
  '<line x1="20" y1="392" x2="760" y2="392" stroke="var(--rule)" stroke-width="1"/>'
