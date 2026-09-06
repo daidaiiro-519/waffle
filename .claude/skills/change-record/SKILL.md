@@ -141,16 +141,16 @@ description: 文書・コード・設計を変更する前に必ず使うスキ�
 - コードなら、変更後のファイルをそのまま置く
 
 雛形は `references/change-view.html` にある。
-マークダウンからの描画は `references/render.py` を使う。
+マークダウンからの描画は `scripts/render.py` を使う。
 
-**変更した文書が2つ以上あるなら、`references/tabs.py` で1枚にまとめる。**
-**タブの中身は拡張子で決まる。**マークダウンは描画した見た目、HTML はそのままの見た目で置く。
+**変更した文書が2つ以上あるなら、`scripts/tabs.py` で1枚にまとめる。**
+**タブの中身は拡張子で決まる**。マークダウンは描画した見た目、HTML はそのままの見た目で置く。
 
 ```
-python3 references/tabs.py <spec.json> <出力.html>
+python3 scripts/tabs.py <spec.json> <出力.html>
 ```
 
-**HTML は `iframe` に流し込む。**そのままの見た目で見せるには、CSS を隔てるしかない。
+**HTML は `iframe` に流し込む**。そのままの見た目で見せるには、CSS を隔てるしかない。
 親に混ぜると、両方の指定が打ち消し合う。届かなければ Shadow DOM へ落ちる。
 
 **印が、その文書の内側のタブに隠れることがある。**
@@ -246,6 +246,7 @@ python3 references/tabs.py <spec.json> <出力.html>
 ## 参照
 
 - `references/change-view.html`: 変更提示ページの雛形。CSS と開閉のスクリプトを含む
-- `references/render.py`: マークダウンをHTMLへ描画し、変更箇所に印を付ける
-- `references/tabs.py`: 文書が複数のとき、タブ1枚にまとめる。HTML はそのままの見た目で置く
+- `scripts/render.py`: マークダウンをHTMLへ描画し、変更箇所に印を付ける。**位置は差し込む前に全部決める**（差し込みながら探すと、印が前の印の属性の中へ入る）
+- `scripts/test_render.py`: 印の付き方を事例で確かめる。`python3 test_render.py` で走る
+- `scripts/tabs.py`: 文書が複数のとき、タブ1枚にまとめる。HTML はそのままの見た目で置く
 - `references/adr.md`: 設計判断をこの形で残すときの当て方

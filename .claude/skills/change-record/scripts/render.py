@@ -82,24 +82,49 @@ def outside_pre(h):
 
 
 def mark(h, marks):
-    hit = 0
+    """変更後のHTMLに、印を差し込む。
+
+    **位置は、差し込む前のHTMLに対して先に全部決める。**
+    差し込んだ `data-b` ・ `data-w` はHTMLの一部になるので、
+    差し込みながら探すと、**次の印が前の印の理由文の中に当たる**。
+    実際にそれで属性の中へ `<mark>` が入り、面が壊れた。
+    """
+    spans = outside_pre(h)
+    plan = []
     for c in marks:
         f = c["find"]
         if f not in h:
-            print("  当たらず: " + f[:60], file=sys.stderr); continue
-        if not any(h.find(f, s, e) >= 0 for s, e in outside_pre(h)):
-            print("  コードか図の中にしかない: " + f[:60], file=sys.stderr); continue
+            print("  当たらず: " + f[:60], file=sys.stderr)
+            continue
+        at = next((h.find(f, a, b) for a, b in spans if h.find(f, a, b) >= 0), None)
+        if at is None:
+            print("  コードか図の中にしかない: " + f[:60], file=sys.stderr)
+            continue
+        if not c.get("why"):
+            print("  なぜが無い: " + f[:60], file=sys.stderr)
+        plan.append((at, len(f), c))
+
+    # 重なりを落とす。同じ場所へ2つ差し込むと、片方が他方の中へ入る
+    plan.sort(key=lambda x: (x[0], -x[1]))
+    kept, end = [], -1
+    for at, ln, c in plan:
+        if at < end:
+            print("  位置が重なる: " + c["find"][:60], file=sys.stderr)
+            continue
+        kept.append((at, ln, c))
+        end = at + ln
+
+    # 後ろから差し込む。前の位置がずれない
+    for at, ln, c in reversed(kept):
         a = html.escape(c.get("before", ""), quote=True)
         w = html.escape(c.get("why", ""), quote=True)
-        if not w:
-            print("  なぜが無い: " + f[:60], file=sys.stderr)
-        at = next(h.find(f, s, e) for s, e in outside_pre(h) if h.find(f, s, e) >= 0)
+        f = c["find"]
         h = (h[:at] + f'<mark class="chg" tabindex="0" role="button" '
                       f'aria-expanded="false" data-b="{a}" data-w="{w}">{f}</mark>'
-             + h[at + len(f):])
-        hit += 1
-    print(f"  {hit}/{len(marks)} 件に印を付けた", file=sys.stderr)
+             + h[at + ln:])
+    print(f"  {len(kept)}/{len(marks)} 件に印を付けた", file=sys.stderr)
     return h
+
 
 if __name__ == "__main__":
     md = io.open(sys.argv[1], encoding="utf-8").read()

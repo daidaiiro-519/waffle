@@ -96,10 +96,10 @@ CSS = """
 *{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);margin:0;
 font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;line-height:1.85}
-.wrap{max-width:56rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+.wrap{max-width:92rem;margin:0 auto;padding:2rem 1.2rem 5rem}
 h1{font-size:1.5rem;margin:0 0 .3rem;letter-spacing:.02em}
 .lede{font-size:1.06rem;border-left:4px solid var(--key);padding:.55rem 0 .55rem .9rem;
-margin:1rem 0 2rem;background:var(--panel)}
+margin:1rem 0 2rem;background:var(--panel);max-width:68rem}
 h2{font-size:1.12rem;margin:2.4rem 0 .8rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
 h3{font-size:1rem;margin:1.6rem 0 .5rem;color:var(--key)}
 table{border-collapse:collapse;width:100%;margin:.9rem 0;font-size:.93rem}
@@ -122,7 +122,7 @@ border-bottom:0;border-radius:.3rem .3rem 0 0;background:var(--panel);color:var(
 box-shadow:0 2px 0 0 var(--paper)}
 .tab .n{font-size:.78rem;color:var(--move);margin-left:.35rem;font-weight:700}
 .pane{border:1px solid var(--line);border-top:0;background:var(--paper)}
-.pane.md{padding:1.2rem 1.4rem}
+.pane.md{padding:1.2rem 1.8rem}
 .pane.md h1{font-size:1.25rem;margin-top:0}
 .pane.html{padding:0}
 .pane.html iframe{display:block;width:100%;border:0;background:var(--paper)}
