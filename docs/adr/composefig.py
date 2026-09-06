@@ -33,7 +33,7 @@ COMPOSE = ('<svg viewBox="0 0 780 400" role="img" aria-label="保存された sc
  '<text x="32" y="312" font-size="9.5" fill="var(--muted)">できる」のように書きます"</text>'
  '<text x="20" y="342" font-size="9.5" fill="var(--del)">どこまでが説明で、どこからが指示かの区切りが無い</text>'
  '<text x="20" y="358" font-size="9.5" fill="var(--del)">長くなるほど、後ろの一文が効かなくなる</text>'
- '<text x="20" y="380" font-size="9.5" fill="var(--muted)">直すときも、説明と指示のどちらを直しているのか分からない</text>'
+ '<text x="20" y="380" font-size="9.5" fill="var(--muted)">機械で切り出せないので、渡した中身を後から確かめられない</text>'
  '<text x="410" y="234" font-size="11" font-weight="700" fill="var(--key)">読むときは、渡すものが変わる</text>'
  '<rect x="410" y="244" width="350" height="60" fill="none" stroke="var(--key)" stroke-width="1.4"/>'
  '<text x="422" y="264" font-size="9.5" fill="var(--key)">これは：<tspan fill="currentColor">シナリオの題</tspan></text>'
@@ -41,6 +41,7 @@ COMPOSE = ('<svg viewBox="0 0 780 400" role="img" aria-label="保存された sc
  '<text x="410" y="326" font-size="9.5" fill="var(--muted)">「書き方」は載らない ── 読む射影と書く射影は</text>'
  '<text x="410" y="342" font-size="9.5" fill="var(--muted)">別の出力先だからである</text>'
  '<text x="410" y="364" font-size="9.5" fill="var(--key)">いま何をしているかを、AI に判断させない</text>'
+ '<text x="410" y="386" font-size="9" fill="var(--muted)">中身を JSON 文字列にしてもよい。合成した文字列は保存されないので、正本は変わらない</text>'
  '</svg>',
  '<b>合成するのは、文をつなぐことではない。</b>「これは」「書き方」「禁じ手」「例」というラベルを頭に置いた行を、'
  '決まった順で並べるだけである ── <b>行の頭がその行の役割を言うので、途中から読んでも形が保つ。</b>'
