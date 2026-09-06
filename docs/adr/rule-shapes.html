@@ -1,0 +1,95 @@
+<title>規則1件は、どう書かれるか</title><style>
+:root{ --paper:#FBFAF7; --ink:#1C1A17; --muted:#6B665D; --card:#FFF; --panel:#F2EFE8;
+  --line:#D8D3C7; --key:#2F6F5E; --add:#9A5B2C; --code:#EFEBE2; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#16150F; --ink:#ECE7DC; --muted:#98918A; --card:#1D1B14; --panel:#211F18;
+  --line:#38342A; --key:#6FBFA4; --add:#D99B62; --code:#2B281F; } }
+:root[data-theme="dark"]{ --paper:#16150F; --ink:#ECE7DC; --muted:#98918A; --card:#1D1B14;
+  --panel:#211F18; --line:#38342A; --key:#6FBFA4; --add:#D99B62; --code:#2B281F; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);line-height:1.8;font-size:15px;
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+main{max-width:74rem;margin:0 auto;padding:2rem 1.2rem 5rem;display:flex;
+  flex-direction:column;gap:2.4rem}
+h1{font-size:1.45rem;margin:0;line-height:1.4}
+h2{font-size:1.12rem;margin:0 0 .9rem;padding-bottom:.35rem;border-bottom:1px solid var(--line)}
+p{margin:0 0 .8rem}
+.lede{color:var(--muted);margin:.6rem 0 0}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:0 0 .4rem}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(19rem,1fr));gap:1rem;
+  align-items:start}
+.col{background:var(--card);border:1px solid var(--line);border-radius:.45rem;padding:1rem}
+.col.now{border-color:var(--muted)}
+.col.pick{border-color:var(--key);border-width:2px}
+.col>h3{margin:0 0 .2rem;font-size:1rem}
+.col>h3 .tag{font-size:.68rem;font-weight:700;letter-spacing:.08em;padding:.1em .45em;
+  border-radius:.2rem;margin-left:.4rem;vertical-align:.15em}
+.col.now .tag{background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+.col.pick .tag{background:var(--key);color:var(--paper)}
+.col>p.k{color:var(--muted);font-size:.82rem;margin:0 0 .8rem}
+.blk{margin:0 0 .9rem}
+.blk .bt{display:block;font-size:.74rem;letter-spacing:.05em;color:var(--muted);
+  margin-bottom:.25rem;font-family:ui-monospace,monospace}
+.blk.core .bt{color:var(--key)}
+.blk.plus .bt{color:var(--add)}
+.blk table{border-collapse:collapse;width:100%;font-size:.82rem}
+.blk td{border:1px solid var(--line);padding:.3rem .5rem;vertical-align:top}
+.blk td:first-child{width:8.5rem;color:var(--muted);white-space:nowrap;background:var(--panel)}
+.blk.core td:first-child{color:var(--key)}
+.blk .bn{font-size:.78rem;color:var(--muted);margin:0 0 .4rem}
+.miss{color:var(--add)}
+.warn{font-size:.78rem;color:var(--add);margin:-.5rem 0 .9rem}
+.ex{margin:0 0 .7rem}
+.ex span{font-size:.72rem;color:var(--muted);display:block}
+pre{background:var(--code);border-radius:.3rem;padding:.5rem .7rem;overflow-x:auto;
+  font-size:.76rem;line-height:1.6;margin:.2rem 0 0}
+code{background:var(--code);border-radius:.2rem;padding:.05em .3em;font-size:.9em;
+  font-family:ui-monospace,SFMono-Regular,monospace}
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--add);
+  border-radius:.35rem;padding:.8rem 1rem;font-size:.88rem}
+.foot{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);padding-top:.9rem}
+</style>
+<main>
+<header>
+  <p class="eyebrow">CODING-SKILLS ／ 論点18</p>
+  <h1>規則1件は、どう書かれるか</h1>
+  <p class="lede">実物の規則を2件、いまの姿と2つの案で並べた。
+  <b>値はすべて実物から取っている</b> ── 並べ替えだけを見せている。
+  B（種類ごとの形）は<b>いまの姿から「散る」をやめただけ</b>なので、
+  A と C の違いが見えるように2つを置いた。</p>
+</header>
+<section><h2>GO-STY-01　書式は <code>gofmt</code> の出力に一致させる<span style="color:var(--muted);font-size:.8rem;font-weight:400">　lang.go/style.md（規則型）</span></h2><div class="cols"><div class="col now"><h3>いま<span class="tag">3か所に散る</span></h3><p class="k">同じ欄が2か所にある</p><div class="blk "><b class="bt">## 規則一覧　の1行</b><table><tr><td>ID</td><td>GO-STY-01</td></tr><tr><td>規則</td><td>書式は <code>gofmt</code> の出力に一致させる</td></tr><tr><td>水準</td><td>必須</td></tr><tr><td>検証方法</td><td>静的解析</td></tr><tr><td>適用範囲</td><td>全体</td></tr></table></div><div class="blk "><b class="bt">## 規則の詳細　の節</b><table><tr><td>水準</td><td>必須</td></tr><tr><td>根拠</td><td>書式の議論を消すために整形ツールを使うので、例外を置くと議論が戻る</td></tr><tr><td>検証方法</td><td><code>gofmt -l .</code> が何も出力しない</td></tr><tr><td>例外</td><td>生成されたコード</td></tr><tr><td>既存コードへの適用</td><td>一括是正</td></tr></table></div><p class="warn">この2つは <b>## 規則一覧</b> にも在る ── 水準・検証方法</p><div class="ex"><span>適合例</span><pre>func ReadPort(raw string) (uint16, error) {
+	n, err := strconv.ParseUint(raw, 10, 16)
+	if err != nil {
+		return 0, fmt.Errorf(&quot;parse port: %w&quot;, err)
+	}
+	return uint16(n), nil
+}</pre></div><div class="ex"><span>違反例</span><pre>func ReadPort(raw string) (uint16, error) { n,err := strconv.ParseUint(raw,10,16); if err!=nil { return 0,err }; return uint16(n),nil }</pre></div><div class="blk "><b class="bt">## 出典　の1行</b><table><tr><td>種類</td><td>規格</td></tr><tr><td>原典</td><td><code>gofmt</code> の説明<br>https://pkg.go.dev/cmd/gofmt</td></tr><tr><td>版・取得日</td><td>2026-09-05 取得</td></tr><tr><td>照合する文字列</td><td><code>gofmt</code></td></tr></table></div></div><div class="col"><h3>A　共通1つの形<span class="tag">1つの塊</span></h3><p class="k">全種類で同じ欄を持つ</p><div class="blk one"><b class="bt">### GO-STY-01</b><p class="bn"><b class="miss">空で並ぶ欄</b>：失敗したときの現れ方・前提条件</p><table><tr><td>言明</td><td>書式は <code>gofmt</code> の出力に一致させる</td></tr><tr><td>水準</td><td>必須</td></tr><tr><td>検証方法</td><td>静的解析</td></tr><tr><td>適用範囲</td><td>全体</td></tr><tr><td>根拠</td><td>書式の議論を消すために整形ツールを使うので、例外を置くと議論が戻る</td></tr><tr><td>例外</td><td>生成されたコード</td></tr><tr><td>既存コードへの適用</td><td>一括是正</td></tr><tr><td>出典・種類</td><td>規格</td></tr><tr><td>出典・原典</td><td><code>gofmt</code> の説明<br>https://pkg.go.dev/cmd/gofmt</td></tr><tr><td>出典・版・取得日</td><td>2026-09-05 取得</td></tr><tr><td>出典・照合する文字列</td><td><code>gofmt</code></td></tr></table></div><div class="ex"><span>適合例</span><pre>func ReadPort(raw string) (uint16, error) {
+	n, err := strconv.ParseUint(raw, 10, 16)
+	if err != nil {
+		return 0, fmt.Errorf(&quot;parse port: %w&quot;, err)
+	}
+	return uint16(n), nil
+}</pre></div><div class="ex"><span>違反例</span><pre>func ReadPort(raw string) (uint16, error) { n,err := strconv.ParseUint(raw,10,16); if err!=nil { return 0,err }; return uint16(n),nil }</pre></div></div><div class="col pick"><h3>C　芯 ＋ 種類ごとの欄<span class="tag">推し</span></h3><p class="k">芯は全種類で同じ。残りは雛形が足す</p><div class="blk core"><b class="bt">芯　── 全種類で同じ</b><table><tr><td>ID</td><td>GO-STY-01</td></tr><tr><td>言明</td><td>書式は <code>gofmt</code> の出力に一致させる</td></tr><tr><td>出どころ</td><td>規格　<code>gofmt</code> の説明　<code>gofmt</code></td></tr><tr><td>検め方</td><td><code>gofmt -l .</code> が何も出力しない</td></tr></table></div><div class="blk plus"><b class="bt">＋ 規則型 の欄　── 雛形が定める</b><table><tr><td>水準</td><td>必須</td></tr><tr><td>根拠</td><td>書式の議論を消すために整形ツールを使うので、例外を置くと議論が戻る</td></tr><tr><td>例外</td><td>生成されたコード</td></tr><tr><td>既存コードへの適用</td><td>一括是正</td></tr><tr><td>適用範囲</td><td>全体</td></tr></table></div><div class="ex"><span>適合例</span><pre>func ReadPort(raw string) (uint16, error) {
+	n, err := strconv.ParseUint(raw, 10, 16)
+	if err != nil {
+		return 0, fmt.Errorf(&quot;parse port: %w&quot;, err)
+	}
+	return uint16(n), nil
+}</pre></div><div class="ex"><span>違反例</span><pre>func ReadPort(raw string) (uint16, error) { n,err := strconv.ParseUint(raw,10,16); if err!=nil { return 0,err }; return uint16(n),nil }</pre></div></div></div></section>
+<section><h2>HK-AC-01　正しい要求に対し、1行の JSON と終了コード <code>0</code> を返す<span style="color:var(--muted);font-size:.8rem;font-weight:400">　purpose.hook/acceptance.md（保証型）</span></h2><div class="cols"><div class="col now"><h3>いま<span class="tag">3か所に散る</span></h3><p class="k">同じ欄が2か所にある</p><div class="blk "><b class="bt">## 規則一覧　の1行</b><table><tr><td>ID</td><td>HK-AC-01</td></tr><tr><td>振る舞い</td><td>正しい要求に対し、1行の JSON と終了コード <code>0</code> を返す</td></tr><tr><td>検証の単位</td><td>端から端まで</td></tr><tr><td>前提条件</td><td>実行ファイルが作られている</td></tr><tr><td>失敗したときの現れ方</td><td>応答が複数行になる、または終了コードが <code>0</code> にならない</td></tr></table></div><div class="blk "><b class="bt">## 規則の詳細　の節</b><table><tr><td>前提</td><td>実行ファイルが作られている</td></tr><tr><td>入力</td><td>標準入力へ、契約どおりの1行の JSON</td></tr><tr><td>期待する結果</td><td>標準出力が1行の JSON、終了コードが <code>0</code></td></tr><tr><td>検証の単位</td><td>端から端まで</td></tr><tr><td>実行コマンド</td><td><code>cargo test --test hook_stdio</code></td></tr><tr><td>失敗の切り分け</td><td>応答が複数行なら、診断が標準出力へ混ざっている</td></tr></table></div><p class="warn">この2つは <b>## 規則一覧</b> にも在る ── 検証の単位</p><div class="blk "><b class="bt">## 出典　の1行</b><table><tr><td>種類</td><td>規格</td></tr><tr><td>原典</td><td>呼び出し元の Hook 仕様（応答の形式）<br>https://docs.claude.com/en/docs/claude-code/hooks</td></tr><tr><td>版・取得日</td><td>2026-09-05 取得</td></tr><tr><td>照合する文字列</td><td><code>hookSpecificOutput</code></td></tr></table></div></div><div class="col"><h3>A　共通1つの形<span class="tag">1つの塊</span></h3><p class="k">全種類で同じ欄を持つ</p><div class="blk one"><b class="bt">### HK-AC-01</b><p class="bn"><b class="miss">空で並ぶ欄</b>：水準・根拠・例外<br><b class="miss">同じことに2つの名前</b>：「前提条件」と「前提」が並ぶ</p><table><tr><td>言明</td><td>正しい要求に対し、1行の JSON と終了コード <code>0</code> を返す</td></tr><tr><td>検証の単位</td><td>端から端まで</td></tr><tr><td>前提条件</td><td>実行ファイルが作られている</td></tr><tr><td>失敗したときの現れ方</td><td>応答が複数行になる、または終了コードが <code>0</code> にならない</td></tr><tr><td>前提</td><td>実行ファイルが作られている</td></tr><tr><td>入力</td><td>標準入力へ、契約どおりの1行の JSON</td></tr><tr><td>期待する結果</td><td>標準出力が1行の JSON、終了コードが <code>0</code></td></tr><tr><td>実行コマンド</td><td><code>cargo test --test hook_stdio</code></td></tr><tr><td>失敗の切り分け</td><td>応答が複数行なら、診断が標準出力へ混ざっている</td></tr><tr><td>出典・種類</td><td>規格</td></tr><tr><td>出典・原典</td><td>呼び出し元の Hook 仕様（応答の形式）<br>https://docs.claude.com/en/docs/claude-code/hooks</td></tr><tr><td>出典・版・取得日</td><td>2026-09-05 取得</td></tr><tr><td>出典・照合する文字列</td><td><code>hookSpecificOutput</code></td></tr></table></div></div><div class="col pick"><h3>C　芯 ＋ 種類ごとの欄<span class="tag">推し</span></h3><p class="k">芯は全種類で同じ。残りは雛形が足す</p><div class="blk core"><b class="bt">芯　── 全種類で同じ</b><table><tr><td>ID</td><td>HK-AC-01</td></tr><tr><td>言明</td><td>正しい要求に対し、1行の JSON と終了コード <code>0</code> を返す</td></tr><tr><td>出どころ</td><td>規格　呼び出し元の Hook 仕様（応答の形式）　<code>hookSpecificOutput</code></td></tr><tr><td>検め方</td><td><code>cargo test --test hook_stdio</code></td></tr></table></div><div class="blk plus"><b class="bt">＋ 保証型 の欄　── 雛形が定める</b><table><tr><td>前提</td><td>実行ファイルが作られている</td></tr><tr><td>入力</td><td>標準入力へ、契約どおりの1行の JSON</td></tr><tr><td>期待する結果</td><td>標準出力が1行の JSON、終了コードが <code>0</code></td></tr><tr><td>検証の単位</td><td>端から端まで</td></tr><tr><td>失敗の切り分け</td><td>応答が複数行なら、診断が標準出力へ混ざっている</td></tr><tr><td>前提条件</td><td>実行ファイルが作られている</td></tr><tr><td>失敗したときの現れ方</td><td>応答が複数行になる、または終了コードが <code>0</code> にならない</td></tr></table></div></div></div></section>
+<section>
+  <h2>この2件で見えること</h2>
+  <div class="note">
+  <p><b>A は、規則型と保証型で使わない欄が空で並ぶ。</b>
+  <code>GO-STY-01</code> には「失敗したときの現れ方」「前提条件」が無く、
+  <code>HK-AC-01</code> には「水準」「根拠」「例外」が無い。
+  「埋まらない欄が残るなら、まだ規約になっていない」という定めと衝突する。</p>
+  <p style="margin:0"><b>C は、芯の4欄がどちらでも埋まる。</b>
+  埋まらないのは種類ごとの欄で、そこは雛形が「その種類に要る欄」として定める ──
+  <b>空欄が「まだ書いていない」を意味するようになる。</b></p>
+  </div>
+</section>
+<p class="foot">この頁は <code>docs/adr/shapes_page.py</code> が、
+<code>.waffle/skills/coding-skills/constraints/</code> の実物から書き出す。</p>
+</main>
