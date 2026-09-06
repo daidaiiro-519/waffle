@@ -7,6 +7,8 @@ axes:
 category: architecture
 declares: 外部との契約
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # バックエンドAPI の契約
@@ -92,7 +94,7 @@ sequenceDiagram
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | HTTP セマンティクス（RFC 9110）<br>https://www.rfc-editor.org/rfc/rfc9110.txt | 2026-09-05 取得 | `status code` |
-| 規格 | 失敗の応答形式（RFC 9457）<br>https://www.rfc-editor.org/rfc/rfc9457.txt | 2026-09-05 取得 | `problem details` |
+| 規格 | HTTP セマンティクス<br>https://www.rfc-editor.org/rfc/rfc9110.txt | 2026-09-06 取得 | 状態コードの意味 |
+| 規格 | 失敗の応答形式<br>https://www.rfc-editor.org/rfc/rfc9457.txt | 2026-09-06 取得 | 失敗の応答の形 |

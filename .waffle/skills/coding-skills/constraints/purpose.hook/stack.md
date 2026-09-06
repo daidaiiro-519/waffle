@@ -10,6 +10,8 @@ provides:
 category: tech-stack
 declares: 実行時に使うツールと依存
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # Hook の実行時の依存
@@ -88,7 +90,7 @@ updated: 2026-09-05
 
 ## 出典
 
-| ツール | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| ツール | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| `serde_json` | 文献 | serde_json の公式ドキュメント<br>https://docs.rs/serde_json/latest/serde_json/ | 2026-09-05 取得 | `from_str` |
-| `tracing` | 文献 | tracing の公式ドキュメント<br>https://docs.rs/tracing/latest/tracing/ | 2026-09-05 取得 | `subscriber` |
+| `serde_json` | 文献 | serde_json の公式ドキュメント<br>https://docs.rs/serde_json/latest/serde_json/ | 2026-09-06 取得 | JSON の読み書き |
+| `tracing` | 文献 | tracing の公式ドキュメント<br>https://docs.rs/tracing/latest/tracing/ | 2026-09-06 取得 | 記録の出し方 |

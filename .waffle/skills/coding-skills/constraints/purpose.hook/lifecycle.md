@@ -9,6 +9,8 @@ axes:
 category: architecture
 declares: 起動と終了
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # Hook の起動と終了
@@ -90,6 +92,6 @@ stateDiagram-v2
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | 呼び出し元の Hook 仕様（実行のされ方）<br>https://docs.claude.com/en/docs/claude-code/hooks | 2026-09-05 取得 | `exit code` |
+| 規格 | 呼び出し元の Hook 仕様<br>https://docs.claude.com/en/docs/claude-code/hooks | 2026-09-06 取得 | 実行のされ方 |

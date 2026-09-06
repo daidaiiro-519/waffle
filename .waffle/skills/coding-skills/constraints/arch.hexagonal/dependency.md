@@ -7,6 +7,8 @@ axes:
 category: architecture
 declares: 依存の向きと、反転の条件
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # 依存の向きと反転
@@ -79,6 +81,6 @@ flowchart LR
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 文献 | Robert C. Martin "The Dependency Inversion Principle"<br>https://alistair.cockburn.us/hexagonal-architecture/ | 2026-09-05 取得 | `Ports and Adapters` |
+| 文献 | Alistair Cockburn "Hexagonal Architecture"<br>https://alistair.cockburn.us/hexagonal-architecture/ | 2026-09-06 取得 | 内側の記述が外側へ漏れない ── 反転はそのための手段である |

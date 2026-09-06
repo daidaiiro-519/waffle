@@ -10,6 +10,8 @@ provides:
 category: tech-stack
 declares: 採用するアーキテクチャ・実行環境・実行時の依存
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # バックエンドAPI の技術構成
@@ -79,7 +81,8 @@ updated: 2026-09-05
 
 ## 出典
 
-| 依存 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 依存 | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| `net/http` | 規格 | Go 標準ライブラリ<br>https://pkg.go.dev/net/http | 2026-09-05 取得 | `net/http` |
-| `net/http` | 規格 | Go 標準ライブラリ<br>https://pkg.go.dev/net/http | 2026-09-05 取得 | `net/http` |
+| `net/http` | 規格 | Go 標準ライブラリ<br>https://pkg.go.dev/net/http | 2026-09-06 取得 | 標準ライブラリの HTTP サーバー |
+| `net/http` | 規格 | Go 標準ライブラリ<br>https://pkg.go.dev/net/http | 2026-09-06 取得 | 標準ライブラリの HTTP クライアント |
+| `log/slog` | 規格 | Go 標準ライブラリ `log/slog`<br>https://pkg.go.dev/log/slog | 2026-09-06 取得 | 構造化した記録を標準で出せる |

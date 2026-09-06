@@ -7,6 +7,8 @@ axes:
 category: architecture
 declares: 層と、層ごとの責務
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # データ契約を中心に置く構成の層
@@ -114,7 +116,7 @@ adapters/
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 文献 | Gary Bernhardt "Boundaries"（中心を純粋に保つ考え方）<br>https://sans-io.readthedocs.io/ | 2026-09-05 取得 | `sans-io` |
-| 文献 | sans-IO の設計（入出力を外へ出す）<br>https://sans-io.readthedocs.io/ | 2026-09-05 取得 | `sans-io` |
+| 文献 | Gary Bernhardt "Boundaries"<br>https://sans-io.readthedocs.io/ | 2026-09-06 取得 | 中心を純粋に保つ |
+| 文献 | sans-IO の設計<br>https://sans-io.readthedocs.io/ | 2026-09-06 取得 | 入出力を外へ出す |

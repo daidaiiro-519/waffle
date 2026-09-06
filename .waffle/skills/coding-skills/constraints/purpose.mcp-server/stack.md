@@ -10,6 +10,8 @@ provides:
 category: tech-stack
 declares: 採用するアーキテクチャ・実行環境・実行時の依存
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # MCP サーバーの技術構成
@@ -76,12 +78,12 @@ updated: 2026-09-05
 
 | 委譲する判断 | 委譲先 | 委譲する理由 |
 |---|---|---|
-| 手順の実装を採るか自前で書くか | 実装 | 仕様の原文を読んでから決める |
+| 手順の実装を採るか自前で書くか | 実装 | 仕様の原典を読んでから決める |
 
 ## 出典
 
-| 依存 | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 依存 | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| `serde_json` | 文献 | serde_json の公式ドキュメント<br>https://docs.rs/serde_json/latest/serde_json/ | 2026-09-05 取得 | `from_str` |
-| 手順 | 規格 | Model Context Protocol の仕様<br>https://modelcontextprotocol.io/specification/2025-06-18 | 2026-09-05 取得 | `capabilities` |
-| `rmcp` | 文献 | rmcp の公式ドキュメント<br>https://docs.rs/rmcp/latest/rmcp/ | 2026-09-05 取得 | `ServerHandler` |
+| `serde_json` | 文献 | serde_json の公式ドキュメント<br>https://docs.rs/serde_json/latest/serde_json/ | 2026-09-06 取得 | JSON の読み書き |
+| 手順 | 規格 | Model Context Protocol の仕様<br>https://modelcontextprotocol.io/specification/2025-06-18 | 2026-09-06 取得 | 能力の申告 |
+| `rmcp` | 文献 | rmcp の公式ドキュメント<br>https://docs.rs/rmcp/latest/rmcp/ | 2026-09-06 取得 | サーバーの実装 |

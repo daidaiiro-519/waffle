@@ -9,6 +9,8 @@ axes:
 category: architecture
 declares: 要素を Rust の仕組みで表す形
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # Rust における要素の表し方（データ契約の構成）
@@ -128,7 +130,7 @@ adapters/
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | Cargo Book / Workspaces<br>https://doc.rust-lang.org/cargo/reference/workspaces.html | 2026-09-05 取得 | `[workspace]` |
-| 規格 | Cargo Book / Dependency resolution<br>https://doc.rust-lang.org/cargo/reference/workspaces.html | 2026-09-05 取得 | `dependencies` |
+| 規格 | Cargo Book / Workspaces<br>https://doc.rust-lang.org/cargo/reference/workspaces.html | 2026-09-06 取得 | ワークスペースで crate を並べる |
+| 規格 | Cargo Book / Specifying Dependencies<br>https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html | 2026-09-06 取得 | 同じワークスペース内の crate は path で指す |

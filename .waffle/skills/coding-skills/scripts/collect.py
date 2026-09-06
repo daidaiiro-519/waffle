@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from _common import KINDS_BY_SHAPE, load_all, rule_ids, shape_of
+from _common import kinds_by_shape, load_all, shape_of
 
 
 def matches(spec_axes: dict, given: dict) -> bool:
@@ -58,18 +58,7 @@ def main() -> int:
         note = f"（{src[1]} が指定）" if src else ""
         print(f"  {axis} = {value}{note}")
 
-    print(f"\n集まった規約 {len(hit)} 本")
-    by_layer: dict[str, list] = {}
-    for s in hit:
-        by_layer.setdefault(s.layer, []).append(s)
-    for layer in sorted(by_layer):
-        print(f"  {layer}/")
-        for s in sorted(by_layer[layer], key=lambda x: x.kind):
-            ids = rule_ids(s)
-            tail = f"　規則 {len(ids)} 件" if ids else ""
-            print(f"    {s.kind}.md　{s.front.get('declares','')}{tail}")
-
-    # この場面で埋まっているべき層と、その中で欠けている種類を出す
+    # この場面で埋まっているべき層。0本の層も、この一覧に現れる
     wanted = []
     if args.lang:
         wanted.append(f"lang.{args.lang}")
@@ -80,17 +69,28 @@ def main() -> int:
         wanted.append(f"lang.{args.lang}+arch.{arch}")
     if args.purpose:
         wanted.append(f"purpose.{args.purpose}")
+    for s in hit:
+        if s.layer not in wanted:
+            wanted.append(s.layer)
 
+    by_shape = kinds_by_shape()
     lacks: list[str] = []
+
+    print(f"\n集まった規約 {len(hit)} 本")
     for layer in wanted:
-        have = {s.kind for s in hit if s.layer == layer}
-        for kind in KINDS_BY_SHAPE[shape_of(layer)]:
+        got = sorted([s for s in hit if s.layer == layer], key=lambda x: x.kind)
+        print(f"  {layer}/　規約 {len(got)} 本")
+        for s in got:
+            ids = s.rule_ids
+            tail = f"　規則 {len(ids)} 件" if ids else ""
+            print(f"    {s.kind}.md　{s.front.get('declares','')}{tail}")
+        have = {s.kind for s in got}
+        for kind in by_shape.get(shape_of(layer), []):
             if kind not in have:
                 lacks.append(f"{layer}/{kind}.md")
+                print(f"    {kind}.md　── 書かれていない")
 
     print(f"\n足りない規約 {len(lacks)} 本")
-    for m in lacks:
-        print(f"  {m}　── 書かれていない")
 
     if lacks:
         print("\n書かずに止まること。references/authoring.md へ回り、"

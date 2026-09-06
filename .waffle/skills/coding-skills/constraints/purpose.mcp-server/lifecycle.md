@@ -9,6 +9,8 @@ axes:
 category: architecture
 declares: 起動と終了
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # MCP サーバーの起動と終了
@@ -71,6 +73,6 @@ stateDiagram-v2
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | Model Context Protocol の仕様（生存期間）<br>https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle | 2026-09-05 取得 | `capability negotiation` |
+| 規格 | Model Context Protocol の仕様<br>https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle | 2026-09-06 取得 | 生存期間 |

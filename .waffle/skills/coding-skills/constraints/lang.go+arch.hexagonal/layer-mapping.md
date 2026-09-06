@@ -9,6 +9,8 @@ axes:
 category: architecture
 declares: 層を Go の仕組みで表す形
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # Go における層の表し方
@@ -122,7 +124,7 @@ internal/
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | Go Modules Reference（`internal` の可視性）<br>https://go.dev/ref/mod | 2026-09-05 取得 | `internal` |
-| 文献 | Go Code Review Comments（インターフェースは使う側が定める）<br>https://go.dev/wiki/CodeReviewComments | 2026-09-05 取得 | `interfaces` |
+| 規格 | Go Modules Reference<br>https://go.dev/ref/mod | 2026-09-06 取得 | `internal` の可視性 |
+| 文献 | Go Code Review Comments<br>https://go.dev/wiki/CodeReviewComments | 2026-09-06 取得 | インターフェースは使う側が定める |

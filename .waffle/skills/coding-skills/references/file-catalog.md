@@ -42,17 +42,19 @@
 | `purpose.backend-api` | 同じ5種 |
 | `purpose.mcp-server` | 同じ5種 |
 
-## 出典
+## 出典と承認
 
-**37本すべての出典を、原文を落として照合した（2026-09-05）。**
-原文は `sources/` に置き、`scripts/check.py` が
-「その URL の原文を落としているか」「照合する文字列がその原文に在るか」を検証する。
+原典は `sources/` に置き、`scripts/check.py` が
+「規則ごとに出典の行が在るか」「その URL の原典を落としているか」
+「承認が記録されているか」を検証する。
 
-| 数えたもの | 件数 |
+**数は `constraints/INDEX.md` に在る**（`python3 scripts/index.py` が書き出す）。
+ここには書かない ── 手で書いた数は必ず腐る。
+
+| 何を確かめるか | どこで |
 |---|---|
-| 落とした原文 | 41 |
-| 照合した出典の行 | 61 |
-| 検証で見つかった食い違い | **17件**（記憶で書いた文字列が原文に無かった。すべて直した） |
+| 検査と、それが守っている宣言の一覧 | `python3 scripts/check.py --contracts` |
+| 機械では裁けないもの | 同上（人が見るものとして並べてある） |
 
 ## まだ埋まっていないもの
 
@@ -75,13 +77,15 @@
 | `SKILL.md` | 書く手順 | 毎回 |
 | `references/glossary.md` | 語の定義 | 迷ったとき |
 | `references/axes.md` | 軸の定義と、値・軸を足す手順 | 規約を起こすとき |
-| `references/sources.md` | 認める出典と、照合の仕方 | 規約を起こすとき |
+| `references/sources.md` | 認める出典と、原典の読み方 | 規約を起こすとき |
 | `references/layer-documents.md` | 層ごとに決められること | 規約を起こすとき |
 | `references/test-perspectives.md` | テスト観点の一覧 | 用途の規約を起こすとき |
 | `references/file-catalog.md` | この一覧 | どの雛形を写すか迷ったとき |
 | `references/authoring.md` | 規約を起こす手順 | 規約を起こすとき |
+| `scripts/relist.py` | 規則の一覧を、詳細の塊から書き出す | 規則を足す・直したとき |
 | `scripts/README.md` | 機械が回すものの説明 | 集める・検証する・索引を出すとき |
 | `scripts/collect.py` | 軸の値から規約を集める | 書く手順の Step 2 |
 | `scripts/check.py` | 規約の形を検証する | 規約を足したとき |
-| `scripts/index.py` | 索引を作り直す | 規約を足したとき |
+| `scripts/index.py` | 索引と数を作り直す | 規約を足したとき |
+| `scripts/tests.py` | scripts の振る舞いを確かめる | scripts を直したとき |
 | `constraints/INDEX.md` | 索引（**生成物。手で書き換えない**） | どの規約が在るかを見るとき |

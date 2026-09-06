@@ -6,8 +6,11 @@ axes:
     value: rust
 category: test
 declares: テストが走る仕組みと、書き方
-updated: 2026-09-05
+updated: 2026-09-06
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
+
 
 # Rust におけるテストの仕組み
 
@@ -17,10 +20,10 @@ updated: 2026-09-05
 
 ## 保証する振る舞い
 
-| ID | 振る舞い | 検証の単位 | 前提条件 | 失敗したときの現れ方 |
-|---|---|---|---|---|
-| RS-TST-01 | すべてのテストが `cargo test` 1つで走る | 単体・結合 | テストが標準の位置に在る | 走らないテストが残り、CI が通ってしまう |
-| RS-TST-02 | テストは実行順に依存せず、単独でも走る | 単体 | 共有状態を持たない | 並列実行で落ちる |
+| ID | 振る舞い | 検証の単位 |
+|---|---|---|
+| RS-TST-01 | すべてのテストが `cargo test` 1つで走る | 単体・結合 |
+| RS-TST-02 | テストは実行順に依存せず、単独でも走る | 単体 |
 
 ## 保証しない振る舞い
 
@@ -39,7 +42,8 @@ updated: 2026-09-05
 | 入力 | なし |
 | 期待する結果 | 走ったテスト数が、書いたテスト数と一致する |
 | 検証の単位 | 単体・結合 |
-| 実行コマンド | `cargo test --all-targets` |
+| 検証方法 | `cargo test --all-targets` |
+| 失敗したときの現れ方 | 走らないテストが残り、CI が通ってしまう |
 | 失敗の切り分け | 走らないテストが在れば、置き場所が標準から外れている |
 
 ### RS-TST-02　テストは実行順に依存せず、単独でも走る
@@ -50,7 +54,8 @@ updated: 2026-09-05
 | 入力 | なし |
 | 期待する結果 | 並列でも単独でも、同じ結果になる |
 | 検証の単位 | 単体 |
-| 実行コマンド | `cargo test` と `cargo test -- --test-threads=1` の両方 |
+| 検証方法 | `cargo test` と `cargo test -- --test-threads=1` の両方 |
+| 失敗したときの現れ方 | 並列実行で落ちる |
 | 失敗の切り分け | 片方だけ落ちるなら、共有状態が残っている |
 
 ## 走らせ方
@@ -112,7 +117,7 @@ fn test_read_port_2() {
 
 ## 出典
 
-| ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| ID | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| RS-TST-01 | 規格 | Cargo Book / Tests<br>https://doc.rust-lang.org/cargo/guide/tests.html | 2026-09-05 取得 | `cargo test` |
-| RS-TST-02 | 規格 | libtest の並列実行<br>https://doc.rust-lang.org/book/ch11-03-test-organization.html | 2026-09-05 取得 | `unit tests` |
+| RS-TST-01 | 規格 | Cargo Book / Tests<br>https://doc.rust-lang.org/cargo/guide/tests.html | 2026-09-06 取得 | テストの走らせ方 |
+| RS-TST-02 | 規格 | The Rust Programming Language ch.11 Controlling How Tests Are Run<br>https://doc.rust-lang.org/book/ch11-02-running-tests.html | 2026-09-06 取得 | テストは既定で並列に走る |

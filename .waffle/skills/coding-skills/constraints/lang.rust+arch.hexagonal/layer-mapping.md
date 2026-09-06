@@ -9,6 +9,8 @@ axes:
 category: architecture
 declares: 層を Rust の仕組みで表す形
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # Rust における層の表し方
@@ -133,7 +135,7 @@ src/
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | Rust Reference / Visibility and privacy<br>https://doc.rust-lang.org/reference/visibility-and-privacy.html | 2026-09-05 取得 | `pub(crate)` |
-| 文献 | Rust API Guidelines C-STRUCT-PRIVATE<br>https://rust-lang.github.io/api-guidelines/naming.html | 2026-09-05 取得 | `naming` |
+| 規格 | Rust Reference / Visibility and privacy<br>https://doc.rust-lang.org/reference/visibility-and-privacy.html | 2026-09-06 取得 | crate 内の可視性 |
+| 文献 | Rust API Guidelines C-STRUCT-PRIVATE<br>https://rust-lang.github.io/api-guidelines/naming.html | 2026-09-06 取得 | 欄を非公開にする |

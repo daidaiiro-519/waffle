@@ -7,6 +7,8 @@ axes:
 category: architecture
 declares: 外部との契約
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # MCP サーバーの契約
@@ -82,7 +84,7 @@ sequenceDiagram
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | Model Context Protocol の仕様<br>https://modelcontextprotocol.io/specification/2025-06-18 | 2026-09-05 取得 | `capabilities` |
-| 規格 | JSON-RPC 2.0<br>https://www.jsonrpc.org/specification | 2026-09-05 取得 | `jsonrpc` |
+| 規格 | Model Context Protocol の仕様<br>https://modelcontextprotocol.io/specification/2025-06-18 | 2026-09-06 取得 | やり取りの形式 |
+| 規格 | JSON-RPC 2.0<br>https://www.jsonrpc.org/specification | 2026-09-06 取得 | JSON-RPC 2.0 |

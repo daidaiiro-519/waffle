@@ -8,8 +8,11 @@ axes:
     value: hexagonal
 category: test
 declares: テストの置き場所
-updated: 2026-09-05
+updated: 2026-09-06
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
+
 
 # Go とヘキサゴナル構成におけるテストの置き場所
 
@@ -37,12 +40,12 @@ updated: 2026-09-05
 
 ## 規則一覧
 
-| ID | 規則 | 水準 | 検証方法 | 適用範囲 |
-|---|---|---|---|---|
-| GH-TP-01 | `model` と `app` のテストは、同じパッケージ（`package model`）に置く | 必須 | レビュー | 内側 |
-| GH-TP-02 | `adapter` のテストは外部パッケージ（`package xxx_test`）に置き、公開する識別子だけを呼ぶ | 必須 | レビュー | 外側 |
-| GH-TP-03 | 出力ポートの偽物は `app` の中に置き、`adapter` へ置かない | 必須 | レビュー | 内側のテスト |
-| GH-TP-04 | 外部サービスを要するテストには、`testing.Short` で外せる印を付ける | 必須 | 静的解析 | 外側 |
+| ID | 規則 | 水準 | 適用範囲 |
+|---|---|---|---|
+| GH-TP-01 | `model` と `app` のテストは、同じパッケージに置く | 必須 | 内側 |
+| GH-TP-02 | `adapter` のテストは外部パッケージに置き、公開する識別子だけを呼ぶ | 必須 | 外側 |
+| GH-TP-03 | 出力ポートの偽物は `app` の中に置き、`adapter` へ置かない | 必須 | 内側のテスト |
+| GH-TP-04 | 外部サービスを要するテストには、`testing.Short` で外せる印を付ける | 必須 | 外側 |
 
 ## 規則の詳細
 
@@ -51,6 +54,7 @@ updated: 2026-09-05
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
+| 適用範囲 | 内側 |
 | 根拠 | 内側は非公開の要素を持つので、外から呼ぶと公開範囲を広げることになる |
 | 検証方法 | `internal/model` ・ `internal/app` の `_test.go` の package 宣言を見る |
 | 例外 | 公開する型だけを確かめるとき |
@@ -77,6 +81,7 @@ package app_test // 内部を呼ぶために app 側を export した
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
+| 適用範囲 | 外側 |
 | 根拠 | 外側は外部との契約なので、契約と同じ入口から確かめる |
 | 検証方法 | `adapter` の `_test.go` が `package xxx_test` になっているかを見る |
 | 例外 | なし |
@@ -95,11 +100,42 @@ package http_test
 package http // 内部関数を直接呼ぶ
 ```
 
+### GH-TP-03　出力ポートの偽物は `app` の中に置き、`adapter` へ置かない
+
+| 項目 | 内容 |
+|---|---|
+| 水準 | 必須 |
+| 適用範囲 | 内側のテスト |
+| 根拠 | 偽物が `adapter` に在ると、`app` のテストが `adapter` に依存する。依存の向きが逆になる |
+| 検証方法 | 当たる命令が無い。`adapter` の中に、出力ポートを満たす型の定義が無いかを見る |
+| 例外 | なし |
+| 既存コードへの適用 | 改修時に是正 |
+
+**適合例**
+
+```go
+// internal/app/user_service_test.go
+type stubUserRepo struct{ saved []*model.User }
+
+func (s *stubUserRepo) Save(ctx context.Context, u *model.User) error {
+	s.saved = append(s.saved, u)
+	return nil
+}
+```
+
+**違反例**
+
+```go
+// internal/adapter/repo/stub.go
+type StubUserRepo struct{ saved []*model.User }
+```
+
 ### GH-TP-04　外部サービスを要するテストには、`testing.Short` で外せる印を付ける
 
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
+| 適用範囲 | 外側 |
 | 根拠 | 外部が要るテストが混ざると、手元でテストが走らなくなる |
 | 検証方法 | `go test -short ./...` が、外部なしで通る |
 | 例外 | なし |
@@ -136,7 +172,9 @@ func TestOrderRepository(t *testing.T) { /* 常に外部へ接続する */ }
 
 ## 出典
 
-| ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| ID | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| GH-TP-01 | 規格 | Go 標準 `testing`（内部テストと外部テスト）<br>https://pkg.go.dev/testing | 2026-09-05 取得 | `Short` |
-| GH-TP-04 | 規格 | Go 標準 `testing.Short`<br>https://pkg.go.dev/testing | 2026-09-05 取得 | `testing.Short` |
+| GH-TP-01 | 規格 | Go 標準 `testing`<br>https://pkg.go.dev/testing | 2026-09-06 取得 | 内部テストと外部テスト |
+| GH-TP-03 | 文献 | Go Code Review Comments<br>https://go.dev/wiki/CodeReviewComments | 2026-09-06 取得 | 偽物は使う側が持つ |
+| GH-TP-04 | 規格 | Go 標準 `testing.Short`<br>https://pkg.go.dev/testing | 2026-09-06 取得 | 短いテストだけを走らせる |
+| GH-TP-02 | 規格 | Go 標準 `testing`<br>https://pkg.go.dev/testing | 2026-09-06 取得 | 外部テストパッケージ |

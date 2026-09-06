@@ -7,6 +7,8 @@ axes:
 category: tech-stack
 declares: Rust の標準ツール
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # Rust のツールチェーン
@@ -76,8 +78,9 @@ updated: 2026-09-05
 
 ## 出典
 
-| ツール | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| ツール | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| `rustfmt` | 規格 | rustfmt 公式ドキュメント<br>https://rust-lang.github.io/rustfmt/ | 2026-09-05 取得 | `rustfmt` |
-| `clippy` | 規格 | Clippy 公式ドキュメント<br>https://doc.rust-lang.org/clippy/ | 2026-09-05 取得 | `clippy` |
-| `thiserror` | 文献 | thiserror の README<br>https://rust-lang.github.io/api-guidelines/interoperability.html | 2026-09-05 取得 | `std::error::Error` |
+| `rustfmt` | 規格 | rustfmt 公式ドキュメント<br>https://rust-lang.github.io/rustfmt/ | 2026-09-06 取得 | 書式を整える |
+| `clippy` | 規格 | Clippy 公式ドキュメント<br>https://doc.rust-lang.org/clippy/ | 2026-09-06 取得 | 静的解析 |
+| `thiserror` | 文献 | thiserror の README<br>https://docs.rs/thiserror/latest/thiserror/ | 2026-09-06 取得 | 標準の `std::error::Error` を導出する |
+| `clippy` | 文献 | Clippy の lint 一覧<br>https://rust-lang.github.io/rust-clippy/master/index.html | 2026-09-06 取得 | lint の名前と、それぞれが何を見るか |

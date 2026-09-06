@@ -7,6 +7,8 @@ axes:
 category: tech-stack
 declares: Go の標準ツール
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # Go のツールチェーン
@@ -78,8 +80,9 @@ updated: 2026-09-05
 
 ## 出典
 
-| ツール | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| ツール | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| `gofmt` | 規格 | `gofmt` の説明<br>https://pkg.go.dev/cmd/gofmt | 2026-09-05 取得 | `gofmt` |
-| `go vet` | 規格 | `go vet` の説明<br>https://pkg.go.dev/cmd/vet | 2026-09-05 取得 | `vet` |
-| `go mod` | 規格 | Go Modules Reference<br>https://go.dev/ref/mod | 2026-09-05 取得 | `go.sum` |
+| `gofmt` | 規格 | `gofmt` の説明<br>https://pkg.go.dev/cmd/gofmt | 2026-09-06 取得 | 書式を整える |
+| `go vet` | 規格 | `go vet` の説明<br>https://pkg.go.dev/cmd/vet | 2026-09-06 取得 | 静的解析 |
+| `go mod` | 規格 | Go Modules Reference<br>https://go.dev/ref/mod | 2026-09-06 取得 | 依存を固定する |
+| `staticcheck` | 文献 | staticcheck の検査一覧<br>https://staticcheck.dev/docs/checks | 2026-09-06 取得 | 検査 ID と、それぞれが何を見るか |

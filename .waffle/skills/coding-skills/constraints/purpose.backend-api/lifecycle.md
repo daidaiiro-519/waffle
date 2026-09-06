@@ -9,6 +9,8 @@ axes:
 category: architecture
 declares: 起動と終了
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # バックエンドAPI の起動と終了
@@ -74,7 +76,7 @@ stateDiagram-v2
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | POSIX のシグナル（`SIGTERM`）<br>https://12factor.net/disposability | 2026-09-05 取得 | `SIGTERM` |
-| 文献 | The Twelve-Factor App（廃棄容易性）<br>https://12factor.net/disposability | 2026-09-05 取得 | `disposability` |
+| 規格 | POSIX のシグナル<br>https://12factor.net/disposability | 2026-09-06 取得 | 停止の合図 |
+| 文献 | The Twelve-Factor App<br>https://12factor.net/disposability | 2026-09-06 取得 | 廃棄容易性 |

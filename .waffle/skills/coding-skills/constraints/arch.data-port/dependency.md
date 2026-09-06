@@ -7,6 +7,8 @@ axes:
 category: architecture
 declares: 依存の向き
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # データ契約への一方向の依存
@@ -77,6 +79,6 @@ flowchart LR
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 文献 | sans-IO の設計（入出力を外へ出す）<br>https://sans-io.readthedocs.io/ | 2026-09-05 取得 | `sans-io` |
+| 文献 | sans-IO の設計<br>https://sans-io.readthedocs.io/ | 2026-09-06 取得 | 入出力を外へ出す |

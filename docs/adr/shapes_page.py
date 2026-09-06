@@ -73,7 +73,7 @@ def now_view(r, kinds):
     """いまの姿 ── 3か所に散る。"""
     a = fields(r["row"], kinds["list"])
     b = fields(r["detail"], kinds["detail"])
-    c = fields(r["src"], ["種類", "原典", "版・取得日", "照合する文字列"])
+    c = fields(r["src"], ["種類", "原典", "版・取得日", "何を裏づけるか"])
     dup = kinds["dup"]
     warn = (f'<p class="warn">この2つは <b>## 規則一覧</b> にも在る ── '
             f'{"・".join(dup)}</p>' if dup else "")
@@ -95,7 +95,7 @@ def a_view(r, kinds):
     merged["言明"] = r["row"].get("規則") or r["row"].get("振る舞い", "")
     merged.update({f"出典・{k}": v for k, v in r["src"].items() if k != "ID"})
     rows = fields(merged, ["言明"] + [k for k in keys if k not in ("言明", "規則", "振る舞い")]
-                  + [f"出典・{k}" for k in ("種類", "原典", "版・取得日", "照合する文字列")])
+                  + [f"出典・{k}" for k in ("種類", "原典", "版・取得日", "何を裏づけるか")])
     empty = [k for k in ("水準", "根拠", "例外", "失敗したときの現れ方", "前提条件")
              if not merged.get(k)]
     note = (f'<b class="miss">空で並ぶ欄</b>：{"・".join(empty)}' if empty else "")
@@ -108,11 +108,15 @@ def a_view(r, kinds):
 def c_view(r, kinds):
     core = {"ID": r["rid"],
             "言明": r["row"].get("規則") or r["row"].get("振る舞い", ""),
-            "出どころ": f'{r["src"].get("種類","")}　{re.sub(r"<br>.*", "", r["src"].get("原典",""))}'
-                        f'　{r["src"].get("照合する文字列","")}',
-            "検証方法": r["detail"].get("検証方法") or r["detail"].get("実行コマンド")
+            "出典": f'{r["src"].get("種類","")}　'
+                    f'{re.sub(r"<br>.*", "", r["src"].get("原典",""))}　'
+                    f'（{r["src"].get("何を裏づけるか","")}）',
+            "検証方法": " ／ ".join(
+                x for x in (r["detail"].get("検証方法")
+                            or r["detail"].get("実行コマンド", ""),
+                            r["detail"].get("命令で落ちない部分", "")) if x)
                       or r["row"].get("検証方法", "")}
-    drop = ("検証方法", "実行コマンド", "規則", "振る舞い")
+    drop = ("検証方法", "実行コマンド", "命令で落ちない部分", "規則", "振る舞い")
     extra = {k: v for k, v in r["detail"].items() if k not in drop and v}
     for k in kinds["list"][1:]:
         if r["row"].get(k) and k not in extra and k not in drop:
@@ -127,7 +131,8 @@ RULE = dict(name="規則型", list=["ID", "規則", "水準", "検証方法", "�
             detail=["水準", "根拠", "検証方法", "例外", "既存コードへの適用"],
             dup=["水準", "検証方法"])
 GUARD = dict(name="保証型", list=["ID", "振る舞い", "検証の単位", "前提条件", "失敗したときの現れ方"],
-             detail=["前提", "入力", "期待する結果", "検証の単位", "実行コマンド", "失敗の切り分け"],
+             detail=["前提", "入力", "期待する結果", "検証の単位", "実行コマンド",
+                     "命令で落ちない部分", "失敗の切り分け"],
              dup=["検証の単位"])
 
 

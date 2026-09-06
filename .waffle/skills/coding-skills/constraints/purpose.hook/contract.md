@@ -7,6 +7,8 @@ axes:
 category: architecture
 declares: 呼び出し元との契約
 updated: 2026-09-05
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
 
 # Hook の契約
@@ -90,6 +92,6 @@ sequenceDiagram
 
 ## 出典
 
-| 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|
-| 規格 | 呼び出し元の Hook 仕様<br>https://docs.claude.com/en/docs/claude-code/hooks | 2026-09-05 取得 | `stdout` |
+| 規格 | 呼び出し元の Hook 仕様<br>https://docs.claude.com/en/docs/claude-code/hooks | 2026-09-06 取得 | 標準入出力での受け渡し |

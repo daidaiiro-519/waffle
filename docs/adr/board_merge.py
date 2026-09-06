@@ -25,7 +25,7 @@ BASE = HERE / "brainstorm-coding-skills-1-12.html"
 OUT = HERE / "brainstorm-coding-skills.html"
 THEME = "CodingSkills ── 制約と、その作用域"
 
-NEW = [BC.t13, BC.t14, BC.t15, BC.t16, BC.t17, BC.t18]
+NEW = [BC.t13, BC.t14, BC.t15, BC.t16, BC.t17, BC.t18, BC.t19, BC.t20]
 
 NOTE = (
     "<b>これは正本ではない。ブレストの記録である。</b>"

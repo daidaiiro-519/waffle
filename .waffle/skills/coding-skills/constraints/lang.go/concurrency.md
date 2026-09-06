@@ -6,8 +6,11 @@ axes:
     value: go
 category: coding
 declares: 並行の単位と、共有の扱い
-updated: 2026-09-05
+updated: 2026-09-06
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
+
 
 # Go における並行の扱い
 
@@ -25,12 +28,12 @@ updated: 2026-09-05
 
 ## 規則一覧
 
-| ID | 規則 | 水準 | 検証方法 | 適用範囲 |
-|---|---|---|---|---|
-| GO-CON-01 | 起動した goroutine は、終わり方を必ず決める | 必須 | レビュー | 全体 |
-| GO-CON-02 | 外部呼び出しを跨ぐ関数は、第1引数に `context.Context` を取る | 必須 | 静的解析 | 公開する関数 |
-| GO-CON-03 | 共有する可変状態は、チャネルか同期の型で守る | 必須 | 静的解析 | 全体 |
-| GO-CON-04 | `context.Context` を構造体に保持しない | 必須 | レビュー | 全体 |
+| ID | 規則 | 水準 | 適用範囲 |
+|---|---|---|---|
+| GO-CON-01 | 起動した goroutine は、終わり方を必ず決める | 必須 | 全体 |
+| GO-CON-02 | 外部呼び出しを跨ぐ関数は、第1引数に `context.Context` を取る | 必須 | 公開する関数 |
+| GO-CON-03 | 共有する可変状態は、チャネルか同期の型で守る | 必須 | 全体 |
+| GO-CON-04 | `context.Context` を構造体に保持しない | 必須 | 全体 |
 
 ## 規則の詳細
 
@@ -39,6 +42,7 @@ updated: 2026-09-05
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
+| 適用範囲 | 全体 |
 | 根拠 | 終わり方の無い goroutine は、資源を保持したまま残る |
 | 検証方法 | `go test -race` と、`go func(` の各所で終了条件を確認する |
 | 例外 | プロセスと同じ寿命を持つと明記した場合 |
@@ -70,11 +74,47 @@ go func() {
 }()
 ```
 
+### GO-CON-02　外部呼び出しを跨ぐ関数は、第1引数に `context.Context` を取る
+
+| 項目 | 内容 |
+|---|---|
+| 水準 | 必須 |
+| 適用範囲 | 公開する関数 |
+| 根拠 | 呼び出し元が締め切りと取り消しを渡せなければ、外部呼び出しは打ち切れない |
+| 検証方法 | 当たる命令が無い（`go vet` の35検査に第1引数を見るものは無い）。`go doc <パッケージ>` の出力で、外部を呼ぶ公開関数の第1引数が `ctx context.Context` かを見る |
+| 例外 | 外部呼び出しを行わない関数 |
+| 既存コードへの適用 | 改修時に是正 |
+
+**適合例**
+
+```go
+func FetchUser(ctx context.Context, id string) (*User, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url(id), nil)
+	if err != nil {
+		return nil, fmt.Errorf("build request: %w", err)
+	}
+	return do(req)
+}
+```
+
+**違反例**
+
+```go
+func FetchUser(id string) (*User, error) {
+	resp, err := http.Get(url(id))
+	if err != nil {
+		return nil, err
+	}
+	return parse(resp)
+}
+```
+
 ### GO-CON-03　共有する可変状態は、チャネルか同期の型で守る
 
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
+| 適用範囲 | 全体 |
 | 根拠 | 競合は、動く場合と動かない場合が実行のたびに変わる |
 | 検証方法 | `go test -race ./...` |
 | 例外 | 読むだけの共有 |
@@ -93,6 +133,36 @@ type counter struct {
 
 ```go
 var total int // 複数の goroutine から書く
+```
+
+### GO-CON-04　`context.Context` を構造体に保持しない
+
+| 項目 | 内容 |
+|---|---|
+| 水準 | 必須 |
+| 適用範囲 | 全体 |
+| 根拠 | `Context` は呼び出し1回ぶんの寿命を持つ。構造体に入れると、その寿命が構造体の寿命に置き換わる |
+| 検証方法 | 当たる命令が無い（`go vet` の35検査に、構造体の欄を見るものは無い）。構造体の欄に `context.Context` が無いかを見る |
+| 例外 | なし |
+| 既存コードへの適用 | 改修時に是正 |
+
+**適合例**
+
+```go
+type Client struct {
+	http *http.Client
+}
+
+func (c *Client) Get(ctx context.Context, id string) (*User, error) { ... }
+```
+
+**違反例**
+
+```go
+type Client struct {
+	ctx  context.Context
+	http *http.Client
+}
 ```
 
 ## 共有の扱い
@@ -124,9 +194,9 @@ var total int // 複数の goroutine から書く
 
 ## 出典
 
-| ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| ID | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| GO-CON-01 | 文献 | Go Blog "Concurrency Patterns"（終わり方）<br>https://go.dev/blog/pipelines | 2026-09-05 取得 | `pipeline` |
-| GO-CON-02 | 規格 | Go 標準ライブラリ `context`<br>https://pkg.go.dev/context | 2026-09-05 取得 | `context.Context` |
-| GO-CON-03 | 規格 | Go の競合検出器<br>https://go.dev/doc/articles/race_detector | 2026-09-05 取得 | `-race` |
-| GO-CON-04 | 規格 | `context` の説明（構造体に保持しない）<br>https://pkg.go.dev/context | 2026-09-05 取得 | `Do not store Contexts` |
+| GO-CON-01 | 文献 | Go Blog "Concurrency Patterns"<br>https://go.dev/blog/pipelines | 2026-09-06 取得 | goroutine の終わり方を決める |
+| GO-CON-02 | 規格 | Go 標準ライブラリ `context`<br>https://pkg.go.dev/context | 2026-09-06 取得 | 取り消しと期限を引数で運ぶ |
+| GO-CON-03 | 規格 | Go の競合検出器<br>https://go.dev/doc/articles/race_detector | 2026-09-06 取得 | 競合の検出 |
+| GO-CON-04 | 規格 | `context` の説明<br>https://pkg.go.dev/context | 2026-09-06 取得 | Context を構造体に保持しない |

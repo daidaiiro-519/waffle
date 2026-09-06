@@ -6,8 +6,11 @@ axes:
     value: rust
 category: coding
 declares: 並行の単位と、共有の扱い
-updated: 2026-09-05
+updated: 2026-09-06
+approved_by: daidaiiro
+approved_at: 2026-09-06
 ---
+
 
 # Rust における並行の扱い
 
@@ -25,12 +28,12 @@ updated: 2026-09-05
 
 ## 規則一覧
 
-| ID | 規則 | 水準 | 検証方法 | 適用範囲 |
-|---|---|---|---|---|
-| RS-CON-01 | 状態を共有せず、所有権を渡して受け渡す | 必須 | レビュー | 全体 |
-| RS-CON-02 | 共有が必要なら、`Arc` と同期の型で包み、素の可変参照を跨がせない | 必須 | 静的解析 | 全体 |
-| RS-CON-03 | ロックを持ったまま、待つ操作を呼ばない | 必須 | レビュー | ロックを使う箇所 |
-| RS-CON-04 | 非同期の実行環境を、ライブラリの公開 API に現さない | 必須 | レビュー | ライブラリの crate |
+| ID | 規則 | 水準 | 適用範囲 |
+|---|---|---|---|
+| RS-CON-01 | 状態を共有せず、所有権を渡して受け渡す | 必須 | 全体 |
+| RS-CON-02 | 共有が必要なら、`Arc` と同期の型で包み、素の可変参照を跨がせない | 必須 | 全体 |
+| RS-CON-03 | ロックを持ったまま、待つ操作を呼ばない | 必須 | ロックを使う箇所 |
+| RS-CON-04 | 非同期の実行環境を、ライブラリの公開 API に現さない | 必須 | ライブラリの crate |
 
 ## 規則の詳細
 
@@ -39,6 +42,7 @@ updated: 2026-09-05
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
+| 適用範囲 | 全体 |
 | 根拠 | 共有しなければ、競合そのものが起きない |
 | 検証方法 | 共有された可変状態が在るかを見る |
 | 例外 | 読むだけの共有 |
@@ -57,11 +61,40 @@ std::thread::spawn(move || tx.send(build_report()).ok());
 static mut TOTAL: usize = 0;
 ```
 
+### RS-CON-02　共有が必要なら、`Arc` と同期の型で包み、素の可変参照を跨がせない
+
+| 項目 | 内容 |
+|---|---|
+| 水準 | 必須 |
+| 適用範囲 | 全体 |
+| 根拠 | 素の可変参照はスレッドを跨げない。跨がせるには `unsafe` が要り、そこでコンパイラの検査が外れる |
+| 検証方法 | `cargo build` と `cargo clippy --all-targets -- -D warnings` と、`unsafe` や生ポインタでコンパイラの検査を迂回していないか |
+| 例外 | なし |
+| 既存コードへの適用 | 改修時に是正 |
+
+**適合例**
+
+```rust
+let shared = Arc::new(Mutex::new(State::default()));
+let handle = {
+    let shared = Arc::clone(&shared);
+    thread::spawn(move || shared.lock().unwrap().advance())
+};
+```
+
+**違反例**
+
+```rust
+struct Shared(*mut State);
+unsafe impl Send for Shared {}
+```
+
 ### RS-CON-03　ロックを持ったまま、待つ操作を呼ばない
 
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
+| 適用範囲 | ロックを使う箇所 |
 | 根拠 | ロックの保持中に待つと、待ち時間の分だけ他が止まる |
 | 検証方法 | ロックの範囲に入出力・待機が入っていないかを見る |
 | 例外 | なし |
@@ -86,6 +119,7 @@ write_to_disk(&guard)?;
 | 項目 | 内容 |
 |---|---|
 | 水準 | 必須 |
+| 適用範囲 | ライブラリの crate |
 | 根拠 | 実行環境を公開に出すと、利用側の選択を奪う |
 | 検証方法 | 公開する型・関数に実行環境固有の型が出ていないかを見る |
 | 例外 | 実行ファイルの crate |
@@ -131,8 +165,9 @@ pub async fn parse(input: tokio::fs::File) -> Result<Record, ParseError> { /* �
 
 ## 出典
 
-| ID | 種類 | 原典 | 版・取得日 | 照合する文字列 |
+| ID | 種類 | 原典 | 版・取得日 | 何を裏づけるか |
 |---|---|---|---|---|
-| RS-CON-01 | 文献 | The Rust Programming Language ch.16 Fearless Concurrency<br>https://doc.rust-lang.org/book/ch16-02-message-passing.html | 2026-09-05 取得 | `Message Passing` |
-| RS-CON-02 | 規格 | Rust std `Arc` ・ `Mutex`<br>https://doc.rust-lang.org/book/ch16-02-message-passing.html | 2026-09-05 取得 | `Message Passing` |
-| RS-CON-04 | 文献 | Rust API Guidelines（公開 API の設計）<br>https://rust-lang.github.io/api-guidelines/naming.html | 2026-09-05 取得 | `naming` |
+| RS-CON-01 | 文献 | The Rust Programming Language ch.16 Fearless Concurrency<br>https://doc.rust-lang.org/book/ch16-02-message-passing.html | 2026-09-06 取得 | 所有権を渡して共有しない |
+| RS-CON-02 | 規格 | The Rust Programming Language ch.16 Shared-State Concurrency<br>https://doc.rust-lang.org/book/ch16-03-shared-state.html | 2026-09-06 取得 | 共有は `Arc` と同期の型で包む |
+| RS-CON-04 | 文献 | Rust API Guidelines<br>https://rust-lang.github.io/api-guidelines/naming.html | 2026-09-06 取得 | 公開 API の設計 |
+| RS-CON-03 | 規格 | Rust std `Mutex`<br>https://doc.rust-lang.org/std/sync/struct.Mutex.html | 2026-09-06 取得 | ロックを持つ間は他が待つ |
