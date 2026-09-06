@@ -345,45 +345,51 @@ t17 = Topic(17, "出典の書き方", "照合する文字列を、どう選ぶ�
   ])
 
 
-PREV = _table(["#", "論点"],
-  [[str(i + 1), q] for i, q in enumerate([
-    "層を並べるか、制約が依存する軸を宣言するか",
-    "何をもって、軸と認めるか",
-    "抽象側が決めないことを、どう宣言するか",
-    "制約1件を、何で数えるか",
-    "制約と実装の、どちらが先に在るか",
-    "CodingSkill は、何をして何をしないか",
-    "このSkillは、何と何を担うか",
-    "制約は、何を根拠に書けるか",
-    "このSkillは、何を持つか",
-    "層と種別を、どう構造で表すか",
-    "どの制約が在るかを、どう見えるようにするか",
-    "制約1件を、Markdown でどう書くか",
-  ])])
+# 盤面は board_merge.py が1枚に畳む。ここは論点だけを持つ
+def build():
+    PREV = _table(["#", "論点"],
+      [[str(i + 1), q] for i, q in enumerate([
+        "層を並べるか、制約が依存する軸を宣言するか",
+        "何をもって、軸と認めるか",
+        "抽象側が決めないことを、どう宣言するか",
+        "制約1件を、何で数えるか",
+        "制約と実装の、どちらが先に在るか",
+        "CodingSkill は、何をして何をしないか",
+        "このSkillは、何と何を担うか",
+        "制約は、何を根拠に書けるか",
+        "このSkillは、何を持つか",
+        "層と種別を、どう構造で表すか",
+        "どの制約が在るかを、どう見えるようにするか",
+        "制約1件を、Markdown でどう書くか",
+      ])])
 
-html = deck("CodingSkills は何を確かめるか", [t13, t17, t14, t15, t16],
-  intro="<b>論点13〜17。CodingSkills のブレストの続きである（2026-09-06）。</b>"
-        "論点13 と 17 が決着し、3つが開いている ── <b>決めただけでは守られない</b>ためである。"
-        "論点1〜12 は <code>docs/adr/brainstorm-coding-skills.html</code> に在る ── "
-        "あちらは生成元のスクリプトを持たない古い形式なので、同じ1枚へ畳めていない。"
-        "<b>畳めていないこと自体が、論点13 の対象である</b>（成果物の保守）。"
-        "<b>これは正本ではない。ブレストの記録である。</b>",
-  extras=[("関連する成果物",
-    "<p class='lead'>いま在るものを並べる。"
-    "<b>成果物のスナップショットは、そこに載っている決定の出どころを持たない</b> ── "
-    "出どころはこの盤面にある。</p>" + _table(["成果物", "何が在るか", "この盤面との関係"],
-    [["<code>docs/adr/needles.html</code>", "出典100件を「その原文を特定できているか」で測った結果",
-      "論点17 の実測"],
-     ["<code>docs/adr/source-rule.html</code>", "出典の書き方3原則と、実データの実例2件",
-      "論点17 の決定"],
-     ["CodingSkills 第1版の全文（Artifact <code>24732a71</code>）",
-      "SKILL.md ・ 参照文書 ・ 雛形15本 ・ 規約37本のダンプ",
-      "<b>決定そのものは載っていない。</b>論点1〜12 の結果として在る"],
-     ["<code>docs/adr/brainstorm-coding-skills.html</code>", "論点1〜12",
-      "<b>生成元のスクリプトを持たない</b>ので、この1枚へ畳めていない"]])),
-    ("これまでの論点（別の盤面に在る）",
-    "<p class='lead'>結論はこの盤面へ写していない ── 写すと、写した側が正になってしまう。"
-    "原本は <code>docs/adr/brainstorm-coding-skills.html</code> である。</p>" + PREV)])
-write(html, "docs/adr/brainstorm-coding-skills-contracts.html",
-      "CodingSkills は何を確かめるか")
-print("ok")
+    html = deck("CodingSkills は何を確かめるか", [t13, t17, t14, t15, t16],
+      intro="<b>論点13〜17。CodingSkills のブレストの続きである（2026-09-06）。</b>"
+            "論点13 と 17 が決着し、3つが開いている ── <b>決めただけでは守られない</b>ためである。"
+            "論点1〜12 は <code>docs/adr/brainstorm-coding-skills.html</code> に在る ── "
+            "あちらは生成元のスクリプトを持たない古い形式なので、同じ1枚へ畳めていない。"
+            "<b>畳めていないこと自体が、論点13 の対象である</b>（成果物の保守）。"
+            "<b>これは正本ではない。ブレストの記録である。</b>",
+      extras=[("関連する成果物",
+        "<p class='lead'>いま在るものを並べる。"
+        "<b>成果物のスナップショットは、そこに載っている決定の出どころを持たない</b> ── "
+        "出どころはこの盤面にある。</p>" + _table(["成果物", "何が在るか", "この盤面との関係"],
+        [["<code>docs/adr/needles.html</code>", "出典100件を「その原文を特定できているか」で測った結果",
+          "論点17 の実測"],
+         ["<code>docs/adr/source-rule.html</code>", "出典の書き方3原則と、実データの実例2件",
+          "論点17 の決定"],
+         ["CodingSkills 第1版の全文（Artifact <code>24732a71</code>）",
+          "SKILL.md ・ 参照文書 ・ 雛形15本 ・ 規約37本のダンプ",
+          "<b>決定そのものは載っていない。</b>論点1〜12 の結果として在る"],
+         ["<code>docs/adr/brainstorm-coding-skills.html</code>", "論点1〜12",
+          "<b>生成元のスクリプトを持たない</b>ので、この1枚へ畳めていない"]])),
+        ("これまでの論点（別の盤面に在る）",
+        "<p class='lead'>結論はこの盤面へ写していない ── 写すと、写した側が正になってしまう。"
+        "原本は <code>docs/adr/brainstorm-coding-skills.html</code> である。</p>" + PREV)])
+    write(html, "docs/adr/brainstorm-coding-skills-contracts.html",
+          "CodingSkills は何を確かめるか")
+    print("ok")
+
+
+if __name__ == "__main__":
+    build()
