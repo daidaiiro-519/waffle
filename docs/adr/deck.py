@@ -21,6 +21,7 @@ from corefig import RULECORE
 from toolfig import TOOLS
 from kindsfig import SPECKINDS
 from relfig import REL
+from onewayfig import ONEWAY
 from treefig import TREE
 from jslist import JSLIST
 from composefig import COMPOSE
@@ -1421,7 +1422,7 @@ t19 = Topic(19, "Spec の種", "層ごとに、何を1つの文書の単位に�
        "CodingSkills では、ここを15種まで切り下げてから形が定まった。"
        "<b>そして業務の層は、すでに過去に切ってあった</b> ── "
        "<code>docs/adr/tier2-domain.html</code>（未承認）が8種別を立てている。",
-  figures=[REL, SPECKINDS],
+  figures=[ONEWAY, REL, SPECKINDS],
   path=[
    "層は3つ（業務 ／ 業務 × 接点 ／ 業務 × 基盤）と決まったが、<b>1つの層に何本置くかが決まっていない</b>",
    "CodingSkills で同じ場面を通っている ── <b>「層で切る」だけでは足りず、雛形の単位まで下ろして15種になった</b>",
