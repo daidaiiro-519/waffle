@@ -98,6 +98,9 @@ class Topic:
 
     status は「未」「新規」「決着」のいずれか。決着した論点は kept を持たず、
     decision（決定・理由・次にすること）と、必要なら extras（節の見出しと中身）だけを持つ。
+
+    path は、その結論に至った道筋。何を問うて何が落ちたかを順に並べる ──
+    結論と根拠だけでは「なぜ他が残らなかったか」が見えない。
     """
     no: int
     label: str
@@ -111,6 +114,7 @@ class Topic:
     dropped: list[tuple[str, str]] = field(default_factory=list)
     found: list[str] = field(default_factory=list)
     pick: tuple[str, str] | None = None
+    path: list[str] = field(default_factory=list)
     grounds: list[tuple[str, str, str, str]] = field(default_factory=list)
     costs: list[str] = field(default_factory=list)
     weaknesses: list[str] = field(default_factory=list)
@@ -119,7 +123,11 @@ class Topic:
 
 
 def _sections(t: Topic) -> str:
-    """論点1つぶんの節を、番号を振って組む。"""
+    """論点1つぶんの節を、番号を振って組む。
+
+    **結論を先に置く。**案の比較や落とした案は、その裏づけとして後ろに置く ──
+    読み手は「何が決まったか」を先に知り、納得しないときだけ裏づけへ降りる。
+    """
     if len(t.kept) == 1:
         raise ValueError(f"論点{t.no}: 反証を通過した案が1つしかない。論点の立て方を見直す "
                          "── 1つしか残らないなら、それは選択ではない。"
@@ -127,9 +135,43 @@ def _sections(t: Topic) -> str:
     secs, n = [], 0
     figs = "".join(f'<figure>{svg}<figcaption>{cap}</figcaption></figure>'
                    for svg, cap in t.figures)
-    if t.figures and not t.pick:
+
+    # 1. 結論 ── 記号と一文、そこへ至った道筋、根拠、図、引き受けること
+    body = ""
+    if t.pick:
+        letter, conclusion = t.pick
+        body += (f'<div class="concl"><span class="n big">{_h.escape(letter)}</span>'
+                 f'<div><p>{conclusion}</p></div></div>')
+    elif t.decision:
+        body += _table(["", ""], [[f'<span class="st done">{_h.escape(k)}</span>', v]
+                                  for k, v in t.decision], "chain")
+    if t.path:
+        body += ('<h3>そう判断するまで</h3><ol class="path">'
+                 + "".join(f"<li>{p}</li>" for p in t.path) + "</ol>")
+    for part, claim, kind, src in t.grounds:
+        if kind not in KINDS:
+            raise ValueError(f"論点{t.no}: 出どころの種類が「{kind}」になっている。"
+                             f"使えるのは {'／'.join(KINDS)} である")
+        if not src.strip() or not part.strip():
+            raise ValueError(f"論点{t.no}: 根拠に、支える先か出どころが無い "
+                             f"── 「{claim[:20]}…」")
+    if t.grounds:
+        body += ('<h3>なぜそう言えるか</h3>'
+                 + _table(["結論のどこを支えるか", "もとにしたこと", "その出どころ"],
+                          [[f'<span class="part">{p}</span>', c,
+                            f'<span class="kind {KINDS[k]}">{_h.escape(k)}</span>'
+                            f'<small>{src}</small>']
+                           for p, c, k, src in t.grounds], "why"))
+    if figs:
+        body += f'<h3>図で見る</h3>{figs}'
+    if t.costs:
+        body += ('<h3>引き受けること</h3><ul class="found">'
+                 + "".join(f"<li>{c}</li>" for c in t.costs) + "</ul>")
+    if body:
         n += 1
-        secs.append(_sec(n, "図で見る", figs))
+        secs.append(_sec(n, "決まり" if t.decision else "私の推し", body))
+
+    # 2. 裏づけ ── 案の比較、帰結、落とした案、反証で分かったこと
     if t.kept:
         n += 1
         rows = []
@@ -138,7 +180,8 @@ def _sections(t: Topic) -> str:
             if o.before and o.why:
                 name = _mark(name, o.before, o.why)
             rows.append([_key(LETTERS[i]), name, o.gist, f'<span class="cost">{o.cost}</span>'])
-        secs.append(_sec(n, "反証を通過した案", _table(["", "案", "中身", "代償"], rows, "opts")))
+        secs.append(_sec(n, "裏づけ ── 反証を通過した案",
+                         _table(["", "案", "中身", "代償"], rows, "opts")))
     for tb in t.tables:
         n += 1
         lead = f'<p class="lead">{tb.lead}</p>' if tb.lead else ""
@@ -158,48 +201,17 @@ def _sections(t: Topic) -> str:
         n += 1
         secs.append(_sec(n, "反証で分かったこと",
                          "<ul class='found'>" + "".join(f"<li>{f}</li>" for f in t.found) + "</ul>"))
-    if t.pick:
+    if t.weaknesses:
         n += 1
-        letter, conclusion = t.pick
-        for part, claim, kind, src in t.grounds:
-            if kind not in KINDS:
-                raise ValueError(f"論点{t.no}: 出どころの種類が「{kind}」になっている。"
-                                 f"使えるのは {'／'.join(KINDS)} である")
-            if not src.strip() or not part.strip():
-                raise ValueError(f"論点{t.no}: 根拠に、支える先か出どころが無い "
-                                 f"── 「{claim[:20]}…」")
-        body = (f'<div class="concl"><span class="n big">{_h.escape(letter)}</span>'
-                f'<div><p>{conclusion}</p></div></div>')
-        if t.grounds:
-            body += ('<h3>なぜそう言えるか</h3>'
-                     + _table(["結論のどこを支えるか", "もとにしたこと", "その出どころ"],
-                              [[f'<span class="part">{p}</span>', c,
-                                f'<span class="kind {KINDS[k]}">{_h.escape(k)}</span>'
-                                f'<small>{src}</small>']
-                               for p, c, k, src in t.grounds], "why"))
-        if figs:
-            body += f'<h3>図で見る</h3>{figs}'
-        if t.costs:
-            body += ('<h3>引き受けること</h3><ul class="found">'
-                     + "".join(f"<li>{c}</li>" for c in t.costs) + "</ul>")
-        if t.weaknesses:
-            body += ('<h3>まだ崩れうるところ</h3><ul class="found">'
-                     + "".join(f"<li>{w}</li>" for w in t.weaknesses) + "</ul>")
-        secs.append(_sec(n, "私の推し", body))
-    for title, body in t.extras:
+        secs.append(_sec(n, "まだ崩れうるところ",
+                         "<ul class='found'>" + "".join(f"<li>{w}</li>" for w in t.weaknesses) + "</ul>"))
+    for title, body2 in t.extras:
         n += 1
-        secs.append(_sec(n, title, body))
-    if t.decision:
-        n += 1
-        secs.append(_sec(n, "決まり", _table(["", ""], [
-            [f'<span class="st done">{_h.escape(k)}</span>', v] for k, v in t.decision], "chain")))
-    else:
+        secs.append(_sec(n, title, body2))
+    if not t.decision:
         n += 1
         secs.append(_sec(n, "あなたの見解",
                          '<div class="you">✏️　記号を選ぶ（どれでもなければ、そう言う）</div>'))
-        n += 1
-        secs.append(_sec(n, "決まり",
-                         '<div class="next">選ばれた案が合意になり、次の論点へ</div>'))
     head = (f'<p class="eyebrow">論点 {t.no}</p><h1>{_h.escape(t.question)}</h1>'
             + (f'<div class="note">{t.note}</div>' if t.note else ""))
     return head + "".join(secs)
@@ -307,6 +319,8 @@ table.why small{color:var(--muted);font-size:.88em;line-height:1.7;display:block
 .n.big{font-size:1rem;padding:.15em .6em;border-width:2px;flex:none}
 h3{font-size:.95rem;font-weight:700;margin:1.8rem 0 .6rem;color:var(--muted)}
 ul.found{margin:0;padding-left:1.1rem;font-size:.92rem}
+ol.path{margin:.6rem 0 1rem;padding-left:1.3rem;font-size:.93rem}
+ol.path li{margin:.45rem 0}
 ul.found li{margin-bottom:.5rem}
 figure{margin:0 0 1.2rem}
 figure+figure{margin-top:1.6rem;padding-top:1.4rem;border-top:1px dashed var(--rule)}
