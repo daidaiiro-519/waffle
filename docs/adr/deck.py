@@ -964,9 +964,12 @@ t15 = Topic(15, "Spec の種類", "spec を、どの単位で型にするか", "
   extras=[("軸ごとの原典（2026-09-06 に落として照合）", """<p class="lead"><b>3つの軸それぞれに、支える原典があるか</b>を確かめた。
 落とした原文から<b>文字列で照合できたものだけ</b>を「照合済み」とし、できなかったものはそう書く。</p>
 <table><tr><th>軸</th><th>原典</th><th>照合した文字列</th></tr>
-<tr><td><b>業務</b></td><td>Evans『Domain-Driven Design』── canonical<br>Fowler「Bounded Context」https://martinfowler.com/bliki/BoundedContext.html</td>
-<td><code>Bounded Context</code> ・ <code>Ubiquitous Language</code> ・ <code>context map</code>（Fowler 側で照合）<br>
-<b>Evans の本と DDD Reference（PDF）は、字の対応表が無く本文を照合できていない</b></td></tr>
+<tr><td><b>業務</b></td><td><b><code>.waffle/skills/ddd-advisor</code> の knowledge 22本</b> ── 原典から引いて作ってある<br>
+（<code>bounded-context</code> ・ <code>ubiquitous-language</code> ・ <code>domain-model</code> ・ <code>subdomain</code> ・
+<code>context-integration</code> ほか）<br>
+補助：Fowler「Bounded Context」</td>
+<td>手元の knowledge をそのまま引ける<br>
+<code>Bounded Context</code> ・ <code>Ubiquitous Language</code> ・ <code>context map</code>（Fowler 側で照合）</td></tr>
 <tr><td><b>接点</b></td><td>Fowler「PresentationDomainDataLayering」https://martinfowler.com/bliki/PresentationDomainDataLayering.html<br>
 Cockburn「Hexagonal Architecture（Ports and Adapters）」<br>
 Robinson「Consumer-Driven Contracts」</td>
@@ -993,9 +996,13 @@ CNCF Platforms White Paper　／　Google SRE Book</td>
 <p class="lead"><b>あなたの言う接点は、Fowler の言う presentation そのものである</b> ──
 UI ・ API ・ CLI ・ MCP は、<b>同じ業務の上に載る別の presentation</b>。
 そして Ports and Adapters が、それらを<b>同格に扱ってよい</b>根拠になる。</p>
+<p class="lead"><b>「境界」という語で2つを混ぜない。</b>
+DDD が扱う<b>文脈どうしの連係</b>（上流と下流、モデル変換装置）は、
+<b>業務の側の話</b>である ── 誰に差し出すかではなく、2つの業務モデルをどうつなぐかを決めている。
+<code>ddd-advisor</code> の <code>context-integration</code> がそれに当たる。</p>
 <table><tr><th>まだ照合していないもの</th><th>なぜ挙げるか</th></tr>
-<tr><td>DDD の境界の関係パターン（Open-host Service ・ Published Language ・ Anticorruption Layer）</td>
-<td><b>DDD 自身が接点の語彙を持っている</b>可能性が高い ── ただし PDF から文字列を取り出せず、<b>照合できていない</b></td></tr>
+<tr><td>画面という接点の中身をどう設計するか（Interaction Design ・ HCI）</td>
+<td>上の3本は「接点が複数あること」「差し替えられること」「約束の確かめ方」を扱うが、<b>画面の設計論そのものは扱っていない</b></td></tr>
 <tr><td>人向けの接点の設計論（Interaction Design ・ HCI）</td><td>画面という接点<b>の中身をどう設計するか</b>は、上の3つが扱っていない ── 原文を落としていない</td></tr></table>""")],
   kept=[
    Option("系ごとに型を並べる（業務 ・ 画面 ・ 基盤 …）",

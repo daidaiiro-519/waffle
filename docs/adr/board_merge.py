@@ -25,7 +25,7 @@ BASE = HERE / "brainstorm-coding-skills-1-12.html"
 OUT = HERE / "brainstorm-coding-skills.html"
 THEME = "CodingSkills ── 制約と、その作用域"
 
-NEW = [BC.t13, BC.t14, BC.t15, BC.t16, BC.t17]
+NEW = [BC.t13, BC.t14, BC.t15, BC.t16, BC.t17, BC.t18]
 
 NOTE = (
     "<b>これは正本ではない。ブレストの記録である。</b>"
@@ -33,7 +33,7 @@ NOTE = (
     "（<code>.waffle/skills/coding-skills/</code>）。"
     "論点13 以降は<b>組んだあとに出てきたもの</b>である ── "
     "検査は何を対象にするか、検査が宣言から導かれていることを何が担保するか、"
-    "出典の照合をどう選ぶか。"
+    "出典の照合をどう選ぶか、規則1件をどんな形で書くか。"
     "<b>既存の実装や既にある規約の形は、ここでの根拠に使っていない</b> ── "
     "あるべき形から導き直した。数えた事実は、問題が実在することの証拠としてだけ引いている。"
 )
