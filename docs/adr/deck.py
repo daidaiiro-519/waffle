@@ -12,6 +12,7 @@ from difffig import DIFF
 from gatefig import GATE, WHERE
 from figs2 import PROMPT, MIGRATE, QUERY
 from jslist import JSLIST
+from composefig import COMPOSE
 
 t1 = Topic(1, "三層", "schema は厚い一枚か、薄い核＋複数の契約か", "決着",
   answer="どちらでもなく、<b>メタレベルの三層</b>",
@@ -478,7 +479,7 @@ t10 = Topic(10, "書き方の指示", "節ごとの書き方の指示を、schem
   answer="推しは C（x- に保存し、渡すときに description へ合成する）",
   note="<b>JSON Schema は「どう書くか」を持たない。</b>載せられるのは <code>description</code> か <code>x-</code> だけで、"
        "<b>構造化出力は <code>x-</code> を拒む（実測）</b> ── この2つの板挟みが、この論点である。",
-  figures=[PROMPT],
+  figures=[PROMPT, COMPOSE],
   tables=[Table("この選択が置くもの",
     ["構造化出力へ渡したとき", "説明と指示を別々に直せるか", "schema を人が読んだとき", "指示を長く書けるか"],
     {"A": ["<b>指示が落ちる</b>", "直せる", "分かれていて読みやすい", "書ける"],
