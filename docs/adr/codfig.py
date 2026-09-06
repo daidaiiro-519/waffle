@@ -1,5 +1,5 @@
 CODCUT = ('<svg viewBox="0 0 780 300" role="img" aria-label="CodingSchema は種別で切り、CodingSkills は層で切っている。同じ対象を別の向きで切っている">'
- '<text x="20" y="24" font-size="11.5" font-weight="700" fill="var(--del)">いまの CodingSchema　── 種別で切る</text>'
+ '<text x="20" y="24" font-size="11.5" font-weight="700" fill="var(--del)">捨てる形　── いまの CodingSchema（種別で切る）</text>''<text x="330" y="100" text-anchor="end" font-size="10" font-weight="700" fill="var(--del)">✕ 捨てる</text>'
  '<rect x="20" y="38" width="82" height="40" fill="none" stroke="var(--soft)" stroke-width="1.2"/>'
  '<text x="61" y="63" text-anchor="middle" font-size="8.5" fill="var(--muted)">architecture</text>'
  '<rect x="108" y="38" width="82" height="40" fill="none" stroke="var(--soft)" stroke-width="1.2"/>'
@@ -13,7 +13,7 @@ CODCUT = ('<svg viewBox="0 0 780 300" role="img" aria-label="CodingSchema は種
  '<text x="20" y="100" font-size="9.5" fill="var(--del)">1つの文書に、言語のことも用途のことも混ざる</text>'
  '<text x="20" y="118" font-size="9.5" fill="var(--muted)">「テスト規約」と言っても、言語の話か用途の話かは開けるまで分からない</text>'
  '<line x1="390" y1="14" x2="390" y2="150" stroke="var(--rule)" stroke-width="1"/>'
- '<text x="410" y="24" font-size="11.5" font-weight="700" fill="var(--key)">CodingSkills　── 層で切る</text>'
+ '<text x="410" y="24" font-size="11.5" font-weight="700" fill="var(--key)">採る形　── CodingSkills に合わせる（層で切る）</text>'
  '<rect x="410" y="38" width="80" height="40" fill="none" stroke="var(--key)" stroke-width="1.4"/>'
  '<text x="450" y="56" text-anchor="middle" font-size="9.5" fill="var(--key)">言語</text>'
  '<text x="450" y="70" text-anchor="middle" font-size="8" fill="var(--muted)">綴り ・ 失敗 ・ 並行</text>'
@@ -47,4 +47,6 @@ CODCUT = ('<svg viewBox="0 0 780 300" role="img" aria-label="CodingSchema は種
  '</svg>',
  '<b>切り方が90度ずれている。</b>CodingSchema は種別で切り、CodingSkills は層で切る ── '
  '<b>同じ「テスト規約」でも、言語の層では「テストが走る仕組み」、用途の層では「何を保証するか」で、構造が違う。</b>'
- '種別で切ると、その2つが同じ名前の文書に入る。')
+ '種別で切ると、その2つが同じ名前の文書に入る。'
+ '<b>左は捨てる形として残してある</b> ── もともと CodingSkills に合わせる想定だったので、'
+ '4種の表現で schema を作り直すことはしない。')
