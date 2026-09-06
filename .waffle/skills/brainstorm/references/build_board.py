@@ -136,7 +136,7 @@ def _sections(t: Topic) -> str:
     figs = "".join(f'<figure>{svg}<figcaption>{cap}</figcaption></figure>'
                    for svg, cap in t.figures)
 
-    # 1. 結論だけを置く ── 何を推すか（または何が決まったか）以外は、ここに入れない
+    # 1. 結論 ── 記号と一文、そこへ至った道筋、根拠、図、引き受けること
     body = ""
     if t.pick:
         letter, conclusion = t.pick
@@ -145,6 +145,9 @@ def _sections(t: Topic) -> str:
     elif t.decision:
         body += _table(["", ""], [[f'<span class="st done">{_h.escape(k)}</span>', v]
                                   for k, v in t.decision], "chain")
+    if t.path:
+        body += ('<h3>そう判断するまで</h3><ol class="path">'
+                 + "".join(f"<li>{p}</li>" for p in t.path) + "</ol>")
     for part, claim, kind, src in t.grounds:
         if kind not in KINDS:
             raise ValueError(f"論点{t.no}: 出どころの種類が「{kind}」になっている。"
@@ -152,30 +155,23 @@ def _sections(t: Topic) -> str:
         if not src.strip() or not part.strip():
             raise ValueError(f"論点{t.no}: 根拠に、支える先か出どころが無い "
                              f"── 「{claim[:20]}…」")
+    if t.grounds:
+        body += ('<h3>なぜそう言えるか</h3>'
+                 + _table(["結論のどこを支えるか", "もとにしたこと", "その出どころ"],
+                          [[f'<span class="part">{p}</span>', c,
+                            f'<span class="kind {KINDS[k]}">{_h.escape(k)}</span>'
+                            f'<small>{src}</small>']
+                           for p, c, k, src in t.grounds], "why"))
+    if figs:
+        body += f'<h3>図で見る</h3>{figs}'
+    if t.costs:
+        body += ('<h3>引き受けること</h3><ul class="found">'
+                 + "".join(f"<li>{c}</li>" for c in t.costs) + "</ul>")
     if body:
         n += 1
         secs.append(_sec(n, "決まり" if t.decision else "私の推し", body))
 
-    # 2. 裏づけ ── 道筋・根拠・図・代償・案の比較・落とした案・分かったこと
-    if t.path:
-        n += 1
-        secs.append(_sec(n, "そう判断するまで",
-                         '<ol class="path">' + "".join(f"<li>{p}</li>" for p in t.path) + "</ol>"))
-    if t.grounds:
-        n += 1
-        secs.append(_sec(n, "なぜそう言えるか",
-                         _table(["結論のどこを支えるか", "もとにしたこと", "その出どころ"],
-                                [[f'<span class="part">{p}</span>', c,
-                                  f'<span class="kind {KINDS[k]}">{_h.escape(k)}</span>'
-                                  f'<small>{src}</small>']
-                                 for p, c, k, src in t.grounds], "why")))
-    if figs:
-        n += 1
-        secs.append(_sec(n, "図で見る", figs))
-    if t.costs:
-        n += 1
-        secs.append(_sec(n, "引き受けること",
-                         "<ul class='found'>" + "".join(f"<li>{c}</li>" for c in t.costs) + "</ul>"))
+    # 2. 裏づけ ── 案の比較、帰結、落とした案、反証で分かったこと
     if t.kept:
         n += 1
         rows = []

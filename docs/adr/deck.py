@@ -19,7 +19,6 @@ from speclayer import SPECLAYER
 from bucketfig import BUCKETS
 from corefig import RULECORE
 from toolfig import TOOLS
-from kindsfig import SPECKINDS
 from relfig import REL
 from onewayfig import ONEWAY
 from treefig import TREE
@@ -1422,7 +1421,7 @@ t19 = Topic(19, "Spec の種", "層ごとに、何を1つの文書の単位に�
        "CodingSkills では、ここを15種まで切り下げてから形が定まった。"
        "<b>そして業務の層は、すでに過去に切ってあった</b> ── "
        "<code>docs/adr/tier2-domain.html</code>（未承認）が8種別を立てている。",
-  figures=[ONEWAY, REL, SPECKINDS],
+  figures=[ONEWAY, REL],
   path=[
    "層は3つ（業務 ／ 業務 × 接点 ／ 業務 × 基盤）と決まったが、<b>1つの層に何本置くかが決まっていない</b>",
    "CodingSkills で同じ場面を通っている ── <b>「層で切る」だけでは足りず、雛形の単位まで下ろして15種になった</b>",
@@ -1479,9 +1478,9 @@ t19 = Topic(19, "Spec の種", "層ごとに、何を1つの文書の単位に�
          "論点15 でそれらを軸へ移したので、この2層はここで新しく立てる。", plain=True),
    Table("この選択が置くもの",
     ["種の数", "1つの文書の大きさ", "抽象と具体の境目"],
-    {"A　粗く（層＝1種）": ["3", "<b>大きい</b> ── 領域も操作も1本に入る", "<b>ぼやける</b>（同じ文書に別の粒度が同居）"],
-     "B　閉じる単位まで": ["<b>8</b>", "1つの判断で閉じる", "<b>単位が判断の粒度と一致する</b>"],
-     "C　細かく（DDD の語彙ごと）": ["15前後", "小さい", "<b>切りすぎ</b> ── 実体と値を別の文書にすると、一貫性の境界が割れる"]})],
+    {"A　層をそのまま種にする": ["3", "<b>大きい</b> ── 領域も操作も1本に入る", "<b>ぼやける</b>（同じ文書に別の粒度が同居）"],
+     "B　描かれる単位まで切る": ["<b>業務8 ＋ 接点2 ＋ 基盤1</b>", "1つの判断で閉じる", "<b>単位が判断の粒度と一致する</b>"],
+     "C　集約の内側を畳む": ["業務6 ＋ …", "集約だけ大きい", "<b>参照が相手の値を写す</b>"]})],
   kept=[
    Option("層をそのまま種にする（3種）",
           "業務 ／ 業務 × 接点 ／ 業務 × 基盤 の3つを、そのまま文書の単位にする",
