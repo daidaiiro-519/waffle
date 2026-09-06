@@ -12,6 +12,7 @@ from difffig import DIFF
 from gatefig import GATE, WHERE
 from figs2 import PROMPT, MIGRATE, QUERY
 from migtime import MIGTIME
+from adrfig import ADRFIG
 from jslist import JSLIST
 from composefig import COMPOSE
 
@@ -708,6 +709,7 @@ t12 = Topic(12, "決定と変更の記録", "決定の記録と、変更の記�
        "<b>そして ADR は、特定の場面のためのものではない</b> ── <b>あらゆる意思決定を残せる型</b>である"
        "（名前の由来としては Architectural Decision Record が通りだが、"
        "ここでは<b>任意の決定を残す型</b>として定義する）。",
+  figures=[ADRFIG],
   tables=[Table("2つの記録は、何が違うか",
     ["何であるか", "属する層", "単位", "寿命"],
     {"変更の記録": ["<b>すべての文書が持つ仕組み</b>", "<b>abstract（共通契約）</b>",
