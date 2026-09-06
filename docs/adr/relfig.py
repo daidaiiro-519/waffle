@@ -14,13 +14,13 @@ REL = ('<svg viewBox="0 0 780 335" role="img" aria-label="業務領域と区切�
  '<text x="20" y="20" font-size="10" fill="var(--muted)">業務領域　── 事業方針で決まる構造（見つけるもの）</text>'
  '<text x="20" y="36" font-size="10" fill="var(--add)">区切られた文脈　── 設計判断（技術者が決めるもの）</text>'
  '<line x1="20" y1="46" x2="760" y2="46" stroke="var(--rule)"/>'
- '<text x="20" y="70" font-size="9.5" font-weight="700" fill="currentColor">① 1対1</text>'
+ '<text x="20" y="70" font-size="9.5" font-weight="700" fill="currentColor">起こりうる形 ①　1対1</text>'
  + _b(20, 80, 200, 34, "業務領域　予約管理", M, 1.2)
  + _b(20, 126, 200, 34, "文脈　予約", A, 1.6)
  + '<line x1="120" y1="114" x2="120" y2="122" stroke="var(--soft)" stroke-width="1.2"/>'
  + '<text x="20" y="182" font-size="8.5" fill="var(--muted)">いちばん分かりやすい形。</text>'
  + '<text x="20" y="196" font-size="8.5" fill="var(--muted)">ただし、これは定義ではない</text>'
- + '<text x="270" y="70" font-size="9.5" font-weight="700" fill="currentColor">② 1つの領域に、複数の文脈</text>'
+ + '<text x="270" y="70" font-size="9.5" font-weight="700" fill="currentColor">起こりうる形 ②　1つの領域に、複数の文脈</text>'
  + _b(270, 80, 220, 34, "業務領域　予約管理", M, 1.2)
  + _b(270, 126, 104, 34, "文脈　予約", A, 1.6)
  + _b(386, 126, 104, 34, "文脈　空き状況", A, 1.6)
@@ -28,7 +28,7 @@ REL = ('<svg viewBox="0 0 780 335" role="img" aria-label="業務領域と区切�
  + '<line x1="438" y1="114" x2="438" y2="122" stroke="var(--soft)" stroke-width="1.2"/>'
  + '<text x="270" y="182" font-size="8.5" fill="var(--muted)">一つの業務領域でも課題が複数あれば、</text>'
  + '<text x="270" y="196" font-size="8.5" fill="var(--muted)">課題ごとに別のモデルを作るほうがよい</text>'
- + '<text x="540" y="70" font-size="9.5" font-weight="700" fill="currentColor">③ 1つの文脈に、複数の領域</text>'
+ + '<text x="540" y="70" font-size="9.5" font-weight="700" fill="currentColor">起こりうる形 ③　1つの文脈に、複数の領域</text>'
  + _b(540, 80, 104, 34, "領域　予約管理", M, 1.2)
  + _b(656, 80, 104, 34, "領域　請求", M, 1.2)
  + _b(540, 126, 220, 34, "文脈　注文まわり", A, 1.6)
@@ -53,4 +53,4 @@ REL = ('<svg viewBox="0 0 780 335" role="img" aria-label="業務領域と区切�
  'だから<b>どちらを外側にしても入らない場合が出る</b>。'
  '③のとき、領域の境界は名前空間やモジュールとして<b>実装の側に現れる</b>。'
  '<b>どれを採るかは決め打ちしない</b> ── 文脈の数は「同じ言葉が一貫する範囲」で決まる設計判断であり、<b>数えた結果はいまの姿であって、あるべき姿ではない。</b>'
- 'だからフォルダの形は、<b>どの対応が来ても壊れないもの</b>を選ぶ。')
+ 'いま何本あるかは<b>再定義の対象そのものなので、根拠にならない</b> ── 決めるのは、新しい定義を当てたあとである。')
