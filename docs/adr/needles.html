@@ -1,0 +1,352 @@
+<title>照合する文字列は、原文を特定できているか</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@700&display=swap">
+<style>
+:root{
+  --paper:#F7F8F9; --card:#FFFFFF; --ink:#171A1D; --muted:#68727E;
+  --rule:#E1E5E9; --key:#2E5D7A; --weak:#A83E28; --good:#2C6A57;
+  --strip:#E4E8EC; --hit:#A83E28; --barbg:#EDF0F2;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#14171A; --card:#1B1F23; --ink:#E7E9EC; --muted:#98A2AE;
+  --rule:#2A3037; --key:#7FB0CC; --weak:#E08A72; --good:#6FBFA3;
+  --strip:#2A3138; --hit:#E08A72; --barbg:#242A30;
+} }
+:root[data-theme="dark"]{
+  --paper:#14171A; --card:#1B1F23; --ink:#E7E9EC; --muted:#98A2AE;
+  --rule:#2A3037; --key:#7FB0CC; --weak:#E08A72; --good:#6FBFA3;
+  --strip:#2A3138; --hit:#E08A72; --barbg:#242A30;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Noto Sans JP",system-ui,sans-serif;font-size:15.5px;line-height:1.85;
+  -webkit-font-smoothing:antialiased}
+main{max-width:58rem;margin:0 auto;padding:2.5rem 1.5rem 5rem;
+  display:flex;flex-direction:column;gap:2.6rem}
+h1{font-family:"Noto Serif JP",serif;font-size:clamp(24px,3.6vw,33px);line-height:1.35;
+  margin:0;text-wrap:balance}
+h2{font-family:"Noto Serif JP",serif;font-size:1.18rem;margin:0 0 1rem;
+  padding-bottom:.45rem;border-bottom:1px solid var(--rule)}
+p{margin:0 0 .9rem}
+.lede{color:var(--muted);margin:.7rem 0 0;font-size:1rem}
+.eyebrow{font-size:11px;letter-spacing:.18em;color:var(--muted);margin:0 0 .5rem}
+.role{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--key);
+  border-radius:.4rem;padding:1rem 1.2rem;font-size:.95rem}
+.role q{font-style:normal;font-weight:700}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));gap:1.1rem}
+.ex{background:var(--card);border:1px solid var(--rule);border-radius:.45rem;padding:1.1rem}
+.ex.g{border-color:var(--good)} .ex.b{border-color:var(--weak)}
+.ex h3{margin:.15rem 0 .1rem;font-size:.93rem}
+.ex .verdict{font-size:.76rem;font-weight:700;letter-spacing:.05em}
+.ex.g .verdict{color:var(--good)} .ex.b .verdict{color:var(--weak)}
+.ex code{display:block;margin:.55rem 0 .5rem;font-size:.8rem;word-break:break-all}
+.ex svg{display:block;width:100%;height:30px;margin:.3rem 0}
+.ex small{color:var(--muted);font-size:.79rem;line-height:1.7;display:block}
+code{font-family:ui-monospace,SFMono-Regular,monospace;font-size:.86em;
+  background:var(--barbg);border-radius:.2rem;padding:.08em .4em}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(11.5rem,1fr));gap:.8rem}
+.tile{background:var(--card);border:1px solid var(--rule);border-radius:.45rem;
+  padding:.9rem 1rem;display:flex;flex-direction:column;gap:.15rem}
+.tile.weak{border-color:var(--weak);border-width:1.5px}
+.tile.good{border-color:var(--good)}
+.tile .k{font-size:.75rem;color:var(--muted);line-height:1.6}
+.tile .v{font-size:1.9rem;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+.tile.weak .v{color:var(--weak)} .tile.good .v{color:var(--good)}
+.tile .d{font-size:.77rem;color:var(--muted);line-height:1.6}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+caption{text-align:left;font-size:.82rem;color:var(--muted);padding-bottom:.5rem}
+th{text-align:left;font-size:.72rem;letter-spacing:.05em;color:var(--muted);font-weight:700;
+  padding:.45rem .6rem;border-bottom:1.5px solid var(--rule);white-space:nowrap}
+td{padding:.6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+td.id{font-family:ui-monospace,monospace;font-size:.78rem;color:var(--key);white-space:nowrap}
+td.st small,td.ct small{display:block;color:var(--muted);font-size:.74rem;margin-top:.15rem}
+td.nd{max-width:19rem}
+td.ct{white-space:nowrap;font-variant-numeric:tabular-nums}
+td.ct b{color:var(--weak);font-size:1.05rem}
+ul{margin:0;padding-left:1.15rem} li{margin-bottom:.45rem}
+.foot{color:var(--muted);font-size:.82rem;border-top:1px solid var(--rule);padding-top:1rem}
+</style>
+<main>
+<header>
+  <p class="eyebrow">CODING-SKILLS ／ 出典の点検</p>
+  <h1>照合する文字列は、原文を特定できているか</h1>
+  <p class="lede">規約の規則には出典が付き、「原文にこの文字列が在る」ことで確かめている。
+  <b>その文字列が、他の原文にも当たっていないかを測った。</b>当たっているなら、
+  原文が別物に差し替わっても、その確認は通ってしまう。</p>
+</header>
+
+<section>
+  <h2>照合する文字列は、何のために在るか</h2>
+  <div class="role">
+    <p style="margin:0 0 .5rem">規約が、この印の役割をこう定めている。</p>
+    <p style="margin:0"><q>版が上がったら、照合する文字列がまだ原文に在るかを確かめる。
+    無ければ、その規則は出典を失っている。</q>
+    <small style="color:var(--muted)">── references/sources.md</small></p>
+  </div>
+  <p style="margin-top:1rem"><b>つまりこの印は、原典が変わったときに鳴るためのものである。</b>
+  鳴らない印は、付いていないのと同じである。</p>
+</section>
+
+<section>
+  <h2>鳴る印と、鳴らない印</h2>
+  <p>目盛は落としてある原文 103 本。赤は、その文字列が当たる原文である。</p>
+  <div class="two">
+    <div class="ex g">
+      <span class="verdict">その1本だけ ── 鳴る</span>
+      <h3>DP-TB-01　写し手は、生の入力とデータ契約の型だけで確かめら</h3>
+      <code>because the code under test deals only with buffers of bytes for</code>
+      <svg viewBox="0 0 250 30" role="img" aria-label="落としてある原文のうち、この文字列に当たる本数"><rect x="0.00" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="4.81" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="9.62" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="14.42" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="19.23" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="24.04" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="28.85" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="33.65" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="38.46" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="43.27" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="48.08" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="52.88" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="57.69" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="62.50" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="67.31" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="72.12" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="76.92" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="81.73" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="86.54" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="91.35" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="96.15" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="100.96" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="105.77" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="110.58" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="115.38" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="120.19" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="125.00" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="129.81" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="134.62" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="139.42" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="144.23" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="149.04" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="153.85" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="158.65" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="163.46" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="168.27" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="173.08" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="177.88" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="182.69" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="187.50" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="192.31" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="197.12" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="201.92" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="206.73" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="211.54" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="216.35" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="221.15" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="225.96" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="230.77" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="235.58" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="240.38" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="245.19" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/></svg>
+      <small>この文字列は、出典に指定した原文にしか当たらない。
+      原文が書き換われば、その場で落ちる。</small>
+    </div>
+    <div class="ex b">
+      <span class="verdict">他に 43 本 ── 鳴らない</span>
+      <h3>GO-ERR-01　失敗は戻り値の最後の `error` で返し、`</h3>
+      <code>errors</code>
+      <svg viewBox="0 0 250 30" role="img" aria-label="落としてある原文のうち、この文字列に当たる本数"><rect x="0.00" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="4.81" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="9.62" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="14.42" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="19.23" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="24.04" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="28.85" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="33.65" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="38.46" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="43.27" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="48.08" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="52.88" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="57.69" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="62.50" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="67.31" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="72.12" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="76.92" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="81.73" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="86.54" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="91.35" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="96.15" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="100.96" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="105.77" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="110.58" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="115.38" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="120.19" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="125.00" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="129.81" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="134.62" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="139.42" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="144.23" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="149.04" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="153.85" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="158.65" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="163.46" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="168.27" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="173.08" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="177.88" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="182.69" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="187.50" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="192.31" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="197.12" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="201.92" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="206.73" y="0" width="3.61" height="30" rx="1" fill="var(--hit)"/><rect x="211.54" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="216.35" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="221.15" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="225.96" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="230.77" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="235.58" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="240.38" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/><rect x="245.19" y="0" width="3.61" height="30" rx="1" fill="var(--strip)"/></svg>
+      <small>落としてある原文のうち 44 本に当たる。
+      <b>出典をまったく別の文書に差し替えても、この確認は通る。</b></small>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>100 件の内訳</h2>
+  <div class="tiles"><div class="tile good"><span class="k">その原文だけに当たる</span><span class="v">31</span><span class="d">版が変われば鳴る</span></div><div class="tile weak"><span class="k">他の原文にも当たる</span><span class="v">69</span><span class="d">原文が差し替わっても鳴らない</span></div><div class="tile weak"><span class="k">うち、自分の原文には1か所</span><span class="v">9</span><span class="d">当たった数では見つからない</span></div><div class="tile"><span class="k">当たった数は多いが特定できている</span><span class="v">15</span><span class="d">数だけ見ると誤って疑う</span></div></div>
+</section>
+
+<section>
+  <h2>当たった数では見つからない</h2>
+  <p>はじめは「原文に何か所当たるか」で測った。<b>その測り方は両方向に外す。</b></p>
+  <div class="scroll"><table><caption>自分の原文には1か所しか当たらないのに、他の原文にも当たる 9 件　── 数で測ると「良い」と判定される</caption><tr><th>規則</th><th>言明</th><th>照合する文字列</th><th>他に当たる原文</th></tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>lang.go+arch.hexagonal/layer-mapping.md</small></td>
+          <td class="nd"><code>internal</code></td>
+          <td class="ct"><b>28</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">RS-ERR-02</td>
+          <td class="st">失敗型は、呼び出し側が分岐できる列挙にする
+            <small>lang.rust/failure.md</small></td>
+          <td class="nd"><code>error types</code></td>
+          <td class="ct"><b>3</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-STY-03</td>
+          <td class="st">パッケージ名は単数形の小文字1語にし、`util` ・ `common` を使わない
+            <small>lang.go/style.md</small></td>
+          <td class="nd"><code>Package names</code></td>
+          <td class="ct"><b>2</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-ERR-05</td>
+          <td class="st">失敗の文面は小文字で始め、句点で終えない
+            <small>lang.go/failure.md</small></td>
+          <td class="nd"><code>Error Strings</code></td>
+          <td class="ct"><b>1</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-ERR-04</td>
+          <td class="st">失敗を捨てない。捨てる場合は理由をコメントで残す
+            <small>lang.go/failure.md</small></td>
+          <td class="nd"><code>Do not discard errors using</code></td>
+          <td class="ct"><b>1</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-STY-04</td>
+          <td class="st">公開する識別子には、識別子名で始まる doc コメントを付ける
+            <small>lang.go/style.md</small></td>
+          <td class="nd"><code>begin with the name of the thing being described</code></td>
+          <td class="ct"><b>1</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-TST-01</td>
+          <td class="st">すべてのテストが `go test ./...` 1つで走る
+            <small>lang.go/test-mechanism.md</small></td>
+          <td class="nd"><code>func TestXxx</code></td>
+          <td class="ct"><b>1</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">GH-TP-03</td>
+          <td class="st">出力ポートの偽物は `app` の中に置き、`adapter` へ置かない
+            <small>lang.go+arch.hexagonal/test-placement.md</small></td>
+          <td class="nd"><code>let the consumer mock the producer implementation</code></td>
+          <td class="ct"><b>1</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>purpose.mcp-server/lifecycle.md</small></td>
+          <td class="nd"><code>capability negotiation</code></td>
+          <td class="ct"><b>1</b> 本<small>自 1 か所</small></td>
+        </tr></table></div>
+  <p class="lede" style="margin-top:1.2rem">逆に、当たった数が多くても特定できているものが
+  15 件ある（<code>disposability</code> は自 58 か所だが、
+  他の原文には1本も当たらない）。<b>数は、この問いの答えになっていない。</b></p>
+</section>
+
+<section>
+  <h2>他の原文にも当たる 69 件</h2>
+  <div class="scroll"><table><caption>他に当たる原文の多い順（上位24件）</caption><tr><th>規則</th><th>言明</th><th>照合する文字列</th><th>他に当たる原文</th></tr><tr>
+          <td class="id">GO-ERR-01</td>
+          <td class="st">失敗は戻り値の最後の `error` で返し、`panic` で流さない
+            <small>lang.go/failure.md</small></td>
+          <td class="nd"><code>errors</code></td>
+          <td class="ct"><b>43</b> 本<small>自 9 か所</small></td>
+        </tr><tr>
+          <td class="id">GH-TP-01</td>
+          <td class="st">`model` と `app` のテストは、同じパッケージ（`package model`）に置く
+            <small>lang.go+arch.hexagonal/test-placement.md</small></td>
+          <td class="nd"><code>Short</code></td>
+          <td class="ct"><b>36</b> 本<small>自 22 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>lang.go+arch.hexagonal/layer-mapping.md</small></td>
+          <td class="nd"><code>internal</code></td>
+          <td class="ct"><b>28</b> 本<small>自 1 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>lang.rust+arch.data-port/layer-mapping.md</small></td>
+          <td class="nd"><code>dependencies</code></td>
+          <td class="ct"><b>23</b> 本<small>自 28 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-STY-05</td>
+          <td class="st">受け取り側は具体型、返す側も具体型にする。抽象は使う側が定める
+            <small>lang.go/style.md</small></td>
+          <td class="nd"><code>interfaces</code></td>
+          <td class="ct"><b>18</b> 本<small>自 7 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>lang.go+arch.hexagonal/layer-mapping.md</small></td>
+          <td class="nd"><code>interfaces</code></td>
+          <td class="ct"><b>18</b> 本<small>自 7 か所</small></td>
+        </tr><tr>
+          <td class="id">RS-CON-04</td>
+          <td class="st">非同期の実行環境を、ライブラリの公開 API に現さない
+            <small>lang.rust/concurrency.md</small></td>
+          <td class="nd"><code>naming</code></td>
+          <td class="ct"><b>17</b> 本<small>自 8 か所</small></td>
+        </tr><tr>
+          <td class="id">RS-STY-04</td>
+          <td class="st">型名に実装技術を含めない。含めてよいのは外部と接する要素だけ
+            <small>lang.rust/style.md</small></td>
+          <td class="nd"><code>naming</code></td>
+          <td class="ct"><b>17</b> 本<small>自 8 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>lang.rust+arch.hexagonal/layer-mapping.md</small></td>
+          <td class="nd"><code>naming</code></td>
+          <td class="ct"><b>17</b> 本<small>自 8 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-STY-02</td>
+          <td class="st">公開する識別子は大文字始まり、それ以外は小文字始まりにする
+            <small>lang.go/style.md</small></td>
+          <td class="nd"><code>exported</code></td>
+          <td class="ct"><b>14</b> 本<small>自 12 か所</small></td>
+        </tr><tr>
+          <td class="id">MC-AC-01</td>
+          <td class="st">初期化のやり取りに、仕様どおりの応答を返す
+            <small>purpose.mcp-server/acceptance.md</small></td>
+          <td class="nd"><code>initialize</code></td>
+          <td class="ct"><b>12</b> 本<small>自 10 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>purpose.mcp-server/test-strategy.md</small></td>
+          <td class="nd"><code>initialize</code></td>
+          <td class="ct"><b>12</b> 本<small>自 10 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>lang.go/toolchain.md</small></td>
+          <td class="nd"><code>vet</code></td>
+          <td class="ct"><b>11</b> 本<small>自 29 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-TST-02</td>
+          <td class="st">テストは実行順に依存せず、並列でも同じ結果になる
+            <small>lang.go/test-mechanism.md</small></td>
+          <td class="nd"><code>Parallel</code></td>
+          <td class="ct"><b>10</b> 本<small>自 77 か所</small></td>
+        </tr><tr>
+          <td class="id">GO-CON-01</td>
+          <td class="st">起動した goroutine は、終わり方を必ず決める
+            <small>lang.go/concurrency.md</small></td>
+          <td class="nd"><code>pipeline</code></td>
+          <td class="ct"><b>9</b> 本<small>自 40 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>lang.rust/toolchain.md</small></td>
+          <td class="nd"><code>clippy</code></td>
+          <td class="ct"><b>8</b> 本<small>自 25 か所</small></td>
+        </tr><tr>
+          <td class="id">BA-AC-01</td>
+          <td class="st">契約どおりの要求に、契約どおりの状態コードと応答を返す
+            <small>purpose.backend-api/acceptance.md</small></td>
+          <td class="nd"><code>status code</code></td>
+          <td class="ct"><b>8</b> 本<small>自 228 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>purpose.backend-api/contract.md</small></td>
+          <td class="nd"><code>status code</code></td>
+          <td class="ct"><b>8</b> 本<small>自 228 か所</small></td>
+        </tr><tr>
+          <td class="id">RS-TST-02</td>
+          <td class="st">テストは実行順に依存せず、単独でも走る
+            <small>lang.rust/test-mechanism.md</small></td>
+          <td class="nd"><code>unit tests</code></td>
+          <td class="ct"><b>6</b> 本<small>自 7 か所</small></td>
+        </tr><tr>
+          <td class="id">RD-TP-01</td>
+          <td class="st">各 crate の単体テストは、対象と同じファイルの `mod tests` に置く
+            <small>lang.rust+arch.data-port/test-placement.md</small></td>
+          <td class="nd"><code>unit tests</code></td>
+          <td class="ct"><b>6</b> 本<small>自 7 か所</small></td>
+        </tr><tr>
+          <td class="id">RH-TP-01</td>
+          <td class="st">すべての層の単体テストは、対象と同じファイルの `mod tests` に置く
+            <small>lang.rust+arch.hexagonal/test-placement.md</small></td>
+          <td class="nd"><code>unit tests</code></td>
+          <td class="ct"><b>6</b> 本<small>自 7 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>purpose.mcp-server/contract.md</small></td>
+          <td class="nd"><code>capabilities</code></td>
+          <td class="ct"><b>6</b> 本<small>自 3 か所</small></td>
+        </tr><tr>
+          <td class="id">宣言</td>
+          <td class="st">（規則ではなく、宣言に付いた出典）
+            <small>purpose.mcp-server/stack.md</small></td>
+          <td class="nd"><code>capabilities</code></td>
+          <td class="ct"><b>6</b> 本<small>自 3 か所</small></td>
+        </tr><tr>
+          <td class="id">DP-TB-03</td>
+          <td class="st">生成した型は、schema と一致する
+            <small>arch.data-port/test-boundaries.md</small></td>
+          <td class="nd"><code>JSON Schema</code></td>
+          <td class="ct"><b>5</b> 本<small>自 22 か所</small></td>
+        </tr></table></div>
+</section>
+
+<section>
+  <h2>機械に決められないこと</h2>
+  <p>ここで測ったのは<b>「その文字列が、その原文を特定できているか」だけ</b>である。
+  特定できていても、<b>その箇所が規則を支えているかは決められない</b> ──
+  それは人が読んで判断する（<code>check.py --contracts</code> が
+  「機械では裁けない」として並べている3件の1つ）。</p>
+</section>
+
+<section>
+  <h2>どうするか</h2>
+  <ul>
+    <li><b>A</b>　69 件すべて、原文から取り直す ── 印が鳴るようになる</li>
+    <li><b>B</b>　他に当たる本数の多いものから直す（<code>errors</code> ・
+      <code>Short</code> ・ <code>internal</code> …）</li>
+    <li><b>C</b>　いまは直さず、この測定を記録として残す</li>
+  </ul>
+</section>
+
+<p class="foot">数はすべて実物から取っている（<code>python3 scripts/check.py --needles</code>）。
+この頁は <code>docs/adr/needles_page.py</code> が書き出す ── 手で書いた数は腐るためである。</p>
+</main>

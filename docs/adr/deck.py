@@ -14,6 +14,7 @@ from figs2 import PROMPT, MIGRATE, QUERY
 from migtime import MIGTIME
 from adrfig import ADRFIG
 from codfig import CODCUT
+from codlayer import CODLAYER
 from jslist import JSLIST
 from composefig import COMPOSE
 
@@ -985,7 +986,7 @@ t16 = Topic(16, "Coding の種類", "コーディング系の型を、どの向�
   note="<b>ここに実際のずれがある。</b>CodingSchema は<b>種別</b>（architecture ・ coding-standard ・ "
        "tech-stack ・ test-standard）で切っているが、CodingSkills は12論点の末に<b>層</b>"
        "（言語 ・ アーキテクチャ ・ 言語×アーキ ・ 用途）で切ると決めた ── <b>切り方が90度ずれている。</b>",
-  figures=[CODCUT],
+  figures=[CODLAYER, CODCUT],
   tables=[Table("種は、雛形の単位になる（15）",
     ["種別", "層（軸から導出される）"],
     {"style ・ failure ・ concurrency": ["コーディング", "言語"],
@@ -1009,7 +1010,7 @@ t16 = Topic(16, "Coding の種類", "コーディング系の型を、どの向�
     lead="<b>種別で切ると、この4つが同じ「テスト規約」という名前の文書に入る。</b>"
          "読み手は、開けるまでどれなのか分からない。", plain=True)],
   kept=[
-   Option("いまの種別（4つ）を保ち、軸は欄で持つ",
+   Option("いまの種別（4つ）を保ち、軸は欄で持つ　── <b>もともとの想定と違う</b>",
           "architecture ・ coding-standard ・ tech-stack ・ test-standard のまま、言語や用途は前置きの欄にする",
           "<b>同じ名前の文書に、構造の違うものが入り続ける。</b>"
           "「テスト規約」を引いても、言語の話か用途の話かは開けるまで分からない"),
@@ -1037,8 +1038,10 @@ t16 = Topic(16, "Coding の種類", "コーディング系の型を、どの向�
          "<b>論点14 の基準が、そのまま答えを出す</b> ── 欄の集合が違えば別の型。"
          "層が違えば宣言する中身の構造が違うのだから、<b>層で切るのが基準に合う</b>",
          "<b>いまが再定義の最中なので、作り直しは受け入れられる</b>（論点11）── "
-         "定常状態に入ってからでは、これは壊す変更として重い"],
-  pick=("B", "<b>CodingSchema の種は、CodingSkills の雛形の単位（15）にする。</b>"
+         "定常状態に入ってからでは、これは壊す変更として重い",
+         "<b>もともと CodingSkills に合わせる想定だった。</b>いまの4種は、その前の形が残っているだけである ── "
+         "<b>4種の表現で schema を作り直すことはしない</b>"],
+  pick=("B", "<b>CodingSchema の種は、CodingSkills の雛形の単位（15）にする。古い4種は捨てる。</b>"
              "層は宣言された軸から導出し、種別は前置きの欄で横断する。"
              "既存の coding 系 document は、再定義の一部として作り直す"),
   grounds=[
