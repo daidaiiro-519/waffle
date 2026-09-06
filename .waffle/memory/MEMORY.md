@@ -8,7 +8,7 @@
 
 ## 走っている作業
 
-- **社内AI人材育成ワークショップ** ── [開催条件と目的](project-ai-workshop.md)。部長向け資料をレビュー中。表紙を加えた15枚で、冒頭に抽象と具体の往復を置く。開催条件の具体化と受講者向け教材はこれから。資料は `docs/workshops/ai-workshop/`。
+- **社内AI人材育成ワークショップ** ── [開催条件と目的](project-ai-workshop.md)。部長向け17枚をレビュー中。作者の暗黙知に依存しない他者利用、初心者向け設問、支援・発表・評価の図解を本編へ反映。設問の正本は `docs/workshops/ai-workshop/survey-and-evaluation.md`。日程・尺度の確定と受講者向け教材はこれから。
 
 - **schema 観の三層（段1・段2 の再定義）** ── 盤面 `docs/adr/brainstorm-schema-conception-board.html`
   （Artifact: `https://claude.ai/code/artifact/b85a142f-d6b5-4964-844c-0f7c64383882`）。
