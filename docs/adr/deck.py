@@ -11,6 +11,7 @@ from projtbl import PROJTBL, GROUPPROJ
 from difffig import DIFF
 from gatefig import GATE, WHERE
 from figs2 import PROMPT, MIGRATE, QUERY
+from jslist import JSLIST
 
 t1 = Topic(1, "三層", "schema は厚い一枚か、薄い核＋複数の契約か", "決着",
   answer="どちらでもなく、<b>メタレベルの三層</b>",
@@ -514,6 +515,7 @@ t10 = Topic(10, "書き方の指示", "節ごとの書き方の指示を、schem
    ("保存を分けること", "説明と指示を同じ文字列にすると、片方だけを直せない", "前提", "案Bの構造からの帰結"),
    ("射影として扱うこと", "保存の形と、出力先ごとの出し方は別である", "決まり", "論点8 の決まり（型は意味、形は射影）"),
   ],
+  extras=[("JSON Schema が持つ語の一覧（57）", JSLIST)],
   costs=["合成する仕組みが要る ── 渡す経路すべてに通す必要がある",
          "人が読む schema と、AI が受け取る schema が別物になる。突き合わせるときは合成後を見る"],
   weaknesses=["<b>合成した description が長くなりすぎたときの扱いは決めていない。</b>渡すたびにトークンへ載る",
