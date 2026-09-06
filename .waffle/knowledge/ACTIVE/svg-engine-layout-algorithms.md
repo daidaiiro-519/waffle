@@ -29,7 +29,7 @@ schemaRef: "KnowledgeSchema/v6"
 
 ## 出典・根拠の透明性
 
-Waffle 自身の実装セッション（2026-08-29）で、.claude/skills/design-svg/svg_engine/ の配置アルゴリズムを Graphviz dot と突き合わせながら直した過程からの抽出。アルゴリズムの系譜としては Sugiyama 法および Gansner らの網状単体法・Brandes-Köpf 法に連なるが、ここに書いたのは外部文献の要約ではなく、この実装で実際に測って確かめた事実である。 **実物の置き場所は `.claude/skills/design-svg/svg_engine/`。**段の実装は `sugiyama.py`、辺の着き先は `compose.py` と `geometry.py`、本家と突き合わせる物差しは `tests/bench_layout.py` にある。
+Waffle 自身の実装セッション（2026-08-29）で、.claude/skills/design-svg/svg_engine/ の配置アルゴリズムを Graphviz dot と突き合わせながら直した過程からの抽出。アルゴリズムの系譜としては Sugiyama 法および Gansner らの網状単体法・Brandes-Köpf 法に連なるが、ここに書いたのは外部文献の要約ではなく、この実装で実際に測って確かめた事実である。 **実物の置き場所は `.claude/skills/design-svg/svg_engine/`**。段の実装は `sugiyama.py`、辺の着き先は `compose.py` と `geometry.py`、本家と突き合わせる物差しは `tests/bench_layout.py` にある。
 
 ### 留保事項
 

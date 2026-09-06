@@ -190,7 +190,7 @@
 ```
 規約   .claude/skills/writing-guard/SKILL.md の5観点
 概念   同 references/knowledge/
-検査   python3 <writing-guard>/references/check_writing.py <deck.html>
+検査   python3 <writing-guard>/scripts/check_writing.py <deck.html>
 ```
 
 **この節に規約を写さない**。写せば、直すたびに2か所を直すことになる。
