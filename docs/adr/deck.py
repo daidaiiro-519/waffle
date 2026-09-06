@@ -1614,7 +1614,7 @@ t20 = Topic(20, "spec の置き方", "文書を、どういうフォルダの形
     {"固定される ── フォルダの骨組み": [
         "<code>business-domains/</code> ・ <code>subdomains/</code> ・ <code>contexts/</code>、"
         "文脈の中の <code>aggregates/</code> ・ <code>usecases/</code> ・ <code>interfaces/</code> ・ <code>platforms/</code>、"
-        "そして <code>contexts/integrations/</code>", "<b>Waffle が決める</b>（型が決まれば決まる）"],
+        "そして <code>contexts/relationships/</code>", "<b>Waffle が決める</b>（型が決まれば決まる）"],
      "固定される ── 置き方の規則": [
         "領域は1本ずつ、文脈は1つずつ、種ごとに1ファイル", "<b>Waffle が決める</b>"],
      "変わる ── 数": ["文脈が何本か、領域が何本か", "<b>利用者が決める</b>（言葉の一貫性と、割る理由）"],
@@ -1636,7 +1636,7 @@ t20 = Topic(20, "spec の置き方", "文書を、どういうフォルダの形
           "<code>contexts/予約/</code> の下に <code>context.json</code> と "
           "<code>models/</code> ・ <code>operations/</code> ・ <code>interfaces/</code> ・ <code>platforms/</code> を置く。"
           "<b>フォルダは「何を入れるか」を名乗り、実体の名前はその中に置く</b>。"
-          "<b>連係の取り決めは文脈の間にあるので <code>contexts/integrations/</code> に置く</b>"
+          "<b>連係の取り決めは文脈の間にあるので <code>contexts/relationships/</code> に置く</b>"
           "（1件＝2つの文脈のつなぎ方。<b>文脈の地図は保存せず、集めて描く</b>）。"
           "事業領域と業務領域は文脈の外に並べる（<code>business-domains/</code> ・ <code>subdomains/</code>）",
           "<b>「全部の CLI の約束」を見るときに横断する</b> ── "
@@ -1653,6 +1653,10 @@ t20 = Topic(20, "spec の置き方", "文書を、どういうフォルダの形
          "spec には業務という主題がある ── <b>だから同じ「層で切る」でも、フォルダの切り方は変わる</b>",
          "<b>どちらを選んでも、片方は横断になる。</b>違うのは<b>横断を人がするか、引き方がするか</b>である ── "
          "人が読む単位は業務なので、人の側を1か所にまとめ、横断は引き方に任せる",
+         "<b>フォルダの名前は <code>relationships/</code> にする</b> ── "
+         "中に入るのは<b>2つの文脈のあいだの関係</b>（どの方法でつなぐか ・ どちらに決定権があるか）で、"
+         "原典が<b>関係</b>と呼んでいるものである。<code>integrations/</code> は"
+         "「つなぐ作業」に寄った語で、中身（関係と決定権）を言っていない",
          "<b>置くのは連係の取り決めであって、文脈の地図ではない</b> ── "
          "取り決めは1件ずつ文書になり（2つの文脈の間にあるので <code>contexts/</code> の下）、"
          "<b>地図はそれを集めて描く</b>（保存しない）。"
