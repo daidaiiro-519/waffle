@@ -26,7 +26,7 @@ BUCKETS = ('<svg viewBox="0 0 780 330" role="img" aria-label="schema で持つ�
  '<text x="540" y="170" font-size="9" fill="var(--muted)">道具の動かし方であって、</text>'
  '<text x="540" y="186" font-size="9" fill="var(--muted)">何が正しいかを述べていない</text>'
  '<text x="540" y="212" font-size="9.5" fill="var(--muted)">hook　？</text>'
- '<text x="540" y="238" font-size="8.5" fill="var(--muted)">ただし「いつ何を検めるか」を言うなら、</text>'
+ '<text x="540" y="238" font-size="8.5" fill="var(--muted)">ただし「いつ何を確かめるか」を言うなら、</text>'
  '<text x="540" y="254" font-size="8.5" fill="var(--muted)">それは規則の側（論点6 の名簿）</text>'
  '<line x1="20" y1="292" x2="760" y2="292" stroke="var(--rule)" stroke-width="1"/>'
  '<text x="20" y="312" font-size="9.5" fill="var(--muted)">？ は<b>まだ当てていない</b>ということ ──'

@@ -5,7 +5,7 @@ TOOLS = ('<svg viewBox="0 0 780 340" role="img" aria-label="能力は業務の�
  '<path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/></marker></defs>'
  '<text x="20" y="22" font-size="10.5" font-weight="700" fill="var(--key)">業務の層　── Waffle ができること</text>'
  '<rect x="20" y="34" width="240" height="86" fill="none" stroke="var(--key)" stroke-width="1.8"/>'
- '<text x="34" y="56" font-size="9.5" fill="currentColor">ずれを検める　／　骨格を作る</text>'
+ '<text x="34" y="56" font-size="9.5" fill="currentColor">ずれを確かめる　／　骨格を作る</text>'
  '<text x="34" y="74" font-size="9.5" fill="currentColor">値を書き込む　／　描画する</text>'
  '<text x="34" y="98" font-size="8.5" fill="var(--muted)">受け入れ基準を持ち、承認を通る</text>'
  '<text x="34" y="112" font-size="8.5" fill="var(--muted)">＝ ここが spec の主題</text>'

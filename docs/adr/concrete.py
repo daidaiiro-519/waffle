@@ -26,14 +26,14 @@ A = pre("""<b>concrete schema（案A）</b>
 ]
 
 <span style="opacity:.7">// 残り2件は、ここに書けない。
-// scenario-drift はコマンドとして別に在り、題の検めは誰も持たない</span>""", "var(--muted)")
+// scenario-drift はコマンドとして別に在り、題の確認は誰も持たない</span>""", "var(--muted)")
 
 AOUT = pre("""<b>走らせた結果（案A）</b>
 規則 2 件を検査した
   SPEC-REF-RESOLVES        違反 0
   VALIDATED-HAS-RESULTS    違反 1   uc-render-blank-template
 
-<span style="opacity:.7">検めていないもの: 出ない（規則の一覧に無いので、数えようがない）</span>""", "var(--muted)")
+<span style="opacity:.7">確かめていないもの: 出ない（規則の一覧に無いので、数えようがない）</span>""", "var(--muted)")
 
 B = pre("""<b>concrete schema（案B）</b>
 "x-rules": [
@@ -47,12 +47,12 @@ B = pre("""<b>concrete schema（案B）</b>
 
   { "ruleId": "SCENARIO-MATCHES-CODE",
     "対象":     "scenarios[]",
-    "検めること": "scenario-drift",     <span style="color:var(--add)">← 名簿の名前</span>
+    "確かめること": "scenario-drift",     <span style="color:var(--add)">← 名簿の名前</span>
     "誰が":     "機械" },
 
   { "ruleId": "TITLE-READS-AS-BEHAVIOR",
     "対象":     "scenarios[].title",
-    "検めること": "human-review",
+    "確かめること": "human-review",
     "誰が":     "人" }
 ]""", "var(--key)")
 
@@ -83,8 +83,8 @@ BOUT = pre("""<b>走らせた結果（案B）</b>
 
 CONCRETE = (WANT + TBL
  + '<h3>案A ── 述語だけを持つ</h3>' + A + AOUT
- + '<h3>案B ── 述語 ＋ 検めることの名前を持つ</h3>' + B + BOOK + BOOK2 + BOUT
- + '<p class="lead">差は最後の1行に出る。<b>案Bは「まだ検めていない12件」を出力できるが、案Aはそれを数えられない</b>'
+ + '<h3>案B ── 述語 ＋ 確かめることの名前を持つ</h3>' + B + BOOK + BOOK2 + BOUT
+ + '<p class="lead">差は最後の1行に出る。<b>案Bは「まだ確かめていない12件」を出力できるが、案Aはそれを数えられない</b>'
    ' ── その規則が一覧に無いからである。'
    '<b>検査の中身が外にあることは、どちらも変わらない。</b>違うのは、外にあるものを規則から名前で指せるかどうかである。</p>'
  '<p class="lead"><b>名簿は2段である。</b><code>scenario-drift</code> は spec 系の型にしか無いので、'

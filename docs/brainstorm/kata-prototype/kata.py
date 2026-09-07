@@ -165,7 +165,7 @@ def resolve_refs(idx, src_root="."):
             k, t = r["kind"], r["target"]
             if k == "spec":       ok = t in uids
             elif k == "impl":     ok = (Path(src_root) / t).exists()
-            elif k == "external": ok = None          # 外部は検めない
+            elif k == "external": ok = None          # 外部は確認ない
             else:                 ok = False
             out.append({"from": addr, "kind": k, "target": t, "resolved": ok})
     return out

@@ -30,7 +30,7 @@ LINE = ('<svg viewBox="0 0 780 320" role="img" aria-label="宣言に収まる述
  '<text x="170" y="208" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--key)">規則の宣言</text>'
  '<text x="36" y="230" font-size="11" fill="var(--muted)">対象　＝　節の印</text>'
  '<text x="36" y="250" font-size="11" fill="var(--key)">述語　＝　左のどれか</text>'
- '<text x="36" y="270" font-size="11" fill="var(--add)">検めること　＝　名簿の名前</text>'
+ '<text x="36" y="270" font-size="11" fill="var(--add)">確かめること　＝　名簿の名前</text>'
  '<text x="36" y="290" font-size="11" fill="var(--muted)">誰が　＝　機械／人</text>'
  '<rect x="420" y="186" width="340" height="54" fill="none" stroke="currentColor" stroke-width="1.6"/>'
  '<text x="590" y="206" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">abstract　全ての型に共通の検査</text>'

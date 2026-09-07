@@ -3,6 +3,7 @@ from pathlib import Path
 import html
 import json
 import re
+import visuals
 
 ROOT = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parent
@@ -49,17 +50,18 @@ def group_svg():
 
 # The slide order and one-sentence claims are fixed before layout construction.
 SLIDES = [
- dict(label='企画の目的', title='身近な課題から、<br>新しい仕組みを生み出す力を育てる。', cls='ws-cover',
+ dict(label='下期AI活用ワークショップ', title='下期AI活用ワークショップ', cls='ws-titlepage',
+      intro='社内AI人材育成',
+      body='<svg class="ws-title-art" viewBox="0 0 1112 130" role="img" aria-label="個々の点がつながり、一つの形になる"><g fill="none" stroke="#9aa18f" stroke-width="2"><circle cx="26" cy="65" r="12"/><circle cx="80" cy="34" r="12"/><circle cx="88" cy="99" r="12"/><path d="M143 65 H205 M265 35 L310 94 L355 35 Z"/><circle cx="265" cy="35" r="10" fill="#f4f1e8"/><circle cx="310" cy="94" r="10" fill="#f4f1e8"/><circle cx="355" cy="35" r="10" fill="#f4f1e8"/><path d="M397 65 H459"/></g><path d="M519 23 L603 65 L519 107 L477 65 Z" fill="#b64326"/></svg>',
+      notes='下期AI活用ワークショップの企画をご説明します。開発者、PM・PLなどが、それぞれの仕事の中でAIを活用して新しい仕組みを生み出す力を育てる企画です。'),
+ dict(label='企画の目的', title='身近な課題から、<br>新しい仕組みをAIで生み出す力を育てる。', cls='ws-cover',
       intro='社内AI人材育成ワークショップ｜下期実施案',
-      body=diagram([('課題を選ぶ','自分の仕事を観察する'),('小さく作る','AIと仕組みを形にする'),('試して直す','他者の反応から学ぶ')],hot=2)+note('主催者の条件：約15名の開発者・PM・PL　／　10月開始・集合日の固定は困難'),
-      notes='この企画は、顧客提案を直接練習するものではありません。その土台となる、自分で課題を見つけて形にする力を育てます。身近な業務を対象に、エージェントやSkillsで小さな仕組みを作り、実際に試して改善します。対象は約15名、10月開始という主催者の条件に基づきます。'),
- dict(label='育てたい力', title='課題を選び、試して直す力を共通の土台にする。',
-      intro='開発者もPM・PLも、自分の判断を成果物で確かめる。',
-      body=table(['育てたい力','参加者の行動','学びが見える記録'],[
-          ['課題を捉える','困る場面と、変えたい状態を決める','課題の説明と対象者'],
-          ['AIに仕事を任せる','目的・材料・制約・完了条件を渡す','エージェントやSkillの設定'],
-          ['<b>試して改善する</b>','他者の使用結果から、判断を見直す','試した結果と修正理由']]),
-      notes='0から1を作る力を、観察できる行動に置き換えます。高度なアプリを作ったかどうかだけでは評価しません。本人が対象者と課題を説明でき、AIに必要な情報を渡し、実際の結果を踏まえて判断を修正できたかを見ます。これが、将来の顧客との課題探索にもつながる育成上の狙いです。'),
+      body=diagram([('課題を選ぶ','自分の仕事を観察する'),('小さく作る','AIと仕組みを形にする'),('試して直す','他者の反応から学ぶ')],hot=2),
+      notes='身近な業務課題から、新しい仕組みをAIで生み出せる人材を育てます。課題の本質を捉え、それを解決する具体的な仕組みへ変えることが狙いです。エージェントやSkillsを使って形にし、実際に試した結果から改善します。'),
+ dict(label='育てたい力', title='課題の本質を捉え、具体化して解決する力を<br>共通の土台にする。', cls='ws-abstraction',
+      intro='開発者もPM・PLも、抽象と具体を往復する。',
+      body='<svg class="ws-abstraction-fig" viewBox="0 0 1112 295" role="img" aria-label="抽象では課題の本質を捉え、具体ではAIで解決の仕組みを作る。試した結果から課題の捉え方を見直す。"><rect x="0" y="40" width="382" height="177" rx="8" fill="#e9e5da"/><text x="28" y="78" font-size="18" fill="#59605a">抽象</text><text x="28" y="122" font-size="28" font-weight="700" fill="#252b29">課題の本質を捉える</text><text x="28" y="162" font-size="19" fill="#59605a">出来事から、重要な構造や関係を</text><text x="28" y="193" font-size="19" fill="#59605a">取り出す。</text><rect x="730" y="40" width="382" height="177" rx="8" fill="#b64326"/><text x="758" y="78" font-size="18" fill="#fff1e9">具体</text><text x="758" y="122" font-size="27" font-weight="700" fill="#fffaf2">AIで解決の仕組みを作る</text><text x="758" y="162" font-size="19" fill="#fff1e9">使う場面と条件に合わせて形にし、</text><text x="758" y="193" font-size="19" fill="#fff1e9">役に立つかを確かめる。</text><text x="556" y="86" font-size="19" text-anchor="middle" fill="#252b29">具体化する</text><path d="M411 109 H701 m -10 -10 l 10 10 -10 10" stroke="#747c6e" stroke-width="2" fill="none"/><text x="556" y="169" font-size="18" text-anchor="middle" fill="#59605a">結果から捉え直す</text><path d="M701 191 H411 m 10 -10 l -10 10 10 10" stroke="#747c6e" stroke-width="2" fill="none"/></svg>',
+      notes='共通の土台にしたいのは、課題の本質を抽象的に捉え、それを具体化して解決する力です。ここでいう抽象とは、目的に照らして、個別の出来事から重要な構造や関係を取り出すことです。何を残し何を省くかを明らかにするため、曖昧な表現へ言い換えることとは異なります。具体化では、使う場面や制約に合わせてAIで仕組みを作り、実際に役に立つかを確かめます。最初に捉えた本質も仮説なので、試した結果に応じて捉え直します。この抽象と具体の往復を、開発者とPM・PLの共通の土台にします。'),
  dict(label='テーマの設計', title='幅のあるテーマから、取り組む課題を本人が決める。',
       intro='主催者は困りごとの領域を示し、解決方法と成果物の形は参加者が選ぶ。',
       body=table(['開発者向けの領域','PM・PL向けの領域'],[
@@ -67,44 +69,46 @@ SLIDES = [
           ['Webアプリを作り始めやすくする','メンバーの状況を把握しやすくする'],
           ['新しい参加者が仕事を始めやすくする','相談や知識共有が生まれやすくする']])+note('テーマを絞る問い：誰が、どんな場面で困るか。何が変われば役に立ったと言えるか。'),
       notes='職種ごとに完成品を指定するのではなく、取り組む領域を選べるようにします。たとえばPM・PLなら、資料を作ることだけでなく、判断材料を集める、認識のずれを見つける、相談の入口を作るといった仕事も対象です。これは用途のヒントであり、推奨する解法の一覧ではありません。参加者自身が経験した場面へ絞り込みます。'),
- dict(label='エージェントとSkills', title='エージェントに役割を与え、Skillsで仕事の進め方を渡す。',
+ dict(label='エージェントとSkills', title='エージェントに役割を与え、Skillsで仕事の進め方を渡す。', cls='ws-diagram',
       intro='人が目的と制約を決め、AIが道具を使って実行し、人が結果を確かめる。',
-      body=diagram([('人','目的・制約・完了条件'),('エージェント','役割・材料・使える道具'),('実行結果','人が確認し、次を決める')],hot=1)+
-           '<div class="ws-skill-link"><span class="ws-pill">Skills</span><span>必要なときに参照する手順・判断基準・参考資料をまとめる。</span></div>'+note('Kiroの機能の説明：公式ドキュメント「Custom agents」「Agent Skills」。利用環境は開始前に確認する。'),
+      body=visuals.agents()+note('Kiroの機能と利用環境は、開始前に確認する。'),
       notes='この図は学習のために仕事の関係を整理したものです。カスタムエージェントには役割や使える道具、参照する情報などを設定できます。Skillsは必要な場面で参照する手順や参考資料のまとまりです。すべてを自律実行させる必要はなく、何を任せて何を人が確認するかを決めることを重視します。Kiro公式資料は付録に記載しています。'),
- dict(label='概念教育', title='教材で考える道具を渡し、操作の入口を支える。',
+ dict(label='概念教育', title='教材で考える道具を渡し、操作の入口を支える。', cls='ws-diagram',
       intro='音声付きの短いスライド動画を、必要なときに見返せる教材にする。',
-      body='<div class="ws-split"><div><p class="ws-eyebrow">概念を学ぶ</p>'+table(['学ぶ内容','考えること'],[
-          ['エージェント','任せる仕事と人の判断の境界'],['情報と道具','目的に必要な材料の選び方'],['Skillsと検証','手順の共有と結果の確かめ方']])+'</div><div>'+diagram([('触る','作成・実行'),('確かめる','読込・結果')],hot=1)+'<p class="ws-copy">操作教材は最小構成。<br>完成した業務事例の再現を課題にしない。</p></div></div>',
+      body=visuals.learning()+note('操作の入口を支え、解決方法は参加者自身が考える。'),
       notes='主教材は概念中心の動画にし、操作の説明は独立した短い補助教材にします。形式を知らないために始められない状態は防ぎます。一方、業務課題の完成例を見せすぎると解法を固定するため、主教材には目的や分担の図を置き、用途のヒントは別途少量だけ公開します。教材はこれから制作する計画で、この提案デッキが受講者向け動画ではありません。'),
  dict(label='下期の進め方', title='半年間で、試作から他者の利用へ進める。',
       intro='2026年10月〜2027年3月の実施案。月ごとの区切りで、非同期に進める。',
       body='<div class="ws-phases"><svg class="ws-phase-path" viewBox="0 0 1112 240" role="img" aria-label="10・11月の試作から、12・1月の見直しを経て、2・3月の他者利用へ進む"><path d="M 355 107 h 21 m -6 -6 l 6 6 -6 6 M 736 107 h 21 m -6 -6 l 6 6 -6 6" fill="none" stroke="#747c6e" stroke-width="2"/></svg><div><p class="ws-date">10・11月</p><h3>学び、試作する</h3><p>概念教材を視聴する<br>課題を選び、小さく動かす</p></div><div class="ws-phase-hot"><p class="ws-date">12・1月</p><h3>見せて、絞り直す</h3><p>12月に中間成果を共有する<br>他者の反応で方向を見直す</p></div><div><p class="ws-date">2・3月</p><h3>使ってもらい、残す</h3><p>別の人が試して改善する<br>3月に成果と学びを共有する</p></div></div>'+note('日程は提案。主催者指定の「10月開始・下期」を、上記の期間として計画している。'),
       notes='毎週同じ時間に集まることは前提にしません。10月から翌3月までを提案期間とし、12月に中間共有、3月に最終共有を置きます。初期から試作に触れ、中間発表まで完成を待たないようにします。途中のテーマ変更も、試した結果に理由があれば認めます。休暇や繁忙期を踏まえ、実働20週を工数試算の仮定にしています。'),
- dict(label='参加形態', title='個人の試行を、少人数の相談グループで支える。',
-      intro='一人ひとりが作り、互いの成果物を試す。得意な人への作業集中を避ける。',
-      body='<div class="ws-split"><div>'+group_svg()+'<p class="ws-source">構成案：15名を3人ずつ、5組の相談グループにする。<br>共同制作も可。全員が操作と自分の判断を説明する。</p></div><div class="ws-plain-stack"><div><h3>個人が持つもの</h3><p>選んだ課題、動かした仕組み、<br>自分で判断したことの記録。</p></div><div><h3>相談グループで行うこと</h3><p>詰まりの相談、別の視点からの質問、<br>成果物の相互利用。</p></div></div></div>',
-      notes='約15名という条件から、3名ずつ5組の相談グループを提案します。グループに一つの完成品を課す方式ではなく、個人が自分の課題と試行を持ちます。共同制作を選ぶ場合も、各人が設定を動かしたことと自分の判断を説明できることを条件にします。グループ構成は職種よりも、利用者として異なる視点を返せる組み合わせを優先します。'),
- dict(label='成果物の条件', title='成果物は、別の人が使える仕組みにする。',
-      intro='アプリ、分析、文書生成など、出力の形式は自由に選べる。',
-      body=diagram([('仕組みを渡す','設定・Skillなどと必要な材料'),('別の人が試す','説明に沿って実行する'),('結果を残す','使えた点・修正した理由')],hot=2)+note('最低限の提出物：動く仕組み／使い方／試した記録。<br>エージェントやSkillsは既存の利用・改良も可。選んだ構成の役割を説明する。'),
-      notes='一度きりの生成結果に加え、再び使うために必要なものを渡せる状態を目指します。エージェント設定やSkill、入力例、実行の説明、試行記録を残します。エージェントやSkillsは既存の利用・改良も認め、選んだ構成の役割を説明します。両方の新規作成を必須条件にはしません。誰かが実際に使い、困った点を改善する経験を成果物の条件にします。既存の構成を改良する場合も、自分が変えた理由を説明します。'),
- dict(label='中間成果物発表', title='中間発表で、次に試すことを見つける。', cls='ws-sharing',
+ dict(label='サポート体制', title='学習コンテンツと、主催者への相談で支える。', cls='ws-diagram',
+      intro='主催者に知見が集まっている前提で、参加者が必要な支援に届くようにする。',
+      body=visuals.support()+note('相談会の時間帯は未定。定時後の場合は任意参加とし、Teams投稿でも相談できる。'),
+      notes='参加者同士で専門的なサポートを担う前提は置きません。ブログや動画で学び、Teamsで主催者に相談できる体制にします。月1回のよろず相談会は開催案です。資料発表の準備を求めず、今の課題や相談したいことをざっくばらんに話す場にします。時間帯はまだ決まっていません。定時後になる場合は任意参加とし、相談内容の要点をTeamsに残します。参加できない人も投稿で同じ支援を受けられるようにします。'),
+ dict(label='成果物の条件', title='作者の暗黙知に頼らず、他者が目的を達成できる仕組みにする。', cls='ws-diagram',
+      intro='目的・適用範囲・使い方を明確にし、初めて使う人にも価値が届く形にする。',
+      body=visuals.handoff()+note('利用条件や限界も説明に含め、初めて使う人の試用で確かめる。'),
+      notes='目指すのは、目的と使い方が明確で、作者の暗黙知に頼らず他者が利用できる成果物です。特定の情報を分離するという実装方法を指定するものではありません。作者だけが知る言い回しや手順がないと動かない場合、その知識を含めて成果物へ反映します。公開された説明と仕組みだけで、初めて使う人が目的を達成できるかを確かめます。利用条件や適用範囲は明示してよく、何にでも使えることを求めるものではありません。OSSへの公開を提出条件にするものでもありません。'),
+ dict(label='中間成果物発表', title='中間発表で、次に試すことを見つける。', cls='ws-sharing ws-diagram',
       intro='12月は、途中の成果と判断に迷っている点を共有する。',
-      body='<div class="ws-split"><div><p class="ws-eyebrow">発表の形式・提案</p><div class="ws-hours"><span>5</span><small>分の録画／人</small></div><p class="ws-copy">課題・動作・困っている点を見せる。</p><p class="ws-source">録画＋要点メモを共有する。録画が難しい場合は、<br>動作画面と説明文でも提出できる。</p></div><div>'+table(['進め方','参加者が行うこと'],[['共有する','1週間で提出・視聴・コメント'],['相互に返す','役立つ場面、疑問、試したい点'],['次を決める','続ける・絞る・方向を変える']])+'</div></div>',
-      notes='中間発表は非同期の録画または動作画面と説明文で成立させます。参加者は同じ相談グループの2人分を必ず見て、他グループの1人分も選んで確認する案です。発表者に点数を付けるより、次に何を試すとよいかを返します。最終共有も同じ形式にし、最初と最後で何を判断し直したかを追加してもらいます。'),
- dict(label='サポート体制', title='Teamsとブログで、試行を止めずに支える。',
-      intro='相談を個別に受け止め、繰り返す疑問は共有できる教材に変える。',
-      body=diagram([('Teamsで相談','目的・試行・詰まりを共有'),('主催者が支援','整理・ヒント・操作補助'),('ブログで共有','学びを再利用できる形にする')],hot=1)+note('運営案：隔週で短い進捗投稿。主催者は週2回を目安に確認し、相談が止まった人にも声をかける。'),
-      notes='主催者は正解を代わりに作るのではなく、問題の整理や次の試行を支えます。操作の障害は直接支援し、課題選択の相談には問い返しや比較の観点を返します。ブログは必読記事を増やし続けず、概念教材と補助記事の索引を設けます。週2回の確認は運営案であり、応答期限として確約する場合は担当者の業務時間を先に確保します。'),
- dict(label='成果の確認', title='成果と判断の変化を、同じ観点で確かめる。', cls='ws-eval',
-      intro='開始時・中間・終了時の記録を比較し、本人と主催者が確認する。',
-      body=table(['観点','確かめること','証拠'],[
-          ['課題の設定','誰の何を変えるか、本人が説明できる','課題メモと選んだ理由'],
-          ['AIへの委任','必要な材料を渡し、出力を確認できる','設定と実行記録'],
-          ['検証と改善','他者の反応で仕組みを修正できる','使用結果と変更内容'],
-          ['共有と再利用','別の人が使い始められる','使い方と他者の試行記録']])+note('事業効果は試行で測る。削減時間は、確認・修正・保守の手間も含めて扱う。'),
-      notes='本人の満足度と完成品の見栄えだけでは、育成の成果を確かめられません。同じ4観点を開始時、中間、終了時に使います。開始時は現状の説明と最小操作を記録し、未経験の観点は未実施とします。運営側は継続率、他者が使えた成果物数、相談の停滞も見ますが、目標値は事前状況を確認して決めます。業務効果の数値は、実測してから報告します。'),
+      body=visuals.meeting()+note('発表用の動画制作は不要。開催日は調整し、必要に応じて会を分ける。'),
+      notes='中間発表はTeamsのWeb会議で行います。参加者が画面共有で途中の成果物を動かし、困っている点を話します。発表用動画の制作は求めません。開催日は調整し、全員が一度に集まれない場合は発表枠を分けます。完成していなくても、動く部分や試した結果があれば共有できます。発表後に中間アンケートへ回答し、次に試すことを記録します。'),
+ dict(label='最終共有会', title='成果物を使い合い、参加者の投票で人気作品を選ぶ。',
+      intro='発表から実際の利用へつなげ、作った人に反応を返す。',
+      body=diagram([('発表する','目的・使い方・変わったこと'),('使ってもらう','提供された説明に沿って試す'),('投票する','使った感想と一緒に選ぶ')],hot=2)+note('運営案：共有会の後に試用期間を設けて投票する。<br>人気作品は表彰し、他者が使えた記録はすべての成果物に残す。'),
+      notes='最後は共有会で作ったものを発表し、参加者が実際に使ってから投票します。会議中だけでは試しきれないため、共有会後に試用期間を置く案です。投票は参加者の関心や使いたい気持ちを表す表彰として扱います。票数だけで個人の学習成果やワークショップの効果を判定しません。主催者が各成果物に他者の試用者を割り当て、票が集まらない作品にも使用結果を返せるようにします。'),
+ dict(label='効果測定の方法', title='同じ人の回答の変化と、他者の試用結果で評価する。', cls='ws-eval ws-diagram',
+      intro='教材視聴前・中間発表後・最終試用後に、同じIDと設問で回答を集める。',
+      body=visuals.evaluation()+note('比較できた人数を併記し、未回答・対象外は除く。人気投票は表彰として別に報告する。'),
+      notes='アンケートは教材視聴前、中間発表後、最終共有会後の試用期間を終えた時点で取ります。同じ参加者IDで対応付け、各設問で向上した人、変わらない人、低下した人を集計します。回答者が変わっただけの差を成長と扱わず、比較人数を必ず示します。利用頻度は過去4週間の実務での利用日数を聞きます。能力と業務活用はそれぞれの0から4の尺度で聞き、合算しません。できるようになったことは行動と出力の記録で確認します。成果物は、初めて使う人が作者の補足なしで目的を達成できたかを試用記録から確認します。人気投票は表彰として別に報告します。'),
+ dict(label='共通アンケートの設問例', title='普段の言葉で、今できることを聞く。', cls='ws-survey-core ws-diagram',
+      intro='AIに詳しくない参加者も、自分の経験から答えられる質問にする。',
+      body=visuals.questionnaire()+note('共通7問から3問を抜粋。事前・中間・終了時に、同じ質問と選択肢で聞く。'),
+      notes='共通項目は、仕事の中でできることを本人の言葉で答えられるようにしています。使いどころ、困りごとの整理、AIへの依頼、複数作業の依頼、使い方の説明、答えの確認、感想をもとにした改善の7問です。回答は0から4の5段階で、スライド右側の選択肢から、今の自分に近いものを選びます。試す機会がない場合も選べます。難しい概念の理解を問う試験にはせず、同じ質問で自己評価の変化を比べます。実際の力は成果物や試用記録も合わせて確認します。開始前に参加者に近い人に回答してもらい、意味が伝わるかを確かめます。'),
+ dict(label='PM・PLアンケートの設問', title='PM・PLには、普段の仕事でAIを使っているかを聞く。', cls='ws-survey-pm ws-diagram',
+      intro='質問：次の業務で、現在AIをどの程度使っていますか。',
+      body=visuals.pm_survey()+note('「仕事で使った」は内容を確かめて使った場合。共通設問とは別に集計する。'),
+      notes='PM・PLの業務は提案資料の作成だけに限定しません。判断材料を揃える、関係者の認識の違いを見つける、支援が必要な箇所を整理する、相談を準備するという仕事も対象です。各業務について、使い方が分からない段階から、確認・修正しながら実務で繰り返し使う段階までを回答してもらいます。共通項目の能力尺度とは意味が異なるため、別に集計します。加えて、困りごとを最大3つ、できるようになりたい業務を最大2つ選び、具体的な場面を記入してもらいます。開発者には別紙の開発業務6項目を用意します。'),
  dict(label='部長への依頼', title='育成方針への合意と、学習時間の確保をお願いする。',
       intro='今回相談すること：自分で課題を選んで試す育成方針と、業務内の学習時間。',
       body='<div class="ws-split"><div><p class="ws-eyebrow">参加者の時間・提案</p><div class="ws-hours"><span>週2</span><small>時間／人</small></div><p class="ws-copy">教材・試作・共有を業務時間に含める。</p><p class="ws-source">試算：2時間 × 実働20週 × 15名＝延べ600時間。<br>20週は仮定。運営工数と利用料金は別途確認する。</p></div><div>'+table(['実施前に詰める条件','具体的な確認事項'],[
@@ -140,6 +144,15 @@ h1{font-size:51px;line-height:1.43} h2{font-size:36px;line-height:1.46;margin-bo
 .body{justify-content:flex-start;padding-top:35px;gap:16px;min-height:0}
 .ws-cover .body{padding-top:29px}
 .ws-cover .ws-intro{font-size:19px;margin-top:14px}
+.ws-cover h2{font-size:47px;line-height:1.43}
+.ws-titlepage{padding-top:215px}
+.ws-titlepage .kicker{display:none}
+.ws-titlepage h1{font-size:61px;line-height:1.4}
+.ws-titlepage .ws-intro{font-size:21px;margin-top:19px}
+.ws-titlepage .body{padding-top:48px}
+.ws-title-art{width:100%;height:130px;display:block;flex:none}
+.ws-abstraction .body{padding-top:20px}
+.ws-abstraction-fig{width:100%;height:auto;display:block;flex:none;font-family:var(--sans)}
 .ws-flow{width:100%;height:auto;max-height:184px;display:block;flex:none;font-family:var(--sans)}
 .ws-note{font-size:16px;line-height:1.8;max-width:none;color:var(--dim);margin-top:8px}
 .ws-table{font-family:var(--sans);width:100%;font-size:20px;border-collapse:collapse;table-layout:fixed}
@@ -166,8 +179,17 @@ h1{font-size:51px;line-height:1.43} h2{font-size:36px;line-height:1.46;margin-bo
 .ws-hours{display:flex;align-items:baseline;gap:18px;padding-top:3px}.ws-hours span{font-size:76px;line-height:1.3;color:var(--accent);font-weight:700;letter-spacing:-.05em}.ws-hours small{font-size:22px}
 .ws-source{font-size:14px;line-height:1.8;color:var(--dim);max-width:none;margin-top:16px}
 .ws-source a{color:inherit;text-decoration:underline;text-underline-offset:3px;position:relative;z-index:6}
-.ws-eval .ws-table td{padding-top:15px;padding-bottom:15px}
+.ws-eval .ws-table td{padding-top:13px;padding-bottom:13px}
+.ws-eval .ws-table th:first-child{width:25%}
+.ws-survey-core .ws-table th:first-child,.ws-survey-pm .ws-table th:first-child{width:18%}
+.ws-survey-core .ws-table td{font-size:18px;padding:12px;line-height:1.65}
+.ws-survey-pm .body{padding-top:20px;gap:10px}
+.ws-survey-pm .ws-table td{font-size:18px;padding:6px 12px;line-height:1.6}
+.ws-survey-core .ws-note,.ws-survey-pm .ws-note{font-size:15px;line-height:1.8}
 .ws-sharing .ws-table th:first-child{width:30%}
+.ws-visual{width:100%;height:auto;display:block;flex:none;font-family:var(--sans)}
+.ws-diagram .body{padding-top:18px;gap:8px}
+.ws-diagram .ws-note{font-size:15px;line-height:1.6;margin-top:0}
 .chrome{font-family:var(--sans);font-size:12px;letter-spacing:0;height:48px;padding:0 42px;color:#6c7468}
 .hint{opacity:1}.progress{height:2px;background:#adb4a3}
 .ws-nav{background:none;border:0;color:inherit;font:inherit;cursor:pointer;pointer-events:auto;padding:7px 15px}
@@ -185,7 +207,7 @@ def build():
     template = TEMPLATE.read_text()
     prefix = template.split('<!-- 01 -->')[0]
     prefix = re.sub(r'<link[^>]+>\s*', '', prefix)
-    prefix = prefix.replace('<title>デッキの題名</title>', '<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>身近な課題から、仕組みを生み出す｜社内AI人材育成</title>')
+    prefix = prefix.replace('<title>デッキの題名</title>', '<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>下期AI活用ワークショップ</title>')
     prefix = prefix.replace('<div class="navzone prev"', '<style>'+CSS+'</style></head><body>\n<div class="navzone prev"', 1)
     slides=[]
     for i, s in enumerate(SLIDES,1):
@@ -200,7 +222,7 @@ def build():
     suffix=suffix.replace("const prev = ()=> show(i-1);", "const prev = ()=> show(i-1);\n  document.getElementById('ws-prev').addEventListener('click', prev);\n  document.getElementById('ws-next').addEventListener('click', next);\n  addEventListener('hashchange',()=>{const n=parseInt(location.hash.slice(1),10)-1;if(Number.isFinite(n)&&n!==i)show(n);});")
     suffix += '\n</body></html>\n'
     (OUT/'director-deck.html').write_text(prefix+'\n'.join(slides)+suffix)
-    notes=['# 部長向け発表原稿\n\n本編12枚、付録2枚。主催者の条件と、今回の運営提案を分けて説明する。\n']
+    notes=[f'# 部長向け発表原稿\n\n表紙1枚、本編{len(SLIDES)-3}枚、付録2枚。主催者の条件と、今回の運営提案を分けて説明します。\n']
     for i,s in enumerate(SLIDES,1):
         notes.append(f'## {i:02d}　{re.sub("<[^>]*>", "", s["title"])}\n\n{s["notes"]}\n')
     (OUT/'speaker-notes.md').write_text('\n'.join(notes))

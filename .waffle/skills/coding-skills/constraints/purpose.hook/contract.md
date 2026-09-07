@@ -34,7 +34,7 @@ sequenceDiagram
     participant H as Hook（入力アダプタ）
     participant A as 業務操作
     C->>H: 標準入力に要求（1行の JSON）
-    H->>H: 形式を検める
+    H->>H: 形式を確かめる
     H->>A: 業務操作へ渡す
     A-->>H: 結果、または失敗
     H-->>C: 標準出力に応答（1行の JSON）

@@ -48,7 +48,7 @@ sequenceDiagram
     participant A as 入力アダプタ
     participant P as 業務操作
     C->>A: HTTP 要求（JSON ＋ 要求識別子）
-    A->>A: 形式と権限を検める
+    A->>A: 形式と権限を確かめる
     A->>P: 業務操作へ渡す
     P-->>A: 結果、または失敗
     A-->>C: 状態コード ＋ JSON

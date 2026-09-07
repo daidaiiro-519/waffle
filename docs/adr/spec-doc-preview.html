@@ -1,0 +1,164 @@
+<title>仕様の文書は、こうなる</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chip:#e7e3d9;
+--key:#2f6f5e;--move:#9a5b2c;--line:#d8d3c7;--warn:#8a3a3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;--chip:#2b281f;
+--key:#6fbfa4;--move:#d99b62;--line:#38342a;--warn:#d97b7b}}
+:root[data-theme="dark"]{--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;
+--chip:#2b281f;--key:#6fbfa4;--move:#d99b62;--line:#38342a;--warn:#d97b7b}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);margin:0;line-height:1.8;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.wrap{max-width:54rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+h1{font-size:1.45rem;margin:0 0 .3rem}
+.lede{font-size:1.04rem;border-left:4px solid var(--key);background:var(--panel);
+padding:.6rem 0 .6rem .9rem;margin:1rem 0 2rem}
+h2{font-size:1.1rem;margin:2.6rem 0 .7rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h2 .sn{display:inline-block;min-width:1.7rem;color:var(--move);font-size:.82rem}
+h3{font-size:.95rem;margin:1.5rem 0 .4rem;color:var(--key)}
+p{margin:.5rem 0}
+table{border-collapse:collapse;width:100%;margin:.7rem 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--chip);font-weight:700}
+code{background:var(--chip);padding:.06rem .3rem;border-radius:.2rem;font-size:.88em}
+.doc{border:1px solid var(--line);background:var(--panel);border-radius:.4rem;
+padding:1rem 1.2rem;margin:1rem 0}
+.doc h4{margin:.2rem 0 .1rem;font-size:1.02rem}
+.doc .meta{font-size:.8rem;color:var(--muted);margin-bottom:.7rem}
+.mark{border-bottom:2px dashed var(--move);cursor:help}
+.mark::after{content:"変";font-size:.62rem;vertical-align:super;color:var(--move);font-weight:700;margin-left:.1rem}
+.temp{background:rgba(154,91,44,.14);border-bottom:1px dotted var(--move)}
+.temp::after{content:"仮";font-size:.62rem;vertical-align:super;color:var(--move);font-weight:700;margin-left:.1rem}
+.key{font-family:ui-monospace,monospace;font-size:.85em;color:var(--key)}
+.note{font-size:.85rem;color:var(--muted)}
+ul{margin:.4rem 0;padding-left:1.2rem}
+li{margin:.25rem 0}
+.legend{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin:.6rem 0 0}
+</style>
+<div class="wrap">
+<h1>仕様の文書は、こうなる</h1>
+<p class="lede"><b>この盤面で決めたことだけから組んだ、描かれた姿である。</b>
+決まりが無いところは<span class="temp">こう</span>印を付けた ── <b>仮置きであって、決まったことではない。</b>
+中身は例で、実在の業務ではない。</p>
+<div class="legend">
+<span><span class="temp">仮</span>　決まっていない欄</span>
+<span><span class="mark">変</span>　承認済みの値から変わった箇所（押すと理由が開く想定）</span>
+<span class="key">SC-01J7Q4K</span>　節の印（論点3）</span>
+</div>
+
+<h2><span class="sn">01</span>業務ユースケース ── 業務の層の1本</h2>
+<div class="doc">
+<h4>予約を確定する</h4>
+<div class="meta">種＝業務ユースケース　／　文脈＝予約　／　印 <span class="key">UC-01J7Q4K</span>　／
+状態＝承認済み（差分あり）</div>
+
+<h3>概要</h3>
+<p>仮の予約を、席を確保した確定の予約に変える。</p>
+
+<h3>属する文脈</h3>
+<p><span class="key">CTX-01H8ZZ2</span>　予約</p>
+
+<h3>属する業務領域</h3>
+<p><span class="key">SD-01H8Q3M</span>　予約管理　<span class="note">（対応は宣言で持つ ── 入れ子ではない）</span></p>
+
+<h3>主アクターと意図</h3>
+<table><tr><th>誰が</th><th>何のために</th></tr>
+<tr><td>予約した人</td><td>席を確実に押さえる</td></tr></table>
+
+<h3>事前条件</h3>
+<ul><li>仮の予約が在る（<span class="key">AGG-01H8V7C</span> 予約）</li>
+<li>その予約の期限が切れていない</li></ul>
+
+<h3>基本フロー</h3>
+<ol><li>予約を、印で取り出す</li>
+<li>期限と席の空きを確かめる</li>
+<li>予約を確定へ移す</li>
+<li>確定したことを、外へ知らせる</li></ol>
+
+<h3>事後条件</h3>
+<ul><li>予約が確定になっている</li>
+<li><span class="mark" title="変更前：席の確保は別のユースケースだった／理由：確保と確定を分けると、あいだで席が取られる">席が確保されている</span></li></ul>
+
+<h3>受け入れ基準</h3>
+<table><tr><th>印</th><th>〜のとき、〜となる</th></tr>
+<tr><td class="key">AC-01J7Q4K-1</td><td>期限内で席が空いているとき、予約は確定になる</td></tr>
+<tr><td class="key">AC-01J7Q4K-2</td><td>期限が切れているとき、確定にならず、期限切れとして返る</td></tr>
+<tr><td class="key">AC-01J7Q4K-3</td><td><span class="mark" title="変更前：「席が無いときは待ち行列に入る」／理由：待ち行列は別のユースケースとして切り出した">席が空いていないとき、確定にならず、空きなしとして返る</span></td></tr></table>
+
+<h3>シナリオ</h3>
+<table><tr><th>印</th><th>分類</th><th>本文</th><th>確かめる単位</th><th>覆う基準</th></tr>
+<tr><td class="key">SC-01J7Q4K-1</td><td>正常</td>
+<td>期限内で席が1つ空いている予約があるとき、確定すると、予約は確定になる</td>
+<td>結合</td><td class="key">AC-01J7Q4K-1</td></tr>
+<tr><td class="key">SC-01J7Q4K-2</td><td>異常</td>
+<td>期限が切れた予約があるとき、確定すると、期限切れとして返る</td>
+<td>単体</td><td class="key">AC-01J7Q4K-2</td></tr></table>
+
+<h3>参照</h3>
+<table><tr><th>指す先</th><th>何を指すか</th></tr>
+<tr><td class="key">AGG-01H8V7C</td><td>予約（集約）── <b>印で指す。値は写さない</b></td></tr>
+<tr><td class="key">VO-01H8W1D</td><td>期限（値オブジェクト）</td></tr></table>
+
+<h3><span class="temp">出す出来事</span></h3>
+<p class="temp">予約が確定した</p>
+<p class="note">この欄を持つかは決めていない ── 業務ユースケースの欄そのものは、この盤面では決めていない。</p>
+</div>
+
+<h2><span class="sn">02</span>差し出しの約束 ── 業務 × 接点の層</h2>
+<div class="doc">
+<h4>予約を確定する（CLI）</h4>
+<div class="meta">種＝差し出しの約束　／　文脈＝予約　／　接点＝CLI　／　印 <span class="key">OF-01J8A2B</span></div>
+
+<h3>差し出す能力</h3>
+<p><span class="key">UC-01J7Q4K</span>　予約を確定する　<span class="note">（印で指す ── 能力の側は接点を知らない）</span></p>
+
+<h3>呼び方</h3>
+<table><tr><th></th><th>約束</th></tr>
+<tr><td>名前</td><td><code>waffle reservation confirm</code></td></tr>
+<tr><td>渡すもの</td><td><code>--id &lt;予約の印&gt;</code></td></tr>
+<tr><td>返るもの</td><td>確定した予約の印と、確定した時刻</td></tr>
+<tr><td>失敗</td><td>期限切れは終了コード 1、空きなしは 2</td></tr></table>
+
+<h3>破れたとき、利用者に何が起きるか</h3>
+<ul><li>名前や引数を変えると、呼び出し側の手順が止まる</li>
+<li>終了コードの意味を変えると、<b>失敗に気づかないまま次へ進む</b></li></ul>
+
+<h3>受け入れ基準</h3>
+<table><tr><th>印</th><th>〜のとき、〜となる</th></tr>
+<tr><td class="key">AC-01J8A2B-1</td><td>期限切れの予約を渡したとき、終了コード 1 が返る</td></tr></table>
+
+<p class="note"><b>作り方は、ここには書かない</b> ── 引数の名づけや終了コードの種類は規約（用途＝CLI）の側にある。</p>
+</div>
+
+<h2><span class="sn">03</span>同じ節を、どの形で出すか</h2>
+<p>上は HTML の姿である。<b>同じ節が、出す先によって形を変える</b>（論点8）── 意味は1つで、形は射影が決める。</p>
+<table><tr><th>出力先</th><th>受け入れ基準の出方</th></tr>
+<tr><td>HTML（人）</td><td>上の表</td></tr>
+<tr><td>Markdown（人 ・ Skill ・ Agent）</td><td><code>| AC-01J7Q4K-1 | 期限内で席が空いているとき、予約は確定になる |</code></td></tr>
+<tr><td>射影なし（AI）</td><td>構造のまま。印と本文がそのまま返り、<b>読み方（<code>x-prompt-query</code>）が添う</b></td></tr></table>
+<p class="note">書き方の指示（<code>x-prompt-write</code>）は、ここには出ない ── 保存はされているが、<b>描くときには載らない</b>（論点10）。</p>
+
+<h2><span class="sn">04</span>承認のときに見えるもの</h2>
+<p>承認の境目（spec→実装）で人が見るのは、<b>全文ではなく差分と、未検の一覧</b>である（論点7 ・ 論点9）。</p>
+<table><tr><th>変わった節</th><th>いまの値</th><th>変えた理由</th></tr>
+<tr><td class="key">AC-01J7Q4K-3</td><td>席が空いていないとき、確定にならず、空きなしとして返る</td>
+<td>待ち行列を別のユースケースとして切り出した</td></tr>
+<tr><td class="key">UC-01J7Q4K</td><td>事後条件に「席が確保されている」を足した</td>
+<td>確保と確定を分けると、あいだで席が取られる</td></tr></table>
+<table><tr><th>確かめたこと</th><th>結果</th></tr>
+<tr><td>参照が実在する節に届く</td><td>違反 0</td></tr>
+<tr><td>受け入れ基準を持たない操作が無い</td><td>違反 0</td></tr>
+<tr><td>シナリオと実装がずれていない</td><td>違反 1　<span class="key">SC-01J7Q4K-2</span></td></tr>
+<tr><td>題が振る舞いを述べている（人が見る）</td><td><b>未検 2</b></td></tr></table>
+<p class="note">承認したら、この差分は<b>1つに畳まれて消える</b> ── 残したい理由は ADR に書く（論点9 ・ 論点12）。</p>
+
+<h2><span class="sn">05</span>この姿のうち、決まっていないもの</h2>
+<table><tr><th>どこ</th><th>なぜ仮置きか</th></tr>
+<tr><td>業務ユースケースの欄そのもの</td><td><b>8種別の欄は、この盤面では決めていない</b>（論点19 は種までを決めた）</td></tr>
+<tr><td>差し出しの約束の欄</td><td>論点18 で下書きを書いただけ</td></tr>
+<tr><td>印の形（<code>UC-01J7Q4K</code> の綴り）</td><td>採番の規則は決めていない（論点3 は「変わらない印を持つ」までを決めた）</td></tr>
+<tr><td>出す出来事を持つか</td><td>同上</td></tr>
+</table>
+<p class="note">決まっているのは、<b>印で参照する ・ 受け入れ基準とシナリオが対で在る ・ 承認では差分と未検を見る ・ 指示は描画に出ない ・ 形は射影が決める</b> ── この5つである。</p>
+</div>
