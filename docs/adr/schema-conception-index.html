@@ -1,0 +1,90 @@
+<title>schema 観の三層 ── 現在地</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chip:#e7e3d9;
+--key:#2f6f5e;--move:#9a5b2c;--line:#d8d3c7}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;--chip:#2b281f;
+--key:#6fbfa4;--move:#d99b62;--line:#38342a}}
+:root[data-theme="dark"]{--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;
+--chip:#2b281f;--key:#6fbfa4;--move:#d99b62;--line:#38342a}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);margin:0;line-height:1.8;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.wrap{max-width:52rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+h1{font-size:1.4rem;margin:0 0 .3rem}
+.lede{font-size:1.02rem;border-left:4px solid var(--key);background:var(--panel);
+padding:.6rem 0 .6rem .9rem;margin:1rem 0 2rem}
+h2{font-size:1.05rem;margin:2.4rem 0 .6rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h2 .sn{display:inline-block;min-width:1.7rem;color:var(--move);font-size:.8rem}
+table{border-collapse:collapse;width:100%;margin:.7rem 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--chip);font-weight:700}
+a{color:var(--key)}
+code{background:var(--chip);padding:.06rem .3rem;border-radius:.2rem;font-size:.88em}
+.note{font-size:.85rem;color:var(--muted)}
+.n{display:inline-block;min-width:1.5rem;font-weight:700;color:var(--move)}
+ol{padding-left:1.3rem}
+li{margin:.3rem 0}
+.main{border:2px solid var(--key);border-radius:.4rem;padding:.9rem 1.1rem;background:var(--panel);margin:1rem 0}
+.main a{font-weight:700;font-size:1.02rem}
+</style>
+<div class="wrap">
+<h1>schema 観の三層 ── 現在地</h1>
+<p class="lede"><b>次に開くのは、いちばん上の盤面1枚でよい。</b>
+決着した論点も未決の論点も、すべてその1枚の中にタブとして入っている ──
+ここは入口の索引であって、中身の写しではない。</p>
+
+<div class="main">
+<a href="https://claude.ai/code/artifact/b85a142f-d6b5-4964-844c-0f7c64383882">▸ schema 観の三層（盤面 ・ 正本）</a>
+<div class="note"><code>docs/adr/brainstorm-schema-conception-board.html</code>　／
+20論点。先頭のタブが現在地の一覧で、各論点の結論 ・ 根拠 ・ 図 ・ 崩れうるところが入っている</div>
+</div>
+
+<h2><span class="sn">01</span>いま決まっていないのは、5つだけ</h2>
+<table><tr><th>#</th><th>問い</th><th>推し</th></tr>
+<tr><td class="n">14</td><td>何を1つの型として立てるか</td>
+<td><b>D</b>　型は<b>軸の集合</b>で決まる。層は軸から導出し、種はその層で決まることの単位</td></tr>
+<tr><td class="n">18</td><td>Hook や Skill の中の処理を、どこに紐づけるか</td>
+<td><b>B</b>　能力は業務の層／差し出し方は業務×接点／script は呼ぶだけ</td></tr>
+<tr><td class="n">17</td><td>ADR 以外を、そもそも schema で持つか</td>
+<td><b>D</b>　ADR ・ knowledge ・ skill ・ agent は文書、template は型にしない、hook は中身で仕分ける</td></tr>
+<tr><td class="n">19</td><td>層ごとに、何を1つの文書の単位にするか</td><td><b>B</b>　業務8＋接点2＋基盤1</td></tr>
+<tr><td class="n">20</td><td>どういうフォルダの形で置くか</td><td><b>B</b>　業務でフォルダを切る</td></tr></table>
+<p><b>順番は 14 → 18 → 17 → 19 → 20。</b>
+17 は 14（どう切るか）と 18（いつ起きるか）に依存し、19 ・ 20 は 14 が決まれば従属する ──
+<b>実質の残りは 14 と 18 の2つである。</b></p>
+
+<h2><span class="sn">02</span>14 を読むための語</h2>
+<table><tr><th>語</th><th>何を指すか</th><th>例</th></tr>
+<tr><td><b>型</b></td><td>concrete schema 1本（論点1の三層のまん中）</td><td>Spec ／ Coding ／ ADR</td></tr>
+<tr><td><b>種</b></td><td>型の中の枝分かれ</td><td>業務ユースケース ・ 集約 ／ 雛形15本</td></tr>
+<tr><td><b>軸</b></td><td><b>何に依存して変わるかの1本。</b>判定は「1つ固定して、他が動くか」</td>
+<td>Coding＝言語 ・ アーキ ・ 用途／Spec＝業務 ・ 接点 ・ 基盤</td></tr>
+<tr><td>値</td><td>軸が取る値。<b>増えても型は増えない</b>（論点5）</td><td>UI ・ API ・ CLI ・ MCP は接点の値</td></tr></table>
+
+<h2><span class="sn">03</span>決まったことから描いた姿</h2>
+<p class="note">どちらも<b>決まったことだけ</b>から組んである。欄そのものは決めていないので「仮」の印が付く。</p>
+<table><tr><th>何</th><th>何が見えるか</th></tr>
+<tr><td><a href="https://claude.ai/code/artifact/f8340f9a-85f8-4612-8db8-1ea503ad722d">仕様の文書は、こうなる</a></td>
+<td>業務ユースケース1本 ・ 差し出しの約束 ・ 射影 ・ 承認の材料</td></tr>
+<tr><td><a href="https://claude.ai/code/artifact/eaf1b27c-9027-4aa5-aade-57fcd55baf0e">関係と、文脈の地図</a></td>
+<td><b>関係は1件ずつ文書になり、地図は保存せず描く</b> ── 線は文書どうしの参照から導き、
+ラベルは関係の宣言から取る。<b>宣言と参照が別入力なので、ずれが違反として出る</b></td></tr></table>
+
+<h2><span class="sn">04</span>隣で決着した、前提になっているブレスト</h2>
+<table><tr><th>何</th><th>この盤面へ、どう効くか</th></tr>
+<tr><td><a href="https://claude.ai/code/artifact/f59a20eb-4dfa-45d3-bdbf-21d8abbe060c">CodingSkills ── 制約と、その作用域</a></td>
+<td><b>合意済み。</b>論点16（Coding の種は雛形の単位15）と、軸の独立性の判定が、ここから来ている</td></tr>
+<tr><td><a href="https://claude.ai/code/artifact/24732a71-b357-41a1-8f53-fbb87417f92d">CodingSkills（第1版）</a></td>
+<td>実物。<code>.waffle/skills/coding-skills/</code> に在る ── 規約37本 ・ 雛形15本 ・ 検査 script</td></tr></table>
+
+<h2><span class="sn">05</span>持ち越している直し</h2>
+<table><tr><th>何を</th><th>なぜ</th></tr>
+<tr><td><b>CodingSkills の軸の記述を 4本→3本 に直す</b></td>
+<td>SKILL.md と glossary.md が実行環境を軸に数えているが、
+<b>実行環境だけを条件にした層は0本</b>で、値は用途が決めている
+（backend-api→resident ・ hook→per-invocation ・ mcp-server→resident）──
+論点14 の判定に落ちる。<b>直すのは CodingSkills 側だけで、盤面の決まりは変わらない</b></td></tr>
+</table>
+<p class="note">語の直しは適用済み ── 「検める」を「確かめる」へ揃えた（上流の Skill 2本は触っていない）。</p>
+</div>
