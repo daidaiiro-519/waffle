@@ -1,0 +1,441 @@
+<title>Skill から、置き場所の名指しを外す</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
+--move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;--chipbg:#2b281f;
+--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}}
+:root[data-theme="dark"]{--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;
+--chipbg:#2b281f;--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);margin:0;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;line-height:1.85}
+.wrap{max-width:92rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+h1{font-size:1.5rem;margin:0 0 .3rem;letter-spacing:.02em}
+.lede{font-size:1.06rem;border-left:4px solid var(--key);padding:.55rem 0 .55rem .9rem;
+margin:1rem 0 2rem;background:var(--panel);max-width:68rem}
+h2{font-size:1.12rem;margin:2.4rem 0 .8rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h3{font-size:1rem;margin:1.6rem 0 .5rem;color:var(--key)}
+table{border-collapse:collapse;width:100%;margin:.9rem 0;font-size:.93rem}
+th,td{border:1px solid var(--line);padding:.42rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--chipbg);font-weight:700}
+code{background:var(--chipbg);padding:.08rem .3rem;border-radius:.2rem;font-size:.88em}
+pre{background:var(--chipbg);padding:.7rem .9rem;border-radius:.3rem;overflow-x:auto;font-size:.84rem}
+.scroll{overflow-x:auto}
+.gone{color:var(--gone)}
+#bar{position:sticky;top:0;z-index:9;background:var(--panel);border-bottom:2px solid var(--move);
+padding:.5rem .9rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;font-size:.9rem;
+margin:0 -1.2rem 1rem}
+#bar button{font:inherit;padding:.2rem .7rem;border-radius:.25rem;border:1px solid var(--move);
+background:transparent;color:var(--move);cursor:pointer}
+#bar button:hover{background:var(--move);color:var(--paper)}
+#tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 0;border-bottom:2px solid var(--line)}
+.tab{font:inherit;font-size:.93rem;padding:.45rem .95rem;border:1px solid var(--line);
+border-bottom:0;border-radius:.3rem .3rem 0 0;background:var(--panel);color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:700;
+box-shadow:0 2px 0 0 var(--paper)}
+.tab .n{font-size:.78rem;color:var(--move);margin-left:.35rem;font-weight:700}
+.pane{border:1px solid var(--line);border-top:0;background:var(--paper)}
+.pane.md{padding:1.2rem 1.8rem}
+.pane.md h1{font-size:1.25rem;margin-top:0}
+.pane.html{padding:0}
+.pane.html iframe{display:block;width:100%;border:0;background:var(--paper)}
+.lane{font-size:.8rem;color:var(--muted);padding:.35rem .9rem;border-bottom:1px dashed var(--line);
+background:var(--panel);display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.lane .how{margin-left:auto;font-style:italic}
+.idx{border-bottom:1px solid var(--line);background:var(--panel);padding:0 .9rem .5rem}
+.idx summary{cursor:pointer;font-size:.88rem;padding:.45rem 0;font-weight:700;color:var(--move)}
+.idx ol{margin:0 0 .3rem;padding-left:1.4rem;font-size:.88rem}
+.idx li{margin:.35rem 0}
+.idx button.go{font:inherit;font-size:.82rem;padding:.05rem .5rem;margin-left:.4rem;
+border:1px solid var(--move);border-radius:.2rem;background:transparent;color:var(--move);cursor:pointer}
+.idx button.go:hover{background:var(--move);color:var(--paper)}
+.idx .b{color:var(--muted);font-size:.84rem}
+</style>
+<style id="markcss-live">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</style>
+<script type="text/plain" id="markcss">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</script>
+
+<div class="wrap">
+<h1>Skill から、置き場所の名指しを外す</h1>
+<p class="lede"><b>Skillが、動かす道具のディレクトリ構成を知っていた。</b><code>skills-creator</code> にはすでに『統合はSkillの外側に置く』という決まりがあるのに、3本がそれを破って置き場所を焼き付けていた ── <b>置き場所が違う環境では、手順どおりに書いても届かない</b>。<b>brainstorm の1件は承認済みなので当て済み</b>（回答を積む場所は呼び出し側が指定する形にした）。<b>この3本は、まだ正本へ当てていない。</b></p>
+<h2>3種類のはみ出し</h2><table><tr><th>どこ</th><th>何を名指していたか</th><th>なぜ問題か</th></tr><tr><td><b>advisor-creator</b>（3か所）</td><td>作ったadvisorの保存先</td><td><b>置き場所は動かす道具が決める。</b>焼き付けると、置き場所の違う環境で手順が空振りする</td></tr><tr><td><b>ddd-advisor</b>（2行）</td><td><b>他のSkillの内部ファイル</b></td><td><b>二重の違反。</b>置き場所を焼き付けており、かつ<b>Skill同士を疎に結ぶ原則</b>も破る</td></tr><tr><td><b>design-share</b>（1か所）</td><td>自分自身の作業フォルダ</td><td>自分の場所を、道具の都合込みで書いていた</td></tr></table><p><b>線の引き方はこうする</b> ── 本文（目的・役割・手順・ガードレール）は<b>満たすべきことだけ</b>、参照節は<b>同梱物の目録</b>（<code>references/…</code> は自分の持ち物なので名前を書いてよい）、<b>それ以外は名指さず、配線表の「何を頼むか」で指す</b>。</p>
+<div id="bar"><b>変更 5 件</b>
+<button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="a">advisor-creator<span class="n">3</span></button><button class="tab" role="tab" data-t="d">ddd-advisor<span class="n">1</span></button><button class="tab" role="tab" data-t="s">design-share<span class="n">1</span></button></div>
+<section class="pane md" data-k="a" hidden><details class="idx" open><summary>この面の変更 3 件</summary><ol><li><b>&lt;strong&gt;呼び出し側が示すSkillの置き場所&lt;/strong&gt;</b><button class="go" data-i="0">その場所へ</button><div class="b">Skillの置き場所は、動かす道具（Claude Code）が決めること。Skillの中に焼き付けると、置き場所が違う環境では手順どおりに書いても届かない。skills-creator の決まり（統合はSkillの外側に置く）にも反していた</div></li><li><b>同じ置き場所の {advisor名}/references/knowledge/</b><button class="go" data-i="1">その場所へ</button><div class="b">同上。SKILL.mdの隣、という相対の言い方で足りる</div></li><li><b>SKILL.mdと同じ {advisor名}/references/ 配下に作成</b><button class="go" data-i="2">その場所へ</button><div class="b">同上</div></li></ol></details><div class="doc"><hr>
+<p>name: &quot;advisor-creator&quot;<br>description: &quot;新しいadvisor Skill（確立された原則・判断基準に基づいて専門的な判断力を提供するSkill）を作成したいとき、「アドバイザーを作って」「advisorを追加したい」と言われたときに使う。判断力の器（role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrails）とbackbone knowledge文書の雛形を、対話ヒアリングを通じて生成する。単体で完結して動作し、特定の外部ツール・システムの有無を判定する処理は持たない。&quot;</p>
+<hr>
+<h1>新規advisor Skillのテンプレート生成を行うSkill：advisor-creator</h1>
+<h2>目的</h2>
+<p>新しいadvisor Skill（確立された原則・判断基準に基づいて専門的な判断力を提供するSkill）を作成したいとき、「アドバイザーを作って」「advisorを追加したい」と言われたときに使う。判断力の器（role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrails）とbackbone knowledge文書の雛形を、対話ヒアリングを通じて生成する。単体で完結して動作し、特定の外部ツール・システムの有無を判定する処理は持たない。</p>
+<hr>
+<h2>役割</h2>
+<p>- advisor設計のコンサルタントとして、専門領域・判断基準の出典をヒアリングする<br>- 判断力の器（role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrails）を満たすSKILL.mdを生成する実装者として動く<br>- backbone knowledge文書（principles/classifications/decisionCriteria/examples/antiPatterns等）の雛形を作成するファシリテーターとして振る舞う<br>- 生成するadvisorの本文に、他のadvisor Skillの名前を直接書かせない（前提とする追加文脈があれば、その情報の抽象的な形状のみを記述させる）<br>- 作成後は動作確認方法をユーザーへ伝える</p>
+<hr>
+<h2>処理対象と成果物</h2>
+<h3>処理対象</h3>
+<p>新規advisorの要件（専門領域名・判断基準の出典・想定される相談種別・backbone knowledgeの範囲）。</p>
+<h3>成果物</h3>
+<p>判断力の器（role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrails）を満たすSKILL.mdと、backbone knowledge文書一式。</p>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>advisor名・専門領域</td><td>明示されなければヒアリングする。</td></tr><tr><td>判断基準の出典（確立された理論・原則等）</td><td>明示されなければヒアリングする。出典が無い場合はadvisorとして成立しない可能性がある旨を伝え、作成を保留する。</td></tr><tr><td>想定される相談種別（概念質問／判断相談／実装相談等）</td><td>明示されなければヒアリングする。種別の数によって判断テンプレートの要否が変わる。</td></tr></table></div>
+<hr>
+<h2>実行手順</h2>
+<h3>Step 1: 専門領域と判断基準の出典をヒアリングする</h3>
+<p>advisor名・専門領域・判断基準となる確立された理論や原則の出典を確認する。出典が無い場合は、断定的な判断を提供できないため作成を保留し理由を伝える。</p>
+<p>- 出典が複数の実務知見の交差点である場合は、単一の権威ある出典として断定的に語らない旨をガードレールに含める</p>
+<h3>Step 2: 想定される相談種別（responseTypes）を確定する</h3>
+<p>概念質問・判断相談・実装相談等、このadvisorが受ける相談の種類を確認する。種別ごとに判断テンプレートが必要かどうかをここで判断する。</p>
+<p>- 種別が1つだけの場合や、判断テンプレートが無くてもknowledgeファイルの決定木で十分な場合は、テンプレートファイルを作らない選択肢もある</p>
+<h3>Step 3: SKILL.mdを生成する</h3>
+<p>references/skill-template-advisor.mdを読み込み、role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrailsの各ブロックをヒアリング内容で埋め、Writeツールで、<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="Writeツールで.claude/skills/{advisor名}/SKILL.mdとして保存する。" data-w="Skillの置き場所は、動かす道具（Claude Code）が決めること。Skillの中に焼き付けると、置き場所が違う環境では手順どおりに書いても届かない。skills-creator の決まり（統合はSkillの外側に置く）にも反していた"><strong>呼び出し側が示すSkillの置き場所</strong></mark>の {advisor名}/SKILL.md として保存する。</p>
+<p>- 役割（role）は「{専門家役割}として、確立された{原則名}に基づいて回答する」から始め、「アンチパターンを見つけたときはリスクと代替案をセットで提示する」等で締める<br>- 他advisor Skillの名前を本文に直接書かない</p>
+<h3>Step 4: backbone knowledge文書を作成する</h3>
+<p>references/knowledge-template.mdを読み込み、専門領域ごとの概念（principles/classifications/decisionCriteria/examples/antiPatterns）を<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b=".claude/skills/{advisor名}/references/knowledge/配下へ作成する。" data-w="同上。SKILL.mdの隣、という相対の言い方で足りる">同じ置き場所の {advisor名}/references/knowledge/ 配下へ作成する。</mark></p>
+<p>- 分類・判断基準・アンチパターンが無い概念は、一覧を空にしその理由（emptyReason）を明示する<br>- 1概念1ファイルを基本とする</p>
+<h3>Step 5: responseTypesごとの判断テンプレートを作成する（該当する場合のみ）</h3>
+<p>相談種別ごとに回答形式を揃えたい場合、references/template-{種別}.mdを<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="SKILL.mdと同じ.claude/skills/{advisor名}/references/配下に作成する。" data-w="同上">SKILL.mdと同じ {advisor名}/references/ 配下に作成する。</mark></p>
+<p>- knowledgeファイルの決定木だけで十分な場合はこのStepを省略してよい</p>
+<h3>Step 6: 完成確認</h3>
+<p>作成したファイル一覧を表示し、このadvisorの呼び出し方（自動発火の条件・明示呼び出しの方法）をユーザーに伝える。</p>
+<hr>
+<h2>出力形式</h2>
+<p>作成したファイル一覧（SKILL.md・knowledgeファイル・テンプレートファイル）を表示し、動作確認方法（どういう相談で自動発火するか）を伝える。</p>
+<hr>
+<h2>ガードレール</h2>
+<p>- 生成するadvisorの本文（role/description/inputExpectation等）に、他のadvisor Skillの名前を直接書かせない。前提とする追加文脈があれば、その情報の抽象的な形状のみを記述させる（疎結合原則）<br>- 新しいadvisorに、特定の外部ツール・システム（Waffle、特定のCLI/MCP等）の存在を自ら判定して振る舞いを変えるロジックを持たせない。統合が必要な場合はadvisor自身の外側（呼び出し側）に置く（依存性の方向違反を避ける）<br>- 判断基準の出典（確立された理論・原則）が無い専門領域はadvisorとして作成しない。出典の無い断定的な判断は権威の詐称になる<br>- backbone knowledgeの分類・判断基準・アンチパターン等が空の概念は、一覧を空にしたままにせず理由（emptyReason）を明示させる<br>- このSkill自身はskill-routerへの登録・knowledgeファイルのデプロイ（symlink等）を行わない。1人のadvisorを完結させるところまでが責務であり、それ以降の統合は呼び出し側の判断に委ねる</p>
+<hr>
+<h2>参照</h2>
+<p>- <code>references/skill-template-advisor.md</code>: advisor SKILL.mdの雛形（role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrailsの8ブロック）<br>- <code>references/knowledge-template.md</code>: backbone knowledge文書の雛形（principles/classifications/decisionCriteria/examples/antiPatterns等）</p></div></section><section class="pane md" data-k="d" hidden><details class="idx" open><summary>この面の変更 1 件</summary><ol><li><b>参照</b><button class="go" data-i="0">その場所へ</button><div class="b">他のSkillの内部ファイルを名指していた。二重の違反 ── 置き場所を焼き付けており、かつSkill同士がテキストで疎に結ばれるという原則も破る。図の構文が要るなら、『図の構文を選んでもらう』という頼みごととして配線表に置く</div></li></ol></details><div class="doc"><hr>
+<p>name: &quot;ddd-advisor&quot;<br>description: &quot;DDD(ドメイン駆動設計)についての概念質問(「〜とは」)・設計判断相談(「〜すべきか」)・実装相談(「〜はどう実装するか」)を受けたときに使う。確立されたDDD原則(バックボーン)に根拠を示して回答し、AI時代の開発文脈を踏まえた考察を末尾に添える。&quot;</p>
+<hr>
+<h1>DDDの概念質問・設計判断に根拠を示して答えるのを担うadvisor Skill：ddd-advisor</h1>
+<h2>目的</h2>
+<p>DDD(ドメイン駆動設計)についての概念質問(「〜とは」)・設計判断相談(「〜すべきか」)・実装相談(「〜はどう実装するか」)を受けたときに使う。確立されたDDD原則(バックボーン)に根拠を示して回答し、AI時代の開発文脈を踏まえた考察を末尾に添える。</p>
+<hr>
+<h2>役割</h2>
+<p>- DDDエキスパートアドバイザーとして、確立された原則・判断基準に基づいて回答する<br>- 抽象的な説明に留まらず、ユーザーの状況に当てはめた具体的な判断を示す<br>- アンチパターンを見つけたときは、リスクと代替案をセットで提示する<br>- 回答の末尾に、AI時代の開発文脈を踏まえた考察を、バックボーンの原則と明確に区別して添える</p>
+<hr>
+<h2>相談種別と回答テンプレート</h2>
+<div class="wrap"><table><tr><th>相談種別</th><th>判定条件</th><th>テンプレート</th></tr><tr><td>概念質問</td><td>「〜とは」「〜の違いは」等の質問形式</td><td><code>references/template-concept.md</code></td></tr><tr><td>判断相談</td><td>「〜すべきか」「〜していいか」等の質問形式</td><td><code>references/template-judgment.md</code></td></tr><tr><td>実装相談</td><td>「〜はどう実装するか」「〜のルールは」等の質問形式</td><td><code>references/template-implementation.md</code></td></tr></table></div>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>質問の種類(概念質問/判断相談/実装相談)</td><td>明示されなければ質問文の形式から判定する(「〜とは」→概念質問、「〜すべきか」→判断相談、「〜はどう実装するか」→実装相談)。</td></tr><tr><td>相談対象のシステム・設計の状況</td><td>明示されなければユーザーに確認する。抽象論だけで判断を返さない。</td></tr></table></div>
+<hr>
+<h2>実行手順</h2>
+<h3>Step 1: 質問を3タイプに分類する</h3>
+<p>ユーザーの質問を「概念質問」「判断相談」「実装相談」のいずれかに分類し、対応するテンプレートを選ぶ。</p>
+<p>- 概念質問（「〜とは何か」「〜の違いは」等）→ template-concept.md<br>- 判断相談（「〜はどうすべきか」「〜していいか」等）→ template-judgment.md<br>- 実装相談（「〜はどう実装するか」「〜のルールは」等）→ template-implementation.md</p>
+<h3>Step 2: 対応するバックボーンknowledgeファイルを特定して必ず読む</h3>
+<p>質問内容に関連するDDD概念を特定し、<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="- `.claude/skills/mermaid-guide/references/syntax-overview.md`: Mermaid構文選定ガイド
+- `.claude/skills/mermaid-guide/references/pattern-{構文名}.md`: 各Mermaid構文のテンプレート
+
+（この2行が参照節に在った）" data-w="他のSkillの内部ファイルを名指していた。二重の違反 ── 置き場所を焼き付けており、かつSkill同士がテキストで疎に結ばれるという原則も破る。図の構文が要るなら、『図の構文を選んでもらう』という頼みごととして配線表に置く">参照</mark>セクションに列挙された対応するknowledgeファイルをReadツールで読み込む。この手順を完了する前に回答を始めてはならない。複数の概念が関連する場合はすべて読んでから次に進む。</p>
+<p>- 既に知っている内容だと感じても、必ず先に読む<br>- 該当するファイルが複数ある場合は全て読み込む</p>
+<h3>Step 3: プレースフォルダー定義票を参照してテンプレートを埋める</h3>
+<p>タイプに応じたテンプレートファイル（template-concept.md／template-judgment.md／template-implementation.md）に定義されたプレースフォルダーを、knowledgeファイルの内容に基づいて埋め、回答を生成する。</p>
+<p>- 定義文・判断基準はknowledgeファイルの記述をそのまま使い、勝手に言い換えない<br>- 判断相談では判定理由を必ず示す<br>- アンチパターンに該当する場合はリスクと代替案をセットで提示する</p>
+<h3>Step 4: AI時代の文脈を踏まえた考察を添える（該当する場合）</h3>
+<p>バックボーンの原則を回答した後、AIがコードを大量かつ高速に生成する開発環境において、この概念がどのような形で再解釈・再適用されうるかについての考察を末尾に添える。</p>
+<p>- この考察はその場の回答として行うものであり、backboneのknowledgeファイル自体には書き加えない<br>- 特定のプロダクト・実装の詳細を断定的に語らない。一般的な考察に留める<br>- 考察であることが分かるよう、バックボーンの原則の引用とは明確に区別して提示する</p>
+<h3>Step 5: 必要に応じてMermaid図を作成する</h3>
+<p>回答にMermaid図が有効な場合、参照セクションのmermaid-guideを参照して適切な構文を選定する。</p>
+<p>- graph構文は使用しない（flowchartに統一）<br>- 判断フローはテキスト形式を維持する</p>
+<hr>
+<h2>ガードレール</h2>
+<p>- knowledgeファイルをReadする前に回答を始めてはならない。知っている内容でも必ず先に読む。最優先ルールであり例外なし<br>- knowledgeファイルに記載されていない内容は「バックボーンの範囲外」として正直に伝え、推測で答えない<br>- 定義文・判断基準はknowledgeファイルから引用し、勝手に言い換えない<br>- 判断相談では必ず判定理由を示す。「〜です」で終わらせない<br>- アンチパターンに該当する場合は必ずリスクと代替案をセットで提示する<br>- AI時代の考察を加える場合も、backboneのknowledgeファイル自体は確立されたDDD原則専用に保つ。考察は回答の都度行い、ファイルには混ぜない<br>- 専門用語（ユビキタス言語・アーキテクチャ用語等）は使ってよいが、初出時は文脈・具体例を添えて意味が解釈できるようにする。相手が業務エキスパートなど非エンジニアの可能性を常に想定し、用語だけを渡して説明を終わらせない。</p>
+<hr>
+<h2>参照knowledge</h2>
+<p>- <code>references/knowledge/business-domain.md</code>: ビジネスドメイン（事業領域）の全体像<br>- <code>references/knowledge/subdomain.md</code>: 業務領域（サブドメイン）の中核・一般・補完分類<br>- <code>references/knowledge/domain-expert.md</code>: 業務エキスパートとの関わり方<br>- <code>references/knowledge/ubiquitous-language.md</code>: 同じ言葉（ユビキタス言語）<br>- <code>references/knowledge/bounded-context.md</code>: 境界づけられたコンテキスト<br>- <code>references/knowledge/context-integration.md</code>: コンテキストどうしの連携パターン（良きパートナー・公開ホストサービス・腐敗防止層等）<br>- <code>references/knowledge/business-logic-simple.md</code>: 単純な業務ロジックの実装（トランザクションスクリプト・アクティブレコード）<br>- <code>references/knowledge/domain-model.md</code>: ドメインモデル（値オブジェクト・エンティティ・集約・業務サービス）<br>- <code>references/knowledge/event-sourced-domain-model.md</code>: イベント履歴式ドメインモデル（イベントソーシング・投影）<br>- <code>references/knowledge/architecture-patterns.md</code>: 技術方式（レイヤードアーキテクチャ・ポートとアダプター・CQRS）<br>- <code>references/knowledge/communication.md</code>: コンテキスト間の通信（モデル変換・送信箱・サーガ・プロセスマネージャー）<br>- <code>references/knowledge/design-heuristics.md</code>: 設計の経験則（実装方法・技術方式・テスト方針の総合判定）<br>- <code>references/knowledge/evolving-design.md</code>: 設計を進化させる（業務領域の変化・実装方法の移行・組織変更への対応）<br>- <code>references/knowledge/event-storming.md</code>: イベントストーミング（ワークショップ技法）<br>- <code>references/knowledge/real-world-ddd.md</code>: 現実世界のDDD導入（戦略的分析・ストラングラー方式・段階的導入）<br>- <code>references/knowledge/microservices.md</code>: マイクロサービスとコンテキスト・サブドメインの関係<br>- <code>references/knowledge/event-driven-architecture.md</code>: イベント駆動型アーキテクチャ<br>- <code>references/knowledge/data-mesh.md</code>: データメッシュ（分析系モデルとDDDの組み合わせ）<br>- <code>references/knowledge/closing-heuristics.md</code>: 実装方法を選択する経験則の総括<br>- <code>references/template-concept.md</code>: 概念質問への回答テンプレート<br>- <code>references/template-judgment.md</code>: 判断相談への回答テンプレート<br>- <code>references/template-implementation.md</code>: 実装相談への回答テンプレート<br>- <code>references/knowledge/architecture-evidence-based-scope.md</code>: 採用済みの knowledge 候補<br>- <code>references/knowledge/knowledge-cand-aggregate-declaration-is-not-class-existence.md</code>: 採用済みの knowledge 候補<br>- <code>references/knowledge/knowledge-cand-declaration-text-arbitrates-violation-claims.md</code>: 採用済みの knowledge 候補</p></div></section><section class="pane md" data-k="s" hidden><details class="idx" open><summary>この面の変更 1 件</summary><ol><li><b>このSkill自身を試すときはこのSkillのディレクトリ配下</b><button class="go" data-i="0">その場所へ</button><div class="b">自分の置き場所を、動かす道具の都合込みで書いていた。『このSkillのディレクトリ配下』と言えば、どこに置かれても同じ意味になる</div></li></ol></details><div class="doc"><hr>
+<p>name: &quot;design-share&quot;<br>description: &quot;UIモックを作成したいとき、またはDesign.md（デザインシステム定義）を対話式で作成・改善したいときに使う。「UIモックを作りたい」「デザイン案を見せたい」「Design.mdを作りたい・直したい」と言われたときに使う。成果物は外部依存ゼロの自己完結HTMLとして手元に出力する。関係者へ見せる経路の用意はこのSkillの責務に含めない。&quot;<br>disable-model-invocation: true</p>
+<hr>
+<h1>UIモック生成とDesign.md作成を行うSkill：design-share</h1>
+<h2>目的</h2>
+<p>UIモックを作成したいとき、またはDesign.md（デザインシステム定義）を対話式で作成・改善したいときに使う。「UIモックを作りたい」「デザイン案を見せたい」「Design.mdを作りたい・直したい」と言われたときに使う。成果物は外部依存ゼロの自己完結HTMLとして手元に出力する。関係者へ見せる経路の用意はこのSkillの責務に含めない。</p>
+<hr>
+<h2>役割</h2>
+<p>- Design.mdを対話式で作成・改善する（ここまでの対話文脈からのトークン提案と、試作artifactによる視覚確認を挟む）<br>- Design.mdを視覚スペックシートとして描画する<br>- Design.mdから複数パターンのUIモックHTMLを生成する<br>- 生成物を、外部依存を持たず単体で開ける1つのファイルとして完結させる<br>- 生成物に、それ自身が何であるかを名乗る自己記述メタデータを持たせる<br>- 生成したモックを敵対的に測定し、修正して閉じる</p>
+<hr>
+<h2>処理対象と成果物</h2>
+<h3>処理対象</h3>
+<p>作りたいUIの目的・対象ユーザー・参考イメージ（対話でヒアリング）、または既存のDesign.mdとそれに対する改善要望・関係者から返ってきたコメント。</p>
+<h3>成果物</h3>
+<p>Design.md（google-labs-code/design.md仕様のYAMLフロントマター＋Markdown本文）と、外部依存ゼロの自己完結HTML（UIパターンモックおよび視覚スペックシート）。HTMLはいずれも、それ自身が何であるかを名乗る自己記述メタデータをheadに持つ。</p>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>作りたいUIの目的・対象ユーザー</td><td>明示されなければ対話の最初にヒアリングする（自由記述）</td></tr><tr><td>既存Design.mdの有無と場所</td><td>指定がなければプロジェクト直下のDESIGN.mdを確認し、あれば改善モード・なければ新規作成モードで開始する。改善モードに入る前に「既存のDESIGN.mdを直す想定で合っているか」を選択式ツールで一言確認し、ユーザーの認識との食い違い（別の場所にあると思っている等）を検知する</td></tr><tr><td>生成するUIパターン数</td><td>指定がなければ2〜3案を提案する</td></tr><tr><td>表示名（パターン名・プロジェクト名）とプロジェクトキー</td><td>明示されなければ、ヒアリングした目的・題材から短い表示名をAIが自動生成し、確定前に選択式ツールで一言（このままでよいか）確認する。プロジェクトキーは表示名を半角英数・ハイフンへ変換（slugify）して自動生成し、ユーザーには確認しない</td></tr><tr><td>生成物の識別子と種別（自己記述メタデータのid・type）</td><td>明示されなければ、識別子はプロジェクトキーとパターン名から半角英数・ハイフンで自動生成し、種別は成果物の性質（視覚スペックシートかUIパターンモックか）から決める。ユーザーには確認しない（運用上の判断であり創造的判断ではないため）。生成物が置かれる場所には依存させない</td></tr><tr><td>試作・生成結果を見た反応</td><td>「良い／直したい」の二択を選択式ツールで確認する。『直したい』が選ばれた場合のみ、どこをどう直したいかを自由記述で聞く</td></tr><tr><td>完成の判断</td><td>ユーザーから完成を申告させない。最後のUIモック確認が済んだ時点で、AIの側から「これで完成としますか」を選択式ツールで明示的に確認し、その回答をもって完成とする（最終ステップの完成確認チェックポイント）</td></tr></table></div>
+<hr>
+<h2>実行手順</h2>
+<h3>Step 1: セッションを開始しDesign.mdの状態を確認する</h3>
+<p>既存Design.mdがあれば改善モード、なければ新規作成モードで開始する。改善モードに入る前に「既存のDESIGN.mdを直す想定で合っているか」を選択式ツール（Claude CodeのAskUserQuestion等、以下同）で一言確認し、ユーザーの認識との食い違い（別の場所にあると思っている等）を無言で通過しない。新規の場合は、まずGarrettの抽象2軸を具体例つきの選択式で絞ってから、その方向性の中で目的をヒアリングする（固定プリセットのアーキタイプギャラリーは使わない——UI表現の幅を目的が定まる前に狭めてしまう上、Scope〜Skeletonで積み上げる具体的な文脈を活かせないため。色・タイポグラフィはStep5で、ここまでの対話内容からAIが提案する）。</p>
+<h4>方向性を絞る質問をする</h4>
+<p>Garrettの抽象2軸（機能としてのプロダクト／ハイパーテキストとしてのプロダクト）を、ユーザーに軸の名前のまま問わず、具体例つきの選択式ツールで絞る。例：「作りたいものは、次のうちどれに近いですか？」→①何かを実行・完了させる場所（例：フォームに入力する、申し込む、管理する）／②何かを伝える・読んでもらう場所（例：会社や商品を紹介する、記事を読んでもらう）／③両方の性質がある（例：商品を紹介しつつ購入も完了させる）。常に自由記述（その他）にも逃がせる。ここで選ばれた方向性は、以降の提案（Step2〜4）の前提として引き継ぐ。</p>
+<h4>目的と対象ユーザーをヒアリングする</h4>
+<p>①で絞った方向性を前提に、この画面が果たす仕事・見る人・言語化しづらい要望を自由記述で引き出す（例：①で「実行・完了系」を選んだ場合「具体的にはどんな作業を早く・簡単にしたいですか？」と聞く）。ここで得た自由記述はStep2で使う判断材料になる。 あわせて「参考にしたい色・ブランドがあれば教えてください（無ければスキップ可）」と一言添え、既存のブランド制約（社名カラー等）の有無を確認する。回答が無ければAIが文脈から提案する（Step5-1）。</p>
+<h4>発話を特徴量カテゴリへ写像する</h4>
+<p>ヒアリングで得た発話を、references/knowledge/nl-feature-routing.md のGarrett5平面（Strategy/Scope/Structure/Skeleton/Surface）に照らし、「どの部分が・どの平面で・どこへ送られるか（8語のどれ、SKILL.md自身のStep2〜4、またはui-copywriting/accessibility-baseline等の既存knowledge）」を一文で言い切ってからStep2以降へ進む。硬い対応表として機械照合せず、発話ごとに言葉で言い切る（8語側の『理由を言い切る』と対になる、注入側のゲート）。</p>
+<h4>対象が自己言及的な場合はdesign-share自身の仕組みを確認する</h4>
+<p>作ろうとしているUI・LP等の題材がdesign-share自体（自己言及的な利用）である場合、何を確定させ・何がプロジェクト間で再利用される基盤かを、印象や通念で書き始める前にSKILL.mdの役割・処理対象・成果物セクションで確認する。design-share以外が題材のときは、対象ユーザーへのヒアリング（step-1-2）がこの確認を兼ねる。</p>
+<h3>Step 2: 機能要件・コンテンツ要件を提案から逆算して確定する</h3>
+<p>Jesse James Garrettの「Elements of User Experience」が定めるScope平面（機能要件・コンテンツ要件）に対応する。Step1-1で既に選ばれた方向性（機能としてのプロダクト寄り／ハイパーテキストとしてのプロダクト寄り／両方）と、Step1-2の目的ヒアリングを踏まえて、具体的な機能候補を選択式ツールの提案として示し、選んでもらう形で機能要件を確定する。空欄の「必要な機能を教えてください」は聞かない。</p>
+<h4>中核機能の見取り図を粗く確認する</h4>
+<p>深掘りに入る前に、この題材に中核機能がいくつくらいありそうかを選択式ツールで粗く確認する（例：主な用途は1つか、複数の役割を兼ねるか）。1つの機能だけを深掘りして完成としない。中核機能が複数ある場合は、機能ごとに以降のstep-2-2〜2-3を繰り返す。 判定基準：1つの中核機能とは「1つの主要な達成目標（ゴール）を持つ、ひとまとまりの作業単位」を指す（例：「申請する」と「承認する」はゴールが異なるため別の中核機能）。</p>
+<h4>機能要件を提案し確定する</h4>
+<p>中核機能ごとに、Step1の目的・対象ユーザーから逆算した具体的な機能候補を選択式ツールで提案し、選んでもらう。不可逆な操作（削除・提出取り消し等）が関わる機能は、その扱い（後戻りできるか）も併せて確認する。回答は常に自由記述（その他）に逃がせる。</p>
+<h4>コンテンツ要件を機能要件から逆算して提案する</h4>
+<p>機能要件が1つ確定するたびに、その機能が成立するために画面が見せる・受け取る必要がある情報要素を逆算して選択式ツールで提案する（独立に「コンテンツ要件を教えてください」とは聞かない）。不可逆な操作が確認された機能では、確認画面・注意書きが要る旨を前提として提案に含める。</p>
+<h4>やり取りが長引いたら粗い試作で一度区切る（既定挙動）</h4>
+<p>機能要件・コンテンツ要件のやり取りが目安3〜4問を超えて続く場合、選択肢としてではなく既定の挙動として、そこまでの内容から一度ワイヤーフレーム程度の粗い試作を生成して見せ、区切る（非デザイナーの早期エンゲージメント確保のため、色を使わないラフな構造確認に限定する）。ユーザーが希望すれば省略してよいが、既定はスキップせず必ず一度は見せる。</p>
+<h3>Step 3: 確定した要件を概念モデルとして関係づける</h3>
+<p>Garrettが定めるStructure平面に対応する。用語は原著の「概念モデル（conceptual model）」——ECサイトの概念モデルが「ショッピングカート」であるように、Step2で確定済みの機能・情報要素を、ユーザーが既に持っている作業の捉え方に合わせて順番・関係として言い当てる。新しい判断軸は増やさず、Step1-1で選ばれた機能/ハイパーテキストの軸をそのまま運ぶ。ここでの提案は画面の数・画面分割を含意しない、状態や手順のルールのレベルの問いに留める（画面配置はStep4の役割）。例：「取り消しは、提出後ならいつでもできますか、それとも承認される前までですか？」。対話（提案→選択）だけで完結させ、試作は不要。 このやり取りが目安3〜4問を超えて続く場合は、Step2と同様に既定挙動として、そこまでの内容から一度粗い試作を見せて区切る。</p>
+<h3>Step 4: 概念モデルを画面骨格へ具体化する</h3>
+<p>Garrettが定めるSkeleton平面に対応する。原著の3要素——Information Design（理解を促す形での情報提示）・Interface Design（機能と対話できるインターフェース要素の配置）・Navigation Design（情報アーキテクチャの中を移動できる画面要素）——に沿って、Step3で決めた概念モデルを実際の画面配置・遷移として具体化する。例：「その取り消しルールは、一覧画面から直接操作できるようにしますか、それとも詳細画面を開いてからにしますか？」。画面配置は言葉だけで判断しにくいため、ここから試作artifactが必要になる。ただしDesign.mdの固定順・round-trip原則（Colorsが未確定の段階で状態系トークンを発明しない）を守るため、この試作は色トークンを一切使わないグレースケール／モノクロの構造検証用に限定する。確認は選択式ツールで「良い／直したい」の二択を聞く。 このやり取りが目安3〜4問を超えて続く場合は、Step2と同様に既定挙動として、そこまでの内容から一度粗い試作を見せて区切る（Step4は元々グレースケール試作を最後に生成するが、それより前に長引く場合は前倒しで見せる）。</p>
+<h3>Step 5: Design.mdを対話と試作artifactの往復で確定する</h3>
+<p>Garrettが定めるSurface平面（Sensory Design＝装飾でなく伝達が目的、他の4平面すべての狙いを満たす）に対応する。design.md仕様の固定順セクション（Overview→Colors→Typography→Layout→Elevation &amp; Depth→Shapes→Components→Do&#x27;s and Don&#x27;ts）・round-trip原則は変更しない。既存どおりColors・Typographyを先に確定し、その後Layout・Componentsを確定する。Colors・Typographyはここまでの対話の内容からAIが提案する（プリセットのアーキタイプは使わない）。Layout・Componentsの試作は、Step4のグレースケール試作に実際の色トークンを乗せたものとして生成し、Step4との連続性を持たせる。</p>
+<h4>Colors・Typographyを確定し試作①を見せる</h4>
+<p>ここまでの対話（機能の性質・情報密度・トーン・対象ユーザー）から、具体的な配色・タイポグラフィのトークン値をAIが提案する（あらかじめ用意されたプリセットから選ばせるのではなく、この題材固有の理由とともに提案する）。google-labs-code/design.md仕様のフォーマットへ直接組み立て、配色スウォッチと見出し・本文サンプル程度の小さな試作を生成し、視覚確認を経てトークン値を確定する。確認は選択式ツールで「良い／直したい」の二択を聞く。『直したい』が選ばれた場合のみ、どこをどう直したいかを自由記述で聞いてから同じチェックポイントへ戻る。</p>
+<h4>Layout・Componentsを確定し試作②を見せる</h4>
+<p>Step4のグレースケール試作に、確定済みの色トークンを適用した実コンテンツに近い試作ページを生成する。見出し・ナビゲーション構成・フッター文言等の最終コピーはこの段階の決定対象ではないため、プレースホルダー文言に留め、コピーそのものの完成度で判断させない。確認は選択式ツールで「良い／直したい」の二択を聞く。『直したい』が選ばれた場合は、Colors・Typography由来の指摘なら試作①（step-5-1）へ、レイアウト由来の指摘ならこの試作②へ戻る。</p>
+<h4>Design.mdを検証しスナップショット保存する</h4>
+<p>npx @google/design.md lint DESIGN.md（または scripts/render_spec_sheet.mjs 実行時の内蔵lint）で構造・コントラストを検証する。エラーがあればDESIGN.mdを直してから先へ進む。バージョンとしてスナップショット保存する。過去版との比較はdiffをオンデマンドで実行する。</p>
+<h3>Step 6: DESIGN.mdをスペックシートとして描き、レビューを反映して確定する</h3>
+<p>確定前のDESIGN.mdを視覚スペックシートとして描画し、関係者からのコメントで方向性を合意してから正式な配置場所へ確定配置する。UIモックの量産はこの確定の後に行う。描いたものを関係者へ見せる経路の用意はこのSkillの責務ではなく、ここでは見せられる状態の1ファイルを作るところまでを担う。</p>
+<h4>スペックシートを生成する</h4>
+<p>scripts/render_spec_sheet.mjs &lt;DESIGN.mdパス&gt; &lt;出力htmlパス&gt; を実行する。内部で @google/design.md の公式lintパイプラインでDESIGN.mdを解析し、解決済みトークンからスウォッチ・タイプスケール・スケール・コンポーネント実物を機械的に生成する（値の手動転記をしない＝round-tripを閉じる）。エラーがあれば生成を中止するので、先にDESIGN.mdを直す。不明なコンポーネントサブトークンや未解決の参照は生成物中に不足として自動的に明示される。生成後 scripts/embed_fonts.py で自己完結化し、自己記述メタデータ（step-7に形を示す）を付けて単体で開ける1ファイルにする。</p>
+<h4>コメントを受けて描き直す</h4>
+<p>関係者から「この方向でOK／修正希望」が返ってきたら、修正希望の内容をDESIGN.mdへ反映し、スペックシートを同じファイルパス・同じ識別子で生成し直す。識別子を変えない——見る側にとって同じものの新しい版であることが、識別子が変わらないことで伝わるため。合意できるまで往復する。</p>
+<h4>確定して正式な配置場所へ置く</h4>
+<p>合意できたら、DESIGN.mdを正式な配置場所（既定はプロジェクトフォルダ直下）へ置く。既存があれば上書き前にバックアップを取る。DESIGN.mdは1プロジェクトにつき常に1つであり、新しく確定したものが以前の確定に取って代わる。確定はUIモックを生成しない（生成は確定後の対話で行う）。</p>
+<h3>Step 7: UIパターンHTMLを生成する</h3>
+<p>確定したDesign.mdをもとに、複数パターンのモックHTMLを生成する。固定の雛形ファイルは使わない——モック本体はDesign.mdのトークンから毎回導出するものであり、雛形を挟むと導出の出どころが雛形の側へずれるため。外部依存を一切持たず単体で開ける1つのファイルにし、コメント欄はページに内蔵しない（レビューの手段は生成物の外側が用意するため、内蔵すると同じものが二重に現れる）。</p>
+<p>- 自己記述メタデータをheadに置く。必須は2つで、<code>&lt;meta name=&quot;id&quot; content=&quot;…&quot;&gt;</code>（この生成物を指す識別子）と <code>&lt;meta name=&quot;type&quot; content=&quot;…&quot;&gt;</code>（成果物の種別）。任意は3つで、<code>&lt;meta name=&quot;title&quot;&gt;</code>・<code>&lt;meta name=&quot;description&quot;&gt;</code>・<code>&lt;meta name=&quot;tags&quot;&gt;</code>（カンマ区切り）。titleを省くと <code>&lt;title&gt;</code> が代わりに読まれる<br>- 識別子は生成物が置かれる場所に依存させない。場所が変わっても同じものだと分かる必要があるため<br>- 同じものを作り直すときは識別子を変えない。別のものを作るときだけ新しい識別子にする</p>
+<h3>Step 8: 生成したモックを敵対的に測定する</h3>
+<p>最良のUIモックは〈生成→敵対的測定→修正→学びの還元〉サイクルで作る。自己批評（理由を言い切る／DESIGN.mdの掟に照らす）だけで完成としない。このスキルが同梱するUX専門知識（references/knowledge/ 特に frontend-design-principles＝ux-advisor由来）を土台にした独立した敵対的測定を、生成のたびに必ずかける。実物と数値evidence（コントラスト計算等）で欠陥を具体箇所で名指しし、verdict＋順位付きmust/should-fixを得る→修正→必要なら再測定で閉じる→学びを知識/アセットへ還元する。生成者は自己採点できないため独立性が必須だが、独立性は“別Skillを呼ぶこと”でなく“別pass・敵対フレーミング（忖度なし/出荷基準/refute既定）・実物の読解”で担保する（生成時の文脈と自己弁護を持ち込まない別レビューとして回す。同梱UX知識を読ませたサブエージェントを敵対レビュアとして使う。外部のadvisor Skillを呼ぶのではなく同梱UX知識による自前測定なので、自己完結（実行時に他Skillを呼ばない）と両立する）。①コンセプト層のレンズ（題材に根ざす・主役を立てる・理由を言い切る等の8語）は、Step1の入力分類でSurface関連発話を「トークンを先に固定する」「作り込みを一貫させる」へ送る用途（狭い・入力分類の送り先）とは別に、ここでは生成された成果物全体に対する広いQA基準として適用する（同じ8語の別用途であり、矛盾する重複ではない）。新しい判断軸がStep1-1で選ばれた軸（機能/ハイパーテキスト）以外に紛れ込んでいないかも、このゲートで確認する。</p>
+<h4>生成直後にDESIGN.mdの掟へ自己点検する</h4>
+<p>『理由を言い切る』を確定時だけでなく実装時にも適用する。制約の明文化はそれ自体では遵守を保証しない（DESIGN.mdに書いた直後の生成物であっても、明文化と無関係に既定の言い回しへ流れうる）ため、敵対的測定にかける前に必ずこの点検を実行する: 効かせどころ＝アクセントが実装でも一点に集約されているか（見出し等に撒いていないか）／主役は状態を跨いで機能する姿を見せているか（1状態だけ『置いた』のは装飾）／状態専用と宣言した色を別用途に流用していないか／DESIGN.mdに無い値を発明していないか（round-trip）／DESIGN.mdのDo&#x27;s and Dontsに列挙した各項目と生成物を1つずつ照合する（トークンの使い方だけでなく、文章として書いた禁止事項も含む）／生成したコピーに、生成物の外側（設計意図・制作プロセス・生成AI自身の判断）への自己言及的な言及が紛れていないか／比喩表現がテーゼ・見出し・図の視覚表現の範囲を超えて、正確性が要る説明文（コマンド説明・手順等）に漏れていないか／自己記述メタデータの必須2項目が入っており、外部ホストを指す参照（script・img・stylesheet）が1つも無いか。違反は実装をDESIGN.mdへ戻すか、掟の方を直す。</p>
+<h4>コンセプト・レイアウト・デザインの3ゲートで敵対的に測定する</h4>
+<p>3つのゲートを直列に進み、各ゲートの内部では複数の判断レンズを並列サブエージェントとして立てて敵対的に検証してから、そのゲートの統合見解を出す。1つのゲートを単独のエージェント判断に任せると、判断が足りない観点が抜け落ちたり、性質の異なる複数の問い（例: 商用出荷可否とありきたり回避と細部の破綻）が1回の測定に混ざって『条件付きYes』の中身が曖昧になる。ゲートごとに、そのゲートが持つ判断レンズを並列サブエージェントとして立て、それぞれ敵対フレーミングで検証し、統合見解としてそのゲートのPASS/FAILを決めてから次のゲートへ進む。上位ゲートがFAILしたら下位ゲートは測定しない（差し戻して再生成する）。特定の題材条件でだけ発動する側道のレンズは作らない——1エージェントで判断が足りない観点があれば、それはゲートの外に追い出さず、そのゲートの内部レンズとして常に並列検証に含める（該当しない題材では単に指摘が出ないだけで、レンズ自体は毎回検証に含める）。 ゲートがFAILした原因がパターン実装（Step7の生成物）ではなくDESIGN.mdのトークン値自体にある場合は、Step7の再生成では解消しないため、Step5-3（DESIGN.mdの修正）まで戻り、スペックシートを同じ識別子で描き直して再確認する。同一ゲートでの再検証が3回を超えて解消しない場合は、無限ループを避けるため人間に判断を委ね、一旦保留として次の対応を確認する。</p>
+<p>- ①コンセプト層（レンズ: 題材に根ざす／主役を立てる／理由を言い切る／round-trip）＝判断の出どころが題材にあるか。『ありきたりを避ける』は独立した拒否権としては置かない——references/knowledge/frontend-design-principles.mdの統べる規則自身が『原則が固定してよいのは題材に根ざす・理由を言い切るだけ』と明記しており、ありきたりを避けるは本来『題材を考えずに既定値クラスタへ反射的に落ちていないか』を検知するための参照点・着眼点であって、題材に根ざすと対等な独立ゲートではない。よって『題材に根ざす』の判定に、既定値クラスタとの一致を『理由付けの除去テスト（その理由を外したとき、選択への必然性が本当に消えるか）を通常より厳しくやる引き金』として組み込むが、除去テストの結果として理由付けが具体的な必然性を持つと判定できるなら、結果が既知の既定値クラスタと偶然一致していてもそれだけを理由に差し戻さない。既定値クラスタとの一致を単独の理由に『ありきたりだからFAIL』と判定することは、この統べる規則違反であり禁止する。『題材に根ざす』は、確立されたデザインパターン（例: SaaSの定番UI構成のような、ユーザーに受け入れられている表現）の援用をその選択がこの題材にとって適切な語彙である限り積極的に許容しつつ、特定の実在デザインを丸ごと模倣し選択の出どころを他者の作品に置くことだけを退ける（模倣は題材から再導出されていないため題材に根ざしていない）。ここがFAILなら見た目をどれだけ磨いても無駄なので即差し戻す。<br>- ②レイアウト層（レンズ: サーフェス別の情報設計／感性工学・人間工学）＝サーフェス別の情報設計が目的に噛み合っているか（SaaS=要約→明細・状態の形符号化、LP=ヒーローの訴求とCV導線、コーポレート=IA・信頼設計の情報粒度・固有名詞/資格の細部精度）を、視覚的階層のGestalt原則・視線の走査パターン・操作対象の到達しやすさ等、感性工学・人間工学に基づく理論的根拠で裏付けて判定する（『噛み合ってそう』という主観評価のままにしない）。<br>- ③デザイン層（レンズ: 視覚クラフト／CSS技術品質／信頼設計の細部精度）＝クラフトと実装が商用の仕上げに達しているか。全レンズが統合見解でPASSして初めて『商用レベル到達（Yes）』と判定する。fix後は必ずそのゲートのレンズ群から再度並列・敵対検証をやり直し、『直したはず』を生成者の自己申告のまま確定にしない。視覚クラフト＝はみ出し・見切れ・余白の欠落や衝突（overflow、要素の重なり、paddingゼロで文字が枠に接触、marginの相殺で密着しすぎ/離れすぎ）といった視覚的に目立つ物理的な崩れを最初に確認する。次いでSVGの歪み（preserveAspectRatio異方性・真円が卵形になる等）、コントラスト・フォーカス可視・状態の三重符号化などa11y下限、lang/full-doc等の文書構造。CSS技術品質＝セレクタ詳細度の衝突（.sectionのような種類セレクタと.ctaのような要素セレクタがpadding/marginを打ち消し合っていないか）、レスポンシブは複数ビューポート（狭幅・中間幅・広幅）で実際に崩れを確認する（静的コード読解だけで済ませない）、保守性（命名一貫性・重複ルール・デッドCSS・!important濫用）。信頼設計の細部精度＝固有名詞・資格表記・登録番号等の細部精度、写真依存プレースホルダーの全箇所一貫性、実在の法人・個人への信頼を毀損する誤植を独立して読み返す（コーポレート/信頼設計中心のモックに限らず、常設レンズとして毎回検証に含める。該当しない題材では単に指摘が出ないだけ）。検証・修正はその適用文脈にのみ有効で、構造的に類似する他のインスタンスや別の適用文脈へは自動的に伝播しない。局所的な修正の直後に安心して終えず、同型の箇所を必ず横断走査する: 共通コンテナクラス（.wrap等）と組み合わせる全要素をgrepで洗い出し、同じ要素にpaddingを重複定義していないか（詳細度や定義順で共通クラスの横方向paddingを丸ごと上書きしていないか）をメディアクエリ内の再定義も含めて機械的に確認する。同様に、複数箇所に同じ構造で描画されるSVG図（ノードと矢印等の描画順）や、複数箇所で再利用される色トークン（用途ごとに閾値が異なるコントラスト等）についても、1箇所の修正・検証で終えず全使用箇所をgrepし直す。モバイルナビは既定でハンバーガー＋ドロワー等の発見可能な標準パターンを使い、横スクロール行のような独自パターンは理由を言い切れる場合のみ採用する。</p>
+<h3>Step 9: 関係者から返ってきたコメントを反映する</h3>
+<p>受け取ったコメントの要点を整理し、Design.mdへの差分として反映する。必要ならモックを生成し直す。生成し直すときは識別子を変えない——同じものの新しい版であることが識別子で伝わるため。コメントをどうやって集めるかはこのSkillの責務ではなく、受け取った内容だけを入力として扱う。</p>
+<h3>Step 10: 完成を確認する</h3>
+<p>試作②確定・DESIGN.md確定・UIモック生成のどれも単独では「完成」ではない。ユーザー自身に完成を申告させない——最後のUIモック確認（step-8を通過した時点）が済んだら、AIの側から選択式ツールで「これで完成としますか」を明示的に確認し、その回答をもって初めて完成とする。承認されたら、生成した成果物の一覧を種別・識別子・題名・ファイルパスの表で示して終える。「まだ直したい」が選ばれた場合は該当ステップへ戻る。</p>
+<hr>
+<h2>出力形式</h2>
+<p>生成したファイルを「種別／識別子／題名／ファイルパス」の表で一度だけ提示する。Design.md確定時は変更されたトークンと本文セクションの要約を報告する。</p>
+<hr>
+<h2>ガードレール</h2>
+<p>- 動作要件: python3がインストール済みであること（同梱書体をHTMLへ埋め込むembed_fonts.pyが使う）。DESIGN.mdの検証とスペックシート生成にはNode.jsと、package.jsonのあるディレクトリでの npm install が必要。それ以外の追加バイナリ・外部サービスには依存しない<br>- Design.mdの実体フォーマットはgoogle-labs-code/design.md仕様に従い、独自フォーマットを発明しない<br>- 生成する自己完結HTMLは、それ自身が何であるかを名乗る自己記述メタデータをheadに持つ（識別子と種別は必須、題名・要約・分類の目印は任意）。識別子は生成物が置かれる場所に依存させず、同じものを作り直すときは変えない。形の詳細は実行手順の「UIパターンHTMLを生成する」を参照<br>- 生成物にコメント欄を内蔵しない。レビューの手段は生成物の外側が用意するため、内蔵すると同じものが二重に現れる<br>- 生成物は外部ホストを指す参照（script・img・stylesheet）を1つも持たない。書体・アイコン・図版はすべてファイルの中へ埋め込み、単体で開ける状態にする<br>- 実行時に他のSkillを呼び出さない。knowledgeはこのSkill内のreferencesで自己完結させる<br>- 特定企業サイトのデザイントークン抽出・同梱・名指し参照をしない<br>- 外部URL（Figma・実アプリ画面）の取り込み機能は提供しない<br>- トークン値（色・タイポグラフィ等）は言葉だけで確定せず、必ず試作artifactの視覚確認を経て確定する<br>- 意思決定を要する成果物を、最後まで生のartifactのまま提示して終えない——単体で開ける自己完結HTMLのファイルとして出力し、関係者へ見せられる状態にする。Step5の試作artifactはDesign.md確定前の小さな確認用途（配色スウォッチ等）に限定する<br>- Design.md確定・試作生成・パターン生成の前に、references/knowledge/frontend-design-principles.md の概念層（題材に根ざす／ありきたりを避ける／主役を立てる／理由を言い切る／効かせどころを絞る／下限を守る／トークンを先に固定する／作り込みを一貫させる）に照らす。特に『理由を言い切る』＝「なぜこれがありきたり（同種の題材なら誰でも出る型どおりの姿）でないか」を自分の言葉で言えることを確認する。○×チェックリストの照合にしない（毎回題材ごとに答えが変わる生成的な問いとして回す）。アクセシビリティ等の下限が通っていることを、ありきたりでない証拠の代わりにしない。<br>- 商用級モックの入力コントラクト（value-prop＝自己完結を保つ）: 書体（assets/fonts＋embed_fonts.py）・統一SVGアイコン（references/icons/ui-icons.md）・生成SVG/CSSクラフト（チャート/パターン/データビズ）はスキル内蔵で埋める。実写・ロゴ・プロダクト画面などの画像は顧客提供とし、外部画像生成には依存しない。SaaSサーフェスは絵より部品（アイコン/チャート/表/状態）が主なので内蔵アセットで商用に届きやすい。LP/コーポレートはブランド画像の提供が前提。emojiをアイコン代わりにしない<br>- 【自然言語の写像ゲート】ユーザー発話をDesign.md確定・トークン決定に反映する前に、発話のどの部分がどこへ送られるかを言葉で言い切ってから展開する。具体的な写像先（8語の概念層・SKILL.md自身のStep2〜4・既存knowledge）とゲートの詳細は実行手順のStep1「発話を特徴量カテゴリへ写像する」を参照。確定したトークン・構成要素には由来を一言添える点は変わらない。<br>- design-shareが生成した成果物（DESIGN.md・パターンHTML）は、その内容が何について語っているか（design-share自身か、design-shareを使う側のプロジェクトの何かか）に関わらず、常に design-share自身の管理下（<code>.design-share/&lt;プロジェクト名&gt;/</code> 配下、DESIGN.mdと生成HTMLを同居させる）に置く。design-shareが自ら利用側のプロジェクト構造（docs/等）を推測して配置先を決めることはしない——それを行うとdesign-shareが個々のプロジェクト構造に依存する密結合なツールになる。成果物を最終的にどこへ配置するか（例: docs/等の公開場所へ移す）は、design-shareの範囲外の作業として人間が個別に判断・実行する。<br>- 【DESIGN.mdとUIモックの確定は非対称】DESIGN.mdは1プロジェクトにつき確定済みは常に1つまでで、新しく確定したものが以前の確定に取って代わる。UIモックの採用は取って代わらない——同じプロジェクト内で複数のUIモックが同時に採用されていてよい（別々の枠——ヒーロー・料金セクション等——を担当する複数モックが並存しうるため）。ただし採用の事実はDESIGN.mdと成果物フォルダに記述として残すだけとし、状態として管理する仕組みを持たない（このSkillの役割は作ることであり、成果物の状態を台帳として抱えることではない）。<br>- 【ローカルフォルダ構成】プロジェクトフォルダ（<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="design-share自身の運用では`.claude/skills/design-share/.design-share/&lt;プロジェクト名&gt;/`" data-w="自分の置き場所を、動かす道具の都合込みで書いていた。『このSkillのディレクトリ配下』と言えば、どこに置かれても同じ意味になる">このSkill自身を試すときはこのSkillのディレクトリ配下</mark>の<code>.design-share/&lt;プロジェクト名&gt;/</code>、通常の顧客プロジェクトではそのリポジトリのルート）の直下に、成果物としてDESIGN.md・mocks/（生成したUIモックHTML一式）を置く（コミット対象）。<code>.design-share/</code>配下にpreview/（スペックシートの確認用。ブラウザで直接開ける）・backups/（確定時の.bak退避）を置く（.gitignore対象、いつでも再生成できる使い捨てファイルのため）。<br>- 【チャットテクニックに依存しない対話設計】会話に乗せてよいのは創造的判断（目的・対象ユーザー、方向性の選択、試作を見た感覚的フィードバック、DESIGN.mdの内容判断、完成の可否）だけであり、運用上の判断（表示名・プロジェクトキーの命名、生成物の識別子・種別の決定、ファイルの置き場所）はAIが既定値・自動生成で吸収し、ユーザーに質問しない。選択肢が有限な創造的判断（方向性の選択・試作への良い/直したい・実行可否・完成確認）は、自由記述で聞かず、実行環境が提供する選択式ツール（Claude CodeのAskUserQuestion等）があれば積極的に使う——ユーザーが文章で上手く言語化できなくても、クリック1つで前進できるようにする。自由記述が必要なのは、選択肢に閉じ込められない内容（目的の説明、直したい箇所の具体的な指摘等）に限る。「これで完成か」は最後のUIモック確認が済んだ時点でAIの側から選択式ツールで確認する一点に統一し、ユーザーからの完成申告を前提にしない。<br>- 【UIモック生成後は必ず敵対的測定にかける】自己批評だけで完成としない。生成→敵対的測定（コンセプト・レイアウト・デザインの3ゲート、各ゲート内は並列サブエージェントで敵対的に検証）→修正→学びの還元、という具体的な手順は実行手順の「生成したモックを敵対的に測定する」を参照。</p>
+<hr>
+<h2>参照</h2>
+<p>- <code>scripts/render_spec_sheet.mjs</code>: DESIGN.mdを@google/design.mdの公式lintパイプラインで解析し、解決済みトークンからスペックシートHTMLを機械生成する（手動転記をしない）。事前に package.json のあるディレクトリで npm install が必要<br>- <code>scripts/embed_fonts.py</code>: 生成HTMLの@font-faceの『FONT:&lt;name&gt;』マーカーを、同梱woff2のbase64 data URIへ置換し自己完結HTMLにする（ランタイム依存はpython3のみ）<br>- <code>package.json</code>: ビルド時ツール依存（@google/design.md）。生成物自体は外部依存ゼロを維持したまま、DESIGN.mdの検証・変換にのみ使う<br>- <code>references/templates/template-design-spec-body.html</code>: DESIGN.mdを視覚スペックシート（スウォッチ・タイプスケール・状態チップ全種・部品の実物・Do/Don&#x27;t）としてレンダリングする本体断片<br>- <code>references/icons/ui-icons.md</code>: 商用UI向けの統一インラインSVGアイコン集（24px/stroke/round・絵文字を使わない）。ブランドロゴはnavアイコンと別形にする<br>- <code>assets/fonts/</code>: 自己完結アセット層の同梱書体（Lato OFL 3ウェイト＋DejaVu Mono、Latin subset woff2＋ライセンス）。商用の見た目を外部依存ゼロで出すための書体。README.md参照。日本語・ブランド書体は顧客提供<br>- <code>references/knowledge/frontend-design-principles.md</code>: 試作artifact・UIパターン生成時の判断基準（hero＝主張、タイポグラフィが個性を運ぶ、大胆さの一点集中等）<br>- <code>references/knowledge/design-md-conventions.md</code>: Design.mdの仕様（YAMLトークン＋固定順セクション）と、試作往復・スナップショット運用の規約<br>- <code>references/knowledge/design-system-tokens.md</code>: デザイントークンの設計原則（既存knowledgeの再利用）<br>- <code>references/knowledge/visual-hierarchy-and-restraint.md</code>: 視覚的階層と抑制の原則（既存knowledgeの再利用）<br>- <code>references/knowledge/ui-copywriting.md</code>: UIコピーの原則（既存knowledgeの再利用）<br>- <code>references/knowledge/accessibility-baseline.md</code>: アクセシビリティの最低基準（既存knowledgeの再利用）<br>- <code>references/knowledge/nl-feature-routing.md</code>: 自然言語(ユーザー発話)をGarrettの5平面（Strategy/Scope/Structure/Skeleton/Surface）へ写像する変換層。8語自体は語彙(受け皿)であって変換ロジックではないため、この変換層が写像を担う。Strategyは8語の適用範囲拡張、Scope/Structure/SkeletonはSKILL.md自身のStep2〜4、Surfaceは8語へ、という送り先の対応を定義する</p></div></section>
+</div>
+<script>
+(function(){
+  var MARKCSS = document.getElementById("markcss").textContent;
+
+  /* 印を1つ、押せるようにする。iframe の中でも Shadow の中でも同じ手が効く */
+  function wire(root, doc){
+    root.querySelectorAll("mark.chg[data-w]").forEach(function(m){
+      var p = doc.createElement("div");
+      p.className = "pop"; p.hidden = true;
+      var b1 = doc.createElement("b"); b1.textContent = "変更前";
+      var pre = doc.createElement("pre"); pre.textContent = m.dataset.b;
+      var b2 = doc.createElement("b"); b2.textContent = "なぜ";
+      var w = doc.createElement("div"); w.textContent = m.dataset.w;
+      p.appendChild(b1); p.appendChild(pre); p.appendChild(b2); p.appendChild(w);
+      var host = m.closest("td") || m.closest("li") || m.parentNode;
+      if (host.nextSibling) host.parentNode.insertBefore(p, host.nextSibling);
+      else host.parentNode.appendChild(p);
+      function tg(){
+        var opening = p.hidden;
+        p.hidden = !opening;
+        m.setAttribute("aria-expanded", opening ? "true" : "false");
+        resizeAll();
+      }
+      m.addEventListener("click", tg);
+      m.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tg(); }
+      });
+    });
+  }
+
+  var frames = [];
+  function resizeAll(){
+    frames.forEach(function(f){
+      try {
+        var d = f.contentDocument;
+        if (d && d.body) f.style.height = (d.documentElement.scrollHeight + 8) + "px";
+      } catch(e){}
+    });
+  }
+
+  /* HTML の面を立てる。iframe が空のままなら Shadow DOM へ落とす */
+  document.querySelectorAll(".pane.html").forEach(function(pane){
+    var tpl = pane.querySelector("template");
+    var src = tpl.innerHTML;
+    var fr = document.createElement("iframe");
+    fr.setAttribute("title", pane.dataset.tab || "");
+    fr.srcdoc = '<!doctype html><meta charset="utf-8">'
+              + '<style>' + MARKCSS + '</style>' + src;
+    pane.appendChild(fr);
+    frames.push(fr);
+    var done = false;
+    fr.addEventListener("load", function(){
+      var d = fr.contentDocument;
+      if (!d || !d.body || !d.body.firstChild) return;
+      done = true;
+      wire(d, d);
+      resizeAll();
+      /* 中の高さは、字が載ってから決まる。変わるたびに測り直す */
+      if (window.ResizeObserver) {
+        new ResizeObserver(resizeAll).observe(d.documentElement);
+      }
+      /* 中のタブを押しても測り直す。中の作りに依らず効く */
+      d.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+      [80, 300, 900].forEach(function(t){ setTimeout(resizeAll, t); });
+      pane.querySelector(".how").textContent = "iframe で置いた";
+    });
+    setTimeout(function(){
+      if (done) return;
+      /* 載ったのに load を取り逃していないかを、もう一度見る */
+      try {
+        var d2 = fr.contentDocument;
+        if (d2 && d2.body && d2.body.firstChild) {
+          done = true; wire(d2, d2); resizeAll();
+          if (window.ResizeObserver) new ResizeObserver(resizeAll).observe(d2.documentElement);
+          d2.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+          pane.querySelector(".how").textContent = "iframe で置いた";
+          return;
+        }
+      } catch(e){}
+      /* 届かなかった。Shadow DOM へ落とす */
+      fr.remove();
+      frames = frames.filter(function(x){ return x !== fr; });
+      var holder = document.createElement("div");
+      pane.appendChild(holder);
+      var sh = holder.attachShadow({mode:"open"});
+      var st = document.createElement("style");
+      st.textContent = MARKCSS + "\n" + (tpl.dataset.shadowcss || "");
+      sh.appendChild(st);
+      var box = document.createElement("div");
+      box.innerHTML = src;
+      sh.appendChild(box);
+      wire(sh, document);
+      pane.querySelector(".how").textContent = "Shadow DOM で置いた";
+    }, 2500);
+  });
+
+  /* 印を、見える状態にする。
+
+     **内側のタブの作り方を、こちらは知らない。**
+     設計ノートは <input type="radio"> と :checked ~ #panel で切り替えていた。
+     JS で切り替える作りもある。**どちらでも効くように、
+     切り替えを1つずつ当てて、印が出たところで止める。** */
+  function reveal(m){
+    if (m.offsetParent) return true;
+    var n = m;
+    while (n && n.nodeType === 1) { if (n.hidden) n.hidden = false; n = n.parentNode; }
+    /* **印が住んでいる根から探す。**
+       Shadow の中の印に対して document を探すと、切り替えが1つも見つからない */
+    var scope = m.getRootNode ? m.getRootNode() : m.ownerDocument;
+    for (var e = m.parentNode; e && e.nodeType === 1; e = e.parentNode) {
+      if (e.tagName === "DETAILS") e.open = true;
+    }
+    if (m.offsetParent) return true;
+    var ins = scope.querySelectorAll('input[type="radio"],input[type="checkbox"]');
+    for (var i = 0; i < ins.length; i++) {
+      var was = ins[i].checked;
+      ins[i].checked = true;
+      if (m.offsetParent) return true;
+      ins[i].checked = was;
+    }
+    return !!m.offsetParent;
+  }
+
+  /* 一覧の「その場所へ」。印を開いて、そこまで運ぶ */
+  document.querySelectorAll(".idx button.go").forEach(function(b){
+    b.onclick = function(){
+      var pane = b.closest(".pane");
+      var i = +b.dataset.i;
+      var fr = pane.querySelector("iframe");
+      var root = fr ? fr.contentDocument : null;
+      if (!root) {
+        var h = Array.prototype.find.call(pane.querySelectorAll("div"),
+          function(x){ return x.shadowRoot; });
+        root = h ? h.shadowRoot : pane;
+      }
+      var m = root.querySelectorAll("mark.chg")[i];
+      if (!m) return;
+      var shown = reveal(m);
+      if (m.getAttribute("aria-expanded") !== "true") m.click();
+      b.textContent = shown ? "その場所へ" : "隠れたまま";
+      setTimeout(function(){
+        var y = 0, e = m;
+        while (e && e.offsetParent) { y += e.offsetTop; e = e.offsetParent; }
+        if (fr) window.scrollTo({top: fr.getBoundingClientRect().top + window.scrollY + y - 60,
+                                 behavior: "smooth"});
+        else m.scrollIntoView({block: "center", behavior: "smooth"});
+      }, 60);
+    };
+  });
+
+  /* マークダウンの面 */
+  document.querySelectorAll(".pane.md").forEach(function(p){ wire(p, document); });
+
+  function allPops(){
+    var out = Array.prototype.slice.call(document.querySelectorAll(".pop"));
+    frames.forEach(function(f){
+      try { out = out.concat(Array.prototype.slice.call(f.contentDocument.querySelectorAll(".pop"))); }
+      catch(e){}
+    });
+    document.querySelectorAll(".pane.html div").forEach(function(h){
+      if (h.shadowRoot) out = out.concat(Array.prototype.slice.call(h.shadowRoot.querySelectorAll(".pop")));
+    });
+    return out;
+  }
+  document.getElementById("oa").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = false; }); resizeAll(); };
+  document.getElementById("ca").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = true; }); resizeAll(); };
+
+  var tabs = document.querySelectorAll(".tab");
+  function sel(k){
+    tabs.forEach(function(t){ t.setAttribute("aria-selected", t.dataset.t === k ? "true" : "false"); });
+    document.querySelectorAll(".pane").forEach(function(p){ p.hidden = (p.dataset.k !== k); });
+    resizeAll();
+  }
+  tabs.forEach(function(t){ t.onclick = function(){ sel(t.dataset.t); }; });
+  if (tabs.length) sel(tabs[0].dataset.t);
+  window.addEventListener("resize", resizeAll);
+})();
+</script>

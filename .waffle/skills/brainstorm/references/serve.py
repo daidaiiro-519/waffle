@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """承認の画面を配り、押された回答を1件ずつファイルに落とす小さなサーバー。
 
-    python3 serve.py <配るディレクトリ> [--port 8731] [--answers .waffle/answers]
+    python3 serve.py <配るディレクトリ> [--port 8731] [--answers <積む先>]
 
 画面からの POST /answer を受け、本文（JSON）を `<answers>/<日時>.json` に書く。
 回答は消さない ── 何を差し戻したかが、あとから順に読めるようにするためである。
@@ -53,7 +53,7 @@ def _fault(body: dict) -> list[str]:
 
 
 class Handler(SimpleHTTPRequestHandler):
-    answers_dir: Path = Path(".waffle/answers")
+    answers_dir: Path = Path("answers")
 
     def end_headers(self) -> None:  # 文字コードを言わないと、日本語が化ける
         if self.path.endswith(".html") or self.path.endswith("/"):
@@ -108,7 +108,7 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("root", nargs="?", default=".", help="画面を置いてあるディレクトリ")
     p.add_argument("--port", type=int, default=8731)
-    p.add_argument("--answers", default=".waffle/answers", help="回答を積む先")
+    p.add_argument("--answers", default="answers", help="回答を積む先。置き場所は呼び出し側が決める")
     a = p.parse_args()
 
     Handler.answers_dir = Path(a.answers).resolve()

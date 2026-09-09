@@ -59,21 +59,21 @@ advisor名・専門領域・判断基準となる確立された理論や原則�
 
 ### Step 3: SKILL.mdを生成する
 
-references/skill-template-advisor.mdを読み込み、role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrailsの各ブロックをヒアリング内容で埋め、Writeツールで.claude/skills/{advisor名}/SKILL.mdとして保存する。
+references/skill-template-advisor.mdを読み込み、role/inputExpectation/responseTypes/knowledgeRefs/steps/guardrailsの各ブロックをヒアリング内容で埋め、Writeツールで、**呼び出し側が示すSkillの置き場所**の {advisor名}/SKILL.md として保存する。
 
 - 役割（role）は「{専門家役割}として、確立された{原則名}に基づいて回答する」から始め、「アンチパターンを見つけたときはリスクと代替案をセットで提示する」等で締める
 - 他advisor Skillの名前を本文に直接書かない
 
 ### Step 4: backbone knowledge文書を作成する
 
-references/knowledge-template.mdを読み込み、専門領域ごとの概念（principles/classifications/decisionCriteria/examples/antiPatterns）を.claude/skills/{advisor名}/references/knowledge/配下へ作成する。
+references/knowledge-template.mdを読み込み、専門領域ごとの概念（principles/classifications/decisionCriteria/examples/antiPatterns）を同じ置き場所の {advisor名}/references/knowledge/ 配下へ作成する。
 
 - 分類・判断基準・アンチパターンが無い概念は、一覧を空にしその理由（emptyReason）を明示する
 - 1概念1ファイルを基本とする
 
 ### Step 5: responseTypesごとの判断テンプレートを作成する（該当する場合のみ）
 
-相談種別ごとに回答形式を揃えたい場合、references/template-{種別}.mdをSKILL.mdと同じ.claude/skills/{advisor名}/references/配下に作成する。
+相談種別ごとに回答形式を揃えたい場合、references/template-{種別}.mdをSKILL.mdと同じ {advisor名}/references/ 配下に作成する。
 
 - knowledgeファイルの決定木だけで十分な場合はこのStepを省略してよい
 

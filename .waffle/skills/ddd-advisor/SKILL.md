@@ -117,8 +117,6 @@ DDD(ドメイン駆動設計)についての概念質問(「〜とは」)・設�
 - `references/template-concept.md`: 概念質問への回答テンプレート
 - `references/template-judgment.md`: 判断相談への回答テンプレート
 - `references/template-implementation.md`: 実装相談への回答テンプレート
-- `.claude/skills/mermaid-guide/references/syntax-overview.md`: Mermaid構文選定ガイド
-- `.claude/skills/mermaid-guide/references/pattern-{構文名}.md`: 各Mermaid構文のテンプレート
 - `references/knowledge/architecture-evidence-based-scope.md`: 採用済みの knowledge 候補
 - `references/knowledge/knowledge-cand-aggregate-declaration-is-not-class-existence.md`: 採用済みの knowledge 候補
 - `references/knowledge/knowledge-cand-declaration-text-arbitrates-violation-claims.md`: 採用済みの knowledge 候補
