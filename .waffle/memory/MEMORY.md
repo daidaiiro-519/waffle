@@ -52,6 +52,16 @@
   **関係は1件ずつ文書になり、地図は保存せず描く**（頂点＝文脈、線は文書どうしの参照から導き、
   ラベルは関係の宣言から取る）。宣言と参照が別入力なので、両者のずれが違反として出る。
 
+- **進め方を「承認だけで進む」形へ変える（合意前）** ──
+  案を並べて選ばせるのをやめ、答えを1つ出して諾否を問う形にする。
+  経緯と適用の仕方は [feedback-approval-not-selection.md](feedback-approval-not-selection.md)。
+  体験用の画面 `docs/adr/approval-only-simulator.html`
+  （`https://claude.ai/code/artifact/d304e1c8-be09-4926-95ab-c1a37e7da06e`）と、
+  回答の受け渡しの構成 `docs/adr/answer-pipeline.html`
+  （`https://claude.ai/code/artifact/8d9e2335-5898-4aeb-a6b1-121dbb49ab48`）まで提示済み。
+  **作ってよいかの承認は、まだもらっていない**（増える物は serve.py ・ フック1本 ・ JSON Schema 1本）。
+  未決5論点は、合意が取れ次第この形で出し直す。
+
 - **CodingSkills の軸の記述を直す（未着手）** ── `.waffle/skills/coding-skills/`。
   SKILL.md と glossary.md が**軸を4つ（言語・アーキ・用途・実行環境）**と書いているが、
   **実行環境だけを条件にした層は0本**で、`runtime` は用途が決めている（backend-api→resident、

@@ -1,0 +1,534 @@
+<meta charset="utf-8">
+<title>承認だけで進む</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#eef1ef; --card:#f8faf9; --ink:#111d1a; --muted:#5b6b66;
+  --rule:#ccd8d4; --rule-soft:#dfe7e4; --sunk:#e7ecea;
+  --key:#0d5c55; --key-soft:#d5e6e3;
+  --warn:#8f5410; --warn-soft:#f0e2cd;
+  --dim:#7d8a86;
+  --src-o:#7a3b6d; --src-k:#0d5c55; --src-j:#8f5410; --src-z:#5b6b66;
+  --shadow:0 1px 0 rgba(17,29,26,.06), 0 8px 22px -18px rgba(17,29,26,.5);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0e1614; --card:#16211e; --ink:#e6eeeb; --muted:#93a29d;
+  --rule:#2a3936; --rule-soft:#22302d; --sunk:#111a18;
+  --key:#6cc9b8; --key-soft:#173330;
+  --warn:#d9a35f; --warn-soft:#33281a;
+  --dim:#7b8985;
+  --src-o:#d094c2; --src-k:#6cc9b8; --src-j:#d9a35f; --src-z:#93a29d;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 26px -18px #000;
+}}
+:root[data-theme="dark"]{
+  --paper:#0e1614; --card:#16211e; --ink:#e6eeeb; --muted:#93a29d;
+  --rule:#2a3936; --rule-soft:#22302d; --sunk:#111a18;
+  --key:#6cc9b8; --key-soft:#173330;
+  --warn:#d9a35f; --warn-soft:#33281a;
+  --dim:#7b8985;
+  --src-o:#d094c2; --src-k:#6cc9b8; --src-j:#d9a35f; --src-z:#93a29d;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 26px -18px #000;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:62rem;margin:0 auto;padding:2.4rem 1.15rem 6rem;display:flex;flex-direction:column;gap:2.6rem}
+h1,h2,h3{font-family:"Shippori Mincho","Yu Mincho",serif;font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:2rem;letter-spacing:.02em;line-height:1.4}
+h2{font-size:1.22rem}
+h3{font-size:1rem}
+h4{margin:0;font-size:.78rem;font-weight:700;color:var(--ink);letter-spacing:.04em}
+p{margin:0}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted)}
+.thesis{font-size:1.05rem;max-width:42rem;color:var(--muted)}
+.thesis b{color:var(--ink);font-weight:700}
+.src{font-size:.76rem;color:var(--muted)}
+header{display:flex;flex-direction:column;gap:.75rem;border-bottom:1px solid var(--rule);padding-bottom:1.6rem}
+
+/* ── 比較 ── */
+.compare{display:flex;flex-direction:column;gap:1rem}
+.panes{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:58rem){.panes{grid-template-columns:1fr 1fr}}
+.pane{background:var(--card);border:1px solid var(--rule-soft);border-radius:.5rem;padding:1.15rem 1.25rem;
+  display:flex;flex-direction:column;gap:.7rem;min-width:0}
+.pane.now{border-color:var(--rule)}
+.pane.next{border-color:var(--key);box-shadow:var(--shadow)}
+.pane-hd{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;
+  border-bottom:1px solid var(--rule-soft);padding-bottom:.5rem}
+.pane-hd .t{font-weight:700;font-size:.95rem}
+.pane.now .pane-hd .t{color:var(--dim)}
+.pane.next .pane-hd .t{color:var(--key)}
+.pane .body{font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:.55rem}
+.pane.now .body{color:var(--dim)}
+.opt{border-left:2px solid var(--rule);padding-left:.7rem}
+.opt b{color:var(--ink);font-weight:700}
+.pane.now .opt b{color:var(--dim)}
+.reco{background:var(--key-soft);border-left:3px solid var(--key);padding:.6rem .8rem;border-radius:0 .3rem .3rem 0;
+  color:var(--ink);font-size:.95rem}
+.reco .lbl{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.14em;color:var(--key);
+  display:block;margin-bottom:.15rem}
+.ask{font-weight:700;color:var(--ink)}
+.pane.now .ask{color:var(--dim)}
+.meters{display:grid;gap:.55rem;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
+.meter{border-top:2px solid var(--rule);padding-top:.5rem;display:flex;flex-direction:column;gap:.05rem}
+.meter .k{font-size:.74rem;color:var(--muted)}
+.meter .v{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;font-size:1.05rem;font-weight:700}
+.meter .v small{font-size:.72rem;font-weight:400;color:var(--muted);margin-left:.15rem}
+.meter.a{border-top-color:var(--dim)} .meter.a .v{color:var(--dim)}
+.meter.b{border-top-color:var(--key)} .meter.b .v{color:var(--key)}
+
+/* ── ラウンド ── */
+.round{display:flex;flex-direction:column;gap:1rem}
+.round-hd{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.round-hd .n{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.14em;color:var(--key);
+  border:1px solid var(--key);border-radius:2rem;padding:.05rem .6rem}
+.round-hd .why{font-size:.8rem;color:var(--muted)}
+.q{background:var(--card);border:1px solid var(--rule-soft);border-radius:.5rem;padding:1.1rem 1.25rem;
+  display:flex;flex-direction:column;gap:.75rem;box-shadow:var(--shadow);transition:border-color .2s}
+.q.done{border-color:var(--key)}
+.q.sent{border-color:var(--warn)}
+.q-hd{display:flex;gap:.6rem;align-items:baseline}
+.q-hd .id{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--key);flex:none}
+.q-hd h3{flex:1}
+.q-hd .tag{font-family:"JetBrains Mono",monospace;font-size:.66rem;color:var(--muted);flex:none}
+.q .ask{font-size:.93rem;font-weight:400;color:var(--muted)}
+
+/* ── 折りたたみの中 ── */
+details{border-top:1px solid var(--rule-soft);padding-top:.55rem}
+summary{cursor:pointer;font-size:.82rem;color:var(--muted);list-style:none;display:flex;gap:.4rem;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"＋";font-family:"JetBrains Mono",monospace;color:var(--key);font-weight:700}
+details[open] summary::before{content:"−"}
+summary:focus-visible{outline:2px solid var(--key);outline-offset:3px}
+.inside{display:flex;flex-direction:column;gap:1.15rem;margin-top:.85rem;padding-left:.9rem;
+  border-left:2px solid var(--rule-soft)}
+.block{display:flex;flex-direction:column;gap:.4rem}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.83rem;min-width:30rem}
+th,td{text-align:left;vertical-align:top;padding:.35rem .55rem;border-bottom:1px solid var(--rule-soft)}
+th{font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.05em;border-bottom-color:var(--rule);
+  white-space:nowrap}
+td.what{color:var(--ink);font-weight:700;width:26%}
+td.src-cell{width:26%;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+.tag-src{font-family:"JetBrains Mono",monospace;font-size:.64rem;font-weight:700;letter-spacing:.08em;
+  border:1px solid currentColor;border-radius:.2rem;padding:0 .3rem;margin-right:.35rem;white-space:nowrap;
+  display:inline-block;vertical-align:.08em}
+.o{color:var(--src-o)} .k{color:var(--src-k)} .j{color:var(--src-j)} .z{color:var(--src-z)}
+ol.chain{margin:0;padding:0;list-style:none;counter-reset:c;display:flex;flex-direction:column;gap:.3rem}
+ol.chain li{counter-increment:c;font-size:.85rem;color:var(--muted);display:flex;gap:.5rem}
+ol.chain li::before{content:counter(c);font-family:"JetBrains Mono",monospace;font-size:.7rem;font-weight:700;
+  color:var(--key);border:1px solid var(--rule);border-radius:50%;width:1.35rem;height:1.35rem;flex:none;
+  display:grid;place-items:center;margin-top:.35rem}
+ol.chain b{color:var(--ink)}
+td.kill{color:var(--muted)}
+td.kill b{color:var(--ink)}
+
+
+/* ── 完成イメージ ── */
+.fig{display:flex;flex-direction:column;gap:.5rem;background:var(--sunk);border:1px solid var(--rule-soft);
+  border-radius:.4rem;padding:.85rem .95rem}
+.fig svg{width:100%;height:auto;display:block;color:var(--ink);overflow:visible}
+.diff{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.76rem;line-height:1.65;
+  display:flex;flex-direction:column;gap:.02rem;overflow-x:auto}
+.diff .dh{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--muted);margin-bottom:.3rem}
+.diff .dn{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.76rem;color:var(--muted);margin-top:.5rem;
+  border-top:1px solid var(--rule-soft);padding-top:.45rem;line-height:1.75}
+.dl{display:flex;gap:.8rem;padding:.06rem .4rem;border-left:2px solid transparent;white-space:nowrap}
+.dl .c{flex:none;min-width:14rem}
+.dl .d{color:var(--muted);white-space:normal;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.78rem}
+.dl.add{border-left-color:var(--key);background:var(--key-soft);color:var(--ink)}
+.dl.add .c::before{content:"+ ";color:var(--key);font-weight:700}
+.dl.del{border-left-color:var(--dim);color:var(--dim)}
+.dl.del .c{text-decoration:line-through;text-decoration-color:var(--dim)}
+.dl.del .c::before{content:"− ";text-decoration:none;display:inline-block}
+.dl.del .d{color:var(--dim)}
+.dl.same .c::before{content:"= ";color:var(--muted)}
+.dl.sub{color:var(--muted)}
+.dl.sub .c{padding-left:.2rem}
+.dl.tmp{color:var(--warn)}
+.dl.tmp .c::before{content:"? ";font-weight:700}
+.dl.grp{margin-top:.4rem;font-family:"Zen Kaku Gothic New",sans-serif;font-weight:700;color:var(--ink);
+  font-size:.78rem;border-bottom:1px solid var(--rule-soft)}
+
+/* ── 操作 ── */
+.acts{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+button.act{font:inherit;font-size:.87rem;cursor:pointer;border-radius:.35rem;padding:.4rem 1.1rem;
+  border:1px solid var(--rule);background:var(--card);color:var(--muted);transition:.15s}
+button.act:hover{border-color:var(--muted)}
+button.act.yes{background:var(--key);border-color:var(--key);color:var(--paper);font-weight:700}
+button.act.yes:hover{filter:brightness(1.08)}
+button.act:focus-visible{outline:2px solid var(--key);outline-offset:2px}
+.verdict{font-size:.87rem;color:var(--muted)}
+.verdict .ok{color:var(--key);font-weight:700}
+.verdict .back{color:var(--warn);font-weight:700}
+.backs{display:flex;gap:.4rem;flex-wrap:wrap;padding:.55rem .7rem;background:var(--warn-soft);border-radius:.35rem}
+.backs span{font-size:.8rem;color:var(--warn);align-self:center;margin-right:.2rem}
+.backs[hidden]{display:none}
+.note{display:flex;flex-direction:column;gap:.3rem;border-top:1px solid var(--rule-soft);padding-top:.6rem}
+label{font-size:.78rem;color:var(--muted)}
+textarea{font:inherit;font-size:.87rem;background:var(--sunk);color:var(--ink);border:1px solid var(--rule);
+  border-radius:.35rem;padding:.55rem .7rem;resize:vertical;min-height:3.2rem;width:100%}
+textarea:focus-visible{outline:2px solid var(--key);outline-offset:1px;border-color:var(--key)}
+
+/* ── 締め ── */
+.done-card{background:var(--card);border:1px solid var(--key);border-radius:.5rem;padding:1.3rem 1.4rem;
+  display:flex;flex-direction:column;gap:1rem;box-shadow:var(--shadow)}
+.done-card[hidden]{display:none}
+.cols{display:grid;gap:1.1rem;grid-template-columns:1fr}
+@media(min-width:48rem){.cols{grid-template-columns:1fr 1fr}}
+ul{margin:0;padding-left:1.1rem;font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:.3rem}
+ul b{color:var(--ink)}
+.strike li{text-decoration:line-through;text-decoration-color:var(--dim);color:var(--dim)}
+.handback{display:flex;flex-direction:column;gap:.5rem;border:1px dashed var(--key);border-radius:.5rem;
+  padding:1rem 1.15rem;background:var(--card)}
+#out{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.76rem;min-height:7rem;line-height:1.7}
+footer{border-top:1px solid var(--rule);padding-top:1.2rem;font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">進め方の実験 ／ 未決5論点</p>
+  <h1>承認だけで進む</h1>
+  <p class="thesis">同じ5つの決定を、<b>案を並べて選ばせる形</b>と、<b>答えを1つ出して諾否を問う形</b>で通す。
+  答えの下には、<b>出どころ ・ 判断の道筋 ・ 何を反証で落としたか</b>を畳んで置いてある ──
+  信頼して押すのではなく、<b>確かめてから押せる</b>ようにするためである。</p>
+</header>
+
+<section class="compare">
+  <h2>論点14を、2つの形で出すと</h2>
+  <p class="src">左は盤面の論点14タブに実際に載っている中身（抜粋）。右は同じ結論を、答えから出したもの。</p>
+  <div class="panes">
+    <div class="pane now">
+      <div class="pane-hd"><span class="t">いまの形 ── 案を並べる</span><span class="eyebrow">選ぶ</span></div>
+      <div class="body">
+        <p class="ask">問い：何を1つの型として立てるか</p>
+        <div class="opt"><b>A　宣言する欄の集合が違えば、別の型にする</b><br>
+        同じ欄で書けるなら同じ型とし、違いは種で表す。<br>
+        代償：「ほぼ同じだが1欄だけ違う」で必ず迷う。閾値を決めることになり、その閾値に根拠が無い</div>
+        <div class="opt"><b>B　軸の集合が違えば別の型。種は、その層で決まることの単位</b><br>
+        その領域が何に依存して変わるかを軸として立て、軸の集合が違えば別の型にする。層は軸の組み合わせから導出する。<br>
+        代償：軸を立てる判断が先に来る。新しい領域では、軸そのものを見つける手間がかかる</div>
+        <div class="opt"><b>C　読み手と用途が違えば、別の型にする</b><br>
+        誰が何のために読むかで切る。<br>
+        代償：同じ構造の文書が、読み手の数だけ増える。読み手は射影で分けられる（論点8）</div>
+        <div class="opt"><b>D　射影先が違えば、別の型にする</b><br>
+        SKILL.md になるもの、HTML になるもの…で切る。<br>
+        代償：形で切ることになり、論点8 と正面から衝突する</div>
+        <div class="opt"><b>落とした案</b>　すべてを1つの型にし、種だけで並べる ──
+        軸を立てずに種を並べると、種ごとに構造がまるで違うものが1つの型に入る</div>
+        <div class="opt"><b>反証で分かったこと</b>　15と16は欄を見比べていない／「1欄だけ違う」の迷いは軸で問えば消える／
+        型は軸の集合、種はその層で決まることの単位</div>
+        <div class="opt"><b>推し</b>　B。ただし前提として論点5・8・15・16 の決着を踏まえていること</div>
+        <p class="ask">記号を選んでください（A・B・C・D、またはどれでもない）</p>
+      </div>
+    </div>
+    <div class="pane next">
+      <div class="pane-hd"><span class="t">変えた形 ── 答えを出す</span><span class="eyebrow">諾否</span></div>
+      <div class="body">
+        <p class="ask">Q1　型を立てる基準</p>
+        <div class="reco"><span class="lbl">私の答え</span>
+        <b>軸の集合で切ります。</b>〈言語×アーキ×用途〉に依存して変わるものは全部 Coding、
+        〈業務×接点×基盤〉は全部 Spec。欄が違っても、別の型にはせず種にとどめます。</div>
+        <p>そう決める理由：Coding も Spec も、実際そう切って決着していました。欄の違いは結果です。</p>
+        <p>引き受けること：新しい領域では、軸そのものを先に立てる手間がかかります。</p>
+        <p class="src">＋ 出どころ4件 ・ 判断の道筋5手 ・ 落とした案4件（畳んである）</p>
+        <p class="ask">これで進めてよいですか</p>
+      </div>
+    </div>
+  </div>
+  <div class="meters">
+    <div class="meter a"><span class="k">左を読む字数</span><span class="v" id="m-a">─</span></div>
+    <div class="meter b"><span class="k">右を読む字数</span><span class="v" id="m-b">─</span></div>
+    <div class="meter a"><span class="k">左であなたがすること</span><span class="v">4<small>案を比べて1つ選ぶ</small></span></div>
+    <div class="meter b"><span class="k">右であなたがすること</span><span class="v">1<small>諾否を返す</small></span></div>
+  </div>
+  <p class="src">字数はこの画面に出ている文字を数えた実測。畳んだ中身は、開いたときだけ読むので数に入れていない。</p>
+</section>
+
+<section class="rounds" id="rounds">
+  <h2>では、実際に5つを通してみる</h2>
+  <p class="src">出るのは<b>いま答えられる問いだけ</b>。他の問いに依存しているものは、依存が片付いてから出る。
+  どの答えにも、<b>畳んだ中に出どころと反証</b>と、<b>あなたが書き込める欄</b>がある。</p>
+</section>
+
+<div class="done-card" id="done" hidden>
+  <h2>フロンティアが空になりました</h2>
+  <div class="cols">
+    <div><p class="eyebrow" style="margin-bottom:.4rem">あなたがしたこと</p><ul id="did"></ul></div>
+    <div><p class="eyebrow" style="margin-bottom:.4rem">しなくて済んだこと</p>
+      <ul class="strike">
+        <li><b>依存を追う</b> ── 論点17 は14と18が決まるまで答えられない、という順番の管理</li>
+        <li><b>案を比べる</b> ── 5論点ぶんの落とした案18件と、その反証</li>
+        <li><b>事実を確かめる</b> ── 実行環境は軸か、hook は何本あるか、といった調べもの</li>
+        <li><b>決着済み15論点を思い出す</b> ── 前提はこちらが持ち、答えに畳んで出す</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="handback">
+  <h3>書いたことを、私に渡す</h3>
+  <p class="src">諾否と、各欄に書いたことをまとめます。<b>ここに出た文章を会話に貼ってください</b> ──
+  それを材料に、答えを組み直します。差し戻しも書き込みも、いつでも構いません。</p>
+  <textarea id="out" readonly aria-label="私に渡す文章"></textarea>
+  <div class="acts">
+    <button class="act yes" id="build">いまの状態をまとめる</button>
+    <button class="act" id="copy">写す</button>
+    <span class="src" id="copied"></span>
+  </div>
+</div>
+
+<footer>
+  盤面（正本）とこの実験は別物です。ここで押した承認は、盤面には反映されません ──
+  進め方そのものを試すための画面です。
+</footer>
+</div>
+
+<script>
+const SRC = {原典:"o", 決まり:"k", 実測:"j", 前提:"z"};
+const ROUNDS = [
+{ n:1, why:"他のどの問いにも依存していない2つ。ここが今のフロンティア。", qs:[
+{ id:"Q1", topic:"論点14", h:"型を立てる基準",
+  ask:"JSON Schema を何本立てるか、その分け目を何で引くか。",
+  reco:"<b>軸の集合で切ります。</b>〈言語×アーキ×用途〉に依存して変わるものは全部 Coding、〈業務×接点×基盤〉は全部 Spec。欄が違っても、別の型にはせず種にとどめます。",
+  why:"Coding も Spec も、実際そう切って決着していました。欄の違いは結果です。",
+  fig:`<svg viewBox="0 0 660 232" role="img" aria-label="欄で切ると型が縦に増えるが、軸で切ると型は2つのままで値が横に増える"><text x="0" y="12" font-size="9.5" fill="var(--dim)" font-weight="700">落とした形 ── 欄の集合で切る</text><rect x="0" y="24" width="168" height="24" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.1"/><text x="84.0" y="39.5" text-anchor="middle" font-size="8.5" fill="var(--dim)">型：この欄の組</text><rect x="0" y="52" width="168" height="24" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.1"/><text x="84.0" y="67.5" text-anchor="middle" font-size="8.5" fill="var(--dim)">型：1欄だけ違う組</text><rect x="0" y="80" width="168" height="24" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.1"/><text x="84.0" y="95.5" text-anchor="middle" font-size="8.5" fill="var(--dim)">型：さらに1欄違う組</text><rect x="0" y="108" width="168" height="24" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.1"/><text x="84.0" y="123.5" text-anchor="middle" font-size="8.5" fill="var(--dim)">型：…</text><text x="84" y="150" font-size="8.5" fill="var(--dim)" text-anchor="middle">1欄違うたびに縦に増える</text><text x="84" y="166" font-size="8.5" fill="var(--dim)" text-anchor="middle">閾値に根拠が持てない</text><line x1="196" y1="10" x2="196" y2="200" stroke="var(--rule)"/><text x="224" y="12" font-size="9.5" fill="var(--key)" font-weight="700">採る形 ── 軸の集合で切る</text><rect x="224" y="24" width="436" height="72" rx="4" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="240" y="44" font-size="10" fill="var(--key)" font-weight="700">CodingSchema</text><text x="240" y="62" font-size="8.5" fill="var(--muted)">軸：言語 × アーキ × 用途</text><rect x="240" y="70" width="64" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="272.0" y="82.5" text-anchor="middle" font-size="8" fill="currentColor">Go</text><rect x="310" y="70" width="64" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="342.0" y="82.5" text-anchor="middle" font-size="8" fill="currentColor">Rust</text><rect x="380" y="70" width="86" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="423.0" y="82.5" text-anchor="middle" font-size="8" fill="currentColor">data-port</text><rect x="472" y="70" width="86" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="515.0" y="82.5" text-anchor="middle" font-size="8" fill="currentColor">hook</text><text x="576" y="84" font-size="8" fill="var(--muted)">…値が増える</text><rect x="224" y="106" width="436" height="72" rx="4" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="240" y="126" font-size="10" fill="var(--key)" font-weight="700">SpecSchema</text><text x="240" y="144" font-size="8.5" fill="var(--muted)">軸：業務 × 接点 × 基盤</text><rect x="240" y="152" width="64" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="272.0" y="164.5" text-anchor="middle" font-size="8" fill="currentColor">予約</text><rect x="310" y="152" width="64" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="342.0" y="164.5" text-anchor="middle" font-size="8" fill="currentColor">請求</text><rect x="380" y="152" width="86" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="423.0" y="164.5" text-anchor="middle" font-size="8" fill="currentColor">CLI</text><rect x="472" y="152" width="86" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="515.0" y="164.5" text-anchor="middle" font-size="8" fill="currentColor">MCP</text><text x="576" y="166" font-size="8" fill="var(--muted)">…値が増える</text><text x="224" y="204" font-size="9.5" fill="var(--key)" font-weight="700">型は2つのまま。値が増えても、型は増えない</text></svg>`,
+  cost:"新しい領域では、軸そのものを先に立てる手間がかかります。",
+  grounds:[
+   ["軸で切ること","型が増えても abstract が太らないのは、軸の値が増えるだけだから","決まり","論点5（型は横に増える）"],
+   ["実際にそう決めたこと","Coding も Spec も、軸を宣言して層を導出する形で決着した","決まり","論点16 ・ 論点15"],
+   ["軸を独立性で判定できること","1つを固定して他が動くなら、それは軸である","決まり","CodingSkills 論点2"],
+   ["読み手や形で切らないこと","読み手の違いは射影で吸収でき、形で切ると意味が1つなのに型が増える","決まり","論点8"]],
+  path:["最初は<b>「欄の集合が違えば別の型」</b>を推していた ── 欄が意味を表しているから",
+        "しかし<b>「1欄だけ違うときどうするか」に答えられなかった</b>。閾値を決めることになり、その閾値に根拠が無い",
+        "15と16を決めたあとで、<b>自分が実際に何で切ったかを見直した</b> ── どちらも欄を見比べていない",
+        "2つとも<b>軸を立てて層を導出していた</b>。欄の違いは、その結果として現れていた",
+        "基準を<b>結果ではなく、切った理由の側へ</b>置き直した ── すると「1欄だけ違う」の迷いが消える"],
+  dropped:[["宣言する欄の集合で切る","「1欄だけ違う」で必ず迷う。<b>閾値に根拠が持てない</b>"],
+           ["読み手と用途で切る","同じ構造の文書が読み手の数だけ増える ── <b>読み手は射影で分けられる</b>（論点8）"],
+           ["射影先（できあがる成果物）で切る","形で切ることになり、<b>論点8 と正面から衝突する</b>"],
+           ["全部を1つの型にし、種だけで並べる","<b>種ごとに構造がまるで違うものが、1つの型に入る</b>"]]},
+{ id:"Q2", topic:"論点18", h:"道具の中の処理を、どこに紐づけるか",
+  ask:"Hook や Skill が走らせている処理を、何の持ち物にするか。",
+  reco:"<b>能力は業務の層に、差し出し方は業務×接点の層に置きます。</b>Hook の script は事象を受けて能力を呼ぶだけにし、処理そのものは持たせません。",
+  why:"CLI・MCP・Hook は同じ能力の差し出し口です。script が処理を持つと、そこからしか使えない能力ができ、承認も検証も通りません。",
+  fig:`<svg viewBox="0 0 660 296" role="img" aria-label="script が処理を持つ形と、能力1つに差し出し口が3つ付く形"><defs><marker id="sa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--key)"/></marker></defs><text x="0" y="12" font-size="9.5" fill="var(--dim)" font-weight="700">落とした形 ── script が処理そのものを持つ</text><rect x="0" y="22" width="196" height="48" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.2"/><text x="98" y="40" font-size="9" fill="var(--dim)" text-anchor="middle" font-weight="700">Hook の script</text><text x="98" y="56" font-size="8.5" fill="var(--dim)" text-anchor="middle">確かめる処理を、中に持つ</text><text x="216" y="44" font-size="9" fill="var(--dim)">CLI からも MCP からも呼べない</text><text x="216" y="60" font-size="9" fill="var(--dim)">承認も検証も通らない</text><line x1="0" y1="90" x2="660" y2="90" stroke="var(--rule)"/><text x="0" y="110" font-size="9.5" fill="var(--key)" font-weight="700">採る形 ── 能力は1つ、差し出し口が3つ</text><rect x="170" y="122" width="320" height="46" rx="4" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="330" y="142" font-size="10" fill="var(--key)" text-anchor="middle" font-weight="700">ずれを確かめる</text><text x="330" y="158" font-size="8.5" fill="var(--muted)" text-anchor="middle">能力 ── 業務の層</text><line x1="120" y1="216" x2="188" y2="172" stroke="var(--key)" stroke-width="1.3" marker-end="url(#sa)"/><line x1="330" y1="216" x2="330" y2="172" stroke="var(--key)" stroke-width="1.3" marker-end="url(#sa)"/><line x1="540" y1="216" x2="472" y2="172" stroke="var(--key)" stroke-width="1.3" marker-end="url(#sa)"/><rect x="40" y="218" width="160" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="1.1"/><text x="120" y="236" font-size="9" fill="currentColor" text-anchor="middle" font-weight="700">CLI の約束</text><text x="120" y="252" font-size="8" fill="var(--muted)" text-anchor="middle">業務 × 接点</text><rect x="250" y="218" width="160" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="1.1"/><text x="330" y="236" font-size="9" fill="currentColor" text-anchor="middle" font-weight="700">MCP の約束</text><text x="330" y="252" font-size="8" fill="var(--muted)" text-anchor="middle">業務 × 接点</text><rect x="460" y="218" width="160" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="1.1"/><text x="540" y="236" font-size="9" fill="currentColor" text-anchor="middle" font-weight="700">Hook の約束</text><text x="540" y="252" font-size="8" fill="var(--muted)" text-anchor="middle">どの事象で起きるか</text><text x="540" y="284" font-size="8.5" fill="var(--key)" text-anchor="middle" font-weight="700">script は呼ぶだけ</text></svg>`,
+  cost:"接点を1つ足すたびに、差し出し方の宣言が1つ増えます。",
+  grounds:[
+   ["接点として扱うこと","CLI ・ MCP ・ Hook は、同じ能力を差し出す先が違うだけである","決まり","論点15（接点は軸。UI・API・CLI・MCP は値）"],
+   ["トリガーを接点の側に置くこと","能力の側に事象を持たせると、接点を差し替えられなくなる","決まり","論点15（掛かることは掛けた層に書く）"],
+   ["script を呼ぶだけにすること","実体は宣言の外に置き、名前で結ぶ ── 実体が宣言を持たないと検証も承認も通らない","決まり","論点6（検査の実体は宣言の外、名前で指す）"],
+   ["いまの形がすでに近いこと","hook が usecaseRef（呼ぶ先）と scriptRef（呼ぶ道具）を分けて持っている","実測","<code>.waffle/documents/hooks/</code> の15本（2026-09-06 に確認）"]],
+  path:["Hook の script が処理そのものを持つと、<b>そこからしか使えない能力ができる</b>",
+        "同じ確認を CLI からも MCP からも呼べず、<b>承認も検証も通らない</b>",
+        "CLI ・ MCP ・ Hook を並べると、<b>違うのは差し出し方だけ</b>だった",
+        "だから論点15 の軸がそのまま当たる ── <b>事象は 業務×接点 の層に落ちる</b>",
+        "接点が規約寄りに見えるのは、<b>約束（名前・引数・終了コード）と作法（名づけ方）が混ざっている</b>から"],
+  dropped:[["script の中に処理を書く","Hook からしか使えない能力ができ、<b>承認も検証も通らない</b>"],
+           ["Hook ごとに独立した spec を作る","同じ能力の spec が接点の数だけ増え、<b>どれが正かを言う仕組みがまた要る</b>"],
+           ["Hook は spec を持たない（実装だけ）","<b>何を約束しているのか誰も言えない</b> ── 承認の境目でも見えない"],
+           ["能力の側に事象を持たせる","CLI にも MCP にも事象は無い ── <b>能力が特定の接点の言葉を持つ</b>ことになる"]]}]},
+
+{ n:2, why:"Q1（型の切り方）とQ2（どこから起きるか）が片付いたので、この3つが答えられるようになりました。", qs:[
+{ id:"Q3", topic:"論点17", h:"ADR 以外を、schema で持つか",
+  ask:"知識・Skill・Agent・雛形・Hook を、文書として持つか、外へ出すか。",
+  reco:"<b>ADR・knowledge・skill・agent は文書として持ちます。</b>雛形は型にせず、Hook は1つの型として扱わず中身で仕分けます（検査は検査の宣言へ、禁止は規則と接点の扱いへ、気づかせは承認の材料へ、残る道具の都合だけ設定へ）。",
+  why:"いずれも宣言する欄が定まります。雛形の中身は判断の手順で、空の骨格は schema から描けます。Hook は15本を開くと4つの性質が混ざっていました。",
+  fig:`<div class="diff"><p class="dh">いま schema が持っている型が、どこへ行くか</p><div class="dl same"><span class="c">spec</span><span class="d">文書のまま</span></div><div class="dl same"><span class="c">coding</span><span class="d">文書のまま</span></div><div class="dl same"><span class="c">ADR</span><span class="d">文書のまま</span></div><div class="dl same"><span class="c">knowledge</span><span class="d">文書のまま</span></div><div class="dl same"><span class="c">skill</span><span class="d">文書のまま ── 手順そのものが「何が正しいか」</span></div><div class="dl same"><span class="c">agent</span><span class="d">文書のまま</span></div><div class="dl del"><span class="c">template</span><span class="d">型をやめる ── 判断の手順は skill の格へ、空の骨格は schema から描く</span></div><div class="dl del"><span class="c">hook</span><span class="d">型をやめる ── 1つではなく、中身で4つに分かれる</span></div><div class="dl sub"><span class="c">　├ 検査　2本</span><span class="d">検査の宣言へ（名簿に載る）</span></div><div class="dl sub"><span class="c">　├ 禁止　6本</span><span class="d">規則（述語）＋ 接点の扱い（止める）へ</span></div><div class="dl sub"><span class="c">　├ 気づかせ　3本</span><span class="d">承認の材料へ（未検の一覧と同じ場所）</span></div><div class="dl sub"><span class="c">　└ 道具の都合　3本</span><span class="d">設定へ ── schema の外に出る</span></div><p class="dn">型は 8 → 6。消えるのは template と hook で、hook の中身は既に決めた3つの仕組みへ入る。</p></div>`,
+  cost:"Hook という型が消え、いま1か所にあるものが3つの仕組みへ散ります。",
+  grounds:[
+   ["軸を要件にすること","型は軸の集合で決まる ── 軸が言えないなら、型として立たない","決まり","Q1 の基準"],
+   ["形で型にしないこと","出す先のために型を作ると、意味が1つなのに型が増える","決まり","論点8"],
+   ["在ることを根拠にしないこと","いまの schema は再定義の対象そのものである","決まり","この盤面で取り下げた誤り（論点15 の立て直し）"],
+   ["空の骨格を型にしないこと","schema から空の骨格を描く能力が、すでに在る","実測","<code>waffle render-blank-template</code>"],
+   ["hook を丸ごと決めないこと","検査2本 ・ 禁止6本 ・ 気づかせ3本 ・ 道具の都合3本と、性質が混ざっている","実測","<code>.waffle/documents/hooks/</code> の15本を開いて数えた（2026-09-06）"]],
+  path:["残る型（ADR ・ knowledge ・ skill ・ agent ・ hook）へ、Q1 の基準を当てようとした",
+        "<b>skill と agent を「形のための型」と疑ったが、誤りだった</b> ── SKILL.md へ出るのは射影で、<b>手順そのものが「何が正しいか」</b>である",
+        "<b>いま schema を持っていること自体は根拠にできない</b> ── それは再定義の対象そのもので、循環する",
+        "そこで<b>決まりから問いを作った</b> ── 軸を持つか ／ 形のためだけでないか を要件にした",
+        "<b>hook を開いたら、15本に4つの性質が混ざっていた</b> ── 丸ごと1つに決めるのが誤りだった",
+        "<b>「禁止は規則へ」も文言の誤りだった</b> ── 規則は述語で真偽しか返さない。禁止は〈規則〉と〈接点の扱い〉に割れる"],
+  dropped:[["いま schema を持っているものを、そのまま持ち続ける","<b>在ることを理由に在り続ける</b> ── 形のための型が混ざっていても誰も気づけない"],
+           ["業務に関わるものだけ型にし、道具は全部外す","<b>skill と agent は手順という「何が正しいか」を持っている</b> ── 見ずに外すと、それを失う"],
+           ["hook を1つの型として決める","<b>問いの立て方自体が誤り</b> ── 15本のうち設定に当たるのは3本だけだった"],
+           ["雛形を型として立てる","中身は空の骨格ではなく<b>判断の骨格</b>で、skill の手順と同じ格だった"]]},
+{ id:"Q4", topic:"論点19", h:"何を1つの文書の単位にするか",
+  ask:"層ごとに、どこで文書を切るか。",
+  reco:"<b>業務の層に8種、接点の層に2種、基盤の層に1種を置きます。</b>業務の8種は 事業領域 ・ 業務領域 ・ 区切られた文脈 ・ 集約 ・ エンティティ ・ 値オブジェクト ・ 業務ユースケース ・ 業務サービス。",
+  why:"種は「その層で決まることの単位」なので、閉じる単位まで切ります。畳むと、集約の内側の置き場所が無くなります。",
+  fig:`<div class="diff"><p class="dh">1つの業務を書くと、こういう文書が並ぶ</p><div class="dl grp"><span class="c">業務の層　8種</span><span class="d"></span></div><div class="dl same"><span class="c">　business-domain</span><span class="d">事業領域</span></div><div class="dl same"><span class="c">　subdomain</span><span class="d">業務領域</span></div><div class="dl same"><span class="c">　context</span><span class="d">区切られた文脈</span></div><div class="dl same"><span class="c">　aggregate</span><span class="d">集約　── 一貫性の境界</span></div><div class="dl same"><span class="c">　entity</span><span class="d">エンティティ</span></div><div class="dl same"><span class="c">　value-object</span><span class="d">値オブジェクト</span></div><div class="dl same"><span class="c">　usecase</span><span class="d">業務ユースケース</span></div><div class="dl same"><span class="c">　domain-service</span><span class="d">業務サービス</span></div><div class="dl grp"><span class="c">業務 × 接点　2種</span><span class="d"></span></div><div class="dl same"><span class="c">　差し出しの約束</span><span class="d">この能力を、どの名前と引数で差し出すか</span></div><div class="dl tmp"><span class="c">　（もう1種）</span><span class="d">名前はまだ決めていない</span></div><div class="dl grp"><span class="c">業務 × 基盤　1種</span><span class="d"></span></div><div class="dl tmp"><span class="c">　（1種）</span><span class="d">名前はまだ決めていない</span></div><p class="dn">畳まないのは、集約の内側（エンティティ ・ 値オブジェクト）に置き場所が要るから。名前を決めていないところは仮のままにしてある。</p></div>`,
+  cost:"文書の数が増えます（1つの業務を、複数の文書に分けて書くことになる）。",
+  grounds:[
+   ["閉じる単位で切ること","閉じない単位を種にすると、中身が他の文書へこぼれる","前提","種は「その層で決まることの単位」という置き方（論点16）"],
+   ["一貫性の境界より小さく切らないこと","境界の内側は実体で持ち、外は識別子で指す ── 割ると守れない","原典","<code>ddd-advisor</code> の knowledge（一貫性の境界）"],
+   ["領域と文脈を分けること","一つの業務領域でも課題が複数あれば課題ごとに別のモデルを作るほうがよく、小さなシステムなら単一の文脈で複数の領域を開発できる","原典","<code>ddd-advisor</code> の knowledge（bounded-context）"],
+   ["文脈を設計の側に置くこと","業務領域は事業方針で決まるが、区切られた文脈はプロジェクトの目的と制約に合わせて技術者が決定できる","原典","同上"],
+   ["接点の値で種を作らないこと","接点は軸の値であり、値が増えても種は増えない","決まり","論点15"]],
+  path:["層をそのまま種にすると、<b>1つの文書に領域の話と操作の話が同居する</b>",
+        "種は「その層で決まることの単位」なので、<b>閉じる単位まで切る必要がある</b>",
+        "自分は業務を5つに畳んでいたが、<b>同じ問いをより細かく通した過去の検討は8種別に切っていた</b>",
+        "畳むと<b>集約の内側（エンティティ ・ 値オブジェクト）の置き場所が無くなり</b>、参照が相手の値を写すことになる",
+        "接点の値ごとに種を作る道は、<b>値が増えるたびに種が増える</b>ので閉じている"],
+  dropped:[["層をそのまま種にする（3種）","1つの文書に<b>粒度の違うものが同居</b>し、抽象と具体の境目が文書の中でぼやける"],
+           ["集約の内側を、集約の文書に畳む","<b>文書どうしの参照が、相手の値を写して持つことになる</b>"],
+           ["接点の値ごとに種を分ける（CLI用・MCP用）","接点は軸の値であって種ではない ── <b>値が増えるたびに種が増える</b>"],
+           ["いまの DomainSpecSchema の種をそのまま使う","<b>それは再定義の対象そのもの</b>で、根拠にはできない"]]},
+{ id:"Q5", topic:"論点20", h:"どういうフォルダの形で置くか",
+  ask:"文書をディスク上でどう並べるか。",
+  reco:"<b>業務でフォルダを切り、その中に接点と基盤の層を置きます。</b>文脈をまたぐもの（領域・関係）だけを上に置き、横断して見たいときは種と接点で引きます。",
+  why:"人が読む単位は業務です。どちらを選んでも片方は横断になるので、人の側を1か所にまとめ、横断は引き方に任せます。",
+  fig:`<div class="diff"><p class="dh">フォルダの形が、こう変わる</p><div class="dl del"><span class="c">domain.予約/</span><span class="d">層でフォルダを切る形</span></div><div class="dl del"><span class="c">　usecase.予約を確定する.json</span><span class="d"></span></div><div class="dl del"><span class="c">domain.予約+interface.cli/</span><span class="d"></span></div><div class="dl del"><span class="c">　offer.予約を確定する.json</span><span class="d"></span></div><div class="dl del"><span class="c">domain.請求/</span><span class="d">同じ業務が、フォルダをまたいで散る</span></div><div class="dl add"><span class="c">contexts/</span><span class="d"></span></div><div class="dl add"><span class="c">　予約/</span><span class="d"></span></div><div class="dl add"><span class="c">　　context.json</span><span class="d">この文脈そのもの</span></div><div class="dl add"><span class="c">　　models/</span><span class="d">集約 ・ エンティティ ・ 値オブジェクト</span></div><div class="dl add"><span class="c">　　operations/</span><span class="d">業務ユースケース ・ 業務サービス</span></div><div class="dl add"><span class="c">　　interfaces/</span><span class="d">差し出しの約束（CLI ・ MCP ・ Hook）</span></div><div class="dl add"><span class="c">　　platforms/</span><span class="d">基盤の約束</span></div><div class="dl add"><span class="c">　relationships/</span><span class="d">予約→請求.json ── 2つの文脈のつなぎ方</span></div><div class="dl add"><span class="c">business-domains/</span><span class="d">文脈をまたぐので、外に並べる</span></div><div class="dl add"><span class="c">subdomains/</span><span class="d">同上</span></div><p class="dn">文脈の地図は保存しない ── relationships/ を集めて描く。フォルダの名前は実体ではなく「何を入れるか」を名乗る。</p></div>`,
+  cost:"「全部の CLI の約束」を見るときに横断になります（引き方で解ける）。",
+  grounds:[
+   ["主題でまとめること","業務は主題であり、接点と基盤は業務に掛かる","決まり","論点15"],
+   ["人の読む単位に合わせること","人が読む単位は文書であり、AI が引く単位は節である","決まり","論点2（単位は読み手に従属する）"],
+   ["横断を引き方に任せること","種と接点で引けるので、フォルダで集める必要が無い","決まり","論点13（意味の述語で引く）"],
+   ["Coding と分けて考えること","Coding の軸は並列で、主題が無い","決まり","論点16（層は軸から導出）"],
+   ["種類の名前を先に置くこと","フォルダの名前が実体だと、そこに何が入るのかを名前が言わない","前提","フォルダは中身の種類を名乗る、という置き方"]],
+  path:["Coding と同じ「層でフォルダ」にすると、<b>同じ業務の文書がフォルダをまたいで散る</b>",
+        "Coding には主題が無く（言語もアーキも用途も並列）、<b>spec には業務という主題がある</b>",
+        "<b>どちらを選んでも、片方は横断になる</b> ── 違うのは、横断を人がするか引き方がするか",
+        "<b>人が読む単位は業務</b>なので、人の側を1か所にまとめ、横断は引き方へ渡す",
+        "フォルダの名前は実体ではなく<b>「何を入れるか」</b>を名乗らせる（<code>予約/</code> ではなく <code>contexts/予約/</code>）"],
+  dropped:[["層でフォルダを切る（Coding と同じ形）","<b>同じ業務の文書が、フォルダをまたいで散る</b> ── 人がフォルダを横断することになる"],
+           ["種でフォルダを切る","<b>層が見えなくなる</b> ── どの文書がどの層に属するかが、名前からしか分からない"],
+           ["接点ごとにフォルダを分け、業務を中に置く","<b>接点が主題になってしまう</b> ── 業務が主題である以上、逆立ちしている"]]}]}
+];
+const BACKS = ["もっと単純に","前提が違う","別の道も見たい"];
+const state = {ok:0, back:0, answered:0, total:5, log:[]};
+const host = document.getElementById('rounds');
+
+const tag = s => `<span class="tag-src ${SRC[s]}">${s}</span>`;
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function card(q){
+  const el = document.createElement('article');
+  el.className = 'q';
+  el.dataset.id = q.id;
+  el.innerHTML = `
+    <div class="q-hd"><span class="id">${q.id}</span><h3>${q.h}</h3><span class="tag">${q.topic}</span></div>
+    <p class="ask">${q.ask}</p>
+    <div class="reco"><span class="lbl">私の答え</span>${q.reco}</div>
+    <div class="fig"><h4>この答えを採ると、こうなる</h4>${q.fig}</div>
+    <details>
+      <summary>出どころ ${q.grounds.length}件 ・ 判断の道筋 ${q.path.length}手 ・ 落とした案 ${q.dropped.length}件</summary>
+      <div class="inside">
+        <div class="block"><h4>なぜそう言えるか</h4><div class="scroll"><table>
+          <tr><th>答えのどこを支えるか</th><th>もとにしたこと</th><th>出どころ</th></tr>
+          ${q.grounds.map(g => `<tr><td class="what">${g[0]}</td><td>${g[1]}</td>
+            <td class="src-cell">${tag(g[2])}${g[3]}</td></tr>`).join('')}
+        </table></div></div>
+        <div class="block"><h4>そこへ至った道筋</h4>
+          <ol class="chain">${q.path.map(p => `<li><span>${p}</span></li>`).join('')}</ol></div>
+        <div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table>
+          <tr><th>案</th><th>何が壊れるか（反証）</th></tr>
+          ${q.dropped.map(d => `<tr><td class="what">${d[0]}</td><td class="kill">${d[1]}</td></tr>`).join('')}
+        </table></div></div>
+        <div class="block"><h4>この答えを採ると、引き受けること</h4>
+          <p class="src" style="font-size:.85rem">${q.cost}</p></div>
+      </div>
+    </details>
+    <div class="acts">
+      <button class="act yes">これで進める</button>
+      <button class="act no">差し戻す</button>
+    </div>
+    <div class="backs" hidden><span>理由を1つ：</span></div>
+    <div class="note">
+      <label for="n-${q.id}">${q.id} について、思っていること・条件・引っかかり（自由に。承認でも差し戻しでも）</label>
+      <textarea id="n-${q.id}" placeholder="ここに書いたことは、私が答えを組み直すときの材料になります"></textarea>
+    </div>`;
+  const acts = el.querySelector('.acts'), backs = el.querySelector('.backs');
+  BACKS.forEach(r => {
+    const b = document.createElement('button');
+    b.className = 'act'; b.textContent = r;
+    b.addEventListener('click', () => settle(el, q, acts, backs, 'back', r));
+    backs.appendChild(b);
+  });
+  el.querySelector('.yes').addEventListener('click', () => settle(el, q, acts, backs, 'ok'));
+  el.querySelector('.no').addEventListener('click', () => {
+    backs.hidden = false; backs.querySelector('button').focus();
+  });
+  return el;
+}
+
+function settle(el, q, acts, backs, kind, reason){
+  backs.hidden = true;
+  const v = document.createElement('p');
+  v.className = 'verdict';
+  if (kind === 'ok'){ state.ok++; el.classList.add('done');
+    v.innerHTML = '<span class="ok">承認</span> この答えで先へ進みます。';
+    state.log.push({id:q.id, h:q.h, v:'承認', r:''});
+  } else { state.back++; el.classList.add('sent');
+    v.innerHTML = `<span class="back">差し戻し</span> 「${reason}」で持ち帰ります ── 次の回に、直した答えを1つ出します。`;
+    state.log.push({id:q.id, h:q.h, v:'差し戻し', r:reason});
+  }
+  acts.replaceWith(v);
+  state.answered++;
+  advance();
+}
+
+let shown = 0;
+function render(i){
+  const r = ROUNDS[i], sec = document.createElement('div');
+  sec.className = 'round';
+  const hd = document.createElement('div');
+  hd.className = 'round-hd';
+  hd.innerHTML = `<span class="n">ROUND ${r.n}</span><span class="why">${r.why}</span>`;
+  sec.appendChild(hd);
+  r.qs.forEach(q => sec.appendChild(card(q)));
+  host.appendChild(sec);
+  shown += r.qs.length;
+}
+
+function advance(){
+  if (state.answered === shown && shown < state.total){ render(1); return; }
+  if (state.answered === state.total){
+    const d = document.getElementById('done');
+    document.getElementById('did').innerHTML =
+      `<li><b>${state.ok} 回</b>の承認</li><li><b>${state.back} 回</b>の差し戻し</li>` +
+      `<li>読んだのは<b>2つの回</b>ぶん ── 5つを一度に並べてはいません</li>`;
+    d.hidden = false;
+  }
+}
+
+render(0);
+
+const count = el => el.textContent.replace(/\s+/g,'').length;
+document.getElementById('m-a').innerHTML = count(document.querySelector('.pane.now .body')) + '<small>字</small>';
+document.getElementById('m-b').innerHTML = count(document.querySelector('.pane.next .body')) + '<small>字</small>';
+
+document.getElementById('build').addEventListener('click', () => {
+  const lines = ['【承認だけで進む ── 私の返答】', ''];
+  const seen = {};
+  state.log.forEach(l => { seen[l.id] = l; });
+  document.querySelectorAll('.q').forEach(el => {
+    const id = el.dataset.id;
+    const h = el.querySelector('h3').textContent;
+    const l = seen[id];
+    const note = (el.querySelector('textarea').value || '').trim();
+    if (!l && !note) return;
+    lines.push(`■ ${id} ${h}`);
+    lines.push(`　諾否：${l ? l.v + (l.r ? `（${l.r}）` : '') : '未回答'}`);
+    if (note) lines.push(`　書いたこと：${note}`);
+    lines.push('');
+  });
+  if (lines.length === 2) lines.push('（まだ何も答えていません）');
+  document.getElementById('out').value = lines.join('\n');
+  document.getElementById('copied').textContent = '';
+});
+
+document.getElementById('copy').addEventListener('click', async () => {
+  const t = document.getElementById('out');
+  const msg = document.getElementById('copied');
+  if (!t.value){ msg.textContent = '先に「いまの状態をまとめる」を押してください'; return; }
+  t.removeAttribute('readonly'); t.select(); t.setSelectionRange(0, t.value.length);
+  try { await navigator.clipboard.writeText(t.value); msg.textContent = '写しました'; }
+  catch { msg.textContent = '選択したので、そのままコピーしてください'; }
+  t.setAttribute('readonly','');
+});
+</script>

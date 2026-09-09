@@ -1,0 +1,127 @@
+<meta charset="utf-8">
+<title>回答が、私に届くまで</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{--paper:#eef1ef;--card:#f8faf9;--ink:#111d1a;--muted:#5b6b66;--rule:#ccd8d4;--rule-soft:#dfe7e4;
+--sunk:#e7ecea;--key:#0d5c55;--key-soft:#d5e6e3;--warn:#8f5410;--dim:#7d8a86;
+--shadow:0 1px 0 rgba(17,29,26,.06),0 8px 22px -18px rgba(17,29,26,.5)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#0e1614;--card:#16211e;--ink:#e6eeeb;--muted:#93a29d;--rule:#2a3936;--rule-soft:#22302d;
+--sunk:#111a18;--key:#6cc9b8;--key-soft:#173330;--warn:#d9a35f;--dim:#7b8985;
+--shadow:0 1px 0 rgba(0,0,0,.4),0 10px 26px -18px #000}}
+:root[data-theme="dark"]{--paper:#0e1614;--card:#16211e;--ink:#e6eeeb;--muted:#93a29d;--rule:#2a3936;
+--rule-soft:#22302d;--sunk:#111a18;--key:#6cc9b8;--key-soft:#173330;--warn:#d9a35f;--dim:#7b8985;
+--shadow:0 1px 0 rgba(0,0,0,.4),0 10px 26px -18px #000}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.85;
+font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.wrap{max-width:58rem;margin:0 auto;padding:2.4rem 1.15rem 5rem;display:flex;flex-direction:column;gap:2.4rem}
+h1,h2,h3{font-family:"Shippori Mincho","Yu Mincho",serif;font-weight:600;margin:0;text-wrap:balance}
+h1{font-size:1.9rem;line-height:1.4}h2{font-size:1.15rem}h3{font-size:.95rem}
+p{margin:0}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.thesis{font-size:1.03rem;color:var(--muted);max-width:42rem}
+.thesis b{color:var(--ink)}
+header{display:flex;flex-direction:column;gap:.7rem;border-bottom:1px solid var(--rule);padding-bottom:1.5rem}
+section{display:flex;flex-direction:column;gap:.8rem}
+.fig{background:var(--sunk);border:1px solid var(--rule-soft);border-radius:.45rem;padding:1rem}
+.fig svg{width:100%;height:auto;display:block;color:var(--ink);overflow:visible}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:32rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .6rem;border-bottom:1px solid var(--rule-soft)}
+th{font-size:.74rem;color:var(--muted);letter-spacing:.05em;border-bottom-color:var(--rule);white-space:nowrap}
+td.n{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--key);white-space:nowrap;width:9rem}
+td b{color:var(--ink)}
+code{font-family:"JetBrains Mono",monospace;font-size:.86em;background:var(--sunk);padding:.05rem .3rem;border-radius:.2rem}
+pre{margin:0;background:var(--sunk);border:1px solid var(--rule-soft);border-radius:.45rem;padding:.9rem 1rem;
+overflow-x:auto;font-family:"JetBrains Mono",monospace;font-size:.78rem;line-height:1.7}
+.k{color:var(--key)}.w{color:var(--warn)}.m{color:var(--muted)}
+.gate{border-left:3px solid var(--warn);background:var(--card);padding:.7rem .9rem;border-radius:0 .35rem .35rem 0;
+font-size:.93rem}
+.gate b{color:var(--warn)}
+.src{font-size:.78rem;color:var(--muted)}
+ul{margin:0;padding-left:1.15rem;font-size:.9rem;color:var(--muted);display:flex;flex-direction:column;gap:.25rem}
+ul b{color:var(--ink)}
+</style>
+<div class="wrap">
+<header>
+  <p class="eyebrow">承認だけで進む ／ 受け渡しの作り</p>
+  <h1>回答が、私に届くまで</h1>
+  <p class="thesis">画面で押した承認が、どこを通って私に届き、<b>どこで人の一言が要るのか</b>。
+  部品は4つしかない ── 画面、受け取る役、回答1件のファイル、そして渡す役である。</p>
+</header>
+
+<section>
+  <div class="fig"><svg viewBox="0 0 760 412" role="img" aria-label="回答が画面からファイルへ落ち、フックを通って私に届き、盤面が更新されて画面へ戻る循環"><defs><marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--key)"/></marker></defs><text x="20" y="16" font-size="10" fill="var(--key)" font-weight="700">ローカル ── 書き込める</text><rect x="20" y="30" width="170" height="50" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="105.0" y="51.5" text-anchor="middle" font-size="9.5" fill="currentColor" font-weight="700">承認の画面</text><text x="105.0" y="65.5" text-anchor="middle" font-size="7.5" fill="currentColor">approval-only-simulator.html</text><rect x="240" y="30" width="170" height="50" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="325.0" y="51.5" text-anchor="middle" font-size="9.5" fill="currentColor" font-weight="700">serve.py</text><text x="325.0" y="65.5" text-anchor="middle" font-size="8.5" fill="currentColor">配る ＋ 受け取る</text><rect x="460" y="30" width="170" height="50" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="545.0" y="51.5" text-anchor="middle" font-size="9.5" fill="currentColor" font-weight="700">回答 1件</text><text x="545.0" y="65.5" text-anchor="middle" font-size="7.5" fill="currentColor">.waffle/answers/*.json</text><line x1="192" y1="55" x2="238" y2="55" stroke="var(--key)" stroke-width="1.4" marker-end="url(#aa)"/><text x="215" y="48" font-size="8.5" fill="var(--key)" text-anchor="middle">①</text><line x1="412" y1="55" x2="458" y2="55" stroke="var(--key)" stroke-width="1.4" marker-end="url(#aa)"/><text x="435" y="48" font-size="8" fill="var(--key)" text-anchor="middle">② POST</text><rect x="460" y="96" width="170" height="28" rx="4" fill="none" stroke="var(--muted)" stroke-width="1.1" stroke-dasharray="4 3"/><text x="545.0" y="113.5" text-anchor="middle" font-size="7.5" fill="var(--muted)">answer-sheet.schema.json</text><line x1="545" y1="80" x2="545" y2="96" stroke="var(--muted)" stroke-width="1"/><text x="646" y="114" font-size="8" fill="var(--muted)">形だけ検査する</text><line x1="0" y1="150" x2="760" y2="150" stroke="var(--warn)" stroke-width="1.2" stroke-dasharray="6 5"/><text x="20" y="144" font-size="9" fill="var(--warn)" font-weight="700">ここから下は、あなたが何か書くまで動かない</text><rect x="460" y="172" width="170" height="50" rx="4" fill="none" stroke="var(--key)" stroke-width="1.5"/><text x="545.0" y="193.5" text-anchor="middle" font-size="9" fill="var(--key)" font-weight="700">UserPromptSubmit</text><text x="545.0" y="207.5" text-anchor="middle" font-size="8.5" fill="var(--key)">未読の回答だけ渡す</text><line x1="545" y1="124" x2="545" y2="170" stroke="var(--key)" stroke-width="1.4" marker-end="url(#aa)"/><text x="560" y="166" font-size="8.5" fill="var(--key)">③</text><rect x="240" y="172" width="170" height="50" rx="4" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="325.0" y="193.5" text-anchor="middle" font-size="8.5" fill="var(--key)" font-weight="700">Claude Code のセッション</text><text x="325.0" y="207.5" text-anchor="middle" font-size="7.5" fill="var(--key)">承認を反映し、差し戻しに答える</text><rect x="20" y="172" width="170" height="50" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="105.0" y="193.5" text-anchor="middle" font-size="9.5" fill="currentColor" font-weight="700">盤面 ・ spec</text><text x="105.0" y="207.5" text-anchor="middle" font-size="8.5" fill="currentColor">更新される正本</text><line x1="458" y1="197" x2="412" y2="197" stroke="var(--key)" stroke-width="1.4" marker-end="url(#aa)"/><text x="435" y="190" font-size="8.5" fill="var(--key)" text-anchor="middle">④</text><line x1="238" y1="197" x2="192" y2="197" stroke="var(--key)" stroke-width="1.4" marker-end="url(#aa)"/><text x="215" y="190" font-size="8.5" fill="var(--key)" text-anchor="middle">⑤</text><line x1="105" y1="170" x2="105" y2="82" stroke="var(--key)" stroke-width="1.4" marker-end="url(#aa)"/><text x="120" y="130" font-size="8.5" fill="var(--key)">⑥ 画面を作り直す</text><line x1="0" y1="246" x2="760" y2="246" stroke="var(--rule)"/><text x="20" y="268" font-size="10" fill="var(--dim)" font-weight="700">Artifact ── 外から書き込めない</text><rect x="20" y="282" width="170" height="46" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.3"/><text x="105.0" y="301.5" text-anchor="middle" font-size="9.5" fill="var(--dim)" font-weight="700">同じ画面</text><text x="105.0" y="315.5" text-anchor="middle" font-size="7.5" fill="var(--dim)">claude.ai の Artifact</text><rect x="240" y="282" width="150" height="46" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.3"/><text x="315.0" y="301.5" text-anchor="middle" font-size="9.5" fill="var(--dim)" font-weight="700">写す</text><text x="315.0" y="315.5" text-anchor="middle" font-size="8.5" fill="var(--dim)">JSON を作る</text><rect x="440" y="282" width="150" height="46" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.3"/><text x="515.0" y="308.5" text-anchor="middle" font-size="9.5" fill="var(--dim)" font-weight="700">会話へ貼る</text><rect x="580" y="352" width="0" height="0" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.3"/><line x1="192" y1="305" x2="238" y2="305" stroke="var(--dim)" stroke-width="1.4" marker-end="url(#aa)"/><line x1="392" y1="305" x2="438" y2="305" stroke="var(--dim)" stroke-width="1.4" marker-end="url(#aa)"/><line x1="590" y1="305" x2="640" y2="305" stroke="var(--dim)" stroke-width="1.4"/><line x1="640" y1="305" x2="640" y2="212" stroke="var(--dim)" stroke-width="1.4" marker-end="url(#aa)"/><text x="654" y="262" font-size="8" fill="var(--dim)">同じセッションへ入る</text><text x="20" y="352" font-size="9" fill="var(--key)" font-weight="700">どちらの道でも、私が動き出すのはあなたが何か書いたときだけ ── 違うのは、書くのが本文か「読んで」の一言か</text><text x="20" y="374" font-size="9" fill="var(--muted)">回答ファイルは1件ごとに残る。承認したもの ・ 差し戻したもの ・ 書いたことが、あとから順に読める</text><text x="20" y="394" font-size="9" fill="var(--muted)">schema が見るのは形だけ（諾否は3値、差し戻しの理由は3値）── 中身が妥当かは、私とあなたが決める</text></svg></div>
+</section>
+
+<section>
+  <h2>部品は4つ</h2>
+  <div class="scroll"><table>
+    <tr><th>部品</th><th>何をするか</th><th>置き場所</th></tr>
+    <tr><td class="n">承認の画面</td><td>答えを見せ、諾否と書き込みを受け取る。<b>いま在るもの</b></td>
+      <td><code>docs/adr/approval-only-simulator.html</code></td></tr>
+    <tr><td class="n">serve.py</td><td>画面を配り、<b>POST された回答をファイルに落とす</b>。
+      いまの <code>python3 -m http.server</code> を置き換える（30行ほど）</td>
+      <td><code>docs/adr/serve.py</code></td></tr>
+    <tr><td class="n">回答 1件</td><td>1回の回答が1ファイル。<b>消さずに積む</b> ──
+      承認したもの・差し戻したもの・書いたことが、あとから順に読める</td>
+      <td><code>.waffle/answers/&lt;日時&gt;.json</code></td></tr>
+    <tr><td class="n">渡す役</td><td><code>UserPromptSubmit</code> のフック。
+      <b>未読の回答があるときだけ</b>その中身を私に渡す。無ければ何もしない</td>
+      <td>フック1本</td></tr>
+  </table></div>
+  <p class="src">ほかに、形を検査するための JSON Schema を1つ（<code>docs/adr/answer-sheet.schema.json</code>）。
+  Waffle の schema 体系には入れない ── <b>そこに入れるかは論点17 が未決だから</b>。</p>
+</section>
+
+<section>
+  <h2>止まる場所は、1か所だけ</h2>
+  <p class="gate"><b>私が動き出せるのは、あなたが何か書いたときだけです。</b>
+  ファイルが書かれても、Claude Code が自分でターンを始めることはありません ──
+  だから「Hook で全自動」にはならず、<b>Hook にできるのは、その一言を短くすること</b>です。</p>
+  <div class="scroll"><table>
+    <tr><th></th><th>あなたが書くもの</th><th>私が読むもの</th></tr>
+    <tr><td class="n">フックを置く</td><td><b>何でもよい一言</b>（「読んで」でも、次の話でも）</td>
+      <td>未読の回答ファイル（フックが渡す）</td></tr>
+    <tr><td class="n">フックを置かない</td><td><b>「回答を読んで」</b>と明示する</td>
+      <td>同じファイル（私が開く）</td></tr>
+    <tr><td class="n">Artifact から</td><td><b>写した JSON を貼る</b></td><td>貼られた本文</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>ファイル1件の中身</h2>
+  <pre><span class="m">{</span>
+  <span class="k">"board"</span>: "brainstorm-schema-conception-board",
+  <span class="k">"answeredAt"</span>: "2026-09-09T21:14:00+09:00",
+  <span class="k">"answers"</span>: [
+    { <span class="k">"questionId"</span>: "Q1", <span class="k">"topic"</span>: "論点14", <span class="k">"title"</span>: "型を立てる基準",
+      <span class="k">"verdict"</span>: "approved",  <span class="m">// approved ｜ returned ｜ unanswered</span>
+      <span class="k">"returnReason"</span>: null,   <span class="m">// もっと単純に ｜ 前提が違う ｜ 別の道も見たい</span>
+      <span class="k">"note"</span>: "軸の判定は文書側にも残してほしい" },
+    { <span class="k">"questionId"</span>: "Q3", <span class="k">"topic"</span>: "論点17", <span class="k">"title"</span>: "ADR 以外を schema で持つか",
+      <span class="k">"verdict"</span>: "returned", <span class="k">"returnReason"</span>: "前提が違う",
+      <span class="k">"note"</span>: "hook を散らすと運用が追えない気がする" }
+  <span class="m">]
+}</span></pre>
+  <ul>
+    <li><b>諾否と差し戻しの理由は、値を固定する</b> ── 3値ずつ。<b>schema が検査できるのは、ここまで</b></li>
+    <li><b><code>note</code> は自由文のまま</b> ── 形を決めると、書けることが減る。中身が妥当かは機械には分からない</li>
+    <li><b>未回答も1件として残す</b> ── 答えなかったことも情報である</li>
+  </ul>
+</section>
+
+<section>
+  <h2>これを作ると、何が変わるか</h2>
+  <div class="scroll"><table>
+    <tr><th></th><th>いま</th><th>作ったあと</th></tr>
+    <tr><td class="n">渡し方</td><td>画面の文章を写して貼る</td><td><b>押した時点でファイルになる</b>（ローカル）</td></tr>
+    <tr><td class="n">私の読み方</td><td>会話に貼られた文章を読む</td><td><b>形の決まった JSON を読む</b> ── 解釈がぶれない</td></tr>
+    <tr><td class="n">履歴</td><td>会話の中に流れる</td><td><b>1回1ファイルで積む</b> ── 何を差し戻したかが後から読める</td></tr>
+    <tr><td class="n">あなたの手間</td><td>写す → 貼る</td><td><b>押す → 一言</b></td></tr>
+  </table></div>
+  <p class="src">増える物は3つ（<code>serve.py</code> ・ フック1本 ・ schema 1本）。
+  減る物はありません ── 画面も盤面もそのままです。</p>
+</section>
+</div>
