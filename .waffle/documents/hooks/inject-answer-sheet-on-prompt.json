@@ -1,0 +1,44 @@
+{
+  "documentId": "inject-answer-sheet-on-prompt",
+  "documentType": "Hook",
+  "schemaRef": "HookSchema/v1",
+  "hookKind": "self-contained",
+  "status": "ACTIVE",
+  "content": {
+    "title": {
+      "blockType": "Title",
+      "title": "承認の画面から届いた回答を、次の発言のときに読ませるHook：inject-answer-sheet-on-prompt"
+    },
+    "purpose": {
+      "blockType": "Purpose",
+      "title": "目的",
+      "text": "承認の画面で押した回答はファイルに落ちるが、Claude Code は自分からターンを始められないため、そのままでは誰も読まない。利用者が次に何か書いたとき、まだ読んでいない回答だけを文脈へ入れることで、『回答を読んで』と毎回書かせずに済むようにする。"
+    },
+    "trigger": {
+      "blockType": "Trigger",
+      "title": "いつ働くか",
+      "text": "利用者が何か書いて送ったとき（Claude Code: UserPromptSubmit）"
+    },
+    "behavior": {
+      "blockType": "Behavior",
+      "title": "判定ロジック",
+      "text": "回答の置き場（.waffle/answers/）にあるファイルのうち、既読の印（.waffle/answers/.read）より新しいものだけを拾う。1件も無ければ何も出力せず沈黙する。在れば、各ファイルの board・answeredAt と、問いごとの questionId・verdict・returnReason・note を並べて追加の文脈として出し、そのファイル名を既読の印へ書き足す。壊れた JSON は読み飛ばし、その旨だけを1行で出す。"
+    },
+    "scriptRef": {
+      "blockType": "ScriptRef",
+      "title": "スクリプト実体",
+      "text": ".waffle/hooks/inject-answer-sheet-on-prompt.py"
+    },
+    "guardrails": {
+      "blockType": "Guardrails",
+      "title": "ガードレール",
+      "items": [
+        "回答が0件のときは何も出力しない（沈黙する）",
+        "既読にしたものを二度と出さない。同じ回答が毎回文脈へ入ると、古い諾否で作業を進めることになる",
+        "回答ファイルを消さない・書き換えない。既読の管理は別ファイル（.waffle/answers/.read）で行う",
+        "判定ロジックを増やさない。読むのは形の決まった欄だけで、note の中身は解釈せずそのまま渡す",
+        "壊れた JSON で止まらない。読み飛ばして、読み飛ばしたことだけを伝える"
+      ]
+    }
+  }
+}

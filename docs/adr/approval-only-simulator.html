@@ -273,14 +273,16 @@ footer{border-top:1px solid var(--rule);padding-top:1.2rem;font-size:.8rem;color
 
 <div class="handback">
   <h3>書いたことを、私に渡す</h3>
-  <p class="src">諾否と、各欄に書いたことをまとめます。<b>ここに出た文章を会話に貼ってください</b> ──
-  それを材料に、答えを組み直します。差し戻しも書き込みも、いつでも構いません。</p>
-  <textarea id="out" readonly aria-label="私に渡す文章"></textarea>
+  <p class="src">諾否と、各欄に書いたことを1件の回答にまとめて送ります。
+  <b>送れたら、Claude に一言書いてください</b> ── そこで読まれます。
+  送れない場所（Artifact など、外から書き込めないところ）で開いているときは、
+  下の JSON を写して会話に貼ってください。差し戻しも書き足しも、いつでも構いません。</p>
   <div class="acts">
-    <button class="act yes" id="build">いまの状態をまとめる</button>
+    <button class="act yes" id="send">まとめて送る</button>
     <button class="act" id="copy">写す</button>
     <span class="src" id="copied"></span>
   </div>
+  <textarea id="out" readonly aria-label="私に渡す回答"></textarea>
 </div>
 
 <footer>
@@ -502,33 +504,52 @@ const count = el => el.textContent.replace(/\s+/g,'').length;
 document.getElementById('m-a').innerHTML = count(document.querySelector('.pane.now .body')) + '<small>字</small>';
 document.getElementById('m-b').innerHTML = count(document.querySelector('.pane.next .body')) + '<small>字</small>';
 
-document.getElementById('build').addEventListener('click', () => {
-  const lines = ['【承認だけで進む ── 私の返答】', ''];
+function sheet(){
   const seen = {};
   state.log.forEach(l => { seen[l.id] = l; });
+  const answers = [];
   document.querySelectorAll('.q').forEach(el => {
-    const id = el.dataset.id;
-    const h = el.querySelector('h3').textContent;
-    const l = seen[id];
+    const id = el.dataset.id, l = seen[id];
     const note = (el.querySelector('textarea').value || '').trim();
     if (!l && !note) return;
-    lines.push(`■ ${id} ${h}`);
-    lines.push(`　諾否：${l ? l.v + (l.r ? `（${l.r}）` : '') : '未回答'}`);
-    if (note) lines.push(`　書いたこと：${note}`);
-    lines.push('');
+    const a = { questionId: id,
+      topic: el.querySelector('.tag').textContent,
+      title: el.querySelector('h3').textContent,
+      verdict: l ? (l.v === '承認' ? 'approved' : 'returned') : 'unanswered',
+      returnReason: l && l.r ? l.r : null };
+    if (note) a.note = note;
+    answers.push(a);
   });
-  if (lines.length === 2) lines.push('（まだ何も答えていません）');
-  document.getElementById('out').value = lines.join('\n');
-  document.getElementById('copied').textContent = '';
+  return { board: 'brainstorm-schema-conception-board',
+           answeredAt: new Date().toISOString(), answers };
+}
+
+const out = document.getElementById('out'), msg = document.getElementById('copied');
+
+document.getElementById('send').addEventListener('click', async () => {
+  const body = sheet();
+  if (!body.answers.length){ msg.textContent = 'まだ何も答えていません'; return; }
+  out.value = JSON.stringify(body, null, 2);
+  msg.textContent = '送っています…';
+  try {
+    const res = await fetch('/answer', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: out.value});
+    const j = await res.json();
+    msg.textContent = res.ok
+      ? `送りました（${j.count} 件）── Claude に一言書いてください`
+      : `送れませんでした：${(j.faults || [j.error]).join(' / ')}`;
+  } catch {
+    msg.textContent = 'ここからは送れません ── 下の JSON を写して、会話に貼ってください';
+  }
 });
 
 document.getElementById('copy').addEventListener('click', async () => {
-  const t = document.getElementById('out');
-  const msg = document.getElementById('copied');
-  if (!t.value){ msg.textContent = '先に「いまの状態をまとめる」を押してください'; return; }
-  t.removeAttribute('readonly'); t.select(); t.setSelectionRange(0, t.value.length);
-  try { await navigator.clipboard.writeText(t.value); msg.textContent = '写しました'; }
+  const body = sheet();
+  if (!body.answers.length){ msg.textContent = 'まだ何も答えていません'; return; }
+  out.value = JSON.stringify(body, null, 2);
+  out.removeAttribute('readonly'); out.select(); out.setSelectionRange(0, out.value.length);
+  try { await navigator.clipboard.writeText(out.value); msg.textContent = '写しました'; }
   catch { msg.textContent = '選択したので、そのままコピーしてください'; }
-  t.setAttribute('readonly','');
+  out.setAttribute('readonly','');
 });
 </script>
