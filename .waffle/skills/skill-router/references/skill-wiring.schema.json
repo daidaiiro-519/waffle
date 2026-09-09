@@ -4,35 +4,54 @@
   "title": "配線表",
   "description": "どの作業のときに、何を、どのSkillに頼むか。1行が1つの頼みごと。行はプロジェクトごとに違うので、skill-router 本体ではなくこのファイルに置く。",
   "type": "object",
-  "required": ["配線"],
+  "required": [
+    "配線"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": {"type": "string"},
+    "$schema": {
+      "type": "string"
+    },
     "配線": {
       "type": "array",
       "minItems": 0,
       "description": "1行が1つの頼みごと。0行でもよい（配線が無い状態は失敗ではない）。",
       "items": {
         "type": "object",
-        "required": ["何を頼むか", "どの作業のとき", "呼ぶSkill", "呼ぶSkillが無いとき"],
+        "required": [
+          "何を頼むか",
+          "どの作業のとき",
+          "呼ぶSkill",
+          "結果をどれだけ当てにするか"
+        ],
         "additionalProperties": false,
         "properties": {
           "何を頼むか": {
-            "type": "string", "minLength": 1,
+            "type": "string",
+            "minLength": 1,
             "description": "頼む内容。Skillの名前ではなく、してほしいことを書く（例:「認証まわりの安全性を見てもらう」）"
           },
           "どの作業のとき": {
-            "type": "string", "minLength": 1,
+            "type": "string",
+            "minLength": 1,
             "description": "その頼みごとが必要になる作業。同じ作業でも対象で変わるなら、対象まで書く"
           },
           "呼ぶSkill": {
-            "type": "array", "minItems": 1,
-            "items": {"type": "string", "minLength": 1},
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
             "description": "頼む相手のSkill名。複数書いてよい"
           },
-          "呼ぶSkillが無いとき": {
-            "enum": ["作業を止める", "結果だけ渡す", "呼ばずに進む"],
-            "description": "作業を止める＝相手の結果が返るまで先へ進めない／結果だけ渡す＝結果は渡すが止めない／呼ばずに進む＝配線が無いことを咎めず、作業側ができる範囲で進む"
+          "結果をどれだけ当てにするか": {
+            "enum": [
+              "結果が要る",
+              "結果は参考",
+              "呼べたら呼ぶ"
+            ],
+            "description": "結果が要る＝呼んで、結果が返るまで作業を進めない（呼べなければ止める）／結果は参考＝呼ぶが結果を待たずに進める／呼べたら呼ぶ＝相手が居なければ呼ばずに進む"
           }
         }
       }

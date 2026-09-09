@@ -1,0 +1,472 @@
+<title>配線を3本足し、欄名の誤りを直す</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
+--move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;--chipbg:#2b281f;
+--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}}
+:root[data-theme="dark"]{--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;
+--chipbg:#2b281f;--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);margin:0;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;line-height:1.85}
+.wrap{max-width:92rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+h1{font-size:1.5rem;margin:0 0 .3rem;letter-spacing:.02em}
+.lede{font-size:1.06rem;border-left:4px solid var(--key);padding:.55rem 0 .55rem .9rem;
+margin:1rem 0 2rem;background:var(--panel);max-width:68rem}
+h2{font-size:1.12rem;margin:2.4rem 0 .8rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h3{font-size:1rem;margin:1.6rem 0 .5rem;color:var(--key)}
+table{border-collapse:collapse;width:100%;margin:.9rem 0;font-size:.93rem}
+th,td{border:1px solid var(--line);padding:.42rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--chipbg);font-weight:700}
+code{background:var(--chipbg);padding:.08rem .3rem;border-radius:.2rem;font-size:.88em}
+pre{background:var(--chipbg);padding:.7rem .9rem;border-radius:.3rem;overflow-x:auto;font-size:.84rem}
+.scroll{overflow-x:auto}
+.gone{color:var(--gone)}
+#bar{position:sticky;top:0;z-index:9;background:var(--panel);border-bottom:2px solid var(--move);
+padding:.5rem .9rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;font-size:.9rem;
+margin:0 -1.2rem 1rem}
+#bar button{font:inherit;padding:.2rem .7rem;border-radius:.25rem;border:1px solid var(--move);
+background:transparent;color:var(--move);cursor:pointer}
+#bar button:hover{background:var(--move);color:var(--paper)}
+#tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 0;border-bottom:2px solid var(--line)}
+.tab{font:inherit;font-size:.93rem;padding:.45rem .95rem;border:1px solid var(--line);
+border-bottom:0;border-radius:.3rem .3rem 0 0;background:var(--panel);color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:700;
+box-shadow:0 2px 0 0 var(--paper)}
+.tab .n{font-size:.78rem;color:var(--move);margin-left:.35rem;font-weight:700}
+.pane{border:1px solid var(--line);border-top:0;background:var(--paper)}
+.pane.md{padding:1.2rem 1.8rem}
+.pane.md h1{font-size:1.25rem;margin-top:0}
+.pane.html{padding:0}
+.pane.html iframe{display:block;width:100%;border:0;background:var(--paper)}
+.lane{font-size:.8rem;color:var(--muted);padding:.35rem .9rem;border-bottom:1px dashed var(--line);
+background:var(--panel);display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.lane .how{margin-left:auto;font-style:italic}
+.idx{border-bottom:1px solid var(--line);background:var(--panel);padding:0 .9rem .5rem}
+.idx summary{cursor:pointer;font-size:.88rem;padding:.45rem 0;font-weight:700;color:var(--move)}
+.idx ol{margin:0 0 .3rem;padding-left:1.4rem;font-size:.88rem}
+.idx li{margin:.35rem 0}
+.idx button.go{font:inherit;font-size:.82rem;padding:.05rem .5rem;margin-left:.4rem;
+border:1px solid var(--move);border-radius:.2rem;background:transparent;color:var(--move);cursor:pointer}
+.idx button.go:hover{background:var(--move);color:var(--paper)}
+.idx .b{color:var(--muted);font-size:.84rem}
+</style>
+<style id="markcss-live">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</style>
+<script type="text/plain" id="markcss">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</script>
+
+<div class="wrap">
+<h1>配線を3本足し、欄名の誤りを直す</h1>
+<p class="lede"><b>実際に配線を組もうとして、欄名の誤りが出た。</b>「呼ぶSkillが無いとき」と名づけたのに、3つの値のうち2つは<b>相手が居るときの話</b>だった ── 『無いとき』と『呼んだあとどう扱うか』を1つの欄に混ぜていた。<b>3つとも同じ問いに答える形へ直し、同時に配線を3本足す</b>（9行→12行）。<b>まだ正本へ当てていない。</b></p>
+<h2>足す3本</h2><table><tr><th>何を頼むか</th><th>呼ぶSkill</th><th>結果をどれだけ当てにするか</th><th>なぜ</th></tr><tr><td>業務領域・区切られた文脈・集約の切り方を、原典に照らして見てもらう</td><td><code>ddd-advisor</code></td><td>結果は参考</td><td><b>実測。</b>この盤面の論点15と19は、ddd-advisor の knowledge 22件を根拠に決めた ── ただし Skill を呼ばず、ファイルを直接読んでいた</td></tr><tr><td>構造化データから図を組んでもらう</td><td><code>design-svg</code></td><td>呼べたら呼ぶ</td><td><b>このセッションで、座標を手で置いた図を7ファイル書いた。</b>design-svg には部品23・トークン109の目録が既にある（目録を実際に叩いて確認）</td></tr><tr><td>図の構文を選んでもらう</td><td><code>mermaid-guide</code></td><td>呼べたら呼ぶ</td><td>ddd-advisor から Mermaid への直接参照を消したので、<b>行き先が宙に浮いていた</b></td></tr></table><h2>直す欄名</h2><table><tr><th></th><th>前</th><th>後</th></tr><tr><td>欄名</td><td>呼ぶSkillが無いとき</td><td><b>結果をどれだけ当てにするか</b></td></tr><tr><td>値</td><td>作業を止める ／ 結果だけ渡す ／ 呼ばずに進む</td><td><b>結果が要る ／ 結果は参考 ／ 呼べたら呼ぶ</b></td></tr></table><p><b>既存9行は機械的に移した</b>（止める→結果が要る、結果だけ渡す→結果は参考）。12行とも新しい形に適合することを、schema に当てて確かめてある。</p>
+<div id="bar"><b>変更 4 件</b>
+<button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="r">skill-router の SKILL.md<span class="n">4</span></button><button class="tab" role="tab" data-t="w">skill-wiring.json（9行→12行）<span class="n">0</span></button><button class="tab" role="tab" data-t="s">skill-wiring.schema.json<span class="n">0</span></button></div>
+<section class="pane md" data-k="r" hidden><details class="idx" open><summary>この面の変更 4 件</summary><ol><li><b>結果をどれだけ当てにするか</b><button class="go" data-i="0">その場所へ</button><div class="b">欄名は『無いとき』を問うているのに、値のうち2つ（作業を止める・結果だけ渡す）は**相手が居るときの話**だった。『無いとき』と『呼んだあとどう扱うか』を1つの欄に混ぜていた。3つとも同じ問い（結果をどれだけ当てにするか）に答える形へ直す</div></li><li><b>呼んで、結果が返るまで作業を進めない。呼べなければ作業を止める</b><button class="go" data-i="1">その場所へ</button><div class="b">相手が居ないときにどうなるかが書かれていなかった。1つの値で最後まで言い切る</div></li><li><b>呼ぶが、結果を待たずに作業を進める。結果は返ってきた時点で渡す</b><button class="go" data-i="2">その場所へ</button><div class="b">『渡す』とだけ書くと、待つのかどうかが読めない。待たないことを書く</div></li><li><b>相手が居なければ呼ばずに進む。作業側が自分でできる範囲でやる</b><button class="go" data-i="3">その場所へ</button><div class="b">『咎めない』は姿勢の話で、何をするかを言っていない</div></li></ol></details><div class="doc"><hr>
+<p>name: &quot;skill-router&quot;<br>description: &quot;ある作業を1つのSkillだけでは終えられないとき、<strong>どのSkillを一緒に呼ぶか</strong>を配線表を見て決める際に使う。Orchestratorが作業の途中で必要な回数だけ呼び、呼んだSkillから返ってきた結果を、その作業への入力として渡す。配線表が持つのは「何を、誰に頼むか」だけで、「いつ呼ぶか（作業の前に材料を集めるのか、作業のあとに十分かを確かめるのか、両方か）」はOrchestratorが決める。skill-router自身はタイミングを持たない。\n\n<strong>この文書が持つのは、配線表の読み方だけである。配線そのものは持たない。</strong> 配線はプロジェクトごとに違う。ここに書けば、書いたプロジェクトでしか使えないSkillになる。\n\n<strong>どんなSkillを呼んでよいかも、この文書は決めない。</strong> それはプロジェクトごとの決め事なので、配線表のファイルに書く。&quot;</p>
+<hr>
+<h1>一緒に呼ぶSkillを配線表から決めるrouter Skill：skill-router</h1>
+<h2>目的</h2>
+<p>ある作業を1つのSkillだけでは終えられないとき、<strong>どのSkillを一緒に呼ぶか</strong>を配線表を見て決める際に使う。Orchestratorが作業の途中で必要な回数だけ呼び、呼んだSkillから返ってきた結果を、その作業への入力として渡す。配線表が持つのは「何を、誰に頼むか」だけで、「いつ呼ぶか（作業の前に材料を集めるのか、作業のあとに十分かを確かめるのか、両方か）」はOrchestratorが決める。skill-router自身はタイミングを持たない。</p>
+<p><strong>この文書が持つのは、配線表の読み方だけである。配線そのものは持たない。</strong> 配線はプロジェクトごとに違う。ここに書けば、書いたプロジェクトでしか使えないSkillになる。</p>
+<p><strong>どんなSkillを呼んでよいかも、この文書は決めない。</strong> それはプロジェクトごとの決め事なので、配線表のファイルに書く。</p>
+<hr>
+<h2>役割</h2>
+<p>- 1つのSkillだけでは終えられない作業を、<strong>外にある配線表</strong>を見て見分ける<br>- <strong>何を頼むか・誰を呼ぶか・その相手が居ないときどうするか</strong>を返す<br>- 呼ぶSkillを、それぞれ独立した目的・役割・タスク・成果物・受け入れ基準を持たせて並列に呼び出せるよう、<strong>呼ぶSkillの名前の一覧</strong>を返す<br>- 作業側のSkillと呼ばれる側のSkillが互いを呼び合う形を避け、Orchestratorに代わって窓口になる<br>- ユーザーから配線の追加・修正・削除を頼まれたときは、対話しながら<strong>配線表のファイル</strong>を書き換える（判定だけを頼まれたときは書き換えない）</p>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>これから行う作業の名前</td><td>明示されなければ、実行しようとしている内容から推測し、分からなければ呼び出し元に聞く。</td></tr><tr><td>その作業が何を対象にするか</td><td>同じ作業でも対象によって呼ぶ相手が変わる場合は必須（対象ごとに配線表を引くため）。前の段階で実際に呼んだSkillがあれば、それも受け取る（固定リストではなく、そのつど引き継ぐ）。</td></tr><tr><td><strong>配線表の場所</strong></td><td><strong>明示されなければ、プロジェクト直下の <code>skill-wiring.json</code> を見る。無ければ配線が1件も無いものとして扱い、何も返さない</strong>（失敗にしない）。</td></tr></table></div>
+<hr>
+<h2>配線表</h2>
+<p><strong>配線表は、このSkillの外にある1つのファイルである。</strong> 形は <code>references/skill-wiring.schema.json</code> が決める。1行が4つの欄を持つ。</p>
+<div class="wrap"><table><tr><th>欄</th><th>何を書くか</th></tr><tr><td>何を頼むか</td><td><strong>頼む内容</strong>。Skillの名前ではなく、してほしいことを書く（例:「認証まわりの安全性を見てもらう」）</td></tr><tr><td>どの作業のとき</td><td>その頼みごとが必要になる作業。同じ作業でも対象で変わるなら、対象まで書く</td></tr><tr><td>呼ぶSkill</td><td>頼む相手のSkill名（複数可）</td></tr><tr><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="| 呼ぶSkillが無いとき | 作業を止める ／ 結果だけ渡す ／ 呼ばずに進む のいずれか |" data-w="欄名は『無いとき』を問うているのに、値のうち2つ（作業を止める・結果だけ渡す）は**相手が居るときの話**だった。『無いとき』と『呼んだあとどう扱うか』を1つの欄に混ぜていた。3つとも同じ問い（結果をどれだけ当てにするか）に答える形へ直す">結果をどれだけ当てにするか</mark></td><td>結果が要る ／ 結果は参考 ／ 呼べたら呼ぶ のいずれか</td></tr></table></div>
+<div class="wrap"><table><tr><th>値</th><th>何が起きるか</th></tr><tr><td>結果が要る</td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="呼んだ相手の結果が返るまで、その作業を先へ進めない" data-w="相手が居ないときにどうなるかが書かれていなかった。1つの値で最後まで言い切る">呼んで、結果が返るまで作業を進めない。呼べなければ作業を止める</mark></td></tr><tr><td>結果は参考</td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="結果は作業へ渡すが、作業は止めない" data-w="『渡す』とだけ書くと、待つのかどうかが読めない。待たないことを書く">呼ぶが、結果を待たずに作業を進める。結果は返ってきた時点で渡す</mark></td></tr><tr><td>呼べたら呼ぶ</td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="配線が無いことを咎めない。作業側が自分でできる範囲で進む" data-w="『咎めない』は姿勢の話で、何をするかを言っていない">相手が居なければ呼ばずに進む。作業側が自分でできる範囲でやる</mark></td></tr></table></div>
+<pre class="code">{
+  &quot;何を頼むか&quot;: &quot;認証まわりの安全性を見てもらう&quot;,
+  &quot;どの作業のとき&quot;: &quot;code-review（認証・権限を含む変更）&quot;,
+  &quot;呼ぶSkill&quot;: [&quot;security-advisor&quot;],
+  &quot;結果をどれだけ当てにするか&quot;: &quot;結果が要る&quot;
+}</pre>
+<hr>
+<h2>ガードレール</h2>
+<p>- <strong>配線の行を、この文書に書かない。</strong> 行は配線表のファイルにだけ置く ── ここに書いた時点で、書いたプロジェクトでしか使えないSkillになる<br>- <strong>呼んでよいSkillの種類を、この文書で限定しない。</strong> どのSkillを呼んでよいかはプロジェクトごとの決め事なので、配線表のファイルに書く<br>- 配線表に行が無い作業は、1つのSkillで終えられるものとして扱い、他のSkillを呼ばない<br>- <strong>配線表が見つからないことを、失敗として扱わない。</strong> 配線が1件も無いものとして進む ── 持ち出した先で必ず止まる作りにしない<br>- <strong>「結果をどれだけ当てにするか」に書いた値が、そのまま振る舞いになる。</strong> 結果が要る・結果は参考・呼べたら呼ぶ の3つ以外を書かない<br>- <strong>1行だけに当てはまる例外を、この文書に書かない。</strong> 前の段階から引き継ぐかどうかは、その行の「どの作業のとき」に書く<br>- skill-router自身は、作業側のSkillも呼ばれる側のSkillも、中で何をしているかを知らない。返すのは名前の一覧までで、並列呼び出しの組み立てと起動はOrchestratorが行う<br>- 配線表の行は「いつ呼ぶか」を持たない。同じ行を、1つの作業の中でOrchestratorが何度呼んでもよい。前用・後用の行を別々に作らない</p>
+<hr>
+<h2>参照</h2>
+<p>- <code>references/skill-wiring.schema.json</code>: 配線表の形を検査するJSON Schema。4つの欄と、「結果をどれだけ当てにするか」に書ける3つの値を定める</p></div></section><section class="pane html" data-k="w" data-tab="skill-wiring.json（9行→12行）" hidden><div class="lane"><b>そのままの見た目で置く</b><span class="how">経路を確かめている…</span></div><template data-shadowcss="">{
+  "$schema": "./.claude/skills/skill-router/references/skill-wiring.schema.json",
+  "配線": [
+    {
+      "何を頼むか": "ドメイン仕様の設計をDDDの観点で見てもらう",
+      "どの作業のとき": "Spec-authoring（ドメイン仕様書）",
+      "呼ぶSkill": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果が要る"
+    },
+    {
+      "何を頼むか": "技術の選び方と構造の妥当性を見てもらう",
+      "どの作業のとき": "Spec-authoring（技術スタック・アーキテクチャ・コーディング規約）",
+      "呼ぶSkill": [
+        "tech-lead-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果が要る"
+    },
+    {
+      "何を頼むか": "テストの方針と観点の抜けを見てもらう",
+      "どの作業のとき": "Spec-authoring（テスト方針・テスト規約）",
+      "呼ぶSkill": [
+        "tech-lead-advisor",
+        "qa-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果が要る"
+    },
+    {
+      "何を頼むか": "基盤の構成を見てもらう",
+      "どの作業のとき": "Spec-authoring（インフラ仕様書）",
+      "呼ぶSkill": [
+        "platform-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果が要る"
+    },
+    {
+      "何を頼むか": "画面と操作の妥当性を見てもらう",
+      "どの作業のとき": "Spec-authoring（画面設計・プレゼンテーション仕様）",
+      "呼ぶSkill": [
+        "ux-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果は参考"
+    },
+    {
+      "何を頼むか": "引き継ぎ文書に残す設計判断を見てもらう",
+      "どの作業のとき": "Handoff-authoring（前の段階で実際に呼んだSkillをそのつど引き継ぐ。固定リストではない）",
+      "呼ぶSkill": [
+        "ddd-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果が要る"
+    },
+    {
+      "何を頼むか": "実装の設計判断を見てもらう",
+      "どの作業のとき": "Implementation（引き継ぎ文書に記録されたSkillをそのつど引き継ぐ。固定リストではない）",
+      "呼ぶSkill": [
+        "ddd-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果が要る"
+    },
+    {
+      "何を頼むか": "UIの実装を見てもらう",
+      "どの作業のとき": "Implementation（UIコンポーネント）",
+      "呼ぶSkill": [
+        "ux-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果は参考"
+    },
+    {
+      "何を頼むか": "原典を落として、原文の語で照合してもらう",
+      "どの作業のとき": "brainstorm（原典の札を付けるとき）",
+      "呼ぶSkill": [
+        "source-fidelity"
+      ],
+      "結果をどれだけ当てにするか": "呼べたら呼ぶ"
+    },
+    {
+      "何を頼むか": "業務領域・区切られた文脈・集約の切り方を、原典に照らして見てもらう",
+      "どの作業のとき": "brainstorm（業務の構造を決める論点を扱うとき）",
+      "呼ぶSkill": [
+        "ddd-advisor"
+      ],
+      "結果をどれだけ当てにするか": "結果は参考"
+    },
+    {
+      "何を頼むか": "構造化データから図を組んでもらう",
+      "どの作業のとき": "brainstorm（盤面や承認の画面に図を載せるとき）",
+      "呼ぶSkill": [
+        "design-svg"
+      ],
+      "結果をどれだけ当てにするか": "呼べたら呼ぶ"
+    },
+    {
+      "何を頼むか": "図の構文を選んでもらう",
+      "どの作業のとき": "ddd-advisor（説明に図を添えるとき）",
+      "呼ぶSkill": [
+        "mermaid-guide"
+      ],
+      "結果をどれだけ当てにするか": "呼べたら呼ぶ"
+    }
+  ],
+  "このプロジェクトの決め事": "見てもらう頼みごとの相手には、助言専門のSkillだけを当てる。それ以外を呼びたくなったときは、作業の切り方が細かすぎないかを先に疑う"
+}
+</template></section><section class="pane html" data-k="s" data-tab="skill-wiring.schema.json" hidden><div class="lane"><b>そのままの見た目で置く</b><span class="how">経路を確かめている…</span></div><template data-shadowcss="">{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://waffle.local/skill-router/skill-wiring.schema.json",
+  "title": "配線表",
+  "description": "どの作業のときに、何を、どのSkillに頼むか。1行が1つの頼みごと。行はプロジェクトごとに違うので、skill-router 本体ではなくこのファイルに置く。",
+  "type": "object",
+  "required": [
+    "配線"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "配線": {
+      "type": "array",
+      "minItems": 0,
+      "description": "1行が1つの頼みごと。0行でもよい（配線が無い状態は失敗ではない）。",
+      "items": {
+        "type": "object",
+        "required": [
+          "何を頼むか",
+          "どの作業のとき",
+          "呼ぶSkill",
+          "結果をどれだけ当てにするか"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "何を頼むか": {
+            "type": "string",
+            "minLength": 1,
+            "description": "頼む内容。Skillの名前ではなく、してほしいことを書く（例:「認証まわりの安全性を見てもらう」）"
+          },
+          "どの作業のとき": {
+            "type": "string",
+            "minLength": 1,
+            "description": "その頼みごとが必要になる作業。同じ作業でも対象で変わるなら、対象まで書く"
+          },
+          "呼ぶSkill": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "頼む相手のSkill名。複数書いてよい"
+          },
+          "結果をどれだけ当てにするか": {
+            "enum": [
+              "結果が要る",
+              "結果は参考",
+              "呼べたら呼ぶ"
+            ],
+            "description": "結果が要る＝呼んで、結果が返るまで作業を進めない（呼べなければ止める）／結果は参考＝呼ぶが結果を待たずに進める／呼べたら呼ぶ＝相手が居なければ呼ばずに進む"
+          }
+        }
+      }
+    },
+    "このプロジェクトの決め事": {
+      "type": "string",
+      "description": "どのSkillを呼んでよいかなど、このプロジェクトだけの取り決め。skill-router 本体は、ここに何が書かれていても振る舞いを変えない（読むのは人とAIである）"
+    }
+  }
+}
+</template></section>
+</div>
+<script>
+(function(){
+  var MARKCSS = document.getElementById("markcss").textContent;
+
+  /* 印を1つ、押せるようにする。iframe の中でも Shadow の中でも同じ手が効く */
+  function wire(root, doc){
+    root.querySelectorAll("mark.chg[data-w]").forEach(function(m){
+      var p = doc.createElement("div");
+      p.className = "pop"; p.hidden = true;
+      var b1 = doc.createElement("b"); b1.textContent = "変更前";
+      var pre = doc.createElement("pre"); pre.textContent = m.dataset.b;
+      var b2 = doc.createElement("b"); b2.textContent = "なぜ";
+      var w = doc.createElement("div"); w.textContent = m.dataset.w;
+      p.appendChild(b1); p.appendChild(pre); p.appendChild(b2); p.appendChild(w);
+      var host = m.closest("td") || m.closest("li") || m.parentNode;
+      if (host.nextSibling) host.parentNode.insertBefore(p, host.nextSibling);
+      else host.parentNode.appendChild(p);
+      function tg(){
+        var opening = p.hidden;
+        p.hidden = !opening;
+        m.setAttribute("aria-expanded", opening ? "true" : "false");
+        resizeAll();
+      }
+      m.addEventListener("click", tg);
+      m.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tg(); }
+      });
+    });
+  }
+
+  var frames = [];
+  function resizeAll(){
+    frames.forEach(function(f){
+      try {
+        var d = f.contentDocument;
+        if (d && d.body) f.style.height = (d.documentElement.scrollHeight + 8) + "px";
+      } catch(e){}
+    });
+  }
+
+  /* HTML の面を立てる。iframe が空のままなら Shadow DOM へ落とす */
+  document.querySelectorAll(".pane.html").forEach(function(pane){
+    var tpl = pane.querySelector("template");
+    var src = tpl.innerHTML;
+    var fr = document.createElement("iframe");
+    fr.setAttribute("title", pane.dataset.tab || "");
+    fr.srcdoc = '<!doctype html><meta charset="utf-8">'
+              + '<style>' + MARKCSS + '</style>' + src;
+    pane.appendChild(fr);
+    frames.push(fr);
+    var done = false;
+    fr.addEventListener("load", function(){
+      var d = fr.contentDocument;
+      if (!d || !d.body || !d.body.firstChild) return;
+      done = true;
+      wire(d, d);
+      resizeAll();
+      /* 中の高さは、字が載ってから決まる。変わるたびに測り直す */
+      if (window.ResizeObserver) {
+        new ResizeObserver(resizeAll).observe(d.documentElement);
+      }
+      /* 中のタブを押しても測り直す。中の作りに依らず効く */
+      d.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+      [80, 300, 900].forEach(function(t){ setTimeout(resizeAll, t); });
+      pane.querySelector(".how").textContent = "iframe で置いた";
+    });
+    setTimeout(function(){
+      if (done) return;
+      /* 載ったのに load を取り逃していないかを、もう一度見る */
+      try {
+        var d2 = fr.contentDocument;
+        if (d2 && d2.body && d2.body.firstChild) {
+          done = true; wire(d2, d2); resizeAll();
+          if (window.ResizeObserver) new ResizeObserver(resizeAll).observe(d2.documentElement);
+          d2.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+          pane.querySelector(".how").textContent = "iframe で置いた";
+          return;
+        }
+      } catch(e){}
+      /* 届かなかった。Shadow DOM へ落とす */
+      fr.remove();
+      frames = frames.filter(function(x){ return x !== fr; });
+      var holder = document.createElement("div");
+      pane.appendChild(holder);
+      var sh = holder.attachShadow({mode:"open"});
+      var st = document.createElement("style");
+      st.textContent = MARKCSS + "\n" + (tpl.dataset.shadowcss || "");
+      sh.appendChild(st);
+      var box = document.createElement("div");
+      box.innerHTML = src;
+      sh.appendChild(box);
+      wire(sh, document);
+      pane.querySelector(".how").textContent = "Shadow DOM で置いた";
+    }, 2500);
+  });
+
+  /* 印を、見える状態にする。
+
+     **内側のタブの作り方を、こちらは知らない。**
+     設計ノートは <input type="radio"> と :checked ~ #panel で切り替えていた。
+     JS で切り替える作りもある。**どちらでも効くように、
+     切り替えを1つずつ当てて、印が出たところで止める。** */
+  function reveal(m){
+    if (m.offsetParent) return true;
+    var n = m;
+    while (n && n.nodeType === 1) { if (n.hidden) n.hidden = false; n = n.parentNode; }
+    /* **印が住んでいる根から探す。**
+       Shadow の中の印に対して document を探すと、切り替えが1つも見つからない */
+    var scope = m.getRootNode ? m.getRootNode() : m.ownerDocument;
+    for (var e = m.parentNode; e && e.nodeType === 1; e = e.parentNode) {
+      if (e.tagName === "DETAILS") e.open = true;
+    }
+    if (m.offsetParent) return true;
+    var ins = scope.querySelectorAll('input[type="radio"],input[type="checkbox"]');
+    for (var i = 0; i < ins.length; i++) {
+      var was = ins[i].checked;
+      ins[i].checked = true;
+      if (m.offsetParent) return true;
+      ins[i].checked = was;
+    }
+    return !!m.offsetParent;
+  }
+
+  /* 一覧の「その場所へ」。印を開いて、そこまで運ぶ */
+  document.querySelectorAll(".idx button.go").forEach(function(b){
+    b.onclick = function(){
+      var pane = b.closest(".pane");
+      var i = +b.dataset.i;
+      var fr = pane.querySelector("iframe");
+      var root = fr ? fr.contentDocument : null;
+      if (!root) {
+        var h = Array.prototype.find.call(pane.querySelectorAll("div"),
+          function(x){ return x.shadowRoot; });
+        root = h ? h.shadowRoot : pane;
+      }
+      var m = root.querySelectorAll("mark.chg")[i];
+      if (!m) return;
+      var shown = reveal(m);
+      if (m.getAttribute("aria-expanded") !== "true") m.click();
+      b.textContent = shown ? "その場所へ" : "隠れたまま";
+      setTimeout(function(){
+        var y = 0, e = m;
+        while (e && e.offsetParent) { y += e.offsetTop; e = e.offsetParent; }
+        if (fr) window.scrollTo({top: fr.getBoundingClientRect().top + window.scrollY + y - 60,
+                                 behavior: "smooth"});
+        else m.scrollIntoView({block: "center", behavior: "smooth"});
+      }, 60);
+    };
+  });
+
+  /* マークダウンの面 */
+  document.querySelectorAll(".pane.md").forEach(function(p){ wire(p, document); });
+
+  function allPops(){
+    var out = Array.prototype.slice.call(document.querySelectorAll(".pop"));
+    frames.forEach(function(f){
+      try { out = out.concat(Array.prototype.slice.call(f.contentDocument.querySelectorAll(".pop"))); }
+      catch(e){}
+    });
+    document.querySelectorAll(".pane.html div").forEach(function(h){
+      if (h.shadowRoot) out = out.concat(Array.prototype.slice.call(h.shadowRoot.querySelectorAll(".pop")));
+    });
+    return out;
+  }
+  document.getElementById("oa").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = false; }); resizeAll(); };
+  document.getElementById("ca").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = true; }); resizeAll(); };
+
+  var tabs = document.querySelectorAll(".tab");
+  function sel(k){
+    tabs.forEach(function(t){ t.setAttribute("aria-selected", t.dataset.t === k ? "true" : "false"); });
+    document.querySelectorAll(".pane").forEach(function(p){ p.hidden = (p.dataset.k !== k); });
+    resizeAll();
+  }
+  tabs.forEach(function(t){ t.onclick = function(){ sel(t.dataset.t); }; });
+  if (tabs.length) sel(tabs[0].dataset.t);
+  window.addEventListener("resize", resizeAll);
+})();
+</script>
