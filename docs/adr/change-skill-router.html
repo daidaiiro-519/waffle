@@ -1,0 +1,404 @@
+<title>skill-router から配線を外へ出す</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
+--move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;--chipbg:#2b281f;
+--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}}
+:root[data-theme="dark"]{--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;
+--chipbg:#2b281f;--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);margin:0;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;line-height:1.85}
+.wrap{max-width:92rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+h1{font-size:1.5rem;margin:0 0 .3rem;letter-spacing:.02em}
+.lede{font-size:1.06rem;border-left:4px solid var(--key);padding:.55rem 0 .55rem .9rem;
+margin:1rem 0 2rem;background:var(--panel);max-width:68rem}
+h2{font-size:1.12rem;margin:2.4rem 0 .8rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h3{font-size:1rem;margin:1.6rem 0 .5rem;color:var(--key)}
+table{border-collapse:collapse;width:100%;margin:.9rem 0;font-size:.93rem}
+th,td{border:1px solid var(--line);padding:.42rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--chipbg);font-weight:700}
+code{background:var(--chipbg);padding:.08rem .3rem;border-radius:.2rem;font-size:.88em}
+pre{background:var(--chipbg);padding:.7rem .9rem;border-radius:.3rem;overflow-x:auto;font-size:.84rem}
+.scroll{overflow-x:auto}
+.gone{color:var(--gone)}
+#bar{position:sticky;top:0;z-index:9;background:var(--panel);border-bottom:2px solid var(--move);
+padding:.5rem .9rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;font-size:.9rem;
+margin:0 -1.2rem 1rem}
+#bar button{font:inherit;padding:.2rem .7rem;border-radius:.25rem;border:1px solid var(--move);
+background:transparent;color:var(--move);cursor:pointer}
+#bar button:hover{background:var(--move);color:var(--paper)}
+#tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 0;border-bottom:2px solid var(--line)}
+.tab{font:inherit;font-size:.93rem;padding:.45rem .95rem;border:1px solid var(--line);
+border-bottom:0;border-radius:.3rem .3rem 0 0;background:var(--panel);color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:700;
+box-shadow:0 2px 0 0 var(--paper)}
+.tab .n{font-size:.78rem;color:var(--move);margin-left:.35rem;font-weight:700}
+.pane{border:1px solid var(--line);border-top:0;background:var(--paper)}
+.pane.md{padding:1.2rem 1.8rem}
+.pane.md h1{font-size:1.25rem;margin-top:0}
+.pane.html{padding:0}
+.pane.html iframe{display:block;width:100%;border:0;background:var(--paper)}
+.lane{font-size:.8rem;color:var(--muted);padding:.35rem .9rem;border-bottom:1px dashed var(--line);
+background:var(--panel);display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.lane .how{margin-left:auto;font-style:italic}
+.idx{border-bottom:1px solid var(--line);background:var(--panel);padding:0 .9rem .5rem}
+.idx summary{cursor:pointer;font-size:.88rem;padding:.45rem 0;font-weight:700;color:var(--move)}
+.idx ol{margin:0 0 .3rem;padding-left:1.4rem;font-size:.88rem}
+.idx li{margin:.35rem 0}
+.idx button.go{font:inherit;font-size:.82rem;padding:.05rem .5rem;margin-left:.4rem;
+border:1px solid var(--move);border-radius:.2rem;background:transparent;color:var(--move);cursor:pointer}
+.idx button.go:hover{background:var(--move);color:var(--paper)}
+.idx .b{color:var(--muted);font-size:.84rem}
+</style>
+<style id="markcss-live">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</style>
+<script type="text/plain" id="markcss">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</script>
+
+<div class="wrap">
+<h1>skill-router から配線を外へ出す</h1>
+<p class="lede"><b>配線表を、Skill の外のファイルへ移す。</b>欄の名前を直しても、<b>Spec-authoring や ddd-advisor といった実在の名前がこの文書に焼き付いている</b>かぎり、他プロジェクトでは書き換えなければ使えない。SKILL.md には<b>欄の意味と読み方だけ</b>を残し、行は隣の面のファイルへ移した ── <b>1行も失っていない</b>。<b>まだ正本へは当てていない。</b></p>
+<h2>何が動いたか</h2><table><tr><th></th><th>前</th><th>後</th></tr><tr><td><b>配線の8行</b></td><td>SKILL.md の中の表</td><td><b>外のファイル</b>（<code>skill-wiring.json</code>）</td></tr><tr><td><b>欄の名前</b></td><td>Skill ／ 併用が必要な条件 ／ 併用するadvisor Skill ／ 強度</td><td><b>何を頼むか ／ どの作業のとき ／ 呼ぶSkill ／ 呼ぶSkillが無いとき</b></td></tr><tr><td><b>呼んでよい相手</b></td><td>この文書が「advisor のみ」と定める</td><td><b>配線表の「このプロジェクトの決め事」</b>へ移す</td></tr><tr><td><b>無いとき</b></td><td>必須 ／ 推奨</td><td>作業を止める ／ 結果だけ渡す ／ <b>呼ばずに進む</b></td></tr><tr><td><b>表が無いとき</b></td><td>想定されていない</td><td><b>配線ゼロとして進む</b>（失敗にしない）</td></tr><tr><td><b>advisor 間の境界</b></td><td>SKILL.md の1節</td><td><b>外す</b>（置き場所は未定 ── 2行が行き場を失う）</td></tr></table><p><b>欄の名前は、2度直している。</b>1度目は「役 ・ 要求元 ・ 担い手」だったが、<b>どのSKILL.mdも「役割」の節を持つので、「役」がそのSkill自身の役割と読めてしまう</b>。何が入る欄なのかを、そのまま名前にした。</p>
+<div id="bar"><b>変更 16 件</b>
+<button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="s">SKILL.md（Skill 本体）<span class="n">16</span></button><button class="tab" role="tab" data-t="w">skill-wiring.json（このリポジトリのデータ・新規）<span class="n">0</span></button></div>
+<section class="pane md" data-k="s" hidden><details class="idx" open><summary>この面の変更 16 件</summary><ol><li><b>一緒に呼ぶSkillを配線表から決めるrouter Skill：skill-ro</b><button class="go" data-i="0">その場所へ</button><div class="b">「schemaごと」「advisor」はWaffleの分類で、題がその分類に縛られていた。決めるのは『何を誰に頼むか』であって、advisorの組み合わせではない</div></li><li><b>&lt;strong&gt;どのSkillを一緒に呼ぶか&lt;/strong&gt;</b><button class="go" data-i="1">その場所へ</button><div class="b">「組み合わせる」は何をするのか言っていない。呼ぶ、と書けば動作が1つに定まる</div></li><li><b>&lt;strong&gt;この文書が持つのは、配線表の読み方だけである。配線そのものは持た</b><button class="go" data-i="2">その場所へ</button><div class="b">欄の名前を直しても、行がこの文書に居るかぎり汎用性は戻らない。Spec-authoring・ddd-advisor という実在の名前が焼き付き、他プロジェクトでは書き換えなければ使えない</div></li><li><b>&lt;strong&gt;何を頼むか・誰を呼ぶか・その相手が居ないときどうするか&lt;/str</b><button class="go" data-i="3">その場所へ</button><div class="b">必須/推奨の2値はadvisorが居る前提の言い方で、『配線が無い』状態を表せなかった</div></li><li><b>これから行う作業の名前</b><button class="go" data-i="4">その場所へ</button><div class="b">『実務Skill』はWaffle固有の分類名。呼び出し元がWaffleの4つのSkillであることを、この文書が知っている必要はない</div></li><li><b>&lt;strong&gt;配線表の場所&lt;/strong&gt;</b><button class="go" data-i="5">その場所へ</button><div class="b">配線を外へ出すと、どこを見るかが入力になる。見つからないときは配線ゼロとして進む ── 持ち出した先で必ず止まる作りにしないため</div></li><li><b>&lt;strong&gt;配線表は、このSkillの外にある1つのファイルである。&lt;/st</b><button class="go" data-i="6">その場所へ</button><div class="b">8行はこのリポジトリのデータであって、Skillの一部ではない。別のファイルへ移し、この文書には欄の意味だけを残す。行は1つも失っていない（隣の面に置いた）</div></li><li><b>&lt;strong&gt;頼む内容&lt;/strong&gt;</b><button class="go" data-i="7">その場所へ</button><div class="b">何のために呼ぶのかが行に無いと、相手を差し替えられない。頼む内容を先頭の欄に立てると、同じ頼みごとに別のSkillを当てられる</div></li><li><b>作業を止める</b><button class="go" data-i="8">その場所へ</button><div class="b">『必須』は強さの言葉で、何が起きるかを言っていない。起きることをそのまま書く</div></li><li><b>結果だけ渡す</b><button class="go" data-i="9">その場所へ</button><div class="b">同上。『推奨』の実際の意味（結果は渡すが止めない）はガードレールの側に隠れていたので、欄の値そのものにする</div></li><li><b>&lt;strong&gt;1行の例&lt;/strong&gt;</b><button class="go" data-i="10">その場所へ</button><div class="b">書き方を示すのに実在の配線を使うと、また紐づく。架空の1行で形だけを示す</div></li><li><b>&lt;strong&gt;配線の行を、この文書に書かない。&lt;/strong&gt;</b><button class="go" data-i="11">その場所へ</button><div class="b">この制約がこの文書に居たせいで、advisorでないSkill（source-fidelityなど）を配線できなかった。歯止め自体は有用なので、配線表のファイルの『このプロジェクトの決め事』へ移す</div></li><li><b>&lt;strong&gt;配線表が見つからないことを、失敗として扱わない。&lt;/strong</b><button class="go" data-i="12">その場所へ</button><div class="b">配線を外へ出すと、無い状態が普通に起こる。無いことを咎めると、持ち出した先で必ず止まる</div></li><li><b>&lt;strong&gt;1行だけに当てはまる例外を、この文書に書かない。&lt;/strong</b><button class="go" data-i="13">その場所へ</button><div class="b">特定の2行についての規則が、全体の決まりの中に居た。行の性質は行に書く</div></li><li><b>ガードレール</b><button class="go" data-i="14">その場所へ</button><div class="b">呼ばれる側どうしの境界は、配線とは別の話である。ここに置くと、この文書がadvisorという分類を知り続けることになる。ただし置き場所はまだ決めていない ── この2行は、いま行き場を失う</div></li><li><b>&lt;code&gt;references/skill-wiring.schema.jso</b><button class="go" data-i="15">その場所へ</button><div class="b">配線表を外へ出すなら、形を検査する手段も一緒に配る。機械が見るのは形だけで、配線が妥当かは人が見る</div></li></ol></details><div class="doc"><hr>
+<p>name: &quot;skill-router&quot;<br>description: &quot;ある作業を1つのSkillだけでは終えられないとき、どのSkillを一緒に呼ぶかを配線表を見て決める際に使う。配線表はこのSkillの外にあるファイルで、プロジェクトごとに持つ。Orchestratorが作業の途中で必要な回数だけ呼び、呼んだSkillから返ってきた結果を、その作業への入力として渡す。配線表が持つのは「何を、誰に頼むか」だけで、「いつ呼ぶか」はOrchestratorが決める。&quot;</p>
+<hr>
+<h1><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="schemaごとに必要なadvisorの組み合わせを振り分けるrouter Skill：skill-router" data-w="「schemaごと」「advisor」はWaffleの分類で、題がその分類に縛られていた。決めるのは『何を誰に頼むか』であって、advisorの組み合わせではない">一緒に呼ぶSkillを配線表から決めるrouter Skill：skill-router</mark></h1>
+<h2>目的</h2>
+<p>ある作業を1つのSkillだけでは終えられないとき、<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="どのadvisor Skillと組み合わせる必要があるか" data-w="「組み合わせる」は何をするのか言っていない。呼ぶ、と書けば動作が1つに定まる"><strong>どのSkillを一緒に呼ぶか</strong></mark>を配線表を見て決める際に使う。Orchestratorが作業の途中で必要な回数だけ呼び、呼んだSkillから返ってきた結果を、その作業への入力として渡す。配線表が持つのは「何を、誰に頼むか」だけで、「いつ呼ぶか（作業の前に材料を集めるのか、作業のあとに十分かを確かめるのか、両方か）」はOrchestratorが決める。skill-router自身はタイミングを持たない。</p>
+<p><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（この段落は無かった。配線の8行が、この文書の中の表として置かれていた）" data-w="欄の名前を直しても、行がこの文書に居るかぎり汎用性は戻らない。Spec-authoring・ddd-advisor という実在の名前が焼き付き、他プロジェクトでは書き換えなければ使えない"><strong>この文書が持つのは、配線表の読み方だけである。配線そのものは持たない。</strong></mark><br>配線はプロジェクトごとに違う。ここに書けば、書いたプロジェクトでしか使えないSkillになる。</p>
+<p><strong>どんなSkillを呼んでよいかも、この文書は決めない。</strong>それはプロジェクトごとの決め事なので、配線表のファイルに書く。</p>
+<hr>
+<h2>役割</h2>
+<p>- 1つのSkillだけでは終えられない作業を、<strong>外にある配線表</strong>を見て見分ける<br>- <mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="併用が必要なadvisor Skillの組み合わせと、その強制力（必須/推奨）を示す" data-w="必須/推奨の2値はadvisorが居る前提の言い方で、『配線が無い』状態を表せなかった"><strong>何を頼むか・誰を呼ぶか・その相手が居ないときどうするか</strong>を返す</mark><br>- 呼ぶSkillを、それぞれ独立した目的・役割・タスク・成果物・受け入れ基準を持たせて並列に呼び出せるよう、<strong>呼ぶSkillの名前の一覧</strong>を返す<br>- 作業側のSkillと呼ばれる側のSkillが互いを呼び合う形を避け、Orchestratorに代わって窓口になる<br>- ユーザーから配線の追加・修正・削除を頼まれたときは、対話しながら<strong>配線表のファイル</strong>を書き換える（判定だけを頼まれたときは書き換えない）</p>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="呼び出し元の実務Skill名" data-w="『実務Skill』はWaffle固有の分類名。呼び出し元がWaffleの4つのSkillであることを、この文書が知っている必要はない">これから行う作業の名前</mark></td><td>明示されなければ、実行しようとしている内容から推測し、分からなければ呼び出し元に聞く。</td></tr><tr><td>その作業が何を対象にするか</td><td>同じ作業でも対象によって呼ぶ相手が変わる場合は必須（対象ごとに配線表を引くため）。前の段階で実際に呼んだSkillがあれば、それも受け取る（固定リストではなく、そのつど引き継ぐ）。</td></tr><tr><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（配線表の場所は入力ではなかった。表はこの文書の中に在った）" data-w="配線を外へ出すと、どこを見るかが入力になる。見つからないときは配線ゼロとして進む ── 持ち出した先で必ず止まる作りにしないため"><strong>配線表の場所</strong></mark></td><td><strong>明示されなければ、プロジェクト直下の <code>skill-wiring.json</code> を見る。無ければ配線が1件も無いものとして扱い、何も返さない</strong>（失敗にしない）。</td></tr></table></div>
+<hr>
+<h2>配線表</h2>
+<p><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="| Skill | 併用が必要な条件 | 併用するadvisor Skill | 強度 |
+|---|---|---|---|
+| Spec-authoring | ドメイン仕様書の作成 | ddd-advisor / tech-lead-advisor | 必須 |
+| Spec-authoring | 技術スタック・アーキテクチャ・コーディング規約の作成 | tech-lead-advisor | 必須 |
+| Spec-authoring | テスト方針・テスト規約の作成 | tech-lead-advisor / qa-advisor | 必須 |
+| Spec-authoring | インフラ仕様書の作成 | platform-advisor | 必須 |
+| Spec-authoring | 画面設計・プレゼンテーション仕様の作成 | ux-advisor | 推奨 |
+| Handoff-authoring | 設計判断を実装への引き継ぎ文書として記録する作業 | ddd-advisor | 必須 |
+| Implementation | 実装 | ddd-advisor | 必須 |
+| Implementation | UIコンポーネントの実装 | ux-advisor | 推奨 |
+
+（この8行が、この位置に表として在った）" data-w="8行はこのリポジトリのデータであって、Skillの一部ではない。別のファイルへ移し、この文書には欄の意味だけを残す。行は1つも失っていない（隣の面に置いた）"><strong>配線表は、このSkillの外にある1つのファイルである。</strong></mark><br>形は <mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（この参照は無かった）" data-w="配線表を外へ出すなら、形を検査する手段も一緒に配る。機械が見るのは形だけで、配線が妥当かは人が見る"><code>references/skill-wiring.schema.json</code></mark> が決める。1行が4つの欄を持つ。</p>
+<div class="wrap"><table><tr><th>欄</th><th>何を書くか</th></tr><tr><td>何を頼むか</td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（欄そのものが無かった。行は「Skill＝Spec-authoring／併用が必要な条件＝ドメイン仕様書の作成」から始まっていた）" data-w="何のために呼ぶのかが行に無いと、相手を差し替えられない。頼む内容を先頭の欄に立てると、同じ頼みごとに別のSkillを当てられる"><strong>頼む内容</strong></mark>。Skillの名前ではなく、してほしいことを書く（例:「認証まわりの安全性を見てもらう」）</td></tr><tr><td>どの作業のとき</td><td>その頼みごとが必要になる作業。同じ作業でも対象で変わるなら、対象まで書く</td></tr><tr><td>呼ぶSkill</td><td>頼む相手のSkill名（複数可）</td></tr><tr><td>呼ぶSkillが無いとき</td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="必須" data-w="『必須』は強さの言葉で、何が起きるかを言っていない。起きることをそのまま書く">作業を止める</mark> ／ <mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="推奨" data-w="同上。『推奨』の実際の意味（結果は渡すが止めない）はガードレールの側に隠れていたので、欄の値そのものにする">結果だけ渡す</mark> ／ 呼ばずに進む のいずれか</td></tr></table></div>
+<p><strong>「呼ぶSkillが無いとき」に書ける3つの値。</strong></p>
+<div class="wrap"><table><tr><th>値</th><th>何が起きるか</th></tr><tr><td>作業を止める</td><td>呼んだ相手の結果が返るまで、その作業を先へ進めない</td></tr><tr><td>結果だけ渡す</td><td>結果は作業へ渡すが、作業は止めない</td></tr><tr><td>呼ばずに進む</td><td>配線が無いことを咎めない。作業側が自分でできる範囲で進む</td></tr></table></div>
+<p><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（例は無く、実在の8行がそのまま説明を兼ねていた）" data-w="書き方を示すのに実在の配線を使うと、また紐づく。架空の1行で形だけを示す"><strong>1行の例</strong></mark>（このプロジェクトの配線ではなく、書き方を示すためのもの）。</p>
+<pre class="code">{
+  &quot;何を頼むか&quot;: &quot;認証まわりの安全性を見てもらう&quot;,
+  &quot;どの作業のとき&quot;: &quot;code-review（認証・権限を含む変更）&quot;,
+  &quot;呼ぶSkill&quot;: [&quot;security-advisor&quot;],
+  &quot;呼ぶSkillが無いとき&quot;: &quot;作業を止める&quot;
+}</pre>
+<hr>
+<h2><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="## advisor間の境界・委譲マップ
+
+| advisor | 範囲外となるトピック | 委譲先 |
+|---|---|---|
+| ux-advisor | 依存方向の適合判定（presentationがユースケースのportを正しく呼んでいるか） | tech-lead-advisor |
+| platform-advisor | アプリケーション内部のレイヤー配置・依存方向の判定 | tech-lead-advisor |
+
+（この節がここに在った）" data-w="呼ばれる側どうしの境界は、配線とは別の話である。ここに置くと、この文書がadvisorという分類を知り続けることになる。ただし置き場所はまだ決めていない ── この2行は、いま行き場を失う">ガードレール</mark></h2>
+<p>- <mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="combinedSkillsに指定できるのは常に助言専門のadvisor Skillのみ。advisor以外のSkillを併用したくなった場合は、実務Skillの境界の切り方自体が細かすぎる設計ミスのサインであり、この表に逃がさない" data-w="この制約がこの文書に居たせいで、advisorでないSkill（source-fidelityなど）を配線できなかった。歯止め自体は有用なので、配線表のファイルの『このプロジェクトの決め事』へ移す"><strong>配線の行を、この文書に書かない。</strong></mark>行は配線表のファイルにだけ置く ── ここに書いた時点で、書いたプロジェクトでしか使えないSkillになる<br>- <strong>呼んでよいSkillの種類を、この文書で限定しない。</strong>どのSkillを呼んでよいかはプロジェクトごとの決め事なので、配線表のファイルに書く<br>- 配線表に行が無い作業は、1つのSkillで終えられるものとして扱い、他のSkillを呼ばない<br>- <mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（この決まりは無かった）" data-w="配線を外へ出すと、無い状態が普通に起こる。無いことを咎めると、持ち出した先で必ず止まる"><strong>配線表が見つからないことを、失敗として扱わない。</strong></mark>配線が1件も無いものとして進む ── 持ち出した先で必ず止まる作りにしない<br>- <strong>「呼ぶSkillが無いとき」に書いた値が、そのまま振る舞いになる。</strong>作業を止める・結果だけ渡す・呼ばずに進む の3つ以外を書かない<br>- <mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="Handoff-authoring/Implementationの行は固定のadvisor一覧ではなく「前段階で実際に参加したadvisor」を動的に引き継ぐ。この表のcombinedSkillsは引き継ぎ元が無い場合のデフォルトとして扱う" data-w="特定の2行についての規則が、全体の決まりの中に居た。行の性質は行に書く"><strong>1行だけに当てはまる例外を、この文書に書かない。</strong></mark>前の段階から引き継ぐかどうかは、その行の「どの作業のとき」に書く<br>- skill-router自身は、作業側のSkillも呼ばれる側のSkillも、中で何をしているかを知らない。返すのは名前の一覧までで、並列呼び出しの組み立てと起動はOrchestratorが行う<br>- 配線表の行は「いつ呼ぶか」を持たない。同じ行を、1つの作業の中でOrchestratorが何度呼んでもよい。前用・後用の行を別々に作らない</p>
+<hr>
+<h2>参照</h2>
+<p>- <code>references/skill-wiring.schema.json</code>: 配線表の形を検査するJSON Schema。4つの欄と、「呼ぶSkillが無いとき」に書ける3つの値を定める<br>- <code>references/porting-guide.md</code>: skill-routerを他プロジェクトへ移す手順（Orchestrator側のdelegationPatterns追加・配線表の書き起こし方）</p></div></section><section class="pane html" data-k="w" data-tab="skill-wiring.json（このリポジトリのデータ・新規）" hidden><div class="lane"><b>そのままの見た目で置く</b><span class="how">経路を確かめている…</span></div><template data-shadowcss="">{
+  "$schema": "./.claude/skills/skill-router/references/skill-wiring.schema.json",
+  "配線": [
+    {
+      "何を頼むか": "ドメイン仕様の設計をDDDの観点で見てもらう",
+      "どの作業のとき": "Spec-authoring（ドメイン仕様書）",
+      "呼ぶSkill": [
+        "ddd-advisor",
+        "tech-lead-advisor"
+      ],
+      "呼ぶSkillが無いとき": "作業を止める"
+    },
+    {
+      "何を頼むか": "技術の選び方と構造の妥当性を見てもらう",
+      "どの作業のとき": "Spec-authoring（技術スタック・アーキテクチャ・コーディング規約）",
+      "呼ぶSkill": [
+        "tech-lead-advisor"
+      ],
+      "呼ぶSkillが無いとき": "作業を止める"
+    },
+    {
+      "何を頼むか": "テストの方針と観点の抜けを見てもらう",
+      "どの作業のとき": "Spec-authoring（テスト方針・テスト規約）",
+      "呼ぶSkill": [
+        "tech-lead-advisor",
+        "qa-advisor"
+      ],
+      "呼ぶSkillが無いとき": "作業を止める"
+    },
+    {
+      "何を頼むか": "基盤の構成を見てもらう",
+      "どの作業のとき": "Spec-authoring（インフラ仕様書）",
+      "呼ぶSkill": [
+        "platform-advisor"
+      ],
+      "呼ぶSkillが無いとき": "作業を止める"
+    },
+    {
+      "何を頼むか": "画面と操作の妥当性を見てもらう",
+      "どの作業のとき": "Spec-authoring（画面設計・プレゼンテーション仕様）",
+      "呼ぶSkill": [
+        "ux-advisor"
+      ],
+      "呼ぶSkillが無いとき": "結果だけ渡す"
+    },
+    {
+      "何を頼むか": "引き継ぎ文書に残す設計判断を見てもらう",
+      "どの作業のとき": "Handoff-authoring（前の段階で実際に呼んだSkillをそのつど引き継ぐ。固定リストではない）",
+      "呼ぶSkill": [
+        "ddd-advisor"
+      ],
+      "呼ぶSkillが無いとき": "作業を止める"
+    },
+    {
+      "何を頼むか": "実装の設計判断を見てもらう",
+      "どの作業のとき": "Implementation（引き継ぎ文書に記録されたSkillをそのつど引き継ぐ。固定リストではない）",
+      "呼ぶSkill": [
+        "ddd-advisor"
+      ],
+      "呼ぶSkillが無いとき": "作業を止める"
+    },
+    {
+      "何を頼むか": "UIの実装を見てもらう",
+      "どの作業のとき": "Implementation（UIコンポーネント）",
+      "呼ぶSkill": [
+        "ux-advisor"
+      ],
+      "呼ぶSkillが無いとき": "結果だけ渡す"
+    },
+    {
+      "何を頼むか": "原典を落として、原文の語で照合してもらう",
+      "どの作業のとき": "brainstorm（原典の札を付けるとき）",
+      "呼ぶSkill": [
+        "source-fidelity"
+      ],
+      "呼ぶSkillが無いとき": "呼ばずに進む"
+    }
+  ],
+  "このプロジェクトの決め事": "見てもらう頼みごとの相手には、助言専門のSkillだけを当てる。それ以外を呼びたくなったときは、作業の切り方が細かすぎないかを先に疑う"
+}
+</template></section>
+</div>
+<script>
+(function(){
+  var MARKCSS = document.getElementById("markcss").textContent;
+
+  /* 印を1つ、押せるようにする。iframe の中でも Shadow の中でも同じ手が効く */
+  function wire(root, doc){
+    root.querySelectorAll("mark.chg[data-w]").forEach(function(m){
+      var p = doc.createElement("div");
+      p.className = "pop"; p.hidden = true;
+      var b1 = doc.createElement("b"); b1.textContent = "変更前";
+      var pre = doc.createElement("pre"); pre.textContent = m.dataset.b;
+      var b2 = doc.createElement("b"); b2.textContent = "なぜ";
+      var w = doc.createElement("div"); w.textContent = m.dataset.w;
+      p.appendChild(b1); p.appendChild(pre); p.appendChild(b2); p.appendChild(w);
+      var host = m.closest("td") || m.closest("li") || m.parentNode;
+      if (host.nextSibling) host.parentNode.insertBefore(p, host.nextSibling);
+      else host.parentNode.appendChild(p);
+      function tg(){
+        var opening = p.hidden;
+        p.hidden = !opening;
+        m.setAttribute("aria-expanded", opening ? "true" : "false");
+        resizeAll();
+      }
+      m.addEventListener("click", tg);
+      m.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tg(); }
+      });
+    });
+  }
+
+  var frames = [];
+  function resizeAll(){
+    frames.forEach(function(f){
+      try {
+        var d = f.contentDocument;
+        if (d && d.body) f.style.height = (d.documentElement.scrollHeight + 8) + "px";
+      } catch(e){}
+    });
+  }
+
+  /* HTML の面を立てる。iframe が空のままなら Shadow DOM へ落とす */
+  document.querySelectorAll(".pane.html").forEach(function(pane){
+    var tpl = pane.querySelector("template");
+    var src = tpl.innerHTML;
+    var fr = document.createElement("iframe");
+    fr.setAttribute("title", pane.dataset.tab || "");
+    fr.srcdoc = '<!doctype html><meta charset="utf-8">'
+              + '<style>' + MARKCSS + '</style>' + src;
+    pane.appendChild(fr);
+    frames.push(fr);
+    var done = false;
+    fr.addEventListener("load", function(){
+      var d = fr.contentDocument;
+      if (!d || !d.body || !d.body.firstChild) return;
+      done = true;
+      wire(d, d);
+      resizeAll();
+      /* 中の高さは、字が載ってから決まる。変わるたびに測り直す */
+      if (window.ResizeObserver) {
+        new ResizeObserver(resizeAll).observe(d.documentElement);
+      }
+      /* 中のタブを押しても測り直す。中の作りに依らず効く */
+      d.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+      [80, 300, 900].forEach(function(t){ setTimeout(resizeAll, t); });
+      pane.querySelector(".how").textContent = "iframe で置いた";
+    });
+    setTimeout(function(){
+      if (done) return;
+      /* 載ったのに load を取り逃していないかを、もう一度見る */
+      try {
+        var d2 = fr.contentDocument;
+        if (d2 && d2.body && d2.body.firstChild) {
+          done = true; wire(d2, d2); resizeAll();
+          if (window.ResizeObserver) new ResizeObserver(resizeAll).observe(d2.documentElement);
+          d2.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+          pane.querySelector(".how").textContent = "iframe で置いた";
+          return;
+        }
+      } catch(e){}
+      /* 届かなかった。Shadow DOM へ落とす */
+      fr.remove();
+      frames = frames.filter(function(x){ return x !== fr; });
+      var holder = document.createElement("div");
+      pane.appendChild(holder);
+      var sh = holder.attachShadow({mode:"open"});
+      var st = document.createElement("style");
+      st.textContent = MARKCSS + "\n" + (tpl.dataset.shadowcss || "");
+      sh.appendChild(st);
+      var box = document.createElement("div");
+      box.innerHTML = src;
+      sh.appendChild(box);
+      wire(sh, document);
+      pane.querySelector(".how").textContent = "Shadow DOM で置いた";
+    }, 2500);
+  });
+
+  /* 印を、見える状態にする。
+
+     **内側のタブの作り方を、こちらは知らない。**
+     設計ノートは <input type="radio"> と :checked ~ #panel で切り替えていた。
+     JS で切り替える作りもある。**どちらでも効くように、
+     切り替えを1つずつ当てて、印が出たところで止める。** */
+  function reveal(m){
+    if (m.offsetParent) return true;
+    var n = m;
+    while (n && n.nodeType === 1) { if (n.hidden) n.hidden = false; n = n.parentNode; }
+    /* **印が住んでいる根から探す。**
+       Shadow の中の印に対して document を探すと、切り替えが1つも見つからない */
+    var scope = m.getRootNode ? m.getRootNode() : m.ownerDocument;
+    for (var e = m.parentNode; e && e.nodeType === 1; e = e.parentNode) {
+      if (e.tagName === "DETAILS") e.open = true;
+    }
+    if (m.offsetParent) return true;
+    var ins = scope.querySelectorAll('input[type="radio"],input[type="checkbox"]');
+    for (var i = 0; i < ins.length; i++) {
+      var was = ins[i].checked;
+      ins[i].checked = true;
+      if (m.offsetParent) return true;
+      ins[i].checked = was;
+    }
+    return !!m.offsetParent;
+  }
+
+  /* 一覧の「その場所へ」。印を開いて、そこまで運ぶ */
+  document.querySelectorAll(".idx button.go").forEach(function(b){
+    b.onclick = function(){
+      var pane = b.closest(".pane");
+      var i = +b.dataset.i;
+      var fr = pane.querySelector("iframe");
+      var root = fr ? fr.contentDocument : null;
+      if (!root) {
+        var h = Array.prototype.find.call(pane.querySelectorAll("div"),
+          function(x){ return x.shadowRoot; });
+        root = h ? h.shadowRoot : pane;
+      }
+      var m = root.querySelectorAll("mark.chg")[i];
+      if (!m) return;
+      var shown = reveal(m);
+      if (m.getAttribute("aria-expanded") !== "true") m.click();
+      b.textContent = shown ? "その場所へ" : "隠れたまま";
+      setTimeout(function(){
+        var y = 0, e = m;
+        while (e && e.offsetParent) { y += e.offsetTop; e = e.offsetParent; }
+        if (fr) window.scrollTo({top: fr.getBoundingClientRect().top + window.scrollY + y - 60,
+                                 behavior: "smooth"});
+        else m.scrollIntoView({block: "center", behavior: "smooth"});
+      }, 60);
+    };
+  });
+
+  /* マークダウンの面 */
+  document.querySelectorAll(".pane.md").forEach(function(p){ wire(p, document); });
+
+  function allPops(){
+    var out = Array.prototype.slice.call(document.querySelectorAll(".pop"));
+    frames.forEach(function(f){
+      try { out = out.concat(Array.prototype.slice.call(f.contentDocument.querySelectorAll(".pop"))); }
+      catch(e){}
+    });
+    document.querySelectorAll(".pane.html div").forEach(function(h){
+      if (h.shadowRoot) out = out.concat(Array.prototype.slice.call(h.shadowRoot.querySelectorAll(".pop")));
+    });
+    return out;
+  }
+  document.getElementById("oa").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = false; }); resizeAll(); };
+  document.getElementById("ca").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = true; }); resizeAll(); };
+
+  var tabs = document.querySelectorAll(".tab");
+  function sel(k){
+    tabs.forEach(function(t){ t.setAttribute("aria-selected", t.dataset.t === k ? "true" : "false"); });
+    document.querySelectorAll(".pane").forEach(function(p){ p.hidden = (p.dataset.k !== k); });
+    resizeAll();
+  }
+  tabs.forEach(function(t){ t.onclick = function(){ sel(t.dataset.t); }; });
+  if (tabs.length) sel(tabs[0].dataset.t);
+  window.addEventListener("resize", resizeAll);
+})();
+</script>

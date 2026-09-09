@@ -1,0 +1,181 @@
+<meta charset="utf-8">
+<title>brainstorm の要件と、根拠の出どころ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{--paper:#eef1ef;--card:#f8faf9;--ink:#111d1a;--muted:#5b6b66;--rule:#ccd8d4;--rule-soft:#dfe7e4;
+--sunk:#e7ecea;--key:#0d5c55;--key-soft:#d5e6e3;--warn:#8f5410;--warn-soft:#f0e2cd;--dim:#7d8a86;
+--shadow:0 1px 0 rgba(17,29,26,.06),0 8px 22px -18px rgba(17,29,26,.5)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#0e1614;--card:#16211e;--ink:#e6eeeb;--muted:#93a29d;--rule:#2a3936;--rule-soft:#22302d;
+--sunk:#111a18;--key:#6cc9b8;--key-soft:#173330;--warn:#d9a35f;--warn-soft:#33281a;--dim:#7b8985;
+--shadow:0 1px 0 rgba(0,0,0,.4),0 10px 26px -18px #000}}
+:root[data-theme="dark"]{--paper:#0e1614;--card:#16211e;--ink:#e6eeeb;--muted:#93a29d;--rule:#2a3936;
+--rule-soft:#22302d;--sunk:#111a18;--key:#6cc9b8;--key-soft:#173330;--warn:#d9a35f;--warn-soft:#33281a;
+--dim:#7b8985;--shadow:0 1px 0 rgba(0,0,0,.4),0 10px 26px -18px #000}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.85;
+font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.wrap{max-width:60rem;margin:0 auto;padding:2.4rem 1.15rem 5rem;display:flex;flex-direction:column;gap:2.4rem}
+h1,h2,h3{font-family:"Shippori Mincho","Yu Mincho",serif;font-weight:600;margin:0;text-wrap:balance}
+h1{font-size:1.9rem;line-height:1.4}h2{font-size:1.15rem}h3{font-size:.98rem;color:var(--key)}
+p{margin:0}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.thesis{font-size:1.03rem;color:var(--muted);max-width:44rem}.thesis b{color:var(--ink)}
+header{display:flex;flex-direction:column;gap:.7rem;border-bottom:1px solid var(--rule);padding-bottom:1.5rem}
+section{display:flex;flex-direction:column;gap:.75rem}
+.fig{background:var(--sunk);border:1px solid var(--rule-soft);border-radius:.45rem;padding:1rem}
+.fig svg{width:100%;height:auto;display:block;color:var(--ink);overflow:visible}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:34rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .6rem;border-bottom:1px solid var(--rule-soft)}
+th{font-size:.73rem;color:var(--muted);letter-spacing:.05em;border-bottom-color:var(--rule);white-space:nowrap}
+td.n{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--key);white-space:nowrap;width:4.5rem}
+td b{color:var(--ink)}
+tr:last-child td{border-bottom:none}
+code{font-family:"JetBrains Mono",monospace;font-size:.86em;background:var(--sunk);padding:.05rem .3rem;border-radius:.2rem}
+.gap{border-left:3px solid var(--warn);background:var(--card);padding:.8rem 1rem;border-radius:0 .35rem .35rem 0}
+.gap b{color:var(--warn)}
+.ans{border:1px solid var(--key);background:var(--key-soft);border-radius:.4rem;padding:.85rem 1rem}
+.ans .lbl{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.14em;color:var(--key);
+display:block;margin-bottom:.2rem}
+.src{font-size:.78rem;color:var(--muted)}
+ul{margin:0;padding-left:1.15rem;font-size:.9rem;color:var(--muted);display:flex;flex-direction:column;gap:.25rem}
+ul b{color:var(--ink)}
+.tag{font-family:"JetBrains Mono",monospace;font-size:.64rem;font-weight:700;border:1px solid currentColor;
+border-radius:.2rem;padding:0 .3rem;margin-right:.3rem;white-space:nowrap;display:inline-block}
+.ok{color:var(--key)}.no{color:var(--warn)}
+mark{background:var(--warn-soft);color:var(--ink);border-bottom:2px solid var(--warn);border-radius:.15em;
+padding:0 .15em}
+td.was{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--dim)}
+</style>
+<div class="wrap">
+<header>
+  <p class="eyebrow">brainstorm ／ 要件</p>
+  <h1>brainstorm の要件と、根拠の出どころ</h1>
+  <p class="thesis">この Skill が<b>何をするか</b>と、<b>どう作られていなければならないか</b>。
+  そして、ブレストの結果が<b>何を一次情報にして、何と突き合わせて答えになるのか</b>。
+  <b>外部依存がどこに在り、持ち出したら何が切れるのか</b>まで、隠さずに置く。</p>
+</header>
+
+<section>
+  <h2>根拠は、どう作られるか</h2>
+  <div class="fig"><svg viewBox="0 0 720 348" role="img" aria-label="三種の出どころが突き合わせに入り、支えられない案が落ちて、残った1つが答えになる"><defs><marker id="ra" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--key)"/></marker></defs><text x="20" y="14" font-size="10" fill="var(--key)" font-weight="700">根拠になれるのは、三種の出どころだけ</text><rect x="20" y="26" width="200" height="54" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="120.0" y="49.0" text-anchor="middle" font-size="9.5" fill="currentColor" font-weight="700">原典</text><text x="120.0" y="64.0" text-anchor="middle" font-size="8.5" fill="currentColor">外にある文献 ・ 規格 ・ 実装</text><rect x="255" y="26" width="200" height="54" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="355.0" y="49.0" text-anchor="middle" font-size="9.5" fill="currentColor" font-weight="700">決まり</text><text x="355.0" y="64.0" text-anchor="middle" font-size="8.5" fill="currentColor">この盤面で決着した論点</text><rect x="490" y="26" width="210" height="54" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="595.0" y="49.0" text-anchor="middle" font-size="9.5" fill="currentColor" font-weight="700">実測</text><text x="595.0" y="64.0" text-anchor="middle" font-size="8.5" fill="currentColor">このリポジトリを数えた結果</text><rect x="20" y="94" width="200" height="30" rx="4" fill="none" stroke="var(--warn)" stroke-width="1.2" stroke-dasharray="5 4"/><text x="120.0" y="112.5" text-anchor="middle" font-size="8.5" fill="var(--warn)" font-weight="700">取り方が、書かれていない</text><line x1="120" y1="124" x2="244" y2="156" stroke="var(--warn)" stroke-width="1.4" marker-end="url(#ra)"/><line x1="355" y1="80" x2="355" y2="156" stroke="var(--key)" stroke-width="1.4" marker-end="url(#ra)"/><line x1="595" y1="80" x2="472" y2="156" stroke="var(--key)" stroke-width="1.4" marker-end="url(#ra)"/><rect x="200" y="158" width="320" height="52" rx="4" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="360.0" y="180.0" text-anchor="middle" font-size="9.5" fill="var(--key)" font-weight="700">突き合わせ</text><text x="360.0" y="195.0" text-anchor="middle" font-size="8.5" fill="var(--key)">この案は、どの札で支えられるか</text><line x1="300" y1="210" x2="180" y2="246" stroke="var(--dim)" stroke-width="1.4" marker-end="url(#ra)"/><line x1="420" y1="210" x2="540" y2="246" stroke="var(--key)" stroke-width="1.4" marker-end="url(#ra)"/><rect x="20" y="248" width="300" height="50" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.3"/><text x="170.0" y="269.0" text-anchor="middle" font-size="9" fill="var(--dim)" font-weight="700">支えられない案は落とす</text><text x="170.0" y="284.0" text-anchor="middle" font-size="8.5" fill="var(--dim)">名前と『何が壊れるか』を残す</text><rect x="390" y="248" width="310" height="50" rx="4" fill="none" stroke="var(--key)" stroke-width="1.6"/><text x="545.0" y="269.0" text-anchor="middle" font-size="9" fill="var(--key)" font-weight="700">残った1つが、答えになる</text><text x="545.0" y="284.0" text-anchor="middle" font-size="8.5" fill="var(--key)">札つきの根拠が、そのまま付いてくる</text><text x="20" y="326" font-size="9" fill="var(--key)" font-weight="700">札に当たらないものは、根拠として置かない ── 置けば、確かめようのないものが決まりになる</text></svg></div>
+  <p class="src">案は「良さそうだから」残るのではない。<b>三種の札のどれかで支えられたものだけが残り、
+  支えられない案は落ちる</b> ── 落ちた案は名前と『何が壊れるか』を添えて残す。</p>
+</section>
+
+<section>
+  <h2>一次情報は、三種類しかない</h2>
+  <div class="scroll"><table>
+    <tr><th>札</th><th>何が一次情報か</th><th>どこから取るか</th><th>突き合わせる相手</th></tr>
+    <tr><td><span class="tag ok">原典</span></td>
+      <td>外にある文献・規格・実装の<b>原文</b></td>
+      <td><b>落として保存したもの</b>（<code>docs/adr/sources/</code> の14件）と、
+        <b>advisor が蓄えた知識</b>（<code>.waffle/skills/ddd-advisor/references/knowledge/</code> の22件）</td>
+      <td>案が原文の記述と食い違っていないか。<b>言い換えず、原文の語で当てる</b></td></tr>
+    <tr><td><span class="tag ok">実測</span></td>
+      <td>このリポジトリを<b>数えた結果</b>（hook 15本の内訳、CLI に在る命令、規約の層の数）</td>
+      <td>その場で数える。<b>利用者には聞かない</b></td>
+      <td>案が「いまそうなっている」という前提を置いていないか</td></tr>
+    <tr><td><span class="tag ok">決まり</span></td>
+      <td>この盤面で<b>すでに決着した論点</b></td>
+      <td>盤面そのもの</td>
+      <td>案が、先に決めたことと衝突していないか</td></tr>
+    <tr><td><span class="tag no">前提</span></td>
+      <td>まだ支えが無い置き方。<b>そう書いて残す</b></td><td>ー</td>
+      <td>のちに原典か実測で置き換わるべきもの</td></tr>
+  </table></div>
+  <p class="src"><b>再定義の対象そのものを根拠にしない</b>、という決まりがここに掛かる ──
+  いまの schema が「そうなっている」ことは、その schema をどう作るかの根拠にはならない（循環する）。</p>
+</section>
+
+<section>
+  <h2>機能要件 ── 何をするか</h2>
+  <div class="scroll"><table>
+    <tr><th></th><th>要件</th><th>満たしていないと、どうなるか</th></tr>
+    <tr><td class="n">F-1</td><td>論点を3〜5個立て、<b>依存関係を自分の側で持つ</b></td>
+      <td>順番の管理が承認者へ渡り、盤面全体を頭に入れないと答えられなくなる</td></tr>
+    <tr><td class="n">F-2</td><td>案を複数出し、<b>提示より前に反証して1つに絞る</b></td>
+      <td>落ちると分かっている案を出すことになる</td></tr>
+    <tr><td class="n">F-3</td><td><b>前提が片付いた問いだけ</b>を1回にまとめて出す</td>
+      <td>答えられない問いに答えさせるか、1問ずつの往復になる</td></tr>
+    <tr><td class="n">F-4</td><td>答えの直下に<b>完成イメージ</b>（図、または変更前後の差分）を畳まずに置く</td>
+      <td>文章だけで決定を受け取ることになり、納得できないまま押すことになる</td></tr>
+    <tr><td class="n">F-5</td><td><b>出どころ・道筋・落とした案</b>を畳んで添える</td>
+      <td>根拠を見ないまま押した承認になる ── それは承認ではない</td></tr>
+    <tr><td class="n">F-6</td><td>どの問いにも<b>自由に書ける欄</b>を置く</td>
+      <td>決められた値で言えないことが、どこにも行き場を失う</td></tr>
+    <tr><td class="n">F-7</td><td>承認・差し戻し・書き足しを受け取り、<b>1件ずつ残す</b></td>
+      <td>何を差し戻したかが、あとから読めなくなる</td></tr>
+    <tr><td class="n">F-8</td><td>差し戻された問いは、<b>直した答えを1つ</b>出す</td>
+      <td>案を並べ直すことになり、また選ばせることになる</td></tr>
+    <tr><td class="n">F-9</td><td>決着を盤面へ記録し、<b>次に答えられる問いを引き直す</b></td>
+      <td>決着が反映されず、同じ問いが二度出る</td></tr>
+    <tr><td class="n">F-10</td><td>変わった箇所を<b>印として残す</b>（変更前と理由が開く）</td>
+      <td>履歴が別の場所へ行き、いまの盤面と突き合わせながら読むことになる</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>非機能要件 ── どう作られていなければならないか</h2>
+  <div class="scroll"><table>
+    <tr><th></th><th>要件</th><th>どう確かめるか</th></tr>
+    <tr><td class="n">N-1</td><td><b>認知負荷</b>：1回に出すのは答えられる問いだけ。読む量は、答え＋完成イメージで足りる</td>
+      <td>画面に出ている字数を数える（実測）。裏づけは畳んであり、数に入らない</td></tr>
+    <tr><td class="n">N-2</td><td><b>追跡できること</b>：どの根拠にも札が付き、回答は1回1件で残る</td>
+      <td>札の無い根拠は置けない（道具が止める）。回答は消さずに積む</td></tr>
+    <tr><td class="n">N-3</td><td><b>図が壊れていないこと</b>：文字の重なり・はみ出し・線が箱を貫くことが無い</td>
+      <td><code>figcheck.py</code> に通す。<b>目で読み返しても見落とす</b>ので機械で当てる</td></tr>
+    <tr><td class="n">N-4</td><td><b>形が決まっていること</b>：回答の諾否と差し戻し理由は決められた値だけ</td>
+      <td>JSON Schema と、受け取り側の検査。<b>形しか見ない</b> ── 中身の妥当性は人が見る</td></tr>
+    <tr><td class="n">N-5</td><td><b>沈黙すること</b>：未読の回答が無ければ、Hook は何も出さない</td>
+      <td>回答0件で走らせて、出力が空であること</td></tr>
+    <tr><td class="n">N-6</td><td><b>他人の道具に依らないこと</b>：やり取りはテキストとファイルだけ</td>
+      <td>Skill の受け渡しに特定ツール専用の仕組みを使わない。回答は素の JSON</td></tr>
+    <tr><td class="n">N-7</td><td><b>独立して判断されること</b>：反証は提示より前に済ませる</td>
+      <td>提示後に反証すると、結論に引きずられる</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>いま、外部依存はどこにあるか</h2>
+  <div class="fig"><svg viewBox="0 0 720 424" role="img" aria-label="道具は内側で閉じていて、外に在るのは材料だけという依存の形"><defs><marker id="da" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--key)"/></marker></defs><text x="20" y="16" font-size="10" fill="var(--key)" font-weight="700">外に在るのは材料だけで、道具は内側で閉じている</text><rect x="20" y="30" width="210" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="125.0" y="55.5" text-anchor="middle" font-size="9" fill="currentColor" font-weight="700">原典 ── 外の文献 ・ 規格</text><text x="20" y="92" font-size="8.5" fill="var(--muted)">落として保存すると、内側に残る</text><text x="20" y="108" font-size="8.5" fill="var(--muted)">いま14件（sha256と日付つき）</text><rect x="490" y="30" width="210" height="44" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.3"/><text x="595.0" y="55.5" text-anchor="middle" font-size="9" fill="var(--dim)" font-weight="700">advisor の knowledge 22件</text><text x="490" y="92" font-size="8.5" fill="var(--dim)">在れば使う。無くても止まらない</text><text x="490" y="108" font-size="8.5" fill="var(--dim)">持ち出すと、ここは切れる</text><rect x="180" y="126" width="360" height="182" rx="4" fill="none" stroke="var(--key)" stroke-width="1.8"/><text x="360" y="146" font-size="9.5" fill="var(--key)" text-anchor="middle" font-weight="700">brainstorm ── このまま持ち出せる単位</text><rect x="196" y="158" width="110" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="251.0" y="176.5" text-anchor="middle" font-size="8" fill="currentColor">SKILL.md</text><rect x="314" y="158" width="110" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="369.0" y="176.5" text-anchor="middle" font-size="8" fill="currentColor">build_board.py</text><rect x="432" y="158" width="94" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="479.0" y="176.5" text-anchor="middle" font-size="8" fill="currentColor">figcheck.py</text><rect x="196" y="196" width="110" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="251.0" y="214.5" text-anchor="middle" font-size="8" fill="currentColor">serve.py</text><rect x="314" y="196" width="212" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="420.0" y="214.5" text-anchor="middle" font-size="8" fill="currentColor">answer-sheet.schema.json</text><text x="360" y="250" font-size="9" fill="var(--key)" text-anchor="middle" font-weight="700">標準ライブラリだけ ── 外部パッケージ 0</text><text x="360" y="270" font-size="8.5" fill="var(--muted)" text-anchor="middle">別のリポジトリへ、この箱ごと持っていける</text><text x="360" y="290" font-size="8" fill="var(--muted)" text-anchor="middle">成果物の HTML は書体を外から読むが、読めなくても崩れない</text><rect x="20" y="346" width="210" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="125.0" y="371.5" text-anchor="middle" font-size="9" fill="currentColor" font-weight="700">対象のリポジトリ ── 実測</text><text x="20" y="408" font-size="8.5" fill="var(--muted)">その場のリポジトリを数える。どこにでも在る</text><rect x="490" y="346" width="210" height="44" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.3"/><text x="595.0" y="371.5" text-anchor="middle" font-size="9" fill="var(--dim)" font-weight="700">Claude Code の Hook</text><text x="490" y="408" font-size="8.5" fill="var(--dim)">無ければ「読んで」の一言で回る</text><line x1="130" y1="74" x2="176" y2="146" stroke="var(--key)" stroke-width="1.4" marker-end="url(#da)"/><line x1="596" y1="74" x2="546" y2="146" stroke="var(--dim)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#da)"/><line x1="130" y1="346" x2="176" y2="300" stroke="var(--key)" stroke-width="1.4" marker-end="url(#da)"/><line x1="596" y1="346" x2="546" y2="300" stroke="var(--dim)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#da)"/></svg></div>
+  <p class="src">実線は<b>要るもの</b>、破線は<b>無くても止まらないもの</b>。
+  <code>build_board.py</code> ・ <code>figcheck.py</code> ・ <code>serve.py</code> の import を数えたところ、
+  <b>標準ライブラリ以外は0件</b>だった（実測）。</p>
+
+  <div class="scroll"><table>
+    <tr><th></th><th>何に依るか</th><th>持ち出したら</th></tr>
+    <tr><td class="n">道具</td><td><b>何にも依らない</b> ── 標準ライブラリだけ</td>
+      <td><b>そのまま動く</b></td></tr>
+    <tr><td class="n">見た目</td><td>書体を外から読む</td>
+      <td>読めなくても<b>崩れない</b>（代わりの書体を並べてある）</td></tr>
+    <tr><td class="n">原典</td><td>外の文献・規格・実装</td>
+      <td><b>落として保存した分は残る</b> ── いま14件、<code>sha256</code> と日付つき</td></tr>
+    <tr><td class="n">knowledge</td><td>advisor が蓄えた22件</td>
+      <td><b>切れる</b> ── ただし在れば使う扱いなので、止まらない</td></tr>
+    <tr><td class="n">実測</td><td>対象のリポジトリそのもの</td>
+      <td>持ち出し先にもリポジトリはある ── <b>依存として健全</b></td></tr>
+    <tr><td class="n">受け渡し</td><td>Hook だけ Claude Code に依る</td>
+      <td>フックは動かないが、<b>「読んで」の一言で回る</b></td></tr>
+  </table></div>
+
+  <p class="gap"><b>この分かれ方が、あるべき形だと考えます。</b>
+  道具は自己完結、材料は外に在る ── <b>原典が内側にあったら、それは原典ではない</b>。
+  危ういのは依存があること自体ではなく、<b>取ってきた原文が手元に無いのに、札だけ付く</b>状態です。</p>
+
+  <div class="ans"><span class="lbl">私の答え</span>
+  <b>「原典の札を付けるなら、原文を落として手元に残す」という規律を1つ足します。</b>
+  落とす手段の在り処（<code>source-fidelity</code>）だけを書き、呼び方は書きません。
+  <mark title="変更前：advisor の knowledge を参照として足す／理由：別リポジトリへ持ち出すと切れる参照を必須にすると、道具の自己完結が壊れる">advisor
+  の knowledge は参照として足さず、「在れば使う」に留めます</mark>。</div>
+  <ul>
+    <li><b>なぜ足すか</b>：取得の経路を書かない原則は、言明としては在っても<b>実行時に参照先を持たない</b></li>
+    <li><b>なぜ knowledge を足さないか</b>：<b>持ち出すと切れる参照を必須にすると、上の図の箱が閉じなくなる</b></li>
+    <li><b>引き受けること</b>：brainstorm が他の Skill の名前を1つ知る ──
+      ただし<b>在り処だけ</b>なので、テキストで疎に結んだままにできる</li>
+    <li><b>落とした案</b>：brainstorm 自身に原典を落とす手順を持たせる →
+      <b>同じ手順が2か所になり、片方が古くなる</b></li>
+  </ul>
+</section>
+</div>

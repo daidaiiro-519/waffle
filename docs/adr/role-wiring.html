@@ -1,0 +1,143 @@
+<meta charset="utf-8">
+<title>役で配線する</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{--paper:#eef1ef;--card:#f8faf9;--ink:#111d1a;--muted:#5b6b66;--rule:#ccd8d4;--rule-soft:#dfe7e4;
+--sunk:#e7ecea;--key:#0d5c55;--key-soft:#d5e6e3;--warn:#8f5410;--warn-soft:#f0e2cd;--dim:#7d8a86;
+--shadow:0 1px 0 rgba(17,29,26,.06),0 8px 22px -18px rgba(17,29,26,.5)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#0e1614;--card:#16211e;--ink:#e6eeeb;--muted:#93a29d;--rule:#2a3936;--rule-soft:#22302d;
+--sunk:#111a18;--key:#6cc9b8;--key-soft:#173330;--warn:#d9a35f;--warn-soft:#33281a;--dim:#7b8985;
+--shadow:0 1px 0 rgba(0,0,0,.4),0 10px 26px -18px #000}}
+:root[data-theme="dark"]{--paper:#0e1614;--card:#16211e;--ink:#e6eeeb;--muted:#93a29d;--rule:#2a3936;
+--rule-soft:#22302d;--sunk:#111a18;--key:#6cc9b8;--key-soft:#173330;--warn:#d9a35f;--warn-soft:#33281a;
+--dim:#7b8985;--shadow:0 1px 0 rgba(0,0,0,.4),0 10px 26px -18px #000}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.85;
+font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.wrap{max-width:60rem;margin:0 auto;padding:2.4rem 1.15rem 5rem;display:flex;flex-direction:column;gap:2.4rem}
+h1,h2,h3{font-family:"Shippori Mincho","Yu Mincho",serif;font-weight:600;margin:0;text-wrap:balance}
+h1{font-size:1.9rem;line-height:1.4}h2{font-size:1.15rem}h3{font-size:.98rem;color:var(--key)}
+p{margin:0}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.thesis{font-size:1.03rem;color:var(--muted);max-width:44rem}.thesis b{color:var(--ink)}
+header{display:flex;flex-direction:column;gap:.7rem;border-bottom:1px solid var(--rule);padding-bottom:1.5rem}
+section{display:flex;flex-direction:column;gap:.75rem}
+.fig{background:var(--sunk);border:1px solid var(--rule-soft);border-radius:.45rem;padding:1rem}
+.fig svg{width:100%;height:auto;display:block;color:var(--ink);overflow:visible}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:34rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .6rem;border-bottom:1px solid var(--rule-soft)}
+th{font-size:.73rem;color:var(--muted);letter-spacing:.05em;border-bottom-color:var(--rule);white-space:nowrap}
+td.n{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--key);white-space:nowrap;width:4.5rem}
+td b{color:var(--ink)}
+tr:last-child td{border-bottom:none}
+code{font-family:"JetBrains Mono",monospace;font-size:.86em;background:var(--sunk);padding:.05rem .3rem;border-radius:.2rem}
+.gap{border-left:3px solid var(--warn);background:var(--card);padding:.8rem 1rem;border-radius:0 .35rem .35rem 0}
+.gap b{color:var(--warn)}
+.ans{border:1px solid var(--key);background:var(--key-soft);border-radius:.4rem;padding:.85rem 1rem}
+.ans .lbl{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.14em;color:var(--key);
+display:block;margin-bottom:.2rem}
+.src{font-size:.78rem;color:var(--muted)}
+ul{margin:0;padding-left:1.15rem;font-size:.9rem;color:var(--muted);display:flex;flex-direction:column;gap:.25rem}
+ul b{color:var(--ink)}
+.tag{font-family:"JetBrains Mono",monospace;font-size:.64rem;font-weight:700;border:1px solid currentColor;
+border-radius:.2rem;padding:0 .3rem;margin-right:.3rem;white-space:nowrap;display:inline-block}
+.ok{color:var(--key)}.no{color:var(--warn)}
+mark{background:var(--warn-soft);color:var(--ink);border-bottom:2px solid var(--warn);border-radius:.15em;
+padding:0 .15em}
+td.was{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--dim)}
+
+.diff{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;line-height:1.7;
+display:flex;flex-direction:column;gap:.04rem;overflow-x:auto}
+.diff .dh{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.82rem;color:var(--muted);margin-bottom:.35rem}
+.diff .dn{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.84rem;color:var(--muted);margin-top:.6rem;
+border-top:1px solid var(--rule-soft);padding-top:.5rem;line-height:1.8}
+.dl{display:flex;gap:.9rem;padding:.1rem .45rem;border-left:2px solid transparent;white-space:nowrap}
+.dl .c{flex:none;min-width:15rem}
+.dl .d{color:var(--muted);white-space:normal;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.82rem}
+.dl.add{border-left-color:var(--key);background:var(--key-soft);color:var(--ink)}
+.dl.add .c::before{content:"+ ";color:var(--key);font-weight:700}
+.dl.same .c::before{content:"= ";color:var(--muted)}
+.dl.sub{color:var(--muted)}
+.dl.tmp{color:var(--warn)}
+.dl.tmp .c::before{content:"? ";font-weight:700}
+</style>
+<div class="wrap">
+<header>
+  <p class="eyebrow">skill-router ／ 抽象の作り直し</p>
+  <h1>役で配線する</h1>
+  <p class="thesis"><b>skill-router は、router になっていない。</b>
+  「実務Skill」「advisor」という<b>Waffle の分類が、欄の意味そのものに入っている</b>ので、
+  別のプロジェクトへ持っていくと語ごと合わない。
+  <b>欄を「役」で書き直すと、Waffle の語は1つも要らなくなる</b> ── 同じ8行はそのまま書ける。</p>
+</header>
+
+<section>
+  <h2>いまの欄と、役で書いた欄</h2>
+  <div class="fig"><svg viewBox="0 0 720 344" role="img" aria-label="いまの欄はWaffleの分類を含むが、役で書き直すとWaffleの語が消える"><defs><marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--key)"/></marker></defs><text x="20" y="16" font-size="9.5" fill="var(--dim)" font-weight="700">いまの欄</text><rect x="20" y="26" width="290" height="196" rx="4" fill="none" stroke="var(--dim)" stroke-width="1.4"/><rect x="36" y="40" width="258" height="26" rx="4" fill="none" stroke="var(--dim)" stroke-width="1"/><text x="165.0" y="56.5" text-anchor="middle" font-size="8.5" fill="var(--dim)">skill：実務Skill の名</text><rect x="36" y="72" width="258" height="26" rx="4" fill="none" stroke="var(--dim)" stroke-width="1"/><text x="165.0" y="88.5" text-anchor="middle" font-size="8.5" fill="var(--dim)">purpose：どの仕様書か</text><rect x="36" y="104" width="258" height="26" rx="4" fill="none" stroke="var(--warn)" stroke-width="1.2"/><text x="165.0" y="120.5" text-anchor="middle" font-size="8.5" fill="var(--warn)">combinedSkills：advisor だけ</text><rect x="36" y="136" width="258" height="26" rx="4" fill="none" stroke="var(--warn)" stroke-width="1.2"/><text x="165.0" y="152.5" text-anchor="middle" font-size="8.5" fill="var(--warn)">strength：必須 ／ 推奨</text><rect x="36" y="168" width="258" height="26" rx="4" fill="none" stroke="var(--warn)" stroke-width="1.2"/><text x="165.0" y="184.5" text-anchor="middle" font-size="8.5" fill="var(--warn)">advisorBoundaries：advisor 間の委譲</text><text x="20" y="240" font-size="8.5" fill="var(--warn)">『実務Skill』『advisor』という Waffle の分類が、</text><text x="20" y="256" font-size="8.5" fill="var(--warn)">欄の意味そのものに入っている ── 語ごと合わない</text><line x1="322" y1="120" x2="378" y2="120" stroke="var(--key)" stroke-width="1.6" marker-end="url(#ma)"/><text x="350" y="110" font-size="8" fill="var(--key)" text-anchor="middle">同じ8行が</text><text x="350" y="140" font-size="8" fill="var(--key)" text-anchor="middle">そのまま書ける</text><text x="392" y="16" font-size="9.5" fill="var(--key)" font-weight="700">役で書くと</text><rect x="392" y="26" width="308" height="196" rx="4" fill="none" stroke="var(--key)" stroke-width="1.7"/><rect x="408" y="40" width="276" height="26" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="546.0" y="56.5" text-anchor="middle" font-size="8.5" fill="currentColor">役：必要とされる能力</text><rect x="408" y="72" width="276" height="26" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="546.0" y="88.5" text-anchor="middle" font-size="8.5" fill="currentColor">要求元：それを必要とする場面</text><rect x="408" y="104" width="276" height="26" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="546.0" y="120.5" text-anchor="middle" font-size="8.5" fill="currentColor">担い手：当てられた Skill（複数可）</text><rect x="408" y="136" width="276" height="26" rx="4" fill="none" stroke="currentColor" stroke-width="1"/><text x="546.0" y="152.5" text-anchor="middle" font-size="8.5" fill="currentColor">無いとき：止める ／ 参考 ／ 飛ばす</text><text x="550" y="186" font-size="9" fill="var(--key)" text-anchor="middle" font-weight="700">欄は4つ。これだけ</text><text x="392" y="240" font-size="8.5" fill="var(--key)">Waffle の語が1つも出てこない ── だから</text><text x="392" y="256" font-size="8.5" fill="var(--key)">別のプロジェクトでも、そのまま使える</text><line x1="20" y1="284" x2="700" y2="284" stroke="var(--rule)"/><text x="20" y="306" font-size="9" fill="var(--key)" font-weight="700">「advisor だけを当てる」は、モデルではなく、このリポジトリの慣習として表の中に降りる</text><text x="20" y="328" font-size="9" fill="var(--muted)">だから表は1つでよい ── 2つに分けようとしたのは、悪い抽象を前提にしていたからだった</text></svg></div>
+</section>
+
+<section>
+  <h2>どこが Waffle に固まっているか</h2>
+  <p class="src">「表の中身はこのリポジトリ固有のデータで、機構本体は使い回せる」と<b>ガードレールに書いてある</b>。
+  だが実際には、<b>データではなくモデルの側に Waffle が入っている</b>。</p>
+  <div class="scroll"><table>
+    <tr><th></th><th>いまの作り</th><th>モデルか、データか</th></tr>
+    <tr><td class="n">欄名</td><td><code>combinedSkills</code>＝「一緒に呼ぶ Skill」</td>
+      <td><b>モデル</b>。<b>役という概念が無く</b>、呼び方だけが残っている</td></tr>
+    <tr><td class="n">制約</td><td>「指定できるのは <b>advisor Skill のみ</b>」</td>
+      <td><b>モデル</b>。advisor は Waffle の分類で、他所には無い</td></tr>
+    <tr><td class="n">強さ</td><td>必須 ／ 推奨（＝結果を参考情報として渡す）</td>
+      <td><b>モデル</b>。<b>advisor が居る前提の意味づけ</b>で、「飛ばす」が無い</td></tr>
+    <tr><td class="n">呼び出し元</td><td>Investigation ・ Spec-authoring ・ Handoff-authoring ・ Implementation</td>
+      <td><b>モデル</b>。役割・入力の想定に<b>固有名が直接</b>書かれている</td></tr>
+    <tr><td class="n">例外規則</td><td>「Handoff-authoring と Implementation の行は動的に引き継ぐ」</td>
+      <td><b>モデル</b>。<b>特定の行についての規則</b>が、機構の側に居る</td></tr>
+    <tr><td class="n">別ブロック</td><td><code>advisorBoundaries</code>（advisor 間の委譲マップ）</td>
+      <td><b>モデル</b>。配線とは別の関心で、router の持ち物ではない</td></tr>
+    <tr><td class="n">表の8行</td><td>Spec-authoring × ddd-advisor …</td>
+      <td><b>データ</b>。ここだけは正しくデータになっている</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>直したあと ── 欄は4つ</h2>
+  <div class="fig"><div class="diff">
+    <p class="dh">同じ8行が、役の形でそのまま書ける</p>
+    <div class="dl same"><span class="c">役</span><span class="d">ドメイン仕様の設計判断を確かめる</span></div>
+    <div class="dl sub"><span class="c">　要求元</span><span class="d">Spec-authoring（ドメイン仕様書）</span></div>
+    <div class="dl sub"><span class="c">　担い手</span><span class="d"><code>ddd-advisor</code> ・ <code>tech-lead-advisor</code></span></div>
+    <div class="dl sub"><span class="c">　無いとき</span><span class="d">止める</span></div>
+    <div class="dl add"><span class="c">役</span><span class="d">原典を落とし、原文の語で照合する</span></div>
+    <div class="dl sub"><span class="c">　要求元</span><span class="d">brainstorm（原典の札を付けるとき）</span></div>
+    <div class="dl sub"><span class="c">　担い手</span><span class="d"><code>source-fidelity</code></span></div>
+    <div class="dl sub"><span class="c">　無いとき</span><span class="d"><b>飛ばす</b> ── 呼ぶ側が自分で落として手元に残す</span></div>
+    <div class="dl tmp"><span class="c">役</span><span class="d">（利用者が足す）── 1行足すだけで、ブレストが通る</span></div>
+    <p class="dn"><b>advisor だけを当てる、という慣習はデータの側に降りる</b> ──
+    このリポジトリでは実際そう運用するが、<b>機構がそれを強制しない</b>。
+    <code>advisorBoundaries</code> は配線とは別の関心なので、router から外す
+    （どこへ置くかは、まだ決めていない）。</p>
+  </div></div>
+</section>
+
+<section>
+  <h2>それで、最初の問いはどうなるか</h2>
+  <div class="ans"><span class="lbl">私の答え</span>
+  <b>skill-router のモデルを「役 ・ 要求元 ・ 担い手 ・ 無いとき」の4欄へ作り直します。</b>
+  <mark title="変更前：いまの表はそのままにして、役の配線表をもう1つ足す／理由：表が2つ要るのは、1つ目が router になっていないからだった。悪い抽象を前提に足していた">表は増やさず、1つのままにします</mark>。
+  <code>source-fidelity</code> は「原典を落とす役」に当てられた1実装、
+  advisor は「確かめる役」に当てられた実装 ── <b>どちらも同じ表の行</b>になります。</div>
+  <ul>
+    <li><b>brainstorm 側に書くのは1文だけ</b>：「原典の札を付けるときは、<b>その役が配線されていれば通る。無ければ自分で落として手元に残す</b>」。Skill の名前は出てこない</li>
+    <li><b>拡張の口</b>：利用者は<b>1行足すだけ</b>。役に名前を付け、担い手を当て、無いときどうするかを書く</li>
+    <li><b>引き受けること</b>：これは <code>SkillSchema</code> への<b>破壊的な変更</b>（欄の意味が変わる）。
+      決まりでは破壊は認めるが、<b>静かに壊さず、まとめて上げる</b>。
+      既存8行は<b>移せる</b>ことを上で確かめた</li>
+    <li><b>いま決めないこと</b>：<code>advisorBoundaries</code> の行き先。
+      router から外すことだけ決め、置き場所は別に問う</li>
+    <li><b>落とした案</b>：表を2つにする → <b>1つ目が router でないという問題が残ったまま</b>／
+      いまの欄名のまま制約だけ緩める → <b>「一緒に呼ぶ」という呼び方の語が残り、役が現れない</b></li>
+  </ul>
+</section>
+</div>

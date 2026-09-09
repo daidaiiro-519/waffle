@@ -821,27 +821,41 @@
       "x-prompt-query": "誰と組めばよいかを引くために読みます。いつ呼ぶかはここでは決まらないので、呼ぶ時機は呼び出し側が判断してください。表に無い技能は、単独で完結すると読みます。",
       "x-render": [
         {
+          "as": "paragraph",
+          "from": "text"
+        },
+        {
           "as": "table",
-          "from": "items",
+          "from": "columns",
           "columns": [
             {
-              "field": "skill",
-              "header": "Skill"
+              "header": "欄",
+              "field": "column"
             },
             {
-              "field": "purpose",
-              "header": "併用が必要な条件"
-            },
-            {
-              "field": "combinedSkills",
-              "header": "併用するadvisor Skill",
-              "code": true
-            },
-            {
-              "field": "strength",
-              "header": "強度"
+              "header": "何を書くか",
+              "field": "what"
             }
           ]
+        },
+        {
+          "as": "table",
+          "from": "fallbacks",
+          "columns": [
+            {
+              "header": "値",
+              "field": "value"
+            },
+            {
+              "header": "何が起きるか",
+              "field": "effect"
+            }
+          ]
+        },
+        {
+          "as": "code",
+          "from": "example",
+          "lang": "json"
         }
       ],
       "properties": {
@@ -850,46 +864,68 @@
           "const": "RoutingTable"
         },
         "title": {
-          "type": "string",
-          "const": "ルーティング表"
+          "const": "配線表"
         },
         "items": {
           "type": "array",
-          "x-prompt-write": "単独では目的を完結できないSkillについてのみ行を追加してください。単独で完結するSkillにはエントリを作らないこと。",
+          "x-prompt-write": "この欄は使いません。配線の行はプロジェクト側のファイル（skill-wiring.json）に置きます。空のままにしてください。",
+          "items": {
+            "type": "object"
+          }
+        },
+        "text": {
+          "type": "string",
+          "x-prompt-write": "配線表がどこに在り、何を持つファイルなのかを2〜3文で書いてください。配線の行そのものは書かないでください（行はプロジェクト側のファイルに置きます）。"
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "配線表が持つ欄を、上から順に並べてください。欄の名前は、何が入る欄なのかがそのまま分かる言葉にします。",
           "items": {
             "type": "object",
+            "additionalProperties": false,
             "required": [
-              "skill",
-              "purpose",
-              "combinedSkills",
-              "strength"
+              "column",
+              "what"
             ],
             "properties": {
-              "skill": {
+              "column": {
                 "type": "string",
-                "x-prompt-write": "併用が必要なSkillの名前（識別子）を記述してください。"
+                "x-prompt-write": "欄の名前。何が入る欄なのかがそのまま分かる言葉にしてください。"
               },
-              "purpose": {
+              "what": {
                 "type": "string",
-                "x-prompt-write": "併用が必要になる条件を記述してください（例: 対象がどのような種類の文書・判断領域を扱うときか）。"
-              },
-              "combinedSkills": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "x-prompt-write": "併用するSkillの名前（識別子）を列挙してください。判断根拠を提供するadvisor種別のSkillのみを指定できます（advisor以外を併用したくなる場合は、Skillの切り方が細かすぎるサインです）。"
-              },
-              "strength": {
-                "type": "string",
-                "enum": [
-                  "必須",
-                  "推奨"
-                ],
-                "x-prompt-write": "必須（併用が無いとrole skillの実行を進めない）か推奨（advisorの結果は参考情報として渡すが、role skillの実行はブロックしない）かを指定してください。"
+                "x-prompt-write": "その欄に何を書くかを、具体例を添えて書いてください。"
               }
             }
           }
+        },
+        "fallbacks": {
+          "type": "array",
+          "minItems": 1,
+          "x-prompt-write": "呼ぶ相手が居ないときに書ける値を、すべて並べてください。値ごとに、実際に何が起きるかを書きます。",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "effect"
+            ],
+            "properties": {
+              "value": {
+                "type": "string",
+                "x-prompt-write": "呼ぶ相手が居ないときに書ける値。"
+              },
+              "effect": {
+                "type": "string",
+                "x-prompt-write": "その値を書いたとき、実際に何が起きるかを書いてください。強さの言葉（必須・推奨）ではなく、起きることを書きます。"
+              }
+            }
+          }
+        },
+        "example": {
+          "type": "string",
+          "x-prompt-write": "配線1行の書き方の例。実在の配線ではなく、架空の1行にしてください（実在のものを書くと、このプロジェクトに紐づきます）。"
         }
       }
     },
@@ -927,9 +963,6 @@
         },
         "description": {
           "$ref": "#/$defs/PurposeBlock"
-        },
-        "advisorBoundaries": {
-          "$ref": "#/$defs/AdvisorBoundariesBlock"
         }
       }
     },

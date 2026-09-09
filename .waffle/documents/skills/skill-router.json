@@ -7,17 +7,17 @@
   "content": {
     "title": {
       "blockType": "Title",
-      "title": "schemaごとに必要なadvisorの組み合わせを振り分けるrouter Skill：skill-router"
+      "title": "一緒に呼ぶSkillを配線表から決めるrouter Skill：skill-router"
     },
     "role": {
       "blockType": "Role",
       "title": "役割",
       "items": [
-        "実務Skillが単独では完結できない場面を、ルーティング表に基づいて判定する",
-        "併用が必要なadvisor Skillの組み合わせと、その強制力（必須/推奨）を示す",
-        "併用が必要なadvisor Skillを、それぞれ独立した目的・役割・タスク・成果物・受け入れ基準を持たせて並列に呼び出せるよう、対象advisor名の一覧を返す",
-        "実務Skill・advisor Skill同士が互いを呼ぶ構造を避け、Orchestratorに代わって組み合わせ判断の一次窓口になる",
-        "ユーザーから明示的にルーティング表の追加・修正・削除を依頼されたときは、対話的に該当行を編集する（判定のみを求められた場合は表を変更しない）"
+        "1つのSkillだけでは終えられない作業を、**外にある配線表**を見て見分ける",
+        "**何を頼むか・誰を呼ぶか・その相手が居ないときどうするか**を返す",
+        "呼ぶSkillを、それぞれ独立した目的・役割・タスク・成果物・受け入れ基準を持たせて並列に呼び出せるよう、**呼ぶSkillの名前の一覧**を返す",
+        "作業側のSkillと呼ばれる側のSkillが互いを呼び合う形を避け、Orchestratorに代わって窓口になる",
+        "ユーザーから配線の追加・修正・削除を頼まれたときは、対話しながら**配線表のファイル**を書き換える（判定だけを頼まれたときは書き換えない）"
       ]
     },
     "inputExpectation": {
@@ -25,98 +25,70 @@
       "title": "入力の想定",
       "items": [
         {
-          "aspect": "呼び出し元の実務Skill名",
-          "interpretation": "明示されなければ、これから実行しようとしている作業内容（spec作成・handoff作成・実装等）から推測し、不明な場合は呼び出し元に確認する。"
+          "aspect": "これから行う作業の名前",
+          "interpretation": "明示されなければ、実行しようとしている内容から推測し、分からなければ呼び出し元に聞く。"
         },
         {
-          "aspect": "対象とする仕様書の種別（ドメイン仕様・技術スタック/アーキテクチャ/コーディング規約・テスト方針・インフラ仕様・画面設計仕様等）または作業目的",
-          "interpretation": "実務SkillがSpec-authoringの場合は必須（仕様書の種別ごとにルーティング表を引くため）。Handoff-authoring/Implementationの場合は「前段階で実際に参加したadvisor」を別途受け取る（動的引き継ぎ、固定リストではない）。"
+          "aspect": "その作業が何を対象にするか",
+          "interpretation": "同じ作業でも対象によって呼ぶ相手が変わる場合は必須（対象ごとに配線表を引くため）。前の段階で実際に呼んだSkillがあれば、それも受け取る（固定リストではなく、そのつど引き継ぐ）。"
+        },
+        {
+          "aspect": "**配線表の場所**",
+          "interpretation": "**明示されなければ、プロジェクト直下の `skill-wiring.json` を見る。無ければ配線が1件も無いものとして扱い、何も返さない**（失敗にしない）。"
         }
       ]
     },
     "routingTable": {
       "blockType": "RoutingTable",
-      "title": "ルーティング表",
-      "items": [
+      "title": "配線表",
+      "items": [],
+      "text": "**配線表は、このSkillの外にある1つのファイルである。** 形は `references/skill-wiring.schema.json` が決める。1行が4つの欄を持つ。",
+      "columns": [
         {
-          "skill": "Spec-authoring",
-          "purpose": "ドメイン仕様書の作成",
-          "combinedSkills": [
-            "ddd-advisor",
-            "tech-lead-advisor"
-          ],
-          "strength": "必須"
+          "column": "何を頼むか",
+          "what": "**頼む内容**。Skillの名前ではなく、してほしいことを書く（例:「認証まわりの安全性を見てもらう」）"
         },
         {
-          "skill": "Spec-authoring",
-          "purpose": "技術スタック・アーキテクチャ・コーディング規約の作成",
-          "combinedSkills": [
-            "tech-lead-advisor"
-          ],
-          "strength": "必須"
+          "column": "どの作業のとき",
+          "what": "その頼みごとが必要になる作業。同じ作業でも対象で変わるなら、対象まで書く"
         },
         {
-          "skill": "Spec-authoring",
-          "purpose": "テスト方針・テスト規約の作成",
-          "combinedSkills": [
-            "tech-lead-advisor",
-            "qa-advisor"
-          ],
-          "strength": "必須"
+          "column": "呼ぶSkill",
+          "what": "頼む相手のSkill名（複数可）"
         },
         {
-          "skill": "Spec-authoring",
-          "purpose": "インフラ仕様書の作成",
-          "combinedSkills": [
-            "platform-advisor"
-          ],
-          "strength": "必須"
-        },
-        {
-          "skill": "Spec-authoring",
-          "purpose": "画面設計・プレゼンテーション仕様の作成",
-          "combinedSkills": [
-            "ux-advisor"
-          ],
-          "strength": "推奨"
-        },
-        {
-          "skill": "Handoff-authoring",
-          "purpose": "設計判断を実装への引き継ぎ文書として記録する作業（前段階のSpec-authoringで実際に参加したadvisorを動的に引き継ぐ。固定リストではない）",
-          "combinedSkills": [
-            "ddd-advisor"
-          ],
-          "strength": "必須"
-        },
-        {
-          "skill": "Implementation",
-          "purpose": "実装（引き継ぎ文書の設計観点・実装観点に記録されたadvisorを動的に引き継ぐ。固定リストではない）",
-          "combinedSkills": [
-            "ddd-advisor"
-          ],
-          "strength": "必須"
-        },
-        {
-          "skill": "Implementation",
-          "purpose": "UIコンポーネントの実装",
-          "combinedSkills": [
-            "ux-advisor"
-          ],
-          "strength": "推奨"
+          "column": "呼ぶSkillが無いとき",
+          "what": "作業を止める ／ 結果だけ渡す ／ 呼ばずに進む のいずれか"
         }
-      ]
+      ],
+      "fallbacks": [
+        {
+          "value": "作業を止める",
+          "effect": "呼んだ相手の結果が返るまで、その作業を先へ進めない"
+        },
+        {
+          "value": "結果だけ渡す",
+          "effect": "結果は作業へ渡すが、作業は止めない"
+        },
+        {
+          "value": "呼ばずに進む",
+          "effect": "配線が無いことを咎めない。作業側が自分でできる範囲で進む"
+        }
+      ],
+      "example": "{\n  \"何を頼むか\": \"認証まわりの安全性を見てもらう\",\n  \"どの作業のとき\": \"code-review（認証・権限を含む変更）\",\n  \"呼ぶSkill\": [\"security-advisor\"],\n  \"呼ぶSkillが無いとき\": \"作業を止める\"\n}"
     },
     "guardrails": {
       "blockType": "Guardrails",
       "title": "ガードレール",
       "items": [
-        "combinedSkillsに指定できるのは常に助言専門のadvisor Skillのみ。advisor以外のSkillを併用したくなった場合は、実務Skillの境界の切り方自体が細かすぎる設計ミスのサインであり、この表に逃がさない",
-        "ルーティング表にエントリが無いSkill（例: Investigation）は単独で完結するとみなし、advisorのdispatchを行わない",
-        "strengthが必須のエントリは、対象advisorの結果を得るまで実務Skillの実行を進めない。推奨のエントリは、対象advisorの結果を参考情報として実務Skillに渡すが、実務Skillの実行をブロックしない",
-        "Handoff-authoring/Implementationの行は固定のadvisor一覧ではなく「前段階で実際に参加したadvisor」を動的に引き継ぐ。この表のcombinedSkillsは引き継ぎ元が無い場合のデフォルトとして扱う",
-        "skill-router自身は実務Skillやadvisor Skillの内部手順を一切知らない。判断結果（併用すべきadvisor名の一覧）を返すだけで、実際の並列呼び出しの組み立てと起動はOrchestrator側が行う",
-        "ルーティング表の各行は「いつ呼ぶか」を持たない。同じ行（同じskill/purpose/combinedSkills）を、実務Skillのライフサイクル内でOrchestratorが執筆前・執筆後の複数回にわたって呼び出してよい。この表に執筆前用・執筆後用の行を別々に作らない",
-        "他プロジェクトへ持ち出す場合は、routingTableの中身をそのプロジェクト自身のSkill構成に合わせて作り直す（表の中身はこのリポジトリのSkill構成に固有のデータであり、機構本体はそのまま使い回せる）"
+        "**配線の行を、この文書に書かない。** 行は配線表のファイルにだけ置く ── ここに書いた時点で、書いたプロジェクトでしか使えないSkillになる",
+        "**呼んでよいSkillの種類を、この文書で限定しない。** どのSkillを呼んでよいかはプロジェクトごとの決め事なので、配線表のファイルに書く",
+        "配線表に行が無い作業は、1つのSkillで終えられるものとして扱い、他のSkillを呼ばない",
+        "**配線表が見つからないことを、失敗として扱わない。** 配線が1件も無いものとして進む ── 持ち出した先で必ず止まる作りにしない",
+        "**「呼ぶSkillが無いとき」に書いた値が、そのまま振る舞いになる。** 作業を止める・結果だけ渡す・呼ばずに進む の3つ以外を書かない",
+        "**1行だけに当てはまる例外を、この文書に書かない。** 前の段階から引き継ぐかどうかは、その行の「どの作業のとき」に書く",
+        "skill-router自身は、作業側のSkillも呼ばれる側のSkillも、中で何をしているかを知らない。返すのは名前の一覧までで、並列呼び出しの組み立てと起動はOrchestratorが行う",
+        "配線表の行は「いつ呼ぶか」を持たない。同じ行を、1つの作業の中でOrchestratorが何度呼んでもよい。前用・後用の行を別々に作らない"
       ]
     },
     "references": {
@@ -124,8 +96,12 @@
       "title": "参照",
       "items": [
         {
+          "path": "references/skill-wiring.schema.json",
+          "description": "配線表の形を検査するJSON Schema。4つの欄と、「呼ぶSkillが無いとき」に書ける3つの値を定める"
+        },
+        {
           "path": "references/porting-guide.md",
-          "description": "skill-routerを他プロジェクトへ移植する具体手順（Orchestrator側のdelegationPatterns追加・routingTable/advisorBoundariesの書き直し方）"
+          "description": "skill-routerを他プロジェクトへ移す手順（Orchestrator側のdelegationPatterns追加・配線表の書き起こし方）"
         }
       ]
     },
@@ -137,23 +113,7 @@
     "description": {
       "blockType": "Purpose",
       "title": "目的",
-      "text": "実務Skill（Investigation/Spec-authoring/Handoff-authoring/Implementation）が単独では目的を完結できない場面で、どのadvisor Skillと組み合わせる必要があるかをルーティング表に基づいて判断する際に使う。CLAUDE.md（Orchestrator）が実務Skillのライフサイクルの中で必要な回数呼び、判断材料となるadvisorの結果を実務Skillへの入力として渡す。ルーティング表は「誰と組み合わせるか（WHO）」のみを扱い、「いつ呼ぶか（WHEN：執筆前の判断材料収集か、執筆後の十分性ゲートチェックか、あるいはその両方か）」はOrchestrator側の責務とし、skill-router自身はタイミングを一切保持しない。"
-    },
-    "advisorBoundaries": {
-      "items": [
-        {
-          "advisor": "ux-advisor",
-          "outOfScopeTopic": "依存方向の適合判定（presentationがユースケースのportを正しく呼んでいるか）",
-          "escalatesTo": "tech-lead-advisor"
-        },
-        {
-          "advisor": "platform-advisor",
-          "outOfScopeTopic": "アプリケーション内部のレイヤー配置・依存方向の判定",
-          "escalatesTo": "tech-lead-advisor"
-        }
-      ],
-      "blockType": "AdvisorBoundaries",
-      "title": "advisor間の境界・委譲マップ"
+      "text": "ある作業を1つのSkillだけでは終えられないとき、**どのSkillを一緒に呼ぶか**を配線表を見て決める際に使う。Orchestratorが作業の途中で必要な回数だけ呼び、呼んだSkillから返ってきた結果を、その作業への入力として渡す。配線表が持つのは「何を、誰に頼むか」だけで、「いつ呼ぶか（作業の前に材料を集めるのか、作業のあとに十分かを確かめるのか、両方か）」はOrchestratorが決める。skill-router自身はタイミングを持たない。\n\n**この文書が持つのは、配線表の読み方だけである。配線そのものは持たない。** 配線はプロジェクトごとに違う。ここに書けば、書いたプロジェクトでしか使えないSkillになる。\n\n**どんなSkillを呼んでよいかも、この文書は決めない。** それはプロジェクトごとの決め事なので、配線表のファイルに書く。"
     }
   },
   "tags": []
