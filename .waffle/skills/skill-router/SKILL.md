@@ -79,4 +79,3 @@ description: "ある作業を1つのSkillだけでは終えられないとき、
 ## 参照
 
 - `references/skill-wiring.schema.json`: 配線表の形を検査するJSON Schema。4つの欄と、「呼ぶSkillが無いとき」に書ける3つの値を定める
-- `references/porting-guide.md`: skill-routerを他プロジェクトへ移す手順（Orchestrator側のdelegationPatterns追加・配線表の書き起こし方）

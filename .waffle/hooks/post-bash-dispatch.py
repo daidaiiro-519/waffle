@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """PostToolUse:Bash集約ディスパッチャ。
 
-check-drift-on-write.py・notify-advisor-consultation.py・
+check-drift-on-write.py・
 notify-validate-render-after-write.py・check-prompt-contract-on-write.pyがBashコマンド1回ごとに個別の
-python3プロセスとして起動し、うち2本が同一のtranscriptファイルを独立に
+python3プロセスとして起動し、うち1本以上が同一のtranscriptファイルを独立に
 全読みしていた（tech-lead-advisor敵対的検証で指摘された実行時の重複）。
 
-3本それぞれのcheck()判定関数をimportlib経由で動的importし、transcript
-ファイルを1回だけ読んでから渡す。3本の判定基準・通知文言はこのファイルでは
+それぞれのcheck()判定関数をimportlib経由で動的importし、transcript
+ファイルを1回だけ読んでから渡す。各判定基準・通知文言はこのファイルでは
 一切変更しない。新しい判定ロジックはここに持ち込まない。
 """
 from __future__ import annotations
@@ -43,7 +43,6 @@ def main() -> None:
             transcript_text = None
 
     check_drift_on_write = _load("check-drift-on-write.py", "_check_drift_on_write")
-    notify_advisor_consultation = _load("notify-advisor-consultation.py", "_notify_advisor_consultation")
     notify_validate_render_after_write = _load(
         "notify-validate-render-after-write.py", "_notify_validate_render_after_write"
     )
@@ -53,7 +52,6 @@ def main() -> None:
 
     messages = [
         check_drift_on_write.check(payload),
-        notify_advisor_consultation.check(payload, transcript_text),
         notify_validate_render_after_write.check(payload, transcript_text),
         check_prompt_contract_on_write.check(payload),
     ]

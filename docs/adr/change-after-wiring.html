@@ -1,0 +1,420 @@
+<title>配線を外へ出したあとの、後始末</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
+--move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;--chipbg:#2b281f;
+--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}}
+:root[data-theme="dark"]{--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;
+--chipbg:#2b281f;--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);margin:0;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;line-height:1.85}
+.wrap{max-width:92rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+h1{font-size:1.5rem;margin:0 0 .3rem;letter-spacing:.02em}
+.lede{font-size:1.06rem;border-left:4px solid var(--key);padding:.55rem 0 .55rem .9rem;
+margin:1rem 0 2rem;background:var(--panel);max-width:68rem}
+h2{font-size:1.12rem;margin:2.4rem 0 .8rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h3{font-size:1rem;margin:1.6rem 0 .5rem;color:var(--key)}
+table{border-collapse:collapse;width:100%;margin:.9rem 0;font-size:.93rem}
+th,td{border:1px solid var(--line);padding:.42rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--chipbg);font-weight:700}
+code{background:var(--chipbg);padding:.08rem .3rem;border-radius:.2rem;font-size:.88em}
+pre{background:var(--chipbg);padding:.7rem .9rem;border-radius:.3rem;overflow-x:auto;font-size:.84rem}
+.scroll{overflow-x:auto}
+.gone{color:var(--gone)}
+#bar{position:sticky;top:0;z-index:9;background:var(--panel);border-bottom:2px solid var(--move);
+padding:.5rem .9rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;font-size:.9rem;
+margin:0 -1.2rem 1rem}
+#bar button{font:inherit;padding:.2rem .7rem;border-radius:.25rem;border:1px solid var(--move);
+background:transparent;color:var(--move);cursor:pointer}
+#bar button:hover{background:var(--move);color:var(--paper)}
+#tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 0;border-bottom:2px solid var(--line)}
+.tab{font:inherit;font-size:.93rem;padding:.45rem .95rem;border:1px solid var(--line);
+border-bottom:0;border-radius:.3rem .3rem 0 0;background:var(--panel);color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:700;
+box-shadow:0 2px 0 0 var(--paper)}
+.tab .n{font-size:.78rem;color:var(--move);margin-left:.35rem;font-weight:700}
+.pane{border:1px solid var(--line);border-top:0;background:var(--paper)}
+.pane.md{padding:1.2rem 1.8rem}
+.pane.md h1{font-size:1.25rem;margin-top:0}
+.pane.html{padding:0}
+.pane.html iframe{display:block;width:100%;border:0;background:var(--paper)}
+.lane{font-size:.8rem;color:var(--muted);padding:.35rem .9rem;border-bottom:1px dashed var(--line);
+background:var(--panel);display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.lane .how{margin-left:auto;font-style:italic}
+.idx{border-bottom:1px solid var(--line);background:var(--panel);padding:0 .9rem .5rem}
+.idx summary{cursor:pointer;font-size:.88rem;padding:.45rem 0;font-weight:700;color:var(--move)}
+.idx ol{margin:0 0 .3rem;padding-left:1.4rem;font-size:.88rem}
+.idx li{margin:.35rem 0}
+.idx button.go{font:inherit;font-size:.82rem;padding:.05rem .5rem;margin-left:.4rem;
+border:1px solid var(--move);border-radius:.2rem;background:transparent;color:var(--move);cursor:pointer}
+.idx button.go:hover{background:var(--move);color:var(--paper)}
+.idx .b{color:var(--muted);font-size:.84rem}
+</style>
+<style id="markcss-live">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</style>
+<script type="text/plain" id="markcss">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</script>
+
+<div class="wrap">
+<h1>配線を外へ出したあとの、後始末</h1>
+<p class="lede"><b>消えた欄を指したままの記述と、要らなくなった仕組みを片づける。</b><b>notify-advisor-consultation フックは、以前から一度も働いていなかった</b> ── schema家族の名前（<code>DomainSpecSchema</code>）を日本語の目的文（「ドメイン仕様書の作成」）と突き合わせており、<b>変更前の8行でも一致は0件</b>だった（実際に走らせて確かめた）。<b>まだ正本へは当てていない。</b></p>
+<h2>消すもの</h2><table><tr><th>何を</th><th>なぜ要らないか</th></tr><tr><td><b><code>notify-advisor-consultation</code></b><br>（script ・ Hookの文書 ・ 登録 ・ シンボリックリンク）</td><td><b>一度も働いていない。</b>突き合わせが噛み合っておらず（<code>DomainSpecSchema</code> と「ドメイン仕様書の作成」）、参照する <code>strength</code> の値（<code>block</code>）も存在しなかった。そのうえ<b>直すには、配線表へ機械用の鍵を足すことになる</b> ── 配線表は人とAIが読む文にしたので、そこへ鍵を戻すとまた結びつきが強くなる</td></tr><tr><td><b><code>skill-router/references/porting-guide.md</code></b></td><td>移植の手順が「SKILL.md を置き、自分の <code>skill-wiring.json</code> を書く」だけになった。<b>SKILL.md 自身が説明している</b>。しかも冒頭が「前提: 既に『完璧な抽象化』の条件を満たしている」のままで、<b>今回否定した主張が残る</b></td></tr><tr><td><b>CLAUDE.md の「機械的に行える作業」の skill-router 行</b></td><td>配線の編集が、ただのファイル書き換えになった。Waffleの手順が要らない</td></tr></table><h2>直すもの</h2><table><tr><th>どこ</th><th>何が起きていたか</th></tr><tr><td>CLAUDE.md の委譲パターン（2行）</td><td>もう無い欄（<code>routingTable</code> ・ <code>combinedSkills</code>）を引けと書いてあった ── <b>空が返り、『配線が無い』と読める</b></td></tr><tr><td>brainstorm のガードレール（1行）</td><td>原典の札は要求するのに、<b>原文の取り方が書かれていなかった</b></td></tr><tr><td>ux-advisor ・ platform-advisor（各1行）</td><td>範囲外だとは書いてあるが、<b>渡し先が消えていた</b></td></tr></table>
+<div id="bar"><b>変更 6 件</b>
+<button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="c">CLAUDE.md<span class="n">3</span></button><button class="tab" role="tab" data-t="b">brainstorm<span class="n">1</span></button><button class="tab" role="tab" data-t="u">ux-advisor<span class="n">1</span></button><button class="tab" role="tab" data-t="p">platform-advisor<span class="n">1</span></button></div>
+<section class="pane md" data-k="c" hidden><details class="idx" open><summary>この面の変更 3 件</summary><ol><li><b>作業を始める前に、まずskill-routerへ問い合わせ</b><button class="go" data-i="0">その場所へ</button><div class="b">routingTable も combinedSkills も、もう存在しない。指示どおり引くと空が返り、『配線が無い』と読めてしまう ── 呼ぶべき相手を1人も呼ばずに進む。また対象をSpec-authoring等の3つに限っていたので、配線表に行を足したbrainstormが通らなかった</div></li><li><b>skill-routerが返した「呼ぶSkill」に従い</b><button class="go" data-i="1">その場所へ</button><div class="b">combinedSkills という欄はもう無い。返るのは「呼ぶSkill」の一覧である</div></li><li><b>機械的に行える作業</b><button class="go" data-i="2">その場所へ</button><div class="b">配線の追加・修正・削除は、`skill-wiring.json` を書き換えるだけになった ── query→fill→validate→render というWaffleの手順は要らない。行ごと消す</div></li></ol></details><div class="doc"><h1>スキーマ駆動でDocumentを検証・生成・描画するリポジトリ全体を編成するOrchestrator：waffle</h1>
+<h2>管轄範囲</h2>
+<p>- <strong>管轄ディレクトリ</strong>: waffle/<br>- <strong>概要</strong>: スキーマという型で文書を焼き上げる、構造検証＋意味ガイダンス内蔵のドキュメントエンジン「Waffle」。JSON Schemaでdocument.jsonを検証・query・render・scaffoldする。自己完結ディレクトリ（<code>git subtree split --prefix=waffle</code>で独立可能）。</p>
+<hr>
+<h2>運用ルール</h2>
+<div class="wrap"><table><tr><th>ルール</th><th>なぜ</th><th>適用方法</th></tr><tr><td>document.json操作は必ずCLI/MCP経由で行う</td><td>自分自身がdogfood対象のため</td><td>create/fill/validate/render/query/check-*/scan-source-code/lint-docstringを使う（直接読み書きしない）</td></tr><tr><td>document.jsonのパスは<code>.waffle/</code>を使う</td><td>has-udd汎用パス（<code>.has-udd/</code>）と混在させないため</td><td><code>waffle/.waffle/documents/</code>配下に置く</td></tr><tr><td>Skill/advisor間はテキストベース疎結合を保つ</td><td>受け手の内部形式を事前に知らなくてよくするため（腐敗防止層と同型）</td><td>入出力はテキストに統一し、構造化への成型は受け手側が行う</td></tr><tr><td>作業開始時に<code>.waffle/memory/MEMORY.md</code>を確認し、関連する既存メモリがあれば踏まえる</td><td>ツールを問わず、過去の決定・訂正・フィードバックを引き継ぐため</td><td>関連する重要な決定・訂正・知見が生じたらmemory-cultivator Skillで<code>.waffle/memory/</code>へ記録する</td></tr><tr><td>作業は UDDループ（調べる→決める→引き継ぐ→作る）を通す。どこまで踏むかはその都度判断する——新規capability・挙動変更・schema変更を伴うなら4段とも踏み、単一フィールド修正・機械的な文言変換・調査単体なら決めることが無いので段は薄くなる。</td><td>経路を2つ用意して先に選ばせると、『どちらの道か』という判断が本来の判断の前に増える。しかも一方の名前が付けられなかった——自然な名前が付かないのは、分ける必要が無いことの合図である。1本のループに寄せても判断は無くならず、spec合意前の実装（既知の再発パターン）と、軽微な修正への過剰な儀式化のどちらへ振れるかを、その都度測ることになる。</td><td>境界事例（例：複数フィールドにまたがるが挙動は変わらない修正）は judgmentTasks の基準に従う。迷ったら『決めることがあるか』を先に問う——決めることがあるなら、決める段と引き継ぐ段を省かない。</td></tr><tr><td>スキーマ構造を変えず、documentの表現レベルだけを直す修正は、必ずx-prompt-write/x-prompt-query側を先に直してからfillする。documentの値を直接書き換えて終わらせない</td><td>document側だけを直接直すと、その表現不備を生んだx-promptのガイダンスが実際に機能したかを一切検証しないまま個別修正で終わってしまう。スキーマ構造の変更を伴わない表現レベルの不備は、その定義上x-promptの記述不足のシグナルであり、documentを直接直すとこのシグナルを握りつぶし、同じ不備が他のdocumentやfill先で再発する</td><td>waffle patch-schemaでx-prompt-write/x-prompt-queryを先に修正し、その上でwaffle scaffold fillでdocument側へ反映する。document側をfillだけで直接書き換える修正はしない</td></tr><tr><td>specを書き終えたら、実装へ移る前に必ずHandoffを作り、ユーザーへ提示して合意を得る。ユーザーから求められて初めて出すのではなく、Orchestrator自身から提案する</td><td>specは『何が正しいか』しか運ばず、『なぜその形にしたか』『どこに何を置くか』は運ばない。specを書き終えた直後は成果物が積み上がって手が動く状態になり、そのまま実装へ入りやすい。実際にこのセッションで3回続けて飛ばし、そのたびにユーザーから指摘された。指摘されてから出すのでは、毎回ユーザーが工程の番人をすることになる</td><td><code>waffle scaffold create --schemaRef HandoffSchema</code> で作り、<code>waffle render-handoff-template</code> でHTMLにしてユーザーへ提示する。descriptionにはこのHandoffが担うユースケースの識別子を必ず並べる（Handoffが指すユースケースをフックが突き合わせるため、境界づけられたコンテキストを指すだけでは、以後どれだけ仕様を足しても検知されない）。未解決の観点はreviewStatusにopenのまま残してよい——全部を解いてから出すのではなく、決まっていないことが見える状態で出す</td></tr></table></div>
+<hr>
+<h2>主要コマンド</h2>
+<div class="wrap"><table><tr><th>コマンド</th><th>用途</th></tr><tr><td>uv run pytest</td><td>unit/integration/acceptance/contractの4層テストを実行する</td></tr><tr><td>uv run waffle validate --path &lt;document.jsonのパス&gt;</td><td>document.jsonをschemaに適合検証する</td></tr><tr><td>uv run waffle render --path &lt;document.jsonのパス&gt;</td><td>document.jsonを成果物（SKILL.md等）へ描画し、deploy先（.claude/skills/等）へ配置する</td></tr><tr><td>uv run waffle query --operation &lt;操作名&gt; --path &lt;document.jsonのパス&gt;</td><td>document.jsonの内容を確認・検索する（get_block/get_field等16操作）</td></tr><tr><td>uv run waffle scaffold --operation create\</td><td>fill ...</td><td>document.jsonの骨格生成、および既存documentへの値の書き込みを行う</td></tr><tr><td>uv run waffle check-spec-integrity / check-scenario-drift / check-schema-version-drift</td><td>spec参照整合性・シナリオドリフト・schema版ドリフトを確認する</td></tr></table></div>
+<hr>
+<h2>自身の役割</h2>
+<p>UDDループ（調べる→決める→引き継ぐ→作る）を1本の道として通し、作業ごとにどこまで踏むかを判断するOrchestrator。決めることがある作業で、決める段と引き継ぐ段を省かないことに責任を持つ。構造の検証・生成・描画はWaffleが機械的に担い、判断はアドバイザーSkillが敵対的に確かめる。</p>
+<hr>
+<h2><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="| skill-routerの概念的な手順のうち、ルーティング表の反映をWaffleコマンドへ対応させる（…） | 「ルーティング表の該当行を追加・修正・削除する」= `content.routingTable.items`を query で現在値取得→組み立て→`waffle scaffold fill --path .waffle/documents/skills/skill-router.json`で丸ごと置き換え→`waffle validate`→`waffle render` |
+
+（この行が、機械的に行える作業の表に在った）" data-w="配線の追加・修正・削除は、`skill-wiring.json` を書き換えるだけになった ── query→fill→validate→render というWaffleの手順は要らない。行ごと消す">機械的に行える作業</mark></h2>
+<div class="wrap"><table><tr><th>作業</th><th>適用方法</th></tr><tr><td>既存document.jsonをscaffold fillで反映する（値そのものの決定はjudgmentTasksを参照。ここでの機械性は反映操作の手順を指す）</td><td>配列は query で現在値取得→組み立て→fill で丸ごと置き換え</td></tr><tr><td>repo rootから<code>uv run --project waffle waffle &lt;command&gt;</code>で呼ぶ</td><td>waffleはrepo rootとは別プロジェクトのため。deploy先パスは<code>waffle/</code>配下を明示する</td></tr><tr><td>spec-authoringの概念的な手順のうち、雛形生成・整合確認・成果物確定をWaffleコマンドへ対応させる（Skill自身にはWaffle固有の語彙を持ち込まない。対応関係はここに集約する）</td><td>「対象spec種別の雛形を用意する」=<code>waffle scaffold create --schemaRef &lt;対応するschemaRef&gt; --discriminator &lt;対応するdiscriminator&gt;</code>（既存document更新時は省略）／「構造の整合を確認する」=<code>waffle validate</code>／「成果物として確定する」=<code>waffle render</code>。「雛形のガイダンスと判断材料に従って値を埋める」（fillの中身の決定）は機械的操作ではない（judgmentTasksを参照）</td></tr><tr><td>handoff-authoringの概念的な手順のうち、対象確認・雛形生成・整合確認・成果物確定をWaffleコマンドへ対応させる</td><td>「対象specとの対応を確認する」=対象specのdocument.jsonのstatusが VALIDATED 以上か<code>waffle query --operation get_meta</code>で確認／「雛形を用意する」=<code>waffle scaffold create --schemaRef HandoffSchema</code>（既存document更新時は省略）／「構造の整合を確認する」=<code>waffle validate</code>／「成果物として確定する」=<code>waffle render-handoff-template --path &lt;documentPath&gt; --outputPath .waffle/handoff/&lt;documentId&gt;.html</code>（<strong>汎用の<code>waffle render</code>ではない</strong>。HandoffSchemaは<code>x-render-target</code>を意図的に持たず、<code>waffle render</code>を実行するとNO_RENDER_TARGETエラーになる。HTML固定テンプレートのみが正しい成果物）。「受け取った判断材料を記録する」（fillの中身の決定）は機械的操作ではない（judgmentTasksを参照）</td></tr><tr><td>knowledge-cultivatorの概念的な手順のうち、記録の器の生成と昇格操作をWaffleコマンドへ対応させる</td><td>「knowledge候補を記録する」（下書き状態の記録手段）=<code>waffle scaffold create --schemaRef KnowledgeSchema</code>でstatus DRAFTのdocumentを作成（記録する内容自体の決定はjudgmentTasksを参照）／「蓄積した下書き候補を審査用にとりまとめる」=<code>waffle query --operation find_all</code>等でstatus DRAFTのKnowledgeSchema documentを洗い出す／採用決定後の正式採用への反映（このSkillの責務外）=Orchestratorが<code>waffle scaffold fill</code>でstatus ACTIVEへ変更→<code>waffle validate</code>→<code>waffle render</code></td></tr></table></div>
+<hr>
+<h2>AIの推論を要する作業</h2>
+<div class="wrap"><table><tr><th>状況</th><th>判断基準</th><th>理由</th></tr><tr><td>schemaに新規トップレベルキーを追加する必要が生じたとき</td><td>そのキーが本当に新規必須キー追加に該当するかを判断し、該当する場合のみEdit/Writeを許容する</td><td>fill/createは新規キーの後追いマージをしないため。check-schema-version-driftで検知されたキーのみEdit/Writeで追記する</td></tr><tr><td>spec-authoring/handoff-authoring/knowledge-cultivatorのfillで実際に書き込む値を決めるとき</td><td>対象フィールドのx-prompt-write（執筆ガイダンス）を読み、advisor相談で得た判断材料（設計観点・実装観点等）と整合する内容を組み立てる。判断材料が不足している場合はOrchestrator自身が独自に判断材料を作り出さず、advisor相談等で確認する</td><td>fillは値を書き込む操作自体は機械的だが、何を書き込むかはx-prompt-writeの解釈とドメイン判断を要するため、mechanicalTasksに含めると『考えずに埋めてよい』という誤解を生む</td></tr><tr><td>作業が UDDループ のどの段まで踏むべきか自明でないとき</td><td>「振る舞いが変わるか」「将来同種の判断が繰り返されるか」のいずれかが Yes なら4段とも踏む。両方 No なら、決めることが無いので決める段と引き継ぐ段は薄くてよい。</td><td>レーンの定義だけでは境界事例を割り切れないため、最終判断はOrchestrator自身に残す</td></tr></table></div>
+<hr>
+<h2>委譲パターン</h2>
+<div class="wrap"><table><tr><th>対象</th><th>タイミング</th><th>範囲</th><th>アクション</th><th>理由</th></tr><tr><td>skill-router</td><td>before</td><td>category</td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="| skill-router | before | category | Spec-authoring/Handoff-authoring/Implementationのいずれかを使う前に、まずskill-routerへ問い合わせ、routingTableが示すadvisorとの組み合わせ（WHO）を確認する（Investigationはrouting表にエントリが無く単独で完結するため対象外）。返ってきたcombinedSkillsの一覧を、続くadvisor委譲パターンへの入力として渡す | …" data-w="routingTable も combinedSkills も、もう存在しない。指示どおり引くと空が返り、『配線が無い』と読めてしまう ── 呼ぶべき相手を1人も呼ばずに進む。また対象をSpec-authoring等の3つに限っていたので、配線表に行を足したbrainstormが通らなかった">作業を始める前に、まずskill-routerへ問い合わせ</mark>、配線表（<code>skill-wiring.json</code>）にその作業の行があるかを確認する。行があれば「何を頼むか」と「呼ぶSkill」を受け取り、続く委譲パターンへの入力として渡す。行が無ければ、その作業は1つのSkillで終えられるものとして進む</td><td>作業側のSkillと呼ばれる側のSkillが互いを呼ぶ構造を避け、判断の窓口をOrchestrator側に置くため（skill-router自身の設計原則）。呼ぶタイミング（作業の前に材料を集める・作業のあとに十分かを確かめるのいずれか、または両方）はOrchestrator自身が判断する</td></tr><tr><td>advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor等）</td><td>after</td><td>category</td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="skill-routerが返したcombinedSkillsに従い" data-w="combinedSkills という欄はもう無い。返るのは「呼ぶSkill」の一覧である">skill-routerが返した「呼ぶSkill」に従い</mark>、敵対的検証を依頼する各advisor（同じadvisorへの敵対的検証フェーズ再検証を含む）ごとに、AgentSchemaのgoal-dispatch構造（目的・役割・読み込むSkill・タスク・成果物・受け入れ基準）で内容を組み立て、Agentツールでwaffleサブエージェントとして並列に呼び出す（汎用のエージェントへ要約した指示を渡す代行はしない。受け手が読み込むべきSkillのSKILL.md本文の具体的な手順、特にresponseTypesが指すテンプレートファイルの読み込みが遂行される保証がないため）（1体ずつ直列に呼ばない。複数advisorへの依頼は1回のメッセージで同時に発行する）。敵対的検証の対象が1件のみで他advisorとの突き合わせが不要な場合は単体呼び出しでよい。全員の結果が揃ったら、各回答がresponseTypesが指すテンプレートの見出し構造を実際に踏襲しているかを確認してから、template-skill-adversarial-verification.mdの形式で統合する（テンプレート構造を踏まない回答は、内容の質も未検証とみなし再実行する）</td><td>advisorはWaffleが所有・出荷する成果物であり、単一advisorの一発出力を無検証で確定させない運用はWaffle自身のOrchestratorの責務。advisorが互いを呼ぶのではなくOrchestrator側が組合せを判断することで、Skill/advisor間のテキストベース疎結合原則を保てる。並列dispatchにするのは、直列に1体ずつ呼ぶと後段のadvisorが前段の結論に引きずられ、独立した意見として機能しなくなるため（診断的差し戻しの前提となる複数視点の独立性を保つ）。呼び出し手段・出力検証を明示するのは、要約した指示による代行dispatchでは受け手がテンプレート等の具体的な手順を遂行する保証がなく、実際に本セッションでテンプレート未遵守の回答を無検証で確定させかけた再発防止のため</td></tr><tr><td>knowledge-cultivator</td><td>before</td><td>single</td><td>advisor相談への応答生成中に次の3種のいずれかに該当したら、knowledge-cultivator Skillを呼ぶ: (1)ユーザーの明示的な反論・訂正 (2)既存knowledgeでカバーできない実際の遭遇 (3)複数advisor並列dispatch時の矛盾。Claude Code専用の<code>feedback_*</code>メモリは経由せず、<code>waffle scaffold create/fill</code>で直接KnowledgeSchema DRAFT文書として記録する</td><td>マルチツール（Claude Code以外のAIツールを含む）で動作する記録経路にする必要があるため。Claude Code専用の記憶機構はツール依存で他ツールから記録できない</td></tr><tr><td>knowledge-cultivator</td><td>after</td><td>single</td><td>knowledge-cultivatorのStep3（候補審査の対話完了後）で採用が決定した候補について、Orchestratorが通常のCLI操作（scaffold fillでstatus: ACTIVEへ変更→対象advisorへのskillRef確認→validate→render）で昇格を実行する。却下・保留の候補はDRAFTのまま残す</td><td>knowledge-cultivatorは候補の検知・記録・審査（人間対話によるバイアス防止）までを自己完結で担う。この審査対話は汎用のbrainstorm skillとは責務が異なる特化型の対話であり、混同して同じ仕組みに載せない。昇格実行のみCLAUDE.mdの既存運用ルールの範囲内の通常操作として切り出し、専用手順を持たせない</td></tr><tr><td>memory-cultivator</td><td>after</td><td>single</td><td>4段階（Investigation/Spec-authoring/Handoff-authoring/Implementation）のいずれの作業中でも、ユーザーによる明示的な訂正・重要な決定・参照情報など、将来のセッションやツールをまたいで再利用すべき事実に気づいたとき、またはユーザーから明示的に「覚えておいて」と頼まれたときに、memory-cultivator Skillを呼ぶ</td><td>ツールを問わず共有される.waffle/memory/へ記録することで、次回セッション・別ツールでも過去の決定・訂正・知見を引き継げるようにするため（operatingRulesが定める作業開始時のMEMORY.md確認と対をなす）</td></tr></table></div></div></section><section class="pane md" data-k="b" hidden><details class="idx" open><summary>この面の変更 1 件</summary><ol><li><b>&lt;strong&gt;原典の札を付けるなら、原文が手元に在る状態にする。&lt;/stron</b><button class="go" data-i="0">その場所へ</button><div class="b">札は要求するのに取り方を書かないと、実行時に参照先を持たない原則になる。配線表には『原文を落とす』頼みごとの行を入れたが、brainstorm 側が知らないままだと誰も読まない</div></li></ol></details><div class="doc"><hr>
+<p>name: &quot;brainstorm&quot;<br>description: &quot;テーマに対して論点を立て、AIが案を出し、AI自身が先に反証して、残った1つを答えとして出す対話進行に使う。利用者がするのは承認・差し戻し・書き足しだけで、案を比べて選ぶ作業は渡さない。前提が片付いた問いだけを1回にまとめて出し、どの問いがどれに依存するかはAI側が持つ。ブレインストーミングを行いたいとき、アイデアを出したいとき、問題を整理・解決したいとき、論点を深掘りしたいときに使う。出力は文字ではなく、押せる成果物として組む。&quot;</p>
+<hr>
+<h1>反証で絞り切った答えを、承認だけで決められるようにする対話進行を担うSkill：brainstorm</h1>
+<h2>目的</h2>
+<p>テーマに対して論点を立て、AIが案を出し、AI自身が先に反証して、残った1つを答えとして出す対話進行に使う。利用者がするのは承認・差し戻し・書き足しだけで、案を比べて選ぶ作業は渡さない。前提が片付いた問いだけを1回にまとめて出し、どの問いがどれに依存するかはAI側が持つ。ブレインストーミングを行いたいとき、アイデアを出したいとき、問題を整理・解決したいとき、論点を深掘りしたいときに使う。出力は文字ではなく、押せる成果物として組む。</p>
+<hr>
+<h2>役割</h2>
+<p>- 論点を3〜5個に構造化し、<strong>どの問いがどれに依存するかを自分で持つ</strong>（利用者へ渡さない）<br>- 論点ごとに案を複数出し、<strong>提示する前に自分で反証して1つに絞る</strong><br>- <strong>前提が片付いた問いだけを、1回にまとめて出す</strong> ── 他の問いに依存するものは、依存が片付いてから出す<br>- 答えの直下に、<strong>完成イメージ（図、または変更前後の差分）を畳まずに置く</strong><br>- 出どころ・そこへ至った道筋・落とした案とその反証を、<strong>畳んで必ず添える</strong><br>- <strong>事実は自分で調べる</strong> ── 調べれば分かることを利用者に聞かない<br>- 承認・差し戻し・書き足しを受け取り、差し戻された問いには<strong>直した答えを1つ</strong>出す<br>- 決着した論点と未決の論点を、同じ1枚の中にタブとして並べる</p>
+<hr>
+<h2>処理対象と成果物</h2>
+<h3>処理対象</h3>
+<p>ブレインストーミングしたいテーマ・深掘りしたい論点。</p>
+<h3>成果物</h3>
+<p>2つの成果物。ひとつは<strong>承認の画面</strong> ── いま答えられる問いだけを並べ、問いごとに答え1つ・完成イメージ・畳んだ裏づけ（出どころ／道筋／落とした案）・書き足しの欄・承認と差し戻しのボタンを持つ。もうひとつは<strong>盤面</strong> ── 論点ごとにタブを1枚持ち、先頭に現在地（番号・論点・状態・いまの答え）を置く。決着した論点には結論・根拠・図・引き受けること・まだ崩れうるところを並べ、変わった箇所には押すと変更前と理由が開く印を置く。利用者の回答は1回1件として残る。</p>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>テーマ・目的</td><td>1〜2文で確認してから始める。論点はこちらで立て、最初に何個かを示す。</td></tr><tr><td>利用者の承認・差し戻し（理由）・書き足し</td><td>承認された答えをその論点の決まりとする。差し戻しは、理由と書き足しを材料に答えを組み直し、<strong>1つだけ</strong>出し直す。</td></tr><tr><td>回答ファイル（未読のもの）</td><td>利用者の返答として読む。承認・差し戻しの理由・書き足しが、問いごとに入っている。</td></tr></table></div>
+<hr>
+<h2>実行手順</h2>
+<h3>Step 1: テーマと論点を立て、依存は自分で持つ</h3>
+<p>テーマを1〜2文で確認し、論点を3〜5個立てて一覧を示す。同時に、どの論点がどれに依存するかを自分の側で整理する ── これは利用者へ渡さない。多すぎると疲弊するので、追加は都度確認する。</p>
+<h3>Step 2: 案を出し、提示する前に反証して1つに絞る</h3>
+<p>案を複数考え、利用者へ見せる前にそれぞれを攻める。落ちた案は捨てず、名前と『何が壊れるか』を残す。残った1つが答えになる。反証の過程で論点の軸そのものが変わることがある。軸が変わったら、そのことも書く。</p>
+<h3>Step 3: いま答えられる問いだけを、1回にまとめて出す</h3>
+<p>前提が片付いた問いだけを並べる。まだ開いている問いに依存するものは、この回には出さない ── 依存が片付いてから出す。1問ずつ往復すると、そのたびに文脈を積み直させることになる。</p>
+<h3>Step 4: 答えの直下に、完成イメージを置く</h3>
+<p>その答えを採ると何ができあがるかを、図か、変更前後の差分で示す。畳まない。決まっていないところは消さず、仮の印を付けて残す。文章だけでは、決定を受け取っても納得できない。</p>
+<h3>Step 5: 裏づけを、畳んで添える</h3>
+<p>なぜそう言えるか（答えのどこを支えるか／もとにしたこと／出どころと札）、そこへ至った道筋（番号を打った連鎖。引き返した手も入れる）、落とした案と何が壊れるか、引き受けること。畳んでよいが、無くしてはならない。</p>
+<h3>Step 6: 自由に書ける欄を、どの問いにも置く</h3>
+<p>差し戻しの理由を決められた値から選べるようにしたうえで、それでは言えないことを書ける欄を必ず置く。書かなくても進められるようにする。</p>
+<h3>Step 7: 承認・差し戻し・書き足しを受け取る</h3>
+<p>利用者がするのは、承認するか、理由を1つ選んで差し戻すか、書き足すか。回答は1回1件として残し、あとから何を差し戻したかが読めるようにする。</p>
+<h3>Step 8: 差し戻された問いは、直した答えを1つ出す</h3>
+<p>理由と書き足しを材料に組み直し、案を並べ直すのではなく、直した答えを1つ出す。何を変えたかは、変わった箇所の印として残す。</p>
+<h3>Step 9: 決着した論点を盤面へ記録し、次に答えられる問いを引き直す</h3>
+<p>承認された答えをその論点の決まりとし、状態を決着に変え、現在地の一覧にいまの答えを書く。決着したことで答えられるようになった問いが次の回になる ── なぜいま開いたのかも一緒に示す。</p>
+<h3>Step 10: 変わった箇所を、盤面に印として残す</h3>
+<p>答えや軸が変わったら、上書きせず印を残す。押すと『変更前』と『なぜ変えたか』が開く。履歴を別の場所へ追い出すと、いまの盤面と突き合わせながら読むことになる。</p>
+<h3>Step 11: まとめる</h3>
+<p>答えられる問いが尽きたら、決まりの一覧・次にすること・保留を並べる。保留は正当な着地点として扱う。</p>
+<hr>
+<h2>出力形式</h2>
+<p>承認の画面と盤面の2つを組む。</p>
+<p><strong>承認の画面</strong>は、いま答えられる問いだけを1回ぶん並べる。問いごとに、答えを1つ／その直下に完成イメージ（図、または変更前後の差分）／畳んだ裏づけ（なぜそう言えるか＝支える先・もとにしたこと・出どころの3列／そこへ至った道筋＝番号を打った連鎖／落とした案と、何が壊れるか）／引き受けること／自由に書ける欄／承認と差し戻しのボタンを置く。差し戻しの理由は決められた値から選べるようにし、それだけでは足りないぶんを自由欄で補えるようにする。</p>
+<p><strong>盤面</strong>は、論点ごとにタブを1枚持つ。先頭のタブは現在地で、番号・論点・状態（未／新規／決着）・いまの答えの一覧を置く。論点のタブは結論だけを1つ目の節に置き、その後ろに裏づけを並べる ── そう判断するまで／なぜそう言えるか／図で見る／引き受けること／落とした案と、その理由／反証で分かったこと／まだ崩れうるところ。</p>
+<p>出どころには種類の札（実測・原典・決まり・前提・未確認）を付ける。答えや軸が変わった箇所は印にし、押すと変更前と理由が開く。全論点が終わったら、決まりの一覧・次にすること・保留を現在地のタブへ並べる。</p>
+<hr>
+<h2>ガードレール</h2>
+<p>- <strong>案を記号で並べて選ばせない。</strong>反証で絞り切った答えを1つ出す ── 並べるのは判断の移譲であって、承認ではない<br>- <strong>依存関係を利用者へ渡さない。</strong>どの問いがどれに依存するかは自分で持ち、いま答えられる問いだけを出す ── 順番の管理は承認者の仕事ではない<br>- <strong>完成イメージを畳まない。</strong>図、または変更前後の差分を、答えの直下に置く ── 人は文章だけで決定を受け取って納得はできない<br>- <strong>出どころ・道筋・落とした案と反証を省かない。</strong>畳んでよいが、無くしてはならない ── 根拠を見ないまま押した承認は、承認になっていない<br>- <strong>事実を利用者に聞かない。</strong>調べれば分かることは自分で調べ、直して報告する ── 利用者に渡すのは決定だけである<br>- <strong>自由に書ける欄を必ず残す。</strong>決められた値だけでは言えないことが出る。書かなくても進めるようにする<br>- 案を1つしか思いつかないまま出さない。<strong>絞るのは反証の結果</strong>であって、最初から1つなのとは違う ── 反証すべき案が1つなら、論点の立て方が誤っている<br>- 落とした案を黙って消してはならない。名前と、何が壊れるかを残す ── 消すと、選択肢を潰したことに誰も気づけない<br>- 反証は提示より前に行う。後にすると、落ちると分かっている案を出すことになる<br>- 答えが変わったら黙って上書きしない。変更前と理由を、変わった箇所のすぐ隣に残す<br>- 節を散文の段落で埋めない。根拠は表で、道筋は番号を打った連鎖で、落とした案は表で、図は図で置く ── 情報の型が、表現の形を決める<br>- 図を落とさない。文字だけで説明すると、読み手が頭の中で像を作ることになり、そこで解釈がぶれる<br>- 図は載せる前に機械で当てる。文字の重なり・はみ出し・線が箱を貫くことは、目で読み返しても見落とす<br>- 決まりが変わったら、図も一緒に直す。文だけ直して図を残すと、盤面の中で食い違う<br>- 根拠は「答えのどこを支えるか」「もとにしたこと」「その出どころ」の3つを揃える。片方だけの根拠は置かない<br>- 出どころに種類の札（実測・原典・決まり・前提・未確認）を必ず付ける。どの札にも当たらないものは、根拠として置かない<br>- <mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（この決まりは無かった。原典という札は要求していたが、原文をどう手に入れるかは書いていなかった）" data-w="札は要求するのに取り方を書かないと、実行時に参照先を持たない原則になる。配線表には『原文を落とす』頼みごとの行を入れたが、brainstorm 側が知らないままだと誰も読まない"><strong>原典の札を付けるなら、原文が手元に在る状態にする。</strong></mark> 原文を落とす頼みごとが配線されていればそれを通し、配線が無ければ自分で落として残す ── 落としていない原典に札だけ付けると、その札は何も指さない<br>- 決着した論点を別のページへ移さない。同じ1枚に置く ── 後の論点は、前の決着を前提にしている<br>- 合意を急かさない。差し戻しは失敗ではなく正常な使い方であり、保留は正当な着地点である<br>- 論点は最初は3〜5個に絞る。追加は都度確認する</p>
+<hr>
+<h2>参照</h2>
+<p>- <code>references/build_board.py</code>: 論点を、タブで切り替える1枚の成果物（HTML）へ組む道具。Topic に論点・状態・答え・完成イメージ・落とした案・反証で分かったこと・そこへ至った道筋・根拠・引き受けること・まだ崩れうるところ・図を渡し、deck() で1枚にまとめると、先頭に現在地のタブが付く。結論が先頭に来て、裏づけは後ろに並ぶ。答えに変更前と理由を添えると、その箇所が押して開く印になる。支える先か出どころを欠いた根拠、決められた札に無い出どころの種類は、例外で止まる。<br>- <code>references/figcheck.py</code>: 図の中の文字が重なっていないか、枠からはみ出していないか、線が箱を貫いていないかを機械で見る道具。図を持つモジュール名を渡すと、食い違いを並べる。載せる前に必ず通す ── 実際に、矢印が箱を貫き、注記が2つ重なって別の文になっている図を出したことがある。<br>- <code>references/serve.py</code>: 承認の画面を配り、押された回答を受け取って1件ずつファイルに落とす小さなサーバー。<code>python3 serve.py &lt;配るディレクトリ&gt;</code> で起動する。回答は <code>.waffle/answers/&lt;日時&gt;.json</code> に積まれ、消さない。外から書き込めない場所（Artifact 等）で開いたときは、画面が写して貼る形に落ちる。<br>- <code>references/answer-sheet.schema.json</code>: 回答1件の形を検査する JSON Schema。諾否と差し戻しの理由は決められた値に限り、書き足しは自由文のままにしてある ── 機械が見られるのは形だけで、中身が妥当かは見られない。</p></div></section><section class="pane md" data-k="u" hidden><details class="idx" open><summary>この面の変更 1 件</summary><ol><li><b>&lt;strong&gt;tech-lead-advisorへ渡す&lt;/strong&gt;</b><button class="go" data-i="0">その場所へ</button><div class="b">渡し先の表を skill-router から外したので、この2行はどこにも残っていなかった。中央に表を作り直すとまた1か所へ集めることになるので、当事者が自分の範囲外と渡し先を持つ</div></li></ol></details><div class="doc"><hr>
+<p>name: &quot;ux-advisor&quot;<br>description: &quot;画面設計・UIコンポーネント設計・デザインシステムの一貫性に関する判断相談を受けたときに使う。プレゼンテーション層の依存方向の適合が判定済みであれば、それを入力として受け取り精度を調整する。未判定でも単体で回答できる。その内側（コンポーネント構造・状態管理・デザイントークン）の設計判断を行う。&quot;</p>
+<hr>
+<h1>画面設計・UIコンポーネント設計の一貫性判断を行うSkill：ux-advisor</h1>
+<h2>目的</h2>
+<p>画面設計・UIコンポーネント設計・デザインシステムの一貫性に関する判断相談を受けたときに使う。プレゼンテーション層の依存方向の適合が判定済みであれば、それを入力として受け取り精度を調整する。未判定でも単体で回答できる。その内側（コンポーネント構造・状態管理・デザイントークン）の設計判断を行う。</p>
+<hr>
+<h2>役割</h2>
+<p>- UI/UXデザインの専門家として、確立された知見（デザインシステム原則・視覚的判断プロセス）に基づいて回答する<br>- 画面の外部契約（ユースケースのportをどう呼ぶか）ではなく、その内側（コンポーネント構造・状態管理・デザイントークン）の設計判断に専念する<br>- デザイントークンの一貫性を<code>design.md</code>フォーマットで記録・参照するよう導く<br>- 紋切り型のデザイン（AIが陥りがちな既定パターン）を見つけたときはリスクと代替案をセットで提示する</p>
+<hr>
+<h2>相談種別と回答テンプレート</h2>
+<div class="wrap"><table><tr><th>相談種別</th><th>判定条件</th><th>テンプレート</th></tr><tr><td>画面・コンポーネント設計の判断相談</td><td>「この配色・フォントをどう決めるべきか」「このコンポーネントの構造はこれでよいか」等の画面設計・UIコンポーネント設計・デザイントークンに関する相談</td><td><code>references/template-judgment-ux.md</code></td></tr></table></div>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>判断対象の画面・コンポーネントの状況</td><td>明示されなければ対象のファイルパス・画面名をユーザーに確認する。抽象論だけで判断を返さない。</td></tr><tr><td>プレゼンテーション層の依存方向の適合判定結果（presentationがユースケースのportを正しく呼んでいるか）</td><td>明示されなければ不明として扱い、レイヤー内部の設計判断のみ行う（依存方向の適合判定は範囲外であり、ux-advisorが代わりに判定しない）。</td></tr></table></div>
+<hr>
+<h2>実行手順</h2>
+<h3>Step 1: 依存方向の判定結果を確認する</h3>
+<p>対象のpresentationがユースケースのportを正しい依存方向で呼んでいるかが既に分かっているか確認する。</p>
+<p>- 分かっている場合はそれを前提として使う<br>- 不明な場合はユーザーに確認するか、依存方向の適合判定は範囲外であることを伝え、レイヤー内部の設計判断のみに専念する</p>
+<h3>Step 2: 相談対象の文脈を理解する</h3>
+<p>判断基準を読む前に、この画面・コンポーネントの利用者は誰か、何を実現しようとしているか、題材固有の特徴は何かを把握する。抽象論のまま判断を始めない。</p>
+<p>- 利用者像（誰が・どんな状況で使うか）が不明な場合はユーザーに確認する<br>- 題材固有の特徴（何がこのプロダクトらしさか）を意識する。ここが後段のvisual-hierarchy-and-restraintの判断（紋切り型を避ける）の土台になる</p>
+<h3>Step 3: 対応するバックボーンknowledgeファイルを特定して必ず読む</h3>
+<p>相談内容に関連するデザイン概念を特定し、参照セクションに列挙された対応するknowledgeファイルをReadツールで読み込む。この手順を完了する前に回答を始めてはならない。</p>
+<p>- デザイントークン・配色・タイポグラフィの一貫性の相談 → design-system-tokens.md<br>- 情報量の多い画面・グラフ可視化・何を最初に見せるかの相談 → progressive-disclosure.md<br>- Hero・構造表現・モーション・紋切り型を避ける相談 → visual-hierarchy-and-restraint.md<br>- ボタン・メッセージ・エラー文等の文言の相談 → ui-copywriting.md<br>- レスポンシブ・フォーカス状態・reduced-motion等の品質下限の相談 → accessibility-baseline.md（常に確認する）<br>- 複数の概念が関連する場合は全て読み込む</p>
+<h3>Step 4: 判断基準に沿って判定し、プラン（design.mdへの記録案）を作る</h3>
+<p>knowledgeファイルの判断基準（決定木）を辿り、判定結果と理由を示す。デザイントークンに関する記録が必要な場合はdesign.mdフォーマットでの記録案を、コードを書く前のプランとして提示する。</p>
+<p>- 判断基準はknowledgeファイルの記述をそのまま使い、勝手に言い換えない<br>- 判定理由を必ず示す<br>- accessibility-baseline.mdの品質下限（レスポンシブ・フォーカス状態・reduced-motion）を満たしているかを必ず確認する</p>
+<h3>Step 5: プランに敵対的検証をかけてから提示する</h3>
+<p>作成したプランを提示する前に、あえて反証する立場に立って見直す：紋切り型（visual-hierarchy-and-restraintのアンチパターン）に陥っていないか、品質下限を満たしているかを、粗探しするつもりで確認する。視覚的な判断を含む場合は、実際に見える形（HTML等のプレビュー）を作って示す。</p>
+<p>- アンチパターンに該当する場合はリスクと代替案をセットで提示する<br>- テキストのみの説明で終わらせず、実際に見える形（HTML等のプレビュー）を作って示す</p>
+<hr>
+<h2>ガードレール</h2>
+<p>- knowledgeファイルをReadする前に回答を始めてはならない。最優先ルールであり例外なし<br>- knowledgeファイルに記載されていない内容は「バックボーンの範囲外」として正直に伝え、推測で答えない<br>- 判断基準はknowledgeファイルから引用し、勝手に言い換えない<br>- 判定には必ず理由を示す<br>- アンチパターンに該当する場合は必ずリスクと代替案をセットで提示する<br>- このバックボーンは、Anthropic公式/frontend-designやMaterial Design/HIG等、複数の確立された実務知見の交差点としてAIが総合したものである。単一の権威ある出典として断定的に語らない<br>- 専門用語（デザイントークン等）は使ってよいが、初出時は文脈・具体例を添えて意味が解釈できるようにする。相手が業務エキスパートなど非エンジニアの可能性を常に想定し、用語だけを渡して説明を終わらせない<br>- 依存方向の適合判定（presentationがユースケースのportを正しく呼んでいるか）は範囲外であり、ux-advisorは代わりに判定しない。<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（渡し先は書かれていなかった。skill-router の「advisor間の境界・委譲マップ」に別表として在った）" data-w="渡し先の表を skill-router から外したので、この2行はどこにも残っていなかった。中央に表を作り直すとまた1か所へ集めることになるので、当事者が自分の範囲外と渡し先を持つ"><strong>tech-lead-advisorへ渡す</strong></mark><br>- 視覚的な判断（配色・レイアウト・コンポーネント構成等）を提案するときは、テキストのみの説明で終わらせず、実際に見える形（HTML等のプレビュー）を作って示す。UIに関する判断はレンダリング結果を見て初めて検証できるため</p>
+<hr>
+<h2>参照knowledge</h2>
+<p>- <code>references/knowledge/design-system-tokens.md</code>: デザイントークン（色・タイポグラフィ・レイアウトコンセプト・シグネチャー要素）を先に決め、design.mdへ記録する運用の判断基準<br>- <code>references/knowledge/progressive-disclosure.md</code>: 情報量が多い画面（グラフ可視化等）で、何を最初に見せ何を段階的に開示するかの判断基準<br>- <code>references/knowledge/visual-hierarchy-and-restraint.md</code>: Hero・タイポグラフィの組み合わせ・構造表現・モーション・作り込み度の一致という5つの視覚的判断軸と、紋切り型を避ける基準<br>- <code>references/knowledge/ui-copywriting.md</code>: ボタン・確認メッセージ・エラー文等、画面上の文言をどう書くかの判断基準<br>- <code>references/knowledge/accessibility-baseline.md</code>: レスポンシブ対応・フォーカス状態・reduced-motion対応という、独自性の追求とは別に常に満たすべき品質下限</p></div></section><section class="pane md" data-k="p" hidden><details class="idx" open><summary>この面の変更 1 件</summary><ol><li><b>&lt;strong&gt;tech-lead-advisorへ渡す&lt;/strong&gt;</b><button class="go" data-i="0">その場所へ</button><div class="b">渡し先の表を skill-router から外したので、この2行はどこにも残っていなかった。中央に表を作り直すとまた1か所へ集めることになるので、当事者が自分の範囲外と渡し先を持つ</div></li></ol></details><div class="doc"><hr>
+<p>name: &quot;platform-advisor&quot;<br>description: &quot;可用性・スケーラビリティ・セキュリティ境界・インフラ構成に関する判断相談を受けたときに使う。アプリケーション内部のレイヤー配置・依存方向が判定済みであれば、それを入力として受け取り、その外側（デプロイ単位がどう動かされ、どう外部と繋がるか）の判断精度を調整する。未判定でも単体で回答できる。判断結果はインフラ仕様書の記述として活用できる。&quot;</p>
+<hr>
+<h1>可用性・スケーラビリティ・セキュリティ境界の判断を行うSkill：platform-advisor</h1>
+<h2>目的</h2>
+<p>可用性・スケーラビリティ・セキュリティ境界・インフラ構成に関する判断相談を受けたときに使う。アプリケーション内部のレイヤー配置・依存方向が判定済みであれば、それを入力として受け取り、その外側（デプロイ単位がどう動かされ、どう外部と繋がるか）の判断精度を調整する。未判定でも単体で回答できる。判断結果はインフラ仕様書の記述として活用できる。</p>
+<hr>
+<h2>役割</h2>
+<p>- SRE/セキュリティ/クラウドアーキテクチャの専門家として、確立された知見（Google SRE等）に基づいて回答する<br>- 可用性・スケーラビリティの目標（SLI/SLO/エラーバジェット）を、業務要件を根拠に設定・判断する<br>- セキュリティ境界（アクセス制御・データ分類）を確立された原則に基づいて判断する<br>- アンチパターンを見つけたときはリスクと代替案をセットで提示する</p>
+<hr>
+<h2>相談種別と回答テンプレート</h2>
+<div class="wrap"><table><tr><th>相談種別</th><th>判定条件</th><th>テンプレート</th></tr><tr><td>インフラ・可用性・セキュリティ境界の判断相談</td><td>「このサービスの可用性目標をどう決めるべきか」「このデータへのアクセス範囲はこれでよいか」等の可用性・スケーラビリティ・セキュリティ境界・インフラ構成に関する相談</td><td><code>references/template-judgment-platform.md</code></td></tr></table></div>
+<hr>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>判断対象のサービス・システムの状況</td><td>明示されなければ対象のサービス名・システム構成をユーザーに確認する。抽象論だけで判断を返さない。</td></tr><tr><td>アプリケーション内部のレイヤー配置判定結果（この関心事がアプリケーション内部かインフラ・運用側か）</td><td>明示されなければ不明として扱い、可用性・スケーラビリティ・セキュリティ境界等のインフラ・運用側の判断のみ行う（アプリケーション内部の層配置は範囲外であり、platform-advisorが代わりに判定しない）。</td></tr></table></div>
+<hr>
+<h2>実行手順</h2>
+<h3>Step 1: レイヤー配置の判定結果を確認する</h3>
+<p>この関心事がアプリケーション内部のレイヤー配置か、インフラ・運用・セキュリティ境界（platform-advisorの領域）かを切り分ける。</p>
+<p>- アプリケーション内部の層配置・依存方向の話であれば、その判定は範囲外であることを伝える<br>- 可用性・スケーラビリティ・セキュリティ境界・インフラ構成の話であれば、この先の手順に進む</p>
+<h3>Step 2: SRE投資の前提を満たすか確認する</h3>
+<p>sre-investment-threshold.mdを最初に読み、対象が「継続的に稼働し複数のアクターが利用する」という前提を満たすか判定する。満たさない場合は各論の検討に進まず、ここで保留と結論づける。</p>
+<p>- 使い捨てプロセス・単一利用者ツールの場合は、SLI/SLO・アクセス制御・可観測性基盤の整備は不要と判定し、理由を示して終える<br>- 前提を満たす場合のみStep3以降に進む</p>
+<h3>Step 3: 対応するバックボーンknowledgeファイルを特定して必ず読む</h3>
+<p>相談内容に関連するSRE/セキュリティ/クラウドアーキテクチャの概念を特定し、参照セクションに列挙された対応するknowledgeファイルをReadツールで読み込む。この手順を完了する前に回答を始めてはならない。</p>
+<p>- 可用性・スケーラビリティ目標の相談 → reliability-targets-and-error-budgets.md<br>- アクセス権・セキュリティ境界の相談 → security-boundary-and-least-privilege.md<br>- 監視・可観測性の相談 → observability-design.md<br>- 構成選定・性能の相談 → performance-efficiency.md<br>- コスト・予算の相談 → cost-optimization.md<br>- 環境負荷・リソース使用率の相談 → sustainability.md<br>- 複数の概念が関連する場合は全て読み込む</p>
+<h3>Step 4: 判断基準に沿って判定し、根拠を示す</h3>
+<p>knowledgeファイルの判断基準（決定木）を辿り、判定結果と理由を示す。</p>
+<p>- 判断基準はknowledgeファイルの記述をそのまま使い、勝手に言い換えない<br>- 判定理由を必ず示す<br>- 該当する場合はインフラ仕様書への記録案を添える<br>- アンチパターンに該当する場合はリスクと代替案をセットで提示する</p>
+<hr>
+<h2>ガードレール</h2>
+<p>- knowledgeファイルをReadする前に回答を始めてはならない。最優先ルールであり例外なし<br>- knowledgeファイルに記載されていない内容は「バックボーンの範囲外」として正直に伝え、推測で答えない<br>- 判断基準はknowledgeファイルから引用し、勝手に言い換えない<br>- 判定には必ず理由を示す<br>- アンチパターンに該当する場合は必ずリスクと代替案をセットで提示する<br>- このバックボーンは、Google SRE等の広く確立された実務知見をAIが総合したものである。単一の権威ある出典として断定的に語らない<br>- 専門用語（SLI/SLO/エラーバジェット等）は使ってよいが、初出時は文脈・具体例を添えて意味が解釈できるようにする。相手が業務エキスパートなど非エンジニアの可能性を常に想定し、用語だけを渡して説明を終わらせない<br>- アプリケーション内部のレイヤー配置・依存方向の判定は範囲外であり、platform-advisorは代わりに判定しない。<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（渡し先は書かれていなかった。skill-router の「advisor間の境界・委譲マップ」に別表として在った）" data-w="渡し先の表を skill-router から外したので、この2行はどこにも残っていなかった。中央に表を作り直すとまた1か所へ集めることになるので、当事者が自分の範囲外と渡し先を持つ"><strong>tech-lead-advisorへ渡す</strong></mark></p>
+<hr>
+<h2>参照knowledge</h2>
+<p>- <code>references/knowledge/sre-investment-threshold.md</code>: SLI/SLO・アクセス制御・可観測性といったSRE投資を検討すべき状況かどうかを判定する前提条件（継続稼働・複数アクター利用）<br>- <code>references/knowledge/reliability-targets-and-error-budgets.md</code>: SLI/SLO/エラーバジェットという可用性目標の定義方法と、エラーバジェット消費に応じたリリース可否の判断基準<br>- <code>references/knowledge/security-boundary-and-least-privilege.md</code>: 最小権限の原則・多層防御という、アクセス権・セキュリティ対策の設計基準<br>- <code>references/knowledge/observability-design.md</code>: メトリクス・ログ・トレースという可観測性の3種類と、監視項目を取捨選択する判断基準<br>- <code>references/knowledge/performance-efficiency.md</code>: データに基づく構成選択・マネージドサービスの活用・定期的な見直しという性能効率の判断基準<br>- <code>references/knowledge/cost-optimization.md</code>: 消費モデル・効率性の測定・差別化されない作業の外部化・コストの帰属というコスト最適化の判断基準<br>- <code>references/knowledge/sustainability.md</code>: 使用率の最大化・需要平準化・データライフサイクル管理という、環境負荷を最小化する判断基準</p></div></section>
+</div>
+<script>
+(function(){
+  var MARKCSS = document.getElementById("markcss").textContent;
+
+  /* 印を1つ、押せるようにする。iframe の中でも Shadow の中でも同じ手が効く */
+  function wire(root, doc){
+    root.querySelectorAll("mark.chg[data-w]").forEach(function(m){
+      var p = doc.createElement("div");
+      p.className = "pop"; p.hidden = true;
+      var b1 = doc.createElement("b"); b1.textContent = "変更前";
+      var pre = doc.createElement("pre"); pre.textContent = m.dataset.b;
+      var b2 = doc.createElement("b"); b2.textContent = "なぜ";
+      var w = doc.createElement("div"); w.textContent = m.dataset.w;
+      p.appendChild(b1); p.appendChild(pre); p.appendChild(b2); p.appendChild(w);
+      var host = m.closest("td") || m.closest("li") || m.parentNode;
+      if (host.nextSibling) host.parentNode.insertBefore(p, host.nextSibling);
+      else host.parentNode.appendChild(p);
+      function tg(){
+        var opening = p.hidden;
+        p.hidden = !opening;
+        m.setAttribute("aria-expanded", opening ? "true" : "false");
+        resizeAll();
+      }
+      m.addEventListener("click", tg);
+      m.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tg(); }
+      });
+    });
+  }
+
+  var frames = [];
+  function resizeAll(){
+    frames.forEach(function(f){
+      try {
+        var d = f.contentDocument;
+        if (d && d.body) f.style.height = (d.documentElement.scrollHeight + 8) + "px";
+      } catch(e){}
+    });
+  }
+
+  /* HTML の面を立てる。iframe が空のままなら Shadow DOM へ落とす */
+  document.querySelectorAll(".pane.html").forEach(function(pane){
+    var tpl = pane.querySelector("template");
+    var src = tpl.innerHTML;
+    var fr = document.createElement("iframe");
+    fr.setAttribute("title", pane.dataset.tab || "");
+    fr.srcdoc = '<!doctype html><meta charset="utf-8">'
+              + '<style>' + MARKCSS + '</style>' + src;
+    pane.appendChild(fr);
+    frames.push(fr);
+    var done = false;
+    fr.addEventListener("load", function(){
+      var d = fr.contentDocument;
+      if (!d || !d.body || !d.body.firstChild) return;
+      done = true;
+      wire(d, d);
+      resizeAll();
+      /* 中の高さは、字が載ってから決まる。変わるたびに測り直す */
+      if (window.ResizeObserver) {
+        new ResizeObserver(resizeAll).observe(d.documentElement);
+      }
+      /* 中のタブを押しても測り直す。中の作りに依らず効く */
+      d.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+      [80, 300, 900].forEach(function(t){ setTimeout(resizeAll, t); });
+      pane.querySelector(".how").textContent = "iframe で置いた";
+    });
+    setTimeout(function(){
+      if (done) return;
+      /* 載ったのに load を取り逃していないかを、もう一度見る */
+      try {
+        var d2 = fr.contentDocument;
+        if (d2 && d2.body && d2.body.firstChild) {
+          done = true; wire(d2, d2); resizeAll();
+          if (window.ResizeObserver) new ResizeObserver(resizeAll).observe(d2.documentElement);
+          d2.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+          pane.querySelector(".how").textContent = "iframe で置いた";
+          return;
+        }
+      } catch(e){}
+      /* 届かなかった。Shadow DOM へ落とす */
+      fr.remove();
+      frames = frames.filter(function(x){ return x !== fr; });
+      var holder = document.createElement("div");
+      pane.appendChild(holder);
+      var sh = holder.attachShadow({mode:"open"});
+      var st = document.createElement("style");
+      st.textContent = MARKCSS + "\n" + (tpl.dataset.shadowcss || "");
+      sh.appendChild(st);
+      var box = document.createElement("div");
+      box.innerHTML = src;
+      sh.appendChild(box);
+      wire(sh, document);
+      pane.querySelector(".how").textContent = "Shadow DOM で置いた";
+    }, 2500);
+  });
+
+  /* 印を、見える状態にする。
+
+     **内側のタブの作り方を、こちらは知らない。**
+     設計ノートは <input type="radio"> と :checked ~ #panel で切り替えていた。
+     JS で切り替える作りもある。**どちらでも効くように、
+     切り替えを1つずつ当てて、印が出たところで止める。** */
+  function reveal(m){
+    if (m.offsetParent) return true;
+    var n = m;
+    while (n && n.nodeType === 1) { if (n.hidden) n.hidden = false; n = n.parentNode; }
+    /* **印が住んでいる根から探す。**
+       Shadow の中の印に対して document を探すと、切り替えが1つも見つからない */
+    var scope = m.getRootNode ? m.getRootNode() : m.ownerDocument;
+    for (var e = m.parentNode; e && e.nodeType === 1; e = e.parentNode) {
+      if (e.tagName === "DETAILS") e.open = true;
+    }
+    if (m.offsetParent) return true;
+    var ins = scope.querySelectorAll('input[type="radio"],input[type="checkbox"]');
+    for (var i = 0; i < ins.length; i++) {
+      var was = ins[i].checked;
+      ins[i].checked = true;
+      if (m.offsetParent) return true;
+      ins[i].checked = was;
+    }
+    return !!m.offsetParent;
+  }
+
+  /* 一覧の「その場所へ」。印を開いて、そこまで運ぶ */
+  document.querySelectorAll(".idx button.go").forEach(function(b){
+    b.onclick = function(){
+      var pane = b.closest(".pane");
+      var i = +b.dataset.i;
+      var fr = pane.querySelector("iframe");
+      var root = fr ? fr.contentDocument : null;
+      if (!root) {
+        var h = Array.prototype.find.call(pane.querySelectorAll("div"),
+          function(x){ return x.shadowRoot; });
+        root = h ? h.shadowRoot : pane;
+      }
+      var m = root.querySelectorAll("mark.chg")[i];
+      if (!m) return;
+      var shown = reveal(m);
+      if (m.getAttribute("aria-expanded") !== "true") m.click();
+      b.textContent = shown ? "その場所へ" : "隠れたまま";
+      setTimeout(function(){
+        var y = 0, e = m;
+        while (e && e.offsetParent) { y += e.offsetTop; e = e.offsetParent; }
+        if (fr) window.scrollTo({top: fr.getBoundingClientRect().top + window.scrollY + y - 60,
+                                 behavior: "smooth"});
+        else m.scrollIntoView({block: "center", behavior: "smooth"});
+      }, 60);
+    };
+  });
+
+  /* マークダウンの面 */
+  document.querySelectorAll(".pane.md").forEach(function(p){ wire(p, document); });
+
+  function allPops(){
+    var out = Array.prototype.slice.call(document.querySelectorAll(".pop"));
+    frames.forEach(function(f){
+      try { out = out.concat(Array.prototype.slice.call(f.contentDocument.querySelectorAll(".pop"))); }
+      catch(e){}
+    });
+    document.querySelectorAll(".pane.html div").forEach(function(h){
+      if (h.shadowRoot) out = out.concat(Array.prototype.slice.call(h.shadowRoot.querySelectorAll(".pop")));
+    });
+    return out;
+  }
+  document.getElementById("oa").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = false; }); resizeAll(); };
+  document.getElementById("ca").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = true; }); resizeAll(); };
+
+  var tabs = document.querySelectorAll(".tab");
+  function sel(k){
+    tabs.forEach(function(t){ t.setAttribute("aria-selected", t.dataset.t === k ? "true" : "false"); });
+    document.querySelectorAll(".pane").forEach(function(p){ p.hidden = (p.dataset.k !== k); });
+    resizeAll();
+  }
+  tabs.forEach(function(t){ t.onclick = function(){ sel(t.dataset.t); }; });
+  if (tabs.length) sel(tabs[0].dataset.t);
+  window.addEventListener("resize", resizeAll);
+})();
+</script>
