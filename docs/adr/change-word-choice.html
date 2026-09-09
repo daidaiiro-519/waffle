@@ -1,0 +1,345 @@
+<title>語の選び方を、規約と運用ルールに置く</title>
+<style>
+:root{--paper:#fbfaf7;--ink:#1c1a17;--muted:#6b665d;--panel:#f2efe8;--chipbg:#e7e3d9;
+--move:#9a5b2c;--key:#2f6f5e;--line:#d8d3c7;--gone:#8a3a3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;--chipbg:#2b281f;
+--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}}
+:root[data-theme="dark"]{--paper:#16150f;--ink:#ece7dc;--muted:#98918a;--panel:#211f18;
+--chipbg:#2b281f;--move:#d99b62;--key:#6fbfa4;--line:#38342a;--gone:#d97b7b}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);margin:0;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;line-height:1.85}
+.wrap{max-width:92rem;margin:0 auto;padding:2rem 1.2rem 5rem}
+h1{font-size:1.5rem;margin:0 0 .3rem;letter-spacing:.02em}
+.lede{font-size:1.06rem;border-left:4px solid var(--key);padding:.55rem 0 .55rem .9rem;
+margin:1rem 0 2rem;background:var(--panel);max-width:68rem}
+h2{font-size:1.12rem;margin:2.4rem 0 .8rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h3{font-size:1rem;margin:1.6rem 0 .5rem;color:var(--key)}
+table{border-collapse:collapse;width:100%;margin:.9rem 0;font-size:.93rem}
+th,td{border:1px solid var(--line);padding:.42rem .6rem;text-align:left;vertical-align:top}
+th{background:var(--chipbg);font-weight:700}
+code{background:var(--chipbg);padding:.08rem .3rem;border-radius:.2rem;font-size:.88em}
+pre{background:var(--chipbg);padding:.7rem .9rem;border-radius:.3rem;overflow-x:auto;font-size:.84rem}
+.scroll{overflow-x:auto}
+.gone{color:var(--gone)}
+#bar{position:sticky;top:0;z-index:9;background:var(--panel);border-bottom:2px solid var(--move);
+padding:.5rem .9rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;font-size:.9rem;
+margin:0 -1.2rem 1rem}
+#bar button{font:inherit;padding:.2rem .7rem;border-radius:.25rem;border:1px solid var(--move);
+background:transparent;color:var(--move);cursor:pointer}
+#bar button:hover{background:var(--move);color:var(--paper)}
+#tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 0;border-bottom:2px solid var(--line)}
+.tab{font:inherit;font-size:.93rem;padding:.45rem .95rem;border:1px solid var(--line);
+border-bottom:0;border-radius:.3rem .3rem 0 0;background:var(--panel);color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:700;
+box-shadow:0 2px 0 0 var(--paper)}
+.tab .n{font-size:.78rem;color:var(--move);margin-left:.35rem;font-weight:700}
+.pane{border:1px solid var(--line);border-top:0;background:var(--paper)}
+.pane.md{padding:1.2rem 1.8rem}
+.pane.md h1{font-size:1.25rem;margin-top:0}
+.pane.html{padding:0}
+.pane.html iframe{display:block;width:100%;border:0;background:var(--paper)}
+.lane{font-size:.8rem;color:var(--muted);padding:.35rem .9rem;border-bottom:1px dashed var(--line);
+background:var(--panel);display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.lane .how{margin-left:auto;font-style:italic}
+.idx{border-bottom:1px solid var(--line);background:var(--panel);padding:0 .9rem .5rem}
+.idx summary{cursor:pointer;font-size:.88rem;padding:.45rem 0;font-weight:700;color:var(--move)}
+.idx ol{margin:0 0 .3rem;padding-left:1.4rem;font-size:.88rem}
+.idx li{margin:.35rem 0}
+.idx button.go{font:inherit;font-size:.82rem;padding:.05rem .5rem;margin-left:.4rem;
+border:1px solid var(--move);border-radius:.2rem;background:transparent;color:var(--move);cursor:pointer}
+.idx button.go:hover{background:var(--move);color:var(--paper)}
+.idx .b{color:var(--muted);font-size:.84rem}
+</style>
+<style id="markcss-live">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</style>
+<script type="text/plain" id="markcss">
+mark.chg{background:transparent;color:inherit;border-bottom:2px dashed #9a5b2c;
+cursor:pointer;padding:0 .1rem}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:#9a5b2c;
+font-weight:700;margin-left:.12rem}
+mark.chg:focus-visible{outline:2px solid #2f6f5e;outline-offset:2px}
+.pop{display:block;margin:.6rem 0 .9rem;padding:.7rem .9rem;border:1px solid #9a5b2c;
+border-radius:.3rem;background:rgba(154,91,44,.07);font-size:.9rem;line-height:1.7;
+font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}
+.pop[hidden]{display:none!important}
+.pop>b{color:#9a5b2c;display:block;margin:.5rem 0 .15rem}
+.pop>b:first-child{margin-top:0}
+.pop pre{white-space:pre-wrap;word-break:break-word;font-size:.82rem;margin:0;
+color:inherit;opacity:.8;background:rgba(128,128,128,.12);padding:.5rem .6rem;border-radius:.2rem}
+</script>
+
+<div class="wrap">
+<h1>語の選び方を、規約と運用ルールに置く</h1>
+<p class="lede"><b>語を選ぶ基準が、どこにも無かった。</b>書き方の規約は「初出の専門用語に説明が付いているか」までしか見ないので、訳した語も、自分で作った語も、説明さえ付ければ通ってしまう。<b>語にも出どころがある</b> ── 根拠に出どころを付けるのと同じ形を、語にも当てる。<b>まだ正本へ当てていない。</b></p>
+<h2>なぜ2か所か</h2><table><tr><th>置き場所</th><th>何を置くか</th><th>なぜそこか</th></tr><tr><td><b>CLAUDE.md の運用ルール</b></td><td>語の選び方そのもの</td><td><b>毎回読まれる唯一の場所。</b>Skill は呼ばれないと効かない ── 実際、書き方の規約はこのセッションで一度も呼ばれていない</td></tr><tr><td><b>書き方の規約の概念8</b></td><td>判定を、説明の有無から<b>語の出どころ</b>へ</td><td>文書を書くときの具体的な判定</td></tr><tr><td><s>memory</s></td><td><b>置かない</b></td><td>思い出せたときだけ効く。2か所に同じことを書くことにもなる</td></tr></table><h2>言い換えないもの</h2><p><b>分野で定着した専門用語は、そのまま使う。</b>API を「呼び出す装置」と書くのは、この規則が求めていることの逆である ── API は読み手の世界にすでにある語なので、判定を通る。<b>言い換えるのは、自分が作った語と、訳した語だけ。</b></p><h2>この判定に、実際に引っかかるもの</h2><table><tr><th>語</th><th>出どころ</th><th>判定</th></tr><tr><td>検める</td><td>別の文書から借りた。読み手の世界には無い</td><td>言い換える</td></tr><tr><td>いつ真か</td><td>「述語」という概念から訳した</td><td>言い換える（適用条件）</td></tr><tr><td>射影 ・ 導出</td><td>英語から訳した</td><td>言い換える（表示形式 ・ 計算して求める）</td></tr><tr><td>印 ・ 札 ・ 盤面</td><td>この成果物のために自分で作った</td><td>その成果物の中では定義して使う。<b>外へ持ち出さない</b></td></tr></table>
+<div id="bar"><b>変更 3 件</b>
+<button id="oa">すべて開く</button><button id="ca">すべて閉じる</button></div>
+<div id="tabs" role="tablist"><button class="tab" role="tab" data-t="c">CLAUDE.md<span class="n">1</span></button><button class="tab" role="tab" data-t="w">書き方の規約（概念8）<span class="n">2</span></button></div>
+<section class="pane md" data-k="c" hidden><details class="idx" open><summary>この面の変更 1 件</summary><ol><li><b>分野で定着している専門用語</b><button class="go" data-i="0">その場所へ</button><div class="b">書き方の規約は Skill なので、呼ばれないと効かない。実際このセッションでは一度も呼ばれず、会話でも文書でも、訳した語と自分で作った語を使い続けた。毎回読まれるのは運用ルールだけなので、ここに置く</div></li></ol></details><div class="doc"><h1>スキーマ駆動でDocumentを検証・生成・描画するリポジトリ全体を編成するOrchestrator：waffle</h1>
+<h2>管轄範囲</h2>
+<p>- <strong>管轄ディレクトリ</strong>: waffle/<br>- <strong>概要</strong>: スキーマという型で文書を焼き上げる、構造検証＋意味ガイダンス内蔵のドキュメントエンジン「Waffle」。JSON Schemaでdocument.jsonを検証・query・render・scaffoldする。自己完結ディレクトリ（<code>git subtree split --prefix=waffle</code>で独立可能）。</p>
+<hr>
+<h2>運用ルール</h2>
+<div class="wrap"><table><tr><th>ルール</th><th>なぜ</th><th>適用方法</th></tr><tr><td>document.json操作は必ずCLI/MCP経由で行う</td><td>自分自身がdogfood対象のため</td><td>create/fill/validate/render/query/check-*/scan-source-code/lint-docstringを使う（直接読み書きしない）</td></tr><tr><td>document.jsonのパスは<code>.waffle/</code>を使う</td><td>has-udd汎用パス（<code>.has-udd/</code>）と混在させないため</td><td><code>waffle/.waffle/documents/</code>配下に置く</td></tr><tr><td>Skill/advisor間はテキストベース疎結合を保つ</td><td>受け手の内部形式を事前に知らなくてよくするため（腐敗防止層と同型）</td><td>入出力はテキストに統一し、構造化への成型は受け手側が行う</td></tr><tr><td>作業開始時に<code>.waffle/memory/MEMORY.md</code>を確認し、関連する既存メモリがあれば踏まえる</td><td>ツールを問わず、過去の決定・訂正・フィードバックを引き継ぐため</td><td>関連する重要な決定・訂正・知見が生じたらmemory-cultivator Skillで<code>.waffle/memory/</code>へ記録する</td></tr><tr><td>作業は UDDループ（調べる→決める→引き継ぐ→作る）を通す。どこまで踏むかはその都度判断する——新規capability・挙動変更・schema変更を伴うなら4段とも踏み、単一フィールド修正・機械的な文言変換・調査単体なら決めることが無いので段は薄くなる。</td><td>経路を2つ用意して先に選ばせると、『どちらの道か』という判断が本来の判断の前に増える。しかも一方の名前が付けられなかった——自然な名前が付かないのは、分ける必要が無いことの合図である。1本のループに寄せても判断は無くならず、spec合意前の実装（既知の再発パターン）と、軽微な修正への過剰な儀式化のどちらへ振れるかを、その都度測ることになる。</td><td>境界事例（例：複数フィールドにまたがるが挙動は変わらない修正）は judgmentTasks の基準に従う。迷ったら『決めることがあるか』を先に問う——決めることがあるなら、決める段と引き継ぐ段を省かない。</td></tr><tr><td>語は、読み手の世界にすでにある語から選ぶ</td><td>自分が作った語や訳した語は、読み手にとって初めて見る語であり、意味を推し量りながら読むことになる。しかも書き手は、それが伝わっているかを確かめられない</td><td><strong><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="（この行は無かった。運用ルールに語の選び方が1つも無い）" data-w="書き方の規約は Skill なので、呼ばれないと効かない。実際このセッションでは一度も呼ばれず、会話でも文書でも、訳した語と自分で作った語を使い続けた。毎回読まれるのは運用ルールだけなので、ここに置く">分野で定着している専門用語</mark>（API・スキーマ・ポート・トランザクション等）は、読み手の世界にある語なので、そのまま使う。</strong>言い換えると、かえって伝わらない。言い換えるのは、<strong>自分がその成果物のために作った語と、英語から訳した語</strong>だけである。判定は、その語の出どころを言えるか ── 「この文書のために作った」「訳した」なら、言い換えるか、新しい語だと書いて定義する。成果物のために作った語を、その外へ持ち出さない</td></tr><tr><td>スキーマ構造を変えず、documentの表現レベルだけを直す修正は、必ずx-prompt-write/x-prompt-query側を先に直してからfillする。documentの値を直接書き換えて終わらせない</td><td>document側だけを直接直すと、その表現不備を生んだx-promptのガイダンスが実際に機能したかを一切検証しないまま個別修正で終わってしまう。スキーマ構造の変更を伴わない表現レベルの不備は、その定義上x-promptの記述不足のシグナルであり、documentを直接直すとこのシグナルを握りつぶし、同じ不備が他のdocumentやfill先で再発する</td><td>waffle patch-schemaでx-prompt-write/x-prompt-queryを先に修正し、その上でwaffle scaffold fillでdocument側へ反映する。document側をfillだけで直接書き換える修正はしない</td></tr><tr><td>specを書き終えたら、実装へ移る前に必ずHandoffを作り、ユーザーへ提示して合意を得る。ユーザーから求められて初めて出すのではなく、Orchestrator自身から提案する</td><td>specは『何が正しいか』しか運ばず、『なぜその形にしたか』『どこに何を置くか』は運ばない。specを書き終えた直後は成果物が積み上がって手が動く状態になり、そのまま実装へ入りやすい。実際にこのセッションで3回続けて飛ばし、そのたびにユーザーから指摘された。指摘されてから出すのでは、毎回ユーザーが工程の番人をすることになる</td><td><code>waffle scaffold create --schemaRef HandoffSchema</code> で作り、<code>waffle render-handoff-template</code> でHTMLにしてユーザーへ提示する。descriptionにはこのHandoffが担うユースケースの識別子を必ず並べる（Handoffが指すユースケースをフックが突き合わせるため、境界づけられたコンテキストを指すだけでは、以後どれだけ仕様を足しても検知されない）。未解決の観点はreviewStatusにopenのまま残してよい——全部を解いてから出すのではなく、決まっていないことが見える状態で出す</td></tr></table></div>
+<hr>
+<h2>主要コマンド</h2>
+<div class="wrap"><table><tr><th>コマンド</th><th>用途</th></tr><tr><td>uv run pytest</td><td>unit/integration/acceptance/contractの4層テストを実行する</td></tr><tr><td>uv run waffle validate --path &lt;document.jsonのパス&gt;</td><td>document.jsonをschemaに適合検証する</td></tr><tr><td>uv run waffle render --path &lt;document.jsonのパス&gt;</td><td>document.jsonを成果物（SKILL.md等）へ描画し、deploy先（.claude/skills/等）へ配置する</td></tr><tr><td>uv run waffle query --operation &lt;操作名&gt; --path &lt;document.jsonのパス&gt;</td><td>document.jsonの内容を確認・検索する（get_block/get_field等16操作）</td></tr><tr><td>uv run waffle scaffold --operation create\</td><td>fill ...</td><td>document.jsonの骨格生成、および既存documentへの値の書き込みを行う</td></tr><tr><td>uv run waffle check-spec-integrity / check-scenario-drift / check-schema-version-drift</td><td>spec参照整合性・シナリオドリフト・schema版ドリフトを確認する</td></tr></table></div>
+<hr>
+<h2>自身の役割</h2>
+<p>UDDループ（調べる→決める→引き継ぐ→作る）を1本の道として通し、作業ごとにどこまで踏むかを判断するOrchestrator。決めることがある作業で、決める段と引き継ぐ段を省かないことに責任を持つ。構造の検証・生成・描画はWaffleが機械的に担い、判断はアドバイザーSkillが敵対的に確かめる。</p>
+<hr>
+<h2>機械的に行える作業</h2>
+<div class="wrap"><table><tr><th>作業</th><th>適用方法</th></tr><tr><td>既存document.jsonをscaffold fillで反映する（値そのものの決定はjudgmentTasksを参照。ここでの機械性は反映操作の手順を指す）</td><td>配列は query で現在値取得→組み立て→fill で丸ごと置き換え</td></tr><tr><td>repo rootから<code>uv run --project waffle waffle &lt;command&gt;</code>で呼ぶ</td><td>waffleはrepo rootとは別プロジェクトのため。deploy先パスは<code>waffle/</code>配下を明示する</td></tr><tr><td>spec-authoringの概念的な手順のうち、雛形生成・整合確認・成果物確定をWaffleコマンドへ対応させる（Skill自身にはWaffle固有の語彙を持ち込まない。対応関係はここに集約する）</td><td>「対象spec種別の雛形を用意する」=<code>waffle scaffold create --schemaRef &lt;対応するschemaRef&gt; --discriminator &lt;対応するdiscriminator&gt;</code>（既存document更新時は省略）／「構造の整合を確認する」=<code>waffle validate</code>／「成果物として確定する」=<code>waffle render</code>。「雛形のガイダンスと判断材料に従って値を埋める」（fillの中身の決定）は機械的操作ではない（judgmentTasksを参照）</td></tr><tr><td>handoff-authoringの概念的な手順のうち、対象確認・雛形生成・整合確認・成果物確定をWaffleコマンドへ対応させる</td><td>「対象specとの対応を確認する」=対象specのdocument.jsonのstatusが VALIDATED 以上か<code>waffle query --operation get_meta</code>で確認／「雛形を用意する」=<code>waffle scaffold create --schemaRef HandoffSchema</code>（既存document更新時は省略）／「構造の整合を確認する」=<code>waffle validate</code>／「成果物として確定する」=<code>waffle render-handoff-template --path &lt;documentPath&gt; --outputPath .waffle/handoff/&lt;documentId&gt;.html</code>（<strong>汎用の<code>waffle render</code>ではない</strong>。HandoffSchemaは<code>x-render-target</code>を意図的に持たず、<code>waffle render</code>を実行するとNO_RENDER_TARGETエラーになる。HTML固定テンプレートのみが正しい成果物）。「受け取った判断材料を記録する」（fillの中身の決定）は機械的操作ではない（judgmentTasksを参照）</td></tr><tr><td>knowledge-cultivatorの概念的な手順のうち、記録の器の生成と昇格操作をWaffleコマンドへ対応させる</td><td>「knowledge候補を記録する」（下書き状態の記録手段）=<code>waffle scaffold create --schemaRef KnowledgeSchema</code>でstatus DRAFTのdocumentを作成（記録する内容自体の決定はjudgmentTasksを参照）／「蓄積した下書き候補を審査用にとりまとめる」=<code>waffle query --operation find_all</code>等でstatus DRAFTのKnowledgeSchema documentを洗い出す／採用決定後の正式採用への反映（このSkillの責務外）=Orchestratorが<code>waffle scaffold fill</code>でstatus ACTIVEへ変更→<code>waffle validate</code>→<code>waffle render</code></td></tr></table></div>
+<hr>
+<h2>AIの推論を要する作業</h2>
+<div class="wrap"><table><tr><th>状況</th><th>判断基準</th><th>理由</th></tr><tr><td>schemaに新規トップレベルキーを追加する必要が生じたとき</td><td>そのキーが本当に新規必須キー追加に該当するかを判断し、該当する場合のみEdit/Writeを許容する</td><td>fill/createは新規キーの後追いマージをしないため。check-schema-version-driftで検知されたキーのみEdit/Writeで追記する</td></tr><tr><td>spec-authoring/handoff-authoring/knowledge-cultivatorのfillで実際に書き込む値を決めるとき</td><td>対象フィールドのx-prompt-write（執筆ガイダンス）を読み、advisor相談で得た判断材料（設計観点・実装観点等）と整合する内容を組み立てる。判断材料が不足している場合はOrchestrator自身が独自に判断材料を作り出さず、advisor相談等で確認する</td><td>fillは値を書き込む操作自体は機械的だが、何を書き込むかはx-prompt-writeの解釈とドメイン判断を要するため、mechanicalTasksに含めると『考えずに埋めてよい』という誤解を生む</td></tr><tr><td>作業が UDDループ のどの段まで踏むべきか自明でないとき</td><td>「振る舞いが変わるか」「将来同種の判断が繰り返されるか」のいずれかが Yes なら4段とも踏む。両方 No なら、決めることが無いので決める段と引き継ぐ段は薄くてよい。</td><td>レーンの定義だけでは境界事例を割り切れないため、最終判断はOrchestrator自身に残す</td></tr></table></div>
+<hr>
+<h2>委譲パターン</h2>
+<div class="wrap"><table><tr><th>対象</th><th>タイミング</th><th>範囲</th><th>アクション</th><th>理由</th></tr><tr><td>skill-router</td><td>before</td><td>category</td><td>作業を始める前に、まずskill-routerへ問い合わせ、配線表（<code>skill-wiring.json</code>）にその作業の行があるかを確認する。行があれば「何を頼むか」と「呼ぶSkill」を受け取り、続く委譲パターンへの入力として渡す。行が無ければ、その作業は1つのSkillで終えられるものとして進む</td><td>作業側のSkillと呼ばれる側のSkillが互いを呼ぶ構造を避け、判断の窓口をOrchestrator側に置くため（skill-router自身の設計原則）。呼ぶタイミング（作業の前に材料を集める・作業のあとに十分かを確かめるのいずれか、または両方）はOrchestrator自身が判断する</td></tr><tr><td>advisor（ddd-advisor/tech-lead-advisor/ux-advisor/qa-advisor等）</td><td>after</td><td>category</td><td>skill-routerが返した「呼ぶSkill」に従い、敵対的検証を依頼する各advisor（同じadvisorへの敵対的検証フェーズ再検証を含む）ごとに、AgentSchemaのgoal-dispatch構造（目的・役割・読み込むSkill・タスク・成果物・受け入れ基準）で内容を組み立て、Agentツールでwaffleサブエージェントとして並列に呼び出す（汎用のエージェントへ要約した指示を渡す代行はしない。受け手が読み込むべきSkillのSKILL.md本文の具体的な手順、特にresponseTypesが指すテンプレートファイルの読み込みが遂行される保証がないため）（1体ずつ直列に呼ばない。複数advisorへの依頼は1回のメッセージで同時に発行する）。敵対的検証の対象が1件のみで他advisorとの突き合わせが不要な場合は単体呼び出しでよい。全員の結果が揃ったら、各回答がresponseTypesが指すテンプレートの見出し構造を実際に踏襲しているかを確認してから、template-skill-adversarial-verification.mdの形式で統合する（テンプレート構造を踏まない回答は、内容の質も未検証とみなし再実行する）</td><td>advisorはWaffleが所有・出荷する成果物であり、単一advisorの一発出力を無検証で確定させない運用はWaffle自身のOrchestratorの責務。advisorが互いを呼ぶのではなくOrchestrator側が組合せを判断することで、Skill/advisor間のテキストベース疎結合原則を保てる。並列dispatchにするのは、直列に1体ずつ呼ぶと後段のadvisorが前段の結論に引きずられ、独立した意見として機能しなくなるため（診断的差し戻しの前提となる複数視点の独立性を保つ）。呼び出し手段・出力検証を明示するのは、要約した指示による代行dispatchでは受け手がテンプレート等の具体的な手順を遂行する保証がなく、実際に本セッションでテンプレート未遵守の回答を無検証で確定させかけた再発防止のため</td></tr><tr><td>knowledge-cultivator</td><td>before</td><td>single</td><td>advisor相談への応答生成中に次の3種のいずれかに該当したら、knowledge-cultivator Skillを呼ぶ: (1)ユーザーの明示的な反論・訂正 (2)既存knowledgeでカバーできない実際の遭遇 (3)複数advisor並列dispatch時の矛盾。Claude Code専用の<code>feedback_*</code>メモリは経由せず、<code>waffle scaffold create/fill</code>で直接KnowledgeSchema DRAFT文書として記録する</td><td>マルチツール（Claude Code以外のAIツールを含む）で動作する記録経路にする必要があるため。Claude Code専用の記憶機構はツール依存で他ツールから記録できない</td></tr><tr><td>knowledge-cultivator</td><td>after</td><td>single</td><td>knowledge-cultivatorのStep3（候補審査の対話完了後）で採用が決定した候補について、Orchestratorが通常のCLI操作（scaffold fillでstatus: ACTIVEへ変更→対象advisorへのskillRef確認→validate→render）で昇格を実行する。却下・保留の候補はDRAFTのまま残す</td><td>knowledge-cultivatorは候補の検知・記録・審査（人間対話によるバイアス防止）までを自己完結で担う。この審査対話は汎用のbrainstorm skillとは責務が異なる特化型の対話であり、混同して同じ仕組みに載せない。昇格実行のみCLAUDE.mdの既存運用ルールの範囲内の通常操作として切り出し、専用手順を持たせない</td></tr><tr><td>memory-cultivator</td><td>after</td><td>single</td><td>4段階（Investigation/Spec-authoring/Handoff-authoring/Implementation）のいずれの作業中でも、ユーザーによる明示的な訂正・重要な決定・参照情報など、将来のセッションやツールをまたいで再利用すべき事実に気づいたとき、またはユーザーから明示的に「覚えておいて」と頼まれたときに、memory-cultivator Skillを呼ぶ</td><td>ツールを問わず共有される.waffle/memory/へ記録することで、次回セッション・別ツールでも過去の決定・訂正・知見を引き継げるようにするため（operatingRulesが定める作業開始時のMEMORY.md確認と対をなす）</td></tr></table></div></div></section><section class="pane md" data-k="w" hidden><details class="idx" open><summary>この面の変更 2 件</summary><ol><li><b>&lt;strong&gt;分野で定着した専門用語はそのまま使い&lt;/strong&gt;</b><button class="go" data-i="0">その場所へ</button><div class="b">言い換えても説明を付けてもよい、と読めるので、説明さえ付ければ通ってしまう。実際「いつ真か」に説明を付けて出した</div></li><li><b>&lt;strong&gt;語の出どころを言えるかを見る&lt;/strong&gt;</b><button class="go" data-i="1">その場所へ</button><div class="b">説明の有無では、訳した語も自分で作った語も止まらない。根拠に出どころを付けるのと同じ形を、語にも当てる</div></li></ol></details><div class="doc"><hr>
+<p>name: doc-writing-skills<br>description: 日本語のテクニカルライティング文書を書く・直すときに必ず使うスキル。設計文書・仕様・報告・README・学術文書など、人が読む文書を書き起こす前と、書いたあとに使う。「文書」「まとめて」「書いて」「ドキュメント」と言われたとき、および既存のmdやHTMLの本文を直すときに必ず使う。<br>version: 1.0.0</p>
+<hr>
+<h2>目的</h2>
+<p><strong>技術文書としても学術文書としても違和感のない日本語を書く。</strong></p>
+<div class="wrap"><table><tr><th>満たすこと</th><th></th></tr><tr><td><strong>論</strong></td><td>意味が通り、論が崩れていない</td></tr><tr><td><strong>構造</strong></td><td>情報が、その型に合った形で置かれている</td></tr><tr><td><strong>文調</strong></td><td>人が読んで、一度で意味が取れる</td></tr><tr><td><strong>語彙</strong></td><td>同じ文脈では、同じものが同じ語で呼ばれている</td></tr></table></div>
+<p><strong>判断の材料は10の概念である。</strong><br><strong>どれも公開された規格・指針から導いており、出どころを最後の節に置く。</strong></p>
+<p><strong>出すには、2つのゲートを通す。</strong></p>
+<div class="wrap"><table><tr><th>ゲート</th><th>何を見るか</th><th>誰が決めるか</th></tr><tr><td><strong>1</strong></td><td>0件にできるものが、0件であること</td><td><strong>機械</strong></td></tr><tr><td><strong>2</strong></td><td>10の判定すべてに、結果が1行ずつあること</td><td><strong>書き手</strong></td></tr></table></div>
+<p><strong>ゲート2が保証するのは、判定を当てたことだけである。</strong><br>何を直すかは、書き手の判断に残る。</p>
+<h2>役割</h2>
+<p>- 書いたものに、10の概念から導いた判定を当てる<br>- 判定を、<strong>読む人がその場でできる1つの操作</strong>に降ろす<br>- <strong>原典から導けない決めは、そう書く</strong><br>- 当てなかった判定を、報告に書く</p>
+<h2>処理対象と成果物</h2>
+<h3>処理対象</h3>
+<p><strong>これから書く日本語の文書、または既に書いてある日本語の文書である。</strong></p>
+<h3>成果物</h3>
+<p><strong>10の判定を当て、直したか残したかを言える文書である。</strong></p>
+<h2>入力の想定</h2>
+<div class="wrap"><table><tr><th>受け取る情報</th><th>解釈・既定値</th></tr><tr><td>読み手</td><td>明示されなければ、その文書を初めて開く人とする</td></tr><tr><td>用語の定め</td><td>対象フォルダに用語を定めた文書があれば、それに従う</td></tr><tr><td>文脈の境界</td><td>明示されなければ、文書1本を1つの文脈とする</td></tr></table></div>
+<hr>
+<h2>実行手順</h2>
+<h3>Step 1: 読み手と用語を決める</h3>
+<p><strong>書き始める前に、読み手を1つに決める。</strong><br>読み手が決まらないと、選ぶ語も構成も決まらない（概念8）。<br>対象フォルダに用語の定めがあれば、先に読む。</p>
+<h3>Step 2: 10の判定を当てる</h3>
+<p><strong>上から順に当てる。</strong><br>前の概念が崩れていると、後の判定は意味を持たない。</p>
+<div class="wrap"><table><tr><th>#</th><th>概念</th><th>規則</th><th>判定</th></tr><tr><td>1</td><td>読み手が組み立て直す作業を、書き手が引き受ける</td><td>1文の中で、読み手に計算をさせない</td><td><strong>頭から一度読んで、戻らずに意味が取れるか</strong>。戻ったなら、戻らせた語が原因である</td></tr><tr><td>2</td><td>情報の型が、置く形を決める</td><td>対比・条件・手順・分岐を、散文に置かない</td><td><strong>その段落を、表か図に置き直せるかを試す</strong></td></tr><tr><td>3</td><td>数が増えたら、形を変える</td><td>並べるものが3つ以上なら、箇条書きか表にする</td><td><strong>数える</strong></td></tr><tr><td>4</td><td>見出しは、本文を読まずに全体を掴ませる</td><td>見出しの階層を飛ばさない。見出しだけで、何がどこにあるかが分かるようにする</td><td><strong>見出しだけを抜き出して、順に読む</strong></td></tr><tr><td>5</td><td>結論を先に置き、根拠を後ろに置く</td><td>節の最初の一文を結論にする</td><td><strong>各節の先頭文だけを並べて読む</strong></td></tr><tr><td>6</td><td>読み手は、形の違いを意味の違いとして読む</td><td>同じ立場のものは同じ形で書く。文体は文書の中で1つにする</td><td><strong>並んでいるものの語尾を見比べる</strong></td></tr><tr><td>7</td><td>語の意味は、文脈の中で定まる</td><td>同じ文脈では、1つの意味に1つの語だけを当てる。文脈が変わるなら、変わることを書く</td><td><strong>用語を書き出し、同じ意味の別の語が無いかを見る</strong></td></tr><tr><td>8</td><td>読み手が誰かで、選ぶ語と構成が変わる</td><td>読み手を先に決める。<strong>語は、読み手の世界にすでにある語から選ぶ</strong>。<mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="読み手を先に決める。専門用語は言い換えるか、説明を付ける" data-w="言い換えても説明を付けてもよい、と読めるので、説明さえ付ければ通ってしまう。実際「いつ真か」に説明を付けて出した"><strong>分野で定着した専門用語はそのまま使い</strong></mark>、自分が作った語・訳した語は持ち込まない。持ち込むなら、新しい語だと書いて定義する</td><td><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="**初出の専門用語に、説明が付いているかを見る**" data-w="説明の有無では、訳した語も自分で作った語も止まらない。根拠に出どころを付けるのと同じ形を、語にも当てる"><strong>語の出どころを言えるかを見る</strong></mark>。「この文書のために作った」「英語から訳した」なら、言い換えるか定義する</td></tr><tr><td>9</td><td>読み手が一度に扱える量には限りがある</td><td>1文は短くする。段落は3行から7行にする。文書の限度を決める</td><td><strong>数える</strong></td></tr><tr><td>10</td><td>比喩と定型句は、読み手によって解けない</td><td>比喩は、例として明示するときだけ使う</td><td><strong>その比喩を字義どおりに読んで、意味が通るかを試す</strong></td></tr></table></div>
+<p><strong>名詞句で終わることは、それ自体では欠陥ではない。</strong><br>見出し・箇条書きの項目・表のセルは、名詞句で置いてよい（Google と JTF が認めている）。<br><strong>判定1が見るのは、文の中で読み手が戻るかどうかである。</strong></p>
+<h3>Step 3: 直したか、残したかを言う</h3>
+<p><strong>判定に当たった箇所を、直すか、理由を付けて残すかのどちらかにする。</strong><br><strong>理由が書けないなら、それは直す対象である。</strong></p>
+<h3>Step 4: 2つのゲートを通す</h3>
+<p><strong>ゲート1は機械が決める。</strong></p>
+<pre class="code">python3 &lt;skill&gt;/scripts/gate.py &lt;ファイル...&gt;
+python3 &lt;skill&gt;/scripts/gate.py --synonyms 用語.tsv &lt;ファイル...&gt;</pre>
+<div class="wrap"><table><tr><th>検査</th><th>拠って立つもの</th></tr><tr><td>見出しの階層が飛んでいる</td><td>概念4</td></tr><tr><td>文体が混ざっている</td><td>概念6</td></tr><tr><td>並んだ項目の語尾が揃っていない</td><td>概念6</td></tr><tr><td>文字で図や表を描いている</td><td>概念2</td></tr><tr><td>同じ意味の語が2つある（対を渡したとき）</td><td>概念7</td></tr><tr><td>強調が描画されない</td><td><strong>媒体の決め</strong></td></tr></table></div>
+<p><strong>最後の1つだけ、概念から導けない。</strong><br>マークダウンの記法に拠るもので、5つの原典はどれも描画について書いていない。<br><strong>別枠であることを、<code>--list</code> と名簿に書いてある。</strong></p>
+<p><strong>概念3と概念9は、ゲートに入らない。</strong><br>数は数えられるが、<strong>いくつで形を変えるかは文脈で変わる</strong>ので、0件にできない。<br>判定として、書き手が当てる。</p>
+<p><strong>ゲート2は書き手が言う。</strong><br>報告に、10の判定すべての結果を1行ずつ書く。<strong>1つでも欠けていれば、通っていない。</strong></p>
+<hr>
+<h2>出力形式</h2>
+<div class="wrap"><table><tr><th>報告する内容</th><th>書き方</th></tr><tr><td>直した箇所</td><td>概念の番号ごとに、どこを何から何へ直したかを表で出す</td></tr><tr><td>残した箇所</td><td>場所と、残す理由を書く</td></tr><tr><td><strong>ゲート1の結果</strong></td><td>通ったか、通っていないか。件数を書く</td></tr><tr><td><strong>当てなかった判定</strong></td><td><strong>番号で書く</strong>。全部当てたなら、そう書く。<strong>1つでも欠ければゲート2は通っていない</strong></td></tr><tr><td>確かめていないこと</td><td><strong>確かめていないことを、確かめたと書かない</strong></td></tr></table></div>
+<hr>
+<h2>ガードレール</h2>
+<p>- <strong>散文で書けることを、散文で書かない</strong>。対比・条件・一覧・手順は表、分岐・流れ・包含は図にする<br>- <strong>桁を空白で揃えて、表に見せない</strong>。表はマークダウンの表で書く<br>- <strong>ASCII で図を描かない</strong>。図は mermaid か SVG で書く<br>- <strong>同じ文脈で、同じ意味に2つの語を当てない</strong>。文脈が変わるなら、変わることを書く<br>- <strong>訂正の記録を本文に残さない</strong>。文書には現行の正しい内容だけを書く。履歴は git が持つ<br>- <strong>数値は原典の文字列で確認してから書く</strong>。要約を経由して引かない<br>- <strong>確かめていない内容を、確かめたように書かない</strong>。推測は推測と分かる形で書く<br>- <strong>原典から導けない決めを、原典の記述として書かない</strong>。こちらの決めだと書く<br>- <strong>ゲートを通していないものを、出さない</strong>。通していないなら、そう書く</p>
+<hr>
+<h2>出典</h2>
+<p><strong>10の概念は、公開された規格・指針から導いた。</strong><br><strong>規則そのものではなく、規則が立っている考え方を取っている。</strong></p>
+<div class="wrap"><table><tr><th>概念</th><th>導いた原典</th></tr><tr><td>1 ・ 3 ・ 9</td><td>公用文作成の考え方 ／ Microsoft Writing Style Guide</td></tr><tr><td>2 ・ 4</td><td>Google developer documentation style guide ／ 公用文作成の考え方</td></tr><tr><td>5</td><td>公用文作成の考え方 ／ Microsoft Writing Style Guide</td></tr><tr><td>6</td><td>公用文作成の考え方 ／ JTF日本語標準スタイルガイド ／ Microsoft ／ Google</td></tr><tr><td>7</td><td>Domain-Driven Design Reference ／ 公用文作成の考え方</td></tr><tr><td>8</td><td>公用文作成の考え方 ／ Google developer documentation style guide</td></tr><tr><td>10</td><td>Google developer documentation style guide ／ 公用文作成の考え方</td></tr></table></div>
+<div class="wrap"><table><tr><th>原典</th><th>出どころ</th><th>落とした日</th></tr><tr><td>公用文作成の考え方（文化審議会建議）</td><td><code>bunka.go.jp/seisaku/bunkashingikai/kokugo/hokoku/pdf/93651301_01.pdf</code></td><td>2026-09-06</td></tr><tr><td>JTF日本語標準スタイルガイド 第3.0版</td><td><code>jtf.jp/pdf/jtf_style_guide.pdf</code></td><td>2026-09-06</td></tr><tr><td>Domain-Driven Design Reference（Eric Evans）</td><td><code>domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf</code></td><td>2026-09-06</td></tr><tr><td>Google developer documentation style guide</td><td><code>developers.google.com/style/</code>（highlights ・ headings ・ translation）</td><td>2026-09-06</td></tr><tr><td>Microsoft Writing Style Guide</td><td><code>learn.microsoft.com/en-us/style-guide/</code>（top 10 tips ・ scannable content）</td><td>2026-09-06</td></tr></table></div>
+<p><strong>原典は変わる。</strong><br>HTML の頁は書き換えられ、PDF は版が上がる。<br><strong>落とした日を残しているので、当たり直すときはそこから確かめる。</strong></p>
+<hr>
+<h2>参照</h2>
+<p>- <code>scripts/gate.py</code>: ゲート1の検査。<strong>拠って立つものは <code>--list</code> で見られる</strong><br>- <code>scripts/test_gate.py</code>: この検査の振る舞いを事例で確かめる。<code>python3 test_gate.py</code> で走る</p></div></section>
+</div>
+<script>
+(function(){
+  var MARKCSS = document.getElementById("markcss").textContent;
+
+  /* 印を1つ、押せるようにする。iframe の中でも Shadow の中でも同じ手が効く */
+  function wire(root, doc){
+    root.querySelectorAll("mark.chg[data-w]").forEach(function(m){
+      var p = doc.createElement("div");
+      p.className = "pop"; p.hidden = true;
+      var b1 = doc.createElement("b"); b1.textContent = "変更前";
+      var pre = doc.createElement("pre"); pre.textContent = m.dataset.b;
+      var b2 = doc.createElement("b"); b2.textContent = "なぜ";
+      var w = doc.createElement("div"); w.textContent = m.dataset.w;
+      p.appendChild(b1); p.appendChild(pre); p.appendChild(b2); p.appendChild(w);
+      var host = m.closest("td") || m.closest("li") || m.parentNode;
+      if (host.nextSibling) host.parentNode.insertBefore(p, host.nextSibling);
+      else host.parentNode.appendChild(p);
+      function tg(){
+        var opening = p.hidden;
+        p.hidden = !opening;
+        m.setAttribute("aria-expanded", opening ? "true" : "false");
+        resizeAll();
+      }
+      m.addEventListener("click", tg);
+      m.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tg(); }
+      });
+    });
+  }
+
+  var frames = [];
+  function resizeAll(){
+    frames.forEach(function(f){
+      try {
+        var d = f.contentDocument;
+        if (d && d.body) f.style.height = (d.documentElement.scrollHeight + 8) + "px";
+      } catch(e){}
+    });
+  }
+
+  /* HTML の面を立てる。iframe が空のままなら Shadow DOM へ落とす */
+  document.querySelectorAll(".pane.html").forEach(function(pane){
+    var tpl = pane.querySelector("template");
+    var src = tpl.innerHTML;
+    var fr = document.createElement("iframe");
+    fr.setAttribute("title", pane.dataset.tab || "");
+    fr.srcdoc = '<!doctype html><meta charset="utf-8">'
+              + '<style>' + MARKCSS + '</style>' + src;
+    pane.appendChild(fr);
+    frames.push(fr);
+    var done = false;
+    fr.addEventListener("load", function(){
+      var d = fr.contentDocument;
+      if (!d || !d.body || !d.body.firstChild) return;
+      done = true;
+      wire(d, d);
+      resizeAll();
+      /* 中の高さは、字が載ってから決まる。変わるたびに測り直す */
+      if (window.ResizeObserver) {
+        new ResizeObserver(resizeAll).observe(d.documentElement);
+      }
+      /* 中のタブを押しても測り直す。中の作りに依らず効く */
+      d.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+      [80, 300, 900].forEach(function(t){ setTimeout(resizeAll, t); });
+      pane.querySelector(".how").textContent = "iframe で置いた";
+    });
+    setTimeout(function(){
+      if (done) return;
+      /* 載ったのに load を取り逃していないかを、もう一度見る */
+      try {
+        var d2 = fr.contentDocument;
+        if (d2 && d2.body && d2.body.firstChild) {
+          done = true; wire(d2, d2); resizeAll();
+          if (window.ResizeObserver) new ResizeObserver(resizeAll).observe(d2.documentElement);
+          d2.addEventListener("click", function(){ setTimeout(resizeAll, 0); });
+          pane.querySelector(".how").textContent = "iframe で置いた";
+          return;
+        }
+      } catch(e){}
+      /* 届かなかった。Shadow DOM へ落とす */
+      fr.remove();
+      frames = frames.filter(function(x){ return x !== fr; });
+      var holder = document.createElement("div");
+      pane.appendChild(holder);
+      var sh = holder.attachShadow({mode:"open"});
+      var st = document.createElement("style");
+      st.textContent = MARKCSS + "\n" + (tpl.dataset.shadowcss || "");
+      sh.appendChild(st);
+      var box = document.createElement("div");
+      box.innerHTML = src;
+      sh.appendChild(box);
+      wire(sh, document);
+      pane.querySelector(".how").textContent = "Shadow DOM で置いた";
+    }, 2500);
+  });
+
+  /* 印を、見える状態にする。
+
+     **内側のタブの作り方を、こちらは知らない。**
+     設計ノートは <input type="radio"> と :checked ~ #panel で切り替えていた。
+     JS で切り替える作りもある。**どちらでも効くように、
+     切り替えを1つずつ当てて、印が出たところで止める。** */
+  function reveal(m){
+    if (m.offsetParent) return true;
+    var n = m;
+    while (n && n.nodeType === 1) { if (n.hidden) n.hidden = false; n = n.parentNode; }
+    /* **印が住んでいる根から探す。**
+       Shadow の中の印に対して document を探すと、切り替えが1つも見つからない */
+    var scope = m.getRootNode ? m.getRootNode() : m.ownerDocument;
+    for (var e = m.parentNode; e && e.nodeType === 1; e = e.parentNode) {
+      if (e.tagName === "DETAILS") e.open = true;
+    }
+    if (m.offsetParent) return true;
+    var ins = scope.querySelectorAll('input[type="radio"],input[type="checkbox"]');
+    for (var i = 0; i < ins.length; i++) {
+      var was = ins[i].checked;
+      ins[i].checked = true;
+      if (m.offsetParent) return true;
+      ins[i].checked = was;
+    }
+    return !!m.offsetParent;
+  }
+
+  /* 一覧の「その場所へ」。印を開いて、そこまで運ぶ */
+  document.querySelectorAll(".idx button.go").forEach(function(b){
+    b.onclick = function(){
+      var pane = b.closest(".pane");
+      var i = +b.dataset.i;
+      var fr = pane.querySelector("iframe");
+      var root = fr ? fr.contentDocument : null;
+      if (!root) {
+        var h = Array.prototype.find.call(pane.querySelectorAll("div"),
+          function(x){ return x.shadowRoot; });
+        root = h ? h.shadowRoot : pane;
+      }
+      var m = root.querySelectorAll("mark.chg")[i];
+      if (!m) return;
+      var shown = reveal(m);
+      if (m.getAttribute("aria-expanded") !== "true") m.click();
+      b.textContent = shown ? "その場所へ" : "隠れたまま";
+      setTimeout(function(){
+        var y = 0, e = m;
+        while (e && e.offsetParent) { y += e.offsetTop; e = e.offsetParent; }
+        if (fr) window.scrollTo({top: fr.getBoundingClientRect().top + window.scrollY + y - 60,
+                                 behavior: "smooth"});
+        else m.scrollIntoView({block: "center", behavior: "smooth"});
+      }, 60);
+    };
+  });
+
+  /* マークダウンの面 */
+  document.querySelectorAll(".pane.md").forEach(function(p){ wire(p, document); });
+
+  function allPops(){
+    var out = Array.prototype.slice.call(document.querySelectorAll(".pop"));
+    frames.forEach(function(f){
+      try { out = out.concat(Array.prototype.slice.call(f.contentDocument.querySelectorAll(".pop"))); }
+      catch(e){}
+    });
+    document.querySelectorAll(".pane.html div").forEach(function(h){
+      if (h.shadowRoot) out = out.concat(Array.prototype.slice.call(h.shadowRoot.querySelectorAll(".pop")));
+    });
+    return out;
+  }
+  document.getElementById("oa").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = false; }); resizeAll(); };
+  document.getElementById("ca").onclick = function(){
+    allPops().forEach(function(p){ p.hidden = true; }); resizeAll(); };
+
+  var tabs = document.querySelectorAll(".tab");
+  function sel(k){
+    tabs.forEach(function(t){ t.setAttribute("aria-selected", t.dataset.t === k ? "true" : "false"); });
+    document.querySelectorAll(".pane").forEach(function(p){ p.hidden = (p.dataset.k !== k); });
+    resizeAll();
+  }
+  tabs.forEach(function(t){ t.onclick = function(){ sel(t.dataset.t); }; });
+  if (tabs.length) sel(tabs[0].dataset.t);
+  window.addEventListener("resize", resizeAll);
+})();
+</script>

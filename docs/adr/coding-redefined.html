@@ -1,0 +1,279 @@
+<meta charset="utf-8">
+<title>規則が主、文書は束</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#eef1ef; --card:#f8faf9; --ink:#111d1a; --muted:#5b6b66;
+  --rule:#ccd8d4; --rule-soft:#dfe7e4; --sunk:#e7ecea;
+  --key:#0d5c55; --key-soft:#d5e6e3;
+  --warn:#8f5410; --warn-soft:#f0e2cd;
+  --dim:#7d8a86;
+  --src-o:#7a3b6d; --src-k:#0d5c55; --src-j:#8f5410; --src-z:#5b6b66;
+  --shadow:0 1px 0 rgba(17,29,26,.06), 0 8px 22px -18px rgba(17,29,26,.5);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0e1614; --card:#16211e; --ink:#e6eeeb; --muted:#93a29d;
+  --rule:#2a3936; --rule-soft:#22302d; --sunk:#111a18;
+  --key:#6cc9b8; --key-soft:#173330;
+  --warn:#d9a35f; --warn-soft:#33281a;
+  --dim:#7b8985;
+  --src-o:#d094c2; --src-k:#6cc9b8; --src-j:#d9a35f; --src-z:#93a29d;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 26px -18px #000;
+}}
+:root[data-theme="dark"]{
+  --paper:#0e1614; --card:#16211e; --ink:#e6eeeb; --muted:#93a29d;
+  --rule:#2a3936; --rule-soft:#22302d; --sunk:#111a18;
+  --key:#6cc9b8; --key-soft:#173330;
+  --warn:#d9a35f; --warn-soft:#33281a;
+  --dim:#7b8985;
+  --src-o:#d094c2; --src-k:#6cc9b8; --src-j:#d9a35f; --src-z:#93a29d;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 26px -18px #000;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:62rem;margin:0 auto;padding:2.4rem 1.15rem 6rem;display:flex;flex-direction:column;gap:2.6rem}
+h1,h2,h3{font-family:"Shippori Mincho","Yu Mincho",serif;font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:2rem;letter-spacing:.02em;line-height:1.4}
+h2{font-size:1.22rem}
+h3{font-size:1rem}
+h4{margin:0;font-size:.78rem;font-weight:700;color:var(--ink);letter-spacing:.04em}
+p{margin:0}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted)}
+.thesis{font-size:1.05rem;max-width:42rem;color:var(--muted)}
+.thesis b{color:var(--ink);font-weight:700}
+.src{font-size:.76rem;color:var(--muted)}
+header{display:flex;flex-direction:column;gap:.75rem;border-bottom:1px solid var(--rule);padding-bottom:1.6rem}
+
+/* ── 比較 ── */
+.compare{display:flex;flex-direction:column;gap:1rem}
+.panes{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:58rem){.panes{grid-template-columns:1fr 1fr}}
+.pane{background:var(--card);border:1px solid var(--rule-soft);border-radius:.5rem;padding:1.15rem 1.25rem;
+  display:flex;flex-direction:column;gap:.7rem;min-width:0}
+.pane.now{border-color:var(--rule)}
+.pane.next{border-color:var(--key);box-shadow:var(--shadow)}
+.pane-hd{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;
+  border-bottom:1px solid var(--rule-soft);padding-bottom:.5rem}
+.pane-hd .t{font-weight:700;font-size:.95rem}
+.pane.now .pane-hd .t{color:var(--dim)}
+.pane.next .pane-hd .t{color:var(--key)}
+.pane .body{font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:.55rem}
+.pane.now .body{color:var(--dim)}
+.opt{border-left:2px solid var(--rule);padding-left:.7rem}
+.opt b{color:var(--ink);font-weight:700}
+.pane.now .opt b{color:var(--dim)}
+.reco{background:var(--key-soft);border-left:3px solid var(--key);padding:.6rem .8rem;border-radius:0 .3rem .3rem 0;
+  color:var(--ink);font-size:.95rem}
+.reco .lbl{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.14em;color:var(--key);
+  display:block;margin-bottom:.15rem}
+.ask{font-weight:700;color:var(--ink)}
+.pane.now .ask{color:var(--dim)}
+.meters{display:grid;gap:.55rem;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
+.meter{border-top:2px solid var(--rule);padding-top:.5rem;display:flex;flex-direction:column;gap:.05rem}
+.meter .k{font-size:.74rem;color:var(--muted)}
+.meter .v{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;font-size:1.05rem;font-weight:700}
+.meter .v small{font-size:.72rem;font-weight:400;color:var(--muted);margin-left:.15rem}
+.meter.a{border-top-color:var(--dim)} .meter.a .v{color:var(--dim)}
+.meter.b{border-top-color:var(--key)} .meter.b .v{color:var(--key)}
+
+/* ── ラウンド ── */
+.round{display:flex;flex-direction:column;gap:1rem}
+.round-hd{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.round-hd .n{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.14em;color:var(--key);
+  border:1px solid var(--key);border-radius:2rem;padding:.05rem .6rem}
+.round-hd .why{font-size:.8rem;color:var(--muted)}
+.q{background:var(--card);border:1px solid var(--rule-soft);border-radius:.5rem;padding:1.1rem 1.25rem;
+  display:flex;flex-direction:column;gap:.75rem;box-shadow:var(--shadow);transition:border-color .2s}
+.q.done{border-color:var(--key)}
+.q.sent{border-color:var(--warn)}
+.q-hd{display:flex;gap:.6rem;align-items:baseline}
+.q-hd .id{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--key);flex:none}
+.q-hd h3{flex:1}
+.q-hd .tag{font-family:"JetBrains Mono",monospace;font-size:.66rem;color:var(--muted);flex:none}
+.q .ask{font-size:.93rem;font-weight:400;color:var(--muted)}
+
+/* ── 折りたたみの中 ── */
+details{border-top:1px solid var(--rule-soft);padding-top:.55rem}
+summary{cursor:pointer;font-size:.82rem;color:var(--muted);list-style:none;display:flex;gap:.4rem;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"＋";font-family:"JetBrains Mono",monospace;color:var(--key);font-weight:700}
+details[open] summary::before{content:"−"}
+summary:focus-visible{outline:2px solid var(--key);outline-offset:3px}
+.inside{display:flex;flex-direction:column;gap:1.15rem;margin-top:.85rem;padding-left:.9rem;
+  border-left:2px solid var(--rule-soft)}
+.block{display:flex;flex-direction:column;gap:.4rem}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.83rem;min-width:30rem}
+th,td{text-align:left;vertical-align:top;padding:.35rem .55rem;border-bottom:1px solid var(--rule-soft)}
+th{font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.05em;border-bottom-color:var(--rule);
+  white-space:nowrap}
+td.what{color:var(--ink);font-weight:700;width:26%}
+td.src-cell{width:26%;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+.tag-src{font-family:"JetBrains Mono",monospace;font-size:.64rem;font-weight:700;letter-spacing:.08em;
+  border:1px solid currentColor;border-radius:.2rem;padding:0 .3rem;margin-right:.35rem;white-space:nowrap;
+  display:inline-block;vertical-align:.08em}
+.o{color:var(--src-o)} .k{color:var(--src-k)} .j{color:var(--src-j)} .z{color:var(--src-z)}
+ol.chain{margin:0;padding:0;list-style:none;counter-reset:c;display:flex;flex-direction:column;gap:.3rem}
+ol.chain li{counter-increment:c;font-size:.85rem;color:var(--muted);display:flex;gap:.5rem}
+ol.chain li::before{content:counter(c);font-family:"JetBrains Mono",monospace;font-size:.7rem;font-weight:700;
+  color:var(--key);border:1px solid var(--rule);border-radius:50%;width:1.35rem;height:1.35rem;flex:none;
+  display:grid;place-items:center;margin-top:.35rem}
+ol.chain b{color:var(--ink)}
+td.kill{color:var(--muted)}
+td.kill b{color:var(--ink)}
+
+
+/* ── 完成イメージ ── */
+.fig{display:flex;flex-direction:column;gap:.5rem;background:var(--sunk);border:1px solid var(--rule-soft);
+  border-radius:.4rem;padding:.85rem .95rem}
+.fig svg{width:100%;height:auto;display:block;color:var(--ink);overflow:visible}
+.diff{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.76rem;line-height:1.65;
+  display:flex;flex-direction:column;gap:.02rem;overflow-x:auto}
+.diff .dh{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--muted);margin-bottom:.3rem}
+.diff .dn{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.76rem;color:var(--muted);margin-top:.5rem;
+  border-top:1px solid var(--rule-soft);padding-top:.45rem;line-height:1.75}
+.dl{display:flex;gap:.8rem;padding:.06rem .4rem;border-left:2px solid transparent;white-space:nowrap}
+.dl .c{flex:none;min-width:14rem}
+.dl .d{color:var(--muted);white-space:normal;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.78rem}
+.dl.add{border-left-color:var(--key);background:var(--key-soft);color:var(--ink)}
+.dl.add .c::before{content:"+ ";color:var(--key);font-weight:700}
+.dl.del{border-left-color:var(--dim);color:var(--dim)}
+.dl.del .c{text-decoration:line-through;text-decoration-color:var(--dim)}
+.dl.del .c::before{content:"− ";text-decoration:none;display:inline-block}
+.dl.del .d{color:var(--dim)}
+.dl.same .c::before{content:"= ";color:var(--muted)}
+.dl.sub{color:var(--muted)}
+.dl.sub .c{padding-left:.2rem}
+.dl.tmp{color:var(--warn)}
+.dl.tmp .c::before{content:"? ";font-weight:700}
+.dl.grp{margin-top:.4rem;font-family:"Zen Kaku Gothic New",sans-serif;font-weight:700;color:var(--ink);
+  font-size:.78rem;border-bottom:1px solid var(--rule-soft)}
+
+/* ── 操作 ── */
+.acts{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+button.act{font:inherit;font-size:.87rem;cursor:pointer;border-radius:.35rem;padding:.4rem 1.1rem;
+  border:1px solid var(--rule);background:var(--card);color:var(--muted);transition:.15s}
+button.act:hover{border-color:var(--muted)}
+button.act.yes{background:var(--key);border-color:var(--key);color:var(--paper);font-weight:700}
+button.act.yes:hover{filter:brightness(1.08)}
+button.act:focus-visible{outline:2px solid var(--key);outline-offset:2px}
+.verdict{font-size:.87rem;color:var(--muted)}
+.verdict .ok{color:var(--key);font-weight:700}
+.verdict .back{color:var(--warn);font-weight:700}
+.backs{display:flex;gap:.4rem;flex-wrap:wrap;padding:.55rem .7rem;background:var(--warn-soft);border-radius:.35rem}
+.backs span{font-size:.8rem;color:var(--warn);align-self:center;margin-right:.2rem}
+.backs[hidden]{display:none}
+.note{display:flex;flex-direction:column;gap:.3rem;border-top:1px solid var(--rule-soft);padding-top:.6rem}
+label{font-size:.78rem;color:var(--muted)}
+textarea{font:inherit;font-size:.87rem;background:var(--sunk);color:var(--ink);border:1px solid var(--rule);
+  border-radius:.35rem;padding:.55rem .7rem;resize:vertical;min-height:3.2rem;width:100%}
+textarea:focus-visible{outline:2px solid var(--key);outline-offset:1px;border-color:var(--key)}
+
+/* ── 締め ── */
+.done-card{background:var(--card);border:1px solid var(--key);border-radius:.5rem;padding:1.3rem 1.4rem;
+  display:flex;flex-direction:column;gap:1rem;box-shadow:var(--shadow)}
+.done-card[hidden]{display:none}
+.cols{display:grid;gap:1.1rem;grid-template-columns:1fr}
+@media(min-width:48rem){.cols{grid-template-columns:1fr 1fr}}
+ul{margin:0;padding-left:1.1rem;font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:.3rem}
+ul b{color:var(--ink)}
+.strike li{text-decoration:line-through;text-decoration-color:var(--dim);color:var(--dim)}
+.handback{display:flex;flex-direction:column;gap:.5rem;border:1px dashed var(--key);border-radius:.5rem;
+  padding:1rem 1.15rem;background:var(--card)}
+#out{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.76rem;min-height:7rem;line-height:1.7}
+footer{border-top:1px solid var(--rule);padding-top:1.2rem;font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+pre.tree{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.79rem;line-height:1.8;
+background:var(--card);border:1px solid var(--rule-soft);border-radius:.4rem;padding:1rem 1.1rem;
+overflow-x:auto;margin:0;color:var(--muted);white-space:pre}
+pre.tree b{color:var(--ink)} pre.tree i{color:var(--warn);font-style:normal}
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">Coding ／ 組み直し</p>
+<h1>規則が主、文書は束</h1>
+<p class="thesis">いまの形からの差分ではなく、<b>決まっていることだけから組み直した</b>。
+中心にあるのは規約でも層でもフォルダでもない ── <b>規則1件</b>である。
+規則が<b>自分がいつ真かを持つ</b>ので、写しが原理的に作れない。</p>
+</header>
+
+<section style="display:flex;flex-direction:column;gap:.7rem">
+<h2>何が在るか</h2>
+<div class="fig"><svg style="max-width:36rem;margin:0 auto" class="wf-fig" viewBox="0 0 503 236" width="503" height="236" role="img"><g transform="translate(6.0,6.0)"><path d="M276.8,32.8 L166.8,95.2" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="166.8,95.2 171.4,89.7 173.8,94.0" fill="#C3CAD2"/><rect x="202.8" y="54.0" width="38.0" height="16.0" fill="#F5F7F9"/><text x="221.8" y="67.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">束ねる</text><path d="M166.8,128.8 L77.4,191.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="77.4,191.4 81.5,185.5 84.3,189.5" fill="#C3CAD2"/><rect x="108.1" y="150.1" width="28.0" height="16.0" fill="#F5F7F9"/><text x="122.1" y="163.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">射影</text><path d="M166.8,128.8 L256.1,191.4" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="256.1,191.4 249.2,189.5 252.0,185.5" fill="#C3CAD2"/><rect x="197.4" y="150.1" width="28.0" height="16.0" fill="#F5F7F9"/><text x="211.4" y="163.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">射影</text><path d="M276.8,32.8 L386.8,95.4" fill="none" stroke="#C3CAD2" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="386.8,95.4 379.7,94.2 382.1,89.9" fill="#C3CAD2"/><rect x="297.8" y="54.1" width="68.0" height="16.0" fill="#F5F7F9"/><text x="331.8" y="67.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">数えれば出る</text><g class="wf-node" transform="translate(202.8,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="148.0" height="32.0" rx="5.0" fill="#E2EFF0" stroke="#16636B" stroke-width="1.6"/><text x="74.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#16636B">規則　言明＋いつ真か</text></g></g><g class="wf-node" transform="translate(74.8,96.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="184.0" height="32.0" rx="5.0" fill="#E2EFF0" stroke="#16636B" stroke-width="1.6"/><text x="92.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#16636B">文書　同時に決まるものの束</text></g></g><g class="wf-node" transform="translate(0.0,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="155.8" height="32.0" rx="5.0" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="77.9" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#171B23">人　1枚にまとめて読む</text></g></g><g class="wf-node" transform="translate(179.8,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="151.6" height="32.0" rx="5.0" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="75.8" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#171B23">AI　必要な節だけ引く</text></g></g><g class="wf-node" transform="translate(282.8,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="208.0" height="32.0" rx="5.0" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="104.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#171B23">層　条件から導く（保存しない）</text></g></g></g></svg></div>
+<p class="src"><b>規則が主。</b>文書は承認のための束で、層とフォルダは<b>導出</b>である。
+人とAIは、同じ文書を別の形で受け取る（論点2・論点8）。</p>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.7rem">
+<h2>① 規則 ── 自分がいつ真かを持つ</h2>
+<pre class="tree">規則 1件
+  言明        並行の単位は、所有を移して渡すものにする
+  <b>いつ真か</b>    language = rust          <i>← 条件が空なら、どの場面でも真</i>
+  検証方法    共有した状態を跨ぐ書き込みが在るかを見る
+  破れると    同じ値を2か所が書き、どちらが勝ったか誰にも言えない
+  出どころ    原典 ／ 版 ／ 取得日 ／ 何を裏づけるか</pre>
+<p class="src"><b>これが写しを消す。</b>「どの場面でも真」なら条件が空の規則が1件在るだけで、
+用途ごとに書き写す先が無い。「Rust だから」なら条件は <code>language=rust</code> の1件で、
+用途の文書がそれを持つことはない ── <b>条件が置き場所を決めるので、人が置き場所を選ばない</b>。</p>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.7rem">
+<h2>② 文書 ── 同時に決まるものの束</h2>
+<pre class="tree">文書 1本　＝　<b>同じ人が、同時に決めるものの束</b>
+  題        Rust における失敗の運び方
+  なぜ      失敗をどう運ぶかは、言語の仕組みで決まり方が変わる
+  規則      4件（それぞれが自分の条件を持つ）
+  範囲外    何を・どこが決めるか
+  承認      誰が、いつ
+
+<i>文書が承認の単位である（論点7）── 規則1件ずつ承認するのは細かすぎ、
+言語ぜんぶを1本にすると、1つ直すたびに全部を承認し直すことになる。</i></pre>
+<p class="src"><b>束ね方を決めるのは「一緒に決まるか」だけ</b>で、軸でも層でもない。
+Rust の失敗の運び方を直すとき、Go の失敗の運び方は動かない ── だから別の文書。
+逆に、失敗の運び方の4つの規則は<b>一緒に決まる</b>ので同じ文書に入る。</p>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.7rem">
+<h2>③ 読むとき ── 3つの形</h2>
+<pre class="tree"><b>人が読むとき</b>
+  何を作るか（用途）→ どの言語で　の2問だけ答える
+  出るのは1枚。<b>その場面で真になる規則だけ</b>が、目録つきで並ぶ
+
+<b>AI が読むとき</b>
+  1枚にしない。<b>必要な節だけを引く</b>（「rust の失敗の運び方の規則」だけ）
+
+<b>層を見たいとき</b>
+  <i>層は保存されていない。</i>条件を数えれば出る
+  ── 「language=rust だけを条件に持つ規則」＝ 言語だけで決まるもの</pre>
+<p class="src"><b>層もフォルダも保存しない。</b>「言語だけで決まる規則」を見たければ、条件を数えれば出る ──
+文脈の地図を保存せず描くのと同じ形である（論点19の決着）。</p>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.7rem">
+<h2>この組み方が消すもの</h2>
+<div class="scroll"><table>
+<tr><th>いまの形で悩んでいたこと</th><th>この組み方では</th></tr>
+<tr><td>フォルダを入れ子にするか、フラットにするか</td><td><b>問いが消える。</b>フォルダは層を表さない</td></tr>
+<tr><td>用途の規約がアーキの層にも属する、をどう表すか</td><td><b>問いが消える。</b>規則が条件を持つので、属する層は数えれば出る</td></tr>
+<tr><td>同じ言明を複数の場所へ書き写してしまう</td><td><b>写す先が無い。</b>条件が空なら規則は1件だけ在る</td></tr>
+<tr><td>軸なしの規約をどこへ置くか</td><td><b>置き場所は要らない。</b>条件が空、というだけ</td></tr>
+<tr><td>場面ごとに文書を作ると組み合わせが爆発する</td><td><b>場面の文書は作らない。</b>読むときに絞る</td></tr>
+</table></div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.7rem">
+<h2>引き受けること</h2>
+<ul>
+<li><b>規則1件ずつに条件を書く手間が増える。</b>いまは文書ごとに1回書けば済んでいた</li>
+<li><b>条件の付け方を誤ると、集まらない。</b>「どの場面でも真」のつもりで条件を付け忘れると、どこにも現れない</li>
+<li><b>人が読む1枚は毎回組み立てる。</b>置いておけないので、読みたいときに出す手順が要る</li>
+<li><b>まだ決めていない</b> ── 条件に何を書けるか（軸の値だけか、範囲や否定も許すか）。ここは次の問いになる</li>
+</ul>
+</section>
+</div>

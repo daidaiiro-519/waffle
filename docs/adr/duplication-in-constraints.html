@@ -1,0 +1,256 @@
+<meta charset="utf-8">
+<title>同じ行が、3か所に写っている</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#eef1ef; --card:#f8faf9; --ink:#111d1a; --muted:#5b6b66;
+  --rule:#ccd8d4; --rule-soft:#dfe7e4; --sunk:#e7ecea;
+  --key:#0d5c55; --key-soft:#d5e6e3;
+  --warn:#8f5410; --warn-soft:#f0e2cd;
+  --dim:#7d8a86;
+  --src-o:#7a3b6d; --src-k:#0d5c55; --src-j:#8f5410; --src-z:#5b6b66;
+  --shadow:0 1px 0 rgba(17,29,26,.06), 0 8px 22px -18px rgba(17,29,26,.5);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0e1614; --card:#16211e; --ink:#e6eeeb; --muted:#93a29d;
+  --rule:#2a3936; --rule-soft:#22302d; --sunk:#111a18;
+  --key:#6cc9b8; --key-soft:#173330;
+  --warn:#d9a35f; --warn-soft:#33281a;
+  --dim:#7b8985;
+  --src-o:#d094c2; --src-k:#6cc9b8; --src-j:#d9a35f; --src-z:#93a29d;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 26px -18px #000;
+}}
+:root[data-theme="dark"]{
+  --paper:#0e1614; --card:#16211e; --ink:#e6eeeb; --muted:#93a29d;
+  --rule:#2a3936; --rule-soft:#22302d; --sunk:#111a18;
+  --key:#6cc9b8; --key-soft:#173330;
+  --warn:#d9a35f; --warn-soft:#33281a;
+  --dim:#7b8985;
+  --src-o:#d094c2; --src-k:#6cc9b8; --src-j:#d9a35f; --src-z:#93a29d;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 26px -18px #000;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:62rem;margin:0 auto;padding:2.4rem 1.15rem 6rem;display:flex;flex-direction:column;gap:2.6rem}
+h1,h2,h3{font-family:"Shippori Mincho","Yu Mincho",serif;font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:2rem;letter-spacing:.02em;line-height:1.4}
+h2{font-size:1.22rem}
+h3{font-size:1rem}
+h4{margin:0;font-size:.78rem;font-weight:700;color:var(--ink);letter-spacing:.04em}
+p{margin:0}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted)}
+.thesis{font-size:1.05rem;max-width:42rem;color:var(--muted)}
+.thesis b{color:var(--ink);font-weight:700}
+.src{font-size:.76rem;color:var(--muted)}
+header{display:flex;flex-direction:column;gap:.75rem;border-bottom:1px solid var(--rule);padding-bottom:1.6rem}
+
+/* ── 比較 ── */
+.compare{display:flex;flex-direction:column;gap:1rem}
+.panes{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:58rem){.panes{grid-template-columns:1fr 1fr}}
+.pane{background:var(--card);border:1px solid var(--rule-soft);border-radius:.5rem;padding:1.15rem 1.25rem;
+  display:flex;flex-direction:column;gap:.7rem;min-width:0}
+.pane.now{border-color:var(--rule)}
+.pane.next{border-color:var(--key);box-shadow:var(--shadow)}
+.pane-hd{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;
+  border-bottom:1px solid var(--rule-soft);padding-bottom:.5rem}
+.pane-hd .t{font-weight:700;font-size:.95rem}
+.pane.now .pane-hd .t{color:var(--dim)}
+.pane.next .pane-hd .t{color:var(--key)}
+.pane .body{font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:.55rem}
+.pane.now .body{color:var(--dim)}
+.opt{border-left:2px solid var(--rule);padding-left:.7rem}
+.opt b{color:var(--ink);font-weight:700}
+.pane.now .opt b{color:var(--dim)}
+.reco{background:var(--key-soft);border-left:3px solid var(--key);padding:.6rem .8rem;border-radius:0 .3rem .3rem 0;
+  color:var(--ink);font-size:.95rem}
+.reco .lbl{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.14em;color:var(--key);
+  display:block;margin-bottom:.15rem}
+.ask{font-weight:700;color:var(--ink)}
+.pane.now .ask{color:var(--dim)}
+.meters{display:grid;gap:.55rem;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
+.meter{border-top:2px solid var(--rule);padding-top:.5rem;display:flex;flex-direction:column;gap:.05rem}
+.meter .k{font-size:.74rem;color:var(--muted)}
+.meter .v{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;font-size:1.05rem;font-weight:700}
+.meter .v small{font-size:.72rem;font-weight:400;color:var(--muted);margin-left:.15rem}
+.meter.a{border-top-color:var(--dim)} .meter.a .v{color:var(--dim)}
+.meter.b{border-top-color:var(--key)} .meter.b .v{color:var(--key)}
+
+/* ── ラウンド ── */
+.round{display:flex;flex-direction:column;gap:1rem}
+.round-hd{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.round-hd .n{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.14em;color:var(--key);
+  border:1px solid var(--key);border-radius:2rem;padding:.05rem .6rem}
+.round-hd .why{font-size:.8rem;color:var(--muted)}
+.q{background:var(--card);border:1px solid var(--rule-soft);border-radius:.5rem;padding:1.1rem 1.25rem;
+  display:flex;flex-direction:column;gap:.75rem;box-shadow:var(--shadow);transition:border-color .2s}
+.q.done{border-color:var(--key)}
+.q.sent{border-color:var(--warn)}
+.q-hd{display:flex;gap:.6rem;align-items:baseline}
+.q-hd .id{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--key);flex:none}
+.q-hd h3{flex:1}
+.q-hd .tag{font-family:"JetBrains Mono",monospace;font-size:.66rem;color:var(--muted);flex:none}
+.q .ask{font-size:.93rem;font-weight:400;color:var(--muted)}
+
+/* ── 折りたたみの中 ── */
+details{border-top:1px solid var(--rule-soft);padding-top:.55rem}
+summary{cursor:pointer;font-size:.82rem;color:var(--muted);list-style:none;display:flex;gap:.4rem;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"＋";font-family:"JetBrains Mono",monospace;color:var(--key);font-weight:700}
+details[open] summary::before{content:"−"}
+summary:focus-visible{outline:2px solid var(--key);outline-offset:3px}
+.inside{display:flex;flex-direction:column;gap:1.15rem;margin-top:.85rem;padding-left:.9rem;
+  border-left:2px solid var(--rule-soft)}
+.block{display:flex;flex-direction:column;gap:.4rem}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.83rem;min-width:30rem}
+th,td{text-align:left;vertical-align:top;padding:.35rem .55rem;border-bottom:1px solid var(--rule-soft)}
+th{font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.05em;border-bottom-color:var(--rule);
+  white-space:nowrap}
+td.what{color:var(--ink);font-weight:700;width:26%}
+td.src-cell{width:26%;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+.tag-src{font-family:"JetBrains Mono",monospace;font-size:.64rem;font-weight:700;letter-spacing:.08em;
+  border:1px solid currentColor;border-radius:.2rem;padding:0 .3rem;margin-right:.35rem;white-space:nowrap;
+  display:inline-block;vertical-align:.08em}
+.o{color:var(--src-o)} .k{color:var(--src-k)} .j{color:var(--src-j)} .z{color:var(--src-z)}
+ol.chain{margin:0;padding:0;list-style:none;counter-reset:c;display:flex;flex-direction:column;gap:.3rem}
+ol.chain li{counter-increment:c;font-size:.85rem;color:var(--muted);display:flex;gap:.5rem}
+ol.chain li::before{content:counter(c);font-family:"JetBrains Mono",monospace;font-size:.7rem;font-weight:700;
+  color:var(--key);border:1px solid var(--rule);border-radius:50%;width:1.35rem;height:1.35rem;flex:none;
+  display:grid;place-items:center;margin-top:.35rem}
+ol.chain b{color:var(--ink)}
+td.kill{color:var(--muted)}
+td.kill b{color:var(--ink)}
+
+
+/* ── 完成イメージ ── */
+.fig{display:flex;flex-direction:column;gap:.5rem;background:var(--sunk);border:1px solid var(--rule-soft);
+  border-radius:.4rem;padding:.85rem .95rem}
+.fig svg{width:100%;height:auto;display:block;color:var(--ink);overflow:visible}
+.diff{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.76rem;line-height:1.65;
+  display:flex;flex-direction:column;gap:.02rem;overflow-x:auto}
+.diff .dh{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--muted);margin-bottom:.3rem}
+.diff .dn{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.76rem;color:var(--muted);margin-top:.5rem;
+  border-top:1px solid var(--rule-soft);padding-top:.45rem;line-height:1.75}
+.dl{display:flex;gap:.8rem;padding:.06rem .4rem;border-left:2px solid transparent;white-space:nowrap}
+.dl .c{flex:none;min-width:14rem}
+.dl .d{color:var(--muted);white-space:normal;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.78rem}
+.dl.add{border-left-color:var(--key);background:var(--key-soft);color:var(--ink)}
+.dl.add .c::before{content:"+ ";color:var(--key);font-weight:700}
+.dl.del{border-left-color:var(--dim);color:var(--dim)}
+.dl.del .c{text-decoration:line-through;text-decoration-color:var(--dim)}
+.dl.del .c::before{content:"− ";text-decoration:none;display:inline-block}
+.dl.del .d{color:var(--dim)}
+.dl.same .c::before{content:"= ";color:var(--muted)}
+.dl.sub{color:var(--muted)}
+.dl.sub .c{padding-left:.2rem}
+.dl.tmp{color:var(--warn)}
+.dl.tmp .c::before{content:"? ";font-weight:700}
+.dl.grp{margin-top:.4rem;font-family:"Zen Kaku Gothic New",sans-serif;font-weight:700;color:var(--ink);
+  font-size:.78rem;border-bottom:1px solid var(--rule-soft)}
+
+/* ── 操作 ── */
+.acts{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+button.act{font:inherit;font-size:.87rem;cursor:pointer;border-radius:.35rem;padding:.4rem 1.1rem;
+  border:1px solid var(--rule);background:var(--card);color:var(--muted);transition:.15s}
+button.act:hover{border-color:var(--muted)}
+button.act.yes{background:var(--key);border-color:var(--key);color:var(--paper);font-weight:700}
+button.act.yes:hover{filter:brightness(1.08)}
+button.act:focus-visible{outline:2px solid var(--key);outline-offset:2px}
+.verdict{font-size:.87rem;color:var(--muted)}
+.verdict .ok{color:var(--key);font-weight:700}
+.verdict .back{color:var(--warn);font-weight:700}
+.backs{display:flex;gap:.4rem;flex-wrap:wrap;padding:.55rem .7rem;background:var(--warn-soft);border-radius:.35rem}
+.backs span{font-size:.8rem;color:var(--warn);align-self:center;margin-right:.2rem}
+.backs[hidden]{display:none}
+.note{display:flex;flex-direction:column;gap:.3rem;border-top:1px solid var(--rule-soft);padding-top:.6rem}
+label{font-size:.78rem;color:var(--muted)}
+textarea{font:inherit;font-size:.87rem;background:var(--sunk);color:var(--ink);border:1px solid var(--rule);
+  border-radius:.35rem;padding:.55rem .7rem;resize:vertical;min-height:3.2rem;width:100%}
+textarea:focus-visible{outline:2px solid var(--key);outline-offset:1px;border-color:var(--key)}
+
+/* ── 締め ── */
+.done-card{background:var(--card);border:1px solid var(--key);border-radius:.5rem;padding:1.3rem 1.4rem;
+  display:flex;flex-direction:column;gap:1rem;box-shadow:var(--shadow)}
+.done-card[hidden]{display:none}
+.cols{display:grid;gap:1.1rem;grid-template-columns:1fr}
+@media(min-width:48rem){.cols{grid-template-columns:1fr 1fr}}
+ul{margin:0;padding-left:1.1rem;font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:.3rem}
+ul b{color:var(--ink)}
+.strike li{text-decoration:line-through;text-decoration-color:var(--dim);color:var(--dim)}
+.handback{display:flex;flex-direction:column;gap:.5rem;border:1px dashed var(--key);border-radius:.5rem;
+  padding:1rem 1.15rem;background:var(--card)}
+#out{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.76rem;min-height:7rem;line-height:1.7}
+footer{border-top:1px solid var(--rule);padding-top:1.2rem;font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">重複は、いま既に在る</p>
+<h1>同じ行が、3か所に写っている</h1>
+<p class="thesis">層で切ると重複が出るのではない。<b>いま出ていて、markdown なので誰も数えていない</b>だけである。
+実物を2件出す ── どちらも1文字も違わない。</p>
+</header>
+
+<section style="display:flex;flex-direction:column;gap:.8rem">
+<h2>① どの軸でも変わらないことを、用途ごとに写している</h2>
+<div class="fig"><div class="diff">
+<p class="dh">同じ1行が、3本の中に在る（4行ぶん、これはそのうち1行）</p>
+<div class="dl del"><span class="c">purpose/backend-api/test-strategy.md:38</span>
+<span class="d">| 検証方法 | 当たる命令が無い。単位ごとのテスト件数を数え、重心の高い単位が最も多いかを見る |</span></div>
+<div class="dl del"><span class="c">purpose/hook/test-strategy.md:38</span>
+<span class="d">| 検証方法 | 当たる命令が無い。単位ごとのテスト件数を数え、重心の高い単位が最も多いかを見る |</span></div>
+<div class="dl del"><span class="c">purpose/mcp-server/test-strategy.md:38</span>
+<span class="d">| 検証方法 | 当たる命令が無い。単位ごとのテスト件数を数え、重心の高い単位が最も多いかを見る |</span></div>
+<p class="dn"><b>この文は、用途にも言語にもアーキにも依っていない。</b>
+どの用途でも同じことを言うから、3本に写された。<b>置き場所が無かったのが原因である。</b></p>
+</div></div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.8rem">
+<h2>② 言語で決まることを、用途が写している</h2>
+<div class="fig"><div class="diff">
+<p class="dh">Rust で決まることが、用途の規約にも書かれている</p>
+<div class="dl same"><span class="c">lang/rust/toolchain.md:42</span>
+<span class="d">| 依存 | ロックファイルを追跡する | <code>Cargo.lock</code> |　<b>← ここが本来の持ち主</b></span></div>
+<div class="dl del"><span class="c">purpose/hook/stack.md:53</span>
+<span class="d">| 依存 | ロックファイルを追跡する | <code>Cargo.lock</code> |</span></div>
+<div class="dl del"><span class="c">purpose/mcp-server/stack.md:54</span>
+<span class="d">| 依存 | ロックファイルを追跡する | <code>Cargo.lock</code> |</span></div>
+<p class="dn"><code>Cargo.lock</code> を追跡するのは<b>Rust だから</b>であって、Hook だからでも MCP だからでもない。</p>
+</div></div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.8rem">
+<h2>直すと、こうなる</h2>
+<div class="fig"><svg class="wf-fig" viewBox="0 0 1053 184" width="1053" height="184" role="img"><g transform="translate(6.0,6.0)"><rect x="0.0" y="16.0" width="542.2" height="156.0" rx="8.0" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><rect x="566.2" y="16.0" width="475.2" height="156.0" rx="8.0" fill="none" stroke="#16636B" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.75"/><path d="M102.1,62.6 L274.5,125.2" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="274.5,125.2 267.3,125.2 269.0,120.6" fill="#C3CAD2"/><rect x="174.3" y="83.9" width="28.0" height="16.0" fill="#F5F7F9"/><text x="188.3" y="97.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">指す</text><path d="M275.5,62.6 L274.5,125.2" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="274.5,125.2 272.1,118.4 277.0,118.5" fill="#C3CAD2"/><rect x="261.0" y="83.9" width="28.0" height="16.0" fill="#F5F7F9"/><text x="275.0" y="97.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">指す</text><path d="M444.0,62.6 L274.5,125.2" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="274.5,125.2 280.0,120.5 281.7,125.2" fill="#C3CAD2"/><rect x="345.2" y="83.9" width="28.0" height="16.0" fill="#F5F7F9"/><text x="359.2" y="97.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">指す</text><path d="M674.3,62.6 L792.1,125.2" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="792.1,125.2 785.0,124.2 787.3,119.9" fill="#C3CAD2"/><rect x="719.2" y="83.9" width="28.0" height="16.0" fill="#F5F7F9"/><text x="733.2" y="97.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">指す</text><path d="M909.4,62.6 L792.1,125.2" fill="none" stroke="#C3CAD2" stroke-width="1.2"/><polygon points="792.1,125.2 796.9,119.8 799.2,124.2" fill="#C3CAD2"/><rect x="836.7" y="83.9" width="28.0" height="16.0" fill="#F5F7F9"/><text x="850.7" y="97.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#79828F">指す</text><rect x="8.0" y="7.0" width="217.0" height="15.0" fill="#F5F7F9"/><text x="116.5" y="18.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#16636B">テストの重心 ── 同じ4行を3本が写していた</text><rect x="574.2" y="7.0" width="269.0" height="15.0" fill="#F5F7F9"/><text x="708.7" y="18.0" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#16636B">Cargo.lock ── 言語で決まることを用途が写していた</text><g class="wf-node" transform="translate(14.0,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="176.2" height="32.0" rx="5.0" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="88.1" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#171B23">purpose.backend-api</text></g></g><g class="wf-node" transform="translate(214.2,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="121.6" height="32.0" rx="5.0" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="60.8" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#171B23">purpose.hook</text></g></g><g class="wf-node" transform="translate(359.8,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="168.4" height="32.0" rx="5.0" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="84.2" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#171B23">purpose.mcp-server</text></g></g><g class="wf-node" transform="translate(215.1,126.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="119.8" height="32.0" rx="5.0" fill="#E2EFF0" stroke="#16636B" stroke-width="1.6"/><text x="59.9" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#16636B">軸なしの層に1本</text></g></g><g class="wf-node" transform="translate(694.1,126.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="196.0" height="32.0" rx="5.0" fill="#E2EFF0" stroke="#16636B" stroke-width="1.6"/><text x="98.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#16636B">lang.rust の toolchain</text></g></g><g class="wf-node" transform="translate(580.2,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="188.2" height="32.0" rx="5.0" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="94.1" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#171B23">purpose.hook の stack</text></g></g><g class="wf-node" transform="translate(792.4,30.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="235.0" height="32.0" rx="5.0" fill="#F5F7F9" stroke="#C3CAD2" stroke-width="1.2"/><text x="117.5" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#171B23">purpose.mcp-server の stack</text></g></g></g></svg></div>
+<div class="fig"><div class="diff">
+<p class="dh">用途の規約から、写した行が消えて1行になる</p>
+<div class="dl del"><span class="c">purpose/hook/stack.md</span>
+<span class="d">| 依存 | ロックファイルを追跡する | <code>Cargo.lock</code> |　<b>値を写している</b></span></div>
+<div class="dl add"><span class="c">purpose/hook/stack.md</span>
+<span class="d">| 依存 | <b><code>lang.rust.toolchain</code> が決める</b> |　<b>印で指す。値は持たない</b></span></div>
+<div class="dl add"><span class="c">新しく1本</span>
+<span class="d"><b>軸なしの層</b>に <code>test-strategy</code> を1本。3つの用途はそれを指す</span></div>
+<p class="dn"><b>これは新しい決まりではない。</b>論点19 で決めた「<b>印で指す。値は写さない</b>」を、
+規約どうしにも当てるだけである。<b>文書にすると、写しは機械で数えられる</b> ──
+いま数えたら<b>18行</b>あった。markdown のままでは、誰も数えていなかった。</p>
+</div></div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.8rem">
+<h2>数えた結果</h2>
+<div class="scroll"><table>
+<tr><th>何を</th><th>件数</th></tr>
+<tr><td>同じ表の行が複数ファイルに現れる</td><td><b>20件</b>（うち表の見出し2件）</td></tr>
+<tr><td><b>中身が重なっている行</b></td><td><b>18件</b></td></tr>
+<tr><td>いちばん重いファイル</td><td><code>purpose/mcp-server/test-strategy.md</code> ── <b>7行</b>が他と重なる</td></tr>
+<tr><td>次に重い</td><td><code>purpose/hook/test-strategy.md</code> 6行 ／ <code>purpose/hook/stack.md</code> 6行</td></tr>
+</table></div>
+<p class="src">数え方：規約32本の表の行を正規化し、同じ行が2ファイル以上に現れるものを数えた（2026-09-09）。</p>
+</section>
+</div>
