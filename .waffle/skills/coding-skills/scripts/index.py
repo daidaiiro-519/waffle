@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import pathlib
 import sys
 
 from _common import CONSTRAINTS, REFERENCES, SOURCES, load_all
@@ -22,6 +23,29 @@ HEAD = """<!-- 生成物。手で書き換えない。`python3 scripts/index.py`
 規約を足したら作り直す。手で書いた行は、次の生成で消える。
 
 """
+
+
+def _shape_of(kind: str) -> str:
+    from _common import KINDS_BY_SHAPE
+    return next((sh for sh, ks in KINDS_BY_SHAPE.items() if kind in ks), "**どこにも置かれない**")
+
+
+def templates_table() -> str:
+    """雛形の表を、雛形の前置きから作る。**手で写さない**——写した3行が既にずれていた。"""
+    import re as _re
+    root = pathlib.Path(__file__).resolve().parent.parent / "templates"
+    rows = []
+    for f in sorted(root.glob("*.md")):
+        head = f.read_text(encoding="utf-8")
+        d = _re.search(r"^declares: (.+)$", head, _re.M)
+        c = _re.search(r"^category: (.+)$", head, _re.M)
+        if not d or not c:
+            continue          # 前置きを持たないものは雛形ではない（`rule-core.md`）
+        rows.append(f"| `templates/{f.name}` | {d.group(1).strip()} | {c.group(1).strip()} | {_shape_of(f.stem)} |\n")
+    return ("## 雛形と規約の種類\n\n"
+            "**規約の種類1つに、雛形1つが対応する。**\n\n"
+            "| 雛形 | 何を宣言するか | 種別 | 置かれる層 |\n|---|---|---|---|\n"
+            + "".join(rows))
 
 
 def render(specs) -> str:
@@ -41,9 +65,10 @@ def render(specs) -> str:
         by_cat.setdefault(s.front.get("category", "（無し）"), []).append(s)
     out.append("| 種別 | 規約 |\n|---|---|\n")
     for cat in sorted(by_cat):
-        items = " ・ ".join(f"`{s.layer}/{s.kind}.md`" for s in by_cat[cat])
+        items = " ・ ".join(f"`{s.where}`" for s in by_cat[cat])
         out.append(f"| {cat} | {items} |\n")
 
+    out.append("\n" + templates_table())
     out.append("\n" + counts(specs))
     return "".join(out)
 

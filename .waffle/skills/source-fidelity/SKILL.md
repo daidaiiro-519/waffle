@@ -289,5 +289,5 @@ Step 3 は「こちらが書いたものが原文に在るか」を見る。
 
 ## 参照
 
-- `scripts/source.py`: 原文を落とし、当てるものが原文に在るかを検める。**保存先は `--dir` で受け取る**
+- `scripts/source.py`: 原文を落とし、当てるものが原文に在るかを確かめる。**保存先は `--dir` で受け取る**
 - `scripts/test_source.py`: この道具の振る舞いを事例で確かめる。`python3 test_source.py` で走る

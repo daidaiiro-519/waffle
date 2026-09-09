@@ -10,28 +10,23 @@
 
 | 層 | 依存する軸 | 規約 | 宣言すること | 規則 |
 |---|---|---|---|---|
-| `arch.data-port` | architecture＝data-port | `dependency.md` | 依存の向き | ─ |
-| `arch.data-port` | architecture＝data-port | `layers.md` | 層と、層ごとの責務 | ─ |
-| `arch.data-port` | architecture＝data-port | `test-boundaries.md` | 確かめる単位の境界 | 5 |
 | `arch.hexagonal` | architecture＝hexagonal | `dependency.md` | 依存の向きと、反転の条件 | ─ |
-| `arch.hexagonal` | architecture＝hexagonal | `layers.md` | 層と、層ごとの責務 | ─ |
-| `arch.hexagonal` | architecture＝hexagonal | `test-boundaries.md` | 確かめる単位の境界 | 4 |
+| `arch.hexagonal` | architecture＝hexagonal | `elements.md` | 構成要素と、要素ごとの責務 | ─ |
+| `arch.hexagonal` | architecture＝hexagonal | `test-boundaries.md` | 確かめる単位の境界 | 7 |
+| `lang.go+arch.hexagonal` | language＝go ／ architecture＝hexagonal | `element-mapping.md` | 構成要素を Go の仕組みで表す形 | ─ |
+| `lang.go+arch.hexagonal` | language＝go ／ architecture＝hexagonal | `test-placement.md` | テストの置き場所 | 4 |
 | `lang.go` | language＝go | `concurrency.md` | 並行の単位と、共有の扱い | 4 |
 | `lang.go` | language＝go | `failure.md` | 失敗の運び方 | 5 |
 | `lang.go` | language＝go | `style.md` | 綴りと書式 | 5 |
 | `lang.go` | language＝go | `test-mechanism.md` | テストが走る仕組みと、書き方 | 2 |
 | `lang.go` | language＝go | `toolchain.md` | Go の標準ツール | ─ |
-| `lang.go+arch.hexagonal` | language＝go ／ architecture＝hexagonal | `layer-mapping.md` | 層を Go の仕組みで表す形 | ─ |
-| `lang.go+arch.hexagonal` | language＝go ／ architecture＝hexagonal | `test-placement.md` | テストの置き場所 | 4 |
-| `lang.rust` | language＝rust | `concurrency.md` | 並行の単位と、共有の扱い | 4 |
+| `lang.rust+arch.hexagonal` | language＝rust ／ architecture＝hexagonal | `element-mapping.md` | 構成要素を Rust の仕組みで表す形 | ─ |
+| `lang.rust+arch.hexagonal` | language＝rust ／ architecture＝hexagonal | `test-placement.md` | テストの置き場所 | 5 |
+| `lang.rust` | language＝rust | `concurrency.md` | 並行の単位と、共有の扱い | 3 |
 | `lang.rust` | language＝rust | `failure.md` | 失敗の運び方 | 4 |
 | `lang.rust` | language＝rust | `style.md` | 綴りと書式 | 4 |
 | `lang.rust` | language＝rust | `test-mechanism.md` | テストが走る仕組みと、書き方 | 2 |
 | `lang.rust` | language＝rust | `toolchain.md` | Rust の標準ツール | ─ |
-| `lang.rust+arch.data-port` | language＝rust ／ architecture＝data-port | `layer-mapping.md` | 要素を Rust の仕組みで表す形 | ─ |
-| `lang.rust+arch.data-port` | language＝rust ／ architecture＝data-port | `test-placement.md` | テストの置き場所 | 3 |
-| `lang.rust+arch.hexagonal` | language＝rust ／ architecture＝hexagonal | `layer-mapping.md` | 層を Rust の仕組みで表す形 | ─ |
-| `lang.rust+arch.hexagonal` | language＝rust ／ architecture＝hexagonal | `test-placement.md` | テストの置き場所 | 3 |
 | `purpose.backend-api` | purpose＝backend-api | `acceptance.md` | 保証する振る舞い | 5 |
 | `purpose.backend-api` | purpose＝backend-api | `contract.md` | 外部との契約 | ─ |
 | `purpose.backend-api` | purpose＝backend-api ／ runtime＝resident | `lifecycle.md` | 起動と終了 | ─ |
@@ -52,10 +47,32 @@
 
 | 種別 | 規約 |
 |---|---|
-| architecture | `arch.data-port/dependency.md` ・ `arch.data-port/layers.md` ・ `arch.hexagonal/dependency.md` ・ `arch.hexagonal/layers.md` ・ `lang.go+arch.hexagonal/layer-mapping.md` ・ `lang.rust+arch.data-port/layer-mapping.md` ・ `lang.rust+arch.hexagonal/layer-mapping.md` ・ `purpose.backend-api/contract.md` ・ `purpose.backend-api/lifecycle.md` ・ `purpose.hook/contract.md` ・ `purpose.hook/lifecycle.md` ・ `purpose.mcp-server/contract.md` ・ `purpose.mcp-server/lifecycle.md` |
-| coding | `lang.go/concurrency.md` ・ `lang.go/failure.md` ・ `lang.go/style.md` ・ `lang.rust/concurrency.md` ・ `lang.rust/failure.md` ・ `lang.rust/style.md` |
-| tech-stack | `lang.go/toolchain.md` ・ `lang.rust/toolchain.md` ・ `purpose.backend-api/stack.md` ・ `purpose.hook/stack.md` ・ `purpose.mcp-server/stack.md` |
-| test | `arch.data-port/test-boundaries.md` ・ `arch.hexagonal/test-boundaries.md` ・ `lang.go/test-mechanism.md` ・ `lang.go+arch.hexagonal/test-placement.md` ・ `lang.rust/test-mechanism.md` ・ `lang.rust+arch.data-port/test-placement.md` ・ `lang.rust+arch.hexagonal/test-placement.md` ・ `purpose.backend-api/acceptance.md` ・ `purpose.backend-api/test-strategy.md` ・ `purpose.hook/acceptance.md` ・ `purpose.hook/test-strategy.md` ・ `purpose.mcp-server/acceptance.md` ・ `purpose.mcp-server/test-strategy.md` |
+| architecture | `constraints/arch/hexagonal/dependency.md` ・ `constraints/arch/hexagonal/elements.md` ・ `constraints/lang/go/arch/hexagonal/element-mapping.md` ・ `constraints/lang/rust/arch/hexagonal/element-mapping.md` ・ `constraints/purpose/backend-api/contract.md` ・ `constraints/purpose/backend-api/lifecycle.md` ・ `constraints/purpose/hook/contract.md` ・ `constraints/purpose/hook/lifecycle.md` ・ `constraints/purpose/mcp-server/contract.md` ・ `constraints/purpose/mcp-server/lifecycle.md` |
+| coding | `constraints/lang/go/concurrency.md` ・ `constraints/lang/go/failure.md` ・ `constraints/lang/go/style.md` ・ `constraints/lang/rust/concurrency.md` ・ `constraints/lang/rust/failure.md` ・ `constraints/lang/rust/style.md` |
+| tech-stack | `constraints/lang/go/toolchain.md` ・ `constraints/lang/rust/toolchain.md` ・ `constraints/purpose/backend-api/stack.md` ・ `constraints/purpose/hook/stack.md` ・ `constraints/purpose/mcp-server/stack.md` |
+| test | `constraints/arch/hexagonal/test-boundaries.md` ・ `constraints/lang/go/arch/hexagonal/test-placement.md` ・ `constraints/lang/go/test-mechanism.md` ・ `constraints/lang/rust/arch/hexagonal/test-placement.md` ・ `constraints/lang/rust/test-mechanism.md` ・ `constraints/purpose/backend-api/acceptance.md` ・ `constraints/purpose/backend-api/test-strategy.md` ・ `constraints/purpose/hook/acceptance.md` ・ `constraints/purpose/hook/test-strategy.md` ・ `constraints/purpose/mcp-server/acceptance.md` ・ `constraints/purpose/mcp-server/test-strategy.md` |
+
+## 雛形と規約の種類
+
+**規約の種類1つに、雛形1つが対応する。**
+
+| 雛形 | 何を宣言するか | 種別 | 置かれる層 |
+|---|---|---|---|
+| `templates/acceptance.md` | 保証する振る舞い | test | 用途 |
+| `templates/concurrency.md` | 並行の単位と、共有の扱い | coding | 言語 |
+| `templates/contract.md` | 外部との契約 | architecture | 用途 |
+| `templates/dependency.md` | 依存の向きと、反転の有無 | architecture | アーキテクチャ |
+| `templates/element-mapping.md` | 要素を言語の仕組みで表す形 | architecture | 言語 × アーキテクチャ |
+| `templates/elements.md` | 構成要素と、要素ごとの責務 | architecture | アーキテクチャ |
+| `templates/failure.md` | 失敗の運び方 | coding | 言語 |
+| `templates/lifecycle.md` | 起動と終了 | architecture | 用途 |
+| `templates/stack.md` | 採用するアーキテクチャ・実行環境・実行時の依存 | tech-stack | 用途 |
+| `templates/style.md` | 綴りと書式 | coding | 言語 |
+| `templates/test-boundaries.md` | 確かめる単位の境界 | test | アーキテクチャ |
+| `templates/test-mechanism.md` | テストが走る仕組みと書き方 | test | 言語 |
+| `templates/test-placement.md` | テストの置き場所 | test | 言語 × アーキテクチャ |
+| `templates/test-strategy.md` | テストの重心・計画・観点の採否 | test | 用途 |
+| `templates/toolchain.md` | 言語の標準ツールと版 | tech-stack | 言語 |
 
 ## 数
 
@@ -63,11 +80,11 @@
 
 | 数えたもの | 件数 |
 |---|---|
-| 規約 | 37 本 |
-| 層 | 10 |
-| 規則 | 69 件 |
+| 規約 | 32 本 |
+| 層 | 8 |
+| 規則 | 65 件 |
 | 出典を持たない規則 | 0 件 |
-| 出典の行 | 105 行 |
-| 出典が指す原典 | 53 本 |
-| 落としてある原典 | 54 本 |
-| 承認が記録された規約 | 37 / 37 本 |
+| 出典の行 | 110 行 |
+| 出典が指す原典 | 56 本 |
+| 落としてある原典 | 64 本 |
+| 承認が記録された規約 | 32 / 32 本 |

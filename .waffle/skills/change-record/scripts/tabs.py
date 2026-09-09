@@ -23,7 +23,7 @@ spec.json の形。
 **どちらの入れ方でも、印の付け方と開閉は同じである。**
 印は `mark.chg` で、押すと変更前と理由が開く。
 
-検めるのは8つ。どれも、以前に実際にやらかしたものである。
+確かめるのは8つ。どれも、以前に実際にやらかしたものである。
   1 <script> が入っているか            —— 繋ぎ忘れて、押しても何も起きなかった
   2 印ごとに data-b と data-w が在るか
   3 .pop[hidden]{display:none} が在るか —— 無いと開いたまま閉じない
@@ -419,7 +419,7 @@ def build(spec):
 
 
 def check(out, spec, total):
-    """作ったあと、開閉が成立する形かを検める。"""
+    """作ったあと、開閉が成立する形かを確かめる。"""
     ok = []
     ok.append(("<script> が在る", "<script>" in out))
     ok.append((".pop[hidden] が在る", ".pop[hidden]{display:none!important}" in out))

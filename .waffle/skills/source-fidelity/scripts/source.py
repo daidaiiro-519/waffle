@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""調査対象の原文を落とし、書こうとしているものが原文に在るかを検める。
+"""調査対象の原文を落とし、書こうとしているものが原文に在るかを確かめる。
 
   python3 source.py fetch  <URL> [--dir <保存先>]
   python3 source.py verify <原文> --as identifier|quote|text <当てるもの>...

@@ -104,21 +104,19 @@ def shape_of(layer: str) -> str:
             "purpose": "用途"}.get(head, "")
 
 
-def kinds_by_shape() -> dict[str, list[str]]:
-    """層の形 → その形が必ず持つ規約の種類。
+# 雛形の種類 → その形の層が必ず持つこと。
+# **ここが正である。**散文の表に置くと、表を守る検査が要ることになる。
+KINDS_BY_SHAPE: dict[str, list[str]] = {
+    "言語": ["style", "failure", "concurrency", "test-mechanism", "toolchain"],
+    "アーキテクチャ": ["elements", "dependency", "test-boundaries"],
+    "言語 × アーキテクチャ": ["element-mapping", "test-placement"],
+    "用途": ["contract", "lifecycle", "acceptance", "test-strategy", "stack"],
+}
 
-    **file-catalog.md の表が正である。**写しを持たない ──
-    写しを持つと写しがずれ、そのずれを守る検査が要ることになる。
-    """
-    out: dict[str, list[str]] = {}
-    text = (REFERENCES / "file-catalog.md").read_text(encoding="utf-8")
-    for tb in tables(text):
-        if not tb.has("雛形", "置かれる層"):
-            continue
-        for row in tb.rows:
-            kind = row["雛形"].strip("`").removeprefix("templates/").removesuffix(".md")
-            out.setdefault(row["置かれる層"], []).append(kind)
-    return out
+
+def kinds_by_shape() -> dict[str, list[str]]:
+    """層の形 → その形が必ず持つ規約の種類。"""
+    return KINDS_BY_SHAPE
 
 
 @dataclass
@@ -132,7 +130,12 @@ class Spec:
 
     @property
     def layer(self) -> str:
-        return self.path.parent.name
+        """層の名前。**前置きが正である。**
+
+        フォルダは、その層をどう並べて見せるかにすぎない
+        （盤面の論点1：層は宣言から導出される）。
+        """
+        return self.front.get("layer", "")
 
     @property
     def kind(self) -> str:
@@ -148,12 +151,14 @@ class Spec:
 
     @property
     def dir_axes(self) -> dict:
-        """ディレクトリ名から読み取った軸。前置きとの食い違いを見るために使う。"""
+        """フォルダの並びから読み取った軸。前置きとの食い違いを見るために使う。
+
+        置き方は `<軸>/<値>` の繰り返しである。軸の並びは
+        言語 → アーキテクチャ → 用途 → 実行環境 に固定する。
+        """
+        parts = list(self.path.relative_to(CONSTRAINTS).parts[:-1])
         out = {}
-        for part in self.layer.split("+"):
-            if "." not in part:
-                continue
-            prefix, value = part.split(".", 1)
+        for prefix, value in zip(parts[0::2], parts[1::2]):
             if prefix in AXIS_PREFIX:
                 out[AXIS_PREFIX[prefix]] = value
         return out

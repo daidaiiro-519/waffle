@@ -185,7 +185,7 @@ python3 scripts/tabs.py <spec.json> <出力.html>
 **`.pop[hidden]{display:none}` を忘れると閉じない。**
 パネルに `display:block` を当てると、`[hidden]` に勝ってしまう。
 
-### Step 7: 理由の欠けを検める
+### Step 7: 理由の欠けを確かめる
 
 **3つ組が揃っていない件が残っていないかを見る。**
 

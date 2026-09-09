@@ -114,7 +114,7 @@ def _unfilled(specs):
 
 
 @check("層に、その形が必ず持つ種類が揃っている", "constraints",
-       "references/file-catalog.md", "規約の種類1つに、雛形1つが対応する")
+       "references/file-catalog.md", "雛形と、置かれる層")
 def _kinds(specs):
     by_shape, out = kinds_by_shape(), []
     for layer in sorted({s.layer for s in specs}):
@@ -132,7 +132,7 @@ def _kinds(specs):
 
 
 @check("雛形が定める節を持つ", "templates",
-       "references/file-catalog.md", "規約の種類1つに、雛形1つが対応する")
+       "references/file-catalog.md", "雛形と、置かれる層")
 def _sections(specs):
     tpl, out = load_templates(), []
     for s in specs:
@@ -149,7 +149,7 @@ def _sections(specs):
 
 
 @check("出典の表が、雛形の定める列を持つ", "templates",
-       "references/file-catalog.md", "規約の種類1つに、雛形1つが対応する")
+       "references/file-catalog.md", "雛形と、置かれる層")
 def _columns(specs):
     """1列目は「何を裏づけるか」を指すので、種類ごとに違ってよい（規則なら ID）。
     残りの列は出典の形そのものなので、雛形が定めたとおりでなければならない。"""
@@ -249,6 +249,18 @@ def _kinds(specs):
                     out.append(f"{s.where}: 出典の種類 {r['種類']} は認めていない"
                                f"（{' ・ '.join(sorted(KINDS))}）")
     return out
+
+
+@check("生成物 INDEX.md が、いまの規約と一致している", "constraints",
+       "references/file-catalog.md", "雛形と、置かれる層")
+def _index_fresh(specs):
+    """**手で書き換えても、作り直し忘れても気づかない**を捕まえる。"""
+    import index
+    want = index.render(specs)
+    got = (ROOT / "constraints" / "INDEX.md").read_text(encoding="utf-8")
+    if want != got:
+        return ["constraints/INDEX.md が古い（`python3 scripts/index.py` で作り直す）"]
+    return []
 
 
 @check("参照文書が指すファイルが実在する", "references",

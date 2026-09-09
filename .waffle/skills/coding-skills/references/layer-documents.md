@@ -22,10 +22,10 @@
 | | `failure.md` | 失敗の運び方 |
 | | `test-mechanism.md` | テストが走る仕組みと、書き方 |
 | | `toolchain.md` | 標準の道具と、その版 |
-| `arch.<値>` | `layers.md` | 層の名前と、層ごとの責務 |
+| `arch.<値>` | `elements.md` | 層の名前と、層ごとの責務 |
 | | `dependency.md` | 依存の向き |
 | | `test-boundaries.md` | 確かめる単位の境界（何を単体とし、何を結合とするか） |
-| `lang.<言語>+arch.<値>` | `layer-mapping.md` | 層を何で表し、向きを何で守るか |
+| `lang.<言語>+arch.<値>` | `element-mapping.md` | 層を何で表し、向きを何で守るか |
 | | `test-placement.md` | テストをどこに置くか |
 | `purpose.<用途>` | `contract.md` | 外との契約 |
 | | `lifecycle.md` | 起動と終了 |
@@ -40,13 +40,13 @@
 
 | 種別 | 中身の形 | 当たる規約 |
 |---|---|---|
-| アーキテクチャ | 表と Mermaid で宣言する | `layers.md` `dependency.md` `layer-mapping.md` `contract.md` `lifecycle.md` |
+| アーキテクチャ | 表と Mermaid で宣言する | `elements.md` `dependency.md` `element-mapping.md` `contract.md` `lifecycle.md` |
 | コーディング | 守るべき言明の並び。適合例と違反例を添える | `style.md` `failure.md` `concurrency.md` |
 | テスト | 保証する振る舞い、確かめる単位、置き場所、重心 | `test-mechanism.md` `test-boundaries.md` `test-placement.md` `acceptance.md` `test-strategy.md` |
 | 技術スタック | ツールと版の表。実行コマンド | `toolchain.md` `stack.md` |
 
 **雛形は種別ごとではなく、規約の種類ごとに1つある。**
-種類が違えば必要な欄が違うので、`layers.md` と `dependency.md` は別の雛形になる。
+種類が違えば必要な欄が違うので、`elements.md` と `dependency.md` は別の雛形になる。
 対応は `references/file-catalog.md` に置く。
 
 **構造と道具は宣言であって、規則ではない。**

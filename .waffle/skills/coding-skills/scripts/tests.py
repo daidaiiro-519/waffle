@@ -91,7 +91,7 @@ class 写しを持たない(unittest.TestCase):
         by_shape = kinds_by_shape()
         self.assertIn("言語", by_shape)
         self.assertIn("style", by_shape["言語"])
-        self.assertIn("layers", by_shape["アーキテクチャ"])
+        self.assertIn("elements", by_shape["アーキテクチャ"])
 
 
 class 検査が宣言を持つ(unittest.TestCase):
@@ -162,7 +162,7 @@ class 集める(unittest.TestCase):
 
     def test_用途の規約が指定した軸が解決される(self):
         _, out = collect("--lang", "rust", "--purpose", "hook")
-        self.assertIn("architecture = data-port", out)
+        self.assertIn("architecture = hexagonal", out)
 
     def test_足りなければ終了コード1で止まる(self):
         code, out = collect("--lang", "python", "--purpose", "hook")
@@ -218,7 +218,9 @@ class 出典が版を持つ(unittest.TestCase):
                 if not tb.has("版・取得日"):
                     continue
                 for row in tb.rows:
-                    if not re.match(r"^\d{4}-\d{2}-\d{2} 取得$", row["版・取得日"].strip()):
+                    # いつ確かめたかが、行のどこかに在ればよい。
+                    # 規格と文献は「版・取得日」に、実測は「原典」に日付を持つ。
+                    if not re.search(r"\d{4}-\d{2}-\d{2}", " ".join(row.values())):
                         bad.append(f"{s.where}: {row['版・取得日']}")
         self.assertEqual(bad, [])
 
