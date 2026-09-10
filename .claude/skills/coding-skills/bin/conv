@@ -1,0 +1,1174 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 daidaiiro
+"""宣言と規約を突き合わせ、集める・並べる・差分を出す・検査する道具。
+
+    conv 初期化 <置き場所>         入口と規約の置き場所を作り、宣言の骨を起こす
+    conv 一式 [宣言のid]           宣言に効く規約を集める（1つしか無ければ省ける）
+    conv 重なり <軸=値> …          その条件と重なる規約を並べる
+    conv 差分 <軸=値> [宣言のid]   その値に変えたときの入れ替わり
+    conv 効かない                  どの宣言にも当たらない規約を並べる
+    conv 画面 [--port 8732] [--出す先 dist]
+                                   ローカルサーバーを立て、描画して見せる。保存しない
+    conv 落とす <出す先> [--md]    一式を1枚にまとめて出す。使い捨て
+    conv 検査                      背骨と条件の軸名を見る
+    conv --version                 この道具の版
+
+**文書は、この Skill の外に置く。**置き場所は `--置き場所` で渡すか、
+環境変数 `CODING_HOME` で指す。既定は、いまのディレクトリの `.coding`。
+
+    .coding/
+      declarations/       選択（宣言）
+      rules/              規則
+      structures/         構造
+      behaviors/          振る舞い
+
+**フォルダは人のためのものである。**機械は前置きの「文書の種類」で判断し、
+置き場所を見ない ── だから置き場所を変えても、集まり方は変わらない。
+
+**切ってよいのは、文書がその値を1つしか持たないものだけ。**
+文書の種類は1つなので切れる。軸は複数もつことがある（`language ＋ architecture`）ので、切れない。
+
+**判断は持たない。**並べるところまでがこの道具で、
+矛盾かどうか・消すかどうかは、読んで決める。
+
+documents/ を読むだけで、書き換えない。
+軸の一覧と、種類ごとの背骨は templates/ が持つ ── ここには書き写さない。
+"""
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+VERSION = "0.1.0"
+BUILT_FROM = "概念実装（CodingSchema はまだ無い）"
+BUILT_ON = "2026-09-10"
+
+import os
+
+ROOT = Path(__file__).resolve().parent.parent
+TPL = ROOT / "templates"                                   # 形の定め。Skill が持つ
+HOME = Path(os.environ.get("CODING_HOME", ".coding"))      # 中身。使う側が持つ
+
+KINDS = ("選択", "規則", "構造", "振る舞い")
+TEMPLATE_OF = {"選択": "declaration", "規則": "rule", "構造": "structure", "振る舞い": "behavior"}
+# 人が見つけるための置き場所。機械は前置きの「文書の種類」で判断する
+FOLDER_OF = {"選択": "declarations", "規則": "rules", "構造": "structures", "振る舞い": "behaviors"}
+PREFIX_OF = {"選択": "declaration", "規則": "rule", "構造": "structure", "振る舞い": "behavior"}
+CORE_KEYS = ("id", "文書の種類", "主題", "まとまる理由", "承認")
+
+
+# ── 読む ────────────────────────────────────────────────
+
+def axis_names() -> dict[str, str]:
+    """条件に書く名 → 読むための呼び名。定めは templates/axes.md が持つ。"""
+    text = (TPL / "axes.md").read_text(encoding="utf-8")
+    return {k: ja for ja, k in re.findall(r"^\| (\S+) \| `(\w+)` \|", text, re.M)}
+
+
+def axes() -> dict[str, bool]:
+    """軸の一覧を templates/axes.md から読む。値は「複数もてるか」。"""
+    text = (TPL / "axes.md").read_text(encoding="utf-8")
+    names = re.findall(r"^\| \S+ \| `(\w+)` \|", text, re.M)
+    # 複数もてるのは form だけ、と axes.md が書いている
+    多値 = set(re.findall(r"複数行書けるのは `(\w+)` だけ", text))
+    return {n: (n in 多値) for n in names}
+
+
+def spine(kind: str) -> list[str]:
+    """種類ごとの背骨（節の並び）を templates/ から読む。"""
+    text = (TPL / f"{TEMPLATE_OF[kind]}.md").read_text(encoding="utf-8")
+    return re.findall(r"^## (.+)$", text, re.M)
+
+
+def front(text: str) -> dict:
+    m = re.match(r"---\n(.*?)\n---\n", text, re.S)
+    if not m:
+        return {}
+    out: dict = {}
+    key = None
+    for line in m.group(1).split("\n"):
+        if line.startswith("  - "):
+            out.setdefault(key, []).append(line[4:].strip())
+        elif ":" in line:
+            key, _, val = line.partition(":")
+            key, val = key.strip(), val.strip()
+            out[key] = val if val else []
+    return out
+
+
+def files() -> list[Path]:
+    """入口と規約。置き場所に関わらず、すべて読む ── 判断は前置きで行う。"""
+    return sorted(HOME.glob("*.md")) + sorted(HOME.glob("*/*.md"))
+
+
+def load() -> list[dict]:
+    docs = []
+    for f in files():
+        text = f.read_text(encoding="utf-8")
+        fm = front(text)
+        if not fm:
+            continue
+        fm["_path"], fm["_text"] = f, text
+        fm["_sections"] = re.findall(r"^## (.+)$", text, re.M)
+        cond = fm.get("適用条件") or []
+        fm["_cond"] = [tuple(x.strip() for x in c.split("=", 1)) for c in cond if "=" in c]
+        docs.append(fm)
+    return docs
+
+
+def values_of(doc: dict) -> dict[str, set[str]]:
+    """宣言が持つ軸の値。機械が読む節だけを見る ── ほかの節にも値が文中に出る。"""
+    m = re.search(r"## この選択がつくる適用条件\n(.*?)(?=\n## |\Z)", doc["_text"], re.S)
+    got: dict[str, set[str]] = {}
+    if m:
+        for k, v in re.findall(r"^(\w+) = ([\w-]+)$", m.group(1), re.M):
+            got.setdefault(k, set()).add(v)
+    return got
+
+
+def fits(doc: dict, vals: dict[str, set[str]]) -> bool:
+    """条件の値をすべて持っているか。条件が空なら、どこでも効く。"""
+    return all(v in vals.get(k, set()) for k, v in doc["_cond"])
+
+
+def find(docs: list[dict], doc_id: str) -> dict:
+    for d in docs:
+        if d.get("id") == doc_id:
+            return d
+    sys.exit(f"{doc_id} という id の文書が無い")
+
+
+# ── 出す ────────────────────────────────────────────────
+
+def entry(docs: list[dict], doc_id: str | None = None) -> dict:
+    """宣言を、置き場所ではなく**種類**で見つける。"""
+    decls = [d for d in docs if d.get("文書の種類") == "選択"]
+    if not decls:
+        sys.exit(f"宣言が無い: {HOME / 'declarations'}")
+    if doc_id:
+        return find(decls, doc_id)
+    if len(decls) > 1:
+        sys.exit("宣言が複数ある。どれかを指す:\n  " + "\n  ".join(d["id"] for d in decls))
+    return decls[0]
+
+
+def 一式(docs, doc_id=None):
+    decl = entry(docs, doc_id)
+    vals = values_of(decl)
+    doc_id = decl.get("id", "?")
+    rules = [d for d in docs if d.get("文書の種類") != "選択"]
+    print(f"宣言 {doc_id}")
+    for k in sorted(vals):
+        print(f"  {k:14} {' ・ '.join(sorted(vals[k]))}")
+    for kind in KINDS[1:]:
+        hit = [d for d in rules if d.get("文書の種類") == kind and fits(d, vals)]
+        print(f"\n{kind}　{len(hit)}本")
+        for d in hit:
+            print(f"  {d['id']:34} {d.get('主題','')}")
+
+
+def 重なり(docs, args):
+    cond = [tuple(x.strip() for x in a.split("=", 1)) for a in args if "=" in a]
+    print(f"条件 {dict(cond)} と重なる規約")
+    for d in docs:
+        if d.get("文書の種類") == "選択":
+            continue
+        c = dict(d["_cond"])
+        if not c or not cond:
+            print(f"  {d['id']:34} {c}")
+            continue
+        shared = set(c) & {k for k, _ in cond}
+        if shared and all(c[k] == dict(cond)[k] for k in shared):
+            print(f"  {d['id']:34} {c}")
+
+
+def 差分(docs, change, doc_id=None):
+    k, _, v = change.partition("=")
+    k, v = k.strip(), v.strip()
+    decl = entry(docs, doc_id)
+    doc_id = decl.get("id", "?")
+    before = values_of(decl)
+    after = dict(before, **{k: {v}})
+    rules = [d for d in docs if d.get("文書の種類") != "選択"]
+    b = {d["id"] for d in rules if fits(d, before)}
+    a = {d["id"] for d in rules if fits(d, after)}
+    print(f"{doc_id}　{k} を {sorted(before.get(k, []))} → {v}")
+    print(f"  効かなくなる {sorted(b - a)}")
+    print(f"  新たに効く　 {sorted(a - b)}")
+    print(f"  変わらない　 {len(b & a)}本")
+
+
+def 効かない(docs):
+    used = [values_of(d) for d in docs if d.get("文書の種類") == "選択"]
+    rules = [d for d in docs if d.get("文書の種類") != "選択"]
+    dead = [d for d in rules if not any(fits(d, v) for v in used)]
+    print(f"どの宣言にも効かない規約　{len(dead)}本")
+    for d in dead:
+        print(f"  {d['id']:34} {dict(d['_cond'])}")
+
+
+def 検査(docs) -> int:
+    ax = axes()
+    bad: list[str] = []
+    # 置き場所は人のためのものだが、種類と食い違っていたら人が迷う。
+    # 前置きの種類・置き場所・id の頭の3つが揃っているかを見る。
+    if not any(d.get("文書の種類") == "選択" for d in docs):
+        bad.append(f"宣言が無い: {HOME / 'declarations'}")
+    for d in docs:
+        kind0, path = d.get("文書の種類"), d["_path"]
+        if kind0 not in KINDS:
+            continue
+        want = FOLDER_OF[kind0]
+        here = path.parent.name if path.parent != HOME else ""
+        if here != want:
+            bad.append(f"{path.name}: {kind0} は {want}/ に置く（いまは {here or '直下'}）")
+        head = PREFIX_OF[kind0]
+        if not str(d.get("id", "")).startswith(head):
+            bad.append(f"{path.name}: id は {head}- で始める（{kind0} だから）")
+    for d in docs:
+        name = d["_path"].name
+        kind = d.get("文書の種類")
+        for key in CORE_KEYS:
+            if not d.get(key):
+                bad.append(f"{name}: 前置きに {key} が無い")
+        if kind not in KINDS:
+            bad.append(f"{name}: 文書の種類が {KINDS} のどれでもない（{kind}）")
+            continue
+        for sec in spine(kind):
+            if sec not in d["_sections"]:
+                bad.append(f"{name}: 節「{sec}」が無い（{kind} の背骨）")
+        if kind == "選択":
+            if not values_of(d):
+                bad.append(f"{name}: 「この選択がつくる適用条件」から軸の値を読めない")
+            for k, vs in values_of(d).items():
+                if k not in ax:
+                    bad.append(f"{name}: 軸の一覧に無い名前で条件を書いている（{k}）")
+                elif len(vs) > 1 and not ax[k]:
+                    bad.append(f"{name}: {k} は複数の値をもてない（{sorted(vs)}）")
+        else:
+            if not d["_cond"]:
+                bad.append(f"{name}: 適用条件が無い")
+            for k, _ in d["_cond"]:
+                if k not in ax:
+                    bad.append(f"{name}: 軸の一覧に無い名前で条件を書いている（{k}）")
+    if bad:
+        print(f"食い違い　{len(bad)}件")
+        for b in bad:
+            print(f"  {b}")
+        return 1
+    print(f"文書 {len(docs)}本　食い違いは無い")
+    return 0
+
+
+def 初期化(place: str) -> int:
+    """入口と規約の置き場所を作り、宣言の骨をテンプレートから起こす。"""
+    home = Path(place)
+    if home.exists():
+        print(f"{home} はすでにある。何もしない")
+        return 1
+    home.mkdir(parents=True)
+    for sub in FOLDER_OF.values():
+        (home / sub).mkdir()
+    (home / "declarations" / "declaration-〈名前〉.md").write_text(
+        (TPL / "declaration.md").read_text(encoding="utf-8"), encoding="utf-8")
+    print(f"{home} を作った")
+    for kind, sub in FOLDER_OF.items():
+        print(f"  {sub + '/':16}← {kind}")
+    print("  declarations/declaration-〈名前〉.md   ← 名前を変えて、軸の値を埋める")
+    print()
+    print("次にすること")
+    print("  1  宣言を書く　　declarations/ の骨に、軸の値を埋める")
+    print("  2  規約を書く　　種類に合うテンプレートから起こし、種類のフォルダへ置く")
+    print(f"  3  検査する　　　CODING_HOME={home} conv 検査")
+    return 0
+
+
+# ── 描く ────────────────────────────────────────────────
+
+def md2html(text: str) -> str:
+    """この Skill の文書が使う書き方だけを、HTML へ写す。
+
+    生の記号を見せるためではなく、**組まれた姿**を見せるために描く。
+    外の道具を呼ばない ── このSkillは単体で動く。
+    """
+    text = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.S)   # 前置きは別に出す
+    out: list[str] = []
+    rows: list[str] = []
+    fence = False
+    code: list[str] = []
+
+    def flush_table():
+        if not rows:
+            return
+        head, *body = rows
+        cells = [c.strip() for c in head.strip("|").split("|")]
+        out.append("<table><tr>" + "".join(f"<th>{inline(c)}</th>" for c in cells) + "</tr>")
+        for r in body:
+            if set(r.replace("|", "").strip()) <= set("-: "):
+                continue
+            cs = [c.strip() for c in r.strip("|").split("|")]
+            out.append("<tr>" + "".join(f"<td>{inline(c)}</td>" for c in cs) + "</tr>")
+        out.append("</table>")
+        rows.clear()
+
+    def inline(t: str) -> str:
+        t = (t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+        t = re.sub(r"`([^`]+)`", r"<code>\1</code>", t)
+        t = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", t)
+        return t
+
+    for line in text.split("\n"):
+        if line.startswith("```"):
+            if fence:
+                out.append("<pre>" + "\n".join(code) + "</pre>")
+                code.clear()
+            fence = not fence
+            continue
+        if fence:
+            code.append(line.replace("&", "&amp;").replace("<", "&lt;"))
+            continue
+        if line.startswith("|"):
+            rows.append(line)
+            continue
+        flush_table()
+        if m := re.match(r"^(#{1,4}) (.+)$", line):
+            n = len(m.group(1))
+            out.append(f"<h{n}>{inline(m.group(2))}</h{n}>")
+        elif line.startswith("- "):
+            out.append(f"<li>{inline(line[2:])}</li>")
+        elif line.strip() == "---":
+            out.append("<hr>")
+        elif line.strip():
+            out.append(f"<p>{inline(line)}</p>")
+    flush_table()
+    return "\n".join(out)
+
+
+LOGO = (
+    "<svg class='logo' viewBox='0 0 24 24' width='22' height='22' aria-hidden='true'>"
+    "<rect x='1.2' y='1.2' width='21.6' height='21.6' rx='5' fill='none' "
+    "stroke='currentColor' stroke-width='1.6' opacity='.35'/>"
+    "<rect x='6' y='6.4' width='12' height='2.4' rx='1.2' fill='currentColor' opacity='.3'/>"
+    "<rect x='6' y='10.8' width='8.4' height='2.4' rx='1.2' fill='currentColor' opacity='.3'/>"
+    "<rect x='6' y='15.2' width='5' height='2.4' rx='1.2' fill='currentColor'/>"
+    "</svg>")
+
+STYLE = """
+:root{--paper:#fff;--card:#f7faf9;--ink:#141c1a;--muted:#61706b;--faint:#8a9793;
+  --rule:#e2eae7;--key:#0d5c55;--key-soft:#dfeeea;--sunk:#f0f5f3;--warn:#8f5410}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:14px/1.65 "Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif}
+.app{display:flex;flex-direction:column;height:100vh}
+
+/* ── 上の帯 ── */
+.top{display:flex;align-items:center;gap:.9rem;padding:.5rem .9rem;
+  border-bottom:1px solid var(--rule);background:var(--paper);flex:none}
+.logo{flex:none;display:block;color:var(--key)}
+.name{font-weight:700;font-size:.95rem;letter-spacing:.04em;color:var(--key)}
+.search{display:flex;align-items:stretch;border:1px solid var(--rule);border-radius:.4rem;
+  overflow:hidden;background:var(--paper);max-width:30rem;flex:1}
+.search:focus-within{border-color:var(--key);box-shadow:0 0 0 3px var(--key-soft)}
+.search select{font:inherit;font-size:.78rem;border:0;border-right:1px solid var(--rule);
+  background:var(--card);color:var(--muted);padding:.3rem .5rem;outline:none}
+.search input{font:inherit;font-size:.82rem;border:0;padding:.3rem .6rem;flex:1;
+  background:transparent;color:var(--ink);outline:none;min-width:6rem}
+.search button{font:inherit;font-size:.78rem;border:0;background:var(--card);color:var(--key);
+  padding:.3rem .8rem;cursor:pointer;border-left:1px solid var(--rule)}
+.search button:hover{background:var(--key-soft)}
+.top .out{margin-left:auto;font-size:.78rem;color:#fff;background:var(--key);
+  border:1px solid var(--key);border-radius:.35rem;padding:.28rem .9rem;text-decoration:none;flex:none}
+
+/* ── 三つの面 ── */
+.body{display:grid;grid-template-columns:auto minmax(20rem,1fr);flex:1;min-height:0}
+.body.split{grid-template-columns:auto minmax(17rem,23rem) minmax(26rem,1fr)}
+nav.facets{width:13.5rem;border-right:1px solid var(--rule);padding:.8rem .7rem;
+  overflow:auto;background:var(--card);transition:width .12s}
+.fh{display:flex;align-items:baseline;margin:.9rem 0 .3rem}
+.fh:first-child{margin-top:0}
+.fh span{font-size:.66rem;letter-spacing:.09em;color:var(--faint);font-family:ui-monospace,monospace}
+.fh a{margin-left:auto;font-size:.66rem;color:var(--key);text-decoration:none}
+.f{display:flex;align-items:center;gap:.4rem;font-size:.79rem;color:var(--ink);
+  text-decoration:none;padding:.2rem .4rem;border-radius:.25rem;line-height:1.5}
+.f:hover{background:var(--sunk)}
+.f.on{background:var(--key);color:#fff;font-weight:700}
+.f.zero{color:var(--faint)}
+.f .num{margin-left:auto;font-size:.68rem;color:var(--faint);font-family:ui-monospace,monospace}
+.f.on .num{color:#cfe6e1}
+.clearall{display:block;margin-top:.9rem;font-size:.72rem;color:var(--key);text-decoration:none}
+
+/* ── 一覧 ── */
+.list{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.bartop{flex:none;padding:.6rem .9rem .3rem;border-bottom:1px solid var(--rule);background:var(--paper)}
+.scroll{overflow:auto;padding:.4rem .9rem 2rem;display:flex;flex-direction:column;gap:.2rem;flex:1}
+.applied{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;margin-bottom:.4rem}
+.chip{display:inline-flex;align-items:center;gap:.3rem;font-size:.73rem;background:var(--key-soft);
+  color:var(--key);border-radius:2rem;padding:.1rem .3rem .1rem .6rem;text-decoration:none}
+.chip b{font-weight:700}
+.chip .x{display:inline-flex;width:1.05rem;height:1.05rem;align-items:center;justify-content:center;
+  border-radius:50%;background:rgba(13,92,85,.13);font-size:.7rem;line-height:1}
+.chip:hover .x{background:var(--key);color:#fff}
+.count{font-size:.72rem;color:var(--muted);font-family:ui-monospace,monospace;
+  border-bottom:1px solid var(--rule);padding-bottom:.45rem;margin-bottom:.15rem}
+a.item{display:grid;grid-template-columns:1fr auto;gap:.15rem .6rem;text-decoration:none;color:var(--ink);
+  padding:.45rem .6rem;border:1px solid transparent;border-radius:.4rem}
+a.item:hover{background:var(--sunk)}
+a.item.on{border-color:var(--key);background:var(--key-soft)}
+a.item .ttl{font-size:.87rem;font-weight:600}
+a.item .kind{font-size:.66rem;color:var(--muted);border:1px solid var(--rule);border-radius:2rem;
+  padding:.02rem .45rem;white-space:nowrap;background:var(--paper)}
+a.item .cond{grid-column:1/2;font-size:.7rem;color:var(--muted);font-family:ui-monospace,monospace;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+a.item .cnt{grid-column:2/3;font-size:.68rem;color:var(--faint);text-align:right;font-family:ui-monospace,monospace}
+.hit{font-size:.63rem;color:var(--key);background:var(--key-soft);border-radius:.2rem;
+  padding:.02rem .3rem;margin-left:.4rem;font-weight:400}
+.empty{padding:2rem .3rem;color:var(--muted);display:flex;flex-direction:column;gap:.5rem;align-items:flex-start}
+.empty h3{margin:0;font-size:.95rem;color:var(--ink)}
+
+/* ── 詳細 ── */
+.detail{border-left:1px solid var(--rule);overflow:auto;padding:1rem 1.3rem 2.5rem;min-width:0}
+.dh{border-bottom:1px solid var(--rule);padding-bottom:.6rem;margin-bottom:.7rem;position:relative}
+.dh h1{font-size:1.15rem;margin:.3rem 0 .35rem;line-height:1.45}
+.badge{display:inline-block;font-size:.65rem;letter-spacing:.1em;color:var(--key);
+  border:1px solid var(--key);border-radius:2rem;padding:.05rem .6rem}
+.close{position:absolute;top:0;right:0;font-size:.9rem;color:var(--faint);text-decoration:none;
+  width:1.6rem;height:1.6rem;display:flex;align-items:center;justify-content:center;border-radius:.3rem}
+.close:hover{background:var(--sunk);color:var(--ink)}
+.meta{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:0}
+.meta .c{font-size:.68rem;color:var(--muted);background:var(--sunk);border-radius:.25rem;padding:.06rem .45rem;
+  font-family:ui-monospace,monospace}
+.meta .id{margin-left:auto;font-family:ui-monospace,monospace;font-size:.66rem;color:var(--faint)}
+.why{font-size:.73rem;color:var(--muted);margin:.4rem 0 0}
+.lead{font-size:.97rem;line-height:1.75;margin:0 0 1rem;padding:.5rem .8rem;
+  background:var(--key-soft);border-radius:.4rem}
+.lead p{margin:0}
+.lead p+p{margin-top:.4rem}
+section.main{margin:0 0 1.1rem}
+section.main>h2,section.sub>h2{font-size:.67rem;letter-spacing:.1em;color:var(--key);margin:0 0 .35rem;
+  font-family:ui-monospace,monospace;text-transform:uppercase}
+section.sub>h2{color:var(--faint)}
+section.sub{margin:0 0 .9rem}
+.tails{margin-top:1.3rem;padding-top:.8rem;border-top:1px solid var(--rule);
+  display:flex;flex-direction:column;gap:.6rem}
+.tails h3{font-size:.66rem;letter-spacing:.09em;color:var(--faint);margin:0 0 .2rem;
+  font-family:ui-monospace,monospace}
+.tails table{font-size:.73rem}
+.tails p,.tails li{font-size:.78rem;color:var(--muted)}
+.stamp{font-size:.68rem;color:var(--faint);font-family:ui-monospace,monospace;margin:.2rem 0 0}
+.ov{margin-top:1.1rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+.ov h3{font-size:.66rem;letter-spacing:.09em;color:var(--faint);margin:0 0 .3rem;font-family:ui-monospace,monospace}
+a.ovr{display:flex;gap:.6rem;align-items:baseline;font-size:.79rem;text-decoration:none;
+  color:var(--ink);padding:.2rem .4rem;border-radius:.25rem}
+a.ovr:hover{background:var(--sunk)}
+a.ovr .c{font-size:.68rem;color:var(--faint);margin-left:auto;font-family:ui-monospace,monospace}
+
+/* ── 本文の要素 ── */
+h1,h2,h3{font-weight:700}
+p{margin:.35rem 0}
+li{margin-left:1.1rem}
+code{font-family:ui-monospace,monospace;font-size:.86em;background:var(--sunk);
+  padding:.05em .35em;border-radius:.2rem}
+pre{background:var(--sunk);padding:.6rem .8rem;border-radius:.35rem;overflow-x:auto;font-size:.78rem}
+table{border-collapse:collapse;width:100%;font-size:.78rem;margin:.35rem 0;
+  border:1px solid var(--rule);border-radius:.35rem;overflow:hidden}
+th,td{text-align:left;vertical-align:top;padding:.34rem .55rem;border-bottom:1px solid var(--rule)}
+th{background:var(--sunk);font-size:.7rem;color:var(--muted);white-space:nowrap;font-weight:700}
+tr:last-child td{border-bottom:0}
+hr{border:0;border-top:1px solid var(--rule);margin:.9rem 0}
+a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--key);outline-offset:2px}
+
+/* ── 出す画面 ── */
+main.ex{padding:1.1rem 1.4rem;max-width:60rem;overflow:auto;display:flex;flex-direction:column;gap:.5rem}
+.exlist{list-style:none;padding:0;margin:.2rem 0 .5rem;display:flex;flex-wrap:wrap;gap:.3rem}
+.exlist li{font-size:.78rem;background:var(--card);border:1px solid var(--rule);
+  border-radius:.3rem;padding:.15rem .55rem;display:flex;gap:.4rem;align-items:baseline}
+.exh{font-size:.67rem;letter-spacing:.1em;color:var(--key);margin:.6rem 0 .3rem;
+  font-family:ui-monospace,monospace;text-transform:uppercase}
+.ex-md{max-height:24rem;overflow:auto;white-space:pre-wrap;font-size:.73rem;line-height:1.6;
+  background:var(--card);border:1px solid var(--rule)}
+.foot{display:flex;gap:.6rem;align-items:center;border-top:1px solid var(--rule);
+  padding-top:.7rem;margin-top:.4rem;font-size:.75rem;color:var(--muted)}
+.go{font:inherit;font-size:.78rem;color:#fff;background:var(--key);border:1px solid var(--key);
+  border-radius:.35rem;padding:.28rem .9rem;text-decoration:none;cursor:pointer;margin-left:auto}
+.back{font-size:.78rem;color:var(--key);text-decoration:none}
+.done{font-size:.85rem;color:var(--key);background:var(--key-soft);border-radius:.35rem;padding:.6rem .9rem}
+.dim2{font-size:.74rem;color:var(--muted)}
+.law{flex:none;padding:.3rem .9rem;border-top:1px solid var(--rule);background:var(--card);
+  font-size:.68rem;color:var(--faint);font-family:ui-monospace,monospace}
+.law a{color:var(--muted);text-decoration:none}
+.law a:hover{color:var(--key);text-decoration:underline}
+/* ── ハンバーガー（JS なし） ── */
+.menu-t{position:absolute;opacity:0;pointer-events:none}
+.burger{flex:none;width:1.9rem;height:1.9rem;display:flex;flex-direction:column;justify-content:center;
+  gap:.22rem;padding:.35rem;border-radius:.3rem;cursor:pointer}
+.burger:hover{background:var(--sunk)}
+.burger span{display:block;height:1.6px;background:var(--muted);border-radius:1px}
+.menu-t:focus-visible+.burger{outline:2px solid var(--key);outline-offset:2px}
+/* 畳むときも、格子から抜かない ── 抜くと右の列がずれる */
+.menu-t:checked~.body nav.facets{width:0;padding:0;border-right:0;overflow:hidden}
+
+/* ── 一覧の切り替え ── */
+.tabs{display:flex;gap:.2rem;align-items:center}
+.tabs{align-items:center}
+a.tab{display:flex;align-items:center;gap:.35rem;font-size:.76rem;color:var(--muted);
+  text-decoration:none;padding:.3rem .7rem;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs .tn{margin-left:auto;padding-right:.3rem}
+a.tab:hover{color:var(--ink)}
+a.tab.on{color:var(--key);border-bottom-color:var(--key);font-weight:700}
+.tn{font-size:.68rem;font-family:ui-monospace,monospace;color:var(--faint)}
+a.tab.on .tn{color:var(--key)}
+
+/* ── 決めごとの並び ── */
+.grp{display:flex;align-items:baseline;gap:.5rem;padding:.6rem .4rem .25rem;
+  margin-top:.3rem;border-top:1px solid var(--rule);position:sticky;top:-.4rem;background:var(--paper);z-index:1}
+.grp:first-of-type{border-top:0;margin-top:0;padding-top:.2rem}
+.gt{font-size:.72rem;font-weight:700;color:var(--key);letter-spacing:.06em}
+.gn{margin-left:auto;font-size:.68rem;color:var(--faint);font-family:ui-monospace,monospace}
+a.rule{display:grid;grid-template-columns:5.6rem 1fr auto auto;gap:.5rem;align-items:baseline;
+  text-decoration:none;color:var(--ink);padding:.32rem .5rem;border-radius:.3rem;font-size:.83rem}
+a.rule:hover{background:var(--sunk)}
+a.rule.on{background:var(--key-soft)}
+.rid{font-family:ui-monospace,monospace;font-size:.72rem;color:var(--key);font-weight:700}
+.rt{min-width:0}
+.lv{font-size:.66rem;color:var(--muted);border:1px solid var(--rule);border-radius:2rem;padding:.02rem .4rem;white-space:nowrap}
+.sc{font-size:.68rem;color:var(--faint);white-space:nowrap}
+
+/* ── 構成の切り替え ── */
+.sws{display:flex;gap:.15rem;flex:none;border:1px solid var(--rule);border-radius:.35rem;padding:.1rem;background:var(--card)}
+.sw{font-size:.7rem;font-family:ui-monospace,monospace;color:var(--muted);text-decoration:none;
+  padding:.12rem .5rem;border-radius:.25rem;line-height:1.5}
+.sw:hover{color:var(--ink)}
+.sw.on{background:var(--key);color:#fff;font-weight:700}
+
+/* ── A：一覧が主役 ── */
+main.wide{overflow:auto;padding:1rem 1.4rem 2.5rem;width:100%;max-width:80rem;margin:0 auto;flex:1;min-height:0}
+.ddbar{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-bottom:.6rem}
+.dd{font:inherit;font-size:.78rem;color:var(--ink);background:var(--paper);
+  border:1px solid var(--rule);border-radius:.35rem;padding:.25rem .5rem;max-width:14rem}
+.dd:hover{border-color:var(--key)}
+.pill{font-size:.75rem;color:var(--key);background:var(--key-soft);border-radius:2rem;
+  padding:.2rem .7rem;text-decoration:none}
+.wlist{display:flex;flex-direction:column;gap:.2rem}
+.wlist .tabs{border-bottom:1px solid var(--rule);margin-bottom:.3rem}
+.wlist .grp{top:0}
+main.wide .doc{max-width:52rem}
+.crumb{margin:0 0 .6rem}
+
+/* ── B：ペインと本文 ── */
+.fbar{flex:none;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;
+  padding:.45rem .9rem;border-bottom:1px solid var(--rule);background:var(--card)}
+.fbar .fsep{flex:none;width:1px;height:1.2rem;background:var(--rule);margin:0 .3rem}
+.fbar .chip{background:var(--paper);border:1px solid var(--key-soft)}
+.body.layB{grid-template-columns:auto minmax(26rem,1fr)}
+nav.pane{width:24rem;border-right:1px solid var(--rule);background:var(--paper);
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;transition:width .12s}
+.menu-t:checked~.body.layB nav.pane{width:0;border-right:0}
+.plist{flex:1;min-height:0;overflow:auto;padding:0 .7rem 2rem;background:var(--paper);
+  display:flex;flex-direction:column;gap:.15rem}
+.plist .tabs{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--rule);z-index:2}
+.plist .grp{top:2rem}
+.plist a.rule{grid-template-columns:5.4rem 1fr auto}
+.plist .lv{display:none}
+main.content{overflow:auto;scroll-behavior:smooth;padding:1.2rem 1.6rem 3rem;min-width:0}
+main.content .doc{max-width:52rem;margin:0 auto}
+.hello{max-width:32rem;margin:4rem auto;color:var(--muted);text-align:center}
+.hello h2{margin:0 0 .4rem;font-size:1.05rem;color:var(--ink)}
+
+/* ── C：ナビと本文と目次 ── */
+.body.layC{grid-template-columns:auto minmax(24rem,1fr) auto}
+.menu-t:checked~.body.layC nav.facets{width:0;padding:0;border-right:0}
+.layC main.content{max-width:none}
+.layC main.content .doc,.layC .wlist{max-width:46rem;margin:0 auto}
+aside.toc{width:13rem;border-left:1px solid var(--rule);padding:1rem .8rem;overflow:auto;background:var(--paper)}
+aside.toc:empty{width:0;padding:0;border-left:0}
+@media(max-width:70rem){aside.toc{display:none}}
+
+@media(max-width:62rem){
+  .body,.body.split,.body.layB,.body.layC{grid-template-columns:1fr}
+  nav.pane{position:fixed;top:2.7rem;bottom:0;left:0;z-index:5;width:0;border-right:0}
+  .menu-t:checked~.body.layB nav.pane{width:min(22rem,90vw);border-right:1px solid var(--rule);
+    box-shadow:.6rem 0 2rem rgba(20,28,26,.12)}
+  .sws{display:none}
+  nav.facets{position:fixed;top:2.7rem;bottom:0;left:0;z-index:5;width:0;padding:0;border-right:0;
+    box-shadow:none}
+  .menu-t:checked~.body nav.facets{width:14rem;padding:.8rem .7rem;
+    border-right:1px solid var(--rule);box-shadow:.6rem 0 2rem rgba(20,28,26,.12)}
+  .detail{border-left:0;border-top:1px solid var(--rule)}
+  a.rule{grid-template-columns:5.2rem 1fr}
+  .lv,.sc{display:none}
+}
+"""
+
+
+def sections(text: str) -> dict:
+    """本文を節に切る。背骨は種類ごとに決まっているので、名前で引ける。"""
+    text = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.S)
+    out, cur, buf = {}, None, []
+    for line in text.split("\n"):
+        if m := re.match(r"^## (.+)$", line):
+            if cur:
+                out[cur] = "\n".join(buf).strip()
+            cur, buf = m.group(1).strip(), []
+        elif cur:
+            buf.append(line)
+    if cur:
+        out[cur] = "\n".join(buf).strip()
+    return out
+
+
+# 種類ごとに、まず見せる節（画面の主役）
+LEAD_OF = {
+    "選択": ["選んだもの", "落とした候補"],
+    "規則": ["規則一覧"],
+    "構造": ["構成要素", "依存の許可"],
+    "振る舞い": ["保証する振る舞い", "保証しない振る舞い"],
+}
+# 末尾へ回す節
+TAIL = ("適用範囲外", "委譲する判断", "出典")
+
+
+def overlap_of(d: dict, docs: list[dict]) -> list[dict]:
+    """条件が重なる規約。重なること自体は正常（広い条件と狭い条件）。"""
+    c = dict(d["_cond"])
+    out = []
+    for o in docs:
+        if o is d or o.get("文書の種類") == "選択":
+            continue
+        oc = dict(o["_cond"])
+        if not c or not oc:
+            out.append(o)
+            continue
+        shared = set(c) & set(oc)
+        if shared and all(c[k] == oc[k] for k in shared):
+            out.append(o)
+    return out
+
+
+def doc_view(d: dict, docs: list[dict] | None = None, sel: dict | None = None) -> str:
+    """文書を、種類の形に合わせて組む。**マークダウンをそのまま流さない。**"""
+    sec = sections(d["_text"])
+    kind = d.get("文書の種類", "")
+    ja0 = axis_names()
+    cond = "".join(f"<span class='c'>{ja0.get(k, k)} {v}</span>" for k, v in d["_cond"]) or "<span class='c'>どこでも効く</span>"
+    close = f"<a class='close' href='{q(sel or {}, id='')}' aria-label='閉じる'>×</a>" if sel is not None else ""
+    head = (f"<header class='dh'>{close}<span class='badge'>{kind}</span>"
+            f"<h1>{d.get('主題','')}</h1>"
+            f"<p class='meta'>{cond}<span class='id'>{d.get('id','')}</span></p>"
+            f"<p class='why'>{d.get('まとまる理由','')}</p></header>")
+    # 段落の中に段落は置けない。<p> にすると帯だけ空で残り、本文が外へ出る
+    lead = f"<div class='lead'>{md2html(sec.pop('概要', ''))}</div>" if sec.get("概要") else ""
+    main = []
+    for name in LEAD_OF.get(kind, []):
+        if body := sec.pop(name, ""):
+            main.append(f"<section class='main' id='sec-{name}'><h2>{name}</h2>{md2html(body)}</section>")
+    rest = []
+    for name, body in sec.items():
+        if name in TAIL or not body:
+            continue
+        rest.append(f"<section class='sub' id='sec-{name}'><h2>{name}</h2>{md2html(body)}</section>")
+    tail = []
+    for name in TAIL:
+        if body := sec.get(name, ""):
+            tail.append(f"<section class='tail' id='sec-{name}'><h3>{name}</h3>{md2html(body)}</section>")
+    stamp = f"<p class='stamp'>承認　{d.get('承認','')}</p>"
+    ov = ""
+    if docs is not None and kind != "選択":
+        others = overlap_of(d, docs)
+        if others:
+            ja = axis_names()
+            rows = "".join(
+                f"<a class='ovr' href='{q(sel or {}, id=o['id'])}'>"
+                f"<span class='t'>{o.get('主題','')}</span>"
+                f"<span class='c'>{' '.join(f'{ja.get(k, k)} {v}' for k, v in o['_cond']) or 'どこでも'}</span></a>"
+                for o in others)
+            ov = (f"<section class='ov'><h3>条件が重なる規約　{len(others)}</h3>{rows}</section>")
+    return (f"<article class='doc'>{head}{lead}{''.join(main)}{''.join(rest)}"
+            f"<div class='tails'>{''.join(tail)}{stamp}</div>{ov}</article>")
+
+
+MAIN_TABLE = {"規則": "規則一覧", "振る舞い": "保証する振る舞い", "構造": "依存の許可"}
+
+
+def rules_of(d: dict) -> list[dict]:
+    """文書が持つ決めごとを、主役の表から取り出す。"""
+    sec = sections(d["_text"]).get(MAIN_TABLE.get(d.get("文書の種類", ""), ""), "")
+    out = []
+    for line in sec.split("\n"):
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) < 2 or not re.fullmatch(r"[A-Z]{2,4}(?:-[A-Z]+)?-\d{2}", cells[0]):
+            continue
+        out.append({"id": cells[0], "text": cells[1],
+                    "level": cells[2] if len(cells) > 2 else "",
+                    "scope": cells[3] if len(cells) > 3 else "",
+                    "doc": d})
+    return out
+
+
+def items(doc: dict) -> int:
+    """その文書が持つ決めごとの数。"""
+    return len(rules_of(doc))
+
+
+def terms(docs: list[dict]) -> list[str]:
+    """探すときに選べるもの。**決めごとの番号だけ**を出す。
+
+    主題は左の一覧に見えているので候補に要らない。
+    本文の語を機械で拾うと、表の行見出しまで混ざって選べる数を超える。
+    """
+    seen: list[str] = []
+    for d in docs:
+        for i in sorted(set(re.findall(r"\b[A-Z]{2,4}(?:-[A-Z]+)?-\d{2}\b", d["_text"]))):
+            if i not in seen:
+                seen.append(i)
+    return seen
+
+
+
+def matched_in(d: dict, word: str) -> str:
+    """どこで当たったか。当たった理由が見えないと、次の一手が決められない。"""
+    if not word:
+        return ""
+    if word in str(d.get("主題", "")):
+        return "主題"
+    if word in str(d.get("id", "")):
+        return "id"
+    if re.search(rf"^\| {re.escape(word)} \|", d["_text"], re.M):
+        return "決めごと"
+    return "本文"
+
+
+def axis_values(docs: list[dict]) -> dict[str, list[str]]:
+    """文書に実際に現れる軸の値。ここに無い値は選べない。"""
+    got: dict[str, set[str]] = {}
+    for d in docs:
+        if d.get("文書の種類") == "選択":
+            for k, vs in values_of(d).items():
+                got.setdefault(k, set()).update(vs)
+        for k, v in d["_cond"]:
+            got.setdefault(k, set()).add(v)
+    return {k: sorted(v) for k, v in sorted(got.items())}
+
+
+def q(sel: dict, **over) -> str:
+    """いまの選び方に、変更を1つ重ねた問い合わせ文字列。"""
+    cur = {k: list(v) for k, v in sel.items()}
+    cur.update(over)
+    parts = []
+    for k, v in cur.items():
+        for x in (v if isinstance(v, list) else [v]):
+            if x:
+                parts.append(f"{k}={x}")
+    return "?" + "&".join(parts) if parts else "?"
+
+
+SCOPES = {"": "すべて", "主題": "主題", "番号": "決めごとの番号", "本文": "本文"}
+LAYOUTS = {"A": "一覧が主役", "B": "ペインと本文", "C": "ナビと目次"}
+LAW = ("<footer class='law'>Canon　© 2026 daidaiiro　"
+       "<a href='https://opensource.org/licenses/MIT'>MIT License</a></footer>")
+
+
+def match(d: dict, word: str, scope: str) -> bool:
+    if not word:
+        return True
+    if scope == "主題":
+        return word in str(d.get("主題", ""))
+    if scope == "番号":
+        return bool(re.search(rf"^\| {re.escape(word)} \|", d["_text"], re.M))
+    if scope == "本文":
+        return word in d["_text"]
+    return (word in d["_text"] or word in str(d.get("id", "")))
+
+
+class View:
+    """絞り込みの結果と、組み立てに要るものを1つにまとめる。"""
+
+    def __init__(self, docs, sel):
+        self.docs, self.sel = docs, sel
+        self.av, self.ja = axis_values(docs), axis_names()
+        self.picked = {k: v[0] for k, v in sel.items() if k in self.av and v and v[0]}
+        self.kind = sel.get("kind", [""])[0]
+        self.word = (sel.get("q", [""])[0] or "").strip()
+        self.scope = sel.get("in", [""])[0]
+        self.by = sel.get("by", ["種類"])[0] or "種類"
+        self.layout = (sel.get("layout", ["B"])[0] or "B").upper()
+        self.rules = [d for d in docs if d.get("文書の種類") != "選択"]
+        self.decls = [d for d in docs if d.get("文書の種類") == "選択"]
+        self.fit = self.narrow(self.picked, self.kind)
+        self.n = sum(max(items(d), 1) for d in self.fit)
+
+    def narrow(self, pk, kd):
+        return [d for d in self.rules
+                if (not kd or d.get("文書の種類") == kd)
+                and match(d, self.word, self.scope)
+                and all(pk[ck] == cv for ck, cv in d["_cond"] if ck in pk)]
+
+    def label(self, k):
+        return self.ja.get(k, k)
+
+
+def header_html(v: View, extra: str = "") -> str:
+    sel = v.sel
+    keep = "".join(f"<input type=hidden name='{k}' value='{x[0]}'>"
+                   for k, x in sel.items() if k not in ("q", "in", "id") and x and x[0])
+    opts = "".join(f"<option value='{k}'{' selected' if v.scope == k else ''}>{t}</option>"
+                   for k, t in SCOPES.items())
+    sw = "".join(f"<a class='sw{' on' if v.layout == k else ''}' href='{q(sel, layout=k)}' "
+                 f"title='{t}'>{k}</a>" for k, t in LAYOUTS.items())
+    return (f"<header class='top'>{extra}{LOGO}<span class='name'>Canon</span>"
+            f"<span class='sws'>{sw}</span>"
+            f"<form class='search' method='get' action='/'>{keep}"
+            f"<select name='in' aria-label='探す範囲'>{opts}</select>"
+            f"<input name='q' value='{v.word}' placeholder='語や番号で探す' autocomplete='off' aria-label='探す語'>"
+            f"<button>探す</button></form>"
+            f"<a class='out' href='{q(sel, 出す='1', id='')}'>まとめて出す</a></header>")
+
+
+def chips_html(v: View) -> str:
+    out = []
+    for k, val in v.picked.items():
+        out.append(f"<a class='chip' href='{q(v.sel, **{k: ''})}'>{v.label(k)} <b>{val}</b>"
+                   f"<span class='x'>×</span></a>")
+    if v.kind:
+        out.append(f"<a class='chip' href='{q(v.sel, kind='')}'><b>{v.kind}</b><span class='x'>×</span></a>")
+    if v.word:
+        out.append(f"<a class='chip' href='{q(v.sel, q='')}'>{SCOPES.get(v.scope, 'すべて')} <b>{v.word}</b>"
+                   f"<span class='x'>×</span></a>")
+    return "".join(out)
+
+
+def facets_html(v: View, compact: bool = False) -> str:
+    out = []
+    for k, vs in v.av.items():
+        on_here = v.picked.get(k)
+        out.append(f"<div class='fh'><span>{v.label(k)}</span>"
+                   + (f"<a href='{q(v.sel, **{k: ''})}'>外す</a>" if on_here else "") + "</div>")
+        for val in vs:
+            n = len(v.narrow({**v.picked, k: val}, v.kind))
+            cls = "f on" if on_here == val else ("f zero" if n == 0 else "f")
+            out.append(f"<a class='{cls}' href='{q(v.sel, **{k: ('' if on_here == val else val)})}'>"
+                       f"{val}<span class='num'>{n}</span></a>")
+    out.append(f"<div class='fh'><span>種類</span>"
+               + (f"<a href='{q(v.sel, kind='')}'>外す</a>" if v.kind else "") + "</div>")
+    for kd in KINDS[1:]:
+        n = len(v.narrow(v.picked, kd))
+        cls = "f on" if v.kind == kd else ("f zero" if n == 0 else "f")
+        out.append(f"<a class='{cls}' href='{q(v.sel, kind=('' if v.kind == kd else kd))}'>{kd}"
+                   f"<span class='num'>{n}</span></a>")
+    if v.decls and not compact:
+        out.append("<div class='fh'><span>宣言</span></div>")
+        for d in v.decls:
+            pre = {k: sorted(x)[0] for k, x in values_of(d).items() if len(x) == 1}
+            out.append(f"<a class='f' href='{q({}, layout=v.layout, **pre)}'>この構成で絞る</a>")
+            out.append(f"<a class='f' href='{q(v.sel, id=d['id'])}'>{d.get('主題','')}</a>")
+    if v.picked or v.kind or v.word:
+        out.append(f"<a class='clearall' href='{q({}, layout=v.layout)}'>すべて外す</a>")
+    return "".join(out)
+
+
+def dropdowns_html(v: View) -> str:
+    """A 案：軸と種類を、上のドロップダウンにする。"""
+    out = []
+    for k, vs in v.av.items():
+        cur = v.picked.get(k, "")
+        opts = "".join(f"<option value='{q(v.sel, **{k: val})}'{' selected' if cur == val else ''}>{val}"
+                       f"（{len(v.narrow({**v.picked, k: val}, v.kind))}）</option>" for val in vs)
+        out.append(f"<select class='dd' onchange='location=this.value' aria-label='{v.label(k)}'>"
+                   f"<option value='{q(v.sel, **{k: ''})}'{'' if cur else ' selected'}>{v.label(k)}</option>"
+                   f"{opts}</select>")
+    opts = "".join(f"<option value='{q(v.sel, kind=kd)}'{' selected' if v.kind == kd else ''}>{kd}"
+                   f"（{len(v.narrow(v.picked, kd))}）</option>" for kd in KINDS[1:])
+    out.append(f"<select class='dd' onchange='location=this.value' aria-label='種類'>"
+               f"<option value='{q(v.sel, kind='')}'{'' if v.kind else ' selected'}>種類</option>{opts}</select>")
+    for d in v.decls:
+        pre = {k: sorted(x)[0] for k, x in values_of(d).items() if len(x) == 1}
+        out.append(f"<a class='pill' href='{q({}, layout=v.layout, **pre)}'>この構成で絞る</a>")
+    return "".join(out)
+
+
+def cond_name(d: dict, v: View) -> str:
+    """その規約が効く条件。軸の値の組を、そのまま名前にする。"""
+    return "　".join(f"{v.label(k)} {x}" for k, x in d["_cond"]) or "どこでも効く"
+
+
+def list_html(v: View, show) -> str:
+    tabs = "".join(f"<a class='tab{' on' if v.by == t else ''}' href='{q(v.sel, by=t)}'>{t}でまとめる</a>"
+                   for t in ("種類", "適用条件"))
+    out = [f"<div class='tabs'>{tabs}<span class='tn'>決めごと {v.n}</span></div>"]
+
+    def line(d, r, tag):
+        on = " on" if show and d["id"] == show["id"] else ""
+        if r is None:
+            return (f"<a class='rule{on}' href='{q(v.sel, id=d['id'])}'>"
+                    f"<span class='rid'>─</span><span class='rt'>{d.get('主題','')}</span>"
+                    f"<span class='lv'>{tag}</span><span class='sc'></span></a>")
+        lv = f"<span class='lv'>{r['level']}</span>" if r["level"] else "<span class='lv'></span>"
+        return (f"<a class='rule{on}' href='{q(v.sel, id=d['id'])}'>"
+                f"<span class='rid'>{r['id']}</span><span class='rt'>{r['text']}</span>"
+                f"{lv}<span class='sc'>{tag}</span></a>")
+
+    if v.by == "種類":
+        groups = [(kd, [d for d in v.fit if d.get("文書の種類") == kd]) for kd in KINDS[1:]]
+        tagf = lambda d: cond_name(d, v) 
+    else:
+        # 鍵は軸の値1つではなく、値の**組**。1つずつにすると、条件を2つ持つ
+        # 規約が両方の束に出て、同じ決めごとのコピーが並ぶ
+        b: dict = {}
+        for d in v.fit:
+            b.setdefault(cond_name(d, v), []).append(d)
+        groups = sorted(b.items(), key=lambda kv: (len(kv[1][0]["_cond"]), kv[0]))
+        tagf = lambda d: d.get("文書の種類", "")
+    for name, group in groups:
+        if not group:
+            continue
+        out.append(f"<div class='grp'><span class='gt'>{name}</span>"
+                   f"<span class='gn'>{sum(max(items(d), 1) for d in group)}</span></div>")
+        for d in group:
+            rs = rules_of(d)
+            if not rs:
+                out.append(line(d, None, tagf(d)))
+            for r in rs:
+                out.append(line(d, r, tagf(d)))
+    if not v.fit:
+        c = chips_html(v)
+        out.append("<div class='empty'><h3>該当なし</h3>"
+                   + (f"<p class='dim2'>効いている絞り込み　押すと外せる</p><div class='applied'>{c}</div>" if c else "")
+                   + f"<a class='back' href='{q({}, layout=v.layout)}'>すべて外す</a></div>")
+    return "".join(out)
+
+
+def toc_html(d: dict) -> str:
+    names = [n for n in sections(d["_text"]) if n and n != "概要"]
+    return ("<div class='fh'><span>この文書の中</span></div>"
+            + "".join(f"<a class='f' href='#sec-{n}'>{n}</a>" for n in names))
+
+
+def page(docs: list[dict], sel: dict, show: dict | None) -> str:
+    v = View(docs, sel)
+    chips = chips_html(v)
+    applied = f"<div class='applied'>{chips or '<span class=dim2>絞り込みなし</span>'}</div>"
+
+    if v.layout == "A":
+        top = header_html(v)
+        if show:
+            main = (f"<main class='wide'><p class='crumb'><a class='back' href='{q(sel, id='')}'>"
+                    f"← 一覧へ戻る</a></p>{doc_view(show, docs, sel)}</main>")
+        else:
+            main = (f"<main class='wide'><div class='ddbar'>{dropdowns_html(v)}</div>"
+                    f"{applied}<div class='wlist'>{list_html(v, show)}</div></main>")
+        return ("<!doctype html><meta charset='utf-8'><title>Canon</title>"
+                f"<style>{STYLE}</style><div class='app layA'>{top}{main}{LAW}</div>")
+
+    if v.layout == "C":
+        top = header_html(v, f"<label for='menu' class='burger' aria-label='絞り込みの開閉'>"
+                             f"<span></span><span></span><span></span></label>")
+        body = (f"<nav class='facets'>{facets_html(v)}</nav>"
+                f"<main class='content'>"
+                + (doc_view(show, docs, sel) if show
+                   else f"{applied}<div class='wlist'>{list_html(v, show)}</div>")
+                + "</main>"
+                + (f"<aside class='toc'>{toc_html(show)}</aside>" if show else "<aside class='toc'></aside>"))
+        return ("<!doctype html><meta charset='utf-8'><title>Canon</title>"
+                f"<style>{STYLE}</style><div class='app'>"
+                f"<input type='checkbox' id='menu' class='menu-t'>{top}"
+                f"<div class='body layC'>{body}</div>{LAW}</div>")
+
+    # B（既定）：上に絞り込みの帯、下にペインと本文
+    top = header_html(v, f"<label for='menu' class='burger' aria-label='一覧の開閉'>"
+                         f"<span></span><span></span><span></span></label>")
+    bar = (f"<div class='fbar'>{dropdowns_html(v)}"
+           f"<span class='fsep'></span>{chips_html(v)}</div>")
+    pane = f"<nav class='pane'><div class='plist'>{list_html(v, show)}</div></nav>"
+    content = ("<main class='content'>"
+               + (doc_view(show, docs, sel) if show else
+                  f"<div class='hello'><h2>決めごとを選ぶ</h2>"
+                  f"<p>上で絞り込み、左の行を押すと、ここに開く。</p>"
+                  f"<p class='dim2'>いま {v.n} 件</p></div>")
+               + "</main>")
+    return ("<!doctype html><meta charset='utf-8'><title>Canon</title>"
+            f"<style>{STYLE}</style><div class='app'>"
+            f"<input type='checkbox' id='menu' class='menu-t'>{top}{bar}"
+            f"<div class='body layB'>{pane}{content}</div>{LAW}</div>")
+
+
+
+def md_bundle(fit: list[dict], cond: str) -> str:
+    """出すマークダウン。落とす と同じものを作る ── 見たものと出るものを一致させる。"""
+    body = [f"# 規約　{cond}", "", f"文書 {len(fit)}本 ・ 決めごと {sum(items(d) for d in fit)}件", "",
+            "この写しは使い捨てである ── 正本は別にある。", ""]
+    for d in fit:
+        body.append(re.sub(r"^---\n.*?\n---\n", "", d["_text"], flags=re.S).strip())
+        body.append("\n---\n")
+    return "\n".join(body)
+
+
+def export_page(fit: list[dict], cond: str, sel: dict, dest: Path, done: Path | None) -> str:
+    md = md_bundle(fit, cond)
+    esc = md.replace("&", "&amp;").replace("<", "&lt;")
+    rows = "".join(f"<li>{d.get('主題','')}<span class='c'>{d.get('文書の種類')}</span></li>" for d in fit)
+    if done:
+        act = (f"<p class='done'>出しました　<code>{done}</code></p>"
+               f"<p class='foot'><a class='go' href='{q(sel, 出す='')}'>一覧へ戻る</a></p>")
+    else:
+        act = (f"<form method='post' action='/'>"
+               + "".join(f"<input type=hidden name='{k}' value='{v[0]}'>" for k, v in sel.items() if k != "出す")
+               + f"<p class='foot'><span class='dim2'>出す先　<code>{dest}</code></span>"
+                 f"<button class='go' type='submit'>この内容で出す</button></p></form>")
+    return ("<!doctype html><meta charset='utf-8'><title>Canon　出す</title>"
+            f"<style>{STYLE}</style><div class='app'>"
+            f"<header class='top'>{LOGO}<span class='name'>Canon</span>"
+            f"<a class='back' href='{q(sel, 出す='')}'>一覧へ戻る</a></header>"
+            f"<main class='ex'><p class='sum'><span class='cond'>{cond}</span>"
+            f"<span class='cnt'>文書 {len(fit)}　決めごと {sum(items(d) for d in fit)}</span></p>"
+            f"<ul class='exlist'>{rows}</ul>"
+            f"<h2 class='exh'>出るもの</h2><pre class='ex-md'>{esc}</pre>{act}</main></div>")
+
+
+def 画面(docs, port: int, dest: str = "dist") -> int:
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import urlparse, parse_qs
+
+    out_dir = Path(dest)
+
+    def picked_of(sel):
+        av = axis_values(docs)
+        picked = {k: v[0] for k, v in sel.items() if k in av and v and v[0]}
+        kind_pick = sel.get("kind", [""])[0]
+        ja = axis_names()
+        fit = [d for d in docs if d.get("文書の種類") != "選択"
+               and (not kind_pick or d.get("文書の種類") == kind_pick)
+               and all(picked[ck] == cv for ck, cv in d["_cond"] if ck in picked)]
+        cond = "　".join(f"{ja.get(k, k)} {v}" for k, v in picked.items()) or "すべて"
+        if kind_pick:
+            cond += f"　{kind_pick}"
+        return fit, cond
+
+    class H(BaseHTTPRequestHandler):
+        def _send(self, html: str):
+            raw = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def do_GET(self):
+            sel = parse_qs(urlparse(self.path).query)
+            if sel.get("出す"):
+                fit, cond = picked_of(sel)
+                return self._send(export_page(fit, cond, sel, out_dir, None))
+            show = None
+            if sel.get("id"):
+                show = next((d for d in docs if d["id"] == sel["id"][0]), None)
+            self._send(page(docs, sel, show))
+
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length") or 0)
+            sel = parse_qs(self.rfile.read(n).decode("utf-8"))
+            fit, cond = picked_of(sel)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            f = out_dir / "conventions.md"
+            f.write_text(md_bundle(fit, cond), encoding="utf-8")
+            self._send(export_page(fit, cond, sel, out_dir, f))
+
+        def log_message(self, *a):
+            pass
+
+    decl = entry(docs)
+    start = q({}, **{k: sorted(v)[0] for k, v in values_of(decl).items() if len(v) == 1})
+    with ThreadingHTTPServer(("127.0.0.1", port), H) as httpd:
+        print(f"開く  : http://127.0.0.1:{port}/{start}")
+        print(f"出す先: {out_dir}")
+        print("左で軸の値を選ぶと、条件が合う文書だけが右に出る")
+        print("保存しない ── 見ているのは、そのつど描いたものである")
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\n止めました")
+    return 0
+
+
+
+def 落とす(docs, dest: str, as_md: bool) -> int:
+    decl = entry(docs)
+    vals = values_of(decl)
+    fit = [d for d in docs if d.get("文書の種類") != "選択" and fits(d, vals)]
+    out = Path(dest)
+    if HOME.resolve() in out.resolve().parents or out.resolve() == HOME.resolve():
+        sys.exit(f"正本の中へは出さない: {out}")
+    out.mkdir(parents=True, exist_ok=True)
+    cond = "　".join(f"{k} = {' ・ '.join(sorted(v))}" for k, v in sorted(vals.items()))
+    if as_md:
+        body = [f"# {decl.get('主題','')}　の規約", "", cond, "",
+                f"規約 {len(fit)}本。**この写しは使い捨てである** ── 正本は別にある。", ""]
+        for d in [decl] + fit:
+            body.append(re.sub(r"^---\n.*?\n---\n", "", d["_text"], flags=re.S))
+            body.append("\n---\n")
+        f = out / f"{decl['id']}.md"
+        f.write_text("\n".join(body), encoding="utf-8")
+    else:
+        parts = [f"<h1>{decl.get('主題','')}　の規約</h1><p class='sum'>{cond}　規約 {len(fit)}本</p>",
+                 "<p class='sum'><b>この写しは使い捨てである</b> ── 正本は別にある。</p>"]
+        for d in [decl] + fit:
+            parts.append(f"<hr><p class='f'><span class='k'>{d.get('文書の種類')}</span>{d['id']}</p>")
+            parts.append(md2html(d["_text"]))
+        f = out / f"{decl['id']}.html"
+        f.write_text(f"<!doctype html><meta charset='utf-8'><title>{decl.get('主題','')}</title>"
+                     f"<style>{STYLE}.wrap{{display:block}}main{{margin:0 auto}}</style>"
+                     f"<main>{''.join(parts)}</main>", encoding="utf-8")
+    print(f"{f} に出した（{len(fit)}本 ＋ 宣言1本）")
+    print("使い捨てである ── 正本は .coding にある")
+    return 0
+
+
+def main() -> int:
+    argv = sys.argv[1:]
+    global HOME
+    if "--置き場所" in argv:
+        i = argv.index("--置き場所")
+        HOME = Path(argv[i + 1])
+        del argv[i:i + 2]
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__)
+        return 1
+    op, *rest = argv
+    if op == "--version":
+        print(f"conv {VERSION}\n作った元　{BUILT_FROM}\n出した日　{BUILT_ON}\n"
+              f"© 2026 daidaiiro　MIT License")
+        return 0
+    if op == "初期化":
+        return 初期化(rest[0])
+    if not HOME.is_dir():
+        sys.exit(f"置き場所が無い: {HOME}\n  conv 初期化 <置き場所> で作るか、--置き場所 で指す")
+    docs = load()
+    if op == "一式":
+        一式(docs, rest[0] if rest else None)
+    elif op == "重なり":
+        重なり(docs, rest)
+    elif op == "差分":
+        差分(docs, rest[0], rest[1] if len(rest) > 1 else None)
+    elif op == "効かない":
+        効かない(docs)
+    elif op == "画面":
+        port, dest = 8732, "dist"
+        if "--port" in rest:
+            port = int(rest[rest.index("--port") + 1])
+        if "--出す先" in rest:
+            dest = rest[rest.index("--出す先") + 1]
+        return 画面(docs, port, dest)
+    elif op == "落とす":
+        return 落とす(docs, rest[0], "--md" in rest)
+    elif op == "検査":
+        return 検査(docs)
+    else:
+        print(__doc__)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
