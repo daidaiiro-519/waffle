@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 daidaiiro
 """図の中の文字が、重なっていないか・枠からはみ出していないかを見る。
 
   python3 figcheck.py <図を持つモジュール名> ...

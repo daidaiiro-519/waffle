@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 daidaiiro
 """論点を、見て選べる1枚へ組む。
 
 文字だけで案を説明すると、読み手が頭の中で像を作ることになり、そこで解釈がぶれる。
@@ -217,6 +219,10 @@ def _sections(t: Topic) -> str:
     return head + "".join(secs)
 
 
+LAW = ('<footer class="law">© 2026 daidaiiro　'
+       '<a href="https://opensource.org/licenses/MIT">MIT License</a></footer>')
+
+
 def deck(theme: str, topics: list[Topic], intro: str | None = None,
          extras: list[tuple[str, str]] | None = None) -> str:
     """複数の論点を、タブで1枚にまとめる。
@@ -244,7 +250,7 @@ def deck(theme: str, topics: list[Topic], intro: str | None = None,
             f'（<span id="n">0</span>か所）</small></div>'
             f'<button id="all" type="button">すべて開く</button></div>'
             f'<div class="tabs" role="tablist">{"".join(tabs)}</div>')
-    return f'{head}<main>{"".join(panels)}</main>{SCRIPT}'
+    return f'{head}<main>{"".join(panels)}</main>{LAW}{SCRIPT}'
 
 
 CSS = """
@@ -264,7 +270,10 @@ CSS = """
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-size:15.5px;line-height:1.85;
   font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:53rem;margin:0 auto;padding:0 1.5rem 5rem}
+main{max-width:53rem;margin:0 auto;padding:0 1.5rem 2rem}
+footer.law{max-width:53rem;margin:0 auto 3rem;padding:.7rem 1.5rem 0;border-top:1px solid var(--rule,#e2eae7);font-size:.7rem;color:var(--faint,#8a9793);font-family:ui-monospace,monospace}
+footer.law a{color:inherit;text-decoration:none}
+footer.law a:hover{text-decoration:underline}
 .eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:1.6rem 0 .5rem}
 h1{font-family:"Noto Serif JP",serif;font-weight:700;font-size:clamp(23px,3.4vw,31px);
   line-height:1.35;margin:0;padding-bottom:.6rem;border-bottom:2px solid var(--key);text-wrap:balance}

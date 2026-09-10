@@ -5,7 +5,8 @@ Claude Code は自分からターンを始められない。だから回答が�
 利用者が次に何か書くまで誰も読まない。このHookは、その「次に何か書いたとき」に
 未読の回答だけを渡す ── 毎回「回答を読んで」と書かせないためである。
 
-既読の管理は `.waffle/answers/.read` で行い、回答そのものは消さず書き換えもしない。
+回答はブレストごとに `.brainstorm/<ブレスト>/answers/` へ積まれる。
+既読の管理は各 answers の `.read` で行い、回答そのものは消さず書き換えもしない。
 """
 from __future__ import annotations
 
@@ -14,14 +15,20 @@ import os
 import sys
 from pathlib import Path
 
-ANSWERS = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".waffle" / "answers"
-READ_MARK = ANSWERS / ".read"
+ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".brainstorm"
 
 
-def _read_marks() -> set[str]:
-    if not READ_MARK.exists():
+def _answer_dirs() -> list[Path]:
+    """ブレストごとの回答置き場。回答はそのブレストの持ち物である。"""
+    if not ROOT.is_dir():
+        return []
+    return sorted(d for d in ROOT.glob("*/answers") if d.is_dir())
+
+
+def _read_marks(mark: Path) -> set[str]:
+    if not mark.exists():
         return set()
-    return {line.strip() for line in READ_MARK.read_text(encoding="utf-8").splitlines() if line.strip()}
+    return {line.strip() for line in mark.read_text(encoding="utf-8").splitlines() if line.strip()}
 
 
 def _line(a: dict) -> str:
@@ -36,35 +43,35 @@ def _line(a: dict) -> str:
 
 
 def main() -> int:
-    if not ANSWERS.is_dir():
-        return 0
-    seen = _read_marks()
-    fresh = sorted(p for p in ANSWERS.glob("*.json") if p.name not in seen)
+    fresh: list[Path] = []
+    for d in _answer_dirs():
+        seen = _read_marks(d / ".read")
+        fresh.extend(p for p in sorted(d.glob("*.json")) if p.name not in seen)
     if not fresh:
         return 0
 
     out: list[str] = ["[承認の画面からの回答]まだ読んでいないものがあります。"]
-    used: list[str] = []
+    used: list[Path] = []
     for p in fresh:
         try:
             body = json.loads(p.read_text(encoding="utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
             out.append(f"- {p.name}: JSON として読めないので飛ばしました")
-            used.append(p.name)
+            used.append(p)
             continue
         answers = body.get("answers") or []
-        out.append(f"- {p.name}　盤面: {body.get('board', '?')}　時刻: {body.get('answeredAt', '?')}")
+        out.append(f"- {p.parent.parent.name} / {p.name}　時刻: {body.get('answeredAt', '?')}")
         out.extend(_line(a) for a in answers if isinstance(a, dict))
-        used.append(p.name)
+        used.append(p)
 
     out.append("承認されたものは決まりとして盤面へ記録し、"
                "差し戻されたものは理由と書き足しを材料に、直した答えを1つ出してください。")
     print("\n".join(out))
 
-    READ_MARK.parent.mkdir(parents=True, exist_ok=True)
-    with READ_MARK.open("a", encoding="utf-8") as f:
-        for name in used:
-            f.write(name + "\n")
+    for p in used:
+        mark = p.parent / ".read"
+        with mark.open("a", encoding="utf-8") as f:
+            f.write(p.name + "\n")
     return 0
 
 
