@@ -1,0 +1,1025 @@
+<meta charset="utf-8">
+<title>規約を、宣言から導く</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#eef1ef; --card:#f8faf9; --ink:#111d1a; --muted:#5b6b66;
+  --rule:#ccd8d4; --rule-soft:#dfe7e4; --sunk:#e7ecea;
+  --key:#0d5c55; --key-soft:#d5e6e3;
+  --warn:#8f5410; --warn-soft:#f0e2cd;
+  --dim:#7d8a86;
+  --fig-ground:#ffffff; --fig-box:#e9efed; --fig-line:#9fb0ab; --zebra:#f3f6f5;
+  --src-o:#7a3b6d; --src-k:#0d5c55; --src-j:#8f5410; --src-z:#5b6b66;
+  --shadow:0 1px 0 rgba(17,29,26,.06), 0 8px 22px -18px rgba(17,29,26,.5);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0e1614; --card:#16211e; --ink:#e6eeeb; --muted:#93a29d;
+  --rule:#2a3936; --rule-soft:#22302d; --sunk:#111a18;
+  --key:#6cc9b8; --key-soft:#173330;
+  --warn:#d9a35f; --warn-soft:#33281a;
+  --dim:#7b8985;
+  --src-o:#d094c2; --src-k:#6cc9b8; --src-j:#d9a35f; --src-z:#93a29d;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 26px -18px #000;
+}}
+:root[data-theme="dark"]{
+  --paper:#0e1614; --card:#16211e; --ink:#e6eeeb; --muted:#93a29d;
+  --rule:#2a3936; --rule-soft:#22302d; --sunk:#111a18;
+  --key:#6cc9b8; --key-soft:#173330;
+  --warn:#d9a35f; --warn-soft:#33281a;
+  --dim:#7b8985;
+  --src-o:#d094c2; --src-k:#6cc9b8; --src-j:#d9a35f; --src-z:#93a29d;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 26px -18px #000;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:62rem;margin:0 auto;padding:2.4rem 1.15rem 6rem;display:flex;flex-direction:column;gap:2.6rem}
+h1,h2,h3{font-family:"Shippori Mincho","Yu Mincho",serif;font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:2rem;letter-spacing:.02em;line-height:1.4}
+h2{font-size:1.22rem}
+h3{font-size:1rem}
+h4{margin:0;font-size:.78rem;font-weight:700;color:var(--ink);letter-spacing:.04em}
+p{margin:0}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted)}
+.thesis{font-size:1.05rem;max-width:42rem;color:var(--muted)}
+.thesis b{color:var(--ink);font-weight:700}
+.src{font-size:.76rem;color:var(--muted)}
+header{display:flex;flex-direction:column;gap:.75rem;border-bottom:1px solid var(--rule);padding-bottom:1.6rem}
+
+/* ── 比較 ── */
+.compare{display:flex;flex-direction:column;gap:1rem}
+.panes{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:58rem){.panes{grid-template-columns:1fr 1fr}}
+.pane{background:var(--card);border:1px solid var(--rule-soft);border-radius:.5rem;padding:1.15rem 1.25rem;
+  display:flex;flex-direction:column;gap:.7rem;min-width:0}
+.pane.now{border-color:var(--rule)}
+.pane.next{border-color:var(--key);box-shadow:var(--shadow)}
+.pane-hd{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;
+  border-bottom:1px solid var(--rule-soft);padding-bottom:.5rem}
+.pane-hd .t{font-weight:700;font-size:.95rem}
+.pane.now .pane-hd .t{color:var(--dim)}
+.pane.next .pane-hd .t{color:var(--key)}
+.pane .body{font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:.55rem}
+.pane.now .body{color:var(--dim)}
+.opt{border-left:2px solid var(--rule);padding-left:.7rem}
+.opt b{color:var(--ink);font-weight:700}
+.pane.now .opt b{color:var(--dim)}
+.reco{background:var(--key-soft);border-left:3px solid var(--key);padding:.6rem .8rem;border-radius:0 .3rem .3rem 0;
+  color:var(--ink);font-size:.95rem}
+.reco .lbl{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.14em;color:var(--key);
+  display:block;margin-bottom:.15rem}
+.ask{font-weight:700;color:var(--ink)}
+.pane.now .ask{color:var(--dim)}
+.meters{display:grid;gap:.55rem;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
+.meter{border-top:2px solid var(--rule);padding-top:.5rem;display:flex;flex-direction:column;gap:.05rem}
+.meter .k{font-size:.74rem;color:var(--muted)}
+.meter .v{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;font-size:1.05rem;font-weight:700}
+.meter .v small{font-size:.72rem;font-weight:400;color:var(--muted);margin-left:.15rem}
+.meter.a{border-top-color:var(--dim)} .meter.a .v{color:var(--dim)}
+.meter.b{border-top-color:var(--key)} .meter.b .v{color:var(--key)}
+
+/* ── ラウンド ── */
+.round{display:flex;flex-direction:column;gap:1rem}
+.round-hd{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.round-hd .n{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.14em;color:var(--key);
+  border:1px solid var(--key);border-radius:2rem;padding:.05rem .6rem}
+.round-hd .why{font-size:.8rem;color:var(--muted)}
+.q{background:var(--card);border:1px solid var(--rule-soft);border-radius:.5rem;padding:1.1rem 1.25rem;
+  display:flex;flex-direction:column;gap:.75rem;box-shadow:var(--shadow);transition:border-color .2s}
+.q.done{border-color:var(--key)}
+.q.settled{border-color:var(--key);border-left-width:4px}
+.q.settled .acts,.q.settled .backs{display:none}
+.q-hd .ok{font-family:"JetBrains Mono",monospace;font-size:.66rem;color:var(--key);border:1px solid var(--key);border-radius:2rem;padding:.05rem .55rem;flex:none}
+/* ── 答えの履歴（タイムライン） ── */
+.vers{display:flex;flex-direction:column;gap:.6rem}
+.ver{border-left:3px solid var(--key);padding-left:.85rem;display:flex;flex-direction:column;gap:.7rem}
+.ver.past{border-left-color:var(--rule-soft)}
+.ver-hd{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;font-size:.78rem}
+.ver-hd .stamp{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.08em;
+  border:1px solid var(--key);color:var(--key);border-radius:2rem;padding:.05rem .55rem;flex:none}
+.ver.past .ver-hd .stamp{border-color:var(--muted);color:var(--muted)}
+.ver-hd .when{color:var(--muted)}
+.pick{display:inline-flex;gap:.35rem;align-items:center;cursor:pointer;color:var(--muted)}
+.pick input{accent-color:var(--key);margin:0}
+.ver.chosen .pick{color:var(--key);font-weight:600}
+.past-why{font-size:.82rem;color:var(--muted);background:var(--paper);border-radius:.35rem;padding:.5rem .7rem}
+.past-why b{color:var(--ink)}
+.past-why .said{display:block;margin-top:.3rem;white-space:pre-wrap;border-left:2px solid var(--rule-soft);padding-left:.6rem}
+details.old>summary{font-size:.8rem}
+/* ── 差し戻しの理由（自由入力） ── */
+.backs{display:flex;flex-direction:column;gap:.45rem}
+.backs .chips{display:flex;gap:.35rem;flex-wrap:wrap}
+.backs .chip{font-size:.75rem;padding:.15rem .6rem;border-radius:2rem;border:1px solid var(--rule-soft);
+  background:transparent;color:var(--muted);cursor:pointer}
+.backs .chip:hover{border-color:var(--key);color:var(--key)}
+.backs input[type=text]{width:100%;padding:.45rem .6rem;border:1px solid var(--rule-soft);
+  border-radius:.35rem;background:var(--paper);color:var(--ink);font:inherit;font-size:.85rem}
+.backs .row{display:flex;gap:.4rem}
+.backs .row button{flex:none}
+/* ── 図：色は描く時点でページのトークンから決めてある（svg_engine のテーマ）。
+   ここには板を重ねない ── 図が載る板は .fig 1枚だけである。 */
+
+/* ── 表：地と縁を持たせる。罫線だけだと、地色に浮いて読めない ── */
+.scroll{overflow-x:auto;background:var(--fig-ground);border:1px solid var(--rule-soft);
+  border-radius:.45rem}
+.scroll>table{min-width:30rem}
+.scroll tr:first-child th{background:var(--sunk)}
+.scroll tr:nth-child(even) td{background:var(--zebra)}
+.scroll th:first-child,.scroll td:first-child{padding-left:.75rem}
+.scroll th:last-child,.scroll td:last-child{padding-right:.75rem}
+.scroll tr:last-child td{border-bottom:0}
+/* ── 目次：論点が増えても、スクロールせずに辿れるようにする ── */
+.toc{position:sticky;top:0;z-index:30;padding:.55rem 0 .5rem;
+  background:var(--paper);
+  background:color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter:blur(6px);border-bottom:1px solid var(--rule-soft);
+  display:flex;gap:.3rem;flex-wrap:wrap;align-items:center}
+.toc .lead{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+  color:var(--muted);margin-right:.2rem}
+.toc a{display:inline-flex;align-items:baseline;gap:.3rem;text-decoration:none;font-size:.76rem;
+  color:var(--muted);border:1px solid var(--rule-soft);border-radius:2rem;padding:.12rem .6rem;
+  background:var(--card);white-space:nowrap;transition:border-color .15s,color .15s}
+.toc a:hover{border-color:var(--key);color:var(--key)}
+.toc a .n{font-family:"JetBrains Mono",monospace;font-size:.68rem;font-weight:700}
+.toc a .s{font-size:.62rem;letter-spacing:.06em}
+.toc a .t{max-width:11rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toc a.st-settled,.toc a.st-done{border-color:var(--key);color:var(--key)}
+.toc a.st-sent{border-color:var(--warn);color:var(--warn)}
+.toc a.now{background:var(--key-soft);border-color:var(--key);color:var(--key);font-weight:700}
+.toc a.send{margin-left:auto;border-color:var(--key);color:var(--key);font-weight:700}
+.q{scroll-margin-top:3.6rem}
+.handback{scroll-margin-top:3.6rem}
+#summary,#export{scroll-margin-top:3.6rem}
+@media (max-width:40rem){.toc a .t{display:none}}
+.acts[hidden]{display:none}
+.chip{font-size:.75rem;padding:.15rem .6rem;border-radius:2rem;border:1px solid var(--rule-soft);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--key);color:var(--key)}
+/* ── 文書の完成イメージ：前置きの欄 ── */
+.fm{display:grid;grid-template-columns:max-content 1fr;gap:.15rem .8rem;font-size:.78rem;
+  background:var(--sunk);border-radius:.35rem;padding:.5rem .7rem;margin-bottom:.5rem}
+.fm dt{color:var(--muted);font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.04em}
+.fm dd{margin:0;color:var(--ink)}
+.fm dd b{color:var(--key)}
+.docs{display:flex;flex-direction:column;gap:.9rem}
+.doc-tag{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.08em;color:var(--key);
+  border:1px solid var(--key);border-radius:2rem;padding:.05rem .55rem;margin-right:.4rem}
+.spine{color:var(--key);font-weight:700}
+.settled-note{font-size:.8rem;color:var(--key);border-top:1px solid var(--rule-soft);padding-top:.5rem}
+.q.sent{border-color:var(--warn)}
+.q-hd{display:flex;gap:.6rem;align-items:baseline}
+.q-hd .id{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--key);flex:none}
+.q-hd h3{flex:1}
+.q-hd .tag{font-family:"JetBrains Mono",monospace;font-size:.66rem;color:var(--muted);flex:none}
+.q .ask{font-size:.93rem;font-weight:400;color:var(--muted)}
+
+/* ── 折りたたみの中 ── */
+details{border-top:1px solid var(--rule-soft);padding-top:.55rem}
+summary{cursor:pointer;font-size:.82rem;color:var(--muted);list-style:none;display:flex;gap:.4rem;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"＋";font-family:"JetBrains Mono",monospace;color:var(--key);font-weight:700}
+details[open] summary::before{content:"−"}
+summary:focus-visible{outline:2px solid var(--key);outline-offset:3px}
+.inside{display:flex;flex-direction:column;gap:1.15rem;margin-top:.85rem;padding-left:.9rem;
+  border-left:2px solid var(--rule-soft)}
+.block{display:flex;flex-direction:column;gap:.4rem}
+table{border-collapse:collapse;width:100%;font-size:.83rem;min-width:30rem}
+th,td{text-align:left;vertical-align:top;padding:.35rem .55rem;border-bottom:1px solid var(--rule-soft)}
+th{font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.05em;border-bottom-color:var(--rule);
+  white-space:nowrap}
+td.what{color:var(--ink);font-weight:700;width:26%}
+td.src-cell{width:26%;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+.tag-src{font-family:"JetBrains Mono",monospace;font-size:.64rem;font-weight:700;letter-spacing:.08em;
+  border:1px solid currentColor;border-radius:.2rem;padding:0 .3rem;margin-right:.35rem;white-space:nowrap;
+  display:inline-block;vertical-align:.08em}
+.o{color:var(--src-o)} .k{color:var(--src-k)} .j{color:var(--src-j)} .z{color:var(--src-z)}
+ol.chain{margin:0;padding:0;list-style:none;counter-reset:c;display:flex;flex-direction:column;gap:.3rem}
+ol.chain li{counter-increment:c;font-size:.85rem;color:var(--muted);display:flex;gap:.5rem}
+ol.chain li::before{content:counter(c);font-family:"JetBrains Mono",monospace;font-size:.7rem;font-weight:700;
+  color:var(--key);border:1px solid var(--rule);border-radius:50%;width:1.35rem;height:1.35rem;flex:none;
+  display:grid;place-items:center;margin-top:.35rem}
+ol.chain b{color:var(--ink)}
+td.kill{color:var(--muted)}
+td.kill b{color:var(--ink)}
+
+
+/* ── 完成イメージ ── */
+.fig{display:flex;flex-direction:column;gap:.5rem;background:var(--fig-ground);border:1px solid var(--rule-soft);
+  border-radius:.4rem;padding:.85rem .95rem}
+.fig svg{width:100%;height:auto;display:block;color:var(--ink);overflow:visible}
+.diff{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.76rem;line-height:1.65;
+  display:flex;flex-direction:column;gap:.02rem;overflow-x:auto}
+.diff .dh{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--muted);margin-bottom:.3rem}
+.diff .dn{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.76rem;color:var(--muted);margin-top:.5rem;
+  border-top:1px solid var(--rule-soft);padding-top:.45rem;line-height:1.75}
+.dl{display:flex;gap:.8rem;padding:.06rem .4rem;border-left:2px solid transparent;white-space:nowrap}
+.dl .c{flex:none;min-width:14rem}
+.dl .d{color:var(--muted);white-space:normal;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.78rem}
+.dl.add{border-left-color:var(--key);background:var(--key-soft);color:var(--ink)}
+.dl.add .c::before{content:"+ ";color:var(--key);font-weight:700}
+.dl.del{border-left-color:var(--dim);color:var(--dim)}
+.dl.del .c{text-decoration:line-through;text-decoration-color:var(--dim)}
+.dl.del .c::before{content:"− ";text-decoration:none;display:inline-block}
+.dl.del .d{color:var(--dim)}
+.dl.same .c::before{content:"= ";color:var(--muted)}
+.dl.sub{color:var(--muted)}
+.dl.sub .c{padding-left:.2rem}
+.dl.tmp{color:var(--warn)}
+.dl.tmp .c::before{content:"? ";font-weight:700}
+.dl.grp{margin-top:.4rem;font-family:"Zen Kaku Gothic New",sans-serif;font-weight:700;color:var(--ink);
+  font-size:.78rem;border-bottom:1px solid var(--rule-soft)}
+
+/* ── 操作 ── */
+.acts{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+button.act{font:inherit;font-size:.87rem;cursor:pointer;border-radius:.35rem;padding:.4rem 1.1rem;
+  border:1px solid var(--rule);background:var(--card);color:var(--muted);transition:.15s}
+button.act:hover{border-color:var(--muted)}
+button.act.yes{background:var(--key);border-color:var(--key);color:var(--paper);font-weight:700}
+button.act.yes:hover{filter:brightness(1.08)}
+button.act:focus-visible{outline:2px solid var(--key);outline-offset:2px}
+.verdict{font-size:.87rem;color:var(--muted)}
+.verdict .ok{color:var(--key);font-weight:700}
+.verdict .back{color:var(--warn);font-weight:700}
+.backs{display:flex;gap:.4rem;flex-wrap:wrap;padding:.55rem .7rem;background:var(--warn-soft);border-radius:.35rem}
+.backs span{font-size:.8rem;color:var(--warn);align-self:center;margin-right:.2rem}
+.backs[hidden]{display:none}
+.note{display:flex;flex-direction:column;gap:.3rem;border-top:1px solid var(--rule-soft);padding-top:.6rem}
+label{font-size:.78rem;color:var(--muted)}
+textarea{font:inherit;font-size:.87rem;background:var(--sunk);color:var(--ink);border:1px solid var(--rule);
+  border-radius:.35rem;padding:.55rem .7rem;resize:vertical;min-height:3.2rem;width:100%}
+textarea:focus-visible{outline:2px solid var(--key);outline-offset:1px;border-color:var(--key)}
+
+/* ── 締め ── */
+.done-card{background:var(--card);border:1px solid var(--key);border-radius:.5rem;padding:1.3rem 1.4rem;
+  display:flex;flex-direction:column;gap:1rem;box-shadow:var(--shadow)}
+.done-card[hidden]{display:none}
+.cols{display:grid;gap:1.1rem;grid-template-columns:1fr}
+@media(min-width:48rem){.cols{grid-template-columns:1fr 1fr}}
+ul{margin:0;padding-left:1.1rem;font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;gap:.3rem}
+ul b{color:var(--ink)}
+.strike li{text-decoration:line-through;text-decoration-color:var(--dim);color:var(--dim)}
+.handback{display:flex;flex-direction:column;gap:.5rem;border:1px dashed var(--key);border-radius:.5rem;
+  padding:1rem 1.15rem;background:var(--card)}
+#out{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.76rem;min-height:7rem;line-height:1.7}
+footer{border-top:1px solid var(--rule);padding-top:1.2rem;font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+pre.tree{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.74rem;line-height:1.8;
+background:var(--card);border:1px solid var(--rule-soft);border-radius:.35rem;padding:.8rem .9rem;
+overflow-x:auto;margin:.3rem 0;color:var(--muted);white-space:pre}
+pre.tree b{color:var(--key)}
+
+mark.chg{background:var(--warn-soft);color:var(--ink);border-bottom:2px solid var(--warn);
+border-radius:.15em;padding:0 .15em;cursor:pointer}
+mark.chg::after{content:"変";font-size:.62rem;vertical-align:super;color:var(--warn);font-weight:700;margin-left:.1rem}
+.pop{display:block;margin:.5rem 0;padding:.6rem .8rem;border:1px solid var(--warn);border-radius:.3rem;
+background:var(--warn-soft);font-size:.85rem;line-height:1.75}
+.pop[hidden]{display:none!important}
+.pop b{color:var(--warn);display:block;margin-top:.4rem}
+.pop b:first-child{margin-top:0}
+.mock{border:1px solid var(--rule);border-radius:.5rem;overflow:hidden;background:var(--card)}
+.mock-bar{background:var(--sunk);border-bottom:1px solid var(--rule-soft);padding:.4rem .8rem;
+font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--muted)}
+.mock-body{display:grid;grid-template-columns:1fr;gap:0}
+@media(min-width:46rem){.mock-body{grid-template-columns:13rem 1fr}}
+.mock-side{border-right:1px solid var(--rule-soft);padding:.8rem;display:flex;flex-direction:column;gap:.25rem}
+.mk-h{font-size:.68rem;letter-spacing:.1em;color:var(--muted);margin-top:.5rem;font-family:"JetBrains Mono",monospace}
+.mk-h:first-child{margin-top:0}
+.mk{font:inherit;font-size:.8rem;text-align:left;border:1px solid var(--rule);background:transparent;
+color:var(--muted);border-radius:.25rem;padding:.15rem .5rem;cursor:default}
+.mk.on{background:var(--key);border-color:var(--key);color:var(--paper);font-weight:700}
+.mk-note{font-size:.68rem;color:var(--muted);margin-top:.7rem;line-height:1.6}
+.mock-main{padding:.8rem 1rem;display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.mk-sum{font-size:.85rem;border-bottom:1px solid var(--rule-soft);padding-bottom:.5rem;margin-bottom:.3rem}
+.mk-dim{color:var(--muted);font-size:.76rem;display:block}
+.mk-row{display:flex;gap:.6rem;align-items:baseline;padding:.3rem .5rem;border-radius:.25rem;
+border:1px solid transparent;font-size:.86rem}
+.mk-row:hover{background:var(--sunk)}
+.mk-row.open{border-color:var(--key);background:var(--key-soft)}
+.mk-t{flex:1;color:var(--ink)}
+.mk-c{font-size:.7rem;color:var(--muted);font-family:"JetBrains Mono",monospace}
+.mk-n{font-size:.7rem;color:var(--key);font-family:"JetBrains Mono",monospace;white-space:nowrap}
+.mk-doc{border-left:3px solid var(--key);background:var(--sunk);padding:.7rem .9rem;margin:.1rem 0 .4rem;
+border-radius:0 .3rem .3rem 0;font-size:.85rem;display:flex;flex-direction:column;gap:.4rem}
+.mk-doc h4{font-size:.95rem}
+.mk-meta{font-size:.72rem;color:var(--muted);font-family:"JetBrains Mono",monospace}
+.mk-doc table{min-width:0;font-size:.78rem}
+.mk-foot{font-size:.76rem;color:var(--muted);border-top:1px solid var(--rule-soft);padding-top:.5rem;
+margin-top:.3rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+.mk.out{border-color:var(--key);color:var(--key);margin-left:auto}
+
+
+footer.law{max-width:53rem;margin:0 auto 3rem;padding:.7rem 1.5rem 0;border-top:1px solid var(--rule,#e2eae7);font-size:.7rem;color:var(--faint,#8a9793);font-family:ui-monospace,monospace}
+footer.law a{color:inherit;text-decoration:none}
+footer.law a:hover{text-decoration:underline}
+</style><div class="wrap">
+<header>
+  <p class="eyebrow">新しいブレスト ／ CodingSchema と coding-skills</p>
+  <h1>規約を、宣言から導く</h1>
+  <p class="thesis"><b>宣言したものから、守るべきことが決まる。</b>
+  何を、どの言語で、どのアーキテクチャで、どう呼ばれる形で作るかを宣言すると、
+  その値を条件に持つ規約だけが効く ── <b>写しは作らない</b>。</p>
+</header>
+
+<section style="display:flex;flex-direction:column;gap:.7rem">
+<h2>この盤を立て直した理由</h2>
+<div class="scroll"><table>
+<tr><th>何が起きたか</th><th>だからどうしたか</th></tr>
+<tr><td>前の盤で「軸とは何か」が3回変わった（用途 ・ 道具 ・ 実行環境の扱い）</td><td>壊れた論点と、その差し戻しの積み重ねが残った</td></tr>
+<tr><td>概念実装を、既存と別に立てた</td><td>採りたい名前は <b>CodingSchema</b> と <b>coding-skills</b> のまま。いまの <code>coding-conventions</code> は、<b>既存のディレクトリと衝突しないための仮の名</b>である</td></tr>
+<tr><td>生きている決着が9つある</td><td><b>持ち越して前提に置く</b> ── 立て直しても、決まったことは決まったまま</td></tr>
+</table></div>
+<p class="src">前の盤 ── <a href="https://claude.ai/code/artifact/ddf79ce5-941b-4b6a-a0ca-13ac459279f7" style="color:var(--key)">Coding を組み直す</a>。
+どうやってここへ来たかの記録として残す。<b>この盤は、そこから決着だけを持ち越して立て直したもの</b>である。</p>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:.7rem">
+<h2>持ち越す決着</h2>
+<p class="src">前の盤で決まり、いまも生きているもの。<b>この盤では前提として扱い、蒸し返さない。</b></p>
+<div class="scroll"><table>
+<tr><th></th><th>決着</th><th>この盤での効き方</th></tr>
+<tr><td><b>決めごとの形</b></td><td>決めごとが<b>適用条件</b>を持つ。置き場所で決まらない</td><td>軸の値が条件になる</td></tr>
+<tr><td><b>文書の単位</b></td><td>文書＝<b>一緒に決まる決めごとのまとまり</b>＝承認の単位</td><td>宣言も1本の文書になる</td></tr>
+<tr><td><b>置き方</b></td><td>正本は<b>1段</b>。フォルダを切らない。辿るのはその場で描くビュー</td><td><b>Q5 で見直した</b> ── 却下していたのは軸で切ること。種類は1つしか持たないので切れる</td></tr>
+<tr><td><b>依存の向き</b></td><td>仕様は<b>外から注入される</b>。規約はそれを受け取る側で、<b>仕様を知らない</b></td><td>Q1 の物差しの理由になる</td></tr><tr><td><b>出典</b></td><td>公式は<b>指す</b>。持つのは私たちの<b>選択</b>だけ。引用した文字列と取得日を書く</td><td>慣習の書き写しを止める力になる</td></tr>
+<tr><td><b>背骨</b></td><td>節の並びは<b>文書の種類</b>が決める。主題は節を作らない</td><td>そのまま</td></tr>
+<tr><td><b>選択</b></td><td>選択は決めごとではない。<b>違反の節を持たず、落とした候補を持つ</b></td><td>宣言＝選択の記録</td></tr>
+<tr><td><b>膨らみ</b></td><td>決めごとは<b>宣言の数では増えない</b>。増えるのは軸の値と主題</td><td>そのまま</td></tr>
+<tr><td><b>見る画面</b></td><td>絞り込んだ結果を、<b>描画して</b>その場で見せる。保存しない。原文（記号の並び）は映さない</td><td><b>持ち越し忘れていた</b> ── 前の盤の決着。<code>conv 画面</code> で実装</td></tr><tr><td><b>出力</b></td><td>一式を1枚にまとめて出す。<b>使い捨て</b>で、正本のフォルダへは出さない</td><td><b>持ち越し忘れていた</b> ── ただし正本が Markdown になったので、「Markdown へ描画する」ではなく「<b>まとめて出す</b>」になった</td></tr><tr><td><b>手入れ</b></td><td>棚卸しにしない。<b>書くとき</b>と<b>選ぶとき</b>に影響を見せる</td><td>そのまま</td></tr>
+<tr><td><b>持てる能力</b></td><td><b>適用条件で絞る</b>を軸に、並べる ・ 差分を出す ・ 出典を当てる。判断は持たない</td><td>そのまま</td></tr>
+</table></div>
+<p class="src"><b>壊れたのは1つだけ</b> ── 「軸とは何か」。この盤は、そこから立て直す。</p>
+</section>
+<nav class="toc" aria-label="論点の目次"><span class="lead">論点</span></nav>
+<div class="round"><div class="round-hd"><span class="n">ROUND 1</span><span class="why">完成イメージには、決定を採ったときにできあがるものだけを置く。どう落としたかは、畳んだ中にある。</span></div>
+<article class="q" data-id="Q1">
+<div class="q-hd"><span class="id">Q1</span><h3>規約と仕様の境界は、どこか</h3><span class="tag">新しい論点</span></div>
+<p class="ask">この Skill が持ってよいものと、持ってはいけないものを、何で分けるか。</p>
+<div class="vers"><div class="ver chosen" data-v="v2"><div class="ver-hd"><span class="stamp">v2</span><span class="when">直した答え</span><label class="pick"><input type="radio" name="pick-Q1" value="v2" checked>これを決定にする</label></div><div class="reco"><span class="lbl">決定</span><b>規約は、仕様を知らないまま書けるものに限ります。</b><b><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="軸の値だけから書けるかで分ける。理由は、規約が共有されるから ── プロダクト固有のものが混ざると、関係のない宣言にまでそれが効く。" data-w="物差しは同じだが、理由が浅かった。本当の理由は依存の向きである ── 仕様は SpecSchema が実装できる高さまで落として、外から注入される。規約はそれを受け取る側であり、規約が仕様を知ると向きが逆転して、プロダクトが変わるたびに規約が動く。共有が壊れるのは、その結果にすぎない">理由は、依存の向きです</mark></b> ── <b>仕様は外から注入されるもの</b>で、規約はそれを受け取る側です。規約が仕様を知ると向きが逆転し、<b>プロダクトが変わるたびに規約が動きます</b>。物差しは変わりません ── <b>軸の値だけから書けるか</b>。</div><div class="fig"><h4>この決定を採ると、こうなる</h4><div style="text-align:center"><svg style="max-width:22rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 394 236" width="394" height="236" role="img"><g transform="translate(6.0,6.0)"><path d="M120.1,32.6 L120.1,95.2" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="120.1,95.2 117.7,88.4 122.6,88.4" fill="#9fb0ab"/><rect x="91.1" y="53.9" width="58.0" height="16.0" fill="#e9efed"/><text x="120.1" y="67.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">条件になる</text><path d="M120.1,128.8 L211.0,191.2" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="211.0,191.2 204.0,189.4 206.8,185.3" fill="#9fb0ab"/><rect x="116.6" y="150.0" width="98.0" height="16.0" fill="#e9efed"/><text x="165.6" y="163.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">どう書くかを与える</text><path d="M302.4,128.6 L211.0,191.2" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="211.0,191.2 215.2,185.3 218.0,189.4" fill="#9fb0ab"/><rect x="207.7" y="149.9" width="98.0" height="16.0" fill="#e9efed"/><text x="256.7" y="163.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">何を作るかを与える</text><g class="wf-node" transform="translate(0.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="239.2" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="119.6" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">軸　言語 ・ アーキテクチャ ・ 形態</text></g></g><g class="wf-node" transform="translate(40.8,96.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="157.6" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="78.8" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">規約　CodingSchema</text></g></g><g class="wf-node" transform="translate(222.4,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="160.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="80.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">仕様　外から注入される</text></g></g><g class="wf-node" transform="translate(181.0,192.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">実装</text></g></g></g></svg></div><p class="dn" style="margin-top:.6rem"><b>規約から仕様へ向かう矢印はありません。</b>規約が与えるのは<b>どう書くか</b>だけで、<b>何を作るか</b>は仕様が与えます。</p><p class="dh" style="margin-top:1rem">分かれ目</p><pre class="tree">  <b>仕様を知らないまま書ける</b>　→　規約。この Skill が持つ
+  <b>仕様を知らないと書けない</b>　→　仕様。受け取る側へ渡す</pre><div style="text-align:center;margin-top:.8rem"><svg style="max-width:44rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 766 100" width="766" height="100" role="img"><g transform="translate(6.0,6.0)"><path d="M276.4,44.0 L339.0,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="339.0,16.0 333.8,21.0 331.8,16.5" fill="#9fb0ab"/><path d="M276.4,44.0 L339.2,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="339.2,72.0 332.0,71.5 334.0,67.0" fill="#9fb0ab"/><path d="M476.6,16.0 L575.0,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="575.0,16.0 568.2,18.5 568.2,13.5" fill="#9fb0ab"/><path d="M512.4,72.0 L575.2,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="575.2,72.0 568.4,74.5 568.4,69.5" fill="#9fb0ab"/><g class="wf-node" transform="translate(0.0,28.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="275.8" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="137.9" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">この言明を書くのに、
+何を知る必要があるか</text></g></g><g class="wf-node" transform="translate(339.8,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="136.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="68.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">軸の値だけで書ける</text></g></g><g class="wf-node" transform="translate(339.8,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="172.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="86.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">仕様を知らないと書けない</text></g></g><g class="wf-node" transform="translate(575.8,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="178.6" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="89.3" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">規約　この Skill が持つ</text></g></g><g class="wf-node" transform="translate(575.8,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="160.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="80.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">仕様　外から注入される</text></g></g></g></svg></div><div class="scroll" style="margin-top:.8rem"><table><tr><th>言明</th><th>仕様を知らずに書けるか</th><th>どちら</th></tr><tr><td>回復可能な失敗は、値として返す</td><td>書ける（言語だけ）</td><td><b>規約</b></td></tr><tr><td>内側は、外側を知ってはならない</td><td>書ける（アーキだけ）</td><td><b>規約</b></td></tr><tr><td>終了コードは <code>0</code> と <code>0</code> 以外の2値に留める</td><td>書ける（形態だけ）</td><td><b>規約</b></td></tr><tr><td><code>validate</code> が失敗したら終了コード <code>2</code> を返す</td><td><b>書けない</b></td><td>仕様</td></tr><tr><td>金額は、誤差の出ない型で扱う</td><td><b>書けない</b>　── 何を扱うかを知っている</td><td>仕様</td></tr><tr><td>文書を失ってはならない</td><td><b>書けない</b></td><td>仕様</td></tr></table></div></div><details><summary>なぜ依存の向きか ・ 落とした案 4件</summary><div class="inside"><div class="block"><h4>なぜ依存の向きが理由なのか</h4><p class="src" style="font-size:.85rem">規約は、<b>仕様を受け取って実装へ落とすときの「どう書くか」</b>を与える。仕様は SpecSchema が実装できる高さまで落として渡すもので、<b>外から注入される</b>。受け取る側が渡す側を知ると、向きが逆転する ── そのとき規約は、<b>プロダクトの数だけ枝分かれし、プロダクトが変わるたびに動く</b>。共有が壊れるのは、その結果にすぎない。</p></div><div class="block"><h4>そこへ至った道筋</h4><ol class="chain"><li><span>概念実装で「正しい要求に、1行の JSON と終了コード <code>0</code> を返す」と書いた</span></li><li><span>これは<b>その道具の約束</b>であって、規約ではないと気づいた</span></li><li><span>いったん「形態ごと外す」と判断したが、それは<b>行き過ぎ</b>だった ── 捨てるべきは文書であって、軸ではない</span></li><li><span>分かれ目を<b>軸の値だけで書けるか</b>に定めたが、理由を「共有が壊れるから」と置いた</span></li><li><span>それは<b>結果であって理由ではない</b> ── 本当の理由は、仕様が外から注入されるという<b>向き</b>である</span></li></ol></div><div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr><tr><td class="what">規約が、プロダクトの事情まで見て書かれる</td><td class="kill"><b>向きが逆転する</b> ── プロダクトが変わるたびに規約が動き、腐る</td></tr><tr><td class="what">境界を決めず、書きたいものを書く</td><td class="kill"><b>同じことが起きる</b> ── どこまでが仕様かを言えなくなる</td></tr><tr><td class="what">振る舞いを丸ごと外す</td><td class="kill"><b>形態の作法まで失う</b> ── 終了コードの使い方は、仕様を知らずに書ける</td></tr><tr><td class="what">仕様と規約を1つの場所に混ぜる</td><td class="kill"><b>受け取る側と渡す側が同じ場所になる</b></td></tr></table></div></div><div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem"><b>書くたびに、この物差しを当てることになります。</b>迷ったら「仕様を知らない人が、この言明を書けるか」を問います。<br><b>書けないものは、捨てるのではなく仕様の側へ渡します。</b></p></div></div></details></div>
+<details class="old"><summary>v1（差し戻し）　理由を「共有が壊れるから」と置いた</summary><div class="ver past" data-v="v1" style="margin-top:.6rem"><div class="ver-hd"><span class="stamp">v1</span><span class="when">差し戻し ・ 2026-09-10</span><label class="pick"><input type="radio" name="pick-Q1" value="v1">これを決定にする</label></div><div class="reco"><span class="lbl">決定</span><b>軸の値だけから書けるかどうかで分けます。</b>
+軸の値だけで書ける言明は<b>規約</b>で、この Skill が持ちます。
+書くのに<b>そのプロダクト固有の事情</b>（何を作るか ・ 誰が使うか ・ 何を保証するか）が要るなら、それは<b>仕様</b>で、別のところが持ちます。</div>
+<div class="fig"><h4>この決定を採ると、こうなる</h4>
+<div style="text-align:center"><svg style="max-width:44rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 802 100" width="802" height="100" role="img"><g transform="translate(6.0,6.0)"><path d="M276.4,44.0 L339.0,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="339.0,16.0 333.8,21.0 331.8,16.5" fill="#9fb0ab"/><path d="M276.4,44.0 L339.2,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="339.2,72.0 332.0,71.5 334.0,67.0" fill="#9fb0ab"/><path d="M476.6,16.0 L611.0,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="611.0,16.0 604.2,18.5 604.2,13.5" fill="#9fb0ab"/><path d="M548.4,72.0 L611.2,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="611.2,72.0 604.4,74.5 604.4,69.5" fill="#9fb0ab"/><g class="wf-node" transform="translate(0.0,28.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="275.8" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="137.9" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">この言明を書くのに、
+何を知る必要があるか</text></g></g><g class="wf-node" transform="translate(339.8,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="136.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="68.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">軸の値だけで書ける</text></g></g><g class="wf-node" transform="translate(339.8,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="208.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="104.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">プロダクトを知らないと書けない</text></g></g><g class="wf-node" transform="translate(611.8,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="178.6" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="89.3" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">規約　この Skill が持つ</text></g></g><g class="wf-node" transform="translate(611.8,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="160.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="80.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">仕様　別のところが持つ</text></g></g></g></svg></div>
+<div class="scroll" style="margin-top:.8rem"><table>
+<tr><th>言明</th><th>書くのに要るもの</th><th>どちら</th></tr>
+<tr><td>回復可能な失敗は、値として返す</td><td><code>language</code> だけ</td><td><b>規約</b></td></tr>
+<tr><td>内側は、外側を知ってはならない</td><td><code>architecture</code> だけ</td><td><b>規約</b></td></tr>
+<tr><td>終了コードは <code>0</code> と <code>0</code> 以外の2値に留め、細かく区分しない</td><td><code>interface = cli</code> だけ</td><td><b>規約</b></td></tr>
+<tr><td>知らない手続きを求められたら、失敗を返して接続を切らない</td><td><code>interface = mcp-server</code> だけ</td><td><b>規約</b></td></tr>
+<tr><td><code>validate</code> が失敗したら終了コード <code>2</code> を返す</td><td><b>そのプロダクトを知らないと書けない</b></td><td>仕様</td></tr>
+<tr><td>正しい要求に、1行の JSON と終了コード <code>0</code> を返す</td><td>同上（「正しい要求」が固有）</td><td>仕様</td></tr>
+<tr><td>文書を失ってはならない</td><td>同上（何を扱うかが固有）</td><td>仕様</td></tr>
+</table></div>
+<p class="dn"><b>境目は「終了コードをどう使うか」と「どの終了コードを返すか」の間にあります。</b>
+使い方は接し方の作法で、返す値はそのプロダクトの約束です。</p>
+
+</div>
+<details><summary>なぜこの物差しか ・ 落とした案 4件</summary><div class="inside">
+<div class="block"><h4>この物差しが守るもの</h4>
+<pre class="tree">規約は<b>共有される</b>　── 条件が合う宣言すべてに効く
+  だから、プロダクト固有のものが混ざると
+  <b>ほかの宣言に、関係のないものが効いてしまう</b>
+
+仕様は<b>宣言ごと</b>　── その1つにしか効かない
+  だから、規約の側に置くと、共有の仕組みが壊れる
+
+<b>境界を守ることが、共有を守ることになる</b></pre></div><div class="block"><h4>なぜこの物差しか</h4>
+<p class="src" style="font-size:.85rem">規約は、条件が合う宣言すべてに効く。
+<b>プロダクト固有のものが1件混ざると、関係のない宣言にまでそれが効く</b> ──
+共有を成り立たせている前提が壊れる。物差しは、その前提から出ている。</p></div>
+<div class="block"><h4>そこへ至った道筋</h4><ol class="chain">
+<li><span>概念実装で「正しい要求に、1行の JSON と終了コード <code>0</code> を返す」と書いた</span></li>
+<li><span>これは<b>その道具の約束</b>であって、規約ではないと気づいた</span></li>
+<li><span>いったん「インターフェースごと外す」と判断したが、それは<b>行き過ぎ</b>だった</span></li>
+<li><span>捨てるべきは<b>文書</b>であって、軸ではない ── 「終了コードは2値に留める」なら書ける</span></li>
+<li><span>分かれ目は<b>軸の値だけで書けるか</b>にある、と定めた</span></li>
+</ol></div>
+<div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr>
+<tr><td class="what">境界を決めず、書きたいものを書く</td><td class="kill"><b>共有が壊れる</b> ── プロダクト固有のものが、関係のない宣言に効く</td></tr>
+<tr><td class="what">振る舞いを丸ごと外す</td><td class="kill"><b>接し方の作法まで失う</b> ── 終了コードの使い方は、どのプロダクトでも同じである</td></tr>
+<tr><td class="what">プロダクト固有のものも、条件を狭めて置く</td><td class="kill"><b>宣言そのものが条件になる</b> ── 宣言ごとの一式に戻る</td></tr>
+<tr><td class="what">仕様と規約を1つの場所に混ぜる</td><td class="kill"><b>どちらが共有されるか分からなくなる</b></td></tr>
+</table></div></div>
+<div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem">
+<b>書くたびに、この物差しを当てることになります。</b>迷ったら「プロダクトを知らない人が、この言明を書けるか」を問います。<br>
+<b>書けないものは、捨てるのではなく仕様の側へ渡します。</b></p></div>
+</div></details>
+<p class="past-why"><b>直した理由：</b>物差しは同じだが、理由が結果を指していた<span class="said">CodingSchema自体が仕様を知る必要なんて全くないんですよね。仕様やプロダクトの特性は外から注入されるものだから、それにCodingSchemaやCodingSkillsが引っ張られてはダメなんです。</span></p></div></details></div><div class="acts"><button class="act yes">これで進める</button><button class="act no">差し戻す</button></div>
+<div class="backs" hidden><label style="font-size:.8rem;color:var(--muted)">差し戻す理由（自由に書けます）</label><div class="chips"></div><div class="row"><input type="text" placeholder="どこが引っかかったかを、そのまま書いてください"><button class="act back-go">これで差し戻す</button></div></div>
+<div class="note"><label for="n-Q1">Q1 について、思っていること・条件・引っかかり</label>
+<textarea id="n-Q1" placeholder="ここに書いたことは、答えを組み直すときの材料になります"></textarea></div>
+</article><article class="q" data-id="Q2">
+<div class="q-hd"><span class="id">Q2</span><h3>軸は何か</h3><span class="tag">立て直し　── 前の盤で3回変わった論点</span></div>
+<p class="ask">宣言のもとで規約を書くのに、何を知っている必要があるか。</p>
+<div class="vers"><div class="ver chosen" data-v="v4"><div class="ver-hd"><span class="stamp">v4</span><span class="when">直した答え　── 敵対的レビューで崩れた</span><label class="pick"><input type="radio" name="pick-Q2" value="v4" checked>これを決定にする</label></div><div class="reco"><span class="lbl">決定</span><b>軸とは、その種類の規約を書くために欠かせないものです。いまは3つ ── 言語 ・ アーキテクチャ ・ 形態。</b><b><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="軸は3つで閉じる。種類が3つなので軸も3つであり、増えるのは種類が増えたときだけ ── 各種類には、無いと書けない軸がちょうど1つあるから。" data-w="反例で2か所とも崩れた。ひとつ ── 依存のライセンス ・ 秘密の混入 ・ 生成物の混入は、コードの一片でも部品の関係でも動かした結果でもなく、リポジトリや成果物を見て見つかる。4つ目の場所がありうるので、種類は3つとは限らない。ふたつ ── 「引数の解釈は1か所に集める」は規則だが形態が無いと書けない。種類ごとに軸がちょうど1つ、ではない。よって軸の数を種類の数で縛れない">閉じるとは言いません</mark></b> ── <b>数は固定できません。</b>歯止めは<b>増やす条件</b>だけです。</div><div class="fig"><h4>この決定を採ると、こうなる</h4><div style="text-align:center"><svg style="max-width:30rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 456 156" width="456" height="156" role="img"><g transform="translate(6.0,6.0)"><path d="M60.8,16.0 L223.4,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="223.4,16.0 216.6,18.5 216.6,13.5" fill="#9fb0ab"/><rect x="98.1" y="6.0" width="88.0" height="16.0" fill="#e9efed"/><text x="142.1" y="19.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">が無いと書けない</text><path d="M112.8,72.0 L223.4,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="223.4,72.0 216.6,74.5 216.6,69.5" fill="#9fb0ab"/><rect x="124.1" y="62.0" width="88.0" height="16.0" fill="#e9efed"/><text x="168.1" y="75.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">が無いと書けない</text><path d="M60.8,128.0 L223.4,128.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="223.4,128.0 216.6,130.5 216.6,125.5" fill="#9fb0ab"/><rect x="98.1" y="118.0" width="88.0" height="16.0" fill="#e9efed"/><text x="142.1" y="131.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">が無いと書けない</text><path d="M112.8,72.0 L223.4,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="223.4,16.0 218.5,21.3 216.3,16.9" fill="#9fb0ab"/><rect x="124.1" y="34.0" width="88.0" height="16.0" fill="#e9efed"/><text x="168.1" y="47.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">借りることがある</text><g class="wf-node" transform="translate(0.0,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">言語</text></g></g><g class="wf-node" transform="translate(0.0,56.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="112.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="56.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">アーキテクチャ</text></g></g><g class="wf-node" transform="translate(0.0,112.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">形態</text></g></g><g class="wf-node" transform="translate(224.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="184.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="92.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">規則　コードの一片への述語</text></g></g><g class="wf-node" transform="translate(224.0,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="208.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="104.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">構造　部品どうしの関係への述語</text></g></g><g class="wf-node" transform="translate(224.0,112.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="220.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="110.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">振る舞い　観測される結果への述語</text></g></g></g></svg></div><p class="dh" style="margin-top:1rem">変更前と、変更後</p><pre class="tree"><b>変更前</b>　v3
+  軸は3つ　　言語 ・ アーキテクチャ ・ 形態
+  種類は3つ　規則 ・ 構造 ・ 振る舞い
+  <b>軸は3つで閉じる</b>　　　　　　　　　　種類の数が軸の数を決めるから
+  <b>各種類に、無いと書けない軸がちょうど1つ</b>
+  増やす条件　その語彙でしか書けない規約が挙がったとき
+
+<b>変更後</b>　v4
+  軸は3つ　　言語 ・ アーキテクチャ ・ 形態　　<b>いまのところ</b>
+  種類は3つ　規則 ・ 構造 ・ 振る舞い　　　　　<b>いまのところ</b>
+  <b>閉じるとは言わない</b>　　　　　　　　　　── 撤回
+  <b>各種類に、無いと書けない軸が少なくとも1つ</b>　── 「ちょうど」を撤回
+  増やす条件　そのまま。<b>閉じないぶん、ここだけが歯止めになる</b></pre><div class="scroll" style="margin-top:.8rem"><table><tr><th>軸</th><th>何を選ぶか</th><th>これが無いと書けない種類</th><th>書ける規約の例</th></tr><tr><td><b>言語</b></td><td>何で書くか</td><td><b>規則</b>　どう書くか</td><td>回復可能な失敗は、値として返す</td></tr><tr><td><b>アーキテクチャ</b></td><td>部品をどう繋ぐか</td><td><b>構造</b>　どう繋ぐか</td><td>内側は、外側を知ってはならない</td></tr><tr><td><b>形態</b></td><td>何として作るか</td><td><b>振る舞い</b>　境界でどう振る舞うか</td><td>終了コードは2値に留める</td></tr></table></div><p class="dn"><b>1つの種類に、軸が2つ要ることがあります</b> ── 「引数の解釈は1か所に集める」は規則ですが、言語と形態の両方が無いと書けません。</p><p class="dh" style="margin-top:1rem">形態とは、何か</p><pre class="tree">形態の値は、<b>何として作るか</b>
+
+  <code>cli</code> ・ <code>tui</code> ・ <code>webapp</code> ・ <code>backend-api</code> ・ <code>batch</code> ・ <code>mcp-server</code> ・ <code>hook</code> …
+
+<b>「何のために作るか」ではない</b>
+  在庫を管理するため ／ 社内向け　　→　<b>仕様の側</b>。軸ではない
+
+それぞれが、<b>その形が持つ不変の概念</b>を持っている
+
+  <b>backend-api</b>　呼び出し元起因とこちら起因の区分 ／ 冪等な操作
+  <b>cli</b>　　　　　引数と終了コード ／ 標準出力は結果、標準エラーは診断
+  <b>batch</b>　　　　1件の失敗で全体を止めるか、飛ばして続けるか ／ 再実行
+  <b>webapp</b>　　　外から来た入力は、内へ渡す前に検証する
+  <b>mcp-server</b>　手続きの一覧を返す ／ 知らない手続きは失敗として返す
+
+<b>この不変の概念は、外部に出どころがある</b>
+  RFC ・ POSIX の慣習 ・ MCP の仕様 ・ その形の定石
+  → <b>書き写さない。指す</b></pre><p class="dn"><b>粒度は、作る形そのものです。</b>「無いものを求められたときの返し方」のような個別の場面まで砕くと、それはその形の不変の概念ではなく、<b>一場面での使い方</b>になります。<br><b>利用者と接するかどうかは問いません</b> ── バッチもバックエンド API も利用者とは接しませんが、外から見える形は持っています。</p><p class="dh" style="margin-top:1rem">だから、こちらが持つのは選択だけ</p><pre class="tree">3つの軸すべてで、同じ形になる
+
+  <b>言語</b>　　　　　公式　Go には <code>error</code> という型がある　　　　　<b>書かない</b>
+  　　　　　　　　　選択　失敗は返り値で返し、<code>panic</code> で流さない　<b>書く</b>
+
+  <b>アーキテクチャ</b>　原典　1つのポートに複数のアダプターが差さる　　<b>書かない</b>
+  　　　　　　　　　選択　アダプターどうしは、互いを参照しない　　　<b>書く</b>
+
+  <b>形態</b>　　　　　公式　404 は資源が無いことを表す　　　　　　　<b>書かない</b>
+  　　　　　　　　　選択　呼び出し元起因は 400 と 404 の2つに留め、
+  　　　　　　　　　　　　独自の区分を足さない　　　　　　　　　　　<b>書く</b></pre><div class="scroll" style="margin-top:.8rem"><table><tr><th>何を持つか</th><th>腐るか</th><th>なぜ</th></tr><tr><td>公式や原典の内容を、こちらへ書き写す</td><td><b>腐る</b></td><td>向こうが動けば、こちらは黙って古くなる</td></tr><tr><td>出典（リンク ・ <b>引用した文字列</b> ・ 取得日）</td><td>腐らないが<b>動いたら分かる</b></td><td>引用した文字列を、原文に当てられる</td></tr><tr><td><b>その出典のもとで、私たちが決めた選択</b></td><td><b>腐らない</b></td><td>私たちが決めたことなので、私たちが変えない限り有効である</td></tr></table></div><p class="dn"><b>言語の内容をこちらで管理すれば、必ず腐ります。</b>アーキテクチャも形態も同じです ── どれも外に出どころがあり、こちらは追いつけません。<br><b>出典を指し、その上で私たちが決めたことだけを書けば、腐るのは出典との対応だけ</b>になります ── そしてそれは、引用した文字列で見つけられます。</p>
+<p class="dh" style="margin-top:1rem">軸を増やす条件</p><pre class="tree">閉じないので、<b>ここだけが歯止め</b>になる
+
+  足してよい　　その軸が無いと書けない規約を、実際に1件書けたとき
+  　　　　　　　かつ、<b>ほかの軸の語では書けない</b>ことを確かめたとき
+
+  足さない　　　名前を思いついたとき
+  　　　　　　　例が1つ見つかったとき
+  　　　　　　　ほかの軸で書き直せるとき</pre><p class="dn"><b>数で固定しようとしたのが誤りでした。</b>例で動かない答えにするために、今度は数を固定しようとして、同じ形の誤りを繰り返しました ── 動かないのは<b>足す条件</b>であって、数ではありません。</p></div><details><summary>崩した反例 ・ 述語と対象 ・ 落とした案 5件</summary><div class="inside"><div class="block"><h4>閉包を崩した反例</h4><pre class="tree"><b>閉包を崩した反例</b>
+
+  依存に、使えないライセンスのものを入れない　→　依存の一覧を見て分かる
+  秘密情報を、履歴に入れない　　　　　　　　　→　履歴を見て分かる
+  生成物をリポジトリに入れない　　　　　　　　→　ファイルの並びを見て分かる
+      <b>コードの一片でも、部品の関係でも、動かした結果でもない</b>
+      → 4つ目の場所がありうる → <b>種類は3つとは限らない</b>
+
+  「引数の解釈は1か所に集める」　→　<b>規則</b>だが、形態が無いと書けない
+  「外から来た値は、内へ渡す前に検証する」　→　同じ
+      <b>種類ごとに軸が1つ、ではない</b>
+      → 軸の数は種類の数で縛れない → <b>閉じない</b></pre></div><div class="block"><h4>述語は、対象を呼ぶ名が無いと書けない</h4><p class="src" style="font-size:.85rem;margin-bottom:.5rem">この筋自体は崩れていない ── 規約は述語であり、対象を呼ぶ名が無ければ書けない。崩れたのは<b>「対象ごとに名は1つ」</b>のほうである。</p><div class="scroll"><table><tr><th>種類</th><th>何に対する述語か</th><th>対象を呼ぶ名</th></tr><tr><td>規則</td><td>コードの一片</td><td>言語　<span class="mk-dim">＋ 形態が要ることがある</span></td></tr><tr><td>構造</td><td>部品どうしの関係</td><td>アーキテクチャ</td></tr><tr><td>振る舞い</td><td>外から観測される結果</td><td>形態</td></tr></table></div></div><div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr><tr><td class="what">閉じると言い続ける</td><td class="kill"><b>反例が2つある</b> ── 種類が3つに収まらず、種類ごとの軸も1つではない</td></tr><tr><td class="what">4つ目の種類を、いまここで立てる</td><td class="kill"><b>まだ規約を1件も書いていない</b> ── 足す条件（実際に書けたとき）を自分で破る</td></tr><tr><td class="what">用途 ・ 道具 ・ 生存期間を軸に入れる</td><td class="kill"><b>無くても書ける</b> ── 物差しに当たらない</td></tr><tr><td class="what">軸と種類を1対1に固定し、借りることを禁じる</td><td class="kill"><b>書けない規約が出る</b></td></tr><tr><td class="what">軸を自由に足せることにする</td><td class="kill"><b>また例で動く</b> ── 閉じないぶん、足す条件だけが歯止めである</td></tr></table></div></div><div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem"><b>数が固定されないので、いつか4つ目が来ます。</b>そのとき動くのは正常です ── 動かないほうが誤りです。<br><b>足す条件を守ることが、唯一の歯止めになります。</b>「規約を1件書けたか」「ほかの軸で書き直せないか」の2つを、毎回当てることになります。</p></div></div></details></div>
+<details class="old"><summary>v3（差し戻し）　軸は3つで閉じる</summary><div class="ver past" data-v="v3" style="margin-top:.6rem"><div class="ver-hd"><span class="stamp">v3</span><span class="when">差し戻し ・ 2026-09-10</span><label class="pick"><input type="radio" name="pick-Q2" value="v3">これを決定にする</label></div><div class="reco"><span class="lbl">決定</span><b>軸とは、その種類の規約を書くために欠かせないものです。</b>種類が3つなので、<b>軸も3つ</b> ── 言語（規則） ・ アーキテクチャ（構造） ・ <b><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="3つ目の軸の名前はインターフェースだった。そして前の盤では、用途は軸ではないと判定していた。" data-w="インターフェースという語では、バッチを含められない ── 時刻や合図で起きるだけで、接する相手がいないため。いったん用途にしたが、用途の最も自然な読みは「何のために作るか」であり、それはまさに排除したい読みだった。定義で打ち消さないと誤読される名前は弱い ── 実際、その読みのせいで一度この軸を落としている。形態なら、最も自然な読みがそのまま定義（何として作るか）になる">形態</mark></b>（振る舞い）。<b><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="軸とは、規約が使う語彙を決めるもの。3つだが、閉じているとは言えない（1つの種類が複数の語彙を使いうるため）。" data-w="語彙という言い方が中途半端だった。整理し直すと、軸は「どの種類の規約が書けるようになるか」で並ぶ。そして述語は対象を呼ぶ名が無いと書けず、対象を呼ぶ名は対象ごとに1つなので、軸の数は種類の数に一致する。これで閉じる ── 前の言い方では成立しなかった論証が、この整理では通る">そして今度は、閉じます</mark></b> ── 軸が増えるのは、<b>決めごとの種類が増えたときだけ</b>です。</div><div class="fig"><h4>この決定を採ると、こうなる</h4><div style="text-align:center"><svg style="max-width:30rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 456 156" width="456" height="156" role="img"><g transform="translate(6.0,6.0)"><path d="M60.8,16.0 L223.4,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="223.4,16.0 216.6,18.5 216.6,13.5" fill="#9fb0ab"/><rect x="98.1" y="6.0" width="88.0" height="16.0" fill="#e9efed"/><text x="142.1" y="19.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">が無いと書けない</text><path d="M112.8,72.0 L223.4,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="223.4,72.0 216.6,74.5 216.6,69.5" fill="#9fb0ab"/><rect x="124.1" y="62.0" width="88.0" height="16.0" fill="#e9efed"/><text x="168.1" y="75.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">が無いと書けない</text><path d="M60.8,128.0 L223.4,128.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="223.4,128.0 216.6,130.5 216.6,125.5" fill="#9fb0ab"/><rect x="98.1" y="118.0" width="88.0" height="16.0" fill="#e9efed"/><text x="142.1" y="131.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">が無いと書けない</text><path d="M112.8,72.0 L223.4,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="223.4,16.0 218.5,21.3 216.3,16.9" fill="#9fb0ab"/><rect x="124.1" y="34.0" width="88.0" height="16.0" fill="#e9efed"/><text x="168.1" y="47.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">借りることがある</text><g class="wf-node" transform="translate(0.0,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">言語</text></g></g><g class="wf-node" transform="translate(0.0,56.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="112.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="56.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">アーキテクチャ</text></g></g><g class="wf-node" transform="translate(0.0,112.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">形態</text></g></g><g class="wf-node" transform="translate(224.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="184.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="92.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">規則　コードの一片への述語</text></g></g><g class="wf-node" transform="translate(224.0,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="208.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="104.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">構造　部品どうしの関係への述語</text></g></g><g class="wf-node" transform="translate(224.0,112.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="220.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="110.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">振る舞い　観測される結果への述語</text></g></g></g></svg></div><div class="scroll" style="margin-top:.8rem"><table><tr><th>軸</th><th>何を選ぶか</th><th>これが無いと書けない種類</th><th>書ける規約の例</th></tr><tr><td><b>言語</b></td><td>何で書くか</td><td><b>規則</b>　どう書くか</td><td>回復可能な失敗は、値として返す</td></tr><tr><td><b>アーキテクチャ</b></td><td>部品をどう繋ぐか</td><td><b>構造</b>　どう繋ぐか</td><td>内側は、外側を知ってはならない</td></tr><tr><td><b>形態</b></td><td><b>何として作るか</b></td><td><b>振る舞い</b>　境界でどう振る舞うか</td><td>終了コードは2値に留める／1件の失敗で全体を止めるかを宣言する</td></tr></table></div><p class="dn"><b>1つの軸が、1つの種類を開けます。</b>ほかの軸を<b>借りる</b>ことはあります ── 「内側は1つのパッケージに置く」は規則ですが、アーキの呼び名（内側）を借りています。</p><p class="dh" style="margin-top:1rem">形態とは、何か</p><pre class="tree">形態の値は、<b>何として作るか</b>
+
+  <code>cli</code> ・ <code>tui</code> ・ <code>webapp</code> ・ <code>backend-api</code> ・ <code>batch</code> ・ <code>mcp-server</code> ・ <code>hook</code> …
+
+<b>「何のために作るか」ではない</b>
+  在庫を管理するため ／ 社内向け　　→　<b>仕様の側</b>。軸ではない
+
+それぞれが、<b>その形が持つ不変の概念</b>を持っている
+
+  <b>backend-api</b>　呼び出し元起因とこちら起因の区分 ／ 冪等な操作
+  <b>cli</b>　　　　　引数と終了コード ／ 標準出力は結果、標準エラーは診断
+  <b>batch</b>　　　　1件の失敗で全体を止めるか、飛ばして続けるか ／ 再実行
+  <b>webapp</b>　　　外から来た入力は、内へ渡す前に検証する
+  <b>mcp-server</b>　手続きの一覧を返す ／ 知らない手続きは失敗として返す
+
+<b>この不変の概念は、外部に出どころがある</b>
+  RFC ・ POSIX の慣習 ・ MCP の仕様 ・ その形の定石
+  → <b>書き写さない。指す</b></pre><p class="dn"><b>粒度は、作る形そのものです。</b>「無いものを求められたときの返し方」のような個別の場面まで砕くと、それはその形の不変の概念ではなく、<b>一場面での使い方</b>になります。<br><b>利用者と接するかどうかは問いません</b> ── バッチもバックエンド API も利用者とは接しませんが、外から見える形は持っています。</p><p class="dh" style="margin-top:1rem">だから、こちらが持つのは選択だけ</p><pre class="tree">3つの軸すべてで、同じ形になる
+
+  <b>言語</b>　　　　　公式　Go には <code>error</code> という型がある　　　　　<b>書かない</b>
+  　　　　　　　　　選択　失敗は返り値で返し、<code>panic</code> で流さない　<b>書く</b>
+
+  <b>アーキテクチャ</b>　原典　1つのポートに複数のアダプターが差さる　　<b>書かない</b>
+  　　　　　　　　　選択　アダプターどうしは、互いを参照しない　　　<b>書く</b>
+
+  <b>形態</b>　　　　　公式　404 は資源が無いことを表す　　　　　　　<b>書かない</b>
+  　　　　　　　　　選択　呼び出し元起因は 400 と 404 の2つに留め、
+  　　　　　　　　　　　　独自の区分を足さない　　　　　　　　　　　<b>書く</b></pre><div class="scroll" style="margin-top:.8rem"><table><tr><th>何を持つか</th><th>腐るか</th><th>なぜ</th></tr><tr><td>公式や原典の内容を、こちらへ書き写す</td><td><b>腐る</b></td><td>向こうが動けば、こちらは黙って古くなる</td></tr><tr><td>出典（リンク ・ <b>引用した文字列</b> ・ 取得日）</td><td>腐らないが<b>動いたら分かる</b></td><td>引用した文字列を、原文に当てられる</td></tr><tr><td><b>その出典のもとで、私たちが決めた選択</b></td><td><b>腐らない</b></td><td>私たちが決めたことなので、私たちが変えない限り有効である</td></tr></table></div><p class="dn"><b>言語の内容をこちらで管理すれば、必ず腐ります。</b>アーキテクチャも形態も同じです ── どれも外に出どころがあり、こちらは追いつけません。<br><b>出典を指し、その上で私たちが決めたことだけを書けば、腐るのは出典との対応だけ</b>になります ── そしてそれは、引用した文字列で見つけられます。</p>
+<p class="dh" style="margin-top:1rem">軸を増やす条件</p><pre class="tree">軸を足したくなったら、<b>種類のほうを問う</b>
+
+  「その規約は、いまの3種類のどれでもないか」
+      → どれかなら、<b>軸は足りている</b>。借りて書ける
+      → どれでもないなら、<b>4つ目の種類</b>が要る
+        ＝ 違反が見つかる場所が、4つ目に見つかったということ
+
+<b>軸だけが増えることはない</b></pre></div><details><summary>述語と対象 ・ 崩れた前案 ・ 落とした案 5件</summary><div class="inside"><div class="block"><h4>なぜ、例が出ても動かなくなるか</h4><p class="src" style="font-size:.85rem">これで、例が出るたびに軸が動くことがなくなります。動くとしたら、それは「違反が見つかる場所が4つ目に見つかった」ときで、そのときは種類のほうから直します。</p></div><div class="block"><h4>軸かどうかの物差し</h4><pre class="tree">物差し ── <b>それが無いと、その種類の規約が1件も書けないか</b>
+
+  <b>言語</b>　　　　　言語を知らずに「コードの一片への述語」は書けない　　<b>軸</b>
+  <b>アーキテクチャ</b>　部品と関係の呼び名を知らずに「関係への述語」は書けない <b>軸</b>
+  <b>形態</b>　　　　　外から見える形を知らずに「観測される結果への述語」は書けない <b>軸</b>
+
+  道具　　　　　道具を知らなくても、3種類とも書ける　　　　　　　<b>軸ではない</b>
+  生存期間　　　形態があれば、振る舞いは書ける　　　　　　　　　　<b>軸ではない</b>
+  何のために　　仕様が持つ。規約は仕様を知らない　　　　　　　　<b>軸ではない</b>
+  　　　　　　　── これが「用途」と読まれると入り込むので、名前を<b>形態</b>にした
+  主題　　　　　話題であって、書けるかどうかに関わらない　　　　　<b>軸ではない</b></pre></div><div class="block"><h4>なぜ3つで閉じるのか</h4><pre class="tree">1　決めごとは<b>3種類</b>しかない（決着）
+     違反が見つかる場所が3つだから
+     ── コードの一片 ／ 部品どうしの関係 ／ 動かした結果
+
+2　規約は<b>述語</b>である。述語は、その<b>対象を呼ぶ名</b>が無いと書けない
+     コードの一片　　を呼ぶ名　→　<b>言語</b>
+     部品どうしの関係を呼ぶ名　→　<b>アーキテクチャ</b>
+     観測される結果　を呼ぶ名　→　<b>形態</b>
+
+3　対象を呼ぶ名は、対象ごとに<b>1つ</b>
+     ほかの軸は<b>借りる</b>ことはあっても、無くても書ける
+
+<b>よって軸は3つ。増えるのは、種類が増えたときだけ</b></pre><p class="dn"><b>前の盤では、この論証が成立しませんでした。</b>「語彙」で並べていたので、1つの種類が複数の語彙を使えてしまい、数が縛れなかった ── <b>「無いと書けないもの」で並べると、対象ごとに1つに定まります。</b></p></div><div class="block"><h4>述語は、対象を呼ぶ名が無いと書けない</h4><div class="scroll"><table><tr><th>種類</th><th>何に対する述語か</th><th>対象を呼ぶ名</th><th>無いとどうなるか</th></tr><tr><td>規則</td><td>コードの一片</td><td><b>言語</b></td><td>「値として返す」の「値」も「返す」も書けない</td></tr><tr><td>構造</td><td>部品どうしの関係</td><td><b>アーキテクチャ</b></td><td>「内側」「ポート」という呼び名が無い</td></tr><tr><td>振る舞い</td><td>外から観測される結果</td><td><b>形態</b></td><td>「要求」「応答」「終了コード」という呼び名が無い</td></tr></table></div></div><div class="block"><h4>前の答えは、どこで崩れたか</h4><div class="scroll"><table><tr><th>前の答え</th><th>何で崩れたか</th></tr><tr><td>軸は 用途 ・ アーキ ・ 言語 ・ 道具 ・ 実行環境 の5つ</td><td>用途も道具も、無くても3種類とも書ける</td></tr><tr><td>実行環境は入口から決まるので、軸ではない</td><td>反例で崩れた（が、結論は別の理由で正しかった）</td></tr><tr><td>インターフェースは軸ではない</td><td>行き過ぎ ── 捨てるべきは書いた文書だった</td></tr><tr><td>生存期間は軸である</td><td>インターフェースがあれば振る舞いは書ける ── 無くても書ける</td></tr><tr><td>軸は語彙で決まり、閉じているとは言えない</td><td><b>整理が中途半端だった</b> ── 「無いと書けないもの」で並べれば閉じる</td></tr></table></div><p class="src" style="font-size:.85rem;margin-top:.5rem"><b>6回動いたのは、毎回「例」から考えていたからである。</b>この答えは例からではなく、<b>種類の数</b>から出ている ── だから例では動かない。</p></div><div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr><tr><td class="what">軸を「使う語彙」で並べる</td><td class="kill"><b>数が縛れない</b> ── 1つの種類が複数の語彙を使えてしまう</td></tr><tr><td class="what">用途 ・ 道具 ・ 生存期間を軸に入れる</td><td class="kill"><b>無くても書ける</b> ── 物差しに当たらない</td></tr><tr><td class="what">軸と種類を1対1に固定し、借りることを禁じる</td><td class="kill"><b>書けない規約が出る</b> ── 「内側は1つのパッケージに置く」が書けない</td></tr><tr><td class="what">軸だけを足せることにする</td><td class="kill"><b>また例で動く</b> ── 6回動いた原因がそのまま残る</td></tr><tr><td class="what">閉じるとは言わないままにする</td><td class="kill"><b>足す条件が緩いままになる</b> ── 種類から問い直す機会が失われる</td></tr></table></div></div><div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem"><b>軸を足したくなったら、種類のほうを問うことになります。</b>「違反が見つかる場所が4つ目に見つかったか」── 見つかっていないなら、軸は足りています。<br><b>借りることは許します。</b>ただし「借りている」と「無いと書けない」は別で、後者だけが軸です。</p></div></div></details><p class="past-why"><b>直した理由：</b>敵対的レビューで、閉包の論証が2か所とも崩れた<span class="said">このCodingSchemaとCodingSkillsの内容で概念的には成立しているかを敵対的レビューして下さい。</span></p></div></details>
+<details class="old"><summary>v2（差し戻し）　軸を「使う語彙」で並べた</summary><div class="ver past" data-v="v2" style="margin-top:.6rem"><div class="ver-hd"><span class="stamp">v2</span><span class="when">差し戻し ・ 2026-09-10</span><label class="pick"><input type="radio" name="pick-Q2" value="v2">これを決定にする</label></div><div class="reco"><span class="lbl">決定</span><b>軸とは、規約が使う語彙を決めるものです。</b>いまは3つ ── <b>言語 ・ アーキテクチャ ・ インターフェース</b>。<b><mark class="chg" tabindex="0" role="button" aria-expanded="false" data-b="言語 ・ アーキテクチャ ・ インターフェース ・ 生存期間 の4つ。生存期間でしか書けない規約が挙がった、と判断した。" data-w="振る舞いとは外から観測される結果である（決着済み）。プロセスが常駐しているかどうかは呼び出し元から観測できないので、振る舞いの語彙にならない。観測できるのは会話が続くかどうかだけで、それはインターフェースの語彙で書ける。生存期間という軸は、観測できないものを軸に立てようとしていた">生存期間は落としました</mark></b><b>閉じているとは言いません。</b>増やせるのは、<b>その語彙でしか書けない規約が実際に挙がったとき</b>だけで、名前を思いついたときではありません。</div><div class="fig"><h4>この決定を採ると、こうなる</h4><div style="text-align:center"><svg style="max-width:28rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 426 156" width="426" height="156" role="img"><g transform="translate(6.0,6.0)"><path d="M60.8,16.0 L205.4,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="205.4,16.0 198.6,18.5 198.6,13.5" fill="#9fb0ab"/><rect x="119.1" y="6.0" width="28.0" height="16.0" fill="#e9efed"/><text x="133.1" y="19.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙</text><path d="M112.8,72.0 L205.4,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="205.4,72.0 198.6,74.5 198.6,69.5" fill="#9fb0ab"/><rect x="145.1" y="62.0" width="28.0" height="16.0" fill="#e9efed"/><text x="159.1" y="75.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙</text><path d="M124.8,128.0 L205.4,128.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="205.4,128.0 198.6,130.5 198.6,125.5" fill="#9fb0ab"/><rect x="151.1" y="118.0" width="28.0" height="16.0" fill="#e9efed"/><text x="165.1" y="131.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙</text><path d="M112.8,72.0 L205.4,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="205.4,16.0 200.9,21.6 198.3,17.4" fill="#9fb0ab"/><rect x="130.1" y="34.0" width="58.0" height="16.0" fill="#e9efed"/><text x="159.1" y="47.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙を貸す</text><g class="wf-node" transform="translate(0.0,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">言語</text></g></g><g class="wf-node" transform="translate(0.0,56.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="112.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="56.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">アーキテクチャ</text></g></g><g class="wf-node" transform="translate(0.0,112.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="124.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="62.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">インターフェース</text></g></g><g class="wf-node" transform="translate(206.0,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="124.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="62.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">規則　どう書くか</text></g></g><g class="wf-node" transform="translate(206.0,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="124.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="62.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">構造　どう繋ぐか</text></g></g><g class="wf-node" transform="translate(206.0,112.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="208.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="104.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">振る舞い　境界でどう振る舞うか</text></g></g></g></svg></div><div class="scroll" style="margin-top:.8rem"><table><tr><th>軸</th><th>何を選ぶか</th><th>決める語彙</th><th>その語彙で書ける規約の例</th></tr><tr><td><b>言語</b></td><td>何で書くか</td><td><code>Result</code> ・ パッケージ ・ 型</td><td>回復可能な失敗は、値として返す</td></tr><tr><td><b>アーキテクチャ</b></td><td>部品をどう繋ぐか</td><td>内側 ・ 外側 ・ ポート</td><td>内側は、外側を知ってはならない</td></tr><tr><td><b>インターフェース</b></td><td>どう呼ばれるか</td><td>要求 ・ 応答 ・ 終了コード ・ 会話の続き方</td><td>終了コードは2値に留め、細かく区分しない／会話をまたいで状態を持ち越さない</td></tr></table></div><p class="dh" style="margin-top:1rem">軸かどうかの、たった1つの物差し</p><pre class="tree">物差し ── <b>その語彙でしか書けない規約が、実際に挙がるか</b>
+
+  言語　　　　　「値として返す」は、言語の語彙でしか書けない　　　<b>軸</b>
+  アーキ　　　　「内側は外側を知らない」も同じ　　　　　　　　　 <b>軸</b>
+  インターフェース「終了コードは2値」は、接し方の語彙でしか書けない <b>軸</b>
+
+  用途　　　　　「バックエンド API」という語で書かれる規約が<b>無い</b>　<b>軸ではない</b>
+  道具　　　　　「gofmt」の語彙で書かれる規約が<b>無い</b>　　　　　　<b>軸ではない</b>
+  生存期間　　　書けると思ったが、<b>インターフェースの語彙で書けた</b>　<b>軸ではない</b>
+  主題　　　　　話題であって語彙ではない　　　　　　　　　　　　 <b>軸ではない</b></pre><p class="dh" style="margin-top:1rem">生存期間を落とした理由</p><pre class="tree">振る舞いとは、<b>外から観測される結果</b>である（決着）
+
+  観測できる　　会話が1往復で閉じるか、続くか
+                → 呼び出し元から見える　　　<b>インターフェースの語彙</b>
+
+  観測できない　プロセスが常駐しているか、呼び出しごとに起き上がるか
+                → 呼び出し元からは区別できない
+                → <b>観測できないものは振る舞いではない</b>
+
+「呼び出しをまたいで状態を持ち越さない」は
+  観測できる部分＝<b>会話が続くこと</b>　　→　インターフェースで書ける
+  観測できない部分＝プロセスの常駐　　　→　配置と運用の話。規約の外
+
+<b>だから生存期間という軸は要らない</b></pre><p class="dn"><b>観測できないものを軸に立てようとしていました。</b>常駐か呼び出しごとかは、配置と運用の選択であって、コードの書き方でも部品の繋ぎ方でも境界の約束でもありません。</p><p class="dh" style="margin-top:1rem">閉じるとは言わない</p><pre class="tree">前の盤では「決めごとは3種類だから、軸も閉じる」と言った
+  <b>これは成立しない</b> ── 1つの種類が複数の語彙を使いうるから
+
+だから<b>軸は増えうる</b>。増やす条件だけを定める
+
+  増やしてよい　その語彙でしか書けない規約が、実際に挙がったとき
+  　　　　　　　しかも<b>ほかの軸の語彙では書けない</b>ことを確かめたとき
+  増やさない　　名前を思いついたとき ／ 例が1つ見つかったとき</pre><p class="dn"><b>生存期間は、後半の条件で落ちました</b> ── 書けると思ったが、インターフェースの語彙で書けた。<b>増やす前に「ほかの軸で書けないか」を確かめる</b>、が抜けていました。</p><p class="dh" style="margin-top:1rem">軸は交差する</p><pre class="tree">1つの軸が1つの種類に対応するわけではない
+
+  <code>language = go ＋ architecture = hexagonal</code>
+      「内側は1つのパッケージに置き、外部技術を読み込まない」
+      → <b>規則</b>だが、アーキの語彙を借りている
+
+<b>適用条件は、複数の軸の値を同時に持てる</b></pre></div><details><summary>なぜ語彙で決まるのか ・ 崩れた前案 ・ 落とした案 5件</summary><div class="inside"><div class="block"><h4>なぜ「語彙」で決まるのか</h4><p class="src" style="font-size:.85rem;margin-bottom:.5rem">規約は<b>述語</b>である ── 何かに対して「こうである」と言う。述語は、<b>その対象の語彙でしか書けない</b>。だから<b>軸とは、語彙の出どころ</b>である。</p><div class="scroll"><table><tr><th>規約の種類</th><th>何に対する述語か</th><th>だから要る語彙</th></tr><tr><td>規則</td><td>コードの一片</td><td>言語</td></tr><tr><td>構造</td><td>部品どうしの関係</td><td>アーキテクチャ</td></tr><tr><td>振る舞い</td><td><b>外から観測される</b>結果</td><td>形態</td></tr></table></div><p class="src" style="font-size:.85rem;margin-top:.5rem"><b>「外から観測される」が効きます</b> ── 観測できないものは振る舞いではないので、その語彙は軸になりません。生存期間はここで落ちました。</p></div><div class="block"><h4>前の答えは、どこで崩れたか</h4><div class="scroll"><table><tr><th>前の答え</th><th>何で崩れたか</th></tr><tr><td>軸は 用途 ・ アーキ ・ 言語 ・ 道具 ・ 実行環境 の5つ</td><td>道具の語彙で書かれる規約が無い</td></tr><tr><td>実行環境は入口から決まるので、軸ではない</td><td>反例 ── 同じ接し方でも常駐と呼び出しごとがある</td></tr><tr><td>生存期間は、アーキの語彙でも書ける</td><td>誤り ── hexagonal は状態の有無を語らない</td></tr><tr><td>インターフェースはプロダクトの姿なので、軸ではない</td><td>行き過ぎ ── 捨てるべきは書いた文書であって、軸ではなかった</td></tr><tr><td>決めごとが3種類だから、軸も閉じる</td><td>論証が成立しない ── 1つの種類が複数の語彙を使いうる</td></tr><tr><td><b>生存期間は軸である</b></td><td><b>観測できない</b> ── 振る舞いの定義に当たらない</td></tr></table></div></div><div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr><tr><td class="what">生存期間を軸に残す</td><td class="kill"><b>観測できないものが軸になる</b> ── 振る舞い＝外から観測される結果、という決着と衝突する</td></tr><tr><td class="what">用途を軸に入れる</td><td class="kill"><b>その語彙で書かれる規約が無い</b></td></tr><tr><td class="what">道具を軸に入れる</td><td class="kill"><b>同じ理由</b> ── 道具は語彙ではなく、規約の引き取り先である</td></tr><tr><td class="what">軸は3つで閉じる、と言い切る</td><td class="kill"><b>論証できない</b> ── 種類の数は軸の数を縛らない</td></tr><tr><td class="what">軸を自由に足せることにする</td><td class="kill"><b>また足し引きが始まる</b> ── 現に6回動かした</td></tr></table></div></div><div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem"><b>軸を足したくなったら、2段構えで確かめることになります</b> ── (1) その語彙でしか書けない規約を1件書く　(2) それが<b>ほかの軸の語彙では書けない</b>ことを確かめる。<br><b>配置と運用（常駐か、呼び出しごとか）は、この Skill の外に出ます。</b></p></div></div></details><p class="past-why"><b>直した理由：</b>「語彙」は中途半端な整理だった。「無いと書けない種類」で並べると閉じる<span class="said">決める語彙というか種類だよね？規則と構造、振る舞いだよね？？ちがう？</span></p></div></details>
+<details class="old"><summary>v1（差し戻し）　軸は4つ ・ 生存期間を含む</summary><div class="ver past" data-v="v1" style="margin-top:.6rem"><div class="ver-hd"><span class="stamp">v1</span><span class="when">差し戻し ・ 2026-09-10</span><label class="pick"><input type="radio" name="pick-Q2" value="v1">これを決定にする</label></div><div class="reco"><span class="lbl">決定</span><b>軸とは、規約が使う語彙を決めるものです。</b>
+いまは4つ ── <b>言語 ・ アーキテクチャ ・ インターフェース ・ 生存期間</b>。
+<b>閉じているとは言いません。</b>増やせるのは、<b>その語彙でしか書けない規約が実際に挙がったとき</b>だけで、
+名前を思いついたときではありません。</div>
+<div class="fig"><h4>この決定を採ると、こうなる</h4>
+<div style="text-align:center"><svg style="max-width:28rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 426 212" width="426" height="212" role="img"><g transform="translate(6.0,6.0)"><path d="M60.8,16.0 L205.4,30.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="205.4,30.0 198.4,31.8 198.9,26.9" fill="#9fb0ab"/><rect x="119.1" y="13.0" width="28.0" height="16.0" fill="#e9efed"/><text x="133.1" y="26.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙</text><path d="M112.8,72.0 L205.4,86.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="205.4,86.0 198.3,87.4 199.1,82.6" fill="#9fb0ab"/><rect x="145.1" y="69.0" width="28.0" height="16.0" fill="#e9efed"/><text x="159.1" y="82.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙</text><path d="M124.8,128.0 L205.4,156.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="205.4,156.0 198.2,156.1 199.8,151.5" fill="#9fb0ab"/><rect x="151.1" y="132.0" width="28.0" height="16.0" fill="#e9efed"/><text x="165.1" y="145.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙</text><path d="M76.8,184.0 L205.4,156.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="205.4,156.0 199.3,159.8 198.3,155.0" fill="#9fb0ab"/><rect x="127.1" y="160.0" width="28.0" height="16.0" fill="#e9efed"/><text x="141.1" y="173.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙</text><path d="M112.8,72.0 L205.4,30.0" fill="none" stroke="#9fb0ab" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="205.4,30.0 200.3,35.0 198.2,30.6" fill="#9fb0ab"/><rect x="130.1" y="41.0" width="58.0" height="16.0" fill="#e9efed"/><text x="159.1" y="54.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">語彙を貸す</text><g class="wf-node" transform="translate(0.0,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="60.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="30.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">言語</text></g></g><g class="wf-node" transform="translate(0.0,56.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="112.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="56.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">アーキテクチャ</text></g></g><g class="wf-node" transform="translate(0.0,112.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="124.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="62.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">インターフェース</text></g></g><g class="wf-node" transform="translate(0.0,168.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="76.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="38.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">生存期間</text></g></g><g class="wf-node" transform="translate(206.0,14.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="124.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="62.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">規則　どう書くか</text></g></g><g class="wf-node" transform="translate(206.0,70.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="124.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="62.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">構造　どう繋ぐか</text></g></g><g class="wf-node" transform="translate(206.0,140.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="208.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="104.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">振る舞い　境界でどう振る舞うか</text></g></g></g></svg></div>
+<div class="scroll" style="margin-top:.8rem"><table>
+<tr><th>軸</th><th>何を選ぶか</th><th>決める語彙</th><th>その語彙で書ける規約の例</th></tr>
+<tr><td><b>言語</b></td><td>何で書くか</td><td><code>Result</code> ・ パッケージ ・ 型</td><td>回復可能な失敗は、値として返す</td></tr>
+<tr><td><b>アーキテクチャ</b></td><td>部品をどう繋ぐか</td><td>内側 ・ 外側 ・ ポート</td><td>内側は、外側を知ってはならない</td></tr>
+<tr><td><b>インターフェース</b></td><td>どう呼ばれるか</td><td>要求 ・ 応答 ・ 終了コード</td><td>終了コードは2値に留め、細かく区分しない</td></tr>
+<tr><td><b>生存期間</b></td><td>いつ生まれ、いつ死ぬか</td><td>呼び出しをまたぐ ・ 停止</td><td>呼び出しをまたいで状態を持ち越さない</td></tr>
+</table></div>
+<p class="dh" style="margin-top:1rem">軸かどうかの、たった1つの物差し</p>
+<pre class="tree"><b>その語彙でしか書けない規約が、実際に挙がるか</b>
+
+  言語　　　　　「値として返す」は、言語の語彙でしか書けない　　　<b>軸</b>
+  アーキ　　　　「内側は外側を知らない」も同じ　　　　　　　　　 <b>軸</b>
+  インターフェース「終了コードは2値」は、接し方の語彙でしか書けない <b>軸</b>
+  生存期間　　　「呼び出しをまたいで持ち越さない」も同じ　　　　　<b>軸</b>
+
+  用途　　　　　「バックエンド API」という語で書かれる規約が<b>無い</b>　<b>軸ではない</b>
+  道具　　　　　「gofmt」の語彙で書かれる規約が<b>無い</b>　　　　　　<b>軸ではない</b>
+  主題　　　　　話題であって語彙ではない　　　　　　　　　　　　 <b>軸ではない</b></pre>
+<p class="dn"><b>用途は宣言の主題です。</b>「バックエンド API を作る」と言ったとき実際に決まっているのは、
+インターフェースと生存期間の値であって、用途という値を条件に持つ規約はありません。<br>
+<b>道具は規約を引き取ります。</b>整形の道具を選ぶと、整形の規約を書かなくてよくなる ── 条件をつくるのではなく、減らします。</p>
+<p class="dh" style="margin-top:1rem">閉じるとは言わない</p>
+<pre class="tree">前の盤では「決めごとは3種類だから、軸も閉じる」と言った
+  <b>これは成立しない</b> ── 1つの種類が複数の語彙を使うから
+  （振る舞いは、インターフェースと生存期間の2つを使う）
+
+だから<b>軸は増えうる</b>。増やす条件だけを定める
+
+  増やしてよい　その語彙でしか書けない規約が、実際に挙がったとき
+  増やさない　　名前を思いついたとき ／ 例が1つ見つかったとき</pre>
+<p class="dn"><b>前の盤で3回変えたのは、例が出るたびに軸を足し引きしたからです。</b>
+増やす条件を決めておけば、例が出ても動きません ── 動くのは、書けない規約が挙がったときだけです。</p>
+<p class="dh" style="margin-top:1rem">軸は交差する</p>
+<pre class="tree">1つの軸が1つの種類に対応するわけではない
+
+  <code>language = go ＋ architecture = hexagonal</code>
+      「内側は1つのパッケージに置き、外部技術を読み込まない」
+      → <b>規則</b>だが、アーキの語彙を借りている
+
+  <code>interface = mcp-server ＋ language = go</code>
+      → 接し方の語彙を、言語の語彙で書く
+
+<b>適用条件は、複数の軸の値を同時に持てる</b></pre>
+</div>
+<details><summary>なぜ語彙で決まるのか ・ 崩れた前案 ・ 落とした案 5件</summary><div class="inside">
+<div class="block"><h4>なぜ「語彙」で決まるのか</h4>
+<p class="src" style="font-size:.85rem;margin-bottom:.5rem">規約は<b>述語</b>である ── 何かに対して「こうである」と言う。
+述語は、<b>その対象の語彙でしか書けない</b>。
+「回復可能な失敗は値として返す」を、言語の語彙なしに書くことはできない。
+だから<b>軸とは、語彙の出どころ</b>である。</p>
+<div class="scroll"><table><tr><th>規約の種類</th><th>何に対する述語か</th><th>だから要る語彙</th></tr>
+<tr><td>規則</td><td>コードの一片</td><td>言語</td></tr>
+<tr><td>構造</td><td>部品どうしの関係</td><td>アーキテクチャ</td></tr>
+<tr><td>振る舞い</td><td>外から観測される結果</td><td>インターフェース（1回の会話） ・ 生存期間（会話をまたぐ）</td></tr>
+</table></div></div>
+<div class="block"><h4>前の答えは、どこで崩れたか</h4><div class="scroll"><table>
+<tr><th>前の答え</th><th>何で崩れたか</th></tr>
+<tr><td>軸は 用途 ・ アーキ ・ 言語 ・ 道具 ・ 実行環境 の5つ</td><td>道具の語彙で書かれる規約が無い ── 道具は規約を引き取るだけ</td></tr>
+<tr><td>実行環境は入口から決まるので、軸ではない</td><td><b>反例</b> ── 同じ接し方でも、動き続ける形と呼び出しごとに起き上がる形がある</td></tr>
+<tr><td>生存期間は、アーキの語彙でも書ける</td><td><b>誤り</b> ── hexagonal は状態の有無を語らない</td></tr>
+<tr><td>インターフェースはプロダクトの姿なので、軸ではない</td><td><b>行き過ぎ</b> ── 捨てるべきは書いた文書であって、軸ではなかった</td></tr>
+<tr><td>決めごとが3種類だから、軸も閉じる</td><td><b>論証が成立しない</b> ── 1つの種類が複数の語彙を使う</td></tr>
+</table></div>
+<p class="src" style="font-size:.85rem;margin-top:.5rem"><b>5回のうち4回は、例に引きずられて足し引きした結果である。</b>
+だからこの答えでは、<b>足し引きの条件</b>のほうを決めてある。</p></div>
+<div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr>
+<tr><td class="what">用途を軸に入れる</td><td class="kill"><b>その語彙で書かれる規約が無い</b> ── 値を変えても、入れ替わるものが無い</td></tr>
+<tr><td class="what">道具を軸に入れる</td><td class="kill"><b>同じ理由</b> ── 道具は語彙ではなく、規約の引き取り先である</td></tr>
+<tr><td class="what">生存期間をインターフェースに畳む</td><td class="kill"><b>組み合わせの数だけ値が要る</b> ── 片方だけで効く規約が書けなくなる</td></tr>
+<tr><td class="what">軸は4つで閉じる、と言い切る</td><td class="kill"><b>論証できない</b> ── 1つの種類が複数の語彙を使うので、種類の数は軸の数を縛らない</td></tr>
+<tr><td class="what">軸を自由に足せることにする</td><td class="kill"><b>また足し引きが始まる</b> ── 足す条件が無いと、例が出るたびに動く</td></tr>
+</table></div></div>
+<div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem">
+<b>軸を足したくなったとき、規約を1件書いてみることになります。</b>その語彙でしか書けないなら足し、ほかの軸の語彙でも書けるなら足しません。<br>
+<b>閉じていないので、いつか5つ目が来ます。</b>そのとき動くのは正常で、動かないほうが誤りです。</p></div>
+</div></details>
+<p class="past-why"><b>直した理由：</b>観測できないものを軸に立てていた<span class="said">生存期間はちょっと意味が不明な概念ですね。これって具体すぎませんか？？</span></p></div></details></div><div class="acts"><button class="act yes">これで進める</button><button class="act no">差し戻す</button></div>
+<div class="backs" hidden><label style="font-size:.8rem;color:var(--muted)">差し戻す理由（自由に書けます）</label><div class="chips"></div><div class="row"><input type="text" placeholder="どこが引っかかったかを、そのまま書いてください"><button class="act back-go">これで差し戻す</button></div></div>
+<div class="note"><label for="n-Q2">Q2 について、思っていること・条件・引っかかり</label>
+<textarea id="n-Q2" placeholder="ここに書いたことは、答えを組み直すときの材料になります"></textarea></div>
+</article><article class="q" data-id="Q3">
+<div class="q-hd"><span class="id">Q3</span><h3>宣言は、何を書くものか</h3><span class="tag">軸3つに合わせて書き直し</span></div>
+<p class="ask">軸が3つになったとき、宣言の文書には何が入るか。</p>
+<div class="reco"><span class="lbl">決定</span><b>宣言は、外から注入される軸の値を受け取る口であり、その値と理由と落とした候補を書く1本の文書です。</b>
+選ぶのは<b>言語 ・ アーキテクチャ ・ 形態</b>の3つ。
+<b>言語とアーキテクチャは1つ、形態は複数もつことがあります</b>（1つの成果物が、端末からも道具からも使える形をとる）。
+<b>道具は軸ではない</b>ので、引き取る規約と一緒に書きます。
+<b>「何のために作るか」は仕様が持ちます</b> ── 宣言に書くのは<b>この宣言の名前</b>だけで、適用条件にはなりません。</div>
+<div class="fig"><h4>この決定を採ると、こうなる</h4>
+<div style="text-align:center"><svg style="max-width:42rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 835 332" width="835" height="332" role="img"><g transform="translate(6.0,6.0)"><path d="M386.4,32.8 L74.0,95.4" fill="none" stroke="#9fb0ab" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="74.0,95.4 80.2,91.7 81.1,96.5" fill="#9fb0ab"/><rect x="216.2" y="54.1" width="28.0" height="16.0" fill="#e9efed"/><text x="230.2" y="67.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">書く</text><path d="M386.4,32.8 L221.8,95.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="221.8,95.4 227.2,90.7 229.0,95.3" fill="#9fb0ab"/><rect x="290.1" y="54.1" width="28.0" height="16.0" fill="#e9efed"/><text x="304.1" y="67.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">選ぶ</text><path d="M386.4,32.8 L359.6,95.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="359.6,95.4 360.0,88.2 364.5,90.2" fill="#9fb0ab"/><rect x="359.0" y="54.1" width="28.0" height="16.0" fill="#e9efed"/><text x="373.0" y="67.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">選ぶ</text><path d="M386.4,32.8 L541.0,95.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="541.0,95.4 533.8,95.1 535.6,90.6" fill="#9fb0ab"/><rect x="449.7" y="54.1" width="28.0" height="16.0" fill="#e9efed"/><text x="463.7" y="67.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">選ぶ</text><path d="M386.4,32.8 L737.0,95.4" fill="none" stroke="#9fb0ab" stroke-width="1.2" stroke-dasharray="4 3"/><polygon points="737.0,95.4 729.9,96.6 730.7,91.8" fill="#9fb0ab"/><rect x="547.7" y="54.1" width="28.0" height="16.0" fill="#e9efed"/><text x="561.7" y="67.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">選ぶ</text><path d="M221.8,128.6 L366.4,191.2" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="366.4,191.2 359.2,190.8 361.2,186.3" fill="#9fb0ab"/><path d="M359.6,128.6 L366.4,191.2" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="366.4,191.2 363.2,184.7 368.1,184.2" fill="#9fb0ab"/><rect x="344.0" y="149.9" width="38.0" height="16.0" fill="#e9efed"/><text x="363.0" y="163.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">になる</text><path d="M541.0,128.6 L366.4,191.2" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="366.4,191.2 371.9,186.6 373.6,191.2" fill="#9fb0ab"/><path d="M366.4,224.8 L366.4,287.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="366.4,287.4 363.9,280.6 368.9,280.6" fill="#9fb0ab"/><rect x="312.4" y="246.1" width="108.0" height="16.0" fill="#e9efed"/><text x="366.4" y="259.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">そのつど突き合わせる</text><g class="wf-node" transform="translate(300.4,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="172.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="86.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">宣言　軸の値を受け取る口</text></g></g><g class="wf-node" transform="translate(0.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="148.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="74.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">主題　この宣言の名前</text></g></g><g class="wf-node" transform="translate(179.4,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="83.8" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="41.9" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">言語　1つ</text></g></g><g class="wf-node" transform="translate(287.2,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="143.8" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="71.9" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">アーキテクチャ　1つ</text></g></g><g class="wf-node" transform="translate(454.9,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="172.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="86.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">形態　複数もつことがある</text></g></g><g class="wf-node" transform="translate(651.0,96.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="172.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="86.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">道具　引き取る規約を書く</text></g></g><g class="wf-node" transform="translate(286.4,192.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="160.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="80.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">適用条件　機械が読む節</text></g></g><g class="wf-node" transform="translate(286.4,288.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="160.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="80.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">条件が合う規約が集まる</text></g></g></g></svg></div>
+<div class="scroll" style="margin-top:.8rem"><table>
+<tr><th>宣言に書くもの</th><th>いくつ</th><th>適用条件になるか</th></tr>
+<tr><td><b>主題</b>　この宣言の名前</td><td>1つ</td><td><b>ならない</b></td></tr>
+<tr><td><b>言語</b></td><td>1つ　<span class="mk-dim">2つ選ぶなら、宣言が2つ</span></td><td>なる</td></tr>
+<tr><td><b>アーキテクチャ</b></td><td>1つ　<span class="mk-dim">同上</span></td><td>なる</td></tr>
+<tr><td><b>形態</b></td><td><b>複数もつことがある</b></td><td>なる</td></tr>
+<tr><td><b>道具</b>　と、引き取る規約</td><td>いくつでも</td><td><b>ならない</b>　── 規約を減らす</td></tr>
+<tr><td><b>出典</b>　リンク ・ 引用した文字列 ・ 取得日</td><td>いくつでも</td><td>ならない</td></tr>
+</table></div>
+<p class="dh" style="margin-top:1rem">宣言 1本を、画面で開くとこう見える</p><div class="mock"><div class="mock-bar"><span class="doc-tag">選択</span>宣言　スキーマで文書を扱う道具</div>
+<div class="mock-body" style="grid-template-columns:1fr"><main class="mock-main">
+<dl class="fm"><dt>id</dt><dd>declaration-waffle</dd>
+<dt>文書の種類</dt><dd><b>選択</b></dd>
+<dt>主題</dt><dd>スキーマで文書を扱う道具　<span class="mk-dim">← この宣言の名前。条件にならない</span></dd>
+<dt>承認</dt><dd>daidaiiro　2026-09-10</dd></dl>
+<div class="mk-doc">
+<p class="mk-meta">選んだもの</p>
+<table><tr><th>軸</th><th>選んだもの</th><th>選んだ理由</th><th>落とした候補</th></tr>
+<tr><td>言語</td><td><code>go</code></td><td>実行ファイル1つで配れる</td><td><code>python</code>（処理系の用意が要る）</td></tr>
+<tr><td>アーキテクチャ</td><td><code>hexagonal</code></td><td>形態が2つあり、どちらからも同じ判断を呼ぶ</td><td><code>layered</code>（形態が2つだと収まらない）</td></tr>
+<tr><td><b>形態</b></td><td><code>cli</code>　<code>mcp-server</code></td><td>人が端末から使う道と、道具から使う道の両方が要る</td><td><code>cli</code> だけ（道具から呼ぶたびに起動すると待ちが積み上がる）</td></tr></table>
+<p class="mk-meta" style="margin-top:.5rem">この選択がつくる適用条件　<span class="mk-dim">── 機械が読む節</span></p>
+<pre style="margin:0;font-size:.76rem">language = go
+architecture = hexagonal
+form = cli
+form = mcp-server</pre>
+<p class="mk-meta" style="margin-top:.5rem">道具　<span class="mk-dim">── 軸ではない。適用条件をつくらない</span></p>
+<table><tr><th>用途</th><th>道具</th><th>引き取る規約</th></tr>
+<tr><td>整形</td><td><code>gofmt</code></td><td>字下げ ・ 改行 ・ 括弧の位置</td></tr>
+<tr><td>検査</td><td><code>go vet</code></td><td>誤りやすい書き方の並べ上げ</td></tr></table>
+<p class="mk-meta" style="margin-top:.5rem">出典</p>
+<table><tr><th>出どころ</th><th>引用した文字列</th><th>取得日</th></tr>
+<tr><td>go.dev/doc</td><td><i>“Build simple, secure, scalable systems with Go”</i></td><td>2026-09-10</td></tr></table>
+<p class="mk-dim" style="margin-top:.4rem"><b>違反の節を持たない</b> ── 選んだことであって、守るべきことではない</p>
+</div></main><footer class="law">© 2026 daidaiiro　<a href="https://opensource.org/licenses/MIT">MIT License</a></footer></div></div>
+<p class="dn"><b>宣言が持つのは、これだけです。</b>「この宣言に効く規約はこの何本」という一覧は持ちません ──
+効く規約は、選んだ値と規約の適用条件を<b>そのつど突き合わせて</b>求めます。</p>
+</div>
+<details><summary>なぜ1本か ・ 落とした案 5件</summary><div class="inside">
+<div class="block"><h4>なぜ宣言は1本の文書か</h4>
+<p class="src" style="font-size:.85rem">選択どうしは<b>互いの候補を狭める</b> ──
+形態を選ぶとアーキの候補が狭まり、アーキと言語で置き方が決まる。
+<b>一緒にしか決められないものは、1本の文書になる</b>（文書＝一緒に決まるもののまとまり）。
+承認も一度で済む ── 「この構成でいく」という1つの決定である。</p></div>
+<div class="block"><h4>なぜ形態だけが複数になるか</h4>
+<p class="src" style="font-size:.85rem">言語やアーキテクチャを2つ選ぶなら、それは<b>別の成果物</b>である ── 宣言が2つになる。
+形態は違う ── <b>1つの成果物が、端末からも道具からも使える形をとれる</b>。
+どちらの形も同じ実行ファイルが持つので、宣言は1つのままである。<br>
+当て方は変わらない ── <b>その値を持っているか</b>で当てる。</p></div>
+<div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr>
+<tr><td class="what">軸ごとに文書を割る</td><td class="kill"><b>名前に宣言を入れることになる</b> ── <code>choice-cli-language</code> のようになり、宣言ごとの一式を管理する形に戻る</td></tr>
+<tr><td class="what">宣言でフォルダを切る</td><td class="kill"><b>文書がすでに言っていることを二重に持つ</b> ── しかもフォルダは機械で引けない</td></tr>
+<tr><td class="what">効く規約の一覧を、宣言に持たせる</td><td class="kill"><b>保存した一覧が古くなる</b> ── 規約が1件増えるたびに直して回る</td></tr>
+<tr><td class="what">形態ごとに宣言を分ける</td><td class="kill"><b>選択が丸ごと重複する</b> ── 言語もアーキも道具も、理由まで同じものが並ぶ</td></tr>
+<tr><td class="what">主題を適用条件に入れる</td><td class="kill"><b>仕様が規約を動かすようになる</b> ── 依存の向きが逆転する（Q1）</td></tr>
+</table></div></div>
+<div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem">
+<b>宣言の文書に、機械が読む節を1つ置くことになります</b>（「この選択がつくる適用条件」）──
+ほかの節にも軸の値が文中に出てくるので、拾う場所を限る必要があります。<br>
+<b>複数の値をとれるのは形態だけ</b>と決めておく必要があります ── 言語やアーキが2つ現れたら、それは宣言が2つです。<br><b>そして条件が当たるのは、宣言の全体です。</b><code>form = cli</code> の規約は、実際には成果物のうち端末から呼ばれる部分にだけ効きますが、<b>どの部分に効くかを機械には言えません</b> ── 適用範囲の欄で補いますが、それは文章なので絞り込みには使えません。<br><b>同じ条件で違う選択をしたい相手が2つあると、書けません。</b>同じ言語を選んだ2つのチームが別の流儀を採りたいとき、写しを作らない設計なので分けられません ── 相手を条件に足すと、Q1 の境界と衝突します。</p></div>
+</div></details>
+<div class="acts"><button class="act yes">これで進める</button><button class="act no">差し戻す</button></div>
+<div class="backs" hidden><label style="font-size:.8rem;color:var(--muted)">差し戻す理由（自由に書けます）</label><div class="chips"></div><div class="row"><input type="text" placeholder="どこが引っかかったかを、そのまま書いてください"><button class="act back-go">これで差し戻す</button></div></div>
+<div class="note"><label for="n-Q3">Q3 について、思っていること・条件・引っかかり</label>
+<textarea id="n-Q3" placeholder="ここに書いたことは、答えを組み直すときの材料になります"></textarea></div>
+</article><article class="q" data-id="Q4">
+<div class="q-hd"><span class="id">Q4</span><h3>CodingSchema と coding-skills は、それぞれ何を持つか</h3><span class="tag">新しい論点</span></div>
+<p class="ask">型と Skill の分担はどこにあるか。</p>
+<div class="reco"><span class="lbl">決定</span><b>CodingSchema は「形」を、coding-skills は「使い方」を持ちます。</b>
+型は<b>軸の一覧 ・ 文書の種類と背骨 ・ 適用条件の欄 ・ 出典の欄</b>を定め、Skill は<b>物差し ・ 手順 ・ ガードレール ・ 道具</b>を持ちます。
+<b>道具は型に依ります</b> ── 欄が無ければ、絞ることも当てることもできません。
+そして<b>どちらも判断は持ちません</b>。</div>
+<div class="fig"><h4>この決定を採ると、こうなる</h4>
+<div style="text-align:center"><svg style="max-width:36rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 739 524" width="739" height="524" role="img"><g transform="translate(6.0,6.0)"><path d="M248.6,32.6 L248.6,95.2" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="248.6,95.2 246.1,88.4 251.0,88.4" fill="#9fb0ab"/><rect x="234.6" y="53.9" width="28.0" height="16.0" fill="#e9efed"/><text x="248.6" y="67.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">従う</text><path d="M248.6,128.8 L107.1,191.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="107.1,191.4 112.3,186.4 114.3,190.9" fill="#9fb0ab"/><rect x="163.8" y="150.1" width="28.0" height="16.0" fill="#e9efed"/><text x="177.8" y="163.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">持つ</text><path d="M248.6,128.8 L390.6,191.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="390.6,191.4 383.4,190.9 385.4,186.4" fill="#9fb0ab"/><rect x="305.6" y="150.1" width="28.0" height="16.0" fill="#e9efed"/><text x="319.6" y="163.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">呼ぶ</text><path d="M390.6,224.6 L391.1,287.2" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="391.1,287.2 388.6,280.5 393.5,280.4" fill="#9fb0ab"/><rect x="366.9" y="245.9" width="48.0" height="16.0" fill="#e9efed"/><text x="390.9" y="259.5" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">欄に依る</text><path d="M391.1,320.8 L212.0,383.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="212.0,383.4 217.6,378.8 219.2,383.5" fill="#9fb0ab"/><rect x="282.6" y="342.1" width="38.0" height="16.0" fill="#e9efed"/><text x="301.6" y="355.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">定める</text><path d="M212.0,416.6 L212.6,479.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="212.6,479.4 210.1,472.7 215.0,472.6" fill="#9fb0ab"/><rect x="183.3" y="438.0" width="58.0" height="16.0" fill="#e9efed"/><text x="212.3" y="451.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">形を与える</text><path d="M391.1,320.8 L568.6,383.4" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="568.6,383.4 561.4,383.5 563.1,378.8" fill="#9fb0ab"/><rect x="465.9" y="342.1" width="28.0" height="16.0" fill="#e9efed"/><text x="479.9" y="355.7" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">守る</text><g class="wf-node" transform="translate(211.4,0.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="75.4" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="37.7" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">人と AI</text></g></g><g class="wf-node" transform="translate(142.4,96.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="213.4" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="106.7" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">coding-skills　使い方を持つ</text></g></g><g class="wf-node" transform="translate(0.0,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="215.2" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="107.6" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">物差し ・ 手順 ・ ガードレール</text></g></g><g class="wf-node" transform="translate(239.2,192.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="302.8" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="151.4" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">道具　絞る ・ 並べる ・ 差分 ・ 出典を当てる</text></g></g><g class="wf-node" transform="translate(299.8,288.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="181.6" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="90.8" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">CodingSchema　形を持つ</text></g></g><g class="wf-node" transform="translate(36.6,384.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="350.8" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="175.4" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">軸の一覧 ・ 文書の種類と背骨 ・ 適用条件 ・ 出典の欄</text></g></g><g class="wf-node" transform="translate(142.2,480.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="139.6" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="69.8" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">文書　宣言 ・ 規約</text></g></g><g class="wf-node" transform="translate(411.4,384.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="315.4" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="157.7" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">abstract schema　ID ・ 種類 ・ 版 ・ 状態</text></g></g></g></svg></div>
+<p class="dh" style="margin-top:1rem">持ち物の分担</p><pre class="tree"><b>CodingSchema が定めるもの</b>　── 形
+  <b>軸の一覧</b>　　言語 ／ アーキテクチャ ／ 形態
+  　　　　　　　　適用条件に書ける軸名を定める。<b>値は自由</b>（go も rust も、型を変えずに書ける）
+  文書の種類　　選択 ／ 規則 ／ 構造 ／ 振る舞い
+  種類ごとの背骨　どの節を持つか
+  適用条件の欄　軸の値の組を書く場所
+  出典の欄　　　リンク ・ <b>引用した文字列</b> ・ 取得日
+  芯　　　　　　id ・ 種類 ・ 主題 ・ まとまる理由 ・ 承認
+
+<b>coding-skills が定めるもの</b>　── 使い方
+  境界の物差し　軸の値だけから書けるか
+  軸の物差し　　それが無いと、その種類が1件も書けないか
+  手順　　　　　宣言する → 規約を書く → 重なりを見る → 差分を見る
+  ガードレール　固有名を書かない ／ 写しを作らない ／ 公式を書き写さない
+  道具　　　　　絞る ・ 並べる ・ 差分を出す ・ 出典を原文に当てる
+
+<b>どちらも持たないもの</b>　── 判断
+  矛盾かどうか ／ 消すかどうか ／ 承認　　→　<b>人</b></pre>
+
+<div class="scroll" style="margin-top:.8rem"><table>
+<tr><th></th><th>CodingSchema</th><th>coding-skills</th></tr>
+<tr><td><b>何であるか</b></td><td>文書の型</td><td>使い方の手順とガードレール</td></tr>
+<tr><td><b>読む相手</b></td><td>機械（検査 ・ 描画 ・ 絞り込み）</td><td>人と AI</td></tr>
+<tr><td><b>軸について持つもの</b></td><td><b>一覧</b>　── どの軸名が書けるか</td><td><b>物差し</b>　── 何が軸になるか</td></tr><tr><td><b>変わるとき</b></td><td>軸か種類が増えたとき ／ 節が増減したとき</td><td>決め方が変わるとき（物差しが変わる）</td></tr>
+<tr><td><b>守る相手</b></td><td>abstract schema の契約</td><td>この盤の決着</td></tr>
+<tr><td><b>持たないもの</b></td><td>判断 ・ 手順</td><td>文書の形</td></tr><tr><td><b>仕様を知るか</b></td><td><b>知らない</b></td><td><b>知らない</b></td></tr>
+</table></div>
+</div>
+<details><summary>なぜこの分け方か ・ 落とした案 4件</summary><div class="inside">
+<div class="block"><h4>なぜこの分け方か</h4>
+<p class="src" style="font-size:.85rem">型は<b>機械が読むもの</b>で、Skill は<b>人と AI が読むもの</b>である。
+読む相手が違えば、変わる理由も違う ── 節が1つ増えるのは型の話で、物差しが変わるのは Skill の話である。
+<b>混ぜると、片方を直したいときにもう片方も動かすことになる。</b></p></div>
+<div class="block"><h4>道具が、型に依る理由</h4><pre class="tree">形が揃っているから、道具が働く
+
+  <b>適用条件の欄</b>があるから　→　絞れる ・ 重なりを並べられる ・ 差分を出せる
+  <b>出典の欄</b>があるから　　　→　引用した文字列を原文に当てられる
+  <b>種類の欄</b>があるから　　　→　背骨が揃っているかを検査できる
+  <b>軸の一覧</b>があるから　　　→　知らない軸名で書かれた条件を、その場で弾ける
+
+<b>欄が無ければ、道具は書けない</b>
+  だから道具は Skill の持ち物ではなく、<b>型に依っている</b></pre></div><div class="block"><h4>道具はどちらの持ち物か</h4>
+<p class="src" style="font-size:.85rem">道具（絞る ・ 並べる ・ 差分を出す ・ 出典を当てる）は、
+<b>型が持つ欄が無ければ書けない</b>。だから型に依る。
+ただし<b>いつ呼ぶか</b>（書くとき ・ 選ぶとき）は Skill が決める ── 呼ぶ側と、依る先が違う。</p></div>
+<div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr>
+<tr><td class="what">手順を型に持たせる</td><td class="kill"><b>物差しが変わるたびに型が動く</b> ── 文書の形は変わっていないのに、版が上がる</td></tr>
+<tr><td class="what">文書の形を Skill に持たせる</td><td class="kill"><b>機械が検査できない</b> ── 形の定めが、人向けの文章の中にしかない</td></tr>
+<tr><td class="what">道具を Skill だけの持ち物にする</td><td class="kill"><b>欄が変わったときに気づけない</b> ── 道具は欄に依っているので、型と一緒に動く必要がある</td></tr>
+<tr><td class="what">判断を、どちらかに持たせる</td><td class="kill"><b>機械が見られるのは形だけである</b> ── 矛盾かどうかは読まないと分からない</td></tr>
+</table></div></div>
+<div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem">
+<b>型と Skill は、別々に版が上がります。</b>物差しを直しても型は動かず、節を足しても物差しは動きません。<br>
+<b>道具は、型の欄が変わったら一緒に直すことになります</b> ── 依っているのは Skill ではなく欄だからです。<br><b>ただし、道具は思ったより少なくて済みます</b> ── 絞る ・ 並べる ・ 差分を出す ・ 効かないものを見つけるは、どれも<b>適用条件で絞る</b>の言い換えなので、汎用の問い合わせ1つで書けます。<b>出典を原文に当てるのは、すでに別の Skill が持っています</b> ── 作り直しません。</p></div>
+</div></details>
+<div class="acts"><button class="act yes">これで進める</button><button class="act no">差し戻す</button></div>
+<div class="backs" hidden><label style="font-size:.8rem;color:var(--muted)">差し戻す理由（自由に書けます）</label><div class="chips"></div><div class="row"><input type="text" placeholder="どこが引っかかったかを、そのまま書いてください"><button class="act back-go">これで差し戻す</button></div></div>
+<div class="note"><label for="n-Q4">Q4 について、思っていること・条件・引っかかり</label>
+<textarea id="n-Q4" placeholder="ここに書いたことは、答えを組み直すときの材料になります"></textarea></div>
+</article><article class="q" data-id="Q5">
+<div class="q-hd"><span class="id">Q5</span><h3>置き場所を、どう切るか</h3><span class="tag">持ち越した決着の見直し</span></div>
+<p class="ask">「正本は1段。フォルダを切らない」と決めていたが、種類で切ってはいけない理由は何か。</p>
+<div class="reco"><span class="lbl">決定</span><b>切ってよいのは、文書がその値を1つしか持たないものだけです。</b>
+<b>文書の種類は1つしか持たない</b>ので切れます ── <code>declarations/</code> ・ <code>rules/</code> ・ <code>structures/</code> ・ <code>behaviors/</code>。<b>選択も含めて4つとも切ります</b> ── 入口だから上に置く、という例外を作らない。入口は種類で見つかるからです。
+<b>軸は複数もつことがある</b>ので切れません（`language ＋ architecture` の規則は、どちらにも置けない）。
+そして<b>機械は置き場所を見ません</b> ── 前置きの種類と適用条件で判断するので、1段に置いても同じ一式が出ます。
+<b>フォルダは人が見つけるためのものです。</b></div>
+<div class="fig"><h4>この決定を採ると、こうなる</h4>
+<div style="text-align:center"><svg style="max-width:34rem;margin:0 auto" class="wf-fig" class="wf-fig" viewBox="0 0 760 100" width="760" height="100" role="img"><g transform="translate(6.0,6.0)"><path d="M148.6,44.0 L289.2,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="289.2,16.0 283.0,19.7 282.1,14.9" fill="#9fb0ab"/><path d="M148.6,44.0 L289.4,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="289.4,72.0 282.3,73.1 283.2,68.3" fill="#9fb0ab"/><path d="M446.6,16.0 L587.0,16.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="587.0,16.0 580.2,18.5 580.2,13.5" fill="#9fb0ab"/><rect x="457.8" y="6.0" width="118.0" height="16.0" fill="#e9efed"/><text x="516.8" y="19.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">置き場所が一意に決まる</text><path d="M426.6,72.0 L587.2,72.0" fill="none" stroke="#9fb0ab" stroke-width="1.2"/><polygon points="587.2,72.0 580.4,74.5 580.4,69.5" fill="#9fb0ab"/><rect x="452.9" y="62.0" width="108.0" height="16.0" fill="#e9efed"/><text x="506.9" y="75.6" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="10.0" fill="#5b6b66">置き場所が決まらない</text><g class="wf-node" transform="translate(0.0,28.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="148.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="74.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">この値で切ってよいか</text></g></g><g class="wf-node" transform="translate(290.0,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="155.8" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="77.9" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">文書が1つしか持たない</text></g></g><g class="wf-node" transform="translate(290.0,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="136.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="68.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">複数もつことがある</text></g></g><g class="wf-node" transform="translate(587.8,0.0)"><g class="svg-box" role="focus"><rect x="0" y="0" width="160.0" height="32.0" rx="5.0" fill="#d5e6e3" stroke="#0d5c55" stroke-width="1.6"/><text x="80.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="600" fill="#0d5c55">切ってよい　文書の種類</text></g></g><g class="wf-node" transform="translate(587.8,56.0)"><g class="svg-box" role="plain"><rect x="0" y="0" width="100.0" height="32.0" rx="5.0" fill="#e9efed" stroke="#ccd8d4" stroke-width="1.2"/><text x="50.0" y="20.3" text-anchor="middle" font-family="Noto Sans JP, Hiragino Kaku Gothic ProN, sans-serif" font-size="12.0" font-weight="400" fill="#111d1a">切れない　軸</text></g></g></g></svg></div>
+<pre class="tree" style="margin-top:.8rem">.coding/
+  declarations/       選択（宣言）
+  rules/              規則
+  structures/         構造
+  behaviors/          振る舞い</pre>
+<p class="dh" style="margin-top:1rem">切ってよいかの物差し</p><pre class="tree">物差し ── <b>その値を、文書が1つしか持たないか</b>
+
+  <b>文書の種類</b>　1つしか持たない　　→　置き場所が一意に決まる　<b>切ってよい</b>
+      declarations/ ／ rules/ ／ structures/ ／ behaviors/　── <b>4つとも切る。例外を作らない</b>
+
+  <b>軸</b>　　　　　複数もつことがある　→　置き場所が決まらない　　<b>切れない</b>
+      「Go ・ hexagonal における置き場所」は
+      language でも architecture でもあるので、どちらにも置けない
+
+  <b>主題</b>　　　　形を決めないもの　　→　種類とずれる　　　　　　切らない</pre>
+<p class="dh" style="margin-top:1rem">機械と人で、見るものが違う</p><pre class="tree">機械は<b>前置きの種類と適用条件</b>で判断する。置き場所を見ない
+  → 1段に置いても、フォルダで切っても、<b>同じ一式が出る</b>
+
+フォルダは<b>人が見つけるため</b>にある
+  → だから<b>種類 ・ 置き場所 ・ id の頭</b>の3つが揃っていなければならない
+     揃っていないと、人がフォルダで探して見つからない
+
+揃っているかは<b>検査が見る</b>
+  規則を structures/ へ置くと　→　「規則 は rules/ に置く」と出る</pre>
+<p class="dn"><b>置き場所を変えても、集まり方は変わりません。</b>
+実際に1段へ移して同じ一式が出ることと、規則を <code>structures/</code> へ置くと検査が捕まえることを、確かめました。</p>
+</div>
+<details><summary>持ち越した決着との関係 ・ 落とした案 4件</summary><div class="inside">
+<div class="block"><h4>持ち越した決着は、何を却下していたのか</h4>
+<p class="src" style="font-size:.85rem">「フォルダを切らない」は<b>軸で切ること</b>を却下していた。
+理由は「宣言している欄と二重になる」と書いていたが、<b>それは浅かった</b> ──
+本当の理由は、<b>1つの文書が複数の軸の値を持つので、置き場所が一意に決まらない</b>ことである。
+文書の種類は1つしか持たないので、この理由は当たらない。</p></div>
+<div class="block"><h4>二重に持つことにならないか</h4>
+<p class="src" style="font-size:.85rem">なる。種類は前置きにも書かれ、置き場所にも現れる。
+ただし<b>機械は前置きだけを見る</b>ので、置き場所が古くなっても集まり方は壊れない。
+そして<b>食い違いは検査が捕まえる</b> ── 腐りを防ぐのではなく、見つかる形にしておくという扱い方（Q8 の持ち越し）と同じである。</p></div>
+<div class="block"><h4>落とした案と、落とした理由</h4><div class="scroll"><table><tr><th>案</th><th>何が壊れるか</th></tr>
+<tr><td class="what">1段のままにする</td><td class="kill"><b>人が探せない</b> ── 画面がまだ無いので、フォルダの並びが唯一の入口である</td></tr>
+<tr><td class="what">軸で切る</td><td class="kill"><b>置き場所が一意に決まらない</b> ── 複数の軸の値を持つ規約を、どこにも置けない</td></tr>
+<tr><td class="what">機械にも置き場所を見せる</td><td class="kill"><b>置き場所が意味を持ってしまう</b> ── 動かすと集まり方が変わり、前置きと二重の正本になる</td></tr>
+<tr><td class="what">置き場所と種類の食い違いを、検査で見ない</td><td class="kill"><b>人が探して見つからない</b> ── 機械は困らないが、人はフォルダで探す</td></tr>
+</table></div></div>
+<div class="block"><h4>この決定を採ると、引き受けること</h4><p class="src" style="font-size:.85rem">
+<b>種類 ・ 置き場所 ・ id の頭の3つを、揃えることになります。</b>検査が見ますが、揃える手間はあります。<br>
+<b>種類が増えたら、フォルダも増えます</b> ── 種類は閉じていないので（Q2）、そのときに1つ増えます。</p></div>
+</div></details>
+<div class="acts"><button class="act yes">これで進める</button><button class="act no">差し戻す</button></div>
+<div class="backs" hidden><label style="font-size:.8rem;color:var(--muted)">差し戻す理由（自由に書けます）</label><div class="chips"></div><div class="row"><input type="text" placeholder="どこが引っかかったかを、そのまま書いてください"><button class="act back-go">これで差し戻す</button></div></div>
+<div class="note"><label for="n-Q5">Q5 について、思っていること・条件・引っかかり</label>
+<textarea id="n-Q5" placeholder="ここに書いたことは、答えを組み直すときの材料になります"></textarea></div>
+</article></div><div class="handback">
+  <h3>回答を送信する</h3>
+  <p class="src">諾否と、書いたことを<b>1件の回答にまとめて</b>送ります。論点ごとに入るのは1件だけです。</p>
+  <p class="src" style="border-left:3px solid var(--warn);padding-left:.7rem"><b>送信では、Claude のターンは始まりません。</b>
+  会話を始められるのはあなたの発言だけなので、<b>送ったあとに一言ください</b>（「回答した」で十分です）。<br>
+  送れない場所で開いているときは、下の JSON をコピーして会話に貼ってください。</p>
+  <p class="src" id="tally" style="margin-bottom:.5rem">まだ何も答えていません</p>
+  <div class="acts"><button class="act yes" id="send" type="button">送信</button>
+  <button class="act" id="copy">コピー</button><span class="src" id="copied"></span></div>
+  <textarea id="out" readonly aria-label="私に渡す回答"></textarea>
+</div>
+</div><script>
+const BACKS=["もっと単純に","前提が違う","別の道も見たい"];
+const state={log:{}};
+/* ── 目次：カードから組む。カードが増えても、書き足す場所は無い ── */
+const toc=document.querySelector('.toc');
+function tocState(el){
+  if(el.classList.contains('settled')) return ['st-settled','決着'];
+  if(el.classList.contains('done')) return ['st-done','承認'];
+  if(el.classList.contains('sent')) return ['st-sent','差し戻し'];
+  return ['','未'];
+}
+document.querySelectorAll('.q').forEach(el=>{
+  const id=el.dataset.id; el.id=id;
+  const a=document.createElement('a');
+  a.href='#'+id;
+  a.innerHTML='<span class="n">'+id+'</span><span class="t">'+
+    el.querySelector('h3').textContent+'</span><span class="s"></span>';
+  toc.appendChild(a);
+});
+{
+  const a=document.createElement('a');
+  a.href='#handback'; a.className='send';
+  a.innerHTML='<span class="t">送信へ</span>';
+  toc.appendChild(a);
+  document.querySelector('.handback').id='handback';
+}
+function tocSync(){
+  document.querySelectorAll('.q').forEach(el=>{
+    const a=toc.querySelector('a[href="#'+el.dataset.id+'"]');
+    if(!a) return;
+    const [cls,label]=tocState(el);
+    a.className=cls; a.querySelector('.s').textContent=label;
+  });
+}
+tocSync();
+/* いま画面に在る論点を印す */
+if('IntersectionObserver' in window){
+  const seen=new Set();
+  const io=new IntersectionObserver(es=>{
+    es.forEach(e=>e.isIntersecting?seen.add(e.target.id):seen.delete(e.target.id));
+    toc.querySelectorAll('a').forEach(a=>a.classList.remove('now'));
+    const first=[...document.querySelectorAll('.q')].find(el=>seen.has(el.id));
+    if(first){const a=toc.querySelector('a[href="#'+first.id+'"]'); if(a)a.classList.add('now');}
+  },{rootMargin:'-58px 0px -70% 0px'});
+  document.querySelectorAll('.q').forEach(el=>io.observe(el));
+}
+
+document.querySelectorAll('.q').forEach(el=>{
+  const acts=el.querySelector('.acts'), backs=el.querySelector('.backs');
+  if(!acts||!backs) return;
+  const chips=backs.querySelector('.chips'), input=backs.querySelector('input[type=text]');
+  BACKS.forEach(r=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=r;
+    b.addEventListener('click',()=>{input.value=input.value?input.value:r;input.focus();});chips.appendChild(b);});
+  backs.querySelector('.back-go').addEventListener('click',()=>{
+    const r=(input.value||'').trim();
+    if(!r){input.focus();input.placeholder='理由を書いてください ── 何が引っかかったかだけで構いません';return;}
+    settle(el,acts,backs,'returned',r);
+  });
+  input.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();backs.querySelector('.back-go').click();}});
+  el.querySelector('.yes').addEventListener('click',()=>settle(el,acts,backs,'approved'));
+  el.querySelector('.no').addEventListener('click',()=>{backs.hidden=false;input.focus();});
+  // 版を選ぶと、選んだ版だけが色づく
+  el.querySelectorAll('input[type=radio]').forEach(r=>r.addEventListener('change',()=>{
+    el.querySelectorAll('.ver').forEach(v=>v.classList.remove('chosen'));
+    const v=el.querySelector('.ver[data-v="'+r.value+'"]'); if(v)v.classList.add('chosen');
+  }));
+});
+function chosen(el){
+  const r=el.querySelector('input[type=radio]:checked');
+  if(!r) return {v:null,label:null};
+  const box=el.querySelector('.ver[data-v="'+r.value+'"]');
+  const sum=box&&box.closest('details.old')?box.closest('details.old').querySelector('summary').textContent:null;
+  return {v:r.value,label:sum};
+}
+function settle(el,acts,backs,verdict,reason){
+  backs.hidden=true;
+  const c=chosen(el), pick=c.v&&el.querySelectorAll('input[type=radio]').length?('　選んだ答え：'+c.v):'';
+  const v=document.createElement('p'); v.className='verdict';
+  el.classList.remove('done','sent');
+  if(verdict==='approved'){el.classList.add('done');
+    v.innerHTML='<span class="ok">承認</span> この答えで先へ進みます。'+pick+'　<button type="button" class="chip undo">取り消す</button>';}
+  else{el.classList.add('sent');
+    v.innerHTML='<span class="back">差し戻し</span> 「'+reason+'」で持ち帰ります ── 直した答えを1つ出します。　<button type="button" class="chip undo">取り消す</button>';}
+  const prev=el.querySelector('.verdict'); if(prev)prev.remove();
+  acts.after(v); acts.hidden=true;
+  v.querySelector('.undo').addEventListener('click',()=>{
+    v.remove(); acts.hidden=false; el.classList.remove('done','sent'); delete state.log[el.dataset.id];
+    tally();
+  });
+  state.log[el.dataset.id]={verdict:verdict,reason:reason||null};
+  tally();
+}
+function tally(){
+  if(typeof tocSync==='function') tocSync();
+  const n=Object.keys(state.log).length;
+  const t=document.getElementById('tally');
+  if(t)t.textContent=n?('いま '+n+' 件を送ります ── 論点ごとに1件だけ入ります'):'まだ何も答えていません';
+}
+function sheet(){
+  const answers=[];
+  document.querySelectorAll('.q').forEach(el=>{
+    const id=el.dataset.id, l=state.log[id], note=(el.querySelector('textarea').value||'').trim();
+    if(!l&&!note) return;
+    const c=chosen(el);
+    const a={questionId:id,topic:el.querySelector('.tag').textContent,
+      title:el.querySelector('h3').textContent,
+      verdict:l?l.verdict:'unanswered',returnReason:l&&l.reason?l.reason:null};
+    if(c.v)a.chosenVersion=c.v;
+    if(c.label)a.chosenLabel=c.label;
+    if(note)a.note=note;
+    answers.push(a);
+  });
+  return {board:'conventions-redesign',round:1,
+    answeredAt:new Date().toISOString(),answers:answers};
+}
+const out=document.getElementById('out'), msg=document.getElementById('copied');
+let sending=false;
+document.getElementById('send').addEventListener('click',async(ev)=>{
+  const btn=ev.currentTarget;
+  if(sending){return;}
+  const body=sheet(); if(!body.answers.length){msg.textContent='まだ何も答えていません';return;}
+  sending=true; btn.disabled=true;
+  out.value=JSON.stringify(body,null,2); msg.textContent='送っています…';
+  try{const res=await fetch('/answer',{method:'POST',headers:{'Content-Type':'application/json'},body:out.value});
+    const j=await res.json();
+    msg.textContent=res.ok?('送りました（'+j.count+' 件）── Claude に一言書いてください')
+      :('送れませんでした：'+(j.faults||[j.error]).join(' / '));
+    if(!res.ok){sending=false;btn.disabled=false;}
+  }catch{msg.textContent='ここからは送れません ── 下の JSON をコピーして、会話に貼ってください';sending=false;btn.disabled=false;}
+});
+document.getElementById('copy').addEventListener('click',async()=>{
+  const body=sheet(); if(!body.answers.length){msg.textContent='まだ何も答えていません';return;}
+  out.value=JSON.stringify(body,null,2);
+  out.removeAttribute('readonly'); out.select();
+  try{await navigator.clipboard.writeText(out.value);msg.textContent='コピーしました';}
+  catch{msg.textContent='選択したので、そのままコピーしてください';}
+  out.setAttribute('readonly','');
+});
+
+document.querySelectorAll('mark.chg').forEach(m=>{
+  m.addEventListener('click',()=>{
+    let pop=m.nextElementSibling;
+    if(!pop||!pop.classList.contains('pop')){
+      pop=document.createElement('div'); pop.className='pop'; pop.hidden=true;
+      pop.innerHTML='<b>変更前</b>'+m.dataset.b+'<b>なぜ変えたか</b>'+m.dataset.w;
+      m.parentNode.insertBefore(pop, m.nextSibling);
+    }
+    pop.hidden=!pop.hidden;
+    m.setAttribute('aria-expanded', String(!pop.hidden));
+  });
+});
+</script>

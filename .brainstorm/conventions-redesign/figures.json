@@ -1,0 +1,351 @@
+{
+  "boundary": {
+    "direction": "LR",
+    "nodes": [
+      {
+        "id": "q",
+        "label": "この言明を書くのに、\n何を知る必要があるか"
+      },
+      {
+        "id": "in",
+        "label": "軸の値だけで書ける",
+        "role": "focus"
+      },
+      {
+        "id": "out",
+        "label": "仕様を知らないと書けない"
+      },
+      {
+        "id": "c",
+        "label": "規約　この Skill が持つ",
+        "role": "focus"
+      },
+      {
+        "id": "s",
+        "label": "仕様　外から注入される"
+      }
+    ],
+    "edges": [
+      {
+        "from": "q",
+        "to": "in"
+      },
+      {
+        "from": "q",
+        "to": "out"
+      },
+      {
+        "from": "in",
+        "to": "c"
+      },
+      {
+        "from": "out",
+        "to": "s"
+      }
+    ]
+  },
+  "axes": {
+    "direction": "LR",
+    "nodes": [
+      {
+        "id": "l",
+        "label": "言語",
+        "role": "focus"
+      },
+      {
+        "id": "ar",
+        "label": "アーキテクチャ",
+        "role": "focus"
+      },
+      {
+        "id": "i",
+        "label": "形態",
+        "role": "focus"
+      },
+      {
+        "id": "r",
+        "label": "規則　コードの一片への述語"
+      },
+      {
+        "id": "st",
+        "label": "構造　部品どうしの関係への述語"
+      },
+      {
+        "id": "be",
+        "label": "振る舞い　観測される結果への述語"
+      }
+    ],
+    "edges": [
+      {
+        "from": "l",
+        "to": "r",
+        "label": "が無いと書けない"
+      },
+      {
+        "from": "ar",
+        "to": "st",
+        "label": "が無いと書けない"
+      },
+      {
+        "from": "i",
+        "to": "be",
+        "label": "が無いと書けない"
+      },
+      {
+        "from": "ar",
+        "to": "r",
+        "label": "借りることがある",
+        "dashed": true
+      }
+    ]
+  },
+  "decl": {
+    "direction": "TB",
+    "nodes": [
+      {
+        "id": "d",
+        "label": "宣言　軸の値を受け取る口",
+        "role": "focus"
+      },
+      {
+        "id": "t",
+        "label": "主題　この宣言の名前"
+      },
+      {
+        "id": "l",
+        "label": "言語　1つ"
+      },
+      {
+        "id": "a",
+        "label": "アーキテクチャ　1つ"
+      },
+      {
+        "id": "k",
+        "label": "形態　複数もつことがある"
+      },
+      {
+        "id": "tool",
+        "label": "道具　引き取る規約を書く"
+      },
+      {
+        "id": "c",
+        "label": "適用条件　機械が読む節",
+        "role": "focus"
+      },
+      {
+        "id": "r",
+        "label": "条件が合う規約が集まる"
+      }
+    ],
+    "edges": [
+      {
+        "from": "d",
+        "to": "t",
+        "label": "書く",
+        "dashed": true
+      },
+      {
+        "from": "d",
+        "to": "l",
+        "label": "選ぶ"
+      },
+      {
+        "from": "d",
+        "to": "a",
+        "label": "選ぶ"
+      },
+      {
+        "from": "d",
+        "to": "k",
+        "label": "選ぶ"
+      },
+      {
+        "from": "d",
+        "to": "tool",
+        "label": "選ぶ",
+        "dashed": true
+      },
+      {
+        "from": "l",
+        "to": "c"
+      },
+      {
+        "from": "a",
+        "to": "c",
+        "label": "になる"
+      },
+      {
+        "from": "k",
+        "to": "c"
+      },
+      {
+        "from": "c",
+        "to": "r",
+        "label": "そのつど突き合わせる"
+      }
+    ]
+  },
+  "roles": {
+    "direction": "TB",
+    "nodes": [
+      {
+        "id": "h",
+        "label": "人と AI"
+      },
+      {
+        "id": "sk",
+        "label": "coding-skills　使い方を持つ",
+        "role": "focus"
+      },
+      {
+        "id": "g",
+        "label": "物差し ・ 手順 ・ ガードレール"
+      },
+      {
+        "id": "t",
+        "label": "道具　絞る ・ 並べる ・ 差分 ・ 出典を当てる"
+      },
+      {
+        "id": "cs",
+        "label": "CodingSchema　形を持つ",
+        "role": "focus"
+      },
+      {
+        "id": "f",
+        "label": "軸の一覧 ・ 文書の種類と背骨 ・ 適用条件 ・ 出典の欄"
+      },
+      {
+        "id": "d",
+        "label": "文書　宣言 ・ 規約"
+      },
+      {
+        "id": "ab",
+        "label": "abstract schema　ID ・ 種類 ・ 版 ・ 状態"
+      }
+    ],
+    "edges": [
+      {
+        "from": "h",
+        "to": "sk",
+        "label": "従う"
+      },
+      {
+        "from": "sk",
+        "to": "g",
+        "label": "持つ"
+      },
+      {
+        "from": "sk",
+        "to": "t",
+        "label": "呼ぶ"
+      },
+      {
+        "from": "t",
+        "to": "cs",
+        "label": "欄に依る"
+      },
+      {
+        "from": "cs",
+        "to": "f",
+        "label": "定める"
+      },
+      {
+        "from": "f",
+        "to": "d",
+        "label": "形を与える"
+      },
+      {
+        "from": "cs",
+        "to": "ab",
+        "label": "守る"
+      }
+    ]
+  },
+  "injection": {
+    "direction": "TB",
+    "nodes": [
+      {
+        "id": "ax",
+        "label": "軸　言語 ・ アーキテクチャ ・ 形態"
+      },
+      {
+        "id": "conv",
+        "label": "規約　CodingSchema",
+        "role": "focus"
+      },
+      {
+        "id": "spec",
+        "label": "仕様　外から注入される"
+      },
+      {
+        "id": "impl",
+        "label": "実装",
+        "role": "focus"
+      }
+    ],
+    "edges": [
+      {
+        "from": "ax",
+        "to": "conv",
+        "label": "条件になる"
+      },
+      {
+        "from": "conv",
+        "to": "impl",
+        "label": "どう書くかを与える"
+      },
+      {
+        "from": "spec",
+        "to": "impl",
+        "label": "何を作るかを与える"
+      }
+    ]
+  },
+  "place": {
+    "direction": "LR",
+    "nodes": [
+      {
+        "id": "q",
+        "label": "この値で切ってよいか"
+      },
+      {
+        "id": "one",
+        "label": "文書が1つしか持たない",
+        "role": "focus"
+      },
+      {
+        "id": "many",
+        "label": "複数もつことがある"
+      },
+      {
+        "id": "ok",
+        "label": "切ってよい　文書の種類",
+        "role": "focus"
+      },
+      {
+        "id": "ng",
+        "label": "切れない　軸"
+      }
+    ],
+    "edges": [
+      {
+        "from": "q",
+        "to": "one"
+      },
+      {
+        "from": "q",
+        "to": "many"
+      },
+      {
+        "from": "one",
+        "to": "ok",
+        "label": "置き場所が一意に決まる"
+      },
+      {
+        "from": "many",
+        "to": "ng",
+        "label": "置き場所が決まらない"
+      }
+    ]
+  }
+}
